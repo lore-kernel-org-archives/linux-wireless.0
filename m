@@ -1,151 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:51538 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751478Ab1KRLCF (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:41111 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751147Ab1K3GIH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Nov 2011 06:02:05 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: [PATCHv3 2/3] wireless: Add NoAck per tid Support
-Date: Fri, 18 Nov 2011 12:01:47 +0100
-Message-Id: <1321614110-32392-3-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111118_120217_968887_FE99736B)
-In-Reply-To: <1321614110-32392-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1321614110-32392-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Wed, 30 Nov 2011 01:08:07 -0500
+Received: by eaak14 with SMTP id k14so191983eaa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Nov 2011 22:08:06 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4ED56E02.6040601@lwfinger.net>
+References: <4ED3A6E8.4050000@aol.com>
+	<CACna6ryNkHeVXWXxFfod1-KQs8HQVv7wF-xpY5MA-Qs6fCypCg@mail.gmail.com>
+	<CACna6rzRJgfddE4jPivxBJCCZEyKSHsdRX7cE15rRxk2nhiRkA@mail.gmail.com>
+	<4ED3B33E.8020309@lwfinger.net>
+	<4ED3FA65.7010104@aol.com>
+	<CACna6rw1gEjd_hcX=5hLHt0YwUqDaVBs7_MO50GLKeok57YtVw@mail.gmail.com>
+	<4ED51DB5.5090202@aol.com>
+	<4ED52FBD.5030302@lwfinger.net>
+	<4ED5535E.50605@aol.com>
+	<4ED56E02.6040601@lwfinger.net>
+Date: Wed, 30 Nov 2011 07:08:05 +0100
+Message-ID: <CACna6rxEW9Bc6vZRPR=t=zfnA3RJoWO4Rd6m7SuY2+6_uoxuLg@mail.gmail.com> (sfid-20111130_070812_155418_004207C8)
+Subject: Re: Trouble with Macbook Pro 8,2 (broadcom 4331) and latest b43
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: AndrewL733 <AndrewL733@aol.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch contains the configuration changes in nl80211/cfg80211.
+2011/11/30 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 11/29/2011 03:49 PM, AndrewL733 wrote:
+>>
+>> On 11/29/2011 02:17 PM, Larry Finger wrote:
+>>>
+>>> That path is derived from the current kernel version. It should get it
+>>> right.
+>>>
+>>> You should already have the directory /lib/modules/3.1.2-1.1-desktop. The
+>>> command 'mv /lib/modules/3.1.2-1-desktop/updates to
+>>> /lib/modules/3.1.2-1.1-desktop/.' followed by 'depmod -a' should be OK.
+>>>
+>>> Larry
+>>
+>> I found that at least with Mandriva, simply putting the new b43 modules in
+>> /lib/modules/{my kernel}/updates and then running depmod (or depmod -a)
+>> did not
+>> work.  After doing that, when I ran "modinfo b43", the result was still
+>> pointing
+>> to the in-kernel b43 modules and not the one in "updates".  However,
+>> renaming
+>> the "updates" directory to "extra" and then running "depmod" again DID
+>> work.
+>> So, putting out-of-kernel modules in a directory named "updates" did not
+>> work!
+>>
+>> I have never seen out-of-kernel modules in "updates".  I compile many
+>> out-of-kernel modules (Myricom, ATTO, 3ware, LSI, Intel) and their
+>> installers
+>> always, always, put the new modules in the "extra" directory and never in
+>> an
+>> "updates" directory.
+>>
+>> Why does compat-wireless install these in the "updates" directory?
+>
+> Because that works with MOST distros.
+>
+>>>
+>>> But now, to do things the "Mandriva way", I am supposed to launch the
+>>> "Mandriva Control Center"  (drakconf), go to the "Manage you network
+>>> devices"
+>>> section and "add" the wlan0 interface to my system. (The idea is to then
+>>> allow
+>>> Network Manager to manage the connection moving forward, but first you
+>>> have to
+>>> enable the connection.) When I try to add wlan0 to my network
+>>> configuration, I
+>>> get a dialog box asking me which firmware file to use?  Basically, it
+>>> wants me
+>>> to navigate to /lib/firmware/b43/ and select one of the "ucode" files.
+>>>  With
+>>> the previous Macbook Pro 8,2, I think I selected ucode13.fw and it worked
+>>> fine.  But what is the correct way to select the proper firmware without
+>>> guessing?
+>>>
+>>> When I was trying to load the "distro b43" driver, dmesg was telling me
+>>> the
+>>> driver needed "FW13".  Does that mean anything?
+>
+> No.
+>
+>> Okay, I got impatient and decided to just tell the Mandriva network device
+>> manager to associate /lib/firmware/b43/ucode13.fw with my wlan0.  But how
+>> do I
+>> know if that's really the correct firmware for the Broadcom 4331 (rev 02)
+>> chipset?  I'm finding that the wireless connection goes down once in a
+>> while.
+>> So far, I have only tried with one access point and maybe the access point
+>> itself is flaky, but it would be nice how to know which firmware to use.
+>> Is the
+>> choice supposed to happen automagically when the b43 driver is loaded?  Is
+>> there
+>> some table somewhere that says which ucodeXX.fw goes with which chipset?
+>
+> The table is found at http://bcm-v4.sipsolutions.net/802.11/Init/Firmware.
+> For my distro and most others, it is done automagically. The kernel reads
+> the version of the 802.11 core and looks up the firmware using logic derived
+> from this table. In the dmesg output, you will find a place where the
+> versions of the various cores is printed. Using ucode13.fw is certainly not
+> right for a 4331. I'm surprised that it works at all.
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- include/linux/nl80211.h |   10 ++++++++++
- include/net/cfg80211.h  |    6 ++++++
- net/wireless/nl80211.c  |   28 ++++++++++++++++++++++++++++
- 3 files changed, 44 insertions(+), 0 deletions(-)
+I'm quite sure it's some Mandriva... well - dumb... configuration that
+doesn't affect driver at all.
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index f9261c2..b99e50d 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -538,6 +538,9 @@
-  *	OLBC handling in hostapd. Beacons are reported in %NL80211_CMD_FRAME
-  *	messages. Note that per PHY only one application may register.
-  *
-+ * @NL80211_CMD_SET_NOACK_MAP: sets a bitmap for the individual TIDs whether
-+ *      No Acknowledgement Policy should be applied.
-+ *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-  */
-@@ -675,6 +678,8 @@ enum nl80211_commands {
- 
- 	NL80211_CMD_UNEXPECTED_4ADDR_FRAME,
- 
-+	NL80211_CMD_SET_NOACK_MAP,
-+
- 	/* add new commands above here */
- 
- 	/* used to define NL80211_CMD_MAX below */
-@@ -1170,6 +1175,9 @@ enum nl80211_commands {
-  *	probe-response frame. The DA field in the 802.11 header is zero-ed out,
-  *	to be filled by the FW.
-  *
-+ * @NL80211_ATTR_NOACK_MAP: This u16 bitmap contains the No Ack Policy of
-+ *      up to 16 TIDs.
-+ *
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-  */
-@@ -1408,6 +1416,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_PROBE_RESP,
- 
-+	NL80211_ATTR_NOACK_MAP,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8d7ba09..2720f2e 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1442,6 +1442,8 @@ struct cfg80211_gtk_rekey_data {
-  *
-  * @probe_client: probe an associated client, must return a cookie that it
-  *	later passes to cfg80211_probe_status().
-+ *
-+ * @set_noack_map: Set the NoAck Map for the TIDs.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -1635,6 +1637,10 @@ struct cfg80211_ops {
- 	int	(*probe_client)(struct wiphy *wiphy, struct net_device *dev,
- 				const u8 *peer, u64 *cookie);
- 
-+	int	(*set_noack_map)(struct wiphy *wiphy,
-+				  struct net_device *dev,
-+				  u16 noack_map);
-+
- 	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy);
- };
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 6bc7c4b..a0c2c13 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -199,6 +199,8 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
- 	[NL80211_ATTR_DONT_WAIT_FOR_ACK] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_PROBE_RESP] = { .type = NLA_BINARY,
- 				      .len = IEEE80211_MAX_DATA_LEN },
-+	[NL80211_ATTR_NOACK_MAP] = { .type = NLA_U16 },
-+
- };
- 
- /* policy for the key attributes */
-@@ -1743,6 +1745,23 @@ static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
- 	return rdev->ops->del_virtual_intf(&rdev->wiphy, dev);
- }
- 
-+static int nl80211_set_noack_map(struct sk_buff *skb, struct genl_info *info)
-+{
-+	struct cfg80211_registered_device *rdev = info->user_ptr[0];
-+	struct net_device *dev = info->user_ptr[1];
-+	u16 noack_map;
-+
-+	if (!info->attrs[NL80211_ATTR_NOACK_MAP])
-+		return -EINVAL;
-+
-+	if (!rdev->ops->set_noack_map)
-+		return -EOPNOTSUPP;
-+
-+	noack_map = nla_get_u16(info->attrs[NL80211_ATTR_NOACK_MAP]);
-+
-+	return rdev->ops->set_noack_map(&rdev->wiphy, dev, noack_map);
-+}
-+
- struct get_key_cookie {
- 	struct sk_buff *msg;
- 	int error;
-@@ -6529,6 +6548,15 @@ static struct genl_ops nl80211_ops[] = {
- 		.internal_flags = NL80211_FLAG_NEED_WIPHY |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-+	{
-+		.cmd = NL80211_CMD_SET_NOACK_MAP,
-+		.doit = nl80211_set_noack_map,
-+		.policy = nl80211_policy,
-+		.flags = GENL_ADMIN_PERM,
-+		.internal_flags = NL80211_FLAG_NEED_NETDEV |
-+				  NL80211_FLAG_NEED_RTNL,
-+	},
-+
- };
- 
- static struct genl_multicast_group nl80211_mlme_mcgrp = {
+b43 uses ucode29_mimo for BCM4331
+
 -- 
-1.7.7.3
-
+Rafał
