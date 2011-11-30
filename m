@@ -1,44 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:52889 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751494Ab1K1Vi5 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:1340 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751154Ab1K3FNY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Nov 2011 16:38:57 -0500
-Received: by vcbfk14 with SMTP id fk14so4064537vcb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Nov 2011 13:38:57 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH 1/5] cfg80211: clarify set tx power mBm documentation
-Date: Mon, 28 Nov 2011 16:38:46 -0500
-Message-Id: <1322516330-4007-2-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111128_223859_939437_38E256AF)
-In-Reply-To: <1322516330-4007-1-git-send-email-mcgrof@qca.qualcomm.com>
-References: <1322516330-4007-1-git-send-email-mcgrof@qca.qualcomm.com>
+	Wed, 30 Nov 2011 00:13:24 -0500
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>,
+	Russell Hu <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Wilson Tsao <wtsao@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 11/17] ath9k: Add functions to allocate/free buffers for MCI
+Date: Wed, 30 Nov 2011 10:41:23 +0530
+Message-ID: <1322629889-19961-12-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111130_061329_311048_B123C523)
+In-Reply-To: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tons of drivers missed that we use mBm and not dBm...
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+required buffers and dma allocation is done for GPM and SCHED
+messages
+
+Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- include/net/cfg80211.h |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
+ drivers/net/wireless/ath/ath9k/mci.c   |   78 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/mci.h   |    2 +
+ 3 files changed, 81 insertions(+), 0 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index ce6236b..f0e82b2 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1402,7 +1402,8 @@ struct cfg80211_gtk_rekey_data {
-  *	have changed. The actual parameter values are available in
-  *	struct wiphy. If returning an error, no value should be changed.
-  *
-- * @set_tx_power: set the transmit power according to the parameters
-+ * @set_tx_power: set the transmit power according to the parameters,
-+ *	the power passed is in mBm, to get dBm use MBM_TO_DBM().
-  * @get_tx_power: store the current TX power into the dbm variable;
-  *	return 0 if successful
-  *
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 93b45b4..9f28cc4 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -647,6 +647,7 @@ struct ath_softc {
+ 	struct delayed_work tx_complete_work;
+ 	struct delayed_work hw_pll_work;
+ 	struct ath_btcoex btcoex;
++	struct ath_mci_coex mci_coex;
+ 
+ 	struct ath_descdma txsdma;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 0fbb141..5b24676 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -14,6 +14,9 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
++#include <linux/dma-mapping.h>
++#include <linux/slab.h>
++
+ #include "ath9k.h"
+ #include "mci.h"
+ 
+@@ -252,3 +255,78 @@ void ath_mci_process_status(struct ath_softc *sc,
+ 	if (old_num_mgmt != mci->num_mgmt)
+ 		ath_mci_update_scheme(sc);
+ }
++
++
++static int ath_mci_buf_alloc(struct ath_softc *sc, struct ath_mci_buf *buf)
++{
++	int error = 0;
++
++	buf->bf_addr = dma_alloc_coherent(sc->dev, buf->bf_len,
++					  &buf->bf_paddr, GFP_KERNEL);
++
++	if (buf->bf_addr == NULL) {
++		error = -ENOMEM;
++		goto fail;
++	}
++
++	return 0;
++
++fail:
++	memset(buf, 0, sizeof(*buf));
++	return error;
++}
++
++static void ath_mci_buf_free(struct ath_softc *sc, struct ath_mci_buf *buf)
++{
++	if (buf->bf_addr) {
++		dma_free_coherent(sc->dev, buf->bf_len, buf->bf_addr,
++							buf->bf_paddr);
++		memset(buf, 0, sizeof(*buf));
++	}
++}
++
++int ath_mci_setup(struct ath_softc *sc)
++{
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
++	struct ath_mci_coex *mci = &sc->mci_coex;
++	int error = 0;
++
++	mci->sched_buf.bf_len = ATH_MCI_SCHED_BUF_SIZE + ATH_MCI_GPM_BUF_SIZE;
++
++	if (ath_mci_buf_alloc(sc, &mci->sched_buf)) {
++		ath_dbg(common, ATH_DBG_FATAL, "MCI buffer alloc failed\n");
++		error = -ENOMEM;
++		goto fail;
++	}
++
++	mci->sched_buf.bf_len = ATH_MCI_SCHED_BUF_SIZE;
++
++	memset(mci->sched_buf.bf_addr, MCI_GPM_RSVD_PATTERN,
++						mci->sched_buf.bf_len);
++
++	mci->gpm_buf.bf_len = ATH_MCI_GPM_BUF_SIZE;
++	mci->gpm_buf.bf_addr = (u8 *)mci->sched_buf.bf_addr +
++							mci->sched_buf.bf_len;
++	mci->gpm_buf.bf_paddr = mci->sched_buf.bf_paddr + mci->sched_buf.bf_len;
++
++	/* initialize the buffer */
++	memset(mci->gpm_buf.bf_addr, MCI_GPM_RSVD_PATTERN, mci->gpm_buf.bf_len);
++
++	ar9003_mci_setup(sc->sc_ah, mci->gpm_buf.bf_paddr,
++			 mci->gpm_buf.bf_addr, (mci->gpm_buf.bf_len >> 4),
++			 mci->sched_buf.bf_paddr);
++fail:
++	return error;
++}
++
++void ath_mci_cleanup(struct ath_softc *sc)
++{
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_mci_coex *mci = &sc->mci_coex;
++
++	/*
++	 * both schedule and gpm buffers will be released
++	 */
++	ath_mci_buf_free(sc, &mci->sched_buf);
++	ar9003_mci_cleanup(ah);
++}
+diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
+index 5df0d60..4eeb0fe 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.h
++++ b/drivers/net/wireless/ath/ath9k/mci.h
+@@ -132,4 +132,6 @@ void ath_mci_process_profile(struct ath_softc *sc,
+ 			     struct ath_mci_profile_info *info);
+ void ath_mci_process_status(struct ath_softc *sc,
+ 			    struct ath_mci_profile_status *status);
++int ath_mci_setup(struct ath_softc *sc);
++void ath_mci_cleanup(struct ath_softc *sc);
+ #endif
 -- 
-1.7.4.15.g7811d
+1.7.0.4
 
