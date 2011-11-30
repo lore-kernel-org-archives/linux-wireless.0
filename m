@@ -1,55 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:48018 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752648Ab1KOHIp (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4115 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751017Ab1K3FMR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Nov 2011 02:08:45 -0500
-Message-ID: <4EC20F84.3000000@qca.qualcomm.com> (sfid-20111115_080849_698225_867830BD)
-Date: Tue, 15 Nov 2011 12:36:44 +0530
-From: mohammed <mohammed@qca.qualcomm.com>
+	Wed, 30 Nov 2011 00:12:17 -0500
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>,
+	Russell Hu <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Wilson Tsao <wtsao@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 04/17] ath9k_hw: initialize MCI parameters
+Date: Wed, 30 Nov 2011 10:41:16 +0530
+Message-ID: <1322629889-19961-5-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111130_061223_204924_17D1A1E3)
+In-Reply-To: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Luciano Coelho <coelho@ti.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@venema.h4ckr.net>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>
-Subject: Re: [RFC 00/18] ath9k: Add support for MCI BT coex
-References: <1321336840-12366-1-git-send-email-mohammed@qca.qualcomm.com> <1321339485.2408.85.camel@cumari>
-In-Reply-To: <1321339485.2408.85.camel@cumari>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 15 November 2011 12:14 PM, Luciano Coelho wrote:
-> Hi Mohammed,
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Hi Luciano,
+these parameter will be utilized and modified in the MCI hardware codes
+state machine
 
->
-> On Tue, 2011-11-15 at 11:30 +0530, Mohammed Shafi Shajakhan wrote:
->> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->>
->> Add support for MCI BT-Coex for AR9462. with AR9462 we have
->> WLAN and BT coexists via MCI protocol(Message Coexistence Interface)
->> WLAN and BT exchanges GPM, SCHED messages and few other messages
->> for coexistence.
->>
->> this is not yet tested and need some more review, few misc cleanups.
->> please add your review comments.
->>
->> thanks a lot to Rajkumar Manoharan<rmanohar@qca.qualcomm.com>  for
->> his suggestions, review comments, code cleanups, and modifications
->> in design.
->
-> [...]
->
-> Your patch emails are not being sent in a threaded form, which is a bit
-> annoying.  Can you fix it? Maybe you are using --no-thread or you have
-> sendemail.thread set to false in your .gitconfig?
+Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c |   22 ++++++++++++++++++++++
+ 1 files changed, 22 insertions(+), 0 deletions(-)
 
-thanks for pointing it out, I will fix it.
-
->
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index e046de9..34b922b 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -408,6 +408,7 @@ fail:
+ static int ath9k_init_btcoex(struct ath_softc *sc)
+ {
+ 	struct ath_txq *txq;
++	struct ath_hw *ah = sc->sc_ah;
+ 	int r;
+ 
+ 	switch (sc->sc_ah->btcoex_hw.scheme) {
+@@ -426,6 +427,27 @@ static int ath9k_init_btcoex(struct ath_softc *sc)
+ 		sc->btcoex.bt_stomp_type = ATH_BTCOEX_STOMP_LOW;
+ 		sc->btcoex.duty_cycle = ATH_BTCOEX_DEF_DUTY_CYCLE;
+ 		INIT_LIST_HEAD(&sc->btcoex.mci.info);
++		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI) {
++			ah->btcoex_hw.mci.ready = false;
++			ah->btcoex_hw.mci.bt_state = 0;
++			ah->btcoex_hw.mci.bt_ver_major = 3;
++			ah->btcoex_hw.mci.bt_ver_minor = 0;
++			ah->btcoex_hw.mci.bt_version_known = false;
++			ah->btcoex_hw.mci.update_2g5g = true;
++			ah->btcoex_hw.mci.is_2g = true;
++			ah->btcoex_hw.mci.wlan_channels_update = false;
++			ah->btcoex_hw.mci.wlan_channels[0] = 0x00000000;
++			ah->btcoex_hw.mci.wlan_channels[1] = 0xffffffff;
++			ah->btcoex_hw.mci.wlan_channels[2] = 0xffffffff;
++			ah->btcoex_hw.mci.wlan_channels[3] = 0x7fffffff;
++			ah->btcoex_hw.mci.query_bt = true;
++			ah->btcoex_hw.mci.unhalt_bt_gpm = true;
++			ah->btcoex_hw.mci.halted_bt_gpm = false;
++			ah->btcoex_hw.mci.need_flush_btinfo = false;
++			ah->btcoex_hw.mci.wlan_cal_seq = 0;
++			ah->btcoex_hw.mci.wlan_cal_done = 0;
++			ah->btcoex_hw.mci.config = 0x2201;
++		}
+ 		break;
+ 	default:
+ 		WARN_ON(1);
 -- 
-thanks,
-shafi
+1.7.0.4
+
