@@ -1,35 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out-1.meta.ua ([194.0.131.45]:57137 "EHLO
-	smtp-out-1.meta.ua" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755749Ab1KCLkT (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:2580 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751172Ab1K3FMi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 07:40:19 -0400
-Message-ID: <48883.148.106.128.38.1320319313.metamail@webmail.meta.ua> (sfid-20111103_124023_513220_B7C550C4)
-Date: Thu, 3 Nov 2011 13:21:53 +0200 (EEST)
-Subject: b43 scans wifi networks with old firmware only.
-From: "Roman V.Leon." <roman-vl@meta.ua>
-To: linux-wireless@vger.kernel.org
-Reply-To: roman-vl@meta.ua
+	Wed, 30 Nov 2011 00:12:38 -0500
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>,
+	Russell Hu <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Wilson Tsao <wtsao@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 06/17] ath9k: Add MCI interrupt to interrupt mask
+Date: Wed, 30 Nov 2011 10:41:18 +0530
+Message-ID: <1322629889-19961-7-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111130_061240_586675_6C27ABB1)
+In-Reply-To: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain;charset=windows-1251
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Gents.
-I have problem with b43 driver 5.100.138, it's not scanning networks for
-unknown reason. I have broadcom wifi card PCIID is 14e4:4315, linux kern
-ver. is 3.0. When i'm trying to launch iwlist scan, i'm getting "no scan
-results".
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-for example:
-sudo ifconfig wlan0 up
-sudo iwlist wlan0 scan
-    No scan results.
+Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-With the older driver 5.10.56.2808, i see normal scan results. If you need
-any more information, i will send.
-
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index e43c41c..90d35f2 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -764,7 +764,8 @@ irqreturn_t ath_isr(int irq, void *dev)
+ 		ATH9K_INT_BMISS |		\
+ 		ATH9K_INT_CST |			\
+ 		ATH9K_INT_TSFOOR |		\
+-		ATH9K_INT_GENTIMER)
++		ATH9K_INT_GENTIMER |		\
++		ATH9K_INT_MCI)
+ 
+ 	struct ath_softc *sc = dev;
+ 	struct ath_hw *ah = sc->sc_ah;
+@@ -1119,6 +1120,9 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	if (ah->caps.hw_caps & ATH9K_HW_CAP_HT)
+ 		ah->imask |= ATH9K_INT_CST;
+ 
++	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
++		ah->imask |= ATH9K_INT_MCI;
++
+ 	sc->sc_flags &= ~SC_OP_INVALID;
+ 	sc->sc_ah->is_monitoring = false;
+ 
 -- 
-Thanks,
-Roman V.Leon.
+1.7.0.4
 
