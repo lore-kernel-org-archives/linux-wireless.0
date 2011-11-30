@@ -1,65 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61399 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757667Ab1KVQXv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Nov 2011 11:23:51 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Wilson Tsao <wtsao@qca.qualcomm.com>
-Subject: [PATCH 06/18] ath9k: Add MCI interrupt to interrupt mask
-Date: Tue, 22 Nov 2011 21:52:33 +0530
-Message-ID: <1321978965-21684-7-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111122_172354_533288_321A59B8)
-In-Reply-To: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1321978965-21684-1-git-send-email-mohammed@qca.qualcomm.com>
+Received: from cantor2.suse.de ([195.135.220.15]:36079 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753042Ab1K3KKc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Nov 2011 05:10:32 -0500
+Date: Wed, 30 Nov 2011 11:10:28 +0100
+From: Michal Hocko <mhocko@suse.cz>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from
+ iwl3945_rs_free_sta
+Message-ID: <20111130101028.GA2906@tiehlicka.suse.cz> (sfid-20111130_111053_261824_4B367AD2)
+References: <20111129100727.GD2675@tiehlicka.suse.cz>
+ <20111129113906.GA7299@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111129113906.GA7299@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Tue 29-11-11 12:39:07, Stanislaw Gruszka wrote:
+> Hi Michal
+> 
+> On Tue, Nov 29, 2011 at 11:07:27AM +0100, Michal Hocko wrote:
+> > [I am not sure whether this is ieee80211 or iwl3945 issue so put both
+> > maintainers into loop]
+> The only changed we had in iwlegacy between 3.1 and 3.2-rc, was only 
+> adjustment to mac80211 changes. However I think this is iwlegacy issue,
+> just for some reason bug did not trigger before.
 
-Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
-Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/main.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+I have double checked 3.1 and cannot reproduce it.
+Anyway, I have put:
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index e43c41c..90d35f2 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -764,7 +764,8 @@ irqreturn_t ath_isr(int irq, void *dev)
- 		ATH9K_INT_BMISS |		\
- 		ATH9K_INT_CST |			\
- 		ATH9K_INT_TSFOOR |		\
--		ATH9K_INT_GENTIMER)
-+		ATH9K_INT_GENTIMER |		\
-+		ATH9K_INT_MCI)
+diff --git a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
+index 8faeaf2..9221ed4 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
++++ b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
+@@ -432,6 +432,7 @@ static void iwl3945_rs_free_sta(void *iwl_priv, struct ieee80211_sta *sta,
+ 	 * to use iwl_priv to print out debugging) since it may not be fully
+ 	 * initialized at this point.
+ 	 */
++	printk("XXX: deleting time: %x\n", rs_sta->rate_scale_flush.base);
+ 	del_timer_sync(&rs_sta->rate_scale_flush);
+ }
  
- 	struct ath_softc *sc = dev;
- 	struct ath_hw *ah = sc->sc_ah;
-@@ -1119,6 +1120,9 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_HT)
- 		ah->imask |= ATH9K_INT_CST;
- 
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_MCI)
-+		ah->imask |= ATH9K_INT_MCI;
-+
- 	sc->sc_flags &= ~SC_OP_INVALID;
- 	sc->sc_ah->is_monitoring = false;
- 
+And the timer base is really NULL when the issue happens. So, somebody
+probably removed the timer already?
+
+> Is this problem 100% reproducible for you ? 
+
+Yes, it seems to be sufficient to suspend to RAM while associated and
+turn off the AP before waking up the machine.
+I wasn't able to reproduce just by turning of the AP while associated
+without suspend.
+
+> If so I'll try to reproduce it locally, otherwise I'll review related
+> code to find reason of that problem.
+> 
+> Thanks
+> Stanislaw 
+
+Thanks
+
 -- 
-1.7.0.4
-
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
