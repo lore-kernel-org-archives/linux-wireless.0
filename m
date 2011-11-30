@@ -1,36 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50063 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752208Ab1KYHe7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 02:34:59 -0500
-Subject: Re: [PATCH v2 0/3] mac80211: timeout tx agg sessions in way
- similar to rx agg sessions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <CALGY4ftKV_u0avbXytHOxRWWiDiDBGhAKTCE+_QqJnebt8Rj=Q@mail.gmail.com> (sfid-20111125_054407_814873_ADCC84EF)
-References: <1322016630-27332-1-git-send-email-mar.kolya@gmail.com>
-	 <1322158678.5366.27.camel@jlt3.sipsolutions.net>
-	 <CALGY4fv6NTRDPUEa-7h+DqaHZwdKnNG4fEmzyHrYZukz3B1gqA@mail.gmail.com>
-	 <1322159944.5366.42.camel@jlt3.sipsolutions.net>
-	 <CALGY4ftKV_u0avbXytHOxRWWiDiDBGhAKTCE+_QqJnebt8Rj=Q@mail.gmail.com>
-	 (sfid-20111125_054407_814873_ADCC84EF)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 25 Nov 2011 08:34:56 +0100
-Message-ID: <1322206496.4123.0.camel@jlt3.sipsolutions.net> (sfid-20111125_083502_571337_D27FCC48)
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:2249 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751933Ab1K3ULV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Nov 2011 15:11:21 -0500
+Message-ID: <4ED68DDE.90304@broadcom.com> (sfid-20111130_211125_430170_8E156ED2)
+Date: Wed, 30 Nov 2011 12:11:10 -0800
+From: "Franky Lin" <frankyl@broadcom.com>
+MIME-Version: 1.0
+To: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/5] brcm80211: fix usage of set tx power
+References: <1322516330-4007-1-git-send-email-mcgrof@qca.qualcomm.com>
+ <1322516330-4007-4-git-send-email-mcgrof@qca.qualcomm.com>
+In-Reply-To: <1322516330-4007-4-git-send-email-mcgrof@qca.qualcomm.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-11-24 at 23:43 -0500, Nikolay Martynov wrote:
+On 11/28/2011 01:38 PM, Luis R. Rodriguez wrote:
+> mBm is passed but dBm was assumed...
+>
+> Signed-off-by: Luis R. Rodriguez<mcgrof@qca.qualcomm.com>
 
-> >> > Looks OK to me. Did you run it through sparse too? :-)
+Thanks Luis,
 
->   I wasn't able to find any sparse warnings introduced by my changes,
-> everything looks fine.
+Acked-by: Franky Lin <frankyl@broadcom.com>
 
-Great, thanks for checking.
-
-johannes
+Franky
 
