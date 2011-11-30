@@ -1,153 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34319 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751398Ab1KQWWP (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:44621 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752232Ab1K3Uqd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Nov 2011 17:22:15 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	"Luis R. Rodriguez" <lrodriguez@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH v2 3/4] compat-wireless: add CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN
-Date: Thu, 17 Nov 2011 17:21:10 -0500
-Message-Id: <1321568471-23068-3-git-send-email-linville@tuxdriver.com> (sfid-20111117_232235_442451_21779C47)
-In-Reply-To: <1321568471-23068-1-git-send-email-linville@tuxdriver.com>
-References: <1321568471-23068-1-git-send-email-linville@tuxdriver.com>
+	Wed, 30 Nov 2011 15:46:33 -0500
+Received: by lagw12 with SMTP id w12so290792lag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Nov 2011 12:46:31 -0800 (PST)
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Nikolay Martynov <mar.kolya@gmail.com>
+Subject: [PATCH v3 0/4] Fix the way ANI is being handled for ar9100 and ar9340
+Date: Wed, 30 Nov 2011 15:46:16 -0500
+Message-Id: <1322685980-8757-1-git-send-email-mar.kolya@gmail.com> (sfid-20111130_214637_133984_71D4ADFA)
+In-Reply-To: <20111130201051.GC2477@tuxdriver.com>
+References: <20111130201051.GC2477@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-An API change in the 2.6.33 timeframe made a number of bluetooth
-functions require an extra parameter.  Some kernels (e.g. RHEL6)
-backport that API change, and this allow us to accommodate them.
+  I'm really sorry that I missed all those tabs-vs-spaces. Please accept my apologies.
+  I think I've now fixed all problems and checkpatch.pl doesn't report
+any issues. Please let me know if there are still style problems.
+  Thanks!
 
-This adds CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN to config.mk and
-modifies an existing patch for the Bluetooth subsystem.
+  Currently in ath9k code there is an attempt which is meant to
+disable ANI for ar9100 and ar9340. But it doesn't really achieve
+this. All it does is disable ANI init and setup (i.e. calls to
+ath9k_hw_ani_setup and ath9k_hw_ani_init). Since ath9k_hw_ani_setup is
+not called ah->config.ani_poll_interval is never initialized (i.e. it
+is always zero) and ath_ani_calibrate always executes ANI procedures
+(over uninitialized ANI parameters).
+  Moreover, ath_ani_calibrate is being called each 1ms because
+common->ani.timer is set to zero interval because
+ah->config.ani_poll_interval==0 (and thus smallest value of all
+intervals). Normally it should not be called this often.
+  This patch changes the code so config.enable_ani is used to check if
+ANI should be performed.
+  Also, this patchset enables ANI for ar9100 - ANI was always performed
+for this chip, but this patch fixes the fact that it was performed
+over uninitialized data.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
-The original RHEL6 patch included a slightly different (and incorrect)
-check for setting CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN on non-RHEL6
-kernels.  I believe this one is correct, as verified by manually
-checking the output of gen-compat-autoconf.sh.
+  All comments and suggestions are appreciated.
+  Thanks.
 
- config.mk                  |    8 ++++++++
- patches/16-bluetooth.patch |   20 ++++++++++----------
- 2 files changed, 18 insertions(+), 10 deletions(-)
+Nikolay Martynov (4):
+  ath9k: trivial: cosmetic fix in calibration debug log
+  ath9k: change calibration debug log to output all calibration types
+  ath9k: use config.enable_ani to check if ani should be performed
+  ath9k: enable ANI for ar9100 chips
 
-diff --git a/config.mk b/config.mk
-index 7116206..2ccca7a 100644
---- a/config.mk
-+++ b/config.mk
-@@ -128,6 +128,14 @@ ifdef CONFIG_COMPAT_KERNEL_2_6_36
-  CONFIG_COMPAT_KFIFO=y
- endif #CONFIG_COMPAT_KERNEL_2_6_36
- 
-+#
-+# CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN definition has no leading
-+# whitespace, because it gets passed-on through compat_autoconf.h.
-+#
-+ifndef CONFIG_COMPAT_KERNEL_2_6_33
-+CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN=y
-+endif #CONFIG_COMPAT_KERNEL_2_6_33
-+
- # Wireless subsystem stuff
- CONFIG_MAC80211=m
- 
-diff --git a/patches/16-bluetooth.patch b/patches/16-bluetooth.patch
-index 00bf613..9a87c43 100644
---- a/patches/16-bluetooth.patch
-+++ b/patches/16-bluetooth.patch
-@@ -45,7 +45,7 @@ here still, but for now we keep this here.
-  }
-  EXPORT_SYMBOL(bt_sock_unregister);
-  
--+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-++#if defined(CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN)
-  static int bt_sock_create(struct net *net, struct socket *sock, int proto,
-  			  int kern)
- +#else
-@@ -58,7 +58,7 @@ here still, but for now we keep this here.
-  	read_lock(&bt_proto_lock);
-  
-  	if (bt_proto[proto] && try_module_get(bt_proto[proto]->owner)) {
--+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-++#if defined(CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN)
-  		err = bt_proto[proto]->create(net, sock, proto, kern);
- +#else
- +		err = bt_proto[proto]->create(net, sock, proto);
-@@ -110,7 +110,7 @@ here still, but for now we keep this here.
-  	.obj_size	= sizeof(struct hci_pinfo)
-  };
-  
--+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-++#if defined(CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN)
-  static int hci_sock_create(struct net *net, struct socket *sock, int protocol,
-  			   int kern)
- +#else
-@@ -163,7 +163,7 @@ here still, but for now we keep this here.
-  	return -EIO;
-  }
-  
--+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,34))
-++#if defined(CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN)
-  static int hidp_output_raw_report(struct hid_device *hid, unsigned char *data, size_t count,
-  		unsigned char report_type)
-  {
-@@ -431,7 +431,7 @@ here still, but for now we keep this here.
-  	return sk;
-  }
-  
--+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-++#if defined(CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN)
-  static int rfcomm_sock_create(struct net *net, struct socket *sock,
-  			      int protocol, int kern)
- +#else
-@@ -522,7 +522,7 @@ here still, but for now we keep this here.
-  	return sk;
-  }
-  
--+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-++#if defined(CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN)
-  static int sco_sock_create(struct net *net, struct socket *sock, int protocol,
-  			   int kern)
- +#else
-@@ -549,7 +549,7 @@ here still, but for now we keep this here.
-  	.obj_size	= sizeof(struct bt_sock)
-  };
-  
--+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-++#if defined(CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN)
-  static int bnep_sock_create(struct net *net, struct socket *sock, int protocol,
-  			    int kern)
- +#else
-@@ -564,7 +564,7 @@ here still, but for now we keep this here.
-  	.obj_size	= sizeof(struct bt_sock)
-  };
-  
--+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-++#if defined(CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN)
-  static int cmtp_sock_create(struct net *net, struct socket *sock, int protocol,
-  			    int kern)
- +#else
-@@ -579,7 +579,7 @@ here still, but for now we keep this here.
-  	.obj_size	= sizeof(struct bt_sock)
-  };
-  
--+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-++#if defined(CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN)
-  static int hidp_sock_create(struct net *net, struct socket *sock, int protocol,
-  			    int kern)
- +#else
-@@ -609,7 +609,7 @@ here still, but for now we keep this here.
-  	return sk;
-  }
-  
--+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,32))
-++#if defined(CONFIG_COMPAT_BT_SOCK_CREATE_NEEDS_KERN)
-  static int l2cap_sock_create(struct net *net, struct socket *sock, int protocol,
-  			     int kern)
- +#else
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |    2 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    3 ++-
+ drivers/net/wireless/ath/ath9k/hw.c           |    6 +++++-
+ drivers/net/wireless/ath/ath9k/main.c         |   13 ++++++++-----
+ 5 files changed, 17 insertions(+), 9 deletions(-)
+
 -- 
-1.7.4.4
+1.7.4.1
 
