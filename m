@@ -1,47 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:54519 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750711Ab1KXXDK (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4115 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151Ab1K3FMS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Nov 2011 18:03:10 -0500
-Date: Fri, 25 Nov 2011 08:02:54 +0900
-From: Norbert Preining <preining@logic.at>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	David Rientjes <rientjes@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ipw3945-devel@lists.sourceforge.net"
-	<ipw3945-devel@lists.sourceforge.net>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	Dave Jones <davej@redhat.com>
-Subject: Re: iwlagn is getting very shaky
-Message-ID: <20111124230254.GA2100@gamma.logic.tuwien.ac.at> (sfid-20111125_000348_019852_63D769A6)
-References: <CANUX_P1RjcRD2tW1A6YYSEV9+aUZyTEro7tZXJWRoxk6gx-2jA@mail.gmail.com> <CANUX_P2aFn84uSqgZA2gTBN7E4+0jGmJQTkx4eug4Ls0hK0==Q@mail.gmail.com> <20111122072730.GA32225@gamma.logic.tuwien.ac.at> <CANUX_P15En9bHVx4bhq6=XKPZnC2u+QyVJ+jnm4ns=39DrOBtg@mail.gmail.com> <2D0C7905-AEB2-4DE4-89B1-945D89F2B5D6@logic.at> <CANUX_P21PDdyo4u-x_1A0Lcqf-33yHgzUxddAoc3juGRNnrcDg@mail.gmail.com> <20111122124357.GA32440@gamma.logic.tuwien.ac.at> <CANUX_P0uyyuK4netV6srYCh9FsC4cpGzxobHE3T38n5RvvA0RQ@mail.gmail.com> <20111123015503.GC23203@gamma.logic.tuwien.ac.at> <CANUX_P1zDDzMy5yrFXSZAkMQ-87uu-fE1e-2sCEgHJi4dh5eiw@mail.gmail.com>
+	Wed, 30 Nov 2011 00:12:18 -0500
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>,
+	Russell Hu <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 00/17] Add support for MCI BT coex
+Date: Wed, 30 Nov 2011 10:41:12 +0530
+Message-ID: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111130_061224_368122_B90E9548)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANUX_P1zDDzMy5yrFXSZAkMQ-87uu-fE1e-2sCEgHJi4dh5eiw@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Do, 24 Nov 2011, Emmanuel Grumbach wrote:
-> Please apply the patch attached on top of the one I previously sent.
-> Let me know I you have trouble with patch.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Which patch? Nothing attached, I also checked in the mail archives
-in case I had again problems with attached patches. Nothing.
-Please resend.
+Add support for MCI BT-Coex for AR9462. with AR9462 we have
+WLAN and BT coexists via MCI protocol(Message Coexistence Interface)
+WLAN and BT exchanges GPM, SCHED messages and few other messages
+for coexistence.
 
-Best wishes
+*thanks to Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+for his technical support
 
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-SAFFRON WALDEN (n.)
-To spray the person you are talking to with half-chewed breadcrumbs or
-small pieces of whitebait.
-			--- Douglas Adams, The Meaning of Liff
+*thanks to Wilson Tsao <wtsao@qca.qualcomm.com> who being the core
+author of MCI, for his valuable help and documents
+
+*thanks a lot to Rajkumar Manoharan <rmanohar@qca.qualcomm.com> for
+his suggestions, review comments, code cleanups, and modifications
+in design.
+
+bug fixes and few miscellaneous cleanups will be added then and there
+
+Mohammed Shafi Shajakhan (17):
+  ath9k_hw: add definitions to support MCI h/w code
+  ath9k_hw: add GPIO output MUX related macros
+  ath9k_hw: Add MCI h/w specific structure
+  ath9k_hw: initialize MCI parameters
+  ath9k_hw: Add MCI h/w code and state machine
+  ath9k: Add MCI interrupt to interrupt mask
+  ath9k_hw: take care of enabling MCI interrupts
+  ath9k_hw: check for asynchronous MCI interrupt pending
+  ath9k_hw: check for MCI interrupt in get_isr
+  ath9k: add MCI specific definitions and structures
+  ath9k: Add functions to allocate/free buffers for MCI
+  ath9k_hw: MCI related changes in chip management
+  ath9k_hw: MCI related changes in set_reset_reg
+  ath9k_hw: Add support for MCI WLAN calibration
+  ath9k_hw: Add MCI related changes in chip reset
+  ath9k: MCI state machine based on MCI interrupt
+  ath9k: fix a typo
+
+ drivers/net/wireless/ath/ath9k/Makefile       |    3 +-
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |   43 +
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c   |   36 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c   | 1464 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h   |  102 ++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h   |    3 +
+ drivers/net/wireless/ath/ath9k/ath9k.h        |    1 +
+ drivers/net/wireless/ath/ath9k/btcoex.c       |    2 +-
+ drivers/net/wireless/ath/ath9k/btcoex.h       |   31 +
+ drivers/net/wireless/ath/ath9k/hw.c           |  174 +++-
+ drivers/net/wireless/ath/ath9k/hw.h           |  182 +++
+ drivers/net/wireless/ath/ath9k/init.c         |   33 +
+ drivers/net/wireless/ath/ath9k/mac.c          |   17 +-
+ drivers/net/wireless/ath/ath9k/main.c         |    9 +-
+ drivers/net/wireless/ath/ath9k/mci.c          |  419 +++++++
+ drivers/net/wireless/ath/ath9k/mci.h          |   20 +
+ drivers/net/wireless/ath/ath9k/reg.h          |  306 +++++-
+ 17 files changed, 2805 insertions(+), 40 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_mci.c
+ create mode 100644 drivers/net/wireless/ath/ath9k/ar9003_mci.h
+
