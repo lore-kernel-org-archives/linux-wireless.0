@@ -1,38 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:52425 "HELO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751840Ab1KHOT0 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57409 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151Ab1K3Sbb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Nov 2011 09:19:26 -0500
-Received: by mail-bw0-f49.google.com with SMTP id t2so726773bka.22
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Nov 2011 06:19:23 -0800 (PST)
-Subject: Re: [PATCH v2 1/2] wl12xx: set scan probe requests rate according
- to the no_cck flag
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1320132232-12283-1-git-send-email-eliad@wizery.com>
-References: <1320132232-12283-1-git-send-email-eliad@wizery.com>
+	Wed, 30 Nov 2011 13:31:31 -0500
+Subject: Re: [PATCH] mac80211: fill rate filter for internal scan requests
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>,
+	stable@vger.kernel.org
+In-Reply-To: <1322668590-18801-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1322668590-18801-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 08 Nov 2011 16:19:20 +0200
-Message-ID: <1320761960.19479.19.camel@cumari> (sfid-20111108_151930_558117_6B9CADFF)
+Date: Wed, 30 Nov 2011 19:31:23 +0100
+Message-ID: <1322677883.3970.0.camel@jlt3.sipsolutions.net> (sfid-20111130_193134_214506_88A07798)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-11-01 at 09:23 +0200, Eliad Peller wrote: 
-> From: Guy Eilam <guy@wizery.com>
+On Wed, 2011-11-30 at 16:56 +0100, Simon Wunderlich wrote:
+> The rates bitmap for internal scan requests shoud be filled,
+> otherwise there will be probe requests with zero rates supported.
 > 
-> Set the TX rate of probe requests during scanning according to the
-> no_cck flag in the scan request struct.
-> 
-> Signed-off-by: Guy Eilam <guy@wizery.com>
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+> Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+
+Cc: stable@vger.kernel.org
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
 > ---
+>  net/mac80211/main.c |    6 ++++++
+>  1 files changed, 6 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> index dddedfa..3e15f75 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -779,6 +779,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+>  	if (!local->int_scan_req)
+>  		return -ENOMEM;
+>  
+> +	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+> +		if (!local->hw.wiphy->bands[band])
+> +			continue;
+> +		local->int_scan_req->rates[band] = (u32) -1;
+> +	}
+> +
+>  	/* if low-level driver supports AP, we also support VLAN */
+>  	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_AP)) {
+>  		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
 
-Applied both patches, thanks!
-
--- 
-Cheers,
-Luca.
 
