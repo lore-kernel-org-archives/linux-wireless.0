@@ -1,45 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41617 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752552Ab1K2PTh (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:41643 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751718Ab1K3FPh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Nov 2011 10:19:37 -0500
-Subject: Re: [PATCH] mac80211: reset addba retries after timeout
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <CALGY4fvLSKBY93M9Bhb-F8Sm=Uw5nU+OvTtAmk_BXQX8WX6V8A@mail.gmail.com> (sfid-20111129_161520_149493_69E914E7)
-References: <1322533625-24641-1-git-send-email-mar.kolya@gmail.com>
-	 <1322555084.4110.2.camel@jlt3.sipsolutions.net>
-	 <CALGY4fvLSKBY93M9Bhb-F8Sm=Uw5nU+OvTtAmk_BXQX8WX6V8A@mail.gmail.com>
-	 (sfid-20111129_161520_149493_69E914E7)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 29 Nov 2011 16:19:33 +0100
-Message-ID: <1322579973.4110.22.camel@jlt3.sipsolutions.net> (sfid-20111129_161941_311578_D9E4E7BA)
-Mime-Version: 1.0
+	Wed, 30 Nov 2011 00:15:37 -0500
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>,
+	Russell Hu <rhu@qca.qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Wilson Tsao <wtsao@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: [PATCH v2 10/17] ath9k: add MCI specific definitions and structures
+Date: Wed, 30 Nov 2011 10:41:22 +0530
+Message-ID: <1322629889-19961-11-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111130_061548_158931_9E292BA3)
+In-Reply-To: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1322629889-19961-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Nikolay,
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-> > Conceptually, this seems OK to me, although on broken APs it might mean
-> > connection stalls every minute, not sure how desirable that is?
-> 
->   Do APs broken is such way exist? I.e. APs which declare aggregation
-> support but do not respond to addba.
+Cc: Wilson Tsao <wtsao@qca.qualcomm.com>
+Cc: Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/mci.h |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
 
-I seem to remember something ... not really sure.
-
->   On the other hand looking at the code I've got an impression that
-> connection doesn't stall while waiting for addba resp, i.e. packets
-> still go though non-agg path. Did I miss something in this regards?
-
-We queue up packets in ieee80211_tx_prep_agg() when
-HT_AGG_STATE_WANT_START is clear but HT_AGG_STATE_OPERATIONAL is not
-set, this is the case after we send the addBA request frame and before
-we get a response. So since the timeout is 1 second, the connection can
-stall for quite a while.
-
-johannes
-
+diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
+index 9590c61..5df0d60 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.h
++++ b/drivers/net/wireless/ath/ath9k/mci.h
+@@ -17,6 +17,9 @@
+ #ifndef MCI_H
+ #define MCI_H
+ 
++#define ATH_MCI_SCHED_BUF_SIZE		(16 * 16) /* 16 entries, 4 dword each */
++#define ATH_MCI_GPM_MAX_ENTRY		16
++#define ATH_MCI_GPM_BUF_SIZE		(ATH_MCI_GPM_MAX_ENTRY * 16)
+ #define ATH_MCI_DEF_BT_PERIOD		40
+ #define ATH_MCI_BDR_DUTY_CYCLE		20
+ #define ATH_MCI_MAX_DUTY_CYCLE		90
+@@ -110,6 +113,20 @@ struct ath_mci_profile {
+ 	u8 num_bdr;
+ };
+ 
++
++struct ath_mci_buf {
++	void *bf_addr;		/* virtual addr of desc */
++	dma_addr_t bf_paddr;    /* physical addr of buffer */
++	u32 bf_len;		/* len of data */
++};
++
++struct ath_mci_coex {
++	atomic_t mci_cal_flag;
++	struct ath_mci_buf sched_buf;
++	struct ath_mci_buf gpm_buf;
++	u32 bt_cal_start;
++};
++
+ void ath_mci_flush_profile(struct ath_mci_profile *mci);
+ void ath_mci_process_profile(struct ath_softc *sc,
+ 			     struct ath_mci_profile_info *info);
+-- 
+1.7.0.4
 
