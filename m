@@ -1,86 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:61448 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755606Ab1KCJRg convert rfc822-to-8bit (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:44621 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752232Ab1K3Uqg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Nov 2011 05:17:36 -0400
-Received: by ggnb2 with SMTP id b2so1111989ggn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Nov 2011 02:17:35 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1320310524.3950.29.camel@jlt3.sipsolutions.net>
-References: <CAMG6FYiV8F=MFBeUQCGSj__h=REVLMvTZCvLEvDPT7GP2KWsWw@mail.gmail.com>
-	<1320310524.3950.29.camel@jlt3.sipsolutions.net>
-Date: Thu, 3 Nov 2011 10:17:34 +0100
-Message-ID: <CAMG6FYhgeNg3CbDZg7GkJkq1ArJ=5n+bD=zPx=6ZFe7-Kj4Jmw@mail.gmail.com> (sfid-20111103_101740_829897_7A94626C)
-Subject: Re: [PATCH] cfg80211: merge in beacon ies of hidden bss.
-From: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 30 Nov 2011 15:46:36 -0500
+Received: by mail-lpp01m010-f46.google.com with SMTP id w12so290792lag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Nov 2011 12:46:35 -0800 (PST)
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Nikolay Martynov <mar.kolya@gmail.com>
+Subject: [PATCH v3 1/4] ath9k: trivial: cosmetic fix in calibration debug log
+Date: Wed, 30 Nov 2011 15:46:17 -0500
+Message-Id: <1322685980-8757-2-git-send-email-mar.kolya@gmail.com> (sfid-20111130_214640_007634_912F5C9A)
+In-Reply-To: <1322685980-8757-1-git-send-email-mar.kolya@gmail.com>
+References: <20111130201051.GC2477@tuxdriver.com>
+ <1322685980-8757-1-git-send-email-mar.kolya@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+  Add missed space and change typo in calibration debugging log.
 
-On Thu, Nov 3, 2011 at 9:55 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9002_calib.c |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
->> +     if (!ie1 && !ie2)
->> +             return 0;
-> I don't think it's valid to leave out the SSID IE, so I'd rather not
-> have that test here. It might interact badly with other uses (mesh?)
->
-ie1 and ie2 could not NULL at the same time, otherwise the bss
-would be found in the first search attempt. However, I would prefer
-to have some water-proof check here. WARN_ON? BUG_ON?
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_calib.c b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+index 88279e3..157337f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_calib.c
+@@ -203,7 +203,7 @@ static void ar9002_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
+ 			i);
+ 
+ 		ath_dbg(common, ATH_DBG_CALIBRATE,
+-			"Orignal: Chn %diq_corr_meas = 0x%08x\n",
++			"Original: Chn %d iq_corr_meas = 0x%08x\n",
+ 			i, ah->totalIqCorrMeas[i]);
+ 
+ 		iqCorrNeg = 0;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 12a730d..755c98e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -225,7 +225,7 @@ static void ar9003_hw_iqcalibrate(struct ath_hw *ah, u8 numChains)
+ 			i);
+ 
+ 		ath_dbg(common, ATH_DBG_CALIBRATE,
+-			"Orignal: Chn %diq_corr_meas = 0x%08x\n",
++			"Original: Chn %d iq_corr_meas = 0x%08x\n",
+ 			i, ah->totalIqCorrMeas[i]);
+ 
+ 		iqCorrNeg = 0;
+-- 
+1.7.4.1
 
->> +     for (i = 0; i < ielen; ++i)
-> ++i here is a bit atypical code style.
->
-Ok.
-
->> +             if (ie2[i + 2])
->> +                     return -1;
-> I don't understand this loop. Why check that ie2 is zeroed, but check
-> only to the minlen of ie1, ie2?
->
-Check that ie2 is zeroed is a check for hidden SSID.
-Check only to minlent to be in-line with cmp_ies().
-
->> +     return ie2[1] - ie1[1];
-> I'd error out much earlier if the length is different instead of
-> comparing to the minlen first.
->
-Key comparator must use same algorithm in any rb-tree search function
-(order is important), otherwise ordering of items in the tree is broken
-and search gives incorrect results.
-This code uses same order as cmp_ies() does.
-
->
->> +static int
->> +merge_hidden_ies(struct cfg80211_internal_bss *res,
->> +              struct cfg80211_internal_bss *hidden)
-> There seems little use for the return value.
->
-Agree. int -> void
-
->> @@ -494,6 +578,13 @@ cfg80211_bss_update(struct cfg80211_registered_device *dev,
->>       spin_lock_bh(&dev->bss_lock);
->>
->>       found = rb_find_bss(dev, res);
->> +     if (!found) {
->> +             struct cfg80211_internal_bss *hidden;
->> +
->> +             hidden = rb_find_hidden_bss(dev, res);
->> +             if (hidden)
->> +                     merge_hidden_ies(res, hidden);
->> +     }
-> I was going to complain that I don't understand why this works -- but
-> then I think now I do. If you move the code down into the else branch
-> it'll be much easier to follow.
->
-Ok.
-
-Thank you for review!
-
-With best regards,
-Dmitry
