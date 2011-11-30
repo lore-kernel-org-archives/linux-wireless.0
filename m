@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:46218 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935481Ab1KJPtl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 10:49:41 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 22/27] iwlagn: don't always split remain-on-channel
-Date: Thu, 10 Nov 2011 06:55:22 -0800
-Message-Id: <1320936927-9078-23-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111110_165006_787619_9FDCDB76)
-In-Reply-To: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1320936927-9078-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from acsinet15.oracle.com ([141.146.126.227]:48678 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751774Ab1K3Iuo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Nov 2011 03:50:44 -0500
+Date: Wed, 30 Nov 2011 11:49:38 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Franky Lin <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Alwin Beukers <alwin@broadcom.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] brcm80211: fmac: small memory leak on error
+Message-ID: <20111130084937.GI6268@elgon.mountain> (sfid-20111130_095049_671505_4CF053EB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+We should free "bus_if" here, it's a small leak but it makes the static
+checkers happy.
 
-Due to the P2P context always having the associated
-bit set when we got to this code, we were splitting
-up the remain-on-channel durations unconditionally.
-This isn't needed -- if the P2P context is in P2P
-device type mode it doesn't impose restrictions on
-timing to skip it in that case.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-scan.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 625beec..359d218 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -416,6 +416,8 @@ static u16 iwl_limit_dwell(struct iwl_priv *priv, u16 dwell_time)
- 
- 		if (!iwl_is_associated_ctx(ctx))
- 			continue;
-+		if (ctx->staging.dev_type == RXON_DEV_TYPE_P2P)
-+			continue;
- 		value = ctx->beacon_int;
- 		if (!value)
- 			value = IWL_PASSIVE_DWELL_BASE;
--- 
-1.7.0.4
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index 77f84f8..b416e27 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -477,8 +477,10 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 		if (!bus_if)
+ 			return -ENOMEM;
+ 		sdiodev = kzalloc(sizeof(struct brcmf_sdio_dev), GFP_KERNEL);
+-		if (!sdiodev)
++		if (!sdiodev) {
++			kfree(bus_if);
+ 			return -ENOMEM;
++		}
+ 		sdiodev->dev = &func->card->dev;
+ 		sdiodev->func[0] = func->card->sdio_func[0];
+ 		sdiodev->func[1] = func;
