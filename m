@@ -1,36 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:55575 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755504Ab1KWO3S (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:38589 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753024Ab1K3KSS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Nov 2011 09:29:18 -0500
-Received: by vcbfk14 with SMTP id fk14so358373vcb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Nov 2011 06:29:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201111230330.11103.tlnd@online.de>
-References: <201111230330.11103.tlnd@online.de>
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Date: Wed, 23 Nov 2011 06:28:57 -0800
-Message-ID: <CAB=NE6U6ru-xns8M+YUccqxw0FwE-sWtZnFkPUud3jHdAcDxsw@mail.gmail.com> (sfid-20111123_152921_163502_2D79E446)
-Subject: Re: [PATCH] cfg80211: Fix changing regulatory from userspace
-To: Timo Lindhorst <tlnd@online.de>
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
+	Wed, 30 Nov 2011 05:18:18 -0500
+Message-ID: <1322648286.6774.0.camel@phoenix> (sfid-20111130_111823_178117_D7BD6748)
+Subject: [PATCH] NFC: pn533: Staticise pn533_data_exchange()
+From: Axel Lin <axel.lin@gmail.com>
+To: linux-kernel@vger.kernel.org
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Date: Wed, 30 Nov 2011 18:18:06 +0800
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 22, 2011 at 6:30 PM, Timo Lindhorst <tlnd@online.de> wrote:
-> The commit de3584bd62d87b4c250129fbc46ca52c80330add -
-> "cfg80211: fix regulatory NULL dereference" prevents the regulatory
-> domain from being changed by user space. A wiphy is only present
-> if the request comes from driver or is set by country IE, thus
-> check only those cases.
->
-> Signed-off-by: Timo Lindhorst <tlnd@online.de>
+It is not used outside this driver so no need to make the symbol global.
 
-Yup but at this point I'd prefer we revert the original patch instead
-given that the patch also had some other short comings. John is it too
-late?
+Signed-off-by: Axel Lin <axel.lin@gmail.com>
+---
+ drivers/nfc/pn533.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-  Luis
+diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
+index bd02384..ea10f54 100644
+--- a/drivers/nfc/pn533.c
++++ b/drivers/nfc/pn533.c
+@@ -1339,7 +1339,7 @@ error:
+ 	return 0;
+ }
+ 
+-int pn533_data_exchange(struct nfc_dev *nfc_dev, u32 target_idx,
++static int pn533_data_exchange(struct nfc_dev *nfc_dev, u32 target_idx,
+ 						struct sk_buff *skb,
+ 						data_exchange_cb_t cb,
+ 						void *cb_context)
+-- 
+1.7.5.4
+
+
+
