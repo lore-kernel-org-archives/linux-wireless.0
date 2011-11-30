@@ -1,74 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:48127 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752626Ab1KYX4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Nov 2011 18:56:20 -0500
-Message-ID: <4ED02B1D.7030409@hauke-m.de> (sfid-20111126_005638_031072_33008E8E)
-Date: Sat, 26 Nov 2011 00:56:13 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mx1.redhat.com ([209.132.183.28]:28461 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752433Ab1K3PjD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Nov 2011 10:39:03 -0500
+Date: Wed, 30 Nov 2011 16:39:30 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from
+ iwl3945_rs_free_sta
+Message-ID: <20111130153929.GA2144@redhat.com> (sfid-20111130_163908_559584_15FF5EBC)
+References: <20111129100727.GD2675@tiehlicka.suse.cz>
+ <20111129113906.GA7299@redhat.com>
+ <20111130101028.GA2906@tiehlicka.suse.cz>
+ <20111130142316.GA2466@redhat.com>
+ <20111130140316.GA4153@tiehlicka.suse.cz>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-	=?UTF-8?B?TWljaGFlbCBCw7xzY2g=?= <m@bues.ch>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJl?= =?UTF-8?B?Y2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: bcma USB Host driver
-References: <4ECAC919.4080408@hauke-m.de> <4ECB8C82.5040003@broadcom.com>
-In-Reply-To: <4ECB8C82.5040003@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/mixed; boundary="OgqxwSJOaUobr8KG"
+In-Reply-To: <20111130140316.GA4153@tiehlicka.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
 
-On 11/22/2011 12:50 PM, Arend van Spriel wrote:
-> On 11/21/2011 10:56 PM, Hauke Mehrtens wrote:
->> Hi,
->>
->> To provide ehci and ohci at the same time I came up with some solutions:
->>
->> 1. The OHCI driver also initializes the EHCI driver, when it gets load
->> and is an USB 2.0 device. This is how it is done in OpenWrt and I do not
->> like it [1].
->> 2. bcma provides two devices with different identification and there are
->> two independ drivers working with it.
-> 
-> When doing this the wrapper access (bcma_aread/awrite) will have effect
-> on both not-so-independent drivers.
-Yes that will be a workaround for this problem and will probably cause
-problems when some other new features are added as we have an additional
-corner case to handle.
+--OgqxwSJOaUobr8KG
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
->> 3. bcma handles the usb registration directly and all code goes to
->> drivers/bcma/
-> 
-> Sound like mixing device driver functionality in a bus driver. It does
-> not feel right to me, but bcma is already handling chipcommon, and
-> pci(e) cores.
-> 
-> Main question would be whether a linux device driver can provide
-> multiple system functions. I tend to say it can. So I would suggest to
-> have a single device driver providing OHCI and EHCI functionality.
+On Wed, Nov 30, 2011 at 03:03:16PM +0100, Michal Hocko wrote:
+> No, didn't help unfortunately...
 
-@USB guys, how do I design a driver for a linux device providing ohci
-and ehci functionality at the same time. The device has two address
-spaces one for ehci and one for ohci functions.
-I thought about registering one controller (ehci or ohci) with
-usb_create_shared_hcd(). The code then will be in an own module and not
-in echi_hcd.ko and ochi_hcd.ko like for pci, I hope this works.
-Is there a better solution to do this, is there an other driver with the
-same problem already solved?
+Lets gather some more messages. Please apply attached simple patch,
+recompile with:
+CONFIG_MAC80211_DEBUG_MENU=y
+CONFIG_MAC80211_VERBOSE_DEBUG=y
+and provide dmesg.
 
->> 4. Is there some way like a platform device with a memory address which
->> I could register and which is then handled by the usb system?
->>
->> Are there any better approaches on how to do this? I do not think I am
->> the first person with such a problem.
->>
->> Hauke
->>
-> 
-> Gr. AvS
-> 
-> ps.: I polled again internally about et driver support. Keep you posted.
-> 
+Thanks
+Stanislaw
+
+--OgqxwSJOaUobr8KG
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="mac80211_debug.patch"
+
+diff --git a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
+index 8faeaf2..c728f94 100644
+--- a/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
++++ b/drivers/net/wireless/iwlegacy/iwl-3945-rs.c
+@@ -413,6 +413,7 @@ static void *iwl3945_rs_alloc_sta(void *iwl_priv, struct ieee80211_sta *sta, gfp
+ 	IWL_DEBUG_RATE(priv, "enter\n");
+ 
+ 	rs_sta = &psta->rs_sta;
++	printk("%s rs_sta %p\n", __func__, rs_sta);
+ 
+ 	spin_lock_init(&rs_sta->lock);
+ 	init_timer(&rs_sta->rate_scale_flush);
+@@ -432,6 +433,10 @@ static void iwl3945_rs_free_sta(void *iwl_priv, struct ieee80211_sta *sta,
+ 	 * to use iwl_priv to print out debugging) since it may not be fully
+ 	 * initialized at this point.
+ 	 */
++
++	printk("%s rs_sta %p\n", __func__, rs_sta);
++	if (WARN_ON(rs_sta->rate_scale_flush.base == NULL))
++		return;
+ 	del_timer_sync(&rs_sta->rate_scale_flush);
+ }
+ 
+
+--OgqxwSJOaUobr8KG--
