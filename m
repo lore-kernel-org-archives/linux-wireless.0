@@ -1,123 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3749 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750814Ab1KJTau (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Nov 2011 14:30:50 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Alwin Beukers" <alwin@broadcom.com>,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 13/19] brcm80211: smac: combine promiscuous mode
- functionality
-Date: Thu, 10 Nov 2011 20:30:28 +0100
-Message-ID: <1320953434-16859-15-git-send-email-arend@broadcom.com> (sfid-20111110_203054_258119_3B97BBF3)
-In-Reply-To: <1320953434-16859-1-git-send-email-arend@broadcom.com>
-References: <1320953434-16859-1-git-send-email-arend@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32091 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752377Ab1K3Pbl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Nov 2011 10:31:41 -0500
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2] ath9k_hw: Fix TX IQ calibration for AR9003
+Date: Wed, 30 Nov 2011 21:01:31 +0530
+Message-ID: <1322667091-1123-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111130_163144_568897_0DB2C0DF)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alwin Beukers <alwin@broadcom.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Combined mac configuration for promiscious mode and monitor mode, and
-removed unused monitor mode flag in pub structure.
+only for AR9485 (or) later chipsets TxIQ calibration
+runs as part of AGC calibration. without this patch
+TX IQ cal completion i.e. ar9003_hw_tx_iq_cal_run won't be executed
+for AR9003
 
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/main.c |   47 +++++++++---------------
- drivers/net/wireless/brcm80211/brcmsmac/pub.h  |    1 -
- 2 files changed, 17 insertions(+), 31 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 6a679c9..36e3e06 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -3583,42 +3583,30 @@ static void brcms_c_bandinit_ordered(struct brcms_c_info *wlc,
- 	brcms_c_set_phy_chanspec(wlc, chanspec);
- }
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8876134..2de52d2 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2332,7 +2332,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
  
--static void brcms_c_mac_bcn_promisc(struct brcms_c_info *wlc)
--{
--	if (wlc->bcnmisc_monitor)
--		brcms_b_mctrl(wlc->hw, MCTL_BCNS_PROMISC, MCTL_BCNS_PROMISC);
--	else
--		brcms_b_mctrl(wlc->hw, MCTL_BCNS_PROMISC, 0);
--}
--
--void brcms_c_mac_bcn_promisc_change(struct brcms_c_info *wlc, bool promisc)
--{
--	wlc->bcnmisc_monitor = promisc;
--	brcms_c_mac_bcn_promisc(wlc);
--}
--
--/* set or clear maccontrol bits MCTL_PROMISC and MCTL_KEEPCONTROL */
-+/*
-+ * Set or clear maccontrol bits MCTL_PROMISC, MCTL_BCNS_PROMISC and
-+ * MCTL_KEEPCONTROL
-+ */
- static void brcms_c_mac_promisc(struct brcms_c_info *wlc)
- {
- 	u32 promisc_bits = 0;
- 
--	/*
--	 * promiscuous mode just sets MCTL_PROMISC
--	 * Note: APs get all BSS traffic without the need to set
--	 * the MCTL_PROMISC bit since all BSS data traffic is
--	 * directed at the AP
--	 */
--	if (wlc->pub->promisc)
--		promisc_bits |= MCTL_PROMISC;
-+	if (wlc->bcnmisc_monitor)
-+		promisc_bits |= MCTL_BCNS_PROMISC;
- 
--	/* monitor mode needs both MCTL_PROMISC and MCTL_KEEPCONTROL
--	 * Note: monitor mode also needs MCTL_BCNS_PROMISC, but that is
--	 * handled in brcms_c_mac_bcn_promisc()
--	 */
- 	if (wlc->monitor)
--		promisc_bits |= MCTL_PROMISC | MCTL_KEEPCONTROL;
-+		promisc_bits |=
-+			MCTL_PROMISC | MCTL_BCNS_PROMISC | MCTL_KEEPCONTROL;
- 
--	brcms_b_mctrl(wlc->hw, MCTL_PROMISC | MCTL_KEEPCONTROL, promisc_bits);
-+	brcms_b_mctrl(wlc->hw,
-+			MCTL_PROMISC | MCTL_BCNS_PROMISC | MCTL_KEEPCONTROL,
-+			promisc_bits);
-+}
-+
-+void brcms_c_mac_bcn_promisc_change(struct brcms_c_info *wlc, bool promisc)
-+{
-+	wlc->bcnmisc_monitor = promisc;
-+	brcms_c_mac_promisc(wlc);
- }
- 
- /*
-@@ -3650,7 +3638,6 @@ static void brcms_c_ucode_mac_upd(struct brcms_c_info *wlc)
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		ah->enabled_cals |= TX_IQ_CAL;
+-		if (!AR_SREV_9330(ah))
++		if (AR_SREV_9485_OR_LATER(ah))
+ 			ah->enabled_cals |= TX_IQ_ON_AGC_CAL;
  	}
- 
- 	/* update the various promisc bits */
--	brcms_c_mac_bcn_promisc(wlc);
- 	brcms_c_mac_promisc(wlc);
- }
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-index 8f3da0e..21ccf3a 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
-@@ -381,7 +381,6 @@ struct brcms_pub {
- 	uint _nbands;		/* # bands supported */
- 	uint now;		/* # elapsed seconds */
- 
--	bool promisc;		/* promiscuous destination address */
- 	bool delayed_down;	/* down delayed */
- 	bool associated;	/* true:part of [I]BSS, false: not */
- 	/* (union of stas_associated, aps_associated) */
+ 	if (AR_SREV_9462(ah))
 -- 
-1.7.5.4
-
+1.7.0.4
 
