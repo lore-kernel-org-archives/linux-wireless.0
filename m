@@ -1,80 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:37796 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932780Ab1LFBaX (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59857 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752658Ab1LAQAr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Dec 2011 20:30:23 -0500
-Received: by ghrr1 with SMTP id r1so4985523ghr.19
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2011 17:30:23 -0800 (PST)
-Message-ID: <4EDD7026.9000308@lwfinger.net> (sfid-20111206_023029_009358_18963AD7)
-Date: Mon, 05 Dec 2011 19:30:14 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 1 Dec 2011 11:00:47 -0500
+Date: Thu, 1 Dec 2011 10:45:30 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Michal Hocko <mhocko@suse.cz>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, Yong Zhang <yong.zhang0@gmail.com>
+Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from
+ iwl3945_rs_free_sta
+Message-ID: <20111201154530.GA24074@tuxdriver.com> (sfid-20111201_170109_171260_158C3F01)
+References: <20111130101028.GA2906@tiehlicka.suse.cz>
+ <20111130142316.GA2466@redhat.com>
+ <20111130140316.GA4153@tiehlicka.suse.cz>
+ <20111130153929.GA2144@redhat.com>
+ <20111201085845.GA4602@tiehlicka.suse.cz>
+ <20111201105538.GA4504@tiehlicka.suse.cz>
+ <20111201115911.GA5706@redhat.com>
+ <20111201124440.GB25614@tiehlicka.suse.cz>
+ <20111201140500.GA4269@tiehlicka.suse.cz>
+ <CAB3XZEd1D7mR3Q_vweNHYUbZxmywbMi3FomQbdSy=1DB8Y0KzA@mail.gmail.com>
 MIME-Version: 1.0
-To: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Strange code in routine wlc_phy_radio_init_2057()
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAB3XZEd1D7mR3Q_vweNHYUbZxmywbMi3FomQbdSy=1DB8Y0KzA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In looking at the support code for Type 2057 radios in brcmsmac, I noticed the 
-following routine:
+On Thu, Dec 01, 2011 at 04:23:19PM +0200, Eliad Peller wrote:
+> On Thu, Dec 1, 2011 at 4:05 PM, Michal Hocko <mhocko@suse.cz> wrote:
+> > On Thu 01-12-11 13:44:40, Michal Hocko wrote:
+> >> On Thu 01-12-11 12:59:12, Stanislaw Gruszka wrote:
+> >> > On Thu, Dec 01, 2011 at 11:55:38AM +0100, Michal Hocko wrote:
+> >> > > [  349.316070] iwl3945_rs_free_sta rs_sta f4be1ac0
+> >> > > [  349.316076] ------------[ cut here ]------------
+> >> > > [  349.316097] WARNING: at drivers/net/wireless/iwlegacy/iwl-3945-rs.c:438 iwl3945_rs_free_sta+0x33/0x42 [iwl3945]()
+> >> >
+> >> > Johannes pointed on irc that this problem is most likely caused by:
+> >> >
+> >> > commit f785d83a19bca326f79d127a413e35769afc0105
+> >> > Author: Eliad Peller <eliad@wizery.com>
+> >> > Date:   Mon Aug 8 16:50:22 2011 +0300
+> >> >
+> >> >     mac80211: clear sta.drv_priv on reconfiguration
+> >> >
+> >> > Michal, could you confirm that? If that is the root of the problem, we
+> >> > need patch for iwlegacy (and iwlwifi) that allocate separate memory for
+> >> > rc structures.
+> >>
+> >> Should I just revert it?
+> >
+> > Reverted and guess what ;)
+> > Yeah, it works. So feel free to add
+> > Reported-adn-Tested-by: Michal Hocko <mhocko@suse.cz>
+> > to the revert.
+> >
+> cool. after giving it a second look, i agree with Stanislaw - let's
+> continue with the revert.
 
-static void wlc_phy_radio_init_2057(struct brcms_phy *pi)
-{
-         struct radio_20xx_regs *regs_2057_ptr = NULL;
+I'm reverting it now.
 
-         if (NREV_IS(pi->pubpi.phy_rev, 7)) {
-                 regs_2057_ptr = regs_2057_rev4;
-         } else if (NREV_IS(pi->pubpi.phy_rev, 8)
-                    || NREV_IS(pi->pubpi.phy_rev, 9)) {
-                 switch (pi->pubpi.radiorev) {
-                 case 5:
-                         if (pi->pubpi.radiover == 0x0)
-                                 regs_2057_ptr = regs_2057_rev5;
-                         else if (pi->pubpi.radiover == 0x1)
-                                 regs_2057_ptr = regs_2057_rev5v1;
-                         else
-                                 break;
-                 case 7:
-                         regs_2057_ptr = regs_2057_rev7;
-                         break;
-                 case 8:
-                         regs_2057_ptr = regs_2057_rev8;
-                         break;
-                 default:
-                         break;
-                 }
-         }
-         wlc_phy_init_radio_regs_allbands(pi, regs_2057_ptr);
-}
+> > Anyway, I have really no idea about the 80211 stack but the patch
+> > doesn't seem to be correct from the layering POV. Why should generic
+> > layer clear something that is driver private data (or at least the
+> > naming suggests that it is driver specific data)?
+> 
+> the driver should "know" the station (and its private data) only
+> between the .sta_add() and .sta_remove() callbacks.
+> on suspend, we do call sta_remove(), so it's valid to clear the private data.
+> 
+> the problem is that the rate control also uses the same private data,
+> and is valid also after sta_remove() was called. i think the right
+> solution is to split the generic private data and the rate control
+> private data.
 
-I do not think that the code for phy revisions 8 or 9, and radio revision 5 is 
-correct. When the radio version is 0, or 1, the case statement will fall through 
-to the radio revision 7 case, thereby negating the logic that sets regs_2057_ptr 
-for case 5.
+Sounds like a reasonable plan to me -- thanks for volunteering! :-)
 
-I think the following patch will fix it:
-
-Index: wireless-testing-new/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-+++ wireless-testing-new/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-@@ -19996,8 +19996,8 @@ static void wlc_phy_radio_init_2057(stru
-                                 regs_2057_ptr = regs_2057_rev5;
-                         else if (pi->pubpi.radiover == 0x1)
-                                 regs_2057_ptr = regs_2057_rev5v1;
--                       else
--                               break;
-+
-+                       break;
-
-                 case 7:
-
-
-Larry
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
