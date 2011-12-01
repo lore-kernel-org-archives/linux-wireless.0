@@ -1,63 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy4-pub.bluehost.com ([69.89.21.11]:46694 "HELO
-	oproxy4-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752414Ab1LVAwl (ORCPT
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:48771 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754403Ab1LAOge (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 19:52:41 -0500
-Message-ID: <4EF28D6A.7080505@xenotime.net> (sfid-20111222_015250_475123_27B843BD)
-Date: Wed, 21 Dec 2011 17:52:42 -0800
-From: Randy Dunlap <rdunlap@xenotime.net>
-MIME-Version: 1.0
-To: Samuel Ortiz <samuel@sortiz.org>
-CC: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: linux-next: Tree for Dec 19 (nfc)
-References: <20111219185556.f07c1f43e28cfd594aaa5fe0@canb.auug.org.au>	 <4EEFA21B.5010305@xenotime.net> <1324399181.5354.0.camel@sortiz-mobl>	 <4EF23A1F.60803@xenotime.net> <1324500160.5354.3.camel@sortiz-mobl>	 <4EF2569D.1070806@xenotime.net> <1324510522.5354.5.camel@sortiz-mobl>
-In-Reply-To: <1324510522.5354.5.camel@sortiz-mobl>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 1 Dec 2011 09:36:34 -0500
+Received: by mail-lpp01m010-f49.google.com with SMTP id u2so1123767lag.22
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Dec 2011 06:36:32 -0800 (PST)
+Subject: Re: [PATCH 1/2] wl12xx: make WL1271_FLAG_IDLE flag per-vif
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1320837504-12026-1-git-send-email-eliad@wizery.com>
+References: <1320837504-12026-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 01 Dec 2011 16:36:13 +0200
+Message-ID: <1322750173.8996.33.camel@cumari> (sfid-20111201_153637_250712_4A548447)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/21/2011 03:35 PM, Samuel Ortiz wrote:
-> On Wed, 2011-12-21 at 13:58 -0800, Randy Dunlap wrote:
->> On 12/21/2011 12:42 PM, Samuel Ortiz wrote:
->>> Hi Randy,
->>>
->>> On Wed, 2011-12-21 at 11:57 -0800, Randy Dunlap wrote:
->>>> On 12/20/2011 08:39 AM, Samuel Ortiz wrote:
->>>>> Hi Randy,
->>>>>
->>>>> On Mon, 2011-12-19 at 12:44 -0800, Randy Dunlap wrote:
->>>>>> On 12/18/2011 11:55 PM, Stephen Rothwell wrote:
->>>>>>> Hi all,
->>>>>>>
->>>>>>> Changes since 20111216:
->>>>>>
->>>>>>
->>>>>> (not new today, just not reported earlier)
->>>>> John applied my fix for this one. It should be fixed now.
->>>>
->>>> Hi Samuel,
->>>>
->>>> Is this supposed to be fixed in linux-next?
->>>> It still fails today (linux-next 20111221).
->>> Do you have a .config for me to look at ?
->>
->> Sure, one of several that failed is attached.
-> Thanks, I just tried this one and it seems to work fine. What's your
-> toolchain ?
-> I'm using: gcc version 4.6.2 (Debian 4.6.2-4)
+On Wed, 2011-11-09 at 13:18 +0200, Eliad Peller wrote: 
+> This flag should be set per-vif, rather than globally.
+> 
+> Rename the flag to indicate IN_USE (rather than IDLE), as
+> in the default configuration (i.e. flag is clear) the vif
+> should be idle.
+> 
+> Change all the bit operations (and elp conditions) appropriately.
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-I'm using:
-> gcc --version
-gcc (GCC) 4.5.2
-
-so maybe it is something that has been fixed in gcc...
-
-Thanks for checking the config.
+Applied both and did a tiny merge with Arik's "configure probe-resp
+template" patch.
 
 -- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+Cheers,
+Luca.
+
