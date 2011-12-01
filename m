@@ -1,79 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:50137 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751915Ab1LDLGE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Dec 2011 06:06:04 -0500
-Subject: Re: [PATCH v1 1/3] support for antenna configuration profiles
-From: Johannes Berg <johannes.berg@intel.com>
-To: Daniel Golle <dgolle@allnet.de>
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <20111128161240.GA25454@localhost> (sfid-20111128_171813_665159_36F11CCF)
-References: <20111128161240.GA25454@localhost>
-	 (sfid-20111128_171813_665159_36F11CCF)
-Date: Sun, 04 Dec 2011 12:06:00 +0100
-Message-ID: <1322996760.4633.7.camel@jlt3.sipsolutions.net> (sfid-20111204_120653_908311_213F3CAD)
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:4527 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753385Ab1LAMpI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Dec 2011 07:45:08 -0500
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] ath9k: clarify max_streams for AR9462
+Date: Thu, 1 Dec 2011 18:14:01 +0530
+Message-ID: <1322743441-3405-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111201_134512_623033_956333BB)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCAyMDExLTExLTI4IGF0IDE3OjEyICswMTAwLCBEYW5pZWwgR29sbGUgd3JvdGU6Cj4g
-VGhpcyBhZGRzIHN1cHBvcnQgZm9yIGFudGVubmEgc3dpdGNoIGNvbmZpZ3VyYXRpb24gcHJvZmls
-ZXMgdG8gbmw4MDIxMS4KCk1laCwgSSBjb3VsZG4ndCBmaW5kIHRoaXMgcGF0Y2ggYmVjYXVzZSB0
-aGUgc3ViamVjdHMgYXJlIGFsbCB3cm9uZy4KVGhyZWUgcGF0Y2hlcyB3aXRoIGV4YWN0bHkgdGhl
-IHNhbWUgc3ViamVjdD8hIENvbWUgb24uIEFsc28gcGxlYXNlIHVzZQp0aHJlYWRlZCBtb2RlIHRv
-IHN1Ym1pdCAtLSBvdGhlcndpc2UgdGhlIDAvTiBkaXNjdXNzaW9uICYgdGhlIHBhdGNoZXMKZ2V0
-IHRvcm4gYXBhcnQgKHdoaWNoIGlzIHRoZSByZWFzb24gSSdtIHJlcGx5aW5nIGhlcmUpLgoKQW55
-d2F5LCBlbm91Z2ggY29tcGxhaW5pbmcuCgoKPiAgLyoqCj4gKyAqIHN0cnVjdCB3aXBoeV9leHRh
-bnRfcHJvZmlsZSAtIFVzZXItcGFyc2FibGUgZXh0ZXJuYWwgYW50ZW5uYSBzd2l0Y2ggaW5mbwo+
-ICsgKgo+ICsgKiBUaGlzIHN0cnVjdHVyZSBpcyB1c2VkIHRvIHByb3ZpZGUgdGhlIGF2YWlsYWJs
-ZSBzd2l0Y2ggY29uZmlndXJhdGlvbnMuCj4gKyAqIEBpZDogdW5pcXVlIGlkZW50aWZpZXIgb2Yg
-dGhlIHByb2ZpbGUKPiArICogQG5hbWU6IHByb2ZpbGUgbmFtZSAoYSBzaG9ydCBzdHJpbmcpCj4g
-KyAqIEBkZXNjcmlwdGlvbjogdXNlci1wYXJzYWJsZSBkZXNjcmlwdGlvbiBvZiB0aGUgcHJvZmls
-ZQo+ICsgKi8KPiArc3RydWN0IHdpcGh5X2V4dGFudF9wcm9maWxlIHsKPiArCWludCBpZDsKPiAr
-CWNoYXIgKm5hbWU7Cj4gKwljaGFyICpkZXNjOwoKY29uc3QKCj4gKwlzdHJ1Y3Qgd2lwaHlfZXh0
-YW50X3Byb2ZpbGUgKmV4dGFudDsKCmNvbnN0CgpBbHNvLCBzaG91bGRuJ3QgdGhpcyBhbGxvdyBt
-dWx0aXBsZSBwcm9maWxlcz8KCkl0J3MgYSBiaXQgc3RyYW5nZSB0byBoYXZlIGEgcHJvZmlsZSBJ
-RCBidXQgdGhlbiBvbmx5IGEgc2luZ2xlCnByb2ZpbGUgLi4uCgo+ICsvKiBwb2xpY3kgZm9yIGV4
-dGVybmFsIGFudGVubmEgc3dpdGNoIGNvbmZpZ3VyYXRpb24gcHJvZmlsZXMgKi8KPiArc3RhdGlj
-IGNvbnN0IHN0cnVjdCBubGFfcG9saWN5Cj4gK25sODAyMTFfZWFzcF9wb2xpY3lbTkw4MDIxMV9F
-QVNQX0FUVFJfTUFYICsgMV0gPSB7Cj4gKwlbTkw4MDIxMV9FQVNQX0FUVFJfSURdID0geyAudHlw
-ZSA9IE5MQV9VMzIgfSwKPiArCVtOTDgwMjExX0VBU1BfQVRUUl9OQU1FXSA9IHsgLnR5cGUgPSBO
-TEFfU1RSSU5HLAo+ICsJCQkJCS5sZW4gPSBJRUVFODAyMTFfTUFYX0RBVEFfTEVOIH0sCj4gKwlb
-Tkw4MDIxMV9FQVNQX0FUVFJfREVTQ10gPSB7IC50eXBlID0gTkxBX1NUUklORywKPiArCQkJCQku
-bGVuID0gSUVFRTgwMjExX01BWF9EQVRBX0xFTiB9LAo+ICt9OwoKVGhvc2UgbGVuZ3RoIHJlc3Ry
-aWN0aW9ucyBhcmUgY29tcGxldGVseSBib2d1cywgYnV0IHRoZXkncmUgYWxzbwp1bm5lY2Vzc2Fy
-eSBzaW5jZSB0aGlzIGRhdGEgaXMgb3V0cHV0IGRhdGEgb25seSBzbyB5b3UgYXJlbid0IHVzaW5n
-IHRoZQpwb2xpY3kgYW55d2hlcmUgYW55d2F5LgoKPiBAQCAtNzgxLDYgKzc5Niw0OCBAQCBzdGF0
-aWMgaW50IG5sODAyMTFfc2VuZF93aXBoeShzdHJ1Y3Qgc2tfYnVmZiAqbXNnLCB1MzIgcGlkLCB1
-MzIgc2VxLCBpbnQgZmxhZ3MsCj4gIAkJfQo+ICAJfQo+ICAKPiArCS8qCj4gKwkgKiBhbnRlbm5h
-IHN3aXRjaCBjb25maWd1cmF0aW9uIHByb2ZpbGUgc3VwcG9ydAo+ICsJICovCj4gKwlpZiAoZGV2
-LT53aXBoeS5mbGFncyAmIFdJUEhZX0ZMQUdfSEFTX0VYVEFOVF9TV0lUQ0gpIHsKPiArCQlzdHJ1
-Y3Qgd2lwaHlfZXh0YW50X3Byb2ZpbGUgKndlcHJvZjsKPiArCQlubF9leHRhbnQgPSBubGFfbmVz
-dF9zdGFydChtc2csIE5MODAyMTFfQVRUUl9XSVBIWV9FWFRBTlQpOwo+ICsJCWlmICghbmxfZXh0
-YW50KQo+ICsJCQlnb3RvIG5sYV9wdXRfZmFpbHVyZTsKPiArCj4gKwkJLyogY3VycmVudGx5IHNl
-bGVjdGVkIGNvbmZpZ3VyYXRpb24gcHJvZmlsZSAqLwo+ICsJCWlmIChkZXYtPm9wcy0+Z2V0X2V4
-dGFudCkgewo+ICsJCQl1MzIgZXh0YW50Owo+ICsJCQlpbnQgcmVzOwo+ICsJCQlyZXMgPSBkZXYt
-Pm9wcy0+Z2V0X2V4dGFudCgmZGV2LT53aXBoeSwgJmV4dGFudCk7Cj4gKwkJCWlmICghcmVzKQo+
-ICsJCQkJTkxBX1BVVF9VMzIobXNnLAo+ICsJCQkJCU5MODAyMTFfRVhUQU5UX0FUVFJfU1RBVEUs
-Cj4gKwkJCQkJZXh0YW50KTsKPiArCQl9Cj4gKwo+ICsJCS8qIGF2YWlsYWJsZSBwcm9maWxlcyAq
-Lwo+ICsJCWk9MDsKPiArCQlubF9lYXNwcyA9IG5sYV9uZXN0X3N0YXJ0KG1zZywgTkw4MDIxMV9F
-WFRBTlRfQVRUUl9QUk9GSUxFUyk7Cj4gKwkJZm9yICh3ZXByb2YgPSBkZXYtPndpcGh5LmV4dGFu
-dDsgd2Vwcm9mLT5pZCA+PSAwOyB3ZXByb2YrKykgewoKT2ggc28gdGhhdCdzIHN1cHBvc2VkIHRv
-IGJlIGFuIGFycmF5IC0tIHRoZXJlJ3Mgbm8gd2F5IHRvIHRlbGwgdGhpcyBmcm9tCnRoZSBoZWFk
-ZXIgZmlsZXMuIEl0J3MgYWNjZXB0YWJsZSwgYnV0IHBsZWFzZSBnaXZlIGl0IGFuIGV4cGxpY2l0
-Cmxlbmd0aC4KCgpBbnl3YXksIGFwYXJ0IGZyb20gdGhlc2UgdGVjaG5pY2FsIGlzc3VlcyB0aGF0
-IHlvdSBtdXN0IGZpeCwgSSBhbHNvIHdhbnQKc29tZWJvZHkgd2hvIGtub3dzIHdoYXQgdGhpcyBp
-cyB1c2VkIGZvciBhbmQgaG93IGl0IGlzIHVzZWQgdG8gcmV2aWV3Cml0LCB3aGljaCBtaWdodCBt
-ZWFuIHdhaXRpbmcgZm9yIEFkcmlhbiB3aG8gc2F5cyBpdCdsbCBiZSBhIGNvdXBsZSBvZgp3ZWVr
-cyBhdCBsZWFzdC4KCmpvaGFubmVzCgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpJbnRl
-bCBHbWJICkRvcm5hY2hlciBTdHJhc3NlIDEKODU2MjIgRmVsZGtpcmNoZW4vTXVlbmNoZW4sIERl
-dXRzY2hsYW5kIApTaXR6IGRlciBHZXNlbGxzY2hhZnQ6IEZlbGRraXJjaGVuIGJlaSBNdWVuY2hl
-bgpHZXNjaGFlZnRzZnVlaHJlcjogRG91Z2xhcyBMdXNrLCBQZXRlciBHbGVpc3NuZXIsIEhhbm5l
-cyBTY2h3YWRlcmVyClJlZ2lzdGVyZ2VyaWNodDogTXVlbmNoZW4gSFJCIDQ3NDU2IApVc3QuLUlk
-TnIuL1ZBVCBSZWdpc3RyYXRpb24gTm8uOiBERTEyOTM4NTg5NQpDaXRpYmFuayBGcmFua2Z1cnQg
-YS5NLiAoQkxaIDUwMiAxMDkgMDApIDYwMDExOTA1Mgo=
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+
+max_streams for AR9462 is '2'. it does not fixes anything, but
+improves the code readability
+
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index e9711e2..41b72fa 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -258,6 +258,8 @@ static void setup_ht_cap(struct ath_softc *sc,
+ 
+ 	if (AR_SREV_9330(ah) || AR_SREV_9485(ah))
+ 		max_streams = 1;
++	else if (AR_SREV_9462(ah))
++		max_streams = 2;
+ 	else if (AR_SREV_9300_20_OR_LATER(ah))
+ 		max_streams = 3;
+ 	else
+-- 
+1.7.0.4
 
