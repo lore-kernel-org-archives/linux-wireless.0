@@ -1,21 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:59028 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751105Ab1LJVKd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Dec 2011 16:10:33 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 1CFCE540204
-	for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2011 16:10:32 -0500 (EST)
-Subject: Compat-wireless release for 2011-12-10 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20111210211031.EFC0340632@repository3.orbit-lab.org> (sfid-20111210_221039_557269_B5449185)
-Date: Sat, 10 Dec 2011 16:10:31 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+Received: from mail2.unitix.de ([176.9.2.175]:49799 "EHLO mail2.unitix.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756218Ab1LATRh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Dec 2011 14:17:37 -0500
+Message-ID: <4ED7D2CB.6010001@arndnet.de> (sfid-20111201_201755_615558_3976C84A)
+Date: Thu, 01 Dec 2011 20:17:31 +0100
+From: Arnd Hannemann <arnd@arndnet.de>
+MIME-Version: 1.0
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+CC: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: 3.2.0-rc2: WARNING: at iwlwifi/wl-trans-pcie.c:1105
+References: <4EC6DE6B.3080603@arndnet.de> <4ECB65A5.3010009@arndnet.de> <CANUX_P1RXxRuybzj0gavVOkN-a3H_qRO45S1nc3oPq1aZe5V3g@mail.gmail.com> <4ECD5CA7.4080606@arndnet.de> <CANUX_P29L-o8-KQ_G9i1b8NzJtHcmRBbDS_88-oKMVU_jiMY8Q@mail.gmail.com> <4ECEBD5A.9090307@arndnet.de> <CANUX_P3TMPeTJmcBbCe=97XMVw7=wAUymFv17W=YUAirgO8+uQ@mail.gmail.com>
+In-Reply-To: <CANUX_P3TMPeTJmcBbCe=97XMVw7=wAUymFv17W=YUAirgO8+uQ@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Am 29.11.2011 10:50, schrieb Emmanuel Grumbach:
+> On Thu, Nov 24, 2011 at 23:55, Arnd Hannemann <arnd@arndnet.de> wrote:
+>> Hi,
+>>
+>> Am 24.11.2011 07:23, schrieb Emmanuel Grumbach:
+>>>>
+>>>> I applied the QUEUE_DEBUG.patch you posted in the other thread, not sure if I'm experiencing the same problem:
+>>>
+>>> Yes, it looks similar. Please enable the MAC80211_HT_DEBUG compilation flag too.
+>>> In any case now that I more the less see what is happening, I am
+>>> working now on another debug patch.
+>>
+...
 
-compat-wireless code metrics
+> Sorry, somehow I saw the mail only now. This one should make it
+> 
+> http://www.spinics.net/lists/linux-wireless/msg81131.html
 
-    823151 - Total upstream lines of code being pulled
+JFYI: I'm currently running on Linus git from Monday (last commit 4244cb482e8eab18142162a27c8829a04585863a)
+for a while now and didn't have seen this Warning yet, nor did I experience the described lag.
+Maybe some other patch might already have fixed it or at least lessen the probability for the
+previous bug to occur.
+
+Best regards
+Arnd
