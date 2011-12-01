@@ -1,47 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:61617 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750881Ab1LLGgm convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:40651 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754340Ab1LAOao convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 01:36:42 -0500
+	Thu, 1 Dec 2011 09:30:44 -0500
 MIME-Version: 1.0
-In-Reply-To: <j8fvka$fu0$1@dough.gmane.org>
-References: <j881g5$tdf$1@dough.gmane.org> <alpine.DEB.2.00.1110252325090.20273@chino.kir.corp.google.com>
- <j8fvka$fu0$1@dough.gmane.org>
-From: =?UTF-8?Q?Mat=C3=ADas_Aguirre?= <matiasaguirre@gmail.com>
-Date: Mon, 12 Dec 2011 04:36:20 -0200
-Message-ID: <CA+tb8OUHNbhVN_KiEkqXJW1apFoExRM5Vrn=ES5SF3sFoGOMfA@mail.gmail.com> (sfid-20111212_073648_299084_903B62BF)
-Subject: Re: wifi iwlagn fails to authenticate after wake from suspend
-To: Gene Smith <gds@chartertn.net>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20111201140500.GA4269@tiehlicka.suse.cz>
+References: <20111129100727.GD2675@tiehlicka.suse.cz>
+	<20111129113906.GA7299@redhat.com>
+	<20111130101028.GA2906@tiehlicka.suse.cz>
+	<20111130142316.GA2466@redhat.com>
+	<20111130140316.GA4153@tiehlicka.suse.cz>
+	<20111130153929.GA2144@redhat.com>
+	<20111201085845.GA4602@tiehlicka.suse.cz>
+	<20111201105538.GA4504@tiehlicka.suse.cz>
+	<20111201115911.GA5706@redhat.com>
+	<20111201124440.GB25614@tiehlicka.suse.cz>
+	<20111201140500.GA4269@tiehlicka.suse.cz>
+Date: Thu, 1 Dec 2011 16:23:19 +0200
+Message-ID: <CAB3XZEd1D7mR3Q_vweNHYUbZxmywbMi3FomQbdSy=1DB8Y0KzA@mail.gmail.com> (sfid-20111201_153102_670408_6D012E01)
+Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from iwl3945_rs_free_sta
+From: Eliad Peller <eliad@wizery.com>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Yong Zhang <yong.zhang0@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, Dec 1, 2011 at 4:05 PM, Michal Hocko <mhocko@suse.cz> wrote:
+> On Thu 01-12-11 13:44:40, Michal Hocko wrote:
+>> On Thu 01-12-11 12:59:12, Stanislaw Gruszka wrote:
+>> > On Thu, Dec 01, 2011 at 11:55:38AM +0100, Michal Hocko wrote:
+>> > > [  349.316070] iwl3945_rs_free_sta rs_sta f4be1ac0
+>> > > [  349.316076] ------------[ cut here ]------------
+>> > > [  349.316097] WARNING: at drivers/net/wireless/iwlegacy/iwl-3945-rs.c:438 iwl3945_rs_free_sta+0x33/0x42 [iwl3945]()
+>> >
+>> > Johannes pointed on irc that this problem is most likely caused by:
+>> >
+>> > commit f785d83a19bca326f79d127a413e35769afc0105
+>> > Author: Eliad Peller <eliad@wizery.com>
+>> > Date:   Mon Aug 8 16:50:22 2011 +0300
+>> >
+>> >     mac80211: clear sta.drv_priv on reconfiguration
+>> >
+>> > Michal, could you confirm that? If that is the root of the problem, we
+>> > need patch for iwlegacy (and iwlwifi) that allocate separate memory for
+>> > rc structures.
+>>
+>> Should I just revert it?
+>
+> Reverted and guess what ;)
+> Yeah, it works. So feel free to add
+> Reported-adn-Tested-by: Michal Hocko <mhocko@suse.cz>
+> to the revert.
+>
+cool. after giving it a second look, i agree with Stanislaw - let's
+continue with the revert.
 
-On Sat, Oct 29, 2011 at 2:32 AM, Gene Smith <gds@chartertn.net> wrote:
-> David Rientjes wrote, On 10/26/2011 02:27 AM:
->> So we need to bisect between 2.4.38 and 3.0.0? :) Â I'm running ubuntu
->> 11.10 on a home laptop so I'll give this a try as well when I can if I can
->> put up with unity for that long.
+> Anyway, I have really no idea about the 80211 stack but the patch
+> doesn't seem to be correct from the layering POV. Why should generic
+> layer clear something that is driver private data (or at least the
+> naming suggests that it is driver specific data)?
 
-I've bisected the problem and narrowed the bug to changeset 73b78a2272
-(http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=73b78a22720087d2d384bdd49e9c25500ba73edd).
+the driver should "know" the station (and its private data) only
+between the .sta_add() and .sta_remove() callbacks.
+on suspend, we do call sta_remove(), so it's valid to clear the private data.
 
-Here's a patch, that applies against 3.2-rc5, that fixed the error for me:
+the problem is that the rate control also uses the same private data,
+and is valid also after sta_remove() was called. i think the right
+solution is to split the generic private data and the rate control
+private data.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c
-b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index bacc06c..01d5d38 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1297,7 +1297,7 @@ int iwl_alive_start(struct iwl_priv *priv)
-                                         BT_COEX_PRIO_TBL_EVT_INIT_CALIB2);
-                if (ret)
-                        return ret;
--       } else {
-+       } else if (priv->cfg->bt_params) {
-                /*
-                 * default is 2-wire BT coexexistence support
-                 */
+Eliad.
