@@ -1,54 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:42307 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753260Ab1LBXdc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Dec 2011 18:33:32 -0500
-Received: from compute3.internal (compute3.nyi.mail.srv.osa [10.202.2.43])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id E67CD2132D
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Dec 2011 18:33:31 -0500 (EST)
-Date: Fri, 2 Dec 2011 15:32:56 -0800
-From: Greg KH <greg@kroah.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Johan Hovold <jhovold@gmail.com>,
+Received: from mx1.redhat.com ([209.132.183.28]:17078 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754172Ab1LANbE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Dec 2011 08:31:04 -0500
+Date: Thu, 1 Dec 2011 14:31:17 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Michal Hocko <mhocko@suse.cz>, LKML <linux-kernel@vger.kernel.org>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: stable-3.1: iwlwifi broken with nomsi
-Message-ID: <20111202233256.GA605@kroah.com> (sfid-20111203_003337_430817_E43E4BC0)
-References: <20111128195939.GA15362@localhost>
- <20111202231858.GC6016@kroah.com>
- <1322864922.13074.27.camel@wwguy-huron>
+	linux-wireless@vger.kernel.org, Yong Zhang <yong.zhang0@gmail.com>
+Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from
+ iwl3945_rs_free_sta
+Message-ID: <20111201133116.GD5706@redhat.com> (sfid-20111201_143125_928608_D5C5F87E)
+References: <20111130101028.GA2906@tiehlicka.suse.cz>
+ <20111130142316.GA2466@redhat.com>
+ <20111130140316.GA4153@tiehlicka.suse.cz>
+ <20111130153929.GA2144@redhat.com>
+ <20111201085845.GA4602@tiehlicka.suse.cz>
+ <20111201105538.GA4504@tiehlicka.suse.cz>
+ <20111201115911.GA5706@redhat.com>
+ <20111201124440.GB25614@tiehlicka.suse.cz>
+ <20111201125554.GC5706@redhat.com>
+ <CAB3XZEeNF8_U__rOPMfiOFNjPTS6gb33CSjdwkhMdRmS+i3CTw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1322864922.13074.27.camel@wwguy-huron>
+In-Reply-To: <CAB3XZEeNF8_U__rOPMfiOFNjPTS6gb33CSjdwkhMdRmS+i3CTw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 02, 2011 at 02:28:42PM -0800, Guy, Wey-Yi wrote:
-> On Fri, 2011-12-02 at 15:18 -0800, Greg KH wrote:
-> > On Mon, Nov 28, 2011 at 08:59:39PM +0100, Johan Hovold wrote:
-> > > Hi Greg, 
-> > > 
-> > > I believe commit 63665158282dd3b5d70 (iwlwifi: allow pci_enable_msi fail)
-> > > needs to be added to the 3.1 stable tree as the driver fails to probe
-> > > with MSI disabled since commit 084dd79172cb3 (iwlagn: move PCI related
-> > > operations from probe and remove to PCI layer) without it:
-> > 
-> > I do not see commit 63665158282dd3b5d70 in Linus's tree, did you get it
-> > incorrect?
-> > 
-> > confused,
-> > 
-> it is commit#8a39ef8ba0fa0410d71db8e981e887fe4fdeca88 in Linville's
-> wireless tree
+On Thu, Dec 01, 2011 at 03:13:42PM +0200, Eliad Peller wrote:
+> i don't really care about temporarily reverting it.
+> but maybe you can just add an "initialized" flag to iwl3945_rs_sta,
+> and check it on free_sta?
 
-How nice, and what exactly can I do with that at this point in time?
+This is not right solution, that will prevent hangs though, but
+we generally wipe out used data, so any other problem could be
+triggered.
 
-{sigh}
-
-Come on, please go read Documentation/stable_kernel_rules.txt again for
-how to do this properly...
-
-greg k-h
+Stanislaw 
