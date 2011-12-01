@@ -1,48 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:36112 "EHLO mga03.intel.com"
+Received: from cantor2.suse.de ([195.135.220.15]:36675 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755155Ab1LNPid (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 10:38:33 -0500
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 3/8] NFC: Do not take the genl mutex from the netlink release notifier
-Date: Wed, 14 Dec 2011 16:43:07 +0100
-Message-Id: <1323877392-20567-4-git-send-email-sameo@linux.intel.com> (sfid-20111214_163836_095213_D963DB93)
-In-Reply-To: <1323877392-20567-1-git-send-email-sameo@linux.intel.com>
-References: <1323877392-20567-1-git-send-email-sameo@linux.intel.com>
+	id S1754215Ab1LAOFF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Dec 2011 09:05:05 -0500
+Date: Thu, 1 Dec 2011 15:05:00 +0100
+From: Michal Hocko <mhocko@suse.cz>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Yong Zhang <yong.zhang0@gmail.com>
+Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from
+ iwl3945_rs_free_sta
+Message-ID: <20111201140500.GA4269@tiehlicka.suse.cz> (sfid-20111201_150510_299146_A793FF6B)
+References: <20111129100727.GD2675@tiehlicka.suse.cz>
+ <20111129113906.GA7299@redhat.com>
+ <20111130101028.GA2906@tiehlicka.suse.cz>
+ <20111130142316.GA2466@redhat.com>
+ <20111130140316.GA4153@tiehlicka.suse.cz>
+ <20111130153929.GA2144@redhat.com>
+ <20111201085845.GA4602@tiehlicka.suse.cz>
+ <20111201105538.GA4504@tiehlicka.suse.cz>
+ <20111201115911.GA5706@redhat.com>
+ <20111201124440.GB25614@tiehlicka.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111201124440.GB25614@tiehlicka.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The netlink notifier is atomic so we must not sleep in that context.
-Also we know that Any netlink packets arriving to us will be purged when
-the notifier is called, so we don't need to take the mutex.
+On Thu 01-12-11 13:44:40, Michal Hocko wrote:
+> On Thu 01-12-11 12:59:12, Stanislaw Gruszka wrote:
+> > On Thu, Dec 01, 2011 at 11:55:38AM +0100, Michal Hocko wrote:
+> > > [  349.316070] iwl3945_rs_free_sta rs_sta f4be1ac0
+> > > [  349.316076] ------------[ cut here ]------------
+> > > [  349.316097] WARNING: at drivers/net/wireless/iwlegacy/iwl-3945-rs.c:438 iwl3945_rs_free_sta+0x33/0x42 [iwl3945]()
+> > 
+> > Johannes pointed on irc that this problem is most likely caused by:
+> > 
+> > commit f785d83a19bca326f79d127a413e35769afc0105
+> > Author: Eliad Peller <eliad@wizery.com>
+> > Date:   Mon Aug 8 16:50:22 2011 +0300
+> > 
+> >     mac80211: clear sta.drv_priv on reconfiguration
+> > 
+> > Michal, could you confirm that? If that is the root of the problem, we
+> > need patch for iwlegacy (and iwlwifi) that allocate separate memory for
+> > rc structures.
+> 
+> Should I just revert it?
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/netlink.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+Reverted and guess what ;)
+Yeah, it works. So feel free to add
+Reported-adn-Tested-by: Michal Hocko <mhocko@suse.cz>
+to the revert.
 
-diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
-index 061711f..1d76d38 100644
---- a/net/nfc/netlink.c
-+++ b/net/nfc/netlink.c
-@@ -504,12 +504,10 @@ static int nfc_genl_rcv_nl_event(struct notifier_block *this,
- 	dev = nfc_device_iter_next(&iter);
- 
- 	while (dev) {
--		mutex_lock(&dev->genl_data.genl_data_mutex);
- 		if (dev->genl_data.poll_req_pid == n->pid) {
- 			nfc_stop_poll(dev);
- 			dev->genl_data.poll_req_pid = 0;
- 		}
--		mutex_unlock(&dev->genl_data.genl_data_mutex);
- 		dev = nfc_device_iter_next(&iter);
- 	}
- 
+Anyway, I have really no idea about the 80211 stack but the patch
+doesn't seem to be correct from the layering POV. Why should generic
+layer clear something that is driver private data (or at least the
+naming suggests that it is driver specific data)?
+
+Thanks a lot for your help.
 -- 
-1.7.7.3
-
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
