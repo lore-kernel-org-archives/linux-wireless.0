@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:25949 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752621Ab1LBXhV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Dec 2011 18:37:21 -0500
-Subject: Re: stable-3.1: iwlwifi broken with nomsi
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Greg KH <greg@kroah.com>
-Cc: Johan Hovold <jhovold@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-In-Reply-To: <20111202233256.GA605@kroah.com>
-References: <20111128195939.GA15362@localhost>
-	 <20111202231858.GC6016@kroah.com> <1322864922.13074.27.camel@wwguy-huron>
-	 <20111202233256.GA605@kroah.com>
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:58542 "EHLO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754780Ab1LAOhJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Dec 2011 09:37:09 -0500
+Received: by mail-lpp01m010-f53.google.com with SMTP id l5so218020lah.40
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Dec 2011 06:37:05 -0800 (PST)
+Subject: Re: [PATCH] wl12xx: avoid bail out when probe-resp is not set by
+ mac80211
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1321984379-1565-1-git-send-email-arik@wizery.com>
+References: <1321984379-1565-1-git-send-email-arik@wizery.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 02 Dec 2011 14:39:44 -0800
-Message-ID: <1322865584.13074.29.camel@wwguy-huron> (sfid-20111203_003724_673715_3570000B)
+Date: Thu, 01 Dec 2011 16:37:02 +0200
+Message-ID: <1322750222.8996.34.camel@cumari> (sfid-20111201_153714_006946_16810B6E)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Greg,
-
-On Fri, 2011-12-02 at 15:32 -0800, Greg KH wrote:
-> On Fri, Dec 02, 2011 at 02:28:42PM -0800, Guy, Wey-Yi wrote:
-> > On Fri, 2011-12-02 at 15:18 -0800, Greg KH wrote:
-> > > On Mon, Nov 28, 2011 at 08:59:39PM +0100, Johan Hovold wrote:
-> > > > Hi Greg, 
-> > > > 
-> > > > I believe commit 63665158282dd3b5d70 (iwlwifi: allow pci_enable_msi fail)
-> > > > needs to be added to the 3.1 stable tree as the driver fails to probe
-> > > > with MSI disabled since commit 084dd79172cb3 (iwlagn: move PCI related
-> > > > operations from probe and remove to PCI layer) without it:
-> > > 
-> > > I do not see commit 63665158282dd3b5d70 in Linus's tree, did you get it
-> > > incorrect?
-> > > 
-> > > confused,
-> > > 
-> > it is commit#8a39ef8ba0fa0410d71db8e981e887fe4fdeca88 in Linville's
-> > wireless tree
+On Tue, 2011-11-22 at 19:52 +0200, Arik Nemtsov wrote: 
+> During reconfig we can get the BSS_CHANGED_AP_PROBE_RESP indication
+> even if a probe-resp has not been set in the first place. Therefore
+> ignore the error when not getting a probe-resp from mac80211. Resort to
+> the legacy probe-resp in this case.
 > 
-> How nice, and what exactly can I do with that at this point in time?
+> Also take this opportunity to add a vif argument to the set_probe_resp
+> function.
 > 
-Can I send the patch to you for stable 3.1?
+> Reported-by: Eliad Peller <eliad@wizery.com>
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
 
-> 
-> Come on, please go read Documentation/stable_kernel_rules.txt again for
-> how to do this properly...
-> 
+Applied.  Thanks!
 
-Sorry, my mistake and did not realize the offending patch is in 3.1
-already.
-
-Wey
-
-
-
+-- 
+Cheers,
+Luca.
 
