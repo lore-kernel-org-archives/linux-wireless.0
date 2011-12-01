@@ -1,72 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:35269 "EHLO
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:42001 "EHLO
 	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752534Ab1LGJ7p convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1753646Ab1LANNm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Dec 2011 04:59:45 -0500
+	Thu, 1 Dec 2011 08:13:42 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAJ-VmomuA7u5=zRGMK2Jd3WG+HWTRTZNST4JDVWU9kUEcfE91Q@mail.gmail.com>
-References: <CAA93jw7kQYONQiAozatRmdRRJeK0GB9eNDWtRZ3AL+OVKn0OpA@mail.gmail.com>
-	<1323082774.2670.40.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
-	<CAJ-VmomuA7u5=zRGMK2Jd3WG+HWTRTZNST4JDVWU9kUEcfE91Q@mail.gmail.com>
-Date: Wed, 7 Dec 2011 10:59:45 +0100
-Message-ID: <CAA93jw6w1KAUwW0_TTwCuAScMnq1+RUQzLGZsRqPy_txPGbcjw@mail.gmail.com> (sfid-20111207_105955_437326_F9146500)
-Subject: Re: Time in Queue, bufferbloat, and... our accidentally
- interplanetary network
-From: Dave Taht <dave.taht@gmail.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Eric Dumazet <eric.dumazet@gmail.com>,
-	bloat <bloat@lists.bufferbloat.net>,
-	bloat-devel <bloat-devel@lists.bufferbloat.net>,
-	netdev@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20111201125554.GC5706@redhat.com>
+References: <20111129100727.GD2675@tiehlicka.suse.cz>
+	<20111129113906.GA7299@redhat.com>
+	<20111130101028.GA2906@tiehlicka.suse.cz>
+	<20111130142316.GA2466@redhat.com>
+	<20111130140316.GA4153@tiehlicka.suse.cz>
+	<20111130153929.GA2144@redhat.com>
+	<20111201085845.GA4602@tiehlicka.suse.cz>
+	<20111201105538.GA4504@tiehlicka.suse.cz>
+	<20111201115911.GA5706@redhat.com>
+	<20111201124440.GB25614@tiehlicka.suse.cz>
+	<20111201125554.GC5706@redhat.com>
+Date: Thu, 1 Dec 2011 15:13:42 +0200
+Message-ID: <CAB3XZEeNF8_U__rOPMfiOFNjPTS6gb33CSjdwkhMdRmS+i3CTw@mail.gmail.com> (sfid-20111201_141403_026710_6E0FF4AE)
+Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from iwl3945_rs_free_sta
+From: Eliad Peller <eliad@wizery.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Michal Hocko <mhocko@suse.cz>, LKML <linux-kernel@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, Yong Zhang <yong.zhang0@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 6, 2011 at 3:03 AM, Adrian Chadd <adrian@freebsd.org> wrote:
-> Hi,
+On Thu, Dec 1, 2011 at 2:55 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Thu, Dec 01, 2011 at 01:44:40PM +0100, Michal Hocko wrote:
+>> On Thu 01-12-11 12:59:12, Stanislaw Gruszka wrote:
+>> > On Thu, Dec 01, 2011 at 11:55:38AM +0100, Michal Hocko wrote:
+>> > > [  349.316070] iwl3945_rs_free_sta rs_sta f4be1ac0
+>> > > [  349.316076] ------------[ cut here ]------------
+>> > > [  349.316097] WARNING: at drivers/net/wireless/iwlegacy/iwl-3945-rs.c:438 iwl3945_rs_free_sta+0x33/0x42 [iwl3945]()
+>> >
+>> > Johannes pointed on irc that this problem is most likely caused by:
+>> >
+>> > commit f785d83a19bca326f79d127a413e35769afc0105
+>> > Author: Eliad Peller <eliad@wizery.com>
+>> > Date:   Mon Aug 8 16:50:22 2011 +0300
+>> >
+>> >     mac80211: clear sta.drv_priv on reconfiguration
+>> >
+>> > Michal, could you confirm that? If that is the root of the problem, we
+>> > need patch for iwlegacy (and iwlwifi) that allocate separate memory for
+>> > rc structures.
+> Actually this require quite big changes in iwlegacy at least, perhaps
+> also in iwlwifi. I prefer to revert commit as temporary fix,  and add
+> memset(0) to drivers .add_sta callback, in drivers which need it. After
+> changing iwlegcy/iwlwifi we could move memset(0) back to ieee80211_reconfig().
 >
-> For what it's worth, I've also been tinkering with time-in-queue for
-> the wifi queue management in FreeBSD. I don't have anything public
-> yet. What I have done actually seems to work quite well, when doing TX
-> queue time-in-queue management. (I'm ignoring RX queue management for
-> now.)
+> Eliad, thoughts?
 >
-> Yes, I think a weighted random drop with both time-in-queue and queue
-> depth would work well. I haven't sat down to model what it'd look like
-> given some traffic profiles.
->
-> I'll be sure to post some patches and results when I have them. :)
+i don't really care about temporarily reverting it.
+but maybe you can just add an "initialized" flag to iwl3945_rs_sta,
+and check it on free_sta?
 
-Well, if there is a way to add BQL sanely to the mac80211 or driver
-layers and then apply some time in queue techniques at some edge
-of some layer(s) down there in Linux, I'd love to know what and where
-is good.
-
-It might be simpler to discuss design ideas etc, in a more generic
-and less noisy forum than netdev and linux-wireless, at least
-for a while, getting to actual patches seems kind of hard at this point.
-
-(at least to me. For all I know eric is finished already, and me, I haven't
- finished grokking the paper he's leveraging some ideas on)
-
-The little I understand about Linux's networking stack dwarfs the
-little I know about BSD's, so I look forward to hearing about your
-results as you get them, and that said, if you could provide some
-pointers and insight into BSD's traffic shaping methods over on
-bloat-devel, we do try to be all-architecture embracing in our
-attempts to beat the bloat.
-
->
->
-> Adrian
-
-
-
--- 
-Dave Täht
-SKYPE: davetaht
-US Tel: 1-239-829-5608
-FR Tel: 0638645374
-http://www.bufferbloat.net
+Eliad.
