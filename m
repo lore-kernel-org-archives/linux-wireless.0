@@ -1,39 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1027 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751671Ab1LUN2b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 08:28:31 -0500
-Date: Wed, 21 Dec 2011 14:28:11 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Yogesh Ashok Powar <yogeshp@marvell.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: Re: [PATCH] mac80211: Call driver commands after drv_start in
- mac80211 restart code
-Message-ID: <20111221132810.GB2235@redhat.com> (sfid-20111221_142834_934492_37201970)
-References: <20111220060505.GA4556@hertz.marvell.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:40879 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754258Ab1LAV0O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Dec 2011 16:26:14 -0500
+Received: by ggnr5 with SMTP id r5so2258691ggn.19
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Dec 2011 13:26:14 -0800 (PST)
+Message-ID: <4ED7F0F3.2000000@lwfinger.net> (sfid-20111201_222618_348981_1AED60A9)
+Date: Thu, 01 Dec 2011 15:26:11 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111220060505.GA4556@hertz.marvell.com>
+To: wireless <linux-wireless@vger.kernel.org>
+Subject: Problems with nullfunc
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 20, 2011 at 11:35:16AM +0530, Yogesh Ashok Powar wrote:
-> Ideally, hardware/firmware initialization is complete after the
-> drv_start routine. In mac80211 restart code (ieee80211_reconfig),
-> defer calling the driver commands i.e. setup fragmentation
-> threshold, rts threshold and coverage class till drv_start
-> routine is called.
+At irregular intervals of 2-3000 sec, I'm getting log entries like
 
-I think this could break drivers that could relay on order we
-have at present. Also chenglog does not tell much. What for you
-need that change?
+ieee80211 phy0: wlan10: Failed to send nullfunc to AP c0:3f:0e:be:2b:44 after 
+500ms, disconnecting.
 
-> +	/* reset coverage class */
-> +	drv_set_coverage_class(local, hw->wiphy->coverage_class);
-> +
-> +
-One extra empty line.
+I am using rtl8192ce. At this point, the regulatory info is logged, and the 
+connection is remade.
 
-Stanislaw
+Any suggestions regarding what I should be looking for? I am guessing that these 
+are are other nullfunc packets that have been transmitted correctly.
+
+Thanks,
+
+Larry
+
