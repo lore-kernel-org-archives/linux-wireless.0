@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www17.your-server.de ([213.133.104.17]:53243 "EHLO
-	www17.your-server.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752525Ab1LCI2d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Dec 2011 03:28:33 -0500
-Subject: [PATCH] iwlegacy: Use kcalloc instead of kzalloc to allocate array
-From: Thomas Meyer <thomas@m3y3r.de>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Date: Tue, 29 Nov 2011 22:08:00 +0100
-Message-ID: <1322600880.1534.324.camel@localhost.localdomain> (sfid-20111203_092859_836734_59E00D6F)
+Received: from mga14.intel.com ([143.182.124.37]:2300 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755850Ab1LATE7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Dec 2011 14:04:59 -0500
+Date: Thu, 1 Dec 2011 20:09:41 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Joe Perches <joe@perches.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/4] nfc: Use standard logging styles
+Message-ID: <20111201190941.GJ22609@sortiz-mobl> (sfid-20111201_200543_007583_BFE723A6)
+References: <cover.1322595343.git.joe@perches.com>
+ <6c89a76ddb76926febe36fe5be514cb186e39a76.1322595343.git.joe@perches.com>
+ <20111201155951.GF22609@sortiz-mobl>
+ <1322765318.30801.9.camel@joe2Laptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1322765318.30801.9.camel@joe2Laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The advantage of kcalloc is, that will prevent integer overflows which could
-result from the multiplication of number of elements and size and it is also
-a bit nicer to read.
+Hi Joe,
 
-The semantic patch that makes this change is available
-in https://lkml.org/lkml/2011/11/25/107
+On Thu, Dec 01, 2011 at 10:48:38AM -0800, Joe Perches wrote:
+> > I would be fine with moving to pr_debug, but I'd like the pr_fmt() routine to
+> > include the function name as well.
+> 
+> If you really want it I can add it back but
+> if you are not aware, dynamic debug can add
+> this by using:
+> 
+> echo "module nfc +fp" > <debugfs>/dynamic_debug/control
+> echo "module nci +fp" > <debugfs>/dynamic_debug/control
+Yes, I'm aware of that.
 
-Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
----
+ 
+> If you're getting dmesg logs from customers
+> that's a bit harder to track though.
+Exactly. I'd prefer to have the __func__ being part of the pr_fmt().
 
-diff -u -p a/drivers/net/wireless/iwlegacy/iwl-tx.c b/drivers/net/wireless/iwlegacy/iwl-tx.c
---- a/drivers/net/wireless/iwlegacy/iwl-tx.c 2011-11-13 11:07:38.540345582 +0100
-+++ b/drivers/net/wireless/iwlegacy/iwl-tx.c 2011-11-28 19:55:42.036442592 +0100
-@@ -297,8 +297,8 @@ static int iwl_legacy_tx_queue_alloc(str
- 	/* Driver private data, only for Tx (not command) queues,
- 	 * not shared with device. */
- 	if (id != priv->cmd_queue) {
--		txq->txb = kzalloc(sizeof(txq->txb[0]) *
--				   TFD_QUEUE_SIZE_MAX, GFP_KERNEL);
-+		txq->txb = kcalloc(TFD_QUEUE_SIZE_MAX, sizeof(txq->txb[0]),
-+				   GFP_KERNEL);
- 		if (!txq->txb) {
- 			IWL_ERR(priv, "kmalloc for auxiliary BD "
- 				  "structures failed\n");
+Cheers,
+Samuel.
+
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
