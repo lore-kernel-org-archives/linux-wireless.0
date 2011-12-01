@@ -1,37 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:33018 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754055Ab1L2NM7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Dec 2011 08:12:59 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>, Paul Stewart <pstew@google.com>,
-	Christian Lamparter <chunkeey@googlemail.com>
-Subject: Re: [PATCH] mac80211: use RCU read locks for sta_info_get
-References: <1324882778-3079-1-git-send-email-mohammed@qca.qualcomm.com>
-Date: Thu, 29 Dec 2011 15:12:49 +0200
-In-Reply-To: <1324882778-3079-1-git-send-email-mohammed@qca.qualcomm.com>
-	(Mohammed Shafi Shajakhan's message of "Mon, 26 Dec 2011 12:29:38
-	+0530")
-Message-ID: <87mxabcyi6.fsf@purkki.adurom.net> (sfid-20111229_141303_642067_BF19BD99)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:38863 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754822Ab1LAOiG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Dec 2011 09:38:06 -0500
+Received: by mail-lpp01m010-f53.google.com with SMTP id l5so230232lah.26
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Dec 2011 06:38:04 -0800 (PST)
+Subject: Re: [PATCH 1/2] wl12xx: leave IV calculation to HW for CCMP
+From: Luciano Coelho <coelho@ti.com>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1319350915-31222-1-git-send-email-arik@wizery.com>
+References: <1319350915-31222-1-git-send-email-arik@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 01 Dec 2011 16:38:00 +0200
+Message-ID: <1322750280.8996.36.camel@cumari> (sfid-20111201_153826_369600_E5DD5FC1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com> writes:
+On Sun, 2011-10-23 at 08:21 +0200, Arik Nemtsov wrote: 
+> Use an appropriate mac80211 flags in CCMP keys to indicate we are
+> calculating the CCMP IV in HW, but require room for the IV to be reserved
+> in the skb. The space is reserved by mac80211.
+> 
+> depends on "mac80211: support adding IV-room in the skb for CCMP keys".
+> 
+> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+> ---
 
-> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
->
-> Cc: Paul Stewart <pstew@google.com>
-> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Applied.
 
-A bit more background would be nice. What user visible bug this actually
-fixes? Is this a new regression or an old bug? If the former, what
-commit introduced the regression?
 
 -- 
-Kalle Valo
+Cheers,
+Luca.
+
