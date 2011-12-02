@@ -1,58 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:46014 "HELO
-	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754062Ab1LUS5R (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:3776 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753839Ab1LBLxB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 13:57:17 -0500
-Message-ID: <4EF23A1F.60803@xenotime.net> (sfid-20111221_195745_869045_2B23DA2A)
-Date: Wed, 21 Dec 2011 11:57:19 -0800
-From: Randy Dunlap <rdunlap@xenotime.net>
+	Fri, 2 Dec 2011 06:53:01 -0500
+Message-ID: <4ED8BC17.9080906@qca.qualcomm.com> (sfid-20111202_125306_508880_8960DB6A)
+Date: Fri, 2 Dec 2011 13:52:55 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Samuel Ortiz <samuel@sortiz.org>
-CC: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-Subject: Re: linux-next: Tree for Dec 19 (nfc)
-References: <20111219185556.f07c1f43e28cfd594aaa5fe0@canb.auug.org.au>	 <4EEFA21B.5010305@xenotime.net> <1324399181.5354.0.camel@sortiz-mobl>
-In-Reply-To: <1324399181.5354.0.camel@sortiz-mobl>
-Content-Type: text/plain; charset=UTF-8
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+CC: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: Inform bss information to cfg80211 before connect
+ event
+References: <1322818619-29265-1-git-send-email-vthiagar@qca.qualcomm.com> <20111202114843.GC4358@jouni.qca.qualcomm.com>
+In-Reply-To: <20111202114843.GC4358@jouni.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/20/2011 08:39 AM, Samuel Ortiz wrote:
-> Hi Randy,
+On 12/02/2011 01:48 PM, Jouni Malinen wrote:
+> On Fri, Dec 02, 2011 at 03:06:59PM +0530, Vasanthakumar Thiagarajan wrote:
+>> This is already done but only when bss entry is not availabe
+>> or aged out. Not updating the bss information when that bss
+>> is available creates a case where there is a bss entry when
+>> checked in ath6kl_cfg80211_connect_event() but it got aged out
+>> by the time cfg80211 checks for the bss entry in __cfg80211_roamed().
+>> This results in the following warning and the failure to notify
+>> roaming event to application. To fix this, update the bss information
+>> for which a romaing event is received. Also renamed ath6kl_add_bss_if_needed()
+>> to ath6kl_inform_bss().
 > 
-> On Mon, 2011-12-19 at 12:44 -0800, Randy Dunlap wrote:
->> On 12/18/2011 11:55 PM, Stephen Rothwell wrote:
->>> Hi all,
->>>
->>> Changes since 20111216:
->>
->>
->> (not new today, just not reported earlier)
-> John applied my fix for this one. It should be fixed now.
+> I don't think this is a good fix for the problem and would prefer this
+> not getting applied before the real issue is fully understood.
 
-Hi Samuel,
+I have already dropped this per Vasanth's request and will wait for v2.
 
-Is this supposed to be fixed in linux-next?
-It still fails today (linux-next 20111221).
-
-
-data.c:(.text+0x3e0): multiple definition of `nfc_llcp_mac_is_down'
-data.c:(.text+0x400): multiple definition of `nfc_llcp_mac_is_up'
-ntf.c:(.text+0xb60): multiple definition of `nfc_llcp_mac_is_down'
-ntf.c:(.text+0xb80): multiple definition of `nfc_llcp_mac_is_up'
-rsp.c:(.text+0x750): multiple definition of `nfc_llcp_mac_is_down'
-rsp.c:(.text+0x770): multiple definition of `nfc_llcp_mac_is_up'
-netlink.c:(.text+0x14e0): multiple definition of `nfc_llcp_mac_is_down'
-netlink.c:(.text+0x1500): multiple definition of `nfc_llcp_mac_is_up'
-af_nfc.c:(.text+0xe0): multiple definition of `nfc_llcp_mac_is_down'
-af_nfc.c:(.text+0x100): multiple definition of `nfc_llcp_mac_is_up'
-rawsock.c:(.text+0x1000): multiple definition of `nfc_llcp_mac_is_down'
-rawsock.c:(.text+0x1020): multiple definition of `nfc_llcp_mac_is_up'
-
-
--- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+Kalle
