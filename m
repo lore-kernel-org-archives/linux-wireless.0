@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:42236 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753086Ab1LSOPF (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60391 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751584Ab1LBVIy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 09:15:05 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: [PATCH 1/2] iw: add nl80211 bitrates
-Date: Mon, 19 Dec 2011 15:14:58 +0100
-Message-Id: <1324304099-18327-4-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111219_151511_500947_7847EB2C)
-In-Reply-To: <1324304099-18327-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1324304099-18327-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Fri, 2 Dec 2011 16:08:54 -0500
+Subject: [PATCH] mac80211: fix retransmit
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 02 Dec 2011 22:08:52 +0100
+Message-ID: <1322860132.4124.10.camel@jlt3.sipsolutions.net> (sfid-20111202_220858_735478_5A88636E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- nl80211.h |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/nl80211.h b/nl80211.h
-index a187606..445e0e4 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -2395,12 +2395,15 @@ enum nl80211_key_attributes {
-  *	in an array of rates as defined in IEEE 802.11 7.3.2.2 (u8 values with
-  *	1 = 500 kbps) but without the IE length restriction (at most
-  *	%NL80211_MAX_SUPP_RATES in a single array).
-+ * @NL80211_TXRATE_MCS: HT (MCS) rates allowed for TX rate selection
-+ *      in an array of MCS numbers.
-  * @__NL80211_TXRATE_AFTER_LAST: internal
-  * @NL80211_TXRATE_MAX: highest TX rate attribute
-  */
- enum nl80211_tx_rate_attributes {
- 	__NL80211_TXRATE_INVALID,
- 	NL80211_TXRATE_LEGACY,
-+	NL80211_TXRATE_MCS,
+This fixes another regression from my "pass all
+fragments to driver at once" patches -- if the
+packet is being retransmitted then we don't go
+through all handlers, but we still need to move
+it to the skbs list, otherwise we run into the
+first warning in __ieee80211_tx() and leak the
+skb.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/tx.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+--- a/net/mac80211/tx.c	2011-12-02 22:01:28.000000000 +0100
++++ b/net/mac80211/tx.c	2011-12-02 22:05:54.000000000 +0100
+@@ -1326,8 +1326,11 @@ static int invoke_tx_handlers(struct iee
+ 	if (!(tx->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL))
+ 		CALL_TXH(ieee80211_tx_h_rate_ctrl);
  
- 	/* keep last */
- 	__NL80211_TXRATE_AFTER_LAST,
--- 
-1.7.7.3
+-	if (unlikely(info->flags & IEEE80211_TX_INTFL_RETRANSMISSION))
++	if (unlikely(info->flags & IEEE80211_TX_INTFL_RETRANSMISSION)) {
++		__skb_queue_tail(&tx->skbs, tx->skb);
++		tx->skb = NULL;
+ 		goto txh_done;
++	}
+ 
+ 	CALL_TXH(ieee80211_tx_h_michael_mic_add);
+ 	CALL_TXH(ieee80211_tx_h_sequence);
+
 
