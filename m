@@ -1,61 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:39815 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755810Ab1LGNx5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Dec 2011 08:53:57 -0500
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [PATCH 4/4] ath9k: Reconfigure tx power on regulatory update
-Date: Wed, 7 Dec 2011 19:23:21 +0530
-Message-ID: <1323266001-12912-4-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111207_145404_839416_67268228)
-In-Reply-To: <1323266001-12912-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1323266001-12912-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga01.intel.com ([192.55.52.88]:25949 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752621Ab1LBXhV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Dec 2011 18:37:21 -0500
+Subject: Re: stable-3.1: iwlwifi broken with nomsi
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Greg KH <greg@kroah.com>
+Cc: Johan Hovold <jhovold@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+In-Reply-To: <20111202233256.GA605@kroah.com>
+References: <20111128195939.GA15362@localhost>
+	 <20111202231858.GC6016@kroah.com> <1322864922.13074.27.camel@wwguy-huron>
+	 <20111202233256.GA605@kroah.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 02 Dec 2011 14:39:44 -0800
+Message-ID: <1322865584.13074.29.camel@wwguy-huron> (sfid-20111203_003724_673715_3570000B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Whenever the regulatory got updated by country IE for the world
-roaming cards, need to reconfigure the tx power immediately to
-increase the power level.
+Hi Greg,
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/init.c |   17 +++++++++++++++--
- 1 files changed, 15 insertions(+), 2 deletions(-)
+On Fri, 2011-12-02 at 15:32 -0800, Greg KH wrote:
+> On Fri, Dec 02, 2011 at 02:28:42PM -0800, Guy, Wey-Yi wrote:
+> > On Fri, 2011-12-02 at 15:18 -0800, Greg KH wrote:
+> > > On Mon, Nov 28, 2011 at 08:59:39PM +0100, Johan Hovold wrote:
+> > > > Hi Greg, 
+> > > > 
+> > > > I believe commit 63665158282dd3b5d70 (iwlwifi: allow pci_enable_msi fail)
+> > > > needs to be added to the 3.1 stable tree as the driver fails to probe
+> > > > with MSI disabled since commit 084dd79172cb3 (iwlagn: move PCI related
+> > > > operations from probe and remove to PCI layer) without it:
+> > > 
+> > > I do not see commit 63665158282dd3b5d70 in Linus's tree, did you get it
+> > > incorrect?
+> > > 
+> > > confused,
+> > > 
+> > it is commit#8a39ef8ba0fa0410d71db8e981e887fe4fdeca88 in Linville's
+> > wireless tree
+> 
+> How nice, and what exactly can I do with that at this point in time?
+> 
+Can I send the patch to you for stable 3.1?
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 41b72fa..999fdc0 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -297,9 +297,22 @@ static int ath9k_reg_notifier(struct wiphy *wiphy,
- {
- 	struct ieee80211_hw *hw = wiphy_to_ieee80211_hw(wiphy);
- 	struct ath_softc *sc = hw->priv;
--	struct ath_regulatory *reg = ath9k_hw_regulatory(sc->sc_ah);
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_regulatory *reg = ath9k_hw_regulatory(ah);
-+	int ret;
-+
-+	ret = ath_reg_notifier_apply(wiphy, request, reg);
- 
--	return ath_reg_notifier_apply(wiphy, request, reg);
-+	/* Set tx power */
-+	if (ah->curchan)
-+		sc->config.txpowlimit = 2 * ah->curchan->chan->max_power;
-+
-+	ath9k_ps_wakeup(sc);
-+	ath9k_hw_set_txpowerlimit(ah, sc->config.txpowlimit, false);
-+	sc->curtxpow = ath9k_hw_regulatory(ah)->power_limit;
-+	ath9k_ps_restore(sc);
-+
-+	return ret;
- }
- 
- /*
--- 
-1.7.8
+> 
+> Come on, please go read Documentation/stable_kernel_rules.txt again for
+> how to do this properly...
+> 
+
+Sorry, my mistake and did not realize the offending patch is in 3.1
+already.
+
+Wey
+
+
+
 
