@@ -1,88 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:49544 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751614Ab1LZScT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Dec 2011 13:32:19 -0500
-Message-ID: <4EF8BDAF.6050402@lwfinger.net> (sfid-20111226_193224_796258_119FE9C2)
-Date: Mon, 26 Dec 2011 12:32:15 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-CC: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: [PATCH] b43: fix regression in PIO case
-References: <alpine.DEB.2.00.1112261608140.12108@axis700.grange> <alpine.DEB.2.00.1112261824000.12108@axis700.grange> <4EF8B42C.2020402@lwfinger.net> <alpine.DEB.2.00.1112261909550.12108@axis700.grange>
-In-Reply-To: <alpine.DEB.2.00.1112261909550.12108@axis700.grange>
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Received: from mga02.intel.com ([134.134.136.20]:13138 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757266Ab1LBRqS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Dec 2011 12:46:18 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 10/16] iwlagn: make debug levels more readable
+Date: Fri,  2 Dec 2011 08:48:34 -0800
+Message-Id: <1322844520-21149-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111202_185944_021968_A38B0078)
+In-Reply-To: <1322844520-21149-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1322844520-21149-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/26/2011 12:17 PM, Guennadi Liakhovetski wrote:
-> On Mon, 26 Dec 2011, Larry Finger wrote:
->
->> On 12/26/2011 11:28 AM, Guennadi Liakhovetski wrote:
->>> This patch fixes the regression, introduced by
->>>
->>> commit 17030f48e31adde5b043741c91ba143f5f7db0fd
->>> From: Rafa³ Mi³ecki<zajec5@gmail.com>
->>> Date: Thu, 11 Aug 2011 17:16:27 +0200
->>> Subject: [PATCH] b43: support new RX header, noticed to be used in 598.314+
->>> fw
->>>
->>> in PIO case.
->>>
->>> Signed-off-by: Guennadi Liakhovetski<g.liakhovetski@gmx.de>
->>> ---
->>> diff --git a/drivers/net/wireless/b43/pio.c b/drivers/net/wireless/b43/pio.c
->>> index ce8a4bd..b64b64c 100644
->>> --- a/drivers/net/wireless/b43/pio.c
->>> +++ b/drivers/net/wireless/b43/pio.c
->>> @@ -617,9 +617,19 @@ static bool pio_rx_frame(struct b43_pio_rxqueue *q)
->>>    	const char *err_msg = NULL;
->>>    	struct b43_rxhdr_fw4 *rxhdr =
->>>    		(struct b43_rxhdr_fw4 *)wl->pio_scratchspace;
->>> +	size_t rxhdr_size = sizeof(*rxhdr);
->>>
->>>    	BUILD_BUG_ON(sizeof(wl->pio_scratchspace)<   sizeof(*rxhdr));
->>> -	memset(rxhdr, 0, sizeof(*rxhdr));
->>> +	switch (dev->fw.hdr_format) {
->>> +	case B43_FW_HDR_410:
->>> +	case B43_FW_HDR_351:
->>> +		rxhdr_size -= sizeof(rxhdr->format_598) -
->>> +			sizeof(rxhdr->format_351);
->>> +		break;
->>> +	case B43_FW_HDR_598:
->>> +		break;
->>> +	}
->>
->> I do not think the above will work for format_410. By my count, the format_410
->> struct is 4 bytes longer than the format_351 struct.
->
-> I think you're looking at struct b43_txhdr, whereas the problem is in
-> struct b43_rxhdr_fw4.
->
-> Thanks
-> Guennadi
->
->>
->> Even if it does work, I suggest using the following:
->>
->> 	size_t rxhdr_size;
->>
->>     	BUILD_BUG_ON(sizeof(wl->pio_scratchspace)<   sizeof(*rxhdr));
->> 	switch (dev->fw.hdr_format) {
->> 	case B43_FW_HDR_351:
->> 		rxhdr_size = sizeof(rxhdr->format_351);
->> 		break;
->> 	case B43_FW_HDR_410:
+From: Johannes Berg <johannes.berg@intel.com>
 
-You are correct - I was looking in the wrong place. Even so, I prefer setting 
-rxhdr_size in the case branches, and not adjust one preset earlier.
+Using the actual shifted constants here allows
+one to read and or them more easily.
 
-Larry
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-debug.h |   58 ++++++++++++++----------------
+ 1 files changed, 27 insertions(+), 31 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index 95740c1..f8fc239 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -134,44 +134,40 @@ static inline void iwl_dbgfs_unregister(struct iwl_priv *priv)
+  */
+ 
+ /* 0x0000000F - 0x00000001 */
+-#define IWL_DL_INFO		(1 << 0)
+-#define IWL_DL_MAC80211		(1 << 1)
+-#define IWL_DL_HCMD		(1 << 2)
+-#define IWL_DL_STATE		(1 << 3)
++#define IWL_DL_INFO		0x00000001
++#define IWL_DL_MAC80211		0x00000002
++#define IWL_DL_HCMD		0x00000004
++#define IWL_DL_STATE		0x00000008
+ /* 0x000000F0 - 0x00000010 */
+-/* unused (1 << 4) */
+-/* unused (1 << 5) */
+-#define IWL_DL_EEPROM		(1 << 6)
+-#define IWL_DL_RADIO		(1 << 7)
++#define IWL_DL_EEPROM		0x00000040
++#define IWL_DL_RADIO		0x00000080
+ /* 0x00000F00 - 0x00000100 */
+-#define IWL_DL_POWER		(1 << 8)
+-#define IWL_DL_TEMP		(1 << 9)
+-/* reserved (1 << 10) */
+-#define IWL_DL_SCAN		(1 << 11)
++#define IWL_DL_POWER		0x00000100
++#define IWL_DL_TEMP		0x00000200
++#define IWL_DL_SCAN		0x00000800
+ /* 0x0000F000 - 0x00001000 */
+-#define IWL_DL_ASSOC		(1 << 12)
+-#define IWL_DL_DROP		(1 << 13)
+-/* reserved (1 << 14) */
+-#define IWL_DL_COEX		(1 << 15)
++#define IWL_DL_ASSOC		0x00001000
++#define IWL_DL_DROP		0x00002000
++#define IWL_DL_COEX		0x00008000
+ /* 0x000F0000 - 0x00010000 */
+-#define IWL_DL_FW		(1 << 16)
+-#define IWL_DL_RF_KILL		(1 << 17)
+-#define IWL_DL_FW_ERRORS	(1 << 18)
+-#define IWL_DL_LED		(1 << 19)
++#define IWL_DL_FW		0x00010000
++#define IWL_DL_RF_KILL		0x00020000
++#define IWL_DL_FW_ERRORS	0x00040000
++#define IWL_DL_LED		0x00080000
+ /* 0x00F00000 - 0x00100000 */
+-#define IWL_DL_RATE		(1 << 20)
+-#define IWL_DL_CALIB		(1 << 21)
+-#define IWL_DL_WEP		(1 << 22)
+-#define IWL_DL_TX		(1 << 23)
++#define IWL_DL_RATE		0x00100000
++#define IWL_DL_CALIB		0x00200000
++#define IWL_DL_WEP		0x00400000
++#define IWL_DL_TX		0x00800000
+ /* 0x0F000000 - 0x01000000 */
+-#define IWL_DL_RX		(1 << 24)
+-#define IWL_DL_ISR		(1 << 25)
+-#define IWL_DL_HT		(1 << 26)
++#define IWL_DL_RX		0x01000000
++#define IWL_DL_ISR		0x02000000
++#define IWL_DL_HT		0x04000000
+ /* 0xF0000000 - 0x10000000 */
+-#define IWL_DL_11H		(1 << 28)
+-#define IWL_DL_STATS		(1 << 29)
+-#define IWL_DL_TX_REPLY		(1 << 30)
+-#define IWL_DL_TX_QUEUES	(1 << 31)
++#define IWL_DL_11H		0x10000000
++#define IWL_DL_STATS		0x20000000
++#define IWL_DL_TX_REPLY		0x40000000
++#define IWL_DL_TX_QUEUES	0x80000000
+ 
+ #define IWL_DEBUG_INFO(p, f, a...)	IWL_DEBUG(p, IWL_DL_INFO, f, ## a)
+ #define IWL_DEBUG_MAC80211(p, f, a...)	IWL_DEBUG(p, IWL_DL_MAC80211, f, ## a)
+-- 
+1.7.0.4
 
