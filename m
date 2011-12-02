@@ -1,74 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:46502 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751320Ab1LFSyi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Dec 2011 13:54:38 -0500
-Date: Tue, 6 Dec 2011 19:53:53 +0100
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
-	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Is linux-next.git bisectable?
-Message-ID: <20111206195353.6f9a0881@stein> (sfid-20111206_195457_770586_E7C61380)
-In-Reply-To: <20111206113346.57b3efd85780b6ff18076e9c@canb.auug.org.au>
-References: <CAB=NE6Uz_gXkY3HGXeW1OnPx84fPVUP=gOJ=2NjBtPZhW=_Bbw@mail.gmail.com>
-	<20111206113346.57b3efd85780b6ff18076e9c@canb.auug.org.au>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=PGP-SHA1;
- boundary="Sig_/AHyV82=nPg_qenBHBr.IXb7"; protocol="application/pgp-signature"
+Received: from mga02.intel.com ([134.134.136.20]:55196 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757258Ab1LBRqR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Dec 2011 12:46:17 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 07/16] iwlagn: remove TX_REPLY_LIMIT debug
+Date: Fri,  2 Dec 2011 08:48:31 -0800
+Message-Id: <1322844520-21149-8-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111202_184627_853816_FBE71394)
+In-Reply-To: <1322844520-21149-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1322844520-21149-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/AHyV82=nPg_qenBHBr.IXb7
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Dec 06 Stephen Rothwell wrote:
-> On Mon, 5 Dec 2011 16:29:36 -0800 "Luis R. Rodriguez" <mcgrof@frijolero.o=
-rg> wrote:
-> > is the linux-next.git tree bisectable? I've noticed some trees are
-> > not. For example wireless-testing.git is bisectable but only between
-> > master-$(date) tags.
->=20
-> Within any one day, the tree is bisectable, but not really between one
-> day and another.  The tree is rebuilt starting from Linus' tree each day.
+This macro is unused right now.
 
-The individual trees that are being submitted to be pulled into linux-next
-*should* be bisectable though.  This is because only stuff is meant to be
-shown to linux-next for which the question
-   "Cross-tree integration testing ignored for a moment,
-    if Linus had a merge window open today, would I ask him to pull this
-    tree right away?"
-would be answered with a firm Yes.
---=20
-Stefan Richter
--=3D=3D=3D=3D=3D-=3D=3D-=3D=3D =3D=3D-- --=3D=3D-
-http://arcgraph.de/sr/
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-debug.h |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
---Sig_/AHyV82=nPg_qenBHBr.IXb7
-Content-Type: application/pgp-signature; name=signature.asc
-Content-Disposition: attachment; filename=signature.asc
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
+index 44a7bdd..a842d71 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
+@@ -206,8 +206,6 @@ static inline void iwl_dbgfs_unregister(struct iwl_priv *priv)
+ #define IWL_DEBUG_STATS_LIMIT(p, f, a...)	\
+ 		IWL_DEBUG_LIMIT(p, IWL_DL_STATS, f, ## a)
+ #define IWL_DEBUG_TX_REPLY(p, f, a...)	IWL_DEBUG(p, IWL_DL_TX_REPLY, f, ## a)
+-#define IWL_DEBUG_TX_REPLY_LIMIT(p, f, a...) \
+-		IWL_DEBUG_LIMIT(p, IWL_DL_TX_REPLY, f, ## a)
+ #define IWL_DEBUG_TX_QUEUES(p, f, a...)	IWL_DEBUG(p, IWL_DL_TX_QUEUES, f, ## a)
+ #define IWL_DEBUG_RADIO(p, f, a...)	IWL_DEBUG(p, IWL_DL_RADIO, f, ## a)
+ #define IWL_DEBUG_POWER(p, f, a...)	IWL_DEBUG(p, IWL_DL_POWER, f, ## a)
+-- 
+1.7.0.4
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (GNU/Linux)
-
-iQIcBAEBAgAGBQJO3mTGAAoJEHnzb7JUXXnQ73cQAIkEU/+SIs3nM/jG5ZOH9VkQ
-mqrdpQnPfZlkaOcfaWiLKNbCQrk1s+D1DcB5NoMv4DI0gDx6rW45uDrlMB2Re8ab
-M4IkaMmxA2TnzO7UyiDH57vaTvfxtwjCpzdEdpxANZ58Zk1IaDsTq1udEfIzVh54
-Wwk0647VhjsQ4S74LH0xk89CbFRrMq/ACeolkK+YHC4vx12VLMsE/UUuyoowBZkV
-8KcNqhFIq3dpbc7PzVsdyOFmt+Jn3ujxd6F/1n84w+R6ruVoX8AmqxUHJlsGaT3c
-smXoLZnKJIrQzjHka06FIE2c8HLnXArgdyinYyQyELdv9cuiJyLb8PITrXPD6CTS
-L9iamwcU5EGuSy8GHHSkaHmr3UAvgAq8ZHbAgY+PX6b1wBg+58JR4TBcbZEhjFfO
-HxP1/M9k1NIYJxd2xRJoqinth63ixsS7LNwmojjKSf18NGXxgOOZk6WKvoEahRnx
-j/gPJTzY80CAUW2VZRqqolhSuCZES4/WhemCjPn8e6U0hEbWi7DMG6/w/bJNcdky
-PvS9/4I2xpFnzy7lU7qeNy2bETanC4RtMIj9s18gavol6GNitiNrOuXZijovjl5j
-QijlqiVzIssvhY97dtDTK68LHpji2v/wTTgpIUoys7PEMesJ9G/0WdfcskCHrL7H
-qzoNry+xHM9RKPRnru8Y
-=yRND
------END PGP SIGNATURE-----
-
---Sig_/AHyV82=nPg_qenBHBr.IXb7--
