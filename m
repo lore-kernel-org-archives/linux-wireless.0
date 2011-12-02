@@ -1,58 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:44764 "EHLO lo.gmane.org"
+Received: from mga02.intel.com ([134.134.136.20]:13138 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753100Ab1LaOZK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Dec 2011 09:25:10 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Rgzrv-00025N-3n
-	for linux-wireless@vger.kernel.org; Sat, 31 Dec 2011 15:25:07 +0100
-Received: from pD9F88DF8.dip.t-dialin.net ([217.248.141.248])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Dec 2011 15:25:07 +0100
-Received: from drahemmaps by pD9F88DF8.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Dec 2011 15:25:07 +0100
-To: linux-wireless@vger.kernel.org
-From: Martin Schleier <drahemmaps@gmx.net>
-Subject: Re: loading firmware while usermodehelper disabled.
-Date: Sat, 31 Dec 2011 14:20:26 +0000 (UTC)
-Message-ID: <loom.20111231T150655-670@post.gmane.org> (sfid-20111231_152538_164806_0A4D7CFA)
-References: <20111230235421.GA6054@redhat.com> <CA+55aFyqm4FbW=--7U4ULk1EBb6RLP0sRgtokODBYnZNiJXWew@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1757249Ab1LBRqR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Dec 2011 12:46:17 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, "Hsu, Kenny" <kenny.hsu@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 04/16] iwlwifi: add generic chunk size of tm dumpit packet
+Date: Fri,  2 Dec 2011 08:48:28 -0800
+Message-Id: <1322844520-21149-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111202_184636_905929_D9D4EB76)
+In-Reply-To: <1322844520-21149-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1322844520-21149-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Linus Torvalds <torvalds@...> writes:
-> On Fri, Dec 30, 2011 at 3:54 PM, Dave Jones <davej@...> wrote:
-> > We're getting a bunch of reports against Fedora 16
-> > (still using 3.1) which look like some drivers are trying to
-> > load firmware on resume from suspend, while usermodehelper
-> > is disabled.
-> 
-> Ok, buggy drivers. You *must*not* load firmware in your resume path,
-> since there is no actual guarantee that any particular device will be
-> resumed after the disk that contains the firmware images.
-> 
-> So it's very simple: drivers that load firmware at resume time are
-> buggy. No ifs, buts, or maybes about it.
-Or are they?
+From: Hsu, Kenny <kenny.hsu@intel.com>
 
-You see, PCMCIA cards [don't know about the pccard express stuff]
-have to deal with a notable exception from this rule since:
+Use generic chunk size of dumpit packet for
+all necessary testmode commands instead of
+add declaration individually.
 
-pcmcia: improve check for same card in slot after resume
-"88b060d6c03fcb9e4d2018b4349954c4242a5c7f"
+Signed-off-by: Kenny Hsu <kenny.hsu@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-sv-open.c  |   20 ++++++++++----------
+ drivers/net/wireless/iwlwifi/iwl-testmode.h |    4 +++-
+ 2 files changed, 13 insertions(+), 11 deletions(-)
 
-This patch changed the way how suspend/resume is handled.
-On resume, the pcmcia subsystem obviously does not know
-if the card has been removed and reinserted, therefore
-it does not call the resume method of the driver but
-instead goes for "probe" and things go south from there.
-
-[And now for the $64 question, what happens to USB drivers
-that are managing devices which are connected to pcmcia
-usb host cards?]
+diff --git a/drivers/net/wireless/iwlwifi/iwl-sv-open.c b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+index a8d0ef6..4ea64d6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-sv-open.c
++++ b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
+@@ -575,7 +575,7 @@ static int iwl_testmode_trace(struct ieee80211_hw *hw, struct nlattr **tb)
+ 		}
+ 		priv->testmode_trace.num_chunks =
+ 			DIV_ROUND_UP(priv->testmode_trace.buff_size,
+-				     TRACE_CHUNK_SIZE);
++				     DUMP_CHUNK_SIZE);
+ 		break;
+ 
+ 	case IWL_TM_CMD_APP2DEV_END_TRACE:
+@@ -607,15 +607,15 @@ static int iwl_testmode_trace_dump(struct ieee80211_hw *hw, struct nlattr **tb,
+ 		idx = cb->args[4];
+ 		if (idx >= priv->testmode_trace.num_chunks)
+ 			return -ENOENT;
+-		length = TRACE_CHUNK_SIZE;
++		length = DUMP_CHUNK_SIZE;
+ 		if (((idx + 1) == priv->testmode_trace.num_chunks) &&
+-		    (priv->testmode_trace.buff_size % TRACE_CHUNK_SIZE))
++		    (priv->testmode_trace.buff_size % DUMP_CHUNK_SIZE))
+ 			length = priv->testmode_trace.buff_size %
+-				TRACE_CHUNK_SIZE;
++				DUMP_CHUNK_SIZE;
+ 
+ 		NLA_PUT(skb, IWL_TM_ATTR_TRACE_DUMP, length,
+ 			priv->testmode_trace.trace_addr +
+-			(TRACE_CHUNK_SIZE * idx));
++			(DUMP_CHUNK_SIZE * idx));
+ 		idx++;
+ 		cb->args[4] = idx;
+ 		return 0;
+@@ -728,7 +728,7 @@ static int iwl_testmode_sram(struct ieee80211_hw *hw, struct nlattr **tb)
+ 					priv->testmode_sram.buff_addr,
+ 					priv->testmode_sram.buff_size / 4);
+ 	priv->testmode_sram.num_chunks =
+-		DIV_ROUND_UP(priv->testmode_sram.buff_size, TRACE_CHUNK_SIZE);
++		DIV_ROUND_UP(priv->testmode_sram.buff_size, DUMP_CHUNK_SIZE);
+ 	priv->testmode_sram.sram_readed = true;
+ 	return 0;
+ }
+@@ -746,15 +746,15 @@ static int iwl_testmode_sram_dump(struct ieee80211_hw *hw, struct nlattr **tb,
+ 			iwl_sram_cleanup(priv);
+ 			return -ENOENT;
+ 		}
+-		length = TRACE_CHUNK_SIZE;
++		length = DUMP_CHUNK_SIZE;
+ 		if (((idx + 1) == priv->testmode_sram.num_chunks) &&
+-		    (priv->testmode_sram.buff_size % TRACE_CHUNK_SIZE))
++		    (priv->testmode_sram.buff_size % DUMP_CHUNK_SIZE))
+ 			length = priv->testmode_sram.buff_size %
+-				TRACE_CHUNK_SIZE;
++				DUMP_CHUNK_SIZE;
+ 
+ 		NLA_PUT(skb, IWL_TM_ATTR_SRAM_DUMP, length,
+ 			priv->testmode_sram.buff_addr +
+-			(TRACE_CHUNK_SIZE * idx));
++			(DUMP_CHUNK_SIZE * idx));
+ 		idx++;
+ 		cb->args[4] = idx;
+ 		return 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.h b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+index 95c8705..e20f3d3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+@@ -250,6 +250,8 @@ enum iwl_tm_attr_t {
+ #define TRACE_BUFF_SIZE_MIN	0x20000
+ #define TRACE_BUFF_SIZE_DEF	TRACE_BUFF_SIZE_MIN
+ #define TRACE_BUFF_PADD		0x2000
+-#define TRACE_CHUNK_SIZE	(PAGE_SIZE - 1024)
++
++/* Maximum data size of each dump it packet */
++#define DUMP_CHUNK_SIZE		(PAGE_SIZE - 1024)
+ 
+ #endif
+-- 
+1.7.0.4
 
