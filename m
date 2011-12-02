@@ -1,30 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:41928 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754859Ab1LOGDi convert rfc822-to-8bit (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:53902 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755508Ab1LBPWT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 01:03:38 -0500
-Received: by wgbdr13 with SMTP id dr13so3345729wgb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2011 22:03:36 -0800 (PST)
+	Fri, 2 Dec 2011 10:22:19 -0500
+Received: by faaq16 with SMTP id q16so2130739faa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Dec 2011 07:22:18 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1323871708-19852-1-git-send-email-linville@tuxdriver.com>
-References: <1323871708-19852-1-git-send-email-linville@tuxdriver.com>
-Date: Thu, 15 Dec 2011 07:03:36 +0100
-Message-ID: <CACna6rx2qUeqZFQyujay2cxMNYFb1Q+H3K5NsXyvq=eNoAQMOA@mail.gmail.com> (sfid-20111215_070341_381482_E7C6F331)
-Subject: Re: [PATCH] b43: avoid calling bcma_* if CONFIG_B43_BCMA is not set
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4ED8B0BA.2020706@openwrt.org>
+References: <20111130201051.GC2477@tuxdriver.com>
+	<1322685980-8757-1-git-send-email-mar.kolya@gmail.com>
+	<1322685980-8757-4-git-send-email-mar.kolya@gmail.com>
+	<4ED8B0BA.2020706@openwrt.org>
+Date: Fri, 2 Dec 2011 10:22:17 -0500
+Message-ID: <CALGY4fuiQ5k3yq9UtPVfLRaoDj-4Ui8vThnDnprsCoZNdPcOZw@mail.gmail.com> (sfid-20111202_162225_060780_B32EB077)
+Subject: Re: [PATCH v3 3/4] ath9k: use config.enable_ani to check if ani
+ should be performed
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/12/14 John W. Linville <linville@tuxdriver.com>:
-> Avoids this:
->
-> ERROR: "bcma_chipco_pll_write" [drivers/net/wireless/b43/b43.ko] undefined!
+2011/12/2 Felix Fietkau <nbd@openwrt.org>:
+> On 2011-11-30 9:46 PM, Nikolay Martynov wrote:
+>> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+>> index 0b9a0e8..391d59c 100644
+>> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+>> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+>> @@ -808,7 +808,8 @@ void ath9k_htc_ani_work(struct work_struct *work)
+>> † † † }
+>>
+>> † † † /* Verify whether we must check ANI */
+>> - † † if ((timestamp - common->ani.checkani_timer) >= ATH_ANI_POLLINTERVAL) {
+>> + † † if (sc->sc_ah->config.enable_ani &&
+>> + † † † † (timestamp - common->ani.checkani_timer) >= ATH_ANI_POLLINTERVAL) {
+>> † † † † † † † aniflag = true;
+>> † † † † † † † common->ani.checkani_timer = timestamp;
+>> † † † }
+> Does not compile, there is no 'sc' variable, use ah->config.enable_ani.
 
-Ouch, sorry. Thanks for patch.
+  Hmm... weird that it didn't fail when I applied this to openwrt.
+Anyway, thanks for letting me know, I'll send an updated patch!
 
 -- 
-Rafa≈Ç
+Truthfully yours,
+Martynov Nikolay.
+Email: mar.kolya@gmail.com
