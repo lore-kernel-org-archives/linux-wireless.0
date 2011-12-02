@@ -1,50 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:33031 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751096Ab1LSQiv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 11:38:51 -0500
-Received: by dajs34 with SMTP id s34so3523544daj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 08:38:50 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1324310187.3414.4.camel@jlt3.sipsolutions.net>
-References: <1324291194-28203-1-git-send-email-helmut.schaa@googlemail.com>
-	<1324310187.3414.4.camel@jlt3.sipsolutions.net>
-Date: Mon, 19 Dec 2011 17:38:50 +0100
-Message-ID: <CAGXE3d8DR1MhzM6Hykx37VfWpwtRFBCNxnaA0j=x1XNvfdfVxQ@mail.gmail.com> (sfid-20111219_173854_257354_D03A88AE)
-Subject: Re: [PATCH] mac80211: Remove superfluous ieee80211_rx_h_remove_qos_control
-From: Helmut Schaa <helmut.schaa@googlemail.com>
+Received: from mga02.intel.com ([134.134.136.20]:37015 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753100Ab1LBUVZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Dec 2011 15:21:25 -0500
+Subject: Re: iwlwifi: kernel panic if try to open tid with large index (>=8)
+From: wwguy <wey-yi.w.guy@intel.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Cc: Nikolay Martynov <mar.kolya@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1322857169.4124.5.camel@jlt3.sipsolutions.net>
+References: <CALGY4fvH5EbBm1oSBHsmXw5r5yfWMQ4yJyVyBx3y70FOEVeT6A@mail.gmail.com>
+	 (sfid-20111202_052910_037002_B91C34E9) <1322817100.4162.0.camel@jlt3.sipsolutions.net>
+	 <1322838068.24199.0.camel@wwguy-ubuntu>
+	 <1322857169.4124.5.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 02 Dec 2011 12:14:51 -0800
+Message-ID: <1322856891.19783.1.camel@wwguy-ubuntu> (sfid-20111202_212128_681623_62E9043E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 19, 2011 at 4:56 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2011-12-19 at 11:39 +0100, Helmut Schaa wrote:
->> This seems to not serve any purpose anymore, at least all frame
->> processing afterwards seems to be able to deal with QoS frames. So,
->> let's save the expensive memmove and just leave the QoS header in the
->> 802.11 frame for further processing.
->>
->> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
->> ---
->>
->> It wouldn't hurt if a second pair of eyes looks through the rx path
->> to see if there's any possible problem with QoS frames in later rx
->> handlers.
->
-> Ok, but I'm on vacation until next year, so I don't know if I'll get to
-> it.
+On Fri, 2011-12-02 at 12:19 -0800, Johannes Berg wrote:
+> On Fri, 2011-12-02 at 07:01 -0800, wwguy wrote:
+> > On Fri, 2011-12-02 at 01:11 -0800, Johannes Berg wrote:
+> > > On Thu, 2011-12-01 at 23:29 -0500, Nikolay Martynov wrote:
+> > > > Hi.
+> > > > 
+> > > >   I have an intel 5300 card running on latest compat-wireless.
+> > > >   If I do:
+> > > > echo "tx start 8" >
+> > > > /sys/kernel/debug/ieee80211/phy0/netdev\:wlan1/stations/XX\:XX\:XX\:XX\:XX\:XX/agg_status
+> > > 
+> > > Yikes. I think mac80211 should just reject that since it will never put
+> > > traffic into that TID anyway.
+> > > 
+> > Johannes, are you going to help fix that :-)
+> 
+> I *think* this is the right fix. Do you agree? It fixes it for sure --
+> but does it really not have any side effects? I'm pretty sure it doesn't
+> since I looked at all the code just now ...
+> 
+initial look at it, I agree
 
-Sure, have a nice holiday.
+Wey
 
-> In principle, this seems fine, but I'd feel more comfortable if
-> somebody else took another look. Not that I don't trust you, just more
-> eyes see more things :-)
-
-No worries, I'd also like to have somebody else looking through
-the code since it's not quite a trivial change.
-
-Helmut
