@@ -1,40 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:48771 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754403Ab1LAOge (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Dec 2011 09:36:34 -0500
-Received: by mail-lpp01m010-f49.google.com with SMTP id u2so1123767lag.22
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Dec 2011 06:36:32 -0800 (PST)
-Subject: Re: [PATCH 1/2] wl12xx: make WL1271_FLAG_IDLE flag per-vif
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1320837504-12026-1-git-send-email-eliad@wizery.com>
-References: <1320837504-12026-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 01 Dec 2011 16:36:13 +0200
-Message-ID: <1322750173.8996.33.camel@cumari> (sfid-20111201_153637_250712_4A548447)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:50314 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752123Ab1LCOq4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Dec 2011 09:46:56 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/6] compat-wireless: fix driver-select for intel
+Date: Sat,  3 Dec 2011 15:46:22 +0100
+Message-Id: <1322923585-13966-3-git-send-email-hauke@hauke-m.de> (sfid-20111203_154700_494822_C264742E)
+In-Reply-To: <1322923585-13966-1-git-send-email-hauke@hauke-m.de>
+References: <1322923585-13966-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-11-09 at 13:18 +0200, Eliad Peller wrote: 
-> This flag should be set per-vif, rather than globally.
-> 
-> Rename the flag to indicate IN_USE (rather than IDLE), as
-> in the default configuration (i.e. flag is clear) the vif
-> should be idle.
-> 
-> Change all the bit operations (and elp conditions) appropriately.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+iwlagn was renamed and iwlegacy was added
 
-Applied both and did a tiny merge with Arik's "configure probe-resp
-template" patch.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ scripts/driver-select |   17 +++++++++++++----
+ 1 files changed, 13 insertions(+), 4 deletions(-)
 
+diff --git a/scripts/driver-select b/scripts/driver-select
+index 3619541..e74dc81 100755
+--- a/scripts/driver-select
++++ b/scripts/driver-select
+@@ -53,7 +53,7 @@ function usage {
+ 	echo -e "\t${CYAN}atheros${NORMAL} < ${PURPLE} ath5k ath9k carl9170 zd1211rw ath6kl ${NORMAL}>"
+ 	echo -e "\t${CYAN}ath${NORMAL} < ${PURPLE} ath5k ath9k carl9170 ath6kl ${NORMAL}>"
+ 	echo -e "\t${CYAN}brcm80211${NORMAL} < ${PURPLE} brcmsmac brcmfmac ${NORMAL}>"
+-	echo -e "\t${CYAN}iwlagn${NORMAL} < ${PURPLE} iwlagn ${NORMAL}>"
++	echo -e "\t${CYAN}intel${NORMAL} < ${PURPLE} iwlwifi, iwlegacy ${NORMAL}>"
+ 	echo -e "\t${CYAN}rtl818x${NORMAL} < ${PURPLE} rtl8180 rtl8187 ${NORMAL}>"
+ 	echo -e "\t${CYAN}rtlwifi${NORMAL} < ${PURPLE} rtl8192ce ${NORMAL}>"
+ 	echo -e "\t${CYAN}wl12xx${NORMAL} < ${PURPLE} wl1251 wl12xx (SPI and SDIO)${NORMAL}>"
+@@ -309,7 +309,8 @@ case $1 in
+ 		disable_var_01
+ 		;;
+ 	intel)
+-		select_drivers		CONFIG_COMPAT_IWLWIFI \
++		select_drivers		CONFIG_IWLWIFI \
++					CONFIG_IWLEGACY \
+ 					CONFIG_IPW
+ 		disable_staging
+ 		disable_var
+@@ -317,8 +318,16 @@ case $1 in
+ 		disable_ethernet
+ 		disable_usbnet
+ 		;;
+-	iwlagn)
+-		select_driver		CONFIG_IWLAGN
++	iwlwifi)
++		select_driver		CONFIG_IWLWIFI
++		disable_staging
++		disable_var_01
++		disable_bt
++		disable_ethernet
++		disable_usbnet
++		;;
++	iwlegacy)
++		select_driver		CONFIG_IWLEGACY
+ 		disable_staging
+ 		disable_var_01
+ 		disable_bt
 -- 
-Cheers,
-Luca.
+1.7.5.4
 
