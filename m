@@ -1,52 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:33959 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752287Ab1LSVZM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 16:25:12 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: Rodriguez Luis <rodrigue@qca.qualcomm.com>
-Cc: mcgrof@infradead.org, linux-wireless@vger.kernel.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 00/15] initvals: fix various errors and warnings
-Date: Mon, 19 Dec 2011 22:24:45 +0100
-Message-Id: <1324329900-3923-1-git-send-email-juhosg@openwrt.org> (sfid-20111219_222515_856768_B088E103)
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48336 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754439Ab1LCBhx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Dec 2011 20:37:53 -0500
+Date: Sat, 3 Dec 2011 10:38:37 +0900
+From: Gustavo Padovan <padovan@profusion.mobi>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth-next 2011-12-03
+Message-ID: <20111203013837.GA2816@joana> (sfid-20111203_023927_353454_59561AC0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch set fixes a build error, a typo and a copy&paste error.
-It also fixes several compiler warnings. Additionally, it adds two 
-helper scripts.
+Hi John,
 
-Gabor Juhos (15):
-  initvals: add missing include for ar9330
-  initvals: fix typos in usage text
-  initvals: fix copy&paste error
-  initvals: add ar9485_initvals.h to ATH9K_DEPS
-  initvals: add checksums for AR9330 1.[12]
-  initvals: add checksums for ar9580
-  initvals: allow to use additional CFLAGS
-  initvals: remove unused variable
-  initvals: fix printf format warnings
-  initvals: fix type of the second argument of 'main'
-  initvals: include <string.h> to make gcc happy
-  initvals: make 'print_initvals_family' static void
-  initvals: use private chksum variables in INI_PRINT* macros
-  initvals: add a script for simplifying checksum verification
-  initvals: add script for regenerating ath9k header files
+Another big pull for -next. Some work on LE scanning from Andre Guedes, more
+AMP work from Andrei Emeltchenko. HCI Management Interface improvements from
+Johan Hedberg and Management and SMP work from Brian Gix. The rest are just
+fixes and clean ups.
 
- Makefile              |    8 +-
- ar9330_1p2_initvals.h | 1080 +++++++++++++++++++++++++++++++++++++++++++++++++
- checksums.txt         |   55 +++
- gen_ath9k_headers.sh  |   36 ++
- initvals.c            |   31 +-
- verify_checksums.sh   |   40 ++
- 6 files changed, 1226 insertions(+), 24 deletions(-)
- create mode 100644 ar9330_1p2_initvals.h
- create mode 100755 gen_ath9k_headers.sh
- create mode 100755 verify_checksums.sh
+Please pull, or let me know any problems. Thanks.
 
--- 
-1.7.2.1
+	Gustavo
+
+The following changes since commit ba5736a5e9ac20c378ae4179e8a0ed3cc4b44351:
+
+  ath9k_hw: add default chainmask for AR9462 (2011-11-30 15:09:02 -0500)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next master
+
+Andre Guedes (4):
+      Bluetooth: Rename mgmt_inquiry_failed()
+      Bluetooth: mgmt_stop_discovery_failed()
+      Bluetooth: Add dev_flags to struct hci_dev
+      Bluetooth: LE Set Scan Parameter Command
+
+Andrei Emeltchenko (10):
+      Bluetooth: Move scope of kernel parameter enable_hs
+      Bluetooth: Do not set HCI_RAW when HS enabled
+      Bluetooth: Allow to set AMP type for virtual HCI
+      Bluetooth: making enable_hs independent from L2CAP
+      Bluetooth: Use queue in the device list
+      Bluetooth: Add HCI Read Flow Control Mode function
+      Bluetooth: remove old code
+      Bluetooth: Correct version check in hci_setup
+      Bluetooth: Remove magic bluetooth version numbers
+      Bluetooth: trivial: correct check for LMP version
+
+Bing Zhao (1):
+      Bluetooth: btmrvl: support Marvell Bluetooth device SD8797
+
+Brian Gix (9):
+      Bluetooth: Add HCI defines for User Passkey entry
+      Bluetooth: Add MGMT opcodes for Passkey Entry
+      Bluetooth: Add MGMT event for Passkey Entry
+      Bluetooth: User Pairing Response restructuring
+      Bluetooth: Differentiate LE User Pairing Responses
+      Bluetooth: Add User Passkey Response handling
+      Bluetooth: Add HCI User Passkey Req Evt handling
+      Bluetooth: Cleanup blkcipher on SMP termination
+      Bluetooth: Centralize SMP pairing failure handling
+
+Cong Wang (1):
+      btusb: fix a memory leak in btusb_send_frame()
+
+David Herrmann (2):
+      Bluetooth: cmtp: Fix module reference
+      Bluetooth: bnep: Fix module reference
+
+Gustavo F. Padovan (5):
+      Bluetooth: Rename l2cap_check_security()
+      Bluetooth: Allow L2CAP to increase the security level
+      Bluetooth: Only set ack_timer if we didn't send and ack
+      Bluetooth: Add user readable debug for state changes
+      Merge branch 'master' of git://git.kernel.org/.../padovan/bluetooth
+
+Johan Hedberg (10):
+      Bluetooth: Add public/random LE address information to mgmt messages
+      Bluetooth: Fix deadlock with mgmt_pair_device
+      Bluetooth: Add proper response to mgmt_remove_keys command
+      Bluetooth: Add status parameter to mgmt_disconnect response
+      Bluetooth: Add address type to mgmt_pair_device
+      Bluetooth: Fix mgmt_pair_device imediate error responses
+      Bluetooth: Return success instead of EALREADY for mgmt commands
+      Bluetooth: Create a unique mgmt error code hierarchy
+      Bluetooth: Add missing cmd_complete for mgmt_load_link_keys
+      Bluetooth: Pass all message parameters to mgmt_start_discovery
+
+Szymon Janc (5):
+      Bluetooth: Fix possible NULL pointer derefence in l2cap code
+      Bluetooth: Simplify l2cap_add_to_srej_queue
+      Bluetooth: Refactor loop in l2cap_retransmit_one_frame
+      Bluetooth: Simplify __l2cap_global_chan_by_addr
+      Bluetooth: Fix some checkpatch.pl errors and warnings
+
+ drivers/bluetooth/Kconfig         |    6 +-
+ drivers/bluetooth/btmrvl_sdio.c   |   15 +-
+ drivers/bluetooth/btusb.c         |    3 +-
+ drivers/bluetooth/hci_vhci.c      |    8 +
+ include/net/bluetooth/bluetooth.h |    5 +
+ include/net/bluetooth/hci.h       |   38 +++
+ include/net/bluetooth/hci_core.h  |   28 ++-
+ include/net/bluetooth/l2cap.h     |    2 +-
+ include/net/bluetooth/mgmt.h      |   49 +++-
+ net/bluetooth/bnep/core.c         |    8 +-
+ net/bluetooth/cmtp/core.c         |    5 +-
+ net/bluetooth/hci_conn.c          |    2 +-
+ net/bluetooth/hci_core.c          |   31 +-
+ net/bluetooth/hci_event.c         |  152 +++++++--
+ net/bluetooth/l2cap_core.c        |  101 ++++--
+ net/bluetooth/l2cap_sock.c        |   16 +-
+ net/bluetooth/mgmt.c              |  660 ++++++++++++++++++++++++++++---------
+ net/bluetooth/smp.c               |   32 ++-
+ 18 files changed, 880 insertions(+), 281 deletions(-)
 
