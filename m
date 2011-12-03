@@ -1,123 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:45423 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754628Ab1L1Wkf convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:32945 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752859Ab1LCJUP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Dec 2011 17:40:35 -0500
-Received: by mail-vw0-f46.google.com with SMTP id fc26so9902345vbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Dec 2011 14:40:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1325033604-26469-5-git-send-email-gwingerde@gmail.com>
-References: <1325033604-26469-1-git-send-email-gwingerde@gmail.com>
-	<1325033604-26469-2-git-send-email-gwingerde@gmail.com>
-	<1325033604-26469-3-git-send-email-gwingerde@gmail.com>
-	<1325033604-26469-4-git-send-email-gwingerde@gmail.com>
-	<1325033604-26469-5-git-send-email-gwingerde@gmail.com>
-Date: Wed, 28 Dec 2011 23:40:35 +0100
-Message-ID: <CAOZOX0UnBzt+=c_9AEZEsuOxZmJyGsQDZkLsadj7R+a=E3ZEqA@mail.gmail.com> (sfid-20111228_234039_230503_038E58ED)
-Subject: Re: [PATCH 4/7] rt2800usb: Let rt2x00usb handle USB padding
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	=?ISO-8859-2?Q?Jakub_Kici=F1ski?= <kubakici@wp.pl>
-Content-Type: text/plain; charset=ISO-8859-2
+	Sat, 3 Dec 2011 04:20:15 -0500
+References: <1322600880.1534.325.camel@localhost.localdomain>
+In-Reply-To: <1322600880.1534.325.camel@localhost.localdomain>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <B3E3F396-DAA8-47B5-BCCB-4CC79766B11C@gmail.com> (sfid-20111203_102047_729187_91F6CCC4)
+Cc: "IvDoorn@gmail.com" <IvDoorn@gmail.com>,
+	"helmut.schaa@googlemail.com" <helmut.schaa@googlemail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH] rt2x00: Use kcalloc instead of kzalloc to allocate array
+Date: Sat, 3 Dec 2011 10:20:10 +0100
+To: Thomas Meyer <thomas@m3y3r.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 28, 2011 at 1:53 AM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> From: Jakub Kiciñski <kubakici@wp.pl>
->
-> Older USB drivers does not append end padding to skb but instead report
-> it in size of data to be transmitted to HW. rt2800usb should follow that
-> behaviour. Custom write_tx_data callback which was adding pad to skb
-> is not be needed any more.
->
-> Thanks to this patch frames handed back from rt2800usb to mac80211 will
-> no longer contain end padding.
->
-> Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+On 29 nov. 2011, at 22:08, Thomas Meyer <thomas@m3y3r.de> wrote:
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+> The advantage of kcalloc is, that will prevent integer overflows which could
+> result from the multiplication of number of elements and size and it is also
+> a bit nicer to read.
+> 
+> The semantic patch that makes this change is available
+> in https://lkml.org/lkml/2011/11/25/107
+> 
+> Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
+
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
 > ---
->  drivers/net/wireless/rt2x00/rt2800usb.c |   37 ++++++++----------------------
->  1 files changed, 10 insertions(+), 27 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index 313cc7f..b15c215 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -400,10 +400,10 @@ static void rt2800usb_write_tx_desc(struct queue_entry *entry,
->        /*
->         * The size of TXINFO_W0_USB_DMA_TX_PKT_LEN is
->         * TXWI + 802.11 header + L2 pad + payload + pad,
-> -        * so need to decrease size of TXINFO and USB end pad.
-> +        * so need to decrease size of TXINFO.
->         */
->        rt2x00_set_field32(&word, TXINFO_W0_USB_DMA_TX_PKT_LEN,
-> -                          entry->skb->len - TXINFO_DESC_SIZE - 4);
-> +                          roundup(entry->skb->len, 4) - TXINFO_DESC_SIZE);
->        rt2x00_set_field32(&word, TXINFO_W0_WIV,
->                           !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc->flags));
->        rt2x00_set_field32(&word, TXINFO_W0_QSEL, 2);
-> @@ -421,37 +421,20 @@ static void rt2800usb_write_tx_desc(struct queue_entry *entry,
->        skbdesc->desc_len = TXINFO_DESC_SIZE + TXWI_DESC_SIZE;
->  }
->
-> -static void rt2800usb_write_tx_data(struct queue_entry *entry,
-> -                                       struct txentry_desc *txdesc)
-> +/*
-> + * TX data initialization
-> + */
-> +static int rt2800usb_get_tx_data_len(struct queue_entry *entry)
->  {
-> -       unsigned int len;
-> -       int err;
-> -
-> -       rt2800_write_tx_data(entry, txdesc);
-> -
->        /*
-> -        * pad(1~3 bytes) is added after each 802.11 payload.
-> -        * USB end pad(4 bytes) is added at each USB bulk out packet end.
-> +        * pad(1~3 bytes) is needed after each 802.11 payload.
-> +        * USB end pad(4 bytes) is needed at each USB bulk out packet end.
->         * TX frame format is :
->         * | TXINFO | TXWI | 802.11 header | L2 pad | payload | pad | USB end pad |
->         *                 |<------------- tx_pkt_len ------------->|
->         */
-> -       len = roundup(entry->skb->len, 4) + 4;
-> -       err = skb_padto(entry->skb, len);
-> -       if (unlikely(err)) {
-> -               WARNING(entry->queue->rt2x00dev, "TX SKB padding error, out of memory\n");
-> -               return;
-> -       }
->
-> -       entry->skb->len = len;
-> -}
-> -
-> -/*
-> - * TX data initialization
-> - */
-> -static int rt2800usb_get_tx_data_len(struct queue_entry *entry)
-> -{
-> -       return entry->skb->len;
-> +       return roundup(entry->skb->len, 4) + 4;
->  }
->
->  /*
-> @@ -807,7 +790,7 @@ static const struct rt2x00lib_ops rt2800usb_rt2x00_ops = {
->        .flush_queue            = rt2x00usb_flush_queue,
->        .tx_dma_done            = rt2800usb_tx_dma_done,
->        .write_tx_desc          = rt2800usb_write_tx_desc,
-> -       .write_tx_data          = rt2800usb_write_tx_data,
-> +       .write_tx_data          = rt2800_write_tx_data,
->        .write_beacon           = rt2800_write_beacon,
->        .clear_beacon           = rt2800_clear_beacon,
->        .get_tx_data_len        = rt2800usb_get_tx_data_len,
-> --
-> 1.7.7.4
->
+> 
+> diff -u -p a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c 2011-11-28 19:36:47.770108588 +0100
+> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c 2011-11-28 19:54:53.495525543 +0100
+> @@ -831,11 +831,11 @@ static int rt2x00lib_probe_hw_modes(stru
+>    if (spec->supported_rates & SUPPORT_RATE_OFDM)
+>        num_rates += 8;
+> 
+> -    channels = kzalloc(sizeof(*channels) * spec->num_channels, GFP_KERNEL);
+> +    channels = kcalloc(spec->num_channels, sizeof(*channels), GFP_KERNEL);
+>    if (!channels)
+>        return -ENOMEM;
+> 
+> -    rates = kzalloc(sizeof(*rates) * num_rates, GFP_KERNEL);
+> +    rates = kcalloc(num_rates, sizeof(*rates), GFP_KERNEL);
+>    if (!rates)
+>        goto exit_free_channels;
+> 
