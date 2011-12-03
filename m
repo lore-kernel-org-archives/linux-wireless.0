@@ -1,99 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:47569 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760167Ab1LPQhq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 11:37:46 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 13/24] iwlwifi: transport layer shouldn't access the AGG SM
-Date: Fri, 16 Dec 2011 07:37:18 -0800
-Message-Id: <1324049849-831-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111216_173802_775681_26AE1ACD)
-In-Reply-To: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:50391 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751608Ab1LCOte (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Dec 2011 09:49:34 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 2/2] compat: add module_usb_driver and module_platform_driver
+Date: Sat,  3 Dec 2011 15:49:26 +0100
+Message-Id: <1322923766-14379-2-git-send-email-hauke@hauke-m.de> (sfid-20111203_154938_627537_F167BCC5)
+In-Reply-To: <1322923766-14379-1-git-send-email-hauke@hauke-m.de>
+References: <1322923766-14379-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This is another step towards the move of tid_data from the shared
-area.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c     |   11 ++++++++++
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   26 ++++--------------------
- 2 files changed, 16 insertions(+), 21 deletions(-)
+ include/linux/compat-3.2.h |    9 +++++++++
+ include/linux/compat-3.3.h |   35 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 44 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 8db9144..88ee557 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -377,6 +377,17 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
- 			goto drop_unlock_sta;
- 		tid_data = &priv->shrd->tid_data[sta_id][tid];
+diff --git a/include/linux/compat-3.2.h b/include/linux/compat-3.2.h
+index db0f648..fb9ef68 100644
+--- a/include/linux/compat-3.2.h
++++ b/include/linux/compat-3.2.h
+@@ -55,6 +55,15 @@ static inline char *hex_byte_pack(char *buf, u8 byte)
+ 	return buf;
+ }
  
-+		/* aggregation is on for this <sta,tid> */
-+		if (info->flags & IEEE80211_TX_CTL_AMPDU &&
-+		    tid_data->agg.state != IWL_AGG_ON) {
-+			IWL_ERR(priv, "TX_CTL_AMPDU while not in AGG:"
-+				" Tx flags = 0x%08x, agg.state = %d",
-+				info->flags, tid_data->agg.state);
-+			IWL_ERR(priv, "sta_id = %d, tid = %d seq_num = %d",
-+				sta_id, tid, SEQ_TO_SN(tid_data->seq_number));
-+			goto drop_unlock_sta;
-+		}
++/* module_platform_driver() - Helper macro for drivers that don't do
++ * anything special in module init/exit.  This eliminates a lot of
++ * boilerplate.  Each module may only use this macro once, and
++ * calling it replaces module_init() and module_exit()
++ */
++#define module_platform_driver(__platform_driver) \
++        module_driver(__platform_driver, platform_driver_register, \
++                        platform_driver_unregister)
 +
- 		seq_number = tid_data->seq_number;
- 		seq_number &= IEEE80211_SCTL_SEQ;
- 		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index 06db602..cfa0bf6 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1058,7 +1058,6 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 	dma_addr_t txcmd_phys;
- 	dma_addr_t scratch_phys;
- 	u16 len, firstlen, secondlen;
--	u16 seq_number = 0;
- 	u8 wait_write_ptr = 0;
- 	u8 txq_id;
- 	bool is_agg = false;
-@@ -1084,26 +1083,11 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 		txq_id =
- 		    trans_pcie->ac_to_queue[ctx][skb_get_queue_mapping(skb)];
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,2,0)) */
  
--	if (ieee80211_is_data_qos(fc) && !ieee80211_is_qos_nullfunc(fc)) {
--		struct iwl_tid_data *tid_data;
--		tid_data = &trans->shrd->tid_data[sta_id][tid];
--		if (WARN_ON_ONCE(tid >= IWL_MAX_TID_COUNT))
--			return -1;
--
--		/* aggregation is on for this <sta,tid> */
--		if (info->flags & IEEE80211_TX_CTL_AMPDU) {
--			if (WARN_ON_ONCE(tid_data->agg.state != IWL_AGG_ON)) {
--				IWL_ERR(trans, "TX_CTL_AMPDU while not in AGG:"
--					" Tx flags = 0x%08x, agg.state = %d",
--					info->flags, tid_data->agg.state);
--				IWL_ERR(trans, "sta_id = %d, tid = %d "
--					"txq_id = %d, seq_num = %d", sta_id,
--					tid, trans_pcie->agg_txq[sta_id][tid],
--					SEQ_TO_SN(seq_number));
--			}
--			txq_id = trans_pcie->agg_txq[sta_id][tid];
--			is_agg = true;
--		}
-+	/* aggregation is on for this <sta,tid> */
-+	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
-+		WARN_ON(tid >= IWL_MAX_TID_COUNT);
-+		txq_id = trans_pcie->agg_txq[sta_id][tid];
-+		is_agg = true;
- 	}
+ #endif /* LINUX_3_2_COMPAT_H */
+diff --git a/include/linux/compat-3.3.h b/include/linux/compat-3.3.h
+index 9383a6e..821333c 100644
+--- a/include/linux/compat-3.3.h
++++ b/include/linux/compat-3.3.h
+@@ -33,6 +33,41 @@ static inline void skb_complete_wifi_ack(struct sk_buff *skb, bool acked)
  
- 	txq = &trans_pcie->txq[txq_id];
+ typedef u32 netdev_features_t;
+ 
++/* source include/linux/device.h */
++/**
++ * module_driver() - Helper macro for drivers that don't do anything
++ * special in module init/exit. This eliminates a lot of boilerplate.
++ * Each module may only use this macro once, and calling it replaces
++ * module_init() and module_exit().
++ *
++ * Use this macro to construct bus specific macros for registering
++ * drivers, and do not use it on its own.
++ */
++#define module_driver(__driver, __register, __unregister) \
++static int __init __driver##_init(void) \
++{ \
++	return __register(&(__driver)); \
++} \
++module_init(__driver##_init); \
++static void __exit __driver##_exit(void) \
++{ \
++	__unregister(&(__driver)); \
++} \
++module_exit(__driver##_exit);
++
++/* source include/linux/usb.h */
++/**
++ * module_usb_driver() - Helper macro for registering a USB driver
++ * @__usb_driver: usb_driver struct
++ *
++ * Helper macro for USB drivers which do not do anything special in module
++ * init/exit. This eliminates a lot of boilerplate. Each module may only
++ * use this macro once, and calling it replaces module_init() and module_exit()
++ */
++#define module_usb_driver(__usb_driver) \
++	module_driver(__usb_driver, usb_register, \
++		       usb_deregister)
++
+ #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0)) */
+ 
+ #endif /* LINUX_3_3_COMPAT_H */
 -- 
-1.7.0.4
+1.7.5.4
 
