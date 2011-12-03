@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:50974 "EHLO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750819Ab1LMJjr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 04:39:47 -0500
-Received: by mail-lpp01m010-f45.google.com with SMTP id s15so2634437lag.4
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Dec 2011 01:39:44 -0800 (PST)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com
-Subject: [PATCH] wl12xx: don't write out of bounds when hlid > WL12XX_MAX_LINKS
-Date: Tue, 13 Dec 2011 11:39:02 +0200
-Message-Id: <1323769142-20515-1-git-send-email-coelho@ti.com> (sfid-20111213_103953_056146_03B3476D)
+Received: from mail.allnet.de ([212.18.29.59]:18846 "EHLO mail.allnet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751195Ab1LCOII (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Dec 2011 09:08:08 -0500
+Message-ID: <4EDA2D34.4070108@allnet.de> (sfid-20111203_150834_119872_D0502588)
+Date: Sat, 3 Dec 2011 15:07:48 +0100
+From: Daniel Golle <dgolle@allnet.de>
+MIME-Version: 1.0
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH v1 0/3] support for antenna configuration profiles
+References: <20111128161225.GA25430@localhost>	 (sfid-20111128_171757_078893_7ACF616B) <1322499145.4060.8.camel@jlt3.sipsolutions.net>	 <4ED4C789.8060701@allnet.de> (sfid-20111129_125258_741403_289EEE8F) <1322643422.3982.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1322643422.3982.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should not get an hlid value bigger than WL12XX_MAX_LINKS from
-wl1271_rx_handle_data().  We have a WARN_ON in case it happens.  But
-despite the warning, we would still go ahead and write the hlid bit
-into active_hlids (a stack variable).  This would cause us to
-overwrite other data in the stack.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-To avoid this problem, we now skip the write when issuing the warning,
-so at least we don't corrupt data.
+Sorry for the delay, I replied off-list by accident and noticed that just now...
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/rx.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+On 11/30/2011 09:57 AM, Johannes Berg wrote:
+> For example, this seems like hardware mods, so how does the driver know
+> what the profiles are?
+Available profiles are passed to the driver via platform_data of the PCI device
+which is set in the board-setup code.
+See changes made to ath9k_platform in the ath9k-specific part 3 of the patchset
+and the board-setup (in the appendix of my previous v0 patch-set, as there were
+no changes to that since the previous patch, I didn't re-post the changes needed
+in arch/mips/ar71xx/dev-ap91-pci.c and my board-setup).
 
-diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
-index 8c277c0..4fbd2a7 100644
---- a/drivers/net/wireless/wl12xx/rx.c
-+++ b/drivers/net/wireless/wl12xx/rx.c
-@@ -258,8 +258,12 @@ void wl12xx_rx(struct wl1271 *wl, struct wl12xx_fw_status *status)
- 						  wl->aggr_buf + pkt_offset,
- 						  pkt_length, unaligned,
- 						  &hlid) == 1) {
--				WARN_ON(hlid >= WL12XX_MAX_LINKS);
--				__set_bit(hlid, active_hlids);
-+				if (hlid < WL12XX_MAX_LINKS)
-+					__set_bit(hlid, active_hlids);
-+				else
-+					WARN(1,
-+					     "hlid exceeded WL12XX_MAX_LINKS "
-+					     "(%d)\n", hlid);
- 			}
- 
- 			wl->rx_counter++;
--- 
-1.7.4.1
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJO2i0vAAoJEDy9cKN/1Et0vxUP/0ubjhKrnOGV+zPPY2P4m6HK
+2n0mhcF9rYA3+7I1DB+6ZwECUvWgJTW/+XSG792huFcND7S9KwREa7RlCj9ES6lQ
+w1WDuk2xcazZHpGN1+TCkLQHDXDQQ/wBZfUppF4ELGhyj0Gujoo1VcADqcQMwVaO
+xVaKUcQN+g5HHsvtnApWh68MfYzEEG5Hk1Z2wqvAc4f8e1knVEZxkMb2nE0o2pLH
+mW6sgcg81lXfnK6P9RBPlEQ3Ef8qxpXvrcEbhBv5LXak1waCx6T7ZIV1CsDytWAm
+C6Rkaitcu10gua7i4dnlWc6wyKQVBd+sIfrb+QPInmMxbSdzQj1nOylth/3Y6CAJ
+b+vQdDDl1WJriVESS/N2ooA7UhHoQhp7/tBQESHZFxE56ejF++fuq4I/I8OqvCIV
+qQsuyY36xbHoh/WztqMOBWTcG4y6Mjd9Eb36yV0DeHVKjUrtsBUMaRUyLXMOAjRm
+P5XzdbUAKm7HfqKdqxHoNehH2GZ6D46BhGvfUierlZOjAyYPZyeRuJgA15em2zpI
+xf98G80m8bN3K4EUKFK78FqULGaitxI4IyR18bdP/5W9bb1Y8IhEKY0pohHX0YJr
+6gdsJOKeajg52O/qVkvsjjU/oByBUzk9RVXas4ivO1GDNQ0i/HK+gK40kK9Fq2FN
+Wdfu2vKmgfqobSbNlCAY
+=LDqq
+-----END PGP SIGNATURE-----
