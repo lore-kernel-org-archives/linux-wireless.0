@@ -1,32 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:40046 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753963Ab1LLVMh (ORCPT
+Received: from mail-qw0-f53.google.com ([209.85.216.53]:63297 "EHLO
+	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755864Ab1LCDjm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 16:12:37 -0500
-Date: Mon, 12 Dec 2011 16:11:18 -0500 (EST)
-Message-Id: <20111212.161118.549983300923917209.davem@davemloft.net> (sfid-20111212_221258_419714_D47996B8)
+	Fri, 2 Dec 2011 22:39:42 -0500
+Received: by mail-qw0-f53.google.com with SMTP id b15so1643606qad.19
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Dec 2011 19:39:42 -0800 (PST)
+From: Nikolay Martynov <mar.kolya@gmail.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless-next 2011-12-12
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20111212193521.GB9508@tuxdriver.com>
-References: <20111212193521.GB9508@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Cc: linux-wireless@vger.kernel.org,
+	Nikolay Martynov <mar.kolya@gmail.com>
+Subject: [PATCH v4 2/4] ath9k: change calibration debug log to output all calibration types
+Date: Fri,  2 Dec 2011 22:39:15 -0500
+Message-Id: <1322883557-14120-3-git-send-email-mar.kolya@gmail.com> (sfid-20111203_043953_859680_72CEF88D)
+In-Reply-To: <1322883557-14120-1-git-send-email-mar.kolya@gmail.com>
+References: <1322883557-14120-1-git-send-email-mar.kolya@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 12 Dec 2011 14:35:21 -0500
+  To help debugging write a log entry when long calibration, short
+calibration or ANI is performed.
 
-> This is the latest round of wireless updates intended for 3.3.
-> This includes big refactoring activities in bluetooth and wl12xx.
-> Beyond that, there is with the usual level of activity around ath9k
-> and iwlwifi as well as a variety of other patches here and there.  One
-> highlight is the introduction of HT operations for IBSS in mac80211.
-> 
-> Please let me know if there are problems!
+Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-Pulled, thanks John.
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index fd59c1f..461afb9 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -561,7 +561,6 @@ void ath_ani_calibrate(unsigned long data)
+ 	/* Long calibration runs independently of short calibration. */
+ 	if ((timestamp - common->ani.longcal_timer) >= long_cal_interval) {
+ 		longcal = true;
+-		ath_dbg(common, ATH_DBG_ANI, "longcal @%lu\n", jiffies);
+ 		common->ani.longcal_timer = timestamp;
+ 	}
+ 
+@@ -569,8 +568,6 @@ void ath_ani_calibrate(unsigned long data)
+ 	if (!common->ani.caldone) {
+ 		if ((timestamp - common->ani.shortcal_timer) >= short_cal_interval) {
+ 			shortcal = true;
+-			ath_dbg(common, ATH_DBG_ANI,
+-				"shortcal @%lu\n", jiffies);
+ 			common->ani.shortcal_timer = timestamp;
+ 			common->ani.resetcal_timer = timestamp;
+ 		}
+@@ -605,6 +602,11 @@ void ath_ani_calibrate(unsigned long data)
+ 						ah->rxchainmask, longcal);
+ 	}
+ 
++	ath_dbg(common, ATH_DBG_ANI,
++		"Calibration @%lu finished: %s %s %s, caldone: %s\n", jiffies,
++		longcal ? "long" : "", shortcal ? "short" : "",
++		aniflag ? "ani" : "", common->ani.caldone ? "true" : "false");
++
+ 	ath9k_ps_restore(sc);
+ 
+ set_timer:
+-- 
+1.7.4.1
+
