@@ -1,42 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:34512 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751414Ab1LSOm7 convert rfc822-to-8bit (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:42023 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755954Ab1LCDjq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 09:42:59 -0500
-Received: by ghbz12 with SMTP id z12so3502466ghb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 06:42:58 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-ID: <20207.19812.522615.450498@gargle.gargle.HOWL> (sfid-20111219_154303_147159_2DE4FA2D)
-Date: Mon, 19 Dec 2011 20:12:44 +0530
-To: =?utf-8?Q?=E6=9D=8E=E5=88=9A?= <gang.li@watchdata.com>
-Cc: "'wireless'" <linux-wireless@vger.kernel.org>
-Subject: Question about IEEE80211_TX_CTL_NO_ACK in ath_9k
-In-Reply-To: <20111219112845.C748820066@mail.watchdata.com.cn>
-References: <4EED232D.3010208@lwfinger.net>
-	<20111219112845.C748820066@mail.watchdata.com.cn>
+	Fri, 2 Dec 2011 22:39:46 -0500
+Received: by qadb14 with SMTP id b14so876444qad.19
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Dec 2011 19:39:45 -0800 (PST)
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Nikolay Martynov <mar.kolya@gmail.com>
+Subject: [PATCH v4 4/4] ath9k: enable ANI for ar9100 chips
+Date: Fri,  2 Dec 2011 22:39:17 -0500
+Message-Id: <1322883557-14120-5-git-send-email-mar.kolya@gmail.com> (sfid-20111203_043955_134843_C3D9DA36)
+In-Reply-To: <1322883557-14120-1-git-send-email-mar.kolya@gmail.com>
+References: <1322883557-14120-1-git-send-email-mar.kolya@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-李刚 wrote:
-> Hi everybody!
-> 
-> My wireless card is AR9280. I set the IEEE80211_TX_CTL_NO_ACK flag before
-> send a packet, but found it no use. It still wait for an ACK. Then I read
-> the code,
-> in ath9k_htc_tx_data(htc_drv_txrx.c) , it seems there is only two flags:
-> 
-> #define ATH9K_HTC_TX_CTSONLY      0x1
-> #define ATH9K_HTC_TX_RTSCTS       0x2
-> 
-> None is about ack.
-> 
-> Does anyone know how to make this flag work properly?
-> 
+  Enable ANI for ar9100 since it seems to be working fine (and as a matter of fact ANI was always performed for ar9100 since code which was supposed to disable it didn't achieve this goal).
+  This patch sets config.enable_ani to default (true) value for ar9100.
 
-NOACK usage is not handled by ath9k_htc.
-See: http://linuxwireless.org/en/users/Drivers/ath9k_htc#TODO
+Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Sujith
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 9871072..7f8fc65 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -610,8 +610,8 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	if (!AR_SREV_9300_20_OR_LATER(ah))
+ 		ah->ani_function &= ~ATH9K_ANI_MRC_CCK;
+ 
+-	/* disable ANI for 9100 and 9340 */
+-	if (AR_SREV_9100(ah) || AR_SREV_9340(ah))
++	/* disable ANI for 9340 */
++	if (AR_SREV_9340(ah))
+ 		ah->config.enable_ani = false;
+ 
+ 	ath9k_hw_init_mode_regs(ah);
+-- 
+1.7.4.1
+
