@@ -1,39 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:3776 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753839Ab1LBLxB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Dec 2011 06:53:01 -0500
-Message-ID: <4ED8BC17.9080906@qca.qualcomm.com> (sfid-20111202_125306_508880_8960DB6A)
-Date: Fri, 2 Dec 2011 13:52:55 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-CC: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: Inform bss information to cfg80211 before connect
- event
-References: <1322818619-29265-1-git-send-email-vthiagar@qca.qualcomm.com> <20111202114843.GC4358@jouni.qca.qualcomm.com>
-In-Reply-To: <20111202114843.GC4358@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from server19320154104.serverpool.info ([193.201.54.104]:50318 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752339Ab1LCOq4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Dec 2011 09:46:56 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 4/6] compat-wireless: add some missing config options
+Date: Sat,  3 Dec 2011 15:46:23 +0100
+Message-Id: <1322923585-13966-4-git-send-email-hauke@hauke-m.de> (sfid-20111203_154701_104658_D2B93334)
+In-Reply-To: <1322923585-13966-1-git-send-email-hauke@hauke-m.de>
+References: <1322923585-13966-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/02/2011 01:48 PM, Jouni Malinen wrote:
-> On Fri, Dec 02, 2011 at 03:06:59PM +0530, Vasanthakumar Thiagarajan wrote:
->> This is already done but only when bss entry is not availabe
->> or aged out. Not updating the bss information when that bss
->> is available creates a case where there is a bss entry when
->> checked in ath6kl_cfg80211_connect_event() but it got aged out
->> by the time cfg80211 checks for the bss entry in __cfg80211_roamed().
->> This results in the following warning and the failure to notify
->> roaming event to application. To fix this, update the bss information
->> for which a romaing event is received. Also renamed ath6kl_add_bss_if_needed()
->> to ath6kl_inform_bss().
-> 
-> I don't think this is a good fix for the problem and would prefer this
-> not getting applied before the real issue is fully understood.
 
-I have already dropped this per Vasanth's request and will wait for v2.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ config.mk |   11 ++++++-----
+ 1 files changed, 6 insertions(+), 5 deletions(-)
 
-Kalle
+diff --git a/config.mk b/config.mk
+index 5eabc51..c8256b8 100644
+--- a/config.mk
++++ b/config.mk
+@@ -171,8 +171,8 @@ CONFIG_MAC80211=m
+ # CONFIG_MAC80211_VERBOSE_PS_DEBUG=y
+ # CONFIG_MAC80211_VERBOSE_MPL_DEBUG=y
+ # CONFIG_MAC80211_VERBOSE_MHWMP_DEBUG=y
++# CONFIG_MAC80211_VERBOSE_TDLS_DEBUG
+ # CONFIG_MAC80211_DEBUG_COUNTERS=y
+-# CONFIG_MAC80211_DRIVER_API_TRACER=y
+ 
+ # choose between pid and minstrel as default rate control algorithm
+ CONFIG_MAC80211_RC_DEFAULT=minstrel_ht
+@@ -292,12 +292,11 @@ CONFIG_IWLWIFI=m
+ # CONFIG_IWLWIFI_DEVICE_SVTOOL=y
+ # CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE=y
+ 
+-CONFIG_IWLWIFI_LEGACY=m
++CONFIG_IWLEGACY=m
+ CONFIG_COMPAT_IWL4965=m
+ CONFIG_IWL3945=m
+-# CONFIG_IWLWIFI_LEGACY_DEBUG=y
+-# CONFIG_IWLWIFI_LEGACY_DEBUGFS=y
+-# CONFIG_IWLWIFI_LEGACY_DEVICE_TRACING=y
++# CONFIG_IWLEGACY_DEBUG=y
++# CONFIG_IWLEGACY_DEBUGFS=y
+ 
+ 
+ CONFIG_B43=m
+@@ -437,6 +436,8 @@ CONFIG_RTL8192DE=m
+ 
+ CONFIG_BRCMSMAC=m
+ 
++CONFIG_MWIFIEX_PCIE=m
++
+ endif #CONFIG_PCI
+ ## end of PCI
+ 
+-- 
+1.7.5.4
+
