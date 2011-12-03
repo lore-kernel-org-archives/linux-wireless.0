@@ -1,77 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:53566 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751176Ab1LVGGm convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:33602 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755864Ab1LCDjo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Dec 2011 01:06:42 -0500
-MIME-Version: 1.0
-In-Reply-To: <1324516857.4755.2.camel@wwguy-ubuntu>
-References: <1324332059-11630-1-git-send-email-wey-yi.w.guy@intel.com>
-	<20111221161953.GB11842@tuxdriver.com>
-	<1324482300.13074.295.camel@wwguy-huron>
-	<20111221195821.GF11842@tuxdriver.com>
-	<1324516857.4755.2.camel@wwguy-ubuntu>
-Date: Thu, 22 Dec 2011 08:06:41 +0200
-Message-ID: <CANUX_P2Ny7YWsYhVTHDRN03yqSdjiHvafC2utsOwdOZd1GqA3Q@mail.gmail.com> (sfid-20111222_070657_448020_1348BB23)
-Subject: Re: [PATCH 3.2] iwlagn: fix (remove) use of PAGE_SIZE
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 2 Dec 2011 22:39:44 -0500
+Received: by mail-qy0-f174.google.com with SMTP id z2so593586qcq.19
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Dec 2011 19:39:44 -0800 (PST)
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Nikolay Martynov <mar.kolya@gmail.com>
+Subject: [PATCH v4 3/4] ath9k: use config.enable_ani to check if ani should be performed
+Date: Fri,  2 Dec 2011 22:39:16 -0500
+Message-Id: <1322883557-14120-4-git-send-email-mar.kolya@gmail.com> (sfid-20111203_043954_506332_8265B5AA)
+In-Reply-To: <1322883557-14120-1-git-send-email-mar.kolya@gmail.com>
+References: <1322883557-14120-1-git-send-email-mar.kolya@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> > > > From: Johannes Berg <johannes.berg@intel.com>
->> > > >
->> > > > The ICT code erroneously uses PAGE_SIZE. The bug
->> > > > is that PAGE_SIZE isn't necessarily 4096, so on
->> > > > such platforms this code will not work correctly
->> > > > as we'll try to attempt to read an index in the
->> > > > table that the device never wrote, it always has
->> > > > 4096-byte pages.
->> > > >
->> > > > Additionally, the manual alignment code here is
->> > > > unnecessary -- Documentation/DMA-API-HOWTO.txt
->> > > > states:
->> > > >   The cpu return address and the DMA bus master address are both
->> > > >   guaranteed to be aligned to the smallest PAGE_SIZE order which
->> > > >   is greater than or equal to the requested size.  This invariant
->> > > >   exists (for example) to guarantee that if you allocate a chunk
->> > > >   which is smaller than or equal to 64 kilobytes, the extent of the
->> > > >   buffer you receive will not cross a 64K boundary.
->> > > >
->> > > > Just use appropriate new constants and get rid of
->> > > > the alignment code.
->> > > >
->> > > > Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->> > > > Cc: stable@vger.kernel.org
->> > > > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
->> > > > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
->> > >
->> > > This seems like a big patch.  It is a bit late in the release cycle
->> > > to rewrite all the DMA allocation code. :-)
->> > >
->> > > What platforms does this affect?  Are there actual users involved?
->> >
->> > I understand the patch is bigger than the regular patch should be
->> > generated for stable kernel. Johannes can explain better, but he is on
->> > vacation. as what I understood, he work with community user who
->> > encounter issue and root cause it is PAGE SIZE cause the problem.
->> >
->> > Thanks
->> > Wey
->>
->> Unless someone screams, I'd be a lot more comfortable saving this
->> for 3.3.
-> unless Johannes has objection, I am ok for 3.3, it is not something
-> people will encounter everyday on common platform..
->
+  Currently in ath9k code there is an attempt which is meant to
+disable ANI for ar9100 and ar9340. But it doesn't really achieve
+this. All it does is disable ANI init and setup (i.e. calls to
+ath9k_hw_ani_setup and ath9k_hw_ani_init). Since ath9k_hw_ani_setup is
+not called ah->config.ani_poll_interval is never initialized (i.e. it
+is always zero) and ath_ani_calibrate always executes ANI procedures
+(over uninitialized ANI parameters).
+  Moreover, ath_ani_calibrate is being called each 1ms because
+common->ani.timer is set to zero interval because
+ah->config.ani_poll_interval==0 (and thus smallest value of all
+intervals). Normally it should not be called this often.
+  This patch changes the code so config.enable_ani is used to check if
+ANI should be performed.
+  config.enable_ani is initialized to true by default. This patch sets
+it to false for ar9100 and ar9340.
 
-Please note that this patch has two parts: one does the real stuff
-(very small), and the other removes unneeded DAM alignment code (big
-part).
-I guess it can wait to 3.3 and the small part will then be posted to stable.
+Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c |    5 +++--
+ drivers/net/wireless/ath/ath9k/hw.c           |    6 +++++-
+ drivers/net/wireless/ath/ath9k/main.c         |    5 +++--
+ 3 files changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index 0b9a0e8..f8ce4ea 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -808,7 +808,8 @@ void ath9k_htc_ani_work(struct work_struct *work)
+ 	}
+ 
+ 	/* Verify whether we must check ANI */
+-	if ((timestamp - common->ani.checkani_timer) >= ATH_ANI_POLLINTERVAL) {
++	if (ah->config.enable_ani &&
++	    (timestamp - common->ani.checkani_timer) >= ATH_ANI_POLLINTERVAL) {
+ 		aniflag = true;
+ 		common->ani.checkani_timer = timestamp;
+ 	}
+@@ -838,7 +839,7 @@ set_timer:
+ 	* short calibration and long calibration.
+ 	*/
+ 	cal_interval = ATH_LONG_CALINTERVAL;
+-	if (priv->ah->config.enable_ani)
++	if (ah->config.enable_ani)
+ 		cal_interval = min(cal_interval, (u32)ATH_ANI_POLLINTERVAL);
+ 	if (!common->ani.caldone)
+ 		cal_interval = min(cal_interval, (u32)short_cal_interval);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index caf572c..9871072 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -504,7 +504,7 @@ static int ath9k_hw_post_init(struct ath_hw *ah)
+ 		return ecode;
+ 	}
+ 
+-	if (!AR_SREV_9100(ah) && !AR_SREV_9340(ah)) {
++	if (ah->config.enable_ani) {
+ 		ath9k_hw_ani_setup(ah);
+ 		ath9k_hw_ani_init(ah);
+ 	}
+@@ -610,6 +610,10 @@ static int __ath9k_hw_init(struct ath_hw *ah)
+ 	if (!AR_SREV_9300_20_OR_LATER(ah))
+ 		ah->ani_function &= ~ATH9K_ANI_MRC_CCK;
+ 
++	/* disable ANI for 9100 and 9340 */
++	if (AR_SREV_9100(ah) || AR_SREV_9340(ah))
++		ah->config.enable_ani = false;
++
+ 	ath9k_hw_init_mode_regs(ah);
+ 
+ 	if (!ah->is_pciexpress)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 461afb9..93fa4f3 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -581,8 +581,9 @@ void ath_ani_calibrate(unsigned long data)
+ 	}
+ 
+ 	/* Verify whether we must check ANI */
+-	if ((timestamp - common->ani.checkani_timer) >=
+-	     ah->config.ani_poll_interval) {
++	if (sc->sc_ah->config.enable_ani
++	    && (timestamp - common->ani.checkani_timer) >=
++	    ah->config.ani_poll_interval) {
+ 		aniflag = true;
+ 		common->ani.checkani_timer = timestamp;
+ 	}
+-- 
+1.7.4.1
+
