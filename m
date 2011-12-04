@@ -1,45 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:50384 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751608Ab1LCOtd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Dec 2011 09:49:33 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/2] compat: add config var for CORDIC and CRC8
-Date: Sat,  3 Dec 2011 15:49:25 +0100
-Message-Id: <1322923766-14379-1-git-send-email-hauke@hauke-m.de> (sfid-20111203_154936_601231_3081CC76)
+Received: from mga11.intel.com ([192.55.52.93]:50137 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751915Ab1LDLGE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Dec 2011 06:06:04 -0500
+Subject: Re: [PATCH v1 1/3] support for antenna configuration profiles
+From: Johannes Berg <johannes.berg@intel.com>
+To: Daniel Golle <dgolle@allnet.de>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <20111128161240.GA25454@localhost> (sfid-20111128_171813_665159_36F11CCF)
+References: <20111128161240.GA25454@localhost>
+	 (sfid-20111128_171813_665159_36F11CCF)
+Date: Sun, 04 Dec 2011 12:06:00 +0100
+Message-ID: <1322996760.4633.7.camel@jlt3.sipsolutions.net> (sfid-20111204_120653_908311_213F3CAD)
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sometimes the kernel version compat-wireless is build against has
-support for cordic and crc8 in its source, but these modules were not
-build when the kernel was build, because no one selected them. The modules are
-needed for the bcmsmac driver and they should be build every time when
-they were not already build while the kernel was build.
-
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- compat/Makefile |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/compat/Makefile b/compat/Makefile
-index 9e4db44..fa9c6cb 100644
---- a/compat/Makefile
-+++ b/compat/Makefile
-@@ -34,9 +34,9 @@ compat-$(CONFIG_COMPAT_KERNEL_2_6_39) += \
- 	compat-2.6.39.o \
- 	kstrtox.o
- compat-$(CONFIG_COMPAT_KERNEL_3_0) += compat-3.0.o
--compat-$(CONFIG_COMPAT_KERNEL_3_1) += \
--	cordic.o \
--	crc8.o
-+
-+compat-$(CONFIG_COMPAT_CORDIC) += cordic.o
-+compat-$(CONFIG_COMPAT_CRC8) += crc8.o
- 
- ifndef CONFIG_64BIT
- ifndef CONFIG_GENERIC_ATOMIC64
--- 
-1.7.5.4
+T24gTW9uLCAyMDExLTExLTI4IGF0IDE3OjEyICswMTAwLCBEYW5pZWwgR29sbGUgd3JvdGU6Cj4g
+VGhpcyBhZGRzIHN1cHBvcnQgZm9yIGFudGVubmEgc3dpdGNoIGNvbmZpZ3VyYXRpb24gcHJvZmls
+ZXMgdG8gbmw4MDIxMS4KCk1laCwgSSBjb3VsZG4ndCBmaW5kIHRoaXMgcGF0Y2ggYmVjYXVzZSB0
+aGUgc3ViamVjdHMgYXJlIGFsbCB3cm9uZy4KVGhyZWUgcGF0Y2hlcyB3aXRoIGV4YWN0bHkgdGhl
+IHNhbWUgc3ViamVjdD8hIENvbWUgb24uIEFsc28gcGxlYXNlIHVzZQp0aHJlYWRlZCBtb2RlIHRv
+IHN1Ym1pdCAtLSBvdGhlcndpc2UgdGhlIDAvTiBkaXNjdXNzaW9uICYgdGhlIHBhdGNoZXMKZ2V0
+IHRvcm4gYXBhcnQgKHdoaWNoIGlzIHRoZSByZWFzb24gSSdtIHJlcGx5aW5nIGhlcmUpLgoKQW55
+d2F5LCBlbm91Z2ggY29tcGxhaW5pbmcuCgoKPiAgLyoqCj4gKyAqIHN0cnVjdCB3aXBoeV9leHRh
+bnRfcHJvZmlsZSAtIFVzZXItcGFyc2FibGUgZXh0ZXJuYWwgYW50ZW5uYSBzd2l0Y2ggaW5mbwo+
+ICsgKgo+ICsgKiBUaGlzIHN0cnVjdHVyZSBpcyB1c2VkIHRvIHByb3ZpZGUgdGhlIGF2YWlsYWJs
+ZSBzd2l0Y2ggY29uZmlndXJhdGlvbnMuCj4gKyAqIEBpZDogdW5pcXVlIGlkZW50aWZpZXIgb2Yg
+dGhlIHByb2ZpbGUKPiArICogQG5hbWU6IHByb2ZpbGUgbmFtZSAoYSBzaG9ydCBzdHJpbmcpCj4g
+KyAqIEBkZXNjcmlwdGlvbjogdXNlci1wYXJzYWJsZSBkZXNjcmlwdGlvbiBvZiB0aGUgcHJvZmls
+ZQo+ICsgKi8KPiArc3RydWN0IHdpcGh5X2V4dGFudF9wcm9maWxlIHsKPiArCWludCBpZDsKPiAr
+CWNoYXIgKm5hbWU7Cj4gKwljaGFyICpkZXNjOwoKY29uc3QKCj4gKwlzdHJ1Y3Qgd2lwaHlfZXh0
+YW50X3Byb2ZpbGUgKmV4dGFudDsKCmNvbnN0CgpBbHNvLCBzaG91bGRuJ3QgdGhpcyBhbGxvdyBt
+dWx0aXBsZSBwcm9maWxlcz8KCkl0J3MgYSBiaXQgc3RyYW5nZSB0byBoYXZlIGEgcHJvZmlsZSBJ
+RCBidXQgdGhlbiBvbmx5IGEgc2luZ2xlCnByb2ZpbGUgLi4uCgo+ICsvKiBwb2xpY3kgZm9yIGV4
+dGVybmFsIGFudGVubmEgc3dpdGNoIGNvbmZpZ3VyYXRpb24gcHJvZmlsZXMgKi8KPiArc3RhdGlj
+IGNvbnN0IHN0cnVjdCBubGFfcG9saWN5Cj4gK25sODAyMTFfZWFzcF9wb2xpY3lbTkw4MDIxMV9F
+QVNQX0FUVFJfTUFYICsgMV0gPSB7Cj4gKwlbTkw4MDIxMV9FQVNQX0FUVFJfSURdID0geyAudHlw
+ZSA9IE5MQV9VMzIgfSwKPiArCVtOTDgwMjExX0VBU1BfQVRUUl9OQU1FXSA9IHsgLnR5cGUgPSBO
+TEFfU1RSSU5HLAo+ICsJCQkJCS5sZW4gPSBJRUVFODAyMTFfTUFYX0RBVEFfTEVOIH0sCj4gKwlb
+Tkw4MDIxMV9FQVNQX0FUVFJfREVTQ10gPSB7IC50eXBlID0gTkxBX1NUUklORywKPiArCQkJCQku
+bGVuID0gSUVFRTgwMjExX01BWF9EQVRBX0xFTiB9LAo+ICt9OwoKVGhvc2UgbGVuZ3RoIHJlc3Ry
+aWN0aW9ucyBhcmUgY29tcGxldGVseSBib2d1cywgYnV0IHRoZXkncmUgYWxzbwp1bm5lY2Vzc2Fy
+eSBzaW5jZSB0aGlzIGRhdGEgaXMgb3V0cHV0IGRhdGEgb25seSBzbyB5b3UgYXJlbid0IHVzaW5n
+IHRoZQpwb2xpY3kgYW55d2hlcmUgYW55d2F5LgoKPiBAQCAtNzgxLDYgKzc5Niw0OCBAQCBzdGF0
+aWMgaW50IG5sODAyMTFfc2VuZF93aXBoeShzdHJ1Y3Qgc2tfYnVmZiAqbXNnLCB1MzIgcGlkLCB1
+MzIgc2VxLCBpbnQgZmxhZ3MsCj4gIAkJfQo+ICAJfQo+ICAKPiArCS8qCj4gKwkgKiBhbnRlbm5h
+IHN3aXRjaCBjb25maWd1cmF0aW9uIHByb2ZpbGUgc3VwcG9ydAo+ICsJICovCj4gKwlpZiAoZGV2
+LT53aXBoeS5mbGFncyAmIFdJUEhZX0ZMQUdfSEFTX0VYVEFOVF9TV0lUQ0gpIHsKPiArCQlzdHJ1
+Y3Qgd2lwaHlfZXh0YW50X3Byb2ZpbGUgKndlcHJvZjsKPiArCQlubF9leHRhbnQgPSBubGFfbmVz
+dF9zdGFydChtc2csIE5MODAyMTFfQVRUUl9XSVBIWV9FWFRBTlQpOwo+ICsJCWlmICghbmxfZXh0
+YW50KQo+ICsJCQlnb3RvIG5sYV9wdXRfZmFpbHVyZTsKPiArCj4gKwkJLyogY3VycmVudGx5IHNl
+bGVjdGVkIGNvbmZpZ3VyYXRpb24gcHJvZmlsZSAqLwo+ICsJCWlmIChkZXYtPm9wcy0+Z2V0X2V4
+dGFudCkgewo+ICsJCQl1MzIgZXh0YW50Owo+ICsJCQlpbnQgcmVzOwo+ICsJCQlyZXMgPSBkZXYt
+Pm9wcy0+Z2V0X2V4dGFudCgmZGV2LT53aXBoeSwgJmV4dGFudCk7Cj4gKwkJCWlmICghcmVzKQo+
+ICsJCQkJTkxBX1BVVF9VMzIobXNnLAo+ICsJCQkJCU5MODAyMTFfRVhUQU5UX0FUVFJfU1RBVEUs
+Cj4gKwkJCQkJZXh0YW50KTsKPiArCQl9Cj4gKwo+ICsJCS8qIGF2YWlsYWJsZSBwcm9maWxlcyAq
+Lwo+ICsJCWk9MDsKPiArCQlubF9lYXNwcyA9IG5sYV9uZXN0X3N0YXJ0KG1zZywgTkw4MDIxMV9F
+WFRBTlRfQVRUUl9QUk9GSUxFUyk7Cj4gKwkJZm9yICh3ZXByb2YgPSBkZXYtPndpcGh5LmV4dGFu
+dDsgd2Vwcm9mLT5pZCA+PSAwOyB3ZXByb2YrKykgewoKT2ggc28gdGhhdCdzIHN1cHBvc2VkIHRv
+IGJlIGFuIGFycmF5IC0tIHRoZXJlJ3Mgbm8gd2F5IHRvIHRlbGwgdGhpcyBmcm9tCnRoZSBoZWFk
+ZXIgZmlsZXMuIEl0J3MgYWNjZXB0YWJsZSwgYnV0IHBsZWFzZSBnaXZlIGl0IGFuIGV4cGxpY2l0
+Cmxlbmd0aC4KCgpBbnl3YXksIGFwYXJ0IGZyb20gdGhlc2UgdGVjaG5pY2FsIGlzc3VlcyB0aGF0
+IHlvdSBtdXN0IGZpeCwgSSBhbHNvIHdhbnQKc29tZWJvZHkgd2hvIGtub3dzIHdoYXQgdGhpcyBp
+cyB1c2VkIGZvciBhbmQgaG93IGl0IGlzIHVzZWQgdG8gcmV2aWV3Cml0LCB3aGljaCBtaWdodCBt
+ZWFuIHdhaXRpbmcgZm9yIEFkcmlhbiB3aG8gc2F5cyBpdCdsbCBiZSBhIGNvdXBsZSBvZgp3ZWVr
+cyBhdCBsZWFzdC4KCmpvaGFubmVzCgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpJbnRl
+bCBHbWJICkRvcm5hY2hlciBTdHJhc3NlIDEKODU2MjIgRmVsZGtpcmNoZW4vTXVlbmNoZW4sIERl
+dXRzY2hsYW5kIApTaXR6IGRlciBHZXNlbGxzY2hhZnQ6IEZlbGRraXJjaGVuIGJlaSBNdWVuY2hl
+bgpHZXNjaGFlZnRzZnVlaHJlcjogRG91Z2xhcyBMdXNrLCBQZXRlciBHbGVpc3NuZXIsIEhhbm5l
+cyBTY2h3YWRlcmVyClJlZ2lzdGVyZ2VyaWNodDogTXVlbmNoZW4gSFJCIDQ3NDU2IApVc3QuLUlk
+TnIuL1ZBVCBSZWdpc3RyYXRpb24gTm8uOiBERTEyOTM4NTg5NQpDaXRpYmFuayBGcmFua2Z1cnQg
+YS5NLiAoQkxaIDUwMiAxMDkgMDApIDYwMDExOTA1Mgo=
 
