@@ -1,57 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1391 "EHLO mms1.broadcom.com"
+Received: from nbd.name ([46.4.11.11]:57372 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753756Ab1LURiW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 12:38:22 -0500
-Message-ID: <4EF21983.1020107@broadcom.com> (sfid-20111221_183825_398031_0E06AD08)
-Date: Wed, 21 Dec 2011 18:38:11 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: lina <lina.lastname@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Debian Lists" <debian-user@lists.debian.org>,
-	=?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
-Subject: Re: bcm4331 firmware installer package
-References: <CAG9cJm=YkvHY56LoBoUf3fuh=xb7m+c0GgUzMZX+QyG1+CBCMg@mail.gmail.com>
-In-Reply-To: <CAG9cJm=YkvHY56LoBoUf3fuh=xb7m+c0GgUzMZX+QyG1+CBCMg@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+	id S1751774Ab1LDHjG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Dec 2011 02:39:06 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 3.2] ath9k: fix check for antenna diversity support
+Date: Sun,  4 Dec 2011 08:38:54 +0100
+Message-Id: <1322984334-62659-1-git-send-email-nbd@openwrt.org> (sfid-20111204_083913_456385_8694EDC5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/21/2011 11:59 AM, lina wrote:
-> Hi,
-> 
-> I don't know which one (else) can be fit for bcm4331 802.11a/b/g/n (rev 02)
-> 
-> From http://wiki.debian.org/bcm43xx#b43_and_b43legacy
-> 
-> I tried:
-> 
-> 1] aptitude install firmware-b43-lpphy-installer
-> 
-> No chroot environment found. Starting normal installation
-> No supported card found.
-> Use proper b43 or b43legacy firmware.
-> Aborting.
-> 
-> 2] # aptitude install firmware-b43-installer
-> 
-> No chroot environment found. Starting normal installation
-> Unsupported device(s) found: PCI id 14e4:4331
-> Aborting.
-> 
-> both of the listed are not working,
->
+fixes a regression on single-stream chips introduced in
+commit 43c3528430bd29f5e52438cad7cf7c0c62bf4583
+"ath9k: implement .get_antenna and .set_antenna"
 
-The bcm4331 support in b43 is pretty new so I do not expect distros are
-providing packages for it. Your best bet is to get linux-firmware repo
-from git.kernel.org. Probably the b43 developers can point you to the
-specific firmware file you need to use for that phy.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> [29546.428819] b43-phy0 ERROR: FOUND UNSUPPORTED PHY (Analog 9, Type
-> 7, Revision 1)
-
-Gr. AvS
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 714c7d8..1c87c7f 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -286,7 +286,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 			ath_start_ani(common);
+ 	}
+ 
+-	if (ath9k_hw_ops(ah)->antdiv_comb_conf_get && sc->ant_rx != 3) {
++	if ((ah->caps.hw_caps & ATH9K_HW_CAP_ANT_DIV_COMB) && sc->ant_rx != 3) {
+ 		struct ath_hw_antcomb_conf div_ant_conf;
+ 		u8 lna_conf;
+ 
+-- 
+1.7.3.2
 
