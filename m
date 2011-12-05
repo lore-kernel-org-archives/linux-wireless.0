@@ -1,88 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:17138 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752351Ab1LVGlX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Dec 2011 01:41:23 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Received: from mail.allnet.de ([212.18.29.59]:16991 "EHLO mail.allnet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756489Ab1LER4s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Dec 2011 12:56:48 -0500
+Message-ID: <4EDCF7EC.2030106@allnet.de> (sfid-20111205_185652_361182_EAEDA733)
+Date: Mon, 5 Dec 2011 17:57:16 +0100
+From: Daniel Golle <dgolle@allnet.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20210.53767.139322.166202@gargle.gargle.HOWL> (sfid-20111222_074126_873629_D2312C59)
-Date: Thu, 22 Dec 2011 12:15:27 +0530
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath6kl: Fix panic when setting a channel
+To: Johannes Berg <johannes.berg@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH v1 1/3] support for antenna configuration profiles
+References: <20111128161240.GA25454@localhost>	 (sfid-20111128_171813_665159_36F11CCF) <1322996760.4633.7.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1322996760.4633.7.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-cfg80211 could pass a NULL net_device to the driver via the
-set_channel() callback, when it receives a request to set the
-device's channel. Not handling this case properly results in this panic:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000cb0
-IP: [<ffffffffa0374e49>] ath6kl_cfg80211_ready+0x9/0x70 [ath6kl_sdio]
+Hi!
 
-Call Trace:
-[<ffffffffa0374ed7>] ath6kl_set_channel+0x27/0x90 [ath6kl_sdio]
-[<ffffffffa04dfd5f>] cfg80211_set_freq+0xff/0x1d0 [cfg80211]
-[<ffffffffa04d3275>] ? nl80211_set_wiphy+0x85/0x660 [cfg80211]
-[<ffffffffa04d3198>] __nl80211_set_channel.isra.39+0x118/0x140 [cfg80211]
-[<ffffffffa04d34f3>] nl80211_set_wiphy+0x303/0x660 [cfg80211]
-[<ffffffff813678d7>] ? rtnl_lock+0x17/0x20
-[<ffffffffa04ca165>] ? nl80211_pre_doit+0xb5/0x150 [cfg80211]
-[<ffffffff81382a45>] genl_rcv_msg+0x1d5/0x250
-[<ffffffff81382870>] ? genl_rcv+0x40/0x40
-[<ffffffff81381be9>] netlink_rcv_skb+0xa9/0xd0
-[<ffffffff81382855>] genl_rcv+0x25/0x40
-[<ffffffff811354f0>] ? might_fault+0x40/0x90
-[<ffffffff81381519>] netlink_unicast+0x2d9/0x320
-[<ffffffff813818e6>] netlink_sendmsg+0x2c6/0x320
-[<ffffffff81343800>] ? sock_update_classid+0xb0/0x110
-[<ffffffff8133f52e>] sock_sendmsg+0x10e/0x130
-[<ffffffff81169933>] ? mem_cgroup_update_page_stat+0x193/0x250
-[<ffffffff811354f0>] ? might_fault+0x40/0x90
-[<ffffffff811354f0>] ? might_fault+0x40/0x90
-[<ffffffff81135539>] ? might_fault+0x89/0x90
-[<ffffffff811354f0>] ? might_fault+0x40/0x90
-[<ffffffff8134d126>] ? verify_iovec+0x56/0xd0
-[<ffffffff8133f9e6>] __sys_sendmsg+0x396/0x3b0
-[<ffffffff8108e823>] ? up_read+0x23/0x40
-[<ffffffff81040e68>] ? do_page_fault+0x208/0x4e0
-[<ffffffff81193151>] ? vfsmount_lock_local_unlock+0x21/0x60
-[<ffffffff811947d0>] ? mntput_no_expire+0x30/0xe0
-[<ffffffff8119489f>] ? mntput+0x1f/0x30
-[<ffffffff81342149>] sys_sendmsg+0x49/0x90
-[<ffffffff81425482>] system_call_fastpath+0x16/0x1b
+On 12/04/2011 12:06 PM, Johannes Berg wrote:
+> On Mon, 2011-11-28 at 17:12 +0100, Daniel Golle wrote:
+>> This adds support for antenna switch configuration profiles to nl80211.
+> 
+> Meh, I couldn't find this patch because the subjects are all wrong.
+> Three patches with exactly the same subject?! Come on. Also please use
+> threaded mode to submit -- otherwise the 0/N discussion & the patches
+> get torn apart (which is the reason I'm replying here).
+I see, I try to use git-email in future to automatize the submission process and
+hope that would improve the form.
+The draft/v0 patch was posted on ath9k-devel, I re-posted this one to
+linux-wireless after Mohammed suggested to post it here to have a broader
+audience for discussion. Unfortunately I didn't repost the board-setup and
+userspace patches as well, I'll try to prepare that in the next days.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   13 ++++++++++++-
- 1 files changed, 12 insertions(+), 1 deletions(-)
+> Anyway, enough complaining.
+Please excuse me being a noob when it comes to collaboration methods, trying to
+emulate what I observe. I highly appreciate people showing me where and how I
+can improve.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 6c59a21..b120a7e 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2014,7 +2014,18 @@ static int ath6kl_set_channel(struct wiphy *wiphy, struct net_device *dev,
- 			      struct ieee80211_channel *chan,
- 			      enum nl80211_channel_type channel_type)
- {
--	struct ath6kl_vif *vif = netdev_priv(dev);
-+	struct ath6kl_vif *vif;
-+
-+	/*
-+	 * 'dev' could be NULL if a channel change is required for the hardware
-+	 * device itself, instead of a particular VIF.
-+	 *
-+	 * FIXME: To be handled properly when monitor mode is supported.
-+	 */
-+	if (!dev)
-+		return -EBUSY;
-+
-+	vif = netdev_priv(dev);
- 
- 	if (!ath6kl_cfg80211_ready(vif))
- 		return -EIO;
--- 
-1.7.8
+> Those length restrictions are completely bogus, but they're also
+> unnecessary since this data is output data only so you aren't using the
+> policy anywhere anyway.
+Should I completely skip adding it to the policy then or just ommit the length
+restriction?
 
+> Oh so that's supposed to be an array -- there's no way to tell this from
+> the header files. It's acceptable, but please give it an explicit
+> length.
+Ok, I haven't seen any devices with more than 2 possible antenna configuation
+profiles (horizontal/vertical, built-in/external) so far, so giving the array a
+fixed length of 4 should be fine for now.
+
+> Anyway, apart from these technical issues that you must fix, I also want
+> somebody who knows what this is used for and how it is used to review
+> it, which might mean waiting for Adrian who says it'll be a couple of
+> weeks at least.
+No worries about that, I'll also be traveling in the next few weeks and we can
+further discuss when Adrian has returned as well.
+
+
+
+Daniel
+
+- -- 
+ALLNET GmbH ; Maistr. 2 ; D-82110 Germering ; Germany
+Tel. +49-89-89422222 - Fax +49-89-89422233
+http://www.allnet.de
+email: Daniel Golle <dgolle@allnet.de>
+Schulungs-/Veranstaltungsprogramm: http://www.802lab.de<http://www.802lab.de/>
+Geschäftsführer: Wolfgang Marcus Bauer
+Handelsregister München B 95922 ; UST-ID-Nr. DE 128214294 ;
+St.-Nr.117/115/00164
+WEEE-Reg.-NR. DE 13101093
+Bankverbindung:
+Sparkasse Fürstenfeldbruck KTO: 2774594 ; BLZ: 70053070
+Swift-Code: BYLADEM1FFB ; IBAN: DE61700530700002774594
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJO3PfpAAoJEDy9cKN/1Et0gSwP/33wyuFu6Hz0o8BnSO7QCP5p
+QPH/KO9tzIsLh7VgDqGYFpkhInh4JCc+zumSM7OL8JY0NkJv+PVoCs9o3WqtDqdY
+k10CV4l1kT0ckfcvsE0E/LTsQAzq53tlc/A8g0NJCRVWUT2ikXE93ixcOh77n/lC
+VvcblSU1wvgvmKn9848Ydm31T32wdrI910kLnGH97NVc3K6cpQUtNLRA5adLTBlz
+nlxj7eFP2rwkiXpBMHO6HWqvW2LpgFgzHCnpCxVyq0To5l4l2KZuscRs94nRm717
+uScjxN7fPHj8WNv/QXlJ5+xQQLL5xfXzJd0UMNSx3yIY3ObgBbjA9j6eme3QLvKG
+Yz6jDzRbCCO0n4YfFxYnrcAsZawjHx4WqjmqV9vpYrEXDEmkaj3LSMt9dYfjWiZX
+PBfUs+Al+2NjO7lqq7nWMevmOlX+GBkQPJeH9Ov3NT8xAlqDmEEE8EzD5NXdAdDw
+BSATVJkTh5OVsU5S13Wlf98N6mcV904lmRDi9jEPUITL1ygiVFiqBMakIF62Ozgc
+flF83MR9f+NxLC0oeqVEYgMddwUK2O3wj5YrT9EsWt6mwJ2kzFfSugo4cf+IGCml
+6MZDX5OoeIB1jWe7MS7jONKXmz2dWU4g1tB8DHc6XSRZKXkrKm7hzrOSF9sIK6hJ
+i76D1gt+BH5/zFAHY4Fd
+=ytEh
+-----END PGP SIGNATURE-----
