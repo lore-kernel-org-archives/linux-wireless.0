@@ -1,197 +1,508 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s15228384.onlinehome-server.info ([87.106.30.177]:53952 "EHLO
-	mail.x86-64.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752257Ab1LALjX (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53404 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754772Ab1LEQpP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Dec 2011 06:39:23 -0500
-Date: Thu, 1 Dec 2011 12:39:19 +0100
-From: Borislav Petkov <bp@amd64.org>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, x86@kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	deepthi@linux.vnet.ibm.com
-Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
-Message-ID: <20111201113919.GC31552@aftab> (sfid-20111201_123946_540469_F53092BD)
-References: <lx6sezwGldO.A.IhF.UBpWOB@chimera>
- <201111212249.31196.rjw@sisk.pl>
- <20111122135412.GA29905@phenom.dumpdata.com>
- <20111129180414.GA11459@phenom.dumpdata.com>
- <20111129183428.GE8200@aftab>
- <20111130175936.GA15168@phenom.dumpdata.com>
+	Mon, 5 Dec 2011 11:45:15 -0500
+Date: Mon, 5 Dec 2011 11:30:32 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless 2011-12-05
+Message-ID: <20111205163032.GC2531@tuxdriver.com> (sfid-20111205_174546_529553_9C310553)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111130175936.GA15168@phenom.dumpdata.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 30, 2011 at 12:59:36PM -0500, Konrad Rzeszutek Wilk wrote:
-> On Tue, Nov 29, 2011 at 07:34:28PM +0100, Borislav Petkov wrote:
-> > On Tue, Nov 29, 2011 at 01:04:14PM -0500, Konrad Rzeszutek Wilk wrote:
-> > > This patch:
-> 
-> 
-> Borislav,
-> 
-> Thanks for your review comments. How does this patch look? I believe
-> I touched upon all of the things you mentioned.
-> 
-> From eb6dbd80078312c428dde69e9313606b7513a2e6 Mon Sep 17 00:00:00 2001
-> From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> Date: Mon, 21 Nov 2011 18:02:02 -0500
-> Subject: [PATCH] xen/pm_idle: Make pm_idle be default_idle under Xen.
-> 
-> This patch:
-> 
-> commit d91ee5863b71e8c90eaf6035bff3078a85e2e7b5
-> Author: Len Brown <len.brown@intel.com>
-> Date:   Fri Apr 1 18:28:35 2011 -0400
-> 
->     cpuidle: replace xen access to x86 pm_idle and default_idle
-> 
->     ..scribble on pm_idle and access default_idle,
->    have it simply disable_cpuidle() so acpi_idle will not load and
->    architecture default HLT will be used.
-> 
-> idea was to have one call - disable_cpuidle() which would make
-> pm_idle not be molested by other code. It disallows cpuidle_idle_call
-> to be set to pm_idle (which is excellent). But in the select_idle_routine()
-> and idle_setup(), the pm_idle can still be set to either:
-> amd_e400_idle, mwait_idle or default_idle. This depends on some
-> CPU flags (MWAIT) and in AMD case on the type of CPU.
-> 
-> In case of mwait_idle we can hit some instances where the hypervisor
-> (Amazon EC2 specifically) sets the MWAIT and we get:
-> 
-> Brought up 2 CPUs
-> invalid opcode: 0000 [#1] SMP
-> CPU 1
-> Modules linked in:
-> 
-> Pid: 0, comm: swapper Not tainted 3.1.0-0.rc6.git0.3.fc16.x86_64 #1
-> RIP: e030:[<ffffffff81015d1d>]  [<ffffffff81015d1d>] mwait_idle+0x6f/0xb4
-> RSP: e02b:ffff8801d28ddf10  EFLAGS: 00010082
-> RAX: ffff8801d28dc010 RBX: ffff8801d28ddfd8 RCX: 0000000000000000
-> RDX: 0000000000000000 RSI: 0000000000000001 RDI: 0000000000000001
-> RBP: ffff8801d28ddf10 R08: 0000000000000000 R09: 0000000000000001
-> R10: 0000000000000001 R11: ffff8801d28ddfd8 R12: ffffffff81b590d0
-> R13: 0000000000000000 R14: 0000000000000000 R15: 0000000000000000
-> FS:  0000000000000000(0000) GS:ffff8801dff81000(0000) knlGS:0000000000000000
-> CS:  e033 DS: 002b ES: 002b CR0: 000000008005003b
-> CR2: 0000000000000000 CR3: 0000000001a05000 CR4: 0000000000002660
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000000
-> Process swapper (pid: 0, threadinfo ffff8801d28dc000, task ffff8801d28cae60)
-> Stack:
->  ffff8801d28ddf40 ffffffff8100e2ed ffff8801dff8e390 c136dfe72feab515
->  0000000000000000 0000000000000000 ffff8801d28ddf50 ffffffff8149ee78
->  0000000000000000 0000000000000000 0000000000000000 0000000000000000
-> Call Trace:
->  [<ffffffff8100e2ed>] cpu_idle+0xae/0xe8
->  [<ffffffff8149ee78>] cpu_bringup_and_idle+0xe/0x10
-> RIP  [<ffffffff81015d1d>] mwait_idle+0x6f/0xb4
->  RSP <ffff8801d28ddf10>
-> 
-> In case of amd_e400_idle we don't get so spectacular crashes, but
-> we do end up making an MSR which is trapped in the hypervisor,
-> and then follow it up with a yield hypercall. Meaning we end up
-> going to hypervisor twice instead of just once.
-> 
-> The previous behavior before v3.0 was that pm_idle was set
-> to default_idle irregardless of select_idle_routine/idle_setup.
-> 
-> We want to do that, but only for one specific case: Xen.
-> This patch does that.
-> 
-> Fixes RH BZ #739499 and Ubuntu #881076
-> Reported-by: Stefan Bader <stefan.bader@canonical.com>
-> Signed-off-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> ---
->  arch/x86/include/asm/system.h |    1 +
->  arch/x86/kernel/process.c     |    8 ++++++++
->  arch/x86/xen/setup.c          |    2 +-
->  3 files changed, 10 insertions(+), 1 deletions(-)
-> 
-> diff --git a/arch/x86/include/asm/system.h b/arch/x86/include/asm/system.h
-> index c2ff2a1..2d2f01c 100644
-> --- a/arch/x86/include/asm/system.h
-> +++ b/arch/x86/include/asm/system.h
-> @@ -401,6 +401,7 @@ extern unsigned long arch_align_stack(unsigned long sp);
->  extern void free_init_pages(char *what, unsigned long begin, unsigned long end);
->  
->  void default_idle(void);
-> +bool set_pm_idle_to_default(void);
->  
->  void stop_this_cpu(void *dummy);
->  
-> diff --git a/arch/x86/kernel/process.c b/arch/x86/kernel/process.c
-> index 1f7f8c8..31f47ba 100644
-> --- a/arch/x86/kernel/process.c
-> +++ b/arch/x86/kernel/process.c
-> @@ -404,6 +404,14 @@ void default_idle(void)
->  EXPORT_SYMBOL(default_idle);
->  #endif
->  
-> +bool set_pm_idle_to_default(void)
-> +{
-> +	bool ret = !!pm_idle;
-> +
-> +	pm_idle = default_idle;
-> +
-> +	return ret;
-> +}
->  void stop_this_cpu(void *dummy)
->  {
->  	local_irq_disable();
-> diff --git a/arch/x86/xen/setup.c b/arch/x86/xen/setup.c
-> index 46d6d21..79dfb57 100644
-> --- a/arch/x86/xen/setup.c
-> +++ b/arch/x86/xen/setup.c
-> @@ -448,6 +448,6 @@ void __init xen_arch_setup(void)
->  #endif
->  	disable_cpuidle();
->  	boot_option_idle_override = IDLE_HALT;
-> -
-> +	WARN_ON(set_pm_idle_to_default());
->  	fiddle_vdso();
->  }
+commit cbec0627ef1adf7afa448e8bbae3146ce910212a
 
->From what I can see, you get the following callchain:
+Dave,
 
-start_kernel
-|-> setup_arch
-    |-> x86_init.oem.arch_setup = xen_arch_setup
-    ....
-    |-> check_bugs
-        |-> identify_boot_cpu
-	    |-> identify_cpu
-	        |-> select_idle_routine
+This batch of fixes is intended for 3.2.
 
+Included is an iwlwifi fix to correctly set some flags related to packet
+encryption, a couple of cfg80211 regulatory fixes (including one that
+patches a hole created by the earlier "cfg80211: fix regulatory NULL
+dereference"), a mac80211 fix to avoid sending probe requests with no
+supported rates included, an iwlwifi fix to prevent reconfiguring HT40
+after an association (prevents an assert in the firmware), and another
+iwlwifi fix that customizes the watchdog timer enablement based on the
+device type.
 
-so xen_arch_setup will set pm_idle and select_idle_routine will honour
-it. I'm being told this is run either in the dom0 or the paravirt guest
-and if so, I don't see any issue with this for baremetal. So you can
-have my ACK provided this is tested on baremetal too.
+Also included is a reversion of a patch that was causing the iwlegacy
+driver to throw WARNINGs.
 
-Thanks.
+Please let me know if there are problems!
 
+John
+
+---
+
+The following changes since commit f61759e6b831a55b89e584b198c3da325e2bc379:
+
+  ipv4: make sure RTO_ONLINK is saved in routing cache (2011-12-03 01:32:23 -0500)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
+
+Johannes Berg (1):
+      iwlagn: fix HW crypto for TX-only keys
+
+John W. Linville (2):
+      Revert "mac80211: clear sta.drv_priv on reconfiguration"
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless into for-davem
+
+Luis R. Rodriguez (2):
+      cfg80211: fix race on init and driver registration
+      cfg80211: amend regulatory NULL dereference fix
+
+Simon Wunderlich (1):
+      mac80211: fill rate filter for internal scan requests
+
+Wey-Yi Guy (2):
+      iwlwifi: do not re-configure HT40 after associated
+      iwlwifi: change the default behavior of watchdog timer
+
+ drivers/net/wireless/iwlwifi/iwl-1000.c     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   36 ++++++++++++-------
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c  |    5 ---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   34 +++++++++---------
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 +
+ drivers/net/wireless/iwlwifi/iwl-core.c     |   22 +++++++++---
+ drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +
+ drivers/net/wireless/iwlwifi/iwl-shared.h   |    4 +-
+ net/mac80211/main.c                         |    6 +++
+ net/mac80211/util.c                         |    1 -
+ net/wireless/reg.c                          |   49 +++++++++++++++++----------
+ 12 files changed, 102 insertions(+), 61 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index e12b48c..dd008b0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -191,6 +191,7 @@ static struct iwl_base_params iwl1000_base_params = {
+ 	.chain_noise_scale = 1000,
+ 	.wd_timeout = IWL_DEF_WD_TIMEOUT,
+ 	.max_event_log_size = 128,
++	.wd_disable = true,
+ };
+ static struct iwl_ht_params iwl1000_ht_params = {
+ 	.ht_greenfield_support = true,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index c511c98..f55fb2d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -364,6 +364,7 @@ static struct iwl_base_params iwl5000_base_params = {
+ 	.wd_timeout = IWL_LONG_WD_TIMEOUT,
+ 	.max_event_log_size = 512,
+ 	.no_idle_support = true,
++	.wd_disable = true,
+ };
+ static struct iwl_ht_params iwl5000_ht_params = {
+ 	.ht_greenfield_support = true,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 58a381c..a7a6def 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -528,6 +528,24 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+ 	return 0;
+ }
+ 
++void iwlagn_config_ht40(struct ieee80211_conf *conf,
++	struct iwl_rxon_context *ctx)
++{
++	if (conf_is_ht40_minus(conf)) {
++		ctx->ht.extension_chan_offset =
++			IEEE80211_HT_PARAM_CHA_SEC_BELOW;
++		ctx->ht.is_40mhz = true;
++	} else if (conf_is_ht40_plus(conf)) {
++		ctx->ht.extension_chan_offset =
++			IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
++		ctx->ht.is_40mhz = true;
++	} else {
++		ctx->ht.extension_chan_offset =
++			IEEE80211_HT_PARAM_CHA_SEC_NONE;
++		ctx->ht.is_40mhz = false;
++	}
++}
++
+ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
+ {
+ 	struct iwl_priv *priv = hw->priv;
+@@ -586,19 +604,11 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 				ctx->ht.enabled = conf_is_ht(conf);
+ 
+ 			if (ctx->ht.enabled) {
+-				if (conf_is_ht40_minus(conf)) {
+-					ctx->ht.extension_chan_offset =
+-						IEEE80211_HT_PARAM_CHA_SEC_BELOW;
+-					ctx->ht.is_40mhz = true;
+-				} else if (conf_is_ht40_plus(conf)) {
+-					ctx->ht.extension_chan_offset =
+-						IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
+-					ctx->ht.is_40mhz = true;
+-				} else {
+-					ctx->ht.extension_chan_offset =
+-						IEEE80211_HT_PARAM_CHA_SEC_NONE;
+-					ctx->ht.is_40mhz = false;
+-				}
++				/* if HT40 is used, it should not change
++				 * after associated except channel switch */
++				if (iwl_is_associated_ctx(ctx) &&
++				     !ctx->ht.is_40mhz)
++					iwlagn_config_ht40(conf, ctx);
+ 			} else
+ 				ctx->ht.is_40mhz = false;
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+index ed62836..4b2aa1d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+@@ -1268,9 +1268,6 @@ int iwl_set_dynamic_key(struct iwl_priv *priv,
+ 
+ 	switch (keyconf->cipher) {
+ 	case WLAN_CIPHER_SUITE_TKIP:
+-		keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
+-		keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+-
+ 		if (sta)
+ 			addr = sta->addr;
+ 		else /* station mode case only */
+@@ -1283,8 +1280,6 @@ int iwl_set_dynamic_key(struct iwl_priv *priv,
+ 					  seq.tkip.iv32, p1k, CMD_SYNC);
+ 		break;
+ 	case WLAN_CIPHER_SUITE_CCMP:
+-		keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+-		/* fall through */
+ 	case WLAN_CIPHER_SUITE_WEP40:
+ 	case WLAN_CIPHER_SUITE_WEP104:
+ 		ret = iwlagn_send_sta_key(priv, keyconf, sta_id,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index ccba69b..bacc06c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2316,6 +2316,17 @@ static int iwlagn_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		return -EOPNOTSUPP;
+ 	}
+ 
++	switch (key->cipher) {
++	case WLAN_CIPHER_SUITE_TKIP:
++		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
++		/* fall through */
++	case WLAN_CIPHER_SUITE_CCMP:
++		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
++		break;
++	default:
++		break;
++	}
++
+ 	/*
+ 	 * We could program these keys into the hardware as well, but we
+ 	 * don't expect much multicast traffic in IBSS and having keys
+@@ -2599,21 +2610,9 @@ static void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
+ 
+ 	/* Configure HT40 channels */
+ 	ctx->ht.enabled = conf_is_ht(conf);
+-	if (ctx->ht.enabled) {
+-		if (conf_is_ht40_minus(conf)) {
+-			ctx->ht.extension_chan_offset =
+-				IEEE80211_HT_PARAM_CHA_SEC_BELOW;
+-			ctx->ht.is_40mhz = true;
+-		} else if (conf_is_ht40_plus(conf)) {
+-			ctx->ht.extension_chan_offset =
+-				IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
+-			ctx->ht.is_40mhz = true;
+-		} else {
+-			ctx->ht.extension_chan_offset =
+-				IEEE80211_HT_PARAM_CHA_SEC_NONE;
+-			ctx->ht.is_40mhz = false;
+-		}
+-	} else
++	if (ctx->ht.enabled)
++		iwlagn_config_ht40(conf, ctx);
++	else
+ 		ctx->ht.is_40mhz = false;
+ 
+ 	if ((le16_to_cpu(ctx->staging.channel) != ch))
+@@ -3499,9 +3498,10 @@ MODULE_PARM_DESC(plcp_check, "Check plcp health (default: 1 [enabled])");
+ module_param_named(ack_check, iwlagn_mod_params.ack_check, bool, S_IRUGO);
+ MODULE_PARM_DESC(ack_check, "Check ack health (default: 0 [disabled])");
+ 
+-module_param_named(wd_disable, iwlagn_mod_params.wd_disable, bool, S_IRUGO);
++module_param_named(wd_disable, iwlagn_mod_params.wd_disable, int, S_IRUGO);
+ MODULE_PARM_DESC(wd_disable,
+-		"Disable stuck queue watchdog timer (default: 0 [enabled])");
++		"Disable stuck queue watchdog timer 0=system default, "
++		"1=disable, 2=enable (default: 0)");
+ 
+ /*
+  * set bt_coex_active to true, uCode will do kill/defer
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 5b936ec..3856aba 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -86,6 +86,8 @@ void iwlagn_bss_info_changed(struct ieee80211_hw *hw,
+ 			     struct ieee80211_vif *vif,
+ 			     struct ieee80211_bss_conf *bss_conf,
+ 			     u32 changes);
++void iwlagn_config_ht40(struct ieee80211_conf *conf,
++			struct iwl_rxon_context *ctx);
+ 
+ /* uCode */
+ int iwlagn_rx_calib_result(struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 001fdf1..fcf5416 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1810,11 +1810,23 @@ void iwl_setup_watchdog(struct iwl_priv *priv)
+ {
+ 	unsigned int timeout = priv->cfg->base_params->wd_timeout;
+ 
+-	if (timeout && !iwlagn_mod_params.wd_disable)
+-		mod_timer(&priv->watchdog,
+-			  jiffies + msecs_to_jiffies(IWL_WD_TICK(timeout)));
+-	else
+-		del_timer(&priv->watchdog);
++	if (!iwlagn_mod_params.wd_disable) {
++		/* use system default */
++		if (timeout && !priv->cfg->base_params->wd_disable)
++			mod_timer(&priv->watchdog,
++				jiffies +
++				msecs_to_jiffies(IWL_WD_TICK(timeout)));
++		else
++			del_timer(&priv->watchdog);
++	} else {
++		/* module parameter overwrite default configuration */
++		if (timeout && iwlagn_mod_params.wd_disable == 2)
++			mod_timer(&priv->watchdog,
++				jiffies +
++				msecs_to_jiffies(IWL_WD_TICK(timeout)));
++		else
++			del_timer(&priv->watchdog);
++	}
+ }
+ 
+ /**
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 137da33..f2fc288 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -113,6 +113,7 @@ struct iwl_lib_ops {
+  * @shadow_reg_enable: HW shadhow register bit
+  * @no_idle_support: do not support idle mode
+  * @hd_v2: v2 of enhanced sensitivity value, used for 2000 series and up
++ * wd_disable: disable watchdog timer
+  */
+ struct iwl_base_params {
+ 	int eeprom_size;
+@@ -134,6 +135,7 @@ struct iwl_base_params {
+ 	const bool shadow_reg_enable;
+ 	const bool no_idle_support;
+ 	const bool hd_v2;
++	const bool wd_disable;
+ };
+ /*
+  * @advanced_bt_coexist: support advanced bt coexist
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 1f7a93c..14eaf37 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -120,7 +120,7 @@ extern struct iwl_mod_params iwlagn_mod_params;
+  * @restart_fw: restart firmware, default = 1
+  * @plcp_check: enable plcp health check, default = true
+  * @ack_check: disable ack health check, default = false
+- * @wd_disable: enable stuck queue check, default = false
++ * @wd_disable: enable stuck queue check, default = 0
+  * @bt_coex_active: enable bt coex, default = true
+  * @led_mode: system default, default = 0
+  * @no_sleep_autoadjust: disable autoadjust, default = true
+@@ -141,7 +141,7 @@ struct iwl_mod_params {
+ 	int restart_fw;
+ 	bool plcp_check;
+ 	bool ack_check;
+-	bool wd_disable;
++	int  wd_disable;
+ 	bool bt_coex_active;
+ 	int led_mode;
+ 	bool no_sleep_autoadjust;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index d999bf3..cae4435 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -757,6 +757,12 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if (!local->int_scan_req)
+ 		return -ENOMEM;
+ 
++	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
++		if (!local->hw.wiphy->bands[band])
++			continue;
++		local->int_scan_req->rates[band] = (u32) -1;
++	}
++
+ 	/* if low-level driver supports AP, we also support VLAN */
+ 	if (local->hw.wiphy->interface_modes & BIT(NL80211_IFTYPE_AP)) {
+ 		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_AP_VLAN);
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index eca0fad..d5230ec 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1039,7 +1039,6 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 					     struct ieee80211_sub_if_data,
+ 					     u.ap);
+ 
+-			memset(&sta->sta.drv_priv, 0, hw->sta_data_size);
+ 			WARN_ON(drv_sta_add(local, sdata, &sta->sta));
+ 		}
+ 	}
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 77e9267..3302c56 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -57,8 +57,17 @@
+ #define REG_DBG_PRINT(args...)
+ #endif
+ 
++static struct regulatory_request core_request_world = {
++	.initiator = NL80211_REGDOM_SET_BY_CORE,
++	.alpha2[0] = '0',
++	.alpha2[1] = '0',
++	.intersect = false,
++	.processed = true,
++	.country_ie_env = ENVIRON_ANY,
++};
++
+ /* Receipt of information from last regulatory request */
+-static struct regulatory_request *last_request;
++static struct regulatory_request *last_request = &core_request_world;
+ 
+ /* To trigger userspace events */
+ static struct platform_device *reg_pdev;
+@@ -150,7 +159,7 @@ static char user_alpha2[2];
+ module_param(ieee80211_regdom, charp, 0444);
+ MODULE_PARM_DESC(ieee80211_regdom, "IEEE 802.11 regulatory domain code");
+ 
+-static void reset_regdomains(void)
++static void reset_regdomains(bool full_reset)
+ {
+ 	/* avoid freeing static information or freeing something twice */
+ 	if (cfg80211_regdomain == cfg80211_world_regdom)
+@@ -165,6 +174,13 @@ static void reset_regdomains(void)
+ 
+ 	cfg80211_world_regdom = &world_regdom;
+ 	cfg80211_regdomain = NULL;
++
++	if (!full_reset)
++		return;
++
++	if (last_request != &core_request_world)
++		kfree(last_request);
++	last_request = &core_request_world;
+ }
+ 
+ /*
+@@ -175,7 +191,7 @@ static void update_world_regdomain(const struct ieee80211_regdomain *rd)
+ {
+ 	BUG_ON(!last_request);
+ 
+-	reset_regdomains();
++	reset_regdomains(false);
+ 
+ 	cfg80211_world_regdom = rd;
+ 	cfg80211_regdomain = rd;
+@@ -1407,7 +1423,8 @@ static int __regulatory_hint(struct wiphy *wiphy,
+ 	}
+ 
+ new_request:
+-	kfree(last_request);
++	if (last_request != &core_request_world)
++		kfree(last_request);
+ 
+ 	last_request = pending_request;
+ 	last_request->intersect = intersect;
+@@ -1577,9 +1594,6 @@ static int regulatory_hint_core(const char *alpha2)
+ {
+ 	struct regulatory_request *request;
+ 
+-	kfree(last_request);
+-	last_request = NULL;
+-
+ 	request = kzalloc(sizeof(struct regulatory_request),
+ 			  GFP_KERNEL);
+ 	if (!request)
+@@ -1777,7 +1791,7 @@ static void restore_regulatory_settings(bool reset_user)
+ 	mutex_lock(&cfg80211_mutex);
+ 	mutex_lock(&reg_mutex);
+ 
+-	reset_regdomains();
++	reset_regdomains(true);
+ 	restore_alpha2(alpha2, reset_user);
+ 
+ 	/*
+@@ -2037,8 +2051,10 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 	}
+ 
+ 	request_wiphy = wiphy_idx_to_wiphy(last_request->wiphy_idx);
+-	if (!request_wiphy) {
+-		reg_set_request_processed();
++	if (!request_wiphy &&
++	    (last_request->initiator == NL80211_REGDOM_SET_BY_DRIVER ||
++	     last_request->initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE)) {
++		schedule_delayed_work(&reg_timeout, 0);
+ 		return -ENODEV;
+ 	}
+ 
+@@ -2046,7 +2062,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 		int r;
+ 
+ 		if (last_request->initiator != NL80211_REGDOM_SET_BY_DRIVER) {
+-			reset_regdomains();
++			reset_regdomains(false);
+ 			cfg80211_regdomain = rd;
+ 			return 0;
+ 		}
+@@ -2067,7 +2083,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 		if (r)
+ 			return r;
+ 
+-		reset_regdomains();
++		reset_regdomains(false);
+ 		cfg80211_regdomain = rd;
+ 		return 0;
+ 	}
+@@ -2092,7 +2108,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 
+ 		rd = NULL;
+ 
+-		reset_regdomains();
++		reset_regdomains(false);
+ 		cfg80211_regdomain = intersected_rd;
+ 
+ 		return 0;
+@@ -2112,7 +2128,7 @@ static int __set_regdom(const struct ieee80211_regdomain *rd)
+ 	kfree(rd);
+ 	rd = NULL;
+ 
+-	reset_regdomains();
++	reset_regdomains(false);
+ 	cfg80211_regdomain = intersected_rd;
+ 
+ 	return 0;
+@@ -2265,11 +2281,8 @@ void /* __init_or_exit */ regulatory_exit(void)
+ 	mutex_lock(&cfg80211_mutex);
+ 	mutex_lock(&reg_mutex);
+ 
+-	reset_regdomains();
+-
+-	kfree(last_request);
++	reset_regdomains(true);
+ 
+-	last_request = NULL;
+ 	dev_set_uevent_suppress(&reg_pdev->dev, true);
+ 
+ 	platform_device_unregister(reg_pdev);
 -- 
-Regards/Gruss,
-Boris.
-
-Advanced Micro Devices GmbH
-Einsteinring 24, 85609 Dornach
-GM: Alberto Bozzo
-Reg: Dornach, Landkreis Muenchen
-HRB Nr. 43632 WEEE Registernr: 129 19551
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
