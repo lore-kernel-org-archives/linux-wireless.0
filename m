@@ -1,68 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:64017 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757070Ab1LWNXY (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:40638 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932446Ab1LET70 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Dec 2011 08:23:24 -0500
-Message-ID: <4EF480C4.8040104@qca.qualcomm.com> (sfid-20111223_142328_723803_81E12472)
-Date: Fri, 23 Dec 2011 15:23:16 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Mon, 5 Dec 2011 14:59:26 -0500
+Received: by ggnr5 with SMTP id r5so5400698ggn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2011 11:59:26 -0800 (PST)
 MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: Fix panic when setting a channel
-References: <20210.53767.139322.166202@gargle.gargle.HOWL>
-In-Reply-To: <20210.53767.139322.166202@gargle.gargle.HOWL>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <1322923766-14379-2-git-send-email-hauke@hauke-m.de>
+References: <1322923766-14379-1-git-send-email-hauke@hauke-m.de> <1322923766-14379-2-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 5 Dec 2011 11:59:05 -0800
+Message-ID: <CAB=NE6XHuopzh9FU018N_dSAU7Fd4TvnRqeq8gdXqDagdQEH1Q@mail.gmail.com> (sfid-20111205_205930_193668_425D9044)
+Subject: Re: [PATCH 2/2] compat: add module_usb_driver and module_platform_driver
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/22/2011 08:45 AM, Sujith Manoharan wrote:
-> cfg80211 could pass a NULL net_device to the driver via the
-> set_channel() callback, when it receives a request to set the
-> device's channel. Not handling this case properly results in this panic:
-> 
-> BUG: unable to handle kernel NULL pointer dereference at 0000000000000cb0
-> IP: [<ffffffffa0374e49>] ath6kl_cfg80211_ready+0x9/0x70 [ath6kl_sdio]
-> 
-> Call Trace:
-> [<ffffffffa0374ed7>] ath6kl_set_channel+0x27/0x90 [ath6kl_sdio]
-> [<ffffffffa04dfd5f>] cfg80211_set_freq+0xff/0x1d0 [cfg80211]
-> [<ffffffffa04d3275>] ? nl80211_set_wiphy+0x85/0x660 [cfg80211]
-> [<ffffffffa04d3198>] __nl80211_set_channel.isra.39+0x118/0x140 [cfg80211]
-> [<ffffffffa04d34f3>] nl80211_set_wiphy+0x303/0x660 [cfg80211]
-> [<ffffffff813678d7>] ? rtnl_lock+0x17/0x20
-> [<ffffffffa04ca165>] ? nl80211_pre_doit+0xb5/0x150 [cfg80211]
-> [<ffffffff81382a45>] genl_rcv_msg+0x1d5/0x250
-> [<ffffffff81382870>] ? genl_rcv+0x40/0x40
-> [<ffffffff81381be9>] netlink_rcv_skb+0xa9/0xd0
-> [<ffffffff81382855>] genl_rcv+0x25/0x40
-> [<ffffffff811354f0>] ? might_fault+0x40/0x90
-> [<ffffffff81381519>] netlink_unicast+0x2d9/0x320
-> [<ffffffff813818e6>] netlink_sendmsg+0x2c6/0x320
-> [<ffffffff81343800>] ? sock_update_classid+0xb0/0x110
-> [<ffffffff8133f52e>] sock_sendmsg+0x10e/0x130
-> [<ffffffff81169933>] ? mem_cgroup_update_page_stat+0x193/0x250
-> [<ffffffff811354f0>] ? might_fault+0x40/0x90
-> [<ffffffff811354f0>] ? might_fault+0x40/0x90
-> [<ffffffff81135539>] ? might_fault+0x89/0x90
-> [<ffffffff811354f0>] ? might_fault+0x40/0x90
-> [<ffffffff8134d126>] ? verify_iovec+0x56/0xd0
-> [<ffffffff8133f9e6>] __sys_sendmsg+0x396/0x3b0
-> [<ffffffff8108e823>] ? up_read+0x23/0x40
-> [<ffffffff81040e68>] ? do_page_fault+0x208/0x4e0
-> [<ffffffff81193151>] ? vfsmount_lock_local_unlock+0x21/0x60
-> [<ffffffff811947d0>] ? mntput_no_expire+0x30/0xe0
-> [<ffffffff8119489f>] ? mntput+0x1f/0x30
-> [<ffffffff81342149>] sys_sendmsg+0x49/0x90
-> [<ffffffff81425482>] system_call_fastpath+0x16/0x1b
-> 
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Applied and pushed all of these and the compat ones, thanks sooo much!!!~
 
-Thanks, patch applied.
+  Luis
 
-When does this happen in practise? It's always good to document the
-actual (user visible) bug the patch fixes.
-
-Kalle
+On Sat, Dec 3, 2011 at 9:49 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  include/linux/compat-3.2.h |    9 +++++++++
+>  include/linux/compat-3.3.h |   35 +++++++++++++++++++++++++++++++++++
+>  2 files changed, 44 insertions(+), 0 deletions(-)
+>
+> diff --git a/include/linux/compat-3.2.h b/include/linux/compat-3.2.h
+> index db0f648..fb9ef68 100644
+> --- a/include/linux/compat-3.2.h
+> +++ b/include/linux/compat-3.2.h
+> @@ -55,6 +55,15 @@ static inline char *hex_byte_pack(char *buf, u8 byte)
+>        return buf;
+>  }
+>
+> +/* module_platform_driver() - Helper macro for drivers that don't do
+> + * anything special in module init/exit.  This eliminates a lot of
+> + * boilerplate.  Each module may only use this macro once, and
+> + * calling it replaces module_init() and module_exit()
+> + */
+> +#define module_platform_driver(__platform_driver) \
+> +        module_driver(__platform_driver, platform_driver_register, \
+> +                        platform_driver_unregister)
+> +
+>  #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,2,0)) */
+>
+>  #endif /* LINUX_3_2_COMPAT_H */
+> diff --git a/include/linux/compat-3.3.h b/include/linux/compat-3.3.h
+> index 9383a6e..821333c 100644
+> --- a/include/linux/compat-3.3.h
+> +++ b/include/linux/compat-3.3.h
+> @@ -33,6 +33,41 @@ static inline void skb_complete_wifi_ack(struct sk_buff *skb, bool acked)
+>
+>  typedef u32 netdev_features_t;
+>
+> +/* source include/linux/device.h */
+> +/**
+> + * module_driver() - Helper macro for drivers that don't do anything
+> + * special in module init/exit. This eliminates a lot of boilerplate.
+> + * Each module may only use this macro once, and calling it replaces
+> + * module_init() and module_exit().
+> + *
+> + * Use this macro to construct bus specific macros for registering
+> + * drivers, and do not use it on its own.
+> + */
+> +#define module_driver(__driver, __register, __unregister) \
+> +static int __init __driver##_init(void) \
+> +{ \
+> +       return __register(&(__driver)); \
+> +} \
+> +module_init(__driver##_init); \
+> +static void __exit __driver##_exit(void) \
+> +{ \
+> +       __unregister(&(__driver)); \
+> +} \
+> +module_exit(__driver##_exit);
+> +
+> +/* source include/linux/usb.h */
+> +/**
+> + * module_usb_driver() - Helper macro for registering a USB driver
+> + * @__usb_driver: usb_driver struct
+> + *
+> + * Helper macro for USB drivers which do not do anything special in module
+> + * init/exit. This eliminates a lot of boilerplate. Each module may only
+> + * use this macro once, and calling it replaces module_init() and module_exit()
+> + */
+> +#define module_usb_driver(__usb_driver) \
+> +       module_driver(__usb_driver, usb_register, \
+> +                      usb_deregister)
+> +
+>  #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0)) */
+>
+>  #endif /* LINUX_3_3_COMPAT_H */
+> --
+> 1.7.5.4
+>
