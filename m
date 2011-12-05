@@ -1,60 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.vyatta.com ([76.74.103.46]:37719 "EHLO mail.vyatta.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752260Ab1LHRVd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 12:21:33 -0500
-Date: Thu, 8 Dec 2011 09:21:30 -0800
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Dave Taht <dave.taht@gmail.com>,
-	David Miller <davem@davemloft.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org, Hagen Paul Pfeifer <hagen@jauu.net>,
-	bloat-devel <bloat-devel@lists.bufferbloat.net>,
-	bloat <bloat@lists.bufferbloat.net>
-Subject: Re: [PATCH net-next] sch_red: Adaptative RED AQM
-Message-ID: <20111208092130.656c39ff@nehalam.linuxnetplumber.net> (sfid-20111208_182137_536582_B7001AA9)
-In-Reply-To: <1323360363.2521.30.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
-References: <CAA93jw7kQYONQiAozatRmdRRJeK0GB9eNDWtRZ3AL+OVKn0OpA@mail.gmail.com>
-	<1323082774.2670.40.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
-	<1323360363.2521.30.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60778 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932546Ab1LERaM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Dec 2011 12:30:12 -0500
+Date: Mon, 5 Dec 2011 12:19:39 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2011-12-05
+Message-ID: <20111205171938.GD2531@tuxdriver.com> (sfid-20111205_183043_218048_03A42082)
+References: <20111205163032.GC2531@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="1yeeQ81UyVL57Vl7"
+In-Reply-To: <20111205163032.GC2531@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 08 Dec 2011 17:06:03 +0100
-Eric Dumazet <eric.dumazet@gmail.com> wrote:
 
-> Changes against our RED implementation are :
-> 
-> max_p is no longer a negative power of two (1/(2^Plog)), but a Q0.32
-> fixed point number, to allow full range described in Adatative paper.
-> 
-> To deliver a random number, we now use a reciprocal divide (thats really
-> a multiply), but this operation is done once per marked/droped packet
-> when in RED_BETWEEN_TRESH window, so added cost (compared to previous
-> AND operation) is near zero.
-> 
-> dump operation gives current max_p value in a new TCA_RED_MAX_P
-> attribute.
-> 
-> Example on a 10Mbit link :
-> 
-> tc qdisc add dev $DEV parent 1:1 handle 10: est 1sec 8sec red \
->    limit 400000 min 30000 max 90000 avpkt 1000 \
->    burst 55 ecn adaptative bandwidth 10Mbit
-> 
-> # tc -s -d qdisc show dev eth3
-> ...
-> qdisc red 10: parent 1:1 limit 400000b min 30000b max 90000b ecn
-> adaptative ewma 5 max_p=0.113335 Scell_log 15
->  Sent 50414282 bytes 34504 pkt (dropped 35, overlimits 1392 requeues 0) 
->  rate 9749Kbit 831pps backlog 72056b 16p requeues 0 
->   marked 1357 early 35 pdrop 0 other 0
-> 
-> 
-> Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
+--1yeeQ81UyVL57Vl7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Is this backward compatible for users that don't specify
-an adaptive parameter.
+Forgot the signature...I'll sign this one, just in case! :-)
+
+John
+
+On Mon, Dec 05, 2011 at 11:30:32AM -0500, John W. Linville wrote:
+> commit cbec0627ef1adf7afa448e8bbae3146ce910212a
+>=20
+> Dave,
+>=20
+> This batch of fixes is intended for 3.2.
+>=20
+> Included is an iwlwifi fix to correctly set some flags related to packet
+> encryption, a couple of cfg80211 regulatory fixes (including one that
+> patches a hole created by the earlier "cfg80211: fix regulatory NULL
+> dereference"), a mac80211 fix to avoid sending probe requests with no
+> supported rates included, an iwlwifi fix to prevent reconfiguring HT40
+> after an association (prevents an assert in the firmware), and another
+> iwlwifi fix that customizes the watchdog timer enablement based on the
+> device type.
+>=20
+> Also included is a reversion of a patch that was causing the iwlegacy
+> driver to throw WARNINGs.
+>=20
+> Please let me know if there are problems!
+>=20
+> John
+>=20
+> ---
+>=20
+> The following changes since commit f61759e6b831a55b89e584b198c3da325e2bc3=
+79:
+>=20
+>   ipv4: make sure RTO_ONLINK is saved in routing cache (2011-12-03 01:32:=
+23 -0500)
+>=20
+> are available in the git repository at:
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for=
+-davem
+>=20
+> Johannes Berg (1):
+>       iwlagn: fix HW crypto for TX-only keys
+>=20
+> John W. Linville (2):
+>       Revert "mac80211: clear sta.drv_priv on reconfiguration"
+>       Merge branch 'master' of git://git.kernel.org/.../linville/wireless=
+ into for-davem
+>=20
+> Luis R. Rodriguez (2):
+>       cfg80211: fix race on init and driver registration
+>       cfg80211: amend regulatory NULL dereference fix
+>=20
+> Simon Wunderlich (1):
+>       mac80211: fill rate filter for internal scan requests
+>=20
+> Wey-Yi Guy (2):
+>       iwlwifi: do not re-configure HT40 after associated
+>       iwlwifi: change the default behavior of watchdog timer
+>=20
+>  drivers/net/wireless/iwlwifi/iwl-1000.c     |    1 +
+>  drivers/net/wireless/iwlwifi/iwl-5000.c     |    1 +
+>  drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   36 ++++++++++++-------
+>  drivers/net/wireless/iwlwifi/iwl-agn-sta.c  |    5 ---
+>  drivers/net/wireless/iwlwifi/iwl-agn.c      |   34 +++++++++---------
+>  drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 +
+>  drivers/net/wireless/iwlwifi/iwl-core.c     |   22 +++++++++---
+>  drivers/net/wireless/iwlwifi/iwl-core.h     |    2 +
+>  drivers/net/wireless/iwlwifi/iwl-shared.h   |    4 +-
+>  net/mac80211/main.c                         |    6 +++
+>  net/mac80211/util.c                         |    1 -
+>  net/wireless/reg.c                          |   49 +++++++++++++++++----=
+------
+>  12 files changed, 102 insertions(+), 61 deletions(-)
+
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+
+--1yeeQ81UyVL57Vl7
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJO3P0qAAoJEJctW/TcYTgGv1EP/2OP9nSnOM6jBvI4Fn20LhEu
+i+JiUintd1GjaKTxLUw7DFqopk5l6JsSZnATiKwv9+3dy/wyb6aJ5re0lwVidRX/
+jPbkwxZJBh/uAjkkOPDSzD150KO4CwerrPm5BqW3pXzI4mGd6kg2exaOtfwWVC9s
+A/kf9QiyTWm6c3sFnocsItkUUDIlraA3c8n5pRH7nLGB95fmA1bMVHimRRWa/qrj
+JBmjq0B5sSnMJzjbjA7Pyfo8tj5vPFBoXNKLjG+iX5O/Hz5j9XmSyYhZGYEtQhWs
+CceLEFaCXzYT8JbVaDtLdSKGgm+JbDSH/6pe67q7Kp/mnbh3fmjcqsn0tOmpZ4qG
+Q34aUMkb+beKlJTELstYSidBXkJSJRht7vb9A9wG+v0//giD5uAClJS64ZFZLrcZ
+eDbrxQ8RkcBQdaDX/myW+R0ZVnDdc5vcdl9+mwILW1fguJsD+6obNNqKu/PXldXg
+z/YaTaZQfXNDTsRR2C6qdExUcBIAwS35baV8WT/GRsgtwO+qiCjjLNURhvN5K4TM
+/qNbf+od8O0Lm2V56QvQmQbZsToSIYHli8lTFz0yiHEcoy77+MTfWkc2Rk0ivLWR
+lb2gg0brlu5b1cMe8tG8C1y9z5dyEKI5MVZGspKIkjEIQl0lxgBA4CFu5wceGmdu
+RpuCqydwFHgXbtGukOAq
+=DPJD
+-----END PGP SIGNATURE-----
+
+--1yeeQ81UyVL57Vl7--
