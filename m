@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:50152 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753340Ab1LUADT (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:34274 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932319Ab1LENnt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 19:03:19 -0500
-Received: by wibhm6 with SMTP id hm6so1677230wib.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 16:03:18 -0800 (PST)
-From: Eyal Shapira <eyal@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>, Luciano Coelho <coelho@ti.com>
-Subject: [PATCH 0/2] report stop sched scan when actually done
-Date: Wed, 21 Dec 2011 02:03:08 +0200
-Message-Id: <1324425790-3030-1-git-send-email-eyal@wizery.com> (sfid-20111221_010329_759582_846E9692)
+	Mon, 5 Dec 2011 08:43:49 -0500
+Received: by iakc1 with SMTP id c1so2121775iak.19
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2011 05:43:49 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAOeh9MsqTQT6qzd47Af674cK4KQHN=uOaG-u1hVWV9faeb2Mwg@mail.gmail.com>
+References: <CAOeh9MuuJtK_edMQvVaLSRytRoFix_OuW4OEcEMDYEak1=CvMw@mail.gmail.com>
+	<CAB3XZEf=jrrqZk58BnV8Gi4iKJ6N6c24M_eLnz816n==kuxmHA@mail.gmail.com>
+	<CAOeh9MsqTQT6qzd47Af674cK4KQHN=uOaG-u1hVWV9faeb2Mwg@mail.gmail.com>
+Date: Mon, 5 Dec 2011 15:43:49 +0200
+Message-ID: <CAB3XZEf4sm66WzG49jYsig=wzip0m2w87tud2Es0wd4aXV2Fqw@mail.gmail.com> (sfid-20111205_144353_128600_B97B011A)
+Subject: Re: Query on ieee80211_subif_start_xmit
+From: Eliad Peller <eliad@wizery.com>
+To: uday kiran <kaniki.uday@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes in mac/cfg80211 to notify userspace
-of NL80211_CMD_SCHED_SCAN_STOPPED only when the driver
-actually reported back that it was stopped. Also
-blocks other attempts until we're really done.
+On Mon, Dec 5, 2011 at 3:14 PM, uday kiran <kaniki.uday@gmail.com> wrote:
+> Thanks for the reply, Eliad.
+>
+> I have walked through the code for function
+> "ieee80211_subif_start_xmit" but could not find any code block which
+> strips the 802.3 header. If possible , could you help me point out
+> that block ?
+>
+	skip_header_bytes = ETH_HLEN;
+	if (ethertype == ETH_P_AARP || ethertype == ETH_P_IPX) {
+		encaps_data = bridge_tunnel_header;
+		encaps_len = sizeof(bridge_tunnel_header);
+		skip_header_bytes -= 2;
+	} else if (ethertype >= 0x600) {
+		encaps_data = rfc1042_header;
+		encaps_len = sizeof(rfc1042_header);
+		skip_header_bytes -= 2;
+	} else {
+		encaps_data = NULL;
+		encaps_len = 0;
+	}
 
-This fixes a scenario where stop sched scan
-is issued and immediately afterwards a new sched scan
-is requested (e.g. with other parameters).
-Current state caused a race where the driver started
-stopping the sched scan but didn't finish and got
-another sched scan request which it couldn't handle.
+	nh_pos = skb_network_header(skb) - skb->data;
+	h_pos = skb_transport_header(skb) - skb->data;
 
-Eyal Shapira (2):
-  mac80211: mark stopped sched scan only after driver does
-  nl80211: report stopped sched scan only after driver does
+	skb_pull(skb, skip_header_bytes);
 
- net/mac80211/scan.c |    9 ++++++---
- net/wireless/scan.c |   17 ++++++++---------
- 2 files changed, 14 insertions(+), 12 deletions(-)
-
--- 
-1.7.4.1
-
+Eliad.
