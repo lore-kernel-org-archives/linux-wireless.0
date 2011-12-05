@@ -1,48 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:1124 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758212Ab1LNVwS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 16:52:18 -0500
-Message-ID: <4EE91A87.5090207@canonical.com> (sfid-20111214_225222_119517_3F7C56F9)
-Date: Wed, 14 Dec 2011 14:52:07 -0700
-From: Tim Gardner <tim.gardner@canonical.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:45960 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755514Ab1LEKh6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Dec 2011 05:37:58 -0500
+Date: Mon, 5 Dec 2011 12:37:51 +0200
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Haohui Liao <liaohaohui@gmail.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: Re: [ath9k-devel] Wireless stalled after a few minutes with Linux
+ Kernel 3.1
+Message-ID: <20111205103751.GA3775@jouni.qca.qualcomm.com> (sfid-20111205_113802_537607_F18DEB97)
+References: <CAHW5WCL2V=wh43YYbiMo+rnh=-g4fobKEZHrCLvW03Q73=gzYA@mail.gmail.com>
+ <4EC7E739.4080404@broadcom.com>
+ <CAHW5WCLUefvgvRkgz7Nr+Rwu6_96t7EVVB33U0ED5g9a0cHFXw@mail.gmail.com>
+ <CAHW5WCK7SU8CJRM8pLy9omEtrPu0_ES=SxWfYEWt30NCwBGEZw@mail.gmail.com>
+ <CAHW5WCJhwGSM74nN5ivoEgP98y_hbbOB8yDO9+2ahhy2B4H7yw@mail.gmail.com>
 MIME-Version: 1.0
-To: Seth Forshee <seth.forshee@canonical.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Problems associating with RTL8188CE
-References: <4ECA99CC.7020008@lwfinger.net> <20111121185610.GD6736@thinkpad-t410> <4ECB028E.3030809@lwfinger.net> <20111122022008.GA17661@thinkpad-t410> <20111213194231.GA30788@thinkpad-t410> <4EE7B85E.3070802@lwfinger.net> <20111213212606.GB30788@thinkpad-t410> <4EE82CC6.2030307@lwfinger.net> <20111214162333.GB19410@thinkpad-t410> <4EE8D150.8090100@lwfinger.net> <20111214164902.GD19410@thinkpad-t410>
-In-Reply-To: <20111214164902.GD19410@thinkpad-t410>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAHW5WCJhwGSM74nN5ivoEgP98y_hbbOB8yDO9+2ahhy2B4H7yw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/14/2011 09:49 AM, Seth Forshee wrote:
-> On Wed, Dec 14, 2011 at 10:39:44AM -0600, Larry Finger wrote:
->> On 12/14/2011 10:23 AM, Seth Forshee wrote:
->>>
->>> I'm running 3.2-rc5 currently. The results are the same with
->>> bleeding-edge compat-wireless.
->>
->> I'm running 3.2-rc5 from wireless-testing, but I should test the one
->> from mainline. I'll also retest an RTL8188CE with my 802.11n AP.
->>
->> What model is that Cisco AP? Perhaps Realsil has one in their lab. I
->> do not have access to any Cisco hardware.
->
-> It's a Linksys E2000.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Sat, Dec 03, 2011 at 10:55:40PM +0800, Haohui Liao wrote:
+> Dear Linux Wifi developers,
+> 
+> Regarding https://bugs.archlinux.org/task/27406
+> 
+> > The following is a portion of my wpa_supplicant.conf
+> >
+> >    ssid="LINUX-LINK"
+> >    proto=WPA2
+> >    key_mgmt=WPA-PSK
+> >    pairwise=TKIP
+> >    group=TKIP
 
-I ordered a refurb Linksys E3000. Should be here Friday. My Lenovo x120e 
-has the identical adapter. It seems to work pretty well except that it 
-won't show up the WNDR3300 11N SSID in the list. I've tested thusly:
+That's pretty strange configuration.. Do you have any particular reason
+for using TKIP as the pairwise cipher with WPA2? CCMP would be much more
+likely configuration for WPA2 in general..
 
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/902557/comments/52
+> Just wondering if I am the only one still doing the following from command line
+> to connect to wifi?
 
-rtg
+I'm sure you are not the only one.. And in this particular case, I don't
+see how that would make a difference.
+
+> wpa_supplicant -Dwext -iwlan0 -c/etc/wpa_supplicant.conf -B
+> iwconfig wlan0 power off
+> dhcpd wlan0
+> 
+> If I do that, I will get wifi stall on wpa_supplicant when there is a
+> rekeying with the Linux 3.1.x kernel.  It does not happen to Linux
+> 3.0.x.  I have been searching on Internet around with no indicator.
+> Just trying to ask if I did anything wrong? or everyone just uses
+> NetworkManager?
+
+Would you be able to provide some more details on what exactly you mean
+with "wifi stall"? Are you sure this is related to rekeying?
+
+May I ask why you have configured the station to force PTK rekeying
+every 10 minutes? While TKIP is not really the most secure design out
+there, the proper way of addressing this would be to use CCMP instead of
+frequent rekeying with TKIP..
+
 -- 
-Tim Gardner tim.gardner@canonical.com
+Jouni Malinen                                            PGP id EFC895FA
