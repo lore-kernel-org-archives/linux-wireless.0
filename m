@@ -1,91 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58897 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755547Ab1LNWKd (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:40138 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755825Ab1LEK7i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 17:10:33 -0500
-Subject: Re: iwlwifi havoc on some APs (rekeying?)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Wolfgang Breyha <wbreyha@gmx.net>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4EE8B12C.4090906@gmx.net> (sfid-20111214_152308_583031_CCEA7CD9)
-References: <4EE2202A.4080303@gmx.net>
-	 <1323446534.13074.96.camel@wwguy-huron>  <4EE24DF4.4020301@gmx.net>
-	 <1323451436.13074.158.camel@wwguy-huron>
-	 (sfid-20111209_192243_598986_F6275AE2) <1323455216.3622.21.camel@jlt3.sipsolutions.net>
-	 <4EE35877.1060507@gmx.net>
-	 (sfid-20111210_140255_490293_C3C0F113) <1323680657.3442.7.camel@jlt3.sipsolutions.net>
-	 <4EE5D2D3.406@gmx.net>
-	 (sfid-20111212_110955_792336_68917631) <1323684754.3442.36.camel@jlt3.sipsolutions.net>
-	 <4EE5E3CD.1070409@gmx.net>
-	 (sfid-20111212_122224_090419_DF83BB07) <1323712082.3442.43.camel@jlt3.sipsolutions.net>
-	 <4EE64522.5090107@gmx.net>
-	 (sfid-20111212_191739_160874_7027323F) <1323790688.3355.24.camel@jlt3.sipsolutions.net>
-	 <4EE8B12C.4090906@gmx.net> (sfid-20111214_152308_583031_CCEA7CD9)
+	Mon, 5 Dec 2011 05:59:38 -0500
+Message-ID: <1323082774.2670.40.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC> (sfid-20111205_115947_058883_D040C134)
+Subject: Re: Time in Queue, bufferbloat, and... our accidentally
+ interplanetary network
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Dave Taht <dave.taht@gmail.com>
+Cc: bloat <bloat@lists.bufferbloat.net>,
+	bloat-devel <bloat-devel@lists.bufferbloat.net>,
+	netdev@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 05 Dec 2011 11:59:34 +0100
+In-Reply-To: <CAA93jw7kQYONQiAozatRmdRRJeK0GB9eNDWtRZ3AL+OVKn0OpA@mail.gmail.com>
+References: <CAA93jw7kQYONQiAozatRmdRRJeK0GB9eNDWtRZ3AL+OVKn0OpA@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 14 Dec 2011 23:10:27 +0100
-Message-ID: <1323900627.3599.4.camel@jlt3.sipsolutions.net> (sfid-20111214_231036_565800_87905FFD)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-12-14 at 15:22 +0100, Wolfgang Breyha wrote:
-> Johannes Berg wrote, on 13.12.2011 16:38:
-> > The program will allocate 2GiB memory (edit to suit, should be OK on
-> > your machine), fill them with 0x94 and then continually scan them for
-> > corruption. Identifying what kind of corruption happened will hopefully
-> > allow me to figure out where it's coming from.
-> > 
-> > It prints out the wrong data & resets the memory so new corruption later
-> > is also identified.
-> 
-> Ok, I had only 20 minutes yesterday evening, but the results are not very
-> pleasant, because there are no results:(
+Le lundi 05 décembre 2011 à 10:05 +0100, Dave Taht a écrit :
 
-Ouch! So we aren't actually just dealing with random memory corruption?!
+> And Eric dumazet also produced a preliminary patch a few weeks back
+> that tied timestamping to before the head of a queue, but that tried to use a
+> reserved field in the skb that appears from points A to Z is not guaranteed
+> to be preserved.
 
-> I did the usual steps to reproduce the case on my laptop:
-> 
-> *) stay connected on the "working" AP (no rekeying)
-> --> *) new here: start "mc"
-> *) echo "1" >...iwlwifi/debug
-> *) open multitail, firefox, vlc
-> *) connect to the other AP (rekeying every 20 seconds currently)
-> *) start video stream
-> *) wait for the second "group rekey finished"
-> *) watch the artifacts, closing applications and listen to crackling sound
-> 
-> Everything happened exactly the same way as always. BUT "mc" didn't show any
-> corrupted memory regions.
+It is guaranteed to be preserved, as it is part of skb->cb[], and
+skb->cb[] content is private to each layer.
 
-Hmmm. Yeah if it was random memory corruption that should have done
-something.
+Here, Qdisc layer.
 
-> I already tried to remember which applications crashed, but currently I'm not
-> able to give them a clear category like "all (network-)IO" or "all
-> audio/video". Allocating memory seems not to be enough to trigger "something".
-> <brainstorm mode>Maybe mmap'ed regions are affected?</brainstorm mode>
+Adding a time limit is possible, all we need is a proper design and
+implementation :)
 
-But my tool was using mmap ;-) I can't think why mmap would make a
-difference though.
+Here is my suggestion :
 
-> Watching a video is only one way to notice that issue. Simply starting firefox
-> with a group of tabs open is an other and has a high probability to
-> immediately crash firefox while fetching the contents.
-> 
-> Watching a video shows the coincidence with the second rekeying event best.
-> 
-> I'll try to give "mc" some more time and start it after/before the others as
-> soon as my pre-x-mas schedule allows it.
+Design a new tfifo/tred qdisc, with following properties :
 
-I wouldn't. If it was really memory corruption, this should've caught
-it. No way firefox would crash while "mc" would run fine. Back to square
-1!
+Adaptative RED, (ECN enabled + head drop), but instead of using
+bytes/packet qlen average, use time_in_queue average.
 
-Maybe we somehow invented the best fuzzer ever? Wrongly decrypted
-packets being sent up without being dropped, and your video stream and
-firefox hating random binary data in the middle of the input?
+A single mandatory parameter to specify the tmin value
+tmax default value would be tmin*3  (so that target avg is 2*tmin)
+tlimit default value would be tmax*8
 
-johannes
+Adaptative RED dynamically adjusts maxp between 1% and 50%
+[Using a timer, every 500ms, and AIMD]
+
+tc qdisc add dev eth0 root tfifo tmin 1ms [tmax val] [tlimit val]
+
+
+I volunteer to work on this new tfifo experimental qdisc :)
+
+This can be used in replacement of pfifo/bfifo in a complex qdisc setup.
+As it has RED included, it also can replace RED.
+
+Please note that once skb leaves Qdisc and is delivered to device, any
+time limit feature must be handled in the driver itself (if it can queue
+packet for a long time period)
+
+
 
