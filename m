@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3996 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753566Ab1LITsy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Dec 2011 14:48:54 -0500
-Message-ID: <4EE26227.8040900@broadcom.com> (sfid-20111209_204858_148833_D6127C8C)
-Date: Fri, 9 Dec 2011 20:31:51 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:50652 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755912Ab1LELaZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Dec 2011 06:30:25 -0500
+Received: by faar15 with SMTP id r15so431864faa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2011 03:30:24 -0800 (PST)
 MIME-Version: 1.0
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"Francesco Gringoli" <francesco.gringoli@ing.unibs.it>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Performance of BCM43224 (14e4:4353)
-References: <4EE15A4E.1090500@lwfinger.net>
- <4EE1E2AC.8030002@broadcom.com> <4EE23AF5.8000400@lwfinger.net>
- <4EE24615.9020003@broadcom.com> <4EE24C22.4000204@lwfinger.net>
-In-Reply-To: <4EE24C22.4000204@lwfinger.net>
-Content-Type: text/plain;
- charset=utf-8
+In-Reply-To: <4ED77C85.1050705@broadcom.com>
+References: <4ED77C85.1050705@broadcom.com>
+Date: Mon, 5 Dec 2011 12:30:24 +0100
+Message-ID: <CACna6rznu8d1BjG0EWjP1VRCPdYAGJv1q+fi1X+XF_Bf-Cx+Mg@mail.gmail.com> (sfid-20111205_123029_741664_72E99EF7)
+Subject: Re: bcma usage in isr context
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/09/2011 06:57 PM, Larry Finger wrote:
-> On 12/09/2011 11:32 AM, Arend van Spriel wrote:
-> 
->> With the submitted patches brcmsmac claims any revision of 802.11 cores.
->> Not sure what b43 claims. I have a patch internally to claim only
->> revisions 23 and 24, which are used in bcm43224, bcm43225, and bcm4313.
-> 
-> The problem is that ai_doattach() is returning NULL. I added pr_err() statements 
-> to each of the places that this could happen and found that the error in in this 
-> fragment:
-> 
->          /* scan for cores */
->          if (socitype == SOCI_AI) {
->                  SI_MSG("Found chip type AI (0x%08x)\n", w);
->                  /* pass chipc address instead of original core base */
->                  ai_scan(&sii->pub, pbus);
->          } else {
->                  /* Found chip of unknown type */
->                  pr_err("Found chip of type %d\n", socitype);
->                  return NULL;
->          }
-> 
-> This one logs "brcmsmac: Found chip of type 4". As SOC_AI is the only SOCI_XX 
-> that is defined, I am not sure that I will be able to get further.
-> 
-> Larry
-> 
+Hi,
 
-That is an unexpected code path especially as brcmsmac is probed from
-bcma so SoC interface type should be AI (aka. AMBA AXI). Checked with
-the proprietary driver and there is no type 4.
+Sorry for late reply, I was a little busy recently...
 
-Can you provide the bcma_device_id information that bcma has collected
-and the bcma_chipinfo for your device?
+W dniu 1 grudnia 2011 14:09 użytkownik Arend van Spriel
+<arend@broadcom.com> napisał:
+> I am doing some final testing on our brcmsmac driver, which I tinkered
+> to become a bcma device driver. During testing an issue popped up in the
+> ISR code.
 
-Gr. AvS
+Do you mean interrupts code?
 
+
+> Looking into the bcma read/write functions in host_pci.c I conclude that
+> bcma itself does not provide protection for concurrency. Am I correct in
+> that? How is this solved in b43?
+
+I think I mean the fact that core driver can switch BCMA to
+ChipCommon, while interrupt handler will try to access 80211 core?
+
+You're right, we don't handle this properly. I'll try to send patch
+today to make use of fixed windows. I've it here for some time
+already, just didn't clean it enough.
+
+-- 
+Rafał
