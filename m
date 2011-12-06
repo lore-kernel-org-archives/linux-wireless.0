@@ -1,68 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:51700 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753340Ab1LUADX (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:48366 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932706Ab1LFA35 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 19:03:23 -0500
-Received: by wgbdr13 with SMTP id dr13so13329224wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 16:03:22 -0800 (PST)
-From: Eyal Shapira <eyal@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>, Luciano Coelho <coelho@ti.com>
-Subject: [PATCH 2/2] nl80211: report stopped sched scan only after driver does
-Date: Wed, 21 Dec 2011 02:03:10 +0200
-Message-Id: <1324425790-3030-3-git-send-email-eyal@wizery.com> (sfid-20111221_010333_926376_B7CC12C5)
-In-Reply-To: <1324425790-3030-1-git-send-email-eyal@wizery.com>
-References: <1324425790-3030-1-git-send-email-eyal@wizery.com>
+	Mon, 5 Dec 2011 19:29:57 -0500
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 5 Dec 2011 16:29:36 -0800
+Message-ID: <CAB=NE6Uz_gXkY3HGXeW1OnPx84fPVUP=gOJ=2NjBtPZhW=_Bbw@mail.gmail.com> (sfid-20111206_013020_008594_2CE255AE)
+Subject: Is linux-next.git bisectable?
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Report NL80211_CMD_SCHED_SCAN_STOPPED and change internal
-states in cfg80211 only after the driver reports that
-sched scan was actually stopped.
+Stephen,
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
----
- net/wireless/scan.c |   17 ++++++++---------
- 1 files changed, 8 insertions(+), 9 deletions(-)
+is the linux-next.git tree bisectable? I've noticed some trees are
+not. For example wireless-testing.git is bisectable but only between
+master-$(date) tags.
 
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 31119e3..d6c87d9 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -133,6 +133,7 @@ EXPORT_SYMBOL(cfg80211_sched_scan_stopped);
- int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
- 			       bool driver_initiated)
- {
-+	int err = 0;
- 	struct net_device *dev;
- 
- 	lockdep_assert_held(&rdev->sched_scan_mtx);
-@@ -143,17 +144,15 @@ int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
- 	dev = rdev->sched_scan_req->dev;
- 
- 	if (!driver_initiated) {
--		int err = rdev->ops->sched_scan_stop(&rdev->wiphy, dev);
--		if (err)
--			return err;
-+		err = rdev->ops->sched_scan_stop(&rdev->wiphy, dev);
-+	} else {
-+		nl80211_send_sched_scan(rdev, dev,
-+					NL80211_CMD_SCHED_SCAN_STOPPED);
-+		kfree(rdev->sched_scan_req);
-+		rdev->sched_scan_req = NULL;
- 	}
- 
--	nl80211_send_sched_scan(rdev, dev, NL80211_CMD_SCHED_SCAN_STOPPED);
--
--	kfree(rdev->sched_scan_req);
--	rdev->sched_scan_req = NULL;
--
--	return 0;
-+	return err;
- }
- 
- static void bss_release(struct kref *ref)
--- 
-1.7.4.1
-
+  Luis
