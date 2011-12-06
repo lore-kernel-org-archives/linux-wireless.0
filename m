@@ -1,44 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:20648 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760447Ab1LPU1I (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:9892 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932967Ab1LFH5I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 15:27:08 -0500
-Date: Fri, 16 Dec 2011 23:26:59 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: sameo@linux.intel.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: re: NFC: Initial LLCP support
-Message-ID: <20111216202659.GD18570@elgon.mountain> (sfid-20111216_212714_018224_15F4F1A2)
+	Tue, 6 Dec 2011 02:57:08 -0500
+From: Vivek Natarajan <nataraja@qualcomm.com>
+To: <rodrigue@qca.qualcomm.com>, <mcgrof@gmail.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH] compat-wireless: Fix ath6kl debug log issue.
+Date: Tue, 6 Dec 2011 13:26:36 +0530
+Message-ID: <1323158196-4169-1-git-send-email-nataraja@qca.qualcomm.com> (sfid-20111206_085727_534891_B7F261FD)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Samuel Ortiz,
+Like ath9k, the ath6kl debug logs were not shown for kernels < 2.6.36.
+This patches fixes the issue.
 
-This is a semi-automatic email about new static checker warnings.
+Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
+---
+ patches/37-vsnprintk.patch |   26 ++++++++++++++++++++++++++
+ 1 files changed, 26 insertions(+), 0 deletions(-)
 
-The patch d646960f7986: "NFC: Initial LLCP support" from Dec 14, 
-2011, leads to the following Smatch complaint:
-
-net/nfc/llcp/sock.c +47 llcp_sock_bind()
-	 warn: variable dereferenced before check 'addr' (see line 45)
-
-net/nfc/llcp/sock.c
-    44	
-    45		pr_debug("sk %p addr %p family %d\n", sk, addr, addr->sa_family);
-                                                                ^^^^^^^^^^^^^^^
-New dereference.
-
-    46	
-    47		if (!addr || addr->sa_family != AF_NFC)
-                     ^^^^
-New check.
-
-    48			return -EINVAL;
-    49	
-
-regards,
-dan carpenter
+diff --git a/patches/37-vsnprintk.patch b/patches/37-vsnprintk.patch
+index 8217de9..fe81956 100644
+--- a/patches/37-vsnprintk.patch
++++ b/patches/37-vsnprintk.patch
+@@ -1,3 +1,29 @@
++--- a/drivers/net/wireless/ath/ath6kl/debug.c
+++++ b/drivers/net/wireless/ath/ath6kl/debug.c
++@@ -39,16 +39,23 @@ struct ath6kl_fwlog_slot {
++ 
++ int ath6kl_printk(const char *level, const char *fmt, ...)
++ {
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
++ 	struct va_format vaf;
+++#endif
++ 	va_list args;
++ 	int rtn;
++ 
++ 	va_start(args, fmt);
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
++ 	vaf.fmt = fmt;
++ 	vaf.va = &args;
++ 
++ 	rtn = printk("%sath6kl: %pV", level, &vaf);
+++#else
+++	printk("%sath6kl: ", level);
+++	rtn = vprintk(fmt, args);
+++#endif
++ 
++ 	va_end(args);
++ 
+ --- a/drivers/net/wireless/ath/main.c
+ +++ b/drivers/net/wireless/ath/main.c
+ @@ -59,15 +59,22 @@ EXPORT_SYMBOL(ath_rxbuf_alloc);
+-- 
+1.7.1
 
