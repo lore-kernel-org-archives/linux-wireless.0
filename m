@@ -1,72 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20703 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753944Ab1LWHOa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Dec 2011 02:14:30 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 06/10] iwlegacy: 3945: get rid of hw_{set,get}_rate
-Date: Fri, 23 Dec 2011 08:13:46 +0100
-Message-Id: <1324624430-3688-6-git-send-email-sgruszka@redhat.com> (sfid-20111223_081433_424492_0BCE8869)
-In-Reply-To: <1324624430-3688-1-git-send-email-sgruszka@redhat.com>
-References: <1324624430-3688-1-git-send-email-sgruszka@redhat.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:37241 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750966Ab1LFJCZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Dec 2011 04:02:25 -0500
+Subject: Re: [PATCH] mac80211: accept public action frames with mismatched
+ BSSID
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	Arik Nemtsov <anamtsov@gmail.com>, Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAB3XZEdk73G-1tfCOPUGDH5jVO7NZ_Wh5ObDWi7EJSZRSeSa9g@mail.gmail.com> (sfid-20111206_081537_025956_2EFDE3C7)
+References: <1323102012.4051.38.camel@jlt3.sipsolutions.net>
+	 <CAB3XZEdk73G-1tfCOPUGDH5jVO7NZ_Wh5ObDWi7EJSZRSeSa9g@mail.gmail.com>
+	 (sfid-20111206_081537_025956_2EFDE3C7)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 06 Dec 2011 10:02:16 +0100
+Message-ID: <1323162136.4696.2.camel@jlt3.sipsolutions.net> (sfid-20111206_100230_632742_CCD7E3D9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove these helpers, some are not unused at all, one can be
-unrolled in place of use.
+On Tue, 2011-12-06 at 09:15 +0200, Eliad Peller wrote:
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/3945.c |    3 +--
- drivers/net/wireless/iwlegacy/3945.h |   18 ------------------
- 2 files changed, 1 insertions(+), 20 deletions(-)
+> > +static inline bool ieee80211_is_public_action(struct ieee80211_hdr *hdr,
+> > +                                             size_t len)
+> > +{
+> > +       struct ieee80211_mgmt *mgmt = (void *)hdr;
+> > +
+> > +       if (len < 25)
+> > +               return false;
+> 
+> maybe use offsetof() to make clearer?
 
-diff --git a/drivers/net/wireless/iwlegacy/3945.c b/drivers/net/wireless/iwlegacy/3945.c
-index 0b99deb..44a1211 100644
---- a/drivers/net/wireless/iwlegacy/3945.c
-+++ b/drivers/net/wireless/iwlegacy/3945.c
-@@ -2331,8 +2331,7 @@ il3945_init_hw_rate_table(struct il_priv *il)
- 	for (i = 0; i < ARRAY_SIZE(il3945_rates); i++) {
- 		idx = il3945_rates[i].table_rs_idx;
- 
--		table[idx].rate_n_flags =
--		    il3945_hw_set_rate_n_flags(il3945_rates[i].plcp, 0);
-+		table[idx].rate_n_flags = cpu_to_le16(il3945_rates[i].plcp);
- 		table[idx].try_cnt = il->retry_rate;
- 		prev_idx = il3945_get_prev_ieee_rate(i);
- 		table[idx].next_rate_idx = il3945_rates[prev_idx].table_rs_idx;
-diff --git a/drivers/net/wireless/iwlegacy/3945.h b/drivers/net/wireless/iwlegacy/3945.h
-index 2b2895c..970e5c3 100644
---- a/drivers/net/wireless/iwlegacy/3945.h
-+++ b/drivers/net/wireless/iwlegacy/3945.h
-@@ -476,24 +476,6 @@ struct il3945_shared {
- 	__le32 tx_base_ptr[8];
- } __packed;
- 
--static inline u8
--il3945_hw_get_rate(__le16 rate_n_flags)
--{
--	return le16_to_cpu(rate_n_flags) & 0xFF;
--}
--
--static inline u16
--il3945_hw_get_rate_n_flags(__le16 rate_n_flags)
--{
--	return le16_to_cpu(rate_n_flags);
--}
--
--static inline __le16
--il3945_hw_set_rate_n_flags(u8 rate, u16 flags)
--{
--	return cpu_to_le16((u16) rate | flags);
--}
--
- /************************************/
- /* iwl3945 Flow Handler Definitions */
- /************************************/
--- 
-1.7.4.4
+Hm. The problem with that is that you need
+	offsetof(... u.action.category ...) + 1
+still since the *offset* is 24 and the size is implicit. Going beyond
+that in the offset calculation would be even stranger... I think 25 is a
+sufficiently non-magic number since everybody knows 24 is the "normal"
+header length, and it matches the style used in this file elsewhere.
+
+johannes
 
