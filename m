@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:7378 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750941Ab1LJRiT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Dec 2011 12:38:19 -0500
-Subject: Re: [PATCH 07/15] iwlwifi: add device ID information support by
- testmode
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Hsu, Kenny" <kenny.hsu@intel.com>
-In-Reply-To: <87r50ce73f.fsf@purkki.adurom.net>
-References: <1323390382-1678-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1323390382-1678-8-git-send-email-wey-yi.w.guy@intel.com>
-	 <87r50ce73f.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 10 Dec 2011 09:31:37 -0800
-Message-ID: <1323538297.1806.13.camel@wwguy-ubuntu> (sfid-20111210_183823_049339_8435DA06)
-Mime-Version: 1.0
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56089 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750941Ab1LFHPE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Dec 2011 02:15:04 -0500
+Received: by iakc1 with SMTP id c1so3281217iak.19
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2011 23:15:04 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1323102012.4051.38.camel@jlt3.sipsolutions.net>
+References: <1323102012.4051.38.camel@jlt3.sipsolutions.net>
+Date: Tue, 6 Dec 2011 09:15:04 +0200
+Message-ID: <CAB3XZEdk73G-1tfCOPUGDH5jVO7NZ_Wh5ObDWi7EJSZRSeSa9g@mail.gmail.com> (sfid-20111206_081510_685435_CFEDA995)
+Subject: Re: [PATCH] mac80211: accept public action frames with mismatched BSSID
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	Arik Nemtsov <anamtsov@gmail.com>, Jouni Malinen <j@w1.fi>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-12-10 at 08:15 -0800, Kalle Valo wrote:
-> Wey-Yi Guy <wey-yi.w.guy@intel.com> writes:
-> 
-> > Create new tm command to report devce ID information to userspace
-> > - IWL_TM_CMD_APP2DEV_GET_DEVICE_ID
-> 
-> And for this we have wiphy.hw_version which is exported via the ethtool
-> interface.
-> 
-good point, I don't think we ever set it up. I will double check and
-submit patches if it is not there.
+On Mon, Dec 5, 2011 at 6:20 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Arik's patch "mac80211: allow action frames with unknown
+> BSSID in GO mode" allowed any action frames in P2P mode
+> to go through, but only to cooked monitor interfaces as
+> the IEEE80211_RX_RA_MATCH was still cleared. As a result
+> my no-monitor patches broke invitation responses.
+>
+> Instead of allowing any action frames in P2P GO mode to
+> go through with a wrong BSSID like that patch did, allow
+> all public action frames. They will never be processed
+> by mac80211, but can be reported via nl80211 then.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+[...]
 
-Wey
+> +static inline bool ieee80211_is_public_action(struct ieee80211_hdr *hdr,
+> +                                             size_t len)
+> +{
+> +       struct ieee80211_mgmt *mgmt = (void *)hdr;
+> +
+> +       if (len < 25)
+> +               return false;
 
+maybe use offsetof() to make clearer?
 
+Eliad.
