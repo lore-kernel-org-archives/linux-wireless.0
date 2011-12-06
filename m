@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56655 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753961Ab1LLUGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 15:06:37 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 4/6] ath9k: remove bogus sequence number increment
-Date: Mon, 12 Dec 2011 21:06:24 +0100
-Message-Id: <1323720386-46132-4-git-send-email-nbd@openwrt.org> (sfid-20111212_210641_904962_2C1B05FD)
-In-Reply-To: <1323720386-46132-3-git-send-email-nbd@openwrt.org>
-References: <1323720386-46132-1-git-send-email-nbd@openwrt.org>
- <1323720386-46132-2-git-send-email-nbd@openwrt.org>
- <1323720386-46132-3-git-send-email-nbd@openwrt.org>
+Received: from external1.orbit-lab.org ([128.6.192.131]:59964 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753267Ab1LFVMw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Dec 2011 16:12:52 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id F1A4E540189
+	for <linux-wireless@vger.kernel.org>; Tue,  6 Dec 2011 16:12:50 -0500 (EST)
+Subject: Compat-wireless release for 2011-12-06 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111206211247.A9CF74062F@repository3.orbit-lab.org> (sfid-20111206_221255_743044_EB87FC8E)
+Date: Tue,  6 Dec 2011 16:12:46 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-tid->seq_next is initialized on A-MPDU start anyway, and the comment next
-to this chunk of code seems to be bogus as well.
+>From git://github.com/mcgrof/compat
+   0c51ea9..984ab77  master     -> origin/master
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + f4cd1a2...a6a9ce3 akpm-end   -> origin/akpm-end  (forced update)
+   b930c26..8e8da02  akpm-start -> origin/akpm-start
+ + e2dec20...9c2d96c master     -> origin/master  (forced update)
+   b930c26..8e8da02  stable     -> origin/stable
+ * [new tag]         next-20111206 -> next-20111206
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ * [new tag]         v3.2-rc4   -> v3.2-rc4
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index b1a37d2..8f38efb 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1729,10 +1729,6 @@ static void ath_tx_send_normal(struct ath_softc *sc, struct ath_txq *txq,
- 	list_add_tail(&bf->list, &bf_head);
- 	bf->bf_state.bf_type = 0;
- 
--	/* update starting sequence number for subsequent ADDBA request */
--	if (tid)
--		INCR(tid->seq_start, IEEE80211_SEQ_MAX);
--
- 	bf->bf_lastbf = bf;
- 	ath_tx_fill_desc(sc, bf, txq, fi->framelen);
- 	ath_tx_txqaddbuf(sc, txq, &bf_head, false);
--- 
-1.7.3.2
-
+    822582 - Total upstream lines of code being pulled
+      2470 - backport code changes
+      2122 - backport code additions
+       348 - backport code deletions
+      8885 - backport from compat module
+     11355 - total backport code
+    1.3804 - % of code consists of backport work
