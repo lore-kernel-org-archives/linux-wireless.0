@@ -1,79 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:63041 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752487Ab1LTWRH (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49102 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752910Ab1LFUAV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 17:17:07 -0500
-Date: Tue, 20 Dec 2011 14:16:57 -0800
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Gabor Juhos <juhosg@openwrt.org>
-CC: <mcgrof@infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 15/15] initvals: add script for regenerating ath9k header
- files
-Message-ID: <20111220221657.GF15071@tux> (sfid-20111220_231711_814312_F7FFD0E8)
-References: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
- <1324329900-3923-16-git-send-email-juhosg@openwrt.org>
+	Tue, 6 Dec 2011 15:00:21 -0500
+Date: Tue, 6 Dec 2011 14:56:43 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, Michael Buesch <m@bues.ch>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: [PATCH] ssb: fix init regression with SoCs
+Message-ID: <20111206195642.GC30288@tuxdriver.com> (sfid-20111206_210026_025513_32D90D67)
+References: <1323123591-11982-1-git-send-email-hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1324329900-3923-16-git-send-email-juhosg@openwrt.org>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1323123591-11982-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 19, 2011 at 10:25:00PM +0100, Gabor Juhos wrote:
-> The script helps to regenerate initval header files for ath9k.
+On Mon, Dec 05, 2011 at 11:19:51PM +0100, Hauke Mehrtens wrote:
+> This fixes a Data bus error on some SoCs. The first fix for this
+> problem did not solve it on all devices.
+>     commit 6ae8ec27868bfdbb815287bee8146acbefaee867
+>     Author: Rafał Miłecki <zajec5@gmail.com>
+>     Date:   Tue Jul 5 17:25:32 2011 +0200
+>         ssb: fix init regression of hostmode PCI core
 > 
-> screenshot:
-> $ ./gen_ath9k_headers.sh ar5008
-> ar5008 => ar5008_initvals.h
+> In ssb_pcicore_fix_sprom_core_index() the sprom on the PCI core is
+> accessed, but the sprom only exists when the ssb bus is connected over
+> a PCI bus to the rest of the system and not when the SSB Bus is the
+> main system bus. SoCs sometimes have a PCI host controller and there
+> this code will not be executed, but there are some old SoCs with an PCI
+> controller in client mode around and ssb_pcicore_fix_sprom_core_index()
+> should not be called on these devices too. The PCI controller on these
+> devices are unused, but without this fix it results in an Data bus
+> error when it gets initialized.
 > 
-> $ ./gen_ath9k_headers.sh
-> ar5008 => ar5008_initvals.h
-> ar9001 => ar9001_initvals.h
-> ar9002 => ar9002_initvals.h
-> ar9003-2p2 => ar9003_2p2_initvals.h
-> ar9330-1p1 => ar9330_1p1_initvals.h
-> ar9330-1p2 => ar9330_1p2_initvals.h
-> ar9485 => ar9485_initvals.h
-> ar9580-1p0 => ar9580_1p0_initvals.h
-> 
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
-> ---
->  gen_ath9k_headers.sh |   36 ++++++++++++++++++++++++++++++++++++
->  1 files changed, 36 insertions(+), 0 deletions(-)
->  create mode 100755 gen_ath9k_headers.sh
-> 
-> diff --git a/gen_ath9k_headers.sh b/gen_ath9k_headers.sh
-> new file mode 100755
-> index 0000000..fb7c313
-> --- /dev/null
-> +++ b/gen_ath9k_headers.sh
-> @@ -0,0 +1,36 @@
-> +#!/bin/sh
-> +
-> +gen_ath9k_header()
-> +{
-> +	local family="$1"
-> +	local ath9k_hdr
-> +
-> +	case $family in
-> +	ar5008 |\
-> +	ar9001 |\
-> +	ar9002 |\
-> +	ar9003-2p2|\
-> +	ar9330-1p1|\
-> +	ar9330-1p2|\
-> +	ar9485|\
-> +	ar9580-1p0)
-> +		ath9k_hdr="$(echo $family | tr '-' '_')_initvals.h"
-> +		;;
-> +	*)
-> +		echo "unknown family: '$family'" 1>&2
-> +		return 1
-> +		;;
-> +	esac
-> +	
+> CC: Michael Buesch <m@bues.ch>
+> CC: Rafał Miłecki <zajec5@gmail.com>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-The above line had a trailing tab, apart from that, everything looks
-great, thanks so much! Applied and pushed!
+Should this go to the stable list?
 
-  Luis
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
