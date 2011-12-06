@@ -1,35 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:50515 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1759737Ab1LOXNg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 18:13:36 -0500
-Message-ID: <1323990813.18292.2.camel@joe2Laptop> (sfid-20111216_001340_208811_8279905A)
-Subject: Re: [PATCH wireless-next] ath: Convert ath_dbg(bar, ATH_DBG_<FOO>,
- to ath_dbg(bar, FOO
-From: Joe Perches <joe@perches.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Date: Thu, 15 Dec 2011 15:13:33 -0800
-In-Reply-To: <CAB=NE6Vr-5jKZGfpMbv3=nhwC_Lj1ZxJEW+4NuvGfgYp=m-=Gw@mail.gmail.com>
-References: <1323989753.1270.19.camel@joe2Laptop>
-	 <CAB=NE6V6AszbNBiMOy4ZacwXqJWeWO0DL3cF_A1E2HVGMicbtA@mail.gmail.com>
-	 <1323990336.18122.1.camel@joe2Laptop>
-	 <CAB=NE6Vr-5jKZGfpMbv3=nhwC_Lj1ZxJEW+4NuvGfgYp=m-=Gw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:63269 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932984Ab1LFI1v (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Dec 2011 03:27:51 -0500
+Received: by ggnr5 with SMTP id r5so5973860ggn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Dec 2011 00:27:50 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAOeh9MvgzNnToPMSwt0_QX+T5T63dJDuekoUOU6_JcbFDmXV-g@mail.gmail.com>
+References: <CAOeh9MuuJtK_edMQvVaLSRytRoFix_OuW4OEcEMDYEak1=CvMw@mail.gmail.com>
+	<CAB3XZEf=jrrqZk58BnV8Gi4iKJ6N6c24M_eLnz816n==kuxmHA@mail.gmail.com>
+	<CAOeh9MsqTQT6qzd47Af674cK4KQHN=uOaG-u1hVWV9faeb2Mwg@mail.gmail.com>
+	<CAB3XZEf4sm66WzG49jYsig=wzip0m2w87tud2Es0wd4aXV2Fqw@mail.gmail.com>
+	<CAOeh9MuGyhwC3swbaZWjQ4+qvsVkofR13j=UX-Rjx0KENw8wgQ@mail.gmail.com>
+	<CAOeh9MvgzNnToPMSwt0_QX+T5T63dJDuekoUOU6_JcbFDmXV-g@mail.gmail.com>
+Date: Tue, 6 Dec 2011 10:27:50 +0200
+Message-ID: <CAB3XZEdET1qMDHE9AJN7r-dmKdhAXz=MTBZbeNYzj87s4Oaozg@mail.gmail.com> (sfid-20111206_092800_775431_209A7C39)
+Subject: Re: Query on ieee80211_subif_start_xmit
+From: Eliad Peller <eliad@wizery.com>
+To: uday kiran <kaniki.uday@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-12-15 at 15:09 -0800, Luis R. Rodriguez wrote:
-> On Thu, Dec 15, 2011 at 3:05 PM, Joe Perches <joe@perches.com> wrote:
-> > sed/emacs
-> > inspection of formats post sed.
-> Is it easy to run again at a later time or was it a bitch?
+On Tue, Dec 6, 2011 at 10:17 AM, uday kiran <kaniki.uday@gmail.com> wrote:
+> Any pointers ?
+>
+> On 12/5/11, uday kiran <kaniki.uday@gmail.com> wrote:
+>> Is ieee80211_subif_start_xmit the standard function called for frame
+>> conversion ? Or will it change based on the driver under use ?
+>>
+>> For frame conversion to work , is it must to add eth and wlan
+>> interfaces to the bridge interface?
+>>
+>> Is it that once 802.3 stack understands that the dest mac is on wi-fi
+>> interface , it calls this function ?
+>>
+>> Please clarify.
+>>
+The proper xmit function will be called according to the netdev used
+to send the packet.
+for mac80211's netdev:
 
-Pretty trivial, but the format mods post coalescing
-(missing newlines, missing spaces) were eyeballed.
+static const struct net_device_ops ieee80211_dataif_ops = {
+[...]
+	.ndo_start_xmit		= ieee80211_subif_start_xmit,
+[...]
+};
 
-Unless you've got a _lot_ of unqueued patches for
-wireless-next, I doubt the delta will be very high.
-
+Eliad.
