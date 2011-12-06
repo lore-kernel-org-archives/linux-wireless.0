@@ -1,93 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:61077 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751084Ab1LKBOo (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:44297 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753200Ab1LFUPR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Dec 2011 20:14:44 -0500
-Received: by eekc4 with SMTP id c4so976078eek.19
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2011 17:14:42 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/7] b43: N-PHY: update some init values
-Date: Sun, 11 Dec 2011 02:55:30 +0100
-Message-Id: <1323568535-2816-3-git-send-email-zajec5@gmail.com> (sfid-20111211_021449_613431_E3DA5258)
-In-Reply-To: <1323568535-2816-1-git-send-email-zajec5@gmail.com>
-References: <1323568535-2816-1-git-send-email-zajec5@gmail.com>
+	Tue, 6 Dec 2011 15:15:17 -0500
+Date: Tue, 6 Dec 2011 15:03:24 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Philipp Dreimann <philipp@dreimann.net>,
+	linux-wireless@vger.kernel.org,
+	"'Chaoming_Li'" <chaoming_li@realsil.com.cn>
+Subject: Re: [PATCH] rtl8192{ce,cu,de,se}: avoid problems because of possible
+ ERFOFF -> ERFSLEEP -> .. transition
+Message-ID: <20111206200324.GD30288@tuxdriver.com> (sfid-20111206_211521_701416_C2E1FC2B)
+References: <1322526100-6433-1-git-send-email-philipp@dreimann.net>
+ <4ED42A75.4010605@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4ED42A75.4010605@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Changes were obtained from MMIO dump from 5.100.82.112.
+Still waiting to see Chaoming's answer...  Also, the patch needs
+to be posted with a Signed-off-by and without greetings or other
+non-pertinent stuff in the changelog.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c      |   24 ++++++++++++------------
- drivers/net/wireless/b43/radio_2056.c |   10 +++++-----
- 2 files changed, 17 insertions(+), 17 deletions(-)
+John
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index f40d804..f540e48 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -1591,18 +1591,18 @@ static void b43_nphy_workarounds_rev3plus(struct b43_wldev *dev)
- 				0x70);
- 	}
- 
--	b43_phy_write(dev, 0x224, 0x039C);
--	b43_phy_write(dev, 0x225, 0x0357);
--	b43_phy_write(dev, 0x226, 0x0317);
--	b43_phy_write(dev, 0x227, 0x02D7);
--	b43_phy_write(dev, 0x228, 0x039C);
--	b43_phy_write(dev, 0x229, 0x0357);
--	b43_phy_write(dev, 0x22A, 0x0317);
--	b43_phy_write(dev, 0x22B, 0x02D7);
--	b43_phy_write(dev, 0x22C, 0x039C);
--	b43_phy_write(dev, 0x22D, 0x0357);
--	b43_phy_write(dev, 0x22E, 0x0317);
--	b43_phy_write(dev, 0x22F, 0x02D7);
-+	b43_phy_write(dev, 0x224, 0x03eb);
-+	b43_phy_write(dev, 0x225, 0x03eb);
-+	b43_phy_write(dev, 0x226, 0x0341);
-+	b43_phy_write(dev, 0x227, 0x0341);
-+	b43_phy_write(dev, 0x228, 0x042b);
-+	b43_phy_write(dev, 0x229, 0x042b);
-+	b43_phy_write(dev, 0x22a, 0x0381);
-+	b43_phy_write(dev, 0x22b, 0x0381);
-+	b43_phy_write(dev, 0x22c, 0x042b);
-+	b43_phy_write(dev, 0x22d, 0x042b);
-+	b43_phy_write(dev, 0x22e, 0x0381);
-+	b43_phy_write(dev, 0x22f, 0x0381);
- }
- 
- static void b43_nphy_workarounds_rev1_2(struct b43_wldev *dev)
-diff --git a/drivers/net/wireless/b43/radio_2056.c b/drivers/net/wireless/b43/radio_2056.c
-index a01f776..4a42994 100644
---- a/drivers/net/wireless/b43/radio_2056.c
-+++ b/drivers/net/wireless/b43/radio_2056.c
-@@ -1572,14 +1572,14 @@ static const struct b2056_inittab_entry b2056_inittab_rev6_syn[] = {
- 	[B2056_SYN_PLL_XTAL5]		= { .ghz5 = 0x0077, .ghz2 = 0x0077, NOUPLOAD, },
- 	[B2056_SYN_PLL_XTAL6]		= { .ghz5 = 0x0007, .ghz2 = 0x0007, NOUPLOAD, },
- 	[B2056_SYN_PLL_REFDIV]		= { .ghz5 = 0x0001, .ghz2 = 0x0001, NOUPLOAD, },
--	[B2056_SYN_PLL_PFD]		= { .ghz5 = 0x0004, .ghz2 = 0x0004, NOUPLOAD, },
-+	[B2056_SYN_PLL_PFD]		= { .ghz5 = 0x0006, .ghz2 = 0x0006, UPLOAD, },
- 	[B2056_SYN_PLL_CP1]		= { .ghz5 = 0x000f, .ghz2 = 0x000f, NOUPLOAD, },
--	[B2056_SYN_PLL_CP2]		= { .ghz5 = 0x0030, .ghz2 = 0x0030, NOUPLOAD, },
-+	[B2056_SYN_PLL_CP2]		= { .ghz5 = 0x003f, .ghz2 = 0x003f, UPLOAD, },
- 	[B2056_SYN_PLL_CP3]		= { .ghz5 = 0x0032, .ghz2 = 0x0032, NOUPLOAD, },
--	[B2056_SYN_PLL_LOOPFILTER1]	= { .ghz5 = 0x000d, .ghz2 = 0x000d, NOUPLOAD, },
--	[B2056_SYN_PLL_LOOPFILTER2]	= { .ghz5 = 0x000d, .ghz2 = 0x000d, NOUPLOAD, },
-+	[B2056_SYN_PLL_LOOPFILTER1]	= { .ghz5 = 0x0006, .ghz2 = 0x0006, UPLOAD, },
-+	[B2056_SYN_PLL_LOOPFILTER2]	= { .ghz5 = 0x0006, .ghz2 = 0x0006, UPLOAD, },
- 	[B2056_SYN_PLL_LOOPFILTER3]	= { .ghz5 = 0x0004, .ghz2 = 0x0004, NOUPLOAD, },
--	[B2056_SYN_PLL_LOOPFILTER4]	= { .ghz5 = 0x0006, .ghz2 = 0x0006, NOUPLOAD, },
-+	[B2056_SYN_PLL_LOOPFILTER4]	= { .ghz5 = 0x002b, .ghz2 = 0x002b, UPLOAD, },
- 	[B2056_SYN_PLL_LOOPFILTER5]	= { .ghz5 = 0x0001, .ghz2 = 0x0001, NOUPLOAD, },
- 	[B2056_SYN_PLL_MMD1]		= { .ghz5 = 0x001c, .ghz2 = 0x001c, NOUPLOAD, },
- 	[B2056_SYN_PLL_MMD2]		= { .ghz5 = 0x0002, .ghz2 = 0x0002, NOUPLOAD, },
+On Mon, Nov 28, 2011 at 06:42:29PM -0600, Larry Finger wrote:
+> On 11/28/2011 06:21 PM, Philipp Dreimann wrote:
+> >Hello!
+> >
+> >I noticed that ppsc->rfpwr_state could be set to ERFSLEEP even
+> >though the device is actually in ERFOFF.
+> >
+> >Or am I missing something?
+> >
+> >BR,
+> >  Philipp
+> >
+> >---
+> >  drivers/net/wireless/rtlwifi/rtl8192ce/phy.c |    3 ++-
+> >  drivers/net/wireless/rtlwifi/rtl8192cu/phy.c |    3 ++-
+> >  drivers/net/wireless/rtlwifi/rtl8192de/phy.c |    2 +-
+> >  drivers/net/wireless/rtlwifi/rtl8192se/phy.c |    3 ++-
+> >  4 files changed, 7 insertions(+), 4 deletions(-)
+> >
+> >diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
+> >index 592a10a..7f6b933 100644
+> >--- a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
+> >+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
+> >@@ -569,7 +569,8 @@ static bool _rtl92ce_phy_set_rf_power_state(struct ieee80211_hw *hw,
+> >  		}
+> >  	case ERFSLEEP:{
+> >  			if (ppsc->rfpwr_state == ERFOFF)
+> >-				break;
+> >+				return false;
+> >+				
+> >  			for (queue_id = 0, i = 0;
+> >  			     queue_id<  RTL_PCI_MAX_TX_QUEUE_COUNT;) {
+> >  				ring =&pcipriv->dev.tx_ring[queue_id];
+> >diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
+> >index 7285290..33ada66 100644
+> >--- a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
+> >+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
+> >@@ -548,7 +548,8 @@ static bool _rtl92cu_phy_set_rf_power_state(struct ieee80211_hw *hw,
+> >  		break;
+> >  	case ERFSLEEP:
+> >  		if (ppsc->rfpwr_state == ERFOFF)
+> >-			break;
+> >+			return false;
+> >+			
+> >  		for (queue_id = 0, i = 0;
+> >  		     queue_id<  RTL_PCI_MAX_TX_QUEUE_COUNT;) {
+> >  			ring =&pcipriv->dev.tx_ring[queue_id];
+> >diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+> >index 3ac7af1..0883349 100644
+> >--- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+> >+++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+> >@@ -3374,7 +3374,7 @@ bool rtl92d_phy_set_rf_power_state(struct ieee80211_hw *hw,
+> >  		break;
+> >  	case ERFSLEEP:
+> >  		if (ppsc->rfpwr_state == ERFOFF)
+> >-			break;
+> >+			return false;
+> >
+> >  		for (queue_id = 0, i = 0;
+> >  		     queue_id<  RTL_PCI_MAX_TX_QUEUE_COUNT;) {
+> >diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/phy.c b/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
+> >index f27171a..539172e 100644
+> >--- a/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
+> >+++ b/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
+> >@@ -602,7 +602,8 @@ bool rtl92s_phy_set_rf_power_state(struct ieee80211_hw *hw,
+> >  		}
+> >  	case ERFSLEEP:
+> >  			if (ppsc->rfpwr_state == ERFOFF)
+> >-				break;
+> >+				return false;
+> >+				
+> >
+> >  			for (queue_id = 0, i = 0;
+> >  			     queue_id<  RTL_PCI_MAX_TX_QUEUE_COUNT;) {
+> 
+> Yes, it would be possible to jump from ERFSLEEP to ERFOFF in the code.
+> 
+> Chaoming: Is this what you want, or is it a bug?
+> 
+> Thanks,
+> 
+> Larry
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.7.3.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
