@@ -1,99 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:15336 "EHLO mga02.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:23684 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752019Ab1LPQhi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 11:37:38 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 02/24] iwlwifi: Add official names for new devices
-Date: Fri, 16 Dec 2011 07:37:07 -0800
-Message-Id: <1324049849-831-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111216_173741_978048_00EEA98F)
-In-Reply-To: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S932851Ab1LFJOA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Dec 2011 04:14:00 -0500
+Subject: Re: [PATCH v1 1/3] support for antenna configuration profiles
+From: Johannes Berg <johannes.berg@intel.com>
+To: Daniel Golle <dgolle@allnet.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
+	Felix Fietkau <nbd@openwrt.org>
+In-Reply-To: <4EDCF7EC.2030106@allnet.de> (sfid-20111205_185652_361182_EAEDA733)
+References: <20111128161240.GA25454@localhost>
+	 (sfid-20111128_171813_665159_36F11CCF) <1322996760.4633.7.camel@jlt3.sipsolutions.net>
+	 <4EDCF7EC.2030106@allnet.de> (sfid-20111205_185652_361182_EAEDA733)
+Date: Tue, 06 Dec 2011 10:13:55 +0100
+Message-ID: <1323162835.4696.8.camel@jlt3.sipsolutions.net> (sfid-20111206_101406_245827_4FE5AB5C)
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Don Fry <donald.h.fry@intel.com>
-
-Replace the engineering names with the marketing names for the
-new devices.
-
-Signed-off-by: Don Fry <donald.h.fry@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-2000.c |   12 ++++++------
- drivers/net/wireless/iwlwifi/iwl-6000.c |    2 +-
- 2 files changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index 1d2cb4c..0946933 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -254,13 +254,13 @@ static struct iwl_bt_params iwl2030_bt_params = {
- 	.iq_invert = true					\
- 
- struct iwl_cfg iwl2000_2bgn_cfg = {
--	.name = "2000 Series 2x2 BGN",
-+	.name = "Intel(R) Centrino(R) Wireless-N 2200 BGN",
- 	IWL_DEVICE_2000,
- 	.ht_params = &iwl2000_ht_params,
- };
- 
- struct iwl_cfg iwl2000_2bgn_d_cfg = {
--	.name = "2000D Series 2x2 BGN",
-+	.name = "Intel(R) Centrino(R) Wireless-N 2200D BGN",
- 	IWL_DEVICE_2000,
- 	.ht_params = &iwl2000_ht_params,
- };
-@@ -282,7 +282,7 @@ struct iwl_cfg iwl2000_2bgn_d_cfg = {
- 	.iq_invert = true					\
- 
- struct iwl_cfg iwl2030_2bgn_cfg = {
--	.name = "2000 Series 2x2 BGN/BT",
-+	.name = "Intel(R) Centrino(R) Wireless-N 2230 BGN",
- 	IWL_DEVICE_2030,
- 	.ht_params = &iwl2000_ht_params,
- };
-@@ -304,13 +304,13 @@ struct iwl_cfg iwl2030_2bgn_cfg = {
- 	.iq_invert = true					\
- 
- struct iwl_cfg iwl105_bgn_cfg = {
--	.name = "105 Series 1x1 BGN",
-+	.name = "Intel(R) Centrino(R) Wireless-N 105 BGN",
- 	IWL_DEVICE_105,
- 	.ht_params = &iwl2000_ht_params,
- };
- 
- struct iwl_cfg iwl105_bgn_d_cfg = {
--	.name = "105D Series 1x1 BGN",
-+	.name = "Intel(R) Centrino(R) Wireless-N 105D BGN",
- 	IWL_DEVICE_105,
- 	.ht_params = &iwl2000_ht_params,
- };
-@@ -333,7 +333,7 @@ struct iwl_cfg iwl105_bgn_d_cfg = {
- 	.iq_invert = true					\
- 
- struct iwl_cfg iwl135_bgn_cfg = {
--	.name = "135 Series 1x1 BGN/BT",
-+	.name = "Intel(R) Centrino(R) Wireless-N 135 BGN",
- 	IWL_DEVICE_135,
- 	.ht_params = &iwl2000_ht_params,
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index a3be117..54b7533 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -423,7 +423,7 @@ struct iwl_cfg iwl6030_2bg_cfg = {
- };
- 
- struct iwl_cfg iwl6035_2agn_cfg = {
--	.name = "6035 Series 2x2 AGN/BT",
-+	.name = "Intel(R) Centrino(R) Advanced-N 6235 AGN",
- 	IWL_DEVICE_6030,
- 	.ht_params = &iwl6000_ht_params,
- };
--- 
-1.7.0.4
+Cj4gPiBUaG9zZSBsZW5ndGggcmVzdHJpY3Rpb25zIGFyZSBjb21wbGV0ZWx5IGJvZ3VzLCBidXQg
+dGhleSdyZSBhbHNvCj4gPiB1bm5lY2Vzc2FyeSBzaW5jZSB0aGlzIGRhdGEgaXMgb3V0cHV0IGRh
+dGEgb25seSBzbyB5b3UgYXJlbid0IHVzaW5nIHRoZQo+ID4gcG9saWN5IGFueXdoZXJlIGFueXdh
+eS4KCj4gU2hvdWxkIEkgY29tcGxldGVseSBza2lwIGFkZGluZyBpdCB0byB0aGUgcG9saWN5IHRo
+ZW4gb3IganVzdCBvbW1pdCB0aGUgbGVuZ3RoCj4gcmVzdHJpY3Rpb24/CgpKdXN0IGRvbid0IGFk
+ZCB0aGUgcG9saWN5LCBJIGRvbid0IHNlZSBpdCBhZGRpbmcgYW55IHZhbHVlLiBUaGUgZm9ybWF0
+CnNob3VsZCBiZSBkb2N1bWVudGVkIHdlbGwgZW5vdWdoIGluIHRoZSBoZWFkZXIgZmlsZSBzbyB1
+c2Vyc3BhY2UgY2FuCnVuZGVyc3RhbmQgaXQgd2l0aG91dCB0aGUgcG9saWN5LgooQWxzbyBub3Rl
+IHRoYXQgSSB3YXMgcmVmZXJyaW5nIHRvIHVzaW5nIGEgYm9ndXMgbGVuZ3RoIGNvbnN0YW50IC0t
+IHlvdQp3ZXJlIHNheWluZyBlYWNoIHN0cmluZyBoZXJlIGNhbiBiZSBhcyBsb25nIGFzIGEgODAy
+LjExIGZyYW1lKQoKPiA+IE9oIHNvIHRoYXQncyBzdXBwb3NlZCB0byBiZSBhbiBhcnJheSAtLSB0
+aGVyZSdzIG5vIHdheSB0byB0ZWxsIHRoaXMgZnJvbQo+ID4gdGhlIGhlYWRlciBmaWxlcy4gSXQn
+cyBhY2NlcHRhYmxlLCBidXQgcGxlYXNlIGdpdmUgaXQgYW4gZXhwbGljaXQKPiA+IGxlbmd0aC4K
+PiBPaywgSSBoYXZlbid0IHNlZW4gYW55IGRldmljZXMgd2l0aCBtb3JlIHRoYW4gMiBwb3NzaWJs
+ZSBhbnRlbm5hIGNvbmZpZ3VhdGlvbgo+IHByb2ZpbGVzIChob3Jpem9udGFsL3ZlcnRpY2FsLCBi
+dWlsdC1pbi9leHRlcm5hbCkgc28gZmFyLCBzbyBnaXZpbmcgdGhlIGFycmF5IGEKPiBmaXhlZCBs
+ZW5ndGggb2YgNCBzaG91bGQgYmUgZmluZSBmb3Igbm93LgoKSSBkb24ndCB0aGluayBkb2luZyBh
+IGZpeGVkIGxlbmd0aCBpcyB1c2VmdWwgLS0ganVzdCBhZGQgYSB2YXJpYWJsZQpkZXNjcmliaW5n
+IHRoZSBsZW5ndGguCgpqb2hhbm5lcwoKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KSW50
+ZWwgR21iSApEb3JuYWNoZXIgU3RyYXNzZSAxCjg1NjIyIEZlbGRraXJjaGVuL011ZW5jaGVuLCBE
+ZXV0c2NobGFuZCAKU2l0eiBkZXIgR2VzZWxsc2NoYWZ0OiBGZWxka2lyY2hlbiBiZWkgTXVlbmNo
+ZW4KR2VzY2hhZWZ0c2Z1ZWhyZXI6IERvdWdsYXMgTHVzaywgUGV0ZXIgR2xlaXNzbmVyLCBIYW5u
+ZXMgU2Nod2FkZXJlcgpSZWdpc3RlcmdlcmljaHQ6IE11ZW5jaGVuIEhSQiA0NzQ1NiAKVXN0Li1J
+ZE5yLi9WQVQgUmVnaXN0cmF0aW9uIE5vLjogREUxMjkzODU4OTUKQ2l0aWJhbmsgRnJhbmtmdXJ0
+IGEuTS4gKEJMWiA1MDIgMTA5IDAwKSA2MDAxMTkwNTIK
 
