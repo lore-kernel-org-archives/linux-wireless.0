@@ -1,106 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:49883 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751592Ab1LIDnu (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59674 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753589Ab1LFTpi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 22:43:50 -0500
-Received: by vcbfk14 with SMTP id fk14so2000505vcb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2011 19:43:49 -0800 (PST)
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Nikolay Martynov <mar.kolya@gmail.com>
-Subject: [PATCH v2] mac80211: split addba retries in time
-Date: Thu,  8 Dec 2011 22:43:41 -0500
-Message-Id: <1323402221-9869-1-git-send-email-mar.kolya@gmail.com> (sfid-20111209_044354_093812_5AADEA34)
-In-Reply-To: <1323162576.4696.4.camel@jlt3.sipsolutions.net>
-References: <1323162576.4696.4.camel@jlt3.sipsolutions.net>
+	Tue, 6 Dec 2011 14:45:38 -0500
+Subject: [PATCH v2] wireless: disable wext sysfs by default
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <1323200675.4696.24.camel@jlt3.sipsolutions.net> (sfid-20111206_204442_206189_FE3FFABF)
+References: <1323200675.4696.24.camel@jlt3.sipsolutions.net>
+	 (sfid-20111206_204442_206189_FE3FFABF)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 06 Dec 2011 20:45:37 +0100
+Message-ID: <1323200737.4696.25.camel@jlt3.sipsolutions.net> (sfid-20111206_204552_873852_05321FDD)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  Currently code allows three (HT_AGG_MAX_RETRIES) unanswered addba
-requests. When this limit is reached aggregation is turned off for
-given TID permanently. This doesn't seem right: three requests is
-not that much, some 'blackout' can happen, but effect of it affects
-whole connection indefinitely.
-  This patch increases number of retries to 15. Also, when there have
-been 3 or more retries it splits further retries apart by 15 seconds
-instead of sending them in very short period of time.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+This code has been on the list to remove for a long
+time, so disable it by default, add a warning to its
+Kconfig, and schedule it for removal in 3.5.
+
+The only known dependency, hal, has not required it
+since its 0.5.12 release, which was in early 2009
+and hal has since been deprecated completely.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/agg-tx.c   |   19 +++++++++++++++++++
- net/mac80211/sta_info.h |    6 +++++-
- 2 files changed, 24 insertions(+), 1 deletions(-)
+v2: this will go into 3.3 so remove in 3.5 not 3.4 ...
 
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index 7380287..7060c8f 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -390,6 +390,7 @@ void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
- #endif
+ Documentation/feature-removal-schedule.txt |    3 +--
+ net/wireless/Kconfig                       |    7 ++++---
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+--- a/net/wireless/Kconfig	2011-12-06 17:06:18.000000000 +0100
++++ b/net/wireless/Kconfig	2011-12-06 20:41:08.000000000 +0100
+@@ -121,15 +121,16 @@ config CFG80211_WEXT
  
- 	spin_lock_bh(&sta->lock);
-+	sta->ampdu_mlme.last_addba_req_time[tid] = jiffies;
- 	sta->ampdu_mlme.addba_req_num[tid]++;
- 	spin_unlock_bh(&sta->lock);
+ config WIRELESS_EXT_SYSFS
+ 	bool "Wireless extensions sysfs files"
+-	default y
+ 	depends on WEXT_CORE && SYSFS
+ 	help
+ 	  This option enables the deprecated wireless statistics
+ 	  files in /sys/class/net/*/wireless/. The same information
+ 	  is available via the ioctls as well.
  
-@@ -490,6 +491,24 @@ int ieee80211_start_tx_ba_session(struct ieee80211_sta *pubsta, u16 tid,
- 		goto err_unlock_sta;
- 	}
+-	  Say Y if you have programs using it, like old versions of
+-	  hal.
++	  Say N. If you know you have ancient tools requiring it,
++	  like very old versions of hal (prior to 0.5.12 release),
++	  say Y and update the tools as soon as possible as this
++	  option will be removed soon.
  
-+	/*
-+	 * if we have tried more than HT_AGG_BURST_RETRIES times we
-+	 * will spread our requests in time to avoid stalling connection
-+	 * for too long
-+	 */
-+	if (sta->ampdu_mlme.addba_req_num[tid] > HT_AGG_BURST_RETRIES &&
-+	    time_before(jiffies, sta->ampdu_mlme.last_addba_req_time[tid] +
-+			HT_AGG_RETRIES_PERIOD)) {
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+		printk(KERN_DEBUG "BA request denied - "
-+		       "waiting a grace period after %d failed requests "
-+		       "on tid %u\n",
-+		       sta->ampdu_mlme.addba_req_num[tid], tid);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+		ret = -EBUSY;
-+		goto err_unlock_sta;
-+	}
-+
- 	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
- 	/* check if the TID is not in aggregation flow already */
- 	if (tid_tx || sta->ampdu_mlme.tid_start_tx[tid]) {
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 1a14fab..c8578eb 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -75,7 +75,9 @@ enum ieee80211_sta_info_flags {
+ config LIB80211
+ 	tristate "Common routines for IEEE802.11 drivers"
+--- a/Documentation/feature-removal-schedule.txt	2011-12-06 17:06:18.000000000 +0100
++++ b/Documentation/feature-removal-schedule.txt	2011-12-06 20:42:23.000000000 +0100
+@@ -263,8 +263,7 @@ Who:	Ravikiran Thirumalai <kiran@scalex8
  
- #define STA_TID_NUM 16
- #define ADDBA_RESP_INTERVAL HZ
--#define HT_AGG_MAX_RETRIES		0x3
-+#define HT_AGG_MAX_RETRIES		15
-+#define HT_AGG_BURST_RETRIES		3
-+#define HT_AGG_RETRIES_PERIOD		(15 * HZ)
- 
- #define HT_AGG_STATE_DRV_READY		0
- #define HT_AGG_STATE_RESPONSE_RECEIVED	1
-@@ -171,6 +173,7 @@ struct tid_ampdu_rx {
-  * @tid_tx: aggregation info for Tx per TID
-  * @tid_start_tx: sessions where start was requested
-  * @addba_req_num: number of times addBA request has been sent.
-+ * @last_addba_req_time: timestamp of the last addBA request.
-  * @dialog_token_allocator: dialog token enumerator for each new session;
-  * @work: work struct for starting/stopping aggregation
-  * @tid_rx_timer_expired: bitmap indicating on which TIDs the
-@@ -190,6 +193,7 @@ struct sta_ampdu_mlme {
- 	struct work_struct work;
- 	struct tid_ampdu_tx __rcu *tid_tx[STA_TID_NUM];
- 	struct tid_ampdu_tx *tid_start_tx[STA_TID_NUM];
-+	unsigned int last_addba_req_time[STA_TID_NUM];
- 	u8 addba_req_num[STA_TID_NUM];
- 	u8 dialog_token_allocator;
- };
--- 
-1.7.4.1
+ What:	Code that is now under CONFIG_WIRELESS_EXT_SYSFS
+ 	(in net/core/net-sysfs.c)
+-When:	After the only user (hal) has seen a release with the patches
+-	for enough time, probably some time in 2010.
++When:	3.5
+ Why:	Over 1K .text/.data size reduction, data is available in other
+ 	ways (ioctls)
+ Who:	Johannes Berg <johannes@sipsolutions.net>
+
 
