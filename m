@@ -1,79 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46025 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44493 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756064Ab1LGPb1 (ORCPT
+	with ESMTP id S1755818Ab1LGPGI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Dec 2011 10:31:27 -0500
-Date: Wed, 7 Dec 2011 21:00:53 +0530
+	Wed, 7 Dec 2011 10:06:08 -0500
+Date: Wed, 7 Dec 2011 20:35:45 +0530
 From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 To: Johannes Berg <johannes@sipsolutions.net>
 CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211: Fix race in bss timeout
-Message-ID: <20111207153052.GB12498@chvasanth-lnx> (sfid-20111207_163134_387992_E9FF4469)
-References: <1323270687-5989-1-git-send-email-vthiagar@qca.qualcomm.com>
- <1323271070.3404.40.camel@jlt3.sipsolutions.net>
+Subject: Re: [PATCH V2 1/2] cfg80211: Define a wrapper function for reporting
+ roaming
+Message-ID: <20111207150543.GA12498@chvasanth-lnx> (sfid-20111207_160616_960239_196C2D04)
+References: <1323265359-1138-1-git-send-email-vthiagar@qca.qualcomm.com>
+ <1323265604.3404.37.camel@jlt3.sipsolutions.net>
+ <20111207135822.GA12398@chvasanth-lnx>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1323271070.3404.40.camel@jlt3.sipsolutions.net>
+In-Reply-To: <20111207135822.GA12398@chvasanth-lnx>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 07, 2011 at 04:17:50PM +0100, Johannes Berg wrote:
-> On Wed, 2011-12-07 at 20:41 +0530, Vasanthakumar Thiagarajan wrote:
+On Wed, Dec 07, 2011 at 07:28:24PM +0530, Vasanthakumar Thiagarajan wrote:
+> > 
+> > Hmm, now that I think about it more, I think the calling convention is
+> > really strange. Why pass the channel and bssid when the BSS struct is
+> > already known?
+> > 
+> > Why not make cfg80211_roamed() do the BSS lookup (which would also
+> > reduce the race for drivers that don't use _bss()) based on the info,
+> > and then call a cfg80211_roamed_bss() that doesn't get channel/bssid.
 > 
-> > +	spin_lock_bh(&dev->bss_lock);
-> > +	memcpy(bssid, bss->bssid, ETH_ALEN);
-> > +	spin_unlock_bh(&dev->bss_lock);
-> 
-> I don't think this is necessary.
+> Sure, i'll change it. This looks better.
 
-Right, i don't see any race either.
-
-> 
-> >  	nl80211_send_roamed(wiphy_to_dev(wdev->wiphy), wdev->netdev, bssid,
-> >  			    req_ie, req_ie_len, resp_ie, resp_ie_len,
-> >  			    GFP_KERNEL);
-> > @@ -615,40 +612,65 @@ void __cfg80211_roamed(struct wireless_dev *wdev,
-> >  	wdev->wext.prev_bssid_valid = true;
-> >  	wireless_send_event(wdev->netdev, SIOCGIWAP, &wrqu, NULL);
-> >  #endif
-> > +
-> > +	return;
-> > +out:
-> > +	if (bss)
-> > +		cfg80211_put_bss(bss);
-> >  }
-> 
-> Doesn't that leak the reference if you return? It'll also give you an
-> smatch warning since the function assumes the "bss" pointer that was
-> passed in is not NULL, no?
-
-Oops, sorry, i'll fix it. I may need to run smatch as well.
-
-> 
-> > +static void cfg80211_roamed_bss(struct net_device *dev,
-> > +				struct cfg80211_bss *bss, const u8 *req_ie,
-> > +				size_t req_ie_len, const u8 *resp_ie,
-> > +				size_t resp_ie_len, gfp_t gfp)
-> >  {
-> >  	struct wireless_dev *wdev = dev->ieee80211_ptr;
-> >  	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
-> >  	struct cfg80211_event *ev;
-> >  	unsigned long flags;
-> >  
-> > -	CFG80211_DEV_WARN_ON(wdev->sme_state != CFG80211_SME_CONNECTED);
-> >  
-> >  	ev = kzalloc(sizeof(*ev) + req_ie_len + resp_ie_len, gfp);
-> 
-> Why remove that warning? Also maybe do something like
-> 
-> 	if (WARN_ON(!bss))
-> 		return;
-> 
-> (before allocating memory)
-
-These warnings are added in cfg80211_roamed().
-
-Thanks!
+Also, i'll create a new patch instead of the next version.
 
 Vasanth
