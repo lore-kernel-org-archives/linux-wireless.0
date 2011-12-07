@@ -1,37 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:45122 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759674Ab1LOW4E (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:63392 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754513Ab1LGLxY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 17:56:04 -0500
-Date: Thu, 15 Dec 2011 17:54:57 -0500 (EST)
-Message-Id: <20111215.175457.1993211580046983211.davem@davemloft.net> (sfid-20111215_235627_304919_392FA394)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2011-12-15
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20111215191523.GA2561@tuxdriver.com>
-References: <20111215191523.GA2561@tuxdriver.com>
+	Wed, 7 Dec 2011 06:53:24 -0500
+Message-ID: <1323258799.2312.18.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC> (sfid-20111207_125333_452276_CF2D2B73)
+Subject: Re: [Bloat] Time in Queue, bufferbloat, and... our accidentally
+ interplanetary network
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Hagen Paul Pfeifer <hagen@jauu.net>
+Cc: Dave Taht <dave.taht@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org,
+	bloat-devel <bloat-devel@lists.bufferbloat.net>,
+	bloat <bloat@lists.bufferbloat.net>
+Date: Wed, 07 Dec 2011 12:53:19 +0100
+In-Reply-To: <9dfc3c5eb811f2774b378fce0158b3e7@localhost>
+References: <CAA93jw7kQYONQiAozatRmdRRJeK0GB9eNDWtRZ3AL+OVKn0OpA@mail.gmail.com>
+	 <1323082774.2670.40.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
+	 <9dfc3c5eb811f2774b378fce0158b3e7@localhost>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Thu, 15 Dec 2011 14:15:24 -0500
-
-> Here are a few more fixes intended for the 3.2 release.  They are
-> all small and narrowly focused.
+Le mercredi 07 décembre 2011 à 11:15 +0100, Hagen Paul Pfeifer a écrit :
+> On Mon, 05 Dec 2011 11:59:34 +0100, Eric Dumazet wrote:
 > 
-> First is a one liner fix for a signedness problem in NFC that could
-> lead to an incorrect return code being propogated.  Next are two
-> iwlwifi regression fixes that received some recent attention on the
-> linux-wireless mailing list.  A third iwlwifi fix corrects a sequence
-> numbering error, which can cause a lot of bad behaviour in the wireless
-> network.  The ath9k fix corrects a potential for an array underrun.
-> Finally, the mwifiex fix corrects a double list deletion.
 > 
-> Please let me know if there are problems!
+> > Adding a time limit is possible, all we need is a proper design and
+> > implementation :)
+> > 
+> > Here is my suggestion :
+> > 
+> > Design a new tfifo/tred qdisc, with following properties :
+> > 
+> > Adaptative RED, (ECN enabled + head drop), but instead of using
+> > bytes/packet qlen average, use time_in_queue average.
+> 
+> Question one: is anything wrong with sfb or choke as the basis, instead of
+> RED?
+> 
 
-Pulled, thanks John.
+RED is the module to bring EWMA stuff, it seems natural to start with
+it. Please note that choke has a RED module too.
+
+Then later, we can add time limit stuff to other Qdisc if needed, its a
+plug anyway. But is there any meaning to compute a global EWMA after
+SFB/SFQ packet classification ?
+
+> Question two: I submitted pfast_head_drop to drop more outdated data
+> instead of new data. Back in time I thought TCP _may_ experience benefits
+> because more up-to-date SACK data packets are saved. Are there any other
+> TCP advantages with head drop policy?
+> 
+
+Note that head drop is a consequence of time limit idea on top of FIFO,
+since only at dequeue time, we compute the delta between current time
+and enqueue time, and we drop/mark the (head) packet if time exceeds our
+current limit.
+
+In general, being able to drop/mark firsts packets in queue instead of
+last ones can let TCP sender be notified of congestion much earlier than
+a tail drop. (We gain the time to transmit whole packets in queue before
+receiver can report in its ACK the congestion back to sender)
+
+
+
