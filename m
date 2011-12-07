@@ -1,44 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49927 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751547Ab1LLRsG (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:52806 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757745Ab1LGQUy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 12:48:06 -0500
-Subject: Re: iwlwifi havoc on some APs (rekeying?)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Wolfgang Breyha <wbreyha@gmx.net>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4EE5E3CD.1070409@gmx.net> (sfid-20111212_122224_090419_DF83BB07)
-References: <4EE2202A.4080303@gmx.net>
-	 <1323446534.13074.96.camel@wwguy-huron>  <4EE24DF4.4020301@gmx.net>
-	 <1323451436.13074.158.camel@wwguy-huron>
-	 (sfid-20111209_192243_598986_F6275AE2) <1323455216.3622.21.camel@jlt3.sipsolutions.net>
-	 <4EE35877.1060507@gmx.net>
-	 (sfid-20111210_140255_490293_C3C0F113) <1323680657.3442.7.camel@jlt3.sipsolutions.net>
-	 <4EE5D2D3.406@gmx.net>
-	 (sfid-20111212_110955_792336_68917631) <1323684754.3442.36.camel@jlt3.sipsolutions.net>
-	 <4EE5E3CD.1070409@gmx.net> (sfid-20111212_122224_090419_DF83BB07)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 12 Dec 2011 18:48:02 +0100
-Message-ID: <1323712082.3442.43.camel@jlt3.sipsolutions.net> (sfid-20111212_184810_451939_4204EA6D)
-Mime-Version: 1.0
+	Wed, 7 Dec 2011 11:20:54 -0500
+Cc: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	<compat@orbit-lab.org>, Paul Stewart <pstew@google.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Senthilkumar Balasubramanian <senthilb@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+Subject: [PATCH 1/2] cfg80211: allow following country IE power for custom regdom cards
+Date: Wed, 7 Dec 2011 21:50:07 +0530
+Message-ID: <1323274808-14094-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111207_174845_042012_116F1C43)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-12-12 at 12:21 +0100, Wolfgang Breyha wrote:
-> Johannes Berg wrote, on 12.12.2011 11:12:
-> > Interesting. We'll have to play with this. Can you try running a 64-bit
-> > kernel maybe and see if that fixes things?
-> 
-> I can try with a F16 x86_64 live image. It's not the latest iwlwifi then, but
-> it happend with the F16 iwlagn too anyway;-) I'll do that in the evening and
-> report.
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
 
-A colleague pointed out that due to the PCI address space hold we might
-be seeing larger addresses -- could you try booting the 32 bit kernel
-with "mem=3G" on the command line (edit it in grub maybe?) and see if
-you can still reproduce it then?
+By definition WIPHY_FLAG_STRICT_REGULATORY was intended to allow the
+wiphy to adjust itself to the country IE power information if the
+card had no regulatory data but we had no way to tell cfg80211 that if
+the card also had its own custom regulatory domain (these are typically
+custom world regulatory domains) that we want to follow the country IE's
+noted values for power for each channel. We add support for this and
+document it.
 
-johannes
+This is not a critical fix but a performance optimization for cards
+with custom regulatory domains that associate to an AP with sends
+out country IEs with a higher EIRP than the one on the custom
+regulatory domain. In practice the only driver affected right now
+are the Atheros drivers as they are the only drivers using both
+WIPHY_FLAG_STRICT_REGULATORY and WIPHY_FLAG_CUSTOM_REGULATORY --
+used on cards that have an Atheros world regulatory domain. Cards
+that have been programmed to follow a country specifically will not
+follow the country IE power. So although not a stable fix distributions
+should consider cherry picking this.
+
+Cc: compat@orbit-lab.org
+Cc: Paul Stewart <pstew@google.com>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: Senthilkumar Balasubramanian <senthilb@qca.qualcomm.com>
+Reported-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ include/net/cfg80211.h |    4 +++-
+ net/wireless/reg.c     |   20 ++++++++++++++++----
+ 2 files changed, 19 insertions(+), 5 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 3de1c39..a2217f4 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1694,7 +1694,9 @@ struct cfg80211_ops {
+  *	regulatory domain no user regulatory domain can enable these channels
+  *	at a later time. This can be used for devices which do not have
+  *	calibration information guaranteed for frequencies or settings
+- *	outside of its regulatory domain.
++ *	outside of its regulatory domain. If used in combination with
++ *	WIPHY_FLAG_CUSTOM_REGULATORY the inspected country IE power settings
++ *	will be followed.
+  * @WIPHY_FLAG_DISABLE_BEACON_HINTS: enable this if your driver needs to ensure
+  *	that passive scan flags and beaconing flags may not be lifted by
+  *	cfg80211 due to regulatory beacon hints. For more information on beacon
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 70b171a..88e0c62 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -873,10 +873,22 @@ static void handle_channel(struct wiphy *wiphy,
+ 	chan->flags = flags | bw_flags | map_regdom_flags(reg_rule->flags);
+ 	chan->max_antenna_gain = min(chan->orig_mag,
+ 		(int) MBI_TO_DBI(power_rule->max_antenna_gain));
+-	if (chan->orig_mpwr)
+-		chan->max_power = min(chan->orig_mpwr,
+-			(int) MBM_TO_DBM(power_rule->max_eirp));
+-	else
++	if (chan->orig_mpwr) {
++		/*
++		 * Devices that have their own custom regulatory domain
++		 * but also use WIPHY_FLAG_STRICT_REGULATORY will follow the
++		 * passed country IE power settings.
++		 */
++		if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE &&
++		    wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY &&
++		    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY) {
++			chan->max_power =
++				MBM_TO_DBM(power_rule->max_eirp);
++		} else {
++			chan->max_power = min(chan->orig_mpwr,
++				(int) MBM_TO_DBM(power_rule->max_eirp));
++		}
++	} else
+ 		chan->max_power = (int) MBM_TO_DBM(power_rule->max_eirp);
+ }
+ 
+-- 
+1.7.8
 
