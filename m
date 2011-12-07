@@ -1,63 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:33168 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750785Ab1LKD0A (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:35375 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755631Ab1LGMfi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Dec 2011 22:26:00 -0500
-Received: by ghbf1 with SMTP id f1so264150ghb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2011 19:25:59 -0800 (PST)
-Message-ID: <4EE422C4.5050005@lwfinger.net> (sfid-20111211_042608_241985_EE26F89D)
-Date: Sat, 10 Dec 2011 21:25:56 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 7 Dec 2011 07:35:38 -0500
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [RFC] ath9k_hw: Fix handling of MCI interrupt
+Date: Wed, 7 Dec 2011 18:05:12 +0530
+Message-ID: <1323261312-20093-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111207_133542_599015_67D6F552)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH 0/7] b43: N-PHY fixes, check dependency before applying
-References: <1323568535-2816-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1323568535-2816-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/10/2011 07:55 PM, Rafał Miłecki wrote:
-> Some N-PHY fixes coming from wl observations and specs changes.
->
-> Please note this patchset depends on following patches:
-> [PATCH 1/2] ssb: extract FEM info from SPROM
-> [PATCH 2/2] bcma: extract FEM info from SPROM
-> send 3 days ago.
->
-> Rafał Miłecki (7):
->    b43: N-PHY: random trivial fixes for typos, missing writes
->    b43: N-PHY: update some init values
->    b43: N-PHY: workaround BCM43224 hw bug in writing table id 9
->    b43: N-PHY: add table for antenna software control
->    b43: N-PHY: determine various PHY params
->    b43: N-PHY: finish 2.4GHz 0x2056 radio setup
->    b43: N-PHY: implement spurious tone avoidance
->
->   drivers/net/wireless/b43/phy_n.c       |  262 +++++++++++++++++++++++++++++---
->   drivers/net/wireless/b43/phy_n.h       |    8 +
->   drivers/net/wireless/b43/radio_2056.c  |   25 +++-
->   drivers/net/wireless/b43/radio_2056.h  |    1 +
->   drivers/net/wireless/b43/tables_nphy.c |   59 +++++++-
->   drivers/net/wireless/b43/tables_nphy.h |   31 ++--
->   6 files changed, 342 insertions(+), 44 deletions(-)
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-This set of patches improved the performance of my BCM43224.
+with the MCI code the MCI interrupt was not handled, as the interrupt
+mask is zeroed out in the below code, fix thi
 
-netperf TCP_MAERTS (RX)  15.0 => 24.5 Mbps
-netperf TCP_STREAM (TX)   6.0 => 13.1 Mbps
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-I have mac80211 debug on, and I see a lot of
-
-wlan13: detected beacon loss from AP - sending probe request
-
-These occur at 1 second intervals. This particular AP does not have a setting 
-for the beacon interval, but I think it is at 100 ms.
-
-Larry
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 95587e3..962b52b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -179,6 +179,8 @@ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+ 	u32 sync_cause = 0, async_cause;
+ 
++	*masked = 0;
++
+ 	async_cause = REG_READ(ah, AR_INTR_ASYNC_CAUSE);
+ 
+ 	if (async_cause & (AR_INTR_MAC_IRQ | AR_INTR_ASYNC_MASK_MCI)) {
+@@ -218,7 +220,6 @@ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ 
+ 	sync_cause = REG_READ(ah, AR_INTR_SYNC_CAUSE) & AR_INTR_SYNC_DEFAULT;
+ 
+-	*masked = 0;
+ 
+ 	if (!isr && !sync_cause)
+ 		return false;
+@@ -259,7 +260,7 @@ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ 			return false;
+ 		}
+ 
+-		*masked = isr & ATH9K_INT_COMMON;
++		*masked |= isr & ATH9K_INT_COMMON;
+ 
+ 		if (ah->config.rx_intr_mitigation)
+ 			if (isr & (AR_ISR_RXMINTR | AR_ISR_RXINTM))
+-- 
+1.7.0.4
 
