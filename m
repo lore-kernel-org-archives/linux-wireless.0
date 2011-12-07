@@ -1,59 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:59920 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752439Ab1LKVxZ convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:35269 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752534Ab1LGJ7p convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Dec 2011 16:53:25 -0500
-Received: by dajs34 with SMTP id s34so1224918daj.19
-        for <linux-wireless@vger.kernel.org>; Sun, 11 Dec 2011 13:53:24 -0800 (PST)
+	Wed, 7 Dec 2011 04:59:45 -0500
 MIME-Version: 1.0
-Date: Sun, 11 Dec 2011 22:47:46 +0100
-Message-ID: <CAMG6FYgGB12s+vTGRuKb1E8qzwMa3=kV2pm5ZFQ=BO4WqqZSRQ@mail.gmail.com> (sfid-20111211_225335_668297_3861F175)
-Subject: [PATCH] mac80211: Do not request FIF_BCN_PRBRESP_PROMISC for HW scan.
-From: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
-To: linux-wireless@vger.kernel.org, Bartosz.Markowski@tieto.com,
-	Janusz.Dziedzic@tieto.com
+In-Reply-To: <CAJ-VmomuA7u5=zRGMK2Jd3WG+HWTRTZNST4JDVWU9kUEcfE91Q@mail.gmail.com>
+References: <CAA93jw7kQYONQiAozatRmdRRJeK0GB9eNDWtRZ3AL+OVKn0OpA@mail.gmail.com>
+	<1323082774.2670.40.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
+	<CAJ-VmomuA7u5=zRGMK2Jd3WG+HWTRTZNST4JDVWU9kUEcfE91Q@mail.gmail.com>
+Date: Wed, 7 Dec 2011 10:59:45 +0100
+Message-ID: <CAA93jw6w1KAUwW0_TTwCuAScMnq1+RUQzLGZsRqPy_txPGbcjw@mail.gmail.com> (sfid-20111207_105955_437326_F9146500)
+Subject: Re: Time in Queue, bufferbloat, and... our accidentally
+ interplanetary network
+From: Dave Taht <dave.taht@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Eric Dumazet <eric.dumazet@gmail.com>,
+	bloat <bloat@lists.bufferbloat.net>,
+	bloat-devel <bloat-devel@lists.bufferbloat.net>,
+	netdev@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_configure_filter code used local->scanning as a boolean value
-when it was a bit mask. Bits SCAN_HW_SCANNING, SCAN_COMPLETED, SCAN_ABORTED
-should not set FIF_BCN_PRBRESP_PROMISC filter.
+On Tue, Dec 6, 2011 at 3:03 AM, Adrian Chadd <adrian@freebsd.org> wrote:
+> Hi,
+>
+> For what it's worth, I've also been tinkering with time-in-queue for
+> the wifi queue management in FreeBSD. I don't have anything public
+> yet. What I have done actually seems to work quite well, when doing TX
+> queue time-in-queue management. (I'm ignoring RX queue management for
+> now.)
+>
+> Yes, I think a weighted random drop with both time-in-queue and queue
+> depth would work well. I haven't sat down to model what it'd look like
+> given some traffic profiles.
+>
+> I'll be sure to post some patches and results when I have them. :)
 
-Similar mistake was fixed also in ieee80211_hw_config (power
-configuration code).
+Well, if there is a way to add BQL sanely to the mac80211 or driver
+layers and then apply some time in queue techniques at some edge
+of some layer(s) down there in Linux, I'd love to know what and where
+is good.
 
-Verified-by: Vitaly Wool <vitaly.wool@sonyeric­sson.com>
-Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
----
- net/mac80211/main.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+It might be simpler to discuss design ideas etc, in a more generic
+and less noisy forum than netdev and linux-wireless, at least
+for a while, getting to actual patches seems kind of hard at this point.
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index cae4435..54f78ab 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -47,7 +47,7 @@ void ieee80211_configure_filter(struct ieee80211_local *local)
- 	if (atomic_read(&local->iff_allmultis))
- 		new_flags |= FIF_ALLMULTI;
+(at least to me. For all I know eric is finished already, and me, I haven't
+ finished grokking the paper he's leveraging some ideas on)
 
--	if (local->monitors || local->scanning)
-+	if (local->monitors || test_bit(SCAN_SW_SCANNING, &local->scanning))
- 		new_flags |= FIF_BCN_PRBRESP_PROMISC;
+The little I understand about Linux's networking stack dwarfs the
+little I know about BSD's, so I look forward to hearing about your
+results as you get them, and that said, if you could provide some
+pointers and insight into BSD's traffic shaping methods over on
+bloat-devel, we do try to be all-architecture embracing in our
+attempts to beat the bloat.
 
- 	if (local->fif_probe_req || local->probe_req_reg)
-@@ -193,8 +193,8 @@ int ieee80211_hw_config(struct ieee80211_local
-*local, u32 changed)
- 		changed |= IEEE80211_CONF_CHANGE_SMPS;
- 	}
+>
+>
+> Adrian
 
--	if ((local->scanning & SCAN_SW_SCANNING) ||
--	    (local->scanning & SCAN_HW_SCANNING))
-+	if (test_bit(SCAN_SW_SCANNING, &local->scanning) ||
-+	    test_bit(SCAN_HW_SCANNING, &local->scanning))
- 		power = chan->max_power;
- 	else
- 		power = local->power_constr_level ?
+
+
 -- 
-1.7.1
+Dave Täht
+SKYPE: davetaht
+US Tel: 1-239-829-5608
+FR Tel: 0638645374
+http://www.bufferbloat.net
