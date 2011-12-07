@@ -1,88 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li9-11.members.linode.com ([67.18.176.11]:39190 "EHLO
-	test.thunk.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755536Ab1LMUR6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 15:17:58 -0500
-Date: Tue, 13 Dec 2011 15:17:52 -0500
-From: Ted Ts'o <tytso@mit.edu>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-kernel@vger.kernel.org, ilw@linux.intel.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: REGRESSION: v3.2-rcX: iwlagn refuses to associate with my AP's
-Message-ID: <20111213201752.GA5094@thunk.org> (sfid-20111213_211814_257794_E2A9C4A9)
-References: <E1RaBm1-0001JR-8a@tytso-glaptop.cam.corp.google.com>
- <1323800557.3355.31.camel@jlt3.sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1323800557.3355.31.camel@jlt3.sipsolutions.net>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:46081 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756244Ab1LGVEV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Dec 2011 16:04:21 -0500
+Received: by qcqz2 with SMTP id z2so796584qcq.19
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2011 13:04:21 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] Support mcast-rate in Mesh Node
+Date: Wed,  7 Dec 2011 13:04:15 -0800
+Message-Id: <1323291855-8418-1-git-send-email-thomas@cozybit.com> (sfid-20111207_220425_440511_963886CC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 13, 2011 at 07:22:37PM +0100, Johannes Berg wrote:
-> 
-> I think this is. It's interesting though that it is deauthenticating --
-> is there anything in the log before? But since you bisected it to the TX
-> sync commit, I'd say let's try the below patch. You might have to adjust
-> the iwl-mac80211.c file to iwl-agn.c, I'm not entirely sure what version
-> has the moved code.
-> 
-> Please let me know -- this commit is probably the right thing to do
-> until we get rid of tx_sync completely.
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 
-Well, this patch seems to fix things for the non-authenticated case.
-I can now associate with the GoogleGuest SSID without any problems.
-I'm still having problems associating with the EAP-TLS encrypted
-network, but that looks like it's a different bug.  (And that may
-explain why I had so much trouble bisecting this; there are two issues
-that have very similar symptoms.)
-
-I did have to slightly modify your patch since at least as of 3.2-rc5,
-the functions involved were in a different file (iwl-agn.c).
-
-I tried Wey's patch, but it didn't seem to result in any change in
-behavior, as you had suggested.
-
-OK, now to see if I can figure out what's going on with the EAP-TLS
-authentication case....
-
-						- Ted
-
->From c1160e3b5dfadc8ac26f5a7ff0ff6ce1e8e7dbae Mon Sep 17 00:00:00 2001
-From: Theodore Ts'o <tytso@google.com>
-Date: Tue, 13 Dec 2011 14:58:50 -0500
-Subject: [PATCH] iwlwifi: disable tx_sync if p2p is not enabled
-
-Test patch sent to LKML from by Johnnes Berg
-
-Signed-off-by: "Theodore Ts'o" <tytso@mit.edu>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ mesh.c |   26 ++++++++++++++++++++++++--
+ 1 files changed, 24 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index bacc06c..78ce547 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -2850,6 +2850,9 @@ static int iwlagn_mac_tx_sync(struct ieee80211_hw *hw,
- 	int ret;
- 	u8 sta_id;
- 
-+	if (!vif->p2p)
-+		return 0;
+diff --git a/mesh.c b/mesh.c
+index dc8f49c..bdd5d1d 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -342,6 +342,9 @@ COMMAND(get, mesh_param, "[<param>]",
+ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
+ 		     struct nl_msg *msg, int argc, char **argv)
+ {
++	float rate = 0;
++	char *end;
 +
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
- 	mutex_lock(&priv->shrd->mutex);
+ 	if (argc < 1)
+ 		return 1;
  
-@@ -2898,6 +2901,9 @@ static void iwlagn_mac_finish_tx_sync(struct ieee80211_hw *hw,
- 	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
- 	struct iwl_rxon_context *ctx = vif_priv->ctx;
+@@ -349,15 +352,34 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
+ 	argc--;
+ 	argv++;
  
-+	if (!vif->p2p)
-+		return;
++	if (argc) {
++		if (strcmp(argv[0], "mcast-rate") == 0) {
++			argc--;
++			argv++;
 +
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
- 	mutex_lock(&priv->shrd->mutex);
++			rate = strtod(argv[0], &end);
++			if (*end != '\0')
++				return 0;
++
++			if (rate)
++				NLA_PUT_U32(msg, NL80211_ATTR_MCAST_RATE,
++						(int)(rate * 10));
++
++				argv++;
++				argc--;
++		}
++	}
++
+ 	if (!argc)
+ 		return 0;
++
+ 	return set_interface_meshparam(state, cb, msg, argc, argv);
+  nla_put_failure:
+ 	return -ENOBUFS;
+ }
+-COMMAND(mesh, join, "<mesh ID> [<param>=<value>]*",
++COMMAND(mesh, join, "<mesh ID> [mcast-rate <rate in Mbps>] [<param>=<value>]*",
+ 	NL80211_CMD_JOIN_MESH, 0, CIB_NETDEV, join_mesh,
+-	"Join a mesh with the given mesh ID and mesh parameters.");
++	"Join a mesh with the given mesh ID with mcast-rate and mesh parameters.");
  
+ static int leave_mesh(struct nl80211_state *state, struct nl_cb *cb,
+ 		      struct nl_msg *msg, int argc, char **argv)
 -- 
-1.7.3.1
+1.7.5.4
 
