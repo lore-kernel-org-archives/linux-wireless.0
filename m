@@ -1,42 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:64379 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752569Ab1LNP2w (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:36807 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757046Ab1LGVNA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 10:28:52 -0500
-Received: by wgbds13 with SMTP id ds13so1582617wgb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2011 07:28:51 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, ivdoorn@gmail.com, gwingerde@gmail.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH] rt2x00: Make use of ieee80211_free_txskb in tx path
-Date: Wed, 14 Dec 2011 16:28:41 +0100
-Message-Id: <1323876521-21224-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20111214_162856_136658_4903C5B3)
+	Wed, 7 Dec 2011 16:13:00 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 08A3854038F
+	for <linux-wireless@vger.kernel.org>; Wed,  7 Dec 2011 16:12:59 -0500 (EST)
+Subject: Compat-wireless release for 2011-12-07 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111207211258.D01384062E@repository3.orbit-lab.org> (sfid-20111207_221304_615091_03A2E668)
+Date: Wed,  7 Dec 2011 16:12:58 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ieee80211_free_txskb should be used when dropping a frame in the device
-rx path such that mac80211 knows about this frame being dropped.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + a6a9ce3...3a0aa65 akpm-end   -> origin/akpm-end  (forced update)
+   8e8da02..b835c0f  akpm-start -> origin/akpm-start
+ + 9c2d96c...84577d6 master     -> origin/master  (forced update)
+   8e8da02..b835c0f  stable     -> origin/stable
+ * [new tag]         next-20111207 -> next-20111207
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- drivers/net/wireless/rt2x00/rt2x00mac.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+compat-wireless code metrics
 
-diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-index 7996cd0..5889558 100644
---- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-@@ -159,7 +159,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
-  exit_fail:
- 	rt2x00queue_pause_queue(queue);
-  exit_free_skb:
--	dev_kfree_skb_any(skb);
-+	ieee80211_free_txskb(hw, skb);
- }
- EXPORT_SYMBOL_GPL(rt2x00mac_tx);
- 
--- 
-1.7.7
-
+    822975 - Total upstream lines of code being pulled
+      2470 - backport code changes
+      2122 - backport code additions
+       348 - backport code deletions
+      8885 - backport from compat module
+     11355 - total backport code
+    1.3798 - % of code consists of backport work
