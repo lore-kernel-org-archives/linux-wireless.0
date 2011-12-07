@@ -1,74 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59674 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:57635 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753589Ab1LFTpi (ORCPT
+	with ESMTP id S1751225Ab1LGJKh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Dec 2011 14:45:38 -0500
-Subject: [PATCH v2] wireless: disable wext sysfs by default
+	Wed, 7 Dec 2011 04:10:37 -0500
+Subject: Re: [smatch stuff] question about iwlagn_rx_calib_result()
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1323200675.4696.24.camel@jlt3.sipsolutions.net> (sfid-20111206_204442_206189_FE3FFABF)
-References: <1323200675.4696.24.camel@jlt3.sipsolutions.net>
-	 (sfid-20111206_204442_206189_FE3FFABF)
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <1323248833.3404.7.camel@jlt3.sipsolutions.net> (sfid-20111207_100731_008636_CABCC4A6)
+References: <20111207085923.GA15304@elgon.mountain>
+	 (sfid-20111207_095943_156880_EC0FBF3D)  <1323248833.3404.7.camel@jlt3.sipsolutions.net>
+	 (sfid-20111207_100731_008636_CABCC4A6)
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 06 Dec 2011 20:45:37 +0100
-Message-ID: <1323200737.4696.25.camel@jlt3.sipsolutions.net> (sfid-20111206_204552_873852_05321FDD)
+Date: Wed, 07 Dec 2011 10:10:29 +0100
+Message-ID: <1323249029.3404.9.camel@jlt3.sipsolutions.net> (sfid-20111207_101041_116715_14EF44C9)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2011-12-07 at 10:07 +0100, Johannes Berg wrote:
+> On Wed, 2011-12-07 at 11:59 +0300, Dan Carpenter wrote:
+> > Smatch complains about iwlagn_rx_calib_result() it would be bad for
+> > "len" to be negative.
+> > 
+> > drivers/net/wireless/iwlwifi/iwl-ucode.c
+> > 
+> >    299  int iwlagn_rx_calib_result(struct iwl_priv *priv,
+> >    300                              struct iwl_rx_mem_buffer *rxb,
+> >    301                              struct iwl_device_cmd *cmd)
+> >    302  {
+> >    303          struct iwl_rx_packet *pkt = rxb_addr(rxb);
+> >    304          struct iwl_calib_hdr *hdr = (struct iwl_calib_hdr *)pkt->u.raw;
+> >    305          int len = le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK;
+> >    306  
+> >    307          /* reduce the size of the length field itself */
+> >    308          len -= 4;
+> >                 ^^^^^^^^
+> > Where does this 4 come from?  I've tried to determine what the minimum
+> > size of "le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_FRAME_SIZE_MSK" is but
+> > I got lost.  Can it ever be less than 4?
+> 
+> 4 is sizeof(struct iwl_cmd_header) I think.
+> 
+> If the frame size ends up <= 4, that would be a major uCode/device bug
+> since any frame has to start with len_n_flags & the header, of which the
+> len_n_flags isn't included (see struct iwl_rx_packet).
 
-This code has been on the list to remove for a long
-time, so disable it by default, add a warning to its
-Kconfig, and schedule it for removal in 3.5.
+Yeah, see iwl_rx_handle(). It adds sizeof(u32) for the rate_n_flags
+field ("status word"). I suppose there could be some value in checking
+that the length is at least 4, but I guess it should be in
+iwl_rx_handle() and then smatch would still complain about
+rx_calib_result().
 
-The only known dependency, hal, has not required it
-since its 0.5.12 release, which was in early 2009
-and hal has since been deprecated completely.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
-v2: this will go into 3.3 so remove in 3.5 not 3.4 ...
-
- Documentation/feature-removal-schedule.txt |    3 +--
- net/wireless/Kconfig                       |    7 ++++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
-
---- a/net/wireless/Kconfig	2011-12-06 17:06:18.000000000 +0100
-+++ b/net/wireless/Kconfig	2011-12-06 20:41:08.000000000 +0100
-@@ -121,15 +121,16 @@ config CFG80211_WEXT
- 
- config WIRELESS_EXT_SYSFS
- 	bool "Wireless extensions sysfs files"
--	default y
- 	depends on WEXT_CORE && SYSFS
- 	help
- 	  This option enables the deprecated wireless statistics
- 	  files in /sys/class/net/*/wireless/. The same information
- 	  is available via the ioctls as well.
- 
--	  Say Y if you have programs using it, like old versions of
--	  hal.
-+	  Say N. If you know you have ancient tools requiring it,
-+	  like very old versions of hal (prior to 0.5.12 release),
-+	  say Y and update the tools as soon as possible as this
-+	  option will be removed soon.
- 
- config LIB80211
- 	tristate "Common routines for IEEE802.11 drivers"
---- a/Documentation/feature-removal-schedule.txt	2011-12-06 17:06:18.000000000 +0100
-+++ b/Documentation/feature-removal-schedule.txt	2011-12-06 20:42:23.000000000 +0100
-@@ -263,8 +263,7 @@ Who:	Ravikiran Thirumalai <kiran@scalex8
- 
- What:	Code that is now under CONFIG_WIRELESS_EXT_SYSFS
- 	(in net/core/net-sysfs.c)
--When:	After the only user (hal) has seen a release with the patches
--	for enough time, probably some time in 2010.
-+When:	3.5
- Why:	Over 1K .text/.data size reduction, data is available in other
- 	ways (ioctls)
- Who:	Johannes Berg <johannes@sipsolutions.net>
-
+johannes
 
