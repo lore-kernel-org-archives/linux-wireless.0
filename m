@@ -1,67 +1,276 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:45960 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755514Ab1LEKh6 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:52913 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933789Ab1LGQYv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Dec 2011 05:37:58 -0500
-Date: Mon, 5 Dec 2011 12:37:51 +0200
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Haohui Liao <liaohaohui@gmail.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: Re: [ath9k-devel] Wireless stalled after a few minutes with Linux
- Kernel 3.1
-Message-ID: <20111205103751.GA3775@jouni.qca.qualcomm.com> (sfid-20111205_113802_537607_F18DEB97)
-References: <CAHW5WCL2V=wh43YYbiMo+rnh=-g4fobKEZHrCLvW03Q73=gzYA@mail.gmail.com>
- <4EC7E739.4080404@broadcom.com>
- <CAHW5WCLUefvgvRkgz7Nr+Rwu6_96t7EVVB33U0ED5g9a0cHFXw@mail.gmail.com>
- <CAHW5WCK7SU8CJRM8pLy9omEtrPu0_ES=SxWfYEWt30NCwBGEZw@mail.gmail.com>
- <CAHW5WCJhwGSM74nN5ivoEgP98y_hbbOB8yDO9+2ahhy2B4H7yw@mail.gmail.com>
+	Wed, 7 Dec 2011 11:24:51 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH V2] cfg80211: Fix race in bss timeout
+Date: Wed, 7 Dec 2011 21:58:58 +0530
+Message-ID: <1323275338-9363-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111207_173416_649944_7C6D7AAC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <CAHW5WCJhwGSM74nN5ivoEgP98y_hbbOB8yDO9+2ahhy2B4H7yw@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 03, 2011 at 10:55:40PM +0800, Haohui Liao wrote:
-> Dear Linux Wifi developers,
-> 
-> Regarding https://bugs.archlinux.org/task/27406
-> 
-> > The following is a portion of my wpa_supplicant.conf
-> >
-> >    ssid="LINUX-LINK"
-> >    proto=WPA2
-> >    key_mgmt=WPA-PSK
-> >    pairwise=TKIP
-> >    group=TKIP
+It is quite possible to run into a race in bss timeout where
+the drivers see the bss entry just before notifying cfg80211
+of a roaming event but it got timed out by the time rdev->event_work
+got scehduled from cfg80211_wq. This would result in the following
+WARN-ON() along with the failure to notify the user space of
+the roaming. The other situation which is happening with ath6kl
+that runs into issue is when the driver reports roam to same AP
+event where the AP bss entry already got expired. To fix this,
+move cfg80211_get_bss() from __cfg80211_roamed() to cfg80211_roamed().
 
-That's pretty strange configuration.. Do you have any particular reason
-for using TKIP as the pairwise cipher with WPA2? CCMP would be much more
-likely configuration for WPA2 in general..
+[158645.538384] WARNING: at net/wireless/sme.c:586
+__cfg80211_roamed+0xc2/0x1b1()
+[158645.538810] Call Trace:
+[158645.538838]  [<c1033527>] warn_slowpath_common+0x65/0x7a
+[158645.538917]  [<c14cfacf>] ? __cfg80211_roamed+0xc2/0x1b1
+[158645.538946]  [<c103354b>] warn_slowpath_null+0xf/0x13
+[158645.539055]  [<c14cfacf>] __cfg80211_roamed+0xc2/0x1b1
+[158645.539086]  [<c14beb5b>] cfg80211_process_rdev_events+0x153/0x1cc
+[158645.539166]  [<c14bd57b>] cfg80211_event_work+0x26/0x36
+[158645.539195]  [<c10482ae>] process_one_work+0x219/0x38b
+[158645.539273]  [<c14bd555>] ? wiphy_new+0x419/0x419
+[158645.539301]  [<c10486cb>] worker_thread+0xf6/0x1bf
+[158645.539379]  [<c10485d5>] ? rescuer_thread+0x1b5/0x1b5
+[158645.539407]  [<c104b3e2>] kthread+0x62/0x67
+[158645.539484]  [<c104b380>] ? __init_kthread_worker+0x42/0x42
+[158645.539514]  [<c151309a>] kernel_thread_helper+0x6/0xd
 
-> Just wondering if I am the only one still doing the following from command line
-> to connect to wifi?
+Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
 
-I'm sure you are not the only one.. And in this particular case, I don't
-see how that would make a difference.
+V2 -- Remove unnecessary spinlock before accessing bss->bssid.
+      Fix bss reference leake in __cfg80211_roamed().
+      Export cfg80211_roamed_bss().
+ 
+ include/net/cfg80211.h |   25 ++++++++++++++++++++
+ net/wireless/core.h    |    6 +---
+ net/wireless/sme.c     |   60 +++++++++++++++++++++++++++++++----------------
+ net/wireless/util.c    |    6 ++--
+ 4 files changed, 69 insertions(+), 28 deletions(-)
 
-> wpa_supplicant -Dwext -iwlan0 -c/etc/wpa_supplicant.conf -B
-> iwconfig wlan0 power off
-> dhcpd wlan0
-> 
-> If I do that, I will get wifi stall on wpa_supplicant when there is a
-> rekeying with the Linux 3.1.x kernel.  It does not happen to Linux
-> 3.0.x.  I have been searching on Internet around with no indicator.
-> Just trying to ask if I did anything wrong? or everyone just uses
-> NetworkManager?
-
-Would you be able to provide some more details on what exactly you mean
-with "wifi stall"? Are you sure this is related to rekeying?
-
-May I ask why you have configured the station to force PTK rekeying
-every 10 minutes? While TKIP is not really the most secure design out
-there, the proper way of addressing this would be to use CCMP instead of
-frequent rekeying with TKIP..
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 8d7ba09..24450b7 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3085,6 +3085,31 @@ void cfg80211_roamed(struct net_device *dev,
+ 		     const u8 *resp_ie, size_t resp_ie_len, gfp_t gfp);
+ 
+ /**
++ * cfg80211_roamed_bss - notify cfg80211 of roaming
++ *
++ * @dev: network device
++ * @bss: entry of bss to which STA got roamed
++ * @req_ie: association request IEs (maybe be %NULL)
++ * @req_ie_len: association request IEs length
++ * @resp_ie: association response IEs (may be %NULL)
++ * @resp_ie_len: assoc response IEs length
++ * @gfp: allocation flags
++ *
++ * This is just a wrapper to notify cfg80211 of roaming event with driver
++ * passing bss to avoid a race in timeout of the bss entry. It should be
++ * called by the underlying driver whenever it roamed from one AP to another
++ * while connected. Drivers which have roaming implemented in firmware
++ * may use this function to avoid a race in bss entry timeout where the bss
++ * entry of the new AP is seen in the driver, but gets timed out by the time
++ * it is accessed in __cfg80211_roamed() due to delay in scheduling
++ * rdev->event_work. __cfg80211_romed() will responsible to release the bss
++ * reference.
++ */
++void cfg80211_roamed_bss(struct net_device *dev, struct cfg80211_bss *bss,
++			 const u8 *req_ie, size_t req_ie_len,
++			 const u8 *resp_ie, size_t resp_ie_len, gfp_t gfp);
++
++/**
+  * cfg80211_disconnected - notify cfg80211 that connection was dropped
+  *
+  * @dev: network device
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 1c7d4df..11ff6bb 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -249,12 +249,11 @@ struct cfg80211_event {
+ 			u16 status;
+ 		} cr;
+ 		struct {
+-			struct ieee80211_channel *channel;
+-			u8 bssid[ETH_ALEN];
+ 			const u8 *req_ie;
+ 			const u8 *resp_ie;
+ 			size_t req_ie_len;
+ 			size_t resp_ie_len;
++			struct cfg80211_bss *bss;
+ 		} rm;
+ 		struct {
+ 			const u8 *ie;
+@@ -397,8 +396,7 @@ int cfg80211_disconnect(struct cfg80211_registered_device *rdev,
+ 			struct net_device *dev, u16 reason,
+ 			bool wextev);
+ void __cfg80211_roamed(struct wireless_dev *wdev,
+-		       struct ieee80211_channel *channel,
+-		       const u8 *bssid,
++		       struct cfg80211_bss *bss,
+ 		       const u8 *req_ie, size_t req_ie_len,
+ 		       const u8 *resp_ie, size_t resp_ie_len);
+ int cfg80211_mgd_wext_connect(struct cfg80211_registered_device *rdev,
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 0acfdc9..006ae8f 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -551,45 +551,35 @@ void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ EXPORT_SYMBOL(cfg80211_connect_result);
+ 
+ void __cfg80211_roamed(struct wireless_dev *wdev,
+-		       struct ieee80211_channel *channel,
+-		       const u8 *bssid,
++		       struct cfg80211_bss *bss,
+ 		       const u8 *req_ie, size_t req_ie_len,
+ 		       const u8 *resp_ie, size_t resp_ie_len)
+ {
+-	struct cfg80211_bss *bss;
+ #ifdef CONFIG_CFG80211_WEXT
+ 	union iwreq_data wrqu;
+ #endif
+-
+ 	ASSERT_WDEV_LOCK(wdev);
+ 
+ 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION &&
+ 		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT))
+-		return;
++		goto out;
+ 
+ 	if (wdev->sme_state != CFG80211_SME_CONNECTED)
+-		return;
++		goto out;
+ 
+ 	/* internal error -- how did we get to CONNECTED w/o BSS? */
+ 	if (WARN_ON(!wdev->current_bss)) {
+-		return;
++		goto out;
+ 	}
+ 
+ 	cfg80211_unhold_bss(wdev->current_bss);
+ 	cfg80211_put_bss(&wdev->current_bss->pub);
+ 	wdev->current_bss = NULL;
+ 
+-	bss = cfg80211_get_bss(wdev->wiphy, channel, bssid,
+-			       wdev->ssid, wdev->ssid_len,
+-			       WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
+-
+-	if (WARN_ON(!bss))
+-		return;
+-
+ 	cfg80211_hold_bss(bss_from_pub(bss));
+ 	wdev->current_bss = bss_from_pub(bss);
+ 
+-	nl80211_send_roamed(wiphy_to_dev(wdev->wiphy), wdev->netdev, bssid,
++	nl80211_send_roamed(wiphy_to_dev(wdev->wiphy), wdev->netdev, bss->bssid,
+ 			    req_ie, req_ie_len, resp_ie, resp_ie_len,
+ 			    GFP_KERNEL);
+ 
+@@ -610,11 +600,14 @@ void __cfg80211_roamed(struct wireless_dev *wdev,
+ 
+ 	memset(&wrqu, 0, sizeof(wrqu));
+ 	wrqu.ap_addr.sa_family = ARPHRD_ETHER;
+-	memcpy(wrqu.ap_addr.sa_data, bssid, ETH_ALEN);
+-	memcpy(wdev->wext.prev_bssid, bssid, ETH_ALEN);
++	memcpy(wrqu.ap_addr.sa_data, bss->bssid, ETH_ALEN);
++	memcpy(wdev->wext.prev_bssid, bss->bssid, ETH_ALEN);
+ 	wdev->wext.prev_bssid_valid = true;
+ 	wireless_send_event(wdev->netdev, SIOCGIWAP, &wrqu, NULL);
+ #endif
++
++out:
++	cfg80211_put_bss(bss);
+ }
+ 
+ void cfg80211_roamed(struct net_device *dev,
+@@ -624,32 +617,57 @@ void cfg80211_roamed(struct net_device *dev,
+ 		     const u8 *resp_ie, size_t resp_ie_len, gfp_t gfp)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct cfg80211_bss *bss;
++
++	CFG80211_DEV_WARN_ON(wdev->sme_state != CFG80211_SME_CONNECTED);
++
++	bss = cfg80211_get_bss(wdev->wiphy, channel, bssid, wdev->ssid,
++			       wdev->ssid_len, WLAN_CAPABILITY_ESS,
++			       WLAN_CAPABILITY_ESS);
++	if (WARN_ON(!bss))
++		return;
++
++	cfg80211_roamed_bss(dev, bss, req_ie, req_ie_len, resp_ie,
++			    resp_ie_len, gfp);
++}
++EXPORT_SYMBOL(cfg80211_roamed);
++
++void cfg80211_roamed_bss(struct net_device *dev,
++			 struct cfg80211_bss *bss, const u8 *req_ie,
++			 size_t req_ie_len, const u8 *resp_ie,
++			 size_t resp_ie_len, gfp_t gfp)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
+ 	struct cfg80211_event *ev;
+ 	unsigned long flags;
+ 
+ 	CFG80211_DEV_WARN_ON(wdev->sme_state != CFG80211_SME_CONNECTED);
+ 
++	if (WARN_ON(!bss))
++		return;
++
+ 	ev = kzalloc(sizeof(*ev) + req_ie_len + resp_ie_len, gfp);
+-	if (!ev)
++	if (!ev) {
++		cfg80211_put_bss(bss);
+ 		return;
++	}
+ 
+ 	ev->type = EVENT_ROAMED;
+-	ev->rm.channel = channel;
+-	memcpy(ev->rm.bssid, bssid, ETH_ALEN);
+ 	ev->rm.req_ie = ((u8 *)ev) + sizeof(*ev);
+ 	ev->rm.req_ie_len = req_ie_len;
+ 	memcpy((void *)ev->rm.req_ie, req_ie, req_ie_len);
+ 	ev->rm.resp_ie = ((u8 *)ev) + sizeof(*ev) + req_ie_len;
+ 	ev->rm.resp_ie_len = resp_ie_len;
+ 	memcpy((void *)ev->rm.resp_ie, resp_ie, resp_ie_len);
++	ev->rm.bss = bss;
+ 
+ 	spin_lock_irqsave(&wdev->event_lock, flags);
+ 	list_add_tail(&ev->list, &wdev->event_list);
+ 	spin_unlock_irqrestore(&wdev->event_lock, flags);
+ 	queue_work(cfg80211_wq, &rdev->event_work);
+ }
+-EXPORT_SYMBOL(cfg80211_roamed);
++EXPORT_SYMBOL(cfg80211_roamed_bss);
+ 
+ void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
+ 			     size_t ie_len, u16 reason, bool from_ap)
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 4dde429..afda051 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -752,9 +752,9 @@ static void cfg80211_process_wdev_events(struct wireless_dev *wdev)
+ 				NULL);
+ 			break;
+ 		case EVENT_ROAMED:
+-			__cfg80211_roamed(wdev, ev->rm.channel, ev->rm.bssid,
+-					  ev->rm.req_ie, ev->rm.req_ie_len,
+-					  ev->rm.resp_ie, ev->rm.resp_ie_len);
++			__cfg80211_roamed(wdev, ev->rm.bss, ev->rm.req_ie,
++					  ev->rm.req_ie_len, ev->rm.resp_ie,
++					  ev->rm.resp_ie_len);
+ 			break;
+ 		case EVENT_DISCONNECTED:
+ 			__cfg80211_disconnected(wdev->netdev,
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.7.0.4
+
