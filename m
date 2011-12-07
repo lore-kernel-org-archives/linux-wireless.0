@@ -1,76 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:41816 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751189Ab1LPGRY (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26034 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756291Ab1LGN6s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 01:17:24 -0500
-Received: by iaeh11 with SMTP id h11so3882277iae.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 22:17:24 -0800 (PST)
-Date: Fri, 16 Dec 2011 11:47:15 +0530
-From: Yogesh Ashok Powar <yogesh.powar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH V2] mac80211: Fixing sparse warning at sta_info.c
-Message-ID: <20111216061715.GA11190@dugs> (sfid-20111216_071728_284744_4D683D46)
+	Wed, 7 Dec 2011 08:58:48 -0500
+Date: Wed, 7 Dec 2011 19:28:24 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V2 1/2] cfg80211: Define a wrapper function for reporting
+ roaming
+Message-ID: <20111207135822.GA12398@chvasanth-lnx> (sfid-20111207_145912_275819_DB2F6051)
+References: <1323265359-1138-1-git-send-email-vthiagar@qca.qualcomm.com>
+ <1323265604.3404.37.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <82612>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1323265604.3404.37.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit 42624d4913a00219a8fdbb4bafd634d1d843be85
-created following sparse warning
->net/mac80211/sta_info.c:965:24: warning: incorrect type in assignment (different address spaces)
->net/mac80211/sta_info.c:965:24:    expected struct tid_ampdu_tx *tid_tx
->net/mac80211/sta_info.c:965:24:    got struct tid_ampdu_tx [noderef] <asn:4>*<noident>
+On Wed, Dec 07, 2011 at 02:46:44PM +0100, Johannes Berg wrote:
+> On Wed, 2011-12-07 at 19:12 +0530, Vasanthakumar Thiagarajan wrote:
+> 
+> >  /**
+> > + * cfg80211_roamed_bss - notify cfg80211 of roaming
+> > + *
+> > + * @dev: network device
+> > + * @bss: entry of bss to which STA got roamed (may be %NULL)
+> 
+> I think you should check that it isn't, that's an implementation thing
+> of __cfg80211_roamed() I think? Semantically, I don't think this should
+> happen here?
 
-Making use of rcu_dereference_protected to fix the problem.
+This is because cfg80211_roamed() can call it with NULL as bss,
+but I agree this should have been stated.
 
-V2:
- - Replacing rcu_dereference with rcu_dereference_protected
-   as suggested by Johannes.
- - Adding mutex_lock/unlock to satisfy the condition at
-   rcu_dereference_protected
+> 
+> It would also be good to note that the reference to the bss is given to
+> the function and it will be released by it.
 
-Cc: Nishant Sarmukadam <nishants@marvell.com>
-Reported-by: Johannes Berg <johannes@sipsolutions.net>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
----
- net/mac80211/sta_info.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
+Ok.
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index c6ca9bd..e4307b7 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -959,10 +959,13 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
- 	 * until the aggregation stop completes. Refer
- 	 * http://thread.gmane.org/gmane.linux.kernel.wireless.general/81936
- 	 */
-+
-+	mutex_lock(&sta->ampdu_mlme.mtx);
-+
- 	for (i = 0; i < STA_TID_NUM; i++) {
--		if (!sta->ampdu_mlme.tid_tx[i])
-+		tid_tx = rcu_dereference_protected_tid_tx(sta, i);
-+		if (!tid_tx)
- 			continue;
--		tid_tx = sta->ampdu_mlme.tid_tx[i];
- 		if (skb_queue_len(&tid_tx->pending)) {
- #ifdef CONFIG_MAC80211_HT_DEBUG
- 			wiphy_debug(local->hw.wiphy, "TX A-MPDU  purging %d "
-@@ -974,6 +977,8 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
- 		kfree_rcu(tid_tx, rcu_head);
- 	}
- 
-+	mutex_unlock(&sta->ampdu_mlme.mtx);
-+
- 	__sta_info_free(local, sta);
- 
- 	return 0;
--- 
-1.7.5.4
+> 
+> > +void cfg80211_roamed_bss(struct net_device *dev, struct cfg80211_bss *bss,
+> > +			 struct ieee80211_channel *channel,
+> > +			 const u8 *bssid, const u8 *req_ie, size_t req_ie_len,
+> > +			 const u8 *resp_ie, size_t resp_ie_len, gfp_t gfp)
+> > +{
+> >  	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> >  	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
+> >  	struct cfg80211_event *ev;
+> 
+> 
+> Hmm, now that I think about it more, I think the calling convention is
+> really strange. Why pass the channel and bssid when the BSS struct is
+> already known?
+> 
+> Why not make cfg80211_roamed() do the BSS lookup (which would also
+> reduce the race for drivers that don't use _bss()) based on the info,
+> and then call a cfg80211_roamed_bss() that doesn't get channel/bssid.
 
+Sure, i'll change it. This looks better.
+
+Thanks!
+
+Vasanth
