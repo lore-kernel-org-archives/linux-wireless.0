@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:23571 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757705Ab1LNRWO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 12:22:14 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 2/2] iwlwifi: allow to switch to HT40 if not associated
-Date: Wed, 14 Dec 2011 08:22:36 -0800
-Message-Id: <1323879756-3817-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111214_182230_413732_56CA4119)
-In-Reply-To: <1323879756-3817-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1323879756-3817-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from alternativer.internetendpunkt.de ([88.198.24.89]:42554 "EHLO
+	geheimer.internetendpunkt.de" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752488Ab1LGKTa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Dec 2011 05:19:30 -0500
+To: Hagen Paul Pfeifer <hagen@jauu.net>
+Subject: Re: [Bloat] Time in Queue, bufferbloat, and... our accidentally  interplanetary network
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=UTF-8
+Date: Wed, 07 Dec 2011 11:19:29 +0100
+From: Hagen Paul Pfeifer <hagen@jauu.net>
+Cc: Eric Dumazet <eric.dumazet@gmail.com>,
+	bloat-devel <bloat-devel@lists.bufferbloat.net>,
+	<netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	bloat <bloat@lists.bufferbloat.net>
+In-Reply-To: <9dfc3c5eb811f2774b378fce0158b3e7@localhost>
+References: <CAA93jw7kQYONQiAozatRmdRRJeK0GB9eNDWtRZ3AL+OVKn0OpA@mail.gmail.com>
+ <1323082774.2670.40.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
+ <9dfc3c5eb811f2774b378fce0158b3e7@localhost>
+Message-ID: <11877422e38eade300dd1cdb9e423d47@localhost> (sfid-20111207_111938_273153_4997847B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My previous patch
-34a5b4b6af104cf18eb50748509528b9bdbc4036 iwlwifi: do not re-configure
-HT40 after associated
 
-Fix the case of HT40 after association on specified AP, but it break the
-association for some APs and cause not able to establish connection.
-We need to address HT40 before and after addociation.
+On Wed, 07 Dec 2011 11:15:38 +0100, Hagen Paul Pfeifer <hagen@jauu.net>
 
-CC: stable@vger.kernel.org #3.0+
-Reported-by: Andrej Gelenberg <andrej.gelenberg@udo.edu>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Tested-by: Andrej Gelenberg <andrej.gelenberg@udo.edu>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+wrote:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index a7a6def..5c7c17c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -606,8 +606,8 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
- 			if (ctx->ht.enabled) {
- 				/* if HT40 is used, it should not change
- 				 * after associated except channel switch */
--				if (iwl_is_associated_ctx(ctx) &&
--				     !ctx->ht.is_40mhz)
-+				if (!ctx->ht.is_40mhz ||
-+						!iwl_is_associated_ctx(ctx))
- 					iwlagn_config_ht40(conf, ctx);
- 			} else
- 				ctx->ht.is_40mhz = false;
--- 
-1.7.0.4
+ 
+
+> Question two: I submitted pfast_head_drop to drop more outdated data
+
+> instead of new data. Back in time I thought TCP _may_ experience
+
+benefits
+
+> because more up-to-date SACK data packets are saved. Are there any other
+
+> TCP advantages with head drop policy?
+
+
+
+Small comment: pfast_head_drop was intended for UDP. E.g. OLSR messages,
+
+regular GPS reporting and the like. TCP was not the focus at that time.
+
+
+
+HGN
+
 
