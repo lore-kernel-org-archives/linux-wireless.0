@@ -1,132 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43956 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:27455 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753110Ab1LUAEY (ORCPT
+	with ESMTP id S1755159Ab1LGMxm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 19:04:24 -0500
-Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
-	<zefir.kurtisi@neratec.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH 1/2] wireless-regdb: Add master DFS region support
-Date: Tue, 20 Dec 2011 16:04:11 -0800
-Message-ID: <1324425852-4492-2-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111221_010429_079926_0BFE2171)
-In-Reply-To: <1324425852-4492-1-git-send-email-rodrigue@qca.qualcomm.com>
-References: <1324425852-4492-1-git-send-email-rodrigue@qca.qualcomm.com>
+	Wed, 7 Dec 2011 07:53:42 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 2/2] ath6kl: Use cfg80211_roamed_bss() to report roaming event
+Date: Wed, 7 Dec 2011 18:27:49 +0530
+Message-ID: <1323262669-30130-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111207_135345_785727_58CE76FB)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+This is to avoid the scenario where the bss entry of the AP got
+expired when reporting roaming event to current AP. As the bss
+entry for the current bss is available in driver, pass this bss
+to cfg80211. This fixes WARNING: at net/wireless/sme.c:586.
 
-To support master DFS we add the three known DFS regions which
-countries are known to support. In order to modify the regulatory
-database schema in a backward compatible way we use one of
-the two pad bytes which were unused. By using one of the two pad
-bytes we end up keeping new regulatory databases with DFS region
-support compatible with older verions of CRDA, the DFS region would
-just not be sent to the kernel when using an old version of CRDA.
+This patch depends on the following patch in cfg80211
+"cfg80211: Define a wrapper function for reporting roaming".
 
-DFS master is only required for modes of operation which iniate
-radiation on DFS channels, we will start supporting DFS with AP
-mode of operation. Without DFS master support you cannot intiate
-radiation on those channels (AP, Mesh, IBSS, P2P). Apart from support
-from wireless-regd, crda and the 802.11 stack you'll also need proper
-DFS support on your device driver.
-
-A country can only map to one DFS region at a time for all frequency
-regions. After this patch countries can start being mapped to their
-own DFS region.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- db2bin.py  |    2 +-
- dbparse.py |   25 ++++++++++++++++++++-----
- 2 files changed, 21 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   37 ++++++++++++++-------------
+ 1 files changed, 19 insertions(+), 18 deletions(-)
 
-diff --git a/db2bin.py b/db2bin.py
-index 23d3ee2..41d3741 100755
---- a/db2bin.py
-+++ b/db2bin.py
-@@ -116,7 +116,7 @@ countrynames.sort()
- for alpha2 in countrynames:
-     coll = countries[alpha2]
-     # struct regdb_file_reg_country
--    output.write(struct.pack('>ccxxI', str(alpha2[0]), str(alpha2[1]), reg_rules_collections[coll.permissions]))
-+    output.write(struct.pack('>ccxBI', str(alpha2[0]), str(alpha2[1]), coll.dfs_region, reg_rules_collections[coll.permissions]))
- 
- 
- if len(sys.argv) > 3:
-diff --git a/dbparse.py b/dbparse.py
-index 2c0d738..893d64e 100755
---- a/dbparse.py
-+++ b/dbparse.py
-@@ -18,6 +18,12 @@ flag_definitions = {
-     'NO-HT40':		1<<10,
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index aa93527..052c575 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -568,11 +568,13 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	return 0;
  }
  
-+dfs_regions = {
-+    'DFS-FCC':		1,
-+    'DFS-ETSI':		2,
-+    'DFS-JP':		3,
-+}
-+
- class FreqBand(object):
-     def __init__(self, start, end, bw, comments=None):
-         self.start = start
-@@ -61,6 +67,10 @@ class PowerRestriction(object):
-         s = self
-         return hash((s.max_ant_gain, s.max_eirp))
+-static int ath6kl_add_bss_if_needed(struct ath6kl_vif *vif,
+-				    enum network_type nw_type,
+-				    const u8 *bssid,
+-				    struct ieee80211_channel *chan,
+-				    const u8 *beacon_ie, size_t beacon_ie_len)
++static struct cfg80211_bss *
++ath6kl_add_bss_if_needed(struct ath6kl_vif *vif,
++			 enum network_type nw_type,
++			 const u8 *bssid,
++			 struct ieee80211_channel *chan,
++			 const u8 *beacon_ie,
++			 size_t beacon_ie_len)
+ {
+ 	struct ath6kl *ar = vif->ar;
+ 	struct cfg80211_bss *bss;
+@@ -601,7 +603,7 @@ static int ath6kl_add_bss_if_needed(struct ath6kl_vif *vif,
+ 		 */
+ 		ie = kmalloc(2 + vif->ssid_len + beacon_ie_len, GFP_KERNEL);
+ 		if (ie == NULL)
+-			return -ENOMEM;
++			return NULL;
+ 		ie[0] = WLAN_EID_SSID;
+ 		ie[1] = vif->ssid_len;
+ 		memcpy(ie + 2, vif->ssid, vif->ssid_len);
+@@ -615,15 +617,9 @@ static int ath6kl_add_bss_if_needed(struct ath6kl_vif *vif,
+ 				   "cfg80211\n", bssid);
+ 		kfree(ie);
+ 	} else
+-		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "cfg80211 already has a bss "
+-			   "entry\n");
+-
+-	if (bss == NULL)
+-		return -ENOMEM;
++		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "cfg80211 already has a bss\n");
  
-+class DFSRegionError(Exception):
-+    def __init__(self, dfs_region):
-+        self.dfs_region = dfs_region
-+
- class FlagError(Exception):
-     def __init__(self, flag):
-         self.flag = flag
-@@ -90,9 +100,15 @@ class Permission(object):
-         return hash(self._as_tuple())
+-	cfg80211_put_bss(bss);
+-
+-	return 0;
++	return bss;
+ }
  
- class Country(object):
--    def __init__(self, permissions=None, comments=None):
-+    def __init__(self, dfs_region, permissions=None, comments=None):
-         self._permissions = permissions or []
-         self.comments = comments or []
-+	self.dfs_region = 0
-+
-+	if dfs_region:
-+		if not dfs_region in dfs_regions:
-+		    raise DFSRegionError(dfs_region)
-+		self.dfs_region = dfs_regions[dfs_region]
+ void ath6kl_cfg80211_connect_event(struct ath6kl_vif *vif, u16 channel,
+@@ -635,6 +631,7 @@ void ath6kl_cfg80211_connect_event(struct ath6kl_vif *vif, u16 channel,
+ {
+ 	struct ieee80211_channel *chan;
+ 	struct ath6kl *ar = vif->ar;
++	struct cfg80211_bss *bss;
  
-     def add(self, perm):
-         assert isinstance(perm, Permission)
-@@ -224,11 +240,10 @@ class DBParser(object):
+ 	/* capinfo + listen interval */
+ 	u8 assoc_req_ie_offset = sizeof(u16) + sizeof(u16);
+@@ -675,8 +672,9 @@ void ath6kl_cfg80211_connect_event(struct ath6kl_vif *vif, u16 channel,
  
-     def _parse_country(self, line):
-         try:
--            cname, line = line.split(':', 1)
-+            cname, cvals= line.split(':', 1)
-+            dfs_region = cvals.strip()
-             if not cname:
-                 self._syntax_error("'country' keyword must be followed by name")
--            if line:
--                self._syntax_error("extra data at end of country line")
-         except ValueError:
-             self._syntax_error("country name must be followed by colon")
+ 	chan = ieee80211_get_channel(ar->wiphy, (int) channel);
  
-@@ -239,7 +254,7 @@ class DBParser(object):
-             if len(cname) != 2:
-                 self._warn("country '%s' not alpha2" % cname)
-             if not cname in self._countries:
--                self._countries[cname] = Country(comments=self._comments)
-+                self._countries[cname] = Country(dfs_region, comments=self._comments)
-             self._current_countries[cname] = self._countries[cname]
-         self._comments = []
+-	if (ath6kl_add_bss_if_needed(vif, nw_type, bssid, chan, assoc_info,
+-				     beacon_ie_len) < 0) {
++	bss = ath6kl_add_bss_if_needed(vif, nw_type, bssid, chan,
++				       assoc_info, beacon_ie_len);
++	if (!bss) {
+ 		ath6kl_err("could not add cfg80211 bss entry\n");
+ 		return;
+ 	}
+@@ -685,6 +683,7 @@ void ath6kl_cfg80211_connect_event(struct ath6kl_vif *vif, u16 channel,
+ 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "ad-hoc %s selected\n",
+ 			   nw_type & ADHOC_CREATOR ? "creator" : "joiner");
+ 		cfg80211_ibss_joined(vif->ndev, bssid, GFP_KERNEL);
++		cfg80211_put_bss(bss);
+ 		return;
+ 	}
+ 
+@@ -695,11 +694,13 @@ void ath6kl_cfg80211_connect_event(struct ath6kl_vif *vif, u16 channel,
+ 					assoc_req_ie, assoc_req_len,
+ 					assoc_resp_ie, assoc_resp_len,
+ 					WLAN_STATUS_SUCCESS, GFP_KERNEL);
++		cfg80211_put_bss(bss);
+ 	} else if (vif->sme_state == SME_CONNECTED) {
+ 		/* inform roam event to cfg80211 */
+-		cfg80211_roamed(vif->ndev, chan, bssid,
++		if (cfg80211_roamed_bss(vif->ndev, bss, chan, bssid,
+ 				assoc_req_ie, assoc_req_len,
+-				assoc_resp_ie, assoc_resp_len, GFP_KERNEL);
++				assoc_resp_ie, assoc_resp_len, GFP_KERNEL))
++			cfg80211_put_bss(bss);
+ 	}
+ }
  
 -- 
-1.7.4.15.g7811d
+1.7.0.4
 
