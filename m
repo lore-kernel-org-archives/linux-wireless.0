@@ -1,38 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:52249 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751699Ab1LUTwo (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:35656 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757856Ab1LGVjd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 14:52:44 -0500
-Received: by lahl5 with SMTP id l5so5697852lah.27
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2011 11:52:40 -0800 (PST)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com
-Subject: [PATCH] wl12xx: enable sparse endianess check by default
-Date: Wed, 21 Dec 2011 21:52:31 +0200
-Message-Id: <1324497151-21295-1-git-send-email-coelho@ti.com> (sfid-20111221_205247_943414_DF9980A4)
+	Wed, 7 Dec 2011 16:39:33 -0500
+Received: by ggnr5 with SMTP id r5so1106643ggn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2011 13:39:33 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1323266001-12912-4-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1323266001-12912-1-git-send-email-rmanohar@qca.qualcomm.com> <1323266001-12912-4-git-send-email-rmanohar@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Wed, 7 Dec 2011 13:39:12 -0800
+Message-ID: <CAB=NE6VuhZ0B1cKfa6pQ0M9Bqo+Uwrcj2xcV74W0yENxfNHb7Q@mail.gmail.com> (sfid-20111207_223936_121251_D02201DF)
+Subject: Re: [PATCH 4/4] ath9k: Reconfigure tx power on regulatory update
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Following the good example of the Intel (and more recently Atheros)
-drivers, enable endianess check by default when running sparse.
+On Wed, Dec 7, 2011 at 5:53 AM, Rajkumar Manoharan
+<rmanohar@qca.qualcomm.com> wrote:
+> Whenever the regulatory got updated by country IE for the world
+> roaming cards, need to reconfigure the tx power immediately to
+> increase the power level.
+>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/Makefile |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+I ACK all except patch [3/4].
 
-diff --git a/drivers/net/wireless/wl12xx/Makefile b/drivers/net/wireless/wl12xx/Makefile
-index fe67262..98f289c 100644
---- a/drivers/net/wireless/wl12xx/Makefile
-+++ b/drivers/net/wireless/wl12xx/Makefile
-@@ -11,3 +11,5 @@ obj-$(CONFIG_WL12XX_SDIO)		+= wl12xx_sdio.o
- 
- # small builtin driver bit
- obj-$(CONFIG_WL12XX_PLATFORM_DATA)	+= wl12xx_platform_data.o
-+
-+ccflags-y += -D__CHECK_ENDIAN__
--- 
-1.7.4.1
+Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 
+  Luis
