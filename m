@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42623 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753325Ab1LAL64 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Dec 2011 06:58:56 -0500
-Date: Thu, 1 Dec 2011 12:59:12 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Michal Hocko <mhocko@suse.cz>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Yong Zhang <yong.zhang0@gmail.com>
-Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from
- iwl3945_rs_free_sta
-Message-ID: <20111201115911.GA5706@redhat.com> (sfid-20111201_125915_134562_5BE2AB6C)
-References: <20111129100727.GD2675@tiehlicka.suse.cz>
- <20111129113906.GA7299@redhat.com>
- <20111130101028.GA2906@tiehlicka.suse.cz>
- <20111130142316.GA2466@redhat.com>
- <20111130140316.GA4153@tiehlicka.suse.cz>
- <20111130153929.GA2144@redhat.com>
- <20111201085845.GA4602@tiehlicka.suse.cz>
- <20111201105538.GA4504@tiehlicka.suse.cz>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:56463 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755159Ab1LGMwW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Dec 2011 07:52:22 -0500
+Received: by wgbdr13 with SMTP id dr13so1281519wgb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2011 04:52:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111201105538.GA4504@tiehlicka.suse.cz>
+In-Reply-To: <4EDCE2CC.3060500@broadcom.com>
+References: <4ED77C85.1050705@broadcom.com>
+	<CACna6rznu8d1BjG0EWjP1VRCPdYAGJv1q+fi1X+XF_Bf-Cx+Mg@mail.gmail.com>
+	<4EDCE2CC.3060500@broadcom.com>
+Date: Wed, 7 Dec 2011 13:52:21 +0100
+Message-ID: <CACna6rwVRrm8YgvoYAmswru8nHXgytuiDRO2F2TQVZyxnfaV9w@mail.gmail.com> (sfid-20111207_135226_287479_DC4AB23D)
+Subject: Re: bcma usage in isr context
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 01, 2011 at 11:55:38AM +0100, Michal Hocko wrote:
-> [  349.316070] iwl3945_rs_free_sta rs_sta f4be1ac0
-> [  349.316076] ------------[ cut here ]------------
-> [  349.316097] WARNING: at drivers/net/wireless/iwlegacy/iwl-3945-rs.c:438 iwl3945_rs_free_sta+0x33/0x42 [iwl3945]()
+W dniu 5 grudnia 2011 16:27 użytkownik Arend van Spriel
+<arend@broadcom.com> napisał:
+>> You're right, we don't handle this properly. I'll try to send patch
+>> today to make use of fixed windows. I've it here for some time
+>> already, just didn't clean it enough.
+>>
+>
+> Ok. For now I have a patch in the bcma read/write host_pci functions
+> that solves it, but fixed bar windows are preferable.
 
-Johannes pointed on irc that this problem is most likely caused by:
+Have you tested my patch? Does it solver your issue? I can't wait to
+see bcma patches for brcmsmac :)
 
-commit f785d83a19bca326f79d127a413e35769afc0105
-Author: Eliad Peller <eliad@wizery.com>
-Date:   Mon Aug 8 16:50:22 2011 +0300
-
-    mac80211: clear sta.drv_priv on reconfiguration
-
-Michal, could you confirm that? If that is the root of the problem, we
-need patch for iwlegacy (and iwlwifi) that allocate separate memory for
-rc structures.
-
-Thanks
-Stanislaw
+-- 
+Rafał
