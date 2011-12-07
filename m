@@ -1,76 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:23097 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752040Ab1LTOnd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 09:43:33 -0500
-Date: Tue, 20 Dec 2011 15:43:18 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com,
-	Andreas Hartmann <andihartmann@01019freenet.de>
-Subject: Re: [rt2x00-users] Poor performance and lockup with rt2800usb and
- Asus USB-N13 adapter
-Message-ID: <20111220144317.GA6027@redhat.com> (sfid-20111220_154338_391487_CDF2733F)
-References: <4ED43A5C.9000102@gmail.com>
- <20111129114603.GB7299@redhat.com>
- <CADLC3L2QpEtPiBg+yvaxir1LpU6j5YMpDG4g0+ezs06g745zcg@mail.gmail.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:46025 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756064Ab1LGPb1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Dec 2011 10:31:27 -0500
+Date: Wed, 7 Dec 2011 21:00:53 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: Fix race in bss timeout
+Message-ID: <20111207153052.GB12498@chvasanth-lnx> (sfid-20111207_163134_387992_E9FF4469)
+References: <1323270687-5989-1-git-send-email-vthiagar@qca.qualcomm.com>
+ <1323271070.3404.40.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CADLC3L2QpEtPiBg+yvaxir1LpU6j5YMpDG4g0+ezs06g745zcg@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1323271070.3404.40.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Nov 30, 2011 at 08:21:49PM -0600, Robert Hancock wrote:
-> On Tue, Nov 29, 2011 at 5:46 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> > On Mon, Nov 28, 2011 at 07:50:20PM -0600, Robert Hancock wrote:
-> >> I recently got an Asus USB-N13 USB Wireless-N adapter which
-> >> apparently uses a Ralink RT3072 chip. I'm using it with an Asus
-> >> RT-N16 access point running TomatoUSB. When running Windows the
-> >> performance is reasonable (about 80 Mbps in both directions).
-> >> However under Fedora 16 (currently kernel 3.1.2) the performance is
-> >> abysmal (10 Mbps or less with lots of packet loss). I'll post some
-> >> debug information below.
-> > rt2800usb needs fixing. I'm able to reproduce these performance
-> > problems locally. They are quite hard to debug, and need some
-> > experiments. But I hope I will provide patches soon or leter.
+On Wed, Dec 07, 2011 at 04:17:50PM +0100, Johannes Berg wrote:
+> On Wed, 2011-12-07 at 20:41 +0530, Vasanthakumar Thiagarajan wrote:
 > 
-> Do you have any leads on what is going wrong? I'm not sure if the
-> issue is with the higher MCS rates not working as well as they should,
-> or with the rate control trying to use them even though they're not
-> working well.
-
-I just discovered that at least some problems are related with power
-save. After "iwconfig wlanX power off" I have pretty short ping times
-and good throughput, both comparable with vendor driver. But I did not
-check that on all adapters that I have yet.
-
-Looking a bit more at that seem we stop and wake queues several times
-between sending each frame. Looks like that thing need to be optimized
-in mac80211, or some parameters have to be setup properly by rt2x00 ...
-
-Also rt2800 PCI and SOC have PS disabled by default ...
- 
-> I tried with the Fedora kernel-debug kernel and didn't see much
-> additional output. The stack trace might have a bit more detail:
+> > +	spin_lock_bh(&dev->bss_lock);
+> > +	memcpy(bssid, bss->bssid, ETH_ALEN);
+> > +	spin_unlock_bh(&dev->bss_lock);
 > 
-> rt2x00queue_index_inc
-> rt2x00lib_dmadone
-> rt2x00usb_kick_rx_entry
-> rt2x00usb_clear_entry
-> rt2x00lib_rxdone
-> rt2x00usb_work_rxdone
-> process_one_work
-> worker_thread
-> kthread
-> kernel_thread_helper
+> I don't think this is necessary.
+
+Right, i don't see any race either.
+
 > 
-> Seems like something that happens on rmmod with the device connected
-> causes these rxdone/txdone functions to go into a tight loop somehow.
+> >  	nl80211_send_roamed(wiphy_to_dev(wdev->wiphy), wdev->netdev, bssid,
+> >  			    req_ie, req_ie_len, resp_ie, resp_ie_len,
+> >  			    GFP_KERNEL);
+> > @@ -615,40 +612,65 @@ void __cfg80211_roamed(struct wireless_dev *wdev,
+> >  	wdev->wext.prev_bssid_valid = true;
+> >  	wireless_send_event(wdev->netdev, SIOCGIWAP, &wrqu, NULL);
+> >  #endif
+> > +
+> > +	return;
+> > +out:
+> > +	if (bss)
+> > +		cfg80211_put_bss(bss);
+> >  }
+> 
+> Doesn't that leak the reference if you return? It'll also give you an
+> smatch warning since the function assumes the "bss" pointer that was
+> passed in is not NULL, no?
 
-I'm not able to reproduce this, perhaps this is related with debugfs
-or sysfs files you ware opening?
+Oops, sorry, i'll fix it. I may need to run smatch as well.
 
-Thanks
-Stanislaw
+> 
+> > +static void cfg80211_roamed_bss(struct net_device *dev,
+> > +				struct cfg80211_bss *bss, const u8 *req_ie,
+> > +				size_t req_ie_len, const u8 *resp_ie,
+> > +				size_t resp_ie_len, gfp_t gfp)
+> >  {
+> >  	struct wireless_dev *wdev = dev->ieee80211_ptr;
+> >  	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
+> >  	struct cfg80211_event *ev;
+> >  	unsigned long flags;
+> >  
+> > -	CFG80211_DEV_WARN_ON(wdev->sme_state != CFG80211_SME_CONNECTED);
+> >  
+> >  	ev = kzalloc(sizeof(*ev) + req_ie_len + resp_ie_len, gfp);
+> 
+> Why remove that warning? Also maybe do something like
+> 
+> 	if (WARN_ON(!bss))
+> 		return;
+> 
+> (before allocating memory)
+
+These warnings are added in cfg80211_roamed().
+
+Thanks!
+
+Vasanth
