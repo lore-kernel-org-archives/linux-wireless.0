@@ -1,74 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:35680 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932481Ab1LEXoW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53325 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756367Ab1LGPR4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Dec 2011 18:44:22 -0500
-Received: by ywa9 with SMTP id 9so4835523ywa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2011 15:44:22 -0800 (PST)
-Message-ID: <4EDD574E.9090801@lwfinger.net> (sfid-20111206_004426_295132_A9604BED)
-Date: Mon, 05 Dec 2011 17:44:14 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Michael Buesch <m@bues.ch>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Subject: Re: [PATCH] ssb: fix init regression with SoCs
-References: <1323123591-11982-1-git-send-email-hauke@hauke-m.de>
-In-Reply-To: <1323123591-11982-1-git-send-email-hauke@hauke-m.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Wed, 7 Dec 2011 10:17:56 -0500
+Subject: Re: [PATCH] cfg80211: Fix race in bss timeout
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1323270687-5989-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1323270687-5989-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 07 Dec 2011 16:17:50 +0100
+Message-ID: <1323271070.3404.40.camel@jlt3.sipsolutions.net> (sfid-20111207_161804_649111_9750A927)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/05/2011 04:19 PM, Hauke Mehrtens wrote:
-> This fixes a Data bus error on some SoCs. The first fix for this
-> problem did not solve it on all devices.
->      commit 6ae8ec27868bfdbb815287bee8146acbefaee867
->      Author: Rafał Miłecki<zajec5@gmail.com>
->      Date:   Tue Jul 5 17:25:32 2011 +0200
->          ssb: fix init regression of hostmode PCI core
->
-> In ssb_pcicore_fix_sprom_core_index() the sprom on the PCI core is
-> accessed, but the sprom only exists when the ssb bus is connected over
-> a PCI bus to the rest of the system and not when the SSB Bus is the
-> main system bus. SoCs sometimes have a PCI host controller and there
-> this code will not be executed, but there are some old SoCs with an PCI
-> controller in client mode around and ssb_pcicore_fix_sprom_core_index()
-> should not be called on these devices too. The PCI controller on these
-> devices are unused, but without this fix it results in an Data bus
-> error when it gets initialized.
->
-> CC: Michael Buesch<m@bues.ch>
-> CC: Rafał Miłecki<zajec5@gmail.com>
-> Signed-off-by: Hauke Mehrtens<hauke@hauke-m.de>
-> ---
->   drivers/ssb/driver_pcicore.c |    8 ++++++--
->   1 files changed, 6 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
-> index 84c934c..520e828 100644
-> --- a/drivers/ssb/driver_pcicore.c
-> +++ b/drivers/ssb/driver_pcicore.c
-> @@ -517,10 +517,14 @@ static void ssb_pcicore_pcie_setup_workarounds(struct ssb_pcicore *pc)
->
->   static void __devinit ssb_pcicore_init_clientmode(struct ssb_pcicore *pc)
->   {
-> -	ssb_pcicore_fix_sprom_core_index(pc);
-> +	struct ssb_device *pdev = pc->dev;
-> +	struct ssb_bus *bus = pdev->bus;
+On Wed, 2011-12-07 at 20:41 +0530, Vasanthakumar Thiagarajan wrote:
+
+> +	spin_lock_bh(&dev->bss_lock);
+> +	memcpy(bssid, bss->bssid, ETH_ALEN);
+> +	spin_unlock_bh(&dev->bss_lock);
+
+I don't think this is necessary.
+
+>  	nl80211_send_roamed(wiphy_to_dev(wdev->wiphy), wdev->netdev, bssid,
+>  			    req_ie, req_ie_len, resp_ie, resp_ie_len,
+>  			    GFP_KERNEL);
+> @@ -615,40 +612,65 @@ void __cfg80211_roamed(struct wireless_dev *wdev,
+>  	wdev->wext.prev_bssid_valid = true;
+>  	wireless_send_event(wdev->netdev, SIOCGIWAP, &wrqu, NULL);
+>  #endif
 > +
-> +	if (bus->bustype == SSB_BUSTYPE_PCI)
-> +		ssb_pcicore_fix_sprom_core_index(pc);
->
->   	/* Disable PCI interrupts. */
-> -	ssb_write32(pc->dev, SSB_INTVEC, 0);
-> +	ssb_write32(pdev, SSB_INTVEC, 0);
+> +	return;
+> +out:
+> +	if (bss)
+> +		cfg80211_put_bss(bss);
+>  }
 
-As bus == pc->dev->bus is only used once, why bother to create it? If you were 
-to change that, then pdev == pc->dev is only used once. Any real reason to 
-change the lines above?
+Doesn't that leak the reference if you return? It'll also give you an
+smatch warning since the function assumes the "bss" pointer that was
+passed in is not NULL, no?
 
-Larry
+> +static void cfg80211_roamed_bss(struct net_device *dev,
+> +				struct cfg80211_bss *bss, const u8 *req_ie,
+> +				size_t req_ie_len, const u8 *resp_ie,
+> +				size_t resp_ie_len, gfp_t gfp)
+>  {
+>  	struct wireless_dev *wdev = dev->ieee80211_ptr;
+>  	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
+>  	struct cfg80211_event *ev;
+>  	unsigned long flags;
+>  
+> -	CFG80211_DEV_WARN_ON(wdev->sme_state != CFG80211_SME_CONNECTED);
+>  
+>  	ev = kzalloc(sizeof(*ev) + req_ie_len + resp_ie_len, gfp);
 
+Why remove that warning? Also maybe do something like
+
+	if (WARN_ON(!bss))
+		return;
+
+(before allocating memory)
+
+Other than that, I like this patch. Much nicer than the previous one I
+think.
+
+johannes
 
