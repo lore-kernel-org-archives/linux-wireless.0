@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:56089 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750941Ab1LFHPE convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:52063 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755060Ab1LGNEn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Dec 2011 02:15:04 -0500
-Received: by iakc1 with SMTP id c1so3281217iak.19
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2011 23:15:04 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1323102012.4051.38.camel@jlt3.sipsolutions.net>
-References: <1323102012.4051.38.camel@jlt3.sipsolutions.net>
-Date: Tue, 6 Dec 2011 09:15:04 +0200
-Message-ID: <CAB3XZEdk73G-1tfCOPUGDH5jVO7NZ_Wh5ObDWi7EJSZRSeSa9g@mail.gmail.com> (sfid-20111206_081510_685435_CFEDA995)
-Subject: Re: [PATCH] mac80211: accept public action frames with mismatched BSSID
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	Arik Nemtsov <anamtsov@gmail.com>, Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 7 Dec 2011 08:04:43 -0500
+Subject: Re: [PATCH 1/2] cfg80211: Define a wrapper function for reporting
+ roaming
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1323262624-30060-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1323262624-30060-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 07 Dec 2011 14:04:37 +0100
+Message-ID: <1323263077.3404.33.camel@jlt3.sipsolutions.net> (sfid-20111207_140448_815333_5FB2CCB8)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 5, 2011 at 6:20 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Arik's patch "mac80211: allow action frames with unknown
-> BSSID in GO mode" allowed any action frames in P2P mode
-> to go through, but only to cooked monitor interfaces as
-> the IEEE80211_RX_RA_MATCH was still cleared. As a result
-> my no-monitor patches broke invitation responses.
->
-> Instead of allowing any action frames in P2P GO mode to
-> go through with a wrong BSSID like that patch did, allow
-> all public action frames. They will never be processed
-> by mac80211, but can be reported via nl80211 then.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
-[...]
+On Wed, 2011-12-07 at 18:27 +0530, Vasanthakumar Thiagarajan wrote:
 
-> +static inline bool ieee80211_is_public_action(struct ieee80211_hdr *hdr,
-> +                                             size_t len)
-> +{
-> +       struct ieee80211_mgmt *mgmt = (void *)hdr;
-> +
-> +       if (len < 25)
-> +               return false;
+>  /**
+> + * cfg80211_roamed_bss - notify cfg80211 of roaming
+> + *
+> + * @dev: network device
+> + * @bss: entry of bss to which STA got roamed (may be %NULL)
+> + * @channel: the channel of the new AP
+> + * @bssid: the BSSID of the new AP
+> + * @req_ie: association request IEs (maybe be %NULL)
+> + * @req_ie_len: association request IEs length
+> + * @resp_ie: association response IEs (may be %NULL)
+> + * @resp_ie_len: assoc response IEs length
+> + * @gfp: allocation flags
+> + *
+> + * This is just a wrapper to notify cfg80211 of roaming event with driver
+> + * passing bss to avoid a race in timeout of the bss entry. It should be
+> + * called by the underlying driver whenever it roamed from one AP to another
+> + * while connected. Drivers which have roaming implemented in firmware
+> + * may use this function to avoid a race in bss entry timeout where the bss
+> + * entry of the new AP is seen in the driver, but gets timed out by the time
+> + * it is accessed in __cfg80211_roamed() due to delay in scheduling
+> + * rdev->event_work. Returns 0 upon success. Driver has to release a reference
+> + * to bss with cfg80211_put_bss() when the return value is non-zero.
+> + */
 
-maybe use offsetof() to make clearer?
+That calling convention is strange. Either make the function responsible
+for it, nor not, but having to do the return value dance is not very
+useful.
 
-Eliad.
+johannes
+
