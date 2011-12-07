@@ -1,46 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:33136 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751605Ab1LQQFx (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:64491 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756620Ab1LGTnx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Dec 2011 11:05:53 -0500
-Received: by iaeh11 with SMTP id h11so6009810iae.19
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Dec 2011 08:05:52 -0800 (PST)
-Message-ID: <4EECBDDC.5070908@lwfinger.net> (sfid-20111217_170613_239873_89128380)
-Date: Sat, 17 Dec 2011 10:05:48 -0600
+	Wed, 7 Dec 2011 14:43:53 -0500
 From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Raffaele Recalcati <lamiaposta71@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: wl0084a / wl1271 understanding
-References: <CAFU7RzPF7NKRkY70Vp_b55AUeDip+ePxk=zqJ_K=SsXUfse7Jw@mail.gmail.com>
-In-Reply-To: <CAFU7RzPF7NKRkY70Vp_b55AUeDip+ePxk=zqJ_K=SsXUfse7Jw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: linville@tuxdriver.com
+Cc: Philipp Dreimann <philipp@dreimann.net>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>,
+	Chaoming Li <chaoming_li@realsil.com.cn>
+Subject: [PATCH V2] rtlwifi: rtl8192ce: rtl8192cu: rtl8192se: rtl8192de: avoid problems because of possible ERFOFF -> ERFSLEEP transition
+Date: Wed,  7 Dec 2011 13:43:31 -0600
+Message-Id: <1323287011-29987-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20111207_204358_189169_C1A39320)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/16/2011 10:54 PM, Raffaele Recalcati wrote:
-> I'm an embedded developer and I really want opensource development for
-> wireless, to be sure to maintain it in many kernel versions I will
-> have.
-> I'm not an wifi expert and so I can have done some mistakes here below.
->
-> wl0084a
-> =============
-> grep -rin wl008 drivers
-> give no result on kernel 3.2-rc6.
-> What is the normal approach to take in account?
-> I have to immediately change the usb wifi dongle due to the lacking of
-> information to develop e proper driver or maybe
-> there is some possibility?
-> Here I can find Logilink drivers
-> http://www.logilink.eu/content/support/download.htm?seticlanguage=en
-> They confirm support for LINUX (kernel 2.6.18 ~ 2.6.33)
-> Looking into drivers files ... yes , they are proprietary.
+From: Philipp Dreimann <philipp@dreimann.net>
 
-Some of the Logilink devices have Realtek chips. If this is a USB device, please 
-post the output of 'lsusb'. If it is PCI, post the output of 'lspci -nnv' - we 
-only need the part that describes the wireless device.
+In drivers rtl8192ce, rtl8192cu, rtl8192se, and rtl8192de, break
+statements would allow ppsc->rfpwr_state to be changed to ERFSLEEP
+even though the device is actually in ERFOFF.
+
+Signed-off-by: Philipp Dreimann <philipp@dreimann.net>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>
+---
+
+V2 - Fix whitespace issues
+
+John,
+
+Please disregard the first submission under the title
+"[PATCH] rtl8192{ce,cu,de,se}: avoid problems because
+of possible ERFOFF -> ERFSLEEP -> .. transition"
+
+I have not heard anything from Chaoming, but this code
+certainly looks wrong. Please apply to 3.2 if possible.
 
 Larry
+---
+
+ drivers/net/wireless/rtlwifi/rtl8192ce/phy.c |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/phy.c |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/phy.c |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/phy.c |    2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
+index 592a10a..3b585aa 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
+@@ -569,7 +569,7 @@ static bool _rtl92ce_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 		}
+ 	case ERFSLEEP:{
+ 			if (ppsc->rfpwr_state == ERFOFF)
+-				break;
++				return false;
+ 			for (queue_id = 0, i = 0;
+ 			     queue_id < RTL_PCI_MAX_TX_QUEUE_COUNT;) {
+ 				ring = &pcipriv->dev.tx_ring[queue_id];
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
+index 7285290..e49cf22 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/phy.c
+@@ -548,7 +548,7 @@ static bool _rtl92cu_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 		break;
+ 	case ERFSLEEP:
+ 		if (ppsc->rfpwr_state == ERFOFF)
+-			break;
++			return false;
+ 		for (queue_id = 0, i = 0;
+ 		     queue_id < RTL_PCI_MAX_TX_QUEUE_COUNT;) {
+ 			ring = &pcipriv->dev.tx_ring[queue_id];
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+index 3ac7af1..0883349 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
+@@ -3374,7 +3374,7 @@ bool rtl92d_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 		break;
+ 	case ERFSLEEP:
+ 		if (ppsc->rfpwr_state == ERFOFF)
+-			break;
++			return false;
+ 
+ 		for (queue_id = 0, i = 0;
+ 		     queue_id < RTL_PCI_MAX_TX_QUEUE_COUNT;) {
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/phy.c b/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
+index f27171a..f10ac1a 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
+@@ -602,7 +602,7 @@ bool rtl92s_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 		}
+ 	case ERFSLEEP:
+ 			if (ppsc->rfpwr_state == ERFOFF)
+-				break;
++				return false;
+ 
+ 			for (queue_id = 0, i = 0;
+ 			     queue_id < RTL_PCI_MAX_TX_QUEUE_COUNT;) {
+-- 
+1.7.7
 
