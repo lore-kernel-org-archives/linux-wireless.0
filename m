@@ -1,49 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:23684 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932851Ab1LFJOA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Dec 2011 04:14:00 -0500
-Subject: Re: [PATCH v1 1/3] support for antenna configuration profiles
-From: Johannes Berg <johannes.berg@intel.com>
-To: Daniel Golle <dgolle@allnet.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <lrodriguez@atheros.com>,
-	Felix Fietkau <nbd@openwrt.org>
-In-Reply-To: <4EDCF7EC.2030106@allnet.de> (sfid-20111205_185652_361182_EAEDA733)
-References: <20111128161240.GA25454@localhost>
-	 (sfid-20111128_171813_665159_36F11CCF) <1322996760.4633.7.camel@jlt3.sipsolutions.net>
-	 <4EDCF7EC.2030106@allnet.de> (sfid-20111205_185652_361182_EAEDA733)
-Date: Tue, 06 Dec 2011 10:13:55 +0100
-Message-ID: <1323162835.4696.8.camel@jlt3.sipsolutions.net> (sfid-20111206_101406_245827_4FE5AB5C)
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:14392 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755810Ab1LGNxd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Dec 2011 08:53:33 -0500
+Cc: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+Subject: [PATCH 1/4] ath: add a helper for processing reg data on init
+Date: Wed, 7 Dec 2011 19:23:18 +0530
+Message-ID: <1323266001-12912-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111207_145347_502159_74177A2F)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Cj4gPiBUaG9zZSBsZW5ndGggcmVzdHJpY3Rpb25zIGFyZSBjb21wbGV0ZWx5IGJvZ3VzLCBidXQg
-dGhleSdyZSBhbHNvCj4gPiB1bm5lY2Vzc2FyeSBzaW5jZSB0aGlzIGRhdGEgaXMgb3V0cHV0IGRh
-dGEgb25seSBzbyB5b3UgYXJlbid0IHVzaW5nIHRoZQo+ID4gcG9saWN5IGFueXdoZXJlIGFueXdh
-eS4KCj4gU2hvdWxkIEkgY29tcGxldGVseSBza2lwIGFkZGluZyBpdCB0byB0aGUgcG9saWN5IHRo
-ZW4gb3IganVzdCBvbW1pdCB0aGUgbGVuZ3RoCj4gcmVzdHJpY3Rpb24/CgpKdXN0IGRvbid0IGFk
-ZCB0aGUgcG9saWN5LCBJIGRvbid0IHNlZSBpdCBhZGRpbmcgYW55IHZhbHVlLiBUaGUgZm9ybWF0
-CnNob3VsZCBiZSBkb2N1bWVudGVkIHdlbGwgZW5vdWdoIGluIHRoZSBoZWFkZXIgZmlsZSBzbyB1
-c2Vyc3BhY2UgY2FuCnVuZGVyc3RhbmQgaXQgd2l0aG91dCB0aGUgcG9saWN5LgooQWxzbyBub3Rl
-IHRoYXQgSSB3YXMgcmVmZXJyaW5nIHRvIHVzaW5nIGEgYm9ndXMgbGVuZ3RoIGNvbnN0YW50IC0t
-IHlvdQp3ZXJlIHNheWluZyBlYWNoIHN0cmluZyBoZXJlIGNhbiBiZSBhcyBsb25nIGFzIGEgODAy
-LjExIGZyYW1lKQoKPiA+IE9oIHNvIHRoYXQncyBzdXBwb3NlZCB0byBiZSBhbiBhcnJheSAtLSB0
-aGVyZSdzIG5vIHdheSB0byB0ZWxsIHRoaXMgZnJvbQo+ID4gdGhlIGhlYWRlciBmaWxlcy4gSXQn
-cyBhY2NlcHRhYmxlLCBidXQgcGxlYXNlIGdpdmUgaXQgYW4gZXhwbGljaXQKPiA+IGxlbmd0aC4K
-PiBPaywgSSBoYXZlbid0IHNlZW4gYW55IGRldmljZXMgd2l0aCBtb3JlIHRoYW4gMiBwb3NzaWJs
-ZSBhbnRlbm5hIGNvbmZpZ3VhdGlvbgo+IHByb2ZpbGVzIChob3Jpem9udGFsL3ZlcnRpY2FsLCBi
-dWlsdC1pbi9leHRlcm5hbCkgc28gZmFyLCBzbyBnaXZpbmcgdGhlIGFycmF5IGEKPiBmaXhlZCBs
-ZW5ndGggb2YgNCBzaG91bGQgYmUgZmluZSBmb3Igbm93LgoKSSBkb24ndCB0aGluayBkb2luZyBh
-IGZpeGVkIGxlbmd0aCBpcyB1c2VmdWwgLS0ganVzdCBhZGQgYSB2YXJpYWJsZQpkZXNjcmliaW5n
-IHRoZSBsZW5ndGguCgpqb2hhbm5lcwoKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KSW50
-ZWwgR21iSApEb3JuYWNoZXIgU3RyYXNzZSAxCjg1NjIyIEZlbGRraXJjaGVuL011ZW5jaGVuLCBE
-ZXV0c2NobGFuZCAKU2l0eiBkZXIgR2VzZWxsc2NoYWZ0OiBGZWxka2lyY2hlbiBiZWkgTXVlbmNo
-ZW4KR2VzY2hhZWZ0c2Z1ZWhyZXI6IERvdWdsYXMgTHVzaywgUGV0ZXIgR2xlaXNzbmVyLCBIYW5u
-ZXMgU2Nod2FkZXJlcgpSZWdpc3RlcmdlcmljaHQ6IE11ZW5jaGVuIEhSQiA0NzQ1NiAKVXN0Li1J
-ZE5yLi9WQVQgUmVnaXN0cmF0aW9uIE5vLjogREUxMjkzODU4OTUKQ2l0aWJhbmsgRnJhbmtmdXJ0
-IGEuTS4gKEJMWiA1MDIgMTA5IDAwKSA2MDAxMTkwNTIK
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+
+This has no functional change. The helper can be used later
+for other things like country IE changes and following the CTL
+for different countries.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/regd.c |   22 +++++++++++++++++-----
+ 1 files changed, 17 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
+index 65ecb5b..ed4966f 100644
+--- a/drivers/net/wireless/ath/regd.c
++++ b/drivers/net/wireless/ath/regd.c
+@@ -508,11 +508,7 @@ static void ath_regd_sanitize(struct ath_regulatory *reg)
+ 	reg->current_rd = 0x64;
+ }
+ 
+-int
+-ath_regd_init(struct ath_regulatory *reg,
+-	      struct wiphy *wiphy,
+-	      int (*reg_notifier)(struct wiphy *wiphy,
+-				  struct regulatory_request *request))
++static int __ath_regd_init(struct ath_regulatory *reg)
+ {
+ 	struct country_code_to_enum_rd *country = NULL;
+ 	u16 regdmn;
+@@ -583,7 +579,23 @@ ath_regd_init(struct ath_regulatory *reg,
+ 	printk(KERN_DEBUG "ath: Regpair used: 0x%0x\n",
+ 		reg->regpair->regDmnEnum);
+ 
++	return 0;
++}
++
++int
++ath_regd_init(struct ath_regulatory *reg,
++	      struct wiphy *wiphy,
++	      int (*reg_notifier)(struct wiphy *wiphy,
++				  struct regulatory_request *request))
++{
++	int r;
++
++	r = __ath_regd_init(reg);
++	if (r)
++		return r;
++
+ 	ath_regd_init_wiphy(reg, wiphy, reg_notifier);
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(ath_regd_init);
+-- 
+1.7.8
 
