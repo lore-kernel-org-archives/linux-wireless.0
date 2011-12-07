@@ -1,40 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [119.255.1.60] ([119.255.1.60]:52988 "EHLO
-	mail.watchdata.com.cn" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1751217Ab1L3IQ4 (ORCPT
+Received: from alternativer.internetendpunkt.de ([88.198.24.89]:42539 "EHLO
+	geheimer.internetendpunkt.de" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752681Ab1LGKPk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Dec 2011 03:16:56 -0500
-Received: from localhost (mail.watchdata.com.cn [127.0.0.1])
-	by mail.watchdata.com.cn (Postfix) with SMTP id AAE2120069
-	for <linux-wireless@vger.kernel.org>; Fri, 30 Dec 2011 16:05:56 +0800 (CST)
-From: =?gb2312?B?wO641Q==?= <gang.li@watchdata.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: "'Ath9k Devel List'" <ath9k-devel@lists.ath9k.org>
-Subject: Question: ieee80211_rx called twice after one ieee80211_subif_start_xmit call
-Date: Fri, 30 Dec 2011 16:15:05 +0800
+	Wed, 7 Dec 2011 05:15:40 -0500
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Subject: Re: [Bloat] Time in Queue, bufferbloat, and... our accidentally  interplanetary network
 MIME-Version: 1.0
 Content-Type: text/plain;
-	charset="gb2312"
-In-Reply-To: <CADGLRPmkbTp-azGJ2=CJum=Y8Mrf7fTbaE9Oi8Om+DQyu7d9uA@mail.gmail.com>
-Message-Id: <20111230080554.DE64420052@mail.watchdata.com.cn> (sfid-20111230_091659_943492_2FFB5092)
+ charset=UTF-8
+Date: Wed, 07 Dec 2011 11:15:38 +0100
+From: Hagen Paul Pfeifer <hagen@jauu.net>
+Cc: Dave Taht <dave.taht@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	<netdev@vger.kernel.org>,
+	bloat-devel <bloat-devel@lists.bufferbloat.net>,
+	bloat <bloat@lists.bufferbloat.net>
+In-Reply-To: <1323082774.2670.40.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
+References: <CAA93jw7kQYONQiAozatRmdRRJeK0GB9eNDWtRZ3AL+OVKn0OpA@mail.gmail.com>
+ <1323082774.2670.40.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
+Message-ID: <9dfc3c5eb811f2774b378fce0158b3e7@localhost> (sfid-20111207_111549_002067_F2234129)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi sirs,
 
-	Today, I noticed that when an data frame is sent by
-ieee80211_subif_start_xmit, then ieee80211_rx will be called twice , first
-is an Acknowledgement frame and second is the response data frame.  Is this
-the normal case?   It seems the RA frame is nonsense and just be freed in
-ieee80211_rx_monitor.
-
-	Is there anyway to tell the hardware not report RA frame to
-mac80211?
-
-
-Thanks very much!
-
-Li gang
+On Mon, 05 Dec 2011 11:59:34 +0100, Eric Dumazet wrote:
 
 
 
+
+
+> Adding a time limit is possible, all we need is a proper design and
+
+> implementation :)
+
+> 
+
+> Here is my suggestion :
+
+> 
+
+> Design a new tfifo/tred qdisc, with following properties :
+
+> 
+
+> Adaptative RED, (ECN enabled + head drop), but instead of using
+
+> bytes/packet qlen average, use time_in_queue average.
+
+
+
+Question one: is anything wrong with sfb or choke as the basis, instead of
+
+RED?
+
+
+
+Question two: I submitted pfast_head_drop to drop more outdated data
+
+instead of new data. Back in time I thought TCP _may_ experience benefits
+
+because more up-to-date SACK data packets are saved. Are there any other
+
+TCP advantages with head drop policy?
+
+
+
+Hagen
