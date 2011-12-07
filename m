@@ -1,161 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:23204 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753971Ab1LIBZB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 20:25:01 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 06/15] iwlwifi: rename CONFIG_IWLWIFI_DEVICE_SVTOOL to CONFIG_IWLWIFI_DEVICE_TESTMODE
-Date: Thu,  8 Dec 2011 16:26:13 -0800
-Message-Id: <1323390382-1678-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111209_022529_980540_F355FDE5)
-In-Reply-To: <1323390382-1678-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1323390382-1678-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail.serverraum.org ([78.47.150.89]:42320 "EHLO
+	mail.serverraum.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756560Ab1LGUsC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Dec 2011 15:48:02 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by mail.serverraum.org (Postfix) with ESMTP id A84DD3EF96
+	for <linux-wireless@vger.kernel.org>; Wed,  7 Dec 2011 21:49:05 +0100 (CET)
+Received: from mail.serverraum.org ([127.0.0.1])
+	by localhost (web.serverraum.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id ii1HTphDuyGC for <linux-wireless@vger.kernel.org>;
+	Wed,  7 Dec 2011 21:49:05 +0100 (CET)
+Received: from mail-vw0-f46.google.com (mail-vw0-f46.google.com [209.85.212.46])
+	(using TLSv1 with cipher RC4-SHA (128/128 bits))
+	(No client certificate requested)
+	by mail.serverraum.org (Postfix) with ESMTPSA id 3EB243EF94
+	for <linux-wireless@vger.kernel.org>; Wed,  7 Dec 2011 21:49:05 +0100 (CET)
+Received: by vbbfc26 with SMTP id fc26so862345vbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2011 12:47:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4EDFA124.7010804@lwfinger.net>
+References: <CADYPuQ7W2B9HjR_TiV=dhD3vW-3pR4Y+s_9oJzTC-CdL+hr=9w@mail.gmail.com>
+	<4ED44089.7010102@lwfinger.net>
+	<CADYPuQ61D997MA2JCw1WD_xOosaKvaWK-_RHeBkLtabydDj2iw@mail.gmail.com>
+	<4EDFA124.7010804@lwfinger.net>
+Date: Wed, 7 Dec 2011 18:47:58 -0200
+Message-ID: <CADYPuQ5io_nKkzqwY3uM5bre-bfUvrmH080MBpwqYpNeot5yHA@mail.gmail.com> (sfid-20111207_214805_928564_95928C9A)
+Subject: Re: rtlwifi, rtl8192se bug soft-lockup
+From: Philipp Dreimann <philipp@dreimann.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, sgruszka@redhat.com,
+	mikem@ring3k.org, John Linville <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change the name to match the works
+On 7 December 2011 15:23, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 12/07/2011 07:59 AM, Philipp Dreimann wrote:
+>>
+>> On 29 November 2011 00:16, Larry Finger<Larry.Finger@lwfinger.net>  wrote:
+>>>
+>>> On 11/28/2011 06:58 PM, Philipp Dreimann wrote:
+>>>  From a quick look, Stanislaw's patch should fix your system. If not,
+>>> then
+>>> please consider pulling a git tree and checking out commit 34ddb20, which
+>>> is
+>>> the one before 67fc6052.
+>>
+>>
+>> It fixed the issue *but* I am currently back to kernel v3.0.3, as it
+>> is the most stable for me. I am not sure whether new issues were
+>> introduced by using a v3.2-rc or if there is more wrong in the
+>> rtl8192se driver itself. I had random sound and standby issues at
+>> which I will have a look some other day.
+>
+>
+> The bug that affected 3.2-rcX and fixed by Stanislaw's patch was not
+> introduced until 3.1. A patch to fix it there was just queued by GregKH.
 
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/Kconfig      |   10 +++++-----
- drivers/net/wireless/iwlwifi/Makefile     |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    6 +++---
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c    |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-agn.h    |    2 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h    |    4 ++--
- 7 files changed, 15 insertions(+), 15 deletions(-)
+I had Stanislaw's patch included.
 
-diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
-index 855b135..82c8cca 100644
---- a/drivers/net/wireless/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/iwlwifi/Kconfig
-@@ -102,12 +102,12 @@ config IWLWIFI_DEVICE_TRACING
- 	  occur.
- endmenu
- 
--config IWLWIFI_DEVICE_SVTOOL
-+config IWLWIFI_DEVICE_TESTMODE
- 	def_bool y
- 	depends on IWLWIFI
- 	depends on NL80211_TESTMODE
- 	help
--	  This option enables the svtool support for iwlwifi device through
--	  NL80211_TESTMODE. svtool is a software validation tool that runs in
--	  the user space and interacts with the device in the kernel space
--	  through the generic netlink message via NL80211_TESTMODE channel.
-+	  This option enables the testmode support for iwlwifi device through
-+	  NL80211_TESTMODE. This provide the capabilities of enable user space
-+	  validation applications to interacts with the device through the
-+	  generic netlink message via NL80211_TESTMODE channel.
-diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
-index 86344ce..9dc84a7 100644
---- a/drivers/net/wireless/iwlwifi/Makefile
-+++ b/drivers/net/wireless/iwlwifi/Makefile
-@@ -18,7 +18,7 @@ iwlwifi-objs		+= iwl-trans-pcie.o iwl-trans-pcie-rx.o iwl-trans-pcie-tx.o
- 
- iwlwifi-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
- iwlwifi-$(CONFIG_IWLWIFI_DEVICE_TRACING) += iwl-devtrace.o
--iwlwifi-$(CONFIG_IWLWIFI_DEVICE_SVTOOL) += iwl-testmode.o
-+iwlwifi-$(CONFIG_IWLWIFI_DEVICE_TESTMODE) += iwl-testmode.o
- 
- CFLAGS_iwl-devtrace.o := -I$(src)
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 359c47a..78efa2b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -352,7 +352,7 @@ static void rs_program_fix_rate(struct iwl_priv *priv,
- 	lq_sta->active_mimo2_rate  = 0x1FD0;	/* 6 - 60 MBits, no 9, no CCK */
- 	lq_sta->active_mimo3_rate  = 0x1FD0;	/* 6 - 60 MBits, no 9, no CCK */
- 
--#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
-+#ifdef CONFIG_IWLWIFI_DEVICE_TESTMODE
- 	/* testmode has higher priority to overwirte the fixed rate */
- 	if (priv->tm_fixed_rate)
- 		lq_sta->dbg_fixed_rate = priv->tm_fixed_rate;
-@@ -1081,7 +1081,7 @@ done:
- 	if (sta && sta->supp_rates[sband->band])
- 		rs_rate_scale_perform(priv, skb, sta, lq_sta);
- 
--#if defined(CONFIG_MAC80211_DEBUGFS) && defined(CONFIG_IWLWIFI_DEVICE_SVTOOL)
-+#if defined(CONFIG_MAC80211_DEBUGFS) && defined(CONFIG_IWLWIFI_DEVICE_TESTMODE)
- 	if ((priv->tm_fixed_rate) &&
- 	    (priv->tm_fixed_rate != lq_sta->dbg_fixed_rate))
- 		rs_program_fix_rate(priv, lq_sta);
-@@ -2904,7 +2904,7 @@ void iwl_rs_rate_init(struct iwl_priv *priv, struct ieee80211_sta *sta, u8 sta_i
- 	if (sband->band == IEEE80211_BAND_5GHZ)
- 		lq_sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
- 	lq_sta->is_agg = 0;
--#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
-+#ifdef CONFIG_IWLWIFI_DEVICE_TESTMODE
- 	priv->tm_fixed_rate = 0;
- #endif
- #ifdef CONFIG_MAC80211_DEBUGFS
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index a1a95d5..cdf9efd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -148,7 +148,7 @@ static void iwlagn_tx_cmd_build_rate(struct iwl_priv *priv,
- 	if (ieee80211_is_data(fc)) {
- 		tx_cmd->initial_rate_index = 0;
- 		tx_cmd->tx_flags |= TX_CMD_FLG_STA_RATE_MSK;
--#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
-+#ifdef CONFIG_IWLWIFI_DEVICE_TESTMODE
- 		if (priv->tm_fixed_rate) {
- 			/*
- 			 * rate overwrite by testmode
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index daf010d..5021cc9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1703,8 +1703,8 @@ static void iwl_debug_config(struct iwl_priv *priv)
- 		"disabled\n");
- #endif
- 
--	dev_printk(KERN_INFO, bus(priv)->dev, "CONFIG_IWLWIFI_DEVICE_SVTOOL "
--#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
-+	dev_printk(KERN_INFO, bus(priv)->dev, "CONFIG_IWLWIFI_DEVICE_TESTMODE "
-+#ifdef CONFIG_IWLWIFI_DEVICE_TESTMODE
- 		"enabled\n");
- #else
- 		"disabled\n");
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index f2f1070..b891bd9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -359,7 +359,7 @@ void iwl_eeprom_get_mac(const struct iwl_priv *priv, u8 *mac);
- extern int iwlagn_init_alive_start(struct iwl_priv *priv);
- extern int iwl_alive_start(struct iwl_priv *priv);
- /* svtool */
--#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
-+#ifdef CONFIG_IWLWIFI_DEVICE_TESTMODE
- extern int iwlagn_mac_testmode_cmd(struct ieee80211_hw *hw, void *data,
- 				   int len);
- extern int iwlagn_mac_testmode_dump(struct ieee80211_hw *hw,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index be26145..d7b64af 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -750,7 +750,7 @@ enum iwl_scan_type {
- 	IWL_SCAN_ROC,
- };
- 
--#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
-+#ifdef CONFIG_IWLWIFI_DEVICE_TESTMODE
- struct iwl_testmode_trace {
- 	u32 buff_size;
- 	u32 total_size;
-@@ -1039,7 +1039,7 @@ struct iwl_priv {
- 	struct led_classdev led;
- 	unsigned long blink_on, blink_off;
- 	bool led_registered;
--#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
-+#ifdef CONFIG_IWLWIFI_DEVICE_TESTMODE
- 	struct iwl_testmode_trace testmode_trace;
- 	struct iwl_testmode_sram testmode_sram;
- 	u32 tm_fixed_rate;
--- 
-1.7.0.4
+>> Another idea about the problem:
+>> I omitted for some reason the following line in the first email about
+>> the problem:
+>> [  732.056049] BUG: soft lockup - CPU#0 stuck for 22s! [kworker/0:3:2112]
+>
+>
+> That was a serious omission.
 
+Yes.
+
+>> While looking at the Call Trace and the code I have no idea why
+>> rtl92s_phy_set_rf_power_state needs that much time for the ERFSLEEP
+>> operation. I suspected an issue in the loop but did not find it so
+>> far.
+>
+>
+> With a modern CPU, no loop can take 22s unless it involves a spin lock that
+> never is released.
+
+Yes, and it should not, as the loop has the lock!
+
+Putting things together:
+
+- Stanislaw's patch prevents the occurrence of the issue with using
+the irq safe spin lock.
+  This is kind of an an revert of
+312d5479dcfaca2b8aa451201b5388fdb8c8684a (I did not check
+everything!).
+
+- The loop-issue is still around but won't be noticed unless the
+delayed execution of rtl_lps_leave() has side-effects..
+
+- As it took up to an hour  to hit the issue, I suspect that there is
+something else going wrong which interferes with the loop...
+
+>> Another solution which I tested was the following:
+>> 0. rtl_lps_leave function informs the  rtl92s_phy_set_rf_power_state
+>> being in the ERFSLEEP-case-loop, that it needs the lock.
+>> 1. rtl92s_phy_set_rf_power_state notices, "return false" ( leaves the
+>> loop and function as if the action failed ) and the lock is released.
+>>
+>> This seemed to work fine as well. - But I am not sure what this might
+>> break for others...
+>
+> Is this the same patch that you posted on the linux-wireless ML?
+
+No, this was not posted so far. I will try to debug the loop issue
+soonish. The outlined idea above only prevents the issue without
+knowing what is happening.
+
+> Although I
+> have not heard back from Chaoming, I formatted that patch correctly and
+> submitted it to John Linville yesterday with the notation that it should be
+> applied to the stable kernels.
+
+Thanks. The comment in v2 is fine now.
