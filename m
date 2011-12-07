@@ -1,39 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:52266 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751166Ab1LHHHO (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:62921 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754657Ab1LGLXb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 02:07:14 -0500
-Received: by wgbds13 with SMTP id ds13so784452wgb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2011 23:07:13 -0800 (PST)
+	Wed, 7 Dec 2011 06:23:31 -0500
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/2] ath9k: validate for non-zero BSSID
+Date: Wed, 7 Dec 2011 16:51:38 +0530
+Message-ID: <1323256899-16453-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111207_122336_510050_F66057EC)
 MIME-Version: 1.0
-In-Reply-To: <20111208064124.GA4406@hertz.marvell.com>
-References: <20111208064124.GA4406@hertz.marvell.com>
-Date: Thu, 8 Dec 2011 09:07:13 +0200
-Message-ID: <CANUX_P3sXXTP7C1hq0kKpTh98gtR6dsnDZQvs4Kq6kR3sbRrYw@mail.gmail.com> (sfid-20111208_080719_996351_9105A47E)
-Subject: Re: [PATCH] mac80211: Purge A-MPDU TX queues before station destructions
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Yogesh Ashok Powar <yogeshp@marvell.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->
-> When a station leaves suddenly while ampdu traffic to that station is still
-> running, there is a possibility that the ampdu pending queues are not freed due
-> to a race condition leading to memory leaks. In '__sta_info_destroy' when we
-> attempt to destroy the ampdu sessions in 'ieee80211_sta_tear_down_BA_sessions',
-> the driver calls 'ieee80211_stop_tx_ba_cb_irqsafe' to delete the ampdu
-> structures (tid_tx) and splice the pending queues and this job gets queued in
-> sdata workqueue. However, the sta entry can get destroyed before the above work
-> gets scheduled and hence the race.
->
-> Purging the queues and freeing the tid_tx to avoid the leak. The better solution
-> would be to fix the race, but that can be taken up in a separate patch.
->
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Did you actually run into that race, or you can see the bug from code
-inspection ?
+before concluding that the recieved beacon is for us, let us make sure
+that the BSSID is non-zero. when I configured ad-hoc mode as creator and
+left it for some time without joining I found we recieved few frames whose
+BSSID is zero, which we concluded wrongly as 'my_beacons'
+
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index e031841..ad5176d 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1823,6 +1823,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		hdr = (struct ieee80211_hdr *) (hdr_skb->data + rx_status_len);
+ 		rxs = IEEE80211_SKB_RXCB(hdr_skb);
+ 		if (ieee80211_is_beacon(hdr->frame_control) &&
++		    !is_zero_ether_addr(common->curbssid) &&
+ 		    !compare_ether_addr(hdr->addr3, common->curbssid))
+ 			rs.is_mybeacon = true;
+ 		else
+-- 
+1.7.0.4
+
