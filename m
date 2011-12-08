@@ -1,52 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58154 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751032Ab1LSQlj (ORCPT
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:57287 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751725Ab1LHP3c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 11:41:39 -0500
-Subject: Re: [PATCH] mac80211: Fix frame classification in AP mode for
- relayed frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-In-Reply-To: <CAGXE3d_dH1jeSVrmANd_OARqwY_NUkKu3He6Y7mP8atzas88pA@mail.gmail.com> (sfid-20111219_173726_642965_66436AD1)
-References: <1324288978-27162-1-git-send-email-helmut.schaa@googlemail.com>
-	 <1324310130.3414.3.camel@jlt3.sipsolutions.net>
-	 <CAGXE3d_dH1jeSVrmANd_OARqwY_NUkKu3He6Y7mP8atzas88pA@mail.gmail.com>
-	 (sfid-20111219_173726_642965_66436AD1)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 19 Dec 2011 17:41:36 +0100
-Message-ID: <1324312896.3414.16.camel@jlt3.sipsolutions.net> (sfid-20111219_174141_394573_D2207553)
-Mime-Version: 1.0
+	Thu, 8 Dec 2011 10:29:32 -0500
+Subject: [PATCH 4/6] ath6kl: fix value of WOW_FILTER_SSID
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Thu, 08 Dec 2011 17:29:25 +0200
+Message-ID: <20111208152925.16924.61689.stgit@x201> (sfid-20111208_162935_654413_9B217EAB)
+In-Reply-To: <20111208152824.16924.31984.stgit@x201>
+References: <20111208152824.16924.31984.stgit@x201>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-12-19 at 17:36 +0100, Helmut Schaa wrote:
+According to the firmware engineers WOW_FILTER_SSID is actually the
+second bit, not the first.
 
-> >> We could also reuse the TID used by the source STA but I guess we should
-> >> always classify frames according to our own mapping instead of relying
-> >> on the associated STAs to do the right thing.
-> >
-> > Not sure that's useful, since we classify almost nothing anyway.
-> 
-> Currently we only use the IPv4 DSCP field for assigning TIDs to
-> frames. That seems to be sufficient for VOIP traffic at least.
-> 
-> > If this was somehow hooked up to tc or iptables that would be
-> > more useful I guess?
-> 
-> Agreed. This would make sense in the future but I don't feel like
-> implementing this right now.
-> 
-> So, you'd prefer to just copy over the TID as used by the source
-> STA (via the priority+256 hack maybe)?
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/wmi.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Seems simpler to me really, at least right now and as default. Not sure,
-maybe other people have more opinion? :)
-
-I just don't expect anyone to hack the kernel for their local policy,
-and using what the STA wanted seems OK? If you run wifi networks you
-kinda trust them already anyway :)
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 4e4f0f7..cbde79c 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -1808,7 +1808,7 @@ struct wmi_set_ip_cmd {
+ } __packed;
+ 
+ enum ath6kl_wow_filters {
+-	WOW_FILTER_SSID			= BIT(0),
++	WOW_FILTER_SSID			= BIT(1),
+ 	WOW_FILTER_OPTION_MAGIC_PACKET  = BIT(2),
+ 	WOW_FILTER_OPTION_EAP_REQ	= BIT(3),
+ 	WOW_FILTER_OPTION_PATTERNS	= BIT(4),
 
