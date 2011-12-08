@@ -1,135 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:48696 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750704Ab1LQIBg (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:42494 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752193Ab1LHP3V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Dec 2011 03:01:36 -0500
+	Thu, 8 Dec 2011 10:29:21 -0500
+Subject: [PATCH 3/6] ath6kl: implement ath6kl_cfg80211_stop_all()
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Thu, 08 Dec 2011 17:29:11 +0200
+Message-ID: <20111208152911.16924.39425.stgit@x201> (sfid-20111208_162926_036210_9B8EF604)
+In-Reply-To: <20111208152824.16924.31984.stgit@x201>
+References: <20111208152824.16924.31984.stgit@x201>
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-Date: Sat, 17 Dec 2011 09:01:35 +0100
-Message-ID: <CA+icZUXVin2-D951yuvdHaZkr=xVzRUsB3uFnH8itfEQ_+Sk9Q@mail.gmail.com> (sfid-20111217_090142_340208_85F1E528)
-Subject: Re: Linux 3.2-rc6 (wireless/iwlwifi)
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>,
-	David Miller <davem@davemloft.net>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Content-Type: multipart/mixed; boundary=20cf3074b2dc570a3104b44520e6
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---20cf3074b2dc570a3104b44520e6
-Content-Type: text/plain; charset=UTF-8
+During suspend we need to stop all vifs, not just the first.
 
-Hi,
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   53 ++++++++++++++++------------
+ drivers/net/wireless/ath/ath6kl/cfg80211.h |    3 +-
+ drivers/net/wireless/ath/ath6kl/main.c     |    3 +-
+ 3 files changed, 34 insertions(+), 25 deletions(-)
 
-unfortunately, this -rc6 is missing some important iwlwifi fixes.
-These were included in wireless.git#master (master-2011-12-14).
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 5f12c04..2bab65f 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1799,7 +1799,7 @@ int ath6kl_cfg80211_suspend(struct ath6kl *ar,
+ 
+ 	case ATH6KL_CFG_SUSPEND_DEEPSLEEP:
+ 
+-		ath6kl_cfg80211_stop(ar);
++		ath6kl_cfg80211_stop_all(ar);
+ 
+ 		/* save the current power mode before enabling power save */
+ 		ar->wmi->saved_pwr_mode = ar->wmi->pwr_mode;
+@@ -1816,7 +1816,7 @@ int ath6kl_cfg80211_suspend(struct ath6kl *ar,
+ 
+ 	case ATH6KL_CFG_SUSPEND_CUTPOWER:
+ 
+-		ath6kl_cfg80211_stop(ar);
++		ath6kl_cfg80211_stop_all(ar);
+ 
+ 		if (ar->state == ATH6KL_STATE_OFF) {
+ 			ath6kl_dbg(ATH6KL_DBG_SUSPEND,
+@@ -2389,22 +2389,8 @@ static struct cfg80211_ops ath6kl_cfg80211_ops = {
+ 	.mgmt_frame_register = ath6kl_mgmt_frame_register,
+ };
+ 
+-void ath6kl_cfg80211_stop(struct ath6kl *ar)
++void ath6kl_cfg80211_stop(struct ath6kl_vif *vif)
+ {
+-	struct ath6kl_vif *vif;
+-
+-	/* FIXME: for multi vif */
+-	vif = ath6kl_vif_first(ar);
+-	if (!vif) {
+-		/* save the current power mode before enabling power save */
+-		ar->wmi->saved_pwr_mode = ar->wmi->pwr_mode;
+-
+-		if (ath6kl_wmi_powermode_cmd(ar->wmi, 0, REC_POWER) != 0)
+-			ath6kl_warn("ath6kl_deep_sleep_enable: "
+-				    "wmi_powermode_cmd failed\n");
+-		return;
+-	}
+-
+ 	switch (vif->sme_state) {
+ 	case SME_DISCONNECTED:
+ 		break;
+@@ -2421,21 +2407,44 @@ void ath6kl_cfg80211_stop(struct ath6kl *ar)
+ 
+ 	if (test_bit(CONNECTED, &vif->flags) ||
+ 	    test_bit(CONNECT_PEND, &vif->flags))
+-		ath6kl_wmi_disconnect_cmd(ar->wmi, vif->fw_vif_idx);
++		ath6kl_wmi_disconnect_cmd(vif->ar->wmi, vif->fw_vif_idx);
+ 
+ 	vif->sme_state = SME_DISCONNECTED;
+ 	clear_bit(CONNECTED, &vif->flags);
+ 	clear_bit(CONNECT_PEND, &vif->flags);
+ 
+ 	/* disable scanning */
+-	if (ath6kl_wmi_scanparams_cmd(ar->wmi, vif->fw_vif_idx, 0xFFFF, 0, 0,
+-				      0, 0, 0, 0, 0, 0, 0) != 0)
+-		printk(KERN_WARNING "ath6kl: failed to disable scan "
+-		       "during suspend\n");
++	if (ath6kl_wmi_scanparams_cmd(vif->ar->wmi, vif->fw_vif_idx, 0xFFFF,
++				      0, 0, 0, 0, 0, 0, 0, 0, 0) != 0)
++		ath6kl_warn("failed to disable scan during stop\n");
+ 
+ 	ath6kl_cfg80211_scan_complete_event(vif, true);
+ }
+ 
++void ath6kl_cfg80211_stop_all(struct ath6kl *ar)
++{
++	struct ath6kl_vif *vif;
++
++	vif = ath6kl_vif_first(ar);
++	if (!vif) {
++		/* save the current power mode before enabling power save */
++		ar->wmi->saved_pwr_mode = ar->wmi->pwr_mode;
++
++		if (ath6kl_wmi_powermode_cmd(ar->wmi, 0, REC_POWER) != 0)
++			ath6kl_warn("ath6kl_deep_sleep_enable: "
++				    "wmi_powermode_cmd failed\n");
++		return;
++	}
++
++	/*
++	 * FIXME: we should take ar->list_lock to protect changes in the
++	 * vif_list, but that's not trivial to do as ath6kl_cfg80211_stop()
++	 * sleeps.
++	 */
++	list_for_each_entry(vif, &ar->vif_list, list)
++		ath6kl_cfg80211_stop(vif);
++}
++
+ struct ath6kl *ath6kl_core_alloc(struct device *dev)
+ {
+ 	struct ath6kl *ar;
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+index 59fa9d8..226a734 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+@@ -52,6 +52,7 @@ int ath6kl_cfg80211_suspend(struct ath6kl *ar,
+ 
+ int ath6kl_cfg80211_resume(struct ath6kl *ar);
+ 
+-void ath6kl_cfg80211_stop(struct ath6kl *ar);
++void ath6kl_cfg80211_stop(struct ath6kl_vif *vif);
++void ath6kl_cfg80211_stop_all(struct ath6kl *ar);
+ 
+ #endif /* ATH6KL_CFG80211_H */
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index 0c7a013..f96e9f3 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -1000,12 +1000,11 @@ static int ath6kl_open(struct net_device *dev)
+ 
+ static int ath6kl_close(struct net_device *dev)
+ {
+-	struct ath6kl *ar = ath6kl_priv(dev);
+ 	struct ath6kl_vif *vif = netdev_priv(dev);
+ 
+ 	netif_stop_queue(dev);
+ 
+-	ath6kl_cfg80211_stop(ar);
++	ath6kl_cfg80211_stop(vif);
+ 
+ 	clear_bit(WLAN_ENABLED, &vif->flags);
+ 
 
-I have attached a single "wireless" patch to make affected people happy.
-
-Regards,
-- Sedat -
-
---20cf3074b2dc570a3104b44520e6
-Content-Type: text/x-diff; charset=US-ASCII; name="wireless.patch"
-Content-Disposition: attachment; filename="wireless.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gwac4snd0
-
-RGFuIENhcnBlbnRlciAoMSk6CiAgICAgIG5mYzogc2lnbmVkbmVzcyBidWcgaW4gX19uY2lfcmVx
-dWVzdCgpCgpKb2hhbm5lcyBCZXJnICgxKToKICAgICAgaXdsd2lmaTogdHhfc3luYyBvbmx5IG9u
-IFBBTiBjb250ZXh0CgpSYWprdW1hciBNYW5vaGFyYW4gKDEpOgogICAgICBhdGg5azogZml4IG1h
-eCBwaHkgcmF0ZSBhdCByYXRlIGNvbnRyb2wgaW5pdAoKU2VkYXQgRGlsZWsgKDEpOgogICAgICBN
-ZXJnZSBnaXQ6Ly9naXQua2VybmVsLm9yZy8uLi4vbGludmlsbGUvd2lyZWxlc3MKCldleS1ZaSBH
-dXkgKDIpOgogICAgICBpd2x3aWZpOiBkbyBub3Qgc2V0IHRoZSBzZXF1ZW5jZSBjb250cm9sIGJp
-dCBpcyBub3QgbmVlZGVkCiAgICAgIGl3bHdpZmk6IGFsbG93IHRvIHN3aXRjaCB0byBIVDQwIGlm
-IG5vdCBhc3NvY2lhdGVkCgpZb2dlc2ggQXNob2sgUG93YXIgKDEpOgogICAgICBtd2lmaWV4OiBh
-dm9pZCBkb3VibGUgbGlzdF9kZWwgaW4gY29tbWFuZCBjYW5jZWwgcGF0aAoKIGRyaXZlcnMvbmV0
-L3dpcmVsZXNzL2F0aC9hdGg5ay9yYy5jICAgICAgICAgfCAgICA0ICsrKy0KIGRyaXZlcnMvbmV0
-L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFnbi1yeG9uLmMgfCAgICA0ICsrLS0KIGRyaXZlcnMvbmV0
-L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFnbi10eC5jICAgfCAgICA1ICsrKystCiBkcml2ZXJzL25l
-dC93aXJlbGVzcy9pd2x3aWZpL2l3bC1hZ24uYyAgICAgIHwgICAgNiArKysrKysKIGRyaXZlcnMv
-bmV0L3dpcmVsZXNzL213aWZpZXgvY21kZXZ0LmMgICAgICAgfCAgICA5ICsrLS0tLS0tLQogbmV0
-L25mYy9uY2kvY29yZS5jICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgIDIgKy0KIDYgZmls
-ZXMgY2hhbmdlZCwgMTggaW5zZXJ0aW9ucygrKSwgMTIgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0
-IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDlrL3JjLmMgYi9kcml2ZXJzL25ldC93aXJl
-bGVzcy9hdGgvYXRoOWsvcmMuYwppbmRleCA4ODhhYmMyLi41MjhkNWYzIDEwMDY0NAotLS0gYS9k
-cml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvcmMuYworKysgYi9kcml2ZXJzL25ldC93aXJl
-bGVzcy9hdGgvYXRoOWsvcmMuYwpAQCAtMTI3MSw3ICsxMjcxLDkgQEAgc3RhdGljIHZvaWQgYXRo
-X3JjX2luaXQoc3RydWN0IGF0aF9zb2Z0YyAqc2MsCiAKIAlhdGhfcmNfcHJpdi0+bWF4X3ZhbGlk
-X3JhdGUgPSBrOwogCWF0aF9yY19zb3J0X3ZhbGlkcmF0ZXMocmF0ZV90YWJsZSwgYXRoX3JjX3By
-aXYpOwotCWF0aF9yY19wcml2LT5yYXRlX21heF9waHkgPSBhdGhfcmNfcHJpdi0+dmFsaWRfcmF0
-ZV9pbmRleFtrLTRdOworCWF0aF9yY19wcml2LT5yYXRlX21heF9waHkgPSAoayA+IDQpID8KKwkJ
-CQkJYXRoX3JjX3ByaXYtPnZhbGlkX3JhdGVfaW5kZXhbay00XSA6CisJCQkJCWF0aF9yY19wcml2
-LT52YWxpZF9yYXRlX2luZGV4W2stMV07CiAJYXRoX3JjX3ByaXYtPnJhdGVfdGFibGUgPSByYXRl
-X3RhYmxlOwogCiAJYXRoX2RiZyhjb21tb24sIEFUSF9EQkdfQ09ORklHLApkaWZmIC0tZ2l0IGEv
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtYWduLXJ4b24uYyBiL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFnbi1yeG9uLmMKaW5kZXggYTdhNmRlZi4uNWM3YzE3YyAx
-MDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtYWduLXJ4b24uYwor
-KysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1hZ24tcnhvbi5jCkBAIC02MDYs
-OCArNjA2LDggQEAgaW50IGl3bGFnbl9tYWNfY29uZmlnKHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3
-LCB1MzIgY2hhbmdlZCkKIAkJCWlmIChjdHgtPmh0LmVuYWJsZWQpIHsKIAkJCQkvKiBpZiBIVDQw
-IGlzIHVzZWQsIGl0IHNob3VsZCBub3QgY2hhbmdlCiAJCQkJICogYWZ0ZXIgYXNzb2NpYXRlZCBl
-eGNlcHQgY2hhbm5lbCBzd2l0Y2ggKi8KLQkJCQlpZiAoaXdsX2lzX2Fzc29jaWF0ZWRfY3R4KGN0
-eCkgJiYKLQkJCQkgICAgICFjdHgtPmh0LmlzXzQwbWh6KQorCQkJCWlmICghY3R4LT5odC5pc180
-MG1oeiB8fAorCQkJCQkJIWl3bF9pc19hc3NvY2lhdGVkX2N0eChjdHgpKQogCQkJCQlpd2xhZ25f
-Y29uZmlnX2h0NDAoY29uZiwgY3R4KTsKIAkJCX0gZWxzZQogCQkJCWN0eC0+aHQuaXNfNDBtaHog
-PSBmYWxzZTsKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFn
-bi10eC5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtYWduLXR4LmMKaW5kZXgg
-MzVhNmI3MS4uZGYxNTQwYyAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lm
-aS9pd2wtYWduLXR4LmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtYWdu
-LXR4LmMKQEAgLTkxLDcgKzkxLDEwIEBAIHN0YXRpYyB2b2lkIGl3bGFnbl90eF9jbWRfYnVpbGRf
-YmFzaWMoc3RydWN0IGl3bF9wcml2ICpwcml2LAogCQl0eF9jbWQtPnRpZF90c3BlYyA9IHFjWzBd
-ICYgMHhmOwogCQl0eF9mbGFncyAmPSB+VFhfQ01EX0ZMR19TRVFfQ1RMX01TSzsKIAl9IGVsc2Ug
-ewotCQl0eF9mbGFncyB8PSBUWF9DTURfRkxHX1NFUV9DVExfTVNLOworCQlpZiAoaW5mby0+Zmxh
-Z3MgJiBJRUVFODAyMTFfVFhfQ1RMX0FTU0lHTl9TRVEpCisJCQl0eF9mbGFncyB8PSBUWF9DTURf
-RkxHX1NFUV9DVExfTVNLOworCQllbHNlCisJCQl0eF9mbGFncyAmPSB+VFhfQ01EX0ZMR19TRVFf
-Q1RMX01TSzsKIAl9CiAKIAlpd2xhZ25fdHhfY21kX3Byb3RlY3Rpb24ocHJpdiwgaW5mbywgZmMs
-ICZ0eF9mbGFncyk7CmRpZmYgLS1naXQgYS9kcml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3
-bC1hZ24uYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFnbi5jCmluZGV4IGJh
-Y2MwNmMuLmUwZTlhM2QgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkv
-aXdsLWFnbi5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFnbi5jCkBA
-IC0yODUwLDYgKzI4NTAsOSBAQCBzdGF0aWMgaW50IGl3bGFnbl9tYWNfdHhfc3luYyhzdHJ1Y3Qg
-aWVlZTgwMjExX2h3ICpodywKIAlpbnQgcmV0OwogCXU4IHN0YV9pZDsKIAorCWlmIChjdHgtPmN0
-eGlkICE9IElXTF9SWE9OX0NUWF9QQU4pCisJCXJldHVybiAwOworCiAJSVdMX0RFQlVHX01BQzgw
-MjExKHByaXYsICJlbnRlclxuIik7CiAJbXV0ZXhfbG9jaygmcHJpdi0+c2hyZC0+bXV0ZXgpOwog
-CkBAIC0yODk4LDYgKzI5MDEsOSBAQCBzdGF0aWMgdm9pZCBpd2xhZ25fbWFjX2ZpbmlzaF90eF9z
-eW5jKHN0cnVjdCBpZWVlODAyMTFfaHcgKmh3LAogCXN0cnVjdCBpd2xfdmlmX3ByaXYgKnZpZl9w
-cml2ID0gKHZvaWQgKil2aWYtPmRydl9wcml2OwogCXN0cnVjdCBpd2xfcnhvbl9jb250ZXh0ICpj
-dHggPSB2aWZfcHJpdi0+Y3R4OwogCisJaWYgKGN0eC0+Y3R4aWQgIT0gSVdMX1JYT05fQ1RYX1BB
-TikKKwkJcmV0dXJuOworCiAJSVdMX0RFQlVHX01BQzgwMjExKHByaXYsICJlbnRlclxuIik7CiAJ
-bXV0ZXhfbG9jaygmcHJpdi0+c2hyZC0+bXV0ZXgpOwogCmRpZmYgLS1naXQgYS9kcml2ZXJzL25l
-dC93aXJlbGVzcy9td2lmaWV4L2NtZGV2dC5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbXdpZmll
-eC9jbWRldnQuYwppbmRleCBhYzI3ODE1Li42ZTBhM2VhIDEwMDY0NAotLS0gYS9kcml2ZXJzL25l
-dC93aXJlbGVzcy9td2lmaWV4L2NtZGV2dC5jCisrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL213
-aWZpZXgvY21kZXZ0LmMKQEAgLTkzOSw3ICs5MzksNiBAQCBtd2lmaWV4X2NhbmNlbF9wZW5kaW5n
-X2lvY3RsKHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIpCiB7CiAJc3RydWN0IGNtZF9j
-dHJsX25vZGUgKmNtZF9ub2RlID0gTlVMTCwgKnRtcF9ub2RlID0gTlVMTDsKIAl1bnNpZ25lZCBs
-b25nIGNtZF9mbGFnczsKLQl1bnNpZ25lZCBsb25nIGNtZF9wZW5kaW5nX3FfZmxhZ3M7CiAJdW5z
-aWduZWQgbG9uZyBzY2FuX3BlbmRpbmdfcV9mbGFnczsKIAl1aW50MTZfdCBjYW5jZWxfc2Nhbl9j
-bWQgPSBmYWxzZTsKIApAQCAtOTQ5LDEyICs5NDgsOSBAQCBtd2lmaWV4X2NhbmNlbF9wZW5kaW5n
-X2lvY3RsKHN0cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIpCiAJCWNtZF9ub2RlID0gYWRh
-cHRlci0+Y3Vycl9jbWQ7CiAJCWNtZF9ub2RlLT53YWl0X3FfZW5hYmxlZCA9IGZhbHNlOwogCQlj
-bWRfbm9kZS0+Y21kX2ZsYWcgfD0gQ01EX0ZfQ0FOQ0VMRUQ7Ci0JCXNwaW5fbG9ja19pcnFzYXZl
-KCZhZGFwdGVyLT5jbWRfcGVuZGluZ19xX2xvY2ssCi0JCQkJICBjbWRfcGVuZGluZ19xX2ZsYWdz
-KTsKLQkJbGlzdF9kZWwoJmNtZF9ub2RlLT5saXN0KTsKLQkJc3Bpbl91bmxvY2tfaXJxcmVzdG9y
-ZSgmYWRhcHRlci0+Y21kX3BlbmRpbmdfcV9sb2NrLAotCQkJCSAgICAgICBjbWRfcGVuZGluZ19x
-X2ZsYWdzKTsKIAkJbXdpZmlleF9pbnNlcnRfY21kX3RvX2ZyZWVfcShhZGFwdGVyLCBjbWRfbm9k
-ZSk7CisJCW13aWZpZXhfY29tcGxldGVfY21kKGFkYXB0ZXIsIGFkYXB0ZXItPmN1cnJfY21kKTsK
-KwkJYWRhcHRlci0+Y3Vycl9jbWQgPSBOVUxMOwogCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZh
-ZGFwdGVyLT5td2lmaWV4X2NtZF9sb2NrLCBjbWRfZmxhZ3MpOwogCX0KIApAQCAtOTgxLDcgKzk3
-Nyw2IEBAIG13aWZpZXhfY2FuY2VsX3BlbmRpbmdfaW9jdGwoc3RydWN0IG13aWZpZXhfYWRhcHRl
-ciAqYWRhcHRlcikKIAkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmYWRhcHRlci0+bXdpZmlleF9j
-bWRfbG9jaywgY21kX2ZsYWdzKTsKIAl9CiAJYWRhcHRlci0+Y21kX3dhaXRfcS5zdGF0dXMgPSAt
-MTsKLQltd2lmaWV4X2NvbXBsZXRlX2NtZChhZGFwdGVyLCBhZGFwdGVyLT5jdXJyX2NtZCk7CiB9
-CiAKIC8qCmRpZmYgLS1naXQgYS9uZXQvbmZjL25jaS9jb3JlLmMgYi9uZXQvbmZjL25jaS9jb3Jl
-LmMKaW5kZXggMzkyNWM2NS4uZWE2NjAzNCAxMDA2NDQKLS0tIGEvbmV0L25mYy9uY2kvY29yZS5j
-CisrKyBiL25ldC9uZmMvbmNpL2NvcmUuYwpAQCAtNjksNyArNjksNyBAQCBzdGF0aWMgaW50IF9f
-bmNpX3JlcXVlc3Qoc3RydWN0IG5jaV9kZXYgKm5kZXYsCiAJX191MzIgdGltZW91dCkKIHsKIAlp
-bnQgcmMgPSAwOwotCXVuc2lnbmVkIGxvbmcgY29tcGxldGlvbl9yYzsKKwlsb25nIGNvbXBsZXRp
-b25fcmM7CiAKIAluZGV2LT5yZXFfc3RhdHVzID0gTkNJX1JFUV9QRU5EOwogCg==
---20cf3074b2dc570a3104b44520e6--
