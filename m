@@ -1,63 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:47167 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751096Ab1LSQgx (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:16786 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753082Ab1LHKBU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 11:36:53 -0500
-Received: by pbdu13 with SMTP id u13so1932611pbd.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 08:36:53 -0800 (PST)
+	Thu, 8 Dec 2011 05:01:20 -0500
+Date: Thu, 8 Dec 2011 15:31:13 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/4] ath9k: Restore EEPROM regulatory upon STA disconnect
+Message-ID: <20111208100111.GA21508@vmraj-lnx.users.atheros.com> (sfid-20111208_110125_467675_FFCA7001)
+References: <1323266001-12912-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <1323266001-12912-3-git-send-email-rmanohar@qca.qualcomm.com>
+ <CAB=NE6XJMvmcgcz_whsVFbe+T1k_KEnW-ZOrC1K-1bZU+R_shg@mail.gmail.com>
+ <20111208060159.GA18304@vmraj-lnx.users.atheros.com>
+ <CAB=NE6UibEve6cLL8d5pXz6p71hNFLTDSWAD6pcswq9Q-0rhjw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1324310130.3414.3.camel@jlt3.sipsolutions.net>
-References: <1324288978-27162-1-git-send-email-helmut.schaa@googlemail.com>
-	<1324310130.3414.3.camel@jlt3.sipsolutions.net>
-Date: Mon, 19 Dec 2011 17:36:53 +0100
-Message-ID: <CAGXE3d_dH1jeSVrmANd_OARqwY_NUkKu3He6Y7mP8atzas88pA@mail.gmail.com> (sfid-20111219_173657_653934_D67F1458)
-Subject: Re: [PATCH] mac80211: Fix frame classification in AP mode for relayed frames
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <CAB=NE6UibEve6cLL8d5pXz6p71hNFLTDSWAD6pcswq9Q-0rhjw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 19, 2011 at 4:55 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2011-12-19 at 11:02 +0100, Helmut Schaa wrote:
->> When mac80211 relays a frame from STA1 to STA2 in AP mode it will get
->> re-classified in the tx path. Unfortunately the frame protocol field
->> is always set to ETH_P_8023 while the classification only kicks in
->> for ETH_P_IP. Hence, a high priority frame from STA1 will be send to
->> STA2 as best effort.
->>
->> To allow proper re-classification of received frames, set the
->> skb->protocol field to the correct value without using eth_type_trans
->> as that would pull of the ethernet header. Also, set the network
->> header position correctly as otherwise the classification code won't
->> find the IP header.
->>
->> This means that every frame relayed by a mac80211 AP will be
->> re-classified and might change its traffic class when the associated
->> STA and mac80211 use different 802.1d <-> TID mappings.
->>
->> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
->> ---
->>
->> We could also reuse the TID used by the source STA but I guess we should
->> always classify frames according to our own mapping instead of relying
->> on the associated STAs to do the right thing.
->
-> Not sure that's useful, since we classify almost nothing anyway.
+On Thu, Dec 08, 2011 at 12:16:21AM -0800, Luis R. Rodriguez wrote:
+> On Wed, Dec 7, 2011 at 10:02 PM, Rajkumar Manoharan
+> <rmanohar@qca.qualcomm.com> wrote:
+> > On Wed, Dec 07, 2011 at 01:37:49PM -0800, Luis R. Rodriguez wrote:
+> >> On Wed, Dec 7, 2011 at 5:53 AM, Rajkumar Manoharan
+> >> <rmanohar@qca.qualcomm.com> wrote:
+> >> > The current regulatory for world roaming mode cards might be
+> >> > overriden by country IE from the assiciated AP. But these
+> >> > regulatory values are failed to be restored on disconnection.
+> >> > This patch ensures to resotre regulatry values at driver side.
+> >> >
+> >> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> >> > ---
+> >> >  drivers/net/wireless/ath/ath9k/main.c |    8 ++++++++
+> >> >  1 files changed, 8 insertions(+), 0 deletions(-)
+> >> >
+> >> > diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> >> > index 424289f..a4dbb7b 100644
+> >> > --- a/drivers/net/wireless/ath/ath9k/main.c
+> >> > +++ b/drivers/net/wireless/ath/ath9k/main.c
+> >> > @@ -2046,6 +2046,14 @@ static void ath9k_config_bss(struct ath_softc *sc, struct ieee80211_vif *vif)
+> >> >                sc->sc_flags &= ~SC_OP_ANI_RUN;
+> >> >                del_timer_sync(&common->ani.timer);
+> >> >                memset(&sc->caldata, 0, sizeof(sc->caldata));
+> >> > +               /*
+> >> > +                * Restore regulatory values that might be updated
+> >> > +                * by country IEs.
+> >> > +                */
+> >> > +               if (!ath_is_world_regd(&common->regulatory) &&
+> >> > +                   ath_is_world_regd(&common->reg_world_copy))
+> >> > +                       memcpy(&common->regulatory, &common->reg_world_copy,
+> >> > +                              sizeof(struct ath_regulatory));
+> >> >        }
+> >>
+> >> NACK, this patch should not be required given that patch [2/4] in this
+> >> series restores this on the reg_notifier() for the
+> >> NL80211_REGDOM_SET_BY_CORE case -- the trick is that when cfg80211
+> >> detects not only a disconnect, but any regulatory restore, it will
+> >> *always* send a reg core hint! Again the hunk from patch [2/4] was:
+> >>
+> >> @@ -363,14 +381,37 @@ int ath_reg_notifier_apply(struct wiphy *wiphy,
+> >>                return 0;
+> >>
+> >>        switch (request->initiator) {
+> >> -       case NL80211_REGDOM_SET_BY_DRIVER:
+> >>        case NL80211_REGDOM_SET_BY_CORE:
+> >> +               /*
+> >> +                * If common->reg_world_copy is world roaming it means we *were*
+> >> +                * world roaming... so we now have to restore that data.
+> >> +                */
+> >> +               if (!ath_is_world_regd(&common->reg_world_copy))
+> >> +                       break;
+> >> +
+> >> +               memcpy(reg, &common->reg_world_copy,
+> >> +                      sizeof(struct ath_regulatory));
+> >> +               break;
+> >> +       case NL80211_REGDOM_SET_BY_DRIVER:
+> >>        case NL80211_REGDOM_SET_BY_USER:
+> >>                break;
+> >>
+> >> Can you please test without this patch and ensure you get the data
+> >> properly restored?
+> >>
+> > But the regulatory updates are ignored for CUSTOM_REGULATORY cards
+> > at wiphy_update_regulatory. Isn't it?
+> >
+> >        if (initiator == NL80211_REGDOM_SET_BY_CORE &&
+> >            wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY) {
+> >                REG_DBG_PRINT("Ignoring regulatory request %s "
+> >                              "since the driver uses its own custom "
+> >                              "regulatory domain\n",
+> >                              reg_initiator_name(initiator));
+> >                return true;
+> >
+> > To ensure that the regulatory is restored always, I did it at bss_info_change.
+> 
+> Ah yes, good point. In that case, please instead modify
+> net/wireless/reg.c to call at least the reg_notifier() even if nothing
+> is done. That way not only ath9k but all the other ath drivers benefit
+> from this change.
+> 
+Then I will send it as separate one. Thanks for the comments.
 
-Currently we only use the IPv4 DSCP field for assigning TIDs to
-frames. That seems to be sufficient for VOIP traffic at least.
+John,
 
-> If this was somehow hooked up to tc or iptables that would be
-> more useful I guess?
+Please drop this patch alone from the series.
 
-Agreed. This would make sense in the future but I don't feel like
-implementing this right now.
-
-So, you'd prefer to just copy over the TID as used by the source
-STA (via the priority+256 hack maybe)?
-
-Helmut
+--
+Rajkumar
