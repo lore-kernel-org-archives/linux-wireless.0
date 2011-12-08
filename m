@@ -1,333 +1,390 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:55153 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751926Ab1LAKd5 (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:63174 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750836Ab1LHQGI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Dec 2011 05:33:57 -0500
-MIME-Version: 1.0
-Date: Thu, 1 Dec 2011 11:33:55 +0100
-Message-ID: <CAJJYPdnaVfkYYT0Y6BseDki4JJcQ=c3UinEYZ+23bX_1xrWDpA@mail.gmail.com> (sfid-20111201_113417_190120_78967B4A)
-Subject: Busy looping iwl3945 driver
-From: Zdenek Kabelac <zdenek.kabelac@gmail.com>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 8 Dec 2011 11:06:08 -0500
+Message-ID: <1323360363.2521.30.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC> (sfid-20111208_170615_042493_2468315B)
+Subject: [PATCH net-next] sch_red: Adaptative RED AQM
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Dave Taht <dave.taht@gmail.com>, David Miller <davem@davemloft.net>
+Cc: bloat <bloat@lists.bufferbloat.net>,
+	bloat-devel <bloat-devel@lists.bufferbloat.net>,
+	netdev@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hagen Paul Pfeifer <hagen@jauu.net>
+Date: Thu, 08 Dec 2011 17:06:03 +0100
+In-Reply-To: <1323082774.2670.40.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
+References: <CAA93jw7kQYONQiAozatRmdRRJeK0GB9eNDWtRZ3AL+OVKn0OpA@mail.gmail.com>
+	 <1323082774.2670.40.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Adaptative RED AQM for linux, based on paper from Sally FLoyd,
+Ramakrishna Gummadi, and Scott Shenker, August 2001 :
 
-Today I've noticed  100% CPU occupied by kworker thread - which
-appeared to be the result of some  iwl3945 driver interaction.
+http://icir.org/floyd/papers/adaptiveRed.pdf
 
-Here are some trace of some tasks from that moment.
-It looked like when I've then even tried to run 'mc' of  'ifconfig' -
-they could not start since some device lock was kept busy.
-
-The problem was most probably caused by doing suspend when attached to
-the wireless network  and resuming in wired docking station,
-without having the previous wireless AP available.
-
-My hw -  T61, 4G, C2D, iwl3945 wifi,   X86_64 kernel 3.2.0-rc3
-Only reboot fixed this problem.
+Goal of Adaptative RED is to make max_p a dynamic value between 1% and
+50% to reach the target average queue : (max_th - min_th) / 2
 
 
- NetworkManager  D 0000000000000000     0   648      1 0x00000004
-  ffff8801301157e8 0000000000000046 ffffffff814d9fe4 0000000000000000
-  ffff8801301157f8 ffff88012c968000 0000000000000000 ffff880130115fd8
-  ffff880130115fd8 ffff880130115fd8 ffffffff81a0d020 ffff88012c968000
- Call Trace:
-  [<ffffffff814d9fe4>] ? __schedule+0x994/0xb50
-  [<ffffffff814da23f>] schedule+0x3f/0x60
-  [<ffffffff814db1c2>] mutex_lock_nested+0x1b2/0x3f0
-  [<ffffffffa033984f>] ? ieee80211_ifa_changed+0x9f/0x150 [mac80211]
-  [<ffffffffa033984f>] ? ieee80211_ifa_changed+0x9f/0x150 [mac80211]
-  [<ffffffffa033984f>] ieee80211_ifa_changed+0x9f/0x150 [mac80211]
-  [<ffffffff814e17e3>] notifier_call_chain+0x93/0x100
-  [<ffffffff81082cf8>] __blocking_notifier_call_chain+0x78/0xb0
-  [<ffffffff81082d46>] blocking_notifier_call_chain+0x16/0x20
-  [<ffffffff814856b6>] __inet_del_ifa+0xb6/0x290
-  [<ffffffff8148633e>] inet_rtm_deladdr+0x10e/0x160
-  [<ffffffff81436544>] rtnetlink_rcv_msg+0x124/0x2e0
-  [<ffffffff81436420>] ? __rtnl_unlock+0x20/0x20
-  [<ffffffff81446c49>] netlink_rcv_skb+0xa9/0xd0
-  [<ffffffff81434465>] rtnetlink_rcv+0x25/0x40
-  [<ffffffff81446580>] netlink_unicast+0x2c0/0x310
-  [<ffffffff81446886>] netlink_sendmsg+0x2b6/0x310
-  [<ffffffff81410458>] ? sock_update_classid+0xb8/0x1f0
-  [<ffffffff81409cee>] sock_sendmsg+0x10e/0x1e0
-  [<ffffffff8140babd>] ? sock_recvmsg+0x18d/0x210
-  [<ffffffff8112dce3>] ? might_fault+0x53/0xb0
-  [<ffffffff8112dd2c>] ? might_fault+0x9c/0xb0
-  [<ffffffff8112dce3>] ? might_fault+0x53/0xb0
-  [<ffffffff814191c6>] ? verify_iovec+0x56/0xd0
-  [<ffffffff8140c116>] __sys_sendmsg+0x376/0x380
-  [<ffffffff81161458>] ? fget_light+0x48/0x3b0
-  [<ffffffff811614f1>] ? fget_light+0xe1/0x3b0
-  [<ffffffff81161458>] ? fget_light+0x48/0x3b0
-  [<ffffffff8118149f>] ? mntput+0x1f/0x30
-  [<ffffffff8140db19>] sys_sendmsg+0x49/0x90
-  [<ffffffff814e562b>] system_call_fastpath+0x16/0x1b
+Every 500 ms:
+ if (avg > target and max_p <= 0.5)
+  increase max_p : max_p += alpha;
+ else if (avg < target and max_p >= 0.01)
+  decrease max_p : max_p *= beta;
+
+target :[min_th + 0.4*(min_th - max_th),
+          min_th + 0.6*(min_th - max_th)].
+alpha : min(0.01, max_p / 4)
+beta : 0.9
+max_P is a Q0.32 fixed point number (unsigned, with 32 bits mantissa)
 
 
+Changes against our RED implementation are :
 
-avahi-daemon    D 0000000000000246     0   667      1 0x00000000
- ffff880127df5ba8 0000000000000046 0000000000000000 0000000000000000
- ffff880127df5bb8 ffff880128be4600 0000000000000000 ffff880127df5fd8
- ffff880127df5fd8 ffff880127df5fd8 ffff88012ca72300 ffff880128be4600
-Call Trace:
- [<ffffffff814da23f>] schedule+0x3f/0x60
- [<ffffffff814db1c2>] mutex_lock_nested+0x1b2/0x3f0
- [<ffffffff81434437>] ? rtnl_lock+0x17/0x20
- [<ffffffff81434437>] ? rtnl_lock+0x17/0x20
- [<ffffffff81434437>] rtnl_lock+0x17/0x20
- [<ffffffff8148ff6f>] ip_mc_leave_group+0x2f/0x180
- [<ffffffff8145b2f4>] do_ip_setsockopt+0x6d4/0xdb0
- [<ffffffff81409cee>] ? sock_sendmsg+0x10e/0x1e0
- [<ffffffff8116a1fc>] ? pipe_write+0x2ec/0x5b0
- [<ffffffff811a1b43>] ? fsnotify+0x93/0x600
- [<ffffffff8140d6f1>] ? sys_sendto+0x101/0x130
- [<ffffffff8145bad6>] ip_setsockopt+0x36/0xb0
- [<ffffffff8147dcab>] udp_setsockopt+0x1b/0x40
- [<ffffffff8140e574>] sock_common_setsockopt+0x14/0x20
- [<ffffffff8140d8ff>] sys_setsockopt+0x7f/0xe0
- [<ffffffff814e562b>] system_call_fastpath+0x16/0x1b
+max_p is no longer a negative power of two (1/(2^Plog)), but a Q0.32
+fixed point number, to allow full range described in Adatative paper.
 
+To deliver a random number, we now use a reciprocal divide (thats really
+a multiply), but this operation is done once per marked/droped packet
+when in RED_BETWEEN_TRESH window, so added cost (compared to previous
+AND operation) is near zero.
 
-wpa_supplicant  D 0000000000000246     0   770      1 0x00000000
- ffff880127c17908 0000000000000046 0000000000000000 0000000000000000
- ffff880127c17918 ffff880127e02300 0000000000000000 ffff880127c17fd8
- ffff880127c17fd8 ffff880127c17fd8 ffff88012ca72300 ffff880127e02300
-Call Trace:
- [<ffffffff814da23f>] schedule+0x3f/0x60
- [<ffffffff814db1c2>] mutex_lock_nested+0x1b2/0x3f0
- [<ffffffff81434437>] ? rtnl_lock+0x17/0x20
- [<ffffffff81434437>] ? rtnl_lock+0x17/0x20
- [<ffffffff81434437>] rtnl_lock+0x17/0x20
- [<ffffffffa02ec1d5>] nl80211_pre_doit+0xf5/0x190 [cfg80211]
- [<ffffffff81447263>] genl_rcv_msg+0x1c3/0x250
- [<ffffffff814470a0>] ? genl_rcv+0x40/0x40
- [<ffffffff81446c49>] netlink_rcv_skb+0xa9/0xd0
- [<ffffffff81447085>] genl_rcv+0x25/0x40
- [<ffffffff81446580>] netlink_unicast+0x2c0/0x310
- [<ffffffff81446886>] netlink_sendmsg+0x2b6/0x310
- [<ffffffff81410458>] ? sock_update_classid+0xb8/0x1f0
- [<ffffffff81409cee>] sock_sendmsg+0x10e/0x1e0
- [<ffffffff8140babd>] ? sock_recvmsg+0x18d/0x210
- [<ffffffff8112dce3>] ? might_fault+0x53/0xb0
- [<ffffffff8112dd2c>] ? might_fault+0x9c/0xb0
- [<ffffffff8112dce3>] ? might_fault+0x53/0xb0
- [<ffffffff814191c6>] ? verify_iovec+0x56/0xd0
- [<ffffffff8140c116>] __sys_sendmsg+0x376/0x380
- [<ffffffff8106a904>] ? set_current_blocked+0x34/0x60
- [<ffffffff8100bee1>] ? fpu_finit+0x21/0x40
- [<ffffffff8100bf4a>] ? init_fpu+0x4a/0x180
- [<ffffffff8100d198>] ? restore_i387_xstate+0xc8/0x1d0
- [<ffffffff811615bf>] ? fget_light+0x1af/0x3b0
- [<ffffffff814ddedb>] ? _raw_spin_unlock_irq+0x3b/0x60
- [<ffffffff8140db19>] sys_sendmsg+0x49/0x90
- [<ffffffff814e562b>] system_call_fastpath+0x16/0x1b
+dump operation gives current max_p value in a new TCA_RED_MAX_P
+attribute.
+
+Example on a 10Mbit link :
+
+tc qdisc add dev $DEV parent 1:1 handle 10: est 1sec 8sec red \
+   limit 400000 min 30000 max 90000 avpkt 1000 \
+   burst 55 ecn adaptative bandwidth 10Mbit
+
+# tc -s -d qdisc show dev eth3
+...
+qdisc red 10: parent 1:1 limit 400000b min 30000b max 90000b ecn
+adaptative ewma 5 max_p=0.113335 Scell_log 15
+ Sent 50414282 bytes 34504 pkt (dropped 35, overlimits 1392 requeues 0) 
+ rate 9749Kbit 831pps backlog 72056b 16p requeues 0 
+  marked 1357 early 35 pdrop 0 other 0
 
 
+Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
+---
+ include/linux/pkt_sched.h |    6 +-
+ include/net/red.h         |  101 +++++++++++++++++++++++++++++-------
+ lib/reciprocal_div.c      |    2 
+ net/sched/sch_red.c       |   21 +++++++
+ 4 files changed, 111 insertions(+), 19 deletions(-)
 
-ntpd            D 0000000000000246     0 21324      1 0x00000000
- ffff880127adfca8 0000000000000046 0000000000000000 0000000000000000
- ffff880127adfcb8 ffff880127f5c600 0000000000000000 ffff880127adffd8
- ffff880127adffd8 ffff880127adffd8 ffff8800379e4600 ffff880127f5c600
-Call Trace:
- [<ffffffff814da23f>] schedule+0x3f/0x60
- [<ffffffff814db1c2>] mutex_lock_nested+0x1b2/0x3f0
- [<ffffffff81434437>] ? rtnl_lock+0x17/0x20
- [<ffffffff81434437>] ? rtnl_lock+0x17/0x20
- [<ffffffff81434437>] rtnl_lock+0x17/0x20
- [<ffffffff81428165>] dev_ioctl+0x3c5/0x660
- [<ffffffff81090b80>] ? lockdep_init_map+0xf0/0x590
- [<ffffffff814092ad>] sock_do_ioctl+0x5d/0x70
- [<ffffffff81409339>] sock_ioctl+0x79/0x2f0
- [<ffffffff811736f8>] do_vfs_ioctl+0x98/0x570
- [<ffffffff814dddf5>] ? _raw_spin_unlock+0x35/0x60
- [<ffffffff8115d7cd>] ? fd_install+0x7d/0x100
- [<ffffffff811615bf>] ? fget_light+0x1af/0x3b0
- [<ffffffff81173c61>] sys_ioctl+0x91/0xa0
- [<ffffffff814e562b>] system_call_fastpath+0x16/0x1b
+diff --git a/include/linux/pkt_sched.h b/include/linux/pkt_sched.h
+index fb556dc..e41e0d4 100644
+--- a/include/linux/pkt_sched.h
++++ b/include/linux/pkt_sched.h
+@@ -181,6 +181,7 @@ enum {
+ 	TCA_RED_UNSPEC,
+ 	TCA_RED_PARMS,
+ 	TCA_RED_STAB,
++	TCA_RED_MAX_P,
+ 	__TCA_RED_MAX,
+ };
+ 
+@@ -194,8 +195,9 @@ struct tc_red_qopt {
+ 	unsigned char   Plog;		/* log(P_max/(qth_max-qth_min))	*/
+ 	unsigned char   Scell_log;	/* cell size for idle damping */
+ 	unsigned char	flags;
+-#define TC_RED_ECN	1
+-#define TC_RED_HARDDROP	2
++#define TC_RED_ECN		1
++#define TC_RED_HARDDROP		2
++#define TC_RED_ADAPTATIVE	4
+ };
+ 
+ struct tc_red_xstats {
+diff --git a/include/net/red.h b/include/net/red.h
+index b72a3b8..f4e9533 100644
+--- a/include/net/red.h
++++ b/include/net/red.h
+@@ -5,6 +5,7 @@
+ #include <net/pkt_sched.h>
+ #include <net/inet_ecn.h>
+ #include <net/dsfield.h>
++#include <linux/reciprocal_div.h>
+ 
+ /*	Random Early Detection (RED) algorithm.
+ 	=======================================
+@@ -87,6 +88,29 @@
+ 	etc.
+  */
+ 
++/*
++ * Adaptative RED : An Algorithm for Increasing the Robustness of RED's AQM
++ * (Sally FLoyd, Ramakrishna Gummadi, and Scott Shenker) August 2001
++ *
++ * Every 500 ms:
++ *  if (avg > target and max_p <= 0.5)
++ *   increase max_p : max_p += alpha;
++ *  else if (avg < target and max_p >= 0.01)
++ *   decrease max_p : max_p *= beta;
++ *
++ * target :[qth_min + 0.4*(qth_min - qth_max),
++ *          qth_min + 0.6*(qth_min - qth_max)].
++ * alpha : min(0.01, max_p / 4)
++ * beta : 0.9
++ * max_P is a Q0.32 fixed point number (with 32 bits mantissa)
++ * max_P between 0.01 and 0.5 (1% - 50%) [ Its no longer a negative power of two ]
++ */
++#define RED_ONE_PERCENT ((u32)DIV_ROUND_CLOSEST(1ULL<<32, 100))
++
++#define MAX_P_MIN (1 * RED_ONE_PERCENT)
++#define MAX_P_MAX (50 * RED_ONE_PERCENT)
++#define MAX_P_ALPHA(val) min(MAX_P_MIN, val / 4)
++
+ #define RED_STAB_SIZE	256
+ #define RED_STAB_MASK	(RED_STAB_SIZE - 1)
+ 
+@@ -101,10 +125,14 @@ struct red_stats {
+ 
+ struct red_parms {
+ 	/* Parameters */
+-	u32		qth_min;	/* Min avg length threshold: A scaled */
+-	u32		qth_max;	/* Max avg length threshold: A scaled */
++	u32		qth_min;	/* Min avg length threshold: Wlog scaled */
++	u32		qth_max;	/* Max avg length threshold: Wlog scaled */
+ 	u32		Scell_max;
+-	u32		Rmask;		/* Cached random mask, see red_rmask */
++	u32		max_P;		/* probability, [0 .. 1.0] 32 scaled */
++	u32		max_P_reciprocal; /* reciprocal_value(max_P / qth_delta) */
++	u32		qth_delta;	/* max_th - min_th */
++	u32		target_min;	/* min_th + 0.4*(max_th - min_th) */
++	u32		target_max;	/* min_th + 0.6*(max_th - min_th) */
+ 	u8		Scell_log;
+ 	u8		Wlog;		/* log(W)		*/
+ 	u8		Plog;		/* random number bits	*/
+@@ -115,19 +143,22 @@ struct red_parms {
+ 					   number generation */
+ 	u32		qR;		/* Cached random number */
+ 
+-	unsigned long	qavg;		/* Average queue length: A scaled */
++	unsigned long	qavg;		/* Average queue length: Wlog scaled */
+ 	ktime_t		qidlestart;	/* Start of current idle period */
+ };
+ 
+-static inline u32 red_rmask(u8 Plog)
++static inline u32 red_maxp(u8 Plog)
+ {
+-	return Plog < 32 ? ((1 << Plog) - 1) : ~0UL;
++	return Plog < 32 ? (~0U >> Plog) : ~0U;
+ }
+ 
++
+ static inline void red_set_parms(struct red_parms *p,
+ 				 u32 qth_min, u32 qth_max, u8 Wlog, u8 Plog,
+ 				 u8 Scell_log, u8 *stab)
+ {
++	int delta = qth_max - qth_min;
++
+ 	/* Reset average queue length, the value is strictly bound
+ 	 * to the parameters below, reseting hurts a bit but leaving
+ 	 * it might result in an unreasonable qavg for a while. --TGR
+@@ -139,14 +170,29 @@ static inline void red_set_parms(struct red_parms *p,
+ 	p->qth_max	= qth_max << Wlog;
+ 	p->Wlog		= Wlog;
+ 	p->Plog		= Plog;
+-	p->Rmask	= red_rmask(Plog);
++	if (delta < 0)
++		delta = 1;
++	p->qth_delta	= delta;
++	p->max_P	= red_maxp(Plog);
++	p->max_P	*= delta; /* max_P = (qth_max-qth_min)/2^Plog */
++
++	p->max_P_reciprocal  = reciprocal_value(p->max_P / delta);
++
++	/* RED Adaptative target :
++	 * [min_th + 0.4*(min_th - max_th),
++	 *  min_th + 0.6*(min_th - max_th)].
++	 */
++	delta /= 5;
++	p->target_min = qth_min + 2*delta;
++	p->target_max = qth_min + 3*delta;
++
+ 	p->Scell_log	= Scell_log;
+ 	p->Scell_max	= (255 << Scell_log);
+ 
+ 	memcpy(p->Stab, stab, sizeof(p->Stab));
+ }
+ 
+-static inline int red_is_idling(struct red_parms *p)
++static inline int red_is_idling(const struct red_parms *p)
+ {
+ 	return p->qidlestart.tv64 != 0;
+ }
+@@ -168,7 +214,7 @@ static inline void red_restart(struct red_parms *p)
+ 	p->qcount = -1;
+ }
+ 
+-static inline unsigned long red_calc_qavg_from_idle_time(struct red_parms *p)
++static inline unsigned long red_calc_qavg_from_idle_time(const struct red_parms *p)
+ {
+ 	s64 delta = ktime_us_delta(ktime_get(), p->qidlestart);
+ 	long us_idle = min_t(s64, delta, p->Scell_max);
+@@ -215,7 +261,7 @@ static inline unsigned long red_calc_qavg_from_idle_time(struct red_parms *p)
+ 	}
+ }
+ 
+-static inline unsigned long red_calc_qavg_no_idle_time(struct red_parms *p,
++static inline unsigned long red_calc_qavg_no_idle_time(const struct red_parms *p,
+ 						       unsigned int backlog)
+ {
+ 	/*
+@@ -230,7 +276,7 @@ static inline unsigned long red_calc_qavg_no_idle_time(struct red_parms *p,
+ 	return p->qavg + (backlog - (p->qavg >> p->Wlog));
+ }
+ 
+-static inline unsigned long red_calc_qavg(struct red_parms *p,
++static inline unsigned long red_calc_qavg(const struct red_parms *p,
+ 					  unsigned int backlog)
+ {
+ 	if (!red_is_idling(p))
+@@ -239,23 +285,24 @@ static inline unsigned long red_calc_qavg(struct red_parms *p,
+ 		return red_calc_qavg_from_idle_time(p);
+ }
+ 
+-static inline u32 red_random(struct red_parms *p)
++
++static inline u32 red_random(const struct red_parms *p)
+ {
+-	return net_random() & p->Rmask;
++	return reciprocal_divide(net_random(), p->max_P_reciprocal);
+ }
+ 
+-static inline int red_mark_probability(struct red_parms *p, unsigned long qavg)
++static inline int red_mark_probability(const struct red_parms *p, unsigned long qavg)
+ {
+ 	/* The formula used below causes questions.
+ 
+-	   OK. qR is random number in the interval 0..Rmask
++	   OK. qR is random number in the interval
++		(0..1/max_P)*(qth_max-qth_min)
+ 	   i.e. 0..(2^Plog). If we used floating point
+ 	   arithmetics, it would be: (2^Plog)*rnd_num,
+ 	   where rnd_num is less 1.
+ 
+ 	   Taking into account, that qavg have fixed
+-	   point at Wlog, and Plog is related to max_P by
+-	   max_P = (qth_max-qth_min)/2^Plog; two lines
++	   point at Wlog, two lines
+ 	   below have the following floating point equivalent:
+ 
+ 	   max_P*(qavg - qth_min)/(qth_max-qth_min) < rnd/qcount
+@@ -315,4 +362,24 @@ static inline int red_action(struct red_parms *p, unsigned long qavg)
+ 	return RED_DONT_MARK;
+ }
+ 
++static inline void red_adaptative_algo(struct red_parms *p)
++{
++	unsigned long qavg;
++	u32 max_p_delta;
++
++	qavg = p->qavg;
++	if (red_is_idling(p))
++		qavg = red_calc_qavg_from_idle_time(p);
++
++	/* p->qavg is fixed point number with point at Wlog */
++	qavg >>= p->Wlog;
++
++	if (qavg > p->target_max && p->max_P <= MAX_P_MAX)
++		p->max_P += MAX_P_ALPHA(p->max_P); /* maxp = maxp + alpha */
++	else if (qavg < p->target_min && p->max_P >= MAX_P_MIN)
++		p->max_P = (p->max_P/10)*9; /* maxp = maxp * Beta */
++
++	max_p_delta = DIV_ROUND_CLOSEST(p->max_P, p->qth_delta);
++	p->max_P_reciprocal = reciprocal_value(max_p_delta);
++}
+ #endif
+diff --git a/lib/reciprocal_div.c b/lib/reciprocal_div.c
+index 6a3bd48..75510e9 100644
+--- a/lib/reciprocal_div.c
++++ b/lib/reciprocal_div.c
+@@ -1,5 +1,6 @@
+ #include <asm/div64.h>
+ #include <linux/reciprocal_div.h>
++#include <linux/export.h>
+ 
+ u32 reciprocal_value(u32 k)
+ {
+@@ -7,3 +8,4 @@ u32 reciprocal_value(u32 k)
+ 	do_div(val, k);
+ 	return (u32)val;
+ }
++EXPORT_SYMBOL(reciprocal_value);
+diff --git a/net/sched/sch_red.c b/net/sched/sch_red.c
+index d617161..8f5a85b 100644
+--- a/net/sched/sch_red.c
++++ b/net/sched/sch_red.c
+@@ -39,6 +39,7 @@
+ struct red_sched_data {
+ 	u32			limit;		/* HARD maximal queue length */
+ 	unsigned char		flags;
++	struct timer_list	adapt_timer;
+ 	struct red_parms	parms;
+ 	struct red_stats	stats;
+ 	struct Qdisc		*qdisc;
+@@ -161,6 +162,8 @@ static void red_reset(struct Qdisc *sch)
+ static void red_destroy(struct Qdisc *sch)
+ {
+ 	struct red_sched_data *q = qdisc_priv(sch);
++
++	del_timer_sync(&q->adapt_timer);
+ 	qdisc_destroy(q->qdisc);
+ }
+ 
+@@ -209,6 +212,10 @@ static int red_change(struct Qdisc *sch, struct nlattr *opt)
+ 				 ctl->Plog, ctl->Scell_log,
+ 				 nla_data(tb[TCA_RED_STAB]));
+ 
++	del_timer(&q->adapt_timer);
++	if (ctl->flags & TC_RED_ADAPTATIVE)
++		mod_timer(&q->adapt_timer, jiffies + HZ/2);
++
+ 	if (!q->qdisc->q.qlen)
+ 		red_start_of_idle_period(&q->parms);
+ 
+@@ -216,11 +223,24 @@ static int red_change(struct Qdisc *sch, struct nlattr *opt)
+ 	return 0;
+ }
+ 
++static inline void red_adaptative_timer(unsigned long arg)
++{
++	struct Qdisc *sch = (struct Qdisc *)arg;
++	struct red_sched_data *q = qdisc_priv(sch);
++	spinlock_t *root_lock = qdisc_lock(qdisc_root_sleeping(sch));
++
++	spin_lock(root_lock);
++	red_adaptative_algo(&q->parms);
++	mod_timer(&q->adapt_timer, jiffies + HZ/2);
++	spin_unlock(root_lock);
++}
++
+ static int red_init(struct Qdisc *sch, struct nlattr *opt)
+ {
+ 	struct red_sched_data *q = qdisc_priv(sch);
+ 
+ 	q->qdisc = &noop_qdisc;
++	setup_timer(&q->adapt_timer, red_adaptative_timer, (unsigned long)sch);
+ 	return red_change(sch, opt);
+ }
+ 
+@@ -243,6 +263,7 @@ static int red_dump(struct Qdisc *sch, struct sk_buff *skb)
+ 	if (opts == NULL)
+ 		goto nla_put_failure;
+ 	NLA_PUT(skb, TCA_RED_PARMS, sizeof(opt), &opt);
++	NLA_PUT_U32(skb, TCA_RED_MAX_P, q->parms.max_P);
+ 	return nla_nest_end(skb, opts);
+ 
+ nla_put_failure:
 
 
-
-Here I've tried  'mc'  and rmmod of iwl3945 (which had in fact open count == 0)
-
-
-
-mc              D 0000000000000000     0 12325  12174 0x00000000
- ffff880007a77ca8 0000000000000046 ffffffff814d9fe4 0000000000000000
- ffff880007a77cb8 ffff880037918000 0000000000000000 ffff880007a77fd8
- ffff880007a77fd8 ffff880007a77fd8 ffffffff81a0d020 ffff880037918000
-Call Trace:
- [<ffffffff814d9fe4>] ? __schedule+0x994/0xb50
- [<ffffffff814da23f>] schedule+0x3f/0x60
- [<ffffffff814db1c2>] mutex_lock_nested+0x1b2/0x3f0
- [<ffffffff81434437>] ? rtnl_lock+0x17/0x20
- [<ffffffff81434437>] ? rtnl_lock+0x17/0x20
- [<ffffffff81434437>] rtnl_lock+0x17/0x20
- [<ffffffff81428165>] dev_ioctl+0x3c5/0x660
- [<ffffffff81090b80>] ? lockdep_init_map+0xf0/0x590
- [<ffffffff814092ad>] sock_do_ioctl+0x5d/0x70
- [<ffffffff81409339>] sock_ioctl+0x79/0x2f0
- [<ffffffff811736f8>] do_vfs_ioctl+0x98/0x570
- [<ffffffff814dddf5>] ? _raw_spin_unlock+0x35/0x60
- [<ffffffff8115d7cd>] ? fd_install+0x7d/0x100
- [<ffffffff811615bf>] ? fget_light+0x1af/0x3b0
- [<ffffffff81173c61>] sys_ioctl+0x91/0xa0
- [<ffffffff814e562b>] system_call_fastpath+0x16/0x1b
-rmmod           D 0000000000000000     0 12340  22112 0x00000000
- ffff880051811bf8 0000000000000046 ffffffff814d9fe4 ffffffff814d5fd1
- 0000000000000001 ffff8800b0cd8000 0000000000000046 ffff880051811fd8
- ffff880051811fd8 ffff880051811fd8 ffff880136d44600 ffff8800b0cd8000
-Call Trace:
- [<ffffffff814d9fe4>] ? __schedule+0x994/0xb50
- [<ffffffff814d5fd1>] ? __slab_free+0x233/0x3aa
- [<ffffffff814da23f>] schedule+0x3f/0x60
- [<ffffffff814dd265>] rwsem_down_failed_common+0xc5/0x160
- [<ffffffff814dd313>] rwsem_down_write_failed+0x13/0x20
- [<ffffffff812d2733>] call_rwsem_down_write_failed+0x13/0x20
- [<ffffffff81082a07>] ? blocking_notifier_chain_unregister+0x27/0xe0
- [<ffffffff814dc629>] ? down_write+0x89/0xb0
- [<ffffffff81082a07>] ? blocking_notifier_chain_unregister+0x27/0xe0
- [<ffffffff81082a07>] blocking_notifier_chain_unregister+0x27/0xe0
- [<ffffffff81485cd8>] unregister_inetaddr_notifier+0x18/0x20
- [<ffffffffa03380b6>] ieee80211_unregister_hw+0x46/0x120 [mac80211]
- [<ffffffffa03b4779>] iwl3945_pci_remove+0x57/0x300 [iwl3945]
- [<ffffffff814dde62>] ? _raw_spin_unlock_irqrestore+0x42/0x80
- [<ffffffff812ee156>] pci_device_remove+0x46/0x110
- [<ffffffff813926bc>] __device_release_driver+0x7c/0xe0
- [<ffffffff81392fc8>] driver_detach+0xd8/0xe0
- [<ffffffff813924f1>] bus_remove_driver+0x91/0x110
- [<ffffffff813937b2>] driver_unregister+0x62/0xa0
- [<ffffffff812ecf94>] pci_unregister_driver+0x44/0xc0
- [<ffffffffa03b4a32>] iwl3945_exit+0x10/0x17 [iwl3945]
- [<ffffffff810a169e>] sys_delete_module+0x16e/0x250
- [<ffffffff8109647f>] ? trace_hardirqs_on_caller+0x1f/0x1b0
- [<ffffffff814e562b>] system_call_fastpath+0x16/0x1b
-
-
-
-Here is  'pert record -a -g'
-
-# Overhead          Command               Shared Object
-                       Symbol
-# ........  ...............  ..........................
-...........................................
-#
-    97.57%      kworker/u:3  [kernel.kallsyms]           [k] lock_timer_base
-                |
-                --- lock_timer_base
-                    try_to_del_timer_sync
-                    del_timer_sync
-                    iwl3945_send_tx_power
-                    ieee80211_bss_info_change_notify
-                    ieee80211_sta_eosp_irqsafe
-                    ieee80211_sta_eosp_irqsafe
-                    ieee80211_stop_tx_ba_cb
-                    ieee80211_stop_tx_ba_cb
-                    ieee80211_stop_tx_ba_cb
-                    ieee80211_stop_tx_ba_cb
-                    process_one_work
-                    worker_thread
-                    kthread
-                    kernel_thread_helper
-
-     0.38%      kworker/u:3  [kernel.kallsyms]           [k] ioread32
-                |
-                --- ioread32
-                   |
-                   |--37.76%-- iwl_legacy_send_bt_config
-                   |          iwl3945_rx_queue_restock
-                   |          iwl3945_irq_tasklet
-                   |          tasklet_action
-                   |          __do_softirq
-                   |          call_softirq
-                   |          do_softirq
-                   |          irq_exit
-                   |          __irqentry_text_start
-                   |          ret_from_intr
-                   |          try_to_del_timer_sync
-                   |          del_timer_sync
-                   |          iwl3945_send_tx_power
-                   |          ieee80211_bss_info_change_notify
-                   |          ieee80211_sta_eosp_irqsafe
-                   |          ieee80211_sta_eosp_irqsafe
-                   |          ieee80211_stop_tx_ba_cb
-                   |          ieee80211_stop_tx_ba_cb
-                   |          ieee80211_stop_tx_ba_cb
-                   |          ieee80211_stop_tx_ba_cb
-                   |          process_one_work
-                   |          worker_thread
-                   |          kthread
-                   |          kernel_thread_helper
-                   |
-                   |--31.13%-- iwl3945_irq_tasklet
-                   |          tasklet_action
-                   |          __do_softirq
-                   |          call_softirq
-                   |          do_softirq
-                   |          irq_exit
-                   |          |
-                   |          |--92.86%-- __irqentry_text_start
-                   |          |          ret_from_intr
-                   |          |          try_to_del_timer_sync
-                   |          |          del_timer_sync
-                   |          |          iwl3945_send_tx_power
-                   |          |          ieee80211_bss_info_change_notify
-                   |          |          ieee80211_sta_eosp_irqsafe
-                   |          |          ieee80211_sta_eosp_irqsafe
-                   |          |          ieee80211_stop_tx_ba_cb
-                   |          |          ieee80211_stop_tx_ba_cb
-                   |          |          ieee80211_stop_tx_ba_cb
-                   |          |          ieee80211_stop_tx_ba_cb
-                   |          |          process_one_work
-                   |          |          worker_thread
-                   |          |          kthread
-                   |          |          kernel_thread_helper
-                   |          |
-                   |           --7.14%-- smp_apic_timer_interrupt
-                   |                     apic_timer_interrupt
-                   |                     try_to_del_timer_sync
-                   |                     del_timer_sync
-                   |                     iwl3945_send_tx_power
-                   |                     ieee80211_bss_info_change_notify
-                   |                     ieee80211_sta_eosp_irqsafe
-                   |                     ieee80211_sta_eosp_irqsafe
-                   |                     ieee80211_stop_tx_ba_cb
-                   |                     ieee80211_stop_tx_ba_cb
-                   |                     ieee80211_stop_tx_ba_cb
-                   |                     ieee80211_stop_tx_ba_cb
-                   |                     process_one_work
-                   |                     worker_thread
-                   |                     kthread
-                   |                     kernel_thread_helper
-                   |
-                    --31.12%-- iwl_legacy_add_beacon_time
-                              handle_irq_event_percpu
-                              handle_irq_event
-                              handle_edge_irq
-                              handle_irq
-                              __irqentry_text_start
-                              ret_from_intr
-                              try_to_del_timer_sync
-                              del_timer_sync
-                              iwl3945_send_tx_power
-                              ieee80211_bss_info_change_notify
-                              ieee80211_sta_eosp_irqsafe
-                              ieee80211_sta_eosp_irqsafe
-                              ieee80211_stop_tx_ba_cb
-                              ieee80211_stop_tx_ba_cb
-                              ieee80211_stop_tx_ba_cb
-                              ieee80211_stop_tx_ba_cb
-                              process_one_work
-                              worker_thread
-                              kthread
-                              kernel_thread_helper
-
-     0.27%      kworker/u:3  [kernel.kallsyms]           [k] read_hpet
-....
-
-Zdenek
