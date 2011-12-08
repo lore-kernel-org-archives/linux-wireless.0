@@ -1,33 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59214 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752509Ab1LBJLn (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:33444 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751142Ab1LHXLg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Dec 2011 04:11:43 -0500
-Subject: Re: iwlwifi: kernel panic if try to open tid with large index (>=8)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CALGY4fvH5EbBm1oSBHsmXw5r5yfWMQ4yJyVyBx3y70FOEVeT6A@mail.gmail.com> (sfid-20111202_052910_037002_B91C34E9)
-References: <CALGY4fvH5EbBm1oSBHsmXw5r5yfWMQ4yJyVyBx3y70FOEVeT6A@mail.gmail.com>
-	 (sfid-20111202_052910_037002_B91C34E9)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 02 Dec 2011 10:11:40 +0100
-Message-ID: <1322817100.4162.0.camel@jlt3.sipsolutions.net> (sfid-20111202_101149_648876_D21F6459)
-Mime-Version: 1.0
+	Thu, 8 Dec 2011 18:11:36 -0500
+MIME-Version: 1.0
+In-Reply-To: <20111209085740.a23a0295a5ea15ab51169f3c@canb.auug.org.au>
+References: <CAB=NE6XDHL8mexe49TSoug3COh11RAvVY339Ntj0MJdw96wO1w@mail.gmail.com>
+ <20111209085740.a23a0295a5ea15ab51169f3c@canb.auug.org.au>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 8 Dec 2011 15:11:15 -0800
+Message-ID: <CAB=NE6X4rgcHWUwn0fRkurf2Y5ci=eERQkNiN=UrPakECYKNdw@mail.gmail.com> (sfid-20111209_001154_453387_61CA2550)
+Subject: Re: linux-next base Linus tag
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Dani Keerikoolparn <danik@qca.qualcomm.com>,
+	"Hoefel, Guilherme" <hoefel@qualcomm.com>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-12-01 at 23:29 -0500, Nikolay Martynov wrote:
-> Hi.
-> 
->   I have an intel 5300 card running on latest compat-wireless.
->   If I do:
-> echo "tx start 8" >
-> /sys/kernel/debug/ieee80211/phy0/netdev\:wlan1/stations/XX\:XX\:XX\:XX\:XX\:XX/agg_status
+On Thu, Dec 8, 2011 at 1:57 PM, Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+> Hi Luis,
+>
+> On Thu, 8 Dec 2011 13:39:16 -0800 "Luis R. Rodriguez" <mcgrof@frijolero.org> wrote:
+>>
+>> If I know a linux-next tag, say next-20110928, how can I extract the
+>> Linus tag you used to start that set of merges for linux-next for?
+>> That is, I am assuming you base your daily linux-next merges on that
+>> day's latest Linus's rc cycle (not just Linus's master tag of that
+>> day). Is that right? If so how can I get that tag?
+>
+> In each linux-next, there is a file called Next/SHA1s, and in there is a
+> SHA1 for "origin" - that is the point in Linus' tree that I started for
+> that day.  I just use the latest available version of Linus' tree each
+> day.
+>
+>> For example for next-20110928 I see in Next/quilt-import.log:
+>
+> For the quilt series, the owner of the series puts a BASE or NEXT_BASE
+> comment in the series to tell me what their series is based on.  I import
+> each quilt series staring from that base into a branch and then merge
+> that branch.
+>
+> For the git trees, I just fetch and merge them.
 
-Yikes. I think mac80211 should just reject that since it will never put
-traffic into that TID anyway.
+Thanks for all the details!
 
-johannes
+Last question, do you do merge conflicts manually? I was also trying
+to see if I can simulate a linux-next merge myself to see what you do
+but I didn't see the scripts you use, any pointers would be
+appreciated.
 
+  Luis
