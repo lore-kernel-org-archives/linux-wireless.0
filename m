@@ -1,44 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:64258 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751420Ab1LISmu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Dec 2011 13:42:50 -0500
-Subject: Re: iwlwifi havoc on some APs (rekeying?)
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "Berg, Johannes" <johannes.berg@intel.com>
-Cc: Wolfgang Breyha <wbreyha@gmx.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1323455216.3622.21.camel@jlt3.sipsolutions.net>
-References: <4EE2202A.4080303@gmx.net>
-	 <1323446534.13074.96.camel@wwguy-huron>  <4EE24DF4.4020301@gmx.net>
-	 <1323451436.13074.158.camel@wwguy-huron>
-	 (sfid-20111209_192243_598986_F6275AE2)  <1323455216.3622.21.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 09 Dec 2011 09:44:09 -0800
-Message-ID: <1323452649.13074.164.camel@wwguy-huron> (sfid-20111209_194254_301821_F1F8CFBA)
+Received: from calzone.tip.net.au ([203.10.76.15]:32820 "EHLO
+	calzone.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751075Ab1LHV5x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Dec 2011 16:57:53 -0500
+Date: Fri, 9 Dec 2011 08:57:40 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: Dani Keerikoolparn <danik@qca.qualcomm.com>,
+	"Hoefel, Guilherme" <hoefel@qualcomm.com>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: linux-next base Linus tag
+Message-Id: <20111209085740.a23a0295a5ea15ab51169f3c@canb.auug.org.au> (sfid-20111208_225810_755089_DA44EC8F)
+In-Reply-To: <CAB=NE6XDHL8mexe49TSoug3COh11RAvVY339Ntj0MJdw96wO1w@mail.gmail.com>
+References: <CAB=NE6XDHL8mexe49TSoug3COh11RAvVY339Ntj0MJdw96wO1w@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA256";
+ boundary="Signature=_Fri__9_Dec_2011_08_57_40_+1100_eACj46DYQfRC5iDX"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-12-09 at 10:26 -0800, Berg, Johannes wrote:
-> On Fri, 2011-12-09 at 09:23 -0800, Guy, Wey-Yi wrote:
-> > Johannes,
-> > 
-> > Anything changed in this area?
-> 
-> What's "this area"? This isn't exactly the first report of random memory
-> corruption ... I think the last one was something with 32/64 bit but I
-> don't remember.
-> 
+--Signature=_Fri__9_Dec_2011_08_57_40_+1100_eACj46DYQfRC5iDX
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-yup, what I mean is do you have any thought on this? I am not sure how
-to reproduce this issue with the APs we have here. 
+Hi Luis,
 
-Something happen between March 2011 and now, bisect it? but we need to
-be able to reproduce the failure case first.
+On Thu, 8 Dec 2011 13:39:16 -0800 "Luis R. Rodriguez" <mcgrof@frijolero.org=
+> wrote:
+>
+> If I know a linux-next tag, say next-20110928, how can I extract the
+> Linus tag you used to start that set of merges for linux-next for?
+> That is, I am assuming you base your daily linux-next merges on that
+> day's latest Linus's rc cycle (not just Linus's master tag of that
+> day). Is that right? If so how can I get that tag?
 
-Thanks
-Wey
-> 
+In each linux-next, there is a file called Next/SHA1s, and in there is a
+SHA1 for "origin" - that is the point in Linus' tree that I started for
+that day.  I just use the latest available version of Linus' tree each
+day.
 
+> For example for next-20110928 I see in Next/quilt-import.log:
 
+For the quilt series, the owner of the series puts a BASE or NEXT_BASE
+comment in the series to tell me what their series is based on.  I import
+each quilt series staring from that base into a branch and then merge
+that branch.
+
+For the git trees, I just fetch and merge them.
+
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Fri__9_Dec_2011_08_57_40_+1100_eACj46DYQfRC5iDX
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBCAAGBQJO4TLUAAoJEECxmPOUX5FE7SkP/2Jw1AUIktFCBnO5HrCtbLAO
+cN9bBxGV9AoV+Jz2f/91SpFHM/VdmynK4kcRelMWBnELzsY5Fsphygu86lskfjci
+v7hqroncLhMgjxIqQNS+adt+dTN2Y/7DjYxBQHO533Hh4nY29cndoW4vMgZANyim
+lK1d86kI8VtHYiYrKqsr7DqUddjQx/inVnk+jUbTd6aAcbqs70Nq2THcjX0WSxKU
+ZKidiaHDwaU5Uk6KspPzl04pIPWXvJBQ0PogzHbKDFwduCVScaLqmv0vhGoZ9pzA
+PMO0dEuXWDd8YxEbNhQMuaNT2CpmG4+DP86nofYBbMlNlOYyM8uPtwPQhIeAgcQD
+fdjtrAnHEM+h9ZmcA47w5QrDSjcAtO4ujC6fJjzN9LC4vghEzbihPlbK+YLvck89
+eM1vdKMyJH8jMXZK/hqA4dtb5gB/49m+3RN0NBieTEkbQsHq1Snhd1AiDJJ91/nc
+NxoJ9anPUag60ywfP/ts3rlGa8LnEW6L2hKC9xSvkDAHe+zYIP70VQPw5RSacBJB
+uw3eCoro9Uxl+EMVNvkoeDQOVde9HmfTFR3DW7CNS2dvDQgNMPBC4wZe1cQ47mkI
+7jtWyaGmp37Q7b7vjlu7D1POXLcrhyZX+vRd0hnInojK3AVR3YSIGX2DgCABfQeE
+eLJ2FwZYYdouuKKmBwpC
+=5SR6
+-----END PGP SIGNATURE-----
+
+--Signature=_Fri__9_Dec_2011_08_57_40_+1100_eACj46DYQfRC5iDX--
