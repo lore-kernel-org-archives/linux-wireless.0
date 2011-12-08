@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:65208 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751935Ab1LRSYv (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:56724 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752275Ab1LHJWI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Dec 2011 13:24:51 -0500
-Received: by mail-wi0-f174.google.com with SMTP id hm6so675676wib.19
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Dec 2011 10:24:50 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/7] wl12xx: implement change_interface
-Date: Sun, 18 Dec 2011 20:25:39 +0200
-Message-Id: <1324232745-22928-2-git-send-email-eliad@wizery.com> (sfid-20111218_192454_499384_FE3E4082)
-In-Reply-To: <1324232745-22928-1-git-send-email-eliad@wizery.com>
-References: <1324232745-22928-1-git-send-email-eliad@wizery.com>
+	Thu, 8 Dec 2011 04:22:08 -0500
+Received: by bkbzv3 with SMTP id zv3so1360028bkb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2011 01:22:06 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH 1/2] ieee80211: Introduce ieee80211_has_frags
+Date: Thu,  8 Dec 2011 10:21:53 +0100
+Message-Id: <1323336114-31203-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20111208_102213_524691_E6445E9E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implement the change_interface callback by simply removing the
-current vif and adding a new one after updating the vif type.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- drivers/net/wireless/wl12xx/main.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+ include/linux/ieee80211.h |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index c305841..86a7ee3 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2269,6 +2269,16 @@ out:
- 	cancel_work_sync(&wl->recovery_work);
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 17f2a76..18326eb 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -544,6 +544,15 @@ static inline int ieee80211_is_qos_nullfunc(__le16 fc)
+ 	       cpu_to_le16(IEEE80211_FTYPE_DATA | IEEE80211_STYPE_QOS_NULLFUNC);
  }
  
-+static int wl12xx_op_change_interface(struct ieee80211_hw *hw,
-+				      struct ieee80211_vif *vif,
-+				      enum nl80211_iftype new_type, bool p2p)
++/**
++ * ieee80211_has_frag - check if IEEE80211_SCTL_FRAG is set
++ * @seq_ctrl: frame sequence control bytes in little-endian byteorder
++ */
++static inline int ieee80211_has_frag(__le16 seq_ctrl)
 +{
-+	wl1271_op_remove_interface(hw, vif);
-+
-+	vif->type = ieee80211_iftype_p2p(new_type, p2p);
-+	return wl1271_op_add_interface(hw, vif);
++	return (seq_ctrl & cpu_to_le16(IEEE80211_SCTL_FRAG)) != 0;
 +}
 +
- static int wl1271_join(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			  bool set_assoc)
- {
-@@ -4629,6 +4639,7 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.stop = wl1271_op_stop,
- 	.add_interface = wl1271_op_add_interface,
- 	.remove_interface = wl1271_op_remove_interface,
-+	.change_interface = wl12xx_op_change_interface,
- #ifdef CONFIG_PM
- 	.suspend = wl1271_op_suspend,
- 	.resume = wl1271_op_resume,
+ struct ieee80211s_hdr {
+ 	u8 flags;
+ 	u8 ttl;
 -- 
-1.7.6.401.g6a319
+1.7.7
 
