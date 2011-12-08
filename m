@@ -1,46 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:58289 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932113Ab1LETQA (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:43985 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750770Ab1LHMMF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Dec 2011 14:16:00 -0500
-From: greearb@candelatech.com
+	Thu, 8 Dec 2011 07:12:05 -0500
+Received: by bkbzv3 with SMTP id zv3so1544432bkb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2011 04:12:03 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 To: linux-wireless@vger.kernel.org
-Cc: Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] mac80211:  Remove WARN_ON in apply-ht-override logic.
-Date: Mon,  5 Dec 2011 11:15:55 -0800
-Message-Id: <1323112555-2765-1-git-send-email-greearb@candelatech.com> (sfid-20111205_201605_295961_FDCD7E53)
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCHv2 2/2] mac80211: Make use of ieee80211_is_* functions in tx status path
+Date: Thu,  8 Dec 2011 13:11:55 +0100
+Message-Id: <1323346315-31917-2-git-send-email-helmut.schaa@googlemail.com> (sfid-20111208_131209_172406_15B533E3)
+In-Reply-To: <1323346315-31917-1-git-send-email-helmut.schaa@googlemail.com>
+References: <1323346315-31917-1-git-send-email-helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Use ieee80211_is_data, ieee80211_is_mgmt and ieee80211_is_first_frag
+in the tx status path. This makes the code easier to read and allows us
+to remove two local variables: frag and type.
 
-AP interfaces routinely call this logic, so just silently
-return when this happens instead of splatting the kernel
-logs.
-
-Reported-by: Christian Lamparter <chunkeey@googlemail.com>
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
-:100644 100644 d3eafae... b5d85e7... M	net/mac80211/ht.c
- net/mac80211/ht.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ net/mac80211/status.c |   15 +++++----------
+ 1 files changed, 5 insertions(+), 10 deletions(-)
 
-diff --git a/net/mac80211/ht.c b/net/mac80211/ht.c
-index d3eafae..b5d85e7 100644
---- a/net/mac80211/ht.c
-+++ b/net/mac80211/ht.c
-@@ -47,7 +47,9 @@ void ieee80211_apply_htcap_overrides(struct ieee80211_sub_if_data *sdata,
- 	int i;
- 
- 	if (sdata->vif.type != NL80211_IFTYPE_STATION) {
--		WARN_ON_ONCE(sdata->vif.type != NL80211_IFTYPE_STATION);
-+		/* AP interfaces call this code when adding new stations,
-+		 * so just silently ignore non station interfaces.
-+		 */
- 		return;
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 46222ce..30c265c 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -340,7 +340,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_local *local = hw_to_local(hw);
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	u16 frag, type;
+ 	__le16 fc;
+ 	struct ieee80211_supported_band *sband;
+ 	struct ieee80211_sub_if_data *sdata;
+@@ -476,12 +475,8 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	 * Fragments are passed to low-level drivers as separate skbs, so these
+ 	 * are actually fragments, not frames. Update frame counters only for
+ 	 * the first fragment of the frame. */
+-
+-	frag = le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_FRAG;
+-	type = le16_to_cpu(hdr->frame_control) & IEEE80211_FCTL_FTYPE;
+-
+ 	if (info->flags & IEEE80211_TX_STAT_ACK) {
+-		if (frag == 0) {
++		if (ieee80211_is_first_frag(hdr->seq_ctrl)) {
+ 			local->dot11TransmittedFrameCount++;
+ 			if (is_multicast_ether_addr(hdr->addr1))
+ 				local->dot11MulticastTransmittedFrameCount++;
+@@ -496,11 +491,11 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 		 * with a multicast address in the address 1 field of type Data
+ 		 * or Management. */
+ 		if (!is_multicast_ether_addr(hdr->addr1) ||
+-		    type == IEEE80211_FTYPE_DATA ||
+-		    type == IEEE80211_FTYPE_MGMT)
++		    ieee80211_is_data(fc) ||
++		    ieee80211_is_mgmt(fc))
+ 			local->dot11TransmittedFragmentCount++;
+ 	} else {
+-		if (frag == 0)
++		if (ieee80211_is_first_frag(hdr->seq_ctrl))
+ 			local->dot11FailedCount++;
  	}
  
+@@ -572,7 +567,7 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 
+ 	/* Need to make a copy before skb->cb gets cleared */
+ 	send_to_cooked = !!(info->flags & IEEE80211_TX_CTL_INJECTED) ||
+-			(type != IEEE80211_FTYPE_DATA);
++			 !(ieee80211_is_data(fc));
+ 
+ 	/*
+ 	 * This is a bit racy but we can avoid a lot of work
 -- 
-1.7.3.4
+1.7.7
 
