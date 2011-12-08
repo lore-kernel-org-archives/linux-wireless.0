@@ -1,64 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:52271 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751351Ab1LJWhZ (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:47710 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752169Ab1LHP3H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Dec 2011 17:37:25 -0500
-Message-ID: <4EE3DF19.6080106@rolandgruber.de> (sfid-20111210_233736_101800_DCB59740)
-Date: Sat, 10 Dec 2011 23:37:13 +0100
-From: Roland Gruber <post@rolandgruber.de>
+	Thu, 8 Dec 2011 10:29:07 -0500
+Subject: [PATCH 2/6] ath6kl: call ath6kl_cfg80211_stop() from ath6kl_close()
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Thu, 08 Dec 2011 17:28:54 +0200
+Message-ID: <20111208152854.16924.10315.stgit@x201> (sfid-20111208_162912_891734_7AAD3AC1)
+In-Reply-To: <20111208152824.16924.31984.stgit@x201>
+References: <20111208152824.16924.31984.stgit@x201>
 MIME-Version: 1.0
-To: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org
-CC: 651622@bugs.debian.org, Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: Bug#651622: linux-2.6: Sitecom WLA-2000 v1.001 WLAN stick not
- supported
-References: <20111210162607.1020.50335.reportbug@roland>		 <1323537258.18450.100.camel@deadeye> <4EE39C40.4030802@rolandgruber.de>	 <1323543622.25752.4.camel@deadeye> <4EE3D447.7030108@rolandgruber.de> <1323554710.25752.18.camel@deadeye>
-In-Reply-To: <1323554710.25752.18.camel@deadeye>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+This way it's possible to keep all disconnect logic in one function and
+easier to add new functionality, like stopping scheduled scan.
 
-Hi,
+There are some changes to commands called during network interface close,
+but there should not be any visible changes in functionality.
 
-I have some problem to get a Sitecom USB WLAN stick to run.
-Ben tried to help me but we did not get it to work. So he pointed me to you. :)
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/main.c |   11 +----------
+ 1 files changed, 1 insertions(+), 10 deletions(-)
 
-It is the Sitecom WLA-2000 v1.001.
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index d9b4ba4..0c7a013 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -1005,16 +1005,7 @@ static int ath6kl_close(struct net_device *dev)
+ 
+ 	netif_stop_queue(dev);
+ 
+-	ath6kl_disconnect(vif);
+-
+-	if (test_bit(WMI_READY, &ar->flag)) {
+-		if (ath6kl_wmi_scanparams_cmd(ar->wmi, vif->fw_vif_idx, 0xFFFF,
+-					      0, 0, 0, 0, 0, 0, 0, 0, 0))
+-			return -EIO;
+-
+-	}
+-
+-	ath6kl_cfg80211_scan_complete_event(vif, true);
++	ath6kl_cfg80211_stop(ar);
+ 
+ 	clear_bit(WLAN_ENABLED, &vif->flags);
+ 
 
-Vendor 0df6
-Product 005d
-Chipset Realtek RTL8191S
-
-Dec 10 18:45:10 roland kernel: [18513.016012] usb 2-3: new high speed USB device number 9 using ehci_hcd
-Dec 10 18:45:10 roland kernel: [18513.151122] usb 2-3: New USB device found, idVendor=0df6, idProduct=005d
-Dec 10 18:45:10 roland kernel: [18513.151126] usb 2-3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-Dec 10 18:45:10 roland kernel: [18513.151129] usb 2-3: Product: RTL8191S WLAN Adapter
-Dec 10 18:45:10 roland kernel: [18513.151130] usb 2-3: Manufacturer: Manufacturer Realtek
-Dec 10 18:45:10 roland kernel: [18513.151132] usb 2-3: SerialNumber: 00e04c000001
-
-We tried to use the kernel module rtl8192cu by adding the IDs with "echo 0df6 005d > /sys/bus/usb/drivers/rtl8192cu/new_id".
-But this led to a kernel oops.
-
-Is there any way to setup the rtl8192cu kernel module so that it accepts the WLAN stick?
-We also tried the module r8192u_usb but it complains about firmware loading problems when connecting the stick.
-
-
-Thanks in advance for your help. Please let me know if you need more information.
-
-
-- -- 
-
-Best regards
-
-Roland
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iEYEARECAAYFAk7j3xkACgkQq/ywNCsrGZ7FBgCfWe5STfX4fKYqc5oExB0CBmPy
-36MAn3oCKMv+8D9e8PMkgnQ1BDlhX0g1
-=6qSS
------END PGP SIGNATURE-----
