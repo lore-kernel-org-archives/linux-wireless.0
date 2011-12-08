@@ -1,70 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1465 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752809Ab1LQChb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 21:37:31 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 03/30] brcm80211: fmac: register a dummy irq handler for
- SDIO function 2
-Date: Fri, 16 Dec 2011 18:36:53 -0800
-Message-ID: <1324089440-8957-4-git-send-email-frankyl@broadcom.com> (sfid-20111217_033735_691535_4DA121A7)
-In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
-References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:35685 "HELO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750983Ab1LHGoR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Dec 2011 01:44:17 -0500
+Date: Thu, 8 Dec 2011 12:11:30 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH] mac80211: Purge A-MPDU TX queues before station
+ destructions
+Message-ID: <20111208064124.GA4406@hertz.marvell.com> (sfid-20111208_074421_606738_7A47FCF3)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When there is data available in dongle for driver to fetch, an
-interrupt will be triggered and both SDIO function 1 and 2 will be
-flagged by default in bcm4329. These two interrupt flags are
-identical and only need to be handled once. Since there is no way
-to turn off one flag from the dongle side, a dummy handler for
-function 2 interrupt is placed.
+When a station leaves suddenly while ampdu traffic to that station is still
+running, there is a possibility that the ampdu pending queues are not freed due
+to a race condition leading to memory leaks. In '__sta_info_destroy' when we
+attempt to destroy the ampdu sessions in 'ieee80211_sta_tear_down_BA_sessions',
+the driver calls 'ieee80211_stop_tx_ba_cb_irqsafe' to delete the ampdu
+structures (tid_tx) and splice the pending queues and this job gets queued in
+sdata workqueue. However, the sta entry can get destroyed before the above work
+gets scheduled and hence the race.
 
-Reported-by: Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Purging the queues and freeing the tid_tx to avoid the leak. The better solution
+would be to fix the race, but that can be taken up in a separate patch.
+
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+ net/mac80211/sta_info.c |   25 +++++++++++++++++++++++++
+ 1 files changed, 25 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-index 6c85d66..32d72a0 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
-@@ -51,12 +51,18 @@ static void brcmf_sdioh_irqhandler(struct sdio_func *func)
- 	sdio_claim_host(func);
- }
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index f982352..c6ca9bd 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -851,6 +851,7 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
+ 	struct ieee80211_sub_if_data *sdata;
+ 	unsigned long flags;
+ 	int ret, i, ac;
++	struct tid_ampdu_tx *tid_tx;
  
-+/* dummy handler for SDIO function 2 interrupt */
-+static void brcmf_sdioh_dummy_irq_handler(struct sdio_func *func)
-+{
-+}
+ 	might_sleep();
+ 
+@@ -949,6 +950,30 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
+ 	}
+ #endif
+ 
++	/* There could be some memory leaks because of ampdu tx pending queue
++	 * not being freed before destroying the station info.
++	 *
++	 * Make sure that such queues are purged before freeing the station
++	 * info.
++	 * TODO: We have to somehow postpone the full destruction
++	 * until the aggregation stop completes. Refer
++	 * http://thread.gmane.org/gmane.linux.kernel.wireless.general/81936
++	 */
++	for (i = 0; i < STA_TID_NUM; i++) {
++		if (!sta->ampdu_mlme.tid_tx[i])
++			continue;
++		tid_tx = sta->ampdu_mlme.tid_tx[i];
++		if (skb_queue_len(&tid_tx->pending)) {
++#ifdef CONFIG_MAC80211_HT_DEBUG
++			wiphy_debug(local->hw.wiphy, "TX A-MPDU  purging %d "
++				"packets for tid=%d\n",
++				skb_queue_len(&tid_tx->pending), i);
++#endif /* CONFIG_MAC80211_HT_DEBUG */
++			__skb_queue_purge(&tid_tx->pending);
++		}
++		kfree_rcu(tid_tx, rcu_head);
++	}
 +
- int brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev)
- {
- 	brcmf_dbg(TRACE, "Entering\n");
- 
- 	sdio_claim_host(sdiodev->func[1]);
- 	sdio_claim_irq(sdiodev->func[1], brcmf_sdioh_irqhandler);
-+	sdio_claim_irq(sdiodev->func[2], brcmf_sdioh_dummy_irq_handler);
- 	sdio_release_host(sdiodev->func[1]);
+ 	__sta_info_free(local, sta);
  
  	return 0;
-@@ -67,6 +73,7 @@ int brcmf_sdcard_intr_dereg(struct brcmf_sdio_dev *sdiodev)
- 	brcmf_dbg(TRACE, "Entering\n");
- 
- 	sdio_claim_host(sdiodev->func[1]);
-+	sdio_release_irq(sdiodev->func[2]);
- 	sdio_release_irq(sdiodev->func[1]);
- 	sdio_release_host(sdiodev->func[1]);
- 
 -- 
-1.7.5.4
-
+1.5.4.1
 
