@@ -1,67 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from calzone.tip.net.au ([203.10.76.15]:48074 "EHLO
-	calzone.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932727Ab1LFAeD (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:61103 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750897Ab1LHSZW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Dec 2011 19:34:03 -0500
-Date: Tue, 6 Dec 2011 11:33:46 +1100
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: Is linux-next.git bisectable?
-Message-Id: <20111206113346.57b3efd85780b6ff18076e9c@canb.auug.org.au> (sfid-20111206_013423_068562_030794D2)
-In-Reply-To: <CAB=NE6Uz_gXkY3HGXeW1OnPx84fPVUP=gOJ=2NjBtPZhW=_Bbw@mail.gmail.com>
-References: <CAB=NE6Uz_gXkY3HGXeW1OnPx84fPVUP=gOJ=2NjBtPZhW=_Bbw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA256";
- boundary="Signature=_Tue__6_Dec_2011_11_33_46_+1100__wg1W4Vg+e_za=j2"
+	Thu, 8 Dec 2011 13:25:22 -0500
+Received: by iakc1 with SMTP id c1so2912957iak.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2011 10:25:21 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
+	Thomas Pedersen <thomas@cozybit.com>
+Subject: [PATCH v2] iw: allow setting mesh mcast-rate
+Date: Thu,  8 Dec 2011 10:25:15 -0800
+Message-Id: <1323368715-6473-1-git-send-email-thomas@cozybit.com> (sfid-20111208_192530_632509_8508CF3C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Signature=_Tue__6_Dec_2011_11_33_46_+1100__wg1W4Vg+e_za=j2
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 
-Hi Luis,
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
 
-On Mon, 5 Dec 2011 16:29:36 -0800 "Luis R. Rodriguez" <mcgrof@frijolero.org=
-> wrote:
->
-> is the linux-next.git tree bisectable? I've noticed some trees are
-> not. For example wireless-testing.git is bisectable but only between
-> master-$(date) tags.
+v2: style and weirdness (Johannes)
+ mesh.c |   20 ++++++++++++++++++--
+ 1 files changed, 18 insertions(+), 2 deletions(-)
 
-Within any one day, the tree is bisectable, but not really between one
-day and another.  The tree is rebuilt starting from Linus' tree each day.
+diff --git a/mesh.c b/mesh.c
+index dc8f49c..37fd1cd 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -342,6 +342,9 @@ COMMAND(get, mesh_param, "[<param>]",
+ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
+ 		     struct nl_msg *msg, int argc, char **argv)
+ {
++	float rate;
++	char *end;
++
+ 	if (argc < 1)
+ 		return 1;
+ 
+@@ -349,15 +352,28 @@ static int join_mesh(struct nl80211_state *state, struct nl_cb *cb,
+ 	argc--;
+ 	argv++;
+ 
++	if (argc > 1 && strcmp(argv[0], "mcast-rate") == 0) {
++		argv++;
++		argc--;
++
++		rate = strtod(argv[0], &end);
++		if (*end != '\0')
++			return 1;
++
++		NLA_PUT_U32(msg, NL80211_ATTR_MCAST_RATE, (int)(rate * 10));
++		argv++;
++		argc--;
++	}
++
+ 	if (!argc)
+ 		return 0;
+ 	return set_interface_meshparam(state, cb, msg, argc, argv);
+  nla_put_failure:
+ 	return -ENOBUFS;
+ }
+-COMMAND(mesh, join, "<mesh ID> [<param>=<value>]*",
++COMMAND(mesh, join, "<mesh ID> [mcast-rate <rate in Mbps>] [<param>=<value>]*",
+ 	NL80211_CMD_JOIN_MESH, 0, CIB_NETDEV, join_mesh,
+-	"Join a mesh with the given mesh ID and mesh parameters.");
++	"Join a mesh with the given mesh ID with mcast-rate and mesh parameters.");
+ 
+ static int leave_mesh(struct nl80211_state *state, struct nl_cb *cb,
+ 		      struct nl_msg *msg, int argc, char **argv)
+-- 
+1.7.5.4
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-
---Signature=_Tue__6_Dec_2011_11_33_46_+1100__wg1W4Vg+e_za=j2
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBCAAGBQJO3WLqAAoJEECxmPOUX5FEPdYP/2ZkhYv2aevXBK4CJz77mA4o
-TjMqJqtyP8dYfsiLl78BS2rYy1tI4O01aApj2PBTyF4lJyl6ZHJErbG8wnifLsjs
-0OfWqsp5QWn0DoCDcjrEJqcH5anpYJY+Pzcw9Jg9s5xpoMc9G9Gutt7btRrvRizm
-Br7xzAWYeJHmm08qFcHsWufIDQgCorx2B3k/W8F8T1ePJ5bb/sKmgJyfd+NlfByW
-BCKTrBqFAiZJ4xb6rRCf0305Bob8NFeJTsBXdBgfcV+f+0laqkS7uIC6sUqN9B0U
-jRiU/4u6OedF3k5kNMbbt01mgKocAgtVA9YHGwGpS7Q3YJ9Pn6E1ykIql9t1MCBT
-1gftqtWJsw4E9cABwn1tg2v1gUSD4ENGyw7ShgGIeqYtrFczDY4UnZDsltKJ1J+T
-idduIB+TdSdB3+5lkj7euVHPJRVHMh6iwZhznZUPZ1qJb7/LXeUDAqcMm7VZKMHf
-oSGBVxGkTijvf6W9ShWgnVGs0a/CsyzJ0DKEmLn4n+bm8tUHngB437EbRHv6h04+
-y86Qw6KYrQsZD2iX3WkHJPltJ6a+2YJjSzMswAP6ocmxnxUF01Fl48+KyvumEFET
-cO9pmGFvZpJ8pKcgKU2n7qlBQ7yRmcIkMRjpT3JHgVKWP63vXlxlZ5j3EB2y5vPD
-AFQx548HjKEbRbDK95Pb
-=QJ/f
------END PGP SIGNATURE-----
-
---Signature=_Tue__6_Dec_2011_11_33_46_+1100__wg1W4Vg+e_za=j2--
