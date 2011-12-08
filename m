@@ -1,33 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:47661 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752189Ab1LPRGa (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:9697 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750759Ab1LHG3O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 12:06:30 -0500
-Received: by vbbfc26 with SMTP id fc26so2608526vbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Dec 2011 09:06:29 -0800 (PST)
-Message-ID: <4EEB7A92.6020701@lwfinger.net> (sfid-20111216_180633_984772_5D7940A9)
-Date: Fri, 16 Dec 2011 11:06:26 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 8 Dec 2011 01:29:14 -0500
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH 1/2] ath9k_hw: check for asynchronous interrupts before bailing out
+Date: Thu, 8 Dec 2011 11:59:02 +0530
+Message-ID: <1323325743-4005-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111208_072919_911495_B560FFAC)
 MIME-Version: 1.0
-To: Tim Gardner <tim.gardner@canonical.com>
-CC: Seth Forshee <seth.forshee@canonical.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Problems associating with RTL8188CE
-References: <4ECA99CC.7020008@lwfinger.net> <20111121185610.GD6736@thinkpad-t410> <4ECB028E.3030809@lwfinger.net> <20111122022008.GA17661@thinkpad-t410> <20111213194231.GA30788@thinkpad-t410> <4EE7B85E.3070802@lwfinger.net> <20111213212606.GB30788@thinkpad-t410> <4EE82CC6.2030307@lwfinger.net> <20111214162333.GB19410@thinkpad-t410> <4EE8D150.8090100@lwfinger.net> <20111214164902.GD19410@thinkpad-t410> <4EE91A87.5090207@canonical.com> <4EE9445B.1010504@lwfinger.net> <4EEA3F53.40305@canonical.com> <4EEA4F8E.60602@lwfinger.net> <4EEB7791.6060500@canonical.com>
-In-Reply-To: <4EEB7791.6060500@canonical.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/16/2011 10:53 AM, Tim Gardner wrote:
->
-> Yep - specifying a _fixed_ channel for 'Up to 130Mbps at 5Ghz & 54Mbps at
-> 2.4Ghz' allowed a connection using the G beacon. I have not verified using a
-> 5Ghz capable adapter that its also beaconing on channel 36.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Do you want to report this to Netgear, or should I?
+in ar9003_hw_get_isr we bail out if we don't have any primary
+interrupts and synchronous interrupts, also make sure we don't
+have any asynchronous interrupts
 
-Larry
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 95587e3..508c202 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -220,7 +220,7 @@ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ 
+ 	*masked = 0;
+ 
+-	if (!isr && !sync_cause)
++	if (!isr && !sync_cause && !async_cause)
+ 		return false;
+ 
+ 	if (isr) {
+-- 
+1.7.0.4
 
