@@ -1,65 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20765 "EHLO mx1.redhat.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:2132 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753871Ab1LWHOW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Dec 2011 02:14:22 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 10/10] iwlegacy: 3945: fix hw passive scan on radar channels
-Date: Fri, 23 Dec 2011 08:13:50 +0100
-Message-Id: <1324624430-3688-10-git-send-email-sgruszka@redhat.com> (sfid-20111223_081425_663088_444006C9)
-In-Reply-To: <1324624430-3688-1-git-send-email-sgruszka@redhat.com>
-References: <1324624430-3688-1-git-send-email-sgruszka@redhat.com>
+	id S1752158Ab1LHXHM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Dec 2011 18:07:12 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 04/23] brcm80211: fmac: remove drive strength code for
+ unsupported chips
+Date: Thu, 8 Dec 2011 15:06:40 -0800
+Message-ID: <1323385619-7454-5-git-send-email-frankyl@broadcom.com> (sfid-20111209_000730_750124_C0571E3F)
+In-Reply-To: <1323385619-7454-1-git-send-email-frankyl@broadcom.com>
+References: <1323385619-7454-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch fix firmware error on "iw dev wlan0 scan passive" for
-hardware scanning (with disable_hw_scan=0 module parameter).
+bcm4325 and bcm4336 are not supported by brcmfmac. Remove the
+drive strength setting code specific for these chips.
 
- iwl3945 0000:03:00.0: Microcode SW error detected. Restarting 0x82000008.
- iwl3945 0000:03:00.0: Loaded firmware version: 15.32.2.9
- iwl3945 0000:03:00.0: Start IWL Error Log Dump:
- iwl3945 0000:03:00.0: Status: 0x0002A2E4, count: 1
- iwl3945 0000:03:00.0: Desc       Time       asrtPC blink2 ilink1  nmiPC   Line
- iwl3945 0000:03:00.0: SYSASSERT     (0x5) 0041263900 0x13756 0x0031C 0x00000 764
- iwl3945 0000:03:00.0: Error Reply type 0x000002FC cmd C_SCAN (0x80) seq 0x443E ser 0x00340000
- iwl3945 0000:03:00.0: Command C_SCAN failed: FW Error
- iwl3945 0000:03:00.0: Can't stop Rx DMA.
-
-We have disable ability to change passive scanning to active on
-particular channel when traffic is detected on that channel. Otherwise
-firmware will report error, when we try to do passive scan on radar
-channels.
-
-Reported-and-debugged-by: Pedro Francisco <pedrogfrancisco@gmail.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/iwlegacy/3945-mac.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   52 +-------------------
+ 1 files changed, 2 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index c817975..54b2d39 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -2623,12 +2623,12 @@ il3945_request_scan(struct il_priv *il, struct ieee80211_vif *vif)
- 	}
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+index d299059..a6048d7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+@@ -59,40 +59,8 @@ struct sdiod_drive_str {
+ 	u8 strength;	/* Pad Drive Strength in mA */
+ 	u8 sel;		/* Chip-specific select value */
+ };
+-/* SDIO Drive Strength to sel value table for PMU Rev 1 */
+-static const struct sdiod_drive_str sdiod_drive_strength_tab1[] = {
+-	{
+-	4, 0x2}, {
+-	2, 0x3}, {
+-	1, 0x0}, {
+-	0, 0x0}
+-	};
+-/* SDIO Drive Strength to sel value table for PMU Rev 2, 3 */
+-static const struct sdiod_drive_str sdiod_drive_strength_tab2[] = {
+-	{
+-	12, 0x7}, {
+-	10, 0x6}, {
+-	8, 0x5}, {
+-	6, 0x4}, {
+-	4, 0x2}, {
+-	2, 0x1}, {
+-	0, 0x0}
+-	};
+-/* SDIO Drive Strength to sel value table for PMU Rev 8 (1.8V) */
+-static const struct sdiod_drive_str sdiod_drive_strength_tab3[] = {
+-	{
+-	32, 0x7}, {
+-	26, 0x6}, {
+-	22, 0x5}, {
+-	16, 0x4}, {
+-	12, 0x3}, {
+-	8, 0x2}, {
+-	4, 0x1}, {
+-	0, 0x0}
+-	};
+-
+ /* SDIO Drive Strength to sel value table for PMU Rev 11 (1.8V) */
+-static const struct sdiod_drive_str sdiod_drvstr_tab4_1v8[] = {
++static const struct sdiod_drive_str sdiod_drvstr_tab1_1v8[] = {
+ 	{32, 0x6},
+ 	{26, 0x7},
+ 	{22, 0x4},
+@@ -598,24 +566,8 @@ brcmf_sdio_chip_drivestrengthinit(struct brcmf_sdio_dev *sdiodev,
+ 		return;
  
- 	/*
--	 * If active scaning is requested but a certain channel
--	 * is marked passive, we can do active scanning if we
--	 * detect transmissions.
-+	 * If active scaning is requested but a certain channel is marked
-+	 * passive, we can do active scanning if we detect transmissions. For
-+	 * passive only scanning disable switching to active on any channel.
- 	 */
- 	scan->good_CRC_th =
--	    is_active ? IL_GOOD_CRC_TH_DEFAULT : IL_GOOD_CRC_TH_DISABLED;
-+	    is_active ? IL_GOOD_CRC_TH_DEFAULT : IL_GOOD_CRC_TH_NEVER;
- 
- 	len =
- 	    il_fill_probe_req(il, (struct ieee80211_mgmt *)scan->data,
+ 	switch (SDIOD_DRVSTR_KEY(ci->chip, ci->pmurev)) {
+-	case SDIOD_DRVSTR_KEY(BCM4325_CHIP_ID, 1):
+-		str_tab = (struct sdiod_drive_str *)&sdiod_drive_strength_tab1;
+-		str_mask = 0x30000000;
+-		str_shift = 28;
+-		break;
+-	case SDIOD_DRVSTR_KEY(BCM4325_CHIP_ID, 2):
+-	case SDIOD_DRVSTR_KEY(BCM4325_CHIP_ID, 3):
+-		str_tab = (struct sdiod_drive_str *)&sdiod_drive_strength_tab2;
+-		str_mask = 0x00003800;
+-		str_shift = 11;
+-		break;
+-	case SDIOD_DRVSTR_KEY(BCM4336_CHIP_ID, 8):
+-		str_tab = (struct sdiod_drive_str *)&sdiod_drive_strength_tab3;
+-		str_mask = 0x00003800;
+-		str_shift = 11;
+-		break;
+ 	case SDIOD_DRVSTR_KEY(BCM4330_CHIP_ID, 12):
+-		str_tab = (struct sdiod_drive_str *)&sdiod_drvstr_tab4_1v8;
++		str_tab = (struct sdiod_drive_str *)&sdiod_drvstr_tab1_1v8;
+ 		str_mask = 0x00003800;
+ 		str_shift = 11;
+ 		break;
 -- 
-1.7.4.4
+1.7.5.4
+
 
