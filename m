@@ -1,37 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:58208 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755377Ab1LBE3F (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:33338 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751424Ab1LHVji (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Dec 2011 23:29:05 -0500
-Received: by wgbdr13 with SMTP id dr13so296683wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Dec 2011 20:29:03 -0800 (PST)
+	Thu, 8 Dec 2011 16:39:38 -0500
 MIME-Version: 1.0
-Date: Thu, 1 Dec 2011 23:29:03 -0500
-Message-ID: <CALGY4fvH5EbBm1oSBHsmXw5r5yfWMQ4yJyVyBx3y70FOEVeT6A@mail.gmail.com> (sfid-20111202_052910_037002_B91C34E9)
-Subject: iwlwifi: kernel panic if try to open tid with large index (>=8)
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 8 Dec 2011 13:39:16 -0800
+Message-ID: <CAB=NE6XDHL8mexe49TSoug3COh11RAvVY339Ntj0MJdw96wO1w@mail.gmail.com> (sfid-20111208_224001_974510_DF1C7EE0)
+Subject: linux-next base Linus tag
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Dani Keerikoolparn <danik@qca.qualcomm.com>,
+	"Hoefel, Guilherme" <hoefel@qualcomm.com>,
+	linux-kernel@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
+Stephen,
 
-  I have an intel 5300 card running on latest compat-wireless.
-  If I do:
-echo "tx start 8" >
-/sys/kernel/debug/ieee80211/phy0/netdev\:wlan1/stations/XX\:XX\:XX\:XX\:XX\:XX/agg_status
-  I get two pages of kernel stack trace and complete freeze, no
-messages left in any logs after reboot.
-  I looks like driver doesn't correctly check that this tid is
-actually supported when it comes from mac80211 layer.
-  This doesn't seem like a huge issue, just an annoying one.
+If I know a linux-next tag, say next-20110928, how can I extract the
+Linus tag you used to start that set of merges for linux-next for?
+That is, I am assuming you base your daily linux-next merges on that
+day's latest Linus's rc cycle (not just Linus's master tag of that
+day). Is that right? If so how can I get that tag?
 
-  Please let me knoe if I can provide any more information.
-  Thanks.
+For example for next-20110928 I see in Next/quilt-import.log:
 
--- 
-Truthfully yours,
-Martynov Nikolay.
-Email: mar.kolya@gmail.com
+diff --git a/Next/quilt-import.log b/Next/quilt-import.log
+new file mode 100644
+index 0000000..a5c7017
+--- /dev/null
++++ b/Next/quilt-import.log
+@@ -0,0 +1,12 @@
++Importing hexagon based on v3.1-rc6
++Unchanged quilt series hexagon
++Importing i2c based on 3.1-rc4
++Unchanged quilt series i2c
++Importing jdelvare-hwmon based on 3.1-rc4
++Unchanged quilt series jdelvare-hwmon
++Importing kernel-doc based on 3.1-rc3
++Unchanged quilt series kernel-doc
++Importing rr based on v3.1-rc2-188-g6719db6
++Unchanged quilt series rr
++Importing device-mapper based on v3.1-rc7
++Unchanged quilt series device-mapper
+
+So I see some development trees were based circa v3.1 on different rc
+cycles, but its unclear to me which one your linux-next was based on
+prior to the merge of git trees / quilt trees.
+
+  Luis
