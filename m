@@ -1,42 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:35229 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752077Ab1LPO6f (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25669 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751038Ab1LHGCi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 09:58:35 -0500
-Subject: Re: unexpected taint message
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Nick Bowler <nbowler@elliptictech.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <20111216144804.GA11693@elliptictech.com>
-References: <4EEB0EFC.5000302@broadcom.com>
-	 <1324038636.3429.1.camel@jlt3.sipsolutions.net>
-	 <4EEB4D61.80602@lwfinger.net>
-	 <1324043939.3429.2.camel@jlt3.sipsolutions.net>
-	 <20111216144804.GA11693@elliptictech.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 16 Dec 2011 15:58:31 +0100
-Message-ID: <1324047511.3429.8.camel@jlt3.sipsolutions.net> (sfid-20111216_155840_390775_2B9E57F3)
-Mime-Version: 1.0
+	Thu, 8 Dec 2011 01:02:38 -0500
+Date: Thu, 8 Dec 2011 11:32:01 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/4] ath9k: Restore EEPROM regulatory upon STA disconnect
+Message-ID: <20111208060159.GA18304@vmraj-lnx.users.atheros.com> (sfid-20111208_070250_189623_36D348C1)
+References: <1323266001-12912-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <1323266001-12912-3-git-send-email-rmanohar@qca.qualcomm.com>
+ <CAB=NE6XJMvmcgcz_whsVFbe+T1k_KEnW-ZOrC1K-1bZU+R_shg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <CAB=NE6XJMvmcgcz_whsVFbe+T1k_KEnW-ZOrC1K-1bZU+R_shg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-12-16 at 09:48 -0500, Nick Bowler wrote:
-> On 2011-12-16 14:58 +0100, Johannes Berg wrote:
-> > Hmm. I wish OOT didn't disable lockdep, we do a lot of development with
-> > modules OOT because the turnaround is faster/easier (for not so
-> > experienced developers). Worst case we can patch it out of the base
-> > kernel I guess...
+On Wed, Dec 07, 2011 at 01:37:49PM -0800, Luis R. Rodriguez wrote:
+> On Wed, Dec 7, 2011 at 5:53 AM, Rajkumar Manoharan
+> <rmanohar@qca.qualcomm.com> wrote:
+> > The current regulatory for world roaming mode cards might be
+> > overriden by country IE from the assiciated AP. But these
+> > regulatory values are failed to be restored on disconnection.
+> > This patch ensures to resotre regulatry values at driver side.
+> >
+> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+> > ---
+> >  drivers/net/wireless/ath/ath9k/main.c |    8 ++++++++
+> >  1 files changed, 8 insertions(+), 0 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+> > index 424289f..a4dbb7b 100644
+> > --- a/drivers/net/wireless/ath/ath9k/main.c
+> > +++ b/drivers/net/wireless/ath/ath9k/main.c
+> > @@ -2046,6 +2046,14 @@ static void ath9k_config_bss(struct ath_softc *sc, struct ieee80211_vif *vif)
+> >                sc->sc_flags &= ~SC_OP_ANI_RUN;
+> >                del_timer_sync(&common->ani.timer);
+> >                memset(&sc->caldata, 0, sizeof(sc->caldata));
+> > +               /*
+> > +                * Restore regulatory values that might be updated
+> > +                * by country IEs.
+> > +                */
+> > +               if (!ath_is_world_regd(&common->regulatory) &&
+> > +                   ath_is_world_regd(&common->reg_world_copy))
+> > +                       memcpy(&common->regulatory, &common->reg_world_copy,
+> > +                              sizeof(struct ath_regulatory));
+> >        }
 > 
-> Indeed, but the good news is that we should finally be able to put this
-> issue behind us soon(ish).
+> NACK, this patch should not be required given that patch [2/4] in this
+> series restores this on the reg_notifier() for the
+> NL80211_REGDOM_SET_BY_CORE case -- the trick is that when cfg80211
+> detects not only a disconnect, but any regulatory restore, it will
+> *always* send a reg core hint! Again the hunk from patch [2/4] was:
 > 
->   https://git.kernel.org/?p=linux/kernel/git/tip/tip.git;a=commit;h=9ec84acee1e221d99dc33237bff5e82839d10cc0
+> @@ -363,14 +381,37 @@ int ath_reg_notifier_apply(struct wiphy *wiphy,
+>                return 0;
+> 
+>        switch (request->initiator) {
+> -       case NL80211_REGDOM_SET_BY_DRIVER:
+>        case NL80211_REGDOM_SET_BY_CORE:
+> +               /*
+> +                * If common->reg_world_copy is world roaming it means we *were*
+> +                * world roaming... so we now have to restore that data.
+> +                */
+> +               if (!ath_is_world_regd(&common->reg_world_copy))
+> +                       break;
+> +
+> +               memcpy(reg, &common->reg_world_copy,
+> +                      sizeof(struct ath_regulatory));
+> +               break;
+> +       case NL80211_REGDOM_SET_BY_DRIVER:
+>        case NL80211_REGDOM_SET_BY_USER:
+>                break;
+> 
+> Can you please test without this patch and ensure you get the data
+> properly restored?
+> 
+But the regulatory updates are ignored for CUSTOM_REGULATORY cards
+at wiphy_update_regulatory. Isn't it?
 
-Oh. I just sent almost the same patch, oops!
+        if (initiator == NL80211_REGDOM_SET_BY_CORE &&
+            wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY) {
+                REG_DBG_PRINT("Ignoring regulatory request %s "
+                              "since the driver uses its own custom "
+                              "regulatory domain\n",
+                              reg_initiator_name(initiator));
+                return true;
 
-johannes
+To ensure that the regulatory is restored always, I did it at bss_info_change.
 
+--
+Rajkumar
