@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4760 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753016Ab1LMElP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 23:41:15 -0500
-Message-ID: <4EE6D717.3030601@broadcom.com> (sfid-20111213_054118_620387_2A8EDF96)
-Date: Mon, 12 Dec 2011 20:39:51 -0800
-From: "Franky Lin" <frankyl@broadcom.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:38854 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750760Ab1LHMNI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Dec 2011 07:13:08 -0500
+Received: by yenm11 with SMTP id m11so1032177yen.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2011 04:13:08 -0800 (PST)
 MIME-Version: 1.0
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/15] brcm80211: the rest of smac bcma switch
- series
-References: <1323731713-14942-1-git-send-email-frankyl@broadcom.com>
- <4EE6D3A0.8030907@lwfinger.net>
-In-Reply-To: <4EE6D3A0.8030907@lwfinger.net>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+In-Reply-To: <1323340772.3332.31.camel@jlt3.sipsolutions.net>
+References: <1323336114-31203-1-git-send-email-helmut.schaa@googlemail.com>
+	<1323336302.3332.7.camel@jlt3.sipsolutions.net>
+	<1323336406.3332.9.camel@jlt3.sipsolutions.net>
+	<CAGXE3d-qyXB7cEaDM6-21FttyF6iNNGRG1_madFVC9d25X6tRA@mail.gmail.com>
+	<1323340772.3332.31.camel@jlt3.sipsolutions.net>
+Date: Thu, 8 Dec 2011 13:13:08 +0100
+Message-ID: <CAGXE3d8aK5SCG9dLQ+bAR=7XYfe1tY0DtqB-fYW7FQ7Amr0=rg@mail.gmail.com> (sfid-20111208_131313_120376_70941FDD)
+Subject: Re: [PATCH 1/2] ieee80211: Introduce ieee80211_has_frags
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/12/2011 08:25 PM, Larry Finger wrote:
-> On 12/12/2011 05:14 PM, Franky Lin wrote:
->> Hi John,
+On Thu, Dec 8, 2011 at 11:39 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2011-12-08 at 10:41 +0100, Helmut Schaa wrote:
+>> On Thu, Dec 8, 2011 at 10:26 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> >> Would _is_frag() read nicer? The piece you're checking is a fragment I
+>> >> think?
+>> >
+>> > Never mind ... the first fragment has is a fragment too and doesn't
+>> > return true here.
 >>
->> This train contains the rest of patch series switching brcmsmac to use
->> bcma bus interface.
->> It depends on the following patch set:
->> [PATCH 00/23] brcm80211: fullmac 4430 support and softmac switch to bcma
->> Message-ID:<1323385619-7454-1-git-send-email-frankyl@broadcom.com>
+>> We could also call it ieee80211_is_first_frag and swap the logic?
 >
-> With this set of patches, my BCM43224 works with brcmsmac.
->
-> Larry
->
+> That seems like a good idea.
 
-Glad to hear that. Thanks for testing it.
-
-Franky
-
+John, I've just sent a v2 of this ...
