@@ -1,49 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:63183 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753486Ab1LYQ6s (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:43232 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751502Ab1LHRTv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Dec 2011 11:58:48 -0500
-Received: by eekc4 with SMTP id c4so10631378eek.19
-        for <linux-wireless@vger.kernel.org>; Sun, 25 Dec 2011 08:58:46 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: Re: [RFC] mac80211: use rcu_read_lock before sta_info_get
-Date: Sun, 25 Dec 2011 17:58:40 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>, pstew@chromium.org,
-	linux-wireless@vger.kernel.org
-References: <1324825752-8186-1-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1324825752-8186-1-git-send-email-mohammed@qca.qualcomm.com>
+	Thu, 8 Dec 2011 12:19:51 -0500
+From: "Elias, Ilan" <ilane@ti.com>
+To: "lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
+	"samuel@sortiz.org" <samuel@sortiz.org>,
+	"aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [RFC] NFC: Add num of targets to TARGETS_FOUND event
+Date: Thu, 8 Dec 2011 17:13:14 +0000
+Message-ID: <B30D1FD582D6484ABF57420512E5803504FD0316@DNCE03.ent.ti.com> (sfid-20111208_181955_265345_6E837654)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201112251758.41131.chunkeey@googlemail.com> (sfid-20111225_175859_572785_9FD42B00)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 25 December 2011 16:09:12 Mohammed Shafi Shajakhan wrote:
-> @@ -1385,7 +1385,9 @@ void ieee80211_beacon_connection_loss_work(struct work_struct *work)
->  	struct sta_info *sta;
->  
->  	if (ifmgd->associated) {
-> +		rcu_read_lock();
->  		sta = sta_info_get(sdata, ifmgd->bssid);
-> +		rcu_read_unlock();
->  		if (sta)
->  			sta->beacon_loss_count++;
->  	}
+Hi Lauro, Aloisio, Samuel, all,
 
-uh, I think it should be:
+It seems that when targets are found (via NFC_EVENT_TARGETS_FOUND), there is no way to know (in user space) how many targets were found in advance.
 
-> +		rcu_read_lock();
->  		sta = sta_info_get(sdata, ifmgd->bssid);
->  		if (sta)
->  			sta->beacon_loss_count++;
-> +		rcu_read_unlock();
+I suggest we add a new attribute NFC_ATTR_NUM_TARGETS_FOUND to the event NFC_EVENT_TARGETS_FOUND.
+Otherwise, the user would have to wait until a timeut expires in order to decide that no more targets will arrive.
+Please note that the knowledge of how many targets were found can be found in the variable dev->n_targets.
 
-Since we update a member of the rcu-protected "sta"
-reference.
+I'll appreciate your comments on this issue.
+If you agree, I'll send out a patch for this.
 
-Regards,
-	Chr
+Thanks & BR,
+Ilan
