@@ -1,187 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33676 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758127Ab1LNVIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 16:08:19 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v2 3/6] ath9k: reduce indentation level in a few places
-Date: Wed, 14 Dec 2011 22:08:05 +0100
-Message-Id: <1323896888-85551-3-git-send-email-nbd@openwrt.org> (sfid-20111214_220829_867202_F0A12155)
-In-Reply-To: <1323896888-85551-2-git-send-email-nbd@openwrt.org>
-References: <1323896888-85551-1-git-send-email-nbd@openwrt.org>
- <1323896888-85551-2-git-send-email-nbd@openwrt.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:56053 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751713Ab1LHJid convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Dec 2011 04:38:33 -0500
+Received: by ghbz2 with SMTP id z2so1350205ghb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2011 01:38:32 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1323336302.3332.7.camel@jlt3.sipsolutions.net>
+References: <1323336114-31203-1-git-send-email-helmut.schaa@googlemail.com>
+	<1323336302.3332.7.camel@jlt3.sipsolutions.net>
+Date: Thu, 8 Dec 2011 10:38:32 +0100
+Message-ID: <CAGXE3d_Cytq=a--29KN8K5NGi=zw1ywhUV=hDqYioWbvt5Uo4A@mail.gmail.com> (sfid-20111208_103841_450629_55223FA7)
+Subject: Re: [PATCH 1/2] ieee80211: Introduce ieee80211_has_frags
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c |  125 ++++++++++++++++-----------------
- 1 files changed, 60 insertions(+), 65 deletions(-)
+On Thu, Dec 8, 2011 at 10:25 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>> +{
+>> +     return (seq_ctrl & cpu_to_le16(IEEE80211_SCTL_FRAG)) != 0;
+>> +}
+>> +
+>
+> Maybe you should move that close to ieee80211_has_morefrags() so it's
+> easy to tell the difference? :-) (that doesn't use bool either, heh)
 
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 649a11e..b1a37d2 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -480,27 +480,25 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		} else if (!isaggr && txok) {
- 			/* transmit completion */
- 			acked_cnt++;
-+		} else if ((tid->state & AGGR_CLEANUP) || !retry) {
-+			/*
-+			 * cleanup in progress, just fail
-+			 * the un-acked sub-frames
-+			 */
-+			txfail = 1;
-+		} else if (flush) {
-+			txpending = 1;
-+		} else if (fi->retries < ATH_MAX_SW_RETRIES) {
-+			if (txok || !an->sleeping)
-+				ath_tx_set_retry(sc, txq, bf->bf_mpdu,
-+						 retries);
-+
-+			txpending = 1;
- 		} else {
--			if ((tid->state & AGGR_CLEANUP) || !retry) {
--				/*
--				 * cleanup in progress, just fail
--				 * the un-acked sub-frames
--				 */
--				txfail = 1;
--			} else if (flush) {
--				txpending = 1;
--			} else if (fi->retries < ATH_MAX_SW_RETRIES) {
--				if (txok || !an->sleeping)
--					ath_tx_set_retry(sc, txq, bf->bf_mpdu,
--							 retries);
--
--				txpending = 1;
--			} else {
--				txfail = 1;
--				txfail_cnt++;
--				bar_index = max_t(int, bar_index,
--					ATH_BA_INDEX(seq_first, seqno));
--			}
-+			txfail = 1;
-+			txfail_cnt++;
-+			bar_index = max_t(int, bar_index,
-+				ATH_BA_INDEX(seq_first, seqno));
- 		}
- 
- 		/*
-@@ -531,32 +529,29 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 				!txfail);
- 		} else {
- 			/* retry the un-acked ones */
--			if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)) {
--				if (bf->bf_next == NULL && bf_last->bf_stale) {
--					struct ath_buf *tbf;
--
--					tbf = ath_clone_txbuf(sc, bf_last);
--					/*
--					 * Update tx baw and complete the
--					 * frame with failed status if we
--					 * run out of tx buf.
--					 */
--					if (!tbf) {
--						spin_lock_bh(&txq->axq_lock);
--						ath_tx_update_baw(sc, tid, seqno);
--						spin_unlock_bh(&txq->axq_lock);
--
--						ath_tx_complete_buf(sc, bf, txq,
--								    &bf_head,
--								    ts, 0);
--						bar_index = max_t(int, bar_index,
--							ATH_BA_INDEX(seq_first,
--								seqno));
--						break;
--					}
--
--					fi->bf = tbf;
-+			if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) &&
-+			    bf->bf_next == NULL && bf_last->bf_stale) {
-+				struct ath_buf *tbf;
-+
-+				tbf = ath_clone_txbuf(sc, bf_last);
-+				/*
-+				 * Update tx baw and complete the
-+				 * frame with failed status if we
-+				 * run out of tx buf.
-+				 */
-+				if (!tbf) {
-+					spin_lock_bh(&txq->axq_lock);
-+					ath_tx_update_baw(sc, tid, seqno);
-+					spin_unlock_bh(&txq->axq_lock);
-+
-+					ath_tx_complete_buf(sc, bf, txq,
-+							    &bf_head, ts, 0);
-+					bar_index = max_t(int, bar_index,
-+						ATH_BA_INDEX(seq_first, seqno));
-+					break;
- 				}
-+
-+				fi->bf = tbf;
- 			}
- 
- 			/*
-@@ -644,24 +639,26 @@ static u32 ath_lookup_rate(struct ath_softc *sc, struct ath_buf *bf,
- 	max_4ms_framelen = ATH_AMPDU_LIMIT_MAX;
- 
- 	for (i = 0; i < 4; i++) {
--		if (rates[i].count) {
--			int modeidx;
--			if (!(rates[i].flags & IEEE80211_TX_RC_MCS)) {
--				legacy = 1;
--				break;
--			}
--
--			if (rates[i].flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
--				modeidx = MCS_HT40;
--			else
--				modeidx = MCS_HT20;
-+		int modeidx;
- 
--			if (rates[i].flags & IEEE80211_TX_RC_SHORT_GI)
--				modeidx++;
-+		if (!rates[i].count)
-+			continue;
- 
--			frmlen = ath_max_4ms_framelen[modeidx][rates[i].idx];
--			max_4ms_framelen = min(max_4ms_framelen, frmlen);
-+		if (!(rates[i].flags & IEEE80211_TX_RC_MCS)) {
-+			legacy = 1;
-+			break;
- 		}
-+
-+		if (rates[i].flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
-+			modeidx = MCS_HT40;
-+		else
-+			modeidx = MCS_HT20;
-+
-+		if (rates[i].flags & IEEE80211_TX_RC_SHORT_GI)
-+			modeidx++;
-+
-+		frmlen = ath_max_4ms_framelen[modeidx][rates[i].idx];
-+		max_4ms_framelen = min(max_4ms_framelen, frmlen);
- 	}
- 
- 	/*
-@@ -1587,11 +1584,9 @@ void ath_txq_schedule(struct ath_softc *sc, struct ath_txq *txq)
- 				break;
- 		}
- 
--		if (!list_empty(&ac->tid_q)) {
--			if (!ac->sched) {
--				ac->sched = true;
--				list_add_tail(&ac->list, &txq->axq_acq);
--			}
-+		if (!list_empty(&ac->tid_q) && !ac->sched) {
-+			ac->sched = true;
-+			list_add_tail(&ac->list, &txq->axq_acq);
- 		}
- 
- 		if (ac == last_ac ||
--- 
-1.7.3.2
+Since all ieee80211_is/has_* functions use int already I took the same
+approach.
 
+And ieee80211_has_morefrags operates on the frame control while
+this operates on seq_ctrl. Hence, I placed it at the end but if you prefer
+to have it closer to ieee80211_has_morefrags I can do that too :)
+
+Helmut
