@@ -1,49 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:17684 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752002Ab1LTSqT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 13:46:19 -0500
-Cc: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH 0/6] atheros-wireless: fix sparse warnings ho ho ho
-Date: Tue, 20 Dec 2011 10:46:05 -0800
-Message-ID: <1324406771-7100-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111220_194625_501027_3DD2917D)
-MIME-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:43922 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754714Ab1LHBFl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 7 Dec 2011 20:05:41 -0500
+Subject: Re: about =?ISO-8859-1?Q?Intel=AE?= PRO/Wireless 2200BG Driver for
+ Linux
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: =?UTF-8?Q?=E5=BC=A0=E9=B9=8F?= <mg0923058@smail.nju.edu.cn>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1733962485.1371.1323304804967.JavaMail.root@mail3.tmailer.org>
+References: <1733962485.1371.1323304804967.JavaMail.root@mail3.tmailer.org>
 Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 07 Dec 2011 16:07:16 -0800
+Message-ID: <1323302836.13074.53.camel@wwguy-huron> (sfid-20111208_020544_533892_06E16D8B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+On Wed, 2011-12-07 at 16:40 -0800, 张鹏 wrote:
+> Dear vger,
+>            Thank you for the development of  Intel® PRO/Wireless 2200BG Driver for Linux.
+>             I'm very glad to have a driver to support my laptop. Now I am learning the design of wireless driver, could you mail me the source code of Intel® PRO/Wireless 2200BG Driver for Linux. I will be anxious for your reply. If possible, could you send me some advice or other reference manual about wireless driver? Thank you very much.
+>             Best wishes.
 
-Here's a slew of sparse warning fixes for all Atheros wireless drivers.
-These have been itching me for a while now. I ask all patch submitters
-and driver maintainers to please run their patches with these two tests:
+is not 2200BG driver part of Linux kernel?
 
-make C=1 M=drivers/net/wireless/ath/
+drivers/net/wireless/ipw2x00
 
-And then if all is happy try:
+Thanks
+Wey 
 
-make C=2 CF="-D__CHECK_ENDIAN__" M=drivers/net/wireless/ath/
 
-Luis R. Rodriguez (6):
-  ath6kl: fix sparse warning on init.c
-  ath9k: make ath_mci_duty_cycle static
-  ath9k_hw: fix sparse warnings on ar9003_rtt.c
-  ath9k: fix tx queue sparse complaint
-  ath5k: avoid sparse warnings on tracing
-  ath9k_hw: fix sparse complaint on ar9003_switch_com_spdt_get()
-
- drivers/net/wireless/ath/ath5k/trace.h         |    5 +++--
- drivers/net/wireless/ath/ath6kl/init.c         |    5 ++++-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    4 ++--
- drivers/net/wireless/ath/ath9k/ar9003_rtt.c    |    1 +
- drivers/net/wireless/ath/ath9k/mci.c           |    2 +-
- drivers/net/wireless/ath/ath9k/xmit.c          |    3 +++
- 6 files changed, 14 insertions(+), 6 deletions(-)
-
--- 
-1.7.4.15.g7811d
 
