@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:47601 "EHLO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752437Ab1LUUgk (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:50433 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750912Ab1LHR0b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 15:36:40 -0500
-Received: by mail-lpp01m010-f42.google.com with SMTP id j5so3149925lag.15
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2011 12:36:38 -0800 (PST)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com
-Subject: [PATCH 0/3] wl1251: sparse warning and endianess fixes
-Date: Wed, 21 Dec 2011 22:36:26 +0200
-Message-Id: <1324499789-13525-1-git-send-email-coelho@ti.com> (sfid-20111221_213643_408696_2855CFC1)
+	Thu, 8 Dec 2011 12:26:31 -0500
+Received: by iakc1 with SMTP id c1so2840623iak.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2011 09:26:31 -0800 (PST)
+Message-ID: <4EE0F342.6040105@lwfinger.net> (sfid-20111208_182635_129754_B6B0DE89)
+Date: Thu, 08 Dec 2011 11:26:26 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Philipp Dreimann <philipp@dreimann.net>,
+	linux-wireless@vger.kernel.org, mikem@ring3k.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: rtlwifi, rtl8192se bug soft-lockup
+References: <CADYPuQ7W2B9HjR_TiV=dhD3vW-3pR4Y+s_9oJzTC-CdL+hr=9w@mail.gmail.com> <4ED44089.7010102@lwfinger.net> <CADYPuQ61D997MA2JCw1WD_xOosaKvaWK-_RHeBkLtabydDj2iw@mail.gmail.com> <4EDFA124.7010804@lwfinger.net> <CADYPuQ5io_nKkzqwY3uM5bre-bfUvrmH080MBpwqYpNeot5yHA@mail.gmail.com> <20111208095212.GB2402@redhat.com>
+In-Reply-To: <20111208095212.GB2402@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 12/08/2011 03:52 AM, Stanislaw Gruszka wrote:
+> On Wed, Dec 07, 2011 at 06:47:58PM -0200, Philipp Dreimann wrote:
+>> No, this was not posted so far. I will try to debug the loop issue
+>> soonish. The outlined idea above only prevents the issue without
+>> knowing what is happening.
+>
+> I looked at it a bit more and realized that we can replace spinlock
+> by mutex. This should fix remaining problems here, and hopefully do
+> not introduce any others. Could you test two attached patches, and
+> if they do not crash intermediately :-) retest again with
+> CONFIG_LOCKDEP ?
 
-It's been a long time since wl1251 got any updates.  Following the
-wave of endianess sparse checks enablement, I decided to do the same
-for wl1251.
+After about 1 hour of testing, I see no problems and no lockdep warnings.
 
-While at it, I found one sparse warning and a couple of endianess
-bugs.  This patchset fixes them.
+BTW, patch #2 did not apply to wireless-testing as your previous patch changing 
+the locking in ps.c has already been applied. Fortunately, it was not much of a 
+problem to get it applied using wiggle.
 
-Cheers,
-Luca.
-
-PS: John, I'll take this through my tree, as we had agreed.  Just a
-reminder. ;)
-
-Luciano Coelho (3):
-  wl1251: fix sparse warning
-  wl1251: convert 32-bit values to le32 before writing to the chip
-  wl1251: enable sparse endianess check by default
-
- drivers/net/wireless/wl1251/Makefile |    2 ++
- drivers/net/wireless/wl1251/boot.c   |    2 --
- drivers/net/wireless/wl1251/io.h     |    9 ++++-----
- drivers/net/wireless/wl1251/wl1251.h |    2 +-
- 4 files changed, 7 insertions(+), 8 deletions(-)
-
--- 
-1.7.4.1
+Larry
 
