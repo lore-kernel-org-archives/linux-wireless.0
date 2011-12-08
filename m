@@ -1,53 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3059 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754588Ab1LLXPq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 18:15:46 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 14/15] brcm80211: smac: register with bcma for specific
- 802.11 core revisions
-Date: Mon, 12 Dec 2011 15:15:12 -0800
-Message-ID: <1323731713-14942-15-git-send-email-frankyl@broadcom.com> (sfid-20111213_001600_825190_2C298BEF)
-In-Reply-To: <1323731713-14942-1-git-send-email-frankyl@broadcom.com>
-References: <1323731713-14942-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:40145 "EHLO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751075Ab1LHWIg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Dec 2011 17:08:36 -0500
+Received: by mail-lpp01m010-f46.google.com with SMTP id p5so1278438lag.33
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2011 14:08:34 -0800 (PST)
+Subject: Re: [PATCH] wl12xx: silence tx_attr uninitialized warning in
+ wl1271_tx_fill_hdr
+From: Luciano Coelho <coelho@ti.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, eliad@wizery.com
+In-Reply-To: <1323378958-13748-1-git-send-email-linville@tuxdriver.com>
+References: <1323378958-13748-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 09 Dec 2011 00:08:31 +0200
+Message-ID: <1323382111.8996.275.camel@cumari> (sfid-20111208_230839_448751_BA1CBC82)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+On Thu, 2011-12-08 at 16:15 -0500, John W. Linville wrote: 
+> CC [M]  drivers/net/wireless/wl12xx/tx.o
+> drivers/net/wireless/wl12xx/tx.c: In function ‘wl1271_tx_fill_hdr’:
+> drivers/net/wireless/wl12xx/tx.c:288:6: warning: ‘tx_attr’ may be used uninitialized in this function
+> 
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
 
-The brcmsmac driver has been verified on chipsets that were supported
-when it was a pci device driver, ie. bcm4313, bcm43224, and bcm43225.
-This patch restricts the driver to 802.11 core revisions that are found
-in these chipsets.
+Ooops! Sorry, John, and thanks for fixing it.  My compiler (gcc for arm)
+doesn't seem to report it.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+We had already seen this and it had been fix in our internal tree.
+Unfortunately we forgot to include this when sending upstream.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index 30ac8b4..77fdc45 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -90,8 +90,8 @@ MODULE_LICENSE("Dual BSD/GPL");
- 
- /* recognized BCMA Core IDs */
- static struct bcma_device_id brcms_coreid_table[] = {
--	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211,
--		  BCMA_ANY_REV, BCMA_ANY_CLASS),
-+	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 23, BCMA_ANY_CLASS),
-+	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 24, BCMA_ANY_CLASS),
- 	BCMA_CORETABLE_END
- };
- MODULE_DEVICE_TABLE(bcma, brcms_coreid_table);
 -- 
-1.7.5.4
-
+Cheers,
+Luca.
 
