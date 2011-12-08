@@ -1,147 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1493 "EHLO MMS3.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1516 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760984Ab1LQChg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 21:37:36 -0500
+	id S1752211Ab1LHXHM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Dec 2011 18:07:12 -0500
 From: "Franky Lin" <frankyl@broadcom.com>
 To: linville@tuxdriver.com
 cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 14/30] brcm80211: fmac: move driver up status to struct
- brcmf_bus
-Date: Fri, 16 Dec 2011 18:37:04 -0800
-Message-ID: <1324089440-8957-15-git-send-email-frankyl@broadcom.com> (sfid-20111217_035946_026464_EA1DF83E)
-In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
-References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+Subject: [PATCH 11/23] brcm80211: smac: change attach interfaces in
+ main.c for bcma support
+Date: Thu, 8 Dec 2011 15:06:47 -0800
+Message-ID: <1323385619-7454-12-git-send-email-frankyl@broadcom.com> (sfid-20111209_000723_871220_28034F51)
+In-Reply-To: <1323385619-7454-1-git-send-email-frankyl@broadcom.com>
+References: <1323385619-7454-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver up/down status to network interface need to be shared by
-common layer and bus layer. Move it to bus interface structure
-brcmf_bus as part of the fullmac bus interface refactoring.
+From: Arend van Spriel <arend@broadcom.com>
+
+The driver is probed through bcma which provides a device representing
+the core. This device is now passed in brcms_c_attach and brcms_b_attach
+functions.
 
 Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
 Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    2 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   18 +++++++++---------
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    5 +++--
- 3 files changed, 13 insertions(+), 12 deletions(-)
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    4 +--
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |   31 +++++++++----------
+ drivers/net/wireless/brcm80211/brcmsmac/pub.h      |    6 ++--
+ 3 files changed, 19 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index db30f02..4dcb11d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -577,6 +577,7 @@ struct brcmf_bus {
- 	void *drvr;		/* pointer to driver pub structure brcmf_pub */
- 	enum brcmf_bus_state state;
- 	uint maxctl;		/* Max size rxctl request from proto to bus */
-+	bool drvr_up;		/* Status flag of driver up/down */
- };
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+index 9e07dc4..30ac8b4 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+@@ -1030,9 +1030,7 @@ static struct brcms_info *brcms_attach(struct bcma_device *pdev)
+ 	}
  
- /* Forward decls for struct brcmf_pub (see below) */
-@@ -594,7 +595,6 @@ struct brcmf_pub {
- 	struct device *dev;		/* fullmac dongle device pointer */
- 
- 	/* Internal brcmf items */
--	bool up;		/* Driver up/down (to OS) */
- 	bool txoff;		/* Transmit flow-controlled */
- 	uint hdrlen;		/* Total BRCMF header length (proto + bus) */
- 	uint rxsz;		/* Rx buffer size bus module should use */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 576cdc4..5e9acf8 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -273,7 +273,7 @@ static void brcmf_netdev_set_multicast_list(struct net_device *ndev)
- int brcmf_sendpkt(struct brcmf_pub *drvr, int ifidx, struct sk_buff *pktbuf)
+ 	/* common load-time initialization */
+-	wl->wlc = brcms_c_attach((void *)wl, pdev->bus->host_pci->vendor,
+-				 pdev->bus->host_pci->device, unit, false,
+-				 pdev->bus->mmio, pdev->bus->host_pci, &err);
++	wl->wlc = brcms_c_attach((void *)wl, pdev, unit, false, &err);
+ 	brcms_release_fw(wl);
+ 	if (!wl->wlc) {
+ 		wiphy_err(wl->wiphy, "%s: attach() failed with code %d\n",
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index ed8fcb4..d329c90 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -4437,9 +4437,8 @@ struct brcms_pub *brcms_c_pub(struct brcms_c_info *wlc)
+  *    initialize software state for each core and band
+  *    put the whole chip in reset(driver down state), no clock
+  */
+-static int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device,
+-			  uint unit, bool piomode, void __iomem *regsva,
+-			  struct pci_dev *btparam)
++static int brcms_b_attach(struct brcms_c_info *wlc, struct bcma_device *core,
++			  uint unit, bool piomode)
  {
- 	/* Reject if down */
--	if (!drvr->up || (drvr->bus_if->state == BRCMF_BUS_DOWN))
-+	if (!drvr->bus_if->drvr_up || (drvr->bus_if->state == BRCMF_BUS_DOWN))
- 		return -ENODEV;
+ 	struct brcms_hardware *wlc_hw;
+ 	struct d11regs __iomem *regs;
+@@ -4449,9 +4448,11 @@ static int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device,
+ 	bool wme = false;
+ 	struct shared_phy_params sha_params;
+ 	struct wiphy *wiphy = wlc->wiphy;
++	struct pci_dev *pcidev = core->bus->host_pci;
  
- 	/* Update multicast statistic */
-@@ -303,10 +303,10 @@ static int brcmf_netdev_start_xmit(struct sk_buff *skb, struct net_device *ndev)
- 	brcmf_dbg(TRACE, "Enter\n");
+-	BCMMSG(wlc->wiphy, "wl%d: vendor 0x%x device 0x%x\n", unit, vendor,
+-		device);
++	BCMMSG(wlc->wiphy, "wl%d: vendor 0x%x device 0x%x\n", unit,
++	       pcidev->vendor,
++	       pcidev->device);
  
- 	/* Reject if down */
--	if (!drvr->up ||
-+	if (!drvr->bus_if->drvr_up ||
- 	    (drvr->bus_if->state == BRCMF_BUS_DOWN)) {
--		brcmf_dbg(ERROR, "xmit rejected pub.up=%d state=%d\n",
--			  drvr->up,
-+		brcmf_dbg(ERROR, "xmit rejected drvup=%d state=%d\n",
-+			  drvr->bus_if->drvr_up,
- 			  drvr->bus_if->state);
- 		netif_stop_queue(ndev);
- 		return -ENODEV;
-@@ -487,7 +487,7 @@ static struct net_device_stats *brcmf_netdev_get_stats(struct net_device *ndev)
+ 	wme = true;
  
- 	brcmf_dbg(TRACE, "Enter\n");
- 
--	if (drvr->up)
-+	if (drvr->bus_if->drvr_up)
- 		/* Use the protocol to get dongle stats */
- 		brcmf_proto_dstats(drvr);
- 
-@@ -633,7 +633,7 @@ static int brcmf_ethtool(struct brcmf_pub *drvr, void __user *uaddr)
- 		}
- 
- 		/* otherwise, require dongle to be up */
--		else if (!drvr->up) {
-+		else if (!drvr->bus_if->drvr_up) {
- 			brcmf_dbg(ERROR, "dongle is not up\n");
- 			return -ENODEV;
- 		}
-@@ -785,11 +785,11 @@ static int brcmf_netdev_stop(struct net_device *ndev)
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 	brcmf_cfg80211_down(drvr->config);
--	if (drvr->up == 0)
-+	if (drvr->bus_if->drvr_up == 0)
- 		return 0;
- 
- 	/* Set state and stop OS transmissions */
--	drvr->up = 0;
-+	drvr->bus_if->drvr_up = 0;
- 	netif_stop_queue(ndev);
- 
- 	return 0;
-@@ -826,7 +826,7 @@ static int brcmf_netdev_open(struct net_device *ndev)
- 	}
- 	/* Allow transmit calls */
- 	netif_start_queue(ndev);
--	drvr->up = 1;
-+	drvr->bus_if->drvr_up = 1;
- 	if (brcmf_cfg80211_up(drvr->config)) {
- 		brcmf_dbg(ERROR, "failed to bring up cfg80211\n");
- 		return -1;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index cc2c653..6c5b5b5 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -2295,7 +2295,8 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+@@ -4468,7 +4469,7 @@ static int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device,
+ 	 * Do the hardware portion of the attach. Also initialize software
+ 	 * state that depends on the particular hardware we are running.
+ 	 */
+-	wlc_hw->sih = ai_attach(regsva, btparam);
++	wlc_hw->sih = ai_attach(core->bus->mmio, core->bus->host_pci);
+ 	if (wlc_hw->sih == NULL) {
+ 		wiphy_err(wiphy, "wl%d: brcms_b_attach: si_attach failed\n",
+ 			  unit);
+@@ -4477,16 +4478,16 @@ static int brcms_b_attach(struct brcms_c_info *wlc, u16 vendor, u16 device,
  	}
  
- 	/* Deflow-control stack if needed */
--	if (drvr->up && (drvr->bus_if->state == BRCMF_BUS_DATA) &&
-+	if (drvr->bus_if->drvr_up &&
-+	    (drvr->bus_if->state == BRCMF_BUS_DATA) &&
- 	    drvr->txoff && (pktq_len(&bus->txq) < TXLOW))
- 		brcmf_txflowcontrol(bus->sdiodev->dev, 0, OFF);
- 
-@@ -2974,7 +2975,7 @@ static int brcmf_sdbrcm_downloadvars(struct brcmf_sdio *bus, void *arg, int len)
- 	brcmf_dbg(TRACE, "Enter\n");
- 
- 	/* Basic sanity checks */
--	if (bus->drvr->up) {
-+	if (bus->sdiodev->bus_if->drvr_up) {
- 		bcmerror = -EISCONN;
- 		goto err;
+ 	/* verify again the device is supported */
+-	if (!brcms_c_chipmatch(vendor, device)) {
++	if (!brcms_c_chipmatch(pcidev->vendor, pcidev->device)) {
+ 		wiphy_err(wiphy, "wl%d: brcms_b_attach: Unsupported "
+ 			"vendor/device (0x%x/0x%x)\n",
+-			 unit, vendor, device);
++			 unit, pcidev->vendor, pcidev->device);
+ 		err = 12;
+ 		goto fail;
  	}
+ 
+-	wlc_hw->vendorid = vendor;
+-	wlc_hw->deviceid = device;
++	wlc_hw->vendorid = pcidev->vendor;
++	wlc_hw->deviceid = pcidev->device;
+ 
+ 	/* set bar0 window to point at D11 core */
+ 	wlc_hw->regs = (struct d11regs __iomem *)
+@@ -8351,9 +8352,8 @@ void brcms_c_init(struct brcms_c_info *wlc, bool mute_tx)
+  * The common driver entry routine. Error codes should be unique
+  */
+ struct brcms_c_info *
+-brcms_c_attach(struct brcms_info *wl, u16 vendor, u16 device, uint unit,
+-	       bool piomode, void __iomem *regsva, struct pci_dev *btparam,
+-	       uint *perr)
++brcms_c_attach(struct brcms_info *wl, struct bcma_device *core, uint unit,
++	       bool piomode, uint *perr)
+ {
+ 	struct brcms_c_info *wlc;
+ 	uint err = 0;
+@@ -8361,7 +8361,7 @@ brcms_c_attach(struct brcms_info *wl, u16 vendor, u16 device, uint unit,
+ 	struct brcms_pub *pub;
+ 
+ 	/* allocate struct brcms_c_info state and its substructures */
+-	wlc = (struct brcms_c_info *) brcms_c_attach_malloc(unit, &err, device);
++	wlc = (struct brcms_c_info *) brcms_c_attach_malloc(unit, &err, 0);
+ 	if (wlc == NULL)
+ 		goto fail;
+ 	wlc->wiphy = wl->wiphy;
+@@ -8388,8 +8388,7 @@ brcms_c_attach(struct brcms_info *wl, u16 vendor, u16 device, uint unit,
+ 	 * low level attach steps(all hw accesses go
+ 	 * inside, no more in rest of the attach)
+ 	 */
+-	err = brcms_b_attach(wlc, vendor, device, unit, piomode, regsva,
+-			     btparam);
++	err = brcms_b_attach(wlc, core, unit, piomode);
+ 	if (err)
+ 		goto fail;
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/pub.h b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+index 21ccf3a..f0038ad 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/pub.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/pub.h
+@@ -17,6 +17,7 @@
+ #ifndef _BRCM_PUB_H_
+ #define _BRCM_PUB_H_
+ 
++#include <linux/bcma/bcma.h>
+ #include <brcmu_wifi.h>
+ #include "types.h"
+ #include "defs.h"
+@@ -530,9 +531,8 @@ struct brcms_antselcfg {
+ 
+ /* common functions for every port */
+ extern struct brcms_c_info *
+-brcms_c_attach(struct brcms_info *wl, u16 vendor, u16 device, uint unit,
+-	       bool piomode, void __iomem *regsva, struct pci_dev *btparam,
+-	       uint *perr);
++brcms_c_attach(struct brcms_info *wl, struct bcma_device *core, uint unit,
++	       bool piomode, uint *perr);
+ extern uint brcms_c_detach(struct brcms_c_info *wlc);
+ extern int brcms_c_up(struct brcms_c_info *wlc);
+ extern uint brcms_c_down(struct brcms_c_info *wlc);
 -- 
 1.7.5.4
 
