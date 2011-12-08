@@ -1,57 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:44495 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751261Ab1L3OPO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Dec 2011 09:15:14 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1RgdEj-0001tG-03
-	for linux-wireless@vger.kernel.org; Fri, 30 Dec 2011 15:15:09 +0100
-Received: from 80.12.110.204 ([80.12.110.204])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Dec 2011 15:15:08 +0100
-Received: from crocromignon by 80.12.110.204 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Dec 2011 15:15:08 +0100
-To: linux-wireless@vger.kernel.org
-From: Jean <crocromignon@yahoo.fr>
-Subject: Re: HOW TO enable UAPSD and WMM on ath9k
-Date: Fri, 30 Dec 2011 14:08:15 +0000 (UTC)
-Message-ID: <loom.20111230T145440-113@post.gmane.org> (sfid-20111230_151518_893195_349810AE)
-References: <10052860.45456.1296639849605.JavaMail.www@wwinf1e10> <AANLkTi=sBohy=tiYJ00k5mMS2mUBRmztB9hRht1d-9js@mail.gmail.com> <AANLkTi=3L0TubSXvP2dDaKwUv9giQ21Z6pN=VvdpUPJC@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:57084 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751057Ab1LHKje (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Dec 2011 05:39:34 -0500
+Subject: Re: [PATCH 1/2] ieee80211: Introduce ieee80211_has_frags
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <CAGXE3d-qyXB7cEaDM6-21FttyF6iNNGRG1_madFVC9d25X6tRA@mail.gmail.com> (sfid-20111208_104224_327728_48CD5980)
+References: <1323336114-31203-1-git-send-email-helmut.schaa@googlemail.com>
+	 <1323336302.3332.7.camel@jlt3.sipsolutions.net>
+	 <1323336406.3332.9.camel@jlt3.sipsolutions.net>
+	 <CAGXE3d-qyXB7cEaDM6-21FttyF6iNNGRG1_madFVC9d25X6tRA@mail.gmail.com>
+	 (sfid-20111208_104224_327728_48CD5980)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 08 Dec 2011 11:39:32 +0100
+Message-ID: <1323340772.3332.31.camel@jlt3.sipsolutions.net> (sfid-20111208_113936_554229_6EB43939)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Thu, 2011-12-08 at 10:41 +0100, Helmut Schaa wrote:
+> On Thu, Dec 8, 2011 at 10:26 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> >> Would _is_frag() read nicer? The piece you're checking is a fragment I
+> >> think?
+> >
+> > Never mind ... the first fragment has is a fragment too and doesn't
+> > return true here.
+> 
+> We could also call it ieee80211_is_first_frag and swap the logic?
 
-You said:
+That seems like a good idea.
 
-You first need to add support for uAPSD to mac80211 for drivers which
-need this completely in software, and then add it to ath9k.
-
-Sorry, but I don't understand. What do you add  to mac80211.h?
-What do you add to ath9k?
-
-Can you explain step by step how to enable UAPSD on ATH9k or other one driver
-please?
-
-I use iw like userspace. It is not possible to define uapsd parameter in  order
-to set or get value like iwpriv.
-
-This case will help many people who want to add parameter because it very
-difficult fo find something.
-
-
-
-Thanks a lot,
-
-Jean
-
-
-
-
-
+johannes
 
