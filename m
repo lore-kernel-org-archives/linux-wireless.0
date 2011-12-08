@@ -1,71 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:34012 "EHLO arrakis.dune.hu"
+Received: from mail.vyatta.com ([76.74.103.46]:37719 "EHLO mail.vyatta.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753230Ab1LSVZR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 16:25:17 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: Rodriguez Luis <rodrigue@qca.qualcomm.com>
-Cc: mcgrof@infradead.org, linux-wireless@vger.kernel.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 05/15] initvals: add checksums for AR9330 1.[12]
-Date: Mon, 19 Dec 2011 22:24:50 +0100
-Message-Id: <1324329900-3923-6-git-send-email-juhosg@openwrt.org> (sfid-20111219_222547_918597_84C7B23E)
-In-Reply-To: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
-References: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
+	id S1752260Ab1LHRVd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Dec 2011 12:21:33 -0500
+Date: Thu, 8 Dec 2011 09:21:30 -0800
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Dave Taht <dave.taht@gmail.com>,
+	David Miller <davem@davemloft.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org, Hagen Paul Pfeifer <hagen@jauu.net>,
+	bloat-devel <bloat-devel@lists.bufferbloat.net>,
+	bloat <bloat@lists.bufferbloat.net>
+Subject: Re: [PATCH net-next] sch_red: Adaptative RED AQM
+Message-ID: <20111208092130.656c39ff@nehalam.linuxnetplumber.net> (sfid-20111208_182137_536582_B7001AA9)
+In-Reply-To: <1323360363.2521.30.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
+References: <CAA93jw7kQYONQiAozatRmdRRJeK0GB9eNDWtRZ3AL+OVKn0OpA@mail.gmail.com>
+	<1323082774.2670.40.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
+	<1323360363.2521.30.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- checksums.txt |   35 +++++++++++++++++++++++++++++++++++
- 1 files changed, 35 insertions(+), 0 deletions(-)
+On Thu, 08 Dec 2011 17:06:03 +0100
+Eric Dumazet <eric.dumazet@gmail.com> wrote:
 
-diff --git a/checksums.txt b/checksums.txt
-index 8fc8fd0..c85a280 100644
---- a/checksums.txt
-+++ b/checksums.txt
-@@ -88,6 +88,41 @@
- 0x0000000029734396        ar9300PciePhy_pll_on_clkreq_disable_L1_2p2
- 0x000000002d834396        ar9300PciePhy_clkreq_enable_L1_2p2
- 0x0000000029834396        ar9300PciePhy_clkreq_disable_L1_2p2
-+0x00000000f92a5e5c        ar9331_1p1_baseband_postamble
-+0x0000000060d0a442        ar9331_modes_lowest_ob_db_tx_gain_1p1
-+0x000000002eafd425        ar9331_modes_high_ob_db_tx_gain_1p1
-+0x0000000060d0a442        ar9331_modes_low_ob_db_tx_gain_1p1
-+0x00000000ed9eaac6        ar9331_1p1_baseband_core_txfir_coeff_japan_2484
-+0x0000000043a7b840        ar9331_1p1_xtal_25M
-+0x0000000070d13603        ar9331_1p1_radio_core
-+0x000000003118c942        ar9331_1p1_soc_postamble
-+0x00000000bace1580        ar9331_common_wo_xlna_rx_gain_1p1
-+0x0000000012057ba7        ar9331_1p1_baseband_core
-+0x0000000060d0a442        ar9331_modes_high_power_tx_gain_1p1
-+0x0000000003f783bb        ar9331_1p1_mac_postamble
-+0x000000000041b68e        ar9331_1p1_soc_preamble
-+0x000000003bd50340        ar9331_1p1_xtal_40M
-+0x000000002ec9e6f3        ar9331_1p1_mac_core
-+0x00000000adbe1180        ar9331_common_rx_gain_1p1
-+0x0000000000000207        ar9331_common_tx_gain_offset1_1
-+0x000000000005de09        ar9331_1p1_chansel_xtal_25M
-+0x0000000000062522        ar9331_1p1_chansel_xtal_40M
-+0x000000006fd38378        ar9331_modes_lowest_ob_db_tx_gain_1p2
-+0x00000000f92a5e5c        ar9331_1p2_baseband_postamble
-+0x000000006fd38378        ar9331_modes_high_ob_db_tx_gain_1p2
-+0x000000006fd38378        ar9331_modes_low_ob_db_tx_gain_1p2
-+0x00000000ed9eaac6        ar9331_1p2_baseband_core_txfir_coeff_japan_2484
-+0x0000000043a7b840        ar9331_1p2_xtal_25M
-+0x000000007c213603        ar9331_1p2_radio_core
-+0x000000003118c942        ar9331_1p2_soc_postamble
-+0x00000000bace1580        ar9331_common_wo_xlna_rx_gain_1p2
-+0x0000000012057ba7        ar9331_1p2_baseband_core
-+0x000000006fd38378        ar9331_modes_high_power_tx_gain_1p2
-+0x0000000003f783bb        ar9331_1p2_mac_postamble
-+0x000000000041b68e        ar9331_1p2_soc_preamble
-+0x000000003bd50340        ar9331_1p2_xtal_40M
-+0x000000002ec9e6f3        ar9331_1p2_mac_core
-+0x0000000087da7380        ar9331_common_rx_gain_1p2
- 0x0000000000266010        ar9485Common_1_0
- 0x0000000003f783bb        ar9485_1_0_mac_postamble
- 0x00000000299bb64e        ar9485_1_0_pcie_phy_pll_on_clkreq_disable_L1
--- 
-1.7.2.1
+> Changes against our RED implementation are :
+> 
+> max_p is no longer a negative power of two (1/(2^Plog)), but a Q0.32
+> fixed point number, to allow full range described in Adatative paper.
+> 
+> To deliver a random number, we now use a reciprocal divide (thats really
+> a multiply), but this operation is done once per marked/droped packet
+> when in RED_BETWEEN_TRESH window, so added cost (compared to previous
+> AND operation) is near zero.
+> 
+> dump operation gives current max_p value in a new TCA_RED_MAX_P
+> attribute.
+> 
+> Example on a 10Mbit link :
+> 
+> tc qdisc add dev $DEV parent 1:1 handle 10: est 1sec 8sec red \
+>    limit 400000 min 30000 max 90000 avpkt 1000 \
+>    burst 55 ecn adaptative bandwidth 10Mbit
+> 
+> # tc -s -d qdisc show dev eth3
+> ...
+> qdisc red 10: parent 1:1 limit 400000b min 30000b max 90000b ecn
+> adaptative ewma 5 max_p=0.113335 Scell_log 15
+>  Sent 50414282 bytes 34504 pkt (dropped 35, overlimits 1392 requeues 0) 
+>  rate 9749Kbit 831pps backlog 72056b 16p requeues 0 
+>   marked 1357 early 35 pdrop 0 other 0
+> 
+> 
+> Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
 
+Is this backward compatible for users that don't specify
+an adaptive parameter.
