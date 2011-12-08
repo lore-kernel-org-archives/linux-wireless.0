@@ -1,77 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44933 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752701Ab1L2Ksq (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:52266 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751166Ab1LHHHO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Dec 2011 05:48:46 -0500
-From: Vivek Natarajan <nataraja@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH] ath6kl: Remove redundant key_index check.
-Date: Thu, 29 Dec 2011 16:18:39 +0530
-Message-ID: <1325155719-4038-1-git-send-email-nataraja@qca.qualcomm.com> (sfid-20111229_114849_913235_F534B366)
+	Thu, 8 Dec 2011 02:07:14 -0500
+Received: by wgbds13 with SMTP id ds13so784452wgb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2011 23:07:13 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20111208064124.GA4406@hertz.marvell.com>
+References: <20111208064124.GA4406@hertz.marvell.com>
+Date: Thu, 8 Dec 2011 09:07:13 +0200
+Message-ID: <CANUX_P3sXXTP7C1hq0kKpTh98gtR6dsnDZQvs4Kq6kR3sbRrYw@mail.gmail.com> (sfid-20111208_080719_996351_9105A47E)
+Subject: Re: [PATCH] mac80211: Purge A-MPDU TX queues before station destructions
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Yogesh Ashok Powar <yogeshp@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Less-than-zero comparison of an unsigned value is never true.
+>
+> When a station leaves suddenly while ampdu traffic to that station is still
+> running, there is a possibility that the ampdu pending queues are not freed due
+> to a race condition leading to memory leaks. In '__sta_info_destroy' when we
+> attempt to destroy the ampdu sessions in 'ieee80211_sta_tear_down_BA_sessions',
+> the driver calls 'ieee80211_stop_tx_ba_cb_irqsafe' to delete the ampdu
+> structures (tid_tx) and splice the pending queues and this job gets queued in
+> sdata workqueue. However, the sta entry can get destroyed before the above work
+> gets scheduled and hence the race.
+>
+> Purging the queues and freeing the tid_tx to avoid the leak. The better solution
+> would be to fix the race, but that can be taken up in a separate patch.
+>
 
-Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   11 +++++------
- 1 files changed, 5 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index d6806be..25db296 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -524,8 +524,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 	    (vif->prwise_crypto == WEP_CRYPT)) {
- 		struct ath6kl_key *key = NULL;
- 
--		if (sme->key_idx < WMI_MIN_KEY_INDEX ||
--		    sme->key_idx > WMI_MAX_KEY_INDEX) {
-+		if (sme->key_idx > WMI_MAX_KEY_INDEX) {
- 			ath6kl_err("key index %d out of bounds\n",
- 				   sme->key_idx);
- 			up(&ar->sem);
-@@ -997,7 +996,7 @@ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
- 					      params->key);
- 	}
- 
--	if (key_index < WMI_MIN_KEY_INDEX || key_index > WMI_MAX_KEY_INDEX) {
-+	if (key_index > WMI_MAX_KEY_INDEX) {
- 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
- 			   "%s: key index %d out of bounds\n", __func__,
- 			   key_index);
-@@ -1115,7 +1114,7 @@ static int ath6kl_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
- 	if (!ath6kl_cfg80211_ready(vif))
- 		return -EIO;
- 
--	if (key_index < WMI_MIN_KEY_INDEX || key_index > WMI_MAX_KEY_INDEX) {
-+	if (key_index > WMI_MAX_KEY_INDEX) {
- 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
- 			   "%s: key index %d out of bounds\n", __func__,
- 			   key_index);
-@@ -1148,7 +1147,7 @@ static int ath6kl_cfg80211_get_key(struct wiphy *wiphy, struct net_device *ndev,
- 	if (!ath6kl_cfg80211_ready(vif))
- 		return -EIO;
- 
--	if (key_index < WMI_MIN_KEY_INDEX || key_index > WMI_MAX_KEY_INDEX) {
-+	if (key_index > WMI_MAX_KEY_INDEX) {
- 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
- 			   "%s: key index %d out of bounds\n", __func__,
- 			   key_index);
-@@ -1184,7 +1183,7 @@ static int ath6kl_cfg80211_set_default_key(struct wiphy *wiphy,
- 	if (!ath6kl_cfg80211_ready(vif))
- 		return -EIO;
- 
--	if (key_index < WMI_MIN_KEY_INDEX || key_index > WMI_MAX_KEY_INDEX) {
-+	if (key_index > WMI_MAX_KEY_INDEX) {
- 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
- 			   "%s: key index %d out of bounds\n",
- 			   __func__, key_index);
--- 
-1.7.1
-
+Did you actually run into that race, or you can see the bug from code
+inspection ?
