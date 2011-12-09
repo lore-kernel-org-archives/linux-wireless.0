@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:55923 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755371Ab1LZNH5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Dec 2011 08:07:57 -0500
-Message-ID: <4EF87199.2050207@qca.qualcomm.com> (sfid-20111226_140818_858443_8FF587B6)
-Date: Mon, 26 Dec 2011 18:37:37 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:3109 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750761Ab1LIUVe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Dec 2011 15:21:34 -0500
+Message-ID: <4EE269CF.2000608@broadcom.com> (sfid-20111209_212140_246588_09E9DEFB)
+Date: Fri, 9 Dec 2011 21:04:31 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>, Paul Stewart <pstew@google.com>
-Subject: Re: [PATCH] mac80211: use RCU read locks for sta_info_get
-References: <1324882778-3079-1-git-send-email-mohammed@qca.qualcomm.com> <201112261151.05309.chunkeey@googlemail.com>
-In-Reply-To: <201112261151.05309.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="ISO-8859-15"; format=flowed
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"Francesco Gringoli" <francesco.gringoli@ing.unibs.it>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Performance of BCM43224 (14e4:4353)
+References: <4EE15A4E.1090500@lwfinger.net>
+ <4EE1E2AC.8030002@broadcom.com> <4EE23AF5.8000400@lwfinger.net>
+ <4EE24615.9020003@broadcom.com> <4EE2509D.6020501@lwfinger.net>
+In-Reply-To: <4EE2509D.6020501@lwfinger.net>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi Christian,
+On 12/09/2011 07:17 PM, Larry Finger wrote:
+> Arend,
+> 
+> I got a little further. The error message was modified as below:
+> 
+>          /* scan for cores */
+>          if (socitype == SOCI_AI) {
+>                  SI_MSG("Found chip type AI (0x%08x)\n", w);
+>                  /* pass chipc address instead of original core base */
+>                  ai_scan(&sii->pub, pbus);
+>          } else {
+>                  /* Found chip of unknown type */
+>                  pr_err("Found chip of type %d, chipid is 0x%x\n", socitype, w);
+>                  return NULL;
+>          }
+> 
+> This one logs "brcmsmac: Found chip of type 4, chipid is 0x4bf80001". That is a 
+> very strange chip ID.
+> 
+> Larry
+> 
 
-On Monday 26 December 2011 04:21 PM, Christian Lamparter wrote:
-> On Monday 26 December 2011 07:59:38 Mohammed Shafi Shajakhan wrote:
->> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->>
->> Cc: Paul Stewart<pstew@google.com>
->> Signed-off-by: Christian Lamparter<chunkeey@googlemail.com>
-> huh, where did I sign that off? Anyway, You [or John?] can drop that line
-> and replace it with Cc: stable@kernel.org
+Indeed. What is more strange is that this looks like value from
+enumeration rom. 0x4bf is BCMA_MANUF_BCM, 0x800 is BCMA_CORE_CHIPCOMMON.
+It seems the BAR window is wrong. Can you read PCI_BAR window in the
+ai_doattach() before reading the chip id.
 
-i will send a proper v2 and this is being recently added by the commit 
-a85e1d55974646a442d95911e3f7d7a891ea9ac5, i will properly mention it 
-also. thank you
-
-
->
-> Regards,
-> 	Chr
+Gr. AvS
 
