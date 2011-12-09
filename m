@@ -1,52 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52063 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755060Ab1LGNEn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Dec 2011 08:04:43 -0500
-Subject: Re: [PATCH 1/2] cfg80211: Define a wrapper function for reporting
- roaming
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1323262624-30060-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1323262624-30060-1-git-send-email-vthiagar@qca.qualcomm.com>
+Received: from mga01.intel.com ([192.55.52.88]:52073 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751361Ab1LISWi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Dec 2011 13:22:38 -0500
+Subject: Re: iwlwifi havoc on some APs (rekeying?)
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Wolfgang Breyha <wbreyha@gmx.net>, johannes.berg@intel.com
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4EE24DF4.4020301@gmx.net>
+References: <4EE2202A.4080303@gmx.net>
+	 <1323446534.13074.96.camel@wwguy-huron>  <4EE24DF4.4020301@gmx.net>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 07 Dec 2011 14:04:37 +0100
-Message-ID: <1323263077.3404.33.camel@jlt3.sipsolutions.net> (sfid-20111207_140448_815333_5FB2CCB8)
+Date: Fri, 09 Dec 2011 09:23:56 -0800
+Message-ID: <1323451436.13074.158.camel@wwguy-huron> (sfid-20111209_192243_598986_F6275AE2)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-12-07 at 18:27 +0530, Vasanthakumar Thiagarajan wrote:
+Johannes,
 
->  /**
-> + * cfg80211_roamed_bss - notify cfg80211 of roaming
-> + *
-> + * @dev: network device
-> + * @bss: entry of bss to which STA got roamed (may be %NULL)
-> + * @channel: the channel of the new AP
-> + * @bssid: the BSSID of the new AP
-> + * @req_ie: association request IEs (maybe be %NULL)
-> + * @req_ie_len: association request IEs length
-> + * @resp_ie: association response IEs (may be %NULL)
-> + * @resp_ie_len: assoc response IEs length
-> + * @gfp: allocation flags
-> + *
-> + * This is just a wrapper to notify cfg80211 of roaming event with driver
-> + * passing bss to avoid a race in timeout of the bss entry. It should be
-> + * called by the underlying driver whenever it roamed from one AP to another
-> + * while connected. Drivers which have roaming implemented in firmware
-> + * may use this function to avoid a race in bss entry timeout where the bss
-> + * entry of the new AP is seen in the driver, but gets timed out by the time
-> + * it is accessed in __cfg80211_roamed() due to delay in scheduling
-> + * rdev->event_work. Returns 0 upon success. Driver has to release a reference
-> + * to bss with cfg80211_put_bss() when the return value is non-zero.
-> + */
+Anything changed in this area?
 
-That calling convention is strange. Either make the function responsible
-for it, nor not, but having to do the return value dance is not very
-useful.
+Thanks
+Wey
 
-johannes
+On Fri, 2011-12-09 at 10:05 -0800, Wolfgang Breyha wrote:
+> On 09/12/11 17:02, Guy, Wey-Yi wrote:
+> > Hi Wolfgang,
+> > 
+> > I don't have the similar AP here for testing. by looking at the log,
+> > looks like there is a issue while you scan.
+> > 
+> > Could you please try this patch and see if make any different? it is a
+> > long shot, but I just like to see if it make any different at all
+> > 
+> > once you apply the patch, please make sure P2P is disabled in .config
+> 
+> Done that... iwlwifi says...
+> > [  833.360213] iwlwifi 0000:43:00.0: CONFIG_IWLWIFI_DEBUG enabled
+> > [  833.360215] iwlwifi 0000:43:00.0: CONFIG_IWLWIFI_DEBUGFS enabled
+> > [  833.360217] iwlwifi 0000:43:00.0: CONFIG_IWLWIFI_DEVICE_TRACING disabled
+> > [  833.360219] iwlwifi 0000:43:00.0: CONFIG_IWLWIFI_DEVICE_SVTOOL enabled
+> > [  833.360222] iwlwifi 0000:43:00.0: CONFIG_IWLWIFI_P2P disabled
+> > [  833.360228] iwlwifi 0000:43:00.0: Detected Intel(R) Centrino(R) Advanced-N 6200 AGN, REV=0x74
+> 
+> But it still occurs. This time it started again right after the 2.
+> rekeying event. wpa_supplicant logged.
+> > Associated with 00:80:48:xx:xx:xx
+> > WPA: Key negotiation completed with 00:80:48:xx:xx:xx [PTK=CCMP GTK=TKIP]
+> > CTRL-EVENT-CONNECTED - Connection to 00:80:48:xx:xx9:xx completed (reauth) [id=0 id_str=]
+> > WPA: Group rekeying completed with 00:80:48:xx:xx:xx [GTK=TKIP]
+> > WPA: Group rekeying completed with 00:80:48:xx:xx:xx [GTK=TKIP]
+> 
+> I failed to mention that I used F14 with compat-wireless from arround
+> march of 2011 before I upgraded to F16 in my first mail. With this
+> version I had no troubles with the exactly same AP and my 2540p.
+> 
+> Greetings, Wolfgang
+> ..
+> 
+> 
+> 
+> > 
+> > Thanks
+> > Wey
+
 
