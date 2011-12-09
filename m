@@ -1,43 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:55680 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751625Ab1LTTBk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 14:01:40 -0500
-Received: by ghbz12 with SMTP id z12so4370854ghb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 11:01:40 -0800 (PST)
-Message-ID: <4EF0DB90.50100@lwfinger.net> (sfid-20111220_200153_589771_DF55535D)
-Date: Tue, 20 Dec 2011 13:01:36 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 0/6] atheros-wireless: fix sparse warnings ho ho ho
-References: <1324406771-7100-1-git-send-email-rodrigue@qca.qualcomm.com>
-In-Reply-To: <1324406771-7100-1-git-send-email-rodrigue@qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga03.intel.com ([143.182.124.21]:23204 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751675Ab1LIBZA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Dec 2011 20:25:00 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 03/15] iwlwifi: Display more uCode debug info
+Date: Thu,  8 Dec 2011 16:26:10 -0800
+Message-Id: <1323390382-1678-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111209_022513_838273_FE12C8F3)
+In-Reply-To: <1323390382-1678-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1323390382-1678-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/20/2011 12:46 PM, Luis R. Rodriguez wrote:
-> From: Luis R. Rodriguez<mcgrof@qca.qualcomm.com>
->
-> Here's a slew of sparse warning fixes for all Atheros wireless drivers.
-> These have been itching me for a while now. I ask all patch submitters
-> and driver maintainers to please run their patches with these two tests:
->
-> make C=1 M=drivers/net/wireless/ath/
->
-> And then if all is happy try:
->
-> make C=2 CF="-D__CHECK_ENDIAN__" M=drivers/net/wireless/ath/
+When uCode encounter problem, it pass a lot of debug data to help debugging
+the issue. We only show partial data before, why not display all of those.
 
-Why not follow a suggestion that Johannes made to me? Add the line
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-commands.h      |   24 ++++++++++++---------
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |   15 +++++++++++++
+ 2 files changed, 29 insertions(+), 10 deletions(-)
 
-ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index f4eccf5..d98d09c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -466,23 +466,27 @@ struct iwl_error_event_table {
+ 	u32 frame_ptr;		/* frame pointer */
+ 	u32 stack_ptr;		/* stack pointer */
+ 	u32 hcmd;		/* last host command header */
+-#if 0
+-	/* no need to read the remainder, we don't use the values */
+-	u32 isr0;		/* isr status register LMPM_NIC_ISR0: rxtx_flag */
+-	u32 isr1;		/* isr status register LMPM_NIC_ISR1: host_flag */
+-	u32 isr2;		/* isr status register LMPM_NIC_ISR2: enc_flag */
+-	u32 isr3;		/* isr status register LMPM_NIC_ISR3: time_flag */
+-	u32 isr4;		/* isr status register LMPM_NIC_ISR4: wico interrupt */
++	u32 isr0;		/* isr status register LMPM_NIC_ISR0:
++				 * rxtx_flag */
++	u32 isr1;		/* isr status register LMPM_NIC_ISR1:
++				 * host_flag */
++	u32 isr2;		/* isr status register LMPM_NIC_ISR2:
++				 * enc_flag */
++	u32 isr3;		/* isr status register LMPM_NIC_ISR3:
++				 * time_flag */
++	u32 isr4;		/* isr status register LMPM_NIC_ISR4:
++				 * wico interrupt */
+ 	u32 isr_pref;		/* isr status register LMPM_NIC_PREF_STAT */
+ 	u32 wait_event;		/* wait event() caller address */
+ 	u32 l2p_control;	/* L2pControlField */
+ 	u32 l2p_duration;	/* L2pDurationField */
+ 	u32 l2p_mhvalid;	/* L2pMhValidBits */
+ 	u32 l2p_addr_match;	/* L2pAddrMatchStat */
+-	u32 lmpm_pmg_sel;	/* indicate which clocks are turned on (LMPM_PMG_SEL) */
+-	u32 u_timestamp;	/* indicate when the date and time of the compilation */
++	u32 lmpm_pmg_sel;	/* indicate which clocks are turned on
++				 * (LMPM_PMG_SEL) */
++	u32 u_timestamp;	/* indicate when the date and time of the
++				 * compilation */
+ 	u32 flow_handler;	/* FH read/write pointers, RX credit */
+-#endif
+ } __packed;
+ 
+ struct iwl_alive_resp {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index becd921..a0d43d6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -648,6 +648,21 @@ static void iwl_dump_nic_error_log(struct iwl_trans *trans)
+ 	IWL_ERR(trans, "0x%08X | hw version\n", table.hw_ver);
+ 	IWL_ERR(trans, "0x%08X | board version\n", table.brd_ver);
+ 	IWL_ERR(trans, "0x%08X | hcmd\n", table.hcmd);
++
++	IWL_ERR(trans, "0x%08X | isr0\n", table.isr0);
++	IWL_ERR(trans, "0x%08X | isr1\n", table.isr1);
++	IWL_ERR(trans, "0x%08X | isr2\n", table.isr2);
++	IWL_ERR(trans, "0x%08X | isr3\n", table.isr3);
++	IWL_ERR(trans, "0x%08X | isr4\n", table.isr4);
++	IWL_ERR(trans, "0x%08X | isr_pref\n", table.isr_pref);
++	IWL_ERR(trans, "0x%08X | wait_event\n", table.wait_event);
++	IWL_ERR(trans, "0x%08X | l2p_control\n", table.l2p_control);
++	IWL_ERR(trans, "0x%08X | l2p_duration\n", table.l2p_duration);
++	IWL_ERR(trans, "0x%08X | l2p_mhvalid\n", table.l2p_mhvalid);
++	IWL_ERR(trans, "0x%08X | l2p_addr_match\n", table.l2p_addr_match);
++	IWL_ERR(trans, "0x%08X | lmpm_pmg_sel\n", table.lmpm_pmg_sel);
++	IWL_ERR(trans, "0x%08X | timestamp\n", table.u_timestamp);
++	IWL_ERR(trans, "0x%08X | flow_handler\n", table.flow_handler);
+ }
+ 
+ /**
+-- 
+1.7.0.4
 
-To the bottom of the make file(s). That way they only need one run. Then enforce 
-the rule by not ACKing any patches with too many of the endian warnings, and do 
-not allow any of the others.
-
-Larry
