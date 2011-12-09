@@ -1,60 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63153 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752769Ab1LMJHi (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45766 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750721Ab1LIPpV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 04:07:38 -0500
-Message-ID: <4EE71542.8040602@qca.qualcomm.com> (sfid-20111213_100744_057945_1762B25A)
-Date: Tue, 13 Dec 2011 14:35:06 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Fri, 9 Dec 2011 10:45:21 -0500
+Date: Fri, 9 Dec 2011 10:44:15 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: Nikolay Martynov <mar.kolya@gmail.com>,
+	"mar.kolya@gmail.com linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: Re: [PATCH] iwlwifi regression in 20111205 merge
+Message-ID: <20111209154415.GA14236@tuxdriver.com> (sfid-20111209_164525_441911_2F2EF987)
+References: <1323398619-19774-1-git-send-email-mar.kolya@gmail.com>
+ <1323399833.13074.80.camel@wwguy-huron>
+ <1323400528.13074.87.camel@wwguy-huron>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>
-Subject: Re: [RFC 2/2] mac80211: Fix power save in change save
-References: <1323766515-19223-1-git-send-email-mohammed@qca.qualcomm.com>	 <1323766515-19223-2-git-send-email-mohammed@qca.qualcomm.com> <1323766643.3355.2.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1323766643.3355.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1323400528.13074.87.camel@wwguy-huron>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Are the bits in the wireless tree correct?  If so, then please just
+send a patch to fix the wireless-next tree.
 
-On Tuesday 13 December 2011 02:27 PM, Johannes Berg wrote:
-> On Tue, 2011-12-13 at 14:25 +0530, Mohammed Shafi Shajakhan wrote:
->> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->>
->> we found that power save is not getting enabled when we do
->> change interface in this order STA->IBSS->STA. this is
->> because ieee80211_setup_sdata clears type-dependen union
->>
->> Reported-by: Leela Kella<leela@qca.qualcomm.com>
->> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->> ---
->>   net/mac80211/mlme.c |    1 +
->>   1 files changed, 1 insertions(+), 0 deletions(-)
->>
->> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
->> index 67a6be1..d87fde3 100644
->> --- a/net/mac80211/mlme.c
->> +++ b/net/mac80211/mlme.c
->> @@ -2371,6 +2371,7 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
->>   		    (unsigned long) sdata);
->>
->>   	ifmgd->flags = 0;
->> +	ifmgd->powersave = sdata->wdev.ps;
->
-> Makes sense.
+Now that the kernel.org mess is sorted, I guess we/I need to go back
+to pulling your trees instead of applying patches...
 
-thanks for the review, I will fix the subject name also.
+John
 
->
-> johannes
->
-
+On Thu, Dec 08, 2011 at 07:15:28PM -0800, Guy, Wey-Yi wrote:
+> John,
+> 
+> what is the correct method to handle this case?
+> the patch need to add a piece of code in iwl-mac80211.c, and also need
+> to backport to stable
+> Since the function was recently move from iwl-agn.c to iwl-mac80211.c,
+> so separated patch need for "wireless-next" and "wireless". But look
+> like portion of patch just lost because the function was move.
+> 
+> Thanks
+> Wey
+> 
+> On Thu, 2011-12-08 at 19:03 -0800, Guy, Wey-Yi wrote:
+> > Hi Nikolay,
+> > 
+> > I believe I know what happen,
+> > 
+> > this change happen after the function being move from iwl-agn.c to
+> > iwl-mac80211.c
+> > 
+> > Author: Johannes Berg <johannes.berg@intel.com>
+> > Date:   Fri Dec 2 08:19:17 2011 -0800
+> > 
+> >     iwlagn: fix HW crypto for TX-only keys
+> >     
+> >     Group keys in IBSS or AP mode are not programmed
+> >     into the device since we give the key to it with
+> >     every TX packet. However, we do need mac80211 to
+> >     create the MMIC & PN in all cases. Move the code
+> >     around to set the key flags all the time. We set
+> >     them even when the key is removed again but that
+> >     is obviously harmless.
+> >     
+> >     Cc: stable@vger.kernel.org
+> >     Reported-by: Reinette Chatre <reinette.chatre@intel.com>
+> >     Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> >     Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> >     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > 
+> > and the changes was made in iwl-mac80211.c
+> > 
+> > but since this patch need to be backport to stable kernel.
+> > so there is a separated patch sent for the changes in iwl-agn.c against
+> > stable
+> > 
+> > because all these, for some reason the changes just got lost.
+> > Thank you for catch this
+> > 
+> > Wey
+> > 
+> > 
+> > On Thu, 2011-12-08 at 18:43 -0800, Nikolay Martynov wrote:
+> > > It looks like the regression was introduced between 20111202 and
+> > > 20111205 (linux-next tree). Symptoms: connection to AP seem to be
+> > > established, but no data goes though it in any way. Tested on intel
+> > > 5300.
+> > >   Peek at the changes have shown that it looks like at least part of
+> > > the code wasn't merged properly. It was originally committed into
+> > > iwl_agn.c but code in question was moved to iwl-mac80211.c.
+> > >   This patch puts code in place and my card works again.
+> > >   I hope this patch will be reviewed by people developing iwl
+> > > driver. Also, it is possible that some other iwl code didn't make it
+> > > though 20111205 merge as well, so this probably should be checked too.
+> > >   Please let me know if I can provide any more info.
+> > >   Thanks!
+> > > 
+> > > Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+> > > ---
+> > >  drivers/net/wireless/iwlwifi/iwl-mac80211.c |   11 +++++++++++
+> > >  1 files changed, 11 insertions(+), 0 deletions(-)
+> > > 
+> > > diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+> > > index 794b735..55308b8 100644
+> > > --- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+> > > +++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+> > > @@ -517,6 +517,17 @@ static int iwlagn_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+> > >  		return -EOPNOTSUPP;
+> > >  	}
+> > >  
+> > > +	switch (key->cipher) {
+> > > +	case WLAN_CIPHER_SUITE_TKIP:
+> > > +		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
+> > > +		/* fall through */
+> > > +	case WLAN_CIPHER_SUITE_CCMP:
+> > > +		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+> > > +		break;
+> > > +	default:
+> > > +		break;
+> > > +	}
+> > > +
+> > >  	/*
+> > >  	 * We could program these keys into the hardware as well, but we
+> > >  	 * don't expect much multicast traffic in IBSS and having keys
+> > 
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> 
+> 
 
 -- 
-thanks,
-shafi
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
