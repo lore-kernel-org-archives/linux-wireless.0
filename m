@@ -1,62 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:63896 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751966Ab1LPONk (ORCPT
+Received: from exprod5og109.obsmtp.com ([64.18.0.188]:52506 "EHLO
+	exprod5og109.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750826Ab1LJQVW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 09:13:40 -0500
-Message-ID: <4EEB521A.70602@lwfinger.net> (sfid-20111216_151401_908907_136BC178)
-Date: Fri, 16 Dec 2011 08:13:46 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 10 Dec 2011 11:21:22 -0500
+Received: from il93mgrg01.am.mot-mobility.com ([10.176.130.20])
+	by il93mgrg01.am.mot-mobility.com (8.14.3/8.14.3) with ESMTP id pB94pe3I008747
+	for <linux-wireless@vger.kernel.org>; Thu, 8 Dec 2011 23:51:41 -0500 (EST)
+Received: from mail-vw0-f47.google.com (mail-vw0-f47.google.com [209.85.212.47])
+	by il93mgrg01.am.mot-mobility.com (8.14.3/8.14.3) with ESMTP id pB94peXT008738
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=OK)
+	for <linux-wireless@vger.kernel.org>; Thu, 8 Dec 2011 23:51:40 -0500 (EST)
+Received: by vbbfc21 with SMTP id fc21so2807170vbb.34
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2011 20:56:51 -0800 (PST)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-Subject: Re: unexpected taint message
-References: <4EEB0EFC.5000302@broadcom.com>  (sfid-20111216_102800_182196_AFD2D6CF) <1324038636.3429.1.camel@jlt3.sipsolutions.net>  <4EEB4D61.80602@lwfinger.net> (sfid-20111216_145414_221850_EED1E4DE) <1324043939.3429.2.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1324043939.3429.2.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Date: Fri, 9 Dec 2011 10:26:51 +0530
+Message-ID: <CAPSXAjdTHKC7wxPXsS2VVNSJcgaWDTQSNBYQhfbog6--uHkDvg@mail.gmail.com> (sfid-20111210_172125_805837_F22BD61F)
+Subject: modprobe utility not found
+From: PRASHANTH CHAKRAVARTHY <a19110@motorola.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sireesha Kosuri <jmng34@motorola.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/16/2011 07:58 AM, Johannes Berg wrote:
-> On Fri, 2011-12-16 at 07:53 -0600, Larry Finger wrote:
->> On 12/16/2011 06:30 AM, Johannes Berg wrote:
->>> On Fri, 2011-12-16 at 10:27 +0100, Arend van Spriel wrote:
->>>> To whoever may know,
->>>>
->>>> Upon loading our driver module I get the following message:
->>>>
->>>> kernel: [  344.805106] Disabling lock debugging due to kernel taint
->>>>
->>>> What exactly are the criteria for tainting? Our driver locking strategy
->>>> is something we want to refactor and having lock debugging during that
->>>> transition may be a life safer.
->>>
->>> cat /proc/sys/kernel/tainted
->>
->> Please note that Documentation/sysctl/kernel.txt is missing the explanation for
->> two bits in the value printed:
->>
->> 2048 - The system is working around a severe firmware bug.
->> 4096 - An out-of-tree module has been loaded.
->>
->> On my system, bit 4096 is set due to loading the VirtualBox module, which
->> disables lock debugging lock debugging. I suspect that loading VMware would
->> cause the same condition.
->
-> Hmm. I wish OOT didn't disable lockdep, we do a lot of development with
-> modules OOT because the turnaround is faster/easier (for not so
-> experienced developers). Worst case we can patch it out of the base
-> kernel I guess...
+Hi,
+We are trying to build compat utility on mac os machines. Builds are
+failing there with error /sbin/modprobe not found. They are passing on
+other linux machines .
+Is there a modprobe utility for mac os machines ?
 
-Me too. Now I understand John's patch entitled "[RFC] modpost: add option to 
-allow external modules to avoid taint". I doubt that it will be allowed 
-upstream, but I think that I will add it as a local commit.
-
-I had failed to notice that the VB module was disabling lock checking, and I 
-ACKed a patch to rtlwifi that triggers a nested lock WARNING. Oh well, at least 
-the bug was not released into the wild yet.
-
-Larry
+Regards,
+Prashanth
