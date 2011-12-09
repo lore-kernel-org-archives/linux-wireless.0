@@ -1,59 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55299 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752250Ab1LUQaf (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:35676 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750878Ab1LITmu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 11:30:35 -0500
-Date: Wed, 21 Dec 2011 11:19:54 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	stable@vger.kernel.org
-Subject: Re: [PATCH 3.2] iwlagn: fix (remove) use of PAGE_SIZE
-Message-ID: <20111221161953.GB11842@tuxdriver.com> (sfid-20111221_173045_728203_3F177509)
-References: <1324332059-11630-1-git-send-email-wey-yi.w.guy@intel.com>
+	Fri, 9 Dec 2011 14:42:50 -0500
+Received: by vbbfc26 with SMTP id fc26so2576010vbb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Dec 2011 11:42:49 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1324332059-11630-1-git-send-email-wey-yi.w.guy@intel.com>
+In-Reply-To: <1323427001.3622.14.camel@jlt3.sipsolutions.net>
+References: <1323427001.3622.14.camel@jlt3.sipsolutions.net>
+Date: Sat, 10 Dec 2011 06:42:49 +1100
+Message-ID: <CAJ-VmomHfArfn6sQhPb=k8cP_MJ-MX5rk1c1g8JgFp=1ce9adQ@mail.gmail.com> (sfid-20111209_204252_568772_3091FE2B)
+Subject: Re: ath9k: reports wrong GI/bandwidth (bug)
+From: Adrian Chadd <adrian@freebsd.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 19, 2011 at 02:00:59PM -0800, Wey-Yi Guy wrote:
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> The ICT code erroneously uses PAGE_SIZE. The bug
-> is that PAGE_SIZE isn't necessarily 4096, so on
-> such platforms this code will not work correctly
-> as we'll try to attempt to read an index in the
-> table that the device never wrote, it always has
-> 4096-byte pages.
-> 
-> Additionally, the manual alignment code here is
-> unnecessary -- Documentation/DMA-API-HOWTO.txt
-> states:
->   The cpu return address and the DMA bus master address are both
->   guaranteed to be aligned to the smallest PAGE_SIZE order which
->   is greater than or equal to the requested size.  This invariant
->   exists (for example) to guarantee that if you allocate a chunk
->   which is smaller than or equal to 64 kilobytes, the extent of the
->   buffer you receive will not cross a 64K boundary.
-> 
-> Just use appropriate new constants and get rid of
-> the alignment code.
-> 
-> Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Can you see whether the -final- frame in an A-MPDU has the correct GI bit set?
 
-This seems like a big patch.  It is a bit late in the release cycle
-to rewrite all the DMA allocation code. :-)
 
-What platforms does this affect?  Are there actual users involved?
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+adrian
