@@ -1,29 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:61416 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757314Ab1LNRXJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 12:23:09 -0500
-Received: by yhr47 with SMTP id 47so1518089yhr.19
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2011 09:23:08 -0800 (PST)
-MIME-Version: 1.0
-Date: Wed, 14 Dec 2011 22:53:08 +0530
-Message-ID: <CAKeTQ4aVzp3GTmzR0zv1j5fWyCUrQLUk9EHHBvZFpDYiQSC1=g@mail.gmail.com> (sfid-20111214_182313_985553_E2D8A2F2)
-Subject: wierless hardware using ath9k driver on AP mode leads to kernel panic
-From: Ashwin Mendonca <ashwinloyal@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from bues.ch ([80.190.117.144]:46149 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751942Ab1LISpe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Dec 2011 13:45:34 -0500
+Date: Fri, 9 Dec 2011 19:45:24 +0100
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: b43-dev <b43-dev@lists.infradead.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: RFKILL switch operations with b43
+Message-ID: <20111209194524.7f57f936@milhouse> (sfid-20111209_194537_142265_B5E0F60C)
+In-Reply-To: <4EE25315.9030504@lwfinger.net>
+References: <4EE25315.9030504@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I can enable AP mode on my netbook. But when I turn on a wireless
-client device, then the sytem on AP mode freezes. It has happened
-since 2.3.38. When I installaed ath9k driver compiled from
-compat-wireless on linux 2.3.38, the issue got disappered. But the
-ath9k driver packed with the kernel still has the issue. On Ubuntu
-11.10, all linux 3.0 releases (the current stable release  Ubuntu
-3.0.14) have the issue. I compiled 3.1.5 stable kernel from sources,
-which also has the issue. I recently compiled
-compat-wireless-3.2-rc1-1, which also got my system frozen. This is
-the bug that I filled at Launchpad:
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/875503
+On Fri, 09 Dec 2011 12:27:33 -0600
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+
+> Does anyone have a laptop with a slide switch (definite on/off positions) and is 
+> using b43? If so, are the "ENABLED" and "DISABLED" messages logged when you move 
+> the switches? What kernel are you using?
+> 
+> The mini-PCIe slot in my laptop is broken, and I need to use an extender, thus I 
+> cannot do the test myself.
+
+If you're not too fat fingered, you can probably modify your extender to add a switch
+or jumper (or loose wire ;) that pulls pin20 to GND with a resistor or floats it.
+That should emulate the rfkill input signal to the wireless device.
+
+http://pinoutsguide.com/Slots/mini_pcie_pinout.shtml
+
+-- 
+Greetings, Michael.
