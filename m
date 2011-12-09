@@ -1,89 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:47254 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751819Ab1LTJex (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 04:34:53 -0500
-Message-ID: <4EF056B6.4050204@neratec.com> (sfid-20111220_103459_416874_92B3282B)
-Date: Tue, 20 Dec 2011 10:34:46 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:41083 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751094Ab1LIAqK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Dec 2011 19:46:10 -0500
+Received: by iakc1 with SMTP id c1so3335588iak.19
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2011 16:46:10 -0800 (PST)
+Message-ID: <4EE15A4E.1090500@lwfinger.net> (sfid-20111209_014615_266435_07DC7A26)
+Date: Thu, 08 Dec 2011 18:46:06 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Joe Perches <joe@perches.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH] ath9k: fix roadkill due to Joe's patch on ath_dbg() changes
-References: <1324351843-4115-1-git-send-email-rodrigue@qca.qualcomm.com>
-In-Reply-To: <1324351843-4115-1-git-send-email-rodrigue@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+CC: b43-dev <b43-dev@lists.infradead.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Performance of BCM43224 (14e4:4353)
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis,
+Guys,
 
-thank you for fixing this that fast. And sorry for the follow-up work after you helped me so much to get the DFS patches upstreamable.
+I just added the patches that let brcmsmac use bcma, and tested the TX and RX 
+rates using netperf. The results are
+
+Driver			RX		TX
+
+brcmsmac		21.7		6.2
+b43			15.0		6.0
+wl			43.5		73.5
+
+The AP is running in 802.11n mode and has throughput of 40-60 Mbps in both 
+directions with an RTL8192CE, thus both open-source drivers have room for 
+improvement.
+
+I am using the following firmware:
+b43-phy0: Loading firmware version 666.2 (2011-02-23 01:15:07)
 
 
-Thanks again,
-Zefir
+With b43 and mac80211 debugging turned on, I see a lot of
 
-On 12/20/2011 04:30 AM, Luis R. Rodriguez wrote:
-> From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-> 
-> Joe changed ath_dbg() to simpify code but while his patch was
-> being merged dfs.c was born and as such did not get the change
-> Joe envisioned. This fixes that. Test compiled with:
-> 
->  make allmodconfig
-> 
-> Cc: Joe Perches <joe@perches.com>
-> Cc: Stephen Rothwell <sfr@canb.auug.org.au>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/dfs.c |    8 ++++----
->  1 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
-> index e4e84a9..f4f56af 100644
-> --- a/drivers/net/wireless/ath/ath9k/dfs.c
-> +++ b/drivers/net/wireless/ath/ath9k/dfs.c
-> @@ -66,7 +66,7 @@ ath9k_postprocess_radar_event(struct ath_softc *sc,
->  	u8 rssi;
->  	u16 dur;
->  
-> -	ath_dbg(ath9k_hw_common(sc->sc_ah), ATH_DBG_DFS,
-> +	ath_dbg(ath9k_hw_common(sc->sc_ah), DFS,
->  		"pulse_bw_info=0x%x, pri,ext len/rssi=(%u/%u, %u/%u)\n",
->  		are->pulse_bw_info,
->  		are->pulse_length_pri, are->rssi,
-> @@ -161,7 +161,7 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
->  
->  	if ((!(rs->rs_phyerr != ATH9K_PHYERR_RADAR)) &&
->  	    (!(rs->rs_phyerr != ATH9K_PHYERR_FALSE_RADAR_EXT))) {
-> -		ath_dbg(common, ATH_DBG_DFS,
-> +		ath_dbg(common, DFS,
->  			"Error: rs_phyer=0x%x not a radar error\n",
->  			rs->rs_phyerr);
->  		return;
-> @@ -190,7 +190,7 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
->  	ard.pulse_length_ext = vdata_end[-2];
->  	ard.pulse_length_pri = vdata_end[-3];
->  
-> -	ath_dbg(common, ATH_DBG_DFS,
-> +	ath_dbg(common, DFS,
->  		"bw_info=%d, length_pri=%d, length_ext=%d, "
->  		"rssi_pri=%d, rssi_ext=%d\n",
->  		ard.pulse_bw_info, ard.pulse_length_pri, ard.pulse_length_ext,
-> @@ -200,7 +200,7 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
->  	drp.ts = mactime;
->  	if (ath9k_postprocess_radar_event(sc, &ard, &drp)) {
->  		static u64 last_ts;
-> -		ath_dbg(common, ATH_DBG_DFS,
-> +		ath_dbg(common, DFS,
->  			"ath9k_dfs_process_phyerr: channel=%d, ts=%llu, "
->  			"width=%d, rssi=%d, delta_ts=%llu\n",
->  			drp.freq, drp.ts, drp.width, drp.rssi, drp.ts-last_ts);
+wlan13: detected beacon loss from AP - sending probe request
+
+Larry
+
 
