@@ -1,46 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:51448 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751694Ab1LTUu2 (ORCPT
+Received: from mms2.broadcom.com ([216.31.210.18]:3786 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752301Ab1LIRiS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 15:50:28 -0500
-Received: by mail-lpp01m010-f42.google.com with SMTP id j5so2761716lag.15
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 12:50:26 -0800 (PST)
-Subject: Re: [PATCH 0/7] wl12xx: various (multi-vif) fixes
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1324232745-22928-1-git-send-email-eliad@wizery.com>
-References: <1324232745-22928-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 20 Dec 2011 22:50:22 +0200
-Message-ID: <1324414222.2182.73.camel@cumari> (sfid-20111220_215031_107176_5BB787FA)
-Mime-Version: 1.0
+	Fri, 9 Dec 2011 12:38:18 -0500
+Message-ID: <4EE2476A.3050107@broadcom.com> (sfid-20111209_183821_259127_91A5350D)
+Date: Fri, 9 Dec 2011 18:37:46 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: "b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: bcma usage in isr context
+References: <4ED77C85.1050705@broadcom.com>
+ <CACna6rznu8d1BjG0EWjP1VRCPdYAGJv1q+fi1X+XF_Bf-Cx+Mg@mail.gmail.com>
+ <4EDCE2CC.3060500@broadcom.com>
+ <CACna6rwVRrm8YgvoYAmswru8nHXgytuiDRO2F2TQVZyxnfaV9w@mail.gmail.com>
+ <4EDF71C6.9050800@broadcom.com>
+ <CACna6rzQqJ-jeuoYMiyYBTt7tXzYV-noCg_kCmOynBrFBnLn2A@mail.gmail.com>
+In-Reply-To: <CACna6rzQqJ-jeuoYMiyYBTt7tXzYV-noCg_kCmOynBrFBnLn2A@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-12-18 at 20:25 +0200, Eliad Peller wrote: 
-> Fix some bugs related to multiple vifs support.
+On 12/07/2011 04:06 PM, Rafał Miłecki wrote:
+> W dniu 7 grudnia 2011 15:01 użytkownik Arend van Spriel
+> <arend@broadcom.com> napisał:
+>> I also intend to do some suspend/resume
+>> testing. I believe there was some issue mentioned on wireless mailing
+>> list with bcma/b43.
 > 
-> Eliad Peller (7):
->   wl12xx: implement change_interface
->   wl12xx: remove redundant code from wl1271_op_conf_tx
->   wl12xx: make WL1271_FLAG_IDLE flag per-vif
->   wl12xx: flush packets before stopping dev role
->   wl12xx: fix checking of started dev role
->   wl12xx: stop device role on remove_interface
->   wl12xx: check the actual vif operstate in wl1271_dev_notify
+> That would be great. I don't have any notebook to use with Broadcom
+> card, that's why suspend&resume isn't implemented. I do all
+> development with my PC. In the notebook wireless card is integrated
+> with the motherboard.
 > 
->  drivers/net/wireless/wl12xx/cmd.c    |    3 +
->  drivers/net/wireless/wl12xx/main.c   |  100 +++++++++++++++++-----------------
->  drivers/net/wireless/wl12xx/ps.c     |   10 +++-
->  drivers/net/wireless/wl12xx/scan.c   |    2 +-
->  drivers/net/wireless/wl12xx/wl12xx.h |    2 +-
->  5 files changed, 63 insertions(+), 54 deletions(-)
 
-Applied, the series, with v2 of 1/7.  Thanks!
+Hi Rafał,
 
--- 
-Cheers,
-Luca.
+Your patch works so I dropped my temp solution using spinlock. Regarding
+suspend/resume it works for suspend-to-ram. The connection is not
+reestablished, but that is probably because I have it not configured in
+NetworkManager to automatically connect.
+
+Gr. AvS
 
