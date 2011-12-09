@@ -1,142 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:10711 "EHLO mga11.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:23204 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754969Ab1LNPia (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 10:38:30 -0500
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 2/8] NFC: Add tx skb allocation routine
-Date: Wed, 14 Dec 2011 16:43:06 +0100
-Message-Id: <1323877392-20567-3-git-send-email-sameo@linux.intel.com> (sfid-20111214_163832_344649_C10518A0)
-In-Reply-To: <1323877392-20567-1-git-send-email-sameo@linux.intel.com>
-References: <1323877392-20567-1-git-send-email-sameo@linux.intel.com>
+	id S1753971Ab1LIBZB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Dec 2011 20:25:01 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 06/15] iwlwifi: rename CONFIG_IWLWIFI_DEVICE_SVTOOL to CONFIG_IWLWIFI_DEVICE_TESTMODE
+Date: Thu,  8 Dec 2011 16:26:13 -0800
+Message-Id: <1323390382-1678-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111209_022529_980540_F355FDE5)
+In-Reply-To: <1323390382-1678-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1323390382-1678-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a factorization of the current rawsock tx skb allocation routine,
-as it will be used by the LLCP code.
-We also rename nfc_alloc_skb to nfc_alloc_recv_skb for consistency sake.
+Change the name to match the works
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/nfc/pn533.c   |    2 +-
- include/net/nfc/nfc.h |    5 ++++-
- net/nfc/core.c        |   30 +++++++++++++++++++++++++++---
- net/nfc/rawsock.c     |    7 ++-----
- 4 files changed, 34 insertions(+), 10 deletions(-)
+ drivers/net/wireless/iwlwifi/Kconfig      |   10 +++++-----
+ drivers/net/wireless/iwlwifi/Makefile     |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-agn.h    |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h    |    4 ++--
+ 7 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
-index dbf214e..ea1caae 100644
---- a/drivers/nfc/pn533.c
-+++ b/drivers/nfc/pn533.c
-@@ -1368,7 +1368,7 @@ static int pn533_data_exchange(struct nfc_dev *nfc_dev, u32 target_idx,
- 			PN533_CMD_DATAEXCH_DATA_MAXLEN +
- 			PN533_FRAME_TAIL_SIZE;
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index 855b135..82c8cca 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -102,12 +102,12 @@ config IWLWIFI_DEVICE_TRACING
+ 	  occur.
+ endmenu
  
--	skb_resp = nfc_alloc_skb(skb_resp_len, GFP_KERNEL);
-+	skb_resp = nfc_alloc_recv_skb(skb_resp_len, GFP_KERNEL);
- 	if (!skb_resp) {
- 		rc = -ENOMEM;
- 		goto error;
-diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
-index 6a7f602..3a3304c 100644
---- a/include/net/nfc/nfc.h
-+++ b/include/net/nfc/nfc.h
-@@ -157,7 +157,10 @@ static inline const char *nfc_device_name(struct nfc_dev *dev)
- 	return dev_name(&dev->dev);
- }
+-config IWLWIFI_DEVICE_SVTOOL
++config IWLWIFI_DEVICE_TESTMODE
+ 	def_bool y
+ 	depends on IWLWIFI
+ 	depends on NL80211_TESTMODE
+ 	help
+-	  This option enables the svtool support for iwlwifi device through
+-	  NL80211_TESTMODE. svtool is a software validation tool that runs in
+-	  the user space and interacts with the device in the kernel space
+-	  through the generic netlink message via NL80211_TESTMODE channel.
++	  This option enables the testmode support for iwlwifi device through
++	  NL80211_TESTMODE. This provide the capabilities of enable user space
++	  validation applications to interacts with the device through the
++	  generic netlink message via NL80211_TESTMODE channel.
+diff --git a/drivers/net/wireless/iwlwifi/Makefile b/drivers/net/wireless/iwlwifi/Makefile
+index 86344ce..9dc84a7 100644
+--- a/drivers/net/wireless/iwlwifi/Makefile
++++ b/drivers/net/wireless/iwlwifi/Makefile
+@@ -18,7 +18,7 @@ iwlwifi-objs		+= iwl-trans-pcie.o iwl-trans-pcie-rx.o iwl-trans-pcie-tx.o
  
--struct sk_buff *nfc_alloc_skb(unsigned int size, gfp_t gfp);
-+struct sk_buff *nfc_alloc_send_skb(struct nfc_dev *dev, struct sock *sk,
-+					unsigned int flags, unsigned int size,
-+					unsigned int *err);
-+struct sk_buff *nfc_alloc_recv_skb(unsigned int size, gfp_t gfp);
+ iwlwifi-$(CONFIG_IWLWIFI_DEBUGFS) += iwl-debugfs.o
+ iwlwifi-$(CONFIG_IWLWIFI_DEVICE_TRACING) += iwl-devtrace.o
+-iwlwifi-$(CONFIG_IWLWIFI_DEVICE_SVTOOL) += iwl-testmode.o
++iwlwifi-$(CONFIG_IWLWIFI_DEVICE_TESTMODE) += iwl-testmode.o
  
- int nfc_targets_found(struct nfc_dev *dev, struct nfc_target *targets,
- 							int ntargets);
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index 2a838b0..f53f88a 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -27,6 +27,7 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/slab.h>
-+#include <linux/nfc.h>
+ CFLAGS_iwl-devtrace.o := -I$(src)
  
- #include "nfc.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+index 359c47a..78efa2b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
+@@ -352,7 +352,7 @@ static void rs_program_fix_rate(struct iwl_priv *priv,
+ 	lq_sta->active_mimo2_rate  = 0x1FD0;	/* 6 - 60 MBits, no 9, no CCK */
+ 	lq_sta->active_mimo3_rate  = 0x1FD0;	/* 6 - 60 MBits, no 9, no CCK */
  
-@@ -275,12 +276,35 @@ error:
- }
+-#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
++#ifdef CONFIG_IWLWIFI_DEVICE_TESTMODE
+ 	/* testmode has higher priority to overwirte the fixed rate */
+ 	if (priv->tm_fixed_rate)
+ 		lq_sta->dbg_fixed_rate = priv->tm_fixed_rate;
+@@ -1081,7 +1081,7 @@ done:
+ 	if (sta && sta->supp_rates[sband->band])
+ 		rs_rate_scale_perform(priv, skb, sta, lq_sta);
  
- /**
-- * nfc_alloc_skb - allocate a skb for data exchange responses
-+ * nfc_alloc_send_skb - allocate a skb for data exchange responses
-  *
-  * @size: size to allocate
-  * @gfp: gfp flags
-  */
--struct sk_buff *nfc_alloc_skb(unsigned int size, gfp_t gfp)
-+struct sk_buff *nfc_alloc_send_skb(struct nfc_dev *dev, struct sock *sk,
-+					unsigned int flags, unsigned int size,
-+					unsigned int *err)
-+{
-+	struct sk_buff *skb;
-+	unsigned int total_size;
-+
-+	total_size = size +
-+		dev->tx_headroom + dev->tx_tailroom + NFC_HEADER_SIZE;
-+
-+	skb = sock_alloc_send_skb(sk, total_size, flags & MSG_DONTWAIT, err);
-+	if (skb)
-+		skb_reserve(skb, dev->tx_headroom + NFC_HEADER_SIZE);
-+
-+	return skb;
-+}
-+
-+/**
-+ * nfc_alloc_recv_skb - allocate a skb for data exchange responses
-+ *
-+ * @size: size to allocate
-+ * @gfp: gfp flags
-+ */
-+struct sk_buff *nfc_alloc_recv_skb(unsigned int size, gfp_t gfp)
- {
- 	struct sk_buff *skb;
- 	unsigned int total_size;
-@@ -293,7 +317,7 @@ struct sk_buff *nfc_alloc_skb(unsigned int size, gfp_t gfp)
+-#if defined(CONFIG_MAC80211_DEBUGFS) && defined(CONFIG_IWLWIFI_DEVICE_SVTOOL)
++#if defined(CONFIG_MAC80211_DEBUGFS) && defined(CONFIG_IWLWIFI_DEVICE_TESTMODE)
+ 	if ((priv->tm_fixed_rate) &&
+ 	    (priv->tm_fixed_rate != lq_sta->dbg_fixed_rate))
+ 		rs_program_fix_rate(priv, lq_sta);
+@@ -2904,7 +2904,7 @@ void iwl_rs_rate_init(struct iwl_priv *priv, struct ieee80211_sta *sta, u8 sta_i
+ 	if (sband->band == IEEE80211_BAND_5GHZ)
+ 		lq_sta->last_txrate_idx += IWL_FIRST_OFDM_RATE;
+ 	lq_sta->is_agg = 0;
+-#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
++#ifdef CONFIG_IWLWIFI_DEVICE_TESTMODE
+ 	priv->tm_fixed_rate = 0;
+ #endif
+ #ifdef CONFIG_MAC80211_DEBUGFS
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index a1a95d5..cdf9efd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -148,7 +148,7 @@ static void iwlagn_tx_cmd_build_rate(struct iwl_priv *priv,
+ 	if (ieee80211_is_data(fc)) {
+ 		tx_cmd->initial_rate_index = 0;
+ 		tx_cmd->tx_flags |= TX_CMD_FLG_STA_RATE_MSK;
+-#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
++#ifdef CONFIG_IWLWIFI_DEVICE_TESTMODE
+ 		if (priv->tm_fixed_rate) {
+ 			/*
+ 			 * rate overwrite by testmode
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index daf010d..5021cc9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1703,8 +1703,8 @@ static void iwl_debug_config(struct iwl_priv *priv)
+ 		"disabled\n");
+ #endif
  
- 	return skb;
- }
--EXPORT_SYMBOL(nfc_alloc_skb);
-+EXPORT_SYMBOL(nfc_alloc_recv_skb);
+-	dev_printk(KERN_INFO, bus(priv)->dev, "CONFIG_IWLWIFI_DEVICE_SVTOOL "
+-#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
++	dev_printk(KERN_INFO, bus(priv)->dev, "CONFIG_IWLWIFI_DEVICE_TESTMODE "
++#ifdef CONFIG_IWLWIFI_DEVICE_TESTMODE
+ 		"enabled\n");
+ #else
+ 		"disabled\n");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index f2f1070..b891bd9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -359,7 +359,7 @@ void iwl_eeprom_get_mac(const struct iwl_priv *priv, u8 *mac);
+ extern int iwlagn_init_alive_start(struct iwl_priv *priv);
+ extern int iwl_alive_start(struct iwl_priv *priv);
+ /* svtool */
+-#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
++#ifdef CONFIG_IWLWIFI_DEVICE_TESTMODE
+ extern int iwlagn_mac_testmode_cmd(struct ieee80211_hw *hw, void *data,
+ 				   int len);
+ extern int iwlagn_mac_testmode_dump(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index be26145..d7b64af 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -750,7 +750,7 @@ enum iwl_scan_type {
+ 	IWL_SCAN_ROC,
+ };
  
- /**
-  * nfc_targets_found - inform that targets were found
-diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
-index 5e9b991..11ac0a1 100644
---- a/net/nfc/rawsock.c
-+++ b/net/nfc/rawsock.c
-@@ -208,13 +208,10 @@ static int rawsock_sendmsg(struct kiocb *iocb, struct socket *sock,
- 	if (sock->state != SS_CONNECTED)
- 		return -ENOTCONN;
- 
--	skb = sock_alloc_send_skb(sk, len + dev->tx_headroom + dev->tx_tailroom + NFC_HEADER_SIZE,
--					msg->msg_flags & MSG_DONTWAIT, &rc);
--	if (!skb)
-+	skb = nfc_alloc_send_skb(dev, sk, msg->msg_flags, len, &rc);
-+	if (skb == NULL)
- 		return rc;
- 
--	skb_reserve(skb, dev->tx_headroom + NFC_HEADER_SIZE);
--
- 	rc = memcpy_fromiovec(skb_put(skb, len), msg->msg_iov, len);
- 	if (rc < 0) {
- 		kfree_skb(skb);
+-#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
++#ifdef CONFIG_IWLWIFI_DEVICE_TESTMODE
+ struct iwl_testmode_trace {
+ 	u32 buff_size;
+ 	u32 total_size;
+@@ -1039,7 +1039,7 @@ struct iwl_priv {
+ 	struct led_classdev led;
+ 	unsigned long blink_on, blink_off;
+ 	bool led_registered;
+-#ifdef CONFIG_IWLWIFI_DEVICE_SVTOOL
++#ifdef CONFIG_IWLWIFI_DEVICE_TESTMODE
+ 	struct iwl_testmode_trace testmode_trace;
+ 	struct iwl_testmode_sram testmode_sram;
+ 	u32 tm_fixed_rate;
 -- 
-1.7.7.3
+1.7.0.4
 
