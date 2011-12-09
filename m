@@ -1,83 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout6.freenet.de ([195.4.92.96]:43242 "EHLO mout6.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753098Ab1LaOIB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Dec 2011 09:08:01 -0500
-Received: from [195.4.92.142] (helo=mjail2.freenet.de)
-	by mout6.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
-	id 1RgzLa-0008Oy-AS
-	for linux-wireless@vger.kernel.org; Sat, 31 Dec 2011 14:51:42 +0100
-Received: from localhost ([::1]:53939 helo=mjail2.freenet.de)
-	by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1RgzLa-0007v9-6e
-	for linux-wireless@vger.kernel.org; Sat, 31 Dec 2011 14:51:42 +0100
-Received: from [195.4.92.12] (port=43484 helo=2.mx.freenet.de)
-	by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1RgzJE-0007FC-Th
-	for linux-wireless@vger.kernel.org; Sat, 31 Dec 2011 14:49:16 +0100
-Received: from p4fde00ee.dip0.t-ipconnect.de ([79.222.0.238]:39435 helo=mail.maya.org)
-	by 2.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
-	id 1RgzJE-0004VD-Hq
-	for linux-wireless@vger.kernel.org; Sat, 31 Dec 2011 14:49:16 +0100
-Received: from [192.168.1.6] (dualc.maya.org [192.168.1.6])
-	by mail.maya.org (8.14.4/8.13.8) with ESMTP id pBVDnBRw003636
-	for <linux-wireless@vger.kernel.org>; Sat, 31 Dec 2011 14:49:11 +0100
-Message-ID: <4EFF12D9.3010602@01019freenet.de> (sfid-20111231_150826_391382_8B3357FB)
-Date: Sat, 31 Dec 2011 14:49:13 +0100
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:56153 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751238Ab1LIR56 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Dec 2011 12:57:58 -0500
+Received: by ghbz2 with SMTP id z2so2725389ghb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Dec 2011 09:57:58 -0800 (PST)
+Message-ID: <4EE24C22.4000204@lwfinger.net> (sfid-20111209_185802_426205_984AE3DE)
+Date: Fri, 09 Dec 2011 11:57:54 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Compat-wireless-3.2-rc6-3 is broken for rt2860 device
-Content-Type: text/plain; charset=ISO-8859-15
+To: Arend van Spriel <arend@broadcom.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Francesco Gringoli <francesco.gringoli@ing.unibs.it>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Performance of BCM43224 (14e4:4353)
+References: <4EE15A4E.1090500@lwfinger.net> <4EE1E2AC.8030002@broadcom.com> <4EE23AF5.8000400@lwfinger.net> <4EE24615.9020003@broadcom.com>
+In-Reply-To: <4EE24615.9020003@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 12/09/2011 11:32 AM, Arend van Spriel wrote:
 
-I tested compat-wireless-3.2-rc6-3 with kernel 3.1 and a rt2860 device
-running in AP mode (80211.n - 40 MHz). During
+> With the submitted patches brcmsmac claims any revision of 802.11 cores.
+> Not sure what b43 claims. I have a patch internally to claim only
+> revisions 23 and 24, which are used in bcm43224, bcm43225, and bcm4313.
 
-netperf -t TCP_STREAM -H ap
+The problem is that ai_doattach() is returning NULL. I added pr_err() statements 
+to each of the places that this could happen and found that the error in in this 
+fragment:
 
-the data stream mostly stalls (-> the device receives data) after a few
-seconds and never comes up any more. The connection is completely death.
-I have to restart wpa_supplicant to get it working again.
+         /* scan for cores */
+         if (socitype == SOCI_AI) {
+                 SI_MSG("Found chip type AI (0x%08x)\n", w);
+                 /* pass chipc address instead of original core base */
+                 ai_scan(&sii->pub, pbus);
+         } else {
+                 /* Found chip of unknown type */
+                 pr_err("Found chip of type %d\n", socitype);
+                 return NULL;
+         }
 
+This one logs "brcmsmac: Found chip of type 4". As SOC_AI is the only SOCI_XX 
+that is defined, I am not sure that I will be able to get further.
 
-
-I tried to isolate the problem the following way:
-
-1. Running compat-wireless-3.2-rc6-3 with the rt2x00 level from
-compat-wireless-3.1.1-1. The problem didn't gone.
-
-2. Running compat-wireless-3.1.1-1 with the rt2x00 based changes in
-compat-wireless-3.2-rc6-3. I can't see the problem any more.
-
-
-That's why I think, that the problem must be outside the rt2x00 changes.
-But there are many changes outside :-).
-
-
-So far, I removed the following patches from compat-wireless-3.2-rc6-3:
-
-mac80211: fix race between the AGG SM and the Tx data path
-mac80211: don't stop a single aggregation session twice
-mac80211: uAPSD - fix IEEE80211_FCTL_MOREDATA bit setting
-mac80211: fix race condition caused by late addBA response
-
-But they seem not to be the culprit.
+Larry
 
 
-I tried to remove these patches, too, but this wasn't possible:
-
-mac80211: don't stop a single aggregation session twice
-mac80211: fix another race in aggregation start
-
-
-
-Does anybody has an idea, which patch could have raised this problem?
-
-
-
-Kind regards,
-Andreas Hartmann
