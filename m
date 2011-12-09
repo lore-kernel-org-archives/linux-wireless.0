@@ -1,104 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:43242 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751520Ab1LOOcK (ORCPT
+Received: from mail-yx0-f202.google.com ([209.85.213.202]:34555 "EHLO
+	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752572Ab1LIXxr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 09:32:10 -0500
-Received: by mail-lpp01m010-f53.google.com with SMTP id r15so1123436lag.26
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 06:32:07 -0800 (PST)
-Subject: pull request: wl12xx 2011-12-15
-From: Luciano Coelho <coelho@ti.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-tbjgN4wRqKHOaclxZF8k"
-Date: Thu, 15 Dec 2011 16:32:03 +0200
-Message-ID: <1323959523.2800.190.camel@cumari> (sfid-20111215_153216_326153_24A013B2)
-Mime-Version: 1.0
+	Fri, 9 Dec 2011 18:53:47 -0500
+Received: by yenm5 with SMTP id m5so457864yen.1
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Dec 2011 15:53:46 -0800 (PST)
+Received: from wpaz1.hot.corp.google.com (wpaz1.hot.corp.google.com [172.24.198.65])
+	by wpzn4.hot.corp.google.com (Postfix) with ESMTPS id A3C0F1E004D
+	for <linux-wireless@vger.kernel.org>; Fri,  9 Dec 2011 15:45:36 -0800 (PST)
+Received: from glenhelen.mtv.corp.google.com (glenhelen.mtv.corp.google.com [172.22.72.223])
+	by wpaz1.hot.corp.google.com with ESMTP id pB9NjZ0b030575
+	for <linux-wireless@vger.kernel.org>; Fri, 9 Dec 2011 15:45:35 -0800
+From: Paul Stewart <pstew@chromium.org>
+Date: Fri, 9 Dec 2011 14:31:44 -0800
+Subject: [PATCHv2] iw: Print connected time and beacon loss in station
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <20111209223349.53B9B206F0@glenhelen.mtv.corp.google.com>
+References: <20111209223349.53B9B206F0@glenhelen.mtv.corp.google.com>
+Message-Id: <20111209234535.64E01204E6@glenhelen.mtv.corp.google.com> (sfid-20111210_005350_384611_6004A543)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Print beacon loss and connected time stats out of the station.
 
---=-tbjgN4wRqKHOaclxZF8k
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Paul Stewart <pstew@chromium.org>
 
-Hi John,
-
-Another pull request intended for 3.3.  This time it's much smaller. ;)
-It contains a couple of fixes for bugs that were causing oopses by
-Pontus and me, one compilation warning removal and a couple of other
-clean-ups and improvements.=20
-
-Please pull or let me know if there's any problem. This tree is based on
-wireless-next/master.
-
-Thanks!=20
-
-The following changes since commit d646960f7986fefb460a2b062d5ccc8ccfeacc3a=
-:
-
-  NFC: Initial LLCP support (2011-12-14 14:50:13 -0500)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/luca/wl12xx.git for-linvill=
-e
-
-Eliad Peller (1):
-      wl12xx: use ieee80211_free_txskb()
-
-Luciano Coelho (5):
-      wl12xx: don't write out of bounds when hlid > WL12XX_MAX_LINKS
-      wl12xx: call extended radio parameters for wl127x AP mode
-      wl12xx: remove deprecated packet detection threshold config
-      wl12xx: remove unused firmware version macros
-      wl12xx: alloc buffer in driver_state_read to prevent compilation warn=
-ing
-
-Pontus Fuchs (2):
-      wl12xx: Restore testmode ABI
-      Set wlvif->ps_compl to NULL in before return
-
- drivers/net/wireless/wl12xx/acx.c      |   26 -----------------
- drivers/net/wireless/wl12xx/acx.h      |    8 -----
- drivers/net/wireless/wl12xx/debugfs.c  |   16 +++++++++--
- drivers/net/wireless/wl12xx/init.c     |   47 ++++++++++------------------=
+v2: Add space between seconds and "s"
 ---
- drivers/net/wireless/wl12xx/init.h     |    1 -
- drivers/net/wireless/wl12xx/main.c     |   19 +++++--------
- drivers/net/wireless/wl12xx/rx.c       |    8 ++++-
- drivers/net/wireless/wl12xx/testmode.c |    1 +
- drivers/net/wireless/wl12xx/tx.c       |    9 +++++-
- drivers/net/wireless/wl12xx/wl12xx.h   |    7 -----
- 10 files changed, 50 insertions(+), 92 deletions(-)
+ nl80211.h |    4 ++++
+ station.c |    9 +++++++++
+ 2 files changed, 13 insertions(+), 0 deletions(-)
 
---=20
-Cheers,
-Luca.
-
-
-
-
---=-tbjgN4wRqKHOaclxZF8k
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAABAgAGBQJO6gTWAAoJEKFHnKIaPMX6zT8QAKPbFPF5ygJGmwjxGqxHlBQv
-fCZEaWDS+ZZ7rUUwdwG9Rutx+gvKesBa99H7Ui2nSp1VAqzY81aeqpEudJtRvqBJ
-NRf8zoY/OF4hLhA3B282eDagAAaNyden1Xz1SyqhwPd4evJy7F0cNWTMMZVGzghA
-BVYLxnQ4WTUgaiMb0IQLFTyZit8HIc7I7HA2O1wrFJCxcz2YuovuN6mjTfNo4EAq
-BpxHkptUjJ6iEQtY6MQmAXN4OH6e0wBgm0c49Baxw5g8WGa8psJJ2Zp3j1lq5Wkb
-czCSlF6v7XRIKtIZX8k+hzBTwGNTU9DH5kdR9asKI7vsXXLjT6Hyuv4I2jzrTud9
-c6snhblCkyrrndOylOoSKpJx2fEMz7yNQpvMEtGEPCXHE6TIQSgywsx/8k+hpsak
-vGQh7tMU7TsvLYqR99uk2kkmfe4TA/IGg+Cy6/7My0NIHrDqo4oRhlItQ3pgn/Qa
-FMTWGfhZTGbJ1JvBxTVMWe+CQi8F9nkuCQ6bJ2QHGInDfkR8WAGt1JmxR8gbIxdj
-WgRGke5aVceghYhYQm0+1pgj953Y9toWePleV+xFd7flCXNUR6zpqWKKV42vB0o1
-YD/26GjXSNgs1KehqZXtH1QOKwgCyII1FdIKW8Er37Q5aAduzAzfhdKGDuyR5bLo
-hPX4u/6Q04XIZuX9F16L
-=s+Ce
------END PGP SIGNATURE-----
-
---=-tbjgN4wRqKHOaclxZF8k--
+diff --git a/nl80211.h b/nl80211.h
+index f51e3bf..3c88e7a 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -1651,6 +1651,7 @@ enum nl80211_sta_bss_param {
+  *     containing info as possible, see &enum nl80211_sta_bss_param
+  * @NL80211_STA_INFO_CONNECTED_TIME: time since the station is last connected
+  * @NL80211_STA_INFO_STA_FLAGS: Contains a struct nl80211_sta_flag_update.
++ * @NL80211_STA_INFO_BEACON_LOSS: count of times beacon loss was detected (u32)
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -1673,6 +1674,7 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_BSS_PARAM,
+ 	NL80211_STA_INFO_CONNECTED_TIME,
+ 	NL80211_STA_INFO_STA_FLAGS,
++	NL80211_STA_INFO_BEACON_LOSS,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+@@ -2785,9 +2787,11 @@ enum nl80211_ap_sme_features {
+  * @NL80211_FEATURE_SK_TX_STATUS: This driver supports reflecting back
+  *	TX status to the socket error queue when requested with the
+  *	socket option.
++ * @NL80211_FEATURE_HT_IBSS: This driver supports IBSS with HT datarates.
+  */
+ enum nl80211_feature_flags {
+ 	NL80211_FEATURE_SK_TX_STATUS	= 1 << 0,
++	NL80211_FEATURE_HT_IBSS		= 1 << 1,
+ };
+ 
+ /**
+diff --git a/station.c b/station.c
+index ef69ea5..db34050 100644
+--- a/station.c
++++ b/station.c
+@@ -51,8 +51,10 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 		[NL80211_STA_INFO_PLINK_STATE] = { .type = NLA_U8 },
+ 		[NL80211_STA_INFO_TX_RETRIES] = { .type = NLA_U32 },
+ 		[NL80211_STA_INFO_TX_FAILED] = { .type = NLA_U32 },
++		[NL80211_STA_INFO_CONNECTED_TIME] = { .type = NLA_U32 },
+ 		[NL80211_STA_INFO_STA_FLAGS] =
+ 			{ .minlen = sizeof(struct nl80211_sta_flag_update) },
++		[NL80211_STA_INFO_BEACON_LOSS] = { .type = NLA_U32 },
+ 	};
+ 
+ 	static struct nla_policy rate_policy[NL80211_RATE_INFO_MAX + 1] = {
+@@ -86,6 +88,9 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 	if_indextoname(nla_get_u32(tb[NL80211_ATTR_IFINDEX]), dev);
+ 	printf("Station %s (on %s)", mac_addr, dev);
+ 
++	if (sinfo[NL80211_STA_INFO_CONNECTED_TIME])
++		printf("\n\tconnected time:\t%u s",
++			nla_get_u32(sinfo[NL80211_STA_INFO_CONNECTED_TIME]));
+ 	if (sinfo[NL80211_STA_INFO_INACTIVE_TIME])
+ 		printf("\n\tinactive time:\t%u ms",
+ 			nla_get_u32(sinfo[NL80211_STA_INFO_INACTIVE_TIME]));
+@@ -107,6 +112,10 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 	if (sinfo[NL80211_STA_INFO_TX_FAILED])
+ 		printf("\n\ttx failed:\t%u",
+ 			nla_get_u32(sinfo[NL80211_STA_INFO_TX_FAILED]));
++	if (sinfo[NL80211_STA_INFO_BEACON_LOSS])
++		printf("\n\tbeacon loss:\t%u",
++			nla_get_u32(sinfo[NL80211_STA_INFO_BEACON_LOSS]));
++
+ 	if (sinfo[NL80211_STA_INFO_SIGNAL])
+ 		printf("\n\tsignal:  \t%d dBm",
+ 			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL]));
+-- 
+1.7.3.1
 
