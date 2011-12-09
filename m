@@ -1,47 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41522 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751862Ab1LOIWZ (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:47531 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751729Ab1LIJ7R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 03:22:25 -0500
-Subject: Re: [PATCH] asus-wmi: explicitly set the wireless LED
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Corentin Chary <corentin.chary@gmail.com>
-Cc: Keng-Yu Lin <kengyu@canonical.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	acpi4asus-user@lists.sourceforge.net,
-	platform-driver-x86@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Richard Purdie <rpurdie@rpsys.net>
-In-Reply-To: <CAHR064iBtSTv79BhXt9_mMWugD4U_xLCM4i1wE7PLnZM8pL57g@mail.gmail.com> (sfid-20111215_080747_060859_05239F9D)
-References: <1323244922-2673-1-git-send-email-kengyu@canonical.com>
-	 <CAHR064iBtSTv79BhXt9_mMWugD4U_xLCM4i1wE7PLnZM8pL57g@mail.gmail.com>
-	 (sfid-20111215_080747_060859_05239F9D)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 15 Dec 2011 09:22:20 +0100
-Message-ID: <1323937340.3337.3.camel@jlt3.sipsolutions.net> (sfid-20111215_092242_304391_EAE0F50E)
-Mime-Version: 1.0
+	Fri, 9 Dec 2011 04:59:17 -0500
+Received: by ghbz2 with SMTP id z2so2346191ghb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Dec 2011 01:59:16 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAJ-Vmo=7s67p8iQF3rt81vMPapOee=21J5wmT5PW8BiWuuev_Q@mail.gmail.com>
+References: <1323420593-9638-1-git-send-email-helmut.schaa@googlemail.com>
+	<CAJ-Vmo=7s67p8iQF3rt81vMPapOee=21J5wmT5PW8BiWuuev_Q@mail.gmail.com>
+Date: Fri, 9 Dec 2011 10:59:16 +0100
+Message-ID: <CAGXE3d9MjViF0GjfivbS0dUqCeTrR=x+HuiJEhauf_o=ncmQ3g@mail.gmail.com> (sfid-20111209_105922_060999_3BA2B543)
+Subject: Re: [RFC] mac80211: Send BAR on same queue as the according QoS frames
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	nbd@openwrt.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-12-15 at 08:07 +0100, Corentin Chary wrote:
+On Fri, Dec 9, 2011 at 10:10 AM, Adrian Chadd <adrian@freebsd.org> wrote:
+> On 9 December 2011 19:49, Helmut Schaa <helmut.schaa@googlemail.com> wrote:
+>> Sending as RFC for now since I'm not sure if this is really required. At least
+>> I couldn't come up with a situation where this would be required. However, it
+>> looks more correct to me to put the BAR into the same queue as the previously
+>> failed QoS frame to avoid possible (?) side effect of the BAR overtaking frames
+>> in the hw tx queues ...
+>
+> I've had to do this in FreeBSD, for more than just the BAR frame - I
+> do this for the ADDBA and null management frames too, just to be sure
+> that frames aren't dropped by the other end.
 
-> Anyway, you should use a led trigger for that, ideally the rfkill%d
-> led trigger, but for that you need the rfkill idx, which is not
-> exported, so you may need a new rfkill_idx() function. CCing rfkill
-> and led guys, they may have a better advice on that.
+Hmm, good point. Also, a DELBA overtaking AMPDUs in the hw queues could
+be a problem ...
 
-Since you wouldn't want to build the string yourself, you'd probably
-want a new rfkill_ledtrigname() function like this:
-
-static const char *rfkill_ledtrigname(struct rfkill *rfkill)
-{
-#ifdef CONFIG_RFKILL_LEDS
-	return rfkill->ledtrigname;
-#endif
-	return NULL;
-}
-
-which you use to assign the LED class device's default trigger.
-
-johannes
-
+Helmut
