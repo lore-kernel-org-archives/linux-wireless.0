@@ -1,45 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:47279 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757007Ab1LNRnL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 12:43:11 -0500
-Received: by vbbfc26 with SMTP id fc26so816281vbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2011 09:43:11 -0800 (PST)
-Message-ID: <4EE8E035.90501@lwfinger.net> (sfid-20111214_184315_356004_745B2E8F)
-Date: Wed, 14 Dec 2011 11:43:17 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Seth Forshee <seth.forshee@canonical.com>
-CC: Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Problems associating with RTL8188CE
-References: <4ECB028E.3030809@lwfinger.net> <20111122022008.GA17661@thinkpad-t410> <20111213194231.GA30788@thinkpad-t410> <4EE7B85E.3070802@lwfinger.net> <20111213212606.GB30788@thinkpad-t410> <4EE82CC6.2030307@lwfinger.net> <20111214162333.GB19410@thinkpad-t410> <4EE8D150.8090100@lwfinger.net> <20111214164902.GD19410@thinkpad-t410> <4EE8D5A1.7040600@lwfinger.net> <20111214171234.GE19410@thinkpad-t410>
-In-Reply-To: <20111214171234.GE19410@thinkpad-t410>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga01.intel.com ([192.55.52.88]:48307 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751667Ab1LIR7Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Dec 2011 12:59:16 -0500
+Subject: Re: [PATCH] iwlwifi regression in 20111205 merge
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Nikolay Martynov <mar.kolya@gmail.com>,
+	"mar.kolya@gmail.com linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+In-Reply-To: <20111209165138.GB14236@tuxdriver.com>
+References: <1323398619-19774-1-git-send-email-mar.kolya@gmail.com>
+	 <1323399833.13074.80.camel@wwguy-huron>
+	 <1323400528.13074.87.camel@wwguy-huron>
+	 <20111209154415.GA14236@tuxdriver.com>
+	 <1323443727.13074.91.camel@wwguy-huron>
+	 <20111209165138.GB14236@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 09 Dec 2011 09:00:35 -0800
+Message-ID: <1323450035.13074.154.camel@wwguy-huron> (sfid-20111209_185919_679274_EF582C05)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Seth,
+On Fri, 2011-12-09 at 08:51 -0800, John W. Linville wrote:
+> On Fri, Dec 09, 2011 at 07:15:27AM -0800, Guy, Wey-Yi wrote:
+> > On Fri, 2011-12-09 at 07:44 -0800, John W. Linville wrote:
+> > > Are the bits in the wireless tree correct?  If so, then please just
+> > > send a patch to fix the wireless-next tree.
+> > > 
+> > > Now that the kernel.org mess is sorted, I guess we/I need to go back
+> > > to pulling your trees instead of applying patches...
+> > > 
+> > "wireless" tree is correct, the piece is missing in iwl-mac80211.c on
+> > "wireless-next" tree. Nikolay's patch fix it.
+> > 
+> > The question I have is what is the right way to deal with this. the
+> > orig. patch need to be backport to stable, but the function was move to
+> > different file short before the patch. That is the reason cause this
+> > mess :-)
+> 
+> Once it has made it to Linus, you can send a patch for
+> stable@vger.kernel.org referencing the commit ID in Linus' tree.
+> 
+> If you mean that the change needs to go to wireless but the function
+> has moved in wireless-next, then post the patch for wireless.  Usually
+> I can figure-out the merge (although apparently not in this case).
+> If you think the merge will be tricky, you can send a reference patch
+> for wireless-next for me to use as a guide when fixing-up the merge.
+> Or you can pull your fixes tree into your -next tree, resolve the
+> merge conflict, and ask me to pull.  Or you can wait until the merge
+> breakage happens, and send a patch. :-)
+> 
 
-As expected, my RTL8188SE came right up.
+Thank you for the advise and I will try my best to make sure not happen
+again :-)
 
-The lspci -nnv details for my card are
+Thanks
+Wey
 
-06:00.0 0280: 10ec:8176 (rev 01)
-         Subsystem: 10ec:8176
-         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR+ FastB2B- DisINTx-
-         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
-<MAbort- >SERR- <PERR- INTx-
-         Latency: 0, Cache Line Size: 64 bytes
-         Interrupt: pin A routed to IRQ 21
-         Region 0: I/O ports at 4000 [size=256]
-         Region 2: Memory at f8000000 (64-bit, non-prefetchable) [size=16K]
-         Capabilities: <access denied>
-         Kernel driver in use: rtl8192ce
 
-Does yours also have 10ec:8176 as the PCI ID?
-
-Larry
 
