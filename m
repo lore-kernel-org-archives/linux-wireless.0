@@ -1,50 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:51677 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752547Ab1LUUhc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 15:37:32 -0500
-Subject: Re: linux-next: Tree for Dec 19 (nfc)
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>
-In-Reply-To: <4EF23A1F.60803@xenotime.net>
-References: <20111219185556.f07c1f43e28cfd594aaa5fe0@canb.auug.org.au>
-	 <4EEFA21B.5010305@xenotime.net> <1324399181.5354.0.camel@sortiz-mobl>
-	 <4EF23A1F.60803@xenotime.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 21 Dec 2011 21:42:40 +0100
-Message-ID: <1324500160.5354.3.camel@sortiz-mobl> (sfid-20111221_213736_232285_50AB8776)
-Mime-Version: 1.0
+Received: from mms1.broadcom.com ([216.31.210.17]:3996 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753566Ab1LITsy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Dec 2011 14:48:54 -0500
+Message-ID: <4EE26227.8040900@broadcom.com> (sfid-20111209_204858_148833_D6127C8C)
+Date: Fri, 9 Dec 2011 20:31:51 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"Francesco Gringoli" <francesco.gringoli@ing.unibs.it>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Performance of BCM43224 (14e4:4353)
+References: <4EE15A4E.1090500@lwfinger.net>
+ <4EE1E2AC.8030002@broadcom.com> <4EE23AF5.8000400@lwfinger.net>
+ <4EE24615.9020003@broadcom.com> <4EE24C22.4000204@lwfinger.net>
+In-Reply-To: <4EE24C22.4000204@lwfinger.net>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Randy,
-
-On Wed, 2011-12-21 at 11:57 -0800, Randy Dunlap wrote:
-> On 12/20/2011 08:39 AM, Samuel Ortiz wrote:
-> > Hi Randy,
-> > 
-> > On Mon, 2011-12-19 at 12:44 -0800, Randy Dunlap wrote:
-> >> On 12/18/2011 11:55 PM, Stephen Rothwell wrote:
-> >>> Hi all,
-> >>>
-> >>> Changes since 20111216:
-> >>
-> >>
-> >> (not new today, just not reported earlier)
-> > John applied my fix for this one. It should be fixed now.
+On 12/09/2011 06:57 PM, Larry Finger wrote:
+> On 12/09/2011 11:32 AM, Arend van Spriel wrote:
 > 
-> Hi Samuel,
+>> With the submitted patches brcmsmac claims any revision of 802.11 cores.
+>> Not sure what b43 claims. I have a patch internally to claim only
+>> revisions 23 and 24, which are used in bcm43224, bcm43225, and bcm4313.
 > 
-> Is this supposed to be fixed in linux-next?
-> It still fails today (linux-next 20111221).
-Do you have a .config for me to look at ?
+> The problem is that ai_doattach() is returning NULL. I added pr_err() statements 
+> to each of the places that this could happen and found that the error in in this 
+> fragment:
+> 
+>          /* scan for cores */
+>          if (socitype == SOCI_AI) {
+>                  SI_MSG("Found chip type AI (0x%08x)\n", w);
+>                  /* pass chipc address instead of original core base */
+>                  ai_scan(&sii->pub, pbus);
+>          } else {
+>                  /* Found chip of unknown type */
+>                  pr_err("Found chip of type %d\n", socitype);
+>                  return NULL;
+>          }
+> 
+> This one logs "brcmsmac: Found chip of type 4". As SOC_AI is the only SOCI_XX 
+> that is defined, I am not sure that I will be able to get further.
+> 
+> Larry
+> 
 
-Cheers,
-Samuel.
+That is an unexpected code path especially as brcmsmac is probed from
+bcma so SoC interface type should be AI (aka. AMBA AXI). Checked with
+the proprietary driver and there is no type 4.
+
+Can you provide the bcma_device_id information that bcma has collected
+and the bcma_chipinfo for your device?
+
+Gr. AvS
 
