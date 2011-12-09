@@ -1,37 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55774 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756672Ab1LPVp2 (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:41369 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751772Ab1LIIuC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 16:45:28 -0500
-Date: Fri, 16 Dec 2011 16:33:07 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] b43: avoid calling bcma_* if CONFIG_B43_BCMA is not set
-Message-ID: <20111216213307.GA5396@tuxdriver.com> (sfid-20111216_224531_919985_0F7B2834)
-References: <1323871708-19852-1-git-send-email-linville@tuxdriver.com>
- <CACna6rwEfgxMcM1FQDLTWqsM3iy2NqokSAByU13oeT-XkysSzw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CACna6rwEfgxMcM1FQDLTWqsM3iy2NqokSAByU13oeT-XkysSzw@mail.gmail.com>
+	Fri, 9 Dec 2011 03:50:02 -0500
+Received: by eaak14 with SMTP id k14so1607367eaa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Dec 2011 00:50:01 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, nbd@openwrt.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [RFC] mac80211: Send BAR on same queue as the according QoS frames
+Date: Fri,  9 Dec 2011 09:49:53 +0100
+Message-Id: <1323420593-9638-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20111209_095007_496758_D350E17F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 15, 2011 at 12:45:58PM +0100, Rafał Miłecki wrote:
-> 2011/12/14 John W. Linville <linville@tuxdriver.com>:
-> > Avoids this:
-> >
-> > ERROR: "bcma_chipco_pll_write" [drivers/net/wireless/b43/b43.ko] undefined!
-> >
-> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> 
-> [BTW] Can you use b43-dev as CC in the future?
+Sending as RFC for now since I'm not sure if this is really required. At least
+I couldn't come up with a situation where this would be required. However, it
+looks more correct to me to put the BAR into the same queue as the previously
+failed QoS frame to avoid possible (?) side effect of the BAR overtaking frames
+in the hw tx queues ...
 
-Maybe you should update the MAINTAINERS entry so that
-scripts/get_maintainer.pl will find that?
+Any thoughts?
 
-John
+Thanks,
+Helmut
+
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ net/mac80211/agg-tx.c      |    2 +-
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/tx.c          |   13 +++++++++----
+ 3 files changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index c45fa5d..f4f47e4 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -134,7 +134,7 @@ void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn)
+ 	bar->start_seq_num = cpu_to_le16(ssn);
+ 
+ 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
+-	ieee80211_tx_skb(sdata, skb);
++	ieee80211_tx_skb_tid(sdata, skb, tid);
+ }
+ EXPORT_SYMBOL(ieee80211_send_bar);
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 96fe754..5ae5c50 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1350,6 +1350,7 @@ void mac80211_ev_michael_mic_failure(struct ieee80211_sub_if_data *sdata, int ke
+ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb);
+ void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb);
++void ieee80211_tx_skb_tid(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb, int tid);
+ void ieee802_11_parse_elems(u8 *start, size_t len,
+ 			    struct ieee802_11_elems *elems);
+ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index e74652d..39f7132 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2700,15 +2700,14 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL(ieee80211_get_buffered_bc);
+ 
+-void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
++void ieee80211_tx_skb_tid(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb, int tid)
+ {
+ 	skb_set_mac_header(skb, 0);
+ 	skb_set_network_header(skb, 0);
+ 	skb_set_transport_header(skb, 0);
+ 
+-	/* Send all internal mgmt frames on VO. Accordingly set TID to 7. */
+-	skb_set_queue_mapping(skb, IEEE80211_AC_VO);
+-	skb->priority = 7;
++	skb_set_queue_mapping(skb, ieee802_1d_to_ac[tid]);
++	skb->priority = tid;
+ 
+ 	/*
+ 	 * The other path calling ieee80211_xmit is from the tasklet,
+@@ -2719,3 +2718,9 @@ void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
+ 	ieee80211_xmit(sdata, skb);
+ 	local_bh_enable();
+ }
++
++void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
++{
++	ieee80211_tx_skb_tid(sdata, skb, 7);
++}
++
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.7
+
