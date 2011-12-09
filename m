@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:55804 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754248Ab1LADRq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 22:17:46 -0500
-Date: Thu, 1 Dec 2011 12:17:08 +0900
-From: Norbert Preining <preining@logic.at>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dave Jones <davej@redhat.com>,
-	David Rientjes <rientjes@google.com>
-Subject: Re: iwlagn is getting very shaky
-Message-ID: <20111201031708.GE4644@gamma.logic.tuwien.ac.at> (sfid-20111201_041803_925894_51D42328)
-References: <1322387175.4044.16.camel@jlt3.sipsolutions.net> <CANUX_P3uoNOj3j-REvYCZP382cHfq+DpBRi7fnzFfMG_dyHtTQ@mail.gmail.com> <20111128035627.GH1422@gamma.logic.tuwien.ac.at> <CANUX_P2kYiFCP8uAhLZC_kVEjoyxabRBx3Pn+ndtFus=6hJN7Q@mail.gmail.com> <20111128042343.GA4619@gamma.logic.tuwien.ac.at> <20111128232525.GA12719@gamma.logic.tuwien.ac.at> <CANUX_P2b_ZYr4hHigA+tGa9uakcq3hQXnOiP5isQtfcYxCaxcw@mail.gmail.com> <1322555472.4110.8.camel@jlt3.sipsolutions.net> <CANUX_P0z9HmZSj_13Fv0LHUgy2UDXWMaj8L2Tgqz2jQC2mbpZw@mail.gmail.com> <F72258A2-71A1-4F82-B5ED-31FD2E837F3A@logic.at>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <F72258A2-71A1-4F82-B5ED-31FD2E837F3A@logic.at>
+Received: from mga03.intel.com ([143.182.124.21]:1214 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753968Ab1LIBZA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Dec 2011 20:25:00 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 05/15] iwlwifi: remove reference to legacy devices
+Date: Thu,  8 Dec 2011 16:26:12 -0800
+Message-Id: <1323390382-1678-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111209_022532_330551_623A1A9A)
+In-Reply-To: <1323390382-1678-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1323390382-1678-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Di, 29 Nov 2011, Norbert Preining wrote:
-> > It might that we are holding the mac80211 workqueue in the driver too...
-> > I guess we could try to enable MAC80211 debug flag with timestamps to check.
-> 
-> Actually I got some strange behaviour today at work, but that might be a university temporary problem.
+After driver split, no need to reference to legacy devices, remove comments
 
-Yeah, I have to say that the situation is much better, but not solved.
-Today I got a completely stuch driver again. I will reactivate debugging
-and see what I get.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-Best wishes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 6f6a647..be26145 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -60,11 +60,10 @@ struct iwl_tx_queue;
+ 
+ /* Default noise level to report when noise measurement is not available.
+  *   This may be because we're:
+- *   1)  Not associated (4965, no beacon statistics being sent to driver)
++ *   1)  Not associated  no beacon statistics being sent to driver)
+  *   2)  Scanning (noise measurement does not apply to associated channel)
+- *   3)  Receiving CCK (3945 delivers noise info only for OFDM frames)
+  * Use default noise value of -127 ... this is below the range of measurable
+- *   Rx dBm for either 3945 or 4965, so it can indicate "unmeasurable" to user.
++ *   Rx dBm for all agn devices, so it can indicate "unmeasurable" to user.
+  *   Also, -127 works better than 0 when averaging frames with/without
+  *   noise info (e.g. averaging might be done in app); measured dBm values are
+  *   always negative ... using a negative value as the default keeps all
+-- 
+1.7.0.4
 
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-...[Arthur] leapt to his feet like an author hearing the
-phone ring...
-                 --- Who says that the character of Arthur isn't
-                 --- autobiographical?
-                 --- Douglas Adams, The Hitchhikers Guide to the Galaxy
