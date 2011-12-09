@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:46601 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755557Ab1LOEQo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 23:16:44 -0500
-Received: by mail-iy0-f174.google.com with SMTP id h11so2176479iae.19
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2011 20:16:44 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Received: from mga03.intel.com ([143.182.124.21]:1214 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753991Ab1LIBZF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 8 Dec 2011 20:25:05 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH 1/3] ath: add a debug level for DFS
-Date: Wed, 14 Dec 2011 20:16:32 -0800
-Message-Id: <1323922595-15533-2-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111215_051647_433074_DB6FCF84)
-In-Reply-To: <1323922595-15533-1-git-send-email-mcgrof@qca.qualcomm.com>
-References: <1323922595-15533-1-git-send-email-mcgrof@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 14/15] iwlagn: use IWL_MAX_TID_COUNT for WoWLAN
+Date: Thu,  8 Dec 2011 16:26:21 -0800
+Message-Id: <1323390382-1678-15-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111209_022523_510119_0CC0AF56)
+In-Reply-To: <1323390382-1678-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1323390382-1678-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This can later be used by other drivers that implement
-DFS support.
+Now that I corrected IWL_MAX_TID_COUNT to be 8
+instead of 9, we can use it in WoWLAN suspend.
 
-Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index 0b93bab..c1d699f 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -218,6 +218,7 @@ do {								\
-  * @ATH_DBG_MCI: Message Coexistence Interface, a private protocol
-  *	used exclusively for WLAN-BT coexistence starting from
-  *	AR9462.
-+ * @ATH_DBG_DFS: radar datection
-  * @ATH_DBG_ANY: enable all debugging
-  *
-  * The debug level is used to control the amount and type of debugging output
-@@ -244,6 +245,7 @@ enum ATH_DEBUG {
- 	ATH_DBG_WMI		= 0x00004000,
- 	ATH_DBG_BSTUCK		= 0x00008000,
- 	ATH_DBG_MCI		= 0x00010000,
-+	ATH_DBG_DFS		= 0x00020000,
- 	ATH_DBG_ANY		= 0xffffffff
- };
- 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 1d63422..057f952 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1157,7 +1157,7 @@ int iwlagn_suspend(struct iwl_priv *priv,
+ 	 * For QoS counters, we store the one to use next, so subtract 0x10
+ 	 * since the uCode will add 0x10 before using the value.
+ 	 */
+-	for (i = 0; i < 8; i++) {
++	for (i = 0; i < IWL_MAX_TID_COUNT; i++) {
+ 		seq = priv->shrd->tid_data[IWL_AP_ID][i].seq_number;
+ 		seq -= 0x10;
+ 		wakeup_filter_cmd.qos_seq[i] = cpu_to_le16(seq);
 -- 
-1.7.4.15.g7811d
+1.7.0.4
 
