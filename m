@@ -1,97 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40625 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753535Ab1LUTPd (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:18915 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750805Ab1LIGgL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 14:15:33 -0500
-Date: Wed, 21 Dec 2011 14:02:11 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Samuel Ortiz <samuel@sortiz.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: linux-next: Tree for Dec 19 (nfc)
-Message-ID: <20111221190211.GE11842@tuxdriver.com> (sfid-20111221_201538_071042_1545EEED)
-References: <20111219185556.f07c1f43e28cfd594aaa5fe0@canb.auug.org.au>
- <4EEFA21B.5010305@xenotime.net>
- <1324399181.5354.0.camel@sortiz-mobl>
- <4EF23A1F.60803@xenotime.net>
+	Fri, 9 Dec 2011 01:36:11 -0500
+Date: Fri, 9 Dec 2011 09:35:39 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ilan Elias <ilane@ti.com>,
+	Paul Gortmaker <paul.gortmaker@windriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] nfc: signedness bug in __nci_request()
+Message-ID: <20111209063539.GA20287@elgon.mountain> (sfid-20111209_073621_902611_F0FF70EA)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4EF23A1F.60803@xenotime.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 21, 2011 at 11:57:19AM -0800, Randy Dunlap wrote:
-> On 12/20/2011 08:39 AM, Samuel Ortiz wrote:
-> > Hi Randy,
-> > 
-> > On Mon, 2011-12-19 at 12:44 -0800, Randy Dunlap wrote:
-> >> On 12/18/2011 11:55 PM, Stephen Rothwell wrote:
-> >>> Hi all,
-> >>>
-> >>> Changes since 20111216:
-> >>
-> >>
-> >> (not new today, just not reported earlier)
-> > John applied my fix for this one. It should be fixed now.
-> 
-> Hi Samuel,
-> 
-> Is this supposed to be fixed in linux-next?
-> It still fails today (linux-next 20111221).
-> 
-> 
-> data.c:(.text+0x3e0): multiple definition of `nfc_llcp_mac_is_down'
-> data.c:(.text+0x400): multiple definition of `nfc_llcp_mac_is_up'
-> ntf.c:(.text+0xb60): multiple definition of `nfc_llcp_mac_is_down'
-> ntf.c:(.text+0xb80): multiple definition of `nfc_llcp_mac_is_up'
-> rsp.c:(.text+0x750): multiple definition of `nfc_llcp_mac_is_down'
-> rsp.c:(.text+0x770): multiple definition of `nfc_llcp_mac_is_up'
-> netlink.c:(.text+0x14e0): multiple definition of `nfc_llcp_mac_is_down'
-> netlink.c:(.text+0x1500): multiple definition of `nfc_llcp_mac_is_up'
-> af_nfc.c:(.text+0xe0): multiple definition of `nfc_llcp_mac_is_down'
-> af_nfc.c:(.text+0x100): multiple definition of `nfc_llcp_mac_is_up'
-> rawsock.c:(.text+0x1000): multiple definition of `nfc_llcp_mac_is_down'
-> rawsock.c:(.text+0x1020): multiple definition of `nfc_llcp_mac_is_up'
+wait_for_completion_interruptible_timeout() returns -ERESTARTSYS if
+interrupted so completion_rc needs to be signed.  The current code
+probably returns -ETIMEDOUT if we hit this situation, but after this
+patch is applied it will return -ERESTARTSYS.
 
-I have this commit in wireless-next, been there a couple of days:
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-commit 645d35902c8f05a1b12fa838aa9052d8eeaf161e
-Author: Samuel Ortiz <sameo@linux.intel.com>
-Date:   Fri Dec 16 15:03:36 2011 +0100
-
-    NFC: Fix LLCP related build failure
-    
-    llcp_mac routines should be static and inlined or build will fail with NFC
-    selected without LLCP.
-    
-    This patch fixes:
-    
-    LD [M]  net/nfc/nfc.o
-    net/nfc/netlink.o: In function `nfc_llcp_mac_is_down':
-    netlink.c:(.text+0x0): multiple definition of `nfc_llcp_mac_is_down'
-    net/nfc/core.o:(.text+0x0): first defined here
-    net/nfc/netlink.o: In function `nfc_llcp_mac_is_up':
-    netlink.c:(.text+0x10): multiple definition of `nfc_llcp_mac_is_up'
-    net/nfc/core.o:(.text+0x10): first defined here
-    net/nfc/af_nfc.o: In function `nfc_llcp_mac_is_down':
-    (.text+0x0): multiple definition of `nfc_llcp_mac_is_down'
-    net/nfc/core.o:(.text+0x0): first defined here
-    net/nfc/af_nfc.o: In function `nfc_llcp_mac_is_up':
-    (.text+0x10): multiple definition of `nfc_llcp_mac_is_up'
-    net/nfc/core.o:(.text+0x10): first defined here
-    net/nfc/rawsock.o: In function `nfc_llcp_mac_is_down':
-    rawsock.c:(.text+0x0): multiple definition of `nfc_llcp_mac_is_down'
-    net/nfc/core.o:(.text+0x0): first defined here
-    net/nfc/rawsock.o: In function `nfc_llcp_mac_is_up':
-    rawsock.c:(.text+0x10): multiple definition of `nfc_llcp_mac_is_up'
-    net/nfc/core.o:(.text+0x10): first defined here
-    
-    Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+index 37de28e..c55f233 100644
+--- a/net/nfc/nci/core.c
++++ b/net/nfc/nci/core.c
+@@ -71,7 +71,7 @@ static int __nci_request(struct nci_dev *ndev,
+ 	__u32 timeout)
+ {
+ 	int rc = 0;
+-	unsigned long completion_rc;
++	long completion_rc;
+ 
+ 	ndev->req_status = NCI_REQ_PEND;
+ 
