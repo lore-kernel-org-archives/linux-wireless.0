@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:46002 "EHLO
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:43259 "EHLO
 	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751054Ab1LGGCD convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1750859Ab1LISRG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Dec 2011 01:02:03 -0500
-Received: by yenm1 with SMTP id m1so186885yen.19
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Dec 2011 22:02:01 -0800 (PST)
-Date: Wed, 7 Dec 2011 01:01:57 -0500
-From: nick black <dankamongmen@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [[PATCH] don't use unsigned ints for signed data, print_mcs_index()]
-Message-ID: <20111207060157.GA14048@qemfd.net> (sfid-20111207_070207_060696_96784902)
+	Fri, 9 Dec 2011 13:17:06 -0500
+Received: by yenm11 with SMTP id m11so2296061yen.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Dec 2011 10:17:05 -0800 (PST)
+Message-ID: <4EE2509D.6020501@lwfinger.net> (sfid-20111209_191711_436719_3937EE1C)
+Date: Fri, 09 Dec 2011 12:17:01 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: Arend van Spriel <arend@broadcom.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Francesco Gringoli <francesco.gringoli@ing.unibs.it>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Performance of BCM43224 (14e4:4353)
+References: <4EE15A4E.1090500@lwfinger.net> <4EE1E2AC.8030002@broadcom.com> <4EE23AF5.8000400@lwfinger.net> <4EE24615.9020003@broadcom.com>
+In-Reply-To: <4EE24615.9020003@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(unsigned this time per
-http://linuxwireless.org/en/developers/Documentation/SubmittingPatches,
-sorry about that)
+Arend,
 
-diff -ur iw-3.1-orig/util.c iw-3.1/util.c
---- iw-3.1-orig/util.c	2011-12-07 00:43:05.495669921 -0500
-+++ iw-3.1/util.c	2011-12-07 00:51:45.558545571 -0500
-@@ -384,7 +384,7 @@
- 
- static void print_mcs_index(const __u8 *mcs)
- {
--	unsigned int mcs_bit, prev_bit = -2, prev_cont = 0;
-+	int mcs_bit, prev_bit = -2, prev_cont = 0;
- 
- 	for (mcs_bit = 0; mcs_bit <= 76; mcs_bit++) {
- 		unsigned int mcs_octet = mcs_bit/8;
-@@ -458,7 +458,7 @@
- 	if (max_ampdu_length) {
- 		printf("\t\tMaximum RX AMPDU length %d bytes (exponent: 0x0%02x)\n",
- 		       max_ampdu_length, exponent);
--        } else {
-+	} else {
- 		printf("\t\tMaximum RX AMPDU length: unrecognized bytes "
- 		       "(exponent: %d)\n", exponent);
- 	}
-@@ -466,8 +466,8 @@
- 
- void print_ampdu_spacing(__u8 spacing)
- {
--        printf("\t\tMinimum RX AMPDU time spacing: %s (0x%02x)\n",
--               print_ampdu_space(spacing), spacing);
-+	printf("\t\tMinimum RX AMPDU time spacing: %s (0x%02x)\n",
-+	       print_ampdu_space(spacing), spacing);
- }
- 
- void print_ht_capability(__u16 cap)
+I got a little further. The error message was modified as below:
 
--- 
-                                       nick black <nickblack@linux.com>
-"A main cause of the Roman Empire's fall was that–lacking zero–they had
-       no way to indicate successful termination of their C programs."
+         /* scan for cores */
+         if (socitype == SOCI_AI) {
+                 SI_MSG("Found chip type AI (0x%08x)\n", w);
+                 /* pass chipc address instead of original core base */
+                 ai_scan(&sii->pub, pbus);
+         } else {
+                 /* Found chip of unknown type */
+                 pr_err("Found chip of type %d, chipid is 0x%x\n", socitype, w);
+                 return NULL;
+         }
+
+This one logs "brcmsmac: Found chip of type 4, chipid is 0x4bf80001". That is a 
+very strange chip ID.
+
+Larry
+
+
