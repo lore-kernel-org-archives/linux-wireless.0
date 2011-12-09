@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4644 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750991Ab1LJUqU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Dec 2011 15:46:20 -0500
-Message-ID: <4EE3C515.5050307@broadcom.com> (sfid-20111210_214623_546618_44674578)
-Date: Sat, 10 Dec 2011 12:46:13 -0800
-From: "Franky Lin" <frankyl@broadcom.com>
+Received: from mailout-de.gmx.net ([213.165.64.22]:42565 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752009Ab1LISFn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Dec 2011 13:05:43 -0500
+Message-ID: <4EE24DF4.4020301@gmx.net> (sfid-20111209_190547_221035_E418966D)
+Date: Fri, 09 Dec 2011 19:05:40 +0100
+From: Wolfgang Breyha <wbreyha@gmx.net>
 MIME-Version: 1.0
-To: "Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: brcmfmac + compat wireless + 2.6.35
-References: <4ECC1F41.90003@broadcom.com>
- <1323539463-6072-1-git-send-email-GNUtoo@no-log.org>
-In-Reply-To: <1323539463-6072-1-git-send-email-GNUtoo@no-log.org>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi havoc on some APs (rekeying?)
+References: <4EE2202A.4080303@gmx.net> <1323446534.13074.96.camel@wwguy-huron>
+In-Reply-To: <1323446534.13074.96.camel@wwguy-huron>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Denis,
+On 09/12/11 17:02, Guy, Wey-Yi wrote:
+> Hi Wolfgang,
+> 
+> I don't have the similar AP here for testing. by looking at the log,
+> looks like there is a issue while you scan.
+> 
+> Could you please try this patch and see if make any different? it is a
+> long shot, but I just like to see if it make any different at all
+> 
+> once you apply the patch, please make sure P2P is disabled in .config
 
-On 12/10/2011 09:51 AM, Denis 'GNUtoo' Carikli wrote:
->> I will submit a patch too add the dummy handler.
-> Since the patch hasn't shown up yet, I decided to give a try,
-> But I failed:
+Done that... iwlwifi says...
+> [  833.360213] iwlwifi 0000:43:00.0: CONFIG_IWLWIFI_DEBUG enabled
+> [  833.360215] iwlwifi 0000:43:00.0: CONFIG_IWLWIFI_DEBUGFS enabled
+> [  833.360217] iwlwifi 0000:43:00.0: CONFIG_IWLWIFI_DEVICE_TRACING disabled
+> [  833.360219] iwlwifi 0000:43:00.0: CONFIG_IWLWIFI_DEVICE_SVTOOL enabled
+> [  833.360222] iwlwifi 0000:43:00.0: CONFIG_IWLWIFI_P2P disabled
+> [  833.360228] iwlwifi 0000:43:00.0: Detected Intel(R) Centrino(R) Advanced-N 6200 AGN, REV=0x74
 
-I saw the patch you sent. I have one queued up internally but am happy 
-to take yours. Does the patch work or not?
+But it still occurs. This time it started again right after the 2.
+rekeying event. wpa_supplicant logged.
+> Associated with 00:80:48:xx:xx:xx
+> WPA: Key negotiation completed with 00:80:48:xx:xx:xx [PTK=CCMP GTK=TKIP]
+> CTRL-EVENT-CONNECTED - Connection to 00:80:48:xx:xx9:xx completed (reauth) [id=0 id_str=]
+> WPA: Group rekeying completed with 00:80:48:xx:xx:xx [GTK=TKIP]
+> WPA: Group rekeying completed with 00:80:48:xx:xx:xx [GTK=TKIP]
 
-> The patch which will follow blocks the phone(ssh doens't respond
-> anymore), I really wonder what's wrong with it since it does
-> something very similar to the bcm4329 driver.
-> The last printk are theses ones:
-> [   63.436157] wifi_set_power = 1
-> [   63.641585] wifi_set_carddetect = 1
-> [   63.646195] sdhci_s3c_force_presence_change : Enter
-> [   63.780660] mmc2: queuing unknown CIS tuple 0x80 (50 bytes)
-> [   63.796865] mmc2: queuing unknown CIS tuple 0x80 (7 bytes)
-> [   63.843426] mmc2: queuing unknown CIS tuple 0x80 (3 bytes)
-> [   63.851883] mmc2: new SDIO card at address 0001
+I failed to mention that I used F14 with compat-wireless from arround
+march of 2011 before I upgraded to F16 in my first mail. With this
+version I had no troubles with the exactly same AP and my 2540p.
 
-Did you try to enable more debug trace? Looks like sdio probe has never 
-been called.
-
-Franky
+Greetings, Wolfgang
+..
 
 
+
+> 
+> Thanks
+> Wey
