@@ -1,67 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from os.inf.tu-dresden.de ([141.76.48.99]:34395 "EHLO
-	os.inf.tu-dresden.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751945Ab1LMWFS (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:35723 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753704Ab1LIA5T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 17:05:18 -0500
-Date: Tue, 13 Dec 2011 23:04:43 +0100
-From: Udo Steinberg <udo@hypervisor.org>
-To: Andrej Gelenberg <andrej.gelenberg@udo.edu>
-Cc: wwguy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: iwlagn regression in v3.1.5
-Message-ID: <20111213230443.2c12caeb@x220.fritz.box> (sfid-20111213_230559_676245_A7C5A930)
-In-Reply-To: <4EE7BEC1.1060506@udo.edu>
-References: <4EE4AEF4.2080702@udo.edu>
-	<4EE4DB55.4090804@udo.edu>
-	<20111211174138.79e51fe8@x220.fritz.box>
-	<4EE4E152.2070204@udo.edu>
-	<1323627815.1806.19.camel@wwguy-ubuntu>
-	<4EE50266.4050208@udo.edu>
-	<1323653737.1806.21.camel@wwguy-ubuntu>
-	<4EE636B9.1020305@udo.edu>
-	<1323807327.7144.6.camel@wwguy-ubuntu>
-	<4EE7BEC1.1060506@udo.edu>
+	Thu, 8 Dec 2011 19:57:19 -0500
+Date: Thu, 08 Dec 2011 19:55:11 -0500 (EST)
+Message-Id: <20111208.195511.1598354035363640359.davem@davemloft.net> (sfid-20111209_015726_116479_E69B853C)
+To: eric.dumazet@gmail.com
+Cc: dave.taht@gmail.com, bloat@lists.bufferbloat.net,
+	bloat-devel@lists.bufferbloat.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, hagen@jauu.net
+Subject: Re: [PATCH net-next] sch_red: Adaptative RED AQM
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1323360363.2521.30.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
+References: <CAA93jw7kQYONQiAozatRmdRRJeK0GB9eNDWtRZ3AL+OVKn0OpA@mail.gmail.com>
+	<1323082774.2670.40.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
+	<1323360363.2521.30.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Eric Dumazet <eric.dumazet@gmail.com>
+Date: Thu, 08 Dec 2011 17:06:03 +0100
 
-Glad to hear it works for you now. In the patch, the following piece of code
+> Adaptative RED AQM for linux, based on paper from Sally FLoyd,
+> Ramakrishna Gummadi, and Scott Shenker, August 2001 :
 
-+				if ((iwl_is_associated_ctx(ctx) &&
-+						!ctx->ht.is_40mhz) ||
-+						!iwl_is_associated_ctx(ctx))
-
-can be simplified to:
-
-	if (!iwl_is_associated_ctx(ctx) || !ctx->ht.is_40mhz)
-
-Cheers,
-
-	- Udo
-
-On Tue, 13 Dec 2011 22:08:17 +0100 Andrej Gelenberg (AG) wrote:
-
-AG> Hi,
-AG> 
-AG> work now for me.
-AG> 
-AG> Regards,
-AG> Andrej Gelenberg
-AG> 
-AG> On 12/13/2011 09:15 PM, wwguy wrote:
-AG> > Hi Andrej,
-AG> >
-AG> > Could you try this patch and see any differences.
-AG> >
-AG> > please still use the same debug flag I ask you last time.
-AG> >
-AG> > Thanks
-AG> > Wey
+Applied.
