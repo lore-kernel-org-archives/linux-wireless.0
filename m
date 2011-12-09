@@ -1,83 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f53.google.com ([209.85.216.53]:52481 "EHLO
-	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750733Ab1LULOV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 06:14:21 -0500
-Received: by qadb15 with SMTP id b15so4636040qad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2011 03:14:20 -0800 (PST)
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CAH5vBdK62juwC_qPPTfmgFkMp9XMy+3j1YLvBSxBc+zr9_oBJQ@mail.gmail.com>
-References: <CAH5vBdJLHkFLQCHHYOczXQt1Hwwe3e-Ct0MUjyTRU0vgodAPOg@mail.gmail.com>
-	<1324424765.13074.281.camel@wwguy-huron>
-	<CAH5vBdKotiPqpHV=tx2fv8=-HRBuJnYe8wEAF2Z9xH3zVnwyqg@mail.gmail.com>
-	<CA+icZUXWccU-TtwE7b7Mm9Nw7juQwDxvYRZfOdjP3q1O-Mr0Ug@mail.gmail.com>
-	<CAH5vBdKtV1Ydb2ffBVDxdynsF9S14Ddy6XezHzXvRC3bRC-huQ@mail.gmail.com>
-	<CA+icZUXDOxNo-Y9d2WcdhMZyDJeCT69z340xMwNiN9hbq0XAFA@mail.gmail.com>
-	<CAH5vBdLq6zOagjmyM1h9Jon+fYnz5t05Dx7u6VqOWGHna+M3_Q@mail.gmail.com>
-	<CA+icZUVixfk0h1ENU-tWMS5hgurbEV4jYpYNWbzaxCUx_b64UQ@mail.gmail.com>
-	<CAH5vBdK62juwC_qPPTfmgFkMp9XMy+3j1YLvBSxBc+zr9_oBJQ@mail.gmail.com>
-Date: Wed, 21 Dec 2011 12:14:20 +0100
-Message-ID: <CA+icZUUhg91UAPMRGgXYAvo6wkr5ogb+vW8SsB28BeUP_6-g6w@mail.gmail.com> (sfid-20111221_121424_844728_21A9F95F)
-Subject: Re: linux 3.2-rcX iwlwifi driver's problem (wifi link unstable when
- moving between multiple APs)
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Cheng Renquan <crquan@gmail.com>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:9277 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750721Ab1LIQOI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 9 Dec 2011 11:14:08 -0500
+Subject: Re: [PATCH] iwlwifi regression in 20111205 merge
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Nikolay Martynov <mar.kolya@gmail.com>,
+	"mar.kolya@gmail.com linux-wireless@vger.kernel.org"
+	<linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+In-Reply-To: <20111209154415.GA14236@tuxdriver.com>
+References: <1323398619-19774-1-git-send-email-mar.kolya@gmail.com>
+	 <1323399833.13074.80.camel@wwguy-huron>
+	 <1323400528.13074.87.camel@wwguy-huron>
+	 <20111209154415.GA14236@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 09 Dec 2011 07:15:27 -0800
+Message-ID: <1323443727.13074.91.camel@wwguy-huron> (sfid-20111209_171413_166736_0E5B531C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 21, 2011 at 11:36 AM, Cheng Renquan <crquan@gmail.com> wrote:
-> On Wed, Dec 21, 2011 at 1:20 AM, Sedat Dilek <sedat.dilek@googlemail.com> wrote:
-[...]
-> read these from MAINTAINERS, just want to confirm if iwlwifi.git has more
-> fresh content, this should be the most upstream, right?
->
+On Fri, 2011-12-09 at 07:44 -0800, John W. Linville wrote:
+> Are the bits in the wireless tree correct?  If so, then please just
+> send a patch to fix the wireless-next tree.
+> 
+> Now that the kernel.org mess is sorted, I guess we/I need to go back
+> to pulling your trees instead of applying patches...
+> 
+"wireless" tree is correct, the piece is missing in iwl-mac80211.c on
+"wireless-next" tree. Nikolay's patch fix it.
 
-Wey-Yi or Johannes can gave you precise answers on iwwifi development.
-Of course the iwlwifi GIT (master) tree has latest stuff.
-As you might have seen there are different GIT branches for stuff to
-go into wireless-testing (experimental sofware), wireless-next
-(linux-next.git) and wireless (linux.git).
+The question I have is what is the right way to deal with this. the
+orig. patch need to be backport to stable, but the function was move to
+different file short before the patch. That is the reason cause this
+mess :-)
 
-> (only here has new fix and fixes are verified correct, then John Linville could
-> pull from here the iwlwifi.git, right? As I understand, the MAINTAINERS model
-> should be the way of iwlwifi.git => wireless.git => net.git => linus)
->
+Thanks
+Wey
 
-For mainline this workflow seems to be correct, but AFAICS you want an
-official statement, so wait for Wey-Yi's answer :-).
+> 
+> On Thu, Dec 08, 2011 at 07:15:28PM -0800, Guy, Wey-Yi wrote:
+> > John,
+> > 
+> > what is the correct method to handle this case?
+> > the patch need to add a piece of code in iwl-mac80211.c, and also need
+> > to backport to stable
+> > Since the function was recently move from iwl-agn.c to iwl-mac80211.c,
+> > so separated patch need for "wireless-next" and "wireless". But look
+> > like portion of patch just lost because the function was move.
+> > 
+> > Thanks
+> > Wey
+> > 
+> > On Thu, 2011-12-08 at 19:03 -0800, Guy, Wey-Yi wrote:
+> > > Hi Nikolay,
+> > > 
+> > > I believe I know what happen,
+> > > 
+> > > this change happen after the function being move from iwl-agn.c to
+> > > iwl-mac80211.c
+> > > 
+> > > Author: Johannes Berg <johannes.berg@intel.com>
+> > > Date:   Fri Dec 2 08:19:17 2011 -0800
+> > > 
+> > >     iwlagn: fix HW crypto for TX-only keys
+> > >     
+> > >     Group keys in IBSS or AP mode are not programmed
+> > >     into the device since we give the key to it with
+> > >     every TX packet. However, we do need mac80211 to
+> > >     create the MMIC & PN in all cases. Move the code
+> > >     around to set the key flags all the time. We set
+> > >     them even when the key is removed again but that
+> > >     is obviously harmless.
+> > >     
+> > >     Cc: stable@vger.kernel.org
+> > >     Reported-by: Reinette Chatre <reinette.chatre@intel.com>
+> > >     Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > >     Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > >     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > > 
+> > > and the changes was made in iwl-mac80211.c
+> > > 
+> > > but since this patch need to be backport to stable kernel.
+> > > so there is a separated patch sent for the changes in iwl-agn.c against
+> > > stable
+> > > 
+> > > because all these, for some reason the changes just got lost.
+> > > Thank you for catch this
+> > > 
+> > > Wey
+> > > 
+> > > 
+> > > On Thu, 2011-12-08 at 18:43 -0800, Nikolay Martynov wrote:
+> > > > It looks like the regression was introduced between 20111202 and
+> > > > 20111205 (linux-next tree). Symptoms: connection to AP seem to be
+> > > > established, but no data goes though it in any way. Tested on intel
+> > > > 5300.
+> > > >   Peek at the changes have shown that it looks like at least part of
+> > > > the code wasn't merged properly. It was originally committed into
+> > > > iwl_agn.c but code in question was moved to iwl-mac80211.c.
+> > > >   This patch puts code in place and my card works again.
+> > > >   I hope this patch will be reviewed by people developing iwl
+> > > > driver. Also, it is possible that some other iwl code didn't make it
+> > > > though 20111205 merge as well, so this probably should be checked too.
+> > > >   Please let me know if I can provide any more info.
+> > > >   Thanks!
+> > > > 
+> > > > Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+> > > > ---
+> > > >  drivers/net/wireless/iwlwifi/iwl-mac80211.c |   11 +++++++++++
+> > > >  1 files changed, 11 insertions(+), 0 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+> > > > index 794b735..55308b8 100644
+> > > > --- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+> > > > +++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+> > > > @@ -517,6 +517,17 @@ static int iwlagn_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+> > > >  		return -EOPNOTSUPP;
+> > > >  	}
+> > > >  
+> > > > +	switch (key->cipher) {
+> > > > +	case WLAN_CIPHER_SUITE_TKIP:
+> > > > +		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
+> > > > +		/* fall through */
+> > > > +	case WLAN_CIPHER_SUITE_CCMP:
+> > > > +		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
+> > > > +		break;
+> > > > +	default:
+> > > > +		break;
+> > > > +	}
+> > > > +
+> > > >  	/*
+> > > >  	 * We could program these keys into the hardware as well, but we
+> > > >  	 * don't expect much multicast traffic in IBSS and having keys
+> > > 
+> > > 
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> > 
+> > 
+> 
 
-> INTEL WIRELESS WIFI LINK (iwlwifi)
-> M:      Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> M:      Intel Linux Wireless <ilw@linux.intel.com>
-> L:      linux-wireless@vger.kernel.org
-> W:      http://intellinuxwireless.org
-> T:      git git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
-> S:      Supported
-> F:      drivers/net/wireless/iwlwifi/
->
->
-> By comparing the two, I got that iwlwifi.git really has more, now
-> prefetched for tomorrow
-> when in office sometimes Internet is not available, and in case
-> wireless.git with your patch
-> still does not work, I could have a try of iwlwifi.git;
->
 
-If you want latest iwlwifi bits, you can try also the work from there.
-But a better strategy would be to test this order:
-1. wireless (stable)
-2. wireless-next or linux-next (testing)
-3. wireless-testing and/or wiwlwifi (experimental)
-
-- Sedat -
-
-> http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=history;f=drivers/net/wireless/iwlwifi
-> http://git.kernel.org/?p=linux/kernel/git/linville/wireless.git;a=history;f=drivers/net/wireless/iwlwifi
->
-[...]
