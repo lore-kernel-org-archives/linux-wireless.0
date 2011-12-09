@@ -1,54 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:45791 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752592Ab1LOFsX convert rfc822-to-8bit (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:61452 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751079Ab1LIWxl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 00:48:23 -0500
-Received: by vcbfk14 with SMTP id fk14so1243356vcb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2011 21:48:22 -0800 (PST)
+	Fri, 9 Dec 2011 17:53:41 -0500
+Received: by ghbz2 with SMTP id z2so2959021ghb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 09 Dec 2011 14:53:41 -0800 (PST)
+Message-ID: <4EE29171.9060608@lwfinger.net> (sfid-20111209_235344_875062_F0847360)
+Date: Fri, 09 Dec 2011 16:53:37 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <CAKeTQ4aVzp3GTmzR0zv1j5fWyCUrQLUk9EHHBvZFpDYiQSC1=g@mail.gmail.com>
-References: <CAKeTQ4aVzp3GTmzR0zv1j5fWyCUrQLUk9EHHBvZFpDYiQSC1=g@mail.gmail.com>
-Date: Thu, 15 Dec 2011 11:18:22 +0530
-Message-ID: <CAD2nsn0jgoUDf02UrajQyOKZiETMEbP6ikBAtBNdmcgT6m34yw@mail.gmail.com> (sfid-20111215_064826_511188_C6013E0B)
-Subject: Re: wierless hardware using ath9k driver on AP mode leads to kernel panic
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Ashwin Mendonca <ashwinloyal@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Arend van Spriel <arend@broadcom.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Francesco Gringoli <francesco.gringoli@ing.unibs.it>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Performance of BCM43224 (14e4:4353)
+References: <4EE15A4E.1090500@lwfinger.net> <4EE1E2AC.8030002@broadcom.com> <4EE23AF5.8000400@lwfinger.net> <4EE24615.9020003@broadcom.com> <4EE2509D.6020501@lwfinger.net> <4EE269CF.2000608@broadcom.com>
+In-Reply-To: <4EE269CF.2000608@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 14, 2011 at 10:53 PM, Ashwin Mendonca <ashwinloyal@gmail.com> wrote:
-> I can enable AP mode on my netbook. But when I turn on a wireless
-> client device, then the sytem on AP mode freezes. It has happened
-> since 2.3.38. When I installaed ath9k driver compiled from
-> compat-wireless on linux 2.3.38, the issue got disappered. But the
-> ath9k driver packed with the kernel still has the issue. On Ubuntu
-> 11.10, all linux 3.0 releases (the current stable release  Ubuntu
-> 3.0.14) have the issue. I compiled 3.1.5 stable kernel from sources,
-> which also has the issue. I recently compiled
-> compat-wireless-3.2-rc1-1, which also got my system frozen. This is
-> the bug that I filled at Launchpad:
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/875503
+On 12/09/2011 02:04 PM, Arend van Spriel wrote:
+>
+> Indeed. What is more strange is that this looks like value from
+> enumeration rom. 0x4bf is BCMA_MANUF_BCM, 0x800 is BCMA_CORE_CHIPCOMMON.
+> It seems the BAR window is wrong. Can you read PCI_BAR window in the
+> ai_doattach() before reading the chip id.
 
-some time back the STA mode itself had this issue, but was fixed by
-https://lkml.org/lkml/2011/4/12/269
-could you please let us know whether this issue happens in
-http://linuxwireless.org/en/users/Download#Where_to_download_bleeding_edge
+I would like a hint on how to do this. I tried some things that failed.
 
-i just tried to put AR2427 in AP mode and then connected a STA, did
-not seem to cause any issue in 3.2.0-rc5-wl. please also post your
-hostapd.conf and your hostapd --version
-
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--- 
-shafi
+Larry
