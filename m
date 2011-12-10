@@ -1,288 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1530 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760987Ab1LQChg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 21:37:36 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 19/30] brcm80211: fmac: stop referencing brcmf_pub in
- bus layer
-Date: Fri, 16 Dec 2011 18:37:09 -0800
-Message-ID: <1324089440-8957-20-git-send-email-frankyl@broadcom.com> (sfid-20111217_035945_085491_29F4006A)
-In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
-References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:51118 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751142Ab1LJTtR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Dec 2011 14:49:17 -0500
+Received: by yenm11 with SMTP id m11so2904970yen.19
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2011 11:49:17 -0800 (PST)
+Message-ID: <4EE3B7B9.5010908@lwfinger.net> (sfid-20111210_204921_181341_BEE36D90)
+Date: Sat, 10 Dec 2011 13:49:13 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Arend van Spriel <arend@broadcom.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Performance of BCM43224 (14e4:4353)
+References: <4EE15A4E.1090500@lwfinger.net> <4EE1E2AC.8030002@broadcom.com> <4EE23AF5.8000400@lwfinger.net> <4EE24615.9020003@broadcom.com> <4EE2509D.6020501@lwfinger.net> <4EE269CF.2000608@broadcom.com> <4EE29171.9060608@lwfinger.net> <CACna6rzQuw+oMvYjN6+7SsTqqW=vFFj8W1iuwDY8x+p+GgJ6jA@mail.gmail.com> <4EE33CCB.80309@broadcom.com>
+In-Reply-To: <4EE33CCB.80309@broadcom.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-brcmf_pub is the data structure for common layer. Since brcmf_bus
-should be the only structure shared by common layer and bus layer,
-stop referencing brcmf_pub from bus layer. This patch is part of
-the fullmac bus interface refactoring.
+On 12/10/2011 05:04 AM, Arend van Spriel wrote:
+>
+> Obviously it should be a pci_read_config_dword(). I found out that I can
+> reproduce the problem over here so I added the print statements:
+>
+> [61359.893254] brcmsmac bcma0:0: mfg 4bf core 812 rev 23 class 0 irq 17
+> [61359.897801] core[2] id=0x820 addr=18002000 wrap=18102000
+> [61359.897808] core[1] id=0x812 addr=18001000 wrap=18101000
+> [61359.897814] core[0] id=0x800 addr=18000000 wrap=18100000
+> [61359.897822] PCI_BAR0_WIN=18107000
+>
+> Not sure how it got programmed to this value, but it definitely is wrong.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    4 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   15 ++++---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   43 +++++++++-----------
- 3 files changed, 29 insertions(+), 33 deletions(-)
+I put pr_info() and dump_stack() at every place where PCI_BAR_WIN0 is changed. 
+The one place in drivers/bcma/host_pci.c is never called - only the location in 
+drivers/bcma/scan.c.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index 980bf70..dcb1bb5 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -669,8 +669,8 @@ extern uint brcmf_c_mkiovar(char *name, char *data, uint datalen,
-  * Returned structure should have bus and prot pointers filled in.
-  * bus_hdrlen specifies required headroom for bus module header.
-  */
--extern struct brcmf_pub *brcmf_attach(struct brcmf_sdio *bus,
--				      uint bus_hdrlen, struct device *dev);
-+extern int brcmf_attach(struct brcmf_sdio *bus,
-+			uint bus_hdrlen, struct device *dev);
- extern int brcmf_net_attach(struct brcmf_pub *drvr, int idx);
- extern int brcmf_netdev_wait_pend8021x(struct net_device *ndev);
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 130cab1..533418e 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -922,17 +922,18 @@ void brcmf_del_if(struct brcmf_pub *drvr, int ifidx)
- 	}
- }
- 
--struct brcmf_pub *brcmf_attach(struct brcmf_sdio *bus, uint bus_hdrlen,
-+int brcmf_attach(struct brcmf_sdio *bus, uint bus_hdrlen,
- 			       struct device *dev)
- {
- 	struct brcmf_pub *drvr = NULL;
-+	int ret = 0;
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
- 	/* Allocate primary brcmf_info */
- 	drvr = kzalloc(sizeof(struct brcmf_pub), GFP_ATOMIC);
- 	if (!drvr)
--		goto fail;
-+		return -ENOMEM;
- 
- 	mutex_init(&drvr->proto_block);
- 
-@@ -944,7 +945,8 @@ struct brcmf_pub *brcmf_attach(struct brcmf_sdio *bus, uint bus_hdrlen,
- 	drvr->dev = dev;
- 
- 	/* Attach and link in the protocol */
--	if (brcmf_proto_attach(drvr) != 0) {
-+	ret = brcmf_proto_attach(drvr);
-+	if (ret != 0) {
- 		brcmf_dbg(ERROR, "brcmf_prot_attach failed\n");
- 		goto fail;
- 	}
-@@ -952,13 +954,12 @@ struct brcmf_pub *brcmf_attach(struct brcmf_sdio *bus, uint bus_hdrlen,
- 	INIT_WORK(&drvr->setmacaddr_work, _brcmf_set_mac_address);
- 	INIT_WORK(&drvr->multicast_work, _brcmf_set_multicast_list);
- 
--	return drvr;
-+	return ret;
- 
- fail:
--	if (drvr)
--		brcmf_detach(dev);
-+	brcmf_detach(dev);
- 
--	return NULL;
-+	return ret;
- }
- 
- int brcmf_bus_start(struct device *dev)
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index a7fe00f..399567f 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -450,8 +450,6 @@ struct sdpcm_shared_le {
- /* misc chip info needed by some of the routines */
- /* Private data for SDIO bus interaction */
- struct brcmf_sdio {
--	struct brcmf_pub *drvr;
--
- 	struct brcmf_sdio_dev *sdiodev;	/* sdio device handler */
- 	struct chip_info *ci;	/* Chip info struct */
- 	char *vars;		/* Variables (from CIS and/or other) */
-@@ -1077,7 +1075,7 @@ static void brcmf_sdbrcm_rxfail(struct brcmf_sdio *bus, bool abort, bool rtx)
- 
- 	/* If we can't reach the device, signal failure */
- 	if (err || brcmf_sdcard_regfail(bus->sdiodev))
--		bus->drvr->bus_if->state = BRCMF_BUS_DOWN;
-+		bus->sdiodev->bus_if->state = BRCMF_BUS_DOWN;
- }
- 
- /* copy a buffer into a pkt buffer chain */
-@@ -1724,7 +1722,7 @@ brcmf_sdbrcm_readframes(struct brcmf_sdio *bus, uint maxframes, bool *finished)
- 
- 	for (rxseq = bus->rx_seq, rxleft = maxframes;
- 	     !bus->rxskip && rxleft &&
--	     bus->drvr->bus_if->state != BRCMF_BUS_DOWN;
-+	     bus->sdiodev->bus_if->state != BRCMF_BUS_DOWN;
- 	     rxseq++, rxleft--) {
- 
- 		/* Handle glomming separately */
-@@ -2259,8 +2257,6 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 	uint datalen;
- 	u8 tx_prec_map;
- 
--	struct brcmf_pub *drvr = bus->drvr;
--
- 	brcmf_dbg(TRACE, "Enter\n");
- 
- 	tx_prec_map = ~bus->flowcontrol;
-@@ -2297,8 +2293,8 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 	}
- 
- 	/* Deflow-control stack if needed */
--	if (drvr->bus_if->drvr_up &&
--	    (drvr->bus_if->state == BRCMF_BUS_DATA) &&
-+	if (bus->sdiodev->bus_if->drvr_up &&
-+	    (bus->sdiodev->bus_if->state == BRCMF_BUS_DATA) &&
- 	    bus->txoff && (pktq_len(&bus->txq) < TXLOW)) {
- 		bus->txoff = OFF;
- 		brcmf_txflowcontrol(bus->sdiodev->dev, 0, OFF);
-@@ -2335,7 +2331,7 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 					       SBSDIO_DEVICE_CTL, &err);
- 		if (err) {
- 			brcmf_dbg(ERROR, "error reading DEVCTL: %d\n", err);
--			bus->drvr->bus_if->state = BRCMF_BUS_DOWN;
-+			bus->sdiodev->bus_if->state = BRCMF_BUS_DOWN;
- 		}
- #endif				/* BCMDBG */
- 
-@@ -2345,7 +2341,7 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 		if (err) {
- 			brcmf_dbg(ERROR, "error reading CSR: %d\n",
- 				  err);
--			bus->drvr->bus_if->state = BRCMF_BUS_DOWN;
-+			bus->sdiodev->bus_if->state = BRCMF_BUS_DOWN;
- 		}
- 
- 		brcmf_dbg(INFO, "DPC: PENDING, devctl 0x%02x clkctl 0x%02x\n",
-@@ -2358,7 +2354,7 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 			if (err) {
- 				brcmf_dbg(ERROR, "error reading DEVCTL: %d\n",
- 					  err);
--				bus->drvr->bus_if->state = BRCMF_BUS_DOWN;
-+				bus->sdiodev->bus_if->state = BRCMF_BUS_DOWN;
- 			}
- 			devctl &= ~SBSDIO_DEVCTL_CA_INT_ONLY;
- 			brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_1,
-@@ -2366,7 +2362,7 @@ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
- 			if (err) {
- 				brcmf_dbg(ERROR, "error writing DEVCTL: %d\n",
- 					  err);
--				bus->drvr->bus_if->state = BRCMF_BUS_DOWN;
-+				bus->sdiodev->bus_if->state = BRCMF_BUS_DOWN;
- 			}
- 			bus->clkstate = CLK_AVAIL;
- 		} else {
-@@ -2522,11 +2518,11 @@ clkwait:
- 		 else await next interrupt */
- 	/* On failed register access, all bets are off:
- 		 no resched or interrupts */
--	if ((bus->drvr->bus_if->state == BRCMF_BUS_DOWN) ||
-+	if ((bus->sdiodev->bus_if->state == BRCMF_BUS_DOWN) ||
- 	    brcmf_sdcard_regfail(bus->sdiodev)) {
- 		brcmf_dbg(ERROR, "failed backplane access over SDIO, halting operation %d\n",
- 			  brcmf_sdcard_regfail(bus->sdiodev));
--		bus->drvr->bus_if->state = BRCMF_BUS_DOWN;
-+		bus->sdiodev->bus_if->state = BRCMF_BUS_DOWN;
- 		bus->intstatus = 0;
- 	} else if (bus->clkstate == CLK_PENDING) {
- 		brcmf_dbg(INFO, "rescheduled due to CLK_PENDING awaiting I_CHIPACTIVE interrupt\n");
-@@ -2563,7 +2559,7 @@ static int brcmf_sdbrcm_dpc_thread(void *data)
- 		if (!wait_for_completion_interruptible(&bus->dpc_wait)) {
- 			/* Call bus dpc unless it indicated down
- 			(then clean stop) */
--			if (bus->drvr->bus_if->state != BRCMF_BUS_DOWN) {
-+			if (bus->sdiodev->bus_if->state != BRCMF_BUS_DOWN) {
- 				if (brcmf_sdbrcm_dpc(bus))
- 					complete(&bus->dpc_wait);
- 			} else {
-@@ -3137,7 +3133,7 @@ static int brcmf_sdbrcm_download_state(struct brcmf_sdio *bus, bool enter)
- 		/* Allow HT Clock now that the ARM is running. */
- 		bus->alp_only = false;
- 
--		bus->drvr->bus_if->state = BRCMF_BUS_LOAD;
-+		bus->sdiodev->bus_if->state = BRCMF_BUS_LOAD;
- 	}
- fail:
- 	return bcmerror;
-@@ -3383,7 +3379,7 @@ void brcmf_sdbrcm_bus_stop(struct device *dev)
- 	bus->hostintmask = 0;
- 
- 	/* Change our idea of bus state */
--	bus->drvr->bus_if->state = BRCMF_BUS_DOWN;
-+	bus->sdiodev->bus_if->state = BRCMF_BUS_DOWN;
- 
- 	/* Force clocks on backplane to be sure F2 interrupt propagates */
- 	saveclk = brcmf_sdcard_cfg_read(bus->sdiodev, SDIO_FUNC_1,
-@@ -3446,7 +3442,7 @@ int brcmf_sdbrcm_bus_init(struct device *dev)
- 			return -1;
- 	}
- 
--	if (!bus->drvr)
-+	if (!bus->sdiodev->bus_if->drvr)
- 		return 0;
- 
- 	/* Start the watchdog timer */
-@@ -3542,7 +3538,7 @@ void brcmf_sdbrcm_isr(void *arg)
- 		return;
- 	}
- 
--	if (bus->drvr->bus_if->state == BRCMF_BUS_DOWN) {
-+	if (bus->sdiodev->bus_if->state == BRCMF_BUS_DOWN) {
- 		brcmf_dbg(ERROR, "bus is down. we have nothing to do\n");
- 		return;
- 	}
-@@ -3798,7 +3794,7 @@ static bool brcmf_sdbrcm_probe_init(struct brcmf_sdio *bus)
- 	brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_0, SDIO_CCCR_IOEx,
- 			       SDIO_FUNC_ENABLE_1, NULL);
- 
--	bus->drvr->bus_if->state = BRCMF_BUS_DOWN;
-+	bus->sdiodev->bus_if->state = BRCMF_BUS_DOWN;
- 	bus->sleeping = false;
- 	bus->rxflow = false;
- 
-@@ -3884,7 +3880,6 @@ static void brcmf_sdbrcm_release(struct brcmf_sdio *bus)
- 		if (bus->sdiodev->bus_if->drvr) {
- 			brcmf_detach(bus->sdiodev->dev);
- 			brcmf_sdbrcm_release_dongle(bus);
--			bus->drvr = NULL;
- 		}
- 
- 		brcmf_sdbrcm_release_malloc(bus);
-@@ -3958,8 +3953,8 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
- 	}
- 
- 	/* Attach to the brcmf/OS/network interface */
--	bus->drvr = brcmf_attach(bus, SDPCM_RESERVE, bus->sdiodev->dev);
--	if (!bus->drvr) {
-+	ret = brcmf_attach(bus, SDPCM_RESERVE, bus->sdiodev->dev);
-+	if (ret != 0) {
- 		brcmf_dbg(ERROR, "brcmf_attach failed\n");
- 		goto fail;
- 	}
-@@ -4032,7 +4027,7 @@ brcmf_sdbrcm_wd_timer(struct brcmf_sdio *bus, uint wdtick)
- 	}
- 
- 	/* don't start the wd until fw is loaded */
--	if (bus->drvr->bus_if->state == BRCMF_BUS_DOWN)
-+	if (bus->sdiodev->bus_if->state == BRCMF_BUS_DOWN)
- 		return;
- 
- 	if (wdtick) {
--- 
-1.7.5.4
+The logged data is
 
+[  813.683905] bcma: BCMA_PCI_BAR0_WIN set to 0x18000000
+[  813.683910] Pid: 8989, comm: work_for_cpu Tainted: G           O 
+3.2.0-rc4-wl+ #146
+[  813.683913] Call Trace:
+[  813.683926]  [<ffffffffa0389af6>] 
+bcma_scan_switch_core.isra.9.part.10+0x36/0x40 [bcma]
+[  813.683933]  [<ffffffffa0389bde>] bcma_init_bus+0x6e/0x70 [bcma]
+[  813.683940]  [<ffffffffa0389c04>] bcma_bus_scan+0x24/0x210 [bcma]
+[  813.683946]  [<ffffffff81028f11>] ? __ioremap_caller+0x2b1/0x390
+[  813.683951]  [<ffffffff811dded0>] ? pci_iomap+0x80/0xc0
+[  813.683958]  [<ffffffffa0389209>] bcma_bus_register+0x19/0x2e0 [bcma]
+[  813.683964]  [<ffffffffa038b800>] bcma_host_pci_probe+0x120/0x1c0 [bcma]
+[  813.683970]  [<ffffffff810636b0>] ? cwq_activate_first_delayed+0x110/0x110
+[  813.683976]  [<ffffffff811f17b2>] local_pci_probe+0x12/0x20
+[  813.683980]  [<ffffffff810636c3>] do_work_for_cpu+0x13/0x30
+[  813.683984]  [<ffffffff8106bb07>] kthread+0x87/0x90
+[  813.683990]  [<ffffffff81384f74>] kernel_thread_helper+0x4/0x10
+[  813.683995]  [<ffffffff8138269d>] ? retint_restore_args+0xe/0xe
+[  813.683999]  [<ffffffff8106ba80>] ? __init_kthread_worker+0x70/0x70
+[  813.684041]  [<ffffffff81384f70>] ? gs_change+0xb/0xb
+[  813.684048] bcma: BCMA_PCI_BAR0_WIN set to 0x18107000
+
+The stack trace is identical for the second entry. It is never remapped, which 
+is why it is wrong in brcmsmac.
+
+Question: Don't you need to change the R_REG macro to use bcma? It is still 
+doing read{b,w,l} operations, and is not checking the mapping.
+
+Larry
 
