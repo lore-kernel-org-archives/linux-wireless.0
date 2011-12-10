@@ -1,71 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:27087 "EHLO mga02.intel.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4644 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760202Ab1LPQh5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 11:37:57 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 22/24] iwlwifi: remove unused AMPDU factor/density configuration
-Date: Fri, 16 Dec 2011 07:37:27 -0800
-Message-Id: <1324049849-831-23-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111216_173826_725007_E4B90104)
-In-Reply-To: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1750991Ab1LJUqU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Dec 2011 15:46:20 -0500
+Message-ID: <4EE3C515.5050307@broadcom.com> (sfid-20111210_214623_546618_44674578)
+Date: Sat, 10 Dec 2011 12:46:13 -0800
+From: "Franky Lin" <frankyl@broadcom.com>
+MIME-Version: 1.0
+To: "Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: brcmfmac + compat wireless + 2.6.35
+References: <4ECC1F41.90003@broadcom.com>
+ <1323539463-6072-1-git-send-email-GNUtoo@no-log.org>
+In-Reply-To: <1323539463-6072-1-git-send-email-GNUtoo@no-log.org>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Denis,
 
-These are unused, so can be removed safely. They also
-don't make a lot of sense in Bluetooth configuration.
+On 12/10/2011 09:51 AM, Denis 'GNUtoo' Carikli wrote:
+>> I will submit a patch too add the dummy handler.
+> Since the patch hasn't shown up yet, I decided to give a try,
+> But I failed:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c |    4 ----
- drivers/net/wireless/iwlwifi/iwl-core.h |    4 ----
- 2 files changed, 0 insertions(+), 8 deletions(-)
+I saw the patch you sent. I have one queued up internally but am happy 
+to take yours. Does the patch work or not?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index fb690a2..e513a80 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -76,11 +76,7 @@ static void iwl_init_ht_hw_capab(const struct iwl_priv *priv,
- 		ht_info->cap |= IEEE80211_HT_CAP_MAX_AMSDU;
- 
- 	ht_info->ampdu_factor = CFG_HT_RX_AMPDU_FACTOR_DEF;
--	if (cfg(priv)->bt_params && cfg(priv)->bt_params->ampdu_factor)
--		ht_info->ampdu_factor = cfg(priv)->bt_params->ampdu_factor;
- 	ht_info->ampdu_density = CFG_HT_MPDU_DENSITY_DEF;
--	if (cfg(priv)->bt_params && cfg(priv)->bt_params->ampdu_density)
--		ht_info->ampdu_density = cfg(priv)->bt_params->ampdu_density;
- 
- 	ht_info->mcs.rx_mask[0] = 0xFF;
- 	if (rx_chains_num >= 2)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 792e802..7bf76ab 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -142,8 +142,6 @@ struct iwl_base_params {
-  * @bt_init_traffic_load: specify initial bt traffic load
-  * @bt_prio_boost: default bt priority boost value
-  * @agg_time_limit: maximum number of uSec in aggregation
-- * @ampdu_factor: Maximum A-MPDU length factor
-- * @ampdu_density: Minimum A-MPDU spacing
-  * @bt_sco_disable: uCode should not response to BT in SCO/ESCO mode
-  */
- struct iwl_bt_params {
-@@ -151,8 +149,6 @@ struct iwl_bt_params {
- 	u8 bt_init_traffic_load;
- 	u8 bt_prio_boost;
- 	u16 agg_time_limit;
--	u8 ampdu_factor;
--	u8 ampdu_density;
- 	bool bt_sco_disable;
- 	bool bt_session_2;
- };
--- 
-1.7.0.4
+> The patch which will follow blocks the phone(ssh doens't respond
+> anymore), I really wonder what's wrong with it since it does
+> something very similar to the bcm4329 driver.
+> The last printk are theses ones:
+> [   63.436157] wifi_set_power = 1
+> [   63.641585] wifi_set_carddetect = 1
+> [   63.646195] sdhci_s3c_force_presence_change : Enter
+> [   63.780660] mmc2: queuing unknown CIS tuple 0x80 (50 bytes)
+> [   63.796865] mmc2: queuing unknown CIS tuple 0x80 (7 bytes)
+> [   63.843426] mmc2: queuing unknown CIS tuple 0x80 (3 bytes)
+> [   63.851883] mmc2: new SDIO card at address 0001
+
+Did you try to enable more debug trace? Looks like sdio probe has never 
+been called.
+
+Franky
+
 
