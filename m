@@ -1,123 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43869 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:59554 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756640Ab1LNLYC (ORCPT
+	with ESMTP id S1750956Ab1LJRvX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 06:24:02 -0500
-Message-Id: <20111214112313.275219807@sipsolutions.net> (sfid-20111214_122408_517065_5EF4D40D)
-Date: Wed, 14 Dec 2011 12:20:31 +0100
+	Sat, 10 Dec 2011 12:51:23 -0500
+Subject: Re: [PATCH 07/15] iwlwifi: add device ID information support by
+ testmode
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 5/5] mac80211: count authorized stations per BSS
-References: <20111214112026.409514167@sipsolutions.net>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	"Hsu, Kenny" <kenny.hsu@intel.com>
+In-Reply-To: <1323390382-1678-8-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111209_022535_454507_1587E816)
+References: <1323390382-1678-1-git-send-email-wey-yi.w.guy@intel.com>
+	 <1323390382-1678-8-git-send-email-wey-yi.w.guy@intel.com>
+	 (sfid-20111209_022535_454507_1587E816)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 10 Dec 2011 18:51:19 +0100
+Message-ID: <1323539479.3344.31.camel@jlt3.sipsolutions.net> (sfid-20111210_185128_574123_C0C3B2A5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, 2011-12-08 at 16:26 -0800, Wey-Yi Guy wrote:
 
-Currently, each AP interface will send multicast
-traffic if any interface has a station entry even
-if that station entry is allocated only. With the
-new station state management we can easily fix it
-by adding a counter that counts each authorized
-station only and send multicast traffic only when
-the correct interface has at least one authorized
-station.
+> +	case IWL_TM_CMD_APP2DEV_GET_DEVICE_ID:
+> +		bus_get_hw_id(bus(priv), buf, sizeof(buf));
+> +		ptr = buf;
+> +		strsep(&ptr, ":");
+> +		sscanf(strsep(&ptr, ":"), "%x", &num);
+> +		sscanf(strsep(&ptr, ":"), "%x", &devid);
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/debugfs_netdev.c |    2 ++
- net/mac80211/ieee80211_i.h    |    1 +
- net/mac80211/sta_info.c       |   14 +++++++++-----
- net/mac80211/tx.c             |   19 ++++++++-----------
- 4 files changed, 20 insertions(+), 16 deletions(-)
+This is kinda ugly too ... sorry, should've seen it earlier.
 
---- a/net/mac80211/debugfs_netdev.c	2011-12-14 09:15:09.000000000 +0100
-+++ b/net/mac80211/debugfs_netdev.c	2011-12-14 11:55:22.000000000 +0100
-@@ -321,6 +321,7 @@ static ssize_t ieee80211_if_parse_tkip_m
- __IEEE80211_IF_FILE_W(tkip_mic_test);
- 
- /* AP attributes */
-+IEEE80211_IF_FILE(num_sta_authorized, u.ap.num_sta_authorized, ATOMIC);
- IEEE80211_IF_FILE(num_sta_ps, u.ap.num_sta_ps, ATOMIC);
- IEEE80211_IF_FILE(dtim_count, u.ap.dtim_count, DEC);
- 
-@@ -458,6 +459,7 @@ static void add_ap_files(struct ieee8021
- 	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
- 	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
- 
-+	DEBUGFS_ADD(num_sta_authorized);
- 	DEBUGFS_ADD(num_sta_ps);
- 	DEBUGFS_ADD(dtim_count);
- 	DEBUGFS_ADD(num_buffered_multicast);
---- a/net/mac80211/ieee80211_i.h	2011-12-14 09:15:09.000000000 +0100
-+++ b/net/mac80211/ieee80211_i.h	2011-12-14 11:55:22.000000000 +0100
-@@ -243,6 +243,7 @@ struct ieee80211_if_ap {
- 	u8 tim[sizeof(unsigned long) * BITS_TO_LONGS(IEEE80211_MAX_AID + 1)];
- 	struct sk_buff_head ps_bc_buf;
- 	atomic_t num_sta_ps; /* number of stations in PS mode */
-+	atomic_t num_sta_authorized; /* number of authorized stations */
- 	int dtim_count;
- 	bool dtim_bc_mc;
- };
---- a/net/mac80211/sta_info.c	2011-12-14 11:54:42.000000000 +0100
-+++ b/net/mac80211/sta_info.c	2011-12-14 11:55:22.000000000 +0100
-@@ -1542,17 +1542,21 @@ int sta_info_move_state_checked(struct s
- 			return -EINVAL;
- 		break;
- 	case IEEE80211_STA_ASSOC:
--		if (sta->sta_state == IEEE80211_STA_AUTH)
-+		if (sta->sta_state == IEEE80211_STA_AUTH) {
- 			set_bit(WLAN_STA_ASSOC, &sta->_flags);
--		else if (sta->sta_state == IEEE80211_STA_AUTHORIZED)
-+		} else if (sta->sta_state == IEEE80211_STA_AUTHORIZED) {
-+			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
-+				atomic_dec(&sta->sdata->u.ap.num_sta_authorized);
- 			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
--		else
-+		} else
- 			return -EINVAL;
- 		break;
- 	case IEEE80211_STA_AUTHORIZED:
--		if (sta->sta_state == IEEE80211_STA_ASSOC)
-+		if (sta->sta_state == IEEE80211_STA_ASSOC) {
-+			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
-+				atomic_inc(&sta->sdata->u.ap.num_sta_authorized);
- 			set_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
--		else
-+		} else
- 			return -EINVAL;
- 		break;
- 	default:
---- a/net/mac80211/tx.c	2011-12-14 11:51:07.000000000 +0100
-+++ b/net/mac80211/tx.c	2011-12-14 11:55:22.000000000 +0100
-@@ -304,17 +304,14 @@ ieee80211_tx_h_check_assoc(struct ieee80
- 			I802_DEBUG_INC(tx->local->tx_handlers_drop_not_assoc);
- 			return TX_DROP;
- 		}
--	} else {
--		if (unlikely(ieee80211_is_data(hdr->frame_control) &&
--			     tx->local->num_sta == 0 &&
--			     tx->sdata->vif.type != NL80211_IFTYPE_ADHOC)) {
--			/*
--			 * No associated STAs - no need to send multicast
--			 * frames.
--			 */
--			return TX_DROP;
--		}
--		return TX_CONTINUE;
-+	} else if (unlikely(tx->sdata->vif.type == NL80211_IFTYPE_AP &&
-+			    ieee80211_is_data(hdr->frame_control) &&
-+			    !atomic_read(&tx->sdata->u.ap.num_sta_authorized))) {
-+		/*
-+		 * No associated STAs - no need to send multicast
-+		 * frames.
-+		 */
-+		return TX_DROP;
- 	}
- 
- 	return TX_CONTINUE;
-
+johannes
 
