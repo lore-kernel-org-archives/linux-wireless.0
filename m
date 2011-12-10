@@ -1,117 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56653 "EHLO nbd.name"
+Received: from swm.pp.se ([212.247.200.143]:60947 "EHLO uplift.swm.pp.se"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753739Ab1LLUGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 15:06:37 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 6/6] ath9k: avoid retransmitting aggregation frames that a BAR was sent for
-Date: Mon, 12 Dec 2011 21:06:26 +0100
-Message-Id: <1323720386-46132-6-git-send-email-nbd@openwrt.org> (sfid-20111212_210640_357954_AEFE3570)
-In-Reply-To: <1323720386-46132-5-git-send-email-nbd@openwrt.org>
-References: <1323720386-46132-1-git-send-email-nbd@openwrt.org>
- <1323720386-46132-2-git-send-email-nbd@openwrt.org>
- <1323720386-46132-3-git-send-email-nbd@openwrt.org>
- <1323720386-46132-4-git-send-email-nbd@openwrt.org>
- <1323720386-46132-5-git-send-email-nbd@openwrt.org>
+	id S1750941Ab1LJRa4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Dec 2011 12:30:56 -0500
+Date: Sat, 10 Dec 2011 12:34:39 +0100 (CET)
+From: Mikael Abrahamsson <swmike@swm.pp.se>
+To: Nikolay Martynov <mar.kolya@gmail.com>
+cc: linux-wireless@vger.kernel.org
+Subject: Re: Spontaneous disconnections debugging
+In-Reply-To: <CALGY4fvRCRwqvncw8nqkEN-mGB5syHXbWKpRspbxC=6Fccpa1g@mail.gmail.com>
+Message-ID: <alpine.DEB.2.00.1112101231120.808@uplift.swm.pp.se> (sfid-20111210_183059_858793_C4105B31)
+References: <CALGY4fvRCRwqvncw8nqkEN-mGB5syHXbWKpRspbxC=6Fccpa1g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The receiver will discard them anyway.
+On Fri, 9 Dec 2011, Nikolay Martynov wrote:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/xmit.c  |   27 ++++++++++++++++++++++++---
- 2 files changed, 25 insertions(+), 3 deletions(-)
+>  I have an intel 5300 as client and openwrt ath9k based router as AP. 
+> Some times (once in several days) I get wireless connection 
+> spontaneously dropped with this message on client: wlan1: 
+> deauthenticating from XX:XX:XX:XX:XX:XX by local choice (reason=3)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 6beaff5..130e5db 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -241,6 +241,7 @@ struct ath_atx_tid {
- 	struct ath_node *an;
- 	struct ath_atx_ac *ac;
- 	unsigned long tx_buf[BITS_TO_LONGS(ATH_TID_MAX_BUFS)];
-+	int bar_index;
- 	u16 seq_start;
- 	u16 seq_next;
- 	u16 baw_size;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 6303c0f..3473da3 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -206,6 +206,8 @@ static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
- 	while (tid->baw_head != tid->baw_tail && !test_bit(tid->baw_head, tid->tx_buf)) {
- 		INCR(tid->seq_start, IEEE80211_SEQ_MAX);
- 		INCR(tid->baw_head, ATH_TID_MAX_BUFS);
-+		if (tid->bar_index >= 0)
-+			tid->bar_index--;
- 	}
- }
- 
-@@ -263,6 +265,7 @@ static void ath_tid_drain(struct ath_softc *sc, struct ath_txq *txq,
- 
- 	tid->seq_next = tid->seq_start;
- 	tid->baw_tail = tid->baw_head;
-+	tid->bar_index = -1;
- }
- 
- static void ath_tx_set_retry(struct ath_softc *sc, struct ath_txq *txq,
-@@ -551,8 +554,12 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		bf = bf_next;
- 	}
- 
--	if (bar_index >= 0)
-+	if (bar_index >= 0) {
-+		u16 bar_seq = ATH_BA_INDEX2SEQ(seq_first, bar_index);
- 		ath_send_bar(tid, ATH_BA_INDEX2SEQ(seq_first, bar_index + 1));
-+		if (BAW_WITHIN(tid->seq_start, tid->baw_size, bar_seq))
-+			tid->bar_index = ATH_BA_INDEX(tid->seq_start, bar_seq);
-+	}
- 
- 	/* prepend un-acked frames to the beginning of the pending frame queue */
- 	if (!skb_queue_empty(&bf_pending)) {
-@@ -779,8 +786,6 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
- 
- 		bf->bf_state.bf_type = BUF_AMPDU | BUF_AGGR;
- 		seqno = bf->bf_state.seqno;
--		if (!bf_first)
--			bf_first = bf;
- 
- 		/* do not step over block-ack window */
- 		if (!BAW_WITHIN(tid->seq_start, tid->baw_size, seqno)) {
-@@ -788,6 +793,21 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
- 			break;
- 		}
- 
-+		if (tid->bar_index > ATH_BA_INDEX(tid->seq_start, seqno)) {
-+			struct ath_tx_status ts = {};
-+			struct list_head bf_head;
-+
-+			INIT_LIST_HEAD(&bf_head);
-+			list_add(&bf->list, &bf_head);
-+			__skb_unlink(skb, &tid->buf_q);
-+			ath_tx_update_baw(sc, tid, seqno);
-+			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0);
-+			continue;
-+		}
-+
-+		if (!bf_first)
-+			bf_first = bf;
-+
- 		if (!rl) {
- 			aggr_limit = ath_lookup_rate(sc, bf, tid);
- 			rl = 1;
-@@ -1130,6 +1150,7 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
- 	txtid->state |= AGGR_ADDBA_PROGRESS;
- 	txtid->paused = true;
- 	*ssn = txtid->seq_start = txtid->seq_next;
-+	txtid->bar_index = -1;
- 
- 	memset(txtid->tx_buf, 0, sizeof(txtid->tx_buf));
- 	txtid->baw_head = txtid->baw_tail = 0;
+Ubuntu 11.10 on a Thinkpad X200 with Intel 5300:
+
+$ dmesg | grep -i deauthenticating | grep "local choice" | wc -l
+44
+$ uptime
+  18:31:07 up 1 day,  7:30,  3 users,  load average: 0.08, 0.03, 0.05
+
+$ dmesg | grep "local choice" | cut -d ] -f2- | sort | uniq -c
+      44  wlan0: deauthenticating from 00:21:91:dc:94:55 by local choice (reason=3)
+      56  wlan0: disassociating from 00:21:91:dc:94:55 by local choice (reason=3)
+
+>  Not that this really creates problems for me, connection is quickly
+> restored and otherwise works fine.
+
+For me it also mostly works fine, but sometimes I have to unload/reload 
+the iwlagn module to make things work again, and sometimes the wifi LED 
+just turns off and requires a reboot to get working again.
+
+At least the 5300 stuff works much better in 3.0 than it did in 2.6.38.
+
 -- 
-1.7.3.2
-
+Mikael Abrahamsson    email: swmike@swm.pp.se
