@@ -1,54 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:48678 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754609Ab1L2MkL (ORCPT
+Received: from mms3.broadcom.com ([216.31.210.19]:3027 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752381Ab1LJLFA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Dec 2011 07:40:11 -0500
-Received: by mail-lpp01m010-f46.google.com with SMTP id d3so2600118lah.19
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Dec 2011 04:40:11 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 1/3] mac80211: check sta_apply_parameters() return value
-Date: Thu, 29 Dec 2011 14:41:39 +0200
-Message-Id: <1325162501-7996-2-git-send-email-eliad@wizery.com> (sfid-20111229_134030_471569_ECBD1EC4)
-In-Reply-To: <1325162501-7996-1-git-send-email-eliad@wizery.com>
-References: <1325162501-7996-1-git-send-email-eliad@wizery.com>
+	Sat, 10 Dec 2011 06:05:00 -0500
+Message-ID: <4EE33CCB.80309@broadcom.com> (sfid-20111210_120508_489495_78FA33DE)
+Date: Sat, 10 Dec 2011 12:04:43 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Francesco Gringoli" <francesco.gringoli@ing.unibs.it>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Performance of BCM43224 (14e4:4353)
+References: <4EE15A4E.1090500@lwfinger.net>
+ <4EE1E2AC.8030002@broadcom.com> <4EE23AF5.8000400@lwfinger.net>
+ <4EE24615.9020003@broadcom.com> <4EE2509D.6020501@lwfinger.net>
+ <4EE269CF.2000608@broadcom.com> <4EE29171.9060608@lwfinger.net>
+ <CACna6rzQuw+oMvYjN6+7SsTqqW=vFFj8W1iuwDY8x+p+GgJ6jA@mail.gmail.com>
+In-Reply-To: <CACna6rzQuw+oMvYjN6+7SsTqqW=vFFj8W1iuwDY8x+p+GgJ6jA@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bail out if sta_apply_parameters() returns an error.
+On 12/10/2011 10:18 AM, Rafał Miłecki wrote:
+> 2011/12/9 Larry Finger <Larry.Finger@lwfinger.net>:
+>> On 12/09/2011 02:04 PM, Arend van Spriel wrote:
+>>>
+>>>
+>>> Indeed. What is more strange is that this looks like value from
+>>> enumeration rom. 0x4bf is BCMA_MANUF_BCM, 0x800 is BCMA_CORE_CHIPCOMMON.
+>>> It seems the BAR window is wrong. Can you read PCI_BAR window in the
+>>> ai_doattach() before reading the chip id.
+>>
+>>
+>> I would like a hint on how to do this. I tried some things that failed.
+> 
+> Have you tried
+> u32 value;
+> pci_write_config_dword(core->bus->host_pci, BCMA_PCI_BAR0_WIN, &value);
+> pr_info();
+> pci_write_config_dword(core->bus->host_pci, BCMA_PCI_BAR0_WIN2, &value);
+> pr_info();
+> 
+> You should also hack bcma_bus_scan to display addr and wrap.
+> pr_info("Core %d addr: 0x%X, wrap 0x%X\n", core->core_index,
+> core->addr, core->wrap);
+> (put is inside the while, after existing pr_info)
+> 
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/mac80211/cfg.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+Obviously it should be a pci_read_config_dword(). I found out that I can
+reproduce the problem over here so I added the print statements:
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 662125d..1c5388d 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1001,6 +1001,7 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct sta_info *sta;
- 	struct ieee80211_sub_if_data *vlansdata;
-+	int err;
- 
- 	mutex_lock(&local->sta_mtx);
- 
-@@ -1040,7 +1041,11 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 		ieee80211_send_layer2_update(sta);
- 	}
- 
--	sta_apply_parameters(local, sta, params);
-+	err = sta_apply_parameters(local, sta, params);
-+	if (err) {
-+		mutex_unlock(&local->sta_mtx);
-+		return err;
-+	}
- 
- 	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) && params->supported_rates)
- 		rate_control_rate_init(sta);
--- 
-1.7.6.401.g6a319
+[61359.893254] brcmsmac bcma0:0: mfg 4bf core 812 rev 23 class 0 irq 17
+[61359.897801] core[2] id=0x820 addr=18002000 wrap=18102000
+[61359.897808] core[1] id=0x812 addr=18001000 wrap=18101000
+[61359.897814] core[0] id=0x800 addr=18000000 wrap=18100000
+[61359.897822] PCI_BAR0_WIN=18107000
+
+Not sure how it got programmed to this value, but it definitely is wrong.
+
+Gr. AvS
 
