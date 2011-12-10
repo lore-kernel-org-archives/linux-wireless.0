@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43272 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754026Ab1L2N2I (ORCPT
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:58582 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750991Ab1LJUeB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Dec 2011 08:28:08 -0500
-Message-ID: <4EFC6AE0.6070306@qca.qualcomm.com> (sfid-20111229_142826_753656_DA7FED0C)
-Date: Thu, 29 Dec 2011 18:58:00 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Kalle Valo <kvalo@adurom.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>, Paul Stewart <pstew@google.com>,
-	Christian Lamparter <chunkeey@googlemail.com>
-Subject: Re: [PATCH] mac80211: use RCU read locks for sta_info_get
-References: <1324882778-3079-1-git-send-email-mohammed@qca.qualcomm.com> <87mxabcyi6.fsf@purkki.adurom.net>
-In-Reply-To: <87mxabcyi6.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Sat, 10 Dec 2011 15:34:01 -0500
+Received: by laah2 with SMTP id h2so859715laa.31
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2011 12:33:58 -0800 (PST)
+Subject: Re: modprobe utility not found
+From: Luciano Coelho <coelho@ti.com>
+To: PRASHANTH CHAKRAVARTHY <a19110@motorola.com>
+Cc: linux-wireless@vger.kernel.org,
+	Sireesha Kosuri <jmng34@motorola.com>
+In-Reply-To: <CAPSXAjdTHKC7wxPXsS2VVNSJcgaWDTQSNBYQhfbog6--uHkDvg@mail.gmail.com>
+References: <CAPSXAjdTHKC7wxPXsS2VVNSJcgaWDTQSNBYQhfbog6--uHkDvg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 10 Dec 2011 22:33:55 +0200
+Message-ID: <1323549235.8996.336.camel@cumari> (sfid-20111210_213414_385810_D01EA2CF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+On Fri, 2011-12-09 at 10:26 +0530, PRASHANTH CHAKRAVARTHY wrote: 
+> Hi,
+> We are trying to build compat utility on mac os machines. Builds are
+> failing there with error /sbin/modprobe not found. They are passing on
+> other linux machines .
+> Is there a modprobe utility for mac os machines ?
 
-On Thursday 29 December 2011 06:42 PM, Kalle Valo wrote:
-> Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>  writes:
->
->> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->>
->> Cc: Paul Stewart<pstew@google.com>
->> Signed-off-by: Christian Lamparter<chunkeey@googlemail.com>
->> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->
-> A bit more background would be nice. What user visible bug this actually
-> fixes? Is this a new regression or an old bug? If the former, what
-> commit introduced the regression?
+I guess you're trying to run 'make install' in the Mac OS machine? That
+doesn't make sense.  You should only install the compat modules on the
+target machine (and I'm sure the target is not your Mac ;).
 
-i had sent a v2 stating its introduced by the recent commit
-http://www.spinics.net/lists/linux-wireless/msg82717.html
+If you're cross-compiling your modules, you should copy them to the
+target.  Or run the make install in the target (which would involve
+copying more than just the compiled modules).
 
->
-
+I hope this helps.
 
 -- 
-thanks,
-shafi
+Cheers,
+Luca.
+
