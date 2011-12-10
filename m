@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:36936 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752100Ab1LPQxI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 11:53:08 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	stable@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 3.2] iwlwifi: update SCD BC table for all SCD queues
-Date: Fri, 16 Dec 2011 07:53:18 -0800
-Message-Id: <1324050798-20530-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111216_175312_720491_3A6E3744)
+Received: from mailout-de.gmx.net ([213.165.64.23]:36248 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751046Ab1LJNCw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Dec 2011 08:02:52 -0500
+Message-ID: <4EE35877.1060507@gmx.net> (sfid-20111210_140255_490293_C3C0F113)
+Date: Sat, 10 Dec 2011 14:02:47 +0100
+From: Wolfgang Breyha <wbreyha@gmx.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes.berg@intel.com>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi havoc on some APs (rekeying?)
+References: <4EE2202A.4080303@gmx.net>  <1323446534.13074.96.camel@wwguy-huron>  <4EE24DF4.4020301@gmx.net>  <1323451436.13074.158.camel@wwguy-huron>  (sfid-20111209_192243_598986_F6275AE2) <1323455216.3622.21.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1323455216.3622.21.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On 09/12/11 19:26, Johannes Berg wrote:
+> What's "this area"? This isn't exactly the first report of random memory
+> corruption ... I think the last one was something with 32/64 bit but I
+> don't remember.
 
-Since we configure all the queues as CHAINABLE, we need to update the
-byte count for all the queues, not only the AGGREGATABLE ones.
+To narrow down "this area" I tried the following:
 
-Not doing so can confuse the SCD and make the fw assert.
+*) I reconfigured my soekris AP hostapd to use wpa_group_rekey=0
+   .... and it works like a charm since then
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
-this patch will be also available from wireless branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
+*) I reconfigured the ubiquiti UniFi AP to use wpa_group_rekey=120
+   ... and I'am pretty sure now that it is exactly the second rekeying
+   that starts messing up the system. Exactly after wpa_supplicant logs
+WPA: Group rekeying completed with 06:27:22:xx:xx:xx [GTK=TKIP]
+   the second time, video streaming with VLC immediatly leeds to all the
+   mentioned sideeffects.
 
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+Maybe it's possible to reproduce it with any hostapd based AP with
+active wpa_group_rekey.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index ce91898..5f17ab8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1197,9 +1197,7 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 	iwl_print_hex_dump(trans, IWL_DL_TX, (u8 *)tx_cmd->hdr, hdr_len);
- 
- 	/* Set up entry for this TFD in Tx byte-count array */
--	if (is_agg)
--		iwl_trans_txq_update_byte_cnt_tbl(trans, txq,
--					       le16_to_cpu(tx_cmd->len));
-+	iwl_trans_txq_update_byte_cnt_tbl(trans, txq, le16_to_cpu(tx_cmd->len));
- 
- 	dma_sync_single_for_device(bus(trans)->dev, txcmd_phys, firstlen,
- 			DMA_BIDIRECTIONAL);
--- 
-1.7.0.4
-
+Greetings, Wolfgang
