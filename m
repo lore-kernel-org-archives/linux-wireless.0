@@ -1,31 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58193 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750954Ab1LIUbf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Dec 2011 15:31:35 -0500
-Subject: Re: ath9k: reports wrong GI/bandwidth (bug)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-In-Reply-To: <CAJ-VmomHfArfn6sQhPb=k8cP_MJ-MX5rk1c1g8JgFp=1ce9adQ@mail.gmail.com> (sfid-20111209_204321_501825_0FF7DC8B)
-References: <1323427001.3622.14.camel@jlt3.sipsolutions.net>
-	 <CAJ-VmomHfArfn6sQhPb=k8cP_MJ-MX5rk1c1g8JgFp=1ce9adQ@mail.gmail.com>
-	 (sfid-20111209_204321_501825_0FF7DC8B)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 09 Dec 2011 21:31:31 +0100
-Message-ID: <1323462691.3615.0.camel@jlt3.sipsolutions.net> (sfid-20111209_213138_036704_20D347FB)
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:34938 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751208Ab1LJVL3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Dec 2011 16:11:29 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH] ath9k: make two mci related functions static
+Date: Sat, 10 Dec 2011 22:11:19 +0100
+Message-Id: <1323551479-17077-1-git-send-email-nbd@openwrt.org> (sfid-20111210_221132_908278_FD1CB583)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2011-12-10 at 06:42 +1100, Adrian Chadd wrote:
-> Can you see whether the -final- frame in an A-MPDU has the correct GI bit set?
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/mci.c |    8 ++++----
+ drivers/net/wireless/ath/ath9k/mci.h |    4 ----
+ 2 files changed, 4 insertions(+), 8 deletions(-)
 
-In a dozen or so cases in the original capture file, it does seem to be
-correct in those cases. Not that it helps much, we could've missed the
-last one :-)
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 5a3a2a9..3118f30 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -234,8 +234,8 @@ static void ath_mci_cal_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
+ 	}
+ }
+ 
+-void ath_mci_process_profile(struct ath_softc *sc,
+-			     struct ath_mci_profile_info *info)
++static void ath_mci_process_profile(struct ath_softc *sc,
++				    struct ath_mci_profile_info *info)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_btcoex *btcoex = &sc->btcoex;
+@@ -261,8 +261,8 @@ void ath_mci_process_profile(struct ath_softc *sc,
+ 	ath_mci_update_scheme(sc);
+ }
+ 
+-void ath_mci_process_status(struct ath_softc *sc,
+-			    struct ath_mci_profile_status *status)
++static void ath_mci_process_status(struct ath_softc *sc,
++				   struct ath_mci_profile_status *status)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_btcoex *btcoex = &sc->btcoex;
+diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
+index b71bded..29e3e51 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.h
++++ b/drivers/net/wireless/ath/ath9k/mci.h
+@@ -128,10 +128,6 @@ struct ath_mci_coex {
+ };
+ 
+ void ath_mci_flush_profile(struct ath_mci_profile *mci);
+-void ath_mci_process_profile(struct ath_softc *sc,
+-			     struct ath_mci_profile_info *info);
+-void ath_mci_process_status(struct ath_softc *sc,
+-			    struct ath_mci_profile_status *status);
+ int ath_mci_setup(struct ath_softc *sc);
+ void ath_mci_cleanup(struct ath_softc *sc);
+ void ath_mci_intr(struct ath_softc *sc);
+-- 
+1.7.3.2
 
