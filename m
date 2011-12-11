@@ -1,106 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:36888 "HELO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751872Ab1LIEl0 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48599 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751221Ab1LKEUe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 23:41:26 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: failure case handling for PCIe events
-Date: Thu,  8 Dec 2011 20:41:03 -0800
-Message-Id: <1323405665-21942-1-git-send-email-bzhao@marvell.com> (sfid-20111209_054135_059587_AFC02016)
+	Sat, 10 Dec 2011 23:20:34 -0500
+Received: by iaeh11 with SMTP id h11so1131009iae.19
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2011 20:20:34 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1323550849-16651-1-git-send-email-nbd@openwrt.org>
+References: <1323550849-16651-1-git-send-email-nbd@openwrt.org>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sun, 11 Dec 2011 15:20:01 +1100
+Message-ID: <CAGRGNgWVG9gEfwRTcF7V-jzfwVQ3RSoYMHmTSp-SKpsbWo7k6w@mail.gmail.com> (sfid-20111211_052043_926256_0AE0B608)
+Subject: Re: [PATCH] ath9k_hw: make bluetooth coexistence support optional at
+ compile time
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Felix,
 
-Event buffers for PCIe interface are allocated during driver
-initialisation, and respective physical addresses are sent to FW
-in *_PCIE_DESC_DETAILS command so that FW can do DMA. These buffers
-will be freed while unloading the driver. Therefore we should not
-free them in event handling error path. Also we should skip next
-pending events in failure case.
+On Sun, Dec 11, 2011 at 08:00, Felix Fietkau <nbd@openwrt.org> wrote:
+> Many systems (e.g. embedded systems) do not have wifi modules connected to
+> bluetooth modules, so bluetooth coexistence is irrelevant there. With the
+> addition of MCI support, ath9k picked up quite a bit of extra code that
+> can be compiled out this way.
+>
+> This patch redefines ATH9K_HW_CAP_MCI and adds an inline wrapper for
+> querying the bluetooth coexistence scheme, allowing the compiler to
+> eliminate code that uses it, with only very little use of #ifdef.
+>
+> On MIPS this reduces the total size for the modules by about 20k.
+>
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+> index 8599822..4905af9 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+> @@ -85,6 +85,9 @@ void ar9003_mci_remote_reset(struct ath_hw *ah, bool wait_done)
+>  {
+>        u32 payload[4] = { 0xffffffff, 0xffffffff, 0xffffffff, 0xffffff00};
+>
+> +       if (!ATH9K_HW_CAP_MCI)
+> +               return;
+> +
 
-Also fixed 'returning -1 instead of -ENOMEM is sloppy' warnings.
+IMHO, the checks for ATH9K_HW_CAP_MCI don't make it obvious that
+they're checking whether coexistence is enabled, and are more about
+whether *part* of it is enabled - which could cause confusion if
+another scheme is ever added, or it gets a not-insignificant re-write.
+Surely it wouldn't be too bad to do some #defining around this code
+and in the headers etc. so that the coexistence only functions aren't
+even looked at by the compiler if isn't enabled? IMHO putting the
+btcoex code in #ifdef blocks is better documentation as it's saying
+"these are the btcoex functions, and they're only used if this config
+variable is enabled" not "this random function can be skipped if some
+hardware feature is disabled".
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/pcie.c |   20 ++++++--------------
- 1 files changed, 6 insertions(+), 14 deletions(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/mwifiex/pcie.c b/drivers/net/wireless/mwifiex/pcie.c
-index a2f3200..4053509 100644
---- a/drivers/net/wireless/mwifiex/pcie.c
-+++ b/drivers/net/wireless/mwifiex/pcie.c
-@@ -386,7 +386,7 @@ static int mwifiex_pcie_create_txbd_ring(struct mwifiex_adapter *adapter)
- 	card->txbd_ring_vbase = kzalloc(card->txbd_ring_size, GFP_KERNEL);
- 	if (!card->txbd_ring_vbase) {
- 		dev_err(adapter->dev, "Unable to allocate buffer for txbd ring.\n");
--		return -1;
-+		return -ENOMEM;
- 	}
- 	card->txbd_ring_pbase = virt_to_phys(card->txbd_ring_vbase);
- 
-@@ -476,7 +476,7 @@ static int mwifiex_pcie_create_rxbd_ring(struct mwifiex_adapter *adapter)
- 	if (!card->rxbd_ring_vbase) {
- 		dev_err(adapter->dev, "Unable to allocate buffer for "
- 				"rxbd_ring.\n");
--		return -1;
-+		return -ENOMEM;
- 	}
- 	card->rxbd_ring_pbase = virt_to_phys(card->rxbd_ring_vbase);
- 
-@@ -569,7 +569,7 @@ static int mwifiex_pcie_create_evtbd_ring(struct mwifiex_adapter *adapter)
- 	if (!card->evtbd_ring_vbase) {
- 		dev_err(adapter->dev, "Unable to allocate buffer. "
- 				"Terminating download\n");
--		return -1;
-+		return -ENOMEM;
- 	}
- 	card->evtbd_ring_pbase = virt_to_phys(card->evtbd_ring_vbase);
- 
-@@ -1231,15 +1231,13 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
- 	if (rdptr >= MWIFIEX_MAX_EVT_BD) {
- 		dev_err(adapter->dev, "event_complete: Invalid rdptr 0x%x\n",
- 					rdptr);
--		ret = -EINVAL;
--		goto done;
-+		return -EINVAL;
- 	}
- 
- 	/* Read the event ring write pointer set by firmware */
- 	if (mwifiex_read_reg(adapter, REG_EVTBD_WRPTR, &wrptr)) {
- 		dev_err(adapter->dev, "event_complete: failed to read REG_EVTBD_WRPTR\n");
--		ret = -1;
--		goto done;
-+		return -1;
- 	}
- 
- 	if (!card->evt_buf_list[rdptr]) {
-@@ -1268,15 +1266,9 @@ static int mwifiex_pcie_event_complete(struct mwifiex_adapter *adapter,
- 	/* Write the event ring read pointer in to REG_EVTBD_RDPTR */
- 	if (mwifiex_write_reg(adapter, REG_EVTBD_RDPTR, card->evtbd_rdptr)) {
- 		dev_err(adapter->dev, "event_complete: failed to read REG_EVTBD_RDPTR\n");
--		ret = -1;
--		goto done;
-+		return -1;
- 	}
- 
--done:
--	/* Free the buffer for failure case */
--	if (ret && skb)
--		dev_kfree_skb_any(skb);
--
- 	dev_dbg(adapter->dev, "info: Check Events Again\n");
- 	ret = mwifiex_pcie_process_event_ready(adapter);
- 
 -- 
-1.7.0.2
 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
