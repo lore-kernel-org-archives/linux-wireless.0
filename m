@@ -1,51 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:34274 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932319Ab1LENnt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Dec 2011 08:43:49 -0500
-Received: by iakc1 with SMTP id c1so2121775iak.19
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2011 05:43:49 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAOeh9MsqTQT6qzd47Af674cK4KQHN=uOaG-u1hVWV9faeb2Mwg@mail.gmail.com>
-References: <CAOeh9MuuJtK_edMQvVaLSRytRoFix_OuW4OEcEMDYEak1=CvMw@mail.gmail.com>
-	<CAB3XZEf=jrrqZk58BnV8Gi4iKJ6N6c24M_eLnz816n==kuxmHA@mail.gmail.com>
-	<CAOeh9MsqTQT6qzd47Af674cK4KQHN=uOaG-u1hVWV9faeb2Mwg@mail.gmail.com>
-Date: Mon, 5 Dec 2011 15:43:49 +0200
-Message-ID: <CAB3XZEf4sm66WzG49jYsig=wzip0m2w87tud2Es0wd4aXV2Fqw@mail.gmail.com> (sfid-20111205_144353_128600_B97B011A)
-Subject: Re: Query on ieee80211_subif_start_xmit
-From: Eliad Peller <eliad@wizery.com>
-To: uday kiran <kaniki.uday@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:50961 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752048Ab1LKSaT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Dec 2011 13:30:19 -0500
+Subject: Re: iwlagn regression in v3.1.5
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Andrej Gelenberg <andrej.gelenberg@udo.edu>
+Cc: Udo Steinberg <udo@hypervisor.org>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <4EE4E152.2070204@udo.edu>
+References: <4EE4AEF4.2080702@udo.edu> <4EE4DB55.4090804@udo.edu>
+	 <20111211174138.79e51fe8@x220.fritz.box>  <4EE4E152.2070204@udo.edu>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 11 Dec 2011 10:23:35 -0800
+Message-ID: <1323627815.1806.19.camel@wwguy-ubuntu> (sfid-20111211_193051_761268_A4864223)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 5, 2011 at 3:14 PM, uday kiran <kaniki.uday@gmail.com> wrote:
-> Thanks for the reply, Eliad.
->
-> I have walked through the code for function
-> "ieee80211_subif_start_xmit" but could not find any code block which
-> strips the 802.3 header. If possible , could you help me point out
-> that block ?
->
-	skip_header_bytes = ETH_HLEN;
-	if (ethertype == ETH_P_AARP || ethertype == ETH_P_IPX) {
-		encaps_data = bridge_tunnel_header;
-		encaps_len = sizeof(bridge_tunnel_header);
-		skip_header_bytes -= 2;
-	} else if (ethertype >= 0x600) {
-		encaps_data = rfc1042_header;
-		encaps_len = sizeof(rfc1042_header);
-		skip_header_bytes -= 2;
-	} else {
-		encaps_data = NULL;
-		encaps_len = 0;
-	}
+On Sun, 2011-12-11 at 08:58 -0800, Andrej Gelenberg wrote:
+> Hi,
+> 
+> this is pretty mean regression for the stable kernel. You may the fix 
+> only for cards, which need it and not for all of them.
 
-	nh_pos = skb_network_header(skb) - skb->data;
-	h_pos = skb_transport_header(skb) - skb->data;
+Could you elaborate more on the failure case and setup. this patch is to
+address HT40 related problem which cause the iwlwifi firmware crash.
 
-	skb_pull(skb, skip_header_bytes);
+Thanks
+Wey
+> >
 
-Eliad.
+
