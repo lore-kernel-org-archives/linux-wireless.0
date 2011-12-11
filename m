@@ -1,207 +1,205 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:13138 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757231Ab1LBRqQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Dec 2011 12:46:16 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 01/16] iwlwifi: do not re-configure HT40 after associated
-Date: Fri,  2 Dec 2011 08:48:25 -0800
-Message-Id: <1322844520-21149-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111202_184624_559729_90931342)
-In-Reply-To: <1322844520-21149-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1322844520-21149-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mx1.HRZ.Uni-Dortmund.DE ([129.217.128.51]:64043 "EHLO
+	unimail.uni-dortmund.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752084Ab1LKQdl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Dec 2011 11:33:41 -0500
+Message-ID: <4EE4DB55.4090804@udo.edu> (sfid-20111211_173401_698267_A07097E9)
+Date: Sun, 11 Dec 2011 17:33:25 +0100
+From: Andrej Gelenberg <andrej.gelenberg@udo.edu>
+MIME-Version: 1.0
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+CC: Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: iwlagn regression in v3.1.5
+References: <4EE4AEF4.2080702@udo.edu>
+In-Reply-To: <4EE4AEF4.2080702@udo.edu>
+Content-Type: multipart/mixed;
+ boundary="------------020502090407090303020902"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ht40 setting should not change after association unless channel switch
+This is a multi-part message in MIME format.
+--------------020502090407090303020902
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-This fix a problem we are seeing which cause uCode assert because driver
-sending invalid information and make uCode confuse
+Hello,
 
-Here is the firmware assert message:
-kernel: iwlagn 0000:03:00.0: Microcode SW error detected.  Restarting 0x82000000.
-kernel: iwlagn 0000:03:00.0: Loaded firmware version: 17.168.5.3 build 42301
-kernel: iwlagn 0000:03:00.0: Start IWL Error Log Dump:
-kernel: iwlagn 0000:03:00.0: Status: 0x000512E4, count: 6
-kernel: iwlagn 0000:03:00.0: 0x00002078 | ADVANCED_SYSASSERT
-kernel: iwlagn 0000:03:00.0: 0x00009514 | uPc
-kernel: iwlagn 0000:03:00.0: 0x00009496 | branchlink1
-kernel: iwlagn 0000:03:00.0: 0x00009496 | branchlink2
-kernel: iwlagn 0000:03:00.0: 0x0000D1F2 | interruptlink1
-kernel: iwlagn 0000:03:00.0: 0x00000000 | interruptlink2
-kernel: iwlagn 0000:03:00.0: 0x01008035 | data1
-kernel: iwlagn 0000:03:00.0: 0x0000C90F | data2
-kernel: iwlagn 0000:03:00.0: 0x000005A7 | line
-kernel: iwlagn 0000:03:00.0: 0x5080B520 | beacon time
-kernel: iwlagn 0000:03:00.0: 0xCC515AE0 | tsf low
-kernel: iwlagn 0000:03:00.0: 0x00000003 | tsf hi
-kernel: iwlagn 0000:03:00.0: 0x00000000 | time gp1
-kernel: iwlagn 0000:03:00.0: 0x29703BF0 | time gp2
-kernel: iwlagn 0000:03:00.0: 0x00000000 | time gp3
-kernel: iwlagn 0000:03:00.0: 0x000111A8 | uCode version
-kernel: iwlagn 0000:03:00.0: 0x000000B0 | hw version
-kernel: iwlagn 0000:03:00.0: 0x00480303 | board version
-kernel: iwlagn 0000:03:00.0: 0x09E8004E | hcmd
-kernel: iwlagn 0000:03:00.0: CSR values:
-kernel: iwlagn 0000:03:00.0: (2nd byte of CSR_INT_COALESCING is CSR_INT_PERIODIC_REG)
-kernel: iwlagn 0000:03:00.0:        CSR_HW_IF_CONFIG_REG: 0X00480303
-kernel: iwlagn 0000:03:00.0:          CSR_INT_COALESCING: 0X0000ff40
-kernel: iwlagn 0000:03:00.0:                     CSR_INT: 0X00000000
-kernel: iwlagn 0000:03:00.0:                CSR_INT_MASK: 0X00000000
-kernel: iwlagn 0000:03:00.0:           CSR_FH_INT_STATUS: 0X00000000
-kernel: iwlagn 0000:03:00.0:                 CSR_GPIO_IN: 0X00000030
-kernel: iwlagn 0000:03:00.0:                   CSR_RESET: 0X00000000
-kernel: iwlagn 0000:03:00.0:                CSR_GP_CNTRL: 0X080403c5
-kernel: iwlagn 0000:03:00.0:                  CSR_HW_REV: 0X000000b0
-kernel: iwlagn 0000:03:00.0:              CSR_EEPROM_REG: 0X07d60ffd
-kernel: iwlagn 0000:03:00.0:               CSR_EEPROM_GP: 0X90000001
-kernel: iwlagn 0000:03:00.0:              CSR_OTP_GP_REG: 0X00030001
-kernel: iwlagn 0000:03:00.0:                 CSR_GIO_REG: 0X00080044
-kernel: iwlagn 0000:03:00.0:            CSR_GP_UCODE_REG: 0X000093bb
-kernel: iwlagn 0000:03:00.0:           CSR_GP_DRIVER_REG: 0X00000000
-kernel: iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
-kernel: iwlagn 0000:03:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
-kernel: iwlagn 0000:03:00.0:                 CSR_LED_REG: 0X00000078
-kernel: iwlagn 0000:03:00.0:        CSR_DRAM_INT_TBL_REG: 0X88214dd2
-kernel: iwlagn 0000:03:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
-kernel: iwlagn 0000:03:00.0:             CSR_ANA_PLL_CFG: 0X00000000
-kernel: iwlagn 0000:03:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
-kernel: iwlagn 0000:03:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0010
-kernel: iwlagn 0000:03:00.0: FH register values:
-kernel: iwlagn 0000:03:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X21316d00
-kernel: iwlagn 0000:03:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X021479c0
-kernel: iwlagn 0000:03:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X00000060
-kernel: iwlagn 0000:03:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X80819104
-kernel: iwlagn 0000:03:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
-kernel: iwlagn 0000:03:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X07030000
-kernel: iwlagn 0000:03:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
-kernel: iwlagn 0000:03:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0001
-kernel: iwlagn 0000:03:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
-kernel: iwlagn 0000:03:00.0: Start IWL Event Log Dump: display last 20 entries
-kernel: ------------[ cut here ]------------
-WARNING: at net/mac80211/util.c:1208 ieee80211_reconfig+0x1f1/0x407()
-kernel: Hardware name: 4290W4H
-kernel: Pid: 1896, comm: kworker/0:0 Not tainted 3.1.0 #2
-kernel: Call Trace:
-kernel:  [<ffffffff81036558>] ? warn_slowpath_common+0x73/0x87
-kernel:  [<ffffffff813b8966>] ? ieee80211_reconfig+0x1f1/0x407
-kernel:  [<ffffffff8139e8dc>] ? ieee80211_recalc_smps_work+0x32/0x32
-kernel:  [<ffffffff8139e95a>] ? ieee80211_restart_work+0x7e/0x87
-kernel:  [<ffffffff810472fa>] ? process_one_work+0x1c8/0x2e3
-kernel:  [<ffffffff810480c9>] ? worker_thread+0x17a/0x23a
-kernel:  [<ffffffff81047f4f>] ? manage_workers.clone.18+0x15b/0x15b
-kernel:  [<ffffffff81047f4f>] ? manage_workers.clone.18+0x15b/0x15b
-kernel:  [<ffffffff8104ba97>] ? kthread+0x7a/0x82
-kernel:  [<ffffffff813d21b4>] ? kernel_thread_helper+0x4/0x10
-kernel:  [<ffffffff8104ba1d>] ? kthread_flush_work_fn+0x11/0x11
-kernel:  [<ffffffff813d21b0>] ? gs_change+0xb/0xb
+the original commit 34a5b4b6af104cf18eb50748509528b9bdbc4036 in upstream 
+(v3.2.0-rc5) break the driver too. Please revert it, before the release. 
+Patch for 3.2-rc5 attached.
 
-Cc: <stable@kernel.org> 3.1+
-Reported-by: Udo Steinberg <udo@hypervisor.org>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Regards,
+Andrej Gelenberg
+
+On 12/11/2011 02:24 PM, Andrej Gelenberg wrote:
+> Hello,
+>
+> there in an regression in kernel release v3.1.5. Commit
+> 43c308bd8d0a3e7d98c5abcd41a4a3fada3d198f "iwlwifi: do not re-configure
+> HT40 after associated" break iwlagn driver for Intel Corporation
+> Centrino Ultimate-N 6300 (rev 35) on my Thinkpad t510. I still can
+> connect to the AP, but i can't pin or access anything. Reverting that
+> commit solved the Problem. I attached the patch.
+>
+> Regards,
+> Andrej Gelenberg
+
+
+--------------020502090407090303020902
+Content-Type: text/x-patch;
+ name="0001-Revert-iwlwifi-do-not-re-configure-HT40-after-associ.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-Revert-iwlwifi-do-not-re-configure-HT40-after-associ.pa";
+ filename*1="tch"
+
+>From 88a9409dbe93193d28e2fde6525e98c84a0ce115 Mon Sep 17 00:00:00 2001
+From: Andrej Gelenberg <andrej.gelenberg@udo.edu>
+Date: Sun, 11 Dec 2011 17:21:38 +0100
+Subject: [PATCH] Revert "iwlwifi: do not re-configure HT40 after associated"
+
+This reverts commit 34a5b4b6af104cf18eb50748509528b9bdbc4036.
+It break wlan driver on my Thinkpad t510. I can connect to the network
+and i get ip from dhcpcd, but no ping or tcp connection can be
+established.
+
+lspci:
+03:00.0 Network controller: Intel Corporation Centrino Ultimate-N 6300
+(rev 35)
+
+dmesg:
+[    3.697288] iwlagn 0000:03:00.0: PCI INT A -> GSI 17 (level, low) ->
+IRQ 17
+[    3.697841] iwlagn 0000:03:00.0: setting latency timer to 64
+[    3.697873] iwlagn 0000:03:00.0: pci_resource_len = 0x00002000
+[    3.698389] iwlagn 0000:03:00.0: pci_resource_base = ffffc90010084000
+[    3.698954] iwlagn 0000:03:00.0: HW Revision ID = 0x35
+[    3.699629] iwlagn 0000:03:00.0: irq 43 for MSI/MSI-X
+[    3.699705] iwlagn 0000:03:00.0: Detected Intel(R) Centrino(R)
+Ultimate-N 6300 AGN, REV=0x74
+[    3.700181] iwlagn 0000:03:00.0: L1 Enabled; Disabling L0S
+[    3.717265] iwlagn 0000:03:00.0: device EEPROM VER=0x436, CALIB=0x6
+[    3.717461] iwlagn 0000:03:00.0: Device SKU: 0X1f0
+[    3.717984] iwlagn 0000:03:00.0: Valid Tx ant: 0X7, Valid Rx ant: 0X7
+[    3.718531] iwlagn 0000:03:00.0: Tunable channels: 13 802.11bg, 24
+802.11a channels
+[    3.719141] iwlagn 0000:03:00.0: loaded firmware version 9.221.4.1
+build 25532
+...
+[   71.965289] iwlagn 0000:03:00.0: L1 Enabled; Disabling L0S
+[   71.972290] iwlagn 0000:03:00.0: Radio type=0x0-0x3-0x1
+[   72.213804] iwlagn 0000:03:00.0: L1 Enabled; Disabling L0S
+[   72.220770] iwlagn 0000:03:00.0: Radio type=0x0-0x3-0x1
+
+Signed-off-by: Andrej Gelenberg <andrej.gelenberg@udo.edu>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   36 +++++++++++++++++---------
- drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 +
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |   18 ++-----------
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   36 +++++++++-----------------
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   18 +++++++++++--
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 -
  3 files changed, 28 insertions(+), 28 deletions(-)
 
 diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 8de97f5..00b3871 100644
+index a7a6def..58a381c 100644
 --- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
 +++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -529,6 +529,24 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
+@@ -528,24 +528,6 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
  	return 0;
  }
  
-+void iwlagn_config_ht40(struct ieee80211_conf *conf,
-+	struct iwl_rxon_context *ctx)
-+{
-+	if (conf_is_ht40_minus(conf)) {
-+		ctx->ht.extension_chan_offset =
-+			IEEE80211_HT_PARAM_CHA_SEC_BELOW;
-+		ctx->ht.is_40mhz = true;
-+	} else if (conf_is_ht40_plus(conf)) {
-+		ctx->ht.extension_chan_offset =
-+			IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
-+		ctx->ht.is_40mhz = true;
-+	} else {
-+		ctx->ht.extension_chan_offset =
-+			IEEE80211_HT_PARAM_CHA_SEC_NONE;
-+		ctx->ht.is_40mhz = false;
-+	}
-+}
-+
+-void iwlagn_config_ht40(struct ieee80211_conf *conf,
+-	struct iwl_rxon_context *ctx)
+-{
+-	if (conf_is_ht40_minus(conf)) {
+-		ctx->ht.extension_chan_offset =
+-			IEEE80211_HT_PARAM_CHA_SEC_BELOW;
+-		ctx->ht.is_40mhz = true;
+-	} else if (conf_is_ht40_plus(conf)) {
+-		ctx->ht.extension_chan_offset =
+-			IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
+-		ctx->ht.is_40mhz = true;
+-	} else {
+-		ctx->ht.extension_chan_offset =
+-			IEEE80211_HT_PARAM_CHA_SEC_NONE;
+-		ctx->ht.is_40mhz = false;
+-	}
+-}
+-
  int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
  {
  	struct iwl_priv *priv = hw->priv;
-@@ -590,19 +608,11 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
+@@ -604,11 +586,19 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
  				ctx->ht.enabled = conf_is_ht(conf);
  
  			if (ctx->ht.enabled) {
--				if (conf_is_ht40_minus(conf)) {
--					ctx->ht.extension_chan_offset =
--						IEEE80211_HT_PARAM_CHA_SEC_BELOW;
--					ctx->ht.is_40mhz = true;
--				} else if (conf_is_ht40_plus(conf)) {
--					ctx->ht.extension_chan_offset =
--						IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
--					ctx->ht.is_40mhz = true;
--				} else {
--					ctx->ht.extension_chan_offset =
--						IEEE80211_HT_PARAM_CHA_SEC_NONE;
--					ctx->ht.is_40mhz = false;
--				}
-+				/* if HT40 is used, it should not change
-+				 * after associated except channel switch */
-+				if (iwl_is_associated_ctx(ctx) &&
-+				     !ctx->ht.is_40mhz)
-+					iwlagn_config_ht40(conf, ctx);
+-				/* if HT40 is used, it should not change
+-				 * after associated except channel switch */
+-				if (iwl_is_associated_ctx(ctx) &&
+-				     !ctx->ht.is_40mhz)
+-					iwlagn_config_ht40(conf, ctx);
++				if (conf_is_ht40_minus(conf)) {
++					ctx->ht.extension_chan_offset =
++						IEEE80211_HT_PARAM_CHA_SEC_BELOW;
++					ctx->ht.is_40mhz = true;
++				} else if (conf_is_ht40_plus(conf)) {
++					ctx->ht.extension_chan_offset =
++						IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
++					ctx->ht.is_40mhz = true;
++				} else {
++					ctx->ht.extension_chan_offset =
++						IEEE80211_HT_PARAM_CHA_SEC_NONE;
++					ctx->ht.is_40mhz = false;
++				}
  			} else
  				ctx->ht.is_40mhz = false;
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 5d8d2f4..2f446a3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -101,6 +101,8 @@ void iwlagn_bss_info_changed(struct ieee80211_hw *hw,
- 			     struct ieee80211_vif *vif,
- 			     struct ieee80211_bss_conf *bss_conf,
- 			     u32 changes);
-+void iwlagn_config_ht40(struct ieee80211_conf *conf,
-+			struct iwl_rxon_context *ctx);
- 
- /* uCode */
- int iwlagn_rx_calib_result(struct iwl_priv *priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index 05b1f0d..ec31482 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -804,21 +804,9 @@ static void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index bacc06c..3a5e802 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -2610,9 +2610,21 @@ static void iwlagn_mac_channel_switch(struct ieee80211_hw *hw,
  
  	/* Configure HT40 channels */
  	ctx->ht.enabled = conf_is_ht(conf);
--	if (ctx->ht.enabled) {
--		if (conf_is_ht40_minus(conf)) {
--			ctx->ht.extension_chan_offset =
--				IEEE80211_HT_PARAM_CHA_SEC_BELOW;
--			ctx->ht.is_40mhz = true;
--		} else if (conf_is_ht40_plus(conf)) {
--			ctx->ht.extension_chan_offset =
--				IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
--			ctx->ht.is_40mhz = true;
--		} else {
--			ctx->ht.extension_chan_offset =
--				IEEE80211_HT_PARAM_CHA_SEC_NONE;
--			ctx->ht.is_40mhz = false;
--		}
--	} else
-+	if (ctx->ht.enabled)
-+		iwlagn_config_ht40(conf, ctx);
-+	else
+-	if (ctx->ht.enabled)
+-		iwlagn_config_ht40(conf, ctx);
+-	else
++	if (ctx->ht.enabled) {
++		if (conf_is_ht40_minus(conf)) {
++			ctx->ht.extension_chan_offset =
++				IEEE80211_HT_PARAM_CHA_SEC_BELOW;
++			ctx->ht.is_40mhz = true;
++		} else if (conf_is_ht40_plus(conf)) {
++			ctx->ht.extension_chan_offset =
++				IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
++			ctx->ht.is_40mhz = true;
++		} else {
++			ctx->ht.extension_chan_offset =
++				IEEE80211_HT_PARAM_CHA_SEC_NONE;
++			ctx->ht.is_40mhz = false;
++		}
++	} else
  		ctx->ht.is_40mhz = false;
  
  	if ((le16_to_cpu(ctx->staging.channel) != ch))
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 3856aba..5b936ec 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -86,8 +86,6 @@ void iwlagn_bss_info_changed(struct ieee80211_hw *hw,
+ 			     struct ieee80211_vif *vif,
+ 			     struct ieee80211_bss_conf *bss_conf,
+ 			     u32 changes);
+-void iwlagn_config_ht40(struct ieee80211_conf *conf,
+-			struct iwl_rxon_context *ctx);
+ 
+ /* uCode */
+ int iwlagn_rx_calib_result(struct iwl_priv *priv,
 -- 
-1.7.0.4
+1.7.8
 
+
+--------------020502090407090303020902--
