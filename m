@@ -1,118 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:43381 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751955Ab1LPRLM (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:61077 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751084Ab1LKBO5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 12:11:12 -0500
-Date: Fri, 16 Dec 2011 11:11:08 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: sgruszka@redhat.com, John W Linville <linville@tuxdriver.com>
-Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: [RFC] rtlwifi: Partial revert of 6539306b
-Message-ID: <4eeb7bac./0AE71DUR6ucOIhZ%Larry.Finger@lwfinger.net> (sfid-20111216_181116_250925_38F809DE)
+	Sat, 10 Dec 2011 20:14:57 -0500
+Received: by mail-ee0-f46.google.com with SMTP id c4so976078eek.19
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2011 17:14:56 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 7/7] b43: N-PHY: implement spurious tone avoidance
+Date: Sun, 11 Dec 2011 02:55:35 +0100
+Message-Id: <1323568535-2816-8-git-send-email-zajec5@gmail.com> (sfid-20111211_021459_811648_AC4E09FD)
+In-Reply-To: <1323568535-2816-1-git-send-email-zajec5@gmail.com>
+References: <1323568535-2816-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw,
 
-When I tested commit 6539306, I did not notice that loading an out-of-tree
-module turns off lockdep testing in kernel 3.2. For that reason, I missed
-the kernel WARNING shown below:
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |   90 +++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 88 insertions(+), 2 deletions(-)
 
-As I stated earlier, my understanding of locking may not up to the task
-of fixing this problem. I first tried using one mutex to replace ips_lock
-and a second to replace lps_lock. That still got a warning.
-
-The solution below, which partially reverts 6539306 and restores one of the
-spinlocks, does not generate any lockdep warnings. This solution also has
-the advantage that it this locking is only used when the NIC is turned on.
-I am, however, ready to test any solution that eliminates both spinlocks.
-
-Larry
-
-[   84.168146] ------------[ cut here ]------------
-[   84.168155] WARNING: at kernel/mutex.c:198 mutex_lock_nested+0x309/0x310()
-[   84.168158] Hardware name: HP Pavilion dv2700 Notebook PC
-[   84.168161] Modules linked in: nfs lockd auth_rpcgss nfs_acl sunrpc af_packet cpufreq_conservative cpufreq_userspace cpufreq_powersave powernow_k8 mperf e
-xt3 jbd ide_cd_mod cdrom snd_hda_codec_conexant arc4 rtl8192ce ide_pci_generic rtl8192c_common rtlwifi snd_hda_intel mac80211 snd_hda_codec snd_pcm snd_timer
- amd74xx ide_core cfg80211 k8temp snd joydev soundcore hwmon battery forcedeth i2c_nforce2 sg rfkill ac serio_raw snd_page_alloc button video i2c_core ipv6 a
-utofs4 ext4 mbcache jbd2 crc16 sd_mod ahci ohci_hcd libahci libata scsi_mod ehci_hcd usbcore usb_common fan processor thermal
-[   84.168231] Pid: 1218, comm: kworker/u:2 Not tainted 3.2.0-rc5-wl+ #155
-[   84.168234] Call Trace:
-[   84.168240]  [<ffffffff81048aaa>] warn_slowpath_common+0x7a/0xb0
-[   84.168245]  [<ffffffff81048af5>] warn_slowpath_null+0x15/0x20
-[   84.168249]  [<ffffffff813811f9>] mutex_lock_nested+0x309/0x310
-[   84.168269]  [<ffffffffa00793f9>] ? rtl_ips_nic_on+0x49/0xb0 [rtlwifi]
-[   84.168277]  [<ffffffffa00793f9>] rtl_ips_nic_on+0x49/0xb0 [rtlwifi]
-[   84.168284]  [<ffffffffa007ab85>] rtl_pci_tx+0x1b5/0x560 [rtlwifi]
-[   84.168291]  [<ffffffffa007635a>] rtl_op_tx+0x9a/0xa0 [rtlwifi]
-[   84.168359]  [<ffffffffa043cf51>] __ieee80211_tx+0x181/0x2b0 [mac80211]
-[   84.168375]  [<ffffffffa043ef06>] ieee80211_tx+0xf6/0x120 [mac80211]
-[   84.168391]  [<ffffffffa043ee49>] ? ieee80211_tx+0x39/0x120 [mac80211]
-[   84.168408]  [<ffffffffa043f80b>] ieee80211_xmit+0xdb/0x100 [mac80211]
-[   84.168425]  [<ffffffffa043f730>] ? ieee80211_skb_resize.isra.26+0xb0/0xb0 [mac80211]
-[   84.168441]  [<ffffffffa0440b2a>] ieee80211_tx_skb_tid+0x5a/0x70 [mac80211]
-[   84.168458]  [<ffffffffa0443da2>] ieee80211_send_auth+0x152/0x1b0 [mac80211]
-[   84.168474]  [<ffffffffa042e169>] ieee80211_work_work+0x1049/0x1860 [mac80211]
-[   84.168489]  [<ffffffffa042d120>] ? free_work+0x20/0x20 [mac80211]
-[   84.168504]  [<ffffffffa042d120>] ? free_work+0x20/0x20 [mac80211]
-[   84.168510]  [<ffffffff81065ffc>] process_one_work+0x17c/0x530
-[   84.168514]  [<ffffffff81065f92>] ? process_one_work+0x112/0x530
-[   84.168519]  [<ffffffff81066994>] worker_thread+0x164/0x350
-[   84.168524]  [<ffffffff8108420d>] ? trace_hardirqs_on+0xd/0x10
-[   84.168528]  [<ffffffff81066830>] ? manage_workers.isra.28+0x220/0x220
-[   84.168533]  [<ffffffff8106bc17>] kthread+0x87/0x90
-[   84.168539]  [<ffffffff813854b4>] kernel_thread_helper+0x4/0x10
-[   84.168543]  [<ffffffff81382bdd>] ? retint_restore_args+0xe/0xe
-[   84.168547]  [<ffffffff8106bb90>] ? __init_kthread_worker+0x70/0x70
-[   84.168552]  [<ffffffff813854b0>] ? gs_change+0xb/0xb
-[   84.168554] ---[ end trace f25a4fdc768c028f ]---
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/base.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/base.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/base.c
-@@ -449,6 +449,7 @@ int rtl_init_core(struct ieee80211_hw *h
- 	/* <4> locks */
- 	mutex_init(&rtlpriv->locks.conf_mutex);
- 	mutex_init(&rtlpriv->locks.ps_mutex);
-+	spin_lock_init(&rtlpriv->locks.ips_lock);
- 	spin_lock_init(&rtlpriv->locks.irq_th_lock);
- 	spin_lock_init(&rtlpriv->locks.h2c_lock);
- 	spin_lock_init(&rtlpriv->locks.rf_ps_lock);
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/ps.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/ps.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/ps.c
-@@ -241,7 +241,7 @@ void rtl_ips_nic_on(struct ieee80211_hw
- 	if (mac->opmode != NL80211_IFTYPE_STATION)
- 		return;
- 
--	mutex_lock(&rtlpriv->locks.ps_mutex);
-+	spin_lock(&rtlpriv->locks.ips_lock);
- 
- 	if (ppsc->inactiveps) {
- 		rtstate = ppsc->rfpwr_state;
-@@ -257,7 +257,7 @@ void rtl_ips_nic_on(struct ieee80211_hw
- 		}
- 	}
- 
--	mutex_unlock(&rtlpriv->locks.ps_mutex);
-+	spin_unlock(&rtlpriv->locks.ips_lock);
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 114c413..6e776d0 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -4023,6 +4023,58 @@ int b43_phy_initn(struct b43_wldev *dev)
+ 	return 0;
  }
  
- /*for FW LPS*/
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/wifi.h
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/wifi.h
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/wifi.h
-@@ -1547,6 +1547,7 @@ struct rtl_locks {
- 	struct mutex ps_mutex;
++static void b43_nphy_pmu_spur_avoid(struct b43_wldev *dev, bool avoid)
++{
++	struct bcma_drv_cc *cc = &dev->dev->bdev->bus->drv_cc;
++	u32 pmu_ctl;
++	if (dev->dev->chip_id == 43224 || dev->dev->chip_id == 43225) {
++		if (avoid) {
++			bcma_chipco_pll_write(cc, 0x0, 0x11500010);
++			bcma_chipco_pll_write(cc, 0x1, 0x000C0C06);
++			bcma_chipco_pll_write(cc, 0x2, 0x0F600a08);
++			bcma_chipco_pll_write(cc, 0x3, 0x00000000);
++			bcma_chipco_pll_write(cc, 0x4, 0x2001E920);
++			bcma_chipco_pll_write(cc, 0x5, 0x88888815);
++		} else {
++			bcma_chipco_pll_write(cc, 0x0, 0x11100010);
++			bcma_chipco_pll_write(cc, 0x1, 0x000c0c06);
++			bcma_chipco_pll_write(cc, 0x2, 0x03000a08);
++			bcma_chipco_pll_write(cc, 0x3, 0x00000000);
++			bcma_chipco_pll_write(cc, 0x4, 0x200005c0);
++			bcma_chipco_pll_write(cc, 0x5, 0x88888815);
++		}
++		pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD;
++	} else if (dev->dev->chip_id == 0x4716) {
++		if (avoid) {
++			bcma_chipco_pll_write(cc, 0x0, 0x11500060);
++			bcma_chipco_pll_write(cc, 0x1, 0x080C0C06);
++			bcma_chipco_pll_write(cc, 0x2, 0x0F600000);
++			bcma_chipco_pll_write(cc, 0x3, 0x00000000);
++			bcma_chipco_pll_write(cc, 0x4, 0x2001E924);
++			bcma_chipco_pll_write(cc, 0x5, 0x88888815);
++		} else {
++			bcma_chipco_pll_write(cc, 0x0, 0x11100060);
++			bcma_chipco_pll_write(cc, 0x1, 0x080c0c06);
++			bcma_chipco_pll_write(cc, 0x2, 0x03000000);
++			bcma_chipco_pll_write(cc, 0x3, 0x00000000);
++			bcma_chipco_pll_write(cc, 0x4, 0x200005c0);
++			bcma_chipco_pll_write(cc, 0x5, 0x88888815);
++		}
++		pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD | BCMA_CC_PMU_CTL_NOILPONW;
++	} else if (dev->dev->chip_id == 0x4322 || dev->dev->chip_id == 0x4340 ||
++		   dev->dev->chip_id == 0x4341) {
++		bcma_chipco_pll_write(cc, 0x0, 0x11100070);
++		bcma_chipco_pll_write(cc, 0x1, 0x1014140a);
++		bcma_chipco_pll_write(cc, 0x5, 0x88888854);
++		if (avoid)
++			bcma_chipco_pll_write(cc, 0x2, 0x05201828);
++		else
++			bcma_chipco_pll_write(cc, 0x2, 0x05001828);
++		pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD;
++	}
++	bcma_cc_set32(cc, BCMA_CC_PMU_CTL, pmu_ctl);
++}
++
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/ChanspecSetup */
+ static void b43_nphy_channel_setup(struct b43_wldev *dev,
+ 				const struct b43_phy_n_sfo_cfg *e,
+@@ -4030,6 +4082,7 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
+ {
+ 	struct b43_phy *phy = &dev->phy;
+ 	struct b43_phy_n *nphy = dev->phy.n;
++	int ch = new_channel->hw_value;
  
- 	/*spin lock */
-+	spinlock_t ips_lock;
- 	spinlock_t irq_th_lock;
- 	spinlock_t h2c_lock;
- 	spinlock_t rf_ps_lock;
+ 	u16 old_band_5ghz;
+ 	u32 tmp32;
+@@ -4069,8 +4122,41 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
+ 
+ 	b43_nphy_tx_lp_fbw(dev);
+ 
+-	if (dev->phy.rev >= 3 && 0) {
+-		/* TODO */
++	if (dev->phy.rev >= 3 &&
++	    dev->phy.n->spur_avoid != B43_SPUR_AVOID_DISABLE) {
++		bool avoid = false;
++		if (dev->phy.n->spur_avoid == B43_SPUR_AVOID_FORCE) {
++			avoid = true;
++		} else if (!b43_channel_type_is_40mhz(phy->channel_type)) {
++			if ((ch >= 5 && ch <= 8) || ch == 13 || ch == 14)
++				avoid = true;
++		} else { /* 40MHz */
++			if (nphy->aband_spurwar_en &&
++			    (ch == 38 || ch == 102 || ch == 118))
++				avoid = dev->dev->chip_id == 0x4716;
++		}
++
++		b43_nphy_pmu_spur_avoid(dev, avoid);
++
++		if (dev->dev->chip_id == 43222 || dev->dev->chip_id == 43224 ||
++		    dev->dev->chip_id == 43225) {
++			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_LOW,
++				    avoid ? 0x5341 : 0x8889);
++			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_HIGH, 0x8);
++		}
++
++		if (dev->phy.rev == 3 || dev->phy.rev == 4)
++			; /* TODO: reset PLL */
++
++		if (avoid)
++			b43_phy_set(dev, B43_NPHY_BBCFG, B43_NPHY_BBCFG_RSTRX);
++		else
++			b43_phy_mask(dev, B43_NPHY_BBCFG,
++				     ~B43_NPHY_BBCFG_RSTRX & 0xFFFF);
++
++		b43_nphy_reset_cca(dev);
++
++		/* wl sets useless phy_isspuravoid here */
+ 	}
+ 
+ 	b43_phy_write(dev, B43_NPHY_NDATAT_DUP40, 0x3830);
+-- 
+1.7.3.4
+
