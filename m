@@ -1,57 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49449 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756517Ab1LPOAX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 09:00:23 -0500
-Date: Fri, 16 Dec 2011 15:04:54 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: NFC build failure on current wireless-testing
-Message-ID: <20111216140454.GD11800@sortiz-mobl> (sfid-20111216_150026_929501_FA448CA7)
-References: <20111216133323.GC14271@redhat.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:42759 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752439Ab1LKWuf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Dec 2011 17:50:35 -0500
+Received: by wgbdr13 with SMTP id dr13so9968597wgb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Dec 2011 14:50:34 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111216133323.GC14271@redhat.com>
+In-Reply-To: <4EE3BE7B.5030606@broadcom.com>
+References: <1323385619-7454-1-git-send-email-frankyl@broadcom.com>
+	<1323385619-7454-6-git-send-email-frankyl@broadcom.com>
+	<CACna6rwVVEYf0F6HZoMKrJg2NT3c4SPb6OH34LsTm8NR+BtsRA@mail.gmail.com>
+	<4EE3BE7B.5030606@broadcom.com>
+Date: Sun, 11 Dec 2011 23:50:34 +0100
+Message-ID: <CACna6rzEQ5hXv6N5xtaLUCt=OvemvPowNJvfe8BAUNXdxDBwkg@mail.gmail.com> (sfid-20111211_235039_278903_3568C035)
+Subject: Re: [PATCH 05/23] bcma: add set/mask macros for 16-bit register access
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+W dniu 10 grudnia 2011 21:18 użytkownik Arend van Spriel
+<arend@broadcom.com> napisał:
+> On 12/10/2011 12:45 PM, Rafał Miłecki wrote:
+>> 2011/12/9 Franky Lin <frankyl@broadcom.com>:
+>>> From: Arend van Spriel <arend@broadcom.com>
+>>>
+>>> The BCMA header only had definitions for 32-bit register access. Used
+>>> those as a template for the 16-bit flavour. Also changed them to inline
+>>> functions to be on the safe side. As offset parameter is used twice there
+>>> would be a problem when used like this: bcma_set32(core, offset++, val);
+>>>
+>>
+>> What is an advantage of static inline over define?
+>>
+>
+> Hi Rafał,
+>
+> Apart from the example given in the commit message the CodingStyle
+> documentation states a preference for inline functions. One advantage I
+> can come up with is type checking by the compiler.
 
-On Fri, Dec 16, 2011 at 02:33:24PM +0100, Stanislaw Gruszka wrote:
-> Got this today after pulling wireless-testing tree:
-> 
-> LD [M]  net/nfc/nfc.o
-> net/nfc/netlink.o: In function `nfc_llcp_mac_is_down':
-> netlink.c:(.text+0x0): multiple definition of `nfc_llcp_mac_is_down'
-> net/nfc/core.o:(.text+0x0): first defined here
-> net/nfc/netlink.o: In function `nfc_llcp_mac_is_up':
-> netlink.c:(.text+0x10): multiple definition of `nfc_llcp_mac_is_up'
-> net/nfc/core.o:(.text+0x10): first defined here
-> net/nfc/af_nfc.o: In function `nfc_llcp_mac_is_down':
-> (.text+0x0): multiple definition of `nfc_llcp_mac_is_down'
-> net/nfc/core.o:(.text+0x0): first defined here
-> net/nfc/af_nfc.o: In function `nfc_llcp_mac_is_up':
-> (.text+0x10): multiple definition of `nfc_llcp_mac_is_up'
-> net/nfc/core.o:(.text+0x10): first defined here
-> net/nfc/rawsock.o: In function `nfc_llcp_mac_is_down':
-> rawsock.c:(.text+0x0): multiple definition of `nfc_llcp_mac_is_down'
-> net/nfc/core.o:(.text+0x0): first defined here
-> net/nfc/rawsock.o: In function `nfc_llcp_mac_is_up':
-> rawsock.c:(.text+0x10): multiple definition of `nfc_llcp_mac_is_up'
-> net/nfc/core.o:(.text+0x10): first defined here
-> make[2]: *** [net/nfc/nfc.o] Error 1
-> make[1]: *** [net/nfc] Error 2
-> make: *** [net] Error 2
-> 
-> Config attached.
-Sorry about that, I just sent a fix to John.
-
-Cheers,
-Samuel.
+Thanks for explaining, compiler errors should be indeed nicer. Thanks
+for patch :)
 
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+Rafał
