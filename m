@@ -1,88 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:9239 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757353Ab1LWP5D (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:34984 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751066Ab1LKACX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Dec 2011 10:57:03 -0500
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Paul Stewart <pstew@google.com>
-Subject: [PATCH] ath9k_hw: increase tx status ring buffer size
-Date: Fri, 23 Dec 2011 21:27:02 +0530
-Message-ID: <1324655822-14923-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111223_165708_775939_D0C5D2CE)
+	Sat, 10 Dec 2011 19:02:23 -0500
+Received: by vbbfc26 with SMTP id fc26so3076884vbb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2011 16:02:23 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1323462691.3615.0.camel@jlt3.sipsolutions.net>
+References: <1323427001.3622.14.camel@jlt3.sipsolutions.net>
+	<CAJ-VmomHfArfn6sQhPb=k8cP_MJ-MX5rk1c1g8JgFp=1ce9adQ@mail.gmail.com>
+	<1323462691.3615.0.camel@jlt3.sipsolutions.net>
+Date: Sun, 11 Dec 2011 11:02:22 +1100
+Message-ID: <CAJ-Vmom2MUp=1FVnqUTcFUYM75W-Ztd3FzeNm_rTEhGpnLJqJQ@mail.gmail.com> (sfid-20111211_010227_520024_C1F06FBB)
+Subject: Re: ath9k: reports wrong GI/bandwidth (bug)
+From: Adrian Chadd <adrian@freebsd.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR9003 chips read tx status from ring buffer whose max number of
-status descriptor is mininal compared to max number of tx buffers.
-On a stress condition, it can be easily overflown which might cause
-false tx hung detection. Though increasing number of max status
-descriptors consumes more memory, it helps to avoid false positive
-chip resets.
+On 10 December 2011 07:31, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Sat, 2011-12-10 at 06:42 +1100, Adrian Chadd wrote:
+>> Can you see whether the -final- frame in an A-MPDU has the correct GI bit set?
+>
+> In a dozen or so cases in the original capture file, it does seem to be
+> correct in those cases. Not that it helps much, we could've missed the
+> last one :-)
 
-Cc: Paul Stewart <pstew@google.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |    2 +-
- drivers/net/wireless/ath/ath9k/ar9003_mac.h |    2 +-
- drivers/net/wireless/ath/ath9k/ath9k.h      |    2 +-
- drivers/net/wireless/ath/ath9k/hw.h         |    2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+Ok. Well, this just adds to the "only the last frame has all the
+"correct" RX state" thing :)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 4a31515..88c81c5 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -583,7 +583,7 @@ void ath9k_hw_reset_txstatus_ring(struct ath_hw *ah)
- 
- void ath9k_hw_setup_statusring(struct ath_hw *ah, void *ts_start,
- 			       u32 ts_paddr_start,
--			       u8 size)
-+			       u16 size)
- {
- 
- 	ah->ts_paddr_start = ts_paddr_start;
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.h b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-index c504493..e203b51 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-@@ -118,5 +118,5 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah,
- void ath9k_hw_reset_txstatus_ring(struct ath_hw *ah);
- void ath9k_hw_setup_statusring(struct ath_hw *ah, void *ts_start,
- 			       u32 ts_paddr_start,
--			       u8 size);
-+			       u16 size);
- #endif
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 95276e9..b30e9fc 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -97,7 +97,7 @@ enum buffer_type {
- #define bf_isampdu(bf)		(bf->bf_state.bf_type & BUF_AMPDU)
- #define bf_isaggr(bf)		(bf->bf_state.bf_type & BUF_AGGR)
- 
--#define ATH_TXSTATUS_RING_SIZE 64
-+#define ATH_TXSTATUS_RING_SIZE 512
- 
- #define	DS2PHYS(_dd, _ds)						\
- 	((_dd)->dd_desc_paddr + ((caddr_t)(_ds) - (caddr_t)(_dd)->dd_desc))
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 48205c2..6a29004 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -1016,7 +1016,7 @@ struct ath_hw {
- 	u32 ts_paddr_start;
- 	u32 ts_paddr_end;
- 	u16 ts_tail;
--	u8 ts_size;
-+	u16 ts_size;
- 
- 	u32 bb_watchdog_last_status;
- 	u32 bb_watchdog_timeout_ms; /* in ms, 0 to disable */
--- 
-1.7.8.1
 
+Adrian
