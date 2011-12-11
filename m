@@ -1,34 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:35656 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757856Ab1LGVjd (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:52309 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751681Ab1LKLfy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Dec 2011 16:39:33 -0500
-Received: by ggnr5 with SMTP id r5so1106643ggn.19
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2011 13:39:33 -0800 (PST)
+	Sun, 11 Dec 2011 06:35:54 -0500
+Received: by eekc4 with SMTP id c4so1142774eek.19
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Dec 2011 03:35:53 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	Larry Finger <larry.finger@lwfinger.net>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V2 7/7] b43: N-PHY: implement spurious tone avoidance
+Date: Sun, 11 Dec 2011 13:16:51 +0100
+Message-Id: <1323605811-2850-1-git-send-email-zajec5@gmail.com> (sfid-20111211_123558_889700_7754BE72)
 MIME-Version: 1.0
-In-Reply-To: <1323266001-12912-4-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1323266001-12912-1-git-send-email-rmanohar@qca.qualcomm.com> <1323266001-12912-4-git-send-email-rmanohar@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Wed, 7 Dec 2011 13:39:12 -0800
-Message-ID: <CAB=NE6VuhZ0B1cKfa6pQ0M9Bqo+Uwrcj2xcV74W0yENxfNHb7Q@mail.gmail.com> (sfid-20111207_223936_121251_D02201DF)
-Subject: Re: [PATCH 4/4] ath9k: Reconfigure tx power on regulatory update
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 7, 2011 at 5:53 AM, Rajkumar Manoharan
-<rmanohar@qca.qualcomm.com> wrote:
-> Whenever the regulatory got updated by country IE for the world
-> roaming cards, need to reconfigure the tx power immediately to
-> increase the power level.
->
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 
-I ACK all except patch [3/4].
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+V2: write pmu_ctl only if it was set. Thx Larry, my gcc didn't notice
+---
+ drivers/net/wireless/b43/phy_n.c |   93 +++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 91 insertions(+), 2 deletions(-)
 
-Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 114c413..730f5a4 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -4023,6 +4023,61 @@ int b43_phy_initn(struct b43_wldev *dev)
+ 	return 0;
+ }
+ 
++/* http://bcm-v4.sipsolutions.net/802.11/PmuSpurAvoid */
++static void b43_nphy_pmu_spur_avoid(struct b43_wldev *dev, bool avoid)
++{
++	struct bcma_drv_cc *cc = &dev->dev->bdev->bus->drv_cc;
++	u32 pmu_ctl;
++	if (dev->dev->chip_id == 43224 || dev->dev->chip_id == 43225) {
++		if (avoid) {
++			bcma_chipco_pll_write(cc, 0x0, 0x11500010);
++			bcma_chipco_pll_write(cc, 0x1, 0x000C0C06);
++			bcma_chipco_pll_write(cc, 0x2, 0x0F600a08);
++			bcma_chipco_pll_write(cc, 0x3, 0x00000000);
++			bcma_chipco_pll_write(cc, 0x4, 0x2001E920);
++			bcma_chipco_pll_write(cc, 0x5, 0x88888815);
++		} else {
++			bcma_chipco_pll_write(cc, 0x0, 0x11100010);
++			bcma_chipco_pll_write(cc, 0x1, 0x000c0c06);
++			bcma_chipco_pll_write(cc, 0x2, 0x03000a08);
++			bcma_chipco_pll_write(cc, 0x3, 0x00000000);
++			bcma_chipco_pll_write(cc, 0x4, 0x200005c0);
++			bcma_chipco_pll_write(cc, 0x5, 0x88888815);
++		}
++		pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD;
++	} else if (dev->dev->chip_id == 0x4716) {
++		if (avoid) {
++			bcma_chipco_pll_write(cc, 0x0, 0x11500060);
++			bcma_chipco_pll_write(cc, 0x1, 0x080C0C06);
++			bcma_chipco_pll_write(cc, 0x2, 0x0F600000);
++			bcma_chipco_pll_write(cc, 0x3, 0x00000000);
++			bcma_chipco_pll_write(cc, 0x4, 0x2001E924);
++			bcma_chipco_pll_write(cc, 0x5, 0x88888815);
++		} else {
++			bcma_chipco_pll_write(cc, 0x0, 0x11100060);
++			bcma_chipco_pll_write(cc, 0x1, 0x080c0c06);
++			bcma_chipco_pll_write(cc, 0x2, 0x03000000);
++			bcma_chipco_pll_write(cc, 0x3, 0x00000000);
++			bcma_chipco_pll_write(cc, 0x4, 0x200005c0);
++			bcma_chipco_pll_write(cc, 0x5, 0x88888815);
++		}
++		pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD | BCMA_CC_PMU_CTL_NOILPONW;
++	} else if (dev->dev->chip_id == 0x4322 || dev->dev->chip_id == 0x4340 ||
++		   dev->dev->chip_id == 0x4341) {
++		bcma_chipco_pll_write(cc, 0x0, 0x11100070);
++		bcma_chipco_pll_write(cc, 0x1, 0x1014140a);
++		bcma_chipco_pll_write(cc, 0x5, 0x88888854);
++		if (avoid)
++			bcma_chipco_pll_write(cc, 0x2, 0x05201828);
++		else
++			bcma_chipco_pll_write(cc, 0x2, 0x05001828);
++		pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD;
++	} else {
++		return;
++	}
++	bcma_cc_set32(cc, BCMA_CC_PMU_CTL, pmu_ctl);
++}
++
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/ChanspecSetup */
+ static void b43_nphy_channel_setup(struct b43_wldev *dev,
+ 				const struct b43_phy_n_sfo_cfg *e,
+@@ -4030,6 +4085,7 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
+ {
+ 	struct b43_phy *phy = &dev->phy;
+ 	struct b43_phy_n *nphy = dev->phy.n;
++	int ch = new_channel->hw_value;
+ 
+ 	u16 old_band_5ghz;
+ 	u32 tmp32;
+@@ -4069,8 +4125,41 @@ static void b43_nphy_channel_setup(struct b43_wldev *dev,
+ 
+ 	b43_nphy_tx_lp_fbw(dev);
+ 
+-	if (dev->phy.rev >= 3 && 0) {
+-		/* TODO */
++	if (dev->phy.rev >= 3 &&
++	    dev->phy.n->spur_avoid != B43_SPUR_AVOID_DISABLE) {
++		bool avoid = false;
++		if (dev->phy.n->spur_avoid == B43_SPUR_AVOID_FORCE) {
++			avoid = true;
++		} else if (!b43_channel_type_is_40mhz(phy->channel_type)) {
++			if ((ch >= 5 && ch <= 8) || ch == 13 || ch == 14)
++				avoid = true;
++		} else { /* 40MHz */
++			if (nphy->aband_spurwar_en &&
++			    (ch == 38 || ch == 102 || ch == 118))
++				avoid = dev->dev->chip_id == 0x4716;
++		}
++
++		b43_nphy_pmu_spur_avoid(dev, avoid);
++
++		if (dev->dev->chip_id == 43222 || dev->dev->chip_id == 43224 ||
++		    dev->dev->chip_id == 43225) {
++			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_LOW,
++				    avoid ? 0x5341 : 0x8889);
++			b43_write16(dev, B43_MMIO_TSF_CLK_FRAC_HIGH, 0x8);
++		}
++
++		if (dev->phy.rev == 3 || dev->phy.rev == 4)
++			; /* TODO: reset PLL */
++
++		if (avoid)
++			b43_phy_set(dev, B43_NPHY_BBCFG, B43_NPHY_BBCFG_RSTRX);
++		else
++			b43_phy_mask(dev, B43_NPHY_BBCFG,
++				     ~B43_NPHY_BBCFG_RSTRX & 0xFFFF);
++
++		b43_nphy_reset_cca(dev);
++
++		/* wl sets useless phy_isspuravoid here */
+ 	}
+ 
+ 	b43_phy_write(dev, B43_NPHY_NDATAT_DUP40, 0x3830);
+-- 
+1.7.3.4
 
-  Luis
