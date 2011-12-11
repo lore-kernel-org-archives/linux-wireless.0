@@ -1,34 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li9-11.members.linode.com ([67.18.176.11]:39576 "EHLO
-	test.thunk.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751933Ab1LUXSi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 18:18:38 -0500
-Date: Wed, 21 Dec 2011 18:18:30 -0500
-From: Ted Ts'o <tytso@mit.edu>
-To: David Miller <davem@davemloft.net>
-Cc: johannes@sipsolutions.net, linux-kernel@vger.kernel.org,
-	ilw@linux.intel.com, linux-wireless@vger.kernel.org
-Subject: Re: REGRESSION: v3.2-rcX: iwlagn refuses to associate with my AP's
-Message-ID: <20111221231830.GC32561@thunk.org> (sfid-20111222_001856_188633_5C3126C5)
-References: <20111213201752.GA5094@thunk.org>
- <20111214015959.GA6276@thunk.org>
- <20111221211213.GB32561@thunk.org>
- <20111221.161607.1331587831465613240.davem@davemloft.net>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:54431 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751084Ab1LKBOs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 10 Dec 2011 20:14:48 -0500
+Received: by mail-ey0-f174.google.com with SMTP id k14so2316533eaa.19
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2011 17:14:47 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/7] b43: N-PHY: workaround BCM43224 hw bug in writing table id 9
+Date: Sun, 11 Dec 2011 02:55:31 +0100
+Message-Id: <1323568535-2816-4-git-send-email-zajec5@gmail.com> (sfid-20111211_021451_267170_D2040B19)
+In-Reply-To: <1323568535-2816-1-git-send-email-zajec5@gmail.com>
+References: <1323568535-2816-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111221.161607.1331587831465613240.davem@davemloft.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 21, 2011 at 04:16:07PM -0500, David Miller wrote:
-> > It seems that fixes for these two issues haven't been pushed to Linus
-> > yet?  It would be nice if they could get pushed to mainline before 3.2
-> > ships, as opposed to being something that has to get fixed in the
-> > 3.2.X series....
-> 
-> It's in my queue to send to Linus.
 
-Great, thanks!!
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/tables_nphy.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-					- Ted
+diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
+index 4ec3d66..05ab6a4 100644
+--- a/drivers/net/wireless/b43/tables_nphy.c
++++ b/drivers/net/wireless/b43/tables_nphy.c
+@@ -2932,6 +2932,13 @@ void b43_ntab_write_bulk(struct b43_wldev *dev, u32 offset,
+ 	b43_phy_write(dev, B43_NPHY_TABLE_ADDR, offset);
+ 
+ 	for (i = 0; i < nr_elements; i++) {
++		/* Auto increment broken + caching issue on BCM43224? */
++		if ((offset >> 10) == 9 && dev->dev->chip_id == 43224 &&
++		    dev->dev->chip_rev == 1) {
++			b43_phy_read(dev, B43_NPHY_TABLE_DATALO);
++			b43_phy_write(dev, B43_NPHY_TABLE_ADDR, offset + i);
++		}
++
+ 		switch (type) {
+ 		case B43_NTAB_8BIT:
+ 			value = *data;
+-- 
+1.7.3.4
 
