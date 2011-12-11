@@ -1,84 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:64408 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753057Ab1LUMGf (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:33168 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750785Ab1LKD0A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 07:06:35 -0500
-Received: by wibhm6 with SMTP id hm6so1893772wib.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2011 04:06:34 -0800 (PST)
-From: Eyal Shapira <eyal@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: trigger recovery for failures in sched scan stop
-Date: Wed, 21 Dec 2011 14:06:26 +0200
-Message-Id: <1324469186-18507-1-git-send-email-eyal@wizery.com> (sfid-20111221_130639_870619_1F960185)
+	Sat, 10 Dec 2011 22:26:00 -0500
+Received: by ghbf1 with SMTP id f1so264150ghb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2011 19:25:59 -0800 (PST)
+Message-ID: <4EE422C4.5050005@lwfinger.net> (sfid-20111211_042608_241985_EE26F89D)
+Date: Sat, 10 Dec 2011 21:25:56 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH 0/7] b43: N-PHY fixes, check dependency before applying
+References: <1323568535-2816-1-git-send-email-zajec5@gmail.com>
+In-Reply-To: <1323568535-2816-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 requires that drv_sched_scan_stop
-will always succeed. We have a few possible errors
-such as OOM, failure to ELP wakeup, fail in the FW command.
-Instead of no-op , trigger a recovery which would
-mark sched scan as stopped and clear up any bad FW state.
+On 12/10/2011 07:55 PM, Rafał Miłecki wrote:
+> Some N-PHY fixes coming from wl observations and specs changes.
+>
+> Please note this patchset depends on following patches:
+> [PATCH 1/2] ssb: extract FEM info from SPROM
+> [PATCH 2/2] bcma: extract FEM info from SPROM
+> send 3 days ago.
+>
+> Rafał Miłecki (7):
+>    b43: N-PHY: random trivial fixes for typos, missing writes
+>    b43: N-PHY: update some init values
+>    b43: N-PHY: workaround BCM43224 hw bug in writing table id 9
+>    b43: N-PHY: add table for antenna software control
+>    b43: N-PHY: determine various PHY params
+>    b43: N-PHY: finish 2.4GHz 0x2056 radio setup
+>    b43: N-PHY: implement spurious tone avoidance
+>
+>   drivers/net/wireless/b43/phy_n.c       |  262 +++++++++++++++++++++++++++++---
+>   drivers/net/wireless/b43/phy_n.h       |    8 +
+>   drivers/net/wireless/b43/radio_2056.c  |   25 +++-
+>   drivers/net/wireless/b43/radio_2056.h  |    1 +
+>   drivers/net/wireless/b43/tables_nphy.c |   59 +++++++-
+>   drivers/net/wireless/b43/tables_nphy.h |   31 ++--
+>   6 files changed, 342 insertions(+), 44 deletions(-)
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |    4 +++-
- drivers/net/wireless/wl12xx/scan.c |   14 +++++++++-----
- 2 files changed, 12 insertions(+), 6 deletions(-)
+This set of patches improved the performance of my BCM43224.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index d5f55a1..0d3de3e 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3137,8 +3137,10 @@ static void wl1271_op_sched_scan_stop(struct ieee80211_hw *hw,
- 	mutex_lock(&wl->mutex);
- 
- 	ret = wl1271_ps_elp_wakeup(wl);
--	if (ret < 0)
-+	if (ret < 0) {
-+		wl12xx_queue_recovery_work(wl);
- 		goto out;
-+	}
- 
- 	wl1271_scan_sched_scan_stop(wl);
- 
-diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
-index e24111e..108bed4 100644
---- a/drivers/net/wireless/wl12xx/scan.c
-+++ b/drivers/net/wireless/wl12xx/scan.c
-@@ -739,22 +739,26 @@ void wl1271_scan_sched_scan_stop(struct wl1271 *wl)
- 
- 	wl1271_debug(DEBUG_CMD, "cmd periodic scan stop");
- 
--	/* FIXME: what to do if alloc'ing to stop fails? */
- 	stop = kzalloc(sizeof(*stop), GFP_KERNEL);
- 	if (!stop) {
- 		wl1271_error("failed to alloc memory to send sched scan stop");
--		return;
-+		goto recovery;
- 	}
- 
- 	stop->tag = WL1271_SCAN_DEFAULT_TAG;
- 
- 	ret = wl1271_cmd_send(wl, CMD_STOP_PERIODIC_SCAN, stop,
- 			      sizeof(*stop), 0);
-+
-+	kfree(stop);
-+
- 	if (ret < 0) {
- 		wl1271_error("failed to send sched scan stop command");
--		goto out_free;
-+		goto recovery;
- 	}
- 
--out_free:
--	kfree(stop);
-+	return;
-+
-+recovery:
-+	wl12xx_queue_recovery_work(wl);
- }
--- 
-1.7.4.1
+netperf TCP_MAERTS (RX)  15.0 => 24.5 Mbps
+netperf TCP_STREAM (TX)   6.0 => 13.1 Mbps
+
+I have mac80211 debug on, and I see a lot of
+
+wlan13: detected beacon loss from AP - sending probe request
+
+These occur at 1 second intervals. This particular AP does not have a setting 
+for the beacon interval, but I think it is at 100 ms.
+
+Larry
+
 
