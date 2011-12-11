@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:41124 "HELO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753918Ab1LMD5R (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:59920 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752439Ab1LKVxZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 22:57:17 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: do not advertise custom regulatory domain capability
-Date: Mon, 12 Dec 2011 19:56:58 -0800
-Message-Id: <1323748618-29736-1-git-send-email-bzhao@marvell.com> (sfid-20111213_045739_675384_D596A84E)
+	Sun, 11 Dec 2011 16:53:25 -0500
+Received: by dajs34 with SMTP id s34so1224918daj.19
+        for <linux-wireless@vger.kernel.org>; Sun, 11 Dec 2011 13:53:24 -0800 (PST)
+MIME-Version: 1.0
+Date: Sun, 11 Dec 2011 22:47:46 +0100
+Message-ID: <CAMG6FYgGB12s+vTGRuKb1E8qzwMa3=kV2pm5ZFQ=BO4WqqZSRQ@mail.gmail.com> (sfid-20111211_225335_668297_3861F175)
+Subject: [PATCH] mac80211: Do not request FIF_BCN_PRBRESP_PROMISC for HW scan.
+From: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+To: linux-wireless@vger.kernel.org, Bartosz.Markowski@tieto.com,
+	Janusz.Dziedzic@tieto.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+ieee80211_configure_filter code used local->scanning as a boolean value
+when it was a bit mask. Bits SCAN_HW_SCANNING, SCAN_COMPLETED, SCAN_ABORTED
+should not set FIF_BCN_PRBRESP_PROMISC filter.
 
-mwifiex driver no longer supports it's own custom regulatory rules,
-but custom regulatory domain capability is still advertised during
-wiphy registration by the driver.
+Similar mistake was fixed also in ieee80211_hw_config (power
+configuration code).
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Verified-by: Vitaly Wool <vitaly.wool@sonyeric­sson.com>
+Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+ net/mac80211/main.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index f02f305..d4310a4 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1396,9 +1396,6 @@ int mwifiex_register_cfg80211(struct mwifiex_private *priv)
- 	memcpy(wdev->wiphy->perm_addr, priv->curr_addr, ETH_ALEN);
- 	wdev->wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
- 
--	/* We are using custom domains */
--	wdev->wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY;
--
- 	/* Reserve space for bss band information */
- 	wdev->wiphy->bss_priv_size = sizeof(u8);
- 
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index cae4435..54f78ab 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -47,7 +47,7 @@ void ieee80211_configure_filter(struct ieee80211_local *local)
+ 	if (atomic_read(&local->iff_allmultis))
+ 		new_flags |= FIF_ALLMULTI;
+
+-	if (local->monitors || local->scanning)
++	if (local->monitors || test_bit(SCAN_SW_SCANNING, &local->scanning))
+ 		new_flags |= FIF_BCN_PRBRESP_PROMISC;
+
+ 	if (local->fif_probe_req || local->probe_req_reg)
+@@ -193,8 +193,8 @@ int ieee80211_hw_config(struct ieee80211_local
+*local, u32 changed)
+ 		changed |= IEEE80211_CONF_CHANGE_SMPS;
+ 	}
+
+-	if ((local->scanning & SCAN_SW_SCANNING) ||
+-	    (local->scanning & SCAN_HW_SCANNING))
++	if (test_bit(SCAN_SW_SCANNING, &local->scanning) ||
++	    test_bit(SCAN_HW_SCANNING, &local->scanning))
+ 		power = chan->max_power;
+ 	else
+ 		power = local->power_constr_level ?
 -- 
-1.7.0.2
-
+1.7.1
