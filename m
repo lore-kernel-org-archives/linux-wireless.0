@@ -1,78 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:24722 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759426Ab1LPN7G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 08:59:06 -0500
-Date: Fri, 16 Dec 2011 15:03:36 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Subject: [PATCH] NFC: Fix LLCP related build failure
-Message-ID: <20111216140336.GC11800@sortiz-mobl> (sfid-20111216_145911_523504_83CDB596)
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:59020 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752258Ab1LKT4t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 11 Dec 2011 14:56:49 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANUX_P2YeE1ixzFU5VM-oex0aTURqr54VHt5FVAL9BJ0PuRX_A@mail.gmail.com>
+References: <20111125122143.GA30404@gamma.logic.tuwien.ac.at>
+	<CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com>
+	<20111125123720.GA31564@gamma.logic.tuwien.ac.at>
+	<CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com>
+	<CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com>
+	<1322387175.4044.16.camel@jlt3.sipsolutions.net>
+	<CANUX_P3uoNOj3j-REvYCZP382cHfq+DpBRi7fnzFfMG_dyHtTQ@mail.gmail.com>
+	<20111128035627.GH1422@gamma.logic.tuwien.ac.at>
+	<CANUX_P2kYiFCP8uAhLZC_kVEjoyxabRBx3Pn+ndtFus=6hJN7Q@mail.gmail.com>
+	<20111128042343.GA4619@gamma.logic.tuwien.ac.at>
+	<20111128232525.GA12719@gamma.logic.tuwien.ac.at>
+	<CANUX_P2b_ZYr4hHigA+tGa9uakcq3hQXnOiP5isQtfcYxCaxcw@mail.gmail.com>
+	<1322555472.4110.8.camel@jlt3.sipsolutions.net>
+	<CANUX_P2YeE1ixzFU5VM-oex0aTURqr54VHt5FVAL9BJ0PuRX_A@mail.gmail.com>
+Date: Sun, 11 Dec 2011 21:56:47 +0200
+Message-ID: <CANUX_P0sCPAWTsSVXpL3w5witnVi6wrtzTgJ0y6HjC-TYC9swg@mail.gmail.com> (sfid-20111211_205653_080789_838FD1AA)
+Subject: Re: iwlagn is getting very shaky
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Norbert Preining <preining@logic.at>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Dave Jones <davej@redhat.com>,
+	David Rientjes <rientjes@google.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>> Could something be hogging the workqueues?
+>>
+>
+>
+> So I tried to understand what is going on with the workqueue and ended
+> up to see that if we are lucky, we can need the workqueue for the BA
+> handshake (could be AddBA / DelBA handling, or driver callback) while
+> we are scanning. Which basically means that we will need to wait until
+> the scan is over to handle these frames / callbacks. I got these
+> measurements while stopping the BA session:
+>
+> * scanning working for roughly 3 seconds (pardon me not being precise,
+> but with this order of magnitude I don't care much about the single
+> millisecond..)
+> * when scanning is over, the while loop in ieee80211_iface_work
+> consumes 73 mgmt for about 34ms.
+> ( how come we have so many beacons during those 3 seconds..., or maybe
+> all the BCAST probe request ?, my network is quite busy...)
+> * then the finally my stop_tx_ba_cb was served which took 10ms (time
+> takes by the driver).
+> * another series of beacons (10ms).
 
-llcp_mac routines should be static and inlined or build will fail with NFC
-selected without LLCP.
-
-This patch fixes:
-
-LD [M]  net/nfc/nfc.o
-net/nfc/netlink.o: In function `nfc_llcp_mac_is_down':
-netlink.c:(.text+0x0): multiple definition of `nfc_llcp_mac_is_down'
-net/nfc/core.o:(.text+0x0): first defined here
-net/nfc/netlink.o: In function `nfc_llcp_mac_is_up':
-netlink.c:(.text+0x10): multiple definition of `nfc_llcp_mac_is_up'
-net/nfc/core.o:(.text+0x10): first defined here
-net/nfc/af_nfc.o: In function `nfc_llcp_mac_is_down':
-(.text+0x0): multiple definition of `nfc_llcp_mac_is_down'
-net/nfc/core.o:(.text+0x0): first defined here
-net/nfc/af_nfc.o: In function `nfc_llcp_mac_is_up':
-(.text+0x10): multiple definition of `nfc_llcp_mac_is_up'
-net/nfc/core.o:(.text+0x10): first defined here
-net/nfc/rawsock.o: In function `nfc_llcp_mac_is_down':
-rawsock.c:(.text+0x0): multiple definition of `nfc_llcp_mac_is_down'
-net/nfc/core.o:(.text+0x0): first defined here
-net/nfc/rawsock.o: In function `nfc_llcp_mac_is_up':
-rawsock.c:(.text+0x10): multiple definition of `nfc_llcp_mac_is_up'
-net/nfc/core.o:(.text+0x10): first defined here
-
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
-John, if you want to revert d646960f7986fefb460a2b062d5ccc8ccfeacc3a, I can
-send you an updated one with that fix included. Let me know what you'd prefer.
-
----
- net/nfc/nfc.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
-index 2c2c401..6d28d75 100644
---- a/net/nfc/nfc.h
-+++ b/net/nfc/nfc.h
-@@ -60,11 +60,11 @@ void nfc_llcp_exit(void);
- 
- #else
- 
--void nfc_llcp_mac_is_down(struct nfc_dev *dev)
-+static inline void nfc_llcp_mac_is_down(struct nfc_dev *dev)
- {
- }
- 
--void nfc_llcp_mac_is_up(struct nfc_dev *dev, u32 target_idx,
-+static inline void nfc_llcp_mac_is_up(struct nfc_dev *dev, u32 target_idx,
- 			u8 comm_mode, u8 rf_mode)
- {
- }
--- 
-1.7.7.3
-
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+What about flushing the workqueue before we scan ?
+This is not a bullet proof solution of course, we will still encounter
+bad races, but at least  we would flush what we can before the
+workqueue becomes unable for 4 seconds (!).
+We can also delay the scan if we are in the middle of {add,del}BA
+handshake, which is the only flow I can think about that needs
+responsiveness. The other frame exchanges are MLME ones and involve
+the wpa_supplicant (unless we are using the late WEXT). Hopefully the
+wpa_supplicant won't request to scan in the middle of association or
+so. There might be other features (mesh or whatever), that may be
+hidden from the wpa_supplicant and require good responsiveness from
+the wq too.
