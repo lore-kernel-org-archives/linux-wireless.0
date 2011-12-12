@@ -1,98 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.23]:34403 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751800Ab1LMOph (ORCPT
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:41147 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750952Ab1LLRNm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 09:45:37 -0500
-Message-ID: <4EE7650B.303@gmx.net> (sfid-20111213_154548_619177_4BFAB4BA)
-Date: Tue, 13 Dec 2011 15:45:31 +0100
-From: Ernst Scott <yummy9@gmx.net>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: (Re:) Fritz!WLAN USB Stick N - 300 Mbit/s
-Content-Type: text/plain; charset=ISO-8859-15
+	Mon, 12 Dec 2011 12:13:42 -0500
+Received: by bkcjm19 with SMTP id jm19so1672702bkc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2011 09:13:41 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] compat-wireless: fix patches/08-rename-config-options.patch
+Date: Mon, 12 Dec 2011 19:14:16 +0200
+Message-Id: <1323710056-15765-1-git-send-email-eliad@wizery.com> (sfid-20111212_181345_317749_D8227368)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+wl12xx_sdio_test module was removed
 
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ patches/08-rename-config-options.patch |    7 +------
+ 1 files changed, 1 insertions(+), 6 deletions(-)
 
-Nachstehende Info zur Kenntnisnahme:
-
-
-
-Siehe ML "opensuse-de@opensuse.org" - 13.12.2011 - 15.35 Uhr
-
-Re: Fritz!WLAN USB Stick N - 300 Mbit/s
-
-
-
-
-Ernst Scott schrieb:
-> > Tobias Reichl schrieb:
->> >> On 11.12.2011 14:32, Ernst Scott wrote:
->>> >>> Ich wollte heute den genannten WLAN-Stick konfigurieren mit
->>> >>> Firmware-Paket "ar9170-firmware-1.1-5.1.noarch.rpm"
->>> >>>
- [ . . . .]
->> >>
- [ . . . .]
->> >> Zum Weiterlesen für Dich:
->> >> http://linuxwireless.org/en/users/Drivers/ar9170
->> >> http://linuxwireless.org/en/users/Drivers/carl9170
->> >>
->> >> Viel Erfolg! Tobias
-> >
-hallo Tobias
-
-ich habe mir die obigen wireless Seiten angesehen
-und kann mitteilen:
-
-Du hast eine richtige  G o l d g r u b e   aufgemacht:
-
-In "http://linuxwireless.org/en/users/Drivers/carl9170" ist zu lesen:
-
-[Zitat]
-There is code available, check out the carl9170.fw page for more
-details.
-Firmware binary
-You can download the GPLv2 Firmware binary:
-for Kernel
-
-Firmware Version
-Download Link
-Linux 2.6.x and 3.0      1.9.2     carl9170-1.fw
-Linux 3.1 and newer     1.9.4     carl9170-1.fw
-[/Zitat]
-
-Mit der Firmware "carl9170-1.fw" konnte ich heute den obigen
-WLAN-Stick installieren und konfigurieren können.
-
-Die Firmware funktioniert ohne wenn und aber.
-
-Tobias - ich gratuliere!
-
-Jetzt gibt es endlich einen Treiber für den WLAN-Stick
-
-
-Grüße an alle
-
-Ernst
-
--- Um die Liste abzubestellen, schicken Sie eine Mail an:
-opensuse-de+unsubscribe@opensuse.org Um den Listen Administrator zu
-erreichen, schicken Sie eine Mail an: opensuse-de+owner@opensuse.org
-
-
-Beste Grüße
-
-Ernst
-
-
-
-
-
-
-
-
-
+diff --git a/patches/08-rename-config-options.patch b/patches/08-rename-config-options.patch
+index fdd39ec..ae50768 100644
+--- a/patches/08-rename-config-options.patch
++++ b/patches/08-rename-config-options.patch
+@@ -107,18 +107,13 @@ CONFIG_BT_HIDP does not build with older kernel versions.
+  hidp-objs := core.o sock.o
+ --- a/drivers/net/wireless/wl12xx/Makefile
+ +++ b/drivers/net/wireless/wl12xx/Makefile
+-@@ -8,9 +8,9 @@ wl12xx_sdio_test-objs	= sdio_test.o
++@@ -8,5 +8,5 @@ wl12xx_sdio_test-objs	= sdio_test.o
+  wl12xx-$(CONFIG_NL80211_TESTMODE)	+= testmode.o
+  obj-$(CONFIG_WL12XX)			+= wl12xx.o
+  obj-$(CONFIG_WL12XX_SPI)		+= wl12xx_spi.o
+ -obj-$(CONFIG_WL12XX_SDIO)		+= wl12xx_sdio.o
+ +obj-$(CONFIG_COMPAT_WL12XX_SDIO)		+= wl12xx_sdio.o
+  
+--obj-$(CONFIG_WL12XX_SDIO_TEST)		+= wl12xx_sdio_test.o
+-+obj-$(CONFIG_COMPAT_WL12XX_SDIO_TEST)		+= wl12xx_sdio_test.o
+- 
+- # small builtin driver bit
+- obj-$(CONFIG_WL12XX_PLATFORM_DATA)	+= wl12xx_platform_data.o
+ --- a/drivers/net/wireless/wl1251/Makefile
+ +++ b/drivers/net/wireless/wl1251/Makefile
+ @@ -5,4 +5,4 @@ wl1251_sdio-objs	+= sdio.o
+-- 
+1.7.6.401.g6a319
 
