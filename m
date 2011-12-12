@@ -1,102 +1,250 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:53440 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752037Ab1LaAW2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Dec 2011 19:22:28 -0500
+Received: from mms1.broadcom.com ([216.31.210.17]:3066 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754623Ab1LLXPq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Dec 2011 18:15:46 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 13/15] brcm80211: smac: cleanup buscore handling in
+ aiutils.c
+Date: Mon, 12 Dec 2011 15:15:11 -0800
+Message-ID: <1323731713-14942-14-git-send-email-frankyl@broadcom.com> (sfid-20111213_002944_942325_1CFD2E78)
+In-Reply-To: <1323731713-14942-1-git-send-email-frankyl@broadcom.com>
+References: <1323731713-14942-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20111230235421.GA6054@redhat.com>
-References: <20111230235421.GA6054@redhat.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 30 Dec 2011 16:22:06 -0800
-Message-ID: <CA+55aFyqm4FbW=--7U4ULk1EBb6RLP0sRgtokODBYnZNiJXWew@mail.gmail.com> (sfid-20111231_012251_160371_1B188C8D)
-Subject: Re: loading firmware while usermodehelper disabled.
-To: Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: Matthew Garrett <mjg@redhat.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 30, 2011 at 3:54 PM, Dave Jones <davej@redhat.com> wrote:
-> We're getting a bunch of reports against Fedora 16
-> (still using 3.1) which look like some drivers are trying to
-> load firmware on resume from suspend, while usermodehelper
-> is disabled.
+From: Arend van Spriel <arend@broadcom.com>
 
-Ok, buggy drivers. You *must*not* load firmware in your resume path,
-since there is no actual guarantee that any particular device will be
-resumed after the disk that contains the firmware images.
+Instead of storing the buscore information now the BCMA core device
+is kept for quick reference in si_info structure.
 
-So it's very simple: drivers that load firmware at resume time are
-buggy. No ifs, buts, or maybes about it.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |   52 +++++++++------------
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.h |   23 ++++-----
+ drivers/net/wireless/brcm80211/brcmsmac/nicpci.c  |    3 +-
+ 3 files changed, 34 insertions(+), 44 deletions(-)
 
-> Here are some example traces:
->
-> https://bugzilla.redhat.com/show_bug.cgi?id=746411
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+index 34a5e02..372bee8 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+@@ -479,10 +479,9 @@ static bool ai_buscore_prep(struct si_info *sii)
+ static bool
+ ai_buscore_setup(struct si_info *sii, struct bcma_device *cc)
+ {
++	struct bcma_device *pci = NULL;
++	struct bcma_device *pcie = NULL;
+ 	struct bcma_device *core;
+-	bool pci, pcie;
+-	uint i;
+-	uint pciidx, pcieidx, pcirev, pcierev;
+ 
+ 
+ 	/* no cores found, bail out */
+@@ -506,15 +505,7 @@ ai_buscore_setup(struct si_info *sii, struct bcma_device *cc)
+ 		sii->pub.pmurev = sii->pub.pmucaps & PCAP_REV_MASK;
+ 	}
+ 
+-	/* figure out bus/orignal core idx */
+-	sii->pub.buscoretype = NODEV_CORE_ID;
+-	sii->pub.buscorerev = NOREV;
+-	sii->buscoreidx = BADIDX;
+-
+-	pci = pcie = false;
+-	pcirev = pcierev = NOREV;
+-	pciidx = pcieidx = BADIDX;
+-
++	/* figure out buscore */
+ 	list_for_each_entry(core, &cc->bus->cores, list) {
+ 		uint cid, crev;
+ 
+@@ -522,30 +513,22 @@ ai_buscore_setup(struct si_info *sii, struct bcma_device *cc)
+ 		crev = core->id.rev;
+ 
+ 		if (cid == PCI_CORE_ID) {
+-			pciidx = i;
+-			pcirev = crev;
+-			pci = true;
++			pci = core;
+ 		} else if (cid == PCIE_CORE_ID) {
+-			pcieidx = i;
+-			pcierev = crev;
+-			pcie = true;
++			pcie = core;
+ 		}
+ 	}
+ 
+ 	if (pci && pcie) {
+ 		if (ai_ispcie(sii))
+-			pci = false;
++			pci = NULL;
+ 		else
+-			pcie = false;
++			pcie = NULL;
+ 	}
+ 	if (pci) {
+-		sii->pub.buscoretype = PCI_CORE_ID;
+-		sii->pub.buscorerev = pcirev;
+-		sii->buscoreidx = pciidx;
++		sii->buscore = pci;
+ 	} else if (pcie) {
+-		sii->pub.buscoretype = PCIE_CORE_ID;
+-		sii->pub.buscorerev = pcierev;
+-		sii->buscoreidx = pcieidx;
++		sii->buscore = pcie;
+ 	}
+ 
+ 	/* fixup necessary chip/core configurations */
+@@ -554,10 +537,8 @@ ai_buscore_setup(struct si_info *sii, struct bcma_device *cc)
+ 		if (sii->pch == NULL)
+ 			return false;
+ 	}
+-	if (ai_pci_fixcfg(&sii->pub)) {
+-		/* si_doattach: si_pci_fixcfg failed */
++	if (ai_pci_fixcfg(&sii->pub))
+ 		return false;
+-	}
+ 
+ 	return true;
+ }
+@@ -589,7 +570,6 @@ static struct si_info *ai_doattach(struct si_info *sii,
+ 	savewin = 0;
+ 
+ 	sii->icbus = pbus;
+-	sii->buscoreidx = BADIDX;
+ 	sii->pcibus = pbus->host_pci;
+ 
+ 	/* switch to Chipcommon core */
+@@ -1248,3 +1228,15 @@ bool ai_is_otp_disabled(struct si_pub *sih)
+ 		return false;
+ 	}
+ }
++
++uint ai_get_buscoretype(struct si_pub *sih)
++{
++	struct si_info *sii = (struct si_info *)sih;
++	return sii->buscore->id.id;
++}
++
++uint ai_get_buscorerev(struct si_pub *sih)
++{
++	struct si_info *sii = (struct si_info *)sih;
++	return sii->buscore->id.rev;
++}
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
+index f9f88dd..f84c6f7 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
+@@ -146,8 +146,6 @@
+  *   public (read-only) portion of aiutils handle returned by si_attach()
+  */
+ struct si_pub {
+-	uint buscoretype;	/* PCI_CORE_ID, PCIE_CORE_ID, PCMCIA_CORE_ID */
+-	uint buscorerev;	/* buscore rev */
+ 	int ccrev;		/* chip common core rev */
+ 	u32 cccaps;		/* chip common capabilities */
+ 	int pmurev;		/* pmu core rev */
+@@ -175,11 +173,10 @@ struct si_info {
+ 	struct bcma_bus *icbus;	/* handle to soc interconnect bus */
+ 	struct pci_dev *pcibus;	/* handle to pci bus */
+ 	struct pcicore_info *pch; /* PCI/E core handle */
+-
++	struct bcma_device *buscore;
+ 	struct list_head var_list; /* list of srom variables */
+ 
+ 	u32 chipst;		/* chip status */
+-	uint buscoreidx;	/* buscore index */
+ };
+ 
+ /*
+@@ -224,47 +221,49 @@ extern void ai_chipcontrl_epa4331(struct si_pub *sih, bool on);
+ /* Enable Ex-PA for 4313 */
+ extern void ai_epa_4313war(struct si_pub *sih);
+ 
+-static inline uint ai_get_buscoretype(struct si_pub *sih)
+-{
+-	return sih->buscoretype;
+-}
++extern uint ai_get_buscoretype(struct si_pub *sih);
++extern uint ai_get_buscorerev(struct si_pub *sih);
+ 
+-static inline uint ai_get_buscorerev(struct si_pub *sih)
+-{
+-	return sih->buscorerev;
+-}
+ static inline int ai_get_ccrev(struct si_pub *sih)
+ {
+ 	return sih->ccrev;
+ }
++
+ static inline u32 ai_get_cccaps(struct si_pub *sih)
+ {
+ 	return sih->cccaps;
+ }
++
+ static inline int ai_get_pmurev(struct si_pub *sih)
+ {
+ 	return sih->pmurev;
+ }
++
+ static inline u32 ai_get_pmucaps(struct si_pub *sih)
+ {
+ 	return sih->pmucaps;
+ }
++
+ static inline uint ai_get_boardtype(struct si_pub *sih)
+ {
+ 	return sih->boardtype;
+ }
++
+ static inline uint ai_get_boardvendor(struct si_pub *sih)
+ {
+ 	return sih->boardvendor;
+ }
++
+ static inline uint ai_get_chip_id(struct si_pub *sih)
+ {
+ 	return sih->chip;
+ }
++
+ static inline uint ai_get_chiprev(struct si_pub *sih)
+ {
+ 	return sih->chiprev;
+ }
++
+ static inline uint ai_get_chippkg(struct si_pub *sih)
+ {
+ 	return sih->chippkg;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/nicpci.c b/drivers/net/wireless/brcm80211/brcmsmac/nicpci.c
+index a433041..7fad6dc 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/nicpci.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/nicpci.c
+@@ -408,7 +408,7 @@ pcie_mdioop(struct pcicore_info *pi, uint physmedia, uint regaddr, bool write,
+ 	bcma_write32(pi->core, PCIEREGOFFS(mdiocontrol),
+ 		     MDIOCTL_PREAM_EN | MDIOCTL_DIVISOR_VAL);
+ 
+-	if (pi->sih->buscorerev >= 10) {
++	if (ai_get_buscorerev(pi->sih) >= 10) {
+ 		/* new serdes is slower in rw,
+ 		 * using two layers of reg address mapping
+ 		 */
+@@ -782,7 +782,6 @@ void pcicore_down(struct pcicore_info *pi, int state)
+ 	pcie_extendL1timer(pi, false);
+ }
+ 
+-/* precondition: current core is sii->buscoretype */
+ void pcicore_fixcfg(struct pcicore_info *pi)
+ {
+ 	struct bcma_device *core = pi->core;
+-- 
+1.7.5.4
 
-It's isight_firmware_load(), in the isight_firmware driver. The driver
-doesn't actually do anything but load the firmware, and is apparently
-not very good at that either.
 
-It should either fake a disconnect and reconnect of the device (and
-let the reconnect then load the firmware through udev or something) or
-it should just save the firmware image in memory from the original
-load, and make the resume just re-initialize it - not load it.
-
-It's also possible that it could be considered a USB layer bug, and
-the USB layer should just not rebind the devices directly in the
-resume function, but do it somehow later. HOWEVER, that would only
-work for "random" USB devices that aren't in use by user space (like
-disks etc might be). So I think that in general the real solution is
-always just "make sure that the firmware is in memory before the
-suspend even happens".
-
-Greg - has the USB resume logic been changed lately?
-
-Matthew? Any comments about that particular driver?
-
-> https://bugzilla.redhat.com/show_bug.cgi?id=771002
-
-Same issue, different driver. Again, it's USB, and it's possible that
-USB just makes it really hard to do this correctly (ie the "save
-firmware image across suspend so that you don't have to load it at
-resume time").
-
-It's also possible that we should blame the firmware code, which is
-expressly written to encourage these kinds of bugs. It may be that i
-tshould be the firmware code that has a "get_firmware()" +
-"put_firmware()" model, and it should cache the firmware explicitly if
-the config supports suspend, so that a firmware read at resume time
-would actually work. The whole "request_firmware()" interface really
-is very prone to these kinds of bugs.
-
-But it's possible this could be fixed at the driver level by doing the
-caching there.
-
-In this case it's the rtl8192cu driver, so Larry, Chaoming, John etc
-added to the cc for that one.
-
-> This possibly sounds like the problem that caca9510ff4e5d842c0589110243d60927836222
-> was trying to fix, but that patch is present in the kernels
-> being reported.
-
-No, caca9510ff4e is only for the case where you actually compile the
-firmware *into* the kernel, so it's part of the kernel image. That's
-useful mainly for avoiding modules and initrd images, thus allowing
-things like having root directly on a disk that needs firmware to be
-loaded. Quite unusual, and it doesn't really work all that well.
-
-Oh, and some people use it for the Radeon firmware with the radeon DRM
-code built it.
-
-It really does need to be fixed at a driver level (possibly with the
-help of firmware/usb support infrastructure).
-
-                  Linus
