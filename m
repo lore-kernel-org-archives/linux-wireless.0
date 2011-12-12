@@ -1,69 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:57471 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750943Ab1L3Ug5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Dec 2011 15:36:57 -0500
-Received: by vbbfc26 with SMTP id fc26so10989334vbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Dec 2011 12:36:57 -0800 (PST)
+Received: from mms1.broadcom.com ([216.31.210.17]:3079 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754664Ab1LLXPq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Dec 2011 18:15:46 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 09/15] brcm80211: smac: remove interrupt disable
+ callback functionality
+Date: Mon, 12 Dec 2011 15:15:07 -0800
+Message-ID: <1323731713-14942-10-git-send-email-frankyl@broadcom.com> (sfid-20111213_001607_370479_B2839286)
+In-Reply-To: <1323731713-14942-1-git-send-email-frankyl@broadcom.com>
+References: <1323731713-14942-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <E1RgiLY-0007Df-Fb@pf14.m5r2.onet>
-References: <E1RgiLY-0007Df-Fb@pf14.m5r2.onet>
-Date: Fri, 30 Dec 2011 21:36:56 +0100
-Message-ID: <CAAfyv37h1LMTvtBGrJy5URh5BFxVVHWTqoUhQGRsGJz6s2xKYA@mail.gmail.com> (sfid-20111230_213701_569514_D2C3D93C)
-Subject: Re: ipw2200 problem
-From: Belisko Marek <marek.belisko@gmail.com>
-To: forlab@op.pl
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 30, 2011 at 8:42 PM,  <forlab@op.pl> wrote:
-> Hi!
-> I'm having problems using this adapter Intel Corporation PRO/Wireless 2915ABG [Calexico2] with backtrack 5. After I
->
-> dmesg | grep error
->
->  the only error message I get is this:
-> [   38.771895] ipw2200: probe of 0000:03:03.0 failed with error -5
->
-> From:
-> dmesg | grep ipw2200
-> [   38.628681] ipw2200: Intel(R) PRO/Wireless 2200/2915 Network Driver, 1.2.2kmprq
-> [   38.628687] ipw2200: Copyright(c) 2003-2006 Intel Corporation
-> [   38.628802] ipw2200 0000:03:03.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-> [   38.628832] ipw2200: Detected Intel PRO/Wireless 2915ABG Network Connection
-> [   38.771793] ipw2200: ipw2200-bss.fw request_firmware failed: Reason -2
--2 = ENOENT which means no such file or directory. Do you have
-ipw2200-bss.fw in /lib/firmware?
-What distro your'e using?
-> [   38.771800] ipw2200: Unable to load firmware: -2
-> [   38.771804] ipw2200: failed to register network device
-> [   38.771846] ipw2200 0000:03:03.0: PCI INT A disabled
-> [   38.771895] ipw2200: probe of 0000:03:03.0 failed with error -5
->
-> I searched the web, but no help there.... Any idea?
->
-> regards
-> Alex
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+From: Arend van Spriel <arend@broadcom.com>
 
-regards,
+There is no need to interrupt disable/enable functionality any
+longer due to BCMA usage assures the correct core is accessed
+in any context.
 
-marek
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |   27 ---------------------
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.h |    4 ---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c    |   26 --------------------
+ 3 files changed, 0 insertions(+), 57 deletions(-)
 
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+index 3a78f5f..86e33f9 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+@@ -818,33 +818,6 @@ void ai_detach(struct si_pub *sih)
+ 	kfree(sii);
+ }
+ 
+-/* register driver interrupt disabling and restoring callback functions */
+-void
+-ai_register_intr_callback(struct si_pub *sih, void *intrsoff_fn,
+-			  void *intrsrestore_fn,
+-			  void *intrsenabled_fn, void *intr_arg)
+-{
+-	struct si_info *sii;
+-
+-	sii = (struct si_info *)sih;
+-	sii->intr_arg = intr_arg;
+-	sii->intrsoff_fn = (u32 (*)(void *)) intrsoff_fn;
+-	sii->intrsrestore_fn = (void (*) (void *, u32)) intrsrestore_fn;
+-	sii->intrsenabled_fn = (bool (*)(void *)) intrsenabled_fn;
+-	/* save current core id.  when this function called, the current core
+-	 * must be the core which provides driver functions(il, et, wl, etc.)
+-	 */
+-	sii->dev_coreid = sii->coreid[sii->curidx];
+-}
+-
+-void ai_deregister_intr_callback(struct si_pub *sih)
+-{
+-	struct si_info *sii;
+-
+-	sii = (struct si_info *)sih;
+-	sii->intrsoff_fn = NULL;
+-}
+-
+ uint ai_coreid(struct si_pub *sih)
+ {
+ 	struct si_info *sii;
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
+index b0b0bff..8c51345 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
+@@ -238,10 +238,6 @@ extern void __iomem *ai_switch_core(struct si_pub *sih, uint coreid,
+ 				    uint *origidx, uint *intr_val);
+ extern void ai_restore_core(struct si_pub *sih, uint coreid, uint intr_val);
+ extern void ai_pci_setup(struct si_pub *sih, uint coremask);
+-extern void ai_register_intr_callback(struct si_pub *sih, void *intrsoff_fn,
+-				      void *intrsrestore_fn,
+-				      void *intrsenabled_fn, void *intr_arg);
+-extern void ai_deregister_intr_callback(struct si_pub *sih);
+ extern void ai_clkctl_init(struct si_pub *sih);
+ extern u16 ai_clkctl_fast_pwrup_delay(struct si_pub *sih);
+ extern bool ai_clkctl_cc(struct si_pub *sih, uint mode);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index d974809..1c75e2f 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -2370,27 +2370,6 @@ void brcms_c_intrson(struct brcms_c_info *wlc)
+ 	bcma_write32(wlc_hw->d11core, D11REGOFFS(macintmask), wlc->macintmask);
+ }
+ 
+-/*
+- * callback for siutils.c, which has only wlc handler, no wl they both check
+- * up, not only because there is no need to off/restore d11 interrupt but also
+- * because per-port code may require sync with valid interrupt.
+- */
+-static u32 brcms_c_wlintrsoff(struct brcms_c_info *wlc)
+-{
+-	if (!wlc->hw->up)
+-		return 0;
+-
+-	return brcms_intrsoff(wlc->wl);
+-}
+-
+-static void brcms_c_wlintrsrestore(struct brcms_c_info *wlc, u32 macintmask)
+-{
+-	if (!wlc->hw->up)
+-		return;
+-
+-	brcms_intrsrestore(wlc->wl, macintmask);
+-}
+-
+ u32 brcms_c_intrsoff(struct brcms_c_info *wlc)
+ {
+ 	struct brcms_hardware *wlc_hw = wlc->hw;
+@@ -4712,10 +4691,6 @@ static int brcms_b_attach(struct brcms_c_info *wlc, struct bcma_device *core,
+ 	/* Match driver "down" state */
+ 	ai_pci_down(wlc_hw->sih);
+ 
+-	/* register sb interrupt callback functions */
+-	ai_register_intr_callback(wlc_hw->sih, (void *)brcms_c_wlintrsoff,
+-				  (void *)brcms_c_wlintrsrestore, NULL, wlc);
+-
+ 	/* turn off pll and xtal to match driver "down" state */
+ 	brcms_b_xtal(wlc_hw, OFF);
+ 
+@@ -4986,7 +4961,6 @@ static int brcms_b_detach(struct brcms_c_info *wlc)
+ 		 * and per-port interrupt object may has been freed. this must
+ 		 * be done before sb core switch
+ 		 */
+-		ai_deregister_intr_callback(wlc_hw->sih);
+ 		ai_pci_sleep(wlc_hw->sih);
+ 	}
+ 
 -- 
-as simple and primitive as possible
--------------------------------------------------
-Marek Belisko - OPEN-NANDRA
-Freelance Developer
+1.7.5.4
 
-Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
-Tel: +421 915 052 184
-skype: marekwhite
-twitter: #opennandra
-web: http://open-nandra.com
+
