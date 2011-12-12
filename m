@@ -1,33 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:41737 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751913Ab1LUSKu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 13:10:50 -0500
-Message-ID: <4EF22117.7070803@openwrt.org> (sfid-20111221_191053_355266_C441B075)
-Date: Wed, 21 Dec 2011 19:10:31 +0100
-From: Gabor Juhos <juhosg@openwrt.org>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-CC: mcgrof@infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] initvals: use SHA1 for verifying initval arrays
-References: <1324470185-17886-1-git-send-email-juhosg@openwrt.org> <CAB=NE6WS6wasEEqFJ7RB7CMKYi=_RTjYJFRYLJc-_qq_-zJSuw@mail.gmail.com>
-In-Reply-To: <CAB=NE6WS6wasEEqFJ7RB7CMKYi=_RTjYJFRYLJc-_qq_-zJSuw@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from he.sipsolutions.net ([78.46.109.217]:56553 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105Ab1LLJG2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Dec 2011 04:06:28 -0500
+Subject: Re: [PATCH] cfg80211: Return beacon loss count in station
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Stewart <pstew@chromium.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20111209223131.71B17206F0@glenhelen.mtv.corp.google.com> (sfid-20111209_233139_912049_EC569042)
+References: <20111209223131.71B17206F0@glenhelen.mtv.corp.google.com>
+	 (sfid-20111209_233139_912049_EC569042)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 12 Dec 2011 10:06:25 +0100
+Message-ID: <1323680785.3442.9.camel@jlt3.sipsolutions.net> (sfid-20111212_100632_669387_9ADD3AE4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011.12.21. 18:02 keltezéssel, Luis R. Rodriguez írta:
-> In the future you may want to do this for patches with a patch in the
-> commit log:
-> 
-> $ cat csumtest.patch | awk '{print "\t"$0}'
-> 
-> As otherwise git will treat this as part of your patch.
+On Fri, 2011-12-09 at 11:01 -0800, Paul Stewart wrote:
+> If station info contains a beacon loss count, return
+> it to userspace.
 
-Ok, I will do that next time.
 
-> This is *really* *really* sexy, thanks, applied and pushed!
+> + * @NL80211_STA_INFO_BEACON_LOSS: count of times beacon loss was detected (u32)
 
-Thanks!
+Hmm, this is very vague. Are you sure it does what you think it does?
+Some drivers like wl12xx might not trigger the beacon loss function for
+every beacon, instead aggregating things. I implemented this in iwlwifi
+once and it would only tell mac80211 roughly every 20 beacons about
+missed ones...
 
--Gabor
+This should at least be documented, but I fear it makes the value rather
+useless in the general case.
+
+johannes
+
+
