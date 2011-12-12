@@ -1,71 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:55384 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753601Ab1LESOq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Dec 2011 13:14:46 -0500
-Received: by vcbfk14 with SMTP id fk14so4169401vcb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2011 10:14:46 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CALSq=BbAG_aJ=p10cHdmQVYTMpfdRwf6sTPEAaFrrrDJCmNW4Q@mail.gmail.com>
-References: <1320918297-1799-1-git-send-email-rmanohar@qca.qualcomm.com>
- <4EBBA1C4.3070007@openwrt.org> <4EBBF90A.2000808@openwrt.org> <CALSq=BbAG_aJ=p10cHdmQVYTMpfdRwf6sTPEAaFrrrDJCmNW4Q@mail.gmail.com>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Mon, 5 Dec 2011 10:14:25 -0800
-Message-ID: <CALSq=Bau2P5+==m9Se7XjuXqgPJNwBNeY04mS3d6ACdU3zRTkA@mail.gmail.com> (sfid-20111205_191450_286108_6E21CE7C)
-Subject: Fwd: [PATCH v2 4/4] ath9k_hw: Fix tx power settings for AR9003
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:4007 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753193Ab1LLOz0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Dec 2011 09:55:26 -0500
+Subject: Re: wifi iwlagn fails to authenticate after wake from suspend
+From: wwguy <wey-yi.w.guy@intel.com>
+To: =?ISO-8859-1?Q?Mat=EDas?= Aguirre <matiasaguirre@gmail.com>
+Cc: Gene Smith <gds@chartertn.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <CA+tb8OUHNbhVN_KiEkqXJW1apFoExRM5Vrn=ES5SF3sFoGOMfA@mail.gmail.com>
+References: <j881g5$tdf$1@dough.gmane.org>
+	 <alpine.DEB.2.00.1110252325090.20273@chino.kir.corp.google.com>
+	 <j8fvka$fu0$1@dough.gmane.org>
+	 <CA+tb8OUHNbhVN_KiEkqXJW1apFoExRM5Vrn=ES5SF3sFoGOMfA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 12 Dec 2011 06:48:42 -0800
+Message-ID: <1323701322.1806.24.camel@wwguy-ubuntu> (sfid-20111212_155544_177444_43D8DD9B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reiterating that the l-w filter is really dumb. It should selectively
-block PATCH mails (and not responses to them).
+On Sun, 2011-12-11 at 22:36 -0800, MatÃ­as Aguirre wrote:
+> Hi,
+> 
+> On Sat, Oct 29, 2011 at 2:32 AM, Gene Smith <gds@chartertn.net> wrote:
+> > David Rientjes wrote, On 10/26/2011 02:27 AM:
+> >> So we need to bisect between 2.4.38 and 3.0.0? :)  I'm running ubuntu
+> >> 11.10 on a home laptop so I'll give this a try as well when I can if I can
+> >> put up with unity for that long.
+> 
+> I've bisected the problem and narrowed the bug to changeset 73b78a2272
+> (http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=73b78a22720087d2d384bdd49e9c25500ba73edd).
+> 
+> Here's a patch, that applies against 3.2-rc5, that fixed the error for me:
+> 
+> diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c
+> b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> index bacc06c..01d5d38 100644
+> --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
+> +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+> @@ -1297,7 +1297,7 @@ int iwl_alive_start(struct iwl_priv *priv)
+>                                          BT_COEX_PRIO_TBL_EVT_INIT_CALIB2);
+>                 if (ret)
+>                         return ret;
+> -       } else {
+> +       } else if (priv->cfg->bt_params) {
+>                 /*
+>                  * default is 2-wire BT coexexistence support
+>                  */
+this is not right, you stop the bt coex for non-combo device.
+maybe you system has issue with BT, we seen this happen on some cases.
+try the following module parameter and see if help
 
-See below.
+$sudo modprobe iwlagn bt_coex_active=0
 
----------- Forwarded message ----------
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Mon, Dec 5, 2011 at 10:09 AM
-Subject: Re: [PATCH v2 4/4] ath9k_hw: Fix tx power settings for AR9003
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-linville@tuxdriver.com, linux-wireless@vger.kernel.org, Paul Stewart
-<pstew@google.com>, Adrian Chadd <adrian.chadd@gmail.com>
+Thanks
+Wey
 
-
-On Thu, Nov 10, 2011 at 8:17 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->>>
->>>  In the FCC rulings, only transmissions that are completely non-coherent, are
->>>  allowed to waive the array gain contribution to EIRP for multi-transmit configurations.
->>>  The use of 2-stream with 2 transmit and use of 3-steam with 3 transmit qualifies
->>>  for this spatial multiplexing MIMO classification as long as the streams are
->>>  directly mapped to each radio (not Walsh spread prior to splitting to multiple radios)
-
-
-Hi Rajkumar, Felix, etc.,
-
-There are 2 (or more) different power limits in play here. In
-particular, the transmit cards have a maximum power output (for
-example, 50 mW), and the local regulatory body has a maximum EIRP
-(say, 1 W for 2.4 GHz in US, maybe 200 mW, maybe 50 mW).
-
-I understand the comment above about the FCC regulations, but maybe we
-should only disable spreading if we're too close (within 3 dB for 2
-antennas, 4.77 dB for 3 antennas) to the regulatory limit?  In other
-words, we should compute the actual EIRP with and without spreading
-and ensure that the EIRP is over the local regulatory limits before we
-disable this feature.
-
-This calculation necessarily includes an estimation of the antenna
-gain; probably the 5 dBi 2.4 GHz and 2 dBi 5 GHz is good enough, we
-could be conservative if necessary. Note that we're already giving
-responsibility to the user in the event that she has hacked together
-an EIRP-requirement-violating directional antenna ;).
-
-[We should only bother if Walsh spreading helps performance. I think
-this is true because it enables each TX chain to transmit slightly
-more power and still meet transmit tolerances, but I might be wrong!]
-
-Thanks,
-Dan
