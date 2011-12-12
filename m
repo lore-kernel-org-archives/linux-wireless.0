@@ -1,159 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53891 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753930Ab1LMQWL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 11:22:11 -0500
-Subject: [PATCH] nl80211: accept testmode dump with netdev
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: "Hsu, Kenny" <kenny.hsu@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 13 Dec 2011 17:22:05 +0100
-Message-ID: <1323793325.3355.27.camel@jlt3.sipsolutions.net> (sfid-20111213_172216_641435_A7F9B851)
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:56653 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753739Ab1LLUGh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Dec 2011 15:06:37 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 6/6] ath9k: avoid retransmitting aggregation frames that a BAR was sent for
+Date: Mon, 12 Dec 2011 21:06:26 +0100
+Message-Id: <1323720386-46132-6-git-send-email-nbd@openwrt.org> (sfid-20111212_210640_357954_AEFE3570)
+In-Reply-To: <1323720386-46132-5-git-send-email-nbd@openwrt.org>
+References: <1323720386-46132-1-git-send-email-nbd@openwrt.org>
+ <1323720386-46132-2-git-send-email-nbd@openwrt.org>
+ <1323720386-46132-3-git-send-email-nbd@openwrt.org>
+ <1323720386-46132-4-git-send-email-nbd@openwrt.org>
+ <1323720386-46132-5-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The receiver will discard them anyway.
 
-All nl80211 commands that need only the wiphy
-still allow identifying it by giving an interface
-index, except, as Kenny pointed out, the testmode
-dump support.
-
-Fix this by looking up the wiphy via the ifidx in
-this case as well.
-
-Tested-by: Kenny Hsu <kenny.hsu@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- net/wireless/nl80211.c |   50 ++++++++++++++++++++++++++++++-------------------
- 1 file changed, 31 insertions(+), 19 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
+ drivers/net/wireless/ath/ath9k/xmit.c  |   27 ++++++++++++++++++++++++---
+ 2 files changed, 25 insertions(+), 3 deletions(-)
 
---- a/net/wireless/nl80211.c	2011-12-10 17:32:28.000000000 +0100
-+++ b/net/wireless/nl80211.c	2011-12-13 14:56:19.000000000 +0100
-@@ -47,22 +47,21 @@ static struct genl_family nl80211_fam =
- };
- 
- /* internal helper: get rdev and dev */
--static int get_rdev_dev_by_info_ifindex(struct genl_info *info,
--				       struct cfg80211_registered_device **rdev,
--				       struct net_device **dev)
-+static int get_rdev_dev_by_ifindex(struct net *netns, struct nlattr **attrs,
-+				   struct cfg80211_registered_device **rdev,
-+				   struct net_device **dev)
- {
--	struct nlattr **attrs = info->attrs;
- 	int ifindex;
- 
- 	if (!attrs[NL80211_ATTR_IFINDEX])
- 		return -EINVAL;
- 
- 	ifindex = nla_get_u32(attrs[NL80211_ATTR_IFINDEX]);
--	*dev = dev_get_by_index(genl_info_net(info), ifindex);
-+	*dev = dev_get_by_index(netns, ifindex);
- 	if (!*dev)
- 		return -ENODEV;
- 
--	*rdev = cfg80211_get_dev_from_ifindex(genl_info_net(info), ifindex);
-+	*rdev = cfg80211_get_dev_from_ifindex(netns, ifindex);
- 	if (IS_ERR(*rdev)) {
- 		dev_put(*dev);
- 		return PTR_ERR(*rdev);
-@@ -4795,7 +4794,7 @@ static int nl80211_testmode_do(struct sk
- static int nl80211_testmode_dump(struct sk_buff *skb,
- 				 struct netlink_callback *cb)
- {
--	struct cfg80211_registered_device *dev;
-+	struct cfg80211_registered_device *rdev;
- 	int err;
- 	long phy_idx;
- 	void *data = NULL;
-@@ -4813,9 +4812,21 @@ static int nl80211_testmode_dump(struct
- 				  nl80211_policy);
- 		if (err)
- 			return err;
--		if (!nl80211_fam.attrbuf[NL80211_ATTR_WIPHY])
--			return -EINVAL;
--		phy_idx = nla_get_u32(nl80211_fam.attrbuf[NL80211_ATTR_WIPHY]);
-+		if (nl80211_fam.attrbuf[NL80211_ATTR_WIPHY]) {
-+			phy_idx = nla_get_u32(
-+				nl80211_fam.attrbuf[NL80211_ATTR_WIPHY]);
-+		} else {
-+			struct net_device *netdev;
-+
-+			err = get_rdev_dev_by_ifindex(sock_net(skb->sk),
-+						      nl80211_fam.attrbuf,
-+						      &rdev, &netdev);
-+			if (err)
-+				return err;
-+			dev_put(netdev);
-+			phy_idx = rdev->wiphy_idx;
-+			cfg80211_unlock_rdev(rdev);
-+		}
- 		if (nl80211_fam.attrbuf[NL80211_ATTR_TESTDATA])
- 			cb->args[1] =
- 				(long)nl80211_fam.attrbuf[NL80211_ATTR_TESTDATA];
-@@ -4827,15 +4838,15 @@ static int nl80211_testmode_dump(struct
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 6beaff5..130e5db 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -241,6 +241,7 @@ struct ath_atx_tid {
+ 	struct ath_node *an;
+ 	struct ath_atx_ac *ac;
+ 	unsigned long tx_buf[BITS_TO_LONGS(ATH_TID_MAX_BUFS)];
++	int bar_index;
+ 	u16 seq_start;
+ 	u16 seq_next;
+ 	u16 baw_size;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 6303c0f..3473da3 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -206,6 +206,8 @@ static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 	while (tid->baw_head != tid->baw_tail && !test_bit(tid->baw_head, tid->tx_buf)) {
+ 		INCR(tid->seq_start, IEEE80211_SEQ_MAX);
+ 		INCR(tid->baw_head, ATH_TID_MAX_BUFS);
++		if (tid->bar_index >= 0)
++			tid->bar_index--;
  	}
- 
- 	mutex_lock(&cfg80211_mutex);
--	dev = cfg80211_rdev_by_wiphy_idx(phy_idx);
--	if (!dev) {
-+	rdev = cfg80211_rdev_by_wiphy_idx(phy_idx);
-+	if (!rdev) {
- 		mutex_unlock(&cfg80211_mutex);
- 		return -ENOENT;
- 	}
--	cfg80211_lock_rdev(dev);
-+	cfg80211_lock_rdev(rdev);
- 	mutex_unlock(&cfg80211_mutex);
- 
--	if (!dev->ops->testmode_dump) {
-+	if (!rdev->ops->testmode_dump) {
- 		err = -EOPNOTSUPP;
- 		goto out_err;
- 	}
-@@ -4846,7 +4857,7 @@ static int nl80211_testmode_dump(struct
- 					   NL80211_CMD_TESTMODE);
- 		struct nlattr *tmdata;
- 
--		if (nla_put_u32(skb, NL80211_ATTR_WIPHY, dev->wiphy_idx) < 0) {
-+		if (nla_put_u32(skb, NL80211_ATTR_WIPHY, phy_idx) < 0) {
- 			genlmsg_cancel(skb, hdr);
- 			break;
- 		}
-@@ -4856,8 +4867,8 @@ static int nl80211_testmode_dump(struct
- 			genlmsg_cancel(skb, hdr);
- 			break;
- 		}
--		err = dev->ops->testmode_dump(&dev->wiphy, skb, cb,
--					      data, data_len);
-+		err = rdev->ops->testmode_dump(&rdev->wiphy, skb, cb,
-+					       data, data_len);
- 		nla_nest_end(skb, tmdata);
- 
- 		if (err == -ENOBUFS || err == -ENOENT) {
-@@ -4875,7 +4886,7 @@ static int nl80211_testmode_dump(struct
- 	/* see above */
- 	cb->args[0] = phy_idx + 1;
-  out_err:
--	cfg80211_unlock_rdev(dev);
-+	cfg80211_unlock_rdev(rdev);
- 	return err;
  }
  
-@@ -6110,7 +6121,8 @@ static int nl80211_pre_doit(struct genl_
+@@ -263,6 +265,7 @@ static void ath_tid_drain(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 	tid->seq_next = tid->seq_start;
+ 	tid->baw_tail = tid->baw_head;
++	tid->bar_index = -1;
+ }
+ 
+ static void ath_tx_set_retry(struct ath_softc *sc, struct ath_txq *txq,
+@@ -551,8 +554,12 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		bf = bf_next;
+ 	}
+ 
+-	if (bar_index >= 0)
++	if (bar_index >= 0) {
++		u16 bar_seq = ATH_BA_INDEX2SEQ(seq_first, bar_index);
+ 		ath_send_bar(tid, ATH_BA_INDEX2SEQ(seq_first, bar_index + 1));
++		if (BAW_WITHIN(tid->seq_start, tid->baw_size, bar_seq))
++			tid->bar_index = ATH_BA_INDEX(tid->seq_start, bar_seq);
++	}
+ 
+ 	/* prepend un-acked frames to the beginning of the pending frame queue */
+ 	if (!skb_queue_empty(&bf_pending)) {
+@@ -779,8 +786,6 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 
+ 		bf->bf_state.bf_type = BUF_AMPDU | BUF_AGGR;
+ 		seqno = bf->bf_state.seqno;
+-		if (!bf_first)
+-			bf_first = bf;
+ 
+ 		/* do not step over block-ack window */
+ 		if (!BAW_WITHIN(tid->seq_start, tid->baw_size, seqno)) {
+@@ -788,6 +793,21 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 			break;
  		}
- 		info->user_ptr[0] = rdev;
- 	} else if (ops->internal_flags & NL80211_FLAG_NEED_NETDEV) {
--		err = get_rdev_dev_by_info_ifindex(info, &rdev, &dev);
-+		err = get_rdev_dev_by_ifindex(genl_info_net(info), info->attrs,
-+					      &rdev, &dev);
- 		if (err) {
- 			if (rtnl)
- 				rtnl_unlock();
-
+ 
++		if (tid->bar_index > ATH_BA_INDEX(tid->seq_start, seqno)) {
++			struct ath_tx_status ts = {};
++			struct list_head bf_head;
++
++			INIT_LIST_HEAD(&bf_head);
++			list_add(&bf->list, &bf_head);
++			__skb_unlink(skb, &tid->buf_q);
++			ath_tx_update_baw(sc, tid, seqno);
++			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0);
++			continue;
++		}
++
++		if (!bf_first)
++			bf_first = bf;
++
+ 		if (!rl) {
+ 			aggr_limit = ath_lookup_rate(sc, bf, tid);
+ 			rl = 1;
+@@ -1130,6 +1150,7 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
+ 	txtid->state |= AGGR_ADDBA_PROGRESS;
+ 	txtid->paused = true;
+ 	*ssn = txtid->seq_start = txtid->seq_next;
++	txtid->bar_index = -1;
+ 
+ 	memset(txtid->tx_buf, 0, sizeof(txtid->tx_buf));
+ 	txtid->baw_head = txtid->baw_tail = 0;
+-- 
+1.7.3.2
 
