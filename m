@@ -1,47 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:55777 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760426Ab1LPVp2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 16:45:28 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: zajec5@gmail.com, "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] b43: mark some vars __maybe_unused in b43_nphy_pmu_spur_avoid
-Date: Fri, 16 Dec 2011 16:33:34 -0500
-Message-Id: <1324071214-5432-1-git-send-email-linville@tuxdriver.com> (sfid-20111216_224532_496709_72C81FBC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:61794 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752234Ab1LLLnz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Dec 2011 06:43:55 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Mike McCormack <mikem@ring3k.org>
+Subject: [PATCH 1/2] rtlwifi: use work for lps
+Date: Mon, 12 Dec 2011 12:43:23 +0100
+Message-Id: <1323690204-5124-1-git-send-email-sgruszka@redhat.com> (sfid-20111212_124359_456417_91ADAFB0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoids this warning when CONFIG_B43_BCMA is not set:
+Leaving leisure power save mode can take some time, so it's better to
+perform that action in process context with interrupts enabled. This
+patch changes lps_leave tasklet to work.
 
-  CC [M]  drivers/net/wireless/b43/phy_n.o
-drivers/net/wireless/b43/phy_n.c: In function ‘b43_nphy_pmu_spur_avoid’:
-drivers/net/wireless/b43/phy_n.c:4052:6: warning: unused variable ‘pmu_ctl’
-drivers/net/wireless/b43/phy_n.c:4051:22: warning: unused variable ‘cc’
-
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Reported-by: Philipp Dreimann <philipp@dreimann.net>
+Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Mike McCormack <mikem@ring3k.org>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/b43/phy_n.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rtlwifi/pci.c  |   26 ++++++++++++++------------
+ drivers/net/wireless/rtlwifi/wifi.h |    3 ++-
+ 2 files changed, 16 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index c8fa2cd..f2435e7 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -4048,8 +4048,8 @@ int b43_phy_initn(struct b43_wldev *dev)
- /* http://bcm-v4.sipsolutions.net/802.11/PmuSpurAvoid */
- static void b43_nphy_pmu_spur_avoid(struct b43_wldev *dev, bool avoid)
- {
--	struct bcma_drv_cc *cc;
--	u32 pmu_ctl;
-+	struct bcma_drv_cc __maybe_unused *cc;
-+	u32 __maybe_unused pmu_ctl;
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index 91f0525..0d4d242 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -610,7 +610,7 @@ tx_status_ok:
+ 	if (((rtlpriv->link_info.num_rx_inperiod +
+ 		rtlpriv->link_info.num_tx_inperiod) > 8) ||
+ 		(rtlpriv->link_info.num_rx_inperiod > 2)) {
+-		tasklet_schedule(&rtlpriv->works.ips_leave_tasklet);
++		schedule_work(&rtlpriv->works.lps_leave_work);
+ 	}
+ }
  
- 	switch (dev->dev->bus_type) {
- #ifdef CONFIG_B43_BCMA
+@@ -736,7 +736,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+ 		if (((rtlpriv->link_info.num_rx_inperiod +
+ 			rtlpriv->link_info.num_tx_inperiod) > 8) ||
+ 			(rtlpriv->link_info.num_rx_inperiod > 2)) {
+-			tasklet_schedule(&rtlpriv->works.ips_leave_tasklet);
++			schedule_work(&rtlpriv->works.lps_leave_work);
+ 		}
+ 
+ 		dev_kfree_skb_any(skb);
+@@ -903,11 +903,6 @@ static void _rtl_pci_irq_tasklet(struct ieee80211_hw *hw)
+ 	_rtl_pci_tx_chk_waitq(hw);
+ }
+ 
+-static void _rtl_pci_ips_leave_tasklet(struct ieee80211_hw *hw)
+-{
+-	rtl_lps_leave(hw);
+-}
+-
+ static void _rtl_pci_prepare_bcn_tasklet(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+@@ -945,6 +940,15 @@ static void _rtl_pci_prepare_bcn_tasklet(struct ieee80211_hw *hw)
+ 	return;
+ }
+ 
++static void rtl_lps_leave_work_callback(struct work_struct *work)
++{
++	struct rtl_works *rtlworks =
++	    container_of(work, struct rtl_works, lps_leave_work);
++	struct ieee80211_hw *hw = rtlworks->hw;
++
++	rtl_lps_leave(hw);
++}
++
+ static void _rtl_pci_init_trx_var(struct ieee80211_hw *hw)
+ {
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+@@ -1006,9 +1010,7 @@ static void _rtl_pci_init_struct(struct ieee80211_hw *hw,
+ 	tasklet_init(&rtlpriv->works.irq_prepare_bcn_tasklet,
+ 		     (void (*)(unsigned long))_rtl_pci_prepare_bcn_tasklet,
+ 		     (unsigned long)hw);
+-	tasklet_init(&rtlpriv->works.ips_leave_tasklet,
+-		     (void (*)(unsigned long))_rtl_pci_ips_leave_tasklet,
+-		     (unsigned long)hw);
++	INIT_WORK(&rtlpriv->works.lps_leave_work, rtl_lps_leave_work_callback);
+ }
+ 
+ static int _rtl_pci_init_tx_ring(struct ieee80211_hw *hw,
+@@ -1478,7 +1480,7 @@ static void rtl_pci_deinit(struct ieee80211_hw *hw)
+ 
+ 	synchronize_irq(rtlpci->pdev->irq);
+ 	tasklet_kill(&rtlpriv->works.irq_tasklet);
+-	tasklet_kill(&rtlpriv->works.ips_leave_tasklet);
++	cancel_work_sync(&rtlpriv->works.lps_leave_work);
+ 
+ 	flush_workqueue(rtlpriv->works.rtl_wq);
+ 	destroy_workqueue(rtlpriv->works.rtl_wq);
+@@ -1553,7 +1555,7 @@ static void rtl_pci_stop(struct ieee80211_hw *hw)
+ 	set_hal_stop(rtlhal);
+ 
+ 	rtlpriv->cfg->ops->disable_interrupt(hw);
+-	tasklet_kill(&rtlpriv->works.ips_leave_tasklet);
++	cancel_work_sync(&rtlpriv->works.lps_leave_work);
+ 
+ 	spin_lock_irqsave(&rtlpriv->locks.rf_ps_lock, flags);
+ 	while (ppsc->rfchange_inprogress) {
+diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+index f3c132b..6e6353b 100644
+--- a/drivers/net/wireless/rtlwifi/wifi.h
++++ b/drivers/net/wireless/rtlwifi/wifi.h
+@@ -1576,7 +1576,8 @@ struct rtl_works {
+ 	/* For SW LPS */
+ 	struct delayed_work ps_work;
+ 	struct delayed_work ps_rfon_wq;
+-	struct tasklet_struct ips_leave_tasklet;
++
++	struct work_struct lps_leave_work;
+ };
+ 
+ struct rtl_debug {
 -- 
-1.7.4.4
+1.7.1
 
