@@ -1,83 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:61187 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751088Ab1LKJYI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Dec 2011 04:24:08 -0500
-MIME-Version: 1.0
-In-Reply-To: <1322555472.4110.8.camel@jlt3.sipsolutions.net>
-References: <20111125122143.GA30404@gamma.logic.tuwien.ac.at>
-	<CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com>
-	<20111125123720.GA31564@gamma.logic.tuwien.ac.at>
-	<CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com>
-	<CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com>
-	<1322387175.4044.16.camel@jlt3.sipsolutions.net>
-	<CANUX_P3uoNOj3j-REvYCZP382cHfq+DpBRi7fnzFfMG_dyHtTQ@mail.gmail.com>
-	<20111128035627.GH1422@gamma.logic.tuwien.ac.at>
-	<CANUX_P2kYiFCP8uAhLZC_kVEjoyxabRBx3Pn+ndtFus=6hJN7Q@mail.gmail.com>
-	<20111128042343.GA4619@gamma.logic.tuwien.ac.at>
-	<20111128232525.GA12719@gamma.logic.tuwien.ac.at>
-	<CANUX_P2b_ZYr4hHigA+tGa9uakcq3hQXnOiP5isQtfcYxCaxcw@mail.gmail.com>
-	<1322555472.4110.8.camel@jlt3.sipsolutions.net>
-Date: Sun, 11 Dec 2011 11:24:06 +0200
-Message-ID: <CANUX_P2YeE1ixzFU5VM-oex0aTURqr54VHt5FVAL9BJ0PuRX_A@mail.gmail.com> (sfid-20111211_102420_475912_B1B58ECC)
-Subject: Re: iwlagn is getting very shaky
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Norbert Preining <preining@logic.at>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dave Jones <davej@redhat.com>,
-	David Rientjes <rientjes@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from nbd.name ([46.4.11.11]:56660 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753963Ab1LLUGq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Dec 2011 15:06:46 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 1/6] ath9k: change maximum software retransmission handling
+Date: Mon, 12 Dec 2011 21:06:21 +0100
+Message-Id: <1323720386-46132-1-git-send-email-nbd@openwrt.org> (sfid-20111212_210649_767111_3D5477C6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> > Intersperesed I see some other messages that are new to me:
->> > [ 4019.443129] Open BA session requested for 00:0a:79:eb:56:10 tid 0
->> > [ 4019.500149] activated addBA response timer on tid 0
->> > [ 4020.500033] addBA response timer expired on tid 0
->
-> I guess the delay here is due to the synchronize_net()? That can take a
-> while, 57ms seems a lot but I suppose it's possible.
->
->> > [ 4020.501626] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 0
->> > [ 4023.740570] switched off addBA timer for tid 0
->> > [ 4023.740578] got addBA resp for tid 0 but we already gave up
->>
->> Here is the AP is finally replying
->
-> It's kinda hard to believe that the AP took 4 seconds (!) to reply to
-> the frame. Where could the frame get stuck? I don't see any other work
-> processing happening etc. either. It's also curious that in those 3
-> seconds between these messages, we didn't actually get around to
-> stopping the session, that only happens just after:
->
+Instead of limiting a subframe to 10 A-MPDU software transmission attempts,
+count hardware retransmissions as well and raise the limit a bit. That way
+there will be fewer software retransmission attempts when traffic suffers
+from lots of hardware retransmissions.
 
-<snip>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/ath9k.h |    2 +-
+ drivers/net/wireless/ath/ath9k/xmit.c  |   15 ++++++++++++---
+ 2 files changed, 13 insertions(+), 4 deletions(-)
 
->
->
-> Could something be hogging the workqueues?
->
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index afc156a..fa6c905 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -542,7 +542,7 @@ struct ath_ant_comb {
+ #define DEFAULT_CACHELINE       32
+ #define ATH_REGCLASSIDS_MAX     10
+ #define ATH_CABQ_READY_TIME     80      /* % of beacon interval */
+-#define ATH_MAX_SW_RETRIES      10
++#define ATH_MAX_SW_RETRIES      30
+ #define ATH_CHAN_MAX            255
+ 
+ #define ATH_TXPOWER_MAX         100     /* .5 dBm units */
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 9e65c31..a46b4e2 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -264,14 +264,17 @@ static void ath_tid_drain(struct ath_softc *sc, struct ath_txq *txq,
+ }
+ 
+ static void ath_tx_set_retry(struct ath_softc *sc, struct ath_txq *txq,
+-			     struct sk_buff *skb)
++			     struct sk_buff *skb, int count)
+ {
+ 	struct ath_frame_info *fi = get_frame_info(skb);
+ 	struct ath_buf *bf = fi->bf;
+ 	struct ieee80211_hdr *hdr;
++	int prev = fi->retries;
+ 
+ 	TX_STAT_INC(txq->axq_qnum, a_retries);
+-	if (fi->retries++ > 0)
++	fi->retries += count;
++
++	if (prev > 0)
+ 		return;
+ 
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+@@ -379,6 +382,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	int nframes;
+ 	u8 tidno;
+ 	bool flush = !!(ts->ts_status & ATH9K_TX_FLUSH);
++	int i, retries;
+ 
+ 	skb = bf->bf_mpdu;
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+@@ -387,6 +391,10 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 	memcpy(rates, tx_info->control.rates, sizeof(rates));
+ 
++	retries = ts->ts_longretry + 1;
++	for (i = 0; i < ts->ts_rateindex; i++)
++		retries += rates[i].count;
++
+ 	rcu_read_lock();
+ 
+ 	sta = ieee80211_find_sta_by_ifaddr(hw, hdr->addr1, hdr->addr2);
+@@ -471,7 +479,8 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 				txpending = 1;
+ 			} else if (fi->retries < ATH_MAX_SW_RETRIES) {
+ 				if (txok || !an->sleeping)
+-					ath_tx_set_retry(sc, txq, bf->bf_mpdu);
++					ath_tx_set_retry(sc, txq, bf->bf_mpdu,
++							 retries);
+ 
+ 				txpending = 1;
+ 			} else {
+-- 
+1.7.3.2
 
-
-So I tried to understand what is going on with the workqueue and ended
-up to see that if we are lucky, we can need the workqueue for the BA
-handshake (could be AddBA / DelBA handling, or driver callback) while
-we are scanning. Which basically means that we will need to wait until
-the scan is over to handle these frames / callbacks. I got these
-measurements while stopping the BA session:
-
-* scanning working for roughly 3 seconds (pardon me not being precise,
-but with this order of magnitude I don't care much about the single
-millisecond..)
-* when scanning is over, the while loop in ieee80211_iface_work
-consumes 73 mgmt for about 34ms.
-( how come we have so many beacons during those 3 seconds..., or maybe
-all the BCAST probe request ?, my network is quite busy...)
-* then the finally my stop_tx_ba_cb was served which took 10ms (time
-takes by the driver).
-* another series of beacons (10ms).
