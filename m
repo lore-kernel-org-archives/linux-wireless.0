@@ -1,447 +1,272 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:36082 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751298Ab1LQM4d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Dec 2011 07:56:33 -0500
-Received: by eekc4 with SMTP id c4so4011135eek.19
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Dec 2011 04:56:32 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/8] b43: N-PHY: reorder functions: collect radio ones
-Date: Sat, 17 Dec 2011 13:57:21 +0100
-Message-Id: <1324126647-22425-3-git-send-email-zajec5@gmail.com> (sfid-20111217_135636_978273_0ECADE78)
-In-Reply-To: <1324126647-22425-1-git-send-email-zajec5@gmail.com>
-References: <1324126647-22425-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:56661 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753998Ab1LLUGr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Dec 2011 15:06:47 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 5/6] ath9k: simplify tx locking
+Date: Mon, 12 Dec 2011 21:06:25 +0100
+Message-Id: <1323720386-46132-5-git-send-email-nbd@openwrt.org> (sfid-20111212_210651_688777_760093DE)
+In-Reply-To: <1323720386-46132-4-git-send-email-nbd@openwrt.org>
+References: <1323720386-46132-1-git-send-email-nbd@openwrt.org>
+ <1323720386-46132-2-git-send-email-nbd@openwrt.org>
+ <1323720386-46132-3-git-send-email-nbd@openwrt.org>
+ <1323720386-46132-4-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Instead of releasing and taking back the lock over and over again in the
+tx path, hold the lock a bit longer, requiring much fewer lock/unlock pairs.
+This makes locking much easier to review and should not have any noticeable
+performance/latency impact.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/b43/phy_n.c |  388 +++++++++++++++++++-------------------
- 1 files changed, 198 insertions(+), 190 deletions(-)
+ drivers/net/wireless/ath/ath9k/xmit.c |   50 ++++++---------------------------
+ 1 files changed, 9 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 1ede258..29ab432 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -414,60 +414,9 @@ static void b43_nphy_set_rf_sequence(struct b43_wldev *dev, u8 cmd,
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 8f38efb..6303c0f 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -169,13 +169,11 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ 	INIT_LIST_HEAD(&bf_head);
+ 
+ 	memset(&ts, 0, sizeof(ts));
+-	spin_lock_bh(&txq->axq_lock);
+ 
+ 	while ((skb = __skb_dequeue(&tid->buf_q))) {
+ 		fi = get_frame_info(skb);
+ 		bf = fi->bf;
+ 
+-		spin_unlock_bh(&txq->axq_lock);
+ 		if (bf && fi->retries) {
+ 			list_add_tail(&bf->list, &bf_head);
+ 			ath_tx_update_baw(sc, tid, bf->bf_state.seqno);
+@@ -184,7 +182,6 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ 		} else {
+ 			ath_tx_send_normal(sc, txq, NULL, skb);
+ 		}
+-		spin_lock_bh(&txq->axq_lock);
+ 	}
+ 
+ 	if (tid->baw_head == tid->baw_tail) {
+@@ -192,8 +189,6 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ 		tid->state &= ~AGGR_CLEANUP;
+ 	}
+ 
+-	spin_unlock_bh(&txq->axq_lock);
+-
+ 	if (sendbar)
+ 		ath_send_bar(tid, tid->seq_start);
+ }
+@@ -254,9 +249,7 @@ static void ath_tid_drain(struct ath_softc *sc, struct ath_txq *txq,
+ 		bf = fi->bf;
+ 
+ 		if (!bf) {
+-			spin_unlock(&txq->axq_lock);
+ 			ath_tx_complete(sc, skb, ATH_TX_ERROR, txq);
+-			spin_lock(&txq->axq_lock);
+ 			continue;
+ 		}
+ 
+@@ -265,9 +258,7 @@ static void ath_tid_drain(struct ath_softc *sc, struct ath_txq *txq,
+ 		if (fi->retries)
+ 			ath_tx_update_baw(sc, tid, bf->bf_state.seqno);
+ 
+-		spin_unlock(&txq->axq_lock);
+ 		ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0);
+-		spin_lock(&txq->axq_lock);
+ 	}
+ 
+ 	tid->seq_next = tid->seq_start;
+@@ -515,9 +506,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 			 * complete the acked-ones/xretried ones; update
+ 			 * block-ack window
+ 			 */
+-			spin_lock_bh(&txq->axq_lock);
+ 			ath_tx_update_baw(sc, tid, seqno);
+-			spin_unlock_bh(&txq->axq_lock);
+ 
+ 			if (rc_update && (acked_cnt == 1 || txfail_cnt == 1)) {
+ 				memcpy(tx_info->control.rates, rates, sizeof(rates));
+@@ -540,9 +529,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 				 * run out of tx buf.
+ 				 */
+ 				if (!tbf) {
+-					spin_lock_bh(&txq->axq_lock);
+ 					ath_tx_update_baw(sc, tid, seqno);
+-					spin_unlock_bh(&txq->axq_lock);
+ 
+ 					ath_tx_complete_buf(sc, bf, txq,
+ 							    &bf_head, ts, 0);
+@@ -572,7 +559,6 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		if (an->sleeping)
+ 			ieee80211_sta_set_buffered(sta, tid->tidno, true);
+ 
+-		spin_lock_bh(&txq->axq_lock);
+ 		skb_queue_splice(&bf_pending, &tid->buf_q);
+ 		if (!an->sleeping) {
+ 			ath_tx_queue_tid(txq, tid);
+@@ -580,7 +566,6 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 			if (ts->ts_status & ATH9K_TXERR_FILT)
+ 				tid->ac->clear_ps_filter = true;
+ 		}
+-		spin_unlock_bh(&txq->axq_lock);
+ 	}
+ 
+ 	if (tid->state & AGGR_CLEANUP)
+@@ -1179,9 +1164,9 @@ void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
+ 		txtid->state |= AGGR_CLEANUP;
+ 	else
+ 		txtid->state &= ~AGGR_ADDBA_COMPLETE;
+-	spin_unlock_bh(&txq->axq_lock);
+ 
+ 	ath_tx_flush_tid(sc, txtid);
++	spin_unlock_bh(&txq->axq_lock);
  }
  
- /**************************************************
-- * Others
-+ * Radio 0x2056
-  **************************************************/
+ void ath_tx_aggr_sleep(struct ieee80211_sta *sta, struct ath_softc *sc,
+@@ -1423,8 +1408,6 @@ static bool bf_is_ampdu_not_probing(struct ath_buf *bf)
  
--void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
--{//TODO
--}
--
--static void b43_nphy_op_adjust_txpower(struct b43_wldev *dev)
--{//TODO
--}
--
--static enum b43_txpwr_result b43_nphy_op_recalc_txpower(struct b43_wldev *dev,
--							bool ignore_tssi)
--{//TODO
--	return B43_TXPWR_RES_DONE;
--}
--
--static void b43_chantab_radio_upload(struct b43_wldev *dev,
--				const struct b43_nphy_channeltab_entry_rev2 *e)
--{
--	b43_radio_write(dev, B2055_PLL_REF, e->radio_pll_ref);
--	b43_radio_write(dev, B2055_RF_PLLMOD0, e->radio_rf_pllmod0);
--	b43_radio_write(dev, B2055_RF_PLLMOD1, e->radio_rf_pllmod1);
--	b43_radio_write(dev, B2055_VCO_CAPTAIL, e->radio_vco_captail);
--	b43_read32(dev, B43_MMIO_MACCTL); /* flush writes */
--
--	b43_radio_write(dev, B2055_VCO_CAL1, e->radio_vco_cal1);
--	b43_radio_write(dev, B2055_VCO_CAL2, e->radio_vco_cal2);
--	b43_radio_write(dev, B2055_PLL_LFC1, e->radio_pll_lfc1);
--	b43_radio_write(dev, B2055_PLL_LFR1, e->radio_pll_lfr1);
--	b43_read32(dev, B43_MMIO_MACCTL); /* flush writes */
--
--	b43_radio_write(dev, B2055_PLL_LFC2, e->radio_pll_lfc2);
--	b43_radio_write(dev, B2055_LGBUF_CENBUF, e->radio_lgbuf_cenbuf);
--	b43_radio_write(dev, B2055_LGEN_TUNE1, e->radio_lgen_tune1);
--	b43_radio_write(dev, B2055_LGEN_TUNE2, e->radio_lgen_tune2);
--	b43_read32(dev, B43_MMIO_MACCTL); /* flush writes */
--
--	b43_radio_write(dev, B2055_C1_LGBUF_ATUNE, e->radio_c1_lgbuf_atune);
--	b43_radio_write(dev, B2055_C1_LGBUF_GTUNE, e->radio_c1_lgbuf_gtune);
--	b43_radio_write(dev, B2055_C1_RX_RFR1, e->radio_c1_rx_rfr1);
--	b43_radio_write(dev, B2055_C1_TX_PGAPADTN, e->radio_c1_tx_pgapadtn);
--	b43_read32(dev, B43_MMIO_MACCTL); /* flush writes */
--
--	b43_radio_write(dev, B2055_C1_TX_MXBGTRIM, e->radio_c1_tx_mxbgtrim);
--	b43_radio_write(dev, B2055_C2_LGBUF_ATUNE, e->radio_c2_lgbuf_atune);
--	b43_radio_write(dev, B2055_C2_LGBUF_GTUNE, e->radio_c2_lgbuf_gtune);
--	b43_radio_write(dev, B2055_C2_RX_RFR1, e->radio_c2_rx_rfr1);
--	b43_read32(dev, B43_MMIO_MACCTL); /* flush writes */
--
--	b43_radio_write(dev, B2055_C2_TX_PGAPADTN, e->radio_c2_tx_pgapadtn);
--	b43_radio_write(dev, B2055_C2_TX_MXBGTRIM, e->radio_c2_tx_mxbgtrim);
--}
--
- static void b43_chantab_radio_2056_upload(struct b43_wldev *dev,
- 				const struct b43_nphy_channeltab_entry_rev3 *e)
+ static void ath_drain_txq_list(struct ath_softc *sc, struct ath_txq *txq,
+ 			       struct list_head *list, bool retry_tx)
+-	__releases(txq->axq_lock)
+-	__acquires(txq->axq_lock)
  {
-@@ -649,6 +598,203 @@ static void b43_radio_2056_setup(struct b43_wldev *dev,
- 	udelay(300);
- }
+ 	struct ath_buf *bf, *lastbf;
+ 	struct list_head bf_head;
+@@ -1451,13 +1434,11 @@ static void ath_drain_txq_list(struct ath_softc *sc, struct ath_txq *txq,
+ 		if (bf_is_ampdu_not_probing(bf))
+ 			txq->axq_ampdu_depth--;
  
-+static void b43_radio_init2056_pre(struct b43_wldev *dev)
-+{
-+	b43_phy_mask(dev, B43_NPHY_RFCTL_CMD,
-+		     ~B43_NPHY_RFCTL_CMD_CHIP0PU);
-+	/* Maybe wl meant to reset and set (order?) RFCTL_CMD_OEPORFORCE? */
-+	b43_phy_mask(dev, B43_NPHY_RFCTL_CMD,
-+		     B43_NPHY_RFCTL_CMD_OEPORFORCE);
-+	b43_phy_set(dev, B43_NPHY_RFCTL_CMD,
-+		    ~B43_NPHY_RFCTL_CMD_OEPORFORCE);
-+	b43_phy_set(dev, B43_NPHY_RFCTL_CMD,
-+		    B43_NPHY_RFCTL_CMD_CHIP0PU);
-+}
-+
-+static void b43_radio_init2056_post(struct b43_wldev *dev)
-+{
-+	b43_radio_set(dev, B2056_SYN_COM_CTRL, 0xB);
-+	b43_radio_set(dev, B2056_SYN_COM_PU, 0x2);
-+	b43_radio_set(dev, B2056_SYN_COM_RESET, 0x2);
-+	msleep(1);
-+	b43_radio_mask(dev, B2056_SYN_COM_RESET, ~0x2);
-+	b43_radio_mask(dev, B2056_SYN_PLL_MAST2, ~0xFC);
-+	b43_radio_mask(dev, B2056_SYN_RCCAL_CTRL0, ~0x1);
-+	/*
-+	if (nphy->init_por)
-+		Call Radio 2056 Recalibrate
-+	*/
-+}
-+
-+/*
-+ * Initialize a Broadcom 2056 N-radio
-+ * http://bcm-v4.sipsolutions.net/802.11/Radio/2056/Init
-+ */
-+static void b43_radio_init2056(struct b43_wldev *dev)
-+{
-+	b43_radio_init2056_pre(dev);
-+	b2056_upload_inittabs(dev, 0, 0);
-+	b43_radio_init2056_post(dev);
-+}
-+
-+/**************************************************
-+ * Radio 0x2055
-+ **************************************************/
-+
-+static void b43_chantab_radio_upload(struct b43_wldev *dev,
-+				const struct b43_nphy_channeltab_entry_rev2 *e)
-+{
-+	b43_radio_write(dev, B2055_PLL_REF, e->radio_pll_ref);
-+	b43_radio_write(dev, B2055_RF_PLLMOD0, e->radio_rf_pllmod0);
-+	b43_radio_write(dev, B2055_RF_PLLMOD1, e->radio_rf_pllmod1);
-+	b43_radio_write(dev, B2055_VCO_CAPTAIL, e->radio_vco_captail);
-+	b43_read32(dev, B43_MMIO_MACCTL); /* flush writes */
-+
-+	b43_radio_write(dev, B2055_VCO_CAL1, e->radio_vco_cal1);
-+	b43_radio_write(dev, B2055_VCO_CAL2, e->radio_vco_cal2);
-+	b43_radio_write(dev, B2055_PLL_LFC1, e->radio_pll_lfc1);
-+	b43_radio_write(dev, B2055_PLL_LFR1, e->radio_pll_lfr1);
-+	b43_read32(dev, B43_MMIO_MACCTL); /* flush writes */
-+
-+	b43_radio_write(dev, B2055_PLL_LFC2, e->radio_pll_lfc2);
-+	b43_radio_write(dev, B2055_LGBUF_CENBUF, e->radio_lgbuf_cenbuf);
-+	b43_radio_write(dev, B2055_LGEN_TUNE1, e->radio_lgen_tune1);
-+	b43_radio_write(dev, B2055_LGEN_TUNE2, e->radio_lgen_tune2);
-+	b43_read32(dev, B43_MMIO_MACCTL); /* flush writes */
-+
-+	b43_radio_write(dev, B2055_C1_LGBUF_ATUNE, e->radio_c1_lgbuf_atune);
-+	b43_radio_write(dev, B2055_C1_LGBUF_GTUNE, e->radio_c1_lgbuf_gtune);
-+	b43_radio_write(dev, B2055_C1_RX_RFR1, e->radio_c1_rx_rfr1);
-+	b43_radio_write(dev, B2055_C1_TX_PGAPADTN, e->radio_c1_tx_pgapadtn);
-+	b43_read32(dev, B43_MMIO_MACCTL); /* flush writes */
-+
-+	b43_radio_write(dev, B2055_C1_TX_MXBGTRIM, e->radio_c1_tx_mxbgtrim);
-+	b43_radio_write(dev, B2055_C2_LGBUF_ATUNE, e->radio_c2_lgbuf_atune);
-+	b43_radio_write(dev, B2055_C2_LGBUF_GTUNE, e->radio_c2_lgbuf_gtune);
-+	b43_radio_write(dev, B2055_C2_RX_RFR1, e->radio_c2_rx_rfr1);
-+	b43_read32(dev, B43_MMIO_MACCTL); /* flush writes */
-+
-+	b43_radio_write(dev, B2055_C2_TX_PGAPADTN, e->radio_c2_tx_pgapadtn);
-+	b43_radio_write(dev, B2055_C2_TX_MXBGTRIM, e->radio_c2_tx_mxbgtrim);
-+}
-+
-+/* http://bcm-v4.sipsolutions.net/802.11/PHY/Radio/2055Setup */
-+static void b43_radio_2055_setup(struct b43_wldev *dev,
-+				const struct b43_nphy_channeltab_entry_rev2 *e)
-+{
-+	B43_WARN_ON(dev->phy.rev >= 3);
-+
-+	b43_chantab_radio_upload(dev, e);
-+	udelay(50);
-+	b43_radio_write(dev, B2055_VCO_CAL10, 0x05);
-+	b43_radio_write(dev, B2055_VCO_CAL10, 0x45);
-+	b43_read32(dev, B43_MMIO_MACCTL); /* flush writes */
-+	b43_radio_write(dev, B2055_VCO_CAL10, 0x65);
-+	udelay(300);
-+}
-+
-+static void b43_radio_init2055_pre(struct b43_wldev *dev)
-+{
-+	b43_phy_mask(dev, B43_NPHY_RFCTL_CMD,
-+		     ~B43_NPHY_RFCTL_CMD_PORFORCE);
-+	b43_phy_set(dev, B43_NPHY_RFCTL_CMD,
-+		    B43_NPHY_RFCTL_CMD_CHIP0PU |
-+		    B43_NPHY_RFCTL_CMD_OEPORFORCE);
-+	b43_phy_set(dev, B43_NPHY_RFCTL_CMD,
-+		    B43_NPHY_RFCTL_CMD_PORFORCE);
-+}
-+
-+static void b43_radio_init2055_post(struct b43_wldev *dev)
-+{
-+	struct b43_phy_n *nphy = dev->phy.n;
-+	struct ssb_sprom *sprom = dev->dev->bus_sprom;
-+	int i;
-+	u16 val;
-+	bool workaround = false;
-+
-+	if (sprom->revision < 4)
-+		workaround = (dev->dev->board_vendor != PCI_VENDOR_ID_BROADCOM
-+			      && dev->dev->board_type == 0x46D
-+			      && dev->dev->board_rev >= 0x41);
-+	else
-+		workaround =
-+			!(sprom->boardflags2_lo & B43_BFL2_RXBB_INT_REG_DIS);
-+
-+	b43_radio_mask(dev, B2055_MASTER1, 0xFFF3);
-+	if (workaround) {
-+		b43_radio_mask(dev, B2055_C1_RX_BB_REG, 0x7F);
-+		b43_radio_mask(dev, B2055_C2_RX_BB_REG, 0x7F);
-+	}
-+	b43_radio_maskset(dev, B2055_RRCCAL_NOPTSEL, 0xFFC0, 0x2C);
-+	b43_radio_write(dev, B2055_CAL_MISC, 0x3C);
-+	b43_radio_mask(dev, B2055_CAL_MISC, 0xFFBE);
-+	b43_radio_set(dev, B2055_CAL_LPOCTL, 0x80);
-+	b43_radio_set(dev, B2055_CAL_MISC, 0x1);
-+	msleep(1);
-+	b43_radio_set(dev, B2055_CAL_MISC, 0x40);
-+	for (i = 0; i < 200; i++) {
-+		val = b43_radio_read(dev, B2055_CAL_COUT2);
-+		if (val & 0x80) {
-+			i = 0;
-+			break;
-+		}
-+		udelay(10);
-+	}
-+	if (i)
-+		b43err(dev->wl, "radio post init timeout\n");
-+	b43_radio_mask(dev, B2055_CAL_LPOCTL, 0xFF7F);
-+	b43_switch_channel(dev, dev->phy.channel);
-+	b43_radio_write(dev, B2055_C1_RX_BB_LPF, 0x9);
-+	b43_radio_write(dev, B2055_C2_RX_BB_LPF, 0x9);
-+	b43_radio_write(dev, B2055_C1_RX_BB_MIDACHP, 0x83);
-+	b43_radio_write(dev, B2055_C2_RX_BB_MIDACHP, 0x83);
-+	b43_radio_maskset(dev, B2055_C1_LNA_GAINBST, 0xFFF8, 0x6);
-+	b43_radio_maskset(dev, B2055_C2_LNA_GAINBST, 0xFFF8, 0x6);
-+	if (!nphy->gain_boost) {
-+		b43_radio_set(dev, B2055_C1_RX_RFSPC1, 0x2);
-+		b43_radio_set(dev, B2055_C2_RX_RFSPC1, 0x2);
-+	} else {
-+		b43_radio_mask(dev, B2055_C1_RX_RFSPC1, 0xFFFD);
-+		b43_radio_mask(dev, B2055_C2_RX_RFSPC1, 0xFFFD);
-+	}
-+	udelay(2);
-+}
-+
-+/*
-+ * Initialize a Broadcom 2055 N-radio
-+ * http://bcm-v4.sipsolutions.net/802.11/Radio/2055/Init
-+ */
-+static void b43_radio_init2055(struct b43_wldev *dev)
-+{
-+	b43_radio_init2055_pre(dev);
-+	if (b43_status(dev) < B43_STAT_INITIALIZED) {
-+		/* Follow wl, not specs. Do not force uploading all regs */
-+		b2055_upload_inittab(dev, 0, 0);
-+	} else {
-+		bool ghz5 = b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ;
-+		b2055_upload_inittab(dev, ghz5, 0);
-+	}
-+	b43_radio_init2055_post(dev);
-+}
-+
-+/**************************************************
-+ * Others
-+ **************************************************/
-+
-+void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
-+{//TODO
-+}
-+
-+static void b43_nphy_op_adjust_txpower(struct b43_wldev *dev)
-+{//TODO
-+}
-+
-+static enum b43_txpwr_result b43_nphy_op_recalc_txpower(struct b43_wldev *dev,
-+							bool ignore_tssi)
-+{//TODO
-+	return B43_TXPWR_RES_DONE;
-+}
-+
- static void b43_chantab_phy_upload(struct b43_wldev *dev,
- 				   const struct b43_phy_n_sfo_cfg *e)
- {
-@@ -952,144 +1098,6 @@ static void b43_nphy_tx_gain_table_upload(struct b43_wldev *dev)
+-		spin_unlock_bh(&txq->axq_lock);
+ 		if (bf_isampdu(bf))
+ 			ath_tx_complete_aggr(sc, txq, bf, &bf_head, &ts, 0,
+ 					     retry_tx);
+ 		else
+ 			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0);
+-		spin_lock_bh(&txq->axq_lock);
  	}
  }
  
--/* http://bcm-v4.sipsolutions.net/802.11/PHY/Radio/2055Setup */
--static void b43_radio_2055_setup(struct b43_wldev *dev,
--				const struct b43_nphy_channeltab_entry_rev2 *e)
--{
--	B43_WARN_ON(dev->phy.rev >= 3);
+@@ -1836,7 +1817,6 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct sk_buff *skb,
+ 	struct ath_buf *bf;
+ 	u8 tidno;
+ 
+-	spin_lock_bh(&txctl->txq->axq_lock);
+ 	if ((sc->sc_flags & SC_OP_TXAGGR) && txctl->an &&
+ 		ieee80211_is_data_qos(hdr->frame_control)) {
+ 		tidno = ieee80211_get_qos_ctl(hdr)[0] &
+@@ -1855,7 +1835,7 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct sk_buff *skb,
+ 	} else {
+ 		bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb);
+ 		if (!bf)
+-			goto out;
++			return;
+ 
+ 		bf->bf_state.bfs_paprd = txctl->paprd;
+ 
+@@ -1864,9 +1844,6 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct sk_buff *skb,
+ 
+ 		ath_tx_send_normal(sc, txctl->txq, tid, skb);
+ 	}
 -
--	b43_chantab_radio_upload(dev, e);
--	udelay(50);
--	b43_radio_write(dev, B2055_VCO_CAL10, 0x05);
--	b43_radio_write(dev, B2055_VCO_CAL10, 0x45);
--	b43_read32(dev, B43_MMIO_MACCTL); /* flush writes */
--	b43_radio_write(dev, B2055_VCO_CAL10, 0x65);
--	udelay(300);
--}
+-out:
+-	spin_unlock_bh(&txctl->txq->axq_lock);
+ }
+ 
+ /* Upon failure caller should free skb */
+@@ -1933,9 +1910,11 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
+ 		ieee80211_stop_queue(sc->hw, q);
+ 		txq->stopped = 1;
+ 	}
+-	spin_unlock_bh(&txq->axq_lock);
+ 
+ 	ath_tx_start_dma(sc, skb, txctl);
++
++	spin_unlock_bh(&txq->axq_lock);
++
+ 	return 0;
+ }
+ 
+@@ -1981,7 +1960,6 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 
+ 	q = skb_get_queue_mapping(skb);
+ 	if (txq == sc->tx.txq_map[q]) {
+-		spin_lock_bh(&txq->axq_lock);
+ 		if (WARN_ON(--txq->pending_frames < 0))
+ 			txq->pending_frames = 0;
+ 
+@@ -1989,7 +1967,6 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 			ieee80211_wake_queue(sc->hw, q);
+ 			txq->stopped = 0;
+ 		}
+-		spin_unlock_bh(&txq->axq_lock);
+ 	}
+ 
+ 	ieee80211_tx_status(hw, skb);
+@@ -2095,8 +2072,6 @@ static void ath_tx_rc_status(struct ath_softc *sc, struct ath_buf *bf,
+ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
+ 				  struct ath_tx_status *ts, struct ath_buf *bf,
+ 				  struct list_head *bf_head)
+-	__releases(txq->axq_lock)
+-	__acquires(txq->axq_lock)
+ {
+ 	int txok;
+ 
+@@ -2106,16 +2081,12 @@ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
+ 	if (bf_is_ampdu_not_probing(bf))
+ 		txq->axq_ampdu_depth--;
+ 
+-	spin_unlock_bh(&txq->axq_lock);
 -
--static void b43_radio_init2055_pre(struct b43_wldev *dev)
--{
--	b43_phy_mask(dev, B43_NPHY_RFCTL_CMD,
--		     ~B43_NPHY_RFCTL_CMD_PORFORCE);
--	b43_phy_set(dev, B43_NPHY_RFCTL_CMD,
--		    B43_NPHY_RFCTL_CMD_CHIP0PU |
--		    B43_NPHY_RFCTL_CMD_OEPORFORCE);
--	b43_phy_set(dev, B43_NPHY_RFCTL_CMD,
--		    B43_NPHY_RFCTL_CMD_PORFORCE);
--}
+ 	if (!bf_isampdu(bf)) {
+ 		ath_tx_rc_status(sc, bf, ts, 1, txok ? 0 : 1, txok);
+ 		ath_tx_complete_buf(sc, bf, txq, bf_head, ts, txok);
+ 	} else
+ 		ath_tx_complete_aggr(sc, txq, bf, bf_head, ts, txok, true);
+ 
+-	spin_lock_bh(&txq->axq_lock);
 -
--static void b43_radio_init2055_post(struct b43_wldev *dev)
--{
--	struct b43_phy_n *nphy = dev->phy.n;
--	struct ssb_sprom *sprom = dev->dev->bus_sprom;
--	int i;
--	u16 val;
--	bool workaround = false;
+ 	if (sc->sc_flags & SC_OP_TXAGGR)
+ 		ath_txq_schedule(sc, txq);
+ }
+@@ -2259,6 +2230,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 	struct list_head bf_head;
+ 	int status;
+ 
++	spin_lock_bh(&txq->axq_lock);
+ 	for (;;) {
+ 		if (work_pending(&sc->hw_reset_work))
+ 			break;
+@@ -2278,12 +2250,8 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 
+ 		txq = &sc->tx.txq[ts.qid];
+ 
+-		spin_lock_bh(&txq->axq_lock);
 -
--	if (sprom->revision < 4)
--		workaround = (dev->dev->board_vendor != PCI_VENDOR_ID_BROADCOM
--			      && dev->dev->board_type == 0x46D
--			      && dev->dev->board_rev >= 0x41);
--	else
--		workaround =
--			!(sprom->boardflags2_lo & B43_BFL2_RXBB_INT_REG_DIS);
--
--	b43_radio_mask(dev, B2055_MASTER1, 0xFFF3);
--	if (workaround) {
--		b43_radio_mask(dev, B2055_C1_RX_BB_REG, 0x7F);
--		b43_radio_mask(dev, B2055_C2_RX_BB_REG, 0x7F);
--	}
--	b43_radio_maskset(dev, B2055_RRCCAL_NOPTSEL, 0xFFC0, 0x2C);
--	b43_radio_write(dev, B2055_CAL_MISC, 0x3C);
--	b43_radio_mask(dev, B2055_CAL_MISC, 0xFFBE);
--	b43_radio_set(dev, B2055_CAL_LPOCTL, 0x80);
--	b43_radio_set(dev, B2055_CAL_MISC, 0x1);
--	msleep(1);
--	b43_radio_set(dev, B2055_CAL_MISC, 0x40);
--	for (i = 0; i < 200; i++) {
--		val = b43_radio_read(dev, B2055_CAL_COUT2);
--		if (val & 0x80) {
--			i = 0;
--			break;
+-		if (list_empty(&txq->txq_fifo[txq->txq_tailidx])) {
+-			spin_unlock_bh(&txq->axq_lock);
+-			return;
 -		}
--		udelay(10);
--	}
--	if (i)
--		b43err(dev->wl, "radio post init timeout\n");
--	b43_radio_mask(dev, B2055_CAL_LPOCTL, 0xFF7F);
--	b43_switch_channel(dev, dev->phy.channel);
--	b43_radio_write(dev, B2055_C1_RX_BB_LPF, 0x9);
--	b43_radio_write(dev, B2055_C2_RX_BB_LPF, 0x9);
--	b43_radio_write(dev, B2055_C1_RX_BB_MIDACHP, 0x83);
--	b43_radio_write(dev, B2055_C2_RX_BB_MIDACHP, 0x83);
--	b43_radio_maskset(dev, B2055_C1_LNA_GAINBST, 0xFFF8, 0x6);
--	b43_radio_maskset(dev, B2055_C2_LNA_GAINBST, 0xFFF8, 0x6);
--	if (!nphy->gain_boost) {
--		b43_radio_set(dev, B2055_C1_RX_RFSPC1, 0x2);
--		b43_radio_set(dev, B2055_C2_RX_RFSPC1, 0x2);
--	} else {
--		b43_radio_mask(dev, B2055_C1_RX_RFSPC1, 0xFFFD);
--		b43_radio_mask(dev, B2055_C2_RX_RFSPC1, 0xFFFD);
--	}
--	udelay(2);
--}
--
--/*
-- * Initialize a Broadcom 2055 N-radio
-- * http://bcm-v4.sipsolutions.net/802.11/Radio/2055/Init
-- */
--static void b43_radio_init2055(struct b43_wldev *dev)
--{
--	b43_radio_init2055_pre(dev);
--	if (b43_status(dev) < B43_STAT_INITIALIZED) {
--		/* Follow wl, not specs. Do not force uploading all regs */
--		b2055_upload_inittab(dev, 0, 0);
--	} else {
--		bool ghz5 = b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ;
--		b2055_upload_inittab(dev, ghz5, 0);
--	}
--	b43_radio_init2055_post(dev);
--}
--
--static void b43_radio_init2056_pre(struct b43_wldev *dev)
--{
--	b43_phy_mask(dev, B43_NPHY_RFCTL_CMD,
--		     ~B43_NPHY_RFCTL_CMD_CHIP0PU);
--	/* Maybe wl meant to reset and set (order?) RFCTL_CMD_OEPORFORCE? */
--	b43_phy_mask(dev, B43_NPHY_RFCTL_CMD,
--		     B43_NPHY_RFCTL_CMD_OEPORFORCE);
--	b43_phy_set(dev, B43_NPHY_RFCTL_CMD,
--		    ~B43_NPHY_RFCTL_CMD_OEPORFORCE);
--	b43_phy_set(dev, B43_NPHY_RFCTL_CMD,
--		    B43_NPHY_RFCTL_CMD_CHIP0PU);
--}
--
--static void b43_radio_init2056_post(struct b43_wldev *dev)
--{
--	b43_radio_set(dev, B2056_SYN_COM_CTRL, 0xB);
--	b43_radio_set(dev, B2056_SYN_COM_PU, 0x2);
--	b43_radio_set(dev, B2056_SYN_COM_RESET, 0x2);
--	msleep(1);
--	b43_radio_mask(dev, B2056_SYN_COM_RESET, ~0x2);
--	b43_radio_mask(dev, B2056_SYN_PLL_MAST2, ~0xFC);
--	b43_radio_mask(dev, B2056_SYN_RCCAL_CTRL0, ~0x1);
--	/*
--	if (nphy->init_por)
--		Call Radio 2056 Recalibrate
--	*/
--}
--
--/*
-- * Initialize a Broadcom 2056 N-radio
-- * http://bcm-v4.sipsolutions.net/802.11/Radio/2056/Init
-- */
--static void b43_radio_init2056(struct b43_wldev *dev)
--{
--	b43_radio_init2056_pre(dev);
--	b2056_upload_inittabs(dev, 0, 0);
--	b43_radio_init2056_post(dev);
--}
--
- /*
-  * Upload the N-PHY tables.
-  * http://bcm-v4.sipsolutions.net/802.11/PHY/N/InitTables
++		if (list_empty(&txq->txq_fifo[txq->txq_tailidx]))
++			break;
+ 
+ 		bf = list_first_entry(&txq->txq_fifo[txq->txq_tailidx],
+ 				      struct ath_buf, list);
+@@ -2307,8 +2275,8 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 		}
+ 
+ 		ath_tx_process_buffer(sc, txq, &ts, bf, &bf_head);
+-		spin_unlock_bh(&txq->axq_lock);
+ 	}
++	spin_unlock_bh(&txq->axq_lock);
+ }
+ 
+ /*****************/
 -- 
-1.7.7
+1.7.3.2
 
