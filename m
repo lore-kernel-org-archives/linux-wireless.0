@@ -1,35 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:51655 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752667Ab1LOIxb (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34295 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750887Ab1LLJwE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 03:53:31 -0500
-Received: by lagu2 with SMTP id u2so1005608lag.23
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 00:53:28 -0800 (PST)
-Subject: Re: [PATCH] wl12xx: Restore testmode ABI
-From: Luciano Coelho <coelho@ti.com>
-To: Pontus Fuchs <pontus.fuchs@gmail.com>
+	Mon, 12 Dec 2011 04:52:04 -0500
+Subject: Re: [RFC] mac80211: Prevent possible BUG on suspend.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1322738024-16626-1-git-send-email-pontus.fuchs@gmail.com>
-References: <1322738024-16626-1-git-send-email-pontus.fuchs@gmail.com>
+In-Reply-To: <CAMG6FYjxRK30hTvKEaK=ppofN=KecJkbabTggWzXZQ5b-EN-NA@mail.gmail.com> (sfid-20111212_102315_339801_E78EE17A)
+References: <CAMG6FYgLHP2WmcuMFh6fzih-NKO8Brvpbeeb2uunZQydYYmNLw@mail.gmail.com>
+	 <1323680547.3442.6.camel@jlt3.sipsolutions.net>
+	 <CAMG6FYjxRK30hTvKEaK=ppofN=KecJkbabTggWzXZQ5b-EN-NA@mail.gmail.com>
+	 (sfid-20111212_102315_339801_E78EE17A)
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 15 Dec 2011 10:53:23 +0200
-Message-ID: <1323939203.2800.177.camel@cumari> (sfid-20111215_095335_262743_2B158453)
+Date: Mon, 12 Dec 2011 10:52:01 +0100
+Message-ID: <1323683521.3442.33.camel@jlt3.sipsolutions.net> (sfid-20111212_105210_298735_CF687EC8)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-12-01 at 12:13 +0100, Pontus Fuchs wrote: 
-> Commit 80900d0140a7648587982c8f299830e900e49165 accidently broke
-> the ABI for testmode commands. Restore the ABI again.
-> 
-> Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-> Cc: stable@kernel.org
-> ---
+On Mon, 2011-12-12 at 10:22 +0100, Dmitry Tarnyagin wrote:
+> On Mon, Dec 12, 2011 at 10:02 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Mon, 2011-12-12 at 00:38 +0100, Dmitry Tarnyagin wrote:
+> >> Some WLAN hardware has
+> >> longer timeouts for non-interruptible configuration-related
+> >> operations, leading to the watchdog timeout while
+> >> ieee80211_scan_cancel is waiting on a mutex.
+> >
+> > Yuck, fix the device?
+> >
+> It's hardly possible. Some configuration changes really takes long time,
+> especially in presence of an active bluetooth session.
+> ... or abort suspend on the driver's level. It's perfectly ok for me. But then
+> driver needs to be at least notified that WLAN is suspending. What do you
+> think about early-suspend driver callback which to be called before any
+> possibly locking operations in mac80211 code?
 
-Applied, thanks!
+That's seems reasonable.
 
--- 
-Cheers,
-Luca.
+> >> The patch checks if interface mutex is already held and rejects
+> >> suspend if there is a possibility of locking.
+> >
+> > That's really not a good plan. This will refuse suspend *all the time*.
+> >
+> All the time? I don't think so.. On normal Linux systems WLAN operations
+> should not interfere with suspend at all. On aggressive systems like Android
+> it's actually a good idea to reject suspend when the interface mutex is held,
+> otherwise system will be likely resumed almost immediately by WoW.
+
+Well whenever it would have to wait for the mutex, even if it just has
+to wait 1ms for it... That will *certainly* trigger *randomly* on normal
+laptops systems and cause a TON of bug reports from users saying "my
+system randomly refuses to suspend".
+
+johannes
 
