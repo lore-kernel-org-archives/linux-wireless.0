@@ -1,42 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm23.bullet.mail.ukl.yahoo.com ([217.146.177.232]:30977 "HELO
-	nm23.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751414Ab1LTPY5 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:43450 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751062Ab1LLPzI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 10:24:57 -0500
-From: Marek Lindner <lindner_marek@yahoo.de>
-To: linux-wireless@vger.kernel.org
-Cc: Marek Lindner <lindner_marek@yahoo.de>
-Subject: [PATCH] mac80211: ibss should not purge clients it is not responsible for
-Date: Tue, 20 Dec 2011 23:16:52 +0800
-Message-Id: <1324394212-8754-1-git-send-email-lindner_marek@yahoo.de> (sfid-20111220_162501_132521_6EACFB45)
+	Mon, 12 Dec 2011 10:55:08 -0500
+MIME-Version: 1.0
+In-Reply-To: <1323701322.1806.24.camel@wwguy-ubuntu>
+References: <j881g5$tdf$1@dough.gmane.org> <alpine.DEB.2.00.1110252325090.20273@chino.kir.corp.google.com>
+ <j8fvka$fu0$1@dough.gmane.org> <CA+tb8OUHNbhVN_KiEkqXJW1apFoExRM5Vrn=ES5SF3sFoGOMfA@mail.gmail.com>
+ <1323701322.1806.24.camel@wwguy-ubuntu>
+From: =?UTF-8?Q?Mat=C3=ADas_Aguirre?= <matiasaguirre@gmail.com>
+Date: Mon, 12 Dec 2011 13:49:25 -0200
+Message-ID: <CA+tb8OX9+xn=G6i+ncQjGMd4MvnjHh1t3ZbuX6Ki1eZCjNhj4A@mail.gmail.com> (sfid-20111212_165512_002999_A96D54E2)
+Subject: Re: wifi iwlagn fails to authenticate after wake from suspend
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: Gene Smith <gds@chartertn.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The IBSS merge code calls ieee80211_sta_expire() with a relatively
-short expire timeout that purges other clients prematurely. The
-expire function has to check that only the clients belonging to
-the vif in question are purged.
+On Mon, Dec 12, 2011 at 12:48 PM, wwguy <wey-yi.w.guy@intel.com> wrote:
+> this is not right, you stop the bt coex for non-combo device.
+> maybe you system has issue with BT, we seen this happen on some cases.
+> try the following module parameter and see if help
+>
+> $sudo modprobe iwlagn bt_coex_active=0
 
-Signed-off-by: Marek Lindner <lindner_marek@yahoo.de>
----
- net/mac80211/sta_info.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+bt_coex_active=0 fixed this issue, thanks Wey
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 2db01e9..5dfcee2 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -941,6 +941,9 @@ void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
- 
- 	mutex_lock(&local->sta_mtx);
- 	list_for_each_entry_safe(sta, tmp, &local->sta_list, list)
-+		if (sdata != sta->sdata)
-+			continue;
-+
- 		if (time_after(jiffies, sta->last_rx + exp_time)) {
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
- 			printk(KERN_DEBUG "%s: expiring inactive STA %pM\n",
+
 -- 
-1.7.5.4
-
+Matías Aguirre
