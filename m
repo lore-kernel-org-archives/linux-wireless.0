@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [119.255.1.60] ([119.255.1.60]:47844 "EHLO
-	mail.watchdata.com.cn" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1752707Ab1LSMKa (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47129 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751423Ab1LLKMi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 07:10:30 -0500
-Received: from localhost (mail.watchdata.com.cn [127.0.0.1])
-	by mail.watchdata.com.cn (Postfix) with SMTP id D626A20069
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 19:28:45 +0800 (CST)
-Received: from ligang (unknown [10.0.112.56])
-	by mail.watchdata.com.cn (Postfix) with ESMTP id C748820066
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 19:28:45 +0800 (CST)
-From: =?gb2312?B?wO641Q==?= <gang.li@watchdata.com>
-To: "'wireless'" <linux-wireless@vger.kernel.org>
-Subject: Question about IEEE80211_TX_CTL_NO_ACK in ath_9k
-Date: Mon, 19 Dec 2011 19:38:23 +0800
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-In-Reply-To: <4EED232D.3010208@lwfinger.net>
-Message-Id: <20111219112845.C748820066@mail.watchdata.com.cn> (sfid-20111219_131033_890271_4109FA40)
+	Mon, 12 Dec 2011 05:12:38 -0500
+Subject: Re: iwlwifi havoc on some APs (rekeying?)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Wolfgang Breyha <wbreyha@gmx.net>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4EE5D2D3.406@gmx.net> (sfid-20111212_110955_792336_68917631)
+References: <4EE2202A.4080303@gmx.net>
+	 <1323446534.13074.96.camel@wwguy-huron>  <4EE24DF4.4020301@gmx.net>
+	 <1323451436.13074.158.camel@wwguy-huron>
+	 (sfid-20111209_192243_598986_F6275AE2) <1323455216.3622.21.camel@jlt3.sipsolutions.net>
+	 <4EE35877.1060507@gmx.net>
+	 (sfid-20111210_140255_490293_C3C0F113) <1323680657.3442.7.camel@jlt3.sipsolutions.net>
+	 <4EE5D2D3.406@gmx.net> (sfid-20111212_110955_792336_68917631)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 12 Dec 2011 11:12:34 +0100
+Message-ID: <1323684754.3442.36.camel@jlt3.sipsolutions.net> (sfid-20111212_111241_586858_F5DEE58D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everybody!
+On Mon, 2011-12-12 at 11:09 +0100, Wolfgang Breyha wrote:
+> On 12/12/11 10:04, Johannes Berg wrote:
+> > Are you running a 32-bit kernel on a 64-bit machine by any chance?
+> > Somebody else reported that using a 64-bit kernel helped similar issues.
+> 
+> That's right. It's F16.i686 on a
+> # cat /proc/cpuinfo
+> processor	: 0
+> vendor_id	: GenuineIntel
+> cpu family	: 6
+> model		: 37
+> model name	: Intel(R) Core(TM) i5 CPU       M 540  @ 2.53GHz
 
-My wireless card is AR9280. I set the IEEE80211_TX_CTL_NO_ACK flag before
-send a packet, but found it no use. It still wait for an ACK. Then I read
-the code,
-in ath9k_htc_tx_data(htc_drv_txrx.c) , it seems there is only two flags:
+Interesting. We'll have to play with this. Can you try running a 64-bit
+kernel maybe and see if that fixes things?
 
-#define ATH9K_HTC_TX_CTSONLY      0x1
-#define ATH9K_HTC_TX_RTSCTS       0x2
-
-None is about ack.
-
-Does anyone know how to make this flag work properly?
-
-Thanks a lot!
-
-gang.li
-
-
-
+johannes
 
