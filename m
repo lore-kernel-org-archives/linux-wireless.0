@@ -1,82 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:58503 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751366Ab1LOTum (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:60595 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750952Ab1LLPyX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 14:50:42 -0500
-Received: by faar15 with SMTP id r15so2609180faa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 11:50:41 -0800 (PST)
-Message-ID: <4EEA4F8E.60602@lwfinger.net> (sfid-20111215_205045_564969_0A7DE4D0)
-Date: Thu, 15 Dec 2011 13:50:38 -0600
+	Mon, 12 Dec 2011 10:54:23 -0500
+Received: by ggdk6 with SMTP id k6so1257978ggd.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2011 07:54:23 -0800 (PST)
+Message-ID: <4EE623AB.8000101@lwfinger.net> (sfid-20111212_165427_487410_12CC767C)
+Date: Mon, 12 Dec 2011 09:54:19 -0600
 From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Tim Gardner <tim.gardner@canonical.com>
-CC: Seth Forshee <seth.forshee@canonical.com>,
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
 	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Problems associating with RTL8188CE
-References: <4ECA99CC.7020008@lwfinger.net> <20111121185610.GD6736@thinkpad-t410> <4ECB028E.3030809@lwfinger.net> <20111122022008.GA17661@thinkpad-t410> <20111213194231.GA30788@thinkpad-t410> <4EE7B85E.3070802@lwfinger.net> <20111213212606.GB30788@thinkpad-t410> <4EE82CC6.2030307@lwfinger.net> <20111214162333.GB19410@thinkpad-t410> <4EE8D150.8090100@lwfinger.net> <20111214164902.GD19410@thinkpad-t410> <4EE91A87.5090207@canonical.com> <4EE9445B.1010504@lwfinger.net> <4EEA3F53.40305@canonical.com>
-In-Reply-To: <4EEA3F53.40305@canonical.com>
+	Mike McCormack <mikem@ring3k.org>
+Subject: Re: [PATCH 1/2] rtlwifi: use work for lps
+References: <1323690204-5124-1-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1323690204-5124-1-git-send-email-sgruszka@redhat.com>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/15/2011 12:41 PM, Tim Gardner wrote:
-> On 12/14/2011 05:50 PM, Larry Finger wrote:
->> Tim,
->>
->> I did the live test with the Dec. 14 build of 12.04 (64 bit). It
->> connected with my WNDR3300 with no difficulty. I tested all 4 modes
->> supported by the AP. All worked.
->>
->> I assume that an installation would work the same as the live version,
->> but that is easy for you to test.
->>
->> Larry
->>
+On 12/12/2011 05:43 AM, Stanislaw Gruszka wrote:
+> Leaving leisure power save mode can take some time, so it's better to
+> perform that action in process context with interrupts enabled. This
+> patch changes lps_leave tasklet to work.
 >
-> Here are the 3 modes I was able to successfully test on my WNDR3300 as an open AP:
->
-> * Up to 270Mbps at 2.4Ghz
-> 11N Channel: 03/2.422Ghz
-> in this mode only the 11N SSID is beaconed.
-> iperf: 11.2 Mbps average over 120 seconds, high of 26.2 Mbps, low of 6.71
->
-> * Up to 270Mbps at 5Ghz & 54Mbps at 2.4Ghz
-> 11N Channel: 36 / 5.180Ghz
-> 11G Channel: auto
-> in this mode only the G beacon can be seen (which makes sense)
-> iperf: 14.3 Mbps average over 120 seconds, high of 28.5 Mbps, low of 8.97
->
-> * Up to 130Mbps at 2.4Ghz
-> 11N Channel: 03/2.422Ghz
-> in this mode only the 11N SSID is beaconed.
-> iperf: 16.0 Mbps average over 120 seconds, high of 28.9 Mbps, low of 7.44
->
-> This mode would not acquire a beacon using the rtl8192ce:
->
-> * Up to 130Mbps at 5Ghz & 54Mbps at 2.4Ghz
-> 11N Channel: 36 / 5.180Ghz
-> 11G Channel: auto
-> in this mode no beacon can be seen.
->
-> I verified using a MacBook Air under OS/X that the N SSID was appearing on the 5
-> Ghz channel, but couldn't see the G beacon. Maybe its a bug in the WNDR3300.
+> Reported-by: Philipp Dreimann<philipp@dreimann.net>
+> Tested-by: Larry Finger<Larry.Finger@lwfinger.net>
+> Cc: Mike McCormack<mikem@ring3k.org>
+> Cc: Chaoming Li<chaoming_li@realsil.com.cn>
+> Signed-off-by: Stanislaw Gruszka<sgruszka@redhat.com>
 
-I had never used the "auto" channel setting before. When I set my AP to the same 
-configuration as yours (130/54 and 36/auto), it sent the 802.11n beacon in the 
-2.4GHz channel. The 11G SSID was not seen; however, I could connect to the AP on 
-channel 1. When I switched to 11G channel 1, rather than auto, then I saw the 
-11G SSID in the beacon. I then tested the 5G band using a Dell DW1450 (p54usb) 
-dual-band device. The 11N SSID was present on channel 36 using auto or channel 1.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-There may be a bug in the WNDR3300 firmware. Sometimes when I switched from 
-channel 1 to auto for the 2G band, that band would beacon the 11G SSID, and 
-other times, it would beacon the 11N SSID. I have not determined a pattern. The 
-11N SSID is always shown on the selected 5G channel. I could, however, connect 
-the RTL8188CE to whatever SSID the AP was sending on the 2.4GHz band.
 
-Curiouser and curiouser,
-
-Larry
+> ---
+>   drivers/net/wireless/rtlwifi/pci.c  |   26 ++++++++++++++------------
+>   drivers/net/wireless/rtlwifi/wifi.h |    3 ++-
+>   2 files changed, 16 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+> index 91f0525..0d4d242 100644
+> --- a/drivers/net/wireless/rtlwifi/pci.c
+> +++ b/drivers/net/wireless/rtlwifi/pci.c
+> @@ -610,7 +610,7 @@ tx_status_ok:
+>   	if (((rtlpriv->link_info.num_rx_inperiod +
+>   		rtlpriv->link_info.num_tx_inperiod)>  8) ||
+>   		(rtlpriv->link_info.num_rx_inperiod>  2)) {
+> -		tasklet_schedule(&rtlpriv->works.ips_leave_tasklet);
+> +		schedule_work(&rtlpriv->works.lps_leave_work);
+>   	}
+>   }
+>
+> @@ -736,7 +736,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+>   		if (((rtlpriv->link_info.num_rx_inperiod +
+>   			rtlpriv->link_info.num_tx_inperiod)>  8) ||
+>   			(rtlpriv->link_info.num_rx_inperiod>  2)) {
+> -			tasklet_schedule(&rtlpriv->works.ips_leave_tasklet);
+> +			schedule_work(&rtlpriv->works.lps_leave_work);
+>   		}
+>
+>   		dev_kfree_skb_any(skb);
+> @@ -903,11 +903,6 @@ static void _rtl_pci_irq_tasklet(struct ieee80211_hw *hw)
+>   	_rtl_pci_tx_chk_waitq(hw);
+>   }
+>
+> -static void _rtl_pci_ips_leave_tasklet(struct ieee80211_hw *hw)
+> -{
+> -	rtl_lps_leave(hw);
+> -}
+> -
+>   static void _rtl_pci_prepare_bcn_tasklet(struct ieee80211_hw *hw)
+>   {
+>   	struct rtl_priv *rtlpriv = rtl_priv(hw);
+> @@ -945,6 +940,15 @@ static void _rtl_pci_prepare_bcn_tasklet(struct ieee80211_hw *hw)
+>   	return;
+>   }
+>
+> +static void rtl_lps_leave_work_callback(struct work_struct *work)
+> +{
+> +	struct rtl_works *rtlworks =
+> +	    container_of(work, struct rtl_works, lps_leave_work);
+> +	struct ieee80211_hw *hw = rtlworks->hw;
+> +
+> +	rtl_lps_leave(hw);
+> +}
+> +
+>   static void _rtl_pci_init_trx_var(struct ieee80211_hw *hw)
+>   {
+>   	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+> @@ -1006,9 +1010,7 @@ static void _rtl_pci_init_struct(struct ieee80211_hw *hw,
+>   	tasklet_init(&rtlpriv->works.irq_prepare_bcn_tasklet,
+>   		     (void (*)(unsigned long))_rtl_pci_prepare_bcn_tasklet,
+>   		     (unsigned long)hw);
+> -	tasklet_init(&rtlpriv->works.ips_leave_tasklet,
+> -		     (void (*)(unsigned long))_rtl_pci_ips_leave_tasklet,
+> -		     (unsigned long)hw);
+> +	INIT_WORK(&rtlpriv->works.lps_leave_work, rtl_lps_leave_work_callback);
+>   }
+>
+>   static int _rtl_pci_init_tx_ring(struct ieee80211_hw *hw,
+> @@ -1478,7 +1480,7 @@ static void rtl_pci_deinit(struct ieee80211_hw *hw)
+>
+>   	synchronize_irq(rtlpci->pdev->irq);
+>   	tasklet_kill(&rtlpriv->works.irq_tasklet);
+> -	tasklet_kill(&rtlpriv->works.ips_leave_tasklet);
+> +	cancel_work_sync(&rtlpriv->works.lps_leave_work);
+>
+>   	flush_workqueue(rtlpriv->works.rtl_wq);
+>   	destroy_workqueue(rtlpriv->works.rtl_wq);
+> @@ -1553,7 +1555,7 @@ static void rtl_pci_stop(struct ieee80211_hw *hw)
+>   	set_hal_stop(rtlhal);
+>
+>   	rtlpriv->cfg->ops->disable_interrupt(hw);
+> -	tasklet_kill(&rtlpriv->works.ips_leave_tasklet);
+> +	cancel_work_sync(&rtlpriv->works.lps_leave_work);
+>
+>   	spin_lock_irqsave(&rtlpriv->locks.rf_ps_lock, flags);
+>   	while (ppsc->rfchange_inprogress) {
+> diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+> index f3c132b..6e6353b 100644
+> --- a/drivers/net/wireless/rtlwifi/wifi.h
+> +++ b/drivers/net/wireless/rtlwifi/wifi.h
+> @@ -1576,7 +1576,8 @@ struct rtl_works {
+>   	/* For SW LPS */
+>   	struct delayed_work ps_work;
+>   	struct delayed_work ps_rfon_wq;
+> -	struct tasklet_struct ips_leave_tasklet;
+> +
+> +	struct work_struct lps_leave_work;
+>   };
+>
+>   struct rtl_debug {
 
