@@ -1,49 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:36394 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756090Ab1LASsj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Dec 2011 13:48:39 -0500
-Message-ID: <1322765318.30801.9.camel@joe2Laptop> (sfid-20111201_194857_517512_8D3EC29D)
-Subject: Re: [PATCH 1/4] nfc: Use standard logging styles
-From: Joe Perches <joe@perches.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Thu, 01 Dec 2011 10:48:38 -0800
-In-Reply-To: <20111201155951.GF22609@sortiz-mobl>
-References: <cover.1322595343.git.joe@perches.com>
-	 <6c89a76ddb76926febe36fe5be514cb186e39a76.1322595343.git.joe@perches.com>
-	 <20111201155951.GF22609@sortiz-mobl>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.tpi.com ([70.99.223.143]:3276 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751585Ab1LLR5E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Dec 2011 12:57:04 -0500
+Message-ID: <4EE63AB6.2010209@canonical.com> (sfid-20111212_185710_097509_3A65CDAA)
+Date: Mon, 12 Dec 2011 10:32:38 -0700
+From: Tim Gardner <tim.gardner@canonical.com>
+MIME-Version: 1.0
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Mike McCormack <mikem@ring3k.org>
+Subject: Re: [PATCH 2/2] rtlwifi: merge ips,lps spinlocks into one mutex
+References: <1323690204-5124-1-git-send-email-sgruszka@redhat.com> <1323690204-5124-2-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1323690204-5124-2-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-12-01 at 16:59 +0100, Samuel Ortiz wrote:
-> Hi Joe,
+On 12/12/2011 04:43 AM, Stanislaw Gruszka wrote:
+> With previous patch "rtlwifi: use work for lps" we can now use mutex for
+> protecting ps mode changing critical sections. This fixes running system
+> with interrupts disabled for long time.
+>
+> Merge ips_lock and lps_lock as they seems to protect the same data
+> structures (accessed in rtl_ps_set_rf_state() function).
+>
+> Reported-by: Philipp Dreimann<philipp@dreimann.net>
+> Tested-by: Larry Finger<Larry.Finger@lwfinger.net>
+> Cc: Mike McCormack<mikem@ring3k.org>
+> Cc: Chaoming Li<chaoming_li@realsil.com.cn>
+> Signed-off-by: Stanislaw Gruszka<sgruszka@redhat.com>
+> ---
+>   drivers/net/wireless/rtlwifi/base.c |    3 +--
+>   drivers/net/wireless/rtlwifi/ps.c   |   21 ++++++++++-----------
+>   drivers/net/wireless/rtlwifi/wifi.h |    3 +--
+>   3 files changed, 12 insertions(+), 15 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
+> index a13ecfc..d81a602 100644
+> --- a/drivers/net/wireless/rtlwifi/base.c
+> +++ b/drivers/net/wireless/rtlwifi/base.c
+> @@ -448,12 +448,11 @@ int rtl_init_core(struct ieee80211_hw *hw)
+>
+>   	/*<4>  locks */
+>   	mutex_init(&rtlpriv->locks.conf_mutex);
+> -	spin_lock_init(&rtlpriv->locks.ips_lock);
+> +	mutex_init(&rtlpriv->locks.ps_mutex);
+>   	spin_lock_init(&rtlpriv->locks.irq_th_lock);
+>   	spin_lock_init(&rtlpriv->locks.h2c_lock);
+>   	spin_lock_init(&rtlpriv->locks.rf_ps_lock);
+>   	spin_lock_init(&rtlpriv->locks.rf_lock);
+> -	spin_lock_init(&rtlpriv->locks.lps_lock);
+>   	spin_lock_init(&rtlpriv->locks.waitq_lock);
+>   	spin_lock_init(&rtlpriv->locks.cck_and_rw_pagea_lock);
+>
+> diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
+> index 55c8e50..a14a68b 100644
+> --- a/drivers/net/wireless/rtlwifi/ps.c
+> +++ b/drivers/net/wireless/rtlwifi/ps.c
+> @@ -241,7 +241,7 @@ void rtl_ips_nic_on(struct ieee80211_hw *hw)
+>   	if (mac->opmode != NL80211_IFTYPE_STATION)
+>   		return;
+>
+> -	spin_lock(&rtlpriv->locks.ips_lock);
+> +	mutex_lock(&rtlpriv->locks.ps_mutex);
+>
+>   	if (ppsc->inactiveps) {
+>   		rtstate = ppsc->rfpwr_state;
+> @@ -257,7 +257,7 @@ void rtl_ips_nic_on(struct ieee80211_hw *hw)
+>   		}
+>   	}
+>
+> -	spin_unlock(&rtlpriv->locks.ips_lock);
+> +	mutex_unlock(&rtlpriv->locks.ps_mutex);
+>   }
+>
+>   /*for FW LPS*/
+> @@ -395,7 +395,7 @@ void rtl_lps_enter(struct ieee80211_hw *hw)
+>   	if (mac->link_state != MAC80211_LINKED)
+>   		return;
+>
+> -	spin_lock_irq(&rtlpriv->locks.lps_lock);
+> +	mutex_lock(&rtlpriv->locks.ps_mutex);
+>
+>   	/* Idle for a while if we connect to AP a while ago. */
+>   	if (mac->cnt_after_linked>= 2) {
+> @@ -407,7 +407,7 @@ void rtl_lps_enter(struct ieee80211_hw *hw)
+>   		}
+>   	}
+>
+> -	spin_unlock_irq(&rtlpriv->locks.lps_lock);
+> +	mutex_unlock(&rtlpriv->locks.ps_mutex);
+>   }
+>
+>   /*Leave the leisure power save mode.*/
+> @@ -416,9 +416,8 @@ void rtl_lps_leave(struct ieee80211_hw *hw)
+>   	struct rtl_priv *rtlpriv = rtl_priv(hw);
+>   	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+>   	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+> -	unsigned long flags;
+>
+> -	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flags);
+> +	mutex_lock(&rtlpriv->locks.ps_mutex);
+>
+>   	if (ppsc->fwctrl_lps) {
+>   		if (ppsc->dot11_psmode != EACTIVE) {
+> @@ -439,7 +438,7 @@ void rtl_lps_leave(struct ieee80211_hw *hw)
+>   			rtl_lps_set_psmode(hw, EACTIVE);
+>   		}
+>   	}
+> -	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flags);
+> +	mutex_unlock(&rtlpriv->locks.ps_mutex);
+>   }
+>
+>   /* For sw LPS*/
+> @@ -540,9 +539,9 @@ void rtl_swlps_rf_awake(struct ieee80211_hw *hw)
+>   		RT_CLEAR_PS_LEVEL(ppsc, RT_PS_LEVEL_ASPM);
+>   	}
+>
+> -	spin_lock_irq(&rtlpriv->locks.lps_lock);
+> +	mutex_lock(&rtlpriv->locks.ps_mutex);
+>   	rtl_ps_set_rf_state(hw, ERFON, RF_CHANGE_BY_PS);
+> -	spin_unlock_irq(&rtlpriv->locks.lps_lock);
+> +	mutex_unlock(&rtlpriv->locks.ps_mutex);
+>   }
+>
+>   void rtl_swlps_rfon_wq_callback(void *data)
+> @@ -575,9 +574,9 @@ void rtl_swlps_rf_sleep(struct ieee80211_hw *hw)
+>   	if (rtlpriv->link_info.busytraffic)
+>   		return;
+>
+> -	spin_lock_irq(&rtlpriv->locks.lps_lock);
+> +	mutex_lock(&rtlpriv->locks.ps_mutex);
+>   	rtl_ps_set_rf_state(hw, ERFSLEEP, RF_CHANGE_BY_PS);
+> -	spin_unlock_irq(&rtlpriv->locks.lps_lock);
+> +	mutex_unlock(&rtlpriv->locks.ps_mutex);
+>
+>   	if (ppsc->reg_rfps_level&  RT_RF_OFF_LEVL_ASPM&&
+>   		!RT_IN_PS_LEVEL(ppsc, RT_PS_LEVEL_ASPM)) {
+> diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+> index 6e6353b..085dccd 100644
+> --- a/drivers/net/wireless/rtlwifi/wifi.h
+> +++ b/drivers/net/wireless/rtlwifi/wifi.h
+> @@ -1544,14 +1544,13 @@ struct rtl_hal_cfg {
+>   struct rtl_locks {
+>   	/* mutex */
+>   	struct mutex conf_mutex;
+> +	struct mutex ps_mutex;
+>
+>   	/*spin lock */
+> -	spinlock_t ips_lock;
+>   	spinlock_t irq_th_lock;
+>   	spinlock_t h2c_lock;
+>   	spinlock_t rf_ps_lock;
+>   	spinlock_t rf_lock;
+> -	spinlock_t lps_lock;
+>   	spinlock_t waitq_lock;
+>
+>   	/*Dual mac*/
 
-Hello Samuel.
+On an SMP platform spin_lock_irqsave() is only effective if the 
+interrupt handler uses the same spinlock. Its benign in this case, but 
+still bogus.
 
-> On Tue, Nov 29, 2011 at 11:37:32AM -0800, Joe Perches wrote:
-> > Using the normal logging styles is preferred over
-> > subsystem specific styles when the subsystem does
-> > not take a specific struct.
-> > Convert nfc_<level> specific messages to pr_<level>
-> > Add newlines to uses.
-> I would be fine with moving to pr_debug, but I'd like the pr_fmt() routine to
-> include the function name as well.
-
-If you really want it I can add it back but
-if you are not aware, dynamic debug can add
-this by using:
-
-echo "module nfc +fp" > <debugfs>/dynamic_debug/control
-echo "module nci +fp" > <debugfs>/dynamic_debug/control
-
-If you're getting dmesg logs from customers
-that's a bit harder to track though.
-
-
+Tested-by: Tim Gardner <tim.gardner@canonical.com>
+-- 
+Tim Gardner tim.gardner@canonical.com
