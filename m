@@ -1,29 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4954 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751406Ab1LPJ1i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 04:27:38 -0500
-Message-ID: <4EEB0EFC.5000302@broadcom.com> (sfid-20111216_102800_182196_AFD2D6CF)
-Date: Fri, 16 Dec 2011 10:27:24 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:44005 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753386Ab1LLO5E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Dec 2011 09:57:04 -0500
+Received: by bkcjm19 with SMTP id jm19so1521471bkc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2011 06:57:03 -0800 (PST)
+Message-ID: <4EE6163A.3010008@gmail.com> (sfid-20111212_155708_992832_24BFE678)
+Date: Mon, 12 Dec 2011 15:56:58 +0100
+From: roel <roel.kluin@gmail.com>
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: unexpected taint message
-Content-Type: text/plain;
- charset=iso-8859-1
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: MIA: Roel Kluin <roel.kluin@gmail.com> ?
+References: <CAB=NE6XkV4BR1Lz0Y0b3yFtPV6HG7avo5QiQw4WTXze5Oou5Mw@mail.gmail.com>
+In-Reply-To: <CAB=NE6XkV4BR1Lz0Y0b3yFtPV6HG7avo5QiQw4WTXze5Oou5Mw@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To whoever may know,
+Hi,
 
-Upon loading our driver module I get the following message:
+> Anyone know what Roel Kluin may be up to? Anyone know if he is alive at least?
 
-kernel: [  344.805106] Disabling lock debugging due to kernel taint
+Yes, I'm alive, just not active on kernel development anymore, for the moment.
 
-What exactly are the criteria for tainting? Our driver locking strategy
-is something we want to refactor and having lock debugging during that
-transition may be a life safer.
+> I haven't received a response from him for 1 month now on a large
+> inquiry I made. The only other person who I was not able to get in
+> touch with had passed away. The last contribution I see from Roel to
+> the kernel or anything that your favorite trustworthy search engine
+> can pick up was on April 10, 2010, [PATCH] RDMA/cxgb4: missing
+> parentheses... I have also tried Roel Kluin <12o3l@tiscali.nl> but
+> that bounces.
 
-Gr. AvS
+Yes, that address is gone.
 
+In the past I made some one- or few liner changes, but I feel I'm not the author and not entitled to have a say on relicensing. Nor do I have knowledge of the ISC license. So I feel I cannot Ack nor Nack. I'd rather refrain from voting, let the remaining majority decide.
+
+Roel
