@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43862 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755289Ab1LNLX6 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:61617 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750881Ab1LLGgm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 06:23:58 -0500
-Message-Id: <20111214112312.886236327@sipsolutions.net> (sfid-20111214_122402_992066_E28F8DA2)
-Date: Wed, 14 Dec 2011 12:20:28 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/5] mac80211: remove duplicate TDLS peer verification
-References: <20111214112026.409514167@sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 12 Dec 2011 01:36:42 -0500
+MIME-Version: 1.0
+In-Reply-To: <j8fvka$fu0$1@dough.gmane.org>
+References: <j881g5$tdf$1@dough.gmane.org> <alpine.DEB.2.00.1110252325090.20273@chino.kir.corp.google.com>
+ <j8fvka$fu0$1@dough.gmane.org>
+From: =?UTF-8?Q?Mat=C3=ADas_Aguirre?= <matiasaguirre@gmail.com>
+Date: Mon, 12 Dec 2011 04:36:20 -0200
+Message-ID: <CA+tb8OUHNbhVN_KiEkqXJW1apFoExRM5Vrn=ES5SF3sFoGOMfA@mail.gmail.com> (sfid-20111212_073648_299084_903B62BF)
+Subject: Re: wifi iwlagn fails to authenticate after wake from suspend
+To: Gene Smith <gds@chartertn.net>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-This is already checked in cfg80211, so no need
-to repeat the checks here.
+On Sat, Oct 29, 2011 at 2:32 AM, Gene Smith <gds@chartertn.net> wrote:
+> David Rientjes wrote, On 10/26/2011 02:27 AM:
+>> So we need to bisect between 2.4.38 and 3.0.0? :)  I'm running ubuntu
+>> 11.10 on a home laptop so I'll give this a try as well when I can if I can
+>> put up with unity for that long.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c |   14 --------------
- 1 file changed, 14 deletions(-)
+I've bisected the problem and narrowed the bug to changeset 73b78a2272
+(http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=73b78a22720087d2d384bdd49e9c25500ba73edd).
 
---- a/net/mac80211/cfg.c	2011-12-14 10:54:15.000000000 +0100
-+++ b/net/mac80211/cfg.c	2011-12-14 10:55:24.000000000 +0100
-@@ -896,12 +896,6 @@ static int ieee80211_add_station(struct
- 	if (is_multicast_ether_addr(mac))
- 		return -EINVAL;
- 
--	/* Only TDLS-supporting stations can add TDLS peers */
--	if ((params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) &&
--	    !((wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS) &&
--	      sdata->vif.type == NL80211_IFTYPE_STATION))
--		return -ENOTSUPP;
--
- 	sta = sta_info_alloc(sdata, mac, GFP_KERNEL);
- 	if (!sta)
- 		return -ENOMEM;
-@@ -968,14 +962,6 @@ static int ieee80211_change_station(stru
- 		return -ENOENT;
- 	}
- 
--	/* The TDLS bit cannot be toggled after the STA was added */
--	if ((params->sta_flags_mask & BIT(NL80211_STA_FLAG_TDLS_PEER)) &&
--	    !!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) !=
--	    !!test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
--		rcu_read_unlock();
--		return -EINVAL;
--	}
--
- 	/* in station mode, supported rates are only valid with TDLS */
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
- 	    params->supported_rates &&
+Here's a patch, that applies against 3.2-rc5, that fixed the error for me:
 
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c
+b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index bacc06c..01d5d38 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1297,7 +1297,7 @@ int iwl_alive_start(struct iwl_priv *priv)
+                                         BT_COEX_PRIO_TBL_EVT_INIT_CALIB2);
+                if (ret)
+                        return ret;
+-       } else {
++       } else if (priv->cfg->bt_params) {
+                /*
+                 * default is 2-wire BT coexexistence support
+                 */
