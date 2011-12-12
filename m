@@ -1,75 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:43778 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751723Ab1LZRvn (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:65352 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750952Ab1LLPy6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Dec 2011 12:51:43 -0500
-Message-ID: <4EF8B42C.2020402@lwfinger.net> (sfid-20111226_185215_509697_F0EA644F)
-Date: Mon, 26 Dec 2011 11:51:40 -0600
+	Mon, 12 Dec 2011 10:54:58 -0500
+Received: by ghbf1 with SMTP id f1so1116578ghb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2011 07:54:57 -0800 (PST)
+Message-ID: <4EE623CB.4060708@lwfinger.net> (sfid-20111212_165500_449820_4B366D3F)
+Date: Mon, 12 Dec 2011 09:54:51 -0600
 From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-CC: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: [PATCH] b43: fix regression in PIO case
-References: <alpine.DEB.2.00.1112261608140.12108@axis700.grange> <alpine.DEB.2.00.1112261824000.12108@axis700.grange>
-In-Reply-To: <alpine.DEB.2.00.1112261824000.12108@axis700.grange>
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Mike McCormack <mikem@ring3k.org>
+Subject: Re: [PATCH 2/2] rtlwifi: merge ips,lps spinlocks into one mutex
+References: <1323690204-5124-1-git-send-email-sgruszka@redhat.com> <1323690204-5124-2-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1323690204-5124-2-git-send-email-sgruszka@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/26/2011 11:28 AM, Guennadi Liakhovetski wrote:
-> This patch fixes the regression, introduced by
+On 12/12/2011 05:43 AM, Stanislaw Gruszka wrote:
+> With previous patch "rtlwifi: use work for lps" we can now use mutex for
+> protecting ps mode changing critical sections. This fixes running system
+> with interrupts disabled for long time.
 >
-> commit 17030f48e31adde5b043741c91ba143f5f7db0fd
-> From: Rafa³ Mi³ecki<zajec5@gmail.com>
-> Date: Thu, 11 Aug 2011 17:16:27 +0200
-> Subject: [PATCH] b43: support new RX header, noticed to be used in 598.314+ fw
+> Merge ips_lock and lps_lock as they seems to protect the same data
+> structures (accessed in rtl_ps_set_rf_state() function).
 >
-> in PIO case.
->
-> Signed-off-by: Guennadi Liakhovetski<g.liakhovetski@gmx.de>
+> Reported-by: Philipp Dreimann<philipp@dreimann.net>
+> Tested-by: Larry Finger<Larry.Finger@lwfinger.net>
+> Cc: Mike McCormack<mikem@ring3k.org>
+> Cc: Chaoming Li<chaoming_li@realsil.com.cn>
+> Signed-off-by: Stanislaw Gruszka<sgruszka@redhat.com>
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+
 > ---
-> diff --git a/drivers/net/wireless/b43/pio.c b/drivers/net/wireless/b43/pio.c
-> index ce8a4bd..b64b64c 100644
-> --- a/drivers/net/wireless/b43/pio.c
-> +++ b/drivers/net/wireless/b43/pio.c
-> @@ -617,9 +617,19 @@ static bool pio_rx_frame(struct b43_pio_rxqueue *q)
->   	const char *err_msg = NULL;
->   	struct b43_rxhdr_fw4 *rxhdr =
->   		(struct b43_rxhdr_fw4 *)wl->pio_scratchspace;
-> +	size_t rxhdr_size = sizeof(*rxhdr);
+>   drivers/net/wireless/rtlwifi/base.c |    3 +--
+>   drivers/net/wireless/rtlwifi/ps.c   |   21 ++++++++++-----------
+>   drivers/net/wireless/rtlwifi/wifi.h |    3 +--
+>   3 files changed, 12 insertions(+), 15 deletions(-)
 >
->   	BUILD_BUG_ON(sizeof(wl->pio_scratchspace)<  sizeof(*rxhdr));
-> -	memset(rxhdr, 0, sizeof(*rxhdr));
-> +	switch (dev->fw.hdr_format) {
-> +	case B43_FW_HDR_410:
-> +	case B43_FW_HDR_351:
-> +		rxhdr_size -= sizeof(rxhdr->format_598) -
-> +			sizeof(rxhdr->format_351);
-> +		break;
-> +	case B43_FW_HDR_598:
-> +		break;
-> +	}
+> diff --git a/drivers/net/wireless/rtlwifi/base.c b/drivers/net/wireless/rtlwifi/base.c
+> index a13ecfc..d81a602 100644
+> --- a/drivers/net/wireless/rtlwifi/base.c
+> +++ b/drivers/net/wireless/rtlwifi/base.c
+> @@ -448,12 +448,11 @@ int rtl_init_core(struct ieee80211_hw *hw)
+>
+>   	/*<4>  locks */
+>   	mutex_init(&rtlpriv->locks.conf_mutex);
+> -	spin_lock_init(&rtlpriv->locks.ips_lock);
+> +	mutex_init(&rtlpriv->locks.ps_mutex);
+>   	spin_lock_init(&rtlpriv->locks.irq_th_lock);
+>   	spin_lock_init(&rtlpriv->locks.h2c_lock);
+>   	spin_lock_init(&rtlpriv->locks.rf_ps_lock);
+>   	spin_lock_init(&rtlpriv->locks.rf_lock);
+> -	spin_lock_init(&rtlpriv->locks.lps_lock);
+>   	spin_lock_init(&rtlpriv->locks.waitq_lock);
+>   	spin_lock_init(&rtlpriv->locks.cck_and_rw_pagea_lock);
+>
+> diff --git a/drivers/net/wireless/rtlwifi/ps.c b/drivers/net/wireless/rtlwifi/ps.c
+> index 55c8e50..a14a68b 100644
+> --- a/drivers/net/wireless/rtlwifi/ps.c
+> +++ b/drivers/net/wireless/rtlwifi/ps.c
+> @@ -241,7 +241,7 @@ void rtl_ips_nic_on(struct ieee80211_hw *hw)
+>   	if (mac->opmode != NL80211_IFTYPE_STATION)
+>   		return;
+>
+> -	spin_lock(&rtlpriv->locks.ips_lock);
+> +	mutex_lock(&rtlpriv->locks.ps_mutex);
+>
+>   	if (ppsc->inactiveps) {
+>   		rtstate = ppsc->rfpwr_state;
+> @@ -257,7 +257,7 @@ void rtl_ips_nic_on(struct ieee80211_hw *hw)
+>   		}
+>   	}
+>
+> -	spin_unlock(&rtlpriv->locks.ips_lock);
+> +	mutex_unlock(&rtlpriv->locks.ps_mutex);
+>   }
+>
+>   /*for FW LPS*/
+> @@ -395,7 +395,7 @@ void rtl_lps_enter(struct ieee80211_hw *hw)
+>   	if (mac->link_state != MAC80211_LINKED)
+>   		return;
+>
+> -	spin_lock_irq(&rtlpriv->locks.lps_lock);
+> +	mutex_lock(&rtlpriv->locks.ps_mutex);
+>
+>   	/* Idle for a while if we connect to AP a while ago. */
+>   	if (mac->cnt_after_linked>= 2) {
+> @@ -407,7 +407,7 @@ void rtl_lps_enter(struct ieee80211_hw *hw)
+>   		}
+>   	}
+>
+> -	spin_unlock_irq(&rtlpriv->locks.lps_lock);
+> +	mutex_unlock(&rtlpriv->locks.ps_mutex);
+>   }
+>
+>   /*Leave the leisure power save mode.*/
+> @@ -416,9 +416,8 @@ void rtl_lps_leave(struct ieee80211_hw *hw)
+>   	struct rtl_priv *rtlpriv = rtl_priv(hw);
+>   	struct rtl_ps_ctl *ppsc = rtl_psc(rtl_priv(hw));
+>   	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+> -	unsigned long flags;
+>
+> -	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flags);
+> +	mutex_lock(&rtlpriv->locks.ps_mutex);
+>
+>   	if (ppsc->fwctrl_lps) {
+>   		if (ppsc->dot11_psmode != EACTIVE) {
+> @@ -439,7 +438,7 @@ void rtl_lps_leave(struct ieee80211_hw *hw)
+>   			rtl_lps_set_psmode(hw, EACTIVE);
+>   		}
+>   	}
+> -	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flags);
+> +	mutex_unlock(&rtlpriv->locks.ps_mutex);
+>   }
+>
+>   /* For sw LPS*/
+> @@ -540,9 +539,9 @@ void rtl_swlps_rf_awake(struct ieee80211_hw *hw)
+>   		RT_CLEAR_PS_LEVEL(ppsc, RT_PS_LEVEL_ASPM);
+>   	}
+>
+> -	spin_lock_irq(&rtlpriv->locks.lps_lock);
+> +	mutex_lock(&rtlpriv->locks.ps_mutex);
+>   	rtl_ps_set_rf_state(hw, ERFON, RF_CHANGE_BY_PS);
+> -	spin_unlock_irq(&rtlpriv->locks.lps_lock);
+> +	mutex_unlock(&rtlpriv->locks.ps_mutex);
+>   }
+>
+>   void rtl_swlps_rfon_wq_callback(void *data)
+> @@ -575,9 +574,9 @@ void rtl_swlps_rf_sleep(struct ieee80211_hw *hw)
+>   	if (rtlpriv->link_info.busytraffic)
+>   		return;
+>
+> -	spin_lock_irq(&rtlpriv->locks.lps_lock);
+> +	mutex_lock(&rtlpriv->locks.ps_mutex);
+>   	rtl_ps_set_rf_state(hw, ERFSLEEP, RF_CHANGE_BY_PS);
+> -	spin_unlock_irq(&rtlpriv->locks.lps_lock);
+> +	mutex_unlock(&rtlpriv->locks.ps_mutex);
+>
+>   	if (ppsc->reg_rfps_level&  RT_RF_OFF_LEVL_ASPM&&
+>   		!RT_IN_PS_LEVEL(ppsc, RT_PS_LEVEL_ASPM)) {
+> diff --git a/drivers/net/wireless/rtlwifi/wifi.h b/drivers/net/wireless/rtlwifi/wifi.h
+> index 6e6353b..085dccd 100644
+> --- a/drivers/net/wireless/rtlwifi/wifi.h
+> +++ b/drivers/net/wireless/rtlwifi/wifi.h
+> @@ -1544,14 +1544,13 @@ struct rtl_hal_cfg {
+>   struct rtl_locks {
+>   	/* mutex */
+>   	struct mutex conf_mutex;
+> +	struct mutex ps_mutex;
+>
+>   	/*spin lock */
+> -	spinlock_t ips_lock;
+>   	spinlock_t irq_th_lock;
+>   	spinlock_t h2c_lock;
+>   	spinlock_t rf_ps_lock;
+>   	spinlock_t rf_lock;
+> -	spinlock_t lps_lock;
+>   	spinlock_t waitq_lock;
+>
+>   	/*Dual mac*/
 
-I do not think the above will work for format_410. By my count, the format_410 
-struct is 4 bytes longer than the format_351 struct.
-
-Even if it does work, I suggest using the following:
-
-	size_t rxhdr_size;
-
-    	BUILD_BUG_ON(sizeof(wl->pio_scratchspace)<  sizeof(*rxhdr));
-	switch (dev->fw.hdr_format) {
-	case B43_FW_HDR_351:
-		rxhdr_size = sizeof(rxhdr->format_351);
-		break;
-	case B43_FW_HDR_410:
-etc.
-
-
-Larry
