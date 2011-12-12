@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41147 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750952Ab1LLRNm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 12:13:42 -0500
-Received: by bkcjm19 with SMTP id jm19so1672702bkc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2011 09:13:41 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] compat-wireless: fix patches/08-rename-config-options.patch
-Date: Mon, 12 Dec 2011 19:14:16 +0200
-Message-Id: <1323710056-15765-1-git-send-email-eliad@wizery.com> (sfid-20111212_181345_317749_D8227368)
+Received: from purkki.adurom.net ([80.68.90.206]:37272 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752693Ab1LLLpP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Dec 2011 06:45:15 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: "Guy\, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: "linville\@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Hsu\, Kenny" <kenny.hsu@intel.com>
+Subject: Re: [PATCH 01/15] iwlwifi: add uCode version information support by testmode
+References: <1323390382-1678-1-git-send-email-wey-yi.w.guy@intel.com>
+	<1323390382-1678-2-git-send-email-wey-yi.w.guy@intel.com>
+	<87vcpoe7bi.fsf@purkki.adurom.net>
+	<1323534307.13074.192.camel@wwguy-huron>
+Date: Mon, 12 Dec 2011 13:45:10 +0200
+In-Reply-To: <1323534307.13074.192.camel@wwguy-huron> (Wey-Yi Guy's message of
+	"Sat, 10 Dec 2011 08:25:07 -0800")
+Message-ID: <87iplmdneh.fsf@purkki.adurom.net> (sfid-20111212_124519_782865_19F1D720)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wl12xx_sdio_test module was removed
+"Guy, Wey-Yi" <wey-yi.w.guy@intel.com> writes:
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- patches/08-rename-config-options.patch |    7 +------
- 1 files changed, 1 insertions(+), 6 deletions(-)
+> On Sat, 2011-12-10 at 08:10 -0800, Kalle Valo wrote:
+>> Wey-Yi Guy <wey-yi.w.guy@intel.com> writes:
+>> 
+>> > From: Hsu, Kenny <kenny.hsu@intel.com>
+>> >
+>> > Create new tm command to report uCode version to userspace
+>> > - IWL_TM_CMD_APP2DEV_GET_FW_VERSION
+>> 
+>> Why not use wiphy.fw_version which is specifally meant for this purpose?
+>> 
+>
+> fw_version is being formatted to string. we need u32
 
-diff --git a/patches/08-rename-config-options.patch b/patches/08-rename-config-options.patch
-index fdd39ec..ae50768 100644
---- a/patches/08-rename-config-options.patch
-+++ b/patches/08-rename-config-options.patch
-@@ -107,18 +107,13 @@ CONFIG_BT_HIDP does not build with older kernel versions.
-  hidp-objs := core.o sock.o
- --- a/drivers/net/wireless/wl12xx/Makefile
- +++ b/drivers/net/wireless/wl12xx/Makefile
--@@ -8,9 +8,9 @@ wl12xx_sdio_test-objs	= sdio_test.o
-+@@ -8,5 +8,5 @@ wl12xx_sdio_test-objs	= sdio_test.o
-  wl12xx-$(CONFIG_NL80211_TESTMODE)	+= testmode.o
-  obj-$(CONFIG_WL12XX)			+= wl12xx.o
-  obj-$(CONFIG_WL12XX_SPI)		+= wl12xx_spi.o
- -obj-$(CONFIG_WL12XX_SDIO)		+= wl12xx_sdio.o
- +obj-$(CONFIG_COMPAT_WL12XX_SDIO)		+= wl12xx_sdio.o
-  
---obj-$(CONFIG_WL12XX_SDIO_TEST)		+= wl12xx_sdio_test.o
--+obj-$(CONFIG_COMPAT_WL12XX_SDIO_TEST)		+= wl12xx_sdio_test.o
-- 
-- # small builtin driver bit
-- obj-$(CONFIG_WL12XX_PLATFORM_DATA)	+= wl12xx_platform_data.o
- --- a/drivers/net/wireless/wl1251/Makefile
- +++ b/drivers/net/wireless/wl1251/Makefile
- @@ -5,4 +5,4 @@ wl1251_sdio-objs	+= sdio.o
+If the u32 format is so important (and I suspect it isn't, most likely
+you have string format for your version numbers as well) you can always
+format the u32 to hex, for example "0xdeadbeef".
+
+Sure, it's ugly but still less ugly than having a private interface in
+the driver. The idea of nl80211 testmode is NOT to replicate wext
+private interface.
+
 -- 
-1.7.6.401.g6a319
-
+Kalle Valo
