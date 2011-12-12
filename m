@@ -1,112 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:16786 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753082Ab1LHKBU (ORCPT
+Received: from mms2.broadcom.com ([216.31.210.18]:2106 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753686Ab1LLR3f convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 05:01:20 -0500
-Date: Thu, 8 Dec 2011 15:31:13 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 3/4] ath9k: Restore EEPROM regulatory upon STA disconnect
-Message-ID: <20111208100111.GA21508@vmraj-lnx.users.atheros.com> (sfid-20111208_110125_467675_FFCA7001)
-References: <1323266001-12912-1-git-send-email-rmanohar@qca.qualcomm.com>
- <1323266001-12912-3-git-send-email-rmanohar@qca.qualcomm.com>
- <CAB=NE6XJMvmcgcz_whsVFbe+T1k_KEnW-ZOrC1K-1bZU+R_shg@mail.gmail.com>
- <20111208060159.GA18304@vmraj-lnx.users.atheros.com>
- <CAB=NE6UibEve6cLL8d5pXz6p71hNFLTDSWAD6pcswq9Q-0rhjw@mail.gmail.com>
+	Mon, 12 Dec 2011 12:29:35 -0500
+Message-ID: <4EE639EF.5000201@broadcom.com> (sfid-20111212_182940_050612_DE561A1F)
+Date: Mon, 12 Dec 2011 18:29:19 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <CAB=NE6UibEve6cLL8d5pXz6p71hNFLTDSWAD6pcswq9Q-0rhjw@mail.gmail.com>
+To: "Julian Wollrath" <jwollrath@web.de>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: brcmsmac fails to bring up BCM43224
+References: <201112121549.55949.jwollrath@web.de>
+In-Reply-To: <201112121549.55949.jwollrath@web.de>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 08, 2011 at 12:16:21AM -0800, Luis R. Rodriguez wrote:
-> On Wed, Dec 7, 2011 at 10:02 PM, Rajkumar Manoharan
-> <rmanohar@qca.qualcomm.com> wrote:
-> > On Wed, Dec 07, 2011 at 01:37:49PM -0800, Luis R. Rodriguez wrote:
-> >> On Wed, Dec 7, 2011 at 5:53 AM, Rajkumar Manoharan
-> >> <rmanohar@qca.qualcomm.com> wrote:
-> >> > The current regulatory for world roaming mode cards might be
-> >> > overriden by country IE from the assiciated AP. But these
-> >> > regulatory values are failed to be restored on disconnection.
-> >> > This patch ensures to resotre regulatry values at driver side.
-> >> >
-> >> > Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> >> > ---
-> >> > †drivers/net/wireless/ath/ath9k/main.c | † †8 ++++++++
-> >> > †1 files changed, 8 insertions(+), 0 deletions(-)
-> >> >
-> >> > diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> >> > index 424289f..a4dbb7b 100644
-> >> > --- a/drivers/net/wireless/ath/ath9k/main.c
-> >> > +++ b/drivers/net/wireless/ath/ath9k/main.c
-> >> > @@ -2046,6 +2046,14 @@ static void ath9k_config_bss(struct ath_softc *sc, struct ieee80211_vif *vif)
-> >> > † † † † † † † †sc->sc_flags &= ~SC_OP_ANI_RUN;
-> >> > † † † † † † † †del_timer_sync(&common->ani.timer);
-> >> > † † † † † † † †memset(&sc->caldata, 0, sizeof(sc->caldata));
-> >> > + † † † † † † † /*
-> >> > + † † † † † † † †* Restore regulatory values that might be updated
-> >> > + † † † † † † † †* by country IEs.
-> >> > + † † † † † † † †*/
-> >> > + † † † † † † † if (!ath_is_world_regd(&common->regulatory) &&
-> >> > + † † † † † † † † † ath_is_world_regd(&common->reg_world_copy))
-> >> > + † † † † † † † † † † † memcpy(&common->regulatory, &common->reg_world_copy,
-> >> > + † † † † † † † † † † † † † † †sizeof(struct ath_regulatory));
-> >> > † † † †}
-> >>
-> >> NACK, this patch should not be required given that patch [2/4] in this
-> >> series restores this on the reg_notifier() for the
-> >> NL80211_REGDOM_SET_BY_CORE case -- the trick is that when cfg80211
-> >> detects not only a disconnect, but any regulatory restore, it will
-> >> *always* send a reg core hint! Again the hunk from patch [2/4] was:
-> >>
-> >> @@ -363,14 +381,37 @@ int ath_reg_notifier_apply(struct wiphy *wiphy,
-> >> † † † † † † † †return 0;
-> >>
-> >> † † † †switch (request->initiator) {
-> >> - † † † case NL80211_REGDOM_SET_BY_DRIVER:
-> >> † † † †case NL80211_REGDOM_SET_BY_CORE:
-> >> + † † † † † † † /*
-> >> + † † † † † † † †* If common->reg_world_copy is world roaming it means we *were*
-> >> + † † † † † † † †* world roaming... so we now have to restore that data.
-> >> + † † † † † † † †*/
-> >> + † † † † † † † if (!ath_is_world_regd(&common->reg_world_copy))
-> >> + † † † † † † † † † † † break;
-> >> +
-> >> + † † † † † † † memcpy(reg, &common->reg_world_copy,
-> >> + † † † † † † † † † † †sizeof(struct ath_regulatory));
-> >> + † † † † † † † break;
-> >> + † † † case NL80211_REGDOM_SET_BY_DRIVER:
-> >> † † † †case NL80211_REGDOM_SET_BY_USER:
-> >> † † † † † † † †break;
-> >>
-> >> Can you please test without this patch and ensure you get the data
-> >> properly restored?
-> >>
-> > But the regulatory updates are ignored for CUSTOM_REGULATORY cards
-> > at wiphy_update_regulatory. Isn't it?
-> >
-> > † † † †if (initiator == NL80211_REGDOM_SET_BY_CORE &&
-> > † † † † † †wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY) {
-> > † † † † † † † †REG_DBG_PRINT("Ignoring regulatory request %s "
-> > † † † † † † † † † † † † † † †"since the driver uses its own custom "
-> > † † † † † † † † † † † † † † †"regulatory domain\n",
-> > † † † † † † † † † † † † † † †reg_initiator_name(initiator));
-> > † † † † † † † †return true;
-> >
-> > To ensure that the regulatory is restored always, I did it at bss_info_change.
+On 12/12/2011 03:49 PM, Julian Wollrath wrote:
+> Hi,
 > 
-> Ah yes, good point. In that case, please instead modify
-> net/wireless/reg.c to call at least the reg_notifier() even if nothing
-> is done. That way not only ath9k but all the other ath drivers benefit
-> from this change.
+> im running an up to date kernel and since after applying the "brcm80211: 
+> fullmac 4430 support and softmac switch to bcma" patch series, my BCM43224 
+> fails to bring up the device.
 > 
-Then I will send it as separate one. Thanks for the comments.
+> [ 9519.193496] bcma-pci-bridge 0000:12:00.0: PCI INT A disabled
+> [ 9574.033024] cfg80211: Calling CRDA to update world regulatory domain
+> [ 9574.033581] bcma-pci-bridge 0000:12:00.0: PCI INT A -> GSI 17 (level, low) 
+> -> IRQ 17
+> [ 9574.033596] bcma-pci-bridge 0000:12:00.0: setting latency timer to 64
+> [ 9574.033703] bcma: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 
+> 0x22, class 0x0)
+> [ 9574.033728] bcma: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 
+> 0x17, class 0x0)
+> [ 9574.033784] bcma: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x0F, 
+> class 0x0)
+> [ 9574.033912] bcma: Found rev 6 PMU (capabilities 0x108C2606)
+> [ 9574.044050] bcma: Bus registered
+> [ 9574.047141] brcmsmac bcma0:0: mfg 4bf core 812 rev 23 class 0 irq 17
+> [ 9574.051858] ieee80211 phy0: wl0: brcms_b_attach: si_attach failed
+> [ 9574.051864] ieee80211 phy0: wl0: brcms_b_attach: failed with err 11
+> [ 9574.051867] ieee80211 phy0: wl0: brcms_c_attach: failed with err 11
+> [ 9574.051880] ieee80211 phy0: brcmsmac: attach() failed with code 11
+> [ 9574.051887] brcmsmac: brcms_bcma_probe: brcms_attach failed!
+> [ 9574.051913] brcms_module_init: register returned 0
+> 
+> If I interpret this information right, it seems, like something went wrong in 
+> the function ai_doattach in aiutils.c.
+> 
+> If you need further information, feel free to ask.
 
-John,
+Thanks, Julian
 
-Please drop this patch alone from the series.
+This issue has been flagged by Larry Finger some days ago. Together with
+Rafa≈Ç (BCMA maintainer) we found what was wrong. The BCMA patches for
+brcmsmac were not the complete set so likely our coming patch series
+will correct the issue.
 
---
-Rajkumar
+Gr. AvS
+
