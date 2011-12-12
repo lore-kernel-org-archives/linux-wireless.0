@@ -1,95 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.23]:60146 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753039Ab1LSU1g (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:39708 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753739Ab1LLUEX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 15:27:36 -0500
-From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Subject: [PATCH] crda: add nested support for libnl-3.2
-Date: Mon, 19 Dec 2011 21:27:15 +0100
-Cc: linux-wireless@vger.kernel.org
+	Mon, 12 Dec 2011 15:04:23 -0500
+Received: by eekc4 with SMTP id c4so1793076eek.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2011 12:04:22 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/2] b43: N-PHY: fix 32-bit reads of tables
+Date: Mon, 12 Dec 2011 21:38:35 +0100
+Message-Id: <1323722316-4265-1-git-send-email-zajec5@gmail.com> (sfid-20111212_210427_734282_68782C24)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201112192127.25032.s.L-H@gmx.de> (sfid-20111219_212745_220505_443972B7)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Skip libnl-3.1 due to broken .pc files.
+The order is different than on older PHYs.
 
-Tested to work with:
-- libnl-3.2.3 (Debian 3.2.3-1)
-
-Changes-licensed-under: ISC
-Signed-off-by: Stefan Lippers-Hollmann <s.l-h@gmx.de>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- Makefile |   25 ++++++++++++++++---------
- crda.c   |    4 ++--
- 2 files changed, 18 insertions(+), 11 deletions(-)
+ drivers/net/wireless/b43/tables_nphy.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index 084d8e5..5a8ed46 100644
---- a/Makefile
-+++ b/Makefile
-@@ -48,19 +48,26 @@ INSTALL ?= install
- NL1FOUND := $(shell pkg-config --atleast-version=1 libnl-1 && echo Y)
- NL2FOUND := $(shell pkg-config --atleast-version=2 libnl-2.0 && echo Y)
- NL3FOUND := $(shell pkg-config --atleast-version=3 libnl-3.0 && echo Y)
-+NL32FOUND := $(shell pkg-config --atleast-version=3 libnl-3.2 && echo Y)
- 
--ifeq ($(NL3FOUND),Y)
-+ifeq ($(NL32FOUND),Y)
- CFLAGS += -DCONFIG_LIBNL30
--NLLIBS += -lnl-genl
--NLLIBNAME = libnl-3.0
-+NLLIBS += $(shell pkg-config --libs libnl-genl-3.2)
-+NLLIBNAME = libnl-3.2
- else
--	ifeq ($(NL2FOUND),Y)
--	CFLAGS += -DCONFIG_LIBNL20
--	NLLIBS += -lnl-genl
--	NLLIBNAME = libnl-2.0
-+	ifeq ($(NL3FOUND),Y)
-+	CFLAGS += -DCONFIG_LIBNL30
-+	NLLIBS += $(shell pkg-config --libs libnl-genl-3.0)
-+	NLLIBNAME = libnl-3.0
- 	else
--		ifeq ($(NL1FOUND),Y)
--		NLLIBNAME = libnl-1
-+		ifeq ($(NL2FOUND),Y)
-+		CFLAGS += -DCONFIG_LIBNL20
-+		NLLIBS += -lnl-genl
-+		NLLIBNAME = libnl-2.0
-+		else
-+			ifeq ($(NL1FOUND),Y)
-+			NLLIBNAME = libnl-1
-+			endif
- 		endif
- 	endif
- endif
-diff --git a/crda.c b/crda.c
-index 1e2ff22..1db54a5 100644
---- a/crda.c
-+++ b/crda.c
-@@ -21,7 +21,7 @@
- #include "regdb.h"
- #include "reglib.h"
- 
--#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30)
-+#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30) && !defined(CONFIG_LIBNL32)
- /* libnl 2.0 compatibility code */
- static inline struct nl_handle *nl_socket_alloc(void)
- {
-@@ -44,7 +44,7 @@ static inline int __genl_ctrl_alloc_cache(struct nl_handle *h, struct nl_cache *
- 
- #define genl_ctrl_alloc_cache __genl_ctrl_alloc_cache
- #define nl_sock nl_handle
--#endif /* CONFIG_LIBNL20 && CONFIG_LIBNL30 */
-+#endif /* CONFIG_LIBNL20 && CONFIG_LIBNL30 && CONFIG_LIBNL32 */
- 
- struct nl80211_state {
- 	struct nl_sock *nl_sock;
+diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
+index 691839e..e1fc337 100644
+--- a/drivers/net/wireless/b43/tables_nphy.c
++++ b/drivers/net/wireless/b43/tables_nphy.c
+@@ -2880,9 +2880,8 @@ u32 b43_ntab_read(struct b43_wldev *dev, u32 offset)
+ 		break;
+ 	case B43_NTAB_32BIT:
+ 		b43_phy_write(dev, B43_NPHY_TABLE_ADDR, offset);
+-		value = b43_phy_read(dev, B43_NPHY_TABLE_DATAHI);
+-		value <<= 16;
+-		value |= b43_phy_read(dev, B43_NPHY_TABLE_DATALO);
++		value = b43_phy_read(dev, B43_NPHY_TABLE_DATALO);
++		value |= b43_phy_read(dev, B43_NPHY_TABLE_DATAHI) << 16;
+ 		break;
+ 	default:
+ 		B43_WARN_ON(1);
+@@ -2916,9 +2915,10 @@ void b43_ntab_read_bulk(struct b43_wldev *dev, u32 offset,
+ 			data += 2;
+ 			break;
+ 		case B43_NTAB_32BIT:
+-			*((u32 *)data) = b43_phy_read(dev, B43_NPHY_TABLE_DATAHI);
+-			*((u32 *)data) <<= 16;
+-			*((u32 *)data) |= b43_phy_read(dev, B43_NPHY_TABLE_DATALO);
++			*((u32 *)data) =
++				b43_phy_read(dev, B43_NPHY_TABLE_DATALO);
++			*((u32 *)data) |=
++				b43_phy_read(dev, B43_NPHY_TABLE_DATAHI) << 16;
+ 			data += 4;
+ 			break;
+ 		default:
 -- 
-1.7.7.3
+1.7.3.4
 
