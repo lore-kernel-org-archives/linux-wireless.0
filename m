@@ -1,32 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:6979 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757536Ab1LNSl1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 13:41:27 -0500
-Message-ID: <4EE8EDBE.1040504@qca.qualcomm.com> (sfid-20111214_194131_464687_E2D673A9)
-Date: Wed, 14 Dec 2011 20:41:02 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:3055 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754531Ab1LLXPu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Dec 2011 18:15:50 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 01/15] brcm80211: smac: change ai_findcoreidx() to
+ ai_findcore()
+Date: Mon, 12 Dec 2011 15:14:59 -0800
+Message-ID: <1323731713-14942-2-git-send-email-frankyl@broadcom.com> (sfid-20111213_001601_790850_783C153A)
+In-Reply-To: <1323731713-14942-1-git-send-email-frankyl@broadcom.com>
+References: <1323731713-14942-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-To: <ryanhsu@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 1/1] ath6kl: Support different uart_tx pin and refclk
- configuration
-References: <1323767467-5952-1-git-send-email-ryanhsu@qca.qualcomm.com>
-In-Reply-To: <1323767467-5952-1-git-send-email-ryanhsu@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/13/2011 11:11 AM, ryanhsu@qca.qualcomm.com wrote:
-> From: Ryan Hsu <ryanhsu@qca.qualcomm.com>
-> 
->     AR6003 family use uart_tx=8 and refclk=26Mhz by default, and AR6004 family
->     uses different uart_tx pin and could also support various xtal source,
->     moves these per hw configuration.
-> 
-> Signed-off-by: Ryan Hsu <ryanhsu@qca.qualcomm.com>
+From: Arend van Spriel <arend@broadcom.com>
 
-Thanks, applied.
+Instead of returning the core index the function now returns
+the bcma device for the requested core id. This function is
+now exposed in the header file.
 
-Kalle
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |   14 +++++++-------
+ drivers/net/wireless/brcm80211/brcmsmac/aiutils.h |    2 ++
+ 2 files changed, 9 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+index 8d3829a..a54cf32 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
+@@ -884,7 +884,7 @@ uint ai_coreidx(struct si_pub *sih)
+ }
+ 
+ /* return index of coreid or BADIDX if not found */
+-uint ai_findcoreidx(struct si_pub *sih, uint coreid, uint coreunit)
++struct bcma_device *ai_findcore(struct si_pub *sih, u16 coreid, u16 coreunit)
+ {
+ 	struct bcma_device *core;
+ 	struct si_info *sii;
+@@ -897,11 +897,11 @@ uint ai_findcoreidx(struct si_pub *sih, uint coreid, uint coreunit)
+ 	list_for_each_entry(core, &sii->icbus->cores, list)
+ 		if (core->id.id == coreid) {
+ 			if (found == coreunit)
+-				return core->core_index;
++				return core;
+ 			found++;
+ 		}
+ 
+-	return BADIDX;
++	return NULL;
+ }
+ 
+ /*
+@@ -912,13 +912,13 @@ uint ai_findcoreidx(struct si_pub *sih, uint coreid, uint coreunit)
+  */
+ void __iomem *ai_setcore(struct si_pub *sih, uint coreid, uint coreunit)
+ {
+-	uint idx;
++	struct bcma_device *core;
+ 
+-	idx = ai_findcoreidx(sih, coreid, coreunit);
+-	if (idx >= SI_MAXCORES)
++	core = ai_findcore(sih, coreid, coreunit);
++	if (core == NULL)
+ 		return NULL;
+ 
+-	return ai_setcoreidx(sih, idx);
++	return ai_setcoreidx(sih, core->core_index);
+ }
+ 
+ /* Turn off interrupt as required by ai_setcore, before switch core */
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
+index 67b378f..b0b0bff 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
++++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
+@@ -219,6 +219,8 @@ struct si_info {
+ 
+ 
+ /* AMBA Interconnect exported externs */
++extern struct bcma_device *ai_findcore(struct si_pub *sih,
++				       u16 coreid, u16 coreunit);
+ extern uint ai_coreidx(struct si_pub *sih);
+ extern uint ai_corerev(struct si_pub *sih);
+ extern u32 ai_core_cflags(struct bcma_device *core, u32 mask, u32 val);
+-- 
+1.7.5.4
+
+
