@@ -1,83 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:27087 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760198Ab1LPQh4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 11:37:56 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 20/24] iwlwifi: create iwl_mac80211 unregister routine
-Date: Fri, 16 Dec 2011 07:37:25 -0800
-Message-Id: <1324049849-831-21-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111216_173817_304015_EC18513B)
-In-Reply-To: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:58851 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754573Ab1LLWuK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Dec 2011 17:50:10 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6Wb9ySk6a1gB-edyF_uRe=-ESehUNbUa+n0g2WYGJXnqw@mail.gmail.com>
+References: <1319461948.31243.31.camel@deadeye> <CAB=NE6Vt91tHCBj7sJHjUCaDZZPqox+omcQjsEj54vQAtbY2bw@mail.gmail.com>
+ <20111212215818.GP3366@decadent.org.uk> <CAB=NE6Wb9ySk6a1gB-edyF_uRe=-ESehUNbUa+n0g2WYGJXnqw@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 12 Dec 2011 14:49:49 -0800
+Message-ID: <CAB=NE6W_aP2rY=6CAd4xYLM8wmiUxrzBqZhCZPEksVMsDQ9jAg@mail.gmail.com> (sfid-20111212_235034_588026_DB505B81)
+Subject: Re: [PATCH] module,bug: Add TAINT_OOT_MODULE flag for modules not
+ built in-tree
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Dave Jones <davej@redhat.com>, Greg KH <greg@kroah.com>,
+	Debian kernel maintainers <debian-kernel@lists.debian.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Don Fry <donald.h.fry@intel.com>
+On Mon, Dec 12, 2011 at 2:47 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+> On Mon, Dec 12, 2011 at 1:58 PM, Ben Hutchings <ben@decadent.org.uk> wrote:
+>> On Mon, Dec 12, 2011 at 01:40:44PM -0800, Luis R. Rodriguez wrote:
+>>> On Mon, Oct 24, 2011 at 6:12 AM, Ben Hutchings <ben@decadent.org.uk> wrote:
+>>> > Use of the GPL or a compatible licence doesn't necessarily make the code
+>>> > any good.  We already consider staging modules to be suspect, and this
+>>> > should also be true for out-of-tree modules which may receive very
+>>> > little review.
+>>> >
+>>> > Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+>>> > ---
+>>> > Debian has been carrying this for the last few kernel versions.  The
+>>> > recent thread '[RFC] virtualbox tainting.' and discussions at KS suggest
+>>> > that this might be more generally useful.
+>>>
+>>> This indeed seems like a good idea to advocate getting things upstream
+>>> (not just staging) but what about the case where we have upstream
+>>> drivers from future kernels backported to older kernels and the newer
+>>> driver is simply provided as a feature for users who may need new
+>>> features / chipset support on their old distribution kernel?
+>>
+>> They continue to work without any loss of functionality.  (After the
+>> follow-up patches to keep dynamic debugging and lock debugging
+>> working.)
+>
+> Great!
+>
+>>> It seems this taint flag will be used for driers backported through
+>>> compat-wireless, the compat kernel module or any other backported
+>>> driver, even if it is indeed upstream and whereby kernel developer
+>>> *do* commit to actually fixing issues. In our experience
+>>> compat-wireless bugs *are real bugs*, not backport bugs so we do look
+>>> into them. In our latest linux-next.git based release for example
+>>> backport code consists only of 1.3804% of the code.
+>>
+>> Now you can look for (O) after the module name in a BUG/Oops message
+>> and you can tell whether the user really had the original or
+>> compat-wireless version of the driver.
+>>
+>> It is really up to each distributor or developer how they treat
+>> bug reports with the O taint.  When handling Debian bug reports I
+>> won't automatically reject such a tainted kernel but I will look
+>> carefully at the module list.
+>
+> I'm working on getting my companies to abandon 802.11 proprietary
+> drivers for good. For Station mode of operation this is pretty much
+> mission complete. For AP products.. this is work in progress. The out
+> of tree flag is a good utility one can use to help justify working
+> upstream but if we treat any future-kernel-backported-driver equally
+> to any out of tree crap piece of shit driver, it seems to do unjustice
+> to the value of a properly upstream backported driver. I will note
+> that I put a lot of effort to ensure that the backport effort is
+> upstream-centric in an *extremely* upstream-biased way, see how I
+> label extra patches for tarballs [1]. If your patches are not upstream
+> the only way you get into these tarballs are by providing patches into
+> these directories:
+>
+>  * pending-stable/ stable fixes from linux-next.git not yet on a stable release
+>  * linux-next-cherry-picks/ patches upstream but that won't go to the
+> stable release that we want to cherry pick
+>  * linux-next-pending/ patches posted on the public development
+> mailing list, patch not yet merged due to the maintainer being away on
+> vacation or whatever
+>  * crap/ patches not even posted publicly yet
+>
+> Each tarball used also gets pegged with a letter if *any* patch from
+> any of these directories gets applied. The compat module, upon being
+> loaded, will also print the kernel ring buffer the exact release,
+> whether extra patches were provided, the upstream git tree used as
+> base and so on.
+>
+> So -- although from a technical perspective this may mean Debian /
+> other kernel developers may ignore the taint flag for compat-wireless
+> it'd sure be nice to avoid it for them all together. Just can't think
+> of a way to do it yet... If you agree should we continue to think of a
+> way if its possible?
+>
+> [1] http://wireless.kernel.org/en/users/Download/stable#Legend
 
-The mac80211 setup_register operations are collected in one routine,
-but the cleanup routines are not.  Create a routine for this.
+How about a way to peg a driver as a backport from future kernels?
+Like maybe MODULE_COMPAT() ?
 
-Signed-off-by: Don Fry <donald.h.fry@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c      |    7 +------
- drivers/net/wireless/iwlwifi/iwl-agn.h      |    1 +
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |    9 +++++++++
- 3 files changed, 11 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 5a9370d..f7e089d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1915,12 +1915,7 @@ void __devexit iwl_remove(struct iwl_priv * priv)
- 	set_bit(STATUS_EXIT_PENDING, &priv->shrd->status);
- 
- 	iwl_testmode_cleanup(priv);
--	iwl_leds_exit(priv);
--
--	if (priv->mac80211_registered) {
--		ieee80211_unregister_hw(priv->hw);
--		priv->mac80211_registered = 0;
--	}
-+	iwlagn_mac_unregister(priv);
- 
- 	iwl_tt_exit(priv);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 66bcd3e..2c5b6c4 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -91,6 +91,7 @@ void iwlagn_prepare_restart(struct iwl_priv *priv);
- struct ieee80211_hw *iwl_alloc_all(void);
- int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 			      struct iwlagn_ucode_capabilities *capa);
-+void iwlagn_mac_unregister(struct iwl_priv *priv);
- 
- /* RXON */
- int iwlagn_set_pan_params(struct iwl_priv *priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index 8074c6e..412ff48 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -245,6 +245,15 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 	return 0;
- }
- 
-+void iwlagn_mac_unregister(struct iwl_priv *priv)
-+{
-+	if (!priv->mac80211_registered)
-+		return;
-+	iwl_leds_exit(priv);
-+	ieee80211_unregister_hw(priv->hw);
-+	priv->mac80211_registered = 0;
-+}
-+
- static int __iwl_up(struct iwl_priv *priv)
- {
- 	struct iwl_rxon_context *ctx;
--- 
-1.7.0.4
-
+  Luis
