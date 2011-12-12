@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:34295 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750796Ab1LIQom (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:57389 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750887Ab1LLKEy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Dec 2011 11:44:42 -0500
-Received: by vbbfc26 with SMTP id fc26so2438265vbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Dec 2011 08:44:41 -0800 (PST)
-Message-ID: <4EE23AF5.8000400@lwfinger.net> (sfid-20111209_174445_406532_3FD4AE54)
-Date: Fri, 09 Dec 2011 10:44:37 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 12 Dec 2011 05:04:54 -0500
+Received: by dajs34 with SMTP id s34so1547173daj.19
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2011 02:04:54 -0800 (PST)
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Francesco Gringoli <francesco.gringoli@ing.unibs.it>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Performance of BCM43224 (14e4:4353)
-References: <4EE15A4E.1090500@lwfinger.net> <4EE1E2AC.8030002@broadcom.com>
-In-Reply-To: <4EE1E2AC.8030002@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1323683521.3442.33.camel@jlt3.sipsolutions.net>
+References: <CAMG6FYgLHP2WmcuMFh6fzih-NKO8Brvpbeeb2uunZQydYYmNLw@mail.gmail.com>
+	<1323680547.3442.6.camel@jlt3.sipsolutions.net>
+	<CAMG6FYjxRK30hTvKEaK=ppofN=KecJkbabTggWzXZQ5b-EN-NA@mail.gmail.com>
+	<1323683521.3442.33.camel@jlt3.sipsolutions.net>
+Date: Mon, 12 Dec 2011 11:04:54 +0100
+Message-ID: <CAMG6FYjMj1pk9eCw=RuEATm+yuCQMWTe18Pt+=OgF=JNY7NpMw@mail.gmail.com> (sfid-20111212_110458_456891_C723C45E)
+Subject: Re: [RFC] mac80211: Prevent possible BUG on suspend.
+From: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/09/2011 04:27 AM, Arend van Spriel wrote:
+On Mon, Dec 12, 2011 at 10:52 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2011-12-12 at 10:22 +0100, Dmitry Tarnyagin wrote:
+>> On Mon, Dec 12, 2011 at 10:02 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> > On Mon, 2011-12-12 at 00:38 +0100, Dmitry Tarnyagin wrote:
+
+>> ... or abort suspend on the driver's level. It's perfectly ok for me. But then
+>> driver needs to be at least notified that WLAN is suspending. What do you
+>> think about early-suspend driver callback which to be called before any
+>> possibly locking operations in mac80211 code?
 >
-> Hi Larry
+> That's seems reasonable.
 >
-> Could you perform your benchmark test on brcmsmac without the bcma
-> patches. It kind of surprises me that we are that far off compared to
-> the wl driver.
+Ok, I will play with it a bit...
 
-I wondered about that myself. Upon investigation, my test with bcma/brcmsmac 
-never worked. Without the patches, my netperf numbers for brcmsmac are RX 40.0 
-and TX 59.7 Mbps.In all cases, the reported number is the maximum of 10 tries of 
-3 sec each.
-
-With the patches, my dmesg contains the following:
-
-[  908.282281] bcma: Bus registered
-[  908.353242] brcmsmac bcma0:0: mfg 4bf core 812 rev 23 class 0 irq 22
-[  908.380164] ieee80211 phy0: wl0: brcms_b_attach: si_attach failed
-[  908.380184] ieee80211 phy0: wl0: brcms_b_attach: failed with err 11
-[  908.380192] ieee80211 phy0: wl0: brcms_c_attach: failed with err 11
-[  908.380316] ieee80211 phy0: brcmsmac: attach() failed with code 11
-[  908.380379] brcmsmac: brcms_bcma_probe: brcms_attach failed!
-[  908.381715] brcms_module_init: register returned 0
-
-As b43 is also loaded, which may be a second problem, it is run instead of brcmsmac.
-
-Larry
-
+> Well whenever it would have to wait for the mutex, even if it just has
+> to wait 1ms for it... That will *certainly* trigger *randomly* on normal
+> laptops systems and cause a TON of bug reports from users saying "my
+> system randomly refuses to suspend".
+>
+Oh, yes, true..
