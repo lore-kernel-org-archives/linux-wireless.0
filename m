@@ -1,61 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39705 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751295Ab1LHXFy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 18:05:54 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: stable@vger.kernel.org, Larry.Finger@lwfinger.net,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
-	Michael Buesch <m@bues.ch>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH v2] ssb: fix init regression with SoCs
-Date: Fri,  9 Dec 2011 00:05:20 +0100
-Message-Id: <1323385520-5933-1-git-send-email-hauke@hauke-m.de> (sfid-20111209_000557_938318_134A55E4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from he.sipsolutions.net ([78.46.109.217]:45867 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105Ab1LLJAs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 12 Dec 2011 04:00:48 -0500
+Subject: Re: [PATCH] mac80211: Do not request FIF_BCN_PRBRESP_PROMISC for
+ HW scan.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Bartosz.Markowski@tieto.com,
+	Janusz.Dziedzic@tieto.com
+In-Reply-To: <CAMG6FYgGB12s+vTGRuKb1E8qzwMa3=kV2pm5ZFQ=BO4WqqZSRQ@mail.gmail.com> (sfid-20111211_225335_668297_3861F175)
+References: <CAMG6FYgGB12s+vTGRuKb1E8qzwMa3=kV2pm5ZFQ=BO4WqqZSRQ@mail.gmail.com>
+	 (sfid-20111211_225335_668297_3861F175)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 12 Dec 2011 10:00:44 +0100
+Message-ID: <1323680444.3442.5.camel@jlt3.sipsolutions.net> (sfid-20111212_100051_519504_47F64535)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes a Data bus error on some SoCs. The first fix for this
-problem did not solve it on all devices.
-    commit 6ae8ec27868bfdbb815287bee8146acbefaee867
-    Author: Rafał Miłecki <zajec5@gmail.com>
-    Date:   Tue Jul 5 17:25:32 2011 +0200
-        ssb: fix init regression of hostmode PCI core
+On Sun, 2011-12-11 at 22:47 +0100, Dmitry Tarnyagin wrote:
+> ieee80211_configure_filter code used local->scanning as a boolean value
+> when it was a bit mask. Bits SCAN_HW_SCANNING, SCAN_COMPLETED, SCAN_ABORTED
+> should not set FIF_BCN_PRBRESP_PROMISC filter.
+> 
+> Similar mistake was fixed also in ieee80211_hw_config (power
+> configuration code).
 
-In ssb_pcicore_fix_sprom_core_index() the sprom on the PCI core is
-accessed, but the sprom only exists when the ssb bus is connected over
-a PCI bus to the rest of the system and not when the SSB Bus is the
-main system bus. SoCs sometimes have a PCI host controller and there
-this code will not be executed, but there are some old SoCs with an PCI
-controller in client mode around and ssb_pcicore_fix_sprom_core_index()
-should not be called on these devices too. The PCI controller on these
-devices are unused, but without this fix it results in an Data bus
-error when it gets initialized.
+Seems right -- although the probresp-promisc filter thing is debatable
+and I think the changelog should be more explicit about it, maybe saying
+that the driver can always change that by itself in the hw scan callback
+if it requires it... That part isn't really only bugfix, it's a semantic
+change.
 
-Cc: stable@vger.kernel.org # Kernel >= 3.0
-Cc: Michael Buesch <m@bues.ch>
-Cc: Rafał Miłecki <zajec5@gmail.com>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/ssb/driver_pcicore.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+The second part, yeah, obviously.
 
-diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
-index 84c934c..2cefe14 100644
---- a/drivers/ssb/driver_pcicore.c
-+++ b/drivers/ssb/driver_pcicore.c
-@@ -517,7 +517,8 @@ static void ssb_pcicore_pcie_setup_workarounds(struct ssb_pcicore *pc)
- 
- static void __devinit ssb_pcicore_init_clientmode(struct ssb_pcicore *pc)
- {
--	ssb_pcicore_fix_sprom_core_index(pc);
-+	if (pc->dev->bus->bustype == SSB_BUSTYPE_PCI)
-+		ssb_pcicore_fix_sprom_core_index(pc);
- 
- 	/* Disable PCI interrupts. */
- 	ssb_write32(pc->dev, SSB_INTVEC, 0);
--- 
-1.7.5.4
+johannes
+
+> Verified-by: Vitaly Wool <vitaly.wool@sonyeric­sson.com>
+> Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+> ---
+>  net/mac80211/main.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> index cae4435..54f78ab 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -47,7 +47,7 @@ void ieee80211_configure_filter(struct ieee80211_local *local)
+>  	if (atomic_read(&local->iff_allmultis))
+>  		new_flags |= FIF_ALLMULTI;
+> 
+> -	if (local->monitors || local->scanning)
+> +	if (local->monitors || test_bit(SCAN_SW_SCANNING, &local->scanning))
+>  		new_flags |= FIF_BCN_PRBRESP_PROMISC;
+> 
+>  	if (local->fif_probe_req || local->probe_req_reg)
+> @@ -193,8 +193,8 @@ int ieee80211_hw_config(struct ieee80211_local
+> *local, u32 changed)
+>  		changed |= IEEE80211_CONF_CHANGE_SMPS;
+>  	}
+> 
+> -	if ((local->scanning & SCAN_SW_SCANNING) ||
+> -	    (local->scanning & SCAN_HW_SCANNING))
+> +	if (test_bit(SCAN_SW_SCANNING, &local->scanning) ||
+> +	    test_bit(SCAN_HW_SCANNING, &local->scanning))
+>  		power = chan->max_power;
+>  	else
+>  		power = local->power_constr_level ?
+
 
