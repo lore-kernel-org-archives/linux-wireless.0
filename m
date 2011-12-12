@@ -1,35 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:54432 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752870Ab1LLSRK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35587 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753285Ab1LLNMc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 13:17:10 -0500
-Message-ID: <4EE64522.5090107@gmx.net> (sfid-20111212_191715_293713_0E6CD5E8)
-Date: Mon, 12 Dec 2011 19:17:06 +0100
-From: Wolfgang Breyha <wbreyha@gmx.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi havoc on some APs (rekeying?)
-References: <4EE2202A.4080303@gmx.net>  <1323446534.13074.96.camel@wwguy-huron>  <4EE24DF4.4020301@gmx.net>  <1323451436.13074.158.camel@wwguy-huron>  (sfid-20111209_192243_598986_F6275AE2) <1323455216.3622.21.camel@jlt3.sipsolutions.net>  <4EE35877.1060507@gmx.net>  (sfid-20111210_140255_490293_C3C0F113) <1323680657.3442.7.camel@jlt3.sipsolutions.net>  <4EE5D2D3.406@gmx.net>  (sfid-20111212_110955_792336_68917631) <1323684754.3442.36.camel@jlt3.sipsolutions.net>  <4EE5E3CD.1070409@gmx.net> (sfid-20111212_122224_090419_DF83BB07) <1323712082.3442.43.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1323712082.3442.43.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 12 Dec 2011 08:12:32 -0500
+Subject: Re: [PATCH] mac80211: don't check sdata_running in vif notifier
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1323695084-28109-1-git-send-email-eliad@wizery.com> (sfid-20111212_140440_745020_54E638D6)
+References: <1323695084-28109-1-git-send-email-eliad@wizery.com>
+	 (sfid-20111212_140440_745020_54E638D6)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 12 Dec 2011 14:12:29 +0100
+Message-ID: <1323695549.3442.38.camel@jlt3.sipsolutions.net> (sfid-20111212_141250_106321_F0760BC4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-12-12 18:48, Johannes Berg wrote:
-> A colleague pointed out that due to the PCI address space hold we might
-> be seeing larger addresses -- could you try booting the 32 bit kernel
-> with "mem=3G" on the command line (edit it in grub maybe?) and see if
-> you can still reproduce it then?
+On Mon, 2011-12-12 at 15:04 +0200, Eliad Peller wrote:
+> The ip address of the vif can be set even before the
+> vif is up. requiring the vif to be up in the vif
+> notifier makes the notifer ignore this event, which
+> causes wrong arp filter configuration later on.
+> 
+> Reported-by: Eyal Shapira <eyal@wizery.com>
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
+>  net/mac80211/main.c |    3 ---
+>  1 files changed, 0 insertions(+), 3 deletions(-)
+> 
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> index 8022c62..ad8f712 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -436,9 +436,6 @@ static int ieee80211_ifa_changed(struct notifier_block *nb,
+>  	sdata = IEEE80211_DEV_TO_SUB_IF(ndev);
+>  	bss_conf = &sdata->vif.bss_conf;
+>  
+> -	if (!ieee80211_sdata_running(sdata))
+> -		return NOTIFY_DONE;
+> -
 
-mem=3G changes nothing except the amount of memory;-) Exactly the same
-issues occur.
+Ok ... maybe a comment would be good when we check associated that if
+associated the interface has to be up? Otherwise casual readers might
+wonder if this can call into the driver while it's down? Dunno...
 
-Trying 64bits now...
+johannes
 
-Greetings, Wolfgang
--- 
-Wolfgang Breyha <wbreyha@gmx.net> | http://www.blafasel.at/
-Vienna University Computer Center | Austria
