@@ -1,92 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49827 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751556Ab1LSTpe (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26911 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753611Ab1LMIzj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 14:45:34 -0500
-Date: Mon, 19 Dec 2011 14:39:57 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Yogesh Ashok Powar <yogesh.powar@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: Re: [PATCH V2] mac80211: Fixing sparse warning at sta_info.c
-Message-ID: <20111219193957.GC31462@tuxdriver.com> (sfid-20111219_204536_386770_EA522036)
-References: <82612>
- <20111216061715.GA11190@dugs>
+	Tue, 13 Dec 2011 03:55:39 -0500
+Cc: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: [RFC 2/2] mac80211: Fix power save in change save
+Date: Tue, 13 Dec 2011 14:25:15 +0530
+Message-ID: <1323766515-19223-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111213_095543_559143_BA2E42EE)
+In-Reply-To: <1323766515-19223-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1323766515-19223-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111216061715.GA11190@dugs>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Applying: mac80211: Fixing sparse warning at sta_info.c
-error: patch failed: net/mac80211/sta_info.c:974
-error: net/mac80211/sta_info.c: patch does not apply
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-What tree did you use as a base for your patch?
+we found that power save is not getting enabled when we do
+change interface in this order STA->IBSS->STA. this is
+because ieee80211_setup_sdata clears type-dependen union
 
-On Fri, Dec 16, 2011 at 11:47:15AM +0530, Yogesh Ashok Powar wrote:
-> The commit 42624d4913a00219a8fdbb4bafd634d1d843be85
-> created following sparse warning
-> >net/mac80211/sta_info.c:965:24: warning: incorrect type in assignment (different address spaces)
-> >net/mac80211/sta_info.c:965:24:    expected struct tid_ampdu_tx *tid_tx
-> >net/mac80211/sta_info.c:965:24:    got struct tid_ampdu_tx [noderef] <asn:4>*<noident>
-> 
-> Making use of rcu_dereference_protected to fix the problem.
-> 
-> V2:
->  - Replacing rcu_dereference with rcu_dereference_protected
->    as suggested by Johannes.
->  - Adding mutex_lock/unlock to satisfy the condition at
->    rcu_dereference_protected
-> 
-> Cc: Nishant Sarmukadam <nishants@marvell.com>
-> Reported-by: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-> ---
->  net/mac80211/sta_info.c |    9 +++++++--
->  1 files changed, 7 insertions(+), 2 deletions(-)
-> 
-> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-> index c6ca9bd..e4307b7 100644
-> --- a/net/mac80211/sta_info.c
-> +++ b/net/mac80211/sta_info.c
-> @@ -959,10 +959,13 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
->  	 * until the aggregation stop completes. Refer
->  	 * http://thread.gmane.org/gmane.linux.kernel.wireless.general/81936
->  	 */
-> +
-> +	mutex_lock(&sta->ampdu_mlme.mtx);
-> +
->  	for (i = 0; i < STA_TID_NUM; i++) {
-> -		if (!sta->ampdu_mlme.tid_tx[i])
-> +		tid_tx = rcu_dereference_protected_tid_tx(sta, i);
-> +		if (!tid_tx)
->  			continue;
-> -		tid_tx = sta->ampdu_mlme.tid_tx[i];
->  		if (skb_queue_len(&tid_tx->pending)) {
->  #ifdef CONFIG_MAC80211_HT_DEBUG
->  			wiphy_debug(local->hw.wiphy, "TX A-MPDU  purging %d "
-> @@ -974,6 +977,8 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
->  		kfree_rcu(tid_tx, rcu_head);
->  	}
->  
-> +	mutex_unlock(&sta->ampdu_mlme.mtx);
-> +
->  	__sta_info_free(local, sta);
->  
->  	return 0;
-> -- 
-> 1.7.5.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Reported-by: Leela Kella <leela@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ net/mac80211/mlme.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 67a6be1..d87fde3 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2371,6 +2371,7 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ 		    (unsigned long) sdata);
+ 
+ 	ifmgd->flags = 0;
++	ifmgd->powersave = sdata->wdev.ps;
+ 
+ 	mutex_init(&ifmgd->mtx);
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
