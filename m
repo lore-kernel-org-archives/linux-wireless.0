@@ -1,38 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60108 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753601Ab1LVLXV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Dec 2011 06:23:21 -0500
-Message-ID: <4EF31325.2050408@openwrt.org> (sfid-20111222_122324_244910_F250B178)
-Date: Thu, 22 Dec 2011 12:23:17 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: wireless newbie <wnewbie72@gmail.com>
-CC: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	openwrt-devel@lists.openwrt.org,
-	Mohammed Shafi <shafi.wireless@gmail.com>
-Subject: Re: ar9390 failing AGC calibration on powerpc platform
-References: <CAApCBGx28SbbmNpynCpKW9CyAsV5+c_fZ=1k9QAsKnXf4nDQEw@mail.gmail.com> <CAApCBGx7fHuQr87TnppE6FyX9d-1F0huUqgYhjv++8vmfov6zQ@mail.gmail.com>
-In-Reply-To: <CAApCBGx7fHuQr87TnppE6FyX9d-1F0huUqgYhjv++8vmfov6zQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:48784 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750764Ab1LMJkx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Dec 2011 04:40:53 -0500
+Received: by mail-lpp01m010-f41.google.com with SMTP id i5so3061381lah.14
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Dec 2011 01:40:52 -0800 (PST)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH] wl12xx: call extended radio parameters for wl127x AP mode
+Date: Tue, 13 Dec 2011 11:39:50 +0200
+Message-Id: <1323769190-20559-1-git-send-email-coelho@ti.com> (sfid-20111213_104055_502669_2A9AE230)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-12-22 12:11 PM, wireless newbie wrote:
-> I still haven't been able to get this thing working. But I have made
-> some tests on other powerpc target (mpc8315 cpu versus mpc8321 cpu on
-> my own target) and I can tell that this problem doesn't seem to be
-> related to big endian environment. Ar9390 works just fine with
-> mpc8315. The difference between those two targets is that 8315 has
-> pcie bus whereas my own target's pcie bus is behind pci-to-pcie bridge
-> (PLX PEX8112).
-> 
-> Is anyone aware of any limitations or bugs related to using ar9390
-> behind pci-to-pcie bridge? All help is really appreciated.
-Have you tried any other PCIe device behind such a bridge?
+We need to set the extended radio parameters for wl127x only.
+Currently, we were only calling this command with wl127x STA mode, but
+we should also do it for AP mode.
 
-Maybe you should also check the ASPM settings, though I don't know
-enough to give you details on that. It's been covered in various threads
-on linux-wireless.
+Move the call to the extended radio paramaters to the common hw_init
+and use a single if for the chip type to do everything at once.
 
-- Felix
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/init.c |   31 +++++++++++++++----------------
+ 1 files changed, 15 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/init.c b/drivers/net/wireless/wl12xx/init.c
+index 88891cd..7662514 100644
+--- a/drivers/net/wireless/wl12xx/init.c
++++ b/drivers/net/wireless/wl12xx/init.c
+@@ -328,12 +328,6 @@ static int wl1271_sta_hw_init(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ {
+ 	int ret;
+ 
+-	if (wl->chip.id != CHIP_ID_1283_PG20) {
+-		ret = wl1271_cmd_ext_radio_parms(wl);
+-		if (ret < 0)
+-			return ret;
+-	}
+-
+ 	/* PS config */
+ 	ret = wl12xx_acx_config_ps(wl, wlvif);
+ 	if (ret < 0)
+@@ -659,19 +653,24 @@ int wl1271_hw_init(struct wl1271 *wl)
+ {
+ 	int ret;
+ 
+-	if (wl->chip.id == CHIP_ID_1283_PG20)
++	if (wl->chip.id == CHIP_ID_1283_PG20) {
+ 		ret = wl128x_cmd_general_parms(wl);
+-	else
+-		ret = wl1271_cmd_general_parms(wl);
+-	if (ret < 0)
+-		return ret;
+-
+-	if (wl->chip.id == CHIP_ID_1283_PG20)
++		if (ret < 0)
++			return ret;
+ 		ret = wl128x_cmd_radio_parms(wl);
+-	else
++		if (ret < 0)
++			return ret;
++	} else {
++		ret = wl1271_cmd_general_parms(wl);
++		if (ret < 0)
++			return ret;
+ 		ret = wl1271_cmd_radio_parms(wl);
+-	if (ret < 0)
+-		return ret;
++		if (ret < 0)
++			return ret;
++		ret = wl1271_cmd_ext_radio_parms(wl);
++		if (ret < 0)
++			return ret;
++	}
+ 
+ 	/* Chip-specific init */
+ 	ret = wl1271_chip_specific_init(wl);
+-- 
+1.7.4.1
+
