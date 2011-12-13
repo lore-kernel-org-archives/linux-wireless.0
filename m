@@ -1,121 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:48336 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754439Ab1LCBhx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Dec 2011 20:37:53 -0500
-Date: Sat, 3 Dec 2011 10:38:37 +0900
-From: Gustavo Padovan <padovan@profusion.mobi>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth-next 2011-12-03
-Message-ID: <20111203013837.GA2816@joana> (sfid-20111203_023927_353454_59561AC0)
+Received: from li9-11.members.linode.com ([67.18.176.11]:34703 "EHLO
+	test.thunk.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753553Ab1LMR0p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Dec 2011 12:26:45 -0500
+Date: Tue, 13 Dec 2011 12:26:42 -0500
+From: Ted Ts'o <tytso@mit.edu>
+To: linux-kernel@vger.kernel.org
+Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: Re: REGRESSION: v3.2-rcX: iwlagn refuses to associate with my AP's
+Message-ID: <20111213172642.GA4962@thunk.org> (sfid-20111213_182706_919934_1757839A)
+References: <E1RaBm1-0001JR-8a@tytso-glaptop.cam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <E1RaBm1-0001JR-8a@tytso-glaptop.cam.corp.google.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+On Mon, Dec 12, 2011 at 02:42:53PM -0500, Theodore Ts'o wrote:
+> Hi there,
+> 
+> I recently discovered a regression in the iwlagn driver (works in v3.1
+> but not in v3.2-rc2... I'm going to continue to bisect, but I thought
+> I'd give a heads up now).  I'm using a Lenovo T410, with the following
+> wireless card:
+> 
+> [   11.197410] iwlwifi 0000:03:00.0: HW Revision ID = 0x35
+> [   11.197637] iwlwifi 0000:03:00.0: Detected Intel(R) Centrino(R) Advanced-N + WiMAX 6250 AGN, REV=0x84
+> 
+> The failure to associate with access points happens at work, with
+> whatever AP's are in use at the Cambridge Google office.  When I tried
+> v3.2-rc5 at home, I was able to associate with a consumer-grade NetGear
+> AP, although it was flaky --- that is, it completely failed to associate
+> initially, but then I tried rebooting and I was eventually able to get
+> it to work.   At work, I was able to reproduce the problem with a
+> v3.2-rc5 and v3.2-rc2 kernel, but the problem did not manifest itself
+> with a v3.1 kernel.
 
-Another big pull for -next. Some work on LE scanning from Andre Guedes, more
-AMP work from Andrei Emeltchenko. HCI Management Interface improvements from
-Johan Hedberg and Management and SMP work from Brian Gix. The rest are just
-fixes and clean ups.
+OK, a follow up.  A bisection puts the finger of blame very firmly at:
 
-Please pull, or let me know any problems. Thanks.
+debcf73 iwlagn: handle GO powersave
 
-	Gustavo
+Specifically, I can't associate with *any* access points (encrypted or
+not) if I compile a kernel at commit debcf73, but if I compile a
+kernel with its parent (commit 8ad71be), it works fine.
 
-The following changes since commit ba5736a5e9ac20c378ae4179e8a0ed3cc4b44351:
+However, as a puzzler, when I tried reverted compiling 3.2-rc5 with
+debcf73 reverted, it did not make the problem go away.  So there's
+something more going on here.  I could try doing a bisect with reverts
+of debcf73 at each step, trying to find the problem, but I'm hoping
+this is enough of a hint that someone can tell me either that this is
+fixed already in the linux-wireless tree, or that they know what's
+wrong and can provide a test patch...
 
-  ath9k_hw: add default chainmask for AR9462 (2011-11-30 15:09:02 -0500)
+Thanks,
 
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next master
-
-Andre Guedes (4):
-      Bluetooth: Rename mgmt_inquiry_failed()
-      Bluetooth: mgmt_stop_discovery_failed()
-      Bluetooth: Add dev_flags to struct hci_dev
-      Bluetooth: LE Set Scan Parameter Command
-
-Andrei Emeltchenko (10):
-      Bluetooth: Move scope of kernel parameter enable_hs
-      Bluetooth: Do not set HCI_RAW when HS enabled
-      Bluetooth: Allow to set AMP type for virtual HCI
-      Bluetooth: making enable_hs independent from L2CAP
-      Bluetooth: Use queue in the device list
-      Bluetooth: Add HCI Read Flow Control Mode function
-      Bluetooth: remove old code
-      Bluetooth: Correct version check in hci_setup
-      Bluetooth: Remove magic bluetooth version numbers
-      Bluetooth: trivial: correct check for LMP version
-
-Bing Zhao (1):
-      Bluetooth: btmrvl: support Marvell Bluetooth device SD8797
-
-Brian Gix (9):
-      Bluetooth: Add HCI defines for User Passkey entry
-      Bluetooth: Add MGMT opcodes for Passkey Entry
-      Bluetooth: Add MGMT event for Passkey Entry
-      Bluetooth: User Pairing Response restructuring
-      Bluetooth: Differentiate LE User Pairing Responses
-      Bluetooth: Add User Passkey Response handling
-      Bluetooth: Add HCI User Passkey Req Evt handling
-      Bluetooth: Cleanup blkcipher on SMP termination
-      Bluetooth: Centralize SMP pairing failure handling
-
-Cong Wang (1):
-      btusb: fix a memory leak in btusb_send_frame()
-
-David Herrmann (2):
-      Bluetooth: cmtp: Fix module reference
-      Bluetooth: bnep: Fix module reference
-
-Gustavo F. Padovan (5):
-      Bluetooth: Rename l2cap_check_security()
-      Bluetooth: Allow L2CAP to increase the security level
-      Bluetooth: Only set ack_timer if we didn't send and ack
-      Bluetooth: Add user readable debug for state changes
-      Merge branch 'master' of git://git.kernel.org/.../padovan/bluetooth
-
-Johan Hedberg (10):
-      Bluetooth: Add public/random LE address information to mgmt messages
-      Bluetooth: Fix deadlock with mgmt_pair_device
-      Bluetooth: Add proper response to mgmt_remove_keys command
-      Bluetooth: Add status parameter to mgmt_disconnect response
-      Bluetooth: Add address type to mgmt_pair_device
-      Bluetooth: Fix mgmt_pair_device imediate error responses
-      Bluetooth: Return success instead of EALREADY for mgmt commands
-      Bluetooth: Create a unique mgmt error code hierarchy
-      Bluetooth: Add missing cmd_complete for mgmt_load_link_keys
-      Bluetooth: Pass all message parameters to mgmt_start_discovery
-
-Szymon Janc (5):
-      Bluetooth: Fix possible NULL pointer derefence in l2cap code
-      Bluetooth: Simplify l2cap_add_to_srej_queue
-      Bluetooth: Refactor loop in l2cap_retransmit_one_frame
-      Bluetooth: Simplify __l2cap_global_chan_by_addr
-      Bluetooth: Fix some checkpatch.pl errors and warnings
-
- drivers/bluetooth/Kconfig         |    6 +-
- drivers/bluetooth/btmrvl_sdio.c   |   15 +-
- drivers/bluetooth/btusb.c         |    3 +-
- drivers/bluetooth/hci_vhci.c      |    8 +
- include/net/bluetooth/bluetooth.h |    5 +
- include/net/bluetooth/hci.h       |   38 +++
- include/net/bluetooth/hci_core.h  |   28 ++-
- include/net/bluetooth/l2cap.h     |    2 +-
- include/net/bluetooth/mgmt.h      |   49 +++-
- net/bluetooth/bnep/core.c         |    8 +-
- net/bluetooth/cmtp/core.c         |    5 +-
- net/bluetooth/hci_conn.c          |    2 +-
- net/bluetooth/hci_core.c          |   31 +-
- net/bluetooth/hci_event.c         |  152 +++++++--
- net/bluetooth/l2cap_core.c        |  101 ++++--
- net/bluetooth/l2cap_sock.c        |   16 +-
- net/bluetooth/mgmt.c              |  660 ++++++++++++++++++++++++++++---------
- net/bluetooth/smp.c               |   32 ++-
- 18 files changed, 880 insertions(+), 281 deletions(-)
-
+						- Ted
