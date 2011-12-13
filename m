@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33674 "EHLO nbd.name"
+Received: from mga02.intel.com ([134.134.136.20]:8630 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758126Ab1LNVIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 16:08:19 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH v2 4/6] ath9k: remove bogus sequence number increment
-Date: Wed, 14 Dec 2011 22:08:06 +0100
-Message-Id: <1323896888-85551-4-git-send-email-nbd@openwrt.org> (sfid-20111214_220827_615314_FA8C3BC2)
-In-Reply-To: <1323896888-85551-3-git-send-email-nbd@openwrt.org>
-References: <1323896888-85551-1-git-send-email-nbd@openwrt.org>
- <1323896888-85551-2-git-send-email-nbd@openwrt.org>
- <1323896888-85551-3-git-send-email-nbd@openwrt.org>
+	id S1753491Ab1LMX1E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Dec 2011 18:27:04 -0500
+Subject: Re: iwlagn regression in v3.1.5
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Udo Steinberg <udo@hypervisor.org>
+Cc: Andrej Gelenberg <andrej.gelenberg@udo.edu>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <20111213230443.2c12caeb@x220.fritz.box>
+References: <4EE4AEF4.2080702@udo.edu>	<4EE4DB55.4090804@udo.edu>
+	 <20111211174138.79e51fe8@x220.fritz.box>	<4EE4E152.2070204@udo.edu>
+	 <1323627815.1806.19.camel@wwguy-ubuntu>	<4EE50266.4050208@udo.edu>
+	 <1323653737.1806.21.camel@wwguy-ubuntu>	<4EE636B9.1020305@udo.edu>
+	 <1323807327.7144.6.camel@wwguy-ubuntu>	<4EE7BEC1.1060506@udo.edu>
+	 <20111213230443.2c12caeb@x220.fritz.box>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 13 Dec 2011 15:20:17 -0800
+Message-ID: <1323818417.21617.0.camel@wwguy-ubuntu> (sfid-20111214_002725_863155_0AC264F1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-tid->seq_next is initialized on A-MPDU start anyway, and the comment next
-to this chunk of code seems to be bogus as well.
+On Tue, 2011-12-13 at 14:04 -0800, Udo Steinberg wrote:
+> Hi,
+> 
+> Glad to hear it works for you now. In the patch, the following piece of code
+> 
+> +				if ((iwl_is_associated_ctx(ctx) &&
+> +						!ctx->ht.is_40mhz) ||
+> +						!iwl_is_associated_ctx(ctx))
+> 
+> can be simplified to:
+> 
+> 	if (!iwl_is_associated_ctx(ctx) || !ctx->ht.is_40mhz)
+> 
+right, looks better this way :-)
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/xmit.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index b1a37d2..8f38efb 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -1729,10 +1729,6 @@ static void ath_tx_send_normal(struct ath_softc *sc, struct ath_txq *txq,
- 	list_add_tail(&bf->list, &bf_head);
- 	bf->bf_state.bf_type = 0;
- 
--	/* update starting sequence number for subsequent ADDBA request */
--	if (tid)
--		INCR(tid->seq_start, IEEE80211_SEQ_MAX);
--
- 	bf->bf_lastbf = bf;
- 	ath_tx_fill_desc(sc, bf, txq, fi->framelen);
- 	ath_tx_txqaddbuf(sc, txq, &bf_head, false);
--- 
-1.7.3.2
+Thanks
+Wey
 
