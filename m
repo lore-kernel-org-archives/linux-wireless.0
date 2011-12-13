@@ -1,52 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:62921 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754657Ab1LGLXb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Dec 2011 06:23:31 -0500
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH 1/2] ath9k: validate for non-zero BSSID
-Date: Wed, 7 Dec 2011 16:51:38 +0530
-Message-ID: <1323256899-16453-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111207_122336_510050_F66057EC)
+Received: from mms1.broadcom.com ([216.31.210.17]:1939 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753179Ab1LMMnY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Dec 2011 07:43:24 -0500
+Message-ID: <4EE7485D.6010109@broadcom.com> (sfid-20111213_134326_741505_23713CF1)
+Date: Tue, 13 Dec 2011 13:43:09 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: "Steve Glass" <stevie.glass@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: CRDA git repository
+References: <4EE73337.2030804@gmail.com>
+In-Reply-To: <4EE73337.2030804@gmail.com>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On 12/13/2011 12:12 PM, Steve Glass wrote:
+> I cloned the CRDA repository from
+> git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/crda.git a long
+> while back. I have been experiencing some regdomain issues with ath5k so
+> I tried a fresh clone of CRDA and that responds with:
+> 
+> Cloning into 'crda'...
+> fatal: The remote end hung up unexpectedly
+> 
+> Has the repository moved? The linux-wireless wiki still refers to the
+> above location.
+> 
+> ATB
+> 
+> Steve
 
-before concluding that the recieved beacon is for us, let us make sure
-that the BSSID is non-zero. when I configured ad-hoc mode as creator and
-left it for some time without joining I found we recieved few frames whose
-BSSID is zero, which we concluded wrongly as 'my_beacons'
+Not sure here, but have you tried:
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/recv.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+http://git.kernel.org/?p=linux/kernel/git/linville/wireless-regdb.git;a=summary
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index e031841..ad5176d 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -1823,6 +1823,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		hdr = (struct ieee80211_hdr *) (hdr_skb->data + rx_status_len);
- 		rxs = IEEE80211_SKB_RXCB(hdr_skb);
- 		if (ieee80211_is_beacon(hdr->frame_control) &&
-+		    !is_zero_ether_addr(common->curbssid) &&
- 		    !compare_ether_addr(hdr->addr3, common->curbssid))
- 			rs.is_mybeacon = true;
- 		else
--- 
-1.7.0.4
+Gr. AvS
 
