@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:56153 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751238Ab1LIR56 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41628 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752728Ab1LMPiN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Dec 2011 12:57:58 -0500
-Received: by ghbz2 with SMTP id z2so2725389ghb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Dec 2011 09:57:58 -0800 (PST)
-Message-ID: <4EE24C22.4000204@lwfinger.net> (sfid-20111209_185802_426205_984AE3DE)
-Date: Fri, 09 Dec 2011 11:57:54 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Francesco Gringoli <francesco.gringoli@ing.unibs.it>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Performance of BCM43224 (14e4:4353)
-References: <4EE15A4E.1090500@lwfinger.net> <4EE1E2AC.8030002@broadcom.com> <4EE23AF5.8000400@lwfinger.net> <4EE24615.9020003@broadcom.com>
-In-Reply-To: <4EE24615.9020003@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 13 Dec 2011 10:38:13 -0500
+Subject: Re: iwlwifi havoc on some APs (rekeying?)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Wolfgang Breyha <wbreyha@gmx.net>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <4EE64522.5090107@gmx.net> (sfid-20111212_191739_160874_7027323F)
+References: <4EE2202A.4080303@gmx.net>
+	 <1323446534.13074.96.camel@wwguy-huron>  <4EE24DF4.4020301@gmx.net>
+	 <1323451436.13074.158.camel@wwguy-huron>
+	 (sfid-20111209_192243_598986_F6275AE2) <1323455216.3622.21.camel@jlt3.sipsolutions.net>
+	 <4EE35877.1060507@gmx.net>
+	 (sfid-20111210_140255_490293_C3C0F113) <1323680657.3442.7.camel@jlt3.sipsolutions.net>
+	 <4EE5D2D3.406@gmx.net>
+	 (sfid-20111212_110955_792336_68917631) <1323684754.3442.36.camel@jlt3.sipsolutions.net>
+	 <4EE5E3CD.1070409@gmx.net>
+	 (sfid-20111212_122224_090419_DF83BB07) <1323712082.3442.43.camel@jlt3.sipsolutions.net>
+	 <4EE64522.5090107@gmx.net> (sfid-20111212_191739_160874_7027323F)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 13 Dec 2011 16:38:08 +0100
+Message-ID: <1323790688.3355.24.camel@jlt3.sipsolutions.net> (sfid-20111213_163817_059702_C83869AC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/09/2011 11:32 AM, Arend van Spriel wrote:
+On Mon, 2011-12-12 at 19:17 +0100, Wolfgang Breyha wrote:
+> On 2011-12-12 18:48, Johannes Berg wrote:
+> > A colleague pointed out that due to the PCI address space hold we might
+> > be seeing larger addresses -- could you try booting the 32 bit kernel
+> > with "mem=3G" on the command line (edit it in grub maybe?) and see if
+> > you can still reproduce it then?
+> 
+> mem=3G changes nothing except the amount of memory;-) Exactly the same
+> issues occur.
 
-> With the submitted patches brcmsmac claims any revision of 802.11 cores.
-> Not sure what b43 claims. I have a patch internally to claim only
-> revisions 23 and 24, which are used in bcm43224, bcm43225, and bcm4313.
+Hm, unfortunately, I can't reproduce this problem, even with 2 minute
+GTK rekey intervals. Could you run this program on your machine while
+you reproduce it?
 
-The problem is that ai_doattach() is returning NULL. I added pr_err() statements 
-to each of the places that this could happen and found that the error in in this 
-fragment:
+http://johannes.sipsolutions.net/files/mc.c.txt
 
-         /* scan for cores */
-         if (socitype == SOCI_AI) {
-                 SI_MSG("Found chip type AI (0x%08x)\n", w);
-                 /* pass chipc address instead of original core base */
-                 ai_scan(&sii->pub, pbus);
-         } else {
-                 /* Found chip of unknown type */
-                 pr_err("Found chip of type %d\n", socitype);
-                 return NULL;
-         }
+(just save as "mc.c" and compile with gcc mc.c -o mc)
 
-This one logs "brcmsmac: Found chip of type 4". As SOC_AI is the only SOCI_XX 
-that is defined, I am not sure that I will be able to get further.
+The program will allocate 2GiB memory (edit to suit, should be OK on
+your machine), fill them with 0x94 and then continually scan them for
+corruption. Identifying what kind of corruption happened will hopefully
+allow me to figure out where it's coming from.
 
-Larry
+It prints out the wrong data & resets the memory so new corruption later
+is also identified.
 
+Thanks!
+
+johannes
 
