@@ -1,48 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5391 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751310Ab1LHIft (ORCPT
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:41124 "HELO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753918Ab1LMD5R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 03:35:49 -0500
-Date: Thu, 8 Dec 2011 14:03:00 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211: Fix race in bss timeout
-Message-ID: <20111208083258.GA15103@chvasanth-lnx> (sfid-20111208_093552_818761_E7EA07D4)
-References: <1323270687-5989-1-git-send-email-vthiagar@qca.qualcomm.com>
- <1323271070.3404.40.camel@jlt3.sipsolutions.net>
- <20111207153052.GB12498@chvasanth-lnx>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20111207153052.GB12498@chvasanth-lnx>
+	Mon, 12 Dec 2011 22:57:17 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: do not advertise custom regulatory domain capability
+Date: Mon, 12 Dec 2011 19:56:58 -0800
+Message-Id: <1323748618-29736-1-git-send-email-bzhao@marvell.com> (sfid-20111213_045739_675384_D596A84E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 07, 2011 at 09:00:53PM +0530, Vasanthakumar Thiagarajan wrote:
-> > >  	nl80211_send_roamed(wiphy_to_dev(wdev->wiphy), wdev->netdev, bssid,
-> > >  			    req_ie, req_ie_len, resp_ie, resp_ie_len,
-> > >  			    GFP_KERNEL);
-> > > @@ -615,40 +612,65 @@ void __cfg80211_roamed(struct wireless_dev *wdev,
-> > >  	wdev->wext.prev_bssid_valid = true;
-> > >  	wireless_send_event(wdev->netdev, SIOCGIWAP, &wrqu, NULL);
-> > >  #endif
-> > > +
-> > > +	return;
-> > > +out:
-> > > +	if (bss)
-> > > +		cfg80211_put_bss(bss);
-> > >  }
-> > 
-> > Doesn't that leak the reference if you return? It'll also give you an
-> > smatch warning since the function assumes the "bss" pointer that was
-> > passed in is not NULL, no?
-> 
-> Oops, sorry, i'll fix it. I may need to run smatch as well.
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Wait, actually we are not leaking the bss reference if we return
-after a successful roam notification. The reference to the current
-bss is released whenever we disconnect from it.
+mwifiex driver no longer supports it's own custom regulatory rules,
+but custom regulatory domain capability is still advertised during
+wiphy registration by the driver.
 
-Vasanth
-> 
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index f02f305..d4310a4 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1396,9 +1396,6 @@ int mwifiex_register_cfg80211(struct mwifiex_private *priv)
+ 	memcpy(wdev->wiphy->perm_addr, priv->curr_addr, ETH_ALEN);
+ 	wdev->wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
+ 
+-	/* We are using custom domains */
+-	wdev->wiphy->flags |= WIPHY_FLAG_CUSTOM_REGULATORY;
+-
+ 	/* Reserve space for bss band information */
+ 	wdev->wiphy->bss_priv_size = sizeof(u8);
+ 
+-- 
+1.7.0.2
+
