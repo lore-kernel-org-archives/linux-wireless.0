@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:47437 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752045Ab1LNRMj (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:35225 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754460Ab1LMSGs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 12:12:39 -0500
-Date: Wed, 14 Dec 2011 11:12:34 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Problems associating with RTL8188CE
-Message-ID: <20111214171234.GE19410@thinkpad-t410> (sfid-20111214_181243_427013_DB96083D)
-References: <4ECB028E.3030809@lwfinger.net>
- <20111122022008.GA17661@thinkpad-t410>
- <20111213194231.GA30788@thinkpad-t410>
- <4EE7B85E.3070802@lwfinger.net>
- <20111213212606.GB30788@thinkpad-t410>
- <4EE82CC6.2030307@lwfinger.net>
- <20111214162333.GB19410@thinkpad-t410>
- <4EE8D150.8090100@lwfinger.net>
- <20111214164902.GD19410@thinkpad-t410>
- <4EE8D5A1.7040600@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4EE8D5A1.7040600@lwfinger.net>
+	Tue, 13 Dec 2011 13:06:48 -0500
+Subject: Re: [Ilw] Re: REGRESSION: v3.2-rcX: iwlagn refuses to associate
+ with my AP's
+From: Johannes Berg <johannes@sipsolutions.net>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: Ted Ts'o <tytso@mit.edu>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <1323798874.7144.4.camel@wwguy-ubuntu> (sfid-20111213_190527_823665_5563A461)
+References: <E1RaBm1-0001JR-8a@tytso-glaptop.cam.corp.google.com>
+	 <20111213172642.GA4962@thunk.org>  <1323798874.7144.4.camel@wwguy-ubuntu>
+	 (sfid-20111213_190527_823665_5563A461)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 13 Dec 2011 19:06:28 +0100
+Message-ID: <1323799588.3355.28.camel@jlt3.sipsolutions.net> (sfid-20111213_190652_340637_C3685E21)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 14, 2011 at 10:58:09AM -0600, Larry Finger wrote:
-> On 12/14/2011 10:49 AM, Seth Forshee wrote:
-> >On Wed, Dec 14, 2011 at 10:39:44AM -0600, Larry Finger wrote:
-> >>On 12/14/2011 10:23 AM, Seth Forshee wrote:
-> >>>
-> >>>I'm running 3.2-rc5 currently. The results are the same with
-> >>>bleeding-edge compat-wireless.
-> >>
-> >>I'm running 3.2-rc5 from wireless-testing, but I should test the one
-> >>from mainline. I'll also retest an RTL8188CE with my 802.11n AP.
-> >>
-> >>What model is that Cisco AP? Perhaps Realsil has one in their lab. I
-> >>do not have access to any Cisco hardware.
-> >
-> >It's a Linksys E2000.
+On Tue, 2011-12-13 at 09:54 -0800, wwguy wrote:
+
+> Thank you for doing all those works, 
 > 
-> If matters come to worse, I can buy a used E2000 for $30 on E-bay.
+> The "debcf73 iwlagn: handle GO powersave" is part of new WiFi Direct
+> feature we are introducing for our up-coming new products. As you can
+> see, the feature still under development and for sure there are a lot
+> issues we need to flush out and make it perfect.
+> 
+> Here I attach a patch which will disable P2P feature by default, could
+> you please give it a try, so we know for sure it is something being
+> introduced by P2P changes. 
 
-If there's anything you'd like me to try, don't hesitate to ask. I'm
-trying to come up to speed on debugging wireless problems anyway, so I'd
-value the experience.
+I don't think this will make a difference since tx_sync is still done.
 
-Thanks,
-Seth
+johannes
+
