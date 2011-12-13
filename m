@@ -1,126 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.HRZ.Uni-Dortmund.DE ([129.217.128.51]:35269 "EHLO
-	unimail.uni-dortmund.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752103Ab1LKTUQ (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37860 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753731Ab1LMUPT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Dec 2011 14:20:16 -0500
-Message-ID: <4EE50266.4050208@udo.edu> (sfid-20111211_202043_058717_4EFDF829)
-Date: Sun, 11 Dec 2011 20:20:06 +0100
-From: Andrej Gelenberg <andrej.gelenberg@udo.edu>
-MIME-Version: 1.0
-To: wwguy <wey-yi.w.guy@intel.com>
-CC: Udo Steinberg <udo@hypervisor.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: iwlagn regression in v3.1.5
-References: <4EE4AEF4.2080702@udo.edu> <4EE4DB55.4090804@udo.edu>  <20111211174138.79e51fe8@x220.fritz.box>  <4EE4E152.2070204@udo.edu> <1323627815.1806.19.camel@wwguy-ubuntu>
-In-Reply-To: <1323627815.1806.19.camel@wwguy-ubuntu>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Tue, 13 Dec 2011 15:15:19 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.77)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1RaYkw-00036Z-Nz
+	for linux-wireless@vger.kernel.org; Tue, 13 Dec 2011 21:15:18 +0100
+Message-Id: <20111213201449.989844540@sipsolutions.net> (sfid-20111213_211526_331033_7D1B8B63)
+Date: Tue, 13 Dec 2011 21:07:21 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 4/4] mac80211: count authorized stations per BSS
+References: <20111213200717.465896579@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-some info to the AP i use:
+Currently, each AP interface will send multicast
+traffic if any interface has a station entry even
+if that station entry is allocated only. With the
+new station state management we can easily fix it
+by adding a counter that counts each authorized
+station only and send multicast traffic only when
+the correct interface has at least one authorized
+station.
 
-Technaxx Router-150 Wifi-N based on ranik soc
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/debugfs_netdev.c |    2 ++
+ net/mac80211/ieee80211_i.h    |    1 +
+ net/mac80211/sta_info.c       |   14 +++++++++-----
+ net/mac80211/tx.c             |   19 ++++++++-----------
+ 4 files changed, 20 insertions(+), 16 deletions(-)
 
-$ iw dev wlan0 station dump
-Station xx:xx..xx:xx (on wlan0)
-         inactive time:  6603 ms
-         rx bytes:       377786468
-         rx packets:     443535
-         tx bytes:       15677515
-         tx packets:     155009
-         tx retries:     2723757
-         tx failed:      51495
-         signal:         -72 dBm
-         signal avg:     -71 dBm
-         tx bitrate:     135.0 MBit/s MCS 6 40Mhz short GI
-         authorized:     yes
-         authenticated:  yes
-         preamble:       long
-         WMM/WME:        yes
-         MFP:            no
+--- a/net/mac80211/debugfs_netdev.c	2011-12-13 20:30:53.000000000 +0100
++++ b/net/mac80211/debugfs_netdev.c	2011-12-13 20:31:16.000000000 +0100
+@@ -321,6 +321,7 @@ static ssize_t ieee80211_if_parse_tkip_m
+ __IEEE80211_IF_FILE_W(tkip_mic_test);
+ 
+ /* AP attributes */
++IEEE80211_IF_FILE(num_sta_authorized, u.ap.num_sta_authorized, ATOMIC);
+ IEEE80211_IF_FILE(num_sta_ps, u.ap.num_sta_ps, ATOMIC);
+ IEEE80211_IF_FILE(dtim_count, u.ap.dtim_count, DEC);
+ 
+@@ -458,6 +459,7 @@ static void add_ap_files(struct ieee8021
+ 	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
+ 	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+ 
++	DEBUGFS_ADD(num_sta_authorized);
+ 	DEBUGFS_ADD(num_sta_ps);
+ 	DEBUGFS_ADD(dtim_count);
+ 	DEBUGFS_ADD(num_buffered_multicast);
+--- a/net/mac80211/ieee80211_i.h	2011-12-13 20:30:53.000000000 +0100
++++ b/net/mac80211/ieee80211_i.h	2011-12-13 20:31:16.000000000 +0100
+@@ -243,6 +243,7 @@ struct ieee80211_if_ap {
+ 	u8 tim[sizeof(unsigned long) * BITS_TO_LONGS(IEEE80211_MAX_AID + 1)];
+ 	struct sk_buff_head ps_bc_buf;
+ 	atomic_t num_sta_ps; /* number of stations in PS mode */
++	atomic_t num_sta_authorized; /* number of authorized stations */
+ 	int dtim_count;
+ 	bool dtim_bc_mc;
+ };
+--- a/net/mac80211/sta_info.c	2011-12-13 20:31:16.000000000 +0100
++++ b/net/mac80211/sta_info.c	2011-12-13 20:31:16.000000000 +0100
+@@ -1542,17 +1542,21 @@ int sta_info_move_state_checked(struct s
+ 			return -EINVAL;
+ 		break;
+ 	case IEEE80211_STA_ASSOC:
+-		if (sta->sta_state == IEEE80211_STA_AUTH)
++		if (sta->sta_state == IEEE80211_STA_AUTH) {
+ 			set_bit(WLAN_STA_ASSOC, &sta->_flags);
+-		else if (sta->sta_state == IEEE80211_STA_AUTHORIZED)
++		} else if (sta->sta_state == IEEE80211_STA_AUTHORIZED) {
++			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
++				atomic_dec(&sta->sdata->u.ap.num_sta_authorized);
+ 			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+-		else
++		} else
+ 			return -EINVAL;
+ 		break;
+ 	case IEEE80211_STA_AUTHORIZED:
+-		if (sta->sta_state == IEEE80211_STA_ASSOC)
++		if (sta->sta_state == IEEE80211_STA_ASSOC) {
++			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
++				atomic_inc(&sta->sdata->u.ap.num_sta_authorized);
+ 			set_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+-		else
++		} else
+ 			return -EINVAL;
+ 		break;
+ 	default:
+--- a/net/mac80211/tx.c	2011-12-13 20:30:53.000000000 +0100
++++ b/net/mac80211/tx.c	2011-12-13 20:31:16.000000000 +0100
+@@ -304,17 +304,14 @@ ieee80211_tx_h_check_assoc(struct ieee80
+ 			I802_DEBUG_INC(tx->local->tx_handlers_drop_not_assoc);
+ 			return TX_DROP;
+ 		}
+-	} else {
+-		if (unlikely(ieee80211_is_data(hdr->frame_control) &&
+-			     tx->local->num_sta == 0 &&
+-			     tx->sdata->vif.type != NL80211_IFTYPE_ADHOC)) {
+-			/*
+-			 * No associated STAs - no need to send multicast
+-			 * frames.
+-			 */
+-			return TX_DROP;
+-		}
+-		return TX_CONTINUE;
++	} else if (unlikely(tx->sdata->vif.type == NL80211_IFTYPE_AP &&
++			    ieee80211_is_data(hdr->frame_control) &&
++			    !atomic_read(&tx->sdata->u.ap.num_sta_authorized))) {
++		/*
++		 * No associated STAs - no need to send multicast
++		 * frames.
++		 */
++		return TX_DROP;
+ 	}
+ 
+ 	return TX_CONTINUE;
 
-$ iwconfig wlan0
-wlan0     IEEE 802.11abgn  ESSID:"xxx"
-           Mode:Managed  Frequency:2.437 GHz  Access Point: xx:xx..xx:xx
-           Bit Rate=121.5 Mb/s   Tx-Power=15 dBm
-           Retry  long limit:7   RTS thr:off   Fragment thr:off
-           Power Management:off
-           Link Quality=42/70  Signal level=-68 dBm
-           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-           Tx excessive retries:51520  Invalid misc:3567 Missed beacon:0
-
-some dmesg output:
-
-[  903.748514] wlan0: authenticate with xx:xx..xx:xx (try 1)
-[  903.750991] wlan0: authenticated
-[  903.753357] wlan0: associate with xx:xx..xx:xx (try 1)
-[  903.759482] wlan0: RX AssocResp from xx:xx..xx:xx (capab=0xc31 
-status=0 aid=1)
-[  903.759487] wlan0: associated
-
-$ iwlist wlan0 scan
-
-           Cell 06 - Address: xx:xx..xx:xx
-                     Channel:6
-                     Frequency:2.437 GHz (Channel 6)
-                     Quality=45/70  Signal level=-65 dBm
-                     Encryption key:on
-                     ESSID:"xxx"
-                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 9 Mb/s
-                               18 Mb/s; 36 Mb/s; 54 Mb/s
-                     Bit Rates:6 Mb/s; 12 Mb/s; 24 Mb/s; 48 Mb/s
-                     Mode:Master
-                     Extra:tsf=0000005666eac197
-                     Extra: Last beacon: 33ms ago
-                     IE: Unknown: 000873757065726B7568
-                     IE: Unknown: 010882848B961224486C
-                     IE: Unknown: 030106
-                     IE: Unknown: 2A0100
-                     IE: Unknown: 32040C183060
-                     IE: Unknown: 
-2D1A7E1117FF000000010000000000000000000000000C0000000000
-                     IE: Unknown: 
-3D1606070500000000000000000000000000000000000000
-                     IE: Unknown: 3E0100
-                     IE: IEEE 802.11i/WPA2 Version 1
-                         Group Cipher : CCMP
-                         Pairwise Ciphers (1) : CCMP
-                         Authentication Suites (1) : PSK
-                     IE: Unknown: 
-DD180050F2020101800003A4000027A4000042435E0062322F00
-                     IE: Unknown: 0B05020012127A
-                     IE: Unknown: 4A0E14000A002C01C800140005001900
-                     IE: Unknown: 7F0101
-                     IE: Unknown: DD07000C4307000000
-                     IE: Unknown: 0706465220010D10
-                     IE: Unknown: 
-DD1E00904C337E1117FF000000010000000000000000000000000C0000000000
-                     IE: Unknown: 
-DD1A00904C3406070500000000000000000000000000000000000000
-
-Regards,
-Andrej Gelenberg
-
-On 12/11/2011 07:23 PM, wwguy wrote:
-> On Sun, 2011-12-11 at 08:58 -0800, Andrej Gelenberg wrote:
->> Hi,
->>
->> this is pretty mean regression for the stable kernel. You may the fix
->> only for cards, which need it and not for all of them.
->
-> Could you elaborate more on the failure case and setup. this patch is to
-> address HT40 related problem which cause the iwlwifi firmware crash.
->
-> Thanks
-> Wey
->>>
->
->
 
