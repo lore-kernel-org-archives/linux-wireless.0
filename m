@@ -1,51 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2828 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755537Ab1LGOBx convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:51090 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753859Ab1LMI51 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Dec 2011 09:01:53 -0500
-Message-ID: <4EDF71C6.9050800@broadcom.com> (sfid-20111207_150156_694395_BD3AB50E)
-Date: Wed, 7 Dec 2011 15:01:42 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: bcma usage in isr context
-References: <4ED77C85.1050705@broadcom.com>
- <CACna6rznu8d1BjG0EWjP1VRCPdYAGJv1q+fi1X+XF_Bf-Cx+Mg@mail.gmail.com>
- <4EDCE2CC.3060500@broadcom.com>
- <CACna6rwVRrm8YgvoYAmswru8nHXgytuiDRO2F2TQVZyxnfaV9w@mail.gmail.com>
-In-Reply-To: <CACna6rwVRrm8YgvoYAmswru8nHXgytuiDRO2F2TQVZyxnfaV9w@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8
+	Tue, 13 Dec 2011 03:57:27 -0500
+Subject: Re: [RFC 2/2] mac80211: Fix power save in change save
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qualcomm.com>
+In-Reply-To: <1323766515-19223-2-git-send-email-mohammed@qca.qualcomm.com>
+References: <1323766515-19223-1-git-send-email-mohammed@qca.qualcomm.com>
+	 <1323766515-19223-2-git-send-email-mohammed@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 13 Dec 2011 09:57:23 +0100
+Message-ID: <1323766643.3355.2.camel@jlt3.sipsolutions.net> (sfid-20111213_095729_716767_2B08FF66)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/07/2011 01:52 PM, Rafał Miłecki wrote:
-> W dniu 5 grudnia 2011 16:27 użytkownik Arend van Spriel
-> <arend@broadcom.com> napisał:
->>> You're right, we don't handle this properly. I'll try to send patch
->>> today to make use of fixed windows. I've it here for some time
->>> already, just didn't clean it enough.
->>>
->>
->> Ok. For now I have a patch in the bcma read/write host_pci functions
->> that solves it, but fixed bar windows are preferable.
+On Tue, 2011-12-13 at 14:25 +0530, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 > 
-> Have you tested my patch? Does it solver your issue? I can't wait to
-> see bcma patches for brcmsmac :)
+> we found that power save is not getting enabled when we do
+> change interface in this order STA->IBSS->STA. this is
+> because ieee80211_setup_sdata clears type-dependen union
 > 
+> Reported-by: Leela Kella <leela@qca.qualcomm.com>
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> ---
+>  net/mac80211/mlme.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+> index 67a6be1..d87fde3 100644
+> --- a/net/mac80211/mlme.c
+> +++ b/net/mac80211/mlme.c
+> @@ -2371,6 +2371,7 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+>  		    (unsigned long) sdata);
+>  
+>  	ifmgd->flags = 0;
+> +	ifmgd->powersave = sdata->wdev.ps;
 
-Not yet. I had a patch in which each read/write used a
-spin_lock_irqsave/spin_unlock_irqrestore. Did not cause to much latency.
-I intend to rebase my changes using your patch later today.
+Makes sense.
 
-Your patch only works if all cores fit in the window. This is the case
-for the current pci-based broadcom chipsets so the patch is fine. I will
-let you know the results. I also intend to do some suspend/resume
-testing. I believe there was some issue mentioned on wireless mailing
-list with bcma/b43.
-
-Gr. AvS
+johannes
 
