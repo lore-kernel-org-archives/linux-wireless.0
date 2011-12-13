@@ -1,59 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58752 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:39364 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751199Ab1LONBK (ORCPT
+	with ESMTP id S1754080Ab1LMSWj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 08:01:10 -0500
-Subject: Re: iwlwifi havoc on some APs (rekeying?)
+	Tue, 13 Dec 2011 13:22:39 -0500
+Subject: Re: REGRESSION: v3.2-rcX: iwlagn refuses to associate with my AP's
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Wolfgang Breyha <wbreyha@gmx.net>
-Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4EE9437F.1060500@gmx.net> (sfid-20111215_014727_969721_A7C059DE)
-References: <4EE2202A.4080303@gmx.net>
-	 <1323446534.13074.96.camel@wwguy-huron> <4EE24DF4.4020301@gmx.net>
-	 <1323451436.13074.158.camel@wwguy-huron>
-	 <1323455216.3622.21.camel@jlt3.sipsolutions.net> <4EE35877.1060507@gmx.net>
-	  <1323680657.3442.7.camel@jlt3.sipsolutions.net> <4EE5D2D3.406@gmx.net>
-	  <1323684754.3442.36.camel@jlt3.sipsolutions.net>
-	 <4EE5E3CD.1070409@gmx.net> <1323712082.3442.43.camel@jlt3.sipsolutions.net>
-	 <4EE64522.5090107@gmx.net> <1323790688.3355.24.camel@jlt3.sipsolutions.net>
-	 <4EE8B12C.4090906@gmx.net>  <1323900627.3599.4.camel@jlt3.sipsolutions.net>
-	 <CALSq=BauniFumdhaSRXn2myh8oL7=7wFkkXGJFo8mdQYmddFeA@mail.gmail.com>
-	 (sfid-20111214_235154_524302_D0498605) <1323903308.3599.8.camel@jlt3.sipsolutions.net>
-	 <4EE9437F.1060500@gmx.net> (sfid-20111215_014727_969721_A7C059DE)
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-kernel@vger.kernel.org, ilw@linux.intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <E1RaBm1-0001JR-8a@tytso-glaptop.cam.corp.google.com> (sfid-20111212_204303_180958_202A47DB)
+References: <E1RaBm1-0001JR-8a@tytso-glaptop.cam.corp.google.com>
+	 (sfid-20111212_204303_180958_202A47DB)
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 15 Dec 2011 14:01:05 +0100
-Message-ID: <1323954065.3337.43.camel@jlt3.sipsolutions.net> (sfid-20111215_140115_964308_EC2E2BF6)
+Date: Tue, 13 Dec 2011 19:22:37 +0100
+Message-ID: <1323800557.3355.31.camel@jlt3.sipsolutions.net> (sfid-20111213_192255_670278_745B788A)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-12-15 at 01:46 +0100, Wolfgang Breyha wrote:
-> On 14/12/11 23:55, Johannes Berg wrote:
-> > I wish I could reproduce it, maybe it would be possible to bisect?
-> 
-> I was able to build and test the following releases of compat-wireless:
-> compat-wireless-2011-10-12
-> compat-wireless-2011-09-27
-> compat-wireless-2011-08-27
-> compat-wireless-2011-08-26
-> 
-> All are affected in the same way. 2011-10-12 gave me a hard system
-> freeze without output to messages. Most likely the "worst case scenario"
-> of the issue.
-> 
-> compat-wireless-2011-08-23 and some older releases I tried do not build
-> on F16 3.1.4.
-> 
-> IIRC 2011-03-25 was the release I used with F14.
+Hi Ted,
 
-Ok, thanks. That's a long time since known good, probably won't help
-much unfortunately.
+> The failure to associate with access points happens at work, with
+> whatever AP's are in use at the Cambridge Google office.  When I tried
+> v3.2-rc5 at home, I was able to associate with a consumer-grade NetGear
+> AP, although it was flaky --- that is, it completely failed to associate
+> initially, but then I tried rebooting and I was eventually able to get
+> it to work.   At work, I was able to reproduce the problem with a
+> v3.2-rc5 and v3.2-rc2 kernel, but the problem did not manifest itself
+> with a v3.1 kernel.
+> 
+> One interesting thing is that I'm getting the following WARNING message
+> triggering in my dmesg logs:
+> 
+> [   48.518246] wlan0: deauthenticating from 00:1a:1e:26:2b:30 by local choice (r
+> eason=3)
+> [   48.525625] ------------[ cut here ]------------
+> [   48.525653] WARNING: at net/wireless/mlme.c:309 __cfg80211_auth_remove+0xc2/0xcf [cfg80211]()
 
-I'm not even sure tracing would help here since evidently something is
-going completely wrong. I think we'll have to try harder to reproduce it
-in our lab.
+> This seems to be happening after the failure to associate with the AP,
+> so it could be a red herring.
 
-johannes
+I think this is. It's interesting though that it is deauthenticating --
+is there anything in the log before? But since you bisected it to the TX
+sync commit, I'd say let's try the below patch. You might have to adjust
+the iwl-mac80211.c file to iwl-agn.c, I'm not entirely sure what version
+has the moved code.
+
+Please let me know -- this commit is probably the right thing to do
+until we get rid of tx_sync completely.
+
+Thanks,
+Johannes
+
+--- wireless-testing.orig/drivers/net/wireless/iwlwifi/iwl-mac80211.c	2011-12-13 09:06:14.000000000 +0100
++++ wireless-testing/drivers/net/wireless/iwlwifi/iwl-mac80211.c	2011-12-13 19:20:24.000000000 +0100
+@@ -1014,6 +1014,9 @@ static int iwlagn_mac_tx_sync(struct iee
+ 	int ret;
+ 	u8 sta_id;
+ 
++	if (!vif->p2p)
++		return 0;
++
+ 	IWL_DEBUG_MAC80211(priv, "enter\n");
+ 	mutex_lock(&priv->shrd->mutex);
+ 
+@@ -1063,6 +1066,9 @@ static void iwlagn_mac_finish_tx_sync(st
+ 	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
+ 	struct iwl_rxon_context *ctx = vif_priv->ctx;
+ 
++	if (!vif->p2p)
++		return;
++
+ 	IWL_DEBUG_MAC80211(priv, "enter\n");
+ 	mutex_lock(&priv->shrd->mutex);
+ 
+
 
