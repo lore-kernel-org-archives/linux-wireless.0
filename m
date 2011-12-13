@@ -1,64 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:53064 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757743Ab1LNR6I (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37857 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753731Ab1LMUPQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 12:58:08 -0500
-Date: Wed, 14 Dec 2011 11:58:04 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Problems associating with RTL8188CE
-Message-ID: <20111214175804.GG19410@thinkpad-t410> (sfid-20111214_185813_866545_409F97F4)
-References: <20111213194231.GA30788@thinkpad-t410>
- <4EE7B85E.3070802@lwfinger.net>
- <20111213212606.GB30788@thinkpad-t410>
- <4EE82CC6.2030307@lwfinger.net>
- <20111214162333.GB19410@thinkpad-t410>
- <4EE8D150.8090100@lwfinger.net>
- <20111214164902.GD19410@thinkpad-t410>
- <4EE8D5A1.7040600@lwfinger.net>
- <20111214171234.GE19410@thinkpad-t410>
- <4EE8E035.90501@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4EE8E035.90501@lwfinger.net>
+	Tue, 13 Dec 2011 15:15:16 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.77)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1RaYkt-00036P-L5
+	for linux-wireless@vger.kernel.org; Tue, 13 Dec 2011 21:15:15 +0100
+Message-Id: <20111213201449.589673140@sipsolutions.net> (sfid-20111213_211521_688055_2861DB2E)
+Date: Tue, 13 Dec 2011 21:07:18 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC 1/4] mac80211: use station mutex in configuration
+References: <20111213200717.465896579@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 14, 2011 at 11:43:17AM -0600, Larry Finger wrote:
-> Seth,
-> 
-> As expected, my RTL8188SE came right up.
-> 
-> The lspci -nnv details for my card are
-> 
-> 06:00.0 0280: 10ec:8176 (rev 01)
->         Subsystem: 10ec:8176
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-> ParErr- Stepping- SERR+ FastB2B- DisINTx-
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast
-> >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0, Cache Line Size: 64 bytes
->         Interrupt: pin A routed to IRQ 21
->         Region 0: I/O ports at 4000 [size=256]
->         Region 2: Memory at f8000000 (64-bit, non-prefetchable) [size=16K]
->         Capabilities: <access denied>
->         Kernel driver in use: rtl8192ce
-> 
-> Does yours also have 10ec:8176 as the PCI ID?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Yes.
+There's no need to use RCU here, we can just lock
+the station mutex instead. This allows the code
+to sleep, which is necessary for later patches.
 
-07:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
-	Subsystem: Realtek Semiconductor Co., Ltd. Device [10ec:8184]
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 32 bytes
-	Interrupt: pin A routed to IRQ 17
-	Region 0: I/O ports at 2000 [size=256]
-	Region 2: Memory at f0100000 (64-bit, non-prefetchable) [size=16K]
-	Capabilities: <access denied>
-	Kernel driver in use: rtl8192ce
-	Kernel modules: rtl8192ce
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+--- a/net/mac80211/cfg.c	2011-12-13 21:01:26.000000000 +0100
++++ b/net/mac80211/cfg.c	2011-12-13 21:01:28.000000000 +0100
+@@ -960,11 +960,11 @@ static int ieee80211_change_station(stru
+ 	struct sta_info *sta;
+ 	struct ieee80211_sub_if_data *vlansdata;
+ 
+-	rcu_read_lock();
++	mutex_lock(&local->sta_mtx);
+ 
+ 	sta = sta_info_get_bss(sdata, mac);
+ 	if (!sta) {
+-		rcu_read_unlock();
++		mutex_unlock(&local->sta_mtx);
+ 		return -ENOENT;
+ 	}
+ 
+@@ -972,7 +972,7 @@ static int ieee80211_change_station(stru
+ 	if ((params->sta_flags_mask & BIT(NL80211_STA_FLAG_TDLS_PEER)) &&
+ 	    !!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) !=
+ 	    !!test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
+-		rcu_read_unlock();
++		mutex_unlock(&local->sta_mtx);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -981,13 +981,13 @@ static int ieee80211_change_station(stru
+ 
+ 		if (vlansdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+ 		    vlansdata->vif.type != NL80211_IFTYPE_AP) {
+-			rcu_read_unlock();
++			mutex_unlock(&local->sta_mtx);
+ 			return -EINVAL;
+ 		}
+ 
+ 		if (params->vlan->ieee80211_ptr->use_4addr) {
+ 			if (vlansdata->u.vlan.sta) {
+-				rcu_read_unlock();
++				mutex_unlock(&local->sta_mtx);
+ 				return -EBUSY;
+ 			}
+ 
+@@ -1003,7 +1003,7 @@ static int ieee80211_change_station(stru
+ 	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) && params->supported_rates)
+ 		rate_control_rate_init(sta);
+ 
+-	rcu_read_unlock();
++	mutex_unlock(&local->sta_mtx);
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+ 	    params->sta_flags_mask & BIT(NL80211_STA_FLAG_AUTHORIZED))
+
+
