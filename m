@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:53019 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751495Ab1LQJfz (ORCPT
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:60165 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751660Ab1LMMvY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Dec 2011 04:35:55 -0500
-Received: by lahl5 with SMTP id l5so3120630lah.27
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Dec 2011 01:35:52 -0800 (PST)
-Subject: Re: wl0084a / wl1271 understanding
-From: Luciano Coelho <coelho@ti.com>
-To: Raffaele Recalcati <lamiaposta71@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAFU7RzPF7NKRkY70Vp_b55AUeDip+ePxk=zqJ_K=SsXUfse7Jw@mail.gmail.com>
-References: <CAFU7RzPF7NKRkY70Vp_b55AUeDip+ePxk=zqJ_K=SsXUfse7Jw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 17 Dec 2011 11:35:47 +0200
-Message-ID: <1324114547.2800.234.camel@cumari> (sfid-20111217_103600_375852_CAA10628)
-Mime-Version: 1.0
+	Tue, 13 Dec 2011 07:51:24 -0500
+Subject: [PATCH v2 1/6] ath6kl: remove a workaround from ath6kl_cfg80211_stop()
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Tue, 13 Dec 2011 14:51:10 +0200
+Message-ID: <20111213125110.10834.46198.stgit@localhost6.localdomain6> (sfid-20111213_135126_024081_63829191)
+In-Reply-To: <20111213124923.10834.20626.stgit@localhost6.localdomain6>
+References: <20111213124923.10834.20626.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Raffaele,
+There's a workaround in ath6kl_cfg80211_stop() which emits disconnected
+even when sme_state was disconnected. This is legacy from the old
+staging driver and I can't repoduce the old problem anymore. I assume the
+bug got fixed while the driver was cleaned up so let's get
+rid of the hack.
 
-On Sat, 2011-12-17 at 05:54 +0100, Raffaele Recalcati wrote: 
-> I'm an embedded developer and I really want opensource development for
-> wireless, to be sure to maintain it in many kernel versions I will
-> have.
-> I'm not an wifi expert and so I can have done some mistakes here below.
-> 
-> wl1271
-> =============
-> At the end of
-> http://processors.wiki.ti.com/index.php/ARM_Processor_Open_Source_Wireless_Connectivity
-> http://www.openlink.org/software/linux-kernel#lk
-> It seems the same as what I can find in drivers/net/wireless/wl12xx
-> kernel directory.
+This makes it possible to call ath6kl_cfg80211_stop from ath6kl_close()
+which happens in a followup patch.
 
-Yes, we have full support for the wl1271 chip in the mainline kernel.
-We are working actively on maintaining and improving it directly
-upstream.  TI makes official releases to the customers which are based
-on the upstream kernel.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 ++------
+ 1 files changed, 2 insertions(+), 6 deletions(-)
 
-Join us on IRC @Freenode #wl12xx to talk more about it if you like.
-
-
--- 
-Cheers,
-Luca.
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index aa93527..5f12c04 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -2406,6 +2406,8 @@ void ath6kl_cfg80211_stop(struct ath6kl *ar)
+ 	}
+ 
+ 	switch (vif->sme_state) {
++	case SME_DISCONNECTED:
++		break;
+ 	case SME_CONNECTING:
+ 		cfg80211_connect_result(vif->ndev, vif->bssid, NULL, 0,
+ 					NULL, 0,
+@@ -2413,12 +2415,6 @@ void ath6kl_cfg80211_stop(struct ath6kl *ar)
+ 					GFP_KERNEL);
+ 		break;
+ 	case SME_CONNECTED:
+-	default:
+-		/*
+-		 * FIXME: oddly enough smeState is in DISCONNECTED during
+-		 * suspend, why? Need to send disconnected event in that
+-		 * state.
+-		 */
+ 		cfg80211_disconnected(vif->ndev, 0, NULL, 0, GFP_KERNEL);
+ 		break;
+ 	}
 
