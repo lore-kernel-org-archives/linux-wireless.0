@@ -1,62 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:63680 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750985Ab1LPGkS convert rfc822-to-8bit (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:36914 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751660Ab1LMMvH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 01:40:18 -0500
+	Tue, 13 Dec 2011 07:51:07 -0500
+Subject: [PATCH v2 0/6] ath6kl: scheduled scan support
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Tue, 13 Dec 2011 14:50:51 +0200
+Message-ID: <20111213124923.10834.20626.stgit@localhost6.localdomain6> (sfid-20111213_135111_319789_0E6E75F5)
 MIME-Version: 1.0
-In-Reply-To: <20111215213822.GB2561@tuxdriver.com>
-References: <20111215191523.GA2561@tuxdriver.com>
-	<CACna6rw736JdkoM8zKxorCFd5oy08QTwWZ6PutoJPSr3ZN8hTg@mail.gmail.com>
-	<20111215213822.GB2561@tuxdriver.com>
-Date: Fri, 16 Dec 2011 07:40:16 +0100
-Message-ID: <CACna6rz3qDpw4eJOoCXx7=z1719v7kS-Ou-WUseR9_vB-O2dag@mail.gmail.com> (sfid-20111216_074022_381457_E4F3F394)
-Subject: Re: pull request: wireless 2011-12-15
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Arend Van Spriel <arend@broadcom.com>
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 15 grudnia 2011 22:38 użytkownik John W. Linville
-<linville@tuxdriver.com> napisał:
-> On Thu, Dec 15, 2011 at 09:04:29PM +0100, Rafał Miłecki wrote:
->> 2011/12/15 John W. Linville <linville@tuxdriver.com>:
->> > commit 42a3b63bb2ca4996a3d1210a004eae2333f1119e
->> >
->> > Dave,
->> >
->> > Here are a few more fixes intended for the 3.2 release.  They are
->> > all small and narrowly focused.
->>
->> John, I've made a mistake and didn't use [PATCH 3.2] header to make it
->> clean my patch is fix. Could you take a look at
->> [PATCH] bcma: support for suspend and resume
->> please?
->>
->> It's not one-liner, but fixes lock ups, which I believe - we really
->> want to avoid.
->
-> It's late in the release cycle, and Dave specifically asked me to slow down.
->
-> Are these suspend/resume lockups a regression?  Or have they always
-> been there?  Do they happen to everyone?
+Here's v2 of my sched scan patches. Changes from v1 are just a
+proper a commit log for patch 6 and removed a fixme comment which
+I had already fixed.
 
-The bug is present since first days of bcma. That's why I even decided
-to add stable to CC.
+---
 
-Personally I've tested that only on 1 machine (I don't have more
-suspendable machines with mini PCIe slot). However all Macbook 8.1/8.2
-users have to remove b43 & bcma before suspending [0], they complain
-about that since ever.
+Kalle Valo (6):
+      ath6kl: remove a workaround from ath6kl_cfg80211_stop()
+      ath6kl: call ath6kl_cfg80211_stop() from ath6kl_close()
+      ath6kl: implement ath6kl_cfg80211_stop_all()
+      ath6kl: fix value of WOW_FILTER_SSID
+      ath6kl: fix reading of FW IE capabilities
+      ath6kl: implement scheduled scan
 
-Arend: I know you're also complaining for suspend in bcma. Can you
-comment on this?
 
-[0] http://ubuntuforums.org/showthread.php?t=1695746
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |  203 ++++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath6kl/cfg80211.h |    6 +
+ drivers/net/wireless/ath/ath6kl/core.h     |    7 +
+ drivers/net/wireless/ath/ath6kl/init.c     |    8 +
+ drivers/net/wireless/ath/ath6kl/main.c     |   12 --
+ drivers/net/wireless/ath/ath6kl/sdio.c     |   26 +++-
+ drivers/net/wireless/ath/ath6kl/wmi.c      |   27 ++++
+ drivers/net/wireless/ath/ath6kl/wmi.h      |    4 -
+ 8 files changed, 249 insertions(+), 44 deletions(-)
 
--- 
-Rafał
