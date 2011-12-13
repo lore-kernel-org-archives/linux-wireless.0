@@ -1,56 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:51233 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751222Ab1LRWQ0 convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:32941 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754307Ab1LMVAW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Dec 2011 17:16:26 -0500
-Received: by iaeh11 with SMTP id h11so7505142iae.19
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Dec 2011 14:16:25 -0800 (PST)
+	Tue, 13 Dec 2011 16:00:22 -0500
+Date: Tue, 13 Dec 2011 15:47:17 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com
+Subject: Re: [PATCH 5/6] ath9k: simplify tx locking
+Message-ID: <20111213204717.GD2613@tuxdriver.com> (sfid-20111213_220029_895169_8C82ED63)
+References: <1323720386-46132-1-git-send-email-nbd@openwrt.org>
+ <1323720386-46132-2-git-send-email-nbd@openwrt.org>
+ <1323720386-46132-3-git-send-email-nbd@openwrt.org>
+ <1323720386-46132-4-git-send-email-nbd@openwrt.org>
+ <1323720386-46132-5-git-send-email-nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <CA+XVXfcexCXc00-oH9O=3TeQuzzm3kkpR+e0u2ycyaeM-3Qdrg@mail.gmail.com>
-References: <1324232745-22928-1-git-send-email-eliad@wizery.com>
-	<1324232745-22928-2-git-send-email-eliad@wizery.com>
-	<CA+XVXfcexCXc00-oH9O=3TeQuzzm3kkpR+e0u2ycyaeM-3Qdrg@mail.gmail.com>
-Date: Mon, 19 Dec 2011 00:16:25 +0200
-Message-ID: <CAB3XZEczUq3Yh26w4AmpTsU81hNozJC8wkDBEghcUnhoNyXBtQ@mail.gmail.com> (sfid-20111218_231629_891323_292D4B65)
-Subject: Re: [PATCH 1/7] wl12xx: implement change_interface
-From: Eliad Peller <eliad@wizery.com>
-To: Arik Nemtsov <anamtsov@gmail.com>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1323720386-46132-5-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 18, 2011 at 8:37 PM, Arik Nemtsov <anamtsov@gmail.com> wrote:
-> On Sun, Dec 18, 2011 at 20:25, Eliad Peller <eliad@wizery.com> wrote:
->> Implement the change_interface callback by simply removing the
->> current vif and adding a new one after updating the vif type.
->>
->> Signed-off-by: Eliad Peller <eliad@wizery.com>
->> ---
->>  drivers/net/wireless/wl12xx/main.c |   11 +++++++++++
->>  1 files changed, 11 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
->> index c305841..86a7ee3 100644
->> --- a/drivers/net/wireless/wl12xx/main.c
->> +++ b/drivers/net/wireless/wl12xx/main.c
->> @@ -2269,6 +2269,16 @@ out:
->>        cancel_work_sync(&wl->recovery_work);
->>  }
->>
->> +static int wl12xx_op_change_interface(struct ieee80211_hw *hw,
->> +                                     struct ieee80211_vif *vif,
->> +                                     enum nl80211_iftype new_type, bool p2p)
->> +{
->> +       wl1271_op_remove_interface(hw, vif);
->> +
->> +       vif->type = ieee80211_iftype_p2p(new_type, p2p);
->
-> Isn't this internal?
+On Mon, Dec 12, 2011 at 09:06:25PM +0100, Felix Fietkau wrote:
+> Instead of releasing and taking back the lock over and over again in the
+> tx path, hold the lock a bit longer, requiring much fewer lock/unlock pairs.
+> This makes locking much easier to review and should not have any noticeable
+> performance/latency impact.
+> 
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 
-it's usually read-only (for the low-level drivers), but here we have
-to change it...
-otoh, i've just noticed that i forgot to update vif->p2p as well :)
+> @@ -2259,6 +2230,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+>  	struct list_head bf_head;
+>  	int status;
+>  
+> +	spin_lock_bh(&txq->axq_lock);
+>  	for (;;) {
+>  		if (work_pending(&sc->hw_reset_work))
+>  			break;
 
-Eliad.
+Pretty sure this is wrong -- gcc seems to agree:
+
+  CC [M]  drivers/net/wireless/ath/ath9k/xmit.o
+drivers/net/wireless/ath/ath9k/xmit.c: In function â€˜ath_tx_edma_taskletâ€™:
+drivers/net/wireless/ath/ath9k/xmit.c:2249:18: warning: â€˜txqâ€™ may be used uninitialized in this function
+
+> @@ -2278,12 +2250,8 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+>  
+>  		txq = &sc->tx.txq[ts.qid];
+>  
+> -		spin_lock_bh(&txq->axq_lock);
+> -
+> -		if (list_empty(&txq->txq_fifo[txq->txq_tailidx])) {
+> -			spin_unlock_bh(&txq->axq_lock);
+> -			return;
+> -		}
+> +		if (list_empty(&txq->txq_fifo[txq->txq_tailidx]))
+> +			break;
+>  
+>  		bf = list_first_entry(&txq->txq_fifo[txq->txq_tailidx],
+>  				      struct ath_buf, list);
+
+Looks like txq doesn't get initialized until this loop?
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
