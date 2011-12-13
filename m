@@ -1,176 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:54431 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751084Ab1LKBOz (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:37187 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751660Ab1LMMvn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Dec 2011 20:14:55 -0500
-Received: by mail-ey0-f174.google.com with SMTP id k14so2316533eaa.19
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2011 17:14:54 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 6/7] b43: N-PHY: finish 2.4GHz 0x2056 radio setup
-Date: Sun, 11 Dec 2011 02:55:34 +0100
-Message-Id: <1323568535-2816-7-git-send-email-zajec5@gmail.com> (sfid-20111211_021457_747958_A8212F43)
-In-Reply-To: <1323568535-2816-1-git-send-email-zajec5@gmail.com>
-References: <1323568535-2816-1-git-send-email-zajec5@gmail.com>
+	Tue, 13 Dec 2011 07:51:43 -0500
+Subject: [PATCH v2 3/6] ath6kl: implement ath6kl_cfg80211_stop_all()
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Tue, 13 Dec 2011 14:51:37 +0200
+Message-ID: <20111213125137.10834.75911.stgit@localhost6.localdomain6> (sfid-20111213_135145_425972_A8447C69)
+In-Reply-To: <20111213124923.10834.20626.stgit@localhost6.localdomain6>
+References: <20111213124923.10834.20626.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+During suspend we need to stop all vifs, not just the first.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/b43/phy_n.c      |   90 ++++++++++++++++++++++++++++++++-
- drivers/net/wireless/b43/radio_2056.c |   15 ++++++
- drivers/net/wireless/b43/radio_2056.h |    1 +
- 3 files changed, 105 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   53 ++++++++++++++++------------
+ drivers/net/wireless/ath/ath6kl/cfg80211.h |    3 +-
+ drivers/net/wireless/ath/ath6kl/main.c     |    3 +-
+ 3 files changed, 34 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 4bd94df..114c413 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -228,10 +228,98 @@ static void b43_chantab_radio_2056_upload(struct b43_wldev *dev,
- static void b43_radio_2056_setup(struct b43_wldev *dev,
- 				const struct b43_nphy_channeltab_entry_rev3 *e)
- {
-+	struct ssb_sprom *sprom = dev->dev->bus_sprom;
-+	enum ieee80211_band band = b43_current_band(dev->wl);
-+	u16 offset;
-+	u8 i;
-+	u16 bias, cbias, pag_boost, pgag_boost, mixg_boost, padg_boost;
-+
- 	B43_WARN_ON(dev->phy.rev < 3);
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 5f12c04..2bab65f 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1799,7 +1799,7 @@ int ath6kl_cfg80211_suspend(struct ath6kl *ar,
  
- 	b43_chantab_radio_2056_upload(dev, e);
--	/* TODO */
-+	b2056_upload_syn_pll_cp2(dev, band == IEEE80211_BAND_5GHZ);
-+
-+	if (sprom->boardflags2_lo & B43_BFL2_GPLL_WAR &&
-+	    b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ) {
-+		b43_radio_write(dev, B2056_SYN_PLL_LOOPFILTER1, 0x1F);
-+		b43_radio_write(dev, B2056_SYN_PLL_LOOPFILTER2, 0x1F);
-+		if (dev->dev->chip_id == 0x4716) {
-+			b43_radio_write(dev, B2056_SYN_PLL_LOOPFILTER4, 0x14);
-+			b43_radio_write(dev, B2056_SYN_PLL_CP2, 0);
-+		} else {
-+			b43_radio_write(dev, B2056_SYN_PLL_LOOPFILTER4, 0x0B);
-+			b43_radio_write(dev, B2056_SYN_PLL_CP2, 0x14);
-+		}
-+	}
-+	if (sprom->boardflags2_lo & B43_BFL2_APLL_WAR &&
-+	    b43_current_band(dev->wl) == IEEE80211_BAND_5GHZ) {
-+		b43_radio_write(dev, B2056_SYN_PLL_LOOPFILTER1, 0x1F);
-+		b43_radio_write(dev, B2056_SYN_PLL_LOOPFILTER2, 0x1F);
-+		b43_radio_write(dev, B2056_SYN_PLL_LOOPFILTER4, 0x05);
-+		b43_radio_write(dev, B2056_SYN_PLL_CP2, 0x0C);
-+	}
-+
-+	if (dev->phy.n->ipa2g_on && band == IEEE80211_BAND_2GHZ) {
-+		for (i = 0; i < 2; i++) {
-+			offset = i ? B2056_TX1 : B2056_TX0;
-+			if (dev->phy.rev >= 5) {
-+				b43_radio_write(dev,
-+					offset | B2056_TX_PADG_IDAC, 0xcc);
-+
-+				if (dev->dev->chip_id == 0x4716) {
-+					bias = 0x40;
-+					cbias = 0x45;
-+					pag_boost = 0x5;
-+					pgag_boost = 0x33;
-+					mixg_boost = 0x55;
-+				} else {
-+					bias = 0x25;
-+					cbias = 0x20;
-+					pag_boost = 0x4;
-+					pgag_boost = 0x03;
-+					mixg_boost = 0x65;
-+				}
-+				padg_boost = 0x77;
-+
-+				b43_radio_write(dev,
-+					offset | B2056_TX_INTPAG_IMAIN_STAT,
-+					bias);
-+				b43_radio_write(dev,
-+					offset | B2056_TX_INTPAG_IAUX_STAT,
-+					bias);
-+				b43_radio_write(dev,
-+					offset | B2056_TX_INTPAG_CASCBIAS,
-+					cbias);
-+				b43_radio_write(dev,
-+					offset | B2056_TX_INTPAG_BOOST_TUNE,
-+					pag_boost);
-+				b43_radio_write(dev,
-+					offset | B2056_TX_PGAG_BOOST_TUNE,
-+					pgag_boost);
-+				b43_radio_write(dev,
-+					offset | B2056_TX_PADG_BOOST_TUNE,
-+					padg_boost);
-+				b43_radio_write(dev,
-+					offset | B2056_TX_MIXG_BOOST_TUNE,
-+					mixg_boost);
-+			} else {
-+				bias = dev->phy.is_40mhz ? 0x40 : 0x20;
-+				b43_radio_write(dev,
-+					offset | B2056_TX_INTPAG_IMAIN_STAT,
-+					bias);
-+				b43_radio_write(dev,
-+					offset | B2056_TX_INTPAG_IAUX_STAT,
-+					bias);
-+				b43_radio_write(dev,
-+					offset | B2056_TX_INTPAG_CASCBIAS,
-+					0x30);
-+			}
-+			b43_radio_write(dev, offset | B2056_TX_PA_SPARE1, 0xee);
-+		}
-+	} else if (dev->phy.n->ipa5g_on && band == IEEE80211_BAND_5GHZ) {
-+		/* TODO */
-+	}
-+
- 	udelay(50);
- 	/* VCO calibration */
- 	b43_radio_write(dev, B2056_SYN_PLL_VCOCAL12, 0x00);
-diff --git a/drivers/net/wireless/b43/radio_2056.c b/drivers/net/wireless/b43/radio_2056.c
-index 4a42994..ce037fb 100644
---- a/drivers/net/wireless/b43/radio_2056.c
-+++ b/drivers/net/wireless/b43/radio_2056.c
-@@ -9055,6 +9055,21 @@ void b2056_upload_inittabs(struct b43_wldev *dev,
- 				B2056_RX1, pts->rx, pts->rx_length);
+ 	case ATH6KL_CFG_SUSPEND_DEEPSLEEP:
+ 
+-		ath6kl_cfg80211_stop(ar);
++		ath6kl_cfg80211_stop_all(ar);
+ 
+ 		/* save the current power mode before enabling power save */
+ 		ar->wmi->saved_pwr_mode = ar->wmi->pwr_mode;
+@@ -1816,7 +1816,7 @@ int ath6kl_cfg80211_suspend(struct ath6kl *ar,
+ 
+ 	case ATH6KL_CFG_SUSPEND_CUTPOWER:
+ 
+-		ath6kl_cfg80211_stop(ar);
++		ath6kl_cfg80211_stop_all(ar);
+ 
+ 		if (ar->state == ATH6KL_STATE_OFF) {
+ 			ath6kl_dbg(ATH6KL_DBG_SUSPEND,
+@@ -2389,22 +2389,8 @@ static struct cfg80211_ops ath6kl_cfg80211_ops = {
+ 	.mgmt_frame_register = ath6kl_mgmt_frame_register,
+ };
+ 
+-void ath6kl_cfg80211_stop(struct ath6kl *ar)
++void ath6kl_cfg80211_stop(struct ath6kl_vif *vif)
+ {
+-	struct ath6kl_vif *vif;
+-
+-	/* FIXME: for multi vif */
+-	vif = ath6kl_vif_first(ar);
+-	if (!vif) {
+-		/* save the current power mode before enabling power save */
+-		ar->wmi->saved_pwr_mode = ar->wmi->pwr_mode;
+-
+-		if (ath6kl_wmi_powermode_cmd(ar->wmi, 0, REC_POWER) != 0)
+-			ath6kl_warn("ath6kl_deep_sleep_enable: "
+-				    "wmi_powermode_cmd failed\n");
+-		return;
+-	}
+-
+ 	switch (vif->sme_state) {
+ 	case SME_DISCONNECTED:
+ 		break;
+@@ -2421,21 +2407,44 @@ void ath6kl_cfg80211_stop(struct ath6kl *ar)
+ 
+ 	if (test_bit(CONNECTED, &vif->flags) ||
+ 	    test_bit(CONNECT_PEND, &vif->flags))
+-		ath6kl_wmi_disconnect_cmd(ar->wmi, vif->fw_vif_idx);
++		ath6kl_wmi_disconnect_cmd(vif->ar->wmi, vif->fw_vif_idx);
+ 
+ 	vif->sme_state = SME_DISCONNECTED;
+ 	clear_bit(CONNECTED, &vif->flags);
+ 	clear_bit(CONNECT_PEND, &vif->flags);
+ 
+ 	/* disable scanning */
+-	if (ath6kl_wmi_scanparams_cmd(ar->wmi, vif->fw_vif_idx, 0xFFFF, 0, 0,
+-				      0, 0, 0, 0, 0, 0, 0) != 0)
+-		printk(KERN_WARNING "ath6kl: failed to disable scan "
+-		       "during suspend\n");
++	if (ath6kl_wmi_scanparams_cmd(vif->ar->wmi, vif->fw_vif_idx, 0xFFFF,
++				      0, 0, 0, 0, 0, 0, 0, 0, 0) != 0)
++		ath6kl_warn("failed to disable scan during stop\n");
+ 
+ 	ath6kl_cfg80211_scan_complete_event(vif, true);
  }
  
-+void b2056_upload_syn_pll_cp2(struct b43_wldev *dev, bool ghz5)
++void ath6kl_cfg80211_stop_all(struct ath6kl *ar)
 +{
-+	struct b2056_inittabs_pts *pts;
-+	const struct b2056_inittab_entry *e;
++	struct ath6kl_vif *vif;
 +
-+	if (dev->phy.rev >= ARRAY_SIZE(b2056_inittabs)) {
-+		B43_WARN_ON(1);
++	vif = ath6kl_vif_first(ar);
++	if (!vif) {
++		/* save the current power mode before enabling power save */
++		ar->wmi->saved_pwr_mode = ar->wmi->pwr_mode;
++
++		if (ath6kl_wmi_powermode_cmd(ar->wmi, 0, REC_POWER) != 0)
++			ath6kl_warn("ath6kl_deep_sleep_enable: "
++				    "wmi_powermode_cmd failed\n");
 +		return;
 +	}
-+	pts = &b2056_inittabs[dev->phy.rev];
-+	e = &pts->syn[B2056_SYN_PLL_CP2];
 +
-+	b43_radio_write(dev, B2056_SYN_PLL_CP2, ghz5 ? e->ghz5 : e->ghz2);
++	/*
++	 * FIXME: we should take ar->list_lock to protect changes in the
++	 * vif_list, but that's not trivial to do as ath6kl_cfg80211_stop()
++	 * sleeps.
++	 */
++	list_for_each_entry(vif, &ar->vif_list, list)
++		ath6kl_cfg80211_stop(vif);
 +}
 +
- const struct b43_nphy_channeltab_entry_rev3 *
- b43_nphy_get_chantabent_rev3(struct b43_wldev *dev, u16 freq)
+ struct ath6kl *ath6kl_core_alloc(struct device *dev)
  {
-diff --git a/drivers/net/wireless/b43/radio_2056.h b/drivers/net/wireless/b43/radio_2056.h
-index a7159d8..5b86673 100644
---- a/drivers/net/wireless/b43/radio_2056.h
-+++ b/drivers/net/wireless/b43/radio_2056.h
-@@ -1090,6 +1090,7 @@ struct b43_nphy_channeltab_entry_rev3 {
+ 	struct ath6kl *ar;
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+index 59fa9d8..226a734 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+@@ -52,6 +52,7 @@ int ath6kl_cfg80211_suspend(struct ath6kl *ar,
  
- void b2056_upload_inittabs(struct b43_wldev *dev,
- 			   bool ghz5, bool ignore_uploadflag);
-+void b2056_upload_syn_pll_cp2(struct b43_wldev *dev, bool ghz5);
+ int ath6kl_cfg80211_resume(struct ath6kl *ar);
  
- /* Get the NPHY Channel Switch Table entry for a channel.
-  * Returns NULL on failure to find an entry. */
--- 
-1.7.3.4
+-void ath6kl_cfg80211_stop(struct ath6kl *ar);
++void ath6kl_cfg80211_stop(struct ath6kl_vif *vif);
++void ath6kl_cfg80211_stop_all(struct ath6kl *ar);
+ 
+ #endif /* ATH6KL_CFG80211_H */
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index 0c7a013..f96e9f3 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -1000,12 +1000,11 @@ static int ath6kl_open(struct net_device *dev)
+ 
+ static int ath6kl_close(struct net_device *dev)
+ {
+-	struct ath6kl *ar = ath6kl_priv(dev);
+ 	struct ath6kl_vif *vif = netdev_priv(dev);
+ 
+ 	netif_stop_queue(dev);
+ 
+-	ath6kl_cfg80211_stop(ar);
++	ath6kl_cfg80211_stop(vif);
+ 
+ 	clear_bit(WLAN_ENABLED, &vif->flags);
+ 
 
