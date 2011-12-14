@@ -1,522 +1,442 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2132 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752426Ab1LHXHR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 18:07:17 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 23/23] brcm80211: smac: use bcma core access functions
- in nicpci.c
-Date: Thu, 8 Dec 2011 15:06:59 -0800
-Message-ID: <1323385619-7454-24-git-send-email-frankyl@broadcom.com> (sfid-20111209_000738_946364_E46DB1D2)
-In-Reply-To: <1323385619-7454-1-git-send-email-frankyl@broadcom.com>
-References: <1323385619-7454-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:59468 "HELO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with SMTP id S1754134Ab1LNEoG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Dec 2011 23:44:06 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] mwifiex: remove cfg_workqueue
+Date: Tue, 13 Dec 2011 20:43:17 -0800
+Message-Id: <1323837797-32547-2-git-send-email-bzhao@marvell.com> (sfid-20111214_054410_771245_81ED22BD)
+In-Reply-To: <1323837797-32547-1-git-send-email-bzhao@marvell.com>
+References: <1323837797-32547-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Code in nicpci.c now uses the PCI(E) core as provided by the BCMA
-bus driver to configure that core.
+cfg_workqueue was added to notify cfg80211 that scan, connect
+or disconnect is done by calling respective completion handlers.
+We can avoid use of this workqueue by calling those handlers
+from other places.
+1) Call connect, disconnect completion handlers in their callback
+   functions.
+   ex. Call cfg80211_connect_result() in mwifiex_cfg80211_connect()
+2) Call scan completion handler after parsing response of last scan
+   command in a queue.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+After removing the workqueue, variables (assoc_request etc.) and
+checks used for mutual exclusion become redundant. Those are also
+removed in this patch.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |   11 +-
- drivers/net/wireless/brcm80211/brcmsmac/nicpci.c  |  179 ++++++++++-----------
- drivers/net/wireless/brcm80211/brcmsmac/nicpci.h  |   11 +-
- 3 files changed, 90 insertions(+), 111 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c  |  191 +++++++++---------------------
+ drivers/net/wireless/mwifiex/cfg80211.h  |    1 -
+ drivers/net/wireless/mwifiex/main.c      |    2 -
+ drivers/net/wireless/mwifiex/main.h      |    9 +--
+ drivers/net/wireless/mwifiex/scan.c      |   13 ++-
+ drivers/net/wireless/mwifiex/sta_event.c |   17 ++--
+ 6 files changed, 75 insertions(+), 158 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-index a68f24a..8d3829a 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-@@ -633,8 +633,7 @@ ai_buscore_setup(struct si_info *sii, u32 savewin, uint *origidx)
- 
- 	/* fixup necessary chip/core configurations */
- 	if (!sii->pch) {
--		sii->pch = pcicore_init(&sii->pub, sii->pcibus,
--					sii->curmap + PCI_16KB0_PCIREGS_OFFSET);
-+		sii->pch = pcicore_init(&sii->pub, sii->icbus->drv_pci.core);
- 		if (sii->pch == NULL)
- 			return false;
- 	}
-@@ -1385,7 +1384,7 @@ void ai_pci_setup(struct si_pub *sih, uint coremask)
- 	}
- 
- 	if (PCI(sih)) {
--		pcicore_pci_setup(sii->pch, regs);
-+		pcicore_pci_setup(sii->pch);
- 
- 		/* switch back to previous core */
- 		ai_setcoreidx(sih, idx);
-@@ -1408,11 +1407,7 @@ int ai_pci_fixcfg(struct si_pub *sih)
- 
- 	/* check 'pi' is correct and fix it if not */
- 	regs = ai_setcore(&sii->pub, ai_get_buscoretype(sih), 0);
--	if (ai_get_buscoretype(sih) == PCIE_CORE_ID)
--		pcicore_fixcfg_pcie(sii->pch,
--				    (struct sbpcieregs __iomem *)regs);
--	else if (ai_get_buscoretype(sih) == PCI_CORE_ID)
--		pcicore_fixcfg_pci(sii->pch, (struct sbpciregs __iomem *)regs);
-+	pcicore_fixcfg(sii->pch);
- 
- 	/* restore the original index */
- 	ai_setcoreidx(&sii->pub, origidx);
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/nicpci.c b/drivers/net/wireless/brcm80211/brcmsmac/nicpci.c
-index 6c3a9f9..a433041 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/nicpci.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/nicpci.c
-@@ -139,6 +139,9 @@
- #define SRSH_PI_MASK	0xf000	/* bit 15:12 */
- #define SRSH_PI_SHIFT	12	/* bit 15:12 */
- 
-+#define PCIREGOFFS(field)	offsetof(struct sbpciregs, field)
-+#define PCIEREGOFFS(field)	offsetof(struct sbpcieregs, field)
-+
- /* Sonics side: PCI core and host control registers */
- struct sbpciregs {
- 	u32 control;		/* PCI control */
-@@ -205,11 +208,7 @@ struct sbpcieregs {
- };
- 
- struct pcicore_info {
--	union {
--		struct sbpcieregs __iomem *pcieregs;
--		struct sbpciregs __iomem *pciregs;
--	} regs;			/* Memory mapped register to the core */
--
-+	struct bcma_device *core;
- 	struct si_pub *sih;	/* System interconnect handle */
- 	struct pci_dev *dev;
- 	u8 pciecap_lcreg_offset;/* PCIE capability LCreg offset
-@@ -238,8 +237,7 @@ static void pr28829_delay(void)
- /* Initialize the PCI core.
-  * It's caller's responsibility to make sure that this is done only once
-  */
--struct pcicore_info *pcicore_init(struct si_pub *sih, struct pci_dev *pdev,
--				  void __iomem *regs)
-+struct pcicore_info *pcicore_init(struct si_pub *sih, struct bcma_device *core)
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index ffd293e..787dbe2 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -751,17 +751,13 @@ mwifiex_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
  {
- 	struct pcicore_info *pi;
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
  
-@@ -249,17 +247,15 @@ struct pcicore_info *pcicore_init(struct si_pub *sih, struct pci_dev *pdev,
- 		return NULL;
- 
- 	pi->sih = sih;
--	pi->dev = pdev;
-+	pi->dev = core->bus->host_pci;
-+	pi->core = core;
- 
--	if (ai_get_buscoretype(sih) == PCIE_CORE_ID) {
-+	if (core->id.id == PCIE_CORE_ID) {
- 		u8 cap_ptr;
--		pi->regs.pcieregs = regs;
- 		cap_ptr = pcicore_find_pci_capability(pi->dev, PCI_CAP_ID_EXP,
- 						      NULL, NULL);
- 		pi->pciecap_lcreg_offset = cap_ptr + PCIE_CAP_LINKCTRL_OFFSET;
--	} else
--		pi->regs.pciregs = regs;
+-	if (priv->disconnect)
+-		return -EBUSY;
 -
+-	priv->disconnect = 1;
+ 	if (mwifiex_deauthenticate(priv, NULL))
+ 		return -EFAULT;
+ 
+ 	wiphy_dbg(wiphy, "info: successfully disconnected from %pM:"
+ 		" reason code %d\n", priv->cfg_bssid, reason_code);
+ 
+-	queue_work(priv->workqueue, &priv->cfg_workqueue);
++	memset(priv->cfg_bssid, 0, ETH_ALEN);
+ 
+ 	return 0;
+ }
+@@ -981,27 +977,32 @@ mwifiex_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
+ 	int ret = 0;
+ 
+-	if (priv->assoc_request)
+-		return -EBUSY;
+-
+ 	if (priv->bss_mode == NL80211_IFTYPE_ADHOC) {
+ 		wiphy_err(wiphy, "received infra assoc request "
+ 				"when station is in ibss mode\n");
+ 		goto done;
+ 	}
+ 
+-	priv->assoc_request = -EINPROGRESS;
+-
+ 	wiphy_dbg(wiphy, "info: Trying to associate to %s and bssid %pM\n",
+ 	       (char *) sme->ssid, sme->bssid);
+ 
+ 	ret = mwifiex_cfg80211_assoc(priv, sme->ssid_len, sme->ssid, sme->bssid,
+ 				     priv->bss_mode, sme->channel, sme, 0);
+-
+-	priv->assoc_request = 1;
+ done:
+-	priv->assoc_result = ret;
+-	queue_work(priv->workqueue, &priv->cfg_workqueue);
++	if (!ret) {
++		cfg80211_connect_result(priv->netdev, priv->cfg_bssid, NULL, 0,
++					NULL, 0, WLAN_STATUS_SUCCESS,
++					GFP_KERNEL);
++		dev_dbg(priv->adapter->dev,
++			"info: associated to bssid %pM successfully\n",
++			priv->cfg_bssid);
++	} else {
++		dev_dbg(priv->adapter->dev,
++			"info: association to bssid %pM failed\n",
++			priv->cfg_bssid);
++		memset(priv->cfg_bssid, 0, ETH_ALEN);
 +	}
- 	return pi;
++
+ 	return ret;
  }
  
-@@ -334,37 +330,37 @@ end:
+@@ -1018,28 +1019,29 @@ mwifiex_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
+ 	struct mwifiex_private *priv = mwifiex_cfg80211_get_priv(wiphy);
+ 	int ret = 0;
  
- /* ***** Register Access API */
- static uint
--pcie_readreg(struct sbpcieregs __iomem *pcieregs, uint addrtype, uint offset)
-+pcie_readreg(struct bcma_device *core, uint addrtype, uint offset)
- {
- 	uint retval = 0xFFFFFFFF;
- 
- 	switch (addrtype) {
- 	case PCIE_CONFIGREGS:
--		W_REG(&pcieregs->configaddr, offset);
--		(void)R_REG((&pcieregs->configaddr));
--		retval = R_REG(&pcieregs->configdata);
-+		bcma_write32(core, PCIEREGOFFS(configaddr), offset);
-+		(void)bcma_read32(core, PCIEREGOFFS(configaddr));
-+		retval = bcma_read32(core, PCIEREGOFFS(configdata));
- 		break;
- 	case PCIE_PCIEREGS:
--		W_REG(&pcieregs->pcieindaddr, offset);
--		(void)R_REG(&pcieregs->pcieindaddr);
--		retval = R_REG(&pcieregs->pcieinddata);
-+		bcma_write32(core, PCIEREGOFFS(pcieindaddr), offset);
-+		(void)bcma_read32(core, PCIEREGOFFS(pcieindaddr));
-+		retval = bcma_read32(core, PCIEREGOFFS(pcieinddata));
- 		break;
- 	}
- 
- 	return retval;
- }
- 
--static uint pcie_writereg(struct sbpcieregs __iomem *pcieregs, uint addrtype,
-+static uint pcie_writereg(struct bcma_device *core, uint addrtype,
- 			  uint offset, uint val)
- {
- 	switch (addrtype) {
- 	case PCIE_CONFIGREGS:
--		W_REG((&pcieregs->configaddr), offset);
--		W_REG((&pcieregs->configdata), val);
-+		bcma_write32(core, PCIEREGOFFS(configaddr), offset);
-+		bcma_write32(core, PCIEREGOFFS(configdata), val);
- 		break;
- 	case PCIE_PCIEREGS:
--		W_REG((&pcieregs->pcieindaddr), offset);
--		W_REG((&pcieregs->pcieinddata), val);
-+		bcma_write32(core, PCIEREGOFFS(pcieindaddr), offset);
-+		bcma_write32(core, PCIEREGOFFS(pcieinddata), val);
- 		break;
- 	default:
- 		break;
-@@ -374,7 +370,6 @@ static uint pcie_writereg(struct sbpcieregs __iomem *pcieregs, uint addrtype,
- 
- static bool pcie_mdiosetblock(struct pcicore_info *pi, uint blk)
- {
--	struct sbpcieregs __iomem *pcieregs = pi->regs.pcieregs;
- 	uint mdiodata, i = 0;
- 	uint pcie_serdes_spinwait = 200;
- 
-@@ -382,12 +377,13 @@ static bool pcie_mdiosetblock(struct pcicore_info *pi, uint blk)
- 		    (MDIODATA_DEV_ADDR << MDIODATA_DEVADDR_SHF) |
- 		    (MDIODATA_BLK_ADDR << MDIODATA_REGADDR_SHF) |
- 		    (blk << 4));
--	W_REG(&pcieregs->mdiodata, mdiodata);
-+	bcma_write32(pi->core, PCIEREGOFFS(mdiodata), mdiodata);
- 
- 	pr28829_delay();
- 	/* retry till the transaction is complete */
- 	while (i < pcie_serdes_spinwait) {
--		if (R_REG(&pcieregs->mdiocontrol) & MDIOCTL_ACCESS_DONE)
-+		if (bcma_read32(pi->core, PCIEREGOFFS(mdiocontrol)) &
-+		    MDIOCTL_ACCESS_DONE)
- 			break;
- 
- 		udelay(1000);
-@@ -404,13 +400,13 @@ static int
- pcie_mdioop(struct pcicore_info *pi, uint physmedia, uint regaddr, bool write,
- 	    uint *val)
- {
--	struct sbpcieregs __iomem *pcieregs = pi->regs.pcieregs;
- 	uint mdiodata;
- 	uint i = 0;
- 	uint pcie_serdes_spinwait = 10;
- 
- 	/* enable mdio access to SERDES */
--	W_REG(&pcieregs->mdiocontrol, MDIOCTL_PREAM_EN | MDIOCTL_DIVISOR_VAL);
-+	bcma_write32(pi->core, PCIEREGOFFS(mdiocontrol),
-+		     MDIOCTL_PREAM_EN | MDIOCTL_DIVISOR_VAL);
- 
- 	if (pi->sih->buscorerev >= 10) {
- 		/* new serdes is slower in rw,
-@@ -432,20 +428,22 @@ pcie_mdioop(struct pcicore_info *pi, uint physmedia, uint regaddr, bool write,
- 		mdiodata |= (MDIODATA_START | MDIODATA_WRITE | MDIODATA_TA |
- 			     *val);
- 
--	W_REG(&pcieregs->mdiodata, mdiodata);
-+	bcma_write32(pi->core, PCIEREGOFFS(mdiodata), mdiodata);
- 
- 	pr28829_delay();
- 
- 	/* retry till the transaction is complete */
- 	while (i < pcie_serdes_spinwait) {
--		if (R_REG(&pcieregs->mdiocontrol) & MDIOCTL_ACCESS_DONE) {
-+		if (bcma_read32(pi->core, PCIEREGOFFS(mdiocontrol)) &
-+		    MDIOCTL_ACCESS_DONE) {
- 			if (!write) {
- 				pr28829_delay();
--				*val = (R_REG(&pcieregs->mdiodata) &
-+				*val = (bcma_read32(pi->core,
-+						    PCIEREGOFFS(mdiodata)) &
- 					MDIODATA_MASK);
- 			}
- 			/* Disable mdio access to SERDES */
--			W_REG(&pcieregs->mdiocontrol, 0);
-+			bcma_write32(pi->core, PCIEREGOFFS(mdiocontrol), 0);
- 			return 0;
- 		}
- 		udelay(1000);
-@@ -453,7 +451,7 @@ pcie_mdioop(struct pcicore_info *pi, uint physmedia, uint regaddr, bool write,
- 	}
- 
- 	/* Timed out. Disable mdio access to SERDES. */
--	W_REG(&pcieregs->mdiocontrol, 0);
-+	bcma_write32(pi->core, PCIEREGOFFS(mdiocontrol), 0);
- 	return 1;
- }
- 
-@@ -502,19 +500,18 @@ static void pcie_extendL1timer(struct pcicore_info *pi, bool extend)
- {
- 	u32 w;
- 	struct si_pub *sih = pi->sih;
--	struct sbpcieregs __iomem *pcieregs = pi->regs.pcieregs;
- 
- 	if (ai_get_buscoretype(sih) != PCIE_CORE_ID ||
- 	    ai_get_buscorerev(sih) < 7)
- 		return;
- 
--	w = pcie_readreg(pcieregs, PCIE_PCIEREGS, PCIE_DLLP_PMTHRESHREG);
-+	w = pcie_readreg(pi->core, PCIE_PCIEREGS, PCIE_DLLP_PMTHRESHREG);
- 	if (extend)
- 		w |= PCIE_ASPMTIMER_EXTEND;
- 	else
- 		w &= ~PCIE_ASPMTIMER_EXTEND;
--	pcie_writereg(pcieregs, PCIE_PCIEREGS, PCIE_DLLP_PMTHRESHREG, w);
--	w = pcie_readreg(pcieregs, PCIE_PCIEREGS, PCIE_DLLP_PMTHRESHREG);
-+	pcie_writereg(pi->core, PCIE_PCIEREGS, PCIE_DLLP_PMTHRESHREG, w);
-+	w = pcie_readreg(pi->core, PCIE_PCIEREGS, PCIE_DLLP_PMTHRESHREG);
- }
- 
- /* centralized clkreq control policy */
-@@ -565,7 +562,7 @@ static void pcie_war_polarity(struct pcicore_info *pi)
- 	if (pi->pcie_polarity != 0)
- 		return;
- 
--	w = pcie_readreg(pi->regs.pcieregs, PCIE_PCIEREGS, PCIE_PLP_STATUSREG);
-+	w = pcie_readreg(pi->core, PCIE_PCIEREGS, PCIE_PLP_STATUSREG);
- 
- 	/* Detect the current polarity at attach and force that polarity and
- 	 * disable changing the polarity
-@@ -584,18 +581,15 @@ static void pcie_war_polarity(struct pcicore_info *pi)
-  */
- static void pcie_war_aspm_clkreq(struct pcicore_info *pi)
- {
--	struct sbpcieregs __iomem *pcieregs = pi->regs.pcieregs;
- 	struct si_pub *sih = pi->sih;
- 	u16 val16;
--	u16 __iomem *reg16;
- 	u32 w;
- 
- 	if (!PCIE_ASPM(sih))
- 		return;
- 
- 	/* bypass this on QT or VSIM */
--	reg16 = &pcieregs->sprom[SRSH_ASPM_OFFSET];
--	val16 = R_REG(reg16);
-+	val16 = bcma_read16(pi->core, PCIEREGOFFS(sprom[SRSH_ASPM_OFFSET]));
- 
- 	val16 &= ~SRSH_ASPM_ENB;
- 	if (pi->pcie_war_aspm_ovr == PCIE_ASPM_ENAB)
-@@ -605,15 +599,15 @@ static void pcie_war_aspm_clkreq(struct pcicore_info *pi)
- 	else if (pi->pcie_war_aspm_ovr == PCIE_ASPM_L0s_ENAB)
- 		val16 |= SRSH_ASPM_L0s_ENB;
- 
--	W_REG(reg16, val16);
-+	bcma_write16(pi->core, PCIEREGOFFS(sprom[SRSH_ASPM_OFFSET]), val16);
- 
- 	pci_read_config_dword(pi->dev, pi->pciecap_lcreg_offset, &w);
- 	w &= ~PCIE_ASPM_ENAB;
- 	w |= pi->pcie_war_aspm_ovr;
- 	pci_write_config_dword(pi->dev, pi->pciecap_lcreg_offset, w);
- 
--	reg16 = &pcieregs->sprom[SRSH_CLKREQ_OFFSET_REV5];
--	val16 = R_REG(reg16);
-+	val16 = bcma_read16(pi->core,
-+			    PCIEREGOFFS(sprom[SRSH_CLKREQ_OFFSET_REV5]));
- 
- 	if (pi->pcie_war_aspm_ovr != PCIE_ASPM_DISAB) {
- 		val16 |= SRSH_CLKREQ_ENB;
-@@ -621,7 +615,8 @@ static void pcie_war_aspm_clkreq(struct pcicore_info *pi)
- 	} else
- 		val16 &= ~SRSH_CLKREQ_ENB;
- 
--	W_REG(reg16, val16);
-+	bcma_write16(pi->core, PCIEREGOFFS(sprom[SRSH_CLKREQ_OFFSET_REV5]),
-+		     val16);
- }
- 
- /* Apply the polarity determined at the start */
-@@ -645,16 +640,15 @@ static void pcie_war_serdes(struct pcicore_info *pi)
- /* Needs to happen when coming out of 'standby'/'hibernate' */
- static void pcie_misc_config_fixup(struct pcicore_info *pi)
- {
--	struct sbpcieregs __iomem *pcieregs = pi->regs.pcieregs;
- 	u16 val16;
--	u16 __iomem *reg16;
- 
--	reg16 = &pcieregs->sprom[SRSH_PCIE_MISC_CONFIG];
--	val16 = R_REG(reg16);
-+	val16 = bcma_read16(pi->core,
-+			    PCIEREGOFFS(sprom[SRSH_PCIE_MISC_CONFIG]));
- 
- 	if ((val16 & SRSH_L23READY_EXIT_NOPERST) == 0) {
- 		val16 |= SRSH_L23READY_EXIT_NOPERST;
--		W_REG(reg16, val16);
-+		bcma_write16(pi->core,
-+			     PCIEREGOFFS(sprom[SRSH_PCIE_MISC_CONFIG]), val16);
- 	}
- }
- 
-@@ -662,37 +656,32 @@ static void pcie_misc_config_fixup(struct pcicore_info *pi)
- /* Needs to happen when coming out of 'standby'/'hibernate' */
- static void pcie_war_noplldown(struct pcicore_info *pi)
- {
--	struct sbpcieregs __iomem *pcieregs = pi->regs.pcieregs;
--	u16 __iomem *reg16;
+-	if (priv->ibss_join_request)
+-		return -EBUSY;
 -
- 	/* turn off serdes PLL down */
- 	ai_cc_reg(pi->sih, offsetof(struct chipcregs, chipcontrol),
- 		  CHIPCTRL_4321_PLL_DOWN, CHIPCTRL_4321_PLL_DOWN);
- 
- 	/* clear srom shadow backdoor */
--	reg16 = &pcieregs->sprom[SRSH_BD_OFFSET];
--	W_REG(reg16, 0);
-+	bcma_write16(pi->core, PCIEREGOFFS(sprom[SRSH_BD_OFFSET]), 0);
- }
- 
- /* Needs to happen when coming out of 'standby'/'hibernate' */
- static void pcie_war_pci_setup(struct pcicore_info *pi)
- {
- 	struct si_pub *sih = pi->sih;
--	struct sbpcieregs __iomem *pcieregs = pi->regs.pcieregs;
- 	u32 w;
- 
- 	if (ai_get_buscorerev(sih) == 0 || ai_get_buscorerev(sih) == 1) {
--		w = pcie_readreg(pcieregs, PCIE_PCIEREGS,
-+		w = pcie_readreg(pi->core, PCIE_PCIEREGS,
- 				 PCIE_TLP_WORKAROUNDSREG);
- 		w |= 0x8;
--		pcie_writereg(pcieregs, PCIE_PCIEREGS,
-+		pcie_writereg(pi->core, PCIE_PCIEREGS,
- 			      PCIE_TLP_WORKAROUNDSREG, w);
+ 	if (priv->bss_mode != NL80211_IFTYPE_ADHOC) {
+ 		wiphy_err(wiphy, "request to join ibss received "
+ 				"when station is not in ibss mode\n");
+ 		goto done;
  	}
  
- 	if (ai_get_buscorerev(sih) == 1) {
--		w = pcie_readreg(pcieregs, PCIE_PCIEREGS, PCIE_DLLP_LCREG);
-+		w = pcie_readreg(pi->core, PCIE_PCIEREGS, PCIE_DLLP_LCREG);
- 		w |= 0x40;
--		pcie_writereg(pcieregs, PCIE_PCIEREGS, PCIE_DLLP_LCREG, w);
-+		pcie_writereg(pi->core, PCIE_PCIEREGS, PCIE_DLLP_LCREG, w);
- 	}
+-	priv->ibss_join_request = -EINPROGRESS;
+-
+ 	wiphy_dbg(wiphy, "info: trying to join to %s and bssid %pM\n",
+ 	       (char *) params->ssid, params->bssid);
  
- 	if (ai_get_buscorerev(sih) == 0) {
-@@ -701,11 +690,11 @@ static void pcie_war_pci_setup(struct pcicore_info *pi)
- 		pcie_mdiowrite(pi, MDIODATA_DEV_RX, SERDES_RX_CDRBW, 0x1466);
- 	} else if (PCIE_ASPM(sih)) {
- 		/* Change the L1 threshold for better performance */
--		w = pcie_readreg(pcieregs, PCIE_PCIEREGS,
-+		w = pcie_readreg(pi->core, PCIE_PCIEREGS,
- 				 PCIE_DLLP_PMTHRESHREG);
- 		w &= ~PCIE_L1THRESHOLDTIME_MASK;
- 		w |= PCIE_L1THRESHOLD_WARVAL << PCIE_L1THRESHOLDTIME_SHIFT;
--		pcie_writereg(pcieregs, PCIE_PCIEREGS,
-+		pcie_writereg(pi->core, PCIE_PCIEREGS,
- 			      PCIE_DLLP_PMTHRESHREG, w);
- 
- 		pcie_war_serdes(pi);
-@@ -794,45 +783,45 @@ void pcicore_down(struct pcicore_info *pi, int state)
+ 	ret = mwifiex_cfg80211_assoc(priv, params->ssid_len, params->ssid,
+ 				params->bssid, priv->bss_mode,
+ 				params->channel, NULL, params->privacy);
+-
+-	priv->ibss_join_request = 1;
+ done:
+-	priv->ibss_join_result = ret;
+-	queue_work(priv->workqueue, &priv->cfg_workqueue);
++	if (!ret) {
++		cfg80211_ibss_joined(priv->netdev, priv->cfg_bssid, GFP_KERNEL);
++		dev_dbg(priv->adapter->dev,
++			"info: joined/created adhoc network with bssid"
++			" %pM successfully\n", priv->cfg_bssid);
++	} else {
++		dev_dbg(priv->adapter->dev,
++			"info: failed creating/joining adhoc network\n");
++	}
++
+ 	return ret;
  }
  
- /* precondition: current core is sii->buscoretype */
--static void pcicore_fixcfg(struct pcicore_info *pi, u16 __iomem *reg16)
-+void pcicore_fixcfg(struct pcicore_info *pi)
+@@ -1054,17 +1056,12 @@ mwifiex_cfg80211_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
  {
--	struct si_info *sii = (struct si_info *)(pi->sih);
-+	struct bcma_device *core = pi->core;
- 	u16 val16;
--	uint pciidx;
-+	uint regoff;
+ 	struct mwifiex_private *priv = mwifiex_cfg80211_get_priv(wiphy);
  
--	pciidx = ai_coreidx(&sii->pub);
--	val16 = R_REG(reg16);
--	if (((val16 & SRSH_PI_MASK) >> SRSH_PI_SHIFT) != (u16)pciidx) {
--		val16 = (u16)(pciidx << SRSH_PI_SHIFT) |
--			(val16 & ~SRSH_PI_MASK);
--		W_REG(reg16, val16);
+-	if (priv->disconnect)
+-		return -EBUSY;
+-
+-	priv->disconnect = 1;
+-
+ 	wiphy_dbg(wiphy, "info: disconnecting from essid %pM\n",
+ 			priv->cfg_bssid);
+ 	if (mwifiex_deauthenticate(priv, NULL))
+ 		return -EFAULT;
+ 
+-	queue_work(priv->workqueue, &priv->cfg_workqueue);
++	memset(priv->cfg_bssid, 0, ETH_ALEN);
+ 
+ 	return 0;
+ }
+@@ -1081,15 +1078,42 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy, struct net_device *dev,
+ 		      struct cfg80211_scan_request *request)
+ {
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
++	int i;
++	struct ieee80211_channel *chan;
+ 
+ 	wiphy_dbg(wiphy, "info: received scan request on %s\n", dev->name);
+ 
+-	if (priv->scan_request && priv->scan_request != request)
+-		return -EBUSY;
+-
+ 	priv->scan_request = request;
+ 
+-	queue_work(priv->workqueue, &priv->cfg_workqueue);
++	priv->user_scan_cfg = kzalloc(sizeof(struct mwifiex_user_scan_cfg),
++					GFP_KERNEL);
++	if (!priv->user_scan_cfg) {
++		dev_err(priv->adapter->dev, "failed to alloc scan_req\n");
++		return -ENOMEM;
++	}
++	for (i = 0; i < request->n_ssids; i++) {
++		memcpy(priv->user_scan_cfg->ssid_list[i].ssid,
++			request->ssids[i].ssid, request->ssids[i].ssid_len);
++		priv->user_scan_cfg->ssid_list[i].max_len =
++			request->ssids[i].ssid_len;
++	}
++	for (i = 0; i < request->n_channels; i++) {
++		chan = request->channels[i];
++		priv->user_scan_cfg->chan_list[i].chan_number = chan->hw_value;
++		priv->user_scan_cfg->chan_list[i].radio_type = chan->band;
++
++		if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)
++			priv->user_scan_cfg->chan_list[i].scan_type =
++				MWIFIEX_SCAN_TYPE_PASSIVE;
++		else
++			priv->user_scan_cfg->chan_list[i].scan_type =
++				MWIFIEX_SCAN_TYPE_ACTIVE;
++
++		priv->user_scan_cfg->chan_list[i].scan_time = 0;
++	}
++	if (mwifiex_set_user_scan_ioctl(priv, priv->user_scan_cfg))
++		return -EFAULT;
++
+ 	return 0;
+ }
+ 
+@@ -1295,10 +1319,6 @@ int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct net_device *dev)
+ 
+ 	priv->media_connected = false;
+ 
+-	cancel_work_sync(&priv->cfg_workqueue);
+-	flush_workqueue(priv->workqueue);
+-	destroy_workqueue(priv->workqueue);
+-
+ 	priv->bss_mode = NL80211_IFTYPE_UNSPECIFIED;
+ 
+ 	return 0;
+@@ -1404,100 +1424,3 @@ int mwifiex_register_cfg80211(struct mwifiex_private *priv)
+ 
+ 	return ret;
+ }
+-
+-/*
+- * This function handles the result of different pending network operations.
+- *
+- * The following operations are handled and CFG802.11 subsystem is
+- * notified accordingly -
+- *      - Scan request completion
+- *      - Association request completion
+- *      - IBSS join request completion
+- *      - Disconnect request completion
+- */
+-void
+-mwifiex_cfg80211_results(struct work_struct *work)
+-{
+-	struct mwifiex_private *priv =
+-		container_of(work, struct mwifiex_private, cfg_workqueue);
+-	struct mwifiex_user_scan_cfg *scan_req;
+-	int ret = 0, i;
+-	struct ieee80211_channel *chan;
+-
+-	if (priv->scan_request) {
+-		scan_req = kzalloc(sizeof(struct mwifiex_user_scan_cfg),
+-				   GFP_KERNEL);
+-		if (!scan_req) {
+-			dev_err(priv->adapter->dev, "failed to alloc "
+-						    "scan_req\n");
+-			return;
+-		}
+-		for (i = 0; i < priv->scan_request->n_ssids; i++) {
+-			memcpy(scan_req->ssid_list[i].ssid,
+-					priv->scan_request->ssids[i].ssid,
+-					priv->scan_request->ssids[i].ssid_len);
+-			scan_req->ssid_list[i].max_len =
+-					priv->scan_request->ssids[i].ssid_len;
+-		}
+-		for (i = 0; i < priv->scan_request->n_channels; i++) {
+-			chan = priv->scan_request->channels[i];
+-			scan_req->chan_list[i].chan_number = chan->hw_value;
+-			scan_req->chan_list[i].radio_type = chan->band;
+-			if (chan->flags & IEEE80211_CHAN_DISABLED)
+-				scan_req->chan_list[i].scan_type =
+-					MWIFIEX_SCAN_TYPE_PASSIVE;
+-			else
+-				scan_req->chan_list[i].scan_type =
+-					MWIFIEX_SCAN_TYPE_ACTIVE;
+-			scan_req->chan_list[i].scan_time = 0;
+-		}
+-		if (mwifiex_set_user_scan_ioctl(priv, scan_req))
+-			ret = -EFAULT;
+-		priv->scan_result_status = ret;
+-		dev_dbg(priv->adapter->dev, "info: %s: sending scan results\n",
+-							__func__);
+-		cfg80211_scan_done(priv->scan_request,
+-				(priv->scan_result_status < 0));
+-		priv->scan_request = NULL;
+-		kfree(scan_req);
+-	}
+-
+-	if (priv->assoc_request == 1) {
+-		if (!priv->assoc_result) {
+-			cfg80211_connect_result(priv->netdev, priv->cfg_bssid,
+-						NULL, 0, NULL, 0,
+-						WLAN_STATUS_SUCCESS,
+-						GFP_KERNEL);
+-			dev_dbg(priv->adapter->dev,
+-				"info: associated to bssid %pM successfully\n",
+-			       priv->cfg_bssid);
+-		} else {
+-			dev_dbg(priv->adapter->dev,
+-				"info: association to bssid %pM failed\n",
+-			       priv->cfg_bssid);
+-			memset(priv->cfg_bssid, 0, ETH_ALEN);
+-		}
+-		priv->assoc_request = 0;
+-		priv->assoc_result = 0;
+-	}
+-
+-	if (priv->ibss_join_request == 1) {
+-		if (!priv->ibss_join_result) {
+-			cfg80211_ibss_joined(priv->netdev, priv->cfg_bssid,
+-					     GFP_KERNEL);
+-			dev_dbg(priv->adapter->dev,
+-				"info: joined/created adhoc network with bssid"
+-					" %pM successfully\n", priv->cfg_bssid);
+-		} else {
+-			dev_dbg(priv->adapter->dev,
+-				"info: failed creating/joining adhoc network\n");
+-		}
+-		priv->ibss_join_request = 0;
+-		priv->ibss_join_result = 0;
+-	}
+-
+-	if (priv->disconnect) {
+-		memset(priv->cfg_bssid, 0, ETH_ALEN);
+-		priv->disconnect = 0;
 -	}
 -}
-+	switch (pi->core->id.id) {
-+	case BCMA_CORE_PCI:
-+		regoff = PCIREGOFFS(sprom[SRSH_PI_OFFSET]);
-+		break;
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.h b/drivers/net/wireless/mwifiex/cfg80211.h
+index 8d010f2..76c76c6 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.h
++++ b/drivers/net/wireless/mwifiex/cfg80211.h
+@@ -26,5 +26,4 @@
  
--void
--pcicore_fixcfg_pci(struct pcicore_info *pi, struct sbpciregs __iomem *pciregs)
--{
--	pcicore_fixcfg(pi, &pciregs->sprom[SRSH_PI_OFFSET]);
--}
-+	case BCMA_CORE_PCIE:
-+		regoff = PCIEREGOFFS(sprom[SRSH_PI_OFFSET]);
-+		break;
+ int mwifiex_register_cfg80211(struct mwifiex_private *);
  
--void pcicore_fixcfg_pcie(struct pcicore_info *pi,
--			 struct sbpcieregs __iomem *pcieregs)
--{
--	pcicore_fixcfg(pi, &pcieregs->sprom[SRSH_PI_OFFSET]);
-+	default:
-+		return;
-+	}
-+
-+	val16 = bcma_read16(pi->core, regoff);
-+	if (((val16 & SRSH_PI_MASK) >> SRSH_PI_SHIFT) !=
-+	    (u16)core->core_index) {
-+		val16 = ((u16)core->core_index << SRSH_PI_SHIFT) |
-+			(val16 & ~SRSH_PI_MASK);
-+		bcma_write16(pi->core, regoff, val16);
-+	}
+-void mwifiex_cfg80211_results(struct work_struct *work);
+ #endif
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index d21cd47..84be196 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -586,8 +586,6 @@ void mwifiex_init_priv_params(struct mwifiex_private *priv,
+ 	priv->media_connected = false;
+ 	memset(&priv->nick_name, 0, sizeof(priv->nick_name));
+ 	priv->num_tx_timeout = 0;
+-	priv->workqueue = create_singlethread_workqueue("cfg80211_wq");
+-	INIT_WORK(&priv->cfg_workqueue, mwifiex_cfg80211_results);
+ 	memcpy(dev->dev_addr, priv->curr_addr, ETH_ALEN);
  }
  
- /* precondition: current core is pci core */
- void
--pcicore_pci_setup(struct pcicore_info *pi, struct sbpciregs __iomem *pciregs)
-+pcicore_pci_setup(struct pcicore_info *pi)
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 41f8863..9207fc6 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -453,15 +453,8 @@ struct mwifiex_private {
+ 	u8 scan_pending_on_block;
+ 	u8 report_scan_result;
+ 	struct cfg80211_scan_request *scan_request;
+-	int scan_result_status;
+-	int assoc_request;
+-	u16 assoc_result;
+-	int ibss_join_request;
+-	u16 ibss_join_result;
+-	bool disconnect;
++	struct mwifiex_user_scan_cfg *user_scan_cfg;
+ 	u8 cfg_bssid[6];
+-	struct workqueue_struct *workqueue;
+-	struct work_struct cfg_workqueue;
+ 	u8 country_code[IEEE80211_COUNTRY_STRING_LEN];
+ 	struct wps wps;
+ 	u8 scan_block;
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index b8b9d37..e2e7156 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -1391,11 +1391,8 @@ int mwifiex_set_user_scan_ioctl(struct mwifiex_private *priv,
  {
--	u32 w;
+ 	int status;
+ 
+-	priv->adapter->scan_wait_q_woken = false;
 -
--	OR_REG(&pciregs->sbtopci2, SBTOPCI_PREF | SBTOPCI_BURST);
--
--	if (ai_get_buscorerev(pi->sih) >= 11) {
--		OR_REG(&pciregs->sbtopci2, SBTOPCI_RC_READMULTI);
--		w = R_REG(&pciregs->clkrun);
--		W_REG(&pciregs->clkrun, w | PCI_CLKRUN_DSBL);
--		w = R_REG(&pciregs->clkrun);
-+	bcma_set32(pi->core, PCIREGOFFS(sbtopci2),
-+		   SBTOPCI_PREF | SBTOPCI_BURST);
-+
-+	if (pi->core->id.rev >= 11) {
-+		bcma_set32(pi->core, PCIREGOFFS(sbtopci2),
-+			   SBTOPCI_RC_READMULTI);
-+		bcma_set32(pi->core, PCIREGOFFS(clkrun), PCI_CLKRUN_DSBL);
-+		(void)bcma_read32(pi->core, PCIREGOFFS(clkrun));
- 	}
+ 	status = mwifiex_scan_networks(priv, scan_req);
+-	if (!status)
+-		status = mwifiex_wait_queue_complete(priv->adapter);
++	queue_work(priv->adapter->workqueue, &priv->adapter->main_work);
+ 
+ 	return status;
  }
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/nicpci.h b/drivers/net/wireless/brcm80211/brcmsmac/nicpci.h
-index 58aa80d..9fc3ead 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/nicpci.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/nicpci.h
-@@ -62,8 +62,7 @@ struct sbpciregs;
- struct sbpcieregs;
+@@ -1796,6 +1793,14 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+ 			up(&priv->async_sem);
+ 		}
  
- extern struct pcicore_info *pcicore_init(struct si_pub *sih,
--					 struct pci_dev *pdev,
--					 void __iomem *regs);
-+					 struct bcma_device *core);
- extern void pcicore_deinit(struct pcicore_info *pch);
- extern void pcicore_attach(struct pcicore_info *pch, int state);
- extern void pcicore_hwup(struct pcicore_info *pch);
-@@ -72,11 +71,7 @@ extern void pcicore_sleep(struct pcicore_info *pch);
- extern void pcicore_down(struct pcicore_info *pch, int state);
- extern u8 pcicore_find_pci_capability(struct pci_dev *dev, u8 req_cap_id,
- 				      unsigned char *buf, u32 *buflen);
--extern void pcicore_fixcfg_pci(struct pcicore_info *pch,
--			       struct sbpciregs __iomem *pciregs);
--extern void pcicore_fixcfg_pcie(struct pcicore_info *pch,
--				struct sbpcieregs __iomem *pciregs);
--extern void pcicore_pci_setup(struct pcicore_info *pch,
--			      struct sbpciregs __iomem *pciregs);
-+extern void pcicore_fixcfg(struct pcicore_info *pch);
-+extern void pcicore_pci_setup(struct pcicore_info *pch);
- 
- #endif /* _BRCM_NICPCI_H_ */
++		if (priv->user_scan_cfg) {
++			dev_dbg(priv->adapter->dev, "info: %s: sending scan "
++							"results\n", __func__);
++			cfg80211_scan_done(priv->scan_request, 0);
++			priv->scan_request = NULL;
++			kfree(priv->user_scan_cfg);
++			priv->user_scan_cfg = NULL;
++		}
+ 	} else {
+ 		/* Get scan command from scan_pending_q and put to
+ 		   cmd_pending_q */
+diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
+index 40205f6..d7aa21d 100644
+--- a/drivers/net/wireless/mwifiex/sta_event.c
++++ b/drivers/net/wireless/mwifiex/sta_event.c
+@@ -115,16 +115,15 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv)
+ 	if (adapter->num_cmd_timeout && adapter->curr_cmd)
+ 		return;
+ 	priv->media_connected = false;
+-	if (!priv->disconnect) {
+-		priv->disconnect = 1;
+-		dev_dbg(adapter->dev, "info: successfully disconnected from"
+-				" %pM: reason code %d\n", priv->cfg_bssid,
+-				WLAN_REASON_DEAUTH_LEAVING);
+-		cfg80211_disconnected(priv->netdev,
+-				WLAN_REASON_DEAUTH_LEAVING, NULL, 0,
+-				GFP_KERNEL);
+-		queue_work(priv->workqueue, &priv->cfg_workqueue);
++	dev_dbg(adapter->dev, "info: successfully disconnected from"
++			" %pM: reason code %d\n", priv->cfg_bssid,
++			WLAN_REASON_DEAUTH_LEAVING);
++	if (priv->bss_mode == NL80211_IFTYPE_STATION) {
++		cfg80211_disconnected(priv->netdev, WLAN_REASON_DEAUTH_LEAVING,
++				      NULL, 0, GFP_KERNEL);
+ 	}
++	memset(priv->cfg_bssid, 0, ETH_ALEN);
++
+ 	if (!netif_queue_stopped(priv->netdev))
+ 		mwifiex_stop_net_dev_queue(priv->netdev, adapter);
+ 	if (netif_carrier_ok(priv->netdev))
 -- 
-1.7.5.4
-
+1.7.0.2
 
