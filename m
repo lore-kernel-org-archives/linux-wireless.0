@@ -1,30 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38620 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751952Ab1LUPPf (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:47617 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750970Ab1LNOQb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 10:15:35 -0500
-Subject: Re: [PATCH 5/6] ath5k: avoid sparse warnings on tracing
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1324406771-7100-6-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111220_194823_067219_205CF66E)
-References: <1324406771-7100-1-git-send-email-rodrigue@qca.qualcomm.com>
-	 <1324406771-7100-6-git-send-email-rodrigue@qca.qualcomm.com>
-	 (sfid-20111220_194823_067219_205CF66E)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 21 Dec 2011 16:15:29 +0100
-Message-ID: <1324480529.3401.8.camel@jlt3.sipsolutions.net> (sfid-20111221_161539_452341_81617AF7)
-Mime-Version: 1.0
+	Wed, 14 Dec 2011 09:16:31 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 2/2] mac80211: Fix power save in change interface
+Date: Wed, 14 Dec 2011 19:46:08 +0530
+Message-ID: <1323872168-6831-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111214_151634_299096_982A9283)
+In-Reply-To: <1323872168-6831-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1323872168-6831-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-12-20 at 10:46 -0800, Luis R. Rodriguez wrote:
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-> Just skip the sparse checks on tracing.
+we found that power save is not getting enabled when we do
+change interface in this order STA->IBSS->STA. this is
+because ieee80211_setup_sdata clears type-dependent union
 
-I seem to remember removing that elsewhere since newer sparse or newer
-tracing code worked fine together.
+Reported-by: Leela Kella <leela@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ net/mac80211/mlme.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 67a6be1..d87fde3 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2371,6 +2371,7 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
+ 		    (unsigned long) sdata);
+ 
+ 	ifmgd->flags = 0;
++	ifmgd->powersave = sdata->wdev.ps;
+ 
+ 	mutex_init(&ifmgd->mtx);
+ 
+-- 
+1.7.0.4
 
