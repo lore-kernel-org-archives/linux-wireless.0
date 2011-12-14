@@ -1,62 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37854 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759464Ab1LPOUj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 09:20:39 -0500
-Subject: Re: unexpected taint message
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <4EEB521A.70602@lwfinger.net> (sfid-20111216_151411_303937_12579E4F)
-References: <4EEB0EFC.5000302@broadcom.com>
-	 (sfid-20111216_102800_182196_AFD2D6CF) <1324038636.3429.1.camel@jlt3.sipsolutions.net>
-	 <4EEB4D61.80602@lwfinger.net>
-	 (sfid-20111216_145414_221850_EED1E4DE) <1324043939.3429.2.camel@jlt3.sipsolutions.net>
-	 <4EEB521A.70602@lwfinger.net> (sfid-20111216_151411_303937_12579E4F)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 16 Dec 2011 15:20:33 +0100
-Message-ID: <1324045233.3429.3.camel@jlt3.sipsolutions.net> (sfid-20111216_152044_664073_965321F7)
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:2037 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757717Ab1LNUNn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Dec 2011 15:13:43 -0500
+Message-ID: <4EE9036A.7000309@broadcom.com> (sfid-20111214_211357_015227_3C7C7087)
+Date: Wed, 14 Dec 2011 21:13:30 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Some funny code in brcmsmac
+References: <4EE823C0.7080205@lwfinger.net>
+In-Reply-To: <4EE823C0.7080205@lwfinger.net>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-12-16 at 08:13 -0600, Larry Finger wrote:
-
-> > Hmm. I wish OOT didn't disable lockdep, we do a lot of development with
-> > modules OOT because the turnaround is faster/easier (for not so
-> > experienced developers). Worst case we can patch it out of the base
-> > kernel I guess...
+On 12/14/2011 05:19 AM, Larry Finger wrote:
+> Franky,
 > 
-> Me too. Now I understand John's patch entitled "[RFC] modpost: add option to 
-> allow external modules to avoid taint". I doubt that it will be allowed 
-> upstream, but I think that I will add it as a local commit.
+> I was looking through the code and noticed the following in routine 
+> wlc_phy_txpwrctrl_pwr_setup_nphy():
+> 
+>          if (pi->sh->sromrev < 4) {
+> 		...
+>                  target_pwr_qtrdbm[0] = 13 * 4;
+>                  target_pwr_qtrdbm[1] = 13 * 4;
+> 		...
+>          } else {
+>                  chan_freq_range = wlc_phy_get_chan_freq_range_nphy(pi, 0);
+>                  switch (chan_freq_range) {
+>                  case WL_CHAN_FREQ_RANGE_2G:
+> 			...
+>                          target_pwr_qtrdbm[0] =
+>                                  pi->nphy_pwrctrl_info[0].max_pwr_2g;
+>                          target_pwr_qtrdbm[1] =
+>                                  pi->nphy_pwrctrl_info[1].max_pwr_2g;
+> 			...
+> 
+>                          break;
+>                  case WL_CHAN_FREQ_RANGE_5GL:
+> 			...
+>                          target_pwr_qtrdbm[0] =
+>                                  pi->nphy_pwrctrl_info[0].max_pwr_5gl;
+>                          target_pwr_qtrdbm[1] =
+>                                  pi->nphy_pwrctrl_info[1].max_pwr_5gl;
+> 			...
+>                          break;
+>                  case WL_CHAN_FREQ_RANGE_5GM:
+> 			...
+>                          target_pwr_qtrdbm[0] =
+>                                  pi->nphy_pwrctrl_info[0].max_pwr_5gm;
+>                          target_pwr_qtrdbm[1] =
+>                                  pi->nphy_pwrctrl_info[1].max_pwr_5gm;
+> 			...
+>                          break;
+>                  case WL_CHAN_FREQ_RANGE_5GH:
+> 			...
+>                          target_pwr_qtrdbm[0] =
+>                                  pi->nphy_pwrctrl_info[0].max_pwr_5gh;
+>                          target_pwr_qtrdbm[1] =
+>                                  pi->nphy_pwrctrl_info[1].max_pwr_5gh;
+> 			...
+>                          break;
+>                  default:
+> 			...
+>                          target_pwr_qtrdbm[0] = 13 * 4;
+>                          target_pwr_qtrdbm[1] = 13 * 4;
+> 			...
+>                          break;
+>                  }
+>          }
+> 
+>          target_pwr_qtrdbm[0] = (s8) pi->tx_power_max;
+>          target_pwr_qtrdbm[1] = (s8) pi->tx_power_max;
+> 
+> After going to some effort to customize the target_pwr_qtrdbm array depending on 
+> the SPROM version and the particular channel being used, the array is 
+> unconditionally overwritten in the end. Although gcc probably optimizes out the 
+> statements that are not needed (I have not looked at the generated code.), 
+> perhaps the code should be modified to make it clearer for human readers.
 
-I was thinking more along the lines of this:
+Yep. That looks pretty useless to me ;-) I will send a code-redux patch
+for this. Feel free to share these kind of observations in a patch email
+(so I can remain my lazy self and ack it ;-) ).
 
---- wireless-testing.orig/kernel/panic.c	2011-12-10 17:32:26.000000000 +0100
-+++ wireless-testing/kernel/panic.c	2011-12-16 15:19:49.000000000 +0100
-@@ -240,8 +240,16 @@ void add_taint(unsigned flag)
- 	 * Also we want to keep up lockdep for staging development and
- 	 * post-warning case.
- 	 */
--	if (flag != TAINT_CRAP && flag != TAINT_WARN && __debug_locks_off())
--		printk(KERN_WARNING "Disabling lock debugging due to kernel taint\n");
-+	switch (flag) {
-+	case TAINT_CRAP:
-+	case TAINT_WARN:
-+	case TAINT_OOT_MODULE:
-+		break;
-+	default:
-+		if (__debug_locks_off())
-+			printk(KERN_WARNING
-+			       "Disabling lock debugging due to kernel taint\n");
-+	}
- 
- 	set_bit(flag, &tainted_mask);
- }
+> Thanks,
+> 
+> Larry
 
+Thanks
+AvS
 
