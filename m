@@ -1,40 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:56053 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751713Ab1LHJid convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:45887 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757371Ab1LNQVf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 04:38:33 -0500
-Received: by ghbz2 with SMTP id z2so1350205ghb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2011 01:38:32 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1323336302.3332.7.camel@jlt3.sipsolutions.net>
-References: <1323336114-31203-1-git-send-email-helmut.schaa@googlemail.com>
-	<1323336302.3332.7.camel@jlt3.sipsolutions.net>
-Date: Thu, 8 Dec 2011 10:38:32 +0100
-Message-ID: <CAGXE3d_Cytq=a--29KN8K5NGi=zw1ywhUV=hDqYioWbvt5Uo4A@mail.gmail.com> (sfid-20111208_103841_450629_55223FA7)
-Subject: Re: [PATCH 1/2] ieee80211: Introduce ieee80211_has_frags
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 14 Dec 2011 11:21:35 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
+	linux-kernel@vger.kernel.org, Dave Jones <davej@redhat.com>,
+	Greg KH <greg@kroah.com>,
+	Debian kernel maintainers <debian-kernel@lists.debian.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [RFC] modpost: add option to allow external modules to avoid taint
+Date: Wed, 14 Dec 2011 11:20:03 -0500
+Message-Id: <1323879603-2961-1-git-send-email-linville@tuxdriver.com> (sfid-20111214_172151_043149_6BCDD8AB)
+In-Reply-To: <1323752547.2825.101.camel@deadeye>
+References: <1323752547.2825.101.camel@deadeye>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 8, 2011 at 10:25 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->> +{
->> +     return (seq_ctrl & cpu_to_le16(IEEE80211_SCTL_FRAG)) != 0;
->> +}
->> +
->
-> Maybe you should move that close to ieee80211_has_morefrags() so it's
-> easy to tell the difference? :-) (that doesn't use bool either, heh)
+In some cases, it might be desirable to package a module from an
+external source tree alongside the base kernel.  In those cases, it
+might also be desirable to not have those modules tainting the kernel.
 
-Since all ieee80211_is/has_* functions use int already I took the same
-approach.
+This patch provides a mechanism for an external module build to declare
+itself as an "integrated build".  Such a module is then treated the same
+as an intree module.
 
-And ieee80211_has_morefrags operates on the frame control while
-this operates on seq_ctrl. Hence, I placed it at the end but if you prefer
-to have it closer to ieee80211_has_morefrags I can do that too :)
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+Any thoughts on this?  I'm thinking of adding this to Fedora kernels,
+where I have been working to integrate the compat-wireless package as
+part of the base kernel RPM.
 
-Helmut
+ scripts/Makefile.modpost |    1 +
+ scripts/mod/modpost.c    |   10 ++++++++--
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/scripts/Makefile.modpost b/scripts/Makefile.modpost
+index 08dce14..160c6fb 100644
+--- a/scripts/Makefile.modpost
++++ b/scripts/Makefile.modpost
+@@ -81,6 +81,7 @@ modpost = scripts/mod/modpost                    \
+  $(if $(KBUILD_EXTMOD),-o $(modulesymfile))      \
+  $(if $(CONFIG_DEBUG_SECTION_MISMATCH),,-S)      \
+  $(if $(KBUILD_EXTMOD)$(KBUILD_MODPOST_WARN),-w) \
++ $(if $(INTEGRATED_BUILD),-B) \
+  $(if $(cross_build),-c)
+ 
+ quiet_cmd_modpost = MODPOST $(words $(filter-out vmlinux FORCE, $^)) modules
+diff --git a/scripts/mod/modpost.c b/scripts/mod/modpost.c
+index 2bd594e..5d077f9 100644
+--- a/scripts/mod/modpost.c
++++ b/scripts/mod/modpost.c
+@@ -43,6 +43,9 @@ static int warn_unresolved = 0;
+ static int sec_mismatch_count = 0;
+ static int sec_mismatch_verbose = 1;
+ 
++/* Is this a module being built as part of an integrated package? */
++static int integrated_build = 0;
++
+ enum export {
+ 	export_plain,      export_unused,     export_gpl,
+ 	export_unused_gpl, export_gpl_future, export_unknown
+@@ -1851,7 +1854,7 @@ static void add_header(struct buffer *b, struct module *mod)
+ 
+ static void add_intree_flag(struct buffer *b, int is_intree)
+ {
+-	if (is_intree)
++	if (is_intree || integrated_build)
+ 		buf_printf(b, "\nMODULE_INFO(intree, \"Y\");\n");
+ }
+ 
+@@ -2101,7 +2104,7 @@ int main(int argc, char **argv)
+ 	struct ext_sym_list *extsym_iter;
+ 	struct ext_sym_list *extsym_start = NULL;
+ 
+-	while ((opt = getopt(argc, argv, "i:I:e:cmsSo:awM:K:")) != -1) {
++	while ((opt = getopt(argc, argv, "i:I:e:cmsSo:awM:K:B")) != -1) {
+ 		switch (opt) {
+ 		case 'i':
+ 			kernel_read = optarg;
+@@ -2139,6 +2142,9 @@ int main(int argc, char **argv)
+ 		case 'w':
+ 			warn_unresolved = 1;
+ 			break;
++		case 'B':
++			integrated_build = 1;
++			break;
+ 		default:
+ 			exit(1);
+ 		}
+-- 
+1.7.4.4
+
