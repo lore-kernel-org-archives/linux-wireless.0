@@ -1,33 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:50353 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750824Ab1LOFSV (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:51014 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754552Ab1LNVWv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 00:18:21 -0500
-Message-ID: <4EE98317.7010102@qca.qualcomm.com> (sfid-20111215_061824_904527_EF5DA1A2)
-Date: Thu, 15 Dec 2011 10:48:15 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Wed, 14 Dec 2011 16:22:51 -0500
+Received: by wgbdr13 with SMTP id dr13so2470181wgb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2011 13:22:50 -0800 (PST)
+Message-ID: <4EE913A7.60708@lwfinger.net> (sfid-20111214_222254_843288_0E00D64F)
+Date: Wed, 14 Dec 2011 15:22:47 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<wtsao@qca.qualcomm.com>, <rmanohar@qca.qualcomm.com>,
-	<senthilb@qca.qualcomm.com>
-Subject: Re: [PATCH] ath: document ATH_DBG_MCI
-References: <1323899796-21170-1-git-send-email-mcgrof@qca.qualcomm.com>
-In-Reply-To: <1323899796-21170-1-git-send-email-mcgrof@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Arend van Spriel <arend@broadcom.com>
+CC: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Some funny code in brcmsmac
+References: <4EE823C0.7080205@lwfinger.net> <4EE9036A.7000309@broadcom.com>
+In-Reply-To: <4EE9036A.7000309@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 15 December 2011 03:26 AM, Luis R. Rodriguez wrote:
-> A debug level was added to the ath module for printing
-> MCI messages but no documentation was provided. Clarify that
-> MCI is the Message Coexistence Interface, a private protocol
-> used exclusively for WLAN-BT coexistence starting from
-> AR9462.
+On 12/14/2011 02:13 PM, Arend van Spriel wrote:
 
-Luis, thank you!
+> Yep. That looks pretty useless to me ;-) I will send a code-redux patch
+> for this. Feel free to share these kind of observations in a patch email
+> (so I can remain my lazy self and ack it ;-) ).
 
--- 
-thanks,
-shafi
+OK. Actually, a patch would have been easier than a big edit on a 
+copy-and-paste. My only problem was whether the code that was specific to the 
+conditions was better, of if it is correct to always use the maximum power.
+
+Larry
