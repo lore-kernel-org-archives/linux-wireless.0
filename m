@@ -1,50 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17252 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753898Ab1LXNNk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Dec 2011 08:13:40 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: Helmut Schaa <helmut.schaa@googlemail.com>,
-	<leela@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH v2] mac80211: fix scan state machine
-Date: Sat, 24 Dec 2011 18:43:28 +0530
-Message-ID: <1324732408-9662-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111224_141356_162049_C6EB4010)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga02.intel.com ([134.134.136.20]:60111 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753734Ab1LNRWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Dec 2011 12:22:13 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 3.2] iwlwifi fix for 3.2
+Date: Wed, 14 Dec 2011 08:22:34 -0800
+Message-Id: <1323879756-3817-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111214_182229_200936_C54B269D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Fix introduced a bug: bad pointer in unload in
+commit 34a5b4b6af104cf18eb50748509528b9bdbc4036.
 
-when we run high bandwidth UDP traffic and we trigger a scan, the scan
-state machine seems to be looping in SUSPEND->RESUME->DECISION->SUSPEND
-and SET_CHANNEL seems to be never called as 'tx_empty' is never true
-while running UDP traffic. fix this by settting SET_CHANNEL state when
-we get into RESUME state.
+Also fix a bug introduced by P2P work.
 
-Cc: Leela Kella <leela@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- net/mac80211/scan.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Johannes Berg (1):
+  iwlwifi: tx_sync only on PAN context
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 2c5041c..2908e56 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -625,7 +625,7 @@ static void ieee80211_scan_state_resume(struct ieee80211_local *local,
- 	local->leave_oper_channel_time = jiffies;
- 
- 	/* advance to the next channel to be scanned */
--	local->next_scan_state = SCAN_DECISION;
-+	local->next_scan_state = SCAN_SET_CHANNEL;
- }
- 
- void ieee80211_scan_work(struct work_struct *work)
--- 
-1.7.0.4
+Wey-Yi Guy (1):
+  iwlwifi: allow to switch to HT40 if not associated
+
+this patch will be also available from wireless branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
+
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    6 ++++++
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
