@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17078 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754172Ab1LANbE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Dec 2011 08:31:04 -0500
-Date: Thu, 1 Dec 2011 14:31:17 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Michal Hocko <mhocko@suse.cz>, LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Yong Zhang <yong.zhang0@gmail.com>
-Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from
- iwl3945_rs_free_sta
-Message-ID: <20111201133116.GD5706@redhat.com> (sfid-20111201_143125_928608_D5C5F87E)
-References: <20111130101028.GA2906@tiehlicka.suse.cz>
- <20111130142316.GA2466@redhat.com>
- <20111130140316.GA4153@tiehlicka.suse.cz>
- <20111130153929.GA2144@redhat.com>
- <20111201085845.GA4602@tiehlicka.suse.cz>
- <20111201105538.GA4504@tiehlicka.suse.cz>
- <20111201115911.GA5706@redhat.com>
- <20111201124440.GB25614@tiehlicka.suse.cz>
- <20111201125554.GC5706@redhat.com>
- <CAB3XZEeNF8_U__rOPMfiOFNjPTS6gb33CSjdwkhMdRmS+i3CTw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAB3XZEeNF8_U__rOPMfiOFNjPTS6gb33CSjdwkhMdRmS+i3CTw@mail.gmail.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:43930 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750727Ab1LNOPY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Dec 2011 09:15:24 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: zajec5@gmail.com, "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] b43: avoid calling bcma_* if CONFIG_B43_BCMA is not set
+Date: Wed, 14 Dec 2011 09:08:28 -0500
+Message-Id: <1323871708-19852-1-git-send-email-linville@tuxdriver.com> (sfid-20111214_151528_022203_A48B706D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 01, 2011 at 03:13:42PM +0200, Eliad Peller wrote:
-> i don't really care about temporarily reverting it.
-> but maybe you can just add an "initialized" flag to iwl3945_rs_sta,
-> and check it on free_sta?
+Avoids this:
 
-This is not right solution, that will prevent hangs though, but
-we generally wipe out used data, so any other problem could be
-triggered.
+ERROR: "bcma_chipco_pll_write" [drivers/net/wireless/b43/b43.ko] undefined!
 
-Stanislaw 
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+It looks like phy_lcn.c could use some bits like this as well...
+
+ drivers/net/wireless/b43/phy_n.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 6b95fd2..154f97d 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -4048,6 +4048,7 @@ int b43_phy_initn(struct b43_wldev *dev)
+ /* http://bcm-v4.sipsolutions.net/802.11/PmuSpurAvoid */
+ static void b43_nphy_pmu_spur_avoid(struct b43_wldev *dev, bool avoid)
+ {
++#ifdef CONFIG_B43_BCMA
+ 	struct bcma_drv_cc *cc = &dev->dev->bdev->bus->drv_cc;
+ 	u32 pmu_ctl;
+ 	if (dev->dev->chip_id == 43224 || dev->dev->chip_id == 43225) {
+@@ -4098,6 +4099,9 @@ static void b43_nphy_pmu_spur_avoid(struct b43_wldev *dev, bool avoid)
+ 		return;
+ 	}
+ 	bcma_cc_set32(cc, BCMA_CC_PMU_CTL, pmu_ctl);
++#else
++	return;
++#endif
+ }
+ 
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/ChanspecSetup */
+-- 
+1.7.4.4
+
