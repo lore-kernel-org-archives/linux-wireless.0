@@ -1,97 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:41369 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751772Ab1LIIuC (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21298 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755403Ab1LNSpr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Dec 2011 03:50:02 -0500
-Received: by eaak14 with SMTP id k14so1607367eaa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Dec 2011 00:50:01 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, nbd@openwrt.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [RFC] mac80211: Send BAR on same queue as the according QoS frames
-Date: Fri,  9 Dec 2011 09:49:53 +0100
-Message-Id: <1323420593-9638-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20111209_095007_496758_D350E17F)
+	Wed, 14 Dec 2011 13:45:47 -0500
+To: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
+Message-ID: <4EE8EE80.8090008@qca.qualcomm.com> (sfid-20111214_194550_826014_A9CF79B7)
+Date: Wed, 14 Dec 2011 20:44:16 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: support for P2P mgmt operations on station interface
+References: <1323811932-5724-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com>
+In-Reply-To: <1323811932-5724-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sending as RFC for now since I'm not sure if this is really required. At least
-I couldn't come up with a situation where this would be required. However, it
-looks more correct to me to put the BAR into the same queue as the previously
-failed QoS frame to avoid possible (?) side effect of the BAR overtaking frames
-in the hw tx queues ...
+On 12/13/2011 11:32 PM, Aarthi Thiruvengadam wrote:
+> This patch enables support for doing P2P management operations like device
+> discovery on top of a station interface. After group formation, the station
+> interface will become a P2P GO/client interface as the case may be.
+> 
+> This feature requires modifications to a couple of existing WMI structures and
+> therefore new command ids and structures have been defined in order to be
+> compatible with older firmware versions and other chips. The exception here is
+> the wmi_connect_cmd. Adding a new field to the end of the structure will not
+> cause any issues with previous firmware versions since firmware only checks for
+> minimum length of the command. The other structures are of variable length,
+> hence it was not possible to add new fields to the end. 
+> 
+> The new command ids have to be added to the end of enum wmi_cmd_id, so it has
+> updated to match the firmware. 
+> 
+> The driver will support both the 'old' and the 'new' commands for a while by
+> checking the firmware capabilities. 
+> 
+> Signed-off-by: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
 
-Any thoughts?
+Thanks, applied.
 
-Thanks,
-Helmut
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
- net/mac80211/agg-tx.c      |    2 +-
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/tx.c          |   13 +++++++++----
- 3 files changed, 11 insertions(+), 5 deletions(-)
-
-diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-index c45fa5d..f4f47e4 100644
---- a/net/mac80211/agg-tx.c
-+++ b/net/mac80211/agg-tx.c
-@@ -134,7 +134,7 @@ void ieee80211_send_bar(struct ieee80211_vif *vif, u8 *ra, u16 tid, u16 ssn)
- 	bar->start_seq_num = cpu_to_le16(ssn);
- 
- 	IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
--	ieee80211_tx_skb(sdata, skb);
-+	ieee80211_tx_skb_tid(sdata, skb, tid);
- }
- EXPORT_SYMBOL(ieee80211_send_bar);
- 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 96fe754..5ae5c50 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1350,6 +1350,7 @@ void mac80211_ev_michael_mic_failure(struct ieee80211_sub_if_data *sdata, int ke
- void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata);
- void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb);
- void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb);
-+void ieee80211_tx_skb_tid(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb, int tid);
- void ieee802_11_parse_elems(u8 *start, size_t len,
- 			    struct ieee802_11_elems *elems);
- u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index e74652d..39f7132 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2700,15 +2700,14 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL(ieee80211_get_buffered_bc);
- 
--void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
-+void ieee80211_tx_skb_tid(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb, int tid)
- {
- 	skb_set_mac_header(skb, 0);
- 	skb_set_network_header(skb, 0);
- 	skb_set_transport_header(skb, 0);
- 
--	/* Send all internal mgmt frames on VO. Accordingly set TID to 7. */
--	skb_set_queue_mapping(skb, IEEE80211_AC_VO);
--	skb->priority = 7;
-+	skb_set_queue_mapping(skb, ieee802_1d_to_ac[tid]);
-+	skb->priority = tid;
- 
- 	/*
- 	 * The other path calling ieee80211_xmit is from the tasklet,
-@@ -2719,3 +2718,9 @@ void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
- 	ieee80211_xmit(sdata, skb);
- 	local_bh_enable();
- }
-+
-+void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
-+{
-+	ieee80211_tx_skb_tid(sdata, skb, 7);
-+}
-+
--- 
-1.7.7
-
+Kalle
