@@ -1,74 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:44870 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750914Ab1LVHrk convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49728 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758119Ab1LNUPY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Dec 2011 02:47:40 -0500
-Received: by qcqz2 with SMTP id z2so4854008qcq.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2011 23:47:39 -0800 (PST)
+	Wed, 14 Dec 2011 15:15:24 -0500
+Date: Wed, 14 Dec 2011 15:08:41 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: linux-next: Tree for Dec 14 (phy vs. bcma)
+Message-ID: <20111214200841.GC2607@tuxdriver.com> (sfid-20111214_211544_485692_537C516E)
+References: <20111214182643.06262d032298672024ba8a76@canb.auug.org.au>
+ <4EE90EB1.4060903@xenotime.net>
 MIME-Version: 1.0
-In-Reply-To: <CACna6rxvmFptSR9WF8Whj1A0ATyygQ9Eo0nUY8n6MugQ0bjP7g@mail.gmail.com>
-References: <CAG9cJm=YkvHY56LoBoUf3fuh=xb7m+c0GgUzMZX+QyG1+CBCMg@mail.gmail.com>
-	<4EF21983.1020107@broadcom.com>
-	<CACna6rxEjQLj_j-f7WZOtOEGfDa+TPWyLDrn2t-FGZ5T2_fz-g@mail.gmail.com>
-	<CAG9cJm=XE3jQiYvGB4T6_Avj=bmc_wXe8JGMr5hePuCu-OnPuA@mail.gmail.com>
-	<CACna6rxvmFptSR9WF8Whj1A0ATyygQ9Eo0nUY8n6MugQ0bjP7g@mail.gmail.com>
-Date: Thu, 22 Dec 2011 15:47:39 +0800
-Message-ID: <CAG9cJmmnEsLQxxbi41v6nM8D+L_cOSQE73qJmDDYhXPnopn+MA@mail.gmail.com> (sfid-20111222_084743_746950_B91D3EB2)
-Subject: Re: bcm4331 firmware installer package
-From: lina <lina.lastname@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Debian Lists <debian-user@lists.debian.org>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-To: unlisted-recipients:; (no To-header on input)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4EE90EB1.4060903@xenotime.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 22, 2011 at 3:07 PM, Rafał Miłecki <zajec5@gmail.com> wrote:
-> 2011/12/22 lina <lina.lastname@gmail.com>:
->> I am still a bit confused. (First thanks for the links all of you
->> provided, but I have visited those web before).
->>
->> Here is the thing:
->> BCM4331 802.11a/b/g/n fit for
->> BCM4331              b/g  HT (r1)
->>
->> What does the 802.11a for?
->
-> Well, your card can operate in 5GHz band (frequencies). But I'm not
->  really sure why you ask about this at all.
->
->  If you want to try experimental BCM4331 support you have to:
->  1) Install kernel 3.2-rc3 or newer
-I have the 3.2.0-rc6
->  or
->  2) Install compat wireless
->
->  After that you've do install firmware (check for wiki howto for kernel
->  3.2 and newer).
+On Wed, Dec 14, 2011 at 01:01:37PM -0800, Randy Dunlap wrote:
+> On 12/13/2011 11:26 PM, Stephen Rothwell wrote:
+> > Hi all,
+> > 
+> > Changes since 20111213:
+> 
+> 
+> drivers/built-in.o: In function `b43_nphy_pmu_spur_avoid.clone.8':
+> phy_n.c:(.text+0x1589d8): undefined reference to `bcma_chipco_pll_write'
+> phy_n.c:(.text+0x1589e9): undefined reference to `bcma_chipco_pll_write'
+> phy_n.c:(.text+0x1589fa): undefined reference to `bcma_chipco_pll_write'
+> phy_n.c:(.text+0x158a08): undefined reference to `bcma_chipco_pll_write'
+> phy_n.c:(.text+0x158a1d): undefined reference to `bcma_chipco_pll_write'
+> drivers/built-in.o:phy_n.c:(.text+0x158a2e): more undefined references to `bcma_chipco_pll_write' follow
+> 
+> 
+> BCMA is not enabled.
+> Full randconfig file is attached.
 
-after installation of the compat-wireless,
+I've already merged a patch to address this.
 
-from
-http://wireless.kernel.org/en/users/Drivers/b43#firmware
+Thanks,
 
- # aptitude install firmware-b43-installer
-
-
-Setting up b43-fwcutter (1:015-9) ...
-Setting up firmware-b43-installer (1:015-9) ...
-No chroot environment found. Starting normal installation
-Unsupported device(s) found: PCI id 14e4:4331
-Aborting.
-
-I don't know which part is wrong here.
-
-Thanks
-
->
-> P.S.
-> Please, don't top post.
->
-> --
-> Rafał
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
