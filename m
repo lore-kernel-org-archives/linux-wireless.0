@@ -1,57 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:50767 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752278Ab1LCOmK (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:59060 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753150Ab1LNVSp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Dec 2011 09:42:10 -0500
-Date: Thu, 1 Dec 2011 09:35:48 -0500
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-To: Borislav Petkov <bp@amd64.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com, x86@kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Maciej Rutecki <maciej.rutecki@gmail.com>,
-	deepthi@linux.vnet.ibm.com
-Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
-Message-ID: <20111201143548.GA28114@phenom.dumpdata.com> (sfid-20111203_154259_580821_1A31B72A)
-References: <lx6sezwGldO.A.IhF.UBpWOB@chimera>
- <201111212249.31196.rjw@sisk.pl>
- <20111122135412.GA29905@phenom.dumpdata.com>
- <20111129180414.GA11459@phenom.dumpdata.com>
- <20111129183428.GE8200@aftab>
- <20111130175936.GA15168@phenom.dumpdata.com>
- <20111201113919.GC31552@aftab>
+	Wed, 14 Dec 2011 16:18:45 -0500
+Received: by eaaj10 with SMTP id j10so1256207eaa.19
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2011 13:18:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111201113919.GC31552@aftab>
+In-Reply-To: <1323851355.3380.5.camel@jlt3.sipsolutions.net>
+References: <1323851355.3380.5.camel@jlt3.sipsolutions.net>
+From: Arik Nemtsov <anamtsov@gmail.com>
+Date: Wed, 14 Dec 2011 23:18:28 +0200
+Message-ID: <CA+XVXfdpyUKEAM-Pk8Dd=kJ5y9z8_hbHciKx9XppAH2M_Znmvg@mail.gmail.com> (sfid-20111214_221849_910353_8A8E5799)
+Subject: Re: [PATCH] nl80211: add TDLS peer flag to policy
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> >From what I can see, you get the following callchain:
-> 
-> start_kernel
-> |-> setup_arch
->     |-> x86_init.oem.arch_setup = xen_arch_setup
->     ....
->     |-> check_bugs
->         |-> identify_boot_cpu
-> 	    |-> identify_cpu
-> 	        |-> select_idle_routine
-> 
-> 
-> so xen_arch_setup will set pm_idle and select_idle_routine will honour
-> it. I'm being told this is run either in the dom0 or the paravirt guest
-> and if so, I don't see any issue with this for baremetal. So you can
-> have my ACK provided this is tested on baremetal too.
+On Wed, Dec 14, 2011 at 10:29, Johannes Berg <johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> This was evidently missed in the TDLS patch (07ba55d7).
+>
+> Cc: Arik Nemtsov <arik@wizery.com>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  net/wireless/nl80211.c |    1 +
+>  1 file changed, 1 insertion(+)
 
-Tested on baremetal and there were no abnormalities. Thanks!
+Thanks
+
+Arik
