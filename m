@@ -1,34 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:53719 "EHLO
-	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751827Ab1LTUu5 (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:34554 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754960Ab1LNNcb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 15:50:57 -0500
-Received: by mail-lpp01m010-f53.google.com with SMTP id r15so3089618lag.12
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 12:50:56 -0800 (PST)
-Subject: Re: [PATCH] wl12xx: add missing copyright notice
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <1324305115-14963-1-git-send-email-coelho@ti.com>
-References: <1324305115-14963-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 20 Dec 2011 22:50:52 +0200
-Message-ID: <1324414252.2182.74.camel@cumari> (sfid-20111220_215100_267400_020FC0FB)
-Mime-Version: 1.0
+	Wed, 14 Dec 2011 08:32:31 -0500
+Received: by lagp5 with SMTP id p5so297214lag.19
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2011 05:32:29 -0800 (PST)
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
+To: coelho@ti.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] Set wlvif->ps_compl to NULL in before return
+Date: Wed, 14 Dec 2011 14:32:23 +0100
+Message-Id: <1323869543-2846-1-git-send-email-pontus.fuchs@gmail.com> (sfid-20111214_143234_687012_A874B55E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-12-19 at 16:31 +0200, Luciano Coelho wrote: 
-> The wl12xx_platform_data.c file did not have a proper copyright
-> notice.
-> 
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
+wl1271_configure_suspend_sta leaves a stale stack declared
+completion in wlvif->ps_compl. Set it to NULL before returning.
 
-Applied.
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 2f7bfa8..b9e506d 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1585,24 +1585,24 @@ static int wl1271_configure_suspend_sta(struct wl1271 *wl,
+ 
+ 		ret = wait_for_completion_timeout(
+ 			&compl, msecs_to_jiffies(WL1271_PS_COMPLETE_TIMEOUT));
++
++		mutex_lock(&wl->mutex);
+ 		if (ret <= 0) {
+ 			wl1271_warning("couldn't enter ps mode!");
+ 			ret = -EBUSY;
+-			goto out;
++			goto out_cleanup;
+ 		}
+ 
+-		/* take mutex again, and wakeup */
+-		mutex_lock(&wl->mutex);
+-
+ 		ret = wl1271_ps_elp_wakeup(wl);
+ 		if (ret < 0)
+-			goto out_unlock;
++			goto out_cleanup;
+ 	}
+ out_sleep:
+ 	wl1271_ps_elp_sleep(wl);
++out_cleanup:
++	wl->ps_compl = NULL;
+ out_unlock:
+ 	mutex_unlock(&wl->mutex);
+-out:
+ 	return ret;
+ 
+ }
 -- 
-Cheers,
-Luca.
+1.7.5.4
 
