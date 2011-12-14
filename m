@@ -1,77 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:40973 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752414Ab1LSQVl (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43869 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756640Ab1LNLYC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 11:21:41 -0500
-Received: by mail-lpp01m010-f46.google.com with SMTP id p5so2758092lag.5
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 08:21:37 -0800 (PST)
-Subject: Re: [PATCH v2 1/7] wl12xx: implement change_interface
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1324310763.3414.7.camel@jlt3.sipsolutions.net>
-References: <1324288803-1666-1-git-send-email-eliad@wizery.com>
-	 <1324292350.2800.280.camel@cumari>
-	 <CAB3XZEeb1eLMHtqtEMpuswv1NiHExy+y0vVkykrzSWdHMoJxMQ@mail.gmail.com>
-	 (sfid-20111219_121736_970824_85C0CDB1)  <1324310763.3414.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 19 Dec 2011 18:21:31 +0200
-Message-ID: <1324311691.2800.355.camel@cumari> (sfid-20111219_172149_839486_9A330D56)
+	Wed, 14 Dec 2011 06:24:02 -0500
+Message-Id: <20111214112313.275219807@sipsolutions.net> (sfid-20111214_122408_517065_5EF4D40D)
+Date: Wed, 14 Dec 2011 12:20:31 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 5/5] mac80211: count authorized stations per BSS
+References: <20111214112026.409514167@sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-12-19 at 17:06 +0100, Johannes Berg wrote: 
-> On Mon, 2011-12-19 at 13:17 +0200, Eliad Peller wrote:
-> 
-> > >> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> > >> index c305841..82fc318 100644
-> > >> --- a/drivers/net/wireless/wl12xx/main.c
-> > >> +++ b/drivers/net/wireless/wl12xx/main.c
-> > >> @@ -2269,6 +2269,17 @@ out:
-> > >>       cancel_work_sync(&wl->recovery_work);
-> > >>  }
-> > >>
-> > >> +static int wl12xx_op_change_interface(struct ieee80211_hw *hw,
-> > >> +                                   struct ieee80211_vif *vif,
-> > >> +                                   enum nl80211_iftype new_type, bool p2p)
-> > >> +{
-> > >> +     wl1271_op_remove_interface(hw, vif);
-> > >> +
-> > >> +     vif->type = ieee80211_iftype_p2p(new_type, p2p);
-> > >> +     vif->p2p = p2p;
-> > >> +     return wl1271_op_add_interface(hw, vif);
-> > >> +}
-> > >> +
-> > >
-> > > As Arik already commented, this looks a bit weird.  Shouldn't the type
-> > > and p2p elements be changed in mac80211 itself? What about doing so if
-> > > the op_change_interface returns success? Currently, the opposite seems
-> > > to happen (ie. mac80211 changes type back to the original vif.type if
-> > > the op fails).
-> > >
-> > iwlegacy and ath9k are also setting vif->type and vif->p2p in a similar manner.
-> > add_interface(vif) assumes vif->type and vif->p2p are correct, so it
-> > makes sense to update the vif before adding it.
-> > i also think this behavior is a bit ugly, but this is the current
-> > mac80211 implementation, and i don't see a good enough reason to
-> > change it :)
-> 
-> The reason I did it this way is because it simplified the code in the
-> driver (for me at least) -- I could call functions that work on a vif
-> and look at vif->type/p2p before and after doing my own changes, whereas
-> if mac80211 was doing the modification I'd have to add extra arguments
-> everywhere.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Yeah, in our driver it's simpler to do it like this too.  It's a bit
-weird, but I don't think it's a problem.  And now that one, two, three
-drivers do it the same way, it has become the de-facto way of doing
-it. ;)
+Currently, each AP interface will send multicast
+traffic if any interface has a station entry even
+if that station entry is allocated only. With the
+new station state management we can easily fix it
+by adding a counter that counts each authorized
+station only and send multicast traffic only when
+the correct interface has at least one authorized
+station.
 
-Would deserve a comment somewhere, IMHO, though.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/debugfs_netdev.c |    2 ++
+ net/mac80211/ieee80211_i.h    |    1 +
+ net/mac80211/sta_info.c       |   14 +++++++++-----
+ net/mac80211/tx.c             |   19 ++++++++-----------
+ 4 files changed, 20 insertions(+), 16 deletions(-)
 
--- 
-Cheers,
-Luca.
+--- a/net/mac80211/debugfs_netdev.c	2011-12-14 09:15:09.000000000 +0100
++++ b/net/mac80211/debugfs_netdev.c	2011-12-14 11:55:22.000000000 +0100
+@@ -321,6 +321,7 @@ static ssize_t ieee80211_if_parse_tkip_m
+ __IEEE80211_IF_FILE_W(tkip_mic_test);
+ 
+ /* AP attributes */
++IEEE80211_IF_FILE(num_sta_authorized, u.ap.num_sta_authorized, ATOMIC);
+ IEEE80211_IF_FILE(num_sta_ps, u.ap.num_sta_ps, ATOMIC);
+ IEEE80211_IF_FILE(dtim_count, u.ap.dtim_count, DEC);
+ 
+@@ -458,6 +459,7 @@ static void add_ap_files(struct ieee8021
+ 	DEBUGFS_ADD(rc_rateidx_mask_2ghz);
+ 	DEBUGFS_ADD(rc_rateidx_mask_5ghz);
+ 
++	DEBUGFS_ADD(num_sta_authorized);
+ 	DEBUGFS_ADD(num_sta_ps);
+ 	DEBUGFS_ADD(dtim_count);
+ 	DEBUGFS_ADD(num_buffered_multicast);
+--- a/net/mac80211/ieee80211_i.h	2011-12-14 09:15:09.000000000 +0100
++++ b/net/mac80211/ieee80211_i.h	2011-12-14 11:55:22.000000000 +0100
+@@ -243,6 +243,7 @@ struct ieee80211_if_ap {
+ 	u8 tim[sizeof(unsigned long) * BITS_TO_LONGS(IEEE80211_MAX_AID + 1)];
+ 	struct sk_buff_head ps_bc_buf;
+ 	atomic_t num_sta_ps; /* number of stations in PS mode */
++	atomic_t num_sta_authorized; /* number of authorized stations */
+ 	int dtim_count;
+ 	bool dtim_bc_mc;
+ };
+--- a/net/mac80211/sta_info.c	2011-12-14 11:54:42.000000000 +0100
++++ b/net/mac80211/sta_info.c	2011-12-14 11:55:22.000000000 +0100
+@@ -1542,17 +1542,21 @@ int sta_info_move_state_checked(struct s
+ 			return -EINVAL;
+ 		break;
+ 	case IEEE80211_STA_ASSOC:
+-		if (sta->sta_state == IEEE80211_STA_AUTH)
++		if (sta->sta_state == IEEE80211_STA_AUTH) {
+ 			set_bit(WLAN_STA_ASSOC, &sta->_flags);
+-		else if (sta->sta_state == IEEE80211_STA_AUTHORIZED)
++		} else if (sta->sta_state == IEEE80211_STA_AUTHORIZED) {
++			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
++				atomic_dec(&sta->sdata->u.ap.num_sta_authorized);
+ 			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+-		else
++		} else
+ 			return -EINVAL;
+ 		break;
+ 	case IEEE80211_STA_AUTHORIZED:
+-		if (sta->sta_state == IEEE80211_STA_ASSOC)
++		if (sta->sta_state == IEEE80211_STA_ASSOC) {
++			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
++				atomic_inc(&sta->sdata->u.ap.num_sta_authorized);
+ 			set_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+-		else
++		} else
+ 			return -EINVAL;
+ 		break;
+ 	default:
+--- a/net/mac80211/tx.c	2011-12-14 11:51:07.000000000 +0100
++++ b/net/mac80211/tx.c	2011-12-14 11:55:22.000000000 +0100
+@@ -304,17 +304,14 @@ ieee80211_tx_h_check_assoc(struct ieee80
+ 			I802_DEBUG_INC(tx->local->tx_handlers_drop_not_assoc);
+ 			return TX_DROP;
+ 		}
+-	} else {
+-		if (unlikely(ieee80211_is_data(hdr->frame_control) &&
+-			     tx->local->num_sta == 0 &&
+-			     tx->sdata->vif.type != NL80211_IFTYPE_ADHOC)) {
+-			/*
+-			 * No associated STAs - no need to send multicast
+-			 * frames.
+-			 */
+-			return TX_DROP;
+-		}
+-		return TX_CONTINUE;
++	} else if (unlikely(tx->sdata->vif.type == NL80211_IFTYPE_AP &&
++			    ieee80211_is_data(hdr->frame_control) &&
++			    !atomic_read(&tx->sdata->u.ap.num_sta_authorized))) {
++		/*
++		 * No associated STAs - no need to send multicast
++		 * frames.
++		 */
++		return TX_DROP;
+ 	}
+ 
+ 	return TX_CONTINUE;
+
 
