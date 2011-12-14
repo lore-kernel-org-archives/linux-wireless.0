@@ -1,64 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:36473 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750972Ab1L0SrH convert rfc822-to-8bit (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:42683 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757269Ab1LNQXi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Dec 2011 13:47:07 -0500
+	Wed, 14 Dec 2011 11:23:38 -0500
+Date: Wed, 14 Dec 2011 10:23:33 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Problems associating with RTL8188CE
+Message-ID: <20111214162333.GB19410@thinkpad-t410> (sfid-20111214_172342_114759_E2AD2951)
+References: <4EC88F58.1080203@lwfinger.net>
+ <20111121181350.GC6736@thinkpad-t410>
+ <4ECA99CC.7020008@lwfinger.net>
+ <20111121185610.GD6736@thinkpad-t410>
+ <4ECB028E.3030809@lwfinger.net>
+ <20111122022008.GA17661@thinkpad-t410>
+ <20111213194231.GA30788@thinkpad-t410>
+ <4EE7B85E.3070802@lwfinger.net>
+ <20111213212606.GB30788@thinkpad-t410>
+ <4EE82CC6.2030307@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.00.1112261824000.12108@axis700.grange>
-References: <alpine.DEB.2.00.1112261608140.12108@axis700.grange>
-	<alpine.DEB.2.00.1112261824000.12108@axis700.grange>
-Date: Tue, 27 Dec 2011 19:47:06 +0100
-Message-ID: <CACna6ry1tKXtUSQHknkEbzBq_gZUyxn1-9Guba2a56xzx242SA@mail.gmail.com> (sfid-20111227_194713_435731_FB096E98)
-Subject: Re: [PATCH] b43: fix regression in PIO case
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4EE82CC6.2030307@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 26 grudnia 2011 18:28 użytkownik Guennadi Liakhovetski
-<g.liakhovetski@gmx.de> napisał:
-> This patch fixes the regression, introduced by
->
-> commit 17030f48e31adde5b043741c91ba143f5f7db0fd
-> From: Rafał Miłecki <zajec5@gmail.com>
-> Date: Thu, 11 Aug 2011 17:16:27 +0200
-> Subject: [PATCH] b43: support new RX header, noticed to be used in 598.314+ fw
->
-> in PIO case.
->
-> Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-> ---
-> diff --git a/drivers/net/wireless/b43/pio.c b/drivers/net/wireless/b43/pio.c
-> index ce8a4bd..b64b64c 100644
-> --- a/drivers/net/wireless/b43/pio.c
-> +++ b/drivers/net/wireless/b43/pio.c
-> @@ -617,9 +617,19 @@ static bool pio_rx_frame(struct b43_pio_rxqueue *q)
->        const char *err_msg = NULL;
->        struct b43_rxhdr_fw4 *rxhdr =
->                (struct b43_rxhdr_fw4 *)wl->pio_scratchspace;
-> +       size_t rxhdr_size = sizeof(*rxhdr);
->
->        BUILD_BUG_ON(sizeof(wl->pio_scratchspace) < sizeof(*rxhdr));
-> -       memset(rxhdr, 0, sizeof(*rxhdr));
-> +       switch (dev->fw.hdr_format) {
-> +       case B43_FW_HDR_410:
-> +       case B43_FW_HDR_351:
-> +               rxhdr_size -= sizeof(rxhdr->format_598) -
-> +                       sizeof(rxhdr->format_351);
-> +               break;
-> +       case B43_FW_HDR_598:
-> +               break;
-> +       }
-> +       memset(rxhdr, 0, rxhdr_size);
+On Tue, Dec 13, 2011 at 10:57:42PM -0600, Larry Finger wrote:
+> Seth,
+> 
+> On 12/13/2011 03:26 PM, Seth Forshee wrote:
+> >
+> >The capture files are available at:
+> >
+> >http://people.canonical.com/~sforshee/rtl8188ce/
+> 
+> The major difference is that the "bad" AP implements 802.11n HT40
+> technology, but the "good" one does not.
+> 
+> There was a period when rtl8192ce and rtl8192cu had a bug that
+> prevented them from associating with 802.11n APs, but that was fixed
+> a long time ago. I can communicate with my Netgear WNDR3300 AP that
+> implements full 802.11 capabilities.
+> 
+> What kernel are you running? If you implement the bleeding-edge
+> compat-wireless release, does that help.
 
-Huuh, that's really tricky. Can you just do "normal" conditions as
-Larry suggested, please?
+I'm running 3.2-rc5 currently. The results are the same with
+bleeding-edge compat-wireless.
 
--- 
-Rafał
+Seth
