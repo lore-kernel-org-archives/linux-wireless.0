@@ -1,62 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:17966 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752252Ab1LTSrA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 13:47:00 -0500
-Cc: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH 4/6] ath9k: fix tx queue sparse complaint
-Date: Tue, 20 Dec 2011 10:46:09 -0800
-Message-ID: <1324406771-7100-5-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111220_194703_966419_231AE7BE)
-In-Reply-To: <1324406771-7100-1-git-send-email-rodrigue@qca.qualcomm.com>
-References: <1324406771-7100-1-git-send-email-rodrigue@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:33672 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758125Ab1LNVIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Dec 2011 16:08:19 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH v2 6/6] ath9k: avoid retransmitting aggregation frames that a BAR was sent for
+Date: Wed, 14 Dec 2011 22:08:08 +0100
+Message-Id: <1323896888-85551-6-git-send-email-nbd@openwrt.org> (sfid-20111214_220824_909265_65C55DA4)
+In-Reply-To: <1323896888-85551-5-git-send-email-nbd@openwrt.org>
+References: <1323896888-85551-1-git-send-email-nbd@openwrt.org>
+ <1323896888-85551-2-git-send-email-nbd@openwrt.org>
+ <1323896888-85551-3-git-send-email-nbd@openwrt.org>
+ <1323896888-85551-4-git-send-email-nbd@openwrt.org>
+ <1323896888-85551-5-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+The receiver will discard them anyway.
 
-This fixes this rant from sparse:
-
-  CHECK   drivers/net/wireless/ath/ath9k/xmit.c
-drivers/net/wireless/ath/ath9k/xmit.c:107:13: warning: context imbalance in 'ath_txq_lock' - wrong count at exit
-drivers/net/wireless/ath/ath9k/xmit.c:112:13: warning: context imbalance in 'ath_txq_unlock' - unexpected unlock
-drivers/net/wireless/ath/ath9k/xmit.c:123:30: warning: context imbalance in 'ath_txq_unlock_complete' - unexpected unlock
-  CC [M]  drivers/net/wireless/ath/ath9k/xmit.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath9k/xmit.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
+ drivers/net/wireless/ath/ath9k/xmit.c  |   27 ++++++++++++++++++++++++---
+ 2 files changed, 25 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 6beaff5..130e5db 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -241,6 +241,7 @@ struct ath_atx_tid {
+ 	struct ath_node *an;
+ 	struct ath_atx_ac *ac;
+ 	unsigned long tx_buf[BITS_TO_LONGS(ATH_TID_MAX_BUFS)];
++	int bar_index;
+ 	u16 seq_start;
+ 	u16 seq_next;
+ 	u16 baw_size;
 diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index b092523..c8fc180 100644
+index 8766796..23e80e6 100644
 --- a/drivers/net/wireless/ath/ath9k/xmit.c
 +++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -105,16 +105,19 @@ static int ath_max_4ms_framelen[4][32] = {
- /*********************/
- 
- static void ath_txq_lock(struct ath_softc *sc, struct ath_txq *txq)
-+	__acquires(&txq->axq_lock)
- {
- 	spin_lock_bh(&txq->axq_lock);
+@@ -206,6 +206,8 @@ static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 	while (tid->baw_head != tid->baw_tail && !test_bit(tid->baw_head, tid->tx_buf)) {
+ 		INCR(tid->seq_start, IEEE80211_SEQ_MAX);
+ 		INCR(tid->baw_head, ATH_TID_MAX_BUFS);
++		if (tid->bar_index >= 0)
++			tid->bar_index--;
+ 	}
  }
  
- static void ath_txq_unlock(struct ath_softc *sc, struct ath_txq *txq)
-+	__releases(&txq->axq_lock)
- {
- 	spin_unlock_bh(&txq->axq_lock);
+@@ -263,6 +265,7 @@ static void ath_tid_drain(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 	tid->seq_next = tid->seq_start;
+ 	tid->baw_tail = tid->baw_head;
++	tid->bar_index = -1;
  }
  
- static void ath_txq_unlock_complete(struct ath_softc *sc, struct ath_txq *txq)
-+	__releases(&txq->axq_lock)
- {
- 	struct sk_buff_head q;
- 	struct sk_buff *skb;
+ static void ath_tx_set_retry(struct ath_softc *sc, struct ath_txq *txq,
+@@ -551,8 +554,12 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		bf = bf_next;
+ 	}
+ 
+-	if (bar_index >= 0)
++	if (bar_index >= 0) {
++		u16 bar_seq = ATH_BA_INDEX2SEQ(seq_first, bar_index);
+ 		ath_send_bar(tid, ATH_BA_INDEX2SEQ(seq_first, bar_index + 1));
++		if (BAW_WITHIN(tid->seq_start, tid->baw_size, bar_seq))
++			tid->bar_index = ATH_BA_INDEX(tid->seq_start, bar_seq);
++	}
+ 
+ 	/* prepend un-acked frames to the beginning of the pending frame queue */
+ 	if (!skb_queue_empty(&bf_pending)) {
+@@ -779,8 +786,6 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 
+ 		bf->bf_state.bf_type = BUF_AMPDU | BUF_AGGR;
+ 		seqno = bf->bf_state.seqno;
+-		if (!bf_first)
+-			bf_first = bf;
+ 
+ 		/* do not step over block-ack window */
+ 		if (!BAW_WITHIN(tid->seq_start, tid->baw_size, seqno)) {
+@@ -788,6 +793,21 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 			break;
+ 		}
+ 
++		if (tid->bar_index > ATH_BA_INDEX(tid->seq_start, seqno)) {
++			struct ath_tx_status ts = {};
++			struct list_head bf_head;
++
++			INIT_LIST_HEAD(&bf_head);
++			list_add(&bf->list, &bf_head);
++			__skb_unlink(skb, &tid->buf_q);
++			ath_tx_update_baw(sc, tid, seqno);
++			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0);
++			continue;
++		}
++
++		if (!bf_first)
++			bf_first = bf;
++
+ 		if (!rl) {
+ 			aggr_limit = ath_lookup_rate(sc, bf, tid);
+ 			rl = 1;
+@@ -1130,6 +1150,7 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
+ 	txtid->state |= AGGR_ADDBA_PROGRESS;
+ 	txtid->paused = true;
+ 	*ssn = txtid->seq_start = txtid->seq_next;
++	txtid->bar_index = -1;
+ 
+ 	memset(txtid->tx_buf, 0, sizeof(txtid->tx_buf));
+ 	txtid->baw_head = txtid->baw_tail = 0;
 -- 
-1.7.4.15.g7811d
+1.7.3.2
 
