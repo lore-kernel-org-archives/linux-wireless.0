@@ -1,170 +1,424 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:36465 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760557Ab1LPTTl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 14:19:41 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: Rodriguez Luis <rodrigue@qca.qualcomm.com>
-Cc: mcgrof@infradead.org, linux-wireless@vger.kernel.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 7/7] initvals: add ath9k specific initvals for AR9330 1.2
-Date: Fri, 16 Dec 2011 20:19:25 +0100
-Message-Id: <1324063165-4349-7-git-send-email-juhosg@openwrt.org> (sfid-20111216_201944_646516_A6AB9F17)
-In-Reply-To: <1324063165-4349-1-git-send-email-juhosg@openwrt.org>
-References: <1324063165-4349-1-git-send-email-juhosg@openwrt.org>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:36873 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753563Ab1LNAaT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Dec 2011 19:30:19 -0500
+Received: by pbbb2 with SMTP id b2so435137pbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Dec 2011 16:30:19 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20111213201449.723037139@sipsolutions.net>
+References: <20111213200717.465896579@sipsolutions.net> <20111213201449.723037139@sipsolutions.net>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Tue, 13 Dec 2011 16:29:58 -0800
+Message-ID: <CAG6hwVNNg9bVErL-rnjsAPK3ymVfFg=t+ifparDi9xFnUzN_bg@mail.gmail.com> (sfid-20111214_013023_931399_8BCFE43C)
+Subject: Re: [RFC 2/4] mac80211: refactor station state transitions
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Javier Cardona <javier@cozybit.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ar9330_1p2_initvals.h file submitted to ath9k has
-been generated manually from the ar9330_12.ini from the
-LSDK-WLAN-9.2.0.405.tgz tarball.
+On Tue, Dec 13, 2011 at 12:07 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+>
+> Station entries can have various states, the most
+> important ones being auth, assoc and authorized.
+> This patch prepares us for telling the driver about
+> these states, we don't want to confuse drivers with
+> strange transitions, so with this we enforce that
+> they move in the right order between them (back and
+> forth); some transitions might happen before the
+> driver even knows about the station, but at least
+> runtime transitions will be ordered correctly.
+>
+> As a consequence, IBSS and MESH stations will now
+> have the ASSOC flag set (so they can transition to
+> AUTHORIZED), and we can get rid of a special case
+> in TX processing.
+>
+> TBD: WLAN_STA_TDLS_PEER_AUTH?
+> TBD: secure mesh AUTH transitions?
 
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
-[juhosg@idared initvals-tool]$ ./initvals -f ar9330-1p2 | sha1sum
-f35f1fe771cae1e21251713c4efe825658ac1dd5  -
-[juhosg@idared initvals-tool]$ make clean all ATHEROS=1
-rm -f initvals
-gcc -DATHEROS -o initvals initvals.c
-[juhosg@idared initvals-tool]$ ./initvals -f ar9330-1p2 | sha1sum
-f35f1fe771cae1e21251713c4efe825658ac1dd5  -
-[juhosg@idared initvals-tool]$
----
- Makefile   |    4 +++-
- initvals.c |   56 +++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 58 insertions(+), 2 deletions(-)
+This patch makes it impossible to add a new unauthenticated station,
+AFAICT. Maybe this is not even desirable from mac80211's POV? The
+reason the secure mesh daemon adds a new unauthenticated peer is to
+stop NL80211_NEW_PEER_CANDIDATE notifications while userspace is
+handling the authentication process, and we need a station entry for
+ieee80211_mgmt_tx().
 
-diff --git a/Makefile b/Makefile
-index 7b9ce88..67d09d5 100644
---- a/Makefile
-+++ b/Makefile
-@@ -10,7 +10,8 @@ ATHEROS_DEPS += \
- 	ar9287_1_1.ini		\
- 	ar9271.ini		\
- 	ar9300_osprey22.ini	\
--	ar9330_11.ini
-+	ar9330_11.ini		\
-+	ar9330_12.ini
- endif
- 
- ATH9K_DEPS += \
-@@ -19,6 +20,7 @@ ATH9K_DEPS += \
- 	ar9002_initvals.h 	\
- 	ar9003_2p2_initvals.h	\
- 	ar9330_1p1_initvals.h	\
-+	ar9330_1p2_initvals.h	\
- 	ar9580_1p0_initvals.h
- 
- initvals: $(ATH9K_DEPS) $(ATHEROS_DEPS) initvals.c
-diff --git a/initvals.c b/initvals.c
-index 6835c7b..5923823 100644
---- a/initvals.c
-+++ b/initvals.c
-@@ -22,6 +22,7 @@ typedef long long unsigned int u64;
- #include "ar9002_initvals.h"
- #include "ar9003_2p2_initvals.h"
- #include "ar9330_1p1_initvals.h"
-+#include "ar9330_1p2_initvals.h"
- #include "ar9485_initvals.h"
- #include "ar9580_1p0_initvals.h"
- 
-@@ -182,6 +183,26 @@ typedef long long unsigned int u64;
- 
- #include "ar9330_11.ini"
- 
-+#define ar9331_modes_lowest_ob_db_tx_gain_hornet1_2		ar9331_modes_lowest_ob_db_tx_gain_1p2
-+#define ar9331_hornet1_2_baseband_postamble			ar9331_1p2_baseband_postamble
-+#define ar9331_modes_high_ob_db_tx_gain_hornet1_2		ar9331_modes_high_ob_db_tx_gain_1p2
-+#define ar9331_modes_low_ob_db_tx_gain_hornet1_2		ar9331_modes_low_ob_db_tx_gain_1p2
-+#define ar9331_hornet1_2_baseband_core_txfir_coeff_japan_2484	ar9331_1p2_baseband_core_txfir_coeff_japan_2484
-+#define ar9331_hornet1_2_xtal_25M				ar9331_1p2_xtal_25M
-+#define ar9331_hornet1_2_radio_core				ar9331_1p2_radio_core
-+#define ar9331_hornet1_2_soc_postamble				ar9331_1p2_soc_postamble
-+#define ar9331_common_wo_xlna_rx_gain_hornet1_2			ar9331_common_wo_xlna_rx_gain_1p2
-+#define ar9331_hornet1_2_baseband_core				ar9331_1p2_baseband_core
-+#define ar9331_modes_high_power_tx_gain_hornet1_2		ar9331_modes_high_power_tx_gain_1p2
-+#define ar9331_hornet1_2_mac_postamble				ar9331_1p2_mac_postamble
-+#define ar9331_hornet1_2_soc_preamble				ar9331_1p2_soc_preamble
-+#define ar9331_hornet1_2_xtal_40M				ar9331_1p2_xtal_40M
-+#define ar9331_hornet1_2_mac_core				ar9331_1p2_mac_core
-+#define ar9331_common_rx_gain_hornet1_2				ar9331_common_rx_gain_1p2
-+#define ar9331_common_tx_gain_offset1_2				ar9331_common_tx_gain_offset1_2
-+
-+#include "ar9330_12.ini"
-+
- #define ar9485Common_poseidon1_0				ar9485Common_1_0
- #define ar9485_poseidon1_0_mac_postamble			ar9485_1_0_mac_postamble
- #define ar9485_poseidon1_0_pcie_phy_pll_on_clkreq_disable_L1	ar9485_1_0_pcie_phy_pll_on_clkreq_disable_L1
-@@ -504,6 +525,28 @@ static void ar9330_1p1_hw_print_initvals(bool check)
- 	INI_PRINT_ONEDIM(ar9331_1p1_chansel_xtal_40M);
- }
- 
-+static void ar9330_1p2_hw_print_initvals(bool check)
-+{
-+	u64 chksum;
-+
-+	INI_PRINT(ar9331_modes_lowest_ob_db_tx_gain_1p2);
-+	INI_PRINT(ar9331_1p2_baseband_postamble);
-+	INI_PRINT(ar9331_modes_high_ob_db_tx_gain_1p2);
-+	INI_PRINT(ar9331_modes_low_ob_db_tx_gain_1p2);
-+	INI_PRINT(ar9331_1p2_baseband_core_txfir_coeff_japan_2484);
-+	INI_PRINT(ar9331_1p2_xtal_25M);
-+	INI_PRINT(ar9331_1p2_radio_core);
-+	INI_PRINT(ar9331_1p2_soc_postamble);
-+	INI_PRINT(ar9331_common_wo_xlna_rx_gain_1p2);
-+	INI_PRINT(ar9331_1p2_baseband_core);
-+	INI_PRINT(ar9331_modes_high_power_tx_gain_1p2);
-+	INI_PRINT(ar9331_1p2_mac_postamble);
-+	INI_PRINT(ar9331_1p2_soc_preamble);
-+	INI_PRINT(ar9331_1p2_xtal_40M);
-+	INI_PRINT(ar9331_1p2_mac_core);
-+	INI_PRINT(ar9331_common_rx_gain_1p2);
-+}
-+
- static void ar9485_hw_print_initvals(bool check)
- {
- 	u64 chksum;
-@@ -558,7 +601,7 @@ static void ar9580_1p0_hw_print_initvals(bool check)
- 
- static void usage()
- {
--	printf("Usage: initvals [-w] [-f ar5008 | ar9001 | ar9002 | ar9003-2p2 | ar9300-1p1 | ar9485 | ar9580-1p0 ]\n");
-+	printf("Usage: initvals [-w] [-f ar5008 | ar9001 | ar9002 | ar9003-2p2 | ar9300-1p1 | ar9300-1p2 | ar9485 | ar9580-1p0 ]\n");
- }
- 
- print_initvals_family(char *family, bool check)
-@@ -592,6 +635,15 @@ print_initvals_family(char *family, bool check)
- 		ar9330_1p1_hw_print_initvals(check);
- 		if (!check)
- 			printf("#endif /* INITVALS_9330_1P1_H */\n");
-+	} else if (strncmp(family, "ar9330-1p2", 10) == 0) {
-+		if (!check) {
-+			printf("#ifndef INITVALS_9330_1P2_H\n");
-+			printf("#define INITVALS_9330_1P2_H\n");
-+			printf("\n");
-+		}
-+		ar9330_1p2_hw_print_initvals(check);
-+		if (!check)
-+			printf("#endif /* INITVALS_9330_1P2_H */\n");
- 	} else if (strncmp(family, "ar9485", 6) == 0) {
- 		if (!check) {
- 			printf("#ifndef INITVALS_9485_H\n");
-@@ -630,6 +682,7 @@ int main(int argc, void *argv[])
- 			ar9002_hw_print_initvals(false);
- 			ar9003_2p2_hw_print_initvals(false);
- 			ar9330_1p1_hw_print_initvals(false);
-+			ar9330_1p2_hw_print_initvals(false);
- 			ar9485_hw_print_initvals(false);
- 			ar9580_1p0_hw_print_initvals(false);
- 
-@@ -659,6 +712,7 @@ int main(int argc, void *argv[])
- 	ar9002_hw_print_initvals(true);
- 	ar9003_2p2_hw_print_initvals(true);
- 	ar9330_1p1_hw_print_initvals(true);
-+	ar9330_1p2_hw_print_initvals(true);
- 	ar9485_hw_print_initvals(true);
- 	ar9580_1p0_hw_print_initvals(true);
- 
--- 
-1.7.2.1
+Some other mechanism could be implemented to halt new peer
+notifications, or just allow userspace to add a station in state NONE
+(ieee80211_tx_h_check_assoc() doesn't even check association flag for
+mesh interfaces).
 
+Thomas
+
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> ---
+>  net/mac80211/cfg.c        |   44 +++++++++++++++++++++-----------
+>  net/mac80211/ibss.c       |    5 ++-
+>  net/mac80211/iface.c      |    5 ++-
+>  net/mac80211/mesh_plink.c |    7 +++--
+>  net/mac80211/mlme.c       |    6 ++--
+>  net/mac80211/sta_info.c   |   62 +++++++++++++++++++++++++++++++++++++++++-----
+>  net/mac80211/sta_info.h   |   36 ++++++++++++++++++++++++++
+>  net/mac80211/tx.c         |    1
+>  8 files changed, 136 insertions(+), 30 deletions(-)
+>
+> --- a/net/mac80211/sta_info.c   2011-12-13 21:01:26.000000000 +0100
+> +++ b/net/mac80211/sta_info.c   2011-12-13 21:03:19.000000000 +0100
+> @@ -204,16 +204,17 @@ struct sta_info *sta_info_get_by_idx(str
+>  }
+>
+>  /**
+> - * __sta_info_free - internal STA free helper
+> + * sta_info_free - free STA
+>  *
+>  * @local: pointer to the global information
+>  * @sta: STA info to free
+>  *
+>  * This function must undo everything done by sta_info_alloc()
+> - * that may happen before sta_info_insert().
+> + * that may happen before sta_info_insert(). It may only be
+> + * called when sta_info_insert() has not been attempted (and
+> + * if that fails, the station is freed anyway.)
+>  */
+> -static void __sta_info_free(struct ieee80211_local *local,
+> -                           struct sta_info *sta)
+> +void sta_info_free(struct ieee80211_local *local, struct sta_info *sta)
+>  {
+>        if (sta->rate_ctrl) {
+>                rate_control_free_sta(sta);
+> @@ -598,7 +599,7 @@ int sta_info_insert_rcu(struct sta_info
+>        return 0;
+>  out_free:
+>        BUG_ON(!err);
+> -       __sta_info_free(local, sta);
+> +       sta_info_free(local, sta);
+>        return err;
+>  }
+>
+> @@ -949,7 +950,7 @@ static int __must_check __sta_info_destr
+>        }
+>  #endif
+>
+> -       __sta_info_free(local, sta);
+> +       sta_info_free(local, sta);
+>
+>        return 0;
+>  }
+> @@ -1513,3 +1514,52 @@ void ieee80211_sta_set_buffered(struct i
+>        sta_info_recalc_tim(sta);
+>  }
+>  EXPORT_SYMBOL(ieee80211_sta_set_buffered);
+> +
+> +int sta_info_move_state_checked(struct sta_info *sta,
+> +                               enum ieee80211_sta_state new_state)
+> +{
+> +       might_sleep(); /* for driver notify later */
+> +
+> +       if (sta->sta_state == new_state)
+> +               return 0;
+> +
+> +       switch (new_state) {
+> +       case IEEE80211_STA_NONE:
+> +               if (sta->sta_state == IEEE80211_STA_AUTH)
+> +                       clear_bit(WLAN_STA_AUTH, &sta->_flags);
+> +               else
+> +                       return -EINVAL;
+> +               break;
+> +       case IEEE80211_STA_AUTH:
+> +               if (sta->sta_state == IEEE80211_STA_NONE)
+> +                       set_bit(WLAN_STA_AUTH, &sta->_flags);
+> +               else if (sta->sta_state == IEEE80211_STA_ASSOC)
+> +                       clear_bit(WLAN_STA_ASSOC, &sta->_flags);
+> +               else
+> +                       return -EINVAL;
+> +               break;
+> +       case IEEE80211_STA_ASSOC:
+> +               if (sta->sta_state == IEEE80211_STA_AUTH)
+> +                       set_bit(WLAN_STA_ASSOC, &sta->_flags);
+> +               else if (sta->sta_state == IEEE80211_STA_AUTHORIZED)
+> +                       clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+> +               else
+> +                       return -EINVAL;
+> +               break;
+> +       case IEEE80211_STA_AUTHORIZED:
+> +               if (sta->sta_state == IEEE80211_STA_ASSOC)
+> +                       set_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+> +               else
+> +                       return -EINVAL;
+> +               break;
+> +       default:
+> +               WARN(1, "invalid state %d", new_state);
+> +               return -EINVAL;
+> +       }
+> +
+> +       printk(KERN_DEBUG "%s: moving STA %pM to state %d\n",
+> +               sta->sdata->name, sta->sta.addr, new_state);
+> +       sta->sta_state = new_state;
+> +
+> +       return 0;
+> +}
+> --- a/net/mac80211/sta_info.h   2011-12-13 21:01:26.000000000 +0100
+> +++ b/net/mac80211/sta_info.h   2011-12-13 21:03:10.000000000 +0100
+> @@ -73,6 +73,13 @@ enum ieee80211_sta_info_flags {
+>        WLAN_STA_4ADDR_EVENT,
+>  };
+>
+> +enum ieee80211_sta_state {
+> +       IEEE80211_STA_NONE,
+> +       IEEE80211_STA_AUTH,
+> +       IEEE80211_STA_ASSOC,
+> +       IEEE80211_STA_AUTHORIZED,
+> +};
+> +
+>  #define STA_TID_NUM 16
+>  #define ADDBA_RESP_INTERVAL HZ
+>  #define HT_AGG_MAX_RETRIES             0x3
+> @@ -262,6 +269,7 @@ struct sta_ampdu_mlme {
+>  * @dummy: indicate a dummy station created for receiving
+>  *     EAP frames before association
+>  * @sta: station information we share with the driver
+> + * @sta_state: duplicates information about station state (for debug)
+>  */
+>  struct sta_info {
+>        /* General information, mostly static */
+> @@ -283,6 +291,8 @@ struct sta_info {
+>
+>        bool uploaded;
+>
+> +       enum ieee80211_sta_state sta_state;
+> +
+>        /* use the accessors defined below */
+>        unsigned long _flags;
+>
+> @@ -371,12 +381,18 @@ static inline enum nl80211_plink_state s
+>  static inline void set_sta_flag(struct sta_info *sta,
+>                                enum ieee80211_sta_info_flags flag)
+>  {
+> +       WARN_ON(flag == WLAN_STA_AUTH ||
+> +               flag == WLAN_STA_ASSOC ||
+> +               flag == WLAN_STA_AUTHORIZED);
+>        set_bit(flag, &sta->_flags);
+>  }
+>
+>  static inline void clear_sta_flag(struct sta_info *sta,
+>                                  enum ieee80211_sta_info_flags flag)
+>  {
+> +       WARN_ON(flag == WLAN_STA_AUTH ||
+> +               flag == WLAN_STA_ASSOC ||
+> +               flag == WLAN_STA_AUTHORIZED);
+>        clear_bit(flag, &sta->_flags);
+>  }
+>
+> @@ -389,15 +405,32 @@ static inline int test_sta_flag(struct s
+>  static inline int test_and_clear_sta_flag(struct sta_info *sta,
+>                                          enum ieee80211_sta_info_flags flag)
+>  {
+> +       WARN_ON(flag == WLAN_STA_AUTH ||
+> +               flag == WLAN_STA_ASSOC ||
+> +               flag == WLAN_STA_AUTHORIZED);
+>        return test_and_clear_bit(flag, &sta->_flags);
+>  }
+>
+>  static inline int test_and_set_sta_flag(struct sta_info *sta,
+>                                        enum ieee80211_sta_info_flags flag)
+>  {
+> +       WARN_ON(flag == WLAN_STA_AUTH ||
+> +               flag == WLAN_STA_ASSOC ||
+> +               flag == WLAN_STA_AUTHORIZED);
+>        return test_and_set_bit(flag, &sta->_flags);
+>  }
+>
+> +int sta_info_move_state_checked(struct sta_info *sta,
+> +                               enum ieee80211_sta_state new_state);
+> +
+> +static inline void sta_info_move_state(struct sta_info *sta,
+> +                                      enum ieee80211_sta_state new_state)
+> +{
+> +       int ret = sta_info_move_state_checked(sta, new_state);
+> +       WARN_ON_ONCE(ret);
+> +}
+> +
+> +
+>  void ieee80211_assign_tid_tx(struct sta_info *sta, int tid,
+>                             struct tid_ampdu_tx *tid_tx);
+>
+> @@ -489,6 +522,9 @@ struct sta_info *sta_info_get_by_idx(str
+>  */
+>  struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+>                                u8 *addr, gfp_t gfp);
+> +
+> +void sta_info_free(struct ieee80211_local *local, struct sta_info *sta);
+> +
+>  /*
+>  * Insert STA info into hash table/list, returns zero or a
+>  * -EEXIST if (if the same MAC address is already present).
+> --- a/net/mac80211/cfg.c        2011-12-13 21:01:28.000000000 +0100
+> +++ b/net/mac80211/cfg.c        2011-12-13 21:03:10.000000000 +0100
+> @@ -746,10 +746,11 @@ static void ieee80211_send_layer2_update
+>        netif_rx_ni(skb);
+>  }
+>
+> -static void sta_apply_parameters(struct ieee80211_local *local,
+> -                                struct sta_info *sta,
+> -                                struct station_parameters *params)
+> +static int sta_apply_parameters(struct ieee80211_local *local,
+> +                               struct sta_info *sta,
+> +                               struct station_parameters *params)
+>  {
+> +       int ret = 0;
+>        u32 rates;
+>        int i, j;
+>        struct ieee80211_supported_band *sband;
+> @@ -763,11 +764,25 @@ static void sta_apply_parameters(struct
+>
+>        if (mask & BIT(NL80211_STA_FLAG_AUTHORIZED)) {
+>                if (set & BIT(NL80211_STA_FLAG_AUTHORIZED))
+> -                       set_sta_flag(sta, WLAN_STA_AUTHORIZED);
+> +                       ret = sta_info_move_state_checked(sta,
+> +                                       IEEE80211_STA_AUTHORIZED);
+>                else
+> -                       clear_sta_flag(sta, WLAN_STA_AUTHORIZED);
+> +                       ret = sta_info_move_state_checked(sta,
+> +                                       IEEE80211_STA_ASSOC);
+>        }
+>
+> +       if (mask & BIT(NL80211_STA_FLAG_AUTHENTICATED)) {
+> +               if (set & BIT(NL80211_STA_FLAG_AUTHENTICATED))
+> +                       ret = sta_info_move_state_checked(sta,
+> +                                       IEEE80211_STA_AUTH);
+> +               else
+> +                       ret = sta_info_move_state_checked(sta,
+> +                                       IEEE80211_STA_NONE);
+> +       }
+> +
+> +       if (ret)
+> +               return ret;
+> +
+>        if (mask & BIT(NL80211_STA_FLAG_SHORT_PREAMBLE)) {
+>                if (set & BIT(NL80211_STA_FLAG_SHORT_PREAMBLE))
+>                        set_sta_flag(sta, WLAN_STA_SHORT_PREAMBLE);
+> @@ -792,13 +807,6 @@ static void sta_apply_parameters(struct
+>                        clear_sta_flag(sta, WLAN_STA_MFP);
+>        }
+>
+> -       if (mask & BIT(NL80211_STA_FLAG_AUTHENTICATED)) {
+> -               if (set & BIT(NL80211_STA_FLAG_AUTHENTICATED))
+> -                       set_sta_flag(sta, WLAN_STA_AUTH);
+> -               else
+> -                       clear_sta_flag(sta, WLAN_STA_AUTH);
+> -       }
+> -
+>        if (mask & BIT(NL80211_STA_FLAG_TDLS_PEER)) {
+>                if (set & BIT(NL80211_STA_FLAG_TDLS_PEER))
+>                        set_sta_flag(sta, WLAN_STA_TDLS_PEER);
+> @@ -870,6 +878,8 @@ static void sta_apply_parameters(struct
+>                        }
+>  #endif
+>        }
+> +
+> +       return 0;
+>  }
+>
+>  static int ieee80211_add_station(struct wiphy *wiphy, struct net_device *dev,
+> @@ -906,10 +916,14 @@ static int ieee80211_add_station(struct
+>        if (!sta)
+>                return -ENOMEM;
+>
+> -       set_sta_flag(sta, WLAN_STA_AUTH);
+> -       set_sta_flag(sta, WLAN_STA_ASSOC);
+> +       sta_info_move_state(sta, IEEE80211_STA_AUTH);
+> +       sta_info_move_state(sta, IEEE80211_STA_ASSOC);
+>
+> -       sta_apply_parameters(local, sta, params);
+> +       err = sta_apply_parameters(local, sta, params);
+> +       if (err) {
+> +               sta_info_free(local, sta);
+> +               return err;
+> +       }
+>
+>        /*
+>         * for TDLS, rate control should be initialized only when supported
+> --- a/net/mac80211/ibss.c       2011-12-13 21:01:26.000000000 +0100
+> +++ b/net/mac80211/ibss.c       2011-12-13 21:03:10.000000000 +0100
+> @@ -512,7 +512,10 @@ struct sta_info *ieee80211_ibss_add_sta(
+>                return NULL;
+>
+>        sta->last_rx = jiffies;
+> -       set_sta_flag(sta, WLAN_STA_AUTHORIZED);
+> +
+> +       sta_info_move_state(sta, IEEE80211_STA_AUTH);
+> +       sta_info_move_state(sta, IEEE80211_STA_ASSOC);
+> +       sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
+>
+>        /* make sure mandatory rates are always added */
+>        sta->sta.supp_rates[band] = supp_rates |
+> --- a/net/mac80211/iface.c      2011-12-13 21:01:26.000000000 +0100
+> +++ b/net/mac80211/iface.c      2011-12-13 21:03:10.000000000 +0100
+> @@ -318,8 +318,9 @@ static int ieee80211_do_open(struct net_
+>                        goto err_del_interface;
+>                }
+>
+> -               /* no atomic bitop required since STA is not live yet */
+> -               set_sta_flag(sta, WLAN_STA_AUTHORIZED);
+> +               sta_info_move_state(sta, IEEE80211_STA_AUTH);
+> +               sta_info_move_state(sta, IEEE80211_STA_ASSOC);
+> +               sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
+>
+>                res = sta_info_insert(sta);
+>                if (res) {
+> --- a/net/mac80211/mesh_plink.c 2011-12-13 21:01:26.000000000 +0100
+> +++ b/net/mac80211/mesh_plink.c 2011-12-13 21:03:10.000000000 +0100
+> @@ -96,9 +96,12 @@ static struct sta_info *mesh_plink_alloc
+>        if (!sta)
+>                return NULL;
+>
+> -       set_sta_flag(sta, WLAN_STA_AUTH);
+> -       set_sta_flag(sta, WLAN_STA_AUTHORIZED);
+> +       sta_info_move_state(sta, IEEE80211_STA_AUTH);
+> +       sta_info_move_state(sta, IEEE80211_STA_ASSOC);
+> +       sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
+> +
+>        set_sta_flag(sta, WLAN_STA_WME);
+> +
+>        sta->sta.supp_rates[local->hw.conf.channel->band] = rates;
+>        if (elems->ht_cap_elem)
+>                ieee80211_ht_cap_ie_to_sta_ht_cap(sdata, sband,
+> --- a/net/mac80211/mlme.c       2011-12-13 21:01:26.000000000 +0100
+> +++ b/net/mac80211/mlme.c       2011-12-13 21:03:10.000000000 +0100
+> @@ -1577,10 +1577,10 @@ static bool ieee80211_assoc_success(stru
+>                return false;
+>        }
+>
+> -       set_sta_flag(sta, WLAN_STA_AUTH);
+> -       set_sta_flag(sta, WLAN_STA_ASSOC);
+> +       sta_info_move_state(sta, IEEE80211_STA_AUTH);
+> +       sta_info_move_state(sta, IEEE80211_STA_ASSOC);
+>        if (!(ifmgd->flags & IEEE80211_STA_CONTROL_PORT))
+> -               set_sta_flag(sta, WLAN_STA_AUTHORIZED);
+> +               sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
+>
+>        rates = 0;
+>        basic_rates = 0;
+> --- a/net/mac80211/tx.c 2011-12-13 21:01:26.000000000 +0100
+> +++ b/net/mac80211/tx.c 2011-12-13 21:03:10.000000000 +0100
+> @@ -295,7 +295,6 @@ ieee80211_tx_h_check_assoc(struct ieee80
+>
+>        if (likely(tx->flags & IEEE80211_TX_UNICAST)) {
+>                if (unlikely(!assoc &&
+> -                            tx->sdata->vif.type != NL80211_IFTYPE_ADHOC &&
+>                             ieee80211_is_data(hdr->frame_control))) {
+>  #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
+>                        printk(KERN_DEBUG "%s: dropped data frame to not "
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
