@@ -1,37 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:35507 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752145Ab1LSP31 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48537 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756193Ab1LNRp1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 10:29:27 -0500
-Message-ID: <4EEF5834.8080408@candelatech.com> (sfid-20111219_162930_411193_76FA2B00)
-Date: Mon, 19 Dec 2011 07:28:52 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Wed, 14 Dec 2011 12:45:27 -0500
+Date: Wed, 14 Dec 2011 12:39:22 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
+	linux-kernel@vger.kernel.org, Dave Jones <davej@redhat.com>,
+	Greg KH <greg@kroah.com>,
+	Debian kernel maintainers <debian-kernel@lists.debian.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC] modpost: add option to allow external modules to avoid
+ taint
+Message-ID: <20111214173922.GA2607@tuxdriver.com> (sfid-20111214_184544_922188_11F6D5D4)
+References: <1323752547.2825.101.camel@deadeye>
+ <1323879603-2961-1-git-send-email-linville@tuxdriver.com>
+ <1323881520.2825.196.camel@deadeye>
 MIME-Version: 1.0
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [PATCH 1/2] nl80211: add support for mcs masks
-References: <1324304099-18327-1-git-send-email-siwu@hrz.tu-chemnitz.de> <1324304099-18327-2-git-send-email-siwu@hrz.tu-chemnitz.de>
-In-Reply-To: <1324304099-18327-2-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1323881520.2825.196.camel@deadeye>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/19/2011 06:14 AM, Simon Wunderlich wrote:
-> Allow to set mcs masks through nl80211. We also allow to set MCS
-> rates but no legacy rates (and vice versa).
+On Wed, Dec 14, 2011 at 04:52:00PM +0000, Ben Hutchings wrote:
+> On Wed, 2011-12-14 at 11:20 -0500, John W. Linville wrote:
+> > In some cases, it might be desirable to package a module from an
+> > external source tree alongside the base kernel.  In those cases, it
+> > might also be desirable to not have those modules tainting the kernel.
+> > 
+> > This patch provides a mechanism for an external module build to declare
+> > itself as an "integrated build".  Such a module is then treated the same
+> > as an intree module.
+> > 
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > ---
+> > Any thoughts on this?  I'm thinking of adding this to Fedora kernels,
+> > where I have been working to integrate the compat-wireless package as
+> > part of the base kernel RPM.
+> [...]
+> 
+> If you're integrating it then why can't you *really* build it in-tree?
 
-Can you not use the ht-caps logic that went in recently?  I was able
-to successfully set station MCS rates with it.  It only works for
-station devices at this point...but AP support could probably be
-added without too much trouble.
+Well, of course, I could.  But it would be a _huge_ waste of my time
+doing so.  The compat-wireless package is already sitting there,
+complete with all the necessary backporting infrastructure.  It's all
+fat and juicy, waiting to be used.  Wasting time replicating that
+just doesn't make any sense to my mind.
 
-Thanks,
-Ben
-
+John
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
