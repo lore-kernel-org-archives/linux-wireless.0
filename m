@@ -1,43 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:46994 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753009Ab1L3PRv (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43862 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755289Ab1LNLX6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Dec 2011 10:17:51 -0500
-Message-ID: <4EFDD61D.6050008@candelatech.com> (sfid-20111230_161754_735863_18FD154D)
-Date: Fri, 30 Dec 2011 07:17:49 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Naoyuki Tai <ntai@smartfruit.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ath9k: Failed to stop TX DMA!, DMA failed to stop in 10 ms
-References: <4EFD5E40.3020606@smartfruit.com>
-In-Reply-To: <4EFD5E40.3020606@smartfruit.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Wed, 14 Dec 2011 06:23:58 -0500
+Message-Id: <20111214112312.886236327@sipsolutions.net> (sfid-20111214_122402_992066_E28F8DA2)
+Date: Wed, 14 Dec 2011 12:20:28 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/5] mac80211: remove duplicate TDLS peer verification
+References: <20111214112026.409514167@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/29/2011 10:46 PM, Naoyuki Tai wrote:
-> Hello,
->
-> I've spent some time on ath9k driver getting stuck.
-> I set up a new system with OpenWRT, and the atheros AR922X had the problem.
-> I've gone through http://linuxwireless.org/en/users/Drivers/ath9k/bugs, and decided to give a go around with newer driver.
-> I went the route of Debian wheezy, so that I can use the updated compat-wireless more easily.
-> The current system is
-> Linux ntai11d 3.1.0-1-486 #1 Sun Dec 11 19:52:34 UTC 2011 i586 GNU/Linux
+From: Johannes Berg <johannes.berg@intel.com>
 
-Did you try any older kernels, maybe stock 3.0, to see if it's a recently
-added problem?
+This is already checked in cfg80211, so no need
+to repeat the checks here.
 
-The scan and off-channel optimizations that I did originally helped
-work around these problems in my own testing, but my optimizations were
-complex and had some other bugs and were removed recently.  It's possible
-that helps expose the DMA issues again...
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/cfg.c |   14 --------------
+ 1 file changed, 14 deletions(-)
 
-Thanks,
-Ben
+--- a/net/mac80211/cfg.c	2011-12-14 10:54:15.000000000 +0100
++++ b/net/mac80211/cfg.c	2011-12-14 10:55:24.000000000 +0100
+@@ -896,12 +896,6 @@ static int ieee80211_add_station(struct
+ 	if (is_multicast_ether_addr(mac))
+ 		return -EINVAL;
+ 
+-	/* Only TDLS-supporting stations can add TDLS peers */
+-	if ((params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) &&
+-	    !((wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS) &&
+-	      sdata->vif.type == NL80211_IFTYPE_STATION))
+-		return -ENOTSUPP;
+-
+ 	sta = sta_info_alloc(sdata, mac, GFP_KERNEL);
+ 	if (!sta)
+ 		return -ENOMEM;
+@@ -968,14 +962,6 @@ static int ieee80211_change_station(stru
+ 		return -ENOENT;
+ 	}
+ 
+-	/* The TDLS bit cannot be toggled after the STA was added */
+-	if ((params->sta_flags_mask & BIT(NL80211_STA_FLAG_TDLS_PEER)) &&
+-	    !!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) !=
+-	    !!test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
+-		rcu_read_unlock();
+-		return -EINVAL;
+-	}
+-
+ 	/* in station mode, supported rates are only valid with TDLS */
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+ 	    params->supported_rates &&
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+
