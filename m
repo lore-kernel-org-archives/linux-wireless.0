@@ -1,46 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li9-11.members.linode.com ([67.18.176.11]:56621 "EHLO
-	test.thunk.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751432Ab1LUVMS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 16:12:18 -0500
-Date: Wed, 21 Dec 2011 16:12:13 -0500
-From: Ted Ts'o <tytso@mit.edu>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, ilw@linux.intel.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: REGRESSION: v3.2-rcX: iwlagn refuses to associate with my AP's
-Message-ID: <20111221211213.GB32561@thunk.org> (sfid-20111221_221222_489553_E4DD5893)
-References: <E1RaBm1-0001JR-8a@tytso-glaptop.cam.corp.google.com>
- <1323800557.3355.31.camel@jlt3.sipsolutions.net>
- <20111213201752.GA5094@thunk.org>
- <20111214015959.GA6276@thunk.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111214015959.GA6276@thunk.org>
+Received: from mga02.intel.com ([134.134.136.20]:32932 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754632Ab1LNPi0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Dec 2011 10:38:26 -0500
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 1/8] NFC: Add function name to the NFC pr_fmt() routine
+Date: Wed, 14 Dec 2011 16:43:05 +0100
+Message-Id: <1323877392-20567-2-git-send-email-sameo@linux.intel.com> (sfid-20111214_163829_550026_63E96B95)
+In-Reply-To: <1323877392-20567-1-git-send-email-sameo@linux.intel.com>
+References: <1323877392-20567-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 13, 2011 at 08:59:59PM -0500, Ted Ts'o wrote:
-> On Tue, Dec 13, 2011 at 03:17:52PM -0500, Ted Ts'o wrote:
-> > Well, this patch seems to fix things for the non-authenticated case.
-> > I can now associate with the GoogleGuest SSID without any problems.
-> > I'm still having problems associating with the EAP-TLS encrypted
-> > network, but that looks like it's a different bug.  (And that may
-> > explain why I had so much trouble bisecting this; there are two issues
-> > that have very similar symptoms.)
-> 
-> ... and the second problem I had with associating with EAP-TLS
-> encrypted SSID's was solved by Wey-Yi's patch: 
-> 
-> 	  iwlwifi: allow to switch to HT40 if not associated yet
-> 
-> ... found in the thread "iwlagn regression in v3.1.5"
-> 
-> So with these two patches applied, things are now stable for me.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ net/nfc/core.c     |    2 +-
+ net/nfc/nci/core.c |    2 +-
+ net/nfc/nci/data.c |    2 +-
+ net/nfc/nci/ntf.c  |    2 +-
+ net/nfc/nci/rsp.c  |    2 +-
+ net/nfc/netlink.c  |    2 +-
+ net/nfc/rawsock.c  |    2 +-
+ 7 files changed, 7 insertions(+), 7 deletions(-)
 
-It seems that fixes for these two issues haven't been pushed to Linus
-yet?  It would be nice if they could get pushed to mainline before 3.2
-ships, as opposed to being something that has to get fixed in the
-3.2.X series....
+diff --git a/net/nfc/core.c b/net/nfc/core.c
+index 3ebc6b3aa..2a838b0 100644
+--- a/net/nfc/core.c
++++ b/net/nfc/core.c
+@@ -21,7 +21,7 @@
+  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++#define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
+ 
+ #include <linux/init.h>
+ #include <linux/kernel.h>
+diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+index 37de28e..921ad1f 100644
+--- a/net/nfc/nci/core.c
++++ b/net/nfc/nci/core.c
+@@ -25,7 +25,7 @@
+  *
+  */
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++#define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
+ 
+ #include <linux/types.h>
+ #include <linux/workqueue.h>
+diff --git a/net/nfc/nci/data.c b/net/nfc/nci/data.c
+index 1e040fe..e5756b3 100644
+--- a/net/nfc/nci/data.c
++++ b/net/nfc/nci/data.c
+@@ -21,7 +21,7 @@
+  *
+  */
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++#define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
+ 
+ #include <linux/types.h>
+ #include <linux/interrupt.h>
+diff --git a/net/nfc/nci/ntf.c b/net/nfc/nci/ntf.c
+index c36bd4a..003846b 100644
+--- a/net/nfc/nci/ntf.c
++++ b/net/nfc/nci/ntf.c
+@@ -25,7 +25,7 @@
+  *
+  */
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++#define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
+ 
+ #include <linux/types.h>
+ #include <linux/interrupt.h>
+diff --git a/net/nfc/nci/rsp.c b/net/nfc/nci/rsp.c
+index ca611c5..3f444c8 100644
+--- a/net/nfc/nci/rsp.c
++++ b/net/nfc/nci/rsp.c
+@@ -25,7 +25,7 @@
+  *
+  */
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++#define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
+ 
+ #include <linux/types.h>
+ #include <linux/interrupt.h>
+diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
+index c10e9b8..061711f 100644
+--- a/net/nfc/netlink.c
++++ b/net/nfc/netlink.c
+@@ -21,7 +21,7 @@
+  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++#define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
+ 
+ #include <net/genetlink.h>
+ #include <linux/nfc.h>
+diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
+index 68ecf3f..5e9b991 100644
+--- a/net/nfc/rawsock.c
++++ b/net/nfc/rawsock.c
+@@ -21,7 +21,7 @@
+  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+  */
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++#define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
+ 
+ #include <net/tcp_states.h>
+ #include <linux/nfc.h>
+-- 
+1.7.7.3
 
-						- Ted
