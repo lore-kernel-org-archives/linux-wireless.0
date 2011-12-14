@@ -1,91 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:18110 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757267Ab1LBRqS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Dec 2011 12:46:18 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, "Hsu, Kenny" <kenny.hsu@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 11/16] iwlwifi: add WOWLAN uCode loading support by testmode
-Date: Fri,  2 Dec 2011 08:48:35 -0800
-Message-Id: <1322844520-21149-12-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111202_184644_011617_7C199096)
-In-Reply-To: <1322844520-21149-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1322844520-21149-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54042 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753526Ab1LNTA1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Dec 2011 14:00:27 -0500
+Date: Wed, 14 Dec 2011 13:54:49 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH V2 1/2] cfg80211: Define a wrapper function for reporting
+ roaming
+Message-ID: <20111214185448.GB2607@tuxdriver.com> (sfid-20111214_200030_342884_14737445)
+References: <1323265359-1138-1-git-send-email-vthiagar@qca.qualcomm.com>
+ <1323265604.3404.37.camel@jlt3.sipsolutions.net>
+ <20111207135822.GA12398@chvasanth-lnx>
+ <20111207150543.GA12498@chvasanth-lnx>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111207150543.GA12498@chvasanth-lnx>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hsu, Kenny <kenny.hsu@intel.com>
+On Wed, Dec 07, 2011 at 08:35:45PM +0530, Vasanthakumar Thiagarajan wrote:
+> On Wed, Dec 07, 2011 at 07:28:24PM +0530, Vasanthakumar Thiagarajan wrote:
+> > > 
+> > > Hmm, now that I think about it more, I think the calling convention is
+> > > really strange. Why pass the channel and bssid when the BSS struct is
+> > > already known?
+> > > 
+> > > Why not make cfg80211_roamed() do the BSS lookup (which would also
+> > > reduce the race for drivers that don't use _bss()) based on the info,
+> > > and then call a cfg80211_roamed_bss() that doesn't get channel/bssid.
+> > 
+> > Sure, i'll change it. This looks better.
+> 
+> Also, i'll create a new patch instead of the next version.
 
-Create new tm command for WOWLAN uCode loading to support
-further debugging function in userspace.
+Is that patch still coming?
 
-- IWL_TM_CMD_APP2DEV_LOAD_WOWLAN_FW
-
-Signed-off-by: Kenny Hsu <kenny.hsu@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-sv-open.c  |   16 ++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-testmode.h |    5 ++++-
- 2 files changed, 20 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-sv-open.c b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
-index 21b2fbb..3c97626 100644
---- a/drivers/net/wireless/iwlwifi/iwl-sv-open.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-sv-open.c
-@@ -463,6 +463,21 @@ static int iwl_testmode_driver(struct ieee80211_hw *hw, struct nlattr **tb)
- 				"Error starting the device: %d\n", status);
- 		break;
- 
-+	case IWL_TM_CMD_APP2DEV_LOAD_WOWLAN_FW:
-+		iwl_scan_cancel_timeout(priv, 200);
-+		iwl_trans_stop_device(trans(priv));
-+		status = iwlagn_load_ucode_wait_alive(priv, IWL_UCODE_WOWLAN);
-+		if (status) {
-+			IWL_DEBUG_INFO(priv,
-+				"Error loading WOWLAN ucode: %d\n", status);
-+			break;
-+		}
-+		status = iwl_alive_start(priv);
-+		if (status)
-+			IWL_DEBUG_INFO(priv,
-+				"Error starting the device: %d\n", status);
-+		break;
-+
- 	case IWL_TM_CMD_APP2DEV_GET_EEPROM:
- 		if (priv->eeprom) {
- 			skb = cfg80211_testmode_alloc_reply_skb(hw->wiphy,
-@@ -826,6 +841,7 @@ int iwlagn_mac_testmode_cmd(struct ieee80211_hw *hw, void *data, int len)
- 	case IWL_TM_CMD_APP2DEV_LOAD_RUNTIME_FW:
- 	case IWL_TM_CMD_APP2DEV_GET_EEPROM:
- 	case IWL_TM_CMD_APP2DEV_FIXRATE_REQ:
-+	case IWL_TM_CMD_APP2DEV_LOAD_WOWLAN_FW:
- 		IWL_DEBUG_INFO(priv, "testmode cmd to driver\n");
- 		result = iwl_testmode_driver(hw, tb);
- 		break;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.h b/drivers/net/wireless/iwlwifi/iwl-testmode.h
-index e20f3d3..deedd27 100644
---- a/drivers/net/wireless/iwlwifi/iwl-testmode.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-testmode.h
-@@ -117,6 +117,8 @@
-  * @IWL_TM_CMD_APP2DEV_DUMP_SRAM:
-  *	commands from user applicaiton to read data in sram
-  *
-+ * @IWL_TM_CMD_APP2DEV_LOAD_WOWLAN_FW: load Weak On Wireless LAN uCode image
-+ *
-  */
- enum iwl_tm_cmd_t {
- 	IWL_TM_CMD_APP2DEV_UCODE		= 1,
-@@ -140,7 +142,8 @@ enum iwl_tm_cmd_t {
- 	IWL_TM_CMD_APP2DEV_INDIRECT_REG_WRITE32	= 19,
- 	IWL_TM_CMD_APP2DEV_READ_SRAM		= 20,
- 	IWL_TM_CMD_APP2DEV_DUMP_SRAM		= 21,
--	IWL_TM_CMD_MAX				= 22,
-+	IWL_TM_CMD_APP2DEV_LOAD_WOWLAN_FW	= 22,
-+	IWL_TM_CMD_MAX				= 23,
- };
- 
- /*
 -- 
-1.7.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
