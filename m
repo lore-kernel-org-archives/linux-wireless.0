@@ -1,44 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:56469 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756198Ab1LENOk (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:58899 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755519Ab1LNWLK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Dec 2011 08:14:40 -0500
-Received: by eaak14 with SMTP id k14so3991273eaa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2011 05:14:39 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAB3XZEf=jrrqZk58BnV8Gi4iKJ6N6c24M_eLnz816n==kuxmHA@mail.gmail.com>
-References: <CAOeh9MuuJtK_edMQvVaLSRytRoFix_OuW4OEcEMDYEak1=CvMw@mail.gmail.com>
-	<CAB3XZEf=jrrqZk58BnV8Gi4iKJ6N6c24M_eLnz816n==kuxmHA@mail.gmail.com>
-Date: Mon, 5 Dec 2011 18:44:39 +0530
-Message-ID: <CAOeh9MsqTQT6qzd47Af674cK4KQHN=uOaG-u1hVWV9faeb2Mwg@mail.gmail.com> (sfid-20111205_141446_684217_226A9496)
-Subject: Re: Query on ieee80211_subif_start_xmit
-From: uday kiran <kaniki.uday@gmail.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 14 Dec 2011 17:11:10 -0500
+Subject: Re: [PATCH] mac80211: Use appropriate TID for sending BAR, ADDBA
+ and DELBA frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	adrian@freebsd.org
+In-Reply-To: <1323871851-4808-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20111214_151134_351207_1D01AC58)
+References: <1323871851-4808-1-git-send-email-helmut.schaa@googlemail.com>
+	 (sfid-20111214_151134_351207_1D01AC58)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 14 Dec 2011 23:11:07 +0100
+Message-ID: <1323900667.3599.5.camel@jlt3.sipsolutions.net> (sfid-20111214_231114_644487_44F7C18E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for the reply, Eliad.
+On Wed, 2011-12-14 at 15:10 +0100, Helmut Schaa wrote:
 
-I have walked through the code for function
-"ieee80211_subif_start_xmit" but could not find any code block which
-strips the 802.3 header. If possible , could you help me point out
-that block ?
+> +void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
+> +{
+> +	/* Send all internal mgmt frames on VO. Accordingly set TID to 7. */
+> +	ieee80211_tx_skb_tid(sdata, skb, 7);
+> +}
+> +
 
--Uday
+This is so trivial, maybe it should be an inline?
 
-On 12/5/11, Eliad Peller <eliad@wizery.com> wrote:
-> On Mon, Dec 5, 2011 at 1:55 PM, uday kiran <kaniki.uday@gmail.com> wrote:
->>  The function ieee80211_subif_start_xmit description says that it will
->>  encapsulate 802.3 frame with 802.11 header and transmit. If yes, what
->>  is the function which will decapsulate at the rx end.
->>
-> the 802.11 header replaces the 802.3 header.
-> i guess the intention was that ieee80211_subif_start_xmit will
-> encapsulate the frame with 802.11 header after decapsulating the 802.3
-> header.
->
-> Eliad.
->
+johannes
+
