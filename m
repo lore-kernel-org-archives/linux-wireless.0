@@ -1,49 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:46572 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901Ab1LSTAc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43858 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755289Ab1LNLX5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 14:00:32 -0500
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1RciRp-0007Ej-DY
-	for linux-wireless@vger.kernel.org; Mon, 19 Dec 2011 14:00:29 -0500
-Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
-	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id pBJInh6c031637
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 13:49:44 -0500
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.4/8.14.4/Submit) id pBJInhIc031635
-	for linux-wireless@vger.kernel.org; Mon, 19 Dec 2011 13:49:43 -0500
-Date: Mon, 19 Dec 2011 13:49:43 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: new stuff for 3.3 needs to be posted _now_
-Message-ID: <20111219184943.GA31462@tuxdriver.com> (sfid-20111219_200035_667499_9E9914A2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 14 Dec 2011 06:23:57 -0500
+Message-Id: <20111214112026.409514167@sipsolutions.net> (sfid-20111214_122400_723641_73C1DD48)
+Date: Wed, 14 Dec 2011 12:20:26 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 0/5] station management rework
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You may have noticed that Linus has released 3.2-rc6, and doesn't
-plan to go beyond -rc7.  So, the merge window is around the corner!
+Thomas was kind enough to look at the previous
+patchset for mesh station handling, and I think
+this new patchset addresses his concerns.
 
-For those that need a reminder, the opening of the merge window is a
-_deadline_ for new features.  Once the merge window opens, only fixes
-will be accepted for 3.3.  In fact, any non-fix patches need to
-already be in wireless-next when the merge window opens if you want
-them in 3.3.  That means you need to get them posted _now_, so they
-can be reviewed and I can find time to merge them before the deadline.
+Arik also helped me look at TDLS, which should
+be handled correctly now.
 
-Just for the record, my employer will be shutdown starting on Friday
-and through the New Year's celebration.  I will probably pay some
-attention to my email over that break, but not as much as usual.
-I will not go to any great lengths to turn your failure to plan into
-my emergency -- sorry.
-
-You have been warned...this means you!
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
-
+johannes
