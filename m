@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:34052 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753325Ab1LSVZY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 16:25:24 -0500
-From: Gabor Juhos <juhosg@openwrt.org>
-To: Rodriguez Luis <rodrigue@qca.qualcomm.com>
-Cc: mcgrof@infradead.org, linux-wireless@vger.kernel.org,
-	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH 08/15] initvals: remove unused variable
-Date: Mon, 19 Dec 2011 22:24:53 +0100
-Message-Id: <1324329900-3923-9-git-send-email-juhosg@openwrt.org> (sfid-20111219_222539_483609_A520261B)
-In-Reply-To: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
-References: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:37333 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757464Ab1LNV4n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Dec 2011 16:56:43 -0500
+Received: by ghbz12 with SMTP id z12so1016355ghb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2011 13:56:42 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	wtsao@qca.qualcomm.com, rmanohar@qca.qualcomm.com,
+	mohammed@qca.qualcomm.com, senthilb@qca.qualcomm.com
+Subject: [PATCH] ath: document ATH_DBG_MCI
+Date: Wed, 14 Dec 2011 13:56:36 -0800
+Message-Id: <1323899796-21170-1-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111214_225645_392987_D4C4EE00)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch fixes the following warning
-(with CFLAGS=-Wunused):
+A debug level was added to the ath module for printing
+MCI messages but no documentation was provided. Clarify that
+MCI is the Message Coexistence Interface, a private protocol
+used exclusively for WLAN-BT coexistence starting from
+AR9462.
 
-initvals.c: In function ‘ath9k_hw_print_initval’:
-initvals.c:315: warning: unused variable ‘chksum’
-
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Cc: wtsao@qca.qualcomm.com
+Cc: rmanohar@qca.qualcomm.com
+Cc: mohammed@qca.qualcomm.com
+Cc: senthilb@qca.qualcomm.com
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 ---
- initvals.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath.h |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/initvals.c b/initvals.c
-index c9235d2..a12573a 100644
---- a/initvals.c
-+++ b/initvals.c
-@@ -312,7 +312,7 @@ static u32 ath9k_patch_initval(u32 idx, u32 val)
- 
- static void ath9k_hw_print_initval(const u32 *array, u32 rows, u32 columns, bool onedim)
- {
--	u32 chksum, col, row;
-+	u32 col, row;
- 
- 	/*
- 	 * This checksum stuff is designed for columns <= 8),
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index 3e4dd2d..0b93bab 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -215,6 +215,9 @@ do {								\
+  * @ATH_DBG_HWTIMER: hardware timer handling
+  * @ATH_DBG_BTCOEX: bluetooth coexistance
+  * @ATH_DBG_BSTUCK: stuck beacons
++ * @ATH_DBG_MCI: Message Coexistence Interface, a private protocol
++ *	used exclusively for WLAN-BT coexistence starting from
++ *	AR9462.
+  * @ATH_DBG_ANY: enable all debugging
+  *
+  * The debug level is used to control the amount and type of debugging output
 -- 
-1.7.2.1
+1.7.4.15.g7811d
 
