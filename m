@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:2939 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751955Ab1LPRLo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 12:11:44 -0500
-Message-ID: <4EEB7BBA.9040808@canonical.com> (sfid-20111216_181146_557537_8D0216A9)
-Date: Fri, 16 Dec 2011 10:11:22 -0700
-From: Tim Gardner <tim.gardner@canonical.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:45833 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754135Ab1LNE5q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Dec 2011 23:57:46 -0500
+Received: by ghbz12 with SMTP id z12so332470ghb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Dec 2011 20:57:45 -0800 (PST)
+Message-ID: <4EE82CC6.2030307@lwfinger.net> (sfid-20111214_055750_694987_EB447382)
+Date: Tue, 13 Dec 2011 22:57:42 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Seth Forshee <seth.forshee@canonical.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: Chaoming Li <chaoming_li@realsil.com.cn>,
 	linux-wireless@vger.kernel.org
 Subject: Re: Problems associating with RTL8188CE
-References: <4ECA99CC.7020008@lwfinger.net> <20111121185610.GD6736@thinkpad-t410> <4ECB028E.3030809@lwfinger.net> <20111122022008.GA17661@thinkpad-t410> <20111213194231.GA30788@thinkpad-t410> <4EE7B85E.3070802@lwfinger.net> <20111213212606.GB30788@thinkpad-t410> <4EE82CC6.2030307@lwfinger.net> <20111214162333.GB19410@thinkpad-t410> <4EE8D150.8090100@lwfinger.net> <20111214164902.GD19410@thinkpad-t410> <4EE91A87.5090207@canonical.com> <4EE9445B.1010504@lwfinger.net> <4EEA3F53.40305@canonical.com> <4EEA4F8E.60602@lwfinger.net> <4EEB7791.6060500@canonical.com> <4EEB7A92.6020701@lwfinger.net>
-In-Reply-To: <4EEB7A92.6020701@lwfinger.net>
+References: <20111118225422.GD19138@thinkpad-t410> <4EC88F58.1080203@lwfinger.net> <20111121181350.GC6736@thinkpad-t410> <4ECA99CC.7020008@lwfinger.net> <20111121185610.GD6736@thinkpad-t410> <4ECB028E.3030809@lwfinger.net> <20111122022008.GA17661@thinkpad-t410> <20111213194231.GA30788@thinkpad-t410> <4EE7B85E.3070802@lwfinger.net> <20111213212606.GB30788@thinkpad-t410>
+In-Reply-To: <20111213212606.GB30788@thinkpad-t410>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/16/2011 10:06 AM, Larry Finger wrote:
-> On 12/16/2011 10:53 AM, Tim Gardner wrote:
->>
->> Yep - specifying a _fixed_ channel for 'Up to 130Mbps at 5Ghz & 54Mbps at
->> 2.4Ghz' allowed a connection using the G beacon. I have not verified
->> using a
->> 5Ghz capable adapter that its also beaconing on channel 36.
->
-> Do you want to report this to Netgear, or should I?
->
-> Larry
->
+Seth,
 
-Please, be my guest :) I'll go back to working on Intel wifi issues.
+On 12/13/2011 03:26 PM, Seth Forshee wrote:
+>
+> The capture files are available at:
+>
+> http://people.canonical.com/~sforshee/rtl8188ce/
 
-rtg
--- 
-Tim Gardner tim.gardner@canonical.com
+The major difference is that the "bad" AP implements 802.11n HT40 technology, 
+but the "good" one does not.
+
+There was a period when rtl8192ce and rtl8192cu had a bug that prevented them 
+from associating with 802.11n APs, but that was fixed a long time ago. I can 
+communicate with my Netgear WNDR3300 AP that implements full 802.11 capabilities.
+
+What kernel are you running? If you implement the bleeding-edge compat-wireless 
+release, does that help.
+
+Larry
