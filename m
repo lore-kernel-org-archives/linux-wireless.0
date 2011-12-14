@@ -1,37 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tactel.se ([82.99.24.195]:56383 "EHLO mail.tactel.se"
+Received: from mga02.intel.com ([134.134.136.20]:30957 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751990Ab1LOJii (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 04:38:38 -0500
-Message-ID: <4EE9BA59.4070607@tactel.se> (sfid-20111215_103843_396388_A77076FD)
-Date: Thu, 15 Dec 2011 10:14:01 +0100
-From: Pontus Fuchs <pontus.fuchs@tactel.se>
-MIME-Version: 1.0
-To: Luciano Coelho <coelho@ti.com>
-CC: Pontus Fuchs <pontus.fuchs@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Set wlvif->ps_compl to NULL in before return
-References: <1323869543-2846-1-git-send-email-pontus.fuchs@gmail.com> <1323939307.2800.183.camel@cumari>
-In-Reply-To: <1323939307.2800.183.camel@cumari>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	id S1756962Ab1LNPig (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Dec 2011 10:38:36 -0500
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 4/8] NFC: Atomic socket allocation
+Date: Wed, 14 Dec 2011 16:43:08 +0100
+Message-Id: <1323877392-20567-5-git-send-email-sameo@linux.intel.com> (sfid-20111214_163838_393881_19A07E3B)
+In-Reply-To: <1323877392-20567-1-git-send-email-sameo@linux.intel.com>
+References: <1323877392-20567-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2011-12-15 09:55, Luciano Coelho wrote:
-> On Wed, 2011-12-14 at 14:32 +0100, Pontus Fuchs wrote:
->> wl1271_configure_suspend_sta leaves a stale stack declared
->> completion in wlvif->ps_compl. Set it to NULL before returning.
->>
->> Signed-off-by: Pontus Fuchs<pontus.fuchs@gmail.com>
->> ---
->
-> Applied with a small fix.  wl->ps_compl was used, which doesn't exist
-> anymore.  I changed it to wlvif->ps_compl before applying.
+rawsock_create() is called with preemption disabled, so we should not
+sleep.
 
-Thanks :) I Messed up when moving the code to your latest tree.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ net/nfc/rawsock.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
--ETOMANYTREES or something
+diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
+index 11ac0a1..2e2f8c6 100644
+--- a/net/nfc/rawsock.c
++++ b/net/nfc/rawsock.c
+@@ -310,7 +310,7 @@ static int rawsock_create(struct net *net, struct socket *sock,
+ 
+ 	sock->ops = &rawsock_ops;
+ 
+-	sk = sk_alloc(net, PF_NFC, GFP_KERNEL, nfc_proto->proto);
++	sk = sk_alloc(net, PF_NFC, GFP_ATOMIC, nfc_proto->proto);
+ 	if (!sk)
+ 		return -ENOMEM;
+ 
+-- 
+1.7.7.3
 
-Cheers,
-
-Pontus
