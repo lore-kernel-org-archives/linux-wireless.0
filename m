@@ -1,80 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:43864 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755289Ab1LNLX7 (ORCPT
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:59183 "HELO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with SMTP id S1754134Ab1LNEnt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 06:23:59 -0500
-Message-Id: <20111214112313.015117327@sipsolutions.net> (sfid-20111214_122407_985464_4DD0B733)
-Date: Wed, 14 Dec 2011 12:20:29 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 3/5] mac80211: use station mutex in configuration
-References: <20111214112026.409514167@sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 13 Dec 2011 23:43:49 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.2] mwifiex: avoid double list_del in command cancel path
+Date: Tue, 13 Dec 2011 20:43:16 -0800
+Message-Id: <1323837797-32547-1-git-send-email-bzhao@marvell.com> (sfid-20111214_054353_597856_B8651E12)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
 
-There's no need to use RCU here, we can just lock
-the station mutex instead. This allows the code
-to sleep, which is necessary for later patches.
+Command cancel path cancels the current command and moves
+it to free command queue. While doing that it deletes the
+command entry from the pending list. This is not correct
+as the entry has been already deleted from the pending
+list at 'mwifiex_exec_next_cmd'. Fixing it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Also making sure the stale command pointer is cleaned and
+unaccessible for later use.
+
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- net/mac80211/cfg.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/mwifiex/cmdevt.c |    9 ++-------
+ 1 files changed, 2 insertions(+), 7 deletions(-)
 
---- a/net/mac80211/cfg.c	2011-12-14 11:39:46.000000000 +0100
-+++ b/net/mac80211/cfg.c	2011-12-14 11:41:05.000000000 +0100
-@@ -954,11 +954,11 @@ static int ieee80211_change_station(stru
- 	struct sta_info *sta;
- 	struct ieee80211_sub_if_data *vlansdata;
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index ac27815..6e0a3ea 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -939,7 +939,6 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
+ {
+ 	struct cmd_ctrl_node *cmd_node = NULL, *tmp_node = NULL;
+ 	unsigned long cmd_flags;
+-	unsigned long cmd_pending_q_flags;
+ 	unsigned long scan_pending_q_flags;
+ 	uint16_t cancel_scan_cmd = false;
  
--	rcu_read_lock();
-+	mutex_lock(&local->sta_mtx);
- 
- 	sta = sta_info_get_bss(sdata, mac);
- 	if (!sta) {
--		rcu_read_unlock();
-+		mutex_unlock(&local->sta_mtx);
- 		return -ENOENT;
+@@ -949,12 +948,9 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
+ 		cmd_node = adapter->curr_cmd;
+ 		cmd_node->wait_q_enabled = false;
+ 		cmd_node->cmd_flag |= CMD_F_CANCELED;
+-		spin_lock_irqsave(&adapter->cmd_pending_q_lock,
+-				  cmd_pending_q_flags);
+-		list_del(&cmd_node->list);
+-		spin_unlock_irqrestore(&adapter->cmd_pending_q_lock,
+-				       cmd_pending_q_flags);
+ 		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
++		mwifiex_complete_cmd(adapter, adapter->curr_cmd);
++		adapter->curr_cmd = NULL;
+ 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
  	}
  
-@@ -966,7 +966,7 @@ static int ieee80211_change_station(stru
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
- 	    params->supported_rates &&
- 	    !test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
--		rcu_read_unlock();
-+		mutex_unlock(&local->sta_mtx);
- 		return -EINVAL;
+@@ -981,7 +977,6 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
+ 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
  	}
+ 	adapter->cmd_wait_q.status = -1;
+-	mwifiex_complete_cmd(adapter, adapter->curr_cmd);
+ }
  
-@@ -975,13 +975,13 @@ static int ieee80211_change_station(stru
- 
- 		if (vlansdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
- 		    vlansdata->vif.type != NL80211_IFTYPE_AP) {
--			rcu_read_unlock();
-+			mutex_unlock(&local->sta_mtx);
- 			return -EINVAL;
- 		}
- 
- 		if (params->vlan->ieee80211_ptr->use_4addr) {
- 			if (vlansdata->u.vlan.sta) {
--				rcu_read_unlock();
-+				mutex_unlock(&local->sta_mtx);
- 				return -EBUSY;
- 			}
- 
-@@ -997,7 +997,7 @@ static int ieee80211_change_station(stru
- 	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) && params->supported_rates)
- 		rate_control_rate_init(sta);
- 
--	rcu_read_unlock();
-+	mutex_unlock(&local->sta_mtx);
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
- 	    params->sta_flags_mask & BIT(NL80211_STA_FLAG_AUTHORIZED))
-
+ /*
+-- 
+1.7.0.2
 
