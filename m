@@ -1,39 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:47531 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751729Ab1LIJ7R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Dec 2011 04:59:17 -0500
-Received: by ghbz2 with SMTP id z2so2346191ghb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Dec 2011 01:59:16 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmo=7s67p8iQF3rt81vMPapOee=21J5wmT5PW8BiWuuev_Q@mail.gmail.com>
-References: <1323420593-9638-1-git-send-email-helmut.schaa@googlemail.com>
-	<CAJ-Vmo=7s67p8iQF3rt81vMPapOee=21J5wmT5PW8BiWuuev_Q@mail.gmail.com>
-Date: Fri, 9 Dec 2011 10:59:16 +0100
-Message-ID: <CAGXE3d9MjViF0GjfivbS0dUqCeTrR=x+HuiJEhauf_o=ncmQ3g@mail.gmail.com> (sfid-20111209_105922_060999_3BA2B543)
-Subject: Re: [RFC] mac80211: Send BAR on same queue as the according QoS frames
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:18424 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754145Ab1LNENx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 13 Dec 2011 23:13:53 -0500
+Subject: Re: REGRESSION: v3.2-rcX: iwlagn refuses to associate with my AP's
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Ted Ts'o <tytso@mit.edu>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <20111214015959.GA6276@thunk.org>
+References: <E1RaBm1-0001JR-8a@tytso-glaptop.cam.corp.google.com>
+	 <1323800557.3355.31.camel@jlt3.sipsolutions.net>
+	 <20111213201752.GA5094@thunk.org>  <20111214015959.GA6276@thunk.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 13 Dec 2011 19:14:30 -0800
+Message-ID: <1323832470.13074.224.camel@wwguy-huron> (sfid-20111214_051358_578097_08B6601F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 9, 2011 at 10:10 AM, Adrian Chadd <adrian@freebsd.org> wrote:
-> On 9 December 2011 19:49, Helmut Schaa <helmut.schaa@googlemail.com> wrote:
->> Sending as RFC for now since I'm not sure if this is really required. At least
->> I couldn't come up with a situation where this would be required. However, it
->> looks more correct to me to put the BAR into the same queue as the previously
->> failed QoS frame to avoid possible (?) side effect of the BAR overtaking frames
->> in the hw tx queues ...
->
-> I've had to do this in FreeBSD, for more than just the BAR frame - I
-> do this for the ADDBA and null management frames too, just to be sure
-> that frames aren't dropped by the other end.
+Hi Ted,
+On Tue, 2011-12-13 at 17:59 -0800, Ted Ts'o wrote:
+> On Tue, Dec 13, 2011 at 03:17:52PM -0500, Ted Ts'o wrote:
+> > Well, this patch seems to fix things for the non-authenticated case.
+> > I can now associate with the GoogleGuest SSID without any problems.
+> > I'm still having problems associating with the EAP-TLS encrypted
+> > network, but that looks like it's a different bug.  (And that may
+> > explain why I had so much trouble bisecting this; there are two issues
+> > that have very similar symptoms.)
+> 
+> ... and the second problem I had with associating with EAP-TLS
+> encrypted SSID's was solved by Wey-Yi's patch: 
+> 
+> 	  iwlwifi: allow to switch to HT40 if not associated yet
+> 
+> ... found in the thread "iwlagn regression in v3.1.5"
+> 
+> So with these two patches applied, things are now stable for me.
+> 
+> One thing: out of curiosity, I assume there is a pretty good testing
+> infrastructure at Intel --- how was it that this didn't caught
+> earlier?  Is it because different access points do things a little
+> different?  Would it be useful if I can find out the model of access
+> point that we're using, so you could hopefully augment your library of
+> test hardware?  I'm asking out of purely selfish reasons, of course,
+> since this took me the better part of a day to bisect each of these
+> problems.
 
-Hmm, good point. Also, a DELBA overtaking AMPDUs in the hw queues could
-be a problem ...
+You ask a very valid and good question, you are correct, we at Intel
+have a very good lab and great testing infrastructure. But at the same
+time, there are so many APs available on the market and each one could
+behave differently, also just like station, AP's software continue
+change and improve, and at the same time, bugs can be introduced. We try
+to do our best, but we can not cover everything and we truly hope the
+community can help us flush the corner cases and bugs we miss.
 
-Helmut
+Yes, if you can let us know your configuration and the AP information,
+it will be very helpful. But please do help us continue test our latest
+driver, so we can improve our driver quality and better serve the
+community.
+
+Thanks
+Wey 
+
+
