@@ -1,60 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:60165 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751660Ab1LMMvY (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:40090 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756306Ab1LNM2t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 07:51:24 -0500
-Subject: [PATCH v2 1/6] ath6kl: remove a workaround from ath6kl_cfg80211_stop()
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Date: Tue, 13 Dec 2011 14:51:10 +0200
-Message-ID: <20111213125110.10834.46198.stgit@localhost6.localdomain6> (sfid-20111213_135126_024081_63829191)
-In-Reply-To: <20111213124923.10834.20626.stgit@localhost6.localdomain6>
-References: <20111213124923.10834.20626.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 14 Dec 2011 07:28:49 -0500
+Subject: [PATCH] mac80211: make address arguments to sta_info_alloc const
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 14 Dec 2011 13:28:46 +0100
+Message-ID: <1323865726.3380.9.camel@jlt3.sipsolutions.net> (sfid-20111214_132856_727275_6FE29E0A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's a workaround in ath6kl_cfg80211_stop() which emits disconnected
-even when sme_state was disconnected. This is legacy from the old
-staging driver and I can't repoduce the old problem anymore. I assume the
-bug got fixed while the driver was cleaned up so let's get
-rid of the hack.
+From: Johannes Berg <johannes.berg@intel.com>
 
-This makes it possible to call ath6kl_cfg80211_stop from ath6kl_close()
-which happens in a followup patch.
+No real changes, just note that they are const.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 ++------
- 1 files changed, 2 insertions(+), 6 deletions(-)
+ net/mac80211/sta_info.c |    2 +-
+ net/mac80211/sta_info.h |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index aa93527..5f12c04 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2406,6 +2406,8 @@ void ath6kl_cfg80211_stop(struct ath6kl *ar)
- 	}
+--- a/net/mac80211/sta_info.c	2011-12-14 12:42:24.000000000 +0100
++++ b/net/mac80211/sta_info.c	2011-12-14 12:52:19.000000000 +0100
+@@ -281,7 +281,7 @@ static int sta_prepare_rate_control(stru
+ }
  
- 	switch (vif->sme_state) {
-+	case SME_DISCONNECTED:
-+		break;
- 	case SME_CONNECTING:
- 		cfg80211_connect_result(vif->ndev, vif->bssid, NULL, 0,
- 					NULL, 0,
-@@ -2413,12 +2415,6 @@ void ath6kl_cfg80211_stop(struct ath6kl *ar)
- 					GFP_KERNEL);
- 		break;
- 	case SME_CONNECTED:
--	default:
--		/*
--		 * FIXME: oddly enough smeState is in DISCONNECTED during
--		 * suspend, why? Need to send disconnected event in that
--		 * state.
--		 */
- 		cfg80211_disconnected(vif->ndev, 0, NULL, 0, GFP_KERNEL);
- 		break;
- 	}
+ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+-				u8 *addr, gfp_t gfp)
++				const u8 *addr, gfp_t gfp)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+--- a/net/mac80211/sta_info.h	2011-12-14 12:51:55.000000000 +0100
++++ b/net/mac80211/sta_info.h	2011-12-14 12:52:13.000000000 +0100
+@@ -522,7 +522,7 @@ struct sta_info *sta_info_get_by_idx(str
+  * until sta_info_insert().
+  */
+ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+-				u8 *addr, gfp_t gfp);
++				const u8 *addr, gfp_t gfp);
+ 
+ void sta_info_free(struct ieee80211_local *local, struct sta_info *sta);
+ 
+
 
