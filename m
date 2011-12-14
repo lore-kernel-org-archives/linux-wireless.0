@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:18110 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757262Ab1LBRqS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Dec 2011 12:46:18 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 08/16] iwlagn: remove HC_DUMP debug
-Date: Fri,  2 Dec 2011 08:48:32 -0800
-Message-Id: <1322844520-21149-9-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111202_184625_986262_07964A77)
-In-Reply-To: <1322844520-21149-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1322844520-21149-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:47437 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752045Ab1LNRMj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Dec 2011 12:12:39 -0500
+Date: Wed, 14 Dec 2011 11:12:34 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Problems associating with RTL8188CE
+Message-ID: <20111214171234.GE19410@thinkpad-t410> (sfid-20111214_181243_427013_DB96083D)
+References: <4ECB028E.3030809@lwfinger.net>
+ <20111122022008.GA17661@thinkpad-t410>
+ <20111213194231.GA30788@thinkpad-t410>
+ <4EE7B85E.3070802@lwfinger.net>
+ <20111213212606.GB30788@thinkpad-t410>
+ <4EE82CC6.2030307@lwfinger.net>
+ <20111214162333.GB19410@thinkpad-t410>
+ <4EE8D150.8090100@lwfinger.net>
+ <20111214164902.GD19410@thinkpad-t410>
+ <4EE8D5A1.7040600@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4EE8D5A1.7040600@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, Dec 14, 2011 at 10:58:09AM -0600, Larry Finger wrote:
+> On 12/14/2011 10:49 AM, Seth Forshee wrote:
+> >On Wed, Dec 14, 2011 at 10:39:44AM -0600, Larry Finger wrote:
+> >>On 12/14/2011 10:23 AM, Seth Forshee wrote:
+> >>>
+> >>>I'm running 3.2-rc5 currently. The results are the same with
+> >>>bleeding-edge compat-wireless.
+> >>
+> >>I'm running 3.2-rc5 from wireless-testing, but I should test the one
+> >>from mainline. I'll also retest an RTL8188CE with my 802.11n AP.
+> >>
+> >>What model is that Cisco AP? Perhaps Realsil has one in their lab. I
+> >>do not have access to any Cisco hardware.
+> >
+> >It's a Linksys E2000.
+> 
+> If matters come to worse, I can buy a used E2000 for $30 on E-bay.
 
-This debug level is unused, remove it.
+If there's anything you'd like me to try, don't hesitate to ask. I'm
+trying to come up to speed on debugging wireless problems anyway, so I'd
+value the experience.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-debug.h |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-debug.h b/drivers/net/wireless/iwlwifi/iwl-debug.h
-index a842d71..3220608 100644
---- a/drivers/net/wireless/iwlwifi/iwl-debug.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-debug.h
-@@ -140,7 +140,7 @@ static inline void iwl_dbgfs_unregister(struct iwl_priv *priv)
- #define IWL_DL_STATE		(1 << 3)
- /* 0x000000F0 - 0x00000010 */
- #define IWL_DL_MACDUMP		(1 << 4)
--#define IWL_DL_HCMD_DUMP	(1 << 5)
-+/* unused (1 << 5) */
- #define IWL_DL_EEPROM		(1 << 6)
- #define IWL_DL_RADIO		(1 << 7)
- /* 0x00000F00 - 0x00000100 */
-@@ -184,7 +184,6 @@ static inline void iwl_dbgfs_unregister(struct iwl_priv *priv)
- #define IWL_DEBUG_LED(p, f, a...)	IWL_DEBUG(p, IWL_DL_LED, f, ## a)
- #define IWL_DEBUG_WEP(p, f, a...)	IWL_DEBUG(p, IWL_DL_WEP, f, ## a)
- #define IWL_DEBUG_HC(p, f, a...)	IWL_DEBUG(p, IWL_DL_HCMD, f, ## a)
--#define IWL_DEBUG_HC_DUMP(p, f, a...)	IWL_DEBUG(p, IWL_DL_HCMD_DUMP, f, ## a)
- #define IWL_DEBUG_EEPROM(p, f, a...)	IWL_DEBUG(p, IWL_DL_EEPROM, f, ## a)
- #define IWL_DEBUG_CALIB(p, f, a...)	IWL_DEBUG(p, IWL_DL_CALIB, f, ## a)
- #define IWL_DEBUG_FW(p, f, a...)	IWL_DEBUG(p, IWL_DL_FW, f, ## a)
--- 
-1.7.0.4
-
+Thanks,
+Seth
