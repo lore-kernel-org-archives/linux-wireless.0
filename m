@@ -1,91 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:54353 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751345Ab1LZSRG convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:43864 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755289Ab1LNLX7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Dec 2011 13:17:06 -0500
-Date: Mon, 26 Dec 2011 19:17:02 +0100 (CET)
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-cc: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: [PATCH] b43: fix regression in PIO case
-In-Reply-To: <4EF8B42C.2020402@lwfinger.net>
-Message-ID: <alpine.DEB.2.00.1112261909550.12108@axis700.grange> (sfid-20111226_191751_702773_322DEF6E)
-References: <alpine.DEB.2.00.1112261608140.12108@axis700.grange> <alpine.DEB.2.00.1112261824000.12108@axis700.grange> <4EF8B42C.2020402@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-2
+	Wed, 14 Dec 2011 06:23:59 -0500
+Message-Id: <20111214112313.015117327@sipsolutions.net> (sfid-20111214_122407_985464_4DD0B733)
+Date: Wed, 14 Dec 2011 12:20:29 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 3/5] mac80211: use station mutex in configuration
+References: <20111214112026.409514167@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 26 Dec 2011, Larry Finger wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> On 12/26/2011 11:28 AM, Guennadi Liakhovetski wrote:
-> > This patch fixes the regression, introduced by
-> > 
-> > commit 17030f48e31adde5b043741c91ba143f5f7db0fd
-> > From: Rafa³ Mi³ecki<zajec5@gmail.com>
-> > Date: Thu, 11 Aug 2011 17:16:27 +0200
-> > Subject: [PATCH] b43: support new RX header, noticed to be used in 598.314+
-> > fw
-> > 
-> > in PIO case.
-> > 
-> > Signed-off-by: Guennadi Liakhovetski<g.liakhovetski@gmx.de>
-> > ---
-> > diff --git a/drivers/net/wireless/b43/pio.c b/drivers/net/wireless/b43/pio.c
-> > index ce8a4bd..b64b64c 100644
-> > --- a/drivers/net/wireless/b43/pio.c
-> > +++ b/drivers/net/wireless/b43/pio.c
-> > @@ -617,9 +617,19 @@ static bool pio_rx_frame(struct b43_pio_rxqueue *q)
-> >   	const char *err_msg = NULL;
-> >   	struct b43_rxhdr_fw4 *rxhdr =
-> >   		(struct b43_rxhdr_fw4 *)wl->pio_scratchspace;
-> > +	size_t rxhdr_size = sizeof(*rxhdr);
-> > 
-> >   	BUILD_BUG_ON(sizeof(wl->pio_scratchspace)<  sizeof(*rxhdr));
-> > -	memset(rxhdr, 0, sizeof(*rxhdr));
-> > +	switch (dev->fw.hdr_format) {
-> > +	case B43_FW_HDR_410:
-> > +	case B43_FW_HDR_351:
-> > +		rxhdr_size -= sizeof(rxhdr->format_598) -
-> > +			sizeof(rxhdr->format_351);
-> > +		break;
-> > +	case B43_FW_HDR_598:
-> > +		break;
-> > +	}
-> 
-> I do not think the above will work for format_410. By my count, the format_410
-> struct is 4 bytes longer than the format_351 struct.
+There's no need to use RCU here, we can just lock
+the station mutex instead. This allows the code
+to sleep, which is necessary for later patches.
 
-I think you're looking at struct b43_txhdr, whereas the problem is in 
-struct b43_rxhdr_fw4.
-
-Thanks
-Guennadi
-
-> 
-> Even if it does work, I suggest using the following:
-> 
-> 	size_t rxhdr_size;
-> 
->    	BUILD_BUG_ON(sizeof(wl->pio_scratchspace)<  sizeof(*rxhdr));
-> 	switch (dev->fw.hdr_format) {
-> 	case B43_FW_HDR_351:
-> 		rxhdr_size = sizeof(rxhdr->format_351);
-> 		break;
-> 	case B43_FW_HDR_410:
-> etc.
-> 
-> 
-> Larry
-> 
-
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-Guennadi Liakhovetski, Ph.D.
-Freelance Open-Source Software Developer
-http://www.open-technology.de/
+ net/mac80211/cfg.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+--- a/net/mac80211/cfg.c	2011-12-14 11:39:46.000000000 +0100
++++ b/net/mac80211/cfg.c	2011-12-14 11:41:05.000000000 +0100
+@@ -954,11 +954,11 @@ static int ieee80211_change_station(stru
+ 	struct sta_info *sta;
+ 	struct ieee80211_sub_if_data *vlansdata;
+ 
+-	rcu_read_lock();
++	mutex_lock(&local->sta_mtx);
+ 
+ 	sta = sta_info_get_bss(sdata, mac);
+ 	if (!sta) {
+-		rcu_read_unlock();
++		mutex_unlock(&local->sta_mtx);
+ 		return -ENOENT;
+ 	}
+ 
+@@ -966,7 +966,7 @@ static int ieee80211_change_station(stru
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+ 	    params->supported_rates &&
+ 	    !test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
+-		rcu_read_unlock();
++		mutex_unlock(&local->sta_mtx);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -975,13 +975,13 @@ static int ieee80211_change_station(stru
+ 
+ 		if (vlansdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
+ 		    vlansdata->vif.type != NL80211_IFTYPE_AP) {
+-			rcu_read_unlock();
++			mutex_unlock(&local->sta_mtx);
+ 			return -EINVAL;
+ 		}
+ 
+ 		if (params->vlan->ieee80211_ptr->use_4addr) {
+ 			if (vlansdata->u.vlan.sta) {
+-				rcu_read_unlock();
++				mutex_unlock(&local->sta_mtx);
+ 				return -EBUSY;
+ 			}
+ 
+@@ -997,7 +997,7 @@ static int ieee80211_change_station(stru
+ 	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) && params->supported_rates)
+ 		rate_control_rate_init(sta);
+ 
+-	rcu_read_unlock();
++	mutex_unlock(&local->sta_mtx);
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+ 	    params->sta_flags_mask & BIT(NL80211_STA_FLAG_AUTHORIZED))
+
+
