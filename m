@@ -1,243 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:43962 "HELO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751401Ab1LIEle (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:57961 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754552Ab1LNVNI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 23:41:34 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: wakeup and stop multiple tx queues in net_device
-Date: Thu,  8 Dec 2011 20:41:05 -0800
-Message-Id: <1323405665-21942-3-git-send-email-bzhao@marvell.com> (sfid-20111209_054138_250857_1BF7BEBC)
-In-Reply-To: <1323405665-21942-1-git-send-email-bzhao@marvell.com>
-References: <1323405665-21942-1-git-send-email-bzhao@marvell.com>
+	Wed, 14 Dec 2011 16:13:08 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id C52DC540302
+	for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2011 16:13:05 -0500 (EST)
+Subject: Compat-wireless release for 2011-12-14 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111214211305.A10F14062B@repository3.orbit-lab.org> (sfid-20111214_221313_406030_FB33B541)
+Date: Wed, 14 Dec 2011 16:13:04 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 4753e29...e225c76 akpm-end   -> origin/akpm-end  (forced update)
+   dc47ce9..373da0a  akpm-start -> origin/akpm-start
+ + 24300f9...7205234 master     -> origin/master  (forced update)
+   dc47ce9..373da0a  stable     -> origin/stable
+ * [new tag]         next-20111214 -> next-20111214
 
-replace single queue function calls with equivalent multiple queue
-functions. Wakeup queue and stop queue calls are guarded by spin lock.
+compat-wireless code metrics
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/init.c      |   40 ++++++++++++++++++++++++++++++
- drivers/net/wireless/mwifiex/main.c      |   11 ++++---
- drivers/net/wireless/mwifiex/main.h      |    9 ++++++
- drivers/net/wireless/mwifiex/sta_event.c |    6 ++--
- drivers/net/wireless/mwifiex/sta_ioctl.c |    4 +-
- drivers/net/wireless/mwifiex/txrx.c      |    5 ++-
- 6 files changed, 63 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
-index 2694045..244c728 100644
---- a/drivers/net/wireless/mwifiex/init.c
-+++ b/drivers/net/wireless/mwifiex/init.c
-@@ -283,6 +283,45 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
- }
- 
- /*
-+ * This function sets trans_start per tx_queue
-+ */
-+void mwifiex_set_trans_start(struct net_device *dev)
-+{
-+	int i;
-+
-+	for (i = 0; i < dev->num_tx_queues; i++)
-+		netdev_get_tx_queue(dev, i)->trans_start = jiffies;
-+
-+	dev->trans_start = jiffies;
-+}
-+
-+/*
-+ * This function wakes up all queues in net_device
-+ */
-+void mwifiex_wake_up_net_dev_queue(struct net_device *netdev,
-+					struct mwifiex_adapter *adapter)
-+{
-+	unsigned long dev_queue_flags;
-+
-+	spin_lock_irqsave(&adapter->queue_lock, dev_queue_flags);
-+	netif_tx_wake_all_queues(netdev);
-+	spin_unlock_irqrestore(&adapter->queue_lock, dev_queue_flags);
-+}
-+
-+/*
-+ * This function stops all queues in net_device
-+ */
-+void mwifiex_stop_net_dev_queue(struct net_device *netdev,
-+					struct mwifiex_adapter *adapter)
-+{
-+	unsigned long dev_queue_flags;
-+
-+	spin_lock_irqsave(&adapter->queue_lock, dev_queue_flags);
-+	netif_tx_stop_all_queues(netdev);
-+	spin_unlock_irqrestore(&adapter->queue_lock, dev_queue_flags);
-+}
-+
-+/*
-  *  This function releases the lock variables and frees the locks and
-  *  associated locks.
-  */
-@@ -359,6 +398,7 @@ int mwifiex_init_lock_list(struct mwifiex_adapter *adapter)
- 	spin_lock_init(&adapter->int_lock);
- 	spin_lock_init(&adapter->main_proc_lock);
- 	spin_lock_init(&adapter->mwifiex_cmd_lock);
-+	spin_lock_init(&adapter->queue_lock);
- 	for (i = 0; i < adapter->priv_num; i++) {
- 		if (adapter->priv[i]) {
- 			priv = adapter->priv[i];
-diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
-index 67e6db7..d21cd47 100644
---- a/drivers/net/wireless/mwifiex/main.c
-+++ b/drivers/net/wireless/mwifiex/main.c
-@@ -401,7 +401,7 @@ mwifiex_fill_buffer(struct sk_buff *skb)
- static int
- mwifiex_open(struct net_device *dev)
- {
--	netif_start_queue(dev);
-+	netif_tx_start_all_queues(dev);
- 	return 0;
- }
- 
-@@ -465,8 +465,8 @@ mwifiex_hard_start_xmit(struct sk_buff *skb, struct net_device *dev)
- 	atomic_inc(&priv->adapter->tx_pending);
- 
- 	if (atomic_read(&priv->adapter->tx_pending) >= MAX_TX_PENDING) {
--		netif_stop_queue(priv->netdev);
--		dev->trans_start = jiffies;
-+		mwifiex_set_trans_start(dev);
-+		mwifiex_stop_net_dev_queue(priv->netdev, priv->adapter);
- 	}
- 
- 	queue_work(priv->adapter->workqueue, &priv->adapter->main_work);
-@@ -533,7 +533,7 @@ mwifiex_tx_timeout(struct net_device *dev)
- 
- 	dev_err(priv->adapter->dev, "%lu : Tx timeout, bss_index=%d\n",
- 				jiffies, priv->bss_index);
--	dev->trans_start = jiffies;
-+	mwifiex_set_trans_start(dev);
- 	priv->num_tx_timeout++;
- }
- 
-@@ -793,7 +793,8 @@ int mwifiex_remove_card(struct mwifiex_adapter *adapter, struct semaphore *sem)
- 		priv = adapter->priv[i];
- 		if (priv && priv->netdev) {
- 			if (!netif_queue_stopped(priv->netdev))
--				netif_stop_queue(priv->netdev);
-+				mwifiex_stop_net_dev_queue(priv->netdev,
-+								adapter);
- 			if (netif_carrier_ok(priv->netdev))
- 				netif_carrier_off(priv->netdev);
- 		}
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 3861a61..41f8863 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -655,10 +655,19 @@ struct mwifiex_adapter {
- 	struct mwifiex_wait_queue cmd_wait_q;
- 	u8 scan_wait_q_woken;
- 	struct cmd_ctrl_node *cmd_queued;
-+	spinlock_t queue_lock;		/* lock for tx queues */
- };
- 
- int mwifiex_init_lock_list(struct mwifiex_adapter *adapter);
- 
-+void mwifiex_set_trans_start(struct net_device *dev);
-+
-+void mwifiex_stop_net_dev_queue(struct net_device *netdev,
-+		struct mwifiex_adapter *adapter);
-+
-+void mwifiex_wake_up_net_dev_queue(struct net_device *netdev,
-+		struct mwifiex_adapter *adapter);
-+
- int mwifiex_init_fw(struct mwifiex_adapter *adapter);
- 
- int mwifiex_init_fw_complete(struct mwifiex_adapter *adapter);
-diff --git a/drivers/net/wireless/mwifiex/sta_event.c b/drivers/net/wireless/mwifiex/sta_event.c
-index f204810..40205f6 100644
---- a/drivers/net/wireless/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/mwifiex/sta_event.c
-@@ -126,7 +126,7 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv)
- 		queue_work(priv->workqueue, &priv->cfg_workqueue);
- 	}
- 	if (!netif_queue_stopped(priv->netdev))
--		netif_stop_queue(priv->netdev);
-+		mwifiex_stop_net_dev_queue(priv->netdev, adapter);
- 	if (netif_carrier_ok(priv->netdev))
- 		netif_carrier_off(priv->netdev);
- 	/* Reset wireless stats signal info */
-@@ -201,7 +201,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		if (!netif_carrier_ok(priv->netdev))
- 			netif_carrier_on(priv->netdev);
- 		if (netif_queue_stopped(priv->netdev))
--			netif_wake_queue(priv->netdev);
-+			mwifiex_wake_up_net_dev_queue(priv->netdev, adapter);
- 		break;
- 
- 	case EVENT_DEAUTHENTICATED:
-@@ -292,7 +292,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		priv->adhoc_is_link_sensed = false;
- 		mwifiex_clean_txrx(priv);
- 		if (!netif_queue_stopped(priv->netdev))
--			netif_stop_queue(priv->netdev);
-+			mwifiex_stop_net_dev_queue(priv->netdev, adapter);
- 		if (netif_carrier_ok(priv->netdev))
- 			netif_carrier_off(priv->netdev);
- 		break;
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 4b6f553..6d990c7 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -234,7 +234,7 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
- 				      "associating...\n");
- 
- 		if (!netif_queue_stopped(priv->netdev))
--			netif_stop_queue(priv->netdev);
-+			mwifiex_stop_net_dev_queue(priv->netdev, adapter);
- 
- 		/* Clear any past association response stored for
- 		 * application retrieval */
-@@ -265,7 +265,7 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
- 		ret = mwifiex_check_network_compatibility(priv, bss_desc);
- 
- 		if (!netif_queue_stopped(priv->netdev))
--			netif_stop_queue(priv->netdev);
-+			mwifiex_stop_net_dev_queue(priv->netdev, adapter);
- 
- 		if (!ret) {
- 			dev_dbg(adapter->dev, "info: network found in scan"
-diff --git a/drivers/net/wireless/mwifiex/txrx.c b/drivers/net/wireless/mwifiex/txrx.c
-index a206f41..d9274a1 100644
---- a/drivers/net/wireless/mwifiex/txrx.c
-+++ b/drivers/net/wireless/mwifiex/txrx.c
-@@ -134,7 +134,7 @@ int mwifiex_write_data_complete(struct mwifiex_adapter *adapter,
- 	if (!priv)
- 		goto done;
- 
--	priv->netdev->trans_start = jiffies;
-+	mwifiex_set_trans_start(priv->netdev);
- 	if (!status) {
- 		priv->stats.tx_packets++;
- 		priv->stats.tx_bytes += skb->len;
-@@ -152,7 +152,8 @@ int mwifiex_write_data_complete(struct mwifiex_adapter *adapter,
- 		if ((GET_BSS_ROLE(tpriv) == MWIFIEX_BSS_ROLE_STA)
- 				&& (tpriv->media_connected)) {
- 			if (netif_queue_stopped(tpriv->netdev))
--				netif_wake_queue(tpriv->netdev);
-+				mwifiex_wake_up_net_dev_queue(tpriv->netdev,
-+								adapter);
- 		}
- 	}
- done:
--- 
-1.7.0.2
-
+    822816 - Total upstream lines of code being pulled
+      2468 - backport code changes
+      2121 - backport code additions
+       347 - backport code deletions
+      8885 - backport from compat module
+     11353 - total backport code
+    1.3798 - % of code consists of backport work
