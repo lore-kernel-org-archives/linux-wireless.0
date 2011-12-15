@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:58887 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752558Ab1LWPEi (ORCPT
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:59645 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751400Ab1LOUEb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Dec 2011 10:04:38 -0500
-Received: by lahd3 with SMTP id d3so1663753lah.5
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Dec 2011 07:04:35 -0800 (PST)
-Subject: Re: [PATCH 2/6] compat-wireless: remove platform_device_id for
- kernel < 2.6.30
-From: Luciano Coelho <coelho@ti.com>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org
-In-Reply-To: <CAB=NE6X=yTDgLdGeR5ZzRW5qEmZkdyk2JC4LQ72RNYkq=iGMCw@mail.gmail.com>
-References: <1324586850-5212-1-git-send-email-hauke@hauke-m.de>
-	 <1324586850-5212-3-git-send-email-hauke@hauke-m.de>
-	 <1324630694.2182.325.camel@cumari>
-	 <CAB=NE6X=yTDgLdGeR5ZzRW5qEmZkdyk2JC4LQ72RNYkq=iGMCw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 23 Dec 2011 17:04:32 +0200
-Message-ID: <1324652672.2182.354.camel@cumari> (sfid-20111223_160441_874109_76E3CBC4)
-Mime-Version: 1.0
+	Thu, 15 Dec 2011 15:04:31 -0500
+MIME-Version: 1.0
+In-Reply-To: <20111215191523.GA2561@tuxdriver.com>
+References: <20111215191523.GA2561@tuxdriver.com>
+Date: Thu, 15 Dec 2011 21:04:29 +0100
+Message-ID: <CACna6rw736JdkoM8zKxorCFd5oy08QTwWZ6PutoJPSr3ZN8hTg@mail.gmail.com> (sfid-20111215_210512_436606_748978A4)
+Subject: Re: pull request: wireless 2011-12-15
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-12-23 at 07:00 -0800, Luis R. Rodriguez wrote: 
-> On Fri, Dec 23, 2011 at 12:58 AM, Luciano Coelho <coelho@ti.com> wrote:
-> > The question is, should we even bother compiling wl12xx if the kernel is
-> > < .30?
-> 
-> You would know better, what systems would even have the driver, etc. I
-> welcome such patch. For now I'll apply this series.
+2011/12/15 John W. Linville <linville@tuxdriver.com>:
+> commit 42a3b63bb2ca4996a3d1210a004eae2333f1119e
+>
+> Dave,
+>
+> Here are a few more fixes intended for the 3.2 release.  They are
+> all small and narrowly focused.
 
-Right, please go ahead and apply it.  My comment was not meant to be a
-NACK. :)
+John, I've made a mistake and didn't use [PATCH 3.2] header to make it
+clean my patch is fix. Could you take a look at
+[PATCH] bcma: support for suspend and resume
+please?
+
+It's not one-liner, but fixes lock ups, which I believe - we really
+want to avoid.
 
 -- 
-Cheers,
-Luca.
-
+Rafał
