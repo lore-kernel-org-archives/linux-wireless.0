@@ -1,36 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:53605 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756416Ab1LPIOW convert rfc822-to-8bit (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:45791 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752592Ab1LOFsX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 03:14:22 -0500
-Received: by pbdu13 with SMTP id u13so628942pbd.19
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Dec 2011 00:14:21 -0800 (PST)
+	Thu, 15 Dec 2011 00:48:23 -0500
+Received: by vcbfk14 with SMTP id fk14so1243356vcb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2011 21:48:22 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1323968408.31153.1.camel@jlt3.sipsolutions.net>
-References: <CAGXE3d9dCL+tnXg5ero51cxf3T9VPVgv8oKo51Vi_gWd8as9Xw@mail.gmail.com>
-	<1323968408.31153.1.camel@jlt3.sipsolutions.net>
-Date: Fri, 16 Dec 2011 09:14:21 +0100
-Message-ID: <CAGXE3d8iseEhF2+w2riO=w_aMDdi8Uv4+w7URCM+PxYG19eYww@mail.gmail.com> (sfid-20111216_091431_633408_62630A4F)
-Subject: Re: QoS frames in AP mode?
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAKeTQ4aVzp3GTmzR0zv1j5fWyCUrQLUk9EHHBvZFpDYiQSC1=g@mail.gmail.com>
+References: <CAKeTQ4aVzp3GTmzR0zv1j5fWyCUrQLUk9EHHBvZFpDYiQSC1=g@mail.gmail.com>
+Date: Thu, 15 Dec 2011 11:18:22 +0530
+Message-ID: <CAD2nsn0jgoUDf02UrajQyOKZiETMEbP6ikBAtBNdmcgT6m34yw@mail.gmail.com> (sfid-20111215_064826_511188_C6013E0B)
+Subject: Re: wierless hardware using ath9k driver on AP mode leads to kernel panic
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Ashwin Mendonca <ashwinloyal@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 15, 2011 at 6:00 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
+On Wed, Dec 14, 2011 at 10:53 PM, Ashwin Mendonca <ashwinloyal@gmail.com> wrote:
+> I can enable AP mode on my netbook. But when I turn on a wireless
+> client device, then the sytem on AP mode freezes. It has happened
+> since 2.3.38. When I installaed ath9k driver compiled from
+> compat-wireless on linux 2.3.38, the issue got disappered. But the
+> ath9k driver packed with the kernel still has the issue. On Ubuntu
+> 11.10, all linux 3.0 releases (the current stable release  Ubuntu
+> 3.0.14) have the issue. I compiled 3.1.5 stable kernel from sources,
+> which also has the issue. I recently compiled
+> compat-wireless-3.2-rc1-1, which also got my system frozen. This is
+> the bug that I filled at Launchpad:
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/875503
 
->>         /* skb->priority values from 256->263 are magic values to
->>          * directly indicate a specific 802.1d priority.  This is used
->>          * to allow 802.1d priority to be passed directly in from VLAN
->>          * tags, etc.
->>          */
->>         if (skb->priority >= 256 && skb->priority <= 263)
->>                 return skb->priority - 256;
+some time back the STA mode itself had this issue, but was fixed by
+https://lkml.org/lkml/2011/4/12/269
+could you please let us know whether this issue happens in
+http://linuxwireless.org/en/users/Download#Where_to_download_bleeding_edge
 
-Is this code still valid? I haven't found a reference in the 802.1q code :(
+i just tried to put AR2427 in AP mode and then connected a STA, did
+not seem to cause any issue in 3.2.0-rc5-wl. please also post your
+hostapd.conf and your hostapd --version
 
-Helmut
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+shafi
