@@ -1,271 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zmx1.ing.unibs.it ([192.167.20.248]:50760 "EHLO
-	zmx1.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759098Ab1LOQbT (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:60207 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751651Ab1LOO6L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 11:31:19 -0500
-Date: Thu, 15 Dec 2011 17:33:17 +0100
-From: francesco.gringoli@ing.unibs.it
-To: m@bues.ch, linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: b43-dev@lists.infradead.org, michele.orru@hotmail.it,
-	riccardo.paolillo@gmail.com, francesco.gringoli@ing.unibs.it
-Subject: [PATCH V2] b43: avoid packet losses in the dma worker code.
-Message-ID: <4eea214d.h4TAGuC6+eReskdR%francesco.gringoli@ing.unibs.it> (sfid-20111215_173121_822369_0B8B13D1)
+	Thu, 15 Dec 2011 09:58:11 -0500
+Received: by vcbfk14 with SMTP id fk14so1570126vcb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 06:58:10 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKeTQ4bDyVbY6ZzLJot0_tUdK-1F7ibOv3kpwNDN15kkcBbyiA@mail.gmail.com>
+References: <CAKeTQ4aVzp3GTmzR0zv1j5fWyCUrQLUk9EHHBvZFpDYiQSC1=g@mail.gmail.com>
+	<CAD2nsn0jgoUDf02UrajQyOKZiETMEbP6ikBAtBNdmcgT6m34yw@mail.gmail.com>
+	<CAKeTQ4adxsEiEzL1DXUvKCF6odfZkQTFhVFJC4AFwBshU-YHFw@mail.gmail.com>
+	<CAD2nsn0Zqw0zdEUrMCnBKKLsZEBw_qqT5MO=7dHCwj8Hd6WpqQ@mail.gmail.com>
+	<CAD2nsn2fSehL_3ntoQDN0qzfSycx_hLP7R2Nn2V+iaubc5RX4A@mail.gmail.com>
+	<CAD2nsn0-OgCvHtx+xHeDtHEJK7s1svxt5jzLmkZNn-huaN3y5g@mail.gmail.com>
+	<CAD2nsn3rNcd8_Wa1A-K0r1cQA4HZzWKUFp+zGr2QFnz8phDOkw@mail.gmail.com>
+	<CAKeTQ4Z4e5wFXUEkOONsJD4Os=yFDMNVsUXKKobV-Q0=C70u3w@mail.gmail.com>
+	<CAD2nsn3Zc8Lf3+yMJtdqLtJ7Z_FQVGvZ6apk7B_oDAD+sWtkXg@mail.gmail.com>
+	<CAKeTQ4bDyVbY6ZzLJot0_tUdK-1F7ibOv3kpwNDN15kkcBbyiA@mail.gmail.com>
+Date: Thu, 15 Dec 2011 20:28:10 +0530
+Message-ID: <CAD2nsn19BHLbqBvWrU+udjk1nxNvhi7UWA4Vpz8UjjsD+6FjNg@mail.gmail.com> (sfid-20111215_155815_139310_7BF12EB6)
+Subject: Re: wierless hardware using ath9k driver on AP mode leads to kernel panic
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Ashwin Mendonca <ashwinloyal@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch addresses a bug in the dma worker code that keeps draining
-packets even when the hardware queues are full. In such cases packets
-can not be passed down to the device and are erroneusly dropped by the
-code.
+On Thu, Dec 15, 2011 at 8:24 PM, Ashwin Mendonca <ashwinloyal@gmail.com> wrote:
+> Now I am recompiling against linux-3.0.0.14. Also I will remove
+> /lib/modules/3.0.0-14-generic/kernel/drivers/net/wireless/ath and
+> reinstall compat-wireless binaries and I will let you know.
 
-This problem was already discussed here
+thanks! should be installed in something like this
+/lib/modules/2.6.32-25-generic/updates/drivers/net/wireless/ath/ath9k
 
-http://www.mail-archive.com/b43-dev@lists.infradead.org/msg01413.html
-
-and acknowledged by Michael.
-
-The patch also introduces separate workers for each hardware queue
-and dedicated buffers where storing packets from mac80211 before sending
-them down to the hardware. Using different workers let bandwidth be
-perfectly shared among the queues according to contention window parameters
-defined at the air interface (EDCA settings).
-
-Number of hardware queues is now defined in b43.h (B43_QOS_QUEUE_NUM).
-
-Acknowledgements to Riccardo Paolillo <riccardo.paolillo@gmail.com> and
-Michele Orru <michele.orru@hotmail.it>
-
-Signed-off-by: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
----
-
-Index: wireless-testing-new/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/b43/b43.h	2011-12-12 16:15:45.134475457 +0100
-+++ wireless-testing-new/drivers/net/wireless/b43/b43.h	2011-12-15 16:26:43.444536723 +0100
-@@ -667,6 +667,7 @@
- };
- 
- /* SHM offsets to the QOS data structures for the 4 different queues. */
-+#define B43_QOS_QUEUE_NUM	4
- #define B43_QOS_PARAMS(queue)	(B43_SHM_SH_EDCFQ + \
- 				 (B43_NR_QOSPARAMS * sizeof(u16) * (queue)))
- #define B43_QOS_BACKGROUND	B43_QOS_PARAMS(0)
-@@ -845,6 +846,14 @@
- #endif
- };
- 
-+/* Multi-Queue work struct */
-+struct b43_mt_work {
-+	/* Work associated to the queue */
-+	struct work_struct mt_work;
-+	/* Queue index */
-+	int work_queue_id;
-+};
-+
- /* Data structure for the WLAN parts (802.11 cores) of the b43 chip. */
- struct b43_wl {
- 	/* Pointer to the active wireless device on this chip */
-@@ -904,17 +913,21 @@
- 	struct work_struct beacon_update_trigger;
- 
- 	/* The current QOS parameters for the 4 queues. */
--	struct b43_qos_params qos_params[4];
-+	struct b43_qos_params qos_params[B43_QOS_QUEUE_NUM];
- 
- 	/* Work for adjustment of the transmission power.
- 	 * This is scheduled when we determine that the actual TX output
- 	 * power doesn't match what we want. */
- 	struct work_struct txpower_adjust_work;
- 
--	/* Packet transmit work */
--	struct work_struct tx_work;
-+	/* Packet transmit work. */
-+	struct b43_mt_work tx_work[B43_QOS_QUEUE_NUM];
-+
- 	/* Queue of packets to be transmitted. */
--	struct sk_buff_head tx_queue;
-+	struct sk_buff_head tx_queue[B43_QOS_QUEUE_NUM];
-+
-+	/* Flag that implement the queues stopping. */
-+	bool tx_queue_stopped[B43_QOS_QUEUE_NUM];
- 
- 	/* The device LEDs. */
- 	struct b43_leds leds;
-Index: wireless-testing-new/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/b43/main.c	2011-12-12 16:15:45.134475457 +0100
-+++ wireless-testing-new/drivers/net/wireless/b43/main.c	2011-12-15 16:29:26.154480397 +0100
-@@ -3375,9 +3375,13 @@
- 
- static void b43_tx_work(struct work_struct *work)
- {
--	struct b43_wl *wl = container_of(work, struct b43_wl, tx_work);
-+	struct b43_mt_work *queue_work = container_of(work, struct b43_mt_work,
-+						      mt_work);
-+	struct b43_wl *wl = container_of(queue_work, struct b43_wl,
-+					 tx_work[queue_work->work_queue_id]);
- 	struct b43_wldev *dev;
- 	struct sk_buff *skb;
-+	int queue_num = queue_work->work_queue_id;
- 	int err = 0;
- 
- 	mutex_lock(&wl->mutex);
-@@ -3387,17 +3391,29 @@
- 		return;
- 	}
- 
--	while (skb_queue_len(&wl->tx_queue)) {
--		skb = skb_dequeue(&wl->tx_queue);
-+	while (skb_queue_len(&wl->tx_queue[queue_num])) {
-+		skb = skb_dequeue(&wl->tx_queue[queue_num]);
- 
- 		if (b43_using_pio_transfers(dev))
- 			err = b43_pio_tx(dev, skb);
- 		else
- 			err = b43_dma_tx(dev, skb);
-+
-+		if (err == -ENOSPC) {
-+			wl->tx_queue_stopped[queue_num] = 1;
-+			ieee80211_stop_queue(wl->hw,
-+					     skb_get_queue_mapping(skb));
-+			skb_queue_head(&wl->tx_queue[queue_num], skb);
-+			break;
-+		}
- 		if (unlikely(err))
- 			dev_kfree_skb(skb); /* Drop it */
-+		err = 0;
- 	}
- 
-+	if (!err)
-+		wl->tx_queue_stopped[queue_num] = 0;
-+
- #if B43_DEBUG
- 	dev->tx_count++;
- #endif
-@@ -3416,8 +3432,13 @@
- 	}
- 	B43_WARN_ON(skb_shinfo(skb)->nr_frags);
- 
--	skb_queue_tail(&wl->tx_queue, skb);
--	ieee80211_queue_work(wl->hw, &wl->tx_work);
-+	skb_queue_tail(&wl->tx_queue[skb->queue_mapping], skb);
-+	if (!wl->tx_queue_stopped[skb->queue_mapping]) {
-+		ieee80211_queue_work(wl->hw,
-+				     &wl->tx_work[skb->queue_mapping].mt_work);
-+	} else {
-+		ieee80211_stop_queue(wl->hw, skb->queue_mapping);
-+	}
- }
- 
- static void b43_qos_params_upload(struct b43_wldev *dev,
-@@ -4147,6 +4168,7 @@
- 	struct b43_wl *wl;
- 	struct b43_wldev *orig_dev;
- 	u32 mask;
-+	int queue_num;
- 
- 	if (!dev)
- 		return NULL;
-@@ -4158,7 +4180,10 @@
- 	/* Cancel work. Unlock to avoid deadlocks. */
- 	mutex_unlock(&wl->mutex);
- 	cancel_delayed_work_sync(&dev->periodic_work);
--	cancel_work_sync(&wl->tx_work);
-+
-+	for (queue_num = 0; queue_num < B43_QOS_QUEUE_NUM; queue_num++)
-+		cancel_work_sync(&wl->tx_work[queue_num].mt_work);
-+
- 	mutex_lock(&wl->mutex);
- 	dev = wl->current_dev;
- 	if (!dev || b43_status(dev) < B43_STAT_STARTED) {
-@@ -4199,9 +4224,11 @@
- 	mask = b43_read32(dev, B43_MMIO_GEN_IRQ_MASK);
- 	B43_WARN_ON(mask != 0xFFFFFFFF && mask);
- 
--	/* Drain the TX queue */
--	while (skb_queue_len(&wl->tx_queue))
--		dev_kfree_skb(skb_dequeue(&wl->tx_queue));
-+	/* Drain each TX queue */
-+	for (queue_num = 0; queue_num < B43_QOS_QUEUE_NUM; queue_num++) {
-+		while (skb_queue_len(&wl->tx_queue[queue_num]))
-+			dev_kfree_skb(skb_dequeue(&wl->tx_queue[queue_num]));
-+	}
- 
- 	b43_mac_suspend(dev);
- 	b43_leds_exit(dev);
-@@ -5245,6 +5272,7 @@
- 	struct ieee80211_hw *hw;
- 	struct b43_wl *wl;
- 	char chip_name[6];
-+	int queue_num;
- 
- 	hw = ieee80211_alloc_hw(sizeof(*wl), &b43_hw_ops);
- 	if (!hw) {
-@@ -5264,7 +5292,7 @@
- 		BIT(NL80211_IFTYPE_WDS) |
- 		BIT(NL80211_IFTYPE_ADHOC);
- 
--	hw->queues = modparam_qos ? 4 : 1;
-+	hw->queues = modparam_qos ? B43_QOS_QUEUE_NUM : 1;
- 	wl->mac80211_initially_registered_queues = hw->queues;
- 	hw->max_rates = 2;
- 	SET_IEEE80211_DEV(hw, dev->dev);
-@@ -5280,8 +5308,14 @@
- 	INIT_LIST_HEAD(&wl->devlist);
- 	INIT_WORK(&wl->beacon_update_trigger, b43_beacon_update_trigger_work);
- 	INIT_WORK(&wl->txpower_adjust_work, b43_phy_txpower_adjust_work);
--	INIT_WORK(&wl->tx_work, b43_tx_work);
--	skb_queue_head_init(&wl->tx_queue);
-+
-+	/* Initialize the work for each queues  */
-+	for (queue_num = 0; queue_num < B43_QOS_QUEUE_NUM; queue_num++) {
-+		INIT_WORK(&wl->tx_work[queue_num].mt_work, b43_tx_work);
-+		wl->tx_work[queue_num].work_queue_id = queue_num;
-+		skb_queue_head_init(&wl->tx_queue[queue_num]);
-+		wl->tx_queue_stopped[queue_num] = 0;
-+	}
- 
- 	snprintf(chip_name, ARRAY_SIZE(chip_name),
- 		 (dev->chip_id > 0x9999) ? "%d" : "%04X", dev->chip_id);
-Index: wireless-testing-new/drivers/net/wireless/b43/dma.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/b43/dma.c	2011-12-12 16:15:45.134475457 +0100
-+++ wireless-testing-new/drivers/net/wireless/b43/dma.c	2011-12-15 16:24:47.134504245 +0100
-@@ -1465,7 +1465,9 @@
- 	if ((free_slots(ring) < TX_SLOTS_PER_FRAME) ||
- 	    should_inject_overflow(ring)) {
- 		/* This TX ring is full. */
--		ieee80211_stop_queue(dev->wl->hw, skb_get_queue_mapping(skb));
-+		unsigned int skb_mapping = skb_get_queue_mapping(skb);
-+		ieee80211_stop_queue(dev->wl->hw, skb_mapping);
-+		dev->wl->tx_queue_stopped[skb_mapping] = 1;
- 		ring->stopped = 1;
- 		if (b43_debug(dev, B43_DBG_DMAVERBOSE)) {
- 			b43dbg(dev->wl, "Stopped TX ring %d\n", ring->index);
-@@ -1584,12 +1586,22 @@
- 	}
- 	if (ring->stopped) {
- 		B43_WARN_ON(free_slots(ring) < TX_SLOTS_PER_FRAME);
--		ieee80211_wake_queue(dev->wl->hw, ring->queue_prio);
- 		ring->stopped = 0;
-+	}
-+
-+	if (dev->wl->tx_queue_stopped[ring->queue_prio]) {
-+		dev->wl->tx_queue_stopped[ring->queue_prio] = 0;
-+	} else {
-+		/* If the driver queue is running wake the corresponding
-+		 * mac80211 queue. */
-+		ieee80211_wake_queue(dev->wl->hw, ring->queue_prio);
- 		if (b43_debug(dev, B43_DBG_DMAVERBOSE)) {
- 			b43dbg(dev->wl, "Woke up TX ring %d\n", ring->index);
- 		}
- 	}
-+	/* Add work to the queue */
-+	ieee80211_queue_work(dev->wl->hw,
-+			     &dev->wl->tx_work[ring->queue_prio].mt_work);
- }
- 
- static void dma_rx(struct b43_dmaring *ring, int *slot)
+-- 
+shafi
