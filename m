@@ -1,58 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:56948 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753201Ab1LTXU0 (ORCPT
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:53912 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751089Ab1LOM6b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 18:20:26 -0500
-Received: by werm1 with SMTP id m1so2332434wer.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 15:20:25 -0800 (PST)
-MIME-Version: 1.0
-From: Cheng Renquan <crquan@gmail.com>
-Date: Tue, 20 Dec 2011 15:20:04 -0800
-Message-ID: <CAH5vBdJLHkFLQCHHYOczXQt1Hwwe3e-Ct0MUjyTRU0vgodAPOg@mail.gmail.com> (sfid-20111221_002030_180161_4157390A)
-Subject: linux 3.2-rcX iwlwifi driver's problem (wifi link unstable when
- moving between multiple APs)
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 15 Dec 2011 07:58:31 -0500
+Received: by lagw12 with SMTP id w12so1093949lag.2
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 04:58:28 -0800 (PST)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH] wl12xx: alloc buffer in driver_state_read to prevent compilation warning
+Date: Thu, 15 Dec 2011 14:58:08 +0200
+Message-Id: <1323953888-10988-1-git-send-email-coelho@ti.com> (sfid-20111215_135835_465205_A66526C5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Intel Linux Wireless group,
+When compiling wl12xx for x86, there was a warning complaining about
+the size of the buffer we were allocating in the stack:
 
-Since 3.2-rcX, it seems no more iwlagn driver? This iwlwifi driver
-seems not stable
-when I hold laptop moving inside a large office, between multiple APs,
-everytime I moved to a new place, the wifi link becomes inactive, and
-I need to wait
-5 minutes or longer to wait iwlwifi stable, networkmanager get a new
-ip address; quite annoying,
+drivers/net/wireless/wl12xx/debugfs.c: In function 'driver_state_read':
+drivers/net/wireless/wl12xx/debugfs.c:380:1: warning: the frame size of 1040 bytes is larger than 1024 bytes
 
+To prevent this, allocate the buffer in the heap instead.
 
-[root@archtop ~]# lspci -D -nn -k -d 8086:4238
-0000:03:00.0 Network controller [0280]: Intel Corporation Centrino
-Ultimate-N 6300 [8086:4238] (rev 35)
-	Subsystem: Intel Corporation Centrino Ultimate-N 6300 3x3 AGN [8086:1111]
-	Kernel driver in use: iwlwifi
-	Kernel modules: iwlwifi
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/debugfs.c |   16 +++++++++++++---
+ 1 files changed, 13 insertions(+), 3 deletions(-)
 
-in the large office, it's using WPA2 enterprise encryption with
-MSCHAPv2 domain user/pass authentication,
+diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+index 2e14b43..15eb3a9 100644
+--- a/drivers/net/wireless/wl12xx/debugfs.c
++++ b/drivers/net/wireless/wl12xx/debugfs.c
+@@ -317,12 +317,19 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
+ {
+ 	struct wl1271 *wl = file->private_data;
+ 	int res = 0;
+-	char buf[1024];
++	ssize_t ret;
++	char *buf;
++
++#define DRIVER_STATE_BUF_LEN 1024
++
++	buf = kmalloc(DRIVER_STATE_BUF_LEN, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+ #define DRIVER_STATE_PRINT(x, fmt)   \
+-	(res += scnprintf(buf + res, sizeof(buf) - res,\
++	(res += scnprintf(buf + res, DRIVER_STATE_BUF_LEN - res,\
+ 			  #x " = " fmt "\n", wl->x))
+ 
+ #define DRIVER_STATE_PRINT_LONG(x) DRIVER_STATE_PRINT(x, "%ld")
+@@ -373,10 +380,13 @@ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
+ #undef DRIVER_STATE_PRINT_LHEX
+ #undef DRIVER_STATE_PRINT_STR
+ #undef DRIVER_STATE_PRINT
++#undef DRIVER_STATE_BUF_LEN
+ 
+ 	mutex_unlock(&wl->mutex);
+ 
+-	return simple_read_from_buffer(user_buf, count, ppos, buf, res);
++	ret = simple_read_from_buffer(user_buf, count, ppos, buf, res);
++	kfree(buf);
++	return ret;
+ }
+ 
+ static const struct file_operations driver_state_ops = {
+-- 
+1.7.4.1
 
-
-Last iwlagn driver in my Ubuntu-10.10 default kernel (linux-2.6.35.X)
-on the same computer
-same networkmanager/wpa_supplicant software same office working wonderful,
-moving smoothly between multiple APs,
-
-At home, even I set wireless router to no any
-encryption/authentication, this new kernel
-would becomes wifi link down every couple of hours, while another
-laptop and same Ubuntu-10
-on this laptop could work smoothly,
-
-
-
-
-Thanks,
