@@ -1,132 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:56818 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751490Ab1L1ABN convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:51746 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750757Ab1LOIxp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Dec 2011 19:01:13 -0500
-Date: Wed, 28 Dec 2011 01:00:55 +0100 (CET)
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-cc: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH] b43: fix regression in PIO case
-In-Reply-To: <4EFA58FD.9060605@lwfinger.net>
-Message-ID: <alpine.DEB.2.00.1112280052030.9949@axis700.grange> (sfid-20111228_010118_462211_D4050B29)
-References: <alpine.DEB.2.00.1112261608140.12108@axis700.grange> <alpine.DEB.2.00.1112261824000.12108@axis700.grange> <CACna6ry1tKXtUSQHknkEbzBq_gZUyxn1-9Guba2a56xzx242SA@mail.gmail.com> <alpine.DEB.2.00.1112272359240.6684@axis700.grange>
- <4EFA58FD.9060605@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
+	Thu, 15 Dec 2011 03:53:45 -0500
+Received: by mail-lpp01m010-f49.google.com with SMTP id c1so1168947lah.22
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 00:53:44 -0800 (PST)
+Subject: Re: [PATCH] wl12xx: don't write out of bounds when hlid >
+ WL12XX_MAX_LINKS
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <1323769142-20515-1-git-send-email-coelho@ti.com>
+References: <1323769142-20515-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Dec 2011 10:53:39 +0200
+Message-ID: <1323939219.2800.178.camel@cumari> (sfid-20111215_095347_872549_06E8A625)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 27 Dec 2011, Larry Finger wrote:
-
-> On 12/27/2011 05:05 PM, Guennadi Liakhovetski wrote:
-> > On Tue, 27 Dec 2011, Rafał Miłecki wrote:
-> > 
-> > > W dniu 26 grudnia 2011 18:28 użytkownik Guennadi Liakhovetski
-> > > <g.liakhovetski@gmx.de>  napisał:
-> > > > This patch fixes the regression, introduced by
-> > > > 
-> > > > commit 17030f48e31adde5b043741c91ba143f5f7db0fd
-> > > > From: Rafał Miłecki<zajec5@gmail.com>
-> > > > Date: Thu, 11 Aug 2011 17:16:27 +0200
-> > > > Subject: [PATCH] b43: support new RX header, noticed to be used in
-> > > > 598.314+ fw
-> > > > 
-> > > > in PIO case.
-> > > > 
-> > > > Signed-off-by: Guennadi Liakhovetski<g.liakhovetski@gmx.de>
-> > > > ---
-> > > > diff --git a/drivers/net/wireless/b43/pio.c
-> > > > b/drivers/net/wireless/b43/pio.c
-> > > > index ce8a4bd..b64b64c 100644
-> > > > --- a/drivers/net/wireless/b43/pio.c
-> > > > +++ b/drivers/net/wireless/b43/pio.c
-> > > > @@ -617,9 +617,19 @@ static bool pio_rx_frame(struct b43_pio_rxqueue *q)
-> > > >         const char *err_msg = NULL;
-> > > >         struct b43_rxhdr_fw4 *rxhdr =
-> > > >                 (struct b43_rxhdr_fw4 *)wl->pio_scratchspace;
-> > > > +       size_t rxhdr_size = sizeof(*rxhdr);
-> > > > 
-> > > >         BUILD_BUG_ON(sizeof(wl->pio_scratchspace)<  sizeof(*rxhdr));
-> > > > -       memset(rxhdr, 0, sizeof(*rxhdr));
-> > > > +       switch (dev->fw.hdr_format) {
-> > > > +       case B43_FW_HDR_410:
-> > > > +       case B43_FW_HDR_351:
-> > > > +               rxhdr_size -= sizeof(rxhdr->format_598) -
-> > > > +                       sizeof(rxhdr->format_351);
-> > > > +               break;
-> > > > +       case B43_FW_HDR_598:
-> > > > +               break;
-> > > > +       }
-> > > > +       memset(rxhdr, 0, rxhdr_size);
-> > > 
-> > > Huuh, that's really tricky. Can you just do "normal" conditions as
-> > > Larry suggested, please?
-> > 
-> > Sorry? I absolutely see nothing tricky there. Do you think this would look
-> > "less tricky" to you:
-> > 
-> > 	switch (dev->fw.hdr_format) {
-> > 	case B43_FW_HDR_410:
-> > 	case B43_FW_HDR_351:
-> > 		rxhdr_size = offsetof(struct b43_rxhdr_fw4,
-> > 					format_351) +
-> > 			sizeof(rxhdr_size->format_351);
-> > 		break;
-> > 	case B43_FW_HDR_598:
-> > 		rxhdr_size = sizeof(*rxhdr);
-> > 		break;
-> > 	}
-> > 
+On Tue, 2011-12-13 at 11:39 +0200, Luciano Coelho wrote: 
+> We should not get an hlid value bigger than WL12XX_MAX_LINKS from
+> wl1271_rx_handle_data().  We have a WARN_ON in case it happens.  But
+> despite the warning, we would still go ahead and write the hlid bit
+> into active_hlids (a stack variable).  This would cause us to
+> overwrite other data in the stack.
 > 
-> How about this?
+> To avoid this problem, we now skip the write when issuing the warning,
+> so at least we don't corrupt data.
 > 
-> Index: wireless-testing-new/drivers/net/wireless/b43/pio.c
-> ===================================================================
-> --- wireless-testing-new.orig/drivers/net/wireless/b43/pio.c
-> +++ wireless-testing-new/drivers/net/wireless/b43/pio.c
-> @@ -617,9 +617,20 @@ static bool pio_rx_frame(struct b43_pio_
->         const char *err_msg = NULL;
->         struct b43_rxhdr_fw4 *rxhdr =
->                 (struct b43_rxhdr_fw4 *)wl->pio_scratchspace;
-> +       size_t rxhdr_size;
-> 
->         BUILD_BUG_ON(sizeof(wl->pio_scratchspace) < sizeof(*rxhdr));
-> -       memset(rxhdr, 0, sizeof(*rxhdr));
-> +       switch (dev->fw.hdr_format) {
-> +       case B43_FW_HDR_410:
-> +       case B43_FW_HDR_351:
-> +               rxhdr_size = sizeof(rxhdr->format_351);
-> +               break;
-> +       case B43_FW_HDR_598:
-> +       default:
-> +               rxhdr_size = sizeof(rxhdr->format_598);
-> +               break;
-> +       }
-> +       memset(rxhdr, 0, rxhdr_size);
-> 
->         /* Check if we have data and wait for it to get ready. */
->         if (q->rev >= 8) {
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
 
-I am sorry, I'm either being blind and stupid or you're trying to do 
-something quite wrong there. struct b43_rxhdr_fw4 has a bunch of fields 
-first, then at the end it has a union of two fields: format_598 and 
-format_351, right? rxhdr is pointing at the struct itself. Before the 
-offending patch memset() used to clean the whole struct. Now in your above 
-version you calculate the size of one of those union fields and nullify 
-that many bytes from the _beginning_ of the whole struct.
+Applied.
 
-I've seen myself being wrong before, but here... I'll let you judge 
-though.
+-- 
+Cheers,
+Luca.
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski, Ph.D.
-Freelance Open-Source Software Developer
-http://www.open-technology.de/
