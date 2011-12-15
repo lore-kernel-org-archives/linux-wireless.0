@@ -1,102 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:32688 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751128Ab1LIEC2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 23:02:28 -0500
-Subject: Re: [PATCH] iwlwifi regression in 20111205 merge
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-Cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-In-Reply-To: <1323398619-19774-1-git-send-email-mar.kolya@gmail.com>
-References: <1323398619-19774-1-git-send-email-mar.kolya@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 08 Dec 2011 19:03:53 -0800
-Message-ID: <1323399833.13074.80.camel@wwguy-huron> (sfid-20111209_050233_785895_9B41EE91)
-Mime-Version: 1.0
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:46601 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758617Ab1LOEQ5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 14 Dec 2011 23:16:57 -0500
+Received: by mail-iy0-f174.google.com with SMTP id h11so2176479iae.19
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2011 20:16:57 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [DO NOT APPLY] ath9k: DFS poo
+Date: Wed, 14 Dec 2011 20:16:35 -0800
+Message-Id: <1323922595-15533-5-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111215_051659_944873_BD876321)
+In-Reply-To: <1323922595-15533-1-git-send-email-mcgrof@qca.qualcomm.com>
+References: <1323922595-15533-1-git-send-email-mcgrof@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Nikolay,
+This is the stuff we need to figure out how to amend properly
+upstream. I am not a fan of the SC_OP thing at all, neither am
+I a fan of the channel stuff being dealt with within ath9k.
 
-I believe I know what happen,
+Consider this the remaining TODO for ath9k apart from the
+other components we need in mac8011 / cfg80211 / hostapd.
 
-this change happen after the function being move from iwl-agn.c to
-iwl-mac80211.c
+---
 
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Fri Dec 2 08:19:17 2011 -0800
-
-    iwlagn: fix HW crypto for TX-only keys
-    
-    Group keys in IBSS or AP mode are not programmed
-    into the device since we give the key to it with
-    every TX packet. However, we do need mac80211 to
-    create the MMIC & PN in all cases. Move the code
-    around to set the key flags all the time. We set
-    them even when the key is removed again but that
-    is obviously harmless.
-    
-    Cc: stable@vger.kernel.org
-    Reported-by: Reinette Chatre <reinette.chatre@intel.com>
-    Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-    Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-and the changes was made in iwl-mac80211.c
-
-but since this patch need to be backport to stable kernel.
-so there is a separated patch sent for the changes in iwl-agn.c against
-stable
-
-because all these, for some reason the changes just got lost.
-Thank you for catch this
-
-Wey
-
-
-On Thu, 2011-12-08 at 18:43 -0800, Nikolay Martynov wrote:
-> It looks like the regression was introduced between 20111202 and
-> 20111205 (linux-next tree). Symptoms: connection to AP seem to be
-> established, but no data goes though it in any way. Tested on intel
-> 5300.
->   Peek at the changes have shown that it looks like at least part of
-> the code wasn't merged properly. It was originally committed into
-> iwl_agn.c but code in question was moved to iwl-mac80211.c.
->   This patch puts code in place and my card works again.
->   I hope this patch will be reviewed by people developing iwl
-> driver. Also, it is possible that some other iwl code didn't make it
-> though 20111205 merge as well, so this probably should be checked too.
->   Please let me know if I can provide any more info.
->   Thanks!
-> 
-> Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-mac80211.c |   11 +++++++++++
->  1 files changed, 11 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-> index 794b735..55308b8 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-> @@ -517,6 +517,17 @@ static int iwlagn_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
->  		return -EOPNOTSUPP;
->  	}
->  
-> +	switch (key->cipher) {
-> +	case WLAN_CIPHER_SUITE_TKIP:
-> +		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
-> +		/* fall through */
-> +	case WLAN_CIPHER_SUITE_CCMP:
-> +		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-> +		break;
-> +	default:
-> +		break;
-> +	}
-> +
->  	/*
->  	 * We could program these keys into the hardware as well, but we
->  	 * don't expect much multicast traffic in IBSS and having keys
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index afc156a..2d91e6f 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -563,6 +563,7 @@ struct ath_ant_comb {
+ #define SC_OP_BT_SCAN		     BIT(13)
+ #define SC_OP_ANI_RUN		     BIT(14)
+ #define SC_OP_PRIM_STA_VIF	     BIT(15)
++#define SC_OP_DFS		     BIT(16)
+ 
+ /* Powersave flags */
+ #define PS_WAIT_FOR_BEACON        BIT(0)
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 7d92004..00cfba7 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -302,6 +302,10 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 		ath9k_hw_antdiv_comb_conf_set(ah, &div_ant_conf);
+ 	}
+ 
++	/* set radar parameters if in DFS mode */
++	if (sc->sc_flags & SC_OP_DFS)
++		ath9k_hw_set_radar_params(ah);
++
+ 	ieee80211_wake_queues(sc->hw);
+ 
+ 	return true;
+@@ -1689,9 +1693,21 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 			memset(&sc->survey[pos], 0, sizeof(struct survey_info));
+ 		}
+ 
++		if (curchan->flags & IEEE80211_CHAN_RADAR) {
++			if (!(ah->caps.hw_caps & ATH9K_HW_CAP_DFS)) {
++				ath_err(common, "HW does not support DFS\n");
++				mutex_unlock(&sc->mutex);
++				return -EINVAL;
++			}
++			sc->sc_flags |= SC_OP_DFS;
++		} else
++			sc->sc_flags &= ~SC_OP_DFS;
++
+ 		if (ath_set_channel(sc, hw, &sc->sc_ah->channels[pos]) < 0) {
+ 			ath_err(common, "Unable to set channel\n");
+ 			mutex_unlock(&sc->mutex);
++			/* clear DFS operation flag on failure */
++			sc->sc_flags &= ~SC_OP_DFS;
+ 			return -EINVAL;
+ 		}
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index e031841..41652de 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -17,6 +17,7 @@
+ #include <linux/dma-mapping.h>
+ #include "ath9k.h"
+ #include "ar9003_mac.h"
++#include "dfs.h"
+ 
+ #define SKB_CB_ATHBUF(__skb)	(*((struct ath_buf **)__skb->cb))
+ 
+@@ -473,6 +474,8 @@ u32 ath_calcrxfilter(struct ath_softc *sc)
+ 		rfilt |= ATH9K_RX_FILTER_MCAST_BCAST_ALL;
+ 	}
+ 
++	if (sc->sc_flags & SC_OP_DFS)
++		rfilt |= ATH9K_RX_FILTER_PHYRADAR;
+ 	return rfilt;
+ 
+ }
+@@ -1846,6 +1849,12 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		    unlikely(tsf_lower - rs.rs_tstamp > 0x10000000))
+ 			rxs->mactime += 0x100000000ULL;
+ 
++		if ((rs.rs_status & ATH9K_RXERR_PHY) &&
++		    (rs.rs_phyerr == ATH9K_PHYERR_RADAR)) {
++			/* DFS: check for radar pulse */
++			ath9k_dfs_process_phyerr(sc, hdr, &rs, rxs->mactime);
++		}
++
+ 		retval = ath9k_rx_skb_preprocess(common, hw, hdr, &rs,
+ 						 rxs, &decrypt_error);
+ 		if (retval)
