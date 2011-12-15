@@ -1,109 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:32977 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754245Ab1L0Qv2 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37811 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751199Ab1LOOHn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Dec 2011 11:51:28 -0500
-Date: Tue, 27 Dec 2011 14:52:01 -0200
-From: Gustavo Padovan <padovan@profusion.mobi>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2011-12-27
-Message-ID: <20111227165201.GC8298@joana> (sfid-20111227_175210_830378_C8D7DF19)
-References: <20111227162103.GB8298@joana>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111227162103.GB8298@joana>
+	Thu, 15 Dec 2011 09:07:43 -0500
+Subject: Re: iwlagn is getting very shaky
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Norbert Preining <preining@logic.at>,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Pekka Enberg <penberg@cs.helsinki.fi>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Dave Jones <davej@redhat.com>,
+	David Rientjes <rientjes@google.com>
+In-Reply-To: <CANUX_P0sCPAWTsSVXpL3w5witnVi6wrtzTgJ0y6HjC-TYC9swg@mail.gmail.com> (sfid-20111211_205719_337550_081FCE1C)
+References: <20111125122143.GA30404@gamma.logic.tuwien.ac.at>
+	 <CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com>
+	 <20111125123720.GA31564@gamma.logic.tuwien.ac.at>
+	 <CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com>
+	 <CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com>
+	 <1322387175.4044.16.camel@jlt3.sipsolutions.net>
+	 <CANUX_P3uoNOj3j-REvYCZP382cHfq+DpBRi7fnzFfMG_dyHtTQ@mail.gmail.com>
+	 <20111128035627.GH1422@gamma.logic.tuwien.ac.at>
+	 <CANUX_P2kYiFCP8uAhLZC_kVEjoyxabRBx3Pn+ndtFus=6hJN7Q@mail.gmail.com>
+	 <20111128042343.GA4619@gamma.logic.tuwien.ac.at>
+	 <20111128232525.GA12719@gamma.logic.tuwien.ac.at>
+	 <CANUX_P2b_ZYr4hHigA+tGa9uakcq3hQXnOiP5isQtfcYxCaxcw@mail.gmail.com>
+	 <1322555472.4110.8.camel@jlt3.sipsolutions.net>
+	 <CANUX_P2YeE1ixzFU5VM-oex0aTURqr54VHt5FVAL9BJ0PuRX_A@mail.gmail.com>
+	 <CANUX_P0sCPAWTsSVXpL3w5witnVi6wrtzTgJ0y6HjC-TYC9swg@mail.gmail.com>
+	 (sfid-20111211_205719_337550_081FCE1C)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Dec 2011 15:07:33 +0100
+Message-ID: <1323958053.3337.48.camel@jlt3.sipsolutions.net> (sfid-20111215_150817_032834_C8911978)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+So I finally looked at this ...
 
-* Gustavo Padovan <padovan@profusion.mobi> [2011-12-27 14:21:03 -0200]:
+On Sun, 2011-12-11 at 21:56 +0200, Emmanuel Grumbach wrote:
+> >> Could something be hogging the workqueues?
 
-> Hi John,
+> > So I tried to understand what is going on with the workqueue and ended
+> > up to see that if we are lucky, we can need the workqueue for the BA
+> > handshake (could be AddBA / DelBA handling, or driver callback) while
+> > we are scanning. Which basically means that we will need to wait until
+> > the scan is over to handle these frames / callbacks. I got these
+> > measurements while stopping the BA session:
+> >
+> > * scanning working for roughly 3 seconds (pardon me not being precise,
+> > but with this order of magnitude I don't care much about the single
+> > millisecond..)
+
+Oh. I see, while scanning we won't process the work queue.
+
+> > * when scanning is over, the while loop in ieee80211_iface_work
+> > consumes 73 mgmt for about 34ms.
+> > ( how come we have so many beacons during those 3 seconds..., or maybe
+> > all the BCAST probe request ?, my network is quite busy...)
+> > * then the finally my stop_tx_ba_cb was served which took 10ms (time
+> > takes by the driver).
+> > * another series of beacons (10ms).
 > 
-> This is my last pull request to 3.3. A good part of the changes here are still
-> related to the workqueue changes, they are both by me and Ulisses Furquim.
-> Besides that there are more AMP work from Andrei and SMP work from Brian Gix
-> plus some other fix/improvements.
+> What about flushing the workqueue before we scan ?
+> This is not a bullet proof solution of course, we will still encounter
+> bad races, but at least  we would flush what we can before the
+> workqueue becomes unable for 4 seconds (!).
 
-Unfortunately I left a compile warning in my tree, I committed a fix.
-This is the only difference from the previous one:
+Yeah, that seems like a good thing. Actually I had an idea about this
+before -- drain & stop the workqueue for any functions in mac80211/cfg.c
+so that mac80211 essentially becomes single-threaded.
 
-    Bluetooth: Fix a compile warning in RFCOMM
+> We can also delay the scan if we are in the middle of {add,del}BA
+> handshake, which is the only flow I can think about that needs
+> responsiveness. The other frame exchanges are MLME ones and involve
+> the wpa_supplicant (unless we are using the late WEXT). Hopefully the
+> wpa_supplicant won't request to scan in the middle of association or
+> so. There might be other features (mesh or whatever), that may be
+> hidden from the wpa_supplicant and require good responsiveness from
+> the wq too.
 
+Hm, yeah, that would be an idea too, but I'm not sure it's easy to do
+right now.
 
-Thanks,
-
-	Gustavo
-
-
-The following changes since commit aef6c928a92481f75fbd548eb8c1e840912444b8:
-
-  mac80211: Keep skb->piority for relayed frames in AP mode (2011-12-21 15:07:52 -0500)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next master
-
-Andrei Emeltchenko (5):
-      Bluetooth: Split ctrl init to BREDR and AMP parts
-      Bluetooth: Initialize default flow control mode
-      Bluetooth: Check for flow control mode
-      Bluetooth: Clean up magic pointers
-      Bluetooth: Remove magic numbers from le scan cmd
-
-Bing Zhao (1):
-      Bluetooth: btusb: fix bInterval for high/super speed isochronous endpoints
-
-Brian Gix (2):
-      Bluetooth: Add MITM mechanism to LE-SMP
-      Bluetooth: Add SMP to User Passkey and Confirm
-
-Gustavo F. Padovan (10):
-      Bluetooth: Move l2cap_{set,clear}_timer to l2cap.h
-      Bluetooth: convert security timer to delayed_work
-      Bluetooth: Rename info_work to info_timer
-      Bluetooth: fix bt_accept_dequeue() to work in process context
-      Bluetooth: Remove l2cap priority from inside RFCOMM.
-      Bluetooth: add debug output to l2cap_ack_timeout()
-      Bluetooth: Remove lock from inquiry_cache
-      Bluetooth: remove *_bh usage from hci_dev_list and hci_cb_list
-      Bluetooth: Don't disable interrupt when locking the queue
-      Bluetooth: Fix a compile warning in RFCOMM
-
-Hemant Gupta (1):
-      Bluetooth: Incorrect address while storing LTK.
-
-Jesse Sung (1):
-      Bluetooth: Add support for BCM20702A0 [0a5c:21e3]
-
-Ulisses Furquim (4):
-      Bluetooth: Remove global mutex hci_task_lock
-      Bluetooth: Always compile SCO and L2CAP in Bluetooth Core
-      Bluetooth: Make HCI call directly into SCO and L2CAP event functions
-      Bluetooth: Fix deadlocks with sock lock and L2CAP timers locks
-
- drivers/bluetooth/btusb.c         |   10 +-
- include/net/bluetooth/bluetooth.h |   22 ----
- include/net/bluetooth/hci.h       |   14 ++-
- include/net/bluetooth/hci_core.h  |  162 +++++++++++---------------
- include/net/bluetooth/l2cap.h     |   40 ++++++-
- include/net/bluetooth/smp.h       |    6 +
- net/bluetooth/Kconfig             |   37 ++-----
- net/bluetooth/Makefile            |    5 +-
- net/bluetooth/af_bluetooth.c      |   11 +-
- net/bluetooth/bnep/Kconfig        |    2 +-
- net/bluetooth/cmtp/Kconfig        |    2 +-
- net/bluetooth/hci_conn.c          |    4 +-
- net/bluetooth/hci_core.c          |  172 +++++++++++-----------------
- net/bluetooth/hci_event.c         |   28 ++++-
- net/bluetooth/hidp/Kconfig        |    2 +-
- net/bluetooth/l2cap_core.c        |  112 ++++--------------
- net/bluetooth/mgmt.c              |   10 ++-
- net/bluetooth/rfcomm/Kconfig      |    2 +-
- net/bluetooth/rfcomm/core.c       |   41 +++-----
- net/bluetooth/sco.c               |   38 +------
- net/bluetooth/smp.c               |  235 +++++++++++++++++++++++++++++++++----
- 21 files changed, 496 insertions(+), 459 deletions(-)
+johannes
 
