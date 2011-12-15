@@ -1,47 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26693 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755557Ab1LOEjx (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54559 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759171Ab1LORAK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 23:39:53 -0500
-Date: Thu, 15 Dec 2011 10:09:21 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V2 1/2] cfg80211: Define a wrapper function for reporting
- roaming
-Message-ID: <20111215043919.GA9240@chvasanth-lnx> (sfid-20111215_054015_328646_B07F6A06)
-References: <1323265359-1138-1-git-send-email-vthiagar@qca.qualcomm.com>
- <1323265604.3404.37.camel@jlt3.sipsolutions.net>
- <20111207135822.GA12398@chvasanth-lnx>
- <20111207150543.GA12498@chvasanth-lnx>
- <20111214185448.GB2607@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20111214185448.GB2607@tuxdriver.com>
+	Thu, 15 Dec 2011 12:00:10 -0500
+Subject: Re: QoS frames in AP mode?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAGXE3d9dCL+tnXg5ero51cxf3T9VPVgv8oKo51Vi_gWd8as9Xw@mail.gmail.com> (sfid-20111215_173035_477199_25946640)
+References: <CAGXE3d9dCL+tnXg5ero51cxf3T9VPVgv8oKo51Vi_gWd8as9Xw@mail.gmail.com>
+	 (sfid-20111215_173035_477199_25946640)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Dec 2011 18:00:08 +0100
+Message-ID: <1323968408.31153.1.camel@jlt3.sipsolutions.net> (sfid-20111215_180015_015790_806D765E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 14, 2011 at 01:54:49PM -0500, John W. Linville wrote:
-> On Wed, Dec 07, 2011 at 08:35:45PM +0530, Vasanthakumar Thiagarajan wrote:
-> > On Wed, Dec 07, 2011 at 07:28:24PM +0530, Vasanthakumar Thiagarajan wrote:
-> > > > 
-> > > > Hmm, now that I think about it more, I think the calling convention is
-> > > > really strange. Why pass the channel and bssid when the BSS struct is
-> > > > already known?
-> > > > 
-> > > > Why not make cfg80211_roamed() do the BSS lookup (which would also
-> > > > reduce the race for drivers that don't use _bss()) based on the info,
-> > > > and then call a cfg80211_roamed_bss() that doesn't get channel/bssid.
-> > > 
-> > > Sure, i'll change it. This looks better.
-> > 
-> > Also, i'll create a new patch instead of the next version.
+On Thu, 2011-12-15 at 17:30 +0100, Helmut Schaa wrote:
+
+> just noticed a problem with QoS frames in AP mode when mac80211
+> relays for example a VOIP frame from STA1 to STA2 the frame will be
+> sent out on AC_BE and not on AC_VO.
+
+Hm. You want (T)DLS ;-)
+
+> When the frame is processed in the rx path we will send it to the wireless media
+> with the code path below (from rx.c):
 > 
-> Is that patch still coming?
+>         if (xmit_skb) {
+>                 /* send to wireless media */
+>                 xmit_skb->protocol = htons(ETH_P_802_3);
+>                 skb_reset_network_header(xmit_skb);
+>                 skb_reset_mac_header(xmit_skb);
+>                 dev_queue_xmit(xmit_skb);
+>         }
+> 
+> So, skb->priority is the same as the received frame but will be overwritten
+> because the the netstack will call ieee80211_select_queue to select the
+> appropriate queue which in turn will use cfg80211_classify8021d to select
+> the skb->priority and the according queue (from net/wireless/util.c):
+> 
+> unsigned int cfg80211_classify8021d(struct sk_buff *skb)
+> {
+>         unsigned int dscp;
+> 
+>         /* skb->priority values from 256->263 are magic values to
+>          * directly indicate a specific 802.1d priority.  This is used
+>          * to allow 802.1d priority to be passed directly in from VLAN
+>          * tags, etc.
+>          */
+>         if (skb->priority >= 256 && skb->priority <= 263)
+>                 return skb->priority - 256;
+> 
+>         switch (skb->protocol) {
+>         case htons(ETH_P_IP):
+>                 dscp = ip_hdr(skb)->tos & 0xfc;
+>                 break;
+>         default:
+>                 return 0;
+>         }
+> 
+>         return dscp >> 5;
+> }
+> 
+> Unfortunately we don't have an skb priority between 256 and 263 and
+> we don't have skb->protocol set to ETH_P_IP here since we've just set
+> it to ETH_P_802_3.
+> 
+> I tried using eth_type_trans on the frame but that will "pull" the ethernet
+> header and adding an skb_push afterwards seems a little bit ugly to me.
+> 
+> Is it possible to just shortcut the classification if the priority is
+> already set?
+> Or should we just add 256 to the priority before sending the frame to
+> dev_queue_xmit?
+> 
+> What would be an appropriate fix for this?
 
-Please drop this, a different patch (cfg80211: Fix race in bss
-timeout) which fixes the same issue has been sent.
+The >= 256 is already a shortcut, so just adding 256 seems reasonable?
 
-Vasanth
+johannes
+
