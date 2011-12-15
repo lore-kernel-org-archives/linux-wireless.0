@@ -1,34 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36960 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752518Ab1LHIdl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 03:33:41 -0500
-Subject: Re: [PATCH] Support mcast-rate in Mesh Node
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-In-Reply-To: <1323291855-8418-1-git-send-email-thomas@cozybit.com> (sfid-20111207_220454_229908_1A24981F)
-References: <1323291855-8418-1-git-send-email-thomas@cozybit.com>
-	 (sfid-20111207_220454_229908_1A24981F)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 08 Dec 2011 09:33:38 +0100
-Message-ID: <1323333218.3332.3.camel@jlt3.sipsolutions.net> (sfid-20111208_093345_318142_22FB8401)
-Mime-Version: 1.0
+Received: from mail.tactel.se ([82.99.24.195]:56383 "EHLO mail.tactel.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751990Ab1LOJii (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Dec 2011 04:38:38 -0500
+Message-ID: <4EE9BA59.4070607@tactel.se> (sfid-20111215_103843_396388_A77076FD)
+Date: Thu, 15 Dec 2011 10:14:01 +0100
+From: Pontus Fuchs <pontus.fuchs@tactel.se>
+MIME-Version: 1.0
+To: Luciano Coelho <coelho@ti.com>
+CC: Pontus Fuchs <pontus.fuchs@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Set wlvif->ps_compl to NULL in before return
+References: <1323869543-2846-1-git-send-email-pontus.fuchs@gmail.com> <1323939307.2800.183.camel@cumari>
+In-Reply-To: <1323939307.2800.183.camel@cumari>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-12-07 at 13:04 -0800, Thomas Pedersen wrote:
+On 2011-12-15 09:55, Luciano Coelho wrote:
+> On Wed, 2011-12-14 at 14:32 +0100, Pontus Fuchs wrote:
+>> wl1271_configure_suspend_sta leaves a stale stack declared
+>> completion in wlvif->ps_compl. Set it to NULL before returning.
+>>
+>> Signed-off-by: Pontus Fuchs<pontus.fuchs@gmail.com>
+>> ---
+>
+> Applied with a small fix.  wl->ps_compl was used, which doesn't exist
+> anymore.  I changed it to wlvif->ps_compl before applying.
 
-> +			if (rate)
-> +				NLA_PUT_U32(msg, NL80211_ATTR_MCAST_RATE,
-> +						(int)(rate * 10));
-> +
-> +				argv++;
-> +				argc--;
+Thanks :) I Messed up when moving the code to your latest tree.
 
-Ahem.
+-ETOMANYTREES or something
 
-johannes
+Cheers,
 
+Pontus
