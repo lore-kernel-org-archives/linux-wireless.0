@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:3929 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752872Ab1L1A7w (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:52739 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754146Ab1LOVp2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Dec 2011 19:59:52 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: John W Linville <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 7/7] rt2x00: Change RF3853 to RF3053.
-Date: Wed, 28 Dec 2011 01:53:24 +0100
-Message-Id: <1325033604-26469-8-git-send-email-gwingerde@gmail.com> (sfid-20111228_020010_779940_F338AD47)
-In-Reply-To: <1325033604-26469-7-git-send-email-gwingerde@gmail.com>
-References: <1325033604-26469-1-git-send-email-gwingerde@gmail.com>
- <1325033604-26469-2-git-send-email-gwingerde@gmail.com>
- <1325033604-26469-3-git-send-email-gwingerde@gmail.com>
- <1325033604-26469-4-git-send-email-gwingerde@gmail.com>
- <1325033604-26469-5-git-send-email-gwingerde@gmail.com>
- <1325033604-26469-6-git-send-email-gwingerde@gmail.com>
- <1325033604-26469-7-git-send-email-gwingerde@gmail.com>
+	Thu, 15 Dec 2011 16:45:28 -0500
+Date: Thu, 15 Dec 2011 16:38:22 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2011-12-15
+Message-ID: <20111215213822.GB2561@tuxdriver.com> (sfid-20111215_224554_619909_EFEE4D97)
+References: <20111215191523.GA2561@tuxdriver.com>
+ <CACna6rw736JdkoM8zKxorCFd5oy08QTwWZ6PutoJPSr3ZN8hTg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rw736JdkoM8zKxorCFd5oy08QTwWZ6PutoJPSr3ZN8hTg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to the latest Ralink vendor drivers, this seems to be the real
-RF chipset type.
+On Thu, Dec 15, 2011 at 09:04:29PM +0100, Rafał Miłecki wrote:
+> 2011/12/15 John W. Linville <linville@tuxdriver.com>:
+> > commit 42a3b63bb2ca4996a3d1210a004eae2333f1119e
+> >
+> > Dave,
+> >
+> > Here are a few more fixes intended for the 3.2 release.  They are
+> > all small and narrowly focused.
+> 
+> John, I've made a mistake and didn't use [PATCH 3.2] header to make it
+> clean my patch is fix. Could you take a look at
+> [PATCH] bcma: support for suspend and resume
+> please?
+> 
+> It's not one-liner, but fixes lock ups, which I believe - we really
+> want to avoid.
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+It's late in the release cycle, and Dave specifically asked me to slow down.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 4778620..2571a2f 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -50,7 +50,7 @@
-  * RF2853 2.4G/5G 3T3R
-  * RF3320 2.4G 1T1R(RT3350/RT3370/RT3390)
-  * RF3322 2.4G 2T2R(RT3352/RT3371/RT3372/RT3391/RT3392)
-- * RF3853 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
-+ * RF3053 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
-  * RF5370 2.4G 1T1R
-  * RF5390 2.4G 1T1R
-  */
-@@ -66,7 +66,7 @@
- #define RF2853				0x000a
- #define RF3320				0x000b
- #define RF3322				0x000c
--#define RF3853				0x000d
-+#define RF3053				0x000d
- #define RF5370				0x5370
- #define RF5390				0x5390
- 
+Are these suspend/resume lockups a regression?  Or have they always
+been there?  Do they happen to everyone?
+
+John
 -- 
-1.7.7.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
