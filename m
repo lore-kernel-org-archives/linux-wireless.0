@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:44269 "EHLO
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:54270 "EHLO
 	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750786Ab1LMTlm (ORCPT
+	with ESMTP id S1759623Ab1LOXJb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 14:41:42 -0500
-Received: by iaeh11 with SMTP id h11so15251iae.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Dec 2011 11:41:42 -0800 (PST)
+	Thu, 15 Dec 2011 18:09:31 -0500
+Received: by iaeh11 with SMTP id h11so3404537iae.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 15:09:31 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <87ehw8eid3.fsf@purkki.adurom.net>
-References: <4EE73337.2030804@gmail.com> <87ehw8eid3.fsf@purkki.adurom.net>
+In-Reply-To: <1323990336.18122.1.camel@joe2Laptop>
+References: <1323989753.1270.19.camel@joe2Laptop> <CAB=NE6V6AszbNBiMOy4ZacwXqJWeWO0DL3cF_A1E2HVGMicbtA@mail.gmail.com>
+ <1323990336.18122.1.camel@joe2Laptop>
 From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 13 Dec 2011 11:41:19 -0800
-Message-ID: <CAB=NE6XcLHUp6dyJXr4Sd4Us-RX9=HnHKLvdiBuccoMJ1dx8pw@mail.gmail.com> (sfid-20111213_204145_952468_B7B116AF)
-Subject: Re: CRDA git repository
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Steve Glass <stevie.glass@gmail.com>,
-	linux-wireless@vger.kernel.org
+Date: Thu, 15 Dec 2011 15:09:10 -0800
+Message-ID: <CAB=NE6Vr-5jKZGfpMbv3=nhwC_Lj1ZxJEW+4NuvGfgYp=m-=Gw@mail.gmail.com> (sfid-20111216_000935_216535_05177A21)
+Subject: Re: [PATCH wireless-next] ath: Convert ath_dbg(bar, ATH_DBG_<FOO>, to
+ ath_dbg(bar, FOO
+To: Joe Perches <joe@perches.com>
+Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 13, 2011 at 5:00 AM, Kalle Valo <kvalo@adurom.com> wrote:
-> Steve Glass <stevie.glass@gmail.com> writes:
+On Thu, Dec 15, 2011 at 3:05 PM, Joe Perches <joe@perches.com> wrote:
+> On Thu, 2011-12-15 at 15:00 -0800, Luis R. Rodriguez wrote:
+>> On Thu, Dec 15, 2011 at 2:55 PM, Joe Perches <joe@perches.com> wrote:
+>> > Add ATH_DBG_ to macros to shorten the uses and
+>> > reduce the line count.
+>> >
+>> > Coalesce ath_dbg formats.
+>> > Add missing spaces to coalesced formats.
+>> > Add missing newline terminations to ath_dbg formats.
+>> > Align ath_dbg arguments where appropriate.
+>> > Standardize ath_dbg formats without periods.
+>> >
+>> > Signed-off-by: Joe Perches <joe@perches.com>
+>> > ---
+>>
+>> Good idea, are you cocci spatching this? This will obviosly create
+>> conflicts with pending patches.
 >
->> I cloned the CRDA repository from
->> git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/crda.git a long
->> while back. I have been experiencing some regdomain issues with ath5k so
->> I tried a fresh clone of CRDA and that responds with:
->
-> I believe it's here:
->
-> http://git.infradead.org/users/mcgrof/crda.git
->
-> and github also has a mirror of that tree.
+> sed/emacs
+> inspection of formats post sed.
 
-Hey guys, so yeah sorry I haven't yet set up git trees back on
-kernel.org as I'm super lazy to create a new public key. So for now
-I've been pushing to both infradead.org and also github. I push
-updates to both servers. In the future I will push to both servers
-*and* kernel.org but gotta get my key.
+Is it easy to run again at a later time or was it a bitch?
 
   Luis
