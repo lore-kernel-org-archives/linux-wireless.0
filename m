@@ -1,57 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:58907 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757536Ab1LNQYH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 11:24:07 -0500
-Received: by faar15 with SMTP id r15so1340463faa.19
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2011 08:24:06 -0800 (PST)
+Received: from mail.tpi.com ([70.99.223.143]:1929 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751294Ab1LOSlb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Dec 2011 13:41:31 -0500
+Message-ID: <4EEA3F53.40305@canonical.com> (sfid-20111215_194134_875227_2362C122)
+Date: Thu, 15 Dec 2011 11:41:23 -0700
+From: Tim Gardner <tim.gardner@canonical.com>
 MIME-Version: 1.0
-In-Reply-To: <1323876521-21224-1-git-send-email-helmut.schaa@googlemail.com>
-References: <1323876521-21224-1-git-send-email-helmut.schaa@googlemail.com>
-Date: Wed, 14 Dec 2011 17:24:05 +0100
-Message-ID: <CAL1gcdNW3Qypf+wNq-heUOz8jpjcrh5j7QWY6HyvHFgs==MoPw@mail.gmail.com> (sfid-20111214_172410_602848_403BA516)
-Subject: Re: [PATCH] rt2x00: Make use of ieee80211_free_txskb in tx path
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	ivdoorn@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Seth Forshee <seth.forshee@canonical.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Problems associating with RTL8188CE
+References: <4ECA99CC.7020008@lwfinger.net> <20111121185610.GD6736@thinkpad-t410> <4ECB028E.3030809@lwfinger.net> <20111122022008.GA17661@thinkpad-t410> <20111213194231.GA30788@thinkpad-t410> <4EE7B85E.3070802@lwfinger.net> <20111213212606.GB30788@thinkpad-t410> <4EE82CC6.2030307@lwfinger.net> <20111214162333.GB19410@thinkpad-t410> <4EE8D150.8090100@lwfinger.net> <20111214164902.GD19410@thinkpad-t410> <4EE91A87.5090207@canonical.com> <4EE9445B.1010504@lwfinger.net>
+In-Reply-To: <4EE9445B.1010504@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 14, 2011 at 4:28 PM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> ieee80211_free_txskb should be used when dropping a frame in the device
-> rx path such that mac80211 knows about this frame being dropped.
+On 12/14/2011 05:50 PM, Larry Finger wrote:
+> Tim,
 >
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-> ---
->  drivers/net/wireless/rt2x00/rt2x00mac.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+> I did the live test with the Dec. 14 build of 12.04 (64 bit). It
+> connected with my WNDR3300 with no difficulty. I tested all 4 modes
+> supported by the AP. All worked.
 >
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> index 7996cd0..5889558 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00mac.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
-> @@ -159,7 +159,7 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
->  exit_fail:
->        rt2x00queue_pause_queue(queue);
->  exit_free_skb:
-> -       dev_kfree_skb_any(skb);
-> +       ieee80211_free_txskb(hw, skb);
->  }
->  EXPORT_SYMBOL_GPL(rt2x00mac_tx);
+> I assume that an installation would work the same as the live version,
+> but that is easy for you to test.
 >
-> --
-> 1.7.7
+> Larry
 >
 
+Here are the 3 modes I was able to successfully test on my WNDR3300 as 
+an open AP:
 
+* Up to 270Mbps at 2.4Ghz
+   11N Channel:	03/2.422Ghz
+   in this mode only the 11N SSID is beaconed.
+   iperf: 11.2 Mbps average over 120 seconds, high of 26.2 Mbps, low of 6.71
 
+* Up to 270Mbps at 5Ghz & 54Mbps at 2.4Ghz
+   11N Channel: 36 / 5.180Ghz
+   11G Channel: auto
+   in this mode only the G beacon can be seen (which makes sense)
+   iperf: 14.3 Mbps average over 120 seconds, high of 28.5 Mbps, low of 8.97
+
+* Up to 130Mbps at 2.4Ghz
+   11N Channel:	03/2.422Ghz
+   in this mode only the 11N SSID is beaconed.
+   iperf: 16.0 Mbps average over 120 seconds, high of 28.9 Mbps, low of 7.44
+
+This mode would not acquire a beacon using the rtl8192ce:
+
+* Up to 130Mbps at 5Ghz & 54Mbps at 2.4Ghz
+   11N Channel: 36 / 5.180Ghz
+   11G Channel: auto
+   in this mode no beacon can be seen.
+
+I verified using a MacBook Air under OS/X that the N SSID was appearing 
+on the 5 Ghz channel, but couldn't see the G beacon. Maybe its a bug in 
+the WNDR3300.
+
+rtg
 -- 
----
-Gertjan
+Tim Gardner tim.gardner@canonical.com
