@@ -1,48 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:57498 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752164Ab1LPU0p (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41525 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752667Ab1LOIXs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 15:26:45 -0500
-Date: Fri, 16 Dec 2011 23:26:38 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: NFC: smatch stuff: min_t() casting
-Message-ID: <20111216202638.GC18570@elgon.mountain> (sfid-20111216_212648_519693_54B0150B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 15 Dec 2011 03:23:48 -0500
+Subject: Re: [PATCH] mac80211: Fixing sparse warning at sta_info.c
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yogesh Ashok Powar <yogeshp@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+In-Reply-To: <20111215051343.GA4570@hertz.marvell.com>
+References: <20111215051343.GA4570@hertz.marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Dec 2011 09:23:45 +0100
+Message-ID: <1323937425.3337.4.camel@jlt3.sipsolutions.net> (sfid-20111215_092351_676339_43E45D9A)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sam,
+On Thu, 2011-12-15 at 10:43 +0530, Yogesh Ashok Powar wrote:
+> The commit 42624d4913a00219a8fdbb4bafd634d1d843be85
+> created following sparse warning
+> >net/mac80211/sta_info.c:965:24: warning: incorrect type in assignment (different address spaces)
+> >net/mac80211/sta_info.c:965:24:    expected struct tid_ampdu_tx *tid_tx
+> >net/mac80211/sta_info.c:965:24:    got struct tid_ampdu_tx [noderef] <asn:4>*<noident>
+> 
+> Making use of rcu_dereference to fix the problem.
 
-Smatch complains about the min_t() casting here.
+That doesn't fix any problem. It trades the compiler warning for a
+runtime warning, so NACK.
 
-net/nfc/llcp/sock.c +80 llcp_sock_bind(44)
-	warn: min_t truncates here '(llcp_addr.service_name_len)' (4294967295 vs 9223372036854775807)
+You will need something like rcu_dereference_protected() here (although
+it's not actually protected, but there's also no need to)
 
-    78          llcp_sock->local = local;
-    79          llcp_sock->nfc_protocol = llcp_addr.nfc_protocol;
-    80          llcp_sock->service_name_len = min_t(unsigned int,
-    81                          llcp_addr.service_name_len, NFC_LLCP_MAX_SERVICE_NAME);
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Smatch complains that .service_name_len is a size_t (64 bits on 64 bit
-architectures).  The cast to unsigned int takes the minimum of the
-truncated value.
+johannes
 
-    82          llcp_sock->service_name = kmemdup(llcp_addr.service_name,
-    83                                  llcp_sock->service_name_len, GFP_KERNEL);
-
-
-These two functions are the same way.
-
-net/nfc/llcp/sock.c +461 llcp_sock_connect(71)
-	warn: min_t truncates here '(addr->service_name_len)' (4294967295 vs 9223372036854775807)
-net/nfc/llcp/sock.c +521 llcp_sock_recvmsg(36) warn:
-	min_t truncates here '(len)' (4294967295 vs 9223372036854775807)
-
-It's not really an issue, but it's slightly untidy.
-
-regards,
-dan carpenter
