@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:44295 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755706Ab1LMV0L (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:46601 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755557Ab1LOEQo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 16:26:11 -0500
-Date: Tue, 13 Dec 2011 15:26:06 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Problems associating with RTL8188CE
-Message-ID: <20111213212606.GB30788@thinkpad-t410> (sfid-20111213_222615_362206_BBA030CF)
-References: <20111118225422.GD19138@thinkpad-t410>
- <4EC88F58.1080203@lwfinger.net>
- <20111121181350.GC6736@thinkpad-t410>
- <4ECA99CC.7020008@lwfinger.net>
- <20111121185610.GD6736@thinkpad-t410>
- <4ECB028E.3030809@lwfinger.net>
- <20111122022008.GA17661@thinkpad-t410>
- <20111213194231.GA30788@thinkpad-t410>
- <4EE7B85E.3070802@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4EE7B85E.3070802@lwfinger.net>
+	Wed, 14 Dec 2011 23:16:44 -0500
+Received: by mail-iy0-f174.google.com with SMTP id h11so2176479iae.19
+        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2011 20:16:44 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [PATCH 1/3] ath: add a debug level for DFS
+Date: Wed, 14 Dec 2011 20:16:32 -0800
+Message-Id: <1323922595-15533-2-git-send-email-mcgrof@qca.qualcomm.com> (sfid-20111215_051647_433074_DB6FCF84)
+In-Reply-To: <1323922595-15533-1-git-send-email-mcgrof@qca.qualcomm.com>
+References: <1323922595-15533-1-git-send-email-mcgrof@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 13, 2011 at 02:41:02PM -0600, Larry Finger wrote:
-> On 12/13/2011 01:42 PM, Seth Forshee wrote:
-> >I have another AP that the rtl8192ce doesn't have any problems
-> >associating with, so I also captured a trace with wireshark when
-> >associating to that AP. I didn't see much that differed except that the
-> >probe response frame with the problematic AP is about 350 bytes longer
-> >(due to additional information elements).
-> 
-> The extra IE entries must be the clue.
-> 
-> >Something else that I noticed is that with the problematic AP, inactive
-> >power save seems to kick in shortly afer sending the
-> >probe/authentication requests. I wondered if this might be behind the
-> >issues, but loading the module with ips=0 makes no difference.
-> >
-> >Any suggestions on what might be going wrong or next steps for
-> >debugging?
-> 
-> With ips=0, all power save should be eliminated. Please take the two
-> capture files, and filter all but the probe and probe response
-> frames. I'll try to find some time to analyze them.
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 
-The capture files are available at:
+This can later be used by other drivers that implement
+DFS support.
 
-http://people.canonical.com/~sforshee/rtl8188ce/
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Thanks,
-Seth
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index 0b93bab..c1d699f 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -218,6 +218,7 @@ do {								\
+  * @ATH_DBG_MCI: Message Coexistence Interface, a private protocol
+  *	used exclusively for WLAN-BT coexistence starting from
+  *	AR9462.
++ * @ATH_DBG_DFS: radar datection
+  * @ATH_DBG_ANY: enable all debugging
+  *
+  * The debug level is used to control the amount and type of debugging output
+@@ -244,6 +245,7 @@ enum ATH_DEBUG {
+ 	ATH_DBG_WMI		= 0x00004000,
+ 	ATH_DBG_BSTUCK		= 0x00008000,
+ 	ATH_DBG_MCI		= 0x00010000,
++	ATH_DBG_DFS		= 0x00020000,
+ 	ATH_DBG_ANY		= 0xffffffff
+ };
+ 
+-- 
+1.7.4.15.g7811d
+
