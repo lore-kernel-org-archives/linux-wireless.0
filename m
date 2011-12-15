@@ -1,116 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:1223 "EHLO
-	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752875Ab1L1A7x (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:50529 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758988Ab1LOQbD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Dec 2011 19:59:53 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: John W Linville <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	=?UTF-8?q?Jakub=20Kici=C5=84ski?= <kubakici@wp.pl>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 4/7] rt2800usb: Let rt2x00usb handle USB padding
-Date: Wed, 28 Dec 2011 01:53:21 +0100
-Message-Id: <1325033604-26469-5-git-send-email-gwingerde@gmail.com> (sfid-20111228_020007_876059_47E43439)
-In-Reply-To: <1325033604-26469-4-git-send-email-gwingerde@gmail.com>
-References: <1325033604-26469-1-git-send-email-gwingerde@gmail.com>
- <1325033604-26469-2-git-send-email-gwingerde@gmail.com>
- <1325033604-26469-3-git-send-email-gwingerde@gmail.com>
- <1325033604-26469-4-git-send-email-gwingerde@gmail.com>
+	Thu, 15 Dec 2011 11:31:03 -0500
+Received: by werm1 with SMTP id m1so131318wer.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 08:31:02 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <8765D965-0435-4ACA-B562-A0CAD768A3FF@ing.unibs.it>
+References: <4ee9d496.ZmxUcTz7IvcMM2Tq%francesco.gringoli@ing.unibs.it>
+	<CACna6rxc9HPWg7VekDr7LFSZp7wMCinsvao-LxEEHnrD95HCig@mail.gmail.com>
+	<8765D965-0435-4ACA-B562-A0CAD768A3FF@ing.unibs.it>
+Date: Thu, 15 Dec 2011 17:31:02 +0100
+Message-ID: <CACna6rw9mqbemoVPhO69NT2gWJ3t0SOt64OU7BD6o6g4D2tC0w@mail.gmail.com> (sfid-20111215_173106_988129_B81DEAB1)
+Subject: Re: [PATCH] b43: avoid packet losses in the dma worker code.
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: francesco.gringoli@ing.unibs.it
+Cc: m@bues.ch, linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	michele.orru@hotmail.it, b43-dev@lists.infradead.org,
+	riccardo.paolillo@gmail.com
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jakub Kiciński <kubakici@wp.pl>
+W dniu 15 grudnia 2011 16:54 użytkownik
+<francesco.gringoli@ing.unibs.it> napisał:
+> On Dec 15, 2011, at 12:29 PM, Rafał Miłecki wrote:
+>
+>> 2011/12/15  <francesco.gringoli@ing.unibs.it>:
+>>> This patch addresses a bug in the dma worker code that keeps draining
+>>> packets even when the hardware queues are full. In such cases packets
+>>> can not be passed down to the device and are erroneusly dropped by the
+>>> code.
+>>>
+>>> This problem was already discussed here
+>>>
+>>> http://www.mail-archive.com/b43-dev@lists.infradead.org/msg01413.html
+>>>
+>>> and acknowledged by Michael.
+>>>
+>>> The patch also introduces separate workers for each hardware queues
+>>> and dedicated buffers where storing packets from mac80211 before sending
+>>> them down to the hardware.
+>>
+>> Have you considered just a one worked iterating over queues?
+>>
+>> I'm not sure if it's efficient to have so many workers, each can be
+>> stopped&resumed, each is taking wl mutex...
+> We were thinking about this issue and at the end we decided to implement this way because of fairness issues among the queues. We tried some dequeuing algorithms (i.e., round robin and priority) but they were all benefitting one of the queues.
 
-Older USB drivers does not append end padding to skb but instead report
-it in size of data to be transmitted to HW. rt2800usb should follow that
-behaviour. Custom write_tx_data callback which was adding pad to skb
-is not be needed any more.
+Is that possible you'll share that patch? Just to see how did you
+resolve dequeuing in case of multiple queues and 1 worker? I don't
+think it should really differ from 4 workers.
 
-Thanks to this patch frames handed back from rt2800usb to mac80211 will
-no longer contain end padding.
-
-Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |   37 ++++++++----------------------
- 1 files changed, 10 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 313cc7f..b15c215 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -400,10 +400,10 @@ static void rt2800usb_write_tx_desc(struct queue_entry *entry,
- 	/*
- 	 * The size of TXINFO_W0_USB_DMA_TX_PKT_LEN is
- 	 * TXWI + 802.11 header + L2 pad + payload + pad,
--	 * so need to decrease size of TXINFO and USB end pad.
-+	 * so need to decrease size of TXINFO.
- 	 */
- 	rt2x00_set_field32(&word, TXINFO_W0_USB_DMA_TX_PKT_LEN,
--			   entry->skb->len - TXINFO_DESC_SIZE - 4);
-+			   roundup(entry->skb->len, 4) - TXINFO_DESC_SIZE);
- 	rt2x00_set_field32(&word, TXINFO_W0_WIV,
- 			   !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc->flags));
- 	rt2x00_set_field32(&word, TXINFO_W0_QSEL, 2);
-@@ -421,37 +421,20 @@ static void rt2800usb_write_tx_desc(struct queue_entry *entry,
- 	skbdesc->desc_len = TXINFO_DESC_SIZE + TXWI_DESC_SIZE;
- }
- 
--static void rt2800usb_write_tx_data(struct queue_entry *entry,
--					struct txentry_desc *txdesc)
-+/*
-+ * TX data initialization
-+ */
-+static int rt2800usb_get_tx_data_len(struct queue_entry *entry)
- {
--	unsigned int len;
--	int err;
--
--	rt2800_write_tx_data(entry, txdesc);
--
- 	/*
--	 * pad(1~3 bytes) is added after each 802.11 payload.
--	 * USB end pad(4 bytes) is added at each USB bulk out packet end.
-+	 * pad(1~3 bytes) is needed after each 802.11 payload.
-+	 * USB end pad(4 bytes) is needed at each USB bulk out packet end.
- 	 * TX frame format is :
- 	 * | TXINFO | TXWI | 802.11 header | L2 pad | payload | pad | USB end pad |
- 	 *                 |<------------- tx_pkt_len ------------->|
- 	 */
--	len = roundup(entry->skb->len, 4) + 4;
--	err = skb_padto(entry->skb, len);
--	if (unlikely(err)) {
--		WARNING(entry->queue->rt2x00dev, "TX SKB padding error, out of memory\n");
--		return;
--	}
- 
--	entry->skb->len = len;
--}
--
--/*
-- * TX data initialization
-- */
--static int rt2800usb_get_tx_data_len(struct queue_entry *entry)
--{
--	return entry->skb->len;
-+	return roundup(entry->skb->len, 4) + 4;
- }
- 
- /*
-@@ -807,7 +790,7 @@ static const struct rt2x00lib_ops rt2800usb_rt2x00_ops = {
- 	.flush_queue		= rt2x00usb_flush_queue,
- 	.tx_dma_done		= rt2800usb_tx_dma_done,
- 	.write_tx_desc		= rt2800usb_write_tx_desc,
--	.write_tx_data		= rt2800usb_write_tx_data,
-+	.write_tx_data		= rt2800_write_tx_data,
- 	.write_beacon		= rt2800_write_beacon,
- 	.clear_beacon		= rt2800_clear_beacon,
- 	.get_tx_data_len	= rt2800usb_get_tx_data_len,
 -- 
-1.7.7.4
-
+Rafał
