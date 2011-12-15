@@ -1,56 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:46022 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750941Ab1LJRmH (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:56027 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756377Ab1LOWMl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Dec 2011 12:42:07 -0500
-Received: by yenm11 with SMTP id m11so2862458yen.19
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2011 09:42:06 -0800 (PST)
-Message-ID: <4EE399EB.2060100@lwfinger.net> (sfid-20111210_184211_270459_F8C99B29)
-Date: Sat, 10 Dec 2011 11:42:03 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 15 Dec 2011 17:12:41 -0500
 MIME-Version: 1.0
-To: Mikael Abrahamsson <swmike@swm.pp.se>
-CC: Nikolay Martynov <mar.kolya@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Spontaneous disconnections debugging
-References: <CALGY4fvRCRwqvncw8nqkEN-mGB5syHXbWKpRspbxC=6Fccpa1g@mail.gmail.com> <alpine.DEB.2.00.1112101231120.808@uplift.swm.pp.se>
-In-Reply-To: <alpine.DEB.2.00.1112101231120.808@uplift.swm.pp.se>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1323807327.7144.6.camel@wwguy-ubuntu>
+References: <4EE4AEF4.2080702@udo.edu>
+	<4EE4DB55.4090804@udo.edu>
+	<20111211174138.79e51fe8@x220.fritz.box>
+	<4EE4E152.2070204@udo.edu>
+	<1323627815.1806.19.camel@wwguy-ubuntu>
+	<4EE50266.4050208@udo.edu>
+	<1323653737.1806.21.camel@wwguy-ubuntu>
+	<4EE636B9.1020305@udo.edu>
+	<1323807327.7144.6.camel@wwguy-ubuntu>
+Date: Thu, 15 Dec 2011 23:12:40 +0100
+Message-ID: <CA+MtwOFhaKWzF2abx-b-5grP5vMgDm_LvoBx1yDHUiz-OrP4jA@mail.gmail.com> (sfid-20111215_231305_935376_6D02942E)
+Subject: Re: iwlagn regression in v3.1.5
+From: =?ISO-8859-2?Q?Arkadiusz_Mi=B6kiewicz?= <a.miskiewicz@gmail.com>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: Andrej Gelenberg <andrej.gelenberg@udo.edu>,
+	Udo Steinberg <udo@hypervisor.org>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/10/2011 05:34 AM, Mikael Abrahamsson wrote:
-> On Fri, 9 Dec 2011, Nikolay Martynov wrote:
+On Tue, Dec 13, 2011 at 9:15 PM, wwguy <wey-yi.w.guy@intel.com> wrote:
+> Hi Andrej,
 >
->> I have an intel 5300 as client and openwrt ath9k based router as AP. Some
->> times (once in several days) I get wireless connection spontaneously dropped
->> with this message on client: wlan1: deauthenticating from XX:XX:XX:XX:XX:XX by
->> local choice (reason=3)
->
-> Ubuntu 11.10 on a Thinkpad X200 with Intel 5300:
->
-> $ dmesg | grep -i deauthenticating | grep "local choice" | wc -l
-> 44
-> $ uptime
-> 18:31:07 up 1 day, 7:30, 3 users, load average: 0.08, 0.03, 0.05
->
-> $ dmesg | grep "local choice" | cut -d ] -f2- | sort | uniq -c
-> 44 wlan0: deauthenticating from 00:21:91:dc:94:55 by local choice (reason=3)
-> 56 wlan0: disassociating from 00:21:91:dc:94:55 by local choice (reason=3)
->
->> Not that this really creates problems for me, connection is quickly
->> restored and otherwise works fine.
->
-> For me it also mostly works fine, but sometimes I have to unload/reload the
-> iwlagn module to make things work again, and sometimes the wifi LED just turns
-> off and requires a reboot to get working again.
->
-> At least the 5300 stuff works much better in 3.0 than it did in 2.6.38.
+> Could you try this patch and see any differences.
 
-I would suggest that both of you try the bleeding-edge compat-wireless, or the 
-kernel from the wireless-testing git tree, before doing any debugging. I'm not 
-involved in iwlagn development, but there have been a lot of changes since 3.0.
+I had a problem with 3.1.5 (3.1.4 was fine) and current Linus git
+where I was able to associate with my AP (5GHz) but only icmp was
+working and while trying to ssh then all packets (including icmp ones)
+started to be dropped.
 
-Larry
+My card is 5350 AGN [Echo Peak] and this patch makes things working
+for me on top of current Linus git, too.
 
+-- 
+Arkadiusz Miśkiewicz        PLD/Linux Team
+arekm / maven.pl            http://ftp.pld-linux.org/
