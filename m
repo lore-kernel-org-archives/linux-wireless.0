@@ -1,37 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:34733 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751280Ab1LIJKn (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:37354 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758988Ab1LOQab (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Dec 2011 04:10:43 -0500
-Received: by vbbfc26 with SMTP id fc26so2142350vbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Dec 2011 01:10:43 -0800 (PST)
+	Thu, 15 Dec 2011 11:30:31 -0500
+Received: by pbdu13 with SMTP id u13so336823pbd.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 08:30:31 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1323420593-9638-1-git-send-email-helmut.schaa@googlemail.com>
-References: <1323420593-9638-1-git-send-email-helmut.schaa@googlemail.com>
-Date: Fri, 9 Dec 2011 20:10:43 +1100
-Message-ID: <CAJ-Vmo=7s67p8iQF3rt81vMPapOee=21J5wmT5PW8BiWuuev_Q@mail.gmail.com> (sfid-20111209_101050_127651_E09FD5F6)
-Subject: Re: [RFC] mac80211: Send BAR on same queue as the according QoS frames
-From: Adrian Chadd <adrian@freebsd.org>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	nbd@openwrt.org
+Date: Thu, 15 Dec 2011 17:30:31 +0100
+Message-ID: <CAGXE3d9dCL+tnXg5ero51cxf3T9VPVgv8oKo51Vi_gWd8as9Xw@mail.gmail.com> (sfid-20111215_173035_477199_25946640)
+Subject: QoS frames in AP mode?
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 December 2011 19:49, Helmut Schaa <helmut.schaa@googlemail.com> wrote:
-> Sending as RFC for now since I'm not sure if this is really required. At least
-> I couldn't come up with a situation where this would be required. However, it
-> looks more correct to me to put the BAR into the same queue as the previously
-> failed QoS frame to avoid possible (?) side effect of the BAR overtaking frames
-> in the hw tx queues ...
+Hi,
 
-I've had to do this in FreeBSD, for more than just the BAR frame - I
-do this for the ADDBA and null management frames too, just to be sure
-that frames aren't dropped by the other end.
+just noticed a problem with QoS frames in AP mode when mac80211
+relays for example a VOIP frame from STA1 to STA2 the frame will be
+sent out on AC_BE and not on AC_VO.
 
-So, +1 from me. :)
+When the frame is processed in the rx path we will send it to the wireless media
+with the code path below (from rx.c):
 
+        if (xmit_skb) {
+                /* send to wireless media */
+                xmit_skb->protocol = htons(ETH_P_802_3);
+                skb_reset_network_header(xmit_skb);
+                skb_reset_mac_header(xmit_skb);
+                dev_queue_xmit(xmit_skb);
+        }
 
-Adrian
+So, skb->priority is the same as the received frame but will be overwritten
+because the the netstack will call ieee80211_select_queue to select the
+appropriate queue which in turn will use cfg80211_classify8021d to select
+the skb->priority and the according queue (from net/wireless/util.c):
+
+unsigned int cfg80211_classify8021d(struct sk_buff *skb)
+{
+        unsigned int dscp;
+
+        /* skb->priority values from 256->263 are magic values to
+         * directly indicate a specific 802.1d priority.  This is used
+         * to allow 802.1d priority to be passed directly in from VLAN
+         * tags, etc.
+         */
+        if (skb->priority >= 256 && skb->priority <= 263)
+                return skb->priority - 256;
+
+        switch (skb->protocol) {
+        case htons(ETH_P_IP):
+                dscp = ip_hdr(skb)->tos & 0xfc;
+                break;
+        default:
+                return 0;
+        }
+
+        return dscp >> 5;
+}
+
+Unfortunately we don't have an skb priority between 256 and 263 and
+we don't have skb->protocol set to ETH_P_IP here since we've just set
+it to ETH_P_802_3.
+
+I tried using eth_type_trans on the frame but that will "pull" the ethernet
+header and adding an skb_push afterwards seems a little bit ugly to me.
+
+Is it possible to just shortcut the classification if the priority is
+already set?
+Or should we just add 256 to the priority before sending the frame to
+dev_queue_xmit?
+
+What would be an appropriate fix for this?
+
+Thanks,
+Helmut
