@@ -1,92 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:2664 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759854Ab1LPQxn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 11:53:43 -0500
-Message-ID: <4EEB7791.6060500@canonical.com> (sfid-20111216_175345_408669_7C9CFB90)
-Date: Fri, 16 Dec 2011 09:53:37 -0700
-From: Tim Gardner <tim.gardner@canonical.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:44516 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758819Ab1LONSq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 15 Dec 2011 08:18:46 -0500
+Received: by vbbfc26 with SMTP id fc26so1492713vbb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 05:18:46 -0800 (PST)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Seth Forshee <seth.forshee@canonical.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Problems associating with RTL8188CE
-References: <4ECA99CC.7020008@lwfinger.net> <20111121185610.GD6736@thinkpad-t410> <4ECB028E.3030809@lwfinger.net> <20111122022008.GA17661@thinkpad-t410> <20111213194231.GA30788@thinkpad-t410> <4EE7B85E.3070802@lwfinger.net> <20111213212606.GB30788@thinkpad-t410> <4EE82CC6.2030307@lwfinger.net> <20111214162333.GB19410@thinkpad-t410> <4EE8D150.8090100@lwfinger.net> <20111214164902.GD19410@thinkpad-t410> <4EE91A87.5090207@canonical.com> <4EE9445B.1010504@lwfinger.net> <4EEA3F53.40305@canonical.com> <4EEA4F8E.60602@lwfinger.net>
-In-Reply-To: <4EEA4F8E.60602@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <CAD2nsn0-OgCvHtx+xHeDtHEJK7s1svxt5jzLmkZNn-huaN3y5g@mail.gmail.com>
+References: <CAKeTQ4aVzp3GTmzR0zv1j5fWyCUrQLUk9EHHBvZFpDYiQSC1=g@mail.gmail.com>
+	<CAD2nsn0jgoUDf02UrajQyOKZiETMEbP6ikBAtBNdmcgT6m34yw@mail.gmail.com>
+	<CAKeTQ4adxsEiEzL1DXUvKCF6odfZkQTFhVFJC4AFwBshU-YHFw@mail.gmail.com>
+	<CAD2nsn0Zqw0zdEUrMCnBKKLsZEBw_qqT5MO=7dHCwj8Hd6WpqQ@mail.gmail.com>
+	<CAD2nsn2fSehL_3ntoQDN0qzfSycx_hLP7R2Nn2V+iaubc5RX4A@mail.gmail.com>
+	<CAD2nsn0-OgCvHtx+xHeDtHEJK7s1svxt5jzLmkZNn-huaN3y5g@mail.gmail.com>
+Date: Thu, 15 Dec 2011 18:48:46 +0530
+Message-ID: <CAD2nsn3rNcd8_Wa1A-K0r1cQA4HZzWKUFp+zGr2QFnz8phDOkw@mail.gmail.com> (sfid-20111215_141857_920156_10CFD3D6)
+Subject: Re: wierless hardware using ath9k driver on AP mode leads to kernel panic
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Ashwin Mendonca <ashwinloyal@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/15/2011 12:50 PM, Larry Finger wrote:
-> On 12/15/2011 12:41 PM, Tim Gardner wrote:
->> On 12/14/2011 05:50 PM, Larry Finger wrote:
->>> Tim,
->>>
->>> I did the live test with the Dec. 14 build of 12.04 (64 bit). It
->>> connected with my WNDR3300 with no difficulty. I tested all 4 modes
->>> supported by the AP. All worked.
->>>
->>> I assume that an installation would work the same as the live version,
->>> but that is easy for you to test.
->>>
->>> Larry
->>>
->>
->> Here are the 3 modes I was able to successfully test on my WNDR3300 as
->> an open AP:
->>
->> * Up to 270Mbps at 2.4Ghz
->> 11N Channel: 03/2.422Ghz
->> in this mode only the 11N SSID is beaconed.
->> iperf: 11.2 Mbps average over 120 seconds, high of 26.2 Mbps, low of 6.71
->>
->> * Up to 270Mbps at 5Ghz & 54Mbps at 2.4Ghz
->> 11N Channel: 36 / 5.180Ghz
->> 11G Channel: auto
->> in this mode only the G beacon can be seen (which makes sense)
->> iperf: 14.3 Mbps average over 120 seconds, high of 28.5 Mbps, low of 8.97
->>
->> * Up to 130Mbps at 2.4Ghz
->> 11N Channel: 03/2.422Ghz
->> in this mode only the 11N SSID is beaconed.
->> iperf: 16.0 Mbps average over 120 seconds, high of 28.9 Mbps, low of 7.44
->>
->> This mode would not acquire a beacon using the rtl8192ce:
->>
->> * Up to 130Mbps at 5Ghz & 54Mbps at 2.4Ghz
->> 11N Channel: 36 / 5.180Ghz
->> 11G Channel: auto
->> in this mode no beacon can be seen.
->>
->> I verified using a MacBook Air under OS/X that the N SSID was
->> appearing on the 5
->> Ghz channel, but couldn't see the G beacon. Maybe its a bug in the
->> WNDR3300.
+On Thu, Dec 15, 2011 at 3:55 PM, Mohammed Shafi
+<shafi.wireless@gmail.com> wrote:
+> On Thu, Dec 15, 2011 at 2:36 PM, Mohammed Shafi
+> <shafi.wireless@gmail.com> wrote:
+>> On Thu, Dec 15, 2011 at 1:24 PM, Mohammed Shafi
+>> <shafi.wireless@gmail.com> wrote:
+>>> On Thu, Dec 15, 2011 at 12:55 PM, Ashwin Mendonca <ashwinloyal@gmail.com> wrote:
+>>>> I tried the bleeding edge build of compat-wireless
+>>>> (compat-wireless-2011-12-14 build) on Linux-3.1.5. It still leads to kernel
+>>>> panic. I manually got the AP up with these steps:
 >
-> I had never used the "auto" channel setting before. When I set my AP to
-> the same configuration as yours (130/54 and 36/auto), it sent the
-> 802.11n beacon in the 2.4GHz channel. The 11G SSID was not seen;
-> however, I could connect to the AP on channel 1. When I switched to 11G
-> channel 1, rather than auto, then I saw the 11G SSID in the beacon. I
-> then tested the 5G band using a Dell DW1450 (p54usb) dual-band device.
-> The 11N SSID was present on channel 36 using auto or channel 1.
+> hi Ashwin,
 >
-> There may be a bug in the WNDR3300 firmware. Sometimes when I switched
-> from channel 1 to auto for the 2G band, that band would beacon the 11G
-> SSID, and other times, it would beacon the 11N SSID. I have not
-> determined a pattern. The 11N SSID is always shown on the selected 5G
-> channel. I could, however, connect the RTL8188CE to whatever SSID the AP
-> was sending on the 2.4GHz band.
->
-> Curiouser and curiouser,
->
-> Larry
+> can you please try the attached patch and it seems to work for me.
+> please go to your compat directory
+> cd compat...
+> then do patch -p1 < ./fix-ar2427-ap-mode-panic.patch
 
-Yep - specifying a _fixed_ channel for 'Up to 130Mbps at 5Ghz & 54Mbps 
-at 2.4Ghz' allowed a connection using the G beacon. I have not verified 
-using a 5Ghz capable adapter that its also beaconing on channel 36.
+this might fix the panic, but i need to verify whether everything else
+is properly handled for AP ps
 
-rtg
+>
+> --
+> shafi
+
+
+
 -- 
-Tim Gardner tim.gardner@canonical.com
+shafi
