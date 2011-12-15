@@ -1,58 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:60728 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757330Ab1LOIZW convert rfc822-to-8bit (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:62022 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751287Ab1LONQV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 03:25:22 -0500
+	Thu, 15 Dec 2011 08:16:21 -0500
+Received: by eekc4 with SMTP id c4so2047873eek.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 05:16:20 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] b43: N-PHY: check for bustype before touching BCMA CC PLLs
+Date: Thu, 15 Dec 2011 14:17:21 +0100
+Message-Id: <1323955041-23950-1-git-send-email-zajec5@gmail.com> (sfid-20111215_141624_834143_AA89636F)
 MIME-Version: 1.0
-In-Reply-To: <1323937340.3337.3.camel@jlt3.sipsolutions.net>
-References: <1323244922-2673-1-git-send-email-kengyu@canonical.com>
-	<CAHR064iBtSTv79BhXt9_mMWugD4U_xLCM4i1wE7PLnZM8pL57g@mail.gmail.com>
-	<1323937340.3337.3.camel@jlt3.sipsolutions.net>
-Date: Thu, 15 Dec 2011 09:25:20 +0100
-Message-ID: <CAHR064ivFUeGwNAfB1MZO0mrvo+sAcM-cZTjR9wZTaPyWRhzAA@mail.gmail.com> (sfid-20111215_092537_922884_AF9E554C)
-Subject: Re: [PATCH] asus-wmi: explicitly set the wireless LED
-From: Corentin Chary <corentin.chary@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Keng-Yu Lin <kengyu@canonical.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	acpi4asus-user@lists.sourceforge.net,
-	platform-driver-x86@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Richard Purdie <rpurdie@rpsys.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 15, 2011 at 9:22 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2011-12-15 at 08:07 +0100, Corentin Chary wrote:
->
->> Anyway, you should use a led trigger for that, ideally the rfkill%d
->> led trigger, but for that you need the rfkill idx, which is not
->> exported, so you may need a new rfkill_idx() function. CCing rfkill
->> and led guys, they may have a better advice on that.
->
-> Since you wouldn't want to build the string yourself, you'd probably
-> want a new rfkill_ledtrigname() function like this:
->
-> static const char *rfkill_ledtrigname(struct rfkill *rfkill)
-> {
-> #ifdef CONFIG_RFKILL_LEDS
->        return rfkill->ledtrigname;
-> #endif
->        return NULL;
-> }
->
-> which you use to assign the LED class device's default trigger.
->
-> johannes
->
+Reported-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c |  107 +++++++++++++++++++++----------------
+ 1 files changed, 61 insertions(+), 46 deletions(-)
 
-Right, but is rfkill->ledtrigname really set somewhere ?
-
-rfkill->led_trigger.name seems safer to use.
-
-
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 6b95fd2..c8fa2cd 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -4048,56 +4048,71 @@ int b43_phy_initn(struct b43_wldev *dev)
+ /* http://bcm-v4.sipsolutions.net/802.11/PmuSpurAvoid */
+ static void b43_nphy_pmu_spur_avoid(struct b43_wldev *dev, bool avoid)
+ {
+-	struct bcma_drv_cc *cc = &dev->dev->bdev->bus->drv_cc;
++	struct bcma_drv_cc *cc;
+ 	u32 pmu_ctl;
+-	if (dev->dev->chip_id == 43224 || dev->dev->chip_id == 43225) {
+-		if (avoid) {
+-			bcma_chipco_pll_write(cc, 0x0, 0x11500010);
+-			bcma_chipco_pll_write(cc, 0x1, 0x000C0C06);
+-			bcma_chipco_pll_write(cc, 0x2, 0x0F600a08);
+-			bcma_chipco_pll_write(cc, 0x3, 0x00000000);
+-			bcma_chipco_pll_write(cc, 0x4, 0x2001E920);
+-			bcma_chipco_pll_write(cc, 0x5, 0x88888815);
+-		} else {
+-			bcma_chipco_pll_write(cc, 0x0, 0x11100010);
+-			bcma_chipco_pll_write(cc, 0x1, 0x000c0c06);
+-			bcma_chipco_pll_write(cc, 0x2, 0x03000a08);
+-			bcma_chipco_pll_write(cc, 0x3, 0x00000000);
+-			bcma_chipco_pll_write(cc, 0x4, 0x200005c0);
+-			bcma_chipco_pll_write(cc, 0x5, 0x88888815);
+-		}
+-		pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD;
+-	} else if (dev->dev->chip_id == 0x4716) {
+-		if (avoid) {
+-			bcma_chipco_pll_write(cc, 0x0, 0x11500060);
+-			bcma_chipco_pll_write(cc, 0x1, 0x080C0C06);
+-			bcma_chipco_pll_write(cc, 0x2, 0x0F600000);
+-			bcma_chipco_pll_write(cc, 0x3, 0x00000000);
+-			bcma_chipco_pll_write(cc, 0x4, 0x2001E924);
+-			bcma_chipco_pll_write(cc, 0x5, 0x88888815);
++
++	switch (dev->dev->bus_type) {
++#ifdef CONFIG_B43_BCMA
++	case B43_BUS_BCMA:
++		cc = &dev->dev->bdev->bus->drv_cc;
++		if (dev->dev->chip_id == 43224 || dev->dev->chip_id == 43225) {
++			if (avoid) {
++				bcma_chipco_pll_write(cc, 0x0, 0x11500010);
++				bcma_chipco_pll_write(cc, 0x1, 0x000C0C06);
++				bcma_chipco_pll_write(cc, 0x2, 0x0F600a08);
++				bcma_chipco_pll_write(cc, 0x3, 0x00000000);
++				bcma_chipco_pll_write(cc, 0x4, 0x2001E920);
++				bcma_chipco_pll_write(cc, 0x5, 0x88888815);
++			} else {
++				bcma_chipco_pll_write(cc, 0x0, 0x11100010);
++				bcma_chipco_pll_write(cc, 0x1, 0x000c0c06);
++				bcma_chipco_pll_write(cc, 0x2, 0x03000a08);
++				bcma_chipco_pll_write(cc, 0x3, 0x00000000);
++				bcma_chipco_pll_write(cc, 0x4, 0x200005c0);
++				bcma_chipco_pll_write(cc, 0x5, 0x88888815);
++			}
++			pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD;
++		} else if (dev->dev->chip_id == 0x4716) {
++			if (avoid) {
++				bcma_chipco_pll_write(cc, 0x0, 0x11500060);
++				bcma_chipco_pll_write(cc, 0x1, 0x080C0C06);
++				bcma_chipco_pll_write(cc, 0x2, 0x0F600000);
++				bcma_chipco_pll_write(cc, 0x3, 0x00000000);
++				bcma_chipco_pll_write(cc, 0x4, 0x2001E924);
++				bcma_chipco_pll_write(cc, 0x5, 0x88888815);
++			} else {
++				bcma_chipco_pll_write(cc, 0x0, 0x11100060);
++				bcma_chipco_pll_write(cc, 0x1, 0x080c0c06);
++				bcma_chipco_pll_write(cc, 0x2, 0x03000000);
++				bcma_chipco_pll_write(cc, 0x3, 0x00000000);
++				bcma_chipco_pll_write(cc, 0x4, 0x200005c0);
++				bcma_chipco_pll_write(cc, 0x5, 0x88888815);
++			}
++			pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD |
++				  BCMA_CC_PMU_CTL_NOILPONW;
++		} else if (dev->dev->chip_id == 0x4322 ||
++			   dev->dev->chip_id == 0x4340 ||
++			   dev->dev->chip_id == 0x4341) {
++			bcma_chipco_pll_write(cc, 0x0, 0x11100070);
++			bcma_chipco_pll_write(cc, 0x1, 0x1014140a);
++			bcma_chipco_pll_write(cc, 0x5, 0x88888854);
++			if (avoid)
++				bcma_chipco_pll_write(cc, 0x2, 0x05201828);
++			else
++				bcma_chipco_pll_write(cc, 0x2, 0x05001828);
++			pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD;
+ 		} else {
+-			bcma_chipco_pll_write(cc, 0x0, 0x11100060);
+-			bcma_chipco_pll_write(cc, 0x1, 0x080c0c06);
+-			bcma_chipco_pll_write(cc, 0x2, 0x03000000);
+-			bcma_chipco_pll_write(cc, 0x3, 0x00000000);
+-			bcma_chipco_pll_write(cc, 0x4, 0x200005c0);
+-			bcma_chipco_pll_write(cc, 0x5, 0x88888815);
++			return;
+ 		}
+-		pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD | BCMA_CC_PMU_CTL_NOILPONW;
+-	} else if (dev->dev->chip_id == 0x4322 || dev->dev->chip_id == 0x4340 ||
+-		   dev->dev->chip_id == 0x4341) {
+-		bcma_chipco_pll_write(cc, 0x0, 0x11100070);
+-		bcma_chipco_pll_write(cc, 0x1, 0x1014140a);
+-		bcma_chipco_pll_write(cc, 0x5, 0x88888854);
+-		if (avoid)
+-			bcma_chipco_pll_write(cc, 0x2, 0x05201828);
+-		else
+-			bcma_chipco_pll_write(cc, 0x2, 0x05001828);
+-		pmu_ctl = BCMA_CC_PMU_CTL_PLL_UPD;
+-	} else {
+-		return;
++		bcma_cc_set32(cc, BCMA_CC_PMU_CTL, pmu_ctl);
++		break;
++#endif
++#ifdef CONFIG_B43_SSB
++	case B43_BUS_SSB:
++		/* FIXME */
++		break;
++#endif
+ 	}
+-	bcma_cc_set32(cc, BCMA_CC_PMU_CTL, pmu_ctl);
+ }
+ 
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/ChanspecSetup */
 -- 
-Corentin Chary
-http://xf.iksaif.net
+1.7.7
+
