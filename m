@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:49246 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755563Ab1LZP3Z convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:51166 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758726Ab1LOL3L convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Dec 2011 10:29:25 -0500
-Date: Mon, 26 Dec 2011 16:29:19 +0100 (CET)
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] b43: support new RX header, noticed to be used in 598.314+
- fw
-Message-ID: <alpine.DEB.2.00.1112261608140.12108@axis700.grange> (sfid-20111226_162930_350908_8261104C)
+	Thu, 15 Dec 2011 06:29:11 -0500
+Received: by wgbdr13 with SMTP id dr13so3905627wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 03:29:10 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-2
+In-Reply-To: <4ee9d496.ZmxUcTz7IvcMM2Tq%francesco.gringoli@ing.unibs.it>
+References: <4ee9d496.ZmxUcTz7IvcMM2Tq%francesco.gringoli@ing.unibs.it>
+Date: Thu, 15 Dec 2011 12:29:10 +0100
+Message-ID: <CACna6rxc9HPWg7VekDr7LFSZp7wMCinsvao-LxEEHnrD95HCig@mail.gmail.com> (sfid-20111215_122914_800234_96226408)
+Subject: Re: [PATCH] b43: avoid packet losses in the dma worker code.
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: francesco.gringoli@ing.unibs.it
+Cc: m@bues.ch, linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	michele.orru@hotmail.it, b43-dev@lists.infradead.org,
+	riccardo.paolillo@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+2011/12/15  <francesco.gringoli@ing.unibs.it>:
+> This patch addresses a bug in the dma worker code that keeps draining
+> packets even when the hardware queues are full. In such cases packets
+> can not be passed down to the device and are erroneusly dropped by the
+> code.
+>
+> This problem was already discussed here
+>
+> http://www.mail-archive.com/b43-dev@lists.infradead.org/msg01413.html
+>
+> and acknowledged by Michael.
+>
+> The patch also introduces separate workers for each hardware queues
+> and dedicated buffers where storing packets from mac80211 before sending
+> them down to the hardware.
 
-Sorry for "simulating" a reply - I'm not subscribed to linux-wireless, so,
-cannot (easily) reply.
-   
-The commit in subject line
+Have you considered just a one worked iterating over queues?
 
-commit 17030f48e31adde5b043741c91ba143f5f7db0fd
-From: Rafa≥ Mi≥ecki <zajec5@gmail.com>
-Date: Thu, 11 Aug 2011 17:16:27 +0200
-Subject: [PATCH] b43: support new RX header, noticed to be used in 598.314+ fw
+I'm not sure if it's efficient to have so many workers, each can be
+stopped&resumed, each is taking wl mutex...
 
-breaks my b43 SDIO card in 3.2-ish kernels. Given the approaching 
-3.2-final release, would be nice to have it fixed before that. The card 
-I've got is marked with some "SD-Link11g" from some "C-guys, Inc." from 
-Taiwan:-) Using firmware version 410.31754. Do I really _have_ to update 
-or is the driver supposed to handle "all" firmware versions, or at least 
-not drop ones, it used to support before?
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski, Ph.D.
-Freelance Open-Source Software Developer
-http://www.open-technology.de/
+-- 
+Rafa≈Ç
