@@ -1,241 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:61248 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755488Ab1LGMzc (ORCPT
+Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:40658 "EHLO
+	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758884Ab1LOOXr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Dec 2011 07:55:32 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <johannes@sipsolutions.net>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/2] cfg80211: Define a wrapper function for reporting roaming
-Date: Wed, 7 Dec 2011 18:27:04 +0530
-Message-ID: <1323262624-30060-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111207_135536_030953_0280BBA2)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 15 Dec 2011 09:23:47 -0500
+Received: by mail-lpp01m010-f42.google.com with SMTP id j5so2089847lag.1
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 06:23:46 -0800 (PST)
+Subject: Re: [PATCH] wl12xx: alloc buffer in driver_state_read to prevent
+ compilation warning
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <1323953888-10988-1-git-send-email-coelho@ti.com>
+References: <1323953888-10988-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Dec 2011 16:23:42 +0200
+Message-ID: <1323959022.2800.186.camel@cumari> (sfid-20111215_152352_603274_9865D484)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It is quite possible to run into a race in bss timeout where
-the drivers see the bss entry just before notifying cfg80211
-of a roaming event but it got timed out by the time rdev->event_work
-got scehduled from cfg80211_wq. This would result in the following
-WARN-ON() along with the failure to notify the user space of
-the roaming. The other situation which is happening with ath6kl
-that runs into issue is when the driver reports roam to same AP
-event where the AP bss entry already got expired.
+On Thu, 2011-12-15 at 14:58 +0200, Luciano Coelho wrote: 
+> When compiling wl12xx for x86, there was a warning complaining about
+> the size of the buffer we were allocating in the stack:
+> 
+> drivers/net/wireless/wl12xx/debugfs.c: In function 'driver_state_read':
+> drivers/net/wireless/wl12xx/debugfs.c:380:1: warning: the frame size of 1040 bytes is larger than 1024 bytes
+> 
+> To prevent this, allocate the buffer in the heap instead.
+> 
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
 
-[158645.538384] WARNING: at net/wireless/sme.c:586
-__cfg80211_roamed+0xc2/0x1b1()
-[158645.538810] Call Trace:
-[158645.538838]  [<c1033527>] warn_slowpath_common+0x65/0x7a
-[158645.538917]  [<c14cfacf>] ? __cfg80211_roamed+0xc2/0x1b1
-[158645.538946]  [<c103354b>] warn_slowpath_null+0xf/0x13
-[158645.539055]  [<c14cfacf>] __cfg80211_roamed+0xc2/0x1b1
-[158645.539086]  [<c14beb5b>] cfg80211_process_rdev_events+0x153/0x1cc
-[158645.539166]  [<c14bd57b>] cfg80211_event_work+0x26/0x36
-[158645.539195]  [<c10482ae>] process_one_work+0x219/0x38b
-[158645.539273]  [<c14bd555>] ? wiphy_new+0x419/0x419
-[158645.539301]  [<c10486cb>] worker_thread+0xf6/0x1bf
-[158645.539379]  [<c10485d5>] ? rescuer_thread+0x1b5/0x1b5
-[158645.539407]  [<c104b3e2>] kthread+0x62/0x67
-[158645.539484]  [<c104b380>] ? __init_kthread_worker+0x42/0x42
-[158645.539514]  [<c151309a>] kernel_thread_helper+0x6/0xd
+Applied.
 
-To fix this, define a wrapper function that driver can use to report
-roaming with the bss entry to which it got roamed.
-
-Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- include/net/cfg80211.h |   28 ++++++++++++++++++++++++++++
- net/wireless/core.h    |    2 ++
- net/wireless/sme.c     |   38 +++++++++++++++++++++++++++++---------
- net/wireless/util.c    |    7 ++++---
- 4 files changed, 63 insertions(+), 12 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 8d7ba09..3178f91 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3085,6 +3085,34 @@ void cfg80211_roamed(struct net_device *dev,
- 		     const u8 *resp_ie, size_t resp_ie_len, gfp_t gfp);
- 
- /**
-+ * cfg80211_roamed_bss - notify cfg80211 of roaming
-+ *
-+ * @dev: network device
-+ * @bss: entry of bss to which STA got roamed (may be %NULL)
-+ * @channel: the channel of the new AP
-+ * @bssid: the BSSID of the new AP
-+ * @req_ie: association request IEs (maybe be %NULL)
-+ * @req_ie_len: association request IEs length
-+ * @resp_ie: association response IEs (may be %NULL)
-+ * @resp_ie_len: assoc response IEs length
-+ * @gfp: allocation flags
-+ *
-+ * This is just a wrapper to notify cfg80211 of roaming event with driver
-+ * passing bss to avoid a race in timeout of the bss entry. It should be
-+ * called by the underlying driver whenever it roamed from one AP to another
-+ * while connected. Drivers which have roaming implemented in firmware
-+ * may use this function to avoid a race in bss entry timeout where the bss
-+ * entry of the new AP is seen in the driver, but gets timed out by the time
-+ * it is accessed in __cfg80211_roamed() due to delay in scheduling
-+ * rdev->event_work. Returns 0 upon success. Driver has to release a reference
-+ * to bss with cfg80211_put_bss() when the return value is non-zero.
-+ */
-+int cfg80211_roamed_bss(struct net_device *dev, struct cfg80211_bss *bss,
-+			struct ieee80211_channel *channel,
-+			const u8 *bssid,
-+			const u8 *req_ie, size_t req_ie_len,
-+			const u8 *resp_ie, size_t resp_ie_len, gfp_t gfp);
-+/**
-  * cfg80211_disconnected - notify cfg80211 that connection was dropped
-  *
-  * @dev: network device
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 1c7d4df..c4c3c1d 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -255,6 +255,7 @@ struct cfg80211_event {
- 			const u8 *resp_ie;
- 			size_t req_ie_len;
- 			size_t resp_ie_len;
-+			struct cfg80211_bss *bss;
- 		} rm;
- 		struct {
- 			const u8 *ie;
-@@ -397,6 +398,7 @@ int cfg80211_disconnect(struct cfg80211_registered_device *rdev,
- 			struct net_device *dev, u16 reason,
- 			bool wextev);
- void __cfg80211_roamed(struct wireless_dev *wdev,
-+		       struct cfg80211_bss *bss,
- 		       struct ieee80211_channel *channel,
- 		       const u8 *bssid,
- 		       const u8 *req_ie, size_t req_ie_len,
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 0acfdc9..17ac3c2 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -551,12 +551,12 @@ void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- EXPORT_SYMBOL(cfg80211_connect_result);
- 
- void __cfg80211_roamed(struct wireless_dev *wdev,
-+		       struct cfg80211_bss *bss,
- 		       struct ieee80211_channel *channel,
- 		       const u8 *bssid,
- 		       const u8 *req_ie, size_t req_ie_len,
- 		       const u8 *resp_ie, size_t resp_ie_len)
- {
--	struct cfg80211_bss *bss;
- #ifdef CONFIG_CFG80211_WEXT
- 	union iwreq_data wrqu;
- #endif
-@@ -565,23 +565,25 @@ void __cfg80211_roamed(struct wireless_dev *wdev,
- 
- 	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_STATION &&
- 		    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT))
--		return;
-+		goto out;
- 
- 	if (wdev->sme_state != CFG80211_SME_CONNECTED)
--		return;
-+		goto out;
- 
- 	/* internal error -- how did we get to CONNECTED w/o BSS? */
- 	if (WARN_ON(!wdev->current_bss)) {
--		return;
-+		goto out;
- 	}
- 
- 	cfg80211_unhold_bss(wdev->current_bss);
- 	cfg80211_put_bss(&wdev->current_bss->pub);
- 	wdev->current_bss = NULL;
- 
--	bss = cfg80211_get_bss(wdev->wiphy, channel, bssid,
--			       wdev->ssid, wdev->ssid_len,
--			       WLAN_CAPABILITY_ESS, WLAN_CAPABILITY_ESS);
-+	if (!bss)
-+		bss = cfg80211_get_bss(wdev->wiphy, channel, bssid,
-+				       wdev->ssid, wdev->ssid_len,
-+				       WLAN_CAPABILITY_ESS,
-+				       WLAN_CAPABILITY_ESS);
- 
- 	if (WARN_ON(!bss))
- 		return;
-@@ -615,6 +617,11 @@ void __cfg80211_roamed(struct wireless_dev *wdev,
- 	wdev->wext.prev_bssid_valid = true;
- 	wireless_send_event(wdev->netdev, SIOCGIWAP, &wrqu, NULL);
- #endif
-+
-+	return;
-+out:
-+	if (bss)
-+		cfg80211_put_bss(bss);
- }
- 
- void cfg80211_roamed(struct net_device *dev,
-@@ -623,6 +630,16 @@ void cfg80211_roamed(struct net_device *dev,
- 		     const u8 *req_ie, size_t req_ie_len,
- 		     const u8 *resp_ie, size_t resp_ie_len, gfp_t gfp)
- {
-+	cfg80211_roamed_bss(dev, NULL, channel, bssid, req_ie, req_ie_len,
-+			    resp_ie, resp_ie_len, gfp);
-+}
-+EXPORT_SYMBOL(cfg80211_roamed);
-+
-+int cfg80211_roamed_bss(struct net_device *dev, struct cfg80211_bss *bss,
-+			struct ieee80211_channel *channel,
-+			const u8 *bssid, const u8 *req_ie, size_t req_ie_len,
-+			const u8 *resp_ie, size_t resp_ie_len, gfp_t gfp)
-+{
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
- 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
- 	struct cfg80211_event *ev;
-@@ -632,7 +649,7 @@ void cfg80211_roamed(struct net_device *dev,
- 
- 	ev = kzalloc(sizeof(*ev) + req_ie_len + resp_ie_len, gfp);
- 	if (!ev)
--		return;
-+		return -ENOMEM;
- 
- 	ev->type = EVENT_ROAMED;
- 	ev->rm.channel = channel;
-@@ -643,13 +660,16 @@ void cfg80211_roamed(struct net_device *dev,
- 	ev->rm.resp_ie = ((u8 *)ev) + sizeof(*ev) + req_ie_len;
- 	ev->rm.resp_ie_len = resp_ie_len;
- 	memcpy((void *)ev->rm.resp_ie, resp_ie, resp_ie_len);
-+	ev->rm.bss = bss;
- 
- 	spin_lock_irqsave(&wdev->event_lock, flags);
- 	list_add_tail(&ev->list, &wdev->event_list);
- 	spin_unlock_irqrestore(&wdev->event_lock, flags);
- 	queue_work(cfg80211_wq, &rdev->event_work);
-+
-+	return 0;
- }
--EXPORT_SYMBOL(cfg80211_roamed);
-+EXPORT_SYMBOL(cfg80211_roamed_bss);
- 
- void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
- 			     size_t ie_len, u16 reason, bool from_ap)
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 4dde429..bffabf5 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -752,9 +752,10 @@ static void cfg80211_process_wdev_events(struct wireless_dev *wdev)
- 				NULL);
- 			break;
- 		case EVENT_ROAMED:
--			__cfg80211_roamed(wdev, ev->rm.channel, ev->rm.bssid,
--					  ev->rm.req_ie, ev->rm.req_ie_len,
--					  ev->rm.resp_ie, ev->rm.resp_ie_len);
-+			__cfg80211_roamed(wdev, ev->rm.bss, ev->rm.channel,
-+					  ev->rm.bssid, ev->rm.req_ie,
-+					  ev->rm.req_ie_len, ev->rm.resp_ie,
-+					  ev->rm.resp_ie_len);
- 			break;
- 		case EVENT_DISCONNECTED:
- 			__cfg80211_disconnected(wdev->netdev,
 -- 
-1.7.0.4
+Cheers,
+Luca.
 
