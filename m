@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www17.your-server.de ([213.133.104.17]:60526 "EHLO
-	www17.your-server.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752840Ab1LCIU7 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45402 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752550Ab1LOIUD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Dec 2011 03:20:59 -0500
-Subject: [PATCH] rt2x00: Use kcalloc instead of kzalloc to allocate array
-From: Thomas Meyer <thomas@m3y3r.de>
-To: IvDoorn@gmail.com, gwingerde@gmail.com,
-	helmut.schaa@googlemail.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+	Thu, 15 Dec 2011 03:20:03 -0500
+Subject: Re: [PATCHv2] mac80211: Use appropriate TID for sending BAR, ADDBA
+ and DELBA frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	adrian@freebsd.org
+In-Reply-To: <1323936138-11357-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20111215_090257_567394_BBE36913)
+References: <1323871851-4808-1-git-send-email-helmut.schaa@googlemail.com>
+	 <1323936138-11357-1-git-send-email-helmut.schaa@googlemail.com>
+	 (sfid-20111215_090257_567394_BBE36913)
 Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Dec 2011 09:19:58 +0100
+Message-ID: <1323937198.3337.0.camel@jlt3.sipsolutions.net> (sfid-20111215_092007_564835_0EA1A0AB)
 Mime-Version: 1.0
-Date: Tue, 29 Nov 2011 22:08:00 +0100
-Message-ID: <1322600880.1534.325.camel@localhost.localdomain> (sfid-20111203_092231_359476_776B830D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The advantage of kcalloc is, that will prevent integer overflows which could
-result from the multiplication of number of elements and size and it is also
-a bit nicer to read.
+On Thu, 2011-12-15 at 09:02 +0100, Helmut Schaa wrote:
 
-The semantic patch that makes this change is available
-in https://lkml.org/lkml/2011/11/25/107
+> Changes in v2: Make ieee80211_tx_skb an inline function.
 
-Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
----
+> +++ b/net/mac80211/tx.c
 
-diff -u -p a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
---- a/drivers/net/wireless/rt2x00/rt2x00dev.c 2011-11-28 19:36:47.770108588 +0100
-+++ b/drivers/net/wireless/rt2x00/rt2x00dev.c 2011-11-28 19:54:53.495525543 +0100
-@@ -831,11 +831,11 @@ static int rt2x00lib_probe_hw_modes(stru
- 	if (spec->supported_rates & SUPPORT_RATE_OFDM)
- 		num_rates += 8;
- 
--	channels = kzalloc(sizeof(*channels) * spec->num_channels, GFP_KERNEL);
-+	channels = kcalloc(spec->num_channels, sizeof(*channels), GFP_KERNEL);
- 	if (!channels)
- 		return -ENOMEM;
- 
--	rates = kzalloc(sizeof(*rates) * num_rates, GFP_KERNEL);
-+	rates = kcalloc(num_rates, sizeof(*rates), GFP_KERNEL);
- 	if (!rates)
- 		goto exit_free_channels;
- 
+> @@ -2719,3 +2718,10 @@ void ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
+>  	ieee80211_xmit(sdata, skb);
+>  	local_bh_enable();
+>  }
+> +
+> +void inline ieee80211_tx_skb(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
+> +{
+> +	/* Send all internal mgmt frames on VO. Accordingly set TID to 7. */
+> +	ieee80211_tx_skb_tid(sdata, skb, 7);
+> +}
+
+Err, well, you should define inlines in a header file ... This inline
+statement probably made no difference at all, except for potentially
+causing a prototype mismatch compiler warning :)
+
+johannes
+
