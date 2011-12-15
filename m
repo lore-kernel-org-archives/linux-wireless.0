@@ -1,61 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:61599 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751224Ab1LTMzr (ORCPT
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:48727 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756325Ab1LOSqB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 07:55:47 -0500
-Received: by wibhm6 with SMTP id hm6so1391677wib.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 04:55:46 -0800 (PST)
-From: Eyal Shapira <eyal@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: mark no sched scan only after FW event
-Date: Tue, 20 Dec 2011 14:55:38 +0200
-Message-Id: <1324385738-3132-1-git-send-email-eyal@wizery.com> (sfid-20111220_135550_640837_4DB716C1)
+	Thu, 15 Dec 2011 13:46:01 -0500
+Received: by lahj13 with SMTP id j13so1946883lah.39
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 10:45:58 -0800 (PST)
+Subject: Re: iw: how to see MAC address
+From: Luciano Coelho <coelho@ti.com>
+To: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAMXE1-pXZm-1HreNjFyUz1geHWZbDM_dd90XAO3chMukh_j4QA@mail.gmail.com>
+References: <CAMXE1-pXZm-1HreNjFyUz1geHWZbDM_dd90XAO3chMukh_j4QA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 15 Dec 2011 20:45:54 +0200
+Message-ID: <1323974754.2800.199.camel@cumari> (sfid-20111215_194605_837462_8E61E9B0)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-stop sched scan isn't an immediate operation
-and we need to wait for PERIODIC_SCAN_COMPLETE_EVENT_ID
-after sending a stop before changing internal state
-and notifying upper layers.
-Not doing this caused problems when canceling an existing sched
-scan and immediately requesting to start a new one
-with a different configuration as the FW was still
-in the middle of the previous sched scan.
+On Thu, 2011-12-15 at 16:32 +0200, Andrei Emeltchenko wrote: 
+> Hi all,
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
----
- drivers/net/wireless/wl12xx/event.c |    2 +-
- drivers/net/wireless/wl12xx/scan.c  |    1 -
- 2 files changed, 1 insertions(+), 2 deletions(-)
+Hi Andrei!
 
-diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-index 00ce794..d3280df68 100644
---- a/drivers/net/wireless/wl12xx/event.c
-+++ b/drivers/net/wireless/wl12xx/event.c
-@@ -267,8 +267,8 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
- 		wl1271_debug(DEBUG_EVENT, "PERIODIC_SCAN_COMPLETE_EVENT "
- 			     "(status 0x%0x)", mbox->scheduled_scan_status);
- 		if (wl->sched_scanning) {
--			wl1271_scan_sched_scan_stop(wl);
- 			ieee80211_sched_scan_stopped(wl->hw);
-+			wl->sched_scanning = false;
- 		}
- 	}
- 
-diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
-index 260986b..8ff680e 100644
---- a/drivers/net/wireless/wl12xx/scan.c
-+++ b/drivers/net/wireless/wl12xx/scan.c
-@@ -754,7 +754,6 @@ void wl1271_scan_sched_scan_stop(struct wl1271 *wl)
- 		wl1271_error("failed to send sched scan stop command");
- 		goto out_free;
- 	}
--	wl->sched_scanning = false;
- 
- out_free:
- 	kfree(stop);
+
+> Sorry for stupid question but how to see my MAC address with iw?
+> 
+> iw phy and dev show lots of information but not MAC. (I can use of
+> course ifconfig)
+
+Why not use ifconfig? If we would do it in iw, we would duplicate the
+functionality.  You need to use ifconfig anyway, at least to bring the
+interface up.
+
 -- 
-1.7.4.1
+Cheers,
+Luca.
 
