@@ -1,45 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:47936 "EHLO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752454Ab1LAKIj (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:60728 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757330Ab1LOIZW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Dec 2011 05:08:39 -0500
-Received: by lagj5 with SMTP id j5so904851lag.34
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Dec 2011 02:08:37 -0800 (PST)
-Subject: Re: [PATCH] wl12xx: add chip_family to platform data struct
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: arik@wizery.com
-In-Reply-To: <1320763424-466-1-git-send-email-coelho@ti.com>
-References: <1320763424-466-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 01 Dec 2011 12:08:33 +0200
-Message-ID: <1322734113.8996.9.camel@cumari> (sfid-20111201_110843_611344_AE1B76CD)
-Mime-Version: 1.0
+	Thu, 15 Dec 2011 03:25:22 -0500
+MIME-Version: 1.0
+In-Reply-To: <1323937340.3337.3.camel@jlt3.sipsolutions.net>
+References: <1323244922-2673-1-git-send-email-kengyu@canonical.com>
+	<CAHR064iBtSTv79BhXt9_mMWugD4U_xLCM4i1wE7PLnZM8pL57g@mail.gmail.com>
+	<1323937340.3337.3.camel@jlt3.sipsolutions.net>
+Date: Thu, 15 Dec 2011 09:25:20 +0100
+Message-ID: <CAHR064ivFUeGwNAfB1MZO0mrvo+sAcM-cZTjR9wZTaPyWRhzAA@mail.gmail.com> (sfid-20111215_092537_922884_AF9E554C)
+Subject: Re: [PATCH] asus-wmi: explicitly set the wireless LED
+From: Corentin Chary <corentin.chary@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Keng-Yu Lin <kengyu@canonical.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	acpi4asus-user@lists.sourceforge.net,
+	platform-driver-x86@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, Richard Purdie <rpurdie@rpsys.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-11-08 at 16:43 +0200, Luciano Coelho wrote: 
-> To abstract the bus modules from the actual driver that handles the
-> chip, we can pass the chip_family struct in the platform data.  This
-> string is used by the bus modules to name the platform device they
-> create.  The same string is used by the platform driver to get probed.
-> 
-> If not specified, we use "wl12xx" as default for backwards
-> compatibility.
-> 
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
+On Thu, Dec 15, 2011 at 9:22 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2011-12-15 at 08:07 +0100, Corentin Chary wrote:
+>
+>> Anyway, you should use a led trigger for that, ideally the rfkill%d
+>> led trigger, but for that you need the rfkill idx, which is not
+>> exported, so you may need a new rfkill_idx() function. CCing rfkill
+>> and led guys, they may have a better advice on that.
+>
+> Since you wouldn't want to build the string yourself, you'd probably
+> want a new rfkill_ledtrigname() function like this:
+>
+> static const char *rfkill_ledtrigname(struct rfkill *rfkill)
+> {
+> #ifdef CONFIG_RFKILL_LEDS
+>        return rfkill->ledtrigname;
+> #endif
+>        return NULL;
+> }
+>
+> which you use to assign the LED class device's default trigger.
+>
+> johannes
+>
 
-I'll skip this patch for now, as it needs to be reworked for backwards
-compatibility with compat-wireless.  We have a solution that I'll
-implement soon (thanks Arik for the good discussions!).
+Right, but is rfkill->ledtrigname really set somewhere ?
 
-And once we touch the platform data again, we need to add some version
-numbering, so we don't keep breaking the ABI between the board files and
-the driver.  More details to follow. ;)
+rfkill->led_trigger.name seems safer to use.
+
 
 -- 
-Cheers,
-Luca.
-
+Corentin Chary
+http://xf.iksaif.net
