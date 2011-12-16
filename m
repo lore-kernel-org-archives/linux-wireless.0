@@ -1,33 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:58998 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752085Ab1LLLVz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 06:21:55 -0500
-Message-ID: <4EE5E3CD.1070409@gmx.net> (sfid-20111212_122158_298875_8EB3EF90)
-Date: Mon, 12 Dec 2011 12:21:49 +0100
-From: Wolfgang Breyha <wbreyha@gmx.net>
+Received: from mga03.intel.com ([143.182.124.21]:24722 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759426Ab1LPN7G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 08:59:06 -0500
+Date: Fri, 16 Dec 2011 15:03:36 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Subject: [PATCH] NFC: Fix LLCP related build failure
+Message-ID: <20111216140336.GC11800@sortiz-mobl> (sfid-20111216_145911_523504_83CDB596)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi havoc on some APs (rekeying?)
-References: <4EE2202A.4080303@gmx.net>  <1323446534.13074.96.camel@wwguy-huron>  <4EE24DF4.4020301@gmx.net>  <1323451436.13074.158.camel@wwguy-huron>  (sfid-20111209_192243_598986_F6275AE2) <1323455216.3622.21.camel@jlt3.sipsolutions.net>  <4EE35877.1060507@gmx.net>  (sfid-20111210_140255_490293_C3C0F113) <1323680657.3442.7.camel@jlt3.sipsolutions.net>  <4EE5D2D3.406@gmx.net> (sfid-20111212_110955_792336_68917631) <1323684754.3442.36.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1323684754.3442.36.camel@jlt3.sipsolutions.net>
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote, on 12.12.2011 11:12:
-> Interesting. We'll have to play with this. Can you try running a 64-bit
-> kernel maybe and see if that fixes things?
 
-I can try with a F16 x86_64 live image. It's not the latest iwlwifi then, but
-it happend with the F16 iwlagn too anyway;-) I'll do that in the evening and
-report.
+llcp_mac routines should be static and inlined or build will fail with NFC
+selected without LLCP.
 
-Greetings, Wolfgang
+This patch fixes:
+
+LD [M]  net/nfc/nfc.o
+net/nfc/netlink.o: In function `nfc_llcp_mac_is_down':
+netlink.c:(.text+0x0): multiple definition of `nfc_llcp_mac_is_down'
+net/nfc/core.o:(.text+0x0): first defined here
+net/nfc/netlink.o: In function `nfc_llcp_mac_is_up':
+netlink.c:(.text+0x10): multiple definition of `nfc_llcp_mac_is_up'
+net/nfc/core.o:(.text+0x10): first defined here
+net/nfc/af_nfc.o: In function `nfc_llcp_mac_is_down':
+(.text+0x0): multiple definition of `nfc_llcp_mac_is_down'
+net/nfc/core.o:(.text+0x0): first defined here
+net/nfc/af_nfc.o: In function `nfc_llcp_mac_is_up':
+(.text+0x10): multiple definition of `nfc_llcp_mac_is_up'
+net/nfc/core.o:(.text+0x10): first defined here
+net/nfc/rawsock.o: In function `nfc_llcp_mac_is_down':
+rawsock.c:(.text+0x0): multiple definition of `nfc_llcp_mac_is_down'
+net/nfc/core.o:(.text+0x0): first defined here
+net/nfc/rawsock.o: In function `nfc_llcp_mac_is_up':
+rawsock.c:(.text+0x10): multiple definition of `nfc_llcp_mac_is_up'
+net/nfc/core.o:(.text+0x10): first defined here
+
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+John, if you want to revert d646960f7986fefb460a2b062d5ccc8ccfeacc3a, I can
+send you an updated one with that fix included. Let me know what you'd prefer.
+
+---
+ net/nfc/nfc.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/nfc/nfc.h b/net/nfc/nfc.h
+index 2c2c401..6d28d75 100644
+--- a/net/nfc/nfc.h
++++ b/net/nfc/nfc.h
+@@ -60,11 +60,11 @@ void nfc_llcp_exit(void);
+ 
+ #else
+ 
+-void nfc_llcp_mac_is_down(struct nfc_dev *dev)
++static inline void nfc_llcp_mac_is_down(struct nfc_dev *dev)
+ {
+ }
+ 
+-void nfc_llcp_mac_is_up(struct nfc_dev *dev, u32 target_idx,
++static inline void nfc_llcp_mac_is_up(struct nfc_dev *dev, u32 target_idx,
+ 			u8 comm_mode, u8 rf_mode)
+ {
+ }
 -- 
-Wolfgang Breyha <wbreyha@gmx.net> | http://www.blafasel.at/
-Vienna University Computer Center | Austria
+1.7.7.3
 
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
