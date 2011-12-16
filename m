@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1939 "EHLO mms1.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:4710 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753179Ab1LMMnY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 07:43:24 -0500
-Message-ID: <4EE7485D.6010109@broadcom.com> (sfid-20111213_134326_741505_23713CF1)
-Date: Tue, 13 Dec 2011 13:43:09 +0100
+	id S1756517Ab1LPOBA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 09:01:00 -0500
+Message-ID: <4EEB4F09.6080806@broadcom.com> (sfid-20111216_150124_001945_0A4416BA)
+Date: Fri, 16 Dec 2011 15:00:41 +0100
 From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: "Steve Glass" <stevie.glass@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: CRDA git repository
-References: <4EE73337.2030804@gmail.com>
-In-Reply-To: <4EE73337.2030804@gmail.com>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+cc: "Johannes Berg" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: unexpected taint message
+References: <4EEB0EFC.5000302@broadcom.com> (
+ sfid-20111216_102800_182196_AFD2D6CF)
+ <1324038636.3429.1.camel@jlt3.sipsolutions.net>
+ <4EEB4D61.80602@lwfinger.net>
+In-Reply-To: <4EEB4D61.80602@lwfinger.net>
 Content-Type: text/plain;
  charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/13/2011 12:12 PM, Steve Glass wrote:
-> I cloned the CRDA repository from
-> git://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/crda.git a long
-> while back. I have been experiencing some regdomain issues with ath5k so
-> I tried a fresh clone of CRDA and that responds with:
+On 12/16/2011 02:53 PM, Larry Finger wrote:
 > 
-> Cloning into 'crda'...
-> fatal: The remote end hung up unexpectedly
-> 
-> Has the repository moved? The linux-wireless wiki still refers to the
-> above location.
-> 
-> ATB
-> 
-> Steve
+> I also found that loading brcmsmac did not trigger the license taint. I think 
+> you are OK with the dual license.
 
-Not sure here, but have you tried:
+Ok. I get it upon loading the brcmutil module. Actually, my usage
+scenario is:
 
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-regdb.git;a=summary
+1) build the driver modules in kernel tree on my development machine.
+2) rsync the brcm80211 folder to my test machine.
+3) insert the driver modules on my test machine.
+
+> Larry
+> 
 
 Gr. AvS
 
