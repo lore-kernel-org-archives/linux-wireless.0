@@ -1,93 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52008 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753535Ab1LWI2A (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Dec 2011 03:28:00 -0500
-Message-ID: <4EF43B85.9050000@qca.qualcomm.com> (sfid-20111223_092825_046627_293525A0)
-Date: Fri, 23 Dec 2011 10:27:49 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	<linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/6] ath6kl: fix sparse warning on init.c
-References: <1324406771-7100-1-git-send-email-rodrigue@qca.qualcomm.com>	 <1324406771-7100-2-git-send-email-rodrigue@qca.qualcomm.com>	 <4EF0E4A3.9010306@qca.qualcomm.com> <1324431770.14214.0.camel@joe2Laptop>
-In-Reply-To: <1324431770.14214.0.camel@joe2Laptop>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mga02.intel.com ([134.134.136.20]:27087 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760198Ab1LPQh4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 11:37:56 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 20/24] iwlwifi: create iwl_mac80211 unregister routine
+Date: Fri, 16 Dec 2011 07:37:25 -0800
+Message-Id: <1324049849-831-21-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111216_173817_304015_EC18513B)
+In-Reply-To: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/21/2011 03:42 AM, Joe Perches wrote:
-> On Tue, 2011-12-20 at 21:40 +0200, Kalle Valo wrote:
->> On 12/20/2011 08:46 PM, Luis R. Rodriguez wrote:
->>
->> 	for (i = 0; i < ARRAY_SIZE(hw_list); i++) {
->> 		hw = &hw_list[i];
->>
->> 		if (hw->id == ar->version.target_ver)
->> 			break;
->> 	}
->>
->> 	if (i == ARRAY_SIZE(hw_list)) {
->> 		ath6kl_err("Unsupported hardware version: 0x%x\n",
->> 			   ar->version.target_ver);
->> 		return -EINVAL;
->> 	}
->>
->> 	ar->hw = *hw;
->>
->> I always check for both compiler and sparse warnings and I have never
->> seen this. What version of compiler do you have?
-> 
-> Is the intent here really to allow multiple ids
-> in the list and match the last one?
+From: Don Fry <donald.h.fry@intel.com>
 
-The idea is that there should be just one hw entry per id. But if there
-would be multiple entires, the code above would take the first one.
+The mac80211 setup_register operations are collected in one routine,
+but the cleanup routines are not.  Create a routine for this.
 
-> If not, perhaps this is simpler?
-> 
-> static int ath6kl_init_hw_params(struct ath6kl *ar)
-> {
-> 	int i;
-> 	const struct ath6kl_hw *hw = hw_list;
-> 
-> 	for (i = 0; i < ARRAY_SIZE(hw_list); i++) {
-> 		if (hw->id == ar->version.target_ver) {
-> 			ar->hw = *hw;
-> 
-> 			ath6kl_dbg(ATH6KL_DBG_BOOT,
-> 				   "target_ver 0x%x target_type 0x%x dataset_patch 0x%x app_load_addr 0x%x\n",
-> 				   ar->version.target_ver, ar->target_type,
-> 				   ar->hw.dataset_patch_addr,
-> 				   ar->hw.app_load_addr);
-> 			ath6kl_dbg(ATH6KL_DBG_BOOT,
-> 				   "app_start_override_addr 0x%x board_ext_data_addr 0x%x reserved_ram_size 0x%x\n",
-> 				   ar->hw.app_start_override_addr,
-> 				   ar->hw.board_ext_data_addr,
-> 				   ar->hw.reserved_ram_size);
-> 			ath6kl_dbg(ATH6KL_DBG_BOOT,
-> 				   "refclk_hz %d uarttx_pin %d\n",
-> 				   ar->hw.refclk_hz, ar->hw.uarttx_pin);
-> 
-> 			return 0;
-> 		}
-> 		hw++;
-> 	}
-> 
-> 	ath6kl_err("Unsupported hardware version: 0x%x\n",
-> 		   ar->version.target_ver);
-> 	return -EINVAL;
-> }
+Signed-off-by: Don Fry <donald.h.fry@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |    7 +------
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |    1 +
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |    9 +++++++++
+ 3 files changed, 11 insertions(+), 6 deletions(-)
 
-There's a lot of indentation in that form which I don't like. And I
-would prefer to have the "main" (non-error) code path unindented. Easier
-to read that way.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 5a9370d..f7e089d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1915,12 +1915,7 @@ void __devexit iwl_remove(struct iwl_priv * priv)
+ 	set_bit(STATUS_EXIT_PENDING, &priv->shrd->status);
+ 
+ 	iwl_testmode_cleanup(priv);
+-	iwl_leds_exit(priv);
+-
+-	if (priv->mac80211_registered) {
+-		ieee80211_unregister_hw(priv->hw);
+-		priv->mac80211_registered = 0;
+-	}
++	iwlagn_mac_unregister(priv);
+ 
+ 	iwl_tt_exit(priv);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 66bcd3e..2c5b6c4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -91,6 +91,7 @@ void iwlagn_prepare_restart(struct iwl_priv *priv);
+ struct ieee80211_hw *iwl_alloc_all(void);
+ int iwlagn_mac_setup_register(struct iwl_priv *priv,
+ 			      struct iwlagn_ucode_capabilities *capa);
++void iwlagn_mac_unregister(struct iwl_priv *priv);
+ 
+ /* RXON */
+ int iwlagn_set_pan_params(struct iwl_priv *priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index 8074c6e..412ff48 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -245,6 +245,15 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
+ 	return 0;
+ }
+ 
++void iwlagn_mac_unregister(struct iwl_priv *priv)
++{
++	if (!priv->mac80211_registered)
++		return;
++	iwl_leds_exit(priv);
++	ieee80211_unregister_hw(priv->hw);
++	priv->mac80211_registered = 0;
++}
++
+ static int __iwl_up(struct iwl_priv *priv)
+ {
+ 	struct iwl_rxon_context *ctx;
+-- 
+1.7.0.4
 
-> btw: there are missing terminating newlines in the
-> existing ath6kl_dbg uses in this routine.
-
-Thanks, I didn't notice that. That needs to be fixed.
-
-Kalle
