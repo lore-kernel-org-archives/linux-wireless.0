@@ -1,139 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2180 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752598Ab1LHXHR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 18:07:17 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 13/23] brcm80211: smac: change ai_attach interface
- taking a bcma_bus object
-Date: Thu, 8 Dec 2011 15:06:49 -0800
-Message-ID: <1323385619-7454-14-git-send-email-frankyl@broadcom.com> (sfid-20111209_000821_109946_EF4AD171)
-In-Reply-To: <1323385619-7454-1-git-send-email-frankyl@broadcom.com>
-References: <1323385619-7454-1-git-send-email-frankyl@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7983 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751952Ab1LPNHj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 08:07:39 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: Felix Fietkau <nbd@openwrt.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+CC: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 1/1] ath9k: fix a soft lockup
+Date: Fri, 16 Dec 2011 18:35:52 +0530
+Message-ID: <1324040752-4583-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111216_140747_384223_306247E4)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-The ai_attach now takes a bcma_bus object as its parameter to
-obtain all required information needed for chip control.
+with the recent changes in the tx path we got a soft lockup.
+introduced by the commit 3ad2952998b08442044690fa9b4ec38c6c3fc4a9
+ath_send_bar seems to later call ath9k_tx which in turn seems to
+acquire the same axq_lock before calling ath_tx_start_dma
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Call Trace:
+[<c03ba9ae>] __delay+0xe/0x10
+[<c03c1dc2>] do_raw_spin_lock+0xb2/0x100
+[<c0671a67>] _raw_spin_lock_bh+0x67/0x80
+[<f984aa81>] ? ath_tx_start+0x151/0x4c0 [ath9k]
+[<f984aa81>] ath_tx_start+0x151/0x4c0 [ath9k]
+[<f984248c>] ath9k_tx+0x9c/0x1f0 [ath9k]
+[<f97eae3e>] __ieee80211_tx+0x18e/0x2d0 [mac80211]
+[<f97ec9ac>] ieee80211_tx+0xfc/0x130 [mac80211]
+[<f97ec8e3>] ? ieee80211_tx+0x33/0x130 [mac80211]
+[<f97ecd88>] ieee80211_xmit+0xc8/0x130 [mac80211]
+[<f97eccc0>] ? ieee80211_tx_pending+0x2e0/0x2e0
+[mac80211]
+[<f97ece3d>] ieee80211_tx_skb_tid+0x4d/0x60 [mac80211]
+[<f97ceda4>] ieee80211_send_bar+0xd4/0xf0 [mac80211]
+[<f984a04a>] ath_tx_complete_aggr+0x52a/0xaa0 [ath9k]
+[<f9849bd0>] ? ath_tx_complete_aggr+0xb0/0xaa0 [ath9k]
+[<f9840029>] ? setup_ht_cap+0x169/0x180 [ath9k]
+[<f984b606>] ? ath_tx_edma_tasklet+0x76/0x2a0 [ath9k]
+[<f984b606>] ? ath_tx_edma_tasklet+0x76/0x2a0 [ath9k]
+[<f984a628>] ath_tx_process_buffer+0x68/0xe0 [ath9k]
+[<f984b705>] ath_tx_edma_tasklet+0x175/0x2a0 [ath9k]
+[<f983fc2d>] ? ath9k_ioread32+0x2d/0x70 [ath9k]
+[<f9842b4b>] ath9k_tasklet+0x10b/0x1c0 [ath9k]
+
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |   18 +++++++++---------
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.h |    5 ++++-
- drivers/net/wireless/brcm80211/brcmsmac/main.c    |    2 +-
- 3 files changed, 14 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath9k/xmit.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-index 5c73119..c1e4f35 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-@@ -1022,22 +1022,25 @@ static __used void ai_nvram_process(struct si_info *sii)
- }
- 
- static struct si_info *ai_doattach(struct si_info *sii,
--				   void __iomem *regs, struct pci_dev *pbus)
-+				   struct bcma_bus *pbus)
- {
-+	void __iomem *regs = pbus->mmio;
- 	struct si_pub *sih = &sii->pub;
- 	u32 w, savewin;
- 	struct chipcregs __iomem *cc;
- 	uint socitype;
- 	uint origidx;
- 
-+	/* assume the window is looking at chipcommon */
-+	WARN_ON(pbus->mapped_core->id.id != BCMA_CORE_CHIPCOMMON);
- 	memset((unsigned char *) sii, 0, sizeof(struct si_info));
- 
- 	savewin = 0;
- 
-+	sii->icbus = pbus;
- 	sii->buscoreidx = BADIDX;
--
- 	sii->curmap = regs;
--	sii->pcibus = pbus;
-+	sii->pcibus = pbus->host_pci;
- 
- 	/* find Chipcommon address */
- 	pci_read_config_dword(sii->pcibus, PCI_BAR0_WIN, &savewin);
-@@ -1160,13 +1163,10 @@ static struct si_info *ai_doattach(struct si_info *sii,
- }
- 
- /*
-- * Allocate a si handle.
-- * devid - pci device id (used to determine chip#)
-- * osh - opaque OS handle
-- * regs - virtual address of initial core registers
-+ * Allocate a si handle and do the attach.
-  */
- struct si_pub *
--ai_attach(void __iomem *regs, struct pci_dev *sdh)
-+ai_attach(struct bcma_bus *pbus)
- {
- 	struct si_info *sii;
- 
-@@ -1175,7 +1175,7 @@ ai_attach(void __iomem *regs, struct pci_dev *sdh)
- 	if (sii == NULL)
- 		return NULL;
- 
--	if (ai_doattach(sii, regs, sdh) == NULL) {
-+	if (ai_doattach(sii, pbus) == NULL) {
- 		kfree(sii);
- 		return NULL;
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 23e80e6..ef81df0 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -189,8 +189,11 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ 		tid->state &= ~AGGR_CLEANUP;
  	}
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-index 0a8e2f7..1e93599 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-@@ -17,6 +17,8 @@
- #ifndef	_BRCM_AIUTILS_H_
- #define	_BRCM_AIUTILS_H_
  
-+#include <linux/bcma/bcma.h>
-+
- #include "types.h"
+-	if (sendbar)
++	if (sendbar) {
++		spin_unlock_bh(&txq->axq_lock);
+ 		ath_send_bar(tid, tid->seq_start);
++		spin_lock_bh(&txq->axq_lock);
++	}
+ }
  
- /*
-@@ -170,6 +172,7 @@ struct gpioh_item {
- /* misc si info needed by some of the routines */
- struct si_info {
- 	struct si_pub pub;	/* back plane public state (must be first) */
-+	struct bcma_bus *icbus;	/* handle to soc interconnect bus */
- 	struct pci_dev *pcibus;	/* handle to pci bus */
- 	uint dev_coreid;	/* the core provides driver functions */
- 	void *intr_arg;		/* interrupt callback function arg */
-@@ -235,7 +238,7 @@ extern u32 ai_addrspacesize(struct si_pub *sih, uint asidx);
- extern void ai_write_wrap_reg(struct si_pub *sih, u32 offset, u32 val);
+ static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
+@@ -556,7 +559,9 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
  
- /* === exported functions === */
--extern struct si_pub *ai_attach(void __iomem *regs, struct pci_dev *sdh);
-+extern struct si_pub *ai_attach(struct bcma_bus *pbus);
- extern void ai_detach(struct si_pub *sih);
- extern uint ai_coreid(struct si_pub *sih);
- extern uint ai_corerev(struct si_pub *sih);
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index d329c90..73bc0ab 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -4469,7 +4469,7 @@ static int brcms_b_attach(struct brcms_c_info *wlc, struct bcma_device *core,
- 	 * Do the hardware portion of the attach. Also initialize software
- 	 * state that depends on the particular hardware we are running.
- 	 */
--	wlc_hw->sih = ai_attach(core->bus->mmio, core->bus->host_pci);
-+	wlc_hw->sih = ai_attach(core->bus);
- 	if (wlc_hw->sih == NULL) {
- 		wiphy_err(wiphy, "wl%d: brcms_b_attach: si_attach failed\n",
- 			  unit);
+ 	if (bar_index >= 0) {
+ 		u16 bar_seq = ATH_BA_INDEX2SEQ(seq_first, bar_index);
++		spin_unlock_bh(&txq->axq_lock);
+ 		ath_send_bar(tid, ATH_BA_INDEX2SEQ(seq_first, bar_index + 1));
++		spin_lock_bh(&txq->axq_lock);
+ 		if (BAW_WITHIN(tid->seq_start, tid->baw_size, bar_seq))
+ 			tid->bar_index = ATH_BA_INDEX(tid->seq_start, bar_seq);
+ 	}
 -- 
-1.7.5.4
-
+1.7.0.4
 
