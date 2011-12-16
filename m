@@ -1,40 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:11858 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757030Ab1LWMvg (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:63896 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751966Ab1LPONk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Dec 2011 07:51:36 -0500
-Message-ID: <4EF4794D.7000102@qca.qualcomm.com> (sfid-20111223_135143_712002_EF64AEFE)
-Date: Fri, 23 Dec 2011 14:51:25 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Fri, 16 Dec 2011 09:13:40 -0500
+Message-ID: <4EEB521A.70602@lwfinger.net> (sfid-20111216_151401_908907_136BC178)
+Date: Fri, 16 Dec 2011 08:13:46 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Raja Mani <rmani@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>,
-	Thirumalai Pachamuthu <tpachamu@qca.qualcomm.com>
-Subject: Re: [PATCH 1/2] ath6kl: Avoid taking struct as argument in ath6kl_wmi_set_ip_cmd
-References: <1324025664-4896-1-git-send-email-rmani@qca.qualcomm.com>
-In-Reply-To: <1324025664-4896-1-git-send-email-rmani@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Arend van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: unexpected taint message
+References: <4EEB0EFC.5000302@broadcom.com>  (sfid-20111216_102800_182196_AFD2D6CF) <1324038636.3429.1.camel@jlt3.sipsolutions.net>  <4EEB4D61.80602@lwfinger.net> (sfid-20111216_145414_221850_EED1E4DE) <1324043939.3429.2.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1324043939.3429.2.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/16/2011 10:54 AM, Raja Mani wrote:
-> In this way, caller is free to pass only the value of IP addr
-> to configure.
-> 
-> In addition to this,
->   * 'ips' variable data type in struct wmi_set_ip_cmd is changed
->      from __le32 to __be32 in order to match network byte order.
->   *  ipv4_is_multicast() is used to validate multicast ip addr.
->   *  New argument if_idx is added to supply correct vif index
->      to ath6kl_wmi_cmd_send().
-> 
-> This will be used in the next patch.
-> 
-> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
-> Signed-off-by: Thirumalai Pachamuthu <tpachamu@qca.qualcomm.com>
+On 12/16/2011 07:58 AM, Johannes Berg wrote:
+> On Fri, 2011-12-16 at 07:53 -0600, Larry Finger wrote:
+>> On 12/16/2011 06:30 AM, Johannes Berg wrote:
+>>> On Fri, 2011-12-16 at 10:27 +0100, Arend van Spriel wrote:
+>>>> To whoever may know,
+>>>>
+>>>> Upon loading our driver module I get the following message:
+>>>>
+>>>> kernel: [  344.805106] Disabling lock debugging due to kernel taint
+>>>>
+>>>> What exactly are the criteria for tainting? Our driver locking strategy
+>>>> is something we want to refactor and having lock debugging during that
+>>>> transition may be a life safer.
+>>>
+>>> cat /proc/sys/kernel/tainted
+>>
+>> Please note that Documentation/sysctl/kernel.txt is missing the explanation for
+>> two bits in the value printed:
+>>
+>> 2048 - The system is working around a severe firmware bug.
+>> 4096 - An out-of-tree module has been loaded.
+>>
+>> On my system, bit 4096 is set due to loading the VirtualBox module, which
+>> disables lock debugging lock debugging. I suspect that loading VMware would
+>> cause the same condition.
+>
+> Hmm. I wish OOT didn't disable lockdep, we do a lot of development with
+> modules OOT because the turnaround is faster/easier (for not so
+> experienced developers). Worst case we can patch it out of the base
+> kernel I guess...
 
-Thanks, both patches applied.
+Me too. Now I understand John's patch entitled "[RFC] modpost: add option to 
+allow external modules to avoid taint". I doubt that it will be allowed 
+upstream, but I think that I will add it as a local commit.
 
-Kalle
+I had failed to notice that the VB module was disabling lock checking, and I 
+ACKed a patch to rtlwifi that triggers a nested lock WARNING. Oh well, at least 
+the bug was not released into the wild yet.
+
+Larry
