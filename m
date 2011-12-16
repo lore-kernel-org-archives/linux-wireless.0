@@ -1,64 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:50318 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752339Ab1LCOq4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Dec 2011 09:46:56 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 4/6] compat-wireless: add some missing config options
-Date: Sat,  3 Dec 2011 15:46:23 +0100
-Message-Id: <1322923585-13966-4-git-send-email-hauke@hauke-m.de> (sfid-20111203_154701_104658_D2B93334)
-In-Reply-To: <1322923585-13966-1-git-send-email-hauke@hauke-m.de>
-References: <1322923585-13966-1-git-send-email-hauke@hauke-m.de>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55774 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756672Ab1LPVp2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 16:45:28 -0500
+Date: Fri, 16 Dec 2011 16:33:07 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] b43: avoid calling bcma_* if CONFIG_B43_BCMA is not set
+Message-ID: <20111216213307.GA5396@tuxdriver.com> (sfid-20111216_224531_919985_0F7B2834)
+References: <1323871708-19852-1-git-send-email-linville@tuxdriver.com>
+ <CACna6rwEfgxMcM1FQDLTWqsM3iy2NqokSAByU13oeT-XkysSzw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rwEfgxMcM1FQDLTWqsM3iy2NqokSAByU13oeT-XkysSzw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Dec 15, 2011 at 12:45:58PM +0100, Rafał Miłecki wrote:
+> 2011/12/14 John W. Linville <linville@tuxdriver.com>:
+> > Avoids this:
+> >
+> > ERROR: "bcma_chipco_pll_write" [drivers/net/wireless/b43/b43.ko] undefined!
+> >
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> 
+> [BTW] Can you use b43-dev as CC in the future?
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- config.mk |   11 ++++++-----
- 1 files changed, 6 insertions(+), 5 deletions(-)
+Maybe you should update the MAINTAINERS entry so that
+scripts/get_maintainer.pl will find that?
 
-diff --git a/config.mk b/config.mk
-index 5eabc51..c8256b8 100644
---- a/config.mk
-+++ b/config.mk
-@@ -171,8 +171,8 @@ CONFIG_MAC80211=m
- # CONFIG_MAC80211_VERBOSE_PS_DEBUG=y
- # CONFIG_MAC80211_VERBOSE_MPL_DEBUG=y
- # CONFIG_MAC80211_VERBOSE_MHWMP_DEBUG=y
-+# CONFIG_MAC80211_VERBOSE_TDLS_DEBUG
- # CONFIG_MAC80211_DEBUG_COUNTERS=y
--# CONFIG_MAC80211_DRIVER_API_TRACER=y
- 
- # choose between pid and minstrel as default rate control algorithm
- CONFIG_MAC80211_RC_DEFAULT=minstrel_ht
-@@ -292,12 +292,11 @@ CONFIG_IWLWIFI=m
- # CONFIG_IWLWIFI_DEVICE_SVTOOL=y
- # CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE=y
- 
--CONFIG_IWLWIFI_LEGACY=m
-+CONFIG_IWLEGACY=m
- CONFIG_COMPAT_IWL4965=m
- CONFIG_IWL3945=m
--# CONFIG_IWLWIFI_LEGACY_DEBUG=y
--# CONFIG_IWLWIFI_LEGACY_DEBUGFS=y
--# CONFIG_IWLWIFI_LEGACY_DEVICE_TRACING=y
-+# CONFIG_IWLEGACY_DEBUG=y
-+# CONFIG_IWLEGACY_DEBUGFS=y
- 
- 
- CONFIG_B43=m
-@@ -437,6 +436,8 @@ CONFIG_RTL8192DE=m
- 
- CONFIG_BRCMSMAC=m
- 
-+CONFIG_MWIFIEX_PCIE=m
-+
- endif #CONFIG_PCI
- ## end of PCI
- 
+John
 -- 
-1.7.5.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
