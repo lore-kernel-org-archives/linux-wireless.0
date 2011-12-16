@@ -1,63 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:42162 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55777 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751453Ab1LMUAY (ORCPT
+	with ESMTP id S1760426Ab1LPVp2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 15:00:24 -0500
-Date: Tue, 13 Dec 2011 14:59:39 -0500
+	Fri, 16 Dec 2011 16:45:28 -0500
 From: "John W. Linville" <linville@tuxdriver.com>
-To: Franky Lin <frankyl@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 15/15] brcm80211: smac: fix compilation issue with
- CONFIG_BCM47XX set
-Message-ID: <20111213195939.GA2613@tuxdriver.com> (sfid-20111213_210027_843949_643A6E8C)
-References: <1323731713-14942-1-git-send-email-frankyl@broadcom.com>
- <1323731713-14942-16-git-send-email-frankyl@broadcom.com>
+To: linux-wireless@vger.kernel.org
+Cc: zajec5@gmail.com, "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] b43: mark some vars __maybe_unused in b43_nphy_pmu_spur_avoid
+Date: Fri, 16 Dec 2011 16:33:34 -0500
+Message-Id: <1324071214-5432-1-git-send-email-linville@tuxdriver.com> (sfid-20111216_224532_496709_72C81FBC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1323731713-14942-16-git-send-email-frankyl@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To preserve bisectability (just in case!), I'm folding this into the
-original patch.
+Avoids this warning when CONFIG_B43_BCMA is not set:
 
-John
+  CC [M]  drivers/net/wireless/b43/phy_n.o
+drivers/net/wireless/b43/phy_n.c: In function ‘b43_nphy_pmu_spur_avoid’:
+drivers/net/wireless/b43/phy_n.c:4052:6: warning: unused variable ‘pmu_ctl’
+drivers/net/wireless/b43/phy_n.c:4051:22: warning: unused variable ‘cc’
 
-On Mon, Dec 12, 2011 at 03:15:13PM -0800, Franky Lin wrote:
-> From: Arend van Spriel <arend@broadcom.com>
-> 
-> With the BCMA support patches a compilation issue was introduced
-> with CONFIG_BCM47XX set. This patch fixes that issue.
-> 
-> Reported-by: Hauke Mehrtens <hauke@hauke-m.de>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Franky Lin <frankyl@broadcom.com>
-> ---
->  .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-> index 687aafa..d2c7fb1 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c
-> @@ -292,7 +292,7 @@ void write_phy_reg(struct brcms_phy *pi, u16 addr, u16 val)
->  	bcma_wflush16(pi->d11core, D11REGOFFS(phyregaddr), addr);
->  	bcma_write16(pi->d11core, D11REGOFFS(phyregdata), val);
->  	if (addr == 0x72)
-> -		(void)bcma_read16(pi->d11core, D11REGOFFS(phyregdata), val);
-> +		(void)bcma_read16(pi->d11core, D11REGOFFS(phyregdata));
->  #else
->  	bcma_write32(pi->d11core, D11REGOFFS(phyregaddr), addr | (val << 16));
->  	if (++pi->phy_wreg >= pi->phy_wreg_limit) {
-> -- 
-> 1.7.5.4
-> 
-> 
-> 
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/b43/phy_n.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index c8fa2cd..f2435e7 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -4048,8 +4048,8 @@ int b43_phy_initn(struct b43_wldev *dev)
+ /* http://bcm-v4.sipsolutions.net/802.11/PmuSpurAvoid */
+ static void b43_nphy_pmu_spur_avoid(struct b43_wldev *dev, bool avoid)
+ {
+-	struct bcma_drv_cc *cc;
+-	u32 pmu_ctl;
++	struct bcma_drv_cc __maybe_unused *cc;
++	u32 __maybe_unused pmu_ctl;
+ 
+ 	switch (dev->dev->bus_type) {
+ #ifdef CONFIG_B43_BCMA
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.4
+
