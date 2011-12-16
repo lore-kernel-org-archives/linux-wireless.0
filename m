@@ -1,84 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37857 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753731Ab1LMUPQ (ORCPT
+Received: from klovia.htt-consult.com ([208.83.67.149]:57112 "EHLO
+	klovia.htt-consult.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751952Ab1LPTou (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 15:15:16 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.77)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1RaYkt-00036P-L5
-	for linux-wireless@vger.kernel.org; Tue, 13 Dec 2011 21:15:15 +0100
-Message-Id: <20111213201449.589673140@sipsolutions.net> (sfid-20111213_211521_688055_2861DB2E)
-Date: Tue, 13 Dec 2011 21:07:18 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
+	Fri, 16 Dec 2011 14:44:50 -0500
+Received: from localhost (unknown [127.0.0.1])
+	by klovia.htt-consult.com (Postfix) with ESMTP id 1C90862A71
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Dec 2011 19:38:34 +0000 (UTC)
+Received: from klovia.htt-consult.com ([127.0.0.1])
+	by localhost (klovia.htt-consult.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id jWdA9WiRiaUs for <linux-wireless@vger.kernel.org>;
+	Fri, 16 Dec 2011 14:38:22 -0500 (EST)
+Received: from lx120e.htt-consult.com (157.67.83.208.client.htt-consult.com [208.83.67.157])
+	(Authenticated sender: rgm@htt-consult.com)
+	by klovia.htt-consult.com (Postfix) with ESMTPSA id ABAEF62A6B
+	for <linux-wireless@vger.kernel.org>; Fri, 16 Dec 2011 14:38:22 -0500 (EST)
+Message-ID: <4EEB9E2E.9050004@htt-consult.com> (sfid-20111216_204453_117443_BFFC7427)
+Date: Fri, 16 Dec 2011 14:38:22 -0500
+From: Robert Moskowitz <rgm@htt-consult.com>
+MIME-Version: 1.0
 To: linux-wireless@vger.kernel.org
-Subject: [RFC 1/4] mac80211: use station mutex in configuration
-References: <20111213200717.465896579@sipsolutions.net>
-Mime-Version: 1.0
+Subject: SAE support
+References: <S1760568Ab1LPTWy/20111216192254Z+423@vger.kernel.org>
+In-Reply-To: <S1760568Ab1LPTWy/20111216192254Z+423@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+I see in:
 
-There's no need to use RCU here, we can just lock
-the station mutex instead. This allows the code
-to sleep, which is necessary for later patches.
+http://marc.info/?l=linux-wireless&m=130145440930760&w=2
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/cfg.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+That SAE support is in for mesh networking.  SAE is so defined that it 
+can be used for STA authentication to an AP or in AdHoc mode.  It is NOT 
+limited to mesh node authentication.  This was extensively discussed at 
+the 802.11 meetings as a reason that specific support of SAE by STAs did 
+not need to be defined; it was already in there.
 
---- a/net/mac80211/cfg.c	2011-12-13 21:01:26.000000000 +0100
-+++ b/net/mac80211/cfg.c	2011-12-13 21:01:28.000000000 +0100
-@@ -960,11 +960,11 @@ static int ieee80211_change_station(stru
- 	struct sta_info *sta;
- 	struct ieee80211_sub_if_data *vlansdata;
- 
--	rcu_read_lock();
-+	mutex_lock(&local->sta_mtx);
- 
- 	sta = sta_info_get_bss(sdata, mac);
- 	if (!sta) {
--		rcu_read_unlock();
-+		mutex_unlock(&local->sta_mtx);
- 		return -ENOENT;
- 	}
- 
-@@ -972,7 +972,7 @@ static int ieee80211_change_station(stru
- 	if ((params->sta_flags_mask & BIT(NL80211_STA_FLAG_TDLS_PEER)) &&
- 	    !!(params->sta_flags_set & BIT(NL80211_STA_FLAG_TDLS_PEER)) !=
- 	    !!test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
--		rcu_read_unlock();
-+		mutex_unlock(&local->sta_mtx);
- 		return -EINVAL;
- 	}
- 
-@@ -981,13 +981,13 @@ static int ieee80211_change_station(stru
- 
- 		if (vlansdata->vif.type != NL80211_IFTYPE_AP_VLAN &&
- 		    vlansdata->vif.type != NL80211_IFTYPE_AP) {
--			rcu_read_unlock();
-+			mutex_unlock(&local->sta_mtx);
- 			return -EINVAL;
- 		}
- 
- 		if (params->vlan->ieee80211_ptr->use_4addr) {
- 			if (vlansdata->u.vlan.sta) {
--				rcu_read_unlock();
-+				mutex_unlock(&local->sta_mtx);
- 				return -EBUSY;
- 			}
- 
-@@ -1003,7 +1003,7 @@ static int ieee80211_change_station(stru
- 	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) && params->supported_rates)
- 		rate_control_rate_init(sta);
- 
--	rcu_read_unlock();
-+	mutex_unlock(&local->sta_mtx);
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
- 	    params->sta_flags_mask & BIT(NL80211_STA_FLAG_AUTHORIZED))
+so......
+
+if an AP is advertising SAE in an IE in the BEACON, what will it take 
+for the STA to respond?  Does this patch provide the necessary 
+functionality?  See sec 8.2a in IEEE 802.11s-2011.
+
+Thank you.
 
 
