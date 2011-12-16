@@ -1,50 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:46238 "HELO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752573Ab1LUP0c (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55225 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756594Ab1LPMai (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 10:26:32 -0500
-Received: by mail-lpp01m010-f42.google.com with SMTP id j5so3047370lag.15
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2011 07:26:31 -0800 (PST)
-Subject: Re: [PATCH] atheros: force endian checks on atheros wireless
- drivers
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Kalle Valo <kvalo@qca.qualcomm.com>, arik@wizery.com
-In-Reply-To: <1324480449.3401.7.camel@jlt3.sipsolutions.net>
-References: <1324408728-20300-1-git-send-email-rodrigue@qca.qualcomm.com>
-	 <1324465840.2182.198.camel@cumari>
-	 (sfid-20111221_121047_806730_87573FD9)  <1324480449.3401.7.camel@jlt3.sipsolutions.net>
+	Fri, 16 Dec 2011 07:30:38 -0500
+Subject: Re: unexpected taint message
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <4EEB0EFC.5000302@broadcom.com> (sfid-20111216_102800_182196_AFD2D6CF)
+References: <4EEB0EFC.5000302@broadcom.com>
+	 (sfid-20111216_102800_182196_AFD2D6CF)
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 21 Dec 2011 17:26:28 +0200
-Message-ID: <1324481188.2182.243.camel@cumari> (sfid-20111221_162636_668482_B85FAD92)
+Date: Fri, 16 Dec 2011 13:30:36 +0100
+Message-ID: <1324038636.3429.1.camel@jlt3.sipsolutions.net> (sfid-20111216_133044_274062_33D2A1A3)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-12-21 at 16:14 +0100, Johannes Berg wrote: 
-> On Wed, 2011-12-21 at 13:10 +0200, Luciano Coelho wrote:
+On Fri, 2011-12-16 at 10:27 +0100, Arend van Spriel wrote:
+> To whoever may know,
 > 
-> > >  ath-$(CONFIG_ATH_DEBUG) += debug.o
-> > > +ccflags-y += -D__CHECK_ENDIAN__
-> > 
-> > Doesn't this force everyone who compiles the modules (even
-> > non-developers) to have sparse installed? Is it really what we want?
+> Upon loading our driver module I get the following message:
 > 
-> No. It just forces everyone who does use sparse to also use it for
-> endian checks. I do the same in all code I maintain, take a look :-)
+> kernel: [  344.805106] Disabling lock debugging due to kernel taint
+> 
+> What exactly are the criteria for tainting? Our driver locking strategy
+> is something we want to refactor and having lock debugging during that
+> transition may be a life safer.
 
-Ah, I get it now.  sparse will only run if C=[12] is passed in the make
-command.
+cat /proc/sys/kernel/tainted
 
-I'll probably add the same in wl12xx.
-
-It would be nice to have a way to enforce developers to run sparse.
-Maybe public humiliation works, but it's not the most efficient way. :)
-
--- 
-Cheers,
-Luca.
+johannes
 
