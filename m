@@ -1,32 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:39044 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756399Ab1LENKP convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37854 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759464Ab1LPOUj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Dec 2011 08:10:15 -0500
-Received: by ghrr1 with SMTP id r1so4342621ghr.19
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2011 05:10:15 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAOeh9MuuJtK_edMQvVaLSRytRoFix_OuW4OEcEMDYEak1=CvMw@mail.gmail.com>
-References: <CAOeh9MuuJtK_edMQvVaLSRytRoFix_OuW4OEcEMDYEak1=CvMw@mail.gmail.com>
-Date: Mon, 5 Dec 2011 15:10:14 +0200
-Message-ID: <CAB3XZEf=jrrqZk58BnV8Gi4iKJ6N6c24M_eLnz816n==kuxmHA@mail.gmail.com> (sfid-20111205_141020_367672_2BE5F4F4)
-Subject: Re: Query on ieee80211_subif_start_xmit
-From: Eliad Peller <eliad@wizery.com>
-To: uday kiran <kaniki.uday@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 16 Dec 2011 09:20:39 -0500
+Subject: Re: unexpected taint message
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <4EEB521A.70602@lwfinger.net> (sfid-20111216_151411_303937_12579E4F)
+References: <4EEB0EFC.5000302@broadcom.com>
+	 (sfid-20111216_102800_182196_AFD2D6CF) <1324038636.3429.1.camel@jlt3.sipsolutions.net>
+	 <4EEB4D61.80602@lwfinger.net>
+	 (sfid-20111216_145414_221850_EED1E4DE) <1324043939.3429.2.camel@jlt3.sipsolutions.net>
+	 <4EEB521A.70602@lwfinger.net> (sfid-20111216_151411_303937_12579E4F)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 16 Dec 2011 15:20:33 +0100
+Message-ID: <1324045233.3429.3.camel@jlt3.sipsolutions.net> (sfid-20111216_152044_664073_965321F7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 5, 2011 at 1:55 PM, uday kiran <kaniki.uday@gmail.com> wrote:
->  The function ieee80211_subif_start_xmit description says that it will
->  encapsulate 802.3 frame with 802.11 header and transmit. If yes, what
->  is the function which will decapsulate at the rx end.
->
-the 802.11 header replaces the 802.3 header.
-i guess the intention was that ieee80211_subif_start_xmit will
-encapsulate the frame with 802.11 header after decapsulating the 802.3
-header.
+On Fri, 2011-12-16 at 08:13 -0600, Larry Finger wrote:
 
-Eliad.
+> > Hmm. I wish OOT didn't disable lockdep, we do a lot of development with
+> > modules OOT because the turnaround is faster/easier (for not so
+> > experienced developers). Worst case we can patch it out of the base
+> > kernel I guess...
+> 
+> Me too. Now I understand John's patch entitled "[RFC] modpost: add option to 
+> allow external modules to avoid taint". I doubt that it will be allowed 
+> upstream, but I think that I will add it as a local commit.
+
+I was thinking more along the lines of this:
+
+--- wireless-testing.orig/kernel/panic.c	2011-12-10 17:32:26.000000000 +0100
++++ wireless-testing/kernel/panic.c	2011-12-16 15:19:49.000000000 +0100
+@@ -240,8 +240,16 @@ void add_taint(unsigned flag)
+ 	 * Also we want to keep up lockdep for staging development and
+ 	 * post-warning case.
+ 	 */
+-	if (flag != TAINT_CRAP && flag != TAINT_WARN && __debug_locks_off())
+-		printk(KERN_WARNING "Disabling lock debugging due to kernel taint\n");
++	switch (flag) {
++	case TAINT_CRAP:
++	case TAINT_WARN:
++	case TAINT_OOT_MODULE:
++		break;
++	default:
++		if (__debug_locks_off())
++			printk(KERN_WARNING
++			       "Disabling lock debugging due to kernel taint\n");
++	}
+ 
+ 	set_bit(flag, &tainted_mask);
+ }
+
+
