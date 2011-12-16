@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:50333 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752119Ab1LCOrC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Dec 2011 09:47:02 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 5/6] compat-wireless: fix brcm80211 driver-select
-Date: Sat,  3 Dec 2011 15:46:24 +0100
-Message-Id: <1322923585-13966-5-git-send-email-hauke@hauke-m.de> (sfid-20111203_154706_590419_542D9C55)
-In-Reply-To: <1322923585-13966-1-git-send-email-hauke@hauke-m.de>
-References: <1322923585-13966-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:47661 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752189Ab1LPRGa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 12:06:30 -0500
+Received: by vbbfc26 with SMTP id fc26so2608526vbb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Dec 2011 09:06:29 -0800 (PST)
+Message-ID: <4EEB7A92.6020701@lwfinger.net> (sfid-20111216_180633_984772_5D7940A9)
+Date: Fri, 16 Dec 2011 11:06:26 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Tim Gardner <tim.gardner@canonical.com>
+CC: Seth Forshee <seth.forshee@canonical.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Problems associating with RTL8188CE
+References: <4ECA99CC.7020008@lwfinger.net> <20111121185610.GD6736@thinkpad-t410> <4ECB028E.3030809@lwfinger.net> <20111122022008.GA17661@thinkpad-t410> <20111213194231.GA30788@thinkpad-t410> <4EE7B85E.3070802@lwfinger.net> <20111213212606.GB30788@thinkpad-t410> <4EE82CC6.2030307@lwfinger.net> <20111214162333.GB19410@thinkpad-t410> <4EE8D150.8090100@lwfinger.net> <20111214164902.GD19410@thinkpad-t410> <4EE91A87.5090207@canonical.com> <4EE9445B.1010504@lwfinger.net> <4EEA3F53.40305@canonical.com> <4EEA4F8E.60602@lwfinger.net> <4EEB7791.6060500@canonical.com>
+In-Reply-To: <4EEB7791.6060500@canonical.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 12/16/2011 10:53 AM, Tim Gardner wrote:
+>
+> Yep - specifying a _fixed_ channel for 'Up to 130Mbps at 5Ghz & 54Mbps at
+> 2.4Ghz' allowed a connection using the G beacon. I have not verified using a
+> 5Ghz capable adapter that its also beaconing on channel 36.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- scripts/driver-select |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+Do you want to report this to Netgear, or should I?
 
-diff --git a/scripts/driver-select b/scripts/driver-select
-index e74dc81..f8ca02f 100755
---- a/scripts/driver-select
-+++ b/scripts/driver-select
-@@ -396,14 +396,14 @@ case $1 in
- 	brcmsmac)
- 		disable_staging
- 		disable_bt_usb_ethernet_var
--		select_drivers		CONFIG_BRCMUTIL CONFIG_BRCMFMAC
--		select_brcm80211_driver	CONFIG_BRCMSMAC
-+		select_drivers		CONFIG_BRCMSMAC
-+		select_brcm80211_driver	CONFIG_BRCMSMAC CONFIG_BRCMUTIL
- 		;;
- 	brcmfmac)
- 		disable_staging
- 		disable_bt_usb_ethernet_var
--		select_drivers		CONFIG_BRCMUTIL CONFIG_BRCMFMAC
--		select_brcm80211_driver	CONFIG_BRCMFMAC
-+		select_drivers		CONFIG_BRCMFMAC
-+		select_brcm80211_driver	CONFIG_BRCMFMAC CONFIG_BRCMUTIL
- 		;;
- 	zd1211rw)
- 		select_driver		CONFIG_COMPAT_ZD1211RW
--- 
-1.7.5.4
+Larry
 
