@@ -1,55 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50012 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755801Ab1LGNqu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Dec 2011 08:46:50 -0500
-Subject: Re: [PATCH V2 1/2] cfg80211: Define a wrapper function for
- reporting roaming
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1323265359-1138-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1323265359-1138-1-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 07 Dec 2011 14:46:44 +0100
-Message-ID: <1323265604.3404.37.camel@jlt3.sipsolutions.net> (sfid-20111207_144653_599548_579B42BC)
-Mime-Version: 1.0
+Received: from arrakis.dune.hu ([78.24.191.176]:36403 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752250Ab1LPTTb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 14:19:31 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: Rodriguez Luis <rodrigue@qca.qualcomm.com>
+Cc: mcgrof@infradead.org, linux-wireless@vger.kernel.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 2/7] initvals: add ar9580_1p0_initvals.h to dependency list
+Date: Fri, 16 Dec 2011 20:19:20 +0100
+Message-Id: <1324063165-4349-2-git-send-email-juhosg@openwrt.org> (sfid-20111216_201934_839309_F0AC106F)
+In-Reply-To: <1324063165-4349-1-git-send-email-juhosg@openwrt.org>
+References: <1324063165-4349-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-12-07 at 19:12 +0530, Vasanthakumar Thiagarajan wrote:
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ Makefile |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
->  /**
-> + * cfg80211_roamed_bss - notify cfg80211 of roaming
-> + *
-> + * @dev: network device
-> + * @bss: entry of bss to which STA got roamed (may be %NULL)
-
-I think you should check that it isn't, that's an implementation thing
-of __cfg80211_roamed() I think? Semantically, I don't think this should
-happen here?
-
-It would also be good to note that the reference to the bss is given to
-the function and it will be released by it.
-
-> +void cfg80211_roamed_bss(struct net_device *dev, struct cfg80211_bss *bss,
-> +			 struct ieee80211_channel *channel,
-> +			 const u8 *bssid, const u8 *req_ie, size_t req_ie_len,
-> +			 const u8 *resp_ie, size_t resp_ie_len, gfp_t gfp)
-> +{
->  	struct wireless_dev *wdev = dev->ieee80211_ptr;
->  	struct cfg80211_registered_device *rdev = wiphy_to_dev(wdev->wiphy);
->  	struct cfg80211_event *ev;
-
-
-Hmm, now that I think about it more, I think the calling convention is
-really strange. Why pass the channel and bssid when the BSS struct is
-already known?
-
-Why not make cfg80211_roamed() do the BSS lookup (which would also
-reduce the race for drivers that don't use _bss()) based on the info,
-and then call a cfg80211_roamed_bss() that doesn't get channel/bssid.
-
-johannes
+diff --git a/Makefile b/Makefile
+index facbd2a..e5a53b3 100644
+--- a/Makefile
++++ b/Makefile
+@@ -16,7 +16,8 @@ ATH9K_DEPS += \
+ 	ar5008_initvals.h 	\
+ 	ar9001_initvals.h	\
+ 	ar9002_initvals.h 	\
+-	ar9003_2p2_initvals.h
++	ar9003_2p2_initvals.h	\
++	ar9580_1p0_initvals.h
+ 
+ initvals: $(ATH9K_DEPS) $(ATHEROS_DEPS) initvals.c
+ 	gcc $(CFLAGS) -o $@ $@.c
+-- 
+1.7.2.1
 
