@@ -1,38 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:65533 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751570Ab1LVOmB (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34003 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759212Ab1LPOva (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Dec 2011 09:42:01 -0500
-Received: by qcqz2 with SMTP id z2so5032983qcq.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Dec 2011 06:42:00 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20111222141102.GA2261@redhat.com>
-References: <CAA=oPaiE-NAP_rfi3BLv-wM_wBwfLyMh-p2KtMALXPaDG6LxxA@mail.gmail.com>
-	<20111222141102.GA2261@redhat.com>
-Date: Thu, 22 Dec 2011 15:42:00 +0100
-Message-ID: <CAA=oPajYJQoz0AhAaGuY9y=2gbMUfpBZJU71TmryG_zksQk_Nw@mail.gmail.com> (sfid-20111222_154205_440151_7D58B479)
-Subject: Re: rt2800usb poor performance
-From: Christian Frost <cf@cfrost.dk>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 16 Dec 2011 09:51:30 -0500
+Subject: Re: unexpected taint message
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	John Linville <linville@tuxdriver.com>
+In-Reply-To: <4EEB5A60.3090101@lwfinger.net> (sfid-20111216_154940_152892_953155B5)
+References: <4EEB0EFC.5000302@broadcom.com>
+	 (sfid-20111216_102800_182196_AFD2D6CF) <1324038636.3429.1.camel@jlt3.sipsolutions.net>
+	 <4EEB4D61.80602@lwfinger.net>
+	 (sfid-20111216_145414_221850_EED1E4DE) <1324043939.3429.2.camel@jlt3.sipsolutions.net>
+	 <4EEB521A.70602@lwfinger.net>
+	 (sfid-20111216_151411_303937_12579E4F) <1324045233.3429.3.camel@jlt3.sipsolutions.net>
+	 <4EEB5A60.3090101@lwfinger.net> (sfid-20111216_154940_152892_953155B5)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 16 Dec 2011 15:51:25 +0100
+Message-ID: <1324047085.3429.5.camel@jlt3.sipsolutions.net> (sfid-20111216_155134_727516_D763F46C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes, I have tried all your suggestions and they do not help. I
-havedownloaded the firmware from ralinktech in version v2.4.0.1
+On Fri, 2011-12-16 at 08:49 -0600, Larry Finger wrote:
 
-Christian
-On Thu, Dec 22, 2011 at 3:11 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Thu, Dec 22, 2011 at 12:44:17PM +0100, Christian Frost wrote:
->> I'm experiencing poor performance with a rt2800usb device when using
->> "compat-wireless-3.2-rc6-3" on a 2.6.35 kernel. The bandwidth is
->> ~0.5Mbps which I would expect to be significantly higher on a G
->> network. Can anyone help with this?
->
-> Do you have any better results on older compat wireless version i.e.
-> 3.0 or 3.1. Does disable power save helps (iwconfig wlanX power off)?
-> Did you try update AP firmware?
->
-> Stanislaw
+> > +	switch (flag) {
+> > +	case TAINT_CRAP:
+> > +	case TAINT_WARN:
+> > +	case TAINT_OOT_MODULE:
+> > +		break;
+> > +	default:
+> > +		if (__debug_locks_off())
+> > +			printk(KERN_WARNING
+> > +			       "Disabling lock debugging due to kernel taint\n");
+> > +	}
+> >
+> >   	set_bit(flag,&tainted_mask);
+> >   }
+> 
+> Yes. I like this patch a lot. Unfortunately, VirtualBox was a part of the 
+> decision to add the OOT taint. At least for that reason, this patch would not be 
+> accepted upstream. It is too bad that the Oracle people fought so hard to keep 
+> their module from setting TAINT_CRAP the way that GregKH wanted. That would have 
+> had fewer side effects for me.
+
+I'm not sure -- I mean, it's one thing to identify OOT modules and
+refuse to support them (and ignore lockdep reports with OOT set), but
+it's another to just disable lockdep? I think?
+
+johannes
+
