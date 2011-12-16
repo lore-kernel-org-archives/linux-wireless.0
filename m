@@ -1,38 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:44715 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759627Ab1LPO5v (ORCPT
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:55335 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932072Ab1LPSx2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 09:57:51 -0500
-Message-ID: <4EEB5C6A.6010103@lwfinger.net> (sfid-20111216_155827_190797_4B448F3E)
-Date: Fri, 16 Dec 2011 08:57:46 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 16 Dec 2011 13:53:28 -0500
+Subject: [PATCH 0/2] ath6kl: firmware API 3 support
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Fri, 16 Dec 2011 20:53:20 +0200
+Message-ID: <20111216185200.18442.29650.stgit@localhost6.localdomain6> (sfid-20111216_195331_180491_55F34A1E)
 MIME-Version: 1.0
-To: Nick Bowler <nbowler@elliptictech.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: unexpected taint message
-References: <4EEB0EFC.5000302@broadcom.com> <1324038636.3429.1.camel@jlt3.sipsolutions.net> <4EEB4D61.80602@lwfinger.net> <1324043939.3429.2.camel@jlt3.sipsolutions.net> <20111216144804.GA11693@elliptictech.com>
-In-Reply-To: <20111216144804.GA11693@elliptictech.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/16/2011 08:48 AM, Nick Bowler wrote:
-> On 2011-12-16 14:58 +0100, Johannes Berg wrote:
->> Hmm. I wish OOT didn't disable lockdep, we do a lot of development with
->> modules OOT because the turnaround is faster/easier (for not so
->> experienced developers). Worst case we can patch it out of the base
->> kernel I guess...
->
-> Indeed, but the good news is that we should finally be able to put this
-> issue behind us soon(ish).
->
->    https://git.kernel.org/?p=linux/kernel/git/tip/tip.git;a=commit;h=9ec84acee1e221d99dc33237bff5e82839d10cc0
+First some refactoring to make it easier to extend the firmware handling
+and then a patch adding support for firmware API 3.
 
-Is that patch queued for 3.3?
+---
 
-Larry
+Kalle Valo (2):
+      ath6kl: handle firmware names more dynamically
+      ath6kl: add support for FW API 3
+
+
+ drivers/net/wireless/ath/ath6kl/core.h |   46 +++++++------
+ drivers/net/wireless/ath/ath6kl/init.c |  113 +++++++++++++++++---------------
+ drivers/net/wireless/ath/ath6kl/sdio.c |   16 ++---
+ drivers/net/wireless/ath/ath6kl/usb.c  |    5 +
+ 4 files changed, 98 insertions(+), 82 deletions(-)
 
