@@ -1,43 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:58934 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752339Ab1LSWnd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 17:43:33 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 0/6] update for 3.3: iwlwifi 2011-12-19
-Date: Mon, 19 Dec 2011 13:43:07 -0800
-Message-Id: <1324330993-24476-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111219_234348_299181_BD98A5CB)
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:41816 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751189Ab1LPGRY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 01:17:24 -0500
+Received: by iaeh11 with SMTP id h11so3882277iae.19
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 22:17:24 -0800 (PST)
+Date: Fri, 16 Dec 2011 11:47:15 +0530
+From: Yogesh Ashok Powar <yogesh.powar@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH V2] mac80211: Fixing sparse warning at sta_info.c
+Message-ID: <20111216061715.GA11190@dugs> (sfid-20111216_071728_284744_4D683D46)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <82612>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We addess a throughput dropping issue caused by mis-configure the calibration
-We make changes for testmode commands to better align with wiphy interface
+The commit 42624d4913a00219a8fdbb4bafd634d1d843be85
+created following sparse warning
+>net/mac80211/sta_info.c:965:24: warning: incorrect type in assignment (different address spaces)
+>net/mac80211/sta_info.c:965:24:    expected struct tid_ampdu_tx *tid_tx
+>net/mac80211/sta_info.c:965:24:    got struct tid_ampdu_tx [noderef] <asn:4>*<noident>
 
-Johannes Berg (2):
-  iwlagn: add IRQ tracing
-  iwlagn: finer-grained HT disable
+Making use of rcu_dereference_protected to fix the problem.
 
-Venkataraman, Meenakshi (1):
-  iwlwifi: Execute runtime calibration always
+V2:
+ - Replacing rcu_dereference with rcu_dereference_protected
+   as suggested by Johannes.
+ - Adding mutex_lock/unlock to satisfy the condition at
+   rcu_dereference_protected
 
-Wey-Yi Guy (3):
-  iwlwifi: deliver hw version in both string and u32 format
-  iwlwifi: set hw_version in wiphy
-  iwlwifi: use bus_get_hw_id for IWL_TM_CMD_APP2DEV_GET_DEVICE_ID
+Cc: Nishant Sarmukadam <nishants@marvell.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+---
+ net/mac80211/sta_info.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-these patches are also available from wireless-next branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
-
- drivers/net/wireless/iwlwifi/iwl-agn.c           |   14 +++++----
- drivers/net/wireless/iwlwifi/iwl-bus.h           |   16 ++++++++---
- drivers/net/wireless/iwlwifi/iwl-core.c          |    2 +-
- drivers/net/wireless/iwlwifi/iwl-devtrace.h      |   29 +++++++++++++++++++
- drivers/net/wireless/iwlwifi/iwl-mac80211.c      |    6 ++++
- drivers/net/wireless/iwlwifi/iwl-pci.c           |   10 ++++++-
- drivers/net/wireless/iwlwifi/iwl-shared.h        |   11 +++++---
- drivers/net/wireless/iwlwifi/iwl-testmode.c      |   13 ++-------
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |   32 ++++++++++++++-------
- 9 files changed, 96 insertions(+), 37 deletions(-)
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index c6ca9bd..e4307b7 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -959,10 +959,13 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
+ 	 * until the aggregation stop completes. Refer
+ 	 * http://thread.gmane.org/gmane.linux.kernel.wireless.general/81936
+ 	 */
++
++	mutex_lock(&sta->ampdu_mlme.mtx);
++
+ 	for (i = 0; i < STA_TID_NUM; i++) {
+-		if (!sta->ampdu_mlme.tid_tx[i])
++		tid_tx = rcu_dereference_protected_tid_tx(sta, i);
++		if (!tid_tx)
+ 			continue;
+-		tid_tx = sta->ampdu_mlme.tid_tx[i];
+ 		if (skb_queue_len(&tid_tx->pending)) {
+ #ifdef CONFIG_MAC80211_HT_DEBUG
+ 			wiphy_debug(local->hw.wiphy, "TX A-MPDU  purging %d "
+@@ -974,6 +977,8 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
+ 		kfree_rcu(tid_tx, rcu_head);
+ 	}
+ 
++	mutex_unlock(&sta->ampdu_mlme.mtx);
++
+ 	__sta_info_free(local, sta);
+ 
+ 	return 0;
+-- 
+1.7.5.4
 
