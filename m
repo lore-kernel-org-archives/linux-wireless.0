@@ -1,41 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:56725 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757198Ab1LNMdg (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:62170 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752202Ab1LPSzl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 07:33:36 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Alexander Simon <an.alexsimon@googlemail.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] mac80211: free skb on error path of ieee80211_ibss_join()
-Date: Wed, 14 Dec 2011 13:33:30 +0100
-Message-Id: <1323866010-10079-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111214_133340_911249_60DB3C23)
+	Fri, 16 Dec 2011 13:55:41 -0500
+Received: by wgbdr13 with SMTP id dr13so6691600wgb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Dec 2011 10:55:40 -0800 (PST)
+MIME-Version: 1.0
+Date: Fri, 16 Dec 2011 19:55:40 +0100
+Message-ID: <CACna6rxEyGbxq813UW8RvzaysCd0jCawYZ0G6eN7XiAQOykTig@mail.gmail.com> (sfid-20111216_195544_801037_26C5D39E)
+Subject: [RFC] b43: Rearranging functions in phy_n.c
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: b43-dev <b43-dev@lists.infradead.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Our new return also created a memleak. The skb should be freed before
-returning an error.
+Hey,
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
----
- net/mac80211/ibss.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+The order of functions in phy_n.c is really messy. I wanted to collect
+related functions, fix order (dependency) and name goups via comments.
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 0fc9752..fe0e91e 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -995,6 +995,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
- 		if (!ieee80211_set_channel_type(sdata->local, sdata,
- 					       params->channel_type)) {
- 			mutex_unlock(&sdata->u.ibss.mtx);
-+			kfree_skb(skb);
- 			return -EINVAL;
- 		}
- 	}
+Is there anything I should know? Patches are going to be huge, tons of
+lines moved around the phy_n.c :(
+
+Are there any objections against that? Any suggestions if I should
+post one huge patch or few smaller ones?
+
 -- 
-1.7.7.3
-
+Rafał
