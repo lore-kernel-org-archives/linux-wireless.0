@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:58543 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756545Ab1LGQD1 (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:63053 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755974Ab1LPIpe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Dec 2011 11:03:27 -0500
-Date: Wed, 7 Dec 2011 21:33:05 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] cfg80211: Fix race in bss timeout
-Message-ID: <20111207160303.GE12498@chvasanth-lnx> (sfid-20111207_170331_359041_361D0CB5)
-References: <1323270687-5989-1-git-send-email-vthiagar@qca.qualcomm.com>
- <1323271070.3404.40.camel@jlt3.sipsolutions.net>
- <20111207153052.GB12498@chvasanth-lnx>
- <1323272248.3404.43.camel@jlt3.sipsolutions.net>
- <20111207155325.GC12498@chvasanth-lnx>
- <1323273375.3404.44.camel@jlt3.sipsolutions.net>
+	Fri, 16 Dec 2011 03:45:34 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1323273375.3404.44.camel@jlt3.sipsolutions.net>
+Date: Fri, 16 Dec 2011 09:45:33 +0100
+Message-ID: <CAGXE3d_ouo4KzQA0-ysLz_RwcqoTc5Sg4V6BZZJP0TJewzNOxw@mail.gmail.com> (sfid-20111216_094542_791952_1F5DC9F2)
+Subject: skb->priority usage in wireless frame classification
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: netdev@vger.kernel.org
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 07, 2011 at 04:56:15PM +0100, Johannes Berg wrote:
-> On Wed, 2011-12-07 at 21:23 +0530, Vasanthakumar Thiagarajan wrote:
-> > On Wed, Dec 07, 2011 at 04:37:28PM +0100, Johannes Berg wrote:
-> > > > 
-> > > > These warnings are added in cfg80211_roamed().
-> > > 
-> > > But this can be called directly by the driver with a NULL BSS.
-> > > 
-> > > Ohh. I see what you did, you didn't allow drivers calling this now. I
-> > > think you should export this function still since otherwise the race
-> > > windows might get tiny, but isn't actually completely closed (the first
-> > > get_bss() might find it, the next a millisecond later not)
-> > 
-> > I can understand the millisecond delay between cfg80211_get_bss() in driver and
-> > __cfg80211_roamed() as there can be delay in event_work getting
-> > scheduled. I don't understand the delay between driver and
-> > cfg80211_roamed() as the later one is direct call. Or this can be
-> > done later if experienced the delay?.
-> 
-> The computer takes time to execute the functions, so time passes, right?
+[Adding netdev]
 
-Ok. As driver adds new bss entry if it is not available it is always
-safe to use the bss from driver to avoid any such race. Thanks!
+Maybe someone from the netdev people can shed some light on this.
+We've got the following code in net/wireless/util.c for frame classification
+(cfg80211_classify8021d):
 
-Vasanth
+/* skb->priority values from 256->263 are magic values to
+* directly indicate a specific 802.1d priority.  This is used
+* to allow 802.1d priority to be passed directly in from VLAN
+* tags, etc.
+*/
+if (skb->priority >= 256 && skb->priority <= 263)
+                 return skb->priority - 256;
+
+I was just thinking about making use of this for some internal mac80211
+QoS handling. But is this code still valid? At least I haven't found anything
+in the 802.1q code :(
+
+Thanks,
+Helmut
