@@ -1,75 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f53.google.com ([209.85.216.53]:64910 "EHLO
-	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751699Ab1LVG5N convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Dec 2011 01:57:13 -0500
-Received: by qadb15 with SMTP id b15so5187591qad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2011 22:57:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CACna6rxEjQLj_j-f7WZOtOEGfDa+TPWyLDrn2t-FGZ5T2_fz-g@mail.gmail.com>
-References: <CAG9cJm=YkvHY56LoBoUf3fuh=xb7m+c0GgUzMZX+QyG1+CBCMg@mail.gmail.com>
-	<4EF21983.1020107@broadcom.com>
-	<CACna6rxEjQLj_j-f7WZOtOEGfDa+TPWyLDrn2t-FGZ5T2_fz-g@mail.gmail.com>
-Date: Thu, 22 Dec 2011 14:57:10 +0800
-Message-ID: <CAG9cJm=XE3jQiYvGB4T6_Avj=bmc_wXe8JGMr5hePuCu-OnPuA@mail.gmail.com> (sfid-20111222_075716_894309_45630DF6)
-Subject: Re: bcm4331 firmware installer package
-From: lina <lina.lastname@gmail.com>
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Debian Lists <debian-user@lists.debian.org>,
-	=?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga02.intel.com ([134.134.136.20]:15336 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759919Ab1LPQhm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 11:37:42 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 10/24] iwlwifi: tid_data logic move to upper layer - check_empty
+Date: Fri, 16 Dec 2011 07:37:15 -0800
+Message-Id: <1324049849-831-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111216_173757_506751_ABD5B68E)
+In-Reply-To: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am still a bit confused. (First thanks for the links all of you
-provided, but I have visited those web before).
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Here is the thing:
-BCM4331 802.11a/b/g/n fit for
-BCM4331              b/g  HT (r1)
+The tid_data is not related to the transport layer, so move
+the logic that depends on it to the upper layer.
+This patch deals with the code that checks if there are still
+pending packets for an RA / TID.
 
-What does the 802.11a for?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c     |   39 ++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   43 -------------------------
+ 2 files changed, 39 insertions(+), 43 deletions(-)
 
-On Thu, Dec 22, 2011 at 2:52 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
-> 2011/12/21 Arend van Spriel <arend@broadcom.com>:
->> On 12/21/2011 11:59 AM, lina wrote:
->>> Hi,
->>>
->>> I don't know which one (else) can be fit for bcm4331 802.11a/b/g/n (rev 02)
->>>
->>> From http://wiki.debian.org/bcm43xx#b43_and_b43legacy
->>>
->>> I tried:
->>>
->>> 1] aptitude install firmware-b43-lpphy-installer
->>>
->>> No chroot environment found. Starting normal installation
->>> No supported card found.
->>> Use proper b43 or b43legacy firmware.
->>> Aborting.
->>>
->>> 2] # aptitude install firmware-b43-installer
->>>
->>> No chroot environment found. Starting normal installation
->>> Unsupported device(s) found: PCI id 14e4:4331
->>> Aborting.
->>>
->>> both of the listed are not working,
->>>
->>
->> The bcm4331 support in b43 is pretty new so I do not expect distros are
->> providing packages for it. Your best bet is to get linux-firmware repo
->> from git.kernel.org. Probably the b43 developers can point you to the
->> specific firmware file you need to use for that phy.
->
-> Arend: I'm not sure how to say it nice... but there is only one
-> company starting with "B" having copyrights to the BCM4331 firmware.
-> Only this company can legally submit BCM4331 firmware to
-> linux-firmware repo.
->
-> --
-> Rafał
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index c46d50d..6321ea2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -588,6 +588,43 @@ int iwlagn_tx_agg_oper(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 			&sta_priv->lq_sta.lq, CMD_ASYNC, false);
+ }
+ 
++static void iwlagn_check_ratid_empty(struct iwl_priv *priv, int sta_id, u8 tid)
++{
++	struct iwl_tid_data *tid_data = &priv->shrd->tid_data[sta_id][tid];
++
++	lockdep_assert_held(&priv->shrd->sta_lock);
++
++	switch (priv->shrd->tid_data[sta_id][tid].agg.state) {
++	case IWL_EMPTYING_HW_QUEUE_DELBA:
++		/* There are no packets for this RA / TID in the HW any more */
++		if (tid_data->agg.ssn == tid_data->next_reclaimed) {
++			IWL_DEBUG_TX_QUEUES(priv,
++				"Can continue DELBA flow ssn = next_recl ="
++				" %d", tid_data->next_reclaimed);
++			iwl_trans_tx_agg_disable(trans(priv), sta_id, tid);
++			tid_data->agg.state = IWL_AGG_OFF;
++			iwl_stop_tx_ba_trans_ready(priv,
++						   NUM_IWL_RXON_CTX,
++						   sta_id, tid);
++		}
++		break;
++	case IWL_EMPTYING_HW_QUEUE_ADDBA:
++		/* There are no packets for this RA / TID in the HW any more */
++		if (tid_data->agg.ssn == tid_data->next_reclaimed) {
++			IWL_DEBUG_TX_QUEUES(priv,
++				"Can continue ADDBA flow ssn = next_recl ="
++				" %d", tid_data->next_reclaimed);
++			tid_data->agg.state = IWL_AGG_ON;
++			iwl_start_tx_ba_trans_ready(priv,
++						    NUM_IWL_RXON_CTX,
++						    sta_id, tid);
++		}
++		break;
++	default:
++		break;
++	}
++}
++
+ static void iwlagn_non_agg_tx_status(struct iwl_priv *priv,
+ 				     struct iwl_rxon_context *ctx,
+ 				     const u8 *addr1)
+@@ -965,6 +1002,7 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
+ 		/*we can free until ssn % q.n_bd not inclusive */
+ 		iwl_trans_reclaim(trans(priv), sta_id, tid, txq_id,
+ 				  ssn, status, &skbs);
++		iwlagn_check_ratid_empty(priv, sta_id, tid);
+ 		freed = 0;
+ 		while (!skb_queue_empty(&skbs)) {
+ 			skb = __skb_dequeue(&skbs);
+@@ -1120,6 +1158,7 @@ int iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
+ 	priv->shrd->tid_data[sta_id][tid].next_reclaimed = ba_resp_scd_ssn;
+ 	iwl_trans_reclaim(trans(priv), sta_id, tid, scd_flow, ba_resp_scd_ssn,
+ 			  0, &reclaimed_skbs);
++	iwlagn_check_ratid_empty(priv, sta_id, tid);
+ 	freed = 0;
+ 	while (!skb_queue_empty(&reclaimed_skbs)) {
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 15bee2b..5d44ec5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1275,47 +1275,6 @@ static int iwl_trans_pcie_request_irq(struct iwl_trans *trans)
+ 	return 0;
+ }
+ 
+-static int iwlagn_txq_check_empty(struct iwl_trans *trans,
+-			   int sta_id, u8 tid, int txq_id)
+-{
+-	struct iwl_tid_data *tid_data = &trans->shrd->tid_data[sta_id][tid];
+-
+-	lockdep_assert_held(&trans->shrd->sta_lock);
+-
+-	switch (trans->shrd->tid_data[sta_id][tid].agg.state) {
+-	case IWL_EMPTYING_HW_QUEUE_DELBA:
+-		/* There are no packets for this RA / TID in the HW any more */
+-		if ((txq_id  == tid_data->agg.txq_id) &&
+-		    (tid_data->agg.ssn == tid_data->next_reclaimed)) {
+-			IWL_DEBUG_TX_QUEUES(trans,
+-				"Can continue DELBA flow ssn = next_recl ="
+-				" %d", tid_data->next_reclaimed);
+-			iwl_trans_pcie_tx_agg_disable(trans, sta_id, tid);
+-			tid_data->agg.state = IWL_AGG_OFF;
+-			iwl_stop_tx_ba_trans_ready(priv(trans),
+-						   NUM_IWL_RXON_CTX,
+-						   sta_id, tid);
+-		}
+-		break;
+-	case IWL_EMPTYING_HW_QUEUE_ADDBA:
+-		/* There are no packets for this RA / TID in the HW any more */
+-		if (tid_data->agg.ssn == tid_data->next_reclaimed) {
+-			IWL_DEBUG_TX_QUEUES(trans,
+-				"Can continue ADDBA flow ssn = next_recl ="
+-				" %d", tid_data->next_reclaimed);
+-			tid_data->agg.state = IWL_AGG_ON;
+-			iwl_start_tx_ba_trans_ready(priv(trans),
+-						    NUM_IWL_RXON_CTX,
+-						    sta_id, tid);
+-		}
+-		break;
+-	default:
+-		break;
+-	}
+-
+-	return 0;
+-}
+-
+ static void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
+ 		      int txq_id, int ssn, u32 status,
+ 		      struct sk_buff_head *skbs)
+@@ -1338,8 +1297,6 @@ static void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
+ 		   status != TX_STATUS_FAIL_PASSIVE_NO_RX))
+ 			iwl_wake_queue(trans, txq, "Packets reclaimed");
+ 	}
+-
+-	iwlagn_txq_check_empty(trans, sta_id, tid, txq_id);
+ }
+ 
+ static void iwl_trans_pcie_free(struct iwl_trans *trans)
+-- 
+1.7.0.4
+
