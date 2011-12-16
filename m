@@ -1,100 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:51345 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752976Ab1LVItZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Dec 2011 03:49:25 -0500
-Received: by wibhm6 with SMTP id hm6so2381688wib.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Dec 2011 00:49:24 -0800 (PST)
+Received: from mail.tpi.com ([70.99.223.143]:2664 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759854Ab1LPQxn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 11:53:43 -0500
+Message-ID: <4EEB7791.6060500@canonical.com> (sfid-20111216_175345_408669_7C9CFB90)
+Date: Fri, 16 Dec 2011 09:53:37 -0700
+From: Tim Gardner <tim.gardner@canonical.com>
 MIME-Version: 1.0
-In-Reply-To: <CAG9cJmkn9HRM1TWL_P0SHBjx9mG4gZYDXeL=HucSg1FK4bf0JQ@mail.gmail.com>
-References: <CAG9cJm=YkvHY56LoBoUf3fuh=xb7m+c0GgUzMZX+QyG1+CBCMg@mail.gmail.com>
-	<4EF21983.1020107@broadcom.com>
-	<CACna6rxEjQLj_j-f7WZOtOEGfDa+TPWyLDrn2t-FGZ5T2_fz-g@mail.gmail.com>
-	<CAG9cJm=XE3jQiYvGB4T6_Avj=bmc_wXe8JGMr5hePuCu-OnPuA@mail.gmail.com>
-	<CACna6rxvmFptSR9WF8Whj1A0ATyygQ9Eo0nUY8n6MugQ0bjP7g@mail.gmail.com>
-	<CAG9cJmmnEsLQxxbi41v6nM8D+L_cOSQE73qJmDDYhXPnopn+MA@mail.gmail.com>
-	<CACna6rw_zB038mJ5XP6qvZR61pB77yRes3UwM50JFawUAhUpYg@mail.gmail.com>
-	<CAG9cJmkn9HRM1TWL_P0SHBjx9mG4gZYDXeL=HucSg1FK4bf0JQ@mail.gmail.com>
-Date: Thu, 22 Dec 2011 09:49:24 +0100
-Message-ID: <CACna6ryy3VaL4u=fts4q0KGxXp0NibMcBaS7tnYbAG5w06sj1Q@mail.gmail.com> (sfid-20111222_094928_264458_C6DD969A)
-Subject: Re: bcm4331 firmware installer package
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: lina <lina.lastname@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Debian Lists <debian-user@lists.debian.org>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Seth Forshee <seth.forshee@canonical.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Problems associating with RTL8188CE
+References: <4ECA99CC.7020008@lwfinger.net> <20111121185610.GD6736@thinkpad-t410> <4ECB028E.3030809@lwfinger.net> <20111122022008.GA17661@thinkpad-t410> <20111213194231.GA30788@thinkpad-t410> <4EE7B85E.3070802@lwfinger.net> <20111213212606.GB30788@thinkpad-t410> <4EE82CC6.2030307@lwfinger.net> <20111214162333.GB19410@thinkpad-t410> <4EE8D150.8090100@lwfinger.net> <20111214164902.GD19410@thinkpad-t410> <4EE91A87.5090207@canonical.com> <4EE9445B.1010504@lwfinger.net> <4EEA3F53.40305@canonical.com> <4EEA4F8E.60602@lwfinger.net>
+In-Reply-To: <4EEA4F8E.60602@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 22 grudnia 2011 09:45 użytkownik lina <lina.lastname@gmail.com> napisał:
-> On Thu, Dec 22, 2011 at 4:34 PM, Rafał Miłecki <zajec5@gmail.com> wrote:
->> 2011/12/22 lina <lina.lastname@gmail.com>:
->>> On Thu, Dec 22, 2011 at 3:07 PM, Rafał Miłecki <zajec5@gmail.com> wrote:
->>>> 2011/12/22 lina <lina.lastname@gmail.com>:
->>>>> I am still a bit confused. (First thanks for the links all of you
->>>>> provided, but I have visited those web before).
->>>>>
->>>>> Here is the thing:
->>>>> BCM4331 802.11a/b/g/n fit for
->>>>> BCM4331              b/g  HT (r1)
->>>>>
->>>>> What does the 802.11a for?
->>>>
->>>> Well, your card can operate in 5GHz band (frequencies). But I'm not
->>>>  really sure why you ask about this at all.
->>>>
->>>>  If you want to try experimental BCM4331 support you have to:
->>>>  1) Install kernel 3.2-rc3 or newer
->>> I have the 3.2.0-rc6
->>>>  or
->>>>  2) Install compat wireless
->>>>
->>>>  After that you've do install firmware (check for wiki howto for kernel
->>>>  3.2 and newer).
+On 12/15/2011 12:50 PM, Larry Finger wrote:
+> On 12/15/2011 12:41 PM, Tim Gardner wrote:
+>> On 12/14/2011 05:50 PM, Larry Finger wrote:
+>>> Tim,
 >>>
->>> after installation of the compat-wireless,
+>>> I did the live test with the Dec. 14 build of 12.04 (64 bit). It
+>>> connected with my WNDR3300 with no difficulty. I tested all 4 modes
+>>> supported by the AP. All worked.
 >>>
->>> from
->>> http://wireless.kernel.org/en/users/Drivers/b43#firmware
+>>> I assume that an installation would work the same as the live version,
+>>> but that is easy for you to test.
 >>>
->>>  # aptitude install firmware-b43-installer
+>>> Larry
 >>>
->>>
->>> Setting up b43-fwcutter (1:015-9) ...
->>> Setting up firmware-b43-installer (1:015-9) ...
->>> No chroot environment found. Starting normal installation
->>> Unsupported device(s) found: PCI id 14e4:4331
->>> Aborting.
->>>
->>> I don't know which part is wrong here.
 >>
->> Your tool is too old (support for BCM4331 is really recent).
-> sorry, here you mean, which tool?
+>> Here are the 3 modes I was able to successfully test on my WNDR3300 as
+>> an open AP:
 >>
->> Just do as I said and use howto for kernel 3.2, not distro-specific
->> howto. You nede to install b43-fwcutter and manually download file for
-> I can't tell the difference. (I really need detailed instructions,
-> thanks for your patience ahead)
+>> * Up to 270Mbps at 2.4Ghz
+>> 11N Channel: 03/2.422Ghz
+>> in this mode only the 11N SSID is beaconed.
+>> iperf: 11.2 Mbps average over 120 seconds, high of 26.2 Mbps, low of 6.71
+>>
+>> * Up to 270Mbps at 5Ghz & 54Mbps at 2.4Ghz
+>> 11N Channel: 36 / 5.180Ghz
+>> 11G Channel: auto
+>> in this mode only the G beacon can be seen (which makes sense)
+>> iperf: 14.3 Mbps average over 120 seconds, high of 28.5 Mbps, low of 8.97
+>>
+>> * Up to 130Mbps at 2.4Ghz
+>> 11N Channel: 03/2.422Ghz
+>> in this mode only the 11N SSID is beaconed.
+>> iperf: 16.0 Mbps average over 120 seconds, high of 28.9 Mbps, low of 7.44
+>>
+>> This mode would not acquire a beacon using the rtl8192ce:
+>>
+>> * Up to 130Mbps at 5Ghz & 54Mbps at 2.4Ghz
+>> 11N Channel: 36 / 5.180Ghz
+>> 11G Channel: auto
+>> in this mode no beacon can be seen.
+>>
+>> I verified using a MacBook Air under OS/X that the N SSID was
+>> appearing on the 5
+>> Ghz channel, but couldn't see the G beacon. Maybe its a bug in the
+>> WNDR3300.
 >
-> I tried to follow what you said before, with the kernel 3.2-rc6
-> install the compate-wireless,
-> but have problem in the following install the firmware-installer.
->> firmware extraction.
+> I had never used the "auto" channel setting before. When I set my AP to
+> the same configuration as yours (130/54 and 36/auto), it sent the
+> 802.11n beacon in the 2.4GHz channel. The 11G SSID was not seen;
+> however, I could connect to the AP on channel 1. When I switched to 11G
+> channel 1, rather than auto, then I saw the 11G SSID in the beacon. I
+> then tested the 5G band using a Dell DW1450 (p54usb) dual-band device.
+> The 11N SSID was present on channel 36 using auto or channel 1.
+>
+> There may be a bug in the WNDR3300 firmware. Sometimes when I switched
+> from channel 1 to auto for the 2G band, that band would beacon the 11G
+> SSID, and other times, it would beacon the 11N SSID. I have not
+> determined a pattern. The 11N SSID is always shown on the selected 5G
+> channel. I could, however, connect the RTL8188CE to whatever SSID the AP
+> was sending on the 2.4GHz band.
+>
+> Curiouser and curiouser,
+>
+> Larry
 
-wget http://bu3sch.de/b43/fwcutter/b43-fwcutter-015.tar.bz2
-tar xjf b43-fwcutter-015.tar.bz2
-cd b43-fwcutter-015
-make
-sudo make install
-cd ..
+Yep - specifying a _fixed_ channel for 'Up to 130Mbps at 5Ghz & 54Mbps 
+at 2.4Ghz' allowed a connection using the G beacon. I have not verified 
+using a 5Ghz capable adapter that its also beaconing on channel 36.
 
-export FIRMWARE_INSTALL_DIR="/lib/firmware"
-wget http://www.lwfinger.com/b43-firmware/broadcom-wl-5.100.138.tar.bz2
-tar xjf broadcom-wl-5.100.138.tar.bz2
-sudo b43-fwcutter -w "$FIRMWARE_INSTALL_DIR"
-broadcom-wl-5.100.138/linux/wl_apsta.o
-
+rtg
 -- 
-Rafał
+Tim Gardner tim.gardner@canonical.com
