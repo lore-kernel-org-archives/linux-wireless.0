@@ -1,236 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zmx1.ing.unibs.it ([192.167.20.248]:49201 "EHLO
-	zmx1.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757632Ab1LOLOK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 06:14:10 -0500
-Date: Thu, 15 Dec 2011 12:05:58 +0100
-From: francesco.gringoli@ing.unibs.it
-To: m@bues.ch, linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: b43-dev@lists.infradead.org, michele.orru@hotmail.it,
-	riccardo.paolillo@gmail.com, francesco.gringoli@ing.unibs.it
-Subject: [PATCH] b43: avoid packet losses in the dma worker code.
-Message-ID: <4ee9d496.ZmxUcTz7IvcMM2Tq%francesco.gringoli@ing.unibs.it> (sfid-20111215_121414_445998_7D1B549F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga02.intel.com ([134.134.136.20]:47569 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760142Ab1LPQhn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 11:37:43 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 08/24] iwlwifi: tid_data logic move to upper layer - tx AGG alloc
+Date: Fri, 16 Dec 2011 07:37:13 -0800
+Message-Id: <1324049849-831-9-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111216_173759_833191_F244166F)
+In-Reply-To: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch addresses a bug in the dma worker code that keeps draining
-packets even when the hardware queues are full. In such cases packets
-can not be passed down to the device and are erroneusly dropped by the
-code.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This problem was already discussed here
+The tid_data is not related to the transport layer, so move
+the logic that depends on it to the upper layer.
+This patch deals with tx AGG alloc.
 
-http://www.mail-archive.com/b43-dev@lists.infradead.org/msg01413.html
-
-and acknowledged by Michael.
-
-The patch also introduces separate workers for each hardware queues
-and dedicated buffers where storing packets from mac80211 before sending
-them down to the hardware.
-
-Acknowledgements to Riccardo Paolillo <riccardo.paolillo@gmail.com> and
-Michele Orru <michele.orru@hotmail.it>
-
-Signed-off-by: Francesco Gringoli <francesco.gringoli@ing.unibs.it>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |   32 +++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    4 +--
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |   26 +---------------
+ drivers/net/wireless/iwlwifi/iwl-trans.h          |    8 ++---
+ 4 files changed, 36 insertions(+), 34 deletions(-)
 
-Index: wireless-testing-new/drivers/net/wireless/b43/b43.h
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/b43/b43.h	2011-12-12 16:15:45.134475457 +0100
-+++ wireless-testing-new/drivers/net/wireless/b43/b43.h	2011-12-13 12:45:10.764607082 +0100
-@@ -845,6 +845,14 @@
- #endif
- };
- 
-+/* Multi-Queue work struct */
-+struct b43_mt_work {
-+	/* Work associated to the queue */
-+	struct work_struct mt_work;
-+	/* Queue index */
-+	int work_queue_id;
-+};
-+
- /* Data structure for the WLAN parts (802.11 cores) of the b43 chip. */
- struct b43_wl {
- 	/* Pointer to the active wireless device on this chip */
-@@ -911,10 +919,14 @@
- 	 * power doesn't match what we want. */
- 	struct work_struct txpower_adjust_work;
- 
--	/* Packet transmit work */
--	struct work_struct tx_work;
-+	/* Packet transmit work. */
-+	struct b43_mt_work tx_work[4];
-+
- 	/* Queue of packets to be transmitted. */
--	struct sk_buff_head tx_queue;
-+	struct sk_buff_head tx_queue[4];
-+
-+	/* Flag that implement the queues stopping*/
-+	bool tx_queue_stopped[4];
- 
- 	/* The device LEDs. */
- 	struct b43_leds leds;
-Index: wireless-testing-new/drivers/net/wireless/b43/main.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/b43/main.c	2011-12-12 16:15:45.134475457 +0100
-+++ wireless-testing-new/drivers/net/wireless/b43/main.c	2011-12-13 13:05:25.834514041 +0100
-@@ -3375,9 +3375,11 @@
- 
- static void b43_tx_work(struct work_struct *work)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index a31cdef..1ec4720 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -470,6 +470,8 @@ int iwlagn_tx_agg_start(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 			struct ieee80211_sta *sta, u16 tid, u16 *ssn)
  {
--	struct b43_wl *wl = container_of(work, struct b43_wl, tx_work);
-+	struct b43_mt_work *queue_work = container_of(work, struct b43_mt_work, mt_work);
-+	struct b43_wl *wl = container_of(queue_work, struct b43_wl, tx_work[queue_work->work_queue_id]);
- 	struct b43_wldev *dev;
- 	struct sk_buff *skb;
-+	int queue_num = queue_work->work_queue_id;
- 	int err = 0;
+ 	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
++	struct iwl_tid_data *tid_data;
++	unsigned long flags;
+ 	int sta_id;
+ 	int ret;
  
- 	mutex_lock(&wl->mutex);
-@@ -3387,15 +3389,27 @@
- 		return;
- 	}
+@@ -493,8 +495,34 @@ int iwlagn_tx_agg_start(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 	if (ret)
+ 		return ret;
  
--	while (skb_queue_len(&wl->tx_queue)) {
--		skb = skb_dequeue(&wl->tx_queue);
-+	while (skb_queue_len(&wl->tx_queue[queue_num])) {
-+		skb = skb_dequeue(&wl->tx_queue[queue_num]);
- 
- 		if (b43_using_pio_transfers(dev))
- 			err = b43_pio_tx(dev, skb);
- 		else
- 			err = b43_dma_tx(dev, skb);
+-	ret = iwl_trans_tx_agg_alloc(trans(priv), vif_priv->ctx->ctxid, sta_id,
+-				     tid, ssn);
++	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
 +
-+		if (err == -ENOSPC) {
-+			wl->tx_queue_stopped[queue_num] = 1;
-+			ieee80211_stop_queue(wl->hw, skb_get_queue_mapping(skb));
-+			skb_queue_head(&wl->tx_queue[queue_num], skb);
-+			break;
-+		}
- 		if (unlikely(err))
- 			dev_kfree_skb(skb); /* Drop it */
-+		err = 0;
++	tid_data = &priv->shrd->tid_data[sta_id][tid];
++	tid_data->agg.ssn = SEQ_TO_SN(tid_data->seq_number);
++
++	*ssn = tid_data->agg.ssn;
++
++	ret = iwl_trans_tx_agg_alloc(trans(priv), sta_id, tid);
++	if (ret) {
++		spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
++		return ret;
 +	}
 +
-+	if (!err) {
-+		wl->tx_queue_stopped[queue_num] = 0;
- 	}
- 
- #if B43_DEBUG
-@@ -3416,8 +3430,12 @@
- 	}
- 	B43_WARN_ON(skb_shinfo(skb)->nr_frags);
- 
--	skb_queue_tail(&wl->tx_queue, skb);
--	ieee80211_queue_work(wl->hw, &wl->tx_work);
-+	skb_queue_tail(&wl->tx_queue[skb->queue_mapping], skb);
-+	if ( !wl->tx_queue_stopped[skb->queue_mapping] ) {
-+		ieee80211_queue_work(wl->hw, &wl->tx_work[skb->queue_mapping].mt_work);
++	if (*ssn == tid_data->next_reclaimed) {
++		IWL_DEBUG_TX_QUEUES(priv, "Can proceed: ssn = next_recl = %d",
++				    tid_data->agg.ssn);
++		tid_data->agg.state = IWL_AGG_ON;
++		iwl_start_tx_ba_trans_ready(priv, vif_priv->ctx->ctxid, sta_id,
++					    tid);
 +	} else {
-+		ieee80211_stop_queue(wl->hw, skb->queue_mapping);
++		IWL_DEBUG_TX_QUEUES(priv, "Can't proceed: ssn %d, "
++				    "next_reclaimed = %d",
++				    tid_data->agg.ssn,
++				    tid_data->next_reclaimed);
++		tid_data->agg.state = IWL_EMPTYING_HW_QUEUE_ADDBA;
 +	}
++
++	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+index 342ee2d..395c9f4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+@@ -286,9 +286,7 @@ void iwl_trans_set_wr_ptrs(struct iwl_trans *trans, int txq_id, u32 index);
+ void iwl_trans_tx_queue_set_status(struct iwl_trans *trans,
+ 			     struct iwl_tx_queue *txq,
+ 			     int tx_fifo_id, int scd_retry);
+-int iwl_trans_pcie_tx_agg_alloc(struct iwl_trans *trans,
+-				enum iwl_rxon_context_id ctx, int sta_id,
+-				int tid, u16 *ssn);
++int iwl_trans_pcie_tx_agg_alloc(struct iwl_trans *trans, int sta_id, int tid);
+ void iwl_trans_pcie_tx_agg_setup(struct iwl_trans *trans,
+ 				 enum iwl_rxon_context_id ctx,
+ 				 int sta_id, int tid, int frame_limit);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index 4ee5f50..28be8a6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -539,12 +539,9 @@ static int iwlagn_txq_ctx_activate_free(struct iwl_trans *trans)
  }
  
- static void b43_qos_params_upload(struct b43_wldev *dev,
-@@ -4147,6 +4165,7 @@
- 	struct b43_wl *wl;
- 	struct b43_wldev *orig_dev;
- 	u32 mask;
-+	int queue_num;
+ int iwl_trans_pcie_tx_agg_alloc(struct iwl_trans *trans,
+-				enum iwl_rxon_context_id ctx, int sta_id,
+-				int tid, u16 *ssn)
++				int sta_id, int tid)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-	struct iwl_tid_data *tid_data;
+-	unsigned long flags;
+ 	int txq_id;
  
- 	if (!dev)
- 		return NULL;
-@@ -4158,7 +4177,10 @@
- 	/* Cancel work. Unlock to avoid deadlocks. */
- 	mutex_unlock(&wl->mutex);
- 	cancel_delayed_work_sync(&dev->periodic_work);
--	cancel_work_sync(&wl->tx_work);
-+
-+	for (queue_num = 0; queue_num < 4; queue_num++)
-+		cancel_work_sync(&wl->tx_work[queue_num].mt_work);
-+
- 	mutex_lock(&wl->mutex);
- 	dev = wl->current_dev;
- 	if (!dev || b43_status(dev) < B43_STAT_STARTED) {
-@@ -4199,9 +4221,11 @@
- 	mask = b43_read32(dev, B43_MMIO_GEN_IRQ_MASK);
- 	B43_WARN_ON(mask != 0xFFFFFFFF && mask);
- 
--	/* Drain the TX queue */
--	while (skb_queue_len(&wl->tx_queue))
--		dev_kfree_skb(skb_dequeue(&wl->tx_queue));
-+	/* Drain each TX queue */
-+	for (queue_num = 0; queue_num < 4; queue_num++) {
-+		while (skb_queue_len(&wl->tx_queue[queue_num]))
-+			dev_kfree_skb(skb_dequeue(&wl->tx_queue[queue_num]));
-+	}
- 
- 	b43_mac_suspend(dev);
- 	b43_leds_exit(dev);
-@@ -5245,6 +5269,7 @@
- 	struct ieee80211_hw *hw;
- 	struct b43_wl *wl;
- 	char chip_name[6];
-+	int queue_num;
- 
- 	hw = ieee80211_alloc_hw(sizeof(*wl), &b43_hw_ops);
- 	if (!hw) {
-@@ -5280,8 +5305,14 @@
- 	INIT_LIST_HEAD(&wl->devlist);
- 	INIT_WORK(&wl->beacon_update_trigger, b43_beacon_update_trigger_work);
- 	INIT_WORK(&wl->txpower_adjust_work, b43_phy_txpower_adjust_work);
--	INIT_WORK(&wl->tx_work, b43_tx_work);
--	skb_queue_head_init(&wl->tx_queue);
-+
-+	/* Initialize the work for each queues  */
-+	for (queue_num = 0; queue_num < 4; queue_num++) {
-+		INIT_WORK(&wl->tx_work[queue_num].mt_work, b43_tx_work);
-+		wl->tx_work[queue_num].work_queue_id = queue_num;
-+		skb_queue_head_init(&wl->tx_queue[queue_num]);
-+		wl->tx_queue_stopped[queue_num] = 0;
-+	}
- 
- 	snprintf(chip_name, ARRAY_SIZE(chip_name),
- 		 (dev->chip_id > 0x9999) ? "%d" : "%04X", dev->chip_id);
-Index: wireless-testing-new/drivers/net/wireless/b43/dma.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/b43/dma.c	2011-12-12 16:15:45.134475457 +0100
-+++ wireless-testing-new/drivers/net/wireless/b43/dma.c	2011-12-13 12:55:58.834540692 +0100
-@@ -1465,7 +1465,9 @@
- 	if ((free_slots(ring) < TX_SLOTS_PER_FRAME) ||
- 	    should_inject_overflow(ring)) {
- 		/* This TX ring is full. */
--		ieee80211_stop_queue(dev->wl->hw, skb_get_queue_mapping(skb));
-+		unsigned int skb_mapping = skb_get_queue_mapping(skb);
-+		ieee80211_stop_queue(dev->wl->hw, skb_mapping);
-+		dev->wl->tx_queue_stopped[skb_mapping] = 1;
- 		ring->stopped = 1;
- 		if (b43_debug(dev, B43_DBG_DMAVERBOSE)) {
- 			b43dbg(dev->wl, "Stopped TX ring %d\n", ring->index);
-@@ -1584,12 +1585,21 @@
+ 	txq_id = iwlagn_txq_ctx_activate_free(trans);
+@@ -553,28 +550,9 @@ int iwl_trans_pcie_tx_agg_alloc(struct iwl_trans *trans,
+ 		return -ENXIO;
  	}
- 	if (ring->stopped) {
- 		B43_WARN_ON(free_slots(ring) < TX_SLOTS_PER_FRAME);
--		ieee80211_wake_queue(dev->wl->hw, ring->queue_prio);
- 		ring->stopped = 0;
-+	}
-+
-+	if ( dev->wl->tx_queue_stopped[ring->queue_prio] ) {
-+		dev->wl->tx_queue_stopped[ring->queue_prio] = 0;
-+	} else {
-+		/* If the driver queue is running wake the corresponding
-+		 * mac80211 queue. */
-+		ieee80211_wake_queue(dev->wl->hw, ring->queue_prio);
- 		if (b43_debug(dev, B43_DBG_DMAVERBOSE)) {
- 			b43dbg(dev->wl, "Woke up TX ring %d\n", ring->index);
- 		}
- 	}
-+	/* Add work to the queue */
-+	ieee80211_queue_work(dev->wl->hw, &dev->wl->tx_work[ring->queue_prio].mt_work);
+ 
+-	spin_lock_irqsave(&trans->shrd->sta_lock, flags);
+-	tid_data = &trans->shrd->tid_data[sta_id][tid];
+-	tid_data->agg.txq_id = txq_id;
+-	tid_data->agg.ssn = SEQ_TO_SN(tid_data->seq_number);
+-
+-	*ssn = tid_data->agg.ssn;
++	trans->shrd->tid_data[sta_id][tid].agg.txq_id = txq_id;
+ 	iwl_set_swq_id(&trans_pcie->txq[txq_id], get_ac_from_tid(tid), txq_id);
+ 
+-	if (*ssn == tid_data->next_reclaimed) {
+-		IWL_DEBUG_TX_QUEUES(trans, "Proceed: ssn = next_recl = %d",
+-				    tid_data->agg.ssn);
+-		tid_data->agg.state = IWL_AGG_ON;
+-		iwl_start_tx_ba_trans_ready(priv(trans), ctx, sta_id, tid);
+-	} else {
+-		IWL_DEBUG_TX_QUEUES(trans, "Can't proceed: ssn %d, "
+-				    "next_recl = %d",
+-				    tid_data->agg.ssn,
+-				    tid_data->next_reclaimed);
+-		tid_data->agg.state = IWL_EMPTYING_HW_QUEUE_ADDBA;
+-	}
+-	spin_unlock_irqrestore(&trans->shrd->sta_lock, flags);
+-
+ 	return 0;
  }
  
- static void dma_rx(struct b43_dmaring *ring, int *slot)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 32c1deb..134d5f2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -186,8 +186,7 @@ struct iwl_trans_ops {
+ 	int (*tx_agg_disable)(struct iwl_trans *trans,
+ 			      int sta_id, int tid);
+ 	int (*tx_agg_alloc)(struct iwl_trans *trans,
+-			    enum iwl_rxon_context_id ctx, int sta_id, int tid,
+-			    u16 *ssn);
++			    int sta_id, int tid);
+ 	void (*tx_agg_setup)(struct iwl_trans *trans,
+ 			     enum iwl_rxon_context_id ctx, int sta_id, int tid,
+ 			     int frame_limit);
+@@ -323,10 +322,9 @@ static inline int iwl_trans_tx_agg_disable(struct iwl_trans *trans,
+ }
+ 
+ static inline int iwl_trans_tx_agg_alloc(struct iwl_trans *trans,
+-					 enum iwl_rxon_context_id ctx,
+-					 int sta_id, int tid, u16 *ssn)
++					 int sta_id, int tid)
+ {
+-	return trans->ops->tx_agg_alloc(trans, ctx, sta_id, tid, ssn);
++	return trans->ops->tx_agg_alloc(trans, sta_id, tid);
+ }
+ 
+ 
+-- 
+1.7.0.4
+
