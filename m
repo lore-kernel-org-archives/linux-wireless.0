@@ -1,91 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:61833 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751914Ab1LTUYI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 15:24:08 -0500
-Cc: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Petri Karhula <petri.karhula@nokia.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH 2/3] cfg80211: replace reg.c Nokia commit 269ac5
-Date: Tue, 20 Dec 2011 12:23:37 -0800
-Message-ID: <1324412618-25131-3-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111220_212413_733190_49E63F1A)
-In-Reply-To: <1324412618-25131-1-git-send-email-rodrigue@qca.qualcomm.com>
-References: <1324412618-25131-1-git-send-email-rodrigue@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from arrakis.dune.hu ([78.24.191.176]:36452 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760557Ab1LPTTi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 14:19:38 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: Rodriguez Luis <rodrigue@qca.qualcomm.com>
+Cc: mcgrof@infradead.org, linux-wireless@vger.kernel.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 5/7] initvals: add support for printing one dimensional arrays
+Date: Fri, 16 Dec 2011 20:19:23 +0100
+Message-Id: <1324063165-4349-5-git-send-email-juhosg@openwrt.org> (sfid-20111216_201941_830171_7CB91D9B)
+In-Reply-To: <1324063165-4349-1-git-send-email-juhosg@openwrt.org>
+References: <1324063165-4349-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+It will be used for printing AR9330 specific initvals.
 
-Nokia hasn't gotten back to me in over 1 month for a relicense
-change request. There are only a few changes that they contributed,
-so just reverting their changes but replacing with another set.
-This change replaces this commit:
-
-commit 269ac5fd2d75b118d76a2291e28796527db2f3f8
-Author: Kalle Valo <kalle.valo@nokia.com>
-Date:   Tue Dec 1 10:47:15 2009 +0200
-
-    cfg80211: indent regulatory messages with spaces
-
-    The regulatory messages in syslog look weird:
-
-    kernel: cfg80211: Regulatory domain: US
-    kernel: ^I(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
-    kernel: ^I(2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2700 mBm)
-    kernel: ^I(5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-    kernel: ^I(5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-    kernel: ^I(5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-    kernel: ^I(5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
-    kernel: ^I(5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
-
-    Indent them with four spaces instead of the tab character to get prettier
-    output.
-
-    Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
-    Acked: Luis R. Rodriguez <lrodriguez@atheros.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-Cc: Petri Karhula <petri.karhula@nokia.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- net/wireless/reg.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ initvals.c |   20 ++++++++++++++++----
+ 1 files changed, 16 insertions(+), 4 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index a7d252e..c0e0e42 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1987,7 +1987,7 @@ static void print_rd_rules(const struct ieee80211_regdomain *rd)
- 	const struct ieee80211_freq_range *freq_range = NULL;
- 	const struct ieee80211_power_rule *power_rule = NULL;
+diff --git a/initvals.c b/initvals.c
+index 541fa6b..b85c9dd 100644
+--- a/initvals.c
++++ b/initvals.c
+@@ -215,7 +215,19 @@ typedef long long unsigned int u64;
+ 	} else { \
+ 		printf("static const u32 "#_array"[][%ld] = {\n", ARRAY_SIZE((_array)[0])); \
+ 		ath9k_hw_print_initval((const u32 *) _array, \
+-				       ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0])); \
++				       ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0]), false); \
++	} \
++    } while (0)
++
++#define INI_PRINT_ONEDIM(_array) do { \
++	if (check) { \
++		chksum = ath9k_hw_check_initval((const u32 *) &_array,\
++						ARRAY_SIZE(_array), 1); \
++		printf("0x%016llx        "#_array"\n", chksum); \
++	} else { \
++		printf("static const u32 "#_array"[] = {\n"); \
++		ath9k_hw_print_initval((const u32 *) _array, \
++				       ARRAY_SIZE(_array), 1, true); \
+ 	} \
+     } while (0)
  
--	pr_info("    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)\n");
-+	pr_info("  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)\n");
+@@ -254,7 +266,7 @@ static u32 ath9k_patch_initval(u32 idx, u32 val)
+ 	return val;
+ }
  
- 	for (i = 0; i < rd->n_reg_rules; i++) {
- 		reg_rule = &rd->reg_rules[i];
-@@ -1999,14 +1999,14 @@ static void print_rd_rules(const struct ieee80211_regdomain *rd)
- 		 * in certain regions
- 		 */
- 		if (power_rule->max_antenna_gain)
--			pr_info("    (%d KHz - %d KHz @ %d KHz), (%d mBi, %d mBm)\n",
-+			pr_info("  (%d KHz - %d KHz @ %d KHz), (%d mBi, %d mBm)\n",
- 				freq_range->start_freq_khz,
- 				freq_range->end_freq_khz,
- 				freq_range->max_bandwidth_khz,
- 				power_rule->max_antenna_gain,
- 				power_rule->max_eirp);
- 		else
--			pr_info("    (%d KHz - %d KHz @ %d KHz), (N/A, %d mBm)\n",
-+			pr_info("  (%d KHz - %d KHz @ %d KHz), (N/A, %d mBm)\n",
- 				freq_range->start_freq_khz,
- 				freq_range->end_freq_khz,
- 				freq_range->max_bandwidth_khz,
+-static void ath9k_hw_print_initval(const u32 *array, u32 rows, u32 columns)
++static void ath9k_hw_print_initval(const u32 *array, u32 rows, u32 columns, bool onedim)
+ {
+ 	u32 chksum, col, row;
+ 
+@@ -286,7 +298,7 @@ static void ath9k_hw_print_initval(const u32 *array, u32 rows, u32 columns)
+ 			u32 idx;
+ 			u32 val;
+ 			if (!col)
+-				printf("\t{");
++				printf("\t%s", onedim ? "" : "{");
+ 			val = array[row * columns + col];
+ 			if (col > 0) {
+ 				idx = array[row * columns];
+@@ -296,7 +308,7 @@ static void ath9k_hw_print_initval(const u32 *array, u32 rows, u32 columns)
+ 			if (col + 1 < columns)
+ 				printf(", ");
+ 		}
+-		printf("},\n");
++		printf("%s,\n", onedim ? "" : "}");
+ 	}
+ 	printf("};\n\n");
+ }
 -- 
-1.7.4.15.g7811d
+1.7.2.1
 
