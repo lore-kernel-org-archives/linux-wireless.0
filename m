@@ -1,97 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:45274 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753279Ab1LUBmw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 20:42:52 -0500
-Message-ID: <1324431770.14214.0.camel@joe2Laptop> (sfid-20111221_024255_022722_7F01516D)
-Subject: Re: [PATCH 1/6] ath6kl: fix sparse warning on init.c
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Date: Tue, 20 Dec 2011 17:42:50 -0800
-In-Reply-To: <4EF0E4A3.9010306@qca.qualcomm.com>
-References: <1324406771-7100-1-git-send-email-rodrigue@qca.qualcomm.com>
-	 <1324406771-7100-2-git-send-email-rodrigue@qca.qualcomm.com>
-	 <4EF0E4A3.9010306@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:47569 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760167Ab1LPQhq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 11:37:46 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 13/24] iwlwifi: transport layer shouldn't access the AGG SM
+Date: Fri, 16 Dec 2011 07:37:18 -0800
+Message-Id: <1324049849-831-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111216_173802_775681_26AE1ACD)
+In-Reply-To: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-12-20 at 21:40 +0200, Kalle Valo wrote:
-> On 12/20/2011 08:46 PM, Luis R. Rodriguez wrote:
-> > From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-> > This fixes this sparse warning:
-> >   CC [M]  drivers/net/wireless/ath/ath6kl/init.o
-> > drivers/net/wireless/ath/ath6kl/init.c: In function ‘ath6kl_init_hw_params’:
-> > drivers/net/wireless/ath/ath6kl/init.c:1377:26: warning: ‘hw’ may be used uninitialized in this function
-> That's a compiler warning.
-[]
-> I can't see how hw can be uninitialised here (looking at the version in
-> ath6kl.git). I copy the full code here:
-> static int ath6kl_init_hw_params(struct ath6kl *ar)
-> {
-> 	const struct ath6kl_hw *hw;
-> 	int i;
-> 
-> 	for (i = 0; i < ARRAY_SIZE(hw_list); i++) {
-> 		hw = &hw_list[i];
-> 
-> 		if (hw->id == ar->version.target_ver)
-> 			break;
-> 	}
-> 
-> 	if (i == ARRAY_SIZE(hw_list)) {
-> 		ath6kl_err("Unsupported hardware version: 0x%x\n",
-> 			   ar->version.target_ver);
-> 		return -EINVAL;
-> 	}
-> 
-> 	ar->hw = *hw;
-> 
-> I always check for both compiler and sparse warnings and I have never
-> seen this. What version of compiler do you have?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Is the intent here really to allow multiple ids
-in the list and match the last one?
+This is another step towards the move of tid_data from the shared
+area.
 
-If not, perhaps this is simpler?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c     |   11 ++++++++++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   26 ++++--------------------
+ 2 files changed, 16 insertions(+), 21 deletions(-)
 
-static int ath6kl_init_hw_params(struct ath6kl *ar)
-{
-	int i;
-	const struct ath6kl_hw *hw = hw_list;
-
-	for (i = 0; i < ARRAY_SIZE(hw_list); i++) {
-		if (hw->id == ar->version.target_ver) {
-			ar->hw = *hw;
-
-			ath6kl_dbg(ATH6KL_DBG_BOOT,
-				   "target_ver 0x%x target_type 0x%x dataset_patch 0x%x app_load_addr 0x%x\n",
-				   ar->version.target_ver, ar->target_type,
-				   ar->hw.dataset_patch_addr,
-				   ar->hw.app_load_addr);
-			ath6kl_dbg(ATH6KL_DBG_BOOT,
-				   "app_start_override_addr 0x%x board_ext_data_addr 0x%x reserved_ram_size 0x%x\n",
-				   ar->hw.app_start_override_addr,
-				   ar->hw.board_ext_data_addr,
-				   ar->hw.reserved_ram_size);
-			ath6kl_dbg(ATH6KL_DBG_BOOT,
-				   "refclk_hz %d uarttx_pin %d\n",
-				   ar->hw.refclk_hz, ar->hw.uarttx_pin);
-
-			return 0;
-		}
-		hw++;
-	}
-
-	ath6kl_err("Unsupported hardware version: 0x%x\n",
-		   ar->version.target_ver);
-	return -EINVAL;
-}
-
-btw: there are missing terminating newlines in the
-existing ath6kl_dbg uses in this routine.
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 8db9144..88ee557 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -377,6 +377,17 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 			goto drop_unlock_sta;
+ 		tid_data = &priv->shrd->tid_data[sta_id][tid];
+ 
++		/* aggregation is on for this <sta,tid> */
++		if (info->flags & IEEE80211_TX_CTL_AMPDU &&
++		    tid_data->agg.state != IWL_AGG_ON) {
++			IWL_ERR(priv, "TX_CTL_AMPDU while not in AGG:"
++				" Tx flags = 0x%08x, agg.state = %d",
++				info->flags, tid_data->agg.state);
++			IWL_ERR(priv, "sta_id = %d, tid = %d seq_num = %d",
++				sta_id, tid, SEQ_TO_SN(tid_data->seq_number));
++			goto drop_unlock_sta;
++		}
++
+ 		seq_number = tid_data->seq_number;
+ 		seq_number &= IEEE80211_SCTL_SEQ;
+ 		hdr->seq_ctrl &= cpu_to_le16(IEEE80211_SCTL_FRAG);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 06db602..cfa0bf6 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1058,7 +1058,6 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 	dma_addr_t txcmd_phys;
+ 	dma_addr_t scratch_phys;
+ 	u16 len, firstlen, secondlen;
+-	u16 seq_number = 0;
+ 	u8 wait_write_ptr = 0;
+ 	u8 txq_id;
+ 	bool is_agg = false;
+@@ -1084,26 +1083,11 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 		txq_id =
+ 		    trans_pcie->ac_to_queue[ctx][skb_get_queue_mapping(skb)];
+ 
+-	if (ieee80211_is_data_qos(fc) && !ieee80211_is_qos_nullfunc(fc)) {
+-		struct iwl_tid_data *tid_data;
+-		tid_data = &trans->shrd->tid_data[sta_id][tid];
+-		if (WARN_ON_ONCE(tid >= IWL_MAX_TID_COUNT))
+-			return -1;
+-
+-		/* aggregation is on for this <sta,tid> */
+-		if (info->flags & IEEE80211_TX_CTL_AMPDU) {
+-			if (WARN_ON_ONCE(tid_data->agg.state != IWL_AGG_ON)) {
+-				IWL_ERR(trans, "TX_CTL_AMPDU while not in AGG:"
+-					" Tx flags = 0x%08x, agg.state = %d",
+-					info->flags, tid_data->agg.state);
+-				IWL_ERR(trans, "sta_id = %d, tid = %d "
+-					"txq_id = %d, seq_num = %d", sta_id,
+-					tid, trans_pcie->agg_txq[sta_id][tid],
+-					SEQ_TO_SN(seq_number));
+-			}
+-			txq_id = trans_pcie->agg_txq[sta_id][tid];
+-			is_agg = true;
+-		}
++	/* aggregation is on for this <sta,tid> */
++	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
++		WARN_ON(tid >= IWL_MAX_TID_COUNT);
++		txq_id = trans_pcie->agg_txq[sta_id][tid];
++		is_agg = true;
+ 	}
+ 
+ 	txq = &trans_pcie->txq[txq_id];
+-- 
+1.7.0.4
 
