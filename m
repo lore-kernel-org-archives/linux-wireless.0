@@ -1,44 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3525 "EHLO mms1.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:1465 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751961Ab1LIK2J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Dec 2011 05:28:09 -0500
-Message-ID: <4EE1E2AC.8030002@broadcom.com> (sfid-20111209_112822_109668_7860A322)
-Date: Fri, 9 Dec 2011 11:27:56 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1752809Ab1LQChb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 21:37:31 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 03/30] brcm80211: fmac: register a dummy irq handler for
+ SDIO function 2
+Date: Fri, 16 Dec 2011 18:36:53 -0800
+Message-ID: <1324089440-8957-4-git-send-email-frankyl@broadcom.com> (sfid-20111217_033735_691535_4DA121A7)
+In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"Francesco Gringoli" <francesco.gringoli@ing.unibs.it>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Performance of BCM43224 (14e4:4353)
-References: <4EE15A4E.1090500@lwfinger.net>
-In-Reply-To: <4EE15A4E.1090500@lwfinger.net>
-Content-Type: text/plain;
- charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/09/2011 01:46 AM, Larry Finger wrote:
-> Guys,
-> 
-> I just added the patches that let brcmsmac use bcma, and tested the TX and RX 
-> rates using netperf. The results are
-> 
-> Driver			RX		TX
-> 
-> brcmsmac		21.7		6.2
-> b43			15.0		6.0
-> wl			43.5		73.5
-> 
+When there is data available in dongle for driver to fetch, an
+interrupt will be triggered and both SDIO function 1 and 2 will be
+flagged by default in bcm4329. These two interrupt flags are
+identical and only need to be handled once. Since there is no way
+to turn off one flag from the dongle side, a dummy handler for
+function 2 interrupt is placed.
 
-Hi Larry
+Reported-by: Denis 'GNUtoo' Carikli <GNUtoo@no-log.org>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-Could you perform your benchmark test on brcmsmac without the bcma
-patches. It kind of surprises me that we are that far off compared to
-the wl driver.
-
-Gr. AvS
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 6c85d66..32d72a0 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -51,12 +51,18 @@ static void brcmf_sdioh_irqhandler(struct sdio_func *func)
+ 	sdio_claim_host(func);
+ }
+ 
++/* dummy handler for SDIO function 2 interrupt */
++static void brcmf_sdioh_dummy_irq_handler(struct sdio_func *func)
++{
++}
++
+ int brcmf_sdcard_intr_reg(struct brcmf_sdio_dev *sdiodev)
+ {
+ 	brcmf_dbg(TRACE, "Entering\n");
+ 
+ 	sdio_claim_host(sdiodev->func[1]);
+ 	sdio_claim_irq(sdiodev->func[1], brcmf_sdioh_irqhandler);
++	sdio_claim_irq(sdiodev->func[2], brcmf_sdioh_dummy_irq_handler);
+ 	sdio_release_host(sdiodev->func[1]);
+ 
+ 	return 0;
+@@ -67,6 +73,7 @@ int brcmf_sdcard_intr_dereg(struct brcmf_sdio_dev *sdiodev)
+ 	brcmf_dbg(TRACE, "Entering\n");
+ 
+ 	sdio_claim_host(sdiodev->func[1]);
++	sdio_release_irq(sdiodev->func[2]);
+ 	sdio_release_irq(sdiodev->func[1]);
+ 	sdio_release_host(sdiodev->func[1]);
+ 
+-- 
+1.7.5.4
 
 
