@@ -1,97 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:40845 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751204Ab1LTHQr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 02:16:47 -0500
-Received: by iaeh11 with SMTP id h11so9832884iae.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 23:16:46 -0800 (PST)
+Received: from mms3.broadcom.com ([216.31.210.19]:1465 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760842Ab1LQChg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 21:37:36 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 02/30] brcm80211: fmac: remove oneline proto block
+ functions
+Date: Fri, 16 Dec 2011 18:36:52 -0800
+Message-ID: <1324089440-8957-3-git-send-email-frankyl@broadcom.com> (sfid-20111217_035946_696482_FDB6CE68)
+In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <4EF00EEB.2010006@gmail.com>
-References: <CAB=NE6WfBDqQzqxNaZm5mMhjyP2t7M-5t=+RA-A2JAKUKjmJzw@mail.gmail.com>
- <4EF00EEB.2010006@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 19 Dec 2011 23:16:25 -0800
-Message-ID: <CAB=NE6Waa5X8p3J343HQGnz6t1Lvn1+ZyQi0pAr50G5z7cUxWQ@mail.gmail.com> (sfid-20111220_081651_222521_03213C5B)
-Subject: Re: [ANN] compat-wireless for 3.2-rc6
-To: Richard Farina <sidhayn@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 19, 2011 at 8:28 PM, Richard Farina <sidhayn@gmail.com> wrote:
-> On 12/19/11 22:55, Luis R. Rodriguez wrote:
->>
->> You all know what this is, only difference is we have a few
->> pending-stable patches not yet merged into Linus' tree but that are on
->> linux-next.git so we suck those in and provide an "-s" release. Below
->> are the statistics of both releases. We have an "-s" release [1] and a
->> vanilla release [2]. I'll note that I expect a few set of patches are
->> desirable to cherry pick from linux-next.git for a type of stable
->> release that we will support but for now I have yet to hear back which
->> patches those are. Feel free to reply here with the sha1sums you want
->> but please be specific of the linux-next.git tag you used.
->>
->> For the -s release:
->>
->> Updated from local tree: /home/mcgrof/linux-stable
->> Origin remote URL:
->> git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
->>
->> compat-wireless code metrics
->>
->>     814570 - Total upstream lines of code being pulled
->>       2488 - backport code changes
->>       2143 - backport code additions
->>        345 - backport code deletions
->>       8670 - backport from compat module
->>      11158 - total backport code
->>     1.3698 - % of code consists of backport work
->>         57 - Code changes brought in from pending-stable
->>         44 - Code additions brought in from pending-stable
->>         13 - Code deletions brought in from pending-stable
->>     0.0070 - % of code being cherry picked from pending-stable
->>
->> Base tree: linux-stable.git
->> Base tree version: v3.2-rc6
->> compat-wireless release: compat-wireless-v3.2-rc6-3-s
->>
->> For the vanilla release:
->>
->> Updated from local tree: /home/mcgrof/linux-stable
->> Origin remote URL:
->> git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
->>
->> compat-wireless code metrics
->>
->>     814570 - Total upstream lines of code being pulled
->>       2488 - backport code changes
->>       2143 - backport code additions
->>        345 - backport code deletions
->>       8670 - backport from compat module
->>      11158 - total backport code
->>     1.3698 - % of code consists of backport work
->>
->> Base tree: linux-stable.git
->> Base tree version: v3.2-rc6
->> compat-wireless release: compat-wireless-v3.2-rc6-3
->>
->> [1]
->> http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.2/compat-wireless-3.2-rc6-3-s.tar.bz2
->> [2]
->> http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.2/compat-wireless-3.2-rc1-1.tar.bz2
->> --
->
-> Not sure how much anyone cares,
+brcmf_os_proto_block and brcmf_os_proto_unblock are oneline
+functions handling proto_block mutex. Place the mutex interface
+call inline to increase readability.
 
-Depends. Does is this issue present for any official kernel 2.6.27..3.1?
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    3 ---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c  |   10 +++++-----
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    4 ++--
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   19 -------------------
+ 4 files changed, 7 insertions(+), 29 deletions(-)
 
-> but this doesn't compile on gentoo hardened.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index c87144c..74ea4b0 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -734,9 +734,6 @@ extern void brcmf_txcomplete(struct brcmf_pub *drvr, struct sk_buff *txp,
+ extern int brcmf_proto_cdc_query_dcmd(struct brcmf_pub *drvr, int ifidx,
+ 				       uint cmd, void *buf, uint len);
+ 
+-/* OS independent layer functions */
+-extern int brcmf_os_proto_block(struct brcmf_pub *drvr);
+-extern int brcmf_os_proto_unblock(struct brcmf_pub *drvr);
+ #ifdef BCMDBG
+ extern int brcmf_write_to_file(struct brcmf_pub *drvr, const u8 *buf, int size);
+ #endif				/* BCMDBG */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+index ebd53aa..87003f8 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
+@@ -284,7 +284,7 @@ brcmf_proto_dcmd(struct brcmf_pub *drvr, int ifidx, struct brcmf_dcmd *dcmd,
+ 		brcmf_dbg(ERROR, "bus is down. we have nothing to do.\n");
+ 		return ret;
+ 	}
+-	brcmf_os_proto_block(drvr);
++	mutex_lock(&drvr->proto_block);
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+@@ -338,7 +338,7 @@ brcmf_proto_dcmd(struct brcmf_pub *drvr, int ifidx, struct brcmf_dcmd *dcmd,
+ 	prot->pending = false;
+ 
+ done:
+-	brcmf_os_proto_unblock(drvr);
++	mutex_unlock(&drvr->proto_block);
+ 
+ 	return ret;
+ }
+@@ -470,19 +470,19 @@ int brcmf_proto_init(struct brcmf_pub *drvr)
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	brcmf_os_proto_block(drvr);
++	mutex_lock(&drvr->proto_block);
+ 
+ 	/* Get the device MAC address */
+ 	strcpy(buf, "cur_etheraddr");
+ 	ret = brcmf_proto_cdc_query_dcmd(drvr, 0, BRCMF_C_GET_VAR,
+ 					  buf, sizeof(buf));
+ 	if (ret < 0) {
+-		brcmf_os_proto_unblock(drvr);
++		mutex_unlock(&drvr->proto_block);
+ 		return ret;
+ 	}
+ 	memcpy(drvr->mac, buf, ETH_ALEN);
+ 
+-	brcmf_os_proto_unblock(drvr);
++	mutex_unlock(&drvr->proto_block);
+ 
+ 	ret = brcmf_c_preinit_dcmds(drvr);
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+index 228b7ed..5e5a954 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+@@ -804,7 +804,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_pub *drvr)
+ 	int scan_unassoc_time = 40;
+ 	int i;
+ 
+-	brcmf_os_proto_block(drvr);
++	mutex_lock(&drvr->proto_block);
+ 
+ 	/* Set Country code */
+ 	if (drvr->country_code[0] != 0) {
+@@ -873,7 +873,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_pub *drvr)
+ 						 0, true);
+ 	}
+ 
+-	brcmf_os_proto_unblock(drvr);
++	mutex_unlock(&drvr->proto_block);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index f9cc5f8..cd0a698 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -1112,25 +1112,6 @@ void brcmf_detach(struct brcmf_pub *drvr)
+ 	}
+ }
+ 
+-int brcmf_os_proto_block(struct brcmf_pub *drvr)
+-{
+-	if (drvr) {
+-		mutex_lock(&drvr->proto_block);
+-		return 1;
+-	}
+-	return 0;
+-}
+-
+-int brcmf_os_proto_unblock(struct brcmf_pub *drvr)
+-{
+-	if (drvr) {
+-		mutex_unlock(&drvr->proto_block);
+-		return 1;
+-	}
+-
+-	return 0;
+-}
+-
+ static int brcmf_get_pend_8021x_cnt(struct brcmf_pub *drvr)
+ {
+ 	return atomic_read(&drvr->pend_8021x_cnt);
+-- 
+1.7.5.4
 
-What's the delta between whatever gentoo hardened has vs its
-respective vanilla stable release? RHEL and Debian seem to do some
-nasty shit on their own, I welcome patches for distribution hacks if
-someone is willing to maintain that crap for their own distribution.
 
-  Luis
