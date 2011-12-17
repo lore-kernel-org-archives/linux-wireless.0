@@ -1,29 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:49652 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932415Ab1LEUUE (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:52045 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750884Ab1LQXnI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Dec 2011 15:20:04 -0500
-Date: Mon, 05 Dec 2011 15:18:40 -0500 (EST)
-Message-Id: <20111205.151840.1208380281291539765.davem@davemloft.net> (sfid-20111205_212038_370810_9C4C905A)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2011-12-05
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20111205171938.GD2531@tuxdriver.com>
-References: <20111205163032.GC2531@tuxdriver.com>
-	<20111205171938.GD2531@tuxdriver.com>
+	Sat, 17 Dec 2011 18:43:08 -0500
+Message-ID: <1324165382.3323.59.camel@edumazet-laptop> (sfid-20111218_004312_653840_2FD28005)
+Subject: Re: Question about TCP Checksum errors
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Date: Sun, 18 Dec 2011 00:43:02 +0100
+In-Reply-To: <4EED232D.3010208@lwfinger.net>
+References: <4EED232D.3010208@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 5 Dec 2011 12:19:39 -0500
+Le samedi 17 décembre 2011 à 17:18 -0600, Larry Finger a écrit :
+> In https://bugzilla.novell.com/show_bug.cgi?id=718736, a user reports that his 
+> network using an RTL8188CE becomes very slow under "heavy" load. This condition 
+> started when he updated from openSUSE 11.4 to 12.1. The kernels involved are 
+> 2.6.37 and 3.1. I am unable to duplicate the problem.
+> 
+> Packet capture with Wireshark shows that the slow down is due to retransmissions 
+> due to TCP checksum errors. I found nothing to explain the situation with a 
+> Google search, thus I am asking here.
+> 
+> I put heavy in quotes because the traffic is from a web browser to yahoo.com, 
+> thus the potential throughput is not very high.
+> 
+> As far as I know, this checksum is generated in a higher layer of the network 
+> stack, and that data is just passed through the 802.11 layer, and the wireless 
+> driver. Is this correct? Anyone have any ideas on where to look for the problem?
+> 
 
-> Forgot the signature...I'll sign this one, just in case! :-)
+I see nothing special in the packet capture from this bug report.
 
-:-)
+(Only suboptimal application opening many concurrent flows in //)
 
-Pulled, thanks a lot.
+Keep in mind most modern NICS compute checksums themselve.
+
+Linux offloads this to NIC
+
+This can be controled eventually by "ethtool -k ethX" (-K to change
+settings)
+
+# ethtool -k eth0
+Offload parameters for eth0:
+rx-checksumming: on
+tx-checksumming: on
+scatter-gather: on
+tcp-segmentation-offload: on
+udp-fragmentation-offload: off
+generic-segmentation-offload: on
+generic-receive-offload: on
+large-receive-offload: off
+rx-vlan-offload: on
+tx-vlan-offload: on
+ntuple-filters: off
+receive-hashing: off
+
+# ethtool -K eth0 tx off
+# ethtool -k eth0
+Offload parameters for eth0:
+rx-checksumming: on
+tx-checksumming: off
+scatter-gather: off
+tcp-segmentation-offload: off
+udp-fragmentation-offload: off
+generic-segmentation-offload: off
+generic-receive-offload: on
+large-receive-offload: off
+rx-vlan-offload: on
+tx-vlan-offload: on
+ntuple-filters: off
+receive-hashing: off
+
+
