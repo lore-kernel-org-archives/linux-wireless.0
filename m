@@ -1,164 +1,324 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:59077 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932548Ab1LPSxq (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:44537 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751468Ab1LQM4k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 13:53:46 -0500
-Subject: [PATCH 2/2] ath6kl: add support for FW API 3
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Date: Fri, 16 Dec 2011 20:53:41 +0200
-Message-ID: <20111216185341.18442.7476.stgit@localhost6.localdomain6> (sfid-20111216_195353_059412_68ED7293)
-In-Reply-To: <20111216185200.18442.29650.stgit@localhost6.localdomain6>
-References: <20111216185200.18442.29650.stgit@localhost6.localdomain6>
+	Sat, 17 Dec 2011 07:56:40 -0500
+Received: by mail-ee0-f46.google.com with SMTP id c4so4011144eek.19
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Dec 2011 04:56:39 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 8/8] b43: N-PHY: reorder functions: random clenaups
+Date: Sat, 17 Dec 2011 13:57:27 +0100
+Message-Id: <1324126647-22425-9-git-send-email-zajec5@gmail.com> (sfid-20111217_135649_684769_CD593299)
+In-Reply-To: <1324126647-22425-1-git-send-email-zajec5@gmail.com>
+References: <1324126647-22425-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As firmware starting from 3.2.0.12 has some API changes and doesn't work
-with older versions of ath6kl we need to bump up the API version. This
-way we don't break anything.
 
-Also store which version of API is used and print that during boot:
-
-ath6kl: ar6003 hw 2.1.1 sdio fw 3.2.0.13 api 3
-
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath6kl/core.h |    3 ++-
- drivers/net/wireless/ath/ath6kl/init.c |   32 +++++++++++++++++---------------
- 2 files changed, 19 insertions(+), 16 deletions(-)
+ drivers/net/wireless/b43/phy_n.c |  223 ++++++++++++++++++++------------------
+ 1 files changed, 116 insertions(+), 107 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 2679577..c095faf 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -98,6 +98,7 @@ struct ath6kl_fw_ie {
- };
- 
- #define ATH6KL_FW_API2_FILE "fw-2.bin"
-+#define ATH6KL_FW_API3_FILE "fw-3.bin"
- 
- /* AR6003 1.0 definitions */
- #define AR6003_HW_1_0_VERSION                 0x300002ba
-@@ -582,7 +583,6 @@ struct ath6kl {
- 			const char *fw;
- 			const char *tcmd;
- 			const char *patch;
--			const char *api2;
- 		} fw;
- 
- 		const char *fw_board;
-@@ -608,6 +608,7 @@ struct ath6kl {
- 	u8 *fw_patch;
- 	size_t fw_patch_len;
- 
-+	unsigned int fw_api;
- 	unsigned long fw_capabilities[ATH6KL_CAPABILITY_LEN];
- 
- 	struct workqueue_struct *ath6kl_wq;
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index c666226..5f62a65 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -53,7 +53,6 @@ static const struct ath6kl_hw hw_list[] = {
- 			.fw		= AR6003_HW_2_0_FIRMWARE_FILE,
- 			.tcmd		= AR6003_HW_2_0_TCMD_FIRMWARE_FILE,
- 			.patch		= AR6003_HW_2_0_PATCH_FILE,
--			.api2		= ATH6KL_FW_API2_FILE,
- 		},
- 
- 		.fw_board		= AR6003_HW_2_0_BOARD_DATA_FILE,
-@@ -75,7 +74,6 @@ static const struct ath6kl_hw hw_list[] = {
- 			.fw		= AR6003_HW_2_1_1_FIRMWARE_FILE,
- 			.tcmd		= AR6003_HW_2_1_1_TCMD_FIRMWARE_FILE,
- 			.patch		= AR6003_HW_2_1_1_PATCH_FILE,
--			.api2		= ATH6KL_FW_API2_FILE,
- 		},
- 
- 		.fw_board		= AR6003_HW_2_1_1_BOARD_DATA_FILE,
-@@ -95,7 +93,6 @@ static const struct ath6kl_hw hw_list[] = {
- 		.fw = {
- 			.dir		= AR6004_HW_1_0_FW_DIR,
- 			.fw		= AR6004_HW_1_0_FIRMWARE_FILE,
--			.api2		= ATH6KL_FW_API2_FILE,
- 		},
- 
- 		.fw_board		= AR6004_HW_1_0_BOARD_DATA_FILE,
-@@ -115,7 +112,6 @@ static const struct ath6kl_hw hw_list[] = {
- 		.fw = {
- 			.dir		= AR6004_HW_1_1_FW_DIR,
- 			.fw		= AR6004_HW_1_1_FIRMWARE_FILE,
--			.api2		= ATH6KL_FW_API2_FILE,
- 		},
- 
- 		.fw_board		= AR6004_HW_1_1_BOARD_DATA_FILE,
-@@ -841,7 +837,7 @@ static int ath6kl_fetch_fw_api1(struct ath6kl *ar)
- 	return 0;
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 17440a9..e89b04b 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -1929,7 +1929,7 @@ static void b43_nphy_workarounds(struct b43_wldev *dev)
  }
  
--static int ath6kl_fetch_fw_api2(struct ath6kl *ar)
-+static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
- {
- 	size_t magic_len, len, ie_len;
- 	const struct firmware *fw;
-@@ -851,11 +847,7 @@ static int ath6kl_fetch_fw_api2(struct ath6kl *ar)
- 	int ret, ie_id, i, index, bit;
- 	__le32 *val;
+ /**************************************************
+- * Others
++ * Tx and Rx
+  **************************************************/
  
--	if (ar->hw.fw.api2 == NULL)
--		return -EOPNOTSUPP;
+ void b43_nphy_set_rxantenna(struct b43_wldev *dev, int antenna)
+@@ -1946,17 +1946,6 @@ static enum b43_txpwr_result b43_nphy_op_recalc_txpower(struct b43_wldev *dev,
+ 	return B43_TXPWR_RES_DONE;
+ }
+ 
+-static void b43_chantab_phy_upload(struct b43_wldev *dev,
+-				   const struct b43_phy_n_sfo_cfg *e)
+-{
+-	b43_phy_write(dev, B43_NPHY_BW1A, e->phy_bw1a);
+-	b43_phy_write(dev, B43_NPHY_BW2, e->phy_bw2);
+-	b43_phy_write(dev, B43_NPHY_BW3, e->phy_bw3);
+-	b43_phy_write(dev, B43_NPHY_BW4, e->phy_bw4);
+-	b43_phy_write(dev, B43_NPHY_BW5, e->phy_bw5);
+-	b43_phy_write(dev, B43_NPHY_BW6, e->phy_bw6);
+-}
 -
--	snprintf(filename, sizeof(filename), "%s/%s",
--		 ar->hw.fw.dir, ar->hw.fw.api2);
-+	snprintf(filename, sizeof(filename), "%s/%s", ar->hw.fw.dir, name);
- 
- 	ret = request_firmware(&fw, filename, ar->dev);
- 	if (ret)
-@@ -1025,17 +1017,26 @@ static int ath6kl_fetch_firmwares(struct ath6kl *ar)
- 	if (ret)
- 		return ret;
- 
--	ret = ath6kl_fetch_fw_api2(ar);
-+	ret = ath6kl_fetch_fw_apin(ar, ATH6KL_FW_API3_FILE);
- 	if (ret == 0) {
--		ath6kl_dbg(ATH6KL_DBG_BOOT, "using fw api 2\n");
--		return 0;
-+		ar->fw_api = 3;
-+		goto out;
-+	}
-+
-+	ret = ath6kl_fetch_fw_apin(ar, ATH6KL_FW_API2_FILE);
-+	if (ret == 0) {
-+		ar->fw_api = 2;
-+		goto out;
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/TxPwrCtrlEnable */
+ static void b43_nphy_tx_power_ctrl(struct b43_wldev *dev, bool enable)
+ {
+@@ -2249,18 +2238,6 @@ static void b43_nphy_tx_gain_table_upload(struct b43_wldev *dev)
  	}
+ }
  
- 	ret = ath6kl_fetch_fw_api1(ar);
- 	if (ret)
- 		return ret;
+-/*
+- * Upload the N-PHY tables.
+- * http://bcm-v4.sipsolutions.net/802.11/PHY/N/InitTables
+- */
+-static void b43_nphy_tables_init(struct b43_wldev *dev)
+-{
+-	if (dev->phy.rev < 3)
+-		b43_nphy_rev0_1_2_tables_init(dev);
+-	else
+-		b43_nphy_rev3plus_tables_init(dev);
+-}
+-
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/PA%20override */
+ static void b43_nphy_pa_override(struct b43_wldev *dev, bool enable)
+ {
+@@ -2313,20 +2290,6 @@ static void b43_nphy_tx_lp_fbw(struct b43_wldev *dev)
+ 	}
+ }
  
--	ath6kl_dbg(ATH6KL_DBG_BOOT, "using fw api 1\n");
-+	ar->fw_api = 1;
+-/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/MIMOConfig */
+-static void b43_nphy_update_mimo_config(struct b43_wldev *dev, s32 preamble)
+-{
+-	u16 mimocfg = b43_phy_read(dev, B43_NPHY_MIMOCFG);
+-
+-	mimocfg |= B43_NPHY_MIMOCFG_AUTO;
+-	if (preamble == 1)
+-		mimocfg |= B43_NPHY_MIMOCFG_GFMIX;
+-	else
+-		mimocfg &= ~B43_NPHY_MIMOCFG_GFMIX;
+-
+-	b43_phy_write(dev, B43_NPHY_MIMOCFG, mimocfg);
+-}
+-
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/Chains */
+ static void b43_nphy_update_txrx_chain(struct b43_wldev *dev)
+ {
+@@ -2606,54 +2569,6 @@ static void b43_nphy_tx_iq_workaround(struct b43_wldev *dev)
+ 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_NPHY_TXIQW3, array[3]);
+ }
+ 
+-/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/SuperSwitchInit */
+-static void b43_nphy_superswitch_init(struct b43_wldev *dev, bool init)
+-{
+-	if (dev->phy.rev >= 3) {
+-		if (!init)
+-			return;
+-		if (0 /* FIXME */) {
+-			b43_ntab_write(dev, B43_NTAB16(9, 2), 0x211);
+-			b43_ntab_write(dev, B43_NTAB16(9, 3), 0x222);
+-			b43_ntab_write(dev, B43_NTAB16(9, 8), 0x144);
+-			b43_ntab_write(dev, B43_NTAB16(9, 12), 0x188);
+-		}
+-	} else {
+-		b43_phy_write(dev, B43_NPHY_GPIO_LOOEN, 0);
+-		b43_phy_write(dev, B43_NPHY_GPIO_HIOEN, 0);
+-
+-		switch (dev->dev->bus_type) {
+-#ifdef CONFIG_B43_BCMA
+-		case B43_BUS_BCMA:
+-			bcma_chipco_gpio_control(&dev->dev->bdev->bus->drv_cc,
+-						 0xFC00, 0xFC00);
+-			break;
+-#endif
+-#ifdef CONFIG_B43_SSB
+-		case B43_BUS_SSB:
+-			ssb_chipco_gpio_control(&dev->dev->sdev->bus->chipco,
+-						0xFC00, 0xFC00);
+-			break;
+-#endif
+-		}
+-
+-		b43_write32(dev, B43_MMIO_MACCTL,
+-			b43_read32(dev, B43_MMIO_MACCTL) &
+-			~B43_MACCTL_GPOUTSMSK);
+-		b43_write16(dev, B43_MMIO_GPIO_MASK,
+-			b43_read16(dev, B43_MMIO_GPIO_MASK) | 0xFC00);
+-		b43_write16(dev, B43_MMIO_GPIO_CONTROL,
+-			b43_read16(dev, B43_MMIO_GPIO_CONTROL) & ~0xFC00);
+-
+-		if (init) {
+-			b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_LO1, 0x2D8);
+-			b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_UP1, 0x301);
+-			b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_LO2, 0x2D8);
+-			b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_UP2, 0x301);
+-		}
+-	}
+-}
+-
+ /* http://bcm-v4.sipsolutions.net/802.11/PHY/N/stop-playback */
+ static void b43_nphy_stop_playback(struct b43_wldev *dev)
+ {
+@@ -2820,25 +2735,6 @@ static void b43_nphy_tx_pwr_ctrl_coef_setup(struct b43_wldev *dev)
+ 		b43_nphy_stay_in_carrier_search(dev, false);
+ }
+ 
+-/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/BPHYInit */
+-static void b43_nphy_bphy_init(struct b43_wldev *dev)
+-{
+-	unsigned int i;
+-	u16 val;
+-
+-	val = 0x1E1F;
+-	for (i = 0; i < 16; i++) {
+-		b43_phy_write(dev, B43_PHY_N_BMODE(0x88 + i), val);
+-		val -= 0x202;
+-	}
+-	val = 0x3E3F;
+-	for (i = 0; i < 16; i++) {
+-		b43_phy_write(dev, B43_PHY_N_BMODE(0x98 + i), val);
+-		val -= 0x202;
+-	}
+-	b43_phy_write(dev, B43_PHY_N_BMODE(0x38), 0x668);
+-}
+-
+ /*
+  * Restore RSSI Calibration
+  * http://bcm-v4.sipsolutions.net/802.11/PHY/N/RestoreRssiCal
+@@ -3865,10 +3761,104 @@ static void b43_nphy_set_rx_core_state(struct b43_wldev *dev, u8 mask)
+ 	b43_mac_enable(dev);
+ }
+ 
++/**************************************************
++ * N-PHY init
++ **************************************************/
 +
-+out:
-+	ath6kl_dbg(ATH6KL_DBG_BOOT, "using fw api %d\n", ar->fw_api);
- 
+ /*
+- * Init N-PHY
+- * http://bcm-v4.sipsolutions.net/802.11/PHY/Init/N
++ * Upload the N-PHY tables.
++ * http://bcm-v4.sipsolutions.net/802.11/PHY/N/InitTables
+  */
++static void b43_nphy_tables_init(struct b43_wldev *dev)
++{
++	if (dev->phy.rev < 3)
++		b43_nphy_rev0_1_2_tables_init(dev);
++	else
++		b43_nphy_rev3plus_tables_init(dev);
++}
++
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/MIMOConfig */
++static void b43_nphy_update_mimo_config(struct b43_wldev *dev, s32 preamble)
++{
++	u16 mimocfg = b43_phy_read(dev, B43_NPHY_MIMOCFG);
++
++	mimocfg |= B43_NPHY_MIMOCFG_AUTO;
++	if (preamble == 1)
++		mimocfg |= B43_NPHY_MIMOCFG_GFMIX;
++	else
++		mimocfg &= ~B43_NPHY_MIMOCFG_GFMIX;
++
++	b43_phy_write(dev, B43_NPHY_MIMOCFG, mimocfg);
++}
++
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/BPHYInit */
++static void b43_nphy_bphy_init(struct b43_wldev *dev)
++{
++	unsigned int i;
++	u16 val;
++
++	val = 0x1E1F;
++	for (i = 0; i < 16; i++) {
++		b43_phy_write(dev, B43_PHY_N_BMODE(0x88 + i), val);
++		val -= 0x202;
++	}
++	val = 0x3E3F;
++	for (i = 0; i < 16; i++) {
++		b43_phy_write(dev, B43_PHY_N_BMODE(0x98 + i), val);
++		val -= 0x202;
++	}
++	b43_phy_write(dev, B43_PHY_N_BMODE(0x38), 0x668);
++}
++
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/N/SuperSwitchInit */
++static void b43_nphy_superswitch_init(struct b43_wldev *dev, bool init)
++{
++	if (dev->phy.rev >= 3) {
++		if (!init)
++			return;
++		if (0 /* FIXME */) {
++			b43_ntab_write(dev, B43_NTAB16(9, 2), 0x211);
++			b43_ntab_write(dev, B43_NTAB16(9, 3), 0x222);
++			b43_ntab_write(dev, B43_NTAB16(9, 8), 0x144);
++			b43_ntab_write(dev, B43_NTAB16(9, 12), 0x188);
++		}
++	} else {
++		b43_phy_write(dev, B43_NPHY_GPIO_LOOEN, 0);
++		b43_phy_write(dev, B43_NPHY_GPIO_HIOEN, 0);
++
++		switch (dev->dev->bus_type) {
++#ifdef CONFIG_B43_BCMA
++		case B43_BUS_BCMA:
++			bcma_chipco_gpio_control(&dev->dev->bdev->bus->drv_cc,
++						 0xFC00, 0xFC00);
++			break;
++#endif
++#ifdef CONFIG_B43_SSB
++		case B43_BUS_SSB:
++			ssb_chipco_gpio_control(&dev->dev->sdev->bus->chipco,
++						0xFC00, 0xFC00);
++			break;
++#endif
++		}
++
++		b43_write32(dev, B43_MMIO_MACCTL,
++			b43_read32(dev, B43_MMIO_MACCTL) &
++			~B43_MACCTL_GPOUTSMSK);
++		b43_write16(dev, B43_MMIO_GPIO_MASK,
++			b43_read16(dev, B43_MMIO_GPIO_MASK) | 0xFC00);
++		b43_write16(dev, B43_MMIO_GPIO_CONTROL,
++			b43_read16(dev, B43_MMIO_GPIO_CONTROL) & ~0xFC00);
++
++		if (init) {
++			b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_LO1, 0x2D8);
++			b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_UP1, 0x301);
++			b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_LO2, 0x2D8);
++			b43_phy_write(dev, B43_NPHY_RFCTL_LUT_TRSW_UP2, 0x301);
++		}
++	}
++}
++
++/* http://bcm-v4.sipsolutions.net/802.11/PHY/Init/N */
+ int b43_phy_initn(struct b43_wldev *dev)
+ {
+ 	struct ssb_sprom *sprom = dev->dev->bus_sprom;
+@@ -4063,6 +4053,21 @@ int b43_phy_initn(struct b43_wldev *dev)
  	return 0;
  }
-@@ -1488,10 +1489,11 @@ int ath6kl_init_hw_start(struct ath6kl *ar)
  
++/**************************************************
++ * Channel switching ops.
++ **************************************************/
++
++static void b43_chantab_phy_upload(struct b43_wldev *dev,
++				   const struct b43_phy_n_sfo_cfg *e)
++{
++	b43_phy_write(dev, B43_NPHY_BW1A, e->phy_bw1a);
++	b43_phy_write(dev, B43_NPHY_BW2, e->phy_bw2);
++	b43_phy_write(dev, B43_NPHY_BW3, e->phy_bw3);
++	b43_phy_write(dev, B43_NPHY_BW4, e->phy_bw4);
++	b43_phy_write(dev, B43_NPHY_BW5, e->phy_bw5);
++	b43_phy_write(dev, B43_NPHY_BW6, e->phy_bw6);
++}
++
+ /* http://bcm-v4.sipsolutions.net/802.11/PmuSpurAvoid */
+ static void b43_nphy_pmu_spur_avoid(struct b43_wldev *dev, bool avoid)
+ {
+@@ -4278,6 +4283,10 @@ static int b43_nphy_set_channel(struct b43_wldev *dev,
+ 	return 0;
+ }
  
- 	if (test_and_clear_bit(FIRST_BOOT, &ar->flag)) {
--		ath6kl_info("%s %s fw %s%s\n",
-+		ath6kl_info("%s %s fw %s api %d%s\n",
- 			    ar->hw.name,
- 			    ath6kl_init_get_hif_name(ar->hif_type),
- 			    ar->wiphy->fw_version,
-+			    ar->fw_api,
- 			    test_bit(TESTMODE, &ar->flag) ? " testmode" : "");
- 	}
- 
++/**************************************************
++ * Basic PHY ops.
++ **************************************************/
++
+ static int b43_nphy_op_allocate(struct b43_wldev *dev)
+ {
+ 	struct b43_phy_n *nphy;
+-- 
+1.7.7
 
