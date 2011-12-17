@@ -1,102 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:59073 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751067Ab1LTUXx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 15:23:53 -0500
-Cc: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	Petri Karhula <petri.karhula@nokia.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH 1/3] cfg80211: replace reg.c Nokia commit c4c32294
-Date: Tue, 20 Dec 2011 12:23:36 -0800
-Message-ID: <1324412618-25131-2-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111220_212359_514728_7E632935)
-In-Reply-To: <1324412618-25131-1-git-send-email-rodrigue@qca.qualcomm.com>
-References: <1324412618-25131-1-git-send-email-rodrigue@qca.qualcomm.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:2352 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760958Ab1LQChb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 21:37:31 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 27/30] brcm80211: fmac: move debug level macros to
+ dhd_dbg.h
+Date: Fri, 16 Dec 2011 18:37:17 -0800
+Message-ID: <1324089440-8957-28-git-send-email-frankyl@broadcom.com> (sfid-20111217_035945_200162_5748A8F2)
+In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Debug message level macros are used for debug purpose. It would be
+more appropriate to place them at dhd_dbg.h.
 
-Nokia hasn't gotten back to me in over 1 month for a relicense
-change request. There are only a few changes that they contributed,
-so just reverting their changes but replacing with another set.
-This change replaces this commit:
-
-commit c4c322941ce0d7e2b7b8794ad70683123d9cb26a
-Author: Yuri Ershov <ext-yuri.ershov@nokia.com>
-Date:   Tue Jun 29 15:08:08 2010 +0400
-
-    cfg80211: Update of regulatory request initiator handling
-
-    In some cases there could be possible dereferencing freed pointer. The
-    update is intended to avoid this issue.
-
-    Signed-off-by: Yuri Ershov <ext-yuri.ershov@nokia.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-Cc: Petri Karhula <petri.karhula@nokia.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- net/wireless/reg.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h     |   15 ---------------
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h |   15 +++++++++++++++
+ 2 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index c45c8b7..a7d252e 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -1480,18 +1480,18 @@ new_request:
- }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index 45b076e..a828d82 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -667,21 +667,6 @@ extern void brcmf_c_pktfilter_offload_enable(struct brcmf_pub *drvr, char *arg,
+ #define BRCMF_DCMD_MEDLEN	1536	/* "med" cmd buffer required */
+ #define	BRCMF_DCMD_MAXLEN	8192	/* max length cmd buffer required */
  
- /* This processes *all* regulatory hints */
--static void reg_process_hint(struct regulatory_request *reg_request)
-+static void reg_process_hint(struct regulatory_request *reg_request,
-+			     enum nl80211_reg_initiator reg_initiator)
- {
- 	int r = 0;
- 	struct wiphy *wiphy = NULL;
--	enum nl80211_reg_initiator initiator = reg_request->initiator;
+-/* message levels */
+-#define BRCMF_ERROR_VAL	0x0001
+-#define BRCMF_TRACE_VAL	0x0002
+-#define BRCMF_INFO_VAL	0x0004
+-#define BRCMF_DATA_VAL	0x0008
+-#define BRCMF_CTL_VAL	0x0010
+-#define BRCMF_TIMER_VAL	0x0020
+-#define BRCMF_HDRS_VAL	0x0040
+-#define BRCMF_BYTES_VAL	0x0080
+-#define BRCMF_INTR_VAL	0x0100
+-#define BRCMF_GLOM_VAL	0x0400
+-#define BRCMF_EVENT_VAL	0x0800
+-#define BRCMF_BTA_VAL	0x1000
+-#define BRCMF_ISCAN_VAL 0x2000
+-
+ /* Enter idle immediately (no timeout) */
+ #define BRCMF_IDLE_IMMEDIATE	(-1)
+ #define BRCMF_IDLE_ACTIVE	0	/* Do not request any SD clock change
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
+index 7467922..bb26ee3 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
+@@ -17,6 +17,21 @@
+ #ifndef _BRCMF_DBG_H_
+ #define _BRCMF_DBG_H_
  
- 	BUG_ON(!reg_request->alpha2);
++/* message levels */
++#define BRCMF_ERROR_VAL	0x0001
++#define BRCMF_TRACE_VAL	0x0002
++#define BRCMF_INFO_VAL	0x0004
++#define BRCMF_DATA_VAL	0x0008
++#define BRCMF_CTL_VAL	0x0010
++#define BRCMF_TIMER_VAL	0x0020
++#define BRCMF_HDRS_VAL	0x0040
++#define BRCMF_BYTES_VAL	0x0080
++#define BRCMF_INTR_VAL	0x0100
++#define BRCMF_GLOM_VAL	0x0400
++#define BRCMF_EVENT_VAL	0x0800
++#define BRCMF_BTA_VAL	0x1000
++#define BRCMF_ISCAN_VAL 0x2000
++
+ #if defined(BCMDBG)
  
- 	if (wiphy_idx_valid(reg_request->wiphy_idx))
- 		wiphy = wiphy_idx_to_wiphy(reg_request->wiphy_idx);
- 
--	if (reg_request->initiator == NL80211_REGDOM_SET_BY_DRIVER &&
-+	if (reg_initiator == NL80211_REGDOM_SET_BY_DRIVER &&
- 	    !wiphy) {
- 		kfree(reg_request);
- 		return;
-@@ -1501,7 +1501,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	/* This is required so that the orig_* parameters are saved */
- 	if (r == -EALREADY && wiphy &&
- 	    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY) {
--		wiphy_update_regulatory(wiphy, initiator);
-+		wiphy_update_regulatory(wiphy, reg_initiator);
- 		return;
- 	}
- 
-@@ -1510,7 +1510,7 @@ static void reg_process_hint(struct regulatory_request *reg_request)
- 	 * source of bogus requests.
- 	 */
- 	if (r != -EALREADY &&
--	    reg_request->initiator == NL80211_REGDOM_SET_BY_USER)
-+	    reg_initiator == NL80211_REGDOM_SET_BY_USER)
- 		schedule_delayed_work(&reg_timeout, msecs_to_jiffies(3142));
- }
- 
-@@ -1547,7 +1547,7 @@ static void reg_process_pending_hints(void)
- 
- 	spin_unlock(&reg_requests_lock);
- 
--	reg_process_hint(reg_request);
-+	reg_process_hint(reg_request, reg_request->initiator);
- 
- out:
- 	mutex_unlock(&reg_mutex);
+ #define brcmf_dbg(level, fmt, ...)					\
 -- 
-1.7.4.15.g7811d
+1.7.5.4
+
 
