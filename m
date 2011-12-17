@@ -1,30 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:59143 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752414Ab1LMIey (ORCPT
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:36504 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752091Ab1LQEyS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 03:34:54 -0500
-Received: by pbbb2 with SMTP id b2so117416pbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Dec 2011 00:34:54 -0800 (PST)
+	Fri, 16 Dec 2011 23:54:18 -0500
+Received: by qadc12 with SMTP id c12so1371142qad.19
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Dec 2011 20:54:18 -0800 (PST)
 MIME-Version: 1.0
-Date: Tue, 13 Dec 2011 14:04:54 +0530
-Message-ID: <CAFeFRo=rcrOnh1J84=XMWSyj8EzjMGYXetH1YkEiWBHBxz=3jQ@mail.gmail.com> (sfid-20111213_093511_419140_2B06202B)
-Subject: Concurrent Mode Mutiple VIF question
-From: Ajit Pal Singh <ajitpallearn@gmail.com>
+Date: Sat, 17 Dec 2011 05:54:17 +0100
+Message-ID: <CAFU7RzPF7NKRkY70Vp_b55AUeDip+ePxk=zqJ_K=SsXUfse7Jw@mail.gmail.com> (sfid-20111217_055428_790333_194A6A3D)
+Subject: wl0084a / wl1271 understanding
+From: Raffaele Recalcati <lamiaposta71@gmail.com>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Community,
+I'm an embedded developer and I really want opensource development for
+wireless, to be sure to maintain it in many kernel versions I will
+have.
+I'm not an wifi expert and so I can have done some mistakes here below.
 
-I am trying to implement Multiple Virtual Interface support for a
-hardware which can support mulitple channels per hardware
-concurrently.( For ex : AP and STA concurrently on different channels)
-.
-However I cannot find support for channels being configured per VIF.
-Could you please help me in understanding if I can support different
-channels per VIF in the current mac80211 implementation.
+wl1271
+=============
+At the end of
+http://processors.wiki.ti.com/index.php/ARM_Processor_Open_Source_Wireless_Connectivity
+http://www.openlink.org/software/linux-kernel#lk
+It seems the same as what I can find in drivers/net/wireless/wl12xx
+kernel directory.
 
-Regards
-Ajitpal Singh
+wl0084a
+=============
+grep -rin wl008 drivers
+give no result on kernel 3.2-rc6.
+What is the normal approach to take in account?
+I have to immediately change the usb wifi dongle due to the lacking of
+information to develop e proper driver or maybe
+there is some possibility?
+Here I can find Logilink drivers
+http://www.logilink.eu/content/support/download.htm?seticlanguage=en
+They confirm support for LINUX (kernel 2.6.18 ~ 2.6.33)
+Looking into drivers files ... yes , they are proprietary.
+
+Thanks for any help,
+Raffaele
