@@ -1,126 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2164 "EHLO mms1.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:1493 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752478Ab1LHXHR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 18:07:17 -0500
+	id S1760984Ab1LQChg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 21:37:36 -0500
 From: "Franky Lin" <frankyl@broadcom.com>
 To: linville@tuxdriver.com
 cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 03/23] brcm80211: fmac: add bcm4330 support
-Date: Thu, 8 Dec 2011 15:06:39 -0800
-Message-ID: <1323385619-7454-4-git-send-email-frankyl@broadcom.com> (sfid-20111209_000827_447715_AFFBD544)
-In-Reply-To: <1323385619-7454-1-git-send-email-frankyl@broadcom.com>
-References: <1323385619-7454-1-git-send-email-frankyl@broadcom.com>
+Subject: [PATCH 14/30] brcm80211: fmac: move driver up status to struct
+ brcmf_bus
+Date: Fri, 16 Dec 2011 18:37:04 -0800
+Message-ID: <1324089440-8957-15-git-send-email-frankyl@broadcom.com> (sfid-20111217_035946_026464_EA1DF83E)
+In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds support for bcm4330 chip which has a SDIO device
-id 0x4330. All basic functionalities of bcm4330 are supported by
-brcmfmac after this patch.
+Driver up/down status to network interface need to be shared by
+common layer and bus layer. Move it to bus interface structure
+brcmf_bus as part of the fullmac bus interface refactoring.
 
 Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
 Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
 Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 +
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 +
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |   34 ++++++++++++++++++++
- 3 files changed, 38 insertions(+), 0 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    2 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   18 +++++++++---------
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    5 +++--
+ 3 files changed, 13 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index bc99267..b895f19 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -40,6 +40,7 @@
- #define DMA_ALIGN_MASK	0x03
- 
- #define SDIO_DEVICE_ID_BROADCOM_4329	0x4329
-+#define SDIO_DEVICE_ID_BROADCOM_4330	0x4330
- 
- #define SDIO_FUNC1_BLOCKSIZE		64
- #define SDIO_FUNC2_BLOCKSIZE		512
-@@ -47,6 +48,7 @@
- /* devices we support, null terminated */
- static const struct sdio_device_id brcmf_sdmmc_ids[] = {
- 	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4329)},
-+	{SDIO_DEVICE(SDIO_VENDOR_ID_BROADCOM, SDIO_DEVICE_ID_BROADCOM_4330)},
- 	{ /* end: all zeroes */ },
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index db30f02..4dcb11d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -577,6 +577,7 @@ struct brcmf_bus {
+ 	void *drvr;		/* pointer to driver pub structure brcmf_pub */
+ 	enum brcmf_bus_state state;
+ 	uint maxctl;		/* Max size rxctl request from proto to bus */
++	bool drvr_up;		/* Status flag of driver up/down */
  };
- MODULE_DEVICE_TABLE(sdio, brcmf_sdmmc_ids);
+ 
+ /* Forward decls for struct brcmf_pub (see below) */
+@@ -594,7 +595,6 @@ struct brcmf_pub {
+ 	struct device *dev;		/* fullmac dongle device pointer */
+ 
+ 	/* Internal brcmf items */
+-	bool up;		/* Driver up/down (to OS) */
+ 	bool txoff;		/* Transmit flow-controlled */
+ 	uint hdrlen;		/* Total BRCMF header length (proto + bus) */
+ 	uint rxsz;		/* Rx buffer size bus module should use */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 576cdc4..5e9acf8 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -273,7 +273,7 @@ static void brcmf_netdev_set_multicast_list(struct net_device *ndev)
+ int brcmf_sendpkt(struct brcmf_pub *drvr, int ifidx, struct sk_buff *pktbuf)
+ {
+ 	/* Reject if down */
+-	if (!drvr->up || (drvr->bus_if->state == BRCMF_BUS_DOWN))
++	if (!drvr->bus_if->drvr_up || (drvr->bus_if->state == BRCMF_BUS_DOWN))
+ 		return -ENODEV;
+ 
+ 	/* Update multicast statistic */
+@@ -303,10 +303,10 @@ static int brcmf_netdev_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+ 	/* Reject if down */
+-	if (!drvr->up ||
++	if (!drvr->bus_if->drvr_up ||
+ 	    (drvr->bus_if->state == BRCMF_BUS_DOWN)) {
+-		brcmf_dbg(ERROR, "xmit rejected pub.up=%d state=%d\n",
+-			  drvr->up,
++		brcmf_dbg(ERROR, "xmit rejected drvup=%d state=%d\n",
++			  drvr->bus_if->drvr_up,
+ 			  drvr->bus_if->state);
+ 		netif_stop_queue(ndev);
+ 		return -ENODEV;
+@@ -487,7 +487,7 @@ static struct net_device_stats *brcmf_netdev_get_stats(struct net_device *ndev)
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	if (drvr->up)
++	if (drvr->bus_if->drvr_up)
+ 		/* Use the protocol to get dongle stats */
+ 		brcmf_proto_dstats(drvr);
+ 
+@@ -633,7 +633,7 @@ static int brcmf_ethtool(struct brcmf_pub *drvr, void __user *uaddr)
+ 		}
+ 
+ 		/* otherwise, require dongle to be up */
+-		else if (!drvr->up) {
++		else if (!drvr->bus_if->drvr_up) {
+ 			brcmf_dbg(ERROR, "dongle is not up\n");
+ 			return -ENODEV;
+ 		}
+@@ -785,11 +785,11 @@ static int brcmf_netdev_stop(struct net_device *ndev)
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 	brcmf_cfg80211_down(drvr->config);
+-	if (drvr->up == 0)
++	if (drvr->bus_if->drvr_up == 0)
+ 		return 0;
+ 
+ 	/* Set state and stop OS transmissions */
+-	drvr->up = 0;
++	drvr->bus_if->drvr_up = 0;
+ 	netif_stop_queue(ndev);
+ 
+ 	return 0;
+@@ -826,7 +826,7 @@ static int brcmf_netdev_open(struct net_device *ndev)
+ 	}
+ 	/* Allow transmit calls */
+ 	netif_start_queue(ndev);
+-	drvr->up = 1;
++	drvr->bus_if->drvr_up = 1;
+ 	if (brcmf_cfg80211_up(drvr->config)) {
+ 		brcmf_dbg(ERROR, "failed to bring up cfg80211\n");
+ 		return -1;
 diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 18597fe..43ba0dd 100644
+index cc2c653..6c5b5b5 100644
 --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
 +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3636,6 +3636,8 @@ static bool brcmf_sdbrcm_chipmatch(u16 chipid)
- {
- 	if (chipid == BCM4329_CHIP_ID)
- 		return true;
-+	if (chipid == BCM4330_CHIP_ID)
-+		return true;
- 	return false;
- }
+@@ -2295,7 +2295,8 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+ 	}
  
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-index f6b1822..d299059 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
-@@ -91,6 +91,18 @@ static const struct sdiod_drive_str sdiod_drive_strength_tab3[] = {
- 	0, 0x0}
- 	};
+ 	/* Deflow-control stack if needed */
+-	if (drvr->up && (drvr->bus_if->state == BRCMF_BUS_DATA) &&
++	if (drvr->bus_if->drvr_up &&
++	    (drvr->bus_if->state == BRCMF_BUS_DATA) &&
+ 	    drvr->txoff && (pktq_len(&bus->txq) < TXLOW))
+ 		brcmf_txflowcontrol(bus->sdiodev->dev, 0, OFF);
  
-+/* SDIO Drive Strength to sel value table for PMU Rev 11 (1.8V) */
-+static const struct sdiod_drive_str sdiod_drvstr_tab4_1v8[] = {
-+	{32, 0x6},
-+	{26, 0x7},
-+	{22, 0x4},
-+	{16, 0x5},
-+	{12, 0x2},
-+	{8, 0x3},
-+	{4, 0x0},
-+	{0, 0x1}
-+};
-+
- u8
- brcmf_sdio_chip_getinfidx(struct chip_info *ci, u16 coreid)
- {
-@@ -396,6 +408,23 @@ static int brcmf_sdio_chip_recognition(struct brcmf_sdio_dev *sdiodev,
- 		ci->c_inf[3].base = BCM4329_CORE_ARM_BASE;
- 		ci->ramsize = BCM4329_RAMSIZE;
- 		break;
-+	case BCM4330_CHIP_ID:
-+		ci->c_inf[0].wrapbase = 0x18100000;
-+		ci->c_inf[0].cib = 0x27004211;
-+		ci->c_inf[1].id = BCMA_CORE_SDIO_DEV;
-+		ci->c_inf[1].base = 0x18002000;
-+		ci->c_inf[1].wrapbase = 0x18102000;
-+		ci->c_inf[1].cib = 0x07004211;
-+		ci->c_inf[2].id = BCMA_CORE_INTERNAL_MEM;
-+		ci->c_inf[2].base = 0x18004000;
-+		ci->c_inf[2].wrapbase = 0x18104000;
-+		ci->c_inf[2].cib = 0x0d080401;
-+		ci->c_inf[3].id = BCMA_CORE_ARM_CM3;
-+		ci->c_inf[3].base = 0x18003000;
-+		ci->c_inf[3].wrapbase = 0x18103000;
-+		ci->c_inf[3].cib = 0x03004211;
-+		ci->ramsize = 0x48000;
-+		break;
- 	default:
- 		brcmf_dbg(ERROR, "chipid 0x%x is not supported\n", ci->chip);
- 		return -ENODEV;
-@@ -585,6 +614,11 @@ brcmf_sdio_chip_drivestrengthinit(struct brcmf_sdio_dev *sdiodev,
- 		str_mask = 0x00003800;
- 		str_shift = 11;
- 		break;
-+	case SDIOD_DRVSTR_KEY(BCM4330_CHIP_ID, 12):
-+		str_tab = (struct sdiod_drive_str *)&sdiod_drvstr_tab4_1v8;
-+		str_mask = 0x00003800;
-+		str_shift = 11;
-+		break;
- 	default:
- 		brcmf_dbg(ERROR, "No SDIO Drive strength init done for chip %s rev %d pmurev %d\n",
- 			  brcmf_sdio_chip_name(ci->chip, chn, 8),
+@@ -2974,7 +2975,7 @@ static int brcmf_sdbrcm_downloadvars(struct brcmf_sdio *bus, void *arg, int len)
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+ 	/* Basic sanity checks */
+-	if (bus->drvr->up) {
++	if (bus->sdiodev->bus_if->drvr_up) {
+ 		bcmerror = -EISCONN;
+ 		goto err;
+ 	}
 -- 
 1.7.5.4
 
