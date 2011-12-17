@@ -1,136 +1,270 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:40247 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751570Ab1LINHT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Dec 2011 08:07:19 -0500
-Received: by qadc12 with SMTP id c12so400294qad.19
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Dec 2011 05:07:18 -0800 (PST)
+Received: from mms2.broadcom.com ([216.31.210.18]:1137 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761007Ab1LQChl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 21:37:41 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 22/30] brcm80211: fmac: abstract bus_stop interface
+ function pointer
+Date: Fri, 16 Dec 2011 18:37:12 -0800
+Message-ID: <1324089440-8957-23-git-send-email-frankyl@broadcom.com> (sfid-20111217_035945_440534_739A873B)
+In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20111205103751.GA3775@jouni.qca.qualcomm.com>
-References: <CAHW5WCL2V=wh43YYbiMo+rnh=-g4fobKEZHrCLvW03Q73=gzYA@mail.gmail.com>
-	<4EC7E739.4080404@broadcom.com>
-	<CAHW5WCLUefvgvRkgz7Nr+Rwu6_96t7EVVB33U0ED5g9a0cHFXw@mail.gmail.com>
-	<CAHW5WCK7SU8CJRM8pLy9omEtrPu0_ES=SxWfYEWt30NCwBGEZw@mail.gmail.com>
-	<CAHW5WCJhwGSM74nN5ivoEgP98y_hbbOB8yDO9+2ahhy2B4H7yw@mail.gmail.com>
-	<20111205103751.GA3775@jouni.qca.qualcomm.com>
-Date: Fri, 9 Dec 2011 21:07:17 +0800
-Message-ID: <CAHW5WCLOk6b5HSYS-mtqgoS6mvdCOzR4NUL_ZpmzM46CTsreRw@mail.gmail.com> (sfid-20111209_140724_416020_156A5EFB)
-Subject: Re: [ath9k-devel] Wireless stalled after a few minutes with Linux
- Kernel 3.1
-From: Haohui Liao <liaohaohui@gmail.com>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Jouni Malinen,
+Common layer should use interface function pointer stored in
+brcmf_bus to invoke corresponding interface function in bus layer.
+This patch is part of the fullmac bus interface refactoring.
 
->> Regarding https://bugs.archlinux.org/task/27406
->>
->> > The following is a portion of my wpa_supplicant.conf
->> >
->> >    ssid="LINUX-LINK"
->> >    proto=WPA2
->> >    key_mgmt=WPA-PSK
->> >    pairwise=TKIP
->> >    group=TKIP
->
-> That's pretty strange configuration.. Do you have any
-> particular reason for using TKIP as the pairwise cipher
-> with WPA2? CCMP would be much more likely configuration
-> for WPA2 in general..
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    4 +
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    4 -
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  164 ++++++++++----------
+ 4 files changed, 88 insertions(+), 86 deletions(-)
 
-The reason I am using TKIP is because my Wifi configuration
-says the following:
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index 30cc417..d3407f7 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -581,6 +581,10 @@ struct brcmf_bus {
+ 	unsigned long tx_realloc;	/* Tx packets realloced for headroom */
+ 	struct dngl_stats dstats;	/* Stats for dongle-based data */
+ 	u8 align;		/* bus alignment requirement */
++
++	/* interface functions pointers */
++	/* Stop bus module: clear pending frames, disable data flow */
++	void (*brcmf_bus_stop)(struct device *);
+ };
+ 
+ /* Forward decls for struct brcmf_pub (see below) */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+index 413ba21..25c1bc3 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+@@ -20,10 +20,6 @@
+ /*
+  * Exported from brcmf bus module (brcmf_usb, brcmf_sdio)
+  */
+-
+-/* Stop bus module: clear pending frames, disable data flow */
+-extern void brcmf_sdbrcm_bus_stop(struct device *dev);
+-
+ /* Initialize bus module: prepare for communication w/dongle */
+ extern int brcmf_sdbrcm_bus_init(struct device *dev);
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 70f0b31..6c398c4 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -1089,7 +1089,7 @@ static void brcmf_bus_detach(struct brcmf_pub *drvr)
+ 		brcmf_proto_stop(drvr);
+ 
+ 		/* Stop the bus module */
+-		brcmf_sdbrcm_bus_stop(drvr->dev);
++		drvr->bus_if->brcmf_bus_stop(drvr->dev);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 129cfd6..7817ede 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -2303,6 +2303,87 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
+ 	return cnt;
+ }
+ 
++static void brcmf_sdbrcm_bus_stop(struct device *dev)
++{
++	u32 local_hostintmask;
++	u8 saveclk;
++	uint retries;
++	int err;
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv;
++	struct brcmf_sdio *bus = sdiodev->bus;
++
++	brcmf_dbg(TRACE, "Enter\n");
++
++	if (bus->watchdog_tsk) {
++		send_sig(SIGTERM, bus->watchdog_tsk, 1);
++		kthread_stop(bus->watchdog_tsk);
++		bus->watchdog_tsk = NULL;
++	}
++
++	if (bus->dpc_tsk && bus->dpc_tsk != current) {
++		send_sig(SIGTERM, bus->dpc_tsk, 1);
++		kthread_stop(bus->dpc_tsk);
++		bus->dpc_tsk = NULL;
++	}
++
++	down(&bus->sdsem);
++
++	bus_wake(bus);
++
++	/* Enable clock for device interrupts */
++	brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
++
++	/* Disable and clear interrupts at the chip level also */
++	w_sdreg32(bus, 0, offsetof(struct sdpcmd_regs, hostintmask), &retries);
++	local_hostintmask = bus->hostintmask;
++	bus->hostintmask = 0;
++
++	/* Change our idea of bus state */
++	bus->sdiodev->bus_if->state = BRCMF_BUS_DOWN;
++
++	/* Force clocks on backplane to be sure F2 interrupt propagates */
++	saveclk = brcmf_sdcard_cfg_read(bus->sdiodev, SDIO_FUNC_1,
++					SBSDIO_FUNC1_CHIPCLKCSR, &err);
++	if (!err) {
++		brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_1,
++				       SBSDIO_FUNC1_CHIPCLKCSR,
++				       (saveclk | SBSDIO_FORCE_HT), &err);
++	}
++	if (err)
++		brcmf_dbg(ERROR, "Failed to force clock for F2: err %d\n", err);
++
++	/* Turn off the bus (F2), free any pending packets */
++	brcmf_dbg(INTR, "disable SDIO interrupts\n");
++	brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_0, SDIO_CCCR_IOEx,
++			 SDIO_FUNC_ENABLE_1, NULL);
++
++	/* Clear any pending interrupts now that F2 is disabled */
++	w_sdreg32(bus, local_hostintmask,
++		  offsetof(struct sdpcmd_regs, intstatus), &retries);
++
++	/* Turn off the backplane clock (only) */
++	brcmf_sdbrcm_clkctl(bus, CLK_SDONLY, false);
++
++	/* Clear the data packet queues */
++	brcmu_pktq_flush(&bus->txq, true, NULL, NULL);
++
++	/* Clear any held glomming stuff */
++	if (bus->glomd)
++		brcmu_pkt_buf_free_skb(bus->glomd);
++	brcmf_sdbrcm_free_glom(bus);
++
++	/* Clear rx control and wake any waiters */
++	bus->rxlen = 0;
++	brcmf_sdbrcm_dcmd_resp_wake(bus);
++
++	/* Reset some F2 state stuff */
++	bus->rxskip = false;
++	bus->tx_seq = bus->rx_seq = 0;
++
++	up(&bus->sdsem);
++}
++
+ static bool brcmf_sdbrcm_dpc(struct brcmf_sdio *bus)
+ {
+ 	u32 intstatus, newstatus = 0;
+@@ -3342,87 +3423,6 @@ brcmf_sdbrcm_download_firmware(struct brcmf_sdio *bus)
+ 	return ret;
+ }
+ 
+-void brcmf_sdbrcm_bus_stop(struct device *dev)
+-{
+-	u32 local_hostintmask;
+-	u8 saveclk;
+-	uint retries;
+-	int err;
+-	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv;
+-	struct brcmf_sdio *bus = sdiodev->bus;
+-
+-	brcmf_dbg(TRACE, "Enter\n");
+-
+-	if (bus->watchdog_tsk) {
+-		send_sig(SIGTERM, bus->watchdog_tsk, 1);
+-		kthread_stop(bus->watchdog_tsk);
+-		bus->watchdog_tsk = NULL;
+-	}
+-
+-	if (bus->dpc_tsk && bus->dpc_tsk != current) {
+-		send_sig(SIGTERM, bus->dpc_tsk, 1);
+-		kthread_stop(bus->dpc_tsk);
+-		bus->dpc_tsk = NULL;
+-	}
+-
+-	down(&bus->sdsem);
+-
+-	bus_wake(bus);
+-
+-	/* Enable clock for device interrupts */
+-	brcmf_sdbrcm_clkctl(bus, CLK_AVAIL, false);
+-
+-	/* Disable and clear interrupts at the chip level also */
+-	w_sdreg32(bus, 0, offsetof(struct sdpcmd_regs, hostintmask), &retries);
+-	local_hostintmask = bus->hostintmask;
+-	bus->hostintmask = 0;
+-
+-	/* Change our idea of bus state */
+-	bus->sdiodev->bus_if->state = BRCMF_BUS_DOWN;
+-
+-	/* Force clocks on backplane to be sure F2 interrupt propagates */
+-	saveclk = brcmf_sdcard_cfg_read(bus->sdiodev, SDIO_FUNC_1,
+-					SBSDIO_FUNC1_CHIPCLKCSR, &err);
+-	if (!err) {
+-		brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_1,
+-				       SBSDIO_FUNC1_CHIPCLKCSR,
+-				       (saveclk | SBSDIO_FORCE_HT), &err);
+-	}
+-	if (err)
+-		brcmf_dbg(ERROR, "Failed to force clock for F2: err %d\n", err);
+-
+-	/* Turn off the bus (F2), free any pending packets */
+-	brcmf_dbg(INTR, "disable SDIO interrupts\n");
+-	brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_0, SDIO_CCCR_IOEx,
+-			 SDIO_FUNC_ENABLE_1, NULL);
+-
+-	/* Clear any pending interrupts now that F2 is disabled */
+-	w_sdreg32(bus, local_hostintmask,
+-		  offsetof(struct sdpcmd_regs, intstatus), &retries);
+-
+-	/* Turn off the backplane clock (only) */
+-	brcmf_sdbrcm_clkctl(bus, CLK_SDONLY, false);
+-
+-	/* Clear the data packet queues */
+-	brcmu_pktq_flush(&bus->txq, true, NULL, NULL);
+-
+-	/* Clear any held glomming stuff */
+-	if (bus->glomd)
+-		brcmu_pkt_buf_free_skb(bus->glomd);
+-	brcmf_sdbrcm_free_glom(bus);
+-
+-	/* Clear rx control and wake any waiters */
+-	bus->rxlen = 0;
+-	brcmf_sdbrcm_dcmd_resp_wake(bus);
+-
+-	/* Reset some F2 state stuff */
+-	bus->rxskip = false;
+-	bus->tx_seq = bus->rx_seq = 0;
+-
+-	up(&bus->sdsem);
+-}
+-
+ int brcmf_sdbrcm_bus_init(struct device *dev)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+@@ -3952,6 +3952,8 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
+ 		bus->dpc_tsk = NULL;
+ 	}
+ 
++	/* Assign bus interface call back */
++	bus->sdiodev->bus_if->brcmf_bus_stop = brcmf_sdbrcm_bus_stop;
+ 	/* Attach to the brcmf/OS/network interface */
+ 	ret = brcmf_attach(SDPCM_RESERVE, bus->sdiodev->dev);
+ 	if (ret != 0) {
+-- 
+1.7.5.4
 
-Network Authentication: WPA2-PSK
-WPA Encryption: TKIP
 
-and I misunderstood the wpa_supplicant.conf and just change
-the WPA-PSK to WPA2-PSK and have the TKIP remain.
-
->> Just wondering if I am the only one still doing the following from command line
->> to connect to wifi?
->
-> I'm sure you are not the only one.. And in this particular
-> case, I don't
-> see how that would make a difference.
-
-It DOES.  I tried yesterday with my Fedora 16 (which is using
-kernel 3.1.2).
-
-With XFCE + NetworkManager, there is no issue with my wifi.
-But when I performed init 3 (shutting down X11) and tried the
-following
-
-wpa_supplicant -Dwext -iwlan0 -c/etc/wpa_supplicant.conf -B
-iwconfig wlan0 power off
-dhclient wlan0
-
-my wifi will ``stall''.  This is probably misleading because
-my machine still runs, it is just that the following scenario
-happens:
-
-The debugging message wpa_supplicant is as follows:
-
-WPA: Request PTK rekeying
-WPA: Sending EAPOL-Key Request (en=0 pairwise=1 ptk_set=1 len=99)
-WPA: TX EAPOL-Key-hexdump (len=99): 01 03 ...
-
-And the is no more communication.  With Wireshark, I will
-get the following (Reference:
-https://bugs.archlinux.org/task/27406?getfile=7864):
-
-Laptop Wifi (QuantaMi) will ask my wifi router (Shenzhen)
-who has 192.168.1.1 tell 192.168.1.3 (my router) but the
-process continues and all Internet connections seem broken.
-
-So 10 minutes' connection to Internet will suddenly stop.
-
-> Would you be able to provide some more details on what
-> exactly you mean with "wifi stall"? Are you sure this is
-> related to rekeying?
-
-I am not sure if the term stall is correct.  But
-wpa_supplicant seems to be hanging there asking (ARP protocol)
-for response from my router but the router seems to be deaf
-and is not responding.  So the ONLY way for me to get back
-a connection is to kill the wpa_supplicant daemon and
-the connection resumes.
-
-This never happens to linux 3.0.7 but happens immediately
-when I upgrade to linux 3.1. (This matter persists until
-Linux 3.1.4)
-
-> May I ask why you have configured the station to force PTK
-> rekeying every 10 minutes? While TKIP is not really the
-> most secure design out there, the proper way of addressing
-> this would be to use CCMP instead of frequent rekeying with
-> TKIP..
-
-Thank you very much for pointing out this to me.  I did not
-actually go through the wpa_supplicant.conf very thoroughly
-and simply adapt the example I found below:
-
-# WPA-Personal(PSK) with TKIP and enforcement for frequent PTK rekeying
-
-I just change the WPA-PSK to WPA2 and everything just works.
-So I thought I got things correct.   Apparently this is not
-the case.  The PTK just happens to come from the
-configuration.
-
-Anyway, it is also good to learn that there is a TPK rekeying
-since surrounding interference may cause wifi connection
-to be broken and my wifi connection may be hanging at random.
-
-I will change to CCMP as you suggested and inform you the
-result.
-
-A million thanks for all your suggestions and correction and
-I hope you forgive my English.
-
-
-Regards,
-Liao Haohui
