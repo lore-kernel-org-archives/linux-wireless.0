@@ -1,59 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:60466 "HELO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751010Ab1LTGHP (ORCPT
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:53019 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751495Ab1LQJfz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 01:07:15 -0500
-Date: Tue, 20 Dec 2011 11:37:08 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH] mwl8k: Call ieee80211_stop_tx_ba_cb_irqsafe for already
- deleted BA stream
-Message-ID: <20111220060657.GA4591@hertz.marvell.com> (sfid-20111220_070718_566398_98CCD895)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sat, 17 Dec 2011 04:35:55 -0500
+Received: by lahl5 with SMTP id l5so3120630lah.27
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Dec 2011 01:35:52 -0800 (PST)
+Subject: Re: wl0084a / wl1271 understanding
+From: Luciano Coelho <coelho@ti.com>
+To: Raffaele Recalcati <lamiaposta71@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAFU7RzPF7NKRkY70Vp_b55AUeDip+ePxk=zqJ_K=SsXUfse7Jw@mail.gmail.com>
+References: <CAFU7RzPF7NKRkY70Vp_b55AUeDip+ePxk=zqJ_K=SsXUfse7Jw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 17 Dec 2011 11:35:47 +0200
+Message-ID: <1324114547.2800.234.camel@cumari> (sfid-20111217_103600_375852_CAA10628)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When stack calls ampdu_action with action = IEEE80211_AMPDU_TX_STOP
-for a stream that has already been removed from the driver, call
-ieee80211_tx_ba_stop_irqsafe to clear the stream in the stack.
+Hi Raffaele,
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   14 +++++++-------
- 1 files changed, 7 insertions(+), 7 deletions(-)
+On Sat, 2011-12-17 at 05:54 +0100, Raffaele Recalcati wrote: 
+> I'm an embedded developer and I really want opensource development for
+> wireless, to be sure to maintain it in many kernel versions I will
+> have.
+> I'm not an wifi expert and so I can have done some mistakes here below.
+> 
+> wl1271
+> =============
+> At the end of
+> http://processors.wiki.ti.com/index.php/ARM_Processor_Open_Source_Wireless_Connectivity
+> http://www.openlink.org/software/linux-kernel#lk
+> It seems the same as what I can find in drivers/net/wireless/wl12xx
+> kernel directory.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index 995695c..901cd79 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -5044,14 +5044,14 @@ mwl8k_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		ieee80211_start_tx_ba_cb_irqsafe(vif, addr, tid);
- 		break;
- 	case IEEE80211_AMPDU_TX_STOP:
--		if (stream == NULL)
--			break;
--		if (stream->state == AMPDU_STREAM_ACTIVE) {
--			spin_unlock(&priv->stream_lock);
--			mwl8k_destroy_ba(hw, stream);
--			spin_lock(&priv->stream_lock);
-+		if (stream) {
-+			if (stream->state == AMPDU_STREAM_ACTIVE) {
-+				spin_unlock(&priv->stream_lock);
-+				mwl8k_destroy_ba(hw, stream);
-+				spin_lock(&priv->stream_lock);
-+			}
-+			mwl8k_remove_stream(hw, stream);
- 		}
--		mwl8k_remove_stream(hw, stream);
- 		ieee80211_stop_tx_ba_cb_irqsafe(vif, addr, tid);
- 		break;
- 	case IEEE80211_AMPDU_TX_OPERATIONAL:
+Yes, we have full support for the wl1271 chip in the mainline kernel.
+We are working actively on maintaining and improving it directly
+upstream.  TI makes official releases to the customers which are based
+on the upstream kernel.
+
+Join us on IRC @Freenode #wl12xx to talk more about it if you like.
+
+
 -- 
-1.7.5.4
+Cheers,
+Luca.
 
