@@ -1,54 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:51273 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751197Ab1LZRTX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Dec 2011 12:19:23 -0500
-Message-ID: <4EF8AC83.9040705@lwfinger.net> (sfid-20111226_181937_804875_E74EF2FB)
-Date: Mon, 26 Dec 2011 11:18:59 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:2325 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760750Ab1LQChb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 21:37:31 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 25/30] brcm80211: fmac: abstract bus_txdata interface
+ function pointer
+Date: Fri, 16 Dec 2011 18:37:15 -0800
+Message-ID: <1324089440-8957-26-git-send-email-frankyl@broadcom.com> (sfid-20111217_033738_680941_9E16861D)
+In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
 MIME-Version: 1.0
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-CC: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] b43: support new RX header, noticed to be used in 598.314+
- fw
-References: <alpine.DEB.2.00.1112261608140.12108@axis700.grange>
-In-Reply-To: <alpine.DEB.2.00.1112261608140.12108@axis700.grange>
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/26/2011 09:29 AM, Guennadi Liakhovetski wrote:
-> Hi
->
-> Sorry for "simulating" a reply - I'm not subscribed to linux-wireless, so,
-> cannot (easily) reply.
->
-> The commit in subject line
->
-> commit 17030f48e31adde5b043741c91ba143f5f7db0fd
-> From: Rafa³ Mi³ecki<zajec5@gmail.com>
-> Date: Thu, 11 Aug 2011 17:16:27 +0200
-> Subject: [PATCH] b43: support new RX header, noticed to be used in 598.314+ fw
->
-> breaks my b43 SDIO card in 3.2-ish kernels. Given the approaching
-> 3.2-final release, would be nice to have it fixed before that. The card
-> I've got is marked with some "SD-Link11g" from some "C-guys, Inc." from
-> Taiwan:-) Using firmware version 410.31754. Do I really _have_ to update
-> or is the driver supposed to handle "all" firmware versions, or at least
-> not drop ones, it used to support before?
+Abstract bus layer brcmf_bus_txdata function pointer for common
+layer. This patch is part of the fullmac bus interface refactoring.
 
-The only cards that *need* to use the new-style firmware are those for which 
-firmware does not exist in the older versions. As this is not the case for your 
-device, something else is wrong.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    5 ++---
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    2 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    3 ++-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-Please post the details for your card. If you had a PCI system, I would ask for 
-'lspci -n'. Please do the same for the SDIO card.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+index 5d5f2af..d5e0ec3 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+@@ -53,6 +53,8 @@ struct brcmf_bus {
+ 	void (*brcmf_bus_stop)(struct device *);
+ 	/* Initialize bus module: prepare for communication w/dongle */
+ 	int (*brcmf_bus_init)(struct device *);
++	/* Send a data frame to the dongle.  Callee disposes of txp. */
++	int (*brcmf_bus_txdata)(struct device *, struct sk_buff *);
+ };
+ 
+ /*
+@@ -99,9 +101,6 @@ extern int brcmf_add_if(struct device *dev, int ifidx,
+ /*
+  * Exported from brcmf bus module (brcmf_usb, brcmf_sdio)
+  */
+-/* Send a data frame to the dongle.  Callee disposes of txp. */
+-extern int brcmf_sdbrcm_bus_txdata(struct device *dev, struct sk_buff *txp);
+-
+ /* Send/receive a control message to/from the dongle.
+  * Expects caller to enforce a single outstanding transaction.
+  */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 62b4575..72bee2c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -291,7 +291,7 @@ int brcmf_sendpkt(struct brcmf_pub *drvr, int ifidx, struct sk_buff *pktbuf)
+ 	brcmf_proto_hdrpush(drvr, ifidx, pktbuf);
+ 
+ 	/* Use bus module to send data frame */
+-	return brcmf_sdbrcm_bus_txdata(drvr->dev, pktbuf);
++	return drvr->bus_if->brcmf_bus_txdata(drvr->dev, pktbuf);
+ }
+ 
+ static int brcmf_netdev_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 5089b64..6a30950 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -2655,7 +2655,7 @@ static int brcmf_sdbrcm_dpc_thread(void *data)
+ 	return 0;
+ }
+ 
+-int brcmf_sdbrcm_bus_txdata(struct device *dev, struct sk_buff *pkt)
++static int brcmf_sdbrcm_bus_txdata(struct device *dev, struct sk_buff *pkt)
+ {
+ 	int ret = -EBADE;
+ 	uint datalen, prec;
+@@ -3955,6 +3955,7 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
+ 	/* Assign bus interface call back */
+ 	bus->sdiodev->bus_if->brcmf_bus_stop = brcmf_sdbrcm_bus_stop;
+ 	bus->sdiodev->bus_if->brcmf_bus_init = brcmf_sdbrcm_bus_init;
++	bus->sdiodev->bus_if->brcmf_bus_txdata = brcmf_sdbrcm_bus_txdata;
+ 	/* Attach to the brcmf/OS/network interface */
+ 	ret = brcmf_attach(SDPCM_RESERVE, bus->sdiodev->dev);
+ 	if (ret != 0) {
+-- 
+1.7.5.4
 
- From your message, it appears that 3.1 works OK. If that is true, would it be 
-possible for you to bisect this problem?
 
-Larry
