@@ -1,97 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:43743 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752318Ab1LSLhY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 06:37:24 -0500
-Received: by lagu2 with SMTP id u2so2593646lag.23
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 03:37:21 -0800 (PST)
-Subject: Re: [PATCH v2 1/7] wl12xx: implement change_interface
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAB3XZEeb1eLMHtqtEMpuswv1NiHExy+y0vVkykrzSWdHMoJxMQ@mail.gmail.com>
-References: <1324288803-1666-1-git-send-email-eliad@wizery.com>
-	 <1324292350.2800.280.camel@cumari>
-	 <CAB3XZEeb1eLMHtqtEMpuswv1NiHExy+y0vVkykrzSWdHMoJxMQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 19 Dec 2011 13:37:17 +0200
-Message-ID: <1324294637.2800.287.camel@cumari> (sfid-20111219_123727_801466_1B4EC69F)
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:1125 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760932Ab1LQChl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 21:37:41 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 04/30] brcm80211: fmac: change function add_if parameter
+Date: Fri, 16 Dec 2011 18:36:54 -0800
+Message-ID: <1324089440-8957-5-git-send-email-frankyl@broadcom.com> (sfid-20111217_035945_635742_E64F7752)
+In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2011-12-19 at 13:17 +0200, Eliad Peller wrote: 
-> On Mon, Dec 19, 2011 at 12:59 PM, Luciano Coelho <coelho@ti.com> wrote:
-> > On Mon, 2011-12-19 at 12:00 +0200, Eliad Peller wrote:
-> >> Implement the change_interface callback by simply removing the
-> >> current vif and adding a new one after updating the vif type.
-> >>
-> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> >> ---
-> >> v2: update vif->p2p as well
-> >>
-> >>  drivers/net/wireless/wl12xx/main.c |   12 ++++++++++++
-> >>  1 files changed, 12 insertions(+), 0 deletions(-)
-> >>
-> >> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-> >> index c305841..82fc318 100644
-> >> --- a/drivers/net/wireless/wl12xx/main.c
-> >> +++ b/drivers/net/wireless/wl12xx/main.c
-> >> @@ -2269,6 +2269,17 @@ out:
-> >>       cancel_work_sync(&wl->recovery_work);
-> >>  }
-> >>
-> >> +static int wl12xx_op_change_interface(struct ieee80211_hw *hw,
-> >> +                                   struct ieee80211_vif *vif,
-> >> +                                   enum nl80211_iftype new_type, bool p2p)
-> >> +{
-> >> +     wl1271_op_remove_interface(hw, vif);
-> >> +
-> >> +     vif->type = ieee80211_iftype_p2p(new_type, p2p);
-> >> +     vif->p2p = p2p;
-> >> +     return wl1271_op_add_interface(hw, vif);
-> >> +}
-> >> +
-> >
-> > As Arik already commented, this looks a bit weird.  Shouldn't the type
-> > and p2p elements be changed in mac80211 itself? What about doing so if
-> > the op_change_interface returns success? Currently, the opposite seems
-> > to happen (ie. mac80211 changes type back to the original vif.type if
-> > the op fails).
-> >
-> iwlegacy and ath9k are also setting vif->type and vif->p2p in a similar manner.
-> add_interface(vif) assumes vif->type and vif->p2p are correct, so it
-> makes sense to update the vif before adding it.
+Change parameter to device pointer for bus layer interface function
+brcmf_add_if. This is part of the fullmac bus interface
+refactoring.
 
-Right, it just came to my mind after I sent my reply that the reason was
-the add_interface().  Still it looks weird.  There would be ways to fix
-this properly, for example by splitting our add_interface() function and
-passing the type and p2p boolean to the inner one.  Not worth the
-effort, so let's not bother for now.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    3 ++-
+ .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    2 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    6 +++++-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
+ 4 files changed, 9 insertions(+), 4 deletions(-)
 
-
-> i also think this behavior is a bit ugly, but this is the current
-> mac80211 implementation, and i don't see a good enough reason to
-> change it :)
-
-Actually after looking more into the code, mac80211 is doing the right
-thing.  Calling change interface with the original vif.  That's why the
-new parameters are passed too.  Only if the call succeeds, mac80211
-changes the parameters in the local data.
-
-The ugly thing is in the hack of removing and re-adding the interface
-with a different type.
-
-
-> > Also, it seems that the p2p value will be overwritten in the
-> > ieee80211_setup_sdata() which is called just after this op returns, so
-> > there's no use to do it here.
-> this is needed as add_interface(vif) might assume vif->p2p is correct.
-
-Yep, got it.
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index 74ea4b0..a8e94eb 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -574,6 +574,7 @@ struct brcmf_dcmd {
+ struct brcmf_bus {
+ 	u8 type;		/* bus type */
+ 	void *bus_priv;		/* pointer to bus private structure */
++	void *drvr;		/* pointer to driver pub structure brcmf_pub */
+ 	enum brcmf_bus_state state;
+ };
+ 
+@@ -743,7 +744,7 @@ extern int brcmf_c_host_event(struct brcmf_pub *drvr, int *idx,
+ 			      void *pktdata, struct brcmf_event_msg *,
+ 			      void **data_ptr);
+ 
+-extern int brcmf_add_if(struct brcmf_pub *drvr, int ifidx,
++extern int brcmf_add_if(struct device *dev, int ifidx,
+ 			char *name, u8 *mac_addr);
+ extern void brcmf_del_if(struct brcmf_pub *drvr, int ifidx);
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+index 5e5a954..e9f7d66 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+@@ -473,7 +473,7 @@ brcmf_c_host_event(struct brcmf_pub *drvr, int *ifidx, void *pktdata,
+ 
+ 		if (ifevent->ifidx > 0 && ifevent->ifidx < BRCMF_MAX_IFS) {
+ 			if (ifevent->action == BRCMF_E_IF_ADD)
+-				brcmf_add_if(drvr, ifevent->ifidx,
++				brcmf_add_if(drvr->dev, ifevent->ifidx,
+ 					     event->ifname,
+ 					     pvt_data->eth.h_dest);
+ 			else
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index cd0a698..3d0177a 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -840,10 +840,12 @@ static const struct net_device_ops brcmf_netdev_ops_pri = {
+ };
+ 
+ int
+-brcmf_add_if(struct brcmf_pub *drvr, int ifidx, char *name, u8 *mac_addr)
++brcmf_add_if(struct device *dev, int ifidx, char *name, u8 *mac_addr)
+ {
+ 	struct brcmf_if *ifp;
+ 	struct net_device *ndev;
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_pub *drvr = bus_if->drvr;
+ 
+ 	brcmf_dbg(TRACE, "idx %d\n", ifidx);
+ 
+@@ -937,6 +939,7 @@ struct brcmf_pub *brcmf_attach(struct brcmf_sdio *bus, uint bus_hdrlen,
+ 	drvr->bus = bus;
+ 	drvr->hdrlen = bus_hdrlen;
+ 	drvr->bus_if = dev_get_drvdata(dev);
++	drvr->bus_if->drvr = drvr;
+ 	drvr->dev = dev;
+ 
+ 	/* Attach and link in the protocol */
+@@ -1108,6 +1111,7 @@ void brcmf_detach(struct brcmf_pub *drvr)
+ 		if (drvr->prot)
+ 			brcmf_proto_detach(drvr);
+ 
++		drvr->bus_if->drvr = NULL;
+ 		kfree(drvr);
+ 	}
+ }
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 3096166..4e3e4ec 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3980,7 +3980,7 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
+ 	}
+ 
+ 	/* add interface and open for business */
+-	if (brcmf_add_if(bus->drvr, 0, "wlan%d", NULL)) {
++	if (brcmf_add_if(bus->sdiodev->dev, 0, "wlan%d", NULL)) {
+ 		brcmf_dbg(ERROR, "Add primary net device interface failed!!\n");
+ 		goto fail;
+ 	}
 -- 
-Cheers,
-Luca.
+1.7.5.4
+
 
