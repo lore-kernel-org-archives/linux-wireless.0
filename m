@@ -1,70 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:60136 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753659Ab1LUAqe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 19:46:34 -0500
-Subject: Re: linux 3.2-rcX iwlwifi driver's problem (wifi link unstable
- when moving between multiple APs)
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Cheng Renquan <crquan@gmail.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <CAH5vBdJLHkFLQCHHYOczXQt1Hwwe3e-Ct0MUjyTRU0vgodAPOg@mail.gmail.com>
-References: <CAH5vBdJLHkFLQCHHYOczXQt1Hwwe3e-Ct0MUjyTRU0vgodAPOg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 20 Dec 2011 15:46:05 -0800
-Message-ID: <1324424765.13074.281.camel@wwguy-huron> (sfid-20111221_014638_653445_B17B5587)
-Mime-Version: 1.0
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:44617 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101Ab1LQM41 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Dec 2011 07:56:27 -0500
+Received: by eaaj10 with SMTP id j10so3614415eaa.19
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Dec 2011 04:56:26 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 0/8] b43: reoder functions in phy_n.c
+Date: Sat, 17 Dec 2011 13:57:19 +0100
+Message-Id: <1324126647-22425-1-git-send-email-zajec5@gmail.com> (sfid-20111217_135632_079595_241B3F94)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Renquan,
+[APPLYING] This patchset is based on top of wireless-next with:
+b43: mark some vars __maybe_unused in b43_nphy_pmu_spur_avoid
+applied.
 
-Thanks you for reporting the issue.It will be greatly appreciated  if
-you can enter a bug report in http://bugzilla.intellinuxwireless.org/.
-Then we can assign engineer to look into the issue , also keep track of
-the progress.
 
-Thanks
-Wey
+As noted on b43-dev, we got really messy in phy_n.c. Functions were
+implemented quite randomly, with specs appering during development,
+sometimes without knowing real mining of the routies.
 
-On Tue, 2011-12-20 at 15:20 -0800, Cheng Renquan wHi Intel Linux
-Wireless group,
-> 
-> Since 3.2-rcX, it seems no more iwlagn driver? This iwlwifi driver
-> seems not stable
-> when I hold laptop moving inside a large office, between multiple APs,
-> everytime I moved to a new place, the wifi link becomes inactive, and
-> I need to wait
-> 5 minutes or longer to wait iwlwifi stable, networkmanager get a new
-> ip address; quite annoying,
-> 
-> 
-> [root@archtop ~]# lspci -D -nn -k -d 8086:4238
-> 0000:03:00.0 Network controller [0280]: Intel Corporation Centrino
-> Ultimate-N 6300 [8086:4238] (rev 35)
-> 	Subsystem: Intel Corporation Centrino Ultimate-N 6300 3x3 AGN [8086:1111]
-> 	Kernel driver in use: iwlwifi
-> 	Kernel modules: iwlwifi
-> 
-> in the large office, it's using WPA2 enterprise encryption with
-> MSCHAPv2 domain user/pass authentication,
-> 
-> 
-> Last iwlagn driver in my Ubuntu-10.10 default kernel (linux-2.6.35.X)
-> on the same computer
-> same networkmanager/wpa_supplicant software same office working wonderful,
-> moving smoothly between multiple APs,
-> 
-> At home, even I set wireless router to no any
-> encryption/authentication, this new kernel
-> would becomes wifi link down every couple of hours, while another
-> laptop and same Ubuntu-10
-> on this laptop could work smoothly,
-> 
-> 
-> 
-> 
-> Thanks,
+That resulted in code hard to read and with some not-so-nice early
+declarations.
 
+This patches makes some cleaning with that code. It moves tons of LOCs,
+but I think we have to do this finally instead of going deeper and
+deeper into that mess.
+
+As Larry suggested, I've made small patches and tried my best to get
+them formatted nicely, to have diffs really clean. I've been
+compiling b43 after each patch, so there shouldn't be any build
+breakage between.
+
+Rafał Miłecki (8):
+  b43: N-PHY: reorder functions: put basic ones at beginning
+  b43: N-PHY: reorder functions: collect radio ones
+  b43: N-PHY: reorder functions: collect samples ones
+  b43: N-PHY: reorder functions: collect RSSI selects
+  b43: N-PHY: split gain control workarounds
+  b43: N-PHY: reorder functions: move RSSI calibration
+  b43: N-PHY: reorder functions: move rest of workarounds
+  b43: N-PHY: reorder functions: random clenaups
+
+ drivers/net/wireless/b43/phy_n.c | 4575 +++++++++++++++++++-------------------
+ 1 files changed, 2301 insertions(+), 2274 deletions(-)
+
+-- 
+1.7.7
 
