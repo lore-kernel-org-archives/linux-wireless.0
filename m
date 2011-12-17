@@ -1,194 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:14760 "EHLO mga01.intel.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:1527 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752213Ab1LSXBS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 18:01:18 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+	id S1760982Ab1LQChg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 21:37:36 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	stable@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 3.2] iwlagn: fix (remove) use of PAGE_SIZE
-Date: Mon, 19 Dec 2011 14:00:59 -0800
-Message-Id: <1324332059-11630-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111220_000124_146203_04FE75C4)
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 20/30] brcm80211: fmac: stop referencing brcmf_sdio in
+ common layer
+Date: Fri, 16 Dec 2011 18:37:10 -0800
+Message-ID: <1324089440-8957-21-git-send-email-frankyl@broadcom.com> (sfid-20111217_035946_587320_B7E3EB1D)
+In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+brcmf_sdio is the data structure for sdio bus layer. Stop
+referencing brcmf_sdio from common layer. This patch is part of
+the fullmac bus interface refactoring.
 
-The ICT code erroneously uses PAGE_SIZE. The bug
-is that PAGE_SIZE isn't necessarily 4096, so on
-such platforms this code will not work correctly
-as we'll try to attempt to read an index in the
-table that the device never wrote, it always has
-4096-byte pages.
-
-Additionally, the manual alignment code here is
-unnecessary -- Documentation/DMA-API-HOWTO.txt
-states:
-  The cpu return address and the DMA bus master address are both
-  guaranteed to be aligned to the smallest PAGE_SIZE order which
-  is greater than or equal to the requested size.  This invariant
-  exists (for example) to guarantee that if you allocate a chunk
-  which is smaller than or equal to 64 kilobytes, the extent of the
-  buffer you receive will not cross a 64K boundary.
-
-Just use appropriate new constants and get rid of
-the alignment code.
-
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
 ---
-this patch will be also available from wireless branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
+ drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    5 +----
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    3 ---
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    4 +---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
+ .../net/wireless/brcm80211/brcmfmac/sdio_host.h    |    4 ++++
+ 5 files changed, 7 insertions(+), 11 deletions(-)
 
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    2 -
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |   73 +++++++++------------
- 2 files changed, 31 insertions(+), 44 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-index 2b6756e..5c29281 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-@@ -219,9 +219,7 @@ struct iwl_trans_pcie {
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+index dcb1bb5..5d0be12 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
+@@ -583,14 +583,12 @@ struct brcmf_bus {
+ };
  
- 	/* INT ICT Table */
- 	__le32 *ict_tbl;
--	void *ict_tbl_vir;
- 	dma_addr_t ict_tbl_dma;
--	dma_addr_t aligned_ict_tbl_dma;
- 	int ict_index;
- 	u32 inta;
- 	bool use_ict;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-index 374c68c..1920237 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-@@ -1136,7 +1136,11 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
-  * ICT functions
-  *
-  ******************************************************************************/
--#define ICT_COUNT (PAGE_SIZE/sizeof(u32))
-+
-+/* a device (PCI-E) page is 4096 bytes long */
-+#define ICT_SHIFT	12
-+#define ICT_SIZE	(1 << ICT_SHIFT)
-+#define ICT_COUNT	(ICT_SIZE / sizeof(u32))
+ /* Forward decls for struct brcmf_pub (see below) */
+-struct brcmf_sdio;		/* device bus info */
+ struct brcmf_proto;	/* device communication protocol info */
+ struct brcmf_cfg80211_dev; /* cfg80211 device info */
  
- /* Free dram table */
- void iwl_free_isr_ict(struct iwl_trans *trans)
-@@ -1144,21 +1148,19 @@ void iwl_free_isr_ict(struct iwl_trans *trans)
- 	struct iwl_trans_pcie *trans_pcie =
- 		IWL_TRANS_GET_PCIE_TRANS(trans);
+ /* Common structure for module and instance linkage */
+ struct brcmf_pub {
+ 	/* Linkage ponters */
+-	struct brcmf_sdio *bus;
+ 	struct brcmf_bus *bus_if;
+ 	struct brcmf_proto *prot;
+ 	struct brcmf_cfg80211_dev *config;
+@@ -669,8 +667,7 @@ extern uint brcmf_c_mkiovar(char *name, char *data, uint datalen,
+  * Returned structure should have bus and prot pointers filled in.
+  * bus_hdrlen specifies required headroom for bus module header.
+  */
+-extern int brcmf_attach(struct brcmf_sdio *bus,
+-			uint bus_hdrlen, struct device *dev);
++extern int brcmf_attach(uint bus_hdrlen, struct device *dev);
+ extern int brcmf_net_attach(struct brcmf_pub *drvr, int idx);
+ extern int brcmf_netdev_wait_pend8021x(struct net_device *ndev);
  
--	if (trans_pcie->ict_tbl_vir) {
--		dma_free_coherent(bus(trans)->dev,
--				  (sizeof(u32) * ICT_COUNT) + PAGE_SIZE,
--				  trans_pcie->ict_tbl_vir,
-+	if (trans_pcie->ict_tbl) {
-+		dma_free_coherent(bus(trans)->dev, ICT_SIZE,
-+				  trans_pcie->ict_tbl,
- 				  trans_pcie->ict_tbl_dma);
--		trans_pcie->ict_tbl_vir = NULL;
--		memset(&trans_pcie->ict_tbl_dma, 0,
--			sizeof(trans_pcie->ict_tbl_dma));
--		memset(&trans_pcie->aligned_ict_tbl_dma, 0,
--			sizeof(trans_pcie->aligned_ict_tbl_dma));
-+		trans_pcie->ict_tbl = NULL;
-+		trans_pcie->ict_tbl_dma = 0;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+index 1841f99..1b34877 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+@@ -44,7 +44,4 @@ brcmf_sdbrcm_bus_txctl(struct device *dev, unsigned char *msg, uint msglen);
+ 
+ extern int
+ brcmf_sdbrcm_bus_rxctl(struct device *dev, unsigned char *msg, uint msglen);
+-
+-extern void brcmf_sdbrcm_wd_timer(struct brcmf_sdio *bus, uint wdtick);
+-
+ #endif				/* _BRCMF_BUS_H_ */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+index 533418e..70f0b31 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+@@ -922,8 +922,7 @@ void brcmf_del_if(struct brcmf_pub *drvr, int ifidx)
  	}
  }
  
+-int brcmf_attach(struct brcmf_sdio *bus, uint bus_hdrlen,
+-			       struct device *dev)
++int brcmf_attach(uint bus_hdrlen, struct device *dev)
+ {
+ 	struct brcmf_pub *drvr = NULL;
+ 	int ret = 0;
+@@ -938,7 +937,6 @@ int brcmf_attach(struct brcmf_sdio *bus, uint bus_hdrlen,
+ 	mutex_init(&drvr->proto_block);
  
--/* allocate dram shared table it is a PAGE_SIZE aligned
-+/*
-+ * allocate dram shared table, it is an aligned memory
-+ * block of ICT_SIZE.
-  * also reset all data related to ICT table interrupt.
-  */
- int iwl_alloc_isr_ict(struct iwl_trans *trans)
-@@ -1166,36 +1168,26 @@ int iwl_alloc_isr_ict(struct iwl_trans *trans)
- 	struct iwl_trans_pcie *trans_pcie =
- 		IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	/* Link to bus module */
+-	drvr->bus = bus;
+ 	drvr->hdrlen = bus_hdrlen;
+ 	drvr->bus_if = dev_get_drvdata(dev);
+ 	drvr->bus_if->drvr = drvr;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 399567f..129cfd6 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3953,7 +3953,7 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
+ 	}
  
--	/* allocate shrared data table */
--	trans_pcie->ict_tbl_vir =
--		dma_alloc_coherent(bus(trans)->dev,
--				   (sizeof(u32) * ICT_COUNT) + PAGE_SIZE,
--				   &trans_pcie->ict_tbl_dma, GFP_KERNEL);
--	if (!trans_pcie->ict_tbl_vir)
-+	trans_pcie->ict_tbl =
-+		dma_alloc_coherent(bus(trans)->dev, ICT_SIZE,
-+				   &trans_pcie->ict_tbl_dma,
-+				   GFP_KERNEL);
-+	if (!trans_pcie->ict_tbl)
- 		return -ENOMEM;
+ 	/* Attach to the brcmf/OS/network interface */
+-	ret = brcmf_attach(bus, SDPCM_RESERVE, bus->sdiodev->dev);
++	ret = brcmf_attach(SDPCM_RESERVE, bus->sdiodev->dev);
+ 	if (ret != 0) {
+ 		brcmf_dbg(ERROR, "brcmf_attach failed\n");
+ 		goto fail;
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+index d36a2a8..a63490e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_host.h
+@@ -122,6 +122,8 @@ struct brcmf_sdreg {
+ 	int value;
+ };
  
--	/* align table to PAGE_SIZE boundary */
--	trans_pcie->aligned_ict_tbl_dma =
--		ALIGN(trans_pcie->ict_tbl_dma, PAGE_SIZE);
--
--	IWL_DEBUG_ISR(trans, "ict dma addr %Lx dma aligned %Lx diff %d\n",
--			   (unsigned long long)trans_pcie->ict_tbl_dma,
--			   (unsigned long long)trans_pcie->aligned_ict_tbl_dma,
--			   (int)(trans_pcie->aligned_ict_tbl_dma -
--			   trans_pcie->ict_tbl_dma));
-+	/* just an API sanity check ... it is guaranteed to be aligned */
-+	if (WARN_ON(trans_pcie->ict_tbl_dma & (ICT_SIZE - 1))) {
-+		iwl_free_isr_ict(trans);
-+		return -EINVAL;
-+	}
- 
--	trans_pcie->ict_tbl =  trans_pcie->ict_tbl_vir +
--			  (trans_pcie->aligned_ict_tbl_dma -
--			  trans_pcie->ict_tbl_dma);
-+	IWL_DEBUG_ISR(trans, "ict dma addr %Lx\n",
-+		      (unsigned long long)trans_pcie->ict_tbl_dma);
- 
--	IWL_DEBUG_ISR(trans, "ict vir addr %p vir aligned %p diff %d\n",
--			     trans_pcie->ict_tbl, trans_pcie->ict_tbl_vir,
--			(int)(trans_pcie->aligned_ict_tbl_dma -
--			    trans_pcie->ict_tbl_dma));
-+	IWL_DEBUG_ISR(trans, "ict vir addr %p\n", trans_pcie->ict_tbl);
- 
- 	/* reset table and index to all 0 */
--	memset(trans_pcie->ict_tbl_vir, 0,
--		(sizeof(u32) * ICT_COUNT) + PAGE_SIZE);
-+	memset(trans_pcie->ict_tbl, 0, ICT_SIZE);
- 	trans_pcie->ict_index = 0;
- 
- 	/* add periodic RX interrupt */
-@@ -1213,23 +1205,20 @@ int iwl_reset_ict(struct iwl_trans *trans)
- 	struct iwl_trans_pcie *trans_pcie =
- 		IWL_TRANS_GET_PCIE_TRANS(trans);
- 
--	if (!trans_pcie->ict_tbl_vir)
-+	if (!trans_pcie->ict_tbl)
- 		return 0;
- 
- 	spin_lock_irqsave(&trans->shrd->lock, flags);
- 	iwl_disable_interrupts(trans);
- 
--	memset(&trans_pcie->ict_tbl[0], 0, sizeof(u32) * ICT_COUNT);
-+	memset(trans_pcie->ict_tbl, 0, ICT_SIZE);
- 
--	val = trans_pcie->aligned_ict_tbl_dma >> PAGE_SHIFT;
-+	val = trans_pcie->ict_tbl_dma >> ICT_SHIFT;
- 
- 	val |= CSR_DRAM_INT_TBL_ENABLE;
- 	val |= CSR_DRAM_INIT_TBL_WRAP_CHECK;
- 
--	IWL_DEBUG_ISR(trans, "CSR_DRAM_INT_TBL_REG =0x%X "
--			"aligned dma address %Lx\n",
--			val,
--			(unsigned long long)trans_pcie->aligned_ict_tbl_dma);
-+	IWL_DEBUG_ISR(trans, "CSR_DRAM_INT_TBL_REG =0x%x\n", val);
- 
- 	iwl_write32(bus(trans), CSR_DRAM_INT_TBL_REG, val);
- 	trans_pcie->use_ict = true;
++struct brcmf_sdio;
++
+ struct brcmf_sdio_dev {
+ 	struct sdio_func *func[SDIO_MAX_FUNCS];
+ 	u8 num_funcs;			/* Supported funcs on client */
+@@ -262,4 +264,6 @@ extern void brcmf_sdio_wdtmr_enable(struct brcmf_sdio_dev *sdiodev,
+ extern void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev);
+ extern void brcmf_sdbrcm_disconnect(void *ptr);
+ extern void brcmf_sdbrcm_isr(void *arg);
++
++extern void brcmf_sdbrcm_wd_timer(struct brcmf_sdio *bus, uint wdtick);
+ #endif				/* _BRCM_SDH_H_ */
 -- 
-1.7.0.4
+1.7.5.4
+
 
