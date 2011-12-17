@@ -1,78 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36630 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751608Ab1LULdm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 06:33:42 -0500
-Date: Wed, 21 Dec 2011 12:33:30 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Pedro Francisco <pedrogfrancisco@gmail.com>
-Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
-Subject: Re: iwl3945 firmware errors: tentative debugging
-Message-ID: <20111221113329.GA2235@redhat.com> (sfid-20111221_123345_809893_0B227103)
-References: <CAJZjf_xDm_RaFqxF-r+MAPyh_HcCb+yV4dNrfhr+LH0-z2zk8g@mail.gmail.com>
- <CAJZjf_yEBb3BEf+-Fei78xBmJT1Y_Jr5fPUJNKwi6kvuVg24KA@mail.gmail.com>
- <20111124125414.GA8077@redhat.com>
- <CAJZjf_zM2zBsoh66KcRwgi-jS7DF-qH5-sKrUoCB=hFTPES7LA@mail.gmail.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47592 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752149Ab1LQPFl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 17 Dec 2011 10:05:41 -0500
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [RFC 2/2] mac80211: stop data transmission while probing AP
+Date: Sat, 17 Dec 2011 20:35:28 +0530
+Message-ID: <1324134328-27503-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111217_160559_319724_A386531D)
+In-Reply-To: <1324134328-27503-1-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1324134328-27503-1-git-send-email-rmanohar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="7AUc2qLy4jB3hD7Z"
-In-Reply-To: <CAJZjf_zM2zBsoh66KcRwgi-jS7DF-qH5-sKrUoCB=hFTPES7LA@mail.gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+If the station is out of coverage of AP and it tries to probe the AP
+because of the beacon loss then there is not point in pushing the
+data from the higher layer. So lets suspend the data transmission
+till the probing succeeds.
 
---7AUc2qLy4jB3hD7Z
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+---
+ net/mac80211/mlme.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-Hi Pedro,
-
-On Tue, Nov 29, 2011 at 05:07:55PM +0000, Pedro Francisco wrote:
-> My country has the following regulatory.bin lines:
-> 
-> country PT:	(2402.000 - 2482.000 @ 40.000), (N/A, 20.00)	(5170.000 -
-> 5250.000 @ 40.000), (N/A, 20.00)	(5250.000 - 5330.000 @ 40.000), (N/A,
-> 20.00), DFS <------ removed whole line	(5490.000 - 5710.000 @ 40.000),
-> (N/A, 27.00), DFS <------ removed whole line
-> 
-> If I remove the last two lines, everything works as expected, i.e., NO
-> "Microsode SW error". If I include any of the last two, the Microcode
-> will issue an error.
-> 
-> I've tried every combination of those lines except just one of
-> "(5250.000 - 5330.000 @ 40.000), (N/A, 20.00), DFS" OR "(5490.000 -
-> 5710.000 @ 40.000), (N/A, 27.00), DFS".
-
-Attached patch stop to trigger error on my setup with "iw dev wlan0 scan
-passive". Can you check if it also fix problem on your normal wireless
-workload?
-
-Thanks
-Stanislaw
-
---7AUc2qLy4jB3hD7Z
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="iwlegacy-do-not-promote-to-active-scan-on-transmistion-detect.patch"
-
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index daef6b5..b6df518 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -2624,12 +2624,12 @@ il3945_request_scan(struct il_priv *il, struct ieee80211_vif *vif)
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 65f1262..d0b4a32 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1239,6 +1239,8 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ 	if (ifmgd->probe_send_count >= unicast_limit)
+ 		dst = NULL;
+ 
++	if (ifmgd->flags & IEEE80211_STA_BEACON_POLL)
++		netif_tx_stop_all_queues(sdata->dev);
+ 	/*
+ 	 * When the hardware reports an accurate Tx ACK status, it's
+ 	 * better to send a nullfunc frame instead of a probe request,
+@@ -1255,6 +1257,10 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+ 					 (u32) -1, true, false);
  	}
  
- 	/*
--	 * If active scaning is requested but a certain channel
--	 * is marked passive, we can do active scanning if we
--	 * detect transmissions.
-+	 * If active scaning is requested but a certain channel is marked
-+	 * passive, we can do active scanning if we detect transmissions. For
-+	 * passive only scanning disable switching to active on any channel.
- 	 */
- 	scan->good_CRC_th =
--	    is_active ? IL_GOOD_CRC_TH_DEFAULT : IL_GOOD_CRC_TH_DISABLED;
-+	    is_active ? IL_GOOD_CRC_TH_DEFAULT : IL_GOOD_CRC_TH_NEVER;
- 
- 	len =
- 	    il_fill_probe_req(il, (struct ieee80211_mgmt *)scan->data,
++	if (ifmgd->flags & IEEE80211_STA_BEACON_POLL) {
++		drv_flush(sdata->local, false);
++		netif_tx_wake_all_queues(sdata->dev);
++	}
+ 	ifmgd->probe_send_count++;
+ 	ifmgd->probe_timeout = jiffies + msecs_to_jiffies(probe_wait_ms);
+ 	run_again(ifmgd, ifmgd->probe_timeout);
+-- 
+1.7.8
 
---7AUc2qLy4jB3hD7Z--
