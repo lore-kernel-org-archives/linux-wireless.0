@@ -1,57 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:56183 "EHLO lo.gmane.org"
+Received: from mms1.broadcom.com ([216.31.210.17]:2334 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751020Ab1LYXpI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Dec 2011 18:45:08 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1RexkZ-0003NA-3S
-	for linux-wireless@vger.kernel.org; Mon, 26 Dec 2011 00:45:07 +0100
-Received: from 66.sub-75-192-52.myvzw.com ([75.192.52.66])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Dec 2011 00:45:07 +0100
-Received: from rmiller61k by 66.sub-75-192-52.myvzw.com with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Dec 2011 00:45:07 +0100
-To: linux-wireless@vger.kernel.org
-From: Bob Miller <rmiller61k@gmail.com>
-Subject: Re: Fedora 16 Wireless Connection Problem
-Date: Sun, 25 Dec 2011 23:42:54 +0000 (UTC)
-Message-ID: <loom.20111226T003824-126@post.gmane.org> (sfid-20111226_004534_847608_2F1D9DC4)
-References: <CADiUXRwb+ktGmyuMxMcXhZkpbhy=kAkOJcTLpJYRcaFFSRMnMg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1760821Ab1LQChb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 16 Dec 2011 21:37:31 -0500
+From: "Franky Lin" <frankyl@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 29/30] brcm80211: fmac: exclude unnecessary header files
+Date: Fri, 16 Dec 2011 18:37:19 -0800
+Message-ID: <1324089440-8957-30-git-send-email-frankyl@broadcom.com> (sfid-20111217_033737_374487_BFE73FB7)
+In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mammar <mammar@...> writes:
+This patch removes some headers files include lines from sdio layer
+code. This is part of the fullmac bus interface refactoring.
 
-> 
-> I have Dell Inpiron N5010 with Broadcom Corporation BCM4313
-> 802.11b/g/n Wireless LAN Controller.
-> 
-> My OS is Fedora 16 64-bit. I have installed the following drivers for
-> my wireless controller, everything is working great until yesterday.
-> Now whenever i try to connect to wirless connection, it failed.
-> 
->
-> 
-> Can anyone help me?
-> 
-> Thanks
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Arend van Spriel <arend@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |    1 -
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    2 --
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 --
+ .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |    1 -
+ 4 files changed, 0 insertions(+), 6 deletions(-)
 
-What kernel are you using?
-
-The latest kernel (kernel-3.1.6-1.fc16.x86_64) seems to have broken the wireless
-on my HP laptop. Wireless capability works with the prior version
-(kernel-3.1.5-6.fc16.x86_64).
-
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+index 32d72a0..4bc8d25 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c
+@@ -31,7 +31,6 @@
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
+ #include <soc.h>
+-#include "dhd.h"
+ #include "dhd_bus.h"
+ #include "dhd_dbg.h"
+ #include "sdio_host.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index f17c818..9b8c0ed 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -31,9 +31,7 @@
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
+ #include "sdio_host.h"
+-#include "dhd.h"
+ #include "dhd_dbg.h"
+-#include "wl_cfg80211.h"
+ #include "dhd_bus.h"
+ 
+ #define SDIO_VENDOR_ID_BROADCOM		0x02d0
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index a8e7ca5..5a002a2 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -87,9 +87,7 @@ struct rte_console {
+ #endif				/* BCMDBG */
+ #include <chipcommon.h>
+ 
+-#include "dhd.h"
+ #include "dhd_bus.h"
+-#include "dhd_proto.h"
+ #include "dhd_dbg.h"
+ 
+ #define TXQLEN		2048	/* bulk tx queue length */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+index a6048d7..11b2d7c 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/sdio_chip.c
+@@ -26,7 +26,6 @@
+ #include <brcmu_wifi.h>
+ #include <brcmu_utils.h>
+ #include <soc.h>
+-#include "dhd.h"
+ #include "dhd_dbg.h"
+ #include "sdio_host.h"
+ #include "sdio_chip.h"
+-- 
+1.7.5.4
 
 
