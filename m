@@ -1,108 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:62689 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751997Ab1LSNsg (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:65208 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751968Ab1LRSYz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 08:48:36 -0500
-Date: Mon, 19 Dec 2011 11:49:12 -0200
-From: Gustavo Padovan <padovan@profusion.mobi>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth-next 2011-12-19
-Message-ID: <20111219134912.GC2610@joana> (sfid-20111219_144841_703599_38B327A4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 18 Dec 2011 13:24:55 -0500
+Received: by mail-wi0-f174.google.com with SMTP id hm6so675676wib.19
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Dec 2011 10:24:54 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/7] wl12xx: make WL1271_FLAG_IDLE flag per-vif
+Date: Sun, 18 Dec 2011 20:25:41 +0200
+Message-Id: <1324232745-22928-4-git-send-email-eliad@wizery.com> (sfid-20111218_192458_899189_DA36B384)
+In-Reply-To: <1324232745-22928-1-git-send-email-eliad@wizery.com>
+References: <1324232745-22928-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+This flag should be set per-vif, rather than globally.
 
-Another set of patches for 3.3. The biggest change here is a long-waited move
-from tasklets to workqueue. All our bluetooth core processing is now done in
-process context. Besides that there is some update from Johan to management
-interface and some other fix/improvements over the three.
+Rename the flag to indicate IN_USE (rather than IDLE), as
+in the default configuration (i.e. flag is clear) the vif
+should be idle.
 
-Please pull, thanks!
+Change all the bit operations (and elp conditions) appropriately.
 
-	Gustavo
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c   |    8 ++++++--
+ drivers/net/wireless/wl12xx/ps.c     |   10 ++++++++--
+ drivers/net/wireless/wl12xx/scan.c   |    2 +-
+ drivers/net/wireless/wl12xx/wl12xx.h |    2 +-
+ 4 files changed, 16 insertions(+), 6 deletions(-)
 
-The following changes since commit 5bd5e9a6ae5137a61d0b5c277eac61892d89fc4f:
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 17e62e4..3a8fd33 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2383,6 +2383,10 @@ static int wl1271_sta_handle_idle(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 				  bool idle)
+ {
+ 	int ret;
++	bool cur_idle = !test_bit(WLVIF_FLAG_IN_USE, &wlvif->flags);
++
++	if (idle == cur_idle)
++		return 0;
+ 
+ 	if (idle) {
+ 		/* no need to croc if we weren't busy (e.g. during boot) */
+@@ -2401,7 +2405,7 @@ static int wl1271_sta_handle_idle(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 			ACX_KEEP_ALIVE_TPL_INVALID);
+ 		if (ret < 0)
+ 			goto out;
+-		set_bit(WL1271_FLAG_IDLE, &wl->flags);
++		clear_bit(WLVIF_FLAG_IN_USE, &wlvif->flags);
+ 	} else {
+ 		/* The current firmware only supports sched_scan in idle */
+ 		if (wl->sched_scanning) {
+@@ -2412,7 +2416,7 @@ static int wl1271_sta_handle_idle(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		ret = wl12xx_start_dev(wl, wlvif);
+ 		if (ret < 0)
+ 			goto out;
+-		clear_bit(WL1271_FLAG_IDLE, &wl->flags);
++		set_bit(WLVIF_FLAG_IN_USE, &wlvif->flags);
+ 	}
+ 
+ out:
+diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
+index a7a1108..a2bdacd 100644
+--- a/drivers/net/wireless/wl12xx/ps.c
++++ b/drivers/net/wireless/wl12xx/ps.c
+@@ -53,8 +53,11 @@ void wl1271_elp_work(struct work_struct *work)
+ 		goto out;
+ 
+ 	wl12xx_for_each_wlvif(wl, wlvif) {
++		if (wlvif->bss_type == BSS_TYPE_AP_BSS)
++			goto out;
++
+ 		if (!test_bit(WLVIF_FLAG_PSM, &wlvif->flags) &&
+-		    !test_bit(WL1271_FLAG_IDLE, &wl->flags))
++		    test_bit(WLVIF_FLAG_IN_USE, &wlvif->flags))
+ 			goto out;
+ 	}
+ 
+@@ -78,8 +81,11 @@ void wl1271_ps_elp_sleep(struct wl1271 *wl)
+ 		return;
+ 
+ 	wl12xx_for_each_wlvif(wl, wlvif) {
++		if (wlvif->bss_type == BSS_TYPE_AP_BSS)
++			return;
++
+ 		if (!test_bit(WLVIF_FLAG_PSM, &wlvif->flags) &&
+-		    !test_bit(WL1271_FLAG_IDLE, &wl->flags))
++		    test_bit(WLVIF_FLAG_IN_USE, &wlvif->flags))
+ 			return;
+ 	}
+ 
+diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
+index 8599dab..108765a 100644
+--- a/drivers/net/wireless/wl12xx/scan.c
++++ b/drivers/net/wireless/wl12xx/scan.c
+@@ -703,7 +703,7 @@ int wl1271_scan_sched_scan_start(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	if (wlvif->bss_type != BSS_TYPE_STA_BSS)
+ 		return -EOPNOTSUPP;
+ 
+-	if (!test_bit(WL1271_FLAG_IDLE, &wl->flags))
++	if (test_bit(WLVIF_FLAG_IN_USE, &wlvif->flags))
+ 		return -EBUSY;
+ 
+ 	start = kzalloc(sizeof(*start), GFP_KERNEL);
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index d21f71f..b2b09cd 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -241,7 +241,6 @@ enum wl12xx_flags {
+ 	WL1271_FLAG_IN_ELP,
+ 	WL1271_FLAG_ELP_REQUESTED,
+ 	WL1271_FLAG_IRQ_RUNNING,
+-	WL1271_FLAG_IDLE,
+ 	WL1271_FLAG_FW_TX_BUSY,
+ 	WL1271_FLAG_DUMMY_PACKET_PENDING,
+ 	WL1271_FLAG_SUSPENDED,
+@@ -262,6 +261,7 @@ enum wl12xx_vif_flags {
+ 	WLVIF_FLAG_PSPOLL_FAILURE,
+ 	WLVIF_FLAG_CS_PROGRESS,
+ 	WLVIF_FLAG_AP_PROBE_RESP_SET,
++	WLVIF_FLAG_IN_USE,
+ };
+ 
+ struct wl1271_link {
+-- 
+1.7.6.401.g6a319
 
-  ath9k: Support RSN Mesh (2011-12-16 09:30:43 -0500)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next master
-
-Andrei Emeltchenko (2):
-      Bluetooth: Add HCI Read Data Block Size function
-      Bluetooth: Simplify num_comp_pkts_evt function
-
-Gustavo F. Padovan (30):
-      Bluetooth: remove struct hci_chan_hash
-      Bluetooth: remove lock from struct conn_hash
-      Bluetooth: Initialize LE connection count
-      Bluetooth: Use chan instead of l2cap_pi macro
-      Bluetooth: Use list_for_each_entry in hci_conn_hash_flush()
-      Bluetooth: make hci_conn_enter_sniff_mode static
-      Bluetooth: Replace spin_lock by mutex in hci_dev
-      Bluetooth: Use delayed_work for connection timeout
-      Bluetooth: Use delayed work for advertisiment cache timeout
-      Bluetooth: hci_conn_auto_accept() doesn't need locking
-      Bluetooth: Move L2CAP timers to workqueue
-      Bluetooth: Don't use spin_lock socket lock anymore
-      Bluetooth: Remove sk_backlog usage from L2CAP
-      Bluetooth: move hci_task_lock to mutex
-      Bluetooth: convert chan_lock to mutex
-      Bluetooth: Use RCU to manipulate chan_list
-      Bluetooth: convert conn hash to RCU
-      Bluetooth: Don't disable tasklets to call hdev->notify()
-      Bluetooth: Move command task to workqueue
-      Bluetooth: convert tx_task to workqueue
-      Bluetooth: convert info timer to delayed_work
-      Bluetooth: invert locking order in connect path
-      Bluetooth: Change l2cap chan_list to use RCU
-      Bluetooth: move power_off to system workqueue
-      Bluetooth: Use new alloc_workqueue()
-      Bluetooth: Remove work_add and work_del from hci_sysfs
-      Bluetooth: Use system workqueue to schedule power_on
-      Bluetooth: Add ProFUSION's copyright
-      Revert "Bluetooth: Revert: Fix L2CAP connection establishment"
-      Merge git://git.kernel.org/.../padovan/bluetooth
-
-Johan Hedberg (10):
-      Bluetooth: Update mgmt_read_info and related mgmt messages
-      Bluetooth: Move mgmt_set_fast_connectable to the right location
-      Bluetooth: Remove mgmt_set_service_cache
-      Bluetooth: Move EIR and CoD update functions to a better position
-      Bluetooth: Add timer for automatically disabling the service cache
-      Bluetooth: Update ordering and opcodes of mgmt messages
-      Bluetooth: Use correct struct for user_confirm_neg_reply
-      Bluetooth: Add missing confirm_name field to mgmt_ev_device_found
-      Bluetooth: Fix mgmt_(block,unblock)_device opcodes
-      Bluetooth: Add missing mgmt_confirm_name command definition
-
-Marcel Holtmann (1):
-      Bluetooth: Process recv path in a workqueue instead of a tasklet
-
-Mat Martineau (3):
-      Bluetooth: Incoming ACL packets do not force active mode
-      Bluetooth: Prevent uninitialized data access in L2CAP configuration
-      Bluetooth: Clear RFCOMM session timer when disconnecting last channel
-
- include/net/bluetooth/hci.h      |    9 +
- include/net/bluetooth/hci_core.h |  118 +++----
- include/net/bluetooth/l2cap.h    |   24 +-
- include/net/bluetooth/mgmt.h     |  191 ++++++-----
- net/bluetooth/hci_conn.c         |  137 ++++-----
- net/bluetooth/hci_core.c         |  173 ++++++-----
- net/bluetooth/hci_event.c        |   99 ++++--
- net/bluetooth/hci_sock.c         |   21 +-
- net/bluetooth/hci_sysfs.c        |   91 ++---
- net/bluetooth/hidp/core.c        |    4 +-
- net/bluetooth/l2cap_core.c       |  360 +++++++++++----------
- net/bluetooth/l2cap_sock.c       |   62 +----
- net/bluetooth/mgmt.c             |  696 ++++++++++++++++++++------------------
- net/bluetooth/rfcomm/core.c      |    1 +
- net/bluetooth/sco.c              |    4 +-
- 15 files changed, 1015 insertions(+), 975 deletions(-)
