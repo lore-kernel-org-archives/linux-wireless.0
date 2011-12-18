@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:34060 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752661Ab1LUIue convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:51079 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751984Ab1LRSZC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 03:50:34 -0500
-Received: by iaeh11 with SMTP id h11so11578868iae.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2011 00:50:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAGXE3d-iHJqu1d5BCETkebR6t7VnkwpuLSi6ddyZWhtVxaE8=Q@mail.gmail.com>
-References: <1324288978-27162-1-git-send-email-helmut.schaa@googlemail.com>
-	<1324310130.3414.3.camel@jlt3.sipsolutions.net>
-	<CAGXE3d_dH1jeSVrmANd_OARqwY_NUkKu3He6Y7mP8atzas88pA@mail.gmail.com>
-	<1324312896.3414.16.camel@jlt3.sipsolutions.net>
-	<CAGXE3d9izM_cu=FpoYfLR1cx=tn+3BPMi9d7XEBfG-bkHR1oRA@mail.gmail.com>
-	<CAGXE3d-iHJqu1d5BCETkebR6t7VnkwpuLSi6ddyZWhtVxaE8=Q@mail.gmail.com>
-Date: Wed, 21 Dec 2011 09:50:33 +0100
-Message-ID: <CAA93jw6=Q3Hs_-J7PJm4SYL35Lx35iwDhcZ6_uxXPOWmjxGpcQ@mail.gmail.com> (sfid-20111221_095037_732325_B498C6A8)
-Subject: Re: [PATCH] mac80211: Fix frame classification in AP mode for relayed frames
-From: Dave Taht <dave.taht@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 18 Dec 2011 13:25:02 -0500
+Received: by mail-we0-f174.google.com with SMTP id m1so927002wer.19
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Dec 2011 10:25:02 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 7/7] wl12xx: check the actual vif operstate in wl1271_dev_notify
+Date: Sun, 18 Dec 2011 20:25:45 +0200
+Message-Id: <1324232745-22928-8-git-send-email-eliad@wizery.com> (sfid-20111218_192509_282249_3280152C)
+In-Reply-To: <1324232745-22928-1-git-send-email-eliad@wizery.com>
+References: <1324232745-22928-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 21, 2011 at 9:12 AM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> On Tue, Dec 20, 2011 at 9:37 AM, Helmut Schaa
-> <helmut.schaa@googlemail.com> wrote:
->>>> So, you'd prefer to just copy over the TID as used by the source
->>>> STA (via the priority+256 hack maybe)?
->>>
->>> Seems simpler to me really, at least right now and as default. Not sure,
->>> maybe other people have more opinion? :)
+The current wl1271_dev_notify implementation sets the
+new operstate to all associated stations (while only
+a specific vif was changed).
 
-Seeing this patch go by triggered me posting one of the patches I've
-been using in cerowrt, which should appear on linux-wireless
-as soon as the greylister gets done with me.
+Until we'll have a method to get the actual vif from
+the given dev, check the current operstate of each vif.
 
-I think that much more extensive classification of wireless traffic is
-highly desirable. In particular, tossing stuff with the TOS interactive bit
-set into VI helps ssh traffic enormously.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   12 +++++++++++-
+ 1 files changed, 11 insertions(+), 1 deletions(-)
 
-It's the magic number hack that bugs me.
-
-
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 4b68b2a..59d3c55 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -450,7 +450,16 @@ static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
+ 	if (wl->state == WL1271_STATE_OFF)
+ 		goto out;
+ 
++	if (dev->operstate != IF_OPER_UP)
++		goto out;
++	/*
++	 * The correct behavior should be just getting the appropriate wlvif
++	 * from the given dev, but currently we don't have a mac80211
++	 * interface for it.
++	 */
+ 	wl12xx_for_each_wlvif_sta(wl, wlvif) {
++		struct ieee80211_vif *vif = wl12xx_wlvif_to_vif(wlvif);
++
+ 		if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
+ 			continue;
+ 
+@@ -458,7 +467,8 @@ static int wl1271_dev_notify(struct notifier_block *me, unsigned long what,
+ 		if (ret < 0)
+ 			goto out;
+ 
+-		wl1271_check_operstate(wl, wlvif, dev->operstate);
++		wl1271_check_operstate(wl, wlvif,
++				       ieee80211_get_operstate(vif));
+ 
+ 		wl1271_ps_elp_sleep(wl);
+ 	}
 -- 
-Dave Täht
-SKYPE: davetaht
-US Tel: 1-239-829-5608
-FR Tel: 0638645374
-http://www.bufferbloat.net
+1.7.6.401.g6a319
+
