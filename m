@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:1214 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753991Ab1LIBZF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 20:25:05 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 14/15] iwlagn: use IWL_MAX_TID_COUNT for WoWLAN
-Date: Thu,  8 Dec 2011 16:26:21 -0800
-Message-Id: <1323390382-1678-15-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111209_022523_510119_0CC0AF56)
-In-Reply-To: <1323390382-1678-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1323390382-1678-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:51079 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751982Ab1LRSZB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 18 Dec 2011 13:25:01 -0500
+Received: by werm1 with SMTP id m1so927002wer.19
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Dec 2011 10:25:00 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 6/7] wl12xx: stop device role on remove_interface
+Date: Sun, 18 Dec 2011 20:25:44 +0200
+Message-Id: <1324232745-22928-7-git-send-email-eliad@wizery.com> (sfid-20111218_192504_910665_C2207B47)
+In-Reply-To: <1324232745-22928-1-git-send-email-eliad@wizery.com>
+References: <1324232745-22928-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+When removing a sta/ibss role, the device role has to
+stopped (and disabled) as well.
 
-Now that I corrected IWL_MAX_TID_COUNT to be 8
-instead of 9, we can use it in WoWLAN suspend.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 1d63422..057f952 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1157,7 +1157,7 @@ int iwlagn_suspend(struct iwl_priv *priv,
- 	 * For QoS counters, we store the one to use next, so subtract 0x10
- 	 * since the uCode will add 0x10 before using the value.
- 	 */
--	for (i = 0; i < 8; i++) {
-+	for (i = 0; i < IWL_MAX_TID_COUNT; i++) {
- 		seq = priv->shrd->tid_data[IWL_AP_ID][i].seq_number;
- 		seq -= 0x10;
- 		wakeup_filter_cmd.qos_seq[i] = cpu_to_le16(seq);
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 7a2ed34..4b68b2a 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2189,7 +2189,11 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+ 		if (ret < 0)
+ 			goto deinit;
+ 
+-		if (wlvif->bss_type == BSS_TYPE_STA_BSS) {
++		if (wlvif->bss_type == BSS_TYPE_STA_BSS ||
++		    wlvif->bss_type == BSS_TYPE_IBSS) {
++			if (wl12xx_dev_role_started(wlvif))
++				wl12xx_stop_dev(wl, wlvif);
++
+ 			ret = wl12xx_cmd_role_disable(wl, &wlvif->dev_role_id);
+ 			if (ret < 0)
+ 				goto deinit;
 -- 
-1.7.0.4
+1.7.6.401.g6a319
 
