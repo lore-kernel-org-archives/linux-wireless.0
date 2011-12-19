@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:48193 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751424Ab1LHVaV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 16:30:21 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luciano Coelho <coelho@ti.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] wl12xx: silence tx_attr uninitialized warning in wl1271_tx_fill_hdr
-Date: Thu,  8 Dec 2011 16:15:58 -0500
-Message-Id: <1323378958-13748-1-git-send-email-linville@tuxdriver.com> (sfid-20111208_223024_697429_89E61DBD)
+Received: from arrakis.dune.hu ([78.24.191.176]:33959 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752287Ab1LSVZM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 16:25:12 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: Rodriguez Luis <rodrigue@qca.qualcomm.com>
+Cc: mcgrof@infradead.org, linux-wireless@vger.kernel.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 00/15] initvals: fix various errors and warnings
+Date: Mon, 19 Dec 2011 22:24:45 +0100
+Message-Id: <1324329900-3923-1-git-send-email-juhosg@openwrt.org> (sfid-20111219_222515_856768_B088E103)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-  CC [M]  drivers/net/wireless/wl12xx/tx.o
-drivers/net/wireless/wl12xx/tx.c: In function ‘wl1271_tx_fill_hdr’:
-drivers/net/wireless/wl12xx/tx.c:288:6: warning: ‘tx_attr’ may be used uninitialized in this function
+The patch set fixes a build error, a typo and a copy&paste error.
+It also fixes several compiler warnings. Additionally, it adds two 
+helper scripts.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/wl12xx/tx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Gabor Juhos (15):
+  initvals: add missing include for ar9330
+  initvals: fix typos in usage text
+  initvals: fix copy&paste error
+  initvals: add ar9485_initvals.h to ATH9K_DEPS
+  initvals: add checksums for AR9330 1.[12]
+  initvals: add checksums for ar9580
+  initvals: allow to use additional CFLAGS
+  initvals: remove unused variable
+  initvals: fix printf format warnings
+  initvals: fix type of the second argument of 'main'
+  initvals: include <string.h> to make gcc happy
+  initvals: make 'print_initvals_family' static void
+  initvals: use private chksum variables in INI_PRINT* macros
+  initvals: add a script for simplifying checksum verification
+  initvals: add script for regenerating ath9k header files
 
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 36eb0d6..7d727ee 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -285,7 +285,7 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 	struct wl1271_tx_hw_descr *desc;
- 	int aligned_len, ac, rate_idx;
- 	s64 hosttime;
--	u16 tx_attr;
-+	u16 tx_attr = 0;
- 	bool is_dummy;
- 
- 	desc = (struct wl1271_tx_hw_descr *) skb->data;
+ Makefile              |    8 +-
+ ar9330_1p2_initvals.h | 1080 +++++++++++++++++++++++++++++++++++++++++++++++++
+ checksums.txt         |   55 +++
+ gen_ath9k_headers.sh  |   36 ++
+ initvals.c            |   31 +-
+ verify_checksums.sh   |   40 ++
+ 6 files changed, 1226 insertions(+), 24 deletions(-)
+ create mode 100644 ar9330_1p2_initvals.h
+ create mode 100755 gen_ath9k_headers.sh
+ create mode 100755 verify_checksums.sh
+
 -- 
-1.7.4.4
+1.7.2.1
 
