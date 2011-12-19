@@ -1,38 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:38863 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754822Ab1LAOiG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Dec 2011 09:38:06 -0500
-Received: by mail-lpp01m010-f53.google.com with SMTP id l5so230232lah.26
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Dec 2011 06:38:04 -0800 (PST)
-Subject: Re: [PATCH 1/2] wl12xx: leave IV calculation to HW for CCMP
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1319350915-31222-1-git-send-email-arik@wizery.com>
-References: <1319350915-31222-1-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 01 Dec 2011 16:38:00 +0200
-Message-ID: <1322750280.8996.36.camel@cumari> (sfid-20111201_153826_369600_E5DD5FC1)
-Mime-Version: 1.0
+Received: from arrakis.dune.hu ([78.24.191.176]:34074 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753327Ab1LSVZ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 16:25:27 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: Rodriguez Luis <rodrigue@qca.qualcomm.com>
+Cc: mcgrof@infradead.org, linux-wireless@vger.kernel.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 09/15] initvals: fix printf format warnings
+Date: Mon, 19 Dec 2011 22:24:54 +0100
+Message-Id: <1324329900-3923-10-git-send-email-juhosg@openwrt.org> (sfid-20111219_222540_098073_3302E7A1)
+In-Reply-To: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
+References: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-10-23 at 08:21 +0200, Arik Nemtsov wrote: 
-> Use an appropriate mac80211 flags in CCMP keys to indicate we are
-> calculating the CCMP IV in HW, but require room for the IV to be reserved
-> in the skb. The space is reserved by mac80211.
-> 
-> depends on "mac80211: support adding IV-room in the skb for CCMP keys".
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
+The patch fixes the following warnings
+(with CFLAGS=-Wformat):
 
-Applied.
+initvals.c: In function ‘ar5008_hw_print_initvals’:
+initvals.c:393: warning: format ‘%ld’ expects type ‘long int’, but argument 2 has type ‘unsigned int’
+initvals.c:394: warning: format ‘%ld’ expects type ‘long int’, but argument 2 has type ‘unsigned int’
+initvals.c:395: warning: format ‘%ld’ expects type ‘long int’, but argument 2 has type ‘unsigned int’
+initvals.c:396: warning: format ‘%ld’ expects type ‘long int’, but argument 2 has type ‘unsigned int’
+initvals.c:397: warning: format ‘%ld’ expects type ‘long int’, but argument 2 has type ‘unsigned int’
+initvals.c:398: warning: format ‘%ld’ expects type ‘long int’, but argument 2 has type ‘unsigned int’
+initvals.c:399: warning: format ‘%ld’ expects type ‘long int’, but argument 2 has type ‘unsigned int’
+initvals.c:400: warning: format ‘%ld’ expects type ‘long int’, but argument 2 has type ‘unsigned int’
+initvals.c:401: warning: format ‘%ld’ expects type ‘long int’, but argument 2 has type ‘unsigned int’
+initvals.c:402: warning: format ‘%ld’ expects type ‘long int’, but argument 2 has type ‘unsigned int’
+initvals.c:403: warning: format ‘%ld’ expects type ‘long int’, but argument 2 has type ‘unsigned int’
+...
 
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ initvals.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/initvals.c b/initvals.c
+index a12573a..1908986 100644
+--- a/initvals.c
++++ b/initvals.c
+@@ -257,7 +257,7 @@ typedef long long unsigned int u64;
+ 						ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0])); \
+ 		printf("0x%016llx        "#_array"\n", chksum); \
+ 	} else { \
+-		printf("static const u32 "#_array"[][%ld] = {\n", ARRAY_SIZE((_array)[0])); \
++		printf("static const u32 "#_array"[][%d] = {\n", (int) ARRAY_SIZE((_array)[0])); \
+ 		ath9k_hw_print_initval((const u32 *) _array, \
+ 				       ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0]), false); \
+ 	} \
 -- 
-Cheers,
-Luca.
+1.7.2.1
 
