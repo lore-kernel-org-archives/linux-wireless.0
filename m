@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:43500 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751344Ab1LIEUU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 23:20:20 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1RYrwY-0002UH-Jx
-	for linux-wireless@vger.kernel.org; Fri, 09 Dec 2011 05:20:18 +0100
-Received: from 152-pra-26.acn.waw.pl ([85.222.113.152])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Dec 2011 05:20:18 +0100
-Received: from harasimczuk by 152-pra-26.acn.waw.pl with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Dec 2011 05:20:18 +0100
-To: linux-wireless@vger.kernel.org
-From: Marcin <harasimczuk@gmail.com>
-Subject: Question: Receiving Probe Request frames via =?utf-8?b?Tkw4MDIxMV9DTURfRlJBTUU=?= event
-Date: Fri, 9 Dec 2011 04:14:41 +0000 (UTC)
-Message-ID: <loom.20111209T045811-823@post.gmane.org> (sfid-20111209_052023_092983_CB24E6BA)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from [119.255.1.60] ([119.255.1.60]:47844 "EHLO
+	mail.watchdata.com.cn" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1752707Ab1LSMKa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 07:10:30 -0500
+Received: from localhost (mail.watchdata.com.cn [127.0.0.1])
+	by mail.watchdata.com.cn (Postfix) with SMTP id D626A20069
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 19:28:45 +0800 (CST)
+Received: from ligang (unknown [10.0.112.56])
+	by mail.watchdata.com.cn (Postfix) with ESMTP id C748820066
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 19:28:45 +0800 (CST)
+From: =?gb2312?B?wO641Q==?= <gang.li@watchdata.com>
+To: "'wireless'" <linux-wireless@vger.kernel.org>
+Subject: Question about IEEE80211_TX_CTL_NO_ACK in ath_9k
+Date: Mon, 19 Dec 2011 19:38:23 +0800
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="gb2312"
+In-Reply-To: <4EED232D.3010208@lwfinger.net>
+Message-Id: <20111219112845.C748820066@mail.watchdata.com.cn> (sfid-20111219_131033_890271_4109FA40)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Hi everybody!
 
-My problem:
+My wireless card is AR9280. I set the IEEE80211_TX_CTL_NO_ACK flag before
+send a packet, but found it no use. It still wait for an ACK. Then I read
+the code,
+in ath9k_htc_tx_data(htc_drv_txrx.c) , it seems there is only two flags:
 
-I am listening to nl80211 events the same way it is done in project iw. Before
-listening to events on a nl80211 socket I register it for receiving Probe
-Request via NL80211_CMD_REGISTER_FRAME ( I checked wpa_supplicant to do it
-correctly ). 
+#define ATH9K_HTC_TX_CTSONLY      0x1
+#define ATH9K_HTC_TX_RTSCTS       0x2
 
-My socket does not seem to receive any NL80211_CMD_FRAME events.
+None is about ack.
 
-Question:
+Does anyone know how to make this flag work properly?
 
-What interface do I have to send my NL80211_CMD_REGISTER_FRAME message to
-receive chosen frames. Is the event listening method used in project iw (file
-"event.c") enough to receive NL80211_CMD_FRAME events, or do I have to do
-something else (something like event loop from wpa_supplicant)? 
+Thanks a lot!
 
-Thank You very much.
- 
+gang.li
+
+
+
 
