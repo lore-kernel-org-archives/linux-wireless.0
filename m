@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:61833 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751694Ab1LTUYH (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49783 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750713Ab1LSP43 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 15:24:07 -0500
-Cc: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH 0/3] cfg80211: reliense the rest of regulatory to ISC
-Date: Tue, 20 Dec 2011 12:23:35 -0800
-Message-ID: <1324412618-25131-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111220_212412_001649_DAFACC85)
-MIME-Version: 1.0
+	Mon, 19 Dec 2011 10:56:29 -0500
+Subject: Re: [PATCH] mac80211: Remove superfluous
+ ieee80211_rx_h_remove_qos_control
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+In-Reply-To: <1324291194-28203-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20111219_114031_877929_3E08F925)
+References: <1324291194-28203-1-git-send-email-helmut.schaa@googlemail.com>
+	 (sfid-20111219_114031_877929_3E08F925)
 Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Dec 2011 16:56:27 +0100
+Message-ID: <1324310187.3414.4.camel@jlt3.sipsolutions.net> (sfid-20111219_165637_742360_0D70E748)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+On Mon, 2011-12-19 at 11:39 +0100, Helmut Schaa wrote:
+> This seems to not serve any purpose anymore, at least all frame
+> processing afterwards seems to be able to deal with QoS frames. So,
+> let's save the expensive memmove and just leave the QoS header in the
+> 802.11 frame for further processing.
+> 
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> ---
+> 
+> It wouldn't hurt if a second pair of eyes looks through the rx path
+> to see if there's any possible problem with QoS frames in later rx
+> handlers.
 
-I'm working on a regulatory revamp of the kernel's regulatory code. In
-this pursuit I've started working on code loosely based on what I had
-originally written but starting in userspace [1] to help easily
-simulate, and test new designs, and run the code through some test
-cases. Additionally given some recent interest and a lot of
-development from the FreeBSD in wireless *and* me getting tired of
-dealing with crap proprietary code in this area I'm inclined to help
-try to unify architecture design and code between other OSes as much
-as possible. I may even be able to convince a few folks to consider
-using this code for usage in some other OSes as well but my focus for
-now is at least Linux and seeing if FreeBSD might be interest in
-collaboration.
+Ok, but I'm on vacation until next year, so I don't know if I'll get to
+it. In principle, this seems fine, but I'd feel more comfortable if
+somebody else took another look. Not that I don't trust you, just more
+eyes see more things :-)
 
-I have obtained ACKs from all the contributors except two entities who
-have died, but made single minor contributions. These patches deal with
-those few minor contributions and relicense the remaining regulatory
-code on cfg80211 to ISC.
-
-[0] git://github.com/mcgrof/regsim.git
-
-Luis R. Rodriguez (3):
-  cfg80211: replace reg.c Nokia commit c4c32294
-  cfg80211: replace reg.c Nokia commit 269ac5
-  cfg80211: relicense reg.c reg.h and genregdb.awk to ISC
-
- net/wireless/genregdb.awk |   13 ++++++++++---
- net/wireless/reg.c        |   35 ++++++++++++++++++++++-------------
- net/wireless/reg.h        |   15 +++++++++++++++
- net/wireless/regdb.h      |   16 ++++++++++++++++
- 4 files changed, 63 insertions(+), 16 deletions(-)
-
--- 
-1.7.4.15.g7811d
+johannes
 
