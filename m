@@ -1,34 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from exprod5og109.obsmtp.com ([64.18.0.188]:52506 "EHLO
-	exprod5og109.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750826Ab1LJQVW (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:57777 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751606Ab1LSTbp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Dec 2011 11:21:22 -0500
-Received: from il93mgrg01.am.mot-mobility.com ([10.176.130.20])
-	by il93mgrg01.am.mot-mobility.com (8.14.3/8.14.3) with ESMTP id pB94pe3I008747
-	for <linux-wireless@vger.kernel.org>; Thu, 8 Dec 2011 23:51:41 -0500 (EST)
-Received: from mail-vw0-f47.google.com (mail-vw0-f47.google.com [209.85.212.47])
-	by il93mgrg01.am.mot-mobility.com (8.14.3/8.14.3) with ESMTP id pB94peXT008738
-	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Thu, 8 Dec 2011 23:51:40 -0500 (EST)
-Received: by vbbfc21 with SMTP id fc21so2807170vbb.34
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2011 20:56:51 -0800 (PST)
-MIME-Version: 1.0
-Date: Fri, 9 Dec 2011 10:26:51 +0530
-Message-ID: <CAPSXAjdTHKC7wxPXsS2VVNSJcgaWDTQSNBYQhfbog6--uHkDvg@mail.gmail.com> (sfid-20111210_172125_805837_F22BD61F)
-Subject: modprobe utility not found
-From: PRASHANTH CHAKRAVARTHY <a19110@motorola.com>
-To: linux-wireless@vger.kernel.org
-Cc: Sireesha Kosuri <jmng34@motorola.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 19 Dec 2011 14:31:45 -0500
+Date: Mon, 19 Dec 2011 14:30:34 -0500 (EST)
+Message-Id: <20111219.143034.1320612609652976723.davem@davemloft.net> (sfid-20111219_203149_155392_D761F1A5)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2011-12-19
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20111219191110.GB31462@tuxdriver.com>
+References: <20111219191110.GB31462@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=euc-kr
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-We are trying to build compat utility on mac os machines. Builds are
-failing there with error /sbin/modprobe not found. They are passing on
-other linux machines .
-Is there a modprobe utility for mac os machines ?
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 19 Dec 2011 14:11:11 -0500
 
-Regards,
-Prashanth
+> Here is another (and probably still not the last) big pull request
+> with updates intended for 3.3.  There is the usual high activity
+> in the iwlwifi and ath9k camps.  Johannes favors us with some
+> mac80211 refactoring.  Rafa©© gives us some more b43 N-phy updates.
+> Samuel gives us another batch of NFC goodness.  The Broadcom folks
+> give us another big batch of updates to their drivers.  The wl12xx
+> guys make a good showing.  And as usual, there are a variety of other
+> contributions as well.
+> 
+> Please let me know if there are problems!
+
+Pulled, thanks John.
