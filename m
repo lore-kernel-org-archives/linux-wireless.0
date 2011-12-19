@@ -1,56 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34003 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759212Ab1LPOva (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 09:51:30 -0500
-Subject: Re: unexpected taint message
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	John Linville <linville@tuxdriver.com>
-In-Reply-To: <4EEB5A60.3090101@lwfinger.net> (sfid-20111216_154940_152892_953155B5)
-References: <4EEB0EFC.5000302@broadcom.com>
-	 (sfid-20111216_102800_182196_AFD2D6CF) <1324038636.3429.1.camel@jlt3.sipsolutions.net>
-	 <4EEB4D61.80602@lwfinger.net>
-	 (sfid-20111216_145414_221850_EED1E4DE) <1324043939.3429.2.camel@jlt3.sipsolutions.net>
-	 <4EEB521A.70602@lwfinger.net>
-	 (sfid-20111216_151411_303937_12579E4F) <1324045233.3429.3.camel@jlt3.sipsolutions.net>
-	 <4EEB5A60.3090101@lwfinger.net> (sfid-20111216_154940_152892_953155B5)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 16 Dec 2011 15:51:25 +0100
-Message-ID: <1324047085.3429.5.camel@jlt3.sipsolutions.net> (sfid-20111216_155134_727516_D763F46C)
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:4866 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752434Ab1LSS3P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 13:29:15 -0500
+Message-ID: <4EEF8270.8090500@broadcom.com> (sfid-20111219_192919_303546_C219E775)
+Date: Mon, 19 Dec 2011 10:29:04 -0800
+From: "Franky Lin" <frankyl@broadcom.com>
+MIME-Version: 1.0
+To: "GNUtoo@no-log.org" <GNUtoo@no-log.org>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: brcmfmac + compat wireless + 2.6.35
+References: <4ECC1F41.90003@broadcom.com>
+ <1323539463-6072-1-git-send-email-GNUtoo@no-log.org>
+ <4EE3C515.5050307@broadcom.com>
+ <c37d1dd4f7760df63a92b6fc1a187068.squirrel@webmail.no-log.org>
+In-Reply-To: <c37d1dd4f7760df63a92b6fc1a187068.squirrel@webmail.no-log.org>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-12-16 at 08:49 -0600, Larry Finger wrote:
+Hi Denis,
 
-> > +	switch (flag) {
-> > +	case TAINT_CRAP:
-> > +	case TAINT_WARN:
-> > +	case TAINT_OOT_MODULE:
-> > +		break;
-> > +	default:
-> > +		if (__debug_locks_off())
-> > +			printk(KERN_WARNING
-> > +			       "Disabling lock debugging due to kernel taint\n");
-> > +	}
-> >
-> >   	set_bit(flag,&tainted_mask);
-> >   }
-> 
-> Yes. I like this patch a lot. Unfortunately, VirtualBox was a part of the 
-> decision to add the OOT taint. At least for that reason, this patch would not be 
-> accepted upstream. It is too bad that the Oracle people fought so hard to keep 
-> their module from setting TAINT_CRAP the way that GregKH wanted. That would have 
-> had fewer side effects for me.
+On 12/18/2011 03:33 AM, Denis 'GNUtoo' Carikli wrote:
+> Hi,
+> With the following patch instead of mine:
+>    brcm80211: fmac: register a dummy irq handler for SDIO function 2
+> it still fails the same way.
 
-I'm not sure -- I mean, it's one thing to identify OOT modules and
-refuse to support them (and ignore lockdep reports with OOT set), but
-it's another to just disable lockdep? I think?
+Indeed there is no big difference from yours. We tested it on X86 and 
+OMAP panda board.
 
-johannes
+> I added that:
+> #define BCMDBG                         1
+> after:
+>   #include "dhd_proto.h"
+>   #include "dhd_dbg.h"
+>   in:
+> drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
+> and:
+> insmod brcmfmac.ko brcmf_msg_level=8192
+
+Could you try to load the driver by insmod brcmfmac.ko 
+brcmf_msg_level=0x7 and send me the log?
+
+> But it wasn't more verbose so I added MMC debug and I got that:
+>
+> [  101.534177] mmc2: starting CMD52 arg 00205c00 flags 00000195
+> [  101.534327] sdhci [sdhci_irq()]: *** mmc2 got interrupt: 0x00000001
+> [  101.534411] mmc2: req done (CMD52): 0: 00001000 00000000 00000000 00000000
+> [  101.534562] mmc2: starting CMD52 arg 00205e00 flags 00000195
+> --- Then it blocks here ---
+
+Looks like it hangs in the middle of downloading firmware.
+
+Thanks,
+Franky
 
