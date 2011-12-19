@@ -1,56 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:32777 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753019Ab1LLN33 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37750 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751206Ab1LSQGI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 08:29:29 -0500
-Received: by bkcjm19 with SMTP id jm19so1426862bkc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2011 05:29:28 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] mac80211: don't check sdata_running in vif notifier
-Date: Mon, 12 Dec 2011 15:30:04 +0200
-Message-Id: <1323696604-4533-1-git-send-email-eliad@wizery.com> (sfid-20111212_142932_909101_F174EE82)
+	Mon, 19 Dec 2011 11:06:08 -0500
+Subject: Re: [PATCH v2 1/7] wl12xx: implement change_interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <CAB3XZEeb1eLMHtqtEMpuswv1NiHExy+y0vVkykrzSWdHMoJxMQ@mail.gmail.com> (sfid-20111219_121736_970824_85C0CDB1)
+References: <1324288803-1666-1-git-send-email-eliad@wizery.com>
+	 <1324292350.2800.280.camel@cumari>
+	 <CAB3XZEeb1eLMHtqtEMpuswv1NiHExy+y0vVkykrzSWdHMoJxMQ@mail.gmail.com>
+	 (sfid-20111219_121736_970824_85C0CDB1)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Dec 2011 17:06:03 +0100
+Message-ID: <1324310763.3414.7.camel@jlt3.sipsolutions.net> (sfid-20111219_170611_860329_282255F1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ip address of the vif can be set even before the
-vif is up. requiring the vif to be up in the vif
-notifier makes the notifer ignore this event, which
-causes wrong arp filter configuration later on.
+On Mon, 2011-12-19 at 13:17 +0200, Eliad Peller wrote:
 
-Reported-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-v2: update the comment (thanks Johannes)
+> >> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+> >> index c305841..82fc318 100644
+> >> --- a/drivers/net/wireless/wl12xx/main.c
+> >> +++ b/drivers/net/wireless/wl12xx/main.c
+> >> @@ -2269,6 +2269,17 @@ out:
+> >>       cancel_work_sync(&wl->recovery_work);
+> >>  }
+> >>
+> >> +static int wl12xx_op_change_interface(struct ieee80211_hw *hw,
+> >> +                                   struct ieee80211_vif *vif,
+> >> +                                   enum nl80211_iftype new_type, bool p2p)
+> >> +{
+> >> +     wl1271_op_remove_interface(hw, vif);
+> >> +
+> >> +     vif->type = ieee80211_iftype_p2p(new_type, p2p);
+> >> +     vif->p2p = p2p;
+> >> +     return wl1271_op_add_interface(hw, vif);
+> >> +}
+> >> +
+> >
+> > As Arik already commented, this looks a bit weird.  Shouldn't the type
+> > and p2p elements be changed in mac80211 itself? What about doing so if
+> > the op_change_interface returns success? Currently, the opposite seems
+> > to happen (ie. mac80211 changes type back to the original vif.type if
+> > the op fails).
+> >
+> iwlegacy and ath9k are also setting vif->type and vif->p2p in a similar manner.
+> add_interface(vif) assumes vif->type and vif->p2p are correct, so it
+> makes sense to update the vif before adding it.
+> i also think this behavior is a bit ugly, but this is the current
+> mac80211 implementation, and i don't see a good enough reason to
+> change it :)
 
- net/mac80211/main.c |    5 +----
- 1 files changed, 1 insertions(+), 4 deletions(-)
+The reason I did it this way is because it simplified the code in the
+driver (for me at least) -- I could call functions that work on a vif
+and look at vif->type/p2p before and after doing my own changes, whereas
+if mac80211 was doing the modification I'd have to add extra arguments
+everywhere.
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 8022c62..7c491ad 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -436,9 +436,6 @@ static int ieee80211_ifa_changed(struct notifier_block *nb,
- 	sdata = IEEE80211_DEV_TO_SUB_IF(ndev);
- 	bss_conf = &sdata->vif.bss_conf;
- 
--	if (!ieee80211_sdata_running(sdata))
--		return NOTIFY_DONE;
--
- 	/* ARP filtering is only supported in managed mode */
- 	if (sdata->vif.type != NL80211_IFTYPE_STATION)
- 		return NOTIFY_DONE;
-@@ -467,7 +464,7 @@ static int ieee80211_ifa_changed(struct notifier_block *nb,
- 	}
- 	bss_conf->arp_addr_cnt = c;
- 
--	/* Configure driver only if associated */
-+	/* Configure driver only if associated (which also implies it is up) */
- 	if (ifmgd->associated) {
- 		bss_conf->arp_filter_enabled = sdata->arp_filter_state;
- 		ieee80211_bss_info_change_notify(sdata,
--- 
-1.7.6.401.g6a319
+johannes
 
