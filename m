@@ -1,68 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:56942 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750715Ab1LHP4h convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 10:56:37 -0500
-Received: by iakc1 with SMTP id c1so2745667iak.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2011 07:56:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1323343608-32561-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1323343608-32561-1-git-send-email-rmanohar@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Thu, 8 Dec 2011 07:56:17 -0800
-Message-ID: <CAB=NE6VRA=GMcD+BsrTLcPtXJCYr3bd2rxWE+AxwWHjVcbDvyw@mail.gmail.com> (sfid-20111208_165640_985336_8BDF407A)
-Subject: Re: [PATCH] cfg80211: notify core hints that helps to restore regd settings
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Paul Stewart <pstew@google.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:58934 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752339Ab1LSWnd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 17:43:33 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 0/6] update for 3.3: iwlwifi 2011-12-19
+Date: Mon, 19 Dec 2011 13:43:07 -0800
+Message-Id: <1324330993-24476-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111219_234348_299181_BD98A5CB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 8, 2011 at 3:26 AM, Rajkumar Manoharan
-<rmanohar@qca.qualcomm.com> wrote:
-> Regulatory updates set by CORE are ignored for custom regulatory cards.
-> Let us notify the changes to the driver, as some drivers uses core hint
-> to restore its orig_* reg domain setting.
->
-> Cc: Paul Stewart <pstew@google.com>
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> ---
->  net/wireless/reg.c |   16 ++++++++++++++--
->  1 files changed, 14 insertions(+), 2 deletions(-)
->
-> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-> index db958ba..c45c8b7 100644
-> --- a/net/wireless/reg.c
-> +++ b/net/wireless/reg.c
-> @@ -1175,9 +1175,21 @@ void regulatory_update(struct wiphy *wiphy,
->  static void update_all_wiphy_regulatory(enum nl80211_reg_initiator initiator)
->  {
->        struct cfg80211_registered_device *rdev;
-> +       struct wiphy *wiphy;
->
-> -       list_for_each_entry(rdev, &cfg80211_rdev_list, list)
-> -               wiphy_update_regulatory(&rdev->wiphy, initiator);
-> +       list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
-> +               wiphy = &rdev->wiphy;
-> +               wiphy_update_regulatory(wiphy, initiator);
-> +               /*
-> +                * Regulatory updates set by CORE are ignored for custom
-> +                * regulatory cards. Let us notify the changes to the driver,
-> +                * as some drivers used this to restore its orig_* reg domain.
-> +                */
-> +               if (initiator == NL80211_REGDOM_SET_BY_CORE &&
-> +                   wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY &&
-> +                   wiphy->reg_notifier)
-> +                       wiphy->reg_notifier(wiphy, last_request);
-> +       }
+We addess a throughput dropping issue caused by mis-configure the calibration
+We make changes for testmode commands to better align with wiphy interface
 
-This looks ugly but for now its fine as the alternative is to add
-another callback for restoring regulatory settings. I'll take this
-into consideration in the regulatory simulator where I'm rewriting all
-this.
+Johannes Berg (2):
+  iwlagn: add IRQ tracing
+  iwlagn: finer-grained HT disable
 
-Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Venkataraman, Meenakshi (1):
+  iwlwifi: Execute runtime calibration always
 
-  Luis
+Wey-Yi Guy (3):
+  iwlwifi: deliver hw version in both string and u32 format
+  iwlwifi: set hw_version in wiphy
+  iwlwifi: use bus_get_hw_id for IWL_TM_CMD_APP2DEV_GET_DEVICE_ID
+
+these patches are also available from wireless-next branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
+
+ drivers/net/wireless/iwlwifi/iwl-agn.c           |   14 +++++----
+ drivers/net/wireless/iwlwifi/iwl-bus.h           |   16 ++++++++---
+ drivers/net/wireless/iwlwifi/iwl-core.c          |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-devtrace.h      |   29 +++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c      |    6 ++++
+ drivers/net/wireless/iwlwifi/iwl-pci.c           |   10 ++++++-
+ drivers/net/wireless/iwlwifi/iwl-shared.h        |   11 +++++---
+ drivers/net/wireless/iwlwifi/iwl-testmode.c      |   13 ++-------
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |   32 ++++++++++++++-------
+ 9 files changed, 96 insertions(+), 37 deletions(-)
+
