@@ -1,148 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2353 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760939Ab1LQChb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 21:37:31 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 12/30] brcm80211: fmac: move sdio used statistics to
- struct brcmf_sdio
-Date: Fri, 16 Dec 2011 18:37:02 -0800
-Message-ID: <1324089440-8957-13-git-send-email-frankyl@broadcom.com> (sfid-20111217_033744_561189_0FAF53E6)
-In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
-References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:43743 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752318Ab1LSLhY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 06:37:24 -0500
+Received: by lagu2 with SMTP id u2so2593646lag.23
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 03:37:21 -0800 (PST)
+Subject: Re: [PATCH v2 1/7] wl12xx: implement change_interface
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAB3XZEeb1eLMHtqtEMpuswv1NiHExy+y0vVkykrzSWdHMoJxMQ@mail.gmail.com>
+References: <1324288803-1666-1-git-send-email-eliad@wizery.com>
+	 <1324292350.2800.280.camel@cumari>
+	 <CAB3XZEeb1eLMHtqtEMpuswv1NiHExy+y0vVkykrzSWdHMoJxMQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Dec 2011 13:37:17 +0200
+Message-ID: <1324294637.2800.287.camel@cumari> (sfid-20111219_123727_801466_1B4EC69F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some statistics only used by sdio modules. Move them to sdio layer
-private structure brcmf_sdio. This is part of the fullmac bus
-interface refactoring.
+On Mon, 2011-12-19 at 13:17 +0200, Eliad Peller wrote: 
+> On Mon, Dec 19, 2011 at 12:59 PM, Luciano Coelho <coelho@ti.com> wrote:
+> > On Mon, 2011-12-19 at 12:00 +0200, Eliad Peller wrote:
+> >> Implement the change_interface callback by simply removing the
+> >> current vif and adding a new one after updating the vif type.
+> >>
+> >> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> >> ---
+> >> v2: update vif->p2p as well
+> >>
+> >>  drivers/net/wireless/wl12xx/main.c |   12 ++++++++++++
+> >>  1 files changed, 12 insertions(+), 0 deletions(-)
+> >>
+> >> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+> >> index c305841..82fc318 100644
+> >> --- a/drivers/net/wireless/wl12xx/main.c
+> >> +++ b/drivers/net/wireless/wl12xx/main.c
+> >> @@ -2269,6 +2269,17 @@ out:
+> >>       cancel_work_sync(&wl->recovery_work);
+> >>  }
+> >>
+> >> +static int wl12xx_op_change_interface(struct ieee80211_hw *hw,
+> >> +                                   struct ieee80211_vif *vif,
+> >> +                                   enum nl80211_iftype new_type, bool p2p)
+> >> +{
+> >> +     wl1271_op_remove_interface(hw, vif);
+> >> +
+> >> +     vif->type = ieee80211_iftype_p2p(new_type, p2p);
+> >> +     vif->p2p = p2p;
+> >> +     return wl1271_op_add_interface(hw, vif);
+> >> +}
+> >> +
+> >
+> > As Arik already commented, this looks a bit weird.  Shouldn't the type
+> > and p2p elements be changed in mac80211 itself? What about doing so if
+> > the op_change_interface returns success? Currently, the opposite seems
+> > to happen (ie. mac80211 changes type back to the original vif.type if
+> > the op fails).
+> >
+> iwlegacy and ath9k are also setting vif->type and vif->p2p in a similar manner.
+> add_interface(vif) assumes vif->type and vif->p2p are correct, so it
+> makes sense to update the vif before adding it.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   11 ----------
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   21 +++++++++++++------
- 2 files changed, 14 insertions(+), 18 deletions(-)
+Right, it just came to my mind after I sent my reply that the reason was
+the add_interface().  Still it looks weird.  There would be ways to fix
+this properly, for example by splitting our add_interface() function and
+passing the type and p2p boolean to the inner one.  Not worth the
+effort, so let's not bother for now.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index 027083e..bfd26e3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -614,21 +614,13 @@ struct brcmf_pub {
- 	unsigned long tx_multicast;
- 	/* Errors in sending data to dongle */
- 	unsigned long tx_errors;
--	/* Control packets sent to dongle */
--	unsigned long tx_ctlpkts;
--	/* Errors sending control frames to dongle */
--	unsigned long tx_ctlerrs;
- 	/* Packets sent up the network interface */
- 	unsigned long rx_packets;
- 	/* Multicast packets sent up the network interface */
- 	unsigned long rx_multicast;
- 	/* Errors processing rx data packets */
- 	unsigned long rx_errors;
--	/* Control frames processed from dongle */
--	unsigned long rx_ctlpkts;
- 
--	/* Errors in processing rx control frames */
--	unsigned long rx_ctlerrs;
- 	/* Packets dropped locally (no memory) */
- 	unsigned long rx_dropped;
- 	/* Packets flushed due to unscheduled sendup thread */
-@@ -636,8 +628,6 @@ struct brcmf_pub {
- 	/* Number of times dpc scheduled by watchdog timer */
- 	unsigned long wd_dpc_sched;
- 
--	/* Number of packets where header read-ahead was used. */
--	unsigned long rx_readahead_cnt;
- 	/* Number of tx packets we had to realloc for headroom */
- 	unsigned long tx_realloc;
- 	/* Number of flow control pkts recvd */
-@@ -645,7 +635,6 @@ struct brcmf_pub {
- 
- 	/* Last error return */
- 	int bcmerror;
--	uint tickcnt;
- 
- 	/* Last error from dongle */
- 	int dongle_error;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index a54abaf..5fb0d90 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -546,6 +546,13 @@ struct brcmf_sdio {
- 	uint f2rxdata;		/* Number of frame data reads */
- 	uint f2txdata;		/* Number of f2 frame writes */
- 	uint f1regdata;		/* Number of f1 register accesses */
-+	uint tickcnt;		/* Number of watchdog been schedule */
-+	unsigned long tx_ctlerrs;	/* Err of sending ctrl frames */
-+	unsigned long tx_ctlpkts;	/* Ctrl frames sent to dongle */
-+	unsigned long rx_ctlerrs;	/* Err of processing rx ctrl frames */
-+	unsigned long rx_ctlpkts;	/* Ctrl frames processed from dongle */
-+	unsigned long rx_readahead_cnt;	/* Number of packets where header
-+					 * read-ahead was used. */
- 
- 	u8 *ctrl_frame_buf;
- 	u32 ctrl_frame_len;
-@@ -1774,7 +1781,7 @@ brcmf_sdbrcm_readframes(struct brcmf_sdio *bus, uint maxframes, bool *finished)
- 				bus->nextlen = 0;
- 			}
- 
--			bus->drvr->rx_readahead_cnt++;
-+			bus->rx_readahead_cnt++;
- 
- 			/* Handle Flow Control */
- 			fcbits = SDPCM_FCMASK_VALUE(
-@@ -2912,9 +2919,9 @@ brcmf_sdbrcm_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
- 	up(&bus->sdsem);
- 
- 	if (ret)
--		bus->drvr->tx_ctlerrs++;
-+		bus->tx_ctlerrs++;
- 	else
--		bus->drvr->tx_ctlpkts++;
-+		bus->tx_ctlpkts++;
- 
- 	return ret ? -EIO : 0;
- }
-@@ -2953,9 +2960,9 @@ brcmf_sdbrcm_bus_rxctl(struct device *dev, unsigned char *msg, uint msglen)
- 	}
- 
- 	if (rxlen)
--		bus->drvr->rx_ctlpkts++;
-+		bus->rx_ctlpkts++;
- 	else
--		bus->drvr->rx_ctlerrs++;
-+		bus->rx_ctlerrs++;
- 
- 	return rxlen ? (int)rxlen : -ETIMEDOUT;
- }
-@@ -3436,7 +3443,7 @@ int brcmf_sdbrcm_bus_init(struct device *dev)
- 		return 0;
- 
- 	/* Start the watchdog timer */
--	bus->drvr->tickcnt = 0;
-+	bus->tickcnt = 0;
- 	brcmf_sdbrcm_wd_timer(bus, BRCMF_WD_POLL_MS);
- 
- 	down(&bus->sdsem);
-@@ -3821,7 +3828,7 @@ brcmf_sdbrcm_watchdog_thread(void *data)
- 		if (!wait_for_completion_interruptible(&bus->watchdog_wait)) {
- 			brcmf_sdbrcm_bus_watchdog(bus);
- 			/* Count the tick for reference */
--			bus->drvr->tickcnt++;
-+			bus->tickcnt++;
- 		} else
- 			break;
- 	}
+
+> i also think this behavior is a bit ugly, but this is the current
+> mac80211 implementation, and i don't see a good enough reason to
+> change it :)
+
+Actually after looking more into the code, mac80211 is doing the right
+thing.  Calling change interface with the original vif.  That's why the
+new parameters are passed too.  Only if the call succeeds, mac80211
+changes the parameters in the local data.
+
+The ugly thing is in the hack of removing and re-adding the interface
+with a different type.
+
+
+> > Also, it seems that the p2p value will be overwritten in the
+> > ieee80211_setup_sdata() which is called just after this op returns, so
+> > there's no use to do it here.
+> this is needed as add_interface(vif) might assume vif->p2p is correct.
+
+Yep, got it.
+
 -- 
-1.7.5.4
-
+Cheers,
+Luca.
 
