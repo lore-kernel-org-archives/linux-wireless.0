@@ -1,68 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:50314 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752123Ab1LCOq4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Dec 2011 09:46:56 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/6] compat-wireless: fix driver-select for intel
-Date: Sat,  3 Dec 2011 15:46:22 +0100
-Message-Id: <1322923585-13966-3-git-send-email-hauke@hauke-m.de> (sfid-20111203_154700_494822_C264742E)
-In-Reply-To: <1322923585-13966-1-git-send-email-hauke@hauke-m.de>
-References: <1322923585-13966-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:47167 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751096Ab1LSQgx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 11:36:53 -0500
+Received: by pbdu13 with SMTP id u13so1932611pbd.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 08:36:53 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1324310130.3414.3.camel@jlt3.sipsolutions.net>
+References: <1324288978-27162-1-git-send-email-helmut.schaa@googlemail.com>
+	<1324310130.3414.3.camel@jlt3.sipsolutions.net>
+Date: Mon, 19 Dec 2011 17:36:53 +0100
+Message-ID: <CAGXE3d_dH1jeSVrmANd_OARqwY_NUkKu3He6Y7mP8atzas88pA@mail.gmail.com> (sfid-20111219_173657_653934_D67F1458)
+Subject: Re: [PATCH] mac80211: Fix frame classification in AP mode for relayed frames
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwlagn was renamed and iwlegacy was added
+On Mon, Dec 19, 2011 at 4:55 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2011-12-19 at 11:02 +0100, Helmut Schaa wrote:
+>> When mac80211 relays a frame from STA1 to STA2 in AP mode it will get
+>> re-classified in the tx path. Unfortunately the frame protocol field
+>> is always set to ETH_P_8023 while the classification only kicks in
+>> for ETH_P_IP. Hence, a high priority frame from STA1 will be send to
+>> STA2 as best effort.
+>>
+>> To allow proper re-classification of received frames, set the
+>> skb->protocol field to the correct value without using eth_type_trans
+>> as that would pull of the ethernet header. Also, set the network
+>> header position correctly as otherwise the classification code won't
+>> find the IP header.
+>>
+>> This means that every frame relayed by a mac80211 AP will be
+>> re-classified and might change its traffic class when the associated
+>> STA and mac80211 use different 802.1d <-> TID mappings.
+>>
+>> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+>> ---
+>>
+>> We could also reuse the TID used by the source STA but I guess we should
+>> always classify frames according to our own mapping instead of relying
+>> on the associated STAs to do the right thing.
+>
+> Not sure that's useful, since we classify almost nothing anyway.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- scripts/driver-select |   17 +++++++++++++----
- 1 files changed, 13 insertions(+), 4 deletions(-)
+Currently we only use the IPv4 DSCP field for assigning TIDs to
+frames. That seems to be sufficient for VOIP traffic at least.
 
-diff --git a/scripts/driver-select b/scripts/driver-select
-index 3619541..e74dc81 100755
---- a/scripts/driver-select
-+++ b/scripts/driver-select
-@@ -53,7 +53,7 @@ function usage {
- 	echo -e "\t${CYAN}atheros${NORMAL} < ${PURPLE} ath5k ath9k carl9170 zd1211rw ath6kl ${NORMAL}>"
- 	echo -e "\t${CYAN}ath${NORMAL} < ${PURPLE} ath5k ath9k carl9170 ath6kl ${NORMAL}>"
- 	echo -e "\t${CYAN}brcm80211${NORMAL} < ${PURPLE} brcmsmac brcmfmac ${NORMAL}>"
--	echo -e "\t${CYAN}iwlagn${NORMAL} < ${PURPLE} iwlagn ${NORMAL}>"
-+	echo -e "\t${CYAN}intel${NORMAL} < ${PURPLE} iwlwifi, iwlegacy ${NORMAL}>"
- 	echo -e "\t${CYAN}rtl818x${NORMAL} < ${PURPLE} rtl8180 rtl8187 ${NORMAL}>"
- 	echo -e "\t${CYAN}rtlwifi${NORMAL} < ${PURPLE} rtl8192ce ${NORMAL}>"
- 	echo -e "\t${CYAN}wl12xx${NORMAL} < ${PURPLE} wl1251 wl12xx (SPI and SDIO)${NORMAL}>"
-@@ -309,7 +309,8 @@ case $1 in
- 		disable_var_01
- 		;;
- 	intel)
--		select_drivers		CONFIG_COMPAT_IWLWIFI \
-+		select_drivers		CONFIG_IWLWIFI \
-+					CONFIG_IWLEGACY \
- 					CONFIG_IPW
- 		disable_staging
- 		disable_var
-@@ -317,8 +318,16 @@ case $1 in
- 		disable_ethernet
- 		disable_usbnet
- 		;;
--	iwlagn)
--		select_driver		CONFIG_IWLAGN
-+	iwlwifi)
-+		select_driver		CONFIG_IWLWIFI
-+		disable_staging
-+		disable_var_01
-+		disable_bt
-+		disable_ethernet
-+		disable_usbnet
-+		;;
-+	iwlegacy)
-+		select_driver		CONFIG_IWLEGACY
- 		disable_staging
- 		disable_var_01
- 		disable_bt
--- 
-1.7.5.4
+> If this was somehow hooked up to tc or iptables that would be
+> more useful I guess?
 
+Agreed. This would make sense in the future but I don't feel like
+implementing this right now.
+
+So, you'd prefer to just copy over the TID as used by the source
+STA (via the priority+256 hack maybe)?
+
+Helmut
