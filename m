@@ -1,143 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:59857 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753915Ab1LWMZi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Dec 2011 07:25:38 -0500
-Received: by wibhm6 with SMTP id hm6so3121641wib.19
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Dec 2011 04:25:37 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wl12xx: implement sta_state callback
-Date: Fri, 23 Dec 2011 14:26:51 +0200
-Message-Id: <1324643211-29498-1-git-send-email-eliad@wizery.com> (sfid-20111223_132540_746532_07645AC9)
+Received: from mga01.intel.com ([192.55.52.88]:14760 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752213Ab1LSXBS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 18:01:18 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	stable@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 3.2] iwlagn: fix (remove) use of PAGE_SIZE
+Date: Mon, 19 Dec 2011 14:00:59 -0800
+Message-Id: <1324332059-11630-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111220_000124_146203_04FE75C4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update the fw regarding peer state and ht caps
-only after the station was authorized.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Otherwise, the fw might try establishing BA session
-before the sta is authorized.
+The ICT code erroneously uses PAGE_SIZE. The bug
+is that PAGE_SIZE isn't necessarily 4096, so on
+such platforms this code will not work correctly
+as we'll try to attempt to read an index in the
+table that the device never wrote, it always has
+4096-byte pages.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Additionally, the manual alignment code here is
+unnecessary -- Documentation/DMA-API-HOWTO.txt
+states:
+  The cpu return address and the DMA bus master address are both
+  guaranteed to be aligned to the smallest PAGE_SIZE order which
+  is greater than or equal to the requested size.  This invariant
+  exists (for example) to guarantee that if you allocate a chunk
+  which is smaller than or equal to 64 kilobytes, the extent of the
+  buffer you receive will not cross a 64K boundary.
+
+Just use appropriate new constants and get rid of
+the alignment code.
+
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
-depends on the "notify driver about changes in station
-state" patchset.
+this patch will be also available from wireless branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
 
- drivers/net/wireless/wl12xx/main.c |   70 +++++++++++++++++++++++++++++++----
- 1 files changed, 62 insertions(+), 8 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    2 -
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |   73 +++++++++------------
+ 2 files changed, 31 insertions(+), 44 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index d5f55a1..19747c4 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -4092,6 +4092,32 @@ void wl1271_free_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 hlid)
- 	wl->active_sta_count--;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+index 2b6756e..5c29281 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+@@ -219,9 +219,7 @@ struct iwl_trans_pcie {
+ 
+ 	/* INT ICT Table */
+ 	__le32 *ict_tbl;
+-	void *ict_tbl_vir;
+ 	dma_addr_t ict_tbl_dma;
+-	dma_addr_t aligned_ict_tbl_dma;
+ 	int ict_index;
+ 	u32 inta;
+ 	bool use_ict;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index 374c68c..1920237 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -1136,7 +1136,11 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
+  * ICT functions
+  *
+  ******************************************************************************/
+-#define ICT_COUNT (PAGE_SIZE/sizeof(u32))
++
++/* a device (PCI-E) page is 4096 bytes long */
++#define ICT_SHIFT	12
++#define ICT_SIZE	(1 << ICT_SHIFT)
++#define ICT_COUNT	(ICT_SIZE / sizeof(u32))
+ 
+ /* Free dram table */
+ void iwl_free_isr_ict(struct iwl_trans *trans)
+@@ -1144,21 +1148,19 @@ void iwl_free_isr_ict(struct iwl_trans *trans)
+ 	struct iwl_trans_pcie *trans_pcie =
+ 		IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+-	if (trans_pcie->ict_tbl_vir) {
+-		dma_free_coherent(bus(trans)->dev,
+-				  (sizeof(u32) * ICT_COUNT) + PAGE_SIZE,
+-				  trans_pcie->ict_tbl_vir,
++	if (trans_pcie->ict_tbl) {
++		dma_free_coherent(bus(trans)->dev, ICT_SIZE,
++				  trans_pcie->ict_tbl,
+ 				  trans_pcie->ict_tbl_dma);
+-		trans_pcie->ict_tbl_vir = NULL;
+-		memset(&trans_pcie->ict_tbl_dma, 0,
+-			sizeof(trans_pcie->ict_tbl_dma));
+-		memset(&trans_pcie->aligned_ict_tbl_dma, 0,
+-			sizeof(trans_pcie->aligned_ict_tbl_dma));
++		trans_pcie->ict_tbl = NULL;
++		trans_pcie->ict_tbl_dma = 0;
+ 	}
  }
  
-+static void wl12xx_update_sta_state(struct wl1271 *wl,
-+				    struct ieee80211_sta *sta,
-+				    enum ieee80211_sta_state state)
-+{
-+	struct wl1271_station *wl_sta;
-+	u8 hlid;
-+	int ret;
-+
-+	wl1271_debug(DEBUG_MAC80211, "update sta state 0x%p state=%d",
-+		     sta, state);
-+
-+	wl_sta = (struct wl1271_station *)sta->drv_priv;
-+	hlid = wl_sta->hlid;
-+
-+	if (sta->state == IEEE80211_STA_AUTHORIZED) {
-+		ret = wl12xx_cmd_set_peer_state(wl, hlid);
-+		if (ret < 0)
-+			return;
-+
-+		ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap, true,
-+						     hlid);
-+		if (ret < 0)
-+			return;
+ 
+-/* allocate dram shared table it is a PAGE_SIZE aligned
++/*
++ * allocate dram shared table, it is an aligned memory
++ * block of ICT_SIZE.
+  * also reset all data related to ICT table interrupt.
+  */
+ int iwl_alloc_isr_ict(struct iwl_trans *trans)
+@@ -1166,36 +1168,26 @@ int iwl_alloc_isr_ict(struct iwl_trans *trans)
+ 	struct iwl_trans_pcie *trans_pcie =
+ 		IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+-	/* allocate shrared data table */
+-	trans_pcie->ict_tbl_vir =
+-		dma_alloc_coherent(bus(trans)->dev,
+-				   (sizeof(u32) * ICT_COUNT) + PAGE_SIZE,
+-				   &trans_pcie->ict_tbl_dma, GFP_KERNEL);
+-	if (!trans_pcie->ict_tbl_vir)
++	trans_pcie->ict_tbl =
++		dma_alloc_coherent(bus(trans)->dev, ICT_SIZE,
++				   &trans_pcie->ict_tbl_dma,
++				   GFP_KERNEL);
++	if (!trans_pcie->ict_tbl)
+ 		return -ENOMEM;
+ 
+-	/* align table to PAGE_SIZE boundary */
+-	trans_pcie->aligned_ict_tbl_dma =
+-		ALIGN(trans_pcie->ict_tbl_dma, PAGE_SIZE);
+-
+-	IWL_DEBUG_ISR(trans, "ict dma addr %Lx dma aligned %Lx diff %d\n",
+-			   (unsigned long long)trans_pcie->ict_tbl_dma,
+-			   (unsigned long long)trans_pcie->aligned_ict_tbl_dma,
+-			   (int)(trans_pcie->aligned_ict_tbl_dma -
+-			   trans_pcie->ict_tbl_dma));
++	/* just an API sanity check ... it is guaranteed to be aligned */
++	if (WARN_ON(trans_pcie->ict_tbl_dma & (ICT_SIZE - 1))) {
++		iwl_free_isr_ict(trans);
++		return -EINVAL;
 +	}
-+}
-+
- static int wl1271_op_sta_add(struct ieee80211_hw *hw,
- 			     struct ieee80211_vif *vif,
- 			     struct ieee80211_sta *sta)
-@@ -4099,6 +4125,7 @@ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
- 	struct wl1271 *wl = hw->priv;
- 	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
- 	struct wl1271_station *wl_sta;
-+	enum ieee80211_sta_state state;
- 	int ret = 0;
- 	u8 hlid;
  
-@@ -4127,14 +4154,9 @@ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
- 	if (ret < 0)
- 		goto out_sleep;
+-	trans_pcie->ict_tbl =  trans_pcie->ict_tbl_vir +
+-			  (trans_pcie->aligned_ict_tbl_dma -
+-			  trans_pcie->ict_tbl_dma);
++	IWL_DEBUG_ISR(trans, "ict dma addr %Lx\n",
++		      (unsigned long long)trans_pcie->ict_tbl_dma);
  
--	ret = wl12xx_cmd_set_peer_state(wl, hlid);
--	if (ret < 0)
--		goto out_sleep;
--
--	ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap, true, hlid);
--	if (ret < 0)
--		goto out_sleep;
--
-+	state = IEEE80211_STA_NONE;
-+	while (state < sta->state)
-+		wl12xx_update_sta_state(wl, sta, ++state);
- out_sleep:
- 	wl1271_ps_elp_sleep(wl);
+-	IWL_DEBUG_ISR(trans, "ict vir addr %p vir aligned %p diff %d\n",
+-			     trans_pcie->ict_tbl, trans_pcie->ict_tbl_vir,
+-			(int)(trans_pcie->aligned_ict_tbl_dma -
+-			    trans_pcie->ict_tbl_dma));
++	IWL_DEBUG_ISR(trans, "ict vir addr %p\n", trans_pcie->ict_tbl);
  
-@@ -4189,6 +4211,37 @@ out:
- 	return ret;
- }
+ 	/* reset table and index to all 0 */
+-	memset(trans_pcie->ict_tbl_vir, 0,
+-		(sizeof(u32) * ICT_COUNT) + PAGE_SIZE);
++	memset(trans_pcie->ict_tbl, 0, ICT_SIZE);
+ 	trans_pcie->ict_index = 0;
  
-+static void wl12xx_op_sta_state(struct ieee80211_hw *hw,
-+				struct ieee80211_vif *vif,
-+				struct ieee80211_sta *sta,
-+				enum ieee80211_sta_state state)
-+{
-+	struct wl1271 *wl = hw->priv;
-+	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
-+	int ret;
-+
-+	wl1271_debug(DEBUG_MAC80211, "mac80211 sta state 0x%p state=%d",
-+		     sta, state);
-+
-+	mutex_lock(&wl->mutex);
-+
-+	if (unlikely(wl->state == WL1271_STATE_OFF))
-+		goto out;
-+
-+	if (wlvif->bss_type != BSS_TYPE_AP_BSS)
-+		goto out;
-+
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	wl12xx_update_sta_state(wl, sta, state);
-+
-+	wl1271_ps_elp_sleep(wl);
-+out:
-+	mutex_unlock(&wl->mutex);
-+}
-+
- static int wl1271_op_ampdu_action(struct ieee80211_hw *hw,
- 				  struct ieee80211_vif *vif,
- 				  enum ieee80211_ampdu_mlme_action action,
-@@ -4652,6 +4705,7 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.get_survey = wl1271_op_get_survey,
- 	.sta_add = wl1271_op_sta_add,
- 	.sta_remove = wl1271_op_sta_remove,
-+	.sta_state = wl12xx_op_sta_state,
- 	.ampdu_action = wl1271_op_ampdu_action,
- 	.tx_frames_pending = wl1271_tx_frames_pending,
- 	.set_bitrate_mask = wl12xx_set_bitrate_mask,
+ 	/* add periodic RX interrupt */
+@@ -1213,23 +1205,20 @@ int iwl_reset_ict(struct iwl_trans *trans)
+ 	struct iwl_trans_pcie *trans_pcie =
+ 		IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+-	if (!trans_pcie->ict_tbl_vir)
++	if (!trans_pcie->ict_tbl)
+ 		return 0;
+ 
+ 	spin_lock_irqsave(&trans->shrd->lock, flags);
+ 	iwl_disable_interrupts(trans);
+ 
+-	memset(&trans_pcie->ict_tbl[0], 0, sizeof(u32) * ICT_COUNT);
++	memset(trans_pcie->ict_tbl, 0, ICT_SIZE);
+ 
+-	val = trans_pcie->aligned_ict_tbl_dma >> PAGE_SHIFT;
++	val = trans_pcie->ict_tbl_dma >> ICT_SHIFT;
+ 
+ 	val |= CSR_DRAM_INT_TBL_ENABLE;
+ 	val |= CSR_DRAM_INIT_TBL_WRAP_CHECK;
+ 
+-	IWL_DEBUG_ISR(trans, "CSR_DRAM_INT_TBL_REG =0x%X "
+-			"aligned dma address %Lx\n",
+-			val,
+-			(unsigned long long)trans_pcie->aligned_ict_tbl_dma);
++	IWL_DEBUG_ISR(trans, "CSR_DRAM_INT_TBL_REG =0x%x\n", val);
+ 
+ 	iwl_write32(bus(trans), CSR_DRAM_INT_TBL_REG, val);
+ 	trans_pcie->use_ict = true;
 -- 
-1.7.6.401.g6a319
+1.7.0.4
 
