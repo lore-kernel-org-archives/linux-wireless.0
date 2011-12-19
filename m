@@ -1,40 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:61316 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752656Ab1LUAHY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 19:07:24 -0500
-Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
-	<zefir.kurtisi@neratec.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH 0/2] wireless-regdb: DFS master changes
-Date: Tue, 20 Dec 2011 16:04:10 -0800
-Message-ID: <1324425852-4492-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111221_010732_615512_32D78354)
+Received: from arrakis.dune.hu ([78.24.191.176]:34127 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753327Ab1LSVZh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 16:25:37 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: Rodriguez Luis <rodrigue@qca.qualcomm.com>
+Cc: mcgrof@infradead.org, linux-wireless@vger.kernel.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 11/15] initvals: include <string.h> to make gcc happy
+Date: Mon, 19 Dec 2011 22:24:56 +0100
+Message-Id: <1324329900-3923-12-git-send-email-juhosg@openwrt.org> (sfid-20111219_222543_669399_42AD4F65)
+In-Reply-To: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
+References: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+The patch fixes the following warning
+(with CFLAGS=-Wimplicit-function-declaration):
 
-Now that DFS master patches are merged for cfg80211 wireless-regdb
-can use being updated with support for exposing the DFS region. This
-is a repost with no changes made, just a poke.
+initvals.c: In function ‘print_initvals_family’:
+initvals.c:612: warning: implicit declaration of function ‘strncmp’
 
-Zefir may next want to add a patch for whatever country he's looking to
-support with ETSI, for example. TI, may want to do the same :D
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ initvals.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Luis R. Rodriguez (2):
-  wireless-regdb: Add master DFS region support
-  wireless-regdb: add FCC as the DFS region for US
-
- db.txt     |    2 +-
- db2bin.py  |    2 +-
- dbparse.py |   25 ++++++++++++++++++++-----
- 3 files changed, 22 insertions(+), 7 deletions(-)
-
+diff --git a/initvals.c b/initvals.c
+index 32a38f6..eca6705 100644
+--- a/initvals.c
++++ b/initvals.c
+@@ -7,6 +7,7 @@
+ #include <stdio.h>
+ #include <stdint.h>
+ #include <stdbool.h>
++#include <string.h>
+ 
+ typedef uint32_t u32;
+ typedef long long unsigned int u64;
 -- 
-1.7.4.15.g7811d
+1.7.2.1
 
