@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li9-11.members.linode.com ([67.18.176.11]:58337 "EHLO
-	test.thunk.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756327Ab1LNCAE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 21:00:04 -0500
-Date: Tue, 13 Dec 2011 20:59:59 -0500
-From: Ted Ts'o <tytso@mit.edu>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-kernel@vger.kernel.org, ilw@linux.intel.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: REGRESSION: v3.2-rcX: iwlagn refuses to associate with my AP's
-Message-ID: <20111214015959.GA6276@thunk.org> (sfid-20111214_030013_696508_950B5BC9)
-References: <E1RaBm1-0001JR-8a@tytso-glaptop.cam.corp.google.com>
- <1323800557.3355.31.camel@jlt3.sipsolutions.net>
- <20111213201752.GA5094@thunk.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111213201752.GA5094@thunk.org>
+Received: from arrakis.dune.hu ([78.24.191.176]:34008 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752843Ab1LSVZR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 16:25:17 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: Rodriguez Luis <rodrigue@qca.qualcomm.com>
+Cc: mcgrof@infradead.org, linux-wireless@vger.kernel.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 04/15] initvals: add ar9485_initvals.h to ATH9K_DEPS
+Date: Mon, 19 Dec 2011 22:24:49 +0100
+Message-Id: <1324329900-3923-5-git-send-email-juhosg@openwrt.org> (sfid-20111219_222524_854093_E10A5E1E)
+In-Reply-To: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
+References: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 13, 2011 at 03:17:52PM -0500, Ted Ts'o wrote:
-> Well, this patch seems to fix things for the non-authenticated case.
-> I can now associate with the GoogleGuest SSID without any problems.
-> I'm still having problems associating with the EAP-TLS encrypted
-> network, but that looks like it's a different bug.  (And that may
-> explain why I had so much trouble bisecting this; there are two issues
-> that have very similar symptoms.)
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ Makefile |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-... and the second problem I had with associating with EAP-TLS
-encrypted SSID's was solved by Wey-Yi's patch: 
+diff --git a/Makefile b/Makefile
+index 67d09d5..1194504 100644
+--- a/Makefile
++++ b/Makefile
+@@ -21,6 +21,7 @@ ATH9K_DEPS += \
+ 	ar9003_2p2_initvals.h	\
+ 	ar9330_1p1_initvals.h	\
+ 	ar9330_1p2_initvals.h	\
++	ar9485_initvals.h	\
+ 	ar9580_1p0_initvals.h
+ 
+ initvals: $(ATH9K_DEPS) $(ATHEROS_DEPS) initvals.c
+-- 
+1.7.2.1
 
-	  iwlwifi: allow to switch to HT40 if not associated yet
-
-... found in the thread "iwlagn regression in v3.1.5"
-
-So with these two patches applied, things are now stable for me.
-
-One thing: out of curiosity, I assume there is a pretty good testing
-infrastructure at Intel --- how was it that this didn't caught
-earlier?  Is it because different access points do things a little
-different?  Would it be useful if I can find out the model of access
-point that we're using, so you could hopefully augment your library of
-test hardware?  I'm asking out of purely selfish reasons, of course,
-since this took me the better part of a day to bisect each of these
-problems.
-
-						- Ted
