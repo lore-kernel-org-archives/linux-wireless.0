@@ -1,42 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:33023 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753253Ab1L0QYV (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41940 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752630Ab1LSUPg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Dec 2011 11:24:21 -0500
-Message-ID: <4EF9F0AA.4080404@qca.qualcomm.com> (sfid-20111227_172424_716722_E8B5A1C4)
-Date: Tue, 27 Dec 2011 21:52:02 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Marek Lindner <lindner_marek@yahoo.de>
-CC: "John W. Linville" <linville@tuxdriver.com>,
+	Mon, 19 Dec 2011 15:15:36 -0500
+Date: Mon, 19 Dec 2011 15:13:46 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Yogesh Ashok Powar <yogesh.powar@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
 	Johannes Berg <johannes@sipsolutions.net>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: fix kernel panic in IBSS due to a regression
-References: <1324876409-2031-1-git-send-email-mohammed@qca.qualcomm.com> <201112270611.13380.lindner_marek@yahoo.de>
-In-Reply-To: <201112270611.13380.lindner_marek@yahoo.de>
-Content-Type: text/plain; charset="ISO-8859-15"; format=flowed
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: Re: [PATCH V2] mac80211: Fixing sparse warning at sta_info.c
+Message-ID: <20111219201346.GD31462@tuxdriver.com> (sfid-20111219_211539_542344_4375D3DC)
+References: <82612>
+ <20111216061715.GA11190@dugs>
+ <20111219193957.GC31462@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111219193957.GC31462@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 27 December 2011 03:41 AM, Marek Lindner wrote:
-> On Monday, December 26, 2011 13:13:29 Mohammed Shafi Shajakhan wrote:
->> kernel panic occurs when we create an IBSS mode and leave it for
->> sometime without any joiner and this is introduced by the
->> commit ec2b774e7c91094d8c00de579646f1162b87b01e where we don't
->> put proper braces for 'list_for_each_entry_safe' and we pass an
->> invalid 'sta' pointer to __sta_info_destroy
->
-> I sw this crash too but did not dive into it yet. Thanks!
-> Some things are too simple ..  :-)
+On Mon, Dec 19, 2011 at 02:39:57PM -0500, John W. Linville wrote:
+> Applying: mac80211: Fixing sparse warning at sta_info.c
+> error: patch failed: net/mac80211/sta_info.c:974
+> error: net/mac80211/sta_info.c: patch does not apply
+> 
+> What tree did you use as a base for your patch?
 
-i took some good time to figure it out, neither obvious to me :-)
+NM -- it was simple to fix-up, even if 'git apply' couldn't figure
+it out...
 
->
-> Cheers,
-> Marek
-
-
+John
 -- 
-thanks,
-shafi
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
