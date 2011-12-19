@@ -1,649 +1,1116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:39177 "EHLO arrakis.dune.hu"
+Received: from arrakis.dune.hu ([78.24.191.176]:33971 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751245Ab1LUMXO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 07:23:14 -0500
+	id S1752686Ab1LSVZO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 16:25:14 -0500
 From: Gabor Juhos <juhosg@openwrt.org>
 To: Rodriguez Luis <rodrigue@qca.qualcomm.com>
 Cc: mcgrof@infradead.org, linux-wireless@vger.kernel.org,
 	Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH] initvals: use SHA1 for verifying initval arrays
-Date: Wed, 21 Dec 2011 13:23:05 +0100
-Message-Id: <1324470185-17886-1-git-send-email-juhosg@openwrt.org> (sfid-20111221_132319_684945_30495A12)
+Subject: [PATCH 01/15] initvals: add missing include for ar9330
+Date: Mon, 19 Dec 2011 22:24:46 +0100
+Message-Id: <1324329900-3923-2-git-send-email-juhosg@openwrt.org> (sfid-20111219_222521_104546_8C8D950D)
+In-Reply-To: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
+References: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current checksum implementation is broken,
-it does not catch all differences in the initval
-arrays.
-
-Here is an example:
-
-$ ./verify_checksums.sh ar9330-1p1
-ar9330-1p1     3ce64df7a3121eab71a13ba9c8e9d9075ab9bae5 pass
-$ cat csumtest.patch
-diff --git a/ar9330_1p1_initvals.h b/ar9330_1p1_initvals.h
-index f11d9b2..508df60 100644
---- a/ar9330_1p1_initvals.h
-+++ b/ar9330_1p1_initvals.h
-@@ -19,7 +19,7 @@
-
- static const u32 ar9331_1p1_baseband_postamble[][5] = {
-        /*  Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
--       {0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8005, 0xd00a8005},
-+       {0x00009810, 0x110a8005, 0x220a8005, 0x330a8005, 0xd00a8005},
-        {0x00009820, 0x206a002e, 0x206a002e, 0x206a002e, 0x206a002e},
-        {0x00009824, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0},
-        {0x00009828, 0x06903081, 0x06903081, 0x06903881, 0x06903881},
-@@ -353,7 +353,7 @@ static const u32 ar9331_1p1_xtal_25M[][2] = {
-
- static const u32 ar9331_1p1_radio_core[][2] = {
-        /* Addr      allmodes  */
--       {0x00016000, 0x36db6db6},
-+       {0x00016000, 0x00db6db6},
-        {0x00016004, 0x6db6db40},
-        {0x00016008, 0x73800000},
-        {0x0001600c, 0x00000000},
-@@ -377,7 +377,7 @@ static const u32 ar9331_1p1_radio_core[][2] = {
-        {0x000160b4, 0x92480040},
-        {0x000160c0, 0x006db6db},
-        {0x000160c4, 0x0186db60},
--       {0x000160c8, 0x6db6db6c},
-+       {0x000160c8, 0xffb6db6c},
-        {0x000160cc, 0x6de6c300},
-        {0x000160d0, 0x14500820},
-        {0x00016100, 0x04cb0001},
-$ patch < csumtest.patch
-patching file ar9330_1p1_initvals.h
-$ ./verify_checksums.sh ar9330-1p1
-ar9330-1p1     3ce64df7a3121eab71a13ba9c8e9d9075ab9bae5 pass
-
-Although the 'ar9330_1p1_initvals.h' file has been
-patched, the checksums are the same in both cases.
-
-This patch uses the SHA1 algorithm to generate hashes
-for the initval arrays, and the modifications from above
-can be catched with it:
-
-$ ./verify_checksums.sh ar9330-1p1
-ar9330-1p1     e2011010f916d63f04bb8f17dbc9b977655a6132 pass
-$ patch < csumtest.patch
-patching file ar9330_1p1_initvals.h
-$ ./verify_checksums.sh ar9330-1p1
-ar9330-1p1     e2011010f916d63f04bb8f17dbc9b977655a6132 fail
-+921643355e41fca62c2a97221bbd840b2f52d614        ar9331_1p1_baseband_postamble
-+f3a229b38e29634251b453334db429887d0da825        ar9331_1p1_radio_core
-
-For the reocrd, with the SHA1 code, verify_checksums.sh
-will complain about the following:
-
-$ ./verify_checksums.sh ar5008 ar9001
-ar5008         e9b2f3c70ec0b86c9fe2b8611456743ee38f51c2 fail
-+c8eae8c7820dded15c9f6e4d491f114faabcf70c        ar5416Common
-ar9001         1b4ad3f6abde428039b8f813f9985246ef8b0d00 fail
-+253547730d9a29d6236b82946f9a51b76c93041b        ar5416Common_9160
-
-The checksum mismatch is caused by the fact, that the
-CRC error fix submitted upstream is not yet present in
-Atheros initvals.
-
-The used SHA1 code is in public domain and it has
-been taken from the MPICH2 project:
-
-http://trac.mcs.anl.gov/projects/mpich2/export/8501/mpich2/trunk/src/mpi/romio/adio/common/sha1.c
-http://trac.mcs.anl.gov/projects/mpich2/export/8501/mpich2/trunk/src/mpi/romio/adio/common/sha1.h
+The ar9330_1p2_initvals.h file was missing from commit
+04970685918765f14f6e51048fb94a96d81542c6 (initvals: add
+ath9k specific initvals for AR9330 1.2)
 
 Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- Makefile            |    6 +-
- initvals.c          |   55 ++++----
- sha1.c              |  375 +++++++++++++++++++++++++++++++++++++++++++++++++++
- sha1.h              |   27 ++++
- verify_checksums.sh |    2 +-
- 5 files changed, 436 insertions(+), 29 deletions(-)
- create mode 100644 sha1.c
- create mode 100644 sha1.h
+ ar9330_1p2_initvals.h | 1080 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 1080 insertions(+), 0 deletions(-)
+ create mode 100644 ar9330_1p2_initvals.h
 
-diff --git a/Makefile b/Makefile
-index 0df14df..50fd689 100644
---- a/Makefile
-+++ b/Makefile
-@@ -27,8 +27,10 @@ ATH9K_DEPS += \
- 	ar9485_initvals.h	\
- 	ar9580_1p0_initvals.h
- 
--initvals: $(ATH9K_DEPS) $(ATHEROS_DEPS) initvals.c
--	gcc $(LOCAL_CFLAGS) -o $@ $@.c
-+SOURCES:=initvals.c sha1.c
-+
-+initvals: $(ATH9K_DEPS) $(ATHEROS_DEPS) $(SOURCES)
-+	gcc $(LOCAL_CFLAGS) -o $@ $(SOURCES)
- 
- all: initvals
- 
-diff --git a/initvals.c b/initvals.c
-index ed7152c..398f5a2 100644
---- a/initvals.c
-+++ b/initvals.c
-@@ -8,6 +8,7 @@
- #include <stdint.h>
- #include <stdbool.h>
- #include <string.h>
-+#include "sha1.h"
- 
- typedef uint32_t u32;
- typedef long long unsigned int u64;
-@@ -254,10 +255,10 @@ typedef long long unsigned int u64;
- 
- #define INI_PRINT(_array) do { \
- 	if (check) { \
--		u64 chksum; \
--		chksum = ath9k_hw_check_initval((const u32 *) &_array,\
-+		char *sha1sum; \
-+		sha1sum = ath9k_hw_check_initval((const u32 *) &_array,\
- 						ARRAY_SIZE(_array), ARRAY_SIZE((_array)[0])); \
--		printf("0x%016llx        "#_array"\n", chksum); \
-+		printf("%s        "#_array"\n", sha1sum); \
- 	} else { \
- 		printf("static const u32 "#_array"[][%d] = {\n", (int) ARRAY_SIZE((_array)[0])); \
- 		ath9k_hw_print_initval((const u32 *) _array, \
-@@ -267,10 +268,10 @@ typedef long long unsigned int u64;
- 
- #define INI_PRINT_ONEDIM(_array) do { \
- 	if (check) { \
--		u64 chksum; \
--		chksum = ath9k_hw_check_initval((const u32 *) &_array,\
-+		char *sha1sum; \
-+		sha1sum = ath9k_hw_check_initval((const u32 *) &_array,\
- 						ARRAY_SIZE(_array), 1); \
--		printf("0x%016llx        "#_array"\n", chksum); \
-+		printf("%s        "#_array"\n", sha1sum); \
- 	} else { \
- 		printf("static const u32 "#_array"[] = {\n"); \
- 		ath9k_hw_print_initval((const u32 *) _array, \
-@@ -360,33 +361,35 @@ static void ath9k_hw_print_initval(const u32 *array, u32 rows, u32 columns, bool
- 	printf("};\n\n");
- }
- 
--static u64 ath9k_hw_check_initval(const u32 *array, u32 rows, u32 columns)
-+static char *ath9k_hw_check_initval(const u32 *array, u32 rows, u32 columns)
- {
--	u32 chksum = 0, col, row;
--
--	/*
--	 * This checksum stuff is designed for columns <= 8),
--	 * and spreads the checksum over 64 bits but since currently
--	 * the initval max column size is 6 we only use the first 48
--	 * bits.
--	 */
--	if (columns > 6)
--		return 0;
-+	SHA1_CTX ctx;
-+	unsigned char digest[SHA1_DIGEST_SIZE];
-+	static char buf[64];
-+	u32 col, row;
- 
-+	SHA1_Init(&ctx);
- 	for (row = 0; row < rows; row++) {
- 		for (col = 0; col < columns; col++) {
--			/*
--			 * To ensure that swaps of values on the same column yield
--			 * different checksums we use the row and column position to
--			 * mix the checksum.
--			 */
--			u32 uniq_row_col_pos = (row + 11) * (col + 17);
--			u32 uniq_val_pos = array[row * columns + col] + (97 * uniq_row_col_pos);
--			chksum ^= (uniq_val_pos << (8 * col));
-+			unsigned char sha1_buf[4];
-+			u32 val;
-+
-+			val = array[row * columns + col];
-+
-+			sha1_buf[0] = (val >> 24) & 0xff;
-+			sha1_buf[1] = (val >> 16) & 0xff;
-+			sha1_buf[2] = (val >> 8) & 0xff;
-+			sha1_buf[3] = val & 0xff;
-+			SHA1_Update(&ctx, sha1_buf, sizeof(sha1_buf));
- 		}
- 	}
- 
--	return chksum;
-+	SHA1_Final(&ctx, digest);
-+	for (col = 0; col < SHA1_DIGEST_SIZE; col++)
-+		sprintf(&buf[col * 2], "%02x", digest[col]);
-+	buf[col * 2] = '\0';
-+
-+	return buf;
- }
- 
- static void ar5008_hw_print_initvals(bool check)
-diff --git a/sha1.c b/sha1.c
+diff --git a/ar9330_1p2_initvals.h b/ar9330_1p2_initvals.h
 new file mode 100644
-index 0000000..3d8254a
+index 0000000..0e6ca08
 --- /dev/null
-+++ b/sha1.c
-@@ -0,0 +1,375 @@
++++ b/ar9330_1p2_initvals.h
+@@ -0,0 +1,1080 @@
 +/*
-+SHA-1 in C
-+By Steve Reid <sreid@sea-to-sky.net>
-+100% Public Domain
++ * Copyright (c) 2011 Atheros Communications Inc.
++ *
++ * Permission to use, copy, modify, and/or distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ */
 +
-+-----------------
-+Modified 7/98
-+By James H. Brown <jbrown@burgoyne.com>
-+Still 100% Public Domain
++#ifndef INITVALS_9330_1P2_H
++#define INITVALS_9330_1P2_H
 +
-+Corrected a problem which generated improper hash values on 16 bit machines
-+Routine SHA1Update changed from
-+	void SHA1Update(SHA1_CTX* context, unsigned char* data, unsigned int
-+len)
-+to
-+	void SHA1Update(SHA1_CTX* context, unsigned char* data, unsigned
-+long len)
++static const u32 ar9331_modes_lowest_ob_db_tx_gain_1p2[][5] = {
++	/*  Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
++	{0x0000a410, 0x000050d7, 0x000050d7, 0x000050d7, 0x000050d7},
++	{0x0000a500, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
++	{0x0000a504, 0x05062002, 0x05062002, 0x04000002, 0x04000002},
++	{0x0000a508, 0x0c002e00, 0x0c002e00, 0x08000004, 0x08000004},
++	{0x0000a50c, 0x11062202, 0x11062202, 0x0d000200, 0x0d000200},
++	{0x0000a510, 0x17022e00, 0x17022e00, 0x11000202, 0x11000202},
++	{0x0000a514, 0x1d000ec2, 0x1d000ec2, 0x15000400, 0x15000400},
++	{0x0000a518, 0x25020ec0, 0x25020ec0, 0x19000402, 0x19000402},
++	{0x0000a51c, 0x2b020ec3, 0x2b020ec3, 0x1d000404, 0x1d000404},
++	{0x0000a520, 0x2f001f04, 0x2f001f04, 0x23000a00, 0x23000a00},
++	{0x0000a524, 0x35001fc4, 0x35001fc4, 0x27000a02, 0x27000a02},
++	{0x0000a528, 0x3c022f04, 0x3c022f04, 0x2b000a04, 0x2b000a04},
++	{0x0000a52c, 0x41023e85, 0x41023e85, 0x3f001620, 0x3f001620},
++	{0x0000a530, 0x48023ec6, 0x48023ec6, 0x41001621, 0x41001621},
++	{0x0000a534, 0x4d023f01, 0x4d023f01, 0x44001640, 0x44001640},
++	{0x0000a538, 0x53023f4b, 0x53023f4b, 0x46001641, 0x46001641},
++	{0x0000a53c, 0x5a027f09, 0x5a027f09, 0x48001642, 0x48001642},
++	{0x0000a540, 0x5f027fc9, 0x5f027fc9, 0x4b001644, 0x4b001644},
++	{0x0000a544, 0x6502feca, 0x6502feca, 0x4e001a81, 0x4e001a81},
++	{0x0000a548, 0x6b02ff4a, 0x6b02ff4a, 0x51001a83, 0x51001a83},
++	{0x0000a54c, 0x7203feca, 0x7203feca, 0x54001c84, 0x54001c84},
++	{0x0000a550, 0x7703ff0b, 0x7703ff0b, 0x57001ce3, 0x57001ce3},
++	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x5b001ce5, 0x5b001ce5},
++	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5f001ce9, 0x5f001ce9},
++	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x66001eec, 0x66001eec},
++	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x66001eec, 0x66001eec},
++	{0x0000a568, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a56c, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a570, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a574, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a578, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a57c, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a580, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
++	{0x0000a584, 0x05062002, 0x05062002, 0x04000002, 0x04000002},
++	{0x0000a588, 0x0c002e00, 0x0c002e00, 0x08000004, 0x08000004},
++	{0x0000a58c, 0x11062202, 0x11062202, 0x0b000200, 0x0b000200},
++	{0x0000a590, 0x17022e00, 0x17022e00, 0x0f000202, 0x0f000202},
++	{0x0000a594, 0x1d000ec2, 0x1d000ec2, 0x11000400, 0x11000400},
++	{0x0000a598, 0x25020ec0, 0x25020ec0, 0x15000402, 0x15000402},
++	{0x0000a59c, 0x2b020ec3, 0x2b020ec3, 0x19000404, 0x19000404},
++	{0x0000a5a0, 0x2f001f04, 0x2f001f04, 0x1b000603, 0x1b000603},
++	{0x0000a5a4, 0x35001fc4, 0x35001fc4, 0x1f000a02, 0x1f000a02},
++	{0x0000a5a8, 0x3c022f04, 0x3c022f04, 0x23000a04, 0x23000a04},
++	{0x0000a5ac, 0x41023e85, 0x41023e85, 0x26000a20, 0x26000a20},
++	{0x0000a5b0, 0x48023ec6, 0x48023ec6, 0x2a000e20, 0x2a000e20},
++	{0x0000a5b4, 0x4d023f01, 0x4d023f01, 0x2e000e22, 0x2e000e22},
++	{0x0000a5b8, 0x53023f4b, 0x53023f4b, 0x31000e24, 0x31000e24},
++	{0x0000a5bc, 0x5a027f09, 0x5a027f09, 0x34001640, 0x34001640},
++	{0x0000a5c0, 0x5f027fc9, 0x5f027fc9, 0x38001660, 0x38001660},
++	{0x0000a5c4, 0x6502feca, 0x6502feca, 0x3b001861, 0x3b001861},
++	{0x0000a5c8, 0x6b02ff4a, 0x6b02ff4a, 0x3e001a81, 0x3e001a81},
++	{0x0000a5cc, 0x7203feca, 0x7203feca, 0x42001a83, 0x42001a83},
++	{0x0000a5d0, 0x7703ff0b, 0x7703ff0b, 0x44001c84, 0x44001c84},
++	{0x0000a5d4, 0x7d06ffcb, 0x7d06ffcb, 0x48001ce3, 0x48001ce3},
++	{0x0000a5d8, 0x8407ff0b, 0x8407ff0b, 0x4c001ce5, 0x4c001ce5},
++	{0x0000a5dc, 0x8907ffcb, 0x8907ffcb, 0x50001ce9, 0x50001ce9},
++	{0x0000a5e0, 0x900fff0b, 0x900fff0b, 0x54001ceb, 0x54001ceb},
++	{0x0000a5e4, 0x960fffcb, 0x960fffcb, 0x56001eec, 0x56001eec},
++	{0x0000a5e8, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5ec, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5f0, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5f4, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5f8, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5fc, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a600, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a604, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a608, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a60c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a610, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a614, 0x01404000, 0x01404000, 0x01404000, 0x01404000},
++	{0x0000a618, 0x02008501, 0x02008501, 0x02008501, 0x02008501},
++	{0x0000a61c, 0x02008802, 0x02008802, 0x02008802, 0x02008802},
++	{0x0000a620, 0x0300c802, 0x0300c802, 0x0300c802, 0x0300c802},
++	{0x0000a624, 0x0300cc03, 0x0300cc03, 0x0300cc03, 0x0300cc03},
++	{0x0000a628, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a62c, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a630, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a634, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a638, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a63c, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++};
 +
-+The 'len' parameter was declared an int which works fine on 32 bit machines.
-+However, on 16 bit machines an int is too small for the shifts being done
-+against
-+it.  This caused the hash function to generate incorrect values if len was
-+greater than 8191 (8K - 1) due to the 'len << 3' on line 3 of SHA1Update().
++static const u32 ar9331_1p2_baseband_postamble[][5] = {
++	/*  Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
++	{0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8005, 0xd00a8005},
++	{0x00009820, 0x206a002e, 0x206a002e, 0x206a002e, 0x206a002e},
++	{0x00009824, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0, 0x5ac640d0},
++	{0x00009828, 0x06903081, 0x06903081, 0x06903881, 0x06903881},
++	{0x0000982c, 0x05eea6d4, 0x05eea6d4, 0x05eea6d4, 0x05eea6d4},
++	{0x00009830, 0x0000059c, 0x0000059c, 0x0000059c, 0x0000059c},
++	{0x00009c00, 0x00000044, 0x00000044, 0x00000044, 0x00000044},
++	{0x00009e00, 0x0372161e, 0x0372161e, 0x037216a4, 0x037216a4},
++	{0x00009e04, 0x00182020, 0x00182020, 0x00182020, 0x00182020},
++	{0x00009e0c, 0x6c4000e2, 0x6d4000e2, 0x6d4000e2, 0x6c4000e2},
++	{0x00009e10, 0x7ec80d2e, 0x7ec80d2e, 0x7ec80d2e, 0x7ec80d2e},
++	{0x00009e14, 0x31395d5e, 0x3139605e, 0x3139605e, 0x31395d5e},
++	{0x00009e18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
++	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
++	{0x00009e2c, 0x0000001c, 0x0000001c, 0x00003221, 0x00003221},
++	{0x00009e3c, 0xcf946222, 0xcf946222, 0xcf946222, 0xcf946222},
++	{0x00009e44, 0x02321e27, 0x02321e27, 0x02282324, 0x02282324},
++	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302010, 0x50302010},
++	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
++	{0x0000a204, 0x00003fc0, 0x00003fc4, 0x00003fc4, 0x00003fc0},
++	{0x0000a208, 0x00000104, 0x00000104, 0x00000004, 0x00000004},
++	{0x0000a230, 0x0000000a, 0x00000014, 0x00000016, 0x0000000b},
++	{0x0000a234, 0x00000fff, 0x00000fff, 0x10000fff, 0x00000fff},
++	{0x0000a238, 0xffb81018, 0xffb81018, 0xffb81018, 0xffb81018},
++	{0x0000a250, 0x00000000, 0x00000000, 0x00000210, 0x00000108},
++	{0x0000a254, 0x000007d0, 0x00000fa0, 0x00001130, 0x00000898},
++	{0x0000a258, 0x02020002, 0x02020002, 0x02020002, 0x02020002},
++	{0x0000a25c, 0x01000e0e, 0x01000e0e, 0x01000e0e, 0x01000e0e},
++	{0x0000a260, 0x3a021501, 0x3a021501, 0x3a021501, 0x3a021501},
++	{0x0000a264, 0x00000e0e, 0x00000e0e, 0x00000e0e, 0x00000e0e},
++	{0x0000a280, 0x00000007, 0x00000007, 0x0000000b, 0x0000000b},
++	{0x0000a284, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a288, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a28c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
++	{0x0000a2d0, 0x00071981, 0x00071981, 0x00071981, 0x00071981},
++	{0x0000a2d8, 0xf999a83a, 0xf999a83a, 0xf999a83a, 0xf999a83a},
++	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000ae04, 0x00802020, 0x00802020, 0x00802020, 0x00802020},
++	{0x0000ae18, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++};
 +
-+Since the file IO in main() reads 16K at a time, any file 8K or larger would
-+be guaranteed to generate the wrong hash (e.g. Test Vector #3, a million
-+"a"s).
++static const u32 ar9331_modes_high_ob_db_tx_gain_1p2[][5] = {
++	/*  Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
++	{0x0000a410, 0x000050d7, 0x000050d7, 0x000050d7, 0x000050d7},
++	{0x0000a500, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
++	{0x0000a504, 0x05062002, 0x05062002, 0x04000002, 0x04000002},
++	{0x0000a508, 0x0c002e00, 0x0c002e00, 0x08000004, 0x08000004},
++	{0x0000a50c, 0x11062202, 0x11062202, 0x0d000200, 0x0d000200},
++	{0x0000a510, 0x17022e00, 0x17022e00, 0x11000202, 0x11000202},
++	{0x0000a514, 0x1d000ec2, 0x1d000ec2, 0x15000400, 0x15000400},
++	{0x0000a518, 0x25020ec0, 0x25020ec0, 0x19000402, 0x19000402},
++	{0x0000a51c, 0x2b020ec3, 0x2b020ec3, 0x1d000404, 0x1d000404},
++	{0x0000a520, 0x2f001f04, 0x2f001f04, 0x23000a00, 0x23000a00},
++	{0x0000a524, 0x35001fc4, 0x35001fc4, 0x27000a02, 0x27000a02},
++	{0x0000a528, 0x3c022f04, 0x3c022f04, 0x2b000a04, 0x2b000a04},
++	{0x0000a52c, 0x41023e85, 0x41023e85, 0x3f001620, 0x3f001620},
++	{0x0000a530, 0x48023ec6, 0x48023ec6, 0x41001621, 0x41001621},
++	{0x0000a534, 0x4d023f01, 0x4d023f01, 0x44001640, 0x44001640},
++	{0x0000a538, 0x53023f4b, 0x53023f4b, 0x46001641, 0x46001641},
++	{0x0000a53c, 0x5a027f09, 0x5a027f09, 0x48001642, 0x48001642},
++	{0x0000a540, 0x5f027fc9, 0x5f027fc9, 0x4b001644, 0x4b001644},
++	{0x0000a544, 0x6502feca, 0x6502feca, 0x4e001a81, 0x4e001a81},
++	{0x0000a548, 0x6b02ff4a, 0x6b02ff4a, 0x51001a83, 0x51001a83},
++	{0x0000a54c, 0x7203feca, 0x7203feca, 0x54001c84, 0x54001c84},
++	{0x0000a550, 0x7703ff0b, 0x7703ff0b, 0x57001ce3, 0x57001ce3},
++	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x5b001ce5, 0x5b001ce5},
++	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5f001ce9, 0x5f001ce9},
++	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x66001eec, 0x66001eec},
++	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x66001eec, 0x66001eec},
++	{0x0000a568, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a56c, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a570, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a574, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a578, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a57c, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a580, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
++	{0x0000a584, 0x05062002, 0x05062002, 0x04000002, 0x04000002},
++	{0x0000a588, 0x0c002e00, 0x0c002e00, 0x08000004, 0x08000004},
++	{0x0000a58c, 0x11062202, 0x11062202, 0x0b000200, 0x0b000200},
++	{0x0000a590, 0x17022e00, 0x17022e00, 0x0f000202, 0x0f000202},
++	{0x0000a594, 0x1d000ec2, 0x1d000ec2, 0x11000400, 0x11000400},
++	{0x0000a598, 0x25020ec0, 0x25020ec0, 0x15000402, 0x15000402},
++	{0x0000a59c, 0x2b020ec3, 0x2b020ec3, 0x19000404, 0x19000404},
++	{0x0000a5a0, 0x2f001f04, 0x2f001f04, 0x1b000603, 0x1b000603},
++	{0x0000a5a4, 0x35001fc4, 0x35001fc4, 0x1f000a02, 0x1f000a02},
++	{0x0000a5a8, 0x3c022f04, 0x3c022f04, 0x23000a04, 0x23000a04},
++	{0x0000a5ac, 0x41023e85, 0x41023e85, 0x26000a20, 0x26000a20},
++	{0x0000a5b0, 0x48023ec6, 0x48023ec6, 0x2a000e20, 0x2a000e20},
++	{0x0000a5b4, 0x4d023f01, 0x4d023f01, 0x2e000e22, 0x2e000e22},
++	{0x0000a5b8, 0x53023f4b, 0x53023f4b, 0x31000e24, 0x31000e24},
++	{0x0000a5bc, 0x5a027f09, 0x5a027f09, 0x34001640, 0x34001640},
++	{0x0000a5c0, 0x5f027fc9, 0x5f027fc9, 0x38001660, 0x38001660},
++	{0x0000a5c4, 0x6502feca, 0x6502feca, 0x3b001861, 0x3b001861},
++	{0x0000a5c8, 0x6b02ff4a, 0x6b02ff4a, 0x3e001a81, 0x3e001a81},
++	{0x0000a5cc, 0x7203feca, 0x7203feca, 0x42001a83, 0x42001a83},
++	{0x0000a5d0, 0x7703ff0b, 0x7703ff0b, 0x44001c84, 0x44001c84},
++	{0x0000a5d4, 0x7d06ffcb, 0x7d06ffcb, 0x48001ce3, 0x48001ce3},
++	{0x0000a5d8, 0x8407ff0b, 0x8407ff0b, 0x4c001ce5, 0x4c001ce5},
++	{0x0000a5dc, 0x8907ffcb, 0x8907ffcb, 0x50001ce9, 0x50001ce9},
++	{0x0000a5e0, 0x900fff0b, 0x900fff0b, 0x54001ceb, 0x54001ceb},
++	{0x0000a5e4, 0x960fffcb, 0x960fffcb, 0x56001eec, 0x56001eec},
++	{0x0000a5e8, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5ec, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5f0, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5f4, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5f8, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5fc, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a600, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a604, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a608, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a60c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a610, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a614, 0x01404000, 0x01404000, 0x01404000, 0x01404000},
++	{0x0000a618, 0x02008501, 0x02008501, 0x02008501, 0x02008501},
++	{0x0000a61c, 0x02008802, 0x02008802, 0x02008802, 0x02008802},
++	{0x0000a620, 0x0300c802, 0x0300c802, 0x0300c802, 0x0300c802},
++	{0x0000a624, 0x0300cc03, 0x0300cc03, 0x0300cc03, 0x0300cc03},
++	{0x0000a628, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a62c, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a630, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a634, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a638, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a63c, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++};
 +
-+I also changed the declaration of variables i & j in SHA1Update to
-+unsigned long from unsigned int for the same reason.
++static const u32 ar9331_modes_low_ob_db_tx_gain_1p2[][5] = {
++	/*  Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
++	{0x0000a410, 0x000050d7, 0x000050d7, 0x000050d7, 0x000050d7},
++	{0x0000a500, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
++	{0x0000a504, 0x05062002, 0x05062002, 0x04000002, 0x04000002},
++	{0x0000a508, 0x0c002e00, 0x0c002e00, 0x08000004, 0x08000004},
++	{0x0000a50c, 0x11062202, 0x11062202, 0x0d000200, 0x0d000200},
++	{0x0000a510, 0x17022e00, 0x17022e00, 0x11000202, 0x11000202},
++	{0x0000a514, 0x1d000ec2, 0x1d000ec2, 0x15000400, 0x15000400},
++	{0x0000a518, 0x25020ec0, 0x25020ec0, 0x19000402, 0x19000402},
++	{0x0000a51c, 0x2b020ec3, 0x2b020ec3, 0x1d000404, 0x1d000404},
++	{0x0000a520, 0x2f001f04, 0x2f001f04, 0x23000a00, 0x23000a00},
++	{0x0000a524, 0x35001fc4, 0x35001fc4, 0x27000a02, 0x27000a02},
++	{0x0000a528, 0x3c022f04, 0x3c022f04, 0x2b000a04, 0x2b000a04},
++	{0x0000a52c, 0x41023e85, 0x41023e85, 0x3f001620, 0x3f001620},
++	{0x0000a530, 0x48023ec6, 0x48023ec6, 0x41001621, 0x41001621},
++	{0x0000a534, 0x4d023f01, 0x4d023f01, 0x44001640, 0x44001640},
++	{0x0000a538, 0x53023f4b, 0x53023f4b, 0x46001641, 0x46001641},
++	{0x0000a53c, 0x5a027f09, 0x5a027f09, 0x48001642, 0x48001642},
++	{0x0000a540, 0x5f027fc9, 0x5f027fc9, 0x4b001644, 0x4b001644},
++	{0x0000a544, 0x6502feca, 0x6502feca, 0x4e001a81, 0x4e001a81},
++	{0x0000a548, 0x6b02ff4a, 0x6b02ff4a, 0x51001a83, 0x51001a83},
++	{0x0000a54c, 0x7203feca, 0x7203feca, 0x54001c84, 0x54001c84},
++	{0x0000a550, 0x7703ff0b, 0x7703ff0b, 0x57001ce3, 0x57001ce3},
++	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x5b001ce5, 0x5b001ce5},
++	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5f001ce9, 0x5f001ce9},
++	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x66001eec, 0x66001eec},
++	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x66001eec, 0x66001eec},
++	{0x0000a568, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a56c, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a570, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a574, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a578, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a57c, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a580, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
++	{0x0000a584, 0x05062002, 0x05062002, 0x04000002, 0x04000002},
++	{0x0000a588, 0x0c002e00, 0x0c002e00, 0x08000004, 0x08000004},
++	{0x0000a58c, 0x11062202, 0x11062202, 0x0b000200, 0x0b000200},
++	{0x0000a590, 0x17022e00, 0x17022e00, 0x0f000202, 0x0f000202},
++	{0x0000a594, 0x1d000ec2, 0x1d000ec2, 0x11000400, 0x11000400},
++	{0x0000a598, 0x25020ec0, 0x25020ec0, 0x15000402, 0x15000402},
++	{0x0000a59c, 0x2b020ec3, 0x2b020ec3, 0x19000404, 0x19000404},
++	{0x0000a5a0, 0x2f001f04, 0x2f001f04, 0x1b000603, 0x1b000603},
++	{0x0000a5a4, 0x35001fc4, 0x35001fc4, 0x1f000a02, 0x1f000a02},
++	{0x0000a5a8, 0x3c022f04, 0x3c022f04, 0x23000a04, 0x23000a04},
++	{0x0000a5ac, 0x41023e85, 0x41023e85, 0x26000a20, 0x26000a20},
++	{0x0000a5b0, 0x48023ec6, 0x48023ec6, 0x2a000e20, 0x2a000e20},
++	{0x0000a5b4, 0x4d023f01, 0x4d023f01, 0x2e000e22, 0x2e000e22},
++	{0x0000a5b8, 0x53023f4b, 0x53023f4b, 0x31000e24, 0x31000e24},
++	{0x0000a5bc, 0x5a027f09, 0x5a027f09, 0x34001640, 0x34001640},
++	{0x0000a5c0, 0x5f027fc9, 0x5f027fc9, 0x38001660, 0x38001660},
++	{0x0000a5c4, 0x6502feca, 0x6502feca, 0x3b001861, 0x3b001861},
++	{0x0000a5c8, 0x6b02ff4a, 0x6b02ff4a, 0x3e001a81, 0x3e001a81},
++	{0x0000a5cc, 0x7203feca, 0x7203feca, 0x42001a83, 0x42001a83},
++	{0x0000a5d0, 0x7703ff0b, 0x7703ff0b, 0x44001c84, 0x44001c84},
++	{0x0000a5d4, 0x7d06ffcb, 0x7d06ffcb, 0x48001ce3, 0x48001ce3},
++	{0x0000a5d8, 0x8407ff0b, 0x8407ff0b, 0x4c001ce5, 0x4c001ce5},
++	{0x0000a5dc, 0x8907ffcb, 0x8907ffcb, 0x50001ce9, 0x50001ce9},
++	{0x0000a5e0, 0x900fff0b, 0x900fff0b, 0x54001ceb, 0x54001ceb},
++	{0x0000a5e4, 0x960fffcb, 0x960fffcb, 0x56001eec, 0x56001eec},
++	{0x0000a5e8, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5ec, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5f0, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5f4, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5f8, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5fc, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a600, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a604, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a608, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a60c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a610, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a614, 0x01404000, 0x01404000, 0x01404000, 0x01404000},
++	{0x0000a618, 0x02008501, 0x02008501, 0x02008501, 0x02008501},
++	{0x0000a61c, 0x02008802, 0x02008802, 0x02008802, 0x02008802},
++	{0x0000a620, 0x0300c802, 0x0300c802, 0x0300c802, 0x0300c802},
++	{0x0000a624, 0x0300cc03, 0x0300cc03, 0x0300cc03, 0x0300cc03},
++	{0x0000a628, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a62c, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a630, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a634, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a638, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a63c, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++};
 +
-+These changes should make no difference to any 32 bit implementations since
-+an
-+int and a long are the same size in those environments.
++static const u32 ar9331_1p2_baseband_core_txfir_coeff_japan_2484[][2] = {
++	/* Addr      allmodes  */
++	{0x0000a398, 0x00000000},
++	{0x0000a39c, 0x6f7f0301},
++	{0x0000a3a0, 0xca9228ee},
++};
 +
-+--
-+I also corrected a few compiler warnings generated by Borland C.
-+1. Added #include <process.h> for exit() prototype
-+2. Removed unused variable 'j' in SHA1Final
-+3. Changed exit(0) to return(0) at end of main.
++static const u32 ar9331_1p2_xtal_25M[][2] = {
++	/* Addr      allmodes  */
++	{0x00007038, 0x000002f8},
++	{0x00008244, 0x0010f3d7},
++	{0x0000824c, 0x0001e7ae},
++	{0x0001609c, 0x0f508f29},
++};
 +
-+ALL changes I made can be located by searching for comments containing 'JHB'
-+-----------------
-+Modified 8/98
-+By Steve Reid <sreid@sea-to-sky.net>
-+Still 100% public domain
++static const u32 ar9331_1p2_radio_core[][2] = {
++	/* Addr      allmodes  */
++	{0x00016000, 0x36db6db6},
++	{0x00016004, 0x6db6db40},
++	{0x00016008, 0x73800000},
++	{0x0001600c, 0x00000000},
++	{0x00016040, 0x7f80fff8},
++	{0x00016044, 0x03d6d2db},
++	{0x00016048, 0x6c924268},
++	{0x0001604c, 0x000f0278},
++	{0x00016050, 0x4db6db8c},
++	{0x00016054, 0x6db60000},
++	{0x00016080, 0x00080000},
++	{0x00016084, 0x0e48048c},
++	{0x00016088, 0x14214514},
++	{0x0001608c, 0x119f081c},
++	{0x00016090, 0x24926490},
++	{0x00016098, 0xd411eb84},
++	{0x000160a0, 0xc2108ffe},
++	{0x000160a4, 0x812fc370},
++	{0x000160a8, 0x423c8000},
++	{0x000160ac, 0x24651800},
++	{0x000160b0, 0x03284f3e},
++	{0x000160b4, 0x92480040},
++	{0x000160c0, 0x006db6db},
++	{0x000160c4, 0x0186db60},
++	{0x000160c8, 0x6db6db6c},
++	{0x000160cc, 0x6de6c300},
++	{0x000160d0, 0x14500820},
++	{0x00016100, 0x04cb0001},
++	{0x00016104, 0xfff80015},
++	{0x00016108, 0x00080010},
++	{0x0001610c, 0x00170000},
++	{0x00016140, 0x10804000},
++	{0x00016144, 0x01884080},
++	{0x00016148, 0x000080c0},
++	{0x00016280, 0x01000015},
++	{0x00016284, 0x14d20000},
++	{0x00016288, 0x00318000},
++	{0x0001628c, 0x50000000},
++	{0x00016290, 0x4b96210f},
++	{0x00016380, 0x00000000},
++	{0x00016384, 0x00000000},
++	{0x00016388, 0x00800700},
++	{0x0001638c, 0x00800700},
++	{0x00016390, 0x00800700},
++	{0x00016394, 0x00000000},
++	{0x00016398, 0x00000000},
++	{0x0001639c, 0x00000000},
++	{0x000163a0, 0x00000001},
++	{0x000163a4, 0x00000001},
++	{0x000163a8, 0x00000000},
++	{0x000163ac, 0x00000000},
++	{0x000163b0, 0x00000000},
++	{0x000163b4, 0x00000000},
++	{0x000163b8, 0x00000000},
++	{0x000163bc, 0x00000000},
++	{0x000163c0, 0x000000a0},
++	{0x000163c4, 0x000c0000},
++	{0x000163c8, 0x14021402},
++	{0x000163cc, 0x00001402},
++	{0x000163d0, 0x00000000},
++	{0x000163d4, 0x00000000},
++};
 +
-+1- Removed #include <process.h> and used return() instead of exit()
-+2- Fixed overwriting of finalcount in SHA1Final() (discovered by Chris Hall)
-+3- Changed email address from steve@edmweb.com to sreid@sea-to-sky.net
++static const u32 ar9331_1p2_soc_postamble[][5] = {
++	/*  Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
++	{0x00007010, 0x00000022, 0x00000022, 0x00000022, 0x00000022},
++};
 +
-+-----------------
-+Modified 4/01
-+By Saul Kravitz <Saul.Kravitz@celera.com>
-+Still 100% PD
-+Modified to run on Compaq Alpha hardware.
++static const u32 ar9331_common_wo_xlna_rx_gain_1p2[][2] = {
++	/* Addr      allmodes  */
++	{0x0000a000, 0x00060005},
++	{0x0000a004, 0x00810080},
++	{0x0000a008, 0x00830082},
++	{0x0000a00c, 0x00850084},
++	{0x0000a010, 0x01820181},
++	{0x0000a014, 0x01840183},
++	{0x0000a018, 0x01880185},
++	{0x0000a01c, 0x018a0189},
++	{0x0000a020, 0x02850284},
++	{0x0000a024, 0x02890288},
++	{0x0000a028, 0x028b028a},
++	{0x0000a02c, 0x03850384},
++	{0x0000a030, 0x03890388},
++	{0x0000a034, 0x038b038a},
++	{0x0000a038, 0x038d038c},
++	{0x0000a03c, 0x03910390},
++	{0x0000a040, 0x03930392},
++	{0x0000a044, 0x03950394},
++	{0x0000a048, 0x00000396},
++	{0x0000a04c, 0x00000000},
++	{0x0000a050, 0x00000000},
++	{0x0000a054, 0x00000000},
++	{0x0000a058, 0x00000000},
++	{0x0000a05c, 0x00000000},
++	{0x0000a060, 0x00000000},
++	{0x0000a064, 0x00000000},
++	{0x0000a068, 0x00000000},
++	{0x0000a06c, 0x00000000},
++	{0x0000a070, 0x00000000},
++	{0x0000a074, 0x00000000},
++	{0x0000a078, 0x00000000},
++	{0x0000a07c, 0x00000000},
++	{0x0000a080, 0x28282828},
++	{0x0000a084, 0x28282828},
++	{0x0000a088, 0x28282828},
++	{0x0000a08c, 0x28282828},
++	{0x0000a090, 0x28282828},
++	{0x0000a094, 0x24242428},
++	{0x0000a098, 0x171e1e1e},
++	{0x0000a09c, 0x02020b0b},
++	{0x0000a0a0, 0x02020202},
++	{0x0000a0a4, 0x00000000},
++	{0x0000a0a8, 0x00000000},
++	{0x0000a0ac, 0x00000000},
++	{0x0000a0b0, 0x00000000},
++	{0x0000a0b4, 0x00000000},
++	{0x0000a0b8, 0x00000000},
++	{0x0000a0bc, 0x00000000},
++	{0x0000a0c0, 0x22072208},
++	{0x0000a0c4, 0x22052206},
++	{0x0000a0c8, 0x22032204},
++	{0x0000a0cc, 0x22012202},
++	{0x0000a0d0, 0x221f2200},
++	{0x0000a0d4, 0x221d221e},
++	{0x0000a0d8, 0x33023303},
++	{0x0000a0dc, 0x33003301},
++	{0x0000a0e0, 0x331e331f},
++	{0x0000a0e4, 0x4402331d},
++	{0x0000a0e8, 0x44004401},
++	{0x0000a0ec, 0x441e441f},
++	{0x0000a0f0, 0x55025503},
++	{0x0000a0f4, 0x55005501},
++	{0x0000a0f8, 0x551e551f},
++	{0x0000a0fc, 0x6602551d},
++	{0x0000a100, 0x66006601},
++	{0x0000a104, 0x661e661f},
++	{0x0000a108, 0x7703661d},
++	{0x0000a10c, 0x77017702},
++	{0x0000a110, 0x00007700},
++	{0x0000a114, 0x00000000},
++	{0x0000a118, 0x00000000},
++	{0x0000a11c, 0x00000000},
++	{0x0000a120, 0x00000000},
++	{0x0000a124, 0x00000000},
++	{0x0000a128, 0x00000000},
++	{0x0000a12c, 0x00000000},
++	{0x0000a130, 0x00000000},
++	{0x0000a134, 0x00000000},
++	{0x0000a138, 0x00000000},
++	{0x0000a13c, 0x00000000},
++	{0x0000a140, 0x001f0000},
++	{0x0000a144, 0x111f1100},
++	{0x0000a148, 0x111d111e},
++	{0x0000a14c, 0x111b111c},
++	{0x0000a150, 0x22032204},
++	{0x0000a154, 0x22012202},
++	{0x0000a158, 0x221f2200},
++	{0x0000a15c, 0x221d221e},
++	{0x0000a160, 0x33013302},
++	{0x0000a164, 0x331f3300},
++	{0x0000a168, 0x4402331e},
++	{0x0000a16c, 0x44004401},
++	{0x0000a170, 0x441e441f},
++	{0x0000a174, 0x55015502},
++	{0x0000a178, 0x551f5500},
++	{0x0000a17c, 0x6602551e},
++	{0x0000a180, 0x66006601},
++	{0x0000a184, 0x661e661f},
++	{0x0000a188, 0x7703661d},
++	{0x0000a18c, 0x77017702},
++	{0x0000a190, 0x00007700},
++	{0x0000a194, 0x00000000},
++	{0x0000a198, 0x00000000},
++	{0x0000a19c, 0x00000000},
++	{0x0000a1a0, 0x00000000},
++	{0x0000a1a4, 0x00000000},
++	{0x0000a1a8, 0x00000000},
++	{0x0000a1ac, 0x00000000},
++	{0x0000a1b0, 0x00000000},
++	{0x0000a1b4, 0x00000000},
++	{0x0000a1b8, 0x00000000},
++	{0x0000a1bc, 0x00000000},
++	{0x0000a1c0, 0x00000000},
++	{0x0000a1c4, 0x00000000},
++	{0x0000a1c8, 0x00000000},
++	{0x0000a1cc, 0x00000000},
++	{0x0000a1d0, 0x00000000},
++	{0x0000a1d4, 0x00000000},
++	{0x0000a1d8, 0x00000000},
++	{0x0000a1dc, 0x00000000},
++	{0x0000a1e0, 0x00000000},
++	{0x0000a1e4, 0x00000000},
++	{0x0000a1e8, 0x00000000},
++	{0x0000a1ec, 0x00000000},
++	{0x0000a1f0, 0x00000396},
++	{0x0000a1f4, 0x00000396},
++	{0x0000a1f8, 0x00000396},
++	{0x0000a1fc, 0x00000296},
++};
 +
-+-----------------
-+Modified 07/2002
-+By Ralph Giles <giles@ghostscript.com>
-+Still 100% public domain
-+modified for use with stdint types, autoconf
-+code cleanup, removed attribution comments
-+switched SHA1Final() argument order for consistency
-+use SHA1_ prefix for public api
-+move public api to sha1.h
-+*/
++static const u32 ar9331_1p2_baseband_core[][2] = {
++	/* Addr      allmodes  */
++	{0x00009800, 0xafe68e30},
++	{0x00009804, 0xfd14e000},
++	{0x00009808, 0x9c0a8f6b},
++	{0x0000980c, 0x04800000},
++	{0x00009814, 0x9280c00a},
++	{0x00009818, 0x00000000},
++	{0x0000981c, 0x00020028},
++	{0x00009834, 0x5f3ca3de},
++	{0x00009838, 0x0108ecff},
++	{0x0000983c, 0x14750600},
++	{0x00009880, 0x201fff00},
++	{0x00009884, 0x00001042},
++	{0x000098a4, 0x00200400},
++	{0x000098b0, 0x32840bbe},
++	{0x000098d0, 0x004b6a8e},
++	{0x000098d4, 0x00000820},
++	{0x000098dc, 0x00000000},
++	{0x000098f0, 0x00000000},
++	{0x000098f4, 0x00000000},
++	{0x00009c04, 0x00000000},
++	{0x00009c08, 0x03200000},
++	{0x00009c0c, 0x00000000},
++	{0x00009c10, 0x00000000},
++	{0x00009c14, 0x00046384},
++	{0x00009c18, 0x05b6b440},
++	{0x00009c1c, 0x00b6b440},
++	{0x00009d00, 0xc080a333},
++	{0x00009d04, 0x40206c10},
++	{0x00009d08, 0x009c4060},
++	{0x00009d0c, 0x1883800a},
++	{0x00009d10, 0x01834061},
++	{0x00009d14, 0x00c00400},
++	{0x00009d18, 0x00000000},
++	{0x00009e08, 0x0038233c},
++	{0x00009e24, 0x9927b515},
++	{0x00009e28, 0x12ef0200},
++	{0x00009e30, 0x06336f77},
++	{0x00009e34, 0x6af6532f},
++	{0x00009e38, 0x0cc80c00},
++	{0x00009e40, 0x0d261820},
++	{0x00009e4c, 0x00001004},
++	{0x00009e50, 0x00ff03f1},
++	{0x00009fc0, 0x803e4788},
++	{0x00009fc4, 0x0001efb5},
++	{0x00009fcc, 0x40000014},
++	{0x0000a20c, 0x00000000},
++	{0x0000a220, 0x00000000},
++	{0x0000a224, 0x00000000},
++	{0x0000a228, 0x10002310},
++	{0x0000a23c, 0x00000000},
++	{0x0000a244, 0x0c000000},
++	{0x0000a2a0, 0x00000001},
++	{0x0000a2c0, 0x00000001},
++	{0x0000a2c8, 0x00000000},
++	{0x0000a2cc, 0x18c43433},
++	{0x0000a2d4, 0x00000000},
++	{0x0000a2dc, 0x00000000},
++	{0x0000a2e0, 0x00000000},
++	{0x0000a2e4, 0x00000000},
++	{0x0000a2e8, 0x00000000},
++	{0x0000a2ec, 0x00000000},
++	{0x0000a2f0, 0x00000000},
++	{0x0000a2f4, 0x00000000},
++	{0x0000a2f8, 0x00000000},
++	{0x0000a344, 0x00000000},
++	{0x0000a34c, 0x00000000},
++	{0x0000a350, 0x0000a000},
++	{0x0000a364, 0x00000000},
++	{0x0000a370, 0x00000000},
++	{0x0000a390, 0x00000001},
++	{0x0000a394, 0x00000444},
++	{0x0000a398, 0x001f0e0f},
++	{0x0000a39c, 0x0075393f},
++	{0x0000a3a0, 0xb79f6427},
++	{0x0000a3a4, 0x00000000},
++	{0x0000a3a8, 0xaaaaaaaa},
++	{0x0000a3ac, 0x3c466478},
++	{0x0000a3c0, 0x20202020},
++	{0x0000a3c4, 0x22222220},
++	{0x0000a3c8, 0x20200020},
++	{0x0000a3cc, 0x20202020},
++	{0x0000a3d0, 0x20202020},
++	{0x0000a3d4, 0x20202020},
++	{0x0000a3d8, 0x20202020},
++	{0x0000a3dc, 0x20202020},
++	{0x0000a3e0, 0x20202020},
++	{0x0000a3e4, 0x20202020},
++	{0x0000a3e8, 0x20202020},
++	{0x0000a3ec, 0x20202020},
++	{0x0000a3f0, 0x00000000},
++	{0x0000a3f4, 0x00000006},
++	{0x0000a3f8, 0x0cdbd380},
++	{0x0000a3fc, 0x000f0f01},
++	{0x0000a400, 0x8fa91f01},
++	{0x0000a404, 0x00000000},
++	{0x0000a408, 0x0e79e5c6},
++	{0x0000a40c, 0x00820820},
++	{0x0000a414, 0x1ce739ce},
++	{0x0000a418, 0x2d001dce},
++	{0x0000a41c, 0x1ce739ce},
++	{0x0000a420, 0x000001ce},
++	{0x0000a424, 0x1ce739ce},
++	{0x0000a428, 0x000001ce},
++	{0x0000a42c, 0x1ce739ce},
++	{0x0000a430, 0x1ce739ce},
++	{0x0000a434, 0x00000000},
++	{0x0000a438, 0x00001801},
++	{0x0000a43c, 0x00000000},
++	{0x0000a440, 0x00000000},
++	{0x0000a444, 0x00000000},
++	{0x0000a448, 0x04000000},
++	{0x0000a44c, 0x00000001},
++	{0x0000a450, 0x00010000},
++	{0x0000a458, 0x00000000},
++	{0x0000a640, 0x00000000},
++	{0x0000a644, 0x3fad9d74},
++	{0x0000a648, 0x0048060a},
++	{0x0000a64c, 0x00003c37},
++	{0x0000a670, 0x03020100},
++	{0x0000a674, 0x09080504},
++	{0x0000a678, 0x0d0c0b0a},
++	{0x0000a67c, 0x13121110},
++	{0x0000a680, 0x31301514},
++	{0x0000a684, 0x35343332},
++	{0x0000a688, 0x00000036},
++	{0x0000a690, 0x00000838},
++	{0x0000a7c0, 0x00000000},
++	{0x0000a7c4, 0xfffffffc},
++	{0x0000a7c8, 0x00000000},
++	{0x0000a7cc, 0x00000000},
++	{0x0000a7d0, 0x00000000},
++	{0x0000a7d4, 0x00000004},
++	{0x0000a7dc, 0x00000001},
++};
 +
-+/*
-+Test Vectors (from FIPS PUB 180-1)
-+"abc"
-+  A9993E36 4706816A BA3E2571 7850C26C 9CD0D89D
-+"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
-+  84983E44 1C3BD26E BAAE4AA1 F95129E5 E54670F1
-+A million repetitions of "a"
-+  34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F
-+*/
++static const u32 ar9331_modes_high_power_tx_gain_1p2[][5] = {
++	/*  Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
++	{0x0000a410, 0x000050d7, 0x000050d7, 0x000050d7, 0x000050d7},
++	{0x0000a500, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
++	{0x0000a504, 0x05062002, 0x05062002, 0x04000002, 0x04000002},
++	{0x0000a508, 0x0c002e00, 0x0c002e00, 0x08000004, 0x08000004},
++	{0x0000a50c, 0x11062202, 0x11062202, 0x0d000200, 0x0d000200},
++	{0x0000a510, 0x17022e00, 0x17022e00, 0x11000202, 0x11000202},
++	{0x0000a514, 0x1d000ec2, 0x1d000ec2, 0x15000400, 0x15000400},
++	{0x0000a518, 0x25020ec0, 0x25020ec0, 0x19000402, 0x19000402},
++	{0x0000a51c, 0x2b020ec3, 0x2b020ec3, 0x1d000404, 0x1d000404},
++	{0x0000a520, 0x2f001f04, 0x2f001f04, 0x23000a00, 0x23000a00},
++	{0x0000a524, 0x35001fc4, 0x35001fc4, 0x27000a02, 0x27000a02},
++	{0x0000a528, 0x3c022f04, 0x3c022f04, 0x2b000a04, 0x2b000a04},
++	{0x0000a52c, 0x41023e85, 0x41023e85, 0x3f001620, 0x3f001620},
++	{0x0000a530, 0x48023ec6, 0x48023ec6, 0x41001621, 0x41001621},
++	{0x0000a534, 0x4d023f01, 0x4d023f01, 0x44001640, 0x44001640},
++	{0x0000a538, 0x53023f4b, 0x53023f4b, 0x46001641, 0x46001641},
++	{0x0000a53c, 0x5a027f09, 0x5a027f09, 0x48001642, 0x48001642},
++	{0x0000a540, 0x5f027fc9, 0x5f027fc9, 0x4b001644, 0x4b001644},
++	{0x0000a544, 0x6502feca, 0x6502feca, 0x4e001a81, 0x4e001a81},
++	{0x0000a548, 0x6b02ff4a, 0x6b02ff4a, 0x51001a83, 0x51001a83},
++	{0x0000a54c, 0x7203feca, 0x7203feca, 0x54001c84, 0x54001c84},
++	{0x0000a550, 0x7703ff0b, 0x7703ff0b, 0x57001ce3, 0x57001ce3},
++	{0x0000a554, 0x7d06ffcb, 0x7d06ffcb, 0x5b001ce5, 0x5b001ce5},
++	{0x0000a558, 0x8407ff0b, 0x8407ff0b, 0x5f001ce9, 0x5f001ce9},
++	{0x0000a55c, 0x8907ffcb, 0x8907ffcb, 0x66001eec, 0x66001eec},
++	{0x0000a560, 0x900fff0b, 0x900fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a564, 0x960fffcb, 0x960fffcb, 0x66001eec, 0x66001eec},
++	{0x0000a568, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a56c, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a570, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a574, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a578, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a57c, 0x9c1fff0b, 0x9c1fff0b, 0x66001eec, 0x66001eec},
++	{0x0000a580, 0x00022200, 0x00022200, 0x00000000, 0x00000000},
++	{0x0000a584, 0x05062002, 0x05062002, 0x04000002, 0x04000002},
++	{0x0000a588, 0x0c002e00, 0x0c002e00, 0x08000004, 0x08000004},
++	{0x0000a58c, 0x11062202, 0x11062202, 0x0b000200, 0x0b000200},
++	{0x0000a590, 0x17022e00, 0x17022e00, 0x0f000202, 0x0f000202},
++	{0x0000a594, 0x1d000ec2, 0x1d000ec2, 0x11000400, 0x11000400},
++	{0x0000a598, 0x25020ec0, 0x25020ec0, 0x15000402, 0x15000402},
++	{0x0000a59c, 0x2b020ec3, 0x2b020ec3, 0x19000404, 0x19000404},
++	{0x0000a5a0, 0x2f001f04, 0x2f001f04, 0x1b000603, 0x1b000603},
++	{0x0000a5a4, 0x35001fc4, 0x35001fc4, 0x1f000a02, 0x1f000a02},
++	{0x0000a5a8, 0x3c022f04, 0x3c022f04, 0x23000a04, 0x23000a04},
++	{0x0000a5ac, 0x41023e85, 0x41023e85, 0x26000a20, 0x26000a20},
++	{0x0000a5b0, 0x48023ec6, 0x48023ec6, 0x2a000e20, 0x2a000e20},
++	{0x0000a5b4, 0x4d023f01, 0x4d023f01, 0x2e000e22, 0x2e000e22},
++	{0x0000a5b8, 0x53023f4b, 0x53023f4b, 0x31000e24, 0x31000e24},
++	{0x0000a5bc, 0x5a027f09, 0x5a027f09, 0x34001640, 0x34001640},
++	{0x0000a5c0, 0x5f027fc9, 0x5f027fc9, 0x38001660, 0x38001660},
++	{0x0000a5c4, 0x6502feca, 0x6502feca, 0x3b001861, 0x3b001861},
++	{0x0000a5c8, 0x6b02ff4a, 0x6b02ff4a, 0x3e001a81, 0x3e001a81},
++	{0x0000a5cc, 0x7203feca, 0x7203feca, 0x42001a83, 0x42001a83},
++	{0x0000a5d0, 0x7703ff0b, 0x7703ff0b, 0x44001c84, 0x44001c84},
++	{0x0000a5d4, 0x7d06ffcb, 0x7d06ffcb, 0x48001ce3, 0x48001ce3},
++	{0x0000a5d8, 0x8407ff0b, 0x8407ff0b, 0x4c001ce5, 0x4c001ce5},
++	{0x0000a5dc, 0x8907ffcb, 0x8907ffcb, 0x50001ce9, 0x50001ce9},
++	{0x0000a5e0, 0x900fff0b, 0x900fff0b, 0x54001ceb, 0x54001ceb},
++	{0x0000a5e4, 0x960fffcb, 0x960fffcb, 0x56001eec, 0x56001eec},
++	{0x0000a5e8, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5ec, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5f0, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5f4, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5f8, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a5fc, 0x9c1fff0b, 0x9c1fff0b, 0x56001eec, 0x56001eec},
++	{0x0000a600, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a604, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a608, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a60c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a610, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
++	{0x0000a614, 0x01404000, 0x01404000, 0x01404000, 0x01404000},
++	{0x0000a618, 0x02008501, 0x02008501, 0x02008501, 0x02008501},
++	{0x0000a61c, 0x02008802, 0x02008802, 0x02008802, 0x02008802},
++	{0x0000a620, 0x0300c802, 0x0300c802, 0x0300c802, 0x0300c802},
++	{0x0000a624, 0x0300cc03, 0x0300cc03, 0x0300cc03, 0x0300cc03},
++	{0x0000a628, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a62c, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a630, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a634, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a638, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++	{0x0000a63c, 0x04011004, 0x04011004, 0x04011004, 0x04011004},
++};
 +
-+/* #define SHA1HANDSOFF  */
++static const u32 ar9331_1p2_mac_postamble[][5] = {
++	/*  Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20  */
++	{0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160},
++	{0x00001070, 0x00000168, 0x000002d0, 0x00000318, 0x0000018c},
++	{0x000010b0, 0x00000e60, 0x00001cc0, 0x00007c70, 0x00003e38},
++	{0x00008014, 0x03e803e8, 0x07d007d0, 0x10801600, 0x08400b00},
++	{0x0000801c, 0x128d8027, 0x128d804f, 0x12e00057, 0x12e0002b},
++	{0x00008120, 0x08f04800, 0x08f04800, 0x08f04810, 0x08f04810},
++	{0x000081d0, 0x00003210, 0x00003210, 0x0000320a, 0x0000320a},
++	{0x00008318, 0x00003e80, 0x00007d00, 0x00006880, 0x00003440},
++};
 +
-+#ifdef HAVE_CONFIG_H
-+#include "config.h"
-+#endif
++static const u32 ar9331_1p2_soc_preamble[][2] = {
++	/* Addr      allmodes  */
++	{0x00007020, 0x00000000},
++	{0x00007034, 0x00000002},
++	{0x00007038, 0x000002f8},
++};
 +
-+#include <stdio.h>
-+#include <string.h>
++static const u32 ar9331_1p2_xtal_40M[][2] = {
++	/* Addr      allmodes  */
++	{0x00007038, 0x000004c2},
++	{0x00008244, 0x0010f400},
++	{0x0000824c, 0x0001e800},
++	{0x0001609c, 0x0b283f31},
++};
 +
-+#include <stdint.h>
-+#include "sha1.h"
++static const u32 ar9331_1p2_mac_core[][2] = {
++	/* Addr      allmodes  */
++	{0x00000008, 0x00000000},
++	{0x00000030, 0x00020085},
++	{0x00000034, 0x00000005},
++	{0x00000040, 0x00000000},
++	{0x00000044, 0x00000000},
++	{0x00000048, 0x00000008},
++	{0x0000004c, 0x00000010},
++	{0x00000050, 0x00000000},
++	{0x00001040, 0x002ffc0f},
++	{0x00001044, 0x002ffc0f},
++	{0x00001048, 0x002ffc0f},
++	{0x0000104c, 0x002ffc0f},
++	{0x00001050, 0x002ffc0f},
++	{0x00001054, 0x002ffc0f},
++	{0x00001058, 0x002ffc0f},
++	{0x0000105c, 0x002ffc0f},
++	{0x00001060, 0x002ffc0f},
++	{0x00001064, 0x002ffc0f},
++	{0x000010f0, 0x00000100},
++	{0x00001270, 0x00000000},
++	{0x000012b0, 0x00000000},
++	{0x000012f0, 0x00000000},
++	{0x0000143c, 0x00000000},
++	{0x0000147c, 0x00000000},
++	{0x00008000, 0x00000000},
++	{0x00008004, 0x00000000},
++	{0x00008008, 0x00000000},
++	{0x0000800c, 0x00000000},
++	{0x00008018, 0x00000000},
++	{0x00008020, 0x00000000},
++	{0x00008038, 0x00000000},
++	{0x0000803c, 0x00000000},
++	{0x00008040, 0x00000000},
++	{0x00008044, 0x00000000},
++	{0x00008048, 0x00000000},
++	{0x0000804c, 0xffffffff},
++	{0x00008054, 0x00000000},
++	{0x00008058, 0x00000000},
++	{0x0000805c, 0x000fc78f},
++	{0x00008060, 0x0000000f},
++	{0x00008064, 0x00000000},
++	{0x00008070, 0x00000310},
++	{0x00008074, 0x00000020},
++	{0x00008078, 0x00000000},
++	{0x0000809c, 0x0000000f},
++	{0x000080a0, 0x00000000},
++	{0x000080a4, 0x02ff0000},
++	{0x000080a8, 0x0e070605},
++	{0x000080ac, 0x0000000d},
++	{0x000080b0, 0x00000000},
++	{0x000080b4, 0x00000000},
++	{0x000080b8, 0x00000000},
++	{0x000080bc, 0x00000000},
++	{0x000080c0, 0x2a800000},
++	{0x000080c4, 0x06900168},
++	{0x000080c8, 0x13881c20},
++	{0x000080cc, 0x01f40000},
++	{0x000080d0, 0x00252500},
++	{0x000080d4, 0x00a00000},
++	{0x000080d8, 0x00400000},
++	{0x000080dc, 0x00000000},
++	{0x000080e0, 0xffffffff},
++	{0x000080e4, 0x0000ffff},
++	{0x000080e8, 0x3f3f3f3f},
++	{0x000080ec, 0x00000000},
++	{0x000080f0, 0x00000000},
++	{0x000080f4, 0x00000000},
++	{0x000080fc, 0x00020000},
++	{0x00008100, 0x00000000},
++	{0x00008108, 0x00000052},
++	{0x0000810c, 0x00000000},
++	{0x00008110, 0x00000000},
++	{0x00008114, 0x000007ff},
++	{0x00008118, 0x000000aa},
++	{0x0000811c, 0x00003210},
++	{0x00008124, 0x00000000},
++	{0x00008128, 0x00000000},
++	{0x0000812c, 0x00000000},
++	{0x00008130, 0x00000000},
++	{0x00008134, 0x00000000},
++	{0x00008138, 0x00000000},
++	{0x0000813c, 0x0000ffff},
++	{0x00008144, 0xffffffff},
++	{0x00008168, 0x00000000},
++	{0x0000816c, 0x00000000},
++	{0x00008170, 0x18486200},
++	{0x00008174, 0x33332210},
++	{0x00008178, 0x00000000},
++	{0x0000817c, 0x00020000},
++	{0x000081c0, 0x00000000},
++	{0x000081c4, 0x33332210},
++	{0x000081c8, 0x00000000},
++	{0x000081cc, 0x00000000},
++	{0x000081d4, 0x00000000},
++	{0x000081ec, 0x00000000},
++	{0x000081f0, 0x00000000},
++	{0x000081f4, 0x00000000},
++	{0x000081f8, 0x00000000},
++	{0x000081fc, 0x00000000},
++	{0x00008240, 0x00100000},
++	{0x00008248, 0x00000800},
++	{0x00008250, 0x00000000},
++	{0x00008254, 0x00000000},
++	{0x00008258, 0x00000000},
++	{0x0000825c, 0x40000000},
++	{0x00008260, 0x00080922},
++	{0x00008264, 0x9d400010},
++	{0x00008268, 0xffffffff},
++	{0x0000826c, 0x0000ffff},
++	{0x00008270, 0x00000000},
++	{0x00008274, 0x40000000},
++	{0x00008278, 0x003e4180},
++	{0x0000827c, 0x00000004},
++	{0x00008284, 0x0000002c},
++	{0x00008288, 0x0000002c},
++	{0x0000828c, 0x000000ff},
++	{0x00008294, 0x00000000},
++	{0x00008298, 0x00000000},
++	{0x0000829c, 0x00000000},
++	{0x00008300, 0x00000140},
++	{0x00008314, 0x00000000},
++	{0x0000831c, 0x0000010d},
++	{0x00008328, 0x00000000},
++	{0x0000832c, 0x00000007},
++	{0x00008330, 0x00000302},
++	{0x00008334, 0x00000700},
++	{0x00008338, 0x00ff0000},
++	{0x0000833c, 0x02400000},
++	{0x00008340, 0x000107ff},
++	{0x00008344, 0xaa48105b},
++	{0x00008348, 0x008f0000},
++	{0x0000835c, 0x00000000},
++	{0x00008360, 0xffffffff},
++	{0x00008364, 0xffffffff},
++	{0x00008368, 0x00000000},
++	{0x00008370, 0x00000000},
++	{0x00008374, 0x000000ff},
++	{0x00008378, 0x00000000},
++	{0x0000837c, 0x00000000},
++	{0x00008380, 0xffffffff},
++	{0x00008384, 0xffffffff},
++	{0x00008390, 0xffffffff},
++	{0x00008394, 0xffffffff},
++	{0x00008398, 0x00000000},
++	{0x0000839c, 0x00000000},
++	{0x000083a0, 0x00000000},
++	{0x000083a4, 0x0000fa14},
++	{0x000083a8, 0x000f0c00},
++	{0x000083ac, 0x33332210},
++	{0x000083b0, 0x33332210},
++	{0x000083b4, 0x33332210},
++	{0x000083b8, 0x33332210},
++	{0x000083bc, 0x00000000},
++	{0x000083c0, 0x00000000},
++	{0x000083c4, 0x00000000},
++	{0x000083c8, 0x00000000},
++	{0x000083cc, 0x00000200},
++	{0x000083d0, 0x000301ff},
++};
 +
-+void SHA1_Transform(uint32_t state[5], const uint8_t buffer[64]);
++static const u32 ar9331_common_rx_gain_1p2[][2] = {
++	/* Addr      allmodes  */
++	{0x0000a000, 0x00010000},
++	{0x0000a004, 0x00030002},
++	{0x0000a008, 0x00050004},
++	{0x0000a00c, 0x00810080},
++	{0x0000a010, 0x01800082},
++	{0x0000a014, 0x01820181},
++	{0x0000a018, 0x01840183},
++	{0x0000a01c, 0x01880185},
++	{0x0000a020, 0x018a0189},
++	{0x0000a024, 0x02850284},
++	{0x0000a028, 0x02890288},
++	{0x0000a02c, 0x03850384},
++	{0x0000a030, 0x03890388},
++	{0x0000a034, 0x038b038a},
++	{0x0000a038, 0x038d038c},
++	{0x0000a03c, 0x03910390},
++	{0x0000a040, 0x03930392},
++	{0x0000a044, 0x03950394},
++	{0x0000a048, 0x00000396},
++	{0x0000a04c, 0x00000000},
++	{0x0000a050, 0x00000000},
++	{0x0000a054, 0x00000000},
++	{0x0000a058, 0x00000000},
++	{0x0000a05c, 0x00000000},
++	{0x0000a060, 0x00000000},
++	{0x0000a064, 0x00000000},
++	{0x0000a068, 0x00000000},
++	{0x0000a06c, 0x00000000},
++	{0x0000a070, 0x00000000},
++	{0x0000a074, 0x00000000},
++	{0x0000a078, 0x00000000},
++	{0x0000a07c, 0x00000000},
++	{0x0000a080, 0x28282828},
++	{0x0000a084, 0x28282828},
++	{0x0000a088, 0x28282828},
++	{0x0000a08c, 0x28282828},
++	{0x0000a090, 0x28282828},
++	{0x0000a094, 0x21212128},
++	{0x0000a098, 0x171c1c1c},
++	{0x0000a09c, 0x02020212},
++	{0x0000a0a0, 0x00000202},
++	{0x0000a0a4, 0x00000000},
++	{0x0000a0a8, 0x00000000},
++	{0x0000a0ac, 0x00000000},
++	{0x0000a0b0, 0x00000000},
++	{0x0000a0b4, 0x00000000},
++	{0x0000a0b8, 0x00000000},
++	{0x0000a0bc, 0x00000000},
++	{0x0000a0c0, 0x001f0000},
++	{0x0000a0c4, 0x111f1100},
++	{0x0000a0c8, 0x111d111e},
++	{0x0000a0cc, 0x111b111c},
++	{0x0000a0d0, 0x22032204},
++	{0x0000a0d4, 0x22012202},
++	{0x0000a0d8, 0x221f2200},
++	{0x0000a0dc, 0x221d221e},
++	{0x0000a0e0, 0x33013302},
++	{0x0000a0e4, 0x331f3300},
++	{0x0000a0e8, 0x4402331e},
++	{0x0000a0ec, 0x44004401},
++	{0x0000a0f0, 0x441e441f},
++	{0x0000a0f4, 0x55015502},
++	{0x0000a0f8, 0x551f5500},
++	{0x0000a0fc, 0x6602551e},
++	{0x0000a100, 0x66006601},
++	{0x0000a104, 0x661e661f},
++	{0x0000a108, 0x7703661d},
++	{0x0000a10c, 0x77017702},
++	{0x0000a110, 0x00007700},
++	{0x0000a114, 0x00000000},
++	{0x0000a118, 0x00000000},
++	{0x0000a11c, 0x00000000},
++	{0x0000a120, 0x00000000},
++	{0x0000a124, 0x00000000},
++	{0x0000a128, 0x00000000},
++	{0x0000a12c, 0x00000000},
++	{0x0000a130, 0x00000000},
++	{0x0000a134, 0x00000000},
++	{0x0000a138, 0x00000000},
++	{0x0000a13c, 0x00000000},
++	{0x0000a140, 0x001f0000},
++	{0x0000a144, 0x111f1100},
++	{0x0000a148, 0x111d111e},
++	{0x0000a14c, 0x111b111c},
++	{0x0000a150, 0x22032204},
++	{0x0000a154, 0x22012202},
++	{0x0000a158, 0x221f2200},
++	{0x0000a15c, 0x221d221e},
++	{0x0000a160, 0x33013302},
++	{0x0000a164, 0x331f3300},
++	{0x0000a168, 0x4402331e},
++	{0x0000a16c, 0x44004401},
++	{0x0000a170, 0x441e441f},
++	{0x0000a174, 0x55015502},
++	{0x0000a178, 0x551f5500},
++	{0x0000a17c, 0x6602551e},
++	{0x0000a180, 0x66006601},
++	{0x0000a184, 0x661e661f},
++	{0x0000a188, 0x7703661d},
++	{0x0000a18c, 0x77017702},
++	{0x0000a190, 0x00007700},
++	{0x0000a194, 0x00000000},
++	{0x0000a198, 0x00000000},
++	{0x0000a19c, 0x00000000},
++	{0x0000a1a0, 0x00000000},
++	{0x0000a1a4, 0x00000000},
++	{0x0000a1a8, 0x00000000},
++	{0x0000a1ac, 0x00000000},
++	{0x0000a1b0, 0x00000000},
++	{0x0000a1b4, 0x00000000},
++	{0x0000a1b8, 0x00000000},
++	{0x0000a1bc, 0x00000000},
++	{0x0000a1c0, 0x00000000},
++	{0x0000a1c4, 0x00000000},
++	{0x0000a1c8, 0x00000000},
++	{0x0000a1cc, 0x00000000},
++	{0x0000a1d0, 0x00000000},
++	{0x0000a1d4, 0x00000000},
++	{0x0000a1d8, 0x00000000},
++	{0x0000a1dc, 0x00000000},
++	{0x0000a1e0, 0x00000000},
++	{0x0000a1e4, 0x00000000},
++	{0x0000a1e8, 0x00000000},
++	{0x0000a1ec, 0x00000000},
++	{0x0000a1f0, 0x00000396},
++	{0x0000a1f4, 0x00000396},
++	{0x0000a1f8, 0x00000396},
++	{0x0000a1fc, 0x00000296},
++};
 +
-+#define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
-+
-+/* blk0() and blk() perform the initial expand. */
-+/* I got the idea of expanding during the round function from SSLeay */
-+/* FIXME: can we do this in an endian-proof way? */
-+#ifdef WORDS_BIGENDIAN
-+#define blk0(i) block->l[i]
-+#else
-+#define blk0(i) (block->l[i] = (rol(block->l[i],24)&0xFF00FF00) \
-+    |(rol(block->l[i],8)&0x00FF00FF))
-+#endif
-+#define blk(i) (block->l[i&15] = rol(block->l[(i+13)&15]^block->l[(i+8)&15] \
-+    ^block->l[(i+2)&15]^block->l[i&15],1))
-+
-+/* (R0+R1), R2, R3, R4 are the different operations used in SHA1 */
-+#define R0(v,w,x,y,z,i) z+=((w&(x^y))^y)+blk0(i)+0x5A827999+rol(v,5);w=rol(w,30);
-+#define R1(v,w,x,y,z,i) z+=((w&(x^y))^y)+blk(i)+0x5A827999+rol(v,5);w=rol(w,30);
-+#define R2(v,w,x,y,z,i) z+=(w^x^y)+blk(i)+0x6ED9EBA1+rol(v,5);w=rol(w,30);
-+#define R3(v,w,x,y,z,i) z+=(((w|x)&y)|(w&x))+blk(i)+0x8F1BBCDC+rol(v,5);w=rol(w,30);
-+#define R4(v,w,x,y,z,i) z+=(w^x^y)+blk(i)+0xCA62C1D6+rol(v,5);w=rol(w,30);
-+
-+
-+#ifdef VERBOSE  /* SAK */
-+void SHAPrintContext(SHA1_CTX *context, char *msg){
-+  printf("%s (%d,%d) %x %x %x %x %x\n",
-+	 msg,
-+	 context->count[0], context->count[1],
-+	 context->state[0],
-+	 context->state[1],
-+	 context->state[2],
-+	 context->state[3],
-+	 context->state[4]);
-+}
-+#endif /* VERBOSE */
-+
-+/* Hash a single 512-bit block. This is the core of the algorithm. */
-+void SHA1_Transform(uint32_t state[5], const uint8_t buffer[64])
-+{
-+    uint32_t a, b, c, d, e;
-+    typedef union {
-+        uint8_t c[64];
-+        uint32_t l[16];
-+    } CHAR64LONG16;
-+    CHAR64LONG16* block;
-+
-+#ifdef SHA1HANDSOFF
-+    static uint8_t workspace[64];
-+    block = (CHAR64LONG16*)workspace;
-+    memcpy(block, buffer, 64);
-+#else
-+    block = (CHAR64LONG16*)buffer;
-+#endif
-+
-+    /* Copy context->state[] to working vars */
-+    a = state[0];
-+    b = state[1];
-+    c = state[2];
-+    d = state[3];
-+    e = state[4];
-+
-+    /* 4 rounds of 20 operations each. Loop unrolled. */
-+    R0(a,b,c,d,e, 0); R0(e,a,b,c,d, 1); R0(d,e,a,b,c, 2); R0(c,d,e,a,b, 3);
-+    R0(b,c,d,e,a, 4); R0(a,b,c,d,e, 5); R0(e,a,b,c,d, 6); R0(d,e,a,b,c, 7);
-+    R0(c,d,e,a,b, 8); R0(b,c,d,e,a, 9); R0(a,b,c,d,e,10); R0(e,a,b,c,d,11);
-+    R0(d,e,a,b,c,12); R0(c,d,e,a,b,13); R0(b,c,d,e,a,14); R0(a,b,c,d,e,15);
-+    R1(e,a,b,c,d,16); R1(d,e,a,b,c,17); R1(c,d,e,a,b,18); R1(b,c,d,e,a,19);
-+    R2(a,b,c,d,e,20); R2(e,a,b,c,d,21); R2(d,e,a,b,c,22); R2(c,d,e,a,b,23);
-+    R2(b,c,d,e,a,24); R2(a,b,c,d,e,25); R2(e,a,b,c,d,26); R2(d,e,a,b,c,27);
-+    R2(c,d,e,a,b,28); R2(b,c,d,e,a,29); R2(a,b,c,d,e,30); R2(e,a,b,c,d,31);
-+    R2(d,e,a,b,c,32); R2(c,d,e,a,b,33); R2(b,c,d,e,a,34); R2(a,b,c,d,e,35);
-+    R2(e,a,b,c,d,36); R2(d,e,a,b,c,37); R2(c,d,e,a,b,38); R2(b,c,d,e,a,39);
-+    R3(a,b,c,d,e,40); R3(e,a,b,c,d,41); R3(d,e,a,b,c,42); R3(c,d,e,a,b,43);
-+    R3(b,c,d,e,a,44); R3(a,b,c,d,e,45); R3(e,a,b,c,d,46); R3(d,e,a,b,c,47);
-+    R3(c,d,e,a,b,48); R3(b,c,d,e,a,49); R3(a,b,c,d,e,50); R3(e,a,b,c,d,51);
-+    R3(d,e,a,b,c,52); R3(c,d,e,a,b,53); R3(b,c,d,e,a,54); R3(a,b,c,d,e,55);
-+    R3(e,a,b,c,d,56); R3(d,e,a,b,c,57); R3(c,d,e,a,b,58); R3(b,c,d,e,a,59);
-+    R4(a,b,c,d,e,60); R4(e,a,b,c,d,61); R4(d,e,a,b,c,62); R4(c,d,e,a,b,63);
-+    R4(b,c,d,e,a,64); R4(a,b,c,d,e,65); R4(e,a,b,c,d,66); R4(d,e,a,b,c,67);
-+    R4(c,d,e,a,b,68); R4(b,c,d,e,a,69); R4(a,b,c,d,e,70); R4(e,a,b,c,d,71);
-+    R4(d,e,a,b,c,72); R4(c,d,e,a,b,73); R4(b,c,d,e,a,74); R4(a,b,c,d,e,75);
-+    R4(e,a,b,c,d,76); R4(d,e,a,b,c,77); R4(c,d,e,a,b,78); R4(b,c,d,e,a,79);
-+
-+    /* Add the working vars back into context.state[] */
-+    state[0] += a;
-+    state[1] += b;
-+    state[2] += c;
-+    state[3] += d;
-+    state[4] += e;
-+
-+    /* Wipe variables */
-+    a = b = c = d = e = 0;
-+}
-+
-+
-+/* SHA1Init - Initialize new context */
-+void SHA1_Init(SHA1_CTX* context)
-+{
-+    /* SHA1 initialization constants */
-+    context->state[0] = 0x67452301;
-+    context->state[1] = 0xEFCDAB89;
-+    context->state[2] = 0x98BADCFE;
-+    context->state[3] = 0x10325476;
-+    context->state[4] = 0xC3D2E1F0;
-+    context->count[0] = context->count[1] = 0;
-+}
-+
-+
-+/* Run your data through this. */
-+void SHA1_Update(SHA1_CTX* context, const uint8_t* data, const size_t len)
-+{
-+    size_t i, j;
-+
-+#ifdef VERBOSE
-+    SHAPrintContext(context, "before");
-+#endif
-+
-+    j = (context->count[0] >> 3) & 63;
-+    if ((context->count[0] += len << 3) < (len << 3)) context->count[1]++;
-+    context->count[1] += (len >> 29);
-+    if ((j + len) > 63) {
-+        memcpy(&context->buffer[j], data, (i = 64-j));
-+        SHA1_Transform(context->state, context->buffer);
-+        for ( ; i + 63 < len; i += 64) {
-+            SHA1_Transform(context->state, data + i);
-+        }
-+        j = 0;
-+    }
-+    else i = 0;
-+    memcpy(&context->buffer[j], &data[i], len - i);
-+
-+#ifdef VERBOSE
-+    SHAPrintContext(context, "after ");
-+#endif
-+}
-+
-+
-+/* Add padding and return the message digest. */
-+void SHA1_Final(SHA1_CTX* context, uint8_t digest[SHA1_DIGEST_SIZE])
-+{
-+    uint32_t i;
-+    uint8_t  finalcount[8];
-+
-+    for (i = 0; i < 8; i++) {
-+        finalcount[i] = (unsigned char)((context->count[(i >= 4 ? 0 : 1)]
-+         >> ((3-(i & 3)) * 8) ) & 255);  /* Endian independent */
-+    }
-+    SHA1_Update(context, (uint8_t *)"\200", 1);
-+    while ((context->count[0] & 504) != 448) {
-+        SHA1_Update(context, (uint8_t *)"\0", 1);
-+    }
-+    SHA1_Update(context, finalcount, 8);  /* Should cause a SHA1_Transform() */
-+    for (i = 0; i < SHA1_DIGEST_SIZE; i++) {
-+        digest[i] = (uint8_t)
-+         ((context->state[i>>2] >> ((3-(i & 3)) * 8) ) & 255);
-+    }
-+
-+    /* Wipe variables */
-+    i = 0;
-+    memset(context->buffer, 0, 64);
-+    memset(context->state, 0, 20);
-+    memset(context->count, 0, 8);
-+    memset(finalcount, 0, 8);	/* SWR */
-+
-+#ifdef SHA1HANDSOFF  /* make SHA1Transform overwrite its own static vars */
-+    SHA1_Transform(context->state, context->buffer);
-+#endif
-+}
-+
-+/*************************************************************/
-+
-+#if 0
-+int main(int argc, char** argv)
-+{
-+int i, j;
-+SHA1_CTX context;
-+unsigned char digest[SHA1_DIGEST_SIZE], buffer[16384];
-+FILE* file;
-+
-+    if (argc > 2) {
-+        puts("Public domain SHA-1 implementation - by Steve Reid <sreid@sea-to-sky.net>");
-+        puts("Modified for 16 bit environments 7/98 - by James H. Brown <jbrown@burgoyne.com>");	/* JHB */
-+        puts("Produces the SHA-1 hash of a file, or stdin if no file is specified.");
-+        return(0);
-+    }
-+    if (argc < 2) {
-+        file = stdin;
-+    }
-+    else {
-+        if (!(file = fopen(argv[1], "rb"))) {
-+            fputs("Unable to open file.", stderr);
-+            return(-1);
-+        }
-+    }
-+    SHA1_Init(&context);
-+    while (!feof(file)) {  /* note: what if ferror(file) */
-+        i = fread(buffer, 1, 16384, file);
-+        SHA1_Update(&context, buffer, i);
-+    }
-+    SHA1_Final(&context, digest);
-+    fclose(file);
-+    for (i = 0; i < SHA1_DIGEST_SIZE/4; i++) {
-+        for (j = 0; j < 4; j++) {
-+            printf("%02X", digest[i*4+j]);
-+        }
-+        putchar(' ');
-+    }
-+    putchar('\n');
-+    return(0);	/* JHB */
-+}
-+#endif
-+
-+/* self test */
-+
-+#ifdef TEST
-+
-+static char *test_data[] = {
-+    "abc",
-+    "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
-+    "A million repetitions of 'a'"};
-+static char *test_results[] = {
-+    "A9993E36 4706816A BA3E2571 7850C26C 9CD0D89D",
-+    "84983E44 1C3BD26E BAAE4AA1 F95129E5 E54670F1",
-+    "34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F"};
-+
-+
-+void digest_to_hex(const uint8_t digest[SHA1_DIGEST_SIZE], char *output)
-+{
-+    int i,j;
-+    char *c = output;
-+
-+    for (i = 0; i < SHA1_DIGEST_SIZE/4; i++) {
-+        for (j = 0; j < 4; j++) {
-+            sprintf(c,"%02X", digest[i*4+j]);
-+            c += 2;
-+        }
-+        sprintf(c, " ");
-+        c += 1;
-+    }
-+    *(c - 1) = '\0';
-+}
-+
-+int main(int argc, char** argv)
-+{
-+    int k;
-+    SHA1_CTX context;
-+    uint8_t digest[20];
-+    char output[80];
-+
-+    fprintf(stdout, "verifying SHA-1 implementation... ");
-+
-+    for (k = 0; k < 2; k++){
-+        SHA1_Init(&context);
-+        SHA1_Update(&context, (uint8_t*)test_data[k], strlen(test_data[k]));
-+        SHA1_Final(&context, digest);
-+	digest_to_hex(digest, output);
-+
-+        if (strcmp(output, test_results[k])) {
-+            fprintf(stdout, "FAIL\n");
-+            fprintf(stderr,"* hash of \"%s\" incorrect:\n", test_data[k]);
-+            fprintf(stderr,"\t%s returned\n", output);
-+            fprintf(stderr,"\t%s is correct\n", test_results[k]);
-+            return (1);
-+        }
-+    }
-+    /* million 'a' vector we feed separately */
-+    SHA1_Init(&context);
-+    for (k = 0; k < 1000000; k++)
-+        SHA1_Update(&context, (uint8_t*)"a", 1);
-+    SHA1_Final(&context, digest);
-+    digest_to_hex(digest, output);
-+    if (strcmp(output, test_results[2])) {
-+        fprintf(stdout, "FAIL\n");
-+        fprintf(stderr,"* hash of \"%s\" incorrect:\n", test_data[2]);
-+        fprintf(stderr,"\t%s returned\n", output);
-+        fprintf(stderr,"\t%s is correct\n", test_results[2]);
-+        return (1);
-+    }
-+
-+    /* success */
-+    fprintf(stdout, "ok\n");
-+    return(0);
-+}
-+#endif /* TEST */
-diff --git a/sha1.h b/sha1.h
-new file mode 100644
-index 0000000..e57a8c3
---- /dev/null
-+++ b/sha1.h
-@@ -0,0 +1,27 @@
-+/* public api for steve reid's public domain SHA-1 implementation */
-+/* this file is in the public domain */
-+
-+#ifndef __SHA1_H
-+#define __SHA1_H
-+
-+#ifdef __cplusplus
-+extern "C" {
-+#endif
-+
-+typedef struct {
-+    uint32_t state[5];
-+    uint32_t count[2];
-+    uint8_t  buffer[64];
-+} SHA1_CTX;
-+
-+#define SHA1_DIGEST_SIZE 20
-+
-+void SHA1_Init(SHA1_CTX* context);
-+void SHA1_Update(SHA1_CTX* context, const uint8_t* data, const size_t len);
-+void SHA1_Final(SHA1_CTX* context, uint8_t digest[SHA1_DIGEST_SIZE]);
-+
-+#ifdef __cplusplus
-+}
-+#endif
-+
-+#endif /* __SHA1_H */
-diff --git a/verify_checksums.sh b/verify_checksums.sh
-index 88915e4..6878ca5 100755
---- a/verify_checksums.sh
-+++ b/verify_checksums.sh
-@@ -27,7 +27,7 @@ verify_family_checksum()
- 	[ "$sum_hal" == "$sum_ath9k" ] && res="pass" || res="fail"
- 	printf "%-14s %-40s %s\n" "$family" "$sum_hal" "$res"
- 	[ "$res" == "fail" ] && \
--		diff -Nurw "$CSUM_DIR/${family}_hal.txt" "$CSUM_DIR/${family}_ath9k.txt" | grep '^+0'
-+		diff -Nurw "$CSUM_DIR/${family}_hal.txt" "$CSUM_DIR/${family}_ath9k.txt" | grep '^+[0-9a-f]'
- }
- 
- FAMILIES="$@"
++#endif /* INITVALS_9330_1P2_H */
 -- 
 1.7.2.1
 
