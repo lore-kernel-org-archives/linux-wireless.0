@@ -1,58 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog119.obsmtp.com ([207.126.144.147]:54435 "EHLO
-	eu1sys200aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753775Ab1LWJCh (ORCPT
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:48306 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752190Ab1LSK7R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Dec 2011 04:02:37 -0500
-From: Darshan Kumar NANDANWAR <Darshan.KN@st.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Srikrishna Pramoda ATIKUKKE <srikrishna.pramodaatikukke@st.com>,
-	Darshan Nandanwar <dk.manit@gmail.com>
-Date: Fri, 23 Dec 2011 17:02:20 +0800
-Subject: RE: insmod RTL8192CE OOPS on 2.6.32.16
-Message-ID: <D6068D304DED1F4FBFC1F56ECFA211D85A1EA7C089@EAPEX1MAIL1.st.com> (sfid-20111223_100241_693519_F0ED3BB5)
-References: <D6068D304DED1F4FBFC1F56ECFA211D85A1EA7BBF0@EAPEX1MAIL1.st.com>
- <4EF1F32F.8070704@lwfinger.net> <20111221151605.GA11842@tuxdriver.com>
- <4EF235B9.3020805@lwfinger.net>
- <D6068D304DED1F4FBFC1F56ECFA211D85A1EA7BE7A@EAPEX1MAIL1.st.com>
- <4EF3559C.9060500@lwfinger.net>
-In-Reply-To: <4EF3559C.9060500@lwfinger.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Mon, 19 Dec 2011 05:59:17 -0500
+Received: by lagv3 with SMTP id v3so339642lag.0
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 02:59:15 -0800 (PST)
+Subject: Re: [PATCH v2 1/7] wl12xx: implement change_interface
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1324288803-1666-1-git-send-email-eliad@wizery.com>
+References: <1324288803-1666-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 19 Dec 2011 12:59:10 +0200
+Message-ID: <1324292350.2800.280.camel@cumari> (sfid-20111219_115921_221165_E058627F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-TGFycnkgLA0KTWFueSB0aGFua3MgLllvdXIgcGF0Y2ggaGVscGVkIG1lIGdldCBvdmVyIHRoYXQg
-aXNzdWUuLiBCdXQgbm93ICBJIGFtIGdldHRpbmcgZm9sbG93aW5nIGVycm9yIHdoaWNoIGlzIG1h
-eSBiZSBiZWNhdXNlIG9mIGZpcm13YXJlIGlzIG5vdCByZXNwb25kaW5nOg0KDQpQQ0k6IEVuYWJs
-aW5nIGRldmljZSAwMDAwOjAwOjAxLjAgKDAwMDAgLT4gMDAwMykNCnJ0bDgxOTJjZSAwMDAwOjAw
-OjAxLjA6IGVuYWJsaW5nIGJ1cyBtYXN0ZXJpbmcNClBDSTogU2V0dGluZyBsYXRlbmN5IHRpbWVy
-IG9mIGRldmljZSAwMDAwOjAwOjAxLjAgdG8gNjQNCnJ0bDgxOTJjZTpydGw5MmNlX3JlYWRfZWVw
-cm9tX2luZm8oKTo8MC0wPiBBdXRvbG9hZCBFUlIhIQ0KcnRsODE5MmNlOnJ0bDkyY19pbml0X3N3
-X3ZhcnMoKTo8MC0wPiBGYWlsZWQgdG8gcmVxdWVzdCBmaXJtd2FyZSENCnJ0bHdpZmk6cnRsX3Bj
-aV9wcm9iZSgpOjwwLTA+IENhbid0IGluaXRfc3dfdmFycy4NCg0KSSBoYXZlIHB1bGxlZCB1cCBs
-YXRlc3QgYnJhbmNoICBvZiBsaW51eC1maXJtd2FyZS5naXQgYW5kIHVzaW5nIGZpcm13YXJlIHJ0
-bHdpZmkvcnRsODE5MmNmdy5iaW4gbG9jYXRlZCBpbiAvbGliL2Zpcm13YXJlIC4uIFBsZWFzZSBn
-aXZlIG1lIHNvbWUgcG9pbnRlcnMgc28gdGhhdCBJIGNhbiBnZXQgb3ZlciB0aGlzIG5vdy4uLg0K
-DQoNCg0KVGhhbmtzDQpEYXJzaGFuIGt1bWFyDQoNCg0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2Fn
-ZS0tLS0tDQpGcm9tOiBMYXJyeSBGaW5nZXIgW21haWx0bzpsYXJyeS5maW5nZXJAZ21haWwuY29t
-XSBPbiBCZWhhbGYgT2YgTGFycnkgRmluZ2VyDQpTZW50OiBUaHVyc2RheSwgRGVjZW1iZXIgMjIs
-IDIwMTEgOTozNyBQTQ0KVG86IERhcnNoYW4gS3VtYXIgTkFOREFOV0FSDQpDYzogSm9obiBXLiBM
-aW52aWxsZTsgd2lyZWxlc3M7IFNyaWtyaXNobmEgUHJhbW9kYSBBVElLVUtLRQ0KU3ViamVjdDog
-UmU6IGluc21vZCBSVEw4MTkyQ0UgT09QUyBvbiAyLjYuMzIuMTYNCg0KT24gMTIvMjIvMjAxMSAw
-NDowOSBBTSwgRGFyc2hhbiBLdW1hciBOQU5EQU5XQVIgd3JvdGU6DQo+IE9PUHMgaXMgaW4gIGZv
-bGxvd2luZyBpbnN0cnVjdGlvbiA6DQo+IHBjaXByaXYtPm5kaXNfYWRhcHRlci5wY2licmlkZ2Vf
-dmVuZG9yaWQgPSBicmlkZ2VfcGRldi0+dmVuZG9yOw0KPiA2NTY6ICAgICAgIDE1IDBhICAgICAg
-ICAgICBtb3YudyAgIHIxLEAocjAscjEwKQ0KPiBJIGhhdmUgYXR0YWNoZWQgdGhlIG9iamR1bXAg
-YXN3ZWxsIC4uDQo+DQo+Pj4gVGhlIGZpeCBjYW1lIHdpdGggY29tbWl0IGI2YjY3ZGYzZjI0YzQ1
-YWYwMDEyZWUsIHdoaWNoIGlzIGRhdGVkIEp1bCAyOS4NCj4gV2hhdCBpcyB0aGlzIGFsbCBhYm91
-dD8gQ291bGQgeW91IHBvaW50IHRvICB0aGlzIGNvbW1pdD8NCg0KS2VybmVsIHNvdXJjZSBpcyBu
-b3cgbWFpbnRhaW5lZCB1c2luZyBnaXQsIHdoaWNoIGtlZXBzIHRyYWNrIG9mIGNoYW5nZXMgdXNp
-bmcgdGhlIHNoYTFzdW0gb2YgdGhlIGNoYW5nZXMuIFRoZSBJRCBhYm92ZSBpcyB0aGUgbGVhZGlu
-ZyBkaWdpdHMgb2YgdGhhdCBzdW0uDQoNClRoZSBwYXRjaCBpbiBxdWVzdGlvbiBpcyBhdHRhY2hl
-ZC4gSXQgaGFuZGxlcyB0aGUgY2FzZXMgd2hlcmUgdGhlIHNlbGYgbWVtYmVyIG9mIHRoZSBwY2lf
-YnVzIHN0cnVjdCBpcyBub3QgcHJlc2VudC4gSXQgYXBwZWFycyBub3QgdG8gaGF2ZSBiZWVuIGFw
-cGxpZWQgdG8geW91ciBzb3VyY2UuIERvZXMgdGhpcyBwYXRjaCBmaXggeW91ciBwcm9ibGVtPw0K
-DQpMYXJyeQ0KDQoNCg==
+On Mon, 2011-12-19 at 12:00 +0200, Eliad Peller wrote: 
+> Implement the change_interface callback by simply removing the
+> current vif and adding a new one after updating the vif type.
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
+> v2: update vif->p2p as well
+> 
+>  drivers/net/wireless/wl12xx/main.c |   12 ++++++++++++
+>  1 files changed, 12 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+> index c305841..82fc318 100644
+> --- a/drivers/net/wireless/wl12xx/main.c
+> +++ b/drivers/net/wireless/wl12xx/main.c
+> @@ -2269,6 +2269,17 @@ out:
+>  	cancel_work_sync(&wl->recovery_work);
+>  }
+>  
+> +static int wl12xx_op_change_interface(struct ieee80211_hw *hw,
+> +				      struct ieee80211_vif *vif,
+> +				      enum nl80211_iftype new_type, bool p2p)
+> +{
+> +	wl1271_op_remove_interface(hw, vif);
+> +
+> +	vif->type = ieee80211_iftype_p2p(new_type, p2p);
+> +	vif->p2p = p2p;
+> +	return wl1271_op_add_interface(hw, vif);
+> +}
+> +
+
+As Arik already commented, this looks a bit weird.  Shouldn't the type
+and p2p elements be changed in mac80211 itself? What about doing so if
+the op_change_interface returns success? Currently, the opposite seems
+to happen (ie. mac80211 changes type back to the original vif.type if
+the op fails).
+
+Also, it seems that the p2p value will be overwritten in the
+ieee80211_setup_sdata() which is called just after this op returns, so
+there's no use to do it here.
+
+-- 
+Cheers,
+Luca.
+
