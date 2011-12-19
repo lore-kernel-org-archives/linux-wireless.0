@@ -1,72 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:59020 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752258Ab1LKT4t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Dec 2011 14:56:49 -0500
+Received: from arrakis.dune.hu ([78.24.191.176]:34052 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753325Ab1LSVZY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 16:25:24 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: Rodriguez Luis <rodrigue@qca.qualcomm.com>
+Cc: mcgrof@infradead.org, linux-wireless@vger.kernel.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 08/15] initvals: remove unused variable
+Date: Mon, 19 Dec 2011 22:24:53 +0100
+Message-Id: <1324329900-3923-9-git-send-email-juhosg@openwrt.org> (sfid-20111219_222539_483609_A520261B)
+In-Reply-To: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
+References: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <CANUX_P2YeE1ixzFU5VM-oex0aTURqr54VHt5FVAL9BJ0PuRX_A@mail.gmail.com>
-References: <20111125122143.GA30404@gamma.logic.tuwien.ac.at>
-	<CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com>
-	<20111125123720.GA31564@gamma.logic.tuwien.ac.at>
-	<CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com>
-	<CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com>
-	<1322387175.4044.16.camel@jlt3.sipsolutions.net>
-	<CANUX_P3uoNOj3j-REvYCZP382cHfq+DpBRi7fnzFfMG_dyHtTQ@mail.gmail.com>
-	<20111128035627.GH1422@gamma.logic.tuwien.ac.at>
-	<CANUX_P2kYiFCP8uAhLZC_kVEjoyxabRBx3Pn+ndtFus=6hJN7Q@mail.gmail.com>
-	<20111128042343.GA4619@gamma.logic.tuwien.ac.at>
-	<20111128232525.GA12719@gamma.logic.tuwien.ac.at>
-	<CANUX_P2b_ZYr4hHigA+tGa9uakcq3hQXnOiP5isQtfcYxCaxcw@mail.gmail.com>
-	<1322555472.4110.8.camel@jlt3.sipsolutions.net>
-	<CANUX_P2YeE1ixzFU5VM-oex0aTURqr54VHt5FVAL9BJ0PuRX_A@mail.gmail.com>
-Date: Sun, 11 Dec 2011 21:56:47 +0200
-Message-ID: <CANUX_P0sCPAWTsSVXpL3w5witnVi6wrtzTgJ0y6HjC-TYC9swg@mail.gmail.com> (sfid-20111211_205653_080789_838FD1AA)
-Subject: Re: iwlagn is getting very shaky
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Norbert Preining <preining@logic.at>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dave Jones <davej@redhat.com>,
-	David Rientjes <rientjes@google.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> Could something be hogging the workqueues?
->>
->
->
-> So I tried to understand what is going on with the workqueue and ended
-> up to see that if we are lucky, we can need the workqueue for the BA
-> handshake (could be AddBA / DelBA handling, or driver callback) while
-> we are scanning. Which basically means that we will need to wait until
-> the scan is over to handle these frames / callbacks. I got these
-> measurements while stopping the BA session:
->
-> * scanning working for roughly 3 seconds (pardon me not being precise,
-> but with this order of magnitude I don't care much about the single
-> millisecond..)
-> * when scanning is over, the while loop in ieee80211_iface_work
-> consumes 73 mgmt for about 34ms.
-> ( how come we have so many beacons during those 3 seconds..., or maybe
-> all the BCAST probe request ?, my network is quite busy...)
-> * then the finally my stop_tx_ba_cb was served which took 10ms (time
-> takes by the driver).
-> * another series of beacons (10ms).
+The patch fixes the following warning
+(with CFLAGS=-Wunused):
 
-What about flushing the workqueue before we scan ?
-This is not a bullet proof solution of course, we will still encounter
-bad races, but at least  we would flush what we can before the
-workqueue becomes unable for 4 seconds (!).
-We can also delay the scan if we are in the middle of {add,del}BA
-handshake, which is the only flow I can think about that needs
-responsiveness. The other frame exchanges are MLME ones and involve
-the wpa_supplicant (unless we are using the late WEXT). Hopefully the
-wpa_supplicant won't request to scan in the middle of association or
-so. There might be other features (mesh or whatever), that may be
-hidden from the wpa_supplicant and require good responsiveness from
-the wq too.
+initvals.c: In function ‘ath9k_hw_print_initval’:
+initvals.c:315: warning: unused variable ‘chksum’
+
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ initvals.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/initvals.c b/initvals.c
+index c9235d2..a12573a 100644
+--- a/initvals.c
++++ b/initvals.c
+@@ -312,7 +312,7 @@ static u32 ath9k_patch_initval(u32 idx, u32 val)
+ 
+ static void ath9k_hw_print_initval(const u32 *array, u32 rows, u32 columns, bool onedim)
+ {
+-	u32 chksum, col, row;
++	u32 col, row;
+ 
+ 	/*
+ 	 * This checksum stuff is designed for columns <= 8),
+-- 
+1.7.2.1
+
