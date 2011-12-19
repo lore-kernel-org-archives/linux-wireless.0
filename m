@@ -1,69 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:41156 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753805Ab1LTCdt (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:57109 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752931Ab1LSNes (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 21:33:49 -0500
-Received: by ggdk6 with SMTP id k6so4459801ggd.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 18:33:49 -0800 (PST)
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: mcgrof@frijolero.org
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>, greg@kroah.com,
-	kvalo@qca.qualcomm.com, linville@tuxdriver.com,
-	senthilb@qca.qualcomm.com, johannes@sipsolutions.net
-Subject: [PATCH] compat-wireless: use linux-stable instead of linux-2.6-allstable
-Date: Mon, 19 Dec 2011 18:33:42 -0800
-Message-Id: <1324348422-25090-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111220_033353_228487_67ECDAAC)
+	Mon, 19 Dec 2011 08:34:48 -0500
+Date: Mon, 19 Dec 2011 11:35:24 -0200
+From: Gustavo Padovan <padovan@profusion.mobi>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: bluetooth 2011-12-19
+Message-ID: <20111219133524.GB2610@joana> (sfid-20111219_143518_118325_297E3E03)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Hi John,
 
-I used to use hpa's linux-2.6-allstable.git tree to make
-stable releases of compat-wireless. This allowed me to
-make updates to the stable releases whenever a 2.6.x.y
-extraversion got out -- but also to make updates whenever
-Linus updated his own tree so I can make RC releases
-based on the latest RC release. Greg has taken over of
-that tree and its now called linux-stable.git. What I am
-seeing though is that the linux-stable git tree now seems
-to not update as often to Linus' tree. This is fine as all
-I have to do is add Linus' tree as a remote and fetch
-those objects and then reset the tree to say, v3.2-rc6
-and that'll get what Linus' tree looks like today.
+3 fixes for 3.2! There one revert that was causing connection issues, a RFCOMM
+fix to a potential kernel panic, and the last on L2CAP to a possible access to
+uninitialized data due to broken remote devices.
 
-This patch just changes the path where we pick up stable
-releases from but also documents this change in case
-anyone that wants to make stable release must also add
-Linus' tree as a remote and fetch those objects.
+Please pull, or let me know any problems.
 
-Cc: greg@kroah.com
-CC: kvalo@qca.qualcomm.com
-Cc: linville@tuxdriver.com
-Cc: senthilb@qca.qualcomm.com
-Cc: johannes@sipsolutions.net
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- scripts/gen-stable-release.sh |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+	Gustavo
 
-diff --git a/scripts/gen-stable-release.sh b/scripts/gen-stable-release.sh
-index d01cb36..a271074 100755
---- a/scripts/gen-stable-release.sh
-+++ b/scripts/gen-stable-release.sh
-@@ -22,7 +22,10 @@ PURPLE="\033[35m"
- CYAN="\033[36m"
- UNDERLINE="\033[02m"
- 
--ALL_STABLE_TREE="linux-2.6-allstable"
-+# Note that this tree may not have the latest RC stuff, so you should also add
-+# Linus' tree as a remote and fetch those objects if you want to make an RC
-+# release instead.
-+ALL_STABLE_TREE="linux-stable"
- STAGING=/tmp/staging/compat-wireless/
- 
- function usage()
--- 
-1.7.4.15.g7811d
+The following changes since commit 78feb35b8161acd95c33a703ed6ab6f554d29387:
+
+  iwlwifi: allow to switch to HT40 if not associated (2011-12-14 13:56:55 -0500)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth master
+
+Gustavo F. Padovan (1):
+      Revert "Bluetooth: Revert: Fix L2CAP connection establishment"
+
+Mat Martineau (2):
+      Bluetooth: Prevent uninitialized data access in L2CAP configuration
+      Bluetooth: Clear RFCOMM session timer when disconnecting last channel
+
+ net/bluetooth/hci_conn.c    |    2 +-
+ net/bluetooth/l2cap_core.c  |   12 +++++++++++-
+ net/bluetooth/rfcomm/core.c |    1 +
+ 3 files changed, 13 insertions(+), 2 deletions(-)
 
