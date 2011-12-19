@@ -1,107 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:38413 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932673Ab1LERcu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Dec 2011 12:32:50 -0500
-Received: by bkbzv3 with SMTP id zv3so2114177bkb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Dec 2011 09:32:49 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org, Arend Van Spriel <arend@broadcom.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: pci: use fixed windows when possible
-Date: Mon,  5 Dec 2011 19:13:39 +0100
-Message-Id: <1323108819-15063-1-git-send-email-zajec5@gmail.com> (sfid-20111205_183301_540179_01F9315C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from arrakis.dune.hu ([78.24.191.176]:33981 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752287Ab1LSVZP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 16:25:15 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: Rodriguez Luis <rodrigue@qca.qualcomm.com>
+Cc: mcgrof@infradead.org, linux-wireless@vger.kernel.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 02/15] initvals: fix typos in usage text
+Date: Mon, 19 Dec 2011 22:24:47 +0100
+Message-Id: <1324329900-3923-3-git-send-email-juhosg@openwrt.org> (sfid-20111219_222521_674050_F531B19C)
+In-Reply-To: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
+References: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some cores are mapped in the fixed way, they registers can be accessed
-all the time.
-
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 ---
- drivers/bcma/host_pci.c |   32 +++++++++++++++++++++-----------
- 1 files changed, 21 insertions(+), 11 deletions(-)
+ initvals.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index 1b51d8b..b0994c0 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -21,48 +21,58 @@ static void bcma_host_pci_switch_core(struct bcma_device *core)
- 	pr_debug("Switched to core: 0x%X\n", core->id.id);
- }
+diff --git a/initvals.c b/initvals.c
+index 5923823..caa4aa9 100644
+--- a/initvals.c
++++ b/initvals.c
+@@ -601,7 +601,7 @@ static void ar9580_1p0_hw_print_initvals(bool check)
  
--static u8 bcma_host_pci_read8(struct bcma_device *core, u16 offset)
-+/* Provides access to the requested core. Returns base offset that has to be
-+ * used. It makes use of fixed windows when possible. */
-+static u16 bcma_host_pci_provide_access_to_core(struct bcma_device *core)
+ static void usage()
  {
-+	switch (core->id.id) {
-+	case BCMA_CORE_CHIPCOMMON:
-+		return 3 * BCMA_CORE_SIZE;
-+	case BCMA_CORE_PCIE:
-+		return 2 * BCMA_CORE_SIZE;
-+	}
-+
- 	if (core->bus->mapped_core != core)
- 		bcma_host_pci_switch_core(core);
-+	return 0;
-+}
-+
-+static u8 bcma_host_pci_read8(struct bcma_device *core, u16 offset)
-+{
-+	offset += bcma_host_pci_provide_access_to_core(core);
- 	return ioread8(core->bus->mmio + offset);
+-	printf("Usage: initvals [-w] [-f ar5008 | ar9001 | ar9002 | ar9003-2p2 | ar9300-1p1 | ar9300-1p2 | ar9485 | ar9580-1p0 ]\n");
++	printf("Usage: initvals [-w] [-f ar5008 | ar9001 | ar9002 | ar9003-2p2 | ar9330-1p1 | ar9330-1p2 | ar9485 | ar9580-1p0 ]\n");
  }
  
- static u16 bcma_host_pci_read16(struct bcma_device *core, u16 offset)
- {
--	if (core->bus->mapped_core != core)
--		bcma_host_pci_switch_core(core);
-+	offset += bcma_host_pci_provide_access_to_core(core);
- 	return ioread16(core->bus->mmio + offset);
- }
- 
- static u32 bcma_host_pci_read32(struct bcma_device *core, u16 offset)
- {
--	if (core->bus->mapped_core != core)
--		bcma_host_pci_switch_core(core);
-+	offset += bcma_host_pci_provide_access_to_core(core);
- 	return ioread32(core->bus->mmio + offset);
- }
- 
- static void bcma_host_pci_write8(struct bcma_device *core, u16 offset,
- 				 u8 value)
- {
--	if (core->bus->mapped_core != core)
--		bcma_host_pci_switch_core(core);
-+	offset += bcma_host_pci_provide_access_to_core(core);
- 	iowrite8(value, core->bus->mmio + offset);
- }
- 
- static void bcma_host_pci_write16(struct bcma_device *core, u16 offset,
- 				 u16 value)
- {
--	if (core->bus->mapped_core != core)
--		bcma_host_pci_switch_core(core);
-+	offset += bcma_host_pci_provide_access_to_core(core);
- 	iowrite16(value, core->bus->mmio + offset);
- }
- 
- static void bcma_host_pci_write32(struct bcma_device *core, u16 offset,
- 				 u32 value)
- {
--	if (core->bus->mapped_core != core)
--		bcma_host_pci_switch_core(core);
-+	offset += bcma_host_pci_provide_access_to_core(core);
- 	iowrite32(value, core->bus->mmio + offset);
- }
- 
+ print_initvals_family(char *family, bool check)
 -- 
-1.7.3.4
+1.7.2.1
 
