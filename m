@@ -1,53 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:42683 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757269Ab1LNQXi (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:37770 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901Ab1LSQMC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 11:23:38 -0500
-Date: Wed, 14 Dec 2011 10:23:33 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Problems associating with RTL8188CE
-Message-ID: <20111214162333.GB19410@thinkpad-t410> (sfid-20111214_172342_114759_E2AD2951)
-References: <4EC88F58.1080203@lwfinger.net>
- <20111121181350.GC6736@thinkpad-t410>
- <4ECA99CC.7020008@lwfinger.net>
- <20111121185610.GD6736@thinkpad-t410>
- <4ECB028E.3030809@lwfinger.net>
- <20111122022008.GA17661@thinkpad-t410>
- <20111213194231.GA30788@thinkpad-t410>
- <4EE7B85E.3070802@lwfinger.net>
- <20111213212606.GB30788@thinkpad-t410>
- <4EE82CC6.2030307@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4EE82CC6.2030307@lwfinger.net>
+	Mon, 19 Dec 2011 11:12:02 -0500
+Received: by yhr47 with SMTP id 47so4110383yhr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 08:12:01 -0800 (PST)
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
+Subject: [PATCH] ath9k: classify DFS debug header further
+Date: Mon, 19 Dec 2011 08:11:54 -0800
+Message-Id: <1324311114-4566-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111219_171206_942643_13CE2CD9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 13, 2011 at 10:57:42PM -0600, Larry Finger wrote:
-> Seth,
-> 
-> On 12/13/2011 03:26 PM, Seth Forshee wrote:
-> >
-> >The capture files are available at:
-> >
-> >http://people.canonical.com/~sforshee/rtl8188ce/
-> 
-> The major difference is that the "bad" AP implements 802.11n HT40
-> technology, but the "good" one does not.
-> 
-> There was a period when rtl8192ce and rtl8192cu had a bug that
-> prevented them from associating with 802.11n APs, but that was fixed
-> a long time ago. I can communicate with my Netgear WNDR3300 AP that
-> implements full 802.11 capabilities.
-> 
-> What kernel are you running? If you implement the bleeding-edge
-> compat-wireless release, does that help.
+From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 
-I'm running 3.2-rc5 currently. The results are the same with
-bleeding-edge compat-wireless.
+DFS_DEBUG_H is very generic, instead use something more specific
+to ath9k such as ATH9K_DFS_DEBUG_H.
 
-Seth
+Reported-by: Julian Calaby <julian.calaby@gmail.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/dfs_debug.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/dfs_debug.h b/drivers/net/wireless/ath/ath9k/dfs_debug.h
+index 6e1e2a7..4911724 100644
+--- a/drivers/net/wireless/ath/ath9k/dfs_debug.h
++++ b/drivers/net/wireless/ath/ath9k/dfs_debug.h
+@@ -16,8 +16,8 @@
+  */
+ 
+ 
+-#ifndef DFS_DEBUG_H
+-#define DFS_DEBUG_H
++#ifndef ATH9K_DFS_DEBUG_H
++#define ATH9K_DFS_DEBUG_H
+ 
+ #include "hw.h"
+ 
+@@ -54,4 +54,4 @@ static inline void ath9k_dfs_init_debug(struct ath_softc *sc) { }
+ 
+ #endif /* CONFIG_ATH9K_DFS_DEBUGFS */
+ 
+-#endif /* DFS_DEBUG_H */
++#endif /* ATH9K_DFS_DEBUG_H */
+-- 
+1.7.4.15.g7811d
+
