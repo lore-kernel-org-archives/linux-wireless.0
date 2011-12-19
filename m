@@ -1,45 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:27979 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752376Ab1LTTMb (ORCPT
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:52778 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751229Ab1LSOcH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 14:12:31 -0500
-Date: Tue, 20 Dec 2011 11:12:28 -0800
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/6] atheros-wireless: fix sparse warnings ho ho ho
-Message-ID: <20111220191228.GC15071@tux> (sfid-20111220_201239_685878_4A9CA633)
-References: <1324406771-7100-1-git-send-email-rodrigue@qca.qualcomm.com>
- <4EF0DB90.50100@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4EF0DB90.50100@lwfinger.net>
+	Mon, 19 Dec 2011 09:32:07 -0500
+Received: by lahl5 with SMTP id l5so4058390lah.27
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 06:32:04 -0800 (PST)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH] wl12xx: add missing copyright notice
+Date: Mon, 19 Dec 2011 16:31:55 +0200
+Message-Id: <1324305115-14963-1-git-send-email-coelho@ti.com> (sfid-20111219_153211_798740_C7BB91B3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 20, 2011 at 01:01:36PM -0600, Larry Finger wrote:
-> On 12/20/2011 12:46 PM, Luis R. Rodriguez wrote:
-> >From: Luis R. Rodriguez<mcgrof@qca.qualcomm.com>
-> >
-> >Here's a slew of sparse warning fixes for all Atheros wireless drivers.
-> >These have been itching me for a while now. I ask all patch submitters
-> >and driver maintainers to please run their patches with these two tests:
-> >
-> >make C=1 M=drivers/net/wireless/ath/
-> >
-> >And then if all is happy try:
-> >
-> >make C=2 CF="-D__CHECK_ENDIAN__" M=drivers/net/wireless/ath/
-> 
-> Why not follow a suggestion that Johannes made to me? Add the line
-> 
-> ccflags-y += -D__CHECK_ENDIAN__
-> 
-> To the bottom of the make file(s). That way they only need one run.
-> Then enforce the rule by not ACKing any patches with too many of the
-> endian warnings, and do not allow any of the others.
+The wl12xx_platform_data.c file did not have a proper copyright
+notice.
 
-Awesome idea.
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/wl12xx_platform_data.c |   21 ++++++++++++++++++++
+ 1 files changed, 21 insertions(+), 0 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/wl12xx/wl12xx_platform_data.c b/drivers/net/wireless/wl12xx/wl12xx_platform_data.c
+index 3c96b33..998e958 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx_platform_data.c
++++ b/drivers/net/wireless/wl12xx/wl12xx_platform_data.c
+@@ -1,3 +1,24 @@
++/*
++ * This file is part of wl12xx
++ *
++ * Copyright (C) 2010-2011 Texas Instruments, Inc.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
++ * 02110-1301 USA
++ *
++ */
++
+ #include <linux/module.h>
+ #include <linux/err.h>
+ #include <linux/wl12xx.h>
+-- 
+1.7.4.1
+
