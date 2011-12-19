@@ -1,76 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:15336 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760205Ab1LPQh5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 11:37:57 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 16/24] iwlwifi: add debug in Tx path in AGG flow
-Date: Fri, 16 Dec 2011 07:37:21 -0800
-Message-Id: <1324049849-831-17-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111216_173826_160478_17812EC2)
-In-Reply-To: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:36552 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752513Ab1LSNVx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 08:21:53 -0500
+Received: by iaeh11 with SMTP id h11so8543514iae.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 05:21:53 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAGRGNgUQ48Bc4qQeZ8Euj1+z8qiyA4cOEcEsx3B0EO5oh2Cnug@mail.gmail.com>
+References: <CAF3gKsxgO16GqP8x4Q_+wUhYK4x919xbik-ATv4agS+Heg3yig@mail.gmail.com>
+ <CAGRGNgUQ48Bc4qQeZ8Euj1+z8qiyA4cOEcEsx3B0EO5oh2Cnug@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 20 Dec 2011 00:21:32 +1100
+Message-ID: <CAGRGNgXYUmQY4SFtRKrxFqDg+wRqpH4hn1Wu-mq5SowqFibHxQ@mail.gmail.com> (sfid-20111219_142157_390175_BFE1F926)
+Subject: Re: Developing Linux tree support for Marvell 88W8335
+To: Shahar Or <mightyiampresence@gmail.com>
+Cc: libertas-dev@lists.infradead.org, mab@comnets.uni-bremen.de,
+	luc@saillard.org, linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Hi Shahar,
 
-This will allow us to catch bad cases in which the packets aren't in
-the right place on the ring.
+Reading your email again, I completely missed the point: you're not
+writing a driver, you're donating cards. Sorry for any confusion.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    1 +
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c    |   13 +++++++++++++
- 2 files changed, 14 insertions(+), 0 deletions(-)
+If *anyone* is developing a driver, the following info, as in my
+previous email, could be helpful:
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-index 5085dae..bd29568 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-@@ -408,6 +408,7 @@ static void iwlagn_tx_queue_stop_scheduler(struct iwl_trans *trans, u16 txq_id)
- void iwl_trans_set_wr_ptrs(struct iwl_trans *trans,
- 				int txq_id, u32 index)
- {
-+	IWL_DEBUG_TX_QUEUES(trans, "Q %d  WrPtr: %d", txq_id, index & 0xff);
- 	iwl_write_direct32(bus(trans), HBUS_TARG_WRPTR,
- 			(index & 0xff) | (txq_id << 8));
- 	iwl_write_prph(bus(trans), SCD_QUEUE_RDPTR(txq_id), index);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index cfa0bf6..409faea 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1063,6 +1063,7 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 	bool is_agg = false;
- 	__le16 fc = hdr->frame_control;
- 	u8 hdr_len = ieee80211_hdrlen(fc);
-+	u16 __maybe_unused wifi_seq;
- 
- 	/*
- 	 * Send this frame after DTIM -- there's a special queue
-@@ -1093,6 +1094,18 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 	txq = &trans_pcie->txq[txq_id];
- 	q = &txq->q;
- 
-+	/* In AGG mode, the index in the ring must correspond to the WiFi
-+	 * sequence number. This is a HW requirements to help the SCD to parse
-+	 * the BA.
-+	 * Check here that the packets are in the right place on the ring.
-+	 */
-+#ifdef CONFIG_IWLWIFI_DEBUG
-+	wifi_seq = SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
-+	WARN_ONCE(is_agg && ((wifi_seq & 0xff) != q->write_ptr),
-+		  "Q: %d WiFi Seq %d tfdNum %d",
-+		  txq_id, wifi_seq, q->write_ptr);
-+#endif
-+
- 	/* Set up driver data for this TFD */
- 	txq->skbs[q->write_ptr] = skb;
- 	txq->cmd[q->write_ptr] = dev_cmd;
+On Tue, Dec 20, 2011 at 00:18, Julian Calaby <julian.calaby@gmail.com> wrote:
+> So, as for actual code and data and stuff:
+>
+> The advice I was given when I was starting to write a driver (no
+> source remains, it never got to the point where it did anything
+> useful) was to start a new mac80211 driver from scratch as this
+> hardware is significantly different from the "Libertas" devices as
+> used in some mobile devices and the OLPC computers. Another approach
+> would be to update the official driver to a newer kernel and stick it
+> into staging, then clean it into a mac80211 driver and then push it
+> out into the kernel tree proper. I was advised that if I needed any
+> hardware info to look at the official driver. (see below)
+>
+> There is a blessed version of the firmware in the linux-firmware tree here:
+>
+> http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=commitdiff;h=e694ee268684ec26af44a6b068203a5f44f6ed06
+>
+> The official Marvell driver, in a source tree here: - Note that this
+> code only works on this exact kernel version and will need some
+> significant work to run with any other kernel version.
+>
+> http://git.infradead.org/users/dwmw2/marvell-db64660-2.6.12.6.git
+>
+> And something approximating a partial driver here:
+>
+> http://git.infradead.org/mrv8k-2.6.git
+>
+> Also, the hardware is probably also significantly different to the
+> "TopDog" devices, so using their driver as a base is probably a bad
+> idea. They have an official driver in the source tree here:
+>
+> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/mwl8k.c;h=995695c28d5c8d66c9999126e9203392428c24c2;hb=HEAD
+> )
+
+Thanks,
+
 -- 
-1.7.0.4
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
