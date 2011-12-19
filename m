@@ -1,41 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:65338 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752165Ab1LLJbv (ORCPT
+Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:42241 "EHLO
+	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752300Ab1LSOPF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 04:31:51 -0500
-Received: by dajs34 with SMTP id s34so1527021daj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2011 01:31:50 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1323680444.3442.5.camel@jlt3.sipsolutions.net>
-References: <CAMG6FYgGB12s+vTGRuKb1E8qzwMa3=kV2pm5ZFQ=BO4WqqZSRQ@mail.gmail.com>
-	<1323680444.3442.5.camel@jlt3.sipsolutions.net>
-Date: Mon, 12 Dec 2011 10:31:46 +0100
-Message-ID: <CAMG6FYgO_LPwMWL1K1+PPVqZJkVj4gaQiyB+PX-NtOe1aPH1aw@mail.gmail.com> (sfid-20111212_103154_617411_6B62D340)
-Subject: Re: [PATCH] mac80211: Do not request FIF_BCN_PRBRESP_PROMISC for HW scan.
-From: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Bartosz.Markowski@tieto.com,
-	Janusz.Dziedzic@tieto.com
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 19 Dec 2011 09:15:05 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCH 2/2] iw: remove ifdefs for mcs mask
+Date: Mon, 19 Dec 2011 15:14:59 +0100
+Message-Id: <1324304099-18327-5-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111219_151519_840326_C003CC4C)
+In-Reply-To: <1324304099-18327-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1324304099-18327-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 12, 2011 at 10:00 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2011-12-11 at 22:47 +0100, Dmitry Tarnyagin wrote:
->> ieee80211_configure_filter code used local->scanning as a boolean value
->> when it was a bit mask. Bits SCAN_HW_SCANNING, SCAN_COMPLETED, SCAN_ABORTED
->> should not set FIF_BCN_PRBRESP_PROMISC filter.
->
-> Seems right -- although the probresp-promisc filter thing is debatable
-> and I think the changelog should be more explicit about it, maybe saying
-> that the driver can always change that by itself in the hw scan callback
-> if it requires it... That part isn't really only bugfix, it's a semantic
-> change.
->
-Well, then the semantic should be at least consistent. Scan code does
-not specially
-configure filter for hw scans, nor after scan complete. But any 3rd
-party config-filter
-requests during an active scan enable probresp-promisc.
+These are enums, not defines. Therefore the ifdef check can never be
+true.
+
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ bitrate.c |   20 ++------------------
+ 1 files changed, 2 insertions(+), 18 deletions(-)
+
+diff --git a/bitrate.c b/bitrate.c
+index cefd150..22b863e 100644
+--- a/bitrate.c
++++ b/bitrate.c
+@@ -17,12 +17,10 @@ static int handle_bitrates(struct nl80211_state *state,
+ 	uint8_t *legacy = NULL;
+ 	int *n_legacy = NULL;
+ 	bool have_mcs_24 = false, have_mcs_5 = false;
+-#ifdef NL80211_TXRATE_MCS
+ 	uint8_t mcs_24[77], mcs_5[77];
+ 	int n_mcs_24 = 0, n_mcs_5 = 0;
+ 	uint8_t *mcs = NULL;
+ 	int *n_mcs = NULL;
+-#endif
+ 	enum {
+ 		S_NONE,
+ 		S_LEGACY,
+@@ -32,9 +30,7 @@ static int handle_bitrates(struct nl80211_state *state,
+ 	for (i = 0; i < argc; i++) {
+ 		char *end;
+ 		double tmpd;
+-#ifdef NL80211_TXRATE_MCS
+ 		long tmpl;
+-#endif
+ 
+ 		if (strcmp(argv[i], "legacy-2.4") == 0) {
+ 			if (have_legacy_24)
+@@ -51,7 +47,6 @@ static int handle_bitrates(struct nl80211_state *state,
+ 			n_legacy = &n_legacy_5;
+ 			have_legacy_5 = true;
+ 		}
+-#ifdef NL80211_TXRATE_MCS
+ 		else if (strcmp(argv[i], "mcs-2.4") == 0) {
+ 			if (have_mcs_24)
+ 				return 1;
+@@ -67,7 +62,6 @@ static int handle_bitrates(struct nl80211_state *state,
+ 			n_mcs = &n_mcs_5;
+ 			have_mcs_5 = true;
+ 		}
+-#endif
+ 		else switch (parser_state) {
+ 		case S_LEGACY:
+ 			tmpd = strtod(argv[i], &end);
+@@ -78,7 +72,6 @@ static int handle_bitrates(struct nl80211_state *state,
+ 			legacy[(*n_legacy)++] = tmpd * 2;
+ 			break;
+ 		case S_MCS:
+-#ifdef NL80211_TXRATE_MCS
+ 			tmpl = strtol(argv[i], &end, 0);
+ 			if (*end != '\0')
+ 				return 1;
+@@ -86,7 +79,6 @@ static int handle_bitrates(struct nl80211_state *state,
+ 				return 1;
+ 			mcs[(*n_mcs)++] = tmpl;
+ 			break;
+-#endif
+ 		default:
+ 			return 1;
+ 		}
+@@ -102,10 +94,8 @@ static int handle_bitrates(struct nl80211_state *state,
+ 			goto nla_put_failure;
+ 		if (have_legacy_24)
+ 			nla_put(msg, NL80211_TXRATE_LEGACY, n_legacy_24, legacy_24);
+-#ifdef NL80211_TXRATE_MCS
+ 		if (have_mcs_24)
+ 			nla_put(msg, NL80211_TXRATE_MCS, n_mcs_24, mcs_24);
+-#endif
+ 		nla_nest_end(msg, nl_band);
+ 	}
+ 
+@@ -115,10 +105,8 @@ static int handle_bitrates(struct nl80211_state *state,
+ 			goto nla_put_failure;
+ 		if (have_legacy_5)
+ 			nla_put(msg, NL80211_TXRATE_LEGACY, n_legacy_5, legacy_5);
+-#ifdef NL80211_TXRATE_MCS
+ 		if (have_mcs_5)
+ 			nla_put(msg, NL80211_TXRATE_MCS, n_mcs_5, mcs_5);
+-#endif
+ 		nla_nest_end(msg, nl_band);
+ 	}
+ 
+@@ -130,13 +118,9 @@ static int handle_bitrates(struct nl80211_state *state,
+ }
+ 
+ #define DESCR_LEGACY "[legacy-<2.4|5> <legacy rate in Mbps>*]"
+-#ifdef NL80211_TXRATE_MCS
+ #define DESCR DESCR_LEGACY " [mcs-<2.4|5> <MCS index>*]"
+-#else
+-#define DESCR DESCR_LEGACY
+-#endif
+ 
+-COMMAND(set, bitrates, DESCR, NL80211_CMD_SET_TX_BITRATE_MASK, 0, CIB_NETDEV,
+-	handle_bitrates,
++COMMAND(set, bitrates, "[legacy-<2.4|5> <legacy rate in Mbps>*] [mcs-<2.4|5> <MCS index>*]",
++	NL80211_CMD_SET_TX_BITRATE_MASK, 0, CIB_NETDEV, handle_bitrates,
+ 	"Sets up the specified rate masks.\n"
+ 	"Not passing any arguments would clear the existing mask (if any).");
+-- 
+1.7.7.3
+
