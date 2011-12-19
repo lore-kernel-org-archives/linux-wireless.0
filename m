@@ -1,89 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37811 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751199Ab1LOOHn (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:46316 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751879Ab1LSKkC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 09:07:43 -0500
-Subject: Re: iwlagn is getting very shaky
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Norbert Preining <preining@logic.at>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Pekka Enberg <penberg@cs.helsinki.fi>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dave Jones <davej@redhat.com>,
-	David Rientjes <rientjes@google.com>
-In-Reply-To: <CANUX_P0sCPAWTsSVXpL3w5witnVi6wrtzTgJ0y6HjC-TYC9swg@mail.gmail.com> (sfid-20111211_205719_337550_081FCE1C)
-References: <20111125122143.GA30404@gamma.logic.tuwien.ac.at>
-	 <CANUX_P1hFzSVPQzd6gq3tLY7hu+LX5suph6uHP+hq6+7rdAK1w@mail.gmail.com>
-	 <20111125123720.GA31564@gamma.logic.tuwien.ac.at>
-	 <CANUX_P2mGQX9H-f7OFusjUrv8ey56JNzFVEdKJkAejsg9zVNkQ@mail.gmail.com>
-	 <CANUX_P1aAz-4TpgSzQ2G=RkJOxXCAVQBja3GNsj_HpMNmqxeUw@mail.gmail.com>
-	 <1322387175.4044.16.camel@jlt3.sipsolutions.net>
-	 <CANUX_P3uoNOj3j-REvYCZP382cHfq+DpBRi7fnzFfMG_dyHtTQ@mail.gmail.com>
-	 <20111128035627.GH1422@gamma.logic.tuwien.ac.at>
-	 <CANUX_P2kYiFCP8uAhLZC_kVEjoyxabRBx3Pn+ndtFus=6hJN7Q@mail.gmail.com>
-	 <20111128042343.GA4619@gamma.logic.tuwien.ac.at>
-	 <20111128232525.GA12719@gamma.logic.tuwien.ac.at>
-	 <CANUX_P2b_ZYr4hHigA+tGa9uakcq3hQXnOiP5isQtfcYxCaxcw@mail.gmail.com>
-	 <1322555472.4110.8.camel@jlt3.sipsolutions.net>
-	 <CANUX_P2YeE1ixzFU5VM-oex0aTURqr54VHt5FVAL9BJ0PuRX_A@mail.gmail.com>
-	 <CANUX_P0sCPAWTsSVXpL3w5witnVi6wrtzTgJ0y6HjC-TYC9swg@mail.gmail.com>
-	 (sfid-20111211_205719_337550_081FCE1C)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 15 Dec 2011 15:07:33 +0100
-Message-ID: <1323958053.3337.48.camel@jlt3.sipsolutions.net> (sfid-20111215_150817_032834_C8911978)
-Mime-Version: 1.0
+	Mon, 19 Dec 2011 05:40:02 -0500
+Received: by wgbdr13 with SMTP id dr13so10458403wgb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 02:40:01 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH] mac80211: Remove superfluous ieee80211_rx_h_remove_qos_control
+Date: Mon, 19 Dec 2011 11:39:54 +0100
+Message-Id: <1324291194-28203-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20111219_114005_860795_10268EE5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So I finally looked at this ...
+This seems to not serve any purpose anymore, at least all frame
+processing afterwards seems to be able to deal with QoS frames. So,
+let's save the expensive memmove and just leave the QoS header in the
+802.11 frame for further processing.
 
-On Sun, 2011-12-11 at 21:56 +0200, Emmanuel Grumbach wrote:
-> >> Could something be hogging the workqueues?
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
 
-> > So I tried to understand what is going on with the workqueue and ended
-> > up to see that if we are lucky, we can need the workqueue for the BA
-> > handshake (could be AddBA / DelBA handling, or driver callback) while
-> > we are scanning. Which basically means that we will need to wait until
-> > the scan is over to handle these frames / callbacks. I got these
-> > measurements while stopping the BA session:
-> >
-> > * scanning working for roughly 3 seconds (pardon me not being precise,
-> > but with this order of magnitude I don't care much about the single
-> > millisecond..)
+It wouldn't hurt if a second pair of eyes looks through the rx path
+to see if there's any possible problem with QoS frames in later rx
+handlers.
 
-Oh. I see, while scanning we won't process the work queue.
+I tried AP and STA mode and couldn't see any problems yet.
 
-> > * when scanning is over, the while loop in ieee80211_iface_work
-> > consumes 73 mgmt for about 34ms.
-> > ( how come we have so many beacons during those 3 seconds..., or maybe
-> > all the BCAST probe request ?, my network is quite busy...)
-> > * then the finally my stop_tx_ba_cb was served which took 10ms (time
-> > takes by the driver).
-> > * another series of beacons (10ms).
-> 
-> What about flushing the workqueue before we scan ?
-> This is not a bullet proof solution of course, we will still encounter
-> bad races, but at least  we would flush what we can before the
-> workqueue becomes unable for 4 seconds (!).
+Thanks,
+Helmut
 
-Yeah, that seems like a good thing. Actually I had an idea about this
-before -- drain & stop the workqueue for any functions in mac80211/cfg.c
-so that mac80211 essentially becomes single-threaded.
+ net/mac80211/rx.c |   20 --------------------
+ 1 files changed, 0 insertions(+), 20 deletions(-)
 
-> We can also delay the scan if we are in the middle of {add,del}BA
-> handshake, which is the only flow I can think about that needs
-> responsiveness. The other frame exchanges are MLME ones and involve
-> the wpa_supplicant (unless we are using the late WEXT). Hopefully the
-> wpa_supplicant won't request to scan in the middle of association or
-> so. There might be other features (mesh or whatever), that may be
-> hidden from the wpa_supplicant and require good responsiveness from
-> the wq too.
-
-Hm, yeah, that would be an idea too, but I'm not sure it's easy to do
-right now.
-
-johannes
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 8418f66..0ff0481 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1576,25 +1576,6 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
+ 	return RX_CONTINUE;
+ }
+ 
+-static ieee80211_rx_result debug_noinline
+-ieee80211_rx_h_remove_qos_control(struct ieee80211_rx_data *rx)
+-{
+-	u8 *data = rx->skb->data;
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)data;
+-
+-	if (!ieee80211_is_data_qos(hdr->frame_control))
+-		return RX_CONTINUE;
+-
+-	/* remove the qos control field, update frame type and meta-data */
+-	memmove(data + IEEE80211_QOS_CTL_LEN, data,
+-		ieee80211_hdrlen(hdr->frame_control) - IEEE80211_QOS_CTL_LEN);
+-	hdr = (struct ieee80211_hdr *)skb_pull(rx->skb, IEEE80211_QOS_CTL_LEN);
+-	/* change frame type to non QOS */
+-	hdr->frame_control &= ~cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
+-
+-	return RX_CONTINUE;
+-}
+-
+ static int
+ ieee80211_802_1x_port_control(struct ieee80211_rx_data *rx)
+ {
+@@ -2669,7 +2650,6 @@ static void ieee80211_rx_handlers(struct ieee80211_rx_data *rx)
+ 		if (ieee80211_vif_is_mesh(&rx->sdata->vif))
+ 			CALL_RXH(ieee80211_rx_h_mesh_fwding);
+ #endif
+-		CALL_RXH(ieee80211_rx_h_remove_qos_control)
+ 		CALL_RXH(ieee80211_rx_h_amsdu)
+ 		CALL_RXH(ieee80211_rx_h_data)
+ 		CALL_RXH(ieee80211_rx_h_ctrl);
+-- 
+1.7.7
 
