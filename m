@@ -1,46 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:3192 "EHLO
-	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752627Ab1L1A7x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Dec 2011 19:59:53 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: John W Linville <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 0/7] Assorted fixes and clean-ups.
-Date: Wed, 28 Dec 2011 01:53:17 +0100
-Message-Id: <1325033604-26469-1-git-send-email-gwingerde@gmail.com> (sfid-20111228_020008_463709_7EC6F331)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:22348 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752460Ab1LSWnh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 17:43:37 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	"Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 6/6] iwlwifi: Execute runtime calibration always
+Date: Mon, 19 Dec 2011 13:43:13 -0800
+Message-Id: <1324330993-24476-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111219_234350_606645_80D136D1)
+In-Reply-To: <1324330993-24476-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1324330993-24476-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Assorted fixes and clean-ups for rt2x00.
+From: Venkataraman, Meenakshi <meenakshi.venkataraman@intel.com>
 
-Note these patches are on top of Larry Finger's uncommitted patch in
-http://marc.info/?l=linux-wireless&m=132501461624898&w=2
+Runtime DC calibration was previously conditional. Remove this
+behaviour, as new devices support runtime DC calibration,
+while older devices ignore the runtime DC calibration request.
 
-Gertjan van Wingerde (6):
-  rt2x00: Identify rt2800usb chipsets.
-  rt2x00: Whitespace cleanup.
-  rt2x00: Convert big if-statements to switch-statements.
-  rt2x00: RT3593 is also applicable to USB.
-  rt2x00: Change RF3853 to RF3053.
+This patch addresses low TX throughput issues seen with the 6205.
 
-Jakub Kiciński (2):
-  rt2800usb: Let rt2x00usb handle USB padding
-  rt2x00usb: Zero USB padding before sending URB
+Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |    7 ++++---
+ drivers/net/wireless/iwlwifi/iwl-shared.h |    2 --
+ 2 files changed, 4 insertions(+), 5 deletions(-)
 
- drivers/net/wireless/rt2x00/rt2800.h    |    4 +-
- drivers/net/wireless/rt2x00/rt2800lib.c |   55 ++++++++++++++++----------
- drivers/net/wireless/rt2x00/rt2800usb.c |   65 +++++++++++--------------------
- drivers/net/wireless/rt2x00/rt2x00.h    |    4 +-
- drivers/net/wireless/rt2x00/rt2x00usb.c |   16 ++++++-
- 5 files changed, 74 insertions(+), 70 deletions(-)
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 9daa4d9..b5c7c5f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1253,9 +1253,10 @@ int iwl_alive_start(struct iwl_priv *priv)
+ 		iwl_send_bt_config(priv);
+ 	}
+ 
+-	if (hw_params(priv).calib_rt_cfg)
+-		iwlagn_send_calib_cfg_rt(priv,
+-					 hw_params(priv).calib_rt_cfg);
++	/*
++	 * Perform runtime calibrations, including DC calibration.
++	 */
++	iwlagn_send_calib_cfg_rt(priv, IWL_CALIB_CFG_DC_IDX);
+ 
+ 	ieee80211_wake_queues(priv->hw);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 66c6258..dc55cc4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -179,7 +179,6 @@ struct iwl_mod_params {
+  * @ct_kill_exit_threshold: when to reeable the device - in hw dependent unit
+  *	relevant for 1000, 6000 and up
+  * @wd_timeout: TX queues watchdog timeout
+- * @calib_rt_cfg: setup runtime calibrations for the hw
+  * @struct iwl_sensitivity_ranges: range of sensitivity values
+  */
+ struct iwl_hw_params {
+@@ -199,7 +198,6 @@ struct iwl_hw_params {
+ 	u32 ct_kill_exit_threshold;
+ 	unsigned int wd_timeout;
+ 
+-	u32 calib_rt_cfg;
+ 	const struct iwl_sensitivity_ranges *sens;
+ };
+ 
 -- 
-1.7.7.4
+1.7.0.4
 
