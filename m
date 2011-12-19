@@ -1,52 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:60451 "EHLO
-	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750814Ab1LRHmo convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Dec 2011 02:42:44 -0500
-Received: by mail-iy0-f175.google.com with SMTP id h37so3281975iak.6
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Dec 2011 23:42:43 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1323871164.8146.0.camel@jlt3.sipsolutions.net>
-References: <1323870210.97711.YahooMailNeo@web28203.mail.ukl.yahoo.com>
-	<1323871164.8146.0.camel@jlt3.sipsolutions.net>
-Date: Sun, 18 Dec 2011 09:42:43 +0200
-Message-ID: <CANJm+iAm2pzESyLv8fmCkQYa6cD2HyxhAWN+eCGar_Q4gvd4xw@mail.gmail.com> (sfid-20111218_084247_991940_1F8688B5)
-Subject: Re: wmm admission control in mac80211
-From: "Divinsky, Yonatan" <yoni.divinsky@ti.com>
-To: Soumik Das <soumik_kgp@yahoo.co.uk>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:51611 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751296Ab1LSKDF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 05:03:05 -0500
+Received: by faar15 with SMTP id r15so3241858faa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 02:03:04 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH] mac80211: Fix frame classification in AP mode for relayed frames
+Date: Mon, 19 Dec 2011 11:02:58 +0100
+Message-Id: <1324288978-27162-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20111219_110309_317828_EB1ECCB5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 14, 2011 at 3:59 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
-> On Wed, 2011-12-14 at 13:43 +0000, Soumik Das wrote:
-> > Hi,
-> >
-> > I was looking at the mac80211. It seems there is no support for admission control in the current implementation.
-> >
-> >
-> > Is there any near term plan for adding the support? Otherwise can I add the support myself?
->
-> I don't know of any plans to add it, but feel free to.
->
+When mac80211 relays a frame from STA1 to STA2 in AP mode it will get
+re-classified in the tx path. Unfortunately the frame protocol field
+is always set to ETH_P_8023 while the classification only kicks in
+for ETH_P_IP. Hence, a high priority frame from STA1 will be send to
+STA2 as best effort.
 
-I have started and implementation to support wmm admission control in mac80211
+To allow proper re-classification of received frames, set the
+skb->protocol field to the correct value without using eth_type_trans
+as that would pull of the ethernet header. Also, set the network
+header position correctly as otherwise the classification code won't
+find the IP header.
 
-The implementation also included an API with nl80211.
+This means that every frame relayed by a mac80211 AP will be
+re-classified and might change its traffic class when the associated
+STA and mac80211 use different 802.1d <-> TID mappings.
 
-I will probably send an RFC in the upcoming days.
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
 
-Thanks,
-Yoni Divinsky
+We could also reuse the TID used by the source STA but I guess we should
+always classify frames according to our own mapping instead of relying
+on the associated STAs to do the right thing.
 
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ net/mac80211/rx.c |   19 ++++++++++++++++---
+ 1 files changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index bf07d08..8418f66 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1827,10 +1827,23 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+ 	}
+ 
+ 	if (xmit_skb) {
+-		/* send to wireless media */
+-		xmit_skb->protocol = htons(ETH_P_802_3);
+-		skb_reset_network_header(xmit_skb);
++		/*
++		 * Send to wireless media
++		 *
++		 * Set protocol field according to the ethernet header
++		 * to allow reclassification of this frame in the tx path.
++		 *
++		 * Don't use eth_type_trans here since it will pull the
++		 * eth header and because we are sure to have an ethernet
++		 * header here.
++		 */
++		ehdr = (struct ethhdr *) xmit_skb->data;
++		if (ntohs(ehdr->h_proto) >= 1536)
++			xmit_skb->protocol = ehdr->h_proto;
++		else
++			xmit_skb->protocol = htons(ETH_P_802_3);
+ 		skb_reset_mac_header(xmit_skb);
++		skb_set_network_header(xmit_skb, sizeof(struct ethhdr));
+ 		dev_queue_xmit(xmit_skb);
+ 	}
+ }
+-- 
+1.7.7
+
