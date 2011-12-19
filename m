@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:33267 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759633Ab1LOXAg (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:46572 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901Ab1LSTAc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 18:00:36 -0500
-Received: by iaeh11 with SMTP id h11so3395191iae.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 15:00:36 -0800 (PST)
+	Mon, 19 Dec 2011 14:00:32 -0500
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1RciRp-0007Ej-DY
+	for linux-wireless@vger.kernel.org; Mon, 19 Dec 2011 14:00:29 -0500
+Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
+	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id pBJInh6c031637
+	for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 13:49:44 -0500
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.4/8.14.4/Submit) id pBJInhIc031635
+	for linux-wireless@vger.kernel.org; Mon, 19 Dec 2011 13:49:43 -0500
+Date: Mon, 19 Dec 2011 13:49:43 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: new stuff for 3.3 needs to be posted _now_
+Message-ID: <20111219184943.GA31462@tuxdriver.com> (sfid-20111219_200035_667499_9E9914A2)
 MIME-Version: 1.0
-In-Reply-To: <1323989753.1270.19.camel@joe2Laptop>
-References: <1323989753.1270.19.camel@joe2Laptop>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 15 Dec 2011 15:00:15 -0800
-Message-ID: <CAB=NE6V6AszbNBiMOy4ZacwXqJWeWO0DL3cF_A1E2HVGMicbtA@mail.gmail.com> (sfid-20111216_000039_657539_FE2A5DD5)
-Subject: Re: [PATCH wireless-next] ath: Convert ath_dbg(bar, ATH_DBG_<FOO>, to
- ath_dbg(bar, FOO
-To: Joe Perches <joe@perches.com>
-Cc: Jouni Malinen <jouni@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 15, 2011 at 2:55 PM, Joe Perches <joe@perches.com> wrote:
-> Add ATH_DBG_ to macros to shorten the uses and
-> reduce the line count.
->
-> Coalesce ath_dbg formats.
-> Add missing spaces to coalesced formats.
-> Add missing newline terminations to ath_dbg formats.
-> Align ath_dbg arguments where appropriate.
-> Standardize ath_dbg formats without periods.
->
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
+You may have noticed that Linus has released 3.2-rc6, and doesn't
+plan to go beyond -rc7.  So, the merge window is around the corner!
 
-Good idea, are you cocci spatching this? This will obviosly create
-conflicts with pending patches.
+For those that need a reminder, the opening of the merge window is a
+_deadline_ for new features.  Once the merge window opens, only fixes
+will be accepted for 3.3.  In fact, any non-fix patches need to
+already be in wireless-next when the merge window opens if you want
+them in 3.3.  That means you need to get them posted _now_, so they
+can be reviewed and I can find time to merge them before the deadline.
 
-  Luis
+Just for the record, my employer will be shutdown starting on Friday
+and through the New Year's celebration.  I will probably pay some
+attention to my email over that break, but not as much as usual.
+I will not go to any great lengths to turn your failure to plan into
+my emergency -- sorry.
+
+You have been warned...this means you!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
+
