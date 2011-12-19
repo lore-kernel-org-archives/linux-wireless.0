@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.23]:36248 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751046Ab1LJNCw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Dec 2011 08:02:52 -0500
-Message-ID: <4EE35877.1060507@gmx.net> (sfid-20111210_140255_490293_C3C0F113)
-Date: Sat, 10 Dec 2011 14:02:47 +0100
-From: Wolfgang Breyha <wbreyha@gmx.net>
-MIME-Version: 1.0
-To: Johannes Berg <johannes.berg@intel.com>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi havoc on some APs (rekeying?)
-References: <4EE2202A.4080303@gmx.net>  <1323446534.13074.96.camel@wwguy-huron>  <4EE24DF4.4020301@gmx.net>  <1323451436.13074.158.camel@wwguy-huron>  (sfid-20111209_192243_598986_F6275AE2) <1323455216.3622.21.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1323455216.3622.21.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from arrakis.dune.hu ([78.24.191.176]:34048 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753322Ab1LSVZW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 16:25:22 -0500
+From: Gabor Juhos <juhosg@openwrt.org>
+To: Rodriguez Luis <rodrigue@qca.qualcomm.com>
+Cc: mcgrof@infradead.org, linux-wireless@vger.kernel.org,
+	Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH 07/15] initvals: allow to use additional CFLAGS
+Date: Mon, 19 Dec 2011 22:24:52 +0100
+Message-Id: <1324329900-3923-8-git-send-email-juhosg@openwrt.org> (sfid-20111219_222531_165207_FD09210D)
+In-Reply-To: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
+References: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/12/11 19:26, Johannes Berg wrote:
-> What's "this area"? This isn't exactly the first report of random memory
-> corruption ... I think the last one was something with 32/64 bit but I
-> don't remember.
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ Makefile |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
 
-To narrow down "this area" I tried the following:
+diff --git a/Makefile b/Makefile
+index 1194504..0df14df 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,5 +1,8 @@
++CFLAGS=
++
++LOCAL_CFLAGS=$(CFLAGS)
+ ifdef ATHEROS
+-CFLAGS += -DATHEROS
++LOCAL_CFLAGS += -DATHEROS
+ 
+ ATHEROS_DEPS += \
+ 	ar9280.ini		\
+@@ -25,7 +28,7 @@ ATH9K_DEPS += \
+ 	ar9580_1p0_initvals.h
+ 
+ initvals: $(ATH9K_DEPS) $(ATHEROS_DEPS) initvals.c
+-	gcc $(CFLAGS) -o $@ $@.c
++	gcc $(LOCAL_CFLAGS) -o $@ $@.c
+ 
+ all: initvals
+ 
+-- 
+1.7.2.1
 
-*) I reconfigured my soekris AP hostapd to use wpa_group_rekey=0
-   .... and it works like a charm since then
-
-*) I reconfigured the ubiquiti UniFi AP to use wpa_group_rekey=120
-   ... and I'am pretty sure now that it is exactly the second rekeying
-   that starts messing up the system. Exactly after wpa_supplicant logs
-WPA: Group rekeying completed with 06:27:22:xx:xx:xx [GTK=TKIP]
-   the second time, video streaming with VLC immediatly leeds to all the
-   mentioned sideeffects.
-
-Maybe it's possible to reproduce it with any hostapd based AP with
-active wpa_group_rekey.
-
-Greetings, Wolfgang
