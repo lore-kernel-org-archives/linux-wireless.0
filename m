@@ -1,137 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45766 "EHLO
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:49827 "EHLO
 	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750721Ab1LIPpV (ORCPT
+	with ESMTP id S1751556Ab1LSTpe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Dec 2011 10:45:21 -0500
-Date: Fri, 9 Dec 2011 10:44:15 -0500
+	Mon, 19 Dec 2011 14:45:34 -0500
+Date: Mon, 19 Dec 2011 14:39:57 -0500
 From: "John W. Linville" <linville@tuxdriver.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Nikolay Martynov <mar.kolya@gmail.com>,
-	"mar.kolya@gmail.com linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: Re: [PATCH] iwlwifi regression in 20111205 merge
-Message-ID: <20111209154415.GA14236@tuxdriver.com> (sfid-20111209_164525_441911_2F2EF987)
-References: <1323398619-19774-1-git-send-email-mar.kolya@gmail.com>
- <1323399833.13074.80.camel@wwguy-huron>
- <1323400528.13074.87.camel@wwguy-huron>
+To: Yogesh Ashok Powar <yogesh.powar@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: Re: [PATCH V2] mac80211: Fixing sparse warning at sta_info.c
+Message-ID: <20111219193957.GC31462@tuxdriver.com> (sfid-20111219_204536_386770_EA522036)
+References: <82612>
+ <20111216061715.GA11190@dugs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1323400528.13074.87.camel@wwguy-huron>
+In-Reply-To: <20111216061715.GA11190@dugs>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Are the bits in the wireless tree correct?  If so, then please just
-send a patch to fix the wireless-next tree.
+Applying: mac80211: Fixing sparse warning at sta_info.c
+error: patch failed: net/mac80211/sta_info.c:974
+error: net/mac80211/sta_info.c: patch does not apply
 
-Now that the kernel.org mess is sorted, I guess we/I need to go back
-to pulling your trees instead of applying patches...
+What tree did you use as a base for your patch?
 
-John
-
-On Thu, Dec 08, 2011 at 07:15:28PM -0800, Guy, Wey-Yi wrote:
-> John,
+On Fri, Dec 16, 2011 at 11:47:15AM +0530, Yogesh Ashok Powar wrote:
+> The commit 42624d4913a00219a8fdbb4bafd634d1d843be85
+> created following sparse warning
+> >net/mac80211/sta_info.c:965:24: warning: incorrect type in assignment (different address spaces)
+> >net/mac80211/sta_info.c:965:24:    expected struct tid_ampdu_tx *tid_tx
+> >net/mac80211/sta_info.c:965:24:    got struct tid_ampdu_tx [noderef] <asn:4>*<noident>
 > 
-> what is the correct method to handle this case?
-> the patch need to add a piece of code in iwl-mac80211.c, and also need
-> to backport to stable
-> Since the function was recently move from iwl-agn.c to iwl-mac80211.c,
-> so separated patch need for "wireless-next" and "wireless". But look
-> like portion of patch just lost because the function was move.
+> Making use of rcu_dereference_protected to fix the problem.
 > 
-> Thanks
-> Wey
+> V2:
+>  - Replacing rcu_dereference with rcu_dereference_protected
+>    as suggested by Johannes.
+>  - Adding mutex_lock/unlock to satisfy the condition at
+>    rcu_dereference_protected
 > 
-> On Thu, 2011-12-08 at 19:03 -0800, Guy, Wey-Yi wrote:
-> > Hi Nikolay,
-> > 
-> > I believe I know what happen,
-> > 
-> > this change happen after the function being move from iwl-agn.c to
-> > iwl-mac80211.c
-> > 
-> > Author: Johannes Berg <johannes.berg@intel.com>
-> > Date:   Fri Dec 2 08:19:17 2011 -0800
-> > 
-> >     iwlagn: fix HW crypto for TX-only keys
-> >     
-> >     Group keys in IBSS or AP mode are not programmed
-> >     into the device since we give the key to it with
-> >     every TX packet. However, we do need mac80211 to
-> >     create the MMIC & PN in all cases. Move the code
-> >     around to set the key flags all the time. We set
-> >     them even when the key is removed again but that
-> >     is obviously harmless.
-> >     
-> >     Cc: stable@vger.kernel.org
-> >     Reported-by: Reinette Chatre <reinette.chatre@intel.com>
-> >     Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> >     Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> >     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > 
-> > and the changes was made in iwl-mac80211.c
-> > 
-> > but since this patch need to be backport to stable kernel.
-> > so there is a separated patch sent for the changes in iwl-agn.c against
-> > stable
-> > 
-> > because all these, for some reason the changes just got lost.
-> > Thank you for catch this
-> > 
-> > Wey
-> > 
-> > 
-> > On Thu, 2011-12-08 at 18:43 -0800, Nikolay Martynov wrote:
-> > > It looks like the regression was introduced between 20111202 and
-> > > 20111205 (linux-next tree). Symptoms: connection to AP seem to be
-> > > established, but no data goes though it in any way. Tested on intel
-> > > 5300.
-> > >   Peek at the changes have shown that it looks like at least part of
-> > > the code wasn't merged properly. It was originally committed into
-> > > iwl_agn.c but code in question was moved to iwl-mac80211.c.
-> > >   This patch puts code in place and my card works again.
-> > >   I hope this patch will be reviewed by people developing iwl
-> > > driver. Also, it is possible that some other iwl code didn't make it
-> > > though 20111205 merge as well, so this probably should be checked too.
-> > >   Please let me know if I can provide any more info.
-> > >   Thanks!
-> > > 
-> > > Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
-> > > ---
-> > >  drivers/net/wireless/iwlwifi/iwl-mac80211.c |   11 +++++++++++
-> > >  1 files changed, 11 insertions(+), 0 deletions(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-> > > index 794b735..55308b8 100644
-> > > --- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-> > > +++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-> > > @@ -517,6 +517,17 @@ static int iwlagn_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
-> > >  		return -EOPNOTSUPP;
-> > >  	}
-> > >  
-> > > +	switch (key->cipher) {
-> > > +	case WLAN_CIPHER_SUITE_TKIP:
-> > > +		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
-> > > +		/* fall through */
-> > > +	case WLAN_CIPHER_SUITE_CCMP:
-> > > +		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-> > > +		break;
-> > > +	default:
-> > > +		break;
-> > > +	}
-> > > +
-> > >  	/*
-> > >  	 * We could program these keys into the hardware as well, but we
-> > >  	 * don't expect much multicast traffic in IBSS and having keys
-> > 
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Cc: Nishant Sarmukadam <nishants@marvell.com>
+> Reported-by: Johannes Berg <johannes@sipsolutions.net>
+> Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+> ---
+>  net/mac80211/sta_info.c |    9 +++++++--
+>  1 files changed, 7 insertions(+), 2 deletions(-)
 > 
+> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+> index c6ca9bd..e4307b7 100644
+> --- a/net/mac80211/sta_info.c
+> +++ b/net/mac80211/sta_info.c
+> @@ -959,10 +959,13 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
+>  	 * until the aggregation stop completes. Refer
+>  	 * http://thread.gmane.org/gmane.linux.kernel.wireless.general/81936
+>  	 */
+> +
+> +	mutex_lock(&sta->ampdu_mlme.mtx);
+> +
+>  	for (i = 0; i < STA_TID_NUM; i++) {
+> -		if (!sta->ampdu_mlme.tid_tx[i])
+> +		tid_tx = rcu_dereference_protected_tid_tx(sta, i);
+> +		if (!tid_tx)
+>  			continue;
+> -		tid_tx = sta->ampdu_mlme.tid_tx[i];
+>  		if (skb_queue_len(&tid_tx->pending)) {
+>  #ifdef CONFIG_MAC80211_HT_DEBUG
+>  			wiphy_debug(local->hw.wiphy, "TX A-MPDU  purging %d "
+> @@ -974,6 +977,8 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
+>  		kfree_rcu(tid_tx, rcu_head);
+>  	}
+>  
+> +	mutex_unlock(&sta->ampdu_mlme.mtx);
+> +
+>  	__sta_info_free(local, sta);
+>  
+>  	return 0;
+> -- 
+> 1.7.5.4
 > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 
 -- 
