@@ -1,118 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1125 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760932Ab1LQChl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 21:37:41 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 04/30] brcm80211: fmac: change function add_if parameter
-Date: Fri, 16 Dec 2011 18:36:54 -0800
-Message-ID: <1324089440-8957-5-git-send-email-frankyl@broadcom.com> (sfid-20111217_035945_635742_E64F7752)
-In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
-References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:59002 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753190Ab1LSOPG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 09:15:06 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCH 1/2] nl80211: add support for mcs masks
+Date: Mon, 19 Dec 2011 15:14:56 +0100
+Message-Id: <1324304099-18327-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111219_151515_347815_279496B7)
+In-Reply-To: <1324304099-18327-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1324304099-18327-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change parameter to device pointer for bus layer interface function
-brcmf_add_if. This is part of the fullmac bus interface
-refactoring.
+Allow to set mcs masks through nl80211. We also allow to set MCS
+rates but no legacy rates (and vice versa).
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    3 ++-
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |    2 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    6 +++++-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
- 4 files changed, 9 insertions(+), 4 deletions(-)
+ include/linux/nl80211.h |    4 +++
+ include/net/cfg80211.h  |    3 +-
+ net/wireless/nl80211.c  |   54 ++++++++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 58 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index 74ea4b0..a8e94eb 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -574,6 +574,7 @@ struct brcmf_dcmd {
- struct brcmf_bus {
- 	u8 type;		/* bus type */
- 	void *bus_priv;		/* pointer to bus private structure */
-+	void *drvr;		/* pointer to driver pub structure brcmf_pub */
- 	enum brcmf_bus_state state;
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index a187606..f1eca8a 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1475,6 +1475,7 @@ enum nl80211_attrs {
+ #define NL80211_ATTR_FEATURE_FLAGS NL80211_ATTR_FEATURE_FLAGS
+ 
+ #define NL80211_MAX_SUPP_RATES			32
++#define NL80211_MAX_SUPP_HT_RATES		255
+ #define NL80211_MAX_SUPP_REG_RULES		32
+ #define NL80211_TKIP_DATA_OFFSET_ENCR_KEY	0
+ #define NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY	16
+@@ -2395,12 +2396,15 @@ enum nl80211_key_attributes {
+  *	in an array of rates as defined in IEEE 802.11 7.3.2.2 (u8 values with
+  *	1 = 500 kbps) but without the IE length restriction (at most
+  *	%NL80211_MAX_SUPP_RATES in a single array).
++ * @NL80211_TXRATE_MCS: HT (MCS) rates allowed for TX rate selection
++ *	in an array of MCS numbers.
+  * @__NL80211_TXRATE_AFTER_LAST: internal
+  * @NL80211_TXRATE_MAX: highest TX rate attribute
+  */
+ enum nl80211_tx_rate_attributes {
+ 	__NL80211_TXRATE_INVALID,
+ 	NL80211_TXRATE_LEGACY,
++	NL80211_TXRATE_MCS,
+ 
+ 	/* keep last */
+ 	__NL80211_TXRATE_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 150c0ee..4b6ff1c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1223,8 +1223,7 @@ enum wiphy_params_flags {
+ struct cfg80211_bitrate_mask {
+ 	struct {
+ 		u32 legacy;
+-		/* TODO: add support for masking MCS rates; e.g.: */
+-		/* u8 mcs[IEEE80211_HT_MCS_MASK_LEN]; */
++		u8 mcs[IEEE80211_HT_MCS_MASK_LEN];
+ 	} control[IEEE80211_NUM_BANDS];
  };
- 
-@@ -743,7 +744,7 @@ extern int brcmf_c_host_event(struct brcmf_pub *drvr, int *idx,
- 			      void *pktdata, struct brcmf_event_msg *,
- 			      void **data_ptr);
- 
--extern int brcmf_add_if(struct brcmf_pub *drvr, int ifidx,
-+extern int brcmf_add_if(struct device *dev, int ifidx,
- 			char *name, u8 *mac_addr);
- extern void brcmf_del_if(struct brcmf_pub *drvr, int ifidx);
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-index 5e5a954..e9f7d66 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_common.c
-@@ -473,7 +473,7 @@ brcmf_c_host_event(struct brcmf_pub *drvr, int *ifidx, void *pktdata,
- 
- 		if (ifevent->ifidx > 0 && ifevent->ifidx < BRCMF_MAX_IFS) {
- 			if (ifevent->action == BRCMF_E_IF_ADD)
--				brcmf_add_if(drvr, ifevent->ifidx,
-+				brcmf_add_if(drvr->dev, ifevent->ifidx,
- 					     event->ifname,
- 					     pvt_data->eth.h_dest);
- 			else
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index cd0a698..3d0177a 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -840,10 +840,12 @@ static const struct net_device_ops brcmf_netdev_ops_pri = {
- };
- 
- int
--brcmf_add_if(struct brcmf_pub *drvr, int ifidx, char *name, u8 *mac_addr)
-+brcmf_add_if(struct device *dev, int ifidx, char *name, u8 *mac_addr)
- {
- 	struct brcmf_if *ifp;
- 	struct net_device *ndev;
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_pub *drvr = bus_if->drvr;
- 
- 	brcmf_dbg(TRACE, "idx %d\n", ifidx);
- 
-@@ -937,6 +939,7 @@ struct brcmf_pub *brcmf_attach(struct brcmf_sdio *bus, uint bus_hdrlen,
- 	drvr->bus = bus;
- 	drvr->hdrlen = bus_hdrlen;
- 	drvr->bus_if = dev_get_drvdata(dev);
-+	drvr->bus_if->drvr = drvr;
- 	drvr->dev = dev;
- 
- 	/* Attach and link in the protocol */
-@@ -1108,6 +1111,7 @@ void brcmf_detach(struct brcmf_pub *drvr)
- 		if (drvr->prot)
- 			brcmf_proto_detach(drvr);
- 
-+		drvr->bus_if->drvr = NULL;
- 		kfree(drvr);
- 	}
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ba43966..6ab1b35 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5324,9 +5324,39 @@ static u32 rateset_to_mask(struct ieee80211_supported_band *sband,
+ 	return mask;
  }
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 3096166..4e3e4ec 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3980,7 +3980,7 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
+ 
++static bool ht_rateset_to_mask(struct ieee80211_supported_band *sband,
++			       u8 *rates, u8 rates_len,
++			       u8 mcs[IEEE80211_HT_MCS_MASK_LEN])
++{
++	u8 i;
++
++	memset(mcs, 0, IEEE80211_HT_MCS_MASK_LEN);
++
++	for (i = 0; i < rates_len; i++) {
++		int ridx, rbit;
++
++		ridx = rates[i] / 8;
++		rbit = BIT(rates[i] % 8);
++
++		/* check validity */
++		if ((ridx < 0) || (ridx > IEEE80211_HT_MCS_MASK_LEN))
++			return false;
++
++		/* check availability */
++		if (sband->ht_cap.mcs.rx_mask[ridx] & rbit)
++			mcs[ridx] |= rbit;
++		else
++			return false;
++	}
++
++	return true;
++}
++
+ static const struct nla_policy nl80211_txattr_policy[NL80211_TXRATE_MAX + 1] = {
+ 	[NL80211_TXRATE_LEGACY] = { .type = NLA_BINARY,
+ 				    .len = NL80211_MAX_SUPP_RATES },
++	[NL80211_TXRATE_MCS] = { .type = NLA_BINARY,
++				 .len = NL80211_MAX_SUPP_HT_RATES },
+ };
+ 
+ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+@@ -5352,6 +5382,8 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 		sband = rdev->wiphy.bands[i];
+ 		mask.control[i].legacy =
+ 			sband ? (1 << sband->n_bitrates) - 1 : 0;
++		memset(&mask.control[i].mcs, sband ? 0xff : 0,
++		       sizeof(mask.control[i].mcs));
  	}
  
- 	/* add interface and open for business */
--	if (brcmf_add_if(bus->drvr, 0, "wlan%d", NULL)) {
-+	if (brcmf_add_if(bus->sdiodev->dev, 0, "wlan%d", NULL)) {
- 		brcmf_dbg(ERROR, "Add primary net device interface failed!!\n");
- 		goto fail;
+ 	/*
+@@ -5373,7 +5405,27 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 				sband,
+ 				nla_data(tb[NL80211_TXRATE_LEGACY]),
+ 				nla_len(tb[NL80211_TXRATE_LEGACY]));
+-			if (mask.control[band].legacy == 0)
++		}
++		if (tb[NL80211_TXRATE_MCS]) {
++			if (!ht_rateset_to_mask(sband,
++				nla_data(tb[NL80211_TXRATE_MCS]),
++				nla_len(tb[NL80211_TXRATE_MCS]),
++				mask.control[band].mcs))
++				return -EINVAL;
++		}
++
++		if (mask.control[band].legacy == 0) {
++			/* don't allow empty legacy rates if HT
++			 * is not even supported. */
++			if (!rdev->wiphy.bands[band]->ht_cap.ht_supported)
++				return -EINVAL;
++
++			for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
++				if (mask.control[band].mcs[i])
++					break;
++
++			/* legacy and mcs rates may not be both empty */
++			if (i == IEEE80211_HT_MCS_MASK_LEN)
+ 				return -EINVAL;
+ 		}
  	}
 -- 
-1.7.5.4
-
+1.7.7.3
 
