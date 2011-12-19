@@ -1,71 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:41211 "EHLO ozlabs.org"
+Received: from mga01.intel.com ([192.55.52.88]:58934 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752062Ab1LSGH6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 01:07:58 -0500
-From: Rusty Russell <rusty@rustcorp.com.au>
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>,
-	linux-kernel@vger.kernel.org, Dave Jones <davej@redhat.com>,
-	Greg KH <greg@kroah.com>,
-	Debian kernel maintainers <debian-kernel@lists.debian.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] modpost: add option to allow external modules to avoid taint
-In-Reply-To: <1324010389.2825.265.camel@deadeye>
-References: <1323752547.2825.101.camel@deadeye> <1323879603-2961-1-git-send-email-linville@tuxdriver.com> <87mxatp3ty.fsf@rustcorp.com.au> <1324010389.2825.265.camel@deadeye>
-Date: Mon, 19 Dec 2011 16:15:45 +1030
-Message-ID: <87k45tnmgm.fsf@rustcorp.com.au> (sfid-20111219_070839_087028_D876B18C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1752383Ab1LSWne (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 17:43:34 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 1/6] iwlagn: add IRQ tracing
+Date: Mon, 19 Dec 2011 13:43:08 -0800
+Message-Id: <1324330993-24476-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111219_234347_690367_6DAC628B)
+In-Reply-To: <1324330993-24476-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1324330993-24476-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 16 Dec 2011 04:39:49 +0000, Ben Hutchings <ben@decadent.org.uk> wrote:
-Non-text part: multipart/signed
-> On Fri, 2011-12-16 at 14:26 +1030, Rusty Russell wrote:
-> > On Wed, 14 Dec 2011 11:20:03 -0500, "John W. Linville" <linville@tuxdriver.com> wrote:
-> > We really want to indicate "out-of-support" which is only a 1:1
-> > mapping to out-of-tree for upstream kernels.
-> 
-> Who are 'we' in this instance?
+From: Johannes Berg <johannes.berg@intel.com>
 
-Whoever turns this flag on.  I was using friendly, inclusive language :)
+The legacy IRQs could be read from a trace by their
+IO accesses, but reading the ICT doesn't leave any
+trace (pun intended ;-) ) so in order to see what
+input they get we need to add specific tracepoints.
 
-> > How does Debian handle this?
-> 
-> All the modules in Debian's kernel binary packages are built in-tree.
-> Backported modules are patched in as necessary.
-> 
-> Debian includes many packages of OOT modules, but those are supported by
-> their respective maintainers and not the kernel team.  So for the kernel
-> team, the 'O' flag does not mean 'unsupported' but may indicate that
-> another maintainer should handle the bug (or it may also be irrelevant
-> to the bug).
+While at it, fix whitespace in two related places.
 
-So, in your case, the kernel team want to know what's outside their
-support, so this flag works well for you.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-devtrace.h      |   29 +++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |   32 ++++++++++++++-------
+ 2 files changed, 50 insertions(+), 11 deletions(-)
 
-As John pointed out, it's a bit useless for them.  We could enable it
-with a config option, or they could ignore it, since they're going to
-module-signing route anyway.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-devtrace.h b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
+index f9d3319..9b212a8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-devtrace.h
++++ b/drivers/net/wireless/iwlwifi/iwl-devtrace.h
+@@ -90,6 +90,35 @@ TRACE_EVENT(iwlwifi_dev_iowrite32,
+ 	TP_printk("[%p] write io[%#x] = %#x)", __entry->priv, __entry->offs, __entry->val)
+ );
+ 
++TRACE_EVENT(iwlwifi_dev_irq,
++	TP_PROTO(void *priv),
++	TP_ARGS(priv),
++	TP_STRUCT__entry(
++		PRIV_ENTRY
++	),
++	TP_fast_assign(
++		PRIV_ASSIGN;
++	),
++	/* TP_printk("") doesn't compile */
++	TP_printk("%d", 0)
++);
++
++TRACE_EVENT(iwlwifi_dev_ict_read,
++	TP_PROTO(void *priv, u32 index, u32 value),
++	TP_ARGS(priv, index, value),
++	TP_STRUCT__entry(
++		PRIV_ENTRY
++		__field(u32, index)
++		__field(u32, value)
++	),
++	TP_fast_assign(
++		PRIV_ASSIGN;
++		__entry->index = index;
++		__entry->value = value;
++	),
++	TP_printk("read ict[%d] = %#.8x", __entry->index, __entry->value)
++);
++
+ #undef TRACE_SYSTEM
+ #define TRACE_SYSTEM iwlwifi_ucode
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index 791005d..06d5698 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -1281,6 +1281,8 @@ static irqreturn_t iwl_isr(int irq, void *data)
+ 	if (!trans)
+ 		return IRQ_NONE;
+ 
++	trace_iwlwifi_dev_irq(priv(trans));
++
+ 	trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+ 	spin_lock_irqsave(&trans->shrd->lock, flags);
+@@ -1355,6 +1357,7 @@ irqreturn_t iwl_isr_ict(int irq, void *data)
+ 	struct iwl_trans_pcie *trans_pcie;
+ 	u32 inta, inta_mask;
+ 	u32 val = 0;
++	u32 read;
+ 	unsigned long flags;
+ 
+ 	if (!trans)
+@@ -1368,6 +1371,8 @@ irqreturn_t iwl_isr_ict(int irq, void *data)
+ 	if (!trans_pcie->use_ict)
+ 		return iwl_isr(irq, data);
+ 
++	trace_iwlwifi_dev_irq(priv(trans));
++
+ 	spin_lock_irqsave(&trans->shrd->lock, flags);
+ 
+ 	/* Disable (but don't clear!) interrupts here to avoid
+@@ -1382,24 +1387,29 @@ irqreturn_t iwl_isr_ict(int irq, void *data)
+ 	/* Ignore interrupt if there's nothing in NIC to service.
+ 	 * This may be due to IRQ shared with another device,
+ 	 * or due to sporadic interrupts thrown from our NIC. */
+-	if (!trans_pcie->ict_tbl[trans_pcie->ict_index]) {
++	read = le32_to_cpu(trans_pcie->ict_tbl[trans_pcie->ict_index]);
++	trace_iwlwifi_dev_ict_read(priv(trans), trans_pcie->ict_index, read);
++	if (!read) {
+ 		IWL_DEBUG_ISR(trans, "Ignore interrupt, inta == 0\n");
+ 		goto none;
+ 	}
+ 
+-	/* read all entries that not 0 start with ict_index */
+-	while (trans_pcie->ict_tbl[trans_pcie->ict_index]) {
+-
+-		val |= le32_to_cpu(trans_pcie->ict_tbl[trans_pcie->ict_index]);
++	/*
++	 * Collect all entries up to the first 0, starting from ict_index;
++	 * note we already read at ict_index.
++	 */
++	do {
++		val |= read;
+ 		IWL_DEBUG_ISR(trans, "ICT index %d value 0x%08X\n",
+-				trans_pcie->ict_index,
+-				le32_to_cpu(
+-				  trans_pcie->ict_tbl[trans_pcie->ict_index]));
++				trans_pcie->ict_index, read);
+ 		trans_pcie->ict_tbl[trans_pcie->ict_index] = 0;
+ 		trans_pcie->ict_index =
+ 			iwl_queue_inc_wrap(trans_pcie->ict_index, ICT_COUNT);
+ 
+-	}
++		read = le32_to_cpu(trans_pcie->ict_tbl[trans_pcie->ict_index]);
++		trace_iwlwifi_dev_ict_read(priv(trans), trans_pcie->ict_index,
++					   read);
++	} while (read);
+ 
+ 	/* We should not get this value, just ignore it. */
+ 	if (val == 0xffffffff)
+@@ -1426,7 +1436,7 @@ irqreturn_t iwl_isr_ict(int irq, void *data)
+ 	if (likely(inta))
+ 		tasklet_schedule(&trans_pcie->irq_tasklet);
+ 	else if (test_bit(STATUS_INT_ENABLED, &trans->shrd->status) &&
+-			!trans_pcie->inta) {
++		 !trans_pcie->inta) {
+ 		/* Allow interrupt if was disabled by this handler and
+ 		 * no tasklet was schedules, We should not enable interrupt,
+ 		 * tasklet will enable it.
+@@ -1442,7 +1452,7 @@ irqreturn_t iwl_isr_ict(int irq, void *data)
+ 	 * only Re-enable if disabled by irq.
+ 	 */
+ 	if (test_bit(STATUS_INT_ENABLED, &trans->shrd->status) &&
+-		!trans_pcie->inta)
++	    !trans_pcie->inta)
+ 		iwl_enable_interrupts(trans);
+ 
+ 	spin_unlock_irqrestore(&trans->shrd->lock, flags);
+-- 
+1.7.0.4
 
-> > Perhaps it makes more sense to use the proposed module signing stuff in
-> > a simplified mode to mark built-with-kernel modules (eg. just put the
-> > sha of known modules inside the kernel).
-> 
-> Unlike commercial distributions, no-one is paying Debian for support
-> contracts and no-one can game the system by hiding OOT modules.  So it's
-> probably not worthwhile for us to use module signing at all.
-> 
-> However, supposing we did go down this route, I would guess that
-> checksums for ~3000 modules take up more space than the signature
-> checking code.  Instead, we could perhaps generate a key pair during
-> build, include the public key in the kernel and then discard the private
-> key.  (But getting entropy would likely be a problem for the key
-> generation.)
-
-Agreed, 60k is a bit expensive for this minor feature.  
-
-Thanks,
-Rusty.
