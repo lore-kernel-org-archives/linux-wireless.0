@@ -1,69 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:63392 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754513Ab1LGLxY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Dec 2011 06:53:24 -0500
-Message-ID: <1323258799.2312.18.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC> (sfid-20111207_125333_452276_CF2D2B73)
-Subject: Re: [Bloat] Time in Queue, bufferbloat, and... our accidentally
- interplanetary network
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Hagen Paul Pfeifer <hagen@jauu.net>
-Cc: Dave Taht <dave.taht@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org,
-	bloat-devel <bloat-devel@lists.bufferbloat.net>,
-	bloat <bloat@lists.bufferbloat.net>
-Date: Wed, 07 Dec 2011 12:53:19 +0100
-In-Reply-To: <9dfc3c5eb811f2774b378fce0158b3e7@localhost>
-References: <CAA93jw7kQYONQiAozatRmdRRJeK0GB9eNDWtRZ3AL+OVKn0OpA@mail.gmail.com>
-	 <1323082774.2670.40.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
-	 <9dfc3c5eb811f2774b378fce0158b3e7@localhost>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:58934 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752513Ab1LSWng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 17:43:36 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 4/6] iwlwifi: set hw_version in wiphy
+Date: Mon, 19 Dec 2011 13:43:11 -0800
+Message-Id: <1324330993-24476-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111219_234350_027675_437C9801)
+In-Reply-To: <1324330993-24476-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1324330993-24476-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le mercredi 07 décembre 2011 à 11:15 +0100, Hagen Paul Pfeifer a écrit :
-> On Mon, 05 Dec 2011 11:59:34 +0100, Eric Dumazet wrote:
-> 
-> 
-> > Adding a time limit is possible, all we need is a proper design and
-> > implementation :)
-> > 
-> > Here is my suggestion :
-> > 
-> > Design a new tfifo/tred qdisc, with following properties :
-> > 
-> > Adaptative RED, (ECN enabled + head drop), but instead of using
-> > bytes/packet qlen average, use time_in_queue average.
-> 
-> Question one: is anything wrong with sfb or choke as the basis, instead of
-> RED?
-> 
+Set the hw_version in wiphy structure
 
-RED is the module to bring EWMA stuff, it seems natural to start with
-it. Please note that choke has a RED module too.
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Then later, we can add time limit stuff to other Qdisc if needed, its a
-plug anyway. But is there any meaning to compute a global EWMA after
-SFB/SFQ packet classification ?
-
-> Question two: I submitted pfast_head_drop to drop more outdated data
-> instead of new data. Back in time I thought TCP _may_ experience benefits
-> because more up-to-date SACK data packets are saved. Are there any other
-> TCP advantages with head drop policy?
-> 
-
-Note that head drop is a consequence of time limit idea on top of FIFO,
-since only at dequeue time, we compute the delta between current time
-and enqueue time, and we drop/mark the (head) packet if time exceeds our
-current limit.
-
-In general, being able to drop/mark firsts packets in queue instead of
-last ones can let TCP sender be notified of congestion much earlier than
-a tail drop. (We gain the time to transmit whole packets in queue before
-receiver can report in its ACK the congestion back to sender)
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index 8dc50dd..f980e57 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -234,6 +234,8 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
+ 		priv->hw->wiphy->bands[IEEE80211_BAND_5GHZ] =
+ 			&priv->bands[IEEE80211_BAND_5GHZ];
+ 
++	hw->wiphy->hw_version = bus_get_hw_id(bus(priv));
++
+ 	iwl_leds_init(priv);
+ 
+ 	ret = ieee80211_register_hw(priv->hw);
+-- 
+1.7.0.4
 
