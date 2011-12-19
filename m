@@ -1,50 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:53902 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755508Ab1LBPWT convert rfc822-to-8bit (ORCPT
+Received: from lunge.queued.net ([173.255.254.236]:39182 "EHLO
+	lunge.queued.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753067Ab1LSUck (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Dec 2011 10:22:19 -0500
-Received: by faaq16 with SMTP id q16so2130739faa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Dec 2011 07:22:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4ED8B0BA.2020706@openwrt.org>
-References: <20111130201051.GC2477@tuxdriver.com>
-	<1322685980-8757-1-git-send-email-mar.kolya@gmail.com>
-	<1322685980-8757-4-git-send-email-mar.kolya@gmail.com>
-	<4ED8B0BA.2020706@openwrt.org>
-Date: Fri, 2 Dec 2011 10:22:17 -0500
-Message-ID: <CALGY4fuiQ5k3yq9UtPVfLRaoDj-4Ui8vThnDnprsCoZNdPcOZw@mail.gmail.com> (sfid-20111202_162225_060780_B32EB077)
-Subject: Re: [PATCH v3 3/4] ath9k: use config.enable_ani to check if ani
- should be performed
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 19 Dec 2011 15:32:40 -0500
+Date: Mon, 19 Dec 2011 12:22:58 -0800
+From: Andres Salomon <dilinger@queued.net>
+To: dcbw@redhat.com
+Cc: linville@tuxdriver.com, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, dsd@laptop.org
+Subject: [PATCH] libertas: clean up scan thread handling
+Message-ID: <20111219122258.26988450@queued.net> (sfid-20111219_213245_135474_16F63B2D)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/12/2 Felix Fietkau <nbd@openwrt.org>:
-> On 2011-11-30 9:46 PM, Nikolay Martynov wrote:
->> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
->> index 0b9a0e8..391d59c 100644
->> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
->> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
->> @@ -808,7 +808,8 @@ void ath9k_htc_ani_work(struct work_struct *work)
->>       }
->>
->>       /* Verify whether we must check ANI */
->> -     if ((timestamp - common->ani.checkani_timer) >= ATH_ANI_POLLINTERVAL) {
->> +     if (sc->sc_ah->config.enable_ani &&
->> +         (timestamp - common->ani.checkani_timer) >= ATH_ANI_POLLINTERVAL) {
->>               aniflag = true;
->>               common->ani.checkani_timer = timestamp;
->>       }
-> Does not compile, there is no 'sc' variable, use ah->config.enable_ani.
 
-  Hmm... weird that it didn't fail when I applied this to openwrt.
-Anyway, thanks for letting me know, I'll send an updated patch!
+The libertas scan thread expects priv->scan_req to be non-NULL.  In theory,
+it should always be set.  In practice, we've seen the following oops:
 
+[ 8363.067444] Unable to handle kernel NULL pointer dereference at virtual address 00000004
+[ 8363.067490] pgd = c0004000
+[ 8363.078393] [00000004] *pgd=00000000
+[ 8363.086711] Internal error: Oops: 17 [#1] PREEMPT
+[ 8363.091375] Modules linked in: fuse libertas_sdio libertas psmouse mousedev ov7670 mmp_camera joydev videobuf2_core videobuf2_dma_sg videobuf2_memops [last unloaded: scsi_wait_scan]
+[ 8363.107490] CPU: 0    Not tainted  (3.0.0-gf7ccc69 #671)
+[ 8363.112799] PC is at lbs_scan_worker+0x108/0x5a4 [libertas]
+[ 8363.118326] LR is at 0x0
+[ 8363.120836] pc : [<bf03a854>]    lr : [<00000000>]    psr: 60000113
+[ 8363.120845] sp : ee66bf48  ip : 00000000  fp : 00000000
+[ 8363.120845] r10: ee2c2088  r9 : c04e2efc  r8 : eef97005
+[ 8363.132231] r7 : eee0716f  r6 : ee2c02c0  r5 : ee2c2088  r4 : eee07160
+[ 8363.137419] r3 : 00000000  r2 : a0000113  r1 : 00000001  r0 : eee07160
+[ 8363.143896] Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment kernel
+[ 8363.157630] Control: 10c5387d  Table: 2e754019  DAC: 00000015
+[ 8363.163334] Process kworker/u:1 (pid: 25, stack limit = 0xee66a2f8)
+
+While I've not found a smoking gun, there are two places that raised red flags
+for me.  The first is in _internal_start_scan, when we queue up a scan; we
+first queue the worker, and then set priv->scan_req.  There's theoretically
+a 50mS delay which should be plenty, but doing things that way just seems
+racy (and not in the good way).
+
+The second is in the scan worker thread itself.  Depending on the state of
+priv->scan_channel, we cancel pending scan runs and then requeue a run in
+300mS.  We then send the scan command down to the hardware, sleep, and if
+we get scan results for all the desired channels, we set priv->scan_req to
+NULL.  However, it that's happened in less than 300mS, what happens with
+the pending scan run?
+
+This patch addresses both of those concerns.  With the patch applied, we
+have not seen the oops in the past two weeks.
+
+Signed-off-by: Andres Salomon <dilinger@queued.net>
+Cc: stable@kernel.org
+---
+ drivers/net/wireless/libertas/cfg.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+index a7f1ab2..db64ef1 100644
+--- a/drivers/net/wireless/libertas/cfg.c
++++ b/drivers/net/wireless/libertas/cfg.c
+@@ -728,9 +728,11 @@ static void lbs_scan_worker(struct work_struct *work)
+ 		le16_to_cpu(scan_cmd->hdr.size),
+ 		lbs_ret_scan, 0);
+ 
+-	if (priv->scan_channel >= priv->scan_req->n_channels)
++	if (priv->scan_channel >= priv->scan_req->n_channels) {
+ 		/* Mark scan done */
++		cancel_delayed_work(&priv->scan_work);
+ 		lbs_scan_done(priv);
++	}
+ 
+ 	/* Restart network */
+ 	if (carrier)
+@@ -759,12 +761,12 @@ static void _internal_start_scan(struct lbs_private *priv, bool internal,
+ 		request->n_ssids, request->n_channels, request->ie_len);
+ 
+ 	priv->scan_channel = 0;
+-	queue_delayed_work(priv->work_thread, &priv->scan_work,
+-		msecs_to_jiffies(50));
+-
+ 	priv->scan_req = request;
+ 	priv->internal_scan = internal;
+ 
++	queue_delayed_work(priv->work_thread, &priv->scan_work,
++		msecs_to_jiffies(50));
++
+ 	lbs_deb_leave(LBS_DEB_CFG80211);
+ }
+ 
 -- 
-Truthfully yours,
-Martynov Nikolay.
-Email: mar.kolya@gmail.com
+1.7.2.5
+
