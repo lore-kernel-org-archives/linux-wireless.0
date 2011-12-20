@@ -1,49 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37005 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752103Ab1L2Kfc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Dec 2011 05:35:32 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH 1/3] ath6kl: Remove few unnecessary spin_locks around set_bit()
-Date: Thu, 29 Dec 2011 16:05:37 +0530
-Message-ID: <1325154939-6986-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111229_113536_209794_41BD4A51)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga02.intel.com ([134.134.136.20]:60136 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753659Ab1LUAqe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Dec 2011 19:46:34 -0500
+Subject: Re: linux 3.2-rcX iwlwifi driver's problem (wifi link unstable
+ when moving between multiple APs)
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Cheng Renquan <crquan@gmail.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAH5vBdJLHkFLQCHHYOczXQt1Hwwe3e-Ct0MUjyTRU0vgodAPOg@mail.gmail.com>
+References: <CAH5vBdJLHkFLQCHHYOczXQt1Hwwe3e-Ct0MUjyTRU0vgodAPOg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 20 Dec 2011 15:46:05 -0800
+Message-ID: <1324424765.13074.281.camel@wwguy-huron> (sfid-20111221_014638_653445_B17B5587)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/txrx.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
+Hi Renquan,
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 506a303..7645eac 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -449,9 +449,7 @@ enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
- 		 * WMI queue with too many commands the only exception to
- 		 * this is during testing using endpointping.
- 		 */
--		spin_lock_bh(&ar->lock);
- 		set_bit(WMI_CTRL_EP_FULL, &ar->flag);
--		spin_unlock_bh(&ar->lock);
- 		ath6kl_err("wmi ctrl ep is full\n");
- 		return action;
- 	}
-@@ -479,9 +477,7 @@ enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
- 		    action != HTC_SEND_FULL_DROP) {
- 			spin_unlock_bh(&ar->list_lock);
- 
--			spin_lock_bh(&vif->if_lock);
- 			set_bit(NETQ_STOPPED, &vif->flags);
--			spin_unlock_bh(&vif->if_lock);
- 			netif_stop_queue(vif->ndev);
- 
- 			return action;
--- 
-1.7.0.4
+Thanks you for reporting the issue.It will be greatly appreciated  if
+you can enter a bug report in http://bugzilla.intellinuxwireless.org/.
+Then we can assign engineer to look into the issue , also keep track of
+the progress.
+
+Thanks
+Wey
+
+On Tue, 2011-12-20 at 15:20 -0800, Cheng Renquan wHi Intel Linux
+Wireless group,
+> 
+> Since 3.2-rcX, it seems no more iwlagn driver? This iwlwifi driver
+> seems not stable
+> when I hold laptop moving inside a large office, between multiple APs,
+> everytime I moved to a new place, the wifi link becomes inactive, and
+> I need to wait
+> 5 minutes or longer to wait iwlwifi stable, networkmanager get a new
+> ip address; quite annoying,
+> 
+> 
+> [root@archtop ~]# lspci -D -nn -k -d 8086:4238
+> 0000:03:00.0 Network controller [0280]: Intel Corporation Centrino
+> Ultimate-N 6300 [8086:4238] (rev 35)
+> 	Subsystem: Intel Corporation Centrino Ultimate-N 6300 3x3 AGN [8086:1111]
+> 	Kernel driver in use: iwlwifi
+> 	Kernel modules: iwlwifi
+> 
+> in the large office, it's using WPA2 enterprise encryption with
+> MSCHAPv2 domain user/pass authentication,
+> 
+> 
+> Last iwlagn driver in my Ubuntu-10.10 default kernel (linux-2.6.35.X)
+> on the same computer
+> same networkmanager/wpa_supplicant software same office working wonderful,
+> moving smoothly between multiple APs,
+> 
+> At home, even I set wireless router to no any
+> encryption/authentication, this new kernel
+> would becomes wifi link down every couple of hours, while another
+> laptop and same Ubuntu-10
+> on this laptop could work smoothly,
+> 
+> 
+> 
+> 
+> Thanks,
+
 
