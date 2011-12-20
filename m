@@ -1,104 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:44133 "EHLO
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:36899 "EHLO
 	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750757Ab1LOJGz convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1752521Ab1LTDax (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 04:06:55 -0500
-Received: by vcbfk14 with SMTP id fk14so1327720vcb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 01:06:54 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAD2nsn0Zqw0zdEUrMCnBKKLsZEBw_qqT5MO=7dHCwj8Hd6WpqQ@mail.gmail.com>
-References: <CAKeTQ4aVzp3GTmzR0zv1j5fWyCUrQLUk9EHHBvZFpDYiQSC1=g@mail.gmail.com>
-	<CAD2nsn0jgoUDf02UrajQyOKZiETMEbP6ikBAtBNdmcgT6m34yw@mail.gmail.com>
-	<CAKeTQ4adxsEiEzL1DXUvKCF6odfZkQTFhVFJC4AFwBshU-YHFw@mail.gmail.com>
-	<CAD2nsn0Zqw0zdEUrMCnBKKLsZEBw_qqT5MO=7dHCwj8Hd6WpqQ@mail.gmail.com>
-Date: Thu, 15 Dec 2011 14:36:54 +0530
-Message-ID: <CAD2nsn2fSehL_3ntoQDN0qzfSycx_hLP7R2Nn2V+iaubc5RX4A@mail.gmail.com> (sfid-20111215_100701_688309_B1BA1195)
-Subject: Re: wierless hardware using ath9k driver on AP mode leads to kernel panic
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Ashwin Mendonca <ashwinloyal@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 19 Dec 2011 22:30:53 -0500
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, linux-next@vger.kernel.org,
+	linux-kernel@vger.kernel.org, zefir.kurtisi@neratec.com,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Joe Perches <joe@perches.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: [PATCH] ath9k: fix roadkill due to Joe's patch on ath_dbg() changes
+Date: Mon, 19 Dec 2011 19:30:43 -0800
+Message-Id: <1324351843-4115-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111220_043123_548117_B0DA4463)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 15, 2011 at 1:24 PM, Mohammed Shafi
-<shafi.wireless@gmail.com> wrote:
-> On Thu, Dec 15, 2011 at 12:55 PM, Ashwin Mendonca <ashwinloyal@gmail.com> wrote:
->> I tried the bleeding edge build of compat-wireless
->> (compat-wireless-2011-12-14 build) on Linux-3.1.5. It still leads to kernel
->> panic. I manually got the AP up with these steps:
->>
->> 1. Removed ip from eth0
->> 2. Created a bridge with brctl
->> 3. Added eth0 to br0
->> 4. Ran hostapd with my con file. And it showed this error:
->>     l2_packet_receive - recvfrom: Network is down
->> 5. Tried to connect my client devices. None were getting authenticated.
->> 6. I assigned an ip to br0. Client got authenticated. System on AP mode
->> froze.
->>
->> My hostapd.conf:
->>
->> ################################################
->> interface=wlan0
->> bridge=br0
->> driver=nl80211
->> logger_syslog=-1
->> logger_syslog_level=2
->> logger_stdout=-1
->> logger_stdout_level=2
->> dump_file=/tmp/hostapd.dump
->> ctrl_interface=/var/run/hostapd
->> ctrl_interface_group=0
->> ssid=test
->> hw_mode=g
->> channel=1
->> beacon_int=100
->> dtim_period=2
->> max_num_sta=255
->> rts_threshold=2347
->> fragm_threshold=2346
->> macaddr_acl=0
->> auth_algs=1
->> ignore_broadcast_ssid=0
->> wmm_enabled=1
->> wmm_ac_bk_cwmin=4
->> wmm_ac_bk_cwmax=10
->> wmm_ac_bk_aifs=7
->> wmm_ac_bk_txop_limit=0
->> wmm_ac_bk_acm=0
->> wmm_ac_be_aifs=3
->> wmm_ac_be_cwmin=4
->> wmm_ac_be_cwmax=10
->> wmm_ac_be_txop_limit=0
->> wmm_ac_be_acm=0
->> wmm_ac_vi_aifs=2
->> wmm_ac_vi_cwmin=3
->> wmm_ac_vi_cwmax=4
->> wmm_ac_vi_txop_limit=94
->> wmm_ac_vi_acm=0
->> wmm_ac_vo_aifs=2
->> wmm_ac_vo_cwmin=2
->> wmm_ac_vo_cwmax=3
->> wmm_ac_vo_txop_limit=47
->> wmm_ac_vo_acm=0
->> eapol_key_index_workaround=0
->> eap_server=0
->> own_ip_addr=127.0.0.1
->> wpa=3
->> wpa_passphrase=ashwinalwyn
->> wpa_key_mgmt=WPA-PSK
->> wpa_pairwise=TKIP
->> rsn_pairwise=CCMP
->>
-> with this config file i had a freeze!  with 3.2.rc1 compat
-> wireless.let me analyze with latest build
+From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 
-i also got the stack trace, and it seems to be a same issue we had for
-STA. we are doing aggregation related stuff while the aggregation
-itself is disabled. i will soon send a fix by today.
+Joe changed ath_dbg() to simpify code but while his patch was
+being merged dfs.c was born and as such did not get the change
+Joe envisioned. This fixes that. Test compiled with:
 
+ make allmodconfig
+
+Cc: Joe Perches <joe@perches.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: John W. Linville <linville@tuxdriver.com>
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/dfs.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/dfs.c b/drivers/net/wireless/ath/ath9k/dfs.c
+index e4e84a9..f4f56af 100644
+--- a/drivers/net/wireless/ath/ath9k/dfs.c
++++ b/drivers/net/wireless/ath/ath9k/dfs.c
+@@ -66,7 +66,7 @@ ath9k_postprocess_radar_event(struct ath_softc *sc,
+ 	u8 rssi;
+ 	u16 dur;
+ 
+-	ath_dbg(ath9k_hw_common(sc->sc_ah), ATH_DBG_DFS,
++	ath_dbg(ath9k_hw_common(sc->sc_ah), DFS,
+ 		"pulse_bw_info=0x%x, pri,ext len/rssi=(%u/%u, %u/%u)\n",
+ 		are->pulse_bw_info,
+ 		are->pulse_length_pri, are->rssi,
+@@ -161,7 +161,7 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
+ 
+ 	if ((!(rs->rs_phyerr != ATH9K_PHYERR_RADAR)) &&
+ 	    (!(rs->rs_phyerr != ATH9K_PHYERR_FALSE_RADAR_EXT))) {
+-		ath_dbg(common, ATH_DBG_DFS,
++		ath_dbg(common, DFS,
+ 			"Error: rs_phyer=0x%x not a radar error\n",
+ 			rs->rs_phyerr);
+ 		return;
+@@ -190,7 +190,7 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
+ 	ard.pulse_length_ext = vdata_end[-2];
+ 	ard.pulse_length_pri = vdata_end[-3];
+ 
+-	ath_dbg(common, ATH_DBG_DFS,
++	ath_dbg(common, DFS,
+ 		"bw_info=%d, length_pri=%d, length_ext=%d, "
+ 		"rssi_pri=%d, rssi_ext=%d\n",
+ 		ard.pulse_bw_info, ard.pulse_length_pri, ard.pulse_length_ext,
+@@ -200,7 +200,7 @@ void ath9k_dfs_process_phyerr(struct ath_softc *sc, void *data,
+ 	drp.ts = mactime;
+ 	if (ath9k_postprocess_radar_event(sc, &ard, &drp)) {
+ 		static u64 last_ts;
+-		ath_dbg(common, ATH_DBG_DFS,
++		ath_dbg(common, DFS,
+ 			"ath9k_dfs_process_phyerr: channel=%d, ts=%llu, "
+ 			"width=%d, rssi=%d, delta_ts=%llu\n",
+ 			drp.freq, drp.ts, drp.width, drp.rssi, drp.ts-last_ts);
 -- 
-shafi
+1.7.4.15.g7811d
+
