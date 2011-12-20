@@ -1,53 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:51342 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754529Ab1L0PSg convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:60466 "HELO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751010Ab1LTGHP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Dec 2011 10:18:36 -0500
-Received: by vcbfk14 with SMTP id fk14so8967319vcb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Dec 2011 07:18:35 -0800 (PST)
+	Tue, 20 Dec 2011 01:07:15 -0500
+Date: Tue, 20 Dec 2011 11:37:08 +0530
+From: Yogesh Ashok Powar <yogeshp@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH] mwl8k: Call ieee80211_stop_tx_ba_cb_irqsafe for already
+ deleted BA stream
+Message-ID: <20111220060657.GA4591@hertz.marvell.com> (sfid-20111220_070718_566398_98CCD895)
 MIME-Version: 1.0
-In-Reply-To: <1324542989-25212-1-git-send-email-helmut.schaa@googlemail.com>
-References: <1324542989-25212-1-git-send-email-helmut.schaa@googlemail.com>
-Date: Tue, 27 Dec 2011 16:18:34 +0100
-Message-ID: <CAOZOX0U5nx+8y5LGqW-4+-SG133GOcmcmjZpx5jq0Hgtug4eeA@mail.gmail.com> (sfid-20111227_161850_089678_78854ED3)
-Subject: Re: [PATCH] rt2x00: Mark active channel's survey data as "in use"
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	gwingerde@gmail.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 22, 2011 at 9:36 AM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> This is just a cosmetical fix since we only return survey data for the
-> active channel but it allows iw to show that the survey data is
-> for the currently used channel.
->
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+When stack calls ampdu_action with action = IEEE80211_AMPDU_TX_STOP
+for a stream that has already been removed from the driver, call
+ieee80211_tx_ba_stop_irqsafe to clear the stream in the stack.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+---
+ drivers/net/wireless/mwl8k.c |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 14fc8d1..bb70e89 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -4686,6 +4686,9 @@ int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
->                survey->channel_time_ext_busy = busy_ext / 1000;
->        }
->
-> +       if (!(hw->conf.flags & IEEE80211_CONF_OFFCHANNEL))
-> +               survey->filled |= SURVEY_INFO_IN_USE;
-> +
->        return 0;
->
->  }
-> --
-> 1.7.7
->
+diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+index 995695c..901cd79 100644
+--- a/drivers/net/wireless/mwl8k.c
++++ b/drivers/net/wireless/mwl8k.c
+@@ -5044,14 +5044,14 @@ mwl8k_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		ieee80211_start_tx_ba_cb_irqsafe(vif, addr, tid);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_STOP:
+-		if (stream == NULL)
+-			break;
+-		if (stream->state == AMPDU_STREAM_ACTIVE) {
+-			spin_unlock(&priv->stream_lock);
+-			mwl8k_destroy_ba(hw, stream);
+-			spin_lock(&priv->stream_lock);
++		if (stream) {
++			if (stream->state == AMPDU_STREAM_ACTIVE) {
++				spin_unlock(&priv->stream_lock);
++				mwl8k_destroy_ba(hw, stream);
++				spin_lock(&priv->stream_lock);
++			}
++			mwl8k_remove_stream(hw, stream);
+ 		}
+-		mwl8k_remove_stream(hw, stream);
+ 		ieee80211_stop_tx_ba_cb_irqsafe(vif, addr, tid);
+ 		break;
+ 	case IEEE80211_AMPDU_TX_OPERATIONAL:
+-- 
+1.7.5.4
+
