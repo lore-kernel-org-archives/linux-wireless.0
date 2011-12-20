@@ -1,51 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.HRZ.Uni-Dortmund.DE ([129.217.128.51]:34869 "EHLO
-	unimail.uni-dortmund.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751620Ab1LKTFm (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:17820 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752252Ab1LTSqe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Dec 2011 14:05:42 -0500
-Message-ID: <4EE4FEF0.1090107@udo.edu> (sfid-20111211_200609_736638_96BED4D1)
-Date: Sun, 11 Dec 2011 20:05:20 +0100
-From: Andrej Gelenberg <andrej.gelenberg@udo.edu>
+	Tue, 20 Dec 2011 13:46:34 -0500
+Cc: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Felix Fietkau <nbd@openwrt.org>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+Subject: [PATCH 6/6] ath9k_hw: fix sparse complaint on ar9003_switch_com_spdt_get()
+Date: Tue, 20 Dec 2011 10:46:11 -0800
+Message-ID: <1324406771-7100-7-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111220_194637_771058_2ECDC9F9)
+In-Reply-To: <1324406771-7100-1-git-send-email-rodrigue@qca.qualcomm.com>
+References: <1324406771-7100-1-git-send-email-rodrigue@qca.qualcomm.com>
 MIME-Version: 1.0
-To: wwguy <wey-yi.w.guy@intel.com>
-CC: Udo Steinberg <udo@hypervisor.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: iwlagn regression in v3.1.5
-References: <4EE4AEF4.2080702@udo.edu> <4EE4DB55.4090804@udo.edu>  <20111211174138.79e51fe8@x220.fritz.box>  <4EE4E152.2070204@udo.edu> <1323627815.1806.19.camel@wwguy-ubuntu>
-In-Reply-To: <1323627815.1806.19.camel@wwguy-ubuntu>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 
-i haven't experienced firmware crushes, but after that commit i don't 
-get any networking with my wlan card. I added some lspci and dmesg 
-output to the patch. There was no strange output in my dmesg. dhcpcd 
-says in logs, that carrier lost after about 30 seconds. How can i 
-reproduce the HT40 bug?
+This fixes this sparse complaint:
 
-Regards,
-Andrej
+make C=2 CF="-D__CHECK_ENDIAN__" M=drivers/net/wireless/ath/
 
-On 12/11/2011 07:23 PM, wwguy wrote:
-> On Sun, 2011-12-11 at 08:58 -0800, Andrej Gelenberg wrote:
->> Hi,
->>
->> this is pretty mean regression for the stable kernel. You may the fix
->> only for cards, which need it and not for all of them.
->
-> Could you elaborate more on the failure case and setup. this patch is to
-> address HT40 related problem which cause the iwlwifi firmware crash.
->
-> Thanks
-> Wey
->>>
->
->
+  CHECK   drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+drivers/net/wireless/ath/ath9k/ar9003_eeprom.c:3544:21: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/ath/ath9k/ar9003_eeprom.c:3544:21:    expected restricted __le32 [usertype] val
+drivers/net/wireless/ath/ath9k/ar9003_eeprom.c:3544:21:    got restricted __le16 [usertype] switchcomspdt
+drivers/net/wireless/ath/ath9k/ar9003_eeprom.c:3546:21: warning: incorrect type in assignment (different base types)
+drivers/net/wireless/ath/ath9k/ar9003_eeprom.c:3546:21:    expected restricted __le32 [usertype] val
+drivers/net/wireless/ath/ath9k/ar9003_eeprom.c:3546:21:    got restricted __le16 [usertype] switchcomspdt
+
+The eep->modalHeader5G.switchcomspdt is a le16 and we return u16,
+so just return le16_to_cpu().
+
+Cc: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 391def9..9fbcbdd 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3538,13 +3538,13 @@ static void ar9003_hw_xpa_bias_level_apply(struct ath_hw *ah, bool is2ghz)
+ static u16 ar9003_switch_com_spdt_get(struct ath_hw *ah, bool is_2ghz)
+ {
+ 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+-	__le32 val;
++	__le16 val;
+ 
+ 	if (is_2ghz)
+ 		val = eep->modalHeader2G.switchcomspdt;
+ 	else
+ 		val = eep->modalHeader5G.switchcomspdt;
+-	return le32_to_cpu(val);
++	return le16_to_cpu(val);
+ }
+ 
+ 
+-- 
+1.7.4.15.g7811d
 
