@@ -1,54 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:30249 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753467Ab1LBKr2 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:61833 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751914Ab1LTUYI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Dec 2011 05:47:28 -0500
-Date: Fri, 2 Dec 2011 16:17:11 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: Inform bss information to cfg80211 before
- connect event
-Message-ID: <20111202104709.GB28660@chvasanth-lnx> (sfid-20111202_114732_551113_3DF38EFE)
-References: <1322818619-29265-1-git-send-email-vthiagar@qca.qualcomm.com>
+	Tue, 20 Dec 2011 15:24:08 -0500
+Cc: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	Petri Karhula <petri.karhula@nokia.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+Subject: [PATCH 2/3] cfg80211: replace reg.c Nokia commit 269ac5
+Date: Tue, 20 Dec 2011 12:23:37 -0800
+Message-ID: <1324412618-25131-3-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111220_212413_733190_49E63F1A)
+In-Reply-To: <1324412618-25131-1-git-send-email-rodrigue@qca.qualcomm.com>
+References: <1324412618-25131-1-git-send-email-rodrigue@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1322818619-29265-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 02, 2011 at 03:06:59PM +0530, Vasanthakumar Thiagarajan wrote:
-> This is already done but only when bss entry is not availabe
-> or aged out. Not updating the bss information when that bss
-> is available creates a case where there is a bss entry when
-> checked in ath6kl_cfg80211_connect_event() but it got aged out
-> by the time cfg80211 checks for the bss entry in __cfg80211_roamed().
-> This results in the following warning and the failure to notify
-> roaming event to application. To fix this, update the bss information
-> for which a romaing event is received. Also renamed ath6kl_add_bss_if_needed()
-> to ath6kl_inform_bss().
-> 
-> [158645.538384] WARNING: at net/wireless/sme.c:586
-> __cfg80211_roamed+0xc2/0x1b1()
-> [158645.538810] Call Trace:
-> [158645.538838]  [<c1033527>] warn_slowpath_common+0x65/0x7a
-> [158645.538917]  [<c14cfacf>] ? __cfg80211_roamed+0xc2/0x1b1
-> [158645.538946]  [<c103354b>] warn_slowpath_null+0xf/0x13
-> [158645.539055]  [<c14cfacf>] __cfg80211_roamed+0xc2/0x1b1
-> [158645.539086]  [<c14beb5b>] cfg80211_process_rdev_events+0x153/0x1cc
-> [158645.539166]  [<c14bd57b>] cfg80211_event_work+0x26/0x36
-> [158645.539195]  [<c10482ae>] process_one_work+0x219/0x38b
-> [158645.539273]  [<c14bd555>] ? wiphy_new+0x419/0x419
-> [158645.539301]  [<c10486cb>] worker_thread+0xf6/0x1bf
-> [158645.539379]  [<c10485d5>] ? rescuer_thread+0x1b5/0x1b5
-> [158645.539407]  [<c104b3e2>] kthread+0x62/0x67
-> [158645.539484]  [<c104b380>] ? __init_kthread_worker+0x42/0x42
-> [158645.539514]  [<c151309a>] kernel_thread_helper+0x6/0xd
-> 
-> Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 
-Please drop this patch, this needs more work.
+Nokia hasn't gotten back to me in over 1 month for a relicense
+change request. There are only a few changes that they contributed,
+so just reverting their changes but replacing with another set.
+This change replaces this commit:
 
-Vasanth
+commit 269ac5fd2d75b118d76a2291e28796527db2f3f8
+Author: Kalle Valo <kalle.valo@nokia.com>
+Date:   Tue Dec 1 10:47:15 2009 +0200
+
+    cfg80211: indent regulatory messages with spaces
+
+    The regulatory messages in syslog look weird:
+
+    kernel: cfg80211: Regulatory domain: US
+    kernel: ^I(start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+    kernel: ^I(2402000 KHz - 2472000 KHz @ 40000 KHz), (600 mBi, 2700 mBm)
+    kernel: ^I(5170000 KHz - 5190000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+    kernel: ^I(5190000 KHz - 5210000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+    kernel: ^I(5210000 KHz - 5230000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+    kernel: ^I(5230000 KHz - 5330000 KHz @ 40000 KHz), (600 mBi, 2300 mBm)
+    kernel: ^I(5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 3000 mBm)
+
+    Indent them with four spaces instead of the tab character to get prettier
+    output.
+
+    Signed-off-by: Kalle Valo <kalle.valo@nokia.com>
+    Acked: Luis R. Rodriguez <lrodriguez@atheros.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+Cc: Petri Karhula <petri.karhula@nokia.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ net/wireless/reg.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index a7d252e..c0e0e42 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -1987,7 +1987,7 @@ static void print_rd_rules(const struct ieee80211_regdomain *rd)
+ 	const struct ieee80211_freq_range *freq_range = NULL;
+ 	const struct ieee80211_power_rule *power_rule = NULL;
+ 
+-	pr_info("    (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)\n");
++	pr_info("  (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)\n");
+ 
+ 	for (i = 0; i < rd->n_reg_rules; i++) {
+ 		reg_rule = &rd->reg_rules[i];
+@@ -1999,14 +1999,14 @@ static void print_rd_rules(const struct ieee80211_regdomain *rd)
+ 		 * in certain regions
+ 		 */
+ 		if (power_rule->max_antenna_gain)
+-			pr_info("    (%d KHz - %d KHz @ %d KHz), (%d mBi, %d mBm)\n",
++			pr_info("  (%d KHz - %d KHz @ %d KHz), (%d mBi, %d mBm)\n",
+ 				freq_range->start_freq_khz,
+ 				freq_range->end_freq_khz,
+ 				freq_range->max_bandwidth_khz,
+ 				power_rule->max_antenna_gain,
+ 				power_rule->max_eirp);
+ 		else
+-			pr_info("    (%d KHz - %d KHz @ %d KHz), (N/A, %d mBm)\n",
++			pr_info("  (%d KHz - %d KHz @ %d KHz), (N/A, %d mBm)\n",
+ 				freq_range->start_freq_khz,
+ 				freq_range->end_freq_khz,
+ 				freq_range->max_bandwidth_khz,
+-- 
+1.7.4.15.g7811d
+
