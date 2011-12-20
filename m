@@ -1,149 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:9277 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750721Ab1LIQOI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Dec 2011 11:14:08 -0500
-Subject: Re: [PATCH] iwlwifi regression in 20111205 merge
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Nikolay Martynov <mar.kolya@gmail.com>,
-	"mar.kolya@gmail.com linux-wireless@vger.kernel.org"
-	<linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-In-Reply-To: <20111209154415.GA14236@tuxdriver.com>
-References: <1323398619-19774-1-git-send-email-mar.kolya@gmail.com>
-	 <1323399833.13074.80.camel@wwguy-huron>
-	 <1323400528.13074.87.camel@wwguy-huron>
-	 <20111209154415.GA14236@tuxdriver.com>
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:47902 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751411Ab1LTUvO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Dec 2011 15:51:14 -0500
+Received: by lagv3 with SMTP id v3so842263lag.28
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 12:51:11 -0800 (PST)
+Subject: Re: [PATCH] wl12xx: fix sched scan of DFS channels
+From: Luciano Coelho <coelho@ti.com>
+To: Eyal Shapira <eyal@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1324375441-2053-1-git-send-email-eyal@wizery.com>
+References: <1324375441-2053-1-git-send-email-eyal@wizery.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 09 Dec 2011 07:15:27 -0800
-Message-ID: <1323443727.13074.91.camel@wwguy-huron> (sfid-20111209_171413_166736_0E5B531C)
+Date: Tue, 20 Dec 2011 22:51:07 +0200
+Message-ID: <1324414267.2182.75.camel@cumari> (sfid-20111220_215116_421236_056A5A75)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-12-09 at 07:44 -0800, John W. Linville wrote:
-> Are the bits in the wireless tree correct?  If so, then please just
-> send a patch to fix the wireless-next tree.
+On Tue, 2011-12-20 at 12:04 +0200, Eyal Shapira wrote: 
+> DFS channels weren't scanned properly because
+> min/max_duration weren't set for these channels
+> even though they're required by the FW.
+> The change sets passive_duration and min/max_duration
+> for all channels as the FW uses the correct parameters
+> according to the channel type.
 > 
-> Now that the kernel.org mess is sorted, I guess we/I need to go back
-> to pulling your trees instead of applying patches...
-> 
-"wireless" tree is correct, the piece is missing in iwl-mac80211.c on
-"wireless-next" tree. Nikolay's patch fix it.
+> Signed-off-by: Eyal Shapira <eyal@wizery.com>
+> ---
 
-The question I have is what is the right way to deal with this. the
-orig. patch need to be backport to stable, but the function was move to
-different file short before the patch. That is the reason cause this
-mess :-)
+Applied, thanks Eyal!
 
-Thanks
-Wey
-
-> 
-> On Thu, Dec 08, 2011 at 07:15:28PM -0800, Guy, Wey-Yi wrote:
-> > John,
-> > 
-> > what is the correct method to handle this case?
-> > the patch need to add a piece of code in iwl-mac80211.c, and also need
-> > to backport to stable
-> > Since the function was recently move from iwl-agn.c to iwl-mac80211.c,
-> > so separated patch need for "wireless-next" and "wireless". But look
-> > like portion of patch just lost because the function was move.
-> > 
-> > Thanks
-> > Wey
-> > 
-> > On Thu, 2011-12-08 at 19:03 -0800, Guy, Wey-Yi wrote:
-> > > Hi Nikolay,
-> > > 
-> > > I believe I know what happen,
-> > > 
-> > > this change happen after the function being move from iwl-agn.c to
-> > > iwl-mac80211.c
-> > > 
-> > > Author: Johannes Berg <johannes.berg@intel.com>
-> > > Date:   Fri Dec 2 08:19:17 2011 -0800
-> > > 
-> > >     iwlagn: fix HW crypto for TX-only keys
-> > >     
-> > >     Group keys in IBSS or AP mode are not programmed
-> > >     into the device since we give the key to it with
-> > >     every TX packet. However, we do need mac80211 to
-> > >     create the MMIC & PN in all cases. Move the code
-> > >     around to set the key flags all the time. We set
-> > >     them even when the key is removed again but that
-> > >     is obviously harmless.
-> > >     
-> > >     Cc: stable@vger.kernel.org
-> > >     Reported-by: Reinette Chatre <reinette.chatre@intel.com>
-> > >     Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> > >     Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-> > >     Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> > > 
-> > > and the changes was made in iwl-mac80211.c
-> > > 
-> > > but since this patch need to be backport to stable kernel.
-> > > so there is a separated patch sent for the changes in iwl-agn.c against
-> > > stable
-> > > 
-> > > because all these, for some reason the changes just got lost.
-> > > Thank you for catch this
-> > > 
-> > > Wey
-> > > 
-> > > 
-> > > On Thu, 2011-12-08 at 18:43 -0800, Nikolay Martynov wrote:
-> > > > It looks like the regression was introduced between 20111202 and
-> > > > 20111205 (linux-next tree). Symptoms: connection to AP seem to be
-> > > > established, but no data goes though it in any way. Tested on intel
-> > > > 5300.
-> > > >   Peek at the changes have shown that it looks like at least part of
-> > > > the code wasn't merged properly. It was originally committed into
-> > > > iwl_agn.c but code in question was moved to iwl-mac80211.c.
-> > > >   This patch puts code in place and my card works again.
-> > > >   I hope this patch will be reviewed by people developing iwl
-> > > > driver. Also, it is possible that some other iwl code didn't make it
-> > > > though 20111205 merge as well, so this probably should be checked too.
-> > > >   Please let me know if I can provide any more info.
-> > > >   Thanks!
-> > > > 
-> > > > Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
-> > > > ---
-> > > >  drivers/net/wireless/iwlwifi/iwl-mac80211.c |   11 +++++++++++
-> > > >  1 files changed, 11 insertions(+), 0 deletions(-)
-> > > > 
-> > > > diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-> > > > index 794b735..55308b8 100644
-> > > > --- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-> > > > +++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-> > > > @@ -517,6 +517,17 @@ static int iwlagn_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
-> > > >  		return -EOPNOTSUPP;
-> > > >  	}
-> > > >  
-> > > > +	switch (key->cipher) {
-> > > > +	case WLAN_CIPHER_SUITE_TKIP:
-> > > > +		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
-> > > > +		/* fall through */
-> > > > +	case WLAN_CIPHER_SUITE_CCMP:
-> > > > +		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-> > > > +		break;
-> > > > +	default:
-> > > > +		break;
-> > > > +	}
-> > > > +
-> > > >  	/*
-> > > >  	 * We could program these keys into the hardware as well, but we
-> > > >  	 * don't expect much multicast traffic in IBSS and having keys
-> > > 
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> > 
-> > 
-> 
-
+-- 
+Cheers,
+Luca.
 
