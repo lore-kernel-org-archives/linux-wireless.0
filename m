@@ -1,58 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li9-11.members.linode.com ([67.18.176.11]:34703 "EHLO
-	test.thunk.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753553Ab1LMR0p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 12:26:45 -0500
-Date: Tue, 13 Dec 2011 12:26:42 -0500
-From: Ted Ts'o <tytso@mit.edu>
-To: linux-kernel@vger.kernel.org
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: Re: REGRESSION: v3.2-rcX: iwlagn refuses to associate with my AP's
-Message-ID: <20111213172642.GA4962@thunk.org> (sfid-20111213_182706_919934_1757839A)
-References: <E1RaBm1-0001JR-8a@tytso-glaptop.cam.corp.google.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:29038 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751669Ab1LTTq1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Dec 2011 14:46:27 -0500
+Date: Tue, 20 Dec 2011 11:46:18 -0800
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/6] ath6kl: fix sparse warning on init.c
+Message-ID: <20111220194618.GD15071@tux> (sfid-20111220_204630_616882_D2F0C750)
+References: <1324406771-7100-1-git-send-email-rodrigue@qca.qualcomm.com>
+ <1324406771-7100-2-git-send-email-rodrigue@qca.qualcomm.com>
+ <4EF0E4A3.9010306@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E1RaBm1-0001JR-8a@tytso-glaptop.cam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <4EF0E4A3.9010306@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 12, 2011 at 02:42:53PM -0500, Theodore Ts'o wrote:
-> Hi there,
+On Tue, Dec 20, 2011 at 09:40:19PM +0200, Kalle Valo wrote:
+> On 12/20/2011 08:46 PM, Luis R. Rodriguez wrote:
+> > From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+> > 
+> > This fixes this sparse warning:
+> > 
+> >   CC [M]  drivers/net/wireless/ath/ath6kl/init.o
+> > drivers/net/wireless/ath/ath6kl/init.c: In function ‘ath6kl_init_hw_params’:
+> > drivers/net/wireless/ath/ath6kl/init.c:1377:26: warning: ‘hw’ may be used uninitialized in this function
 > 
-> I recently discovered a regression in the iwlagn driver (works in v3.1
-> but not in v3.2-rc2... I'm going to continue to bisect, but I thought
-> I'd give a heads up now).  I'm using a Lenovo T410, with the following
-> wireless card:
+> That's a compiler warning.
 > 
-> [   11.197410] iwlwifi 0000:03:00.0: HW Revision ID = 0x35
-> [   11.197637] iwlwifi 0000:03:00.0: Detected Intel(R) Centrino(R) Advanced-N + WiMAX 6250 AGN, REV=0x84
+> >  static int ath6kl_init_hw_params(struct ath6kl *ar)
+> >  {
+> > -	const struct ath6kl_hw *hw;
+> > +	const struct ath6kl_hw *hw = NULL;
+> >  	int i;
+> >  
+> >  	for (i = 0; i < ARRAY_SIZE(hw_list); i++) {
+> > @@ -1390,6 +1390,9 @@ static int ath6kl_init_hw_params(struct ath6kl *ar)
+> >  		return -EINVAL;
+> >  	}
+> >  
+> > +	if (!hw)
+> > +		return -EINVAL;
 > 
-> The failure to associate with access points happens at work, with
-> whatever AP's are in use at the Cambridge Google office.  When I tried
-> v3.2-rc5 at home, I was able to associate with a consumer-grade NetGear
-> AP, although it was flaky --- that is, it completely failed to associate
-> initially, but then I tried rebooting and I was eventually able to get
-> it to work.   At work, I was able to reproduce the problem with a
-> v3.2-rc5 and v3.2-rc2 kernel, but the problem did not manifest itself
-> with a v3.1 kernel.
+> I can't see how hw can be uninitialised here (looking at the version in
+> ath6kl.git). I copy the full code here:
+> 
+> static int ath6kl_init_hw_params(struct ath6kl *ar)
+> {
+> 	const struct ath6kl_hw *hw;
+> 	int i;
+> 
+> 	for (i = 0; i < ARRAY_SIZE(hw_list); i++) {
+> 		hw = &hw_list[i];
+> 
+> 		if (hw->id == ar->version.target_ver)
+> 			break;
+> 	}
+> 
+> 	if (i == ARRAY_SIZE(hw_list)) {
+> 		ath6kl_err("Unsupported hardware version: 0x%x\n",
+> 			   ar->version.target_ver);
+> 		return -EINVAL;
+> 	}
+> 
+> 	ar->hw = *hw;
+> 
+> I always check for both compiler and sparse warnings and I have never
+> seen this. What version of compiler do you have?
+> 
+> I have:
+> 
+> gcc-4.5.real (Ubuntu/Linaro 4.5.2-8ubuntu4) 4.5.2
 
-OK, a follow up.  A bisection puts the finger of blame very firmly at:
+Same.
 
-debcf73 iwlagn: handle GO powersave
+mcgrof@tux ~ $ gcc --version
+gcc-4.5.real (Ubuntu/Linaro 4.5.2-8ubuntu4) 4.5.2
+Copyright (C) 2010 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE
 
-Specifically, I can't associate with *any* access points (encrypted or
-not) if I compile a kernel at commit debcf73, but if I compile a
-kernel with its parent (commit 8ad71be), it works fine.
-
-However, as a puzzler, when I tried reverted compiling 3.2-rc5 with
-debcf73 reverted, it did not make the problem go away.  So there's
-something more going on here.  I could try doing a bisect with reverts
-of debcf73 at each step, trying to find the problem, but I'm hoping
-this is enough of a hint that someone can tell me either that this is
-fixed already in the linux-wireless tree, or that they know what's
-wrong and can provide a test patch...
-
-Thanks,
-
-						- Ted
+  Luis
