@@ -1,36 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:9351 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753878Ab1LATJi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Dec 2011 14:09:38 -0500
-Date: Thu, 1 Dec 2011 20:14:21 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Axel Lin <axel.lin@gmail.com>
-Cc: linux-kernel@vger.kernel.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] NFC: pn533: Staticise pn533_data_exchange()
-Message-ID: <20111201191421.GK22609@sortiz-mobl> (sfid-20111201_200952_995132_B8FC1956)
-References: <1322648286.6774.0.camel@phoenix>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:34751 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751772Ab1LTD7C (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 19 Dec 2011 22:59:02 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1322648286.6774.0.camel@phoenix>
+In-Reply-To: <CAB=NE6WfBDqQzqxNaZm5mMhjyP2t7M-5t=+RA-A2JAKUKjmJzw@mail.gmail.com>
+References: <CAB=NE6WfBDqQzqxNaZm5mMhjyP2t7M-5t=+RA-A2JAKUKjmJzw@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 19 Dec 2011 19:58:40 -0800
+Message-ID: <CAB=NE6VKYDoPzQV+HpaM1tDM_=whZV1hgUxPeS6twzgiz1WtEA@mail.gmail.com> (sfid-20111220_045919_190916_49A4D184)
+Subject: Re: [ANN] compat-wireless for 3.2-rc6
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Axel,
+On Mon, Dec 19, 2011 at 7:55 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+> [1] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.2/compat-wireless-3.2-rc6-3-s.tar.bz2
+> [2] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.2/compat-wireless-3.2-rc1-1.tar.bz2
 
-On Wed, Nov 30, 2011 at 06:18:06PM +0800, Axel Lin wrote:
-> It is not used outside this driver so no need to make the symbol global.
-> 
-> Signed-off-by: Axel Lin <axel.lin@gmail.com>
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
+I messed up on the URL to the vanilla release [2] but here is the right one:
 
-Cheers,
-Samuel.
+http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.2/compat-wireless-3.2-rc6-3.tar.bz2
 
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+  Luis
