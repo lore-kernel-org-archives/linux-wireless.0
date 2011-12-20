@@ -1,158 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18189 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751053Ab1LRCFk (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:63738 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752230Ab1LTKEL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Dec 2011 21:05:40 -0500
-From: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Rishi Panjwani <rpanjwan@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: Support for TCP checksum offload to firmware
-Date: Sat, 17 Dec 2011 18:00:31 -0800
-Message-ID: <1324173631-14594-2-git-send-email-rpanjwan@qca.qualcomm.com> (sfid-20111218_030544_201463_39C1A1D2)
-In-Reply-To: <1324173631-14594-1-git-send-email-rpanjwan@qca.qualcomm.com>
-References: <1324173631-14594-1-git-send-email-rpanjwan@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 20 Dec 2011 05:04:11 -0500
+Received: by wgbdr13 with SMTP id dr13so12218259wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 02:04:10 -0800 (PST)
+From: Eyal Shapira <eyal@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: fix sched scan of DFS channels
+Date: Tue, 20 Dec 2011 12:04:01 +0200
+Message-Id: <1324375441-2053-1-git-send-email-eyal@wizery.com> (sfid-20111220_110416_047884_DB5523C9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The change enables offloading TCP checksum calculation to firmware.
-This has been achieved by adding a module param called csum_offload.
-The support has been added for QA team's testing purposes and currently
-there is no plan to offload the feature to firmware by default.
-To enable TCP checksum offload, at the time of loading the ath6kl
-driver, add 'csum_offload=1' to the load instruction as follows:
-insmod ath6kl_sdio.ko csum_offload=1
+DFS channels weren't scanned properly because
+min/max_duration weren't set for these channels
+even though they're required by the FW.
+The change sets passive_duration and min/max_duration
+for all channels as the FW uses the correct parameters
+according to the channel type.
 
-Signed-off-by: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
 ---
- drivers/net/wireless/ath/ath6kl/core.h |    2 +
- drivers/net/wireless/ath/ath6kl/init.c |    7 ++++++
- drivers/net/wireless/ath/ath6kl/txrx.c |   38 +++++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath6kl/wmi.h  |    3 ++
- 4 files changed, 45 insertions(+), 5 deletions(-)
+ drivers/net/wireless/wl12xx/scan.c |   15 ++++++++-------
+ 1 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 96f65c9..69b6b22 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -180,6 +180,8 @@ struct ath6kl_fw_ie {
- #define ATH6KL_CONF_ENABLE_TX_BURST		BIT(3)
- #define ATH6KL_CONF_SUSPEND_CUTPOWER		BIT(4)
+diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
+index 8599dab..260986b 100644
+--- a/drivers/net/wireless/wl12xx/scan.c
++++ b/drivers/net/wireless/wl12xx/scan.c
+@@ -437,18 +437,19 @@ wl1271_scan_get_sched_scan_channels(struct wl1271 *wl,
  
-+extern bool csum_offload;
+ 			if (flags & IEEE80211_CHAN_RADAR) {
+ 				channels[j].flags |= SCAN_CHANNEL_FLAGS_DFS;
 +
- enum wlan_low_pwr_state {
- 	WLAN_POWER_STATE_ON,
- 	WLAN_POWER_STATE_CUT_PWR,
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index c97f83c..721b602 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -28,10 +28,12 @@
- unsigned int debug_mask;
- static unsigned int testmode;
- static bool suspend_cutpower;
-+bool csum_offload;
- 
- module_param(debug_mask, uint, 0644);
- module_param(testmode, uint, 0644);
- module_param(suspend_cutpower, bool, 0444);
-+module_param(csum_offload, bool, 0444);
- 
- static const struct ath6kl_hw hw_list[] = {
- 	{
-@@ -1649,6 +1651,11 @@ int ath6kl_core_init(struct ath6kl *ar)
- 
- 	set_bit(FIRST_BOOT, &ar->flag);
- 
-+	if (csum_offload) {
-+		ndev->features |= NETIF_F_IP_CSUM;
-+		ar->rx_meta_ver = WMI_META_VERSION_2;
-+	}
+ 				channels[j].passive_duration =
+ 					cpu_to_le16(c->dwell_time_dfs);
+-			}
+-			else if (flags & IEEE80211_CHAN_PASSIVE_SCAN) {
++			} else {
+ 				channels[j].passive_duration =
+ 					cpu_to_le16(c->dwell_time_passive);
+-			} else {
+-				channels[j].min_duration =
+-					cpu_to_le16(c->min_dwell_time_active);
+-				channels[j].max_duration =
+-					cpu_to_le16(c->max_dwell_time_active);
+ 			}
 +
- 	ret = ath6kl_init_hw_start(ar);
- 	if (ret) {
- 		ath6kl_err("Failed to start hardware: %d\n", ret);
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 506a303..e0d3907 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -244,6 +244,8 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- 	u8 ac = 99 ; /* initialize to unmapped ac */
- 	bool chk_adhoc_ps_mapping = false, more_data = false;
- 	int ret;
-+	struct wmi_tx_meta_v2 meta_v2;
-+	u8 csum_start = 0, csum_dest = 0, csum = skb->ip_summed;
- 
- 	ath6kl_dbg(ATH6KL_DBG_WLAN_TX,
- 		   "%s: skb=0x%p, data=0x%p, len=0x%x\n", __func__,
-@@ -265,6 +267,13 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- 	}
- 
- 	if (test_bit(WMI_ENABLED, &ar->flag)) {
-+		if (csum_offload && csum == CHECKSUM_PARTIAL) {
-+			csum_start = skb->csum_start -
-+					(skb->network_header - skb->head) +
-+					sizeof(struct ath6kl_llc_snap_hdr);
-+			csum_dest = skb->csum_offset + csum_start;
-+		}
++			channels[j].min_duration =
++				cpu_to_le16(c->min_dwell_time_active);
++			channels[j].max_duration =
++				cpu_to_le16(c->max_dwell_time_active);
 +
- 		if (skb_headroom(skb) < dev->needed_headroom) {
- 			struct sk_buff *tmp_skb = skb;
+ 			channels[j].tx_power_att = req->channels[i]->max_power;
+ 			channels[j].channel = req->channels[i]->hw_value;
  
-@@ -281,11 +290,30 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- 			goto fail_tx;
- 		}
- 
--		if (ath6kl_wmi_data_hdr_add(ar->wmi, skb, DATA_MSGTYPE,
--					    more_data, 0, 0, NULL,
--					    vif->fw_vif_idx)) {
--			ath6kl_err("wmi_data_hdr_add failed\n");
--			goto fail_tx;
-+		if (csum_offload && (csum == CHECKSUM_PARTIAL)) {
-+			meta_v2.csum_start = csum_start;
-+			meta_v2.csum_dest = csum_dest;
-+
-+/*instruct target to calculate checksum*/
-+			meta_v2.csum_flags = CSUM_OFFLOAD_FLAG;
-+			ret = ath6kl_wmi_data_hdr_add(ar->wmi, skb,
-+					DATA_MSGTYPE, more_data, 0,
-+					WMI_META_VERSION_2,
-+					&meta_v2, vif->fw_vif_idx);
-+			if (ret) {
-+				ath6kl_warn("failed to add tcp checksum:%d\n"
-+						, ret);
-+				goto fail_tx;
-+			}
-+		} else {
-+			ret = ath6kl_wmi_data_hdr_add(ar->wmi, skb,
-+						DATA_MSGTYPE, more_data, 0, 0,
-+						NULL, vif->fw_vif_idx);
-+			if (ret) {
-+				ath6kl_warn("failed to add wmi data header:%d\n"
-+						, ret);
-+				goto fail_tx;
-+			}
- 		}
- 
- 		if ((vif->nw_type == ADHOC_NETWORK) &&
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 4e4f0f7..c2b83c7 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -257,6 +257,9 @@ static inline u8 wmi_data_hdr_get_if_idx(struct wmi_data_hdr *dhdr)
- #define WMI_META_VERSION_1	0x01
- #define WMI_META_VERSION_2	0x02
- 
-+/* Flag to signal to FW to calculate TCP checksum */
-+#define CSUM_OFFLOAD_FLAG 0x01
-+
- struct wmi_tx_meta_v1 {
- 	/* packet ID to identify the tx request */
- 	u8 pkt_id;
 -- 
-1.7.0.4
+1.7.4.1
 
