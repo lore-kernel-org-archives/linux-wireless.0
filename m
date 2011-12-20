@@ -1,75 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:41077 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752457Ab1LSVO3 (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:40922 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751688Ab1LTVNE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 16:14:29 -0500
-Date: Mon, 19 Dec 2011 22:14:23 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [PATCH 1/2] nl80211: add support for mcs masks
-Message-ID: <20111219211423.GA24764@pandem0nium> (sfid-20111219_221432_797739_90E837F7)
-References: <1324304099-18327-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1324304099-18327-2-git-send-email-siwu@hrz.tu-chemnitz.de>
- <4EEF5834.8080408@candelatech.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="W/nzBZO5zC0uMSeA"
-In-Reply-To: <4EEF5834.8080408@candelatech.com>
+	Tue, 20 Dec 2011 16:13:04 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 2E5D6540204
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 16:13:02 -0500 (EST)
+Subject: Compat-wireless release for 2011-12-20 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111220211302.06A464062F@repository3.orbit-lab.org> (sfid-20111220_221310_969552_FDC37CC4)
+Date: Tue, 20 Dec 2011 16:13:01 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+>From git://github.com/mcgrof/compat-wireless
+   1331272..14042c2  linux-3.2.y -> origin/linux-3.2.y
+ * [new tag]         compat-wireless-v3.2-rc6-3 -> compat-wireless-v3.2-rc6-3
+>From git://github.com/mcgrof/compat-wireless
+ * [new tag]         compat-wireless-v3.2-rc6-2 -> compat-wireless-v3.2-rc6-2
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + fd38fc8...f5a1c6b akpm-end   -> origin/akpm-end  (forced update)
+   497f16f..390f998  akpm-start -> origin/akpm-start
+ + faea567...00ea063 master     -> origin/master  (forced update)
+   497f16f..390f998  stable     -> origin/stable
+ * [new tag]         next-20111220 -> next-20111220
 
---W/nzBZO5zC0uMSeA
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+compat-wireless code metrics
 
-Hello Ben,
-
-On Mon, Dec 19, 2011 at 07:28:52AM -0800, Ben Greear wrote:
-> On 12/19/2011 06:14 AM, Simon Wunderlich wrote:
-> >Allow to set mcs masks through nl80211. We also allow to set MCS
-> >rates but no legacy rates (and vice versa).
->=20
-> Can you not use the ht-caps logic that went in recently?  I was able
-> to successfully set station MCS rates with it.  It only works for
-> station devices at this point...but AP support could probably be
-> added without too much trouble.
-
-I have not tried that out yet, but one important side effect we are
-using here is to force HT mode, also for No Ack packets which are
-usually sent with the lowest (legacy) rate. We are building fixed
-links and want to set a fixed HT rate there, and only this rate should
-be used whenever possible (and no legacy rates).
-
-As far as I understand, the ht caps overrides will only override
-HT configurations, but what I want is to also let the rate matcher
-consider HT rates too and to disable legacy rates completely.
-
-As the mcs masks support has been prepared a long time ago in iw and
-mac80211, it did not seem to be the worst idea to finally fill this
-gap and implement it. :)
-
-Cheers,
-	Simon
-
---W/nzBZO5zC0uMSeA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk7vqS8ACgkQrzg/fFk7axYKLACfSr+icsFeviYnF5+hOI8aZ7Vr
-6IIAn2BMIVg04eCTM72XSm37ellBJoOk
-=kkVb
------END PGP SIGNATURE-----
-
---W/nzBZO5zC0uMSeA--
+    823372 - Total upstream lines of code being pulled
