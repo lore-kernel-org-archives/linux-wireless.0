@@ -1,105 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:61622 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753184Ab1LLWrj convert rfc822-to-8bit (ORCPT
+Received: from fw.wantstofly.org ([80.101.37.227]:62457 "EHLO
+	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751782Ab1LTSj7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 17:47:39 -0500
-MIME-Version: 1.0
-In-Reply-To: <20111212215818.GP3366@decadent.org.uk>
-References: <1319461948.31243.31.camel@deadeye> <CAB=NE6Vt91tHCBj7sJHjUCaDZZPqox+omcQjsEj54vQAtbY2bw@mail.gmail.com>
- <20111212215818.GP3366@decadent.org.uk>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 12 Dec 2011 14:47:14 -0800
-Message-ID: <CAB=NE6Wb9ySk6a1gB-edyF_uRe=-ESehUNbUa+n0g2WYGJXnqw@mail.gmail.com> (sfid-20111212_234806_395372_3EA38618)
-Subject: Re: [PATCH] module,bug: Add TAINT_OOT_MODULE flag for modules not
- built in-tree
-To: Ben Hutchings <ben@decadent.org.uk>
+	Tue, 20 Dec 2011 13:39:59 -0500
+Date: Tue, 20 Dec 2011 19:32:52 +0100
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+To: Yogesh Ashok Powar <yogeshp@marvell.com>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Dave Jones <davej@redhat.com>, Greg KH <greg@kroah.com>,
-	Debian kernel maintainers <debian-kernel@lists.debian.org>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: Re: [PATCH 1/2] mwl8k: Recover from firmware crash
+Message-ID: <20111220183252.GE913@wantstofly.org> (sfid-20111220_194003_761731_F31E29D5)
+References: <20111220060809.GA4624@hertz.marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111220060809.GA4624@hertz.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 12, 2011 at 1:58 PM, Ben Hutchings <ben@decadent.org.uk> wrote:
-> On Mon, Dec 12, 2011 at 01:40:44PM -0800, Luis R. Rodriguez wrote:
->> On Mon, Oct 24, 2011 at 6:12 AM, Ben Hutchings <ben@decadent.org.uk> wrote:
->> > Use of the GPL or a compatible licence doesn't necessarily make the code
->> > any good.  We already consider staging modules to be suspect, and this
->> > should also be true for out-of-tree modules which may receive very
->> > little review.
->> >
->> > Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
->> > ---
->> > Debian has been carrying this for the last few kernel versions.  The
->> > recent thread '[RFC] virtualbox tainting.' and discussions at KS suggest
->> > that this might be more generally useful.
->>
->> This indeed seems like a good idea to advocate getting things upstream
->> (not just staging) but what about the case where we have upstream
->> drivers from future kernels backported to older kernels and the newer
->> driver is simply provided as a feature for users who may need new
->> features / chipset support on their old distribution kernel?
->
-> They continue to work without any loss of functionality.  (After the
-> follow-up patches to keep dynamic debugging and lock debugging
-> working.)
+On Tue, Dec 20, 2011 at 11:38:22AM +0530, Yogesh Ashok Powar wrote:
 
-Great!
+> In case of firmware crash, reload the firmware and reconfigure it
+> by triggering ieee80211_hw_restart; mac80211 utility function.
+> 
+> Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+> Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
 
->> It seems this taint flag will be used for driers backported through
->> compat-wireless, the compat kernel module or any other backported
->> driver, even if it is indeed upstream and whereby kernel developer
->> *do* commit to actually fixing issues. In our experience
->> compat-wireless bugs *are real bugs*, not backport bugs so we do look
->> into them. In our latest linux-next.git based release for example
->> backport code consists only of 1.3804% of the code.
->
-> Now you can look for (O) after the module name in a BUG/Oops message
-> and you can tell whether the user really had the original or
-> compat-wireless version of the driver.
->
-> It is really up to each distributor or developer how they treat
-> bug reports with the O taint.  When handling Debian bug reports I
-> won't automatically reject such a tainted kernel but I will look
-> carefully at the module list.
 
-I'm working on getting my companies to abandon 802.11 proprietary
-drivers for good. For Station mode of operation this is pretty much
-mission complete. For AP products.. this is work in progress. The out
-of tree flag is a good utility one can use to help justify working
-upstream but if we treat any future-kernel-backported-driver equally
-to any out of tree crap piece of shit driver, it seems to do unjustice
-to the value of a properly upstream backported driver. I will note
-that I put a lot of effort to ensure that the backport effort is
-upstream-centric in an *extremely* upstream-biased way, see how I
-label extra patches for tarballs [1]. If your patches are not upstream
-the only way you get into these tarballs are by providing patches into
-these directories:
+> @@ -262,6 +262,11 @@ struct mwl8k_priv {
+>  	 */
+>  	struct ieee80211_tx_queue_params wmm_params[MWL8K_TX_WMM_QUEUES];
+>  
+> +	/* To do the task of reloading the firmware */
+> +	struct work_struct fw_reload;
+> +
+> +	atomic_t  hw_reload_state;
 
-  * pending-stable/ stable fixes from linux-next.git not yet on a stable release
-  * linux-next-cherry-picks/ patches upstream but that won't go to the
-stable release that we want to cherry pick
-  * linux-next-pending/ patches posted on the public development
-mailing list, patch not yet merged due to the maintainer being away on
-vacation or whatever
-  * crap/ patches not even posted publicly yet
+Why is this an atomic_t?
 
-Each tarball used also gets pegged with a letter if *any* patch from
-any of these directories gets applied. The compat module, upon being
-loaded, will also print the kernel ring buffer the exact release,
-whether extra patches were provided, the upstream git tree used as
-base and so on.
 
-So -- although from a technical perspective this may mean Debian /
-other kernel developers may ignore the taint flag for compat-wireless
-it'd sure be nice to avoid it for them all together. Just can't think
-of a way to do it yet... If you agree should we continue to think of a
-way if its possible?
+> +/* FW reload states */
+> +enum {
+> +	FW_RELOAD_INIT = 0,
+> +	FW_RELOAD_TEST,
+> +	FW_RELOAD_ALL_BLOCK,
+> +	FW_RELOAD_FINAL,
+> +};
+> +
+>  /* Request fw image */
+>  static int mwl8k_request_fw(struct mwl8k_priv *priv,
+>  			    const char *fname, const struct firmware **fw,
+> @@ -1516,6 +1529,9 @@ static int mwl8k_tx_wait_empty(struct ieee80211_hw *hw)
+>  
+>  		oldcount = priv->pending_tx_pkts;
+>  
+> +		if (!atomic_read(&priv->hw_reload_state))
+> +			atomic_set(&priv->hw_reload_state, FW_RELOAD_TEST);
 
-[1] http://wireless.kernel.org/en/users/Download/stable#Legend
+Explicit comparison against FW_RELOAD_INIT ?
 
-  Luis
+
+> @@ -1827,6 +1850,16 @@ mwl8k_txq_xmit(struct ieee80211_hw *hw, int index, struct sk_buff *skb)
+>  	bool mgmtframe = false;
+>  	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *)skb->data;
+>  
+> +	if (atomic_read(&priv->hw_reload_state) > FW_RELOAD_TEST) {
+> +		/*
+> +		 * If fw reload is going on there is no point
+> +		 * in sending the packets down to the firmware.
+> +		 * Free the packets
+> +		 */
+> +		dev_kfree_skb(skb);
+> +		return;
+
+Why don't you stop the queues when commencing firmware reload?
+
+
+> @@ -2102,6 +2135,13 @@ static int mwl8k_post_cmd(struct ieee80211_hw *hw, struct mwl8k_cmd_pkt *cmd)
+>  	unsigned long timeout = 0;
+>  	u8 buf[32];
+>  
+> +	if (atomic_read(&priv->hw_reload_state) == FW_RELOAD_ALL_BLOCK) {
+> +		wiphy_err(hw->wiphy, "Not executing command %s since "
+> +				"firmware reload is in progress\n",
+> +				mwl8k_cmd_name(cmd->code, buf, sizeof(buf)));
+> +		return -EBUSY;
+> +	}
+
+Why don't you just hold the firmware lock while reloading the firmware?
+
+
+> @@ -4510,8 +4552,10 @@ static void mwl8k_remove_interface(struct ieee80211_hw *hw,
+>  
+>  	mwl8k_cmd_set_mac_addr(hw, vif, "\x00\x00\x00\x00\x00\x00");
+>  
+> -	priv->macids_used &= ~(1 << mwl8k_vif->macid);
+> -	list_del(&mwl8k_vif->list);
+> +	if (priv->macids_used) {
+> +		priv->macids_used &= ~(1 << mwl8k_vif->macid);
+> +		list_del(&mwl8k_vif->list);
+> +	}
+
+If mwl8k_remove_interface() is called, ->macids_used is surely nonzero?
+What does this change accomplish?
+
+
+> +static void  mwl8k_reload_fw_work(struct work_struct *work)
+
+Redundant space
+
+
+> +{
+> +	struct mwl8k_priv *priv =
+> +			container_of(work, struct mwl8k_priv, fw_reload);
+
+Extra tab
+
+
+> +	/* If some command is waiting for a response, clear it */
+> +	if (priv->hostcmd_wait != NULL)
+> +		complete(priv->hostcmd_wait);
+
+And set it to NULL?
+
+
+> +	if (mwl8k_reload_firmware(hw, di->fw_image_ap))
+> +		wiphy_err(hw->wiphy, "Firmware reloading failed\n");
+> +	else
+> +		wiphy_err(hw->wiphy, "Firmware restarted successfully\n");
+
+Why are you always reloading the Access Point firmware image?  The
+STA firmware image never crashes?
+
+
+> +
+> +	return;
+>  }
+
+Redundant statement.
+
+
+>  static int mwl8k_init_firmware(struct ieee80211_hw *hw, char *fw_image,
+> @@ -5268,6 +5335,8 @@ static int mwl8k_init_firmware(struct ieee80211_hw *hw, char *fw_image,
+>  {
+>  	struct mwl8k_priv *priv = hw->priv;
+>  	int rc;
+> +#define MAX_RESATRT_ATTEMEPT_COUNT	5
+> +	static int restart_count;
+
+eeeeew.  no, no, no.
+
+
+>  static int mwl8k_reload_firmware(struct ieee80211_hw *hw, char *fw_image)
+>  {
+>  	int i, rc = 0;
+>  	struct mwl8k_priv *priv = hw->priv;
+> +	struct mwl8k_vif *mwl8k_vif, *tmp_vif;
+>  
+>  	mwl8k_stop(hw);
+>  	mwl8k_rxq_deinit(hw, 0);
+>  
+> +	list_for_each_entry_safe(mwl8k_vif, tmp_vif, &priv->vif_list, list) {
+> +		priv->macids_used &= ~(1 << mwl8k_vif->macid);
+> +		list_del(&mwl8k_vif->list);
+> +	}
+
+This seems like a dirty hack to cover up for something else.
+
+
+> @@ -5624,7 +5729,6 @@ static int __devinit mwl8k_probe(struct pci_dev *pdev,
+>  	priv->pdev = pdev;
+>  	priv->device_info = &mwl8k_info_tbl[id->driver_data];
+>  
+> -
+>  	priv->sram = pci_iomap(pdev, 0, 0x10000);
+>  	if (priv->sram == NULL) {
+>  		wiphy_err(hw->wiphy, "Cannot map device SRAM\n");
+
+Unrelated whitespace change.
+
+Isn't cozybit involved in this anymore?
