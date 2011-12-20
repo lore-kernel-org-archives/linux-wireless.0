@@ -1,104 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:36292 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751974Ab1LSNSz (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:54088 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752446Ab1LTO4i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 08:18:55 -0500
-Received: by iaeh11 with SMTP id h11so8540229iae.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 05:18:55 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAF3gKsxgO16GqP8x4Q_+wUhYK4x919xbik-ATv4agS+Heg3yig@mail.gmail.com>
-References: <CAF3gKsxgO16GqP8x4Q_+wUhYK4x919xbik-ATv4agS+Heg3yig@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 20 Dec 2011 00:18:33 +1100
-Message-ID: <CAGRGNgUQ48Bc4qQeZ8Euj1+z8qiyA4cOEcEsx3B0EO5oh2Cnug@mail.gmail.com> (sfid-20111219_141901_250743_7FF6AD6B)
-Subject: Re: Developing Linux tree support for Marvell 88W8335
-To: Shahar Or <mightyiampresence@gmail.com>
-Cc: libertas-dev@lists.infradead.org, mab@comnets.uni-bremen.de,
-	luc@saillard.org, linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 20 Dec 2011 09:56:38 -0500
+Received: by mail-yx0-f174.google.com with SMTP id m11so4040485yen.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 06:56:37 -0800 (PST)
+From: ilanelias78@gmail.com
+To: aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	samuel@sortiz.org, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Ilan Elias <ilane@ti.com>
+Subject: [PATCH 2/2] NFC: Handle error during NCI data exchange
+Date: Tue, 20 Dec 2011 16:57:41 +0200
+Message-Id: <1324393061-32173-3-git-send-email-ilane@ti.com> (sfid-20111220_155640_317136_8A714A5C)
+In-Reply-To: <1324393061-32173-1-git-send-email-ilane@ti.com>
+References: <1324393061-32173-1-git-send-email-ilane@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Shahar,
+From: Ilan Elias <ilane@ti.com>
 
-You really should subscribe to the linux-wireless list and CC them on
-big emails like this. (I've quoted in full below and CC'd them.)
+Add support for NCI Interface Error Notification.
+When this notification is received and we're during a
+data exchange transaction, indicate an error to the NFC
+core layer via the data exchange callback.
 
-My response is below the quote.
+Signed-off-by: Ilan Elias <ilane@ti.com>
+---
+ include/net/nfc/nci.h |    6 ++++++
+ net/nfc/nci/ntf.c     |   18 ++++++++++++++++++
+ 2 files changed, 24 insertions(+), 0 deletions(-)
 
-On Mon, Dec 19, 2011 at 23:23, Shahar Or <mightyiampresence@gmail.com> wrote:
-> To all whom may NOT be interested in this, I apologize. I collected your
-> addresses from the libertas-dev mailing lists and saillard.org because you
-> seemed to be interested in this about two to three years ago.
->
-> So here it is again.
->
-> I've two identical PCI NICs with the 88W8335 chip.
->
-> I'd like to see firm Linux support for these so I'm doing what I can by
-> donating them.
->
-> If you want to work on the drivers and need a card please tell me and I'll
-> ship one to you.
->
-> BTW they work with ndiswrapper tested in Ubuntu but WPA2-PSK doesn't work
-> but that's a different driver :)
->
-> Thanks for all the amazing work.
-
-I have a similar card in my testing and development box here, but have
-not yet started on anything resembling a driver. - That said, I was
-involved in prodding Marvell for a proper firmware release as I have,
-on at least two occasions, intended to write a driver for this card
-but never actually got anywhere.
-
-I, annoyingly, lack the time (insert flimsy excuse about having a full
-time programming job here) to actually write a driver, but I'm always
-happy to test stuff out, so if you need any testing done, talk to me.
-I'm sure there are other people out there with similar hardware who
-could stick it in a Linux box and test your driver.
-
-So, as for actual code and data and stuff:
-
-The advice I was given when I was starting to write a driver (no
-source remains, it never got to the point where it did anything
-useful) was to start a new mac80211 driver from scratch as this
-hardware is significantly different from the "Libertas" devices as
-used in some mobile devices and the OLPC computers. Another approach
-would be to update the official driver to a newer kernel and stick it
-into staging, then clean it into a mac80211 driver and then push it
-out into the kernel tree proper. I was advised that if I needed any
-hardware info to look at the official driver. (see below)
-
-There is a blessed version of the firmware in the linux-firmware tree here:
-
-http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=commitdiff;h=e694ee268684ec26af44a6b068203a5f44f6ed06
-
-The official Marvell driver, in a source tree here: - Note that this
-code only works on this exact kernel version and will need some
-significant work to run with any other kernel version.
-
-http://git.infradead.org/users/dwmw2/marvell-db64660-2.6.12.6.git
-
-And something approximating a partial driver here:
-
-http://git.infradead.org/mrv8k-2.6.git
-
-Also, the hardware is probably also significantly different to the
-"TopDog" devices, so using their driver as a base is probably a bad
-idea. They have an official driver in the source tree here:
-
-http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=blob;f=drivers/net/wireless/mwl8k.c;h=995695c28d5c8d66c9999126e9203392428c24c2;hb=HEAD
-)
-
-Good luck, and again, if you need any testing, talk to me =)
-
-Thanks,
-
+diff --git a/include/net/nfc/nci.h b/include/net/nfc/nci.h
+index 2a7fdb2..2be95e2 100644
+--- a/include/net/nfc/nci.h
++++ b/include/net/nfc/nci.h
+@@ -260,6 +260,12 @@ struct nci_core_conn_credit_ntf {
+ 	struct conn_credit_entry	conn_entries[NCI_MAX_NUM_CONN];
+ } __packed;
+ 
++#define NCI_OP_CORE_INTF_ERROR_NTF	nci_opcode_pack(NCI_GID_CORE, 0x08)
++struct nci_core_intf_error_ntf {
++	__u8	status;
++	__u8	conn_id;
++} __packed;
++
+ #define NCI_OP_RF_INTF_ACTIVATED_NTF	nci_opcode_pack(NCI_GID_RF_MGMT, 0x05)
+ struct rf_tech_specific_params_nfca_poll {
+ 	__u16	sens_res;
+diff --git a/net/nfc/nci/ntf.c b/net/nfc/nci/ntf.c
+index c8813ed..352f7a2 100644
+--- a/net/nfc/nci/ntf.c
++++ b/net/nfc/nci/ntf.c
+@@ -71,6 +71,20 @@ static void nci_core_conn_credits_ntf_packet(struct nci_dev *ndev,
+ 		queue_work(ndev->tx_wq, &ndev->tx_work);
+ }
+ 
++static void nci_core_conn_intf_error_ntf_packet(struct nci_dev *ndev,
++						struct sk_buff *skb)
++{
++	struct nci_core_intf_error_ntf *ntf = (void *) skb->data;
++
++	ntf->conn_id = nci_conn_id(&ntf->conn_id);
++
++	pr_debug("status 0x%x, conn_id %d\n", ntf->status, ntf->conn_id);
++
++	/* complete the data exchange transaction, if exists */
++	if (test_bit(NCI_DATA_EXCHANGE, &ndev->flags))
++		nci_data_exchange_complete(ndev, NULL, -EIO);
++}
++
+ static __u8 *nci_extract_rf_params_nfca_passive_poll(struct nci_dev *ndev,
+ 			struct nci_rf_intf_activated_ntf *ntf, __u8 *data)
+ {
+@@ -280,6 +294,10 @@ void nci_ntf_packet(struct nci_dev *ndev, struct sk_buff *skb)
+ 		nci_core_conn_credits_ntf_packet(ndev, skb);
+ 		break;
+ 
++	case NCI_OP_CORE_INTF_ERROR_NTF:
++		nci_core_conn_intf_error_ntf_packet(ndev, skb);
++		break;
++
+ 	case NCI_OP_RF_INTF_ACTIVATED_NTF:
+ 		nci_rf_intf_activated_ntf_packet(ndev, skb);
+ 		break;
 -- 
-Julian Calaby
+1.7.0.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
