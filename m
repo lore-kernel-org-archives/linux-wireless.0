@@ -1,45 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37241 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750966Ab1LFJCZ (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:36018 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751827Ab1LTDzv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Dec 2011 04:02:25 -0500
-Subject: Re: [PATCH] mac80211: accept public action frames with mismatched
- BSSID
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: John Linville <linville@tuxdriver.com>,
-	Arik Nemtsov <anamtsov@gmail.com>, Jouni Malinen <j@w1.fi>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <CAB3XZEdk73G-1tfCOPUGDH5jVO7NZ_Wh5ObDWi7EJSZRSeSa9g@mail.gmail.com> (sfid-20111206_081537_025956_2EFDE3C7)
-References: <1323102012.4051.38.camel@jlt3.sipsolutions.net>
-	 <CAB3XZEdk73G-1tfCOPUGDH5jVO7NZ_Wh5ObDWi7EJSZRSeSa9g@mail.gmail.com>
-	 (sfid-20111206_081537_025956_2EFDE3C7)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 06 Dec 2011 10:02:16 +0100
-Message-ID: <1323162136.4696.2.camel@jlt3.sipsolutions.net> (sfid-20111206_100230_632742_CCD7E3D9)
-Mime-Version: 1.0
+	Mon, 19 Dec 2011 22:55:51 -0500
+MIME-Version: 1.0
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 19 Dec 2011 19:55:28 -0800
+Message-ID: <CAB=NE6WfBDqQzqxNaZm5mMhjyP2t7M-5t=+RA-A2JAKUKjmJzw@mail.gmail.com> (sfid-20111220_045612_880500_C827E73A)
+Subject: [ANN] compat-wireless for 3.2-rc6
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org,
+	linux-bluetooth <linux-bluetooth@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-12-06 at 09:15 +0200, Eliad Peller wrote:
+You all know what this is, only difference is we have a few
+pending-stable patches not yet merged into Linus' tree but that are on
+linux-next.git so we suck those in and provide an "-s" release. Below
+are the statistics of both releases. We have an "-s" release [1] and a
+vanilla release [2]. I'll note that I expect a few set of patches are
+desirable to cherry pick from linux-next.git for a type of stable
+release that we will support but for now I have yet to hear back which
+patches those are. Feel free to reply here with the sha1sums you want
+but please be specific of the linux-next.git tag you used.
 
-> > +static inline bool ieee80211_is_public_action(struct ieee80211_hdr *hdr,
-> > +                                             size_t len)
-> > +{
-> > +       struct ieee80211_mgmt *mgmt = (void *)hdr;
-> > +
-> > +       if (len < 25)
-> > +               return false;
-> 
-> maybe use offsetof() to make clearer?
+For the -s release:
 
-Hm. The problem with that is that you need
-	offsetof(... u.action.category ...) + 1
-still since the *offset* is 24 and the size is implicit. Going beyond
-that in the offset calculation would be even stranger... I think 25 is a
-sufficiently non-magic number since everybody knows 24 is the "normal"
-header length, and it matches the style used in this file elsewhere.
+Updated from local tree: /home/mcgrof/linux-stable
+Origin remote URL:
+git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 
-johannes
+compat-wireless code metrics
 
+    814570 - Total upstream lines of code being pulled
+      2488 - backport code changes
+      2143 - backport code additions
+       345 - backport code deletions
+      8670 - backport from compat module
+     11158 - total backport code
+    1.3698 - % of code consists of backport work
+        57 - Code changes brought in from pending-stable
+        44 - Code additions brought in from pending-stable
+        13 - Code deletions brought in from pending-stable
+    0.0070 - % of code being cherry picked from pending-stable
+
+Base tree: linux-stable.git
+Base tree version: v3.2-rc6
+compat-wireless release: compat-wireless-v3.2-rc6-3-s
+
+For the vanilla release:
+
+Updated from local tree: /home/mcgrof/linux-stable
+Origin remote URL:
+git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+
+compat-wireless code metrics
+
+    814570 - Total upstream lines of code being pulled
+      2488 - backport code changes
+      2143 - backport code additions
+       345 - backport code deletions
+      8670 - backport from compat module
+     11158 - total backport code
+    1.3698 - % of code consists of backport work
+
+Base tree: linux-stable.git
+Base tree version: v3.2-rc6
+compat-wireless release: compat-wireless-v3.2-rc6-3
+
+[1] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.2/compat-wireless-3.2-rc6-3-s.tar.bz2
+[2] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.2/compat-wireless-3.2-rc1-1.tar.bz2
