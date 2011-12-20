@@ -1,64 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:42739 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750727Ab1LNOWk (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:59573 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752455Ab1LTTk1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 09:22:40 -0500
-Message-ID: <4EE8B12C.4090906@gmx.net> (sfid-20111214_152243_806197_9FE28829)
-Date: Wed, 14 Dec 2011 15:22:36 +0100
-From: Wolfgang Breyha <wbreyha@gmx.net>
+	Tue, 20 Dec 2011 14:40:27 -0500
+Message-ID: <4EF0E4A3.9010306@qca.qualcomm.com> (sfid-20111220_204031_097620_546E3046)
+Date: Tue, 20 Dec 2011 21:40:19 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi havoc on some APs (rekeying?)
-References: <4EE2202A.4080303@gmx.net>  <1323446534.13074.96.camel@wwguy-huron>  <4EE24DF4.4020301@gmx.net>  <1323451436.13074.158.camel@wwguy-huron>  (sfid-20111209_192243_598986_F6275AE2) <1323455216.3622.21.camel@jlt3.sipsolutions.net>  <4EE35877.1060507@gmx.net>  (sfid-20111210_140255_490293_C3C0F113) <1323680657.3442.7.camel@jlt3.sipsolutions.net>  <4EE5D2D3.406@gmx.net>  (sfid-20111212_110955_792336_68917631) <1323684754.3442.36.camel@jlt3.sipsolutions.net>  <4EE5E3CD.1070409@gmx.net>  (sfid-20111212_122224_090419_DF83BB07) <1323712082.3442.43.camel@jlt3.sipsolutions.net>  <4EE64522.5090107@gmx.net> (sfid-20111212_191739_160874_7027323F) <1323790688.3355.24.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1323790688.3355.24.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=us-ascii
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/6] ath6kl: fix sparse warning on init.c
+References: <1324406771-7100-1-git-send-email-rodrigue@qca.qualcomm.com> <1324406771-7100-2-git-send-email-rodrigue@qca.qualcomm.com>
+In-Reply-To: <1324406771-7100-2-git-send-email-rodrigue@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg wrote, on 13.12.2011 16:38:
-> The program will allocate 2GiB memory (edit to suit, should be OK on
-> your machine), fill them with 0x94 and then continually scan them for
-> corruption. Identifying what kind of corruption happened will hopefully
-> allow me to figure out where it's coming from.
+On 12/20/2011 08:46 PM, Luis R. Rodriguez wrote:
+> From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 > 
-> It prints out the wrong data & resets the memory so new corruption later
-> is also identified.
+> This fixes this sparse warning:
+> 
+>   CC [M]  drivers/net/wireless/ath/ath6kl/init.o
+> drivers/net/wireless/ath/ath6kl/init.c: In function ‘ath6kl_init_hw_params’:
+> drivers/net/wireless/ath/ath6kl/init.c:1377:26: warning: ‘hw’ may be used uninitialized in this function
 
-Ok, I had only 20 minutes yesterday evening, but the results are not very
-pleasant, because there are no results:(
+That's a compiler warning.
 
-I did the usual steps to reproduce the case on my laptop:
+>  static int ath6kl_init_hw_params(struct ath6kl *ar)
+>  {
+> -	const struct ath6kl_hw *hw;
+> +	const struct ath6kl_hw *hw = NULL;
+>  	int i;
+>  
+>  	for (i = 0; i < ARRAY_SIZE(hw_list); i++) {
+> @@ -1390,6 +1390,9 @@ static int ath6kl_init_hw_params(struct ath6kl *ar)
+>  		return -EINVAL;
+>  	}
+>  
+> +	if (!hw)
+> +		return -EINVAL;
 
-*) stay connected on the "working" AP (no rekeying)
---> *) new here: start "mc"
-*) echo "1" >...iwlwifi/debug
-*) open multitail, firefox, vlc
-*) connect to the other AP (rekeying every 20 seconds currently)
-*) start video stream
-*) wait for the second "group rekey finished"
-*) watch the artifacts, closing applications and listen to crackling sound
+I can't see how hw can be uninitialised here (looking at the version in
+ath6kl.git). I copy the full code here:
 
-Everything happened exactly the same way as always. BUT "mc" didn't show any
-corrupted memory regions.
+static int ath6kl_init_hw_params(struct ath6kl *ar)
+{
+	const struct ath6kl_hw *hw;
+	int i;
 
-I already tried to remember which applications crashed, but currently I'm not
-able to give them a clear category like "all (network-)IO" or "all
-audio/video". Allocating memory seems not to be enough to trigger "something".
-<brainstorm mode>Maybe mmap'ed regions are affected?</brainstorm mode>
+	for (i = 0; i < ARRAY_SIZE(hw_list); i++) {
+		hw = &hw_list[i];
 
-Watching a video is only one way to notice that issue. Simply starting firefox
-with a group of tabs open is an other and has a high probability to
-immediately crash firefox while fetching the contents.
+		if (hw->id == ar->version.target_ver)
+			break;
+	}
 
-Watching a video shows the coincidence with the second rekeying event best.
+	if (i == ARRAY_SIZE(hw_list)) {
+		ath6kl_err("Unsupported hardware version: 0x%x\n",
+			   ar->version.target_ver);
+		return -EINVAL;
+	}
 
-I'll try to give "mc" some more time and start it after/before the others as
-soon as my pre-x-mas schedule allows it.
+	ar->hw = *hw;
 
-Greetings, Wolfgang
--- 
-Wolfgang Breyha <wbreyha@gmx.net> | http://www.blafasel.at/
-Vienna University Computer Center | Austria
+I always check for both compiler and sparse warnings and I have never
+seen this. What version of compiler do you have?
+
+I have:
+
+gcc-4.5.real (Ubuntu/Linaro 4.5.2-8ubuntu4) 4.5.2
+
+Kalle
