@@ -1,27 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:42924 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752206Ab1LVLoR (ORCPT
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:53719 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751827Ab1LTUu5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Dec 2011 06:44:17 -0500
-Received: by qcqz2 with SMTP id z2so4946130qcq.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Dec 2011 03:44:17 -0800 (PST)
-MIME-Version: 1.0
-Date: Thu, 22 Dec 2011 12:44:17 +0100
-Message-ID: <CAA=oPaiE-NAP_rfi3BLv-wM_wBwfLyMh-p2KtMALXPaDG6LxxA@mail.gmail.com> (sfid-20111222_124425_771006_B53FB1A0)
-Subject: rt2800usb poor performance
-From: Christian Frost <cf@cfrost.dk>
+	Tue, 20 Dec 2011 15:50:57 -0500
+Received: by mail-lpp01m010-f53.google.com with SMTP id r15so3089618lag.12
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 12:50:56 -0800 (PST)
+Subject: Re: [PATCH] wl12xx: add missing copyright notice
+From: Luciano Coelho <coelho@ti.com>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1324305115-14963-1-git-send-email-coelho@ti.com>
+References: <1324305115-14963-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 20 Dec 2011 22:50:52 +0200
+Message-ID: <1324414252.2182.74.camel@cumari> (sfid-20111220_215100_267400_020FC0FB)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, 2011-12-19 at 16:31 +0200, Luciano Coelho wrote: 
+> The wl12xx_platform_data.c file did not have a proper copyright
+> notice.
+> 
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
 
-I'm experiencing poor performance with a rt2800usb device when using
-"compat-wireless-3.2-rc6-3" on a 2.6.35 kernel. The bandwidth is
-~0.5Mbps which I would expect to be significantly higher on a G
-network. Can anyone help with this?
+Applied.
 
-Regards,
-Christian
+
+-- 
+Cheers,
+Luca.
+
