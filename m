@@ -1,34 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:49209 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753734Ab1LNRZK (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:61599 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751224Ab1LTMzr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 12:25:10 -0500
-Received: by eekc4 with SMTP id c4so1049639eek.19
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Dec 2011 09:25:09 -0800 (PST)
-Message-ID: <4EE8DBF3.5080907@lwfinger.net> (sfid-20111214_182521_209071_E29D84A8)
-Date: Wed, 14 Dec 2011 11:25:07 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Seth Forshee <seth.forshee@canonical.com>
-CC: Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Problems associating with RTL8188CE
-References: <4ECB028E.3030809@lwfinger.net> <20111122022008.GA17661@thinkpad-t410> <20111213194231.GA30788@thinkpad-t410> <4EE7B85E.3070802@lwfinger.net> <20111213212606.GB30788@thinkpad-t410> <4EE82CC6.2030307@lwfinger.net> <20111214162333.GB19410@thinkpad-t410> <4EE8D150.8090100@lwfinger.net> <20111214164902.GD19410@thinkpad-t410> <4EE8D5A1.7040600@lwfinger.net> <20111214171234.GE19410@thinkpad-t410>
-In-Reply-To: <20111214171234.GE19410@thinkpad-t410>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 20 Dec 2011 07:55:47 -0500
+Received: by wibhm6 with SMTP id hm6so1391677wib.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 04:55:46 -0800 (PST)
+From: Eyal Shapira <eyal@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: mark no sched scan only after FW event
+Date: Tue, 20 Dec 2011 14:55:38 +0200
+Message-Id: <1324385738-3132-1-git-send-email-eyal@wizery.com> (sfid-20111220_135550_640837_4DB716C1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/14/2011 11:12 AM, Seth Forshee wrote:
->
-> If there's anything you'd like me to try, don't hesitate to ask. I'm
-> trying to come up to speed on debugging wireless problems anyway, so I'd
-> value the experience.
+stop sched scan isn't an immediate operation
+and we need to wait for PERIODIC_SCAN_COMPLETE_EVENT_ID
+after sending a stop before changing internal state
+and notifying upper layers.
+Not doing this caused problems when canceling an existing sched
+scan and immediately requesting to start a new one
+with a different configuration as the FW was still
+in the middle of the previous sched scan.
 
-I have not had a chance to reboot so that I can install the RTL8188CE. In 
-addition, I'm building a fresh copy of mainline 3.2-rc5 for a separate test. 
-I'll let you know what happens.
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+---
+ drivers/net/wireless/wl12xx/event.c |    2 +-
+ drivers/net/wireless/wl12xx/scan.c  |    1 -
+ 2 files changed, 1 insertions(+), 2 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
+index 00ce794..d3280df68 100644
+--- a/drivers/net/wireless/wl12xx/event.c
++++ b/drivers/net/wireless/wl12xx/event.c
+@@ -267,8 +267,8 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
+ 		wl1271_debug(DEBUG_EVENT, "PERIODIC_SCAN_COMPLETE_EVENT "
+ 			     "(status 0x%0x)", mbox->scheduled_scan_status);
+ 		if (wl->sched_scanning) {
+-			wl1271_scan_sched_scan_stop(wl);
+ 			ieee80211_sched_scan_stopped(wl->hw);
++			wl->sched_scanning = false;
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
+index 260986b..8ff680e 100644
+--- a/drivers/net/wireless/wl12xx/scan.c
++++ b/drivers/net/wireless/wl12xx/scan.c
+@@ -754,7 +754,6 @@ void wl1271_scan_sched_scan_stop(struct wl1271 *wl)
+ 		wl1271_error("failed to send sched scan stop command");
+ 		goto out_free;
+ 	}
+-	wl->sched_scanning = false;
+ 
+ out_free:
+ 	kfree(stop);
+-- 
+1.7.4.1
 
