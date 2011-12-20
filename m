@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:45190 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753057Ab1LIAug (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 19:50:36 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 3.2] iwlwifi: do not set the sequence control bit is not needed
-Date: Thu,  8 Dec 2011 15:52:00 -0800
-Message-Id: <1323388320-13825-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111209_015040_226746_DF3D9236)
+Received: from [119.255.1.60] ([119.255.1.60]:34536 "EHLO
+	mail.watchdata.com.cn" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1751010Ab1LTFko convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Dec 2011 00:40:44 -0500
+Received: from localhost (mail.watchdata.com.cn [127.0.0.1])
+	by mail.watchdata.com.cn (Postfix) with SMTP id 2350520071
+	for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 13:29:51 +0800 (CST)
+From: =?gb2312?B?wO641Q==?= <gang.li@watchdata.com>
+To: "'Sujith'" <m.sujith@gmail.com>
+Cc: "'wireless'" <linux-wireless@vger.kernel.org>
+Subject: RE: Question about IEEE80211_TX_CTL_NO_ACK in ath_9k
+Date: Tue, 20 Dec 2011 13:39:41 +0800
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="gb2312"
+In-Reply-To: <20207.19812.522615.450498@gargle.gargle.HOWL>
+Message-Id: <20111220052951.0C13C20012@mail.watchdata.com.cn> (sfid-20111220_064048_109574_D2C20484)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check the IEEE80211_TX_CTL_ASSIGN_SEQ flag from mac80211, then decide how to
-set the TX_CMD_FLG_SEQ_CTL_MSK bit. Setting the wrong bit in BAR frame whill
-make the firmware to increment the sequence number which is incorrect and
-cause unknown behavior.
+> > Hi everybody!
+> >
+> > My wireless card is AR9280. I set the IEEE80211_TX_CTL_NO_ACK flag
+before
+> > send a packet, but found it no use. It still wait for an ACK. Then I
+read
+> > the code,
+> > in ath9k_htc_tx_data(htc_drv_txrx.c) , it seems there is only two flags:
+> >
+> > #define ATH9K_HTC_TX_CTSONLY      0x1
+> > #define ATH9K_HTC_TX_RTSCTS       0x2
+> >
+> > None is about ack.
+> >
+> > Does anyone know how to make this flag work properly?
+> >
+> 
+> NOACK usage is not handled by ath9k_htc.
+> See: http://linuxwireless.org/en/users/Drivers/ath9k_htc#TODO
+> 
 
-CC: stable@vger.kernel.org #3.0+
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
-this patch will be also available from wireless branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
+Thanks£¡
 
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+So , is there any way to set the re-transmit times when ACK not received?
+Now , it will send 10 times.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 35a6b71..df1540c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -91,7 +91,10 @@ static void iwlagn_tx_cmd_build_basic(struct iwl_priv *priv,
- 		tx_cmd->tid_tspec = qc[0] & 0xf;
- 		tx_flags &= ~TX_CMD_FLG_SEQ_CTL_MSK;
- 	} else {
--		tx_flags |= TX_CMD_FLG_SEQ_CTL_MSK;
-+		if (info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ)
-+			tx_flags |= TX_CMD_FLG_SEQ_CTL_MSK;
-+		else
-+			tx_flags &= ~TX_CMD_FLG_SEQ_CTL_MSK;
- 	}
- 
- 	iwlagn_tx_cmd_protection(priv, info, fc, &tx_flags);
--- 
-1.7.0.4
+> Sujith
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
