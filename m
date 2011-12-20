@@ -1,45 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:47620 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754311Ab1LBLsv (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:63041 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752487Ab1LTWRH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Dec 2011 06:48:51 -0500
-Date: Fri, 2 Dec 2011 13:48:43 +0200
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <kvalo@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: Inform bss information to cfg80211 before
- connect event
-Message-ID: <20111202114843.GC4358@jouni.qca.qualcomm.com> (sfid-20111202_124858_687812_6B6E0BAC)
-References: <1322818619-29265-1-git-send-email-vthiagar@qca.qualcomm.com>
+	Tue, 20 Dec 2011 17:17:07 -0500
+Date: Tue, 20 Dec 2011 14:16:57 -0800
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Gabor Juhos <juhosg@openwrt.org>
+CC: <mcgrof@infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 15/15] initvals: add script for regenerating ath9k header
+ files
+Message-ID: <20111220221657.GF15071@tux> (sfid-20111220_231711_814312_F7FFD0E8)
+References: <1324329900-3923-1-git-send-email-juhosg@openwrt.org>
+ <1324329900-3923-16-git-send-email-juhosg@openwrt.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1322818619-29265-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1324329900-3923-16-git-send-email-juhosg@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Dec 02, 2011 at 03:06:59PM +0530, Vasanthakumar Thiagarajan wrote:
-> This is already done but only when bss entry is not availabe
-> or aged out. Not updating the bss information when that bss
-> is available creates a case where there is a bss entry when
-> checked in ath6kl_cfg80211_connect_event() but it got aged out
-> by the time cfg80211 checks for the bss entry in __cfg80211_roamed().
-> This results in the following warning and the failure to notify
-> roaming event to application. To fix this, update the bss information
-> for which a romaing event is received. Also renamed ath6kl_add_bss_if_needed()
-> to ath6kl_inform_bss().
+On Mon, Dec 19, 2011 at 10:25:00PM +0100, Gabor Juhos wrote:
+> The script helps to regenerate initval header files for ath9k.
+> 
+> screenshot:
+> $ ./gen_ath9k_headers.sh ar5008
+> ar5008 => ar5008_initvals.h
+> 
+> $ ./gen_ath9k_headers.sh
+> ar5008 => ar5008_initvals.h
+> ar9001 => ar9001_initvals.h
+> ar9002 => ar9002_initvals.h
+> ar9003-2p2 => ar9003_2p2_initvals.h
+> ar9330-1p1 => ar9330_1p1_initvals.h
+> ar9330-1p2 => ar9330_1p2_initvals.h
+> ar9485 => ar9485_initvals.h
+> ar9580-1p0 => ar9580_1p0_initvals.h
+> 
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+> ---
+>  gen_ath9k_headers.sh |   36 ++++++++++++++++++++++++++++++++++++
+>  1 files changed, 36 insertions(+), 0 deletions(-)
+>  create mode 100755 gen_ath9k_headers.sh
+> 
+> diff --git a/gen_ath9k_headers.sh b/gen_ath9k_headers.sh
+> new file mode 100755
+> index 0000000..fb7c313
+> --- /dev/null
+> +++ b/gen_ath9k_headers.sh
+> @@ -0,0 +1,36 @@
+> +#!/bin/sh
+> +
+> +gen_ath9k_header()
+> +{
+> +	local family="$1"
+> +	local ath9k_hdr
+> +
+> +	case $family in
+> +	ar5008 |\
+> +	ar9001 |\
+> +	ar9002 |\
+> +	ar9003-2p2|\
+> +	ar9330-1p1|\
+> +	ar9330-1p2|\
+> +	ar9485|\
+> +	ar9580-1p0)
+> +		ath9k_hdr="$(echo $family | tr '-' '_')_initvals.h"
+> +		;;
+> +	*)
+> +		echo "unknown family: '$family'" 1>&2
+> +		return 1
+> +		;;
+> +	esac
+> +	
 
-I don't think this is a good fix for the problem and would prefer this
-not getting applied before the real issue is fully understood.
+The above line had a trailing tab, apart from that, everything looks
+great, thanks so much! Applied and pushed!
 
-This can clear valid IE information in the BSS table and make it more
-difficult to complete 4-way handshake correctly. The previous condition
-for the cfg80211_bss_inform() call in ath6kl_add_bss_if_needed() is
-actually identical to the one that is used in __cfg80211_roamed(). In
-other words, the issue is most likely from the BSS entry getting timed
-out and removed between the operations and the proper fix for this is to
-make sure the entry does not get removed and that should be doable
-without filling it with bogus information.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+  Luis
