@@ -1,85 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:13138 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757251Ab1LBRqR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Dec 2011 12:46:17 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	stable@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 06/16] iwlagn: fix HW crypto for TX-only keys
-Date: Fri,  2 Dec 2011 08:48:30 -0800
-Message-Id: <1322844520-21149-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111202_184623_946604_9D81AC82)
-In-Reply-To: <1322844520-21149-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1322844520-21149-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:17684 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752002Ab1LTSqT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Dec 2011 13:46:19 -0500
+Cc: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+Subject: [PATCH 0/6] atheros-wireless: fix sparse warnings ho ho ho
+Date: Tue, 20 Dec 2011 10:46:05 -0800
+Message-ID: <1324406771-7100-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111220_194625_501027_3DD2917D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 
-Group keys in IBSS or AP mode are not programmed
-into the device since we give the key to it with
-every TX packet. However, we do need mac80211 to
-create the MMIC & PN in all cases. Move the code
-around to set the key flags all the time. We set
-them even when the key is removed again but that
-is obviously harmless.
+Here's a slew of sparse warning fixes for all Atheros wireless drivers.
+These have been itching me for a while now. I ask all patch submitters
+and driver maintainers to please run their patches with these two tests:
 
-Cc: stable@vger.kernel.org
-Reported-by: Reinette Chatre <reinette.chatre@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-sta.c  |    5 -----
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |   11 +++++++++++
- 2 files changed, 11 insertions(+), 5 deletions(-)
+make C=1 M=drivers/net/wireless/ath/
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-index 901fd94..626ed70 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
-@@ -1250,9 +1250,6 @@ int iwl_set_dynamic_key(struct iwl_priv *priv,
- 
- 	switch (keyconf->cipher) {
- 	case WLAN_CIPHER_SUITE_TKIP:
--		keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
--		keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
--
- 		if (sta)
- 			addr = sta->addr;
- 		else /* station mode case only */
-@@ -1265,8 +1262,6 @@ int iwl_set_dynamic_key(struct iwl_priv *priv,
- 					  seq.tkip.iv32, p1k, CMD_SYNC);
- 		break;
- 	case WLAN_CIPHER_SUITE_CCMP:
--		keyconf->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
--		/* fall through */
- 	case WLAN_CIPHER_SUITE_WEP40:
- 	case WLAN_CIPHER_SUITE_WEP104:
- 		ret = iwlagn_send_sta_key(priv, keyconf, sta_id,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index ec31482..bafd525 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -521,6 +521,17 @@ static int iwlagn_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		return -EOPNOTSUPP;
- 	}
- 
-+	switch (key->cipher) {
-+	case WLAN_CIPHER_SUITE_TKIP:
-+		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
-+		/* fall through */
-+	case WLAN_CIPHER_SUITE_CCMP:
-+		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-+		break;
-+	default:
-+		break;
-+	}
-+
- 	/*
- 	 * We could program these keys into the hardware as well, but we
- 	 * don't expect much multicast traffic in IBSS and having keys
+And then if all is happy try:
+
+make C=2 CF="-D__CHECK_ENDIAN__" M=drivers/net/wireless/ath/
+
+Luis R. Rodriguez (6):
+  ath6kl: fix sparse warning on init.c
+  ath9k: make ath_mci_duty_cycle static
+  ath9k_hw: fix sparse warnings on ar9003_rtt.c
+  ath9k: fix tx queue sparse complaint
+  ath5k: avoid sparse warnings on tracing
+  ath9k_hw: fix sparse complaint on ar9003_switch_com_spdt_get()
+
+ drivers/net/wireless/ath/ath5k/trace.h         |    5 +++--
+ drivers/net/wireless/ath/ath6kl/init.c         |    5 ++++-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |    4 ++--
+ drivers/net/wireless/ath/ath9k/ar9003_rtt.c    |    1 +
+ drivers/net/wireless/ath/ath9k/mci.c           |    2 +-
+ drivers/net/wireless/ath/ath9k/xmit.c          |    3 +++
+ 6 files changed, 14 insertions(+), 6 deletions(-)
+
 -- 
-1.7.0.4
+1.7.4.15.g7811d
 
