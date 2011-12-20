@@ -1,86 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:51041 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752083Ab1L0XGB convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:56948 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753201Ab1LTXU0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Dec 2011 18:06:01 -0500
-Date: Wed, 28 Dec 2011 00:05:57 +0100 (CET)
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH] b43: fix regression in PIO case
-In-Reply-To: <CACna6ry1tKXtUSQHknkEbzBq_gZUyxn1-9Guba2a56xzx242SA@mail.gmail.com>
-Message-ID: <alpine.DEB.2.00.1112272359240.6684@axis700.grange> (sfid-20111228_000623_607911_1264F7CE)
-References: <alpine.DEB.2.00.1112261608140.12108@axis700.grange> <alpine.DEB.2.00.1112261824000.12108@axis700.grange> <CACna6ry1tKXtUSQHknkEbzBq_gZUyxn1-9Guba2a56xzx242SA@mail.gmail.com>
+	Tue, 20 Dec 2011 18:20:26 -0500
+Received: by werm1 with SMTP id m1so2332434wer.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 15:20:25 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
+From: Cheng Renquan <crquan@gmail.com>
+Date: Tue, 20 Dec 2011 15:20:04 -0800
+Message-ID: <CAH5vBdJLHkFLQCHHYOczXQt1Hwwe3e-Ct0MUjyTRU0vgodAPOg@mail.gmail.com> (sfid-20111221_002030_180161_4157390A)
+Subject: linux 3.2-rcX iwlwifi driver's problem (wifi link unstable when
+ moving between multiple APs)
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 27 Dec 2011, Rafał Miłecki wrote:
+Hi Intel Linux Wireless group,
 
-> W dniu 26 grudnia 2011 18:28 użytkownik Guennadi Liakhovetski
-> <g.liakhovetski@gmx.de> napisał:
-> > This patch fixes the regression, introduced by
-> >
-> > commit 17030f48e31adde5b043741c91ba143f5f7db0fd
-> > From: Rafał Miłecki <zajec5@gmail.com>
-> > Date: Thu, 11 Aug 2011 17:16:27 +0200
-> > Subject: [PATCH] b43: support new RX header, noticed to be used in 598.314+ fw
-> >
-> > in PIO case.
-> >
-> > Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-> > ---
-> > diff --git a/drivers/net/wireless/b43/pio.c b/drivers/net/wireless/b43/pio.c
-> > index ce8a4bd..b64b64c 100644
-> > --- a/drivers/net/wireless/b43/pio.c
-> > +++ b/drivers/net/wireless/b43/pio.c
-> > @@ -617,9 +617,19 @@ static bool pio_rx_frame(struct b43_pio_rxqueue *q)
-> >        const char *err_msg = NULL;
-> >        struct b43_rxhdr_fw4 *rxhdr =
-> >                (struct b43_rxhdr_fw4 *)wl->pio_scratchspace;
-> > +       size_t rxhdr_size = sizeof(*rxhdr);
-> >
-> >        BUILD_BUG_ON(sizeof(wl->pio_scratchspace) < sizeof(*rxhdr));
-> > -       memset(rxhdr, 0, sizeof(*rxhdr));
-> > +       switch (dev->fw.hdr_format) {
-> > +       case B43_FW_HDR_410:
-> > +       case B43_FW_HDR_351:
-> > +               rxhdr_size -= sizeof(rxhdr->format_598) -
-> > +                       sizeof(rxhdr->format_351);
-> > +               break;
-> > +       case B43_FW_HDR_598:
-> > +               break;
-> > +       }
-> > +       memset(rxhdr, 0, rxhdr_size);
-> 
-> Huuh, that's really tricky. Can you just do "normal" conditions as
-> Larry suggested, please?
+Since 3.2-rcX, it seems no more iwlagn driver? This iwlwifi driver
+seems not stable
+when I hold laptop moving inside a large office, between multiple APs,
+everytime I moved to a new place, the wifi link becomes inactive, and
+I need to wait
+5 minutes or longer to wait iwlwifi stable, networkmanager get a new
+ip address; quite annoying,
 
-Sorry? I absolutely see nothing tricky there. Do you think this would look 
-"less tricky" to you:
 
-	switch (dev->fw.hdr_format) {
-	case B43_FW_HDR_410:
-	case B43_FW_HDR_351:
-		rxhdr_size = offsetof(struct b43_rxhdr_fw4,
-					format_351) +
-			sizeof(rxhdr_size->format_351);
-		break;
-	case B43_FW_HDR_598:
-		rxhdr_size = sizeof(*rxhdr);
-		break;
-	}
+[root@archtop ~]# lspci -D -nn -k -d 8086:4238
+0000:03:00.0 Network controller [0280]: Intel Corporation Centrino
+Ultimate-N 6300 [8086:4238] (rev 35)
+	Subsystem: Intel Corporation Centrino Ultimate-N 6300 3x3 AGN [8086:1111]
+	Kernel driver in use: iwlwifi
+	Kernel modules: iwlwifi
 
-?
+in the large office, it's using WPA2 enterprise encryption with
+MSCHAPv2 domain user/pass authentication,
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski, Ph.D.
-Freelance Open-Source Software Developer
-http://www.open-technology.de/
+
+Last iwlagn driver in my Ubuntu-10.10 default kernel (linux-2.6.35.X)
+on the same computer
+same networkmanager/wpa_supplicant software same office working wonderful,
+moving smoothly between multiple APs,
+
+At home, even I set wireless router to no any
+encryption/authentication, this new kernel
+would becomes wifi link down every couple of hours, while another
+laptop and same Ubuntu-10
+on this laptop could work smoothly,
+
+
+
+
+Thanks,
