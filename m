@@ -1,124 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32932 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754632Ab1LNPi0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 10:38:26 -0500
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 1/8] NFC: Add function name to the NFC pr_fmt() routine
-Date: Wed, 14 Dec 2011 16:43:05 +0100
-Message-Id: <1323877392-20567-2-git-send-email-sameo@linux.intel.com> (sfid-20111214_163829_550026_63E96B95)
-In-Reply-To: <1323877392-20567-1-git-send-email-sameo@linux.intel.com>
-References: <1323877392-20567-1-git-send-email-sameo@linux.intel.com>
+Received: from ud10.udmedia.de ([194.117.254.50]:52457 "EHLO
+	mail.ud10.udmedia.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750915Ab1LUGpk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Dec 2011 01:45:40 -0500
+Date: Wed, 21 Dec 2011 07:45:37 +0100
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Kernel Testers List <kernel-testers@vger.kernel.org>,
+	Linux SCSI List <linux-scsi@vger.kernel.org>,
+	Florian Mickler <florian@mickler.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Maciej Rutecki <maciej.rutecki@gmail.com>
+Subject: Re: 3.2-rc6+: Reported regressions from 3.0 and 3.1
+Message-ID: <20111221064537.GD1629@x4> (sfid-20111221_074549_596555_E947BAB5)
+References: <lx6sezwGldO.A.IhF.UBpWOB@chimera>
+ <201112210039.14100.linux-pm-bounces@lists.linux-foundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201112210039.14100.linux-pm-bounces@lists.linux-foundation.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- net/nfc/core.c     |    2 +-
- net/nfc/nci/core.c |    2 +-
- net/nfc/nci/data.c |    2 +-
- net/nfc/nci/ntf.c  |    2 +-
- net/nfc/nci/rsp.c  |    2 +-
- net/nfc/netlink.c  |    2 +-
- net/nfc/rawsock.c  |    2 +-
- 7 files changed, 7 insertions(+), 7 deletions(-)
+On 2011.12.21 at 00:54 +0100, Rafael J. Wysocki wrote:
+> Subject    : WARNING: at fs/sysfs/sysfs.h:195 (during boot)
+> Submitter  : Markus Trippelsdorf <markus-xp2qqqlHh3xzoYq+O6RWwA@public.gmane.org>
+> Date       : 2011-11-13 19:24
+> Message-ID : 20111113192417.GA1659-tLCgZGx+iJ+kxVt8IV0GqQ@public.gmane.org
+> References : http://marc.info/?l=linux-kernel&m=132121231921932&w=2
+> 
+> Subject    : WARNING: at mm/slub.c:3357, kernel BUG at mm/slub.c:3413
+> Submitter  : Markus Trippelsdorf <markus-xp2qqqlHh3xzoYq+O6RWwA@public.gmane.org>
+> Date       : 2011-11-18 7:25
+> Message-ID : 20111118072519.GA1615-tLCgZGx+iJ+kxVt8IV0GqQ@public.gmane.org
+> References : http://marc.info/?l=linux-kernel&m=132160119031794&w=2
 
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index 3ebc6b3aa..2a838b0 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -21,7 +21,7 @@
-  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-  */
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+#define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
- 
- #include <linux/init.h>
- #include <linux/kernel.h>
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 37de28e..921ad1f 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -25,7 +25,7 @@
-  *
-  */
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+#define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
- 
- #include <linux/types.h>
- #include <linux/workqueue.h>
-diff --git a/net/nfc/nci/data.c b/net/nfc/nci/data.c
-index 1e040fe..e5756b3 100644
---- a/net/nfc/nci/data.c
-+++ b/net/nfc/nci/data.c
-@@ -21,7 +21,7 @@
-  *
-  */
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+#define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
- 
- #include <linux/types.h>
- #include <linux/interrupt.h>
-diff --git a/net/nfc/nci/ntf.c b/net/nfc/nci/ntf.c
-index c36bd4a..003846b 100644
---- a/net/nfc/nci/ntf.c
-+++ b/net/nfc/nci/ntf.c
-@@ -25,7 +25,7 @@
-  *
-  */
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+#define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
- 
- #include <linux/types.h>
- #include <linux/interrupt.h>
-diff --git a/net/nfc/nci/rsp.c b/net/nfc/nci/rsp.c
-index ca611c5..3f444c8 100644
---- a/net/nfc/nci/rsp.c
-+++ b/net/nfc/nci/rsp.c
-@@ -25,7 +25,7 @@
-  *
-  */
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+#define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
- 
- #include <linux/types.h>
- #include <linux/interrupt.h>
-diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
-index c10e9b8..061711f 100644
---- a/net/nfc/netlink.c
-+++ b/net/nfc/netlink.c
-@@ -21,7 +21,7 @@
-  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-  */
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+#define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
- 
- #include <net/genetlink.h>
- #include <linux/nfc.h>
-diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
-index 68ecf3f..5e9b991 100644
---- a/net/nfc/rawsock.c
-+++ b/net/nfc/rawsock.c
-@@ -21,7 +21,7 @@
-  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-  */
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+#define pr_fmt(fmt) KBUILD_MODNAME ": %s: " fmt, __func__
- 
- #include <net/tcp_states.h>
- #include <linux/nfc.h>
+Both entries were caused by the same Radeon kexec writeback bug. This issue
+will hopefully be fixed in the next release.
+
+> Subject    : Impossible high cpu-time values for migration threads
+> Submitter  : Markus Trippelsdorf <markus-xp2qqqlHh3xzoYq+O6RWwA@public.gmane.org>
+> Date       : 2011-11-17 22:17
+> Message-ID : 20111117221731.GA9229-tLCgZGx+iJ+kxVt8IV0GqQ@public.gmane.org
+> References : http://marc.info/?l=linux-kernel&m=132156832124314&w=2
+
+This is a cosmetic issue, but I'm still seeing this after bursts of high
+CPU usage:
+
+ % ps afx -F
+UID        PID  PPID  C    SZ   RSS PSR STIME TTY      STAT   TIME CMD
+root         2     0  0     0     0   1 Dec20 ?        S      0:00 [kthreadd]
+root         3     2  0     0     0   0 Dec20 ?        S      0:01  \_ [ksoftirqd/0]
+root         6     2  0     0     0   0 Dec20 ?        S      0:00  \_ [migration/0]
+root         7     2  0     0     0   1 Dec20 ?        S      0:00  \_ [migration/1]
+root         8     2  0     0     0   1 Dec20 ?        S      0:05  \_ [kworker/1:0]
+root         9     2  0     0     0   1 Dec20 ?        S      0:01  \_ [ksoftirqd/1]
+root        11     2  0     0     0   2 Dec20 ?        S      0:00  \_ [migration/2]
+root        13     2  0     0     0   2 Dec20 ?        S      0:01  \_ [ksoftirqd/2]
+root        14     2 22     0     0   3 Dec20 ?        S    192:21  \_ [migration/3]
+root        16     2  0     0     0   3 Dec20 ?        S      0:01  \_ [ksoftirqd/3]
+root        17     2  0     0     0   2 Dec20 ?        S<     0:00  \_ [khelper]
+...
+
 -- 
-1.7.7.3
-
+Markus
