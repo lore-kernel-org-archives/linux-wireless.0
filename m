@@ -1,79 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:41157 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753963Ab1LANhz convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:58077 "HELO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752712Ab1LUCUJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Dec 2011 08:37:55 -0500
-MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CAB3XZEeNF8_U__rOPMfiOFNjPTS6gb33CSjdwkhMdRmS+i3CTw@mail.gmail.com>
-References: <20111129100727.GD2675@tiehlicka.suse.cz>
-	<20111129113906.GA7299@redhat.com>
-	<20111130101028.GA2906@tiehlicka.suse.cz>
-	<20111130142316.GA2466@redhat.com>
-	<20111130140316.GA4153@tiehlicka.suse.cz>
-	<20111130153929.GA2144@redhat.com>
-	<20111201085845.GA4602@tiehlicka.suse.cz>
-	<20111201105538.GA4504@tiehlicka.suse.cz>
-	<20111201115911.GA5706@redhat.com>
-	<20111201124440.GB25614@tiehlicka.suse.cz>
-	<20111201125554.GC5706@redhat.com>
-	<CAB3XZEeNF8_U__rOPMfiOFNjPTS6gb33CSjdwkhMdRmS+i3CTw@mail.gmail.com>
-Date: Thu, 1 Dec 2011 14:37:54 +0100
-Message-ID: <CA+icZUVo_GOax20wzOmsYOWXokM2hrajkDMRcVaz1425ApJ5sg@mail.gmail.com> (sfid-20111201_143830_302300_1E9BCB85)
-Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from iwl3945_rs_free_sta
-From: Sedat Dilek <sedat.dilek@googlemail.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Michal Hocko <mhocko@suse.cz>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Yong Zhang <yong.zhang0@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 20 Dec 2011 21:20:09 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-bluetooth@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Gustavo Padovan <padovan@profusion.mobi>,
+	Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH] Bluetooth: btusb: fix bInterval for high/super speed isochronous endpoints
+Date: Tue, 20 Dec 2011 18:19:00 -0800
+Message-Id: <1324433940-16838-1-git-send-email-bzhao@marvell.com> (sfid-20111221_032037_893938_E5D7D096)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 1, 2011 at 2:13 PM, Eliad Peller <eliad@wizery.com> wrote:
-> On Thu, Dec 1, 2011 at 2:55 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> On Thu, Dec 01, 2011 at 01:44:40PM +0100, Michal Hocko wrote:
->>> On Thu 01-12-11 12:59:12, Stanislaw Gruszka wrote:
->>> > On Thu, Dec 01, 2011 at 11:55:38AM +0100, Michal Hocko wrote:
->>> > > [  349.316070] iwl3945_rs_free_sta rs_sta f4be1ac0
->>> > > [  349.316076] ------------[ cut here ]------------
->>> > > [  349.316097] WARNING: at drivers/net/wireless/iwlegacy/iwl-3945-rs.c:438 iwl3945_rs_free_sta+0x33/0x42 [iwl3945]()
->>> >
->>> > Johannes pointed on irc that this problem is most likely caused by:
->>> >
->>> > commit f785d83a19bca326f79d127a413e35769afc0105
->>> > Author: Eliad Peller <eliad@wizery.com>
->>> > Date:   Mon Aug 8 16:50:22 2011 +0300
->>> >
->>> >     mac80211: clear sta.drv_priv on reconfiguration
->>> >
->>> > Michal, could you confirm that? If that is the root of the problem, we
->>> > need patch for iwlegacy (and iwlwifi) that allocate separate memory for
->>> > rc structures.
->> Actually this require quite big changes in iwlegacy at least, perhaps
->> also in iwlwifi. I prefer to revert commit as temporary fix,  and add
->> memset(0) to drivers .add_sta callback, in drivers which need it. After
->> changing iwlegcy/iwlwifi we could move memset(0) back to ieee80211_reconfig().
->>
->> Eliad, thoughts?
->>
-> i don't really care about temporarily reverting it.
-> but maybe you can just add an "initialized" flag to iwl3945_rs_sta,
-> and check it on free_sta?
->
+For high-speed/super-speed isochronous endpoints, the bInterval
+value is used as exponent, 2^(bInterval-1). Luckily we have
+usb_fill_int_urb() function that handles it correctly. So we just
+call this function to fill in the RX URB.
 
-Isnt't the mainline handling "user-friendliness first" by reverting
-"buggy" commits (especially if there is no fix/patch in sight)?
-A proper fix can be done later.
-Just my 2 cents.
+Cc: Marcel Holtmann <marcel@holtmann.org>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/bluetooth/btusb.c |    9 ++-------
+ 1 files changed, 2 insertions(+), 7 deletions(-)
 
-- Sedat -
+diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
+index ea5ad1c..a67c6db 100644
+--- a/drivers/bluetooth/btusb.c
++++ b/drivers/bluetooth/btusb.c
+@@ -508,15 +508,10 @@ static int btusb_submit_isoc_urb(struct hci_dev *hdev, gfp_t mem_flags)
+ 
+ 	pipe = usb_rcvisocpipe(data->udev, data->isoc_rx_ep->bEndpointAddress);
+ 
+-	urb->dev      = data->udev;
+-	urb->pipe     = pipe;
+-	urb->context  = hdev;
+-	urb->complete = btusb_isoc_complete;
+-	urb->interval = data->isoc_rx_ep->bInterval;
++	usb_fill_int_urb(urb, data->udev, pipe, buf, size, btusb_isoc_complete,
++				hdev, data->isoc_rx_ep->bInterval);
+ 
+ 	urb->transfer_flags  = URB_FREE_BUFFER | URB_ISO_ASAP;
+-	urb->transfer_buffer = buf;
+-	urb->transfer_buffer_length = size;
+ 
+ 	__fill_isoc_descriptor(urb, size,
+ 			le16_to_cpu(data->isoc_rx_ep->wMaxPacketSize));
+-- 
+1.7.4.1
 
-> Eliad.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
