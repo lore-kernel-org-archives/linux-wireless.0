@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:50961 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752048Ab1LKSaT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Dec 2011 13:30:19 -0500
-Subject: Re: iwlagn regression in v3.1.5
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Andrej Gelenberg <andrej.gelenberg@udo.edu>
-Cc: Udo Steinberg <udo@hypervisor.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <4EE4E152.2070204@udo.edu>
-References: <4EE4AEF4.2080702@udo.edu> <4EE4DB55.4090804@udo.edu>
-	 <20111211174138.79e51fe8@x220.fritz.box>  <4EE4E152.2070204@udo.edu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 11 Dec 2011 10:23:35 -0800
-Message-ID: <1323627815.1806.19.camel@wwguy-ubuntu> (sfid-20111211_193051_761268_A4864223)
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:29444 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753059Ab1LUR1G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Dec 2011 12:27:06 -0500
+Cc: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+Subject: [PATCH v2 2/6] ath9k: make ath_mci_duty_cycle static
+Date: Wed, 21 Dec 2011 09:27:01 -0800
+Message-ID: <1324488421-16364-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111221_182712_019299_E0BFBC49)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2011-12-11 at 08:58 -0800, Andrej Gelenberg wrote:
-> Hi,
-> 
-> this is pretty mean regression for the stable kernel. You may the fix 
-> only for cards, which need it and not for all of them.
+From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 
-Could you elaborate more on the failure case and setup. this patch is to
-address HT40 related problem which cause the iwlwifi firmware crash.
+This fixes this sparse warning:
 
-Thanks
-Wey
-> >
+  CHECK   drivers/net/wireless/ath/ath9k/mci.c
+drivers/net/wireless/ath/ath9k/mci.c:23:4: warning: symbol 'ath_mci_duty_cycle' was not declared. Should it be static?
 
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+
+This uses const as suggeste by Joe.
+
+ drivers/net/wireless/ath/ath9k/mci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index fee8c6f..15629f7 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -20,7 +20,7 @@
+ #include "ath9k.h"
+ #include "mci.h"
+ 
+-u8 ath_mci_duty_cycle[] = { 0, 50, 60, 70, 80, 85, 90, 95, 98 };
++static const u8 ath_mci_duty_cycle[] = { 0, 50, 60, 70, 80, 85, 90, 95, 98 };
+ 
+ static struct ath_mci_profile_info*
+ ath_mci_find_profile(struct ath_mci_profile *mci,
+-- 
+1.7.4.15.g7811d
 
