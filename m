@@ -1,38 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:34321 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751876Ab1LRUjG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Dec 2011 15:39:06 -0500
-Date: Sun, 18 Dec 2011 21:43:35 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: Re: [patch 2/2] NFC: use kfree_skb() for sk_buffs
-Message-ID: <20111218204335.GR11800@sortiz-mobl> (sfid-20111218_213912_238886_92AAE19E)
-References: <20111216202600.GB18570@elgon.mountain>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:11510 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751258Ab1LUOyR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Dec 2011 09:54:17 -0500
+Message-ID: <4EF1F313.1090304@qca.qualcomm.com> (sfid-20111221_155420_237729_D0D49061)
+Date: Wed, 21 Dec 2011 20:24:11 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111216202600.GB18570@elgon.mountain>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: fix scan state machine
+References: <1324479072-8242-1-git-send-email-mohammed@qca.qualcomm.com>
+In-Reply-To: <1324479072-8242-1-git-send-email-mohammed@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+On Wednesday 21 December 2011 08:21 PM, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>
+> when we run high bandwidth UDP traffic and we trigger a scan, the scan
+> state machine seems to be looping in SUSPEND->RESUME->DECISION->SUSPEND
+> and SET_CHANNEL seems to be never called as 'tx_empty' is never true
+> while running UDP traffic. fix this by settting SET_CHANNEL state when
+> we get into RESUME state.
 
-On Fri, Dec 16, 2011 at 11:26:00PM +0300, Dan Carpenter wrote:
-> This is a struct sk_buff pointer and it should be freed with kfree_skb()
-> instead of kfree().
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
+Hi johannes,
 
-Thanks.
+i am not completely familiar with the scan state machine. used some 
+previous before some of your latest changes in scan state machine and
+found this might help. please let me know if this does not helps 
+something. thank you!
 
-Cheers,
-Samuel.
+>
+> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+> ---
+>   net/mac80211/scan.c |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+> index 2c5041c..2908e56 100644
+> --- a/net/mac80211/scan.c
+> +++ b/net/mac80211/scan.c
+> @@ -625,7 +625,7 @@ static void ieee80211_scan_state_resume(struct ieee80211_local *local,
+>   	local->leave_oper_channel_time = jiffies;
+>
+>   	/* advance to the next channel to be scanned */
+> -	local->next_scan_state = SCAN_DECISION;
+> +	local->next_scan_state = SCAN_SET_CHANNEL;
+>   }
+>
+>   void ieee80211_scan_work(struct work_struct *work)
+
 
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+thanks,
+shafi
