@@ -1,37 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1152 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753694Ab1LOLkv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 06:40:51 -0500
-Message-ID: <4EE9DCBC.2000402@broadcom.com> (sfid-20111215_124055_730018_462A3781)
-Date: Thu, 15 Dec 2011 12:40:44 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Dan Carpenter" <dan.carpenter@oracle.com>
-cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: brcm: list of smatch warnings
-References: <20111215112947.GB3906@elgon.mountain>
-In-Reply-To: <20111215112947.GB3906@elgon.mountain>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from shards.monkeyblade.net ([198.137.202.13]:55522 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751378Ab1LUVRP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Dec 2011 16:17:15 -0500
+Date: Wed, 21 Dec 2011 16:16:07 -0500 (EST)
+Message-Id: <20111221.161607.1331587831465613240.davem@davemloft.net> (sfid-20111221_221731_553209_D8CD02E6)
+To: tytso@mit.edu
+Cc: johannes@sipsolutions.net, linux-kernel@vger.kernel.org,
+	ilw@linux.intel.com, linux-wireless@vger.kernel.org
+Subject: Re: REGRESSION: v3.2-rcX: iwlagn refuses to associate with my AP's
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20111221211213.GB32561@thunk.org>
+References: <20111213201752.GA5094@thunk.org>
+	<20111214015959.GA6276@thunk.org>
+	<20111221211213.GB32561@thunk.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/15/2011 12:29 PM, Dan Carpenter wrote:
-> Smatch still complains about the brcm driver.  Could you take a look at
-> these messages?  It's mostly just cleanups like doing the correct cast
-> for min_t() or handling the default cases on switch statements etc or
-> verifying that we broke out of a loop instead of coming to the end
-> without finding what we were looking for.
+From: "Ted Ts'o" <tytso@mit.edu>
+Date: Wed, 21 Dec 2011 16:12:13 -0500
+
+> On Tue, Dec 13, 2011 at 08:59:59PM -0500, Ted Ts'o wrote:
+>> On Tue, Dec 13, 2011 at 03:17:52PM -0500, Ted Ts'o wrote:
+>> ... and the second problem I had with associating with EAP-TLS
+>> encrypted SSID's was solved by Wey-Yi's patch: 
+>> 
+>> 	  iwlwifi: allow to switch to HT40 if not associated yet
+>> 
+>> ... found in the thread "iwlagn regression in v3.1.5"
+>> 
+>> So with these two patches applied, things are now stable for me.
 > 
-> regards,
-> dan carpenter
-> 
+> It seems that fixes for these two issues haven't been pushed to Linus
+> yet?  It would be nice if they could get pushed to mainline before 3.2
+> ships, as opposed to being something that has to get fixed in the
+> 3.2.X series....
 
-Thanks, Dan
-
-Will sure take a look at those messages. It is on our internal worklist.
-
-Gr. AvS
-
+It's in my queue to send to Linus.
