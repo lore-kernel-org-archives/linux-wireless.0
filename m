@@ -1,53 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zmx1.ing.unibs.it ([192.167.20.248]:45730 "EHLO
-	zmx1.ing.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751679Ab1LOPyS convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45736 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751517Ab1LUPKt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 10:54:18 -0500
-Subject: Re: [PATCH] b43: avoid packet losses in the dma worker code.
-Mime-Version: 1.0 (Apple Message framework v1084)
-Content-Type: text/plain; charset=utf-8
-From: francesco.gringoli@ing.unibs.it
-In-Reply-To: <CACna6rxc9HPWg7VekDr7LFSZp7wMCinsvao-LxEEHnrD95HCig@mail.gmail.com>
-Date: Thu, 15 Dec 2011 16:54:14 +0100
-Cc: m@bues.ch, linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	michele.orru@hotmail.it, b43-dev@lists.infradead.org,
-	riccardo.paolillo@gmail.com
-Message-Id: <8765D965-0435-4ACA-B562-A0CAD768A3FF@ing.unibs.it> (sfid-20111215_165422_097140_E08DD99E)
-References: <4ee9d496.ZmxUcTz7IvcMM2Tq%francesco.gringoli@ing.unibs.it> <CACna6rxc9HPWg7VekDr7LFSZp7wMCinsvao-LxEEHnrD95HCig@mail.gmail.com>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+	Wed, 21 Dec 2011 10:10:49 -0500
+Subject: Re: [PATCH v2 0/2] report stop sched scan when actually done
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eyal Shapira <eyal@wizery.com>
+Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
+In-Reply-To: <1324462262-10277-1-git-send-email-eyal@wizery.com> (sfid-20111221_111141_897967_3E904A2C)
+References: <1324462262-10277-1-git-send-email-eyal@wizery.com>
+	 (sfid-20111221_111141_897967_3E904A2C)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 21 Dec 2011 16:10:44 +0100
+Message-ID: <1324480244.3401.6.camel@jlt3.sipsolutions.net> (sfid-20111221_161052_039864_FE40B7C5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Dec 15, 2011, at 12:29 PM, Rafał Miłecki wrote:
-
-> 2011/12/15  <francesco.gringoli@ing.unibs.it>:
->> This patch addresses a bug in the dma worker code that keeps draining
->> packets even when the hardware queues are full. In such cases packets
->> can not be passed down to the device and are erroneusly dropped by the
->> code.
->> 
->> This problem was already discussed here
->> 
->> http://www.mail-archive.com/b43-dev@lists.infradead.org/msg01413.html
->> 
->> and acknowledged by Michael.
->> 
->> The patch also introduces separate workers for each hardware queues
->> and dedicated buffers where storing packets from mac80211 before sending
->> them down to the hardware.
+On Wed, 2011-12-21 at 12:11 +0200, Eyal Shapira wrote:
+> Changes in mac/cfg80211 to notify userspace
+> of NL80211_CMD_SCHED_SCAN_STOPPED only when the driver
+> actually reported back that it was stopped. Also
+> blocks other attempts until we're really done.
 > 
-> Have you considered just a one worked iterating over queues?
-> 
-> I'm not sure if it's efficient to have so many workers, each can be
-> stopped&resumed, each is taking wl mutex...
-We were thinking about this issue and at the end we decided to implement this way because of fairness issues among the queues. We tried some dequeuing algorithms (i.e., round robin and priority) but they were all benefitting one of the queues. With four workers instead the tests we made with iperf-udp showed to perfectly share the bandwidth among the queues obeying to the contention window parameters at the air interface.
+> This fixes a scenario where stop sched scan
+> is issued and immediately afterwards a new sched scan
+> is requested (e.g. with other parameters).
+> Current state caused a race where the driver started
+> stopping the sched scan but didn't finish and got
+> another sched scan request which it couldn't handle.
 
-Thanks for the comments about the previous patch: I changed it a bit and I'm going to post V2.
+Luca really needs to take a close look at this, and I think you should
+also take a look to see if this kind of API change can be avoided.
 
--Francesco
-
-> 
-> -- 
-> Rafał
+johannes
 
