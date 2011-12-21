@@ -1,46 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:48015 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754072Ab1LWQW5 (ORCPT
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:33888 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752437Ab1LUUgp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Dec 2011 11:22:57 -0500
-Received: by ggdk6 with SMTP id k6so6901524ggd.19
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Dec 2011 08:22:56 -0800 (PST)
-Message-ID: <4EF4AADC.8090204@lwfinger.net> (sfid-20111223_172300_016086_BD28CD74)
-Date: Fri, 23 Dec 2011 10:22:52 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Darshan Kumar NANDANWAR <Darshan.KN@st.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Srikrishna Pramoda ATIKUKKE <srikrishna.pramodaatikukke@st.com>,
-	Darshan Nandanwar <dk.manit@gmail.com>
-Subject: Re: insmod RTL8192CE OOPS on 2.6.32.16
-References: <D6068D304DED1F4FBFC1F56ECFA211D85A1EA7BBF0@EAPEX1MAIL1.st.com> <4EF1F32F.8070704@lwfinger.net> <20111221151605.GA11842@tuxdriver.com> <4EF235B9.3020805@lwfinger.net> <D6068D304DED1F4FBFC1F56ECFA211D85A1EA7BE7A@EAPEX1MAIL1.st.com> <4EF3559C.9060500@lwfinger.net> <D6068D304DED1F4FBFC1F56ECFA211D85A1EA7C089@EAPEX1MAIL1.st.com>
-In-Reply-To: <D6068D304DED1F4FBFC1F56ECFA211D85A1EA7C089@EAPEX1MAIL1.st.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Wed, 21 Dec 2011 15:36:45 -0500
+Received: by lami14 with SMTP id i14so3216854lam.20
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2011 12:36:42 -0800 (PST)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH 2/3] wl1251: convert 32-bit values to le32 before writing to the chip
+Date: Wed, 21 Dec 2011 22:36:28 +0200
+Message-Id: <1324499789-13525-3-git-send-email-coelho@ti.com> (sfid-20111221_213647_884271_DC469CB0)
+In-Reply-To: <1324499789-13525-1-git-send-email-coelho@ti.com>
+References: <1324499789-13525-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/23/2011 03:02 AM, Darshan Kumar NANDANWAR wrote:
-> Larry ,
-> Many thanks .Your patch helped me get over that issue.. But now  I am getting following error which is may be because of firmware is not responding:
->
-> PCI: Enabling device 0000:00:01.0 (0000 ->  0003)
-> rtl8192ce 0000:00:01.0: enabling bus mastering
-> PCI: Setting latency timer of device 0000:00:01.0 to 64
-> rtl8192ce:rtl92ce_read_eeprom_info():<0-0>  Autoload ERR!!
-> rtl8192ce:rtl92c_init_sw_vars():<0-0>  Failed to request firmware!
-> rtlwifi:rtl_pci_probe():<0-0>  Can't init_sw_vars.
->
-> I have pulled up latest branch  of linux-firmware.git and using firmware rtlwifi/rtl8192cfw.bin located in /lib/firmware .. Please give me some pointers so that I can get over this now...
+The 32-bit values were not converted before writing them to the chip.
+Change the wl1251_read32() and wl1251_write32() so that they always
+read and write le32 values and convert to and from the CPU endianess.
 
-Please grab the latest version of the compat-wireless sources. That way we will 
-not be chasing bugs that are already fixed.
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl1251/io.h     |    9 ++++-----
+ drivers/net/wireless/wl1251/wl1251.h |    2 +-
+ 2 files changed, 5 insertions(+), 6 deletions(-)
 
-After you get that package implemented, then use "modprobe rtl8192ce debug=4" 
-when you load the module, and send me that dmesg output.
-
-Larry
-
+diff --git a/drivers/net/wireless/wl1251/io.h b/drivers/net/wireless/wl1251/io.h
+index c545e9d..d382877 100644
+--- a/drivers/net/wireless/wl1251/io.h
++++ b/drivers/net/wireless/wl1251/io.h
+@@ -36,16 +36,15 @@
+ 
+ static inline u32 wl1251_read32(struct wl1251 *wl, int addr)
+ {
+-	u32 response;
+-
+-	wl->if_ops->read(wl, addr, &response, sizeof(u32));
++	wl->if_ops->read(wl, addr, &wl->buffer_32, sizeof(wl->buffer_32));
+ 
+-	return response;
++	return le32_to_cpu(wl->buffer_32);
+ }
+ 
+ static inline void wl1251_write32(struct wl1251 *wl, int addr, u32 val)
+ {
+-	wl->if_ops->write(wl, addr, &val, sizeof(u32));
++	wl->buffer_32 = cpu_to_le32(val);
++	wl->if_ops->write(wl, addr, &wl->buffer_32, sizeof(wl->buffer_32));
+ }
+ 
+ static inline u32 wl1251_read_elp(struct wl1251 *wl, int addr)
+diff --git a/drivers/net/wireless/wl1251/wl1251.h b/drivers/net/wireless/wl1251/wl1251.h
+index a77f1bb..9d8f581 100644
+--- a/drivers/net/wireless/wl1251/wl1251.h
++++ b/drivers/net/wireless/wl1251/wl1251.h
+@@ -380,7 +380,7 @@ struct wl1251 {
+ 	struct wl1251_stats stats;
+ 	struct wl1251_debugfs debugfs;
+ 
+-	u32 buffer_32;
++	__le32 buffer_32;
+ 	u32 buffer_cmd;
+ 	u8 buffer_busyword[WL1251_BUSY_WORD_LEN];
+ 	struct wl1251_rx_descriptor *rx_descriptor;
+-- 
+1.7.4.1
 
