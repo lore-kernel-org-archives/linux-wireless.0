@@ -1,32 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:64160 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751713Ab1LHJlx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 04:41:53 -0500
-Received: by yenm11 with SMTP id m11so926863yen.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2011 01:41:52 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1323336406.3332.9.camel@jlt3.sipsolutions.net>
-References: <1323336114-31203-1-git-send-email-helmut.schaa@googlemail.com>
-	<1323336302.3332.7.camel@jlt3.sipsolutions.net>
-	<1323336406.3332.9.camel@jlt3.sipsolutions.net>
-Date: Thu, 8 Dec 2011 10:41:52 +0100
-Message-ID: <CAGXE3d-qyXB7cEaDM6-21FttyF6iNNGRG1_madFVC9d25X6tRA@mail.gmail.com> (sfid-20111208_104158_433756_61F042A0)
-Subject: Re: [PATCH 1/2] ieee80211: Introduce ieee80211_has_frags
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga11.intel.com ([192.55.52.93]:63923 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751598Ab1LURwq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Dec 2011 12:52:46 -0500
+Subject: Re: [PATCH] drivers/iwlwifi: use dma_zalloc_coherent() for DMA
+ allocation
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Djalal Harouni <tixxdz@opendz.org>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+In-Reply-To: <20111221002147.GA4996@dztty>
+References: <20111221002147.GA4996@dztty>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 21 Dec 2011 08:52:10 -0800
+Message-ID: <1324486330.13074.322.camel@wwguy-huron> (sfid-20111221_185250_957632_7793CBFC)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 8, 2011 at 10:26 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->> Would _is_frag() read nicer? The piece you're checking is a fragment I
->> think?
->
-> Never mind ... the first fragment has is a fragment too and doesn't
-> return true here.
+Hi Djalal,
 
-We could also call it ieee80211_is_first_frag and swap the logic?
+
+On Tue, 2011-12-20 at 16:21 -0800, Djalal Harouni wrote:
+> Replace dma_alloc_coherent()+memset() with the new dma_zalloc_coherent()
+> 
+> Signed-off-by: Djalal Harouni <tixxdz@opendz.org>
+> ---
+
+iwl-trans-pcie.c is one of the source files in iwlwifi driver hold
+dual-license (GPL + BSD), are you ok to release your code for the BSD
+license and relinquish the copyright?
+
+btw, we are in the process of rewrite and re-architect major portion of
+iwlwifi driver, and we also plan to make most of the code dual-license
+(GPL + BSD). 
+
+Thanks you in advance
+
+Wey
+
+
