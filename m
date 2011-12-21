@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37439 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753110Ab1LUAFH (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:50152 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753340Ab1LUADT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 19:05:07 -0500
-Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
-	<zefir.kurtisi@neratec.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH 2/2] wireless-regdb: add FCC as the DFS region for US
-Date: Tue, 20 Dec 2011 16:04:12 -0800
-Message-ID: <1324425852-4492-3-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111221_010509_935979_32A7EEC1)
-In-Reply-To: <1324425852-4492-1-git-send-email-rodrigue@qca.qualcomm.com>
-References: <1324425852-4492-1-git-send-email-rodrigue@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 20 Dec 2011 19:03:19 -0500
+Received: by wibhm6 with SMTP id hm6so1677230wib.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 16:03:18 -0800 (PST)
+From: Eyal Shapira <eyal@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>, Luciano Coelho <coelho@ti.com>
+Subject: [PATCH 0/2] report stop sched scan when actually done
+Date: Wed, 21 Dec 2011 02:03:08 +0200
+Message-Id: <1324425790-3030-1-git-send-email-eyal@wizery.com> (sfid-20111221_010329_759582_846E9692)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Changes in mac/cfg80211 to notify userspace
+of NL80211_CMD_SCHED_SCAN_STOPPED only when the driver
+actually reported back that it was stopped. Also
+blocks other attempts until we're really done.
 
-DFS master support in the US requires consideration for DFS
-requirements as defined by the FCC rules.
+This fixes a scenario where stop sched scan
+is issued and immediately afterwards a new sched scan
+is requested (e.g. with other parameters).
+Current state caused a race where the driver started
+stopping the sched scan but didn't finish and got
+another sched scan request which it couldn't handle.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- db.txt |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Eyal Shapira (2):
+  mac80211: mark stopped sched scan only after driver does
+  nl80211: report stopped sched scan only after driver does
 
-diff --git a/db.txt b/db.txt
-index f0b46d8..4b7e879 100644
---- a/db.txt
-+++ b/db.txt
-@@ -651,7 +651,7 @@ country TR:
- country UA:
- 	(2402 - 2482 @ 40), (N/A, 20)
- 
--country US:
-+country US: DFS-FCC
- 	(2402 - 2472 @ 40), (3, 27)
- 	(5170 - 5250 @ 40), (3, 17)
- 	(5250 - 5330 @ 40), (3, 20), DFS
+ net/mac80211/scan.c |    9 ++++++---
+ net/wireless/scan.c |   17 ++++++++---------
+ 2 files changed, 14 insertions(+), 12 deletions(-)
+
 -- 
-1.7.4.15.g7811d
+1.7.4.1
 
