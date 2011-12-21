@@ -1,64 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3994 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752186Ab1LIRco (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Dec 2011 12:32:44 -0500
-Message-ID: <4EE24615.9020003@broadcom.com> (sfid-20111209_183247_615726_F795A69C)
-Date: Fri, 9 Dec 2011 18:32:05 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:35949 "HELO
+	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751908Ab1LUTUu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Dec 2011 14:20:50 -0500
+Message-ID: <4EF23FA4.7080507@xenotime.net> (sfid-20111221_202110_106404_6F406AF5)
+Date: Wed, 21 Dec 2011 12:20:52 -0800
+From: Randy Dunlap <rdunlap@xenotime.net>
 MIME-Version: 1.0
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"Francesco Gringoli" <francesco.gringoli@ing.unibs.it>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Performance of BCM43224 (14e4:4353)
-References: <4EE15A4E.1090500@lwfinger.net>
- <4EE1E2AC.8030002@broadcom.com> <4EE23AF5.8000400@lwfinger.net>
-In-Reply-To: <4EE23AF5.8000400@lwfinger.net>
-Content-Type: text/plain;
- charset=utf-8
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Samuel Ortiz <samuel@sortiz.org>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: linux-next: Tree for Dec 19 (nfc)
+References: <20111219185556.f07c1f43e28cfd594aaa5fe0@canb.auug.org.au> <4EEFA21B.5010305@xenotime.net> <1324399181.5354.0.camel@sortiz-mobl> <4EF23A1F.60803@xenotime.net> <20111221190211.GE11842@tuxdriver.com>
+In-Reply-To: <20111221190211.GE11842@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/09/2011 05:44 PM, Larry Finger wrote:
-> On 12/09/2011 04:27 AM, Arend van Spriel wrote:
+On 12/21/2011 11:02 AM, John W. Linville wrote:
+> On Wed, Dec 21, 2011 at 11:57:19AM -0800, Randy Dunlap wrote:
+>> On 12/20/2011 08:39 AM, Samuel Ortiz wrote:
+>>> Hi Randy,
+>>>
+>>> On Mon, 2011-12-19 at 12:44 -0800, Randy Dunlap wrote:
+>>>> On 12/18/2011 11:55 PM, Stephen Rothwell wrote:
+>>>>> Hi all,
+>>>>>
+>>>>> Changes since 20111216:
+>>>>
+>>>>
+>>>> (not new today, just not reported earlier)
+>>> John applied my fix for this one. It should be fixed now.
 >>
->> Hi Larry
+>> Hi Samuel,
 >>
->> Could you perform your benchmark test on brcmsmac without the bcma
->> patches. It kind of surprises me that we are that far off compared to
->> the wl driver.
+>> Is this supposed to be fixed in linux-next?
+>> It still fails today (linux-next 20111221).
+>>
+>>
+>> data.c:(.text+0x3e0): multiple definition of `nfc_llcp_mac_is_down'
+>> data.c:(.text+0x400): multiple definition of `nfc_llcp_mac_is_up'
+>> ntf.c:(.text+0xb60): multiple definition of `nfc_llcp_mac_is_down'
+>> ntf.c:(.text+0xb80): multiple definition of `nfc_llcp_mac_is_up'
+>> rsp.c:(.text+0x750): multiple definition of `nfc_llcp_mac_is_down'
+>> rsp.c:(.text+0x770): multiple definition of `nfc_llcp_mac_is_up'
+>> netlink.c:(.text+0x14e0): multiple definition of `nfc_llcp_mac_is_down'
+>> netlink.c:(.text+0x1500): multiple definition of `nfc_llcp_mac_is_up'
+>> af_nfc.c:(.text+0xe0): multiple definition of `nfc_llcp_mac_is_down'
+>> af_nfc.c:(.text+0x100): multiple definition of `nfc_llcp_mac_is_up'
+>> rawsock.c:(.text+0x1000): multiple definition of `nfc_llcp_mac_is_down'
+>> rawsock.c:(.text+0x1020): multiple definition of `nfc_llcp_mac_is_up'
 > 
-> I wondered about that myself. Upon investigation, my test with bcma/brcmsmac 
-> never worked. Without the patches, my netperf numbers for brcmsmac are RX 40.0 
-> and TX 59.7 Mbps.In all cases, the reported number is the maximum of 10 tries of 
-> 3 sec each.
+> I have this commit in wireless-next, been there a couple of days:
 
-Hi, Larry
+Apparently this patch is not sufficient.  There is still a build problem.
 
-That numbers do make more sense. Thanks for testing.
 
-> With the patches, my dmesg contains the following:
+> commit 645d35902c8f05a1b12fa838aa9052d8eeaf161e
+> Author: Samuel Ortiz <sameo@linux.intel.com>
+> Date:   Fri Dec 16 15:03:36 2011 +0100
 > 
-> [  908.282281] bcma: Bus registered
-> [  908.353242] brcmsmac bcma0:0: mfg 4bf core 812 rev 23 class 0 irq 22
-> [  908.380164] ieee80211 phy0: wl0: brcms_b_attach: si_attach failed
-> [  908.380184] ieee80211 phy0: wl0: brcms_b_attach: failed with err 11
-> [  908.380192] ieee80211 phy0: wl0: brcms_c_attach: failed with err 11
-> [  908.380316] ieee80211 phy0: brcmsmac: attach() failed with code 11
-> [  908.380379] brcmsmac: brcms_bcma_probe: brcms_attach failed!
-> [  908.381715] brcms_module_init: register returned 0
+>     NFC: Fix LLCP related build failure
+>     
+>     llcp_mac routines should be static and inlined or build will fail with NFC
+>     selected without LLCP.
+>     
+>     This patch fixes:
+>     
+>     LD [M]  net/nfc/nfc.o
+>     net/nfc/netlink.o: In function `nfc_llcp_mac_is_down':
+>     netlink.c:(.text+0x0): multiple definition of `nfc_llcp_mac_is_down'
+>     net/nfc/core.o:(.text+0x0): first defined here
+>     net/nfc/netlink.o: In function `nfc_llcp_mac_is_up':
+>     netlink.c:(.text+0x10): multiple definition of `nfc_llcp_mac_is_up'
+>     net/nfc/core.o:(.text+0x10): first defined here
+>     net/nfc/af_nfc.o: In function `nfc_llcp_mac_is_down':
+>     (.text+0x0): multiple definition of `nfc_llcp_mac_is_down'
+>     net/nfc/core.o:(.text+0x0): first defined here
+>     net/nfc/af_nfc.o: In function `nfc_llcp_mac_is_up':
+>     (.text+0x10): multiple definition of `nfc_llcp_mac_is_up'
+>     net/nfc/core.o:(.text+0x10): first defined here
+>     net/nfc/rawsock.o: In function `nfc_llcp_mac_is_down':
+>     rawsock.c:(.text+0x0): multiple definition of `nfc_llcp_mac_is_down'
+>     net/nfc/core.o:(.text+0x0): first defined here
+>     net/nfc/rawsock.o: In function `nfc_llcp_mac_is_up':
+>     rawsock.c:(.text+0x10): multiple definition of `nfc_llcp_mac_is_up'
+>     net/nfc/core.o:(.text+0x10): first defined here
+>     
+>     Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> 
 
-That is too bad. I thought all individual commits were ok,  but I
-reordered some. It could be the srom code failing, which will likely
-become redundant as bcma can provide the info.
 
-> As b43 is also loaded, which may be a second problem, it is run instead of brcmsmac.
-
-With the submitted patches brcmsmac claims any revision of 802.11 cores.
-Not sure what b43 claims. I have a patch internally to claim only
-revisions 23 and 24, which are used in bcm43224, bcm43225, and bcm4313.
-
-Gr. AvS
-
+-- 
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
