@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:58206 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752543Ab1LMMwE (ORCPT
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:52249 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751699Ab1LUTwo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 07:52:04 -0500
-Subject: [PATCH v2 5/6] ath6kl: fix reading of FW IE capabilities
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Date: Tue, 13 Dec 2011 14:51:58 +0200
-Message-ID: <20111213125158.10834.22898.stgit@localhost6.localdomain6> (sfid-20111213_135207_311559_E0DC7EF5)
-In-Reply-To: <20111213124923.10834.20626.stgit@localhost6.localdomain6>
-References: <20111213124923.10834.20626.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Wed, 21 Dec 2011 14:52:44 -0500
+Received: by lahl5 with SMTP id l5so5697852lah.27
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2011 11:52:40 -0800 (PST)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH] wl12xx: enable sparse endianess check by default
+Date: Wed, 21 Dec 2011 21:52:31 +0200
+Message-Id: <1324497151-21295-1-git-send-email-coelho@ti.com> (sfid-20111221_205247_943414_DF9980A4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For some strange reason I used ALIGN() to calculate index to the
-buffer. That is totally bogus and wouldn't work when it tried to read
-the second bit. Fix it by removing the ALIGN() altogether.
+Following the good example of the Intel (and more recently Atheros)
+drivers, enable endianess check by default when running sparse.
 
-Also check that ie_len is not too short.
-
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/ath/ath6kl/init.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ drivers/net/wireless/wl12xx/Makefile |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index c97f83c..5753f00 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -913,12 +913,15 @@ static int ath6kl_fetch_fw_api2(struct ath6kl *ar)
- 				   ar->hw.reserved_ram_size);
- 			break;
- 		case ATH6KL_FW_IE_CAPABILITIES:
-+			if (ie_len < DIV_ROUND_UP(ATH6KL_FW_CAPABILITY_MAX, 8))
-+				break;
+diff --git a/drivers/net/wireless/wl12xx/Makefile b/drivers/net/wireless/wl12xx/Makefile
+index fe67262..98f289c 100644
+--- a/drivers/net/wireless/wl12xx/Makefile
++++ b/drivers/net/wireless/wl12xx/Makefile
+@@ -11,3 +11,5 @@ obj-$(CONFIG_WL12XX_SDIO)		+= wl12xx_sdio.o
+ 
+ # small builtin driver bit
+ obj-$(CONFIG_WL12XX_PLATFORM_DATA)	+= wl12xx_platform_data.o
 +
- 			ath6kl_dbg(ATH6KL_DBG_BOOT,
- 				   "found firmware capabilities ie (%zd B)\n",
- 				   ie_len);
- 
- 			for (i = 0; i < ATH6KL_FW_CAPABILITY_MAX; i++) {
--				index = ALIGN(i, 8) / 8;
-+				index = i / 8;
- 				bit = i % 8;
- 
- 				if (data[index] & (1 << bit))
++ccflags-y += -D__CHECK_ENDIAN__
+-- 
+1.7.4.1
 
