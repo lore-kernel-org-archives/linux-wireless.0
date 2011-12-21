@@ -1,69 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36675 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754215Ab1LAOFF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Dec 2011 09:05:05 -0500
-Date: Thu, 1 Dec 2011 15:05:00 +0100
-From: Michal Hocko <mhocko@suse.cz>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Yong Zhang <yong.zhang0@gmail.com>
-Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from
- iwl3945_rs_free_sta
-Message-ID: <20111201140500.GA4269@tiehlicka.suse.cz> (sfid-20111201_150510_299146_A793FF6B)
-References: <20111129100727.GD2675@tiehlicka.suse.cz>
- <20111129113906.GA7299@redhat.com>
- <20111130101028.GA2906@tiehlicka.suse.cz>
- <20111130142316.GA2466@redhat.com>
- <20111130140316.GA4153@tiehlicka.suse.cz>
- <20111130153929.GA2144@redhat.com>
- <20111201085845.GA4602@tiehlicka.suse.cz>
- <20111201105538.GA4504@tiehlicka.suse.cz>
- <20111201115911.GA5706@redhat.com>
- <20111201124440.GB25614@tiehlicka.suse.cz>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:35752 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752816Ab1LUX2r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Dec 2011 18:28:47 -0500
+Received: by wgbdr13 with SMTP id dr13so14984811wgb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2011 15:28:46 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111201124440.GB25614@tiehlicka.suse.cz>
+In-Reply-To: <1324484074.13074.313.camel@wwguy-huron>
+References: <CAH5vBdJLHkFLQCHHYOczXQt1Hwwe3e-Ct0MUjyTRU0vgodAPOg@mail.gmail.com>
+ <1324424765.13074.281.camel@wwguy-huron> <CAH5vBdKotiPqpHV=tx2fv8=-HRBuJnYe8wEAF2Z9xH3zVnwyqg@mail.gmail.com>
+ <CA+icZUXWccU-TtwE7b7Mm9Nw7juQwDxvYRZfOdjP3q1O-Mr0Ug@mail.gmail.com>
+ <CAH5vBdKtV1Ydb2ffBVDxdynsF9S14Ddy6XezHzXvRC3bRC-huQ@mail.gmail.com>
+ <CA+icZUXDOxNo-Y9d2WcdhMZyDJeCT69z340xMwNiN9hbq0XAFA@mail.gmail.com>
+ <CAH5vBdLq6zOagjmyM1h9Jon+fYnz5t05Dx7u6VqOWGHna+M3_Q@mail.gmail.com>
+ <CA+icZUVixfk0h1ENU-tWMS5hgurbEV4jYpYNWbzaxCUx_b64UQ@mail.gmail.com>
+ <CAH5vBdK62juwC_qPPTfmgFkMp9XMy+3j1YLvBSxBc+zr9_oBJQ@mail.gmail.com>
+ <CA+icZUUhg91UAPMRGgXYAvo6wkr5ogb+vW8SsB28BeUP_6-g6w@mail.gmail.com> <1324484074.13074.313.camel@wwguy-huron>
+From: Cheng Renquan <crquan@gmail.com>
+Date: Wed, 21 Dec 2011 15:28:25 -0800
+Message-ID: <CAH5vBdJ4-33z3FbOwVG1QRzfFOwFpz1wccbQNDXEC6-NhBa31A@mail.gmail.com> (sfid-20111222_002857_091582_D34ACDF2)
+Subject: Re: linux 3.2-rcX iwlwifi driver's problem (wifi link unstable when
+ moving between multiple APs)
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu 01-12-11 13:44:40, Michal Hocko wrote:
-> On Thu 01-12-11 12:59:12, Stanislaw Gruszka wrote:
-> > On Thu, Dec 01, 2011 at 11:55:38AM +0100, Michal Hocko wrote:
-> > > [  349.316070] iwl3945_rs_free_sta rs_sta f4be1ac0
-> > > [  349.316076] ------------[ cut here ]------------
-> > > [  349.316097] WARNING: at drivers/net/wireless/iwlegacy/iwl-3945-rs.c:438 iwl3945_rs_free_sta+0x33/0x42 [iwl3945]()
-> > 
-> > Johannes pointed on irc that this problem is most likely caused by:
-> > 
-> > commit f785d83a19bca326f79d127a413e35769afc0105
-> > Author: Eliad Peller <eliad@wizery.com>
-> > Date:   Mon Aug 8 16:50:22 2011 +0300
-> > 
-> >     mac80211: clear sta.drv_priv on reconfiguration
-> > 
-> > Michal, could you confirm that? If that is the root of the problem, we
-> > need patch for iwlegacy (and iwlwifi) that allocate separate memory for
-> > rc structures.
-> 
-> Should I just revert it?
+I cherry-picked these 3 patches on top to v3.2.0-rc6, and now it's working,
+Thank you all everyone's effort;
 
-Reverted and guess what ;)
-Yeah, it works. So feel free to add
-Reported-adn-Tested-by: Michal Hocko <mhocko@suse.cz>
-to the revert.
+[archuser@archtop linux-git]$ git cherry-pick 123877b80
+[b46 55de35a] iwlwifi: do not set the sequence control bit is not needed
+ Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+[archuser@archtop linux-git]$ git cherry-pick 81670a49184
+[b46 1b0b51d] iwlwifi: tx_sync only on PAN context
+ Author: Johannes Berg <johannes.berg@intel.com>
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+[archuser@archtop linux-git]$ git cherry-pick 78feb35b81
+[b46 73d79e2] iwlwifi: allow to switch to HT40 if not associated
+ Author: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Anyway, I have really no idea about the 80211 stack but the patch
-doesn't seem to be correct from the layering POV. Why should generic
-layer clear something that is driver private data (or at least the
-naming suggests that it is driver specific data)?
 
-Thanks a lot for your help.
--- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+When walking to some corner meeting rooms (but still has good
+wifi connectivity, verified by another Android phone wifi ;),
+the roaming may be from previous AP to none and none to next AP,
+the process may need 1 to 2 minutes to be stable again, it's not
+ideally swift but acceptable,
+
+
+Dec 21 14:59:11 archtop NetworkManager[2333]: <info> (wlan0): roamed
+from BSSID 24:B6:57:34:CC:5F (blizzard) to 6C:9C:ED:EC:BC:7F
+(blizzard)
+Dec 21 14:59:41 archtop NetworkManager[2333]: <info> (wlan0): roamed
+from BSSID 6C:9C:ED:EC:BC:7F (blizzard) to (none) ((none))
+Dec 21 14:59:53 archtop NetworkManager[2333]: <info> (wlan0): roamed
+from BSSID (none) ((none)) to 2C:3F:38:F6:A8:AF (blizzard)
+
+
+Thanks,
