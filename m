@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:21298 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755403Ab1LNSpr (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:51677 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752547Ab1LUUhc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 13:45:47 -0500
-To: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
-Message-ID: <4EE8EE80.8090008@qca.qualcomm.com> (sfid-20111214_194550_826014_A9CF79B7)
-Date: Wed, 14 Dec 2011 20:44:16 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: support for P2P mgmt operations on station interface
-References: <1323811932-5724-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com>
-In-Reply-To: <1323811932-5724-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Wed, 21 Dec 2011 15:37:32 -0500
+Subject: Re: linux-next: Tree for Dec 19 (nfc)
+From: Samuel Ortiz <samuel@sortiz.org>
+Reply-To: Samuel Ortiz <samuel@sortiz.org>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+In-Reply-To: <4EF23A1F.60803@xenotime.net>
+References: <20111219185556.f07c1f43e28cfd594aaa5fe0@canb.auug.org.au>
+	 <4EEFA21B.5010305@xenotime.net> <1324399181.5354.0.camel@sortiz-mobl>
+	 <4EF23A1F.60803@xenotime.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 21 Dec 2011 21:42:40 +0100
+Message-ID: <1324500160.5354.3.camel@sortiz-mobl> (sfid-20111221_213736_232285_50AB8776)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/13/2011 11:32 PM, Aarthi Thiruvengadam wrote:
-> This patch enables support for doing P2P management operations like device
-> discovery on top of a station interface. After group formation, the station
-> interface will become a P2P GO/client interface as the case may be.
-> 
-> This feature requires modifications to a couple of existing WMI structures and
-> therefore new command ids and structures have been defined in order to be
-> compatible with older firmware versions and other chips. The exception here is
-> the wmi_connect_cmd. Adding a new field to the end of the structure will not
-> cause any issues with previous firmware versions since firmware only checks for
-> minimum length of the command. The other structures are of variable length,
-> hence it was not possible to add new fields to the end. 
-> 
-> The new command ids have to be added to the end of enum wmi_cmd_id, so it has
-> updated to match the firmware. 
-> 
-> The driver will support both the 'old' and the 'new' commands for a while by
-> checking the firmware capabilities. 
-> 
-> Signed-off-by: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
+Hi Randy,
 
-Thanks, applied.
+On Wed, 2011-12-21 at 11:57 -0800, Randy Dunlap wrote:
+> On 12/20/2011 08:39 AM, Samuel Ortiz wrote:
+> > Hi Randy,
+> > 
+> > On Mon, 2011-12-19 at 12:44 -0800, Randy Dunlap wrote:
+> >> On 12/18/2011 11:55 PM, Stephen Rothwell wrote:
+> >>> Hi all,
+> >>>
+> >>> Changes since 20111216:
+> >>
+> >>
+> >> (not new today, just not reported earlier)
+> > John applied my fix for this one. It should be fixed now.
+> 
+> Hi Samuel,
+> 
+> Is this supposed to be fixed in linux-next?
+> It still fails today (linux-next 20111221).
+Do you have a .config for me to look at ?
 
-Kalle
+Cheers,
+Samuel.
+
