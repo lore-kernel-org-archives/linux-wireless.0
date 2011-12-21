@@ -1,51 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.bufferbloat.net ([149.20.54.82]:40136 "EHLO
-	huchra.bufferbloat.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752931Ab1LUIsm (ORCPT
+Received: from senator.holtmann.net ([87.106.208.187]:48266 "EHLO
+	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750924Ab1LUC3L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 03:48:42 -0500
-From: Dave Taht <dave.taht@bufferbloat.net>
-To: linux-wireless@vger.kernel.org
-Cc: Dave Taht <dave.taht@bufferbloat.net>
-Subject: [PATCH 1/1] Treat IPv6 diffserv the same as ipv4 diffserv for 802.11e
-Date: Wed, 21 Dec 2011 00:41:45 -0800
-Message-Id: <1324456905-2628-2-git-send-email-dave.taht@bufferbloat.net> (sfid-20111221_094848_063798_3C98A904)
-In-Reply-To: <1324456905-2628-1-git-send-email-dave.taht@bufferbloat.net>
-References: <1324456905-2628-1-git-send-email-dave.taht@bufferbloat.net>
+	Tue, 20 Dec 2011 21:29:11 -0500
+Message-ID: <1324434516.1965.159.camel@aeonflux> (sfid-20111221_032915_940241_39A70D1F)
+Subject: Re: [PATCH] Bluetooth: btusb: fix bInterval for high/super speed
+ isochronous endpoints
+From: Marcel Holtmann <marcel@holtmann.org>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-bluetooth@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Gustavo Padovan <padovan@profusion.mobi>
+Date: Tue, 20 Dec 2011 18:28:36 -0800
+In-Reply-To: <1324433940-16838-1-git-send-email-bzhao@marvell.com>
+References: <1324433940-16838-1-git-send-email-bzhao@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wireless will select a different hardware queue based on the
-top 3 bits of the diffserv field, for ipv4. Extend that queue
-selection mechanism to ipv6, and make the calls orthogonal.
----
- net/wireless/util.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+Hi Bing,
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index e77df75..2c0600c 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -9,6 +9,7 @@
- #include <linux/slab.h>
- #include <net/cfg80211.h>
- #include <net/ip.h>
-+#include <net/dsfield.h>
- #include "core.h"
- 
- struct ieee80211_rate *
-@@ -650,7 +651,10 @@ unsigned int cfg80211_classify8021d(struct sk_buff *skb)
- 
- 	switch (skb->protocol) {
- 	case htons(ETH_P_IP):
--		dscp = ip_hdr(skb)->tos & 0xfc;
-+		dscp = ipv4_get_dsfield(ip_hdr(skb)) & 0xfc;
-+		break;
-+	case htons(ETH_P_IPV6):
-+		dscp = ipv6_get_dsfield(ipv6_hdr(skb)) & 0xfc;
- 		break;
- 	default:
- 		return 0;
--- 
-1.7.1
+> For high-speed/super-speed isochronous endpoints, the bInterval
+> value is used as exponent, 2^(bInterval-1). Luckily we have
+> usb_fill_int_urb() function that handles it correctly. So we just
+> call this function to fill in the RX URB.
+> 
+> Cc: Marcel Holtmann <marcel@holtmann.org>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> ---
+>  drivers/bluetooth/btusb.c |    9 ++-------
+>  1 files changed, 2 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
+> index ea5ad1c..a67c6db 100644
+> --- a/drivers/bluetooth/btusb.c
+> +++ b/drivers/bluetooth/btusb.c
+> @@ -508,15 +508,10 @@ static int btusb_submit_isoc_urb(struct hci_dev *hdev, gfp_t mem_flags)
+>  
+>  	pipe = usb_rcvisocpipe(data->udev, data->isoc_rx_ep->bEndpointAddress);
+>  
+> -	urb->dev      = data->udev;
+> -	urb->pipe     = pipe;
+> -	urb->context  = hdev;
+> -	urb->complete = btusb_isoc_complete;
+> -	urb->interval = data->isoc_rx_ep->bInterval;
+> +	usb_fill_int_urb(urb, data->udev, pipe, buf, size, btusb_isoc_complete,
+> +				hdev, data->isoc_rx_ep->bInterval);
+>  
+>  	urb->transfer_flags  = URB_FREE_BUFFER | URB_ISO_ASAP;
+> -	urb->transfer_buffer = buf;
+> -	urb->transfer_buffer_length = size;
+
+this looks better. And don't ask me why I did not do that from the
+beginning ;)
+
+Acked-by: Marcel Holtmann <marcel@holtmann.org>
+
+Regards
+
+Marcel
+
 
