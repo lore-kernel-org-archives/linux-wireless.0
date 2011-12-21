@@ -1,62 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:53876 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752103Ab1L2Kfj (ORCPT
+Received: from merlin.infradead.org ([205.233.59.134]:52823 "EHLO
+	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752863Ab1LUXaL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Dec 2011 05:35:39 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH 2/3] ath6kl: Add a module parameter to enable uart debug
-Date: Thu, 29 Dec 2011 16:05:38 +0530
-Message-ID: <1325154939-6986-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111229_113543_107286_3F682DFF)
-In-Reply-To: <1325154939-6986-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1325154939-6986-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 21 Dec 2011 18:30:11 -0500
+Subject: Re: linux-next: Tree for Dec 19 (nfc)
+From: Samuel Ortiz <samuel@sortiz.org>
+Reply-To: Samuel Ortiz <samuel@sortiz.org>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+In-Reply-To: <4EF2569D.1070806@xenotime.net>
+References: <20111219185556.f07c1f43e28cfd594aaa5fe0@canb.auug.org.au>
+	 <4EEFA21B.5010305@xenotime.net> <1324399181.5354.0.camel@sortiz-mobl>
+	 <4EF23A1F.60803@xenotime.net> <1324500160.5354.3.camel@sortiz-mobl>
+	 <4EF2569D.1070806@xenotime.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 22 Dec 2011 00:35:22 +0100
+Message-ID: <1324510522.5354.5.camel@sortiz-mobl> (sfid-20111222_003042_954267_68BE649D)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To enable firmware debug messages through uart interface,
+On Wed, 2011-12-21 at 13:58 -0800, Randy Dunlap wrote:
+> On 12/21/2011 12:42 PM, Samuel Ortiz wrote:
+> > Hi Randy,
+> > 
+> > On Wed, 2011-12-21 at 11:57 -0800, Randy Dunlap wrote:
+> >> On 12/20/2011 08:39 AM, Samuel Ortiz wrote:
+> >>> Hi Randy,
+> >>>
+> >>> On Mon, 2011-12-19 at 12:44 -0800, Randy Dunlap wrote:
+> >>>> On 12/18/2011 11:55 PM, Stephen Rothwell wrote:
+> >>>>> Hi all,
+> >>>>>
+> >>>>> Changes since 20111216:
+> >>>>
+> >>>>
+> >>>> (not new today, just not reported earlier)
+> >>> John applied my fix for this one. It should be fixed now.
+> >>
+> >> Hi Samuel,
+> >>
+> >> Is this supposed to be fixed in linux-next?
+> >> It still fails today (linux-next 20111221).
+> > Do you have a .config for me to look at ?
+> 
+> Sure, one of several that failed is attached.
+Thanks, I just tried this one and it seems to work fine. What's your
+toolchain ?
+I'm using: gcc version 4.6.2 (Debian 4.6.2-4)
 
-modprobe ath6kl_sdio uart_debug=1.
+Cheers,
+Samuel.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/init.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 57e0312..fcac538 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -28,10 +28,12 @@
- unsigned int debug_mask;
- static unsigned int testmode;
- static bool suspend_cutpower;
-+static unsigned int uart_debug;
- 
- module_param(debug_mask, uint, 0644);
- module_param(testmode, uint, 0644);
- module_param(suspend_cutpower, bool, 0444);
-+module_param(uart_debug, uint, 0644);
- 
- static const struct ath6kl_hw hw_list[] = {
- 	{
-@@ -464,6 +466,13 @@ int ath6kl_configure_target(struct ath6kl *ar)
- 	u8 fw_iftype, fw_mode = 0, fw_submode = 0;
- 	int i, status;
- 
-+	param = uart_debug;
-+	if (ath6kl_bmi_write(ar, ath6kl_get_hi_item_addr(ar,
-+			     HI_ITEM(hi_serial_enable)), (u8 *)&param, 4)) {
-+		ath6kl_err("bmi_write_memory for uart debug failed\n");
-+		return -EIO;
-+	}
-+
- 	/*
- 	 * Note: Even though the firmware interface type is
- 	 * chosen as BSS_STA for all three interfaces, can
--- 
-1.7.0.4
 
