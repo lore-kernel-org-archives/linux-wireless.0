@@ -1,145 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f53.google.com ([209.85.216.53]:38160 "EHLO
-	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757245Ab1LGSSD convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43956 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753110Ab1LUAEY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Dec 2011 13:18:03 -0500
-Received: by qadb15 with SMTP id b15so822174qad.19
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Dec 2011 10:18:02 -0800 (PST)
+	Tue, 20 Dec 2011 19:04:24 -0500
+Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
+	<zefir.kurtisi@neratec.com>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+Subject: [PATCH 1/2] wireless-regdb: Add master DFS region support
+Date: Tue, 20 Dec 2011 16:04:11 -0800
+Message-ID: <1324425852-4492-2-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111221_010429_079926_0BFE2171)
+In-Reply-To: <1324425852-4492-1-git-send-email-rodrigue@qca.qualcomm.com>
+References: <1324425852-4492-1-git-send-email-rodrigue@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1323257717.3404.13.camel@jlt3.sipsolutions.net>
-References: <1323257717.3404.13.camel@jlt3.sipsolutions.net>
-Date: Wed, 7 Dec 2011 10:18:01 -0800
-Message-ID: <CAAKGvm4hYsf2RNU-fakHiN6OUMuH9jT-CHsxROgJc60snc8MSg@mail.gmail.com> (sfid-20111207_191807_599704_45A07D59)
-Subject: Re: [PATCH] mac80211_hwsim: fix wmediumd_pid
-From: =?ISO-8859-1?Q?Javier_L=F3pez?= <jlopex@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 
-I agree with all the proposed changes.
+To support master DFS we add the three known DFS regions which
+countries are known to support. In order to modify the regulatory
+database schema in a backward compatible way we use one of
+the two pad bytes which were unused. By using one of the two pad
+bytes we end up keeping new regulatory databases with DFS region
+support compatible with older verions of CRDA, the DFS region would
+just not be sent to the kernel when using an old version of CRDA.
 
-Thanks Johannes
+DFS master is only required for modes of operation which iniate
+radiation on DFS channels, we will start supporting DFS with AP
+mode of operation. Without DFS master support you cannot intiate
+radiation on those channels (AP, Mesh, IBSS, P2P). Apart from support
+from wireless-regd, crda and the 802.11 stack you'll also need proper
+DFS support on your device driver.
 
-Cheers,
+A country can only map to one DFS region at a time for all frequency
+regions. After this patch countries can start being mapped to their
+own DFS region.
 
-On Wed, Dec 7, 2011 at 3:35 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Fix a few minor issues with wmediumd_pid:
-> a) make static
-> b) use u32 to match the snd_pid type
-> c) use ACCESS_ONCE since we don't lock it
-> d) don't explicitly initialize to 0
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
->  drivers/net/wireless/mac80211_hwsim.c |   21 ++++++++++-----------
->  1 file changed, 10 insertions(+), 11 deletions(-)
->
-> --- a/drivers/net/wireless/mac80211_hwsim.c     2011-12-07 09:11:40.000000000 +0100
-> +++ b/drivers/net/wireless/mac80211_hwsim.c     2011-12-07 12:32:26.000000000 +0100
-> @@ -37,7 +37,8 @@ MODULE_AUTHOR("Jouni Malinen");
->  MODULE_DESCRIPTION("Software simulator of 802.11 radio(s) for mac80211");
->  MODULE_LICENSE("GPL");
->
-> -int wmediumd_pid;
-> +static u32 wmediumd_pid;
-> +
->  static int radios = 2;
->  module_param(radios, int, 0444);
->  MODULE_PARM_DESC(radios, "Number of simulated radios");
-> @@ -665,7 +666,7 @@ static void mac80211_hwsim_tx(struct iee
->  {
->        bool ack;
->        struct ieee80211_tx_info *txi;
-> -       int _pid;
-> +       u32 _pid;
->
->        mac80211_hwsim_monitor_rx(hw, skb);
->
-> @@ -676,7 +677,7 @@ static void mac80211_hwsim_tx(struct iee
->        }
->
->        /* wmediumd mode check */
-> -       _pid = wmediumd_pid;
-> +       _pid = ACCESS_ONCE(wmediumd_pid);
->
->        if (_pid)
->                return mac80211_hwsim_tx_frame_nl(hw, skb, _pid);
-> @@ -764,7 +765,7 @@ static void mac80211_hwsim_beacon_tx(voi
->        struct ieee80211_hw *hw = arg;
->        struct sk_buff *skb;
->        struct ieee80211_tx_info *info;
-> -       int _pid;
-> +       u32 _pid;
->
->        hwsim_check_magic(vif);
->
-> @@ -781,7 +782,7 @@ static void mac80211_hwsim_beacon_tx(voi
->        mac80211_hwsim_monitor_rx(hw, skb);
->
->        /* wmediumd mode check */
-> -       _pid = wmediumd_pid;
-> +       _pid = ACCESS_ONCE(wmediumd_pid);
->
->        if (_pid)
->                return mac80211_hwsim_tx_frame_nl(hw, skb, _pid);
-> @@ -1254,7 +1255,7 @@ static void hwsim_send_ps_poll(void *dat
->        struct hwsim_vif_priv *vp = (void *)vif->drv_priv;
->        struct sk_buff *skb;
->        struct ieee80211_pspoll *pspoll;
-> -       int _pid;
-> +       u32 _pid;
->
->        if (!vp->assoc)
->                return;
-> @@ -1275,7 +1276,7 @@ static void hwsim_send_ps_poll(void *dat
->        memcpy(pspoll->ta, mac, ETH_ALEN);
->
->        /* wmediumd mode check */
-> -       _pid = wmediumd_pid;
-> +       _pid = ACCESS_ONCE(wmediumd_pid);
->
->        if (_pid)
->                return mac80211_hwsim_tx_frame_nl(data->hw, skb, _pid);
-> @@ -1292,7 +1293,7 @@ static void hwsim_send_nullfunc(struct m
->        struct hwsim_vif_priv *vp = (void *)vif->drv_priv;
->        struct sk_buff *skb;
->        struct ieee80211_hdr *hdr;
-> -       int _pid;
-> +       u32 _pid;
->
->        if (!vp->assoc)
->                return;
-> @@ -1314,7 +1315,7 @@ static void hwsim_send_nullfunc(struct m
->        memcpy(hdr->addr3, vp->bssid, ETH_ALEN);
->
->        /* wmediumd mode check */
-> -       _pid = wmediumd_pid;
-> +       _pid = ACCESS_ONCE(wmediumd_pid);
->
->        if (_pid)
->                return mac80211_hwsim_tx_frame_nl(data->hw, skb, _pid);
-> @@ -1634,8 +1635,6 @@ static int hwsim_init_netlink(void)
->        int rc;
->        printk(KERN_INFO "mac80211_hwsim: initializing netlink\n");
->
-> -       wmediumd_pid = 0;
-> -
->        rc = genl_register_family_with_ops(&hwsim_genl_family,
->                hwsim_ops, ARRAY_SIZE(hwsim_ops));
->        if (rc)
->
->
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ db2bin.py  |    2 +-
+ dbparse.py |   25 ++++++++++++++++++++-----
+ 2 files changed, 21 insertions(+), 6 deletions(-)
 
+diff --git a/db2bin.py b/db2bin.py
+index 23d3ee2..41d3741 100755
+--- a/db2bin.py
++++ b/db2bin.py
+@@ -116,7 +116,7 @@ countrynames.sort()
+ for alpha2 in countrynames:
+     coll = countries[alpha2]
+     # struct regdb_file_reg_country
+-    output.write(struct.pack('>ccxxI', str(alpha2[0]), str(alpha2[1]), reg_rules_collections[coll.permissions]))
++    output.write(struct.pack('>ccxBI', str(alpha2[0]), str(alpha2[1]), coll.dfs_region, reg_rules_collections[coll.permissions]))
+ 
+ 
+ if len(sys.argv) > 3:
+diff --git a/dbparse.py b/dbparse.py
+index 2c0d738..893d64e 100755
+--- a/dbparse.py
++++ b/dbparse.py
+@@ -18,6 +18,12 @@ flag_definitions = {
+     'NO-HT40':		1<<10,
+ }
+ 
++dfs_regions = {
++    'DFS-FCC':		1,
++    'DFS-ETSI':		2,
++    'DFS-JP':		3,
++}
++
+ class FreqBand(object):
+     def __init__(self, start, end, bw, comments=None):
+         self.start = start
+@@ -61,6 +67,10 @@ class PowerRestriction(object):
+         s = self
+         return hash((s.max_ant_gain, s.max_eirp))
+ 
++class DFSRegionError(Exception):
++    def __init__(self, dfs_region):
++        self.dfs_region = dfs_region
++
+ class FlagError(Exception):
+     def __init__(self, flag):
+         self.flag = flag
+@@ -90,9 +100,15 @@ class Permission(object):
+         return hash(self._as_tuple())
+ 
+ class Country(object):
+-    def __init__(self, permissions=None, comments=None):
++    def __init__(self, dfs_region, permissions=None, comments=None):
+         self._permissions = permissions or []
+         self.comments = comments or []
++	self.dfs_region = 0
++
++	if dfs_region:
++		if not dfs_region in dfs_regions:
++		    raise DFSRegionError(dfs_region)
++		self.dfs_region = dfs_regions[dfs_region]
+ 
+     def add(self, perm):
+         assert isinstance(perm, Permission)
+@@ -224,11 +240,10 @@ class DBParser(object):
+ 
+     def _parse_country(self, line):
+         try:
+-            cname, line = line.split(':', 1)
++            cname, cvals= line.split(':', 1)
++            dfs_region = cvals.strip()
+             if not cname:
+                 self._syntax_error("'country' keyword must be followed by name")
+-            if line:
+-                self._syntax_error("extra data at end of country line")
+         except ValueError:
+             self._syntax_error("country name must be followed by colon")
+ 
+@@ -239,7 +254,7 @@ class DBParser(object):
+             if len(cname) != 2:
+                 self._warn("country '%s' not alpha2" % cname)
+             if not cname in self._countries:
+-                self._countries[cname] = Country(comments=self._comments)
++                self._countries[cname] = Country(dfs_region, comments=self._comments)
+             self._current_countries[cname] = self._countries[cname]
+         self._comments = []
+ 
+-- 
+1.7.4.15.g7811d
 
-
---
-Javier López
