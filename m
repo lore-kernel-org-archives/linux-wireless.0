@@ -1,36 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:35625 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753084Ab1LUChp convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:51700 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753340Ab1LUADX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 21:37:45 -0500
-Received: by werm1 with SMTP id m1so2399019wer.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 18:37:44 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1324424765.13074.281.camel@wwguy-huron>
-References: <CAH5vBdJLHkFLQCHHYOczXQt1Hwwe3e-Ct0MUjyTRU0vgodAPOg@mail.gmail.com>
- <1324424765.13074.281.camel@wwguy-huron>
-From: Cheng Renquan <crquan@gmail.com>
-Date: Tue, 20 Dec 2011 18:37:22 -0800
-Message-ID: <CAH5vBdKotiPqpHV=tx2fv8=-HRBuJnYe8wEAF2Z9xH3zVnwyqg@mail.gmail.com> (sfid-20111221_033748_653544_D6BB292D)
-Subject: Re: linux 3.2-rcX iwlwifi driver's problem (wifi link unstable when
- moving between multiple APs)
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 20 Dec 2011 19:03:23 -0500
+Received: by wgbdr13 with SMTP id dr13so13329224wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 16:03:22 -0800 (PST)
+From: Eyal Shapira <eyal@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>, Luciano Coelho <coelho@ti.com>
+Subject: [PATCH 2/2] nl80211: report stopped sched scan only after driver does
+Date: Wed, 21 Dec 2011 02:03:10 +0200
+Message-Id: <1324425790-3030-3-git-send-email-eyal@wizery.com> (sfid-20111221_010333_926376_B7CC12C5)
+In-Reply-To: <1324425790-3030-1-git-send-email-eyal@wizery.com>
+References: <1324425790-3030-1-git-send-email-eyal@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 20, 2011 at 3:46 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> Hi Renquan,
->
-> Thanks you for reporting the issue.It will be greatly appreciated  if
-> you can enter a bug report in http://bugzilla.intellinuxwireless.org/.
-> Then we can assign engineer to look into the issue , also keep track of
-> the progress.
->
-> Thanks
-> Wey
+Report NL80211_CMD_SCHED_SCAN_STOPPED and change internal
+states in cfg80211 only after the driver reports that
+sched scan was actually stopped.
 
-have reported http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2338
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+---
+ net/wireless/scan.c |   17 ++++++++---------
+ 1 files changed, 8 insertions(+), 9 deletions(-)
+
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 31119e3..d6c87d9 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -133,6 +133,7 @@ EXPORT_SYMBOL(cfg80211_sched_scan_stopped);
+ int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
+ 			       bool driver_initiated)
+ {
++	int err = 0;
+ 	struct net_device *dev;
+ 
+ 	lockdep_assert_held(&rdev->sched_scan_mtx);
+@@ -143,17 +144,15 @@ int __cfg80211_stop_sched_scan(struct cfg80211_registered_device *rdev,
+ 	dev = rdev->sched_scan_req->dev;
+ 
+ 	if (!driver_initiated) {
+-		int err = rdev->ops->sched_scan_stop(&rdev->wiphy, dev);
+-		if (err)
+-			return err;
++		err = rdev->ops->sched_scan_stop(&rdev->wiphy, dev);
++	} else {
++		nl80211_send_sched_scan(rdev, dev,
++					NL80211_CMD_SCHED_SCAN_STOPPED);
++		kfree(rdev->sched_scan_req);
++		rdev->sched_scan_req = NULL;
+ 	}
+ 
+-	nl80211_send_sched_scan(rdev, dev, NL80211_CMD_SCHED_SCAN_STOPPED);
+-
+-	kfree(rdev->sched_scan_req);
+-	rdev->sched_scan_req = NULL;
+-
+-	return 0;
++	return err;
+ }
+ 
+ static void bss_release(struct kref *ref)
+-- 
+1.7.4.1
+
