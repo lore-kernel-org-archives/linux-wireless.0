@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26911 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753611Ab1LMIzj (ORCPT
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:46238 "HELO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752573Ab1LUP0c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 03:55:39 -0500
-Cc: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qualcomm.com>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Wed, 21 Dec 2011 10:26:32 -0500
+Received: by mail-lpp01m010-f42.google.com with SMTP id j5so3047370lag.15
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2011 07:26:31 -0800 (PST)
+Subject: Re: [PATCH] atheros: force endian checks on atheros wireless
+ drivers
+From: Luciano Coelho <coelho@ti.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Subject: [RFC 2/2] mac80211: Fix power save in change save
-Date: Tue, 13 Dec 2011 14:25:15 +0530
-Message-ID: <1323766515-19223-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111213_095543_559143_BA2E42EE)
-In-Reply-To: <1323766515-19223-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1323766515-19223-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Kalle Valo <kvalo@qca.qualcomm.com>, arik@wizery.com
+In-Reply-To: <1324480449.3401.7.camel@jlt3.sipsolutions.net>
+References: <1324408728-20300-1-git-send-email-rodrigue@qca.qualcomm.com>
+	 <1324465840.2182.198.camel@cumari>
+	 (sfid-20111221_121047_806730_87573FD9)  <1324480449.3401.7.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 21 Dec 2011 17:26:28 +0200
+Message-ID: <1324481188.2182.243.camel@cumari> (sfid-20111221_162636_668482_B85FAD92)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Wed, 2011-12-21 at 16:14 +0100, Johannes Berg wrote: 
+> On Wed, 2011-12-21 at 13:10 +0200, Luciano Coelho wrote:
+> 
+> > >  ath-$(CONFIG_ATH_DEBUG) += debug.o
+> > > +ccflags-y += -D__CHECK_ENDIAN__
+> > 
+> > Doesn't this force everyone who compiles the modules (even
+> > non-developers) to have sparse installed? Is it really what we want?
+> 
+> No. It just forces everyone who does use sparse to also use it for
+> endian checks. I do the same in all code I maintain, take a look :-)
 
-we found that power save is not getting enabled when we do
-change interface in this order STA->IBSS->STA. this is
-because ieee80211_setup_sdata clears type-dependen union
+Ah, I get it now.  sparse will only run if C=[12] is passed in the make
+command.
 
-Reported-by: Leela Kella <leela@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- net/mac80211/mlme.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+I'll probably add the same in wl12xx.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 67a6be1..d87fde3 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2371,6 +2371,7 @@ void ieee80211_sta_setup_sdata(struct ieee80211_sub_if_data *sdata)
- 		    (unsigned long) sdata);
- 
- 	ifmgd->flags = 0;
-+	ifmgd->powersave = sdata->wdev.ps;
- 
- 	mutex_init(&ifmgd->mtx);
- 
+It would be nice to have a way to enforce developers to run sparse.
+Maybe public humiliation works, but it's not the most efficient way. :)
+
 -- 
-1.7.0.4
+Cheers,
+Luca.
 
