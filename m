@@ -1,75 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from li9-11.members.linode.com ([67.18.176.11]:51083 "EHLO
-	test.thunk.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753227Ab1LLTm4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 14:42:56 -0500
-Date: Mon, 12 Dec 2011 14:42:53 -0500
-Message-Id: <E1RaBm1-0001JR-8a@tytso-glaptop.cam.corp.google.com> (sfid-20111212_204303_180958_202A47DB)
-To: linux-kernel@vger.kernel.org
-cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
-Subject: REGRESSION: v3.2-rcX: iwlagn refuses to associate with my AP's
-From: "Theodore Ts'o" <tytso@mit.edu>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:42569 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750733Ab1LUJHQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Dec 2011 04:07:16 -0500
+Received: by werm1 with SMTP id m1so2532217wer.19
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2011 01:07:15 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CA+icZUXDOxNo-Y9d2WcdhMZyDJeCT69z340xMwNiN9hbq0XAFA@mail.gmail.com>
+References: <CAH5vBdJLHkFLQCHHYOczXQt1Hwwe3e-Ct0MUjyTRU0vgodAPOg@mail.gmail.com>
+ <1324424765.13074.281.camel@wwguy-huron> <CAH5vBdKotiPqpHV=tx2fv8=-HRBuJnYe8wEAF2Z9xH3zVnwyqg@mail.gmail.com>
+ <CA+icZUXWccU-TtwE7b7Mm9Nw7juQwDxvYRZfOdjP3q1O-Mr0Ug@mail.gmail.com>
+ <CAH5vBdKtV1Ydb2ffBVDxdynsF9S14Ddy6XezHzXvRC3bRC-huQ@mail.gmail.com> <CA+icZUXDOxNo-Y9d2WcdhMZyDJeCT69z340xMwNiN9hbq0XAFA@mail.gmail.com>
+From: Cheng Renquan <crquan@gmail.com>
+Date: Wed, 21 Dec 2011 01:06:54 -0800
+Message-ID: <CAH5vBdLq6zOagjmyM1h9Jon+fYnz5t05Dx7u6VqOWGHna+M3_Q@mail.gmail.com> (sfid-20111221_100722_264618_80B7F9FF)
+Subject: Re: linux 3.2-rcX iwlwifi driver's problem (wifi link unstable when
+ moving between multiple APs)
+To: sedat.dilek@gmail.com
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi there,
+On Wed, Dec 21, 2011 at 12:53 AM, Sedat Dilek
+<sedat.dilek@googlemail.com> wrote:
+> /me confused...
+> Your subject is/was " ...linux 3.2-rcX iwlwifi driver's problem...",
+> now you are talking about iwlwifi.git.
+> Not sure what's the base of iwlwifi.git, but I guess it is wireless-testing?
+> BTW; what do you meant by 3.2-rcX, what is X? -rc1, -rc2...-rc6?
+> Which of those -rcX are affected?
 
-I recently discovered a regression in the iwlagn driver (works in v3.1
-but not in v3.2-rc2... I'm going to continue to bisect, but I thought
-I'd give a heads up now).  I'm using a Lenovo T410, with the following
-wireless card:
+More details are tracked into the bug, the kernel version one between
+linus offical 3.2.0-rc5 and 3.2.0-rc6,
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2338
 
-[   11.197410] iwlwifi 0000:03:00.0: HW Revision ID = 0x35
-[   11.197637] iwlwifi 0000:03:00.0: Detected Intel(R) Centrino(R) Advanced-N + WiMAX 6250 AGN, REV=0x84
+This kernel has been running on my Lenovo laptop more than 1 week with
+no reboot (only suspend & resume),
+and wifi roaming problems happened in office everyday,
 
-This doesn't appear to be the same regression as the one reported in the
-thread "iwlagn regression in v3.1.5", since the commit which Andrej
-pointed at (and which fixed his problem when he reverted it, "iwlwifi:
-do not re-configure HT40 after associated") does not appear in v3.2-rc2.
+[root@archtop ~]# modinfo iwlwifi
+filename:      /lib/modules/3.2.0-rc5+/kernel/drivers/net/wireless/iwlwifi/iwlwifi.ko
 
-The failure to associate with access points happens at work, with
-whatever AP's are in use at the Cambridge Google office.  When I tried
-v3.2-rc5 at home, I was able to associate with a consumer-grade NetGear
-AP, although it was flaky --- that is, it completely failed to associate
-initially, but then I tried rebooting and I was eventually able to get
-it to work.   At work, I was able to reproduce the problem with a
-v3.2-rc5 and v3.2-rc2 kernel, but the problem did not manifest itself
-with a v3.1 kernel.
+>>> [1] http://lkml.org/lkml/2011/12/17/14
+>>
+>> Is it already in iwlwifi.git? I'm gonna test it when I'm in office,
+>> http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git
 
-One interesting thing is that I'm getting the following WARNING message
-triggering in my dmesg logs:
+Now I'm asking if the patch mentioned in your above link is already in
+iwl git tree,
+since it's Intel's offical tree for iwlwifi, I'm gonna clone a latest
+tree and test it;
 
-[   48.518246] wlan0: deauthenticating from 00:1a:1e:26:2b:30 by local choice (r
-eason=3)
-[   48.525625] ------------[ cut here ]------------
-[   48.525653] WARNING: at net/wireless/mlme.c:309 __cfg80211_auth_remove+0xc2/0xcf [cfg80211]()
-[   48.525656] Hardware name: 2516CTO
-[   48.525658] Modules linked in: ecryptfs encrypted_keys trusted binfmt_misc rfcomm ppdev bridge stp bnep snd_hda_codec_hdmi ip6t_LOG nf_conntrack_ipv6 nf_defrag_ipv6 ipt_REJECT ipt_LOG nvidia(P) ipt_ULOG xt_limit xt_tcpudp btusb xt_addrtype bluetooth xt_owner uvcvideo xt_conntrack videodev v4l2_compat_ioctl32 ip6table_filter ip6_tables xt_state xt_helper nf_nat_tftp nf_conntrack_tftp nf_nat_irc iwlwifi nf_conntrack_irc nf_nat_ftp nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_conntrack_ftp snd_hda_codec_conexant mac80211 intel_ips nf_conntrack iptable_filter ip_tables x_tables cfg80211 sdhci_pci snd_hda_intel snd_hda_codec snd_hwdep thinkpad_acpi nvram tpm_tis tpm tpm_bios lp parport mxm_wmi intel_agp ehci_hcd intel_gtt
-[   48.525782] Pid: 69, comm: kworker/u:5 Tainted: P           O 3.2.0-rc5 #14
-[   48.525786] Call Trace:
-[   48.525798]  [<ffffffff8105bf6e>] warn_slowpath_common+0x85/0x9d
-[   48.525804]  [<ffffffff8105bfa0>] warn_slowpath_null+0x1a/0x1c
-[   48.525816]  [<ffffffffa00b29db>] __cfg80211_auth_remove+0xc2/0xcf [cfg80211]
-[   48.525828]  [<ffffffffa00b3290>] cfg80211_send_auth_timeout+0x98/0xaf [cfg80211]
-[   48.525845]  [<ffffffffa0106cdb>] ieee80211_probe_auth_done+0x39/0xcb [mac80211]
-[   48.525858]  [<ffffffffa01096f2>] ieee80211_work_work+0x1003/0x1074 [mac80211]
-[   48.525864]  [<ffffffff8108ac9d>] ? print_lock_contention_bug+0x1b/0xee
-[   48.525877]  [<ffffffffa01086ef>] ? free_work+0x19/0x19 [mac80211]
-[   48.525884]  [<ffffffff81074989>] process_one_work+0x230/0x398
-[   48.525889]  [<ffffffff810748fa>] ? process_one_work+0x1a1/0x398
-[   48.525897]  [<ffffffff81074c2c>] worker_thread+0x13b/0x25a
-[   48.525902]  [<ffffffff81074af1>] ? process_one_work+0x398/0x398
-[   48.525909]  [<ffffffff810789f7>] kthread+0xa0/0xa8
-[   48.525915]  [<ffffffff8108b66f>] ? trace_hardirqs_on_caller+0x123/0x15a
-[   48.525923]  [<ffffffff815173c4>] kernel_thread_helper+0x4/0x10
-[   48.525930]  [<ffffffff8150f274>] ? retint_restore_args+0x13/0x13
-[   48.525936]  [<ffffffff81078957>] ? __init_kthread_worker+0x5b/0x5b
-[   48.525941]  [<ffffffff815173c0>] ? gs_change+0x13/0x13
-[   48.525945] ---[ end trace d5c80202b94eccb9 ]---
-[   64.008073] wlan0: deauthenticating from 00:1a:1e:26:2c:90 by local choice (reason=3)
-[   64.014596] ------------[ cut here ]------------
-
-This seems to be happening after the failure to associate with the AP,
-so it could be a red herring.
-
-							- Ted
+But you're using a googlemail, now I'm not sure if you're working in
+that Intel iwl team...
