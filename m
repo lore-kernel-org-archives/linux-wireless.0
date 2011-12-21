@@ -1,39 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:38822 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750914Ab1LVHoa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Dec 2011 02:44:30 -0500
-Received: by lahd3 with SMTP id d3so809540lah.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2011 23:44:29 -0800 (PST)
-Message-ID: <4EF2DFDB.3070501@gmail.com> (sfid-20111222_084445_627618_F8E75395)
-Date: Thu, 22 Dec 2011 08:44:27 +0100
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
-MIME-Version: 1.0
-To: Ohad Ben-Cohen <ohad@wizery.com>
-CC: ido@wizery.com, coelho@ti.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] wl12xx: Fix power control for CONFIG_RUNTIME_PM off configurations
-References: <1324467662-10065-1-git-send-email-pontus.fuchs@gmail.com> <CAK=WgbacGjAzXPSWd1sF0RwyJ3tbMYTrZM0v2sO-pd5heSawVQ@mail.gmail.com>
-In-Reply-To: <CAK=WgbacGjAzXPSWd1sF0RwyJ3tbMYTrZM0v2sO-pd5heSawVQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from perches-mx.perches.com ([206.117.179.246]:46156 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752320Ab1LUBlt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 20 Dec 2011 20:41:49 -0500
+Message-ID: <1324431708.11292.13.camel@joe2Laptop> (sfid-20111221_024153_031713_9ED803DA)
+Subject: Re: [PATCH 1/6] ath6kl: fix sparse warning on init.c
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Date: Tue, 20 Dec 2011 17:41:48 -0800
+In-Reply-To: <4EF0E4A3.9010306@qca.qualcomm.com>
+References: <1324406771-7100-1-git-send-email-rodrigue@qca.qualcomm.com>
+	 <1324406771-7100-2-git-send-email-rodrigue@qca.qualcomm.com>
+	 <4EF0E4A3.9010306@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Tue, 2011-12-20 at 21:40 +0200, Kalle Valo wrote:
+> On 12/20/2011 08:46 PM, Luis R. Rodriguez wrote:
+> > From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+> > This fixes this sparse warning:
+> >   CC [M]  drivers/net/wireless/ath/ath6kl/init.o
+> > drivers/net/wireless/ath/ath6kl/init.c: In function ‘ath6kl_init_hw_params’:
+> > drivers/net/wireless/ath/ath6kl/init.c:1377:26: warning: ‘hw’ may be used uninitialized in this function
+> That's a compiler warning.
+[]
+> I can't see how hw can be uninitialised here (looking at the version in
+> ath6kl.git). I copy the full code here:
+> static int ath6kl_init_hw_params(struct ath6kl *ar)
+> {
+> 	const struct ath6kl_hw *hw;
+> 	int i;
+> 
+> 	for (i = 0; i < ARRAY_SIZE(hw_list); i++) {
+> 		hw = &hw_list[i];
+> 
+> 		if (hw->id == ar->version.target_ver)
+> 			break;
+> 	}
+> 
+> 	if (i == ARRAY_SIZE(hw_list)) {
+> 		ath6kl_err("Unsupported hardware version: 0x%x\n",
+> 			   ar->version.target_ver);
+> 		return -EINVAL;
+> 	}
+> 
+> 	ar->hw = *hw;
+> 
+> I always check for both compiler and sparse warnings and I have never
+> seen this. What version of compiler do you have?
 
-On 2011-12-22 07:39, Ohad Ben-Cohen wrote:
->> -       /* Tell PM core that we don't need the card to be powered now */
->> -       pm_runtime_put_noidle(&func->dev);
->> +       /* Power off as we don't need the card to be powered now */
->> +       wl12xx_sdio_power_off(func);
->
-> This in particular looks wrong.
->
-> You bypass runtime PM by manipulating the power state of the card
-> directly, and as a result you leave the runtime PM state out of sync
-> with the real power state of the device.
+Is the intent here really to allow multiple ids
+in the list and match the last one?
 
-Even without my changes we will call wl12xx_sdio_power_on/off for every 
-ifconfig up/down. Is that also a problem or is that case different?
+If not, perhaps something like this is simpler?
 
-//Pontus
+static int ath6kl_init_hw_params(struct ath6kl *ar)
+{
+	int i;
+	const struct ath6kl_hw *hw = hw_list;
+
+	for (i = 0; i < ARRAY_SIZE(hw_list); i++) {
+		if (hw->id == ar->version.target_ver) {
+			ar->hw = *hw;
+
+			ath6kl_dbg(ATH6KL_DBG_BOOT,
+				   "target_ver 0x%x target_type 0x%x dataset_patch 0x%x app_load_addr 0x%x\n",
+				   ar->version.target_ver, ar->target_type,
+				   ar->hw.dataset_patch_addr,
+				   ar->hw.app_load_addr);
+			ath6kl_dbg(ATH6KL_DBG_BOOT,
+				   "app_start_override_addr 0x%x board_ext_data_addr 0x%x reserved_ram_size 0x%x\n",
+				   ar->hw.app_start_override_addr,
+				   ar->hw.board_ext_data_addr,
+				   ar->hw.reserved_ram_size);
+			ath6kl_dbg(ATH6KL_DBG_BOOT,
+				   "refclk_hz %d uarttx_pin %d\n",
+				   ar->hw.refclk_hz, ar->hw.uarttx_pin);
+
+			return 0;
+		}
+		hw++;
+	}
+
+	ath6kl_err("Unsupported hardware version: 0x%x\n",
+		   ar->version.target_ver);
+	return -EINVAL;
+}
+
+btw: there are missing terminating newlines in the
+current ath6kl_dbg uses in this routine.
+
