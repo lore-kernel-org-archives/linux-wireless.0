@@ -1,140 +1,162 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:50367 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751899Ab1LIVPl (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:54717 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752656Ab1LUA0d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Dec 2011 16:15:41 -0500
-Received: by eaak14 with SMTP id k14so1926659eaa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Dec 2011 13:15:40 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org, Greg KH <gregkh@suse.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	stable@kernel.org
-Subject: [PATCH] bcma: support for suspend and resume
-Date: Fri,  9 Dec 2011 22:16:07 +0100
-Message-Id: <1323465367-5130-1-git-send-email-zajec5@gmail.com> (sfid-20111209_221544_985226_70B2DEC8)
+	Tue, 20 Dec 2011 19:26:33 -0500
+From: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] ath6kl: Support for TCP checksum offload to firmware
+Date: Tue, 20 Dec 2011 16:25:36 -0800
+Message-ID: <1324427136-8183-1-git-send-email-rpanjwan@qca.qualcomm.com> (sfid-20111221_012637_788927_B7ACD0F9)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-bcma used to lock up machine without enabling PCI or initializing CC.
+The change enables offloading TCP checksum calculation to firmware.
+The support has been added for QA team's testing purposes and currently
+there is no plan to offload the feature to firmware by default at
+load time.
 
-Cc: stable@kernel.org
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+To enable TCP checksum offload for tx and rx paths, use
+the ethtool as follows:
+ethtool -K <interface> tx on
+ethtool -K <interface> rx on
+
+To disable TCP checksum offload, for tx and rx paths, use
+the ethtool as follows:
+ethtool -K <interface> tx off
+ethtool -K <interface> rx off
+
+Signed-off-by: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
 ---
-DC input port stopped working in my notebook. I had to open it and fix.
-Guess what has appeared to my eyes... WiFI card in the mini PCIe slot!
-For all the years I believed WiFi is integrated with the motherboard!
+ drivers/net/wireless/ath/ath6kl/init.c |    2 +
+ drivers/net/wireless/ath/ath6kl/txrx.c |   61 +++++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath6kl/wmi.h  |    3 ++
+ 3 files changed, 61 insertions(+), 5 deletions(-)
 
-Taking a chance, I've put BCM43224 and decided to resolve suspend and
-resume issue. I've reproduced lock ups and tracked them :)
-
-It fixes lockups, so I believe it has to be Cc to stable.
----
- drivers/bcma/bcma_private.h |    3 +++
- drivers/bcma/host_pci.c     |   37 +++++++++++++++++++++++++++++++++++++
- drivers/bcma/main.c         |   16 ++++++++++++++++
- 3 files changed, 56 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 30a3085..fda56bd 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -18,6 +18,9 @@ void bcma_bus_unregister(struct bcma_bus *bus);
- int __init bcma_bus_early_register(struct bcma_bus *bus,
- 				   struct bcma_device *core_cc,
- 				   struct bcma_device *core_mips);
-+#ifdef CONFIG_PM
-+int bcma_bus_resume(struct bcma_bus *bus);
-+#endif
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index c97f83c..b232cc4 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1649,6 +1649,8 @@ int ath6kl_core_init(struct ath6kl *ar)
  
- /* scan.c */
- int bcma_bus_scan(struct bcma_bus *bus);
-diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-index 1b51d8b..990f5a8 100644
---- a/drivers/bcma/host_pci.c
-+++ b/drivers/bcma/host_pci.c
-@@ -224,6 +224,41 @@ static void bcma_host_pci_remove(struct pci_dev *dev)
- 	pci_set_drvdata(dev, NULL);
- }
+ 	set_bit(FIRST_BOOT, &ar->flag);
  
-+#ifdef CONFIG_PM
-+static int bcma_host_pci_suspend(struct pci_dev *dev, pm_message_t state)
-+{
-+	/* Host specific */
-+	pci_save_state(dev);
-+	pci_disable_device(dev);
-+	pci_set_power_state(dev, pci_choose_state(dev, state));
++	ndev->hw_features |= (NETIF_F_IP_CSUM | NETIF_F_RXCSUM);
 +
-+	return 0;
-+}
-+
-+static int bcma_host_pci_resume(struct pci_dev *dev)
-+{
-+	struct bcma_bus *bus = pci_get_drvdata(dev);
-+	int err;
-+
-+	/* Host specific */
-+	pci_set_power_state(dev, 0);
-+	err = pci_enable_device(dev);
-+	if (err)
-+		return err;
-+	pci_restore_state(dev);
-+
-+	/* Bus specific */
-+	err = bcma_bus_resume(bus);
-+	if (err)
-+		return err;
-+
-+	return 0;
-+}
-+#else /* CONFIG_PM */
-+# define bcma_host_pci_suspend	NULL
-+# define bcma_host_pci_resume	NULL
-+#endif /* CONFIG_PM */
-+
- static DEFINE_PCI_DEVICE_TABLE(bcma_pci_bridge_tbl) = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x0576) },
- 	{ PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4331) },
-@@ -239,6 +274,8 @@ static struct pci_driver bcma_pci_bridge_driver = {
- 	.id_table = bcma_pci_bridge_tbl,
- 	.probe = bcma_host_pci_probe,
- 	.remove = bcma_host_pci_remove,
-+	.suspend = bcma_host_pci_suspend,
-+	.resume = bcma_host_pci_resume,
- };
+ 	ret = ath6kl_init_hw_start(ar);
+ 	if (ret) {
+ 		ath6kl_err("Failed to start hardware: %d\n", ret);
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 506a303..e402b73 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -244,6 +244,8 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
+ 	u8 ac = 99 ; /* initialize to unmapped ac */
+ 	bool chk_adhoc_ps_mapping = false, more_data = false;
+ 	int ret;
++	struct wmi_tx_meta_v2 meta_v2;
++	u8 csum_start = 0, csum_dest = 0, csum = skb->ip_summed;
  
- int __init bcma_host_pci_init(void)
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 70c84b9..10f92b3 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -240,6 +240,22 @@ int __init bcma_bus_early_register(struct bcma_bus *bus,
- 	return 0;
- }
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_TX,
+ 		   "%s: skb=0x%p, data=0x%p, len=0x%x\n", __func__,
+@@ -265,6 +267,14 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
+ 	}
  
-+#ifdef CONFIG_PM
-+int bcma_bus_resume(struct bcma_bus *bus)
-+{
-+	struct bcma_device *core;
+ 	if (test_bit(WMI_ENABLED, &ar->flag)) {
++		if ((dev->hw_features & NETIF_F_IP_CSUM) &&
++				(csum == CHECKSUM_PARTIAL)) {
++			csum_start = skb->csum_start -
++					(skb_network_header(skb) - skb->head) +
++					sizeof(struct ath6kl_llc_snap_hdr);
++			csum_dest = skb->csum_offset + csum_start;
++		}
 +
-+	/* Init CC core */
-+	core = bcma_find_core(bus, BCMA_CORE_CHIPCOMMON);
-+	if (core) {
-+		bus->drv_cc.setup_done = false;
-+		bcma_core_chipcommon_init(&bus->drv_cc);
+ 		if (skb_headroom(skb) < dev->needed_headroom) {
+ 			struct sk_buff *tmp_skb = skb;
+ 
+@@ -281,11 +291,31 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
+ 			goto fail_tx;
+ 		}
+ 
+-		if (ath6kl_wmi_data_hdr_add(ar->wmi, skb, DATA_MSGTYPE,
+-					    more_data, 0, 0, NULL,
+-					    vif->fw_vif_idx)) {
+-			ath6kl_err("wmi_data_hdr_add failed\n");
+-			goto fail_tx;
++		if ((dev->hw_features & NETIF_F_IP_CSUM) &&
++				(csum == CHECKSUM_PARTIAL)) {
++			meta_v2.csum_start = csum_start;
++			meta_v2.csum_dest = csum_dest;
++
++/*instruct target to calculate checksum*/
++			meta_v2.csum_flags = CSUM_OFFLOAD_FLAG;
++			ret = ath6kl_wmi_data_hdr_add(ar->wmi, skb,
++					DATA_MSGTYPE, more_data, 0,
++					WMI_META_VERSION_2,
++					&meta_v2, vif->fw_vif_idx);
++			if (ret) {
++				ath6kl_warn("failed to add tcp checksum:%d\n"
++						, ret);
++				goto fail_tx;
++			}
++		} else {
++			ret = ath6kl_wmi_data_hdr_add(ar->wmi, skb,
++						DATA_MSGTYPE, more_data, 0, 0,
++						NULL, vif->fw_vif_idx);
++			if (ret) {
++				ath6kl_warn("failed to add wmi data header:%d\n"
++						, ret);
++				goto fail_tx;
++			}
+ 		}
+ 
+ 		if ((vif->nw_type == ADHOC_NETWORK) &&
+@@ -1259,6 +1289,27 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ 		break;
+ 	}
+ 
++/*Support for configuring rx checksum offload*/
++	if ((vif->ndev->features & NETIF_F_RXCSUM) &&
++		(ar->rx_meta_ver != WMI_META_VERSION_2)) {
++		ar->rx_meta_ver = WMI_META_VERSION_2;
++		if (ath6kl_wmi_set_rx_frame_format_cmd(ar->wmi,
++			if_idx, ar->rx_meta_ver, 0, 0)) {
++			ath6kl_err("unable to set the rx frame format\n");
++			status = -EIO;
++		}
++	} else if (!(vif->ndev->features & NETIF_F_RXCSUM) &&
++		(ar->rx_meta_ver == WMI_META_VERSION_2)) {
++		ar->rx_meta_ver = 0;
++		if (ath6kl_wmi_set_rx_frame_format_cmd(ar->wmi,
++			if_idx, ar->rx_meta_ver, 0, 0)) {
++			ath6kl_err("unable to set the rx frame format\n");
++			status = -EIO;
++		}
++
 +	}
 +
-+	return 0;
-+}
-+#endif
 +
- int __bcma_driver_register(struct bcma_driver *drv, struct module *owner)
- {
- 	drv->drv.name = drv->name;
+ 	if (dot11_hdr)
+ 		status = ath6kl_wmi_dot11_hdr_remove(ar->wmi, skb);
+ 	else if (!is_amsdu)
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 4e4f0f7..c2b83c7 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -257,6 +257,9 @@ static inline u8 wmi_data_hdr_get_if_idx(struct wmi_data_hdr *dhdr)
+ #define WMI_META_VERSION_1	0x01
+ #define WMI_META_VERSION_2	0x02
+ 
++/* Flag to signal to FW to calculate TCP checksum */
++#define CSUM_OFFLOAD_FLAG 0x01
++
+ struct wmi_tx_meta_v1 {
+ 	/* packet ID to identify the tx request */
+ 	u8 pkt_id;
 -- 
-1.7.3.4
+1.7.0.4
 
