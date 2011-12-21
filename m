@@ -1,55 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fmmailgate02.web.de ([217.72.192.227]:59039 "EHLO
-	fmmailgate02.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753172Ab1LLOt5 (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:64408 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753057Ab1LUMGf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 09:49:57 -0500
-Received: from moweb002.kundenserver.de (moweb002.kundenserver.de [172.19.20.108])
-	by fmmailgate02.web.de (Postfix) with ESMTP id 4E3301BB38EE6
-	for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2011 15:49:56 +0100 (CET)
-From: Julian Wollrath <jwollrath@web.de>
-To: linux-wireless@vger.kernel.org
-Subject: brcmsmac fails to bring up BCM43224
-Date: Mon, 12 Dec 2011 15:49:55 +0100
-MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201112121549.55949.jwollrath@web.de> (sfid-20111212_155000_914204_B3B7CB37)
+	Wed, 21 Dec 2011 07:06:35 -0500
+Received: by wibhm6 with SMTP id hm6so1893772wib.19
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2011 04:06:34 -0800 (PST)
+From: Eyal Shapira <eyal@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wl12xx: trigger recovery for failures in sched scan stop
+Date: Wed, 21 Dec 2011 14:06:26 +0200
+Message-Id: <1324469186-18507-1-git-send-email-eyal@wizery.com> (sfid-20111221_130639_870619_1F960185)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+mac80211 requires that drv_sched_scan_stop
+will always succeed. We have a few possible errors
+such as OOM, failure to ELP wakeup, fail in the FW command.
+Instead of no-op , trigger a recovery which would
+mark sched scan as stopped and clear up any bad FW state.
 
-im running an up to date kernel and since after applying the "brcm80211: 
-fullmac 4430 support and softmac switch to bcma" patch series, my BCM43224 
-fails to bring up the device.
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    4 +++-
+ drivers/net/wireless/wl12xx/scan.c |   14 +++++++++-----
+ 2 files changed, 12 insertions(+), 6 deletions(-)
 
-[ 9519.193496] bcma-pci-bridge 0000:12:00.0: PCI INT A disabled
-[ 9574.033024] cfg80211: Calling CRDA to update world regulatory domain
-[ 9574.033581] bcma-pci-bridge 0000:12:00.0: PCI INT A -> GSI 17 (level, low) 
--> IRQ 17
-[ 9574.033596] bcma-pci-bridge 0000:12:00.0: setting latency timer to 64
-[ 9574.033703] bcma: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 
-0x22, class 0x0)
-[ 9574.033728] bcma: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 
-0x17, class 0x0)
-[ 9574.033784] bcma: Core 2 found: PCIe (manuf 0x4BF, id 0x820, rev 0x0F, 
-class 0x0)
-[ 9574.033912] bcma: Found rev 6 PMU (capabilities 0x108C2606)
-[ 9574.044050] bcma: Bus registered
-[ 9574.047141] brcmsmac bcma0:0: mfg 4bf core 812 rev 23 class 0 irq 17
-[ 9574.051858] ieee80211 phy0: wl0: brcms_b_attach: si_attach failed
-[ 9574.051864] ieee80211 phy0: wl0: brcms_b_attach: failed with err 11
-[ 9574.051867] ieee80211 phy0: wl0: brcms_c_attach: failed with err 11
-[ 9574.051880] ieee80211 phy0: brcmsmac: attach() failed with code 11
-[ 9574.051887] brcmsmac: brcms_bcma_probe: brcms_attach failed!
-[ 9574.051913] brcms_module_init: register returned 0
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index d5f55a1..0d3de3e 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -3137,8 +3137,10 @@ static void wl1271_op_sched_scan_stop(struct ieee80211_hw *hw,
+ 	mutex_lock(&wl->mutex);
+ 
+ 	ret = wl1271_ps_elp_wakeup(wl);
+-	if (ret < 0)
++	if (ret < 0) {
++		wl12xx_queue_recovery_work(wl);
+ 		goto out;
++	}
+ 
+ 	wl1271_scan_sched_scan_stop(wl);
+ 
+diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
+index e24111e..108bed4 100644
+--- a/drivers/net/wireless/wl12xx/scan.c
++++ b/drivers/net/wireless/wl12xx/scan.c
+@@ -739,22 +739,26 @@ void wl1271_scan_sched_scan_stop(struct wl1271 *wl)
+ 
+ 	wl1271_debug(DEBUG_CMD, "cmd periodic scan stop");
+ 
+-	/* FIXME: what to do if alloc'ing to stop fails? */
+ 	stop = kzalloc(sizeof(*stop), GFP_KERNEL);
+ 	if (!stop) {
+ 		wl1271_error("failed to alloc memory to send sched scan stop");
+-		return;
++		goto recovery;
+ 	}
+ 
+ 	stop->tag = WL1271_SCAN_DEFAULT_TAG;
+ 
+ 	ret = wl1271_cmd_send(wl, CMD_STOP_PERIODIC_SCAN, stop,
+ 			      sizeof(*stop), 0);
++
++	kfree(stop);
++
+ 	if (ret < 0) {
+ 		wl1271_error("failed to send sched scan stop command");
+-		goto out_free;
++		goto recovery;
+ 	}
+ 
+-out_free:
+-	kfree(stop);
++	return;
++
++recovery:
++	wl12xx_queue_recovery_work(wl);
+ }
+-- 
+1.7.4.1
 
-If I interpret this information right, it seems, like something went wrong in 
-the function ai_doattach in aiutils.c.
-
-If you need further information, feel free to ask.
-
-
-With best regards,
-Julian Wollrath
