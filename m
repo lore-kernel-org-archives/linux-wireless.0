@@ -1,62 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:5267 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751346Ab1LHOv5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 09:51:57 -0500
-Date: Thu, 8 Dec 2011 16:50:30 +0200
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH] ath6kl: Use delayed key configuration for WAPI in AP mode
-Message-ID: <20111208145030.GA1131@jouni.qca.qualcomm.com> (sfid-20111208_155201_087568_7C9368E7)
+Received: from mx1.redhat.com ([209.132.183.28]:36630 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751608Ab1LULdm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Dec 2011 06:33:42 -0500
+Date: Wed, 21 Dec 2011 12:33:30 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Pedro Francisco <pedrogfrancisco@gmail.com>
+Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Subject: Re: iwl3945 firmware errors: tentative debugging
+Message-ID: <20111221113329.GA2235@redhat.com> (sfid-20111221_123345_809893_0B227103)
+References: <CAJZjf_xDm_RaFqxF-r+MAPyh_HcCb+yV4dNrfhr+LH0-z2zk8g@mail.gmail.com>
+ <CAJZjf_yEBb3BEf+-Fei78xBmJT1Y_Jr5fPUJNKwi6kvuVg24KA@mail.gmail.com>
+ <20111124125414.GA8077@redhat.com>
+ <CAJZjf_zM2zBsoh66KcRwgi-jS7DF-qH5-sKrUoCB=hFTPES7LA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: multipart/mixed; boundary="7AUc2qLy4jB3hD7Z"
+In-Reply-To: <CAJZjf_zM2zBsoh66KcRwgi-jS7DF-qH5-sKrUoCB=hFTPES7LA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed to allow WAPI AP to configure the initial group key
-to the target in the same way as is done with TKIP/CCMP. This
-fixes broadcast data frame delivery with the initial group key.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    3 ++-
- drivers/net/wireless/ath/ath6kl/main.c     |    4 +++-
- 2 files changed, 5 insertions(+), 2 deletions(-)
+--7AUc2qLy4jB3hD7Z
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index aa93527..77059c7 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1001,7 +1001,8 @@ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
- 		   key_usage, key->seq_len);
+Hi Pedro,
+
+On Tue, Nov 29, 2011 at 05:07:55PM +0000, Pedro Francisco wrote:
+> My country has the following regulatory.bin lines:
+> 
+> country PT:	(2402.000 - 2482.000 @ 40.000), (N/A, 20.00)	(5170.000 -
+> 5250.000 @ 40.000), (N/A, 20.00)	(5250.000 - 5330.000 @ 40.000), (N/A,
+> 20.00), DFS <------ removed whole line	(5490.000 - 5710.000 @ 40.000),
+> (N/A, 27.00), DFS <------ removed whole line
+> 
+> If I remove the last two lines, everything works as expected, i.e., NO
+> "Microsode SW error". If I include any of the last two, the Microcode
+> will issue an error.
+> 
+> I've tried every combination of those lines except just one of
+> "(5250.000 - 5330.000 @ 40.000), (N/A, 20.00), DFS" OR "(5490.000 -
+> 5710.000 @ 40.000), (N/A, 27.00), DFS".
+
+Attached patch stop to trigger error on my setup with "iw dev wlan0 scan
+passive". Can you check if it also fix problem on your normal wireless
+workload?
+
+Thanks
+Stanislaw
+
+--7AUc2qLy4jB3hD7Z
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="iwlegacy-do-not-promote-to-active-scan-on-transmistion-detect.patch"
+
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index daef6b5..b6df518 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -2624,12 +2624,12 @@ il3945_request_scan(struct il_priv *il, struct ieee80211_vif *vif)
+ 	}
  
- 	if (vif->nw_type == AP_NETWORK && !pairwise &&
--	    (key_type == TKIP_CRYPT || key_type == AES_CRYPT) && params) {
-+	    (key_type == TKIP_CRYPT || key_type == AES_CRYPT ||
-+	     key_type == WAPI_CRYPT) && params) {
- 		ar->ap_mode_bkey.valid = true;
- 		ar->ap_mode_bkey.key_index = key_index;
- 		ar->ap_mode_bkey.key_type = key_type;
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index d9b4ba4..9cf48f4 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -397,7 +397,9 @@ void ath6kl_connect_ap_mode_bss(struct ath6kl_vif *vif, u16 channel)
- 	case NONE_AUTH:
- 		if (vif->prwise_crypto == WEP_CRYPT)
- 			ath6kl_install_static_wep_keys(vif);
--		break;
-+		if (!ik->valid || ik->key_type != WAPI_CRYPT)
-+			break;
-+		/* for WAPI, we need to set the delayed group key, continue: */
- 	case WPA_PSK_AUTH:
- 	case WPA2_PSK_AUTH:
- 	case (WPA_PSK_AUTH | WPA2_PSK_AUTH):
--- 
-1.7.4.1
+ 	/*
+-	 * If active scaning is requested but a certain channel
+-	 * is marked passive, we can do active scanning if we
+-	 * detect transmissions.
++	 * If active scaning is requested but a certain channel is marked
++	 * passive, we can do active scanning if we detect transmissions. For
++	 * passive only scanning disable switching to active on any channel.
+ 	 */
+ 	scan->good_CRC_th =
+-	    is_active ? IL_GOOD_CRC_TH_DEFAULT : IL_GOOD_CRC_TH_DISABLED;
++	    is_active ? IL_GOOD_CRC_TH_DEFAULT : IL_GOOD_CRC_TH_NEVER;
+ 
+ 	len =
+ 	    il_fill_probe_req(il, (struct ieee80211_mgmt *)scan->data,
 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+--7AUc2qLy4jB3hD7Z--
