@@ -1,186 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3062 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754666Ab1LLXPq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 18:15:46 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 12/15] brcm80211: smac: cleanup si_info structure
- definition
-Date: Mon, 12 Dec 2011 15:15:10 -0800
-Message-ID: <1323731713-14942-13-git-send-email-frankyl@broadcom.com> (sfid-20111213_001558_656989_1DB85A38)
-In-Reply-To: <1323731713-14942-1-git-send-email-frankyl@broadcom.com>
-References: <1323731713-14942-1-git-send-email-frankyl@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40243 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752900Ab1LUUAg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Dec 2011 15:00:36 -0500
+Date: Wed, 21 Dec 2011 14:58:21 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH 3.2] iwlagn: fix (remove) use of PAGE_SIZE
+Message-ID: <20111221195821.GF11842@tuxdriver.com> (sfid-20111221_210040_335225_9F381B36)
+References: <1324332059-11630-1-git-send-email-wey-yi.w.guy@intel.com>
+ <20111221161953.GB11842@tuxdriver.com>
+ <1324482300.13074.295.camel@wwguy-huron>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1324482300.13074.295.camel@wwguy-huron>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+On Wed, Dec 21, 2011 at 07:45:00AM -0800, Guy, Wey-Yi wrote:
+> Hi John,
+> 
+> On Wed, 2011-12-21 at 08:19 -0800, John W. Linville wrote:
+> > On Mon, Dec 19, 2011 at 02:00:59PM -0800, Wey-Yi Guy wrote:
+> > > From: Johannes Berg <johannes.berg@intel.com>
+> > > 
+> > > The ICT code erroneously uses PAGE_SIZE. The bug
+> > > is that PAGE_SIZE isn't necessarily 4096, so on
+> > > such platforms this code will not work correctly
+> > > as we'll try to attempt to read an index in the
+> > > table that the device never wrote, it always has
+> > > 4096-byte pages.
+> > > 
+> > > Additionally, the manual alignment code here is
+> > > unnecessary -- Documentation/DMA-API-HOWTO.txt
+> > > states:
+> > >   The cpu return address and the DMA bus master address are both
+> > >   guaranteed to be aligned to the smallest PAGE_SIZE order which
+> > >   is greater than or equal to the requested size.  This invariant
+> > >   exists (for example) to guarantee that if you allocate a chunk
+> > >   which is smaller than or equal to 64 kilobytes, the extent of the
+> > >   buffer you receive will not cross a 64K boundary.
+> > > 
+> > > Just use appropriate new constants and get rid of
+> > > the alignment code.
+> > > 
+> > > Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> > > Cc: stable@vger.kernel.org
+> > > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > > Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+> > 
+> > This seems like a big patch.  It is a bit late in the release cycle
+> > to rewrite all the DMA allocation code. :-)
+> > 
+> > What platforms does this affect?  Are there actual users involved?
+> 
+> I understand the patch is bigger than the regular patch should be
+> generated for stable kernel. Johannes can explain better, but he is on
+> vacation. as what I understood, he work with community user who
+> encounter issue and root cause it is PAGE SIZE cause the problem.
+> 
+> Thanks
+> Wey
 
-Number of fields are no longer needed as the BCMA provides it
-or makes them redundant. These have been removed.
+Unless someone screams, I'd be a lot more comfortable saving this
+for 3.3.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |   51 +++++----------------
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.h |   27 -----------
- 2 files changed, 11 insertions(+), 67 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-index f78350a..34a5e02 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-@@ -454,29 +454,6 @@ struct aidmp {
- 	u32 componentid3;	/* 0xffc */
- };
- 
--/* parse the enumeration rom to identify all cores */
--static void ai_scan(struct si_pub *sih, struct bcma_bus *bus)
--{
--	struct si_info *sii = (struct si_info *)sih;
--	struct bcma_device *core;
--	uint idx;
--
--	list_for_each_entry(core, &bus->cores, list) {
--		idx = core->core_index;
--		sii->cia[idx] = core->id.manuf << CIA_MFG_SHIFT;
--		sii->cia[idx] |= core->id.id << CIA_CID_SHIFT;
--		sii->cia[idx] |= core->id.class << CIA_CCL_SHIFT;
--		sii->cib[idx] = core->id.rev << CIB_REV_SHIFT;
--		sii->coreid[idx] = core->id.id;
--		sii->coresba[idx] = core->addr;
--		sii->coresba_size[idx] = 0x1000;
--		sii->coresba2[idx] = 0;
--		sii->coresba2_size[idx] = 0;
--		sii->wrapba[idx] = core->wrap;
--		sii->numcores++;
--	}
--}
--
- /* return true if PCIE capability exists in the pci config space */
- static bool ai_ispcie(struct si_info *sii)
- {
-@@ -502,10 +479,16 @@ static bool ai_buscore_prep(struct si_info *sii)
- static bool
- ai_buscore_setup(struct si_info *sii, struct bcma_device *cc)
- {
-+	struct bcma_device *core;
- 	bool pci, pcie;
- 	uint i;
- 	uint pciidx, pcieidx, pcirev, pcierev;
- 
-+
-+	/* no cores found, bail out */
-+	if (cc->bus->nr_cores == 0)
-+		return false;
-+
- 	/* get chipcommon rev */
- 	sii->pub.ccrev = cc->id.rev;
- 
-@@ -532,11 +515,11 @@ ai_buscore_setup(struct si_info *sii, struct bcma_device *cc)
- 	pcirev = pcierev = NOREV;
- 	pciidx = pcieidx = BADIDX;
- 
--	for (i = 0; i < sii->numcores; i++) {
-+	list_for_each_entry(core, &cc->bus->cores, list) {
- 		uint cid, crev;
- 
--		cid = sii->coreid[i];
--		crev = (sii->cib[i] & CIB_REV_MASK) >> CIB_REV_SHIFT;
-+		cid = core->id.id;
-+		crev = core->id.rev;
- 
- 		if (cid == PCI_CORE_ID) {
- 			pciidx = i;
-@@ -596,7 +579,6 @@ static __used void ai_nvram_process(struct si_info *sii)
- static struct si_info *ai_doattach(struct si_info *sii,
- 				   struct bcma_bus *pbus)
- {
--	void __iomem *regs = pbus->mmio;
- 	struct si_pub *sih = &sii->pub;
- 	u32 w, savewin;
- 	struct bcma_device *cc;
-@@ -609,8 +591,6 @@ static struct si_info *ai_doattach(struct si_info *sii,
- 	sii->icbus = pbus;
- 	sii->buscoreidx = BADIDX;
- 	sii->pcibus = pbus->host_pci;
--	sii->curmap = regs;
--	sii->curwrap = sii->curmap + SI_CORE_SIZE;
- 
- 	/* switch to Chipcommon core */
- 	cc = pbus->drv_cc.core;
-@@ -634,19 +614,10 @@ static struct si_info *ai_doattach(struct si_info *sii,
- 	sih->chippkg = (w & CID_PKG_MASK) >> CID_PKG_SHIFT;
- 
- 	/* scan for cores */
--	if (socitype == SOCI_AI) {
--		SI_MSG("Found chip type AI (0x%08x)\n", w);
--		/* pass chipc address instead of original core base */
--		ai_scan(&sii->pub, pbus);
--	} else {
--		/* Found chip of unknown type */
--		return NULL;
--	}
--	/* no cores found, bail out */
--	if (sii->numcores == 0)
-+	if (socitype != SOCI_AI)
- 		return NULL;
- 
--	/* bus/core/clk setup */
-+	SI_MSG("Found chip type AI (0x%08x)\n", w);
- 	if (!ai_buscore_setup(sii, cc))
- 		goto exit;
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-index 6742758..f9f88dd 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.h
-@@ -174,39 +174,12 @@ struct si_info {
- 	struct si_pub pub;	/* back plane public state (must be first) */
- 	struct bcma_bus *icbus;	/* handle to soc interconnect bus */
- 	struct pci_dev *pcibus;	/* handle to pci bus */
--	uint dev_coreid;	/* the core provides driver functions */
--	void *intr_arg;		/* interrupt callback function arg */
--	u32 (*intrsoff_fn) (void *intr_arg); /* turns chip interrupts off */
--	/* restore chip interrupts */
--	void (*intrsrestore_fn) (void *intr_arg, u32 arg);
--	/* check if interrupts are enabled */
--	bool (*intrsenabled_fn) (void *intr_arg);
--
- 	struct pcicore_info *pch; /* PCI/E core handle */
- 
- 	struct list_head var_list; /* list of srom variables */
- 
--	void __iomem *curmap;			/* current regs va */
--	void __iomem *regs[SI_MAXCORES];	/* other regs va */
--
- 	u32 chipst;		/* chip status */
--	uint curidx;		/* current core index */
- 	uint buscoreidx;	/* buscore index */
--	uint numcores;		/* # discovered cores */
--	uint coreid[SI_MAXCORES]; /* id of each core */
--	u32 coresba[SI_MAXCORES]; /* backplane address of each core */
--	void *regs2[SI_MAXCORES]; /* 2nd virtual address per core (usbh20) */
--	u32 coresba2[SI_MAXCORES]; /* 2nd phys address per core (usbh20) */
--	u32 coresba_size[SI_MAXCORES]; /* backplane address space size */
--	u32 coresba2_size[SI_MAXCORES];	/* second address space size */
--
--	void *curwrap;		/* current wrapper va */
--	void *wrappers[SI_MAXCORES];	/* other cores wrapper va */
--	u32 wrapba[SI_MAXCORES];	/* address of controlling wrapper */
--
--	u32 cia[SI_MAXCORES];	/* erom cia entry for each core */
--	u32 cib[SI_MAXCORES];	/* erom cia entry for each core */
--	u32 oob_router;	/* oob router registers for axi */
- };
- 
- /*
+John
 -- 
-1.7.5.4
-
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
