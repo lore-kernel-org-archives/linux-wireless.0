@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:63072 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751857Ab1L3Ja7 convert rfc822-to-8bit (ORCPT
+Received: from numidia.opendz.org ([98.142.220.152]:41826 "EHLO
+	numidia.opendz.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752991Ab1LUTp6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Dec 2011 04:30:59 -0500
-Received: by vcbfk14 with SMTP id fk14so10574501vcb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Dec 2011 01:30:59 -0800 (PST)
+	Wed, 21 Dec 2011 14:45:58 -0500
+Date: Wed, 21 Dec 2011 20:48:52 +0100
+From: Djalal Harouni <tixxdz@opendz.org>
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] drivers/iwlwifi: use dma_zalloc_coherent() for DMA
+ allocation
+Message-ID: <20111221194852.GA19795@dztty> (sfid-20111221_204603_961129_59FC35C0)
+References: <20111221002147.GA4996@dztty>
+ <1324486330.13074.322.camel@wwguy-huron>
 MIME-Version: 1.0
-In-Reply-To: <20111230080554.DE64420052@mail.watchdata.com.cn>
-References: <CADGLRPmkbTp-azGJ2=CJum=Y8Mrf7fTbaE9Oi8Om+DQyu7d9uA@mail.gmail.com>
-	<20111230080554.DE64420052@mail.watchdata.com.cn>
-Date: Fri, 30 Dec 2011 01:30:58 -0800
-Message-ID: <CAJ-VmomR_1iN5rryyvui6iQGuN+3aWAets5NQjx+sHpZe8ck0w@mail.gmail.com> (sfid-20111230_103103_317169_711B87BF)
-Subject: Re: Question: ieee80211_rx called twice after one ieee80211_subif_start_xmit
- call
-From: Adrian Chadd <adrian@freebsd.org>
-To: =?GB2312?B?wO641Q==?= <gang.li@watchdata.com>
-Cc: linux-wireless@vger.kernel.org,
-	Ath9k Devel List <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=GB2312
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1324486330.13074.322.camel@wwguy-huron>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/12/30 ภ๎ธี <gang.li@watchdata.com>:
-> Hi sirs,
+On Wed, Dec 21, 2011 at 08:52:10AM -0800, Guy, Wey-Yi wrote:
+> Hi Djalal,
+> 
+> 
+> On Tue, 2011-12-20 at 16:21 -0800, Djalal Harouni wrote:
+> > Replace dma_alloc_coherent()+memset() with the new dma_zalloc_coherent()
+> > 
+> > Signed-off-by: Djalal Harouni <tixxdz@opendz.org>
+> > ---
+> 
+> iwl-trans-pcie.c is one of the source files in iwlwifi driver hold
+> dual-license (GPL + BSD), are you ok to release your code for the BSD
+> license and relinquish the copyright?
+Yes, It's ok.
+
+> btw, we are in the process of rewrite and re-architect major portion of
+> iwlwifi driver, and we also plan to make most of the code dual-license
+> (GPL + BSD).
 >
->        Today, I noticed that when an data frame is sent by
-> ieee80211_subif_start_xmit, then ieee80211_rx will be called twice , first
-> is an Acknowledgement frame and second is the response data frame.  Is this
-> the normal case?   It seems the RA frame is nonsense and just be freed in
-> ieee80211_rx_monitor.
->
->        Is there anyway to tell the hardware not report RA frame to
-> mac80211?
+> Thanks you in advance
+> 
+> Wey
+Thanks Wey.
 
-.. its receiving ACKs? I thought it only did that when either promisc
-or control was enabled. Try fiddling around with the RX filter bitmask
-and see if you can determine (for your NIC :) which filter bit is
-doing it.
-
-Maybe the interface is in promisc mode in hostap mode and this is why
-you're seeing ACKs.
-
-
-Adrian
+-- 
+tixxdz
+http://opendz.org
