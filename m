@@ -1,51 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:48811 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755615Ab1LGOEP (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:35625 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753084Ab1LUChp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Dec 2011 09:04:15 -0500
-Date: Wed, 7 Dec 2011 19:34:08 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <compat@orbit-lab.org>,
-	Paul Stewart <pstew@google.com>,
-	Senthilkumar Balasubramanian <senthilb@qca.qualcomm.com>
-Subject: Re: [RFC v2 2/2] cfg80211: Restore orig channel values upon
- disconnect
-Message-ID: <20111207140406.GA13140@vmraj-lnx.users.atheros.com> (sfid-20111207_150418_798916_8097B403)
-References: <1322518991-7040-1-git-send-email-mcgrof@qca.qualcomm.com>
- <1322518991-7040-3-git-send-email-mcgrof@qca.qualcomm.com>
+	Tue, 20 Dec 2011 21:37:45 -0500
+Received: by werm1 with SMTP id m1so2399019wer.19
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 18:37:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1322518991-7040-3-git-send-email-mcgrof@qca.qualcomm.com>
+In-Reply-To: <1324424765.13074.281.camel@wwguy-huron>
+References: <CAH5vBdJLHkFLQCHHYOczXQt1Hwwe3e-Ct0MUjyTRU0vgodAPOg@mail.gmail.com>
+ <1324424765.13074.281.camel@wwguy-huron>
+From: Cheng Renquan <crquan@gmail.com>
+Date: Tue, 20 Dec 2011 18:37:22 -0800
+Message-ID: <CAH5vBdKotiPqpHV=tx2fv8=-HRBuJnYe8wEAF2Z9xH3zVnwyqg@mail.gmail.com> (sfid-20111221_033748_653544_D6BB292D)
+Subject: Re: linux 3.2-rcX iwlwifi driver's problem (wifi link unstable when
+ moving between multiple APs)
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 28, 2011 at 05:23:11PM -0500, Luis R. Rodriguez wrote:
-> From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> 
-> When we restore regulatory settings the world regulatory domain
-> is properly reset on cfg80211 (or user prefered regulatory domain)
-> but we were never setting back channel values for drivers that use
-> WIPHY_FLAG_CUSTOM_REGULATORY. Set these values up again by using
-> the orig_ channel parameters.
-> 
-> This fixes restoring custom regulatory settings upon disconnect
-> events.
-> 
-> Cc: compat@orbit-lab.org
-> Cc: Paul Stewart <pstew@google.com>
-> Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> Cc: Senthilkumar Balasubramanian <senthilb@qca.qualcomm.com>
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-> Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-> ---
->  net/wireless/reg.c |   20 ++++++++++++++++++++
->  1 files changed, 20 insertions(+), 0 deletions(-)
-> 
-John,
+On Tue, Dec 20, 2011 at 3:46 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+> Hi Renquan,
+>
+> Thanks you for reporting the issue.It will be greatly appreciated  if
+> you can enter a bug report in http://bugzilla.intellinuxwireless.org/.
+> Then we can assign engineer to look into the issue , also keep track of
+> the progress.
+>
+> Thanks
+> Wey
 
-Can you please push these two RFC patches?
-
---
-Rajkumar
+have reported http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2338
