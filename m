@@ -1,85 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54559 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759171Ab1LORAK (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:53478 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751138Ab1LUILt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 12:00:10 -0500
-Subject: Re: QoS frames in AP mode?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <CAGXE3d9dCL+tnXg5ero51cxf3T9VPVgv8oKo51Vi_gWd8as9Xw@mail.gmail.com> (sfid-20111215_173035_477199_25946640)
-References: <CAGXE3d9dCL+tnXg5ero51cxf3T9VPVgv8oKo51Vi_gWd8as9Xw@mail.gmail.com>
-	 (sfid-20111215_173035_477199_25946640)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 15 Dec 2011 18:00:08 +0100
-Message-ID: <1323968408.31153.1.camel@jlt3.sipsolutions.net> (sfid-20111215_180015_015790_806D765E)
-Mime-Version: 1.0
+	Wed, 21 Dec 2011 03:11:49 -0500
+Received: by lahd3 with SMTP id d3so447264lah.19
+        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2011 00:11:48 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH] mac80211: Keep skb->piority for relayed frames in AP mode
+Date: Wed, 21 Dec 2011 09:11:35 +0100
+Message-Id: <1324455095-3888-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20111221_091152_921809_29A5222C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-12-15 at 17:30 +0100, Helmut Schaa wrote:
+When mac80211 relays a frame from STA1 to STA2 in AP mode it will get
+re-classified in the tx path. Unfortunately the frame protocol field
+is always set to ETH_P_8023 while the classification only kicks in
+for ETH_P_IP. Hence, a high priority frame from STA1 will be send to
+STA2 as best effort.
 
-> just noticed a problem with QoS frames in AP mode when mac80211
-> relays for example a VOIP frame from STA1 to STA2 the frame will be
-> sent out on AC_BE and not on AC_VO.
+Instead of running classification on the frame just use the same
+priority as STA1 did. Do this by adding 256 to the skb->priority
+to allow cfg80211_classify8021d to shortcut frame classification.
 
-Hm. You want (T)DLS ;-)
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ net/mac80211/rx.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
-> When the frame is processed in the rx path we will send it to the wireless media
-> with the code path below (from rx.c):
-> 
->         if (xmit_skb) {
->                 /* send to wireless media */
->                 xmit_skb->protocol = htons(ETH_P_802_3);
->                 skb_reset_network_header(xmit_skb);
->                 skb_reset_mac_header(xmit_skb);
->                 dev_queue_xmit(xmit_skb);
->         }
-> 
-> So, skb->priority is the same as the received frame but will be overwritten
-> because the the netstack will call ieee80211_select_queue to select the
-> appropriate queue which in turn will use cfg80211_classify8021d to select
-> the skb->priority and the according queue (from net/wireless/util.c):
-> 
-> unsigned int cfg80211_classify8021d(struct sk_buff *skb)
-> {
->         unsigned int dscp;
-> 
->         /* skb->priority values from 256->263 are magic values to
->          * directly indicate a specific 802.1d priority.  This is used
->          * to allow 802.1d priority to be passed directly in from VLAN
->          * tags, etc.
->          */
->         if (skb->priority >= 256 && skb->priority <= 263)
->                 return skb->priority - 256;
-> 
->         switch (skb->protocol) {
->         case htons(ETH_P_IP):
->                 dscp = ip_hdr(skb)->tos & 0xfc;
->                 break;
->         default:
->                 return 0;
->         }
-> 
->         return dscp >> 5;
-> }
-> 
-> Unfortunately we don't have an skb priority between 256 and 263 and
-> we don't have skb->protocol set to ETH_P_IP here since we've just set
-> it to ETH_P_802_3.
-> 
-> I tried using eth_type_trans on the frame but that will "pull" the ethernet
-> header and adding an skb_push afterwards seems a little bit ugly to me.
-> 
-> Is it possible to just shortcut the classification if the priority is
-> already set?
-> Or should we just add 256 to the priority before sending the frame to
-> dev_queue_xmit?
-> 
-> What would be an appropriate fix for this?
-
-The >= 256 is already a shortcut, so just adding 256 seems reasonable?
-
-johannes
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index cd689cf..c6ff3b6 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1808,7 +1808,12 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+ 	}
+ 
+ 	if (xmit_skb) {
+-		/* send to wireless media */
++		/*
++		 * Send to wireless media and increase priority by 256 to
++		 * keep the received priority instead of reclassifying
++		 * the frame (see cfg80211_classify8021d).
++		 */
++		xmit_skb->priority += 256; 
+ 		xmit_skb->protocol = htons(ETH_P_802_3);
+ 		skb_reset_network_header(xmit_skb);
+ 		skb_reset_mac_header(xmit_skb);
+-- 
+1.7.7
 
