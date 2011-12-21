@@ -1,37 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1885 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752094Ab1LURrf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 12:47:35 -0500
-Message-ID: <4EF21BA1.3020806@broadcom.com> (sfid-20111221_184738_550088_50C5119A)
-Date: Wed, 21 Dec 2011 18:47:13 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:55299 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752250Ab1LUQaf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Dec 2011 11:30:35 -0500
+Date: Wed, 21 Dec 2011 11:19:54 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	stable@vger.kernel.org
+Subject: Re: [PATCH 3.2] iwlagn: fix (remove) use of PAGE_SIZE
+Message-ID: <20111221161953.GB11842@tuxdriver.com> (sfid-20111221_173045_728203_3F177509)
+References: <1324332059-11630-1-git-send-email-wey-yi.w.guy@intel.com>
 MIME-Version: 1.0
-To: "Dan Carpenter" <dan.carpenter@oracle.com>
-cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: brcm: list of smatch warnings
-References: <20111215112947.GB3906@elgon.mountain>
-In-Reply-To: <20111215112947.GB3906@elgon.mountain>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1324332059-11630-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/15/2011 12:29 PM, Dan Carpenter wrote:
-> Smatch still complains about the brcm driver.  Could you take a look at
-> these messages?  It's mostly just cleanups like doing the correct cast
-> for min_t() or handling the default cases on switch statements etc or
-> verifying that we broke out of a loop instead of coming to the end
-> without finding what we were looking for.
+On Mon, Dec 19, 2011 at 02:00:59PM -0800, Wey-Yi Guy wrote:
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> The ICT code erroneously uses PAGE_SIZE. The bug
+> is that PAGE_SIZE isn't necessarily 4096, so on
+> such platforms this code will not work correctly
+> as we'll try to attempt to read an index in the
+> table that the device never wrote, it always has
+> 4096-byte pages.
+> 
+> Additionally, the manual alignment code here is
+> unnecessary -- Documentation/DMA-API-HOWTO.txt
+> states:
+>   The cpu return address and the DMA bus master address are both
+>   guaranteed to be aligned to the smallest PAGE_SIZE order which
+>   is greater than or equal to the requested size.  This invariant
+>   exists (for example) to guarantee that if you allocate a chunk
+>   which is smaller than or equal to 64 kilobytes, the extent of the
+>   buffer you receive will not cross a 64K boundary.
+> 
+> Just use appropriate new constants and get rid of
+> the alignment code.
+> 
+> Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-As promised I took a look at the smatch complaints.
+This seems like a big patch.  It is a bit late in the release cycle
+to rewrite all the DMA allocation code. :-)
 
-> drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c +1710 wlc_phy_txpower_reg_limit_calc(50) error: potential null derefence 'txpwr_ptr1'.
-> drivers/net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c +1719 wlc_phy_txpower_reg_limit_calc(59) error: potential null derefence 'txpwr_ptr2'.
+What platforms does this affect?  Are there actual users involved?
 
-However, I am not sure about these two. Reading the code these seem
-false positives. Could you confirm or correct me on these.
-
-Gr. AvS
-
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
