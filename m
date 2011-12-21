@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:35859 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752929Ab1LTVEs (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:36471 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751258Ab1LUPhy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 16:04:48 -0500
-Received: by mail-ee0-f46.google.com with SMTP id c4so6950267eek.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 13:04:48 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/3] b43: N-PHY: fix success condition of running samples
-Date: Tue, 20 Dec 2011 22:45:48 +0100
-Message-Id: <1324417549-5545-2-git-send-email-zajec5@gmail.com> (sfid-20111220_220451_688574_55A6E68E)
-In-Reply-To: <1324417549-5545-1-git-send-email-zajec5@gmail.com>
-References: <1324417549-5545-1-git-send-email-zajec5@gmail.com>
+	Wed, 21 Dec 2011 10:37:54 -0500
+Message-ID: <4EF1FD4C.3070507@qca.qualcomm.com> (sfid-20111221_163757_632283_D17C9BBA)
+Date: Wed, 21 Dec 2011 21:07:48 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [RFC] mac80211: fix scan state machine
+References: <1324479072-8242-1-git-send-email-mohammed@qca.qualcomm.com> <CAGXE3d-Ntrz7WUXMKBHP2oyX1YBFvqyDHU96x9xGb__C=O8Mtw@mail.gmail.com>
+In-Reply-To: <CAGXE3d-Ntrz7WUXMKBHP2oyX1YBFvqyDHU96x9xGb__C=O8Mtw@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday 21 December 2011 09:01 PM, Helmut Schaa wrote:
+> Hi,
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Hi Helmut,
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index 52503c6..da6fa03 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -956,7 +956,7 @@ static void b43_nphy_run_samples(struct b43_wldev *dev, u16 samps, u16 loops,
- 			b43_phy_write(dev, B43_NPHY_SAMP_CMD, 1);
- 	}
- 	for (i = 0; i < 100; i++) {
--		if (b43_phy_read(dev, B43_NPHY_RFSEQST) & 1) {
-+		if (!(b43_phy_read(dev, B43_NPHY_RFSEQST) & 1)) {
- 			i = 0;
- 			break;
- 		}
+>
+> On Wed, Dec 21, 2011 at 3:51 PM, Mohammed Shafi Shajakhan
+> <mohammed@qca.qualcomm.com>  wrote:
+>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>>
+>> when we run high bandwidth UDP traffic and we trigger a scan, the scan
+>> state machine seems to be looping in SUSPEND->RESUME->DECISION->SUSPEND
+>> and SET_CHANNEL seems to be never called as 'tx_empty' is never true
+>> while running UDP traffic. fix this by settting SET_CHANNEL state when
+>> we get into RESUME state.
+>
+> Your analysis looks correct to me. Previously (before the
+> simplification patches)
+> the logic to always scan at least one channel was put in scan_state_decision but
+> maybe it makes sense to have it in scan_state_resume.
+
+thanks for the review.
+i compared "ieee80211_scan_state_resume" with the older code's
+"ieee80211_scan_state_leave_oper_channel"
+
+>
+> So, to me the patch looks good.
+>
+> Helmut
+>
+
+
 -- 
-1.7.3.4
-
+thanks,
+shafi
