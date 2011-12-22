@@ -1,36 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59554 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750956Ab1LJRvX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Dec 2011 12:51:23 -0500
-Subject: Re: [PATCH 07/15] iwlwifi: add device ID information support by
- testmode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	"Hsu, Kenny" <kenny.hsu@intel.com>
-In-Reply-To: <1323390382-1678-8-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111209_022535_454507_1587E816)
-References: <1323390382-1678-1-git-send-email-wey-yi.w.guy@intel.com>
-	 <1323390382-1678-8-git-send-email-wey-yi.w.guy@intel.com>
-	 (sfid-20111209_022535_454507_1587E816)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 10 Dec 2011 18:51:19 +0100
-Message-ID: <1323539479.3344.31.camel@jlt3.sipsolutions.net> (sfid-20111210_185128_574123_C0C3B2A5)
+Received: from mout6.freenet.de ([195.4.92.96]:56192 "EHLO mout6.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752186Ab1LVTGa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Dec 2011 14:06:30 -0500
+Date: Thu, 22 Dec 2011 19:58:37 +0100
+From: Andreas Hartmann <andihartmann@freenet.de>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: Andreas Hartmann <andihartmann@01019freenet.de>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	users@rt2x00.serialmonkey.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: [rt2x00-users] Poor performance and lockup with rt2800usb and
+ Asus USB-N13 adapter
+Message-ID: <20111222195837.1628ef59@dualc.maya.org> (sfid-20111222_200635_583999_B120BFF4)
+In-Reply-To: <4EF36E10.7070601@gmail.com>
+References: <4ED43A5C.9000102@gmail.com>
+	<20111129114603.GB7299@redhat.com>
+	<CADLC3L2QpEtPiBg+yvaxir1LpU6j5YMpDG4g0+ezs06g745zcg@mail.gmail.com>
+	<20111220144317.GA6027@redhat.com>
+	<20111222161810.GB13554@redhat.com>
+	<201112221731.pBMHVScq005421@mail.maya.org>
+	<4EF36E10.7070601@gmail.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-12-08 at 16:26 -0800, Wey-Yi Guy wrote:
+Am Thu, 22 Dec 2011 18:51:12 +0100
+schrieb Gertjan van Wingerde <gwingerde@gmail.com>:
 
-> +	case IWL_TM_CMD_APP2DEV_GET_DEVICE_ID:
-> +		bus_get_hw_id(bus(priv), buf, sizeof(buf));
-> +		ptr = buf;
-> +		strsep(&ptr, ":");
-> +		sscanf(strsep(&ptr, ":"), "%x", &num);
-> +		sscanf(strsep(&ptr, ":"), "%x", &devid);
+> Hi Andreas,
+> 
+> On 12/22/11 18:31, Andreas Hartmann wrote:
+> >
+> > BTW: The patch in [1] breaks the driver completely (tested with
+> > compat-wireless 3.1rc1).
+> >
+> > [1]
+> > http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-December/004345.html
+> >
+> 
+> I haven't reviewed these patches yet, but did you apply both patches 
+> that were sent out earlier today (which replace the one you mention here)?
 
-This is kinda ugly too ... sorry, should've seen it earlier.
+Sorry, I missed this one:
+http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-December/004344.html
 
-johannes
+Please excuse me for being unperceptive.
+These both patches don't change the behavior significantly for me.
 
+> Also, can you elaborate (preferably as a response to the actual patches) 
+
+I would like to answer directly to the list / thread, but unfortunately,
+I don't get any mail from it although I'm subscribed. Therefore I have
+to poll here:
+http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-December/thread.html
+
+
+Thank you for your response,
+kind regards,
+Andreas
