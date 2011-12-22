@@ -1,87 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:57990 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757656Ab1LWTsY convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:46590 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753366Ab1LVIgi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Dec 2011 14:48:24 -0500
-Received: by vbbfc26 with SMTP id fc26so7596194vbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Dec 2011 11:48:23 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAApCBGyrF4JSEGnq0USdUT8UvmyR2kRMCFh-2nmEeRR0FTCfEw@mail.gmail.com>
-References: <CAApCBGx28SbbmNpynCpKW9CyAsV5+c_fZ=1k9QAsKnXf4nDQEw@mail.gmail.com>
-	<CAApCBGx7fHuQr87TnppE6FyX9d-1F0huUqgYhjv++8vmfov6zQ@mail.gmail.com>
-	<4EF31325.2050408@openwrt.org>
-	<CAApCBGwto0YxMKcirX_FJYaGw8K6Dcoxpn9P30=Mk-9oHJok+Q@mail.gmail.com>
-	<CAJ-VmonyWC4JXrikuzxxaaGMReqq3VGhH+WLWjtN+8gTCvM7kg@mail.gmail.com>
-	<4EF42F12.1000309@openwrt.org>
-	<CAApCBGyrF4JSEGnq0USdUT8UvmyR2kRMCFh-2nmEeRR0FTCfEw@mail.gmail.com>
-Date: Fri, 23 Dec 2011 11:48:23 -0800
-Message-ID: <CAJ-Vmok-aU4u=a_O7n1FOwD2cnd_eQMcyKzvYgXOSbZ=uSrHAA@mail.gmail.com> (sfid-20111223_204831_478880_263730EA)
-Subject: Re: ar9390 failing AGC calibration on powerpc platform
-From: Adrian Chadd <adrian@freebsd.org>
-To: wireless newbie <wnewbie72@gmail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, openwrt-devel@lists.openwrt.org,
-	Mohammed Shafi <shafi.wireless@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 22 Dec 2011 03:36:38 -0500
+Received: by wgbdr13 with SMTP id dr13so15521713wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Dec 2011 00:36:37 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, ivdoorn@gmail.com, gwingerde@gmail.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH] rt2x00: Mark active channel's survey data as "in use"
+Date: Thu, 22 Dec 2011 09:36:29 +0100
+Message-Id: <1324542989-25212-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20111222_093642_088127_9EB69C59)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is it this bad behaved in 5ghz mode?
+This is just a cosmetical fix since we only return survey data for the
+active channel but it allows iw to show that the survey data is
+for the currently used channel.
 
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-adrian
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 14fc8d1..bb70e89 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -4686,6 +4686,9 @@ int rt2800_get_survey(struct ieee80211_hw *hw, int idx,
+ 		survey->channel_time_ext_busy = busy_ext / 1000;
+ 	}
+ 
++	if (!(hw->conf.flags & IEEE80211_CONF_OFFCHANNEL))
++		survey->filled |= SURVEY_INFO_IN_USE;
++
+ 	return 0;
+ 
+ }
+-- 
+1.7.7
 
-On 23 December 2011 01:03, wireless newbie <wnewbie72@gmail.com> wrote:
->> iw wlan0 survey dump
->
-> Here is what I got. Looks like its busy most of the time, doesn't it?
->
-> Survey data from wlan0
->        frequency:                      2412 MHz
->        channel active time:            139291 ms
->        channel busy time:              135849 ms
->        channel receive time:           0 ms
->        channel transmit time:          0 ms
-> Survey data from wlan0
->        frequency:                      2417 MHz
-> Survey data from wlan0
->        frequency:                      2422 MHz
-> Survey data from wlan0
->        frequency:                      2427 MHz
-> Survey data from wlan0
->        frequency:                      2432 MHz
-> Survey data from wlan0
->        frequency:                      2437 MHz
-> Survey data from wlan0
->        frequency:                      2442 MHz
-> Survey data from wlan0
->        frequency:                      2447 MHz
-> Survey data from wlan0
->        frequency:                      2452 MHz
-> Survey data from wlan0
->        frequency:                      2457 MHz
-> Survey data from wlan0
->        frequency:                      2462 MHz
-> Survey data from wlan0
->        frequency:                      5180 MHz
-> Survey data from wlan0
->        frequency:                      5200 MHz
-> Survey data from wlan0
->        frequency:                      5220 MHz
-> Survey data from wlan0
->        frequency:                      5240 MHz
-> Survey data from wlan0
->        frequency:                      5745 MHz
-> Survey data from wlan0
->        frequency:                      5765 MHz
-> Survey data from wlan0
->        frequency:                      5785 MHz
-> Survey data from wlan0
->        frequency:                      5805 MHz
-> Survey data from wlan0
->        frequency:                      5825 MHz
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
