@@ -1,66 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:61256 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751719Ab1LJPjA convert rfc822-to-8bit (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:42924 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752206Ab1LVLoR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Dec 2011 10:39:00 -0500
-Received: by iaeh11 with SMTP id h11so360074iae.19
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2011 07:39:00 -0800 (PST)
+	Thu, 22 Dec 2011 06:44:17 -0500
+Received: by qcqz2 with SMTP id z2so4946130qcq.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Dec 2011 03:44:17 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAMcMvsg6MAYqk8=-T8VXHqKQ6-OXdUF0yf1RJ7MDuJ=QWuQ9_A@mail.gmail.com>
-References: <1323523783-536-1-git-send-email-rmanohar@qca.qualcomm.com>
-	<CAMcMvsg6MAYqk8=-T8VXHqKQ6-OXdUF0yf1RJ7MDuJ=QWuQ9_A@mail.gmail.com>
-Date: Sat, 10 Dec 2011 07:38:59 -0800
-Message-ID: <CAMcMvsib636Jf5=3ACV3Y-1nvE_NEk+NPsh3yECOD08Lq8LdQQ@mail.gmail.com> (sfid-20111210_163903_954541_1F8247C4)
-Subject: Re: [PATCH] ath9k: fix max phy rate at rate control init
-From: Paul Stewart <pstew@google.com>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	stable@kernel.org
+Date: Thu, 22 Dec 2011 12:44:17 +0100
+Message-ID: <CAA=oPaiE-NAP_rfi3BLv-wM_wBwfLyMh-p2KtMALXPaDG6LxxA@mail.gmail.com> (sfid-20111222_124425_771006_B53FB1A0)
+Subject: rt2800usb poor performance
+From: Christian Frost <cf@cfrost.dk>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Dec 10, 2011 at 7:33 AM, Paul Stewart <pstew@google.com> wrote:
-> Hi Rajkumar,
->
-> On Sat, Dec 10, 2011 at 5:29 AM, Rajkumar Manoharan
-> <rmanohar@qca.qualcomm.com> wrote:
->> The stations always chooses 1Mbps for all trasmitting frames,
->> whenever the AP is configured to lock the supported rates.
->> As the max phy rate is always set with the 4th from highest phy rate,
->> this assumption might be wrong if we have less than that. Fix that.
->>
->> Cc: stable@kernel.org
->> Cc: Paul Stewart <pstew@google.com>
->> Reported-by: Ajay Gummalla <agummalla@google.com>
->> Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
->> ---
->>  drivers/net/wireless/ath/ath9k/rc.c |    4 +++-
->>  1 files changed, 3 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
->> index 888abc2..528d5f3 100644
->> --- a/drivers/net/wireless/ath/ath9k/rc.c
->> +++ b/drivers/net/wireless/ath/ath9k/rc.c
->> @@ -1271,7 +1271,9 @@ static void ath_rc_init(struct ath_softc *sc,
->>
->>        ath_rc_priv->max_valid_rate = k;
->>        ath_rc_sort_validrates(rate_table, ath_rc_priv);
->> -       ath_rc_priv->rate_max_phy = ath_rc_priv->valid_rate_index[k-4];
->> +       ath_rc_priv->rate_max_phy = (k > 4) ?
->> +                                       ath_rc_priv->valid_rate_index[k-4] :
->> +                                       ath_rc_priv->valid_rate_index[k-1];
->
-> Is k guaranteed > 1 here?  Some test equipment export only one rate so
-> we lock in to a single rate. I'm not sure how this would factor into
-> the k value here.
+Hi,
 
-Sorry, I get what you're doing here.  Carry on as if I didn't say anything. :-)
+I'm experiencing poor performance with a rt2800usb device when using
+"compat-wireless-3.2-rc6-3" on a 2.6.35 kernel. The bandwidth is
+~0.5Mbps which I would expect to be significantly higher on a G
+network. Can anyone help with this?
 
->>        ath_rc_priv->rate_table = rate_table;
->>
->>        ath_dbg(common, ATH_DBG_CONFIG,
->> --
->> 1.7.8
->>
+Regards,
+Christian
