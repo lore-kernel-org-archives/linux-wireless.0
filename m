@@ -1,75 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:36018 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751827Ab1LTDzv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 22:55:51 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:35718 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753371Ab1LVPy1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Dec 2011 10:54:27 -0500
+Date: Thu, 22 Dec 2011 16:54:16 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Christian Frost <cf@cfrost.dk>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rt2800usb poor performance
+Message-ID: <20111222155415.GA13554@redhat.com> (sfid-20111222_165436_531859_4009E782)
+References: <CAA=oPaiE-NAP_rfi3BLv-wM_wBwfLyMh-p2KtMALXPaDG6LxxA@mail.gmail.com>
+ <20111222141102.GA2261@redhat.com>
+ <CAA=oPajYJQoz0AhAaGuY9y=2gbMUfpBZJU71TmryG_zksQk_Nw@mail.gmail.com>
 MIME-Version: 1.0
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 19 Dec 2011 19:55:28 -0800
-Message-ID: <CAB=NE6WfBDqQzqxNaZm5mMhjyP2t7M-5t=+RA-A2JAKUKjmJzw@mail.gmail.com> (sfid-20111220_045612_880500_C827E73A)
-Subject: [ANN] compat-wireless for 3.2-rc6
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAA=oPajYJQoz0AhAaGuY9y=2gbMUfpBZJU71TmryG_zksQk_Nw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You all know what this is, only difference is we have a few
-pending-stable patches not yet merged into Linus' tree but that are on
-linux-next.git so we suck those in and provide an "-s" release. Below
-are the statistics of both releases. We have an "-s" release [1] and a
-vanilla release [2]. I'll note that I expect a few set of patches are
-desirable to cherry pick from linux-next.git for a type of stable
-release that we will support but for now I have yet to hear back which
-patches those are. Feel free to reply here with the sha1sums you want
-but please be specific of the linux-next.git tag you used.
+On Thu, Dec 22, 2011 at 03:42:00PM +0100, Christian Frost wrote:
+> Yes, I have tried all your suggestions and they do not help. I
+> havedownloaded the firmware from ralinktech in version v2.4.0.1
 
-For the -s release:
+If you compile driver with CONFIG_RT2X00_DEBUG it will show exact
+chip name. Please provide that info, we probably need to fix
+that chip support in rt2800usb. For now you will need to use vendor
+driver, which unfortunately will most likely work better than in kernel
+driver for that particular chip.
 
-Updated from local tree: /home/mcgrof/linux-stable
-Origin remote URL:
-git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-
-compat-wireless code metrics
-
-    814570 - Total upstream lines of code being pulled
-      2488 - backport code changes
-      2143 - backport code additions
-       345 - backport code deletions
-      8670 - backport from compat module
-     11158 - total backport code
-    1.3698 - % of code consists of backport work
-        57 - Code changes brought in from pending-stable
-        44 - Code additions brought in from pending-stable
-        13 - Code deletions brought in from pending-stable
-    0.0070 - % of code being cherry picked from pending-stable
-
-Base tree: linux-stable.git
-Base tree version: v3.2-rc6
-compat-wireless release: compat-wireless-v3.2-rc6-3-s
-
-For the vanilla release:
-
-Updated from local tree: /home/mcgrof/linux-stable
-Origin remote URL:
-git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-
-compat-wireless code metrics
-
-    814570 - Total upstream lines of code being pulled
-      2488 - backport code changes
-      2143 - backport code additions
-       345 - backport code deletions
-      8670 - backport from compat module
-     11158 - total backport code
-    1.3698 - % of code consists of backport work
-
-Base tree: linux-stable.git
-Base tree version: v3.2-rc6
-compat-wireless release: compat-wireless-v3.2-rc6-3
-
-[1] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.2/compat-wireless-3.2-rc6-3-s.tar.bz2
-[2] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.2/compat-wireless-3.2-rc1-1.tar.bz2
+Stanislaw
