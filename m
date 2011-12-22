@@ -1,42 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:64293 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752479Ab1LACJz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Nov 2011 21:09:55 -0500
-Date: Thu, 1 Dec 2011 10:09:45 +0800
-From: Yong Zhang <yong.zhang0@gmail.com>
-To: Michal Hocko <mhocko@suse.cz>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from
- iwl3945_rs_free_sta
-Message-ID: <20111201020945.GA5932@zhy> (sfid-20111201_031018_174662_DDD76EBF)
-Reply-To: Yong Zhang <yong.zhang0@gmail.com>
-References: <20111129100727.GD2675@tiehlicka.suse.cz>
+Received: from mx1.redhat.com ([209.132.183.28]:22966 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751570Ab1LVOLH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Dec 2011 09:11:07 -0500
+Date: Thu, 22 Dec 2011 15:11:03 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Christian Frost <cf@cfrost.dk>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: rt2800usb poor performance
+Message-ID: <20111222141102.GA2261@redhat.com> (sfid-20111222_151117_716109_97AADB6F)
+References: <CAA=oPaiE-NAP_rfi3BLv-wM_wBwfLyMh-p2KtMALXPaDG6LxxA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20111129100727.GD2675@tiehlicka.suse.cz>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAA=oPaiE-NAP_rfi3BLv-wM_wBwfLyMh-p2KtMALXPaDG6LxxA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Nov 29, 2011 at 11:07:27AM +0100, Michal Hocko wrote:
-> Looks we are stuck in lock_timer_base loop. I am not familiar with the
-> code but either base is NULL or we are racing with timer->base changes.
-> I guess that the first one sounds more probable. The timer in question
-> is &rs_sta->rate_scale_flush.
+On Thu, Dec 22, 2011 at 12:44:17PM +0100, Christian Frost wrote:
+> I'm experiencing poor performance with a rt2800usb device when using
+> "compat-wireless-3.2-rc6-3" on a 2.6.35 kernel. The bandwidth is
+> ~0.5Mbps which I would expect to be significantly higher on a G
+> network. Can anyone help with this?
 
-FYI
+Do you have any better results on older compat wireless version i.e.
+3.0 or 3.1. Does disable power save helps (iwconfig wlanX power off)?
+Did you try update AP firmware?
 
-If you could apply below commits in -tip/core/debugobjects
-dc4218b timer: Use debugobjects to catch deletion of uninitialized timers
-fb16b8c timer: Setup uninitialized timer with a stub callback
-b84d435 debugobjects: Extend to assert that an object is initialized
-feac18d debugobjects: Be smarter about static objects
-
-and enable DEBUG_OBJECTS_TIMERS, maybe you can catch something easily.
-
-Thanks,
-Yong
+Stanislaw
