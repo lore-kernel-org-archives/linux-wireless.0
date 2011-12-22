@@ -1,48 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtpfb2-g21.free.fr ([212.27.42.10]:43148 "EHLO
-	smtpfb2-g21.free.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752227Ab1LSRE5 (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:36364 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753952Ab1LVLL7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 12:04:57 -0500
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4])
-	by smtpfb2-g21.free.fr (Postfix) with ESMTP id 05403CB2CF7
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 18:04:52 +0100 (CET)
-Received: from [192.168.108.17] (unknown [213.36.7.13])
-	by smtp4-g21.free.fr (Postfix) with ESMTP id 4C0CF4C84BC
-	for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 18:04:09 +0100 (CET)
-Subject: Race in ieee80211_register_hw()
-From: Maxime Bizon <mbizon@freebox.fr>
-Reply-To: mbizon@freebox.fr
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="ANSI_X3.4-1968"
-Date: Mon, 19 Dec 2011 18:04:08 +0100
-Message-ID: <1324314248.6069.112.camel@sakura.staff.proxad.net> (sfid-20111219_180500_295801_20E8D326)
-Mime-Version: 1.0
+	Thu, 22 Dec 2011 06:11:59 -0500
+Received: by wgbdr13 with SMTP id dr13so15723364wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Dec 2011 03:11:58 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAApCBGx28SbbmNpynCpKW9CyAsV5+c_fZ=1k9QAsKnXf4nDQEw@mail.gmail.com>
+References: <CAApCBGx28SbbmNpynCpKW9CyAsV5+c_fZ=1k9QAsKnXf4nDQEw@mail.gmail.com>
+Date: Thu, 22 Dec 2011 13:11:58 +0200
+Message-ID: <CAApCBGx7fHuQr87TnppE6FyX9d-1F0huUqgYhjv++8vmfov6zQ@mail.gmail.com> (sfid-20111222_121203_221077_B579182E)
+Subject: Re: ar9390 failing AGC calibration on powerpc platform
+From: wireless newbie <wnewbie72@gmail.com>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Cc: Felix Fietkau <nbd@openwrt.org>, openwrt-devel@lists.openwrt.org,
+	Mohammed Shafi <shafi.wireless@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi again,
 
-Hi all,
+I still haven't been able to get this thing working. But I have made
+some tests on other powerpc target (mpc8315 cpu versus mpc8321 cpu on
+my own target) and I can tell that this problem doesn't seem to be
+related to big endian environment. Ar9390 works just fine with
+mpc8315. The difference between those two targets is that 8315 has
+pcie bus whereas my own target's pcie bus is behind pci-to-pcie bridge
+(PLX PEX8112).
 
-I'm using udev/sysfs to detect when a new phy becomes available, and
-then immediately open it.
-
-When I insmod the wifi card module driver, it works most of the times,
-but sometimes I get this:
-
-ieee80211 phy0: Failed to initialize rate control algorithm
-
-
-I noticed that ieee80211_register_hw() first registers the PHY, which
-makes it available to userspace, then does subsequent config calls on
-it. ieee80211_init_rate_ctrl_alg then fails since local->open_count is
-not zero.
-
-This is easy to reproduce by adding an msleep() after wiphy_register()
-
-What lock should I use to surround the whole registration process ?
-
--- 
-Maxime
+Is anyone aware of any limitations or bugs related to using ar9390
+behind pci-to-pcie bridge? All help is really appreciated.
 
 
+2011/11/29 wireless newbie <wnewbie72@gmail.com>:
+> Hi,
+>
+> I have been trying to get my ar9390 based wlan module to work as an AP
+> on my powerpc target. There seems to be some issues with AGC
+> calibration though. As soon as I start hostapd, I get the following:
+>
+> ath9k 0000:01:00.0: mon.wlan0: Features changed: 0x00004800 -> 0x00004000
+> ath: Unable to reset hardware; reset status -5 (freq 2412 MHz)
+> Could not set interface mon.wlan0 flags: Input/output error
+> nl80211: Failed to set interface wlan0 into AP mode
+> nl80211 driver initialization failed.
+> ELOOP: remaining socket: sock=8 eloop_data=0x10219770
+> user_data=0x10219d18 handler=0x1002b8c0
+> ELOOP: remaining socket: sock=10 eloop_data=0x1021c0b8 user_data=(nil)
+> handler=0x100353e0
+>
+> Further debugging revealed that the problem was AGC calibration that
+> didn't finish and that can be seen from the logs too:
+>
+> ath: timeout (100000 us) on reg 0xa2c4: 0x00158dd9 & 0x00000001 != 0x00000000
+>
+> I moved that module to x86 ubuntu 11.10 pc to see if it works there.
+> For my surprise it worked just fine. So it seems that there is
+> something related to powerpc platform. I'm using kernel 2.6.39 and
+> compat wireless drivers from november. Would it be possible that there
+> is some endianess stuff somewhere that isn't handled properly?
