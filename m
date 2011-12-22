@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:44922 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751597Ab1LRIjH (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:9003 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753976Ab1LVImM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Dec 2011 03:39:07 -0500
-Received: by iaeh11 with SMTP id h11so6806549iae.19
-        for <linux-wireless@vger.kernel.org>; Sun, 18 Dec 2011 00:39:06 -0800 (PST)
+	Thu, 22 Dec 2011 03:42:12 -0500
+Message-ID: <4EF2ECA0.2080501@qca.qualcomm.com> (sfid-20111222_094220_048454_05D1E988)
+Date: Thu, 22 Dec 2011 10:38:56 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAMG6FYjwVHbdEr0eJPV6wcp9ZFO2m2HKcWUdBeP3GC0Z6_G+jA@mail.gmail.com>
-References: <CAMG6FYg38voWUWtKJ-4dRnv+MS=JqXL+q6A+Pc=mbsbDpMOusQ@mail.gmail.com>
-	<1321479498.4502.27.camel@jlt3.sipsolutions.net>
-	<CAMG6FYjwVHbdEr0eJPV6wcp9ZFO2m2HKcWUdBeP3GC0Z6_G+jA@mail.gmail.com>
-Date: Sun, 18 Dec 2011 10:39:06 +0200
-Message-ID: <CAB3XZEfdu3Jau4L=40xn32BEayd7pT_Dj_ALWFH+by5EdE4z6Q@mail.gmail.com> (sfid-20111218_093911_269617_C132784F)
-Subject: Re: [RFC] cfg80211: more correct support of multi-essid bss-es
-From: Eliad Peller <eliad@wizery.com>
-To: Dmitry Tarnyagin <abi.dmitryt@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Michal Marek <mmarek@suse.cz>, <linux-next@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>
+Subject: Re: linux-next: build failure after merge of the final tree (wireless
+ tree related)
+References: <20111222165849.df5ea3e2997375de24f1490b@canb.auug.org.au>
+In-Reply-To: <20111222165849.df5ea3e2997375de24f1490b@canb.auug.org.au>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi Dmitry,
+Hi Stephen,
 
-On Thu, Nov 17, 2011 at 1:38 AM, Dmitry Tarnyagin <abi.dmitryt@gmail.com> wrote:
-> On Wed, Nov 16, 2011 at 10:38 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Wed, 2011-11-16 at 15:00 +0100, Dmitry Tarnyagin wrote:
->
->>> The patch implements linked list of aliases for bss (alias is a bss
->>> with the same key information but with different ESSID).
->>
->> I think you mean here not "different SSID", but "possibly hidden SSID"?
->> Otherwise the code doesn't make much sense -- if the SSID is really
->> incompatible it doesn't seem to get stuffed into the same node?
->>
-> I'm trying to address 3 different but similar scenarios:
-> 1. Hidden AP, has different SSID in beacons (empty) and probe responses (real);
-> 2. Changing of SSID of an existing AP (in some moment 2 aliases with
-> different SSID in both beacon and probe resp exist in the bss list);
-> 3. (hypothetical) real multi-ssid AP with permanent set of 2 or more
-> different ies sets.
->
+I'll add linux-wireless and ath6kl-devel as I'm sick today and hopefully
+someone else from our team will take a look at it.
 
-are you going to resubmit this RFC as a proper patch?
-in wl12xx we sometimes encounter the case in which we get the hidden
-beacon only after the probe response, which prevents us from entering
-psm. this patch seems to fix it (although, as Johannes noted, you
-might want to add some checks to validate this is actually a hidden
-ssid).
+On 12/22/2011 07:58 AM, Stephen Rothwell wrote:
 
-thanks,
-Eliad.
+> After merging the final tree, today's linux-next build (powerpc
+> allyesconfig) failed like this:
+> 
+> drivers/net/wireless/ath/ath6kl/cfg80211.c:27:1: error: expected ')' before 'KBUILD_MODNAME'
+> drivers/net/wireless/ath/ath6kl/cfg80211.c:27:1: error: 'KBUILD_MODNAME' undeclared here (not in a function)
+> drivers/net/wireless/ath/ath6kl/cfg80211.c:27:1: error: expected ',' or ';' before string constant
+> drivers/net/wireless/ath/ath6kl/init.c:32:1: error: expected ')' before 'KBUILD_MODNAME'
+> drivers/net/wireless/ath/ath6kl/init.c:32:1: error: 'KBUILD_MODNAME' undeclared here (not in a function)
+> drivers/net/wireless/ath/ath6kl/init.c:32:1: error: expected ',' or ';' before string constant
+> drivers/net/wireless/ath/ath6kl/init.c:33:1: error: expected ')' before 'KBUILD_MODNAME'
+> drivers/net/wireless/ath/ath6kl/init.c:33:1: error: invalid initializer
+> drivers/net/wireless/ath/ath6kl/init.c:33:1: error: expected ',' or ';' before string constant
+> drivers/net/wireless/ath/ath6kl/init.c:34:1: error: expected ')' before 'KBUILD_MODNAME'
+> drivers/net/wireless/ath/ath6kl/init.c:34:1: error: invalid initializer
+> drivers/net/wireless/ath/ath6kl/init.c:34:1: error: expected ',' or ';' before string constant
+> 
+> I can't figure out what goes wrong here.  On the compile command line,
+> KBUILD_MODNAME is not defined, but KBUILD_BASE_NAME is.
+> 
+> However, reverting commit fde57764ef87 ("ath6kl: enable USB support")
+> made the problem go away.  That commit caused the above two files to be
+> built into two separate modules.
+
+Is this ppc specific problem? Is there anything we should do on ath6kl
+to fix this?
+
+Kalle
