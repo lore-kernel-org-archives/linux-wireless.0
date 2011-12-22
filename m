@@ -1,55 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:63479 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754390Ab1L1UM0 convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:61161 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753215Ab1LVIev convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Dec 2011 15:12:26 -0500
-Received: by vcbfk14 with SMTP id fk14so9715858vcb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Dec 2011 12:12:25 -0800 (PST)
+	Thu, 22 Dec 2011 03:34:51 -0500
+Received: by wibhm6 with SMTP id hm6so2374915wib.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Dec 2011 00:34:50 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1325033604-26469-7-git-send-email-gwingerde@gmail.com>
-References: <1325033604-26469-1-git-send-email-gwingerde@gmail.com>
-	<1325033604-26469-2-git-send-email-gwingerde@gmail.com>
-	<1325033604-26469-3-git-send-email-gwingerde@gmail.com>
-	<1325033604-26469-4-git-send-email-gwingerde@gmail.com>
-	<1325033604-26469-5-git-send-email-gwingerde@gmail.com>
-	<1325033604-26469-6-git-send-email-gwingerde@gmail.com>
-	<1325033604-26469-7-git-send-email-gwingerde@gmail.com>
-Date: Wed, 28 Dec 2011 21:12:25 +0100
-Message-ID: <CAOZOX0V4CS14MA4=1vyBLWB_d5+598c__xKEXGqD5skMno7HUQ@mail.gmail.com> (sfid-20111228_211228_637347_18E63A8E)
-Subject: Re: [PATCH 6/7] rt2x00: RT3593 is also applicable to USB.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAG9cJmmnEsLQxxbi41v6nM8D+L_cOSQE73qJmDDYhXPnopn+MA@mail.gmail.com>
+References: <CAG9cJm=YkvHY56LoBoUf3fuh=xb7m+c0GgUzMZX+QyG1+CBCMg@mail.gmail.com>
+	<4EF21983.1020107@broadcom.com>
+	<CACna6rxEjQLj_j-f7WZOtOEGfDa+TPWyLDrn2t-FGZ5T2_fz-g@mail.gmail.com>
+	<CAG9cJm=XE3jQiYvGB4T6_Avj=bmc_wXe8JGMr5hePuCu-OnPuA@mail.gmail.com>
+	<CACna6rxvmFptSR9WF8Whj1A0ATyygQ9Eo0nUY8n6MugQ0bjP7g@mail.gmail.com>
+	<CAG9cJmmnEsLQxxbi41v6nM8D+L_cOSQE73qJmDDYhXPnopn+MA@mail.gmail.com>
+Date: Thu, 22 Dec 2011 09:34:50 +0100
+Message-ID: <CACna6rw_zB038mJ5XP6qvZR61pB77yRes3UwM50JFawUAhUpYg@mail.gmail.com> (sfid-20111222_093455_035499_0F67785D)
+Subject: Re: bcm4331 firmware installer package
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: lina <lina.lastname@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Debian Lists <debian-user@lists.debian.org>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 28, 2011 at 1:53 AM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+2011/12/22 lina <lina.lastname@gmail.com>:
+> On Thu, Dec 22, 2011 at 3:07 PM, Rafa≈Ç Mi≈Çecki <zajec5@gmail.com> wrote:
+>> 2011/12/22 lina <lina.lastname@gmail.com>:
+>>> I am still a bit confused. (First thanks for the links all of you
+>>> provided, but I have visited those web before).
+>>>
+>>> Here is the thing:
+>>> BCM4331 802.11a/b/g/n fit for
+>>> BCM4331 ¬† ¬† ¬† ¬† ¬† ¬† ¬†b/g ¬†HT (r1)
+>>>
+>>> What does the 802.11a for?
+>>
+>> Well, your card can operate in 5GHz band (frequencies). But I'm not
+>> ¬†really sure why you ask about this at all.
+>>
+>> ¬†If you want to try experimental BCM4331 support you have to:
+>> ¬†1) Install kernel 3.2-rc3 or newer
+> I have the 3.2.0-rc6
+>> ¬†or
+>> ¬†2) Install compat wireless
+>>
+>> ¬†After that you've do install firmware (check for wiki howto for kernel
+>> ¬†3.2 and newer).
+>
+> after installation of the compat-wireless,
+>
+> from
+> http://wireless.kernel.org/en/users/Drivers/b43#firmware
+>
+> ¬†# aptitude install firmware-b43-installer
+>
+>
+> Setting up b43-fwcutter (1:015-9) ...
+> Setting up firmware-b43-installer (1:015-9) ...
+> No chroot environment found. Starting normal installation
+> Unsupported device(s) found: PCI id 14e4:4331
+> Aborting.
+>
+> I don't know which part is wrong here.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Your tool is too old (support for BCM4331 is really recent).
 
-> ---
-> †drivers/net/wireless/rt2x00/rt2x00.h | † †2 +-
-> †1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> index 851b717..b03b22c 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -189,7 +189,7 @@ struct rt2x00_chip {
-> †#define RT3090 † † † † 0x3090 †/* 2.4GHz PCIe */
-> †#define RT3390 † † † † 0x3390
-> †#define RT3572 † † † † 0x3572
-> -#define RT3593 † † † † 0x3593 †/* PCIe */
-> +#define RT3593 † † † † 0x3593
-> †#define RT3883 † † † † 0x3883 †/* WSOC */
-> †#define RT5390 † † † † 0x5390 †/* 2.4GHz */
->
-> --
-> 1.7.7.4
->
+Just do as I said and use howto for kernel 3.2, not distro-specific
+howto. You nede to install b43-fwcutter and manually download file for
+firmware extraction.
+
+-- 
+Rafa≈Ç
