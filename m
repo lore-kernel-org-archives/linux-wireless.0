@@ -1,84 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2348 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760945Ab1LQChb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 21:37:31 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 17/30] brcm80211: fmac: move packet realloc stats to
- struct brcmf_bus
-Date: Fri, 16 Dec 2011 18:37:07 -0800
-Message-ID: <1324089440-8957-18-git-send-email-frankyl@broadcom.com> (sfid-20111217_035946_426901_802415E2)
-In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
-References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:47278 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752191Ab1LVAJy convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Dec 2011 19:09:54 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Wed, 21 Dec 2011 16:06:21 -0800
+Subject: RE: [PATCH 2/3] mwifiex: use IEEE80211_HT_PARAM_CHA_SEC_* macros
+Message-ID: <477F20668A386D41ADCC57781B1F704308185E3EED@SC-VEXCH1.marvell.com> (sfid-20111222_010957_403662_57A53E14)
+References: <1324453642-1920-1-git-send-email-bzhao@marvell.com>
+ <1324453642-1920-2-git-send-email-bzhao@marvell.com>
+ <CAGRGNgVEnn23UbnEUFXiKhu=6j4VJi560Y6AkyRP978gTtzGnA@mail.gmail.com>
+In-Reply-To: <CAGRGNgVEnn23UbnEUFXiKhu=6j4VJi560Y6AkyRP978gTtzGnA@mail.gmail.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-tx_realloc is used by both common layer and bus layer. This patch
-moves it to interface structure brcmf_bus as part of the fullmac
-bus interface refactoring.
+Hi Julian,
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    3 +--
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
- 3 files changed, 3 insertions(+), 4 deletions(-)
+Thanks for your comment.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index 86cb197..7461567 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -578,6 +578,7 @@ struct brcmf_bus {
- 	enum brcmf_bus_state state;
- 	uint maxctl;		/* Max size rxctl request from proto to bus */
- 	bool drvr_up;		/* Status flag of driver up/down */
-+	unsigned long tx_realloc;	/* Tx packets realloced for headroom */
- 	struct dngl_stats dstats;	/* Stats for dongle-based data */
- };
- 
-@@ -615,8 +616,6 @@ struct brcmf_pub {
- 	/* Number of times dpc scheduled by watchdog timer */
- 	unsigned long wd_dpc_sched;
- 
--	/* Number of tx packets we had to realloc for headroom */
--	unsigned long tx_realloc;
- 	/* Number of flow control pkts recvd */
- 	unsigned long fc_packets;
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index e456099..1ce6322 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -324,7 +324,7 @@ static int brcmf_netdev_start_xmit(struct sk_buff *skb, struct net_device *ndev)
- 
- 		brcmf_dbg(INFO, "%s: insufficient headroom\n",
- 			  brcmf_ifname(drvr, ifp->idx));
--		drvr->tx_realloc++;
-+		drvr->bus_if->tx_realloc++;
- 		skb2 = skb_realloc_headroom(skb, drvr->hdrlen);
- 		dev_kfree_skb(skb);
- 		skb = skb2;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 4b0a87d..e0456e9 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -2130,7 +2130,7 @@ static int brcmf_sdbrcm_txpkt(struct brcmf_sdio *bus, struct sk_buff *pkt,
- 		if (skb_headroom(pkt) < pad) {
- 			brcmf_dbg(INFO, "insufficient headroom %d for %d pad\n",
- 				  skb_headroom(pkt), pad);
--			bus->drvr->tx_realloc++;
-+			bus->sdiodev->bus_if->tx_realloc++;
- 			new = brcmu_pkt_buf_get_skb(pkt->len + BRCMF_SDALIGN);
- 			if (!new) {
- 				brcmf_dbg(ERROR, "couldn't allocate new %d-byte packet\n",
--- 
-1.7.5.4
+> Subject: Re: [PATCH 2/3] mwifiex: use IEEE80211_HT_PARAM_CHA_SEC_* macros
+> 
+> Hi Bing and Amitkumar,
+> 
+> Quick question:
+> 
+> On Wed, Dec 21, 2011 at 18:47, Bing Zhao <bzhao@marvell.com> wrote:
+> > From: Amitkumar Karwar <akarwar@marvell.com>
+> >
+> > Replace driver specific macros with the corresponding
+> > IEEE80211_HT_PARAM_CHA_SEC_* macros defined in ieee80211.h.
+> > Also, rename 'adapter->chan_offset' to 'adapter->sec_chan_offset'
+> > for consistency.
+> >
+> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> > ---
+> > diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+> > index 64bf640..0723f61 100644
+> > --- a/drivers/net/wireless/mwifiex/cfg80211.c
+> > +++ b/drivers/net/wireless/mwifiex/cfg80211.c
+> > +static u8
+> > +mwifiex_cfg80211_channel_type_to_sec_chan_offset(enum nl80211_channel_type
+> > +                                                channel_type)
+> >  {
+> >        switch (channel_type) {
+> >        case NL80211_CHAN_NO_HT:
+> >        case NL80211_CHAN_HT20:
+> > -               return NO_SEC_CHANNEL;
+> > +               return IEEE80211_HT_PARAM_CHA_SEC_NONE;
+> >        case NL80211_CHAN_HT40PLUS:
+> > -               return SEC_CHANNEL_ABOVE;
+> > +               return IEEE80211_HT_PARAM_CHA_SEC_ABOVE;
+> >        case NL80211_CHAN_HT40MINUS:
+> > -               return SEC_CHANNEL_BELOW;
+> > +               return IEEE80211_HT_PARAM_CHA_SEC_BELOW;
+> >        default:
+> > -               return NO_SEC_CHANNEL;
+> > +               return IEEE80211_HT_PARAM_CHA_SEC_NONE;
+> >        }
+> >  }
+> 
+> Is there a function in mac80211 to do this for you?
 
+The mac80211.h does define inline functions like this:
+
+static inline bool
+conf_is_ht40_minus(struct ieee80211_conf *conf)
+{
+        return conf->channel_type == NL80211_CHAN_HT40MINUS;
+}
+
+But they take 'struct ieee80211_conf *conf', instead of 'enum nl80211_channel_type', as the parameters. If I make use of them I will have to construct a redundant 'struct ieee80211_conf' variable in mwifiex driver and add "if (ht40_minus), else if (ht40_plus), else()" logic to get the return values of IEEE80211_HT_PARAM_CHA_SEC_ type.
+
+> 
+> > @@ -51,20 +51,20 @@ mwifiex_cfg80211_channel_type_to_mwifiex_channels(enum nl80211_channel_type
+> >  static enum nl80211_channel_type
+> >  mwifiex_channels_to_cfg80211_channel_type(int channel_type)
+> >  {
+> >        switch (channel_type) {
+> > -       case NO_SEC_CHANNEL:
+> > +       case IEEE80211_HT_PARAM_CHA_SEC_NONE:
+> >                return NL80211_CHAN_HT20;
+> > -       case SEC_CHANNEL_ABOVE:
+> > +       case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
+> >                return NL80211_CHAN_HT40PLUS;
+> > -       case SEC_CHANNEL_BELOW:
+> > +       case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
+> >                return NL80211_CHAN_HT40MINUS;
+> >        default:
+> >                return NL80211_CHAN_HT20;
+> 
+> Same again.
+
+The macro replacement in this function is temporary. This entire function has been removed in 3/3 in the same patch series.
+
+By the way, I couldn't locate a dedicated mac80211 function for this one.
+
+Thanks,
+Bing
 
