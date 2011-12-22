@@ -1,18 +1,18 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:47066 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754515Ab1L0QEM (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18989 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751621Ab1LVPZ0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Dec 2011 11:04:12 -0500
+	Thu, 22 Dec 2011 10:25:26 -0500
 From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 To: "John W. Linville" <linville@tuxdriver.com>,
 	Johannes Berg <johannes@sipsolutions.net>
-CC: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+CC: Helmut Schaa <helmut.schaa@googlemail.com>,
 	<linux-wireless@vger.kernel.org>,
 	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [RFC] mac80211: minor cleanup
-Date: Tue, 27 Dec 2011 21:34:01 +0530
-Message-ID: <1325001841-1881-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111227_170416_504310_06D7C3D0)
+Subject: [PATCH] mac80211: fix scan state machine
+Date: Thu, 22 Dec 2011 20:52:30 +0530
+Message-ID: <1324567350-8397-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111222_162529_980031_35888CA7)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -20,29 +20,30 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-if we had set 'fixed-freq' paramter in iw ibss join command,
-scan request won't be intiated in this path with the state
-'IEEE80211_IBSS_MLME_JOINED'
+when we run high bandwidth UDP traffic and we trigger a scan, the scan
+state machine seems to be looping in SUSPEND->RESUME->DECISION->SUSPEND
+and SET_CHANNEL seems to be never called as 'tx_empty' is never true
+while running UDP traffic. fix this by settting SET_CHANNEL state when
+we get into RESUME state.
 
 Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- net/mac80211/ibss.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ net/mac80211/scan.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index f8a32bf..8875673 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -642,8 +642,7 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
- 	       "IBSS networks with same SSID (merge)\n", sdata->name);
+diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
+index 2c5041c..2908e56 100644
+--- a/net/mac80211/scan.c
++++ b/net/mac80211/scan.c
+@@ -625,7 +625,7 @@ static void ieee80211_scan_state_resume(struct ieee80211_local *local,
+ 	local->leave_oper_channel_time = jiffies;
  
- 	ieee80211_request_internal_scan(sdata,
--			ifibss->ssid, ifibss->ssid_len,
--			ifibss->fixed_channel ? ifibss->channel : NULL);
-+			ifibss->ssid, ifibss->ssid_len, NULL);
+ 	/* advance to the next channel to be scanned */
+-	local->next_scan_state = SCAN_DECISION;
++	local->next_scan_state = SCAN_SET_CHANNEL;
  }
  
- static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+ void ieee80211_scan_work(struct work_struct *work)
 -- 
 1.7.0.4
 
