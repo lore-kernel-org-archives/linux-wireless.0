@@ -1,27 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:36599 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753775Ab1LWJCB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Dec 2011 04:02:01 -0500
-Received: by wibhm6 with SMTP id hm6so3011654wib.19
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Dec 2011 01:01:59 -0800 (PST)
-Message-ID: <4EF44384.7070606@gmail.com> (sfid-20111223_100205_198489_2C274AF7)
-Date: Fri, 23 Dec 2011 10:01:56 +0100
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:4965 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751998Ab1LVQSk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Dec 2011 11:18:40 -0500
+Date: Thu, 22 Dec 2011 17:18:28 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com,
+	Andreas Hartmann <andihartmann@01019freenet.de>
+Subject: Re: [rt2x00-users] Poor performance and lockup with rt2800usb and
+ Asus USB-N13 adapter
+Message-ID: <20111222161810.GB13554@redhat.com> (sfid-20111222_171845_879125_311511C9)
+References: <4ED43A5C.9000102@gmail.com>
+ <20111129114603.GB7299@redhat.com>
+ <CADLC3L2QpEtPiBg+yvaxir1LpU6j5YMpDG4g0+ezs06g745zcg@mail.gmail.com>
+ <20111220144317.GA6027@redhat.com>
 MIME-Version: 1.0
-To: cf@cfrost.dk, linux-wireless@vger.kernel.org
-Subject: Re: rt2800usb poor performance
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111220144317.GA6027@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Frost wrote:
+On Tue, Dec 20, 2011 at 03:43:17PM +0100, Stanislaw Gruszka wrote:
+> I just discovered that at least some problems are related with power
+> save. After "iwconfig wlanX power off" I have pretty short ping times
+> and good throughput, both comparable with vendor driver. But I did not
+> check that on all adapters that I have yet.
+>
+> Looking a bit more at that seem we stop and wake queues several times
+> between sending each frame. Looks like that thing need to be optimized
+> in mac80211, or some parameters have to be setup properly by rt2x00 ...
+> 
+> Also rt2800 PCI and SOC have PS disabled by default ...
 
-> Yes, I have tried all your suggestions and they do not help. I
-> havedownloaded the firmware from ralinktech in version v2.4.0.1
+There is no bug with ping latencies when power save is enabled. Ping
+send packet every second, between that we put driver in power save
+mode (i.e. tell AP that we are sleeping and it has to buffer frame
+to us). When we send ping packet, we wake up and receive packet from
+a AP after longer time than in normal operation mode.
 
-The latest fw is at:
-http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git
+I did more testing here and I have one device that works very bad,
+no matter if PS is configured or not. It is 
 
-the fw of ralink web is outdated.
+phy6 -> rt2x00_set_chip: Info - Chipset detected - rt: 3071, rf: 0008, rev: 021c.
+
+I'm going to investigate problems with that device, hopefully these are the
+same problems that Robert and Andreas have.
+
+Stanislaw
