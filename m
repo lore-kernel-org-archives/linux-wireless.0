@@ -1,42 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:40389 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755078Ab1LNQtH (ORCPT
+Received: from external1.orbit-lab.org ([128.6.192.131]:54318 "HELO
+	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752895Ab1LVVMu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Dec 2011 11:49:07 -0500
-Date: Wed, 14 Dec 2011 10:49:02 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Problems associating with RTL8188CE
-Message-ID: <20111214164902.GD19410@thinkpad-t410> (sfid-20111214_174912_675992_D0398B26)
-References: <4ECA99CC.7020008@lwfinger.net>
- <20111121185610.GD6736@thinkpad-t410>
- <4ECB028E.3030809@lwfinger.net>
- <20111122022008.GA17661@thinkpad-t410>
- <20111213194231.GA30788@thinkpad-t410>
- <4EE7B85E.3070802@lwfinger.net>
- <20111213212606.GB30788@thinkpad-t410>
- <4EE82CC6.2030307@lwfinger.net>
- <20111214162333.GB19410@thinkpad-t410>
- <4EE8D150.8090100@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4EE8D150.8090100@lwfinger.net>
+	Thu, 22 Dec 2011 16:12:50 -0500
+Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
+	by external1.orbit-lab.org (Postfix) with ESMTP id 2F2E5540204
+	for <linux-wireless@vger.kernel.org>; Thu, 22 Dec 2011 16:12:49 -0500 (EST)
+Subject: Compat-wireless release for 2011-12-22 is baked
+To: <linux-wireless@vger.kernel.org>
+Message-Id: <20111222211249.0826040623@repository3.orbit-lab.org> (sfid-20111222_221254_162553_88E9C857)
+Date: Thu, 22 Dec 2011 16:12:48 -0500 (EST)
+From: compat@orbit-lab.org (Compat-wireless cronjob account)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 14, 2011 at 10:39:44AM -0600, Larry Finger wrote:
-> On 12/14/2011 10:23 AM, Seth Forshee wrote:
-> >
-> >I'm running 3.2-rc5 currently. The results are the same with
-> >bleeding-edge compat-wireless.
-> 
-> I'm running 3.2-rc5 from wireless-testing, but I should test the one
-> from mainline. I'll also retest an RTL8188CE with my 802.11n AP.
-> 
-> What model is that Cisco AP? Perhaps Realsil has one in their lab. I
-> do not have access to any Cisco hardware.
+>From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
+ + 8d24890...454ac7f akpm-end   -> origin/akpm-end  (forced update)
+   a4a4923..b9e26df  akpm-start -> origin/akpm-start
+ + 4d8359a...4765f87 master     -> origin/master  (forced update)
+   a4a4923..b9e26df  stable     -> origin/stable
+ * [new tag]         next-20111222 -> next-20111222
 
-It's a Linksys E2000.
+compat-wireless code metrics
+
+    824709 - Total upstream lines of code being pulled
