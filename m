@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.HRZ.Uni-Dortmund.DE ([129.217.128.51]:64628 "EHLO
-	unimail.uni-dortmund.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505Ab1LKQ7U (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:59012 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753547Ab1LVK24 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Dec 2011 11:59:20 -0500
-Message-ID: <4EE4E152.2070204@udo.edu> (sfid-20111211_175957_221690_4DB13C76)
-Date: Sun, 11 Dec 2011 17:58:58 +0100
-From: Andrej Gelenberg <andrej.gelenberg@udo.edu>
-MIME-Version: 1.0
-To: Udo Steinberg <udo@hypervisor.org>
-CC: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: iwlagn regression in v3.1.5
-References: <4EE4AEF4.2080702@udo.edu> <4EE4DB55.4090804@udo.edu> <20111211174138.79e51fe8@x220.fritz.box>
-In-Reply-To: <20111211174138.79e51fe8@x220.fritz.box>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 22 Dec 2011 05:28:56 -0500
+Subject: Re: [PATCH] NFC: Export a new attribute nfcid1 in target info
+From: Samuel Ortiz <samuel@sortiz.org>
+Reply-To: Samuel Ortiz <samuel@sortiz.org>
+To: ilanelias78@gmail.com
+Cc: aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Ilan Elias <ilane@ti.com>
+In-Reply-To: <1324547514-3237-1-git-send-email-ilane@ti.com>
+References: <1324547514-3237-1-git-send-email-ilane@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 22 Dec 2011 11:34:13 +0100
+Message-ID: <1324550053.5354.7.camel@sortiz-mobl> (sfid-20111222_112900_028317_F9F69803)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Ilan,
 
-this is pretty mean regression for the stable kernel. You may the fix 
-only for cards, which need it and not for all of them.
+On Thu, 2011-12-22 at 11:51 +0200, ilanelias78@gmail.com wrote:
+> From: Ilan Elias <ilane@ti.com>
+> 
+> The nfcid1 is the NFC-A identifier.
+> It is exported as an attribute of the target info
+> (returned as a response to NFC_CMD_GET_TARGET).
+> 
+> Signed-off-by: Ilan Elias <ilane@ti.com>
+Acked-by: Samuel Ortiz <sameo@linux.intel.com>
 
-Regards,
-Andrej
+Cheers,
+Samuel.
 
-On 12/11/2011 05:41 PM, Udo Steinberg wrote:
-> Hi,
->
-> The patch fixes the following bug:
-> http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=2326
->
-> If the patch introduces a regression for you, then the problem needs to be
-> investigated further. Reverting the patch will reintroduce an already fixed
-> problem for others.
->
-> Cheers,
->
-> 	- Udo
->
+
