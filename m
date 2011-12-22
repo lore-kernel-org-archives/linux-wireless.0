@@ -1,239 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1508 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760974Ab1LQChg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 21:37:36 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 15/30] brcm80211: fmac: remove duplicate statistics from
- driver data structure
-Date: Fri, 16 Dec 2011 18:37:05 -0800
-Message-ID: <1324089440-8957-16-git-send-email-frankyl@broadcom.com> (sfid-20111217_035946_506693_97F36A9B)
-In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
-References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-qw0-f53.google.com ([209.85.216.53]:61070 "EHLO
+	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753494Ab1LVI5y convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Dec 2011 03:57:54 -0500
+Received: by qadb15 with SMTP id b15so5234740qad.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Dec 2011 00:57:53 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CACna6ryy3VaL4u=fts4q0KGxXp0NibMcBaS7tnYbAG5w06sj1Q@mail.gmail.com>
+References: <CAG9cJm=YkvHY56LoBoUf3fuh=xb7m+c0GgUzMZX+QyG1+CBCMg@mail.gmail.com>
+	<4EF21983.1020107@broadcom.com>
+	<CACna6rxEjQLj_j-f7WZOtOEGfDa+TPWyLDrn2t-FGZ5T2_fz-g@mail.gmail.com>
+	<CAG9cJm=XE3jQiYvGB4T6_Avj=bmc_wXe8JGMr5hePuCu-OnPuA@mail.gmail.com>
+	<CACna6rxvmFptSR9WF8Whj1A0ATyygQ9Eo0nUY8n6MugQ0bjP7g@mail.gmail.com>
+	<CAG9cJmmnEsLQxxbi41v6nM8D+L_cOSQE73qJmDDYhXPnopn+MA@mail.gmail.com>
+	<CACna6rw_zB038mJ5XP6qvZR61pB77yRes3UwM50JFawUAhUpYg@mail.gmail.com>
+	<CAG9cJmkn9HRM1TWL_P0SHBjx9mG4gZYDXeL=HucSg1FK4bf0JQ@mail.gmail.com>
+	<CACna6ryy3VaL4u=fts4q0KGxXp0NibMcBaS7tnYbAG5w06sj1Q@mail.gmail.com>
+Date: Thu, 22 Dec 2011 16:57:53 +0800
+Message-ID: <CAG9cJm==YcbFNToV-mq1o2WoXcMACXLzZ9tk58TDSPC3Mjcrkg@mail.gmail.com> (sfid-20111222_095757_989903_D6587615)
+Subject: Re: bcm4331 firmware installer package
+From: lina <lina.lastname@gmail.com>
+To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Debian Lists <debian-user@lists.debian.org>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some dongle statistics are stored in two places and synced when net
-device status inquired. There is no need to do it this way any more.
-Direct all usage to dongle stats structure in order to increase
-readability.
+On Thu, Dec 22, 2011 at 4:49 PM, Rafa³ Mi³ecki <zajec5@gmail.com> wrote:
+> W dniu 22 grudnia 2011 09:45 u¿ytkownik lina <lina.lastname@gmail.com> napisa³:
+>> On Thu, Dec 22, 2011 at 4:34 PM, Rafa³ Mi³ecki <zajec5@gmail.com> wrote:
+>>> 2011/12/22 lina <lina.lastname@gmail.com>:
+>>>> On Thu, Dec 22, 2011 at 3:07 PM, Rafa³ Mi³ecki <zajec5@gmail.com> wrote:
+>>>>> 2011/12/22 lina <lina.lastname@gmail.com>:
+>>>>>> I am still a bit confused. (First thanks for the links all of you
+>>>>>> provided, but I have visited those web before).
+>>>>>>
+>>>>>> Here is the thing:
+>>>>>> BCM4331 802.11a/b/g/n fit for
+>>>>>> BCM4331              b/g  HT (r1)
+>>>>>>
+>>>>>> What does the 802.11a for?
+>>>>>
+>>>>> Well, your card can operate in 5GHz band (frequencies). But I'm not
+>>>>>  really sure why you ask about this at all.
+>>>>>
+>>>>>  If you want to try experimental BCM4331 support you have to:
+>>>>>  1) Install kernel 3.2-rc3 or newer
+>>>> I have the 3.2.0-rc6
+>>>>>  or
+>>>>>  2) Install compat wireless
+>>>>>
+>>>>>  After that you've do install firmware (check for wiki howto for kernel
+>>>>>  3.2 and newer).
+>>>>
+>>>> after installation of the compat-wireless,
+>>>>
+>>>> from
+>>>> http://wireless.kernel.org/en/users/Drivers/b43#firmware
+>>>>
+>>>>  # aptitude install firmware-b43-installer
+>>>>
+>>>>
+>>>> Setting up b43-fwcutter (1:015-9) ...
+>>>> Setting up firmware-b43-installer (1:015-9) ...
+>>>> No chroot environment found. Starting normal installation
+>>>> Unsupported device(s) found: PCI id 14e4:4331
+>>>> Aborting.
+>>>>
+>>>> I don't know which part is wrong here.
+>>>
+>>> Your tool is too old (support for BCM4331 is really recent).
+>> sorry, here you mean, which tool?
+>>>
+>>> Just do as I said and use howto for kernel 3.2, not distro-specific
+>>> howto. You nede to install b43-fwcutter and manually download file for
+>> I can't tell the difference. (I really need detailed instructions,
+>> thanks for your patience ahead)
+>>
+>> I tried to follow what you said before, with the kernel 3.2-rc6
+>> install the compate-wireless,
+>> but have problem in the following install the firmware-installer.
+>>> firmware extraction.
+>
+> wget http://bu3sch.de/b43/fwcutter/b43-fwcutter-015.tar.bz2
+> tar xjf b43-fwcutter-015.tar.bz2
+> cd b43-fwcutter-015
+> make
+> sudo make install
+> cd ..
+>
+> export FIRMWARE_INSTALL_DIR="/lib/firmware"
+> wget http://www.lwfinger.com/b43-firmware/broadcom-wl-5.100.138.tar.bz2
+> tar xjf broadcom-wl-5.100.138.tar.bz2
+> sudo b43-fwcutter -w "$FIRMWARE_INSTALL_DIR"  broadcom-wl-5.100.138/linux/wl_apsta.o
+>
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |   13 -------------
- drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c  |   12 ------------
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   10 +++-------
- .../net/wireless/brcm80211/brcmfmac/dhd_proto.h    |    3 ---
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   20 ++++++++++----------
- 5 files changed, 13 insertions(+), 45 deletions(-)
+Thanks and ?
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index 4dcb11d..44cad9b 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -608,21 +608,8 @@ struct brcmf_pub {
- 
- 	/* Additional stats for the bus level */
- 
--	/* Data packets sent to dongle */
--	unsigned long tx_packets;
- 	/* Multicast data packets sent to dongle */
- 	unsigned long tx_multicast;
--	/* Errors in sending data to dongle */
--	unsigned long tx_errors;
--	/* Packets sent up the network interface */
--	unsigned long rx_packets;
--	/* Multicast packets sent up the network interface */
--	unsigned long rx_multicast;
--	/* Errors processing rx data packets */
--	unsigned long rx_errors;
--
--	/* Packets dropped locally (no memory) */
--	unsigned long rx_dropped;
- 	/* Packets flushed due to unscheduled sendup thread */
- 	unsigned long rx_flushed;
- 	/* Number of times dpc scheduled by watchdog timer */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-index 774aeac..8b4dba3 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-@@ -453,18 +453,6 @@ void brcmf_proto_detach(struct brcmf_pub *drvr)
- 	drvr->prot = NULL;
- }
- 
--void brcmf_proto_dstats(struct brcmf_pub *drvr)
--{
--	/* No stats from dongle added yet, copy bus stats */
--	drvr->dstats.tx_packets = drvr->tx_packets;
--	drvr->dstats.tx_errors = drvr->tx_errors;
--	drvr->dstats.rx_packets = drvr->rx_packets;
--	drvr->dstats.rx_errors = drvr->rx_errors;
--	drvr->dstats.rx_dropped = drvr->rx_dropped;
--	drvr->dstats.multicast = drvr->rx_multicast;
--	return;
--}
--
- int brcmf_proto_init(struct brcmf_pub *drvr)
- {
- 	int ret = 0;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 5e9acf8..4f5ec43 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -342,7 +342,7 @@ done:
- 	if (ret)
- 		drvr->dstats.tx_dropped++;
- 	else
--		drvr->tx_packets++;
-+		drvr->dstats.tx_packets++;
- 
- 	/* Return ok: we always eat the packet */
- 	return 0;
-@@ -427,7 +427,7 @@ void brcmf_rx_frame(struct device *dev, int ifidx,
- 		skb->protocol = eth_type_trans(skb, skb->dev);
- 
- 		if (skb->pkt_type == PACKET_MULTICAST)
--			drvr->rx_multicast++;
-+			drvr->dstats.multicast++;
- 
- 		skb->data = eth;
- 		skb->len = len;
-@@ -447,7 +447,7 @@ void brcmf_rx_frame(struct device *dev, int ifidx,
- 		}
- 
- 		drvr->dstats.rx_bytes += skb->len;
--		drvr->rx_packets++;	/* Local count */
-+		drvr->dstats.rx_packets++;	/* Local count */
- 
- 		if (in_interrupt())
- 			netif_rx(skb);
-@@ -487,10 +487,6 @@ static struct net_device_stats *brcmf_netdev_get_stats(struct net_device *ndev)
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
--	if (drvr->bus_if->drvr_up)
--		/* Use the protocol to get dongle stats */
--		brcmf_proto_dstats(drvr);
--
- 	/* Copy dongle stats to net device stats */
- 	ifp->stats.rx_packets = drvr->dstats.rx_packets;
- 	ifp->stats.tx_packets = drvr->dstats.tx_packets;
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h
-index 130a847..7005ff17 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_proto.h
-@@ -49,9 +49,6 @@ extern int brcmf_proto_hdrpull(struct device *dev, int *ifidx,
- extern int brcmf_proto_dcmd(struct brcmf_pub *drvr, int ifidx,
- 				struct brcmf_dcmd *dcmd, int len);
- 
--/* Update local copy of dongle statistics */
--extern void brcmf_proto_dstats(struct brcmf_pub *drvr);
--
- extern int brcmf_c_preinit_dcmds(struct brcmf_pub *drvr);
- 
- extern int brcmf_proto_cdc_set_dcmd(struct brcmf_pub *drvr, int ifidx,
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 6c5b5b5..255861b 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -1263,7 +1263,7 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 		if (errcode < 0) {
- 			brcmf_dbg(ERROR, "glom read of %d bytes failed: %d\n",
- 				  dlen, errcode);
--			bus->drvr->rx_errors++;
-+			bus->drvr->dstats.rx_errors++;
- 
- 			if (bus->glomerr++ < 3) {
- 				brcmf_sdbrcm_rxfail(bus, true, true);
-@@ -1447,7 +1447,7 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 			} else if (brcmf_proto_hdrpull(bus->sdiodev->dev,
- 						       &ifidx, pfirst) != 0) {
- 				brcmf_dbg(ERROR, "rx protocol error\n");
--				bus->drvr->rx_errors++;
-+				bus->drvr->dstats.rx_errors++;
- 				skb_unlink(pfirst, &bus->glom);
- 				brcmu_pkt_buf_free_skb(pfirst);
- 				continue;
-@@ -1548,7 +1548,7 @@ brcmf_sdbrcm_read_control(struct brcmf_sdio *bus, u8 *hdr, uint len, uint doff)
- 	if ((rdlen + BRCMF_FIRSTREAD) > bus->sdiodev->bus_if->maxctl) {
- 		brcmf_dbg(ERROR, "%d-byte control read exceeds %d-byte buffer\n",
- 			  rdlen, bus->sdiodev->bus_if->maxctl);
--		bus->drvr->rx_errors++;
-+		bus->drvr->dstats.rx_errors++;
- 		brcmf_sdbrcm_rxfail(bus, false, false);
- 		goto done;
- 	}
-@@ -1556,7 +1556,7 @@ brcmf_sdbrcm_read_control(struct brcmf_sdio *bus, u8 *hdr, uint len, uint doff)
- 	if ((len - doff) > bus->sdiodev->bus_if->maxctl) {
- 		brcmf_dbg(ERROR, "%d-byte ctl frame (%d-byte ctl data) exceeds %d-byte limit\n",
- 			  len, len - doff, bus->sdiodev->bus_if->maxctl);
--		bus->drvr->rx_errors++;
-+		bus->drvr->dstats.rx_errors++;
- 		bus->rx_toolong++;
- 		brcmf_sdbrcm_rxfail(bus, false, false);
- 		goto done;
-@@ -1630,7 +1630,7 @@ brcmf_alloc_pkt_and_read(struct brcmf_sdio *bus, u16 rdlen,
- 		brcmf_dbg(ERROR, "(nextlen): read %d bytes failed: %d\n",
- 			  rdlen, sdret);
- 		brcmu_pkt_buf_free_skb(*pkt);
--		bus->drvr->rx_errors++;
-+		bus->drvr->dstats.rx_errors++;
- 		/* Force retry w/normal header read.
- 		 * Don't attempt NAK for
- 		 * gSPI
-@@ -1979,7 +1979,7 @@ brcmf_sdbrcm_readframes(struct brcmf_sdio *bus, uint maxframes, bool *finished)
- 			/* Too long -- skip this frame */
- 			brcmf_dbg(ERROR, "too long: len %d rdlen %d\n",
- 				  len, rdlen);
--			bus->drvr->rx_errors++;
-+			bus->drvr->dstats.rx_errors++;
- 			bus->rx_toolong++;
- 			brcmf_sdbrcm_rxfail(bus, false, false);
- 			continue;
-@@ -1991,7 +1991,7 @@ brcmf_sdbrcm_readframes(struct brcmf_sdio *bus, uint maxframes, bool *finished)
- 			/* Give up on data, request rtx of events */
- 			brcmf_dbg(ERROR, "brcmu_pkt_buf_get_skb failed: rdlen %d chan %d\n",
- 				  rdlen, chan);
--			bus->drvr->rx_dropped++;
-+			bus->drvr->dstats.rx_dropped++;
- 			brcmf_sdbrcm_rxfail(bus, false, RETRYCHAN(chan));
- 			continue;
- 		}
-@@ -2011,7 +2011,7 @@ brcmf_sdbrcm_readframes(struct brcmf_sdio *bus, uint maxframes, bool *finished)
- 				   : ((chan == SDPCM_DATA_CHANNEL) ? "data"
- 				      : "test")), sdret);
- 			brcmu_pkt_buf_free_skb(pkt);
--			bus->drvr->rx_errors++;
-+			bus->drvr->dstats.rx_errors++;
- 			brcmf_sdbrcm_rxfail(bus, true, RETRYCHAN(chan));
- 			continue;
- 		}
-@@ -2064,7 +2064,7 @@ deliver:
- 			   pkt) != 0) {
- 			brcmf_dbg(ERROR, "rx protocol error\n");
- 			brcmu_pkt_buf_free_skb(pkt);
--			bus->drvr->rx_errors++;
-+			bus->drvr->dstats.rx_errors++;
- 			continue;
- 		}
- 
-@@ -2276,7 +2276,7 @@ static uint brcmf_sdbrcm_sendfromq(struct brcmf_sdio *bus, uint maxframes)
- 
- 		ret = brcmf_sdbrcm_txpkt(bus, pkt, SDPCM_DATA_CHANNEL, true);
- 		if (ret)
--			bus->drvr->tx_errors++;
-+			bus->drvr->dstats.tx_errors++;
- 		else
- 			bus->drvr->dstats.tx_bytes += datalen;
- 
--- 
-1.7.5.4
-
-
+> --
+> Rafa³
