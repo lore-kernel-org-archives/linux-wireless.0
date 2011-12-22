@@ -1,32 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:58209 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756090Ab1LOLqA convert rfc822-to-8bit (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:25210 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752186Ab1LVBdg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 06:46:00 -0500
-Received: by wgbdr13 with SMTP id dr13so3929925wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 03:45:59 -0800 (PST)
+	Wed, 21 Dec 2011 20:33:36 -0500
+From: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
+To: Djalal Harouni <tixxdz@opendz.org>
+CC: Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Date: Wed, 21 Dec 2011 17:33:33 -0800
+Subject: RE: [PATCH] drivers/iwlwifi: use dma_zalloc_coherent() for DMA
+ allocation
+Message-ID: <E9954878DD1FB34FAE5187FB88C58A3501AC762882@orsmsx506.amr.corp.intel.com> (sfid-20111222_023341_751919_9214A917)
+References: <20111221002147.GA4996@dztty>
+ <1324486330.13074.322.camel@wwguy-huron> <20111221194852.GA19795@dztty>
+In-Reply-To: <20111221194852.GA19795@dztty>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1323871708-19852-1-git-send-email-linville@tuxdriver.com>
-References: <1323871708-19852-1-git-send-email-linville@tuxdriver.com>
-Date: Thu, 15 Dec 2011 12:45:58 +0100
-Message-ID: <CACna6rwEfgxMcM1FQDLTWqsM3iy2NqokSAByU13oeT-XkysSzw@mail.gmail.com> (sfid-20111215_124603_640466_FEE92E18)
-Subject: Re: [PATCH] b43: avoid calling bcma_* if CONFIG_B43_BCMA is not set
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2011/12/14 John W. Linville <linville@tuxdriver.com>:
-> Avoids this:
->
-> ERROR: "bcma_chipco_pll_write" [drivers/net/wireless/b43/b43.ko] undefined!
->
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Hi Djalal,
 
-[BTW] Can you use b43-dev as CC in the future?
+> 
+> iwl-trans-pcie.c is one of the source files in iwlwifi driver hold 
+> dual-license (GPL + BSD), are you ok to release your code for the BSD 
+> license and relinquish the copyright?
+Yes, It's ok.
 
--- 
-Rafał
+Thank you very much
+
+Wey
