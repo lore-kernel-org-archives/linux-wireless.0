@@ -1,68 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:18424 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754145Ab1LNENx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 23:13:53 -0500
-Subject: Re: REGRESSION: v3.2-rcX: iwlagn refuses to associate with my AP's
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Ted Ts'o <tytso@mit.edu>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <20111214015959.GA6276@thunk.org>
-References: <E1RaBm1-0001JR-8a@tytso-glaptop.cam.corp.google.com>
-	 <1323800557.3355.31.camel@jlt3.sipsolutions.net>
-	 <20111213201752.GA5094@thunk.org>  <20111214015959.GA6276@thunk.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 13 Dec 2011 19:14:30 -0800
-Message-ID: <1323832470.13074.224.camel@wwguy-huron> (sfid-20111214_051358_578097_08B6601F)
+Received: from calzone.tip.net.au ([203.10.76.15]:50994 "EHLO
+	calzone.tip.net.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752149Ab1LVBDx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 21 Dec 2011 20:03:53 -0500
+Date: Thu, 22 Dec 2011 12:03:43 +1100
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Samuel Ortiz <samuel@sortiz.org>, linux-next@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+Subject: Re: linux-next: Tree for Dec 19 (nfc)
+Message-Id: <20111222120343.32afd5524db3cfe8b3876892@canb.auug.org.au> (sfid-20111222_020410_858224_9B4FB536)
+In-Reply-To: <4EF28D6A.7080505@xenotime.net>
+References: <20111219185556.f07c1f43e28cfd594aaa5fe0@canb.auug.org.au>
+	<4EEFA21B.5010305@xenotime.net>
+	<1324399181.5354.0.camel@sortiz-mobl>
+	<4EF23A1F.60803@xenotime.net>
+	<1324500160.5354.3.camel@sortiz-mobl>
+	<4EF2569D.1070806@xenotime.net>
+	<1324510522.5354.5.camel@sortiz-mobl>
+	<4EF28D6A.7080505@xenotime.net>
 Mime-Version: 1.0
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA256";
+ boundary="Signature=_Thu__22_Dec_2011_12_03_43_+1100_O=Eoye=K3b+FTm5j"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ted,
-On Tue, 2011-12-13 at 17:59 -0800, Ted Ts'o wrote:
-> On Tue, Dec 13, 2011 at 03:17:52PM -0500, Ted Ts'o wrote:
-> > Well, this patch seems to fix things for the non-authenticated case.
-> > I can now associate with the GoogleGuest SSID without any problems.
-> > I'm still having problems associating with the EAP-TLS encrypted
-> > network, but that looks like it's a different bug.  (And that may
-> > explain why I had so much trouble bisecting this; there are two issues
-> > that have very similar symptoms.)
-> 
-> ... and the second problem I had with associating with EAP-TLS
-> encrypted SSID's was solved by Wey-Yi's patch: 
-> 
-> 	  iwlwifi: allow to switch to HT40 if not associated yet
-> 
-> ... found in the thread "iwlagn regression in v3.1.5"
-> 
-> So with these two patches applied, things are now stable for me.
-> 
-> One thing: out of curiosity, I assume there is a pretty good testing
-> infrastructure at Intel --- how was it that this didn't caught
-> earlier?  Is it because different access points do things a little
-> different?  Would it be useful if I can find out the model of access
-> point that we're using, so you could hopefully augment your library of
-> test hardware?  I'm asking out of purely selfish reasons, of course,
-> since this took me the better part of a day to bisect each of these
-> problems.
+--Signature=_Thu__22_Dec_2011_12_03_43_+1100_O=Eoye=K3b+FTm5j
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-You ask a very valid and good question, you are correct, we at Intel
-have a very good lab and great testing infrastructure. But at the same
-time, there are so many APs available on the market and each one could
-behave differently, also just like station, AP's software continue
-change and improve, and at the same time, bugs can be introduced. We try
-to do our best, but we can not cover everything and we truly hope the
-community can help us flush the corner cases and bugs we miss.
+Hi all,
 
-Yes, if you can let us know your configuration and the AP information,
-it will be very helpful. But please do help us continue test our latest
-driver, so we can improve our driver quality and better serve the
-community.
+On Wed, 21 Dec 2011 17:52:42 -0800 Randy Dunlap <rdunlap@xenotime.net> wrot=
+e:
+>
+> On 12/21/2011 03:35 PM, Samuel Ortiz wrote:
+> > On Wed, 2011-12-21 at 13:58 -0800, Randy Dunlap wrote:
+> >> On 12/21/2011 12:42 PM, Samuel Ortiz wrote:
+> >>> Hi Randy,
+> >>>
+> >>> On Wed, 2011-12-21 at 11:57 -0800, Randy Dunlap wrote:
+> >>>> On 12/20/2011 08:39 AM, Samuel Ortiz wrote:
+> >>>>> Hi Randy,
+> >>>>>
+> >>>>> On Mon, 2011-12-19 at 12:44 -0800, Randy Dunlap wrote:
+> >>>>>> On 12/18/2011 11:55 PM, Stephen Rothwell wrote:
+> >>>>>>> Hi all,
+> >>>>>>>
+> >>>>>>> Changes since 20111216:
+> >>>>>>
+> >>>>>>
+> >>>>>> (not new today, just not reported earlier)
+> >>>>> John applied my fix for this one. It should be fixed now.
+> >>>>
+> >>>> Hi Samuel,
+> >>>>
+> >>>> Is this supposed to be fixed in linux-next?
+> >>>> It still fails today (linux-next 20111221).
+> >>> Do you have a .config for me to look at ?
+> >>
+> >> Sure, one of several that failed is attached.
+> > Thanks, I just tried this one and it seems to work fine. What's your
+> > toolchain ?
+> > I'm using: gcc version 4.6.2 (Debian 4.6.2-4)
+>=20
+> I'm using:
+> > gcc --version
+> gcc (GCC) 4.5.2
+>=20
+> so maybe it is something that has been fixed in gcc...
+>=20
+> Thanks for checking the config.
 
-Thanks
-Wey 
+Well, it would be interesting to know what tree Samuel was testing,
+because the fix commit was *not* in next-20111221 due to another error in
+the wireless-next tree ...
 
+That fix *should* be in today's linux-next since the fix for the other
+build problem is there.
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
 
+--Signature=_Thu__22_Dec_2011_12_03_43_+1100_O=Eoye=K3b+FTm5j
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBCAAGBQJO8oHvAAoJEECxmPOUX5FEB2AP/1YAWL3U+/qLoUTTmn8vTZyX
+0ow15ieiwVSbTjyVfsB2aI6mO2rB8p4ILW4eM7q1gX5xjdOFTyl0FfrY9Z14jqNw
+Gtp3jPY/BupfLm6Ed8sWP7nBswrg9117GUyepMZyT1h21cNty4f3tQKm+MGgsFi2
+l0HvC3UXR7/sMcLHhls9y9BtJyW9GEFdXnmqK7+c/BFSEKGVXD9ceHZBvFM1SDlt
+4y1anWIF9SLMjxS+t2Zk2f6APBTNdiqc0cwaf2aXnL5+EtSD9IQJmVUbFaxzsulx
+xluSO8oqwOr7yChLyizu3meWfwFa/licvTsvEtsI/OQ/VfzqAx8oGBH+xcHRsWVY
+NCuVGlCjHwXEDO3jSWjLOzFpRzFch4jF/b7bwC+vs9+2ABpRFIJEW9xCL90OVcWx
+ugJp6Bd/lj2qtuhUR/BBzzUJonV5j9peY1zOaw6DnKcBq0FCgaHzoQUNgv6w2zga
+4XvX9xlm+B+Cid7StLRZUKWHeermYWu0Otm9pzwq/dyxC6iNa8AgCdvmf0E9txiT
+BCHBe9mxe7VyRLtcPoKmXQBxl9KV7MEJ0LV64djkRxdlZj2k0JX9oYBBa5890dVS
+QzUoW5ybtRiFzj733p5hsVlFJ8fB7Dg3nDBJ50ALjgShkTBXg6K5T9yRtknEmLQJ
+Epe62lMLvA/idFNEfZlZ
+=8s3L
+-----END PGP SIGNATURE-----
+
+--Signature=_Thu__22_Dec_2011_12_03_43_+1100_O=Eoye=K3b+FTm5j--
