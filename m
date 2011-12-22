@@ -1,165 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3081 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754624Ab1LLXPq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 18:15:46 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 03/15] brcm80211: smac: use bcma core access function in
- srom.c
-Date: Mon, 12 Dec 2011 15:15:01 -0800
-Message-ID: <1323731713-14942-4-git-send-email-frankyl@broadcom.com> (sfid-20111213_001613_885731_9DC84880)
-In-Reply-To: <1323731713-14942-1-git-send-email-frankyl@broadcom.com>
-References: <1323731713-14942-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:38495 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754981Ab1LVI74 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 22 Dec 2011 03:59:56 -0500
+Received: by iaeh11 with SMTP id h11so13217238iae.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Dec 2011 00:59:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1324469186-18507-1-git-send-email-eyal@wizery.com>
+References: <1324469186-18507-1-git-send-email-eyal@wizery.com>
+Date: Thu, 22 Dec 2011 10:59:55 +0200
+Message-ID: <CAB3XZEdMS-_=qz+DTjtEsM8CGa0wvyqKdtWNF5+aCjV+=+326g@mail.gmail.com> (sfid-20111222_095959_980391_949D19A9)
+Subject: Re: [PATCH] wl12xx: trigger recovery for failures in sched scan stop
+From: Eliad Peller <eliad@wizery.com>
+To: Eyal Shapira <eyal@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arend van Spriel <arend@broadcom.com>
+On Wed, Dec 21, 2011 at 2:06 PM, Eyal Shapira <eyal@wizery.com> wrote:
+> mac80211 requires that drv_sched_scan_stop
+> will always succeed. We have a few possible errors
+> such as OOM, failure to ELP wakeup, fail in the FW command.
+> Instead of no-op , trigger a recovery which would
+> mark sched scan as stopped and clear up any bad FW state.
+>
+> Signed-off-by: Eyal Shapira <eyal@wizery.com>
+> ---
+this patch seems a bit redundant.
 
-The code in srom.c now uses the core access function provided by
-BCMA so no need to pass __iomem pointer any longer.
-
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c |    2 +-
- drivers/net/wireless/brcm80211/brcmsmac/srom.c    |   50 ++++++--------------
- drivers/net/wireless/brcm80211/brcmsmac/srom.h    |    2 +-
- 3 files changed, 17 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-index a54cf32..bb12ebc 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/aiutils.c
-@@ -725,7 +725,7 @@ static struct si_info *ai_doattach(struct si_info *sii,
- 		goto exit;
- 
- 	/* Init nvram from sprom/otp if they exist */
--	if (srom_var_init(&sii->pub, cc))
-+	if (srom_var_init(&sii->pub))
- 		goto exit;
- 
- 	ai_nvram_process(sii);
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/srom.c b/drivers/net/wireless/brcm80211/brcmsmac/srom.c
-index 95eb620..6109215 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/srom.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/srom.c
-@@ -586,17 +586,6 @@ static const struct brcms_sromvar perpath_pci_sromvars[] = {
-  * shared between devices. */
- static u8 brcms_srom_crc8_table[CRC8_TABLE_SIZE];
- 
--static u8 __iomem *
--srom_window_address(struct si_pub *sih, u8 __iomem *curmap)
--{
--	if (ai_get_ccrev(sih) < 32)
--		return curmap + PCI_BAR0_SPROM_OFFSET;
--	if (ai_get_cccaps(sih) & CC_CAP_SROM)
--		return curmap + PCI_16KB0_CCREGS_OFFSET + CC_SROM_OTP;
--
--	return NULL;
--}
--
- static uint mask_shift(u16 mask)
- {
- 	uint i;
-@@ -779,17 +768,27 @@ _initvars_srom_pci(u8 sromrev, u16 *srom, struct list_head *var_list)
-  * Return 0 on success, nonzero on error.
-  */
- static int
--sprom_read_pci(struct si_pub *sih, u8 __iomem *sprom, uint wordoff,
--	       u16 *buf, uint nwords, bool check_crc)
-+sprom_read_pci(struct si_pub *sih, u16 *buf, uint nwords, bool check_crc)
- {
- 	int err = 0;
- 	uint i;
- 	u8 *bbuf = (u8 *)buf; /* byte buffer */
- 	uint nbytes = nwords << 1;
-+	struct bcma_device *core;
-+	uint sprom_offset;
-+
-+	/* determine core to read */
-+	if (ai_get_ccrev(sih) < 32) {
-+		core = ai_findcore(sih, BCMA_CORE_80211, 0);
-+		sprom_offset = PCI_BAR0_SPROM_OFFSET;
-+	} else {
-+		core = ai_findcore(sih, BCMA_CORE_CHIPCOMMON, 0);
-+		sprom_offset = CHIPCREGOFFS(sromotp);
-+	}
- 
- 	/* read the sprom in bytes */
- 	for (i = 0; i < nbytes; i++)
--		bbuf[i] = readb(sprom+i);
-+		bbuf[i] = bcma_read8(core, sprom_offset+i);
- 
- 	if (buf[0] == 0xffff)
- 		/*
-@@ -851,10 +850,9 @@ static int otp_read_pci(struct si_pub *sih, u16 *buf, uint nwords)
-  * Initialize nonvolatile variable table from sprom.
-  * Return 0 on success, nonzero on error.
-  */
--static int initvars_srom_pci(struct si_pub *sih, void __iomem *curmap)
-+int srom_var_init(struct si_pub *sih)
- {
- 	u16 *srom;
--	u8 __iomem *sromwindow;
- 	u8 sromrev = 0;
- 	u32 sr;
- 	int err = 0;
-@@ -866,12 +864,9 @@ static int initvars_srom_pci(struct si_pub *sih, void __iomem *curmap)
- 	if (!srom)
- 		return -ENOMEM;
- 
--	sromwindow = srom_window_address(sih, curmap);
--
- 	crc8_populate_lsb(brcms_srom_crc8_table, SROM_CRC8_POLY);
- 	if (ai_is_sprom_available(sih)) {
--		err = sprom_read_pci(sih, sromwindow, 0, srom,
--				     SROM4_WORDS, true);
-+		err = sprom_read_pci(sih, srom, SROM4_WORDS, true);
- 
- 		if (err == 0)
- 			/* srom read and passed crc */
-@@ -921,21 +916,6 @@ void srom_free_vars(struct si_pub *sih)
- 		kfree(entry);
- 	}
- }
--/*
-- * Initialize local vars from the right source for this platform.
-- * Return 0 on success, nonzero on error.
-- */
--int srom_var_init(struct si_pub *sih, void __iomem *curmap)
--{
--	uint len;
--
--	len = 0;
--
--	if (curmap != NULL)
--		return initvars_srom_pci(sih, curmap);
--
--	return -EINVAL;
--}
- 
- /*
-  * Search the name=value vars for a specific one and return its value.
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/srom.h b/drivers/net/wireless/brcm80211/brcmsmac/srom.h
-index c81df97..f2a58f2 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/srom.h
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/srom.h
-@@ -20,7 +20,7 @@
- #include "types.h"
- 
- /* Prototypes */
--extern int srom_var_init(struct si_pub *sih, void __iomem *curmap);
-+extern int srom_var_init(struct si_pub *sih);
- extern void srom_free_vars(struct si_pub *sih);
- 
- extern int srom_read(struct si_pub *sih, uint bus, void *curmap,
--- 
-1.7.5.4
+>        ret = wl1271_ps_elp_wakeup(wl);
+> -       if (ret < 0)
+> +       if (ret < 0) {
+> +               wl12xx_queue_recovery_work(wl);
+>                goto out;
+> +       }
+>
+we enqueue recovery in wl1271_ps_elp_wakeup() in most error paths.
 
 
+> -       /* FIXME: what to do if alloc'ing to stop fails? */
+>        stop = kzalloc(sizeof(*stop), GFP_KERNEL);
+>        if (!stop) {
+>                wl1271_error("failed to alloc memory to send sched scan stop");
+> -               return;
+> +               goto recovery;
+>        }
+not sure if initiating recovery here will really help. it'll probably
+fail as well, and good chances we are going to panic soon anyway :)
+
+>        ret = wl1271_cmd_send(wl, CMD_STOP_PERIODIC_SCAN, stop,
+>                              sizeof(*stop), 0);
+> +
+> +       kfree(stop);
+> +
+>        if (ret < 0) {
+>                wl1271_error("failed to send sched scan stop command");
+> -               goto out_free;
+> +               goto recovery;
+>        }
+>
+wl1271_cmd_send enqueues recovery work on error as well.
+
+anyway, the major thing i don't like here is handling the sched_stop
+in a different manner than the rest of the commands.
+
+Eliad.
