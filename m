@@ -1,75 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:40569 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751459Ab1L3LTL (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:48015 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754072Ab1LWQW5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Dec 2011 06:19:11 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH] mac80211: remove dead code
-Date: Fri, 30 Dec 2011 16:49:01 +0530
-Message-ID: <1325243941-8803-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111230_121914_654813_A4DF6F20)
+	Fri, 23 Dec 2011 11:22:57 -0500
+Received: by ggdk6 with SMTP id k6so6901524ggd.19
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Dec 2011 08:22:56 -0800 (PST)
+Message-ID: <4EF4AADC.8090204@lwfinger.net> (sfid-20111223_172300_016086_BD28CD74)
+Date: Fri, 23 Dec 2011 10:22:52 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Darshan Kumar NANDANWAR <Darshan.KN@st.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Srikrishna Pramoda ATIKUKKE <srikrishna.pramodaatikukke@st.com>,
+	Darshan Nandanwar <dk.manit@gmail.com>
+Subject: Re: insmod RTL8192CE OOPS on 2.6.32.16
+References: <D6068D304DED1F4FBFC1F56ECFA211D85A1EA7BBF0@EAPEX1MAIL1.st.com> <4EF1F32F.8070704@lwfinger.net> <20111221151605.GA11842@tuxdriver.com> <4EF235B9.3020805@lwfinger.net> <D6068D304DED1F4FBFC1F56ECFA211D85A1EA7BE7A@EAPEX1MAIL1.st.com> <4EF3559C.9060500@lwfinger.net> <D6068D304DED1F4FBFC1F56ECFA211D85A1EA7C089@EAPEX1MAIL1.st.com>
+In-Reply-To: <D6068D304DED1F4FBFC1F56ECFA211D85A1EA7C089@EAPEX1MAIL1.st.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On 12/23/2011 03:02 AM, Darshan Kumar NANDANWAR wrote:
+> Larry ,
+> Many thanks .Your patch helped me get over that issue.. But now  I am getting following error which is may be because of firmware is not responding:
+>
+> PCI: Enabling device 0000:00:01.0 (0000 ->  0003)
+> rtl8192ce 0000:00:01.0: enabling bus mastering
+> PCI: Setting latency timer of device 0000:00:01.0 to 64
+> rtl8192ce:rtl92ce_read_eeprom_info():<0-0>  Autoload ERR!!
+> rtl8192ce:rtl92c_init_sw_vars():<0-0>  Failed to request firmware!
+> rtlwifi:rtl_pci_probe():<0-0>  Can't init_sw_vars.
+>
+> I have pulled up latest branch  of linux-firmware.git and using firmware rtlwifi/rtl8192cfw.bin located in /lib/firmware .. Please give me some pointers so that I can get over this now...
 
-ieee80211_offchannel_enable_all_ps function is no longer used
-and looks like its logic is extensively handled in
-ieee80211_offchannel_stop_vifs
+Please grab the latest version of the compat-wireless sources. That way we will 
+not be chasing bugs that are already fixed.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- net/mac80211/ieee80211_i.h |    2 --
- net/mac80211/offchannel.c  |   17 -----------------
- 2 files changed, 0 insertions(+), 19 deletions(-)
+After you get that package implemented, then use "modprobe rtl8192ce debug=4" 
+when you load the module, and send me that dmesg output.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c3f3e43..2f0642d 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1221,8 +1221,6 @@ int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata);
- void ieee80211_sched_scan_stopped_work(struct work_struct *work);
- 
- /* off-channel helpers */
--void ieee80211_offchannel_enable_all_ps(struct ieee80211_local *local,
--					bool tell_ap);
- void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
- 				    bool offchannel_ps_enable);
- void ieee80211_offchannel_return(struct ieee80211_local *local,
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index e4330d8..8818180 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -138,23 +138,6 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
- 	mutex_unlock(&local->iflist_mtx);
- }
- 
--void ieee80211_offchannel_enable_all_ps(struct ieee80211_local *local,
--					bool tell_ap)
--{
--	struct ieee80211_sub_if_data *sdata;
--
--	mutex_lock(&local->iflist_mtx);
--	list_for_each_entry(sdata, &local->interfaces, list) {
--		if (!ieee80211_sdata_running(sdata))
--			continue;
--
--		if (sdata->vif.type == NL80211_IFTYPE_STATION &&
--		    sdata->u.mgd.associated)
--			ieee80211_offchannel_ps_enable(sdata, tell_ap);
--	}
--	mutex_unlock(&local->iflist_mtx);
--}
--
- void ieee80211_offchannel_return(struct ieee80211_local *local,
- 				 bool offchannel_ps_disable)
- {
--- 
-1.7.0.4
+Larry
+
 
