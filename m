@@ -1,35 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from external1.orbit-lab.org ([128.6.192.131]:50158 "HELO
-	external1.orbit-lab.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755374Ab1LMVMv (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:36770 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752437Ab1LWJDy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 16:12:51 -0500
-Received: from repository3.orbit-lab.org (repository3.orbit-lab.org [10.50.0.41])
-	by external1.orbit-lab.org (Postfix) with ESMTP id 65295540202
-	for <linux-wireless@vger.kernel.org>; Tue, 13 Dec 2011 16:12:50 -0500 (EST)
-Subject: Compat-wireless release for 2011-12-13 is baked
-To: <linux-wireless@vger.kernel.org>
-Message-Id: <20111213211250.4357B40638@repository3.orbit-lab.org> (sfid-20111213_221254_953537_6FE10047)
-Date: Tue, 13 Dec 2011 16:12:50 -0500 (EST)
-From: compat@orbit-lab.org (Compat-wireless cronjob account)
+	Fri, 23 Dec 2011 04:03:54 -0500
+Received: by wgbdr13 with SMTP id dr13so17134151wgb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Dec 2011 01:03:52 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4EF42F12.1000309@openwrt.org>
+References: <CAApCBGx28SbbmNpynCpKW9CyAsV5+c_fZ=1k9QAsKnXf4nDQEw@mail.gmail.com>
+	<CAApCBGx7fHuQr87TnppE6FyX9d-1F0huUqgYhjv++8vmfov6zQ@mail.gmail.com>
+	<4EF31325.2050408@openwrt.org>
+	<CAApCBGwto0YxMKcirX_FJYaGw8K6Dcoxpn9P30=Mk-9oHJok+Q@mail.gmail.com>
+	<CAJ-VmonyWC4JXrikuzxxaaGMReqq3VGhH+WLWjtN+8gTCvM7kg@mail.gmail.com>
+	<4EF42F12.1000309@openwrt.org>
+Date: Fri, 23 Dec 2011 11:03:52 +0200
+Message-ID: <CAApCBGyrF4JSEGnq0USdUT8UvmyR2kRMCFh-2nmEeRR0FTCfEw@mail.gmail.com> (sfid-20111223_100358_995732_309A3C15)
+Subject: Re: ar9390 failing AGC calibration on powerpc platform
+From: wireless newbie <wnewbie72@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Adrian Chadd <adrian@freebsd.org>, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, openwrt-devel@lists.openwrt.org,
+	Mohammed Shafi <shafi.wireless@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From git://github.com/mcgrof/compat-wireless
-   84dbe2c..d4e01e7  master     -> origin/master
->From git://github.com/mcgrof/compat-wireless
- * [new tag]         compat-wireless-2011-12-13 -> compat-wireless-2011-12-13
->From git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next
- + 3d92dea...4753e29 akpm-end   -> origin/akpm-end  (forced update)
- + e7cc2aa...24300f9 master     -> origin/master  (forced update)
- * [new tag]         next-20111213 -> next-20111213
+> iw wlan0 survey dump
 
-compat-wireless code metrics
+Here is what I got. Looks like its busy most of the time, doesn't it?
 
-    823167 - Total upstream lines of code being pulled
-      2468 - backport code changes
-      2121 - backport code additions
-       347 - backport code deletions
-      8885 - backport from compat module
-     11353 - total backport code
-    1.3792 - % of code consists of backport work
+Survey data from wlan0
+        frequency:                      2412 MHz
+        channel active time:            139291 ms
+        channel busy time:              135849 ms
+        channel receive time:           0 ms
+        channel transmit time:          0 ms
+Survey data from wlan0
+        frequency:                      2417 MHz
+Survey data from wlan0
+        frequency:                      2422 MHz
+Survey data from wlan0
+        frequency:                      2427 MHz
+Survey data from wlan0
+        frequency:                      2432 MHz
+Survey data from wlan0
+        frequency:                      2437 MHz
+Survey data from wlan0
+        frequency:                      2442 MHz
+Survey data from wlan0
+        frequency:                      2447 MHz
+Survey data from wlan0
+        frequency:                      2452 MHz
+Survey data from wlan0
+        frequency:                      2457 MHz
+Survey data from wlan0
+        frequency:                      2462 MHz
+Survey data from wlan0
+        frequency:                      5180 MHz
+Survey data from wlan0
+        frequency:                      5200 MHz
+Survey data from wlan0
+        frequency:                      5220 MHz
+Survey data from wlan0
+        frequency:                      5240 MHz
+Survey data from wlan0
+        frequency:                      5745 MHz
+Survey data from wlan0
+        frequency:                      5765 MHz
+Survey data from wlan0
+        frequency:                      5785 MHz
+Survey data from wlan0
+        frequency:                      5805 MHz
+Survey data from wlan0
+        frequency:                      5825 MHz
