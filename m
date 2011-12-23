@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:46835 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751953Ab1LPNxm (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:35812 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752134Ab1LWHnQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 08:53:42 -0500
-Message-ID: <4EEB4D61.80602@lwfinger.net> (sfid-20111216_145347_354114_661E7407)
-Date: Fri, 16 Dec 2011 07:53:37 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 23 Dec 2011 02:43:16 -0500
+Received: by qcqz2 with SMTP id z2so5436310qcq.19
+        for <linux-wireless@vger.kernel.org>; Thu, 22 Dec 2011 23:43:15 -0800 (PST)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: unexpected taint message
-References: <4EEB0EFC.5000302@broadcom.com>  (sfid-20111216_102800_182196_AFD2D6CF) <1324038636.3429.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1324038636.3429.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20111222155415.GA13554@redhat.com>
+References: <CAA=oPaiE-NAP_rfi3BLv-wM_wBwfLyMh-p2KtMALXPaDG6LxxA@mail.gmail.com>
+	<20111222141102.GA2261@redhat.com>
+	<CAA=oPajYJQoz0AhAaGuY9y=2gbMUfpBZJU71TmryG_zksQk_Nw@mail.gmail.com>
+	<20111222155415.GA13554@redhat.com>
+Date: Fri, 23 Dec 2011 08:43:15 +0100
+Message-ID: <CAA=oPajknLLXAK7xQhkoK+YhtQhE1M8fworNkhEW+yZYTmN6+w@mail.gmail.com> (sfid-20111223_084334_444502_38788C2A)
+Subject: Re: rt2800usb poor performance
+From: Christian Frost <cf@cfrost.dk>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/16/2011 06:30 AM, Johannes Berg wrote:
-> On Fri, 2011-12-16 at 10:27 +0100, Arend van Spriel wrote:
->> To whoever may know,
->>
->> Upon loading our driver module I get the following message:
->>
->> kernel: [  344.805106] Disabling lock debugging due to kernel taint
->>
->> What exactly are the criteria for tainting? Our driver locking strategy
->> is something we want to refactor and having lock debugging during that
->> transition may be a life safer.
+I get the following print outs:
+
+Compat-wireless backport release:
+compat-wireless-v3.2-rc6-3Backportbased on linux-stable.git
+v3.2-rc6cfg80211: Calling CRDA to updateworld regulatory domainusb
+2-1: reset high speed USB device usingehci_hcd and address 2phy0 ->
+rt2x00_set_chip: Info - Chipset detected- rt: 3070, rf: 0005, rev:
+0201.
+
+Please let me know if you need for info.
+On Thu, Dec 22, 2011 at 4:54 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Thu, Dec 22, 2011 at 03:42:00PM +0100, Christian Frost wrote:
+>> Yes, I have tried all your suggestions and they do not help. I
+>> havedownloaded the firmware from ralinktech in version v2.4.0.1
 >
-> cat /proc/sys/kernel/tainted
-
-Please note that Documentation/sysctl/kernel.txt is missing the explanation for 
-two bits in the value printed:
-
-2048 - The system is working around a severe firmware bug.
-4096 - An out-of-tree module has been loaded.
-
-On my system, bit 4096 is set due to loading the VirtualBox module, which 
-disables lock debugging lock debugging. I suspect that loading VMware would 
-cause the same condition.
-
-I also found that loading brcmsmac did not trigger the license taint. I think 
-you are OK with the dual license.
-
-Larry
-
-
+> If you compile driver with CONFIG_RT2X00_DEBUG it will show exact
+> chip name. Please provide that info, we probably need to fix
+> that chip support in rt2800usb. For now you will need to use vendor
+> driver, which unfortunately will most likely work better than in kernel
+> driver for that particular chip.
+>
+> Stanislaw
