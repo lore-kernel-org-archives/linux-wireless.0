@@ -1,64 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:39967 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751207Ab1L0JDI (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:9239 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757353Ab1LWP5D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Dec 2011 04:03:08 -0500
-Date: Tue, 27 Dec 2011 11:02:56 +0200
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH] ath6kl: Add del_station cfg80211_ops
-Message-ID: <20111227090256.GA14371@jouni.qca.qualcomm.com> (sfid-20111227_100339_064283_B042FBC6)
+	Fri, 23 Dec 2011 10:57:03 -0500
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Paul Stewart <pstew@google.com>
+Subject: [PATCH] ath9k_hw: increase tx status ring buffer size
+Date: Fri, 23 Dec 2011 21:27:02 +0530
+Message-ID: <1324655822-14923-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111223_165708_775939_D0C5D2CE)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hostapd/wpa_supplicant AP mode uses this operation to flush the station
-entries. Implement this in ath6kl to avoid unnecessary warnings from
-NL80211_CMD_DEL_STATION failing.
+AR9003 chips read tx status from ring buffer whose max number of
+status descriptor is mininal compared to max number of tx buffers.
+On a stress condition, it can be easily overflown which might cause
+false tx hung detection. Though increasing number of max status
+descriptors consumes more memory, it helps to avoid false positive
+chip resets.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: Paul Stewart <pstew@google.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |    2 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mac.h |    2 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h      |    2 +-
+ drivers/net/wireless/ath/ath9k/hw.h         |    2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index d6806be..f74762e 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2300,6 +2300,19 @@ static int ath6kl_del_beacon(struct wiphy *wiphy, struct net_device *dev)
- 	return 0;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 4a31515..88c81c5 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -583,7 +583,7 @@ void ath9k_hw_reset_txstatus_ring(struct ath_hw *ah)
  
-+static const u8 bcast_addr[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
-+
-+static int ath6kl_del_station(struct wiphy *wiphy, struct net_device *dev,
-+			      u8 *mac)
-+{
-+	struct ath6kl *ar = ath6kl_priv(dev);
-+	struct ath6kl_vif *vif = netdev_priv(dev);
-+	const u8 *addr = mac ? mac : bcast_addr;
-+
-+	return ath6kl_wmi_ap_set_mlme(ar->wmi, vif->fw_vif_idx, WMI_AP_DEAUTH,
-+				      addr, WLAN_REASON_PREV_AUTH_NOT_VALID);
-+}
-+
- static int ath6kl_change_station(struct wiphy *wiphy, struct net_device *dev,
- 				 u8 *mac, struct station_parameters *params)
+ void ath9k_hw_setup_statusring(struct ath_hw *ah, void *ts_start,
+ 			       u32 ts_paddr_start,
+-			       u8 size)
++			       u16 size)
  {
-@@ -2603,6 +2616,7 @@ static struct cfg80211_ops ath6kl_cfg80211_ops = {
- 	.add_beacon = ath6kl_add_beacon,
- 	.set_beacon = ath6kl_set_beacon,
- 	.del_beacon = ath6kl_del_beacon,
-+	.del_station = ath6kl_del_station,
- 	.change_station = ath6kl_change_station,
- 	.remain_on_channel = ath6kl_remain_on_channel,
- 	.cancel_remain_on_channel = ath6kl_cancel_remain_on_channel,
+ 
+ 	ah->ts_paddr_start = ts_paddr_start;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.h b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+index c504493..e203b51 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+@@ -118,5 +118,5 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah,
+ void ath9k_hw_reset_txstatus_ring(struct ath_hw *ah);
+ void ath9k_hw_setup_statusring(struct ath_hw *ah, void *ts_start,
+ 			       u32 ts_paddr_start,
+-			       u8 size);
++			       u16 size);
+ #endif
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 95276e9..b30e9fc 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -97,7 +97,7 @@ enum buffer_type {
+ #define bf_isampdu(bf)		(bf->bf_state.bf_type & BUF_AMPDU)
+ #define bf_isaggr(bf)		(bf->bf_state.bf_type & BUF_AGGR)
+ 
+-#define ATH_TXSTATUS_RING_SIZE 64
++#define ATH_TXSTATUS_RING_SIZE 512
+ 
+ #define	DS2PHYS(_dd, _ds)						\
+ 	((_dd)->dd_desc_paddr + ((caddr_t)(_ds) - (caddr_t)(_dd)->dd_desc))
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 48205c2..6a29004 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -1016,7 +1016,7 @@ struct ath_hw {
+ 	u32 ts_paddr_start;
+ 	u32 ts_paddr_end;
+ 	u16 ts_tail;
+-	u8 ts_size;
++	u16 ts_size;
+ 
+ 	u32 bb_watchdog_last_status;
+ 	u32 bb_watchdog_timeout_ms; /* in ms, 0 to disable */
 -- 
-1.7.4.1
+1.7.8.1
 
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
