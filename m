@@ -1,127 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:32524 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751521Ab1LMLsC (ORCPT
+Received: from eu1sys200aog119.obsmtp.com ([207.126.144.147]:54435 "EHLO
+	eu1sys200aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753775Ab1LWJCh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Dec 2011 06:48:02 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH V2 2/2] ath6kl: Use cfg80211_roamed_bss() to report roaming event
-Date: Tue, 13 Dec 2011 17:19:57 +0530
-Message-ID: <1323776997-2962-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111213_124808_824483_809DF1D5)
+	Fri, 23 Dec 2011 04:02:37 -0500
+From: Darshan Kumar NANDANWAR <Darshan.KN@st.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	wireless <linux-wireless@vger.kernel.org>,
+	Srikrishna Pramoda ATIKUKKE <srikrishna.pramodaatikukke@st.com>,
+	Darshan Nandanwar <dk.manit@gmail.com>
+Date: Fri, 23 Dec 2011 17:02:20 +0800
+Subject: RE: insmod RTL8192CE OOPS on 2.6.32.16
+Message-ID: <D6068D304DED1F4FBFC1F56ECFA211D85A1EA7C089@EAPEX1MAIL1.st.com> (sfid-20111223_100241_693519_F0ED3BB5)
+References: <D6068D304DED1F4FBFC1F56ECFA211D85A1EA7BBF0@EAPEX1MAIL1.st.com>
+ <4EF1F32F.8070704@lwfinger.net> <20111221151605.GA11842@tuxdriver.com>
+ <4EF235B9.3020805@lwfinger.net>
+ <D6068D304DED1F4FBFC1F56ECFA211D85A1EA7BE7A@EAPEX1MAIL1.st.com>
+ <4EF3559C.9060500@lwfinger.net>
+In-Reply-To: <4EF3559C.9060500@lwfinger.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is to avoid the scenario where the bss entry of the AP got
-expired when reporting roaming event to current AP. As the bss
-entry for the current bss is available in driver, pass this bss
-to cfg80211. This fixes WARNING: at net/wireless/sme.c:586.
-
-This patch depends on the following patch in cfg80211
-"cfg80211: Fix race in bss timeout".
-
-Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   37 +++++++++++++--------------
- 1 files changed, 18 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index aa93527..856e38a 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -568,11 +568,13 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 	return 0;
- }
- 
--static int ath6kl_add_bss_if_needed(struct ath6kl_vif *vif,
--				    enum network_type nw_type,
--				    const u8 *bssid,
--				    struct ieee80211_channel *chan,
--				    const u8 *beacon_ie, size_t beacon_ie_len)
-+static struct cfg80211_bss *
-+ath6kl_add_bss_if_needed(struct ath6kl_vif *vif,
-+			 enum network_type nw_type,
-+			 const u8 *bssid,
-+			 struct ieee80211_channel *chan,
-+			 const u8 *beacon_ie,
-+			 size_t beacon_ie_len)
- {
- 	struct ath6kl *ar = vif->ar;
- 	struct cfg80211_bss *bss;
-@@ -601,7 +603,7 @@ static int ath6kl_add_bss_if_needed(struct ath6kl_vif *vif,
- 		 */
- 		ie = kmalloc(2 + vif->ssid_len + beacon_ie_len, GFP_KERNEL);
- 		if (ie == NULL)
--			return -ENOMEM;
-+			return NULL;
- 		ie[0] = WLAN_EID_SSID;
- 		ie[1] = vif->ssid_len;
- 		memcpy(ie + 2, vif->ssid, vif->ssid_len);
-@@ -615,15 +617,9 @@ static int ath6kl_add_bss_if_needed(struct ath6kl_vif *vif,
- 				   "cfg80211\n", bssid);
- 		kfree(ie);
- 	} else
--		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "cfg80211 already has a bss "
--			   "entry\n");
--
--	if (bss == NULL)
--		return -ENOMEM;
-+		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "cfg80211 already has a bss\n");
- 
--	cfg80211_put_bss(bss);
--
--	return 0;
-+	return bss;
- }
- 
- void ath6kl_cfg80211_connect_event(struct ath6kl_vif *vif, u16 channel,
-@@ -635,6 +631,7 @@ void ath6kl_cfg80211_connect_event(struct ath6kl_vif *vif, u16 channel,
- {
- 	struct ieee80211_channel *chan;
- 	struct ath6kl *ar = vif->ar;
-+	struct cfg80211_bss *bss;
- 
- 	/* capinfo + listen interval */
- 	u8 assoc_req_ie_offset = sizeof(u16) + sizeof(u16);
-@@ -675,8 +672,9 @@ void ath6kl_cfg80211_connect_event(struct ath6kl_vif *vif, u16 channel,
- 
- 	chan = ieee80211_get_channel(ar->wiphy, (int) channel);
- 
--	if (ath6kl_add_bss_if_needed(vif, nw_type, bssid, chan, assoc_info,
--				     beacon_ie_len) < 0) {
-+	bss = ath6kl_add_bss_if_needed(vif, nw_type, bssid, chan,
-+				       assoc_info, beacon_ie_len);
-+	if (!bss) {
- 		ath6kl_err("could not add cfg80211 bss entry\n");
- 		return;
- 	}
-@@ -685,6 +683,7 @@ void ath6kl_cfg80211_connect_event(struct ath6kl_vif *vif, u16 channel,
- 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "ad-hoc %s selected\n",
- 			   nw_type & ADHOC_CREATOR ? "creator" : "joiner");
- 		cfg80211_ibss_joined(vif->ndev, bssid, GFP_KERNEL);
-+		cfg80211_put_bss(bss);
- 		return;
- 	}
- 
-@@ -695,11 +694,11 @@ void ath6kl_cfg80211_connect_event(struct ath6kl_vif *vif, u16 channel,
- 					assoc_req_ie, assoc_req_len,
- 					assoc_resp_ie, assoc_resp_len,
- 					WLAN_STATUS_SUCCESS, GFP_KERNEL);
-+		cfg80211_put_bss(bss);
- 	} else if (vif->sme_state == SME_CONNECTED) {
- 		/* inform roam event to cfg80211 */
--		cfg80211_roamed(vif->ndev, chan, bssid,
--				assoc_req_ie, assoc_req_len,
--				assoc_resp_ie, assoc_resp_len, GFP_KERNEL);
-+		cfg80211_roamed_bss(vif->ndev, bss, assoc_req_ie, assoc_req_len,
-+				    assoc_resp_ie, assoc_resp_len, GFP_KERNEL);
- 	}
- }
- 
--- 
-1.7.0.4
-
+TGFycnkgLA0KTWFueSB0aGFua3MgLllvdXIgcGF0Y2ggaGVscGVkIG1lIGdldCBvdmVyIHRoYXQg
+aXNzdWUuLiBCdXQgbm93ICBJIGFtIGdldHRpbmcgZm9sbG93aW5nIGVycm9yIHdoaWNoIGlzIG1h
+eSBiZSBiZWNhdXNlIG9mIGZpcm13YXJlIGlzIG5vdCByZXNwb25kaW5nOg0KDQpQQ0k6IEVuYWJs
+aW5nIGRldmljZSAwMDAwOjAwOjAxLjAgKDAwMDAgLT4gMDAwMykNCnJ0bDgxOTJjZSAwMDAwOjAw
+OjAxLjA6IGVuYWJsaW5nIGJ1cyBtYXN0ZXJpbmcNClBDSTogU2V0dGluZyBsYXRlbmN5IHRpbWVy
+IG9mIGRldmljZSAwMDAwOjAwOjAxLjAgdG8gNjQNCnJ0bDgxOTJjZTpydGw5MmNlX3JlYWRfZWVw
+cm9tX2luZm8oKTo8MC0wPiBBdXRvbG9hZCBFUlIhIQ0KcnRsODE5MmNlOnJ0bDkyY19pbml0X3N3
+X3ZhcnMoKTo8MC0wPiBGYWlsZWQgdG8gcmVxdWVzdCBmaXJtd2FyZSENCnJ0bHdpZmk6cnRsX3Bj
+aV9wcm9iZSgpOjwwLTA+IENhbid0IGluaXRfc3dfdmFycy4NCg0KSSBoYXZlIHB1bGxlZCB1cCBs
+YXRlc3QgYnJhbmNoICBvZiBsaW51eC1maXJtd2FyZS5naXQgYW5kIHVzaW5nIGZpcm13YXJlIHJ0
+bHdpZmkvcnRsODE5MmNmdy5iaW4gbG9jYXRlZCBpbiAvbGliL2Zpcm13YXJlIC4uIFBsZWFzZSBn
+aXZlIG1lIHNvbWUgcG9pbnRlcnMgc28gdGhhdCBJIGNhbiBnZXQgb3ZlciB0aGlzIG5vdy4uLg0K
+DQoNCg0KVGhhbmtzDQpEYXJzaGFuIGt1bWFyDQoNCg0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2Fn
+ZS0tLS0tDQpGcm9tOiBMYXJyeSBGaW5nZXIgW21haWx0bzpsYXJyeS5maW5nZXJAZ21haWwuY29t
+XSBPbiBCZWhhbGYgT2YgTGFycnkgRmluZ2VyDQpTZW50OiBUaHVyc2RheSwgRGVjZW1iZXIgMjIs
+IDIwMTEgOTozNyBQTQ0KVG86IERhcnNoYW4gS3VtYXIgTkFOREFOV0FSDQpDYzogSm9obiBXLiBM
+aW52aWxsZTsgd2lyZWxlc3M7IFNyaWtyaXNobmEgUHJhbW9kYSBBVElLVUtLRQ0KU3ViamVjdDog
+UmU6IGluc21vZCBSVEw4MTkyQ0UgT09QUyBvbiAyLjYuMzIuMTYNCg0KT24gMTIvMjIvMjAxMSAw
+NDowOSBBTSwgRGFyc2hhbiBLdW1hciBOQU5EQU5XQVIgd3JvdGU6DQo+IE9PUHMgaXMgaW4gIGZv
+bGxvd2luZyBpbnN0cnVjdGlvbiA6DQo+IHBjaXByaXYtPm5kaXNfYWRhcHRlci5wY2licmlkZ2Vf
+dmVuZG9yaWQgPSBicmlkZ2VfcGRldi0+dmVuZG9yOw0KPiA2NTY6ICAgICAgIDE1IDBhICAgICAg
+ICAgICBtb3YudyAgIHIxLEAocjAscjEwKQ0KPiBJIGhhdmUgYXR0YWNoZWQgdGhlIG9iamR1bXAg
+YXN3ZWxsIC4uDQo+DQo+Pj4gVGhlIGZpeCBjYW1lIHdpdGggY29tbWl0IGI2YjY3ZGYzZjI0YzQ1
+YWYwMDEyZWUsIHdoaWNoIGlzIGRhdGVkIEp1bCAyOS4NCj4gV2hhdCBpcyB0aGlzIGFsbCBhYm91
+dD8gQ291bGQgeW91IHBvaW50IHRvICB0aGlzIGNvbW1pdD8NCg0KS2VybmVsIHNvdXJjZSBpcyBu
+b3cgbWFpbnRhaW5lZCB1c2luZyBnaXQsIHdoaWNoIGtlZXBzIHRyYWNrIG9mIGNoYW5nZXMgdXNp
+bmcgdGhlIHNoYTFzdW0gb2YgdGhlIGNoYW5nZXMuIFRoZSBJRCBhYm92ZSBpcyB0aGUgbGVhZGlu
+ZyBkaWdpdHMgb2YgdGhhdCBzdW0uDQoNClRoZSBwYXRjaCBpbiBxdWVzdGlvbiBpcyBhdHRhY2hl
+ZC4gSXQgaGFuZGxlcyB0aGUgY2FzZXMgd2hlcmUgdGhlIHNlbGYgbWVtYmVyIG9mIHRoZSBwY2lf
+YnVzIHN0cnVjdCBpcyBub3QgcHJlc2VudC4gSXQgYXBwZWFycyBub3QgdG8gaGF2ZSBiZWVuIGFw
+cGxpZWQgdG8geW91ciBzb3VyY2UuIERvZXMgdGhpcyBwYXRjaCBmaXggeW91ciBwcm9ibGVtPw0K
+DQpMYXJyeQ0KDQoNCg==
