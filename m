@@ -1,61 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:39708 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753739Ab1LLUEX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Dec 2011 15:04:23 -0500
-Received: by eekc4 with SMTP id c4so1793076eek.19
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Dec 2011 12:04:22 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] b43: N-PHY: fix 32-bit reads of tables
-Date: Mon, 12 Dec 2011 21:38:35 +0100
-Message-Id: <1323722316-4265-1-git-send-email-zajec5@gmail.com> (sfid-20111212_210427_734282_68782C24)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:28098 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753180Ab1LWHOT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Dec 2011 02:14:19 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 07/10] iwlegacy: 4965: remove one il4965_hdl_beacon
+Date: Fri, 23 Dec 2011 08:13:47 +0100
+Message-Id: <1324624430-3688-7-git-send-email-sgruszka@redhat.com> (sfid-20111223_081422_122232_841C216A)
+In-Reply-To: <1324624430-3688-1-git-send-email-sgruszka@redhat.com>
+References: <1324624430-3688-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The order is different than on older PHYs.
+We have two such functions.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/b43/tables_nphy.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/iwlegacy/4965-mac.c |    3 +--
+ drivers/net/wireless/iwlegacy/4965.c     |   19 -------------------
+ 2 files changed, 1 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
-index 691839e..e1fc337 100644
---- a/drivers/net/wireless/b43/tables_nphy.c
-+++ b/drivers/net/wireless/b43/tables_nphy.c
-@@ -2880,9 +2880,8 @@ u32 b43_ntab_read(struct b43_wldev *dev, u32 offset)
- 		break;
- 	case B43_NTAB_32BIT:
- 		b43_phy_write(dev, B43_NPHY_TABLE_ADDR, offset);
--		value = b43_phy_read(dev, B43_NPHY_TABLE_DATAHI);
--		value <<= 16;
--		value |= b43_phy_read(dev, B43_NPHY_TABLE_DATALO);
-+		value = b43_phy_read(dev, B43_NPHY_TABLE_DATALO);
-+		value |= b43_phy_read(dev, B43_NPHY_TABLE_DATAHI) << 16;
- 		break;
- 	default:
- 		B43_WARN_ON(1);
-@@ -2916,9 +2915,10 @@ void b43_ntab_read_bulk(struct b43_wldev *dev, u32 offset,
- 			data += 2;
- 			break;
- 		case B43_NTAB_32BIT:
--			*((u32 *)data) = b43_phy_read(dev, B43_NPHY_TABLE_DATAHI);
--			*((u32 *)data) <<= 16;
--			*((u32 *)data) |= b43_phy_read(dev, B43_NPHY_TABLE_DATALO);
-+			*((u32 *)data) =
-+				b43_phy_read(dev, B43_NPHY_TABLE_DATALO);
-+			*((u32 *)data) |=
-+				b43_phy_read(dev, B43_NPHY_TABLE_DATAHI) << 16;
- 			data += 4;
- 			break;
- 		default:
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index cefc623..1667232 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -3780,13 +3780,12 @@ il4965_hdl_beacon(struct il_priv *il, struct il_rx_buf *rxb)
+ #ifdef CONFIG_IWLEGACY_DEBUG
+ 	u8 rate = il4965_hw_get_rate(beacon->beacon_notify_hdr.rate_n_flags);
+ 
+-	D_RX("beacon status %x retries %d iss %d " "tsf %d %d rate %d\n",
++	D_RX("beacon status %x retries %d iss %d tsf:0x%.8x%.8x rate %d\n",
+ 	     le32_to_cpu(beacon->beacon_notify_hdr.u.status) & TX_STATUS_MSK,
+ 	     beacon->beacon_notify_hdr.failure_frame,
+ 	     le32_to_cpu(beacon->ibss_mgr_status),
+ 	     le32_to_cpu(beacon->high_tsf), le32_to_cpu(beacon->low_tsf), rate);
+ #endif
+-
+ 	il->ibss_manager = le32_to_cpu(beacon->ibss_mgr_status);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlegacy/4965.c b/drivers/net/wireless/iwlegacy/4965.c
+index 84c54dc..cacbc03 100644
+--- a/drivers/net/wireless/iwlegacy/4965.c
++++ b/drivers/net/wireless/iwlegacy/4965.c
+@@ -2114,24 +2114,6 @@ il4965_hdl_tx(struct il_priv *il, struct il_rx_buf *rxb)
+ 	spin_unlock_irqrestore(&il->sta_lock, flags);
+ }
+ 
+-static void
+-il4965_hdl_beacon(struct il_priv *il, struct il_rx_buf *rxb)
+-{
+-	struct il_rx_pkt *pkt = rxb_addr(rxb);
+-	struct il4965_beacon_notif *beacon = (void *)pkt->u.raw;
+-	u8 rate __maybe_unused =
+-	    il4965_hw_get_rate(beacon->beacon_notify_hdr.rate_n_flags);
+-
+-	D_RX("beacon status %#x, retries:%d ibssmgr:%d "
+-	     "tsf:0x%.8x%.8x rate:%d\n",
+-	     le32_to_cpu(beacon->beacon_notify_hdr.u.status) & TX_STATUS_MSK,
+-	     beacon->beacon_notify_hdr.failure_frame,
+-	     le32_to_cpu(beacon->ibss_mgr_status),
+-	     le32_to_cpu(beacon->high_tsf), le32_to_cpu(beacon->low_tsf), rate);
+-
+-	il->ibss_manager = le32_to_cpu(beacon->ibss_mgr_status);
+-}
+-
+ /* Set up 4965-specific Rx frame reply handlers */
+ static void
+ il4965_handler_setup(struct il_priv *il)
+@@ -2140,7 +2122,6 @@ il4965_handler_setup(struct il_priv *il)
+ 	il->handlers[N_RX] = il4965_hdl_rx;
+ 	/* Tx response */
+ 	il->handlers[C_TX] = il4965_hdl_tx;
+-	il->handlers[N_BEACON] = il4965_hdl_beacon;
+ }
+ 
+ static struct il_hcmd_ops il4965_hcmd = {
 -- 
-1.7.3.4
+1.7.4.4
 
