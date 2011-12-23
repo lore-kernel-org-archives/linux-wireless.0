@@ -1,38 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:49879 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752146Ab1LPTEn (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:43362 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752569Ab1LWPRL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 14:04:43 -0500
-Received: by vbbfc26 with SMTP id fc26so2717165vbb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 16 Dec 2011 11:04:43 -0800 (PST)
-Message-ID: <4EEB9647.9080208@lwfinger.net> (sfid-20111216_200446_984090_78EA68DF)
-Date: Fri, 16 Dec 2011 13:04:39 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 23 Dec 2011 10:17:11 -0500
+Received: by iaeh11 with SMTP id h11so15228020iae.19
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Dec 2011 07:17:11 -0800 (PST)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: b43-dev <b43-dev@lists.infradead.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] b43: Rearranging functions in phy_n.c
-References: <CACna6rxEyGbxq813UW8RvzaysCd0jCawYZ0G6eN7XiAQOykTig@mail.gmail.com>
-In-Reply-To: <CACna6rxEyGbxq813UW8RvzaysCd0jCawYZ0G6eN7XiAQOykTig@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1324586850-5212-1-git-send-email-hauke@hauke-m.de>
+References: <1324586850-5212-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Fri, 23 Dec 2011 07:16:50 -0800
+Message-ID: <CAB=NE6WwSpBMED9+TqmAAhufFxvLT=AVpfwWRUn=SB=ZWccLpg@mail.gmail.com> (sfid-20111223_161714_827735_ABC8B74B)
+Subject: Re: [PATCH 0/6] compat-wireless: various fixes
+To: Hauke Mehrtens <hauke@hauke-m.de>,
+	"Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/16/2011 12:55 PM, Rafał Miłecki wrote:
-> Hey,
->
-> The order of functions in phy_n.c is really messy. I wanted to collect
-> related functions, fix order (dependency) and name goups via comments.
->
-> Is there anything I should know? Patches are going to be huge, tons of
-> lines moved around the phy_n.c :(
->
-> Are there any objections against that? Any suggestions if I should
-> post one huge patch or few smaller ones?
+On Thu, Dec 22, 2011 at 12:47 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> This make compat-wireless apply against current linux-next and build
+> with kernel version from 2.6.27 to 3.2. This series just contains some
+> patches handing some recent changes in linux-next nothing special.
 
-Several smaller ones always help the reviewer. I would vote for that option.
+Thanks so much, applied and pushed!
 
-Larry
+In the future please provide a description of the patches added to
+patches/, I've added your description this time. This helps other
+driver writers who need such functionality understand why this is done
+but also sets a bar for adding patches into compat-wireless vs adding
+something to the generic compat module.
 
+  Luis
