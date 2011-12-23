@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:59797 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752314Ab1LUOyn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 09:54:43 -0500
-Received: by iaeh11 with SMTP id h11so11992230iae.19
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Dec 2011 06:54:42 -0800 (PST)
-Message-ID: <4EF1F32F.8070704@lwfinger.net> (sfid-20111221_155446_435803_33E23944)
-Date: Wed, 21 Dec 2011 08:54:39 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Darshan Kumar NANDANWAR <Darshan.KN@st.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: insmod RTL8192CE OOPS on 2.6.32.16
-References: <D6068D304DED1F4FBFC1F56ECFA211D85A1EA7BBF0@EAPEX1MAIL1.st.com>
-In-Reply-To: <D6068D304DED1F4FBFC1F56ECFA211D85A1EA7BBF0@EAPEX1MAIL1.st.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:20765 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753871Ab1LWHOW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 23 Dec 2011 02:14:22 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 10/10] iwlegacy: 3945: fix hw passive scan on radar channels
+Date: Fri, 23 Dec 2011 08:13:50 +0100
+Message-Id: <1324624430-3688-10-git-send-email-sgruszka@redhat.com> (sfid-20111223_081425_663088_444006C9)
+In-Reply-To: <1324624430-3688-1-git-send-email-sgruszka@redhat.com>
+References: <1324624430-3688-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/21/2011 06:06 AM, Darshan Kumar NANDANWAR wrote:
-> Larry ,
->
-> I am using RTL8192CE driver for 2.6.32.16 for one of the DTV soc(sh4 cpu) ..
-> Once I insert it , I get following oops... The same oops is reported by *John
-> Linville in https://bugzilla.kernel.org/show_bug.cgi?id=40212 . But
-> unfortunately , given link is down ; so I am unable to get into the the
-> discussion. Could you please give me the pointers why it’s happening so?*
->
-> Lspci is showing me correct vendor and product id which is : *0x10ec 0x8178*
+Patch fix firmware error on "iw dev wlan0 scan passive" for
+hardware scanning (with disable_hw_scan=0 module parameter).
 
-I added the linux-wireless ML to the Cc list so that others will see this thread.
+ iwl3945 0000:03:00.0: Microcode SW error detected. Restarting 0x82000008.
+ iwl3945 0000:03:00.0: Loaded firmware version: 15.32.2.9
+ iwl3945 0000:03:00.0: Start IWL Error Log Dump:
+ iwl3945 0000:03:00.0: Status: 0x0002A2E4, count: 1
+ iwl3945 0000:03:00.0: Desc       Time       asrtPC blink2 ilink1  nmiPC   Line
+ iwl3945 0000:03:00.0: SYSASSERT     (0x5) 0041263900 0x13756 0x0031C 0x00000 764
+ iwl3945 0000:03:00.0: Error Reply type 0x000002FC cmd C_SCAN (0x80) seq 0x443E ser 0x00340000
+ iwl3945 0000:03:00.0: Command C_SCAN failed: FW Error
+ iwl3945 0000:03:00.0: Can't stop Rx DMA.
 
-I do not remember the kernel bugzilla. Perhaps John does.
+We have disable ability to change passive scanning to active on
+particular channel when traffic is detected on that channel. Otherwise
+firmware will report error, when we try to do passive scan on radar
+channels.
 
-Are you using a recent version of compat-wireless? If not, please do.
+Reported-and-debugged-by: Pedro Francisco <pedrogfrancisco@gmail.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/3945-mac.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-I do not know anything about the sh4, but I will try to help.
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index c817975..54b2d39 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -2623,12 +2623,12 @@ il3945_request_scan(struct il_priv *il, struct ieee80211_vif *vif)
+ 	}
+ 
+ 	/*
+-	 * If active scaning is requested but a certain channel
+-	 * is marked passive, we can do active scanning if we
+-	 * detect transmissions.
++	 * If active scaning is requested but a certain channel is marked
++	 * passive, we can do active scanning if we detect transmissions. For
++	 * passive only scanning disable switching to active on any channel.
+ 	 */
+ 	scan->good_CRC_th =
+-	    is_active ? IL_GOOD_CRC_TH_DEFAULT : IL_GOOD_CRC_TH_DISABLED;
++	    is_active ? IL_GOOD_CRC_TH_DEFAULT : IL_GOOD_CRC_TH_NEVER;
+ 
+ 	len =
+ 	    il_fill_probe_req(il, (struct ieee80211_mgmt *)scan->data,
+-- 
+1.7.4.4
 
-The only rtl8192ce routine mentioned in the traceback is rtl92ce_module_init. I 
-see no indication that it got as far as the .probe routine, which is 
-rtl_pci_probe() in drivers/net/wireless/rtlwifi/pci.c. It might be useful to put 
-a printk() at the beginning of that routine to see if it is being reached. I 
-would also suggest that you modprobe the various components separately. First 
-rtlwifi, then rtl8192c_common, and finally rtl8192ce.
-
-Is the sh4 little- or big-endian? Not all the code has been tested on a BE machine.
-
-Larry
