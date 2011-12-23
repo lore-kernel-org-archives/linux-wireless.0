@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60391 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751584Ab1LBVIy (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:46124 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752558Ab1LWMXX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Dec 2011 16:08:54 -0500
-Subject: [PATCH] mac80211: fix retransmit
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 02 Dec 2011 22:08:52 +0100
-Message-ID: <1322860132.4124.10.camel@jlt3.sipsolutions.net> (sfid-20111202_220858_735478_5A88636E)
-Mime-Version: 1.0
+	Fri, 23 Dec 2011 07:23:23 -0500
+Received: by wgbdr13 with SMTP id dr13so17384114wgb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Dec 2011 04:23:22 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/3] notify driver about changes in station state
+Date: Fri, 23 Dec 2011 14:24:32 +0200
+Message-Id: <1324643075-29385-1-git-send-email-eliad@wizery.com> (sfid-20111223_132327_172217_163BD2AE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patchset is a sequel for Johannes' "station management rework"
+patchset. It adds a new sta_state callback, so low-level driver
+will be able to register for station state changes.
 
-This fixes another regression from my "pass all
-fragments to driver at once" patches -- if the
-packet is being retransmitted then we don't go
-through all handlers, but we still need to move
-it to the skbs list, otherwise we run into the
-first warning in __ieee80211_tx() and leak the
-skb.
+Note: I took the easy approach and added a specific sta_state() callback.
+If someone thinks it would be better to add a generic sta_changed()
+callback (and pass an additional "changed" mask), we can do it
+instead...
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tx.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Eliad Peller (3):
+  mac80211: check sta_apply_parameters() return value
+  mac80211: move sta_state into sta->sta
+  mac80211: add sta_state callback
 
---- a/net/mac80211/tx.c	2011-12-02 22:01:28.000000000 +0100
-+++ b/net/mac80211/tx.c	2011-12-02 22:05:54.000000000 +0100
-@@ -1326,8 +1326,11 @@ static int invoke_tx_handlers(struct iee
- 	if (!(tx->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL))
- 		CALL_TXH(ieee80211_tx_h_rate_ctrl);
- 
--	if (unlikely(info->flags & IEEE80211_TX_INTFL_RETRANSMISSION))
-+	if (unlikely(info->flags & IEEE80211_TX_INTFL_RETRANSMISSION)) {
-+		__skb_queue_tail(&tx->skbs, tx->skb);
-+		tx->skb = NULL;
- 		goto txh_done;
-+	}
- 
- 	CALL_TXH(ieee80211_tx_h_michael_mic_add);
- 	CALL_TXH(ieee80211_tx_h_sequence);
+ include/net/mac80211.h      |   17 +++++++++++++++++
+ net/mac80211/cfg.c          |    7 ++++++-
+ net/mac80211/driver-ops.h   |   17 +++++++++++++++++
+ net/mac80211/driver-trace.h |   28 ++++++++++++++++++++++++++++
+ net/mac80211/sta_info.c     |   26 ++++++++++++++++----------
+ net/mac80211/sta_info.h     |   11 -----------
+ 6 files changed, 84 insertions(+), 22 deletions(-)
 
+-- 
+1.7.6.401.g6a319
 
