@@ -1,61 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:11510 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751258Ab1LUOyR (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:63492 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754416Ab1LWVCG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 09:54:17 -0500
-Message-ID: <4EF1F313.1090304@qca.qualcomm.com> (sfid-20111221_155420_237729_D0D49061)
-Date: Wed, 21 Dec 2011 20:24:11 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Fri, 23 Dec 2011 16:02:06 -0500
+Received: by qcqz2 with SMTP id z2so5771870qcq.19
+        for <linux-wireless@vger.kernel.org>; Fri, 23 Dec 2011 13:02:05 -0800 (PST)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] mac80211: fix scan state machine
-References: <1324479072-8242-1-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1324479072-8242-1-git-send-email-mohammed@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Date: Sat, 24 Dec 2011 02:02:05 +0500
+Message-ID: <CADiUXRwb+ktGmyuMxMcXhZkpbhy=kAkOJcTLpJYRcaFFSRMnMg@mail.gmail.com> (sfid-20111223_220211_850241_85F31750)
+Subject: Fedora 16 Wireless Connection Problem
+From: mammar <mammar@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 21 December 2011 08:21 PM, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->
-> when we run high bandwidth UDP traffic and we trigger a scan, the scan
-> state machine seems to be looping in SUSPEND->RESUME->DECISION->SUSPEND
-> and SET_CHANNEL seems to be never called as 'tx_empty' is never true
-> while running UDP traffic. fix this by settting SET_CHANNEL state when
-> we get into RESUME state.
+I have Dell Inpiron N5010 with Broadcom Corporation BCM4313
+802.11b/g/n Wireless LAN Controller.
 
-Hi johannes,
+My OS is Fedora 16 64-bit. I have installed the following drivers for
+my wireless controller, everything is working great until yesterday.
+Now whenever i try to connect to wirless connection, it failed.
 
-i am not completely familiar with the scan state machine. used some 
-previous before some of your latest changes in scan state machine and
-found this might help. please let me know if this does not helps 
-something. thank you!
+http://download1.rpmfusion.org/nonfree/fedora/releases/16/Everything/x86_64/os/repoview/broadcom-wl.html
 
->
-> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
-> ---
->   net/mac80211/scan.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-> index 2c5041c..2908e56 100644
-> --- a/net/mac80211/scan.c
-> +++ b/net/mac80211/scan.c
-> @@ -625,7 +625,7 @@ static void ieee80211_scan_state_resume(struct ieee80211_local *local,
->   	local->leave_oper_channel_time = jiffies;
->
->   	/* advance to the next channel to be scanned */
-> -	local->next_scan_state = SCAN_DECISION;
-> +	local->next_scan_state = SCAN_SET_CHANNEL;
->   }
->
->   void ieee80211_scan_work(struct work_struct *work)
+I haven't installed anything that can cause this problem.
 
+Following are log messages from /var/log/messages when i try to
+connect to connection. I have double checked connection settings and
+everything is correct.
 
--- 
-thanks,
-shafi
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Activation
+(eth1) starting connection 'Auto Communication Gallery'
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> (eth1): device
+state change: disconnected -> prepare (reason 'none') [30 40 0]
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> Activation (eth1) starting connection 'Auto Communication
+Gallery'
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> (eth1): device state change: disconnected -> prepare (reason
+'none') [30 40 0]
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Activation
+(eth1) Stage 1 of 5 (Device Prepare) scheduled...
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> Activation (eth1) Stage 1 of 5 (Device Prepare) scheduled...
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Activation
+(eth1) Stage 1 of 5 (Device Prepare) started...
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> Activation (eth1) Stage 1 of 5 (Device Prepare) started...
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Activation
+(eth1) Stage 2 of 5 (Device Configure) scheduled...
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Activation
+(eth1) Stage 1 of 5 (Device Prepare) complete.
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> Activation (eth1) Stage 2 of 5 (Device Configure) scheduled...
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> Activation (eth1) Stage 1 of 5 (Device Prepare) complete.
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Activation
+(eth1) Stage 2 of 5 (Device Configure) starting...
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> Activation (eth1) Stage 2 of 5 (Device Configure) starting...
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> (eth1): device
+state change: prepare -> config (reason 'none') [40 50 0]
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> (eth1): device state change: prepare -> config (reason 'none')
+[40 50 0]
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Activation
+(eth1/wireless): connection 'Auto Communication Gallery' has security,
+and secrets exist. No new secrets needed.
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> Activation (eth1/wireless): connection 'Auto Communication
+Gallery' has security, and secrets exist. No new secrets needed.
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Config: added
+'ssid' value 'Communication Gallery'
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> Config: added 'ssid' value 'Communication Gallery'
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Config: added
+'scan_ssid' value '1'
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Config: added
+'key_mgmt' value 'NONE'
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Config: added
+'wep_key0' value '<omitted>'
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Config: added
+'wep_tx_keyidx' value '0'
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Activation
+(eth1) Stage 2 of 5 (Device Configure) complete.
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> Config: added 'scan_ssid' value '1'
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> Config: added 'key_mgmt' value 'NONE'
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> Config: added 'wep_key0' value '<omitted>'
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> Config: added 'wep_tx_keyidx' value '0'
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> Activation (eth1) Stage 2 of 5 (Device Configure) complete.
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Config: set
+interface ap_scan to 1
+Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> Config: set interface ap_scan to 1
+Dec 24 00:46:16 ma-laptop NetworkManager[1039]: <info> (eth1):
+supplicant interface state: inactive -> scanning
+Dec 24 00:46:16 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> (eth1): supplicant interface state: inactive -> scanning
+Dec 24 00:46:41 ma-laptop NetworkManager[1039]: <warn> Activation
+(eth1/wireless): association took too long.
+Dec 24 00:46:41 ma-laptop NetworkManager[1039]: <info> (eth1): device
+state change: config -> need-auth (reason 'none') [50 60 0]
+Dec 24 00:46:41 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<warn> Activation (eth1/wireless): association took too long.
+Dec 24 00:46:41 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> (eth1): device state change: config -> need-auth (reason
+'none') [50 60 0]
+Dec 24 00:46:41 ma-laptop NetworkManager[1039]: <warn> Activation
+(eth1/wireless): asking for new secrets
+Dec 24 00:46:41 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<warn> Activation (eth1/wireless): asking for new secrets
+Dec 24 00:46:41 ma-laptop NetworkManager[1039]: <warn> Couldn't
+disconnect supplicant interface: This interface is not connected.
+Dec 24 00:46:41 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<warn> Couldn't disconnect supplicant interface: This interface is not
+connected.
+Dec 24 00:46:41 ma-laptop NetworkManager[1039]: <warn> Couldn't
+disconnect supplicant interface: This interface is not connected.
+Dec 24 00:46:41 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<warn> Couldn't disconnect supplicant interface: This interface is not
+connected.
+Dec 24 00:46:43 ma-laptop NetworkManager[1039]: <info> (eth1):
+supplicant interface state: scanning -> inactive
+Dec 24 00:46:43 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
+<info> (eth1): supplicant interface state: scanning -> inactive
+Dec 24 00:46:52 ma-laptop NetworkManager[1039]: <warn> No agents were
+available for this request.
+
+Can anyone help me?
+
+Thanks
