@@ -1,128 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:42241 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752300Ab1LSOPF (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:56528 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753745Ab1LWM74 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 09:15:05 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: [PATCH 2/2] iw: remove ifdefs for mcs mask
-Date: Mon, 19 Dec 2011 15:14:59 +0100
-Message-Id: <1324304099-18327-5-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20111219_151519_840326_C003CC4C)
-In-Reply-To: <1324304099-18327-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1324304099-18327-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Fri, 23 Dec 2011 07:59:56 -0500
+Message-ID: <4EF47B44.8050601@qca.qualcomm.com> (sfid-20111223_140000_217080_74FD3076)
+Date: Fri, 23 Dec 2011 14:59:48 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/2] ath6kl: firmware API 3 support
+References: <20111216185200.18442.29650.stgit@localhost6.localdomain6>
+In-Reply-To: <20111216185200.18442.29650.stgit@localhost6.localdomain6>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are enums, not defines. Therefore the ifdef check can never be
-true.
+On 12/16/2011 08:53 PM, Kalle Valo wrote:
+> First some refactoring to make it easier to extend the firmware handling
+> and then a patch adding support for firmware API 3.
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- bitrate.c |   20 ++------------------
- 1 files changed, 2 insertions(+), 18 deletions(-)
+Both patches applied.
 
-diff --git a/bitrate.c b/bitrate.c
-index cefd150..22b863e 100644
---- a/bitrate.c
-+++ b/bitrate.c
-@@ -17,12 +17,10 @@ static int handle_bitrates(struct nl80211_state *state,
- 	uint8_t *legacy = NULL;
- 	int *n_legacy = NULL;
- 	bool have_mcs_24 = false, have_mcs_5 = false;
--#ifdef NL80211_TXRATE_MCS
- 	uint8_t mcs_24[77], mcs_5[77];
- 	int n_mcs_24 = 0, n_mcs_5 = 0;
- 	uint8_t *mcs = NULL;
- 	int *n_mcs = NULL;
--#endif
- 	enum {
- 		S_NONE,
- 		S_LEGACY,
-@@ -32,9 +30,7 @@ static int handle_bitrates(struct nl80211_state *state,
- 	for (i = 0; i < argc; i++) {
- 		char *end;
- 		double tmpd;
--#ifdef NL80211_TXRATE_MCS
- 		long tmpl;
--#endif
- 
- 		if (strcmp(argv[i], "legacy-2.4") == 0) {
- 			if (have_legacy_24)
-@@ -51,7 +47,6 @@ static int handle_bitrates(struct nl80211_state *state,
- 			n_legacy = &n_legacy_5;
- 			have_legacy_5 = true;
- 		}
--#ifdef NL80211_TXRATE_MCS
- 		else if (strcmp(argv[i], "mcs-2.4") == 0) {
- 			if (have_mcs_24)
- 				return 1;
-@@ -67,7 +62,6 @@ static int handle_bitrates(struct nl80211_state *state,
- 			n_mcs = &n_mcs_5;
- 			have_mcs_5 = true;
- 		}
--#endif
- 		else switch (parser_state) {
- 		case S_LEGACY:
- 			tmpd = strtod(argv[i], &end);
-@@ -78,7 +72,6 @@ static int handle_bitrates(struct nl80211_state *state,
- 			legacy[(*n_legacy)++] = tmpd * 2;
- 			break;
- 		case S_MCS:
--#ifdef NL80211_TXRATE_MCS
- 			tmpl = strtol(argv[i], &end, 0);
- 			if (*end != '\0')
- 				return 1;
-@@ -86,7 +79,6 @@ static int handle_bitrates(struct nl80211_state *state,
- 				return 1;
- 			mcs[(*n_mcs)++] = tmpl;
- 			break;
--#endif
- 		default:
- 			return 1;
- 		}
-@@ -102,10 +94,8 @@ static int handle_bitrates(struct nl80211_state *state,
- 			goto nla_put_failure;
- 		if (have_legacy_24)
- 			nla_put(msg, NL80211_TXRATE_LEGACY, n_legacy_24, legacy_24);
--#ifdef NL80211_TXRATE_MCS
- 		if (have_mcs_24)
- 			nla_put(msg, NL80211_TXRATE_MCS, n_mcs_24, mcs_24);
--#endif
- 		nla_nest_end(msg, nl_band);
- 	}
- 
-@@ -115,10 +105,8 @@ static int handle_bitrates(struct nl80211_state *state,
- 			goto nla_put_failure;
- 		if (have_legacy_5)
- 			nla_put(msg, NL80211_TXRATE_LEGACY, n_legacy_5, legacy_5);
--#ifdef NL80211_TXRATE_MCS
- 		if (have_mcs_5)
- 			nla_put(msg, NL80211_TXRATE_MCS, n_mcs_5, mcs_5);
--#endif
- 		nla_nest_end(msg, nl_band);
- 	}
- 
-@@ -130,13 +118,9 @@ static int handle_bitrates(struct nl80211_state *state,
- }
- 
- #define DESCR_LEGACY "[legacy-<2.4|5> <legacy rate in Mbps>*]"
--#ifdef NL80211_TXRATE_MCS
- #define DESCR DESCR_LEGACY " [mcs-<2.4|5> <MCS index>*]"
--#else
--#define DESCR DESCR_LEGACY
--#endif
- 
--COMMAND(set, bitrates, DESCR, NL80211_CMD_SET_TX_BITRATE_MASK, 0, CIB_NETDEV,
--	handle_bitrates,
-+COMMAND(set, bitrates, "[legacy-<2.4|5> <legacy rate in Mbps>*] [mcs-<2.4|5> <MCS index>*]",
-+	NL80211_CMD_SET_TX_BITRATE_MASK, 0, CIB_NETDEV, handle_bitrates,
- 	"Sets up the specified rate masks.\n"
- 	"Not passing any arguments would clear the existing mask (if any).");
--- 
-1.7.7.3
-
+Kalle
