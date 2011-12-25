@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45736 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751517Ab1LUPKt (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:63183 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753486Ab1LYQ6s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 10:10:49 -0500
-Subject: Re: [PATCH v2 0/2] report stop sched scan when actually done
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eyal Shapira <eyal@wizery.com>
-Cc: linux-wireless@vger.kernel.org, Luciano Coelho <coelho@ti.com>
-In-Reply-To: <1324462262-10277-1-git-send-email-eyal@wizery.com> (sfid-20111221_111141_897967_3E904A2C)
-References: <1324462262-10277-1-git-send-email-eyal@wizery.com>
-	 (sfid-20111221_111141_897967_3E904A2C)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 21 Dec 2011 16:10:44 +0100
-Message-ID: <1324480244.3401.6.camel@jlt3.sipsolutions.net> (sfid-20111221_161052_039864_FE40B7C5)
-Mime-Version: 1.0
+	Sun, 25 Dec 2011 11:58:48 -0500
+Received: by eekc4 with SMTP id c4so10631378eek.19
+        for <linux-wireless@vger.kernel.org>; Sun, 25 Dec 2011 08:58:46 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: Re: [RFC] mac80211: use rcu_read_lock before sta_info_get
+Date: Sun, 25 Dec 2011 17:58:40 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>, pstew@chromium.org,
+	linux-wireless@vger.kernel.org
+References: <1324825752-8186-1-git-send-email-mohammed@qca.qualcomm.com>
+In-Reply-To: <1324825752-8186-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201112251758.41131.chunkeey@googlemail.com> (sfid-20111225_175859_572785_9FD42B00)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2011-12-21 at 12:11 +0200, Eyal Shapira wrote:
-> Changes in mac/cfg80211 to notify userspace
-> of NL80211_CMD_SCHED_SCAN_STOPPED only when the driver
-> actually reported back that it was stopped. Also
-> blocks other attempts until we're really done.
-> 
-> This fixes a scenario where stop sched scan
-> is issued and immediately afterwards a new sched scan
-> is requested (e.g. with other parameters).
-> Current state caused a race where the driver started
-> stopping the sched scan but didn't finish and got
-> another sched scan request which it couldn't handle.
+On Sunday 25 December 2011 16:09:12 Mohammed Shafi Shajakhan wrote:
+> @@ -1385,7 +1385,9 @@ void ieee80211_beacon_connection_loss_work(struct work_struct *work)
+>  	struct sta_info *sta;
+>  
+>  	if (ifmgd->associated) {
+> +		rcu_read_lock();
+>  		sta = sta_info_get(sdata, ifmgd->bssid);
+> +		rcu_read_unlock();
+>  		if (sta)
+>  			sta->beacon_loss_count++;
+>  	}
 
-Luca really needs to take a close look at this, and I think you should
-also take a look to see if this kind of API change can be avoided.
+uh, I think it should be:
 
-johannes
+> +		rcu_read_lock();
+>  		sta = sta_info_get(sdata, ifmgd->bssid);
+>  		if (sta)
+>  			sta->beacon_loss_count++;
+> +		rcu_read_unlock();
 
+Since we update a member of the rcu-protected "sta"
+reference.
+
+Regards,
+	Chr
