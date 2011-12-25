@@ -1,38 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:63053 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755974Ab1LPIpe convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:63478 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751020Ab1LYXhB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 03:45:34 -0500
+	Sun, 25 Dec 2011 18:37:01 -0500
 MIME-Version: 1.0
-Date: Fri, 16 Dec 2011 09:45:33 +0100
-Message-ID: <CAGXE3d_ouo4KzQA0-ysLz_RwcqoTc5Sg4V6BZZJP0TJewzNOxw@mail.gmail.com> (sfid-20111216_094542_791952_1F5DC9F2)
-Subject: skb->priority usage in wireless frame classification
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: netdev@vger.kernel.org
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CACna6rz3qDpw4eJOoCXx7=z1719v7kS-Ou-WUseR9_vB-O2dag@mail.gmail.com>
+References: <20111215191523.GA2561@tuxdriver.com>
+	<CACna6rw736JdkoM8zKxorCFd5oy08QTwWZ6PutoJPSr3ZN8hTg@mail.gmail.com>
+	<20111215213822.GB2561@tuxdriver.com>
+	<CACna6rz3qDpw4eJOoCXx7=z1719v7kS-Ou-WUseR9_vB-O2dag@mail.gmail.com>
+Date: Mon, 26 Dec 2011 00:36:59 +0100
+Message-ID: <CACna6rxO2dC=Y3nv-d-w89MqyM0j0aumk=r5Yh_KEg=MwOcvEQ@mail.gmail.com> (sfid-20111226_003807_255665_876FA800)
+Subject: Re: pull request: wireless 2011-12-15
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Greg KH <greg@kroah.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[Adding netdev]
+W dniu 16 grudnia 2011 07:40 u≈ºytkownik Rafa≈Ç Mi≈Çecki
+<zajec5@gmail.com> napisa≈Ç:
+> W dniu 15 grudnia 2011 22:38 u≈ºytkownik John W. Linville
+> <linville@tuxdriver.com> napisa≈Ç:
+>> On Thu, Dec 15, 2011 at 09:04:29PM +0100, Rafa≈Ç Mi≈Çecki wrote:
+>>> 2011/12/15 John W. Linville <linville@tuxdriver.com>:
+>>> > commit 42a3b63bb2ca4996a3d1210a004eae2333f1119e
+>>> >
+>>> > Dave,
+>>> >
+>>> > Here are a few more fixes intended for the 3.2 release. ¬†They are
+>>> > all small and narrowly focused.
+>>>
+>>> John, I've made a mistake and didn't use [PATCH 3.2] header to make it
+>>> clean my patch is fix. Could you take a look at
+>>> [PATCH] bcma: support for suspend and resume
+>>> please?
+>>>
+>>> It's not one-liner, but fixes lock ups, which I believe - we really
+>>> want to avoid.
+>>
+>> It's late in the release cycle, and Dave specifically asked me to slow down.
+>>
+>> Are these suspend/resume lockups a regression? ¬†Or have they always
+>> been there? ¬†Do they happen to everyone?
+>
+> The bug is present since first days of bcma. That's why I even decided
+> to add stable to CC.
+>
+> Personally I've tested that only on 1 machine (I don't have more
+> suspendable machines with mini PCIe slot). However all Macbook 8.1/8.2
+> users have to remove b43 & bcma before suspending [0], they complain
+> about that since ever.
+>
+> Arend: I know you're also complaining for suspend in bcma. Can you
+> comment on this?
+>
+> [0] http://ubuntuforums.org/showthread.php?t=1695746
 
-Maybe someone from the netdev people can shed some light on this.
-We've got the following code in net/wireless/util.c for frame classification
-(cfg80211_classify8021d):
+User nephyrin on #bcm-users has confirmed this patch fixes
+suspend&resume for him. Without this patch he got deadlock without
+seeing any kernel panic logs - quite an ugly case.
 
-/* skb->priority values from 256->263 are magic values to
-* directly indicate a specific 802.1d priority. †This is used
-* to allow 802.1d priority to be passed directly in from VLAN
-* tags, etc.
-*/
-if (skb->priority >= 256 && skb->priority <= 263)
- † † † † † † † † return skb->priority - 256;
+I still think this patch may be worth taking as fix and backporting too.
 
-I was just thinking about making use of this for some internal mac80211
-QoS handling. But is this code still valid? At least I haven't found anything
-in the 802.1q code :(
-
-Thanks,
-Helmut
+-- 
+Rafa≈Ç
