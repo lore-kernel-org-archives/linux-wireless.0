@@ -1,34 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:51652 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755021Ab1LOIyX (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5046 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752114Ab1LYPGn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 03:54:23 -0500
-Received: by mail-lpp01m010-f47.google.com with SMTP id i14so838213lam.6
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 00:54:22 -0800 (PST)
-Subject: Re: [PATCH] wl12xx: remove deprecated packet detection threshold
- config
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <1323783954-26402-1-git-send-email-coelho@ti.com>
-References: <1323783954-26402-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 15 Dec 2011 10:54:17 +0200
-Message-ID: <1323939257.2800.181.camel@cumari> (sfid-20111215_095425_432034_30CAAFDA)
-Mime-Version: 1.0
+	Sun, 25 Dec 2011 10:06:43 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [RFC] mac80211: use rcu_read_lock before sta_info_get
+Date: Sun, 25 Dec 2011 20:36:31 +0530
+Message-ID: <1324825591-8088-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111225_160702_587611_B50E8538)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-12-13 at 15:45 +0200, Luciano Coelho wrote: 
-> The ACX_PD_THRESHOLD configuration command is deprecated and should
-> not be used anymore.
-> 
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Applied.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ net/mac80211/mlme.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 57989a0..c8a1acc 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1385,7 +1385,9 @@ void ieee80211_beacon_connection_loss_work(struct work_struct *work)
+ 	struct sta_info *sta;
+ 
+ 	if (ifmgd->associated) {
++		rcu_read_lock();
+ 		sta = sta_info_get(sdata, ifmgd->bssid);
++		rcu_read_unlock();
+ 		if (sta)
+ 			sta->beacon_loss_count++;
+ 	}
 -- 
-Cheers,
-Luca.
+1.7.0.4
 
