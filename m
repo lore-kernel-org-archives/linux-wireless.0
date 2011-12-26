@@ -1,116 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1522 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760976Ab1LQChg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 21:37:36 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 13/30] brcm80211: fmac: move maxctl to struct brcmf_bus
-Date: Fri, 16 Dec 2011 18:37:03 -0800
-Message-ID: <1324089440-8957-14-git-send-email-frankyl@broadcom.com> (sfid-20111217_035945_543160_1C0EB194)
-In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
-References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:51273 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751197Ab1LZRTX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 26 Dec 2011 12:19:23 -0500
+Message-ID: <4EF8AC83.9040705@lwfinger.net> (sfid-20111226_181937_804875_E74EF2FB)
+Date: Mon, 26 Dec 2011 11:18:59 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+CC: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] b43: support new RX header, noticed to be used in 598.314+
+ fw
+References: <alpine.DEB.2.00.1112261608140.12108@axis700.grange>
+In-Reply-To: <alpine.DEB.2.00.1112261608140.12108@axis700.grange>
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-maxctl is the max size of rxctl request from protocol layer to bus
-layer. Move it to bus interface structure brcmf_bus. This is part
-of the fullmac bus interface refactoring.
+On 12/26/2011 09:29 AM, Guennadi Liakhovetski wrote:
+> Hi
+>
+> Sorry for "simulating" a reply - I'm not subscribed to linux-wireless, so,
+> cannot (easily) reply.
+>
+> The commit in subject line
+>
+> commit 17030f48e31adde5b043741c91ba143f5f7db0fd
+> From: Rafa³ Mi³ecki<zajec5@gmail.com>
+> Date: Thu, 11 Aug 2011 17:16:27 +0200
+> Subject: [PATCH] b43: support new RX header, noticed to be used in 598.314+ fw
+>
+> breaks my b43 SDIO card in 3.2-ish kernels. Given the approaching
+> 3.2-final release, would be nice to have it fixed before that. The card
+> I've got is marked with some "SD-Link11g" from some "C-guys, Inc." from
+> Taiwan:-) Using firmware version 410.31754. Do I really _have_ to update
+> or is the driver supposed to handle "all" firmware versions, or at least
+> not drop ones, it used to support before?
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c  |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   14 +++++++-------
- 3 files changed, 9 insertions(+), 9 deletions(-)
+The only cards that *need* to use the new-style firmware are those for which 
+firmware does not exist in the older versions. As this is not the case for your 
+device, something else is wrong.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index bfd26e3..db30f02 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -576,6 +576,7 @@ struct brcmf_bus {
- 	void *bus_priv;		/* pointer to bus private structure */
- 	void *drvr;		/* pointer to driver pub structure brcmf_pub */
- 	enum brcmf_bus_state state;
-+	uint maxctl;		/* Max size rxctl request from proto to bus */
- };
- 
- /* Forward decls for struct brcmf_pub (see below) */
-@@ -596,7 +597,6 @@ struct brcmf_pub {
- 	bool up;		/* Driver up/down (to OS) */
- 	bool txoff;		/* Transmit flow-controlled */
- 	uint hdrlen;		/* Total BRCMF header length (proto + bus) */
--	uint maxctl;		/* Max size rxctl request from proto to bus */
- 	uint rxsz;		/* Rx buffer size bus module should use */
- 	u8 wme_dp;		/* wme discard priority */
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-index 3f0b316..774aeac 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c
-@@ -437,7 +437,7 @@ int brcmf_proto_attach(struct brcmf_pub *drvr)
- 
- 	drvr->prot = cdc;
- 	drvr->hdrlen += BDC_HEADER_LEN;
--	drvr->maxctl = BRCMF_DCMD_MAXLEN +
-+	drvr->bus_if->maxctl = BRCMF_DCMD_MAXLEN +
- 			sizeof(struct brcmf_proto_cdc_dcmd) + ROUND_UP_MARGIN;
- 	return 0;
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 5fb0d90..cc2c653 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -1534,7 +1534,7 @@ brcmf_sdbrcm_read_control(struct brcmf_sdio *bus, u8 *hdr, uint len, uint doff)
- 	if (bus->roundup && bus->blocksize && (rdlen > bus->blocksize)) {
- 		pad = bus->blocksize - (rdlen % bus->blocksize);
- 		if ((pad <= bus->roundup) && (pad < bus->blocksize) &&
--		    ((len + pad) < bus->drvr->maxctl))
-+		    ((len + pad) < bus->sdiodev->bus_if->maxctl))
- 			rdlen += pad;
- 	} else if (rdlen % BRCMF_SDALIGN) {
- 		rdlen += BRCMF_SDALIGN - (rdlen % BRCMF_SDALIGN);
-@@ -1545,17 +1545,17 @@ brcmf_sdbrcm_read_control(struct brcmf_sdio *bus, u8 *hdr, uint len, uint doff)
- 		rdlen = roundup(rdlen, ALIGNMENT);
- 
- 	/* Drop if the read is too big or it exceeds our maximum */
--	if ((rdlen + BRCMF_FIRSTREAD) > bus->drvr->maxctl) {
-+	if ((rdlen + BRCMF_FIRSTREAD) > bus->sdiodev->bus_if->maxctl) {
- 		brcmf_dbg(ERROR, "%d-byte control read exceeds %d-byte buffer\n",
--			  rdlen, bus->drvr->maxctl);
-+			  rdlen, bus->sdiodev->bus_if->maxctl);
- 		bus->drvr->rx_errors++;
- 		brcmf_sdbrcm_rxfail(bus, false, false);
- 		goto done;
- 	}
- 
--	if ((len - doff) > bus->drvr->maxctl) {
-+	if ((len - doff) > bus->sdiodev->bus_if->maxctl) {
- 		brcmf_dbg(ERROR, "%d-byte ctl frame (%d-byte ctl data) exceeds %d-byte limit\n",
--			  len, len - doff, bus->drvr->maxctl);
-+			  len, len - doff, bus->sdiodev->bus_if->maxctl);
- 		bus->drvr->rx_errors++;
- 		bus->rx_toolong++;
- 		brcmf_sdbrcm_rxfail(bus, false, false);
-@@ -3666,9 +3666,9 @@ static bool brcmf_sdbrcm_probe_malloc(struct brcmf_sdio *bus)
- {
- 	brcmf_dbg(TRACE, "Enter\n");
- 
--	if (bus->drvr->maxctl) {
-+	if (bus->sdiodev->bus_if->maxctl) {
- 		bus->rxblen =
--		    roundup((bus->drvr->maxctl + SDPCM_HDRLEN),
-+		    roundup((bus->sdiodev->bus_if->maxctl + SDPCM_HDRLEN),
- 			    ALIGNMENT) + BRCMF_SDALIGN;
- 		bus->rxbuf = kmalloc(bus->rxblen, GFP_ATOMIC);
- 		if (!(bus->rxbuf))
--- 
-1.7.5.4
+Please post the details for your card. If you had a PCI system, I would ask for 
+'lspci -n'. Please do the same for the SDIO card.
 
+ From your message, it appears that 3.1 works OK. If that is true, would it be 
+possible for you to bisect this problem?
 
+Larry
