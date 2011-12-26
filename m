@@ -1,18 +1,19 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18989 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751621Ab1LVPZ0 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:54689 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751476Ab1LZG7r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Dec 2011 10:25:26 -0500
+	Mon, 26 Dec 2011 01:59:47 -0500
 From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 To: "John W. Linville" <linville@tuxdriver.com>,
 	Johannes Berg <johannes@sipsolutions.net>
-CC: Helmut Schaa <helmut.schaa@googlemail.com>,
-	<linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH] mac80211: fix scan state machine
-Date: Thu, 22 Dec 2011 20:52:30 +0530
-Message-ID: <1324567350-8397-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111222_162529_980031_35888CA7)
+CC: <linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Paul Stewart <pstew@google.com>,
+	Christian Lamparter <chunkeey@googlemail.com>
+Subject: [PATCH] mac80211: use RCU read locks for sta_info_get
+Date: Mon, 26 Dec 2011 12:29:38 +0530
+Message-ID: <1324882778-3079-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111226_075951_809337_16E46358)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -20,30 +21,29 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-when we run high bandwidth UDP traffic and we trigger a scan, the scan
-state machine seems to be looping in SUSPEND->RESUME->DECISION->SUSPEND
-and SET_CHANNEL seems to be never called as 'tx_empty' is never true
-while running UDP traffic. fix this by settting SET_CHANNEL state when
-we get into RESUME state.
-
+Cc: Paul Stewart <pstew@google.com>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
 Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- net/mac80211/scan.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ net/mac80211/mlme.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 2c5041c..2908e56 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -625,7 +625,7 @@ static void ieee80211_scan_state_resume(struct ieee80211_local *local,
- 	local->leave_oper_channel_time = jiffies;
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 57989a0..ecb4c84 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1385,9 +1385,11 @@ void ieee80211_beacon_connection_loss_work(struct work_struct *work)
+ 	struct sta_info *sta;
  
- 	/* advance to the next channel to be scanned */
--	local->next_scan_state = SCAN_DECISION;
-+	local->next_scan_state = SCAN_SET_CHANNEL;
- }
+ 	if (ifmgd->associated) {
++		rcu_read_lock();
+ 		sta = sta_info_get(sdata, ifmgd->bssid);
+ 		if (sta)
+ 			sta->beacon_loss_count++;
++		rcu_read_unlock();
+ 	}
  
- void ieee80211_scan_work(struct work_struct *work)
+ 	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
 -- 
 1.7.0.4
 
