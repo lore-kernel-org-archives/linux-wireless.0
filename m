@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:37770 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901Ab1LSQMC (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:55923 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755371Ab1LZNH5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 11:12:02 -0500
-Received: by yhr47 with SMTP id 47so4110383yhr.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 08:12:01 -0800 (PST)
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>
-Subject: [PATCH] ath9k: classify DFS debug header further
-Date: Mon, 19 Dec 2011 08:11:54 -0800
-Message-Id: <1324311114-4566-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20111219_171206_942643_13CE2CD9)
+	Mon, 26 Dec 2011 08:07:57 -0500
+Message-ID: <4EF87199.2050207@qca.qualcomm.com> (sfid-20111226_140818_858443_8FF587B6)
+Date: Mon, 26 Dec 2011 18:37:37 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>, Paul Stewart <pstew@google.com>
+Subject: Re: [PATCH] mac80211: use RCU read locks for sta_info_get
+References: <1324882778-3079-1-git-send-email-mohammed@qca.qualcomm.com> <201112261151.05309.chunkeey@googlemail.com>
+In-Reply-To: <201112261151.05309.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="ISO-8859-15"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+hi Christian,
 
-DFS_DEBUG_H is very generic, instead use something more specific
-to ath9k such as ATH9K_DFS_DEBUG_H.
+On Monday 26 December 2011 04:21 PM, Christian Lamparter wrote:
+> On Monday 26 December 2011 07:59:38 Mohammed Shafi Shajakhan wrote:
+>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>>
+>> Cc: Paul Stewart<pstew@google.com>
+>> Signed-off-by: Christian Lamparter<chunkeey@googlemail.com>
+> huh, where did I sign that off? Anyway, You [or John?] can drop that line
+> and replace it with Cc: stable@kernel.org
 
-Reported-by: Julian Calaby <julian.calaby@gmail.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/dfs_debug.h |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+i will send a proper v2 and this is being recently added by the commit 
+a85e1d55974646a442d95911e3f7d7a891ea9ac5, i will properly mention it 
+also. thank you
 
-diff --git a/drivers/net/wireless/ath/ath9k/dfs_debug.h b/drivers/net/wireless/ath/ath9k/dfs_debug.h
-index 6e1e2a7..4911724 100644
---- a/drivers/net/wireless/ath/ath9k/dfs_debug.h
-+++ b/drivers/net/wireless/ath/ath9k/dfs_debug.h
-@@ -16,8 +16,8 @@
-  */
- 
- 
--#ifndef DFS_DEBUG_H
--#define DFS_DEBUG_H
-+#ifndef ATH9K_DFS_DEBUG_H
-+#define ATH9K_DFS_DEBUG_H
- 
- #include "hw.h"
- 
-@@ -54,4 +54,4 @@ static inline void ath9k_dfs_init_debug(struct ath_softc *sc) { }
- 
- #endif /* CONFIG_ATH9K_DFS_DEBUGFS */
- 
--#endif /* DFS_DEBUG_H */
-+#endif /* ATH9K_DFS_DEBUG_H */
--- 
-1.7.4.15.g7811d
+
+>
+> Regards,
+> 	Chr
 
