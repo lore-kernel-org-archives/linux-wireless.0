@@ -1,56 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:33444 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751142Ab1LHXLg convert rfc822-to-8bit (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.186]:54353 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751345Ab1LZSRG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 18:11:36 -0500
-MIME-Version: 1.0
-In-Reply-To: <20111209085740.a23a0295a5ea15ab51169f3c@canb.auug.org.au>
-References: <CAB=NE6XDHL8mexe49TSoug3COh11RAvVY339Ntj0MJdw96wO1w@mail.gmail.com>
- <20111209085740.a23a0295a5ea15ab51169f3c@canb.auug.org.au>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 8 Dec 2011 15:11:15 -0800
-Message-ID: <CAB=NE6X4rgcHWUwn0fRkurf2Y5ci=eERQkNiN=UrPakECYKNdw@mail.gmail.com> (sfid-20111209_001154_453387_61CA2550)
-Subject: Re: linux-next base Linus tag
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Dani Keerikoolparn <danik@qca.qualcomm.com>,
-	"Hoefel, Guilherme" <hoefel@qualcomm.com>,
+	Mon, 26 Dec 2011 13:17:06 -0500
+Date: Mon, 26 Dec 2011 19:17:02 +0100 (CET)
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+cc: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
 	linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: [PATCH] b43: fix regression in PIO case
+In-Reply-To: <4EF8B42C.2020402@lwfinger.net>
+Message-ID: <alpine.DEB.2.00.1112261909550.12108@axis700.grange> (sfid-20111226_191751_702773_322DEF6E)
+References: <alpine.DEB.2.00.1112261608140.12108@axis700.grange> <alpine.DEB.2.00.1112261824000.12108@axis700.grange> <4EF8B42C.2020402@lwfinger.net>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 8, 2011 at 1:57 PM, Stephen Rothwell <sfr@canb.auug.org.au> wrote:
-> Hi Luis,
->
-> On Thu, 8 Dec 2011 13:39:16 -0800 "Luis R. Rodriguez" <mcgrof@frijolero.org> wrote:
->>
->> If I know a linux-next tag, say next-20110928, how can I extract the
->> Linus tag you used to start that set of merges for linux-next for?
->> That is, I am assuming you base your daily linux-next merges on that
->> day's latest Linus's rc cycle (not just Linus's master tag of that
->> day). Is that right? If so how can I get that tag?
->
-> In each linux-next, there is a file called Next/SHA1s, and in there is a
-> SHA1 for "origin" - that is the point in Linus' tree that I started for
-> that day. Â I just use the latest available version of Linus' tree each
-> day.
->
->> For example for next-20110928 I see in Next/quilt-import.log:
->
-> For the quilt series, the owner of the series puts a BASE or NEXT_BASE
-> comment in the series to tell me what their series is based on. Â I import
-> each quilt series staring from that base into a branch and then merge
-> that branch.
->
-> For the git trees, I just fetch and merge them.
+On Mon, 26 Dec 2011, Larry Finger wrote:
 
-Thanks for all the details!
+> On 12/26/2011 11:28 AM, Guennadi Liakhovetski wrote:
+> > This patch fixes the regression, introduced by
+> > 
+> > commit 17030f48e31adde5b043741c91ba143f5f7db0fd
+> > From: Rafa³ Mi³ecki<zajec5@gmail.com>
+> > Date: Thu, 11 Aug 2011 17:16:27 +0200
+> > Subject: [PATCH] b43: support new RX header, noticed to be used in 598.314+
+> > fw
+> > 
+> > in PIO case.
+> > 
+> > Signed-off-by: Guennadi Liakhovetski<g.liakhovetski@gmx.de>
+> > ---
+> > diff --git a/drivers/net/wireless/b43/pio.c b/drivers/net/wireless/b43/pio.c
+> > index ce8a4bd..b64b64c 100644
+> > --- a/drivers/net/wireless/b43/pio.c
+> > +++ b/drivers/net/wireless/b43/pio.c
+> > @@ -617,9 +617,19 @@ static bool pio_rx_frame(struct b43_pio_rxqueue *q)
+> >   	const char *err_msg = NULL;
+> >   	struct b43_rxhdr_fw4 *rxhdr =
+> >   		(struct b43_rxhdr_fw4 *)wl->pio_scratchspace;
+> > +	size_t rxhdr_size = sizeof(*rxhdr);
+> > 
+> >   	BUILD_BUG_ON(sizeof(wl->pio_scratchspace)<  sizeof(*rxhdr));
+> > -	memset(rxhdr, 0, sizeof(*rxhdr));
+> > +	switch (dev->fw.hdr_format) {
+> > +	case B43_FW_HDR_410:
+> > +	case B43_FW_HDR_351:
+> > +		rxhdr_size -= sizeof(rxhdr->format_598) -
+> > +			sizeof(rxhdr->format_351);
+> > +		break;
+> > +	case B43_FW_HDR_598:
+> > +		break;
+> > +	}
+> 
+> I do not think the above will work for format_410. By my count, the format_410
+> struct is 4 bytes longer than the format_351 struct.
 
-Last question, do you do merge conflicts manually? I was also trying
-to see if I can simulate a linux-next merge myself to see what you do
-but I didn't see the scripts you use, any pointers would be
-appreciated.
+I think you're looking at struct b43_txhdr, whereas the problem is in 
+struct b43_rxhdr_fw4.
 
-  Luis
+Thanks
+Guennadi
+
+> 
+> Even if it does work, I suggest using the following:
+> 
+> 	size_t rxhdr_size;
+> 
+>    	BUILD_BUG_ON(sizeof(wl->pio_scratchspace)<  sizeof(*rxhdr));
+> 	switch (dev->fw.hdr_format) {
+> 	case B43_FW_HDR_351:
+> 		rxhdr_size = sizeof(rxhdr->format_351);
+> 		break;
+> 	case B43_FW_HDR_410:
+> etc.
+> 
+> 
+> Larry
+> 
+
+---
+Guennadi Liakhovetski, Ph.D.
+Freelance Open-Source Software Developer
+http://www.open-technology.de/
