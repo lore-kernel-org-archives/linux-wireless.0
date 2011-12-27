@@ -1,60 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:60023 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753385Ab1LAMom (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Dec 2011 07:44:42 -0500
-Date: Thu, 1 Dec 2011 13:44:40 +0100
-From: Michal Hocko <mhocko@suse.cz>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, Yong Zhang <yong.zhang0@gmail.com>
-Subject: Re: [3.2-rc3] 100% CPU usage while in del_timer_sync from
- iwl3945_rs_free_sta
-Message-ID: <20111201124440.GB25614@tiehlicka.suse.cz> (sfid-20111201_134456_588494_7E1A9173)
-References: <20111129100727.GD2675@tiehlicka.suse.cz>
- <20111129113906.GA7299@redhat.com>
- <20111130101028.GA2906@tiehlicka.suse.cz>
- <20111130142316.GA2466@redhat.com>
- <20111130140316.GA4153@tiehlicka.suse.cz>
- <20111130153929.GA2144@redhat.com>
- <20111201085845.GA4602@tiehlicka.suse.cz>
- <20111201105538.GA4504@tiehlicka.suse.cz>
- <20111201115911.GA5706@redhat.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:57074 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754828Ab1L0Rkq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Dec 2011 12:40:46 -0500
+Received: by iaeh11 with SMTP id h11so20680347iae.19
+        for <linux-wireless@vger.kernel.org>; Tue, 27 Dec 2011 09:40:45 -0800 (PST)
+Message-ID: <4EFA0319.2030505@lwfinger.net> (sfid-20111227_184053_239611_4ABC1E6A)
+Date: Tue, 27 Dec 2011 11:40:41 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111201115911.GA5706@redhat.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+CC: John W Linville <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com, helmut.schaa@googlemail.com,
+	IvDoorn@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2800usb: Move ID out of unknown
+References: <4ef9f8d7.gS21SIcvWuSTbCy9%Larry.Finger@lwfinger.net> <4EFA00DC.8070007@gmail.com>
+In-Reply-To: <4EFA00DC.8070007@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu 01-12-11 12:59:12, Stanislaw Gruszka wrote:
-> On Thu, Dec 01, 2011 at 11:55:38AM +0100, Michal Hocko wrote:
-> > [  349.316070] iwl3945_rs_free_sta rs_sta f4be1ac0
-> > [  349.316076] ------------[ cut here ]------------
-> > [  349.316097] WARNING: at drivers/net/wireless/iwlegacy/iwl-3945-rs.c:438 iwl3945_rs_free_sta+0x33/0x42 [iwl3945]()
-> 
-> Johannes pointed on irc that this problem is most likely caused by:
-> 
-> commit f785d83a19bca326f79d127a413e35769afc0105
-> Author: Eliad Peller <eliad@wizery.com>
-> Date:   Mon Aug 8 16:50:22 2011 +0300
-> 
->     mac80211: clear sta.drv_priv on reconfiguration
-> 
-> Michal, could you confirm that? If that is the root of the problem, we
-> need patch for iwlegacy (and iwlwifi) that allocate separate memory for
-> rc structures.
+On 12/27/2011 11:31 AM, Gertjan van Wingerde wrote:
+> Hi Larry,
+>
+> On 12/27/11 17:56, Larry Finger wrote:
+>> Testing on the openSUSE wireless forum has shown that a Linksys
+>> WUSB54GC v3 with USB ID 1737:0077 works with rt2800usb when the ID is
+>> written to /sys/.../new_id. This ID can therefore be moved out of UNKNOWN.
+>>
+>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+>> Cc: Stable<stable@vger.kernel.org>
+>
+> We've got these devices is the UNKNOWN section because we don't know
+> what chipset is used by these devices (and therefore the level of
+> support is unknown).
+>
+> Do you know which chipset is used by this device?
+>
+> This should be reported in dmesg when CONFIG_RT2X00_DEBUG is enabled.
 
-Should I just revert it?
+The OP is using an openSUSE distro kernel so we don't have the chance to get 
+info from that source. With lsusb, we get Bus 001 Device 002: ID 1737:0077 
+Linksys WUSB54GC v3 802.11g Adapter [Ralink RT2070L]. Does that help?
 
-> 
-> Thanks
-> Stanislaw
+I just ordered one of these devices from E-bay. I can get you more info when it 
+arrives.
 
--- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+Larry
+
+
