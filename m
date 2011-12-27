@@ -1,38 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:59012 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753547Ab1LVK24 (ORCPT
+Received: from cpsmtpb-ews09.kpnxchange.com ([213.75.39.14]:3453 "EHLO
+	cpsmtpb-ews09.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754662Ab1L0SJO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Dec 2011 05:28:56 -0500
-Subject: Re: [PATCH] NFC: Export a new attribute nfcid1 in target info
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: ilanelias78@gmail.com
-Cc: aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Ilan Elias <ilane@ti.com>
-In-Reply-To: <1324547514-3237-1-git-send-email-ilane@ti.com>
-References: <1324547514-3237-1-git-send-email-ilane@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 22 Dec 2011 11:34:13 +0100
-Message-ID: <1324550053.5354.7.camel@sortiz-mobl> (sfid-20111222_112900_028317_F9F69803)
-Mime-Version: 1.0
+	Tue, 27 Dec 2011 13:09:14 -0500
+Message-ID: <4EFA09C7.4010901@gmail.com> (sfid-20111227_190917_597802_F9364092)
+Date: Tue, 27 Dec 2011 19:09:11 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: John W Linville <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com, helmut.schaa@googlemail.com,
+	IvDoorn@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2800usb: Move ID out of unknown
+References: <4ef9f8d7.gS21SIcvWuSTbCy9%Larry.Finger@lwfinger.net> <4EFA00DC.8070007@gmail.com> <4EFA0319.2030505@lwfinger.net>
+In-Reply-To: <4EFA0319.2030505@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ilan,
-
-On Thu, 2011-12-22 at 11:51 +0200, ilanelias78@gmail.com wrote:
-> From: Ilan Elias <ilane@ti.com>
+On 12/27/11 18:40, Larry Finger wrote:
+> On 12/27/2011 11:31 AM, Gertjan van Wingerde wrote:
+>> Hi Larry,
+>>
+>> On 12/27/11 17:56, Larry Finger wrote:
+>>> Testing on the openSUSE wireless forum has shown that a Linksys
+>>> WUSB54GC v3 with USB ID 1737:0077 works with rt2800usb when the ID is
+>>> written to /sys/.../new_id. This ID can therefore be moved out of
+>>> UNKNOWN.
+>>>
+>>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+>>> Cc: Stable<stable@vger.kernel.org>
+>>
+>> We've got these devices is the UNKNOWN section because we don't know
+>> what chipset is used by these devices (and therefore the level of
+>> support is unknown).
+>>
+>> Do you know which chipset is used by this device?
+>>
+>> This should be reported in dmesg when CONFIG_RT2X00_DEBUG is enabled.
 > 
-> The nfcid1 is the NFC-A identifier.
-> It is exported as an attribute of the target info
-> (returned as a response to NFC_CMD_GET_TARGET).
-> 
-> Signed-off-by: Ilan Elias <ilane@ti.com>
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
+> The OP is using an openSUSE distro kernel so we don't have the chance to
+> get info from that source. With lsusb, we get Bus 001 Device 002: ID
+> 1737:0077 Linksys WUSB54GC v3 802.11g Adapter [Ralink RT2070L]. Does
+> that help?
 
-Cheers,
-Samuel.
+Yes, that helps. This most probably is an RT3070-based device that uses
+an RF2020 RF chipset. We have seen these kind of devices before and they
+indeed are properly supported.
 
+Your patch make sense, however, could you please list this USB ID with
+the other Linksys USB devices further up in the list. We have ordered
+the list on manufacturer name, alphabetically ordered.
 
+---
+Gertjan
