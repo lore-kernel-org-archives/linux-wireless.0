@@ -1,75 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:14738 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47066 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751166Ab1LHS3g (ORCPT
+	with ESMTP id S1754515Ab1L0QEM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 13:29:36 -0500
-Cc: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH RESEND 1/4] ath: add a helper for processing reg data on init
-Date: Thu, 8 Dec 2011 23:59:23 +0530
-Message-ID: <1323368966-10001-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111208_192940_109871_A6A28726)
+	Tue, 27 Dec 2011 11:04:12 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [RFC] mac80211: minor cleanup
+Date: Tue, 27 Dec 2011 21:34:01 +0530
+Message-ID: <1325001841-1881-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111227_170416_504310_06D7C3D0)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-This has no functional change. The helper can be used later
-for other things like country IE changes and following the CTL
-for different countries.
+if we had set 'fixed-freq' paramter in iw ibss join command,
+scan request won't be intiated in this path with the state
+'IEEE80211_IBSS_MLME_JOINED'
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
-Acked-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/regd.c |   22 +++++++++++++++++-----
- 1 files changed, 17 insertions(+), 5 deletions(-)
+ net/mac80211/ibss.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index 65ecb5b..ed4966f 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -508,11 +508,7 @@ static void ath_regd_sanitize(struct ath_regulatory *reg)
- 	reg->current_rd = 0x64;
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index f8a32bf..8875673 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -642,8 +642,7 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
+ 	       "IBSS networks with same SSID (merge)\n", sdata->name);
+ 
+ 	ieee80211_request_internal_scan(sdata,
+-			ifibss->ssid, ifibss->ssid_len,
+-			ifibss->fixed_channel ? ifibss->channel : NULL);
++			ifibss->ssid, ifibss->ssid_len, NULL);
  }
  
--int
--ath_regd_init(struct ath_regulatory *reg,
--	      struct wiphy *wiphy,
--	      int (*reg_notifier)(struct wiphy *wiphy,
--				  struct regulatory_request *request))
-+static int __ath_regd_init(struct ath_regulatory *reg)
- {
- 	struct country_code_to_enum_rd *country = NULL;
- 	u16 regdmn;
-@@ -583,7 +579,23 @@ ath_regd_init(struct ath_regulatory *reg,
- 	printk(KERN_DEBUG "ath: Regpair used: 0x%0x\n",
- 		reg->regpair->regDmnEnum);
- 
-+	return 0;
-+}
-+
-+int
-+ath_regd_init(struct ath_regulatory *reg,
-+	      struct wiphy *wiphy,
-+	      int (*reg_notifier)(struct wiphy *wiphy,
-+				  struct regulatory_request *request))
-+{
-+	int r;
-+
-+	r = __ath_regd_init(reg);
-+	if (r)
-+		return r;
-+
- 	ath_regd_init_wiphy(reg, wiphy, reg_notifier);
-+
- 	return 0;
- }
- EXPORT_SYMBOL(ath_regd_init);
+ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
 -- 
-1.7.8
+1.7.0.4
 
