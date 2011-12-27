@@ -1,30 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:34751 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751772Ab1LTD7C (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:33023 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753253Ab1L0QYV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 22:59:02 -0500
+	Tue, 27 Dec 2011 11:24:21 -0500
+Message-ID: <4EF9F0AA.4080404@qca.qualcomm.com> (sfid-20111227_172424_716722_E8B5A1C4)
+Date: Tue, 27 Dec 2011 21:52:02 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6WfBDqQzqxNaZm5mMhjyP2t7M-5t=+RA-A2JAKUKjmJzw@mail.gmail.com>
-References: <CAB=NE6WfBDqQzqxNaZm5mMhjyP2t7M-5t=+RA-A2JAKUKjmJzw@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 19 Dec 2011 19:58:40 -0800
-Message-ID: <CAB=NE6VKYDoPzQV+HpaM1tDM_=whZV1hgUxPeS6twzgiz1WtEA@mail.gmail.com> (sfid-20111220_045919_190916_49A4D184)
-Subject: Re: [ANN] compat-wireless for 3.2-rc6
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Marek Lindner <lindner_marek@yahoo.de>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: fix kernel panic in IBSS due to a regression
+References: <1324876409-2031-1-git-send-email-mohammed@qca.qualcomm.com> <201112270611.13380.lindner_marek@yahoo.de>
+In-Reply-To: <201112270611.13380.lindner_marek@yahoo.de>
+Content-Type: text/plain; charset="ISO-8859-15"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 19, 2011 at 7:55 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
-> [1] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.2/compat-wireless-3.2-rc6-3-s.tar.bz2
-> [2] http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.2/compat-wireless-3.2-rc1-1.tar.bz2
+On Tuesday 27 December 2011 03:41 AM, Marek Lindner wrote:
+> On Monday, December 26, 2011 13:13:29 Mohammed Shafi Shajakhan wrote:
+>> kernel panic occurs when we create an IBSS mode and leave it for
+>> sometime without any joiner and this is introduced by the
+>> commit ec2b774e7c91094d8c00de579646f1162b87b01e where we don't
+>> put proper braces for 'list_for_each_entry_safe' and we pass an
+>> invalid 'sta' pointer to __sta_info_destroy
+>
+> I sw this crash too but did not dive into it yet. Thanks!
+> Some things are too simple ..  :-)
 
-I messed up on the URL to the vanilla release [2] but here is the right one:
+i took some good time to figure it out, neither obvious to me :-)
 
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.2/compat-wireless-3.2-rc6-3.tar.bz2
+>
+> Cheers,
+> Marek
 
-  Luis
+
+-- 
+thanks,
+shafi
