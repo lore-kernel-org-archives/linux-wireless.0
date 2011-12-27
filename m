@@ -1,43 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1650 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756090Ab1LOLpe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 06:45:34 -0500
-Message-ID: <4EE9DDD2.3000904@broadcom.com> (sfid-20111215_124538_029239_79950BB0)
-Date: Thu, 15 Dec 2011 12:45:22 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:39967 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751207Ab1L0JDI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 27 Dec 2011 04:03:08 -0500
+Date: Tue, 27 Dec 2011 11:02:56 +0200
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH] ath6kl: Add del_station cfg80211_ops
+Message-ID: <20111227090256.GA14371@jouni.qca.qualcomm.com> (sfid-20111227_100339_064283_B042FBC6)
 MIME-Version: 1.0
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-cc: "John W Linville" <linville@tuxdriver.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] brcmsmac: Replace kmalloc/memset with kzalloc
-References: <4ee95a07.ADXjXEI3nOhhruq1%Larry.Finger@lwfinger.net>
-In-Reply-To: <4ee95a07.ADXjXEI3nOhhruq1%Larry.Finger@lwfinger.net>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/15/2011 03:23 AM, Larry Finger wrote:
-> In ai_attach(), space is allocated for an si_info struct. Immediately
-> after the allocation, routine ai_doattach() is called and that allocated
-> space is set to zero. As no other routine calls ai_doattach(), kzalloc()
-> can be utilized.
-> 
+hostapd/wpa_supplicant AP mode uses this operation to flush the station
+entries. Implement this in ath6kl to avoid unnecessary warnings from
+NL80211_CMD_DEL_STATION failing.
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> 
-> John,
-> 
-> This is 3.3 material.
-> 
-> Larry
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index d6806be..f74762e 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -2300,6 +2300,19 @@ static int ath6kl_del_beacon(struct wiphy *wiphy, struct net_device *dev)
+ 	return 0;
+ }
+ 
++static const u8 bcast_addr[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
++
++static int ath6kl_del_station(struct wiphy *wiphy, struct net_device *dev,
++			      u8 *mac)
++{
++	struct ath6kl *ar = ath6kl_priv(dev);
++	struct ath6kl_vif *vif = netdev_priv(dev);
++	const u8 *addr = mac ? mac : bcast_addr;
++
++	return ath6kl_wmi_ap_set_mlme(ar->wmi, vif->fw_vif_idx, WMI_AP_DEAUTH,
++				      addr, WLAN_REASON_PREV_AUTH_NOT_VALID);
++}
++
+ static int ath6kl_change_station(struct wiphy *wiphy, struct net_device *dev,
+ 				 u8 *mac, struct station_parameters *params)
+ {
+@@ -2603,6 +2616,7 @@ static struct cfg80211_ops ath6kl_cfg80211_ops = {
+ 	.add_beacon = ath6kl_add_beacon,
+ 	.set_beacon = ath6kl_set_beacon,
+ 	.del_beacon = ath6kl_del_beacon,
++	.del_station = ath6kl_del_station,
+ 	.change_station = ath6kl_change_station,
+ 	.remain_on_channel = ath6kl_remain_on_channel,
+ 	.cancel_remain_on_channel = ath6kl_cancel_remain_on_channel,
+-- 
+1.7.4.1
 
-Thanks, Larry
 
-Gr. AvS
-
+-- 
+Jouni Malinen                                            PGP id EFC895FA
