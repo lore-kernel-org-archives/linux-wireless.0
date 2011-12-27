@@ -1,64 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:59571 "EHLO
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56946 "EHLO
 	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751310Ab1LQSLs (ORCPT
+	with ESMTP id S1751490Ab1L0XrN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Dec 2011 13:11:48 -0500
-Received: by iaeh11 with SMTP id h11so6141919iae.19
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Dec 2011 10:11:47 -0800 (PST)
-Message-ID: <4EECDB5C.6020104@lwfinger.net> (sfid-20111217_191152_165204_A528D7B6)
-Date: Sat, 17 Dec 2011 12:11:40 -0600
+	Tue, 27 Dec 2011 18:47:13 -0500
+Message-ID: <4EFA58FD.9060605@lwfinger.net> (sfid-20111228_004718_448070_13306708)
+Date: Tue, 27 Dec 2011 17:47:09 -0600
 From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: linux-wireless@vger.kernel.org,
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH 0/8] b43: reoder functions in phy_n.c
-References: <1324126647-22425-1-git-send-email-zajec5@gmail.com>
-In-Reply-To: <1324126647-22425-1-git-send-email-zajec5@gmail.com>
+	linux-kernel@vger.kernel.org,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH] b43: fix regression in PIO case
+References: <alpine.DEB.2.00.1112261608140.12108@axis700.grange> <alpine.DEB.2.00.1112261824000.12108@axis700.grange> <CACna6ry1tKXtUSQHknkEbzBq_gZUyxn1-9Guba2a56xzx242SA@mail.gmail.com> <alpine.DEB.2.00.1112272359240.6684@axis700.grange>
+In-Reply-To: <alpine.DEB.2.00.1112272359240.6684@axis700.grange>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/17/2011 06:57 AM, Rafał Miłecki wrote:
-> [APPLYING] This patchset is based on top of wireless-next with:
-> b43: mark some vars __maybe_unused in b43_nphy_pmu_spur_avoid
-> applied.
+On 12/27/2011 05:05 PM, Guennadi Liakhovetski wrote:
+> On Tue, 27 Dec 2011, Rafał Miłecki wrote:
 >
+>> W dniu 26 grudnia 2011 18:28 użytkownik Guennadi Liakhovetski
+>> <g.liakhovetski@gmx.de>  napisał:
+>>> This patch fixes the regression, introduced by
+>>>
+>>> commit 17030f48e31adde5b043741c91ba143f5f7db0fd
+>>> From: Rafał Miłecki<zajec5@gmail.com>
+>>> Date: Thu, 11 Aug 2011 17:16:27 +0200
+>>> Subject: [PATCH] b43: support new RX header, noticed to be used in 598.314+ fw
+>>>
+>>> in PIO case.
+>>>
+>>> Signed-off-by: Guennadi Liakhovetski<g.liakhovetski@gmx.de>
+>>> ---
+>>> diff --git a/drivers/net/wireless/b43/pio.c b/drivers/net/wireless/b43/pio.c
+>>> index ce8a4bd..b64b64c 100644
+>>> --- a/drivers/net/wireless/b43/pio.c
+>>> +++ b/drivers/net/wireless/b43/pio.c
+>>> @@ -617,9 +617,19 @@ static bool pio_rx_frame(struct b43_pio_rxqueue *q)
+>>>         const char *err_msg = NULL;
+>>>         struct b43_rxhdr_fw4 *rxhdr =
+>>>                 (struct b43_rxhdr_fw4 *)wl->pio_scratchspace;
+>>> +       size_t rxhdr_size = sizeof(*rxhdr);
+>>>
+>>>         BUILD_BUG_ON(sizeof(wl->pio_scratchspace)<  sizeof(*rxhdr));
+>>> -       memset(rxhdr, 0, sizeof(*rxhdr));
+>>> +       switch (dev->fw.hdr_format) {
+>>> +       case B43_FW_HDR_410:
+>>> +       case B43_FW_HDR_351:
+>>> +               rxhdr_size -= sizeof(rxhdr->format_598) -
+>>> +                       sizeof(rxhdr->format_351);
+>>> +               break;
+>>> +       case B43_FW_HDR_598:
+>>> +               break;
+>>> +       }
+>>> +       memset(rxhdr, 0, rxhdr_size);
+>>
+>> Huuh, that's really tricky. Can you just do "normal" conditions as
+>> Larry suggested, please?
 >
-> As noted on b43-dev, we got really messy in phy_n.c. Functions were
-> implemented quite randomly, with specs appering during development,
-> sometimes without knowing real mining of the routies.
+> Sorry? I absolutely see nothing tricky there. Do you think this would look
+> "less tricky" to you:
 >
-> That resulted in code hard to read and with some not-so-nice early
-> declarations.
+> 	switch (dev->fw.hdr_format) {
+> 	case B43_FW_HDR_410:
+> 	case B43_FW_HDR_351:
+> 		rxhdr_size = offsetof(struct b43_rxhdr_fw4,
+> 					format_351) +
+> 			sizeof(rxhdr_size->format_351);
+> 		break;
+> 	case B43_FW_HDR_598:
+> 		rxhdr_size = sizeof(*rxhdr);
+> 		break;
+> 	}
 >
-> This patches makes some cleaning with that code. It moves tons of LOCs,
-> but I think we have to do this finally instead of going deeper and
-> deeper into that mess.
->
-> As Larry suggested, I've made small patches and tried my best to get
-> them formatted nicely, to have diffs really clean. I've been
-> compiling b43 after each patch, so there shouldn't be any build
-> breakage between.
->
-> Rafał Miłecki (8):
->    b43: N-PHY: reorder functions: put basic ones at beginning
->    b43: N-PHY: reorder functions: collect radio ones
->    b43: N-PHY: reorder functions: collect samples ones
->    b43: N-PHY: reorder functions: collect RSSI selects
->    b43: N-PHY: split gain control workarounds
->    b43: N-PHY: reorder functions: move RSSI calibration
->    b43: N-PHY: reorder functions: move rest of workarounds
->    b43: N-PHY: reorder functions: random clenaups
->
->   drivers/net/wireless/b43/phy_n.c | 4575 +++++++++++++++++++-------------------
->   1 files changed, 2301 insertions(+), 2274 deletions(-)
 
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+How about this?
 
-I like all these patches, and you don't have to change anything. Note, that 
-cleanups is misspelled in the subject line for #8.
+Index: wireless-testing-new/drivers/net/wireless/b43/pio.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/b43/pio.c
++++ wireless-testing-new/drivers/net/wireless/b43/pio.c
+@@ -617,9 +617,20 @@ static bool pio_rx_frame(struct b43_pio_
+         const char *err_msg = NULL;
+         struct b43_rxhdr_fw4 *rxhdr =
+                 (struct b43_rxhdr_fw4 *)wl->pio_scratchspace;
++       size_t rxhdr_size;
+
+         BUILD_BUG_ON(sizeof(wl->pio_scratchspace) < sizeof(*rxhdr));
+-       memset(rxhdr, 0, sizeof(*rxhdr));
++       switch (dev->fw.hdr_format) {
++       case B43_FW_HDR_410:
++       case B43_FW_HDR_351:
++               rxhdr_size = sizeof(rxhdr->format_351);
++               break;
++       case B43_FW_HDR_598:
++       default:
++               rxhdr_size = sizeof(rxhdr->format_598);
++               break;
++       }
++       memset(rxhdr, 0, rxhdr_size);
+
+         /* Check if we have data and wait for it to get ready. */
+         if (q->rev >= 8) {
 
 Larry
+
