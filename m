@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:38854 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750760Ab1LHMNI (ORCPT
+Received: from cpsmtpb-ews09.kpnxchange.com ([213.75.39.14]:1327 "EHLO
+	cpsmtpb-ews09.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754645Ab1L0RbL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 07:13:08 -0500
-Received: by yenm11 with SMTP id m11so1032177yen.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Dec 2011 04:13:08 -0800 (PST)
+	Tue, 27 Dec 2011 12:31:11 -0500
+Message-ID: <4EFA00DC.8070007@gmail.com> (sfid-20111227_183114_560286_054AC983)
+Date: Tue, 27 Dec 2011 18:31:08 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1323340772.3332.31.camel@jlt3.sipsolutions.net>
-References: <1323336114-31203-1-git-send-email-helmut.schaa@googlemail.com>
-	<1323336302.3332.7.camel@jlt3.sipsolutions.net>
-	<1323336406.3332.9.camel@jlt3.sipsolutions.net>
-	<CAGXE3d-qyXB7cEaDM6-21FttyF6iNNGRG1_madFVC9d25X6tRA@mail.gmail.com>
-	<1323340772.3332.31.camel@jlt3.sipsolutions.net>
-Date: Thu, 8 Dec 2011 13:13:08 +0100
-Message-ID: <CAGXE3d8aK5SCG9dLQ+bAR=7XYfe1tY0DtqB-fYW7FQ7Amr0=rg@mail.gmail.com> (sfid-20111208_131313_120376_70941FDD)
-Subject: Re: [PATCH 1/2] ieee80211: Introduce ieee80211_has_frags
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: John W Linville <linville@tuxdriver.com>,
+	users@rt2x00.serialmonkey.com, helmut.schaa@googlemail.com,
+	IvDoorn@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2800usb: Move ID out of unknown
+References: <4ef9f8d7.gS21SIcvWuSTbCy9%Larry.Finger@lwfinger.net>
+In-Reply-To: <4ef9f8d7.gS21SIcvWuSTbCy9%Larry.Finger@lwfinger.net>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 8, 2011 at 11:39 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2011-12-08 at 10:41 +0100, Helmut Schaa wrote:
->> On Thu, Dec 8, 2011 at 10:26 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> >> Would _is_frag() read nicer? The piece you're checking is a fragment I
->> >> think?
->> >
->> > Never mind ... the first fragment has is a fragment too and doesn't
->> > return true here.
->>
->> We could also call it ieee80211_is_first_frag and swap the logic?
->
-> That seems like a good idea.
+Hi Larry,
 
-John, I've just sent a v2 of this ...
+On 12/27/11 17:56, Larry Finger wrote:
+> Testing on the openSUSE wireless forum has shown that a Linksys
+> WUSB54GC v3 with USB ID 1737:0077 works with rt2800usb when the ID is
+> written to /sys/.../new_id. This ID can therefore be moved out of UNKNOWN.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org>
+
+We've got these devices is the UNKNOWN section because we don't know
+what chipset is used by these devices (and therefore the level of
+support is unknown).
+
+Do you know which chipset is used by this device?
+
+This should be reported in dmesg when CONFIG_RT2X00_DEBUG is enabled.
+
+---
+Gertjan.
