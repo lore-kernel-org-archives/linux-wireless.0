@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:64880 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752558Ab1LWMXZ (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:63479 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754390Ab1L1UM0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Dec 2011 07:23:25 -0500
-Received: by werm1 with SMTP id m1so3926910wer.19
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Dec 2011 04:23:24 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/3] mac80211: check sta_apply_parameters() return value
-Date: Fri, 23 Dec 2011 14:24:33 +0200
-Message-Id: <1324643075-29385-2-git-send-email-eliad@wizery.com> (sfid-20111223_132329_237183_DB0C49DC)
-In-Reply-To: <1324643075-29385-1-git-send-email-eliad@wizery.com>
-References: <1324643075-29385-1-git-send-email-eliad@wizery.com>
+	Wed, 28 Dec 2011 15:12:26 -0500
+Received: by vcbfk14 with SMTP id fk14so9715858vcb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Dec 2011 12:12:25 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1325033604-26469-7-git-send-email-gwingerde@gmail.com>
+References: <1325033604-26469-1-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-2-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-3-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-4-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-5-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-6-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-7-git-send-email-gwingerde@gmail.com>
+Date: Wed, 28 Dec 2011 21:12:25 +0100
+Message-ID: <CAOZOX0V4CS14MA4=1vyBLWB_d5+598c__xKEXGqD5skMno7HUQ@mail.gmail.com> (sfid-20111228_211228_637347_18E63A8E)
+Subject: Re: [PATCH 6/7] rt2x00: RT3593 is also applicable to USB.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bail out if sta_apply_parameters() returns an error.
+On Wed, Dec 28, 2011 at 1:53 AM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/mac80211/cfg.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 850bb96..f08a337 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1001,6 +1001,7 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 	struct ieee80211_local *local = wiphy_priv(wiphy);
- 	struct sta_info *sta;
- 	struct ieee80211_sub_if_data *vlansdata;
-+	int err;
- 
- 	mutex_lock(&local->sta_mtx);
- 
-@@ -1040,7 +1041,11 @@ static int ieee80211_change_station(struct wiphy *wiphy,
- 		ieee80211_send_layer2_update(sta);
- 	}
- 
--	sta_apply_parameters(local, sta, params);
-+	err = sta_apply_parameters(local, sta, params);
-+	if (err) {
-+		mutex_unlock(&local->sta_mtx);
-+		return err;
-+	}
- 
- 	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) && params->supported_rates)
- 		rate_control_rate_init(sta);
--- 
-1.7.6.401.g6a319
-
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+> index 851b717..b03b22c 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> @@ -189,7 +189,7 @@ struct rt2x00_chip {
+>  #define RT3090         0x3090  /* 2.4GHz PCIe */
+>  #define RT3390         0x3390
+>  #define RT3572         0x3572
+> -#define RT3593         0x3593  /* PCIe */
+> +#define RT3593         0x3593
+>  #define RT3883         0x3883  /* WSOC */
+>  #define RT5390         0x5390  /* 2.4GHz */
+>
+> --
+> 1.7.7.4
+>
