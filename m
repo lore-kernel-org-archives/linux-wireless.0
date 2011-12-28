@@ -1,123 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:54431 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751084Ab1LKBOw (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:45423 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754628Ab1L1Wkf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Dec 2011 20:14:52 -0500
-Received: by mail-ey0-f174.google.com with SMTP id k14so2316533eaa.19
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2011 17:14:52 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 5/7] b43: N-PHY: determine various PHY params
-Date: Sun, 11 Dec 2011 02:55:33 +0100
-Message-Id: <1323568535-2816-6-git-send-email-zajec5@gmail.com> (sfid-20111211_021455_730628_B528A3D8)
-In-Reply-To: <1323568535-2816-1-git-send-email-zajec5@gmail.com>
-References: <1323568535-2816-1-git-send-email-zajec5@gmail.com>
+	Wed, 28 Dec 2011 17:40:35 -0500
+Received: by mail-vw0-f46.google.com with SMTP id fc26so9902345vbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Dec 2011 14:40:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1325033604-26469-5-git-send-email-gwingerde@gmail.com>
+References: <1325033604-26469-1-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-2-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-3-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-4-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-5-git-send-email-gwingerde@gmail.com>
+Date: Wed, 28 Dec 2011 23:40:35 +0100
+Message-ID: <CAOZOX0UnBzt+=c_9AEZEsuOxZmJyGsQDZkLsadj7R+a=E3ZEqA@mail.gmail.com> (sfid-20111228_234039_230503_038E58ED)
+Subject: Re: [PATCH 4/7] rt2800usb: Let rt2x00usb handle USB padding
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	=?ISO-8859-2?Q?Jakub_Kici=F1ski?= <kubakici@wp.pl>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Dec 28, 2011 at 1:53 AM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> From: Jakub KiciÒski <kubakici@wp.pl>
+>
+> Older USB drivers does not append end padding to skb but instead report
+> it in size of data to be transmitted to HW. rt2800usb should follow that
+> behaviour. Custom write_tx_data callback which was adding pad to skb
+> is not be needed any more.
+>
+> Thanks to this patch frames handed back from rt2800usb to mac80211 will
+> no longer contain end padding.
+>
+> Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
----
- drivers/net/wireless/b43/phy_n.c |   35 +++++++++++++++++++++++++++++++++++
- drivers/net/wireless/b43/phy_n.h |    8 ++++++++
- 2 files changed, 43 insertions(+), 0 deletions(-)
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
-index f540e48..4bd94df 100644
---- a/drivers/net/wireless/b43/phy_n.c
-+++ b/drivers/net/wireless/b43/phy_n.c
-@@ -4062,10 +4062,13 @@ static void b43_nphy_op_prepare_structs(struct b43_wldev *dev)
- {
- 	struct b43_phy *phy = &dev->phy;
- 	struct b43_phy_n *nphy = phy->n;
-+	struct ssb_sprom *sprom = dev->dev->bus_sprom;
- 
- 	memset(nphy, 0, sizeof(*nphy));
- 
- 	nphy->hang_avoid = (phy->rev == 3 || phy->rev == 4);
-+	nphy->spur_avoid = (phy->rev >= 3) ?
-+				B43_SPUR_AVOID_AUTO : B43_SPUR_AVOID_DISABLE;
- 	nphy->gain_boost = true; /* this way we follow wl, assume it is true */
- 	nphy->txrx_chain = 2; /* sth different than 0 and 1 for now */
- 	nphy->phyrxchain = 3; /* to avoid b43_nphy_set_rx_core_state like wl */
-@@ -4074,6 +4077,38 @@ static void b43_nphy_op_prepare_structs(struct b43_wldev *dev)
- 	 * 0x7f == 127 and we check for 128 when restoring TX pwr ctl. */
- 	nphy->tx_pwr_idx[0] = 128;
- 	nphy->tx_pwr_idx[1] = 128;
-+
-+	/* Hardware TX power control and 5GHz power gain */
-+	nphy->txpwrctrl = false;
-+	nphy->pwg_gain_5ghz = false;
-+	if (dev->phy.rev >= 3 ||
-+	    (dev->dev->board_vendor == PCI_VENDOR_ID_APPLE &&
-+	     (dev->dev->core_rev == 11 || dev->dev->core_rev == 12))) {
-+		nphy->txpwrctrl = true;
-+		nphy->pwg_gain_5ghz = true;
-+	} else if (sprom->revision >= 4) {
-+		if (dev->phy.rev >= 2 &&
-+		    (sprom->boardflags2_lo & B43_BFL2_TXPWRCTRL_EN)) {
-+			nphy->txpwrctrl = true;
-+#ifdef CONFIG_B43_SSB
-+			if (dev->dev->bus_type == B43_BUS_SSB &&
-+			    dev->dev->sdev->bus->bustype == SSB_BUSTYPE_PCI) {
-+				struct pci_dev *pdev =
-+					dev->dev->sdev->bus->host_pci;
-+				if (pdev->device == 0x4328 ||
-+				    pdev->device == 0x432a)
-+					nphy->pwg_gain_5ghz = true;
-+			}
-+#endif
-+		} else if (sprom->boardflags2_lo & B43_BFL2_5G_PWRGAIN) {
-+			nphy->pwg_gain_5ghz = true;
-+		}
-+	}
-+
-+	if (dev->phy.rev >= 3) {
-+		nphy->ipa2g_on = sprom->fem.ghz2.extpa_gain == 2;
-+		nphy->ipa5g_on = sprom->fem.ghz5.extpa_gain == 2;
-+	}
- }
- 
- static void b43_nphy_op_free(struct b43_wldev *dev)
-diff --git a/drivers/net/wireless/b43/phy_n.h b/drivers/net/wireless/b43/phy_n.h
-index fbf5202..56ef97b 100644
---- a/drivers/net/wireless/b43/phy_n.h
-+++ b/drivers/net/wireless/b43/phy_n.h
-@@ -716,6 +716,12 @@
- 
- struct b43_wldev;
- 
-+enum b43_nphy_spur_avoid {
-+	B43_SPUR_AVOID_DISABLE,
-+	B43_SPUR_AVOID_AUTO,
-+	B43_SPUR_AVOID_FORCE,
-+};
-+
- struct b43_chanspec {
- 	u16 center_freq;
- 	enum nl80211_channel_type channel_type;
-@@ -785,6 +791,7 @@ struct b43_phy_n {
- 	u16 mphase_txcal_bestcoeffs[11];
- 
- 	bool txpwrctrl;
-+	bool pwg_gain_5ghz;
- 	u8 tx_pwr_idx[2];
- 	u16 adj_pwr_tbl[84];
- 	u16 txcal_bbmult;
-@@ -803,6 +810,7 @@ struct b43_phy_n {
- 	u16 classifier_state;
- 	u16 clip_state[2];
- 
-+	enum b43_nphy_spur_avoid spur_avoid;
- 	bool aband_spurwar_en;
- 	bool gband_spurwar_en;
- 
--- 
-1.7.3.4
-
+> ---
+> †drivers/net/wireless/rt2x00/rt2800usb.c | † 37 ++++++++----------------------
+> †1 files changed, 10 insertions(+), 27 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index 313cc7f..b15c215 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -400,10 +400,10 @@ static void rt2800usb_write_tx_desc(struct queue_entry *entry,
+> † † † †/*
+> † † † † * The size of TXINFO_W0_USB_DMA_TX_PKT_LEN is
+> † † † † * TXWI + 802.11 header + L2 pad + payload + pad,
+> - † † † †* so need to decrease size of TXINFO and USB end pad.
+> + † † † †* so need to decrease size of TXINFO.
+> † † † † */
+> † † † †rt2x00_set_field32(&word, TXINFO_W0_USB_DMA_TX_PKT_LEN,
+> - † † † † † † † † † † † † †entry->skb->len - TXINFO_DESC_SIZE - 4);
+> + † † † † † † † † † † † † †roundup(entry->skb->len, 4) - TXINFO_DESC_SIZE);
+> † † † †rt2x00_set_field32(&word, TXINFO_W0_WIV,
+> † † † † † † † † † † † † † !test_bit(ENTRY_TXD_ENCRYPT_IV, &txdesc->flags));
+> † † † †rt2x00_set_field32(&word, TXINFO_W0_QSEL, 2);
+> @@ -421,37 +421,20 @@ static void rt2800usb_write_tx_desc(struct queue_entry *entry,
+> † † † †skbdesc->desc_len = TXINFO_DESC_SIZE + TXWI_DESC_SIZE;
+> †}
+>
+> -static void rt2800usb_write_tx_data(struct queue_entry *entry,
+> - † † † † † † † † † † † † † † † † † † † struct txentry_desc *txdesc)
+> +/*
+> + * TX data initialization
+> + */
+> +static int rt2800usb_get_tx_data_len(struct queue_entry *entry)
+> †{
+> - † † † unsigned int len;
+> - † † † int err;
+> -
+> - † † † rt2800_write_tx_data(entry, txdesc);
+> -
+> † † † †/*
+> - † † † †* pad(1~3 bytes) is added after each 802.11 payload.
+> - † † † †* USB end pad(4 bytes) is added at each USB bulk out packet end.
+> + † † † †* pad(1~3 bytes) is needed after each 802.11 payload.
+> + † † † †* USB end pad(4 bytes) is needed at each USB bulk out packet end.
+> † † † † * TX frame format is :
+> † † † † * | TXINFO | TXWI | 802.11 header | L2 pad | payload | pad | USB end pad |
+> † † † † * † † † † † † † † |<------------- tx_pkt_len ------------->|
+> † † † † */
+> - † † † len = roundup(entry->skb->len, 4) + 4;
+> - † † † err = skb_padto(entry->skb, len);
+> - † † † if (unlikely(err)) {
+> - † † † † † † † WARNING(entry->queue->rt2x00dev, "TX SKB padding error, out of memory\n");
+> - † † † † † † † return;
+> - † † † }
+>
+> - † † † entry->skb->len = len;
+> -}
+> -
+> -/*
+> - * TX data initialization
+> - */
+> -static int rt2800usb_get_tx_data_len(struct queue_entry *entry)
+> -{
+> - † † † return entry->skb->len;
+> + † † † return roundup(entry->skb->len, 4) + 4;
+> †}
+>
+> †/*
+> @@ -807,7 +790,7 @@ static const struct rt2x00lib_ops rt2800usb_rt2x00_ops = {
+> † † † †.flush_queue † † † † † †= rt2x00usb_flush_queue,
+> † † † †.tx_dma_done † † † † † †= rt2800usb_tx_dma_done,
+> † † † †.write_tx_desc † † † † †= rt2800usb_write_tx_desc,
+> - † † † .write_tx_data † † † † †= rt2800usb_write_tx_data,
+> + † † † .write_tx_data † † † † †= rt2800_write_tx_data,
+> † † † †.write_beacon † † † † † = rt2800_write_beacon,
+> † † † †.clear_beacon † † † † † = rt2800_clear_beacon,
+> † † † †.get_tx_data_len † † † †= rt2800usb_get_tx_data_len,
+> --
+> 1.7.7.4
+>
