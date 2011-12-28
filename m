@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:47902 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751411Ab1LTUvO (ORCPT
+Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:4200 "EHLO
+	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752825Ab1L1A7w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Dec 2011 15:51:14 -0500
-Received: by lagv3 with SMTP id v3so842263lag.28
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Dec 2011 12:51:11 -0800 (PST)
-Subject: Re: [PATCH] wl12xx: fix sched scan of DFS channels
-From: Luciano Coelho <coelho@ti.com>
-To: Eyal Shapira <eyal@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1324375441-2053-1-git-send-email-eyal@wizery.com>
-References: <1324375441-2053-1-git-send-email-eyal@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 20 Dec 2011 22:51:07 +0200
-Message-ID: <1324414267.2182.75.camel@cumari> (sfid-20111220_215116_421236_056A5A75)
-Mime-Version: 1.0
+	Tue, 27 Dec 2011 19:59:52 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: John W Linville <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>, <users@rt2x00.serialmonkey.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 2/7] rt2x00: Whitespace cleanup.
+Date: Wed, 28 Dec 2011 01:53:19 +0100
+Message-Id: <1325033604-26469-3-git-send-email-gwingerde@gmail.com> (sfid-20111228_020004_508039_9602DEC1)
+In-Reply-To: <1325033604-26469-2-git-send-email-gwingerde@gmail.com>
+References: <1325033604-26469-1-git-send-email-gwingerde@gmail.com>
+ <1325033604-26469-2-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-12-20 at 12:04 +0200, Eyal Shapira wrote: 
-> DFS channels weren't scanned properly because
-> min/max_duration weren't set for these channels
-> even though they're required by the FW.
-> The change sets passive_duration and min/max_duration
-> for all channels as the FW uses the correct parameters
-> according to the channel type.
-> 
-> Signed-off-by: Eyal Shapira <eyal@wizery.com>
-> ---
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Applied, thanks Eyal!
-
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 99ff12d..851b717 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -191,7 +191,7 @@ struct rt2x00_chip {
+ #define RT3572		0x3572
+ #define RT3593		0x3593	/* PCIe */
+ #define RT3883		0x3883	/* WSOC */
+-#define RT5390         0x5390  /* 2.4GHz */
++#define RT5390		0x5390  /* 2.4GHz */
+ 
+ 	u16 rf;
+ 	u16 rev;
 -- 
-Cheers,
-Luca.
+1.7.7.4
 
