@@ -1,83 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:35685 "HELO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750983Ab1LHGoR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Dec 2011 01:44:17 -0500
-Date: Thu, 8 Dec 2011 12:11:30 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH] mac80211: Purge A-MPDU TX queues before station
- destructions
-Message-ID: <20111208064124.GA4406@hertz.marvell.com> (sfid-20111208_074421_606738_7A47FCF3)
+Received: from mout4.freenet.de ([195.4.92.94]:39172 "EHLO mout4.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754614Ab1L1WDf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Dec 2011 17:03:35 -0500
+Received: from [195.4.92.141] (helo=mjail1.freenet.de)
+	by mout4.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
+	id 1Rg1aw-0005lf-2t
+	for linux-wireless@vger.kernel.org; Wed, 28 Dec 2011 23:03:34 +0100
+Received: from localhost ([::1]:57688 helo=mjail1.freenet.de)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1Rg1av-00061G-VN
+	for linux-wireless@vger.kernel.org; Wed, 28 Dec 2011 23:03:34 +0100
+Received: from [195.4.92.28] (port=57892 helo=18.mx.freenet.de)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1Rg1Yt-0005Ug-LY
+	for linux-wireless@vger.kernel.org; Wed, 28 Dec 2011 23:01:27 +0100
+Received: from p4fde0638.dip0.t-ipconnect.de ([79.222.6.56]:42059 helo=mail.maya.org)
+	by 18.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
+	id 1Rg1Yt-0001FC-9Y
+	for linux-wireless@vger.kernel.org; Wed, 28 Dec 2011 23:01:27 +0100
+Message-ID: <4EFB91B0.2070800@01019freenet.de> (sfid-20111228_230339_321780_5ABF2A0C)
+Date: Wed, 28 Dec 2011 23:01:20 +0100
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+CC: Ivo Van Doorn <ivdoorn@gmail.com>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	=?ISO-8859-2?Q?Jakub_Kici=F1ski?= <kubakici@wp.pl>
+Subject: Re: [PATCH 4/7] rt2800usb: Let rt2x00usb handle USB padding
+References: <1325033604-26469-1-git-send-email-gwingerde@gmail.com> <1325033604-26469-2-git-send-email-gwingerde@gmail.com> <1325033604-26469-3-git-send-email-gwingerde@gmail.com> <1325033604-26469-4-git-send-email-gwingerde@gmail.com> <1325033604-26469-5-git-send-email-gwingerde@gmail.com> <CAOZOX0XauBTyaBR9j75de=BeTZ1v_rRfgdJc7BPYDsA9HYi-2w@mail.gmail.com> <4EFB7F6B.8050104@gmail.com>
+In-Reply-To: <4EFB7F6B.8050104@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a station leaves suddenly while ampdu traffic to that station is still
-running, there is a possibility that the ampdu pending queues are not freed due
-to a race condition leading to memory leaks. In '__sta_info_destroy' when we
-attempt to destroy the ampdu sessions in 'ieee80211_sta_tear_down_BA_sessions',
-the driver calls 'ieee80211_stop_tx_ba_cb_irqsafe' to delete the ampdu
-structures (tid_tx) and splice the pending queues and this job gets queued in
-sdata workqueue. However, the sta entry can get destroyed before the above work
-gets scheduled and hence the race.
+Gertjan van Wingerde schrieb:
+> On 12/28/11 21:12, Ivo Van Doorn wrote:
+>> On Wed, Dec 28, 2011 at 1:53 AM, Gertjan van Wingerde
+>> <gwingerde@gmail.com> wrote:
+>>> From: Jakub Kiciñski <kubakici@wp.pl>
+>>>
+>>> Older USB drivers does not append end padding to skb but instead report
+>>> it in size of data to be transmitted to HW. rt2800usb should follow that
+>>> behaviour. Custom write_tx_data callback which was adding pad to skb
+>>> is not be needed any more.
+>>>
+>>> Thanks to this patch frames handed back from rt2800usb to mac80211 will
+>>> no longer contain end padding.
+>>
+>> What happened to the reports that after this (and the next) patch, the
+>> non-2800 USB
+>> drivers are failing?
+> 
+> I have seen only 1 failure report (from Andreas Hartmann), which seemed
+> to have been caused by not applying both patches. ISTR that Andreas did
+> not see any regression when both patches were applied.
 
-Purging the queues and freeing the tid_tx to avoid the leak. The better solution
-would be to fix the race, but that can be taken up in a separate patch.
+Yes, that's true. The behavior of a rt3572 dongle in my test with both
+patches applied was the same as without these both patches.
 
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
----
- net/mac80211/sta_info.c |   25 +++++++++++++++++++++++++
- 1 files changed, 25 insertions(+), 0 deletions(-)
+Please note that the test I did was very short, because the rt2800usb
+driver works really bad with this device anyway.
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index f982352..c6ca9bd 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -851,6 +851,7 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
- 	struct ieee80211_sub_if_data *sdata;
- 	unsigned long flags;
- 	int ret, i, ac;
-+	struct tid_ampdu_tx *tid_tx;
- 
- 	might_sleep();
- 
-@@ -949,6 +950,30 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
- 	}
- #endif
- 
-+	/* There could be some memory leaks because of ampdu tx pending queue
-+	 * not being freed before destroying the station info.
-+	 *
-+	 * Make sure that such queues are purged before freeing the station
-+	 * info.
-+	 * TODO: We have to somehow postpone the full destruction
-+	 * until the aggregation stop completes. Refer
-+	 * http://thread.gmane.org/gmane.linux.kernel.wireless.general/81936
-+	 */
-+	for (i = 0; i < STA_TID_NUM; i++) {
-+		if (!sta->ampdu_mlme.tid_tx[i])
-+			continue;
-+		tid_tx = sta->ampdu_mlme.tid_tx[i];
-+		if (skb_queue_len(&tid_tx->pending)) {
-+#ifdef CONFIG_MAC80211_HT_DEBUG
-+			wiphy_debug(local->hw.wiphy, "TX A-MPDU  purging %d "
-+				"packets for tid=%d\n",
-+				skb_queue_len(&tid_tx->pending), i);
-+#endif /* CONFIG_MAC80211_HT_DEBUG */
-+			__skb_queue_purge(&tid_tx->pending);
-+		}
-+		kfree_rcu(tid_tx, rcu_head);
-+	}
-+
- 	__sta_info_free(local, sta);
- 
- 	return 0;
--- 
-1.5.4.1
 
+
+Kind regards,
+Andreas Hartmann
