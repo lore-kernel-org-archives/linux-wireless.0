@@ -1,40 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:51746 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750757Ab1LOIxp (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:45423 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754628Ab1L1WkO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 03:53:45 -0500
-Received: by mail-lpp01m010-f49.google.com with SMTP id c1so1168947lah.22
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 00:53:44 -0800 (PST)
-Subject: Re: [PATCH] wl12xx: don't write out of bounds when hlid >
- WL12XX_MAX_LINKS
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <1323769142-20515-1-git-send-email-coelho@ti.com>
-References: <1323769142-20515-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 15 Dec 2011 10:53:39 +0200
-Message-ID: <1323939219.2800.178.camel@cumari> (sfid-20111215_095347_872549_06E8A625)
-Mime-Version: 1.0
+	Wed, 28 Dec 2011 17:40:14 -0500
+Received: by vbbfc26 with SMTP id fc26so9902345vbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Dec 2011 14:40:13 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4EFB91B0.2070800@01019freenet.de>
+References: <1325033604-26469-1-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-2-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-3-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-4-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-5-git-send-email-gwingerde@gmail.com>
+	<CAOZOX0XauBTyaBR9j75de=BeTZ1v_rRfgdJc7BPYDsA9HYi-2w@mail.gmail.com>
+	<4EFB7F6B.8050104@gmail.com>
+	<4EFB91B0.2070800@01019freenet.de>
+Date: Wed, 28 Dec 2011 23:40:13 +0100
+Message-ID: <CAOZOX0V5V6O=GDydjmxn2YGAJGwqT5GU8GqVeshdbe=MJt4jwg@mail.gmail.com> (sfid-20111228_234037_548915_065C1BDE)
+Subject: Re: [PATCH 4/7] rt2800usb: Let rt2x00usb handle USB padding
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
+	John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	=?ISO-8859-2?Q?Jakub_Kici=F1ski?= <kubakici@wp.pl>
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-12-13 at 11:39 +0200, Luciano Coelho wrote: 
-> We should not get an hlid value bigger than WL12XX_MAX_LINKS from
-> wl1271_rx_handle_data().  We have a WARN_ON in case it happens.  But
-> despite the warning, we would still go ahead and write the hlid bit
-> into active_hlids (a stack variable).  This would cause us to
-> overwrite other data in the stack.
-> 
-> To avoid this problem, we now skip the write when issuing the warning,
-> so at least we don't corrupt data.
-> 
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
-> ---
+2011/12/28 Andreas Hartmann <andihartmann@01019freenet.de>:
+> Gertjan van Wingerde schrieb:
+>> On 12/28/11 21:12, Ivo Van Doorn wrote:
+>>> On Wed, Dec 28, 2011 at 1:53 AM, Gertjan van Wingerde
+>>> <gwingerde@gmail.com> wrote:
+>>>> From: Jakub Kiciñski <kubakici@wp.pl>
+>>>>
+>>>> Older USB drivers does not append end padding to skb but instead report
+>>>> it in size of data to be transmitted to HW. rt2800usb should follow that
+>>>> behaviour. Custom write_tx_data callback which was adding pad to skb
+>>>> is not be needed any more.
+>>>>
+>>>> Thanks to this patch frames handed back from rt2800usb to mac80211 will
+>>>> no longer contain end padding.
+>>>
+>>> What happened to the reports that after this (and the next) patch, the
+>>> non-2800 USB
+>>> drivers are failing?
+>>
+>> I have seen only 1 failure report (from Andreas Hartmann), which seemed
+>> to have been caused by not applying both patches. ISTR that Andreas did
+>> not see any regression when both patches were applied.
+>
+> Yes, that's true. The behavior of a rt3572 dongle in my test with both
+> patches applied was the same as without these both patches.
+>
+> Please note that the test I did was very short, because the rt2800usb
+> driver works really bad with this device anyway.
 
-Applied.
+Ok, thanks for the update.
 
--- 
-Cheers,
-Luca.
-
+Ivo
