@@ -1,91 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:16602 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750699Ab1LZFNh (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:63760 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754628Ab1L1Wkx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Dec 2011 00:13:37 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Marek Lindner <lindner_marek@yahoo.de>
-Subject: [PATCH] mac80211: fix kernel panic in IBSS due to a regression
-Date: Mon, 26 Dec 2011 10:43:29 +0530
-Message-ID: <1324876409-2031-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111226_061340_939860_6E1100C4)
+	Wed, 28 Dec 2011 17:40:53 -0500
+Received: by vcbfk14 with SMTP id fk14so9781906vcb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Dec 2011 14:40:52 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1325033604-26469-6-git-send-email-gwingerde@gmail.com>
+References: <1325033604-26469-1-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-2-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-3-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-4-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-5-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-6-git-send-email-gwingerde@gmail.com>
+Date: Wed, 28 Dec 2011 23:40:52 +0100
+Message-ID: <CAOZOX0U4x8OaX=XLGbPy5wMMhm_=fiRqULoL2hh048QgaNGq6A@mail.gmail.com> (sfid-20111228_234056_043537_B9A2AAE5)
+Subject: Re: [PATCH 5/7] rt2x00usb: Zero USB padding before sending URB
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	=?ISO-8859-2?Q?Jakub_Kici=F1ski?= <kubakici@wp.pl>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Wed, Dec 28, 2011 at 1:53 AM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> From: Jakub Kiciński <kubakici@wp.pl>
+>
+> When USB driver requires padding at the end of frame or URB it will report
+> this need by increasing return value of get_tx_data_len callback. Common
+> USB code uses that return value as desired URB length.
+>
+> Ensure that appropriate part of skb's tailroom exists and is zeroed.
+>
+> Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
 
-kernel panic occurs when we create an IBSS mode and leave it for
-sometime without any joiner and this is introduced by the
-commit ec2b774e7c91094d8c00de579646f1162b87b01e where we don't
-put proper braces for 'list_for_each_entry_safe' and we pass an
-invalid 'sta' pointer to __sta_info_destroy
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-EIP is at __list_add+0xe/0xa0
-EAX: f3b63db4 EBX: 00000000 ECX: eab88c1c EDX: 00000000
-ESI: 00000000 EDI: 00000246 EBP: f3b63d80 ESP: f3b63d58
-DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-Process kworker/u:2 (pid: 198, ti=f3b62000 task=f3afbea0
-task.ti=f3b62000)
-Stack:
-00000000 00000000 f9ef9821 00000000 00000000 eab88c30
-f3b63d80 c017f623
-eab88bf0 eab88bf0 f3b63dd0 c066f925 00000000 00000002
-00000000 f9ef9821
-f3b63da0 c0180a2b eab88c1c eab88c30 00000002 f3afbea0
-eab88bf4 f3b63db4
- Call Trace:
-[<f9ef9821>] ? __ieee80211_stop_tx_ba_session+0x31/0x60
-[mac80211]
-[<c017f623>] ? debug_mutex_add_waiter+0x23/0x60
-[<c066f925>] __mutex_lock_common+0xd5/0x390
-[<f9ef9821>] ? __ieee80211_stop_tx_ba_session+0x31/0x60
-[mac80211]
-[<c0180a2b>] ? trace_hardirqs_off+0xb/0x10
-[<c066fd37>] mutex_lock_nested+0x47/0x60
-[<f9ef9821>] ? __ieee80211_stop_tx_ba_session+0x31/0x60
-[mac80211]
-[<f9ef9821>] __ieee80211_stop_tx_ba_session+0x31/0x60
-[mac80211]
-[<f9ef8989>] ieee80211_sta_tear_down_BA_sessions+0x39/0x60 [mac80211]
-[<f9ef1a67>] __sta_info_destroy+0x57/0x780 [mac80211]
-[<f9ef2223>] ieee80211_sta_expire+0x93/0xb0 [mac80211]
-[<f9efc8f6>] ieee80211_ibss_work+0x2d6/0x530 [mac80211]
-
-Cc: Marek Lindner <lindner_marek@yahoo.de>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- net/mac80211/sta_info.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index f0d3b48..b197136 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -945,7 +945,8 @@ void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
- 	struct sta_info *sta, *tmp;
- 
- 	mutex_lock(&local->sta_mtx);
--	list_for_each_entry_safe(sta, tmp, &local->sta_list, list)
-+
-+	list_for_each_entry_safe(sta, tmp, &local->sta_list, list) {
- 		if (sdata != sta->sdata)
- 			continue;
- 
-@@ -956,6 +957,8 @@ void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
- #endif
- 			WARN_ON(__sta_info_destroy(sta));
- 		}
-+	}
-+
- 	mutex_unlock(&local->sta_mtx);
- }
- 
--- 
-1.7.0.4
-
+> --
+>  drivers/net/wireless/rt2x00/rt2x00usb.c |   16 +++++++++++++---
+>  1 files changed, 13 insertions(+), 3 deletions(-)
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00usb.c |   16 +++++++++++++---
+>  1 files changed, 13 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00usb.c b/drivers/net/wireless/rt2x00/rt2x00usb.c
+> index 1e31050..2eea386 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00usb.c
+> @@ -298,12 +298,22 @@ static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry, void* data)
+>                return false;
+>
+>        /*
+> -        * USB devices cannot blindly pass the skb->len as the
+> -        * length of the data to usb_fill_bulk_urb. Pass the skb
+> -        * to the driver to determine what the length should be.
+> +        * USB devices require certain padding at the end of each frame
+> +        * and urb. Those paddings are not included in skbs. Pass entry
+> +        * to the driver to determine what the overall length should be.
+>         */
+>        length = rt2x00dev->ops->lib->get_tx_data_len(entry);
+>
+> +       status = skb_padto(entry->skb, length);
+> +       if (unlikely(status)) {
+> +               /* TODO: report something more appropriate than IO_FAILED. */
+> +               WARNING(rt2x00dev, "TX SKB padding error, out of memory\n");
+> +               set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
+> +               rt2x00lib_dmadone(entry);
+> +
+> +               return false;
+> +       }
+> +
+>        usb_fill_bulk_urb(entry_priv->urb, usb_dev,
+>                          usb_sndbulkpipe(usb_dev, entry->queue->usb_endpoint),
+>                          entry->skb->data, length,
+> --
+> 1.7.7.4
+>
