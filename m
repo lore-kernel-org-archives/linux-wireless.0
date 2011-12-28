@@ -1,61 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:55381 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932984Ab1LFIRK (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25549 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753812Ab1L1NkF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Dec 2011 03:17:10 -0500
-Received: by faar15 with SMTP id r15so1411166faa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Dec 2011 00:17:09 -0800 (PST)
+	Wed, 28 Dec 2011 08:40:05 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	Felix Fietkau <nbd@openwrt.org>, <ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH] ath9k: tx queue enable is read only for EDMA chipsets
+Date: Wed, 28 Dec 2011 19:09:54 +0530
+Message-ID: <1325079594-3212-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111228_144015_843353_721FD2CB)
 MIME-Version: 1.0
-In-Reply-To: <CAOeh9MuGyhwC3swbaZWjQ4+qvsVkofR13j=UX-Rjx0KENw8wgQ@mail.gmail.com>
-References: <CAOeh9MuuJtK_edMQvVaLSRytRoFix_OuW4OEcEMDYEak1=CvMw@mail.gmail.com>
-	<CAB3XZEf=jrrqZk58BnV8Gi4iKJ6N6c24M_eLnz816n==kuxmHA@mail.gmail.com>
-	<CAOeh9MsqTQT6qzd47Af674cK4KQHN=uOaG-u1hVWV9faeb2Mwg@mail.gmail.com>
-	<CAB3XZEf4sm66WzG49jYsig=wzip0m2w87tud2Es0wd4aXV2Fqw@mail.gmail.com>
-	<CAOeh9MuGyhwC3swbaZWjQ4+qvsVkofR13j=UX-Rjx0KENw8wgQ@mail.gmail.com>
-Date: Tue, 6 Dec 2011 13:47:09 +0530
-Message-ID: <CAOeh9MvgzNnToPMSwt0_QX+T5T63dJDuekoUOU6_JcbFDmXV-g@mail.gmail.com> (sfid-20111206_091714_709939_C42E53E6)
-Subject: Re: Query on ieee80211_subif_start_xmit
-From: uday kiran <kaniki.uday@gmail.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Any pointers ?
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-On 12/5/11, uday kiran <kaniki.uday@gmail.com> wrote:
-> Is ieee80211_subif_start_xmit the standard function called for frame
-> conversion ? Or will it change based on the driver under use ?
->
-> For frame conversion to work , is it must to add eth and wlan
-> interfaces to the bridge interface?
->
-> Is it that once 802.3 stack understands that the dest mac is on wi-fi
-> interface , it calls this function ?
->
-> Please clarify.
->
->> 	skip_header_bytes = ETH_HLEN;
->> 	if (ethertype == ETH_P_AARP || ethertype == ETH_P_IPX) {
->> 		encaps_data = bridge_tunnel_header;
->> 		encaps_len = sizeof(bridge_tunnel_header);
->> 		skip_header_bytes -= 2;
->> 	} else if (ethertype >= 0x600) {
->> 		encaps_data = rfc1042_header;
->> 		encaps_len = sizeof(rfc1042_header);
->> 		skip_header_bytes -= 2;
->> 	} else {
->> 		encaps_data = NULL;
->> 		encaps_len = 0;
->> 	}
->>
->> 	nh_pos = skb_network_header(skb) - skb->data;
->> 	h_pos = skb_transport_header(skb) - skb->data;
->>
->> 	skb_pull(skb, skip_header_bytes);
->>
->> Eliad.
->>
->
+for EDMA chip AR_Q_TXE (tx enable for each queue) is read only
+
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |    7 +++++--
+ 1 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index dc5fd56..b8967e4 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -356,6 +356,7 @@ void ath_beacon_tasklet(unsigned long data)
+ 	struct ath_buf *bf = NULL;
+ 	struct ieee80211_vif *vif;
+ 	struct ath_tx_status ts;
++	bool edma = !!(ah->caps.hw_caps & ATH9K_HW_CAP_EDMA);
+ 	int slot;
+ 	u32 bfaddr, bc = 0;
+ 
+@@ -456,10 +457,12 @@ void ath_beacon_tasklet(unsigned long data)
+ 	if (bfaddr != 0) {
+ 		/* NB: cabq traffic should already be queued and primed */
+ 		ath9k_hw_puttxbuf(ah, sc->beacon.beaconq, bfaddr);
+-		ath9k_hw_txstart(ah, sc->beacon.beaconq);
++
++		if (!edma)
++			ath9k_hw_txstart(ah, sc->beacon.beaconq);
+ 
+ 		sc->beacon.ast_be_xmit += bc;     /* XXX per-vif? */
+-		if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
++		if (edma) {
+ 			spin_lock_bh(&sc->sc_pcu_lock);
+ 			ath9k_hw_txprocdesc(ah, bf->bf_desc, (void *)&ts);
+ 			spin_unlock_bh(&sc->sc_pcu_lock);
+-- 
+1.7.0.4
+
