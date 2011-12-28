@@ -1,103 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52806 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757745Ab1LGQUy (ORCPT
+Received: from moutng.kundenserver.de ([212.227.126.187]:56818 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751490Ab1L1ABN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Dec 2011 11:20:54 -0500
-Cc: <linux-wireless@vger.kernel.org>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>,
-	<compat@orbit-lab.org>, Paul Stewart <pstew@google.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Senthilkumar Balasubramanian <senthilb@qca.qualcomm.com>,
-	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-Subject: [PATCH 1/2] cfg80211: allow following country IE power for custom regdom cards
-Date: Wed, 7 Dec 2011 21:50:07 +0530
-Message-ID: <1323274808-14094-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20111207_174845_042012_116F1C43)
+	Tue, 27 Dec 2011 19:01:13 -0500
+Date: Wed, 28 Dec 2011 01:00:55 +0100 (CET)
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+cc: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-kernel@vger.kernel.org,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH] b43: fix regression in PIO case
+In-Reply-To: <4EFA58FD.9060605@lwfinger.net>
+Message-ID: <alpine.DEB.2.00.1112280052030.9949@axis700.grange> (sfid-20111228_010118_462211_D4050B29)
+References: <alpine.DEB.2.00.1112261608140.12108@axis700.grange> <alpine.DEB.2.00.1112261824000.12108@axis700.grange> <CACna6ry1tKXtUSQHknkEbzBq_gZUyxn1-9Guba2a56xzx242SA@mail.gmail.com> <alpine.DEB.2.00.1112272359240.6684@axis700.grange>
+ <4EFA58FD.9060605@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+On Tue, 27 Dec 2011, Larry Finger wrote:
 
-By definition WIPHY_FLAG_STRICT_REGULATORY was intended to allow the
-wiphy to adjust itself to the country IE power information if the
-card had no regulatory data but we had no way to tell cfg80211 that if
-the card also had its own custom regulatory domain (these are typically
-custom world regulatory domains) that we want to follow the country IE's
-noted values for power for each channel. We add support for this and
-document it.
+> On 12/27/2011 05:05 PM, Guennadi Liakhovetski wrote:
+> > On Tue, 27 Dec 2011, Rafał Miłecki wrote:
+> > 
+> > > W dniu 26 grudnia 2011 18:28 użytkownik Guennadi Liakhovetski
+> > > <g.liakhovetski@gmx.de>  napisał:
+> > > > This patch fixes the regression, introduced by
+> > > > 
+> > > > commit 17030f48e31adde5b043741c91ba143f5f7db0fd
+> > > > From: Rafał Miłecki<zajec5@gmail.com>
+> > > > Date: Thu, 11 Aug 2011 17:16:27 +0200
+> > > > Subject: [PATCH] b43: support new RX header, noticed to be used in
+> > > > 598.314+ fw
+> > > > 
+> > > > in PIO case.
+> > > > 
+> > > > Signed-off-by: Guennadi Liakhovetski<g.liakhovetski@gmx.de>
+> > > > ---
+> > > > diff --git a/drivers/net/wireless/b43/pio.c
+> > > > b/drivers/net/wireless/b43/pio.c
+> > > > index ce8a4bd..b64b64c 100644
+> > > > --- a/drivers/net/wireless/b43/pio.c
+> > > > +++ b/drivers/net/wireless/b43/pio.c
+> > > > @@ -617,9 +617,19 @@ static bool pio_rx_frame(struct b43_pio_rxqueue *q)
+> > > >         const char *err_msg = NULL;
+> > > >         struct b43_rxhdr_fw4 *rxhdr =
+> > > >                 (struct b43_rxhdr_fw4 *)wl->pio_scratchspace;
+> > > > +       size_t rxhdr_size = sizeof(*rxhdr);
+> > > > 
+> > > >         BUILD_BUG_ON(sizeof(wl->pio_scratchspace)<  sizeof(*rxhdr));
+> > > > -       memset(rxhdr, 0, sizeof(*rxhdr));
+> > > > +       switch (dev->fw.hdr_format) {
+> > > > +       case B43_FW_HDR_410:
+> > > > +       case B43_FW_HDR_351:
+> > > > +               rxhdr_size -= sizeof(rxhdr->format_598) -
+> > > > +                       sizeof(rxhdr->format_351);
+> > > > +               break;
+> > > > +       case B43_FW_HDR_598:
+> > > > +               break;
+> > > > +       }
+> > > > +       memset(rxhdr, 0, rxhdr_size);
+> > > 
+> > > Huuh, that's really tricky. Can you just do "normal" conditions as
+> > > Larry suggested, please?
+> > 
+> > Sorry? I absolutely see nothing tricky there. Do you think this would look
+> > "less tricky" to you:
+> > 
+> > 	switch (dev->fw.hdr_format) {
+> > 	case B43_FW_HDR_410:
+> > 	case B43_FW_HDR_351:
+> > 		rxhdr_size = offsetof(struct b43_rxhdr_fw4,
+> > 					format_351) +
+> > 			sizeof(rxhdr_size->format_351);
+> > 		break;
+> > 	case B43_FW_HDR_598:
+> > 		rxhdr_size = sizeof(*rxhdr);
+> > 		break;
+> > 	}
+> > 
+> 
+> How about this?
+> 
+> Index: wireless-testing-new/drivers/net/wireless/b43/pio.c
+> ===================================================================
+> --- wireless-testing-new.orig/drivers/net/wireless/b43/pio.c
+> +++ wireless-testing-new/drivers/net/wireless/b43/pio.c
+> @@ -617,9 +617,20 @@ static bool pio_rx_frame(struct b43_pio_
+>         const char *err_msg = NULL;
+>         struct b43_rxhdr_fw4 *rxhdr =
+>                 (struct b43_rxhdr_fw4 *)wl->pio_scratchspace;
+> +       size_t rxhdr_size;
+> 
+>         BUILD_BUG_ON(sizeof(wl->pio_scratchspace) < sizeof(*rxhdr));
+> -       memset(rxhdr, 0, sizeof(*rxhdr));
+> +       switch (dev->fw.hdr_format) {
+> +       case B43_FW_HDR_410:
+> +       case B43_FW_HDR_351:
+> +               rxhdr_size = sizeof(rxhdr->format_351);
+> +               break;
+> +       case B43_FW_HDR_598:
+> +       default:
+> +               rxhdr_size = sizeof(rxhdr->format_598);
+> +               break;
+> +       }
+> +       memset(rxhdr, 0, rxhdr_size);
+> 
+>         /* Check if we have data and wait for it to get ready. */
+>         if (q->rev >= 8) {
 
-This is not a critical fix but a performance optimization for cards
-with custom regulatory domains that associate to an AP with sends
-out country IEs with a higher EIRP than the one on the custom
-regulatory domain. In practice the only driver affected right now
-are the Atheros drivers as they are the only drivers using both
-WIPHY_FLAG_STRICT_REGULATORY and WIPHY_FLAG_CUSTOM_REGULATORY --
-used on cards that have an Atheros world regulatory domain. Cards
-that have been programmed to follow a country specifically will not
-follow the country IE power. So although not a stable fix distributions
-should consider cherry picking this.
+I am sorry, I'm either being blind and stupid or you're trying to do 
+something quite wrong there. struct b43_rxhdr_fw4 has a bunch of fields 
+first, then at the end it has a union of two fields: format_598 and 
+format_351, right? rxhdr is pointing at the struct itself. Before the 
+offending patch memset() used to clean the whole struct. Now in your above 
+version you calculate the size of one of those union fields and nullify 
+that many bytes from the _beginning_ of the whole struct.
 
-Cc: compat@orbit-lab.org
-Cc: Paul Stewart <pstew@google.com>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: Senthilkumar Balasubramanian <senthilb@qca.qualcomm.com>
-Reported-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+I've seen myself being wrong before, but here... I'll let you judge 
+though.
+
+Thanks
+Guennadi
 ---
- include/net/cfg80211.h |    4 +++-
- net/wireless/reg.c     |   20 ++++++++++++++++----
- 2 files changed, 19 insertions(+), 5 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 3de1c39..a2217f4 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1694,7 +1694,9 @@ struct cfg80211_ops {
-  *	regulatory domain no user regulatory domain can enable these channels
-  *	at a later time. This can be used for devices which do not have
-  *	calibration information guaranteed for frequencies or settings
-- *	outside of its regulatory domain.
-+ *	outside of its regulatory domain. If used in combination with
-+ *	WIPHY_FLAG_CUSTOM_REGULATORY the inspected country IE power settings
-+ *	will be followed.
-  * @WIPHY_FLAG_DISABLE_BEACON_HINTS: enable this if your driver needs to ensure
-  *	that passive scan flags and beaconing flags may not be lifted by
-  *	cfg80211 due to regulatory beacon hints. For more information on beacon
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 70b171a..88e0c62 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -873,10 +873,22 @@ static void handle_channel(struct wiphy *wiphy,
- 	chan->flags = flags | bw_flags | map_regdom_flags(reg_rule->flags);
- 	chan->max_antenna_gain = min(chan->orig_mag,
- 		(int) MBI_TO_DBI(power_rule->max_antenna_gain));
--	if (chan->orig_mpwr)
--		chan->max_power = min(chan->orig_mpwr,
--			(int) MBM_TO_DBM(power_rule->max_eirp));
--	else
-+	if (chan->orig_mpwr) {
-+		/*
-+		 * Devices that have their own custom regulatory domain
-+		 * but also use WIPHY_FLAG_STRICT_REGULATORY will follow the
-+		 * passed country IE power settings.
-+		 */
-+		if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE &&
-+		    wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY &&
-+		    wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY) {
-+			chan->max_power =
-+				MBM_TO_DBM(power_rule->max_eirp);
-+		} else {
-+			chan->max_power = min(chan->orig_mpwr,
-+				(int) MBM_TO_DBM(power_rule->max_eirp));
-+		}
-+	} else
- 		chan->max_power = (int) MBM_TO_DBM(power_rule->max_eirp);
- }
- 
--- 
-1.7.8
-
+Guennadi Liakhovetski, Ph.D.
+Freelance Open-Source Software Developer
+http://www.open-technology.de/
