@@ -1,140 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:36865 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752692Ab1LLBmV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Dec 2011 20:42:21 -0500
-Subject: Re: iwlagn regression in v3.1.5
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Andrej Gelenberg <andrej.gelenberg@udo.edu>
-Cc: Udo Steinberg <udo@hypervisor.org>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-In-Reply-To: <4EE50266.4050208@udo.edu>
-References: <4EE4AEF4.2080702@udo.edu> <4EE4DB55.4090804@udo.edu>
-	 <20111211174138.79e51fe8@x220.fritz.box>  <4EE4E152.2070204@udo.edu>
-	 <1323627815.1806.19.camel@wwguy-ubuntu>  <4EE50266.4050208@udo.edu>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 11 Dec 2011 17:35:37 -0800
-Message-ID: <1323653737.1806.21.camel@wwguy-ubuntu> (sfid-20111212_024225_518194_9B3C01B8)
-Mime-Version: 1.0
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:39091 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754422Ab1L1UMl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 28 Dec 2011 15:12:41 -0500
+Received: by vbbfc26 with SMTP id fc26so9835525vbb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 28 Dec 2011 12:12:40 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1325033604-26469-8-git-send-email-gwingerde@gmail.com>
+References: <1325033604-26469-1-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-2-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-3-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-4-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-5-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-6-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-7-git-send-email-gwingerde@gmail.com>
+	<1325033604-26469-8-git-send-email-gwingerde@gmail.com>
+Date: Wed, 28 Dec 2011 21:12:40 +0100
+Message-ID: <CAOZOX0VAvsS=YiEtpWW+4arzPo5RcEaSA_KpC-w0vCm3-uWsmw@mail.gmail.com> (sfid-20111228_211243_647473_B7F70A63)
+Subject: Re: [PATCH 7/7] rt2x00: Change RF3853 to RF3053.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: John W Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andjej,
+On Wed, Dec 28, 2011 at 1:53 AM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> According to the latest Ralink vendor drivers, this seems to be the real
+> RF chipset type.
+>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Could you please load the module with debug=0x1082 and send me the log.
-
-$sudo modprobe iwlagn debug=0x1082
-
-Thanks
-Wey
-
-On Sun, 2011-12-11 at 11:20 -0800, Andrej Gelenberg wrote:
-> Hi,
-> 
-> some info to the AP i use:
-> 
-> Technaxx Router-150 Wifi-N based on ranik soc
-> 
-> $ iw dev wlan0 station dump
-> Station xx:xx..xx:xx (on wlan0)
->          inactive time:  6603 ms
->          rx bytes:       377786468
->          rx packets:     443535
->          tx bytes:       15677515
->          tx packets:     155009
->          tx retries:     2723757
->          tx failed:      51495
->          signal:         -72 dBm
->          signal avg:     -71 dBm
->          tx bitrate:     135.0 MBit/s MCS 6 40Mhz short GI
->          authorized:     yes
->          authenticated:  yes
->          preamble:       long
->          WMM/WME:        yes
->          MFP:            no
-> 
-> $ iwconfig wlan0
-> wlan0     IEEE 802.11abgn  ESSID:"xxx"
->            Mode:Managed  Frequency:2.437 GHz  Access Point: xx:xx..xx:xx
->            Bit Rate=121.5 Mb/s   Tx-Power=15 dBm
->            Retry  long limit:7   RTS thr:off   Fragment thr:off
->            Power Management:off
->            Link Quality=42/70  Signal level=-68 dBm
->            Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
->            Tx excessive retries:51520  Invalid misc:3567 Missed beacon:0
-> 
-> some dmesg output:
-> 
-> [  903.748514] wlan0: authenticate with xx:xx..xx:xx (try 1)
-> [  903.750991] wlan0: authenticated
-> [  903.753357] wlan0: associate with xx:xx..xx:xx (try 1)
-> [  903.759482] wlan0: RX AssocResp from xx:xx..xx:xx (capab=0xc31 
-> status=0 aid=1)
-> [  903.759487] wlan0: associated
-> 
-> $ iwlist wlan0 scan
-> 
->            Cell 06 - Address: xx:xx..xx:xx
->                      Channel:6
->                      Frequency:2.437 GHz (Channel 6)
->                      Quality=45/70  Signal level=-65 dBm
->                      Encryption key:on
->                      ESSID:"xxx"
->                      Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 9 Mb/s
->                                18 Mb/s; 36 Mb/s; 54 Mb/s
->                      Bit Rates:6 Mb/s; 12 Mb/s; 24 Mb/s; 48 Mb/s
->                      Mode:Master
->                      Extra:tsf=0000005666eac197
->                      Extra: Last beacon: 33ms ago
->                      IE: Unknown: 000873757065726B7568
->                      IE: Unknown: 010882848B961224486C
->                      IE: Unknown: 030106
->                      IE: Unknown: 2A0100
->                      IE: Unknown: 32040C183060
->                      IE: Unknown: 
-> 2D1A7E1117FF000000010000000000000000000000000C0000000000
->                      IE: Unknown: 
-> 3D1606070500000000000000000000000000000000000000
->                      IE: Unknown: 3E0100
->                      IE: IEEE 802.11i/WPA2 Version 1
->                          Group Cipher : CCMP
->                          Pairwise Ciphers (1) : CCMP
->                          Authentication Suites (1) : PSK
->                      IE: Unknown: 
-> DD180050F2020101800003A4000027A4000042435E0062322F00
->                      IE: Unknown: 0B05020012127A
->                      IE: Unknown: 4A0E14000A002C01C800140005001900
->                      IE: Unknown: 7F0101
->                      IE: Unknown: DD07000C4307000000
->                      IE: Unknown: 0706465220010D10
->                      IE: Unknown: 
-> DD1E00904C337E1117FF000000010000000000000000000000000C0000000000
->                      IE: Unknown: 
-> DD1A00904C3406070500000000000000000000000000000000000000
-> 
-> Regards,
-> Andrej Gelenberg
-> 
-> On 12/11/2011 07:23 PM, wwguy wrote:
-> > On Sun, 2011-12-11 at 08:58 -0800, Andrej Gelenberg wrote:
-> >> Hi,
-> >>
-> >> this is pretty mean regression for the stable kernel. You may the fix
-> >> only for cards, which need it and not for all of them.
-> >
-> > Could you elaborate more on the failure case and setup. this patch is to
-> > address HT40 related problem which cause the iwlwifi firmware crash.
-> >
-> > Thanks
-> > Wey
-> >>>
-> >
-> >
-> 
-
-
+> ---
+>  drivers/net/wireless/rt2x00/rt2800.h |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+> index 4778620..2571a2f 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800.h
+> +++ b/drivers/net/wireless/rt2x00/rt2800.h
+> @@ -50,7 +50,7 @@
+>  * RF2853 2.4G/5G 3T3R
+>  * RF3320 2.4G 1T1R(RT3350/RT3370/RT3390)
+>  * RF3322 2.4G 2T2R(RT3352/RT3371/RT3372/RT3391/RT3392)
+> - * RF3853 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
+> + * RF3053 2.4G/5G 3T3R(RT3883/RT3563/RT3573/RT3593/RT3662)
+>  * RF5370 2.4G 1T1R
+>  * RF5390 2.4G 1T1R
+>  */
+> @@ -66,7 +66,7 @@
+>  #define RF2853                         0x000a
+>  #define RF3320                         0x000b
+>  #define RF3322                         0x000c
+> -#define RF3853                         0x000d
+> +#define RF3053                         0x000d
+>  #define RF5370                         0x5370
+>  #define RF5390                         0x5390
+>
+> --
+> 1.7.7.4
+>
