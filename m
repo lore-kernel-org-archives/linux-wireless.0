@@ -1,177 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:41121 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752513Ab1LGICb (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:48678 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754432Ab1L2MkO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Dec 2011 03:02:31 -0500
-Subject: [PATCH] mac80211: fix another race in aggregation start
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 07 Dec 2011 09:02:21 +0100
-Message-ID: <1323244941.3404.0.camel@jlt3.sipsolutions.net> (sfid-20111207_090237_552574_1F6FB2B2)
-Mime-Version: 1.0
+	Thu, 29 Dec 2011 07:40:14 -0500
+Received: by mail-lpp01m010-f46.google.com with SMTP id d3so2600118lah.19
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Dec 2011 04:40:13 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 2/3] mac80211: move sta_state into sta->sta
+Date: Thu, 29 Dec 2011 14:41:40 +0200
+Message-Id: <1325162501-7996-3-git-send-email-eliad@wizery.com> (sfid-20111229_134029_889336_BD204BCE)
+In-Reply-To: <1325162501-7996-1-git-send-email-eliad@wizery.com>
+References: <1325162501-7996-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Make the station state visible to the low-level drivers.
+In the following patches the drivers will be notified
+about each change in the station state.
 
-Emmanuel noticed that when mac80211 stops the queues
-for aggregation that can leave a packet pending. This
-packet will be given to the driver after the AMPDU
-callback, but as a non-aggregated packet which messes
-up the sequence number etc.
-
-I also noticed by looking at the code that if packets
-are being processed while we clear the WANT_START bit,
-they might see it cleared already and queue up on
-tid_tx->pending. If the driver then rejects the new
-aggregation session we leak the packet.
-
-Fix both of these issues by changing this code to not
-stop the queues at all. Instead, let packets queue up
-on the tid_tx->pending queue instead of letting them
-get to the driver, and add code to recover properly
-in case the driver rejects the session.
-
-(The patch looks large because it has to move two
-functions to before their new use.)
-
-Cc: stable@vger.kernel.org
-Reported-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- net/mac80211/agg-tx.c |   86 +++++++++++++++++++++++---------------------------
- 1 file changed, 41 insertions(+), 45 deletions(-)
+ include/net/mac80211.h  |   10 ++++++++++
+ net/mac80211/sta_info.c |   20 ++++++++++----------
+ net/mac80211/sta_info.h |   11 -----------
+ 3 files changed, 20 insertions(+), 21 deletions(-)
 
---- a/net/mac80211/agg-tx.c	2011-11-29 19:28:50.000000000 +0100
-+++ b/net/mac80211/agg-tx.c	2011-11-29 19:29:18.000000000 +0100
-@@ -305,6 +305,38 @@ ieee80211_wake_queue_agg(struct ieee8021
- 	__release(agg_queue);
- }
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 8788c3a..cec5610 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -961,6 +961,14 @@ enum set_key_cmd {
+ 	SET_KEY, DISABLE_KEY,
+ };
  
-+/*
-+ * splice packets from the STA's pending to the local pending,
-+ * requires a call to ieee80211_agg_splice_finish later
-+ */
-+static void __acquires(agg_queue)
-+ieee80211_agg_splice_packets(struct ieee80211_local *local,
-+			     struct tid_ampdu_tx *tid_tx, u16 tid)
-+{
-+	int queue = ieee80211_ac_from_tid(tid);
-+	unsigned long flags;
++enum ieee80211_sta_state {
++	/* NOTE: These need to be ordered correctly! */
++	IEEE80211_STA_NONE,
++	IEEE80211_STA_AUTH,
++	IEEE80211_STA_ASSOC,
++	IEEE80211_STA_AUTHORIZED,
++};
 +
-+	ieee80211_stop_queue_agg(local, tid);
-+
-+	if (WARN(!tid_tx, "TID %d gone but expected when splicing aggregates"
-+			  " from the pending queue\n", tid))
-+		return;
-+
-+	if (!skb_queue_empty(&tid_tx->pending)) {
-+		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
-+		/* copy over remaining packets */
-+		skb_queue_splice_tail_init(&tid_tx->pending,
-+					   &local->pending[queue]);
-+		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
-+	}
-+}
-+
-+static void __releases(agg_queue)
-+ieee80211_agg_splice_finish(struct ieee80211_local *local, u16 tid)
-+{
-+	ieee80211_wake_queue_agg(local, tid);
-+}
-+
- void ieee80211_tx_ba_session_handle_start(struct sta_info *sta, int tid)
+ /**
+  * struct ieee80211_sta - station table entry
+  *
+@@ -981,6 +989,7 @@ enum set_key_cmd {
+  * @uapsd_queues: bitmap of queues configured for uapsd. Only valid
+  *	if wme is supported.
+  * @max_sp: max Service Period. Only valid if wme is supported.
++ * @state: the current station state
+  */
+ struct ieee80211_sta {
+ 	u32 supp_rates[IEEE80211_NUM_BANDS];
+@@ -990,6 +999,7 @@ struct ieee80211_sta {
+ 	bool wme;
+ 	u8 uapsd_queues;
+ 	u8 max_sp;
++	enum ieee80211_sta_state state;
+ 
+ 	/* must be last */
+ 	u8 drv_priv[0] __attribute__((__aligned__(sizeof(void *))));
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 3d01abb..66e2de6 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -765,8 +765,8 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
+ 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+ 		RCU_INIT_POINTER(sdata->u.vlan.sta, NULL);
+ 
+-	while (sta->sta_state > IEEE80211_STA_NONE)
+-		sta_info_move_state(sta, sta->sta_state - 1);
++	while (sta->sta.state > IEEE80211_STA_NONE)
++		sta_info_move_state(sta, sta->sta.state - 1);
+ 
+ 	if (sta->uploaded) {
+ 		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
+@@ -1407,28 +1407,28 @@ int sta_info_move_state_checked(struct sta_info *sta,
  {
- 	struct tid_ampdu_tx *tid_tx;
-@@ -316,19 +348,17 @@ void ieee80211_tx_ba_session_handle_star
- 	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
+ 	might_sleep();
  
- 	/*
--	 * While we're asking the driver about the aggregation,
--	 * stop the AC queue so that we don't have to worry
--	 * about frames that came in while we were doing that,
--	 * which would require us to put them to the AC pending
--	 * afterwards which just makes the code more complex.
-+	 * Start queuing up packets for this aggregation session.
-+	 * We're going to release them once the driver is OK with
-+	 * that.
- 	 */
--	ieee80211_stop_queue_agg(local, tid);
--
- 	clear_bit(HT_AGG_STATE_WANT_START, &tid_tx->state);
+-	if (sta->sta_state == new_state)
++	if (sta->sta.state == new_state)
+ 		return 0;
  
- 	/*
--	 * make sure no packets are being processed to get
--	 * valid starting sequence number
-+	 * Make sure no packets are being processed. This ensures that
-+	 * we have a valid starting sequence number and that in-flight
-+	 * packets have been flushed out and no packets for this TID
-+	 * will go into the driver during the ampdu_action call.
- 	 */
- 	synchronize_net();
+ 	switch (new_state) {
+ 	case IEEE80211_STA_NONE:
+-		if (sta->sta_state == IEEE80211_STA_AUTH)
++		if (sta->sta.state == IEEE80211_STA_AUTH)
+ 			clear_bit(WLAN_STA_AUTH, &sta->_flags);
+ 		else
+ 			return -EINVAL;
+ 		break;
+ 	case IEEE80211_STA_AUTH:
+-		if (sta->sta_state == IEEE80211_STA_NONE)
++		if (sta->sta.state == IEEE80211_STA_NONE)
+ 			set_bit(WLAN_STA_AUTH, &sta->_flags);
+-		else if (sta->sta_state == IEEE80211_STA_ASSOC)
++		else if (sta->sta.state == IEEE80211_STA_ASSOC)
+ 			clear_bit(WLAN_STA_ASSOC, &sta->_flags);
+ 		else
+ 			return -EINVAL;
+ 		break;
+ 	case IEEE80211_STA_ASSOC:
+-		if (sta->sta_state == IEEE80211_STA_AUTH) {
++		if (sta->sta.state == IEEE80211_STA_AUTH) {
+ 			set_bit(WLAN_STA_ASSOC, &sta->_flags);
+-		} else if (sta->sta_state == IEEE80211_STA_AUTHORIZED) {
++		} else if (sta->sta.state == IEEE80211_STA_AUTHORIZED) {
+ 			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
+ 				atomic_dec(&sta->sdata->u.ap.num_sta_authorized);
+ 			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+@@ -1436,7 +1436,7 @@ int sta_info_move_state_checked(struct sta_info *sta,
+ 			return -EINVAL;
+ 		break;
+ 	case IEEE80211_STA_AUTHORIZED:
+-		if (sta->sta_state == IEEE80211_STA_ASSOC) {
++		if (sta->sta.state == IEEE80211_STA_ASSOC) {
+ 			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
+ 				atomic_inc(&sta->sdata->u.ap.num_sta_authorized);
+ 			set_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
+@@ -1450,7 +1450,7 @@ int sta_info_move_state_checked(struct sta_info *sta,
  
-@@ -342,17 +372,15 @@ void ieee80211_tx_ba_session_handle_star
- 					" tid %d\n", tid);
- #endif
- 		spin_lock_bh(&sta->lock);
-+		ieee80211_agg_splice_packets(local, tid_tx, tid);
- 		ieee80211_assign_tid_tx(sta, tid, NULL);
-+		ieee80211_agg_splice_finish(local, tid);
- 		spin_unlock_bh(&sta->lock);
+ 	printk(KERN_DEBUG "%s: moving STA %pM to state %d\n",
+ 		sta->sdata->name, sta->sta.addr, new_state);
+-	sta->sta_state = new_state;
++	sta->sta.state = new_state;
  
--		ieee80211_wake_queue_agg(local, tid);
- 		kfree_rcu(tid_tx, rcu_head);
- 		return;
- 	}
- 
--	/* we can take packets again now */
--	ieee80211_wake_queue_agg(local, tid);
--
- 	/* activate the timer for the recipient's addBA response */
- 	mod_timer(&tid_tx->addba_resp_timer, jiffies + ADDBA_RESP_INTERVAL);
- #ifdef CONFIG_MAC80211_HT_DEBUG
-@@ -490,38 +518,6 @@ int ieee80211_start_tx_ba_session(struct
+ 	return 0;
  }
- EXPORT_SYMBOL(ieee80211_start_tx_ba_session);
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 6f77f12..2f54cd0 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -73,14 +73,6 @@ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_4ADDR_EVENT,
+ };
  
--/*
-- * splice packets from the STA's pending to the local pending,
-- * requires a call to ieee80211_agg_splice_finish later
-- */
--static void __acquires(agg_queue)
--ieee80211_agg_splice_packets(struct ieee80211_local *local,
--			     struct tid_ampdu_tx *tid_tx, u16 tid)
--{
--	int queue = ieee80211_ac_from_tid(tid);
--	unsigned long flags;
+-enum ieee80211_sta_state {
+-	/* NOTE: These need to be ordered correctly! */
+-	IEEE80211_STA_NONE,
+-	IEEE80211_STA_AUTH,
+-	IEEE80211_STA_ASSOC,
+-	IEEE80211_STA_AUTHORIZED,
+-};
 -
--	ieee80211_stop_queue_agg(local, tid);
+ #define STA_TID_NUM 16
+ #define ADDBA_RESP_INTERVAL HZ
+ #define HT_AGG_MAX_RETRIES		15
+@@ -274,7 +266,6 @@ struct sta_ampdu_mlme {
+  * @dummy: indicate a dummy station created for receiving
+  *	EAP frames before association
+  * @sta: station information we share with the driver
+- * @sta_state: duplicates information about station state (for debug)
+  * @beacon_loss_count: number of times beacon loss has triggered
+  */
+ struct sta_info {
+@@ -297,8 +288,6 @@ struct sta_info {
+ 
+ 	bool uploaded;
+ 
+-	enum ieee80211_sta_state sta_state;
 -
--	if (WARN(!tid_tx, "TID %d gone but expected when splicing aggregates"
--			  " from the pending queue\n", tid))
--		return;
--
--	if (!skb_queue_empty(&tid_tx->pending)) {
--		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
--		/* copy over remaining packets */
--		skb_queue_splice_tail_init(&tid_tx->pending,
--					   &local->pending[queue]);
--		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
--	}
--}
--
--static void __releases(agg_queue)
--ieee80211_agg_splice_finish(struct ieee80211_local *local, u16 tid)
--{
--	ieee80211_wake_queue_agg(local, tid);
--}
--
- static void ieee80211_agg_tx_operational(struct ieee80211_local *local,
- 					 struct sta_info *sta, u16 tid)
- {
-
+ 	/* use the accessors defined below */
+ 	unsigned long _flags;
+ 
+-- 
+1.7.6.401.g6a319
 
