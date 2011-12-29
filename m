@@ -1,36 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:41949 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751606Ab1LUOSn convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:40672 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752018Ab1L2UL4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Dec 2011 09:18:43 -0500
-From: "Elias, Ilan" <ilane@ti.com>
-To: "lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
-	"samuel@sortiz.org" <samuel@sortiz.org>,
-	"aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [RFC] NFC: Add RF technology specific parameters to target info
-Date: Wed, 21 Dec 2011 14:18:33 +0000
-Message-ID: <B30D1FD582D6484ABF57420512E5803504FE1669@DNCE03.ent.ti.com> (sfid-20111221_151846_813099_85E6E863)
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 29 Dec 2011 15:11:56 -0500
+Date: Thu, 29 Dec 2011 14:11:49 -0600
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: Christoph Anton Mitterer <calestyo@scientia.net>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Dietsche <Gregory.Dietsche@cuw.edu>,
+	linux-kernel@vger.kernel.org
+Subject: Re: iwl4965: "MAC is in deep sleep!" freezes
+Message-ID: <20111229201149.GB1674@elie.Belkin> (sfid-20111229_211202_102208_3C2AC257)
+References: <bbdbd01d4965ae789384bc1f9d0a2426@imap.dd24.net>
+ <20110902233806.GA22157@elie>
+ <20110905091918.GC2221@redhat.com>
+ <265f56a4dc9f5d3edeca3d101e445353@imap.dd24.net>
+ <20110908084913.GB2195@redhat.com>
+ <1321228952.3362.15.camel@fermat.scientia.net>
+ <20111114014615.GC16508@elie.hsd1.il.comcast.net>
+ <1321466933.3364.16.camel@fermat.scientia.net>
+ <20111118074552.GB2203@redhat.com>
+ <1325171851.3907.33.camel@fermat.scientia.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1325171851.3907.33.camel@fermat.scientia.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Samuel, Lauro, Aloisio,
+Christoph Anton Mitterer wrote:
 
-Currently, the target information (sent as response to NFC_CMD_GET_TARGET) contains the following: target index, protocols, sens_res, and sel_res.
-As far as I understand, the sens_res (2 Octets) and sel_res (1 Octet) fields are suitable only for tech A.
+> The logging is basically identical to what I've send before.
+>
+> So either there is some weird hardware damage,.. or (as I suggested
+> before) it might be just some different revision or so of the chipset,
+> behaving different?!
+>
+> Guess it's pointless to send you the same logging output again, but if
+> you'd like to I can do so.
 
-It seems that several RF technology specific parameters should be added to the target info:
-1) For tech A: NFCID1 (0, 4, 7, or 10 Octets), and NFCID1 Length (1 Octet).
-2) For tech B: SENSB_RES Response (11 or 12 Octets), and SENSB_RES Response Length (1 Octet).
-3) For tech F: SENSF_RES Response (16 or 18 Octets) and SENSF_RES Response Length (1 Octet).
+Yes, please do, or provide a link and summary so we don't have to hunt
+it down.
 
-For example, Android LibNfc and OpenNfc stacks (and the application above) expect those fields.
-In some technologies, it's required to use those fields in upper layers, e.g. in Mifare classic the tag ID is used during authentication (the tag ID can be found in each of the information fields mentioned above for each tech by different name).
-
-I'll appreciate your comments on this issue.
-
-Thanks & BR,
-Ilan
+Hope that helps,
+Jonathan
