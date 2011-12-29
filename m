@@ -1,52 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4965 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751998Ab1LVQSk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Dec 2011 11:18:40 -0500
-Date: Thu, 22 Dec 2011 17:18:28 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com,
-	Andreas Hartmann <andihartmann@01019freenet.de>
-Subject: Re: [rt2x00-users] Poor performance and lockup with rt2800usb and
- Asus USB-N13 adapter
-Message-ID: <20111222161810.GB13554@redhat.com> (sfid-20111222_171845_879125_311511C9)
-References: <4ED43A5C.9000102@gmail.com>
- <20111129114603.GB7299@redhat.com>
- <CADLC3L2QpEtPiBg+yvaxir1LpU6j5YMpDG4g0+ezs06g745zcg@mail.gmail.com>
- <20111220144317.GA6027@redhat.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43272 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754026Ab1L2N2I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Dec 2011 08:28:08 -0500
+Message-ID: <4EFC6AE0.6070306@qca.qualcomm.com> (sfid-20111229_142826_753656_DA7FED0C)
+Date: Thu, 29 Dec 2011 18:58:00 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111220144317.GA6027@redhat.com>
+To: Kalle Valo <kvalo@adurom.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>, Paul Stewart <pstew@google.com>,
+	Christian Lamparter <chunkeey@googlemail.com>
+Subject: Re: [PATCH] mac80211: use RCU read locks for sta_info_get
+References: <1324882778-3079-1-git-send-email-mohammed@qca.qualcomm.com> <87mxabcyi6.fsf@purkki.adurom.net>
+In-Reply-To: <87mxabcyi6.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 20, 2011 at 03:43:17PM +0100, Stanislaw Gruszka wrote:
-> I just discovered that at least some problems are related with power
-> save. After "iwconfig wlanX power off" I have pretty short ping times
-> and good throughput, both comparable with vendor driver. But I did not
-> check that on all adapters that I have yet.
+Hi Kalle,
+
+On Thursday 29 December 2011 06:42 PM, Kalle Valo wrote:
+> Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>  writes:
 >
-> Looking a bit more at that seem we stop and wake queues several times
-> between sending each frame. Looks like that thing need to be optimized
-> in mac80211, or some parameters have to be setup properly by rt2x00 ...
-> 
-> Also rt2800 PCI and SOC have PS disabled by default ...
+>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>>
+>> Cc: Paul Stewart<pstew@google.com>
+>> Signed-off-by: Christian Lamparter<chunkeey@googlemail.com>
+>> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>
+> A bit more background would be nice. What user visible bug this actually
+> fixes? Is this a new regression or an old bug? If the former, what
+> commit introduced the regression?
 
-There is no bug with ping latencies when power save is enabled. Ping
-send packet every second, between that we put driver in power save
-mode (i.e. tell AP that we are sleeping and it has to buffer frame
-to us). When we send ping packet, we wake up and receive packet from
-a AP after longer time than in normal operation mode.
+i had sent a v2 stating its introduced by the recent commit
+http://www.spinics.net/lists/linux-wireless/msg82717.html
 
-I did more testing here and I have one device that works very bad,
-no matter if PS is configured or not. It is 
+>
 
-phy6 -> rt2x00_set_chip: Info - Chipset detected - rt: 3071, rf: 0008, rev: 021c.
 
-I'm going to investigate problems with that device, hopefully these are the
-same problems that Robert and Andreas have.
-
-Stanislaw
+-- 
+thanks,
+shafi
