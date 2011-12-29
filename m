@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:55546 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752951Ab1LVUrz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Dec 2011 15:47:55 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 6/6] compat-wireless: no trans_start on netdev_queue
-Date: Thu, 22 Dec 2011 21:47:30 +0100
-Message-Id: <1324586850-5212-7-git-send-email-hauke@hauke-m.de> (sfid-20111222_214759_484984_DCC29AED)
-In-Reply-To: <1324586850-5212-1-git-send-email-hauke@hauke-m.de>
-References: <1324586850-5212-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:48678 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754432Ab1L2MkJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Dec 2011 07:40:09 -0500
+Received: by mail-lpp01m010-f46.google.com with SMTP id d3so2600118lah.19
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Dec 2011 04:40:08 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 0/3] notify driver about changes in station state
+Date: Thu, 29 Dec 2011 14:41:38 +0200
+Message-Id: <1325162501-7996-1-git-send-email-eliad@wizery.com> (sfid-20111229_134029_345293_0DEAAE0F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-struct netdev_queue does not have the attribute trans_start in kernel <
-2.6.31. trans_start on struct net_device does the same on older kernels.
+This patchset is a sequel for Johannes' "station management rework"
+patchset. It adds a new sta_state callback, so low-level driver
+will be able to register for station state changes.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/47-no_trans_start_on_netdev_queue.patch |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
- create mode 100644 patches/47-no_trans_start_on_netdev_queue.patch
+v2: call drv_sta_state() within the sta addition process (thanks Johannes)
 
-diff --git a/patches/47-no_trans_start_on_netdev_queue.patch b/patches/47-no_trans_start_on_netdev_queue.patch
-new file mode 100644
-index 0000000..c9e3345
---- /dev/null
-+++ b/patches/47-no_trans_start_on_netdev_queue.patch
-@@ -0,0 +1,13 @@
-+--- a/drivers/net/wireless/mwifiex/init.c
-++++ b/drivers/net/wireless/mwifiex/init.c
-+@@ -289,8 +289,10 @@ void mwifiex_set_trans_start(struct net_
-+ {
-+ 	int i;
-+ 
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,31))
-+ 	for (i = 0; i < dev->num_tx_queues; i++)
-+ 		netdev_get_tx_queue(dev, i)->trans_start = jiffies;
-++#endif
-+ 
-+ 	dev->trans_start = jiffies;
-+ }
+Eliad Peller (3):
+  mac80211: check sta_apply_parameters() return value
+  mac80211: move sta_state into sta->sta
+  mac80211: add sta_state callback
+
+ include/net/mac80211.h      |   17 +++++++++++++++++
+ net/mac80211/cfg.c          |    7 ++++++-
+ net/mac80211/driver-ops.h   |   17 +++++++++++++++++
+ net/mac80211/driver-trace.h |   28 ++++++++++++++++++++++++++++
+ net/mac80211/sta_info.c     |   33 ++++++++++++++++++++++-----------
+ net/mac80211/sta_info.h     |   11 -----------
+ net/mac80211/util.c         |    9 ++++++++-
+ 7 files changed, 98 insertions(+), 24 deletions(-)
+
 -- 
-1.7.5.4
+1.7.6.401.g6a319
 
