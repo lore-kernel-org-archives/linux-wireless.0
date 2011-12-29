@@ -1,386 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:59031 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932529Ab1LPSxi (ORCPT
+Received: from mail.redfish-solutions.com ([66.232.79.143]:42522 "EHLO
+	mail.redfish-solutions.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753010Ab1L2BD3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 13:53:38 -0500
-Subject: [PATCH 1/2] ath6kl: handle firmware names more dynamically
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Date: Fri, 16 Dec 2011 20:53:31 +0200
-Message-ID: <20111216185331.18442.48268.stgit@localhost6.localdomain6> (sfid-20111216_195343_439278_DB74B6CA)
-In-Reply-To: <20111216185200.18442.29650.stgit@localhost6.localdomain6>
-References: <20111216185200.18442.29650.stgit@localhost6.localdomain6>
+	Wed, 28 Dec 2011 20:03:29 -0500
+Received: from macbook.redfish-solutions.com (macbook.redfish-solutions.com [192.168.1.17])
+	(authenticated bits=0)
+	by mail.redfish-solutions.com (8.14.5/8.14.5) with ESMTP id pBT0uEJ2025549
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <linux-wireless@vger.kernel.org>; Wed, 28 Dec 2011 17:56:15 -0700
+Message-ID: <4EFBBAAE.8040507@redfish-solutions.com> (sfid-20111229_020349_552566_85DD948E)
+Date: Wed, 28 Dec 2011 17:56:14 -0700
+From: Philip Prindeville <philipp_subx@redfish-solutions.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: linux-wireless@vger.kernel.org
+Subject: Panic in tpt support on ath5k
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently ath6kl has just hardcoded paths to each firmware file. Change
-this more dynamic by separating the the directory and file name from each
-other. That way it's easier to dynamically create full paths to firmware and
-code looks better. And now it's possible to remove a function needed by
-devicetree code.
+I'm using compat-wireless-2011-12-01 on OpenWRT trunk on an alix5k, with a Winston Neweb CM/9 card and seeing:
 
-While at it add a structure inside struct ath6kl_hw to contain all
-firmware names. I deliberately omitted board file support as
-those will be handled later.
+[   29.822951] BUG: unable to handle kernel NULL pointer dereference at   (null)
+[   29.832121] IP: [<d0af1747>] __ieee80211_get_rx_led_name+0xb9/0xcd [mac80211]
+[   29.832121] *pde = 00000000
+[   29.832121] Oops: 0000 [#1]
+[   29.832121] last sysfs file: /sys/kernel/uevent_seqnum
+[   29.832121] Modules linked in: gpio_keys_polled leds_gpio lm90 scx200_acb i2c_gpio i2c_algo_pcf i2c_algo_pca i2c_algo
+_bit i2c_dev i2c_core geodewdt via_rhine ohci_hcd xt_LED ledtrig_heartbeat ledtrig_gpio cs5535_gpio cs5535_clockevt nf_n
+at_irc nf_conntrack_irc nf_nat_ftp nf_conntrack_ftp xt_TRACE cs5535_mfgpt cs5535_mfd mfd_core ipt_MASQUERADE iptable_nat
+ nf_nat xt_CT xt_conntrack xt_NOTRACK iptable_raw xt_state nf_conntrack_ipv4 nf_defrag_ipv4 nf_conntrack ehci_hcd pppoe
+pppox ipt_REJECT xt_TCPMSS ipt_LOG xt_comment xt_multiport xt_mac xt_limit iptable_mangle iptable_filter ip_tables xt_tc
+pudp x_tables nsc_gpio gpio_dev dummy ppp_mppe ppp_async ppp_generic slhc button_hotplug ath9k ath9k_common ath9k_hw ath
+5k ath mac80211 usbcore nls_base crc_ccitt input_polldev msr cfg80211 compat input_core chainiv eseqiv crypto_wq sha1_ge
+neric krng rng cryptosoft cryptodev(P) ocf(P) md5 geode_aes hmac ecb des_generic deflate cbc authenc arc4 aes_i586 aes_g
+eneric zlib_deflate crypto_blkcipher cryptomgr aead crypto_hash crypto_algapi
+[   29.832121]
+[   29.832121] Pid: 1071, comm: hostapd Tainted: P            2.6.39.4 #1
+[   29.832121] EIP: 0060:[<d0af1747>] EFLAGS: 00010286 CPU: 0
+[   29.832121] EIP is at __ieee80211_get_rx_led_name+0xb9/0xcd [mac80211]
+[   29.832121] EAX: fffffff8 EBX: ffffff9c ECX: 00000000 EDX: ffffffff
+[   29.832121] ESI: cf84900c EDI: 00000001 EBP: 00000001 ESP: ce47fe58
+[   29.832121]  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+[   29.832121] Process hostapd (pid: 1071, ti=ce47e000 task=cee88c80 task.ti=ce47e000)
+[   29.832121] Stack:
+[   29.832121]  00000000 00000000 00000001 cee40a40 cf849000 d0af1c40 ce458000 ce458340
+[   29.832121]  cee40a40 00000000 d0ae3f08 01458000 ce458048 ce458000 ce458048 d0afb400
+[   29.832121]  00000000 c116cefd ce458000 00000000 00001003 c116d0db 00000001 ce458000
+[   29.832121] Call Trace:
+[   29.832121]  [<d0af1c40>] ? ieee80211_mod_tpt_led_trig+0xa4/0xc4 [mac80211]
+[   29.832121]  [<d0ae3f08>] ? __ieee80211_recalc_idle+0x700/0xa17 [mac80211]
+[   29.832121]  [<c116cefd>] ? __dev_open+0x76/0xa1
+[   29.832121]  [<c116d0db>] ? __dev_change_flags+0x97/0x110
+[   29.832121]  [<c116d1c1>] ? dev_change_flags+0x10/0x3b
+[   29.832121]  [<c11a6f9d>] ? devinet_ioctl+0x22a/0x588
+[   29.832121]  [<c115f3a0>] ? sock_ioctl+0x1b9/0x1e0
+[   29.832121]  [<c115f1e7>] ? sock_fasync+0x6a/0x6a
+[   29.832121]  [<c10743ba>] ? do_vfs_ioctl+0x446/0x49e
+[   29.832121]  [<c1160c5f>] ? sys_socketcall+0x19a/0x1dc
+[   29.832121]  [<c1074439>] ? sys_ioctl+0x27/0x4a
+[   29.832121]  [<c11ca485>] ? syscall_call+0x7/0xb
+[   29.832121] Code: 89 54 24 08 eb 05 4a 85 d2 79 d0 8b 5e 0c 83 eb 64 83 c6 0c eb 15 89 d8 8d 4c 24 04 8d 54 24 08 e8
+ed f0 65 f0 8b 5b 64 83 eb 64 <8b> 43 64 8d 74 26 00 8d 43 64 39 f0 75 dd 83 c4 0c 5b 5e c3 55
+[   29.832121] EIP: [<d0af1747>] __ieee80211_get_rx_led_name+0xb9/0xcd [mac80211] SS:ESP 0068:ce47fe58
+[   29.832121] CR2: 0000000000000000
+[   30.680974] ---[ end trace 371e7af7a93daf8b ]---
+[   32.384319] BUG: unable to handle kernel NULL pointer dereference at   (null)
+[   32.394261] IP: [<d0af1747>] __ieee80211_get_rx_led_name+0xb9/0xcd [mac80211]
+[   32.394261] *pde = 00000000
+[   32.394261] Oops: 0000 [#2]
+[   32.394261] last sysfs file: /sys/kernel/uevent_seqnum
+[   32.394261] Modules linked in: gpio_keys_polled leds_gpio lm90 scx200_acb i2c_gpio i2c_algo_pcf i2c_algo_pca i2c_algo
+_bit i2c_dev i2c_core geodewdt via_rhine ohci_hcd xt_LED ledtrig_heartbeat ledtrig_gpio cs5535_gpio cs5535_clockevt nf_n
+at_irc nf_conntrack_irc nf_nat_ftp nf_conntrack_ftp xt_TRACE cs5535_mfgpt cs5535_mfd mfd_core ipt_MASQUERADE iptable_nat
+ nf_nat xt_CT xt_conntrack xt_NOTRACK iptable_raw xt_state nf_conntrack_ipv4 nf_defrag_ipv4 nf_conntrack ehci_hcd pppoe
+pppox ipt_REJECT xt_TCPMSS ipt_LOG xt_comment xt_multiport xt_mac xt_limit iptable_mangle iptable_filter ip_tables xt_tc
+pudp x_tables nsc_gpio gpio_dev dummy ppp_mppe ppp_async ppp_generic slhc button_hotplug ath9k ath9k_common ath9k_hw ath
+5k ath mac80211 usbcore nls_base crc_ccitt input_polldev msr cfg80211 compat input_core chainiv eseqiv crypto_wq sha1_ge
+neric krng rng cryptosoft cryptodev(P) ocf(P) md5 geode_aes hmac ecb des_generic deflate cbc authenc arc4 aes_i586 aes_g
+eneric zlib_deflate crypto_blkcipher cryptomgr aead crypto_hash crypto_algapi
+[   32.394261]
+[   32.394261] Pid: 1081, comm: S45firewall Tainted: P      D     2.6.39.4 #1
+[   32.394261] EIP: 0060:[<d0af1747>] EFLAGS: 00010286 CPU: 0
+[   32.394261] EIP is at __ieee80211_get_rx_led_name+0xb9/0xcd [mac80211]
+[   32.394261] EAX: fffffff8 EBX: ffffff9c ECX: 00000000 EDX: ffffffff
+[   32.394261] ESI: cf84900c EDI: cf80ffcc EBP: cf80ffe0 ESP: cf80ffa8
+[   32.394261]  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
+[   32.394261] Process S45firewall (pid: 1081, ti=cf80e000 task=cee89c20 task.ti=ce452000)
+[   32.394261] Stack:
+[   32.394261]  00000000 00000000 00000001 c12c3260 00000100 c1023daa d0af1694 c12c3a6c
+[   32.394261]  c12c3c6c cefc9454 cf839f6c 00000001 c12c30c4 00000100 00000001 c1020a34
+[   32.394261]  0000000a ce453f8c ce452000 c10209da 00000007 c10034b5
+[   32.394261] Call Trace:
+[   32.394261]  [<c1023daa>] ? run_timer_softirq+0xf8/0x164
+[   32.394261]  [<d0af1694>] ? __ieee80211_get_rx_led_name+0x6/0xcd [mac80211]
+[   32.394261]  [<c1020a34>] ? __do_softirq+0x5a/0xc9
+[   32.394261]  [<c10209da>] ? local_bh_enable+0x6f/0x6f
+[   32.394261]  <IRQ>
+[   32.394261]  [<c1003417>] ? do_IRQ+0x6b/0x7b
+[   32.394261]  [<c11caf69>] ? common_interrupt+0x29/0x30
+[   32.394261] Code: 89 54 24 08 eb 05 4a 85 d2 79 d0 8b 5e 0c 83 eb 64 83 c6 0c eb 15 89 d8 8d 4c 24 04 8d 54 24 08 e8
+ed f0 65 f0 8b 5b 64 83 eb 64 <8b> 43 64 8d 74 26 00 8d 43 64 39 f0 75 dd 83 c4 0c 5b 5e c3 55
+[   32.394261] EIP: [<d0af1747>] __ieee80211_get_rx_led_name+0xb9/0xcd [mac80211] SS:ESP 0068:cf80ffa8
+[   32.394261] CR2: 0000000000000000
+[   33.152138] ---[ end trace 371e7af7a93daf8c ]---
+[   33.166070] Kernel panic - not syncing: Fatal exception in interrupt
+[   33.185204] Pid: 1081, comm: S45firewall Tainted: P      D     2.6.39.4 #1
+[   33.205883] Call Trace:
+[   33.213221]  [<c11c904f>] ? panic+0x4d/0x12a
+[   33.226126]  [<c10041e6>] ? oops_end+0x68/0x86
+[   33.239559]  [<c101561a>] ? no_context+0x10c/0x116
+[   33.254017]  [<c1015900>] ? vmalloc_sync_all+0xa9/0xa9
+[   33.269517]  [<c101572b>] ? bad_area_nosemaphore+0xa/0xc
+[   33.285536]  [<c1015a5d>] ? do_page_fault+0x15d/0x350
+[   33.300767]  [<c1015900>] ? vmalloc_sync_all+0xa9/0xa9
+[   33.316262]  [<c11ca814>] ? error_code+0x58/0x60
+[   33.330177]  [<c1015900>] ? vmalloc_sync_all+0xa9/0xa9
+[   33.345737]  [<d0af1747>] ? __ieee80211_get_rx_led_name+0xb9/0xcd [mac80211]
+[   33.366946]  [<c1023daa>] ? run_timer_softirq+0xf8/0x164
+[   33.382993]  [<d0af1694>] ? __ieee80211_get_rx_led_name+0x6/0xcd [mac80211]
+[   33.403925]  [<c1020a34>] ? __do_softirq+0x5a/0xc9
+[   33.418388]  [<c10209da>] ? local_bh_enable+0x6f/0x6f
+[   33.433604]  <IRQ>  [<c1003417>] ? do_IRQ+0x6b/0x7b
+[   33.448353]  [<c11caf69>] ? common_interrupt+0x29/0x30
 
-This is needed for firmware API 3.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/core.h |   45 ++++++++-------
- drivers/net/wireless/ath/ath6kl/init.c |   95 +++++++++++++++++---------------
- drivers/net/wireless/ath/ath6kl/sdio.c |   16 +++--
- drivers/net/wireless/ath/ath6kl/usb.c  |    5 +-
- 4 files changed, 87 insertions(+), 74 deletions(-)
+for quite a while, led trigger 'tpt' support has been lacking for ath5k.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index c863a28..2679577 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -97,45 +97,46 @@ struct ath6kl_fw_ie {
- 	u8 data[0];
- };
- 
-+#define ATH6KL_FW_API2_FILE "fw-2.bin"
-+
- /* AR6003 1.0 definitions */
- #define AR6003_HW_1_0_VERSION                 0x300002ba
- 
- /* AR6003 2.0 definitions */
- #define AR6003_HW_2_0_VERSION                 0x30000384
- #define AR6003_HW_2_0_PATCH_DOWNLOAD_ADDRESS  0x57e910
--#define AR6003_HW_2_0_OTP_FILE "ath6k/AR6003/hw2.0/otp.bin.z77"
--#define AR6003_HW_2_0_FIRMWARE_FILE "ath6k/AR6003/hw2.0/athwlan.bin.z77"
--#define AR6003_HW_2_0_TCMD_FIRMWARE_FILE "ath6k/AR6003/hw2.0/athtcmd_ram.bin"
--#define AR6003_HW_2_0_PATCH_FILE "ath6k/AR6003/hw2.0/data.patch.bin"
--#define AR6003_HW_2_0_FIRMWARE_2_FILE "ath6k/AR6003/hw2.0/fw-2.bin"
-+#define AR6003_HW_2_0_FW_DIR			"ath6k/AR6003/hw2.0"
-+#define AR6003_HW_2_0_OTP_FILE			"otp.bin.z77"
-+#define AR6003_HW_2_0_FIRMWARE_FILE		"athwlan.bin.z77"
-+#define AR6003_HW_2_0_TCMD_FIRMWARE_FILE	"athtcmd_ram.bin"
-+#define AR6003_HW_2_0_PATCH_FILE		"data.patch.bin"
- #define AR6003_HW_2_0_BOARD_DATA_FILE "ath6k/AR6003/hw2.0/bdata.bin"
- #define AR6003_HW_2_0_DEFAULT_BOARD_DATA_FILE \
- 			"ath6k/AR6003/hw2.0/bdata.SD31.bin"
- 
- /* AR6003 3.0 definitions */
- #define AR6003_HW_2_1_1_VERSION                 0x30000582
--#define AR6003_HW_2_1_1_OTP_FILE "ath6k/AR6003/hw2.1.1/otp.bin"
--#define AR6003_HW_2_1_1_FIRMWARE_FILE "ath6k/AR6003/hw2.1.1/athwlan.bin"
--#define AR6003_HW_2_1_1_TCMD_FIRMWARE_FILE \
--			"ath6k/AR6003/hw2.1.1/athtcmd_ram.bin"
--#define AR6003_HW_2_1_1_PATCH_FILE "ath6k/AR6003/hw2.1.1/data.patch.bin"
--#define AR6003_HW_2_1_1_FIRMWARE_2_FILE "ath6k/AR6003/hw2.1.1/fw-2.bin"
-+#define AR6003_HW_2_1_1_FW_DIR			"ath6k/AR6003/hw2.1.1"
-+#define AR6003_HW_2_1_1_OTP_FILE		"otp.bin"
-+#define AR6003_HW_2_1_1_FIRMWARE_FILE		"athwlan.bin"
-+#define AR6003_HW_2_1_1_TCMD_FIRMWARE_FILE	"athtcmd_ram.bin"
-+#define AR6003_HW_2_1_1_PATCH_FILE		"data.patch.bin"
- #define AR6003_HW_2_1_1_BOARD_DATA_FILE "ath6k/AR6003/hw2.1.1/bdata.bin"
- #define AR6003_HW_2_1_1_DEFAULT_BOARD_DATA_FILE	\
- 			"ath6k/AR6003/hw2.1.1/bdata.SD31.bin"
- 
- /* AR6004 1.0 definitions */
- #define AR6004_HW_1_0_VERSION                 0x30000623
--#define AR6004_HW_1_0_FIRMWARE_2_FILE         "ath6k/AR6004/hw1.0/fw-2.bin"
--#define AR6004_HW_1_0_FIRMWARE_FILE           "ath6k/AR6004/hw1.0/fw.ram.bin"
-+#define AR6004_HW_1_0_FW_DIR			"ath6k/AR6004/hw1.0"
-+#define AR6004_HW_1_0_FIRMWARE_FILE		"fw.ram.bin"
- #define AR6004_HW_1_0_BOARD_DATA_FILE         "ath6k/AR6004/hw1.0/bdata.bin"
- #define AR6004_HW_1_0_DEFAULT_BOARD_DATA_FILE \
- 	"ath6k/AR6004/hw1.0/bdata.DB132.bin"
- 
- /* AR6004 1.1 definitions */
- #define AR6004_HW_1_1_VERSION                 0x30000001
--#define AR6004_HW_1_1_FIRMWARE_2_FILE         "ath6k/AR6004/hw1.1/fw-2.bin"
--#define AR6004_HW_1_1_FIRMWARE_FILE           "ath6k/AR6004/hw1.1/fw.ram.bin"
-+#define AR6004_HW_1_1_FW_DIR			"ath6k/AR6004/hw1.1"
-+#define AR6004_HW_1_1_FIRMWARE_FILE		"fw.ram.bin"
- #define AR6004_HW_1_1_BOARD_DATA_FILE         "ath6k/AR6004/hw1.1/bdata.bin"
- #define AR6004_HW_1_1_DEFAULT_BOARD_DATA_FILE \
- 	"ath6k/AR6004/hw1.1/bdata.DB132.bin"
-@@ -575,11 +576,15 @@ struct ath6kl {
- 		u32 refclk_hz;
- 		u32 uarttx_pin;
- 
--		const char *fw_otp;
--		const char *fw;
--		const char *fw_tcmd;
--		const char *fw_patch;
--		const char *fw_api2;
-+		struct ath6kl_hw_fw {
-+			const char *dir;
-+			const char *otp;
-+			const char *fw;
-+			const char *tcmd;
-+			const char *patch;
-+			const char *api2;
-+		} fw;
-+
- 		const char *fw_board;
- 		const char *fw_default_board;
- 	} hw;
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 0643558..c666226 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -47,11 +47,15 @@ static const struct ath6kl_hw hw_list[] = {
- 		/* hw2.0 needs override address hardcoded */
- 		.app_start_override_addr	= 0x944C00,
- 
--		.fw_otp			= AR6003_HW_2_0_OTP_FILE,
--		.fw			= AR6003_HW_2_0_FIRMWARE_FILE,
--		.fw_tcmd		= AR6003_HW_2_0_TCMD_FIRMWARE_FILE,
--		.fw_patch		= AR6003_HW_2_0_PATCH_FILE,
--		.fw_api2		= AR6003_HW_2_0_FIRMWARE_2_FILE,
-+		.fw = {
-+			.dir		= AR6003_HW_2_0_FW_DIR,
-+			.otp		= AR6003_HW_2_0_OTP_FILE,
-+			.fw		= AR6003_HW_2_0_FIRMWARE_FILE,
-+			.tcmd		= AR6003_HW_2_0_TCMD_FIRMWARE_FILE,
-+			.patch		= AR6003_HW_2_0_PATCH_FILE,
-+			.api2		= ATH6KL_FW_API2_FILE,
-+		},
-+
- 		.fw_board		= AR6003_HW_2_0_BOARD_DATA_FILE,
- 		.fw_default_board	= AR6003_HW_2_0_DEFAULT_BOARD_DATA_FILE,
- 	},
-@@ -65,11 +69,15 @@ static const struct ath6kl_hw hw_list[] = {
- 		.refclk_hz			= 26000000,
- 		.uarttx_pin			= 8,
- 
--		.fw_otp			= AR6003_HW_2_1_1_OTP_FILE,
--		.fw			= AR6003_HW_2_1_1_FIRMWARE_FILE,
--		.fw_tcmd		= AR6003_HW_2_1_1_TCMD_FIRMWARE_FILE,
--		.fw_patch		= AR6003_HW_2_1_1_PATCH_FILE,
--		.fw_api2		= AR6003_HW_2_1_1_FIRMWARE_2_FILE,
-+		.fw = {
-+			.dir		= AR6003_HW_2_1_1_FW_DIR,
-+			.otp		= AR6003_HW_2_1_1_OTP_FILE,
-+			.fw		= AR6003_HW_2_1_1_FIRMWARE_FILE,
-+			.tcmd		= AR6003_HW_2_1_1_TCMD_FIRMWARE_FILE,
-+			.patch		= AR6003_HW_2_1_1_PATCH_FILE,
-+			.api2		= ATH6KL_FW_API2_FILE,
-+		},
-+
- 		.fw_board		= AR6003_HW_2_1_1_BOARD_DATA_FILE,
- 		.fw_default_board	= AR6003_HW_2_1_1_DEFAULT_BOARD_DATA_FILE,
- 	},
-@@ -84,8 +92,12 @@ static const struct ath6kl_hw hw_list[] = {
- 		.refclk_hz			= 26000000,
- 		.uarttx_pin			= 11,
- 
--		.fw			= AR6004_HW_1_0_FIRMWARE_FILE,
--		.fw_api2		= AR6004_HW_1_0_FIRMWARE_2_FILE,
-+		.fw = {
-+			.dir		= AR6004_HW_1_0_FW_DIR,
-+			.fw		= AR6004_HW_1_0_FIRMWARE_FILE,
-+			.api2		= ATH6KL_FW_API2_FILE,
-+		},
-+
- 		.fw_board		= AR6004_HW_1_0_BOARD_DATA_FILE,
- 		.fw_default_board	= AR6004_HW_1_0_DEFAULT_BOARD_DATA_FILE,
- 	},
-@@ -100,8 +112,12 @@ static const struct ath6kl_hw hw_list[] = {
- 		.refclk_hz			= 40000000,
- 		.uarttx_pin			= 11,
- 
--		.fw			= AR6004_HW_1_1_FIRMWARE_FILE,
--		.fw_api2		= AR6004_HW_1_1_FIRMWARE_2_FILE,
-+		.fw = {
-+			.dir		= AR6004_HW_1_1_FW_DIR,
-+			.fw		= AR6004_HW_1_1_FIRMWARE_FILE,
-+			.api2		= ATH6KL_FW_API2_FILE,
-+		},
-+
- 		.fw_board		= AR6004_HW_1_1_BOARD_DATA_FILE,
- 		.fw_default_board	= AR6004_HW_1_1_DEFAULT_BOARD_DATA_FILE,
- 	},
-@@ -626,21 +642,6 @@ static int ath6kl_get_fw(struct ath6kl *ar, const char *filename,
- }
- 
- #ifdef CONFIG_OF
--static const char *get_target_ver_dir(const struct ath6kl *ar)
--{
--	switch (ar->version.target_ver) {
--	case AR6003_HW_1_0_VERSION:
--		return "ath6k/AR6003/hw1.0";
--	case AR6003_HW_2_0_VERSION:
--		return "ath6k/AR6003/hw2.0";
--	case AR6003_HW_2_1_1_VERSION:
--		return "ath6k/AR6003/hw2.1.1";
--	}
--	ath6kl_warn("%s: unsupported target version 0x%x.\n", __func__,
--		    ar->version.target_ver);
--	return NULL;
--}
--
- /*
-  * Check the device tree for a board-id and use it to construct
-  * the pathname to the firmware file.  Used (for now) to find a
-@@ -663,7 +664,7 @@ static bool check_device_tree(struct ath6kl *ar)
- 			continue;
- 		}
- 		snprintf(board_filename, sizeof(board_filename),
--			 "%s/bdata.%s.bin", get_target_ver_dir(ar), board_id);
-+			 "%s/bdata.%s.bin", ar->hw.fw.dir, board_id);
- 
- 		ret = ath6kl_get_fw(ar, board_filename, &ar->fw_board,
- 				    &ar->fw_board_len);
-@@ -730,19 +731,20 @@ static int ath6kl_fetch_board_file(struct ath6kl *ar)
- 
- static int ath6kl_fetch_otp_file(struct ath6kl *ar)
- {
--	const char *filename;
-+	char filename[100];
- 	int ret;
- 
- 	if (ar->fw_otp != NULL)
- 		return 0;
- 
--	if (ar->hw.fw_otp == NULL) {
-+	if (ar->hw.fw.otp == NULL) {
- 		ath6kl_dbg(ATH6KL_DBG_BOOT,
- 			   "no OTP file configured for this hw\n");
- 		return 0;
- 	}
- 
--	filename = ar->hw.fw_otp;
-+	snprintf(filename, sizeof(filename), "%s/%s",
-+		 ar->hw.fw.dir, ar->hw.fw.otp);
- 
- 	ret = ath6kl_get_fw(ar, filename, &ar->fw_otp,
- 			    &ar->fw_otp_len);
-@@ -757,29 +759,32 @@ static int ath6kl_fetch_otp_file(struct ath6kl *ar)
- 
- static int ath6kl_fetch_fw_file(struct ath6kl *ar)
- {
--	const char *filename;
-+	char filename[100];
- 	int ret;
- 
- 	if (ar->fw != NULL)
- 		return 0;
- 
- 	if (testmode) {
--		if (ar->hw.fw_tcmd == NULL) {
-+		if (ar->hw.fw.tcmd == NULL) {
- 			ath6kl_warn("testmode not supported\n");
- 			return -EOPNOTSUPP;
- 		}
- 
--		filename = ar->hw.fw_tcmd;
-+		snprintf(filename, sizeof(filename), "%s/%s",
-+			 ar->hw.fw.dir, ar->hw.fw.tcmd);
- 
- 		set_bit(TESTMODE, &ar->flag);
- 
- 		goto get_fw;
- 	}
- 
--	if (WARN_ON(ar->hw.fw == NULL))
-+	/* FIXME: remove WARN_ON() as we won't support FW API 1 for long */
-+	if (WARN_ON(ar->hw.fw.fw == NULL))
- 		return -EINVAL;
- 
--	filename = ar->hw.fw;
-+	snprintf(filename, sizeof(filename), "%s/%s",
-+		 ar->hw.fw.dir, ar->hw.fw.fw);
- 
- get_fw:
- 	ret = ath6kl_get_fw(ar, filename, &ar->fw, &ar->fw_len);
-@@ -794,16 +799,17 @@ get_fw:
- 
- static int ath6kl_fetch_patch_file(struct ath6kl *ar)
- {
--	const char *filename;
-+	char filename[100];
- 	int ret;
- 
- 	if (ar->fw_patch != NULL)
- 		return 0;
- 
--	if (ar->hw.fw_patch == NULL)
-+	if (ar->hw.fw.patch == NULL)
- 		return 0;
- 
--	filename = ar->hw.fw_patch;
-+	snprintf(filename, sizeof(filename), "%s/%s",
-+		 ar->hw.fw.dir, ar->hw.fw.patch);
- 
- 	ret = ath6kl_get_fw(ar, filename, &ar->fw_patch,
- 			    &ar->fw_patch_len);
-@@ -840,15 +846,16 @@ static int ath6kl_fetch_fw_api2(struct ath6kl *ar)
- 	size_t magic_len, len, ie_len;
- 	const struct firmware *fw;
- 	struct ath6kl_fw_ie *hdr;
--	const char *filename;
-+	char filename[100];
- 	const u8 *data;
- 	int ret, ie_id, i, index, bit;
- 	__le32 *val;
- 
--	if (ar->hw.fw_api2 == NULL)
-+	if (ar->hw.fw.api2 == NULL)
- 		return -EOPNOTSUPP;
- 
--	filename = ar->hw.fw_api2;
-+	snprintf(filename, sizeof(filename), "%s/%s",
-+		 ar->hw.fw.dir, ar->hw.fw.api2);
- 
- 	ret = request_firmware(&fw, filename, ar->dev);
- 	if (ret)
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 15c3f56..278a9f3 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -1362,19 +1362,19 @@ MODULE_AUTHOR("Atheros Communications, Inc.");
- MODULE_DESCRIPTION("Driver support for Atheros AR600x SDIO devices");
- MODULE_LICENSE("Dual BSD/GPL");
- 
--MODULE_FIRMWARE(AR6003_HW_2_0_OTP_FILE);
--MODULE_FIRMWARE(AR6003_HW_2_0_FIRMWARE_FILE);
--MODULE_FIRMWARE(AR6003_HW_2_0_PATCH_FILE);
-+MODULE_FIRMWARE(AR6003_HW_2_0_FW_DIR "/" AR6003_HW_2_0_OTP_FILE);
-+MODULE_FIRMWARE(AR6003_HW_2_0_FW_DIR "/" AR6003_HW_2_0_FIRMWARE_FILE);
-+MODULE_FIRMWARE(AR6003_HW_2_0_FW_DIR "/" AR6003_HW_2_0_PATCH_FILE);
- MODULE_FIRMWARE(AR6003_HW_2_0_BOARD_DATA_FILE);
- MODULE_FIRMWARE(AR6003_HW_2_0_DEFAULT_BOARD_DATA_FILE);
--MODULE_FIRMWARE(AR6003_HW_2_1_1_OTP_FILE);
--MODULE_FIRMWARE(AR6003_HW_2_1_1_FIRMWARE_FILE);
--MODULE_FIRMWARE(AR6003_HW_2_1_1_PATCH_FILE);
-+MODULE_FIRMWARE(AR6003_HW_2_1_1_FW_DIR "/" AR6003_HW_2_1_1_OTP_FILE);
-+MODULE_FIRMWARE(AR6003_HW_2_1_1_FW_DIR "/" AR6003_HW_2_1_1_FIRMWARE_FILE);
-+MODULE_FIRMWARE(AR6003_HW_2_1_1_FW_DIR "/" AR6003_HW_2_1_1_PATCH_FILE);
- MODULE_FIRMWARE(AR6003_HW_2_1_1_BOARD_DATA_FILE);
- MODULE_FIRMWARE(AR6003_HW_2_1_1_DEFAULT_BOARD_DATA_FILE);
--MODULE_FIRMWARE(AR6004_HW_1_0_FIRMWARE_FILE);
-+MODULE_FIRMWARE(AR6004_HW_1_0_FW_DIR "/" AR6004_HW_1_0_FIRMWARE_FILE);
- MODULE_FIRMWARE(AR6004_HW_1_0_BOARD_DATA_FILE);
- MODULE_FIRMWARE(AR6004_HW_1_0_DEFAULT_BOARD_DATA_FILE);
--MODULE_FIRMWARE(AR6004_HW_1_1_FIRMWARE_FILE);
-+MODULE_FIRMWARE(AR6004_HW_1_1_FW_DIR "/" AR6004_HW_1_1_FIRMWARE_FILE);
- MODULE_FIRMWARE(AR6004_HW_1_1_BOARD_DATA_FILE);
- MODULE_FIRMWARE(AR6004_HW_1_1_DEFAULT_BOARD_DATA_FILE);
-diff --git a/drivers/net/wireless/ath/ath6kl/usb.c b/drivers/net/wireless/ath/ath6kl/usb.c
-index e3cf397..bb34179 100644
---- a/drivers/net/wireless/ath/ath6kl/usb.c
-+++ b/drivers/net/wireless/ath/ath6kl/usb.c
-@@ -423,9 +423,10 @@ module_exit(ath6kl_usb_exit);
- MODULE_AUTHOR("Atheros Communications, Inc.");
- MODULE_DESCRIPTION("Driver support for Atheros AR600x USB devices");
- MODULE_LICENSE("Dual BSD/GPL");
--MODULE_FIRMWARE(AR6004_HW_1_0_FIRMWARE_FILE);
-+
-+MODULE_FIRMWARE(AR6004_HW_1_0_FW_DIR "/" AR6004_HW_1_0_FIRMWARE_FILE);
- MODULE_FIRMWARE(AR6004_HW_1_0_BOARD_DATA_FILE);
- MODULE_FIRMWARE(AR6004_HW_1_0_DEFAULT_BOARD_DATA_FILE);
--MODULE_FIRMWARE(AR6004_HW_1_1_FIRMWARE_FILE);
-+MODULE_FIRMWARE(AR6004_HW_1_1_FW_DIR "/" AR6004_HW_1_1_FIRMWARE_FILE);
- MODULE_FIRMWARE(AR6004_HW_1_1_BOARD_DATA_FILE);
- MODULE_FIRMWARE(AR6004_HW_1_1_DEFAULT_BOARD_DATA_FILE);
+It's recent state causing panics is new, however.
 
+Can support for tpt on ath5k get a little lovin' so it's on par with ath9k, or at least not causing panics?
+
+Thanks,
+
+-Philip
