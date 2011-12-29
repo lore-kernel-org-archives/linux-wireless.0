@@ -1,68 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:52073 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751361Ab1LISWi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Dec 2011 13:22:38 -0500
-Subject: Re: iwlwifi havoc on some APs (rekeying?)
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Wolfgang Breyha <wbreyha@gmx.net>, johannes.berg@intel.com
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4EE24DF4.4020301@gmx.net>
-References: <4EE2202A.4080303@gmx.net>
-	 <1323446534.13074.96.camel@wwguy-huron>  <4EE24DF4.4020301@gmx.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 09 Dec 2011 09:23:56 -0800
-Message-ID: <1323451436.13074.158.camel@wwguy-huron> (sfid-20111209_192243_598986_F6275AE2)
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:61838 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752839Ab1L2Kig (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Dec 2011 05:38:36 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 3/3] ath6kl: Remove few deadcode in main.c
+Date: Thu, 29 Dec 2011 16:05:39 +0530
+Message-ID: <1325154939-6986-3-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111229_113839_870033_515C78F1)
+In-Reply-To: <1325154939-6986-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1325154939-6986-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes,
+1. In ath6kl_add_new_sta(), if (ielen <= ATH6KL_MAX_IE) is going to be
+always true due to ielen being u8 and is checked against 256.
 
-Anything changed in this area?
+2. In ath6kl_reset_device(), since control can never reach switch..case
+when the target_type is neither TARGET_TYPE_AR6003 nor TARGET_TYPE_AR6004,
+remove the default option of switch statement.
 
-Thanks
-Wey
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/main.c |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
 
-On Fri, 2011-12-09 at 10:05 -0800, Wolfgang Breyha wrote:
-> On 09/12/11 17:02, Guy, Wey-Yi wrote:
-> > Hi Wolfgang,
-> > 
-> > I don't have the similar AP here for testing. by looking at the log,
-> > looks like there is a issue while you scan.
-> > 
-> > Could you please try this patch and see if make any different? it is a
-> > long shot, but I just like to see if it make any different at all
-> > 
-> > once you apply the patch, please make sure P2P is disabled in .config
-> 
-> Done that... iwlwifi says...
-> > [  833.360213] iwlwifi 0000:43:00.0: CONFIG_IWLWIFI_DEBUG enabled
-> > [  833.360215] iwlwifi 0000:43:00.0: CONFIG_IWLWIFI_DEBUGFS enabled
-> > [  833.360217] iwlwifi 0000:43:00.0: CONFIG_IWLWIFI_DEVICE_TRACING disabled
-> > [  833.360219] iwlwifi 0000:43:00.0: CONFIG_IWLWIFI_DEVICE_SVTOOL enabled
-> > [  833.360222] iwlwifi 0000:43:00.0: CONFIG_IWLWIFI_P2P disabled
-> > [  833.360228] iwlwifi 0000:43:00.0: Detected Intel(R) Centrino(R) Advanced-N 6200 AGN, REV=0x74
-> 
-> But it still occurs. This time it started again right after the 2.
-> rekeying event. wpa_supplicant logged.
-> > Associated with 00:80:48:xx:xx:xx
-> > WPA: Key negotiation completed with 00:80:48:xx:xx:xx [PTK=CCMP GTK=TKIP]
-> > CTRL-EVENT-CONNECTED - Connection to 00:80:48:xx:xx9:xx completed (reauth) [id=0 id_str=]
-> > WPA: Group rekeying completed with 00:80:48:xx:xx:xx [GTK=TKIP]
-> > WPA: Group rekeying completed with 00:80:48:xx:xx:xx [GTK=TKIP]
-> 
-> I failed to mention that I used F14 with compat-wireless from arround
-> march of 2011 before I upgraded to F16 in my first mail. With this
-> version I had no troubles with the exactly same AP and my 2540p.
-> 
-> Greetings, Wolfgang
-> ..
-> 
-> 
-> 
-> > 
-> > Thanks
-> > Wey
-
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index eea3c74..ff447b0 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -62,8 +62,7 @@ static void ath6kl_add_new_sta(struct ath6kl *ar, u8 *mac, u16 aid, u8 *wpaie,
+ 
+ 	sta = &ar->sta_list[free_slot];
+ 	memcpy(sta->mac, mac, ETH_ALEN);
+-	if (ielen <= ATH6KL_MAX_IE)
+-		memcpy(sta->wpa_ie, wpaie, ielen);
++	memcpy(sta->wpa_ie, wpaie, ielen);
+ 	sta->aid = aid;
+ 	sta->keymgmt = keymgmt;
+ 	sta->ucipher = ucipher;
+@@ -347,9 +346,6 @@ void ath6kl_reset_device(struct ath6kl *ar, u32 target_type,
+ 	case TARGET_TYPE_AR6004:
+ 		address = AR6004_RESET_CONTROL_ADDRESS;
+ 		break;
+-	default:
+-		address = AR6003_RESET_CONTROL_ADDRESS;
+-		break;
+ 	}
+ 
+ 	status = ath6kl_diag_write32(ar, address, data);
+-- 
+1.7.0.4
 
