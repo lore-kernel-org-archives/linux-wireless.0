@@ -1,75 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:46311 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751105Ab1LJVEy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Dec 2011 16:04:54 -0500
-Message-ID: <4EE3C96B.4070102@hauke-m.de> (sfid-20111210_220457_302739_04D6D07D)
-Date: Sat, 10 Dec 2011 22:04:43 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:53876 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752103Ab1L2Kfj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Dec 2011 05:35:39 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 2/3] ath6kl: Add a module parameter to enable uart debug
+Date: Thu, 29 Dec 2011 16:05:38 +0530
+Message-ID: <1325154939-6986-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20111229_113543_107286_3F682DFF)
+In-Reply-To: <1325154939-6986-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1325154939-6986-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Franky Lin <frankyl@broadcom.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 18/23] brcm80211: smac: use bcma functions for register
- access in phy code
-References: <1323385619-7454-1-git-send-email-frankyl@broadcom.com> <1323385619-7454-19-git-send-email-frankyl@broadcom.com>
-In-Reply-To: <1323385619-7454-19-git-send-email-frankyl@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/09/2011 12:06 AM, Franky Lin wrote:
-> From: Arend van Spriel <arend@broadcom.com>
-> 
-> This adds the use of bcma functions to access the registers within
-> the phy source code.
-> 
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Franky Lin <frankyl@broadcom.com>
-> ---
->  drivers/net/wireless/brcm80211/brcmsmac/main.c     |    2 +-
->  .../net/wireless/brcm80211/brcmsmac/phy/phy_cmn.c  |  183 +++++++++-----------
->  .../net/wireless/brcm80211/brcmsmac/phy/phy_hal.h  |    2 +-
->  .../net/wireless/brcm80211/brcmsmac/phy/phy_int.h  |    4 +-
->  .../net/wireless/brcm80211/brcmsmac/phy/phy_lcn.c  |   69 ++++----
->  .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |   75 ++++----
->  drivers/net/wireless/brcm80211/brcmsmac/types.h    |    3 +
->  7 files changed, 162 insertions(+), 176 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> index 43172b3..5db2bdc 100644
-> --- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-> +++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-....
->  
->  void write_phy_reg(struct brcms_phy *pi, u16 addr, u16 val)
->  {
-> -	struct d11regs __iomem *regs;
-> -
-> -	regs = pi->regs;
-> -
->  #ifdef CONFIG_BCM47XX
-> -	W_REG_FLUSH(&regs->phyregaddr, addr);
-> -	W_REG(&regs->phyregdata, val);
-> +	bcma_wflush16(pi->d11core, D11REGOFFS(phyregaddr), addr);
-> +	bcma_write16(pi->d11core, D11REGOFFS(phyregdata), val);
->  	if (addr == 0x72)
-> -		(void)R_REG(&regs->phyregdata);
-> +		(void)bcma_read16(pi->d11core, D11REGOFFS(phyregdata), val);
-                                                                     ^^^
-This does not compile with CONFIG_BCM47XX set.
->  #else
-> -	W_REG((u32 __iomem *)(&regs->phyregaddr), addr | (val << 16));
-> +	bcma_write32(pi->d11core, D11REGOFFS(phyregaddr), addr | (val << 16));
->  	if (++pi->phy_wreg >= pi->phy_wreg_limit) {
->  		pi->phy_wreg = 0;
-> -		(void)R_REG(&regs->phyversion);
-> +		(void)bcma_read16(pi->d11core, D11REGOFFS(phyversion));
->  	}
->  #endif
->  }
->  
-...
+To enable firmware debug messages through uart interface,
 
-Hauke
+modprobe ath6kl_sdio uart_debug=1.
+
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/init.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 57e0312..fcac538 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -28,10 +28,12 @@
+ unsigned int debug_mask;
+ static unsigned int testmode;
+ static bool suspend_cutpower;
++static unsigned int uart_debug;
+ 
+ module_param(debug_mask, uint, 0644);
+ module_param(testmode, uint, 0644);
+ module_param(suspend_cutpower, bool, 0444);
++module_param(uart_debug, uint, 0644);
+ 
+ static const struct ath6kl_hw hw_list[] = {
+ 	{
+@@ -464,6 +466,13 @@ int ath6kl_configure_target(struct ath6kl *ar)
+ 	u8 fw_iftype, fw_mode = 0, fw_submode = 0;
+ 	int i, status;
+ 
++	param = uart_debug;
++	if (ath6kl_bmi_write(ar, ath6kl_get_hi_item_addr(ar,
++			     HI_ITEM(hi_serial_enable)), (u8 *)&param, 4)) {
++		ath6kl_err("bmi_write_memory for uart debug failed\n");
++		return -EIO;
++	}
++
+ 	/*
+ 	 * Note: Even though the firmware interface type is
+ 	 * chosen as BSS_STA for all three interfaces, can
+-- 
+1.7.0.4
+
