@@ -1,43 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:58582 "EHLO
-	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750991Ab1LJUeB (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44933 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752701Ab1L2Ksq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Dec 2011 15:34:01 -0500
-Received: by laah2 with SMTP id h2so859715laa.31
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Dec 2011 12:33:58 -0800 (PST)
-Subject: Re: modprobe utility not found
-From: Luciano Coelho <coelho@ti.com>
-To: PRASHANTH CHAKRAVARTHY <a19110@motorola.com>
-Cc: linux-wireless@vger.kernel.org,
-	Sireesha Kosuri <jmng34@motorola.com>
-In-Reply-To: <CAPSXAjdTHKC7wxPXsS2VVNSJcgaWDTQSNBYQhfbog6--uHkDvg@mail.gmail.com>
-References: <CAPSXAjdTHKC7wxPXsS2VVNSJcgaWDTQSNBYQhfbog6--uHkDvg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 10 Dec 2011 22:33:55 +0200
-Message-ID: <1323549235.8996.336.camel@cumari> (sfid-20111210_213414_385810_D01EA2CF)
-Mime-Version: 1.0
+	Thu, 29 Dec 2011 05:48:46 -0500
+From: Vivek Natarajan <nataraja@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH] ath6kl: Remove redundant key_index check.
+Date: Thu, 29 Dec 2011 16:18:39 +0530
+Message-ID: <1325155719-4038-1-git-send-email-nataraja@qca.qualcomm.com> (sfid-20111229_114849_913235_F534B366)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2011-12-09 at 10:26 +0530, PRASHANTH CHAKRAVARTHY wrote: 
-> Hi,
-> We are trying to build compat utility on mac os machines. Builds are
-> failing there with error /sbin/modprobe not found. They are passing on
-> other linux machines .
-> Is there a modprobe utility for mac os machines ?
+Less-than-zero comparison of an unsigned value is never true.
 
-I guess you're trying to run 'make install' in the Mac OS machine? That
-doesn't make sense.  You should only install the compat modules on the
-target machine (and I'm sure the target is not your Mac ;).
+Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   11 +++++------
+ 1 files changed, 5 insertions(+), 6 deletions(-)
 
-If you're cross-compiling your modules, you should copy them to the
-target.  Or run the make install in the target (which would involve
-copying more than just the compiled modules).
-
-I hope this helps.
-
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index d6806be..25db296 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -524,8 +524,7 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 	    (vif->prwise_crypto == WEP_CRYPT)) {
+ 		struct ath6kl_key *key = NULL;
+ 
+-		if (sme->key_idx < WMI_MIN_KEY_INDEX ||
+-		    sme->key_idx > WMI_MAX_KEY_INDEX) {
++		if (sme->key_idx > WMI_MAX_KEY_INDEX) {
+ 			ath6kl_err("key index %d out of bounds\n",
+ 				   sme->key_idx);
+ 			up(&ar->sem);
+@@ -997,7 +996,7 @@ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 					      params->key);
+ 	}
+ 
+-	if (key_index < WMI_MIN_KEY_INDEX || key_index > WMI_MAX_KEY_INDEX) {
++	if (key_index > WMI_MAX_KEY_INDEX) {
+ 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+ 			   "%s: key index %d out of bounds\n", __func__,
+ 			   key_index);
+@@ -1115,7 +1114,7 @@ static int ath6kl_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
+ 	if (!ath6kl_cfg80211_ready(vif))
+ 		return -EIO;
+ 
+-	if (key_index < WMI_MIN_KEY_INDEX || key_index > WMI_MAX_KEY_INDEX) {
++	if (key_index > WMI_MAX_KEY_INDEX) {
+ 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+ 			   "%s: key index %d out of bounds\n", __func__,
+ 			   key_index);
+@@ -1148,7 +1147,7 @@ static int ath6kl_cfg80211_get_key(struct wiphy *wiphy, struct net_device *ndev,
+ 	if (!ath6kl_cfg80211_ready(vif))
+ 		return -EIO;
+ 
+-	if (key_index < WMI_MIN_KEY_INDEX || key_index > WMI_MAX_KEY_INDEX) {
++	if (key_index > WMI_MAX_KEY_INDEX) {
+ 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+ 			   "%s: key index %d out of bounds\n", __func__,
+ 			   key_index);
+@@ -1184,7 +1183,7 @@ static int ath6kl_cfg80211_set_default_key(struct wiphy *wiphy,
+ 	if (!ath6kl_cfg80211_ready(vif))
+ 		return -EIO;
+ 
+-	if (key_index < WMI_MIN_KEY_INDEX || key_index > WMI_MAX_KEY_INDEX) {
++	if (key_index > WMI_MAX_KEY_INDEX) {
+ 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG,
+ 			   "%s: key index %d out of bounds\n",
+ 			   __func__, key_index);
 -- 
-Cheers,
-Luca.
+1.7.1
 
