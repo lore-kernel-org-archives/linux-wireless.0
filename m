@@ -1,170 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:15336 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760196Ab1LPQh4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 11:37:56 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 17/24] iwlwifi: kill iwl_{start,stop}_tx_ba_trans_ready
-Date: Fri, 16 Dec 2011 07:37:22 -0800
-Message-Id: <1324049849-831-18-git-send-email-wey-yi.w.guy@intel.com> (sfid-20111216_173822_009642_79DDF944)
-In-Reply-To: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1324049849-831-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:52297 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754026Ab1L2Mrp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 29 Dec 2011 07:47:45 -0500
+Received: by qcqz2 with SMTP id z2so7865482qcq.19
+        for <linux-wireless@vger.kernel.org>; Thu, 29 Dec 2011 04:47:44 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] wl12xx: implement sta_state callback
+Date: Thu, 29 Dec 2011 14:49:18 +0200
+Message-Id: <1325162958-8515-1-git-send-email-eliad@wizery.com> (sfid-20111229_134748_472920_12CA0DE5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Update the fw regarding peer state and ht caps
+only after the station was authorized.
 
-Since my latest patches, the upper layer reports to mac80211 that the
-driver is ready to continue the start / stop BA flow as opposed to
-the transport layer. Hence, iwl_{start,stop}_tx_ba_trans_ready are
-not needed any more.
+Otherwise, the fw might try establishing BA session
+before the sta is authorized.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   22 +++++++++++-----------
- drivers/net/wireless/iwlwifi/iwl-core.c   |   28 ----------------------------
- drivers/net/wireless/iwlwifi/iwl-shared.h |    6 ------
- 3 files changed, 11 insertions(+), 45 deletions(-)
+depends on "notify driver about changes in station state" patchset
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index b4f3c08..ae35c53 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -432,7 +432,6 @@ drop_unlock_priv:
- int iwlagn_tx_agg_stop(struct iwl_priv *priv, struct ieee80211_vif *vif,
- 			struct ieee80211_sta *sta, u16 tid)
- {
--	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
- 	struct iwl_tid_data *tid_data;
- 	unsigned long flags;
- 	int sta_id;
-@@ -495,7 +494,7 @@ turn_off:
- 
- 	spin_unlock_irqrestore(&priv->shrd->lock, flags);
- 
--	iwl_stop_tx_ba_trans_ready(priv, vif_priv->ctx->ctxid, sta_id, tid);
-+	ieee80211_stop_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 
- 	return 0;
+v2: wait for sta_state() callbacks, rather than checking the state
+    on sta_add()
+
+ drivers/net/wireless/wl12xx/main.c |   67 +++++++++++++++++++++++++++++------
+ 1 files changed, 55 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 70f636f..dd81e30 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -4369,6 +4369,29 @@ void wl1271_free_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 hlid)
+ 	wl->active_sta_count--;
  }
-@@ -503,7 +502,6 @@ turn_off:
- int iwlagn_tx_agg_start(struct iwl_priv *priv, struct ieee80211_vif *vif,
- 			struct ieee80211_sta *sta, u16 tid, u16 *ssn)
- {
--	struct iwl_vif_priv *vif_priv = (void *)vif->drv_priv;
- 	struct iwl_tid_data *tid_data;
- 	unsigned long flags;
- 	int sta_id;
-@@ -546,8 +544,7 @@ int iwlagn_tx_agg_start(struct iwl_priv *priv, struct ieee80211_vif *vif,
- 		IWL_DEBUG_TX_QUEUES(priv, "Can proceed: ssn = next_recl = %d",
- 				    tid_data->agg.ssn);
- 		tid_data->agg.state = IWL_AGG_ON;
--		iwl_start_tx_ba_trans_ready(priv, vif_priv->ctx->ctxid, sta_id,
--					    tid);
-+		ieee80211_start_tx_ba_cb_irqsafe(vif, sta->addr, tid);
- 	} else {
- 		IWL_DEBUG_TX_QUEUES(priv, "Can't proceed: ssn %d, "
- 				    "next_reclaimed = %d",
-@@ -625,9 +622,16 @@ int iwlagn_tx_agg_oper(struct iwl_priv *priv, struct ieee80211_vif *vif,
- static void iwlagn_check_ratid_empty(struct iwl_priv *priv, int sta_id, u8 tid)
- {
- 	struct iwl_tid_data *tid_data = &priv->tid_data[sta_id][tid];
-+	enum iwl_rxon_context_id ctx;
-+	struct ieee80211_vif *vif;
-+	u8 *addr;
  
- 	lockdep_assert_held(&priv->shrd->sta_lock);
- 
-+	addr = priv->stations[sta_id].sta.sta.addr;
-+	ctx = priv->stations[sta_id].ctxid;
-+	vif = priv->contexts[ctx].vif;
++static void wl12xx_update_sta_state(struct wl1271 *wl,
++				    struct ieee80211_sta *sta,
++				    enum ieee80211_sta_state state)
++{
++	struct wl1271_station *wl_sta;
++	u8 hlid;
++	int ret;
 +
- 	switch (priv->tid_data[sta_id][tid].agg.state) {
- 	case IWL_EMPTYING_HW_QUEUE_DELBA:
- 		/* There are no packets for this RA / TID in the HW any more */
-@@ -637,9 +641,7 @@ static void iwlagn_check_ratid_empty(struct iwl_priv *priv, int sta_id, u8 tid)
- 				" %d", tid_data->next_reclaimed);
- 			iwl_trans_tx_agg_disable(trans(priv), sta_id, tid);
- 			tid_data->agg.state = IWL_AGG_OFF;
--			iwl_stop_tx_ba_trans_ready(priv,
--						   NUM_IWL_RXON_CTX,
--						   sta_id, tid);
-+			ieee80211_stop_tx_ba_cb_irqsafe(vif, addr, tid);
- 		}
- 		break;
- 	case IWL_EMPTYING_HW_QUEUE_ADDBA:
-@@ -649,9 +651,7 @@ static void iwlagn_check_ratid_empty(struct iwl_priv *priv, int sta_id, u8 tid)
- 				"Can continue ADDBA flow ssn = next_recl ="
- 				" %d", tid_data->next_reclaimed);
- 			tid_data->agg.state = IWL_AGG_ON;
--			iwl_start_tx_ba_trans_ready(priv,
--						    NUM_IWL_RXON_CTX,
--						    sta_id, tid);
-+			ieee80211_start_tx_ba_cb_irqsafe(vif, addr, tid);
- 		}
- 		break;
- 	default:
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index d037f69..fb690a2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1584,34 +1584,6 @@ __le32 iwl_add_beacon_time(struct iwl_priv *priv, u32 base,
- 	return cpu_to_le32(res);
++	wl_sta = (struct wl1271_station *)sta->drv_priv;
++	hlid = wl_sta->hlid;
++
++	if (state == IEEE80211_STA_AUTHORIZED) {
++		ret = wl12xx_cmd_set_peer_state(wl, hlid);
++		if (ret < 0)
++			return;
++
++		ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap, true,
++						     hlid);
++		if (ret < 0)
++			return;
++	}
++}
++
+ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
+ 			     struct ieee80211_vif *vif,
+ 			     struct ieee80211_sta *sta)
+@@ -4401,24 +4424,12 @@ static int wl1271_op_sta_add(struct ieee80211_hw *hw,
+ 		goto out_free_sta;
+ 
+ 	ret = wl12xx_cmd_add_peer(wl, wlvif, sta, hlid);
+-	if (ret < 0)
+-		goto out_sleep;
+-
+-	ret = wl12xx_cmd_set_peer_state(wl, hlid);
+-	if (ret < 0)
+-		goto out_sleep;
+ 
+-	ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap, true, hlid);
+-	if (ret < 0)
+-		goto out_sleep;
+-
+-out_sleep:
+ 	wl1271_ps_elp_sleep(wl);
+ 
+ out_free_sta:
+ 	if (ret < 0)
+ 		wl1271_free_sta(wl, wlvif, hlid);
+-
+ out:
+ 	mutex_unlock(&wl->mutex);
+ 	return ret;
+@@ -4466,6 +4477,37 @@ out:
+ 	return ret;
  }
  
--void iwl_start_tx_ba_trans_ready(struct iwl_priv *priv,
--				 enum iwl_rxon_context_id ctx,
--				 u8 sta_id, u8 tid)
--{
--	struct ieee80211_vif *vif;
--	u8 *addr = priv->stations[sta_id].sta.sta.addr;
--
--	if (ctx == NUM_IWL_RXON_CTX)
--		ctx = priv->stations[sta_id].ctxid;
--	vif = priv->contexts[ctx].vif;
--
--	ieee80211_start_tx_ba_cb_irqsafe(vif, addr, tid);
--}
--
--void iwl_stop_tx_ba_trans_ready(struct iwl_priv *priv,
--				enum iwl_rxon_context_id ctx,
--				u8 sta_id, u8 tid)
--{
--	struct ieee80211_vif *vif;
--	u8 *addr = priv->stations[sta_id].sta.sta.addr;
--
--	if (ctx == NUM_IWL_RXON_CTX)
--		ctx = priv->stations[sta_id].ctxid;
--	vif = priv->contexts[ctx].vif;
--
--	ieee80211_stop_tx_ba_cb_irqsafe(vif, addr, tid);
--}
--
- void iwl_set_hw_rfkill_state(struct iwl_priv *priv, bool state)
- {
- 	wiphy_rfkill_set_hw_state(priv->hw->wiphy, state);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index c458137..aa1ed65 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -532,12 +532,6 @@ int __must_check iwl_rx_dispatch(struct iwl_priv *priv,
- 				 struct iwl_device_cmd *cmd);
- 
- int iwlagn_hw_valid_rtc_data_addr(u32 addr);
--void iwl_start_tx_ba_trans_ready(struct iwl_priv *priv,
--				 enum iwl_rxon_context_id ctx,
--				 u8 sta_id, u8 tid);
--void iwl_stop_tx_ba_trans_ready(struct iwl_priv *priv,
--				enum iwl_rxon_context_id ctx,
--				u8 sta_id, u8 tid);
- void iwl_set_hw_rfkill_state(struct iwl_priv *priv, bool state);
- void iwl_nic_config(struct iwl_priv *priv);
- void iwl_free_skb(struct iwl_priv *priv, struct sk_buff *skb);
++static void wl12xx_op_sta_state(struct ieee80211_hw *hw,
++				struct ieee80211_vif *vif,
++				struct ieee80211_sta *sta,
++				enum ieee80211_sta_state state)
++{
++	struct wl1271 *wl = hw->priv;
++	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
++	int ret;
++
++	wl1271_debug(DEBUG_MAC80211, "mac80211 sta %d state=%d",
++		     sta->aid, state);
++
++	mutex_lock(&wl->mutex);
++
++	if (unlikely(wl->state == WL1271_STATE_OFF))
++		goto out;
++
++	if (wlvif->bss_type != BSS_TYPE_AP_BSS)
++		goto out;
++
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out;
++
++	wl12xx_update_sta_state(wl, sta, state);
++
++	wl1271_ps_elp_sleep(wl);
++out:
++	mutex_unlock(&wl->mutex);
++}
++
+ static int wl1271_op_ampdu_action(struct ieee80211_hw *hw,
+ 				  struct ieee80211_vif *vif,
+ 				  enum ieee80211_ampdu_mlme_action action,
+@@ -4931,6 +4973,7 @@ static const struct ieee80211_ops wl1271_ops = {
+ 	.get_survey = wl1271_op_get_survey,
+ 	.sta_add = wl1271_op_sta_add,
+ 	.sta_remove = wl1271_op_sta_remove,
++	.sta_state = wl12xx_op_sta_state,
+ 	.ampdu_action = wl1271_op_ampdu_action,
+ 	.tx_frames_pending = wl1271_tx_frames_pending,
+ 	.set_bitrate_mask = wl12xx_set_bitrate_mask,
 -- 
-1.7.0.4
+1.7.6.401.g6a319
 
