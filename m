@@ -1,107 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:54712 "EHLO
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:57471 "EHLO
 	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754369Ab1L1ULc convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1750943Ab1L3Ug5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Dec 2011 15:11:32 -0500
-Received: by vbbfc26 with SMTP id fc26so9835043vbb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Dec 2011 12:11:31 -0800 (PST)
+	Fri, 30 Dec 2011 15:36:57 -0500
+Received: by vbbfc26 with SMTP id fc26so10989334vbb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 30 Dec 2011 12:36:57 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1325033604-26469-4-git-send-email-gwingerde@gmail.com>
-References: <1325033604-26469-1-git-send-email-gwingerde@gmail.com>
-	<1325033604-26469-2-git-send-email-gwingerde@gmail.com>
-	<1325033604-26469-3-git-send-email-gwingerde@gmail.com>
-	<1325033604-26469-4-git-send-email-gwingerde@gmail.com>
-Date: Wed, 28 Dec 2011 21:11:31 +0100
-Message-ID: <CAOZOX0UW27EbRFr4xk87pOSpSbgiifOvaAKBex1J9m87gV=e=A@mail.gmail.com> (sfid-20111228_211153_530773_C9E07AAC)
-Subject: Re: [PATCH 3/7] rt2x00: Convert big if-statements to switch-statements.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <E1RgiLY-0007Df-Fb@pf14.m5r2.onet>
+References: <E1RgiLY-0007Df-Fb@pf14.m5r2.onet>
+Date: Fri, 30 Dec 2011 21:36:56 +0100
+Message-ID: <CAAfyv37h1LMTvtBGrJy5URh5BFxVVHWTqoUhQGRsGJz6s2xKYA@mail.gmail.com> (sfid-20111230_213701_569514_D2C3D93C)
+Subject: Re: ipw2200 problem
+From: Belisko Marek <marek.belisko@gmail.com>
+To: forlab@op.pl
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 28, 2011 at 1:53 AM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-
-PS. Is this something that can be done for the other drivers as well?
-
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |   44 ++++++++++++++++++------------
->  1 files changed, 26 insertions(+), 18 deletions(-)
+On Fri, Dec 30, 2011 at 8:42 PM,  <forlab@op.pl> wrote:
+> Hi!
+> I'm having problems using this adapter Intel Corporation PRO/Wireless 2915ABG [Calexico2] with backtrack 5. After I
 >
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index e5df380..5b0137c 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -1944,19 +1944,24 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
->                info->default_power2 = TXPOWER_A_TO_DEV(info->default_power2);
->        }
+> dmesg | grep error
 >
-> -       if (rt2x00_rf(rt2x00dev, RF2020) ||
-> -           rt2x00_rf(rt2x00dev, RF3020) ||
-> -           rt2x00_rf(rt2x00dev, RF3021) ||
-> -           rt2x00_rf(rt2x00dev, RF3022) ||
-> -           rt2x00_rf(rt2x00dev, RF3320))
-> +       switch (rt2x00dev->chip.rf) {
-> +       case RF2020:
-> +       case RF3020:
-> +       case RF3021:
-> +       case RF3022:
-> +       case RF3320:
->                rt2800_config_channel_rf3xxx(rt2x00dev, conf, rf, info);
-> -       else if (rt2x00_rf(rt2x00dev, RF3052))
-> +               break;
-> +       case RF3052:
->                rt2800_config_channel_rf3052(rt2x00dev, conf, rf, info);
-> -       else if (rt2x00_rf(rt2x00dev, RF5370) ||
-> -                rt2x00_rf(rt2x00dev, RF5390))
-> +               break;
-> +       case RF5370:
-> +       case RF5390:
->                rt2800_config_channel_rf53xx(rt2x00dev, conf, rf, info);
-> -       else
-> +               break;
-> +       default:
->                rt2800_config_channel_rf2xxx(rt2x00dev, conf, rf, info);
-> +       }
+> Â the only error message I get is this:
+> [ Â  38.771895] ipw2200: probe of 0000:03:03.0 failed with error -5
 >
->        /*
->         * Change BBP settings
-> @@ -3932,15 +3937,18 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
->        rt2x00_set_chip(rt2x00dev, rt2x00_get_field32(reg, MAC_CSR0_CHIPSET),
->                        value, rt2x00_get_field32(reg, MAC_CSR0_REVISION));
+> From:
+> dmesg | grep ipw2200
+> [ Â  38.628681] ipw2200: Intel(R) PRO/Wireless 2200/2915 Network Driver, 1.2.2kmprq
+> [ Â  38.628687] ipw2200: Copyright(c) 2003-2006 Intel Corporation
+> [ Â  38.628802] ipw2200 0000:03:03.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+> [ Â  38.628832] ipw2200: Detected Intel PRO/Wireless 2915ABG Network Connection
+> [ Â  38.771793] ipw2200: ipw2200-bss.fw request_firmware failed: Reason -2
+-2 = ENOENT which means no such file or directory. Do you have
+ipw2200-bss.fw in /lib/firmware?
+What distro your'e using?
+> [ Â  38.771800] ipw2200: Unable to load firmware: -2
+> [ Â  38.771804] ipw2200: failed to register network device
+> [ Â  38.771846] ipw2200 0000:03:03.0: PCI INT A disabled
+> [ Â  38.771895] ipw2200: probe of 0000:03:03.0 failed with error -5
 >
-> -       if (!rt2x00_rt(rt2x00dev, RT2860) &&
-> -           !rt2x00_rt(rt2x00dev, RT2872) &&
-> -           !rt2x00_rt(rt2x00dev, RT2883) &&
-> -           !rt2x00_rt(rt2x00dev, RT3070) &&
-> -           !rt2x00_rt(rt2x00dev, RT3071) &&
-> -           !rt2x00_rt(rt2x00dev, RT3090) &&
-> -           !rt2x00_rt(rt2x00dev, RT3390) &&
-> -           !rt2x00_rt(rt2x00dev, RT3572) &&
-> -           !rt2x00_rt(rt2x00dev, RT5390)) {
-> +       switch (rt2x00dev->chip.rt) {
-> +       case RT2860:
-> +       case RT2872:
-> +       case RT2883:
-> +       case RT3070:
-> +       case RT3071:
-> +       case RT3090:
-> +       case RT3390:
-> +       case RT3572:
-> +       case RT5390:
-> +               break;
-> +       default:
->                ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
->                return -ENODEV;
->        }
+> I searched the web, but no help there.... Any idea?
+>
+> regards
+> Alex
 > --
-> 1.7.7.4
->
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at Â http://vger.kernel.org/majordomo-info.html
+
+regards,
+
+marek
+
+-- 
+as simple and primitive as possible
+-------------------------------------------------
+Marek Belisko - OPEN-NANDRA
+Freelance Developer
+
+Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
+Tel: +421 915 052 184
+skype: marekwhite
+twitter: #opennandra
+web: http://open-nandra.com
