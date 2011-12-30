@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:38533 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754664Ab1LAOXy (ORCPT
+Received: from [119.255.1.60] ([119.255.1.60]:52988 "EHLO
+	mail.watchdata.com.cn" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1751217Ab1L3IQ4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Dec 2011 09:23:54 -0500
-Received: by mail-lpp01m010-f41.google.com with SMTP id i5so1045923lah.14
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Dec 2011 06:23:47 -0800 (PST)
-Subject: Re: [PATCH 0/2] wl12xx: Fix problems in nvs file parsing
-From: Luciano Coelho <coelho@ti.com>
-To: Pontus Fuchs <pontus.fuchs@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1318922622-8356-1-git-send-email-pontus.fuchs@gmail.com>
-References: <1318922622-8356-1-git-send-email-pontus.fuchs@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 01 Dec 2011 16:23:43 +0200
-Message-ID: <1322749423.8996.29.camel@cumari> (sfid-20111201_152357_254313_0F496313)
-Mime-Version: 1.0
+	Fri, 30 Dec 2011 03:16:56 -0500
+Received: from localhost (mail.watchdata.com.cn [127.0.0.1])
+	by mail.watchdata.com.cn (Postfix) with SMTP id AAE2120069
+	for <linux-wireless@vger.kernel.org>; Fri, 30 Dec 2011 16:05:56 +0800 (CST)
+From: =?gb2312?B?wO641Q==?= <gang.li@watchdata.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: "'Ath9k Devel List'" <ath9k-devel@lists.ath9k.org>
+Subject: Question: ieee80211_rx called twice after one ieee80211_subif_start_xmit call
+Date: Fri, 30 Dec 2011 16:15:05 +0800
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="gb2312"
+In-Reply-To: <CADGLRPmkbTp-azGJ2=CJum=Y8Mrf7fTbaE9Oi8Om+DQyu7d9uA@mail.gmail.com>
+Message-Id: <20111230080554.DE64420052@mail.watchdata.com.cn> (sfid-20111230_091659_943492_2FFB5092)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2011-10-18 at 09:23 +0200, Pontus Fuchs wrote: 
-> A crafted nvs file could trick the driver into reading and writing
-> beyond end of buffers.
-> 
-> Pontus Fuchs (2):
->   wl12xx: Validate FEM index from ini file and FW
->   wl12xx: Check buffer bound when processing nvs data
-> 
->  drivers/net/wireless/wl12xx/boot.c |   14 ++++++++++++++
->  drivers/net/wireless/wl12xx/cmd.c  |   22 ++++++++++++++++++++++
->  2 files changed, 36 insertions(+), 0 deletions(-)
+Hi sirs,
 
-Applied both, tack!
+	Today, I noticed that when an data frame is sent by
+ieee80211_subif_start_xmit, then ieee80211_rx will be called twice , first
+is an Acknowledgement frame and second is the response data frame.  Is this
+the normal case?   It seems the RA frame is nonsense and just be freed in
+ieee80211_rx_monitor.
 
--- 
-Cheers,
-Luca.
+	Is there anyway to tell the hardware not report RA frame to
+mac80211?
+
+
+Thanks very much!
+
+Li gang
+
+
 
