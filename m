@@ -1,139 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:63492 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754416Ab1LWVCG (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:40569 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751459Ab1L3LTL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Dec 2011 16:02:06 -0500
-Received: by qcqz2 with SMTP id z2so5771870qcq.19
-        for <linux-wireless@vger.kernel.org>; Fri, 23 Dec 2011 13:02:05 -0800 (PST)
+	Fri, 30 Dec 2011 06:19:11 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH] mac80211: remove dead code
+Date: Fri, 30 Dec 2011 16:49:01 +0530
+Message-ID: <1325243941-8803-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20111230_121914_654813_A4DF6F20)
 MIME-Version: 1.0
-Date: Sat, 24 Dec 2011 02:02:05 +0500
-Message-ID: <CADiUXRwb+ktGmyuMxMcXhZkpbhy=kAkOJcTLpJYRcaFFSRMnMg@mail.gmail.com> (sfid-20111223_220211_850241_85F31750)
-Subject: Fedora 16 Wireless Connection Problem
-From: mammar <mammar@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have Dell Inpiron N5010 with Broadcom Corporation BCM4313
-802.11b/g/n Wireless LAN Controller.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-My OS is Fedora 16 64-bit. I have installed the following drivers for
-my wireless controller, everything is working great until yesterday.
-Now whenever i try to connect to wirless connection, it failed.
+ieee80211_offchannel_enable_all_ps function is no longer used
+and looks like its logic is extensively handled in
+ieee80211_offchannel_stop_vifs
 
-http://download1.rpmfusion.org/nonfree/fedora/releases/16/Everything/x86_64/os/repoview/broadcom-wl.html
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ net/mac80211/ieee80211_i.h |    2 --
+ net/mac80211/offchannel.c  |   17 -----------------
+ 2 files changed, 0 insertions(+), 19 deletions(-)
 
-I haven't installed anything that can cause this problem.
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c3f3e43..2f0642d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1221,8 +1221,6 @@ int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_sched_scan_stopped_work(struct work_struct *work);
+ 
+ /* off-channel helpers */
+-void ieee80211_offchannel_enable_all_ps(struct ieee80211_local *local,
+-					bool tell_ap);
+ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
+ 				    bool offchannel_ps_enable);
+ void ieee80211_offchannel_return(struct ieee80211_local *local,
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index e4330d8..8818180 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -138,23 +138,6 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
+ 	mutex_unlock(&local->iflist_mtx);
+ }
+ 
+-void ieee80211_offchannel_enable_all_ps(struct ieee80211_local *local,
+-					bool tell_ap)
+-{
+-	struct ieee80211_sub_if_data *sdata;
+-
+-	mutex_lock(&local->iflist_mtx);
+-	list_for_each_entry(sdata, &local->interfaces, list) {
+-		if (!ieee80211_sdata_running(sdata))
+-			continue;
+-
+-		if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+-		    sdata->u.mgd.associated)
+-			ieee80211_offchannel_ps_enable(sdata, tell_ap);
+-	}
+-	mutex_unlock(&local->iflist_mtx);
+-}
+-
+ void ieee80211_offchannel_return(struct ieee80211_local *local,
+ 				 bool offchannel_ps_disable)
+ {
+-- 
+1.7.0.4
 
-Following are log messages from /var/log/messages when i try to
-connect to connection. I have double checked connection settings and
-everything is correct.
-
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Activation
-(eth1) starting connection 'Auto Communication Gallery'
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> (eth1): device
-state change: disconnected -> prepare (reason 'none') [30 40 0]
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> Activation (eth1) starting connection 'Auto Communication
-Gallery'
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> (eth1): device state change: disconnected -> prepare (reason
-'none') [30 40 0]
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Activation
-(eth1) Stage 1 of 5 (Device Prepare) scheduled...
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> Activation (eth1) Stage 1 of 5 (Device Prepare) scheduled...
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Activation
-(eth1) Stage 1 of 5 (Device Prepare) started...
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> Activation (eth1) Stage 1 of 5 (Device Prepare) started...
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Activation
-(eth1) Stage 2 of 5 (Device Configure) scheduled...
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Activation
-(eth1) Stage 1 of 5 (Device Prepare) complete.
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> Activation (eth1) Stage 2 of 5 (Device Configure) scheduled...
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> Activation (eth1) Stage 1 of 5 (Device Prepare) complete.
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Activation
-(eth1) Stage 2 of 5 (Device Configure) starting...
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> Activation (eth1) Stage 2 of 5 (Device Configure) starting...
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> (eth1): device
-state change: prepare -> config (reason 'none') [40 50 0]
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> (eth1): device state change: prepare -> config (reason 'none')
-[40 50 0]
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Activation
-(eth1/wireless): connection 'Auto Communication Gallery' has security,
-and secrets exist. No new secrets needed.
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> Activation (eth1/wireless): connection 'Auto Communication
-Gallery' has security, and secrets exist. No new secrets needed.
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Config: added
-'ssid' value 'Communication Gallery'
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> Config: added 'ssid' value 'Communication Gallery'
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Config: added
-'scan_ssid' value '1'
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Config: added
-'key_mgmt' value 'NONE'
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Config: added
-'wep_key0' value '<omitted>'
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Config: added
-'wep_tx_keyidx' value '0'
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Activation
-(eth1) Stage 2 of 5 (Device Configure) complete.
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> Config: added 'scan_ssid' value '1'
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> Config: added 'key_mgmt' value 'NONE'
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> Config: added 'wep_key0' value '<omitted>'
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> Config: added 'wep_tx_keyidx' value '0'
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> Activation (eth1) Stage 2 of 5 (Device Configure) complete.
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: <info> Config: set
-interface ap_scan to 1
-Dec 24 00:46:15 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> Config: set interface ap_scan to 1
-Dec 24 00:46:16 ma-laptop NetworkManager[1039]: <info> (eth1):
-supplicant interface state: inactive -> scanning
-Dec 24 00:46:16 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> (eth1): supplicant interface state: inactive -> scanning
-Dec 24 00:46:41 ma-laptop NetworkManager[1039]: <warn> Activation
-(eth1/wireless): association took too long.
-Dec 24 00:46:41 ma-laptop NetworkManager[1039]: <info> (eth1): device
-state change: config -> need-auth (reason 'none') [50 60 0]
-Dec 24 00:46:41 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<warn> Activation (eth1/wireless): association took too long.
-Dec 24 00:46:41 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> (eth1): device state change: config -> need-auth (reason
-'none') [50 60 0]
-Dec 24 00:46:41 ma-laptop NetworkManager[1039]: <warn> Activation
-(eth1/wireless): asking for new secrets
-Dec 24 00:46:41 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<warn> Activation (eth1/wireless): asking for new secrets
-Dec 24 00:46:41 ma-laptop NetworkManager[1039]: <warn> Couldn't
-disconnect supplicant interface: This interface is not connected.
-Dec 24 00:46:41 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<warn> Couldn't disconnect supplicant interface: This interface is not
-connected.
-Dec 24 00:46:41 ma-laptop NetworkManager[1039]: <warn> Couldn't
-disconnect supplicant interface: This interface is not connected.
-Dec 24 00:46:41 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<warn> Couldn't disconnect supplicant interface: This interface is not
-connected.
-Dec 24 00:46:43 ma-laptop NetworkManager[1039]: <info> (eth1):
-supplicant interface state: scanning -> inactive
-Dec 24 00:46:43 ma-laptop NetworkManager[1039]: NetworkManager[1039]:
-<info> (eth1): supplicant interface state: scanning -> inactive
-Dec 24 00:46:52 ma-laptop NetworkManager[1039]: <warn> No agents were
-available for this request.
-
-Can anyone help me?
-
-Thanks
