@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swm.pp.se ([212.247.200.143]:60947 "EHLO uplift.swm.pp.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750941Ab1LJRa4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Dec 2011 12:30:56 -0500
-Date: Sat, 10 Dec 2011 12:34:39 +0100 (CET)
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-cc: linux-wireless@vger.kernel.org
-Subject: Re: Spontaneous disconnections debugging
-In-Reply-To: <CALGY4fvRCRwqvncw8nqkEN-mGB5syHXbWKpRspbxC=6Fccpa1g@mail.gmail.com>
-Message-ID: <alpine.DEB.2.00.1112101231120.808@uplift.swm.pp.se> (sfid-20111210_183059_858793_C4105B31)
-References: <CALGY4fvRCRwqvncw8nqkEN-mGB5syHXbWKpRspbxC=6Fccpa1g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Received: from mx5.portal.onet.pl ([213.180.147.149]:55766 "EHLO
+	mx5.portal.onet.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751320Ab1L3UL1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Dec 2011 15:11:27 -0500
+Received: from pf14.m5r2.onet ([10.174.32.45]:44318)
+	by mx5.portal.onet.pl with esmtp (Exim 4.63)
+	(envelope-from <forlab@op.pl>)
+	id 1RgiLY-0004IR-R6
+	for linux-wireless@vger.kernel.org; Fri, 30 Dec 2011 20:42:32 +0100
+Received: from localhost ([127.0.0.1] helo=ps1.test.onet.pl)
+	by pf14.m5r2.onet with smtp (Exim 4.50)
+	id 1RgiLY-0007Df-Fb
+	for linux-wireless@vger.kernel.org; Fri, 30 Dec 2011 20:42:32 +0100
+To: linux-wireless@vger.kernel.org
+From: forlab@op.pl
+Date: Fri, 30 Dec 2011 20:42:32 +0100
+Content-Type: text/plain; charset=US-ASCII
+Subject: ipw2200 problem
+Mime-Version: 1.0
+Message-Id: <E1RgiLY-0007Df-Fb@pf14.m5r2.onet> (sfid-20111230_211135_238269_8EBD7968)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 9 Dec 2011, Nikolay Martynov wrote:
+Hi!
+I'm having problems using this adapter Intel Corporation PRO/Wireless 2915ABG [Calexico2] with backtrack 5. After I
 
->  I have an intel 5300 as client and openwrt ath9k based router as AP. 
-> Some times (once in several days) I get wireless connection 
-> spontaneously dropped with this message on client: wlan1: 
-> deauthenticating from XX:XX:XX:XX:XX:XX by local choice (reason=3)
+dmesg | grep error
 
-Ubuntu 11.10 on a Thinkpad X200 with Intel 5300:
+ the only error message I get is this:
+[   38.771895] ipw2200: probe of 0000:03:03.0 failed with error -5
 
-$ dmesg | grep -i deauthenticating | grep "local choice" | wc -l
-44
-$ uptime
-  18:31:07 up 1 day,  7:30,  3 users,  load average: 0.08, 0.03, 0.05
+From:
+dmesg | grep ipw2200
+[   38.628681] ipw2200: Intel(R) PRO/Wireless 2200/2915 Network Driver, 1.2.2kmprq
+[   38.628687] ipw2200: Copyright(c) 2003-2006 Intel Corporation
+[   38.628802] ipw2200 0000:03:03.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+[   38.628832] ipw2200: Detected Intel PRO/Wireless 2915ABG Network Connection
+[   38.771793] ipw2200: ipw2200-bss.fw request_firmware failed: Reason -2
+[   38.771800] ipw2200: Unable to load firmware: -2
+[   38.771804] ipw2200: failed to register network device
+[   38.771846] ipw2200 0000:03:03.0: PCI INT A disabled
+[   38.771895] ipw2200: probe of 0000:03:03.0 failed with error -5
 
-$ dmesg | grep "local choice" | cut -d ] -f2- | sort | uniq -c
-      44  wlan0: deauthenticating from 00:21:91:dc:94:55 by local choice (reason=3)
-      56  wlan0: disassociating from 00:21:91:dc:94:55 by local choice (reason=3)
+I searched the web, but no help there.... Any idea?
 
->  Not that this really creates problems for me, connection is quickly
-> restored and otherwise works fine.
-
-For me it also mostly works fine, but sometimes I have to unload/reload 
-the iwlagn module to make things work again, and sometimes the wifi LED 
-just turns off and requires a reboot to get working again.
-
-At least the 5300 stuff works much better in 3.0 than it did in 2.6.38.
-
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+regards
+Alex
