@@ -1,40 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:48678 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754432Ab1L2MkJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Dec 2011 07:40:09 -0500
-Received: by mail-lpp01m010-f46.google.com with SMTP id d3so2600118lah.19
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Dec 2011 04:40:08 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 0/3] notify driver about changes in station state
-Date: Thu, 29 Dec 2011 14:41:38 +0200
-Message-Id: <1325162501-7996-1-git-send-email-eliad@wizery.com> (sfid-20111229_134029_345293_0DEAAE0F)
+Received: from lo.gmane.org ([80.91.229.12]:44764 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753100Ab1LaOZK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Dec 2011 09:25:10 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Rgzrv-00025N-3n
+	for linux-wireless@vger.kernel.org; Sat, 31 Dec 2011 15:25:07 +0100
+Received: from pD9F88DF8.dip.t-dialin.net ([217.248.141.248])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Dec 2011 15:25:07 +0100
+Received: from drahemmaps by pD9F88DF8.dip.t-dialin.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Sat, 31 Dec 2011 15:25:07 +0100
+To: linux-wireless@vger.kernel.org
+From: Martin Schleier <drahemmaps@gmx.net>
+Subject: Re: loading firmware while usermodehelper disabled.
+Date: Sat, 31 Dec 2011 14:20:26 +0000 (UTC)
+Message-ID: <loom.20111231T150655-670@post.gmane.org> (sfid-20111231_152538_164806_0A4D7CFA)
+References: <20111230235421.GA6054@redhat.com> <CA+55aFyqm4FbW=--7U4ULk1EBb6RLP0sRgtokODBYnZNiJXWew@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset is a sequel for Johannes' "station management rework"
-patchset. It adds a new sta_state callback, so low-level driver
-will be able to register for station state changes.
+Linus Torvalds <torvalds@...> writes:
+> On Fri, Dec 30, 2011 at 3:54 PM, Dave Jones <davej@...> wrote:
+> > We're getting a bunch of reports against Fedora 16
+> > (still using 3.1) which look like some drivers are trying to
+> > load firmware on resume from suspend, while usermodehelper
+> > is disabled.
+> 
+> Ok, buggy drivers. You *must*not* load firmware in your resume path,
+> since there is no actual guarantee that any particular device will be
+> resumed after the disk that contains the firmware images.
+> 
+> So it's very simple: drivers that load firmware at resume time are
+> buggy. No ifs, buts, or maybes about it.
+Or are they?
 
-v2: call drv_sta_state() within the sta addition process (thanks Johannes)
+You see, PCMCIA cards [don't know about the pccard express stuff]
+have to deal with a notable exception from this rule since:
 
-Eliad Peller (3):
-  mac80211: check sta_apply_parameters() return value
-  mac80211: move sta_state into sta->sta
-  mac80211: add sta_state callback
+pcmcia: improve check for same card in slot after resume
+"88b060d6c03fcb9e4d2018b4349954c4242a5c7f"
 
- include/net/mac80211.h      |   17 +++++++++++++++++
- net/mac80211/cfg.c          |    7 ++++++-
- net/mac80211/driver-ops.h   |   17 +++++++++++++++++
- net/mac80211/driver-trace.h |   28 ++++++++++++++++++++++++++++
- net/mac80211/sta_info.c     |   33 ++++++++++++++++++++++-----------
- net/mac80211/sta_info.h     |   11 -----------
- net/mac80211/util.c         |    9 ++++++++-
- 7 files changed, 98 insertions(+), 24 deletions(-)
+This patch changed the way how suspend/resume is handled.
+On resume, the pcmcia subsystem obviously does not know
+if the card has been removed and reinserted, therefore
+it does not call the resume method of the driver but
+instead goes for "probe" and things go south from there.
 
--- 
-1.7.6.401.g6a319
+[And now for the $64 question, what happens to USB drivers
+that are managing devices which are connected to pcmcia
+usb host cards?]
 
