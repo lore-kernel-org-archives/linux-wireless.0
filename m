@@ -1,58 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:32945 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752859Ab1LCJUP convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:53440 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752037Ab1LaAW2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Dec 2011 04:20:15 -0500
-References: <1322600880.1534.325.camel@localhost.localdomain>
-In-Reply-To: <1322600880.1534.325.camel@localhost.localdomain>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <B3E3F396-DAA8-47B5-BCCB-4CC79766B11C@gmail.com> (sfid-20111203_102047_729187_91F6CCC4)
-Cc: "IvDoorn@gmail.com" <IvDoorn@gmail.com>,
-	"helmut.schaa@googlemail.com" <helmut.schaa@googlemail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] rt2x00: Use kcalloc instead of kzalloc to allocate array
-Date: Sat, 3 Dec 2011 10:20:10 +0100
-To: Thomas Meyer <thomas@m3y3r.de>
+	Fri, 30 Dec 2011 19:22:28 -0500
+MIME-Version: 1.0
+In-Reply-To: <20111230235421.GA6054@redhat.com>
+References: <20111230235421.GA6054@redhat.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Fri, 30 Dec 2011 16:22:06 -0800
+Message-ID: <CA+55aFyqm4FbW=--7U4ULk1EBb6RLP0sRgtokODBYnZNiJXWew@mail.gmail.com> (sfid-20111231_012251_160371_1B188C8D)
+Subject: Re: loading firmware while usermodehelper disabled.
+To: Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: Matthew Garrett <mjg@redhat.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29 nov. 2011, at 22:08, Thomas Meyer <thomas@m3y3r.de> wrote:
+On Fri, Dec 30, 2011 at 3:54 PM, Dave Jones <davej@redhat.com> wrote:
+> We're getting a bunch of reports against Fedora 16
+> (still using 3.1) which look like some drivers are trying to
+> load firmware on resume from suspend, while usermodehelper
+> is disabled.
 
-> The advantage of kcalloc is, that will prevent integer overflows which could
-> result from the multiplication of number of elements and size and it is also
-> a bit nicer to read.
-> 
-> The semantic patch that makes this change is available
-> in https://lkml.org/lkml/2011/11/25/107
-> 
-> Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
+Ok, buggy drivers. You *must*not* load firmware in your resume path,
+since there is no actual guarantee that any particular device will be
+resumed after the disk that contains the firmware images.
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+So it's very simple: drivers that load firmware at resume time are
+buggy. No ifs, buts, or maybes about it.
 
-> ---
-> 
-> diff -u -p a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c 2011-11-28 19:36:47.770108588 +0100
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c 2011-11-28 19:54:53.495525543 +0100
-> @@ -831,11 +831,11 @@ static int rt2x00lib_probe_hw_modes(stru
->    if (spec->supported_rates & SUPPORT_RATE_OFDM)
->        num_rates += 8;
-> 
-> -    channels = kzalloc(sizeof(*channels) * spec->num_channels, GFP_KERNEL);
-> +    channels = kcalloc(spec->num_channels, sizeof(*channels), GFP_KERNEL);
->    if (!channels)
->        return -ENOMEM;
-> 
-> -    rates = kzalloc(sizeof(*rates) * num_rates, GFP_KERNEL);
-> +    rates = kcalloc(num_rates, sizeof(*rates), GFP_KERNEL);
->    if (!rates)
->        goto exit_free_channels;
-> 
+> Here are some example traces:
+>
+> https://bugzilla.redhat.com/show_bug.cgi?id=746411
+
+It's isight_firmware_load(), in the isight_firmware driver. The driver
+doesn't actually do anything but load the firmware, and is apparently
+not very good at that either.
+
+It should either fake a disconnect and reconnect of the device (and
+let the reconnect then load the firmware through udev or something) or
+it should just save the firmware image in memory from the original
+load, and make the resume just re-initialize it - not load it.
+
+It's also possible that it could be considered a USB layer bug, and
+the USB layer should just not rebind the devices directly in the
+resume function, but do it somehow later. HOWEVER, that would only
+work for "random" USB devices that aren't in use by user space (like
+disks etc might be). So I think that in general the real solution is
+always just "make sure that the firmware is in memory before the
+suspend even happens".
+
+Greg - has the USB resume logic been changed lately?
+
+Matthew? Any comments about that particular driver?
+
+> https://bugzilla.redhat.com/show_bug.cgi?id=771002
+
+Same issue, different driver. Again, it's USB, and it's possible that
+USB just makes it really hard to do this correctly (ie the "save
+firmware image across suspend so that you don't have to load it at
+resume time").
+
+It's also possible that we should blame the firmware code, which is
+expressly written to encourage these kinds of bugs. It may be that i
+tshould be the firmware code that has a "get_firmware()" +
+"put_firmware()" model, and it should cache the firmware explicitly if
+the config supports suspend, so that a firmware read at resume time
+would actually work. The whole "request_firmware()" interface really
+is very prone to these kinds of bugs.
+
+But it's possible this could be fixed at the driver level by doing the
+caching there.
+
+In this case it's the rtl8192cu driver, so Larry, Chaoming, John etc
+added to the cc for that one.
+
+> This possibly sounds like the problem that caca9510ff4e5d842c0589110243d60927836222
+> was trying to fix, but that patch is present in the kernels
+> being reported.
+
+No, caca9510ff4e is only for the case where you actually compile the
+firmware *into* the kernel, so it's part of the kernel image. That's
+useful mainly for avoiding modules and initrd images, thus allowing
+things like having root directly on a disk that needs firmware to be
+loaded. Quite unusual, and it doesn't really work all that well.
+
+Oh, and some people use it for the Radeon firmware with the radeon DRM
+code built it.
+
+It really does need to be fixed at a driver level (possibly with the
+help of firmware/usb support infrastructure).
+
+                  Linus
