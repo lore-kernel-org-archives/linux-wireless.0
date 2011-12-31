@@ -1,105 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1136 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761006Ab1LQChl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Dec 2011 21:37:41 -0500
-From: "Franky Lin" <frankyl@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 05/30] brcm80211: fmac: change function bus_start
- parameter
-Date: Fri, 16 Dec 2011 18:36:55 -0800
-Message-ID: <1324089440-8957-6-git-send-email-frankyl@broadcom.com> (sfid-20111217_035946_958322_4DB98913)
-In-Reply-To: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
-References: <1324089440-8957-1-git-send-email-frankyl@broadcom.com>
+Received: from cavan.codon.org.uk ([93.93.128.6]:56871 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752449Ab1LaAk0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 30 Dec 2011 19:40:26 -0500
+Date: Sat, 31 Dec 2011 00:40:16 +0000
+From: Matthew Garrett <mjg@redhat.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+Message-ID: <20111231004015.GA23226@srcf.ucam.org> (sfid-20111231_014043_275722_1AE9D4B3)
+References: <20111230235421.GA6054@redhat.com>
+ <CA+55aFyqm4FbW=--7U4ULk1EBb6RLP0sRgtokODBYnZNiJXWew@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+55aFyqm4FbW=--7U4ULk1EBb6RLP0sRgtokODBYnZNiJXWew@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change parameter to device pointer for bus layer interface function
-brcmf_bus_start. This is part of the fullmac bus interface
-refactoring.
+On Fri, Dec 30, 2011 at 04:22:06PM -0800, Linus Torvalds wrote:
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Arend van Spriel <arend@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    2 +-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   10 ++++++----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    2 +-
- 3 files changed, 8 insertions(+), 6 deletions(-)
+> It's isight_firmware_load(), in the isight_firmware driver. The driver
+> doesn't actually do anything but load the firmware, and is apparently
+> not very good at that either.
+> 
+> It should either fake a disconnect and reconnect of the device (and
+> let the reconnect then load the firmware through udev or something) or
+> it should just save the firmware image in memory from the original
+> load, and make the resume just re-initialize it - not load it.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-index a8e94eb..0f1384d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd.h
-@@ -752,7 +752,7 @@ extern void brcmf_del_if(struct brcmf_pub *drvr, int ifidx);
- extern int brcmf_sendpkt(struct brcmf_pub *drvr, int ifidx,\
- 			 struct sk_buff *pkt);
- 
--extern int brcmf_bus_start(struct brcmf_pub *drvr);
-+extern int brcmf_bus_start(struct device *dev);
- 
- extern void brcmf_c_pktfilter_offload_set(struct brcmf_pub *drvr, char *arg);
- extern void brcmf_c_pktfilter_offload_enable(struct brcmf_pub *drvr, char *arg,
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-index 3d0177a..0440471 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-@@ -800,7 +800,7 @@ static int brcmf_netdev_open(struct net_device *ndev)
- 
- 	if (ifp->idx == 0) {	/* do it only for primary eth0 */
- 		/* try to bring up bus */
--		ret = brcmf_bus_start(drvr);
-+		ret = brcmf_bus_start(drvr->dev);
- 		if (ret != 0) {
- 			brcmf_dbg(ERROR, "failed with code %d\n", ret);
- 			return -1;
-@@ -960,23 +960,25 @@ fail:
- 	return NULL;
- }
- 
--int brcmf_bus_start(struct brcmf_pub *drvr)
-+int brcmf_bus_start(struct device *dev)
- {
- 	int ret = -1;
- 	/* Room for "event_msgs" + '\0' + bitvec */
- 	char iovbuf[BRCMF_EVENTING_MASK_LEN + 12];
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_pub *drvr = bus_if->drvr;
- 
- 	brcmf_dbg(TRACE, "\n");
- 
- 	/* Bring up the bus */
--	ret = brcmf_sdbrcm_bus_init(drvr->dev);
-+	ret = brcmf_sdbrcm_bus_init(dev);
- 	if (ret != 0) {
- 		brcmf_dbg(ERROR, "brcmf_sdbrcm_bus_init failed %d\n", ret);
- 		return ret;
- 	}
- 
- 	/* If bus is not ready, can't come up */
--	if (drvr->bus_if->state != BRCMF_BUS_DATA) {
-+	if (bus_if->state != BRCMF_BUS_DATA) {
- 		brcmf_dbg(ERROR, "failed bus is not ready\n");
- 		return -ENODEV;
- 	}
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 4e3e4ec..a961627 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3971,7 +3971,7 @@ void *brcmf_sdbrcm_probe(u32 regsva, struct brcmf_sdio_dev *sdiodev)
- 	brcmf_dbg(INFO, "completed!!\n");
- 
- 	/* if firmware path present try to download and bring up bus */
--	ret = brcmf_bus_start(bus->drvr);
-+	ret = brcmf_bus_start(bus->sdiodev->dev);
- 	if (ret != 0) {
- 		if (ret == -ENOLINK) {
- 			brcmf_dbg(ERROR, "dongle is not responding\n");
+Mm. My recollection is that these devices retained their firmware over 
+suspend/resume, so wouldn't resume with a USB id that matched the driver 
+and so this code shouldn't be called. It seems that either I was 
+horribly wrong about that, or something's changed in the USB layer 
+that's resulting in them resetting themselves. Newer devices don't 
+require this, so I'll need to try to chase up some older hardware to 
+figure out what's going on.
+
 -- 
-1.7.5.4
-
-
+Matthew Garrett | mjg59@srcf.ucam.org
