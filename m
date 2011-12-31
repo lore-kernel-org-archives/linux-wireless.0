@@ -1,56 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:44516 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758819Ab1LONSq (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:36467 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753212Ab1LaQ1c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Dec 2011 08:18:46 -0500
-Received: by vbbfc26 with SMTP id fc26so1492713vbb.19
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Dec 2011 05:18:46 -0800 (PST)
+	Sat, 31 Dec 2011 11:27:32 -0500
+Date: Sat, 31 Dec 2011 16:27:18 +0000
+From: Matthew Garrett <mjg@redhat.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+Message-ID: <20111231162718.GA27867@srcf.ucam.org> (sfid-20111231_172737_790155_E1C16B32)
+References: <20111231004015.GA23226@srcf.ucam.org>
+ <Pine.LNX.4.44L0.1112311028270.22327-100000@netrider.rowland.org>
 MIME-Version: 1.0
-In-Reply-To: <CAD2nsn0-OgCvHtx+xHeDtHEJK7s1svxt5jzLmkZNn-huaN3y5g@mail.gmail.com>
-References: <CAKeTQ4aVzp3GTmzR0zv1j5fWyCUrQLUk9EHHBvZFpDYiQSC1=g@mail.gmail.com>
-	<CAD2nsn0jgoUDf02UrajQyOKZiETMEbP6ikBAtBNdmcgT6m34yw@mail.gmail.com>
-	<CAKeTQ4adxsEiEzL1DXUvKCF6odfZkQTFhVFJC4AFwBshU-YHFw@mail.gmail.com>
-	<CAD2nsn0Zqw0zdEUrMCnBKKLsZEBw_qqT5MO=7dHCwj8Hd6WpqQ@mail.gmail.com>
-	<CAD2nsn2fSehL_3ntoQDN0qzfSycx_hLP7R2Nn2V+iaubc5RX4A@mail.gmail.com>
-	<CAD2nsn0-OgCvHtx+xHeDtHEJK7s1svxt5jzLmkZNn-huaN3y5g@mail.gmail.com>
-Date: Thu, 15 Dec 2011 18:48:46 +0530
-Message-ID: <CAD2nsn3rNcd8_Wa1A-K0r1cQA4HZzWKUFp+zGr2QFnz8phDOkw@mail.gmail.com> (sfid-20111215_141857_920156_10CFD3D6)
-Subject: Re: wierless hardware using ath9k driver on AP mode leads to kernel panic
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Ashwin Mendonca <ashwinloyal@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <Pine.LNX.4.44L0.1112311028270.22327-100000@netrider.rowland.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 15, 2011 at 3:55 PM, Mohammed Shafi
-<shafi.wireless@gmail.com> wrote:
-> On Thu, Dec 15, 2011 at 2:36 PM, Mohammed Shafi
-> <shafi.wireless@gmail.com> wrote:
->> On Thu, Dec 15, 2011 at 1:24 PM, Mohammed Shafi
->> <shafi.wireless@gmail.com> wrote:
->>> On Thu, Dec 15, 2011 at 12:55 PM, Ashwin Mendonca <ashwinloyal@gmail.com> wrote:
->>>> I tried the bleeding edge build of compat-wireless
->>>> (compat-wireless-2011-12-14 build) on Linux-3.1.5. It still leads to kernel
->>>> panic. I manually got the AP up with these steps:
->
-> hi Ashwin,
->
-> can you please try the attached patch and it seems to work for me.
-> please go to your compat directory
-> cd compat...
-> then do patch -p1 < ./fix-ar2427-ap-mode-panic.patch
+On Sat, Dec 31, 2011 at 10:33:12AM -0500, Alan Stern wrote:
 
-this might fix the panic, but i need to verify whether everything else
-is properly handled for AP ps
+> Nothing has changed in the USB layer -- it has always been true that
+> devices could be reset during a suspend/resume cycle.  This isn't a
+> matter of how the stack is written or anything like that; some
+> motherboards simply do not provide suspend power to their USB
+> controllers.  Or the firmware reinitializes the controllers and
+> attached devices during resume, forcing Linux's USB core to reset
+> every device on the affected buses.
 
->
-> --
-> shafi
-
-
+I know that this is hardware dependent, but the hardware hasn't changed 
+here.
 
 -- 
-shafi
+Matthew Garrett | mjg59@srcf.ucam.org
