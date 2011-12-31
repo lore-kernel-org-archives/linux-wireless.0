@@ -1,60 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:49036 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751629Ab1LSJ7F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Dec 2011 04:59:05 -0500
-Received: by wgbdr13 with SMTP id dr13so10390055wgb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Dec 2011 01:59:03 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 1/7] wl12xx: implement change_interface
-Date: Mon, 19 Dec 2011 12:00:03 +0200
-Message-Id: <1324288803-1666-1-git-send-email-eliad@wizery.com> (sfid-20111219_105909_006242_91293B81)
+Received: from mout6.freenet.de ([195.4.92.96]:43242 "EHLO mout6.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753098Ab1LaOIB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 31 Dec 2011 09:08:01 -0500
+Received: from [195.4.92.142] (helo=mjail2.freenet.de)
+	by mout6.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
+	id 1RgzLa-0008Oy-AS
+	for linux-wireless@vger.kernel.org; Sat, 31 Dec 2011 14:51:42 +0100
+Received: from localhost ([::1]:53939 helo=mjail2.freenet.de)
+	by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1RgzLa-0007v9-6e
+	for linux-wireless@vger.kernel.org; Sat, 31 Dec 2011 14:51:42 +0100
+Received: from [195.4.92.12] (port=43484 helo=2.mx.freenet.de)
+	by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1RgzJE-0007FC-Th
+	for linux-wireless@vger.kernel.org; Sat, 31 Dec 2011 14:49:16 +0100
+Received: from p4fde00ee.dip0.t-ipconnect.de ([79.222.0.238]:39435 helo=mail.maya.org)
+	by 2.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
+	id 1RgzJE-0004VD-Hq
+	for linux-wireless@vger.kernel.org; Sat, 31 Dec 2011 14:49:16 +0100
+Received: from [192.168.1.6] (dualc.maya.org [192.168.1.6])
+	by mail.maya.org (8.14.4/8.13.8) with ESMTP id pBVDnBRw003636
+	for <linux-wireless@vger.kernel.org>; Sat, 31 Dec 2011 14:49:11 +0100
+Message-ID: <4EFF12D9.3010602@01019freenet.de> (sfid-20111231_150826_391382_8B3357FB)
+Date: Sat, 31 Dec 2011 14:49:13 +0100
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Compat-wireless-3.2-rc6-3 is broken for rt2860 device
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Implement the change_interface callback by simply removing the
-current vif and adding a new one after updating the vif type.
+Hello,
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-v2: update vif->p2p as well
+I tested compat-wireless-3.2-rc6-3 with kernel 3.1 and a rt2860 device
+running in AP mode (80211.n - 40 MHz). During
 
- drivers/net/wireless/wl12xx/main.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+netperf -t TCP_STREAM -H ap
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index c305841..82fc318 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2269,6 +2269,17 @@ out:
- 	cancel_work_sync(&wl->recovery_work);
- }
- 
-+static int wl12xx_op_change_interface(struct ieee80211_hw *hw,
-+				      struct ieee80211_vif *vif,
-+				      enum nl80211_iftype new_type, bool p2p)
-+{
-+	wl1271_op_remove_interface(hw, vif);
-+
-+	vif->type = ieee80211_iftype_p2p(new_type, p2p);
-+	vif->p2p = p2p;
-+	return wl1271_op_add_interface(hw, vif);
-+}
-+
- static int wl1271_join(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			  bool set_assoc)
- {
-@@ -4629,6 +4640,7 @@ static const struct ieee80211_ops wl1271_ops = {
- 	.stop = wl1271_op_stop,
- 	.add_interface = wl1271_op_add_interface,
- 	.remove_interface = wl1271_op_remove_interface,
-+	.change_interface = wl12xx_op_change_interface,
- #ifdef CONFIG_PM
- 	.suspend = wl1271_op_suspend,
- 	.resume = wl1271_op_resume,
--- 
-1.7.6.401.g6a319
+the data stream mostly stalls (-> the device receives data) after a few
+seconds and never comes up any more. The connection is completely death.
+I have to restart wpa_supplicant to get it working again.
 
+
+
+I tried to isolate the problem the following way:
+
+1. Running compat-wireless-3.2-rc6-3 with the rt2x00 level from
+compat-wireless-3.1.1-1. The problem didn't gone.
+
+2. Running compat-wireless-3.1.1-1 with the rt2x00 based changes in
+compat-wireless-3.2-rc6-3. I can't see the problem any more.
+
+
+That's why I think, that the problem must be outside the rt2x00 changes.
+But there are many changes outside :-).
+
+
+So far, I removed the following patches from compat-wireless-3.2-rc6-3:
+
+mac80211: fix race between the AGG SM and the Tx data path
+mac80211: don't stop a single aggregation session twice
+mac80211: uAPSD - fix IEEE80211_FCTL_MOREDATA bit setting
+mac80211: fix race condition caused by late addBA response
+
+But they seem not to be the culprit.
+
+
+I tried to remove these patches, too, but this wasn't possible:
+
+mac80211: don't stop a single aggregation session twice
+mac80211: fix another race in aggregation start
+
+
+
+Does anybody has an idea, which patch could have raised this problem?
+
+
+
+Kind regards,
+Andreas Hartmann
