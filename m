@@ -1,92 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from investici.nine.ch ([217.150.252.179]:36747 "EHLO
-	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755539Ab2ALVhw (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:64045 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750990Ab2AADtO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jan 2012 16:37:52 -0500
-Date: Thu, 12 Jan 2012 22:37:15 +0100
-From: Antonio Quartulli <ordex@autistici.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] mac80211: in IBSS use the Auth frame to trigger STA
- reinsertion
-Message-ID: <20120112213714.GD3077@ritirata.org> (sfid-20120112_223755_864532_6F4EB142)
-References: <1326400616-1109-1-git-send-email-ordex@autistici.org>
- <1326400616-1109-2-git-send-email-ordex@autistici.org>
- <1326401451.3463.11.camel@jlt3.sipsolutions.net>
+	Sat, 31 Dec 2011 22:49:14 -0500
+Message-ID: <4EFFD7B6.407@lwfinger.net> (sfid-20120101_044936_051046_C197A2C0)
+Date: Sat, 31 Dec 2011 21:49:10 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1326401451.3463.11.camel@jlt3.sipsolutions.net>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+References: <20111230235421.GA6054@redhat.com> <CA+55aFyqm4FbW=--7U4ULk1EBb6RLP0sRgtokODBYnZNiJXWew@mail.gmail.com>
+In-Reply-To: <CA+55aFyqm4FbW=--7U4ULk1EBb6RLP0sRgtokODBYnZNiJXWew@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 12, 2012 at 09:50:51PM +0100, Johannes Berg wrote:
-> On Thu, 2012-01-12 at 21:36 +0100, Antonio Quartulli wrote:
-> 
-> > +static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
-> > +					struct ieee80211_mgmt *mgmt,
-> > +					size_t len)
-> > +{
-> > +	u16 auth_alg, auth_transaction;
-> > +	size_t baselen;
-> > +
-> > +	lockdep_assert_held(&sdata->u.ibss.mtx);
-> > +
-> > +	if (len < 24 + 6)
-> > +		return;
-> > +
-> > +	baselen = (u8 *) mgmt->u.auth.variable - (u8 *) mgmt;
-> > +	if (baselen > len)
-> > +		return;
-> > +
-> > +	auth_alg = le16_to_cpu(mgmt->u.auth.auth_alg);
-> > +	auth_transaction = le16_to_cpu(mgmt->u.auth.auth_transaction);
-> > +
-> > +	if (auth_alg == WLAN_AUTH_OPEN && auth_transaction == 1) {
-> 
-> negating & return would be easier to read & less indentation
+On 12/30/2011 06:22 PM, Linus Torvalds wrote:
+> On Fri, Dec 30, 2011 at 3:54 PM, Dave Jones<davej@redhat.com>  wrote:
+>> We're getting a bunch of reports against Fedora 16
+>> (still using 3.1) which look like some drivers are trying to
+>> load firmware on resume from suspend, while usermodehelper
+>> is disabled.
+>
+> Ok, buggy drivers. You *must*not* load firmware in your resume path,
+> since there is no actual guarantee that any particular device will be
+> resumed after the disk that contains the firmware images.
+>
+> So it's very simple: drivers that load firmware at resume time are
+> buggy. No ifs, buts, or maybes about it.
+>
+>> Here are some example traces:
+>>
+>> https://bugzilla.redhat.com/show_bug.cgi?id=746411
+>
+> It's isight_firmware_load(), in the isight_firmware driver. The driver
+> doesn't actually do anything but load the firmware, and is apparently
+> not very good at that either.
+>
+> It should either fake a disconnect and reconnect of the device (and
+> let the reconnect then load the firmware through udev or something) or
+> it should just save the firmware image in memory from the original
+> load, and make the resume just re-initialize it - not load it.
+>
+> It's also possible that it could be considered a USB layer bug, and
+> the USB layer should just not rebind the devices directly in the
+> resume function, but do it somehow later. HOWEVER, that would only
+> work for "random" USB devices that aren't in use by user space (like
+> disks etc might be). So I think that in general the real solution is
+> always just "make sure that the firmware is in memory before the
+> suspend even happens".
+>
+> Greg - has the USB resume logic been changed lately?
+>
+> Matthew? Any comments about that particular driver?
+>
+>> https://bugzilla.redhat.com/show_bug.cgi?id=771002
+>
+> Same issue, different driver. Again, it's USB, and it's possible that
+> USB just makes it really hard to do this correctly (ie the "save
+> firmware image across suspend so that you don't have to load it at
+> resume time").
+>
+> It's also possible that we should blame the firmware code, which is
+> expressly written to encourage these kinds of bugs. It may be that i
+> tshould be the firmware code that has a "get_firmware()" +
+> "put_firmware()" model, and it should cache the firmware explicitly if
+> the config supports suspend, so that a firmware read at resume time
+> would actually work. The whole "request_firmware()" interface really
+> is very prone to these kinds of bugs.
+>
+> But it's possible this could be fixed at the driver level by doing the
+> caching there.
+>
+> In this case it's the rtl8192cu driver, so Larry, Chaoming, John etc
+> added to the cc for that one.
 
-I agree :-)
+A patch that delays the firmware reading until the upload is needed when the 
+interface is brought up will be sent to John very soon. My box loses its video 
+when a suspend/resume cycle is done, but the WARNING is no longer printed by 
+rtl8192cu.
 
-> 
-> > +#ifdef CONFIG_MAC80211_IBSS_DEBUG
-> > +		printk(KERN_DEBUG "%s: RX Auth SA=%pM DA=%pM BSSID=%pM."
-> > +		       "(auth_transaction=%d)\n",
-> > +		       sdata->name, mgmt->sa, mgmt->da, mgmt->bssid,
-> > +		       auth_transaction);
-> > +#endif
-> > +		if (sta_info_destroy_addr(sdata, mgmt->sa) != -ENOENT) {
-> > +			ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0,
-> > +					       false);
-> > +			rcu_read_unlock();
-> > +		}
-> 
-> This doesn't seem to make sense, why not add the station even if we
-> didn't know about it before?
+Larry
 
-mh, at the beginning the idea was to avoid to interfere with the current sta_adding mechanism,
-so if a station was not there yet, then I didn't want to add it at that point.
 
-But looking at the code now I can consider it a mistake, since it doesn't really
-make sense.
-
-I'll remove it in version 2 of this patch.
-
-Thanks
-
-p.s. In version 2 I will also write a more "understandable" commit message
-
-> 
-> johannes
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Antonio Quartulli
-
-..each of us alone is worth nothing..
-Ernesto "Che" Guevara
