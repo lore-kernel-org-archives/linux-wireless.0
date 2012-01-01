@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from h118.nextmail.ru ([194.67.36.118]:58323 "EHLO h118.nextmail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754790Ab2ALSEo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jan 2012 13:04:44 -0500
-To: =?koi8-r?B?TW9oYW1tZWQgU2hhZmk=?= <shafi.wireless@gmail.com>
-From: =?koi8-r?B?TVI=?= <g7af0ec1e3ea1e7b1@nextmail.ru>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"=?koi8-r?B?UmFqa3VtYXIgTWFub2hhcmFu?=" <rmanohar@qca.qualcomm.com>
-Subject: =?koi8-r?B?UmU6IGF0aDlrIGNyYXNoIDMuMi1yYzc=?=
-Date: Thu, 12 Jan 2012 22:04:41 +0400
-Message-ID: <NEXT-4f0f20b95e2525.38731543@nextmail.ru> (sfid-20120112_190449_751939_48FAF3F7)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:58475 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750925Ab2AAQc1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jan 2012 11:32:27 -0500
+From: Marek Vasut <marek.vasut@gmail.com>
+To: Oliver Neukum <oliver@neukum.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+Date: Sun, 1 Jan 2012 17:32:22 +0100
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+References: <20111230235421.GA6054@redhat.com> <201201011054.47233.marek.vasut@gmail.com> <201201011328.41311.oliver@neukum.org>
+In-Reply-To: <201201011328.41311.oliver@neukum.org>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201201011732.23069.marek.vasut@gmail.com> (sfid-20120101_173231_981430_FC93F4E4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- > 2012/1/11 MR <g7af0ec1e3ea1e7b1@nextmail.ru>:
- > >> does roaming seems to trigger this issue consistently ?
- > >> . please provide the logs
- > >> sudo modprobe -v ath9k debug=0xffffffff
- > >> http://linuxwireless.org/en/users/Drivers/ath9k/debug
- > >
- > > As I need to rebuild for CONFIG_ATH_DEBUG: should I check the 
-allegedely
- > > proper fix or wide-angle code removal first?
- > 
- > please check with the proper fix
+> Am Sonntag, 1. Januar 2012, 10:54:47 schrieb Marek Vasut:
+> > > Am Samstag, 31. Dezember 2011, 19:39:18 schrieb Marek Vasut:
+> > > > maybe we should implement such thing into the firmware loader itself?
+> > > > Allow it -- for example via some node in /dev -- to force loading
+> > > > firmware into some buffer in kernel just before suspend so it'll
+> > > > certainly be readily available at resume time?
+> > > 
+> > > This is difficult. We don't know at suspend time which firmware we will
+> > > need at resume time.
+> > 
+> > That's not actually true ... you can ask the drivers if they need to load
+> > firmware after resume ... that can be implemented and udev can handle it.
+> > The driver should know if the hardware it's controlling is stupid or
+> > not.
+> 
+> Device IDs can morph due to a power loss. After resumption another driver
+> would bind.
 
-Turned out I got lucky previous time.
+What do you mean? I don't think I quite follow.
 
-This time I went to the other AP, spent some time under it, roamed back and 
-WiFi didn't disappear. I didn't even lose XMPP connections in the process. 
+M
 
-Maybe debug printing (which prints a lot) managed to introduce some extra 
-delays into some race condition.
-
-I hope I will have time to test this more on Monday. Tomorrow I will be 
-using WiFi less than usual.
-
-
+> 
+> 	Regards
+> 		Oliver
