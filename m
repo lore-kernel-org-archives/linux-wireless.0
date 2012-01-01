@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:51350 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755760Ab2APTQV (ORCPT
+Received: from out5.smtp.messagingengine.com ([66.111.4.29]:52224 "EHLO
+	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753052Ab2AAWpT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jan 2012 14:16:21 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Alexandre Oliva <oliva@lsd.ic.unicamp.br>,
-	Arend van Spriel <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] brcmfmac: work-around gcc 4.7 build issue
-Date: Mon, 16 Jan 2012 14:00:12 -0500
-Message-Id: <1326740412-24010-1-git-send-email-linville@tuxdriver.com> (sfid-20120116_201625_396020_73DA02F5)
+	Sun, 1 Jan 2012 17:45:19 -0500
+Received: from compute6.internal (compute6.nyi.mail.srv.osa [10.202.2.46])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 082A420C6C
+	for <linux-wireless@vger.kernel.org>; Sun,  1 Jan 2012 17:45:19 -0500 (EST)
+Message-ID: <4F00E1FB.9060507@fastmail.fm> (sfid-20120101_234607_753054_E475D101)
+Date: Sun, 01 Jan 2012 22:45:15 +0000
+From: Jack Stone <jwjstone@fastmail.fm>
+MIME-Version: 1.0
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+References: <20111230235421.GA6054@redhat.com> <CA+55aFyqm4FbW=--7U4ULk1EBb6RLP0sRgtokODBYnZNiJXWew@mail.gmail.com>
+In-Reply-To: <CA+55aFyqm4FbW=--7U4ULk1EBb6RLP0sRgtokODBYnZNiJXWew@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Alexandre Oliva <oliva@lsd.ic.unicamp.br>
+On 31/12/11 00:22, Linus Torvalds wrote:
+> It's also possible that we should blame the firmware code, which is
+> expressly written to encourage these kinds of bugs. It may be that i
+> tshould be the firmware code that has a "get_firmware()" +
+> "put_firmware()" model, and it should cache the firmware explicitly if
+> the config supports suspend, so that a firmware read at resume time
+> would actually work. The whole "request_firmware()" interface really
+> is very prone to these kinds of bugs.
 
-Alexandre Oliva <oliva@lsd.ic.unicamp.br> says:
+How about these semantics for get_firmware / put_firmware:
 
-"It's an issue brought about by GCC 4.7's partial-inlining, that ends up
-splitting the udelay function just at the wrong spot, in such a way that
-some sanity checks for constants fails, and we end up calling
-bad_udelay.
+get_firmware -> checks for a cached copy of the firmware and returns
+that if it exists otherwise calls _get_firmware (i.e.
+_request_firmware). Either way we get a refcount to the firmware blob.
+This requires adding 3 members to struct firmware: the refcount, the
+name of the firmware (see @name in request_firmware) and a list head to
+cache with. We could also add and async version of this to match
+request_firmware_nowait.
 
-This patch fixes the problem.  Feel free to push it upstream if it makes
-sense to you."
+put_firmware -> Removes a refcount from the firmware and frees if there
+are no more users.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com.
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+put_firmware is called when we are sure that we no longer need to reload
+the firmware for that device - device close time for most drivers.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index f23b0c3..bf11850 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -2475,7 +2475,7 @@ static s32 brcmf_init_iscan(struct brcmf_cfg80211_priv *cfg_priv)
- 	return err;
- }
- 
--static void brcmf_delay(u32 ms)
-+static __always_inline void brcmf_delay(u32 ms)
- {
- 	if (ms < 1000 / HZ) {
- 		cond_resched();
--- 
-1.7.4.4
+USB is a more difficult case as devices can change ID but the firmware
+blob still needs to be associated with them. I don't know USB at all so
+I have no idea if we can track this. Some PCI devices may also suffer
+the same problem.
 
+Hope this is useful,
+
+Jack
