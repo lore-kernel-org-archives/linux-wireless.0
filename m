@@ -1,26 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gmmr4.centrum.cz ([46.255.227.253]:48349 "EHLO gmmr4.centrum.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752424Ab2A1O4S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jan 2012 09:56:18 -0500
-Received: from mail1007.cent (unknown [10.32.3.101])
-	by gmmr4.centrum.cz (Postfix) with ESMTP id 946BA1A001CA2
-	for <linux-wireless@vger.kernel.org>; Sat, 28 Jan 2012 15:45:44 +0100 (CET)
-To: <linux-wireless@vger.kernel.org>
-Subject: connection interrupted for rt61pci in master mode
-Date: Sat, 28 Jan 2012 15:45:44 +0100
-From: <trencan@centrum.cz>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:58951 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752543Ab2AAUa1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jan 2012 15:30:27 -0500
 MIME-Version: 1.0
-Message-Id: <20120128154544.70E060CD@centrum.cz> (sfid-20120128_155621_700454_A21897F4)
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <Pine.LNX.4.44L0.1201011105200.4534-100000@netrider.rowland.org>
+References: <201201011322.34483.oliver@neukum.org> <Pine.LNX.4.44L0.1201011105200.4534-100000@netrider.rowland.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Sun, 1 Jan 2012 12:30:04 -0800
+Message-ID: <CA+55aFw-ar6dnPvn5wy=3Tv8fc_7Witri2mV=cCvH+aMv+jH1Q@mail.gmail.com> (sfid-20120101_213106_997680_B721DDBF)
+Subject: Re: loading firmware while usermodehelper disabled.
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Oliver Neukum <oliver@neukum.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sun, Jan 1, 2012 at 8:17 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
+>
+> As Linus pointed out, the real problem here is the firmware loader.
+> The way it is now, a driver can't always depend on the data being
+> available, even during a normal boot.  It ought to use an asynchronous
+> approach; then none of these problems would arise.
 
-Hello,
+WRONG.
 
-I have RaLink RT2561/RT61 802.11g PCI wireless card and use it in master mode as AP. I have latest Mandriva 2011.0 distro with kernel 2.6.38.7-desktop-1mnb2. Driver for wifi card is rt61pci. If I connect via wifi from another PC then after some small time I get connection interrupted and I must disconnect and reconnect again. I tried latest compat-wireless-3.3-rc1-2 and also latest hostapd-0.7.3, but still same issue. In previous Mandriva version 2010.2 I had kernel 2.6.33.7-desktop-2mnb, hostapd-0.6.7 and it worked perfectly. Hostapd uses driver=nl80211, mode=g, channel=11. There are no errors in messages. I know it is not issue of the client machine, since same behavior I have if I connect to AP with HTC smartphone. Is it any known bug of rt61pci driver or hostapd?
+Alan, you're not getting it. Loading firmware as part of
+suspend/resume is WRONG.
 
-Thanks.
+It would not be made any better by an asynchronous approach, and that
+isn't the problem with request_firmware().
 
-Regards.
+Suspend/resume is *special*, and it's special for a very simple
+reason: unlike bootup or attaching a new device, suspend/resume
+happens WHILE THE USER IS ACTIVE.
+
+Loading firmware at that time is wrong. It's impossible. You have to
+have the firmware available *before* any processes might need it, but
+at the same time actually loading the firmware may need help from user
+space and/or other devices. It's a chicken-and-egg problem.
+
+So let me repeat one more time: Loading firmware at resume time is a
+device driver bug. Seriously. How many times do I have to say it?
+
+And making it asynchronous doesn't make it *any* less of a bug. It
+doesn't change anything but timing, but the problem was never about
+timing in the first place! The problem was about dependencies. User
+space may well depend on the device, and *other* devices may well
+depend on the device working.
+
+So stop with the inanity. I've already told people what the fix is:
+make sure that the firmware image is in memory before the suspend ever
+happens, and just reload it from memory. NOT with
+"request_firmware()". Because requesting the firmware at resume time
+is buggy and wrong, and has nothing to do with "asynchronous" or
+"synchronous". It has everything to do with "it's buggy".
+
+Really really really.
+
+So the problem with request_firmware() has absolutely nothing to do
+with "asynchronous". The problem is that the firmware interfaces do
+not cache the data in memory, and currently *cannot* sanely cache the
+firmware data simply because the interface doesn't have any kind of
+lifetime rules.
+
+In other words: we could make "request_firmware()" cache *all*
+firmware images forever, but there is currently no way to say "ok, the
+device was unplugged - and not fakily so by a resume event, but for
+real, and physically - so now you can drop the cache". Which means
+that effectively request_firmware() can do no caching at all, because
+it might eventually just run out of memory.
+
+It is *possible* that we might tie the firmware lifetime rules to the
+driver module lifetime. But it would probably be much better if we
+made for an explicit model of "ok, the device is now really gone" so
+that it would work properly with compiled-in drivers etc too.
+
+And yes, the firmware would have to stay around even around a
+resume/suspend that causes unplug events over USB. The "use USB and
+lose power" actually happens also for built-in devices that may well
+be disks and network cards that are *needed* by user space, so even if
+the device has been electrically unplugged, it is still attached and
+needs to be brought back *before* user space comes back.
+
+That's the whole point of suspend/resume: we're not starting from a
+clean slate. We are supposed to continue as if nothing happened!
+
+                                  Linus
