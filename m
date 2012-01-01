@@ -1,57 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:53453 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754438Ab2ACTtR (ORCPT
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:41261 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752833Ab2AAUjU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 14:49:17 -0500
-Received: by iaeh11 with SMTP id h11so31329860iae.19
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2012 11:49:16 -0800 (PST)
-Message-ID: <4F035BB7.8030203@lwfinger.net> (sfid-20120103_204920_705593_31B328AD)
-Date: Tue, 03 Jan 2012 13:49:11 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: John Williams <john@pond-weed.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [Question] Realtek USB 0bda:8176 as AP?
-References: <20120101130000.57429e74@buffy.scoobygang>
-In-Reply-To: <20120101130000.57429e74@buffy.scoobygang>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sun, 1 Jan 2012 15:39:20 -0500
+Date: Sun, 1 Jan 2012 20:39:45 +0000
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Marek Vasut <marek.vasut@gmail.com>
+Cc: Oliver Neukum <oliver@neukum.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+Message-ID: <20120101203945.0ebc2f55@pyramind.ukuu.org.uk> (sfid-20120101_214002_742691_97CE0DEA)
+In-Reply-To: <201201011732.23069.marek.vasut@gmail.com>
+References: <20111230235421.GA6054@redhat.com>
+	<201201011054.47233.marek.vasut@gmail.com>
+	<201201011328.41311.oliver@neukum.org>
+	<201201011732.23069.marek.vasut@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/01/2012 07:00 AM, John Williams wrote:
-> Hello list,
->
-> I see there was a discussion on this list about three months ago about
-> using an RTL8192CU (usb 0bda:8176) in access point mode. I've just
-> bought one and I've got the same problem: hostapd just prints this in a
-> loop until it gives up:
->
-> WPA: 00:24:23:0c:9c:2f WPA_PTK entering state PTKSTART
-> wlan0: STA 00:24:23:0c:9c:2f WPA: sending 1/4 msg of 4-Way Handshake
-> WPA: Send EAPOL(version=2 secure=0 mic=0 ack=1 install=0 pairwise=8
->    kde_len=0 keyidx=0 encr=0)
-> IEEE 802.1X: 00:24:23:0c:9c:2f TX status -version=2 type=3
->    length=95 - ack=1
-> wlan0: STA 00:24:23:0c:9c:2f
-> WPA: EAPOL-Key timeout
->
-> This is with the driver from compat_wireless as of 2011-12-29.
->
-> It works fine with the driver downloaded from the realtek website
-> (provided that I also use their patched version of hostapd), so it's
-> not a hardware problem.
->
-> If anyone could point me to the area in the driver where it is supposed
-> to receive the missing message, I would be happy to have a go at
-> debugging it.
+> > Device IDs can morph due to a power loss. After resumption another driver
+> > would bind.
+> 
+> What do you mean? I don't think I quite follow.
 
-I do not know what the problem with using the kernel versions of 
-rtl8192{ce,cu,se,de} as an AP. I have been going through the differences between 
-the version available on the Realtek web site and the kernel sources. Sorting 
-out the differences is mind numbing, and will take a while to complete.
+Lots of USB hardware appears as one device id when powered on, then when
+the firmware is loaded turns into something else that becomes relevant to
+the user.
 
-Patches will be posted on the wireless ML when I get a fix.
+So on powerup your wireless card goes
 
-Larry
+	'I've no idea what I am, feed me firmware for this id"
 
+when it gets the firmware it disconnects, reconnects and says
+
+	"I am a USB wireless card with this id"
+
+When you suspend the power gets killed so the device loses its firmware
+and goes back to being a firmware requesting thing on resume.
+
+Worse still - you don't easily know if the device is in fact new and was
+added while suspended, or was always there.
+
+So for those devices you do need to load the firmware into them
+automatically after the resume to work out what they are and get the MAC
+to see if its the same wireless card or not.
+
+
+Alan
