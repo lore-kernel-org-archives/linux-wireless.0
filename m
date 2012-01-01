@@ -1,87 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:6520 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751482Ab2AKMzk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 07:55:40 -0500
-Message-ID: <4F0D86C6.1040304@qca.qualcomm.com> (sfid-20120111_135543_861656_385964E9)
-Date: Wed, 11 Jan 2012 14:55:34 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Thirumalai <tpachamu@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 3/4] ath6kl: Add uAPSD support in rx path.
-References: <1326095135-1633-1-git-send-email-tpachamu@qca.qualcomm.com>
-In-Reply-To: <1326095135-1633-1-git-send-email-tpachamu@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from bues.ch ([80.190.117.144]:38305 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752943Ab2AAVjb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jan 2012 16:39:31 -0500
+Date: Sun, 1 Jan 2012 22:39:13 +0100
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Oliver Neukum <oliver@neukum.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+Message-ID: <20120101223913.3ff57d0f@milhouse> (sfid-20120101_223958_238432_1FDE2BB2)
+In-Reply-To: <201201012227.56568.oliver@neukum.org>
+References: <201201011322.34483.oliver@neukum.org>
+	<Pine.LNX.4.44L0.1201011105200.4534-100000@netrider.rowland.org>
+	<CA+55aFw-ar6dnPvn5wy=3Tv8fc_7Witri2mV=cCvH+aMv+jH1Q@mail.gmail.com>
+	<201201012227.56568.oliver@neukum.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/2012 09:45 AM, Thirumalai wrote:
-> If uAPSD trigger is received, send out the packets in uAPSD
-> queue. Set more data bit if the queue is not empty else
-> update the uAPSD bitmap for the station.
-> 
-> Signed-off-by: Thirumalai <tpachamu@qca.qualcomm.com>
+On Sun, 1 Jan 2012 22:27:56 +0100
+Oliver Neukum <oliver@neukum.org> wrote:
 
-[...]
+> Ideally usbcore would deal with such devices, but at present the USB layer
+> is unable to cleanly resume devices that change their IDs during
+> resume.
+> Solving this would mean putting all firmware loaders into kernel space.
+> And the mode switching logic as well.
 
-> +	/*
-> +	 * If the APSD q for this STA is not empty, dequeue and
-> +	 * send a pkt from the head of the q. Also update the
-> +	 * More data bit in the WMI_DATA_HDR if there are
-> +	 * more pkts for this STA in the APSD q.
-> +	 * If there are no more pkts for this STA,
-> +	 * update the APSD bitmap for this STA.
-> +	 */
-> +
-> +	num_frames_to_deliver = (conn->apsd_info >> 4) & 0xF;
+I don't get it. Why would a device enter a state after resume, that it was not
+in at _any_ time before the machine was suspended?
 
-Defines would be nice for values 4 and 0xF.
+These change-id-on-bootstrap devices usually work like this,
+as far as I know:
 
-> +
-> +	/*
-> +	 * Number of frames to send in a service period is
-> +	 * indicated by the station
-> +	 * in the QOS_INFO of the association request
-> +	 * If it is zero, send all frames
-> +	 */
-> +	if (!num_frames_to_deliver)
-> +		num_frames_to_deliver = 0xFFFF;
+probe bootstrap device (switches hw to real device)
+probe real device (firmware is loaded)
+Suspend machine
+Resume machine
+usb detects that the device is "gone"
+probe/resume bootstrap device (switches hw to real device)
+probe/resume real device (No need to fetch fw from userspace. It's already cached)
 
-And for 0xFFFF.
+What did I get wrong?
 
-> +
-> +	spin_lock_bh(&conn->psq_lock);
-> +	is_apsdq_empty  = skb_queue_empty(&conn->apsdq);
-
-Extra space after is_apsdq_empty.
-
-> -				while ((skbuff = skb_dequeue(&conn->psq))
-> -				       != NULL) {
-> +				skbuff = skb_dequeue(&conn->psq);
-> +				while (skbuff != NULL) {
-> +					spin_unlock_bh(&conn->psq_lock);
-> +					ath6kl_data_tx(skbuff, vif->ndev);
-> +					spin_lock_bh(&conn->psq_lock);
-> +					skbuff = skb_dequeue(&conn->psq);
-> +				}
-
-I would say the original style is better:
-
-while ((skbuff = skb_dequeue(&conn->psq))
-
-> +
-> +				is_apsdq_empty = skb_queue_empty(&conn->apsdq);
-> +				skbuff = skb_dequeue(&conn->apsdq);
-> +				while (skbuff != NULL) {
->  					spin_unlock_bh(&conn->psq_lock);
->  					ath6kl_data_tx(skbuff, vif->ndev);
->  					spin_lock_bh(&conn->psq_lock);
-> +					skbuff = skb_dequeue(&conn->apsdq);
->  				}
-
-Same here.
-
-Kalle
+-- 
+Greetings, Michael.
