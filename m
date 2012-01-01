@@ -1,45 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:48782 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751721Ab2ABPC3 (ORCPT
+Received: from netrider.rowland.org ([192.131.102.5]:41821 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750883Ab2AAQRx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 10:02:29 -0500
-Received: by iaeh11 with SMTP id h11so29397842iae.19
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Jan 2012 07:02:29 -0800 (PST)
+	Sun, 1 Jan 2012 11:17:53 -0500
+Date: Sun, 1 Jan 2012 11:17:52 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Oliver Neukum <oliver@neukum.org>
+cc: Matthew Garrett <mjg@redhat.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+In-Reply-To: <201201011322.34483.oliver@neukum.org>
+Message-ID: <Pine.LNX.4.44L0.1201011105200.4534-100000@netrider.rowland.org> (sfid-20120101_171834_487894_79ED7848)
 MIME-Version: 1.0
-In-Reply-To: <1325515471.3643.15.camel@jlt3.sipsolutions.net>
-References: <1325162501-7996-1-git-send-email-eliad@wizery.com>
-	<1325162501-7996-4-git-send-email-eliad@wizery.com>
-	<1325501581.3643.8.camel@jlt3.sipsolutions.net>
-	<CAB3XZEfQ87gAPPAf4TO6LRbFtBh3YBRR5DO-oM=YB_BPczyCUA@mail.gmail.com>
-	<1325515471.3643.15.camel@jlt3.sipsolutions.net>
-Date: Mon, 2 Jan 2012 17:02:29 +0200
-Message-ID: <CAB3XZEdXrkG_3caV4TzFrR=3fXk+TSjSLddiyke2npArcWr0pg@mail.gmail.com> (sfid-20120102_160233_183267_7622959E)
-Subject: Re: [PATCH v2 3/3] mac80211: add sta_state callback
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 2, 2012 at 4:44 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> if sta_state will be allowed to return an error, instead of adding a
->> new backward compatibility implementation to mac80211 we can just
->> change all the current drivers to register for sta_state(), and
->> operate on auth->assoc and assoc->auth transitions instead of
->> sta_add/sta_remove.
->
-> Right, that's the alternative, but it would be easier to add the code in
-> mac80211 I think? And if we add a "NOT_EXIST" state we can completely
-> make sta_add/sta_remove be only there for drivers that don't need more
-> advanced state?
->
-oh, so sta_/add/remove and sta_state will be 2 different mechanisms?
-now it all looks better.
+On Sun, 1 Jan 2012, Oliver Neukum wrote:
 
-i guess implementing it in mac80211 is easier. hopefully, most of the
-drivers will move to the new model and finally we'll be able to delete
-the backward compatibility layer (which is always an annoying thing).
+> Am Sonntag, 1. Januar 2012, 03:21:45 schrieb Alan Stern:
+> > On Sat, 31 Dec 2011, Oliver Neukum wrote:
+> 
+> > > We are definitely going through do_unbind_rebind(). But I don't think
+> > > it matters why we got there. We seem to be calling probe() too early.
+> > > And we need to guarantee that a driver can request firmware in probe()
+> > > 
+> > > So something has changed in the resume code path further up.
+> > 
+> > For at least a year and a half, it has been true that rebinding takes
+> 
+> Yes, so I don't understand why we haven't been hitting this issue
+> all that time.
 
-Eliad.
+Perhaps if Matthew compared logs from an old and a new system with 
+appropriate debugging options configured, something might show up.
+
+> > place during the complete phase of system resume.  Clearly that is too 
+> > early to load firmware.  When do you think we should do it instead?
+> 
+> I think we ought to delay until right after user space is unfrozen.
+> The devices are gone anyway, so we lose nothing but have the ability
+> to call helpers.
+
+That's true.  But doing it will be a nuisance.  The nice thing about 
+the current situation is that the driver core automatically iterates 
+over all interfaces.
+
+> > And how should we keep track of which interfaces need rebinding?
+> 
+> I guess this calls for a brute force approach. We can kick khubd and have
+> it walk all busses checking for  needs_binding.
+
+Ugh.  At a minimum, let's use a different process, not khubd.
+
+As Linus pointed out, the real problem here is the firmware loader.  
+The way it is now, a driver can't always depend on the data being
+available, even during a normal boot.  It ought to use an asynchronous
+approach; then none of these problems would arise.
+
+Alan Stern
+
