@@ -1,103 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:38335 "HELO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753307Ab2AYEx6 (ORCPT
+Received: from smtp-out002.kontent.com ([81.88.40.216]:43001 "EHLO
+	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751444Ab2AAM1B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 23:53:58 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH] mwifiex: update BSS parameters in dump_station_info()
-Date: Tue, 24 Jan 2012 20:50:25 -0800
-Message-Id: <1327467025-5190-2-git-send-email-bzhao@marvell.com> (sfid-20120125_055400_931718_441663E4)
-In-Reply-To: <1327467025-5190-1-git-send-email-bzhao@marvell.com>
-References: <1327467025-5190-1-git-send-email-bzhao@marvell.com>
+	Sun, 1 Jan 2012 07:27:01 -0500
+From: Oliver Neukum <oliver@neukum.org>
+To: Marek Vasut <marek.vasut@gmail.com>
+Subject: Re: loading firmware while usermodehelper disabled.
+Date: Sun, 1 Jan 2012 13:28:41 +0100
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+References: <20111230235421.GA6054@redhat.com> <201201011048.18953.oliver@neukum.org> <201201011054.47233.marek.vasut@gmail.com>
+In-Reply-To: <201201011054.47233.marek.vasut@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201201011328.41311.oliver@neukum.org> (sfid-20120101_132731_027612_A602148C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+Am Sonntag, 1. Januar 2012, 10:54:47 schrieb Marek Vasut:
+> > Am Samstag, 31. Dezember 2011, 19:39:18 schrieb Marek Vasut:
+> > > maybe we should implement such thing into the firmware loader itself?
+> > > Allow it -- for example via some node in /dev -- to force loading
+> > > firmware into some buffer in kernel just before suspend so it'll
+> > > certainly be readily available at resume time?
+> > 
+> > This is difficult. We don't know at suspend time which firmware we will
+> > need at resume time.
+> 
+> That's not actually true ... you can ask the drivers if they need to load 
+> firmware after resume ... that can be implemented and udev can handle it. The 
+> driver should know if the hardware it's controlling is stupid or not.
 
-This enables user to check beacon interval, DTIM period, short slot
-time and short preamble information using "iw dev mlan0 link" command
-when station is in connected state.
+Device IDs can morph due to a power loss. After resumption another driver
+would bind.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |   17 +++++++++++++++++
- drivers/net/wireless/mwifiex/main.h     |    1 +
- drivers/net/wireless/mwifiex/scan.c     |    6 ++++++
- 3 files changed, 24 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 00f1005..6fef492 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -557,6 +557,23 @@ mwifiex_dump_station_info(struct mwifiex_private *priv,
- 	/* bit rate is in 500 kb/s units. Convert it to 100kb/s units */
- 	sinfo->txrate.legacy = rate.rate * 5;
- 
-+	if (priv->bss_mode == NL80211_IFTYPE_STATION) {
-+		sinfo->filled |= STATION_INFO_BSS_PARAM;
-+		sinfo->bss_param.flags = 0;
-+		if (priv->curr_bss_params.bss_descriptor.cap_info_bitmap &
-+						WLAN_CAPABILITY_SHORT_PREAMBLE)
-+			sinfo->bss_param.flags |=
-+					BSS_PARAM_FLAGS_SHORT_PREAMBLE;
-+		if (priv->curr_bss_params.bss_descriptor.cap_info_bitmap &
-+						WLAN_CAPABILITY_SHORT_SLOT_TIME)
-+			sinfo->bss_param.flags |=
-+					BSS_PARAM_FLAGS_SHORT_SLOT_TIME;
-+		sinfo->bss_param.dtim_period =
-+			priv->curr_bss_params.bss_descriptor.dtim_period;
-+		sinfo->bss_param.beacon_interval =
-+			priv->curr_bss_params.bss_descriptor.beacon_period;
-+	}
-+
- 	return ret;
- }
- 
-diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
-index 6712ea8..3dc0f72 100644
---- a/drivers/net/wireless/mwifiex/main.h
-+++ b/drivers/net/wireless/mwifiex/main.h
-@@ -249,6 +249,7 @@ struct mwifiex_bssdescriptor {
- 	u32 channel;
- 	u32 freq;
- 	u16 beacon_period;
-+	u8 dtim_period;
- 	u8 erp_flags;
- 	u32 bss_mode;
- 	u8 supported_rates[MWIFIEX_SUPPORTED_RATES];
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 98f1ca9..1352085 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -1086,6 +1086,7 @@ mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
- 	struct ieee_types_vendor_specific *vendor_ie;
- 	const u8 wpa_oui[4] = { 0x00, 0x50, 0xf2, 0x01 };
- 	const u8 wmm_oui[4] = { 0x00, 0x50, 0xf2, 0x02 };
-+	struct ieee80211_tim_ie *tim_ie;
- 
- 	found_data_rate_ie = false;
- 	rate_size = 0;
-@@ -1258,6 +1259,11 @@ mwifiex_update_bss_desc_with_ie(struct mwifiex_adapter *adapter,
- 					sizeof(struct ieee_types_header) -
- 					bss_entry->beacon_buf);
- 			break;
-+		case WLAN_EID_TIM:
-+			tim_ie = (void *) (current_ptr +
-+					 sizeof(struct ieee_types_header));
-+			bss_entry->dtim_period = tim_ie->dtim_period;
-+			break;
- 		default:
- 			break;
- 		}
--- 
-1.7.0.2
-
+	Regards
+		Oliver
