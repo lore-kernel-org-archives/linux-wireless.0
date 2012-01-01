@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from i118-21-156-233.s30.a048.ap.plala.or.jp ([118.21.156.233]:36670
-	"EHLO rinabert.homeip.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754424Ab2AaOYR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 09:24:17 -0500
-From: Masanari Iida <standby24x7@gmail.com>
-To: samuel.ortiz@intel.com, ilw@linux.intel.com,
-	linux-wireless@vger.kernel.org
-Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
-	standby24x7@gmail.com
-Subject: [PATCH] [trivial] iwmc3200wifi: Fix typo in trace.h
-Date: Tue, 31 Jan 2012 23:23:45 +0900
-Message-Id: <1328019825-2067-1-git-send-email-standby24x7@gmail.com> (sfid-20120131_152433_194717_33B4816F)
+Received: from bues.ch ([80.190.117.144]:38272 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752833Ab2AAUuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jan 2012 15:50:22 -0500
+Date: Sun, 1 Jan 2012 21:50:00 +0100
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Marek Vasut <marek.vasut@gmail.com>,
+	Oliver Neukum <oliver@neukum.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+Message-ID: <20120101215000.04b13f43@milhouse> (sfid-20120101_215106_804816_A37C0608)
+In-Reply-To: <20120101203945.0ebc2f55@pyramind.ukuu.org.uk>
+References: <20111230235421.GA6054@redhat.com>
+	<201201011054.47233.marek.vasut@gmail.com>
+	<201201011328.41311.oliver@neukum.org>
+	<201201011732.23069.marek.vasut@gmail.com>
+	<20120101203945.0ebc2f55@pyramind.ukuu.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct spelling "embeded" to "embedded" in
-drivers/net/wireless/iwmc3200wifi/trace.h
+On Sun, 1 Jan 2012 20:39:45 +0000
+Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
 
-Signed-off-by: Masanari Iida <standby24x7@gmail.com>
----
- drivers/net/wireless/iwmc3200wifi/trace.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> When you suspend the power gets killed so the device loses its firmware
+> and goes back to being a firmware requesting thing on resume.
+> 
+> Worse still - you don't easily know if the device is in fact new and was
+> added while suspended, or was always there.
+> 
+> So for those devices you do need to load the firmware into them
+> automatically after the resume to work out what they are and get the MAC
+> to see if its the same wireless card or not.
 
-diff --git a/drivers/net/wireless/iwmc3200wifi/trace.h b/drivers/net/wireless/iwmc3200wifi/trace.h
-index abb4805..f5f7070 100644
---- a/drivers/net/wireless/iwmc3200wifi/trace.h
-+++ b/drivers/net/wireless/iwmc3200wifi/trace.h
-@@ -144,7 +144,7 @@ TRACE_EVENT(iwm_tx_packets,
- 
- 	TP_printk(
- 		IWM_PR_FMT " Tx %spacket: eot %d, seq 0x%x, sta_color 0x%x, "
--		"ra_tid 0x%x, credit_group 0x%x, embeded_packets %d, %d bytes",
-+		"ra_tid 0x%x, credit_group 0x%x, embedded_packets %d, %d bytes",
- 		IWM_PR_ARG, !__entry->eot ? "concatenated " : "",
- 		__entry->eot, __entry->seq, __entry->color, __entry->ra_tid,
- 		__entry->credit_group, __entry->npkt, __entry->bytes
+Well, that does not prevent you from caching the firmware once you
+got it from userspace and keep it until module unload (or probably device
+close), so that it is already available on resume.
+
 -- 
-1.7.6.5
-
+Greetings, Michael.
