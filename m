@@ -1,35 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:57166 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755151Ab2ARDMT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 22:12:19 -0500
-Message-ID: <1326856336.20922.22.camel@joe2Laptop> (sfid-20120118_041222_726719_AE15DBE2)
-Subject: Re: [PATCH] rtlwifi: Move pr_fmt macros to a single location
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 17 Jan 2012 19:12:16 -0800
-In-Reply-To: <4f1636b2.D5g8MJEc04WZglzi%Larry.Finger@lwfinger.net>
-References: <4f1636b2.D5g8MJEc04WZglzi%Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:49668 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750925Ab2AARGK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 1 Jan 2012 12:06:10 -0500
+From: Marek Vasut <marek.vasut@gmail.com>
+To: Oliver Neukum <oliver@neukum.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+Date: Sun, 1 Jan 2012 18:06:06 +0100
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+References: <20111230235421.GA6054@redhat.com> <201201011328.41311.oliver@neukum.org> <201201011732.23069.marek.vasut@gmail.com>
+In-Reply-To: <201201011732.23069.marek.vasut@gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201201011806.07150.marek.vasut@gmail.com> (sfid-20120101_180656_417441_F23BF636)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-01-17 at 21:04 -0600, Larry Finger wrote:
-> Although the rtlwifi family of devices contains 11 copies of the pr_fmt
-> macro, the macro is not defined for all routines that need it. By moving
-> the macro to wifi.h, a single copy is available for all routines.
-[]
-> +++ wireless-testing-new/drivers/net/wireless/rtlwifi/wifi.h
-> @@ -172,6 +172,8 @@ enum hardware_type {
->  	 _pdesc->rxmcs == DESC92_RATE5_5M ||		\
->  	 _pdesc->rxmcs == DESC92_RATE11M)
->  
-> +#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+> > Am Sonntag, 1. Januar 2012, 10:54:47 schrieb Marek Vasut:
+> > > > Am Samstag, 31. Dezember 2011, 19:39:18 schrieb Marek Vasut:
+> > > > > maybe we should implement such thing into the firmware loader
+> > > > > itself? Allow it -- for example via some node in /dev -- to force
+> > > > > loading firmware into some buffer in kernel just before suspend so
+> > > > > it'll certainly be readily available at resume time?
+> > > > 
+> > > > This is difficult. We don't know at suspend time which firmware we
+> > > > will need at resume time.
+> > > 
+> > > That's not actually true ... you can ask the drivers if they need to
+> > > load firmware after resume ... that can be implemented and udev can
+> > > handle it. The driver should know if the hardware it's controlling is
+> > > stupid or not.
+> > 
+> > Device IDs can morph due to a power loss. After resumption another driver
+> > would bind.
+> 
+> What do you mean? I don't think I quite follow.
 
-This #define should be before any #include of kernel.h/printk.h
-or any other #include that might use it indirectly.
+Ah I see ... you mean like you can swap the devices (eg. usb devices) when the 
+computer is asleep. Yea, that's an issue.
 
+On the other hand, you'd expect those to keep pestering udev to load firmware 
+later in the wakeup process (maybe it can be somehow defered?). But if we 
+actually implemented some pre-suspend FW cache, it might help the speed of 
+resume a bit, right ?
 
+M
+> 
+> M
+> 
+> > 	Regards
+> > 	
+> > 		Oliver
