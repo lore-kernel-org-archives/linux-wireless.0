@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([195.4.92.90]:52190 "EHLO mout0.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752664Ab2AYNb3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jan 2012 08:31:29 -0500
-Received: from [195.4.92.140] (helo=mjail0.freenet.de)
-	by mout0.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
-	id 1Rq2wh-0007nq-LC
-	for linux-wireless@vger.kernel.org; Wed, 25 Jan 2012 14:31:27 +0100
-Received: from localhost ([::1]:42204 helo=mjail0.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1Rq2wh-0000vQ-KK
-	for linux-wireless@vger.kernel.org; Wed, 25 Jan 2012 14:31:27 +0100
-Received: from [195.4.92.12] (port=50590 helo=2.mx.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1Rq2uV-000831-LH
-	for linux-wireless@vger.kernel.org; Wed, 25 Jan 2012 14:29:11 +0100
-Received: from [2002:4fde:14a5:2:5054:ff:feb8:40bd] (port=59249 helo=mail.maya.org)
-	by 2.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
-	id 1Rq2uV-0007xw-6B
-	for linux-wireless@vger.kernel.org; Wed, 25 Jan 2012 14:29:11 +0100
-Message-ID: <4F20039C.2030809@01019freenet.de> (sfid-20120125_143132_856571_463F873A)
-Date: Wed, 25 Jan 2012 14:29:00 +0100
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:64707 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751854Ab2ABIiK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jan 2012 03:38:10 -0500
+From: Marek Vasut <marek.vasut@gmail.com>
+To: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
+Subject: Re: loading firmware while usermodehelper disabled.
+Date: Mon, 2 Jan 2012 09:38:06 +0100
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+References: <201201011322.34483.oliver@neukum.org> <201201020517.19624.marek.vasut@gmail.com> <CA+XFjiqbU=WF+Ee7YdzQRZr4YZ00xhiMcOYawkQ9pX7DuYjbeQ@mail.gmail.com>
+In-Reply-To: <CA+XFjiqbU=WF+Ee7YdzQRZr4YZ00xhiMcOYawkQ9pX7DuYjbeQ@mail.gmail.com>
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: ath9k get's completely knocked out by rt3572 device
-References: <4F1EF618.6080108@01019freenet.de> <13411135.eH6opTgxBo@helmutmobil.site> <4F1FBA09.3000003@01019freenet.de> <4F1FDEAE.2020009@01019freenet.de> <CAGXE3d9Lrk+ginqqbxVM+v_+fpnhu=y_R=TGdyoy+ZWuLtfbtQ@mail.gmail.com>
-In-Reply-To: <CAGXE3d9Lrk+ginqqbxVM+v_+fpnhu=y_R=TGdyoy+ZWuLtfbtQ@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201201020938.07149.marek.vasut@gmail.com> (sfid-20120102_093818_748433_9FCD1416)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helmut Schaa schrieb:
-> On Wed, Jan 25, 2012 at 11:51 AM, Andreas Hartmann 
-> <andihartmann@01019freenet.de> wrote:
->> As promised, I repeated the test before with another AP. The
->> destination host of netperf was the same. See below!
+> On Mon, Jan 2, 2012 at 5:17 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
+> > FYI this is not only problem with USB, but with PCMCIA too for example.
+> > 
+> > M
 > 
-> So, in total it looks a little bit better then with the rt2800pci AP 
-> but still the airtime is distributed not equally but the Ralink STA
-> seems to get a higher amount of airtime :(.
+> Also, PCI Express. Some Nvidia graphics cards only assume their real
+> PCI device ID during video POST (which can happen either as part of
+> system POST, if the card is primary, or during Linux startup/resume,
+> for a secondary card).
 
-Well, the amount of sent data from AP -> STA is much higher with rt2860
-based AP. So, the density is higher as with the Linksys WAP. Could this
-be a problem for ath9k? But ath9k runs very well, if the conditions are
-better (not as much disruption).
+Now that's really screwed. Is that "nvidia/intel optimus" also affected by this 
+? (that thing where you have two GPUs in one laptop).
 
-The rt2860 based AP feels smoother than the Linksys WAP. If the reverse
-way could be optimized, it would be a great AP :-).
-
-But you have to take into consideration, that the rt2860 AP resides
-directly on PCI and isn't restricted to fast ethernet. The throughput
-peaks with the rt2860 based AP where about 14 MBit/s (-> xosview). These
-couldn't be seen with the Linksys WAP.
-
-> 
-> Maybe the ralink driver treats the channel access parameters
-> differently?
-
-Don't know.
-
-
-Andreas
+M
