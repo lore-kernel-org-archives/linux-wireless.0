@@ -1,36 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:47926 "HELO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752232Ab2A3Trt (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:62408 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751441Ab2ABDY6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 14:47:49 -0500
-Received: by mail-lpp01m010-f44.google.com with SMTP id l5so2337557lah.3
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 11:47:48 -0800 (PST)
-Subject: Re: [PATCH 03/12] wl12xx: use dev_role_id for sched scan
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1327924857-1250-4-git-send-email-eliad@wizery.com>
-References: <1327924857-1250-1-git-send-email-eliad@wizery.com>
-	 <1327924857-1250-4-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 30 Jan 2012 21:47:43 +0200
-Message-ID: <1327952863.3626.105.camel@cumari> (sfid-20120130_204751_568025_235D55ED)
-Mime-Version: 1.0
+	Sun, 1 Jan 2012 22:24:58 -0500
+From: Marek Vasut <marek.vasut@gmail.com>
+To: Michael =?iso-8859-1?q?B=FCsch?= <m@bues.ch>
+Subject: Re: loading firmware while usermodehelper disabled.
+Date: Mon, 2 Jan 2012 04:24:54 +0100
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Oliver Neukum <oliver@neukum.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+References: <20111230235421.GA6054@redhat.com> <20120101203945.0ebc2f55@pyramind.ukuu.org.uk> <20120101215000.04b13f43@milhouse>
+In-Reply-To: <20120101215000.04b13f43@milhouse>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201201020424.54444.marek.vasut@gmail.com> (sfid-20120102_042557_653023_52DB182C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-01-30 at 14:00 +0200, Eliad Peller wrote: 
-> sched_scan is used only when the sta is
-> not associated, and thus should use
-> the dev role (instead of sta role)
+> On Sun, 1 Jan 2012 20:39:45 +0000
 > 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+> Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> > When you suspend the power gets killed so the device loses its firmware
+> > and goes back to being a firmware requesting thing on resume.
+> > 
+> > Worse still - you don't easily know if the device is in fact new and was
+> > added while suspended, or was always there.
+> > 
+> > So for those devices you do need to load the firmware into them
+> > automatically after the resume to work out what they are and get the MAC
+> > to see if its the same wireless card or not.
+> 
+> Well, that does not prevent you from caching the firmware once you
+> got it from userspace and keep it until module unload (or probably device
+> close), so that it is already available on resume.
 
-Can you squash this with 02/12?
+That's actually wrong. If you cached every single firmware, the kernel would 
+gulp down a lot of space that can't be swapped out!
 
--- 
-Cheers,
-Luca.
-
+M
