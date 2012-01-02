@@ -1,20 +1,15 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:49753 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752993Ab2ABVBI (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:64152 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752523Ab2ABWbc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 16:01:08 -0500
-MIME-Version: 1.0
-In-Reply-To: <4F0219AB.6010505@fastmail.fm>
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
- <4F02165C.1060400@fastmail.fm> <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
- <4F0219AB.6010505@fastmail.fm>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 2 Jan 2012 13:00:45 -0800
-Message-ID: <CA+55aFx=AEG7X2Y-LoHchgPdwNpeSkBG1J7eXprmO=czEJOD2A@mail.gmail.com> (sfid-20120102_220124_866995_494580F2)
-Subject: Re: loading firmware while usermodehelper disabled.
+	Mon, 2 Jan 2012 17:31:32 -0500
+From: Marek Vasut <marek.vasut@gmail.com>
 To: Jack Stone <jwjstone@fastmail.fm>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
+Subject: Re: loading firmware while usermodehelper disabled.
+Date: Mon, 2 Jan 2012 23:31:27 +0100
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
 	Oliver Neukum <oliver@neukum.org>,
 	Matthew Garrett <mjg@redhat.com>,
 	Dave Jones <davej@redhat.com>,
@@ -22,34 +17,74 @@ Cc: Alan Stern <stern@rowland.harvard.edu>,
 	Larry Finger <Larry.Finger@lwfinger.net>,
 	Chaoming Li <chaoming_li@realsil.com.cn>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
 	USB list <linux-usb@vger.kernel.org>,
 	Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> <201201022252.20139.marek.vasut@gmail.com> <4F022846.8080305@fastmail.fm>
+In-Reply-To: <4F022846.8080305@fastmail.fm>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201201022331.27562.marek.vasut@gmail.com> (sfid-20120102_233150_860102_4DB6C9E8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 2, 2012 at 12:55 PM, Jack Stone <jwjstone@fastmail.fm> wrote:
->
-> The problem comes with knowing when to put the firmware - how do we tell
-> the generic driver that that device has firmware that might need to be
-> freed on disconnect. I don't know enough about USB to know if we can
-> tell if the same device has reconnected due to firmware being loaded or
-> if it was simply unplugged and a new device plugged in.
+> On 02/01/12 21:52, Marek Vasut wrote:
+> >> On 02/01/12 21:23, Linus Torvalds wrote:
+> >>> On Mon, Jan 2, 2012 at 1:09 PM, Jack Stone <jwjstone@fastmail.fm> wrote:
+> >>>> What about USB "class" drivers e.g. usb-storage. They handle any
+> >>>> device that reports itself as a usb mass storage device. There could
+> >>>> be a device that needs to be bootstrapped before it becomes a generic
+> >>>> usb mass storage device. Do we really want to have to write a new
+> >>>> driver that is almost identical to the generic driver but handles the
+> >>>> USB firmware correctly.
+> >>> 
+> >>> I'd hope that the generic driver just expose enough interfaces that
+> >>> you could basically do a "firmware-load" driver that just loads the
+> >>> firmware and then attaches the device to the generic driver.
+> >> 
+> >> Sounds workable.
+> >> 
+> >> To make the firmware caching easier I would propose one extra function
+> >> in addition to the aforemensioned get_firmware / put_firmware - a
+> >> find_firmware function to search the cache and return the appropriate
+> >> firmware blob. It should only be called if the caller already has a
+> >> refcount to the firmware, it's only use is to save every driver saving a
+> >> pointer to the firmware.
+> >> 
+> >> If noone beats me to it I will try and put together an RFC for a new
+> >> version.
+> > 
+> > The problem is on systems with limited resources, most notably RAM. If
+> > you plug in many devices at once, many firmwares will be cached at one
+> > point, efectivelly doing DoS attach on the machine?
+> > 
+> > Also, how will this solve the suspect-resume issue? What if the device
+> > suspends only occasionally -- like every 24 hours -- then you'd have the
+> > FW cached all the time too?
+> 
+> Yes, at least to begin with. If we can come up with a robust scheme
+> which doesn't require the firmware to be kept in memory then that would
+> also be workable.
+> 
+> For example, drivers which know they don't ever need the firmware again
+> wouldn't need to cache it. That would probably be quite a small list -
+> there are systems that cut power to USB devices over suspend and so
+> those devices would need the firmware reloading.
 
-Well, if we just have a 10-second timeout for the firmware flushing
-after the last "put" operation, we don't even care.
+That's the problem -- there are devices that can suspend, but in the end, the 
+port turns of the power to those devices and they loose fw anyway.
+> 
+> I don't think there is anyway to avoid the memory requirement if we want
+> to be able to resume transparently to user-space (or even resume at all
+> in some setups).
 
-It doesn't even *matter* if the device is a physically different
-device - if the driver loads the same firmware, it will be cached, and
-it will still be correct for that (physically different, but with the
-same firmware requirements) device. So even the whole "user switched
-devices around" issue is irrelevant.
+Well ... injecting firmware into kernel with some userland helper just before 
+suspend is no-go?
 
-Of course, if the driver is some piece-of-crap that explicitly loads
-the wrong firmware for the device it manages, the firmware will be
-wrong, but hey, "Don't do that then". The drivers job very much
-includes being able to look at the device ID (whether USB or PCIe or
-PCMCIA) and figure out which firmware image it needs to load.
+M
 
-                   Linus
+> 
+> Thanks,
+> 
+> Jack
