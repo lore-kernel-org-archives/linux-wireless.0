@@ -1,58 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:48978 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750805Ab2ADROu (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:45641 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753037Ab2ABRIU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jan 2012 12:14:50 -0500
-Message-ID: <4F048905.5060004@lwfinger.net> (sfid-20120104_181455_208901_AB3C9A0C)
-Date: Wed, 04 Jan 2012 11:14:45 -0600
+	Mon, 2 Jan 2012 12:08:20 -0500
+Message-ID: <4F01E480.2070800@lwfinger.net> (sfid-20120102_180825_624774_749E7158)
+Date: Mon, 02 Jan 2012 11:08:16 -0600
 From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-CC: John W Linville <linville@tuxdriver.com>,
-	torvalds@linux-foundation.org, linux-kernel@vger.kernel.org,
-	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8192cu: Fix WARNING on suspend/resume
-References: <4f034b6c.ypfAbSdXSgMHtfqa%Larry.Finger@lwfinger.net> <CALSq=BaJSURcKU8RkCxxG=Mht4y04dVefKMESuHmiEdhwzc2Eg@mail.gmail.com>
-In-Reply-To: <CALSq=BaJSURcKU8RkCxxG=Mht4y04dVefKMESuHmiEdhwzc2Eg@mail.gmail.com>
+To: John W Linville <linville@tuxdriver.com>,
+	torvalds@linux-foundation.org
+CC: chaoming_li@realsil.com.cn, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: rtl8192ce: rtl8192cu: Delay firmware file read
+ until needed to fix at drivers/base/firmware_class.c:537
+References: <4effd8e3.n1quWeZQBSRwqFJt%Larry.Finger@lwfinger.net>
+In-Reply-To: <4effd8e3.n1quWeZQBSRwqFJt%Larry.Finger@lwfinger.net>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/04/2012 10:16 AM, Daniel Halperin wrote:
-> Sorry, Larry, I didn't see this til it was included in John's mail this morning.
->
-> On Tue, Jan 3, 2012 at 10:39 AM, Larry Finger<Larry.Finger@lwfinger.net>  wrote:
->>
->> +#ifdef CONFIG_PM
->> +static int rtl8192cu_usb_suspend(struct usb_interface *pusb_intf,
->> +                                pm_message_t message)
->> +{
->> +       /* Increase usage_count to Save loaded fw across suspend/resume */
->> +       atomic_inc(&usage_count);
->> +       return 0;
->> +}
->> +
->> +static int rtl8192cu_usb_resume(struct usb_interface *pusb_intf)
->> +{
->> +       atomic_dec(&usage_count);       /* after resume, decrease usage count */
->> +       return 0;
->> +}
->> +#endif
->
-> Based on the warning-fix I submitted yesterday, this probably produces
-> a warning if CONFIG_PM is set but not CONFIG_PM_SLEEP. My patch was
-> for an ethernet driver, but iwlwifi and ath5k appear to follow the
-> same pattern using CONFIG_PM_SLEEP instead of the above.
->
-> See: http://www.spinics.net/lists/netdev/msg184717.html for the patch
-> and http://www.spinics.net/lists/netdev/msg184715.html for the
-> discussion.
+On 12/31/2011 09:54 PM, Larry Finger wrote:
+> A recent LKML thread (http://lkml.indiana.edu/hypermail/linux/kernel/1112.3/00965.html)
+> discusses the the WARNING listed below, which occurs after a suspend/resume cycle. For
+> rtl8192cu, the problem was fixed by delaying the firmware loading until the interface is
+> brought up. By this time, the userspace support is available.
 
-Thanks for the note. I will prepare a revised patch.
+John,
 
-What architecture gave the warning? Of x86_64, I was unable to get 
-CONFIG_PM_SLEEP without CONFIG_PM.
+Please drop this patch. The "fix" only cures the symptom, not the underlying 
+cause. I will rework and resubmit.
+
+Thanks,
 
 Larry
-
