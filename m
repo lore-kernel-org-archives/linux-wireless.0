@@ -1,324 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:54848 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751297Ab2AOIjm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jan 2012 03:39:42 -0500
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
+Received: from netrider.rowland.org ([192.131.102.5]:36169 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752944Ab2ABQyU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jan 2012 11:54:20 -0500
+Date: Mon, 2 Jan 2012 11:54:18 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+cc: Oliver Neukum <oliver@neukum.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 3/8] brcm80211: Add and use brcmX_dbg_dump_hex
-Date: Sun, 15 Jan 2012 00:38:40 -0800
-Message-Id: <289e8a2dcdbb03315ba41788a358f5afc4bacb1b.1326616556.git.joe@perches.com> (sfid-20120115_094204_612417_2773531B)
-In-Reply-To: <cover.1326616556.git.joe@perches.com>
-References: <cover.1326616556.git.joe@perches.com>
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+In-Reply-To: <CA+55aFw-ar6dnPvn5wy=3Tv8fc_7Witri2mV=cCvH+aMv+jH1Q@mail.gmail.com>
+Message-ID: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> (sfid-20120102_175426_430965_61B238EC)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reduce the number of #ifdef DEBUG uses by
-adding a dbg_hex_dump routine which has the
-appropriate #ifdef DEBUG test.
+On Sun, 1 Jan 2012, Linus Torvalds wrote:
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h  |    6 +
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  141 +++++++-------------
- drivers/net/wireless/brcm80211/brcmutil/utils.c    |   18 +++
- .../net/wireless/brcm80211/include/brcmu_utils.h   |   11 ++
- 4 files changed, 84 insertions(+), 92 deletions(-)
+> On Sun, Jan 1, 2012 at 8:17 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> >
+> > As Linus pointed out, the real problem here is the firmware loader.
+> > The way it is now, a driver can't always depend on the data being
+> > available, even during a normal boot.  It ought to use an asynchronous
+> > approach; then none of these problems would arise.
+> 
+> WRONG.
+> 
+> Alan, you're not getting it. Loading firmware as part of
+> suspend/resume is WRONG.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-index f5ca9fc..a2c4576 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-@@ -68,6 +68,12 @@ do {									\
- 
- #endif				/* defined(DEBUG) */
- 
-+#define brcmf_dbg_hex_dump(test, data, len, fmt, ...)			\
-+do {									\
-+	if (test)							\
-+		brcmu_dbg_hex_dump(data, len, fmt, ##__VA_ARGS__);	\
-+} while (0)
-+
- extern int brcmf_msg_level;
- 
- #endif				/* _BRCMF_DBG_H_ */
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index 7157a60..4ab1023 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -1279,13 +1279,10 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 			}
- 			return 0;
- 		}
--#ifdef DEBUG
--		if (BRCMF_GLOM_ON()) {
--			printk(KERN_DEBUG "SUPERFRAME:\n");
--			print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
--				pfirst->data, min_t(int, pfirst->len, 48));
--		}
--#endif
-+
-+		brcmf_dbg_hex_dump(BRCMF_GLOM_ON(),
-+				   pfirst->data, min_t(int, pfirst->len, 48),
-+				   "SUPERFRAME:\n");
- 
- 		/* Validate the superframe header */
- 		dptr = (u8 *) (pfirst->data);
-@@ -1362,13 +1359,8 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 			check = get_unaligned_le16(dptr + sizeof(u16));
- 			chan = SDPCM_PACKET_CHANNEL(&dptr[SDPCM_FRAMETAG_LEN]);
- 			doff = SDPCM_DOFFSET_VALUE(&dptr[SDPCM_FRAMETAG_LEN]);
--#ifdef DEBUG
--			if (BRCMF_GLOM_ON()) {
--				printk(KERN_DEBUG "subframe:\n");
--				print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
--						     dptr, 32);
--			}
--#endif
-+			brcmf_dbg_hex_dump(BRCMF_GLOM_ON(),
-+					   dptr, 32, "subframe:\n");
- 
- 			if ((u16)~(sublen ^ check)) {
- 				brcmf_dbg(ERROR, "(subframe %d): HW hdr error: len/check 0x%04x/0x%04x\n",
-@@ -1433,13 +1425,8 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 			}
- 			rxseq++;
- 
--#ifdef DEBUG
--			if (BRCMF_BYTES_ON() && BRCMF_DATA_ON()) {
--				printk(KERN_DEBUG "Rx Subframe Data:\n");
--				print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
--						     dptr, dlen);
--			}
--#endif
-+			brcmf_dbg_hex_dump(BRCMF_BYTES_ON() && BRCMF_DATA_ON(),
-+					   dptr, dlen, "Rx Subframe Data:\n");
- 
- 			__skb_trim(pfirst, sublen);
- 			skb_pull(pfirst, doff);
-@@ -1457,17 +1444,13 @@ static u8 brcmf_sdbrcm_rxglom(struct brcmf_sdio *bus, u8 rxseq)
- 				continue;
- 			}
- 
--#ifdef DEBUG
--			if (BRCMF_GLOM_ON()) {
--				brcmf_dbg(GLOM, "subframe %d to stack, %p (%p/%d) nxt/lnk %p/%p\n",
--					  bus->glom.qlen, pfirst, pfirst->data,
--					  pfirst->len, pfirst->next,
--					  pfirst->prev);
--				print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
--						pfirst->data,
--						min_t(int, pfirst->len, 32));
--			}
--#endif				/* DEBUG */
-+			brcmf_dbg_hex_dump(BRCMF_GLOM_ON(),
-+					   pfirst->data,
-+					   min_t(int, pfirst->len, 32),
-+					   "subframe %d to stack, %p (%p/%d) nxt/lnk %p/%p\n",
-+					   bus->glom.qlen, pfirst, pfirst->data,
-+					   pfirst->len, pfirst->next,
-+					   pfirst->prev);
- 		}
- 		/* sent any remaining packets up */
- 		if (bus->glom.qlen) {
-@@ -1584,12 +1567,8 @@ brcmf_sdbrcm_read_control(struct brcmf_sdio *bus, u8 *hdr, uint len, uint doff)
- 
- gotpkt:
- 
--#ifdef DEBUG
--	if (BRCMF_BYTES_ON() && BRCMF_CTL_ON()) {
--		printk(KERN_DEBUG "RxCtrl:\n");
--		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, bus->rxctl, len);
--	}
--#endif
-+	brcmf_dbg_hex_dump(BRCMF_BYTES_ON() && BRCMF_CTL_ON(),
-+			   bus->rxctl, len, "RxCtrl:\n");
- 
- 	/* Point to valid data and indicate its length */
- 	bus->rxctl += doff;
-@@ -1818,17 +1797,13 @@ brcmf_sdbrcm_readframes(struct brcmf_sdio *bus, uint maxframes, bool *finished)
- 			}
- 			bus->tx_max = txmax;
- 
--#ifdef DEBUG
--			if (BRCMF_BYTES_ON() && BRCMF_DATA_ON()) {
--				printk(KERN_DEBUG "Rx Data:\n");
--				print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
--						     rxbuf, len);
--			} else if (BRCMF_HDRS_ON()) {
--				printk(KERN_DEBUG "RxHdr:\n");
--				print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
--						     bus->rxhdr, SDPCM_HDRLEN);
--			}
--#endif
-+			brcmf_dbg_hex_dump(BRCMF_BYTES_ON() && BRCMF_DATA_ON(),
-+					   rxbuf, len, "Rx Data:\n");
-+			brcmf_dbg_hex_dump(!(BRCMF_BYTES_ON() &&
-+					     BRCMF_DATA_ON()) &&
-+					   BRCMF_HDRS_ON(),
-+					   bus->rxhdr, SDPCM_HDRLEN,
-+					   "RxHdr:\n");
- 
- 			if (chan == SDPCM_CONTROL_CHANNEL) {
- 				brcmf_dbg(ERROR, "(nextlen): readahead on control packet %d?\n",
-@@ -1865,13 +1840,9 @@ brcmf_sdbrcm_readframes(struct brcmf_sdio *bus, uint maxframes, bool *finished)
- 			brcmf_sdbrcm_rxfail(bus, true, true);
- 			continue;
- 		}
--#ifdef DEBUG
--		if (BRCMF_BYTES_ON() || BRCMF_HDRS_ON()) {
--			printk(KERN_DEBUG "RxHdr:\n");
--			print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
--					     bus->rxhdr, SDPCM_HDRLEN);
--		}
--#endif
-+		brcmf_dbg_hex_dump(BRCMF_BYTES_ON() || BRCMF_HDRS_ON(),
-+				   bus->rxhdr, SDPCM_HDRLEN, "RxHdr:\n");
-+
- 
- 		/* Extract hardware header fields */
- 		len = get_unaligned_le16(bus->rxhdr);
-@@ -2024,13 +1995,8 @@ brcmf_sdbrcm_readframes(struct brcmf_sdio *bus, uint maxframes, bool *finished)
- 		skb_push(pkt, BRCMF_FIRSTREAD);
- 		memcpy(pkt->data, bus->rxhdr, BRCMF_FIRSTREAD);
- 
--#ifdef DEBUG
--		if (BRCMF_BYTES_ON() && BRCMF_DATA_ON()) {
--			printk(KERN_DEBUG "Rx Data:\n");
--			print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
--					     pkt->data, len);
--		}
--#endif
-+		brcmf_dbg_hex_dump(BRCMF_BYTES_ON() && BRCMF_DATA_ON(),
-+				   pkt->data, len, "Rx Data:\n");
- 
- deliver:
- 		/* Save superframe descriptor and allocate packet frame */
-@@ -2038,14 +2004,9 @@ deliver:
- 			if (SDPCM_GLOMDESC(&bus->rxhdr[SDPCM_FRAMETAG_LEN])) {
- 				brcmf_dbg(GLOM, "glom descriptor, %d bytes:\n",
- 					  len);
--#ifdef DEBUG
--				if (BRCMF_GLOM_ON()) {
--					printk(KERN_DEBUG "Glom Data:\n");
--					print_hex_dump_bytes("",
--							     DUMP_PREFIX_OFFSET,
--							     pkt->data, len);
--				}
--#endif
-+				brcmf_dbg_hex_dump(BRCMF_GLOM_ON(),
-+						   pkt->data, len,
-+						   "Glom Data:\n");
- 				__skb_trim(pkt, len);
- 				skb_pull(pkt, SDPCM_HDRLEN);
- 				bus->glomd = pkt;
-@@ -2178,16 +2139,18 @@ static int brcmf_sdbrcm_txpkt(struct brcmf_sdio *bus, struct sk_buff *pkt,
- 
- #ifdef DEBUG
- 	tx_packets[pkt->priority]++;
--	if (BRCMF_BYTES_ON() &&
--	    (((BRCMF_CTL_ON() && (chan == SDPCM_CONTROL_CHANNEL)) ||
--	      (BRCMF_DATA_ON() && (chan != SDPCM_CONTROL_CHANNEL))))) {
--		printk(KERN_DEBUG "Tx Frame:\n");
--		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, frame, len);
--	} else if (BRCMF_HDRS_ON()) {
--		printk(KERN_DEBUG "TxHdr:\n");
--		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
--				     frame, min_t(u16, len, 16));
--	}
-+
-+	brcmf_dbg_hex_dump(BRCMF_BYTES_ON() &&
-+			   ((BRCMF_CTL_ON() && chan == SDPCM_CONTROL_CHANNEL) ||
-+			    (BRCMF_DATA_ON() && chan != SDPCM_CONTROL_CHANNEL)),
-+			   frame, len, "Tx Frame:\n");
-+	brcmf_dbg_hex_dump(!(BRCMF_BYTES_ON() &&
-+			     ((BRCMF_CTL_ON() &&
-+			       chan == SDPCM_CONTROL_CHANNEL) ||
-+			      (BRCMF_DATA_ON() &&
-+			       chan != SDPCM_CONTROL_CHANNEL))) &&
-+			   BRCMF_HDRS_ON(),
-+			   frame, min_t(u16, len, 16), "TxHdr:\n");
- #endif
- 
- 	/* Raise len to next SDIO block to eliminate tail command */
-@@ -2982,17 +2945,11 @@ brcmf_sdbrcm_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
- 	}
- 
- 	if (ret == -1) {
--#ifdef DEBUG
--		if (BRCMF_BYTES_ON() && BRCMF_CTL_ON()) {
--			printk(KERN_DEBUG "Tx Frame:\n");
--			print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
--					     frame, len);
--		} else if (BRCMF_HDRS_ON()) {
--			printk(KERN_DEBUG "TxHdr:\n");
--			print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
--					     frame, min_t(u16, len, 16));
--		}
--#endif
-+		brcmf_dbg_hex_dump(BRCMF_BYTES_ON() && BRCMF_CTL_ON(),
-+				   frame, len, "Tx Frame:\n");
-+		brcmf_dbg_hex_dump(!(BRCMF_BYTES_ON() && BRCMF_CTL_ON()) &&
-+				   BRCMF_HDRS_ON(),
-+				   frame, min_t(u16, len, 16), "TxHdr:\n");
- 
- 		do {
- 			ret = brcmf_tx_frame(bus, frame, len);
-diff --git a/drivers/net/wireless/brcm80211/brcmutil/utils.c b/drivers/net/wireless/brcm80211/brcmutil/utils.c
-index e25fb2d..2207eaa 100644
---- a/drivers/net/wireless/brcm80211/brcmutil/utils.c
-+++ b/drivers/net/wireless/brcm80211/brcmutil/utils.c
-@@ -253,4 +253,22 @@ void brcmu_prpkt(const char *msg, struct sk_buff *p0)
- 		print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, p->data, p->len);
- }
- EXPORT_SYMBOL(brcmu_prpkt);
-+
-+void brcmu_dbg_hex_dump(const void *data, size_t size, const char *fmt, ...)
-+{
-+	struct va_format vaf;
-+	va_list args;
-+
-+	va_start(args, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	pr_debug("%pV", &vaf);
-+
-+	va_end(args);
-+
-+	print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, data, size);
-+}
-+EXPORT_SYMBOL(brcmu_dbg_hex_dump);
- #endif				/* defined(DEBUG) */
-diff --git a/drivers/net/wireless/brcm80211/include/brcmu_utils.h b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-index 0cde38a..477b92a 100644
---- a/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-+++ b/drivers/net/wireless/brcm80211/include/brcmu_utils.h
-@@ -182,4 +182,15 @@ extern void brcmu_prpkt(const char *msg, struct sk_buff *p0);
- #define brcmu_prpkt(a, b)
- #endif				/* DEBUG */
- 
-+#ifdef DEBUG
-+extern __printf(3, 4)
-+void brcmu_dbg_hex_dump(const void *data, size_t size, const char *fmt, ...);
-+#else
-+__printf(3, 4)
-+static inline
-+void brcmu_dbg_hex_dump(const void *data, size_t size, const char *fmt, ...)
-+{
-+}
-+#endif
-+
- #endif				/* _BRCMU_UTILS_H_ */
--- 
-1.7.8.111.gad25c.dirty
+Having read through the remainder of your message, I now see your point
+and agree with it.  However, you misunderstood what I was trying to
+say.
+
+(For example, consider the issue of firmware loading during bootup.  
+Wouldn't that work out better if an async approach was always used?  
+And doesn't this argue that drivers should never do synchronous 
+firmware loads?)
+
+The issue with firmware, USB, and suspend/resume involves several
+considerations.  The basic fact is this:
+
+	USB devices sometimes lose their firmware during suspend.
+	Before the device can be used again, the firmware has to be
+	reloaded.
+
+The question is how and when to reload the firmware.  As a general
+rule, current drivers do this synchronously as part of their probe
+routine (though there are exceptions).  For all I know, some drivers
+may try to do this even if the firmware is already loaded.  The problem
+we face is that the USB core may call the probe routine during the
+resume procedure.  And as we know, during resume is not a good time to
+load firmware.
+
+What Oliver and I have been discussing is delaying the probe call until
+after resume is finished, when userspace is back up and everything is
+operating normally again.  It would be more awkward than the current
+code, but it definitely can be done.
+
+> It would not be made any better by an asynchronous approach, and that
+> isn't the problem with request_firmware().
+
+Leaving aside questions about request_firmware()'s merits, consider
+what would happen if drivers loaded firmware asynchronously during
+probe.  The USB core could call the probe routine while the system was
+resuming, the probe routine would return immediately, and the actual
+firmware load would not take place until later when userspace was
+operating.  Then everything would look the same as if probe had been
+called after the system resume was finished.
+
+If, as mentioned parenthetically above, drivers should always load 
+firmware asynchronously, then the USB core wouldn't need to be changed 
+at all.
+
+> Suspend/resume is *special*, and it's special for a very simple
+> reason: unlike bootup or attaching a new device, suspend/resume
+> happens WHILE THE USER IS ACTIVE.
+> 
+> Loading firmware at that time is wrong. It's impossible. You have to
+> have the firmware available *before* any processes might need it, but
+> at the same time actually loading the firmware may need help from user
+> space and/or other devices. It's a chicken-and-egg problem.
+
+Not in the case we have been discussing.  There is no chicken-and-egg
+dependancy; no processes can need to use the device before the firmware
+is loaded because the old device instance has already been unregistered
+(and the new one won't be registered until after the firmware is
+loaded).
+
+> So let me repeat one more time: Loading firmware at resume time is a
+> device driver bug. Seriously. How many times do I have to say it?
+
+It sounds like you were thinking of a situation in which the driver
+would try to reload the firmware while keeping the device instance
+intact and available the entire time.  That isn't what Oliver and I
+have been talking about.
+
+On the other hand, something very much like it may crop up in
+connection with reset-resume.  Usually it doesn't, because a USB device
+without firmware generally presents a different set of descriptors from 
+the ones it presents when the firmware is running.  As a result, when 
+the firmware is lost the device will change identities, and the USB 
+core will not attempt a reset-resume.
+
+But it is possible that some devices might present the same descriptors
+with and without firmware.  In such cases it would then be up to the
+driver to detect that the firmware was gone and arrange for it to be
+reloaded somehow -- before userspace wakes up.  In this case your point
+is perfectly valid; the driver simply cannot rely on the firmware
+loader for this, whether synchronously or not.  The only option is for
+the driver to cache the firmware.  (Or give up entirely and unbind
+itself from the device -- but then how would it eventually rebind?)
+
+A similar problem can occur with USB drivers that don't support
+suspend/resume at all.  Such drivers get unbound during suspend and
+then rebound during resume.  When the probe routine runs for rebinding,
+it may try to reload the firmware -- even though the firmware is most
+likely still present.  It's fair to say this really is a driver bug.
+
+Alan Stern
 
