@@ -1,53 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60309 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752509Ab2ATM6s (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:34380 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751441Ab2ABD30 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 07:58:48 -0500
-Message-Id: <20120120125740.726174716@sipsolutions.net> (sfid-20120120_135852_376595_1F0A30EF)
-Date: Fri, 20 Jan 2012 13:55:20 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 04/11] mac80211: add NOTEXIST station state
-References: <20120120125516.000124996@sipsolutions.net>
-Mime-Version: 1.0
+	Sun, 1 Jan 2012 22:29:26 -0500
+From: Marek Vasut <marek.vasut@gmail.com>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: loading firmware while usermodehelper disabled.
+Date: Mon, 2 Jan 2012 04:29:23 +0100
+Cc: Oliver Neukum <oliver@neukum.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Matthew Garrett <mjg@redhat.com>,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+References: <20111230235421.GA6054@redhat.com> <201201011732.23069.marek.vasut@gmail.com> <20120101203945.0ebc2f55@pyramind.ukuu.org.uk>
+In-Reply-To: <20120101203945.0ebc2f55@pyramind.ukuu.org.uk>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201201020429.23808.marek.vasut@gmail.com> (sfid-20120102_042943_851233_1523A547)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+> > > Device IDs can morph due to a power loss. After resumption another
+> > > driver would bind.
+> > 
+> > What do you mean? I don't think I quite follow.
+> 
+> Lots of USB hardware appears as one device id when powered on, then when
+> the firmware is loaded turns into something else that becomes relevant to
+> the user.
+> 
+> So on powerup your wireless card goes
+> 
+> 	'I've no idea what I am, feed me firmware for this id"
+> 
+> when it gets the firmware it disconnects, reconnects and says
+> 
+> 	"I am a USB wireless card with this id"
+> 
+> When you suspend the power gets killed so the device loses its firmware
+> and goes back to being a firmware requesting thing on resume.
 
-This will be used by drivers later if they
-need to have stations inserted all the time,
-in mac80211 has no purpose, is never used
-and sta_state starts out in NONE.
+Ah, even worse then. I wasn't aware of devices like this at all. Mhmmmm ...
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/sta_info.c |    2 ++
- net/mac80211/sta_info.h |    1 +
- 2 files changed, 3 insertions(+)
+> 
+> Worse still - you don't easily know if the device is in fact new and was
+> added while suspended, or was always there.
 
---- a/net/mac80211/sta_info.h	2012-01-20 13:54:16.000000000 +0100
-+++ b/net/mac80211/sta_info.h	2012-01-20 13:54:19.000000000 +0100
-@@ -77,6 +77,7 @@ enum ieee80211_sta_info_flags {
- 
- enum ieee80211_sta_state {
- 	/* NOTE: These need to be ordered correctly! */
-+	IEEE80211_STA_NOTEXIST,
- 	IEEE80211_STA_NONE,
- 	IEEE80211_STA_AUTH,
- 	IEEE80211_STA_ASSOC,
---- a/net/mac80211/sta_info.c	2012-01-20 13:54:19.000000000 +0100
-+++ b/net/mac80211/sta_info.c	2012-01-20 13:54:19.000000000 +0100
-@@ -293,6 +293,8 @@ struct sta_info *sta_info_alloc(struct i
- 	sta->sdata = sdata;
- 	sta->last_rx = jiffies;
- 
-+	sta->sta_state = IEEE80211_STA_NONE;
-+
- 	do_posix_clock_monotonic_gettime(&uptime);
- 	sta->last_connected = uptime.tv_sec;
- 	ewma_init(&sta->avg_signal, 1024, 8);
+Yea, that's the problem I outlined in the subsequent email.
+> 
+> So for those devices you do need to load the firmware into them
+> automatically after the resume to work out what they are and get the MAC
+> to see if its the same wireless card or not.
 
+Sure, but then you'd have to wait for userland to actually be ready to feed 
+those. Sometimes, you'd like to avoid that -- for example for devices that are 
+always present. But this solution is stupid as it doesn't solve the whole 
+problem.
 
+> 
+> Alan
