@@ -1,261 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:33392 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753250Ab2AHCrR (ORCPT
+Received: from out5.smtp.messagingengine.com ([66.111.4.29]:50285 "EHLO
+	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753001Ab2ABVJL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jan 2012 21:47:17 -0500
-Received: by mail-iy0-f174.google.com with SMTP id h11so4842716iae.19
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jan 2012 18:47:16 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 5/8] rtl8192ce: Update copyright dates
-Date: Sat,  7 Jan 2012 20:46:44 -0600
-Message-Id: <1325990807-13575-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120108_034723_348393_4F34A841)
-In-Reply-To: <1325990807-13575-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1325990807-13575-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 2 Jan 2012 16:09:11 -0500
+Received: from compute6.internal (compute6.nyi.mail.srv.osa [10.202.2.46])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 1C59F2113E
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Jan 2012 16:09:11 -0500 (EST)
+Message-ID: <4F021CF4.9050205@fastmail.fm> (sfid-20120102_220929_847841_09CD6C1E)
+Date: Mon, 02 Jan 2012 21:09:08 +0000
+From: Jack Stone <jwjstone@fastmail.fm>
+MIME-Version: 1.0
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> <4F02165C.1060400@fastmail.fm> <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com> <4F0219AB.6010505@fastmail.fm> <CA+55aFx=AEG7X2Y-LoHchgPdwNpeSkBG1J7eXprmO=czEJOD2A@mail.gmail.com>
+In-Reply-To: <CA+55aFx=AEG7X2Y-LoHchgPdwNpeSkBG1J7eXprmO=czEJOD2A@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192ce/def.h   |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/dm.c    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/dm.h    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.h    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/led.c   |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/led.h   |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/phy.c   |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/phy.h   |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/reg.h   |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/rf.c    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/rf.h    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/sw.c    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/sw.h    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/table.c |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/table.h |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c   |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.h   |    2 +-
- 18 files changed, 18 insertions(+), 18 deletions(-)
+On 02/01/12 21:00, Linus Torvalds wrote:
+> On Mon, Jan 2, 2012 at 12:55 PM, Jack Stone <jwjstone@fastmail.fm> wrote:
+>>
+>> The problem comes with knowing when to put the firmware - how do we tell
+>> the generic driver that that device has firmware that might need to be
+>> freed on disconnect. I don't know enough about USB to know if we can
+>> tell if the same device has reconnected due to firmware being loaded or
+>> if it was simply unplugged and a new device plugged in.
+> 
+> Well, if we just have a 10-second timeout for the firmware flushing
+> after the last "put" operation, we don't even care.
+> 
+> It doesn't even *matter* if the device is a physically different
+> device - if the driver loads the same firmware, it will be cached, and
+> it will still be correct for that (physically different, but with the
+> same firmware requirements) device. So even the whole "user switched
+> devices around" issue is irrelevant.
+> 
+> Of course, if the driver is some piece-of-crap that explicitly loads
+> the wrong firmware for the device it manages, the firmware will be
+> wrong, but hey, "Don't do that then". The drivers job very much
+> includes being able to look at the device ID (whether USB or PCIe or
+> PCMCIA) and figure out which firmware image it needs to load.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-index 9fc804d..04c3aef 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/def.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/dm.c b/drivers/net/wireless/rtlwifi/rtl8192ce/dm.c
-index 6730e68..27b3af8 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/dm.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/dm.h b/drivers/net/wireless/rtlwifi/rtl8192ce/dm.h
-index 07dd955..26747fa 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/dm.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/dm.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-index 971bd29..c5aced4 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.h b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.h
-index 07dbe3e..52a3aea 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/hw.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/hw.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/led.c b/drivers/net/wireless/rtlwifi/rtl8192ce/led.c
-index 09758f4..8283e9b 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/led.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/led.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/led.h b/drivers/net/wireless/rtlwifi/rtl8192ce/led.h
-index 7dfccea..c576106 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/led.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/led.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-index 03ee82e..c64daf2 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.h b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.h
-index be2c92a..d5e3b70 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/phy.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/phy.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-index ba5ff04..43806d9 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/reg.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/rf.c b/drivers/net/wireless/rtlwifi/rtl8192ce/rf.c
-index 5ef9604..69d720d 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/rf.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/rf.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h b/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h
-index 39ff036..6c8d56e 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/rf.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-index 425387a..2d72c95 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.h b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.h
-index b7dc326..d2367a5 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/sw.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/sw.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/table.c b/drivers/net/wireless/rtlwifi/rtl8192ce/table.c
-index ba938b9..752f943 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/table.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/table.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/table.h b/drivers/net/wireless/rtlwifi/rtl8192ce/table.h
-index 3a6e8b6..8b79161 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/table.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/table.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-index 41b54d5..d59f12c 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h
-index c8977a5..efb9ab2 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192ce/trx.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
--- 
-1.7.7
+What about USB "class" drivers e.g. usb-storage. They handle any device
+that reports itself as a usb mass storage device. There could be a
+device that needs to be bootstrapped before it becomes a generic usb
+mass storage device. Do we really want to have to write a new driver
+that is almost identical to the generic driver but handles the USB
+firmware correctly.
+
+The other option is to extend the class drivers to understand that a
+certain device needs this piece of firmware and to handle it but that
+will bloat the generic drivers with lots of vendor stuff. We could do
+this by lists of USB ids or something similar.
+
+Thanks,
+
+Jack
 
