@@ -1,73 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out002.kontent.com ([81.88.40.216]:37631 "EHLO
-	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751294Ab2ABIdj convert rfc822-to-8bit (ORCPT
+Received: from out5.smtp.messagingengine.com ([66.111.4.29]:46737 "EHLO
+	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753080Ab2ABXZ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 03:33:39 -0500
-From: Oliver Neukum <oliver@neukum.org>
-To: Michael =?iso-8859-1?q?B=FCsch?= <m@bues.ch>
-Subject: Re: loading firmware while usermodehelper disabled.
-Date: Mon, 2 Jan 2012 08:56:25 +0100
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Mon, 2 Jan 2012 18:25:57 -0500
+Received: from compute4.internal (compute4.nyi.mail.srv.osa [10.202.2.44])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 2BE8B20A79
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Jan 2012 18:25:57 -0500 (EST)
+Message-ID: <4F023D02.1030403@fastmail.fm> (sfid-20120103_002635_501952_02ADFBE0)
+Date: Mon, 02 Jan 2012 23:25:54 +0000
+From: Jack Stone <jwjstone@fastmail.fm>
+MIME-Version: 1.0
+To: Marek Vasut <marek.vasut@gmail.com>
+CC: Linus Torvalds <torvalds@linux-foundation.org>,
 	Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
 	Matthew Garrett <mjg@redhat.com>,
 	Dave Jones <davej@redhat.com>,
 	Linux Kernel <linux-kernel@vger.kernel.org>,
 	Larry Finger <Larry.Finger@lwfinger.net>,
 	Chaoming Li <chaoming_li@realsil.com.cn>,
 	"John W. Linville" <linville@tuxdriver.com>,
-	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
 	USB list <linux-usb@vger.kernel.org>,
 	Linux Wireless List <linux-wireless@vger.kernel.org>
-References: <201201011322.34483.oliver@neukum.org> <201201012227.56568.oliver@neukum.org> <20120101223913.3ff57d0f@milhouse>
-In-Reply-To: <20120101223913.3ff57d0f@milhouse>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201201020856.26235.oliver@neukum.org> (sfid-20120102_093414_753753_28269424)
+Subject: Re: loading firmware while usermodehelper disabled.
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> <201201022252.20139.marek.vasut@gmail.com> <4F022846.8080305@fastmail.fm> <201201022331.27562.marek.vasut@gmail.com>
+In-Reply-To: <201201022331.27562.marek.vasut@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Sonntag, 1. Januar 2012, 22:39:13 schrieb Michael Büsch:
-
-> These change-id-on-bootstrap devices usually work like this,
-> as far as I know:
+On 02/01/12 22:31, Marek Vasut wrote:
+>> I don't think there is anyway to avoid the memory requirement if we want
+>> to be able to resume transparently to user-space (or even resume at all
+>> in some setups).
 > 
-> probe bootstrap device (switches hw to real device)
+> Well ... injecting firmware into kernel with some userland helper just before 
+> suspend is no-go?
 
-And you will find no driver if the firmware is uploaded in user space.
-udev runs a firmware loader that uses libusb. usb_modeswitch
-presents you with the same problem.
+Its a perfectly good idea but you still need the full memory requirement
+during the suspend.
 
-> probe real device (firmware is loaded)
+Thanks,
 
-The real driver will often be generic and have no idea the device
-needs firmware to turn it into a functional generic device. And we really don't
-want to contaminate the generic drivers with that information.
+Jack
 
-So we'd need
-
-a) kernel infrastructure to track "shadow" drivers for firmware upload
-b) a heuristic to decide when a device underwent a virtual replug
-
-> Suspend machine
-> Resume machine
-> usb detects that the device is "gone"
-> probe/resume bootstrap device (switches hw to real device)
-
-We need a way to verify this is really the device which we need firmware
-for.
-
-> probe/resume real device (No need to fetch fw from userspace. It's already cached)
-
-Now we need to wait for the firmware upload to take effect. How long?
-And we need to hold off telling the driver that its device was disconnected. 
-
-> What did I get wrong?
-
-In addition you now need logic to tell the "shadow" drivers that a device
-is gone so that they can free the firmware. Oh and of course you will need
-to refcount firmware (but we probably need to do that anyway)
-
-	Regards
-		Oliver
