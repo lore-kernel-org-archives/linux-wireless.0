@@ -1,99 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:62089 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751038Ab2ABHoM convert rfc822-to-8bit (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:54837 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751666Ab2ABERX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 02:44:12 -0500
-Received: by wgbdr13 with SMTP id dr13so26345118wgb.1
-        for <linux-wireless@vger.kernel.org>; Sun, 01 Jan 2012 23:44:11 -0800 (PST)
+	Sun, 1 Jan 2012 23:17:23 -0500
+From: Marek Vasut <marek.vasut@gmail.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+Date: Mon, 2 Jan 2012 05:17:19 +0100
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+References: <201201011322.34483.oliver@neukum.org> <Pine.LNX.4.44L0.1201011105200.4534-100000@netrider.rowland.org> <CA+55aFw-ar6dnPvn5wy=3Tv8fc_7Witri2mV=cCvH+aMv+jH1Q@mail.gmail.com>
+In-Reply-To: <CA+55aFw-ar6dnPvn5wy=3Tv8fc_7Witri2mV=cCvH+aMv+jH1Q@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmok-aU4u=a_O7n1FOwD2cnd_eQMcyKzvYgXOSbZ=uSrHAA@mail.gmail.com>
-References: <CAApCBGx28SbbmNpynCpKW9CyAsV5+c_fZ=1k9QAsKnXf4nDQEw@mail.gmail.com>
-	<CAApCBGx7fHuQr87TnppE6FyX9d-1F0huUqgYhjv++8vmfov6zQ@mail.gmail.com>
-	<4EF31325.2050408@openwrt.org>
-	<CAApCBGwto0YxMKcirX_FJYaGw8K6Dcoxpn9P30=Mk-9oHJok+Q@mail.gmail.com>
-	<CAJ-VmonyWC4JXrikuzxxaaGMReqq3VGhH+WLWjtN+8gTCvM7kg@mail.gmail.com>
-	<4EF42F12.1000309@openwrt.org>
-	<CAApCBGyrF4JSEGnq0USdUT8UvmyR2kRMCFh-2nmEeRR0FTCfEw@mail.gmail.com>
-	<CAJ-Vmok-aU4u=a_O7n1FOwD2cnd_eQMcyKzvYgXOSbZ=uSrHAA@mail.gmail.com>
-Date: Mon, 2 Jan 2012 09:44:11 +0200
-Message-ID: <CAApCBGxgxLcij=u5VLPojk82afVffmBYP84pgFEOhFzZdjs=3g@mail.gmail.com> (sfid-20120102_084416_709959_6E249043)
-Subject: Re: ar9390 failing AGC calibration on powerpc platform
-From: wireless newbie <wnewbie72@gmail.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, openwrt-devel@lists.openwrt.org,
-	Mohammed Shafi <shafi.wireless@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201201020517.19624.marek.vasut@gmail.com> (sfid-20120102_051801_108867_C556E438)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+> On Sun, Jan 1, 2012 at 8:17 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> > As Linus pointed out, the real problem here is the firmware loader.
+> > The way it is now, a driver can't always depend on the data being
+> > available, even during a normal boot.  It ought to use an asynchronous
+> > approach; then none of these problems would arise.
+> 
+> WRONG.
+> 
+> Alan, you're not getting it. Loading firmware as part of
+> suspend/resume is WRONG.
+> 
+> It would not be made any better by an asynchronous approach, and that
+> isn't the problem with request_firmware().
+> 
+> Suspend/resume is *special*, and it's special for a very simple
+> reason: unlike bootup or attaching a new device, suspend/resume
+> happens WHILE THE USER IS ACTIVE.
+> 
+> Loading firmware at that time is wrong. It's impossible. You have to
+> have the firmware available *before* any processes might need it, but
+> at the same time actually loading the firmware may need help from user
+> space and/or other devices. It's a chicken-and-egg problem.
+> 
+> So let me repeat one more time: Loading firmware at resume time is a
+> device driver bug. Seriously. How many times do I have to say it?
+> 
+> And making it asynchronous doesn't make it *any* less of a bug. It
+> doesn't change anything but timing, but the problem was never about
+> timing in the first place! The problem was about dependencies. User
+> space may well depend on the device, and *other* devices may well
+> depend on the device working.
+> 
+> So stop with the inanity. I've already told people what the fix is:
+> make sure that the firmware image is in memory before the suspend ever
+> happens, and just reload it from memory. NOT with
+> "request_firmware()". Because requesting the firmware at resume time
+> is buggy and wrong, and has nothing to do with "asynchronous" or
+> "synchronous". It has everything to do with "it's buggy".
+> 
+> Really really really.
+> 
+> So the problem with request_firmware() has absolutely nothing to do
+> with "asynchronous". The problem is that the firmware interfaces do
+> not cache the data in memory, and currently *cannot* sanely cache the
+> firmware data simply because the interface doesn't have any kind of
+> lifetime rules.
+> 
+> In other words: we could make "request_firmware()" cache *all*
+> firmware images forever, but there is currently no way to say "ok, the
+> device was unplugged - and not fakily so by a resume event, but for
+> real, and physically - so now you can drop the cache". Which means
+> that effectively request_firmware() can do no caching at all, because
+> it might eventually just run out of memory.
+> 
+> It is *possible* that we might tie the firmware lifetime rules to the
+> driver module lifetime. But it would probably be much better if we
+> made for an explicit model of "ok, the device is now really gone" so
+> that it would work properly with compiled-in drivers etc too.
+> 
+> And yes, the firmware would have to stay around even around a
+> resume/suspend that causes unplug events over USB. The "use USB and
+> lose power" actually happens also for built-in devices that may well
+> be disks and network cards that are *needed* by user space, so even if
+> the device has been electrically unplugged, it is still attached and
+> needs to be brought back *before* user space comes back.
+> 
+> That's the whole point of suspend/resume: we're not starting from a
+> clean slate. We are supposed to continue as if nothing happened!
+> 
+>                                   Linus
 
-I tried 5ghz by changing hw_mode to 'a' and channel to 40. Still I get
-the same error:
+FYI this is not only problem with USB, but with PCMCIA too for example.
 
-ath: Unable to reset hardware; reset status -5 (freq 2412 MHz)
-
-That frequency makes me wonder if the change has really any affect?
-
-
-2011/12/23 Adrian Chadd <adrian@freebsd.org>:
-> Is it this bad behaved in 5ghz mode?
->
->
-> adrian
->
-> On 23 December 2011 01:03, wireless newbie <wnewbie72@gmail.com> wrote:
->>> iw wlan0 survey dump
->>
->> Here is what I got. Looks like its busy most of the time, doesn't it?
->>
->> Survey data from wlan0
->>        frequency:                      2412 MHz
->>        channel active time:            139291 ms
->>        channel busy time:              135849 ms
->>        channel receive time:           0 ms
->>        channel transmit time:          0 ms
->> Survey data from wlan0
->>        frequency:                      2417 MHz
->> Survey data from wlan0
->>        frequency:                      2422 MHz
->> Survey data from wlan0
->>        frequency:                      2427 MHz
->> Survey data from wlan0
->>        frequency:                      2432 MHz
->> Survey data from wlan0
->>        frequency:                      2437 MHz
->> Survey data from wlan0
->>        frequency:                      2442 MHz
->> Survey data from wlan0
->>        frequency:                      2447 MHz
->> Survey data from wlan0
->>        frequency:                      2452 MHz
->> Survey data from wlan0
->>        frequency:                      2457 MHz
->> Survey data from wlan0
->>        frequency:                      2462 MHz
->> Survey data from wlan0
->>        frequency:                      5180 MHz
->> Survey data from wlan0
->>        frequency:                      5200 MHz
->> Survey data from wlan0
->>        frequency:                      5220 MHz
->> Survey data from wlan0
->>        frequency:                      5240 MHz
->> Survey data from wlan0
->>        frequency:                      5745 MHz
->> Survey data from wlan0
->>        frequency:                      5765 MHz
->> Survey data from wlan0
->>        frequency:                      5785 MHz
->> Survey data from wlan0
->>        frequency:                      5805 MHz
->> Survey data from wlan0
->>        frequency:                      5825 MHz
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+M
