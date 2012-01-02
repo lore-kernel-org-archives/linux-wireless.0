@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.u-psud.fr ([129.175.33.41]:63836 "EHLO smtp1.u-psud.fr"
+Received: from nbd.name ([46.4.11.11]:46935 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932372Ab2AKPzy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 10:55:54 -0500
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Nicolas Cavallari <cavallar@lri.fr>
-Subject: [PATCH] carl9170: claim to support IBSS RSN.
-Date: Wed, 11 Jan 2012 16:44:50 +0100
-Message-Id: <1326296690-2644-1-git-send-email-cavallar@lri.fr> (sfid-20120111_165558_251836_53539AC9)
+	id S1752653Ab2ABORr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jan 2012 09:17:47 -0500
+Message-ID: <4F01BC85.8050806@openwrt.org> (sfid-20120102_151752_851091_180FD67E)
+Date: Mon, 02 Jan 2012 15:17:41 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	m.sujith@gmail.com, ath9k-devel@lists.ath9k.org
+Subject: Re: [RFC] ath9k_hw: make use of ar9003_calc_ptr_chksum
+References: <1325509985-11720-1-git-send-email-mohammed@qca.qualcomm.com> <4F01B408.1080900@openwrt.org> <4F01B9CF.2020206@qca.qualcomm.com>
+In-Reply-To: <4F01B9CF.2020206@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On carl9170, HW encryption is disabled on IBSS; the mac80211
-software-based encryption is used instead. As mac80211 supports IBSS
-RSN (per-STA GTK), claim its support in the carl9170 PHY.
+On 2012-01-02 3:06 PM, Mohammed Shafi Shajakhan wrote:
+> hi Felix,
+> 
+> 
+> On Monday 02 January 2012 07:11 PM, Felix Fietkau wrote:
+>> On 2012-01-02 2:13 PM, Mohammed Shafi Shajakhan wrote:
+>>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>>>
+>>> make use of the already available function 'ar9003_calc_ptr_chksum'
+>>> in 'ar9003_set_txdesc'
+>>>
+>>> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>> NACK. I intentionally did not use that function to avoid unnecessary
+>> access to uncached memory (for performance reasons).
+> 
+> please explain how it effects the performance and will it cause a 
+> significant impact
+I don't have any exact numbers anymore, but it was visible enough in the
+oprofile stats to justify a little functional duplication of code.
+Eventually this duplication can go away if I can change the
+ar9003_hw_set_desc_link function to incrementally fix up the checksum
+instead of recalculating it, which would make the code even more efficient.
 
-Signed-off-by: Nicolas Cavallari <cavallar@lri.fr>
----
- drivers/net/wireless/ath/carl9170/main.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
-index f06e069..24c7f85 100644
---- a/drivers/net/wireless/ath/carl9170/main.c
-+++ b/drivers/net/wireless/ath/carl9170/main.c
-@@ -1796,6 +1796,9 @@ void *carl9170_alloc(size_t priv_size)
- 		ar->noise[i] = -95; /* ATH_DEFAULT_NOISE_FLOOR */
- 
- 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
-+
-+	/* As IBSS Encryption is software-based, IBSS RSN is supported. */
-+	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
- 	return ar;
- 
- err_nomem:
--- 
-1.7.7.3
-
+- Felix
