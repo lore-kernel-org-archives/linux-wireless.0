@@ -1,71 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:43834 "EHLO
-	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752143Ab2AVT1Q (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:33822 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606Ab2ABWDt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jan 2012 14:27:16 -0500
-Received: from compute2.internal (compute2.nyi.mail.srv.osa [10.202.2.42])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 7A7F72050E
-	for <linux-wireless@vger.kernel.org>; Sun, 22 Jan 2012 14:27:15 -0500 (EST)
-Date: Sun, 22 Jan 2012 14:23:46 -0500
-From: Greg KH <greg@kroah.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Alan Stern <stern@rowland.harvard.edu>, ralf@linux-mips.org,
-	linux-mips@linux-mips.org, USB list <linux-usb@vger.kernel.org>,
-	zajec5@gmail.com, linux-wireless@vger.kernel.org, m@bues.ch,
-	george@znau.edu.ua
-Subject: Re: [PATCH 4/7] USB: EHCI: Add a generic platform device driver
-Message-ID: <20120122192346.GA1691@kroah.com> (sfid-20120122_202722_238729_5AADAB1A)
-References: <Pine.LNX.4.44L0.1201212235050.32266-100000@netrider.rowland.org>
- <4F1C24F5.2020506@hauke-m.de>
+	Mon, 2 Jan 2012 17:03:49 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F1C24F5.2020506@hauke-m.de>
+In-Reply-To: <20120102215028.GA15701@srcf.ucam.org>
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
+ <4F02165C.1060400@fastmail.fm> <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
+ <20120102211904.GA15316@srcf.ucam.org> <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
+ <20120102215028.GA15701@srcf.ucam.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Mon, 2 Jan 2012 14:03:27 -0800
+Message-ID: <CA+55aFz73GuHiOW1NoAuJLea_GKLepiZjrnrgpOKdQizPgnhoA@mail.gmail.com> (sfid-20120102_230431_934466_3241309A)
+Subject: Re: loading firmware while usermodehelper disabled.
+To: Matthew Garrett <mjg@redhat.com>
+Cc: Jack Stone <jwjstone@fastmail.fm>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 22, 2012 at 04:02:13PM +0100, Hauke Mehrtens wrote:
-> On 01/22/2012 04:41 AM, Alan Stern wrote:
-> > On Sat, 21 Jan 2012, Hauke Mehrtens wrote:
-> > 
-> >> This adds a generic driver for platform devices. It works like the PCI
-> >> driver and is based on it. This is for devices which do not have an own
-> >> bus but their EHCI controller works like a PCI controller. It will be
-> >> used for the Broadcom bcma and ssb USB EHCI controller.
-> > 
-> > Before adding a generic platform driver for EHCI, you should give some
-> > to thought to how it might be generalized.  There are a lot of EHCI
-> > platform drivers, all differing in various major or minor respects.  
-> > It should be possible to replace a lot of them with the generic driver, 
-> > but first it will need some way to cope with a few minor quirks.
-> > 
-> > Please consider this, and think about which of the existing drivers 
-> > could be replaced.
-> 
-> For now I just build this for bcma and ssb based SoCs. Yes there are
-> some drivers which could be replaced with this one, but most (all ??) of
-> them do something special in the device probing and this have to be
-> moved to somewhere else e.g. where the platform device is created.
-> I could rename it so it would not be generic any more, but I think it is
-> the wrong approach. ;-)
-> I am not able and do not have the time to convert all EHCI platform
-> drivers, where it is possible  to this generic platform driver, as I do
-> not have the devices to test this and time is limited.
+On Mon, Jan 2, 2012 at 1:50 PM, Matthew Garrett <mjg@redhat.com> wrote:
+> On Mon, Jan 02, 2012 at 01:27:03PM -0800, Linus Torvalds wrote:
+>
+>> If we didn't load the firmware before the suspend, then the resume
+>> function of a device sure as hell had better not load it at resume
+>> time either.
+>
+> If the hardware has lost its state then refusing to load the firmware at
+> resume time isn't going to leave you with a working device.
 
-Time is not limited for us, sorry, this seems like the correct thing to
-do, and because of that, we (well I at least) will not accept this patch
-as-is.
+What the heck is your problem?
 
-Please go rework it to be as Alan suggested.
+Go back and read it.
 
-> If someone else wants to improve something on these "generic" platform
-> drivers to make them work with an other device I am totally fine with it.
+If it wasn't loaded before, THEN IT WASN'T WORKING BEFORE EITHER! And
+if it was loaded before, then it would be cached (and thus trivially
+reloaded without having to invoke user-space or disk devices that may
+not be running) and thus loading it would work.
 
-I think that someone just became you :)
+So regardless of the state before, it would resume "correctly" - in
+the same state it was suspended. In other words: a caching firmware
+loader would have done EXACTLY THE RIGHT THING.
 
-Yes, this isn't fair, but it's how Linux kernel development works,
-sorry.
+Why the hell do you keep on harping on idiotic issues? Stop being a
+moron, just repeat after me:
 
-thanks,
+   A caching firmware loader fixes all these issues
 
-greg k-h
+and is simple to boot. Stop the idiotic blathering already.
+
+                    Linus
