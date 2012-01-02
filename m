@@ -1,14 +1,20 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:47412 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753637Ab2ACAmD (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:45112 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606Ab2ABV10 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 19:42:03 -0500
-Date: Tue, 3 Jan 2012 00:42:20 +0000
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: Jack Stone <jwjstone@fastmail.fm>
-Cc: Matthew Garrett <mjg@redhat.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
+	Mon, 2 Jan 2012 16:27:26 -0500
+MIME-Version: 1.0
+In-Reply-To: <20120102211904.GA15316@srcf.ucam.org>
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
+ <4F02165C.1060400@fastmail.fm> <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
+ <20120102211904.GA15316@srcf.ucam.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Mon, 2 Jan 2012 13:27:03 -0800
+Message-ID: <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com> (sfid-20120102_222742_094947_9520821B)
+Subject: Re: loading firmware while usermodehelper disabled.
+To: Matthew Garrett <mjg@redhat.com>
+Cc: Jack Stone <jwjstone@fastmail.fm>,
 	Alan Stern <stern@rowland.harvard.edu>,
 	Oliver Neukum <oliver@neukum.org>,
 	Dave Jones <davej@redhat.com>,
@@ -19,37 +25,40 @@ Cc: Matthew Garrett <mjg@redhat.com>,
 	Greg Kroah-Hartman <gregkh@suse.de>,
 	USB list <linux-usb@vger.kernel.org>,
 	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-Message-ID: <20120103004220.084d61f3@pyramind.ukuu.org.uk> (sfid-20120103_014222_477086_FF33E216)
-In-Reply-To: <4F0220F5.30309@fastmail.fm>
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
-	<4F02165C.1060400@fastmail.fm>
-	<CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
-	<20120102211904.GA15316@srcf.ucam.org>
-	<4F0220F5.30309@fastmail.fm>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Can we tell by the USB ids that this is a device that might need
-> firmware and load it into memory anyway - it would use more memory but
-> would always work as we would have the firmware.
+On Mon, Jan 2, 2012 at 1:19 PM, Matthew Garrett <mjg@redhat.com> wrote:
+> On Mon, Jan 02, 2012 at 12:48:48PM -0800, Linus Torvalds wrote:
+>
+>> Why are you guys making it any more complicated than that?
+>
+> Because it's inadequate. You can't guarantee that we ever loaded
+> firmware.
 
-Only by wasting a lot of memory in some cases. For the majority of cases
-however yes you can take a good guess that id X might need firmware Y and
-the firmware will only be a few K.
+If we didn't load the firmware before the suspend, then the resume
+function of a device sure as hell had better not load it at resume
+time either.
 
-In that case however you don't want some generic firmware module knowing
-all this crap, your driver can just request_firmware() the stuff as
-modprobe and free it up on the module unload. For a typical 8bit firmware
-of a few K you'll free a ton more memory unloading the module than the
-firmware ! That I think actually covers the majority of devices under
-discussion.
+And don't make the stupid argument that we don't know. That's just
+inane. Either the driver loads the firmware at startup, or it doesn't.
+If it loads it at startup, the firmware will have been loaded. If it
+loads it only at "open" time or similar (and the device wasn't
+opened), then the resume had better *know* about that, and not try to
+load the firmware of a device that wasn't open!
 
-For the giant-firmware cases, it's unworkable on small devices - but they
-are special cases anyway and almost entirely video - so not currently
-ones that cause a problem unless you are doing RFC4824 in which case your
-nearest asylum should be consulted.
+And for chrissake, don't bother making it more complicated than it is,
+just for some theoretical hardware or situation that nobody cares
+about.
 
-Alan
+Go back to the original report of the *actual* problems we have. They
+are not some complex case where things magically change. The REAL
+ACTUAL problems that people have are for very straightforward
+situations where we simply do the wrong thing, largely because our
+firmware loading is full of crap.
+
+Fix the 99%. Screw the crazy shit, don't even bother worrying about it
+until *after* the 99% is fixed.
+
+                            Linus
