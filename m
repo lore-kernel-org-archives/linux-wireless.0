@@ -1,68 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail44.messagelabs.com ([216.82.249.179]:3209 "HELO
-	mail44.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754713Ab2AKTbU convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:62089 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751038Ab2ABHoM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 14:31:20 -0500
+	Mon, 2 Jan 2012 02:44:12 -0500
+Received: by wgbdr13 with SMTP id dr13so26345118wgb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Jan 2012 23:44:11 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [PATCH 1/2] wireless: Save original maximum regulatory transmission power for the calucation of the local maximum transmit power
-Date: Wed, 11 Jan 2012 21:31:09 +0200
-Message-ID: <5EFF534737810441B0F97C2792E49C2DD20381@ILMAIL01.dspg.com> (sfid-20120111_203127_553290_15DF0876)
-In-Reply-To: <1326308385.3417.11.camel@jlt3.sipsolutions.net>
-References: <5EFF534737810441B0F97C2792E49C2DD20371@ILMAIL01.dspg.com> <1326308385.3417.11.camel@jlt3.sipsolutions.net>
-From: "Hong Wu" <Hong.Wu@dspg.com>
-To: "Johannes Berg" <johannes@sipsolutions.net>
-Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAJ-Vmok-aU4u=a_O7n1FOwD2cnd_eQMcyKzvYgXOSbZ=uSrHAA@mail.gmail.com>
+References: <CAApCBGx28SbbmNpynCpKW9CyAsV5+c_fZ=1k9QAsKnXf4nDQEw@mail.gmail.com>
+	<CAApCBGx7fHuQr87TnppE6FyX9d-1F0huUqgYhjv++8vmfov6zQ@mail.gmail.com>
+	<4EF31325.2050408@openwrt.org>
+	<CAApCBGwto0YxMKcirX_FJYaGw8K6Dcoxpn9P30=Mk-9oHJok+Q@mail.gmail.com>
+	<CAJ-VmonyWC4JXrikuzxxaaGMReqq3VGhH+WLWjtN+8gTCvM7kg@mail.gmail.com>
+	<4EF42F12.1000309@openwrt.org>
+	<CAApCBGyrF4JSEGnq0USdUT8UvmyR2kRMCFh-2nmEeRR0FTCfEw@mail.gmail.com>
+	<CAJ-Vmok-aU4u=a_O7n1FOwD2cnd_eQMcyKzvYgXOSbZ=uSrHAA@mail.gmail.com>
+Date: Mon, 2 Jan 2012 09:44:11 +0200
+Message-ID: <CAApCBGxgxLcij=u5VLPojk82afVffmBYP84pgFEOhFzZdjs=3g@mail.gmail.com> (sfid-20120102_084416_709959_6E249043)
+Subject: Re: ar9390 failing AGC calibration on powerpc platform
+From: wireless newbie <wnewbie72@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, openwrt-devel@lists.openwrt.org,
+	Mohammed Shafi <shafi.wireless@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The local maximum transmit power is the maximum power a wireless device
-allowed to transmit. If Power Constraint is presented, the local maximum
-power equals to the maximum allowed power defined in regulatory domain
-minus power constraint.
+Hi,
 
-The maximum transmit power is maximum power a wireless device capable of
-transmitting, and should be used in Power Capability element (7.3.2.16
-IEEE802.11 2007).
+I tried 5ghz by changing hw_mode to 'a' and channel to 40. Still I get
+the same error:
 
-The transmit power from a wireless device should not greater than the
-local maximum transmit power.
+ath: Unable to reset hardware; reset status -5 (freq 2412 MHz)
 
-The maximum transmit power was not calculated correctly in the current
-Linux wireless/mac80211 when Power Constraint is presented.
-
-Hong   
-
------Original Message-----
-From: Johannes Berg [mailto:johannes@sipsolutions.net] 
-Sent: Wednesday, January 11, 2012 11:00 AM
-To: Hong Wu
-Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] wireless: Save original maximum regulatory
-transmission power for the calucation of the local maximum transmit
-power
-
-On Wed, 2012-01-11 at 20:33 +0200, Hong Wu wrote:
-> The local maximum transmit power for a channel is defined as the
-maximum
-> regulatory transmission power minus the local power constraint
-specified
-> for the channel in the Power Constraint element. (7.3.2.15 IEEE80211
-2007)
-
-I have a feeling that looking at the code I understand what you're
-trying to fix, but please explain it better.
-
-johannes
+That frequency makes me wonder if the change has really any affect?
 
 
-______________________________________________________________________
-DSP Group, Inc. automatically scans all emails and attachments using
-MessageLabs Email Security System.
-_____________________________________________________________________
-
-______________________________________________________________________
-DSP Group, Inc. automatically scans all emails and attachments using MessageLabs Email Security System.
-_____________________________________________________________________
+2011/12/23 Adrian Chadd <adrian@freebsd.org>:
+> Is it this bad behaved in 5ghz mode?
+>
+>
+> adrian
+>
+> On 23 December 2011 01:03, wireless newbie <wnewbie72@gmail.com> wrote:
+>>> iw wlan0 survey dump
+>>
+>> Here is what I got. Looks like its busy most of the time, doesn't it?
+>>
+>> Survey data from wlan0
+>>        frequency:                      2412 MHz
+>>        channel active time:            139291 ms
+>>        channel busy time:              135849 ms
+>>        channel receive time:           0 ms
+>>        channel transmit time:          0 ms
+>> Survey data from wlan0
+>>        frequency:                      2417 MHz
+>> Survey data from wlan0
+>>        frequency:                      2422 MHz
+>> Survey data from wlan0
+>>        frequency:                      2427 MHz
+>> Survey data from wlan0
+>>        frequency:                      2432 MHz
+>> Survey data from wlan0
+>>        frequency:                      2437 MHz
+>> Survey data from wlan0
+>>        frequency:                      2442 MHz
+>> Survey data from wlan0
+>>        frequency:                      2447 MHz
+>> Survey data from wlan0
+>>        frequency:                      2452 MHz
+>> Survey data from wlan0
+>>        frequency:                      2457 MHz
+>> Survey data from wlan0
+>>        frequency:                      2462 MHz
+>> Survey data from wlan0
+>>        frequency:                      5180 MHz
+>> Survey data from wlan0
+>>        frequency:                      5200 MHz
+>> Survey data from wlan0
+>>        frequency:                      5220 MHz
+>> Survey data from wlan0
+>>        frequency:                      5240 MHz
+>> Survey data from wlan0
+>>        frequency:                      5745 MHz
+>> Survey data from wlan0
+>>        frequency:                      5765 MHz
+>> Survey data from wlan0
+>>        frequency:                      5785 MHz
+>> Survey data from wlan0
+>>        frequency:                      5805 MHz
+>> Survey data from wlan0
+>>        frequency:                      5825 MHz
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
