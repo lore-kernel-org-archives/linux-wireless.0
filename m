@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:36384 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751120Ab2AYViO (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48782 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751721Ab2ABPC3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jan 2012 16:38:14 -0500
-Received: by yenm6 with SMTP id m6so2668290yen.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jan 2012 13:38:13 -0800 (PST)
-Message-ID: <4F207641.2090908@lwfinger.net> (sfid-20120125_223817_804592_01D43E18)
-Date: Wed, 25 Jan 2012 15:38:09 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 2 Jan 2012 10:02:29 -0500
+Received: by iaeh11 with SMTP id h11so29397842iae.19
+        for <linux-wireless@vger.kernel.org>; Mon, 02 Jan 2012 07:02:29 -0800 (PST)
 MIME-Version: 1.0
-To: Timon ter Braak <timon@terbraak.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Realtek rtl8192se in AP mode?
-References: <CAP6E9idrT=gu6cnKqMzVMVEXqRHdyuADgBNJTdCebt1Rf1dcfg@mail.gmail.com> <jfoo7s$4n9$1@dough.gmane.org>
-In-Reply-To: <jfoo7s$4n9$1@dough.gmane.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1325515471.3643.15.camel@jlt3.sipsolutions.net>
+References: <1325162501-7996-1-git-send-email-eliad@wizery.com>
+	<1325162501-7996-4-git-send-email-eliad@wizery.com>
+	<1325501581.3643.8.camel@jlt3.sipsolutions.net>
+	<CAB3XZEfQ87gAPPAf4TO6LRbFtBh3YBRR5DO-oM=YB_BPczyCUA@mail.gmail.com>
+	<1325515471.3643.15.camel@jlt3.sipsolutions.net>
+Date: Mon, 2 Jan 2012 17:02:29 +0200
+Message-ID: <CAB3XZEdXrkG_3caV4TzFrR=3fXk+TSjSLddiyke2npArcWr0pg@mail.gmail.com> (sfid-20120102_160233_183267_7622959E)
+Subject: Re: [PATCH v2 3/3] mac80211: add sta_state callback
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/25/2012 05:15 AM, Timon ter Braak wrote:
-> I can confirm this issue. With another chip/device I have an AP running fine for
-> years now, but with my new system I have been unsuccessful.
-> I have tried a variety of settings, and I am quite confident that it will not
-> work until the driver/firmware is fixed.
+On Mon, Jan 2, 2012 at 4:44 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> if sta_state will be allowed to return an error, instead of adding a
+>> new backward compatibility implementation to mac80211 we can just
+>> change all the current drivers to register for sta_state(), and
+>> operate on auth->assoc and assoc->auth transitions instead of
+>> sta_add/sta_remove.
 >
-> Realtek just released a new driver, but until now I was unable to download and
-> test it (permission denied):
+> Right, that's the alternative, but it would be easier to add the code in
+> mac80211 I think? And if we add a "NOT_EXIST" state we can completely
+> make sta_add/sta_remove be only there for drivers that don't need more
+> advanced state?
 >
-> http://www.realtek.com.tw/downloads/downloadsView.aspx?Langid=1&PNid=21&PFid=48&Level=5&Conn=4&ProdID=230&DownTypeID=3&GetDown=false&Downloads=true&SortByDesc=1
+oh, so sta_/add/remove and sta_state will be 2 different mechanisms?
+now it all looks better.
 
-The kernel version of rtl8192se is known to fail in AP mode. It is a problem 
-that I work on when I get time; however, any difficulty in STA mode has higher 
-priority than any in AP mode.
+i guess implementing it in mac80211 is easier. hopefully, most of the
+drivers will move to the new model and finally we'll be able to delete
+the backward compatibility layer (which is always an annoying thing).
 
-I was able to download the vendor driver from both the USA2 and USA3 mirrors. It 
-compiled under kernel 3.3-rc1 with only a few harmless warnings, and should 
-build OK for any kernel version. It does work in AP mode.
-
-I am comparing the kernel source with 
-"realtek/rtl_92ce_92se_92de_linux_mac80211_0005.1230.2011". Although they 
-started from a common point, there has been considerable divergence, thus a 
-simple comparison of the two sets of sources is a bit difficult.
-
-If all the Realtek FTP sites fail, please let me know, and I will mail you the 
-vendor source. I have not attached it here as it is too big for the ML.
-
-Larry
+Eliad.
