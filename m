@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout4.freenet.de ([195.4.92.94]:43705 "EHLO mout4.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751502Ab2AWR63 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jan 2012 12:58:29 -0500
-Received: from [195.4.92.140] (helo=mjail0.freenet.de)
-	by mout4.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
-	id 1RpO9y-00074t-N9
-	for linux-wireless@vger.kernel.org; Mon, 23 Jan 2012 18:58:26 +0100
-Received: from localhost ([::1]:56305 helo=mjail0.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1RpO9y-00039v-MU
-	for linux-wireless@vger.kernel.org; Mon, 23 Jan 2012 18:58:26 +0100
-Received: from [195.4.92.20] (port=45621 helo=10.mx.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1RpO7E-0000eU-67
-	for linux-wireless@vger.kernel.org; Mon, 23 Jan 2012 18:55:36 +0100
-Received: from [2002:4fde:11a5:2:5054:ff:feb8:40bd] (port=33471 helo=mail.maya.org)
-	by 10.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
-	id 1RpO7D-0005Dj-PW
-	for linux-wireless@vger.kernel.org; Mon, 23 Jan 2012 18:55:36 +0100
-Message-Id: <201201231755.q0NHtQUR002682@mail.maya.org> (sfid-20120123_185831_900058_58DC8C36)
-Date: Mon, 23 Jan 2012 18:55:24 +0100
-From: Andreas Hartmann <andihartmann@01019freenet.de>
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] compat: add __cancel_delayed_work()
-In-Reply-To: <CAB=NE6UBBRg53EjW3t8YEUoGLvQS00dnx6Z=-rmBa7pb-D_TCg@mail.gmail.com>
-References: <1327153475-28081-1-git-send-email-hauke@hauke-m.de> <CAB=NE6UBBRg53EjW3t8YEUoGLvQS00dnx6Z=-rmBa7pb-D_TCg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:59910 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752654Ab2ABRtq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jan 2012 12:49:46 -0500
+Message-ID: <4F01DC4B.50501@qca.qualcomm.com> (sfid-20120102_184948_834848_0AFDABE0)
+Date: Mon, 2 Jan 2012 18:33:15 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 3/3] ath6kl: Remove few deadcode in main.c
+References: <1325154939-6986-1-git-send-email-vthiagar@qca.qualcomm.com> <1325154939-6986-3-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1325154939-6986-3-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis R. Rodriguez schrieb:
-> On Sat, Jan 21, 2012 at 5:44 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->> __cancel_delayed_work is needed by include/net/bluetooth/l2cap.h and
->> not available in old kernel versions. This was just copied from the
->> kernel.
->>
->> This should also go into compat-wireless-stable-3.3.
->>
->> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+On 12/29/2011 12:35 PM, Vasanthakumar Thiagarajan wrote:
+> 1. In ath6kl_add_new_sta(), if (ielen <= ATH6KL_MAX_IE) is going to be
+> always true due to ielen being u8 and is checked against 256.
 > 
-> Thanks! Applied all onto compat-wireless.git and compat.git, in
-> addition to the linux-3.3.y branch for compat.git as you indicated for
-> this patch. Will roll out a new tarball right away.
+> 2. In ath6kl_reset_device(), since control can never reach switch..case
+> when the target_type is neither TARGET_TYPE_AR6003 nor TARGET_TYPE_AR6004,
+> remove the default option of switch statement.
 
-BTW: I've to apply always the following patch to some older
-compat-wireless packages (3.2 e.g) to get it compiled with kernel 3.1:
+Two separate patches, please.
 
---- drivers/misc/eeprom/Makefile.orig	2012-01-10 02:10:51.000000000 +0100
-+++ drivers/misc/eeprom/Makefile	2012-01-10 05:14:40.082494612 +0100
-@@ -1,3 +1,3 @@
- obj-$(CONFIG_EEPROM_93CX6)	+= eeprom_93cx6.o
--obj-$(CONFIG_EEPROM_93XX46)	+= eeprom_93xx46.o
-+# obj-$(CONFIG_EEPROM_93XX46)	+= eeprom_93xx46.o
- obj-$(CONFIG_EEPROM_DIGSY_MTC_CFG) += digsy_mtc_eeprom.o
+> @@ -62,8 +62,7 @@ static void ath6kl_add_new_sta(struct ath6kl *ar, u8 *mac, u16 aid, u8 *wpaie,
+>  
+>  	sta = &ar->sta_list[free_slot];
+>  	memcpy(sta->mac, mac, ETH_ALEN);
+> -	if (ielen <= ATH6KL_MAX_IE)
+> -		memcpy(sta->wpa_ie, wpaie, ielen);
+> +	memcpy(sta->wpa_ie, wpaie, ielen);
 
-Is this eventually needed in 3.3, too?
+And then someone changes the u8 ielen to something else and accidentally
+adds a bug. I would prefer to have an explicit check for the ielen to
+make it obvious what's the maximum length.
 
+I don't really like using u8 for ielen either. IMHO size_t or similar
+would be better.
 
-Thanks,
-Andreas
+Kalle
