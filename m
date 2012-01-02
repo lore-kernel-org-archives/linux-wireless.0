@@ -1,36 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:45641 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753037Ab2ABRIU (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:65029 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750996Ab2ABHC7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 12:08:20 -0500
-Message-ID: <4F01E480.2070800@lwfinger.net> (sfid-20120102_180825_624774_749E7158)
-Date: Mon, 02 Jan 2012 11:08:16 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 2 Jan 2012 02:02:59 -0500
+Received: by wibhm6 with SMTP id hm6so8195220wib.19
+        for <linux-wireless@vger.kernel.org>; Sun, 01 Jan 2012 23:02:58 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/3] bcma: SPROM: extract power info for cores
+Date: Mon,  2 Jan 2012 08:41:25 +0100
+Message-Id: <1325490085-3806-3-git-send-email-zajec5@gmail.com> (sfid-20120102_080302_823703_32598520)
+In-Reply-To: <1325490085-3806-1-git-send-email-zajec5@gmail.com>
+References: <1325490085-3806-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-To: John W Linville <linville@tuxdriver.com>,
-	torvalds@linux-foundation.org
-CC: chaoming_li@realsil.com.cn, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: rtl8192ce: rtl8192cu: Delay firmware file read
- until needed to fix at drivers/base/firmware_class.c:537
-References: <4effd8e3.n1quWeZQBSRwqFJt%Larry.Finger@lwfinger.net>
-In-Reply-To: <4effd8e3.n1quWeZQBSRwqFJt%Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/31/2011 09:54 PM, Larry Finger wrote:
-> A recent LKML thread (http://lkml.indiana.edu/hypermail/linux/kernel/1112.3/00965.html)
-> discusses the the WARNING listed below, which occurs after a suspend/resume cycle. For
-> rtl8192cu, the problem was fixed by delaying the firmware loading until the interface is
-> brought up. By this time, the userspace support is available.
 
-John,
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/bcma/sprom.c |   40 +++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 39 insertions(+), 1 deletions(-)
 
-Please drop this patch. The "fix" only cures the symptom, not the underlying 
-cause. I will rework and resubmit.
+diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
+index 27f62cc..cb835f0 100644
+--- a/drivers/bcma/sprom.c
++++ b/drivers/bcma/sprom.c
+@@ -129,8 +129,14 @@ static int bcma_sprom_valid(const u16 *sprom)
+ 
+ static void bcma_sprom_extract_r8(struct bcma_bus *bus, const u16 *sprom)
+ {
+-	u16 v;
++	u16 v, o;
+ 	int i;
++	u16 pwr_info_offset[] = {
++		SSB_SROM8_PWR_INFO_CORE0, SSB_SROM8_PWR_INFO_CORE1,
++		SSB_SROM8_PWR_INFO_CORE2, SSB_SROM8_PWR_INFO_CORE3
++	};
++	BUILD_BUG_ON(ARRAY_SIZE(pwr_info_offset) !=
++			ARRAY_SIZE(bus->sprom.core_pwr_info));
+ 
+ 	bus->sprom.revision = sprom[SSB_SPROMSIZE_WORDS_R4 - 1] &
+ 		SSB_SPROM_REVISION_REV;
+@@ -185,6 +191,38 @@ static void bcma_sprom_extract_r8(struct bcma_bus *bus, const u16 *sprom)
+ 
+ 	SPEX(country_code, SSB_SPROM8_CCODE, ~0, 0);
+ 
++	/* Extract cores power info info */
++	for (i = 0; i < ARRAY_SIZE(pwr_info_offset); i++) {
++		o = pwr_info_offset[i];
++		SPEX(core_pwr_info[i].itssi_2g, o + SSB_SROM8_2G_MAXP_ITSSI,
++			SSB_SPROM8_2G_ITSSI, SSB_SPROM8_2G_ITSSI_SHIFT);
++		SPEX(core_pwr_info[i].maxpwr_2g, o + SSB_SROM8_2G_MAXP_ITSSI,
++			SSB_SPROM8_2G_MAXP, 0);
++
++		SPEX(core_pwr_info[i].pa_2g[0], o + SSB_SROM8_2G_PA_0, ~0, 0);
++		SPEX(core_pwr_info[i].pa_2g[1], o + SSB_SROM8_2G_PA_1, ~0, 0);
++		SPEX(core_pwr_info[i].pa_2g[2], o + SSB_SROM8_2G_PA_2, ~0, 0);
++
++		SPEX(core_pwr_info[i].itssi_5g, o + SSB_SROM8_5G_MAXP_ITSSI,
++			SSB_SPROM8_5G_ITSSI, SSB_SPROM8_5G_ITSSI_SHIFT);
++		SPEX(core_pwr_info[i].maxpwr_5g, o + SSB_SROM8_5G_MAXP_ITSSI,
++			SSB_SPROM8_5G_MAXP, 0);
++		SPEX(core_pwr_info[i].maxpwr_5gh, o + SSB_SPROM8_5GHL_MAXP,
++			SSB_SPROM8_5GH_MAXP, 0);
++		SPEX(core_pwr_info[i].maxpwr_5gl, o + SSB_SPROM8_5GHL_MAXP,
++			SSB_SPROM8_5GL_MAXP, SSB_SPROM8_5GL_MAXP_SHIFT);
++
++		SPEX(core_pwr_info[i].pa_5gl[0], o + SSB_SROM8_5GL_PA_0, ~0, 0);
++		SPEX(core_pwr_info[i].pa_5gl[1], o + SSB_SROM8_5GL_PA_1, ~0, 0);
++		SPEX(core_pwr_info[i].pa_5gl[2], o + SSB_SROM8_5GL_PA_2, ~0, 0);
++		SPEX(core_pwr_info[i].pa_5g[0], o + SSB_SROM8_5G_PA_0, ~0, 0);
++		SPEX(core_pwr_info[i].pa_5g[1], o + SSB_SROM8_5G_PA_1, ~0, 0);
++		SPEX(core_pwr_info[i].pa_5g[2], o + SSB_SROM8_5G_PA_2, ~0, 0);
++		SPEX(core_pwr_info[i].pa_5gh[0], o + SSB_SROM8_5GH_PA_0, ~0, 0);
++		SPEX(core_pwr_info[i].pa_5gh[1], o + SSB_SROM8_5GH_PA_1, ~0, 0);
++		SPEX(core_pwr_info[i].pa_5gh[2], o + SSB_SROM8_5GH_PA_2, ~0, 0);
++	}
++
+ 	SPEX(fem.ghz2.tssipos, SSB_SPROM8_FEM2G, SSB_SROM8_FEM_TSSIPOS,
+ 	     SSB_SROM8_FEM_TSSIPOS_SHIFT);
+ 	SPEX(fem.ghz2.extpa_gain, SSB_SPROM8_FEM2G, SSB_SROM8_FEM_EXTPA_GAIN,
+-- 
+1.7.3.4
 
-Thanks,
-
-Larry
