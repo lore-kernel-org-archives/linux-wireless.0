@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:9818 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758574Ab2AFKb7 (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:50391 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606Ab2ABWMn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jan 2012 05:31:59 -0500
-Message-ID: <4F06CD8F.50204@qca.qualcomm.com> (sfid-20120106_113204_970019_C635D00A)
-Date: Fri, 6 Jan 2012 12:31:43 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Mon, 2 Jan 2012 17:12:43 -0500
+Date: Mon, 2 Jan 2012 22:12:36 +0000
+From: Matthew Garrett <mjg@redhat.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jack Stone <jwjstone@fastmail.fm>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+Message-ID: <20120102221235.GA16012@srcf.ucam.org> (sfid-20120102_231326_850340_41A3DC8F)
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
+ <4F02165C.1060400@fastmail.fm>
+ <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
+ <20120102211904.GA15316@srcf.ucam.org>
+ <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
+ <20120102215028.GA15701@srcf.ucam.org>
+ <CA+55aFz73GuHiOW1NoAuJLea_GKLepiZjrnrgpOKdQizPgnhoA@mail.gmail.com>
 MIME-Version: 1.0
-To: Daniel Smith <viscous.liquid@gmail.com>
-CC: <linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: AR6002 support in ath6kl driver
-References: <CADGLRPkBk+FhPSoEf=dK+W+yx1FS0HP3tkjv6BxPHQ5ZmCRg-A@mail.gmail.com>
-In-Reply-To: <CADGLRPkBk+FhPSoEf=dK+W+yx1FS0HP3tkjv6BxPHQ5ZmCRg-A@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+55aFz73GuHiOW1NoAuJLea_GKLepiZjrnrgpOKdQizPgnhoA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Daniel,
+On Mon, Jan 02, 2012 at 02:03:27PM -0800, Linus Torvalds wrote:
+> On Mon, Jan 2, 2012 at 1:50 PM, Matthew Garrett <mjg@redhat.com> wrote:
+> > On Mon, Jan 02, 2012 at 01:27:03PM -0800, Linus Torvalds wrote:
+> >
+> >> If we didn't load the firmware before the suspend, then the resume
+> >> function of a device sure as hell had better not load it at resume
+> >> time either.
+> >
+> > If the hardware has lost its state then refusing to load the firmware at
+> > resume time isn't going to leave you with a working device.
+> 
+> What the heck is your problem?
+> 
+> Go back and read it.
+> 
+> If it wasn't loaded before, THEN IT WASN'T WORKING BEFORE EITHER! And
+> if it was loaded before, then it would be cached (and thus trivially
+> reloaded without having to invoke user-space or disk devices that may
+> not be running) and thus loading it would work.
 
-On 12/28/2011 11:01 PM, Daniel Smith wrote:
+The kernel that loaded the firmware to make the device work is not 
+required to be the same kernel that we're running when we suspend. The 
+hardware keeps its firmware over warm reboots, and if it already has 
+loaded firmware then we have no way of knowing that it needs firmware at 
+all.
 
-> So I have recently been asked to begin supporting an AR6002
-> platform. Currently it is using the Atheros ar6000 (v 2.1.2) driver.
-> I see that the ar6kl driver only supports the AR6003 and was
-> wondering if there was some technical reason that support for the
-> AR6002 was dropped in the up-streaming process?
-
-No other reason than lack of time and resources.
-
-> If not, would AR6002 support be welcomed in the mainstream driver
-> should I decide to attempt the endeavor of porting/adding into the
-> ath6kl driver?
-
-I would be happy to take AR6002 patches as long as they follow the style
-used in ath6kl and are otherwise of good quality. I would recommend that
-you first setup your own git tree for this and once you have something
-working we can start discussing merging your changes to ath6kl.
-
-> Finally, could I expect any support from the ath6kl
-> developers troubleshooting issues that would inevitable arise along
-> the way?
-
-Based on my long email backlog I cannot provide anything than reviewing
-patches and giving general comments. I simply don't have the time to
-work on the details.
-
-Kalle
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
