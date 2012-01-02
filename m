@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:42189 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750824Ab2AWSpx (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:53876 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753467Ab2ABW32 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jan 2012 13:45:53 -0500
-Received: by iacb35 with SMTP id b35so4097465iac.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2012 10:45:53 -0800 (PST)
+	Mon, 2 Jan 2012 17:29:28 -0500
+Date: Mon, 2 Jan 2012 22:29:20 +0000
+From: Matthew Garrett <mjg@redhat.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jack Stone <jwjstone@fastmail.fm>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+Message-ID: <20120102222920.GA16160@srcf.ucam.org> (sfid-20120102_232948_233898_932D19E9)
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
+ <4F02165C.1060400@fastmail.fm>
+ <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
+ <20120102211904.GA15316@srcf.ucam.org>
+ <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
+ <20120102215028.GA15701@srcf.ucam.org>
+ <CA+55aFz73GuHiOW1NoAuJLea_GKLepiZjrnrgpOKdQizPgnhoA@mail.gmail.com>
+ <20120102221235.GA16012@srcf.ucam.org>
+ <CA+55aFyHvmvast_kuNddU3iotReR1mOpKM4HGAw80ma8kn+2-g@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6VgovpKT8gG9Z9AUihOMk7KXLMENBjuQCBAmowMd3TUtQ@mail.gmail.com>
-References: <1327338154-3806-1-git-send-email-eliad@wizery.com>
-	<CAB=NE6V26e6caZwCyO2chiZ_7iGVkoD_jtKsxfCLSHumrOp=Wg@mail.gmail.com>
-	<CAB3XZEdo2zBRvyhv39jm98n146w_ppNmi-OR+VBTNj+ReuOyhg@mail.gmail.com>
-	<CAB=NE6VgovpKT8gG9Z9AUihOMk7KXLMENBjuQCBAmowMd3TUtQ@mail.gmail.com>
-Date: Mon, 23 Jan 2012 20:45:53 +0200
-Message-ID: <CAB3XZEdLsHF6NSa6+VkheUVag=8gHLOFfFtq77yzEYqSQp+OzQ@mail.gmail.com> (sfid-20120123_194557_004148_F3D943F2)
-Subject: Re: [PATCH] compat-wireless: fix wl12xx driver-select
-From: Eliad Peller <eliad@wizery.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+55aFyHvmvast_kuNddU3iotReR1mOpKM4HGAw80ma8kn+2-g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 23, 2012 at 8:28 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
-> On Mon, Jan 23, 2012 at 10:09 AM, Eliad Peller <eliad@wizery.com> wrote:
->> On Mon, Jan 23, 2012 at 7:23 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
->>> On Mon, Jan 23, 2012 at 9:02 AM, Eliad Peller <eliad@wizery.com> wrote:
->>>> wl12xx is a possible choice for both group drivers and
->>>> singular modules (making it impossible to build only
->>>> the wl12xx module). change the group name to "ti" instead.
->>>>
->>>> Signed-off-by: Eliad Peller <eliad@wizery.com>
->>>> ---
->>>
->>> Is this a stable fix for linux-3.3.y branch of compat-wireless or only
->>> for the master branch ?
->>>
->> this is a stable fix (not very important one, though. only avoids some
->> redundant compilations).
->
-> I just see this doing name changes for driver-select, how is this
-> fixing anything?
->
-because the "switch" has 2 "cases" with the same value.
-currently, "driver-select wl12xx" selects both wl12xx and wl1251
-(because the first wl12xx "case" is chosen)
-you can't select only wl12xx.
+On Mon, Jan 02, 2012 at 02:19:37PM -0800, Linus Torvalds wrote:
+> On Mon, Jan 2, 2012 at 2:12 PM, Matthew Garrett <mjg@redhat.com> wrote:
+> >
+> > The kernel that loaded the firmware to make the device work is not
+> > required to be the same kernel that we're running when we suspend.
+> 
+> Why do you make up all these idiotic theoretical cases that nobody
+> cares about and has no relevance what-so-ever for the 99%?
 
-after this fix:
-driver-select ti - selects wl12xx and wl1251
-driver-select wl12xx - selects only wl12xx
+Rebooting is a theoretical case?
 
-Eliad.
+> And if you *can* load the firmware in the new kernel, just do it
+> before the suspend event. Problem solved.
+
+How do we know to do that? The device appears to be a UVC device at 
+suspend. It's only at resume that we discover that it's actually a 
+programmable device.
+
+> And once more: your made-up scenario has *nothing* what-so-ever to do
+> with the actual warnings that started this whole thread.
+
+The warnings that started the thread are associated with a driver that I 
+wrote. I'm explaining to you that your suggestion doesn't work for 
+a real-world scenario involving that driver. If the firmware has been 
+loaded and then the user reboots, the new kernel has no indication that 
+it needs to load the firmware. There are various ways of handling this, 
+but it's simply untrue that we'll always load the firmware at kernel 
+init time.
+
+-- 
+Matthew Garrett | mjg59@srcf.ucam.org
