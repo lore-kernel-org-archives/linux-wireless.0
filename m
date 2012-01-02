@@ -1,66 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:51234 "EHLO
-	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752994Ab2A3T7b (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:39035 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751810Ab2ABKjy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 14:59:31 -0500
-Received: by mail-lpp01m010-f44.google.com with SMTP id l5so2845662lah.31
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 11:59:29 -0800 (PST)
-Subject: Re: [PATCH 00/12] wl12xx: update fw api
-From: Luciano Coelho <coelho@ti.com>
+	Mon, 2 Jan 2012 05:39:54 -0500
+Subject: Re: [PATCH v2 1/3] mac80211: check sta_apply_parameters() return
+ value
+From: Johannes Berg <johannes@sipsolutions.net>
 To: Eliad Peller <eliad@wizery.com>
-Cc: Kalle Valo <kvalo@adurom.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <1327931733.3626.72.camel@cumari>
-References: <1327924857-1250-1-git-send-email-eliad@wizery.com>
-	 <87fwexco94.fsf@purkki.adurom.net>
-	 <CAB3XZEfaQAD0p2VJ28znznaB3P_3z3NvEiROJTbyCW+su2gLzg@mail.gmail.com>
-	 <1327931733.3626.72.camel@cumari>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1325162501-7996-2-git-send-email-eliad@wizery.com> (sfid-20111229_134042_080500_86ED6831)
+References: <1325162501-7996-1-git-send-email-eliad@wizery.com>
+	 <1325162501-7996-2-git-send-email-eliad@wizery.com>
+	 (sfid-20111229_134042_080500_86ED6831)
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 30 Jan 2012 21:59:25 +0200
-Message-ID: <1327953565.3626.111.camel@cumari> (sfid-20120130_205934_503384_8DAAC6D6)
+Date: Mon, 02 Jan 2012 11:39:48 +0100
+Message-ID: <1325500788.3643.0.camel@jlt3.sipsolutions.net> (sfid-20120102_114013_491124_A6B6D451)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-01-30 at 15:55 +0200, Luciano Coelho wrote: 
-> On Mon, 2012-01-30 at 15:52 +0200, Eliad Peller wrote: 
-> > On Mon, Jan 30, 2012 at 3:29 PM, Kalle Valo <kvalo@adurom.com> wrote:
-> > > Eliad Peller <eliad@wizery.com> writes:
-> > >
-> > >> The fw api was changed in the latest FWs (6.3.5.0.95 for wl127x
-> > >> and 7.3.5.0.95 for wl128x).
-> > >>
-> > >> Along with some small adjustments, the main changes
-> > >> inroduced by this patheset are configuring the
-> > >> templates per-role, and moving to IEEE80211_HW_SUPPORTS_DYNAMIC_PS
-> > >> mode.
-> > >
-> > > I didn't look so carefully, but doesn't this break bisect? I mean if you
-> > > change the firmware api in small patches wl12xx can't work properly
-> > > until all patches are applied, right?
-> > >
-> > > I would say that a huge patch doing all the necessary changes in one go
-> > > is better, even it's ugly.
-> > >
-> > yes. it will break bisect (although it shouldn't break compilations).
-> > i guess it's a matter of taste, but i think keeping the patches
-> > manageable is more important than being able to bisect.
+On Thu, 2011-12-29 at 14:41 +0200, Eliad Peller wrote:
+> Bail out if sta_apply_parameters() returns an error.
 > 
-> I tend to agree with Eliad.  If we do all in one go, git blame will be
-> horrible.
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+
+Good catch,
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+
+> ---
+>  net/mac80211/cfg.c |    7 ++++++-
+>  1 files changed, 6 insertions(+), 1 deletions(-)
 > 
-> But it's a good point and I'm not fully convinced what is the best way
-> to go. :\
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index 662125d..1c5388d 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -1001,6 +1001,7 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+>  	struct ieee80211_local *local = wiphy_priv(wiphy);
+>  	struct sta_info *sta;
+>  	struct ieee80211_sub_if_data *vlansdata;
+> +	int err;
+>  
+>  	mutex_lock(&local->sta_mtx);
+>  
+> @@ -1040,7 +1041,11 @@ static int ieee80211_change_station(struct wiphy *wiphy,
+>  		ieee80211_send_layer2_update(sta);
+>  	}
+>  
+> -	sta_apply_parameters(local, sta, params);
+> +	err = sta_apply_parameters(local, sta, params);
+> +	if (err) {
+> +		mutex_unlock(&local->sta_mtx);
+> +		return err;
+> +	}
+>  
+>  	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) && params->supported_rates)
+>  		rate_control_rate_init(sta);
 
-I think this is okay.  With the 2 squashes I proposed, there will be
-only 3 patches where bisect would be broken.
-
-We could add an info in the first patch and remove it in the last one to
-make it clear that we're in the middle of the change.
-
-Does anyone go against this?
-
--- 
-Cheers,
-Luca.
 
