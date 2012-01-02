@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.u-psud.fr ([129.175.33.41]:57448 "EHLO smtp1.u-psud.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751560Ab2AZMmt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 07:42:49 -0500
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Do not encrypt EAPOL frames in IBSS Mode.
-Date: Thu, 26 Jan 2012 13:42:22 +0100
-Message-Id: <1327581742-15460-1-git-send-email-cavallar@lri.fr> (sfid-20120126_134252_162490_7A6AB3DA)
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:39964 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753302Ab2ABXuj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jan 2012 18:50:39 -0500
+Date: Mon, 2 Jan 2012 23:50:44 +0000
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jack Stone <jwjstone@fastmail.fm>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+Message-ID: <20120102235044.23935096@pyramind.ukuu.org.uk> (sfid-20120103_005116_568271_29E5ECEB)
+In-Reply-To: <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
+	<4F02165C.1060400@fastmail.fm>
+	<CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, EAPOL Frames in IBSS mode are encrypted if a PTK
-is available.  This patch turn off encryption for all EAPOL
-frames when on IBSS mode, as there is no suitable userspace
-calls to configure the control port protocol and settings.
+> So the only thing we need is to fix the braindamaged firmware
+> interfaces. We need caching, and we need to replace (or at least
+> extend) "load_firware()" with "[get|put]_firmware()".
 
-IBSS RSN sort-of worked without this patch because PTKs
-are only installed after the completion of a successful
-EAPOL exchange,  so unicast operations would work,  but
-multicast and rekeying would often fail.
+So at what moment after a resume does a firmware that was in use with a
+device go away and what do we do about devices inserted while suspended ?
 
-Signed-off-by: Nicolas Cavallari <cavallar@lri.fr>
----
- net/mac80211/ibss.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Remembering that
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index bed30ba..9d8e699 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -1022,6 +1022,8 @@ void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
- 
-+	sdata->control_port_no_encrypt = true;
-+
- 	setup_timer(&ifibss->timer, ieee80211_ibss_timer,
- 		    (unsigned long) sdata);
- 	mutex_init(&ifibss->mtx);
--- 
-1.7.8.3
+- there is no moment when USB says 'we have finished re-enumeration'.
+  There is no point at which you can say 'we have finished
+  re-enumeration, we are now starting on enumeration of new stuff'. New
+  stuff wanting firmware will pop up on resume mixed in with old stuff.
 
+- we don't seem to have any device or bus infrastructure for doing a
+  'post resume' purge of such data if we could decide when that moment
+  is ?
+
+Alan
