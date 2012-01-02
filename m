@@ -1,15 +1,20 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:53876 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753467Ab2ABW32 (ORCPT
+Received: from out5.smtp.messagingengine.com ([66.111.4.29]:50017 "EHLO
+	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752335Ab2ABUzK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 17:29:28 -0500
-Date: Mon, 2 Jan 2012 22:29:20 +0000
-From: Matthew Garrett <mjg@redhat.com>
+	Mon, 2 Jan 2012 15:55:10 -0500
+Received: from compute5.internal (compute5.nyi.mail.srv.osa [10.202.2.45])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 1B2A621045
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Jan 2012 15:55:10 -0500 (EST)
+Message-ID: <4F0219AB.6010505@fastmail.fm> (sfid-20120102_215600_781553_57974966)
+Date: Mon, 02 Jan 2012 20:55:07 +0000
+From: Jack Stone <jwjstone@fastmail.fm>
+MIME-Version: 1.0
 To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jack Stone <jwjstone@fastmail.fm>,
-	Alan Stern <stern@rowland.harvard.edu>,
+CC: Alan Stern <stern@rowland.harvard.edu>,
 	Oliver Neukum <oliver@neukum.org>,
+	Matthew Garrett <mjg@redhat.com>,
 	Dave Jones <davej@redhat.com>,
 	Linux Kernel <linux-kernel@vger.kernel.org>,
 	Larry Finger <Larry.Finger@lwfinger.net>,
@@ -19,50 +24,44 @@ Cc: Jack Stone <jwjstone@fastmail.fm>,
 	USB list <linux-usb@vger.kernel.org>,
 	Linux Wireless List <linux-wireless@vger.kernel.org>
 Subject: Re: loading firmware while usermodehelper disabled.
-Message-ID: <20120102222920.GA16160@srcf.ucam.org> (sfid-20120102_232948_233898_932D19E9)
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
- <4F02165C.1060400@fastmail.fm>
- <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
- <20120102211904.GA15316@srcf.ucam.org>
- <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
- <20120102215028.GA15701@srcf.ucam.org>
- <CA+55aFz73GuHiOW1NoAuJLea_GKLepiZjrnrgpOKdQizPgnhoA@mail.gmail.com>
- <20120102221235.GA16012@srcf.ucam.org>
- <CA+55aFyHvmvast_kuNddU3iotReR1mOpKM4HGAw80ma8kn+2-g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+55aFyHvmvast_kuNddU3iotReR1mOpKM4HGAw80ma8kn+2-g@mail.gmail.com>
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> <4F02165C.1060400@fastmail.fm> <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
+In-Reply-To: <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 02, 2012 at 02:19:37PM -0800, Linus Torvalds wrote:
-> On Mon, Jan 2, 2012 at 2:12 PM, Matthew Garrett <mjg@redhat.com> wrote:
-> >
-> > The kernel that loaded the firmware to make the device work is not
-> > required to be the same kernel that we're running when we suspend.
+On 02/01/12 20:48, Linus Torvalds wrote:
+> On Mon, Jan 2, 2012 at 12:41 PM, Jack Stone <jwjstone@fastmail.fm> wrote:
+>>
+>> What about the case where the firmware that needs to be loaded is on the
+>> USB device that needs the firmware. This can be resolved at boot using
+>> an initrd but at resume time we don't have that.
 > 
-> Why do you make up all these idiotic theoretical cases that nobody
-> cares about and has no relevance what-so-ever for the 99%?
+> Quite frankly, caching the firmware will just automagically fix this.
+> 
+> I don't understand why people even bother to talk about USB ID's etc
+> changing - that is totally irrelevant. We don't look up firmware by
+> USB ID's anyway.
 
-Rebooting is a theoretical case?
+I agree. The only problem I can see is with the lifetime of the
+firmware. If we have a generic USB driver that looks after (for example)
+all USB disks then we do not want to add the knowedge to it for each
+individual vendors firmware.
 
-> And if you *can* load the firmware in the new kernel, just do it
-> before the suspend event. Problem solved.
+For example:
 
-How do we know to do that? The device appears to be a UVC device at 
-suspend. It's only at resume that we discover that it's actually a 
-programmable device.
+	1/ Plug in device, registers as a bootstrap device
+	2/ Load firmware into device (and put firmware in cache)
+	3/ Device disconnects and reconnects with new USB id
+	4/ Generic driver takes over as it recognizes the new id
 
-> And once more: your made-up scenario has *nothing* what-so-ever to do
-> with the actual warnings that started this whole thread.
+The problem comes with knowing when to put the firmware - how do we tell
+the generic driver that that device has firmware that might need to be
+freed on disconnect. I don't know enough about USB to know if we can
+tell if the same device has reconnected due to firmware being loaded or
+if it was simply unplugged and a new device plugged in.
 
-The warnings that started the thread are associated with a driver that I 
-wrote. I'm explaining to you that your suggestion doesn't work for 
-a real-world scenario involving that driver. If the firmware has been 
-loaded and then the user reboots, the new kernel has no indication that 
-it needs to load the firmware. There are various ways of handling this, 
-but it's simply untrue that we'll always load the firmware at kernel 
-init time.
+Hope this makes sense,
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Jack
+
