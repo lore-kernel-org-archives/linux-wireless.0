@@ -1,33 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp23.services.sfr.fr ([93.17.128.20]:29271 "EHLO
-	smtp23.services.sfr.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751525Ab2A0K0q (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50047 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751089Ab2ABNx6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jan 2012 05:26:46 -0500
-Message-ID: <1327660003.21888.14.camel@milan> (sfid-20120127_112649_975486_09F6FF3F)
-Subject: Re: BCM4313 keeps disconnecting with brcmsmac and multiple APs
-From: Milan Bouchet-Valat <nalimilan@club.fr>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Milan Bouchet-Valat <nalimilan@club-internet.fr>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 27 Jan 2012 11:26:43 +0100
-In-Reply-To: <4F227784.10309@broadcom.com>
-References: <22905678.140637.1327401110095.JavaMail.www@wsfrf1232>
-	 <4F227784.10309@broadcom.com>
+	Mon, 2 Jan 2012 08:53:58 -0500
+Subject: Re: [RFC 2/2] mac80211: stop data transmission while probing AP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1324134328-27503-2-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1324134328-27503-1-git-send-email-rmanohar@qca.qualcomm.com>
+	 <1324134328-27503-2-git-send-email-rmanohar@qca.qualcomm.com>
 Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 02 Jan 2012 14:53:51 +0100
+Message-ID: <1325512431.3643.11.camel@jlt3.sipsolutions.net> (sfid-20120102_145401_743518_95C4B122)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le vendredi 27 janvier 2012 à 11:08 +0100, Arend van Spriel a écrit :
-> Another thing to consider. I notice that you have a bluetooth device in
-> there as well. Can you disable that (if possible) and try again.
-I'll try that, but sadly not before Tuesday as I'm not in the right
-place ATM.
+On Sat, 2011-12-17 at 20:35 +0530, Rajkumar Manoharan wrote:
+> If the station is out of coverage of AP and it tries to probe the AP
+> because of the beacon loss then there is not point in pushing the
+> data from the higher layer. So lets suspend the data transmission
+> till the probing succeeds.
 
-> Does your AP have DFS enabled?
-I'll ask my IT staff about that. Or is there a way to get this
-information from the logs or iwconfig?
+We could argue about the idea,
 
+> +	if (ifmgd->flags & IEEE80211_STA_BEACON_POLL)
+> +		netif_tx_stop_all_queues(sdata->dev);
+>  	/*
+>  	 * When the hardware reports an accurate Tx ACK status, it's
+>  	 * better to send a nullfunc frame instead of a probe request,
+> @@ -1255,6 +1257,10 @@ static void ieee80211_mgd_probe_ap_send(struct ieee80211_sub_if_data *sdata)
+>  					 (u32) -1, true, false);
+>  	}
+>  
+> +	if (ifmgd->flags & IEEE80211_STA_BEACON_POLL) {
+> +		drv_flush(sdata->local, false);
+> +		netif_tx_wake_all_queues(sdata->dev);
+> +	}
 
-Thanks!
+but this implementation is completely bogus anyway. Think about what
+this really does.
+
+johannes
+
