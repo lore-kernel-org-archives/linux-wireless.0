@@ -1,95 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:65023 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751758Ab2ARLOH (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:33434 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751454Ab2ABUtK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jan 2012 06:14:07 -0500
-Received: by yenm6 with SMTP id m6so702218yen.19
-        for <linux-wireless@vger.kernel.org>; Wed, 18 Jan 2012 03:14:06 -0800 (PST)
-From: ilanelias78@gmail.com
-To: samuel@sortiz.org, lauro.venancio@openbossa.org,
-	aloisio.almeida@openbossa.org, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Ilan Elias <ilane@ti.com>
-Subject: [PATCH 2/3] NFC: NFC core layer should not set the target_idx
-Date: Wed, 18 Jan 2012 13:16:13 +0200
-Message-Id: <1326885374-13318-3-git-send-email-ilane@ti.com> (sfid-20120118_121410_905182_1B9A339A)
-In-Reply-To: <1326885374-13318-1-git-send-email-ilane@ti.com>
-References: <1326885374-13318-1-git-send-email-ilane@ti.com>
+	Mon, 2 Jan 2012 15:49:10 -0500
+MIME-Version: 1.0
+In-Reply-To: <4F02165C.1060400@fastmail.fm>
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> <4F02165C.1060400@fastmail.fm>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Mon, 2 Jan 2012 12:48:48 -0800
+Message-ID: <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com> (sfid-20120102_214915_952974_81DF91A8)
+Subject: Re: loading firmware while usermodehelper disabled.
+To: Jack Stone <jwjstone@fastmail.fm>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Elias <ilane@ti.com>
+On Mon, Jan 2, 2012 at 12:41 PM, Jack Stone <jwjstone@fastmail.fm> wrote:
+>
+> What about the case where the firmware that needs to be loaded is on the
+> USB device that needs the firmware. This can be resolved at boot using
+> an initrd but at resume time we don't have that.
 
-The NFC core layer should not set the target_idx.
-Instead, the driver layer (e.g. NCI, PN533) should set the
-target_idx, so that it will be able to identify the target
-when its I/F (e.g. activate_target) is called.
-This is required in order to support multiple targets.
-Note that currently supported drivers (PN533 and NCI) don't
-use the target_idx in their implementation.
+Quite frankly, caching the firmware will just automagically fix this.
 
-Signed-off-by: Ilan Elias <ilane@ti.com>
----
- include/net/nfc/nfc.h |    1 -
- net/nfc/core.c        |    5 -----
- net/nfc/rawsock.c     |   12 ------------
- 3 files changed, 0 insertions(+), 18 deletions(-)
+I don't understand why people even bother to talk about USB ID's etc
+changing - that is totally irrelevant. We don't look up firmware by
+USB ID's anyway.
 
-diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
-index 819530d..d253278 100644
---- a/include/net/nfc/nfc.h
-+++ b/include/net/nfc/nfc.h
-@@ -87,7 +87,6 @@ struct nfc_genl_data {
- 
- struct nfc_dev {
- 	unsigned idx;
--	unsigned target_idx;
- 	struct nfc_target *targets;
- 	int n_targets;
- 	int targets_generation;
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index 3ddf6e6..6089aca 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -431,15 +431,10 @@ EXPORT_SYMBOL(nfc_alloc_recv_skb);
- int nfc_targets_found(struct nfc_dev *dev, struct nfc_target *targets,
- 							int n_targets)
- {
--	int i;
--
- 	pr_debug("dev_name=%s n_targets=%d\n", dev_name(&dev->dev), n_targets);
- 
- 	dev->polling = false;
- 
--	for (i = 0; i < n_targets; i++)
--		targets[i].idx = dev->target_idx++;
--
- 	spin_lock_bh(&dev->targets_lock);
- 
- 	dev->targets_generation++;
-diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
-index 2e2f8c6..5325439 100644
---- a/net/nfc/rawsock.c
-+++ b/net/nfc/rawsock.c
-@@ -92,18 +92,6 @@ static int rawsock_connect(struct socket *sock, struct sockaddr *_addr,
- 		goto error;
- 	}
- 
--	if (addr->target_idx > dev->target_idx - 1 ||
--		addr->target_idx < dev->target_idx - dev->n_targets) {
--		rc = -EINVAL;
--		goto error;
--	}
--
--	if (addr->target_idx > dev->target_idx - 1 ||
--		addr->target_idx < dev->target_idx - dev->n_targets) {
--		rc = -EINVAL;
--		goto error;
--	}
--
- 	rc = nfc_activate_target(dev, addr->target_idx, addr->nfc_protocol);
- 	if (rc)
- 		goto put_dev;
--- 
-1.7.0.4
+So the *only* thing you need is:
 
+ - don't have the firmware loaded by some special user space helper -
+use "load_firmware()" (which in turn then will use a user-space helper
+to load it, but that's a separate issue)
+
+ - make sure "load_firmware()" caches the firmware by firmware name.
+
+You can even make the caching be some simple "cache for at least 10
+seconds after the last 'put' operation", and you'll be able to
+trivially handle the case of a device "going away" only to be
+immediately reconnected due to some electrical issue or whatever
+(including changing USB ID's).
+
+Even if the ID's change, the driver should damn well react to the new
+ID and load the same damn firmware, because it's the same damn
+physical device.
+
+Why are you guys making it any more complicated than that?
+
+Sure, if you have a user-space driver and you load the firmware
+magically from user space too, and never use "request_firmware()" in a
+real kernel driver, then you can never handle suspend/resume
+correctly, BUT WHO THE F*CK CARES? At that point it's a "the kernel
+cannot do it, because the kernel has nothing to do with it", but
+exactly for the same reason it is TOTALLY POINTLESS to even bring it
+up as an issue. It's not an issue - it's a broken user-space driver
+that has nothing to do with the kernel, and shouldn't be discussed on
+kernel lists as a kernel issue.
+
+So the only thing we need is to fix the braindamaged firmware
+interfaces. We need caching, and we need to replace (or at least
+extend) "load_firware()" with "[get|put]_firmware()".
+
+                             Linus
