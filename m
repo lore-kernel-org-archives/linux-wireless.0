@@ -1,188 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:40289 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754582Ab2ACSjo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 13:39:44 -0500
-Date: Tue, 03 Jan 2012 12:39:40 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	torvalds@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] rtl8192cu: Fix WARNING on suspend/resume
-Message-ID: <4f034b6c.ypfAbSdXSgMHtfqa%Larry.Finger@lwfinger.net> (sfid-20120103_193950_033087_EB8183A2)
+Received: from nbd.name ([46.4.11.11]:51379 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751084Ab2ABNlh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jan 2012 08:41:37 -0500
+Message-ID: <4F01B408.1080900@openwrt.org> (sfid-20120102_144154_277363_712DE366)
+Date: Mon, 02 Jan 2012 14:41:28 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	m.sujith@gmail.com, ath9k-devel@lists.ath9k.org
+Subject: Re: [RFC] ath9k_hw: make use of ar9003_calc_ptr_chksum
+References: <1325509985-11720-1-git-send-email-mohammed@qca.qualcomm.com>
+In-Reply-To: <1325509985-11720-1-git-send-email-mohammed@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A recent LKML thread (http://lkml.indiana.edu/hypermail/linux/kernel/1112.3/00965.html)
-discusses warnings that occur during a suspend/resume cycle. The driver
-attempts to read the firmware file before userspace is ready, leading to the
-following warning:
+On 2012-01-02 2:13 PM, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> 
+> make use of the already available function 'ar9003_calc_ptr_chksum'
+> in 'ar9003_set_txdesc'
+> 
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+NACK. I intentionally did not use that function to avoid unnecessary
+access to uncached memory (for performance reasons).
 
-WARNING: at drivers/base/firmware_class.c:537 _request_firmware+0x3f6/0x420()
-
-For rtl8192cu, the problem is fixed by storing the firmware in a global buffer
-rather than one allocated per device. The usage count is increased when
-suspending and decreased when resuming. This way, the firmware is retained
-through a suspend/resume cycle, and does not have to be reread.
-
-This patch should fix the bug reported in
-https://bugzilla.redhat.com/show_bug.cgi?id=771002.
-
-Note: This patch also touches rtl8192ce as the "firmware" loaded message
-is now printed in the wrong place.
-
-Reported-by: Mohammed Arafa <bugzilla@in-egypt.net>
-Reported-by: Dave Jones <davej@redhat.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Stable <stable@vger.kernel.org>
----
-
-John/Linus,
-
-This patch should be pushed in V3.2 (if possible).
-
-There will be similar patches for rtl8192{ce,se,de}, but as they do not
-trigger a warning, I'll save them for later.
-
-Larry
----
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-@@ -265,7 +265,6 @@ int rtl92c_download_fw(struct ieee80211_
- 	if (!rtlhal->pfirmware)
- 		return 1;
- 
--	pr_info("Loading firmware file %s\n", rtlpriv->cfg->fw_name);
- 	pfwheader = (struct rtl92c_firmware_header *)rtlhal->pfirmware;
- 	pfwdata = (u8 *) rtlhal->pfirmware;
- 	fwsize = rtlhal->fwsize;
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-@@ -186,6 +186,7 @@ int rtl92c_init_sw_vars(struct ieee80211
- 	memcpy(rtlpriv->rtlhal.pfirmware, firmware->data, firmware->size);
- 	rtlpriv->rtlhal.fwsize = firmware->size;
- 	release_firmware(firmware);
-+	pr_info("rtl8192ce: Loaded firmware file %s\n", rtlpriv->cfg->fw_name);
- 
- 	return 0;
- }
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-@@ -43,6 +43,8 @@
- #include "hw.h"
- #include <linux/vmalloc.h>
- #include <linux/module.h>
-+#include <linux/atomic.h>
-+#include <linux/types.h>
- 
- MODULE_AUTHOR("Georgia		<georgia@realtek.com>");
- MODULE_AUTHOR("Ziv Huang	<ziv_huang@realtek.com>");
-@@ -51,6 +53,10 @@ MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("Realtek 8192C/8188C 802.11n USB wireless");
- MODULE_FIRMWARE("rtlwifi/rtl8192cufw.bin");
- 
-+static char *rtl8192cu_firmware;		/* pointer to firmware */
-+static int firmware_size;
-+static atomic_t usage_count;
-+
- static int rtl92cu_init_sw_vars(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -62,12 +68,21 @@ static int rtl92cu_init_sw_vars(struct i
- 	rtlpriv->dm.disable_framebursting = 0;
- 	rtlpriv->dm.thermalvalue = 0;
- 	rtlpriv->dbg.global_debuglevel = rtlpriv->cfg->mod_params->debug;
--	rtlpriv->rtlhal.pfirmware = vmalloc(0x4000);
--	if (!rtlpriv->rtlhal.pfirmware) {
-+
-+	if (rtl8192cu_firmware) {
-+		/* firmware already loaded - true for suspend/resume
-+		 * and multiple instances of the device */
-+		rtlpriv->rtlhal.pfirmware = rtl8192cu_firmware;
-+		rtlpriv->rtlhal.fwsize = firmware_size;
-+		return 0;
-+	}
-+	rtl8192cu_firmware = vzalloc(0x4000);
-+	if (!rtl8192cu_firmware) {
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
- 			 ("Can't alloc buffer for fw.\n"));
- 		return 1;
- 	}
-+
- 	/* request fw */
- 	err = request_firmware(&firmware, rtlpriv->cfg->fw_name,
- 			rtlpriv->io.dev);
-@@ -82,9 +97,14 @@ static int rtl92cu_init_sw_vars(struct i
- 		release_firmware(firmware);
- 		return 1;
- 	}
--	memcpy(rtlpriv->rtlhal.pfirmware, firmware->data, firmware->size);
-+	pr_info("rtl8192cu: Loaded firmware from file %s\n",
-+		rtlpriv->cfg->fw_name);
-+	memcpy(rtl8192cu_firmware, firmware->data, firmware->size);
-+	firmware_size = firmware->size;
- 	rtlpriv->rtlhal.fwsize = firmware->size;
-+	rtlpriv->rtlhal.pfirmware = rtl8192cu_firmware;
- 	release_firmware(firmware);
-+	atomic_inc(&usage_count);
- 
- 	return 0;
- }
-@@ -93,12 +113,30 @@ static void rtl92cu_deinit_sw_vars(struc
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
--	if (rtlpriv->rtlhal.pfirmware) {
--		vfree(rtlpriv->rtlhal.pfirmware);
-+	atomic_dec(&usage_count);
-+	if (!atomic_read(&usage_count) && rtlpriv->rtlhal.pfirmware) {
-+		vfree(rtl8192cu_firmware);
-+		rtl8192cu_firmware = NULL;
- 		rtlpriv->rtlhal.pfirmware = NULL;
- 	}
- }
- 
-+#ifdef CONFIG_PM
-+static int rtl8192cu_usb_suspend(struct usb_interface *pusb_intf,
-+				 pm_message_t message)
-+{
-+	/* Increase usage_count to Save loaded fw across suspend/resume */
-+	atomic_inc(&usage_count);
-+	return 0;
-+}
-+
-+static int rtl8192cu_usb_resume(struct usb_interface *pusb_intf)
-+{
-+	atomic_dec(&usage_count);	/* after resume, decrease usage count */
-+	return 0;
-+}
-+#endif
-+
- static struct rtl_hal_ops rtl8192cu_hal_ops = {
- 	.init_sw_vars = rtl92cu_init_sw_vars,
- 	.deinit_sw_vars = rtl92cu_deinit_sw_vars,
-@@ -375,9 +413,9 @@ static struct usb_driver rtl8192cu_drive
- 	.id_table = rtl8192c_usb_ids,
- 
- #ifdef CONFIG_PM
--	/* .suspend = rtl_usb_suspend, */
--	/* .resume = rtl_usb_resume, */
--	/* .reset_resume = rtl8192c_resume, */
-+	.suspend = rtl8192cu_usb_suspend,
-+	.resume = rtl8192cu_usb_resume,
-+	.reset_resume = rtl8192cu_usb_resume,
- #endif /* CONFIG_PM */
- #ifdef CONFIG_AUTOSUSPEND
- 	.supports_autosuspend = 1,
+- Felix
