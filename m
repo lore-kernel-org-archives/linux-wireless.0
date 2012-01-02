@@ -1,33 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from h118.nextmail.ru ([194.67.36.118]:45294 "EHLO h118.nextmail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754075Ab2AFOqJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jan 2012 09:46:09 -0500
-To: =?koi8-r?B?TW9oYW1tZWQgU2hhZmk=?= <shafi.wireless@gmail.com>
-From: =?koi8-r?B?TVI=?= <g7af0ec1e3ea1e7b1@nextmail.ru>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: =?koi8-r?B?UmU6IGF0aDlrIGNyYXNoIDMuMi1yYzc=?=
-Date: Fri, 06 Jan 2012 18:46:07 +0400
-Message-ID: <NEXT-4f07092f473990.86346967@nextmail.ru> (sfid-20120106_154626_792600_506A8901)
-Mime-Version: 1.0
-Content-type: text/plain;
-	 charset="koi8-r"
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:47197 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606Ab2ABVwZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 Jan 2012 16:52:25 -0500
+From: Marek Vasut <marek.vasut@gmail.com>
+To: Jack Stone <jwjstone@fastmail.fm>
+Subject: Re: loading firmware while usermodehelper disabled.
+Date: Mon, 2 Jan 2012 22:52:19 +0100
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> <CA+55aFx2NMDSY8rmsToU-zxe+bR-gzsxc8HajNWNWfykVJqd9w@mail.gmail.com> <4F022214.8070906@fastmail.fm>
+In-Reply-To: <4F022214.8070906@fastmail.fm>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201201022252.20139.marek.vasut@gmail.com> (sfid-20120102_225241_562046_BA147748)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- > > š> can a find a fix
- > > š> for both of them
- > >
- > > I am building kernel with pos<0 check added...
- > 
- > thanks!  if it does not works, i have only one more idea(a patch
- > which removes some suspicious code which abuses a pointer any way that
- > has to be fixed properly ). otherwise i need to recreate the issue and
- > capture the stack trace completely, put debug prints. i ran an
- > overnight test but was unable to recreate the issue. later today AN  i
- > got a crash accidentally but only once, after that never.
+> On 02/01/12 21:23, Linus Torvalds wrote:
+> > On Mon, Jan 2, 2012 at 1:09 PM, Jack Stone <jwjstone@fastmail.fm> wrote:
+> >> What about USB "class" drivers e.g. usb-storage. They handle any device
+> >> that reports itself as a usb mass storage device. There could be a
+> >> device that needs to be bootstrapped before it becomes a generic usb
+> >> mass storage device. Do we really want to have to write a new driver
+> >> that is almost identical to the generic driver but handles the USB
+> >> firmware correctly.
+> > 
+> > I'd hope that the generic driver just expose enough interfaces that
+> > you could basically do a "firmware-load" driver that just loads the
+> > firmware and then attaches the device to the generic driver.
+> 
+> Sounds workable.
+> 
+> To make the firmware caching easier I would propose one extra function
+> in addition to the aforemensioned get_firmware / put_firmware - a
+> find_firmware function to search the cache and return the appropriate
+> firmware blob. It should only be called if the caller already has a
+> refcount to the firmware, it's only use is to save every driver saving a
+> pointer to the firmware.
+> 
+> If noone beats me to it I will try and put together an RFC for a new
+> version.
 
-What is a complete stack trace? Maybe I can configure console in some way and 
-get the needed information.
+The problem is on systems with limited resources, most notably RAM. If you plug 
+in many devices at once, many firmwares will be cached at one point, efectivelly 
+doing DoS attach on the machine?
 
+Also, how will this solve the suspect-resume issue? What if the device suspends 
+only occasionally -- like every 24 hours -- then you'd have the FW cached all 
+the time too?
 
+M
+> 
+> Thanks,
+> 
+> Jack
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
