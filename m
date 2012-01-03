@@ -1,95 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52125 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756392Ab2AJPdN (ORCPT
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:58704 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750983Ab2ACA6O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jan 2012 10:33:13 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.77)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1RkdhI-0000lO-97
-	for linux-wireless@vger.kernel.org; Tue, 10 Jan 2012 16:33:12 +0100
-Message-Id: <20120110153239.983642800@sipsolutions.net> (sfid-20120110_163317_536583_F68CA564)
-Date: Tue, 10 Jan 2012 16:30:50 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [RFC/RFT 2/3] cfg80211: export cfg80211_ref_bss
-References: <20120110153048.612308160@sipsolutions.net>
+	Mon, 2 Jan 2012 19:58:14 -0500
+Date: Tue, 3 Jan 2012 00:58:39 +0000
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jack Stone <jwjstone@fastmail.fm>
+Cc: Marek Vasut <marek.vasut@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+Message-ID: <20120103005839.618af359@pyramind.ukuu.org.uk> (sfid-20120103_015831_503436_86AE0AAC)
+In-Reply-To: <c163595a-163e-4e68-ba0f-de5ca58e8de9@email.android.com>
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
+	<201201022331.27562.marek.vasut@gmail.com>
+	<4F023D02.1030403@fastmail.fm>
+	<201201030131.15397.marek.vasut@gmail.com>
+	<c163595a-163e-4e68-ba0f-de5ca58e8de9@email.android.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+> >Hm ... and we can't have memory type that "can be swapped-out, but must
+> >be 
+> >loaded back before suspend" in kernel, right?
+> 
+> Nope. Kernel swapping is a big headache and Linux doesn't do it. The only thing we can do is drop any clean cache pages, but that has performance implications.
 
-This is needed by mac80211 to keep a reference
-to a BSS alive for the auth process. Remove the
-old version of cfg80211_ref_bss() since it's
-not actually used.
+You could however have an arrangement where the firmware refmanager does
+a list of request_firmware()s at the very start of the suspend process. It
+cannot be done during suspend for obvious reasons (sorry I already
+suspended the hard disk) but it can be done just before.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/cfg80211.h |   14 ++++++++++++++
- net/wireless/core.h    |    5 -----
- net/wireless/scan.c    |   12 ++++++++++++
- 3 files changed, 26 insertions(+), 5 deletions(-)
+In that case with get/put_firmware you'd just need to extend the API to
 
---- a/include/net/cfg80211.h	2012-01-09 13:57:47.000000000 +0100
-+++ b/include/net/cfg80211.h	2012-01-09 14:40:09.000000000 +0100
-@@ -2709,6 +2709,20 @@ struct cfg80211_bss *cfg80211_get_mesh(s
- 				       struct ieee80211_channel *channel,
- 				       const u8 *meshid, size_t meshidlen,
- 				       const u8 *meshcfg);
-+/**
-+ * cfg80211_ref_bss - reference BSS struct
-+ * @bss: the BSS struct to reference
-+ *
-+ * Increments the refcount of the given BSS struct.
-+ */
-+void cfg80211_ref_bss(struct cfg80211_bss *bss);
-+
-+/**
-+ * cfg80211_put_bss - unref BSS struct
-+ * @bss: the BSS struct
-+ *
-+ * Decrements the refcount of the given BSS struct.
-+ */
- void cfg80211_put_bss(struct cfg80211_bss *bss);
- 
- /**
---- a/net/wireless/core.h	2012-01-09 13:57:47.000000000 +0100
-+++ b/net/wireless/core.h	2012-01-09 14:41:13.000000000 +0100
-@@ -144,11 +144,6 @@ static inline struct cfg80211_internal_b
- 	return container_of(pub, struct cfg80211_internal_bss, pub);
- }
- 
--static inline void cfg80211_ref_bss(struct cfg80211_internal_bss *bss)
--{
--	kref_get(&bss->ref);
--}
--
- static inline void cfg80211_hold_bss(struct cfg80211_internal_bss *bss)
- {
- 	atomic_inc(&bss->hold);
---- a/net/wireless/scan.c	2012-01-09 12:40:53.000000000 +0100
-+++ b/net/wireless/scan.c	2012-01-09 14:40:58.000000000 +0100
-@@ -861,6 +861,18 @@ cfg80211_inform_bss_frame(struct wiphy *
- }
- EXPORT_SYMBOL(cfg80211_inform_bss_frame);
- 
-+void cfg80211_ref_bss(struct cfg80211_bss *pub)
-+{
-+	struct cfg80211_internal_bss *bss;
-+
-+	if (!pub)
-+		return;
-+
-+	bss = container_of(pub, struct cfg80211_internal_bss, pub);
-+	kref_get(&bss->ref);
-+}
-+EXPORT_SYMBOL(cfg80211_ref_bss);
-+
- void cfg80211_put_bss(struct cfg80211_bss *pub)
- {
- 	struct cfg80211_internal_bss *bss;
+	get_firmware()
+	put_firmware()
+	get_for_suspend_firmware()
+
+and a driver might do something like
 
 
+module_init
+
+	fw = get_for_suspend_firmware("wombatdepolariser.fw");
+	
+
+open:  /* just optimising */
+	kref_get(&fw->kref);
+
+close:
+	put_firmware(fw);
+
+
+module_unload:
+	put_firmware(fw);
+
+
+Now the uglier side of that is how you make sure that if
+get_for_suspend_firmware() works that when we suspend the firmware is
+present. We could keep the file handle open but that might block unmounts
+or we could assume that as its superuser stuff that the distro authors
+don't screw up - in which case we'd refuse to suspend with a nasty
+complaint if the firmware turned out to have been deleted behind our back.
+
+You'd also have to be in situation where new device probes were not
+processed but userspace (eg the fw loader helper) were still running.
+
+That seems to me to be a useful optimisation project for bigger firmwares
+but not something to implement on day 1 ?
+
+Alan
