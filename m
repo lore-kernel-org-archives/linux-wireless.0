@@ -1,40 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:46826 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751174Ab2AVC1n (ORCPT
+Received: from out5.smtp.messagingengine.com ([66.111.4.29]:52954 "EHLO
+	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753461Ab2ACAXO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jan 2012 21:27:43 -0500
-Message-ID: <4F1B741C.3050903@lwfinger.net> (sfid-20120122_032834_756631_054B838A)
-Date: Sat, 21 Jan 2012 20:27:40 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 2 Jan 2012 19:23:14 -0500
+Received: from compute3.internal (compute3.nyi.mail.srv.osa [10.202.2.43])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 10C3A211A9
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Jan 2012 19:23:14 -0500 (EST)
+References: <20120102211904.GA15316@srcf.ucam.org> <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com> <20120102215028.GA15701@srcf.ucam.org> <CA+55aFz73GuHiOW1NoAuJLea_GKLepiZjrnrgpOKdQizPgnhoA@mail.gmail.com> <20120102221235.GA16012@srcf.ucam.org> <CA+55aFyHvmvast_kuNddU3iotReR1mOpKM4HGAw80ma8kn+2-g@mail.gmail.com> <20120102222920.GA16160@srcf.ucam.org> <CA+55aFyUK6X7ip2UXV9iT07=qezXfbw82wn6UKAN8JFQtYNs5Q@mail.gmail.com> <20120102230037.GA16458@srcf.ucam.org> <4F023E6B.2020307@fastmail.fm> <20120103001356.GA17183@srcf.ucam.org>
+In-Reply-To: <20120103001356.GA17183@srcf.ucam.org>
 MIME-Version: 1.0
-To: LKML <linux-kernel@vger.kernel.org>
-CC: Ingo Molnar <mingo@elte.hu>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Alok Kataria <akataria@vmware.com>,
-	Dan Hecht <dhecht@vmware.com>
-Subject: Re: (Very old) Regression following commit bfc0f59
-References: <4F1B71F5.6020000@lwfinger.net>
-In-Reply-To: <4F1B71F5.6020000@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+ charset=UTF-8
+Subject: Re: loading firmware while usermodehelper disabled.
+From: Jack Stone <jwjstone@fastmail.fm>
+Date: Tue, 03 Jan 2012 00:22:58 +0000
+To: Matthew Garrett <mjg@redhat.com>
+CC: Linus Torvalds <torvalds@linux-foundation.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Message-ID: <8e95c7e3-e9d5-43c4-8e6a-b8d40584cbd6@email.android.com> (sfid-20120103_012318_253293_76425757)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/21/2012 08:18 PM, Larry Finger wrote:
-> I recently discovered that an ancient laptop built by Mtech and containing an
-> AMD K6 450/2 CPU was generating errors when using the Cardbus versions of
-> Broadcom cards using either b43 of b43legacy. Expecting some change in those
-> drivers or ssb, I found a kernel old enough to work without the error, and did a
-> bisection. I was very surprised when "x86: merge tsc calibration", which is
-> commit bfc0f5947afa5e3a13e55867f4478c8a92c11dca (dated July 1, 2008), turned out
-> to be the source of the regression. It was verified by generating a reversion
-> patch. One main difference is that the bad code gets a processor speed of
-> 214.398 MHz, whereas reverting the commit yields 428.845 MHz, which is more in
-> keeping with the stated frequency of 450 MHz. As the machine is more than 10
-> years old, the clock may have drifted considerably.
 
-The newest kernel that was running on this laptop was 3.2-rc4. When I updated to 
-3.3-rc1, the problem above was fixed, thus nothing needs to be done.
 
-Larry
+Matthew Garrett <mjg@redhat.com> wrote:
 
+>On Mon, Jan 02, 2012 at 11:31:55PM +0000, Jack Stone wrote:
+>
+>> Rather than merging the drivers we could make the uvcvideo (or any
+>other
+>> generic driver) driver expose a "subdriver" interface that allows
+>> another module to bind to the specific ID and add extra handling to
+>> certain events. We could then use that interface to provide a
+>firmware
+>> driver for each device that needs it. The firmware driver could bind
+>to
+>> the bootstrap device and to the uvcvideo subdriver interface and it
+>> would then have all the lifetime info we need. [Credit to Linus for
+>> suggesting this idea]
+>
+>No, the uvcvideo driver would need to call out to load the firmware 
+>loader driver, otherwise you'll never know to load the firmware loader 
+>driver.
+
+So we have a table of USB ids that list the devices that need firmware drivers. When the uvcvideo driver registers the firmware interface with a USB id that matches the list we load the firmware driver and pass it a "warm start" event so it can cache the firmware.
+
+As long as we can identify the devices that *might* need firmware then we are ok.
+
+Thanks,
+
+Jack
+
+-- 
+Sent from my Android phone with K-9 Mail. Please excuse my brevity.
