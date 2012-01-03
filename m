@@ -1,129 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60312 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753070Ab2ATM6v (ORCPT
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:48700 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753521Ab2ACAei (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 07:58:51 -0500
-Message-Id: <20120120125741.005056157@sipsolutions.net> (sfid-20120120_135854_989109_1C93125D)
-Date: Fri, 20 Jan 2012 13:55:22 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 06/11] mac80211: implement sta_add/sta_remove in sta_state
-References: <20120120125516.000124996@sipsolutions.net>
+	Mon, 2 Jan 2012 19:34:38 -0500
+Date: Tue, 3 Jan 2012 00:35:08 +0000
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jack Stone <jwjstone@fastmail.fm>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+Message-ID: <20120103003508.726f5482@pyramind.ukuu.org.uk> (sfid-20120103_013455_068841_E8AFDEC2)
+In-Reply-To: <4F022214.8070906@fastmail.fm>
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
+	<4F02165C.1060400@fastmail.fm>
+	<CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
+	<4F0219AB.6010505@fastmail.fm>
+	<CA+55aFx=AEG7X2Y-LoHchgPdwNpeSkBG1J7eXprmO=czEJOD2A@mail.gmail.com>
+	<4F021CF4.9050205@fastmail.fm>
+	<CA+55aFx2NMDSY8rmsToU-zxe+bR-gzsxc8HajNWNWfykVJqd9w@mail.gmail.com>
+	<4F022214.8070906@fastmail.fm>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+> To make the firmware caching easier I would propose one extra function
+> in addition to the aforemensioned get_firmware / put_firmware - a
+> find_firmware function to search the cache and return the appropriate
+> firmware blob. 
 
-Instead of maintaining separate sta_add/sta_remove
-callsites, implement it in sta_state when the driver
-has no sta_state implementation.
+If the caller has a recount they have a pointer. If the caller can't work
+out how to assign a 32bit value to a field in a struct please get them to
+work on something less important than kernel code.
 
-The only behavioural change this should cause is in
-secure mesh mode: with this the station entries will
-only be created after the stations are set to AUTH.
-Given which drivers support mesh, this seems to not
-be a problem.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/driver-ops.h |   11 ++++++++++-
- net/mac80211/pm.c         |    2 --
- net/mac80211/sta_info.c   |   23 +++++++++--------------
- net/mac80211/util.c       |    2 --
- 4 files changed, 19 insertions(+), 19 deletions(-)
-
---- a/net/mac80211/sta_info.c	2012-01-20 13:54:19.000000000 +0100
-+++ b/net/mac80211/sta_info.c	2012-01-20 13:54:20.000000000 +0100
-@@ -365,7 +365,12 @@ static int sta_info_insert_drv_state(str
- 	}
- 
- 	if (!err) {
--		sta->uploaded = true;
-+		/*
-+		 * Drivers using legacy sta_add/sta_remove callbacks only
-+		 * get uploaded set to true after sta_add is called.
-+		 */
-+		if (!local->ops->sta_add)
-+			sta->uploaded = true;
- 		return 0;
- 	}
- 
-@@ -417,18 +422,9 @@ static int sta_info_insert_finish(struct
- 
- 	if (!sta->dummy || dummy_reinsert) {
- 		/* notify driver */
--		err = drv_sta_add(local, sdata, &sta->sta);
--		if (err) {
--			if (sdata->vif.type != NL80211_IFTYPE_ADHOC)
--				goto out_err;
--			printk(KERN_DEBUG "%s: failed to add IBSS STA %pM to "
--					  "driver (%d) - keeping it anyway.\n",
--			       sdata->name, sta->sta.addr, err);
--		} else {
--			err = sta_info_insert_drv_state(local, sdata, sta);
--			if (err)
--				goto out_err;
--		}
-+		err = sta_info_insert_drv_state(local, sdata, sta);
-+		if (err)
-+			goto out_err;
- 	}
- 
- 	if (!dummy_reinsert) {
-@@ -813,7 +809,6 @@ int __must_check __sta_info_destroy(stru
- 	}
- 
- 	if (sta->uploaded) {
--		drv_sta_remove(local, sdata, &sta->sta);
- 		ret = drv_sta_state(local, sdata, sta, IEEE80211_STA_NONE,
- 				    IEEE80211_STA_NOTEXIST);
- 		WARN_ON_ONCE(ret != 0);
---- a/net/mac80211/util.c	2012-01-20 13:54:19.000000000 +0100
-+++ b/net/mac80211/util.c	2012-01-20 13:54:20.000000000 +0100
-@@ -1187,8 +1187,6 @@ int ieee80211_reconfig(struct ieee80211_
- 		if (sta->uploaded) {
- 			enum ieee80211_sta_state state;
- 
--			WARN_ON(drv_sta_add(local, sta->sdata, &sta->sta));
--
- 			for (state = IEEE80211_STA_NOTEXIST;
- 			     state < sta->sta_state - 1; state++)
- 				WARN_ON(drv_sta_state(local, sta->sdata, sta,
---- a/net/mac80211/pm.c	2012-01-20 13:54:19.000000000 +0100
-+++ b/net/mac80211/pm.c	2012-01-20 13:54:20.000000000 +0100
-@@ -100,8 +100,6 @@ int __ieee80211_suspend(struct ieee80211
- 		if (sta->uploaded) {
- 			enum ieee80211_sta_state state;
- 
--			drv_sta_remove(local, sta->sdata, &sta->sta);
--
- 			state = sta->sta_state;
- 			for (; state > IEEE80211_STA_NOTEXIST; state--)
- 				WARN_ON(drv_sta_state(local, sdata, sta,
---- a/net/mac80211/driver-ops.h	2012-01-20 13:54:19.000000000 +0100
-+++ b/net/mac80211/driver-ops.h	2012-01-20 13:54:20.000000000 +0100
-@@ -493,9 +493,18 @@ int drv_sta_state(struct ieee80211_local
- 	check_sdata_in_driver(sdata);
- 
- 	trace_drv_sta_state(local, sdata, &sta->sta, old_state, new_state);
--	if (local->ops->sta_state)
-+	if (local->ops->sta_state) {
- 		ret = local->ops->sta_state(&local->hw, &sdata->vif, &sta->sta,
- 					    old_state, new_state);
-+	} else if (old_state == IEEE80211_STA_AUTH &&
-+		   new_state == IEEE80211_STA_ASSOC) {
-+		ret = drv_sta_add(local, sdata, &sta->sta);
-+		if (ret == 0)
-+			sta->uploaded = true;
-+	} else if (old_state == IEEE80211_STA_ASSOC &&
-+		   new_state == IEEE80211_STA_AUTH) {
-+		drv_sta_remove(local, sdata, &sta->sta);
-+	}
- 	trace_drv_return_int(local, ret);
- 	return ret;
- }
-
-
+Alan
