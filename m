@@ -1,15 +1,16 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:45468 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753418Ab2ACPQT (ORCPT
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:48686 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753505Ab2ACAbG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 10:16:19 -0500
-Date: Tue, 3 Jan 2012 10:16:18 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Oliver Neukum <oliver@neukum.org>
-cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Matthew Garrett <mjg@redhat.com>,
-	Jack Stone <jwjstone@fastmail.fm>,
+	Mon, 2 Jan 2012 19:31:06 -0500
+Date: Tue, 3 Jan 2012 00:31:26 +0000
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jack Stone <jwjstone@fastmail.fm>
+Cc: Matthew Garrett <mjg@redhat.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
 	Dave Jones <davej@redhat.com>,
 	Linux Kernel <linux-kernel@vger.kernel.org>,
 	Larry Finger <Larry.Finger@lwfinger.net>,
@@ -19,46 +20,43 @@ cc: Linus Torvalds <torvalds@linux-foundation.org>,
 	USB list <linux-usb@vger.kernel.org>,
 	Linux Wireless List <linux-wireless@vger.kernel.org>
 Subject: Re: loading firmware while usermodehelper disabled.
-In-Reply-To: <201201031250.52580.oliver@neukum.org>
-Message-ID: <Pine.LNX.4.44L0.1201031002050.1452-100000@iolanthe.rowland.org> (sfid-20120103_161623_090835_6114ED32)
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Message-ID: <20120103003126.52ad9077@pyramind.ukuu.org.uk> (sfid-20120103_013149_071356_FFDBB1B1)
+In-Reply-To: <8e95c7e3-e9d5-43c4-8e6a-b8d40584cbd6@email.android.com>
+References: <20120102211904.GA15316@srcf.ucam.org>
+	<CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
+	<20120102215028.GA15701@srcf.ucam.org>
+	<CA+55aFz73GuHiOW1NoAuJLea_GKLepiZjrnrgpOKdQizPgnhoA@mail.gmail.com>
+	<20120102221235.GA16012@srcf.ucam.org>
+	<CA+55aFyHvmvast_kuNddU3iotReR1mOpKM4HGAw80ma8kn+2-g@mail.gmail.com>
+	<20120102222920.GA16160@srcf.ucam.org>
+	<CA+55aFyUK6X7ip2UXV9iT07=qezXfbw82wn6UKAN8JFQtYNs5Q@mail.gmail.com>
+	<20120102230037.GA16458@srcf.ucam.org>
+	<4F023E6B.2020307@fastmail.fm>
+	<20120103001356.GA17183@srcf.ucam.org>
+	<8e95c7e3-e9d5-43c4-8e6a-b8d40584cbd6@email.android.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 3 Jan 2012, Oliver Neukum wrote:
-
-> > The USB suspend/resume function does that "unbind/rebind" dance, and
-> > that causes a "device_attach()". Which causes a probe() to be called.
-> > 
-> > Should it do that? I think not, not if the ID's haven't changed. But I
-> > don't know the USB layer all that well.
+> So we have a table of USB ids that list the devices that need firmware drivers. When the uvcvideo driver registers the firmware interface with a USB id that matches the list we load the firmware driver and pass it a "warm start" event so it can cache the firmware.
 > 
-> The ID has changed. That is why we run into this problem.
-> And indeed the USB layer does the rebind only if either
-> 
-> a) ID has changed
+> As long as we can identify the devices that *might* need firmware then we are ok.
 
-That's not true, or at least, it shouldn't be true.
+You just broke the module loading guarantees that stop it all coming apart
+in the first place. Probably not in many real world ways but not good.
 
-If the ID has changed then there's nothing to rebind.  The old device
-is gone; it cannot be resumed or rebound at all.  That's the theory,
-and indeed things really do work that way during reset-resume.
+If we warm booted from Windows into Linux and then suspended then on
+resume we won't have the driver for the firmware loaded present - we
+never saw the 'need firmware' id.
 
-Now, during an ordinary resume, the USB core does not check IDs.  It
-assumes that if suspend power was provided to the bus and the device
-was connected to the bus the entire time, then the device remains
-unchanged.  Perhaps this assumption is a mistake, but so far I haven't
-seen any data to prove that it is.
+That moves us from a dependancy chain for firmware to one including
+firmware and modules (imagine /lib/modules over iscsi for an iscsi
+adapter needing firmware).
 
-> b) the driver tells us that it cannot deal with a device that has lost its state
+At the moment I don't think anyone has been dumb enough to do firmware
+requiring storage and NFS root over firmware requiring USB devices is
+pretty dumb. I don't however think it's a good hole to dig ?
 
-This case applies only in situations where the driver doesn't have a 
-reset_resume method.  The uvc driver does have one.
-
-(You left out a third case: The driver doesn't have any suspend/resume
-methods.  But this case applies only when the device has not lost its
-state, and besides, the uvc driver does have these methods.)
-
-Alan Stern
+Alan
 
