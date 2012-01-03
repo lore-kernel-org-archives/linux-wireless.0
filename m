@@ -1,254 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:16104 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754485Ab2AIHqC (ORCPT
+Received: from out5.smtp.messagingengine.com ([66.111.4.29]:57751 "EHLO
+	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752203Ab2ACW2I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 02:46:02 -0500
-From: Thirumalai <tpachamu@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Thirumalai <tpachamu@qca.qualcomm.com>
-Subject: [PATCH 4/4] ath6kl: Add UAPSD support in tx path.
-Date: Mon, 9 Jan 2012 13:15:52 +0530
-Message-ID: <1326095152-1663-1-git-send-email-tpachamu@qca.qualcomm.com> (sfid-20120109_084605_771617_8CAA0842)
+	Tue, 3 Jan 2012 17:28:08 -0500
+Received: from compute5.internal (compute5.nyi.mail.srv.osa [10.202.2.45])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 3B38A207C2
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Jan 2012 17:28:08 -0500 (EST)
+Date: Tue, 3 Jan 2012 14:27:31 -0800
+From: Greg KH <greg@kroah.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2011-12-15
+Message-ID: <20120103222731.GA26544@kroah.com> (sfid-20120103_232825_700432_D831FC82)
+References: <20111215191523.GA2561@tuxdriver.com>
+ <CACna6rw736JdkoM8zKxorCFd5oy08QTwWZ6PutoJPSr3ZN8hTg@mail.gmail.com>
+ <20111215213822.GB2561@tuxdriver.com>
+ <CACna6rz3qDpw4eJOoCXx7=z1719v7kS-Ou-WUseR9_vB-O2dag@mail.gmail.com>
+ <CACna6rxO2dC=Y3nv-d-w89MqyM0j0aumk=r5Yh_KEg=MwOcvEQ@mail.gmail.com>
+ <20120103205226.GA17131@kroah.com>
+ <CACna6rwjrg6m3SEBxfYWgRSTN5_4-TuA0tdG6P2pFuUvwvvjZA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rwjrg6m3SEBxfYWgRSTN5_4-TuA0tdG6P2pFuUvwvvjZA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If tx is not because of uAPSD trigger and if power save is
-enabled then queue the packet uAPSD queue.
+On Tue, Jan 03, 2012 at 11:06:59PM +0100, Rafał Miłecki wrote:
+> W dniu 3 stycznia 2012 21:52 użytkownik Greg KH <greg@kroah.com> napisał:
+> > On Mon, Dec 26, 2011 at 12:36:59AM +0100, Rafał Miłecki wrote:
+> >> W dniu 16 grudnia 2011 07:40 użytkownik Rafał Miłecki
+> >> <zajec5@gmail.com> napisał:
+> >> > W dniu 15 grudnia 2011 22:38 użytkownik John W. Linville
+> >> > <linville@tuxdriver.com> napisał:
+> >> >> On Thu, Dec 15, 2011 at 09:04:29PM +0100, Rafał Miłecki wrote:
+> >> >>> 2011/12/15 John W. Linville <linville@tuxdriver.com>:
+> >> >>> > commit 42a3b63bb2ca4996a3d1210a004eae2333f1119e
+> >> >>> >
+> >> >>> > Dave,
+> >> >>> >
+> >> >>> > Here are a few more fixes intended for the 3.2 release.  They are
+> >> >>> > all small and narrowly focused.
+> >> >>>
+> >> >>> John, I've made a mistake and didn't use [PATCH 3.2] header to make it
+> >> >>> clean my patch is fix. Could you take a look at
+> >> >>> [PATCH] bcma: support for suspend and resume
+> >> >>> please?
+> >> >>>
+> >> >>> It's not one-liner, but fixes lock ups, which I believe - we really
+> >> >>> want to avoid.
+> >> >>
+> >> >> It's late in the release cycle, and Dave specifically asked me to slow down.
+> >> >>
+> >> >> Are these suspend/resume lockups a regression?  Or have they always
+> >> >> been there?  Do they happen to everyone?
+> >> >
+> >> > The bug is present since first days of bcma. That's why I even decided
+> >> > to add stable to CC.
+> >> >
+> >> > Personally I've tested that only on 1 machine (I don't have more
+> >> > suspendable machines with mini PCIe slot). However all Macbook 8.1/8.2
+> >> > users have to remove b43 & bcma before suspending [0], they complain
+> >> > about that since ever.
+> >> >
+> >> > Arend: I know you're also complaining for suspend in bcma. Can you
+> >> > comment on this?
+> >> >
+> >> > [0] http://ubuntuforums.org/showthread.php?t=1695746
+> >>
+> >> User nephyrin on #bcm-users has confirmed this patch fixes
+> >> suspend&resume for him. Without this patch he got deadlock without
+> >> seeing any kernel panic logs - quite an ugly case.
+> >>
+> >> I still think this patch may be worth taking as fix and backporting too.
+> >
+> > What patch specifically?  What is the git commit id of it in Linus's
+> > tree?  Without that information, telling stable@ about it is
+> > pointless...
+> 
+> Sorry Greg, it's about
+> 
+> commit 775ab52142b02237a54184238e922251c59a2b5c
+> Author: Rafał Miłecki <zajec5@gmail.com>
+> Date:   Fri Dec 9 22:16:07 2011 +0100
+> 
+>     bcma: support for suspend and resume
+> 
+>     bcma used to lock up machine without enabling PCI or initializing CC.
+> 
+>     Cc: stable@vger.kernel.org
+>     Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> 
+> it's located in wireless-testing:
+> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+> 
+> John didn't pass this to Linus yet.
 
-Signed-off-by: Thirumalai <tpachamu@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/txrx.c |  155 ++++++++++++++++++++++++-------
- drivers/net/wireless/ath/ath6kl/wmi.h  |    1 +
- 2 files changed, 121 insertions(+), 35 deletions(-)
+Then there's nothing I can do about it.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index bf6b102..b37ee00 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -77,12 +77,120 @@ static u8 ath6kl_ibss_map_epid(struct sk_buff *skb, struct net_device *dev,
- 	return ar->node_map[ep_map].ep_id;
- }
- 
-+static bool ath6kl_process_uapsdq(struct ath6kl_sta *conn,
-+				struct ath6kl_vif *vif,
-+				struct sk_buff *skb,
-+				u32 *flags)
-+{
-+	struct ath6kl *ar = vif->ar;
-+	bool ps_queued = false, is_apsdq_empty = false;
-+	struct ethhdr *datap = (struct ethhdr *) skb->data;
-+	u8 up = 0;
-+	u8 traffic_class;
-+	u16 ether_type;
-+	u8 *ip_hdr;
-+	struct ath6kl_llc_snap_hdr *llc_hdr;
-+
-+	if (conn->sta_flags & STA_PS_APSD_TRIGGER) {
-+		/*
-+		 * This tx is because of a uAPSD trigger, determine
-+		 * more and EOSP bit. Set EOSP if queue is empty
-+		 * or sufficient frames are delivered for this trigger.
-+		 */
-+		spin_lock_bh(&conn->psq_lock);
-+		if (!skb_queue_empty(&conn->apsdq))
-+			*flags |= WMI_DATA_HDR_FLAGS_MORE;
-+		else if (conn->sta_flags & STA_PS_APSD_EOSP)
-+			*flags |= WMI_DATA_HDR_FLAGS_EOSP;
-+		*flags |= WMI_DATA_HDR_FLAGS_UAPSD;
-+		spin_unlock_bh(&conn->psq_lock);
-+	} else if (conn->apsd_info) {
-+		if (test_bit(WMM_ENABLED, &vif->flags)) {
-+			ether_type = datap->h_proto;
-+			if (is_ethertype(be16_to_cpu(ether_type))) {
-+				/* packet is in DIX format  */
-+				ip_hdr = (u8 *)(datap + 1);
-+			} else {
-+				/* packet is in 802.3 format */
-+				llc_hdr = (struct ath6kl_llc_snap_hdr *)
-+							(datap + 1);
-+				ether_type = llc_hdr->eth_type;
-+				ip_hdr = (u8 *)(llc_hdr + 1);
-+			}
-+
-+			if (ether_type == cpu_to_be16(IP_ETHERTYPE))
-+				up = ath6kl_wmi_determine_user_priority(
-+						ip_hdr, 0);
-+		}
-+
-+		traffic_class =
-+			ath6kl_wmi_get_traffic_class(up);
-+		if (conn->apsd_info & (1 << traffic_class)) {
-+			/* Queue the frames if the STA is sleeping */
-+			spin_lock_bh(&conn->psq_lock);
-+			is_apsdq_empty = skb_queue_empty(&conn->apsdq);
-+			skb_queue_tail(&conn->apsdq, skb);
-+			spin_unlock_bh(&conn->psq_lock);
-+
-+			/*
-+			 * If this is the first pkt getting queued
-+			 * for this STA, update the PVB for this STA
-+			 */
-+			if (is_apsdq_empty) {
-+				ath6kl_wmi_set_apsd_bfrd_traf(ar->wmi,
-+						vif->fw_vif_idx,
-+						conn->aid, 1, 0);
-+				ath6kl_wmi_set_pvb_cmd(ar->wmi,
-+						vif->fw_vif_idx,
-+						conn->aid, 1);
-+			}
-+			*flags |= WMI_DATA_HDR_FLAGS_UAPSD;
-+			ps_queued = true;
-+		}
-+	}
-+	return ps_queued;
-+}
-+
-+static bool ath6kl_process_psq(struct ath6kl_sta *conn,
-+				struct ath6kl_vif *vif,
-+				struct sk_buff *skb,
-+				u32 *flags)
-+{
-+	bool ps_queued = false, is_psq_empty = false;
-+	struct ath6kl *ar = vif->ar;
-+
-+	if (conn->sta_flags & STA_PS_POLLED) {
-+		spin_lock_bh(&conn->psq_lock);
-+		if (!skb_queue_empty(&conn->psq))
-+			*flags |= WMI_DATA_HDR_FLAGS_MORE;
-+		spin_unlock_bh(&conn->psq_lock);
-+	} else {
-+		/* Queue the frames if the STA is sleeping */
-+		spin_lock_bh(&conn->psq_lock);
-+		is_psq_empty = skb_queue_empty(&conn->psq);
-+		skb_queue_tail(&conn->psq, skb);
-+		spin_unlock_bh(&conn->psq_lock);
-+
-+		/*
-+		 * If this is the first pkt getting queued
-+		 * for this STA, update the PVB for this
-+		 * STA.
-+		 */
-+		if (is_psq_empty)
-+			ath6kl_wmi_set_pvb_cmd(ar->wmi,
-+					vif->fw_vif_idx,
-+					conn->aid, 1);
-+		ps_queued = true;
-+	}
-+	return ps_queued;
-+}
-+
- static bool ath6kl_powersave_ap(struct ath6kl_vif *vif, struct sk_buff *skb,
--				bool *more_data)
-+				u32 *flags)
- {
- 	struct ethhdr *datap = (struct ethhdr *) skb->data;
- 	struct ath6kl_sta *conn = NULL;
--	bool ps_queued = false, is_psq_empty = false;
-+	bool ps_queued = false;
- 	struct ath6kl *ar = vif->ar;
- 
- 	if (is_multicast_ether_addr(datap->h_dest)) {
-@@ -128,7 +236,7 @@ static bool ath6kl_powersave_ap(struct ath6kl_vif *vif, struct sk_buff *skb,
- 				 */
- 				spin_lock_bh(&ar->mcastpsq_lock);
- 				if (!skb_queue_empty(&ar->mcastpsq))
--					*more_data = true;
-+					*flags |= WMI_DATA_HDR_FLAGS_MORE;
- 				spin_unlock_bh(&ar->mcastpsq_lock);
- 			}
- 		}
-@@ -142,37 +250,13 @@ static bool ath6kl_powersave_ap(struct ath6kl_vif *vif, struct sk_buff *skb,
- 		}
- 
- 		if (conn->sta_flags & STA_PS_SLEEP) {
--			if (!(conn->sta_flags & STA_PS_POLLED)) {
--				/* Queue the frames if the STA is sleeping */
--				spin_lock_bh(&conn->psq_lock);
--				is_psq_empty = skb_queue_empty(&conn->psq);
--				skb_queue_tail(&conn->psq, skb);
--				spin_unlock_bh(&conn->psq_lock);
--
--				/*
--				 * If this is the first pkt getting queued
--				 * for this STA, update the PVB for this
--				 * STA.
--				 */
--				if (is_psq_empty)
--					ath6kl_wmi_set_pvb_cmd(ar->wmi,
--							       vif->fw_vif_idx,
--							       conn->aid, 1);
--
--				ps_queued = true;
--			} else {
--				/*
--				 * This tx is because of a PsPoll.
--				 * Determine if MoreData bit has to be set.
--				 */
--				spin_lock_bh(&conn->psq_lock);
--				if (!skb_queue_empty(&conn->psq))
--					*more_data = true;
--				spin_unlock_bh(&conn->psq_lock);
--			}
-+			ps_queued = ath6kl_process_uapsdq(conn,
-+						vif, skb, flags);
-+			if (!(*flags & WMI_DATA_HDR_FLAGS_UAPSD))
-+				ps_queued = ath6kl_process_psq(conn,
-+						vif, skb, flags);
- 		}
- 	}
--
- 	return ps_queued;
- }
- 
-@@ -242,12 +326,13 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- 	u32 map_no = 0;
- 	u16 htc_tag = ATH6KL_DATA_PKT_TAG;
- 	u8 ac = 99 ; /* initialize to unmapped ac */
--	bool chk_adhoc_ps_mapping = false, more_data = false;
-+	bool chk_adhoc_ps_mapping = false;
- 	int ret;
- 	struct wmi_tx_meta_v2 meta_v2;
- 	void *meta;
- 	u8 csum_start = 0, csum_dest = 0, csum = skb->ip_summed;
- 	u8 meta_ver = 0;
-+	u32 flags = 0;
- 
- 	ath6kl_dbg(ATH6KL_DBG_WLAN_TX,
- 		   "%s: skb=0x%p, data=0x%p, len=0x%x\n", __func__,
-@@ -264,7 +349,7 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- 
- 	/* AP mode Power saving processing */
- 	if (vif->nw_type == AP_NETWORK) {
--		if (ath6kl_powersave_ap(vif, skb, &more_data))
-+		if (ath6kl_powersave_ap(vif, skb, &flags))
- 			return 0;
- 	}
- 
-@@ -308,7 +393,7 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- 		}
- 
- 		ret = ath6kl_wmi_data_hdr_add(ar->wmi, skb,
--				DATA_MSGTYPE, more_data, 0,
-+				DATA_MSGTYPE, flags, 0,
- 				meta_ver,
- 				meta, vif->fw_vif_idx);
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index fba2c01..d4bc5a8 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -164,6 +164,7 @@ enum wmi_data_hdr_data_type {
- enum wmi_data_hdr_flags {
- 	WMI_DATA_HDR_FLAGS_MORE = 0x1,
- 	WMI_DATA_HDR_FLAGS_EOSP = 0x2,
-+	WMI_DATA_HDR_FLAGS_UAPSD = 0x4,
- };
- 
- #define WMI_DATA_HDR_DATA_TYPE_MASK     0x3
--- 
-1.7.4.1
+As it's properly tagged, I'll pick it up when it gets to Linus.
 
+thanks,
+
+greg k-h
