@@ -1,67 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:54742 "HELO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753461Ab2ACAS7 (ORCPT
+Received: from out5.smtp.messagingengine.com ([66.111.4.29]:58910 "EHLO
+	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752792Ab2ACMTU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 19:18:59 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.2] mwifiex: fix crash during simultaneous scan and connect
-Date: Mon,  2 Jan 2012 16:18:40 -0800
-Message-Id: <1325549920-22474-1-git-send-email-bzhao@marvell.com> (sfid-20120103_011903_567394_8DE51FEF)
+	Tue, 3 Jan 2012 07:19:20 -0500
+Received: from compute5.internal (compute5.nyi.mail.srv.osa [10.202.2.45])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 89CCC2070C
+	for <linux-wireless@vger.kernel.org>; Tue,  3 Jan 2012 07:19:19 -0500 (EST)
+Message-ID: <4F02F244.6040902@fastmail.fm> (sfid-20120103_131944_138496_6E5E05C2)
+Date: Tue, 03 Jan 2012 12:19:16 +0000
+From: Jack Stone <jwjstone@fastmail.fm>
+MIME-Version: 1.0
+To: Oliver Neukum <oliver@neukum.org>
+CC: Alan Cox <alan@lxorguk.ukuu.org.uk>,
+	Matthew Garrett <mjg@redhat.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> <4F0220F5.30309@fastmail.fm> <20120103004220.084d61f3@pyramind.ukuu.org.uk> <201201031257.47265.oliver@neukum.org>
+In-Reply-To: <201201031257.47265.oliver@neukum.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On 03/01/12 11:57, Oliver Neukum wrote:
+> Am Dienstag, 3. Januar 2012, 01:42:20 schrieb Alan Cox:
+>> In that case however you don't want some generic firmware module knowing
+>> all this crap, your driver can just request_firmware() the stuff as
+>> modprobe and free it up on the module unload. For a typical 8bit firmware
+>> of a few K you'll free a ton more memory unloading the module than the
+>> firmware ! That I think actually covers the majority of devices under
+>> discussion.
+> 
+> I am afraid it doesn't, at least not fully.
+> We have many devices whose primary (operational) driver does not load
+> the firmware. That job is left to a secondary driver or user space.
+> 
+> We could leave those secondary drivers and their firmware in RAM after
+> their primary usage and except for a few pathological cases (which
+> can be solved with a few udev rules preventively loading drivers) we'd
+> be good, but we lack a mechanism for switching to a seconary driver
+> and back during resumption.
 
-If 'iw connect' command is fired when driver is already busy in
-serving 'iw scan' command, ssid specific scan operation for connect
-is skipped. In this case cmd wait queue handler gets called with no
-command in queue (i.e. adapter->cmd_queued = NULL).
+You don't mension the bus used so I'm going to use USB as an example.
 
-This patch adds a NULL check in mwifiex_wait_queue_complete()
-routine to fix crash observed during simultaneous scan and assoc
-operations.
+As I understand it the majority of devices that need firmware have two
+different identities: the "bootstrap" id and the "primary" id. If we
+always make sure we have the drivers for both bootsrap and primary ids
+loaded then we should have the firmware in memory. If the device has
+lost its firmware then it will reregister with the bootstrap id
+otherwise it will continue with the primary id. Either way the correct
+driver should pick it up and handle it.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
+That said, I guess there are more complicated / difficult pieces of
+hardware that might not do that. Is that the case here? Can we detect
+that the firmware needs reloading and have the primary driver "yield" to
+the firmware driver?
 
-Hi John,
+Thanks,
 
-Hope it can catch up the 3.2 train. Otherwise please apply it for 3.3.
-Thanks!
-
-
- drivers/net/wireless/mwifiex/sta_ioctl.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index e40196d..470ca75 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -55,9 +55,14 @@ int mwifiex_wait_queue_complete(struct mwifiex_adapter *adapter)
- {
- 	bool cancel_flag = false;
- 	int status = adapter->cmd_wait_q.status;
--	struct cmd_ctrl_node *cmd_queued = adapter->cmd_queued;
-+	struct cmd_ctrl_node *cmd_queued;
- 
-+	if (!adapter->cmd_queued)
-+		return 0;
-+
-+	cmd_queued = adapter->cmd_queued;
- 	adapter->cmd_queued = NULL;
-+
- 	dev_dbg(adapter->dev, "cmd pending\n");
- 	atomic_inc(&adapter->cmd_pending);
- 
--- 
-1.7.0.2
+Jack
 
