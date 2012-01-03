@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:44250 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755880Ab2AIW21 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57972 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751987Ab2ACIMx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 17:28:27 -0500
-Received: by wgbdr10 with SMTP id dr10so2335347wgb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2012 14:28:25 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20120109222544.11008.qmail@stuge.se>
-References: <CAEWwF+bnM0bxbZR6B57H_nv3fkUdhP-ytAu30MLhUWq7QxB3GQ@mail.gmail.com>
-	<CACna6rzA6ix2PrZDHXQLTDQuo942urtUAWYagDC0x9zANSVNKQ@mail.gmail.com>
-	<20120109222544.11008.qmail@stuge.se>
-Date: Mon, 9 Jan 2012 23:28:24 +0100
-Message-ID: <CACna6rx_q6J4PU0ucX+ZJqqkzpp24pf3Mz+Od2HPtVg8w-r1pQ@mail.gmail.com> (sfid-20120109_232831_358221_50494A78)
-Subject: Re: BCM43231
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Abimanyu Gottumukkala <me@abimanyu.in>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 3 Jan 2012 03:12:53 -0500
+Subject: Re: [PATCH 3/3] ath6kl: Remove few deadcode in main.c
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+In-Reply-To: <20120103054000.GB16733@chvasanth-lnx> (sfid-20120103_064051_183446_5E9CAA08)
+References: <1325154939-6986-1-git-send-email-vthiagar@qca.qualcomm.com>
+	 <1325154939-6986-3-git-send-email-vthiagar@qca.qualcomm.com>
+	 <4F01DC4B.50501@qca.qualcomm.com>  <20120103054000.GB16733@chvasanth-lnx>
+	 (sfid-20120103_064051_183446_5E9CAA08)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 03 Jan 2012 09:12:50 +0100
+Message-ID: <1325578370.3905.3.camel@jlt3.sipsolutions.net> (sfid-20120103_091256_473955_0021745F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 9 stycznia 2012 23:25 użytkownik Peter Stuge <peter@stuge.se> napisał:
-> Rafał Miłecki wrote:
->> I've been using "usbmon" to dump traffic.
->
-> The tool at http://people.redhat.com/zaitcev/linux/usbmon-6.tar.gz
-> and not simply cat on the usbmon files in debugfs I hope.
->
-> debugfs only shows the first bytes of long transfers, but the API
-> used by the usbmon-6 tool shows complete traffic.
+On Tue, 2012-01-03 at 11:10 +0530, Vasanthakumar Thiagarajan wrote:
 
-I was just using
-cat /sys/kernel/debug/usb/usbmon/0u
+> > > @@ -62,8 +62,7 @@ static void ath6kl_add_new_sta(struct ath6kl *ar, u8 *mac, u16 aid, u8 *wpaie,
+> > >  
+> > >  	sta = &ar->sta_list[free_slot];
+> > >  	memcpy(sta->mac, mac, ETH_ALEN);
+> > > -	if (ielen <= ATH6KL_MAX_IE)
+> > > -		memcpy(sta->wpa_ie, wpaie, ielen);
+> > > +	memcpy(sta->wpa_ie, wpaie, ielen);
+> 
+> > 
+> > And then someone changes the u8 ielen to something else and accidentally
+> > adds a bug. I would prefer to have an explicit check for the ielen to
+> > make it obvious what's the maximum length.
+> > 
+> > I don't really like using u8 for ielen either. IMHO size_t or similar
+> > would be better.
+> 
+> The length of any IE is 1 byte, u8 is the appropriate one.
 
-I didn't see info about eating the rest of transfer in
-Documentation/usb/usbmon.txt. Thanks for the tip, I'll give it a
-chance tomorrow.
+No -- this can contain multiple IEs.
 
--- 
-Rafał
+johannes
+
