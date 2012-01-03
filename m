@@ -1,82 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:36003 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753748Ab2A3XEf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 18:04:35 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
-	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 7/7] bcma: add extra sprom check
-Date: Tue, 31 Jan 2012 00:03:37 +0100
-Message-Id: <1327964617-7910-8-git-send-email-hauke@hauke-m.de> (sfid-20120131_000440_003305_FEF9A686)
-In-Reply-To: <1327964617-7910-1-git-send-email-hauke@hauke-m.de>
-References: <1327964617-7910-1-git-send-email-hauke@hauke-m.de>
+Received: from mail.lang.hm ([64.81.33.126]:40230 "EHLO bifrost.lang.hm"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751477Ab2ACJdq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jan 2012 04:33:46 -0500
+Date: Tue, 3 Jan 2012 01:24:15 -0800 (PST)
+From: david@lang.hm
+To: "Alexander E. Patrakov" <patrakov@gmail.com>
+cc: linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: loading firmware while usermodehelper disabled.
+In-Reply-To: <20120103151637.1388e204@home>
+Message-ID: <alpine.DEB.2.02.1201030119430.4979@asgard.lang.hm> (sfid-20120103_103352_573665_4BF24A78)
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> <4F02165C.1060400@fastmail.fm> <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com> <20120102211904.GA15316@srcf.ucam.org> <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
+ <20120102215028.GA15701@srcf.ucam.org> <20120103151637.1388e204@home>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This check is needed on the BCM43224 device as it says in the
-capabilities it has an sprom but is extra check says it has not.
+On Tue, 3 Jan 2012, Alexander E. Patrakov wrote:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/sprom.c                        |    7 +++++++
- include/linux/bcma/bcma_driver_chipcommon.h |   16 ++++++++++++++++
- 2 files changed, 23 insertions(+), 0 deletions(-)
+> Matthew Garrett <mjg@redhat.com> wrote:
+>
+>> On Mon, Jan 02, 2012 at 01:27:03PM -0800, Linus Torvalds wrote:
+>>
+>>> If we didn't load the firmware before the suspend, then the resume
+>>> function of a device sure as hell had better not load it at resume
+>>> time either.
+>>
+>> If the hardware has lost its state then refusing to load the firmware
+>> at resume time isn't going to leave you with a working device.
+>>
+>>> And for chrissake, don't bother making it more complicated than it
+>>> is, just for some theoretical hardware or situation that nobody
+>>> cares about.
+>>
+>> It's not theoretical hardware. This appears to be the current
+>> behaviour of the isight devices. If you reboot they retain their
+>> firmware. If you suspend, they don't. So if we have a flow like this:
+>>
+>> 1) user boots from cold. Device comes up with generic USB ID.
+>> 2) isight_firmware loads and binds. Firmware is loaded. Device
+>> disconnects and reconnects with an ID that's bound by the UVC driver.
+>> 3) user reboots. Device comes up with UVC ID. isight_firmware doesn't
+>> bind.
+>> 4) user suspends.
+>> 5) user resumes. isight_firmware binds and attempts to load firmware.
+>>
+>> then just caching the firmware is inadequate - we had never
+>> previously seen the device on this boot, so we've never loaded it in
+>> order to cache it. isight_firmware could unconditionally load the
+>> firmware on module load just in case a device is plugged in, but that
+>> seems even less elegant than caching it.
+>
+> What a heated discussion due to, essentially, a non-technical, legal
+> issue! Remember that the whole "userspace firmware loader" saga
+> together with the asynchronous firmware interface started when Debian
+> started complaining over the non-freeness of the firmware being bundled
+> as a part of the kernel module as an array of bytes. That design,
+> however, never had such dependency issues. So maybe revert to it, with
+> the following changes, and solve the legal issue seen by Debian by
+> hiring a lawyer?
 
-diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
-index e35134f..ca77525 100644
---- a/drivers/bcma/sprom.c
-+++ b/drivers/bcma/sprom.c
-@@ -250,6 +250,7 @@ int bcma_sprom_get(struct bcma_bus *bus)
- {
- 	u16 offset;
- 	u16 *sprom;
-+	u32 sromctrl;
- 	int err = 0;
- 
- 	if (!bus->drv_cc.core)
-@@ -258,6 +259,12 @@ int bcma_sprom_get(struct bcma_bus *bus)
- 	if (!(bus->drv_cc.capabilities & BCMA_CC_CAP_SPROM))
- 		return -ENOENT;
- 
-+	if (bus->drv_cc.core->id.rev >= 32) {
-+		sromctrl = bcma_read32(bus->drv_cc.core, BCMA_CC_SROM_CONTROL);
-+		if (!(sromctrl & BCMA_CC_SROM_CONTROL_PRESENT))
-+			return -ENOENT;
-+	}
-+
- 	sprom = kcalloc(SSB_SPROMSIZE_WORDS_R4, sizeof(u16),
- 			GFP_KERNEL);
- 	if (!sprom)
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index a33086a..e72938b 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -181,6 +181,22 @@
- #define BCMA_CC_FLASH_CFG		0x0128
- #define  BCMA_CC_FLASH_CFG_DS		0x0010	/* Data size, 0=8bit, 1=16bit */
- #define BCMA_CC_FLASH_WAITCNT		0x012C
-+#define BCMA_CC_SROM_CONTROL		0x0190
-+#define  BCMA_CC_SROM_CONTROL_START	0x80000000
-+#define  BCMA_CC_SROM_CONTROL_BUSY	0x80000000
-+#define  BCMA_CC_SROM_CONTROL_OPCODE	0x60000000
-+#define  BCMA_CC_SROM_CONTROL_OP_READ	0x00000000
-+#define  BCMA_CC_SROM_CONTROL_OP_WRITE	0x20000000
-+#define  BCMA_CC_SROM_CONTROL_OP_WRDIS	0x40000000
-+#define  BCMA_CC_SROM_CONTROL_OP_WREN	0x60000000
-+#define  BCMA_CC_SROM_CONTROL_OTPSEL	0x00000010
-+#define  BCMA_CC_SROM_CONTROL_LOCK	0x00000008
-+#define  BCMA_CC_SROM_CONTROL_SIZE_MASK	0x00000006
-+#define  BCMA_CC_SROM_CONTROL_SIZE_1K	0x00000000
-+#define  BCMA_CC_SROM_CONTROL_SIZE_4K	0x00000002
-+#define  BCMA_CC_SROM_CONTROL_SIZE_16K	0x00000004
-+#define  BCMA_CC_SROM_CONTROL_SIZE_SHIFT	1
-+#define  BCMA_CC_SROM_CONTROL_PRESENT	0x00000001
- /* 0x1E0 is defined as shared BCMA_CLKCTLST */
- #define BCMA_CC_HW_WORKAROUND		0x01E4 /* Hardware workaround (rev >= 20) */
- #define BCMA_CC_UART0_DATA		0x0300
--- 
-1.7.5.4
+at the very least, there should be a simple compile option that says 
+'compile any firmware that may be needed into the kernel/module image' so 
+that those of us who are not worried about the distribution of firmware 
+blobs (or who don't believe that just splitting the firmware blobs into 
+a separate tree gains anything) can just opt out of this entire mess. As I 
+see it, today we have the option of manually specifying firmware blobs to 
+compile in, but no easy way to just include them all.
 
+> 1. Make firmware a special case of a data-only non-GPL kernel module.
+> Change the tainter so that it doesn't taint the kernel for data-only
+> modules.
+> 2. Make the actual driver depend on the relevant firmware modules for
+> all devices supported by it, even if the devices don't always need the
+> said firmware.
+> 3. Disallow building drivers that need firmware as non-modules.
+
+Please do not do this one.
+
+David Lang
+
+> 4. Do something (e.g. split the driver into a core and a shim, or make
+> a fake firmware module) to allow the user to install without firmware
+> if he knows that it works with his hardware.
+> 5. Profit!
+>
+> This way, as long as the driver is loaded, the necessary firmware is
+> also there, as a dependency.
+>
+>
