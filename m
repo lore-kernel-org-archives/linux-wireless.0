@@ -1,70 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm13.bullet.mail.ird.yahoo.com ([77.238.189.66]:27439 "HELO
-	nm13.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753793Ab2AaKpM convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 05:45:12 -0500
-Message-ID: <1328006709.47544.YahooMailClassic@web29504.mail.ird.yahoo.com> (sfid-20120131_114521_315777_6C216947)
-Date: Tue, 31 Jan 2012 10:45:09 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: rtl8187 behavior change/breakage with 3.2.1-3.fc16.x86_64<->3.2.2-1.fc16.x86_64
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@canonical.com>
-In-Reply-To: <20120130183924.GA2493@tuxdriver.com>
+Received: from mx1.redhat.com ([209.132.183.28]:37827 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752245Ab2ACKfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jan 2012 05:35:20 -0500
+Date: Tue, 3 Jan 2012 11:34:58 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 didn't survive after s2ram failure
+Message-ID: <20120103103457.GA3391@redhat.com> (sfid-20120103_113551_183654_8F377828)
+References: <20111227105340.GD5344@tiehlicka.suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111227105340.GD5344@tiehlicka.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Mon, 30/1/12, John W. Linville <linville@tuxdriver.com> wrote:
+On Tue, Dec 27, 2011 at 11:53:40AM +0100, Michal Hocko wrote:
+> my laptop died (due to drained batteries) while it was suspended to
+> RAM and the wireless didn't get back to life after I booted again.
 
-> On Mon, Jan 30, 2012 at 11:51:32AM
-> +0000, Hin-Tak Leung wrote:
-> > --- On Sun, 29/1/12, Larry Finger <Larry.Finger@lwfinger.net>
-> wrote:
-> > 
-> > > > This may be a fedora-specific problem - I
-> noticed that
-> > > just after booting into the new fedora kernel
-> > > (3.2.2-1.fc16.x86_64), I am getting a strange
-> message from
-> > > the kernel:
-> > > >
-> > > > rtl8187: Invalid hwaddr! Using randomly
-> generated MAC
-> > > address
-> > 
-> > 
-> > > I just checked, and rtl8187 works fine with my
-> RTL8187L
-> > > using 3.3-rc1 from 
-> > > wireless-testing. I don't know where the problem
-> occurs.
-> > 
-> > Thanks for looking. It is mostly likely a
-> fedora-specific problem then. Unless John has any idea, I'll
-> eventually unpacking the fedora kernel source if the problem
-> persists for another kernel.
-> > 
-> > Cheers,
-> > Hin-Tak
-> > 
-> > P.S. Herton's e-mail seems to have changed.
+I wonder how we could kill hardware that way ...
+
+> Dmesg says:
+> cfg80211: Calling CRDA to update world regulatory domain
+> iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for Linux, in-tree:s
+> iwl3945: Copyright(c) 2003-2011 Intel Corporation
+> iwl3945 0000:05:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+> iwl3945 0000:05:00.0: setting latency timer to 64
+> iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+> iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+> iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+> iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+> iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+> iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+> iwl3945 0000:05:00.0: bad EEPROM signature,EEPROM_GP=0x00000007
+> iwl3945 0000:05:00.0: EEPROM not found, EEPROM_GP=0xffffffff
+> iwl3945 0000:05:00.0: Unable to init EEPROM
+> iwl3945 0000:05:00.0: PCI INT A disabled
+> iwl3945: probe of 0000:05:00.0 failed with error -2
 > 
-> When I integrated compat-wireless into the Fedora kernels,
-> I
-> left it using the in-kernel eeprom_93cx6 driver. 
-> Apparently some
-> incompatiblity has krept-in, and several wireless drives
-> stopped
-> working.  I have changed the fedora kernels to use the
-> version of
-> eeprom_93cx6 now, so the next build should work alright.
+> Is there anything I can do to resurrect it?
 
-Thanks for checking! I'll await the next fedora update. No prob - these things happen from time to time: living life on the bleeding-edge!
+No idea. Please provide logs with debug=0x47ffffff option.
 
-Hin-Tak
+Did you try to totally power-off the laptop by removing
+battery (and power cable of course) ?
 
+If anything other will not help, is possible to rewrite eeprom, I don't
+know how to do this, but I know that tool for that exist:
+http://code.google.com/p/iwleeprom/
+
+Stanislaw
