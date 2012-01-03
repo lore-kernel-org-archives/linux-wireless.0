@@ -1,43 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6660 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:14928 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756338Ab2AXNJv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 08:09:51 -0500
+	id S1752045Ab2ACKvR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jan 2012 05:51:17 -0500
+Date: Tue, 3 Jan 2012 11:51:07 +0100
 From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 4/4] rt2800usb: remove PWR_PIN_CFG=0x3 during init
-Date: Tue, 24 Jan 2012 14:09:09 +0100
-Message-Id: <1327410549-4714-4-git-send-email-sgruszka@redhat.com> (sfid-20120124_140954_818135_A353FEFA)
-In-Reply-To: <1327410549-4714-1-git-send-email-sgruszka@redhat.com>
-References: <1327410549-4714-1-git-send-email-sgruszka@redhat.com>
+To: Jonathan Nieder <jrnieder@gmail.com>
+Cc: Christoph Anton Mitterer <calestyo@scientia.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Dietsche <Gregory.Dietsche@cuw.edu>,
+	linux-kernel@vger.kernel.org
+Subject: Re: iwl4965: "MAC is in deep sleep!" freezes
+Message-ID: <20120103105107.GB3391@redhat.com> (sfid-20120103_115138_298731_53D562A6)
+References: <20110902233806.GA22157@elie>
+ <20110905091918.GC2221@redhat.com>
+ <265f56a4dc9f5d3edeca3d101e445353@imap.dd24.net>
+ <20110908084913.GB2195@redhat.com>
+ <1321228952.3362.15.camel@fermat.scientia.net>
+ <20111114014615.GC16508@elie.hsd1.il.comcast.net>
+ <1321466933.3364.16.camel@fermat.scientia.net>
+ <20111118074552.GB2203@redhat.com>
+ <1325171851.3907.33.camel@fermat.scientia.net>
+ <20111229201149.GB1674@elie.Belkin>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111229201149.GB1674@elie.Belkin>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This seems to be only needed as workaround for hardware problem on
-PCI devices.
+On Thu, Dec 29, 2011 at 02:11:49PM -0600, Jonathan Nieder wrote:
+> Christoph Anton Mitterer wrote:
+> 
+> > The logging is basically identical to what I've send before.
+> >
+> > So either there is some weird hardware damage,.. or (as I suggested
+> > before) it might be just some different revision or so of the chipset,
+> > behaving different?!
 
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2800usb.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+Hmm, on my experience, software sucks much more than hardware, but we
+never can exclude hardware problem. I'm not sure if there are divergence
+between iwl4965 chipsets. Also I'm not sure if there are more than one
+chipsets revision at all. Christoph, you mentioned that you replaced you 
+motherboard. Did the problem start to happen after that? Did you
+correctly connect antennas cables to adapter. Does adapter sits
+tight in the mini PCIe slot?
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 425267a..f0074bc 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -226,8 +226,6 @@ static int rt2800usb_init_registers(struct rt2x00_dev *rt2x00dev)
- 	rt2x00usb_register_read(rt2x00dev, PBF_SYS_CTRL, &reg);
- 	rt2x00usb_register_write(rt2x00dev, PBF_SYS_CTRL, reg & ~0x00002000);
- 
--	rt2x00usb_register_write(rt2x00dev, PWR_PIN_CFG, 0x00000003);
--
- 	reg = 0;
- 	rt2x00_set_field32(&reg, MAC_SYS_CTRL_RESET_CSR, 1);
- 	rt2x00_set_field32(&reg, MAC_SYS_CTRL_RESET_BBP, 1);
--- 
-1.7.1
+> > Guess it's pointless to send you the same logging output again, but if
+> > you'd like to I can do so.
+> 
+> Yes, please do, or provide a link and summary so we don't have to hunt
+> it down.
 
+No, that's not needed if there are no good logs for compare. If possible
+try on some very old kernel, first kernel with iwl4965 support was 2.6.24.
+
+Thanks
+Stanislaw
