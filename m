@@ -1,113 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:41398 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751853Ab2AVPCZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jan 2012 10:02:25 -0500
-Message-ID: <4F1C24F5.2020506@hauke-m.de> (sfid-20120122_160232_939996_E5FFD700)
-Date: Sun, 22 Jan 2012 16:02:13 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:36520 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754581Ab2ACVIH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jan 2012 16:08:07 -0500
+Received: by mail-ee0-f46.google.com with SMTP id c4so16211505eek.19
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2012 13:08:07 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 3/5] b43: N-PHY: upload PAPD PGA gain delta table
+Date: Tue,  3 Jan 2012 22:49:19 +0100
+Message-Id: <1325627361-3394-3-git-send-email-zajec5@gmail.com> (sfid-20120103_220813_636207_6C61BDC0)
+In-Reply-To: <1325627361-3394-1-git-send-email-zajec5@gmail.com>
+References: <1325627361-3394-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-To: Alan Stern <stern@rowland.harvard.edu>
-CC: ralf@linux-mips.org, linux-mips@linux-mips.org,
-	USB list <linux-usb@vger.kernel.org>, zajec5@gmail.com,
-	linux-wireless@vger.kernel.org, m@bues.ch, george@znau.edu.ua
-Subject: Re: [PATCH 4/7] USB: EHCI: Add a generic platform device driver
-References: <Pine.LNX.4.44L0.1201212235050.32266-100000@netrider.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1201212235050.32266-100000@netrider.rowland.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/22/2012 04:41 AM, Alan Stern wrote:
-> On Sat, 21 Jan 2012, Hauke Mehrtens wrote:
-> 
->> This adds a generic driver for platform devices. It works like the PCI
->> driver and is based on it. This is for devices which do not have an own
->> bus but their EHCI controller works like a PCI controller. It will be
->> used for the Broadcom bcma and ssb USB EHCI controller.
-> 
-> Before adding a generic platform driver for EHCI, you should give some
-> to thought to how it might be generalized.  There are a lot of EHCI
-> platform drivers, all differing in various major or minor respects.  
-> It should be possible to replace a lot of them with the generic driver, 
-> but first it will need some way to cope with a few minor quirks.
-> 
-> Please consider this, and think about which of the existing drivers 
-> could be replaced.
 
-For now I just build this for bcma and ssb based SoCs. Yes there are
-some drivers which could be replaced with this one, but most (all ??) of
-them do something special in the device probing and this have to be
-moved to somewhere else e.g. where the platform device is created.
-I could rename it so it would not be generic any more, but I think it is
-the wrong approach. ;-)
-I am not able and do not have the time to convert all EHCI platform
-drivers, where it is possible  to this generic platform driver, as I do
-not have the devices to test this and time is limited.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/b43/phy_n.c       |   11 +++++------
+ drivers/net/wireless/b43/tables_nphy.c |    5 +++++
+ drivers/net/wireless/b43/tables_nphy.h |    2 ++
+ 3 files changed, 12 insertions(+), 6 deletions(-)
 
-If someone else wants to improve something on these "generic" platform
-drivers to make them work with an other device I am totally fine with it.
-> 
->> --- /dev/null
->> +++ b/drivers/usb/host/ehci-platform.c
->> @@ -0,0 +1,211 @@
->> +/*
->> + * Generic platform ehci driver
->> + *
->> + * Copyright 2007 Steven Brown <sbrown@cortland.com>
->> + * Copyright 2010-2011 Hauke Mehrtens <hauke@hauke-m.de>
->> + *
->> + * Derived from the ohci-ssb driver
->> + * Copyright 2007 Michael Buesch <m@bues.ch>
->> + *
->> + * Derived from the EHCI-PCI driver
->> + * Copyright (c) 2000-2004 by David Brownell
->> + *
->> + * Derived from the ohci-pci driver
->> + * Copyright 1999 Roman Weissgaerber
->> + * Copyright 2000-2002 David Brownell
->> + * Copyright 1999 Linus Torvalds
->> + * Copyright 1999 Gregory P. Smith
->> + *
->> + * Licensed under the GNU/GPL. See COPYING for details.
->> + */
->> +#include <linux/platform_device.h>
->> +
->> +static int ehci_platform_reset(struct usb_hcd *hcd)
->> +{
->> +	struct ehci_hcd *ehci = hcd_to_ehci(hcd);
->> +	int retval;
->> +
->> +	ehci->caps = hcd->regs;
->> +	ehci->regs = hcd->regs +
->> +		HC_LENGTH(ehci, ehci_readl(ehci, &ehci->caps->hc_capbase));
->> +
->> +	dbg_hcs_params(ehci, "reset");
->> +	dbg_hcc_params(ehci, "reset");
->> +
->> +	/* cache this readonly data; minimize chip reads */
->> +	ehci->hcs_params = ehci_readl(ehci, &ehci->caps->hcs_params);
->> +
->> +	retval = ehci_halt(ehci);
->> +	if (retval)
->> +		return retval;
->> +
->> +	/* data structure init */
->> +	retval = ehci_init(hcd);
->> +	if (retval)
->> +		return retval;
->> +
->> +	ehci_reset(ehci);
->> +
->> +	ehci_port_power(ehci, 1);
->> +
->> +	return retval;
->> +}
-> 
-> Most of this routine should be replaced with a call to ehci_setup.
-Thanks for the info, this is changed.
-> 
-> Alan Stern
-> 
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 1e499f0..c4c310d 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -2607,12 +2607,9 @@ static void b43_nphy_tx_gain_table_upload(struct b43_wldev *dev)
+ 	struct b43_phy *phy = &dev->phy;
+ 
+ 	const u32 *table = NULL;
+-#if 0
+-	TODO: b43_ntab_papd_pga_gain_delta_ipa_2*
+ 	u32 rfpwr_offset;
+ 	u8 pga_gain;
+ 	int i;
+-#endif
+ 
+ 	table = b43_nphy_get_tx_gain_table(dev);
+ 	b43_ntab_write_bulk(dev, B43_NTAB32(26, 192), 128, table);
+@@ -2621,19 +2618,21 @@ static void b43_nphy_tx_gain_table_upload(struct b43_wldev *dev)
+ 	if (phy->rev >= 3) {
+ #if 0
+ 		nphy->gmval = (table[0] >> 16) & 0x7000;
++#endif
+ 
+ 		for (i = 0; i < 128; i++) {
+ 			pga_gain = (table[i] >> 24) & 0xF;
+ 			if (b43_current_band(dev->wl) == IEEE80211_BAND_2GHZ)
+-				rfpwr_offset = b43_ntab_papd_pga_gain_delta_ipa_2g[pga_gain];
++				rfpwr_offset =
++				 b43_ntab_papd_pga_gain_delta_ipa_2g[pga_gain];
+ 			else
+-				rfpwr_offset = b43_ntab_papd_pga_gain_delta_ipa_5g[pga_gain];
++				rfpwr_offset =
++				 0; /* FIXME */
+ 			b43_ntab_write(dev, B43_NTAB32(26, 576 + i),
+ 				       rfpwr_offset);
+ 			b43_ntab_write(dev, B43_NTAB32(27, 576 + i),
+ 				       rfpwr_offset);
+ 		}
+-#endif
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
+index dc52249..44d49f7 100644
+--- a/drivers/net/wireless/b43/tables_nphy.c
++++ b/drivers/net/wireless/b43/tables_nphy.c
+@@ -2529,6 +2529,11 @@ static const u32 txpwrctrl_tx_gain_ipa_5g[] = {
+ 	0x70f70021, 0x70f70020, 0x70f70020, 0x70f7001f,
+ };
+ 
++const s8 b43_ntab_papd_pga_gain_delta_ipa_2g[] = {
++	-114, -108, -98, -91, -84, -78, -70, -62,
++	-54, -46, -39, -31, -23, -15, -8, 0
++};
++
+ const u16 tbl_iqcal_gainparams[2][9][8] = {
+ 	{
+ 		{ 0x000, 0, 0, 2, 0x69, 0x69, 0x69, 0x69 },
+diff --git a/drivers/net/wireless/b43/tables_nphy.h b/drivers/net/wireless/b43/tables_nphy.h
+index 2a9d5f1..f348953 100644
+--- a/drivers/net/wireless/b43/tables_nphy.h
++++ b/drivers/net/wireless/b43/tables_nphy.h
+@@ -179,6 +179,8 @@ void b43_nphy_rev3plus_tables_init(struct b43_wldev *dev);
+ 
+ const u32 *b43_nphy_get_tx_gain_table(struct b43_wldev *dev);
+ 
++extern const s8 b43_ntab_papd_pga_gain_delta_ipa_2g[];
++
+ extern const u16 tbl_iqcal_gainparams[2][9][8];
+ extern const struct nphy_txiqcal_ladder ladder_lo[];
+ extern const struct nphy_txiqcal_ladder ladder_iq[];
+-- 
+1.7.3.4
 
-Hauke
