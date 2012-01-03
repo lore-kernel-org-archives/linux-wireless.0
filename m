@@ -1,64 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52133 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755616Ab2ALUux (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jan 2012 15:50:53 -0500
-Subject: Re: [PATCH 2/2] mac80211: in IBSS use the Auth frame to trigger
- STA reinsertion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <ordex@autistici.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1326400616-1109-2-git-send-email-ordex@autistici.org>
-References: <1326400616-1109-1-git-send-email-ordex@autistici.org>
-	 <1326400616-1109-2-git-send-email-ordex@autistici.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 12 Jan 2012 21:50:51 +0100
-Message-ID: <1326401451.3463.11.camel@jlt3.sipsolutions.net> (sfid-20120112_215057_541933_39B91364)
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:44571 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752668Ab2ACMXi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jan 2012 07:23:38 -0500
+Date: Tue, 3 Jan 2012 13:23:12 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 didn't survive after s2ram failure
+Message-ID: <20120103122311.GC3391@redhat.com> (sfid-20120103_132354_925583_E9C70707)
+References: <20111227105340.GD5344@tiehlicka.suse.cz>
+ <20120103103457.GA3391@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120103103457.GA3391@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-01-12 at 21:36 +0100, Antonio Quartulli wrote:
-
-> +static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
-> +					struct ieee80211_mgmt *mgmt,
-> +					size_t len)
-> +{
-> +	u16 auth_alg, auth_transaction;
-> +	size_t baselen;
-> +
-> +	lockdep_assert_held(&sdata->u.ibss.mtx);
-> +
-> +	if (len < 24 + 6)
-> +		return;
-> +
-> +	baselen = (u8 *) mgmt->u.auth.variable - (u8 *) mgmt;
-> +	if (baselen > len)
-> +		return;
-> +
-> +	auth_alg = le16_to_cpu(mgmt->u.auth.auth_alg);
-> +	auth_transaction = le16_to_cpu(mgmt->u.auth.auth_transaction);
-> +
-> +	if (auth_alg == WLAN_AUTH_OPEN && auth_transaction == 1) {
-
-negating & return would be easier to read & less indentation
-
-> +#ifdef CONFIG_MAC80211_IBSS_DEBUG
-> +		printk(KERN_DEBUG "%s: RX Auth SA=%pM DA=%pM BSSID=%pM."
-> +		       "(auth_transaction=%d)\n",
-> +		       sdata->name, mgmt->sa, mgmt->da, mgmt->bssid,
-> +		       auth_transaction);
-> +#endif
-> +		if (sta_info_destroy_addr(sdata, mgmt->sa) != -ENOENT) {
-> +			ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0,
-> +					       false);
-> +			rcu_read_unlock();
-> +		}
-
-This doesn't seem to make sense, why not add the station even if we
-didn't know about it before?
-
-johannes
-
+On Tue, Jan 03, 2012 at 11:34:58AM +0100, Stanislaw Gruszka wrote:
+> On Tue, Dec 27, 2011 at 11:53:40AM +0100, Michal Hocko wrote:
+> > my laptop died (due to drained batteries) while it was suspended to
+> > RAM and the wireless didn't get back to life after I booted again.
+> 
+> I wonder how we could kill hardware that way ...
+> 
+> > Dmesg says:
+> > cfg80211: Calling CRDA to update world regulatory domain
+> > iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for Linux, in-tree:s
+> > iwl3945: Copyright(c) 2003-2011 Intel Corporation
+> > iwl3945 0000:05:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
+> > iwl3945 0000:05:00.0: setting latency timer to 64
+> > iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+> > iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+> > iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+> > iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+> > iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+> > iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+> > iwl3945 0000:05:00.0: bad EEPROM signature,EEPROM_GP=0x00000007
+> > iwl3945 0000:05:00.0: EEPROM not found, EEPROM_GP=0xffffffff
+> > iwl3945 0000:05:00.0: Unable to init EEPROM
+> > iwl3945 0000:05:00.0: PCI INT A disabled
+> > iwl3945: probe of 0000:05:00.0 failed with error -2
+> > 
+> > Is there anything I can do to resurrect it?
+> 
+> No idea. Please provide logs with debug=0x47ffffff option.
+> 
+> Did you try to totally power-off the laptop by removing
+> battery (and power cable of course) ?
+> 
+> If anything other will not help, is possible to rewrite eeprom, I don't
+> know how to do this, but I know that tool for that exist:
+> http://code.google.com/p/iwleeprom/
+Actually I do not think we overwrite eeprom, seems problem is at pci-e
+bus level. Simply we can not communicate with device through pci-e bus.
+That is kind a silly, but you can check if removing cart from slot
+and put it back again (assuring it correctly connected) helps.
+ 
+Stanislaw 
