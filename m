@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:47648 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757177Ab2ADXHr (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:64137 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753597Ab2ACAbU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jan 2012 18:07:47 -0500
-Subject: [PATCH 0/6] ath6kl: create ath6kl_core.ko
-To: linville@tuxdriver.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: sfr@canb.auug.org.au, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-next@vger.kernel.org, ath6kl-devel@qualcomm.com,
-	davem@davemloft.net
-Date: Thu, 05 Jan 2012 01:07:20 +0200
-Message-ID: <20120104230429.32306.75965.stgit@x201> (sfid-20120105_000757_327947_7FE2D4D4)
+	Mon, 2 Jan 2012 19:31:20 -0500
+From: Marek Vasut <marek.vasut@gmail.com>
+To: Jack Stone <jwjstone@fastmail.fm>
+Subject: Re: loading firmware while usermodehelper disabled.
+Date: Tue, 3 Jan 2012 01:31:15 +0100
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Greg Kroah-Hartman" <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> <201201022331.27562.marek.vasut@gmail.com> <4F023D02.1030403@fastmail.fm>
+In-Reply-To: <4F023D02.1030403@fastmail.fm>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201201030131.15397.marek.vasut@gmail.com> (sfid-20120103_013149_667336_0B4D088B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here's the patchset to fix the allyesconfig build breakage. My fix is to
-create a separate module ath6kl_core.ko which both ath6kl_sdio.ko and
-ath6kl_usb.ko use. I have tested various combinations to make sure that
-there are no compile errors anymore. Also allyesconfig build is running
-right now.
+> On 02/01/12 22:31, Marek Vasut wrote:
+> >> I don't think there is anyway to avoid the memory requirement if we want
+> >> to be able to resume transparently to user-space (or even resume at all
+> >> in some setups).
+> > 
+> > Well ... injecting firmware into kernel with some userland helper just
+> > before suspend is no-go?
+> 
+> Its a perfectly good idea but you still need the full memory requirement
+> during the suspend.
 
-Dave, please take a look and let me know if you prefer to fix this somehow
-differently.
+Hm ... and we can't have memory type that "can be swapped-out, but must be 
+loaded back before suspend" in kernel, right?
 
-John, these patches are based your wireless-next tree, they do not even
-apply to ath6kl.git. If the patches are ok, please take them directly to
-get them faster to Dave.
-
-Sorry again for this mess and taking so long to fix it.
-
----
-
-Kalle Valo (6):
-      ath6kl: rename vif init and cleanup functions
-      ath6kl: unify cfg80211 init/cleanup functions
-      ath6kl: create core.c
-      ath6kl: get rid of AR_DBG_LVL_CHECK()
-      ath6kl: convert ath6kl_dbg() and ath6kl_dbg_dump() into functions
-      ath6kl: create ath6kl_core.ko
-
-
- drivers/net/wireless/ath/ath6kl/Makefile   |   35 +--
- drivers/net/wireless/ath/ath6kl/cfg80211.c |  207 ++++++++------------
- drivers/net/wireless/ath/ath6kl/cfg80211.h |   12 +
- drivers/net/wireless/ath/ath6kl/common.h   |    3 
- drivers/net/wireless/ath/ath6kl/core.c     |  297 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/core.h     |   10 +
- drivers/net/wireless/ath/ath6kl/debug.c    |   62 ++++--
- drivers/net/wireless/ath/ath6kl/debug.h    |   27 ---
- drivers/net/wireless/ath/ath6kl/hif.c      |   10 +
- drivers/net/wireless/ath/ath6kl/init.c     |  211 +-------------------
- drivers/net/wireless/ath/ath6kl/sdio.c     |    4 
- drivers/net/wireless/ath/ath6kl/usb.c      |    8 -
- drivers/net/wireless/ath/ath6kl/wmi.c      |    3 
- 13 files changed, 478 insertions(+), 411 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath6kl/core.c
-
+> 
+> Thanks,
+> 
+> Jack
