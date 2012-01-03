@@ -1,52 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out5.smtp.messagingengine.com ([66.111.4.29]:40780 "EHLO
-	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752523Ab2ABV0Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 16:26:16 -0500
-Received: from compute1.internal (compute1.nyi.mail.srv.osa [10.202.2.41])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id BD06E2128E
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Jan 2012 16:26:15 -0500 (EST)
-Message-ID: <4F0220F5.30309@fastmail.fm> (sfid-20120102_222621_402169_DFD806A2)
-Date: Mon, 02 Jan 2012 21:26:13 +0000
-From: Jack Stone <jwjstone@fastmail.fm>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:47741 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754497Ab2ACTAs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jan 2012 14:00:48 -0500
+Message-ID: <4F035028.6030207@hauke-m.de> (sfid-20120103_200051_699137_AFFCF8D5)
+Date: Tue, 03 Jan 2012 19:59:52 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-To: Matthew Garrett <mjg@redhat.com>
-CC: Linus Torvalds <torvalds@linux-foundation.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Oliver Neukum <oliver@neukum.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> <4F02165C.1060400@fastmail.fm> <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com> <20120102211904.GA15316@srcf.ucam.org>
-In-Reply-To: <20120102211904.GA15316@srcf.ucam.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: linux-wireless@vger.kernel.org,
+	Luis Rodriguez <mcgrof@frijolero.org>
+Subject: Re: compat-wireless patch Re: [PATCH] Enable CONFIG_RT2800{PCI,USB}_RT53XX
+References: <1325604516-14280-1-git-send-email-linville@tuxdriver.com> <20120103153535.GA24318@tuxdriver.com>
+In-Reply-To: <20120103153535.GA24318@tuxdriver.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/01/12 21:19, Matthew Garrett wrote:
-> On Mon, Jan 02, 2012 at 12:48:48PM -0800, Linus Torvalds wrote:
-> 
->> Why are you guys making it any more complicated than that?
-> 
-> Because it's inadequate. You can't guarantee that we ever loaded 
-> firmware. The same hardware might maintain state over warm reboots but 
-> not over suspend. We never loaded the firmware loader driver. We never 
-> called request_firmware(). We have no way of knowing whether the device 
-> is an older one that needs firmware loading, or a newer one which has it 
-> in flash.
-> 
+On 01/03/2012 04:35 PM, John W. Linville wrote:
+> On Tue, Jan 03, 2012 at 10:28:36AM -0500, John W. Linville wrote:
+>> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>> ---
+>> Any reason to treat these differently than the RT35XX devices?
+Some/Long time ago RT53XX devices where marked as not working in
+Kconfig, now I can not find such a message any more, so I am totally
+fine with this patch.
 
-Can we tell by the USB ids that this is a device that might need
-firmware and load it into memory anyway - it would use more memory but
-would always work as we would have the firmware.
-
-Thanks,
-
-Jack
+Hauke
