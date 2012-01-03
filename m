@@ -1,105 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41552 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753855Ab2ATPz1 (ORCPT
+Received: from esgaroth.petrovitsch.at ([78.47.184.11]:2518 "EHLO
+	esgaroth.petrovitsch.priv.at" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753650Ab2ACOxI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 10:55:27 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH 5/6] ath6kl: Fix bug in using tid given by addba/delba req events
-Date: Fri, 20 Jan 2012 21:22:01 +0530
-Message-ID: <1327074722-3492-5-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120120_165531_432428_3609DFEB)
-In-Reply-To: <1327074722-3492-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1327074722-3492-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 3 Jan 2012 09:53:08 -0500
+Subject: Re: loading firmware while usermodehelper disabled.
+From: Bernd Petrovitsch <bernd@petrovitsch.priv.at>
+To: "Alexander E. Patrakov" <patrakov@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Date: Tue, 03 Jan 2012 15:12:29 +0100
+In-Reply-To: <20120103151637.1388e204@home>
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
+	 <4F02165C.1060400@fastmail.fm>
+	 <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
+	 <20120102211904.GA15316@srcf.ucam.org>
+	 <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
+	 <20120102215028.GA15701@srcf.ucam.org> <20120103151637.1388e204@home>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <1325599949.4806.22.camel@thorin> (sfid-20120103_155334_833521_5FBEFD81)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The tid which is given in addba/delba req event is not
-just tid but also muxed with the assoc id (MSB 4 bits)
-which can be used to determine the corresponding connected
-station in softap mode. The actual tid is LSB 4 bits. Using
-the tid as it is with rx_tid[] would result in OOB or invalid
-memory access in AP mode.
+On Die, 2012-01-03 at 15:16 +0600, Alexander E. Patrakov wrote:
+[...]
+> however, never had such dependency issues. So maybe revert to it, with
+> the following changes, and solve the legal issue seen by Debian by
+> hiring a lawyer?
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/txrx.c |   25 +++++++++++++++++++++++--
- 1 files changed, 23 insertions(+), 2 deletions(-)
+You have to talk to the Debian people about this.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 35ddae3..eeb3a10 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -17,6 +17,17 @@
- #include "core.h"
- #include "debug.h"
- 
-+/*
-+ * tid - tid_mux0..tid_mux3
-+ * aid - tid_mux4..tid_mux7
-+ */
-+#define ATH6KL_TID_MASK 0xf
-+
-+static inline u8 ath6kl_get_tid(u8 tid_mux)
-+{
-+	return tid_mux & ATH6KL_TID_MASK;
-+}
-+
- static u8 ath6kl_ibss_map_epid(struct sk_buff *skb, struct net_device *dev,
- 			       u32 *map_no)
- {
-@@ -1602,7 +1613,7 @@ static void aggr_delete_tid_state(struct aggr_info_conn *aggr_conn, u8 tid)
- 	memset(stats, 0, sizeof(struct rxtid_stats));
- }
- 
--void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid, u16 seq_no,
-+void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid_mux, u16 seq_no,
- 			     u8 win_sz)
- {
- 	struct aggr_info *p_aggr = vif->aggr_cntxt;
-@@ -1610,12 +1621,17 @@ void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid, u16 seq_no,
- 	struct rxtid *rxtid;
- 	struct rxtid_stats *stats;
- 	u16 hold_q_size;
-+	u8 tid;
- 
- 	if (!p_aggr || !p_aggr->aggr_conn)
- 		return;
- 
- 	aggr_conn = p_aggr->aggr_conn;
- 
-+	tid = ath6kl_get_tid(tid_mux);
-+	if (tid >= NUM_OF_TIDS)
-+		return;
-+
- 	rxtid = &aggr_conn->rx_tid[tid];
- 	stats = &aggr_conn->stat[tid];
- 
-@@ -1691,15 +1707,20 @@ struct aggr_info *aggr_init(struct ath6kl_vif *vif)
- 	return p_aggr;
- }
- 
--void aggr_recv_delba_req_evt(struct ath6kl_vif *vif, u8 tid)
-+void aggr_recv_delba_req_evt(struct ath6kl_vif *vif, u8 tid_mux)
- {
- 	struct aggr_info *p_aggr = vif->aggr_cntxt;
- 	struct rxtid *rxtid;
- 	struct aggr_info_conn *aggr_conn;
-+	u8 tid;
- 
- 	if (!p_aggr || !p_aggr->aggr_conn)
- 		return;
- 
-+	tid = ath6kl_get_tid(tid_mux);
-+	if (tid >= NUM_OF_TIDS)
-+		return;
-+
- 	aggr_conn = p_aggr->aggr_conn;
- 	rxtid = &aggr_conn->rx_tid[tid];
- 
+Sorry for the semi-off-topic,
+	Bernd
 -- 
-1.7.0.4
+Bernd Petrovitsch                  Email : bernd@petrovitsch.priv.at
+                     LUGA : http://www.luga.at
 
