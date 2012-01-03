@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:64749 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744Ab2AIFLK convert rfc822-to-8bit (ORCPT
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:47412 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753637Ab2ACAmD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 00:11:10 -0500
-MIME-Version: 1.0
-In-Reply-To: <NEXT-4f09438ac7d220.32208778@nextmail.ru>
-References: <NEXT-4f09438ac7d220.32208778@nextmail.ru>
-Date: Mon, 9 Jan 2012 10:41:08 +0530
-Message-ID: <CAD2nsn2W0aodLfS8eBo1zTfN2kMFZ83=FtC3cH=Q4OrohQAyNQ@mail.gmail.com> (sfid-20120109_061115_338962_0D72EBA3)
-Subject: Re: ath9k crash 3.2-rc7
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: MR <g7af0ec1e3ea1e7b1@nextmail.ru>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 2 Jan 2012 19:42:03 -0500
+Date: Tue, 3 Jan 2012 00:42:20 +0000
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Jack Stone <jwjstone@fastmail.fm>
+Cc: Matthew Garrett <mjg@redhat.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+Message-ID: <20120103004220.084d61f3@pyramind.ukuu.org.uk> (sfid-20120103_014222_477086_FF33E216)
+In-Reply-To: <4F0220F5.30309@fastmail.fm>
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
+	<4F02165C.1060400@fastmail.fm>
+	<CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
+	<20120102211904.GA15316@srcf.ucam.org>
+	<4F0220F5.30309@fastmail.fm>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/1/8 MR <g7af0ec1e3ea1e7b1@nextmail.ru>:
->  >  > *does the other patch which remove some suspicious looking code, to
->  >  > see if it improves the situation and avoids the warnings itself.
->  >
->  >I have built and loaded the kernel with this patch. I even have netconsole
->  >
->  > apparently working. But ten hours have not elapsed yet. So far so good.
->  >
->  > If it works till the 10th, I will test it with roaming, too.
->
-> Around 23 hours have elapsed.
->
-> WiFi seems to be working 100% of time. It is always at least lightly loaded.
->
-> Speedtests seems to gve slightly better upload results than I remember with
-> 2.6.* (and I have a good enough ISP for WiFi to be the weakest link), so it
-> doesn't seem to be a performance regression, either.
+> Can we tell by the USB ids that this is a device that might need
+> firmware and load it into memory anyway - it would use more memory but
+> would always work as we would have the firmware.
 
-great and thanks a lot for testing!
-rather than removing the suspicious code
-this is properly fixed by us with this patch.
-http://marc.info/?l=linux-wireless&m=132595161516806&w=2
-you can  download the raw message. please report back if you again
-get the issue.
+Only by wasting a lot of memory in some cases. For the majority of cases
+however yes you can take a good guess that id X might need firmware Y and
+the firmware will only be a few K.
 
->
-> As for roaming while connected - I will try not to forget to test it on the
-> 10th.
->
->
+In that case however you don't want some generic firmware module knowing
+all this crap, your driver can just request_firmware() the stuff as
+modprobe and free it up on the module unload. For a typical 8bit firmware
+of a few K you'll free a ton more memory unloading the module than the
+firmware ! That I think actually covers the majority of devices under
+discussion.
 
+For the giant-firmware cases, it's unworkable on small devices - but they
+are special cases anyway and almost entirely video - so not currently
+ones that cause a problem unless you are doing RFC4824 in which case your
+nearest asylum should be consulted.
 
--- 
-shafi
+Alan
