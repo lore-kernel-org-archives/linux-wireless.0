@@ -1,59 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:57405 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752452Ab2A0DG3 (ORCPT
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:58573 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753461Ab2ACAuS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 22:06:29 -0500
-Date: Thu, 26 Jan 2012 21:06:23 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Problems associating with RTL8188CE
-Message-ID: <20120127030623.GA26774@ubuntu-macmini> (sfid-20120127_040637_468664_E0E73FDD)
-References: <4EE82CC6.2030307@lwfinger.net>
- <20111214162333.GB19410@thinkpad-t410>
- <4EE8D150.8090100@lwfinger.net>
- <20111214164902.GD19410@thinkpad-t410>
- <4EE8D5A1.7040600@lwfinger.net>
- <20111214171234.GE19410@thinkpad-t410>
- <4EE8E035.90501@lwfinger.net>
- <20111214175804.GG19410@thinkpad-t410>
- <20120126213344.GC14465@ubuntu-macmini>
- <4F21E6CF.5040006@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F21E6CF.5040006@lwfinger.net>
+	Mon, 2 Jan 2012 19:50:18 -0500
+Date: Tue, 3 Jan 2012 00:50:41 +0000
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jack Stone <jwjstone@fastmail.fm>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+Message-ID: <20120103005041.3865e345@pyramind.ukuu.org.uk> (sfid-20120103_015023_316880_02E4322A)
+In-Reply-To: <CA+55aFx=AEG7X2Y-LoHchgPdwNpeSkBG1J7eXprmO=czEJOD2A@mail.gmail.com>
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
+	<4F02165C.1060400@fastmail.fm>
+	<CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
+	<4F0219AB.6010505@fastmail.fm>
+	<CA+55aFx=AEG7X2Y-LoHchgPdwNpeSkBG1J7eXprmO=czEJOD2A@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 26, 2012 at 05:50:39PM -0600, Larry Finger wrote:
-> On 01/26/2012 03:33 PM, Seth Forshee wrote:
-> >Sorry for the long silence on this, I was busy with some other things.
-> >But I've been playing with it again this week and uncovered some new
-> >information regarding the failures.
-> >
-> >I noticed the other day that the rtl8188ce was no longer having trouble
-> >associating with this AP. After playing around in the router settings I
-> >discovered that it works fine so long as the router isn't on channel 1.
-> >So then I configured my other router to use channel 1, and then I
-> >started seeing problems with that router as well.
-> >
-> >I also tried the rtl8192ce driver from Realtek's website, and I'm having
-> >better luck with that driver.
-> 
-> Seth,
-> 
-> Are those AP's 802.11n devices that allow HT features on channel 1?
-> I do not know if we support that or not. On my 802.11n device, it
-> automatically switches to channel 3 when I enable HT, and that
-> works.
-> 
-> I can connect to an 802.11g AP on channel 1 with no trouble.
+> Well, if we just have a 10-second timeout for the firmware flushing
+> after the last "put" operation, we don't even care.
 
-Whether or not HT is enabled makes no difference. One is an older
-802.11g router, and on the other I see the same problems with or without
-HT enabled.
+So for a resume 10 seconds after the resume point on the basis that's
+probably enough time to enumerate all the existing hardware without
+errors ? (With errors it can be about 30 as my crappy Dell monitor USB
+hub now and then likes to remind me)
 
-Seth
+
+Alan
