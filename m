@@ -1,55 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([195.4.92.90]:60620 "EHLO mout0.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750895Ab2AXV4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 16:56:20 -0500
-Received: from [195.4.92.141] (helo=mjail1.freenet.de)
-	by mout0.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
-	id 1RpoLh-0005sV-9c
-	for linux-wireless@vger.kernel.org; Tue, 24 Jan 2012 22:56:17 +0100
-Received: from localhost ([::1]:57892 helo=mjail1.freenet.de)
-	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1RpoLh-00005M-5L
-	for linux-wireless@vger.kernel.org; Tue, 24 Jan 2012 22:56:17 +0100
-Received: from [195.4.92.21] (port=55768 helo=11.mx.freenet.de)
-	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1RpoIb-0006pJ-4c
-	for linux-wireless@vger.kernel.org; Tue, 24 Jan 2012 22:53:05 +0100
-Received: from [2002:4fde:916:2:5054:ff:feb8:40bd] (port=48114 helo=mail.maya.org)
-	by 11.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
-	id 1RpoIa-0000mM-Mu
-	for linux-wireless@vger.kernel.org; Tue, 24 Jan 2012 22:53:05 +0100
-Message-ID: <4F1F2837.5090307@maya.org> (sfid-20120124_225624_236872_01C564FD)
-Date: Tue, 24 Jan 2012 22:52:55 +0100
-From: Andreas Hartmann <andihartmann@freenet.de>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:53453 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754438Ab2ACTtR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jan 2012 14:49:17 -0500
+Received: by iaeh11 with SMTP id h11so31329860iae.19
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2012 11:49:16 -0800 (PST)
+Message-ID: <4F035BB7.8030203@lwfinger.net> (sfid-20120103_204920_705593_31B328AD)
+Date: Tue, 03 Jan 2012 13:49:11 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
+To: John Williams <john@pond-weed.com>
 CC: linux-wireless@vger.kernel.org
-Subject: Re: ath9k get's completely knocked out by rt3572 device
-References: <4F1EF618.6080108@01019freenet.de> <13411135.eH6opTgxBo@helmutmobil.site>
-In-Reply-To: <13411135.eH6opTgxBo@helmutmobil.site>
-Content-Type: text/plain; charset=ISO-8859-15
+Subject: Re: [Question] Realtek USB 0bda:8176 as AP?
+References: <20120101130000.57429e74@buffy.scoobygang>
+In-Reply-To: <20120101130000.57429e74@buffy.scoobygang>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helmut Schaa schrieb:
-> Am Dienstag, 24. Januar 2012, 19:19:04 schrieb Andreas Hartmann:
->> - At the moment of stopping netperf on rt3572, the ath9k device
->> instantly started sending / receiving data again as expected.
-> [...]
->> Does anybody has an idea what could cause this situation? Or is this normal?
-> 
-> Your netperf traffic is in the direction STA -> AP or also in the other
-> direction?
+On 01/01/2012 07:00 AM, John Williams wrote:
+> Hello list,
+>
+> I see there was a discussion on this list about three months ago about
+> using an RTL8192CU (usb 0bda:8176) in access point mode. I've just
+> bought one and I've got the same problem: hostapd just prints this in a
+> loop until it gives up:
+>
+> WPA: 00:24:23:0c:9c:2f WPA_PTK entering state PTKSTART
+> wlan0: STA 00:24:23:0c:9c:2f WPA: sending 1/4 msg of 4-Way Handshake
+> WPA: Send EAPOL(version=2 secure=0 mic=0 ack=1 install=0 pairwise=8
+>    kde_len=0 keyidx=0 encr=0)
+> IEEE 802.1X: 00:24:23:0c:9c:2f TX status -version=2 type=3
+>    length=95 - ack=1
+> wlan0: STA 00:24:23:0c:9c:2f
+> WPA: EAPOL-Key timeout
+>
+> This is with the driver from compat_wireless as of 2011-12-29.
+>
+> It works fine with the driver downloaded from the realtek website
+> (provided that I also use their patched version of hostapd), so it's
+> not a hardware problem.
+>
+> If anyone could point me to the area in the driver where it is supposed
+> to receive the missing message, I would be happy to have a go at
+> debugging it.
 
-In both directions (serially). It's a script, which does the following:
+I do not know what the problem with using the kernel versions of 
+rtl8192{ce,cu,se,de} as an AP. I have been going through the differences between 
+the version available on the Realtek web site and the kernel sources. Sorting 
+out the differences is mind numbing, and will take a while to complete.
 
-while true
-do
-	netperf -H host -t TCP_STREAM 	 # (STA -> AP)
-	netperf -H host -t TCP_MAERTS    # (AP -> STA)
-	netperf -H host -t TCP_SENDFILE  # (STA -> AP)
-done
+Patches will be posted on the wireless ML when I get a fix.
 
+Larry
 
-Andreas
