@@ -1,56 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:58100 "EHLO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754713Ab2AXJGl (ORCPT
+Received: from out5.smtp.messagingengine.com ([66.111.4.29]:38538 "EHLO
+	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753542Ab2ACAlw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 04:06:41 -0500
-Received: by laho5 with SMTP id o5so750123lah.4
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2012 01:06:38 -0800 (PST)
+	Mon, 2 Jan 2012 19:41:52 -0500
+Received: from compute4.internal (compute4.nyi.mail.srv.osa [10.202.2.44])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 3E21421446
+	for <linux-wireless@vger.kernel.org>; Mon,  2 Jan 2012 19:41:52 -0500 (EST)
+References: <20120102211904.GA15316@srcf.ucam.org> <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com> <20120102215028.GA15701@srcf.ucam.org> <CA+55aFz73GuHiOW1NoAuJLea_GKLepiZjrnrgpOKdQizPgnhoA@mail.gmail.com> <20120102221235.GA16012@srcf.ucam.org> <CA+55aFyHvmvast_kuNddU3iotReR1mOpKM4HGAw80ma8kn+2-g@mail.gmail.com> <20120102222920.GA16160@srcf.ucam.org> <CA+55aFyUK6X7ip2UXV9iT07=qezXfbw82wn6UKAN8JFQtYNs5Q@mail.gmail.com> <20120102230037.GA16458@srcf.ucam.org> <4F023E6B.2020307@fastmail.fm> <20120103001356.GA17183@srcf.ucam.org> <8e95c7e3-e9d5-43c4-8e6a-b8d40584cbd6@email.android.com> <20120103003126.52ad9077@pyramind.ukuu.org.uk>
+In-Reply-To: <20120103003126.52ad9077@pyramind.ukuu.org.uk>
 MIME-Version: 1.0
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com
-Subject: [PATCH 0/8] wl12xx: some fixes and improvements for PLT mode
-Date: Tue, 24 Jan 2012 11:06:21 +0200
-Message-Id: <1327395989-29663-1-git-send-email-coelho@ti.com> (sfid-20120124_100649_553080_F51E9933)
+Content-Type: text/plain;
+ charset=UTF-8
+Subject: Re: loading firmware while usermodehelper disabled.
+From: Jack Stone <jwjstone@fastmail.fm>
+Date: Tue, 03 Jan 2012 00:41:34 +0000
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+CC: Matthew Garrett <mjg@redhat.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Message-ID: <089f1112-758b-4006-ba47-64ce4bc1409f@email.android.com> (sfid-20120103_014157_889260_1A53AF93)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-This patchset fixes some bugs in PLT mode and adds support for 2 MAC
-addresses based on the NVS file or in the device's fuse ROM.
 
-This two patches I sent as part of the "wl12xx: read MAC from fuse
-rom" series are superseded by this set.
+Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
 
-Cheers,
-Luca.
- 
+>> So we have a table of USB ids that list the devices that need
+>firmware drivers. When the uvcvideo driver registers the firmware
+>interface with a USB id that matches the list we load the firmware
+>driver and pass it a "warm start" event so it can cache the firmware.
+>> 
+>> As long as we can identify the devices that *might* need firmware
+>then we are ok.
+>
+>You just broke the module loading guarantees that stop it all coming
+>apart
+>in the first place. Probably not in many real world ways but not good.
+>
+>If we warm booted from Windows into Linux and then suspended then on
+>resume we won't have the driver for the firmware loaded present - we
+>never saw the 'need firmware' id.
 
-Ido Yariv (3):
-  wl12xx: Acquire lock before stopping plt
-  wl12xx: Power off after flushing work
-  wl12xx: Fix potential interrupt storm
+I agree we won't see the need firmware id but we should still be able to identify the device from some of its ids shouldn't we? We could then cache the firmware even though we never loaded it.
 
-Luciano Coelho (5):
-  wl12xx: cancel delayed elp work and clear flags when stopping PLT
-  wl12xx: move partition table definition to io.c
-  wl12xx: read chip ID and HW PG version during probe
-  wl12xx: use two MAC addresses based on the NVS or from fuse ROM
-  wl12xx: add testmode operation to read the BD_ADDR from Fuse ROM
+>That moves us from a dependancy chain for firmware to one including
+>firmware and modules (imagine /lib/modules over iscsi for an iscsi
+>adapter needing firmware).
+>
+>At the moment I don't think anyone has been dumb enough to do firmware
+>requiring storage and NFS root over firmware requiring USB devices is
+>pretty dumb. I don't however think it's a good hole to dig ?
 
- drivers/net/wireless/wl12xx/boot.c     |  102 ++-------------
- drivers/net/wireless/wl12xx/boot.h     |   10 --
- drivers/net/wireless/wl12xx/debug.h    |    1 +
- drivers/net/wireless/wl12xx/io.c       |   59 +++++++++
- drivers/net/wireless/wl12xx/io.h       |    2 +
- drivers/net/wireless/wl12xx/main.c     |  216 ++++++++++++++++++++++++++------
- drivers/net/wireless/wl12xx/reg.h      |   27 ++++
- drivers/net/wireless/wl12xx/testmode.c |   50 ++++++++
- drivers/net/wireless/wl12xx/wl12xx.h   |    7 +-
- 9 files changed, 335 insertions(+), 139 deletions(-)
+I'm sure someone will try it at somepoint...
+
+Thanks,
+
+Jack
 
 -- 
-1.7.4.1
-
+Sent from my Android phone with K-9 Mail. Please excuse my brevity.
