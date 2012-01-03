@@ -1,182 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47588 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755164Ab2ASIbj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jan 2012 03:31:39 -0500
-Message-Id: <20120119083102.873553392@sipsolutions.net> (sfid-20120119_093143_713988_6A1D8336)
-Date: Thu, 19 Jan 2012 09:29:58 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] mac80211: make CQM RSSI support per virtual interface
-References: <20120119082956.486569312@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mx2.mail.elte.hu ([157.181.151.9]:36584 "EHLO mx2.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751992Ab2ACI2x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jan 2012 03:28:53 -0500
+Date: Tue, 3 Jan 2012 09:26:27 +0100
+From: Ingo Molnar <mingo@elte.hu>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Jack Stone <jwjstone@fastmail.fm>,
+	Matthew Garrett <mjg@redhat.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Oliver Neukum <oliver@neukum.org>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+Message-ID: <20120103082627.GA13214@elte.hu> (sfid-20120103_092857_159646_D0A489E4)
+References: <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
+ <20120102215028.GA15701@srcf.ucam.org>
+ <CA+55aFz73GuHiOW1NoAuJLea_GKLepiZjrnrgpOKdQizPgnhoA@mail.gmail.com>
+ <20120102221235.GA16012@srcf.ucam.org>
+ <CA+55aFyHvmvast_kuNddU3iotReR1mOpKM4HGAw80ma8kn+2-g@mail.gmail.com>
+ <20120102222920.GA16160@srcf.ucam.org>
+ <CA+55aFyUK6X7ip2UXV9iT07=qezXfbw82wn6UKAN8JFQtYNs5Q@mail.gmail.com>
+ <20120102230037.GA16458@srcf.ucam.org>
+ <4F023E6B.2020307@fastmail.fm>
+ <20120103001851.3530f99d@pyramind.ukuu.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120103001851.3530f99d@pyramind.ukuu.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-Similar to the previous beacon filtering patch,
-make CQM RSSI support depend on the flags that
-the driver set for virtual interfaces.
+* Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- drivers/net/wireless/wl1251/main.c |    6 +++---
- drivers/net/wireless/wl12xx/main.c |    4 ++--
- include/net/mac80211.h             |   14 +++++++-------
- net/mac80211/cfg.c                 |   10 ++--------
- net/mac80211/debugfs.c             |    2 --
- net/mac80211/mlme.c                |    4 ++--
- 6 files changed, 16 insertions(+), 24 deletions(-)
+> > You mensioned earlier about not being able to tell the 
+> > difference between a device that needs firmware and one that 
+> > needs flash (e.g. they use exactly the same ids). It doesn't 
+> > really matter - we just assume that it might need firmware 
+> > and load it anyway. It uses more memory but is robust.
+> 
+> We only need to do that for the devices where order and not 
+> blocking matters. There are a few (and some are video) where 
+> the firmware sizes is megabytes, which on an embedded 
+> controlling device is not acceptable. I don't believe any of 
+> them are things where simply delaying the restoration will 
+> cause problems however - its video, and DVB and the like not 
+> wireless or serial.
 
---- a/include/net/mac80211.h	2012-01-19 09:22:06.000000000 +0100
-+++ b/include/net/mac80211.h	2012-01-19 09:24:42.000000000 +0100
-@@ -856,9 +856,14 @@ struct ieee80211_channel_switch {
-  *
-  * @IEEE80211_VIF_BEACON_FILTER: the device performs beacon filtering
-  *	on this virtual interface to avoid unnecessary CPU wakeups
-+ * @IEEE80211_VIF_SUPPORTS_CQM_RSSI: the device can do connection quality
-+ *	monitoring on this virtual interface -- i.e. it can monitor
-+ *	connection quality related parameters, such as the RSSI level and
-+ *	provide notifications if configured trigger levels are reached.
-  */
- enum ieee80211_vif_flags {
- 	IEEE80211_VIF_BEACON_FILTER		= BIT(0),
-+	IEEE80211_VIF_SUPPORTS_CQM_RSSI		= BIT(1),
- };
- 
- /**
-@@ -1119,11 +1124,6 @@ enum sta_notify_cmd {
-  *      When this flag is set, signaling beacon-loss will cause an immediate
-  *      change to disassociated state.
-  *
-- * @IEEE80211_HW_SUPPORTS_CQM_RSSI:
-- *	Hardware can do connection quality monitoring - i.e. it can monitor
-- *	connection quality related parameters, such as the RSSI level and
-- *	provide notifications if configured trigger levels are reached.
-- *
-  * @IEEE80211_HW_NEED_DTIM_PERIOD:
-  *	This device needs to know the DTIM period for the BSS before
-  *	associating.
-@@ -1167,7 +1167,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_SUPPORTS_UAPSD			= 1<<17,
- 	IEEE80211_HW_REPORTS_TX_ACK_STATUS		= 1<<18,
- 	IEEE80211_HW_CONNECTION_MONITOR			= 1<<19,
--	IEEE80211_HW_SUPPORTS_CQM_RSSI			= 1<<20,
-+	/* reuse bit 20 */
- 	IEEE80211_HW_SUPPORTS_PER_STA_GTK		= 1<<21,
- 	IEEE80211_HW_AP_LINK_PS				= 1<<22,
- 	IEEE80211_HW_TX_AMPDU_SETUP_IN_HW		= 1<<23,
-@@ -3408,7 +3408,7 @@ void ieee80211_enable_dyn_ps(struct ieee
-  * @rssi_event: the RSSI trigger event type
-  * @gfp: context flags
-  *
-- * When the %IEEE80211_HW_SUPPORTS_CQM_RSSI is set, and a connection quality
-+ * When the %IEEE80211_VIF_SUPPORTS_CQM_RSSI is set, and a connection quality
-  * monitoring is configured with an rssi threshold, the driver will inform
-  * whenever the rssi level reaches the threshold.
-  */
---- a/net/mac80211/cfg.c	2012-01-19 09:22:06.000000000 +0100
-+++ b/net/mac80211/cfg.c	2012-01-19 09:24:42.000000000 +0100
-@@ -1862,7 +1862,6 @@ static int ieee80211_set_cqm_rssi_config
- 					 s32 rssi_thold, u32 rssi_hyst)
- {
- 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
--	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
- 	struct ieee80211_vif *vif = &sdata->vif;
- 	struct ieee80211_bss_conf *bss_conf = &vif->bss_conf;
- 
-@@ -1873,14 +1872,9 @@ static int ieee80211_set_cqm_rssi_config
- 	bss_conf->cqm_rssi_thold = rssi_thold;
- 	bss_conf->cqm_rssi_hyst = rssi_hyst;
- 
--	if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_CQM_RSSI)) {
--		if (sdata->vif.type != NL80211_IFTYPE_STATION)
--			return -EOPNOTSUPP;
--		return 0;
--	}
--
- 	/* tell the driver upon association, unless already associated */
--	if (sdata->u.mgd.associated)
-+	if (sdata->u.mgd.associated &&
-+	    sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI)
- 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_CQM);
- 
- 	return 0;
---- a/net/mac80211/debugfs.c	2012-01-19 09:22:06.000000000 +0100
-+++ b/net/mac80211/debugfs.c	2012-01-19 09:24:42.000000000 +0100
-@@ -257,8 +257,6 @@ static ssize_t hwflags_read(struct file
- 		sf += snprintf(buf + sf, mxln - sf, "REPORTS_TX_ACK_STATUS\n");
- 	if (local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
- 		sf += snprintf(buf + sf, mxln - sf, "CONNECTION_MONITOR\n");
--	if (local->hw.flags & IEEE80211_HW_SUPPORTS_CQM_RSSI)
--		sf += snprintf(buf + sf, mxln - sf, "SUPPORTS_CQM_RSSI\n");
- 	if (local->hw.flags & IEEE80211_HW_SUPPORTS_PER_STA_GTK)
- 		sf += snprintf(buf + sf, mxln - sf, "SUPPORTS_PER_STA_GTK\n");
- 	if (local->hw.flags & IEEE80211_HW_AP_LINK_PS)
---- a/net/mac80211/mlme.c	2012-01-19 09:22:06.000000000 +0100
-+++ b/net/mac80211/mlme.c	2012-01-19 09:24:42.000000000 +0100
-@@ -1043,7 +1043,7 @@ static void ieee80211_set_associated(str
- 	bss_info_changed |= BSS_CHANGED_BSSID;
- 
- 	/* Tell the driver to monitor connection quality (if supported) */
--	if ((local->hw.flags & IEEE80211_HW_SUPPORTS_CQM_RSSI) &&
-+	if (sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI &&
- 	    bss_conf->cqm_rssi_thold)
- 		bss_info_changed |= BSS_CHANGED_CQM;
- 
-@@ -1891,7 +1891,7 @@ static void ieee80211_rx_mgmt_beacon(str
- 
- 	if (bss_conf->cqm_rssi_thold &&
- 	    ifmgd->count_beacon_signal >= IEEE80211_SIGNAL_AVE_MIN_COUNT &&
--	    !(local->hw.flags & IEEE80211_HW_SUPPORTS_CQM_RSSI)) {
-+	    !(sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI)) {
- 		int sig = ifmgd->ave_beacon_signal / 16;
- 		int last_event = ifmgd->last_cqm_event_signal;
- 		int thold = bss_conf->cqm_rssi_thold;
---- a/drivers/net/wireless/wl1251/main.c	2012-01-19 09:22:06.000000000 +0100
-+++ b/drivers/net/wireless/wl1251/main.c	2012-01-19 09:24:42.000000000 +0100
-@@ -514,7 +514,8 @@ static int wl1251_op_add_interface(struc
- 	struct wl1251 *wl = hw->priv;
- 	int ret = 0;
- 
--	vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER;
-+	vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER |
-+			     IEEE80211_VIF_SUPPORTS_CQM_RSSI;
- 
- 	wl1251_debug(DEBUG_MAC80211, "mac80211 add interface type %d mac %pM",
- 		     vif->type, vif->addr);
-@@ -1340,8 +1341,7 @@ int wl1251_init_ieee80211(struct wl1251
- 
- 	wl->hw->flags = IEEE80211_HW_SIGNAL_DBM |
- 		IEEE80211_HW_SUPPORTS_PS |
--		IEEE80211_HW_SUPPORTS_UAPSD |
--		IEEE80211_HW_SUPPORTS_CQM_RSSI;
-+		IEEE80211_HW_SUPPORTS_UAPSD;
- 
- 	wl->hw->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
- 					 BIT(NL80211_IFTYPE_ADHOC);
---- a/drivers/net/wireless/wl12xx/main.c	2012-01-19 09:22:06.000000000 +0100
-+++ b/drivers/net/wireless/wl12xx/main.c	2012-01-19 09:24:42.000000000 +0100
-@@ -2060,7 +2060,8 @@ static int wl1271_op_add_interface(struc
- 	u8 role_type;
- 	bool booted = false;
- 
--	vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER;
-+	vif->driver_flags |= IEEE80211_VIF_BEACON_FILTER |
-+			     IEEE80211_VIF_SUPPORTS_CQM_RSSI;
- 
- 	wl1271_debug(DEBUG_MAC80211, "mac80211 add interface type %d mac %pM",
- 		     ieee80211_vif_type_p2p(vif), vif->addr);
-@@ -4904,7 +4905,6 @@ static int wl1271_init_ieee80211(struct
- 		IEEE80211_HW_SUPPORTS_UAPSD |
- 		IEEE80211_HW_HAS_RATE_CONTROL |
- 		IEEE80211_HW_CONNECTION_MONITOR |
--		IEEE80211_HW_SUPPORTS_CQM_RSSI |
- 		IEEE80211_HW_REPORTS_TX_ACK_STATUS |
- 		IEEE80211_HW_SPECTRUM_MGMT |
- 		IEEE80211_HW_AP_LINK_PS |
+Here's the size histogram/analysis of all *.fw, *.bin, *.dat, 
+*.ucode, etc. files in /lib/firmware on a fully populated 
+distro:
 
+ 476 firmware blobs total
 
+The toplist:
+
+ -rw-r--r--. 1 root root 2786404 Jul 24  2010 ./bcm70012fw.bin
+ -rw-r--r--. 1 root root 1781048 Feb  9  2011 ./phanfw.bin
+ -rw-r--r--. 1 root root  864276 Jul 24  2010 ./bcm70015fw.bin
+ -rw-r--r--. 1 root root  844980 Feb  8  2011 ./asihpi/dsp6200.bin
+ -rw-r--r--. 1 root root  636980 Feb  8  2011 ./asihpi/dsp6600.bin
+ -rw-r--r--. 1 root root  627696 Feb  8  2011 ./asihpi/dsp6400.bin
+ -rw-r--r--. 1 root root  563592 Aug  4 22:04 ./myri10ge_rss_ethp_z8e.dat
+ -rw-r--r--. 1 root root  553192 Aug  4 22:04 ./myri10ge_rss_eth_z8e.dat
+ -rw-r--r--. 1 root root  504916 Feb  8  2011 ./asihpi/dsp8900.bin
+ -rw-r--r--. 1 root root  498128 Sep  7 20:14 ./ct2fw.bin
+
+ - 2% of them, i.e. just a tiny fraction is over 512 KB.
+ - 80% of the firmware blobs are below 100K.
+ - 50% of them are below 16K.
+
+So loading them into RAM is the obviously right solution.
+
+Those few devices that absolutely want to load the firmware blob 
+dynamically on some weird low-RAM system can do so *BEFORE* 
+suspending.
+
+There is nothing that prevents a low-RAM system from loading the 
+firmware blob in an early suspend callback and making sure it's 
+there at resume time - and then unloading it from RAM after 
+resume.
+
+I.e. large blobs can manage their RAM usage just fine - but the 
+obscenity of the 1% should not control the design and sanity of 
+the 99% case ...
+
+> [...]
+> 
+> The world is heading this way more and more. It's moving from 
+> the old PC model of 'user closes lid, clunk for 15 seconds, 
+> enter suspend, user opens lid, churn churn, video, churn 
+> clunk. resume' to suspend/resume being so fast it happens 
+> between keystrokes.
+
+Exactly!
+
+Thanks,
+
+	Ingo
