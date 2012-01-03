@@ -1,61 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:37027 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751017Ab2AJFT0 (ORCPT
+Received: from iolanthe.rowland.org ([192.131.102.54]:45468 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753418Ab2ACPQT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jan 2012 00:19:26 -0500
-Received: by ghbg21 with SMTP id g21so1965405ghb.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2012 21:19:26 -0800 (PST)
-Message-ID: <4F0BCA5A.1090101@gmail.com> (sfid-20120110_061931_555437_AF4D9257)
-Date: Tue, 10 Jan 2012 13:19:22 +0800
-From: lina <lina.lastname@gmail.com>
+	Tue, 3 Jan 2012 10:16:19 -0500
+Date: Tue, 3 Jan 2012 10:16:18 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Oliver Neukum <oliver@neukum.org>
+cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Matthew Garrett <mjg@redhat.com>,
+	Jack Stone <jwjstone@fastmail.fm>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: loading firmware while usermodehelper disabled.
+In-Reply-To: <201201031250.52580.oliver@neukum.org>
+Message-ID: <Pine.LNX.4.44L0.1201031002050.1452-100000@iolanthe.rowland.org> (sfid-20120103_161623_090835_6114ED32)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: modprob b43 not work after hilibernate
-References: <4F09AAE5.2080209@gmail.com>	<4F09BEC0.7080702@lwfinger.net>	<4F09C1E2.6020907@gmail.com> <CACna6rxMPnn1DHtMvsHtCG3y=_-sCKgb=L901MV96fj31BZ58A@mail.gmail.com> <4F0A686F.9050802@gmail.com> <4F0B21A7.10009@lwfinger.net> <4F0BBDBB.2060407@gmail.com> <4F0BC55C.70509@lwfinger.net>
-In-Reply-To: <4F0BC55C.70509@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 10,January,2012 12:58 PM, Larry Finger wrote:
-> On 01/09/2012 10:25 PM, lina wrote:
->> On Tuesday 10,January,2012 01:19 AM, Larry Finger wrote:
->>> On 01/08/2012 10:09 PM, lina wrote:
->>>> On Monday 09,January,2012 05:44 AM, Rafał Miłecki wrote:
->>>>> Does your kernel have
->>>>> [PATCH] bcma: support for suspend and resume
->>>>> applied?
->>>>
->>>> I don't know how to check, googled for a while, found some thread, but
->>>> did not
->>>> find the patch, is it in the kernel.org [patch] part, I thought the
->>>> [full
->>>> source] is already patched?
->>>
->>> The mainline kernel v3.2-3191-g36e9db2 has that patch.
->>
->> when I tried to open
->> http://www.kernel.org/diff/diffview.cgi?file=/pub/linux/kernel/v3.0/patch-3.2.bz2
->>
->>
->> diffview is looping on the cached resource:
->> /home/httpd/cache/diffview/ZM/ZMxXxIlPZnZ9405Mc9XmGRWFlkM/index
->>
->> when I googled v3.2-3191-g36e9db2, it leads me to this thread only.
->>
->> sorry, I am confusing about how to get this patch and make it to patch.
->>
->> Thanks for your time,
->
-> Get the bleeding-edge version of compat-wireless. That will *always* get
-> you the latest set of patches.
+On Tue, 3 Jan 2012, Oliver Neukum wrote:
 
-Thanks, I just installed the compat-wireless-2012-01-09.tar.bz2
+> > The USB suspend/resume function does that "unbind/rebind" dance, and
+> > that causes a "device_attach()". Which causes a probe() to be called.
+> > 
+> > Should it do that? I think not, not if the ID's haven't changed. But I
+> > don't know the USB layer all that well.
+> 
+> The ID has changed. That is why we run into this problem.
+> And indeed the USB layer does the rebind only if either
+> 
+> a) ID has changed
 
-will keep update.
->
-> Larry
->
+That's not true, or at least, it shouldn't be true.
+
+If the ID has changed then there's nothing to rebind.  The old device
+is gone; it cannot be resumed or rebound at all.  That's the theory,
+and indeed things really do work that way during reset-resume.
+
+Now, during an ordinary resume, the USB core does not check IDs.  It
+assumes that if suspend power was provided to the bus and the device
+was connected to the bus the entire time, then the device remains
+unchanged.  Perhaps this assumption is a mistake, but so far I haven't
+seen any data to prove that it is.
+
+> b) the driver tells us that it cannot deal with a device that has lost its state
+
+This case applies only in situations where the driver doesn't have a 
+reset_resume method.  The uvc driver does have one.
+
+(You left out a third case: The driver doesn't have any suspend/resume
+methods.  But this case applies only when the device has not lost its
+state, and besides, the uvc driver does have these methods.)
+
+Alan Stern
 
