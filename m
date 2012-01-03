@@ -1,90 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:57785 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752419Ab2ATNgz (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:47276 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755307Ab2ACVIF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 08:36:55 -0500
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH v2 3/8] ath6kl: Add a new func to config default WOW patterns for non AP mode
-Date: Fri, 20 Jan 2012 19:05:39 +0530
-Message-ID: <1327066544-23779-4-git-send-email-rmani@qca.qualcomm.com> (sfid-20120120_143659_322917_054F57FD)
-In-Reply-To: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com>
-References: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com>
+	Tue, 3 Jan 2012 16:08:05 -0500
+Received: by eekc4 with SMTP id c4so16211531eek.19
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2012 13:08:04 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/5] b43: N-PHY: fix typos in RF control
+Date: Tue,  3 Jan 2012 22:49:18 +0100
+Message-Id: <1325627361-3394-2-git-send-email-zajec5@gmail.com> (sfid-20120103_220811_764231_F7BFAA35)
+In-Reply-To: <1325627361-3394-1-git-send-email-zajec5@gmail.com>
+References: <1325627361-3394-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
 
-ath6kl_non_ap_add_default_wow_patterns() is added to configure
-the below default patterns when the system enters into WOW
-suspend in non AP mode.
-
-  * Unicast packet pattern
-  * mDNS/SSDP/LLMNR pattern
-
-This func will be called from ath6kl_wow_suspend().
-
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   40 ++++++++++++++++++++++++++++
- 1 files changed, 40 insertions(+), 0 deletions(-)
+ drivers/net/wireless/b43/phy_n.c       |    6 +++---
+ drivers/net/wireless/b43/tables_nphy.c |    6 +++---
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 88cce8f..9ab92c4 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1802,6 +1802,46 @@ static int ath6kl_ap_add_default_wow_patterns(struct ath6kl *ar,
- 	return 0;
- }
+diff --git a/drivers/net/wireless/b43/phy_n.c b/drivers/net/wireless/b43/phy_n.c
+index 20394d8..1e499f0 100644
+--- a/drivers/net/wireless/b43/phy_n.c
++++ b/drivers/net/wireless/b43/phy_n.c
+@@ -211,7 +211,7 @@ static void b43_nphy_rf_control_intc_override(struct b43_wldev *dev, u8 field,
  
-+static int ath6kl_non_ap_add_default_wow_patterns(struct ath6kl *ar,
-+						     struct ath6kl_vif *vif)
-+{
-+	struct net_device *ndev = vif->ndev;
-+	static const u8 discvr_pattern[] = { 0xe0, 0x00, 0x00, 0xf8 };
-+	static const u8 discvr_mask[] = { 0xf0, 0x00, 0x00, 0xf8 };
-+	u8 discvr_offset = 38;
-+	u8 mac_mask[ETH_ALEN];
-+	int ret;
-+
-+	/* Setup unicast pkt pattern */
-+	memset(mac_mask, 0xff, ETH_ALEN);
-+	ret = ath6kl_wmi_add_wow_pattern_cmd(ar->wmi,
-+				vif->fw_vif_idx, WOW_LIST_ID,
-+				ETH_ALEN, 0, ndev->dev_addr,
-+				mac_mask);
-+	if (ret) {
-+		ath6kl_err("failed to add WOW unicast pattern\n");
-+		return ret;
-+	}
-+
-+	/*
-+	 * Setup multicast pattern for mDNS 224.0.0.251,
-+	 * SSDP 239.255.255.250 and LLMNR 224.0.0.252
-+	 */
-+	if ((ndev->flags & IFF_ALLMULTI) ||
-+	    (ndev->flags & IFF_MULTICAST && netdev_mc_count(ndev) > 0)) {
-+		ret = ath6kl_wmi_add_wow_pattern_cmd(ar->wmi,
-+				vif->fw_vif_idx, WOW_LIST_ID,
-+				sizeof(discvr_pattern), discvr_offset,
-+				discvr_pattern, discvr_mask);
-+		if (ret) {
-+			ath6kl_err("failed to add WOW mDNS/SSDP/LLMNR pattern\n");
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
- {
- 	struct in_device *in_dev;
+ 		reg = (i == 0) ?
+ 			B43_NPHY_RFCTL_INTC1 : B43_NPHY_RFCTL_INTC2;
+-		b43_phy_mask(dev, reg, 0xFBFF);
++		b43_phy_set(dev, reg, 0x400);
+ 
+ 		switch (field) {
+ 		case 0:
+@@ -227,7 +227,7 @@ static void b43_nphy_rf_control_intc_override(struct b43_wldev *dev, u8 field,
+ 				b43_phy_set(dev, B43_NPHY_RFCTL_CMD,
+ 						B43_NPHY_RFCTL_CMD_START);
+ 				for (j = 0; j < 100; j++) {
+-					if (b43_phy_read(dev, B43_NPHY_RFCTL_CMD) & B43_NPHY_RFCTL_CMD_START) {
++					if (!(b43_phy_read(dev, B43_NPHY_RFCTL_CMD) & B43_NPHY_RFCTL_CMD_START)) {
+ 						j = 0;
+ 						break;
+ 					}
+@@ -246,7 +246,7 @@ static void b43_nphy_rf_control_intc_override(struct b43_wldev *dev, u8 field,
+ 				b43_phy_set(dev, B43_NPHY_RFCTL_CMD,
+ 						B43_NPHY_RFCTL_CMD_RXTX);
+ 				for (j = 0; j < 100; j++) {
+-					if (b43_phy_read(dev, B43_NPHY_RFCTL_CMD) & B43_NPHY_RFCTL_CMD_RXTX) {
++					if (!(b43_phy_read(dev, B43_NPHY_RFCTL_CMD) & B43_NPHY_RFCTL_CMD_RXTX)) {
+ 						j = 0;
+ 						break;
+ 					}
+diff --git a/drivers/net/wireless/b43/tables_nphy.c b/drivers/net/wireless/b43/tables_nphy.c
+index 645bc34..dc52249 100644
+--- a/drivers/net/wireless/b43/tables_nphy.c
++++ b/drivers/net/wireless/b43/tables_nphy.c
+@@ -2739,11 +2739,11 @@ const struct nphy_rf_control_override_rev3 tbl_rf_control_override_rev3[] = {
+ 	{ 0x0001,  0, 0xE7, 0x7A, 0xEC, 0x7D }, /* field == 0x0002 (fls 2) */
+ 	{ 0x0002,  1, 0xE7, 0x7A, 0xEC, 0x7D }, /* field == 0x0004 (fls 3) */
+ 	{ 0x0004,  2, 0xE7, 0x7A, 0xEC, 0x7D }, /* field == 0x0008 (fls 4) */
+-	{ 0x0016,  4, 0xE7, 0x7A, 0xEC, 0x7D }, /* field == 0x0010 (fls 5) */
++	{ 0x0010,  4, 0xE7, 0x7A, 0xEC, 0x7D }, /* field == 0x0010 (fls 5) */
+ 	{ 0x0020,  5, 0xE7, 0x7A, 0xEC, 0x7D }, /* field == 0x0020 (fls 6) */
+ 	{ 0x0040,  6, 0xE7, 0x7A, 0xEC, 0x7D }, /* field == 0x0040 (fls 7) */
+-	{ 0x0080,  6, 0xE7, 0x7A, 0xEC, 0x7D }, /* field == 0x0080 (fls 8) */
+-	{ 0x0100,  7, 0xE7, 0x7A, 0xEC, 0x7D }, /* field == 0x0100 (fls 9) */
++	{ 0x0080,  7, 0xE7, 0x7A, 0xEC, 0x7D }, /* field == 0x0080 (fls 8) */
++	{ 0x0100,  8, 0xE7, 0x7A, 0xEC, 0x7D }, /* field == 0x0100 (fls 9) */
+ 	{ 0x0007,  0, 0xE7, 0xF8, 0xEC, 0xFA }, /* field == 0x0200 (fls 10) */
+ 	{ 0x0070,  4, 0xE7, 0xF8, 0xEC, 0xFA }, /* field == 0x0400 (fls 11) */
+ 	{ 0xE000, 13, 0xE7, 0x7A, 0xEC, 0x7D }, /* field == 0x0800 (fls 12) */
 -- 
-1.7.1
+1.7.3.4
 
