@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44387 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753627Ab2AMTbJ (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:34257 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753985Ab2ACQ33 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jan 2012 14:31:09 -0500
-Date: Fri, 13 Jan 2012 14:20:01 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: [PATCH] b43: add default option to avoid duplicating device
- support with brcmsmac
-Message-ID: <20120113192000.GD18899@tuxdriver.com> (sfid-20120113_203113_746369_6860B247)
-References: <1326315180-29398-1-git-send-email-linville@tuxdriver.com>
- <CACna6rxffpPhYVqKNttu79JET=NkBP4NrAayywQHWcj=mw=T9A@mail.gmail.com>
- <20120112161720.GI11093@tuxdriver.com>
- <20120113013248.30123.qmail@stuge.se>
+	Tue, 3 Jan 2012 11:29:29 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120113013248.30123.qmail@stuge.se>
+In-Reply-To: <20120103122424.GA24367@srcf.ucam.org>
+References: <20120102215028.GA15701@srcf.ucam.org> <Pine.LNX.4.44L0.1201022136190.20386-100000@netrider.rowland.org>
+ <20120103032505.GA19702@srcf.ucam.org> <CA+55aFxnOBJZBb5KC7HC3z9Whk585SaHeCx9zyie3MMsfsvExw@mail.gmail.com>
+ <20120103122424.GA24367@srcf.ucam.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Tue, 3 Jan 2012 08:29:07 -0800
+Message-ID: <CA+55aFyee3DtBTRpxbiZSx2fCk4xYVOFQ3BeAybR8uynYp0AYA@mail.gmail.com> (sfid-20120103_172938_354183_24C6A4EB)
+Subject: Re: loading firmware while usermodehelper disabled.
+To: Matthew Garrett <mjg@redhat.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+	Jack Stone <jwjstone@fastmail.fm>,
+	Oliver Neukum <oliver@neukum.org>,
+	Dave Jones <davej@redhat.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Kroah-Hartman <gregkh@suse.de>,
+	USB list <linux-usb@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 13, 2012 at 02:32:48AM +0100, Peter Stuge wrote:
-> John W. Linville wrote:
-> > The summary line could be different as well, if you can think of a
-> > better way to describe the issue.  I am open to suggestions.
-> 
-> I think these terms are clear:
-> 
-> Community b43 driver
-> Broadcom brcmsmac driver
-> 
-> How to apply them I leave up to you. :)
+On Tue, Jan 3, 2012 at 4:24 AM, Matthew Garrett <mjg@redhat.com> wrote:
+>
+> The IDs will have changed due to the firmware falling out.
 
-Maybe you think that is clear, but it doesn't do much for me.
+The thing is, I don't think it has.
 
-I could say "Support for devices already supported by the
-Broadcom-supported brcmsmac driver"?
+You said this used to work. And I suspect that the ID's haven't
+changed at all. The unbind/rebind kind of supports that (it shouldn't
+re-bind if it's not the same device, afaik). I suspect the bug report
+is from a system that didn't actually have the firmware loaded even
+before the suspend (so no USB ID changes, just the stupid
+unbind/rebind).
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Of course, it's possible that it "used to work" just because we used
+to have that "we'll try to load things even if user space isn't
+ready", which caused 30-second timeouts for the random cases where it
+didn't work, but also silently "just worked" for the other random
+cases where it did happen to work. But I don't think unbind/rebind is
+correct for an ID change, so that really doesn't make sense as a
+explanation either (at least for *this* particular bug report).
+
+                         Linus
