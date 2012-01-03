@@ -1,63 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out5.smtp.messagingengine.com ([66.111.4.29]:52224 "EHLO
-	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753052Ab2AAWpT (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:39407 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753827Ab2ACPpx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jan 2012 17:45:19 -0500
-Received: from compute6.internal (compute6.nyi.mail.srv.osa [10.202.2.46])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 082A420C6C
-	for <linux-wireless@vger.kernel.org>; Sun,  1 Jan 2012 17:45:19 -0500 (EST)
-Message-ID: <4F00E1FB.9060507@fastmail.fm> (sfid-20120101_234607_753054_E475D101)
-Date: Sun, 01 Jan 2012 22:45:15 +0000
-From: Jack Stone <jwjstone@fastmail.fm>
+	Tue, 3 Jan 2012 10:45:53 -0500
+Date: Tue, 3 Jan 2012 10:35:36 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luis Rodriguez <mcgrof@frijolero.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: compat-wireless patch Re: [PATCH] Enable
+ CONFIG_RT2800{PCI,USB}_RT53XX
+Message-ID: <20120103153535.GA24318@tuxdriver.com> (sfid-20120103_164557_290815_8A9415DD)
+References: <1325604516-14280-1-git-send-email-linville@tuxdriver.com>
 MIME-Version: 1.0
-To: Linus Torvalds <torvalds@linux-foundation.org>
-CC: Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-References: <20111230235421.GA6054@redhat.com> <CA+55aFyqm4FbW=--7U4ULk1EBb6RLP0sRgtokODBYnZNiJXWew@mail.gmail.com>
-In-Reply-To: <CA+55aFyqm4FbW=--7U4ULk1EBb6RLP0sRgtokODBYnZNiJXWew@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1325604516-14280-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31/12/11 00:22, Linus Torvalds wrote:
-> It's also possible that we should blame the firmware code, which is
-> expressly written to encourage these kinds of bugs. It may be that i
-> tshould be the firmware code that has a "get_firmware()" +
-> "put_firmware()" model, and it should cache the firmware explicitly if
-> the config supports suspend, so that a firmware read at resume time
-> would actually work. The whole "request_firmware()" interface really
-> is very prone to these kinds of bugs.
+On Tue, Jan 03, 2012 at 10:28:36AM -0500, John W. Linville wrote:
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> Any reason to treat these differently than the RT35XX devices?
 
-How about these semantics for get_firmware / put_firmware:
+Obviously, this is a compat-wireless patch -- duh! :-)
 
-get_firmware -> checks for a cached copy of the firmware and returns
-that if it exists otherwise calls _get_firmware (i.e.
-_request_firmware). Either way we get a refcount to the firmware blob.
-This requires adding 3 members to struct firmware: the refcount, the
-name of the firmware (see @name in request_firmware) and a list head to
-cache with. We could also add and async version of this to match
-request_firmware_nowait.
+John
 
-put_firmware -> Removes a refcount from the firmware and frees if there
-are no more users.
+> 
+>  config.mk |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/config.mk b/config.mk
+> index e44b814..4d2ad5c 100644
+> --- a/config.mk
+> +++ b/config.mk
+> @@ -393,7 +393,7 @@ ifdef CONFIG_CRC_CCITT
+>  CONFIG_RT2800PCI=m
+>  CONFIG_RT2800PCI_RT33XX=y
+>  CONFIG_RT2800PCI_RT35XX=y
+> -# CONFIG_RT2800PCI_RT53XX=y
+> +CONFIG_RT2800PCI_RT53XX=y
+>  endif #CONFIG_CRC_CCITT
+>  NEED_RT2X00=y
+>  
+> @@ -523,7 +523,7 @@ ifdef CONFIG_CRC_CCITT
+>  CONFIG_RT2800USB=m
+>  CONFIG_RT2800USB_RT33XX=y
+>  CONFIG_RT2800USB_RT35XX=y
+> -# CONFIG_RT2800USB_RT53XX=y
+> +CONFIG_RT2800USB_RT53XX=y
+>  CONFIG_RT2800USB_UNKNOWN=y
+>  endif #CONFIG_CRC_CCITT
+>  CONFIG_RT2X00_LIB_USB=m
+> -- 
+> 1.7.4.4
+> 
+> 
 
-put_firmware is called when we are sure that we no longer need to reload
-the firmware for that device - device close time for most drivers.
-
-USB is a more difficult case as devices can change ID but the firmware
-blob still needs to be associated with them. I don't know USB at all so
-I have no idea if we can track this. Some PCI devices may also suffer
-the same problem.
-
-Hope this is useful,
-
-Jack
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
