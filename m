@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:61643 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755831Ab2APSlU (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41344 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753792Ab2ACPaz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jan 2012 13:41:20 -0500
-Date: Mon, 16 Jan 2012 10:41:15 -0800
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qca.qualcomm.com>,
-	Felix Fietkau <nbd@openwrt.org>, <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH 1/1] ath9k: Fix kernel panic in AR2427 in AP mode
-Message-ID: <20120116184115.GG4511@tux> (sfid-20120116_194125_063667_F1561FE2)
-References: <1324828153-5656-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1324828153-5656-1-git-send-email-mohammed@qca.qualcomm.com>
+	Tue, 3 Jan 2012 10:30:55 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luis Rodriguez <mcgrof@frijolero.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] Enable CONFIG_RT2800{PCI,USB}_RT53XX
+Date: Tue,  3 Jan 2012 10:28:36 -0500
+Message-Id: <1325604516-14280-1-git-send-email-linville@tuxdriver.com> (sfid-20120103_163058_215406_AF05DB92)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 25, 2011 at 09:19:13PM +0530, Mohammed Shafi Shajakhan wrote:
-> Cc: stable@kernel.org
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+Any reason to treat these differently than the RT35XX devices?
+
+ config.mk |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/config.mk b/config.mk
+index e44b814..4d2ad5c 100644
+--- a/config.mk
++++ b/config.mk
+@@ -393,7 +393,7 @@ ifdef CONFIG_CRC_CCITT
+ CONFIG_RT2800PCI=m
+ CONFIG_RT2800PCI_RT33XX=y
+ CONFIG_RT2800PCI_RT35XX=y
+-# CONFIG_RT2800PCI_RT53XX=y
++CONFIG_RT2800PCI_RT53XX=y
+ endif #CONFIG_CRC_CCITT
+ NEED_RT2X00=y
  
-
-For future reference please use from now on stable@vger.kernel.org
-instead of the older one [1].
-
-[1] http://www.kroah.com/log/linux/stable-status-01-2012.html
-
-  Luis
+@@ -523,7 +523,7 @@ ifdef CONFIG_CRC_CCITT
+ CONFIG_RT2800USB=m
+ CONFIG_RT2800USB_RT33XX=y
+ CONFIG_RT2800USB_RT35XX=y
+-# CONFIG_RT2800USB_RT53XX=y
++CONFIG_RT2800USB_RT53XX=y
+ CONFIG_RT2800USB_UNKNOWN=y
+ endif #CONFIG_CRC_CCITT
+ CONFIG_RT2X00_LIB_USB=m
+-- 
+1.7.4.4
 
