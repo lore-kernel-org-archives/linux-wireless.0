@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:54391 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753111Ab2AWLUf (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17188 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750749Ab2ACFkc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jan 2012 06:20:35 -0500
-Date: Mon, 23 Jan 2012 13:20:26 +0200
-From: Johan Hedberg <johan.hedberg@gmail.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: Re: [PATCH COMMITTED] bluetooth: hci: Fix type of "enable_hs" to
- bool.
-Message-ID: <20120123112026.GA18050@x220> (sfid-20120123_122050_816068_D061DA53)
-References: <20120122.144654.2252112633629547845.davem@davemloft.net>
- <1327283783.1955.84.camel@aeonflux>
+	Tue, 3 Jan 2012 00:40:32 -0500
+Date: Tue, 3 Jan 2012 11:10:02 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 3/3] ath6kl: Remove few deadcode in main.c
+Message-ID: <20120103054000.GB16733@chvasanth-lnx> (sfid-20120103_064051_183446_5E9CAA08)
+References: <1325154939-6986-1-git-send-email-vthiagar@qca.qualcomm.com>
+ <1325154939-6986-3-git-send-email-vthiagar@qca.qualcomm.com>
+ <4F01DC4B.50501@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1327283783.1955.84.camel@aeonflux>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4F01DC4B.50501@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marcel,
-
-On Mon, Jan 23, 2012, Marcel Holtmann wrote:
-> Hi Dave,
-> 
-> > net/bluetooth/hci_core.c: In function ‘__check_enable_hs’:
-> > net/bluetooth/hci_core.c:2587:1: warning: return from incompatible pointer type [enabled by default]
+On Mon, Jan 02, 2012 at 06:33:15PM +0200, Kalle Valo wrote:
+> On 12/29/2011 12:35 PM, Vasanthakumar Thiagarajan wrote:
+> > 1. In ath6kl_add_new_sta(), if (ielen <= ATH6KL_MAX_IE) is going to be
+> > always true due to ielen being u8 and is checked against 256.
 > > 
-> > Signed-off-by: David S. Miller <davem@davemloft.net>
-> > ---
-> > 
-> > I noticed this while validating the build today, committed to 'net'.
+> > 2. In ath6kl_reset_device(), since control can never reach switch..case
+> > when the target_type is neither TARGET_TYPE_AR6003 nor TARGET_TYPE_AR6004,
+> > remove the default option of switch statement.
 > 
-> and from your subject, I assume you rightfully just applied that patch
-> to your tree.
+> Two separate patches, please.
+
+Ok, I split the patch.
 > 
-> I remember that I acked such a patch, but it seems it never made it
-> anywhere in the end :(
+> > @@ -62,8 +62,7 @@ static void ath6kl_add_new_sta(struct ath6kl *ar, u8 *mac, u16 aid, u8 *wpaie,
+> >  
+> >  	sta = &ar->sta_list[free_slot];
+> >  	memcpy(sta->mac, mac, ETH_ALEN);
+> > -	if (ielen <= ATH6KL_MAX_IE)
+> > -		memcpy(sta->wpa_ie, wpaie, ielen);
+> > +	memcpy(sta->wpa_ie, wpaie, ielen);
 
-It's over here:
+> 
+> And then someone changes the u8 ielen to something else and accidentally
+> adds a bug. I would prefer to have an explicit check for the ielen to
+> make it obvious what's the maximum length.
+> 
+> I don't really like using u8 for ielen either. IMHO size_t or similar
+> would be better.
 
-http://git.kernel.org/?p=linux/kernel/git/jh/bluetooth-next.git;a=commitdiff;h=174b9000541fdffbdc53cf9464efb1c8a1d777db
+The length of any IE is 1 byte, u8 is the appropriate one.
 
-Johan
+Vasanth
