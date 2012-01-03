@@ -1,54 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:44161 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932409Ab2AKBat (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jan 2012 20:30:49 -0500
-Received: by vbbfc26 with SMTP id fc26so168463vbb.19
-        for <linux-wireless@vger.kernel.org>; Tue, 10 Jan 2012 17:30:48 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1326237636.13074.389.camel@wwguy-huron>
-References: <CAH5vBdJLHkFLQCHHYOczXQt1Hwwe3e-Ct0MUjyTRU0vgodAPOg@mail.gmail.com>
- <1324424765.13074.281.camel@wwguy-huron> <CAH5vBdKotiPqpHV=tx2fv8=-HRBuJnYe8wEAF2Z9xH3zVnwyqg@mail.gmail.com>
- <CA+icZUXWccU-TtwE7b7Mm9Nw7juQwDxvYRZfOdjP3q1O-Mr0Ug@mail.gmail.com>
- <CAH5vBdKtV1Ydb2ffBVDxdynsF9S14Ddy6XezHzXvRC3bRC-huQ@mail.gmail.com>
- <CA+icZUXDOxNo-Y9d2WcdhMZyDJeCT69z340xMwNiN9hbq0XAFA@mail.gmail.com>
- <CAH5vBdLq6zOagjmyM1h9Jon+fYnz5t05Dx7u6VqOWGHna+M3_Q@mail.gmail.com>
- <CA+icZUVixfk0h1ENU-tWMS5hgurbEV4jYpYNWbzaxCUx_b64UQ@mail.gmail.com>
- <CAH5vBdK62juwC_qPPTfmgFkMp9XMy+3j1YLvBSxBc+zr9_oBJQ@mail.gmail.com>
- <CA+icZUUhg91UAPMRGgXYAvo6wkr5ogb+vW8SsB28BeUP_6-g6w@mail.gmail.com>
- <1324484074.13074.313.camel@wwguy-huron> <CAH5vBdJ4-33z3FbOwVG1QRzfFOwFpz1wccbQNDXEC6-NhBa31A@mail.gmail.com>
- <1324518057.4755.4.camel@wwguy-ubuntu> <CAH5vBdKwQ3vPr01PiRMmUqARK4CE44vM9WeVSx-QydpDLQtT1A@mail.gmail.com>
- <1326234428.13074.385.camel@wwguy-huron> <CAH5vBd++OmF11vBHYgNmLABm3pG3mOERcq5dgeP6o9fneRLODQ@mail.gmail.com>
- <1326237636.13074.389.camel@wwguy-huron>
-From: Cheng Renquan <crquan@gmail.com>
-Date: Tue, 10 Jan 2012 17:30:27 -0800
-Message-ID: <CAH5vBdLjCsSdV+hzBMg2hpn+kh6a572FKmVs84cLCtR9XROKbg@mail.gmail.com> (sfid-20120111_023053_594887_4C6FA1A3)
-Subject: Re: linux 3.2-rcX iwlwifi driver's problem (wifi link unstable when
- moving between multiple APs)
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from lo.gmane.org ([80.91.229.12]:47937 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751627Ab2ACJkO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jan 2012 04:40:14 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Ri0qq-0005qj-9g
+	for linux-wireless@vger.kernel.org; Tue, 03 Jan 2012 10:40:12 +0100
+Received: from 188.16.200.234 ([188.16.200.234])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2012 10:40:12 +0100
+Received: from patrakov by 188.16.200.234 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2012 10:40:12 +0100
+To: linux-wireless@vger.kernel.org
+From: "Alexander E. Patrakov" <patrakov@gmail.com>
+Subject: Re: loading firmware while usermodehelper disabled.
+Date: Tue, 3 Jan 2012 15:16:37 +0600
+Message-ID: <20120103151637.1388e204@home> (sfid-20120103_104019_322635_4664B59C)
+References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
+	<4F02165C.1060400@fastmail.fm>
+	<CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
+	<20120102211904.GA15316@srcf.ucam.org>
+	<CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
+	<20120102215028.GA15701@srcf.ucam.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20120102215028.GA15701@srcf.ucam.org>
+Cc: linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 10, 2012 at 3:20 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> Hi Cheng,
+Matthew Garrett <mjg@redhat.com> wrote:
 
-> Got it, very sorry for the problem you experience, yes, I agree with
-> you, it might be because the noisy environment. Could you please send me
-> the dmesg log with the following flags
->
-> $sudo modprobe iwlwifi debug=0x1083
->
-> Thanks
-> Wey
+> On Mon, Jan 02, 2012 at 01:27:03PM -0800, Linus Torvalds wrote:
+> 
+> > If we didn't load the firmware before the suspend, then the resume
+> > function of a device sure as hell had better not load it at resume
+> > time either.
+> 
+> If the hardware has lost its state then refusing to load the firmware
+> at resume time isn't going to leave you with a working device.
+> 
+> > And for chrissake, don't bother making it more complicated than it
+> > is, just for some theoretical hardware or situation that nobody
+> > cares about.
+> 
+> It's not theoretical hardware. This appears to be the current
+> behaviour of the isight devices. If you reboot they retain their
+> firmware. If you suspend, they don't. So if we have a flow like this:
+> 
+> 1) user boots from cold. Device comes up with generic USB ID.
+> 2) isight_firmware loads and binds. Firmware is loaded. Device 
+> disconnects and reconnects with an ID that's bound by the UVC driver.
+> 3) user reboots. Device comes up with UVC ID. isight_firmware doesn't 
+> bind.
+> 4) user suspends.
+> 5) user resumes. isight_firmware binds and attempts to load firmware.
+> 
+> then just caching the firmware is inadequate - we had never
+> previously seen the device on this boot, so we've never loaded it in
+> order to cache it. isight_firmware could unconditionally load the
+> firmware on module load just in case a device is plugged in, but that
+> seems even less elegant than caching it.
 
-Attached iwlwifi-debug-jan10.txt.xz privately to Guy since it may have
-some privacy; please do not spread;
+What a heated discussion due to, essentially, a non-technical, legal
+issue! Remember that the whole "userspace firmware loader" saga
+together with the asynchronous firmware interface started when Debian
+started complaining over the non-freeness of the firmware being bundled
+as a part of the kernel module as an array of bytes. That design,
+however, never had such dependency issues. So maybe revert to it, with
+the following changes, and solve the legal issue seen by Debian by
+hiring a lawyer?
 
-tried a few meeting rooms only the last one failed roaming; may be
-because many ones have left office right now, don't have so much
-noise; will try again another busy time;
+1. Make firmware a special case of a data-only non-GPL kernel module.
+Change the tainter so that it doesn't taint the kernel for data-only
+modules.
+2. Make the actual driver depend on the relevant firmware modules for
+all devices supported by it, even if the devices don't always need the
+said firmware.
+3. Disallow building drivers that need firmware as non-modules.
+4. Do something (e.g. split the driver into a core and a shim, or make
+a fake firmware module) to allow the user to install without firmware
+if he knows that it works with his hardware.
+5. Profit!
+
+This way, as long as the driver is loaded, the necessary firmware is
+also there, as a dependency.
+
+-- 
+Alexander E. Patrakov
+
