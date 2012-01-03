@@ -1,55 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:41703 "HELO
-	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751260Ab2AUSEe (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:28044 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751185Ab2ACJL5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jan 2012 13:04:34 -0500
-Message-ID: <4F1B0BE4.7090401@xenotime.net> (sfid-20120121_190732_264908_95442908)
-Date: Sat, 21 Jan 2012 11:03:00 -0800
-From: Randy Dunlap <rdunlap@xenotime.net>
+	Tue, 3 Jan 2012 04:11:57 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 1/3] ath6kl: Add a function in wmi to send WMI_MCAST_FILTER_CMDID
+Date: Tue, 3 Jan 2012 14:41:59 +0530
+Message-ID: <1325581921-5249-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120103_101222_205546_50D2379C)
 MIME-Version: 1.0
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-CC: Linus Torvalds <torvalds@linux-foundation.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH 8/14] kernel-doc: fix new warnings in cfg80211.h
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+This will be used to disable/enable multicast receive.
 
-Fix new kernel-doc warnings:
-
-Warning(include/net/cfg80211.h:1165): No description found for parameter 'channel_type'
-Warning(include/net/cfg80211.h:2090): No description found for parameter 'probe_resp_offload'
-
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
-Cc:	Johannes Berg <johannes@sipsolutions.net>
-Cc:	linux-wireless@vger.kernel.org
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- include/net/cfg80211.h |    6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/ath/ath6kl/wmi.c |   17 +++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/wmi.h |    5 +++++
+ 2 files changed, 22 insertions(+), 0 deletions(-)
 
---- lnx-33-rc1.orig/include/net/cfg80211.h
-+++ lnx-33-rc1/include/net/cfg80211.h
-@@ -1140,6 +1140,7 @@ struct cfg80211_disassoc_request {
-  * @bssid: Fixed BSSID requested, maybe be %NULL, if set do not
-  *	search for IBSSs with a different BSSID.
-  * @channel: The channel to use if no IBSS can be found to join.
-+ * @channel_type: channel type (HT mode)
-  * @channel_fixed: The channel should be fixed -- do not search for
-  *	IBSSs to join on other channels.
-  * @ie: information element(s) to include in the beacon
-@@ -1978,6 +1979,11 @@ struct wiphy_wowlan_support {
-  *	configured as RX antennas. Antenna configuration commands will be
-  *	rejected unless this or @available_antennas_tx is set.
-  *
-+ * @probe_resp_offload:
-+ *	 Bitmap of supported protocols for probe response offloading.
-+ *	 See &enum nl80211_probe_resp_offload_support_attr. Only valid
-+ *	 when the wiphy flag @WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD is set.
-+ *
-  * @max_remain_on_channel_duration: Maximum time a remain-on-channel operation
-  *	may request, if implemented.
-  *
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 1e31c38..ccd29db 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -2855,6 +2855,23 @@ int ath6kl_wmi_test_cmd(struct wmi *wmi, void *buf, size_t len)
+ 	return ret;
+ }
+ 
++int ath6kl_wmi_mcast_filter_cmd(struct wmi *wmi, u8 if_idx, bool mc_all_on)
++{
++	struct sk_buff *skb;
++	struct wmi_mcast_filter_cmd *cmd;
++	int ret;
++
++	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
++	if (!skb)
++		return -ENOMEM;
++
++	cmd = (struct wmi_mcast_filter_cmd *) skb->data;
++	cmd->mcast_all_enable = mc_all_on;
++
++	ret = ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_MCAST_FILTER_CMDID,
++				  NO_SYNC_WMIFLAG);
++	return ret;
++}
+ 
+ s32 ath6kl_wmi_get_rate(s8 rate_index)
+ {
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 96e3cc1..7b3b244 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -1237,6 +1237,10 @@ enum target_event_report_config {
+ 	NO_DISCONN_EVT_IN_RECONN
+ };
+ 
++struct wmi_mcast_filter_cmd {
++	u8 mcast_all_enable;
++} __packed;
++
+ /* Command Replies */
+ 
+ /* WMI_GET_CHANNEL_LIST_CMDID reply */
+@@ -2432,6 +2436,7 @@ int ath6kl_wmi_del_wow_pattern_cmd(struct wmi *wmi, u8 if_idx,
+ int ath6kl_wmi_set_roam_lrssi_cmd(struct wmi *wmi, u8 lrssi);
+ int ath6kl_wmi_force_roam_cmd(struct wmi *wmi, const u8 *bssid);
+ int ath6kl_wmi_set_roam_mode_cmd(struct wmi *wmi, enum wmi_roam_mode mode);
++int ath6kl_wmi_mcast_filter_cmd(struct wmi *wmi, u8 if_idx, bool mc_all_on);
+ 
+ /* AP mode */
+ int ath6kl_wmi_ap_profile_commit(struct wmi *wmip, u8 if_idx,
+-- 
+1.7.0.4
+
