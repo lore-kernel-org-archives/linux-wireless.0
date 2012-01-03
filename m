@@ -1,39 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41780 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751238Ab2ASGYY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jan 2012 01:24:24 -0500
-Message-ID: <4F17B712.6020907@qca.qualcomm.com> (sfid-20120119_072428_555325_40B555BB)
-Date: Thu, 19 Jan 2012 08:24:18 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Jonathan Bagg <jbagg@lenbrook.com>
-CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: ath6kl in compat wireless supports AP mode?
-References: <4F10AA2D.1060000@lenbrook.com>	<4F16AF8D.6070201@qca.qualcomm.com> <20246.46742.295455.729628@gargle.gargle.HOWL> <4F172101.3010207@lenbrook.com>
-In-Reply-To: <4F172101.3010207@lenbrook.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from lo.gmane.org ([80.91.229.12]:51104 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752572Ab2ACOKl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 Jan 2012 09:10:41 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Ri54Z-00030y-F1
+	for linux-wireless@vger.kernel.org; Tue, 03 Jan 2012 15:10:39 +0100
+Received: from ii143133.directconnect.no ([84.247.143.133])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2012 15:10:39 +0100
+Received: from ltson36 by ii143133.directconnect.no with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2012 15:10:39 +0100
+To: linux-wireless@vger.kernel.org
+From: Thanh Son Le <ltson36@yahoo.com>
+Subject: [PATCH 0/2] add support for mcs masks
+Date: Tue, 3 Jan 2012 14:10:27 +0000 (UTC)
+Message-ID: <loom.20120103T150820-24@post.gmane.org> (sfid-20120103_151056_571554_B91708A9)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/18/2012 09:44 PM, Jonathan Bagg wrote:
+Dear Simon
 
-> I'm running....
-> Compat-wireless 3.1 (ath6kl still in staging) built against kernel 2.6.35.3
->      mac80211 as module
->      cfg80211 as module
-> hostapd v2.0-devel (git cloned today)
-> libnl-2.0
-> arm, freescale imx51
-> 
-> I tried hostapd v2.0-devel and no go.
+I have read your patches on adding supports for MCS rates, both iw and compat-
+wireless, it seems interesting.
 
-If ath6kl is still in staging you have an ancient version and it will
-not support AP mode. Please try latest wireless-compat or use the latest
-kernel from ath6kl.git:
+For evaluation purpose, I have added the patches to Compat-wireless and IW. It 
+seems compiling and running fine.
 
-git://github.com/kvalo/ath6kl.git
+But when I tried to set up the rate, through iw set bitrates command, it does 
+not work. Please refer to the following dumping message for further details:
+----------------------------------------------
+root@Openwrt:/sys/kernel/debug/ieee80211/phy0# iw dev wlan0.sta1 set bitrates 
+mcs-5 14
+root@Openwrt:/sys/kernel/debug/ieee80211/phy0# iw dev wlan0.sta1 station dump
+Station 00:xx::xx:xx:xx (on wlan0.sta1)
+        inactive time:  490 ms
+        rx bytes:       1739675
+        rx packets:     15179
+        tx bytes:       7421803
+        tx packets:     14051
+        tx retries:     714
+        tx failed:      139
+        signal:         -45 dBm
+        signal_ctl0:    -46 dBm
+        signal_ctl1:    -45 dBm
+        tx bitrate:     6.0 MBit/s
+        rx bitrate:     6.0 MBit/s
+root@Javelin:/sys/kernel/debug/ieee80211/phy0# 
+--------------------------------------------------------------------------------
+-------
 
-Kalle
+I have tested both with ack and noack, but it still does not work
+Both AP and STA are in WDS.
+
+Can you check for me whether the set command is correct and whether it can work 
+in AP/STA mode ?
+
+Once again, Thanks you very much for your kind helps and considerations and I 
+look forward to receiving information from you.
+
+Yours sincerely
+
+Le
+
