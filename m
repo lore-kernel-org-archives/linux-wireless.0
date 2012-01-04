@@ -1,49 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:49804 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755526Ab2AIWSj (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:44523 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756422Ab2ADRn7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 17:18:39 -0500
-Received: by obcwo16 with SMTP id wo16so4722675obc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2012 14:18:38 -0800 (PST)
-Message-ID: <4F0B67BA.20207@lwfinger.net> (sfid-20120109_231843_058423_88A3AEFC)
-Date: Mon, 09 Jan 2012 16:18:34 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 4 Jan 2012 12:43:59 -0500
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: b43-dev <b43-dev@lists.infradead.org>,
-	Abimanyu Gottumukkala <me@abimanyu.in>,
-	linux-wireless@vger.kernel.org,
-	Arend van Spriel <arend@broadcom.com>
-Subject: Re: BCM43231
-References: <CAEWwF+bnM0bxbZR6B57H_nv3fkUdhP-ytAu30MLhUWq7QxB3GQ@mail.gmail.com> <CACna6rzNrFWBJ+n3n9wrnP_Gi3LKCWt+o1Gs38_EjkMgG_k8vg@mail.gmail.com>
-In-Reply-To: <CACna6rzNrFWBJ+n3n9wrnP_Gi3LKCWt+o1Gs38_EjkMgG_k8vg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <4F048905.5060004@lwfinger.net>
+References: <4f034b6c.ypfAbSdXSgMHtfqa%Larry.Finger@lwfinger.net>
+ <CALSq=BaJSURcKU8RkCxxG=Mht4y04dVefKMESuHmiEdhwzc2Eg@mail.gmail.com> <4F048905.5060004@lwfinger.net>
+From: Daniel Halperin <dhalperi@cs.washington.edu>
+Date: Wed, 4 Jan 2012 09:43:37 -0800
+Message-ID: <CALSq=BYvjtTxwRCKJ1BTJkyd6vHiUwHFSZ669wWisd_b50yB9Q@mail.gmail.com> (sfid-20120104_184416_818541_2C04F4F6)
+Subject: Re: [PATCH] rtl8192cu: Fix WARNING on suspend/resume
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: John W Linville <linville@tuxdriver.com>,
+	torvalds@linux-foundation.org, linux-kernel@vger.kernel.org,
+	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/2012 02:12 PM, RafaÅ‚ MiÅ‚ecki wrote:
-> 2011/12/30 Abimanyu Gottumukkala<me@abimanyu.in>:
->> Does any one have status or any info on BCM43231 USB drivers?
+On Wed, Jan 4, 2012 at 9:14 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 01/04/2012 10:16 AM, Daniel Halperin wrote:
+>>
+>> Sorry, Larry, I didn't see this til it was included in John's mail this
+>> morning.
+>>
+>> On Tue, Jan 3, 2012 at 10:39 AM, Larry Finger<Larry.Finger@lwfinger.net>
+>>  wrote:
+>>>
+>>>
+>>> +#ifdef CONFIG_PM
+>>> +static int rtl8192cu_usb_suspend(struct usb_interface *pusb_intf,
+>>> +                                pm_message_t message)
+>>> +{
+>>> +       /* Increase usage_count to Save loaded fw across suspend/resume
+>>> */
+>>> +       atomic_inc(&usage_count);
+>>> +       return 0;
+>>> +}
+>>> +
+>>> +static int rtl8192cu_usb_resume(struct usb_interface *pusb_intf)
+>>> +{
+>>> +       atomic_dec(&usage_count);       /* after resume, decrease usage
+>>> count */
+>>> +       return 0;
+>>> +}
+>>> +#endif
+>>
+>>
+>> Based on the warning-fix I submitted yesterday, this probably produces
+>> a warning if CONFIG_PM is set but not CONFIG_PM_SLEEP. My patch was
+>> for an ethernet driver, but iwlwifi and ath5k appear to follow the
+>> same pattern using CONFIG_PM_SLEEP instead of the above.
+>>
+>> See: http://www.spinics.net/lists/netdev/msg184717.html for the patch
+>> and http://www.spinics.net/lists/netdev/msg184715.html for the
+>> discussion.
 >
-> I've received my WNA3100, 0846:9020 (maybe BCM43231, can't confirm).
 >
-> It works with ndiswrapper and bcmwlhigh6, I can scan and even connect
-> to my WPA2 network.
+> Thanks for the note. I will prepare a revised patch.
 >
-> Unfortunately I've no idea what hardware is this. I've dumped
-> ndiswrapper USB operations but they don't tell me a single thing.
-> Initialization is represented by only ~1000 lines in dumps and I've
-> connected in next ~1500 lines of USB dump. I've been using "usbmon" to
-> dump traffic.
+> What architecture gave the warning? Of x86_64, I was unable to get
+> CONFIG_PM_SLEEP without CONFIG_PM.
+>
 
-The evidence points to some kind of Broadcom chip. The USB data base says that 
-an ID of "0846:9020" is a "WNA3100(v1) Wireless-N 300 [Broadcom BCM43231]". In 
-addition, the Windows driver name of bcmwlhigh6 indicates a BroadCoM WL driver 
-of some sort. Given the relatively small amount of initialization traffic, it 
-must be a fullmac device that likely does not need external firmware.
+x86-64. I realized that I actually explained this problem rather
+clearly when I fixed it for iwlwifi 5 months ago. :)
+https://github.com/mirrors/linux/commit/f090fba305658fe6e464e2fbd25fad81957ece26
 
-I remember seeing some mail about the Broadcom guys working on a Linux driver 
-for a USB fullmac device. Is this the one? (I added Arend to the Cc.)
+"""
+CC [M]  drivers/net/wireless/iwlwifi/iwl-pci.o
+  drivers/net/wireless/iwlwifi/iwl-pci.c:506: warning:
+‘iwl_pci_suspend’ defined but not used
+  drivers/net/wireless/iwlwifi/iwl-pci.c:519: warning:
+‘iwl_pci_resume’ defined but not used
 
-Larry
+These are only used if CONFIG_PM_SLEEP is enabled. CONFIG_PM depends
+(CONFIG_PM_SLEEP || CONFIG_PM_RUNTIME), so it can be set without
+CONFIG_PM_SLEEP selected.
+"""
+
+Dan
