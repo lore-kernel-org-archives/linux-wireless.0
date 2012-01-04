@@ -1,59 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:49852 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751247Ab2AEI5Y (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:52302 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752585Ab2ADTu2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 03:57:24 -0500
-Message-ID: <4F0565E1.30909@qca.qualcomm.com> (sfid-20120105_095801_417561_992CEA71)
-Date: Thu, 5 Jan 2012 10:57:05 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: <linville@tuxdriver.com>, <sfr@canb.auug.org.au>,
-	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-next@vger.kernel.org>,
-	<ath6kl-devel@qualcomm.com>, <davem@davemloft.net>
-Subject: Re: [PATCH 4/6] ath6kl: get rid of AR_DBG_LVL_CHECK()
-References: <20120104230429.32306.75965.stgit@x201>	 <20120104230921.32306.63985.stgit@x201> <1325721515.4116.11.camel@joe2Laptop>
-In-Reply-To: <1325721515.4116.11.camel@joe2Laptop>
-Content-Type: text/plain; charset="UTF-8"
+	Wed, 4 Jan 2012 14:50:28 -0500
+Date: Wed, 04 Jan 2012 14:49:23 -0500 (EST)
+Message-Id: <20120104.144923.372584452455227614.davem@davemloft.net> (sfid-20120104_205046_513040_4389F3FC)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-01-04 #2
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120104164339.GG2540@tuxdriver.com>
+References: <20120104164339.GG2540@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/2012 01:58 AM, Joe Perches wrote:
-> On Thu, 2012-01-05 at 01:09 +0200, Kalle Valo wrote:
->> We don't need it as debug calls already have a log level and compiler
->> should be smart enough to optimise away the code when ath6kl debug code
->> is not enabled. Also it makes it easier to abstract core code to
->> ath6kl_core.ko.
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Wed, 4 Jan 2012 11:43:40 -0500
+
+> Here are a handful of straggler wireless fixes for 3.2.  Included is
+> a NULL pointer fix for mwifiex, a regression fix for handling rx
+> header lengths for differnt b43 firmwares in PIO mode, a revert of
+> a one-liner for Bluetooth HCI that was causing uncomfortable delays
+> during resume, and an ath9k fix for a panic when running in AP mode
+> with aggregation disabled.
 > 
-> Changelog isn't representative of code changes.
-> ATH6KL_DBG_ANY -> ATH6KL_DBG_IRQ.
+> The Bluetooth fix is a one-liner change of a delay value.  The mwifiex,
+> b43, and ath9k fixes are relatively small and isolated to their
+> respective drivers.
 > 
->> diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-> []
->> @@ -82,31 +82,31 @@ void ath6kl_dump_registers(struct ath6kl_device *dev,
->>  			   struct ath6kl_irq_enable_reg *irq_enable_reg)
->>  {
->>  
->> -	ath6kl_dbg(ATH6KL_DBG_ANY, ("<------- Register Table -------->\n"));
->> +	ath6kl_dbg(ATH6KL_DBG_IRQ, ("<------- Register Table -------->\n"));
+> Please let me know if there are problems!
+...
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
 
-It's related to this change:
-
--		if (AR_DBG_LVL_CHECK(ATH6KL_DBG_IRQ))
--			ath6kl_dump_registers(dev, &dev->irq_proc_reg,
--					 &dev->irq_en_reg);
-+		ath6kl_dump_registers(dev, &dev->irq_proc_reg,
-+				      &dev->irq_en_reg);
-
-So instead of checking ATH6KL_DBG_IRQ before calling the function the
-debug messages in function instead use ATH6KL_DBG_IRQ. I'll mention this
-in the commit log.
-
-I should get rid of that ATH6KL_DBG_ANY level completely, it's just
-confusing. But I'll do that later.
-
-Thank you for the review.
-
-Kalle
+Pulled, thanks.
