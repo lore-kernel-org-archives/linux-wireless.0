@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:52302 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752585Ab2ADTu2 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55313 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753727Ab2ADLGG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jan 2012 14:50:28 -0500
-Date: Wed, 04 Jan 2012 14:49:23 -0500 (EST)
-Message-Id: <20120104.144923.372584452455227614.davem@davemloft.net> (sfid-20120104_205046_513040_4389F3FC)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-01-04 #2
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120104164339.GG2540@tuxdriver.com>
-References: <20120104164339.GG2540@tuxdriver.com>
+	Wed, 4 Jan 2012 06:06:06 -0500
+Subject: Re: [PATCH] mac80211: station state transition error handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eliad Peller <eliad@wizery.com>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAB3XZEfABhPBjD4sL369ziK8gRhuvWjHYRzM=Fxp0t=q_Ekzcg@mail.gmail.com> (sfid-20120104_120105_033366_BAA46512)
+References: <1325672933.3339.17.camel@jlt3.sipsolutions.net>
+	 <CAB3XZEfABhPBjD4sL369ziK8gRhuvWjHYRzM=Fxp0t=q_Ekzcg@mail.gmail.com>
+	 (sfid-20120104_120105_033366_BAA46512)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 04 Jan 2012 12:06:01 +0100
+Message-ID: <1325675161.3339.29.camel@jlt3.sipsolutions.net> (sfid-20120104_120610_814254_FF91E83B)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Wed, 4 Jan 2012 11:43:40 -0500
+On Wed, 2012-01-04 at 13:00 +0200, Eliad Peller wrote:
 
-> Here are a handful of straggler wireless fixes for 3.2.  Included is
-> a NULL pointer fix for mwifiex, a regression fix for handling rx
-> header lengths for differnt b43 firmwares in PIO mode, a revert of
-> a one-liner for Bluetooth HCI that was causing uncomfortable delays
-> during resume, and an ath9k fix for a panic when running in AP mode
-> with aggregation disabled.
-> 
-> The Bluetooth fix is a one-liner change of a delay value.  The mwifiex,
-> b43, and ath9k fixes are relatively small and isolated to their
-> respective drivers.
-> 
-> Please let me know if there are problems!
-...
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
+> > +       if (err) {
+> > +               printk(KERN_DEBUG
+> > +                      "%s: failed to move station %pM to desired state\n",
+> > +                      sdata->name, sta->sta.addr);
+> > +               sta_info_destroy_addr(sdata, sta->sta.addr);
+> > +               mutex_unlock(&sdata->local->sta_mtx);
+> > +               return false;
+> > +       }
+> >
+> sta_info_destroy_addr takes the mutex by itself, so i guess you should
+> either release it before or call __sta_info_destroy directly?
 
-Pulled, thanks.
+Ouch, thanks. I guess the latter makes more sense, will send a v2.
+
+johannes
+
