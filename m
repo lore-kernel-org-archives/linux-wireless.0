@@ -1,111 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:50524 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753101Ab2A2RXG (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:49376 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757177Ab2ADXIU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jan 2012 12:23:06 -0500
-Received: by yhoo21 with SMTP id o21so1444779yho.19
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Jan 2012 09:23:05 -0800 (PST)
-Message-ID: <4F258074.5090804@lwfinger.net> (sfid-20120129_182312_497898_7FCF73C0)
-Date: Sun, 29 Jan 2012 11:23:00 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 4 Jan 2012 18:08:20 -0500
+Subject: [PATCH 1/6] ath6kl: rename vif init and cleanup functions
+To: linville@tuxdriver.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: sfr@canb.auug.org.au, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-next@vger.kernel.org, ath6kl-devel@qualcomm.com,
+	davem@davemloft.net
+Date: Thu, 05 Jan 2012 01:07:51 +0200
+Message-ID: <20120104230751.32306.2699.stgit@x201> (sfid-20120105_000824_173684_17C3E5F4)
+In-Reply-To: <20120104230429.32306.75965.stgit@x201>
+References: <20120104230429.32306.75965.stgit@x201>
 MIME-Version: 1.0
-To: Olivier Fabre <off@free.fr>
-CC: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: r8712u regression on kernel 3.2
-References: <1327856447.4f257b3f53f66@imp.free.fr>
-In-Reply-To: <1327856447.4f257b3f53f66@imp.free.fr>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/29/2012 11:00 AM, Olivier Fabre wrote:
-> Hi Larry,
->
-> A few Arch Linux users and I noticed that the r8712u driver didn't work
-> anymore starting from kernel 3.2.1, while it worked in 3.0 and 3.1.
->
-> Here is the Arch Linux bug report:
-> https://bugs.archlinux.org/task/27996
->
-> I'll list whatever info I can think of about my own case below...
->
-> lsusb:
->
-> Bus 003 Device 003: ID 0bda:8172 Realtek Semiconductor Corp. RTL8191SU
-> 802.11n WLAN Adapter
->
-> Partial dmesg:
->
-> [    5.347026] r8712u: module is from the staging directory, the quality is
-> unknown, you have been warned.
-> [    5.348082] r8712u: DriverVersion: v7_0.20100831
-> [    5.348096] r8712u: register rtl8712_netdev_ops to netdev_ops
-> [    5.348098] r8712u: USB_SPEED_HIGH with 4 endpoints
-> [    5.348459] r8712u: Boot from EFUSE: Autoload OK
-> [    6.075474] r8712u: CustomerID = 0x0000
-> [    6.075479] r8712u: MAC Address from efuse = 80:1f:02:0b:bb:11
-> [    6.075770] usbcore: registered new interface driver r8712u
-> [    7.132386] r8712u: Loading firmware from "rtlwifi/rtl8712u.bin"
-> [    7.789082] r8712u: 1 RCR=0x153f00e
-> [    7.789829] r8712u: 2 RCR=0x553f00e
-> [   16.240983] r8712u: Loading firmware from "rtlwifi/rtl8712u.bin"
-> [   16.890571] r8712u: 1 RCR=0x153f00e
-> [   16.891427] r8712u: 2 RCR=0x553f00e
-> [   17.440436] r8712u: Loading firmware from "rtlwifi/rtl8712u.bin"
-> [   18.086805] r8712u: 1 RCR=0x153f00e
-> [   18.087554] r8712u: 2 RCR=0x553f00e
-> [   61.003359] r8712u: Loading firmware from "rtlwifi/rtl8712u.bin"
->
-> In dmesg I see that network applications get stuck, including wpa_supplicant
-> and xfce4-netload-plugin:
->
-> [  239.934619] INFO: task xfce4-netload-p:766 blocked for more than 120
-> seconds.
-> [  239.934623] "echo 0>  /proc/sys/kernel/hung_task_timeout_secs" disables
-> this message.
-> [  239.934627] xfce4-netload-p D 00000000fffee866     0   766    729
-> 0x00000000
-> [  239.934633]  ffff88007fec7cd8 0000000000000086 ffffffff00000000
-> ffffea000437fd80
-> [  239.934639]  ffff8801081bf200 ffff88007fec7fd8 ffff88007fec7fd8
-> ffff88007fec7fd8
-> [  239.934644]  ffff880110ca4e60 ffff8801081bf200 ffff88007ff193b8
-> ffff880104cf4d00
-> [  239.934649] Call Trace:
-> [  239.934660]  [<ffffffff8110ec10>] ? __pagevec_free+0x60/0x100
-> [  239.934667]  [<ffffffff814258bf>] schedule+0x3f/0x60
-> [  239.934671]  [<ffffffff81426fa4>] __mutex_lock_slowpath+0x154/0x370
-> [  239.934675]  [<ffffffff814271d6>] mutex_lock+0x16/0x30
-> [  239.934681]  [<ffffffff81371d15>] rtnl_lock+0x15/0x20
-> [  239.934685]  [<ffffffff813c5db7>] devinet_ioctl+0xd7/0x730
-> [  239.934689]  [<ffffffff813c6f05>] inet_ioctl+0x75/0x90
-> [  239.934694]  [<ffffffff8134a260>] sock_do_ioctl+0x30/0x70
-> [  239.934698]  [<ffffffff8134a54d>] sock_ioctl+0x6d/0x2c0
-> [  239.934706]  [<ffffffff8116879b>] ? alloc_file+0x2b/0xd0
-> [  239.934711]  [<ffffffff811793af>] do_vfs_ioctl+0x8f/0x500
-> [  239.934715]  [<ffffffff8134bf64>] ? sock_alloc_file+0xa4/0x120
-> [  239.934719]  [<ffffffff811655b2>] ? fd_install+0x62/0x80
-> [  239.934724]  [<ffffffff811798b1>] sys_ioctl+0x91/0xa0
-> [  239.934727]  [<ffffffff8134d460>] ? sys_socket+0x40/0x70
-> [  239.934733]  [<ffffffff814290c2>] system_call_fastpath+0x16/0x1b
->
->
-> I'm currently running kernel 3.0.17 (LTS) and the driver works, but if I
-> boot under 3.2.2 it doesn't (all other software being equal.)
->
-> I'm guessing bisecting might help find the source of the problem, but I've
-> never done that. But I could try.
+ath6kl_cfg80211_vif_init/cleanup() follow more closely the style used
+elsewhere in ath6kl.
 
-When contacting a maintainer about a problem, always Cc the appropriate mailing 
-list, and keep that ML in any replies.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    9 ++++-----
+ drivers/net/wireless/ath/ath6kl/cfg80211.h |    2 ++
+ drivers/net/wireless/ath/ath6kl/core.h     |    1 -
+ drivers/net/wireless/ath/ath6kl/init.c     |    5 +++--
+ 4 files changed, 9 insertions(+), 8 deletions(-)
 
-I think the problem is that Arch Linux has switched to a new version of udev, 
-which is causing all sorts of problems for drivers that use synchronous loading 
-of firmware. Several drivers, including r8712u, need to be converted to an 
-asynchronous load mechanism. Until that happens, you should be able to work 
-around it by using a "modprobe -r/modprobe" sequence. Once the user-space code 
-is fully up and running, the synchronous loading will be OK.
-
-Larry
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 6c59a21..cd67cb6 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1403,7 +1403,7 @@ static int ath6kl_cfg80211_del_iface(struct wiphy *wiphy,
+ 
+ 	ath6kl_cleanup_vif(vif, test_bit(WMI_READY, &ar->flag));
+ 
+-	ath6kl_deinit_if_data(vif);
++	ath6kl_cfg80211_vif_cleanup(vif);
+ 
+ 	return 0;
+ }
+@@ -2742,7 +2742,7 @@ int ath6kl_register_ieee80211_hw(struct ath6kl *ar)
+ 	return 0;
+ }
+ 
+-static int ath6kl_init_if_data(struct ath6kl_vif *vif)
++static int ath6kl_cfg80211_vif_init(struct ath6kl_vif *vif)
+ {
+ 	vif->aggr_cntxt = aggr_init(vif->ndev);
+ 	if (!vif->aggr_cntxt) {
+@@ -2761,7 +2761,7 @@ static int ath6kl_init_if_data(struct ath6kl_vif *vif)
+ 	return 0;
+ }
+ 
+-void ath6kl_deinit_if_data(struct ath6kl_vif *vif)
++void ath6kl_cfg80211_vif_cleanup(struct ath6kl_vif *vif)
+ {
+ 	struct ath6kl *ar = vif->ar;
+ 
+@@ -2808,8 +2808,7 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
+ 
+ 	ath6kl_init_control_info(vif);
+ 
+-	/* TODO: Pass interface specific pointer instead of ar */
+-	if (ath6kl_init_if_data(vif))
++	if (ath6kl_cfg80211_vif_init(vif))
+ 		goto err;
+ 
+ 	if (register_netdevice(ndev))
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.h b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+index 81f20a5..aa96169 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.h
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.h
+@@ -53,6 +53,8 @@ int ath6kl_cfg80211_suspend(struct ath6kl *ar,
+ 
+ int ath6kl_cfg80211_resume(struct ath6kl *ar);
+ 
++void ath6kl_cfg80211_vif_cleanup(struct ath6kl_vif *vif);
++
+ void ath6kl_cfg80211_stop(struct ath6kl_vif *vif);
+ void ath6kl_cfg80211_stop_all(struct ath6kl *ar);
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index c863a28..93d05c0 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -723,7 +723,6 @@ void ath6kl_wakeup_event(void *dev);
+ void ath6kl_reset_device(struct ath6kl *ar, u32 target_type,
+ 			 bool wait_fot_compltn, bool cold_reset);
+ void ath6kl_init_control_info(struct ath6kl_vif *vif);
+-void ath6kl_deinit_if_data(struct ath6kl_vif *vif);
+ void ath6kl_core_free(struct ath6kl *ar);
+ struct ath6kl_vif *ath6kl_vif_first(struct ath6kl *ar);
+ void ath6kl_cleanup_vif(struct ath6kl_vif *vif, bool wmi_ready);
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 368ecbd..ffe6254 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1695,7 +1695,7 @@ err_rxbuf_cleanup:
+ 	ath6kl_htc_flush_rx_buf(ar->htc_target);
+ 	ath6kl_cleanup_amsdu_rxbufs(ar);
+ 	rtnl_lock();
+-	ath6kl_deinit_if_data(netdev_priv(ndev));
++	ath6kl_cfg80211_vif_cleanup(netdev_priv(ndev));
+ 	rtnl_unlock();
+ 	wiphy_unregister(ar->wiphy);
+ err_debug_init:
+@@ -1716,6 +1716,7 @@ err_wq:
+ 	return ret;
+ }
+ 
++/* FIXME: move this to cfg80211.c and rename to ath6kl_cfg80211_vif_stop() */
+ void ath6kl_cleanup_vif(struct ath6kl_vif *vif, bool wmi_ready)
+ {
+ 	static u8 bcast_mac[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+@@ -1761,7 +1762,7 @@ void ath6kl_stop_txrx(struct ath6kl *ar)
+ 		spin_unlock_bh(&ar->list_lock);
+ 		ath6kl_cleanup_vif(vif, test_bit(WMI_READY, &ar->flag));
+ 		rtnl_lock();
+-		ath6kl_deinit_if_data(vif);
++		ath6kl_cfg80211_vif_cleanup(vif);
+ 		rtnl_unlock();
+ 		spin_lock_bh(&ar->list_lock);
+ 	}
 
