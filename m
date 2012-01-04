@@ -1,62 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:46935 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752742Ab2AaJnF (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:55188 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755835Ab2ADPE2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 04:43:05 -0500
-Received: by iacb35 with SMTP id b35so619340iac.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 01:43:04 -0800 (PST)
+	Wed, 4 Jan 2012 10:04:28 -0500
+Received: by eekc4 with SMTP id c4so16727331eek.19
+        for <linux-wireless@vger.kernel.org>; Wed, 04 Jan 2012 07:04:27 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: Re: Compat-wireless-3.2-rc6-3 is broken for rt2860 device
+Date: Wed, 04 Jan 2012 16:04:18 +0100
+Message-ID: <1408490.qSFZVkU7fA@helmutmobil.site> (sfid-20120104_160434_635385_ABDC5FE1)
+In-Reply-To: <4F040FEA.3080703@01019freenet.de>
+References: <4EFF12D9.3010602@01019freenet.de> <2766356.70ylY68Gqi@helmutmobil.site> <4F040FEA.3080703@01019freenet.de>
 MIME-Version: 1.0
-In-Reply-To: <87bopkcnv6.fsf@purkki.adurom.net>
-References: <1327924857-1250-1-git-send-email-eliad@wizery.com>
-	<87fwexco94.fsf@purkki.adurom.net>
-	<CAB3XZEfaQAD0p2VJ28znznaB3P_3z3NvEiROJTbyCW+su2gLzg@mail.gmail.com>
-	<87bopkcnv6.fsf@purkki.adurom.net>
-Date: Tue, 31 Jan 2012 11:43:04 +0200
-Message-ID: <CAB3XZEfHSRiH7x91-aUi0wHvBmAjj5mgj7=_8NE3+DOdZbRdGg@mail.gmail.com> (sfid-20120131_104311_389644_2620039D)
-Subject: Re: [PATCH 00/12] wl12xx: update fw api
-From: Eliad Peller <eliad@wizery.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-15"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 31, 2012 at 9:50 AM, Kalle Valo <kvalo@adurom.com> wrote:
-> Eliad Peller <eliad@wizery.com> writes:
->
->> On Mon, Jan 30, 2012 at 3:29 PM, Kalle Valo <kvalo@adurom.com> wrote:
->>> Eliad Peller <eliad@wizery.com> writes:
->>>
->>>> The fw api was changed in the latest FWs (6.3.5.0.95 for wl127x
->>>> and 7.3.5.0.95 for wl128x).
->>>>
->>>> Along with some small adjustments, the main changes
->>>> inroduced by this patheset are configuring the
->>>> templates per-role, and moving to IEEE80211_HW_SUPPORTS_DYNAMIC_PS
->>>> mode.
->>>
->>> I didn't look so carefully, but doesn't this break bisect? I mean if you
->>> change the firmware api in small patches wl12xx can't work properly
->>> until all patches are applied, right?
->>>
->>> I would say that a huge patch doing all the necessary changes in one go
->>> is better, even it's ugly.
->>>
->> yes. it will break bisect (although it shouldn't break compilations).
->> i guess it's a matter of taste, but i think keeping the patches
->> manageable is more important than being able to bisect.
->
-> Yeah, it's just matter of taste. It's easy to skip commits during bisect
-> but someone not familiar with wl12xx does not know what commits to
-> skip and that will cause problems.
->
-> But I don't care how you do it, I just wanted to point out this aspect :)
->
-ok, thanks :)
+Hi,
 
-i took Luca's approach, and added an error message to the driver, and
-prevented it from starting in the transitional commits. i'll send an
-updated patchset soon.
+Am Mittwoch, 4. Januar 2012, 09:38:02 schrieb Andreas Hartmann:
+> Helmut Schaa schrieb:
+> >> Removing this patch
+> >>
+> >> mac80211: retry sending failed BAR frames later instead of tearing down
+> >> aggr (http://www.spinics.net/lists/linux-wireless/msg76379.html) makes
+> >> it working again.
+> >>
+> >> Device is: RaLink RT2800 802.11n PCI
+> > 
+> > What's the client device connected to the rt2x00 AP?
+> 
+> It's a rt3572 usb chip (Linksys WUSB600N v2), driven with the rt3572sta
+> module.
+> 
+> > Mind to send a
+> > 802.11 capture wen this stall happens?
 
-Eliad.
+Andreas provided me with a capture now. The interesting part is that
+the rt2x00 AP sends bursts of BARs with the same sequence number when
+the stall happens. I only had a quick look at the code in question but
+couldn't see anything wrong at a first glance.
+
+Helmut
