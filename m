@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:53735 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751572Ab2A0Bu1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 20:50:27 -0500
-Date: Fri, 27 Jan 2012 10:50:15 +0900
-From: Norbert Preining <preining@logic.at>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	Dave Jones <davej@redhat.com>
-Subject: Re: iwlagn is getting even worse with 3.3-rc1
-Message-ID: <20120127015015.GA23291@gamma.logic.tuwien.ac.at> (sfid-20120127_025042_726042_DB694F0F)
-References: <20120124013625.GB18436@gamma.logic.tuwien.ac.at> <CANUX_P3er0orBy8OhDuY1DfgD810UD-_HB_ukJnCA+W8e-VazQ@mail.gmail.com> <20120125002250.GA20431@gamma.logic.tuwien.ac.at> <CANUX_P0UREz_jZABu+Y_QYOh9tx_sKZSSkZpYHBEVtcU4QQdSA@mail.gmail.com> <20120126003735.GA2346@gamma.logic.tuwien.ac.at> <CANUX_P0H_WaWwnpjoBcMpZQY4xH=cbVhAKxWKXmz-HwFMcWS6w@mail.gmail.com> <CANUX_P3XSCsWUJ9M55qeaK-DuPEMXODFPJiNk+BgnHN-=WECqw@mail.gmail.com> <20120126232555.GB16330@gamma.logic.tuwien.ac.at>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120126232555.GB16330@gamma.logic.tuwien.ac.at>
+Received: from mx1.redhat.com ([209.132.183.28]:30177 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754009Ab2ADVLB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jan 2012 16:11:01 -0500
+Subject: Re: Fedora 16 Wireless Connection Problem
+From: Dan Williams <dcbw@redhat.com>
+To: Bob Miller <rmiller61k@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <loom.20111226T003824-126@post.gmane.org>
+References: <CADiUXRwb+ktGmyuMxMcXhZkpbhy=kAkOJcTLpJYRcaFFSRMnMg@mail.gmail.com>
+	 <loom.20111226T003824-126@post.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 04 Jan 2012 15:11:00 -0600
+Message-ID: <1325711460.7269.47.camel@d430> (sfid-20120104_221105_993994_5DB19C8F)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Emmanuel,
-
-On Fr, 27 Jan 2012, Norbert Preining wrote:
-> First tests are promising, after reboot it was working immediately
-> without need to rfkill block/unblock. lso after suspend and resume.
+On Sun, 2011-12-25 at 23:42 +0000, Bob Miller wrote:
+> mammar <mammar@...> writes:
 > 
-> Will test more the next days and report back.
+> > 
+> > I have Dell Inpiron N5010 with Broadcom Corporation BCM4313
+> > 802.11b/g/n Wireless LAN Controller.
+> > 
+> > My OS is Fedora 16 64-bit. I have installed the following drivers for
+> > my wireless controller, everything is working great until yesterday.
+> > Now whenever i try to connect to wirless connection, it failed.
+> > 
+> >
+> > 
+> > Can anyone help me?
+> > 
+> > Thanks
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@...
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> > 
+> 
+> What kernel are you using?
+> 
+> The latest kernel (kernel-3.1.6-1.fc16.x86_64) seems to have broken the wireless
+> on my HP laptop. Wireless capability works with the prior version
+> (kernel-3.1.5-6.fc16.x86_64).
 
-Unfortunately, at the university it is still a complete no-go.
-Usually the connection works for a short time, then breaks down.
-After that even unloading and loading the module did not reactivate
-it, I cannot get a connection at all. But other units, or with
-older kernel (it was 2.6.3X AFAIR) it was working without a glitch.
+I also note the OP is using the wl.o driver, which is known not to be
+terribly reliable with wpa_supplicant and NetworkManager, while mac80211
+drivers work much better.  I'd suggest looking into b43 or the new
+softmac driver from Broadcom if you can.  Beyond that, we'd need
+wpa_supplicant debug logs showing the actual issue, which can be
+obtained by following these directions:
 
-I uploaded a syslog output including kernel and network manager logs
-to
-	http://www.logic.at/people/preining/syslog.log
-(new one). This shows a session from loading the module up to giving up.
+http://live.gnome.org/NetworkManager/Debugging
 
-Best wishes
+Dan
 
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-AITH (n.)
-The single bristle that sticks out sideways on a cheap paintbrush.
-			--- Douglas Adams, The Meaning of Liff
