@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50911 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751660Ab2AZSQV (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:51512 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754084Ab2ADSaP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 13:16:21 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] compat: use kconfig.h in compat-2.6.h for 3.1 and later kernels
-Date: Thu, 26 Jan 2012 13:00:56 -0500
-Message-Id: <1327600856-29635-1-git-send-email-linville@tuxdriver.com> (sfid-20120126_191624_303256_BECA3C93)
+	Wed, 4 Jan 2012 13:30:15 -0500
+Date: Wed, 04 Jan 2012 13:30:12 -0500 (EST)
+Message-Id: <20120104.133012.2194053254581656154.davem@davemloft.net> (sfid-20120104_193018_396391_CA56DBF7)
+To: vthiagar@qca.qualcomm.com
+Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	ath6kl-devel@qualcomm.com
+Subject: Re: [PATCH] ath6kl: Use a mutex_lock to avoid race in diabling and
+ handling irq
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1325672839-16608-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1325672839-16608-1-git-send-email-vthiagar@qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This file was introduced in commit 2a11c8ea20bf850b3a2c60db8c2e7497d28aba99
-and included in 3.1 and later kernels.  It includes <generated/autoconf.h>
-itself, as well as some other definitions that are used elsewhere.
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Date: Wed, 4 Jan 2012 15:57:19 +0530
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- include/linux/compat-2.6.h |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+> Currently this race is handled but in a messy way an atomic
+> variable is being checked in a loop which sleeps upto ms
+> in every iteration. Remove this logic and use a mutex
+> to make sure irq is not disabled when irq handling is in
+> progress.
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
-index c23e94a..3ccd051 100644
---- a/include/linux/compat-2.6.h
-+++ b/include/linux/compat-2.6.h
-@@ -2,7 +2,9 @@
- #define LINUX_26_COMPAT_H
- 
- #include <linux/version.h>
--#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
-+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0))
-+#include <linux/kconfig.h>
-+#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
- #include <generated/autoconf.h>
- #else
- #include <linux/autoconf.h>
--- 
-1.7.4.4
+So you guys have time to code up patches like this but not enough
+time to fix the build failure properly that exists in -next for
+some time now?
+
+This kind of stuff really drives me nuts, fix your priorities.  You
+guys added a build regression to the tree, fix that first.
 
