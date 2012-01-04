@@ -1,47 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53272 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756508Ab2AJRfN (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37204 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756475Ab2ADRAx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jan 2012 12:35:13 -0500
-Subject: Re: [PATCHv2 2/2] mac80211: add support for mcs masks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-In-Reply-To: <20120110172832.GA19790@pandem0nium>
-References: <1325793490-21501-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1325793490-21501-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1326114294.3451.25.camel@jlt3.sipsolutions.net>
-	 <20120110172832.GA19790@pandem0nium>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 10 Jan 2012 18:35:11 +0100
-Message-ID: <1326216911.3438.11.camel@jlt3.sipsolutions.net> (sfid-20120110_183517_354212_642B8E52)
-Mime-Version: 1.0
+	Wed, 4 Jan 2012 12:00:53 -0500
+Date: Wed, 4 Jan 2012 11:57:52 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-01-04 #2
+Message-ID: <20120104165752.GH2540@tuxdriver.com> (sfid-20120104_180120_559314_E1E7EEBE)
+References: <20120104164339.GG2540@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="J5MfuwkIyy7RmF4Q"
+In-Reply-To: <20120104164339.GG2540@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-01-10 at 18:28 +0100, Simon Wunderlich wrote:
-> Hello Johannes,
 
-> > All this logic is pretty complex, maybe we could translate the bitmap to
-> > an array of unsigned longs and use test_bit() instead of open-coding it
-> > for 8-bit words?
-> 
-> Mhm, I would rather not add further copies into this fast path function, and
-> simply casting will result in bad behaviour (alignment, endianess). 
+--J5MfuwkIyy7RmF4Q
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Well you don't want to copy it, you want to maintain the data that way,
-I think? Ok I think I see -- you're concerned about the masking etc.
-Dunno. Maybe at least there's a way to abstract out all the
-calculations?
+On Wed, Jan 04, 2012 at 11:43:40AM -0500, John W. Linville wrote:
+> Dave,
+>=20
+> Here are a handful of straggler wireless fixes for 3.2.  Included is
+> a NULL pointer fix for mwifiex, a regression fix for handling rx
+> header lengths for differnt b43 firmwares in PIO mode, a revert of
+> a one-liner for Bluetooth HCI that was causing uncomfortable delays
+> during resume, and an ath9k fix for a panic when running in AP mode
+> with aggregation disabled.
+>=20
+> The Bluetooth fix is a one-liner change of a delay value.  The mwifiex,
+> b43, and ath9k fixes are relatively small and isolated to their
+> respective drivers.
+>=20
+> Please let me know if there are problems!
+>=20
+> John
+>=20
+> ---
+>=20
+> The following changes since commit 405cc2736527bd506fd8f652308b03b2c8a1e8=
+b9:
+>=20
+>   fix CAN MAINTAINERS SCM tree type (2012-01-03 14:57:43 -0500)
+>=20
+> are available in the git repository at:
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for=
+-davem
 
-> Generally
-> changing the mcs_mask to u32 is possible,
+The top of the tree here is commit d8f46ff11081f03b09efe82245a3257bab6bf60e.
 
-No, u64 might work today but maybe somebody will want to use higher
-MCSes in the future?
+Thanks,
 
-johannes
+John
+--=20
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
 
+--J5MfuwkIyy7RmF4Q
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPBIUPAAoJEJctW/TcYTgGDbAQAIzBwlebXC7xi4l+JYIth6Qd
+hdztsJoloFnetiSOVh9iyZgfOfKltweWZgPtjSTtyvxrNWIzB2aS+IvFYHYOduBc
+VSBRQWT6CTBrnoCvTrIATnYXcmiIkQa8W1ylVPLujUnrcSp40hAb+hps25SWRvPg
+FSnhlCIE5D55sxshUgNG9qmJaJrsivbjrKeDiKSwzivC9K2GZCHubqd9suIer7fZ
+AwiK20ayJ9T3jS68qu2H3BDeZuTni2W57pENHe+UFF2nE3Bytyhx0+A6hFx5fapu
+1x2V/BxUWL8v/QoXutImOsyYG22DuDfzuOd7/4A53W9Z2mO0al4Qa/TKCqoUrTBH
+/g/NlDbUdFXzU/o8a9MJEzX0f8vmXhqJ9xFD2RxlVQIikYKXFrpTMOapuXMWR3Eo
+h87nxxIOfd7dwImHbJxo5zs2jdkp08fdRemozWdsLBsmi96mumNzXQaLE3fnvv8K
+PxJboyZWs8E4z/bamBgM7LjQDXcKYtys36W+/UkI0ZT0FkupS77jVEJIg+ww/ySC
+gMyU9b84qroeunHhISAZK3V3VRGgEf9TnxmeeeGRANx15ALl5LyEopuEO64Cp+Bm
+bn43sgL5K9XU1u4x0AvSvwf3hTqAYPrlAL2Pau9ClJc1IzgSwG9eI+TnOip55W3w
++2kHbM6UJ7spUKrVkl6y
+=bAk9
+-----END PGP SIGNATURE-----
+
+--J5MfuwkIyy7RmF4Q--
