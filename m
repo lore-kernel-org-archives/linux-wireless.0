@@ -1,152 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:47245 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752519Ab2ASNR6 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57661 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755316Ab2ADQpH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jan 2012 08:17:58 -0500
-Message-ID: <1326979070.2054.17.camel@shinybook.infradead.org> (sfid-20120119_141802_093829_2A0B55F7)
-Subject: Re: [PATCH V3 2/2] MAINTAINERS: add b43 mailing list
-From: David Woodhouse <dwmw2@infradead.org>
-To: Gregory Bellier <gregory.bellier@gmail.com>
-Cc: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Date: Fri, 20 Jan 2012 00:17:50 +1100
-In-Reply-To: <CAD3=kO+kLO5-1ZY-X=7TsdEBrgzqQQF8uEVwrtu2eGduhAC6jQ@mail.gmail.com>
-References: <1326491706-14970-1-git-send-email-zajec5@gmail.com>
-	 <1326491706-14970-2-git-send-email-zajec5@gmail.com>
-	 <1326975859.2054.14.camel@shinybook.infradead.org>
-	 <CACna6rynAD9Rxsbmxd2UROrfwEQt65yV=FUR8jGSsDgiBhRiww@mail.gmail.com>
-	 <1326977309.2054.16.camel@shinybook.infradead.org>
-	 <CAD3=kO+kLO5-1ZY-X=7TsdEBrgzqQQF8uEVwrtu2eGduhAC6jQ@mail.gmail.com>
-Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature";
-	boundary="=-00ClrBs0kS9c6CHeGDwN"
-Mime-Version: 1.0
+	Wed, 4 Jan 2012 11:45:07 -0500
+Date: Wed, 4 Jan 2012 11:43:40 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull request: wireless 2012-01-04 #2
+Message-ID: <20120104164339.GG2540@tuxdriver.com> (sfid-20120104_174545_904530_CF751218)
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="p2kqVDKq5asng8Dg"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
---=-00ClrBs0kS9c6CHeGDwN
-Content-Type: text/plain; charset="UTF-8"
+--p2kqVDKq5asng8Dg
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2012-01-19 at 14:16 +0100, Gregory Bellier wrote:
-> Maybe you did that to avoid spamming=E2=80=A6 ?
+Dave,
 
-It's a crappy way to avoid spamming. We should be able to do better.
-Filtering out all HTML goes a long way :)
+Here are a handful of straggler wireless fixes for 3.2.  Included is
+a NULL pointer fix for mwifiex, a regression fix for handling rx
+header lengths for differnt b43 firmwares in PIO mode, a revert of
+a one-liner for Bluetooth HCI that was causing uncomfortable delays
+during resume, and an ath9k fix for a panic when running in AP mode
+with aggregation disabled.
 
+The Bluetooth fix is a one-liner change of a delay value.  The mwifiex,
+b43, and ath9k fixes are relatively small and isolated to their
+respective drivers.
+
+Please let me know if there are problems!
+
+John
+
+---
+
+The following changes since commit 405cc2736527bd506fd8f652308b03b2c8a1e8b9:
+
+  fix CAN MAINTAINERS SCM tree type (2012-01-03 14:57:43 -0500)
+
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-d=
+avem
+
+Amitkumar Karwar (1):
+      mwifiex: fix crash during simultaneous scan and connect
+
+Guennadi Liakhovetski (1):
+      b43: fix regression in PIO case
+
+Gustavo F. Padovan (1):
+      Revert "Bluetooth: Increase HCI reset timeout in hci_dev_do_close"
+
+John W. Linville (2):
+      Merge branch 'master' of git://git.kernel.org/.../padovan/bluetooth
+      Merge branch 'master' of git://git.kernel.org/.../linville/wireless i=
+nto for-davem
+
+Mohammed Shafi Shajakhan (1):
+      ath9k: Fix kernel panic in AR2427 in AP mode
+
+ drivers/net/wireless/ath/ath9k/main.c    |    3 +++
+ drivers/net/wireless/b43/pio.c           |   16 +++++++++++++---
+ drivers/net/wireless/mwifiex/sta_ioctl.c |    7 ++++++-
+ net/bluetooth/hci_core.c                 |    2 +-
+ 4 files changed, 23 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/a=
+th/ath9k/main.c
+index d2348a5..a9c5ae7 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1843,6 +1843,9 @@ static void ath9k_sta_notify(struct ieee80211_hw *hw,
+ 	struct ath_softc *sc =3D hw->priv;
+ 	struct ath_node *an =3D (struct ath_node *) sta->drv_priv;
+=20
++	if (!(sc->sc_flags & SC_OP_TXAGGR))
++		return;
++
+ 	switch (cmd) {
+ 	case STA_NOTIFY_SLEEP:
+ 		an->sleeping =3D true;
+diff --git a/drivers/net/wireless/b43/pio.c b/drivers/net/wireless/b43/pio.c
+index fcff923..279a53e 100644
+--- a/drivers/net/wireless/b43/pio.c
++++ b/drivers/net/wireless/b43/pio.c
+@@ -617,9 +617,19 @@ static bool pio_rx_frame(struct b43_pio_rxqueue *q)
+ 	const char *err_msg =3D NULL;
+ 	struct b43_rxhdr_fw4 *rxhdr =3D
+ 		(struct b43_rxhdr_fw4 *)wl->pio_scratchspace;
++	size_t rxhdr_size =3D sizeof(*rxhdr);
+=20
+ 	BUILD_BUG_ON(sizeof(wl->pio_scratchspace) < sizeof(*rxhdr));
+-	memset(rxhdr, 0, sizeof(*rxhdr));
++	switch (dev->fw.hdr_format) {
++	case B43_FW_HDR_410:
++	case B43_FW_HDR_351:
++		rxhdr_size -=3D sizeof(rxhdr->format_598) -
++			sizeof(rxhdr->format_351);
++		break;
++	case B43_FW_HDR_598:
++		break;
++	}
++	memset(rxhdr, 0, rxhdr_size);
+=20
+ 	/* Check if we have data and wait for it to get ready. */
+ 	if (q->rev >=3D 8) {
+@@ -657,11 +667,11 @@ data_ready:
+=20
+ 	/* Get the preamble (RX header) */
+ 	if (q->rev >=3D 8) {
+-		b43_block_read(dev, rxhdr, sizeof(*rxhdr),
++		b43_block_read(dev, rxhdr, rxhdr_size,
+ 			       q->mmio_base + B43_PIO8_RXDATA,
+ 			       sizeof(u32));
+ 	} else {
+-		b43_block_read(dev, rxhdr, sizeof(*rxhdr),
++		b43_block_read(dev, rxhdr, rxhdr_size,
+ 			       q->mmio_base + B43_PIO_RXDATA,
+ 			       sizeof(u16));
+ 	}
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireles=
+s/mwifiex/sta_ioctl.c
+index ea4a29b..1679c25 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -55,9 +55,14 @@ int mwifiex_wait_queue_complete(struct mwifiex_adapter *=
+adapter)
+ {
+ 	bool cancel_flag =3D false;
+ 	int status =3D adapter->cmd_wait_q.status;
+-	struct cmd_ctrl_node *cmd_queued =3D adapter->cmd_queued;
++	struct cmd_ctrl_node *cmd_queued;
+=20
++	if (!adapter->cmd_queued)
++		return 0;
++
++	cmd_queued =3D adapter->cmd_queued;
+ 	adapter->cmd_queued =3D NULL;
++
+ 	dev_dbg(adapter->dev, "cmd pending\n");
+ 	atomic_inc(&adapter->cmd_pending);
+=20
+diff --git a/net/bluetooth/hci_core.c b/net/bluetooth/hci_core.c
+index be84ae3..b84458d 100644
+--- a/net/bluetooth/hci_core.c
++++ b/net/bluetooth/hci_core.c
+@@ -613,7 +613,7 @@ static int hci_dev_do_close(struct hci_dev *hdev)
+ 	if (!test_bit(HCI_RAW, &hdev->flags)) {
+ 		set_bit(HCI_INIT, &hdev->flags);
+ 		__hci_request(hdev, hci_reset_req, 0,
+-					msecs_to_jiffies(HCI_INIT_TIMEOUT));
++					msecs_to_jiffies(250));
+ 		clear_bit(HCI_INIT, &hdev->flags);
+ 	}
+=20
 --=20
-dwmw2
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
 
---=-00ClrBs0kS9c6CHeGDwN
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
+--p2kqVDKq5asng8Dg
+Content-Type: application/pgp-signature
 
-MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIITvzCCBi0w
-ggQVoAMCAQICAwCtOTANBgkqhkiG9w0BAQUFADBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwG
-A1UECxMVaHR0cDovL3d3dy5DQWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290
-MB4XDTEwMDYxMjEwMDMwMFoXDTEyMDYxMTEwMDMwMFowgegxGDAWBgNVBAMTD0RhdmlkIFdvb2Ro
-b3VzZTEiMCAGCSqGSIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzEfMB0GCSqGSIb3DQEJARYQ
-ZGF2aWRAd29vZGhvdS5zZTEoMCYGCSqGSIb3DQEJARYZZGF2aWQud29vZGhvdXNlQGludGVsLmNv
-bTEkMCIGCSqGSIb3DQEJARYVZHdtdzJAbGludXguaW50ZWwuY29tMTcwNQYJKoZIhvcNAQkBFigx
-MDg3MmEwN2Y2ZDdlMWUwN2Y1NWZmMTcyYTAzYjMwMGVlYWFkMjAzMIIBIjANBgkqhkiG9w0BAQEF
-AAOCAQ8AMIIBCgKCAQEA29OPhNvMxBMW83psWdVhZDtmJvgN+tBEp1r6MZamONsR0k81a6fDFwJz
-M0fEzEbV/bDG102QyX/xXC/0IpKV4acnqESC+sTHUmRwxfRKGNmR6t2iwEs2Y5kQDF31JxbCt49w
-AlhLMAa+e1MBZ7vO0uDmRuJpS7+ZdHboq7cdk6dyoeumGv5sl6U/SPK9rL4KzULtqQaw6Wucd6MJ
-irIggEHfCNqeT5a+TyuH4zKCwv9nblIGXq9wt+yqu5t/RicGaKPnXSqo/WpJAGggaO8g92mnYlVl
-Wu/b9bYVISwQ8LI0sEtjN1WnP5AQO2f59bdPAVk4Rn25HceOO4NvlG47LwIDAQABo4IBcTCCAW0w
-DAYDVR0TAQH/BAIwADBWBglghkgBhvhCAQ0ESRZHVG8gZ2V0IHlvdXIgb3duIGNlcnRpZmljYXRl
-IGZvciBGUkVFIGhlYWQgb3ZlciB0byBodHRwOi8vd3d3LkNBY2VydC5vcmcwQAYDVR0lBDkwNwYI
-KwYBBQUHAwQGCCsGAQUFBwMCBgorBgEEAYI3CgMEBgorBgEEAYI3CgMDBglghkgBhvhCBAEwMgYI
-KwYBBQUHAQEEJjAkMCIGCCsGAQUFBzABhhZodHRwOi8vb2NzcC5jYWNlcnQub3JnMIGOBgNVHREE
-gYYwgYOBE2R3bXcyQGluZnJhZGVhZC5vcmeBEGRhdmlkQHdvb2Rob3Uuc2WBGWRhdmlkLndvb2Ro
-b3VzZUBpbnRlbC5jb22BFWR3bXcyQGxpbnV4LmludGVsLmNvbYEoMTA4NzJhMDdmNmQ3ZTFlMDdm
-NTVmZjE3MmEwM2IzMDBlZWFhZDIwMzANBgkqhkiG9w0BAQUFAAOCAgEAXm+SUO1/TSeGJK0D9pAm
-E9LTFkdlgbaD6HXGbS0TNUDyfLFkacc2F1JLoWcoFwcL6Rup5o/Rt4QYDBPWgF9EXFvqsc9SLrSe
-X6VwRj7vI40x19ThE2A1Y8DzBJ9+2MzIR6hd5n9axATCOIRhmZVjX1cRkwshEGvAn8mTYGhWttkx
-WhBcaAuCd9OOQqUwfxTUXiSfVumPUNrrbuvaH6MjrNjDrXdvicL26Y+AzFSJn3o8DShjjMhkUx9l
-qV46BpjSGIuvkHhcLkGJ3Y1YmtOX1hwT+Z+d/10WJh8ZG2FqIlJtPtqvHK5ol/KvdzMwmMBd4qFj
-YAO32vf7zde+jdTHNp2Mb15bJHhNdGOsZicpGue42fg3deZQFe1E2KBl9VO09fjncjt9YdhCUtxO
-buDnoOixY6YSJgSmGJB2Xs+TE5gps4UiiOYen+NeJkuwg5x9vmyraU061Uc0csfc/E5IoxhTX/Pc
-H+zXiER8aSjA/9MXQfrJM2xkY6UNKlDbCYSLKnH/O02eu7Hma6lB4wtcY8ECu7LJuFY2448Quolv
-SQfQLRvKauGFGUAhbPClOxObuv/fNzA+lfg8DX2y5jXDutnpvBGgsplKxoah01SZfR9zNqxodPx2
-srKhujBNB+WiAZntMf0xp4e0JPMlTFxm3tbY9wuBSyTJyueO9hUkbN4wggYtMIIEFaADAgECAgMA
-rTkwDQYJKoZIhvcNAQEFBQAwVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6
-Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdDAeFw0xMDA2MTIx
-MDAzMDBaFw0xMjA2MTExMDAzMDBaMIHoMRgwFgYDVQQDEw9EYXZpZCBXb29kaG91c2UxIjAgBgkq
-hkiG9w0BCQEWE2R3bXcyQGluZnJhZGVhZC5vcmcxHzAdBgkqhkiG9w0BCQEWEGRhdmlkQHdvb2Ro
-b3Uuc2UxKDAmBgkqhkiG9w0BCQEWGWRhdmlkLndvb2Rob3VzZUBpbnRlbC5jb20xJDAiBgkqhkiG
-9w0BCQEWFWR3bXcyQGxpbnV4LmludGVsLmNvbTE3MDUGCSqGSIb3DQEJARYoMTA4NzJhMDdmNmQ3
-ZTFlMDdmNTVmZjE3MmEwM2IzMDBlZWFhZDIwMzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
-ggEBANvTj4TbzMQTFvN6bFnVYWQ7Zib4DfrQRKda+jGWpjjbEdJPNWunwxcCczNHxMxG1f2wxtdN
-kMl/8Vwv9CKSleGnJ6hEgvrEx1JkcMX0ShjZkerdosBLNmOZEAxd9ScWwrePcAJYSzAGvntTAWe7
-ztLg5kbiaUu/mXR26Ku3HZOncqHrphr+bJelP0jyvay+Cs1C7akGsOlrnHejCYqyIIBB3wjank+W
-vk8rh+MygsL/Z25SBl6vcLfsqrubf0YnBmij510qqP1qSQBoIGjvIPdpp2JVZVrv2/W2FSEsEPCy
-NLBLYzdVpz+QEDtn+fW3TwFZOEZ9uR3HjjuDb5RuOy8CAwEAAaOCAXEwggFtMAwGA1UdEwEB/wQC
-MAAwVgYJYIZIAYb4QgENBEkWR1RvIGdldCB5b3VyIG93biBjZXJ0aWZpY2F0ZSBmb3IgRlJFRSBo
-ZWFkIG92ZXIgdG8gaHR0cDovL3d3dy5DQWNlcnQub3JnMEAGA1UdJQQ5MDcGCCsGAQUFBwMEBggr
-BgEFBQcDAgYKKwYBBAGCNwoDBAYKKwYBBAGCNwoDAwYJYIZIAYb4QgQBMDIGCCsGAQUFBwEBBCYw
-JDAiBggrBgEFBQcwAYYWaHR0cDovL29jc3AuY2FjZXJ0Lm9yZzCBjgYDVR0RBIGGMIGDgRNkd213
-MkBpbmZyYWRlYWQub3JngRBkYXZpZEB3b29kaG91LnNlgRlkYXZpZC53b29kaG91c2VAaW50ZWwu
-Y29tgRVkd213MkBsaW51eC5pbnRlbC5jb22BKDEwODcyYTA3ZjZkN2UxZTA3ZjU1ZmYxNzJhMDNi
-MzAwZWVhYWQyMDMwDQYJKoZIhvcNAQEFBQADggIBAF5vklDtf00nhiStA/aQJhPS0xZHZYG2g+h1
-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
-AAAAAA==
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
 
+iQIcBAEBAgAGBQJPBIG7AAoJEJctW/TcYTgGXmEP/0+PLaTaO14MHFWQfwWnoU9h
+5d7zYWFzqrrdPx6+ll/yYSmTN3nKnnJfiqyAm64ZQ/ET6AP0sAwAM/wHyKlsQiyo
+p3+nPiglxzqtsCdu41+tjsbETNVplOzs/cEmh4b0yqIlcHO0dSMqlZd8lZQ8q/n5
+QgrE9MrhTyhtc/+eCh6UgUB/Vu45HQrS6mO/t39vk/z90wrqrynBXyKT8rQwYM5O
+cRO7YHLaSOMqx6JLnQ2DW8Jr1ReZSGEbzVtT/yoO6gLQhagWwkwxXPr+lnp0Wbes
+FTqx3/pQe8oPCClir1s1m8ha5C1Pix5PH72ErmV4vEsg9sUcK2RizPTO3CNix3YW
+d2pKmoQSP3tuNfRTFNtKziTXWU3wOtvfBlFOh3B4lqa08Ze4euO+5mqP70VwMNoG
+exOh/+5KQPZmegvfOUvzkl+k7Jw51HvKwbGAF5amSlUR18kVr0YyZfj9H7Wt2Hk+
+nSablpBHdsnchECAigDPIJ7Y93XH/rmqq46mp5Q9OeQl0+vbVaZeUNB6dSa/yAFk
+btoeY7VPcaAkNIY4jALPJcSh0IDcA4TiDQ7GFuwyRHnWOadUsD8+vbHcM/q6mQgL
+5E2ltQ6hnRjk4xiT68osAjjOtOtvt6JTydwAlnQSW/PkqaChYARO+BsXZqhMUSqV
+D7FrwRDQiEubeMQy7e3t
+=kKef
+-----END PGP SIGNATURE-----
 
---=-00ClrBs0kS9c6CHeGDwN--
-
+--p2kqVDKq5asng8Dg--
