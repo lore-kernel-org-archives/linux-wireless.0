@@ -1,82 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:57351 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753137Ab2AIKXW (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:65431 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756431Ab2ADRk6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 05:23:22 -0500
-Received: by pbdu13 with SMTP id u13so2109721pbd.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2012 02:23:21 -0800 (PST)
+	Wed, 4 Jan 2012 12:40:58 -0500
+Message-ID: <4F048F26.5000804@lwfinger.net> (sfid-20120104_184124_840672_F8E006AE)
+Date: Wed, 04 Jan 2012 11:40:54 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4F0562DF.3000200@dualc.maya.org>
-References: <4EFF12D9.3010602@01019freenet.de>
-	<2766356.70ylY68Gqi@helmutmobil.site>
-	<4F040FEA.3080703@01019freenet.de>
-	<1408490.qSFZVkU7fA@helmutmobil.site>
-	<4F0562DF.3000200@dualc.maya.org>
-Date: Mon, 9 Jan 2012 11:23:21 +0100
-Message-ID: <CAGXE3d8b5qtbhesPjRy3EXvkiwshUg0eZqcDBzb1OhKK3j6z6A@mail.gmail.com> (sfid-20120109_112326_012446_92E57548)
-Subject: Re: Compat-wireless-3.2-rc6-3 is broken for rt2860 device
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Andreas Hartmann <andihartmann@freenet.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-01-04
+References: <20120104155816.GE2540@tuxdriver.com> <20120104163109.GF2540@tuxdriver.com>
+In-Reply-To: <20120104163109.GF2540@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 5, 2012 at 9:44 AM, Andreas Hartmann
-<andihartmann@freenet.de> wrote:
-> Helmut Schaa schrieb:
->> Hi,
->>
->> Am Mittwoch, 4. Januar 2012, 09:38:02 schrieb Andreas Hartmann:
->>> Helmut Schaa schrieb:
->>>>> Removing this patch
->>>>>
->>>>> mac80211: retry sending failed BAR frames later instead of tearing down
->>>>> aggr (http://www.spinics.net/lists/linux-wireless/msg76379.html) makes
->>>>> it working again.
->>>>>
->>>>> Device is: RaLink RT2800 802.11n PCI
->>>>
->>>> What's the client device connected to the rt2x00 AP?
->>>
->>> It's a rt3572 usb chip (Linksys WUSB600N v2), driven with the rt3572sta
->>> module.
->>>
->>>> Mind to send a
->>>> 802.11 capture wen this stall happens?
->>
->> Andreas provided me with a capture now. The interesting part is that
->> the rt2x00 AP sends bursts of BARs with the same sequence number when
->> the stall happens. I only had a quick look at the code in question but
->> couldn't see anything wrong at a first glance.
+On 01/04/2012 10:31 AM, John W. Linville wrote:
+> On Wed, Jan 04, 2012 at 10:58:16AM -0500, John W. Linville wrote:
 >
+>> I was hesitant to include the rtlwifi fix, but settled on inclusion
+>> because it was a product of a recent ginormous thread about the
+>> intersection of firmware loading and suspend/resume.  Plus it fixes
+>> a bug report in the Red Hat Bugzilla. :-) If you don't think it is
+>> worthy, let me know and I'll drop it from this release.
 >
-> Some additional information:
+> It looks like this could generate a build warning...
 >
-> - The AP initiates BARs for 6 different, successive sequence numbers.
-> - The first 5 sequence numbers are finished after sending of about 8 (!)
-> BAR's.
-> Important: each BAR is responded *instantly* by the STA.
-> - The BAR for the next sequence number is sent "endless" though the STA
-> responses to each BAR instantly again.
+> 	http://marc.info/?l=linux-wireless&m=132569396407866&w=2
 >
->
-> Another thing: it is striking, that the performance from STA -> AP is at
-> max 8,5 MBit/s, whereas the performance from AP -> STA can be 15 MBit/s
-> (all measured with netperf).
->
->
-> Could it be, that somewhere in the stack of the AP the response packet
-> from STA -> AP get's lost or ignored or blocked?
+> I'm getting cold feet on this one.  I withdraw this pull request --
+> new one to follow soon!
 
-The BlockAck is solely handled in hardware. But I need to check, maybe
-the BAR tx status is reported as unacknowledged when the BA contains
-a BA bitmap of only zeros ...
+John,
 
-Don't know when I can find time to do this but if you like to test something
-you could try to add some printks in the rt2x00 tx status path to see if any
-BAR frames are reported as acknowledged (and if these have a bitmap != 0).
+I will resubmit this patch with a fix.
 
-Helmut
+I now realize that my fix has a different problem in that the firmware might not 
+be preserved under certain scenarios if there were two instances of the device 
+sharing the driver. These are corner cases, but I would like to fix that as well.
+
+Is there any way for a driver to know that it is being initialized for a second 
+device?
+
+Thanks,
+
+Larry
