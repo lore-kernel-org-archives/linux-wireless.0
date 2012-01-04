@@ -1,75 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.u-psud.fr ([129.175.33.41]:56421 "EHLO smtp1.u-psud.fr"
+Received: from mx1.redhat.com ([209.132.183.28]:8646 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753578Ab2AQNR7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 08:17:59 -0500
-Message-ID: <4F157505.3060306@lri.fr> (sfid-20120117_141801_887100_91CEA0D5)
-Date: Tue, 17 Jan 2012 14:17:57 +0100
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-MIME-Version: 1.0
-To: Antonio Quartulli <ordex@autistici.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCHv3 2/2] mac80211: in IBSS use the Auth frame to trigger
- STA reinsertion
-References: <1326737526-29750-1-git-send-email-ordex@autistici.org>
-In-Reply-To: <1326737526-29750-1-git-send-email-ordex@autistici.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1756405Ab2ADQ6H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jan 2012 11:58:07 -0500
+Subject: Re: APM6270 wireless driver
+From: Dan Williams <dcbw@redhat.com>
+To: Belisko Marek <marek.belisko@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAAfyv35teMwij7Bg=5b+sBGZt8UpDRQzfdbw2G0EmBW9vEjg+w@mail.gmail.com>
+References: <CAAfyv35teMwij7Bg=5b+sBGZt8UpDRQzfdbw2G0EmBW9vEjg+w@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 04 Jan 2012 10:58:05 -0600
+Message-ID: <1325696285.2622.11.camel@d430> (sfid-20120104_175811_113905_751A05DF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16/01/2012 19:12, Antonio Quartulli wrote:
-> -static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
-> +static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
-> +						  bool auth)
->  	__acquires(RCU)
->  {
->  	struct ieee80211_sub_if_data *sdata = sta->sdata;
-> @@ -289,13 +265,15 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
->  		    addr, sdata->name);
->  #endif
->  
-> +	if (auth) {
->  #ifdef CONFIG_MAC80211_IBSS_DEBUG
-> -	printk(KERN_DEBUG "TX Auth SA=%pM DA=%pM BSSID=%pM"
-> -	       "(auth_transaction=1)\n", sdata->vif.addr,
-> -	       sdata->u.ibss.bssid, addr);
-> +		printk(KERN_DEBUG "TX Auth SA=%pM DA=%pM BSSID=%pM"
-> +		       "(auth_transaction=1)\n", sdata->vif.addr,
-> +		       sdata->u.ibss.bssid, addr);
->  #endif
-> -	ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, NULL, 0,
-> -			    addr, sdata->u.ibss.bssid, NULL, 0, 0);
-> +		ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, NULL, 0,
-> +				    addr, sdata->u.ibss.bssid, NULL, 0, 0);
-> +	}
->  
->  	sta_info_move_state(sta, IEEE80211_STA_AUTH);
->  	sta_info_move_state(sta, IEEE80211_STA_ASSOC);
-[added context]
-	sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
+On Wed, 2011-12-28 at 14:00 +0100, Belisko Marek wrote:
+> Hi,
+> 
+> is there available any actual kernel driver which works with APM6270 chip?
+> There is available some old sources which are currently not compilable
+> (http://friendlyarm.net/forum/topic/3624)
+> 
+> Make sense to push existing driver to staging drivers? Seems to me
+> little bit outdated ;)
 
-	rate_control_rate_init(sta);
+The sources from the link you pasted make it appear that the APM card is
+a rebranded Marvell SD8686 with PXA SDHC bus drivers.  There's already a
+driver for the SD8686 which probably works with this part, although we
+may need to add the vendor ID for the APM6270.
 
-	/* If it fails, maybe we raced another insertion? */
-	if (sta_info_insert_rcu(sta))
-		return sta_info_get(sdata, addr);
-	return sta;
-}
+For the SDIO bus drivers, we'd need to see if the existing upstream bus
+drivers already work for this hardware, and if not, the ones from that
+package would then need to be ported.  I don't see a PXA270m SDIO driver
+in the upstream tree, but there's a lot of support for the S3C2440
+including an MMC driver which is a prerequisite for SD support.  I'm not
+sure if the s3cmci MMC driver supports SDIO though.
 
+Dan
 
-I tested your patch, but quickly run into a race condition where i would
-get Auth frame multiplication.
-
-The worst case apparently happen when A boots for the first time and the
-first message that B receives is an Auth frame.  In that case, there are
-several ieee80211_ibss_add_sta() calls running concurrently on B  (A and
-B are SMP systems)  but only one succeeds,  except that your patch sends
-Auth frames before the check, so B sends several Auth frames to A.
-
-Then A proceed to reset B.  After A deletes B's sta_info,  but before
-it reinserts it, some other code (ieee80211_ibss_rx_no_sta?) may call
-ieee80211_ibss_add_sta()  concurrently,  sending more Auth frames...
-increasing the odds of another race condition...
-
-By calling send_auth only when sta_info_insert_rcu() succeeds, i'm no
-longer able to reproduce the Auth flood.
