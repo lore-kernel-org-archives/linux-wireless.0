@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37827 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752245Ab2ACKfU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 05:35:20 -0500
-Date: Tue, 3 Jan 2012 11:34:58 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Michal Hocko <mhocko@suse.cz>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Subject: Re: iwl3945 didn't survive after s2ram failure
-Message-ID: <20120103103457.GA3391@redhat.com> (sfid-20120103_113551_183654_8F377828)
-References: <20111227105340.GD5344@tiehlicka.suse.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111227105340.GD5344@tiehlicka.suse.cz>
+Received: from shards.monkeyblade.net ([198.137.202.13]:51498 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754084Ab2ADS3R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jan 2012 13:29:17 -0500
+Date: Wed, 04 Jan 2012 13:28:11 -0500 (EST)
+Message-Id: <20120104.132811.1526508364584579293.davem@davemloft.net> (sfid-20120104_192920_681719_8D0486B9)
+To: kvalo@qca.qualcomm.com
+Cc: linville@tuxdriver.com, ath6kl-devel@qualcomm.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath6kl: force building as a module
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120104094134.28754.39652.stgit@x201>
+References: <20120104094134.28754.39652.stgit@x201>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 27, 2011 at 11:53:40AM +0100, Michal Hocko wrote:
-> my laptop died (due to drained batteries) while it was suspended to
-> RAM and the wireless didn't get back to life after I booted again.
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Date: Wed, 04 Jan 2012 11:41:34 +0200
 
-I wonder how we could kill hardware that way ...
-
-> Dmesg says:
-> cfg80211: Calling CRDA to update world regulatory domain
-> iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for Linux, in-tree:s
-> iwl3945: Copyright(c) 2003-2011 Intel Corporation
-> iwl3945 0000:05:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-> iwl3945 0000:05:00.0: setting latency timer to 64
-> iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-> iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-> iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-> iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-> iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-> iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-> iwl3945 0000:05:00.0: bad EEPROM signature,EEPROM_GP=0x00000007
-> iwl3945 0000:05:00.0: EEPROM not found, EEPROM_GP=0xffffffff
-> iwl3945 0000:05:00.0: Unable to init EEPROM
-> iwl3945 0000:05:00.0: PCI INT A disabled
-> iwl3945: probe of 0000:05:00.0 failed with error -2
+> Stephen reported that ath6kl fails if both sdio and usb are built
+> into the kernel:
 > 
-> Is there anything I can do to resurrect it?
+> ath6kl/cfg80211.c:27:1: error: expected ')' before 'KBUILD_MODNAME'
+> ath6kl/cfg80211.c:27:1: error: 'KBUILD_MODNAME' undeclared here (not in a function)
+> ath6kl/cfg80211.c:27:1: error: expected ',' or ';' before string constant
+> 
+> As a temporary fix make ath6kl build only as a module. This will be reverted
+> once a separate ath6kl core module is implemented which will fix this
+> properly.
+> 
+> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-No idea. Please provide logs with debug=0x47ffffff option.
-
-Did you try to totally power-off the laptop by removing
-battery (and power cable of course) ?
-
-If anything other will not help, is possible to rewrite eeprom, I don't
-know how to do this, but I know that tool for that exist:
-http://code.google.com/p/iwleeprom/
-
-Stanislaw
+NACK, fix this properly.
