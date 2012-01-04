@@ -1,107 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.mail.elte.hu ([157.181.151.9]:36584 "EHLO mx2.mail.elte.hu"
+Received: from mout4.freenet.de ([195.4.92.94]:46331 "EHLO mout4.freenet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751992Ab2ACI2x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 03:28:53 -0500
-Date: Tue, 3 Jan 2012 09:26:27 +0100
-From: Ingo Molnar <mingo@elte.hu>
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jack Stone <jwjstone@fastmail.fm>,
-	Matthew Garrett <mjg@redhat.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Oliver Neukum <oliver@neukum.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-Message-ID: <20120103082627.GA13214@elte.hu> (sfid-20120103_092857_159646_D0A489E4)
-References: <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
- <20120102215028.GA15701@srcf.ucam.org>
- <CA+55aFz73GuHiOW1NoAuJLea_GKLepiZjrnrgpOKdQizPgnhoA@mail.gmail.com>
- <20120102221235.GA16012@srcf.ucam.org>
- <CA+55aFyHvmvast_kuNddU3iotReR1mOpKM4HGAw80ma8kn+2-g@mail.gmail.com>
- <20120102222920.GA16160@srcf.ucam.org>
- <CA+55aFyUK6X7ip2UXV9iT07=qezXfbw82wn6UKAN8JFQtYNs5Q@mail.gmail.com>
- <20120102230037.GA16458@srcf.ucam.org>
- <4F023E6B.2020307@fastmail.fm>
- <20120103001851.3530f99d@pyramind.ukuu.org.uk>
+	id S1751027Ab2ADIkj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jan 2012 03:40:39 -0500
+Received: from [195.4.92.141] (helo=mjail1.freenet.de)
+	by mout4.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
+	id 1RiMOj-0004Dl-Dq
+	for linux-wireless@vger.kernel.org; Wed, 04 Jan 2012 09:40:37 +0100
+Received: from localhost ([::1]:38888 helo=mjail1.freenet.de)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1RiMOj-0007XM-A9
+	for linux-wireless@vger.kernel.org; Wed, 04 Jan 2012 09:40:37 +0100
+Received: from [195.4.92.10] (port=51527 helo=0.mx.freenet.de)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1RiMML-0006kO-4p
+	for linux-wireless@vger.kernel.org; Wed, 04 Jan 2012 09:38:09 +0100
+Received: from p4fde00d8.dip0.t-ipconnect.de ([79.222.0.216]:57267 helo=mail.maya.org)
+	by 0.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
+	id 1RiMMK-0006wS-ON
+	for linux-wireless@vger.kernel.org; Wed, 04 Jan 2012 09:38:09 +0100
+Message-ID: <4F040FEA.3080703@01019freenet.de> (sfid-20120104_094043_310700_DB6A3C02)
+Date: Wed, 04 Jan 2012 09:38:02 +0100
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120103001851.3530f99d@pyramind.ukuu.org.uk>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: Compat-wireless-3.2-rc6-3 is broken for rt2860 device
+References: <4EFF12D9.3010602@01019freenet.de> <4EFF71F8.6070208@01019freenet.de> <2766356.70ylY68Gqi@helmutmobil.site>
+In-Reply-To: <2766356.70ylY68Gqi@helmutmobil.site>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Helmut,
 
-* Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+happy new year for you, too!
 
-> > You mensioned earlier about not being able to tell the 
-> > difference between a device that needs firmware and one that 
-> > needs flash (e.g. they use exactly the same ids). It doesn't 
-> > really matter - we just assume that it might need firmware 
-> > and load it anyway. It uses more memory but is robust.
+Helmut Schaa schrieb:
+> Hi Andreas,
 > 
-> We only need to do that for the devices where order and not 
-> blocking matters. There are a few (and some are video) where 
-> the firmware sizes is megabytes, which on an embedded 
-> controlling device is not acceptable. I don't believe any of 
-> them are things where simply delaying the restoration will 
-> cause problems however - its video, and DVB and the like not 
-> wireless or serial.
-
-Here's the size histogram/analysis of all *.fw, *.bin, *.dat, 
-*.ucode, etc. files in /lib/firmware on a fully populated 
-distro:
-
- 476 firmware blobs total
-
-The toplist:
-
- -rw-r--r--. 1 root root 2786404 Jul 24  2010 ./bcm70012fw.bin
- -rw-r--r--. 1 root root 1781048 Feb  9  2011 ./phanfw.bin
- -rw-r--r--. 1 root root  864276 Jul 24  2010 ./bcm70015fw.bin
- -rw-r--r--. 1 root root  844980 Feb  8  2011 ./asihpi/dsp6200.bin
- -rw-r--r--. 1 root root  636980 Feb  8  2011 ./asihpi/dsp6600.bin
- -rw-r--r--. 1 root root  627696 Feb  8  2011 ./asihpi/dsp6400.bin
- -rw-r--r--. 1 root root  563592 Aug  4 22:04 ./myri10ge_rss_ethp_z8e.dat
- -rw-r--r--. 1 root root  553192 Aug  4 22:04 ./myri10ge_rss_eth_z8e.dat
- -rw-r--r--. 1 root root  504916 Feb  8  2011 ./asihpi/dsp8900.bin
- -rw-r--r--. 1 root root  498128 Sep  7 20:14 ./ct2fw.bin
-
- - 2% of them, i.e. just a tiny fraction is over 512 KB.
- - 80% of the firmware blobs are below 100K.
- - 50% of them are below 16K.
-
-So loading them into RAM is the obviously right solution.
-
-Those few devices that absolutely want to load the firmware blob 
-dynamically on some weird low-RAM system can do so *BEFORE* 
-suspending.
-
-There is nothing that prevents a low-RAM system from loading the 
-firmware blob in an early suspend callback and making sure it's 
-there at resume time - and then unloading it from RAM after 
-resume.
-
-I.e. large blobs can manage their RAM usage just fine - but the 
-obscenity of the 1% should not control the design and sanity of 
-the 99% case ...
-
-> [...]
+> Am Samstag, 31. Dezember 2011, 21:35:04 schrieb Andreas Hartmann:
+>> Andreas Hartmann schrieb:
+>>> Hello,
+>>>
+>>> I tested compat-wireless-3.2-rc6-3 with kernel 3.1 and a rt2860 device
+>>> running in AP mode (80211.n - 40 MHz). During
+>>>
+>>> netperf -t TCP_STREAM -H ap
+>>>
+>>> the data stream mostly stalls (-> the device receives data) after a few
+>>> seconds and never comes up any more. The connection is completely death.
+>>> I have to restart wpa_supplicant to get it working again.
+>>>
+>>>
+>>>
+>>> I tried to isolate the problem the following way:
+>>>
+>>> 1. Running compat-wireless-3.2-rc6-3 with the rt2x00 level from
+>>> compat-wireless-3.1.1-1. The problem didn't gone.
+>>>
+>>> 2. Running compat-wireless-3.1.1-1 with the rt2x00 based changes in
+>>> compat-wireless-3.2-rc6-3. I can't see the problem any more.
+>>>
+>>>
+>>> That's why I think, that the problem must be outside the rt2x00 changes.
+>>> But there are many changes outside :-).
+>>
+>>
+>> Removing this patch
+>>
+>> mac80211: retry sending failed BAR frames later instead of tearing down
+>> aggr (http://www.spinics.net/lists/linux-wireless/msg76379.html) makes
+>> it working again.
+>>
+>> Device is: RaLink RT2800 802.11n PCI
 > 
-> The world is heading this way more and more. It's moving from 
-> the old PC model of 'user closes lid, clunk for 15 seconds, 
-> enter suspend, user opens lid, churn churn, video, churn 
-> clunk. resume' to suspend/resume being so fast it happens 
-> between keystrokes.
+> What's the client device connected to the rt2x00 AP?
 
-Exactly!
+It's a rt3572 usb chip (Linksys WUSB600N v2), driven with the rt3572sta
+module.
+
+> Mind to send a
+> 802.11 capture wen this stall happens?
+
+I would try to scan the traffic with a third device in monitor mode
+(airmon-ng). But: 802.11n uses more than one channel. How can I get
+them? airmon-ng can't be told to listen to more than one channel at a
+time (or better: I probably don't know how to do it :-)).
+
+Do you have an idea, how to completely trace 802.11n?
+
 
 Thanks,
-
-	Ingo
+Andreas
