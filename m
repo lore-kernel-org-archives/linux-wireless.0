@@ -1,36 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.u-psud.fr ([129.175.33.41]:53161 "EHLO smtp1.u-psud.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751153Ab2ALKKG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jan 2012 05:10:06 -0500
-Message-ID: <4F0EB16B.8070606@lri.fr> (sfid-20120112_111011_335488_166AD32D)
-Date: Thu, 12 Jan 2012 11:09:47 +0100
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:47648 "EHLO
+	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757177Ab2ADXHr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jan 2012 18:07:47 -0500
+Subject: [PATCH 0/6] ath6kl: create ath6kl_core.ko
+To: linville@tuxdriver.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: sfr@canb.auug.org.au, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-next@vger.kernel.org, ath6kl-devel@qualcomm.com,
+	davem@davemloft.net
+Date: Thu, 05 Jan 2012 01:07:20 +0200
+Message-ID: <20120104230429.32306.75965.stgit@x201> (sfid-20120105_000757_327947_7FE2D4D4)
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] carl9170: claim to support IBSS RSN.
-References: <1326296690-2644-1-git-send-email-cavallar@lri.fr> <201201111713.36373.chunkeey@googlemail.com>
-In-Reply-To: <201201111713.36373.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11/01/2012 17:13, Christian Lamparter wrote:
-> On Wednesday, January 11, 2012 04:44:50 PM Nicolas Cavallari wrote:
->> On carl9170, HW encryption is disabled on IBSS; the mac80211
->> software-based encryption is used instead. As mac80211 supports IBSS
->> RSN (per-STA GTK), claim its support in the carl9170 PHY.
-> 
-> Uh, was IBSS RSN fixed? Sure, if it works, why not. 
-> 
+Here's the patchset to fix the allyesconfig build breakage. My fix is to
+create a separate module ath6kl_core.ko which both ath6kl_sdio.ko and
+ath6kl_usb.ko use. I have tested various combinations to make sure that
+there are no compile errors anymore. Also allyesconfig build is running
+right now.
 
-Fixed or not, it works for me and anyway there is this code in
-ieee80211_alloc_hw() :
+Dave, please take a look and let me know if you prefer to fix this somehow
+differently.
 
-207aba60 573)   if (!ops->set_key)
-207aba60 574)           wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+John, these patches are based your wireless-next tree, they do not even
+apply to ath6kl.git. If the patches are ok, please take them directly to
+get them faster to Dave.
 
-Which enables IBSS RSN on all SW-crypto-only devices.
+Sorry again for this mess and taking so long to fix it.
+
+---
+
+Kalle Valo (6):
+      ath6kl: rename vif init and cleanup functions
+      ath6kl: unify cfg80211 init/cleanup functions
+      ath6kl: create core.c
+      ath6kl: get rid of AR_DBG_LVL_CHECK()
+      ath6kl: convert ath6kl_dbg() and ath6kl_dbg_dump() into functions
+      ath6kl: create ath6kl_core.ko
+
+
+ drivers/net/wireless/ath/ath6kl/Makefile   |   35 +--
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |  207 ++++++++------------
+ drivers/net/wireless/ath/ath6kl/cfg80211.h |   12 +
+ drivers/net/wireless/ath/ath6kl/common.h   |    3 
+ drivers/net/wireless/ath/ath6kl/core.c     |  297 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/core.h     |   10 +
+ drivers/net/wireless/ath/ath6kl/debug.c    |   62 ++++--
+ drivers/net/wireless/ath/ath6kl/debug.h    |   27 ---
+ drivers/net/wireless/ath/ath6kl/hif.c      |   10 +
+ drivers/net/wireless/ath/ath6kl/init.c     |  211 +-------------------
+ drivers/net/wireless/ath/ath6kl/sdio.c     |    4 
+ drivers/net/wireless/ath/ath6kl/usb.c      |    8 -
+ drivers/net/wireless/ath/ath6kl/wmi.c      |    3 
+ 13 files changed, 478 insertions(+), 411 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/core.c
+
