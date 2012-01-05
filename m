@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:60713 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752413Ab2AQLNq (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:36433 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932545Ab2AETgY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 06:13:46 -0500
-Subject: Re: [PATCH v2] NFC: Export new attributes sensb_res and sensf_res
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: ilanelias78@gmail.com
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Ilan Elias <ilane@ti.com>
-In-Reply-To: <1326791203-10990-1-git-send-email-ilane@ti.com>
-References: <1326791203-10990-1-git-send-email-ilane@ti.com>
+	Thu, 5 Jan 2012 14:36:24 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.77)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Rit6s-0003dl-OM
+	for linux-wireless@vger.kernel.org; Thu, 05 Jan 2012 20:36:22 +0100
+Subject: [PATCH] compat: backport dma_alloc_coherent
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 17 Jan 2012 12:19:56 +0100
-Message-ID: <1326799196.22824.26.camel@sortiz-mobl> (sfid-20120117_121350_164733_B5E14A7E)
+Date: Thu, 05 Jan 2012 20:36:23 +0100
+Message-ID: <1325792183.3339.9.camel@jlt3.sipsolutions.net> (sfid-20120105_203629_404449_7994E655)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ilan,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Tue, 2012-01-17 at 11:06 +0200, ilanelias78@gmail.com wrote:
-> From: Ilan Elias <ilane@ti.com>
-> 
-> Export new attributes sensb_res for tech B and sensf_res
-> for tech F in the target info (returned as a response to
-> NFC_CMD_GET_TARGET).
-> The max size of the attributes nfcid1, sensb_res and sensf_res
-> is exported to user space though include/linux/nfc.
-> 
-> Signed-off-by: Ilan Elias <ilane@ti.com>
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
+This is needed now for some wireless drivers.
+Simply copy the upstream implementation.
 
-Cheers,
-Samuel.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+
+--- a/include/linux/compat-3.2.h
++++ b/include/linux/compat-3.2.h
+@@ -10,6 +10,15 @@
+ 
+ #define PMSG_IS_AUTO(msg)	(((msg).event & PM_EVENT_AUTO) != 0)
+ 
++static inline void *dma_zalloc_coherent(struct device *dev, size_t size,
++					dma_addr_t *dma_handle, gfp_t flag)
++{
++	void *ret = dma_alloc_coherent(dev, size, dma_handle, flag);
++	if (ret)
++		memset(ret, 0, size);
++	return ret;
++}
++
+ /**
+  * skb_frag_page - retrieve the page refered to by a paged fragment
+  * @frag: the paged fragment
 
 
