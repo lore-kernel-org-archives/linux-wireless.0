@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([195.4.92.90]:59656 "EHLO mout0.freenet.de"
+Received: from mms1.broadcom.com ([216.31.210.17]:3257 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754472Ab2ADMbo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jan 2012 07:31:44 -0500
-Received: from [195.4.92.141] (helo=mjail1.freenet.de)
-	by mout0.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
-	id 1RiQ0L-0008LO-VG
-	for linux-wireless@vger.kernel.org; Wed, 04 Jan 2012 13:31:41 +0100
-Received: from localhost ([::1]:36910 helo=mjail1.freenet.de)
-	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1RiQ0L-0007o0-RY
-	for linux-wireless@vger.kernel.org; Wed, 04 Jan 2012 13:31:41 +0100
-Received: from [195.4.92.28] (port=44551 helo=18.mx.freenet.de)
-	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1RiPyD-0006LD-Mi
-	for linux-wireless@vger.kernel.org; Wed, 04 Jan 2012 13:29:29 +0100
-Received: from p4fde00d8.dip0.t-ipconnect.de ([79.222.0.216]:55248 helo=mail.maya.org)
-	by 18.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
-	id 1RiPyD-0000pY-BL
-	for linux-wireless@vger.kernel.org; Wed, 04 Jan 2012 13:29:29 +0100
-Message-ID: <4F044626.6010806@dualc.maya.org> (sfid-20120104_133147_788038_DD17AB10)
-Date: Wed, 04 Jan 2012 13:29:26 +0100
-From: Andreas Hartmann <andihartmann@freenet.de>
+	id S1753358Ab2AEO47 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 09:56:59 -0500
+Message-ID: <4F05BA2B.7040504@broadcom.com> (sfid-20120105_155703_928725_8B59CEE0)
+Date: Thu, 5 Jan 2012 15:56:43 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: Compat-wireless-3.2-rc6-3 is broken for rt2860 device
-References: <4EFF12D9.3010602@01019freenet.de> <4EFF71F8.6070208@01019freenet.de> <2766356.70ylY68Gqi@helmutmobil.site>
-In-Reply-To: <2766356.70ylY68Gqi@helmutmobil.site>
-Content-Type: text/plain; charset=ISO-8859-15
-To: unlisted-recipients:; (no To-header on input)
+To: Fabioamd87 <fabioamd87@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+Subject: Re: Brcm80211 drivers situation
+References: <CAHghS26SkhET0y0RGVrATg+OUcFX7NVwTfAXvbHF2s0wrSijiQ@mail.gmail.com>
+ <4F059780.8040700@broadcom.com>
+ <CAHghS275Fy3dafGH_NcfnsFG9B_5aH4Rw8ruTeHvtk3688gFNA@mail.gmail.com>
+In-Reply-To: <CAHghS275Fy3dafGH_NcfnsFG9B_5aH4Rw8ruTeHvtk3688gFNA@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helmut Schaa schrieb:
+On 01/05/2012 03:10 PM, Fabioamd87 wrote:
+> Hi, thanks for the reply.
+> 
+> The driver are located in AUR package database: https://aur.archlinux.org/packages.php?ID=21690 that is not that confortable to install because you need to create packages and care about depndencies, but is ok, I succeeded to install it.
+> So there is no chance to have an "out of the box" support?
 
-[...]
+That is up to the particular distro.
 
-> What's the client device connected to the rt2x00 AP? Mind to send a
-> 802.11 capture wen this stall happens?
+> My primary problem is with my laptop hp 6735b that use not phisical button but a sensible to finger area to activate/deactivate the wireless card.
+> 
+> On windows I can deactivate and then reactivate it correctly, On linux if I disactive it I can't reactivate. (and I need to reboot in windows, activate it, and re-reboot in linux with all boring consequences, expecially if you inaccurately disable the card passing on that area with your finger)
+> 
+> I tried also with rfkill but with no results.
+> 
+> I hope that you know how to help me.
 
-I sent Helmut a trace, which hopefully contains some hints.
+Sorry to say, but nope. The physical RFKILL switches are pretty obscure.
+They intend to disable all RF sources in the laptop. The RFKILL
+subsystem within linux handles the physical switches and notifies all
+wireless devices when it changes and the driver disables/enables its RF.
 
+You could try 'rfkill event' and look what happens when you touch the
+'button'. This is what I get with a switch on my laptop:
 
-Regards,
-Andreas
+$ rfkill event
+1325775232.353767: idx 0 type 1 op 0 soft 0 hard 0
+1325775232.353907: idx 1 type 2 op 0 soft 0 hard 0
+>> disable RF
+1325775239.701387: idx 0 type 1 op 2 soft 1 hard 1
+>> enable RF
+1325775242.701371: idx 0 type 1 op 2 soft 0 hard 0
+
+Gr. AvS
+
