@@ -1,42 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:33369 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751340Ab2AOJVx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jan 2012 04:21:53 -0500
-Message-ID: <1326619310.6164.2.camel@joe2Laptop> (sfid-20120115_102219_595155_C824BB37)
-Subject: Re: [PATCH 3/8] brcm80211: Add and use brcmX_dbg_dump_hex
-From: Joe Perches <joe@perches.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Date: Sun, 15 Jan 2012 01:21:50 -0800
-In-Reply-To: <4F1299C4.7020902@broadcom.com>
-References: <cover.1326616556.git.joe@perches.com>
-	 <289e8a2dcdbb03315ba41788a358f5afc4bacb1b.1326616556.git.joe@perches.com>
-	 <4F1299C4.7020902@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0.aculab.com ([213.249.233.131]:42252 "HELO mx0.aculab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755525Ab2AEL1Q convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 06:27:16 -0500
+Received: from mx0.aculab.com ([127.0.0.1])
+ by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
+ id 17938-01 for <linux-wireless@vger.kernel.org>;
+ Thu,  5 Jan 2012 11:27:12 +0000 (GMT)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [PATCH 1/7] rtlwifi: Neaten RT_ASSERT, RT_TRACE, RTPRINT, RT_PRINT_DATA macros
+Date: Thu, 5 Jan 2012 11:25:30 -0000
+Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6D8AF30@saturn3.aculab.com> (sfid-20120105_122742_882118_8F72668F)
+In-Reply-To: <54d3f83c3e53d7008a013a631c23360a983695a6.1325734202.git.joe@perches.com>
+From: "David Laight" <David.Laight@ACULAB.COM>
+To: "Joe Perches" <joe@perches.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Chaoming Li" <chaoming_li@realsil.com.cn>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-01-15 at 10:17 +0100, Arend van Spriel wrote:
-> On 01/15/2012 09:38 AM, Joe Perches wrote:
-> 
-> > +#ifdef DEBUG
-> > +extern __printf(3, 4)
-> 
-> Just curious if I can learn something here. What does the __printf(3, 4) do?
+> +#define RT_PRINT_DATA(rtlpriv, _comp, _level, _titlestring, _hexdata,
+\
+> +		      _hexdatalen)			 	\
+> +do {							 	\
+> +	if (unlikely(((_comp) & rtlpriv->dbg.global_debugcomponents) &&
+\
+> +		     (_level <= rtlpriv->dbg.global_debuglevel))) {
+\
+> +		printk(KERN_DEBUG "%s: ", KBUILD_MODNAME); 	\
+> +		pr_cont("In process \"%s\" (pid %i):",	 	\
+> +			current->comm, current->pid);	 	\
+> +		printk(_titlestring);			 	\
+> +		print_hex_dump_bytes("", DUMP_PREFIX_NONE, 	\
+> +				     _hexdata, _hexdatalen);
+\
+> +	}
+\
+> +} while (0)
 
-It's a #define for gcc __attribute__((format (printf, ...)))
-It makes gcc validate the printf format and arguments.
+>From my experiences you need to use:
+  if (unlikely(a) && b)
+not:
+  if (unlikely(a && b))
+to get the expected static branch prediction.
 
-http://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html
+Also, only the initial test need be in the #define,
+the printfs (etc) can be moved into a real function.
+This would reduce the code size (if used more than once).
+
+	David
 
 
