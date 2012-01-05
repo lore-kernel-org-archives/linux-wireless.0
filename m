@@ -1,86 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:64446 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755278Ab2ALX3a convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44666 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932644Ab2AEPd3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jan 2012 18:29:30 -0500
-Date: Fri, 13 Jan 2012 00:29:13 +0100 (CET)
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-To: Julian Calaby <julian.calaby@gmail.com>
-cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-Subject: Re: [PATCH] wireless: b43: fix Oops on card eject during transfer
-In-Reply-To: <Pine.LNX.4.64.1201061653050.18586@axis700.grange>
-Message-ID: <Pine.LNX.4.64.1201130028340.1646@axis700.grange> (sfid-20120113_002934_399437_FD673C56)
-References: <Pine.LNX.4.64.1201061256190.16279@axis700.grange>
- <CAGRGNgUj3EUPKc0SX+3yCbygdbhS7_CN4hgR7ZAzjXuULw9fLg@mail.gmail.com>
- <Pine.LNX.4.64.1201061653050.18586@axis700.grange>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+	Thu, 5 Jan 2012 10:33:29 -0500
+Message-Id: <20120105153228.362570502@sipsolutions.net> (sfid-20120105_163333_917410_AD7D9C1A)
+Date: Thu, 05 Jan 2012 16:30:44 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/8] mac80211: move managed mode station state modification
+References: <20120105153043.568616380@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+From: Johannes Berg <johannes.berg@intel.com>
 
-I haven't seen this patch going into any tree or being included in any 
-pull request. What's the status?
+Move the station state modification right before insert,
+this just makes the current code more readable (you can
+tell that it's before insertion looking at a single
+screenful of code) right now, but some upcoming changes
+will require this.
 
-Thanks
-Guennadi
-
-On Fri, 6 Jan 2012, Guennadi Liakhovetski wrote:
-
-> Hi Julian
-> 
-> On Sat, 7 Jan 2012, Julian Calaby wrote:
-> 
-> > Hi Guennadi,
-> > 
-> > On Fri, Jan 6, 2012 at 22:58, Guennadi Liakhovetski
-> > <g.liakhovetski@gmx.de> wrote:
-> > > An Oops has once been observed, when the SDIO card had been ejected during
-> > > IO. The PC value shows, that the dev pointer in b43_op_stop() was NULL.
-> > >
-> > > Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-> > > ---
-> > >
-> > > Might also be good for stable
-> > >
-> > >  drivers/net/wireless/b43/main.c |    3 +++
-> > >  1 files changed, 3 insertions(+), 0 deletions(-)
-> > >
-> > > diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> > > index 5634d9a..3849c25 100644
-> > > --- a/drivers/net/wireless/b43/main.c
-> > > +++ b/drivers/net/wireless/b43/main.c
-> > > @@ -4834,6 +4834,9 @@ static void b43_op_stop(struct ieee80211_hw *hw)
-> > >        cancel_work_sync(&(wl->beacon_update_trigger));
-> > >
-> > >        mutex_lock(&wl->mutex);
-> > > +       if (!dev)
-> > > +               goto out_unlock;
-> > 
-> > Is there any reason to take this mutex, then jump to a label that
-> > releases it immediately?
-> > 
-> > Would it be better to add a new label after the mutex_unlock() below
-> > and jump to there immediately after the cancel_work_sync() call above?
-> 
-> The reason is exactly that: to avoid adding one more label. It is an 
-> exceptional case, that that branch would be taken, so, there's no reason 
-> to optimize for it. Whereas adding one label would clutter the code 
-> needlessly, IMHO.
-> 
-> Thanks
-> Guennadi
-> ---
-> Guennadi Liakhovetski, Ph.D.
-> Freelance Open-Source Software Developer
-> http://www.open-technology.de/
-> 
-
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
-Guennadi Liakhovetski, Ph.D.
-Freelance Open-Source Software Developer
-http://www.open-technology.de/
+ net/mac80211/mlme.c |   28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
+
+--- a/net/mac80211/mlme.c	2012-01-04 12:08:59.000000000 +0100
++++ b/net/mac80211/mlme.c	2012-01-04 12:12:23.000000000 +0100
+@@ -1585,20 +1585,6 @@ static bool ieee80211_assoc_success(stru
+ 		return false;
+ 	}
+ 
+-	err = sta_info_move_state(sta, IEEE80211_STA_AUTH);
+-	if (!err)
+-		err = sta_info_move_state(sta, IEEE80211_STA_ASSOC);
+-	if (!err && !(ifmgd->flags & IEEE80211_STA_CONTROL_PORT))
+-		err = sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
+-	if (err) {
+-		printk(KERN_DEBUG
+-		       "%s: failed to move station %pM to desired state\n",
+-		       sdata->name, sta->sta.addr);
+-		WARN_ON(__sta_info_destroy(sta));
+-		mutex_unlock(&sdata->local->sta_mtx);
+-		return false;
+-	}
+-
+ 	rates = 0;
+ 	basic_rates = 0;
+ 	sband = local->hw.wiphy->bands[wk->chan->band];
+@@ -1646,6 +1632,20 @@ static bool ieee80211_assoc_success(stru
+ 	if (elems.wmm_param)
+ 		set_sta_flag(sta, WLAN_STA_WME);
+ 
++	err = sta_info_move_state(sta, IEEE80211_STA_AUTH);
++	if (!err)
++		err = sta_info_move_state(sta, IEEE80211_STA_ASSOC);
++	if (!err && !(ifmgd->flags & IEEE80211_STA_CONTROL_PORT))
++		err = sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
++	if (err) {
++		printk(KERN_DEBUG
++		       "%s: failed to move station %pM to desired state\n",
++		       sdata->name, sta->sta.addr);
++		WARN_ON(__sta_info_destroy(sta));
++		mutex_unlock(&sdata->local->sta_mtx);
++		return false;
++	}
++
+ 	/* sta_info_reinsert will also unlock the mutex lock */
+ 	err = sta_info_reinsert(sta);
+ 	sta = NULL;
+
+
