@@ -1,116 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1484 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755784Ab2AXKel (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 05:34:41 -0500
-Message-ID: <4F1E8931.8070605@broadcom.com> (sfid-20120124_113500_365980_11B06AC4)
-Date: Tue, 24 Jan 2012 11:34:25 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:55537 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756541Ab2AEMd1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 07:33:27 -0500
 MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: 3.3.0-rc1 kernel becomes unresponsive
-Content-Type: text/plain;
- charset=iso-8859-1
+In-Reply-To: <1325765663-7141-1-git-send-email-festevam@gmail.com>
+References: <1325765663-7141-1-git-send-email-festevam@gmail.com>
+Date: Thu, 5 Jan 2012 13:33:25 +0100
+Message-ID: <CAL1gcdOrr41Br1Z-JCih6BGdxLmZ9ns+W-cVRxvd+guO2xC_zQ@mail.gmail.com> (sfid-20120105_133332_525252_32FDC803)
+Subject: Re: [PATCH] drivers: net: Fix dependency for EEPROM_93CX6
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	davem@davemloft.net, linville@tuxdriver.com,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I moved my development work to 3.3.0-rc1 from wireless-testing
-repository. After loading the brcmfmac driver (12 sec.) I suddenly see
-the BUG message 'scheduling while atomic' and it fills up the entire log
-with the machine becoming totally unresponsive.
+On Thu, Jan 5, 2012 at 1:14 PM, Fabio Estevam <festevam@gmail.com> wrote:
+> Fix the following build warning:
+>
+> warning: (KS8851 && AX88796_93CX6 && RTL8180 && RTL8187 && ADM8211 && RT2400PCI && RT2500PCI && RT61PCI && RT2800PCI && R8187SE) selects EEPROM_93CX6 which has unmet direct dependencies (MISC_DEVICES)
+>
+> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
 
-Any suggestions on where to start looking. What type of problems could
-cause this?
+NAK, at least for the rt2x00 part, but probably for the other parts as well.
+The rt2x00 drivers actually need the EEPROM_93CX6 driver to be
+present, otherwise they won't work correctly. Therefore only selecting
+the symbol when MISC_DEVICES has been enabled can lead to a
+non-functional configuration for the rt2x00 devices.
 
-Gr. AvS
-----------------------------------------------------------------------------------------
+A correct fix would be to also select MISC_DEVICES at all locations
+where EEPROM_93CX6 is selected.
 
-Jan 24 04:53:07 lb-bun-10 kernel: [63122.211870] usbcore: registered new
-interface driver brcmfmac
-Jan 24 04:53:08 lb-bun-10 kernel: [63122.300516] udev[7158]: renamed
-network interface wlan0 to wlan1
-Jan 24 04:53:08 lb-bun-10 kernel: [63122.325482] ERROR @brcmf_run_iscan
-: error (-3)
-Jan 24 04:53:09 lb-bun-10 kernel: [63123.695387] cfg80211: Found new
-beacon on frequency: 5745 MHz (Ch 149) on
- phy0
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106731] BUG: scheduling while
-atomic: swapper/0/0/0x10000100
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106737] Modules linked in:
-brcmfmac(O) brcmutil(O) cfg80211(O) sdhci_pci sdhci mmc_core aes_generic
-arc4 binfmt_misc snd_hda_codec_hdmi snd_hda_codec_idt snd_hda_intel
-snd_hda_codec intel_agp nouveau snd_hwdep snd_pcm snd_seq_midi
-snd_rawmidi snd_seq_midi_event snd_seq snd_timer snd_seq_device snd
-soundcore snd_page_alloc dell_laptop psmouse intel_gtt dell_wmi ttm
-drm_kms_helper drm serio_raw intel_ips mxm_wmi dcdbas agpgart
-sparse_keymap video firewire_ohci ahci libahci firewire_core crc_itu_t
-e1000e [last unloaded: mmc_core]
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106794] Modules linked in:
-brcmfmac(O) brcmutil(O) cfg80211(O) sdhci_pci sdhci mmc_core aes_generic
-arc4 binfmt_misc snd_hda_codec_hdmi snd_hda_codec_idt snd_hda_intel
-snd_hda_codec intel_agp nouveau snd_hwdep snd_pcm snd_seq_midi
-snd_rawmidi snd_seq_midi_event snd_seq snd_timer snd_seq_device snd
-soundcore snd_page_alloc dell_laptop psmouse intel_gtt dell_wmi ttm
-drm_kms_helper drm serio_raw intel_ips mxm_wmi dcdbas agpgart
-sparse_keymap video firewire_ohci ahci libahci firewire_core crc_itu_t
-e1000e [last unloaded: mmc_core]
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106840]
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106845] Pid: 0, comm: swapper/0
-Tainted: G           O 3.3.0-rc1-wl-testing #2 Dell Inc. Latitude
-E6410/07XJP9
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106853] EIP: 0060:[<c12be284>]
-EFLAGS: 00000202 CPU: 0
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106863] EIP is at
-intel_idle+0xb4/0x110
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106867] EAX: 00000000 EBX:
-000018ec ECX: 00000000 EDX: 000018ec
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106870] ESI: 00000000 EDI:
-00000008 EBP: c169df70 ESP: c169df54
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106874]  DS: 007b ES: 007b FS:
-00d8 GS: 00e0 SS: 0068
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106878] Process swapper/0 (pid:
-0, ti=f500c000 task=c16a1de0 task.ti=
-c169c000)
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106882] Stack:
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106884]  00000020 f5409e5c
-00000003 00000000 000000cc c16d2000 f5409e
-5c c169df94
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106892]  c13beb8b 00000000
-00000000 00000003 c169f000 c16f1010 000000
-00 c169f000
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106900]  c169dfb4 c1001d84
-0dc4807d 0000000f 39547204 0c134087 c172d0
-60 0008d800
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106909] Call Trace:
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106919]  [<c13beb8b>]
-cpuidle_idle_call+0xab/0x1d0
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106926]  [<c1001d84>]
-cpu_idle+0xa4/0xf0
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106933]  [<c149d2cd>]
-rest_init+0x5d/0x70
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106942]  [<c16f5853>]
-start_kernel+0x38a/0x390
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106947]  [<c16f52f3>] ?
-kernel_init+0x145/0x145
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106953]  [<c16f5075>]
-i386_start_kernel+0x75/0x79
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.106955] Code: f6 89 e0 25 00 e0
-ff ff 8b 40 08 a8 08 75 08 b1 01 8b 4
-5 e4 0f 01 c9 e8 7b 85 db ff 29 d8 19 f2 e8 d2 86 d7 ff 89 c6 89 d3 fb
-90 <8d> 74 26 00 85 3d a0 28 6d c1 75 0
-d 8d 55 f0 b8 05 00 00 00 e8
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.107009] Call Trace:
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.107014]  [<c13beb8b>]
-cpuidle_idle_call+0xab/0x1d0
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.107018]  [<c1001d84>]
-cpu_idle+0xa4/0xf0
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.107023]  [<c149d2cd>]
-rest_init+0x5d/0x70
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.107028]  [<c16f5853>]
-start_kernel+0x38a/0x390
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.107033]  [<c16f52f3>] ?
-kernel_init+0x145/0x145
-Jan 24 04:53:20 lb-bun-10 kernel: [63135.107038]  [<c16f5075>]
-i386_start_kernel+0x75/0x79
+---
+Gertjan.
 
+> ---
+>  drivers/net/ethernet/8390/Kconfig    |    2 +-
+>  drivers/net/ethernet/micrel/Kconfig  |    3 +--
+>  drivers/net/wireless/Kconfig         |    2 +-
+>  drivers/net/wireless/rt2x00/Kconfig  |    8 ++++----
+>  drivers/net/wireless/rtl818x/Kconfig |    4 ++--
+>  5 files changed, 9 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/net/ethernet/8390/Kconfig b/drivers/net/ethernet/8390/Kconfig
+> index e04ade4..d967c74 100644
+> --- a/drivers/net/ethernet/8390/Kconfig
+> +++ b/drivers/net/ethernet/8390/Kconfig
+> @@ -69,7 +69,7 @@ config AX88796
+>  config AX88796_93CX6
+>        bool "ASIX AX88796 external 93CX6 eeprom support"
+>        depends on AX88796
+> -       select EEPROM_93CX6
+> +       select EEPROM_93CX6 if MISC_DEVICES
+>        ---help---
+>          Select this if your platform comes with an external 93CX6 eeprom.
+>
+> diff --git a/drivers/net/ethernet/micrel/Kconfig b/drivers/net/ethernet/micrel/Kconfig
+> index 1ea811c..bc99abf 100644
+> --- a/drivers/net/ethernet/micrel/Kconfig
+> +++ b/drivers/net/ethernet/micrel/Kconfig
+> @@ -42,8 +42,7 @@ config KS8851
+>        select NET_CORE
+>        select MII
+>        select CRC32
+> -       select MISC_DEVICES
+> -       select EEPROM_93CX6
+> +       select EEPROM_93CX6 if MISC_DEVICES
+>        ---help---
+>          SPI driver for Micrel KS8851 SPI attached network chip.
+>
+> diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
+> index abd3b71..d15d3a9 100644
+> --- a/drivers/net/wireless/Kconfig
+> +++ b/drivers/net/wireless/Kconfig
+> @@ -223,7 +223,7 @@ config ADM8211
+>        tristate "ADMtek ADM8211 support"
+>        depends on MAC80211 && PCI && EXPERIMENTAL
+>        select CRC32
+> -       select EEPROM_93CX6
+> +       select EEPROM_93CX6 if MISC_DEVICES
+>        ---help---
+>          This driver is for ADM8211A, ADM8211B, and ADM8211C based cards.
+>          These are PCI/mini-PCI/Cardbus 802.11b chips found in cards such as:
+> diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+> index a0a7854..c7be1a9 100644
+> --- a/drivers/net/wireless/rt2x00/Kconfig
+> +++ b/drivers/net/wireless/rt2x00/Kconfig
+> @@ -21,7 +21,7 @@ config RT2400PCI
+>        tristate "Ralink rt2400 (PCI/PCMCIA) support"
+>        depends on PCI
+>        select RT2X00_LIB_PCI
+> -       select EEPROM_93CX6
+> +       select EEPROM_93CX6 if MISC_DEVICES
+>        ---help---
+>          This adds support for rt2400 wireless chipset family.
+>          Supported chips: RT2460.
+> @@ -32,7 +32,7 @@ config RT2500PCI
+>        tristate "Ralink rt2500 (PCI/PCMCIA) support"
+>        depends on PCI
+>        select RT2X00_LIB_PCI
+> -       select EEPROM_93CX6
+> +       select EEPROM_93CX6 if MISC_DEVICES
+>        ---help---
+>          This adds support for rt2500 wireless chipset family.
+>          Supported chips: RT2560.
+> @@ -46,7 +46,7 @@ config RT61PCI
+>        select RT2X00_LIB_FIRMWARE
+>        select RT2X00_LIB_CRYPTO
+>        select CRC_ITU_T
+> -       select EEPROM_93CX6
+> +       select EEPROM_93CX6 if MISC_DEVICES
+>        ---help---
+>          This adds support for rt2501 wireless chipset family.
+>          Supported chips: RT2561, RT2561S & RT2661.
+> @@ -62,7 +62,7 @@ config RT2800PCI
+>        select RT2X00_LIB_FIRMWARE
+>        select RT2X00_LIB_CRYPTO
+>        select CRC_CCITT
+> -       select EEPROM_93CX6
+> +       select EEPROM_93CX6 if MISC_DEVICES
+>        ---help---
+>          This adds support for rt27xx/rt28xx/rt30xx wireless chipset family.
+>          Supported chips: RT2760, RT2790, RT2860, RT2880, RT2890, RT3052,
+> diff --git a/drivers/net/wireless/rtl818x/Kconfig b/drivers/net/wireless/rtl818x/Kconfig
+> index 17d80fe..3e399b8 100644
+> --- a/drivers/net/wireless/rtl818x/Kconfig
+> +++ b/drivers/net/wireless/rtl818x/Kconfig
+> @@ -4,7 +4,7 @@
+>  config RTL8180
+>        tristate "Realtek 8180/8185 PCI support"
+>        depends on MAC80211 && PCI && EXPERIMENTAL
+> -       select EEPROM_93CX6
+> +       select EEPROM_93CX6 if MISC_DEVICES
+>        ---help---
+>          This is a driver for RTL8180 and RTL8185 based cards.
+>          These are PCI based chips found in cards such as:
+> @@ -60,7 +60,7 @@ config RTL8180
+>  config RTL8187
+>        tristate "Realtek 8187 and 8187B USB support"
+>        depends on MAC80211 && USB
+> -       select EEPROM_93CX6
+> +       select EEPROM_93CX6 if MISC_DEVICES
+>        ---help---
+>          This is a driver for RTL8187 and RTL8187B based cards.
+>          These are USB based chips found in devices such as:
+> --
+> 1.7.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+---
+Gertjan
