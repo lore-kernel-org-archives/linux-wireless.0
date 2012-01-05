@@ -1,52 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:33072 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751038Ab2AKXHz (ORCPT
+Received: from mx0.aculab.com ([213.249.233.131]:41667 "HELO mx0.aculab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1757055Ab2AEKnR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 18:07:55 -0500
-Received: by werm1 with SMTP id m1so937886wer.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2012 15:07:54 -0800 (PST)
+	Thu, 5 Jan 2012 05:43:17 -0500
+Received: from mx0.aculab.com ([127.0.0.1])
+ by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
+ id 02062-09 for <linux-wireless@vger.kernel.org>;
+ Thu,  5 Jan 2012 10:43:11 +0000 (GMT)
 MIME-Version: 1.0
-Date: Wed, 11 Jan 2012 17:07:54 -0600
-Message-ID: <CAJ8GFOgazS1MWk+vaNHd=SCtenO+6fYty-_JqZVGX5+xa04dDg@mail.gmail.com> (sfid-20120112_000758_732655_A25408AB)
-Subject: carl9170: How to control transmit power?
-From: Harshal Chhaya <harshal@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [PATCH 5/6] ath6kl: convert ath6kl_dbg() and ath6kl_dbg_dump() into functions
+Date: Thu, 5 Jan 2012 10:41:28 -0000
+Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6D8AF2F@saturn3.aculab.com> (sfid-20120105_114331_613132_27506D22)
+In-Reply-To: <1325720472.4116.7.camel@joe2Laptop>
+From: "David Laight" <David.Laight@ACULAB.COM>
+To: "Joe Perches" <joe@perches.com>,
+	"Kalle Valo" <kvalo@qca.qualcomm.com>
+Cc: <linville@tuxdriver.com>, <sfr@canb.auug.org.au>,
+	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-next@vger.kernel.org>,
+	<ath6kl-devel@qualcomm.com>, <davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+ 
+> > +	va_start(args, fmt);
+> > +	ath6kl_printk(KERN_DEBUG, fmt, &args);
+> 
+> Passing a va_list as an argument?
+> I believe this doesn't work.
+> I think you'll need to add and use:
 
-Does the carl9170 driver/firmware allow real-time updates to the tx
-power parameter?
+Passing a va_list certainly does work - vprintf() etc.
+What is problematical is taking the address of a va_list.
 
-On my AR9170-based AP, I can't set the tx power using either 'iw' or 'iwconfig'.
+The likely problem is a 'levels of indirection' one
+because, when va_list needs to be a struct (very
+likely when arguments are passed in registers),
+it is often declared as as array type.
 
-'iw' fails with an error message:
-
-root@OpenWrt:/etc/hostapd# iw wlan0 set txpower fixed 10
-command failed: Operation not supported (-95)
-
-
-'iwconfig' seems to update the information that's displayed but it
-doesn't affect the actual tx power
-
-root@OpenWrt:/# iwconfig wlan0
-wlan0     IEEE 802.11bgn  Mode:Master  Frequency:2.412 GHz  Tx-Power=7 dBm
-          RTS thr:off   Fragment thr:off
-          Power Management:off
-
-root@OpenWrt:/# iwconfig wlan0 txpower 11
-
-root@OpenWrt:/# iwconfig wlan0
-wlan0     IEEE 802.11bgn  Mode:Master  Frequency:2.412 GHz  Tx-Power=11 dBm
-          RTS thr:off   Fragment thr:off
-          Power Management:off
+	David
 
 
-Is there another way to set the tx power? I want to reduce the range
-of my AP and am trying to lower the tx power.
-
-Thanks,
-- Harshal
