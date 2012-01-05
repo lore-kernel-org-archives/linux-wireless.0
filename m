@@ -1,64 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30747 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750741Ab2AWPWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jan 2012 10:22:13 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: stable@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH -stable 3.2] iwlagn: check for SMPS mode
-Date: Mon, 23 Jan 2012 16:21:50 +0100
-Message-Id: <1327332110-10879-1-git-send-email-sgruszka@redhat.com> (sfid-20120123_162216_973526_6ECE5A3E)
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38223 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758249Ab2AET6R (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 14:58:17 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCHv2 1/2] nl80211: add support for mcs masks
+Date: Thu,  5 Jan 2012 20:58:07 +0100
+Message-Id: <1325793490-21501-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20120105_205826_971333_45DB2E08)
+In-Reply-To: <1325793490-21501-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1325793490-21501-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Allow to set mcs masks through nl80211. We also allow to set MCS
+rates but no legacy rates (and vice versa).
 
-commit b2ccccdca46273c7b321ecf5041c362cd950da20 upstream.
-
-Check and report WARN only when its invalid
-
-Resolves:
-https://bugzilla.kernel.org/show_bug.cgi?id=42621
-https://bugzilla.redhat.com/show_bug.cgi?id=766071
-
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    1 +
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    3 +++
- 2 files changed, 4 insertions(+), 0 deletions(-)
+ include/linux/nl80211.h |    4 +++
+ include/net/cfg80211.h  |    3 +-
+ net/wireless/nl80211.c  |   61 ++++++++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 65 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 1a52ed2..6465983 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -827,6 +827,7 @@ static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
- 	case IEEE80211_SMPS_STATIC:
- 	case IEEE80211_SMPS_DYNAMIC:
- 		return IWL_NUM_IDLE_CHAINS_SINGLE;
-+	case IEEE80211_SMPS_AUTOMATIC:
- 	case IEEE80211_SMPS_OFF:
- 		return active_cnt;
- 	default:
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 5c7c17c..d552fa3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -559,6 +559,9 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 0f5ff37..225272c 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -1475,6 +1475,7 @@ enum nl80211_attrs {
+ #define NL80211_ATTR_FEATURE_FLAGS NL80211_ATTR_FEATURE_FLAGS
  
- 	mutex_lock(&priv->shrd->mutex);
+ #define NL80211_MAX_SUPP_RATES			32
++#define NL80211_MAX_SUPP_HT_RATES		77
+ #define NL80211_MAX_SUPP_REG_RULES		32
+ #define NL80211_TKIP_DATA_OFFSET_ENCR_KEY	0
+ #define NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY	16
+@@ -2401,12 +2402,15 @@ enum nl80211_key_attributes {
+  *	in an array of rates as defined in IEEE 802.11 7.3.2.2 (u8 values with
+  *	1 = 500 kbps) but without the IE length restriction (at most
+  *	%NL80211_MAX_SUPP_RATES in a single array).
++ * @NL80211_TXRATE_MCS: HT (MCS) rates allowed for TX rate selection
++ *	in an array of MCS numbers.
+  * @__NL80211_TXRATE_AFTER_LAST: internal
+  * @NL80211_TXRATE_MAX: highest TX rate attribute
+  */
+ enum nl80211_tx_rate_attributes {
+ 	__NL80211_TXRATE_INVALID,
+ 	NL80211_TXRATE_LEGACY,
++	NL80211_TXRATE_MCS,
  
-+	if (test_bit(STATUS_EXIT_PENDING, &priv->shrd->status))
-+		goto out;
+ 	/* keep last */
+ 	__NL80211_TXRATE_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 15f4be7..2b23757 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1228,8 +1228,7 @@ enum wiphy_params_flags {
+ struct cfg80211_bitrate_mask {
+ 	struct {
+ 		u32 legacy;
+-		/* TODO: add support for masking MCS rates; e.g.: */
+-		/* u8 mcs[IEEE80211_HT_MCS_MASK_LEN]; */
++		u8 mcs[IEEE80211_HT_MCS_MASK_LEN];
+ 	} control[IEEE80211_NUM_BANDS];
+ };
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b3d3cf8..1f510fa 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5364,9 +5364,39 @@ static u32 rateset_to_mask(struct ieee80211_supported_band *sband,
+ 	return mask;
+ }
+ 
++static bool ht_rateset_to_mask(struct ieee80211_supported_band *sband,
++			       u8 *rates, u8 rates_len,
++			       u8 mcs[IEEE80211_HT_MCS_MASK_LEN])
++{
++	u8 i;
 +
- 	if (unlikely(test_bit(STATUS_SCANNING, &priv->shrd->status))) {
- 		IWL_DEBUG_MAC80211(priv, "leave - scanning\n");
- 		goto out;
++	memset(mcs, 0, IEEE80211_HT_MCS_MASK_LEN);
++
++	for (i = 0; i < rates_len; i++) {
++		int ridx, rbit;
++
++		ridx = rates[i] / 8;
++		rbit = BIT(rates[i] % 8);
++
++		/* check validity */
++		if ((ridx < 0) || (ridx > IEEE80211_HT_MCS_MASK_LEN))
++			return false;
++
++		/* check availability */
++		if (sband->ht_cap.mcs.rx_mask[ridx] & rbit)
++			mcs[ridx] |= rbit;
++		else
++			return false;
++	}
++
++	return true;
++}
++
+ static const struct nla_policy nl80211_txattr_policy[NL80211_TXRATE_MAX + 1] = {
+ 	[NL80211_TXRATE_LEGACY] = { .type = NLA_BINARY,
+ 				    .len = NL80211_MAX_SUPP_RATES },
++	[NL80211_TXRATE_MCS] = { .type = NLA_BINARY,
++				 .len = NL80211_MAX_SUPP_HT_RATES },
+ };
+ 
+ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+@@ -5392,12 +5422,20 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 		sband = rdev->wiphy.bands[i];
+ 		mask.control[i].legacy =
+ 			sband ? (1 << sband->n_bitrates) - 1 : 0;
++		if (sband)
++			memcpy(mask.control[i].mcs,
++			       sband->ht_cap.mcs.rx_mask,
++			       sizeof(mask.control[i].mcs));
++		else
++			memset(mask.control[i].mcs, 0,
++			       sizeof(mask.control[i].mcs));
+ 	}
+ 
+ 	/*
+ 	 * The nested attribute uses enum nl80211_band as the index. This maps
+ 	 * directly to the enum ieee80211_band values used in cfg80211.
+ 	 */
++	BUILD_BUG_ON(NL80211_MAX_SUPP_HT_RATES > IEEE80211_HT_MCS_MASK_LEN * 8);
+ 	nla_for_each_nested(tx_rates, info->attrs[NL80211_ATTR_TX_RATES], rem)
+ 	{
+ 		enum ieee80211_band band = nla_type(tx_rates);
+@@ -5413,7 +5451,28 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 				sband,
+ 				nla_data(tb[NL80211_TXRATE_LEGACY]),
+ 				nla_len(tb[NL80211_TXRATE_LEGACY]));
+-			if (mask.control[band].legacy == 0)
++		}
++		if (tb[NL80211_TXRATE_MCS]) {
++			if (!ht_rateset_to_mask(
++					sband,
++					nla_data(tb[NL80211_TXRATE_MCS]),
++					nla_len(tb[NL80211_TXRATE_MCS]),
++					mask.control[band].mcs))
++				return -EINVAL;
++		}
++
++		if (mask.control[band].legacy == 0) {
++			/* don't allow empty legacy rates if HT
++			 * is not even supported. */
++			if (!rdev->wiphy.bands[band]->ht_cap.ht_supported)
++				return -EINVAL;
++
++			for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
++				if (mask.control[band].mcs[i])
++					break;
++
++			/* legacy and mcs rates may not be both empty */
++			if (i == IEEE80211_HT_MCS_MASK_LEN)
+ 				return -EINVAL;
+ 		}
+ 	}
 -- 
-1.7.1
+1.7.7.3
 
