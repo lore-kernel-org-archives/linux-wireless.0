@@ -1,101 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:55610 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754650Ab2AaPvS (ORCPT
+Received: from mail.solarflare.com ([216.237.3.220]:10033 "EHLO
+	ocex02.SolarFlarecom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755393Ab2AERDc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 10:51:18 -0500
-Received: by wics10 with SMTP id s10so83344wic.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 07:51:17 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/4] wl12xx: Set IEEE80211_TX_RC_SHORT_GI if short GI was used on
-Date: Tue, 31 Jan 2012 17:54:41 +0200
-Message-Id: <1328025283-22888-2-git-send-email-eliad@wizery.com> (sfid-20120131_165123_970088_2402BEA7)
-In-Reply-To: <1328025283-22888-1-git-send-email-eliad@wizery.com>
-References: <1328025283-22888-1-git-send-email-eliad@wizery.com>
+	Thu, 5 Jan 2012 12:03:32 -0500
+Message-ID: <1325783007.3764.19.camel@bwh-desktop> (sfid-20120105_180337_638947_B874EC2C)
+Subject: Re: [PATCH v2] drivers: net: Fix dependency for EEPROM_93CX6
+From: Ben Hutchings <bhutchings@solarflare.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Fabio Estevam <festevam@gmail.com>, <netdev@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, <gwingerde@gmail.com>,
+	<linville@tuxdriver.com>, <davem@davemloft.net>,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Date: Thu, 5 Jan 2012 17:03:27 +0000
+In-Reply-To: <4F05CBA9.1070602@lwfinger.net>
+References: <1325770673-17309-1-git-send-email-festevam@gmail.com>
+	 <4F05CBA9.1070602@lwfinger.net>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+On Thu, 2012-01-05 at 10:11 -0600, Larry Finger wrote:
+> On 01/05/2012 07:37 AM, Fabio Estevam wrote:
+> > Fix the following build warning:
+> >
+> > warning: (KS8851&&  AX88796_93CX6&&  RTL8180&&  RTL8187&&  ADM8211&&  RT2400PCI&&  RT2500PCI&&  RT61PCI&&  RT2800PCI&&  R8187SE) selects EEPROM_93CX6 which has unmet direct dependencies (MISC_DEVICES)
+> >
+> > Signed-off-by: Fabio Estevam<fabio.estevam@freescale.com>
+> > ---
+> > Changes since v1:
+> > - Place MISC_DEVICES dependency into the 'depends on' line
+> 
+> Is this the right way to fix this? Whenever I get this kind of build warning, I 
+> usually attribute it to a problem with my local configuration and fix my copy of 
+> .config, not modify the build system. With this change, it seems to me that a 
+> lot of devices will suddenly disappear from the build with little explanation.
 
-New FW reports usage of short GI as a rate class index. Check for
-this rate and set the IEEE80211_TX_RC_SHORT_GI if used.
+I entirely agree.
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-depends on the "wl12xx: update fw api" patchset
+> I don't feel confident enough to NACK the patch, but I would like an expert to 
+> comment.
 
- drivers/net/wireless/wl12xx/conf.h |    5 +++--
- drivers/net/wireless/wl12xx/main.c |    2 ++
- drivers/net/wireless/wl12xx/tx.c   |    8 ++++++--
- 3 files changed, 11 insertions(+), 4 deletions(-)
+I'm not an expert but am prepared to be opinionated!
 
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index a152713..a179510 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -66,7 +66,8 @@ enum {
- };
- 
- enum {
--	CONF_HW_RXTX_RATE_MCS7 = 0,
-+	CONF_HW_RXTX_RATE_MCS7_SGI = 0,
-+	CONF_HW_RXTX_RATE_MCS7,
- 	CONF_HW_RXTX_RATE_MCS6,
- 	CONF_HW_RXTX_RATE_MCS5,
- 	CONF_HW_RXTX_RATE_MCS4,
-@@ -92,7 +93,7 @@ enum {
- };
- 
- /* Rates between and including these are MCS rates */
--#define CONF_HW_RXTX_RATE_MCS_MIN CONF_HW_RXTX_RATE_MCS7
-+#define CONF_HW_RXTX_RATE_MCS_MIN CONF_HW_RXTX_RATE_MCS7_SGI
- #define CONF_HW_RXTX_RATE_MCS_MAX CONF_HW_RXTX_RATE_MCS0
- 
- enum {
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index ea4e2c4..d67acc3 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -4620,6 +4620,7 @@ static struct ieee80211_channel wl1271_channels[] = {
- /* mapping to indexes for wl1271_rates */
- static const u8 wl1271_rate_to_idx_2ghz[] = {
- 	/* MCS rates are used only with 11n */
-+	7,                            /* CONF_HW_RXTX_RATE_MCS7_SGI */
- 	7,                            /* CONF_HW_RXTX_RATE_MCS7 */
- 	6,                            /* CONF_HW_RXTX_RATE_MCS6 */
- 	5,                            /* CONF_HW_RXTX_RATE_MCS5 */
-@@ -4741,6 +4742,7 @@ static struct ieee80211_channel wl1271_channels_5ghz[] = {
- /* mapping to indexes for wl1271_rates_5ghz */
- static const u8 wl1271_rate_to_idx_5ghz[] = {
- 	/* MCS rates are used only with 11n */
-+	7,                            /* CONF_HW_RXTX_RATE_MCS7_SGI */
- 	7,                            /* CONF_HW_RXTX_RATE_MCS7 */
- 	6,                            /* CONF_HW_RXTX_RATE_MCS6 */
- 	5,                            /* CONF_HW_RXTX_RATE_MCS5 */
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index f95112f..ee313e7 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -766,10 +766,14 @@ out:
- 
- static u8 wl1271_tx_get_rate_flags(u8 rate_class_index)
- {
-+	u8 flags = 0;
-+
- 	if (rate_class_index >= CONF_HW_RXTX_RATE_MCS_MIN &&
- 	    rate_class_index <= CONF_HW_RXTX_RATE_MCS_MAX)
--		return IEEE80211_TX_RC_MCS;
--	return 0;
-+		flags |= IEEE80211_TX_RC_MCS;
-+	if (rate_class_index == CONF_HW_RXTX_RATE_MCS7_SGI)
-+		flags |= IEEE80211_TX_RC_SHORT_GI;
-+	return flags;
- }
- 
- static void wl1271_tx_complete_packet(struct wl1271 *wl,
+> I have noticed that the defconfigs for various architectures are split between 
+> turning MISC_DEVICES on or off.
+
+That seems like a bug, since MISC_DEVICES doesn't by itself select any
+code.  (It's also not a meaningful category and maybe ought not to be an
+option at all.)
+
+Ben.
+
 -- 
-1.7.6.401.g6a319
+Ben Hutchings, Staff Engineer, Solarflare
+Not speaking for my employer; that's the marketing department's job.
+They asked us to note that Solarflare product names are trademarked.
 
