@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1159 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754926Ab2AETMb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 14:12:31 -0500
-Message-ID: <4F05F60C.5030406@broadcom.com> (sfid-20120105_201234_971998_D1C9003C)
-Date: Thu, 5 Jan 2012 20:12:12 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:13810 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751371Ab2AEIWq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 03:22:46 -0500
+Message-ID: <4F055DC8.9050902@qca.qualcomm.com> (sfid-20120105_092252_463605_0360F688)
+Date: Thu, 5 Jan 2012 10:22:32 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Stephen Hemminger" <shemminger@vyatta.com>
-cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-Subject: Re: [PATCH 2/2] brcmfmac: use existing net_device_stats
-References: <20120105183947.295358582@vyatta.com>
- <20120105184000.572918423@vyatta.com>
-In-Reply-To: <20120105184000.572918423@vyatta.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+To: Joe Perches <joe@perches.com>
+CC: <linville@tuxdriver.com>, <sfr@canb.auug.org.au>,
+	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-next@vger.kernel.org>,
+	<ath6kl-devel@qualcomm.com>, <davem@davemloft.net>
+Subject: Re: [PATCH 5/6] ath6kl: convert ath6kl_dbg() and ath6kl_dbg_dump()
+ into functions
+References: <20120104230429.32306.75965.stgit@x201>	 <20120104230950.32306.21264.stgit@x201> <1325720472.4116.7.camel@joe2Laptop>
+In-Reply-To: <1325720472.4116.7.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/2012 07:39 PM, Stephen Hemminger wrote:
-> Minor space savings. Compile tested only.
+On 01/05/2012 01:41 AM, Joe Perches wrote:
+> On Thu, 2012-01-05 at 01:09 +0200, Kalle Valo wrote:
+>> That way it's possible to not export debug_mask outside the upcoming
+>> ath6kl_core.ko and that makes it easier to ath6kl_core.ko in the
+>> following patch.
+> []
+>> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> []
+>> diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+> []
+>> +void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...)
+>> +{
+>> +	va_list args;
+>> +
+>> +	if (!(debug_mask & mask))
+>> +		return;
+>> +
+>> +	va_start(args, fmt);
+>> +	ath6kl_printk(KERN_DEBUG, fmt, &args);
 > 
+> Passing a va_list as an argument?
+> I believe this doesn't work.
 
-This is actually not going to work. The struct brcmf_if represents
-individual interfaces which each have their own device statistics.
+Doh, I was supposed to test this but then I forgot in the hurry. Thanks
+for pointing this out. I will send v2 which will fix this.
 
-> Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
-> 
-> 
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c	2012-01-05 10:02:57.488495190 -0800
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c	2012-01-05 10:09:58.536972268 -0800
-> @@ -56,7 +56,6 @@ struct brcmf_if {
->  	struct brcmf_info *info;	/* back pointer to brcmf_info */
->  	/* OS/stack specifics */
->  	struct net_device *ndev;
-> -	struct net_device_stats stats;
->  	int idx;		/* iface idx in dongle */
->  	int state;		/* interface state */
->  	u8 mac_addr[ETH_ALEN];	/* assigned MAC address */
-> @@ -526,7 +525,6 @@ static struct net_device_stats *brcmf_ne
->  {
->  	struct brcmf_info *drvr_priv = *(struct brcmf_info **)
->  					netdev_priv(ndev);
-> -	struct brcmf_if *ifp;
->  	int ifidx;
->  
-
-Gr. AvS
-
+Kalle
