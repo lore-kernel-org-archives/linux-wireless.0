@@ -1,57 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45140 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932743Ab2AEQZW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 11:25:22 -0500
-Date: Thu, 5 Jan 2012 17:25:19 +0100
-From: Michal Hocko <mhocko@suse.cz>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: iwl3945 didn't survive after s2ram failure
-Message-ID: <20120105162519.GE3937@tiehlicka.suse.cz> (sfid-20120105_172537_267983_B9F6DBEA)
-References: <20111227105340.GD5344@tiehlicka.suse.cz>
- <20120103103457.GA3391@redhat.com>
- <20120103130306.GA3891@tiehlicka.suse.cz>
- <20120105110744.GA2222@redhat.com>
- <20120105141913.GA3937@tiehlicka.suse.cz>
- <20120105150040.GE2222@redhat.com>
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:49805 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756802Ab2AEN0X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 08:26:23 -0500
+Subject: [PATCH v2 0/6] ath6kl: create ath6kl_core.ko
+To: linville@tuxdriver.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: sfr@canb.auug.org.au, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-next@vger.kernel.org, ath6kl-devel@qualcomm.com,
+	davem@davemloft.net
+Date: Thu, 05 Jan 2012 15:25:56 +0200
+Message-ID: <20120105132523.22281.95999.stgit@x201> (sfid-20120105_142634_826956_C54D02F8)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120105150040.GE2222@redhat.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu 05-01-12 16:00:41, Stanislaw Gruszka wrote:
-> On Thu, Jan 05, 2012 at 03:19:13PM +0100, Michal Hocko wrote:
-> > 
-> > OK, so I have tried to boot with pcie_aspm=off and the wireless
-> > resurrect. The I found out that I booted into 3.2 rather than 3.2-rc6 so
-> > I retested with the original kernel and guess what, yes it reported the
-> > same problem as before (with or without parameter). 
-> > So I have tried to retest with few kernels (3.2.0-rc5,
-> > 3.2.0-rc6-00005-ga36bfdd, 3.2.0-rc7-00083-g115e8e7 and 3.2.0) that I
-> > still had on my machine and 3.2.0-rc6-00005-ga36bfdd seems to be the
-> > only affected one.
-> > There doesn't seem to be any obvious difference wrt. the driver in the
-> > logs (attached).
-> > 
-> > Looking in the history it seems that 497f16f2 [pci: Fix hotplug of
-> > Express Module with pci bridges] might be related.
-> 
-> From the changelog of that commit: "I noticed that the bridges get
-> assigned but do not get enabled", that looks like the problem we had
-> seen.
+Here's the patchset to fix the allyesconfig build breakage. The fix is to
+create a separate module ath6kl_core.ko which both ath6kl_sdio.ko and
+ath6kl_usb.ko use.
 
-Yes, I am just wondering why I haven't seen the problem before. I was
-using rc6 for quite some time and using suspend/resume cycle all the
-time. It was just after suspend didn't survive when I saw the problem
-for the first time...
--- 
-Michal Hocko
-SUSE Labs
-SUSE LINUX s.r.o.
-Lihovarska 1060/12
-190 00 Praha 9    
-Czech Republic
+v2:
+
+o fix ath6kl_dbg() to use va_format correctly (thanks to joe)
+o improved commit log in patch 4
+
+---
+
+Kalle Valo (6):
+      ath6kl: rename vif init and cleanup functions
+      ath6kl: unify cfg80211 init/cleanup functions
+      ath6kl: create core.c
+      ath6kl: get rid of AR_DBG_LVL_CHECK()
+      ath6kl: convert ath6kl_dbg() and ath6kl_dbg_dump() into functions
+      ath6kl: create ath6kl_core.ko
+
+
+ drivers/net/wireless/ath/ath6kl/Makefile   |   35 +--
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |  207 ++++++++------------
+ drivers/net/wireless/ath/ath6kl/cfg80211.h |   12 +
+ drivers/net/wireless/ath/ath6kl/common.h   |    3 
+ drivers/net/wireless/ath/ath6kl/core.c     |  297 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/core.h     |   10 +
+ drivers/net/wireless/ath/ath6kl/debug.c    |   68 +++++-
+ drivers/net/wireless/ath/ath6kl/debug.h    |   27 ---
+ drivers/net/wireless/ath/ath6kl/hif.c      |   10 +
+ drivers/net/wireless/ath/ath6kl/init.c     |  211 +-------------------
+ drivers/net/wireless/ath/ath6kl/sdio.c     |    4 
+ drivers/net/wireless/ath/ath6kl/usb.c      |    8 -
+ drivers/net/wireless/ath/ath6kl/wmi.c      |    3 
+ 13 files changed, 484 insertions(+), 411 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/ath6kl/core.c
+
