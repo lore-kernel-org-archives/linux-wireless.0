@@ -1,107 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:53854 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754075Ab2AFOmA (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:32805 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755198Ab2AERVQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jan 2012 09:42:00 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAD2nsn0PJU+ZuZfuVOzsvN0yq76JdgYpwkoeS8yfvKQSiO8VfA@mail.gmail.com>
-References: <NEXT-4f06ee5c00c505.33406970@nextmail.ru>
-	<CAD2nsn0PJU+ZuZfuVOzsvN0yq76JdgYpwkoeS8yfvKQSiO8VfA@mail.gmail.com>
-Date: Fri, 6 Jan 2012 20:11:59 +0530
-Message-ID: <CAD2nsn3+AWwz1=h9mXR1S5S5ioydHTBzeoWd7wrgh9jnp_hQTA@mail.gmail.com> (sfid-20120106_154220_228665_B4AE7812)
-Subject: Re: ath9k crash 3.2-rc7
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: MR <g7af0ec1e3ea1e7b1@nextmail.ru>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: multipart/mixed; boundary=bcaec54ee96423d71004b5dd0ded
+	Thu, 5 Jan 2012 12:21:16 -0500
+Date: Thu, 05 Jan 2012 12:20:04 -0500 (EST)
+Message-Id: <20120105.122004.1170447281304011158.davem@davemloft.net> (sfid-20120105_182125_399986_9B2B432F)
+To: Larry.Finger@lwfinger.net
+Cc: festevam@gmail.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, gwingerde@gmail.com,
+	linville@tuxdriver.com, fabio.estevam@freescale.com
+Subject: Re: [PATCH v2] drivers: net: Fix dependency for EEPROM_93CX6
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <4F05CBA9.1070602@lwfinger.net>
+References: <1325770673-17309-1-git-send-email-festevam@gmail.com>
+	<4F05CBA9.1070602@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---bcaec54ee96423d71004b5dd0ded
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Thu, 05 Jan 2012 10:11:21 -0600
 
-On Fri, Jan 6, 2012 at 8:05 PM, Mohammed Shafi <shafi.wireless@gmail.com> w=
-rote:
-> 2012/1/6 MR <g7af0ec1e3ea1e7b1@nextmail.ru>:
->> =A0>:( =A0i had put those warnings to prevent the crash itself and what'=
-s causing
->> =A0>it.
->> =A0> may be i had missed that pos can be < 0 in addition to (pos > 37).
->> =A0> i am just looking at those areas of code for some other issue. hope=
- i
->> =A0> can a find a fix
->> =A0> for both of them
+> On 01/05/2012 07:37 AM, Fabio Estevam wrote:
+>> Fix the following build warning:
 >>
->> I am building kernel with pos<0 check added...
->
-> thanks! =A0if it does not works, i have only one more idea(a patch
-> which removes some suspicious code which abuses a pointer any way that
-> has to be fixed properly ). otherwise i need to recreate the issue and
-> capture the stack trace completely, put debug prints. i ran an
-> overnight test but was unable to recreate the issue. later today AN =A0i
-> got a crash accidentally but only once, after that never.
-
-attaching the patch for your reference, but this is not the fix. it
-has to be fixed properly.
-if it does not helps, then the issue itself is something else i had assumed=
-.
-
->
+>> warning: (KS8851&& AX88796_93CX6&& RTL8180&& RTL8187&& ADM8211&&
+>> RT2400PCI&& RT2500PCI&& RT61PCI&& RT2800PCI&& R8187SE) selects
+>> EEPROM_93CX6 which has unmet direct dependencies (MISC_DEVICES)
 >>
->> I hoped for some ad-hoc stress-test recommendation, but I guess this wil=
-l have
->> to wait.
+>> Signed-off-by: Fabio Estevam<fabio.estevam@freescale.com>
+>> ---
+>> Changes since v1:
+>> - Place MISC_DEVICES dependency into the 'depends on' line
+> 
+> Is this the right way to fix this? Whenever I get this kind of build
+> warning, I usually attribute it to a problem with my local
+> configuration and fix my copy of .config, not modify the build
+> system. With this change, it seems to me that a lot of devices will
+> suddenly disappear from the build with little explanation. I don't
+> feel confident enough to NACK the patch, but I would like an expert to
+> comment.
+> 
+> I have noticed that the defconfigs for various architectures are split
+> between turning MISC_DEVICES on or off.
 
-any test if we can recreate the panic ASAP will be highly helpful. it
-will help us narrow down the issue quickly and put more debug
-prints/ideas
+Right, this is definitely the wrong fix, "select" is the right way to
+fix this because no user should have to know the gory details of what
+random odd config variables have to be on already in order to turn on
+support for a device they are interested in.
 
->>
->>
->
->
->
-> --
-> shafi
-
-
-
---=20
-shafi
-
---bcaec54ee96423d71004b5dd0ded
-Content-Type: text/x-diff; charset=US-ASCII; name="remove-suspicious-code.patch"
-Content-Disposition: attachment; filename="remove-suspicious-code.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gx3bcews0
-
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9tYWluLmMgYi9kcml2
-ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvbWFpbi5jCmluZGV4IGUyNjdjOTIuLmEzOWNiZGMg
-MTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9tYWluLmMKKysrIGIv
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDlrL21haW4uYwpAQCAtMTYyOSw3ICsxNjI5LDYg
-QEAgc3RhdGljIGludCBhdGg5a19jb25maWcoc3RydWN0IGllZWU4MDIxMV9odyAqaHcsIHUzMiBj
-aGFuZ2VkKQogCiAJaWYgKGNoYW5nZWQgJiBJRUVFODAyMTFfQ09ORl9DSEFOR0VfQ0hBTk5FTCkg
-ewogCQlzdHJ1Y3QgaWVlZTgwMjExX2NoYW5uZWwgKmN1cmNoYW4gPSBody0+Y29uZi5jaGFubmVs
-OwotCQlzdHJ1Y3QgYXRoOWtfY2hhbm5lbCBvbGRfY2hhbjsKIAkJaW50IHBvcyA9IGN1cmNoYW4t
-Pmh3X3ZhbHVlOwogCQlpbnQgb2xkX3BvcyA9IC0xOwogCQl1bnNpZ25lZCBsb25nIGZsYWdzOwpA
-QCAtMTY0NSwyNSArMTY0NCwxNSBAQCBzdGF0aWMgaW50IGF0aDlrX2NvbmZpZyhzdHJ1Y3QgaWVl
-ZTgwMjExX2h3ICpodywgdTMyIGNoYW5nZWQpCiAJCWF0aF9kYmcoY29tbW9uLCBDT05GSUcsICJT
-ZXQgY2hhbm5lbDogJWQgTUh6IHR5cGU6ICVkXG4iLAogCQkJY3VyY2hhbi0+Y2VudGVyX2ZyZXEs
-IGNvbmYtPmNoYW5uZWxfdHlwZSk7CiAKKwkJYXRoOWtfY21uX3VwZGF0ZV9pY2hhbm5lbCgmc2Mt
-PnNjX2FoLT5jaGFubmVsc1twb3NdLAorCQkJCQkgIGN1cmNoYW4sIGNvbmYtPmNoYW5uZWxfdHlw
-ZSk7CisKIAkJLyogdXBkYXRlIHN1cnZleSBzdGF0cyBmb3IgdGhlIG9sZCBjaGFubmVsIGJlZm9y
-ZSBzd2l0Y2hpbmcgKi8KIAkJc3Bpbl9sb2NrX2lycXNhdmUoJmNvbW1vbi0+Y2NfbG9jaywgZmxh
-Z3MpOwogCQlhdGhfdXBkYXRlX3N1cnZleV9zdGF0cyhzYyk7CiAJCXNwaW5fdW5sb2NrX2lycXJl
-c3RvcmUoJmNvbW1vbi0+Y2NfbG9jaywgZmxhZ3MpOwogCiAJCS8qCi0JCSAqIFByZXNlcnZlIHRo
-ZSBjdXJyZW50IGNoYW5uZWwgdmFsdWVzLCBiZWZvcmUgdXBkYXRpbmcKLQkJICogdGhlIHNhbWUg
-Y2hhbm5lbAotCQkgKi8KLQkJaWYgKG9sZF9wb3MgPT0gcG9zKSB7Ci0JCQltZW1jcHkoJm9sZF9j
-aGFuLCAmc2MtPnNjX2FoLT5jaGFubmVsc1twb3NdLAotCQkJCXNpemVvZihzdHJ1Y3QgYXRoOWtf
-Y2hhbm5lbCkpOwotCQkJYWgtPmN1cmNoYW4gPSAmb2xkX2NoYW47Ci0JCX0KLQotCQlhdGg5a19j
-bW5fdXBkYXRlX2ljaGFubmVsKCZzYy0+c2NfYWgtPmNoYW5uZWxzW3Bvc10sCi0JCQkJCSAgY3Vy
-Y2hhbiwgY29uZi0+Y2hhbm5lbF90eXBlKTsKLQotCQkvKgogCQkgKiBJZiB0aGUgb3BlcmF0aW5n
-IGNoYW5uZWwgY2hhbmdlcywgY2hhbmdlIHRoZSBzdXJ2ZXkgaW4tdXNlIGZsYWdzCiAJCSAqIGFs
-b25nIHdpdGggaXQuCiAJCSAqIFJlc2V0IHRoZSBzdXJ2ZXkgZGF0YSBmb3IgdGhlIG5ldyBjaGFu
-bmVsLCB1bmxlc3Mgd2UncmUgc3dpdGNoaW5nCg==
---bcaec54ee96423d71004b5dd0ded--
+Fix this right, by using "select MISC_DEVICES"
