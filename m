@@ -1,141 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:59472 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932711Ab2AEQoU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 11:44:20 -0500
-Message-ID: <4F05D361.6040809@lwfinger.net> (sfid-20120105_174640_951673_F5B1E9C0)
-Date: Thu, 05 Jan 2012 10:44:17 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:53890 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755018Ab2AELjl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 06:39:41 -0500
+Date: Thu, 5 Jan 2012 12:39:40 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Mike Edenfield <kutulu@kutulu.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: iwl3945: disassociating from current AP on rescan with kernels >
+ 3.0
+Message-ID: <20120105113939.GC2222@redhat.com> (sfid-20120105_123945_484599_3F0C84C3)
+References: <012e01ccc67b$bfe90be0$3fbb23a0$@kutulu.org>
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/7] rtlwifi: Standardize RT_PRINT_DATA macro and uses
-References: <cover.1325734202.git.joe@perches.com>  <e7d4163a9897f33145d8a07be54f507ab68e0243.1325734203.git.joe@perches.com>  <20120105114314.GD2222@redhat.com> <1325780947.22154.14.camel@joe2Laptop>
-In-Reply-To: <1325780947.22154.14.camel@joe2Laptop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <012e01ccc67b$bfe90be0$3fbb23a0$@kutulu.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/2012 10:29 AM, Joe Perches wrote:
-> On Thu, 2012-01-05 at 12:43 +0100, Stanislaw Gruszka wrote:
->> Hi Joe
->
-> Morning Stanislaw.
->
->> On Wed, Jan 04, 2012 at 07:40:40PM -0800, Joe Perches wrote:
->>>   	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
->>
->> Since you are working on it, can you also get rid of this DBG_*
->> parameter, if rtlwifi maintainers are ok with that? It is additional
->> console loglvevel, standard kernel loglevel should be used.
->
-> Not quite, all of the RT_PRINT_DATA are emitted at KERN_DEBUG.
-> These DBG_*s are just a normal debug verbosity level.
->
-> It does seem odd though to have a DBG_EMERG and not always
-> emit it.
+On Thu, Dec 29, 2011 at 05:46:48PM -0500, Mike Edenfield wrote:
+> After upgrading to a v3.0 kernel, my Intel wireless adapter stopped working
+> when used with any UI-based wpa_supplicant front-end that does periodic
+> scans, such as NetworkManager and wicd. Whenever the software asks for an AP
+> scan, the device disconnects from its current AP and blacklists it, making
+> it impossible to reconnect until I kill wpa_supplicant. If I manually
+> configure wpa_supplicant and launch it directly, the adapter stays
+> associated with the AP properly.
+> 
+> I was able to reproduct this behavior with kernel version 3.0.4, 3.1.4, and
+> 3.1.5, but downgrading to 2.6.39 or lower solves the problem. I haven't seen
+> any other reports of this problem specific to 3.x -- did I miss some other
+> step I need to do when upgrading?
 
-Those are always logged, no matter what debug level is set.
+Are you sure this is 2.6.39 -> 3.0 regression. There are not many
+changes in iwlegacy driver between these
 
-> What might also be useful for any embedded use is to add
-> CONFIG_RTLWIFI_DEBUG to conditionally remove all of the
-> debug logging code to reduce the largish object size.
->
-> This reduces the object size by about 1/3 (250KB)
-> when CONFIG_RTLWIFI_DEBUG is not set.
->
-> $ size drivers/net/wireless/rtlwifi/built-in.o*
->     text	   data	    bss	    dec	    hex	filename
->   368722	  55333	  94224	 518279	  7e887	drivers/net/wireless/rtlwifi/built-in.o.new
->   586904	  55333	 127216	 769453	  bbdad	drivers/net/wireless/rtlwifi/built-in.o.old
->
-> Signed-off-by: Joe Perches<joe@perches.com>
+$ git log v2.6.39..v3.0 --oneline --no-merges -- drivers/net/wireless/iwlegacy/
+51e6525 iwlegacy: fix channel switch locking
+51892db iwl4965: set tx power after rxon_assoc
+dfe2158 iwl4965: correctly validate temperature value
+aac11c1 iwl4965: fix 5GHz operation
+8220ba3 iwlegacy: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
+2245090 iwlegacy: remove sync_cmd_mutex
+28a6e57 iwlegacy: more priv->mutex serialization
+81e6326 iwlegacy: fix enqueue hcmd race conditions
+93fd74e iwlegacy: comment typo fix diable -> disable
+7a55237 iwlegacy: remove scan_tx_antennas
+5855c7d iwlegacy: remove unneeded __packed
+8eb0ac7 iwlegacy: remove unneeded disable_hw_scan check
+3e41de8 iwlegacy: simplify init geos
+a078a1f iwlegacy: enable only rfkill interrupt when device is down
+ab42b40 iwlegacy: remove duplicate initialization in iwl4956_down()
+85ee7a1 treewide: cleanup continuations and remove logging message whitespace
+0477ad7 iwlegacy: use pci_dev->revision
+a22e93f iwl4965: drop a lone pr_err()
 
-This change seems sensible to me.
+and none of it looks suspicious.
 
-Larry
+Problem looks more like software scanning issue, which we enable
+by default on 2.6.39. Can you check if disable_hw_scan=0 module
+parameter helps?
 
->
-> ---
->
->   drivers/net/wireless/rtlwifi/Kconfig |    5 +++++
->   drivers/net/wireless/rtlwifi/debug.h |   34 ++++++++++++++++++++++++++++++++++
->   2 files changed, 39 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/Kconfig b/drivers/net/wireless/rtlwifi/Kconfig
-> index d6c42e6..44b9c0a 100644
-> --- a/drivers/net/wireless/rtlwifi/Kconfig
-> +++ b/drivers/net/wireless/rtlwifi/Kconfig
-> @@ -49,6 +49,11 @@ config RTLWIFI
->   	depends on RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE
->   	default m
->
-> +config RTLWIFI_DEBUG
-> +	tristate "Additional debugging output"
-> +	depends on RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE
-> +	default y
-> +
->   config RTL8192C_COMMON
->   	tristate
->   	depends on RTL8192CE || RTL8192CU
-> diff --git a/drivers/net/wireless/rtlwifi/debug.h b/drivers/net/wireless/rtlwifi/debug.h
-> index b024c23..fd5600c 100644
-> --- a/drivers/net/wireless/rtlwifi/debug.h
-> +++ b/drivers/net/wireless/rtlwifi/debug.h
-> @@ -156,6 +156,8 @@ enum dbgp_flag_e {
->   	DBGP_TYPE_MAX
->   };
->
-> +#ifdef CONFIG_RTLWIFI_DEBUG
-> +
->   #define RT_ASSERT(_exp, fmt, ...)					\
->   do {									\
->   	if (!(_exp)) {							\
-> @@ -195,5 +197,37 @@ do {									\
->   	}								\
->   } while (0)
->
-> +#else
-> +
-> +struct rtl_priv;
-> +
-> +__printf(2, 3)
-> +static inline void RT_ASSERT(int exp, const char *fmt, ...)
-> +{
-> +}
-> +
-> +__printf(4, 5)
-> +static inline void RT_TRACE(struct rtl_priv *rtlpriv,
-> +			    int comp, int level,
-> +			    const char *fmt, ...)
-> +{
-> +}
-> +
-> +__printf(4, 5)
-> +static inline void RTPRINT(struct rtl_priv *rtlpriv,
-> +			   int dbgtype, int dbgflag,
-> +			   const char *fmt, ...)
-> +{
-> +}
-> +
-> +static inline void RT_PRINT_DATA(struct rtl_priv *rtlpriv,
-> +				 int comp, int level,
-> +				 const char *titlestring,
-> +				 const void *hexdata, size_t hexdatalen)
-> +{
-> +}
-> +
-> +#endif
-> +
->   void rtl_dbgp_flag_init(struct ieee80211_hw *hw);
->   #endif
->
->
->
->
-
+Thanks
+Stanislaw
