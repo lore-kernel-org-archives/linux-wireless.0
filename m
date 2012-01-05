@@ -1,53 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:36690 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751126Ab2AaHuH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 02:50:07 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/12] wl12xx: update fw api
-References: <1327924857-1250-1-git-send-email-eliad@wizery.com>
-	<87fwexco94.fsf@purkki.adurom.net>
-	<CAB3XZEfaQAD0p2VJ28znznaB3P_3z3NvEiROJTbyCW+su2gLzg@mail.gmail.com>
-Date: Tue, 31 Jan 2012 09:50:05 +0200
-In-Reply-To: <CAB3XZEfaQAD0p2VJ28znznaB3P_3z3NvEiROJTbyCW+su2gLzg@mail.gmail.com>
-	(Eliad Peller's message of "Mon, 30 Jan 2012 15:52:06 +0200")
-Message-ID: <87bopkcnv6.fsf@purkki.adurom.net> (sfid-20120131_085011_829082_3A02C243)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from perches-mx.perches.com ([206.117.179.246]:34846 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932488Ab2AEQiM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 11:38:12 -0500
+Message-ID: <1325781489.22154.19.camel@joe2Laptop> (sfid-20120105_173831_196738_E1B42A86)
+Subject: Re: [PATCH v2 5/6] ath6kl: convert ath6kl_dbg() and
+ ath6kl_dbg_dump() into functions
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, sfr@canb.auug.org.au,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-next@vger.kernel.org,
+	ath6kl-devel@qualcomm.com, davem@davemloft.net
+Date: Thu, 05 Jan 2012 08:38:09 -0800
+In-Reply-To: <20120105132834.22281.78822.stgit@x201>
+References: <20120105132523.22281.95999.stgit@x201>
+	 <20120105132834.22281.78822.stgit@x201>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Eliad Peller <eliad@wizery.com> writes:
+On Thu, 2012-01-05 at 15:28 +0200, Kalle Valo wrote:
 
-> On Mon, Jan 30, 2012 at 3:29 PM, Kalle Valo <kvalo@adurom.com> wrote:
->> Eliad Peller <eliad@wizery.com> writes:
->>
->>> The fw api was changed in the latest FWs (6.3.5.0.95 for wl127x
->>> and 7.3.5.0.95 for wl128x).
->>>
->>> Along with some small adjustments, the main changes
->>> inroduced by this patheset are configuring the
->>> templates per-role, and moving to IEEE80211_HW_SUPPORTS_DYNAMIC_PS
->>> mode.
->>
->> I didn't look so carefully, but doesn't this break bisect? I mean if you
->> change the firmware api in small patches wl12xx can't work properly
->> until all patches are applied, right?
->>
->> I would say that a huge patch doing all the necessary changes in one go
->> is better, even it's ugly.
->>
-> yes. it will break bisect (although it shouldn't break compilations).
-> i guess it's a matter of taste, but i think keeping the patches
-> manageable is more important than being able to bisect.
+Hey Kalle.
 
-Yeah, it's just matter of taste. It's easy to skip commits during bisect
-but someone not familiar with wl12xx does not know what commits to
-skip and that will cause problems.
+> diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+[]
+> +void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...)
+[]
+> +	ath6kl_printk(KERN_DEBUG, "%pV", &vaf);
+[
+> diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
+[]
+> +void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...);
 
-But I don't care how you do it, I just wanted to point out this aspect :)
+You need to add
 
--- 
-Kalle Valo
+__printf(2, 3)
+
+to the prototype.
+
+If it's not there, the printf formats and arguments aren't verified.
+%pV could do the wrong/bad things.
+
+
