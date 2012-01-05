@@ -1,39 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:59910 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753352Ab2ABRtq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 12:49:46 -0500
-Message-ID: <4F01DA75.3060602@qca.qualcomm.com> (sfid-20120102_184950_429429_2B8248DB)
-Date: Mon, 2 Jan 2012 18:25:25 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from cantor2.suse.de ([195.135.220.15]:55945 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754562Ab2AEMUx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 07:20:53 -0500
+Date: Thu, 5 Jan 2012 13:20:51 +0100
+From: Michal Hocko <mhocko@suse.cz>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 didn't survive after s2ram failure
+Message-ID: <20120105122051.GC4194@tiehlicka.suse.cz> (sfid-20120105_132109_785880_D4600D19)
+References: <20111227105340.GD5344@tiehlicka.suse.cz>
+ <20120103103457.GA3391@redhat.com>
+ <20120103122311.GC3391@redhat.com>
+ <20120103130733.GB3891@tiehlicka.suse.cz>
+ <20120105112648.GB2222@redhat.com>
 MIME-Version: 1.0
-To: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] ath6kl: Support for TCP checksum offload to firmware
-References: <1325024880-22364-1-git-send-email-rpanjwan@qca.qualcomm.com>
-In-Reply-To: <1325024880-22364-1-git-send-email-rpanjwan@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120105112648.GB2222@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/28/2011 12:28 AM, Rishi Panjwani wrote:
-> The change enables offloading TCP checksum calculation to firmware.
-> There are still some issues with the checksum offload so better to
-> disable it by default until the issues are resolved.
-> 
-> To enable TCP checksum offload for tx and rx paths, use
-> the ethtool as follows:
-> ethtool -K <interface> tx on
-> ethtool -K <interface> rx on
-> 
-> To disable TCP checksum offload, for tx and rx paths, use
-> the ethtool as follows:
-> ethtool -K <interface> tx off
-> ethtool -K <interface> rx off
-> 
-> Signed-off-by: Rishi Panjwani <rpanjwan@qca.qualcomm.com>
+On Thu 05-01-12 12:26:49, Stanislaw Gruszka wrote:
+> On Tue, Jan 03, 2012 at 02:07:33PM +0100, Michal Hocko wrote:
+> > On Tue 03-01-12 13:23:12, Stanislaw Gruszka wrote:
+> > > On Tue, Jan 03, 2012 at 11:34:58AM +0100, Stanislaw Gruszka wrote:
+> > [...]
+> > > > If anything other will not help, is possible to rewrite eeprom, I don't
+> > > > know how to do this, but I know that tool for that exist:
+> > > > http://code.google.com/p/iwleeprom/
+> > > Actually I do not think we overwrite eeprom, seems problem is at pci-e
+> > > bus level. Simply we can not communicate with device through pci-e bus.
+> > > That is kind a silly, but you can check if removing cart from slot
+> > > and put it back again (assuring it correctly connected) helps.
+> > 
+> > I am not sure whether the wireless is integrated (this is a laptop) and
+> > I am little bit reluctant to open it as the warranty seems to be still
+> > valid and I would break it if I get inside.
+> Wow, laptop with so old wifi adapter has still a warranty. That good news,
+> you can ask vendor for fixing the problem :-)
 
-Thanks, applied with some minor indentation changes.
+Well it came with some kind of premium warranty and that one ends at the
+end of this month so I should better hurry ;)
 
-Kalle
+> > I have just realized that I haven't provided lspci output so just in
+> > case it is helpful:
+> I tried to reproduce on my laptop by suspend and removing power sources,
+> device initialize properly during boot.
+
+I assume that you don't see the same issue...
+
+> I'm still wondering why we can break anything by power off during
+> suspend. Maybe there is some BIOS facility that power off PCIe device
+> or bridge during suspend, and now it in powered off state. Hard to tell,
+> except mentioned in other email pci* boot parameter try to change PCIe
+> related BIOS settings if there are any. 
+
+Unfortunately not much to set up...
+
+> 
+> Stanislaw
+
+Thanks
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
