@@ -1,55 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:35879 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751285Ab2AOIjb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jan 2012 03:39:31 -0500
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 2/8] brcmfmac: Convert printk(KERN_DEBUG to pr_debug
-Date: Sun, 15 Jan 2012 00:38:39 -0800
-Message-Id: <836088dbbb4916e162ac212d05a5e77a9ba451a1.1326616556.git.joe@perches.com> (sfid-20120115_094221_649613_57485479)
-In-Reply-To: <cover.1326616556.git.joe@perches.com>
-References: <cover.1326616556.git.joe@perches.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:62324 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757627Ab2AEQL0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 11:11:26 -0500
+Message-ID: <4F05CBA9.1070602@lwfinger.net> (sfid-20120105_171135_984257_51A16734)
+Date: Thu, 05 Jan 2012 10:11:21 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Fabio Estevam <festevam@gmail.com>
+CC: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	gwingerde@gmail.com, linville@tuxdriver.com, davem@davemloft.net,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: Re: [PATCH v2] drivers: net: Fix dependency for EEPROM_93CX6
+References: <1325770673-17309-1-git-send-email-festevam@gmail.com>
+In-Reply-To: <1325770673-17309-1-git-send-email-festevam@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow dynamic debugging.
+On 01/05/2012 07:37 AM, Fabio Estevam wrote:
+> Fix the following build warning:
+>
+> warning: (KS8851&&  AX88796_93CX6&&  RTL8180&&  RTL8187&&  ADM8211&&  RT2400PCI&&  RT2500PCI&&  RT61PCI&&  RT2800PCI&&  R8187SE) selects EEPROM_93CX6 which has unmet direct dependencies (MISC_DEVICES)
+>
+> Signed-off-by: Fabio Estevam<fabio.estevam@freescale.com>
+> ---
+> Changes since v1:
+> - Place MISC_DEVICES dependency into the 'depends on' line
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+Is this the right way to fix this? Whenever I get this kind of build warning, I 
+usually attribute it to a problem with my local configuration and fix my copy of 
+.config, not modify the build system. With this change, it seems to me that a 
+lot of devices will suddenly disappear from the build with little explanation. I 
+don't feel confident enough to NACK the patch, but I would like an expert to 
+comment.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-index 8b2060b..f5ca9fc 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
-@@ -39,13 +39,13 @@ do {									\
- 	if (BRCMF_ERROR_VAL == BRCMF_##level##_VAL) {			\
- 		if (brcmf_msg_level & BRCMF_##level##_VAL) {		\
- 			if (net_ratelimit())				\
--				printk(KERN_DEBUG "%s: " fmt,		\
--				       __func__, ##__VA_ARGS__);	\
-+				pr_debug("%s: " fmt,			\
-+					 __func__, ##__VA_ARGS__);	\
- 		}							\
- 	} else {							\
- 		if (brcmf_msg_level & BRCMF_##level##_VAL) {		\
--			printk(KERN_DEBUG "%s: " fmt,			\
--			       __func__, ##__VA_ARGS__);		\
-+			pr_debug("%s: " fmt,				\
-+				 __func__, ##__VA_ARGS__);		\
- 		}							\
- 	}								\
- } while (0)
--- 
-1.7.8.111.gad25c.dirty
+I have noticed that the defconfigs for various architectures are split between 
+turning MISC_DEVICES on or off.
 
+Larry
