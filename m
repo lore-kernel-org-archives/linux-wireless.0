@@ -1,34 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.lenbrook.com ([216.94.44.85]:26660 "EHLO mail.lenbrook.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:1696 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754094Ab2AMWSi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jan 2012 17:18:38 -0500
-Message-ID: <4F10AA2D.1060000@lenbrook.com> (sfid-20120113_231842_337504_FAC1D175)
-Date: Fri, 13 Jan 2012 17:03:25 -0500
-From: Jonathan Bagg <jbagg@lenbrook.com>
+	id S1753229Ab2AEKID (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 05:08:03 -0500
+Message-ID: <4F057673.8000807@broadcom.com> (sfid-20120105_110808_367464_6584F8F4)
+Date: Thu, 5 Jan 2012 11:07:47 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: ath6kl in compat wireless supports AP mode?
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: "Stephen Hemminger" <shemminger@vyatta.com>
+cc: "John W.Linville" <linville@tuxdriver.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"Pieter-Paul Giesberts" <pieterpg@broadcom.com>,
+	"Alwin Beukers" <alwin@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] brcm80211: make ethtool_ops const
+References: <20120104145251.5102b435@nehalam.linuxnetplumber.net>
+In-Reply-To: <20120104145251.5102b435@nehalam.linuxnetplumber.net>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Anybody know if the ath6kl driver in compat wireless supports AP mode?
+On 01/04/2012 11:52 PM, Stephen Hemminger wrote:
+> All usage of ethtool_ops should be const; also add comma at end
+> of initializer list.
+> 
+> Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+> ---
+> Patch against net-next
 
-hostapd hostapd.conf
-nl80211: Failed to set interface wlan0 into AP mode
-nl80211 driver initialization failed.
+Assuming net-next and wireless-next are in sync.
 
-hostapd.conf
-interface=wlan0
-driver=nl80211
-ssid=test
-channel=1
+Acked-by: Arend van Spriel <arend@broadcom.com>
 
-Using
-hostapd v0.7.3
-libnl-2.0
-
-Jon Bagg
+Gr. AvS
 
 
