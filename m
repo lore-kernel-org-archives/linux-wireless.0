@@ -1,71 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38706 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752327Ab2ATMxv (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:41477 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756196Ab2AEI1K convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 07:53:51 -0500
-Message-Id: <20120120125312.956655635@sipsolutions.net> (sfid-20120120_135355_867515_B3532489)
-Date: Fri, 20 Jan 2012 13:52:36 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
+	Thu, 5 Jan 2012 03:27:10 -0500
+Received: by vcbfk14 with SMTP id fk14so211287vcb.19
+        for <linux-wireless@vger.kernel.org>; Thu, 05 Jan 2012 00:27:09 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAHzJmyaXGpZO3TFaMwqKZaYwO4brtxWENoekvGSdo20UVdUVZg@mail.gmail.com>
+References: <CAHzJmyaXGpZO3TFaMwqKZaYwO4brtxWENoekvGSdo20UVdUVZg@mail.gmail.com>
+Date: Thu, 5 Jan 2012 13:57:09 +0530
+Message-ID: <CAD2nsn2zYWFG_N+tJohh9DwBHmaVJ6ZkyYgh8LAK81=Sws5e=g@mail.gmail.com> (sfid-20120105_092715_927048_50B6992A)
+Subject: Re: ath9k_htc.ko
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Linx Zhang <linx.zhang@gmail.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] mac80211: fix a few -Wshadow warnings
-References: <20120120125235.243434836@sipsolutions.net>
-Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thu, Jan 5, 2012 at 1:00 PM, Linx Zhang <linx.zhang@gmail.com> wrote:
+> All,
+>
+> Anyone knows how to setup Atheros USB wifi card(TP-LINK WN821N) as AP
+> mode on the linux (Ubuntu 11.10)? I have tested below commands, but
+> failed:
 
-It seems that -Wshadow is no longer default in
-sparse runs, but let's fix the warnings anyway.
+please use
+http://linuxwireless.org/en/users/Documentation/hostapd
+http://linuxwireless.org/en/users/Download/stable#compat-wireless_3.2_stable_releases
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c     |    3 ---
- net/mac80211/status.c |    6 +++---
- 2 files changed, 3 insertions(+), 6 deletions(-)
-
---- a/net/mac80211/rx.c	2012-01-20 13:50:03.000000000 +0100
-+++ b/net/mac80211/rx.c	2012-01-20 13:50:10.000000000 +0100
-@@ -2180,9 +2180,6 @@ ieee80211_rx_h_mgmt_check(struct ieee802
- 	if (rx->sdata->vif.type == NL80211_IFTYPE_AP &&
- 	    ieee80211_is_beacon(mgmt->frame_control) &&
- 	    !(rx->flags & IEEE80211_RX_BEACON_REPORTED)) {
--		struct ieee80211_rx_status *status;
--
--		status = IEEE80211_SKB_RXCB(rx->skb);
- 		cfg80211_report_obss_beacon(rx->local->hw.wiphy,
- 					    rx->skb->data, rx->skb->len,
- 					    status->freq, GFP_ATOMIC);
---- a/net/mac80211/status.c	2012-01-20 13:50:03.000000000 +0100
-+++ b/net/mac80211/status.c	2012-01-20 13:50:10.000000000 +0100
-@@ -350,7 +350,6 @@ void ieee80211_tx_status(struct ieee8021
- 	bool send_to_cooked;
- 	bool acked;
- 	struct ieee80211_bar *bar;
--	u16 tid;
- 	int rtap_len;
- 
- 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
-@@ -412,7 +411,7 @@ void ieee80211_tx_status(struct ieee8021
- 		}
- 
- 		if (!acked && ieee80211_is_back_req(fc)) {
--			u16 control;
-+			u16 tid, control;
- 
- 			/*
- 			 * BAR failed, store the last SSN and retry sending
-@@ -516,7 +515,8 @@ void ieee80211_tx_status(struct ieee8021
- 
- 		if (ieee80211_is_nullfunc(hdr->frame_control) ||
- 		    ieee80211_is_qos_nullfunc(hdr->frame_control)) {
--			bool acked = info->flags & IEEE80211_TX_STAT_ACK;
-+			acked = info->flags & IEEE80211_TX_STAT_ACK;
-+
- 			cfg80211_probe_status(skb->dev, hdr->addr1,
- 					      cookie, acked, GFP_ATOMIC);
- 		} else {
+>
+> mypromp#iwconfig
+> wlan0     IEEE 802.11bgn  ESSID:off/any
+>          Mode:Managed  Access Point: Not-Associated   Tx-Power=20 dBm
+>          Retry  long limit:7   RTS thr:off   Fragment thr:off
+>          Encryption key:off
+>          Power Management:off
+>
+> mypromp#/wlanconfig ath create wlandev wlan0 wlanmode ap
+> wlanconfig: ioctl: Operation not supported
+>
+> mypromp# lsmod
+> Module                  Size  Used by
+> ath9k_htc              51280  0
+> ath9k_common            1661  1 ath9k_htc
+> ath9k_hw              335589  2 ath9k_htc,ath9k_common
+> ath                    13592  3 ath9k_htc,ath9k_common,ath9k_hw
+> mac80211              224045  1 ath9k_htc
+> cfg80211              151788  3 ath9k_htc,ath,mac80211
+> compat                 15880  3 ath9k_htc,mac80211,cfg80211
+> rfkill                 14626  1 cfg80211
+>
+> mypromp# lsusb
+> Bus 001 Device 007: ID 0cf3:7015 Atheros Communications, Inc.
+>
+> Any comments or helps will be appreciated!
+>
+> Thanks.
+>
+> Morris
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
+
+-- 
+shafi
