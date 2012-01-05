@@ -1,27 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:25443 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754384Ab2AQPqj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 10:46:39 -0500
-Message-ID: <4F1597D9.1040909@qca.qualcomm.com> (sfid-20120117_164644_446770_1B1B911F)
-Date: Tue, 17 Jan 2012 17:46:33 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:53522 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754117Ab2AEKOW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 05:14:22 -0500
+Date: Thu, 5 Jan 2012 11:14:13 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Christoph Anton Mitterer <calestyo@scientia.net>
+Cc: Jonathan Nieder <jrnieder@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg Dietsche <Gregory.Dietsche@cuw.edu>,
+	linux-kernel@vger.kernel.org
+Subject: Re: iwl4965: "MAC is in deep sleep!" freezes
+Message-ID: <20120105101412.GB2103@redhat.com> (sfid-20120105_111439_814141_34D7904F)
+References: <265f56a4dc9f5d3edeca3d101e445353@imap.dd24.net>
+ <20110908084913.GB2195@redhat.com>
+ <1321228952.3362.15.camel@fermat.scientia.net>
+ <20111114014615.GC16508@elie.hsd1.il.comcast.net>
+ <1321466933.3364.16.camel@fermat.scientia.net>
+ <20111118074552.GB2203@redhat.com>
+ <1325171851.3907.33.camel@fermat.scientia.net>
+ <20111229201149.GB1674@elie.Belkin>
+ <20120103105107.GB3391@redhat.com>
+ <1325640148.3359.142.camel@fermat.scientia.net>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Alex Yang <xiaojuny@qca.qualcomm.com>
-Subject: Re: [PATCH] Add testmode 2 for 6003 ART.
-References: <1326807149-3809-1-git-send-email-kvalo@qca.qualcomm.com> <20120117145237.GE12733@tuxdriver.com>
-In-Reply-To: <20120117145237.GE12733@tuxdriver.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1325640148.3359.142.camel@fermat.scientia.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/17/2012 04:52 PM, John W. Linville wrote:
-> Please make sure to reference "ath6kl: " in your patch subject.
+On Wed, Jan 04, 2012 at 02:22:28AM +0100, Christoph Anton Mitterer wrote:
+> > Christoph, you mentioned that you replaced you 
+> > motherboard. Did the problem start to happen after that?
+> Yep,... the old board broke (and the system didn't bot anymore at
+> all)... it was replaced with a new one by the manufacturer... and
+> starting with that (with no software change on the disk in the meantime)
+> the wifi didn't work anymore (as described).
+Hmm, perhaps iwl4965 device does not work well with the new PCIe chipset.
 
-Good point, I missed that. If we don't need to send v2 I'll add the
-suffix when I commit the patch. Thanks.
+Does any of fallowing workaround the problem?
 
-Kalle
+kernel boot parameter:
+pcie_aspm=off
+pci_aspm=force
+pci=nocrs
+pci=use_crs
+
+iwlegacy module parameter:
+bt_coex_active=0
+
+iwl4965 module parameters
+11n_disable=1
+
+> > Did you
+> > correctly connect antennas cables to adapter.
+> yep... at first (when they sent it back to me) it was not connected at
+> all... I connected it... the problem persists in both states, connected
+> and unconnected.
+There should be 3 or 2 antennas: 1 - white, 3 - grey, 2 - black,
+connection on adapter should match cable color (ok, I don't know if
+it does any difference, but it worth to try). If there is only one
+antenna available, perhaps there is somewhere another miniPCIe slot
+where are more antenna cables available. But, if there is really
+only one antenna cable, it should be connected to number 1 (white)
+adapter connector.
+
+Stanislaw
+
