@@ -1,55 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:34211 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754807Ab2ADJlv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jan 2012 04:41:51 -0500
-Subject: [PATCH] ath6kl: force building as a module
-To: linville@tuxdriver.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Date: Wed, 04 Jan 2012 11:41:34 +0200
-Message-ID: <20120104094134.28754.39652.stgit@x201> (sfid-20120104_104155_420277_80A23692)
+Received: from cantor2.suse.de ([195.135.220.15]:38773 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932460Ab2AEOTP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 09:19:15 -0500
+Date: Thu, 5 Jan 2012 15:19:13 +0100
+From: Michal Hocko <mhocko@suse.cz>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: Re: iwl3945 didn't survive after s2ram failure
+Message-ID: <20120105141913.GA3937@tiehlicka.suse.cz> (sfid-20120105_151935_161244_A874E883)
+References: <20111227105340.GD5344@tiehlicka.suse.cz>
+ <20120103103457.GA3391@redhat.com>
+ <20120103130306.GA3891@tiehlicka.suse.cz>
+ <20120105110744.GA2222@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120105110744.GA2222@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stephen reported that ath6kl fails if both sdio and usb are built
-into the kernel:
+On Thu 05-01-12 12:07:45, Stanislaw Gruszka wrote:
+[...]
+> Only interesting thing we do while resume in the driver is:
+> pci_write_config_byte(pdev, PCI_CFG_RETRY_TIMEOUT, 0x00); 
+> we do the same during erly stage of .probe function too.
+> 
+> In the RH bugzilla case, it was regression. There are no iwlegacy
+> changes between mentioned kernel versions. There are some APCI and pci
+> changes. Can you try if any of these kernel boot parameters helps:
+> pcie_aspm=off
+> pcie_aspm=force
+> pci=nocsr
+> pci=use_csr
 
-ath6kl/cfg80211.c:27:1: error: expected ')' before 'KBUILD_MODNAME'
-ath6kl/cfg80211.c:27:1: error: 'KBUILD_MODNAME' undeclared here (not in a function)
-ath6kl/cfg80211.c:27:1: error: expected ',' or ';' before string constant
+OK, so I have tried to boot with pcie_aspm=off and the wireless
+resurrect. The I found out that I booted into 3.2 rather than 3.2-rc6 so
+I retested with the original kernel and guess what, yes it reported the
+same problem as before (with or without parameter). 
+So I have tried to retest with few kernels (3.2.0-rc5,
+3.2.0-rc6-00005-ga36bfdd, 3.2.0-rc7-00083-g115e8e7 and 3.2.0) that I
+still had on my machine and 3.2.0-rc6-00005-ga36bfdd seems to be the
+only affected one.
+There doesn't seem to be any obvious difference wrt. the driver in the
+logs (attached).
 
-As a temporary fix make ath6kl build only as a module. This will be reverted
-once a separate ath6kl core module is implemented which will fix this
-properly.
+Looking in the history it seems that 497f16f2 [pci: Fix hotplug of
+Express Module with pci bridges] might be related. It fixes an issue
+introduced by bbef98ab [PCI: defer enablement of SRIOV BARS] which is a
+part of my 3.2.0-rc6-00005-ga36bfdd problematic version. But I do not
+understand details of the patch so I cannot tell that for 100%.
+Yinghai Lu, is it possible that I the problem I have seen is somehow
+related? For reference the thread started at
+https://lkml.org/lkml/2011/12/27/65
 
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/Kconfig |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/Kconfig b/drivers/net/wireless/ath/ath6kl/Kconfig
-index d755a5e..d290ec7 100644
---- a/drivers/net/wireless/ath/ath6kl/Kconfig
-+++ b/drivers/net/wireless/ath/ath6kl/Kconfig
-@@ -6,6 +6,7 @@ config ATH6KL_SDIO
- 	depends on ATH6KL
- 	depends on MMC
- 	depends on CFG80211
-+	depends on m
- 	---help---
- 	  This module adds support for wireless adapters based on
- 	  Atheros AR6003 and AR6004 chipsets running over SDIO. If you
-@@ -19,6 +20,7 @@ config ATH6KL_USB
- 	depends on USB
- 	depends on CFG80211
- 	depends on EXPERIMENTAL
-+	depends on m
- 	---help---
- 	  This module adds support for wireless adapters based on
- 	  Atheros AR6004 chipset running over USB. This is still under
-
+Thanks
+-- 
+Michal Hocko
+SUSE Labs
+SUSE LINUX s.r.o.
+Lihovarska 1060/12
+190 00 Praha 9    
+Czech Republic
