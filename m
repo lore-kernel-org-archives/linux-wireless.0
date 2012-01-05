@@ -1,47 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:48700 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753521Ab2ACAei (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 19:34:38 -0500
-Date: Tue, 3 Jan 2012 00:35:08 +0000
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: Jack Stone <jwjstone@fastmail.fm>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Oliver Neukum <oliver@neukum.org>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
+Received: from perches-mx.perches.com ([206.117.179.246]:41260 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757855Ab2AEDlN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jan 2012 22:41:13 -0500
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
 	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-Message-ID: <20120103003508.726f5482@pyramind.ukuu.org.uk> (sfid-20120103_013455_068841_E8AFDEC2)
-In-Reply-To: <4F022214.8070906@fastmail.fm>
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
-	<4F02165C.1060400@fastmail.fm>
-	<CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
-	<4F0219AB.6010505@fastmail.fm>
-	<CA+55aFx=AEG7X2Y-LoHchgPdwNpeSkBG1J7eXprmO=czEJOD2A@mail.gmail.com>
-	<4F021CF4.9050205@fastmail.fm>
-	<CA+55aFx2NMDSY8rmsToU-zxe+bR-gzsxc8HajNWNWfykVJqd9w@mail.gmail.com>
-	<4F022214.8070906@fastmail.fm>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 0/7] rtlwifi: debug macros and uses neatening
+Date: Wed,  4 Jan 2012 19:40:38 -0800
+Message-Id: <cover.1325734202.git.joe@perches.com> (sfid-20120105_044206_628698_B52FA02F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> To make the firmware caching easier I would propose one extra function
-> in addition to the aforemensioned get_firmware / put_firmware - a
-> find_firmware function to search the cache and return the appropriate
-> firmware blob. 
+Shrinks the objects a fair bit too.
 
-If the caller has a recount they have a pointer. If the caller can't work
-out how to assign a 32bit value to a field in a struct please get them to
-work on something less important than kernel code.
+Joe Perches (7):
+  rtlwifi: Neaten RT_ASSERT, RT_TRACE, RTPRINT, RT_PRINT_DATA macros
+  rtlwifi: Standardize RT_PRINT_DATA macro and uses
+  rtlwifi: Convert RT_TRACE macro to use ##__VA_ARGS__
+  rtlwifi: Convert RTPRINT macro to use ##__VA_ARGS__
+  rtlwifi: Convert RT_ASSERT macro to use ##__VA_ARGS__
+  rtlwifi: Remove duplicate __func__
+  rtlwifi: Optimize RT_TRACE macro use of KBUILD_MODNAME for size
 
-Alan
+ drivers/net/wireless/rtlwifi/base.c                |   56 +-
+ drivers/net/wireless/rtlwifi/cam.c                 |   81 ++--
+ drivers/net/wireless/rtlwifi/core.c                |  124 ++--
+ drivers/net/wireless/rtlwifi/debug.h               |   85 ++--
+ drivers/net/wireless/rtlwifi/efuse.c               |   61 +-
+ drivers/net/wireless/rtlwifi/pci.c                 |  211 +++----
+ drivers/net/wireless/rtlwifi/ps.c                  |   31 +-
+ drivers/net/wireless/rtlwifi/rc.c                  |    2 +-
+ drivers/net/wireless/rtlwifi/regd.c                |   12 +-
+ drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c  |  189 +++---
+ drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c  |   84 ++--
+ drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |  211 +++---
+ drivers/net/wireless/rtlwifi/rtl8192ce/dm.c        |   24 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |  262 ++++----
+ drivers/net/wireless/rtlwifi/rtl8192ce/led.c       |   16 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/phy.c       |  108 ++--
+ drivers/net/wireless/rtlwifi/rtl8192ce/rf.c        |   83 ++--
+ drivers/net/wireless/rtlwifi/rtl8192ce/sw.c        |    8 +-
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |   23 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/dm.c        |   24 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/hw.c        |  257 ++++----
+ drivers/net/wireless/rtlwifi/rtl8192cu/led.c       |   15 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.c       |  105 ++--
+ drivers/net/wireless/rtlwifi/rtl8192cu/phy.c       |  121 ++--
+ drivers/net/wireless/rtlwifi/rtl8192cu/rf.c        |   71 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/sw.c        |    6 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c       |   42 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c        |  239 +++----
+ drivers/net/wireless/rtlwifi/rtl8192de/fw.c        |  117 ++--
+ drivers/net/wireless/rtlwifi/rtl8192de/hw.c        |  188 +++---
+ drivers/net/wireless/rtlwifi/rtl8192de/led.c       |   14 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/phy.c       |  682 ++++++++++----------
+ drivers/net/wireless/rtlwifi/rtl8192de/rf.c        |   95 ++--
+ drivers/net/wireless/rtlwifi/rtl8192de/sw.c        |    8 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.c       |   26 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/dm.c        |   30 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/fw.c        |   66 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/hw.c        |  244 ++++----
+ drivers/net/wireless/rtlwifi/rtl8192se/led.c       |   15 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/phy.c       |  204 +++---
+ drivers/net/wireless/rtlwifi/rtl8192se/rf.c        |   60 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c        |    8 +-
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c       |   18 +-
+ drivers/net/wireless/rtlwifi/usb.c                 |   39 +-
+ 44 files changed, 2084 insertions(+), 2281 deletions(-)
+
+-- 
+1.7.8.111.gad25c.dirty
+
