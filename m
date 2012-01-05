@@ -1,54 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:10512 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755005Ab2AIBhm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jan 2012 20:37:42 -0500
-Subject: Re: [PATCH RFC] iwlwifi: add basic runtime PM support
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: "Yan, Zheng" <zheng.z.yan@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, ilw@linux.intel.com,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <4F0A3C62.6010403@intel.com>
-References: <4F065F59.2070107@intel.com>
-	 <1325843269.3330.4.camel@jlt3.sipsolutions.net>
-	 <4F0A3C62.6010403@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 08 Jan 2012 16:34:11 -0800
-Message-ID: <1326069251.13074.360.camel@wwguy-huron> (sfid-20120109_023751_014283_49868169)
-Mime-Version: 1.0
+Received: from sfca-50.vyatta.com ([76.74.103.50]:38169 "EHLO fiji.vyatta.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1753680Ab2AEStf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 13:49:35 -0500
+Message-Id: <20120105184000.346920961@vyatta.com> (sfid-20120105_194940_576115_1C1CAD51)
+Date: Thu, 05 Jan 2012 10:39:48 -0800
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/3] ath6kl: make net_device_ops const
+References: <20120105183947.295358582@vyatta.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-01-09 at 09:01 +0800, Yan, Zheng wrote:
-> On 01/06/2012 05:47 PM, Johannes Berg wrote:
-> > [add linux-wireless]
-> > 
-> > On Fri, 2012-01-06 at 10:41 +0800, Yan, Zheng wrote:
-> >> This simple patch adds open/close based runtime PM support to the iwlwifi driver.
-> >> Namely, make the driver suspend the device after shutting down the interface and
-> >> resume the device when activating the interface. In my test, suspending the device
-> >> can save about 0.4 watt power. The shortcoming is that the device no longer generate
-> >> rfkill changes interrupt.
-> > 
-> > NACK due to that last sentence. There's no way we can live with that in
-> > the general case -- and your patch isn't even configurable afaict. And
-> > I'm sure polling the rfkill flag would use just as much energy.
-> > 
-> It's configurable, runtime PM is disabled by default.
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
-Somehow I miss it, how you configure it?
-
-> 
-> > There might be some value in this in a system that doesn't have a hard
-> > rfkill line, but that means this needs to be configurable since the
-> > device can't know whether there's a button or not [1].
-> > 
-> The patch targets system that only use software rfkill
-
-How you control that?
-
-Wey
-> 
+--- a/drivers/net/wireless/ath/ath6kl/main.c	2012-01-05 09:50:35.716589669 -0800
++++ b/drivers/net/wireless/ath/ath6kl/main.c	2012-01-05 09:52:58.906118317 -0800
+@@ -1456,7 +1456,7 @@ static struct net_device_stats *ath6kl_g
+ 	return &ar->net_stats;
+ }
+ 
+-static struct net_device_ops ath6kl_netdev_ops = {
++static const struct net_device_ops ath6kl_netdev_ops = {
+ 	.ndo_open               = ath6kl_open,
+ 	.ndo_stop               = ath6kl_close,
+ 	.ndo_start_xmit         = ath6kl_data_tx,
 
 
