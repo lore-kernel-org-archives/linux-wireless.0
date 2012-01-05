@@ -1,47 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:57514 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751255Ab2AQJnK convert rfc822-to-8bit (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:52507 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932235Ab2AEToU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 04:43:10 -0500
-From: "Elias, Ilan" <ilane@ti.com>
-To: Samuel Ortiz <samuel@sortiz.org>
-CC: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
-	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] NFC: Increase NCI deactivate timeout
-Date: Tue, 17 Jan 2012 09:42:56 +0000
-Message-ID: <B30D1FD582D6484ABF57420512E580350F5E0D88@DNCE03.ent.ti.com> (sfid-20120117_104314_848673_F44647F4)
-References: <1326022982-30205-1-git-send-email-ilane@ti.com>
- <1326745622.22824.12.camel@sortiz-mobl>
-In-Reply-To: <1326745622.22824.12.camel@sortiz-mobl>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 5 Jan 2012 14:44:20 -0500
 MIME-Version: 1.0
+In-Reply-To: <20120105141913.GA3937@tiehlicka.suse.cz>
+References: <20111227105340.GD5344@tiehlicka.suse.cz>
+	<20120103103457.GA3391@redhat.com>
+	<20120103130306.GA3891@tiehlicka.suse.cz>
+	<20120105110744.GA2222@redhat.com>
+	<20120105141913.GA3937@tiehlicka.suse.cz>
+Date: Thu, 5 Jan 2012 11:44:17 -0800
+Message-ID: <CAE9FiQVi_TN29mUtvHG6ZqWRCkyE6H5eG5z350uXrub=zUmYgA@mail.gmail.com> (sfid-20120105_204436_146323_2325F31F)
+Subject: Re: iwl3945 didn't survive after s2ram failure
+From: Yinghai Lu <yinghai@kernel.org>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- Hi Samuel,
+On Thu, Jan 5, 2012 at 6:19 AM, Michal Hocko <mhocko@suse.cz> wrote:
 
-> > Increase NCI deactivate timeout from 5 sec to 30 sec.
-> > NCI deactivate procedure might take a long time,
-> > depending on the local and remote parameters.
-> 30 seconds sounds like a huge delay for receiving a reply to 
-> such command.
-> Would you care explaining how we can get that long of a timeout ?
-The controller in the Reader side uses a value called nRETRY (see NFC Forum Digital spec).
-This value is an internal implementation, valid range is 2 to 5.
-This value determines the number of re-transmissions.
+>
+> Looking in the history it seems that 497f16f2 [pci: Fix hotplug of
+> Express Module with pci bridges] might be related. It fixes an issue
+> introduced by bbef98ab [PCI: defer enablement of SRIOV BARS] which is a
+> part of my 3.2.0-rc6-00005-ga36bfdd problematic version. But I do not
+> understand details of the patch so I cannot tell that for 100%.
+> Yinghai Lu, is it possible that I the problem I have seen is somehow
+> related? For reference the thread started at
+> https://lkml.org/lkml/2011/12/27/65
 
-The controller in the Tag side uses a value called FWI - Frame Waiting time Integer (see NFC Forum Digital spec).
-This value is an internal implementation, valid range is 1 to 14.
-This value determines (via some formula) the FWT - Frame Waiting Time, which is a timout.
-Max FWT value can be almost 5sec.
+you have one bridge that BIOS does not assign resource to it.
+so kernel will allocate resource to it.
 
-So, the total max timeout can be 5sec for the first packet + 5sec for each of the 5 re-transmissions = 5 + 5x5 = 30 sec.
+[    0.331694] pci 0000:00:1c.2: BAR 8: assigned [mem 0x80100000-0x803fffff]
+[    0.331825] pci 0000:00:1c.2: BAR 9: assigned [mem
+0x80400000-0x805fffff 64bit pref]
+[    0.332041] pci 0000:00:1c.2: BAR 7: assigned [io  0x4000-0x4fff]
+[    0.334271] pci 0000:05:00.0: BAR 0: assigned [mem 0x80100000-0x80100fff]
+[    0.334455] pci 0000:05:00.0: BAR 0: set to [mem
+0x80100000-0x80100fff] (PCI address [0x80100000-0x80100fff])
+[    0.334666] pci 0000:00:1c.2: PCI bridge to [bus 05-05]
+[    0.334794] pci 0000:00:1c.2:   bridge window [io  0x4000-0x4fff]
+[    0.334926] pci 0000:00:1c.2:   bridge window [mem 0x80100000-0x803fffff]
+[    0.335058] pci 0000:00:1c.2:   bridge window [mem
+0x80400000-0x805fffff 64bit pref]
 
-> Cheers,
-> Samuel.
+yes, the commit fix the problem.
 
-Thanks & BR,
-Ilan
+in the commit log i already said:
+
+|    That should fix regression like BIOS does not assign correct resource to
+|    bridge.
+
+
+Thanks
+
+Yinghai Lu
