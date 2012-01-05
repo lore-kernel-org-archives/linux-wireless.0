@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:51152 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932247Ab2AEDmw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jan 2012 22:42:52 -0500
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-kernel@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 6/7] rtlwifi: Remove duplicate __func__
-Date: Wed,  4 Jan 2012 19:40:44 -0800
-Message-Id: <423eb9a5e773ff865997dbef580c3b741dc45a8a.1325734203.git.joe@perches.com> (sfid-20120105_044328_467115_C53C8511)
-In-Reply-To: <cover.1325734202.git.joe@perches.com>
-References: <cover.1325734202.git.joe@perches.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.123]:51089 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754126Ab2AECut (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 Jan 2012 21:50:49 -0500
+Date: Wed, 04 Jan 2012 20:50:47 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
+Subject: [PATCH] rtl8192se: Fix BUG caused by failure to check skb
+ allocation
+Message-ID: <4f051007.f9kZR+Kc8uuRLpnd%Larry.Finger@lwfinger.net> (sfid-20120105_035053_079670_6080C1B5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The RT_TRACE macro already prepends it.
+When downloading firmware into the device, the driver fails to check the
+return when allocating an skb. When the allocation fails, a BUG can be
+generated, as seen in https://bugzilla.redhat.com/show_bug.cgi?id=771656.
 
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
 ---
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-index aca0fd5..7d5f799 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/trx.c
-@@ -620,7 +620,7 @@ void rtl92cu_tx_fill_desc(struct ieee80211_hw *hw,
- 		SET_TX_DESC_BMC(txdesc, 1);
- 	_rtl_fill_usb_tx_desc(txdesc);
- 	_rtl_tx_desc_checksum(txdesc);
--	RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE, " %s ==>\n", __func__);
-+	RT_TRACE(rtlpriv, COMP_SEND, DBG_TRACE, "==>\n");
- }
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/fw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/fw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/fw.c
+@@ -196,6 +196,8 @@ static bool _rtl92s_firmware_downloadcod
+ 		/* Allocate skb buffer to contain firmware */
+ 		/* info and tx descriptor info. */
+ 		skb = dev_alloc_skb(frag_length);
++		if (!skb)
++			return false;
+ 		skb_reserve(skb, extra_descoffset);
+ 		seg_ptr = (u8 *)skb_put(skb, (u32)(frag_length -
+ 					extra_descoffset));
+@@ -573,6 +575,8 @@ static bool _rtl92s_firmware_set_h2c_cmd
  
- void rtl92cu_fill_fake_txdesc(struct ieee80211_hw *hw, u8 * pDesc,
--- 
-1.7.8.111.gad25c.dirty
-
+ 	len = _rtl92s_get_h2c_cmdlen(MAX_TRANSMIT_BUFFER_SIZE, 1, &cmd_len);
+ 	skb = dev_alloc_skb(len);
++	if (!skb)
++		return false;
+ 	cb_desc = (struct rtl_tcb_desc *)(skb->cb);
+ 	cb_desc->queue_index = TXCMD_QUEUE;
+ 	cb_desc->cmd_or_init = DESC_PACKET_TYPE_NORMAL;
