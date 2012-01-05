@@ -1,39 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:48945 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751932Ab2AaJk6 convert rfc822-to-8bit (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:61843 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751615Ab2AETCs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 04:40:58 -0500
-Received: by iacb35 with SMTP id b35so617183iac.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 01:40:57 -0800 (PST)
+	Thu, 5 Jan 2012 14:02:48 -0500
 MIME-Version: 1.0
-In-Reply-To: <1327953181.3626.107.camel@cumari>
-References: <1327924857-1250-1-git-send-email-eliad@wizery.com>
-	<1327924857-1250-2-git-send-email-eliad@wizery.com>
-	<1327953181.3626.107.camel@cumari>
-Date: Tue, 31 Jan 2012 11:40:57 +0200
-Message-ID: <CAB3XZEd=76pbZ8pX8+7Xn6NzfKpVN5nYTf+JrJgeNJz1nizfFA@mail.gmail.com> (sfid-20120131_104103_304667_6DCB7B2E)
-Subject: Re: [PATCH 01/12] wl12xx: fw api change - add role_id to set_template
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAOMZO5AuZ_MHW3C1uNK7PyRz=XRHXhn2pvKCwk7iXLDd0YkDOQ@mail.gmail.com>
+References: <1325770673-17309-1-git-send-email-festevam@gmail.com>
+	<4F05CBA9.1070602@lwfinger.net>
+	<20120105.122004.1170447281304011158.davem@davemloft.net>
+	<CAOMZO5AuZ_MHW3C1uNK7PyRz=XRHXhn2pvKCwk7iXLDd0YkDOQ@mail.gmail.com>
+Date: Thu, 5 Jan 2012 17:02:46 -0200
+Message-ID: <CAOMZO5DTDpp8+9FOjPXGFQtQPg7Pv5qfAwFO3UC6AUdEDgpHYg@mail.gmail.com> (sfid-20120105_200257_591581_B030627A)
+Subject: Re: [PATCH v2] drivers: net: Fix dependency for EEPROM_93CX6
+From: Fabio Estevam <festevam@gmail.com>
+To: David Miller <davem@davemloft.net>
+Cc: Larry.Finger@lwfinger.net, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, gwingerde@gmail.com,
+	linville@tuxdriver.com, fabio.estevam@freescale.com,
+	bhutchings@solarflare.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 30, 2012 at 9:53 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Mon, 2012-01-30 at 14:00 +0200, Eliad Peller wrote:
->> @@ -191,7 +193,7 @@ enum cmd_templ {
->>  /* unit ms */
->>  #define WL1271_COMMAND_TIMEOUT     2000
->>  #define WL1271_CMD_TEMPL_DFLT_SIZE 252
->> -#define WL1271_CMD_TEMPL_MAX_SIZE  548
->> +#define WL1271_CMD_TEMPL_MAX_SIZE  512
->> #define WL1271_EVENT_TIMEOUT       750
->
-> Is this change here on purpose? Is it really related to the FW API
-> change?
->
-yes. this const determines the size of the wl1271_cmd_template_set struct.
+On Thu, Jan 5, 2012 at 4:06 PM, Fabio Estevam <festevam@gmail.com> wrote:
 
-Eliad.
+> I have tried selecting MISC_DEVICES in the Kconfig's, but the warning remains.
+>
+> I agree with Ben's comment: "That seems like a bug, since MISC_DEVICES
+> doesn't by itself select any
+> code. Â (It's also not a meaningful category and maybe ought not to be an
+> option at all.)"
+
+What about the aproach below?
+
+drivers/misc/Kconfig |   12 ++----------
+ 1 files changed, 2 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+index 6a1a092..9c7a474 100644
+--- a/drivers/misc/Kconfig
++++ b/drivers/misc/Kconfig
+@@ -10,15 +10,8 @@ config SENSORS_LIS3LV02D
+ 	select INPUT_POLLDEV
+ 	default n
+
+-menuconfig MISC_DEVICES
+-	bool "Misc devices"
+-	---help---
+-	  Say Y here to get to see options for device drivers from various
+-	  different categories. This option alone does not add any kernel code.
+-
+-	  If you say N, all options in this submenu will be skipped and disabled.
++menu "Misc devices"
+
+-if MISC_DEVICES
+
+ config AD525X_DPOT
+ 	tristate "Analog Devices Digital Potentiometers"
+@@ -516,5 +509,4 @@ source "drivers/misc/ti-st/Kconfig"
+ source "drivers/misc/lis3lv02d/Kconfig"
+ source "drivers/misc/carma/Kconfig"
+ source "drivers/misc/altera-stapl/Kconfig"
+-
+-endif # MISC_DEVICES
++endmenu
+-- 
+
+This would remove the unneeded dependency of MISC_DEVICES.
+
+I know I need to take extra care not to break other things, but just
+would like to get a feedback if this approach goes into the right
+direction.
+
+Thanks,
+
+Fabio Estevam
