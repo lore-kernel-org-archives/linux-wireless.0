@@ -1,52 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34782 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757038Ab2ASRoD (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38230 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758247Ab2AET6R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jan 2012 12:44:03 -0500
-Subject: Re: [RFC] rtlwifi: Convert to asynchronous firmware load
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>, kay.sievers@vrfy.org,
-	torvalds@linux-foundation.org, linux-wireless@vger.kernel.org
-In-Reply-To: <4f18547e.Wk+PvRcReqCTbnIk%Larry.Finger@lwfinger.net> (sfid-20120119_183607_855723_7E85CDF5)
-References: <4f18547e.Wk+PvRcReqCTbnIk%Larry.Finger@lwfinger.net>
-	 (sfid-20120119_183607_855723_7E85CDF5)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 19 Jan 2012 18:43:50 +0100
-Message-ID: <1326995030.3631.7.camel@jlt3.sipsolutions.net> (sfid-20120119_184412_339487_A777471E)
-Mime-Version: 1.0
+	Thu, 5 Jan 2012 14:58:17 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCH 2/2] iw: remove ifdefs for mcs mask
+Date: Thu,  5 Jan 2012 20:58:10 +0100
+Message-Id: <1325793490-21501-5-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20120105_205825_838394_55647120)
+In-Reply-To: <1325793490-21501-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1325793490-21501-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-01-19 at 11:35 -0600, Larry Finger wrote:
+These are enums, not defines. Therefore the ifdef check can never be
+true.
 
-> This patch converts all rtlwifi-based drivers to use the asynchronous firmware
-> loading mechanism. A completion queue entry is inititialized and the firmware
-> load is started with the device initialization. The firmware-loaded callback routine
-> issues a complete() call. The routine that uploads firmware to the device calls
-> wait_for_completion_interruptible_timeout() with a 5 sec timeout.
-> 
-> The current patch is working, but as this is my first usage of the completion
-> mechanism, I would like an expert to look it over. In particular, is it
-> sufficient and prudent to issue a complete() call when the driver is unloaded
-> so as to not leave a queue entry when the underlying struct is destroyed?
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+---
+ bitrate.c |   20 ++------------------
+ 1 files changed, 2 insertions(+), 18 deletions(-)
 
-I don't think this makes a lot of sense. You're already registering with
-mac80211, and then you wait inside start -- but that would be holding
-the RTNL etc.
-
-The way we do this in iwlwifi (and some others) makes more sense I
-think: we only register with mac80211 after we actually load firmware,
-i.e. in your rtl_fw_cb() you'd continue with ieee80211_register_hw() etc
-instead of doing it in pci_probe(). If you never get firmware, you
-obviously don't do that -- you unbind instead by calling
-device_release_driver().
-
-Doing that not only saves you the complexity of the completion but also
-the potential deadlock (until timeout) when the tool that uploads the
-firmware needs to acquire the rtnl for some reason and ifup is waiting
-for the firmware.
-
-johannes
+diff --git a/bitrate.c b/bitrate.c
+index cefd150..22b863e 100644
+--- a/bitrate.c
++++ b/bitrate.c
+@@ -17,12 +17,10 @@ static int handle_bitrates(struct nl80211_state *state,
+ 	uint8_t *legacy = NULL;
+ 	int *n_legacy = NULL;
+ 	bool have_mcs_24 = false, have_mcs_5 = false;
+-#ifdef NL80211_TXRATE_MCS
+ 	uint8_t mcs_24[77], mcs_5[77];
+ 	int n_mcs_24 = 0, n_mcs_5 = 0;
+ 	uint8_t *mcs = NULL;
+ 	int *n_mcs = NULL;
+-#endif
+ 	enum {
+ 		S_NONE,
+ 		S_LEGACY,
+@@ -32,9 +30,7 @@ static int handle_bitrates(struct nl80211_state *state,
+ 	for (i = 0; i < argc; i++) {
+ 		char *end;
+ 		double tmpd;
+-#ifdef NL80211_TXRATE_MCS
+ 		long tmpl;
+-#endif
+ 
+ 		if (strcmp(argv[i], "legacy-2.4") == 0) {
+ 			if (have_legacy_24)
+@@ -51,7 +47,6 @@ static int handle_bitrates(struct nl80211_state *state,
+ 			n_legacy = &n_legacy_5;
+ 			have_legacy_5 = true;
+ 		}
+-#ifdef NL80211_TXRATE_MCS
+ 		else if (strcmp(argv[i], "mcs-2.4") == 0) {
+ 			if (have_mcs_24)
+ 				return 1;
+@@ -67,7 +62,6 @@ static int handle_bitrates(struct nl80211_state *state,
+ 			n_mcs = &n_mcs_5;
+ 			have_mcs_5 = true;
+ 		}
+-#endif
+ 		else switch (parser_state) {
+ 		case S_LEGACY:
+ 			tmpd = strtod(argv[i], &end);
+@@ -78,7 +72,6 @@ static int handle_bitrates(struct nl80211_state *state,
+ 			legacy[(*n_legacy)++] = tmpd * 2;
+ 			break;
+ 		case S_MCS:
+-#ifdef NL80211_TXRATE_MCS
+ 			tmpl = strtol(argv[i], &end, 0);
+ 			if (*end != '\0')
+ 				return 1;
+@@ -86,7 +79,6 @@ static int handle_bitrates(struct nl80211_state *state,
+ 				return 1;
+ 			mcs[(*n_mcs)++] = tmpl;
+ 			break;
+-#endif
+ 		default:
+ 			return 1;
+ 		}
+@@ -102,10 +94,8 @@ static int handle_bitrates(struct nl80211_state *state,
+ 			goto nla_put_failure;
+ 		if (have_legacy_24)
+ 			nla_put(msg, NL80211_TXRATE_LEGACY, n_legacy_24, legacy_24);
+-#ifdef NL80211_TXRATE_MCS
+ 		if (have_mcs_24)
+ 			nla_put(msg, NL80211_TXRATE_MCS, n_mcs_24, mcs_24);
+-#endif
+ 		nla_nest_end(msg, nl_band);
+ 	}
+ 
+@@ -115,10 +105,8 @@ static int handle_bitrates(struct nl80211_state *state,
+ 			goto nla_put_failure;
+ 		if (have_legacy_5)
+ 			nla_put(msg, NL80211_TXRATE_LEGACY, n_legacy_5, legacy_5);
+-#ifdef NL80211_TXRATE_MCS
+ 		if (have_mcs_5)
+ 			nla_put(msg, NL80211_TXRATE_MCS, n_mcs_5, mcs_5);
+-#endif
+ 		nla_nest_end(msg, nl_band);
+ 	}
+ 
+@@ -130,13 +118,9 @@ static int handle_bitrates(struct nl80211_state *state,
+ }
+ 
+ #define DESCR_LEGACY "[legacy-<2.4|5> <legacy rate in Mbps>*]"
+-#ifdef NL80211_TXRATE_MCS
+ #define DESCR DESCR_LEGACY " [mcs-<2.4|5> <MCS index>*]"
+-#else
+-#define DESCR DESCR_LEGACY
+-#endif
+ 
+-COMMAND(set, bitrates, DESCR, NL80211_CMD_SET_TX_BITRATE_MASK, 0, CIB_NETDEV,
+-	handle_bitrates,
++COMMAND(set, bitrates, "[legacy-<2.4|5> <legacy rate in Mbps>*] [mcs-<2.4|5> <MCS index>*]",
++	NL80211_CMD_SET_TX_BITRATE_MASK, 0, CIB_NETDEV, handle_bitrates,
+ 	"Sets up the specified rate masks.\n"
+ 	"Not passing any arguments would clear the existing mask (if any).");
+-- 
+1.7.7.3
 
