@@ -1,42 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-87-79-73-36.netcologne.de ([87.79.73.36]:38835 "EHLO
-	kjanke.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751871Ab2AUIAO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jan 2012 03:00:14 -0500
-Received: from [192.168.27.121] (unknown [192.168.27.121])
-	by kjanke.com (Postfix) with ESMTPS id 6B65929E2
-	for <linux-wireless@vger.kernel.org>; Sat, 21 Jan 2012 07:40:06 +0100 (CET)
-Message-ID: <4F1A6F08.5040108@kjanke.com> (sfid-20120121_090019_139815_D0F8A48E)
-Date: Sat, 21 Jan 2012 08:53:44 +0100
-From: Kristoffer Janke <privat@kjanke.com>
+Received: from mx1.redhat.com ([209.132.183.28]:1027 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755401Ab2AELIG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 06:08:06 -0500
+Date: Thu, 5 Jan 2012 12:07:45 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 didn't survive after s2ram failure
+Message-ID: <20120105110744.GA2222@redhat.com> (sfid-20120105_120821_622031_EADB61F1)
+References: <20111227105340.GD5344@tiehlicka.suse.cz>
+ <20120103103457.GA3391@redhat.com>
+ <20120103130306.GA3891@tiehlicka.suse.cz>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: p54usb (LM87) not correctly working with usb1
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: multipart/mixed; boundary="RnlQjJ0d97Da+TV1"
+In-Reply-To: <20120103130306.GA3891@tiehlicka.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-i have an older server that only has usb 1.1 ports and attached a 
-"Siemens Gigaset USB Adapter 54 V2" (chip: ISL3887, vid/pid: 
-0x083a/0x4521), with the firmware 
-http://daemonizer.de/prism54/prism54-fw/fw-usb/2.13.25.0.lm87.arm the 
-device comes up and everything looks fine.
 
-the only problem is, that hostapd does not work correctly, no wlan 
-client can connect (but the device is in their list).
-because i read somewhere that usb1.1 together with this device is not 
-working correctly with hostapd, i tried it on a different machine, 
-routed the device through virtual box usb driver and there it was 
-working perfect; to check that its really a usb1.1 problem, i disabled 
-the usb2.0 controllers and retried on that same machine -> not working, 
-same behaviour as on the older server; i tested it again with usb 2.0 -> 
-worked, 1.1 -> non working, 2.0 -> working.
+--RnlQjJ0d97Da+TV1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-so it looks like there is something bahving wrong if the device is 
-connected to an usb 1.0/1.1 port.
+On Tue, Jan 03, 2012 at 02:03:06PM +0100, Michal Hocko wrote:
+> [ 5622.739466] ieee80211 phy0: U iwl_legacy_apm_init Init card's basic functions
+> [ 5622.740021] iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
+[snip]
+> Yes and no change. I even tried to disable wireless in BIOS boot and
+> then enable it again. No change...
+> It seems somebody already had the same problem
+> https://bugzilla.redhat.com/show_bug.cgi?id=639184. My BIOS doesn't
+> provide any locator setting, unfortunatelly.
+> 
+> The message above says that the HW is still in a deep sleep state. Can
+> we somehow force waking it up?
 
-im willing to debug this stuff if i get some pointers...
+The message is a bit confusing, it happen when on device processor does
+not clear bit it suppose to. It can be in some sleep state, reset state
+or powered off. But this message could be triggered when there is PCIe
+connection problem, since we can not read properly register value, what
+seems to be issue here as value is 0xFFFFFFFF.
 
-regards,
-Kristoffer Janke
+> Or, can we just ignore the signature check and (maybe) fix it by another
+> suspend/resume cycle?
+
+Only interesting thing we do while resume in the driver is:
+pci_write_config_byte(pdev, PCI_CFG_RETRY_TIMEOUT, 0x00); 
+we do the same during erly stage of .probe function too.
+
+In the RH bugzilla case, it was regression. There are no iwlegacy
+changes between mentioned kernel versions. There are some APCI and pci
+changes. Can you try if any of these kernel boot parameters helps:
+pcie_aspm=off
+pcie_aspm=force
+pci=nocsr
+pci=use_csr
+
+More than that, I'm attaching a patch, there is very small chance
+it will help.
+
+Stanislaw
+
+--RnlQjJ0d97Da+TV1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="iwl3945.patch"
+
+diff --git a/drivers/net/wireless/iwlegacy/iwl3945-base.c b/drivers/net/wireless/iwlegacy/iwl3945-base.c
+index b282d86..94934eb 100644
+--- a/drivers/net/wireless/iwlegacy/iwl3945-base.c
++++ b/drivers/net/wireless/iwlegacy/iwl3945-base.c
+@@ -3700,8 +3700,8 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	/***************************
+ 	 * 2. Initializing PCI bus
+ 	 * *************************/
+-	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1 |
+-				PCIE_LINK_STATE_CLKPM);
++	//pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1 |
++	//			PCIE_LINK_STATE_CLKPM);
+ 
+ 	if (pci_enable_device(pdev)) {
+ 		err = -ENODEV;
+@@ -3751,7 +3751,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
+ 	 * strange state ... like being left stranded by a primary kernel
+ 	 * and this is now the kdump kernel trying to start up
+ 	 */
+-	iwl_write32(priv, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
++	//iwl_write32(priv, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
+ 
+ 	/***********************
+ 	 * 4. Read EEPROM
+
+--RnlQjJ0d97Da+TV1--
