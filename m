@@ -1,211 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47053 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756838Ab2AXOwr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 09:52:47 -0500
-Date: Tue, 24 Jan 2012 15:52:47 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: 3.3.0-rc1 kernel becomes unresponsive
-Message-ID: <20120124145246.GB5217@redhat.com> (sfid-20120124_155304_763297_38C15C5C)
-References: <4F1E8931.8070605@broadcom.com>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="82I3+IH0IqGh5yIs"
-In-Reply-To: <4F1E8931.8070605@broadcom.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:44676 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932654Ab2AEPdl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 10:33:41 -0500
+Message-Id: <20120105153229.027613982@sipsolutions.net> (sfid-20120105_163345_607465_D746BD55)
+Date: Thu, 05 Jan 2012 16:30:49 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 6/8] mac80211: implement sta_add/sta_remove in sta_state
+References: <20120105153043.568616380@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
---82I3+IH0IqGh5yIs
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Instead of maintaining separate sta_add/sta_remove
+callsites, implement it in sta_state when the driver
+has no sta_state implementation.
 
-On Tue, Jan 24, 2012 at 11:34:25AM +0100, Arend van Spriel wrote:
-> I moved my development work to 3.3.0-rc1 from wireless-testing
-> repository. After loading the brcmfmac driver (12 sec.) I suddenly see
-> the BUG message 'scheduling while atomic' and it fills up the entire log
-> with the machine becoming totally unresponsive.
-> 
-> Any suggestions on where to start looking. What type of problems could
-> cause this?
+The only behavioural change this should cause is in
+secure mesh mode: with this the station entries will
+only be created after the stations are set to AUTH.
+Given which drivers support mesh, this seems to not
+be a problem.
 
-There are various debug config options which allow to narrow such problems
-down. CONFIG_LOCKDEP seems to be most useful, but there are other quite
-helpful too. Try to add options from attached file to your .config (do not
-forgot to "make oldconfig" and check if these options ware not wiped out),
-and after recompile see if kernel will print some more valuable messages.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/driver-ops.h |   11 ++++++++++-
+ net/mac80211/pm.c         |    2 --
+ net/mac80211/sta_info.c   |   23 +++++++++--------------
+ net/mac80211/util.c       |    2 --
+ 4 files changed, 19 insertions(+), 19 deletions(-)
 
-Stanislaw
-
---82I3+IH0IqGh5yIs
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="debug.config"
-
-#
-# Kernel hacking
-#
-CONFIG_TRACE_IRQFLAGS_SUPPORT=y
-CONFIG_PRINTK_TIME=y
-CONFIG_DEFAULT_MESSAGE_LOGLEVEL=4
-# CONFIG_ENABLE_WARN_DEPRECATED is not set
-CONFIG_ENABLE_MUST_CHECK=y
-CONFIG_FRAME_WARN=1024
-CONFIG_MAGIC_SYSRQ=y
-CONFIG_STRIP_ASM_SYMS=y
-# CONFIG_UNUSED_SYMBOLS is not set
-CONFIG_DEBUG_FS=y
-CONFIG_HEADERS_CHECK=y
-# CONFIG_DEBUG_SECTION_MISMATCH is not set
-CONFIG_DEBUG_KERNEL=y
-CONFIG_DEBUG_SHIRQ=y
-# CONFIG_LOCKUP_DETECTOR is not set
-# CONFIG_HARDLOCKUP_DETECTOR is not set
-CONFIG_DETECT_HUNG_TASK=y
-CONFIG_DEFAULT_HUNG_TASK_TIMEOUT=120
-# CONFIG_BOOTPARAM_HUNG_TASK_PANIC is not set
-CONFIG_BOOTPARAM_HUNG_TASK_PANIC_VALUE=0
-CONFIG_SCHED_DEBUG=y
-CONFIG_SCHEDSTATS=y
-CONFIG_TIMER_STATS=y
-CONFIG_DEBUG_OBJECTS=y
-# CONFIG_DEBUG_OBJECTS_SELFTEST is not set
-CONFIG_DEBUG_OBJECTS_FREE=y
-CONFIG_DEBUG_OBJECTS_TIMERS=y
-CONFIG_DEBUG_OBJECTS_WORK=y
-CONFIG_DEBUG_OBJECTS_RCU_HEAD=y
-# CONFIG_DEBUG_OBJECTS_PERCPU_COUNTER is not set
-CONFIG_DEBUG_OBJECTS_ENABLE_DEFAULT=1
-# CONFIG_SLUB_STATS is not set
-CONFIG_DEBUG_RT_MUTEXES=y
-CONFIG_DEBUG_PI_LIST=y
-# CONFIG_RT_MUTEX_TESTER is not set
-CONFIG_DEBUG_SPINLOCK=y
-CONFIG_DEBUG_MUTEXES=y
-CONFIG_DEBUG_LOCK_ALLOC=y
-CONFIG_PROVE_LOCKING=y
-# CONFIG_PROVE_RCU is not set
-# CONFIG_SPARSE_RCU_POINTER is not set
-CONFIG_LOCKDEP=y
-# CONFIG_LOCK_STAT is not set
-# CONFIG_DEBUG_LOCKDEP is not set
-CONFIG_TRACE_IRQFLAGS=y
-# CONFIG_DEBUG_ATOMIC_SLEEP is not set
-# CONFIG_DEBUG_LOCKING_API_SELFTESTS is not set
-CONFIG_STACKTRACE=y
-CONFIG_DEBUG_STACK_USAGE=y
-# CONFIG_DEBUG_KOBJECT is not set
-CONFIG_DEBUG_HIGHMEM=y
-# CONFIG_DEBUG_INFO is not set
-CONFIG_DEBUG_VM=y
-# CONFIG_DEBUG_VIRTUAL is not set
-CONFIG_DEBUG_WRITECOUNT=y
-# CONFIG_DEBUG_MEMORY_INIT is not set
-CONFIG_DEBUG_LIST=y
-# CONFIG_TEST_LIST_SORT is not set
-CONFIG_DEBUG_SG=y
-CONFIG_DEBUG_NOTIFIERS=y
-CONFIG_DEBUG_CREDENTIALS=y
-CONFIG_ARCH_WANT_FRAME_POINTERS=y
-CONFIG_FRAME_POINTER=y
-CONFIG_BOOT_PRINTK_DELAY=y
-# CONFIG_RCU_TORTURE_TEST is not set
-CONFIG_RCU_CPU_STALL_TIMEOUT=60
-# CONFIG_KPROBES_SANITY_TEST is not set
-# CONFIG_BACKTRACE_SELF_TEST is not set
-# CONFIG_DEBUG_BLOCK_EXT_DEVT is not set
-# CONFIG_DEBUG_FORCE_WEAK_PER_CPU is not set
-# CONFIG_DEBUG_PER_CPU_MAPS is not set
-# CONFIG_LKDTM is not set
-# CONFIG_CPU_NOTIFIER_ERROR_INJECT is not set
-CONFIG_FAULT_INJECTION=y
-CONFIG_FAILSLAB=y
-CONFIG_FAIL_PAGE_ALLOC=y
-CONFIG_FAIL_MAKE_REQUEST=y
-CONFIG_FAIL_IO_TIMEOUT=y
-CONFIG_FAULT_INJECTION_DEBUG_FS=y
-CONFIG_FAULT_INJECTION_STACKTRACE_FILTER=y
-CONFIG_LATENCYTOP=y
-CONFIG_SYSCTL_SYSCALL_CHECK=y
-CONFIG_DEBUG_PAGEALLOC=y
-CONFIG_USER_STACKTRACE_SUPPORT=y
-CONFIG_NOP_TRACER=y
-CONFIG_HAVE_FUNCTION_TRACER=y
-CONFIG_HAVE_FUNCTION_GRAPH_TRACER=y
-CONFIG_HAVE_FUNCTION_GRAPH_FP_TEST=y
-CONFIG_HAVE_FUNCTION_TRACE_MCOUNT_TEST=y
-CONFIG_HAVE_DYNAMIC_FTRACE=y
-CONFIG_HAVE_FTRACE_MCOUNT_RECORD=y
-CONFIG_HAVE_SYSCALL_TRACEPOINTS=y
-CONFIG_HAVE_C_RECORDMCOUNT=y
-CONFIG_TRACER_MAX_TRACE=y
-CONFIG_RING_BUFFER=y
-CONFIG_EVENT_TRACING=y
-CONFIG_EVENT_POWER_TRACING_DEPRECATED=y
-CONFIG_CONTEXT_SWITCH_TRACER=y
-CONFIG_RING_BUFFER_ALLOW_SWAP=y
-CONFIG_TRACING=y
-CONFIG_GENERIC_TRACER=y
-CONFIG_TRACING_SUPPORT=y
-CONFIG_FTRACE=y
-# CONFIG_FUNCTION_TRACER is not set
-# CONFIG_IRQSOFF_TRACER is not set
-CONFIG_SCHED_TRACER=y
-CONFIG_FTRACE_SYSCALLS=y
-CONFIG_BRANCH_PROFILE_NONE=y
-# CONFIG_PROFILE_ANNOTATED_BRANCHES is not set
-# CONFIG_PROFILE_ALL_BRANCHES is not set
-# CONFIG_STACK_TRACER is not set
-CONFIG_BLK_DEV_IO_TRACE=y
-CONFIG_KPROBE_EVENT=y
-# CONFIG_FTRACE_STARTUP_TEST is not set
-CONFIG_MMIOTRACE=y
-# CONFIG_MMIOTRACE_TEST is not set
-CONFIG_RING_BUFFER_BENCHMARK=m
-# CONFIG_PROVIDE_OHCI1394_DMA_INIT is not set
-CONFIG_BUILD_DOCSRC=y
-CONFIG_DYNAMIC_DEBUG=y
-CONFIG_DMA_API_DEBUG=y
-# CONFIG_ATOMIC64_SELFTEST is not set
-# CONFIG_SAMPLES is not set
-CONFIG_HAVE_ARCH_KGDB=y
-CONFIG_KGDB=y
-CONFIG_KGDB_SERIAL_CONSOLE=y
-CONFIG_KGDB_TESTS=y
-# CONFIG_KGDB_TESTS_ON_BOOT is not set
-# CONFIG_KGDB_LOW_LEVEL_TRAP is not set
-# CONFIG_KGDB_KDB is not set
-CONFIG_HAVE_ARCH_KMEMCHECK=y
-# CONFIG_KMEMCHECK is not set
-# CONFIG_TEST_KSTRTOX is not set
-CONFIG_STRICT_DEVMEM=y
-# CONFIG_X86_VERBOSE_BOOTUP is not set
-CONFIG_EARLY_PRINTK=y
-CONFIG_EARLY_PRINTK_DBGP=y
-CONFIG_DEBUG_STACKOVERFLOW=y
-CONFIG_X86_PTDUMP=y
-# CONFIG_DEBUG_RODATA is not set
-# CONFIG_DEBUG_SET_MODULE_RONX is not set
-CONFIG_DEBUG_NX_TEST=m
-CONFIG_DOUBLEFAULT=y
-# CONFIG_IOMMU_STRESS is not set
-CONFIG_HAVE_MMIOTRACE_SUPPORT=y
-# CONFIG_X86_DECODER_SELFTEST is not set
-CONFIG_IO_DELAY_TYPE_0X80=0
-CONFIG_IO_DELAY_TYPE_0XED=1
-CONFIG_IO_DELAY_TYPE_UDELAY=2
-CONFIG_IO_DELAY_TYPE_NONE=3
-CONFIG_IO_DELAY_0X80=y
-# CONFIG_IO_DELAY_0XED is not set
-# CONFIG_IO_DELAY_UDELAY is not set
-# CONFIG_IO_DELAY_NONE is not set
-CONFIG_DEFAULT_IO_DELAY_TYPE=0
-CONFIG_DEBUG_BOOT_PARAMS=y
-# CONFIG_CPA_DEBUG is not set
-CONFIG_OPTIMIZE_INLINING=y
-# CONFIG_DEBUG_STRICT_USER_COPY_CHECKS is not set
+--- a/net/mac80211/sta_info.c	2012-01-05 16:22:36.000000000 +0100
++++ b/net/mac80211/sta_info.c	2012-01-05 16:29:46.000000000 +0100
+@@ -367,7 +367,12 @@ static int sta_info_insert_drv_state(str
+ 	}
+ 
+ 	if (!err) {
+-		sta->uploaded = true;
++		/*
++		 * Drivers using legacy sta_add/sta_remove callbacks only
++		 * get uploaded set to true after sta_add is called.
++		 */
++		if (!local->ops->sta_add)
++			sta->uploaded = true;
+ 		return 0;
+ 	}
+ 
+@@ -419,18 +424,9 @@ static int sta_info_insert_finish(struct
+ 
+ 	if (!sta->dummy || dummy_reinsert) {
+ 		/* notify driver */
+-		err = drv_sta_add(local, sdata, &sta->sta);
+-		if (err) {
+-			if (sdata->vif.type != NL80211_IFTYPE_ADHOC)
+-				goto out_err;
+-			printk(KERN_DEBUG "%s: failed to add IBSS STA %pM to "
+-					  "driver (%d) - keeping it anyway.\n",
+-			       sdata->name, sta->sta.addr, err);
+-		} else {
+-			err = sta_info_insert_drv_state(local, sdata, sta);
+-			if (err)
+-				goto out_err;
+-		}
++		err = sta_info_insert_drv_state(local, sdata, sta);
++		if (err)
++			goto out_err;
+ 	}
+ 
+ 	if (!dummy_reinsert) {
+@@ -812,7 +808,6 @@ int __must_check __sta_info_destroy(stru
+ 	}
+ 
+ 	if (sta->uploaded) {
+-		drv_sta_remove(local, sdata, &sta->sta);
+ 		ret = drv_sta_state(local, sdata, sta, IEEE80211_STA_NONE,
+ 				    IEEE80211_STA_NOTEXIST);
+ 		WARN_ON_ONCE(ret != 0);
+--- a/net/mac80211/util.c	2012-01-05 16:09:23.000000000 +0100
++++ b/net/mac80211/util.c	2012-01-05 16:29:46.000000000 +0100
+@@ -1188,8 +1188,6 @@ int ieee80211_reconfig(struct ieee80211_
+ 		if (sta->uploaded) {
+ 			enum ieee80211_sta_state state;
+ 
+-			WARN_ON(drv_sta_add(local, sta->sdata, &sta->sta));
+-
+ 			for (state = IEEE80211_STA_NOTEXIST;
+ 			     state < sta->sta_state - 1; state++)
+ 				WARN_ON(drv_sta_state(local, sta->sdata, sta,
+--- a/net/mac80211/pm.c	2012-01-05 16:09:23.000000000 +0100
++++ b/net/mac80211/pm.c	2012-01-05 16:29:46.000000000 +0100
+@@ -100,8 +100,6 @@ int __ieee80211_suspend(struct ieee80211
+ 		if (sta->uploaded) {
+ 			enum ieee80211_sta_state state;
+ 
+-			drv_sta_remove(local, sta->sdata, &sta->sta);
+-
+ 			state = sta->sta_state;
+ 			for (; state > IEEE80211_STA_NOTEXIST; state--)
+ 				WARN_ON(drv_sta_state(local, sdata, sta,
+--- a/net/mac80211/driver-ops.h	2012-01-05 16:09:23.000000000 +0100
++++ b/net/mac80211/driver-ops.h	2012-01-05 16:29:46.000000000 +0100
+@@ -493,9 +493,18 @@ int drv_sta_state(struct ieee80211_local
+ 	check_sdata_in_driver(sdata);
+ 
+ 	trace_drv_sta_state(local, sdata, &sta->sta, old_state, new_state);
+-	if (local->ops->sta_state)
++	if (local->ops->sta_state) {
+ 		ret = local->ops->sta_state(&local->hw, &sdata->vif, &sta->sta,
+ 					    old_state, new_state);
++	} else if (old_state == IEEE80211_STA_AUTH &&
++		   new_state == IEEE80211_STA_ASSOC) {
++		ret = drv_sta_add(local, sdata, &sta->sta);
++		if (ret == 0)
++			sta->uploaded = true;
++	} else if (old_state == IEEE80211_STA_ASSOC &&
++		   new_state == IEEE80211_STA_AUTH) {
++		drv_sta_remove(local, sdata, &sta->sta);
++	}
+ 	trace_drv_return_int(local, ret);
+ 	return ret;
+ }
 
 
-
---82I3+IH0IqGh5yIs--
