@@ -1,63 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43441 "EHLO mx1.redhat.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1676 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752399Ab2AQLjP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 06:39:15 -0500
-Date: Tue, 17 Jan 2012 12:38:50 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Patrick <ragamuffin@datacomm.ch>
-Subject: [PATCH] brcmsmac: fix tx queue flush infinite loop
-Message-ID: <20120117113849.GB3091@redhat.com> (sfid-20120117_123919_046996_5DFA2C42)
+	id S1751538Ab2AETjn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 14:39:43 -0500
+Message-ID: <4F05FC76.5070509@broadcom.com> (sfid-20120105_203946_144950_A00C9C08)
+Date: Thu, 5 Jan 2012 11:39:34 -0800
+From: "Franky Lin" <frankyl@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "Stephen Hemminger" <shemminger@vyatta.com>
+cc: "Arend Van Spriel" <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] brcmfmac: use existing net_device_stats
+References: <20120105183947.295358582@vyatta.com>
+ <20120105184000.572918423@vyatta.com> <4F05F60C.5030406@broadcom.com>
+ <20120105111554.57f411d0@nehalam.linuxnetplumber.net>
+In-Reply-To: <20120105111554.57f411d0@nehalam.linuxnetplumber.net>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch workaround live deadlock problem caused by infinite loop
-in brcms_c_wait_for_tx_completion(). I do not consider the patch as
-the proper fix, which should fix the real reason of tx queue flush
-failure, but patch helps with system lockup.
+On 01/05/2012 11:15 AM, Stephen Hemminger wrote:
+> On Thu, 5 Jan 2012 20:12:12 +0100
+> "Arend van Spriel"<arend@broadcom.com>  wrote:
+>
+>> On 01/05/2012 07:39 PM, Stephen Hemminger wrote:
+>>> Minor space savings. Compile tested only.
+>>>
+>>
+>> This is actually not going to work. The struct brcmf_if represents
+>> individual interfaces which each have their own device statistics.
+>>
+>
+> Why not, if you  look it is only used during the aggregation and return
+> of netdevice stats.
+>
 
-Reference:
-https://bugzilla.kernel.org/show_bug.cgi?id=42576
+We only support one primary interface at the moment. But we have plan to 
+add P2P support using virtual interfaces. It would be better to have 
+individual stats for different interfaces.
 
-Reported-and-tested-by: Patrick <ragamuffin@datacomm.ch>
-Cc: stable@vger.kernel.org # 3.2+
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c |   10 +++++++++-
- 1 files changed, 9 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index f7ed340..f6affc6 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -7981,13 +7981,21 @@ int brcms_c_get_curband(struct brcms_c_info *wlc)
- 
- void brcms_c_wait_for_tx_completion(struct brcms_c_info *wlc, bool drop)
- {
-+	int timeout = 20;
-+
- 	/* flush packet queue when requested */
- 	if (drop)
- 		brcmu_pktq_flush(&wlc->pkt_queue->q, false, NULL, NULL);
- 
- 	/* wait for queue and DMA fifos to run dry */
--	while (!pktq_empty(&wlc->pkt_queue->q) || brcms_txpktpendtot(wlc) > 0)
-+	while (!pktq_empty(&wlc->pkt_queue->q) || brcms_txpktpendtot(wlc) > 0) {
- 		brcms_msleep(wlc->wl, 1);
-+
-+		if (--timeout == 0)
-+			break;
-+	}
-+
-+	WARN_ON_ONCE(timeout == 0);
- }
- 
- void brcms_c_set_beacon_listen_interval(struct brcms_c_info *wlc, u8 interval)
--- 
-1.7.1
+Thanks,
+Franky
 
