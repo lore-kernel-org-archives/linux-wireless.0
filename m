@@ -1,48 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:49353 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932197Ab2ARRTy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jan 2012 12:19:54 -0500
-Subject: Re: [PATCH] compat-wireless: check if modprobe exists before using
- it
-From: Luciano Coelho <coelho@ti.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	wlist@ti.com, idor@ti.com, assaf@ti.com, gil.barak@ti.com
-In-Reply-To: <CAB=NE6WFFPgQkBvn8uShMVG1+SExUFXfa9dW2jLGad62Sc5dOA@mail.gmail.com>
-References: <1326874421-4654-1-git-send-email-coelho@ti.com>
-	 <CAB=NE6WFFPgQkBvn8uShMVG1+SExUFXfa9dW2jLGad62Sc5dOA@mail.gmail.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:38599 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932728Ab2AEQas (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 11:30:48 -0500
+Message-ID: <1325781045.22154.15.camel@joe2Laptop> (sfid-20120105_173127_667034_7A3BE5B7)
+Subject: RE: [PATCH 5/6] ath6kl: convert ath6kl_dbg() and ath6kl_dbg_dump()
+ into functions
+From: Joe Perches <joe@perches.com>
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, linville@tuxdriver.com,
+	sfr@canb.auug.org.au, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-next@vger.kernel.org, ath6kl-devel@qualcomm.com,
+	davem@davemloft.net
+Date: Thu, 05 Jan 2012 08:30:45 -0800
+In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6D8AF2F@saturn3.aculab.com>
+References: <AE90C24D6B3A694183C094C60CF0A2F6D8AF2F@saturn3.aculab.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 18 Jan 2012 19:19:48 +0200
-Message-ID: <1326907188.4598.257.camel@cumari> (sfid-20120118_181959_546182_8056CCC4)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-01-18 at 09:15 -0800, Luis R. Rodriguez wrote: 
-> On Wed, Jan 18, 2012 at 12:13 AM, Luciano Coelho <coelho@ti.com> wrote:
-> > If you're cross-compiling compat-wireless on a different host, you
-> > can't reliably use modprobe.  The host system may not even have
-> > modprobe, so it doesn't make sense to run modprobe, unless you're
-> > installing the modules on the target machine.
-> >
-> > The modprobe command was being used unconditionally to set the MADWIFI
-> > and OLD_IWL variables.  This commit adds a check to see whether
-> > modprobe exists before trying to use.  It also adds a dependency on
-> > the modprobe commands to all recipes that rely on it, so we fail more
-> > gracefully if modprobe doesn't exist in the system.
-> >
-> > Reported by: William List <wlist@ti.com>
-> > Signed-off-by: Luciano Coelho <coelho@ti.com>
-> 
-> Good point, I've propagated this into the linux-3.2.y and linux-3.1.y
-> branches of compat-wireless as well so that if a new release is made
-> the fixes go along with it.
+On Thu, 2012-01-05 at 10:41 +0000, David Laight wrote:
+> > > +	va_start(args, fmt);
+> > > +	ath6kl_printk(KERN_DEBUG, fmt, &args);
+> > Passing a va_list as an argument?
+> > I believe this doesn't work.
+> > I think you'll need to add and use:
+> Passing a va_list certainly does work - vprintf() etc.
+> What is problematical is taking the address of a va_list.
 
-Excellent, thanks dude!
+Nope.  This referred to this specific instance.
+Taking the address of a va_list works fine.
+Look at the provide example.
 
--- 
-Cheers,
-Luca.
 
