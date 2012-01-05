@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46030 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753412Ab2AIIyc (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48291 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751335Ab2AESA5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 03:54:32 -0500
-Subject: Re: [PATCH 0/4] Enable uAPSD support in AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thirumalai <tpachamu@qca.qualcomm.com>
-Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1326095083-1538-1-git-send-email-tpachamu@qca.qualcomm.com> (sfid-20120109_084754_846351_9C65331D)
-References: <1326095083-1538-1-git-send-email-tpachamu@qca.qualcomm.com>
-	 (sfid-20120109_084754_846351_9C65331D)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 Jan 2012 09:54:28 +0100
-Message-ID: <1326099268.3451.0.camel@jlt3.sipsolutions.net> (sfid-20120109_095435_696259_F6555235)
-Mime-Version: 1.0
+	Thu, 5 Jan 2012 13:00:57 -0500
+Date: Thu, 5 Jan 2012 12:49:07 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull request: wireless-next 2012-01-05
+Message-ID: <20120105174906.GD10666@tuxdriver.com> (sfid-20120105_190108_504985_717677F5)
+References: <20120105160938.GC10666@tuxdriver.com>
+ <20120105.123039.977245333906219511.davem@davemloft.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120105.123039.977245333906219511.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-01-09 at 13:14 +0530, Thirumalai wrote:
-> In addition to legacy power save, this series of patch adds
-> support for uAPSD in AP mode.
+On Thu, Jan 05, 2012 at 12:30:39PM -0500, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Thu, 5 Jan 2012 11:09:38 -0500
 > 
-> When connected station goes into suspend state, the driver will
-> start queuing pkts in the separate queue (called uapsd queue)
-> until the station ask for it. 
+> > Here is the last wireless "feature" pull request intended for 3.3.
+> > Mostly minutia, but highlights include an NFC spec update and some
+> > relicensing of regulatory code under the ISC license.
+> > 
+> > After consulation with Kalle, I have reverted the ath6kl USB bits that
+> > were causing build problems.
+> > 
+> > Please let me know if there are problems!
+> > 
+> > John
+> > 
+> > P.S. Sorry about the "ssh://" URL -- git.kernel.org seems a bit slow
+> > about syncing today...
 > 
-> The moment driver starting queuing, it will enable traffic indication
-> bit for the client connected to indicate data availability. 
-> Once station ask for the data (via Trigger frame), the driver will 
-> dequeue and send pkt one by one to the station.
+> That ssh URL would only work for you, since I don't have permission to get
+> at your trees even just to pull.
 
-The way you describe this sounds incorrect, but I'll leave it to Kalle
-to figure out what you're doing and whether it is correct or not ... if
-only some ACs are trigger-enabled those don't influence the TIM bit.
+Hmmm...really?  I'm pretty sure I pulled other trees that way.
 
-johannes
+> I pulled from the equivalent git:// URL, the top commit was the ath6kl
+> USB revert.
 
+Sure, that's fine.
+
+Thanks!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
