@@ -1,152 +1,240 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:55554 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751560Ab2AZMme (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:45580 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932191Ab2AEN3Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 07:42:34 -0500
-Received: by ggnp1 with SMTP id p1so200819ggn.23
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 04:42:33 -0800 (PST)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <hostap@lists.shmoo.com>
-Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
-	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
-	<adrian.chadd@gmail.com>, <j@w1.fi>, <johannes@sipsolutions.net>,
-	<coelho@ti.com>, <assaf@ti.com>, <yoni.divinsky@ti.com>,
-	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>
-Subject: [RFC 3/7] hostapd: add dfs events
-Date: Thu, 26 Jan 2012 14:41:25 +0200
-Message-Id: <1327581689-22090-4-git-send-email-victorg@ti.com> (sfid-20120126_134237_064991_63A77977)
-In-Reply-To: <1327581689-22090-1-git-send-email-victorg@ti.com>
-References: <1327581689-22090-1-git-send-email-victorg@ti.com>
+	Thu, 5 Jan 2012 08:29:16 -0500
+Subject: [PATCH v2 6/6] ath6kl: create ath6kl_core.ko
+To: linville@tuxdriver.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: sfr@canb.auug.org.au, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-next@vger.kernel.org, ath6kl-devel@qualcomm.com,
+	davem@davemloft.net
+Date: Thu, 05 Jan 2012 15:28:55 +0200
+Message-ID: <20120105132855.22281.87053.stgit@x201> (sfid-20120105_142938_484510_1040D1B1)
+In-Reply-To: <20120105132523.22281.95999.stgit@x201>
+References: <20120105132523.22281.95999.stgit@x201>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add EVENT_RADAR_DETECTED and EVENT_CHANNEL_SWITCH_COMPLETE
-events.
+Now ath6kl is ready for splitting core code to ath6kl_core.ko module.
+This also makes it possible to link both sdio and usb code to kernel
+at the same time, which earlier failed miserably.
 
-EVENT_RADAR_DETECTED indicates that radar was detected on
-operational channel. EVENT_CHANNEL_SWITCH_COMPLETE indicates
-that device has finished the channel switch process.
-
-Signed-off-by: Boris Presman <boris.presman@ti.com>
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- src/ap/drv_callbacks.c      |   40 ++++++++++++++++++++++++++++++++++++++++
- src/drivers/driver.h        |   22 +++++++++++++++++++++-
- src/drivers/driver_common.c |    2 ++
- 3 files changed, 63 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath6kl/Makefile   |   37 +++++++++++-----------------
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    3 ++
+ drivers/net/wireless/ath/ath6kl/core.c     |    9 +++++++
+ drivers/net/wireless/ath/ath6kl/debug.c    |    3 ++
+ drivers/net/wireless/ath/ath6kl/hif.c      |    5 ++++
+ drivers/net/wireless/ath/ath6kl/init.c     |    3 ++
+ 6 files changed, 37 insertions(+), 23 deletions(-)
 
-diff --git a/src/ap/drv_callbacks.c b/src/ap/drv_callbacks.c
-index b7febdc..d5079c4 100644
---- a/src/ap/drv_callbacks.c
-+++ b/src/ap/drv_callbacks.c
-@@ -464,6 +464,37 @@ static void hostapd_event_eapol_rx(struct hostapd_data *hapd, const u8 *src,
- 	ieee802_1x_receive(hapd, src, data, data_len);
+diff --git a/drivers/net/wireless/ath/ath6kl/Makefile b/drivers/net/wireless/ath/ath6kl/Makefile
+index 9bb69a8..863b9f6 100644
+--- a/drivers/net/wireless/ath/ath6kl/Makefile
++++ b/drivers/net/wireless/ath/ath6kl/Makefile
+@@ -21,32 +21,23 @@
+ # Author(s): ="Atheros"
+ #------------------------------------------------------------------------------
+ 
+-obj-$(CONFIG_ATH6KL_SDIO) := ath6kl_sdio.o
+-ath6kl_sdio-y += debug.o
+-ath6kl_sdio-y += hif.o
+-ath6kl_sdio-y += htc.o
+-ath6kl_sdio-y += bmi.o
+-ath6kl_sdio-y += cfg80211.o
+-ath6kl_sdio-y += init.o
+-ath6kl_sdio-y += main.o
+-ath6kl_sdio-y += txrx.o
+-ath6kl_sdio-y += wmi.o
+-ath6kl_sdio-y += core.o
++obj-$(CONFIG_ATH6KL) += ath6kl_core.o
++ath6kl_core-y += debug.o
++ath6kl_core-y += hif.o
++ath6kl_core-y += htc.o
++ath6kl_core-y += bmi.o
++ath6kl_core-y += cfg80211.o
++ath6kl_core-y += init.o
++ath6kl_core-y += main.o
++ath6kl_core-y += txrx.o
++ath6kl_core-y += wmi.o
++ath6kl_core-y += core.o
++ath6kl_core-$(CONFIG_NL80211_TESTMODE) += testmode.o
++
++obj-$(CONFIG_ATH6KL_SDIO) += ath6kl_sdio.o
+ ath6kl_sdio-y += sdio.o
+-ath6kl_sdio-$(CONFIG_NL80211_TESTMODE) += testmode.o
+ 
+ obj-$(CONFIG_ATH6KL_USB) += ath6kl_usb.o
+-ath6kl_usb-y += debug.o
+-ath6kl_usb-y += hif.o
+-ath6kl_usb-y += htc.o
+-ath6kl_usb-y += bmi.o
+-ath6kl_usb-y += cfg80211.o
+-ath6kl_usb-y += init.o
+-ath6kl_usb-y += main.o
+-ath6kl_usb-y += txrx.o
+-ath6kl_usb-y += wmi.o
+-ath6kl_usb-y += core.o
+ ath6kl_usb-y += usb.o
+-ath6kl_usb-$(CONFIG_NL80211_TESTMODE) += testmode.o
+ 
+ ccflags-y += -D__CHECK_ENDIAN__
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 64043f8..d4ed6d1 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -15,6 +15,7 @@
+  */
+ 
+ #include <linux/moduleparam.h>
++#include <linux/export.h>
+ 
+ #include "core.h"
+ #include "cfg80211.h"
+@@ -1907,6 +1908,7 @@ int ath6kl_cfg80211_suspend(struct ath6kl *ar,
+ 
+ 	return 0;
  }
++EXPORT_SYMBOL(ath6kl_cfg80211_suspend);
  
-+static void hostapd_event_radar_detected(struct hostapd_data *hapd,
-+		struct radar_detected *radar)
-+{
-+	if (!hapd->iconf->ieee80211h)
-+		return;
-+
-+	if ((!(hapd->iface->dfs_state & DFS_INIT_PHASE_CAC)) &&
-+	    (hapd->iface->freq != radar->freq)) {
-+		wpa_printf(MSG_WARNING, "False radar detection, op_freq(%d) != "
-+			   "radar_freq(%d)", hapd->iface->freq, radar->freq);
-+		return;
-+	}
-+
-+	if (ieee802_11_radar_detected(hapd))
-+		ieee802_11_start_channel_switch(hapd, TRUE);
-+	else
-+		wpa_printf(MSG_DEBUG, "False radar detection");
-+}
-+
-+static void hostapd_event_complete_channel_switch(struct hostapd_data *hapd,
-+		struct channel_switch_complete *channel_switch)
-+{
-+	if (hapd->next_channel->freq != channel_switch->freq) {
-+		wpa_printf(MSG_WARNING, "Switched to wrong freq, next_freq(%d) "
-+			   "!= ch_switch_freq(%d)", hapd->next_channel->freq,
-+			   channel_switch->freq);
-+	}
-+
-+	if (channel_switch->status)
-+		ieee802_11_complete_channel_switch(hapd);
-+}
+ int ath6kl_cfg80211_resume(struct ath6kl *ar)
+ {
+@@ -1958,6 +1960,7 @@ int ath6kl_cfg80211_resume(struct ath6kl *ar)
  
- void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
- 			  union wpa_event_data *data)
-@@ -576,6 +607,15 @@ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
- 			break;
- 		hostapd_event_sta_low_ack(hapd, data->low_ack.addr);
- 		break;
-+	case EVENT_RADAR_DETECTED:
-+		if (data)
-+			hostapd_event_radar_detected(hapd, &data->radar_detected);
-+		break;
-+	case EVENT_CHANNEL_SWITCH_COMPLETE:
-+		if (data)
-+			hostapd_event_complete_channel_switch(hapd,
-+				&data->channel_switch_complete);
-+		break;
- #ifdef NEED_AP_MLME
- 	case EVENT_RX_ACTION:
- 		if (data->rx_action.da == NULL || data->rx_action.sa == NULL ||
-diff --git a/src/drivers/driver.h b/src/drivers/driver.h
-index 1f2e521..68bf2e7 100644
---- a/src/drivers/driver.h
-+++ b/src/drivers/driver.h
-@@ -2973,7 +2973,17 @@ enum wpa_event_type {
- 	/**
- 	 * EVENT_EAPOL_TX_STATUS - notify of EAPOL TX status
- 	 */
--	EVENT_EAPOL_TX_STATUS
-+	EVENT_EAPOL_TX_STATUS,
-+
-+	/**
-+	 * EVENT_RADAR_DETECTED - notify of radar detection
-+	 */
-+	EVENT_RADAR_DETECTED,
-+
-+	/**
-+	 * EVENT_CHANNEL_SWITCH_COMPLETE - notify of channel switch complete
-+	 */
-+	EVENT_CHANNEL_SWITCH_COMPLETE
- };
+ 	return 0;
+ }
++EXPORT_SYMBOL(ath6kl_cfg80211_resume);
  
+ #ifdef CONFIG_PM
  
-@@ -3563,6 +3573,16 @@ union wpa_event_data {
- 		int data_len;
- 		int ack;
- 	} eapol_tx_status;
-+
-+	struct radar_detected {
-+		int status;
-+		int freq;
-+	} radar_detected;
-+
-+	struct channel_switch_complete {
-+		int status;
-+		int freq;
-+	} channel_switch_complete;
- };
+diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
+index 7e3574e..0d00475 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.c
++++ b/drivers/net/wireless/ath/ath6kl/core.c
+@@ -16,7 +16,9 @@
  
- /**
-diff --git a/src/drivers/driver_common.c b/src/drivers/driver_common.c
-index 26ca8d6..8e0492a 100644
---- a/src/drivers/driver_common.c
-+++ b/src/drivers/driver_common.c
-@@ -83,6 +83,8 @@ const char * event_to_string(enum wpa_event_type event)
- 	E2S(SCHED_SCAN_STOPPED);
- 	E2S(DRIVER_CLIENT_POLL_OK);
- 	E2S(EAPOL_TX_STATUS);
-+	E2S(RADAR_DETECTED);
-+	E2S(CHANNEL_SWITCH_COMPLETE);
+ #include "core.h"
+ 
++#include <linux/module.h>
+ #include <linux/moduleparam.h>
++#include <linux/export.h>
+ 
+ #include "debug.h"
+ #include "hif-ops.h"
+@@ -198,6 +200,7 @@ err_wq:
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL(ath6kl_core_init);
+ 
+ struct ath6kl *ath6kl_core_create(struct device *dev)
+ {
+@@ -254,6 +257,7 @@ struct ath6kl *ath6kl_core_create(struct device *dev)
+ 
+ 	return ar;
+ }
++EXPORT_SYMBOL(ath6kl_core_create);
+ 
+ void ath6kl_core_cleanup(struct ath6kl *ar)
+ {
+@@ -280,9 +284,14 @@ void ath6kl_core_cleanup(struct ath6kl *ar)
+ 	ath6kl_cfg80211_cleanup(ar);
+ 	ath6kl_cfg80211_destroy(ar);
+ }
++EXPORT_SYMBOL(ath6kl_core_cleanup);
+ 
+ void ath6kl_core_destroy(struct ath6kl *ar)
+ {
+ 	ath6kl_cfg80211_destroy(ar);
+ }
++EXPORT_SYMBOL(ath6kl_core_destroy);
+ 
++MODULE_AUTHOR("Qualcomm Atheros");
++MODULE_DESCRIPTION("Core module for AR600x SDIO and USB devices.");
++MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index f1fa57b..5430166 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -54,6 +54,7 @@ int ath6kl_printk(const char *level, const char *fmt, ...)
+ 
+ 	return rtn;
+ }
++EXPORT_SYMBOL(ath6kl_printk);
+ 
+ #ifdef CONFIG_ATH6KL_DEBUG
+ 
+@@ -74,6 +75,7 @@ void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...)
+ 
+ 	va_end(args);
+ }
++EXPORT_SYMBOL(ath6kl_dbg);
+ 
+ void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
+ 		     const char *msg, const char *prefix,
+@@ -86,6 +88,7 @@ void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
+ 		print_hex_dump_bytes(prefix, DUMP_PREFIX_OFFSET, buf, len);
  	}
+ }
++EXPORT_SYMBOL(ath6kl_dbg_dump);
  
- 	return "UNKNOWN";
--- 
-1.7.5.4
+ #define REG_OUTPUT_LEN_PER_LINE	25
+ #define REGTYPE_STR_LEN		100
+diff --git a/drivers/net/wireless/ath/ath6kl/hif.c b/drivers/net/wireless/ath/ath6kl/hif.c
+index 3d26c14..e911737 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif.c
++++ b/drivers/net/wireless/ath/ath6kl/hif.c
+@@ -15,6 +15,8 @@
+  */
+ #include "hif.h"
+ 
++#include <linux/export.h>
++
+ #include "core.h"
+ #include "target.h"
+ #include "hif-ops.h"
+@@ -59,6 +61,8 @@ int ath6kl_hif_rw_comp_handler(void *context, int status)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL(ath6kl_hif_rw_comp_handler);
++
+ #define REG_DUMP_COUNT_AR6003   60
+ #define REGISTER_DUMP_LEN_MAX   60
+ 
+@@ -560,6 +564,7 @@ int ath6kl_hif_intr_bh_handler(struct ath6kl *ar)
+ 
+ 	return status;
+ }
++EXPORT_SYMBOL(ath6kl_hif_intr_bh_handler);
+ 
+ static int ath6kl_hif_enable_intrs(struct ath6kl_device *dev)
+ {
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 5a92307..6183c42 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -17,8 +17,10 @@
+ 
+ #include <linux/moduleparam.h>
+ #include <linux/errno.h>
++#include <linux/export.h>
+ #include <linux/of.h>
+ #include <linux/mmc/sdio_func.h>
++
+ #include "core.h"
+ #include "cfg80211.h"
+ #include "target.h"
+@@ -1596,3 +1598,4 @@ void ath6kl_stop_txrx(struct ath6kl *ar)
+ 
+ 	clear_bit(WLAN_ENABLED, &ar->flag);
+ }
++EXPORT_SYMBOL(ath6kl_stop_txrx);
 
