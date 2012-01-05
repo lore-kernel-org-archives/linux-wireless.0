@@ -1,29 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:35203 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751135Ab2A1GbH convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:51156 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932645Ab2AEPy4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jan 2012 01:31:07 -0500
+	Thu, 5 Jan 2012 10:54:56 -0500
+Message-ID: <4F05C7CB.3000607@lwfinger.net> (sfid-20120105_165531_134699_897D9841)
+Date: Thu, 05 Jan 2012 09:54:51 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Date: Sat, 28 Jan 2012 01:31:05 -0500
-Message-ID: <CAHdPZaMWC6_bGXXJvjbmJDz-JDF7gx8QUTd2e8iW=5+ecTPiSg@mail.gmail.com> (sfid-20120128_073149_088866_0FAD1233)
-Subject: so many if conditions in _rtl92c_store_pwrIndex_diffrate_offset.
-From: "devendra.aaru" <devendra.aaru@gmail.com>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Joe Perches <joe@perches.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Re: [PATCH 2/7] rtlwifi: Standardize RT_PRINT_DATA macro and uses
+References: <cover.1325734202.git.joe@perches.com> <e7d4163a9897f33145d8a07be54f507ab68e0243.1325734203.git.joe@perches.com> <20120105114314.GD2222@redhat.com>
+In-Reply-To: <20120105114314.GD2222@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi wireless folks,
+On 01/05/2012 05:43 AM, Stanislaw Gruszka wrote:
+> Hi Joe
+>
+> On Wed, Jan 04, 2012 at 07:40:40PM -0800, Joe Perches wrote:
+>>   	RT_PRINT_DATA(rtlpriv, COMP_CMD, DBG_DMESG,
+>
+> Since you are working on it, can you also get rid of this DBG_*
+> parameter, if rtlwifi maintainers are ok with that? It is additional
+> console loglvevel, standard kernel loglevel should be used.
 
-in _rtl92c_store_pwrIndex_diffrate_offset (
-drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c), there are lot of
-if conditions, checking the register address.
-my understanding is that if the register address matches to a
-particular rate, we set the txpower level to a particular group. but
-it is even possible with the switch or if else if statements,
- please correct me if i am wrong.
+I'm not OK with that. Those DBG_* parameters are used in conjunction with a 
+load-time debug parameter to set the level of debugging. You could rename all of 
+them, but that would be useless churning of the source with no real value.
 
-Thanks,
-Dev.
+Larry
+
