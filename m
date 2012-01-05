@@ -1,73 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38654 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751048Ab2AZKlQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 05:41:16 -0500
-Date: Thu, 26 Jan 2012 11:41:14 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Luigi Tarenga <luigi.tarenga@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: PROBLEM: unable to associate to some AP with new iwl_legacy
- driver
-Message-ID: <20120126104112.GA2451@redhat.com> (sfid-20120126_114120_122054_B2E872CE)
-References: <CAKkO-EgieZkXTAeHn7XkTQG8EXHEHP6zUOedGUre0+CRjBMS9g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKkO-EgieZkXTAeHn7XkTQG8EXHEHP6zUOedGUre0+CRjBMS9g@mail.gmail.com>
+Received: from shards.monkeyblade.net ([198.137.202.13]:33903 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757909Ab2AETXP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 14:23:15 -0500
+Date: Thu, 05 Jan 2012 14:21:52 -0500 (EST)
+Message-Id: <20120105.142152.1306829639610242754.davem@davemloft.net> (sfid-20120105_202320_468348_B2D0F150)
+To: bhutchings@solarflare.com
+Cc: festevam@gmail.com, Larry.Finger@lwfinger.net,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	gwingerde@gmail.com, linville@tuxdriver.com,
+	fabio.estevam@freescale.com
+Subject: Re: [PATCH v2] drivers: net: Fix dependency for EEPROM_93CX6
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1325791078.3764.30.camel@bwh-desktop>
+References: <CAOMZO5AuZ_MHW3C1uNK7PyRz=XRHXhn2pvKCwk7iXLDd0YkDOQ@mail.gmail.com>
+	<CAOMZO5DTDpp8+9FOjPXGFQtQPg7Pv5qfAwFO3UC6AUdEDgpHYg@mail.gmail.com>
+	<1325791078.3764.30.camel@bwh-desktop>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi.
+From: Ben Hutchings <bhutchings@solarflare.com>
+Date: Thu, 5 Jan 2012 19:17:58 +0000
 
-On Wed, Jan 25, 2012 at 04:25:20PM +0100, Luigi Tarenga wrote:
-> I sent a bug report to the wrong team (ilw@linux.intel.com), I hope
-> this time I get it right :)
-> 
-> [1.] One line summary of the problem:
-> unable to associate to some AP with new iwl_legacy driver
-> 
-> [2.] Full description of the problem/report:
-> I'm unable to connect to one of mine AP with a 4965AGN with new 3.2 kernel.
-> Using stock Centos 6.2 kernel it works while with custom kernel 3.2 compiled
-> from vanilla wpa_supplicant return a timeout error during the
-> authentication phase.
-> Using another WNIC (ralink rt2870) with new 3.2 kernel on the same AP
-> works fine.
-> The AP is D-Link DIR-300 with OpenWrt compiled from trunk, it's based
-> on the RT3050F SoC.
-> With the 4965AGN I can connect other AP correctly, I'm not sure if the bug is on
-> other layer or on AP, what makes me think about a problem on the
-> iwl4965/iwl_legacy
-> is the fact that from the Centos kernel I can connect to the very same AP.
+> Right, you'll have to delete all dependencies on MISC_DEVICES.  Maybe
+> remove it from defconfigs as well, though I'm not sure whether it's
+> normal to do that at the same time.
 
-Please provide verbose debug logs on working and not working kernel 
-for compare.
-
-Kernel has to be compiled with CONFIG_IWLWIFI_LEGACY_DEBUG or
-CONFIG_IWLWIFI_DEBUG, or CONFIG_IWLEGACY_DEBUG (depend on kernel
-version). On CentOS, kernel-debug should has proper option enabled.
-
-Please configure syslog to log debug messages into /var/log/kernel
-(some hint here: https://fedoraproject.org/wiki/DebugWireless), restart
-syslog, then do:
-
-modprobe -r iwl4965
-echo > /var/log/kernel
-modprobe iwl4965 debug=0x47ffffff
-wait for association failure (bad kernel) or association success (good kernel)
-modprobe -r iwl4965
-
-And post me compress /var/log/kernel files.
-
-On CentOS there is iwlagn module instead of iwl4965.
-
-Would be great if you can find two consecutive kernel versions
-where the things get broken. Most likely this is 2.6.38 -> 2.6.39
-regression where the iwlwifi driver split into iwlegacy happen.
-And provide logs from there. But if you don't want to bother
-with trying different kernel version, verbose logs from CentOS
-and 3.2 are fine, just will be a bit harder for me to analyze
-them.
-
-Thanks
-Stanislaw
+defconfigs are usually left to the arch maintainers to update.
