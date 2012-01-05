@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f42.google.com ([209.85.213.42]:61006 "EHLO
-	mail-yw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751105Ab2AaHMD (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:57245 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932667Ab2AEPwO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 02:12:03 -0500
-From: "Devendra.Naga" <devendra.aaru@gmail.com>
-To: <Larry.Finger@lwfinger.net>, <chaoming_li@realsil.com.cn>,
-	<linville@tuxdriver.com>, <paul.gortmaker@windriver.com>,
-	<joe@perches.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: "Devendra.Naga" <devendra.aaru@gmail.com>
-Subject: [PATCH] rtlwifi/rtl8192c: in _rtl92c_phy_calculate_bit_shift remove comparing bitmask against 1
-Date: Tue, 31 Jan 2012 02:11:03 -0500
-Message-Id: <1327993863-6810-1-git-send-email-devendra.aaru@gmail.com> (sfid-20120131_081226_382132_F94AD7EA)
+	Thu, 5 Jan 2012 10:52:14 -0500
+Subject: Re: [PATCH 2/2] NFC: Handle error during NCI data exchange
+From: Samuel Ortiz <samuel@sortiz.org>
+Reply-To: Samuel Ortiz <samuel@sortiz.org>
+To: ilanelias78@gmail.com
+Cc: aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Ilan Elias <ilane@ti.com>
+In-Reply-To: <1324393061-32173-3-git-send-email-ilane@ti.com>
+References: <1324393061-32173-1-git-send-email-ilane@ti.com>
+	 <1324393061-32173-3-git-send-email-ilane@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 05 Jan 2012 16:57:59 +0100
+Message-ID: <1325779079.5354.15.camel@sortiz-mobl> (sfid-20120105_165221_811802_13216B8E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Devendra.Naga" <devendra.aaru@gmail.com>
+Hi Ilan,
 
-in _rtl92c_phy_calculate_bit_shift everytime the right shifted bitmask
-is AND with 1 and compared against 1. i.e.
-       if ((bitmask >> i) & 0x1 == 1)
-               break;
-which in the if condition is anyway becomes a 1 or 0.
+On Tue, 2011-12-20 at 16:57 +0200, ilanelias78@gmail.com wrote:
+> From: Ilan Elias <ilane@ti.com>
+> 
+> Add support for NCI Interface Error Notification.
+> When this notification is received and we're during a
+> data exchange transaction, indicate an error to the NFC
+> core layer via the data exchange callback.
+> 
+> Signed-off-by: Ilan Elias <ilane@ti.com>
+Acked-by: Samuel Ortiz <sameo@linux.intel.com>
 
-Signed-off-by: Devendra.Naga <devendra.aaru@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Cheers,
+Samuel.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-index 22e998d..a76b223 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-@@ -177,7 +177,7 @@ u32 _rtl92c_phy_calculate_bit_shift(u32 bitmask)
- 	u32 i;
- 
- 	for (i = 0; i <= 31; i++) {
--		if (((bitmask >> i) & 0x1) == 1)
-+		if ((bitmask >> i) & 0x1)
- 			break;
- 	}
- 	return i;
--- 
-1.7.5.4
 
