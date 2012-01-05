@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:55188 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755835Ab2ADPE2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jan 2012 10:04:28 -0500
-Received: by eekc4 with SMTP id c4so16727331eek.19
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jan 2012 07:04:27 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: Re: Compat-wireless-3.2-rc6-3 is broken for rt2860 device
-Date: Wed, 04 Jan 2012 16:04:18 +0100
-Message-ID: <1408490.qSFZVkU7fA@helmutmobil.site> (sfid-20120104_160434_635385_ABDC5FE1)
-In-Reply-To: <4F040FEA.3080703@01019freenet.de>
-References: <4EFF12D9.3010602@01019freenet.de> <2766356.70ylY68Gqi@helmutmobil.site> <4F040FEA.3080703@01019freenet.de>
+Received: from mx1.redhat.com ([209.132.183.28]:13035 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751467Ab2AEL1N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 06:27:13 -0500
+Date: Thu, 5 Jan 2012 12:26:49 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 didn't survive after s2ram failure
+Message-ID: <20120105112648.GB2222@redhat.com> (sfid-20120105_122746_896673_A13B5EA1)
+References: <20111227105340.GD5344@tiehlicka.suse.cz>
+ <20120103103457.GA3391@redhat.com>
+ <20120103122311.GC3391@redhat.com>
+ <20120103130733.GB3891@tiehlicka.suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120103130733.GB3891@tiehlicka.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-Am Mittwoch, 4. Januar 2012, 09:38:02 schrieb Andreas Hartmann:
-> Helmut Schaa schrieb:
-> >> Removing this patch
-> >>
-> >> mac80211: retry sending failed BAR frames later instead of tearing down
-> >> aggr (http://www.spinics.net/lists/linux-wireless/msg76379.html) makes
-> >> it working again.
-> >>
-> >> Device is: RaLink RT2800 802.11n PCI
-> > 
-> > What's the client device connected to the rt2x00 AP?
+On Tue, Jan 03, 2012 at 02:07:33PM +0100, Michal Hocko wrote:
+> On Tue 03-01-12 13:23:12, Stanislaw Gruszka wrote:
+> > On Tue, Jan 03, 2012 at 11:34:58AM +0100, Stanislaw Gruszka wrote:
+> [...]
+> > > If anything other will not help, is possible to rewrite eeprom, I don't
+> > > know how to do this, but I know that tool for that exist:
+> > > http://code.google.com/p/iwleeprom/
+> > Actually I do not think we overwrite eeprom, seems problem is at pci-e
+> > bus level. Simply we can not communicate with device through pci-e bus.
+> > That is kind a silly, but you can check if removing cart from slot
+> > and put it back again (assuring it correctly connected) helps.
 > 
-> It's a rt3572 usb chip (Linksys WUSB600N v2), driven with the rt3572sta
-> module.
-> 
-> > Mind to send a
-> > 802.11 capture wen this stall happens?
+> I am not sure whether the wireless is integrated (this is a laptop) and
+> I am little bit reluctant to open it as the warranty seems to be still
+> valid and I would break it if I get inside.
+Wow, laptop with so old wifi adapter has still a warranty. That good news,
+you can ask vendor for fixing the problem :-)
 
-Andreas provided me with a capture now. The interesting part is that
-the rt2x00 AP sends bursts of BARs with the same sequence number when
-the stall happens. I only had a quick look at the code in question but
-couldn't see anything wrong at a first glance.
+> I have just realized that I haven't provided lspci output so just in
+> case it is helpful:
+I tried to reproduce on my laptop by suspend and removing power sources,
+device initialize properly during boot.
 
-Helmut
+I'm still wondering why we can break anything by power off during
+suspend. Maybe there is some BIOS facility that power off PCIe device
+or bridge during suspend, and now it in powered off state. Hard to tell,
+except mentioned in other email pci* boot parameter try to change PCIe
+related BIOS settings if there are any. 
+
+Stanislaw
