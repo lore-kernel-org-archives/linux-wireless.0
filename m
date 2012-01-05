@@ -1,44 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:61543 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932065Ab2AIHrp (ORCPT
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:40367 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758290Ab2AEUQm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 02:47:45 -0500
-From: Thirumalai <tpachamu@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Thirumalai <tpachamu@qca.qualcomm.com>
-Subject: [PATCH 0/4] Enable uAPSD support in AP mode
-Date: Mon, 9 Jan 2012 13:14:43 +0530
-Message-ID: <1326095083-1538-1-git-send-email-tpachamu@qca.qualcomm.com> (sfid-20120109_084754_846351_9C65331D)
+	Thu, 5 Jan 2012 15:16:42 -0500
+Message-ID: <4F060527.5080801@lwfinger.net> (sfid-20120105_211648_086170_6AA78DEB)
+Date: Thu, 05 Jan 2012 14:16:39 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Ben Hutchings <bhutchings@solarflare.com>
+CC: Fabio Estevam <festevam@gmail.com>,
+	David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, gwingerde@gmail.com,
+	linville@tuxdriver.com, fabio.estevam@freescale.com
+Subject: Re: [PATCH v2] drivers: net: Fix dependency for EEPROM_93CX6
+References: <1325770673-17309-1-git-send-email-festevam@gmail.com>  <4F05CBA9.1070602@lwfinger.net>  <20120105.122004.1170447281304011158.davem@davemloft.net>  <CAOMZO5AuZ_MHW3C1uNK7PyRz=XRHXhn2pvKCwk7iXLDd0YkDOQ@mail.gmail.com>  <CAOMZO5DTDpp8+9FOjPXGFQtQPg7Pv5qfAwFO3UC6AUdEDgpHYg@mail.gmail.com> <1325791078.3764.30.camel@bwh-desktop>
+In-Reply-To: <1325791078.3764.30.camel@bwh-desktop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In addition to legacy power save, this series of patch adds
-support for uAPSD in AP mode.
+On 01/05/2012 01:17 PM, Ben Hutchings wrote:
+> On Thu, 2012-01-05 at 17:02 -0200, Fabio Estevam wrote:
+>> On Thu, Jan 5, 2012 at 4:06 PM, Fabio Estevam<festevam@gmail.com>  wrote:
+>>
+>>> I have tried selecting MISC_DEVICES in the Kconfig's, but the warning remains.
+>>>
+>>> I agree with Ben's comment: "That seems like a bug, since MISC_DEVICES
+>>> doesn't by itself select any
+>>> code.  (It's also not a meaningful category and maybe ought not to be an
+>>> option at all.)"
+>>
+>> What about the aproach below?
+>>
+>> drivers/misc/Kconfig |   12 ++----------
+>>   1 files changed, 2 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+>> index 6a1a092..9c7a474 100644
+>> --- a/drivers/misc/Kconfig
+>> +++ b/drivers/misc/Kconfig
+>> @@ -10,15 +10,8 @@ config SENSORS_LIS3LV02D
+>>   	select INPUT_POLLDEV
+>>   	default n
+>>
+>> -menuconfig MISC_DEVICES
+>> -	bool "Misc devices"
+>> -	---help---
+>> -	  Say Y here to get to see options for device drivers from various
+>> -	  different categories. This option alone does not add any kernel code.
+>> -
+>> -	  If you say N, all options in this submenu will be skipped and disabled.
+>> +menu "Misc devices"
+>>
+>> -if MISC_DEVICES
+>>
+>>   config AD525X_DPOT
+>>   	tristate "Analog Devices Digital Potentiometers"
+>> @@ -516,5 +509,4 @@ source "drivers/misc/ti-st/Kconfig"
+>>   source "drivers/misc/lis3lv02d/Kconfig"
+>>   source "drivers/misc/carma/Kconfig"
+>>   source "drivers/misc/altera-stapl/Kconfig"
+>> -
+>> -endif # MISC_DEVICES
+>> +endmenu
+>
+> Yes, that's what I was thinking of.
+>
+>> This would remove the unneeded dependency of MISC_DEVICES.
+>>
+>> I know I need to take extra care not to break other things, but just
+>> would like to get a feedback if this approach goes into the right
+>> direction.
+>
+> Right, you'll have to delete all dependencies on MISC_DEVICES.  Maybe
+> remove it from defconfigs as well, though I'm not sure whether it's
+> normal to do that at the same time.
 
-When connected station goes into suspend state, the driver will
-start queuing pkts in the separate queue (called uapsd queue)
-until the station ask for it. 
+I also think this is the correct approach.
 
-The moment driver starting queuing, it will enable traffic indication
-bit for the client connected to indicate data availability. 
-Once station ask for the data (via Trigger frame), the driver will 
-dequeue and send pkt one by one to the station.
+In the drivers/ tree, there are two mentions of MISC_DEVICES left:
 
-Thirumalai (4):
-  ath6kl: Add new WMI functions for uAPSD
-  ath6kl: Introduce new queue for uAPSD.
-  ath6kl: Add uAPSD support in rx path.
-  ath6kl: Add UAPSD support in tx path.
+finger@larrylap:~/wireless-testing-new> grep -r MISC_DEVICES drivers/*
+drivers/misc/Kconfig:# This one has to live outside of the MISC_DEVICES conditional,
+drivers/mmc/host/Kconfig:       select MISC_DEVICES
 
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    6 +
- drivers/net/wireless/ath/ath6kl/core.h     |    6 +-
- drivers/net/wireless/ath/ath6kl/main.c     |    8 +-
- drivers/net/wireless/ath/ath6kl/txrx.c     |  258 ++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath6kl/wmi.c      |   62 ++++++-
- drivers/net/wireless/ath/ath6kl/wmi.h      |   50 +++++-
- 6 files changed, 339 insertions(+), 51 deletions(-)
+Larry
 
