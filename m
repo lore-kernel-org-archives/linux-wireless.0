@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:51348 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753004Ab2ABWT7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 17:19:59 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:9557 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753899Ab2AEPBE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 Jan 2012 10:01:04 -0500
+Date: Thu, 5 Jan 2012 16:00:41 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Michal Hocko <mhocko@suse.cz>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: iwl3945 didn't survive after s2ram failure
+Message-ID: <20120105150040.GE2222@redhat.com> (sfid-20120105_160108_690977_8311A532)
+References: <20111227105340.GD5344@tiehlicka.suse.cz>
+ <20120103103457.GA3391@redhat.com>
+ <20120103130306.GA3891@tiehlicka.suse.cz>
+ <20120105110744.GA2222@redhat.com>
+ <20120105141913.GA3937@tiehlicka.suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <20120102221235.GA16012@srcf.ucam.org>
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
- <4F02165C.1060400@fastmail.fm> <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
- <20120102211904.GA15316@srcf.ucam.org> <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
- <20120102215028.GA15701@srcf.ucam.org> <CA+55aFz73GuHiOW1NoAuJLea_GKLepiZjrnrgpOKdQizPgnhoA@mail.gmail.com>
- <20120102221235.GA16012@srcf.ucam.org>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 2 Jan 2012 14:19:37 -0800
-Message-ID: <CA+55aFyHvmvast_kuNddU3iotReR1mOpKM4HGAw80ma8kn+2-g@mail.gmail.com> (sfid-20120102_232028_864063_221FDDE5)
-Subject: Re: loading firmware while usermodehelper disabled.
-To: Matthew Garrett <mjg@redhat.com>
-Cc: Jack Stone <jwjstone@fastmail.fm>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Oliver Neukum <oliver@neukum.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120105141913.GA3937@tiehlicka.suse.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 2, 2012 at 2:12 PM, Matthew Garrett <mjg@redhat.com> wrote:
->
-> The kernel that loaded the firmware to make the device work is not
-> required to be the same kernel that we're running when we suspend.
+On Thu, Jan 05, 2012 at 03:19:13PM +0100, Michal Hocko wrote:
+> 
+> OK, so I have tried to boot with pcie_aspm=off and the wireless
+> resurrect. The I found out that I booted into 3.2 rather than 3.2-rc6 so
+> I retested with the original kernel and guess what, yes it reported the
+> same problem as before (with or without parameter). 
+> So I have tried to retest with few kernels (3.2.0-rc5,
+> 3.2.0-rc6-00005-ga36bfdd, 3.2.0-rc7-00083-g115e8e7 and 3.2.0) that I
+> still had on my machine and 3.2.0-rc6-00005-ga36bfdd seems to be the
+> only affected one.
+> There doesn't seem to be any obvious difference wrt. the driver in the
+> logs (attached).
+> 
+> Looking in the history it seems that 497f16f2 [pci: Fix hotplug of
+> Express Module with pci bridges] might be related.
 
-Why do you make up all these idiotic theoretical cases that nobody
-cares about and has no relevance what-so-ever for the 99%?
+>From the changelog of that commit: "I noticed that the bridges get
+assigned but do not get enabled", that looks like the problem we had
+seen.
 
-Seriously? It's just stupid.
+Anyway there is noting to do here, we have bug in 3.2-rc6 fixed in
+3.2-rc7.
 
-If you have some multi-kernel setup, or depend on booting windows
-before booting Linux in order to have the firmware there, or you use
-hibernate and switch things around (hibernate, not suspend - different
-thing), and cannot load the firmware in the regular kernel, who the
-hell cares?
-
-And if you *can* load the firmware in the new kernel, just do it
-before the suspend event. Problem solved.
-
-And once more: your made-up scenario has *nothing* what-so-ever to do
-with the actual warnings that started this whole thread.
-
-You seem to *intentionally* be off in some random alternate reality
-that is not relevant to anybody else, or to the actual reported
-problems at hand.
-
-Why?
-
-                        Linus
+Thanks
+Stanislaw
