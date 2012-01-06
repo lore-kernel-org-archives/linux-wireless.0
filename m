@@ -1,77 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63920 "EHLO mx1.redhat.com"
+Received: from mga03.intel.com ([143.182.124.21]:35769 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752679Ab2A3PSd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 10:18:33 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 2/4] rt2800: radio 3xxx: program RF_R1 during channel switch
-Date: Mon, 30 Jan 2012 16:17:57 +0100
-Message-Id: <1327936679-12576-2-git-send-email-sgruszka@redhat.com> (sfid-20120130_161836_641046_2BAB2914)
-In-Reply-To: <1327936679-12576-1-git-send-email-sgruszka@redhat.com>
-References: <1327936679-12576-1-git-send-email-sgruszka@redhat.com>
+	id S1759250Ab2AFWTr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jan 2012 17:19:47 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Kenny Hsu <kenny.hsu@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 4/7] iwlwifi: enhance testmode command sram_read
+Date: Fri,  6 Jan 2012 13:16:30 -0800
+Message-Id: <1325884593-31298-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120106_232018_427691_E916F754)
+In-Reply-To: <1325884593-31298-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1325884593-31298-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Synchronize code with Ralink driver:
-2011_0719_RT3070_RT3370_RT5370_RT5372_Linux_STA_V2.5.0.3_DPO
-Based on functions:
-RT33xx_ChipSwitchChannel
-RT30xx_ChipSwitchChannel
-RT33xx_Init
+From: Kenny Hsu <kenny.hsu@intel.com>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+This patch enables SRAM read function to support entire target memory.
+
+Signed-off-by: Kenny Hsu <kenny.hsu@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/rt2x00/rt2800lib.c |   34 +++++++++++++++++++++++++++++++
- 1 files changed, 34 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-testmode.c |    7 +++----
+ drivers/net/wireless/iwlwifi/iwl-testmode.h |    3 +++
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 6edf566..a841918 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1666,6 +1666,40 @@ static void rt2800_config_channel_rf3xxx(struct rt2x00_dev *rt2x00dev,
- 	rt2x00_set_field8(&rfcsr, RFCSR13_TX_POWER, info->default_power2);
- 	rt2800_rfcsr_write(rt2x00dev, 13, rfcsr);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+index 2fc2067..58575fd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+@@ -733,7 +733,7 @@ static int iwl_testmode_ownership(struct ieee80211_hw *hw, struct nlattr **tb)
+ static int iwl_testmode_sram(struct ieee80211_hw *hw, struct nlattr **tb)
+ {
+ 	struct iwl_priv *priv = hw->priv;
+-	u32 base, ofs, size, maxsize;
++	u32 ofs, size, maxsize;
  
-+	rt2800_rfcsr_read(rt2x00dev, 1, &rfcsr);
-+	rt2x00_set_field8(&rfcsr, RFCSR1_RX0_PD, 0);
-+	rt2x00_set_field8(&rfcsr, RFCSR1_TX0_PD, 0);
-+	if (rt2x00_rt(rt2x00dev, RT3390)) {
-+		rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD,
-+				  rt2x00dev->default_ant.rx_chain_num == 1);
-+		rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD,
-+				  rt2x00dev->default_ant.tx_chain_num == 1);
-+	} else {
-+		rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 0);
-+		rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 0);
-+		rt2x00_set_field8(&rfcsr, RFCSR1_RX2_PD, 0);
-+		rt2x00_set_field8(&rfcsr, RFCSR1_TX2_PD, 0);
+ 	if (priv->testmode_sram.sram_readed)
+ 		return -EBUSY;
+@@ -765,7 +765,7 @@ static int iwl_testmode_sram(struct ieee80211_hw *hw, struct nlattr **tb)
+ 		IWL_DEBUG_INFO(priv, "Error, unsupported uCode type\n");
+ 		return -ENOSYS;
+ 	}
+-	if ((ofs + size) > maxsize) {
++	if ((ofs + size) > (maxsize + SRAM_DATA_SEG_OFFSET)) {
+ 		IWL_DEBUG_INFO(priv, "Invalid offset/size: out of range\n");
+ 		return -EINVAL;
+ 	}
+@@ -776,8 +776,7 @@ static int iwl_testmode_sram(struct ieee80211_hw *hw, struct nlattr **tb)
+ 		IWL_DEBUG_INFO(priv, "Error allocating memory\n");
+ 		return -ENOMEM;
+ 	}
+-	base = 0x800000;
+-	_iwl_read_targ_mem_words(bus(priv), base + ofs,
++	_iwl_read_targ_mem_words(bus(priv), ofs,
+ 					priv->testmode_sram.buff_addr,
+ 					priv->testmode_sram.buff_size / 4);
+ 	priv->testmode_sram.num_chunks =
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.h b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+index 26138f1..9c6a67a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+@@ -271,4 +271,7 @@ enum iwl_tm_attr_t {
+ /* Maximum data size of each dump it packet */
+ #define DUMP_CHUNK_SIZE		(PAGE_SIZE - 1024)
+ 
++/* Address offset of data segment in SRAM */
++#define SRAM_DATA_SEG_OFFSET   0x800000
 +
-+		switch (rt2x00dev->default_ant.tx_chain_num) {
-+		case 1:
-+			rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 1);
-+			/* fall through */
-+		case 2:
-+			rt2x00_set_field8(&rfcsr, RFCSR1_TX2_PD, 1);
-+			break;
-+		}
-+
-+		switch (rt2x00dev->default_ant.rx_chain_num) {
-+		case 1:
-+			rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 1);
-+			/* fall through */
-+		case 2:
-+			rt2x00_set_field8(&rfcsr, RFCSR1_RX2_PD, 1);
-+			break;
-+		}
-+	}
-+	rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
-+
- 	rt2800_rfcsr_read(rt2x00dev, 23, &rfcsr);
- 	rt2x00_set_field8(&rfcsr, RFCSR23_FREQ_OFFSET, rt2x00dev->freq_offset);
- 	rt2800_rfcsr_write(rt2x00dev, 23, rfcsr);
+ #endif
 -- 
-1.7.1
+1.7.0.4
 
