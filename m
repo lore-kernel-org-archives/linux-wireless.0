@@ -1,69 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53522 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754117Ab2AEKOW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 05:14:22 -0500
-Date: Thu, 5 Jan 2012 11:14:13 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Christoph Anton Mitterer <calestyo@scientia.net>
-Cc: Jonathan Nieder <jrnieder@gmail.com>,
-	linux-wireless@vger.kernel.org,
+Received: from moutng.kundenserver.de ([212.227.126.186]:50557 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030367Ab2AFQB0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jan 2012 11:01:26 -0500
+Date: Fri, 6 Jan 2012 17:01:22 +0100 (CET)
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+To: Julian Calaby <julian.calaby@gmail.com>
+cc: linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Dietsche <Gregory.Dietsche@cuw.edu>,
-	linux-kernel@vger.kernel.org
-Subject: Re: iwl4965: "MAC is in deep sleep!" freezes
-Message-ID: <20120105101412.GB2103@redhat.com> (sfid-20120105_111439_814141_34D7904F)
-References: <265f56a4dc9f5d3edeca3d101e445353@imap.dd24.net>
- <20110908084913.GB2195@redhat.com>
- <1321228952.3362.15.camel@fermat.scientia.net>
- <20111114014615.GC16508@elie.hsd1.il.comcast.net>
- <1321466933.3364.16.camel@fermat.scientia.net>
- <20111118074552.GB2203@redhat.com>
- <1325171851.3907.33.camel@fermat.scientia.net>
- <20111229201149.GB1674@elie.Belkin>
- <20120103105107.GB3391@redhat.com>
- <1325640148.3359.142.camel@fermat.scientia.net>
+	Stefano Brivio <stefano.brivio@polimi.it>
+Subject: Re: [PATCH] wireless: b43: fix Oops on card eject during transfer
+In-Reply-To: <CAGRGNgUj3EUPKc0SX+3yCbygdbhS7_CN4hgR7ZAzjXuULw9fLg@mail.gmail.com>
+Message-ID: <Pine.LNX.4.64.1201061653050.18586@axis700.grange> (sfid-20120106_170130_221225_1D58CE8D)
+References: <Pine.LNX.4.64.1201061256190.16279@axis700.grange>
+ <CAGRGNgUj3EUPKc0SX+3yCbygdbhS7_CN4hgR7ZAzjXuULw9fLg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1325640148.3359.142.camel@fermat.scientia.net>
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 04, 2012 at 02:22:28AM +0100, Christoph Anton Mitterer wrote:
-> > Christoph, you mentioned that you replaced you 
-> > motherboard. Did the problem start to happen after that?
-> Yep,... the old board broke (and the system didn't bot anymore at
-> all)... it was replaced with a new one by the manufacturer... and
-> starting with that (with no software change on the disk in the meantime)
-> the wifi didn't work anymore (as described).
-Hmm, perhaps iwl4965 device does not work well with the new PCIe chipset.
+Hi Julian
 
-Does any of fallowing workaround the problem?
+On Sat, 7 Jan 2012, Julian Calaby wrote:
 
-kernel boot parameter:
-pcie_aspm=off
-pci_aspm=force
-pci=nocrs
-pci=use_crs
+> Hi Guennadi,
+> 
+> On Fri, Jan 6, 2012 at 22:58, Guennadi Liakhovetski
+> <g.liakhovetski@gmx.de> wrote:
+> > An Oops has once been observed, when the SDIO card had been ejected during
+> > IO. The PC value shows, that the dev pointer in b43_op_stop() was NULL.
+> >
+> > Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+> > ---
+> >
+> > Might also be good for stable
+> >
+> >  drivers/net/wireless/b43/main.c |    3 +++
+> >  1 files changed, 3 insertions(+), 0 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+> > index 5634d9a..3849c25 100644
+> > --- a/drivers/net/wireless/b43/main.c
+> > +++ b/drivers/net/wireless/b43/main.c
+> > @@ -4834,6 +4834,9 @@ static void b43_op_stop(struct ieee80211_hw *hw)
+> >        cancel_work_sync(&(wl->beacon_update_trigger));
+> >
+> >        mutex_lock(&wl->mutex);
+> > +       if (!dev)
+> > +               goto out_unlock;
+> 
+> Is there any reason to take this mutex, then jump to a label that
+> releases it immediately?
+> 
+> Would it be better to add a new label after the mutex_unlock() below
+> and jump to there immediately after the cancel_work_sync() call above?
 
-iwlegacy module parameter:
-bt_coex_active=0
+The reason is exactly that: to avoid adding one more label. It is an 
+exceptional case, that that branch would be taken, so, there's no reason 
+to optimize for it. Whereas adding one label would clutter the code 
+needlessly, IMHO.
 
-iwl4965 module parameters
-11n_disable=1
-
-> > Did you
-> > correctly connect antennas cables to adapter.
-> yep... at first (when they sent it back to me) it was not connected at
-> all... I connected it... the problem persists in both states, connected
-> and unconnected.
-There should be 3 or 2 antennas: 1 - white, 3 - grey, 2 - black,
-connection on adapter should match cable color (ok, I don't know if
-it does any difference, but it worth to try). If there is only one
-antenna available, perhaps there is somewhere another miniPCIe slot
-where are more antenna cables available. But, if there is really
-only one antenna cable, it should be connected to number 1 (white)
-adapter connector.
-
-Stanislaw
-
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski, Ph.D.
+Freelance Open-Source Software Developer
+http://www.open-technology.de/
