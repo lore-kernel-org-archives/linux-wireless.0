@@ -1,120 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8171 "EHLO mx1.redhat.com"
+Received: from mga03.intel.com ([143.182.124.21]:35769 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751003Ab2AaCmM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 21:42:12 -0500
-Date: Mon, 30 Jan 2012 21:41:43 -0500
-From: Dave Jones <davej@redhat.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Norbert Preining <preining@logic.at>, linux-kernel@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: Re: iwlagn is getting even worse with 3.3-rc1
-Message-ID: <20120131024143.GA10418@redhat.com> (sfid-20120131_034242_100758_6462844E)
-References: <20120124013625.GB18436@gamma.logic.tuwien.ac.at>
- <CANUX_P3er0orBy8OhDuY1DfgD810UD-_HB_ukJnCA+W8e-VazQ@mail.gmail.com>
- <20120125002250.GA20431@gamma.logic.tuwien.ac.at>
- <CANUX_P0UREz_jZABu+Y_QYOh9tx_sKZSSkZpYHBEVtcU4QQdSA@mail.gmail.com>
- <20120126003735.GA2346@gamma.logic.tuwien.ac.at>
- <CANUX_P0H_WaWwnpjoBcMpZQY4xH=cbVhAKxWKXmz-HwFMcWS6w@mail.gmail.com>
- <CANUX_P3XSCsWUJ9M55qeaK-DuPEMXODFPJiNk+BgnHN-=WECqw@mail.gmail.com>
- <20120126232555.GB16330@gamma.logic.tuwien.ac.at>
- <CANUX_P0z2800ip=yfW15zELqhDNFrHbTvDY3OF59PuxizN=XSA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CANUX_P0z2800ip=yfW15zELqhDNFrHbTvDY3OF59PuxizN=XSA@mail.gmail.com>
+	id S1750995Ab2AFWTr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jan 2012 17:19:47 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 2/7] iwlwifi: Sanity check for sta_id
+Date: Fri,  6 Jan 2012 13:16:28 -0800
+Message-Id: <1325884593-31298-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120106_232024_136328_4E5D5F8F)
+In-Reply-To: <1325884593-31298-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1325884593-31298-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 26, 2012 at 04:06:36PM -0800, Emmanuel Grumbach wrote:
- > On Thu, Jan 26, 2012 at 15:25, Norbert Preining <preining@logic.at> wrote:
- > > Hi Emmanuel,
- > >
- > > On Do, 26 Jan 2012, Emmanuel Grumbach wrote:
- > >> are suffering from the same issue. I am merging the mail threads here.
- > >
- > > First tests are promising, after reboot it was working immediately
- > > without need to rfkill block/unblock. lso after suspend and resume.
- > >
- > > Will test more the next days and report back.
- > >
- > > dmesg output without debugging still the same, but connection
- > > continues without any problem:
- > > [   62.437916] Open BA session requested for 00:0a:79:eb:56:10 tid 0
- > > [   62.456184] activated addBA response timer on tid 0
- > > [   63.456042] addBA response timer expired on tid 0
- > > [   63.456063] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 0
- > > [   67.008297] switched off addBA timer for tid 0
- > > [   67.008305] got addBA resp for tid 0 but we already gave up
- > > [   67.008340] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 0
- > > [   67.015503] Open BA session requested for 00:0a:79:eb:56:10 tid 0
- > > [   67.031648] activated addBA response timer on tid 0
- > > [   67.129907] switched off addBA timer for tid 0
- > > [   67.129914] Aggregation is on for tid 0
- > > [   67.130076] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:0a:79:eb:56:10 tid = 0
- > > [  100.288018] tx session timer expired on tid 0
- > > [  100.288032] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 0
- > > [  106.347302] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 0
- > > [  106.374760] Open BA session requested for 00:0a:79:eb:56:10 tid 0
- > > [  106.388178] activated addBA response timer on tid 0
- > > [  106.390041] switched off addBA timer for tid 0
- > > [  106.390044] Aggregation is on for tid 0
- > > [  106.390193] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:0a:79:eb:56:10 tid = 0
- > > [  135.786765] Open BA session requested for 00:0a:79:eb:56:10 tid 6
- > > [  135.804164] activated addBA response timer on tid 6
- > > [  135.806088] switched off addBA timer for tid 6
- > > [  135.806092] Aggregation is on for tid 6
- > > [  135.806241] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:0a:79:eb:56:10 tid = 6
- > > [  146.912031] tx session timer expired on tid 6
- > > [  146.912071] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 6
- > > [  146.924187] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 6
- > > [  256.560100] tx session timer expired on tid 0
- > > [  256.560132] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 0
- > > [  256.584379] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 0
- > > [  258.477345] Open BA session requested for 00:0a:79:eb:56:10 tid 0
- > > [  258.500189] activated addBA response timer on tid 0
- > > [  258.502148] switched off addBA timer for tid 0
- > > [  258.502151] Aggregation is on for tid 0
- > > [  258.502340] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:0a:79:eb:56:10 tid = 0
- > >
- > > Later on after resume I got a few hickups but the connection just
- > > hang for a shor ttime, then came back:
- > > [  589.895086] delba from 00:0a:79:eb:56:10 (initiator) tid 0 reason code 39
- > > [  589.895095] Rx BA session stop requested for 00:0a:79:eb:56:10 tid 0 inititator reason: 0
- > > [  589.900879] Rx A-MPDU request on tid 0 result 0
- > > [  589.900950] unexpected AddBA Req from 00:0a:79:eb:56:10 on tid 0
- > > [  589.900958] Rx BA session stop requested for 00:0a:79:eb:56:10 tid 0 recipient reason: 32
- > > [  589.902649] Rx A-MPDU request on tid 0 result 0
- > > [  589.902690] unexpected AddBA Req from 00:0a:79:eb:56:10 on tid 0
- > > [  589.902698] Rx BA session stop requested for 00:0a:79:eb:56:10 tid 0 recipient reason: 32
- > > [  589.903732] Rx A-MPDU request on tid 0 result 0
- > > [  589.903810] unexpected AddBA Req from 00:0a:79:eb:56:10 on tid 0
- > > [  589.903817] Rx BA session stop requested for 00:0a:79:eb:56:10 tid 0 recipient reason: 32
- > > [  589.904965] Rx A-MPDU request on tid 0 result 0
- > > [  589.905045] unexpected AddBA Req from 00:0a:79:eb:56:10 on tid 0
- > > [  589.905053] Rx BA session stop requested for 00:0a:79:eb:56:10 tid 0 recipient reason: 32
- > > [  589.906510] Rx A-MPDU request on tid 0 result 0
- > > [  590.456062] ieee80211 phy0: release an RX reorder frame due to timeout on earlier frames
- > > [  590.456075] ieee80211 phy0: release an RX reorder frame due to timeout on earlier frames
- > > [  590.456083] ieee80211 phy0: release an RX reorder frame due to timeout on earlier frames
- > > [  594.413810] delba from 00:0a:79:eb:56:10 (initiator) tid 0 reason code 39
- > > [  594.413822] Rx BA session stop requested for 00:0a:79:eb:56:10 tid 0 inititator reason: 0
- > > [  594.428073] Rx A-MPDU request on tid 0 result 0
- > >
- > >
- > > Generally fine.
- > >
- > > Thanks, more reports later.
- > >
- > 
- > Dave ?
+On my testing, I saw some strange behavior
 
-after running with it all evening, it seems to be working fine so far.
+[  421.739708] iwlwifi 0000:01:00.0: ACTIVATE a non DRIVER active station id 148 addr 00:00:00:00:00:00
+[  421.739719] iwlwifi 0000:01:00.0: iwl_sta_ucode_activate Added STA id 148 addr 00:00:00:00:00:00 to uCode
 
-(Sorry for delay, been on vacation for a week)
+not sure how it happen, but adding the sanity check to prevent memory
+corruption
 
-	Dave
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+index 7353826..8d4353a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+@@ -35,9 +35,12 @@
+ #include "iwl-trans.h"
+ 
+ /* priv->shrd->sta_lock must be held */
+-static void iwl_sta_ucode_activate(struct iwl_priv *priv, u8 sta_id)
++static int iwl_sta_ucode_activate(struct iwl_priv *priv, u8 sta_id)
+ {
+-
++	if (sta_id >= IWLAGN_STATION_COUNT) {
++		IWL_ERR(priv, "invalid sta_id %u", sta_id);
++		return -EINVAL;
++	}
+ 	if (!(priv->stations[sta_id].used & IWL_STA_DRIVER_ACTIVE))
+ 		IWL_ERR(priv, "ACTIVATE a non DRIVER active station id %u "
+ 			"addr %pM\n",
+@@ -53,6 +56,7 @@ static void iwl_sta_ucode_activate(struct iwl_priv *priv, u8 sta_id)
+ 		IWL_DEBUG_ASSOC(priv, "Added STA id %u addr %pM to uCode\n",
+ 				sta_id, priv->stations[sta_id].sta.sta.addr);
+ 	}
++	return 0;
+ }
+ 
+ static int iwl_process_add_sta_resp(struct iwl_priv *priv,
+@@ -77,8 +81,7 @@ static int iwl_process_add_sta_resp(struct iwl_priv *priv,
+ 	switch (pkt->u.add_sta.status) {
+ 	case ADD_STA_SUCCESS_MSK:
+ 		IWL_DEBUG_INFO(priv, "REPLY_ADD_STA PASSED\n");
+-		iwl_sta_ucode_activate(priv, sta_id);
+-		ret = 0;
++		ret = iwl_sta_ucode_activate(priv, sta_id);
+ 		break;
+ 	case ADD_STA_NO_ROOM_IN_TABLE:
+ 		IWL_ERR(priv, "Adding station %d failed, no room in table.\n",
+-- 
+1.7.0.4
 
