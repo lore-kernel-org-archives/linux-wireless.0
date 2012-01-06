@@ -1,33 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:61915 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759172Ab2AFU5E (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:48176 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750984Ab2AFIOs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jan 2012 15:57:04 -0500
-Message-ID: <4F07601D.3050504@lwfinger.net> (sfid-20120106_215728_456143_832A9B57)
-Date: Fri, 06 Jan 2012 14:57:01 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Fri, 6 Jan 2012 03:14:48 -0500
+Message-ID: <4F06AD59.3050207@qca.qualcomm.com> (sfid-20120106_091505_464162_189EEF2A)
+Date: Fri, 6 Jan 2012 10:14:17 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
 To: Joe Perches <joe@perches.com>
-CC: Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] rtlwifi: Simplify chip version id logging
-References: <0f80cb0e369db8c8884d4a1d46e70a60c1dfb19c.1325878172.git.joe@perches.com> <066ccb110481f572dd34b5fc83671194f3d2e00a.1325878172.git.joe@perches.com>
-In-Reply-To: <066ccb110481f572dd34b5fc83671194f3d2e00a.1325878172.git.joe@perches.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+CC: <linville@tuxdriver.com>, <sfr@canb.auug.org.au>,
+	<netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-next@vger.kernel.org>,
+	<ath6kl-devel@qualcomm.com>, <davem@davemloft.net>
+Subject: Re: [PATCH v2 5/6] ath6kl: convert ath6kl_dbg() and ath6kl_dbg_dump()
+ into functions
+References: <20120105132523.22281.95999.stgit@x201>	 <20120105132834.22281.78822.stgit@x201> <1325781489.22154.19.camel@joe2Laptop>
+In-Reply-To: <1325781489.22154.19.camel@joe2Laptop>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/06/2012 01:31 PM, Joe Perches wrote:
-> Reduce object size a few KB too.
->
-> $ size drivers/net/wireless/rtlwifi/built-in.o*
->     text	   data	    bss	    dec	    hex	filename
->   584493	  55333	 126800	 766626	  bb2a2	drivers/net/wireless/rtlwifi/built-in.o.new
->   586904	  55333	 127216	 769453	  bbdad	drivers/net/wireless/rtlwifi/built-in.o.old
->
-> Signed-off-by: Joe Perches<joe@perches.com>
+Hi Joe,
 
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+On 01/05/2012 06:38 PM, Joe Perches wrote:
+> On Thu, 2012-01-05 at 15:28 +0200, Kalle Valo wrote:
+> 
+>> diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+> []
+>> +void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...)
+> []
+>> +	ath6kl_printk(KERN_DEBUG, "%pV", &vaf);
+> [
+>> diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
+> []
+>> +void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...);
+> 
+> You need to add
+> 
+> __printf(2, 3)
+> 
+> to the prototype.
+> 
+> If it's not there, the printf formats and arguments aren't verified.
+> %pV could do the wrong/bad things.
+
+Nice, I'll add that to v3. Thanks again.
+
+Kalle
