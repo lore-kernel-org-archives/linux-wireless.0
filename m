@@ -1,36 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40483 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756815Ab2ADUay (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:61915 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759172Ab2AFU5E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jan 2012 15:30:54 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] libipw_wx_set_encodeext: mark dev as __maybe_unused to prevent warning
-Date: Wed,  4 Jan 2012 15:24:35 -0500
-Message-Id: <1325708675-23408-1-git-send-email-linville@tuxdriver.com> (sfid-20120104_213058_447847_8BBE800A)
+	Fri, 6 Jan 2012 15:57:04 -0500
+Message-ID: <4F07601D.3050504@lwfinger.net> (sfid-20120106_215728_456143_832A9B57)
+Date: Fri, 06 Jan 2012 14:57:01 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] rtlwifi: Simplify chip version id logging
+References: <0f80cb0e369db8c8884d4a1d46e70a60c1dfb19c.1325878172.git.joe@perches.com> <066ccb110481f572dd34b5fc83671194f3d2e00a.1325878172.git.joe@perches.com>
+In-Reply-To: <066ccb110481f572dd34b5fc83671194f3d2e00a.1325878172.git.joe@perches.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- drivers/net/wireless/ipw2x00/libipw_wx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On 01/06/2012 01:31 PM, Joe Perches wrote:
+> Reduce object size a few KB too.
+>
+> $ size drivers/net/wireless/rtlwifi/built-in.o*
+>     text	   data	    bss	    dec	    hex	filename
+>   584493	  55333	 126800	 766626	  bb2a2	drivers/net/wireless/rtlwifi/built-in.o.new
+>   586904	  55333	 127216	 769453	  bbdad	drivers/net/wireless/rtlwifi/built-in.o.old
+>
+> Signed-off-by: Joe Perches<joe@perches.com>
 
-diff --git a/drivers/net/wireless/ipw2x00/libipw_wx.c b/drivers/net/wireless/ipw2x00/libipw_wx.c
-index 1571505..fce8bbf 100644
---- a/drivers/net/wireless/ipw2x00/libipw_wx.c
-+++ b/drivers/net/wireless/ipw2x00/libipw_wx.c
-@@ -523,7 +523,7 @@ int libipw_wx_set_encodeext(struct libipw_device *ieee,
- 			       struct iw_request_info *info,
- 			       union iwreq_data *wrqu, char *extra)
- {
--	struct net_device *dev = ieee->dev;
-+	struct net_device *dev __maybe_unused = ieee->dev;
- 	struct iw_point *encoding = &wrqu->encoding;
- 	struct iw_encode_ext *ext = (struct iw_encode_ext *)extra;
- 	int i, idx, ret = 0;
--- 
-1.7.4.4
-
+ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
