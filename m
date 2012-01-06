@@ -1,46 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:45446 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753442Ab2ACPJW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 10:09:22 -0500
-Date: Tue, 3 Jan 2012 10:09:21 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Matthew Garrett <mjg@redhat.com>
-cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Jack Stone <jwjstone@fastmail.fm>,
-	Oliver Neukum <oliver@neukum.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-In-Reply-To: <20120103032505.GA19702@srcf.ucam.org>
-Message-ID: <Pine.LNX.4.44L0.1201031007500.1452-100000@iolanthe.rowland.org> (sfid-20120103_160926_367706_A096F6D1)
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from mga03.intel.com ([143.182.124.21]:21042 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751129Ab2AFWTr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jan 2012 17:19:47 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Kenny Hsu <kenny.hsu@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 3/7] iwlwifi: update testmode command of direct register access
+Date: Fri,  6 Jan 2012 13:16:29 -0800
+Message-Id: <1325884593-31298-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120106_232008_630347_CDFF149F)
+In-Reply-To: <1325884593-31298-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1325884593-31298-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 3 Jan 2012, Matthew Garrett wrote:
+From: Kenny Hsu <kenny.hsu@intel.com>
 
-> On Mon, Jan 02, 2012 at 09:45:58PM -0500, Alan Stern wrote:
-> 
-> > Wait a second.  Why does isight_firmware bind at this time?  Binding to
-> > new devices is handled by khubd, which doesn't start running again
-> > until after the resume is finished (the device appears to be new
-> > because its descriptors have changed).  At that point there should be
-> > no trouble reloading the firmware.
-> 
-> Then why are we getting this warning? The firmware is only loaded in the 
-> probe function.
+In order to make sure the testcommand function of direct register
+access can be performed even NIC is asleep, replace corresponding
+handler iwl_read32 and iwl_write32 by using iwl_direct_read32 and
+iwl_direct_write32.
 
-I don't know.  Do you have a kernel log (with CONFIG_USB_DEBUG enabled) 
-posted somewhere?
+Signed-off-by: Kenny Hsu <kenny.hsu@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-testmode.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Alan Stern
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+index 4a5cddd..2fc2067 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+@@ -299,7 +299,7 @@ static int iwl_testmode_reg(struct ieee80211_hw *hw, struct nlattr **tb)
+ 
+ 	switch (nla_get_u32(tb[IWL_TM_ATTR_COMMAND])) {
+ 	case IWL_TM_CMD_APP2DEV_DIRECT_REG_READ32:
+-		val32 = iwl_read32(bus(priv), ofs);
++		val32 = iwl_read_direct32(bus(priv), ofs);
+ 		IWL_INFO(priv, "32bit value to read 0x%x\n", val32);
+ 
+ 		skb = cfg80211_testmode_alloc_reply_skb(hw->wiphy, 20);
+@@ -321,7 +321,7 @@ static int iwl_testmode_reg(struct ieee80211_hw *hw, struct nlattr **tb)
+ 		} else {
+ 			val32 = nla_get_u32(tb[IWL_TM_ATTR_REG_VALUE32]);
+ 			IWL_INFO(priv, "32bit value to write 0x%x\n", val32);
+-			iwl_write32(bus(priv), ofs, val32);
++			iwl_write_direct32(bus(priv), ofs, val32);
+ 		}
+ 		break;
+ 	case IWL_TM_CMD_APP2DEV_DIRECT_REG_WRITE8:
+-- 
+1.7.0.4
 
