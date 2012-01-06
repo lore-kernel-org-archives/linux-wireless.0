@@ -1,112 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:65075 "EHLO mga09.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:35769 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753872Ab2AKMi6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 07:38:58 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Dave Jones <davej@redhat.com>
-CC: Dan Williams <dcbw@redhat.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: RE: iwlwifi worse than ever in current git.
-Date: Wed, 11 Jan 2012 12:38:43 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB306429E@HASMSX103.ger.corp.intel.com> (sfid-20120111_133903_579810_850A1D97)
-References: <20120110184917.GA26973@redhat.com>
- <1326221614.5067.6.camel@dcbw.foobar.com>
- <0BA3FCBA62E2DC44AF3030971E174FB3063085@HASMSX103.ger.corp.intel.com>
- <20120111014243.GA22066@redhat.com>
-In-Reply-To: <20120111014243.GA22066@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S1750995Ab2AFWTq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jan 2012 17:19:46 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 0/7] update for 3.4: iwlwifi 2012-01-06
+Date: Fri,  6 Jan 2012 13:16:26 -0800
+Message-Id: <1325884593-31298-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120106_232002_744812_6A8D64A1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> [  173.145695] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_start Can proceed: ssn =
-> next_recl = 869
-> [  173.147133] iwlwifi 0000:04:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 101
-> [  173.147545] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate
-> BA Queue 11 on FIFO 1
-> [  173.148050] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra =
-> b8:c7:5d:0c:39:88 tid = 0
+We add and improve the features support for testmode
+We also update the Copyright to 2012
 
-I am missing logs here... You seem to reauthenticate but I can't see disconnection... weird
+Kenny Hsu (4):
+  iwlwifi: update testmode command of direct register access
+  iwlwifi: enhance testmode command sram_read
+  iwlwifi: update error dump in testmode command sram_read
+  iwlwifi: add testmode cmd IWL_TM_CMD_APP2DEV_GET_FW_INFO
 
+Wey-Yi Guy (3):
+  iwlwifi: don't process the info from uCode if does not has ownership
+  iwlwifi: Sanity check for sta_id
+  iwlwifi: update Copyright
 
-> [  192.805102] wlan0: authenticate with b8:c7:5d:0c:39:87 (try 1)
-> [  192.807392] wlan0: authenticated
-> [  192.814840] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_stop Can't proceed: ssn
-> 1633, next_recl = 139
-
-Stop AGG before we are associated ?!
-Is that leftovers from the previous association that was torn down ?
-
-> [  192.818669] wlan0: moving STA b8:c7:5d:0c:39:88 to state 2
-> [  192.818939] wlan0: moving STA b8:c7:5d:0c:39:88 to state 1
-> [  192.819206] wlan0: moving STA b8:c7:5d:0c:39:88 to state 0
-> [  192.824157] wlan0: associate with b8:c7:5d:0c:39:87 (try 1)
-
-Associating to another AP ? A band maybe ?
-
-> [  192.828014] wlan0: RX ReassocResp from b8:c7:5d:0c:39:87 (capab=0x431
-> status=0 aid=3)
-> [  192.828372] wlan0: associated
-> [  192.828515] wlan0: moving STA b8:c7:5d:0c:39:87 to state 1
-> [  192.828713] wlan0: moving STA b8:c7:5d:0c:39:87 to state 2
-> [  193.853664] wlan0: moving STA b8:c7:5d:0c:39:87 to state 3
-> [  278.421399] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_start Can proceed: ssn =
-> next_recl = 165
-> [  278.423946] iwlwifi 0000:04:00.0: U iwl_trans_set_wr_ptrs Q 12  WrPtr: 165
-> [  278.424007] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate
-> BA Queue 12 on FIFO 1
-> [  278.424835] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra =
-> b8:c7:5d:0c:39:87 tid = 0
-> [  285.176431] iwlwifi 0000:04:00.0: I iwl_stop_queue Stop hwq 12 ac 2 stop
-> count 1. Queue is full
-> [  290.304163] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_stop Can't proceed: ssn
-> 397, next_recl = 174
-> 
-> 
-> At this point I unloaded, and reloaded the module.
-> I had to do this several times until it finally came back up.
-> 
-> Shortly afterwards..
-> 
-> [  599.752969] wlan0: authenticate with b8:c7:5d:0c:39:87 (try 1)
-> [  599.755359] wlan0: authenticated
-> [  599.762131] iwlwifi 0000:04:00.0: I iwl_stop_queue Stop hwq 0 ac 0 stop
-> count 1. Tx on passive channel
-
-Interesting. The FW is complaining that you are Txing on a channel that is defined as passive channel...
-
-
-> [  599.774132] iwlwifi 0000:04:00.0: U iwl_trans_pcie_wake_any_queue Queue
-> Status: Q[0] stopped
-> [  599.774551] iwlwifi 0000:04:00.0: U iwl_wake_queue Wake hwq 0 ac 0.
-> Disassoc: flush queue
-> [  599.774921] iwlwifi 0000:04:00.0: U iwl_trans_pcie_wake_any_queue Queue
-> Status: Q[1] awake
-> [  599.775779] iwlwifi 0000:04:00.0: U iwl_trans_pcie_wake_any_queue Queue
-> Status: Q[2] awake
-> [  599.776515] iwlwifi 0000:04:00.0: U iwl_trans_pcie_wake_any_queue Queue
-> Status: Q[3] awake
-> [  599.777198] iwlwifi 0000:04:00.0: I iwl_stop_queue Stop hwq 0 ac 0 stop
-> count 1. Tx on passive channel
-
-Again.
-
-
-There are a few AMPDUs issues here but I guess the worst issue you are seeing is due to the passive channel thing.
-Does it feel better with 11n disabled ?
-
-
-
----------------------------------------------------------------------
-Intel Israel (74) Limited
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+ drivers/net/wireless/iwlwifi/iwl-1000.c           |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-2000.c           |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c           |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c           |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.c      |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.h      |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-hw.h         |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c        |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c         |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.h         |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c         |   30 +++++-----
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c       |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c        |   13 +++--
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.c         |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.h         |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c            |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.h            |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-bus.h            |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-cfg.h            |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h       |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c           |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h           |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-csr.h            |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-debug.h          |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c        |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h            |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-devtrace.c       |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-devtrace.h       |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c         |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h         |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-fh.h             |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-io.c             |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-io.h             |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-led.c            |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-led.h            |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c       |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-pci.c            |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-power.c          |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-power.h          |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-prph.h           |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c           |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-shared.h         |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-testmode.c       |   64 ++++++++++++++++----
+ drivers/net/wireless/iwlwifi/iwl-testmode.h       |   26 +++++++-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-trans.c          |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-trans.h          |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-ucode.c          |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-wifi.h           |    4 +-
+ 53 files changed, 166 insertions(+), 105 deletions(-)
 
