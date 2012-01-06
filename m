@@ -1,93 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews09.kpnxchange.com ([213.75.39.14]:4713 "EHLO
-	cpsmtpb-ews09.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754392Ab2A3WGz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 17:06:55 -0500
-Message-ID: <4F271479.4090303@gmail.com> (sfid-20120130_230701_625313_A7777383)
-Date: Mon, 30 Jan 2012 23:06:49 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 2/4] rt2800: radio 3xxx: program RF_R1
- during channel switch
-References: <1327936679-12576-1-git-send-email-sgruszka@redhat.com> <1327936679-12576-2-git-send-email-sgruszka@redhat.com>
-In-Reply-To: <1327936679-12576-2-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from perches-mx.perches.com ([206.117.179.246]:39248 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754651Ab2AFTbt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jan 2012 14:31:49 -0500
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-kernel@vger.kernel.org
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 1/2] rtlwifi: Remove incorrect logging message prefixes
+Date: Fri,  6 Jan 2012 11:31:42 -0800
+Message-Id: <0f80cb0e369db8c8884d4a1d46e70a60c1dfb19c.1325878172.git.joe@perches.com> (sfid-20120106_203233_783219_8722BB21)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/30/12 16:17, Stanislaw Gruszka wrote:
-> Synchronize code with Ralink driver:
-> 2011_0719_RT3070_RT3370_RT5370_RT5372_Linux_STA_V2.5.0.3_DPO
-> Based on functions:
-> RT33xx_ChipSwitchChannel
-> RT30xx_ChipSwitchChannel
-> RT33xx_Init
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+pr_fmt() adds them.  These are unnecessary and wrong.
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |   34 +++++++++++++++++++++++++++++++
->  1 files changed, 34 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 6edf566..a841918 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -1666,6 +1666,40 @@ static void rt2800_config_channel_rf3xxx(struct rt2x00_dev *rt2x00dev,
->  	rt2x00_set_field8(&rfcsr, RFCSR13_TX_POWER, info->default_power2);
->  	rt2800_rfcsr_write(rt2x00dev, 13, rfcsr);
->  
-> +	rt2800_rfcsr_read(rt2x00dev, 1, &rfcsr);
-> +	rt2x00_set_field8(&rfcsr, RFCSR1_RX0_PD, 0);
-> +	rt2x00_set_field8(&rfcsr, RFCSR1_TX0_PD, 0);
-> +	if (rt2x00_rt(rt2x00dev, RT3390)) {
-> +		rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD,
-> +				  rt2x00dev->default_ant.rx_chain_num == 1);
-> +		rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD,
-> +				  rt2x00dev->default_ant.tx_chain_num == 1);
-> +	} else {
-> +		rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 0);
-> +		rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 0);
-> +		rt2x00_set_field8(&rfcsr, RFCSR1_RX2_PD, 0);
-> +		rt2x00_set_field8(&rfcsr, RFCSR1_TX2_PD, 0);
-> +
-> +		switch (rt2x00dev->default_ant.tx_chain_num) {
-> +		case 1:
-> +			rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 1);
-> +			/* fall through */
-> +		case 2:
-> +			rt2x00_set_field8(&rfcsr, RFCSR1_TX2_PD, 1);
-> +			break;
-> +		}
-> +
-> +		switch (rt2x00dev->default_ant.rx_chain_num) {
-> +		case 1:
-> +			rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 1);
-> +			/* fall through */
-> +		case 2:
-> +			rt2x00_set_field8(&rfcsr, RFCSR1_RX2_PD, 1);
-> +			break;
-> +		}
-> +	}
-> +	rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
-> +
->  	rt2800_rfcsr_read(rt2x00dev, 23, &rfcsr);
->  	rt2x00_set_field8(&rfcsr, RFCSR23_FREQ_OFFSET, rt2x00dev->freq_offset);
->  	rt2800_rfcsr_write(rt2x00dev, 23, rfcsr);
-
-To be honest, I think that this can be simplied to a single case for
-both RT30xx and RT33xx. Just take the RT30xx branch of the added
-if-statement and it should just work fine on both chipset families.
-
-Yes, I am aware the Ralink driver has slightly different code here, but
-that just seems to be because they work with knowledge of the
-limitations of RT33xx, which ensures that tx_chain_num and rx_chain_num
-can never be 2 on that chipset, but still handling it doesn't harm. It
-would merely result in better readable code.
-
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
-Gertjan
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.c |    2 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/sw.c  |    4 ++--
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c  |    4 ++--
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+index 943f3d4..71c7aca 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+@@ -84,7 +84,7 @@ void rtl92c_read_chip_version(struct ieee80211_hw *hw)
+ 		}
+ 	}
+ 	rtlhal->version  = (enum version_8192c)chip_version;
+-	pr_info("rtl8192cu: Chip version 0x%x\n", chip_version);
++	pr_info("Chip version 0x%x\n", chip_version);
+ 	switch (rtlhal->version) {
+ 	case VERSION_NORMAL_TSMC_CHIP_92C_1T2R:
+ 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+index 022f065..364aa40 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+@@ -154,9 +154,9 @@ static int rtl92d_init_sw_vars(struct ieee80211_hw *hw)
+ 	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
+ 	rtlpriv->psc.fwctrl_lps = rtlpriv->cfg->mod_params->fwctrl_lps;
+ 	if (!rtlpriv->psc.inactiveps)
+-		pr_info("rtl8192ce: Power Save off (module option)\n");
++		pr_info("Power Save off (module option)\n");
+ 	if (!rtlpriv->psc.fwctrl_lps)
+-		pr_info("rtl8192ce: FW Power Save off (module option)\n");
++		pr_info("FW Power Save off (module option)\n");
+ 	rtlpriv->psc.reg_fwctrl_lps = 3;
+ 	rtlpriv->psc.reg_max_lps_awakeintvl = 5;
+ 	/* for ASPM, you can close aspm through
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+index a933aef..5795a54 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+@@ -168,9 +168,9 @@ static int rtl92s_init_sw_vars(struct ieee80211_hw *hw)
+ 	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
+ 	rtlpriv->psc.fwctrl_lps = rtlpriv->cfg->mod_params->fwctrl_lps;
+ 	if (!rtlpriv->psc.inactiveps)
+-		pr_info("rtl8192ce: Power Save off (module option)\n");
++		pr_info("Power Save off (module option)\n");
+ 	if (!rtlpriv->psc.fwctrl_lps)
+-		pr_info("rtl8192ce: FW Power Save off (module option)\n");
++		pr_info("FW Power Save off (module option)\n");
+ 	rtlpriv->psc.reg_fwctrl_lps = 3;
+ 	rtlpriv->psc.reg_max_lps_awakeintvl = 5;
+ 	/* for ASPM, you can close aspm through
+-- 
+1.7.8.111.gad25c.dirty
+
