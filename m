@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:35537 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752530Ab2A3UPP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 15:15:15 -0500
-Message-ID: <4F26FA4A.9090102@hauke-m.de> (sfid-20120130_211519_203571_A5CDCA50)
-Date: Mon, 30 Jan 2012 21:15:06 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mms3.broadcom.com ([216.31.210.19]:1807 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758781Ab2AFUIA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jan 2012 15:08:00 -0500
+Message-ID: <4F075497.9070607@broadcom.com> (sfid-20120106_210805_762579_3BBBC482)
+Date: Fri, 6 Jan 2012 12:07:51 -0800
+From: "Franky Lin" <frankyl@broadcom.com>
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	Arend van Spriel <arend@broadcom.com>,
+To: "Stephen Hemminger" <shemminger@vyatta.com>
+cc: "Arend Van Spriel" <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Broadcom sprom
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH 2/2] brcmfmac: use existing net_device_stats
+References: <20120105183947.295358582@vyatta.com>
+ <20120105184000.572918423@vyatta.com> <4F05F60C.5030406@broadcom.com>
+ <20120105111554.57f411d0@nehalam.linuxnetplumber.net>
+ <4F05FC76.5070509@broadcom.com>
+ <20120105210001.600aacd3@nehalam.linuxnetplumber.net>
+In-Reply-To: <20120105210001.600aacd3@nehalam.linuxnetplumber.net>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I had a look at the sprom parsing, as the SoC sprom parsing code is
-dated and does not fill in some fields introduced in updates of struct
-ssb_sprom. I had a look at the brcm/include/bcmsrom_tbl.h file found in
-the Broadcom SoC SDK containing the positions and names of the sprom
-values. For the old sprom versions <= 4 our struct ssb_sprom contains
-mostly all fields available in the sprom, but for more recent it misses
-some/many values. I searched brcmsmac for some of them and they are
-mostly parsing the same values for v8 and v9 as the Broadcom SoC SDK
-does, but they do not use all of them.
+On 01/05/2012 09:00 PM, Stephen Hemminger wrote:
+> You are confused. The only place the data in question is used is:
+> static struct net_device_stats *brcmf_netdev_get_stats
+>
+> This is a per-network device standard API and it returns per-network device
+> statistics. Several releases ago, structure element was added to the network_device
+> struct for common usage by drivers. All this patch does is use that instead of the
+> private device scratch pad.
+>
+> If you really want to be more clever, the device should be convert to the
+> new getstats64 API, but that requires more work (like wrapping updates with
+> the u64_stats_sync() macros.
+>
 
-How should we proceed? Should I extend struct ssb_sprom to support all
-sprom values available or found in the Broadcom SDK in sprom version 1
-to 9 and add the parsing code to bcm47xx arch code, ssb (for old
-versions) and bcma, or just the ones currently needed by any driver? As
-even brcmsmac does not use all of them some seam to be unused at all.
+I misunderstood since the first mail I got of this thread is Arend's 
+reply. But I did receive the "brcmf: make net_device_ops const" patch. 
+Something wrong with the mail server?
 
-As the struct would be under 1KB if we put in all sprom values we know
-of I am for adding all these values into it and we do not have to deal
-with sproms till version 10 is released. ;-)
+Franky
 
-What are you opinions about this?
-
-Hauke
