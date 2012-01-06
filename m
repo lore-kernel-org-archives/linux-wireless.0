@@ -1,139 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44668 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932621Ab2AEPda (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:62239 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030320Ab2AFPrG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 10:33:30 -0500
-Message-Id: <20120105153228.497095902@sipsolutions.net> (sfid-20120105_163334_529782_82FE1906)
-Date: Thu, 05 Jan 2012 16:30:45 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/8] mac80211: simplify AP_VLAN handling
-References: <20120105153043.568616380@sipsolutions.net>
-Mime-Version: 1.0
+	Fri, 6 Jan 2012 10:47:06 -0500
+Received: by ghbg21 with SMTP id g21so734786ghb.19
+        for <linux-wireless@vger.kernel.org>; Fri, 06 Jan 2012 07:47:04 -0800 (PST)
+Message-ID: <4F071775.4010308@gmail.com> (sfid-20120106_164711_099608_9BFC6FF4)
+Date: Fri, 06 Jan 2012 23:47:01 +0800
+From: lina <lina.lastname@gmail.com>
+MIME-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Subject: Fwd: how to uninstall the b43 and reinstall
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi,
 
-Setting keys and updating TKIP keys must use the
-BSS sdata (not AP_VLAN), so we translate. Move
-the translation into driver-ops wrappers instead
-of having it inline in the code to simplify the
-normal code flow.
+a quick question, how to clear the b43?
 
-The same can be done for sta_add/remove which
-already does the translation in the wrapper.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/driver-ops.h |    2 ++
- net/mac80211/key.c        |    8 --------
- net/mac80211/pm.c         |   11 ++---------
- net/mac80211/sta_info.c   |    8 +-------
- net/mac80211/util.c       |   11 ++---------
- 5 files changed, 7 insertions(+), 33 deletions(-)
+a detailed background stories as following:
 
---- a/net/mac80211/driver-ops.h	2012-01-04 14:20:03.000000000 +0100
-+++ b/net/mac80211/driver-ops.h	2012-01-04 14:20:09.000000000 +0100
-@@ -253,6 +253,7 @@ static inline int drv_set_key(struct iee
- 
- 	might_sleep();
- 
-+	sdata = get_bss_sdata(sdata);
- 	check_sdata_in_driver(sdata);
- 
- 	trace_drv_set_key(local, cmd, sdata, sta, key);
-@@ -272,6 +273,7 @@ static inline void drv_update_tkip_key(s
- 	if (sta)
- 		ista = &sta->sta;
- 
-+	sdata = get_bss_sdata(sdata);
- 	check_sdata_in_driver(sdata);
- 
- 	trace_drv_update_tkip_key(local, sdata, conf, ista, iv32);
---- a/net/mac80211/key.c	2012-01-04 14:20:03.000000000 +0100
-+++ b/net/mac80211/key.c	2012-01-04 14:20:09.000000000 +0100
-@@ -123,9 +123,6 @@ static int ieee80211_key_enable_hw_accel
- 		 */
- 		if (!(key->conf.flags & IEEE80211_KEY_FLAG_PAIRWISE))
- 			goto out_unsupported;
--		sdata = container_of(sdata->bss,
--				     struct ieee80211_sub_if_data,
--				     u.ap);
- 	}
- 
- 	ret = drv_set_key(key->local, SET_KEY, sdata, sta, &key->conf);
-@@ -187,11 +184,6 @@ static void ieee80211_key_disable_hw_acc
- 	      (key->conf.flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE)))
- 		increment_tailroom_need_count(sdata);
- 
--	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--		sdata = container_of(sdata->bss,
--				     struct ieee80211_sub_if_data,
--				     u.ap);
--
- 	ret = drv_set_key(key->local, DISABLE_KEY, sdata,
- 			  sta, &key->conf);
- 
---- a/net/mac80211/pm.c	2012-01-04 14:20:03.000000000 +0100
-+++ b/net/mac80211/pm.c	2012-01-04 14:20:09.000000000 +0100
-@@ -97,15 +97,8 @@ int __ieee80211_suspend(struct ieee80211
- 	/* tear down aggregation sessions and remove STAs */
- 	mutex_lock(&local->sta_mtx);
- 	list_for_each_entry(sta, &local->sta_list, list) {
--		if (sta->uploaded) {
--			sdata = sta->sdata;
--			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--				sdata = container_of(sdata->bss,
--					     struct ieee80211_sub_if_data,
--					     u.ap);
--
--			drv_sta_remove(local, sdata, &sta->sta);
--		}
-+		if (sta->uploaded)
-+			drv_sta_remove(local, sta->sdata, &sta->sta);
- 
- 		mesh_plink_quiesce(sta);
- 	}
---- a/net/mac80211/sta_info.c	2012-01-04 14:20:03.000000000 +0100
-+++ b/net/mac80211/sta_info.c	2012-01-04 14:20:09.000000000 +0100
-@@ -774,14 +774,8 @@ int __must_check __sta_info_destroy(stru
- 		WARN_ON_ONCE(err != 0);
- 	}
- 
--	if (sta->uploaded) {
--		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--			sdata = container_of(sdata->bss,
--					     struct ieee80211_sub_if_data,
--					     u.ap);
-+	if (sta->uploaded)
- 		drv_sta_remove(local, sdata, &sta->sta);
--		sdata = sta->sdata;
--	}
- 
- 	/*
- 	 * At this point, after we wait for an RCU grace period,
---- a/net/mac80211/util.c	2012-01-04 14:20:03.000000000 +0100
-+++ b/net/mac80211/util.c	2012-01-04 14:20:09.000000000 +0100
-@@ -1185,15 +1185,8 @@ int ieee80211_reconfig(struct ieee80211_
- 	/* add STAs back */
- 	mutex_lock(&local->sta_mtx);
- 	list_for_each_entry(sta, &local->sta_list, list) {
--		if (sta->uploaded) {
--			sdata = sta->sdata;
--			if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
--				sdata = container_of(sdata->bss,
--					     struct ieee80211_sub_if_data,
--					     u.ap);
--
--			WARN_ON(drv_sta_add(local, sdata, &sta->sta));
--		}
-+		if (sta->uploaded)
-+			WARN_ON(drv_sta_add(local, sta->sdata, &sta->sta));
- 	}
- 	mutex_unlock(&local->sta_mtx);
- 
 
+I installed the b43 following the advice given by list,
+mainly from
+http://linuxwireless.org/en/users/Drivers/b43
+
+it WORKED.
+
+but yesterday I removed the old kernel 3.2-rc6, which is the one b43 worked,
+and installed the 3.2 from kernel.org. I guess it's latest, than 3.2-rc6 ?
+
+I don't know how to remove the b43 since the trial of
+make uninstall in pathTo/b43-fwcutter-015 not work.
+
+so I just did something like make install again, and then
+1 
+<http://linuxwireless.org/en/users/Drivers/b43#CA-d6bf7044c28bbe20619873aa0dd5f8faa0864c61_1> 
+export FIRMWARE_INSTALL_DIR="/lib/firmware"
+2 
+<http://linuxwireless.org/en/users/Drivers/b43#CA-d6bf7044c28bbe20619873aa0dd5f8faa0864c61_2> 
+wget http://www.lwfinger.com/b43-firmware/broadcom-wl-5.100.138.tar.bz2
+3 
+<http://linuxwireless.org/en/users/Drivers/b43#CA-d6bf7044c28bbe20619873aa0dd5f8faa0864c61_3> 
+tar xjf broadcom-wl-5.100.138.tar.bz2
+4 sudo b43-fwcutter -w "$FIRMWARE_INSTALL_DIR" 
+broadcom-wl-5.100.138/linux/wl_apsta.o
+
+dmesg showed me:
+[  127.434017] cfg80211: Calling CRDA to update world regulatory domain
+[  127.704793] b43-phy0: Broadcom 4331 WLAN found (core revision 29)
+[  127.704821] bcma: Switched to core: 0x812
+[  127.705237] b43-phy0 ERROR: FOUND UNSUPPORTED PHY (Analog 9, Type 7, 
+Revision 1)
+[  127.705244] b43: probe of bcma0:0 failed with error -95
+[  127.705260] Broadcom 43xx driver loaded [ Features: PMNLS ]
+[  431.367724] applesmc: FS! : read arg fail
+
+Thanks for any advice
 
