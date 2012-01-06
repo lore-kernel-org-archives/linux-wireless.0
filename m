@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:4979 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753859Ab2AXLqi (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:52533 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754075Ab2AFOua convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 06:46:38 -0500
-Message-ID: <4F1E9A19.7080406@qca.qualcomm.com> (sfid-20120124_124642_199102_E994D733)
-Date: Tue, 24 Jan 2012 13:46:33 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Fri, 6 Jan 2012 09:50:30 -0500
 MIME-Version: 1.0
-To: <rmani@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH v2 7/8] ath6kl: Add a support to handle the host sleep
- mode cmd processed event
-References: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com> <1327066544-23779-8-git-send-email-rmani@qca.qualcomm.com>
-In-Reply-To: <1327066544-23779-8-git-send-email-rmani@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <NEXT-4f07092f473990.86346967@nextmail.ru>
+References: <NEXT-4f07092f473990.86346967@nextmail.ru>
+Date: Fri, 6 Jan 2012 20:20:29 +0530
+Message-ID: <CAD2nsn1xf17MRwCfX26VhfOuXLuwMAsPkvGPBnMz51U=G8E+gw@mail.gmail.com> (sfid-20120106_155048_393198_138EEB5B)
+Subject: Re: ath9k crash 3.2-rc7
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: MR <g7af0ec1e3ea1e7b1@nextmail.ru>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/20/2012 03:35 PM, rmani@qca.qualcomm.com wrote:
-> From: Raja Mani <rmani@qca.qualcomm.com>
-> 
-> For every WMI_SET_HOST_SLEEP_MODE_CMDID command (send from the host),
-> the firmware sends WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID as
-> an acknowledgement to the host.
-> 
-> In order to being sync with the firmware, the host has to wait for
-> this event before going to the suspend state.
-> 
-> This patch adds,
->  * New command WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID in
->    WMI event table.
->  * New WMI function ath6kl_wmi_host_sleep_mode_cmd_prcd_evt_rx()
->    to process the event.
->  * New flag HOST_SLEEP_MODE_CMD_PROCESSED in VIF flags to record
->    the arrival of the event.
-> 
-> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+2012/1/6 MR <g7af0ec1e3ea1e7b1@nextmail.ru>:
+>  > >  > can a find a fix
+>  > >  > for both of them
+>  > >
+>  > > I am building kernel with pos<0 check added...
+>  >
+>  > thanks!  if it does not works, i have only one more idea(a patch
+>  > which removes some suspicious code which abuses a pointer any way that
+>  > has to be fixed properly ). otherwise i need to recreate the issue and
+>  > capture the stack trace completely, put debug prints. i ran an
+>  > overnight test but was unable to recreate the issue. later today AN  i
+>  > got a crash accidentally but only once, after that never.
+>
+> What is a complete stack trace? Maybe I can configure console in some way and
+> get the needed information.
 
-You could fold patches 7 and 8 as they are one logical change.
+just want to make sure , if we get the EIP and the exact line.
+ath9k_config+0x115/0x780  points to ath_update_survey_stats
 
-Kalle
+>
+>
+
+-- 
+shafi
