@@ -1,259 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from h118.nextmail.ru ([194.67.36.118]:47190 "EHLO h118.nextmail.ru"
+Received: from mga03.intel.com ([143.182.124.21]:35769 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756607Ab2AJSOk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jan 2012 13:14:40 -0500
-To: =?koi8-r?B?TW9oYW1tZWQgU2hhZmk=?= <shafi.wireless@gmail.com>
-From: =?koi8-r?B?TVI=?= <g7af0ec1e3ea1e7b1@nextmail.ru>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"=?koi8-r?B?UmFqa3VtYXIgTWFub2hhcmFu?=" <rmanohar@qca.qualcomm.com>
-Subject: =?koi8-r?B?UmU6IGF0aDlrIGNyYXNoIDMuMi1yYzc=?=
-Date: Tue, 10 Jan 2012 22:14:37 +0400
-Message-ID: <NEXT-4f0c800d645e48.34497251@nextmail.ru> (sfid-20120110_191501_374363_BC8254B0)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1759269Ab2AFWTs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 6 Jan 2012 17:19:48 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Kenny Hsu <kenny.hsu@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 6/7] iwlwifi: add testmode cmd IWL_TM_CMD_APP2DEV_GET_FW_INFO
+Date: Fri,  6 Jan 2012 13:16:32 -0800
+Message-Id: <1325884593-31298-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120106_232005_917803_8BD853B8)
+In-Reply-To: <1325884593-31298-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1325884593-31298-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- > >> So, I am building 3.2 with two patches: over/under-flow catcher (pity
- > >that
- >>> it seems to be on a multiple-times-per-second codepath and just leaving
- > >the
- >> > checks there for everyone is suboptimal) and allegedely proper fix.
- >Both
- > > > applied OK with a small offset.
- > > 
- > > as per our assumption, we should not see those over/underflow errors,
- > > with the patch
- > > above mentioned. please let us know if you hit upon this warnings,
- > > even after the proper fix.
- > 
- > 2 hours in. It looks like 10%-20% throughput loss (both up and down with 
- >similar ratio) relative to "remove suspicious code" build. It may be some 
- >other change, of course (slightly moving the notebook, removing USB device
- >
- > charging from the notebook or something like that)
+From: Kenny Hsu <kenny.hsu@intel.com>
 
-Seems to be AP-dependent. 
+Add new testmode command IWL_TM_CMD_APP2DEV_GET_FW_INFO for
+reporting the following information of existing loaded uCode image.
++ uCode type
++ Instruction section size
++ Data section size
 
-I spent entire day on one AP with no problems, went across the building, 
-roamed (went offline, found new AP) succesfully, and then ten minutes later:
-(logs saved)
+Signed-off-by: Kenny Hsu <kenny.hsu@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-testmode.c |   41 ++++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-testmode.h |   19 +++++++++++-
+ 2 files changed, 57 insertions(+), 3 deletions(-)
 
-Jan 10 10:35:57 401a0bf1 kernel: [ 7681.407314] wlan0: deauthenticating from 
-00:19:5b:be:3c:a7 by local choice (reason=3)
-Jan 10 10:35:57 401a0bf1 kernel: [ 7681.427485] cfg80211: Calling CRDA to 
-update world regulatory domain
-Jan 10 10:35:57 401a0bf1 kernel: [ 7681.694908] ADDRCONF(NETDEV_UP): wlan0: 
-link is not ready
-Jan 10 10:35:58 401a0bf1 kernel: [ 7682.545018] wlan0: authenticate with 
-00:19:5b:be:3c:a7 (try 1)
-Jan 10 10:35:58 401a0bf1 kernel: [ 7682.546922] wlan0: authenticated
-Jan 10 10:35:58 401a0bf1 kernel: [ 7682.546954] wlan0: associate with 
-00:19:5b:be:3c:a7 (try 1)
-Jan 10 10:35:58 401a0bf1 kernel: [ 7682.549414] wlan0: RX AssocResp from 
-00:19:5b:be:3c:a7 (capab=0x431 status=0 aid=1)
-Jan 10 10:35:58 401a0bf1 kernel: [ 7682.549421] wlan0: associated
-Jan 10 10:35:58 401a0bf1 kernel: [ 7682.549900] ADDRCONF(NETDEV_CHANGE): 
-wlan0: link becomes ready
-Jan 10 10:36:09 401a0bf1 kernel: [ 7693.095841] wlan0: no IPv6 routers 
-present
-Jan 10 21:01:14 401a0bf1 kernel: [45162.286679] cfg80211: Calling CRDA to 
-update world regulatory domain
-Jan 10 21:01:14 401a0bf1 kernel: [45163.155037] wlan0: authenticate with 
-00:24:8c:81:e1:76 (try 1)
-Jan 10 21:01:14 401a0bf1 kernel: [45163.157132] wlan0: authenticated
-Jan 10 21:01:14 401a0bf1 kernel: [45163.157159] wlan0: associate with 
-00:24:8c:81:e1:76 (try 1)
-Jan 10 21:01:14 401a0bf1 kernel: [45163.159708] wlan0: RX AssocResp from 
-00:24:8c:81:e1:76 (capab=0x411 status=0 aid=2)
-Jan 10 21:01:14 401a0bf1 kernel: [45163.159713] wlan0: associated
-Jan 10 21:34:32 401a0bf1 kernel: [47159.166426] ath: Failed to wakeup in 
-500us
-Jan 10 21:34:34 401a0bf1 kernel: [47160.506049] ath: Failed to stop TX DMA, 
-queues=0x10f!
-Jan 10 21:34:34 401a0bf1 kernel: [47160.518977] ath: DMA failed to stop in 
-10 ms AR_CR=0xffffffff AR_DIAG_SW=0xffffffff DMADBG_7=0xffffffff
-Jan 10 21:34:34 401a0bf1 kernel: [47160.518982] ath: Could not stop RX, we 
-could be confusing the DMA engine when we start RX up
-Jan 10 21:34:34 401a0bf1 kernel: [47160.635143] ath: Chip reset failed
-Jan 10 21:34:34 401a0bf1 kernel: [47160.635146] ath: Unable to reset 
-channel, reset status -22
-Jan 10 21:34:34 401a0bf1 kernel: [47161.226194] ath: Failed to stop TX DMA, 
-queues=0x10f!
-Jan 10 21:34:34 401a0bf1 kernel: [47161.239098] ath: DMA failed to stop in 
-10 ms AR_CR=0xffffffff AR_DIAG_SW=0xffffffff DMADBG_7=0xffffffff
-Jan 10 21:34:34 401a0bf1 kernel: [47161.239103] ath: Could not stop RX, we 
-could be confusing the DMA engine when we start RX up
-
-
-Jan 10 21:42:53 401a0bf1 kernel: [47659.159537] ath: Failed to stop TX DMA, 
-queues=0x10f!
-Jan 10 21:42:53 401a0bf1 kernel: [47659.172508] ath: DMA failed to stop in 
-10 ms AR_CR=0xffffffff AR_DIAG_SW=0xffffffff DMADBG_7=0xffffffff
-Jan 10 21:42:53 401a0bf1 kernel: [47659.172510] ath: Could not stop RX, we 
-could be confusing the DMA engine when we start RX up
-Jan 10 21:42:53 401a0bf1 kernel: [47659.288040] ath: Chip reset failed
-Jan 10 21:42:53 401a0bf1 kernel: [47659.288045] ath: Unable to reset 
-channel, reset status -22
-Jan 10 21:42:53 401a0bf1 kernel: [47659.288091] ath: Unable to set channel
-Jan 10 21:42:53 401a0bf1 kernel: [47659.353999] ath: Failed to stop TX DMA, 
-queues=0x10f!
-Jan 10 21:42:53 401a0bf1 kernel: [47659.366852] ath: DMA failed to stop in 
-10 ms AR_CR=0xffffffff AR_DIAG_SW=0xffffffff DMADBG_7=0xffffffff
-Jan 10 21:42:53 401a0bf1 kernel: [47659.366857] ath: Could not stop RX, we 
-could be confusing the DMA engine when we start RX up
-Jan 10 21:42:53 401a0bf1 kernel: [47659.482275] ath: Chip reset failed
-Jan 10 21:42:53 401a0bf1 kernel: [47659.482280] ath: Unable to reset 
-channel, reset status -22
-Jan 10 21:42:53 401a0bf1 kernel: [47659.482302] ath: Unable to set channel
-Jan 10 21:42:53 401a0bf1 kernel: [47659.548509] ath: Failed to stop TX DMA, 
-queues=0x10f!
-Jan 10 21:42:53 401a0bf1 kernel: [47659.561477] ath: DMA failed to stop in 
-10 ms AR_CR=0xffffffff AR_DIAG_SW=0xffffffff DMADBG_7=0xffffffff
-Jan 10 21:42:53 401a0bf1 kernel: [47659.561481] ath: Could not stop RX, we 
-could be confusing the DMA engine when we start RX up
-Jan 10 21:42:53 401a0bf1 kernel: [47659.677601] ath: Chip reset failed
-Jan 10 21:42:53 401a0bf1 kernel: [47659.677604] ath: Unable to reset channel 
-(2462 MHz), reset status -22
-Jan 10 21:42:54 401a0bf1 kernel: [47660.682084] ath: Failed to wakeup in 
-500us
-Jan 10 21:42:55 401a0bf1 kernel: [47661.231280] ath: Failed to wakeup in 
-500us
-Jan 10 21:42:55 401a0bf1 kernel: [47661.245756] ath: Failed to wakeup in 
-500us
-Jan 10 21:42:55 401a0bf1 kernel: [47661.273456] ath: Failed to wakeup in 
-500us
-Jan 10 21:42:55 401a0bf1 kernel: [47661.284277] ath: Failed to wakeup in 
-500us
-Jan 10 21:42:55 401a0bf1 kernel: [47661.349214] ath: Failed to stop TX DMA, 
-queues=0x10f!
-Jan 10 21:42:55 401a0bf1 kernel: [47661.362013] ath: DMA failed to stop in 
-10 ms AR_CR=0xffffffff AR_DIAG_SW=0xffffffff DMADBG_7=0xffffffff
-Jan 10 21:42:55 401a0bf1 kernel: [47661.362016] ath: Could not stop RX, we 
-could be confusing the DMA engine when we start RX up
-Jan 10 21:42:55 401a0bf1 kernel: [47661.604443] ath: Failed to wakeup in 
-500us
-Jan 10 21:42:55 401a0bf1 kernel: [47661.670201] ath: Failed to stop TX DMA, 
-queues=0x10f!
-Jan 10 21:42:55 401a0bf1 kernel: [47661.683148] ath: DMA failed to stop in 
-10 ms AR_CR=0xffffffff AR_DIAG_SW=0xffffffff DMADBG_7=0xffffffff
-Jan 10 21:42:55 401a0bf1 kernel: [47661.683152] ath: Could not stop RX, we 
-could be confusing the DMA engine when we start RX up
-Jan 10 21:42:55 401a0bf1 kernel: [47661.799038] ath: Chip reset failed
-Jan 10 21:42:55 401a0bf1 kernel: [47661.799043] ath: Unable to reset channel 
-(2462 MHz), reset status -22
-Jan 10 21:42:56 401a0bf1 kernel: [47662.373472] ath: Failed to wakeup in 
-500us
-Jan 10 21:42:56 401a0bf1 kernel: [47662.489762] ath: Chip reset failed
-Jan 10 21:42:56 401a0bf1 kernel: [47662.489769] ath: Unable to reset 
-hardware; reset status -22 (freq 2462 MHz)
-Jan 10 21:42:59 401a0bf1 kernel: [47665.685279] ath: Failed to wakeup in 
-500us
-Jan 10 21:43:04 401a0bf1 kernel: [47670.688494] ath: Failed to wakeup in 
-500us
-Jan 10 21:43:09 401a0bf1 kernel: [47675.675943] ath: Failed to wakeup in 
-500us
-Jan 10 21:43:14 401a0bf1 kernel: [47680.663071] ath: Failed to wakeup in 
-500us
-Jan 10 21:43:19 401a0bf1 kernel: [47685.666297] ath: Failed to wakeup in 
-500us
-Jan 10 21:43:24 401a0bf1 kernel: [47690.669649] ath: Failed to wakeup in 
-500us
-Jan 10 21:43:25 401a0bf1 kernel: [47691.020335] ath: Failed to wakeup in 
-500us
-Jan 10 21:43:25 401a0bf1 kernel: [47691.135856] ath: Chip reset failed
-Jan 10 21:43:25 401a0bf1 kernel: [47691.135861] ath: Unable to reset 
-hardware; reset status -22 (freq 2462 MHz)
-Jan 10 21:43:29 401a0bf1 kernel: [47695.656864] ath: Failed to wakeup in 
-500us
-
-
-
-Jan 10 21:44:01 401a0bf1 kernel: [47727.484465] ath9k: Driver unloaded
-Jan 10 21:44:04 401a0bf1 kernel: [47729.913403] ath9k 0000:03:00.0: enabling 
-device (0000 -> 0002)
-Jan 10 21:44:04 401a0bf1 kernel: [47729.913414] ath9k 0000:03:00.0: PCI INT 
-A -> GSI 17 (level, low) -> IRQ 17
-Jan 10 21:44:04 401a0bf1 kernel: [47729.913427] ath9k 0000:03:00.0: setting 
-latency timer to 64
-Jan 10 21:44:04 401a0bf1 kernel: [47730.028960] ath: Couldn't reset chip
-Jan 10 21:44:04 401a0bf1 kernel: [47730.028963] ath: Unable to initialize 
-hardware; initialization status: -5
-Jan 10 21:44:04 401a0bf1 kernel: [47730.028968] ath9k 0000:03:00.0: Failed 
-to initialize device
-Jan 10 21:44:04 401a0bf1 kernel: [47730.029010] ath9k 0000:03:00.0: PCI INT 
-A disabled
-Jan 10 21:44:04 401a0bf1 kernel: [47730.029033] ath9k: probe of 0000:03:00.0 
-failed with error -5
-
-
-
-03:00.0 Network controller: Atheros Communications Inc. AR9285 Wireless 
-Network Adapter (PCI-Express) (rev 01)
-        Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
-Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Interrupt: pin A routed to IRQ 17
-        Region 0: Memory at d7400000 (64-bit, non-prefetchable) [size=64K]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-
-,D3hot+,D3cold-)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit-
-                Address: 00000000  Data: 0000
-        Capabilities: [60] Express (v2) Legacy Endpoint, MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s 
-<128ns, L1 <2us
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- 
-Unsupported-
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr+ UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- 
-TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, 
-Latency L0 <512ns, L1 <64us
-                        ClockPM- Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- 
-CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ 
-DLActive- BWMgmt- ABWMgmt-
-                DevCap2: Completion Timeout: Not Supported, TimeoutDis+
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
-                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- 
-SpeedDis-, Selectable De-emphasis: -6dB
-                         Transmit Margin: Normal Operating Range, 
-EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -6dB
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- 
-RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- 
-RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- 
-RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- 
-NonFatalErr+
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- 
-NonFatalErr+
-                AERCap: First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ 
-ChkEn-
-        Capabilities: [140 v1] Virtual Channel
-                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
-                Arb:    Fixed- WRR32- WRR64- WRR128-
-                Ctrl:   ArbSelect=Fixed
-                Status: InProgress-
-                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- 
-WRR256-
-                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
-                        Status: NegoPending- InProgress-
-        Capabilities: [160 v1] Device Serial Number 00-00-00-00-00-00-00-00
-        Capabilities: [170 v1] Power Budgeting <?>
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+index b56cd90..7684c0e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+@@ -115,6 +115,9 @@ struct nla_policy iwl_testmode_gnl_msg_policy[IWL_TM_ATTR_MAX] = {
+ 
+ 	[IWL_TM_ATTR_FW_VERSION] = { .type = NLA_U32, },
+ 	[IWL_TM_ATTR_DEVICE_ID] = { .type = NLA_U32, },
++	[IWL_TM_ATTR_FW_TYPE] = { .type = NLA_U32, },
++	[IWL_TM_ATTR_FW_INST_SIZE] = { .type = NLA_U32, },
++	[IWL_TM_ATTR_FW_DATA_SIZE] = { .type = NLA_U32, },
+ };
+ 
+ /*
+@@ -422,7 +425,7 @@ static int iwl_testmode_driver(struct ieee80211_hw *hw, struct nlattr **tb)
+ 	struct sk_buff *skb;
+ 	unsigned char *rsp_data_ptr = NULL;
+ 	int status = 0, rsp_data_len = 0;
+-	u32 devid;
++	u32 devid, inst_size = 0, data_size = 0;
+ 
+ 	switch (nla_get_u32(tb[IWL_TM_ATTR_COMMAND])) {
+ 	case IWL_TM_CMD_APP2DEV_GET_DEVICENAME:
+@@ -548,6 +551,41 @@ static int iwl_testmode_driver(struct ieee80211_hw *hw, struct nlattr **tb)
+ 					"Error sending msg : %d\n", status);
+ 		break;
+ 
++	case IWL_TM_CMD_APP2DEV_GET_FW_INFO:
++		skb = cfg80211_testmode_alloc_reply_skb(hw->wiphy, 20 + 8);
++		if (!skb) {
++			IWL_DEBUG_INFO(priv, "Error allocating memory\n");
++			return -ENOMEM;
++		}
++		switch (priv->shrd->ucode_type) {
++		case IWL_UCODE_REGULAR:
++			inst_size = trans(priv)->ucode_rt.code.len;
++			data_size = trans(priv)->ucode_rt.data.len;
++			break;
++		case IWL_UCODE_INIT:
++			inst_size = trans(priv)->ucode_init.code.len;
++			data_size = trans(priv)->ucode_init.data.len;
++			break;
++		case IWL_UCODE_WOWLAN:
++			inst_size = trans(priv)->ucode_wowlan.code.len;
++			data_size = trans(priv)->ucode_wowlan.data.len;
++			break;
++		case IWL_UCODE_NONE:
++			IWL_DEBUG_INFO(priv, "The uCode has not been loaded\n");
++			break;
++		default:
++			IWL_DEBUG_INFO(priv, "Unsupported uCode type\n");
++			break;
++		}
++		NLA_PUT_U32(skb, IWL_TM_ATTR_FW_TYPE, priv->shrd->ucode_type);
++		NLA_PUT_U32(skb, IWL_TM_ATTR_FW_INST_SIZE, inst_size);
++		NLA_PUT_U32(skb, IWL_TM_ATTR_FW_DATA_SIZE, data_size);
++		status = cfg80211_testmode_reply(skb);
++		if (status < 0)
++			IWL_DEBUG_INFO(priv,
++					"Error sending msg : %d\n", status);
++		break;
++
+ 	default:
+ 		IWL_DEBUG_INFO(priv, "Unknown testmode driver command ID\n");
+ 		return -ENOSYS;
+@@ -881,6 +919,7 @@ int iwlagn_mac_testmode_cmd(struct ieee80211_hw *hw, void *data, int len)
+ 	case IWL_TM_CMD_APP2DEV_LOAD_WOWLAN_FW:
+ 	case IWL_TM_CMD_APP2DEV_GET_FW_VERSION:
+ 	case IWL_TM_CMD_APP2DEV_GET_DEVICE_ID:
++	case IWL_TM_CMD_APP2DEV_GET_FW_INFO:
+ 		IWL_DEBUG_INFO(priv, "testmode cmd to driver\n");
+ 		result = iwl_testmode_driver(hw, tb);
+ 		break;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.h b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+index 9c6a67a..cb0cf35 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+@@ -120,6 +120,8 @@
+  * @IWL_TM_CMD_APP2DEV_LOAD_WOWLAN_FW: load Weak On Wireless LAN uCode image
+  * @IWL_TM_CMD_APP2DEV_GET_FW_VERSION: retrieve uCode version
+  * @IWL_TM_CMD_APP2DEV_GET_DEVICE_ID: retrieve ID information in device
++ * @IWL_TM_CMD_APP2DEV_GET_FW_INFO:
++ *	retrieve informration of existing loaded uCode image
+  *
+  */
+ enum iwl_tm_cmd_t {
+@@ -147,7 +149,8 @@ enum iwl_tm_cmd_t {
+ 	IWL_TM_CMD_APP2DEV_LOAD_WOWLAN_FW	= 22,
+ 	IWL_TM_CMD_APP2DEV_GET_FW_VERSION	= 23,
+ 	IWL_TM_CMD_APP2DEV_GET_DEVICE_ID	= 24,
+-	IWL_TM_CMD_MAX				= 25,
++	IWL_TM_CMD_APP2DEV_GET_FW_INFO		= 25,
++	IWL_TM_CMD_MAX				= 26,
+ };
+ 
+ /*
+@@ -237,6 +240,15 @@ enum iwl_tm_cmd_t {
+  *	When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_GET_DEVICE_ID,
+  *	IWL_TM_ATTR_DEVICE_ID for the device ID information
+  *
++ * @IWL_TM_ATTR_FW_TYPE:
++ * @IWL_TM_ATTR_FW_INST_SIZE:
++ * @IWL_TM_ATTR_FW_DATA_SIZE:
++ *	When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_GET_FW_INFO,
++ *	The mandatory fields are:
++ *	IWL_TM_ATTR_FW_TYPE for the uCode type (INIT/RUNTIME/...)
++ *	IWL_TM_ATTR_FW_INST_SIZE for the size of instruction section
++ *	IWL_TM_ATTR_FW_DATA_SIZE for the size of data section
++ *
+  */
+ enum iwl_tm_attr_t {
+ 	IWL_TM_ATTR_NOT_APPLICABLE		= 0,
+@@ -259,7 +271,10 @@ enum iwl_tm_attr_t {
+ 	IWL_TM_ATTR_SRAM_DUMP			= 17,
+ 	IWL_TM_ATTR_FW_VERSION			= 18,
+ 	IWL_TM_ATTR_DEVICE_ID			= 19,
+-	IWL_TM_ATTR_MAX				= 20,
++	IWL_TM_ATTR_FW_TYPE			= 20,
++	IWL_TM_ATTR_FW_INST_SIZE		= 21,
++	IWL_TM_ATTR_FW_DATA_SIZE		= 22,
++	IWL_TM_ATTR_MAX				= 23,
+ };
+ 
+ /* uCode trace buffer */
+-- 
+1.7.0.4
 
