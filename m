@@ -1,53 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:47182 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756089Ab2AJE6I (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:12162 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751230Ab2AGPgM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 23:58:08 -0500
-Received: by iabz25 with SMTP id z25so313184iab.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2012 20:58:07 -0800 (PST)
-Message-ID: <4F0BC55C.70509@lwfinger.net> (sfid-20120110_055815_869909_F2CC6ED3)
-Date: Mon, 09 Jan 2012 22:58:04 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 7 Jan 2012 10:36:12 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	<m.sujith@gmail.com>, Felix Fietkau <nbd@openwrt.org>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH] ath9k_hw: fix a comment
+Date: Sat, 7 Jan 2012 21:06:02 +0530
+Message-ID: <1325950562-6169-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120107_163632_633619_A0E33735)
 MIME-Version: 1.0
-To: lina <lina.lastname@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: modprob b43 not work after hilibernate
-References: <4F09AAE5.2080209@gmail.com>	<4F09BEC0.7080702@lwfinger.net>	<4F09C1E2.6020907@gmail.com> <CACna6rxMPnn1DHtMvsHtCG3y=_-sCKgb=L901MV96fj31BZ58A@mail.gmail.com> <4F0A686F.9050802@gmail.com> <4F0B21A7.10009@lwfinger.net> <4F0BBDBB.2060407@gmail.com>
-In-Reply-To: <4F0BBDBB.2060407@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/2012 10:25 PM, lina wrote:
-> On Tuesday 10,January,2012 01:19 AM, Larry Finger wrote:
->> On 01/08/2012 10:09 PM, lina wrote:
->>> On Monday 09,January,2012 05:44 AM, Rafał Miłecki wrote:
->>>> Does your kernel have
->>>> [PATCH] bcma: support for suspend and resume
->>>> applied?
->>>
->>> I don't know how to check, googled for a while, found some thread, but
->>> did not
->>> find the patch, is it in the kernel.org [patch] part, I thought the [full
->>> source] is already patched?
->>
->> The mainline kernel v3.2-3191-g36e9db2 has that patch.
->
-> when I tried to open
-> http://www.kernel.org/diff/diffview.cgi?file=/pub/linux/kernel/v3.0/patch-3.2.bz2
->
-> diffview is looping on the cached resource:
-> /home/httpd/cache/diffview/ZM/ZMxXxIlPZnZ9405Mc9XmGRWFlkM/index
->
-> when I googled v3.2-3191-g36e9db2, it leads me to this thread only.
->
-> sorry, I am confusing about how to get this patch and make it to patch.
->
-> Thanks for your time,
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Get the bleeding-edge version of compat-wireless. That will *always* get you the 
-latest set of patches.
+also remove an unused macro and a function declaration
 
-Larry
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    2 +-
+ drivers/net/wireless/ath/ath9k/ath9k.h      |    1 -
+ drivers/net/wireless/ath/ath9k/calib.h      |    1 -
+ 3 files changed, 1 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 2589b38..2b0bfb8 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -46,7 +46,7 @@ static const int m2ThreshExt_off = 127;
+  * @chan:
+  *
+  * This is the function to change channel on single-chip devices, that is
+- * all devices after ar9280.
++ * for AR9300 family of chipsets.
+  *
+  * This function takes the channel value in MHz and sets
+  * hardware channel value. Assumes writes have been enabled to analog bus.
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index b30e9fc..171ccf7 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -679,7 +679,6 @@ void ath9k_deinit_device(struct ath_softc *sc);
+ void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw);
+ void ath9k_reload_chainmask_settings(struct ath_softc *sc);
+ 
+-void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw);
+ bool ath9k_uses_beacons(int type);
+ 
+ #ifdef CONFIG_ATH9K_PCI
+diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
+index 05b9dbf..3b33996 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.h
++++ b/drivers/net/wireless/ath/ath9k/calib.h
+@@ -19,7 +19,6 @@
+ 
+ #include "hw.h"
+ 
+-#define AR_PHY_CCA_FILTERWINDOW_LENGTH_INIT     3
+ #define AR_PHY_CCA_FILTERWINDOW_LENGTH          5
+ 
+ #define NUM_NF_READINGS       6
+-- 
+1.7.0.4
 
