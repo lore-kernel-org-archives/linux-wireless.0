@@ -1,32 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:47664 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753352Ab2AaWsA (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:51459 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751612Ab2AGBp6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 17:48:00 -0500
-Received: by iacb35 with SMTP id b35so564588iac.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 14:48:00 -0800 (PST)
+	Fri, 6 Jan 2012 20:45:58 -0500
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1RjLM3-0000bD-6Y
+	for linux-wireless@vger.kernel.org; Fri, 06 Jan 2012 20:45:55 -0500
+Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
+	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id q071ioF4025826
+	for <linux-wireless@vger.kernel.org>; Fri, 6 Jan 2012 20:44:50 -0500
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.4/8.14.4/Submit) id q071inWp025824
+	for linux-wireless@vger.kernel.org; Fri, 6 Jan 2012 20:44:49 -0500
+Date: Fri, 6 Jan 2012 20:44:49 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: Your new feature should not be enabled by default! --
+ [torvalds@linux-foundation.org: Re: [GIT] Networking]
+Message-ID: <20120107014449.GF12127@tuxdriver.com> (sfid-20120107_024601_659034_42839986)
 MIME-Version: 1.0
-In-Reply-To: <1327618305-23077-1-git-send-email-hauke@hauke-m.de>
-References: <1327618305-23077-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 31 Jan 2012 14:47:40 -0800
-Message-ID: <CAB=NE6V+Njnf2C+bdCEXVoLVdPAf7FaS08CVjk9R0vu1K5CHsA@mail.gmail.com> (sfid-20120131_234805_546823_5F80981E)
-Subject: Re: [PATCH] compat: move br_port_exists() to compat-2.6.36.h
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 26, 2012 at 2:51 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> br_port_exists() was moved to a new compat-*.h file for every new
-> kernel release, as it is not in mainline. This patch moves it to compat-
-> 2.6.36.h so it has not to be moved any more for a new kernel version.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Words of wisdom...
 
-Thanks! Applied! I'll push shortly after I merge the rest of the
-pending patches.
+----- Forwarded message from Linus Torvalds <torvalds@linux-foundation.org> -----
 
-  Luis
+> Date: Fri, 6 Jan 2012 17:34:39 -0800
+> From: Linus Torvalds <torvalds@linux-foundation.org>
+> To: David Miller <davem@davemloft.net>
+> Cc: akpm@linux-foundation.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+> Subject: Re: [GIT] Networking
+> 
+> On Thu, Jan 5, 2012 at 4:28 PM, David Miller <davem@davemloft.net> wrote:
+> >
+> > Netlink socket dumping is now supported for UDP and AF_UNIX sockets
+> > thanks to Pavel Emelyanov.
+> 
+> .. and this is such a magically important feature that it has to be
+> enabled by default?
+> 
+> It's something that has never been supported before, how did it
+> suddenly become 'default y' after twenty years of not even being an
+> issue?
+> 
+> It's a disease, I tell you, to think that new features are important.
+> Stop it. Tell people you take patches from to stop it. If we haven't
+> needed them before, they sure as hell aren't suddenly "Say Yes if you
+> don't know" material.
+> 
+> Please fix this, but more importantly, please try to fix *people*. So
+> I don't have to always react to the stupid new "default y" options.
+> 
+>                               Linus
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+----- End forwarded message -----
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
