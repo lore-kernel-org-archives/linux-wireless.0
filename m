@@ -1,39 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:51512 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754084Ab2ADSaP (ORCPT
+Received: from mailout-de.gmx.net ([213.165.64.23]:32856 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753290Ab2AGTmq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jan 2012 13:30:15 -0500
-Date: Wed, 04 Jan 2012 13:30:12 -0500 (EST)
-Message-Id: <20120104.133012.2194053254581656154.davem@davemloft.net> (sfid-20120104_193018_396391_CA56DBF7)
-To: vthiagar@qca.qualcomm.com
-Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	ath6kl-devel@qualcomm.com
-Subject: Re: [PATCH] ath6kl: Use a mutex_lock to avoid race in diabling and
- handling irq
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1325672839-16608-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1325672839-16608-1-git-send-email-vthiagar@qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 7 Jan 2012 14:42:46 -0500
+Content-Type: text/plain; charset=UTF-8
+From: John Wyzer <john.wyzer@gmx.de>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: HT40 not working for Intel 5100 AGN ?
+Date: Sat, 07 Jan 2012 20:42:33 +0100
+Message-Id: <1325965297-sup-3780@localhost> (sfid-20120107_204250_502483_56C12E73)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Date: Wed, 4 Jan 2012 15:57:19 +0530
+Kernel: git tag v3.2 
 
-> Currently this race is handled but in a messy way an atomic
-> variable is being checked in a loop which sleeps upto ms
-> in every iteration. Remove this logic and use a mutex
-> to make sure irq is not disabled when irq handling is in
-> progress.
-> 
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+After modprobe:
+Detected Intel(R) WiFi Link 5100 AGN, REV=0x54
 
-So you guys have time to code up patches like this but not enough
-time to fix the build failure properly that exists in -next for
-some time now?
+If have an AP with openwrt configured to work with 802.11g+n, HT40+.
+A different Laptop with Windows installed connects with 150Mb/s
 
-This kind of stuff really drives me nuts, fix your priorities.  You
-guys added a build regression to the tree, fix that first.
+The maximum bitrate for the aforementioned Intel card however is displayed by
+iwconfig to be 54 Mb/s which seems to be confirmed by the actual transfer
+rates.
+The connection is being established by wpa_supplicant 0.7.3.
+
+I tried researching this problem but did not really find it documented. Is this
+a known issue or can I provide further information for debugging? 
+
+Many thanks,
+John
+
+PS: please include me in the reply.
 
