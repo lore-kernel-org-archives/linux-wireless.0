@@ -1,69 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:46283 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753222Ab2AYMmy (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:40753 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752594Ab2AGVEM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jan 2012 07:42:54 -0500
-Received: by ghrr11 with SMTP id r11so1328937ghr.19
-        for <linux-wireless@vger.kernel.org>; Wed, 25 Jan 2012 04:42:53 -0800 (PST)
-Message-ID: <4F1FF8C9.4050803@lwfinger.net> (sfid-20120125_134303_840397_4F6E8883)
-Date: Wed, 25 Jan 2012 06:42:49 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sat, 7 Jan 2012 16:04:12 -0500
+Received: by wgbdr10 with SMTP id dr10so526166wgb.1
+        for <linux-wireless@vger.kernel.org>; Sat, 07 Jan 2012 13:04:11 -0800 (PST)
 MIME-Version: 1.0
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: zajec5@gmail.com, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org
-Subject: Re: b43: N-PHY: implement RSSI calibration for rev3+
-References: <20120125081815.GA19911@elgon.mountain>
-In-Reply-To: <20120125081815.GA19911@elgon.mountain>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CANUX_P22vWv+XenOLs7Smf2P7CpPCVperF5JagS2JyCCpHXKOQ@mail.gmail.com>
+References: <201201071127.06717.toralf.foerster@gmx.de>
+	<CANUX_P22vWv+XenOLs7Smf2P7CpPCVperF5JagS2JyCCpHXKOQ@mail.gmail.com>
+Date: Sat, 7 Jan 2012 23:04:11 +0200
+Message-ID: <CANUX_P2uzZwpCTcfgAu09PAcE-uUDCW0FMQK77P32cjwS2Hy9Q@mail.gmail.com> (sfid-20120107_220415_770842_0A46FA51)
+Subject: Re: suggestion for a reasonable value for /sys/module/iwlwifi/parameters/debug
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: =?ISO-8859-1?Q?Toralf_F=F6rster?= <toralf.foerster@gmx.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/25/2012 02:18 AM, Dan Carpenter wrote:
-> Hello Rafał Miłecki,
+On Sat, Jan 7, 2012 at 22:55, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>> If I choosed 0x43ff my syslog message files exploded - and I'd like to trouble
+>> shoot a problem with my wlan at a ThinkPad T400 (iwlwifi, 5100 AGN controler).
+>> The symptoms are that 1-2 times in a hour the network stops working without
+>> any message in /var/log/messages (kernel 3.0.x, 3.1.x, 3.2.0 tested).
+>>
+>> Thanks for any advice
+>> --
 >
-> The patch e0c9a0219a8f: "b43: N-PHY: implement RSSI calibration for
-> rev3+" from Jan 5, 2012, leads to the following Smatch warning:
-> drivers/net/wireless/b43/phy_n.c +1381 b43_nphy_rev3_rssi_cal()
-> 	 error: buffer overflow 'results[j]' 4<= 4
+> For this kind of issues I added the TX_QUEUES debug flags, but I just
+> checked and it is not in 3.2. It is in John's wireless tree though. It
+> is bit 31: debug=0x80000000
 >
+> BTW - John, I have tried many times to understand all this, but stupid
+> me, couldn't ever make it. How come a patch is in wireless which in my
+> understanding (probably wrong) is supposed to feed the current rc
+> cycle (meaning the 3.2-rcX which just ended) and not be in 3.2 stable
+> release ? Sorry for the ignorance...
 >
-> +               for (i = 0; i<  4; i++) {
-> +                       s32 curr;
-> +                       s32 mind = 40;
-> +                       s32 minpoll = 249;
-> +                       u8 minvcm = 0;
-> +                       if (2 * core != i)
-> +                               continue;
-> +                       for (j = 0; j<  8; j++) {
-> +                               curr = results[j][i] * results[j][i] +
-> +                                       results[j][i + 1] * results[j][i];
->                                                     ^^^^^
-> On the last iteration through the loop "i + 1" = 4.
->
-> +                               if (curr<  mind) {
-> +                                       mind = curr;
-> +                                       minvcm = j;
-> +                               }
-> +                               if (results[j][i]<  minpoll)
-> +                                       minpoll = results[j][i];
-> +                       }
-> +                       vcm_final = minvcm;
-> +                       results_min[i] = minpoll;
-> +               }
->
-> I don't know the code well enough to say if this can happen or not.
-> Perhaps on the last iteration we always hit the "if (2 * core != i)
-> continue" condition.  Anyway, since this is the first time this has hit
-> linux-next, I thought I would let you know.
-
-The condition you point out will occur for i equals 3. As 2 * anything will 
-never be equal to 3, the continue will definitely be executed for that case.
-
-This idea would need further investigation, but it certainly appears the the for 
-loop could be changed to "for (i = 0; i < 4; i += 2)", which would accomplish 
-the same end and should have the side effect of silencing the Smatch warning.
-
-Larry
-
+Or maybe the wireless tree has already be recreated on top of Linus's
+tree (through Dave's tree) after he merged everything ?
