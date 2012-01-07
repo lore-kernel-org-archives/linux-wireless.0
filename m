@@ -1,47 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45082 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752244Ab2A1EbF (ORCPT
+Received: from mailout-de.gmx.net ([213.165.64.22]:35493 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751890Ab2AGK1O convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jan 2012 23:31:05 -0500
-Message-ID: <4F2379E6.9050303@sipsolutions.net> (sfid-20120128_053152_085582_972EFC0D)
-Date: Fri, 27 Jan 2012 20:30:30 -0800
-From: Johannes Berg <johannes@sipsolutions.net>
+	Sat, 7 Jan 2012 05:27:14 -0500
+From: Toralf =?utf-8?q?F=C3=B6rster?= <toralf.foerster@gmx.de>
+To: linux-wireless@vger.kernel.org
+Subject: suggestion for a reasonable value for /sys/module/iwlwifi/parameters/debug
+Date: Sat, 7 Jan 2012 11:27:05 +0100
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: LKML <linux-kernel@vger.kernel.org>,
-	wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Kernel BUG due to kernel page fault
-References: <4F21D57F.7090103@lwfinger.net> (sfid-20120126_233645_796686_E4D04A53)
-In-Reply-To: <4F21D57F.7090103@lwfinger.net> (sfid-20120126_233645_796686_E4D04A53)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201201071127.06717.toralf.foerster@gmx.de> (sfid-20120107_112731_971611_4E3BE93B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry,
+If I choosed 0x43ff my syslog message files exploded - and I'd like to trouble 
+shoot a problem with my wlan at a ThinkPad T400 (iwlwifi, 5100 AGN controler). 
+The symptoms are that 1-2 times in a hour the network stops working without 
+any message in /var/log/messages (kernel 3.0.x, 3.1.x, 3.2.0 tested).
 
-On 1/26/2012 2:36 PM, Larry Finger wrote:
-> I am trying to convert the rtlwifi family of drivers to use asynchronous
-> firmware loading. With recent changes in udev, many problems are being
-> reported. See Bug 42632] at b.k.o.
-
-I'm not sure what caused your problem, but your email reminded me of an 
-issue we had with asynchronous firmware loading that you may want to 
-consider.
-
-When request_firmware_async() is called, it eventually calls the 
-callback you give it. This may, however, be a long time later (I think 
-the current default timeout is 1 minute). In the meantime, the module 
-could be unloaded by the user, and then the system crashes as soon as 
-the firmwaer code attempts to invoke the callback.
-
-To fix this, we have a completion in iwlwifi that some exit code path 
-waits for to make sure this scenario doesn't happen.
-
-I think you should implement that.
-
-A better fix would probably be to make request_firmware_async() take a 
-struct module * argument and pass THIS_MODULE to it, and make the 
-firmware code handle this, but currently it doesn't.
-
-johannes
+Thanks for any advice
+-- 
+MfG/Sincerely
+Toralf Förster
+pgp finger print: 7B1A 07F4 EC82 0F90 D4C2 8936 872A E508 7DB6 9DA3
