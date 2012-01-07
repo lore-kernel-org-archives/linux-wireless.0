@@ -1,92 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:54450 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757008Ab2ADVay (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:45370 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759239Ab2AGBv7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jan 2012 16:30:54 -0500
-Date: Wed, 4 Jan 2012 16:28:09 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: MR <g7af0ec1e3ea1e7b1@nextmail.ru>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: ath9k crash 3.2-rc7
-Message-ID: <20120104212808.GI2540@tuxdriver.com> (sfid-20120104_223101_798994_01A9FA18)
-References: <NEXT-4f04c2111e5f83.17805410@nextmail.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <NEXT-4f04c2111e5f83.17805410@nextmail.ru>
+	Fri, 6 Jan 2012 20:51:59 -0500
+Date: Fri, 06 Jan 2012 17:50:52 -0800 (PST)
+Message-Id: <20120106.175052.1545748791981066358.davem@davemloft.net> (sfid-20120107_025202_611594_FE1C898D)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Your new feature should not be enabled by default! --
+ [torvalds@linux-foundation.org: Re: [GIT] Networking]
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120107014449.GF12127@tuxdriver.com>
+References: <20120107014449.GF12127@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You probably want to try linux-wireless@vger.kernel.org for maximum exposure...
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 6 Jan 2012 20:44:49 -0500
 
-On Thu, Jan 05, 2012 at 01:18:09AM +0400, MR wrote:
-> Hello.
-> 
-> I have noticed a complete crash (forced switch to console and Alt-SysRq-B 
-> doesn't work) when I use ath9k driver for my WiFi card. The problem is that 
-> the crash occurs after a few hours of use, so blind bissecting doesn't look 
-> like a short-term plan.
-> 
-> My card is (as lspci says):
-> 
-> 03:00.0 Network controller: Atheros Communications Inc. AR9285 Wireless 
-> Network Adapter (PCI-Express) (rev 01)
->         Subsystem: Device 1a3b:1089
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
-> Stepping- SERR- FastB2B- DisINTx-
->         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
-> <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 0, Cache Line Size: 64 bytes
->         Interrupt: pin A routed to IRQ 17
->         Region 0: Memory at d7400000 (64-bit, non-prefetchable) [size=64K]
-> 
-> I use an Asus N53JN notebook, if that matters.
-> 
-> I have photos of two instances of the crash. The backtrace goes as follows (I 
-> typed this in, so maybe there is a typo somewhere - I hope there is none, 
-> though):
-> 
-> wq_worker_sleeping+0x10/0xa0
-> __schedule+0x427/0x7b0
-> ? call_rcu_sched+0x10/0x20
-> schedule+0x3a/0x50
-> do_exit+0x57c/0x840
-> ? kmsg_dump+0x45/0xe0
-> oops_end+0xa5/0xf0
-> no_context+0xf2/0x270
-> __bad_area_no_semaphore+0xe/0x10
-> do_page_fault+0x2ba/0x450
-> ? up+0x2d/0x50
-> ? console_unlock+0x1df/0x250
-> ? select_task_rq_fair+0x5be/0x970
-> page_fault+0x25/0x30
-> ? ath_update_survey_stats+0xb7/0x1c0 [ath9k]
-> ath9k_config+0x115/0x780 [ath9k]
-> ? queue_work+0x1a/0x20
-> ? queue_delayed_work+0x25/0x30
-> ? ieee80211_queue_delayed_work+0x46/0x60 [mac80211]
-> ? ath9k_flush+0x155/0x1d0 [ath9k]
-> ieee80211_hw_config+0xe2/0x160 [mac80211]
-> ieee80211_scan_work+0x243/0x5c0 [mac80211]
-> ? ieee80211_scan_rx+0x1c0/0x1c0 [mac80211]
-> process_one_work+0x111/0x390
-> worker_thread+0x162/0x340
-> manage_workers.clone.26+0x240/0x240
-> kthread+0x96/0xa0
-> kernel_thread_helper+0x4/0x10
-> ? kthread_worker_fn+0x190/0x190
-> ? gs_change+0x13/0x13
-> 
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+> Words of wisdom...
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Too bad he's talking out of his ass in this specific case.
