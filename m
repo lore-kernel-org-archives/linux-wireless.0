@@ -1,40 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54749 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751570Ab2ATOSA (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:49952 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752680Ab2AGSbl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 09:18:00 -0500
-Subject: Re: [PATCH RESEND] mac80211: support fixed rate packet injection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sam Leffler <sleffler@chromium.org>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-In-Reply-To: <20120119182033.5F60358073@lefflers.sfo.corp.google.com> (sfid-20120119_192053_053697_DFEA50C5)
-References: <20120119182033.5F60358073@lefflers.sfo.corp.google.com>
-	 (sfid-20120119_192053_053697_DFEA50C5)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 20 Jan 2012 15:17:33 +0100
-Message-ID: <1327069053.9857.3.camel@jlt3.sipsolutions.net> (sfid-20120120_151804_462814_EA8FCE49)
+	Sat, 7 Jan 2012 13:31:41 -0500
+Date: Sat, 07 Jan 2012 10:31:40 -0800 (PST)
+Message-Id: <20120107.103140.1318784272514489273.davem@davemloft.net> (sfid-20120107_193153_055148_ECD2F264)
+To: netdev@vger.kernel.org
+CC: netfilter-devel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: 'net-next' is dormant, long live 'net'
+From: David Miller <davem@davemloft.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-01-12 at 09:53 -0800, Sam Leffler wrote:
 
-> +	if (fixed_rate != -1) {
-> +		struct ieee80211_channel *chan = local->hw.conf.channel;
-> +		struct ieee80211_supported_band *sband =
-> +			local->hw.wiphy->bands[chan->band];
-> +		struct ieee80211_tx_rate *rates = info->control.rates;
-> +		int i;
-> +
-> +		if (fixed_rate_flags & IEEE80211_TX_RC_MCS) {
-> +			WARN_ON(!sband->ht_cap.ht_supported);
-> +			rates[0].idx = fixed_rate;
+Now that Linus has pulled all of the net-next changes into his
+tree for this merge window, net-next is not longer active.
 
-Unless I missed something, this would be *trivial* to trigger by
-injection -- doesn't seem like a good idea to me.
-
-johannes
-
-
+All activity will occur in the 'net' tree until the first -RC is
+released by Linus, at which time 'net-next' will come alive once
+more for new development.
