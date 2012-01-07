@@ -1,28 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:9503 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933046Ab2AITrT (ORCPT
+Received: from [119.255.1.60] ([119.255.1.60]:48284 "EHLO
+	mail.watchdata.com.cn" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1759372Ab2AGCMd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 14:47:19 -0500
-Message-ID: <4F0B43DF.4090703@qca.qualcomm.com> (sfid-20120109_204722_963674_2AD58647)
-Date: Mon, 9 Jan 2012 21:45:35 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Fri, 6 Jan 2012 21:12:33 -0500
+Received: from localhost (mail.watchdata.com.cn [127.0.0.1])
+	by mail.watchdata.com.cn (Postfix) with SMTP id CDA592005F
+	for <linux-wireless@vger.kernel.org>; Sat,  7 Jan 2012 10:01:51 +0800 (CST)
+From: =?gb2312?B?wO641Q==?= <gang.li@watchdata.com>
+To: <linux-wireless@vger.kernel.org>,
+	"'Ath9k Devel List'" <ath9k-devel@lists.ath9k.org>
+Subject: Question about duration of data frame in ath9k_htc
+Date: Sat, 7 Jan 2012 10:11:13 +0800
 MIME-Version: 1.0
-To: <rmani@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 7/8] ath6kl: Removed unused ATH6KL_CONF_SUSPEND_CUTPOWER
- macro
-References: <1326098182-9103-1-git-send-email-rmani@qca.qualcomm.com> <1326098182-9103-8-git-send-email-rmani@qca.qualcomm.com>
-In-Reply-To: <1326098182-9103-8-git-send-email-rmani@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain;
+	charset="gb2312"
+In-Reply-To: <CADGLRPmkbTp-azGJ2=CJum=Y8Mrf7fTbaE9Oi8Om+DQyu7d9uA@mail.gmail.com>
+Message-Id: <20120107020151.B53C81FFF8@mail.watchdata.com.cn> (sfid-20120107_031237_478087_7CBC738D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/2012 10:36 AM, rmani@qca.qualcomm.com wrote:
-> From: Raja Mani <rmani@qca.qualcomm.com>
-> 
-> Title says everything.
 
-You can fold this with patch 1 where you remove the code using this define.
+Hi Sirs,
 
-Kalle
+	From wireshark, I noticed that when send an data frame , the
+duration of frame control is fixed at 60 , no matter the frame length is 100
+bytes or 1000 bytes.
+
+	It seems this value is calculated in firmware and should be correct.
+But I don't know why. And this value can be set in mac80211?
+
+
+Thanks in advance!
+
+Li gang
+
+
+
