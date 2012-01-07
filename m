@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11431 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754955Ab2AYJy2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jan 2012 04:54:28 -0500
-Date: Wed, 25 Jan 2012 10:54:08 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 4/4] rt2800usb: remove PWR_PIN_CFG=0x3
- during init
-Message-ID: <20120125095407.GA3406@redhat.com> (sfid-20120125_105431_795152_151C5DC0)
-References: <1327410549-4714-1-git-send-email-sgruszka@redhat.com>
- <1327410549-4714-4-git-send-email-sgruszka@redhat.com>
- <201201241737.q0OHbmX5003698@mail.maya.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59431 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751275Ab2AGWBA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 7 Jan 2012 17:01:00 -0500
+Date: Sat, 7 Jan 2012 16:47:25 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Toralf =?iso-8859-1?Q?F=F6rster?= <toralf.foerster@gmx.de>,
+	linux-wireless@vger.kernel.org
+Subject: Re: suggestion for a reasonable value for
+ /sys/module/iwlwifi/parameters/debug
+Message-ID: <20120107214724.GA7746@tuxdriver.com> (sfid-20120107_230128_399044_551F8011)
+References: <201201071127.06717.toralf.foerster@gmx.de>
+ <CANUX_P22vWv+XenOLs7Smf2P7CpPCVperF5JagS2JyCCpHXKOQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201201241737.q0OHbmX5003698@mail.maya.org>
+In-Reply-To: <CANUX_P22vWv+XenOLs7Smf2P7CpPCVperF5JagS2JyCCpHXKOQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello
+On Sat, Jan 07, 2012 at 10:55:30PM +0200, Emmanuel Grumbach wrote:
+> > If I choosed 0x43ff my syslog message files exploded - and I'd like to trouble
+> > shoot a problem with my wlan at a ThinkPad T400 (iwlwifi, 5100 AGN controler).
+> > The symptoms are that 1-2 times in a hour the network stops working without
+> > any message in /var/log/messages (kernel 3.0.x, 3.1.x, 3.2.0 tested).
+> >
+> > Thanks for any advice
+> > --
+> 
+> For this kind of issues I added the TX_QUEUES debug flags, but I just
+> checked and it is not in 3.2. It is in John's wireless tree though. It
+> is bit 31: debug=0x80000000
+> 
+> BTW - John, I have tried many times to understand all this, but stupid
+> me, couldn't ever make it. How come a patch is in wireless which in my
+> understanding (probably wrong) is supposed to feed the current rc
+> cycle (meaning the 3.2-rcX which just ended) and not be in 3.2 stable
+> release ? Sorry for the ignorance...
 
-On Tue, Jan 24, 2012 at 06:37:45PM +0100, Andreas Hartmann wrote:
-> Stanislaw Gruszka schrieb:
-> > This seems to be only needed as workaround for hardware problem on 
-> > PCI devices.
-> 
-> I tested this series (with all other resent patches applied) against a
-> rt3572usb based device (Linksys WUSB600N) on to different machines
-> (64bit smp (linux 3.2.1) and 32bit single core (linux 2.6.37.6)). I
-> couldn't see any functional change. Unfortunately it's as bad as
-> always :-(.
-> 
-> But one thing is new: I'm getting now these errors in messages (with
-> kernel 3.2.1) in the moment of the stall (which never stops until the
-> module is unloaded (or I didn't display enough patience)):
-> 
-> 
-> Jan 24 18:10:23 nb kernel: [  798.289036] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-This is write to BBP_CSR_CFG. I don't know, which patch is is responsible
-for that error (patch4 looks most suspicious), can you check those 4 patches
-one by one, and tell us which is causing this error? 
+We are betwen the release and the next -rc1.  Right now everything
+in wireless is the stuff that was in wireless-next last week.
 
-Thanks
-Stanislaw
+Hth!
+
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
