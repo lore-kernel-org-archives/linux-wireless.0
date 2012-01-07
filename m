@@ -1,59 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0.aculab.com ([213.249.233.131]:42252 "HELO mx0.aculab.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755525Ab2AEL1Q convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:62196 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751230Ab2AGPgb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 06:27:16 -0500
-Received: from mx0.aculab.com ([127.0.0.1])
- by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
- id 17938-01 for <linux-wireless@vger.kernel.org>;
- Thu,  5 Jan 2012 11:27:12 +0000 (GMT)
+	Sat, 7 Jan 2012 10:36:31 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH] mac80211: minor cleanup
+Date: Sat, 7 Jan 2012 21:06:21 +0530
+Message-ID: <1325950581-6228-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120107_163634_924500_74E4535D)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [PATCH 1/7] rtlwifi: Neaten RT_ASSERT, RT_TRACE, RTPRINT, RT_PRINT_DATA macros
-Date: Thu, 5 Jan 2012 11:25:30 -0000
-Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6D8AF30@saturn3.aculab.com> (sfid-20120105_122742_882118_8F72668F)
-In-Reply-To: <54d3f83c3e53d7008a013a631c23360a983695a6.1325734202.git.joe@perches.com>
-From: "David Laight" <David.Laight@ACULAB.COM>
-To: "Joe Perches" <joe@perches.com>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Chaoming Li" <chaoming_li@realsil.com.cn>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> +#define RT_PRINT_DATA(rtlpriv, _comp, _level, _titlestring, _hexdata,
-\
-> +		      _hexdatalen)			 	\
-> +do {							 	\
-> +	if (unlikely(((_comp) & rtlpriv->dbg.global_debugcomponents) &&
-\
-> +		     (_level <= rtlpriv->dbg.global_debuglevel))) {
-\
-> +		printk(KERN_DEBUG "%s: ", KBUILD_MODNAME); 	\
-> +		pr_cont("In process \"%s\" (pid %i):",	 	\
-> +			current->comm, current->pid);	 	\
-> +		printk(_titlestring);			 	\
-> +		print_hex_dump_bytes("", DUMP_PREFIX_NONE, 	\
-> +				     _hexdata, _hexdatalen);
-\
-> +	}
-\
-> +} while (0)
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
->From my experiences you need to use:
-  if (unlikely(a) && b)
-not:
-  if (unlikely(a && b))
-to get the expected static branch prediction.
+we would have bailed out if 'ifibss->fixed_channel'
+is valid i.e. we had used 'fixed-freq' parameter in iw ibss
+join command. this is with the state 'IEEE80211_IBSS_MLME_JOINED'
+so no need to check for it
 
-Also, only the initial test need be in the #define,
-the printfs (etc) can be moved into a real function.
-This would reduce the code size (if used more than once).
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ net/mac80211/ibss.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-	David
-
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index f8a32bf..8875673 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -642,8 +642,7 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
+ 	       "IBSS networks with same SSID (merge)\n", sdata->name);
+ 
+ 	ieee80211_request_internal_scan(sdata,
+-			ifibss->ssid, ifibss->ssid_len,
+-			ifibss->fixed_channel ? ifibss->channel : NULL);
++			ifibss->ssid, ifibss->ssid_len, NULL);
+ }
+ 
+ static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
+-- 
+1.7.0.4
 
