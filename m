@@ -1,65 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:40527 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753149Ab2AQSJC (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:38922 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753972Ab2AHQwF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 13:09:02 -0500
-Subject: [PATCH v3 3/8] ath6kl: add ATH6KL_CONF_UART_DEBUG
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Date: Tue, 17 Jan 2012 20:08:56 +0200
-Message-ID: <20120117180856.29995.25607.stgit@localhost6.localdomain6> (sfid-20120117_190906_493022_01D68971)
-In-Reply-To: <20120117180827.29995.67922.stgit@localhost6.localdomain6>
-References: <20120117180827.29995.67922.stgit@localhost6.localdomain6>
+	Sun, 8 Jan 2012 11:52:05 -0500
+Received: by iaeh11 with SMTP id h11so5505957iae.19
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jan 2012 08:52:04 -0800 (PST)
+Message-ID: <4F09C9B0.7080204@lwfinger.net> (sfid-20120108_175228_271234_D3F45EC3)
+Date: Sun, 08 Jan 2012 10:52:00 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+CC: Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: Strange behavior with rtl8192se
+References: <20120108140753.GA2246@nautilus.holoscopio.com>
+In-Reply-To: <20120108140753.GA2246@nautilus.holoscopio.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add ATH6KL_CONF_UART_DEBUG which is set whenever uart_debug module
-parameter is enabled. This way we can keep the uart_debug parameter
-static when core.c file is introduced.
+On 01/08/2012 08:07 AM, Thadeu Lima de Souza Cascardo wrote:
+> Hello, Larry.
+>
+> I have some problems with rtl819se that I couldn't find out what the
+> reason is. I would like some ideas as to what look after, what debugging
+> I can make or what changes I could try in the driver to fix it.
+>
+> The problem is that, sometimes, the adapter cannot receive probe
+> responses from my AP. Other devices in my network can reconnect to it,
+> so it's not a problem in the AP itself. There are other evidence that
+> point out to a problem with rtl8192se, as I will point out below.
+>
+> So, usually this happens when, for some reason, I can't receive any
+> packages from the network. After that, I try to reconnect, with no
+> success. The problem is that, even after a reboot, I keep trying without
+> no success to associate. I need to shutdown the machine to get the
+> adapter back to work. And that's another evidence that the AP is not to
+> blame. And it also happens with other AP I have around. Below is what I
+> get in dmesg when trying to associate.
+>
+> wlan0: direct probe to 36:d9:98:74:ff:42 (try 1/3)
+> wlan0: direct probe to 36:d9:98:74:ff:42 (try 2/3)
+> wlan0: direct probe to 36:d9:98:74:ff:42 (try 3/3)
+> wlan0: direct probe to 36:d9:98:74:ff:42 timed out
+> wlan0: direct probe to 36:d9:98:74:ff:42 (try 1/3)
+> wlan0: direct probe to 36:d9:98:74:ff:42 (try 2/3)
+> wlan0: direct probe to 36:d9:98:74:ff:42 (try 3/3)
+> wlan0: direct probe to 36:d9:98:74:ff:42 timed out
+>
+> Since a reboot didn't work and a shutdown did fix it, I have tried
+> shutting down only the adapter, putting it into D3_cold state and then
+> back into D0, but that didn't work. That may be a problem with my
+> notebook and its ACPI implementation. What I have managed to do is to
+> hibernate: after a resume from that, it works as if I have shutdown. So,
+> it's really a matter of shutting down the adapter or the system, instead
+> of rebooting.
+>
+> And that tells more: I have also tried to reload the driver and mac80211
+> stack, with no success. And since hibernate works, that is in their
+> favour to some extent. It indicates that's not a problem in a software
+> state. Well, there is the suspend and resume functions, but since
+> suspend didn't work and hibernate uses the same functions, they are not
+> fixing anything, neither breaking it.
+>
+> So, what I suspect is either there is some state in the hardware, like a
+> filter for the BSSID or anything like that, that is not being cleared by
+> the driver, or there is something wrong with the platform, perhaps ACPI
+> is doing something stupid. There is not much reason to suspect the
+> latter, however, since this bug does not require me to switch rfkill off
+> and on or to unplug the notebook from the wall. It just happens if I
+> have to reconnect for any reason.
+>
+> Since the adapter is not receiving probe responses from my AP, I decided
+> to run it on monitor too. And, well, it does not receive the probe
+> responses from my AP, but receives from some APs nearby. If I try to
+> associate with my other AP, however, it fails too. I have put another
+> device in monitor state too and have seen that the AP is sending the
+> responses, so the adapter is really sending the requests (which I also
+> saw in the monitor), but it's just not receivig the responses.
+>
+> Note that this was all done two meters from the AP, so this should not
+> be a matter of distance or power. The other AP, whose responses I see
+> should be further away, since it's not in my apartment.
+>
+> Any clues? I have run these monitor tests using 3.2-rc6. But I have also
+> run into this same problem running 3.2-03023-g02550d6, which is latest
+> rc, containing a merge from the last net-next.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/core.h |    1 +
- drivers/net/wireless/ath/ath6kl/init.c |    5 ++++-
- 2 files changed, 5 insertions(+), 1 deletions(-)
+There are some changes in compat-wireless that are not in 3.2-git, but nothing 
+that would cause this problem comes to mind. What is the PCI ID for your device? 
+I have 3 with different stream configuration, and I want to test the one you are 
+using.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index a75c09e..5b48ed4 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -195,6 +195,7 @@ struct ath6kl_fw_ie {
- #define ATH6KL_CONF_ENABLE_11N			BIT(2)
- #define ATH6KL_CONF_ENABLE_TX_BURST		BIT(3)
- #define ATH6KL_CONF_SUSPEND_CUTPOWER		BIT(4)
-+#define ATH6KL_CONF_UART_DEBUG			BIT(5)
- 
- enum wlan_low_pwr_state {
- 	WLAN_POWER_STATE_ON,
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 6baa855..911e2df 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -466,7 +466,7 @@ int ath6kl_configure_target(struct ath6kl *ar)
- 	u8 fw_iftype, fw_mode = 0, fw_submode = 0;
- 	int i, status;
- 
--	param = uart_debug;
-+	param = !!(ar->conf_flags & ATH6KL_CONF_UART_DEBUG);
- 	if (ath6kl_bmi_write(ar, ath6kl_get_hi_item_addr(ar,
- 			     HI_ITEM(hi_serial_enable)), (u8 *)&param, 4)) {
- 		ath6kl_err("bmi_write_memory for uart debug failed\n");
-@@ -1679,6 +1679,9 @@ int ath6kl_core_init(struct ath6kl *ar)
- 	if (suspend_cutpower)
- 		ar->conf_flags |= ATH6KL_CONF_SUSPEND_CUTPOWER;
- 
-+	if (uart_debug)
-+		ar->conf_flags |= ATH6KL_CONF_UART_DEBUG;
-+
- 	ar->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM |
- 			    WIPHY_FLAG_HAVE_AP_SME |
- 			    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
+I have not received any other reports of needing to power off to restore 
+operation. For me, rtl8192se has become quite stable.
+
+It certainly appears that your receiver is in some state that requires the power 
+to be shut off. Rebooting without a power off should clear any filters, but I 
+doubt that any are being set.
+
+The only other piece of info that might be useful would be the output of 'sudo 
+lspci -vvv' for the adapter used by the rtl8192se when it is working and when it 
+has failed.
+
+I am currently building the latest git pull from mainline to see if I can 
+duplicate the problem.
+
+Larry
 
