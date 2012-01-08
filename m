@@ -1,85 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:46513 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755740Ab2AYQtP (ORCPT
+Received: from liberdade2.minaslivre.org ([74.50.53.203]:33697 "EHLO
+	liberdade.minaslivre.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750917Ab2AHOON (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jan 2012 11:49:15 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAC9WiBgzg-dD5Sba9Cd_uvsfMxqQib+vsXXDyMSMSR_Y7P_CCw@mail.gmail.com>
-References: <CAC9WiBgpBCWZVjAQkJWSpXhC_dK1KKPfAHZvxVgaLV8BUsc41Q@mail.gmail.com>
-	<4F1FBAA9.4040405@broadcom.com>
-	<CAC9WiBjpsLuJhzw+vZsPC2bA73mad444Gq32DRL_gCri2MqaMw@mail.gmail.com>
-	<4F1FD2AA.9020708@broadcom.com>
-	<CA+5PVA73WHfnurWiyY4w9f4_mw=vUdpaNmAavHZtt+xYfo8Kcw@mail.gmail.com>
-	<CAC9WiBgzg-dD5Sba9Cd_uvsfMxqQib+vsXXDyMSMSR_Y7P_CCw@mail.gmail.com>
-Date: Wed, 25 Jan 2012 11:49:12 -0500
-Message-ID: <CA+5PVA4Cq5BRfKEa1uckVbtCGKhKmuw1tujQ19T3wk3c5CcsAQ@mail.gmail.com> (sfid-20120125_174934_793520_E5ED7655)
-Subject: Re: kernel 3.2.1: BUG: scheduling while atomic: swapper/0/0/0x10000100
-From: Josh Boyer <jwboyer@gmail.com>
-To: Francis Moreau <francis.moro@gmail.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Sun, 8 Jan 2012 09:14:13 -0500
+Date: Sun, 8 Jan 2012 12:07:56 -0200
+From: Thadeu Lima de Souza Cascardo <cascardo@holoscopio.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org,
 	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Subject: Strange behavior with rtl8192se
+Message-ID: <20120108140753.GA2246@nautilus.holoscopio.com> (sfid-20120108_151433_015215_47F80224)
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="a8Wt8u1KmwUX3Y2C"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 25, 2012 at 11:37 AM, Francis Moreau <francis.moro@gmail.com> wrote:
-> Hello,
->
-> On Wed, Jan 25, 2012 at 1:11 PM, Josh Boyer <jwboyer@gmail.com> wrote:
->>
->> We've had a few similar issues reported in Fedora yesterday after we
->> rebased to 3.2.1.
->
-> From which kernel did you rebase to 3.2.1 ?
 
-Fedora 16 went from 3.1.9 to 3.2.1 earlier this week.  We hadn't been getting
-reports like this until 3.2.1 showed up.  I asked one of the reporters to try
-3.2.0 and they say it recreates there still, so it seems the issue showed up
-with the 3.2 release.  One user managed to capture the trace below using a
-kernel with a variety of debug options turned on.  It isn't the same backtrace
-but it might be related.
+--a8Wt8u1KmwUX3Y2C
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-backtrace:
-:BUG: sleeping function called from invalid context at
-drivers/base/power/runtime.c:785
-:in_atomic(): 1, irqs_disabled(): 0, pid: 0, name: swapper/0
-:1 lock held by swapper/0/0:
-: #0:  (&chip->rts51x_suspend_timer){+.-...}, at: [<ffffffff8108d711>]
-run_timer_softirq+0x111/0x600
-:Pid: 0, comm: swapper/0 Tainted: G        W    3.2.0-2.fc17.x86_64.debug #1
-:Call Trace:
-: <IRQ>  [<ffffffff8105ee7a>] __might_sleep+0x13a/0x1f0
-: [<ffffffffa00180b0>] ? rts51x_modi_suspend_timer+0x50/0x50 [ums_realtek]
-: [<ffffffff813fdee3>] __pm_runtime_idle+0xa3/0xb0
-: [<ffffffffa00180b0>] ? rts51x_modi_suspend_timer+0x50/0x50 [ums_realtek]
-: [<ffffffff8146ed30>] usb_autopm_put_interface+0x30/0x40
-: [<ffffffffa0018125>] rts51x_suspend_timer_fn+0x75/0x80 [ums_realtek]
-: [<ffffffff8108d7a6>] run_timer_softirq+0x1a6/0x600
-: [<ffffffff8108d711>] ? run_timer_softirq+0x111/0x600
-: [<ffffffff81084700>] __do_softirq+0xe0/0x370
-: [<ffffffff8101fcc3>] ? native_sched_clock+0x13/0x80
-: [<ffffffff8167f27c>] call_softirq+0x1c/0x30
-: [<ffffffff8101a3e5>] do_softirq+0xa5/0xe0
-: [<ffffffff81084d15>] irq_exit+0xe5/0xf0
-: [<ffffffff8167fc3e>] smp_apic_timer_interrupt+0x6e/0x99
-: [<ffffffff8167daf3>] apic_timer_interrupt+0x73/0x80
-: <EOI>  [<ffffffff8101fd39>] ? sched_clock+0x9/0x10
-: [<ffffffff81363f9b>] ? intel_idle+0xfb/0x160
-: [<ffffffff81363f97>] ? intel_idle+0xf7/0x160
-: [<ffffffff814fa7f3>] cpuidle_idle_call+0xb3/0x520
-: [<ffffffff81017265>] cpu_idle+0xe5/0x130
-: [<ffffffff8164aff3>] rest_init+0xd7/0xe4
-: [<ffffffff8164af1c>] ? csum_partial_copy_generic+0x16c/0x16c
-: [<ffffffff81f60c39>] start_kernel+0x3ec/0x3f9
-: [<ffffffff81f60347>] x86_64_start_reservations+0x132/0x136
-: [<ffffffff81f6044b>] x86_64_start_kernel+0x100/0x10f
+Hello, Larry.
 
-Not sure if that is a common trend yet or not.
+I have some problems with rtl819se that I couldn't find out what the
+reason is. I would like some ideas as to what look after, what debugging
+I can make or what changes I could try in the driver to fix it.
 
-josh
+The problem is that, sometimes, the adapter cannot receive probe
+responses from my AP. Other devices in my network can reconnect to it,
+so it's not a problem in the AP itself. There are other evidence that
+point out to a problem with rtl8192se, as I will point out below.
 
-https://bugzilla.redhat.com/show_bug.cgi?id=784345
-https://bugzilla.redhat.com/show_bug.cgi?id=784414
+So, usually this happens when, for some reason, I can't receive any
+packages from the network. After that, I try to reconnect, with no
+success. The problem is that, even after a reboot, I keep trying without
+no success to associate. I need to shutdown the machine to get the
+adapter back to work. And that's another evidence that the AP is not to
+blame. And it also happens with other AP I have around. Below is what I
+get in dmesg when trying to associate.
+
+wlan0: direct probe to 36:d9:98:74:ff:42 (try 1/3)
+wlan0: direct probe to 36:d9:98:74:ff:42 (try 2/3)
+wlan0: direct probe to 36:d9:98:74:ff:42 (try 3/3)
+wlan0: direct probe to 36:d9:98:74:ff:42 timed out
+wlan0: direct probe to 36:d9:98:74:ff:42 (try 1/3)
+wlan0: direct probe to 36:d9:98:74:ff:42 (try 2/3)
+wlan0: direct probe to 36:d9:98:74:ff:42 (try 3/3)
+wlan0: direct probe to 36:d9:98:74:ff:42 timed out
+
+Since a reboot didn't work and a shutdown did fix it, I have tried
+shutting down only the adapter, putting it into D3_cold state and then
+back into D0, but that didn't work. That may be a problem with my
+notebook and its ACPI implementation. What I have managed to do is to
+hibernate: after a resume from that, it works as if I have shutdown. So,
+it's really a matter of shutting down the adapter or the system, instead
+of rebooting.
+
+And that tells more: I have also tried to reload the driver and mac80211
+stack, with no success. And since hibernate works, that is in their
+favour to some extent. It indicates that's not a problem in a software
+state. Well, there is the suspend and resume functions, but since
+suspend didn't work and hibernate uses the same functions, they are not
+fixing anything, neither breaking it.
+
+So, what I suspect is either there is some state in the hardware, like a
+filter for the BSSID or anything like that, that is not being cleared by
+the driver, or there is something wrong with the platform, perhaps ACPI
+is doing something stupid. There is not much reason to suspect the
+latter, however, since this bug does not require me to switch rfkill off
+and on or to unplug the notebook from the wall. It just happens if I
+have to reconnect for any reason.
+
+Since the adapter is not receiving probe responses from my AP, I decided
+to run it on monitor too. And, well, it does not receive the probe
+responses from my AP, but receives from some APs nearby. If I try to
+associate with my other AP, however, it fails too. I have put another
+device in monitor state too and have seen that the AP is sending the
+responses, so the adapter is really sending the requests (which I also
+saw in the monitor), but it's just not receivig the responses.
+
+Note that this was all done two meters from the AP, so this should not
+be a matter of distance or power. The other AP, whose responses I see
+should be further away, since it's not in my apartment.
+
+Any clues? I have run these monitor tests using 3.2-rc6. But I have also
+run into this same problem running 3.2-03023-g02550d6, which is latest
+rc, containing a merge from the last net-next.
+
+Regards.
+Cascardo.
+
+--a8Wt8u1KmwUX3Y2C
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPCaM3AAoJEEWxSg7udFZIfzoP/2FTRYY3gGWkVMeIRLDjsIqA
+ZigKtPxPfqt7auzPNuiiQekERc+5OwtYXbmWG9vHySvMKAXSuOnhsk0ghYUObJHm
+PGA6K7gVc+ohfQgO49dCKrAucTZKOe5//5DJuGeYuaua8XaARE/OpvnNjoLAYZf1
+xQzIcwCWGUDV10ot6BLGXIoHS2XgRSZWdHau5+UkoFyp0nlHVrwqEgi5xXRUHUBd
+RtTY6lnOcSmLUcxtngoHswXeRYpNA8eLBmRf6ahlreEXJpI+jf83APSLyxp5S7qz
+P5UmE7geFLZI56oN3phQOAPllrjrPRuYEkd/TaDqTXB3kYa1tae/HpYOB/VlHeQ1
+eyfmNfOfWftOXmSZV40eZHtCSWnjUslQ0NKfqik4L0VfR+x7iBblnTUGnQ5+UkjI
+a/Jz71dN+63WfpU5HOoH2x2U9bxiHd6GnUXDQhPo4dEIzNNDDBcthCCkPBsBPcgN
+8SJ0W+gmkf++BmdIibWfFS/eHDNqNkCHnbC4R5jraruG6I8XMogTWvMEU5u0EiyU
+5Bal1I/zLJQ2D1+dZI1dDNPc3ragQB8pCAKZNnCxZiws7OuGQAJmC4e7dDjlD3CN
+ZdpwW0d/8+5beO6W7UIca3u2SApKc+/ctnJQkEhWGEGi1SfLULIl7IHnGsRMqUmA
+iW8ymAG6RVicT5S71LUc
+=3ACF
+-----END PGP SIGNATURE-----
+
+--a8Wt8u1KmwUX3Y2C--
