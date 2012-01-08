@@ -1,36 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:46888 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753372Ab2AaQiR (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:35308 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751114Ab2AHLxE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 11:38:17 -0500
-Received: by vcge1 with SMTP id e1so178716vcg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 08:38:16 -0800 (PST)
-Message-ID: <4F2818F5.6000802@lwfinger.net> (sfid-20120131_173823_354839_B2036FD9)
-Date: Tue, 31 Jan 2012 10:38:13 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Sun, 8 Jan 2012 06:53:04 -0500
+Received: by iaeh11 with SMTP id h11so5243672iae.19
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jan 2012 03:53:04 -0800 (PST)
+Message-ID: <4F098398.8090004@gmail.com> (sfid-20120108_125310_309550_DA1DB462)
+Date: Sun, 08 Jan 2012 19:52:56 +0800
+From: lina <lina.lastname@gmail.com>
 MIME-Version: 1.0
-To: tim.gardner@canonical.com
-CC: Tim Gardner <rtg.canonical@gmail.com>,
-	John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V3] rtlwifi: Convert to asynchronous firmware load
-References: <4f272b8e.6jAMcI3HDthxlb+q%Larry.Finger@lwfinger.net> <4F280689.1080402@canonical.com>
-In-Reply-To: <4F280689.1080402@canonical.com>
+To: linux-wireless@vger.kernel.org
+Subject: which one I can safely removed to lose some weight?
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/31/2012 09:19 AM, Tim Gardner wrote:
->
->
-> d88e0b3162bded8190866d9a17f5e36c9bb0d29e in wireless-testing (which includes
-> 'rtlwifi: Convert to asynchronous firmware load') is working well on my
-> RTL8188CE [10ec:8176].
+Hi,
 
-Thanks for the feedback. Note: The patch was merged before V3 was available, 
-thus you will also need the "rtlwifi: Remove extra debugging message 
-accidentally left in" patch that I just sent to John.
+after install the b43 related packages, my / become so heavy suddenly, 
+reached 84%.
 
-Larry
+now
+
+:/lib/modules/3.2.0-1-lina/updates/drivers/net/wireless# ls
+adm8211.ko       brcm80211     libertas           orinoco        rtlwifi
+at76c50x-usb.ko  ipw2x00       libertas_tf        p54            wl1251
+ath              iwlegacy      mac80211_hwsim.ko  rndis_wlan.ko  wl12xx
+b43              iwlwifi       mwifiex            rt2x00         zd1211rw
+b43legacy        iwmc3200wifi  mwl8k.ko           rtl818x
+
+root@dove:/lib/modules/3.2.0-1-lina/updates/drivers/net/wireless# du -sh
+141M    .
+
+I wonder above director, which one I can safely remove:
+
+# lspci | grep Broad
+02:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM57765 
+Gigabit Ethernet PCIe (rev 10)
+02:00.1 SD Host controller: Broadcom Corporation NetXtreme BCM57765 
+Memory Card Reader (rev 10)
+03:00.0 Network controller: Broadcom Corporation BCM4331 802.11a/b/g/n 
+(rev 02)
+
+
+I can keep it, just in case there are some redundant packages to take 
+the place,
+
+Thanks for any advice,
 
