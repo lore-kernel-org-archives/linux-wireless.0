@@ -1,60 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52796 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753254Ab2AKI1X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 03:27:23 -0500
-Date: Wed, 11 Jan 2012 09:26:54 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH] mac80211: fix rx->key NULL pointer dereference in
- promiscuous mode
-Message-ID: <20120111082639.GA2624@redhat.com> (sfid-20120111_092727_097962_1BDE0147)
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56108 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753781Ab2AHQFX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Jan 2012 11:05:23 -0500
+Received: by iaeh11 with SMTP id h11so5461783iae.19
+        for <linux-wireless@vger.kernel.org>; Sun, 08 Jan 2012 08:05:23 -0800 (PST)
+Message-ID: <4F09BEC0.7080702@lwfinger.net> (sfid-20120108_170527_478155_40AF15E1)
+Date: Sun, 08 Jan 2012 10:05:20 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: lina <lina.lastname@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: modprob b43 not work after hilibernate
+References: <4F09AAE5.2080209@gmail.com>
+In-Reply-To: <4F09AAE5.2080209@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since:
+On 01/08/2012 08:40 AM, lina wrote:
+> Hi,
+>
+> after hibernation,
+>
+> I tried modprob b43 and /etc/initi.d/network-manager restart not work,
+>
+> is it reboot the only option. ( I googled it seems, not so sure)
 
-commit 816c04fe7ef01dd9649f5ccfe796474db8708be5
-Author: Christian Lamparter <chunkeey@googlemail.com>
-Date:   Sat Apr 30 15:24:30 2011 +0200
+Hibernation involves so many parts of the computer that it is hard to tell what 
+is happening. If unloading and reloading b43 using modprobe does not help, then 
+it is not solely a problem with b43.
 
-    mac80211: consolidate MIC failure report handling
+You need to provide a better description of what you are doing. Include specific 
+output from dmesg and the exact commands you are trying. You should also include 
+what distro you are running, your kernel version, and what brand and model of 
+computer you are using.
 
-is possible to that we dereference rx->key == NULL when driver set
-RX_FLAG_MMIC_STRIPPED and not RX_FLAG_IV_STRIPPED and we are in
-promiscuous mode. This happen with rt73usb and rt61pci at least.
-
-Before the commit we always check rx->key against NULL, so I assume
-fix should be done in mac80211 (also mic_fail path has similar check).
-
-References:
-https://bugzilla.redhat.com/show_bug.cgi?id=769766
-http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2012-January/004395.html
-
-Cc: stable@vger.kernel.org # 3.0+
-Reported-by: Stuart D Gathman <stuart@gathman.org>
-Reported-by: Kai Wohlfahrt <kai.scorpio@gmail.com>
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- net/mac80211/wpa.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 93aab07..422b798 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -106,7 +106,7 @@ ieee80211_rx_h_michael_mic_verify(struct ieee80211_rx_data *rx)
- 		if (status->flag & RX_FLAG_MMIC_ERROR)
- 			goto mic_fail;
- 
--		if (!(status->flag & RX_FLAG_IV_STRIPPED))
-+		if (!(status->flag & RX_FLAG_IV_STRIPPED) && rx->key)
- 			goto update_iv;
- 
- 		return RX_CONTINUE;
--- 
-1.7.1
+Larry
 
