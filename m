@@ -1,56 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:40425 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751879Ab2AZLc5 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:61543 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932065Ab2AIHrp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 06:32:57 -0500
-Received: by wics10 with SMTP id s10so291746wic.19
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 03:32:56 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: send null packet on active (psm) reconfiguration
-Date: Thu, 26 Jan 2012 13:36:05 +0200
-Message-Id: <1327577765-25815-1-git-send-email-eliad@wizery.com> (sfid-20120126_123301_093867_94FA3FF7)
+	Mon, 9 Jan 2012 02:47:45 -0500
+From: Thirumalai <tpachamu@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Thirumalai <tpachamu@qca.qualcomm.com>
+Subject: [PATCH 0/4] Enable uAPSD support in AP mode
+Date: Mon, 9 Jan 2012 13:14:43 +0530
+Message-ID: <1326095083-1538-1-git-send-email-tpachamu@qca.qualcomm.com> (sfid-20120109_084754_846351_9C65331D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The sta might be in psm against the ap (e.g. because
-this was the before a hw restart), so we explicitly
-send a null packet in order to make sure it'll
-sync against the ap (and get out of psm).
+In addition to legacy power save, this series of patch adds
+support for uAPSD in AP mode.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- net/mac80211/util.c |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
+When connected station goes into suspend state, the driver will
+start queuing pkts in the separate queue (called uapsd queue)
+until the station ask for it. 
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 9919892..17de0dd 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1272,6 +1272,21 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 	ieee80211_recalc_ps(local, -1);
- 
- 	/*
-+	 * The sta might be in psm against the ap (e.g. because
-+	 * this was the state before a hw restart), so we
-+	 * explicitly send a null packet in order to make sure
-+	 * it'll sync against the ap (and get out of psm).
-+	 */
-+	if (!(local->hw.conf.flags & IEEE80211_CONF_PS)) {
-+		list_for_each_entry(sdata, &local->interfaces, list) {
-+			if (sdata->vif.type != NL80211_IFTYPE_STATION)
-+				continue;
-+
-+			ieee80211_send_nullfunc(local, sdata, 0);
-+		}
-+	}
-+
-+	/*
- 	 * Clear the WLAN_STA_BLOCK_BA flag so new aggregation
- 	 * sessions can be established after a resume.
- 	 *
--- 
-1.7.6.401.g6a319
+The moment driver starting queuing, it will enable traffic indication
+bit for the client connected to indicate data availability. 
+Once station ask for the data (via Trigger frame), the driver will 
+dequeue and send pkt one by one to the station.
+
+Thirumalai (4):
+  ath6kl: Add new WMI functions for uAPSD
+  ath6kl: Introduce new queue for uAPSD.
+  ath6kl: Add uAPSD support in rx path.
+  ath6kl: Add UAPSD support in tx path.
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    6 +
+ drivers/net/wireless/ath/ath6kl/core.h     |    6 +-
+ drivers/net/wireless/ath/ath6kl/main.c     |    8 +-
+ drivers/net/wireless/ath/ath6kl/txrx.c     |  258 ++++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath6kl/wmi.c      |   62 ++++++-
+ drivers/net/wireless/ath/ath6kl/wmi.h      |   50 +++++-
+ 6 files changed, 339 insertions(+), 51 deletions(-)
 
