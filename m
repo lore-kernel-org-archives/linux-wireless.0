@@ -1,68 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:54444 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751281Ab2A1QZg (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:53003 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932851Ab2AITVy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jan 2012 11:25:36 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: [PATCHv3 0/2] [RESEND] add support for mcs masks
-Date: Sat, 28 Jan 2012 17:25:31 +0100
-Message-Id: <1327767935-16984-1-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20120128_172603_544108_12127058)
+	Mon, 9 Jan 2012 14:21:54 -0500
+Message-ID: <4F0B3DF6.7000103@qca.qualcomm.com> (sfid-20120109_202158_643614_889BBF93)
+Date: Mon, 9 Jan 2012 21:20:22 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 1/8] ath6kl: Rename modparam variable suspend_cutpower
+ to suspend_mode
+References: <1326098182-9103-1-git-send-email-rmani@qca.qualcomm.com> <1326098182-9103-2-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1326098182-9103-2-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset is simply the rebased version of PATCHv2, which received
-quite a few comments, but in the end we agreed to leave it as it is.
-As the patchset has not been merged so far, I'm resending it. If there
-are any comments/objections, please let me know. :)
+On 01/09/2012 10:36 AM, rmani@qca.qualcomm.com wrote:
+> From: Raja Mani <rmani@qca.qualcomm.com>
+> 
+> suspend_cutpower was introduced to force cut power mode when
+> system goes to suspend state. Now, generic module parameter
+> is required to specify suspend mode including DEEP SLEEP and WOW
+> while doing insmod. Renaming existing module parameter variable
+> suspend_cutpower would be sufficient to meet this requirement.
+> 
+> suspend_mode can take any one of three suspend state,
+>    1) cut power
+>    2) deep sleep
+>    3) wow
+> 
+> For invalid value other than above mode, cut power mode will be
+> selected.
+> 
+> To avoid externing mod parameter suspend_mode, new variable
+> ar->suspend_mode is added to have copy of mod param variable
+> and will be in sdio.c in the following patches.
+> 
+> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 
-(original) description:
+I think this patch needs to be folded with something else, maybe with
+patch 2?
 
-This patchset adds support for fixed HT datarates. The configuration is
-set through nl80211, and now accepts MCS masks next to the legacy masks.
-
-A user may also choose to only use HT datarates and no legacy rates at all -
-- as always when fiddling with datarates, he should know what he's doing,
-and a fallback in the rate matching functions allow to use the rate controls
-selected rate if no matching rate was found. The rate matching was enhanced
-to consider MCS rates as well.
-
-I have tested this feature in IBSS mode with ath9k devices and with and without
-NoAcks, and (at least for me) it works as expected.
-
-There is an iw patch as well to make use of this feature.
-
-It should apply well on the latest wireless-testing kernel.
-
-Changes to previous versions:
- * fix NL80211_MAX_SUPP_HT_RATES and add bug assertion
- * copy mcs rates from sband into mask
- * add sanity check for rate index
- * various formatting clean up
-
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-
-Simon Wunderlich (2):
-  nl80211: add support for mcs masks
-  mac80211: add support for mcs masks
-
- include/linux/nl80211.h       |    4 +
- include/net/cfg80211.h        |    3 +-
- include/net/mac80211.h        |    1 +
- net/mac80211/cfg.c            |    5 +-
- net/mac80211/debugfs_netdev.c |   34 +++++++++++
- net/mac80211/ieee80211_i.h    |    1 +
- net/mac80211/iface.c          |    7 ++
- net/mac80211/rate.c           |  124 ++++++++++++++++++++++++++++++++++++++---
- net/mac80211/tx.c             |    5 ++
- net/wireless/nl80211.c        |   61 ++++++++++++++++++++-
- 10 files changed, 233 insertions(+), 12 deletions(-)
-
--- 
-1.7.8.3
-
+Kalle
