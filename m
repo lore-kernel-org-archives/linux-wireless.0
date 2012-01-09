@@ -1,47 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:40325 "EHLO mga01.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:12323 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932099Ab2AIPng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 10:43:36 -0500
-Subject: Re: [PATCH RFC] iwlwifi: add basic runtime PM support
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Yan, Zheng" <zheng.z.yan@intel.com>, ilw@linux.intel.com,
+	id S1755264Ab2AIBz4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 8 Jan 2012 20:55:56 -0500
+Message-ID: <4F0A492A.5080504@intel.com> (sfid-20120109_025627_087966_ED2F3C31)
+Date: Mon, 09 Jan 2012 09:55:54 +0800
+From: "Yan, Zheng" <zheng.z.yan@intel.com>
+MIME-Version: 1.0
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+CC: Johannes Berg <johannes@sipsolutions.net>, ilw@linux.intel.com,
 	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <1326100270.3451.5.camel@jlt3.sipsolutions.net>
-References: <4F065F59.2070107@intel.com>
-	 <1325843269.3330.4.camel@jlt3.sipsolutions.net>
-	 <4F0A3C62.6010403@intel.com> <1326069251.13074.360.camel@wwguy-huron>
-	 <4F0A492A.5080504@intel.com>  <1326071127.13074.367.camel@wwguy-huron>
-	 <1326100270.3451.5.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 Jan 2012 06:39:59 -0800
-Message-ID: <1326119999.13074.369.camel@wwguy-huron> (sfid-20120109_164341_076712_006A3872)
-Mime-Version: 1.0
+Subject: Re: [PATCH RFC] iwlwifi: add basic runtime PM support
+References: <4F065F59.2070107@intel.com>  <1325843269.3330.4.camel@jlt3.sipsolutions.net>  <4F0A3C62.6010403@intel.com> <1326069251.13074.360.camel@wwguy-huron>
+In-Reply-To: <1326069251.13074.360.camel@wwguy-huron>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-01-09 at 10:11 +0100, Johannes Berg wrote:
-> On Sun, 2012-01-08 at 17:05 -0800, Guy, Wey-Yi wrote:
+On 01/09/2012 08:34 AM, Guy, Wey-Yi wrote:
+> On Mon, 2012-01-09 at 09:01 +0800, Yan, Zheng wrote:
+>> On 01/06/2012 05:47 PM, Johannes Berg wrote:
+>>> [add linux-wireless]
+>>>
+>>> On Fri, 2012-01-06 at 10:41 +0800, Yan, Zheng wrote:
+>>>> This simple patch adds open/close based runtime PM support to the iwlwifi driver.
+>>>> Namely, make the driver suspend the device after shutting down the interface and
+>>>> resume the device when activating the interface. In my test, suspending the device
+>>>> can save about 0.4 watt power. The shortcoming is that the device no longer generate
+>>>> rfkill changes interrupt.
+>>>
+>>> NACK due to that last sentence. There's no way we can live with that in
+>>> the general case -- and your patch isn't even configurable afaict. And
+>>> I'm sure polling the rfkill flag would use just as much energy.
+>>>
+>> It's configurable, runtime PM is disabled by default.
 > 
+> Somehow I miss it, how you configure it?
 > 
-> > I understand, but unless we figure out either make rkill interrupt works
-> > in runtime PM, or figure out the platform does not has HW RFKILL
-> > automatically, I don't see how this patch can upstream without generate
-> > a lot of issues and bug reports.
-> 
-> I suppose the question is -- will any tools/users enable it and then
-> scream about their rfkill?
-> 
-> Maybe we can use pm_runtime_forbid() to disable it completely, and add a
-> module parameter or something to enable it -- just so people are aware
-> of the tradeoffs?
+change the value of /sys/devices/.../power/control to auto to enable the runtime PM.
+(e.g echo auto > /sys/devices/pci0000:00/0000:00:1c.3/0000:02:00.0/power/control)
 
-module parameter shall works, we just need a clear and easy way to allow
-user enable/disable this runtime PM feature and not making mistake
-
-Wey
+>>
+>>> There might be some value in this in a system that doesn't have a hard
+>>> rfkill line, but that means this needs to be configurable since the
+>>> device can't know whether there's a button or not [1].
+>>>
+>> The patch targets system that only use software rfkill
 > 
+> How you control that?  
+I can't. Our team is working on runtime PM project, the purpose of the patch is
+more or less to demonstrate how much power can be saved.
 
+Regards
+Yan, Zheng
 
