@@ -1,83 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:55895 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751560Ab2AZMmo (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:17011 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754485Ab2AIHpq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 07:42:44 -0500
-Received: by mail-gy0-f177.google.com with SMTP id z22so185868ghb.36
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 04:42:43 -0800 (PST)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <hostap@lists.shmoo.com>
-Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
-	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
-	<adrian.chadd@gmail.com>, <j@w1.fi>, <johannes@sipsolutions.net>,
-	<coelho@ti.com>, <assaf@ti.com>, <yoni.divinsky@ti.com>,
-	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>
-Subject: [RFC 5/7] nl80211: add support to enable TX on oper-channel
-Date: Thu, 26 Jan 2012 14:41:27 +0200
-Message-Id: <1327581689-22090-6-git-send-email-victorg@ti.com> (sfid-20120126_134246_471951_FCD17A24)
-In-Reply-To: <1327581689-22090-1-git-send-email-victorg@ti.com>
-References: <1327581689-22090-1-git-send-email-victorg@ti.com>
+	Mon, 9 Jan 2012 02:45:46 -0500
+From: Thirumalai <tpachamu@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Thirumalai <tpachamu@qca.qualcomm.com>
+Subject: [PATCH 3/4] ath6kl: Add uAPSD support in rx path.
+Date: Mon, 9 Jan 2012 13:15:35 +0530
+Message-ID: <1326095135-1633-1-git-send-email-tpachamu@qca.qualcomm.com> (sfid-20120109_084548_653329_F0A87EB5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Once a channel has been passes the channel availability
-check (CAC) the ap may start the tx with
-wpa_driver_nl80211_enable_dfs_tx().
+If uAPSD trigger is received, send out the packets in uAPSD
+queue. Set more data bit if the queue is not empty else
+update the uAPSD bitmap for the station.
 
-Add wpa_driver_nl80211_enable_dfs_tx() + init drv_ops.
-
-Signed-off-by: Boris Presman <boris.presman@ti.com>
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+Signed-off-by: Thirumalai <tpachamu@qca.qualcomm.com>
 ---
- src/drivers/driver_nl80211.c |   27 +++++++++++++++++++++++++++
- 1 files changed, 27 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath6kl/txrx.c |  103 +++++++++++++++++++++++++++++++-
+ 1 files changed, 101 insertions(+), 2 deletions(-)
 
-diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
-index f1e6ca2..e3d6a3c 100644
---- a/src/drivers/driver_nl80211.c
-+++ b/src/drivers/driver_nl80211.c
-@@ -8627,6 +8627,32 @@ static int nl80211_set_p2p_powersave(void *priv, int legacy_ps, int opp_ps,
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index fcea824..bf6b102 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -1093,6 +1093,80 @@ static bool aggr_process_recv_frm(struct aggr_info *agg_info, u8 tid,
+ 	return is_queued;
  }
  
- 
-+static int wpa_driver_nl80211_enable_dfs_tx(void *priv)
++static void ath6kl_uapsd_trigger_frame_rx(struct ath6kl_vif *vif,
++						 struct ath6kl_sta *conn)
 +{
-+	struct i802_bss *bss = priv;
-+	struct wpa_driver_nl80211_data *drv = bss->drv;
-+	struct nl_msg *msg;
-+	int ret;
++	struct ath6kl *ar = vif->ar;
++	bool is_apsdq_empty;
++	bool is_apsdq_empty_at_start;
++	u32 num_frames_to_deliver;
++	struct sk_buff *skb = NULL;
 +
-+	wpa_printf(MSG_DEBUG, "nl80211: Enable DFS tx");
++	/*
++	 * If the APSD q for this STA is not empty, dequeue and
++	 * send a pkt from the head of the q. Also update the
++	 * More data bit in the WMI_DATA_HDR if there are
++	 * more pkts for this STA in the APSD q.
++	 * If there are no more pkts for this STA,
++	 * update the APSD bitmap for this STA.
++	 */
 +
-+	msg = nlmsg_alloc();
-+	if (!msg)
-+		return -1;
++	num_frames_to_deliver = (conn->apsd_info >> 4) & 0xF;
 +
-+	nl80211_cmd(bss->drv, msg, 0, NL80211_CMD_DFS_ENABLE_TX);
-+	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, drv->ifindex);
++	/*
++	 * Number of frames to send in a service period is
++	 * indicated by the station
++	 * in the QOS_INFO of the association request
++	 * If it is zero, send all frames
++	 */
++	if (!num_frames_to_deliver)
++		num_frames_to_deliver = 0xFFFF;
 +
-+	ret = send_and_recv_msgs(drv, msg, NULL, NULL);
-+	if (ret == 0)
-+		return 0;
-+	wpa_printf(MSG_DEBUG, "nl80211: Failed to enable DFS tx: "
-+		   "%d (%s)", ret, strerror(-ret));
-+nla_put_failure:
-+	return -1;
++	spin_lock_bh(&conn->psq_lock);
++	is_apsdq_empty  = skb_queue_empty(&conn->apsdq);
++	spin_unlock_bh(&conn->psq_lock);
++	is_apsdq_empty_at_start = is_apsdq_empty;
++
++	while ((!is_apsdq_empty) && (num_frames_to_deliver)) {
++
++		spin_lock_bh(&conn->psq_lock);
++		skb = skb_dequeue(&conn->apsdq);
++		is_apsdq_empty  = skb_queue_empty(&conn->apsdq);
++		spin_unlock_bh(&conn->psq_lock);
++
++		/*
++		 * Set the STA flag to Trigger delivery,
++		 * so that the frame will go out
++		 */
++		conn->sta_flags |= STA_PS_APSD_TRIGGER;
++		num_frames_to_deliver--;
++
++		/* Last frame in the service period, set EOSP or queue empty */
++		if ((is_apsdq_empty) || (!num_frames_to_deliver))
++			conn->sta_flags |= STA_PS_APSD_EOSP;
++
++		ath6kl_data_tx(skb, vif->ndev);
++		conn->sta_flags &= ~(STA_PS_APSD_TRIGGER);
++		conn->sta_flags &= ~(STA_PS_APSD_EOSP);
++	}
++
++	if (is_apsdq_empty) {
++		ath6kl_wmi_set_pvb_cmd(ar->wmi, vif->fw_vif_idx, conn->aid, 0);
++		if (is_apsdq_empty_at_start) {
++			ath6kl_wmi_set_apsd_bfrd_traf(ar->wmi,
++					vif->fw_vif_idx,
++					conn->aid, 0,
++					WMI_AP_APSD_NO_DELIVERY_FRAMES);
++		} else {
++			ath6kl_wmi_set_apsd_bfrd_traf(ar->wmi,
++					vif->fw_vif_idx,
++					conn->aid, 0, 0);
++		}
++	}
++
++	return;
 +}
 +
-+
- #ifdef CONFIG_TDLS
+ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ {
+ 	struct ath6kl *ar = target->dev->ar;
+@@ -1104,6 +1178,7 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ 	int status = packet->status;
+ 	enum htc_endpoint_id ept = packet->endpoint;
+ 	bool is_amsdu, prev_ps, ps_state = false;
++	bool trigger_state = false;
+ 	struct ath6kl_sta *conn = NULL;
+ 	struct sk_buff *skb1 = NULL;
+ 	struct ethhdr *datap = NULL;
+@@ -1197,6 +1272,8 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ 			      WMI_DATA_HDR_PS_MASK);
  
- static int nl80211_send_tdls_mgmt(void *priv, const u8 *dst, u8 action_code,
-@@ -8920,6 +8946,7 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
- 	.set_rekey_info = nl80211_set_rekey_info,
- 	.poll_client = nl80211_poll_client,
- 	.set_p2p_powersave = nl80211_set_p2p_powersave,
-+	.enable_tx = wpa_driver_nl80211_enable_dfs_tx,
- #ifdef CONFIG_TDLS
- 	.send_tdls_mgmt = nl80211_send_tdls_mgmt,
- 	.tdls_oper = nl80211_tdls_oper,
+ 		offset = sizeof(struct wmi_data_hdr);
++		trigger_state = !!((dhdr->info3 >> WMI_DATA_HDR_TRIGGER_SHIFT) &
++				  WMI_DATA_HDR_TRIGGER_MASK);
+ 
+ 		switch (meta_type) {
+ 		case 0:
+@@ -1235,18 +1312,40 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ 		else
+ 			conn->sta_flags &= ~STA_PS_SLEEP;
+ 
++		/* Accept trigger only when the station is in sleep */
++		if ((conn->sta_flags & STA_PS_SLEEP) && trigger_state)
++			ath6kl_uapsd_trigger_frame_rx(vif, conn);
++
+ 		if (prev_ps ^ !!(conn->sta_flags & STA_PS_SLEEP)) {
+ 			if (!(conn->sta_flags & STA_PS_SLEEP)) {
+ 				struct sk_buff *skbuff = NULL;
++				bool is_apsdq_empty;
+ 
+ 				spin_lock_bh(&conn->psq_lock);
+-				while ((skbuff = skb_dequeue(&conn->psq))
+-				       != NULL) {
++				skbuff = skb_dequeue(&conn->psq);
++				while (skbuff != NULL) {
++					spin_unlock_bh(&conn->psq_lock);
++					ath6kl_data_tx(skbuff, vif->ndev);
++					spin_lock_bh(&conn->psq_lock);
++					skbuff = skb_dequeue(&conn->psq);
++				}
++
++				is_apsdq_empty = skb_queue_empty(&conn->apsdq);
++				skbuff = skb_dequeue(&conn->apsdq);
++				while (skbuff != NULL) {
+ 					spin_unlock_bh(&conn->psq_lock);
+ 					ath6kl_data_tx(skbuff, vif->ndev);
+ 					spin_lock_bh(&conn->psq_lock);
++					skbuff = skb_dequeue(&conn->apsdq);
+ 				}
+ 				spin_unlock_bh(&conn->psq_lock);
++
++				if (!is_apsdq_empty)
++					ath6kl_wmi_set_apsd_bfrd_traf(
++							ar->wmi,
++							vif->fw_vif_idx,
++							conn->aid, 0, 0);
++
+ 				/* Clear the PVB for this STA */
+ 				ath6kl_wmi_set_pvb_cmd(ar->wmi, vif->fw_vif_idx,
+ 						       conn->aid, 0);
 -- 
-1.7.5.4
+1.7.4.1
 
