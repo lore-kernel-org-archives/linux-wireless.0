@@ -1,64 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail198.messagelabs.com ([216.82.254.163]:54750 "HELO
-	mail198.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932778Ab2AKSee convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:18929 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752232Ab2AIIh6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 13:34:34 -0500
+	Mon, 9 Jan 2012 03:37:58 -0500
+From: <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH 7/8] ath6kl: Removed unused ATH6KL_CONF_SUSPEND_CUTPOWER macro
+Date: Mon, 9 Jan 2012 14:06:21 +0530
+Message-ID: <1326098182-9103-8-git-send-email-rmani@qca.qualcomm.com> (sfid-20120109_093801_265050_97A23BE7)
+In-Reply-To: <1326098182-9103-1-git-send-email-rmani@qca.qualcomm.com>
+References: <1326098182-9103-1-git-send-email-rmani@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="ISO-8859-1"
-Subject: [PATCH 2/2] mac80211: Fix the maximum transmit power with power constraint
-Date: Wed, 11 Jan 2012 20:34:30 +0200
-Message-ID: <5EFF534737810441B0F97C2792E49C2DD20372@ILMAIL01.dspg.com> (sfid-20120111_193437_603649_2C151F32)
-From: "Hong Wu" <Hong.Wu@dspg.com>
-To: <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The local maximum transmit power for a channel is defined as the maximum
-regulatory transmission power minus the local power constraint specified
-for the channel in the Power Constraint element. (7.3.2.15 IEEE80211 2007)
+From: Raja Mani <rmani@qca.qualcomm.com>
 
-Signed-off-by: Hong Wu <hong.wu@dspg.com>
+Title says everything.
+
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 ---
- net/mac80211/main.c |    3 ++-
- net/mac80211/mlme.c |    2 +-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath6kl/core.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 0a0d94a..6192caa 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -155,7 +155,8 @@ int ieee80211_hw_config(struct ieee80211_local *local, u32 changed)
-            power = chan->max_power;
-      else
-            power = local->power_constr_level ?
--                 (chan->max_power - local->power_constr_level) :
-+                 min(chan->max_power,
-+                       (chan->max_reg_power  - local->power_constr_level)) :
-                  chan->max_power;
- 
-      if (local->user_power_level >= 0)
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index ecb4c84..95d3964 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -547,7 +547,7 @@ static void ieee80211_handle_pwr_constr(struct ieee80211_sub_if_data *sdata,
-      if (pwr_constr_elem_len != 1)
-            return;
- 
--     if ((*pwr_constr_elem <= conf->channel->max_power) &&
-+     if ((*pwr_constr_elem <= conf->channel->max_reg_power) &&
-          (*pwr_constr_elem != sdata->local->power_constr_level)) {
-            sdata->local->power_constr_level = *pwr_constr_elem;
-            ieee80211_hw_config(sdata->local, 0);
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index be61fc3..b6b756b 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -188,7 +188,6 @@ struct ath6kl_fw_ie {
+ #define ATH6KL_CONF_IGNORE_PS_FAIL_EVT_IN_SCAN  BIT(1)
+ #define ATH6KL_CONF_ENABLE_11N			BIT(2)
+ #define ATH6KL_CONF_ENABLE_TX_BURST		BIT(3)
+-#define ATH6KL_CONF_SUSPEND_CUTPOWER		BIT(4)
+ 
+ enum wlan_low_pwr_state {
+ 	WLAN_POWER_STATE_ON,
 -- 
-1.7.0.4
+1.7.1
 
-
-
-
-______________________________________________________________________
-DSP Group, Inc. automatically scans all emails and attachments using MessageLabs Email Security System.
-_____________________________________________________________________
