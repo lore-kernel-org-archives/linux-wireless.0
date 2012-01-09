@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:47964 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752122Ab2AWQ7h (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:65194 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754874Ab2AIH5I convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jan 2012 11:59:37 -0500
-Received: by wgbed3 with SMTP id ed3so3015611wgb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2012 08:59:36 -0800 (PST)
+	Mon, 9 Jan 2012 02:57:08 -0500
 MIME-Version: 1.0
-From: Eliad Peller <eliad@wizery.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] compat-wireless: fix wl12xx driver-select
-Date: Mon, 23 Jan 2012 19:02:34 +0200
-Message-Id: <1327338154-3806-1-git-send-email-eliad@wizery.com> (sfid-20120123_175939_621377_FCCC8E97)
+In-Reply-To: <NEXT-4f0a99de7f4ef4.35302262@nextmail.ru>
+References: <NEXT-4f0a99de7f4ef4.35302262@nextmail.ru>
+Date: Mon, 9 Jan 2012 13:27:07 +0530
+Message-ID: <CAD2nsn2MH7yXWZML5byD1_RW1d0E2Q2rhmnOBHei5iUVPU_ukA@mail.gmail.com> (sfid-20120109_085730_443421_1008FC6B)
+Subject: Re: ath9k crash 3.2-rc7
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: MR <g7af0ec1e3ea1e7b1@nextmail.ru>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wl12xx is a possible choice for both group drivers and
-singular modules (making it impossible to build only
-the wl12xx module). change the group name to "ti" instead.
+2012/1/9 MR <g7af0ec1e3ea1e7b1@nextmail.ru>:
+>  >> So, I am building 3.2 with two patches: over/under-flow catcher (pity
+>  >that
+>  >> it seems to be on a multiple-times-per-second codepath and just leaving
+>  >the
+>  > > checks there for everyone is suboptimal) and allegedely proper fix. Both
+>  > > applied OK with a small offset.
+>  >
+>  > as per our assumption, we should not see those over/underflow errors,
+>  > with the patch
+>  > above mentioned. please let us know if you hit upon this warnings,
+>  > even after the proper fix.
+>
+> In my experience (and as I understand the situation) if garbage is writen to
+> the "chan", it is caught by the check and device is dead-until-reboot anyway.
+> On 3.0, even without checks device was dead-until-reboot, but no crash
+> happened. All these checks do is converting "panic" to "WiFi broken" for 3.2.
+>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- scripts/driver-select |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+true those checks are to confirm that 'chan' is corrupted and the
+patch is to fix it.
 
-diff --git a/scripts/driver-select b/scripts/driver-select
-index f8ca02f..540d2fe 100755
---- a/scripts/driver-select
-+++ b/scripts/driver-select
-@@ -56,7 +56,7 @@ function usage {
- 	echo -e "\t${CYAN}intel${NORMAL} < ${PURPLE} iwlwifi, iwlegacy ${NORMAL}>"
- 	echo -e "\t${CYAN}rtl818x${NORMAL} < ${PURPLE} rtl8180 rtl8187 ${NORMAL}>"
- 	echo -e "\t${CYAN}rtlwifi${NORMAL} < ${PURPLE} rtl8192ce ${NORMAL}>"
--	echo -e "\t${CYAN}wl12xx${NORMAL} < ${PURPLE} wl1251 wl12xx (SPI and SDIO)${NORMAL}>"
-+	echo -e "\t${CYAN}ti${NORMAL} < ${PURPLE} wl1251 wl12xx (SPI and SDIO)${NORMAL}>"
- 	
- 	echo -e "\nSupported group drivers: Bluetooth & Ethernet:"
- 	echo -e "\t${CYAN}atlxx${NORMAL} < ${PURPLE} atl1 atl2 atl1e atl1c ${NORMAL}>"
-@@ -348,7 +348,7 @@ case $1 in
- 		disable_bt_usb_ethernet_var
- 		disable_lib80211
- 		;;
--	wl12xx)
-+	ti)
- 		select_drivers		CONFIG_WL1251 \
- 					CONFIG_WL12XX
- 		disable_staging
 -- 
-1.7.6.401.g6a319
-
+shafi
