@@ -1,60 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:63379 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751181Ab2AZMJZ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:22482 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751562Ab2AIIhe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 07:09:25 -0500
-Received: by mail-we0-f174.google.com with SMTP id b13so321544wer.19
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 04:09:25 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] wl12xx: don't release/claim sdio on suspend/resume
-Date: Thu, 26 Jan 2012 14:12:32 +0200
-Message-Id: <1327579952-4595-2-git-send-email-eliad@wizery.com> (sfid-20120126_130929_074395_F1394E54)
-In-Reply-To: <1327579952-4595-1-git-send-email-eliad@wizery.com>
-References: <1327579952-4595-1-git-send-email-eliad@wizery.com>
+	Mon, 9 Jan 2012 03:37:34 -0500
+From: <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH 4/8] ath6kl: Add a new func to config default WOW patterns for non AP mode
+Date: Mon, 9 Jan 2012 14:06:18 +0530
+Message-ID: <1326098182-9103-5-git-send-email-rmani@qca.qualcomm.com> (sfid-20120109_093737_133068_27894390)
+In-Reply-To: <1326098182-9103-1-git-send-email-rmani@qca.qualcomm.com>
+References: <1326098182-9103-1-git-send-email-rmani@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we reverted to claiming the host only when needed,
-we no longer need to release/claim the host on suspend/resume.
+From: Raja Mani <rmani@qca.qualcomm.com>
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+ath6kl_non_ap_add_default_wow_patterns() is added to configure the below
+default patterns when the system enters into WOW suspend in non AP mode.
+
+  * Unicast packet pattern
+  * mDNS/SSDP/LLMNR pattern
+
+This func will be called from ath6kl_wow_suspend().
+
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 ---
- drivers/net/wireless/wl12xx/sdio.c |   11 -----------
- 1 files changed, 0 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   40 ++++++++++++++++++++++++++++
+ 1 files changed, 40 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
-index 099c2c9..ce3b9a9 100644
---- a/drivers/net/wireless/wl12xx/sdio.c
-+++ b/drivers/net/wireless/wl12xx/sdio.c
-@@ -324,9 +324,6 @@ static int wl1271_suspend(struct device *dev)
- 			dev_err(dev, "error while trying to keep power\n");
- 			goto out;
- 		}
--
--		/* release host */
--		sdio_release_host(func);
- 	}
- out:
- 	return ret;
-@@ -334,15 +331,7 @@ out:
- 
- static int wl1271_resume(struct device *dev)
- {
--	struct sdio_func *func = dev_to_sdio_func(dev);
--	struct wl12xx_sdio_glue *glue = sdio_get_drvdata(func);
--	struct wl1271 *wl = platform_get_drvdata(glue->core);
--
- 	dev_dbg(dev, "wl1271 resume\n");
--	if (wl->wow_enabled) {
--		/* claim back host */
--		sdio_claim_host(func);
--	}
- 
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index deba99c..65e4609 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1804,6 +1804,46 @@ static int ath6kl_ap_add_default_wow_patterns(struct ath6kl *ar,
  	return 0;
  }
+ 
++static int ath6kl_non_ap_add_default_wow_patterns(struct ath6kl *ar,
++						     struct ath6kl_vif *vif)
++{
++	struct net_device *ndev = vif->ndev;
++	static u8 discvr_pattern[] = { 0xe0, 0x00, 0x00, 0xf8 };
++	static u8 discvr_mask[] = { 0xf0, 0x00, 0x00, 0xf8 };
++	u8 discvr_offset = 38;
++	u8 mac_mask[ETH_ALEN];
++	int ret;
++
++	/* Setup unicast pkt pattern */
++	memset(mac_mask, 0xff, ETH_ALEN);
++	ret = ath6kl_wmi_add_wow_pattern_cmd(ar->wmi,
++				vif->fw_vif_idx, WOW_LIST_ID,
++				ETH_ALEN, 0, ndev->dev_addr,
++				mac_mask);
++	if (ret) {
++		ath6kl_err("failed to add WOW unicast pattern\n");
++		return ret;
++	}
++
++	/*
++	 * Setup multicast pattern for mDNS 224.0.0.251,
++	 * SSDP 239.255.255.250 and LLMNR 224.0.0.252
++	 */
++	if ((ndev->flags & IFF_ALLMULTI) ||
++	    (ndev->flags & IFF_MULTICAST && netdev_mc_count(ndev) > 0)) {
++		ret = ath6kl_wmi_add_wow_pattern_cmd(ar->wmi,
++				vif->fw_vif_idx, WOW_LIST_ID,
++				sizeof(discvr_pattern), discvr_offset,
++				discvr_pattern, discvr_mask);
++		if (ret) {
++			ath6kl_err("failed to add WOW mDNS/SSDP/LLMNR pattern\n");
++			return ret;
++		}
++	}
++
++	return 0;
++}
++
+ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
+ {
+ 	struct in_device *in_dev;
 -- 
-1.7.6.401.g6a319
+1.7.1
 
