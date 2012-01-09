@@ -1,43 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:49532 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757298Ab2ADX6h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jan 2012 18:58:37 -0500
-Message-ID: <1325721515.4116.11.camel@joe2Laptop> (sfid-20120105_005855_481699_1A854AD5)
-Subject: Re: [PATCH 4/6] ath6kl: get rid of AR_DBG_LVL_CHECK()
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, sfr@canb.auug.org.au,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-next@vger.kernel.org,
-	ath6kl-devel@qualcomm.com, davem@davemloft.net
-Date: Wed, 04 Jan 2012 15:58:35 -0800
-In-Reply-To: <20120104230921.32306.63985.stgit@x201>
-References: <20120104230429.32306.75965.stgit@x201>
-	 <20120104230921.32306.63985.stgit@x201>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from foo.stuge.se ([212.116.89.98]:57221 "HELO foo.stuge.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755853Ab2AIWZs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jan 2012 17:25:48 -0500
+Message-ID: <20120109222544.11008.qmail@stuge.se> (sfid-20120109_232551_265507_46A50874)
+Date: Mon, 9 Jan 2012 23:25:44 +0100
+From: Peter Stuge <peter@stuge.se>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Abimanyu Gottumukkala <me@abimanyu.in>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: BCM43231
+References: <CAEWwF+bnM0bxbZR6B57H_nv3fkUdhP-ytAu30MLhUWq7QxB3GQ@mail.gmail.com> <CACna6rzA6ix2PrZDHXQLTDQuo942urtUAWYagDC0x9zANSVNKQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rzA6ix2PrZDHXQLTDQuo942urtUAWYagDC0x9zANSVNKQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-01-05 at 01:09 +0200, Kalle Valo wrote:
-> We don't need it as debug calls already have a log level and compiler
-> should be smart enough to optimise away the code when ath6kl debug code
-> is not enabled. Also it makes it easier to abstract core code to
-> ath6kl_core.ko.
+Rafał Miłecki wrote:
+> I've been using "usbmon" to dump traffic.
 
-Changelog isn't representative of code changes.
-ATH6KL_DBG_ANY -> ATH6KL_DBG_IRQ.
+The tool at http://people.redhat.com/zaitcev/linux/usbmon-6.tar.gz
+and not simply cat on the usbmon files in debugfs I hope.
 
-> diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-[]
-> @@ -82,31 +82,31 @@ void ath6kl_dump_registers(struct ath6kl_device *dev,
->  			   struct ath6kl_irq_enable_reg *irq_enable_reg)
->  {
->  
-> -	ath6kl_dbg(ATH6KL_DBG_ANY, ("<------- Register Table -------->\n"));
-> +	ath6kl_dbg(ATH6KL_DBG_IRQ, ("<------- Register Table -------->\n"));
-
-etc...
+debugfs only shows the first bytes of long transfers, but the API
+used by the usbmon-6 tool shows complete traffic.
 
 
+//Peter
