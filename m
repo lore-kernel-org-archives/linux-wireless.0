@@ -1,203 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([195.4.92.90]:39695 "EHLO mout0.freenet.de"
+Received: from mout2.freenet.de ([195.4.92.92]:36381 "EHLO mout2.freenet.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753918Ab2AJL70 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jan 2012 06:59:26 -0500
-Received: from [195.4.92.140] (helo=mjail0.freenet.de)
-	by mout0.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
-	id 1RkaMN-0006cF-AW
-	for linux-wireless@vger.kernel.org; Tue, 10 Jan 2012 12:59:23 +0100
-Received: from localhost ([::1]:42271 helo=mjail0.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1RkaMN-0008Sc-6i
-	for linux-wireless@vger.kernel.org; Tue, 10 Jan 2012 12:59:23 +0100
-Received: from [195.4.92.20] (port=40218 helo=10.mx.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1RkaJl-0007d1-4r
-	for linux-wireless@vger.kernel.org; Tue, 10 Jan 2012 12:56:41 +0100
-Received: from p4fde00e1.dip0.t-ipconnect.de ([79.222.0.225]:34115 helo=mail.maya.org)
-	by 10.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
-	id 1RkaJk-0005cT-QT
-	for linux-wireless@vger.kernel.org; Tue, 10 Jan 2012 12:56:41 +0100
-Message-Id: <201201101156.q0ABuS87004643@mail.maya.org> (sfid-20120110_125929_994261_77142A57)
-Date: Tue, 10 Jan 2012 12:56:28 +0100
+	id S1755335Ab2AIPhe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jan 2012 10:37:34 -0500
+Received: from [195.4.92.141] (helo=mjail1.freenet.de)
+	by mout2.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
+	id 1RkHHw-0005YF-Mt
+	for linux-wireless@vger.kernel.org; Mon, 09 Jan 2012 16:37:32 +0100
+Received: from localhost ([::1]:58917 helo=mjail1.freenet.de)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1RkHHw-0004MO-KC
+	for linux-wireless@vger.kernel.org; Mon, 09 Jan 2012 16:37:32 +0100
+Received: from [195.4.92.18] (port=33587 helo=8.mx.freenet.de)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1RkHFX-000437-Qg
+	for linux-wireless@vger.kernel.org; Mon, 09 Jan 2012 16:35:03 +0100
+Received: from p4fde0028.dip0.t-ipconnect.de ([79.222.0.40]:59111 helo=mail.maya.org)
+	by 8.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
+	id 1RkFI2-0001oM-Om
+	for linux-wireless@vger.kernel.org; Mon, 09 Jan 2012 14:29:34 +0100
+Message-ID: <4F0AEBAB.9020104@01019freenet.de> (sfid-20120109_163739_119043_06E938BA)
+Date: Mon, 09 Jan 2012 14:29:15 +0100
 From: Andreas Hartmann <andihartmann@01019freenet.de>
+MIME-Version: 1.0
 To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	Felix Fietkau <nbd@openwrt.org>
 Subject: Re: Compat-wireless-3.2-rc6-3 is broken for rt2860 device
-In-Reply-To: <CAGXE3d_jW7NFnekMfwn6JPXX0xB4UWM3ttbRVLv-ZbsoMOoWEw@mail.gmail.com>
-References: <4EFF12D9.3010602@01019freenet.de> <2766356.70ylY68Gqi@helmutmobil.site> <4F040FEA.3080703@01019freenet.de> <1408490.qSFZVkU7fA@helmutmobil.site> <4F0562DF.3000200@dualc.maya.org> <CAGXE3d8b5qtbhesPjRy3EXvkiwshUg0eZqcDBzb1OhKK3j6z6A@mail.gmail.com> <4F0AEBAB.9020104@01019freenet.de> <CAGXE3d-cOeTEHugbgWMoz8-Dymw0=JHxykdK4ZkBmCJZ9tSPmg@mail.gmail.com> <201201100803.q0A83nsQ003757@mail.maya.org> <CAGXE3d_jW7NFnekMfwn6JPXX0xB4UWM3ttbRVLv-ZbsoMOoWEw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+References: <4EFF12D9.3010602@01019freenet.de> <2766356.70ylY68Gqi@helmutmobil.site> <4F040FEA.3080703@01019freenet.de> <1408490.qSFZVkU7fA@helmutmobil.site> <4F0562DF.3000200@dualc.maya.org> <CAGXE3d8b5qtbhesPjRy3EXvkiwshUg0eZqcDBzb1OhKK3j6z6A@mail.gmail.com>
+In-Reply-To: <CAGXE3d8b5qtbhesPjRy3EXvkiwshUg0eZqcDBzb1OhKK3j6z6A@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Helmut Schaa schrieb:
-> On Tue, Jan 10, 2012 at 9:03 AM, Andreas Hartmann
-> <andihartmann@01019freenet.de> wrote:
->> Meanwhile, I took a look at the tx_path with Felix patch applied. I'm
->> getting this output:
+> On Thu, Jan 5, 2012 at 9:44 AM, Andreas Hartmann
+> <andihartmann@freenet.de> wrote:
+>> Helmut Schaa schrieb:
+>>> Hi,
+>>>
+>>> Am Mittwoch, 4. Januar 2012, 09:38:02 schrieb Andreas Hartmann:
+>>>> Helmut Schaa schrieb:
+>>>>>> Removing this patch
+>>>>>>
+>>>>>> mac80211: retry sending failed BAR frames later instead of tearing down
+>>>>>> aggr (http://www.spinics.net/lists/linux-wireless/msg76379.html) makes
+>>>>>> it working again.
+>>>>>>
+>>>>>> Device is: RaLink RT2800 802.11n PCI
+>>>>>
+>>>>> What's the client device connected to the rt2x00 AP?
+>>>>
+>>>> It's a rt3572 usb chip (Linksys WUSB600N v2), driven with the rt3572sta
+>>>> module.
+>>>>
+>>>>> Mind to send a
+>>>>> 802.11 capture wen this stall happens?
+>>>
+>>> Andreas provided me with a capture now. The interesting part is that
+>>> the rt2x00 AP sends bursts of BARs with the same sequence number when
+>>> the stall happens. I only had a quick look at the code in question but
+>>> couldn't see anything wrong at a first glance.
 >>
 >>
->> -> netperf start
+>> Some additional information:
 >>
->> [38139.839028] Open BA session requested for 00:25:9c:de:4e:30 tid 0
->> [38139.848151] IEEE80211_AMPDU_TX_START
->> [38139.848157] activated addBA response timer on tid 0
->> [38139.849723] switched off addBA timer for tid 0
->> [38139.849728] Aggregation is on for tid 0
+>> - The AP initiates BARs for 6 different, successive sequence numbers.
+>> - The first 5 sequence numbers are finished after sending of about 8 (!)
+>> BAR's.
+>> Important: each BAR is responded *instantly* by the STA.
+>> - The BAR for the next sequence number is sent "endless" though the STA
+>> responses to each BAR instantly again.
 >>
->> -> stall
 >>
->> [38161.686305] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 1
->> [38161.698957] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 2
+>> Another thing: it is striking, that the performance from STA -> AP is at
+>> max 8,5 MBit/s, whereas the performance from AP -> STA can be 15 MBit/s
+>> (all measured with netperf).
 >>
->> [38161.698963] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4>
->> [38161.699116] ieee80211_check_pending_bar() -> ieee80211_send_bar() true tid: 0 failed_bar_ssn: 65040
->> [38161.710238] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 3
->> [38161.710240] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4>
->> [38161.710394] ieee80211_check_pending_bar() -> ieee80211_send_bar() true tid: 0 failed_bar_ssn: 65040
->> [38161.724512] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 4
->> [38161.724519] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4>
->> [38161.724659] ieee80211_check_pending_bar() -> ieee80211_send_bar() true tid: 0 failed_bar_ssn: 65040
->> [38161.735416] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 5
->> [38161.735423] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4>
->> [38161.735486] ieee80211_check_pending_bar() -> ieee80211_send_bar() true tid: 0 failed_bar_ssn: 65040
->> [38161.747815] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 6
->> [38161.747822] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4>
->> [38161.747888] ieee80211_check_pending_bar() -> ieee80211_send_bar() true tid: 0 failed_bar_ssn: 65040
->> [38161.755268] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 7
->> [38161.755271] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4>
->> [38161.758823] ieee80211_check_pending_bar() -> ieee80211_send_bar() true tid: 0 failed_bar_ssn: 65040
->> [38161.772898] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 8
->> [38161.772901] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4>
->> [38161.773049] ieee80211_check_pending_bar() -> ieee80211_send_bar() true tid: 0 failed_bar_ssn: 65040
->> [38161.789222] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 9
->> ...
 >>
->> Looks as if sending of any package is reported as broken at some
->> point of time and this circle cannot be left anymore.
+>> Could it be, that somewhere in the stack of the AP the response packet
+>> from STA -> AP get's lost or ignored or blocked?
 > 
-> Not necessarily since mac80211 will only retry the BAR if a data frame
-> transmission was successful. 
-
-Ok - this can't be seen in the trace as I just traced channel 1 - there
-could be some data transfer outside of channel 1.
-
-But if I look at the debug output, I fear, that at some point the tx is
-broken completely as I can see at the beginning of each stall solely
-tx failures.
-
-> Hence, it seems as if only the BARs TX
-> status is reported incorrectly ...
-
-Seems so. Because each BAR can be seen in the trace and is responded by
-the STA.
-
-> I see two issues here:
-> 1) rt2800pci seems to have problems delivering the BAR _or_ doesn't
->    report the tx status correctly
-
-I think, that there is a problem with the tx status, as if I can see the
-BAR in the trace and even the response of the STA (so the BAR was
-probably ok), there really seems to be a problem with the tx status.
-
-> 2) If the same BAR fails consecutively we should maybe really tear down
->    the BA session as it was done before
+> The BlockAck is solely handled in hardware. But I need to check, maybe
+> the BAR tx status is reported as unacknowledged when the BA contains
+> a BA bitmap of only zeros ...
 > 
-> 2 is done in the below untested patch and will also work around 1.
-> Mind to give it a try?
+> Don't know when I can find time to do this but if you like to test something
+> you could try to add some printks in the rt2x00 tx status path to see if any
+> BAR frames are reported as acknowledged (and if these have a bitmap != 0).
 
-Yes :-)
+I tried the following with reverted patch "mac80211: retry sending
+failed BAR frames later instead of tearing down" to see what's done to
+not break down the data stream:
 
-The workaround patch works fine for me (at a first glance - I didn't
-check for any side effects yet). The stall doesn't happen any more. But
-I'm not really sure, why it works:
-
-At the beginning, you just can see 9 tx failures. After a few tx
-failures, you can see 7 BAR's, which are pending, but never passed to
-ieee80211_send_bar().
-
-- Why are they suddenly ok (are they really ok)? Or is it a logging
-  problem (too much input at the same time)?
+-> enabling CONFIG_MAC80211_HT_DEBUG
+-> some additional output
 
 
-At session 38176, you can see your patch at work :-).
+Start of netperf:
+
+[18836.107487] Open BA session requested for 00:25:9c:aa:bb:cc tid 0
+[18836.116149] IEEE80211_AMPDU_TX_START
+[18836.116156] activated addBA response timer on tid 0
+[18836.116209] Rx A-MPDU request on tid 0 result 0
+[18836.118846] switched off addBA timer for tid 0
+[18836.118851] Aggregation is on for tid 0
+
+(that's the same as with the patch, which I reverted)
 
 
-[27229.720767] rt2800_txdone_entry - tx failed
-[27229.720791] rt2800_txdone_entry - tx failed
-[27229.720800] rt2800_txdone_entry - tx failed
-[27229.720807] rt2800_txdone_entry - tx failed
-[27229.720814] rt2800_txdone_entry - tx failed
-[27229.720821] rt2800_txdone_entry - tx failed
-[27229.720828] rt2800_txdone_entry - tx failed
-[27229.720835] rt2800_txdone_entry - tx failed
-[27229.727130] rt2800_txdone_entry - tx failed
-[27229.727133] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <38064>
-[27229.734419] rt2800_txdone_entry - tx failed
-[27229.734431] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <38080>
-[27229.741731] rt2800_txdone_entry - tx failed
-[27229.741741] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <38096>
-[27229.749097] rt2800_txdone_entry - tx failed
-[27229.749107] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <38112>
-[27229.758136] rt2800_txdone_entry - tx failed
-[27229.758143] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <38128>
-[27229.765453] rt2800_txdone_entry - tx failed
-[27229.765461] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <38144>
-[27229.771836] rt2800_txdone_entry - tx failed
-[27229.771843] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <38160>
-[27229.779281] rt2800_txdone_entry - tx failed
-[27229.779290] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <38176>
+Later on, I can see some sequences like this:
 
-[27229.779315] ieee80211_check_pending_bar -> ieee80211_send_bar() retry cnt: 2 tid: 0 failed_bar_ssn: 38176
-[27229.786705] rt2800_txdone_entry - tx failed
-[27229.786714] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <38176>
-[27229.793439] ieee80211_check_pending_bar -> ieee80211_send_bar() retry cnt: 1 tid: 0 failed_bar_ssn: 38176
-
-[27229.793452] ieee80211_check_pending_bar -> ieee80211_stop_tx_ba_session() retry cnt: 0 tid: 0 failed_bar_ssn: 38176
-
-[27229.793476] Tx BA session stop requested for 00:25:9c:11:22:33 tid 0
-[27229.802082] Stopping Tx BA session for 00:25:9c:11:22:33 tid 0
-
-[27229.807455] rt2800_txdone_entry - tx failed
-[27229.807465] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <38176>
-
-[27229.816023] Open BA session requested for 00:25:9c:11:22:33 tid 0
-[27229.834077] activated addBA response timer on tid 0
-[27229.835517] switched off addBA timer for tid 0
-[27229.835522] Aggregation is on for tid 0
+[18868.875495] ieee80211_ba_session_work() called
+___ieee80211_stop_tx_ba_session
+[18868.875503] Tx BA session stop requested for 00:25:9c:aa:bb:cc tid 0
+[18868.884143] IEEE80211_AMPDU_TX_STOP
+[18868.884155] Stopping Tx BA session for 00:25:9c:aa:bb:cc tid 0
+[18868.963066] Open BA session requested for 00:25:9c:aa:bb:cc tid 0
+[18868.972047] IEEE80211_AMPDU_TX_START
+[18868.972054] activated addBA response timer on tid 0
+[18868.979154] switched off addBA timer for tid 0
+[18868.979156] Aggregation is on for tid 0
 
 
-
-The following test is done with reduced debugging (without the tx
-failed entries). But I can see the set_bar_pending calls without a
-send_bar, too. This block is typical and comes up about 6 times a
-minute (not regularly).
-
-[29007.375460] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <4000>
-[29007.384394] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <4016>
-[29007.391329] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <4032>
-[29007.398646] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <4048>
-[29007.409470] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <4064>
-[29007.415295] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <4080>
-[29007.425943] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <4096>
-[29007.439950] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <4112>
-[29007.440041] ieee80211_check_pending_bar -> ieee80211_send_bar() retry cnt: 2 tid: 0 failed_bar_ssn: 4112
-[29007.440061] ieee80211_check_pending_bar -> ieee80211_send_bar() retry cnt: 1 tid: 0 failed_bar_ssn: 4112
-[29007.440071] ieee80211_check_pending_bar -> ieee80211_stop_tx_ba_session() retry cnt: 0 tid: 0 failed_bar_ssn: 4112
-[29007.440100] Tx BA session stop requested for 00:25:9c:11:22:33 tid 0
-[29007.447797] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <4112>
-[29007.449024] Stopping Tx BA session for 00:25:9c:11:22:33 tid 0
-[29007.461327] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <4112>
-[29007.490023] Open BA session requested for 00:25:9c:11:22:33 tid 0
-[29007.499048] activated addBA response timer on tid 0
-[29007.504198] switched off addBA timer for tid 0
-[29007.504203] Aggregation is on for tid 0
+With the reverted patch applied again, I can't see any entries in the
+moment of the stall. It just stalls silently.
+How is the situation I can see with the reverted patch handled now?
+Could it be, that it isn't handled at all?
 
 
+Here you can see the triggering of the teardown of the BA session
+(hopefully), if the patch is reverted:
 
-Thank you for your time - I really appreciate your work!
+"ieee80211_ba_session_work() called ___ieee80211_stop_tx_ba_session"
+triggers the dropping of BA session. The code at this point is
+(net/mac80211/ht.c):
+
+
+--------------------------------------------------------------------------
+void ieee80211_ba_session_work(struct work_struct *work) {
+...
+for (tid = 0; tid < STA_TID_NUM; tid++) {
+
+    ...
+
+    tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
+
+    if (tid_tx && test_and_clear_bit(HT_AGG_STATE_WANT_STOP,
+                                     &tid_tx->state)) {
+
+        printk("ieee80211_ba_session_work called
+               ___ieee80211_stop_tx_ba_session\n"); // debug
+
+        ___ieee80211_stop_tx_ba_session(sta,tid,
+					WLAN_BACK_INITIATOR,
+                                        true);
+	}
+    }
+...
+}
+----------------------------------------------------------------------------
+
+Does this help you to get the reason for the problem? I could do some
+more tests - but I'm not sure where to get the bitmap you desire to see :-).
+
+
 Kind regards,
 Andreas
