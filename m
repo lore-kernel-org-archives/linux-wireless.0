@@ -1,99 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:58951 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752543Ab2AAUa1 convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:35058 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932942Ab2AITa0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jan 2012 15:30:27 -0500
+	Mon, 9 Jan 2012 14:30:26 -0500
+Message-ID: <4F0B4049.4070306@qca.qualcomm.com> (sfid-20120109_203033_802179_3AE86DB9)
+Date: Mon, 9 Jan 2012 21:30:17 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.44L0.1201011105200.4534-100000@netrider.rowland.org>
-References: <201201011322.34483.oliver@neukum.org> <Pine.LNX.4.44L0.1201011105200.4534-100000@netrider.rowland.org>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Sun, 1 Jan 2012 12:30:04 -0800
-Message-ID: <CA+55aFw-ar6dnPvn5wy=3Tv8fc_7Witri2mV=cCvH+aMv+jH1Q@mail.gmail.com> (sfid-20120101_213106_997680_B721DDBF)
-Subject: Re: loading firmware while usermodehelper disabled.
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Oliver Neukum <oliver@neukum.org>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+To: <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 2/8] ath6kl: Re-architect suspend mode handling in ath6kl_sdio_suspend()
+References: <1326098182-9103-1-git-send-email-rmani@qca.qualcomm.com> <1326098182-9103-3-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1326098182-9103-3-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 1, 2012 at 8:17 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
->
-> As Linus pointed out, the real problem here is the firmware loader.
-> The way it is now, a driver can't always depend on the data being
-> available, even during a normal boot.  It ought to use an asynchronous
-> approach; then none of these problems would arise.
+On 01/09/2012 10:36 AM, rmani@qca.qualcomm.com wrote:
+> From: Raja Mani <rmani@qca.qualcomm.com>
+> 
+> Dynamic suspend mode selection logic based on the host sdio
+> controller capability (MMC_PM_KEEP_POWER and MMC_PM_WAKE_SDIO_IRQ)
+> is completely removed.
 
-WRONG.
+What's the reason for this change? This loses all the automatic
+detection we have. I would hope that we could keep the existing
+detection capability and use the module parameter to override the
+detection logic or something like that.
 
-Alan, you're not getting it. Loading firmware as part of
-suspend/resume is WRONG.
+The driver should be as automatic as possible and the suspend_mode
+module parameter should be used to override something.
 
-It would not be made any better by an asynchronous approach, and that
-isn't the problem with request_firmware().
+> Additionally, new logic is added to have backup retry.
+> In other words, If the driver fails to enter into either
+> WOW (or) DEEP SLEEP mode, it would give a try in CUT POWER mode.
 
-Suspend/resume is *special*, and it's special for a very simple
-reason: unlike bootup or attaching a new device, suspend/resume
-happens WHILE THE USER IS ACTIVE.
+So the function now has a loop. To me that sounds very confusing and
+error prone. What's the reason for this?
 
-Loading firmware at that time is wrong. It's impossible. You have to
-have the firmware available *before* any processes might need it, but
-at the same time actually loading the firmware may need help from user
-space and/or other devices. It's a chicken-and-egg problem.
-
-So let me repeat one more time: Loading firmware at resume time is a
-device driver bug. Seriously. How many times do I have to say it?
-
-And making it asynchronous doesn't make it *any* less of a bug. It
-doesn't change anything but timing, but the problem was never about
-timing in the first place! The problem was about dependencies. User
-space may well depend on the device, and *other* devices may well
-depend on the device working.
-
-So stop with the inanity. I've already told people what the fix is:
-make sure that the firmware image is in memory before the suspend ever
-happens, and just reload it from memory. NOT with
-"request_firmware()". Because requesting the firmware at resume time
-is buggy and wrong, and has nothing to do with "asynchronous" or
-"synchronous". It has everything to do with "it's buggy".
-
-Really really really.
-
-So the problem with request_firmware() has absolutely nothing to do
-with "asynchronous". The problem is that the firmware interfaces do
-not cache the data in memory, and currently *cannot* sanely cache the
-firmware data simply because the interface doesn't have any kind of
-lifetime rules.
-
-In other words: we could make "request_firmware()" cache *all*
-firmware images forever, but there is currently no way to say "ok, the
-device was unplugged - and not fakily so by a resume event, but for
-real, and physically - so now you can drop the cache". Which means
-that effectively request_firmware() can do no caching at all, because
-it might eventually just run out of memory.
-
-It is *possible* that we might tie the firmware lifetime rules to the
-driver module lifetime. But it would probably be much better if we
-made for an explicit model of "ok, the device is now really gone" so
-that it would work properly with compiled-in drivers etc too.
-
-And yes, the firmware would have to stay around even around a
-resume/suspend that causes unplug events over USB. The "use USB and
-lose power" actually happens also for built-in devices that may well
-be disks and network cards that are *needed* by user space, so even if
-the device has been electrically unplugged, it is still attached and
-needs to be brought back *before* user space comes back.
-
-That's the whole point of suspend/resume: we're not starting from a
-clean slate. We are supposed to continue as if nothing happened!
-
-                                  Linus
+Kalle
