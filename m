@@ -1,135 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:43487 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753181Ab2AEMOj (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:51337 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751562Ab2AIIhm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 07:14:39 -0500
-From: Fabio Estevam <festevam@gmail.com>
-To: netdev@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, davem@davemloft.net,
-	linville@tuxdriver.com, Fabio Estevam <festevam@gmail.com>,
-	Fabio Estevam <fabio.estevam@freescale.com>
-Subject: [PATCH] drivers: net: Fix dependency for EEPROM_93CX6
-Date: Thu,  5 Jan 2012 10:14:23 -0200
-Message-Id: <1325765663-7141-1-git-send-email-festevam@gmail.com> (sfid-20120105_131455_828647_63835875)
+	Mon, 9 Jan 2012 03:37:42 -0500
+From: <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH 5/8] ath6kl: Move WOW patterns config code to a separate function.
+Date: Mon, 9 Jan 2012 14:06:19 +0530
+Message-ID: <1326098182-9103-6-git-send-email-rmani@qca.qualcomm.com> (sfid-20120109_093745_412847_AC84E78A)
+In-Reply-To: <1326098182-9103-1-git-send-email-rmani@qca.qualcomm.com>
+References: <1326098182-9103-1-git-send-email-rmani@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix the following build warning:
+From: Raja Mani <rmani@qca.qualcomm.com>
 
-warning: (KS8851 && AX88796_93CX6 && RTL8180 && RTL8187 && ADM8211 && RT2400PCI && RT2500PCI && RT61PCI && RT2800PCI && R8187SE) selects EEPROM_93CX6 which has unmet direct dependencies (MISC_DEVICES)
+Move the user provided WOW patterns configuration code
+from ath6kl_wow_suspend() to a separate function called
+ath6kl_add_usr_wow_patterns().
 
-Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+It gives more modularity to the existing code.
+
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 ---
- drivers/net/ethernet/8390/Kconfig    |    2 +-
- drivers/net/ethernet/micrel/Kconfig  |    3 +--
- drivers/net/wireless/Kconfig         |    2 +-
- drivers/net/wireless/rt2x00/Kconfig  |    8 ++++----
- drivers/net/wireless/rtl818x/Kconfig |    4 ++--
- 5 files changed, 9 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |  108 +++++++++++++++------------
+ 1 files changed, 60 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/net/ethernet/8390/Kconfig b/drivers/net/ethernet/8390/Kconfig
-index e04ade4..d967c74 100644
---- a/drivers/net/ethernet/8390/Kconfig
-+++ b/drivers/net/ethernet/8390/Kconfig
-@@ -69,7 +69,7 @@ config AX88796
- config AX88796_93CX6
- 	bool "ASIX AX88796 external 93CX6 eeprom support"
- 	depends on AX88796
--	select EEPROM_93CX6
-+	select EEPROM_93CX6 if MISC_DEVICES
- 	---help---
- 	  Select this if your platform comes with an external 93CX6 eeprom.
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 65e4609..347c5a4 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1727,6 +1727,64 @@ static int ath6kl_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
+ 	return 0;
+ }
  
-diff --git a/drivers/net/ethernet/micrel/Kconfig b/drivers/net/ethernet/micrel/Kconfig
-index 1ea811c..bc99abf 100644
---- a/drivers/net/ethernet/micrel/Kconfig
-+++ b/drivers/net/ethernet/micrel/Kconfig
-@@ -42,8 +42,7 @@ config KS8851
- 	select NET_CORE
- 	select MII
- 	select CRC32
--	select MISC_DEVICES
--	select EEPROM_93CX6
-+	select EEPROM_93CX6 if MISC_DEVICES
- 	---help---
- 	  SPI driver for Micrel KS8851 SPI attached network chip.
++static int ath6kl_add_usr_wow_patterns(struct ath6kl *ar,
++				       struct ath6kl_vif *vif,
++				       struct cfg80211_wowlan *wow,
++				       u32 *filter)
++{
++	int ret, pos;
++	u8 mask[WOW_MASK_SIZE];
++	u16 i;
++
++	/* Configure the patterns that we received from the user. */
++	for (i = 0; i < wow->n_patterns; i++) {
++
++		/*
++		 * Convert given nl80211 specific mask value to equivalent
++		 * driver specific mask value and send it to the chip along
++		 * with patterns. For example, If the mask value defined in
++		 * struct cfg80211_wowlan is 0xA (equivalent binary is 1010),
++		 * then equivalent driver specific mask value is
++		 * "0xFF 0x00 0xFF 0x00".
++		 */
++		memset(&mask, 0, sizeof(mask));
++		for (pos = 0; pos < wow->patterns[i].pattern_len; pos++) {
++			if (wow->patterns[i].mask[pos / 8] & (0x1 << (pos % 8)))
++				mask[pos] = 0xFF;
++		}
++		/*
++		 * Note: Pattern's offset is not passed as part of wowlan
++		 * parameter from CFG layer. So it's always passed as ZERO
++		 * to the firmware. It means, given WOW patterns are always
++		 * matched from the first byte of received pkt in the firmware.
++		 */
++		ret = ath6kl_wmi_add_wow_pattern_cmd(ar->wmi,
++					vif->fw_vif_idx, WOW_LIST_ID,
++					wow->patterns[i].pattern_len,
++					0 /* pattern offset */,
++					wow->patterns[i].pattern, mask);
++		if (ret)
++			return ret;
++	}
++
++	if (wow->disconnect)
++		*filter |= WOW_FILTER_OPTION_NWK_DISASSOC;
++
++	if (wow->magic_pkt)
++		*filter |= WOW_FILTER_OPTION_MAGIC_PACKET;
++
++	if (wow->gtk_rekey_failure)
++		*filter |= WOW_FILTER_OPTION_GTK_ERROR;
++
++	if (wow->eap_identity_req)
++		*filter |= WOW_FILTER_OPTION_EAP_REQ;
++
++	if (wow->four_way_handshake)
++		*filter |= WOW_FILTER_OPTION_8021X_4WAYHS;
++
++	return 0;
++}
++
+ static int ath6kl_ap_add_default_wow_patterns(struct ath6kl *ar,
+ 		struct ath6kl_vif *vif)
+ {
+@@ -1849,10 +1907,10 @@ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
+ 	struct in_device *in_dev;
+ 	struct in_ifaddr *ifa;
+ 	struct ath6kl_vif *vif;
+-	int ret, pos, left;
++	int ret, left;
+ 	u32 filter = 0;
+ 	u16 i;
+-	u8 mask[WOW_MASK_SIZE], index = 0;
++	u8 index = 0;
+ 	__be32 ips[MAX_IP_ADDRS];
  
-diff --git a/drivers/net/wireless/Kconfig b/drivers/net/wireless/Kconfig
-index abd3b71..d15d3a9 100644
---- a/drivers/net/wireless/Kconfig
-+++ b/drivers/net/wireless/Kconfig
-@@ -223,7 +223,7 @@ config ADM8211
- 	tristate "ADMtek ADM8211 support"
- 	depends on MAC80211 && PCI && EXPERIMENTAL
- 	select CRC32
--	select EEPROM_93CX6
-+	select EEPROM_93CX6 if MISC_DEVICES
- 	---help---
- 	  This driver is for ADM8211A, ADM8211B, and ADM8211C based cards.
- 	  These are PCI/mini-PCI/Cardbus 802.11b chips found in cards such as:
-diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-index a0a7854..c7be1a9 100644
---- a/drivers/net/wireless/rt2x00/Kconfig
-+++ b/drivers/net/wireless/rt2x00/Kconfig
-@@ -21,7 +21,7 @@ config RT2400PCI
- 	tristate "Ralink rt2400 (PCI/PCMCIA) support"
- 	depends on PCI
- 	select RT2X00_LIB_PCI
--	select EEPROM_93CX6
-+	select EEPROM_93CX6 if MISC_DEVICES
- 	---help---
- 	  This adds support for rt2400 wireless chipset family.
- 	  Supported chips: RT2460.
-@@ -32,7 +32,7 @@ config RT2500PCI
- 	tristate "Ralink rt2500 (PCI/PCMCIA) support"
- 	depends on PCI
- 	select RT2X00_LIB_PCI
--	select EEPROM_93CX6
-+	select EEPROM_93CX6 if MISC_DEVICES
- 	---help---
- 	  This adds support for rt2500 wireless chipset family.
- 	  Supported chips: RT2560.
-@@ -46,7 +46,7 @@ config RT61PCI
- 	select RT2X00_LIB_FIRMWARE
- 	select RT2X00_LIB_CRYPTO
- 	select CRC_ITU_T
--	select EEPROM_93CX6
-+	select EEPROM_93CX6 if MISC_DEVICES
- 	---help---
- 	  This adds support for rt2501 wireless chipset family.
- 	  Supported chips: RT2561, RT2561S & RT2661.
-@@ -62,7 +62,7 @@ config RT2800PCI
- 	select RT2X00_LIB_FIRMWARE
- 	select RT2X00_LIB_CRYPTO
- 	select CRC_CCITT
--	select EEPROM_93CX6
-+	select EEPROM_93CX6 if MISC_DEVICES
- 	---help---
- 	  This adds support for rt27xx/rt28xx/rt30xx wireless chipset family.
- 	  Supported chips: RT2760, RT2790, RT2860, RT2880, RT2890, RT3052,
-diff --git a/drivers/net/wireless/rtl818x/Kconfig b/drivers/net/wireless/rtl818x/Kconfig
-index 17d80fe..3e399b8 100644
---- a/drivers/net/wireless/rtl818x/Kconfig
-+++ b/drivers/net/wireless/rtl818x/Kconfig
-@@ -4,7 +4,7 @@
- config RTL8180
- 	tristate "Realtek 8180/8185 PCI support"
- 	depends on MAC80211 && PCI && EXPERIMENTAL
--	select EEPROM_93CX6
-+	select EEPROM_93CX6 if MISC_DEVICES
- 	---help---
- 	  This is a driver for RTL8180 and RTL8185 based cards.
- 	  These are PCI based chips found in cards such as:
-@@ -60,7 +60,7 @@ config RTL8180
- config RTL8187
- 	tristate "Realtek 8187 and 8187B USB support"
- 	depends on MAC80211 && USB
--	select EEPROM_93CX6
-+	select EEPROM_93CX6 if MISC_DEVICES
- 	---help---
- 	  This is a driver for RTL8187 and RTL8187B based cards.
- 	  These are USB based chips found in devices such as:
+ 	vif = ath6kl_vif_first(ar);
+@@ -1869,37 +1927,6 @@ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
+ 	for (i = 0; i < WOW_MAX_FILTERS_PER_LIST; i++)
+ 		ath6kl_wmi_del_wow_pattern_cmd(ar->wmi, vif->fw_vif_idx,
+ 					       WOW_LIST_ID, i);
+-	/* Configure new WOW patterns */
+-	for (i = 0; i < wow->n_patterns; i++) {
+-
+-		/*
+-		 * Convert given nl80211 specific mask value to equivalent
+-		 * driver specific mask value and send it to the chip along
+-		 * with patterns. For example, If the mask value defined in
+-		 * struct cfg80211_wowlan is 0xA (equivalent binary is 1010),
+-		 * then equivalent driver specific mask value is
+-		 * "0xFF 0x00 0xFF 0x00".
+-		 */
+-		memset(&mask, 0, sizeof(mask));
+-		for (pos = 0; pos < wow->patterns[i].pattern_len; pos++) {
+-			if (wow->patterns[i].mask[pos / 8] & (0x1 << (pos % 8)))
+-				mask[pos] = 0xFF;
+-		}
+-		/*
+-		 * Note: Pattern's offset is not passed as part of wowlan
+-		 * parameter from CFG layer. So it's always passed as ZERO
+-		 * to the firmware. It means, given WOW patterns are always
+-		 * matched from the first byte of received pkt in the firmware.
+-		 */
+-		ret = ath6kl_wmi_add_wow_pattern_cmd(ar->wmi,
+-					vif->fw_vif_idx, WOW_LIST_ID,
+-					wow->patterns[i].pattern_len,
+-					0 /* pattern offset */,
+-					wow->patterns[i].pattern, mask);
+-		if (ret)
+-			return ret;
+-	}
+-
+ 	/* Setup own IP addr for ARP agent. */
+ 	in_dev = __in_dev_get_rtnl(vif->ndev);
+ 	if (!in_dev)
+@@ -1927,21 +1954,6 @@ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
+ 	}
+ 
+ skip_arp:
+-	if (wow->disconnect)
+-		filter |= WOW_FILTER_OPTION_NWK_DISASSOC;
+-
+-	if (wow->magic_pkt)
+-		filter |= WOW_FILTER_OPTION_MAGIC_PACKET;
+-
+-	if (wow->gtk_rekey_failure)
+-		filter |= WOW_FILTER_OPTION_GTK_ERROR;
+-
+-	if (wow->eap_identity_req)
+-		filter |= WOW_FILTER_OPTION_EAP_REQ;
+-
+-	if (wow->four_way_handshake)
+-		filter |= WOW_FILTER_OPTION_8021X_4WAYHS;
+-
+ 	ret = ath6kl_wmi_set_wow_mode_cmd(ar->wmi, vif->fw_vif_idx,
+ 					  ATH6KL_WOW_MODE_ENABLE,
+ 					  filter,
 -- 
 1.7.1
 
