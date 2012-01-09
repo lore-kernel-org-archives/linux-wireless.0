@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:55571 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752930Ab2AQRRO (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46030 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753412Ab2AIIyc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 12:17:14 -0500
-Date: Tue, 17 Jan 2012 12:16:05 -0500 (EST)
-Message-Id: <20120117.121605.1198600029451960992.davem@davemloft.net> (sfid-20120117_181736_557006_4B23D801)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-01-17
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120117154629.GG12733@tuxdriver.com>
-References: <20120117154629.GG12733@tuxdriver.com>
+	Mon, 9 Jan 2012 03:54:32 -0500
+Subject: Re: [PATCH 0/4] Enable uAPSD support in AP mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thirumalai <tpachamu@qca.qualcomm.com>
+Cc: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1326095083-1538-1-git-send-email-tpachamu@qca.qualcomm.com> (sfid-20120109_084754_846351_9C65331D)
+References: <1326095083-1538-1-git-send-email-tpachamu@qca.qualcomm.com>
+	 (sfid-20120109_084754_846351_9C65331D)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 09 Jan 2012 09:54:28 +0100
+Message-ID: <1326099268.3451.0.camel@jlt3.sipsolutions.net> (sfid-20120109_095435_696259_F6555235)
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 17 Jan 2012 10:46:29 -0500
-
-> Here is a set of fixes for 3.3.  This includes the ones that I
-> originally posted on Monday, the bcma ones from Linus, plus a few
-> more...
- ...
-> The following changes since commit 7c7c7f01cc5e3e423120a4848a73dd5e4586f2f9:
+On Mon, 2012-01-09 at 13:14 +0530, Thirumalai wrote:
+> In addition to legacy power save, this series of patch adds
+> support for uAPSD in AP mode.
 > 
->   vhost-net: add module alias (v2.1) (2012-01-13 10:12:23 -0800)
+> When connected station goes into suspend state, the driver will
+> start queuing pkts in the separate queue (called uapsd queue)
+> until the station ask for it. 
 > 
-> are available in the git repository at:
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git master
+> The moment driver starting queuing, it will enable traffic indication
+> bit for the client connected to indicate data availability. 
+> Once station ask for the data (via Trigger frame), the driver will 
+> dequeue and send pkt one by one to the station.
 
-Pulled, thanks a lot John.
+The way you describe this sounds incorrect, but I'll leave it to Kalle
+to figure out what you're doing and whether it is correct or not ... if
+only some ACs are trigger-enabled those don't influence the TIM bit.
+
+johannes
+
