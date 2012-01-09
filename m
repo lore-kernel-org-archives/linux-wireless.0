@@ -1,78 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:62555 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754504Ab2AHVod convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:17011 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754485Ab2AIHpr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jan 2012 16:44:33 -0500
-Received: by werm1 with SMTP id m1so2214604wer.19
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jan 2012 13:44:32 -0800 (PST)
+	Mon, 9 Jan 2012 02:45:47 -0500
+From: Thirumalai <tpachamu@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Thirumalai <tpachamu@qca.qualcomm.com>
+Subject: [PATCH 1/4] ath6kl: Add new WMI functions for uAPSD
+Date: Mon, 9 Jan 2012 13:15:05 +0530
+Message-ID: <1326095106-1572-1-git-send-email-tpachamu@qca.qualcomm.com> (sfid-20120109_084550_501111_A6AA1378)
 MIME-Version: 1.0
-In-Reply-To: <4F09C1E2.6020907@gmail.com>
-References: <4F09AAE5.2080209@gmail.com>
-	<4F09BEC0.7080702@lwfinger.net>
-	<4F09C1E2.6020907@gmail.com>
-Date: Sun, 8 Jan 2012 22:44:32 +0100
-Message-ID: <CACna6rxMPnn1DHtMvsHtCG3y=_-sCKgb=L901MV96fj31BZ58A@mail.gmail.com> (sfid-20120108_224440_612149_A55B64C6)
-Subject: Re: modprob b43 not work after hilibernate
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: lina <lina.lastname@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/1/8 lina <lina.lastname@gmail.com>:
-> On Monday 09,January,2012 12:05 AM, Larry Finger wrote:
->>
->> On 01/08/2012 08:40 AM, lina wrote:
->>>
->>> Hi,
->>>
->>> after hibernation,
->>>
->>> I tried modprob b43 and /etc/initi.d/network-manager restart not work,
->>>
->>> is it reboot the only option. ( I googled it seems, not so sure)
->>
->>
->> Hibernation involves so many parts of the computer that it is hard to
->> tell what is happening. If unloading and reloading b43 using modprobe
->> does not help, then it is not solely a problem with b43.
->>
->> You need to provide a better description of what you are doing. Include
->> specific output from dmesg and the exact commands you are trying. You
->> should also include what distro you are running, your kernel version,
->> and what brand and model of computer you are using.
->
->
-> It's fine with me to reboot.
->
-> 3.2.0-1 SMP  x86_64 GNU/Linux
->
-> Debian wheezy.
->
-> I upload the dmesg output in the following link,
->
-> https://docs.google.com/open?id=0B93SVRfpVVg3ZThiYmQ3NjctOWU2Ni00ODQ5LTgzMGMtMGMyMDgxMjVjYTFl
->
-> It's absolutely not something urgent or very-necessary to me, so just take
-> your time and interest, I was just asking. btw, if there is some problem in
-> the dmesg, maybe not high relevant to this topic, please also feel free to
-> let me know.
-> any further info you need just let me know,
+WMI functions are added
+* To enable/disable uapsd
+* To signal the firmware about buffered frames
+  in the host for the APSD WMM AC.
 
-I'm not sure if I can see suspend&resume in your dmesg...
+Signed-off-by: Thirumalai <tpachamu@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/wmi.c |   37 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/wmi.h |   17 +++++++++++++++
+ 2 files changed, 54 insertions(+), 0 deletions(-)
 
-What does happen after resume? What after reloading b43? Have you
-tried reloading both: b43 and bcma:
-rmmod b43
-rmmod bcma
-modprobe b43
-?
-Does your kernel have
-[PATCH] bcma: support for suspend and resume
-applied?
-
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index c6ca660..cda9cc7 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -2948,6 +2948,43 @@ int ath6kl_wmi_ap_set_mlme(struct wmi *wmip, u8 if_idx, u8 cmd, const u8 *mac,
+ 				   NO_SYNC_WMIFLAG);
+ }
+ 
++/* This command will be used to enable/disable AP uAPSD feature */
++int ath6kl_wmi_ap_set_apsd(struct wmi *wmi, u8 if_idx, u8 enable)
++{
++	struct wmi_ap_set_apsd_cmd *cmd;
++	struct sk_buff *skb;
++
++	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
++	if (!skb)
++		return -ENOMEM;
++
++	cmd = (struct wmi_ap_set_apsd_cmd *)skb->data;
++	cmd->enable = enable;
++
++	return ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_AP_SET_APSD_CMDID,
++				   NO_SYNC_WMIFLAG);
++}
++
++int ath6kl_wmi_set_apsd_bfrd_traf(struct wmi *wmi, u8 if_idx,
++					     u16 aid, u16 bitmap, u32 flags)
++{
++	struct wmi_ap_apsd_buffered_traffic_cmd *cmd;
++	struct sk_buff *skb;
++
++	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
++	if (!skb)
++		return -ENOMEM;
++
++	cmd = (struct wmi_ap_apsd_buffered_traffic_cmd *)skb->data;
++	cmd->aid = cpu_to_le16(aid);
++	cmd->bitmap = cpu_to_le16(bitmap);
++	cmd->flags = cpu_to_le32(flags);
++
++	return ath6kl_wmi_cmd_send(wmi, if_idx, skb,
++				   WMI_AP_APSD_BUFFERED_TRAFFIC_CMDID,
++				   NO_SYNC_WMIFLAG);
++}
++
+ static int ath6kl_wmi_pspoll_event_rx(struct wmi *wmi, u8 *datap, int len,
+ 				      struct ath6kl_vif *vif)
+ {
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 2b43599..c48e289 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -2107,6 +2107,19 @@ struct wmi_rx_frame_format_cmd {
+ } __packed;
+ 
+ /* AP mode events */
++struct wmi_ap_set_apsd_cmd {
++	u8 enable;
++} __packed;
++
++enum wmi_ap_apsd_buffered_traffic_flags {
++	WMI_AP_APSD_NO_DELIVERY_FRAMES =  0x1,
++};
++
++struct wmi_ap_apsd_buffered_traffic_cmd {
++	__le16 aid;
++	__le16 bitmap;
++	__le32 flags;
++} __packed;
+ 
+ /* WMI_PS_POLL_EVENT */
+ struct wmi_pspoll_event {
+@@ -2434,7 +2447,11 @@ int ath6kl_wmi_del_wow_pattern_cmd(struct wmi *wmi, u8 if_idx,
+ int ath6kl_wmi_set_roam_lrssi_cmd(struct wmi *wmi, u8 lrssi);
+ int ath6kl_wmi_force_roam_cmd(struct wmi *wmi, const u8 *bssid);
+ int ath6kl_wmi_set_roam_mode_cmd(struct wmi *wmi, enum wmi_roam_mode mode);
++int ath6kl_wmi_ap_set_apsd(struct wmi *wmi, u8 if_idx, u8 enable);
+ 
++int ath6kl_wmi_set_apsd_bfrd_traf(struct wmi *wmi,
++						u8 if_idx, u16 aid,
++						u16 bitmap, u32 flags);
+ /* AP mode */
+ int ath6kl_wmi_ap_profile_commit(struct wmi *wmip, u8 if_idx,
+ 				 struct wmi_connect_cmd *p);
 -- 
-Rafał
+1.7.4.1
+
