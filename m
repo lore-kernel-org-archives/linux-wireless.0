@@ -1,54 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:48673 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754760Ab2APTWb (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:62627 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751615Ab2AIIjb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jan 2012 14:22:31 -0500
-Received: by eaac11 with SMTP id c11so314935eaa.19
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2012 11:22:30 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Re: [RFC] mac80211: Fix possible race between sta_unblock and network softirq
-Date: Mon, 16 Jan 2012 20:22:21 +0100
-Message-ID: <331689478.qzl2dPmWvj@helmutmobil.site> (sfid-20120116_202235_740425_527BDDCC)
-In-Reply-To: <1326732693.3510.21.camel@jlt3.sipsolutions.net>
-References: <1326728542-31697-1-git-send-email-helmut.schaa@googlemail.com> <1326732693.3510.21.camel@jlt3.sipsolutions.net>
+	Mon, 9 Jan 2012 03:39:31 -0500
+From: <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH 0/8] Allow the user to define suspend mode
+Date: Mon, 9 Jan 2012 14:06:14 +0530
+Message-ID: <1326098182-9103-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20120109_093934_746682_2B7B0621)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Montag, 16. Januar 2012, 17:51:33 schrieb Johannes Berg:
-> On Mon, 2012-01-16 at 16:42 +0100, Helmut Schaa wrote:
-> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> > ---
-> > 
-> > I'm currently writing some code for rt2800 that requires the driver
-> > to stop sending to a specific station for a short period of time
-> > (until all AMPDUs are finished to work around a hw issue that affects
-> > rate sampling with minstrel_ht). I decided to give
-> > ieee80211_sta_block_awake a try, however, the machine sometimes locked
-> > up while running some performance tests but due to a hw watchdog I
-> > wasn't able to get any sort of backtrace :(
-> > 
-> > So, while doing some review of the ieee80211_sta_block_awake I came
-> > across this and wondered if softirqs should be disabled when delivering
-> > the buffered frames in sta_unblock.
-> > 
-> > Using this patch I cannot reproduce the lockup anymore.
-> > 
-> > So, is there any special reason this single code path in sta_unblock
-> > doesn't disable softirqs?
-> 
-> This seems right
+From: Raja Mani <rmani@qca.qualcomm.com>
 
-The patch or the current approach without disable_bh?
+This series of patch enables the user to specify the suspend mode 
+via module parameter (suspend_mode) while doing insmod of the driver.
 
-> -- not sure where the lockup would be though.
+   To select Cut Power mode:
+      insmod ath6kl_sdio.ko suspend_mode = 1
 
-Not sure either :( unfortunately I cannot disable the hw watchdog (and
-that has a timeout of only 2 seconds). Maybe I can reproduce it with
-a regular rt2800 PCI card ...
+   To select Deep Sleep mode:
+      insmod ath6kl_sdio.ko suspend_mode = 2
 
-Helmut
+   To select WOW suspend mode:
+      insmod ath6kl_sdio.ko suspend_mode = 3
+
+Existing module param 'suspend_cutpower' variable is renamed to 
+'suspend_mode' for this purspose.
+
+Dynamic suspend mode selection logic based on the host SDIO 
+host controller is removed in ath6kl_sdio_suspend(). 
+Now, ath6kl_sdio_suspend() will react based on the module 
+parameter 'suspend_mode'.
+
+Additionally, If the user doesn't provide any WOW patterns, 
+the default WOW patterns will be configured while going to 
+WOW suspend mode.
+
+Please provide your comments on this patch series.
+
+Raja Mani (8):
+  ath6kl: Rename modparam variable suspend_cutpower to suspend_mode
+  ath6kl: Re-architect suspend mode handling in ath6kl_sdio_suspend()
+  ath6kl: Add a new func to configure default WOW patterns for AP mode
+  ath6kl: Add a new func to config default WOW patterns for non AP mode
+  ath6kl: Move WOW patterns config code to a separate function.
+  ath6kl: Configure WOW patterns while going to wow_suspend
+  ath6kl: Removed unused ATH6KL_CONF_SUSPEND_CUTPOWER macro
+  ath6kl: Return a proper error code when not in connected state
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |  222 +++++++++++++++++++++++-----
+ drivers/net/wireless/ath/ath6kl/core.h     |    2 +-
+ drivers/net/wireless/ath/ath6kl/init.c     |   11 +-
+ drivers/net/wireless/ath/ath6kl/sdio.c     |  105 ++++++++-----
+ 4 files changed, 258 insertions(+), 82 deletions(-)
+
