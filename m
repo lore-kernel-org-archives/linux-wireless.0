@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:35514 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752782Ab2ASNJ1 convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:28749 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754017Ab2AILqu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jan 2012 08:09:27 -0500
-Received: by ggnb1 with SMTP id b1so827190ggn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2012 05:09:27 -0800 (PST)
+	Mon, 9 Jan 2012 06:46:50 -0500
+Message-ID: <4F0AD3A1.5020100@qca.qualcomm.com> (sfid-20120109_124654_126883_CA80C432)
+Date: Mon, 9 Jan 2012 13:46:41 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1326976540.3324.3.camel@jlt3.sipsolutions.net>
-References: <20120119082956.486569312@sipsolutions.net>
-	<20120119083102.873553392@sipsolutions.net>
-	<CAB3XZEd9F+0oOeSmn4UWPZ2iwWdRZ83KcRYRfD4q8ZrGm7m=4Q@mail.gmail.com>
-	<1326976540.3324.3.camel@jlt3.sipsolutions.net>
-Date: Thu, 19 Jan 2012 15:09:27 +0200
-Message-ID: <CAB3XZEc5o5fqPvVUGgN4h3e56kMmm3u3m9gg4FbRG0UbeQ-Rhw@mail.gmail.com> (sfid-20120119_140948_408753_D26B8083)
-Subject: Re: [PATCH 2/2] mac80211: make CQM RSSI support per virtual interface
-From: Eliad Peller <eliad@wizery.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+CC: Thirumalai <tpachamu@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 0/4] Enable uAPSD support in AP mode
+References: <1326095083-1538-1-git-send-email-tpachamu@qca.qualcomm.com>	 (sfid-20120109_084754_846351_9C65331D) <1326099268.3451.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1326099268.3451.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 19, 2012 at 2:35 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2012-01-19 at 13:37 +0200, Eliad Peller wrote:
->> On Thu, Jan 19, 2012 at 10:29 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > From: Johannes Berg <johannes.berg@intel.com>
->> >
->> > Similar to the previous beacon filtering patch,
->> > make CQM RSSI support depend on the flags that
->> > the driver set for virtual interfaces.
->> >
->> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
->> > ---
->> [...]
+On 01/09/2012 10:54 AM, Johannes Berg wrote:
+> On Mon, 2012-01-09 at 13:14 +0530, Thirumalai wrote:
+>> In addition to legacy power save, this series of patch adds
+>> support for uAPSD in AP mode.
 >>
->> >
->> > -       if (!(local->hw.flags & IEEE80211_HW_SUPPORTS_CQM_RSSI)) {
->> > -               if (sdata->vif.type != NL80211_IFTYPE_STATION)
->> > -                       return -EOPNOTSUPP;
->> > -               return 0;
->> > -       }
->> > -
->> >        /* tell the driver upon association, unless already associated */
->> > -       if (sdata->u.mgd.associated)
->> > +       if (sdata->u.mgd.associated &&
->> > +           sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI)
->> >                ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_CQM);
->> >
->> should you return EOPNOTSUPP if the vif doesn't support it?
->
-> No. The code above that checks the type is useless as cfg80211 already
-> checks the type, and we do support this in software in mac80211 if
-> there's no HW offload for it.
->
-right. thanks.
+>> When connected station goes into suspend state, the driver will
+>> start queuing pkts in the separate queue (called uapsd queue)
+>> until the station ask for it. 
+>>
+>> The moment driver starting queuing, it will enable traffic indication
+>> bit for the client connected to indicate data availability. 
+>> Once station ask for the data (via Trigger frame), the driver will 
+>> dequeue and send pkt one by one to the station.
+> 
+> The way you describe this sounds incorrect, but I'll leave it to Kalle
+> to figure out what you're doing and whether it is correct or not ... if
+> only some ACs are trigger-enabled those don't influence the TIM bit.
 
-Eliad.
+Yeah, that does sound odd. Thirumalai, does the code really this way or
+is it just a problem with the description? (I need to study the code in
+detail still.)
+
+Johannes, thanks for pointing this out.
+
+Kalle
