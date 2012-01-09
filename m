@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8229 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755320Ab2AJSxT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jan 2012 13:53:19 -0500
-Message-ID: <1326221614.5067.6.camel@dcbw.foobar.com> (sfid-20120110_195332_644565_70181AEF)
-Subject: Re: iwlwifi worse than ever in current git.
-From: Dan Williams <dcbw@redhat.com>
-To: Dave Jones <davej@redhat.com>
-Cc: netdev@vger.kernel.org, emmanuel.grumbach@intel.com,
-	wey-yi.w.guy@intel.com,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 10 Jan 2012 12:53:34 -0600
-In-Reply-To: <20120110184917.GA26973@redhat.com>
-References: <20120110184917.GA26973@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43689 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751659Ab2AIRxP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jan 2012 12:53:15 -0500
+Message-ID: <4F0B2946.4040503@qca.qualcomm.com> (sfid-20120109_185318_984263_D10FD880)
+Date: Mon, 9 Jan 2012 19:52:06 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 0/8] Allow the user to define suspend mode
+References: <1326098182-9103-1-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1326098182-9103-1-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-01-10 at 13:49 -0500, Dave Jones wrote:
-> For the last few releases, iwlwifi has been getting consistently worse
-> wrt reliability for me.  The failure mode has varied, from the chip just
-> locking up with no tx/rx of packets with nothing being logged, to
-> microcode warnings, and spewing 'Tx aggregation enabled' messages over and over.
+On 01/09/2012 10:36 AM, rmani@qca.qualcomm.com wrote:
 
-You might want to CC linux-wireless@vger too...
+> This series of patch enables the user to specify the suspend mode 
+> via module parameter (suspend_mode) while doing insmod of the driver.
+> 
+>    To select Cut Power mode:
+>       insmod ath6kl_sdio.ko suspend_mode = 1
+> 
+>    To select Deep Sleep mode:
+>       insmod ath6kl_sdio.ko suspend_mode = 2
+> 
+>    To select WOW suspend mode:
+>       insmod ath6kl_sdio.ko suspend_mode = 3
+> 
+> Existing module param 'suspend_cutpower' variable is renamed to 
+> 'suspend_mode' for this purspose.
 
-> The merge post 3.2 has made these problems a lot worse.  Before, these
-> lock-ups were happening once or twice a day. Now they happen several times an hour
-> (and after the first one, they seem more frequent). When they happen,
-> unloading and reloading the module is the only way for me to get working wireless again.
-> They may happen more frequently when the laptop is not idle.
-> 
-> I did a bisect of the changes since 3.2, which pointed at 76bc10fcd128ad028cf77c62e179cd20dc2ffecf
-> as being the culprit, but to be honest I'm not 100% convinced.
-> 
-> Because every step of the way during the bisect, I saw different failure modes,
-> so when I marked something as 'good', it meant "doesn't lock up in the same way",
-> even though it may be symptomatic of the same problem.
-> 
-> The specific chip I'm using is a 5300 in a Dell Adamo, connecting to
-> an Apple airport extreme (current model) in N mode.
-> 
-> 	Dave
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm not sure about this one. In a way this makes sense so that user can
+force the particular suspend mode, but on the other hand I'm not sure if
+this is a bit too much.
 
+J&J (John and Johannes), what do you think? Is this acceptable?
 
+Kalle
