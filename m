@@ -1,111 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:41118 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753443Ab2AaJyP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 04:54:15 -0500
-Received: by mail-we0-f174.google.com with SMTP id b13so172570wer.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 01:54:14 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 08/10] wl12xx: remove 2 unused parameters in wl1271_ps_set_mode()
-Date: Tue, 31 Jan 2012 11:57:23 +0200
-Message-Id: <1328003845-3926-9-git-send-email-eliad@wizery.com> (sfid-20120131_105430_756508_CE5ADE05)
-In-Reply-To: <1328003845-3926-1-git-send-email-eliad@wizery.com>
-References: <1328003845-3926-1-git-send-email-eliad@wizery.com>
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:34184 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932525Ab2AISvq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 Jan 2012 13:51:46 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+CC: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Mon, 9 Jan 2012 10:49:19 -0800
+Subject: RE: [PATCH 4/4] drivers/net/wireless/mwifiex/scan.c: convert
+ GFP_KERNEL to GFP_ATOMIC
+Message-ID: <477F20668A386D41ADCC57781B1F7043083601A973@SC-VEXCH1.marvell.com> (sfid-20120109_195207_330130_B8DAD76E)
+References: <1326102050-30265-4-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <1326102050-30265-4-git-send-email-Julia.Lawall@lip6.fr>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Hi Julia,
 
-cleanup 2 unused parameters of wl1271_ps_set_mode
+Thanks for the patch.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/debugfs.c |    4 +---
- drivers/net/wireless/wl12xx/main.c    |   10 +++-------
- drivers/net/wireless/wl12xx/ps.c      |    2 +-
- drivers/net/wireless/wl12xx/ps.h      |    2 +-
- 4 files changed, 6 insertions(+), 12 deletions(-)
+> Subject: [PATCH 4/4] drivers/net/wireless/mwifiex/scan.c: convert GFP_KERNEL to GFP_ATOMIC
+> 
+> From: Julia Lawall <julia.lawall@lip6.fr>
+> 
+> The function is called with locks held and thus should not use GFP_KERNEL.
+> 
+> The semantic patch that makes this report is available
+> in scripts/coccinelle/locks/call_kern.cocci.
+> 
+> More information about semantic patching is available at
+> http://coccinelle.lip6.fr/
+> 
+> Signed-off-by: Julia Lawall <julia.lawall@lip6.fr>
 
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index 156a774..4436851 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -359,9 +359,7 @@ static ssize_t dynamic_ps_timeout_write(struct file *file,
- 
- 	wl12xx_for_each_wlvif_sta(wl, wlvif) {
- 		if (test_bit(WLVIF_FLAG_PSM, &wlvif->flags))
--			wl1271_ps_set_mode(wl, wlvif, STATION_AUTO_PS_MODE,
--					   wlvif->basic_rate, true);
--
-+			wl1271_ps_set_mode(wl, wlvif, STATION_AUTO_PS_MODE);
- 	}
- 
- 	wl1271_ps_elp_sleep(wl);
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 247e32d..d90b5bd 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2446,8 +2446,7 @@ static int wl12xx_config_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		if (test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags)) {
- 			wl1271_debug(DEBUG_PSM, "psm enabled");
- 			ret = wl1271_ps_set_mode(wl, wlvif,
--						 STATION_POWER_SAVE_MODE,
--						 wlvif->basic_rate, true);
-+						 STATION_AUTO_PS_MODE);
- 		}
- 	} else if (!(conf->flags & IEEE80211_CONF_PS) &&
- 		   test_bit(WLVIF_FLAG_PSM_REQUESTED, &wlvif->flags)) {
-@@ -2457,8 +2456,7 @@ static int wl12xx_config_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 
- 		if (test_bit(WLVIF_FLAG_PSM, &wlvif->flags))
- 			ret = wl1271_ps_set_mode(wl, wlvif,
--						 STATION_ACTIVE_MODE,
--						 wlvif->basic_rate, true);
-+						 STATION_ACTIVE_MODE);
- 	}
- 
- 	if (conf->power_level != wlvif->power_level) {
-@@ -3798,9 +3796,7 @@ sta_not_found:
- 		    !test_bit(WLVIF_FLAG_PSM, &wlvif->flags)) {
- 
- 			ret = wl1271_ps_set_mode(wl, wlvif,
--						 STATION_AUTO_PS_MODE,
--						 wlvif->basic_rate,
--						 true);
-+						 STATION_AUTO_PS_MODE);
- 			if (ret < 0)
- 				goto out;
- 		}
-diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
-index 60f03c4..5074c2a 100644
---- a/drivers/net/wireless/wl12xx/ps.c
-+++ b/drivers/net/wireless/wl12xx/ps.c
-@@ -160,7 +160,7 @@ out:
- }
- 
- int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
--		       enum wl1271_cmd_ps_mode mode, u32 rates, bool send)
-+		       enum wl1271_cmd_ps_mode mode)
- {
- 	int ret;
- 	u16 timeout = wl->conf.conn.dynamic_ps_timeout;
-diff --git a/drivers/net/wireless/wl12xx/ps.h b/drivers/net/wireless/wl12xx/ps.h
-index a12052f..5f19d4f 100644
---- a/drivers/net/wireless/wl12xx/ps.h
-+++ b/drivers/net/wireless/wl12xx/ps.h
-@@ -28,7 +28,7 @@
- #include "acx.h"
- 
- int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
--		       enum wl1271_cmd_ps_mode mode, u32 rates, bool send);
-+		       enum wl1271_cmd_ps_mode mode);
- void wl1271_ps_elp_sleep(struct wl1271 *wl);
- int wl1271_ps_elp_wakeup(struct wl1271 *wl);
- void wl1271_elp_work(struct work_struct *work);
--- 
-1.7.6.401.g6a319
+Acked-by: Bing Zhao <bzhao@marvell.com>
+
+Regards,
+Bing
+
+> 
+> ---
+>  drivers/net/wireless/mwifiex/scan.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+> index 6396d33..98f1ca9 100644
+> --- a/drivers/net/wireless/mwifiex/scan.c
+> +++ b/drivers/net/wireless/mwifiex/scan.c
+> @@ -2001,7 +2001,7 @@ mwifiex_save_curr_bcn(struct mwifiex_private *priv)
+> 
+>  		kfree(priv->curr_bcn_buf);
+>  		priv->curr_bcn_buf = kmalloc(curr_bss->beacon_buf_size,
+> -						GFP_KERNEL);
+> +						GFP_ATOMIC);
+>  		if (!priv->curr_bcn_buf) {
+>  			dev_err(priv->adapter->dev,
+>  					"failed to alloc curr_bcn_buf\n");
 
