@@ -1,29 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from h118.nextmail.ru ([194.67.36.118]:36165 "EHLO h118.nextmail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751090Ab2AFMvm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jan 2012 07:51:42 -0500
-To: =?koi8-r?B?TW9oYW1tZWQgU2hhZmk=?= <shafi.wireless@gmail.com>
-From: =?koi8-r?B?TVI=?= <g7af0ec1e3ea1e7b1@nextmail.ru>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: =?koi8-r?B?UmU6IGF0aDlrIGNyYXNoIDMuMi1yYzc=?=
-Date: Fri, 06 Jan 2012 16:51:39 +0400
-Message-ID: <NEXT-4f06ee5c00c505.33406970@nextmail.ru> (sfid-20120106_135158_288153_DA2CEC6D)
+Received: from he.sipsolutions.net ([78.46.109.217]:52123 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756392Ab2AJPdL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jan 2012 10:33:11 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.77)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1RkdhF-0000lI-6D
+	for linux-wireless@vger.kernel.org; Tue, 10 Jan 2012 16:33:09 +0100
+Message-Id: <20120110153048.612308160@sipsolutions.net> (sfid-20120110_163315_162452_01A5E7B6)
+Date: Tue, 10 Jan 2012 16:30:48 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Subject: [RFC/RFT 0/3] auth/assoc redesign
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- >:(  i had put those warnings to prevent the crash itself and what's causing
- >it.
- > may be i had missed that pos can be < 0 in addition to (pos > 37).
- > i am just looking at those areas of code for some other issue. hope i
- > can a find a fix
- > for both of them
+So ... I've talked about this long enough, here we go.
 
-I am building kernel with pos<0 check added...
+I haven't yet tested roaming and everything, but I wanted
+to show it to everybody. Maybe you can *see* bugs, or run
+your own testing on it.
 
-I hoped for some ad-hoc stress-test recommendation, but I guess this will have 
-to wait. 
+I'm sending the patches, but I suggest if you want to try
+them go download them on my website:
+http://johannes.sipsolutions.net/patches/kernel/all/LATEST/
 
+johannes
 
