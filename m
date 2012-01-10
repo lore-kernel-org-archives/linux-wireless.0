@@ -1,54 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:53165 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761Ab2A1UEC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jan 2012 15:04:02 -0500
-Received: by vcbgb30 with SMTP id gb30so1916915vcb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jan 2012 12:04:01 -0800 (PST)
+Received: from mga14.intel.com ([143.182.124.37]:61806 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756672Ab2AJUki (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jan 2012 15:40:38 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Dan Williams <dcbw@redhat.com>, Dave Jones <davej@redhat.com>
+CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: RE: iwlwifi worse than ever in current git.
+Date: Tue, 10 Jan 2012 20:40:32 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3063085@HASMSX103.ger.corp.intel.com> (sfid-20120110_214048_748044_36D00286)
+References: <20120110184917.GA26973@redhat.com>
+ <1326221614.5067.6.camel@dcbw.foobar.com>
+In-Reply-To: <1326221614.5067.6.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <201201290358.35433.lindner_marek@yahoo.de>
-References: <1327735027-30121-1-git-send-email-lindner_marek@yahoo.de>
- <4F2443BB.3000602@openwrt.org> <CALSq=BahchLsgVVeFei+_FQAchMAAg2yU1drmpZTgt0pVoJbJg@mail.gmail.com>
- <201201290358.35433.lindner_marek@yahoo.de>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Sat, 28 Jan 2012 12:03:41 -0800
-Message-ID: <CALSq=BYOaFSa4zuK0j8vFavjR38wC86Hqcd-sbYZ3b+CBGReJw@mail.gmail.com> (sfid-20120128_210413_301343_9D16935A)
-Subject: Re: [PATCH] mac80211: minstrel_ht should not override user supplied
- rts setting
-To: Marek Lindner <lindner_marek@yahoo.de>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 28, 2012 at 11:58 AM, Marek Lindner <lindner_marek@yahoo.de> wrote:
-> On Sunday, January 29, 2012 03:17:32 Daniel Halperin wrote:
->> Adaptive RTS/CTS is important to control for interference---RTS/CTS is
->> there so that other Wi-Fi devices know not to interfere with your
->> flow. It may well be the case that this is not a major problem in
->> whatever your scenario you're working, Marek, but it makes a big
->> difference in a many bad corner cases.
->
-> I am very well aware of what RTS/CTS is for and I am not against using it.
-> However, having the rate algorithm overriding the user setting for a specific
-> rate is extremely hard to grasp or debug.
-> To give you an understanding where I am coming from: In our networks we
-> experienced extremely variable throughput ranging from 30Mbit/s (single
-> stream) to 0.2 Mbit/s in the next second. As you can imagine we were trying to
-> figure out what was going on. After spending some time and losing hair I
-> noticed that the RTS/CTS implementation of our driver (ath9k) is buggy. Every
-> once in a while the nodes would "battle" each other with RTS/CTS packets.
-> Strange enough for us, sometimes no RTS packets were sent and sometimes they
-> would battle. All attempts to disable RTS/CTS for the mere sake of testing(!)
-> was impossible. First I thought ath9k did not properly implement the "iw rts"
-> setting but that wasn't the case. After losing more hair I realized that
-> minstrel_ht, a rate control algorithm(!), was overriding my rts settings but
-> not always(!). The only way to make RTS shut up was to apply the posted patch.
+SGksDQoNCklzIHRoYXQgc2VyaWVzIEkgYWRkZWQgYSBkZWJ1ZyBmbGFnIHRoYXQgdGVsbHMgdXMg
+d2hhdCBoYXBwZW5zIHdpdGggdGhlIHF1ZXVlczogcGxlYXNlIGVuYWJsZSB0aGUgMzFzdCBiaXQ6
+IDB4ODAwMDAwMDANCg0KSnVzdCBkZWJ1Zz0weDgwMDAwMDAwIGFzIGEgbW9kdWxlIHBhcmFtZXRl
+ci4NCg0KPiANCj4gT24gVHVlLCAyMDEyLTAxLTEwIGF0IDEzOjQ5IC0wNTAwLCBEYXZlIEpvbmVz
+IHdyb3RlOg0KPiA+IEZvciB0aGUgbGFzdCBmZXcgcmVsZWFzZXMsIGl3bHdpZmkgaGFzIGJlZW4g
+Z2V0dGluZyBjb25zaXN0ZW50bHkgd29yc2UNCj4gPiB3cnQgcmVsaWFiaWxpdHkgZm9yIG1lLiAg
+VGhlIGZhaWx1cmUgbW9kZSBoYXMgdmFyaWVkLCBmcm9tIHRoZSBjaGlwIGp1c3QNCj4gPiBsb2Nr
+aW5nIHVwIHdpdGggbm8gdHgvcnggb2YgcGFja2V0cyB3aXRoIG5vdGhpbmcgYmVpbmcgbG9nZ2Vk
+LCB0bw0KPiA+IG1pY3JvY29kZSB3YXJuaW5ncywgYW5kIHNwZXdpbmcgJ1R4IGFnZ3JlZ2F0aW9u
+IGVuYWJsZWQnIG1lc3NhZ2VzIG92ZXIgYW5kDQo+IG92ZXIuDQo+IA0KPiBZb3UgbWlnaHQgd2Fu
+dCB0byBDQyBsaW51eC13aXJlbGVzc0B2Z2VyIHRvby4uLg0KPiANCj4gPiBUaGUgbWVyZ2UgcG9z
+dCAzLjIgaGFzIG1hZGUgdGhlc2UgcHJvYmxlbXMgYSBsb3Qgd29yc2UuICBCZWZvcmUsIHRoZXNl
+DQo+ID4gbG9jay11cHMgd2VyZSBoYXBwZW5pbmcgb25jZSBvciB0d2ljZSBhIGRheS4gTm93IHRo
+ZXkgaGFwcGVuIHNldmVyYWwgdGltZXMNCj4gYW4gaG91cg0KPiA+IChhbmQgYWZ0ZXIgdGhlIGZp
+cnN0IG9uZSwgdGhleSBzZWVtIG1vcmUgZnJlcXVlbnQpLiBXaGVuIHRoZXkgaGFwcGVuLA0KPiA+
+IHVubG9hZGluZyBhbmQgcmVsb2FkaW5nIHRoZSBtb2R1bGUgaXMgdGhlIG9ubHkgd2F5IGZvciBt
+ZSB0byBnZXQgd29ya2luZw0KPiB3aXJlbGVzcyBhZ2Fpbi4NCj4gPiBUaGV5IG1heSBoYXBwZW4g
+bW9yZSBmcmVxdWVudGx5IHdoZW4gdGhlIGxhcHRvcCBpcyBub3QgaWRsZS4NCj4gPg0KPiA+IEkg
+ZGlkIGEgYmlzZWN0IG9mIHRoZSBjaGFuZ2VzIHNpbmNlIDMuMiwgd2hpY2ggcG9pbnRlZCBhdA0K
+PiA3NmJjMTBmY2QxMjhhZDAyOGNmNzdjNjJlMTc5Y2QyMGRjMmZmZWNmDQo+ID4gYXMgYmVpbmcg
+dGhlIGN1bHByaXQsIGJ1dCB0byBiZSBob25lc3QgSSdtIG5vdCAxMDAlIGNvbnZpbmNlZC4NCj4g
+Pg0KPiA+IEJlY2F1c2UgZXZlcnkgc3RlcCBvZiB0aGUgd2F5IGR1cmluZyB0aGUgYmlzZWN0LCBJ
+IHNhdyBkaWZmZXJlbnQgZmFpbHVyZQ0KPiBtb2RlcywNCj4gPiBzbyB3aGVuIEkgbWFya2VkIHNv
+bWV0aGluZyBhcyAnZ29vZCcsIGl0IG1lYW50ICJkb2Vzbid0IGxvY2sgdXAgaW4gdGhlIHNhbWUN
+Cj4gd2F5IiwNCj4gPiBldmVuIHRob3VnaCBpdCBtYXkgYmUgc3ltcHRvbWF0aWMgb2YgdGhlIHNh
+bWUgcHJvYmxlbS4NCj4gPg0KPiA+IFRoZSBzcGVjaWZpYyBjaGlwIEknbSB1c2luZyBpcyBhIDUz
+MDAgaW4gYSBEZWxsIEFkYW1vLCBjb25uZWN0aW5nIHRvDQo+ID4gYW4gQXBwbGUgYWlycG9ydCBl
+eHRyZW1lIChjdXJyZW50IG1vZGVsKSBpbiBOIG1vZGUuDQo+ID4NCj4gPiAJRGF2ZQ0KPiA+DQo+
+ID4gLS0NCj4gPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAi
+dW5zdWJzY3JpYmUgbmV0ZGV2IiBpbg0KPiA+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpv
+cmRvbW9Admdlci5rZXJuZWwub3JnDQo+ID4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDov
+L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo+IA0KDQotLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0K
+SW50ZWwgSXNyYWVsICg3NCkgTGltaXRlZAoKVGhpcyBlLW1haWwgYW5kIGFueSBhdHRhY2htZW50
+cyBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgbWF0ZXJpYWwgZm9yCnRoZSBzb2xlIHVzZSBvZiB0
+aGUgaW50ZW5kZWQgcmVjaXBpZW50KHMpLiBBbnkgcmV2aWV3IG9yIGRpc3RyaWJ1dGlvbgpieSBv
+dGhlcnMgaXMgc3RyaWN0bHkgcHJvaGliaXRlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVk
+CnJlY2lwaWVudCwgcGxlYXNlIGNvbnRhY3QgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3Bp
+ZXMuCg==
 
-Can you explain what the low-level behavior of an RTS/CTS "battle" is?
-
-Abstractly, the behavior you're describing sounds like a buggy driver
-that doesn't obey overheard RTS or CTS packets.
-
-Dan
