@@ -1,74 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout6.freenet.de ([195.4.92.96]:38137 "EHLO mout6.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756192Ab2AXRkY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 12:40:24 -0500
-Message-Id: <201201241737.q0OHbmX5003698@mail.maya.org> (sfid-20120124_184028_330919_A726E699)
-Date: Tue, 24 Jan 2012 18:37:45 +0100
-From: Andreas Hartmann <andihartmann@01019freenet.de>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 4/4] rt2800usb: remove PWR_PIN_CFG=0x3
- during init
-In-Reply-To: <1327410549-4714-4-git-send-email-sgruszka@redhat.com>
-References: <1327410549-4714-1-git-send-email-sgruszka@redhat.com> <1327410549-4714-4-git-send-email-sgruszka@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:41082 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751945Ab2AJWZa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jan 2012 17:25:30 -0500
+Date: Tue, 10 Jan 2012 23:25:24 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: "Goldenshtein, Victor" <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, hostap@lists.shmoo.com,
+	kgiori@qca.qualcomm.com, mcgrof@frijolero.org,
+	zefir.kurtisi@neratec.com, adrian.chadd@gmail.com, j@w1.fi,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Luciano Coelho <coelho@ti.com>, Assaf Azulay <assaf@ti.com>,
+	"Divinsky, Yonatan" <yoni.divinsky@ti.com>,
+	Igal Chernobelsky <igalc@ti.com>, adrian@freebsd.org,
+	nbd@nbd.name
+Subject: Re: DFS implementation status update
+Message-ID: <20120110222524.GF19790@pandem0nium> (sfid-20120110_232534_154387_D7F92195)
+References: <CAK80WHZZp=NxVigOZWgECF6Z1Apdzc3dPCXyYRn98QizALTh=g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="SxgehGEc6vB0cZwN"
+In-Reply-To: <CAK80WHZZp=NxVigOZWgECF6Z1Apdzc3dPCXyYRn98QizALTh=g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
 
-Stanislaw Gruszka schrieb:
-> This seems to be only needed as workaround for hardware problem on 
-> PCI devices.
+--SxgehGEc6vB0cZwN
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I tested this series (with all other resent patches applied) against a
-rt3572usb based device (Linksys WUSB600N) on to different machines
-(64bit smp (linux 3.2.1) and 32bit single core (linux 2.6.37.6)). I
-couldn't see any functional change. Unfortunately it's as bad as
-always :-(.
+Hello Victor,
 
-But one thing is new: I'm getting now these errors in messages (with
-kernel 3.2.1) in the moment of the stall (which never stops until the
-module is unloaded (or I didn't display enough patience)):
+thank you for the update, it is nice to hear that you're working on this!
 
+I have a few questions regarding your implementation and whether you have
+some features on your list for possible future extensions, please see below.
+If you don't have them on your list, I could work on some of them too, plea=
+se
+don't take this as if I'd expect that you need to do that. ;)
 
-Jan 24 18:10:23 nb kernel: [  798.289036] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:24 nb kernel: [  798.701293] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:24 nb kernel: [  799.113537] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x101c with error -71.
-Jan 24 18:10:25 nb kernel: [  799.525923] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:25 nb kernel: [  799.938177] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:25 nb kernel: [  800.350428] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x101c with error -71.
-Jan 24 18:10:26 nb kernel: [  800.762682] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:26 nb kernel: [  801.174804] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:27 nb kernel: [  801.586928] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:27 nb kernel: [  801.999047] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:28 nb kernel: [  802.411208] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:28 nb kernel: [  802.823413] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:28 nb kernel: [  803.235584] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:28 nb kernel: [  803.278183] tx session timer expired on tid 0
-Jan 24 18:10:29 nb kernel: [  803.647830] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:29 nb kernel: [  804.059961] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:30 nb kernel: [  804.472326] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:30 nb kernel: [  804.884463] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:30 nb kernel: [  805.296625] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:31 nb kernel: [  805.708686] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:31 nb kernel: [  806.120842] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:32 nb kernel: [  806.533120] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:32 nb kernel: [  806.945222] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:33 nb kernel: [  807.357495] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:33 nb kernel: [  807.769588] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:33 nb kernel: [  808.181876] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:34 nb kernel: [  808.594125] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:10:34 nb kernel: [  809.006261] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-...
-Jan 24 18:11:07 nb kernel: [  841.590496] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:11:07 nb kernel: [  841.590604] phy0 -> rt2x00usb_regbusy_read: Error - Indirect register access failed: offset=0x0000101c, value=0xffff8800
-Jan 24 18:11:07 nb kernel: [  842.003019] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-Jan 24 18:11:08 nb kernel: [  842.415369] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x101c with error -71.
+On Tue, Jan 10, 2012 at 10:22:44AM +0200, Goldenshtein, Victor wrote:
+> Main DFS procedures
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+>=20
+> 1. Hostapd gets driver's DFS capabilities.
 
+Do you plan to support IBSS/Ad-Hoc as well?
 
-Kind regards,
-Andreas
+>=20
+> 2. If 80211h is enabled in the hostapd.conf and the driver supports
+> one of the above radar detection techniques, hostapd may use DFS
+> channels.
+
+I guess you're implementing the channel switch part for now, any plans
+on the rest of 802.11h? (station measurement, TPC, etc).=20
+
+>=20
+> 3. Hostapd selects an operational channel (default from hostapd.conf),
+> if selected channel is a DFS channel, hostapd sends
+> start_radar_detection command to the device/driver which starts
+> monitoring for radar interference while hostapd sets a timer for a CAC
+> (Channel Availability Check) time, which is 60 seconds (DFS spec).
+>=20
+> 4. As CAC timer expires and no radar has been detected, hostapd may
+> continue with the init flow, otherwise if interference is detected
+> hostapd randomly selects another channel (later on this can be changed
+> to ACS). If the new channel is also a DFS channel hostapd performs CAC
+> once again, while the original channel is added to a "black list" for
+> a period of ''No-Occupancy'' time (time that the channel can't be
+> used/selected).
+
+Do you plan to allow band selection or channel selection? For example,
+it would be desirable to only select indoor channels or outdoor channels,
+exclude weather channels (5600-5650 MHz) or only select a specific subband =
+where
+high tx power is allowed.
+
+I'm also not sure if pre-selecting a start channel is conforming to=20
+ETSI EN 301 893 V1.5.1 - as I'd interpret it (but I might be wrong), a
+channel should always be randomly selected from the available channel list
+(4.7.2.6 Uniform Spreading) - there is not test specified for this though (=
+Annex A).
+
+I'm also missing the channel switch announcement for associated clients in =
+your
+flow chart, but maybe you skipped this to keep it simple. It looks like a g=
+ood approach,=20
+I'm really looking forward to your patchset.
+
+Cheers,
+	Simon
+
+--SxgehGEc6vB0cZwN
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk8MutQACgkQrzg/fFk7axYcwACg48q0fMXWx7saVJiaNZi13KRQ
+cb4AoI1DJAvlNggFeUXX0pyzk08lSOs6
+=AhDA
+-----END PGP SIGNATURE-----
+
+--SxgehGEc6vB0cZwN--
