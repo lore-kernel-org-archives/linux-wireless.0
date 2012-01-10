@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:48583 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750758Ab2AQBRL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jan 2012 20:17:11 -0500
-Date: Mon, 16 Jan 2012 20:17:03 -0500 (EST)
-Message-Id: <20120116.201703.109506071619281024.davem@davemloft.net> (sfid-20120117_021714_838299_2DFE893D)
-To: julian.calaby@gmail.com
-Cc: torvalds@linux-foundation.org, keithp@keithp.com,
-	linux-wireless@vger.kernel.org, zajec5@gmail.com
-Subject: Re: MBA resume wedge due to wireless fixed yet?
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <CAGRGNgUhGs+30WpppKvH110qBMcSss3xKEoNH_Tv+ZEoKWRJhg@mail.gmail.com>
-References: <CAGRGNgVL-tmY8e2hk43hQQot6YwvEWcQYwoSHLtQGj4JR+Nk3w@mail.gmail.com>
-	<CA+55aFz6qAY+q+Fes4gZdit1V_XQO7hcqp+V=ytuY=XYq2Tu8Q@mail.gmail.com>
-	<CAGRGNgUhGs+30WpppKvH110qBMcSss3xKEoNH_Tv+ZEoKWRJhg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mms3.broadcom.com ([216.31.210.19]:4708 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752815Ab2AJLIR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jan 2012 06:08:17 -0500
+Message-ID: <4F0C1C0C.2020504@broadcom.com> (sfid-20120110_120821_644523_B47C2D9F)
+Date: Tue, 10 Jan 2012 12:07:56 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	"Abimanyu Gottumukkala" <me@abimanyu.in>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: BCM43231
+References: <CAEWwF+bnM0bxbZR6B57H_nv3fkUdhP-ytAu30MLhUWq7QxB3GQ@mail.gmail.com>
+ <CACna6rzNrFWBJ+n3n9wrnP_Gi3LKCWt+o1Gs38_EjkMgG_k8vg@mail.gmail.com>
+ <4F0B67BA.20207@lwfinger.net>
+In-Reply-To: <4F0B67BA.20207@lwfinger.net>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 17 Jan 2012 12:09:03 +1100
-
-> Hi,
+On 01/09/2012 11:18 PM, Larry Finger wrote:
 > 
-> On Tue, Jan 17, 2012 at 11:57, Linus Torvalds
-> <torvalds@linux-foundation.org> wrote:
->> On Mon, Jan 16, 2012 at 4:37 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
->>> Hi all,
->>>
->>> I have a stupid question:
->>>
->>> On Tue, Jan 17, 2012 at 10:56, Linus Torvalds
->>> <torvalds@linux-foundation.org> wrote:
->>>> I have patches, but haven't committed them because I was kind of
->>>> expecting them to go through the wireless tree.
->>>
->>> Then why were these patches never posted to linux-wireless?
->>
->> They were posted to at least netdev, they were cc'd to the top-level
->> maintainers (both David and Linville), and the maintainers of the
->> driver itself.
+> I remember seeing some mail about the Broadcom guys working on a Linux driver 
+> for a USB fullmac device. Is this the one? (I added Arend to the Cc.)
 > 
-> I noticed all the names for the driver maintainers but my eyes must
-> have skipped over David and Linville.
+> Larry
+> 
 
-I poked John and told him he needs to integrate those changes ASAP.
+As you know we currently have two linux drivers. brcmfmac is a fullmac
+architecture for cfg80211, brcmsmac is a softmac architecture for
+mac80211. The brcmfmac driver will get usb support soon (when I finish
+my testing over here) but it supports another device (ie. bcm43236).
+
+The bcm43231 has another architecture and can not be supported by either
+of the drivers.
+
+Gr. AvS
+
