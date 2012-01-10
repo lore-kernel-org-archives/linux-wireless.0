@@ -1,92 +1,259 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:19212 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750885Ab2AXLay (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 06:30:54 -0500
-Message-ID: <4F1E9667.1040504@qca.qualcomm.com> (sfid-20120124_123058_678797_8E775D5F)
-Date: Tue, 24 Jan 2012 13:30:47 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: <rmani@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH v2 1/8] ath6kl: Re-architect suspend mode handling in
- ath6kl_sdio_suspend
-References: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com> <1327066544-23779-2-git-send-email-rmani@qca.qualcomm.com>
-In-Reply-To: <1327066544-23779-2-git-send-email-rmani@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from h118.nextmail.ru ([194.67.36.118]:47190 "EHLO h118.nextmail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756607Ab2AJSOk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jan 2012 13:14:40 -0500
+To: =?koi8-r?B?TW9oYW1tZWQgU2hhZmk=?= <shafi.wireless@gmail.com>
+From: =?koi8-r?B?TVI=?= <g7af0ec1e3ea1e7b1@nextmail.ru>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"=?koi8-r?B?UmFqa3VtYXIgTWFub2hhcmFu?=" <rmanohar@qca.qualcomm.com>
+Subject: =?koi8-r?B?UmU6IGF0aDlrIGNyYXNoIDMuMi1yYzc=?=
+Date: Tue, 10 Jan 2012 22:14:37 +0400
+Message-ID: <NEXT-4f0c800d645e48.34497251@nextmail.ru> (sfid-20120110_191501_374363_BC8254B0)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/20/2012 03:35 PM, rmani@qca.qualcomm.com wrote:
-> From: Raja Mani <rmani@qca.qualcomm.com>
-> 
-> Using this patch, the user can bypass existing auto
-> suspend mode selection logic and force ath6kl to enter
-> into the suspend mode what he/she wants.
-> 
-> If the user doesn't choose any suspend mode while doing
-> insmod of the driver, auto suspend mode selection logic
-> will kick in and choose suspend mode based on the host
-> SDIO controller capability.
-> 
-> Generic module parameter is required to specify suspend
-> mode including Deep Sleep and WOW while doing insmod.
-> Renaming existing mod param variable suspend_cutpower
-> would be sufficient to meet this requirement.
-> 
-> New module parameter suspend_mode can take any one of
-> the below suspend state,
->    1. cut power
->    2. deep sleep
->    3. wow
-> 
-> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+ > >> So, I am building 3.2 with two patches: over/under-flow catcher (pity
+ > >that
+ >>> it seems to be on a multiple-times-per-second codepath and just leaving
+ > >the
+ >> > checks there for everyone is suboptimal) and allegedely proper fix.
+ >Both
+ > > > applied OK with a small offset.
+ > > 
+ > > as per our assumption, we should not see those over/underflow errors,
+ > > with the patch
+ > > above mentioned. please let us know if you hit upon this warnings,
+ > > even after the proper fix.
+ > 
+ > 2 hours in. It looks like 10%-20% throughput loss (both up and down with 
+ >similar ratio) relative to "remove suspicious code" build. It may be some 
+ >other change, of course (slightly moving the notebook, removing USB device
+ >
+ > charging from the notebook or something like that)
 
-Few comments:
+Seems to be AP-dependent. 
 
-> --- a/drivers/net/wireless/ath/ath6kl/core.c
-> +++ b/drivers/net/wireless/ath/ath6kl/core.c
-> @@ -25,12 +25,12 @@
->  #include "cfg80211.h"
->  
->  unsigned int debug_mask;
-> -static bool suspend_cutpower;
-> +static unsigned char suspend_mode;
+I spent entire day on one AP with no problems, went across the building, 
+roamed (went offline, found new AP) succesfully, and then ten minutes later:
+(logs saved)
 
-IMHO uint is better, just like below.
+Jan 10 10:35:57 401a0bf1 kernel: [ 7681.407314] wlan0: deauthenticating from 
+00:19:5b:be:3c:a7 by local choice (reason=3)
+Jan 10 10:35:57 401a0bf1 kernel: [ 7681.427485] cfg80211: Calling CRDA to 
+update world regulatory domain
+Jan 10 10:35:57 401a0bf1 kernel: [ 7681.694908] ADDRCONF(NETDEV_UP): wlan0: 
+link is not ready
+Jan 10 10:35:58 401a0bf1 kernel: [ 7682.545018] wlan0: authenticate with 
+00:19:5b:be:3c:a7 (try 1)
+Jan 10 10:35:58 401a0bf1 kernel: [ 7682.546922] wlan0: authenticated
+Jan 10 10:35:58 401a0bf1 kernel: [ 7682.546954] wlan0: associate with 
+00:19:5b:be:3c:a7 (try 1)
+Jan 10 10:35:58 401a0bf1 kernel: [ 7682.549414] wlan0: RX AssocResp from 
+00:19:5b:be:3c:a7 (capab=0x431 status=0 aid=1)
+Jan 10 10:35:58 401a0bf1 kernel: [ 7682.549421] wlan0: associated
+Jan 10 10:35:58 401a0bf1 kernel: [ 7682.549900] ADDRCONF(NETDEV_CHANGE): 
+wlan0: link becomes ready
+Jan 10 10:36:09 401a0bf1 kernel: [ 7693.095841] wlan0: no IPv6 routers 
+present
+Jan 10 21:01:14 401a0bf1 kernel: [45162.286679] cfg80211: Calling CRDA to 
+update world regulatory domain
+Jan 10 21:01:14 401a0bf1 kernel: [45163.155037] wlan0: authenticate with 
+00:24:8c:81:e1:76 (try 1)
+Jan 10 21:01:14 401a0bf1 kernel: [45163.157132] wlan0: authenticated
+Jan 10 21:01:14 401a0bf1 kernel: [45163.157159] wlan0: associate with 
+00:24:8c:81:e1:76 (try 1)
+Jan 10 21:01:14 401a0bf1 kernel: [45163.159708] wlan0: RX AssocResp from 
+00:24:8c:81:e1:76 (capab=0x411 status=0 aid=2)
+Jan 10 21:01:14 401a0bf1 kernel: [45163.159713] wlan0: associated
+Jan 10 21:34:32 401a0bf1 kernel: [47159.166426] ath: Failed to wakeup in 
+500us
+Jan 10 21:34:34 401a0bf1 kernel: [47160.506049] ath: Failed to stop TX DMA, 
+queues=0x10f!
+Jan 10 21:34:34 401a0bf1 kernel: [47160.518977] ath: DMA failed to stop in 
+10 ms AR_CR=0xffffffff AR_DIAG_SW=0xffffffff DMADBG_7=0xffffffff
+Jan 10 21:34:34 401a0bf1 kernel: [47160.518982] ath: Could not stop RX, we 
+could be confusing the DMA engine when we start RX up
+Jan 10 21:34:34 401a0bf1 kernel: [47160.635143] ath: Chip reset failed
+Jan 10 21:34:34 401a0bf1 kernel: [47160.635146] ath: Unable to reset 
+channel, reset status -22
+Jan 10 21:34:34 401a0bf1 kernel: [47161.226194] ath: Failed to stop TX DMA, 
+queues=0x10f!
+Jan 10 21:34:34 401a0bf1 kernel: [47161.239098] ath: DMA failed to stop in 
+10 ms AR_CR=0xffffffff AR_DIAG_SW=0xffffffff DMADBG_7=0xffffffff
+Jan 10 21:34:34 401a0bf1 kernel: [47161.239103] ath: Could not stop RX, we 
+could be confusing the DMA engine when we start RX up
 
->  static unsigned int uart_debug;
->  static unsigned int ath6kl_p2p;
->  
->  module_param(debug_mask, uint, 0644);
-> -module_param(suspend_cutpower, bool, 0444);
-> +module_param(suspend_mode, byte, 0644);
->  module_param(uart_debug, uint, 0644);
->  module_param(ath6kl_p2p, uint, 0644);
 
-> --- a/drivers/net/wireless/ath/ath6kl/sdio.c
-> +++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-> @@ -779,7 +779,7 @@ out:
->  	return ret;
->  }
->  
-> -static int ath6kl_sdio_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
-> +static int ath6kl_set_sdio_pm_keep_pwr_wake_irq(struct ath6kl *ar)
+Jan 10 21:42:53 401a0bf1 kernel: [47659.159537] ath: Failed to stop TX DMA, 
+queues=0x10f!
+Jan 10 21:42:53 401a0bf1 kernel: [47659.172508] ath: DMA failed to stop in 
+10 ms AR_CR=0xffffffff AR_DIAG_SW=0xffffffff DMADBG_7=0xffffffff
+Jan 10 21:42:53 401a0bf1 kernel: [47659.172510] ath: Could not stop RX, we 
+could be confusing the DMA engine when we start RX up
+Jan 10 21:42:53 401a0bf1 kernel: [47659.288040] ath: Chip reset failed
+Jan 10 21:42:53 401a0bf1 kernel: [47659.288045] ath: Unable to reset 
+channel, reset status -22
+Jan 10 21:42:53 401a0bf1 kernel: [47659.288091] ath: Unable to set channel
+Jan 10 21:42:53 401a0bf1 kernel: [47659.353999] ath: Failed to stop TX DMA, 
+queues=0x10f!
+Jan 10 21:42:53 401a0bf1 kernel: [47659.366852] ath: DMA failed to stop in 
+10 ms AR_CR=0xffffffff AR_DIAG_SW=0xffffffff DMADBG_7=0xffffffff
+Jan 10 21:42:53 401a0bf1 kernel: [47659.366857] ath: Could not stop RX, we 
+could be confusing the DMA engine when we start RX up
+Jan 10 21:42:53 401a0bf1 kernel: [47659.482275] ath: Chip reset failed
+Jan 10 21:42:53 401a0bf1 kernel: [47659.482280] ath: Unable to reset 
+channel, reset status -22
+Jan 10 21:42:53 401a0bf1 kernel: [47659.482302] ath: Unable to set channel
+Jan 10 21:42:53 401a0bf1 kernel: [47659.548509] ath: Failed to stop TX DMA, 
+queues=0x10f!
+Jan 10 21:42:53 401a0bf1 kernel: [47659.561477] ath: DMA failed to stop in 
+10 ms AR_CR=0xffffffff AR_DIAG_SW=0xffffffff DMADBG_7=0xffffffff
+Jan 10 21:42:53 401a0bf1 kernel: [47659.561481] ath: Could not stop RX, we 
+could be confusing the DMA engine when we start RX up
+Jan 10 21:42:53 401a0bf1 kernel: [47659.677601] ath: Chip reset failed
+Jan 10 21:42:53 401a0bf1 kernel: [47659.677604] ath: Unable to reset channel 
+(2462 MHz), reset status -22
+Jan 10 21:42:54 401a0bf1 kernel: [47660.682084] ath: Failed to wakeup in 
+500us
+Jan 10 21:42:55 401a0bf1 kernel: [47661.231280] ath: Failed to wakeup in 
+500us
+Jan 10 21:42:55 401a0bf1 kernel: [47661.245756] ath: Failed to wakeup in 
+500us
+Jan 10 21:42:55 401a0bf1 kernel: [47661.273456] ath: Failed to wakeup in 
+500us
+Jan 10 21:42:55 401a0bf1 kernel: [47661.284277] ath: Failed to wakeup in 
+500us
+Jan 10 21:42:55 401a0bf1 kernel: [47661.349214] ath: Failed to stop TX DMA, 
+queues=0x10f!
+Jan 10 21:42:55 401a0bf1 kernel: [47661.362013] ath: DMA failed to stop in 
+10 ms AR_CR=0xffffffff AR_DIAG_SW=0xffffffff DMADBG_7=0xffffffff
+Jan 10 21:42:55 401a0bf1 kernel: [47661.362016] ath: Could not stop RX, we 
+could be confusing the DMA engine when we start RX up
+Jan 10 21:42:55 401a0bf1 kernel: [47661.604443] ath: Failed to wakeup in 
+500us
+Jan 10 21:42:55 401a0bf1 kernel: [47661.670201] ath: Failed to stop TX DMA, 
+queues=0x10f!
+Jan 10 21:42:55 401a0bf1 kernel: [47661.683148] ath: DMA failed to stop in 
+10 ms AR_CR=0xffffffff AR_DIAG_SW=0xffffffff DMADBG_7=0xffffffff
+Jan 10 21:42:55 401a0bf1 kernel: [47661.683152] ath: Could not stop RX, we 
+could be confusing the DMA engine when we start RX up
+Jan 10 21:42:55 401a0bf1 kernel: [47661.799038] ath: Chip reset failed
+Jan 10 21:42:55 401a0bf1 kernel: [47661.799043] ath: Unable to reset channel 
+(2462 MHz), reset status -22
+Jan 10 21:42:56 401a0bf1 kernel: [47662.373472] ath: Failed to wakeup in 
+500us
+Jan 10 21:42:56 401a0bf1 kernel: [47662.489762] ath: Chip reset failed
+Jan 10 21:42:56 401a0bf1 kernel: [47662.489769] ath: Unable to reset 
+hardware; reset status -22 (freq 2462 MHz)
+Jan 10 21:42:59 401a0bf1 kernel: [47665.685279] ath: Failed to wakeup in 
+500us
+Jan 10 21:43:04 401a0bf1 kernel: [47670.688494] ath: Failed to wakeup in 
+500us
+Jan 10 21:43:09 401a0bf1 kernel: [47675.675943] ath: Failed to wakeup in 
+500us
+Jan 10 21:43:14 401a0bf1 kernel: [47680.663071] ath: Failed to wakeup in 
+500us
+Jan 10 21:43:19 401a0bf1 kernel: [47685.666297] ath: Failed to wakeup in 
+500us
+Jan 10 21:43:24 401a0bf1 kernel: [47690.669649] ath: Failed to wakeup in 
+500us
+Jan 10 21:43:25 401a0bf1 kernel: [47691.020335] ath: Failed to wakeup in 
+500us
+Jan 10 21:43:25 401a0bf1 kernel: [47691.135856] ath: Chip reset failed
+Jan 10 21:43:25 401a0bf1 kernel: [47691.135861] ath: Unable to reset 
+hardware; reset status -22 (freq 2462 MHz)
+Jan 10 21:43:29 401a0bf1 kernel: [47695.656864] ath: Failed to wakeup in 
+500us
 
-The function name doesn't need to be this long, ath6kl_sdio_pm_caps(),
-or something like that, is enough. And I'm not really sure if this
-function makes sense, it complicates the error handling.
 
-> +	if (ar->suspend_mode == WLAN_POWER_STATE_WOW ||
-> +	    (!ar->suspend_mode && wow)) {
-> +
-> +		ret = ath6kl_set_sdio_pm_keep_pwr_wake_irq(ar);
-> +		if (ret)
-> +			goto cut_pwr;
 
-This changes functionality so that if MMC_PM_WAKE_SDIO_IRQ is not
-supported we will fallback to cutpower, earlier we would go to deep
-sleep mode. I guess that's ok, but it still is a functionality change.
+Jan 10 21:44:01 401a0bf1 kernel: [47727.484465] ath9k: Driver unloaded
+Jan 10 21:44:04 401a0bf1 kernel: [47729.913403] ath9k 0000:03:00.0: enabling 
+device (0000 -> 0002)
+Jan 10 21:44:04 401a0bf1 kernel: [47729.913414] ath9k 0000:03:00.0: PCI INT 
+A -> GSI 17 (level, low) -> IRQ 17
+Jan 10 21:44:04 401a0bf1 kernel: [47729.913427] ath9k 0000:03:00.0: setting 
+latency timer to 64
+Jan 10 21:44:04 401a0bf1 kernel: [47730.028960] ath: Couldn't reset chip
+Jan 10 21:44:04 401a0bf1 kernel: [47730.028963] ath: Unable to initialize 
+hardware; initialization status: -5
+Jan 10 21:44:04 401a0bf1 kernel: [47730.028968] ath9k 0000:03:00.0: Failed 
+to initialize device
+Jan 10 21:44:04 401a0bf1 kernel: [47730.029010] ath9k 0000:03:00.0: PCI INT 
+A disabled
+Jan 10 21:44:04 401a0bf1 kernel: [47730.029033] ath9k: probe of 0000:03:00.0 
+failed with error -5
 
-Kalle
+
+
+03:00.0 Network controller: Atheros Communications Inc. AR9285 Wireless 
+Network Adapter (PCI-Express) (rev 01)
+        Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+        Interrupt: pin A routed to IRQ 17
+        Region 0: Memory at d7400000 (64-bit, non-prefetchable) [size=64K]
+        Capabilities: [40] Power Management version 3
+                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-
+,D3hot+,D3cold-)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit-
+                Address: 00000000  Data: 0000
+        Capabilities: [60] Express (v2) Legacy Endpoint, MSI 00
+                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s 
+<128ns, L1 <2us
+                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- 
+Unsupported-
+                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr+ UncorrErr+ FatalErr- UnsuppReq+ AuxPwr- 
+TransPend-
+                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, 
+Latency L0 <512ns, L1 <64us
+                        ClockPM- Surprise- LLActRep- BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- 
+CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ 
+DLActive- BWMgmt- ABWMgmt-
+                DevCap2: Completion Timeout: Not Supported, TimeoutDis+
+                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
+                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- 
+SpeedDis-, Selectable De-emphasis: -6dB
+                         Transmit Margin: Normal Operating Range, 
+EnterModifiedCompliance- ComplianceSOS-
+                         Compliance De-emphasis: -6dB
+                LnkSta2: Current De-emphasis Level: -6dB
+        Capabilities: [100 v1] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- 
+RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- 
+RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- 
+RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- 
+NonFatalErr+
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- 
+NonFatalErr+
+                AERCap: First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ 
+ChkEn-
+        Capabilities: [140 v1] Virtual Channel
+                Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
+                Arb:    Fixed- WRR32- WRR64- WRR128-
+                Ctrl:   ArbSelect=Fixed
+                Status: InProgress-
+                VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+                        Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- 
+WRR256-
+                        Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+                        Status: NegoPending- InProgress-
+        Capabilities: [160 v1] Device Serial Number 00-00-00-00-00-00-00-00
+        Capabilities: [170 v1] Power Budgeting <?>
+
+
+
