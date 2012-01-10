@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37176 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751340Ab2AOKC1 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18269 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752690Ab2AJEU3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jan 2012 05:02:27 -0500
-Subject: Re: calling request_firmware() from module init will not work with
- recent/future udev versions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Tom Gundersen <teg@jklm.no>, Andy Whitcroft <apw@canonical.com>
-In-Reply-To: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com> (sfid-20120114_162556_888923_085E9D1A)
-References: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
-	 (sfid-20120114_162556_888923_085E9D1A)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sun, 15 Jan 2012 11:02:23 +0100
-Message-ID: <1326621743.3448.1.camel@jlt3.sipsolutions.net> (sfid-20120115_110232_616339_09086520)
-Mime-Version: 1.0
+	Mon, 9 Jan 2012 23:20:29 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20235.48473.693136.780100@gargle.gargle.HOWL> (sfid-20120110_052033_316603_028D2263)
+Date: Tue, 10 Jan 2012 09:53:53 +0530
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/4] ath6kl: Initialize a variable properly
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kay,
+This prevents 'comp_pktq' from being used in an
+incorrect manner.
 
-> These drivers need to be fixed to load their firmware during ifup,
-> which would be the most flexible solution. That way, it should also
-> work if the driver is built-in, or is loaded from initramfs and no
-> firmware is available.
-> Alternatively, the firmware request should be able to use the aync
-> firmware_request API and not the blocking one.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/htc.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Will udev now also return the async load only after root is booted if it
-can't be satisfied earlier? There are a number of devices, particularly
-wireless, that need firmware before they can register with mac80211 for
-capability advertisement reasons.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index b017022..2d72190 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -2062,6 +2062,7 @@ int ath6kl_htc_rxmsg_pending_handler(struct htc_target *target,
+ 	enum htc_endpoint_id id;
+ 	int n_fetched = 0;
+ 
++	INIT_LIST_HEAD(&comp_pktq);
+ 	*num_pkts = 0;
+ 
+ 	/*
+-- 
+1.7.8.3
 
