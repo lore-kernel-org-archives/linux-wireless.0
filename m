@@ -1,67 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32672 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754749Ab2AYQK2 (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:49299 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750989Ab2AJH3e convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jan 2012 11:10:28 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH V3 4/6] ath6kl: Pass vif instead of ar to ath6kl_add_new_sta()
-Date: Wed, 25 Jan 2012 21:37:52 +0530
-Message-ID: <1327507674-2561-4-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120125_171032_475399_82973284)
-In-Reply-To: <1327507674-2561-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1327507674-2561-1-git-send-email-vthiagar@qca.qualcomm.com>
+	Tue, 10 Jan 2012 02:29:34 -0500
+Received: by werm1 with SMTP id m1so3231937wer.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2012 23:29:33 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CACna6ryJT1Nw8Yxrj8CftERjO=y7kYc-9cTP5Bj-N-=NniAhdg@mail.gmail.com>
+References: <CAEWwF+bnM0bxbZR6B57H_nv3fkUdhP-ytAu30MLhUWq7QxB3GQ@mail.gmail.com>
+	<CACna6rzA6ix2PrZDHXQLTDQuo942urtUAWYagDC0x9zANSVNKQ@mail.gmail.com>
+	<20120109222544.11008.qmail@stuge.se>
+	<CACna6ryJT1Nw8Yxrj8CftERjO=y7kYc-9cTP5Bj-N-=NniAhdg@mail.gmail.com>
+Date: Tue, 10 Jan 2012 08:29:33 +0100
+Message-ID: <CACna6ryuR1hoJGH1Gy_v_N-HUhgL_8rxZf_-9q=DPQW-ERGX0w@mail.gmail.com> (sfid-20120110_082938_306846_09694377)
+Subject: Re: BCM43231
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Abimanyu Gottumukkala <me@abimanyu.in>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will be used when initializing station specific aggregation
-information.
+W dniu 10 stycznia 2012 08:00 użytkownik Rafał Miłecki
+<zajec5@gmail.com> napisał:
+> I've quickly tried usbmon userspace tool, but not much more luck with
+> it. Example from this tool:
+>
+> f2c19e40 6.317817 S Ci:2:013:0 s 80 06 0200 0000 0027 39 <
+> f2c19e40 6.318305 C Ci:2:013:0 0 39 =
+>    09022700 010100a0 64090400 0003ff02 ff000705 81031000 04070582 02000200
+>     . . ' .  . . . .  d . . .  . . . .  . . . .  . . . .  . . . .  . . . .
+>
+> Maybe it requires some switch or sth... unfortunately it's not
+> documented at all ;/
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/main.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+usbmon -s 1024 > dump.txt
+:)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 3a3b2cc..acb4acb 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -52,10 +52,11 @@ struct ath6kl_sta *ath6kl_find_sta_by_aid(struct ath6kl *ar, u8 aid)
- 	return conn;
- }
- 
--static void ath6kl_add_new_sta(struct ath6kl *ar, u8 *mac, u16 aid, u8 *wpaie,
--			       size_t ielen, u8 keymgmt, u8 ucipher, u8 auth,
--			       u8 apsd_info)
-+static void ath6kl_add_new_sta(struct ath6kl_vif *vif, u8 *mac, u16 aid,
-+			       u8 *wpaie, size_t ielen, u8 keymgmt,
-+			       u8 ucipher, u8 auth, u8 apsd_info)
- {
-+	struct ath6kl *ar = vif->ar;
- 	struct ath6kl_sta *sta;
- 	u8 free_slot;
- 
-@@ -430,7 +431,6 @@ void ath6kl_connect_ap_mode_sta(struct ath6kl_vif *vif, u16 aid, u8 *mac_addr,
- 				u8 keymgmt, u8 ucipher, u8 auth,
- 				u8 assoc_req_len, u8 *assoc_info, u8 apsd_info)
- {
--	struct ath6kl *ar = vif->ar;
- 	u8 *ies = NULL, *wpa_ie = NULL, *pos;
- 	size_t ies_len = 0;
- 	struct station_info sinfo;
-@@ -484,7 +484,7 @@ void ath6kl_connect_ap_mode_sta(struct ath6kl_vif *vif, u16 aid, u8 *mac_addr,
- 		pos += 2 + pos[1];
- 	}
- 
--	ath6kl_add_new_sta(ar, mac_addr, aid, wpa_ie,
-+	ath6kl_add_new_sta(vif, mac_addr, aid, wpa_ie,
- 			   wpa_ie ? 2 + wpa_ie[1] : 0,
- 			   keymgmt, ucipher, auth, apsd_info);
- 
 -- 
-1.7.0.4
-
+Rafał
