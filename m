@@ -1,33 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:54282 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753601Ab2A3PId (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 10:08:33 -0500
-Received: by werb13 with SMTP id b13so3536021wer.19
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 07:08:32 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1327935323.3630.3.camel@jlt3.sipsolutions.net>
-References: <CAG-2HqUqwHo_xgqC79riQF2DA4DPz1Qy5ZARQK8GT+tf_-UKRg@mail.gmail.com>
- <1327935323.3630.3.camel@jlt3.sipsolutions.net>
-From: Tom Gundersen <teg@jklm.no>
-Date: Mon, 30 Jan 2012 16:08:12 +0100
-Message-ID: <CAG-2HqXikXhCighRnc8ovEB0YJm=0DRgxAcyBDnFpQw_vRGcww@mail.gmail.com> (sfid-20120130_160838_764486_18F47034)
-Subject: Re: status of ipw2x00
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	linux-wireless@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:2244 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756664Ab2AJS6I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jan 2012 13:58:08 -0500
+Subject: Re: iwlwifi worse than ever in current git.
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: emmanuel.grumbach@intel.com
+Cc: Dave Jones <davej@redhat.com>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20120110184917.GA26973@redhat.com>
+References: <20120110184917.GA26973@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 10 Jan 2012 09:54:21 -0800
+Message-ID: <1326218061.13074.383.camel@wwguy-huron> (sfid-20120110_195817_682453_A0BE6F40)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Emmanuel,
 
-On Mon, Jan 30, 2012 at 3:55 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Yes, it's unfortunate but true -- ipw 2200 and the current 2200 devices
-> are completely different hardware, there's no overlap.
+On Tue, 2012-01-10 at 13:49 -0500, Dave Jones wrote:
+> For the last few releases, iwlwifi has been getting consistently worse
+> wrt reliability for me.  The failure mode has varied, from the chip just
+> locking up with no tx/rx of packets with nothing being logged, to
+> microcode warnings, and spewing 'Tx aggregation enabled' messages over and over.
+> 
+> The merge post 3.2 has made these problems a lot worse.  Before, these
+> lock-ups were happening once or twice a day. Now they happen several times an hour
+> (and after the first one, they seem more frequent). When they happen,
+> unloading and reloading the module is the only way for me to get working wireless again.
+> They may happen more frequently when the laptop is not idle.
+> 
+> I did a bisect of the changes since 3.2, which pointed at 76bc10fcd128ad028cf77c62e179cd20dc2ffecf
+> as being the culprit, but to be honest I'm not 100% convinced.
+> 
+> Because every step of the way during the bisect, I saw different failure modes,
+> so when I marked something as 'good', it meant "doesn't lock up in the same way",
+> even though it may be symptomatic of the same problem.
+> 
+> The specific chip I'm using is a 5300 in a Dell Adamo, connecting to
+> an Apple airport extreme (current model) in N mode.
+> 
+ANy thought on this, patch 76bc10fcd128ad028cf77c62e179cd20dc2ffecf move
+the tid_data to different layer, it shall not have any functional
+changes.
 
-Thanks for the clarification.
+Thanks
+Wey
+> 
 
-Tom
+
