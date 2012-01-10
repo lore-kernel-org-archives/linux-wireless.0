@@ -1,74 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:47197 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752606Ab2ABVwZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 16:52:25 -0500
-From: Marek Vasut <marek.vasut@gmail.com>
-To: Jack Stone <jwjstone@fastmail.fm>
-Subject: Re: loading firmware while usermodehelper disabled.
-Date: Mon, 2 Jan 2012 22:52:19 +0100
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Oliver Neukum <oliver@neukum.org>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Greg Kroah-Hartman" <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> <CA+55aFx2NMDSY8rmsToU-zxe+bR-gzsxc8HajNWNWfykVJqd9w@mail.gmail.com> <4F022214.8070906@fastmail.fm>
-In-Reply-To: <4F022214.8070906@fastmail.fm>
+Received: from mga03.intel.com ([143.182.124.21]:61701 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752303Ab2AJWFk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jan 2012 17:05:40 -0500
+From: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
+To: Dan Williams <dcbw@redhat.com>, Dave Jones <davej@redhat.com>
+CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: RE: iwlwifi worse than ever in current git.
+Date: Tue, 10 Jan 2012 22:05:25 +0000
+Message-ID: <4595B4D22AB93C4FABBA84AAD5AA37FD0154B1@ORSMSX104.amr.corp.intel.com> (sfid-20120110_230545_753919_BDF2A067)
+References: <20120110184917.GA26973@redhat.com>
+ <1326221614.5067.6.camel@dcbw.foobar.com>
+In-Reply-To: <1326221614.5067.6.camel@dcbw.foobar.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201201022252.20139.marek.vasut@gmail.com> (sfid-20120102_225241_562046_BA147748)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On 02/01/12 21:23, Linus Torvalds wrote:
-> > On Mon, Jan 2, 2012 at 1:09 PM, Jack Stone <jwjstone@fastmail.fm> wrote:
-> >> What about USB "class" drivers e.g. usb-storage. They handle any device
-> >> that reports itself as a usb mass storage device. There could be a
-> >> device that needs to be bootstrapped before it becomes a generic usb
-> >> mass storage device. Do we really want to have to write a new driver
-> >> that is almost identical to the generic driver but handles the USB
-> >> firmware correctly.
-> > 
-> > I'd hope that the generic driver just expose enough interfaces that
-> > you could basically do a "firmware-load" driver that just loads the
-> > firmware and then attaches the device to the generic driver.
-> 
-> Sounds workable.
-> 
-> To make the firmware caching easier I would propose one extra function
-> in addition to the aforemensioned get_firmware / put_firmware - a
-> find_firmware function to search the cache and return the appropriate
-> firmware blob. It should only be called if the caller already has a
-> refcount to the firmware, it's only use is to save every driver saving a
-> pointer to the firmware.
-> 
-> If noone beats me to it I will try and put together an RFC for a new
-> version.
-
-The problem is on systems with limited resources, most notably RAM. If you plug 
-in many devices at once, many firmwares will be cached at one point, efectivelly 
-doing DoS attach on the machine?
-
-Also, how will this solve the suspect-resume issue? What if the device suspends 
-only occasionally -- like every 24 hours -- then you'd have the FW cached all 
-the time too?
-
-M
-> 
-> Thanks,
-> 
-> Jack
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SGkgRGFuLA0KDQo+PiBGb3IgdGhlIGxhc3QgZmV3IHJlbGVhc2VzLCBpd2x3aWZpIGhhcyBiZWVu
+IGdldHRpbmcgY29uc2lzdGVudGx5IHdvcnNlDQo+PiB3cnQgcmVsaWFiaWxpdHkgZm9yIG1lLiAN
+Cg0KW01WXSBEbyB5b3UgaGF2ZSBhbiBhcHByb3hpbWF0ZSBpZGVhIG9mIHdoYXQgcmVsZWFzZSB0
+aGUgZmFpbHVyZSBzdGFydGVkIG9jY3VycmluZz8NCg0KIFRoZSBmYWlsdXJlIG1vZGUgaGFzIHZh
+cmllZCwgZnJvbSB0aGUgY2hpcA0KPj4ganVzdCBsb2NraW5nIHVwIHdpdGggbm8gdHgvcnggb2Yg
+cGFja2V0cyB3aXRoIG5vdGhpbmcgYmVpbmcgbG9nZ2VkLCB0bw0KPj4gbWljcm9jb2RlIHdhcm5p
+bmdzLCBhbmQgc3Bld2luZyAnVHggYWdncmVnYXRpb24gZW5hYmxlZCcgbWVzc2FnZXMgb3Zlcg0K
+PmFuZCBvdmVyLg0KIA0KW01WXSBJJ20gbm90IHN1cmUgaWYgaXQgaXMgcmVsYXRlZCB0byB0aGUg
+cHJvYmxlbSB5b3UncmUgc2VlaW5nLCBidXQgSSBzZWUgdGhhdCB5b3UncmUgdXNpbmcgYSA1MzAw
+LCBzbyBjYW4geW91IHRyeSB0byBsb2FkIHRoZSBpd2x3aWZpIG1vZHVsZSB3aXRoIHRoZSBmb2xs
+b3dpbmcgcGFyYW1ldGVyIGFuZCBzZWUgaWYgaXQgaGVscHM/DQoNCm1vZHByb2JlIGl3bGFnbiBi
+dF9jb2V4X2FjdGl2ZT0wDQoNClRoYW5rcywNCk1lZW5ha3NoaQ0K
