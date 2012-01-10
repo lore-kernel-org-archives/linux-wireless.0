@@ -1,121 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:46747 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752783Ab2AaOkt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 09:40:49 -0500
-Received: by mail-we0-f174.google.com with SMTP id b13so66758wer.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 06:40:49 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 4/7] wl12xx: add forced_ps debugfs file
-Date: Tue, 31 Jan 2012 16:44:05 +0200
-Message-Id: <1328021048-8944-5-git-send-email-eliad@wizery.com> (sfid-20120131_154101_596807_18EB307C)
-In-Reply-To: <1328021048-8944-1-git-send-email-eliad@wizery.com>
-References: <1328021048-8944-1-git-send-email-eliad@wizery.com>
+Received: from mout6.freenet.de ([195.4.92.96]:57498 "EHLO mout6.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751111Ab2AJOoj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jan 2012 09:44:39 -0500
+Received: from [195.4.92.141] (helo=mjail1.freenet.de)
+	by mout6.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
+	id 1RkcwH-00068H-L4
+	for linux-wireless@vger.kernel.org; Tue, 10 Jan 2012 15:44:37 +0100
+Received: from localhost ([::1]:37046 helo=mjail1.freenet.de)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1RkcwH-0004Yd-HH
+	for linux-wireless@vger.kernel.org; Tue, 10 Jan 2012 15:44:37 +0100
+Received: from [195.4.92.26] (port=36919 helo=16.mx.freenet.de)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1RkctW-0003cM-Tm
+	for linux-wireless@vger.kernel.org; Tue, 10 Jan 2012 15:41:46 +0100
+Received: from p4fde00e1.dip0.t-ipconnect.de ([79.222.0.225]:44988 helo=mail.maya.org)
+	by 16.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
+	id 1RkctW-0005hW-4p
+	for linux-wireless@vger.kernel.org; Tue, 10 Jan 2012 15:41:46 +0100
+Message-Id: <201201101441.q0AEfaZ8005133@mail.maya.org> (sfid-20120110_154443_762479_52E1840B)
+Date: Tue, 10 Jan 2012 15:41:36 +0100
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: Compat-wireless-3.2-rc6-3 is broken for rt2860 device
+In-Reply-To: <CAGXE3d9R7BOfTOc=SW6NT89=CxBugXBEnj+nffKw4M-VwtPcpA@mail.gmail.com>
+References: <4EFF12D9.3010602@01019freenet.de>
+	<2766356.70ylY68Gqi@helmutmobil.site>
+	<4F040FEA.3080703@01019freenet.de>
+	<1408490.qSFZVkU7fA@helmutmobil.site>
+	<4F0562DF.3000200@dualc.maya.org>
+	<CAGXE3d8b5qtbhesPjRy3EXvkiwshUg0eZqcDBzb1OhKK3j6z6A@mail.gmail.com>
+	<4F0AEBAB.9020104@01019freenet.de>
+	<CAGXE3d-cOeTEHugbgWMoz8-Dymw0=JHxykdK4ZkBmCJZ9tSPmg@mail.gmail.com>
+	<201201100803.q0A83nsQ003757@mail.maya.org>
+	<CAGXE3d_jW7NFnekMfwn6JPXX0xB4UWM3ttbRVLv-ZbsoMOoWEw@mail.gmail.com>
+	<201201101156.q0ABuS87004643@mail.maya.org>
+	<CAGXE3d9usjQB+9jkBPgtvL6fT8L84ZzDQQ3UqHyMdb+PRfhrKA@mail.gmail.com>
+	<201201101301.q0AD1qSK004871@mail.maya.org>
+	<CAGXE3d9R7BOfTOc=SW6NT89=CxBugXBEnj+nffKw4M-VwtPcpA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Am Tue, 10 Jan 2012 14:43:21 +0100
+schrieb Helmut Schaa <helmut.schaa@googlemail.com>:
 
-Added control over forced_ps option through debugfs.
-This can be either 1 or 0.
+> Hi,
+> 
+> On Tue, Jan 10, 2012 at 2:01 PM, Andreas Hartmann
+> <andihartmann@01019freenet.de> wrote:
+> > Helmut Schaa schrieb:
+> > [...]
+> >> So this looks good to me although the broken tx status for BAR frames
+> >> is for sure a rt2800pci problem (or even a hw issue).
+> >
+> > Sorry - What do you mean with "hw issue"? Is my hw broken?
+> 
+> Hehe, no :)
+> 
+> > Or is it a specific "behavior" of exactly this device:
+> 
+> I think most rt2800pci will behave the same and just interpret a
+> BlockAck as response to a BAR in a different manner as a BlockAck
+> in response to a Data frame.
+> 
+> When we send the BAR we tell the hw that the frame needs to be
+> acknowledged and according to the spec the hw will only count
+> a normal ACK as successful transmission, the peer will however
+> answer with a BlockAck as long as a BA session is active.
+> 
+> It might be possible to advise the hw to allow the BAR to be acked
+> by a BlockAck by specifying AMDPU=1 in the TXWI. Not sure
+> if that breaks anything else.
+> 
+> However, a BAR seems to be "ack-able" by both an ACK and a
+> BlockAck according to 802.11-2007. If the recipient answers with
+> an ACK the BA session might already be terminated and we would
+> stop the BA session as soon as 3 BARs failed with the previous
+> patch. This should be fine I guess.
+> 
+> So you might just give the following a try (also fully untested and
+> maybe with some of your debugging output enabled).
+> 
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> ---
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00queue.c
+> b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> index e4641da..5d0a3d3 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00queue.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00queue.c
+> @@ -393,6 +393,9 @@ static void
+> rt2x00queue_create_tx_descriptor_ht(struct rt2x00_dev *rt2x00dev,
+>  		txdesc->u.ht.txop = TXOP_SIFS;
+>  	else
+>  		txdesc->u.ht.txop = TXOP_HTTXOP;
+> +
+> +	if (ieee80211_is_back_req(hdr->frame_control))
+> +		__set_bit(ENTRY_TXD_HT_AMPDU, &txdesc->flags);
+>  }
+> 
+>  static void rt2x00queue_create_tx_descriptor(struct rt2x00_dev *rt2x00dev,
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/debugfs.c |   70 +++++++++++++++++++++++++++++++++
- 1 files changed, 70 insertions(+), 0 deletions(-)
+Unfortunately, I don't think it fixes anything (an equal looking
+sequence could be seen just 10s before - ok other ssn numbers :-)):
 
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index 02da445..1c26238 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -376,6 +376,75 @@ static const struct file_operations dynamic_ps_timeout_ops = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t forced_ps_read(struct file *file, char __user *user_buf,
-+			  size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+
-+	return wl1271_format_buffer(user_buf, count,
-+				    ppos, "%d\n",
-+				    wl->conf.conn.forced_ps);
-+}
-+
-+static ssize_t forced_ps_write(struct file *file,
-+				    const char __user *user_buf,
-+				    size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+	struct wl12xx_vif *wlvif;
-+	unsigned long value;
-+	int ret, ps_mode;
-+
-+	ret = kstrtoul_from_user(user_buf, count, 10, &value);
-+	if (ret < 0) {
-+		wl1271_warning("illegal value in forced_ps");
-+		return -EINVAL;
-+	}
-+
-+	if (value != 1 && value != 0) {
-+		wl1271_warning("forced_ps should be either 0 or 1");
-+		return -ERANGE;
-+	}
-+
-+	mutex_lock(&wl->mutex);
-+
-+	if (wl->conf.conn.forced_ps == value)
-+		goto out;
-+
-+	wl->conf.conn.forced_ps = value;
-+
-+	if (wl->state == WL1271_STATE_OFF)
-+		goto out;
-+
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	/* In case we're already in PSM, trigger it again to switch mode
-+	 * immediately without waiting for re-association
-+	 */
-+
-+	ps_mode = value ? STATION_POWER_SAVE_MODE : STATION_AUTO_PS_MODE;
-+
-+	wl12xx_for_each_wlvif_sta(wl, wlvif) {
-+		if (test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags))
-+			wl1271_ps_set_mode(wl, wlvif, ps_mode);
-+	}
-+
-+	wl1271_ps_elp_sleep(wl);
-+
-+out:
-+	mutex_unlock(&wl->mutex);
-+	return count;
-+}
-+
-+static const struct file_operations forced_ps_ops = {
-+	.read = forced_ps_read,
-+	.write = forced_ps_write,
-+	.open = wl1271_open_file_generic,
-+	.llseek = default_llseek,
-+};
-+
- static ssize_t driver_state_read(struct file *file, char __user *user_buf,
- 				 size_t count, loff_t *ppos)
- {
-@@ -1011,6 +1080,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
- 	DEBUGFS_ADD(beacon_interval, rootdir);
- 	DEBUGFS_ADD(beacon_filtering, rootdir);
- 	DEBUGFS_ADD(dynamic_ps_timeout, rootdir);
-+	DEBUGFS_ADD(forced_ps, rootdir);
- 
- 	streaming = debugfs_create_dir("rx_streaming", rootdir);
- 	if (!streaming || IS_ERR(streaming))
--- 
-1.7.6.401.g6a319
+[38517.363964] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 19
+[38517.363977] __set_bit ENTRY_TXD_HT_AMPDU
+[38517.363989] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 20
+[38517.363995] __set_bit ENTRY_TXD_HT_AMPDU
+[38517.364005] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 21
+[38517.364011] __set_bit ENTRY_TXD_HT_AMPDU
+[38517.364020] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 22
+[38517.364026] __set_bit ENTRY_TXD_HT_AMPDU
+[38517.364034] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 23
+[38517.364042] __set_bit ENTRY_TXD_HT_AMPDU
+[38517.375021] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 24
+[38517.375028] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <27248>
+[38517.389129] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 25
+[38517.389132] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <27264>
+[38517.397279] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 26
+[38517.397283] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <27280>
+[38517.407062] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 27
+[38517.407069] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <27296>
+[38517.417684] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 28
+[38517.417691] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <27312>
+[38517.417742] ieee80211_check_pending_bar -> ieee80211_send_bar() retry cnt: 2 tid: 0 failed_bar_ssn: 27312
+[38517.417751] __set_bit ENTRY_TXD_HT_AMPDU
+[38517.417763] ieee80211_check_pending_bar -> ieee80211_send_bar() retry cnt: 1 tid: 0 failed_bar_ssn: 27312
+[38517.417768] __set_bit ENTRY_TXD_HT_AMPDU
+[38517.417775] ieee80211_check_pending_bar -> ieee80211_stop_tx_ba_session() retry cnt: 0 tid: 0 failed_bar_ssn: 27312
+[38517.417840] Tx BA session stop requested for 00:25:9c:11:22:33 tid 0
+[38517.426147] Stopping Tx BA session for 00:25:9c:11:22:33 tid 0
+[38517.432511] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 29
+[38517.432518] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <27312>
+[38517.439356] rt2x00lib_txdone - no success - low_level_stats.dot11ACKFailureCount: 30
+[38517.439362] status.c ieee80211_tx_status() calls ieee80211_set_bar_pending. tid: <0> control: <4> ssn: <27312>
+[38517.491026] Open BA session requested for 00:25:9c:11:22:33 tid 0
+[38517.499048] activated addBA response timer on tid 0
+[38517.507633] switched off addBA timer for tid 0
+[38517.507637] Aggregation is on for tid 0
 
+
+Some additional information might be interesting: 
+I'm getting these tx errors nearly always (I haven't seen them in the
+other direction until now) while sending data from STA -> AP (not from
+AP -> STA). The throughput from STA -> AP is mostly about 8 MBit/s
+whereas the other direction reaches up to 15 MBit/s.
+
+
+
+Kind regards,
+Andreas
