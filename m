@@ -1,54 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:32805 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755198Ab2AERVQ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18269 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752690Ab2AJEUb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 12:21:16 -0500
-Date: Thu, 05 Jan 2012 12:20:04 -0500 (EST)
-Message-Id: <20120105.122004.1170447281304011158.davem@davemloft.net> (sfid-20120105_182125_399986_9B2B432F)
-To: Larry.Finger@lwfinger.net
-Cc: festevam@gmail.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, gwingerde@gmail.com,
-	linville@tuxdriver.com, fabio.estevam@freescale.com
-Subject: Re: [PATCH v2] drivers: net: Fix dependency for EEPROM_93CX6
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <4F05CBA9.1070602@lwfinger.net>
-References: <1325770673-17309-1-git-send-email-festevam@gmail.com>
-	<4F05CBA9.1070602@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 9 Jan 2012 23:20:31 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20235.48458.157197.283592@gargle.gargle.HOWL> (sfid-20120110_052034_556577_34D73EAA)
+Date: Tue, 10 Jan 2012 09:53:38 +0530
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/4] ath6kl: Remove redundant pointer check
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Date: Thu, 05 Jan 2012 10:11:21 -0600
+'params' is already used earlier and there is no point
+in checking for a NULL condition again.
 
-> On 01/05/2012 07:37 AM, Fabio Estevam wrote:
->> Fix the following build warning:
->>
->> warning: (KS8851&& AX88796_93CX6&& RTL8180&& RTL8187&& ADM8211&&
->> RT2400PCI&& RT2500PCI&& RT61PCI&& RT2800PCI&& R8187SE) selects
->> EEPROM_93CX6 which has unmet direct dependencies (MISC_DEVICES)
->>
->> Signed-off-by: Fabio Estevam<fabio.estevam@freescale.com>
->> ---
->> Changes since v1:
->> - Place MISC_DEVICES dependency into the 'depends on' line
-> 
-> Is this the right way to fix this? Whenever I get this kind of build
-> warning, I usually attribute it to a problem with my local
-> configuration and fix my copy of .config, not modify the build
-> system. With this change, it seems to me that a lot of devices will
-> suddenly disappear from the build with little explanation. I don't
-> feel confident enough to NACK the patch, but I would like an expert to
-> comment.
-> 
-> I have noticed that the defconfigs for various architectures are split
-> between turning MISC_DEVICES on or off.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   31 +++++++++++++--------------
+ 1 files changed, 15 insertions(+), 16 deletions(-)
 
-Right, this is definitely the wrong fix, "select" is the right way to
-fix this because no user should have to know the gory details of what
-random odd config variables have to be on already in order to turn on
-support for a device they are interested in.
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 2a166cc..cfe9cd5 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -983,6 +983,7 @@ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 	struct ath6kl *ar = ath6kl_priv(ndev);
+ 	struct ath6kl_vif *vif = netdev_priv(ndev);
+ 	struct ath6kl_key *key = NULL;
++	int seq_len;
+ 	u8 key_usage;
+ 	u8 key_type;
+ 
+@@ -1011,23 +1012,21 @@ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 	else
+ 		key_usage = GROUP_USAGE;
+ 
+-	if (params) {
+-		int seq_len = params->seq_len;
+-		if (params->cipher == WLAN_CIPHER_SUITE_SMS4 &&
+-		    seq_len > ATH6KL_KEY_SEQ_LEN) {
+-			/* Only first half of the WPI PN is configured */
+-			seq_len = ATH6KL_KEY_SEQ_LEN;
+-		}
+-		if (params->key_len > WLAN_MAX_KEY_LEN ||
+-		    seq_len > sizeof(key->seq))
+-			return -EINVAL;
+-
+-		key->key_len = params->key_len;
+-		memcpy(key->key, params->key, key->key_len);
+-		key->seq_len = seq_len;
+-		memcpy(key->seq, params->seq, key->seq_len);
+-		key->cipher = params->cipher;
++	seq_len = params->seq_len;
++	if (params->cipher == WLAN_CIPHER_SUITE_SMS4 &&
++	    seq_len > ATH6KL_KEY_SEQ_LEN) {
++		/* Only first half of the WPI PN is configured */
++		seq_len = ATH6KL_KEY_SEQ_LEN;
+ 	}
++	if (params->key_len > WLAN_MAX_KEY_LEN ||
++	    seq_len > sizeof(key->seq))
++		return -EINVAL;
++
++	key->key_len = params->key_len;
++	memcpy(key->key, params->key, key->key_len);
++	key->seq_len = seq_len;
++	memcpy(key->seq, params->seq, key->seq_len);
++	key->cipher = params->cipher;
+ 
+ 	switch (key->cipher) {
+ 	case WLAN_CIPHER_SUITE_WEP40:
+-- 
+1.7.8.3
 
-Fix this right, by using "select MISC_DEVICES"
