@@ -1,78 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:61843 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751615Ab2AETCs convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53272 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756508Ab2AJRfN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 14:02:48 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAOMZO5AuZ_MHW3C1uNK7PyRz=XRHXhn2pvKCwk7iXLDd0YkDOQ@mail.gmail.com>
-References: <1325770673-17309-1-git-send-email-festevam@gmail.com>
-	<4F05CBA9.1070602@lwfinger.net>
-	<20120105.122004.1170447281304011158.davem@davemloft.net>
-	<CAOMZO5AuZ_MHW3C1uNK7PyRz=XRHXhn2pvKCwk7iXLDd0YkDOQ@mail.gmail.com>
-Date: Thu, 5 Jan 2012 17:02:46 -0200
-Message-ID: <CAOMZO5DTDpp8+9FOjPXGFQtQPg7Pv5qfAwFO3UC6AUdEDgpHYg@mail.gmail.com> (sfid-20120105_200257_591581_B030627A)
-Subject: Re: [PATCH v2] drivers: net: Fix dependency for EEPROM_93CX6
-From: Fabio Estevam <festevam@gmail.com>
-To: David Miller <davem@davemloft.net>
-Cc: Larry.Finger@lwfinger.net, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, gwingerde@gmail.com,
-	linville@tuxdriver.com, fabio.estevam@freescale.com,
-	bhutchings@solarflare.com
-Content-Type: text/plain; charset=UTF-8
+	Tue, 10 Jan 2012 12:35:13 -0500
+Subject: Re: [PATCHv2 2/2] mac80211: add support for mcs masks
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+In-Reply-To: <20120110172832.GA19790@pandem0nium>
+References: <1325793490-21501-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1325793490-21501-3-git-send-email-siwu@hrz.tu-chemnitz.de>
+	 <1326114294.3451.25.camel@jlt3.sipsolutions.net>
+	 <20120110172832.GA19790@pandem0nium>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 10 Jan 2012 18:35:11 +0100
+Message-ID: <1326216911.3438.11.camel@jlt3.sipsolutions.net> (sfid-20120110_183517_354212_642B8E52)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 5, 2012 at 4:06 PM, Fabio Estevam <festevam@gmail.com> wrote:
+On Tue, 2012-01-10 at 18:28 +0100, Simon Wunderlich wrote:
+> Hello Johannes,
 
-> I have tried selecting MISC_DEVICES in the Kconfig's, but the warning remains.
->
-> I agree with Ben's comment: "That seems like a bug, since MISC_DEVICES
-> doesn't by itself select any
-> code.  (It's also not a meaningful category and maybe ought not to be an
-> option at all.)"
+> > All this logic is pretty complex, maybe we could translate the bitmap to
+> > an array of unsigned longs and use test_bit() instead of open-coding it
+> > for 8-bit words?
+> 
+> Mhm, I would rather not add further copies into this fast path function, and
+> simply casting will result in bad behaviour (alignment, endianess). 
 
-What about the aproach below?
+Well you don't want to copy it, you want to maintain the data that way,
+I think? Ok I think I see -- you're concerned about the masking etc.
+Dunno. Maybe at least there's a way to abstract out all the
+calculations?
 
-drivers/misc/Kconfig |   12 ++----------
- 1 files changed, 2 insertions(+), 10 deletions(-)
+> Generally
+> changing the mcs_mask to u32 is possible,
 
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index 6a1a092..9c7a474 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -10,15 +10,8 @@ config SENSORS_LIS3LV02D
- 	select INPUT_POLLDEV
- 	default n
+No, u64 might work today but maybe somebody will want to use higher
+MCSes in the future?
 
--menuconfig MISC_DEVICES
--	bool "Misc devices"
--	---help---
--	  Say Y here to get to see options for device drivers from various
--	  different categories. This option alone does not add any kernel code.
--
--	  If you say N, all options in this submenu will be skipped and disabled.
-+menu "Misc devices"
+johannes
 
--if MISC_DEVICES
-
- config AD525X_DPOT
- 	tristate "Analog Devices Digital Potentiometers"
-@@ -516,5 +509,4 @@ source "drivers/misc/ti-st/Kconfig"
- source "drivers/misc/lis3lv02d/Kconfig"
- source "drivers/misc/carma/Kconfig"
- source "drivers/misc/altera-stapl/Kconfig"
--
--endif # MISC_DEVICES
-+endmenu
--- 
-
-This would remove the unneeded dependency of MISC_DEVICES.
-
-I know I need to take extra care not to break other things, but just
-would like to get a feedback if this approach goes into the right
-direction.
-
-Thanks,
-
-Fabio Estevam
