@@ -1,70 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56141 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750827Ab2APMVe (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:35595 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753387Ab2AJLOP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jan 2012 07:21:34 -0500
-Subject: Re: [PATCH] mac80211: fix tx->skb NULL pointer dereference
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yoni Divinsky <yoni.divinsky@ti.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1326707004-3352-1-git-send-email-yoni.divinsky@ti.com> (sfid-20120116_104144_714044_0D0D9702)
-References: <1326707004-3352-1-git-send-email-yoni.divinsky@ti.com>
-	 (sfid-20120116_104144_714044_0D0D9702)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 16 Jan 2012 13:21:32 +0100
-Message-ID: <1326716492.3510.10.camel@jlt3.sipsolutions.net> (sfid-20120116_132137_430770_1A95420B)
-Mime-Version: 1.0
+	Tue, 10 Jan 2012 06:14:15 -0500
+Received: by werm1 with SMTP id m1so3366549wer.19
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jan 2012 03:14:14 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4F0C1C0C.2020504@broadcom.com>
+References: <CAEWwF+bnM0bxbZR6B57H_nv3fkUdhP-ytAu30MLhUWq7QxB3GQ@mail.gmail.com>
+	<CACna6rzNrFWBJ+n3n9wrnP_Gi3LKCWt+o1Gs38_EjkMgG_k8vg@mail.gmail.com>
+	<4F0B67BA.20207@lwfinger.net>
+	<4F0C1C0C.2020504@broadcom.com>
+Date: Tue, 10 Jan 2012 12:14:14 +0100
+Message-ID: <CACna6ry75+cW=M4gAFbf6E3aBqbfKUYEpnkZNAMwTsEvLAg3JA@mail.gmail.com> (sfid-20120110_121419_899115_CF844FCC)
+Subject: Re: BCM43231
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	Abimanyu Gottumukkala <me@abimanyu.in>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-01-16 at 11:43 +0200, Yoni Divinsky wrote:
-> In function ieee80211_tx_h_encrypt the var info was
-> initialized from tx->skb, since the fucntion
-> is called after the function ieee80211_tx_h_fragment
-> tx->skb is not valid anymore.
+2012/1/10 Arend van Spriel <arend@broadcom.com>:
+> On 01/09/2012 11:18 PM, Larry Finger wrote:
+>>
+>> I remember seeing some mail about the Broadcom guys working on a Linux driver
+>> for a USB fullmac device. Is this the one? (I added Arend to the Cc.)
+>>
+>> Larry
+>>
+>
+> As you know we currently have two linux drivers. brcmfmac is a fullmac
+> architecture for cfg80211, brcmsmac is a softmac architecture for
+> mac80211. The brcmfmac driver will get usb support soon (when I finish
+> my testing over here) but it supports another device (ie. bcm43236).
+>
+> The bcm43231 has another architecture and can not be supported by either
+> of the drivers.
 
-Wow, that's quite a while ago, I guess nobody tests WAPI often? :-)
+Can you check what chipset is 0846:9020? I didn't see any prove it's
+BCM43231 so far. Can you confirm/deny this?
 
-> @@ -1001,8 +1001,6 @@ ieee80211_tx_h_stats(struct ieee80211_tx_data *tx)
->  static ieee80211_tx_result debug_noinline
->  ieee80211_tx_h_encrypt(struct ieee80211_tx_data *tx)
->  {
-> -	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
-> -
->  	if (!tx->key)
->  		return TX_CONTINUE;
->  
-> @@ -1017,13 +1015,7 @@ ieee80211_tx_h_encrypt(struct ieee80211_tx_data *tx)
->  	case WLAN_CIPHER_SUITE_AES_CMAC:
->  		return ieee80211_crypto_aes_cmac_encrypt(tx);
->  	default:
-> -		/* handle hw-only algorithm */
-> -		if (info->control.hw_key) {
-> -			ieee80211_tx_set_protected(tx);
-> -			return TX_CONTINUE;
-> -		}
-> -		break;
-> -
-> +		return ieee80211_crypto_default_encrypt(tx);
+Firmware upload of Windows driver for 0846:9020 looks similar to brcmfmac.
 
-How about
-ieee80211_require_hw_crypto() or something like that?
-
-> +ieee80211_tx_result
-> +ieee80211_crypto_default_encrypt(struct ieee80211_tx_data *tx)
-> +{
-> +	struct sk_buff *skb;
-> +	struct ieee80211_tx_info *info = NULL;
-> +
-> +	skb_queue_walk(&tx->skbs, skb) {
-> +		info  = IEEE80211_SKB_CB(skb);
-> +
-> +		/* handle hw-only algorithm */
-> +		if (info == NULL || !info->control.hw_key)
-> +			return TX_DROP;
-
-info == NULL can't happen
-
-johannes
-
+-- 
+Rafał
