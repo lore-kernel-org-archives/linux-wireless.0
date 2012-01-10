@@ -1,94 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:47378 "HELO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754750Ab2AXJGm (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:37027 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751017Ab2AJFT0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 04:06:42 -0500
-Received: by mail-lpp01m010-f47.google.com with SMTP id s15so3026393lag.34
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2012 01:06:40 -0800 (PST)
+	Tue, 10 Jan 2012 00:19:26 -0500
+Received: by ghbg21 with SMTP id g21so1965405ghb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2012 21:19:26 -0800 (PST)
+Message-ID: <4F0BCA5A.1090101@gmail.com> (sfid-20120110_061931_555437_AF4D9257)
+Date: Tue, 10 Jan 2012 13:19:22 +0800
+From: lina <lina.lastname@gmail.com>
 MIME-Version: 1.0
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, Ido Yariv <ido@wizery.com>
-Subject: [PATCH 1/8] wl12xx: Acquire lock before stopping plt
-Date: Tue, 24 Jan 2012 11:06:22 +0200
-Message-Id: <1327395989-29663-2-git-send-email-coelho@ti.com> (sfid-20120124_100655_172174_CF37D8FC)
-In-Reply-To: <1327395989-29663-1-git-send-email-coelho@ti.com>
-References: <1327395989-29663-1-git-send-email-coelho@ti.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: modprob b43 not work after hilibernate
+References: <4F09AAE5.2080209@gmail.com>	<4F09BEC0.7080702@lwfinger.net>	<4F09C1E2.6020907@gmail.com> <CACna6rxMPnn1DHtMvsHtCG3y=_-sCKgb=L901MV96fj31BZ58A@mail.gmail.com> <4F0A686F.9050802@gmail.com> <4F0B21A7.10009@lwfinger.net> <4F0BBDBB.2060407@gmail.com> <4F0BC55C.70509@lwfinger.net>
+In-Reply-To: <4F0BC55C.70509@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Yariv <ido@wizery.com>
+On Tuesday 10,January,2012 12:58 PM, Larry Finger wrote:
+> On 01/09/2012 10:25 PM, lina wrote:
+>> On Tuesday 10,January,2012 01:19 AM, Larry Finger wrote:
+>>> On 01/08/2012 10:09 PM, lina wrote:
+>>>> On Monday 09,January,2012 05:44 AM, Rafał Miłecki wrote:
+>>>>> Does your kernel have
+>>>>> [PATCH] bcma: support for suspend and resume
+>>>>> applied?
+>>>>
+>>>> I don't know how to check, googled for a while, found some thread, but
+>>>> did not
+>>>> find the patch, is it in the kernel.org [patch] part, I thought the
+>>>> [full
+>>>> source] is already patched?
+>>>
+>>> The mainline kernel v3.2-3191-g36e9db2 has that patch.
+>>
+>> when I tried to open
+>> http://www.kernel.org/diff/diffview.cgi?file=/pub/linux/kernel/v3.0/patch-3.2.bz2
+>>
+>>
+>> diffview is looping on the cached resource:
+>> /home/httpd/cache/diffview/ZM/ZMxXxIlPZnZ9405Mc9XmGRWFlkM/index
+>>
+>> when I googled v3.2-3191-g36e9db2, it leads me to this thread only.
+>>
+>> sorry, I am confusing about how to get this patch and make it to patch.
+>>
+>> Thanks for your time,
+>
+> Get the bleeding-edge version of compat-wireless. That will *always* get
+> you the latest set of patches.
 
-__wl1271_plt_stop is called from both wl1271_plt_stop and
-wl1271_unregister_hw. While wl1271_plt_stop acquires a mutex,
-wl1271_unregister_hw does not.
+Thanks, I just installed the compat-wireless-2012-01-09.tar.bz2
 
-Fix this by calling wl1271_plt_stop instead of __wl1271_plt_stop from
-wl1271_unregister_hw.
-
-Signed-off-by: Ido Yariv <ido@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |   18 +++++-------------
- 1 files changed, 5 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 915d56c..fc4d4d5 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1391,13 +1391,15 @@ out:
- 	return ret;
- }
- 
--static int __wl1271_plt_stop(struct wl1271 *wl)
-+int wl1271_plt_stop(struct wl1271 *wl)
- {
- 	int ret = 0;
- 
- 	wl1271_notice("power down");
- 
-+	mutex_lock(&wl->mutex);
- 	if (wl->state != WL1271_STATE_PLT) {
-+		mutex_unlock(&wl->mutex);
- 		wl1271_error("cannot power down because not in PLT "
- 			     "state: %d", wl->state);
- 		ret = -EBUSY;
-@@ -1410,25 +1412,15 @@ static int __wl1271_plt_stop(struct wl1271 *wl)
- 	wl->rx_counter = 0;
- 
- 	mutex_unlock(&wl->mutex);
-+
- 	wl1271_disable_interrupts(wl);
- 	wl1271_flush_deferred_work(wl);
- 	cancel_work_sync(&wl->netstack_work);
- 	cancel_work_sync(&wl->recovery_work);
--	mutex_lock(&wl->mutex);
- out:
- 	return ret;
- }
- 
--int wl1271_plt_stop(struct wl1271 *wl)
--{
--	int ret;
--
--	mutex_lock(&wl->mutex);
--	ret = __wl1271_plt_stop(wl);
--	mutex_unlock(&wl->mutex);
--	return ret;
--}
--
- static void wl1271_op_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- {
- 	struct wl1271 *wl = hw->priv;
-@@ -4878,7 +4870,7 @@ static int wl1271_register_hw(struct wl1271 *wl)
- static void wl1271_unregister_hw(struct wl1271 *wl)
- {
- 	if (wl->state == WL1271_STATE_PLT)
--		__wl1271_plt_stop(wl);
-+		wl1271_plt_stop(wl);
- 
- 	unregister_netdevice_notifier(&wl1271_dev_notifier);
- 	ieee80211_unregister_hw(wl->hw);
--- 
-1.7.4.1
+will keep update.
+>
+> Larry
+>
 
