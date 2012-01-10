@@ -1,147 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:43040 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758788Ab2AFQTa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jan 2012 11:19:30 -0500
-Subject: [PATCH] compat-wireless: Handle name change from iwlagn to iwlwifi
- in 3.2
-From: Don Fry <donald.h.fry@intel.com>
-To: mcgrof@frijolero.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 06 Jan 2012 08:18:51 -0800
-Message-ID: <1325866731.9160.3.camel@dfry-linux1> (sfid-20120106_171934_327784_23D8F766)
-Mime-Version: 1.0
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:53153 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752982Ab2AJHAt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jan 2012 02:00:49 -0500
+Received: by wgbdr10 with SMTP id dr10so2680081wgb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2012 23:00:48 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20120109222544.11008.qmail@stuge.se>
+References: <CAEWwF+bnM0bxbZR6B57H_nv3fkUdhP-ytAu30MLhUWq7QxB3GQ@mail.gmail.com>
+	<CACna6rzA6ix2PrZDHXQLTDQuo942urtUAWYagDC0x9zANSVNKQ@mail.gmail.com>
+	<20120109222544.11008.qmail@stuge.se>
+Date: Tue, 10 Jan 2012 08:00:48 +0100
+Message-ID: <CACna6ryJT1Nw8Yxrj8CftERjO=y7kYc-9cTP5Bj-N-=NniAhdg@mail.gmail.com> (sfid-20120110_080053_389855_6FB618D3)
+Subject: Re: BCM43231
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Abimanyu Gottumukkala <me@abimanyu.in>,
+	b43-dev <b43-dev@lists.infradead.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Don Fry <donald.h.fry@intel.com>
+W dniu 9 stycznia 2012 23:25 użytkownik Peter Stuge <peter@stuge.se> napisał:
+> Rafał Miłecki wrote:
+>> I've been using "usbmon" to dump traffic.
+>
+> The tool at http://people.redhat.com/zaitcev/linux/usbmon-6.tar.gz
+> and not simply cat on the usbmon files in debugfs I hope.
+>
+> debugfs only shows the first bytes of long transfers, but the API
+> used by the usbmon-6 tool shows complete traffic.
 
-With linux-3.2 the iwlagn driver is renamed iwlwifi.  For some kernels
-(like 3.1.5) this causes the non-compat iwlagn.ko to try and run against
-the compat mac80211 resulting in a kernel oops.  This change prevents the
-non-compat iwlagn.ko from being loaded.
+I think I start to understand. The number before "<" or "=" or ">" is
+amount of bytes. For example:
 
-Signed-off-by: Don Fry <donald.h.fry@intel.com>
----
- Makefile            |   17 +++++++++++++++--
- scripts/iwl-enable  |   11 ++++++++++-
- scripts/unload.sh   |    2 +-
- scripts/wlunload.sh |    2 +-
- 4 files changed, 27 insertions(+), 5 deletions(-)
+ea700b40 493839847 S Bi:2:003:6 -115 8 <
+We just asked for 8 bytes
 
-diff --git a/Makefile b/Makefile
-index d3a9d93..d66ebe4 100644
---- a/Makefile
-+++ b/Makefile
-@@ -9,7 +9,9 @@ export KLIB_BUILD ?=	$(KLIB)/build
- # Sometimes not available in the path
- MODPROBE := /sbin/modprobe
- MADWIFI=$(shell $(MODPROBE) -l ath_pci)
--OLD_IWL=$(shell $(MODPROBE) -l iwl4965)
-+NEW_IWL=$(shell $(MODPROBE) -l iwlwifi)
-+OLD_IWL=$(shell $(MODPROBE) -l iwlagn)
-+ANCIENT_IWL=$(shell $(MODPROBE) -l iwl4965)
- 
- DESTDIR?=
- 
-@@ -187,7 +189,7 @@ install-scripts:
- 		echo Running athenable ath5k...;\
- 		/usr/sbin/athenable ath5k ;\
- 	fi
--	@if [ ! -z "$(OLD_IWL)" ] && [ -z "$(DESTDIR)" ]; then \
-+	@if [ ! -z "$(ANCIENT_IWL)" ] && [ ! -z "$(OLD_IWL)" ] && [ -z "$(DESTDIR)" ]; then \
- 		echo ;\
- 		echo -n "Note: iwl4965 detected, we're going to disable it. "  ;\
- 		echo "If you would like to enable it later you can run:"  ;\
-@@ -196,6 +198,15 @@ install-scripts:
- 		echo Running iwl-enable iwlagn...;\
- 		/usr/sbin/iwl-enable iwlagn ;\
- 	fi
-+	@if [ ! -z "$(NEW_IWL)" ] && [ ! -z "$(OLD_IWL)" ] && [ -z "$(DESTDIR)" ]; then \
-+		echo ;\
-+		echo -n "Note: iwlagn detected, we're going to disable it. "  ;\
-+		echo "If you would like to enable it later you can run:"  ;\
-+		echo "    sudo iwl-load iwlagn"  ;\
-+		echo ;\
-+		echo Running iwl-enable iwlwifi...;\
-+		/usr/sbin/iwl-enable iwlwifi ;\
-+	fi
- 	@# If on distributions like Mandriva which like to
- 	@# compress their modules this will find out and do
- 	@# it for you. Reason is some old version of modutils
-@@ -234,6 +245,7 @@ install-scripts:
- 	@$(MODPROBE) -l ipw2200
- 	@$(MODPROBE) -l iwl3945
- 	@$(MODPROBE) -l iwlagn
-+	@$(MODPROBE) -l iwlwifi
- 	@$(MODPROBE) -l iwlcore
- 	@$(MODPROBE) -l iwmc3200wifi
- 	@$(MODPROBE) -l lib80211_crypt_ccmp
-@@ -364,6 +376,7 @@ uninstall:
- 	@$(MODPROBE) -l ipw2100
- 	@$(MODPROBE) -l ipw2200
- 	@$(MODPROBE) -l iwl3945
-+	@$(MODPROBE) -l iwlwifi
- 	@$(MODPROBE) -l iwlagn
- 	@$(MODPROBE) -l iwlcore
- 	@$(MODPROBE) -l iwmc3200wifi
-diff --git a/scripts/iwl-enable b/scripts/iwl-enable
-index 765195b..0737024 100755
---- a/scripts/iwl-enable
-+++ b/scripts/iwl-enable
-@@ -17,7 +17,14 @@ IWL_NEW="iwlagn"
- IWL_OLD="iwl4965"
- 
- # Appended to module file at the end when we want to ignore one
--USAGE="Usage: $0 [ $IWL_NEW | $IWL_OLD ]"
-+USAGE="Usage: $0 [ $IWL_NEW | $IWL_OLD | iwlwifi]"
-+
-+function enable_iwlwifi {
-+	for i in $IWL_OLD $IWL_NEW; do
-+		module_disable $i
-+	done
-+	module_enable iwlwifi
-+}
- 
- function enable_iwlagn {
- 	module_disable $IWL_OLD
-@@ -41,6 +48,8 @@ if [ "$MODULE" == "iwl4965" ]; then
- 	module_enable $IWL_OLD
- elif [ "$MODULE" == "iwlagn" ]; then
- 	enable_iwlagn
-+elif [ "$MODULE" == "iwlwifi" ]; then
-+	enable_iwlwifi
- else
- 	echo "$USAGE"
- 	exit
-diff --git a/scripts/unload.sh b/scripts/unload.sh
-index abc5e72..b791b6e 100755
---- a/scripts/unload.sh
-+++ b/scripts/unload.sh
-@@ -15,7 +15,7 @@ MODULES="$MODULES adm8211 zd1211rw"
- MODULES="$MODULES orinoco_cs orinoco_nortel orinoco_pci orinoco_plx"
- MODULES="$MODULES orinoco_tld orinoco_usb spectrum_cs orinoco"
- MODULES="$MODULES b43 b44 b43legacy brcm80211 ssb"
--MODULES="$MODULES iwl3945 iwlagn iwlcore"
-+MODULES="$MODULES iwl3945 iwlwifi iwlagn iwlcore"
- MODULES="$MODULES ath9k ath9k_htc ath9k_common ath9k_hw "
- MODULES="$MODULES ath5k ath ath6kl ar9170usb carl9170"
- MODULES="$MODULES p54pci p54usb p54spi p54common"
-diff --git a/scripts/wlunload.sh b/scripts/wlunload.sh
-index cd6298d..c6c6af9 100755
---- a/scripts/wlunload.sh
-+++ b/scripts/wlunload.sh
-@@ -15,7 +15,7 @@ MODULES="$MODULES adm8211 zd1211rw"
- MODULES="$MODULES orinoco_cs orinoco_nortel orinoco_pci orinoco_plx"
- MODULES="$MODULES orinoco_tld orinoco_usb spectrum_cs orinoco"
- MODULES="$MODULES b43 b44 b43legacy brcm80211 ssb"
--MODULES="$MODULES iwl3945 iwlagn iwlcore"
-+MODULES="$MODULES iwl3945 iwlwifi iwlagn iwlcore"
- MODULES="$MODULES ath9k ath9k_htc ath9k_common ath9k_hw "
- MODULES="$MODULES ath5k ath ath6kl ar9170usb carl9170"
- MODULES="$MODULES p54pci p54usb p54spi p54common"
+ea700b40 493840818 C Bi:2:003:6 0 8 = 00060456 00000000
+Here we received the 8 bytes.
+
+f3dad540 493840838 S Bi:2:003:6 -115 13 <
+We asked for 13 bytes.
+
+f3dad540 493840923 C Bi:2:003:6 0 13 = 55534253 0a1a0000 00000000 00
+The requested 13 bytes.
+
+Now some bigger amount:
+
+eb48d640 504977573 S Ci:2:010:0 s 80 06 0200 0000 0027 39 <
+Asking for 39bytes?
+
+eb48d640 504977936 C Ci:2:010:0 0 39 = 09022700 010100a0 64090400
+0003ff02 ff000705 81031000 04070582 02000200
+Only 32bytes received?
+
+Is this the issue you meant? Am I correctly parsing that dumps?
+
+
+
+I've quickly tried usbmon userspace tool, but not much more luck with
+it. Example from this tool:
+
+f2c19e40 6.317817 S Ci:2:013:0 s 80 06 0200 0000 0027 39 <
+f2c19e40 6.318305 C Ci:2:013:0 0 39 =
+    09022700 010100a0 64090400 0003ff02 ff000705 81031000 04070582 02000200
+     . . ' .  . . . .  d . . .  . . . .  . . . .  . . . .  . . . .  . . . .
+
+Maybe it requires some switch or sth... unfortunately it's not
+documented at all ;/
+
 -- 
-1.7.4.4
-
-
-
+Rafał
