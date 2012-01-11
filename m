@@ -1,47 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [206.117.179.246] ([206.117.179.246]:57731 "EHLO labridge.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752015Ab2AaHhg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 02:37:36 -0500
-Message-ID: <1327995440.1804.16.camel@joe2Laptop> (sfid-20120131_083753_957431_36A12EEC)
-Subject: Re: [PATCH] rtlwifi/rtl8192c: in _rtl92c_phy_calculate_bit_shift
- remove comparing bitmask against 1
-From: Joe Perches <joe@perches.com>
-To: "Devendra.Naga" <devendra.aaru@gmail.com>
-Cc: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	linville@tuxdriver.com, paul.gortmaker@windriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Mon, 30 Jan 2012 23:37:20 -0800
-In-Reply-To: <1327993863-6810-1-git-send-email-devendra.aaru@gmail.com>
-References: <1327993863-6810-1-git-send-email-devendra.aaru@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:6520 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751482Ab2AKMzk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jan 2012 07:55:40 -0500
+Message-ID: <4F0D86C6.1040304@qca.qualcomm.com> (sfid-20120111_135543_861656_385964E9)
+Date: Wed, 11 Jan 2012 14:55:34 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Thirumalai <tpachamu@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 3/4] ath6kl: Add uAPSD support in rx path.
+References: <1326095135-1633-1-git-send-email-tpachamu@qca.qualcomm.com>
+In-Reply-To: <1326095135-1633-1-git-send-email-tpachamu@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-01-31 at 02:11 -0500, Devendra.Naga wrote:
-> From: "Devendra.Naga" <devendra.aaru@gmail.com>
-[]
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-[]
-> @@ -177,7 +177,7 @@ u32 _rtl92c_phy_calculate_bit_shift(u32 bitmask)
->  	u32 i;
->  
->  	for (i = 0; i <= 31; i++) {
-> -		if (((bitmask >> i) & 0x1) == 1)
-> +		if ((bitmask >> i) & 0x1)
->  			break;
->  	}
->  	return i;
+On 01/09/2012 09:45 AM, Thirumalai wrote:
+> If uAPSD trigger is received, send out the packets in uAPSD
+> queue. Set more data bit if the queue is not empty else
+> update the uAPSD bitmap for the station.
+> 
+> Signed-off-by: Thirumalai <tpachamu@qca.qualcomm.com>
 
-Perhaps this is simpler and faster:
+[...]
 
-{
-	u32 rtn = (u32)ffs((int)bitmask);
-	if (rtn)
-		return rtn - 1;
-	return 32;
-}
+> +	/*
+> +	 * If the APSD q for this STA is not empty, dequeue and
+> +	 * send a pkt from the head of the q. Also update the
+> +	 * More data bit in the WMI_DATA_HDR if there are
+> +	 * more pkts for this STA in the APSD q.
+> +	 * If there are no more pkts for this STA,
+> +	 * update the APSD bitmap for this STA.
+> +	 */
+> +
+> +	num_frames_to_deliver = (conn->apsd_info >> 4) & 0xF;
 
+Defines would be nice for values 4 and 0xF.
 
+> +
+> +	/*
+> +	 * Number of frames to send in a service period is
+> +	 * indicated by the station
+> +	 * in the QOS_INFO of the association request
+> +	 * If it is zero, send all frames
+> +	 */
+> +	if (!num_frames_to_deliver)
+> +		num_frames_to_deliver = 0xFFFF;
+
+And for 0xFFFF.
+
+> +
+> +	spin_lock_bh(&conn->psq_lock);
+> +	is_apsdq_empty  = skb_queue_empty(&conn->apsdq);
+
+Extra space after is_apsdq_empty.
+
+> -				while ((skbuff = skb_dequeue(&conn->psq))
+> -				       != NULL) {
+> +				skbuff = skb_dequeue(&conn->psq);
+> +				while (skbuff != NULL) {
+> +					spin_unlock_bh(&conn->psq_lock);
+> +					ath6kl_data_tx(skbuff, vif->ndev);
+> +					spin_lock_bh(&conn->psq_lock);
+> +					skbuff = skb_dequeue(&conn->psq);
+> +				}
+
+I would say the original style is better:
+
+while ((skbuff = skb_dequeue(&conn->psq))
+
+> +
+> +				is_apsdq_empty = skb_queue_empty(&conn->apsdq);
+> +				skbuff = skb_dequeue(&conn->apsdq);
+> +				while (skbuff != NULL) {
+>  					spin_unlock_bh(&conn->psq_lock);
+>  					ath6kl_data_tx(skbuff, vif->ndev);
+>  					spin_lock_bh(&conn->psq_lock);
+> +					skbuff = skb_dequeue(&conn->apsdq);
+>  				}
+
+Same here.
+
+Kalle
