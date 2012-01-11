@@ -1,92 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:52290 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750758Ab2AQDvi convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42003 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753124Ab2AKVQD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jan 2012 22:51:38 -0500
-Received: by iagf6 with SMTP id f6so3577060iag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2012 19:51:38 -0800 (PST)
+	Wed, 11 Jan 2012 16:16:03 -0500
+Date: Wed, 11 Jan 2012 16:07:36 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] b43: add default option to avoid duplicating device
+ support with brcmsmac
+Message-ID: <20120111210736.GE11093@tuxdriver.com> (sfid-20120111_221609_301642_9F4F6058)
+References: <1326315180-29398-1-git-send-email-linville@tuxdriver.com>
+ <4F0DF91F.6020005@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1326772102.4598.63.camel@cumari>
-References: <1326723806-15960-1-git-send-email-coelho@ti.com>
- <1326723806-15960-3-git-send-email-coelho@ti.com> <CAGRGNgVfJeEji1EtU5u_GfHN9sgKGEkDRg9ko7JdkMqUUFvFyw@mail.gmail.com>
- <1326772102.4598.63.camel@cumari>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 17 Jan 2012 14:51:16 +1100
-Message-ID: <CAGRGNgWjCYsyzWCn0-j-A7Cqv2Prdftzxvu6WkjMzOdvOxcunA@mail.gmail.com> (sfid-20120117_045141_113039_B17C76C3)
-Subject: Re: [PATCH 2/2] wl12xx: add operation to retrieve the MAC address
- from Fuse ROM
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F0DF91F.6020005@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luciano,
+On Wed, Jan 11, 2012 at 10:03:27PM +0100, Arend van Spriel wrote:
+> On 01/11/2012 09:53 PM, John W. Linville wrote:
+> > Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> > ---
+> >  drivers/net/wireless/b43/Kconfig |    5 +++++
+> >  drivers/net/wireless/b43/main.c  |    2 ++
+> >  2 files changed, 7 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+> > +config B43_BCMA_EXTRA
+> > +	bool "Support for devices also supported by brcmsmac"
+> > +	depends on B43_BCMA
+> > +	default n
+> 
+> If I am not mistaken the 'default n' is not really needed.
 
-On Tue, Jan 17, 2012 at 14:48, Luciano Coelho <coelho@ti.com> wrote:
-> On Tue, 2012-01-17 at 11:46 +1100, Julian Calaby wrote:
->> Hi Luciano,
->>
->> On Tue, Jan 17, 2012 at 01:23, Luciano Coelho <coelho@ti.com> wrote:
->> > Add a testmode command to retrieve the MAC address that is stored in
->> > the Fuse ROM in newer PGs.  In old PGs this operation is not
->> > supported.
->> >
->> > Signed-off-by: Luciano Coelho <coelho@ti.com>
->> > ---
->> >  drivers/net/wireless/wl12xx/boot.c     |    3 +-
->> >  drivers/net/wireless/wl12xx/boot.h     |   10 ----
->> >  drivers/net/wireless/wl12xx/reg.h      |   15 ++++++
->> >  drivers/net/wireless/wl12xx/testmode.c |   87 ++++++++++++++++++++++++++++++++
->> >  4 files changed, 104 insertions(+), 11 deletions(-)
->> >
->> > diff --git a/drivers/net/wireless/wl12xx/testmode.c b/drivers/net/wireless/wl12xx/testmode.c
->> > index 25093c0..613e0b3 100644
->> > --- a/drivers/net/wireless/wl12xx/testmode.c
->> > +++ b/drivers/net/wireless/wl12xx/testmode.c
->> > @@ -264,6 +266,89 @@ static int wl1271_tm_cmd_recover(struct wl1271 *wl, struct nlattr *tb[])
->> >        return 0;
->> >  }
->> >
->> > +static bool wl12xx_tm_mac_in_fuse(struct wl1271 *wl)
->> > +{
->> > +       bool supported = false;
->> > +       u8 major, minor;
->> > +
->> > +       if (wl->chip.id == CHIP_ID_1283_PG20) {
->> > +               major = (wl->hw_pg_ver & WL128X_PG_MAJOR_VER_MASK) >>
->> > +                       WL128X_PG_MAJOR_VER_OFFSET;
->> > +               minor = (wl->hw_pg_ver & WL128X_PG_MINOR_VER_MASK) >>
->> > +                       WL128X_PG_MINOR_VER_OFFSET;
->> > +
->> > +               /* in wl128x we have the MAC address if the PG is >= (2, 1) */
->> > +               if (major > 2 || (major == 2 && minor >= 1))
->> > +                       supported = true;
->> > +       } else {
->> > +               major = (wl->hw_pg_ver & WL127X_PG_MAJOR_VER_MASK) >>
->> > +                       WL127X_PG_MAJOR_VER_OFFSET;
->> > +               minor = (wl->hw_pg_ver & WL127X_PG_MINOR_VER_MASK) >>
->> > +                       WL127X_PG_MINOR_VER_OFFSET;
->> > +
->> > +               /* in wl127x we have the MAC address if the PG is >= (3, 1) */
->> > +               if (major == 3 && minor >= 1)
->>
->> Is this test correct? Do only major == 3 PGs support this command?
->
-> Yes, major == 3 and minor greater than or equal to 1.  Actually, there
-> can't be a major greater than 3, because it's only 2 bits, so 3 is the
-> maximum value.
+But I _really_ mean it!! :-)
 
-Just wanted to check as it seemed odd compared to the block for the
-WL128X parts. I'm guessing TI never expected these parts to last long
-enough to have more than 3 major revisions =)
+I'll drop that line in the final commit...
 
-Thanks,
-
+John
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
