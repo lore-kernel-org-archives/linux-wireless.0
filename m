@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:3378 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755695Ab2AJRiY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jan 2012 12:38:24 -0500
-From: "Pachamuthu, Thirumalai" <tpachamu@qca.qualcomm.com>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: RE: [PATCH 0/4] Enable uAPSD support in AP mode
-Date: Tue, 10 Jan 2012 17:38:16 +0000
-Message-ID: <0118B7479E19DD469808F3B2CE43263BBCF024@aphydexd01a> (sfid-20120110_183827_724626_0EBE7617)
-References: <1326095083-1538-1-git-send-email-tpachamu@qca.qualcomm.com>
-	 (sfid-20120109_084754_846351_9C65331D)
- <1326099268.3451.0.camel@jlt3.sipsolutions.net>
- <4F0AD3A1.5020100@qca.qualcomm.com>
-In-Reply-To: <4F0AD3A1.5020100@qca.qualcomm.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mms3.broadcom.com ([216.31.210.19]:2942 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932786Ab2AKO0L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jan 2012 09:26:11 -0500
+Message-ID: <4F0D9BF8.7020001@broadcom.com> (sfid-20120111_152615_195520_DF809D40)
+Date: Wed, 11 Jan 2012 15:26:00 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
+To: "Francis Moreau" <francis.moro@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"gregkh@suse.de" <gregkh@suse.de>
+Subject: Re: About the patch:
+ "staging: brcm80211: only enable brcmsmac if bcma is not set"
+References: <CAC9WiBj0A54_R3NszGBEhzMAiZzL0NBmickE88avp0NDGHyjpg@mail.gmail.com>
+ <CAC9WiBhVWvvN-yqoYvBoD1uUi0P5e2cBu68Mva99wVxr7W0ibg@mail.gmail.com>
+ <4F0D7F6B.5000601@broadcom.com>
+ <CAC9WiBgp02u90rJNC64kKU8GN7jcP_YOSRXSBbR83kHvf3CneQ@mail.gmail.com>
+In-Reply-To: <CAC9WiBgp02u90rJNC64kKU8GN7jcP_YOSRXSBbR83kHvf3CneQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-S2FsbGUsDQoJSXQncyBqdXN0IGEgcHJvYmxlbSBvZiBkZXNjcmlwdGlvbiBvbmx5LiBXZSB3aWxs
-IG5vdCBlbmFibGUgdGhlIFRJTSB3aGVuIHdlIGNvbmZpZ3VyZSBzb21lIG9mIHRoZSBhYyBhcyB0
-cmlnZ2VyIGVuYWJsZWQuIEhvd2V2ZXIgd2Ugd2lsbCB1c2UgdGhlIFRJTSB3aGVuIHdlIGVuYWJs
-ZWQgYWxsIHRoZSBBQydzLg0KLVRoaXJ1bWFsYWkNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0t
-LS0NCkZyb206IFZhbG8sIEthbGxlIA0KU2VudDogTW9uZGF5LCBKYW51YXJ5IDA5LCAyMDEyIDU6
-MTcgUE0NClRvOiBKb2hhbm5lcyBCZXJnDQpDYzogUGFjaGFtdXRodSwgVGhpcnVtYWxhaTsgbGlu
-dXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBhdGg2a2wtZGV2ZWwNClN1YmplY3Q6IFJlOiBb
-UEFUQ0ggMC80XSBFbmFibGUgdUFQU0Qgc3VwcG9ydCBpbiBBUCBtb2RlDQoNCk9uIDAxLzA5LzIw
-MTIgMTA6NTQgQU0sIEpvaGFubmVzIEJlcmcgd3JvdGU6DQo+IE9uIE1vbiwgMjAxMi0wMS0wOSBh
-dCAxMzoxNCArMDUzMCwgVGhpcnVtYWxhaSB3cm90ZToNCj4+IEluIGFkZGl0aW9uIHRvIGxlZ2Fj
-eSBwb3dlciBzYXZlLCB0aGlzIHNlcmllcyBvZiBwYXRjaCBhZGRzIHN1cHBvcnQgDQo+PiBmb3Ig
-dUFQU0QgaW4gQVAgbW9kZS4NCj4+DQo+PiBXaGVuIGNvbm5lY3RlZCBzdGF0aW9uIGdvZXMgaW50
-byBzdXNwZW5kIHN0YXRlLCB0aGUgZHJpdmVyIHdpbGwgc3RhcnQgDQo+PiBxdWV1aW5nIHBrdHMg
-aW4gdGhlIHNlcGFyYXRlIHF1ZXVlIChjYWxsZWQgdWFwc2QgcXVldWUpIHVudGlsIHRoZSANCj4+
-IHN0YXRpb24gYXNrIGZvciBpdC4NCj4+DQo+PiBUaGUgbW9tZW50IGRyaXZlciBzdGFydGluZyBx
-dWV1aW5nLCBpdCB3aWxsIGVuYWJsZSB0cmFmZmljIGluZGljYXRpb24gDQo+PiBiaXQgZm9yIHRo
-ZSBjbGllbnQgY29ubmVjdGVkIHRvIGluZGljYXRlIGRhdGEgYXZhaWxhYmlsaXR5Lg0KPj4gT25j
-ZSBzdGF0aW9uIGFzayBmb3IgdGhlIGRhdGEgKHZpYSBUcmlnZ2VyIGZyYW1lKSwgdGhlIGRyaXZl
-ciB3aWxsIA0KPj4gZGVxdWV1ZSBhbmQgc2VuZCBwa3Qgb25lIGJ5IG9uZSB0byB0aGUgc3RhdGlv
-bi4NCj4gDQo+IFRoZSB3YXkgeW91IGRlc2NyaWJlIHRoaXMgc291bmRzIGluY29ycmVjdCwgYnV0
-IEknbGwgbGVhdmUgaXQgdG8gS2FsbGUgDQo+IHRvIGZpZ3VyZSBvdXQgd2hhdCB5b3UncmUgZG9p
-bmcgYW5kIHdoZXRoZXIgaXQgaXMgY29ycmVjdCBvciBub3QgLi4uIA0KPiBpZiBvbmx5IHNvbWUg
-QUNzIGFyZSB0cmlnZ2VyLWVuYWJsZWQgdGhvc2UgZG9uJ3QgaW5mbHVlbmNlIHRoZSBUSU0gYml0
-Lg0KDQpZZWFoLCB0aGF0IGRvZXMgc291bmQgb2RkLiBUaGlydW1hbGFpLCBkb2VzIHRoZSBjb2Rl
-IHJlYWxseSB0aGlzIHdheSBvciBpcyBpdCBqdXN0IGEgcHJvYmxlbSB3aXRoIHRoZSBkZXNjcmlw
-dGlvbj8gKEkgbmVlZCB0byBzdHVkeSB0aGUgY29kZSBpbiBkZXRhaWwgc3RpbGwuKQ0KDQpKb2hh
-bm5lcywgdGhhbmtzIGZvciBwb2ludGluZyB0aGlzIG91dC4NCg0KS2FsbGUNCg==
+On 01/11/2012 02:13 PM, Francis Moreau wrote:
+> On Wed, Jan 11, 2012 at 1:24 PM, Arend van Spriel <arend@broadcom.com> wrote:
+>> On 01/11/2012 12:40 PM, Francis Moreau wrote:
+>>> Hi,
+>>>
+>>> This has finally been merged and is part of the 3.2 release.
+>>>
+>>> So now distros don't ship the brcmsmac driver anymore which is
+>>> basically the only driver which can handle my card.
+>>
+>> I am not sure why you come to that conclusion,
+> 
+> I checked on both OpenSuse and Mandriva, and they both have CONFIG_BCMA=m.
+> 
+>> For kernel v3.3 the brcmsmac driver will be using bcma.
+> 
+> Great.
+> 
+> But v3.2...
+> 
+
+Given the configuration BCMA=m I agree that brcmsmac is probably not in
+the distro in binary form. However, you can probably install the kernel
+source package and rebuilt the kernel with BCMA=n and BRCMSMAC=m.
+
+Gr. AvS
+
