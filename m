@@ -1,75 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:57247 "EHLO mga14.intel.com"
+Received: from bear.ext.ti.com ([192.94.94.41]:57074 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753160Ab2AKQpD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 11:45:03 -0500
-Subject: Re: linux 3.2-rcX iwlwifi driver's problem (wifi link unstable
- when moving between multiple APs)
-From: wwguy <wey-yi.w.guy@intel.com>
-To: Cheng Renquan <crquan@gmail.com>
-Cc: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
+	id S1756329Ab2AKOQR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jan 2012 09:16:17 -0500
+From: "Elias, Ilan" <ilane@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "samuel@sortiz.org" <samuel@sortiz.org>,
+	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
+	"aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <CAH5vBdLjCsSdV+hzBMg2hpn+kh6a572FKmVs84cLCtR9XROKbg@mail.gmail.com>
-References: <CAH5vBdJLHkFLQCHHYOczXQt1Hwwe3e-Ct0MUjyTRU0vgodAPOg@mail.gmail.com>
-	 <1324424765.13074.281.camel@wwguy-huron>
-	 <CAH5vBdKotiPqpHV=tx2fv8=-HRBuJnYe8wEAF2Z9xH3zVnwyqg@mail.gmail.com>
-	 <CA+icZUXWccU-TtwE7b7Mm9Nw7juQwDxvYRZfOdjP3q1O-Mr0Ug@mail.gmail.com>
-	 <CAH5vBdKtV1Ydb2ffBVDxdynsF9S14Ddy6XezHzXvRC3bRC-huQ@mail.gmail.com>
-	 <CA+icZUXDOxNo-Y9d2WcdhMZyDJeCT69z340xMwNiN9hbq0XAFA@mail.gmail.com>
-	 <CAH5vBdLq6zOagjmyM1h9Jon+fYnz5t05Dx7u6VqOWGHna+M3_Q@mail.gmail.com>
-	 <CA+icZUVixfk0h1ENU-tWMS5hgurbEV4jYpYNWbzaxCUx_b64UQ@mail.gmail.com>
-	 <CAH5vBdK62juwC_qPPTfmgFkMp9XMy+3j1YLvBSxBc+zr9_oBJQ@mail.gmail.com>
-	 <CA+icZUUhg91UAPMRGgXYAvo6wkr5ogb+vW8SsB28BeUP_6-g6w@mail.gmail.com>
-	 <1324484074.13074.313.camel@wwguy-huron>
-	 <CAH5vBdJ4-33z3FbOwVG1QRzfFOwFpz1wccbQNDXEC6-NhBa31A@mail.gmail.com>
-	 <1324518057.4755.4.camel@wwguy-ubuntu>
-	 <CAH5vBdKwQ3vPr01PiRMmUqARK4CE44vM9WeVSx-QydpDLQtT1A@mail.gmail.com>
-	 <1326234428.13074.385.camel@wwguy-huron>
-	 <CAH5vBd++OmF11vBHYgNmLABm3pG3mOERcq5dgeP6o9fneRLODQ@mail.gmail.com>
-	 <1326237636.13074.389.camel@wwguy-huron>
-	 <CAH5vBdLjCsSdV+hzBMg2hpn+kh6a572FKmVs84cLCtR9XROKbg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 11 Jan 2012 08:37:47 -0800
-Message-ID: <1326299867.25784.41.camel@wwguy-ubuntu> (sfid-20120111_174521_844223_4923AF80)
-Mime-Version: 1.0
+Subject: RE: [PATCH] NFC: Download TI NFC init script
+Date: Wed, 11 Jan 2012 14:15:13 +0000
+Message-ID: <B30D1FD582D6484ABF57420512E580350F5D1C60@DLEE74.ent.ti.com> (sfid-20120111_151621_327970_2E38C11E)
+References: <1326285768-3073-1-git-send-email-ilane@ti.com>
+	 (sfid-20120111_134051_269239_A8A55A8B)
+ <1326286159.3417.1.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1326286159.3417.1.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Renquan,
-
-On Tue, 2012-01-10 at 17:30 -0800, Cheng Renquan wrote:
-> On Tue, Jan 10, 2012 at 3:20 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> > Hi Cheng,
-> 
-> > Got it, very sorry for the problem you experience, yes, I agree with
-> > you, it might be because the noisy environment. Could you please send me
-> > the dmesg log with the following flags
-> >
-> > $sudo modprobe iwlwifi debug=0x1083
-> >
-> > Thanks
-> > Wey
-> 
-> Attached iwlwifi-debug-jan10.txt.xz privately to Guy since it may have
-> some privacy; please do not spread;
-> 
-> tried a few meeting rooms only the last one failed roaming; may be
-> because many ones have left office right now, don't have so much
-> noise; will try again another busy time;
-
->From the log you provide, I can see both "direct probe timeout" and
-"authentication timeout".
-
-You mention it is in an noisy environment. The thing I am not sure is
-this a device fail to transmit issue or fail to receive "ack" from AP
-issue?
+Hi Johannes, 
  
-Is it possible for you to capture the sniffer trace if you have the
-tools?
+> > @@ -47,6 +59,36 @@ struct nfcwilink_hdr {
+> >  	u16 len;
+> >  } __packed;
+> 
+> > +struct bts_file_hdr {
+> > +	u32 magic;
+> 
+> All this new stuff, but also the old stuff above, seems to be missing
+> endian annotations.
 
+You're correct.
+I'll fix it and send a new patch.
 
-Thanks
-Wey
-
-
+Thanks & BR,
+Ilan
