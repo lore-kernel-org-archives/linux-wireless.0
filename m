@@ -1,64 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:49668 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750925Ab2AARGK (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:44161 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932409Ab2AKBat (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jan 2012 12:06:10 -0500
-From: Marek Vasut <marek.vasut@gmail.com>
-To: Oliver Neukum <oliver@neukum.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-Date: Sun, 1 Jan 2012 18:06:06 +0100
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	"Greg Kroah-Hartman" <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-References: <20111230235421.GA6054@redhat.com> <201201011328.41311.oliver@neukum.org> <201201011732.23069.marek.vasut@gmail.com>
-In-Reply-To: <201201011732.23069.marek.vasut@gmail.com>
+	Tue, 10 Jan 2012 20:30:49 -0500
+Received: by vbbfc26 with SMTP id fc26so168463vbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 10 Jan 2012 17:30:48 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201201011806.07150.marek.vasut@gmail.com> (sfid-20120101_180656_417441_F23BF636)
+In-Reply-To: <1326237636.13074.389.camel@wwguy-huron>
+References: <CAH5vBdJLHkFLQCHHYOczXQt1Hwwe3e-Ct0MUjyTRU0vgodAPOg@mail.gmail.com>
+ <1324424765.13074.281.camel@wwguy-huron> <CAH5vBdKotiPqpHV=tx2fv8=-HRBuJnYe8wEAF2Z9xH3zVnwyqg@mail.gmail.com>
+ <CA+icZUXWccU-TtwE7b7Mm9Nw7juQwDxvYRZfOdjP3q1O-Mr0Ug@mail.gmail.com>
+ <CAH5vBdKtV1Ydb2ffBVDxdynsF9S14Ddy6XezHzXvRC3bRC-huQ@mail.gmail.com>
+ <CA+icZUXDOxNo-Y9d2WcdhMZyDJeCT69z340xMwNiN9hbq0XAFA@mail.gmail.com>
+ <CAH5vBdLq6zOagjmyM1h9Jon+fYnz5t05Dx7u6VqOWGHna+M3_Q@mail.gmail.com>
+ <CA+icZUVixfk0h1ENU-tWMS5hgurbEV4jYpYNWbzaxCUx_b64UQ@mail.gmail.com>
+ <CAH5vBdK62juwC_qPPTfmgFkMp9XMy+3j1YLvBSxBc+zr9_oBJQ@mail.gmail.com>
+ <CA+icZUUhg91UAPMRGgXYAvo6wkr5ogb+vW8SsB28BeUP_6-g6w@mail.gmail.com>
+ <1324484074.13074.313.camel@wwguy-huron> <CAH5vBdJ4-33z3FbOwVG1QRzfFOwFpz1wccbQNDXEC6-NhBa31A@mail.gmail.com>
+ <1324518057.4755.4.camel@wwguy-ubuntu> <CAH5vBdKwQ3vPr01PiRMmUqARK4CE44vM9WeVSx-QydpDLQtT1A@mail.gmail.com>
+ <1326234428.13074.385.camel@wwguy-huron> <CAH5vBd++OmF11vBHYgNmLABm3pG3mOERcq5dgeP6o9fneRLODQ@mail.gmail.com>
+ <1326237636.13074.389.camel@wwguy-huron>
+From: Cheng Renquan <crquan@gmail.com>
+Date: Tue, 10 Jan 2012 17:30:27 -0800
+Message-ID: <CAH5vBdLjCsSdV+hzBMg2hpn+kh6a572FKmVs84cLCtR9XROKbg@mail.gmail.com> (sfid-20120111_023053_594887_4C6FA1A3)
+Subject: Re: linux 3.2-rcX iwlwifi driver's problem (wifi link unstable when
+ moving between multiple APs)
+To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+Cc: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > Am Sonntag, 1. Januar 2012, 10:54:47 schrieb Marek Vasut:
-> > > > Am Samstag, 31. Dezember 2011, 19:39:18 schrieb Marek Vasut:
-> > > > > maybe we should implement such thing into the firmware loader
-> > > > > itself? Allow it -- for example via some node in /dev -- to force
-> > > > > loading firmware into some buffer in kernel just before suspend so
-> > > > > it'll certainly be readily available at resume time?
-> > > > 
-> > > > This is difficult. We don't know at suspend time which firmware we
-> > > > will need at resume time.
-> > > 
-> > > That's not actually true ... you can ask the drivers if they need to
-> > > load firmware after resume ... that can be implemented and udev can
-> > > handle it. The driver should know if the hardware it's controlling is
-> > > stupid or not.
-> > 
-> > Device IDs can morph due to a power loss. After resumption another driver
-> > would bind.
-> 
-> What do you mean? I don't think I quite follow.
+On Tue, Jan 10, 2012 at 3:20 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+> Hi Cheng,
 
-Ah I see ... you mean like you can swap the devices (eg. usb devices) when the 
-computer is asleep. Yea, that's an issue.
+> Got it, very sorry for the problem you experience, yes, I agree with
+> you, it might be because the noisy environment. Could you please send me
+> the dmesg log with the following flags
+>
+> $sudo modprobe iwlwifi debug=0x1083
+>
+> Thanks
+> Wey
 
-On the other hand, you'd expect those to keep pestering udev to load firmware 
-later in the wakeup process (maybe it can be somehow defered?). But if we 
-actually implemented some pre-suspend FW cache, it might help the speed of 
-resume a bit, right ?
+Attached iwlwifi-debug-jan10.txt.xz privately to Guy since it may have
+some privacy; please do not spread;
 
-M
-> 
-> M
-> 
-> > 	Regards
-> > 	
-> > 		Oliver
+tried a few meeting rooms only the last one failed roaming; may be
+because many ones have left office right now, don't have so much
+noise; will try again another busy time;
