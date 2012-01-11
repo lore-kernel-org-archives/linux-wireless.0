@@ -1,66 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29107 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754638Ab2AUJxY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jan 2012 04:53:24 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH V2 4/6] ath6kl: Pass vif instead of ar to ath6kl_add_new_sta()
-Date: Sat, 21 Jan 2012 15:22:51 +0530
-Message-ID: <1327139573-7435-4-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120121_105457_419815_3A0D449B)
-In-Reply-To: <1327139573-7435-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1327139573-7435-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga14.intel.com ([143.182.124.37]:57247 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753160Ab2AKQpD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jan 2012 11:45:03 -0500
+Subject: Re: linux 3.2-rcX iwlwifi driver's problem (wifi link unstable
+ when moving between multiple APs)
+From: wwguy <wey-yi.w.guy@intel.com>
+To: Cheng Renquan <crquan@gmail.com>
+Cc: "sedat.dilek@gmail.com" <sedat.dilek@gmail.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAH5vBdLjCsSdV+hzBMg2hpn+kh6a572FKmVs84cLCtR9XROKbg@mail.gmail.com>
+References: <CAH5vBdJLHkFLQCHHYOczXQt1Hwwe3e-Ct0MUjyTRU0vgodAPOg@mail.gmail.com>
+	 <1324424765.13074.281.camel@wwguy-huron>
+	 <CAH5vBdKotiPqpHV=tx2fv8=-HRBuJnYe8wEAF2Z9xH3zVnwyqg@mail.gmail.com>
+	 <CA+icZUXWccU-TtwE7b7Mm9Nw7juQwDxvYRZfOdjP3q1O-Mr0Ug@mail.gmail.com>
+	 <CAH5vBdKtV1Ydb2ffBVDxdynsF9S14Ddy6XezHzXvRC3bRC-huQ@mail.gmail.com>
+	 <CA+icZUXDOxNo-Y9d2WcdhMZyDJeCT69z340xMwNiN9hbq0XAFA@mail.gmail.com>
+	 <CAH5vBdLq6zOagjmyM1h9Jon+fYnz5t05Dx7u6VqOWGHna+M3_Q@mail.gmail.com>
+	 <CA+icZUVixfk0h1ENU-tWMS5hgurbEV4jYpYNWbzaxCUx_b64UQ@mail.gmail.com>
+	 <CAH5vBdK62juwC_qPPTfmgFkMp9XMy+3j1YLvBSxBc+zr9_oBJQ@mail.gmail.com>
+	 <CA+icZUUhg91UAPMRGgXYAvo6wkr5ogb+vW8SsB28BeUP_6-g6w@mail.gmail.com>
+	 <1324484074.13074.313.camel@wwguy-huron>
+	 <CAH5vBdJ4-33z3FbOwVG1QRzfFOwFpz1wccbQNDXEC6-NhBa31A@mail.gmail.com>
+	 <1324518057.4755.4.camel@wwguy-ubuntu>
+	 <CAH5vBdKwQ3vPr01PiRMmUqARK4CE44vM9WeVSx-QydpDLQtT1A@mail.gmail.com>
+	 <1326234428.13074.385.camel@wwguy-huron>
+	 <CAH5vBd++OmF11vBHYgNmLABm3pG3mOERcq5dgeP6o9fneRLODQ@mail.gmail.com>
+	 <1326237636.13074.389.camel@wwguy-huron>
+	 <CAH5vBdLjCsSdV+hzBMg2hpn+kh6a572FKmVs84cLCtR9XROKbg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 11 Jan 2012 08:37:47 -0800
+Message-ID: <1326299867.25784.41.camel@wwguy-ubuntu> (sfid-20120111_174521_844223_4923AF80)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will be used when initializing station specific aggregation
-information.
+Hi Renquan,
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/main.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+On Tue, 2012-01-10 at 17:30 -0800, Cheng Renquan wrote:
+> On Tue, Jan 10, 2012 at 3:20 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
+> > Hi Cheng,
+> 
+> > Got it, very sorry for the problem you experience, yes, I agree with
+> > you, it might be because the noisy environment. Could you please send me
+> > the dmesg log with the following flags
+> >
+> > $sudo modprobe iwlwifi debug=0x1083
+> >
+> > Thanks
+> > Wey
+> 
+> Attached iwlwifi-debug-jan10.txt.xz privately to Guy since it may have
+> some privacy; please do not spread;
+> 
+> tried a few meeting rooms only the last one failed roaming; may be
+> because many ones have left office right now, don't have so much
+> noise; will try again another busy time;
 
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 3a3b2cc..acb4acb 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -52,10 +52,11 @@ struct ath6kl_sta *ath6kl_find_sta_by_aid(struct ath6kl *ar, u8 aid)
- 	return conn;
- }
+>From the log you provide, I can see both "direct probe timeout" and
+"authentication timeout".
+
+You mention it is in an noisy environment. The thing I am not sure is
+this a device fail to transmit issue or fail to receive "ack" from AP
+issue?
  
--static void ath6kl_add_new_sta(struct ath6kl *ar, u8 *mac, u16 aid, u8 *wpaie,
--			       size_t ielen, u8 keymgmt, u8 ucipher, u8 auth,
--			       u8 apsd_info)
-+static void ath6kl_add_new_sta(struct ath6kl_vif *vif, u8 *mac, u16 aid,
-+			       u8 *wpaie, size_t ielen, u8 keymgmt,
-+			       u8 ucipher, u8 auth, u8 apsd_info)
- {
-+	struct ath6kl *ar = vif->ar;
- 	struct ath6kl_sta *sta;
- 	u8 free_slot;
- 
-@@ -430,7 +431,6 @@ void ath6kl_connect_ap_mode_sta(struct ath6kl_vif *vif, u16 aid, u8 *mac_addr,
- 				u8 keymgmt, u8 ucipher, u8 auth,
- 				u8 assoc_req_len, u8 *assoc_info, u8 apsd_info)
- {
--	struct ath6kl *ar = vif->ar;
- 	u8 *ies = NULL, *wpa_ie = NULL, *pos;
- 	size_t ies_len = 0;
- 	struct station_info sinfo;
-@@ -484,7 +484,7 @@ void ath6kl_connect_ap_mode_sta(struct ath6kl_vif *vif, u16 aid, u8 *mac_addr,
- 		pos += 2 + pos[1];
- 	}
- 
--	ath6kl_add_new_sta(ar, mac_addr, aid, wpa_ie,
-+	ath6kl_add_new_sta(vif, mac_addr, aid, wpa_ie,
- 			   wpa_ie ? 2 + wpa_ie[1] : 0,
- 			   keymgmt, ucipher, auth, apsd_info);
- 
--- 
-1.7.0.4
+Is it possible for you to capture the sniffer trace if you have the
+tools?
+
+
+Thanks
+Wey
+
 
