@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:29339 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753170Ab2AMMyF (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:38543 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751794Ab2AKOpe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jan 2012 07:54:05 -0500
-From: Antonio Quartulli <ordex@autistici.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Antonio Quartulli <ordex@autistici.org>
-Subject: [PATCH] mac80211: remove useless DA checking in ieee80211_rx_mgmt_probe_resp()
-Date: Fri, 13 Jan 2012 13:53:18 +0100
-Message-Id: <1326459198-8413-1-git-send-email-ordex@autistici.org> (sfid-20120113_135409_723854_8F7885A4)
+	Wed, 11 Jan 2012 09:45:34 -0500
+From: "Elias, Ilan" <ilane@ti.com>
+To: Ohad Ben-Cohen <ohad@wizery.com>
+CC: "samuel@sortiz.org" <samuel@sortiz.org>,
+	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
+	"aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] NFC: Download TI NFC init script
+Date: Wed, 11 Jan 2012 14:45:17 +0000
+Message-ID: <B30D1FD582D6484ABF57420512E580350F5D1C88@DLEE74.ent.ti.com> (sfid-20120111_154538_325813_24C0BCB8)
+References: <1326285768-3073-1-git-send-email-ilane@ti.com>
+ <CAK=WgbanHKn3r9VYocmFpoCu9YKOf-hL20GKOgm=qmU1S6A_-A@mail.gmail.com>
+In-Reply-To: <CAK=WgbanHKn3r9VYocmFpoCu9YKOf-hL20GKOgm=qmU1S6A_-A@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Actually the DA field has already been checked along the rx path (in
-prepare_for_handlers()) and this check is therefore useless at this point.
+ Hi Ohad,
 
-Signed-off-by: Antonio Quartulli <ordex@autistici.org>
----
- net/mac80211/ibss.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index f8a32bf..6aacce9 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -854,9 +854,6 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
- 	size_t baselen;
- 	struct ieee802_11_elems elems;
+> > Download TI NFC init script during nfcwilink open operation,
+> > after the NFC channel is registered with TI shared transport.
+> > TI NFC init script is written in BTS format.
+> > First, read the chip version via a special vendor specific command.
+> > Second, we request the relevant BTS file from the user space, and
+> > then send the BTS commands to the chip.
+> 
+> nfcwilink_open() begins by calling the shared transport's
+> st_register() function, which also seem to be loading, parsing and
+> sending a BTS firmware to the device.
+> 
+> Does it mean that two firmwares are needed for these NFC devices ?
+Yes, TI NFC chip requires 2 different init scripts:
+1) General init script for all cores (HCI commands), which comes first
+2) NFC init script only for the NFC core (NCI commands), which comes second
  
--	if (memcmp(mgmt->da, sdata->vif.addr, ETH_ALEN))
--		return; /* ignore ProbeResp to foreign address */
--
- 	baselen = (u8 *) mgmt->u.probe_resp.variable - (u8 *) mgmt;
- 	if (baselen > len)
- 		return;
--- 
-1.7.3.4
+> From a quick look it seems that much of the boilerplate code for the
+> BTS handling is quite similar; any way to avoid some of the code
+> duplication (something the shared transport code doesn't try very hard
+> to do ;) ?
+There are several major differences between the two:
+1) The vesion read in st_kim is the BT chip version, using the standard HCI_Read_Local_Version_Information command. This version is regarded as the general chip version.
+The version read in the nfcwilink is a different version using a special vendor specific NCI command. This version is regarded as the NFC chip version.
+2) The NFC init script is in NCI commands, while the general init script is in HCI commands.
+3) In NFC, we want a simplified BTS init script, e.g. with only ACTION_SEND_COMMAND. No waiting, sleeping or other actions...
 
+To summarize, it's a new core with different commands (NCI and not HCI).
+We chose BTS to make it simple and familiar, but it's a simplified BTS, and we handle the actions differently.
+
+Thanks & BR,
+Ilan
