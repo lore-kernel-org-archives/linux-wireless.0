@@ -1,57 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:12323 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755264Ab2AIBz4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jan 2012 20:55:56 -0500
-Message-ID: <4F0A492A.5080504@intel.com> (sfid-20120109_025627_087966_ED2F3C31)
-Date: Mon, 09 Jan 2012 09:55:54 +0800
-From: "Yan, Zheng" <zheng.z.yan@intel.com>
+Received: from mail44.messagelabs.com ([216.82.249.179]:3209 "HELO
+	mail44.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754713Ab2AKTbU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jan 2012 14:31:20 -0500
 MIME-Version: 1.0
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-CC: Johannes Berg <johannes@sipsolutions.net>, ilw@linux.intel.com,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH RFC] iwlwifi: add basic runtime PM support
-References: <4F065F59.2070107@intel.com>  <1325843269.3330.4.camel@jlt3.sipsolutions.net>  <4F0A3C62.6010403@intel.com> <1326069251.13074.360.camel@wwguy-huron>
-In-Reply-To: <1326069251.13074.360.camel@wwguy-huron>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [PATCH 1/2] wireless: Save original maximum regulatory transmission power for the calucation of the local maximum transmit power
+Date: Wed, 11 Jan 2012 21:31:09 +0200
+Message-ID: <5EFF534737810441B0F97C2792E49C2DD20381@ILMAIL01.dspg.com> (sfid-20120111_203127_553290_15DF0876)
+In-Reply-To: <1326308385.3417.11.camel@jlt3.sipsolutions.net>
+References: <5EFF534737810441B0F97C2792E49C2DD20371@ILMAIL01.dspg.com> <1326308385.3417.11.camel@jlt3.sipsolutions.net>
+From: "Hong Wu" <Hong.Wu@dspg.com>
+To: "Johannes Berg" <johannes@sipsolutions.net>
+Cc: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/2012 08:34 AM, Guy, Wey-Yi wrote:
-> On Mon, 2012-01-09 at 09:01 +0800, Yan, Zheng wrote:
->> On 01/06/2012 05:47 PM, Johannes Berg wrote:
->>> [add linux-wireless]
->>>
->>> On Fri, 2012-01-06 at 10:41 +0800, Yan, Zheng wrote:
->>>> This simple patch adds open/close based runtime PM support to the iwlwifi driver.
->>>> Namely, make the driver suspend the device after shutting down the interface and
->>>> resume the device when activating the interface. In my test, suspending the device
->>>> can save about 0.4 watt power. The shortcoming is that the device no longer generate
->>>> rfkill changes interrupt.
->>>
->>> NACK due to that last sentence. There's no way we can live with that in
->>> the general case -- and your patch isn't even configurable afaict. And
->>> I'm sure polling the rfkill flag would use just as much energy.
->>>
->> It's configurable, runtime PM is disabled by default.
-> 
-> Somehow I miss it, how you configure it?
-> 
-change the value of /sys/devices/.../power/control to auto to enable the runtime PM.
-(e.g echo auto > /sys/devices/pci0000:00/0000:00:1c.3/0000:02:00.0/power/control)
+The local maximum transmit power is the maximum power a wireless device
+allowed to transmit. If Power Constraint is presented, the local maximum
+power equals to the maximum allowed power defined in regulatory domain
+minus power constraint.
 
->>
->>> There might be some value in this in a system that doesn't have a hard
->>> rfkill line, but that means this needs to be configurable since the
->>> device can't know whether there's a button or not [1].
->>>
->> The patch targets system that only use software rfkill
-> 
-> How you control that?  
-I can't. Our team is working on runtime PM project, the purpose of the patch is
-more or less to demonstrate how much power can be saved.
+The maximum transmit power is maximum power a wireless device capable of
+transmitting, and should be used in Power Capability element (7.3.2.16
+IEEE802.11 2007).
 
-Regards
-Yan, Zheng
+The transmit power from a wireless device should not greater than the
+local maximum transmit power.
 
+The maximum transmit power was not calculated correctly in the current
+Linux wireless/mac80211 when Power Constraint is presented.
+
+Hong   
+
+-----Original Message-----
+From: Johannes Berg [mailto:johannes@sipsolutions.net] 
+Sent: Wednesday, January 11, 2012 11:00 AM
+To: Hong Wu
+Cc: linville@tuxdriver.com; linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] wireless: Save original maximum regulatory
+transmission power for the calucation of the local maximum transmit
+power
+
+On Wed, 2012-01-11 at 20:33 +0200, Hong Wu wrote:
+> The local maximum transmit power for a channel is defined as the
+maximum
+> regulatory transmission power minus the local power constraint
+specified
+> for the channel in the Power Constraint element. (7.3.2.15 IEEE80211
+2007)
+
+I have a feeling that looking at the code I understand what you're
+trying to fix, but please explain it better.
+
+johannes
+
+
+______________________________________________________________________
+DSP Group, Inc. automatically scans all emails and attachments using
+MessageLabs Email Security System.
+_____________________________________________________________________
+
+______________________________________________________________________
+DSP Group, Inc. automatically scans all emails and attachments using MessageLabs Email Security System.
+_____________________________________________________________________
