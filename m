@@ -1,36 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.westmancom.com ([216.36.128.163]:39264 "HELO
-	mail.westmancom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753412Ab2A2R4m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jan 2012 12:56:42 -0500
-Message-ID: <1327859778.27653.5.camel@localhost> (sfid-20120129_185646_443886_7ADDFF19)
-Subject: bcm43236 chipset
-From: "M. Lambert" <lambertm@westman.wave.ca>
-To: linux-wireless@vger.kernel.org
-Date: Sun, 29 Jan 2012 11:56:18 -0600
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:60898 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932778Ab2AKBm7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 Jan 2012 20:42:59 -0500
+Date: Tue, 10 Jan 2012 20:42:57 -0500
+From: Dave Jones <davej@redhat.com>
+To: "Venkataraman, Meenakshi" <meenakshi.venkataraman@intel.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi worse than ever in current git.
+Message-ID: <20120111014257.GB22066@redhat.com> (sfid-20120111_024312_280417_421B33A2)
+References: <20120110184917.GA26973@redhat.com>
+ <1326221614.5067.6.camel@dcbw.foobar.com>
+ <4595B4D22AB93C4FABBA84AAD5AA37FD0154B1@ORSMSX104.amr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4595B4D22AB93C4FABBA84AAD5AA37FD0154B1@ORSMSX104.amr.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Good morning,
+On Tue, Jan 10, 2012 at 10:05:25PM +0000, Venkataraman, Meenakshi wrote:
+ > Hi Dan,
+ > 
+ > >> For the last few releases, iwlwifi has been getting consistently worse
+ > >> wrt reliability for me. 
+ > 
+ > [MV] Do you have an approximate idea of what release the failure started occurring?
+ > 
+ >  The failure mode has varied, from the chip
+ > >> just locking up with no tx/rx of packets with nothing being logged, to
+ > >> microcode warnings, and spewing 'Tx aggregation enabled' messages over
+ > >and over.
+ >  
+ > [MV] I'm not sure if it is related to the problem you're seeing, but I see that you're using a 5300, so can you try to load the iwlwifi module with the following parameter and see if it helps?
+ > 
+ > modprobe iwlagn bt_coex_active=0
 
-I have seen a couple of posts where reference was made to usb support in
-broadcom drivers, and that the code would also support additional
-chipsets (such as the bcm43236 but not the 43231) when quote "my testing
-here is complete" unquote.
+Seems to make no difference at all.
 
-As I have a Linksys AE2500 (13b1:003a) usb dongle, I am very interested
-in helping test this functionality no matter how reliable it is, or is
-not at this time.  Using Fedora 16 x64, kernel 3.2.2-1 at this time.  I
-believe I'd have to build my own kernel to enable bcma support but not
-positive about that yet.
+	Dave
 
-If the driver is near a point where testing by others with certain
-hardware could be helpful and/or useful I'd be happy to test and provide
-any feedback.
 
-Thanks,
-Mark 
 
