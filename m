@@ -1,79 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out5.smtp.messagingengine.com ([66.111.4.29]:44088 "EHLO
-	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754036Ab2ACVDn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 16:03:43 -0500
-Received: from compute3.internal (compute3.nyi.mail.srv.osa [10.202.2.43])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 7A61C20B1E
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Jan 2012 16:03:43 -0500 (EST)
-Date: Tue, 3 Jan 2012 12:52:26 -0800
-From: Greg KH <greg@kroah.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2011-12-15
-Message-ID: <20120103205226.GA17131@kroah.com> (sfid-20120103_220434_311529_E5C4AFBF)
-References: <20111215191523.GA2561@tuxdriver.com>
- <CACna6rw736JdkoM8zKxorCFd5oy08QTwWZ6PutoJPSr3ZN8hTg@mail.gmail.com>
- <20111215213822.GB2561@tuxdriver.com>
- <CACna6rz3qDpw4eJOoCXx7=z1719v7kS-Ou-WUseR9_vB-O2dag@mail.gmail.com>
- <CACna6rxO2dC=Y3nv-d-w89MqyM0j0aumk=r5Yh_KEg=MwOcvEQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CACna6rxO2dC=Y3nv-d-w89MqyM0j0aumk=r5Yh_KEg=MwOcvEQ@mail.gmail.com>
+Received: from smtp1.u-psud.fr ([129.175.33.41]:63836 "EHLO smtp1.u-psud.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932372Ab2AKPzy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jan 2012 10:55:54 -0500
+From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Nicolas Cavallari <cavallar@lri.fr>
+Subject: [PATCH] carl9170: claim to support IBSS RSN.
+Date: Wed, 11 Jan 2012 16:44:50 +0100
+Message-Id: <1326296690-2644-1-git-send-email-cavallar@lri.fr> (sfid-20120111_165558_251836_53539AC9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 26, 2011 at 12:36:59AM +0100, Rafał Miłecki wrote:
-> W dniu 16 grudnia 2011 07:40 użytkownik Rafał Miłecki
-> <zajec5@gmail.com> napisał:
-> > W dniu 15 grudnia 2011 22:38 użytkownik John W. Linville
-> > <linville@tuxdriver.com> napisał:
-> >> On Thu, Dec 15, 2011 at 09:04:29PM +0100, Rafał Miłecki wrote:
-> >>> 2011/12/15 John W. Linville <linville@tuxdriver.com>:
-> >>> > commit 42a3b63bb2ca4996a3d1210a004eae2333f1119e
-> >>> >
-> >>> > Dave,
-> >>> >
-> >>> > Here are a few more fixes intended for the 3.2 release.  They are
-> >>> > all small and narrowly focused.
-> >>>
-> >>> John, I've made a mistake and didn't use [PATCH 3.2] header to make it
-> >>> clean my patch is fix. Could you take a look at
-> >>> [PATCH] bcma: support for suspend and resume
-> >>> please?
-> >>>
-> >>> It's not one-liner, but fixes lock ups, which I believe - we really
-> >>> want to avoid.
-> >>
-> >> It's late in the release cycle, and Dave specifically asked me to slow down.
-> >>
-> >> Are these suspend/resume lockups a regression?  Or have they always
-> >> been there?  Do they happen to everyone?
-> >
-> > The bug is present since first days of bcma. That's why I even decided
-> > to add stable to CC.
-> >
-> > Personally I've tested that only on 1 machine (I don't have more
-> > suspendable machines with mini PCIe slot). However all Macbook 8.1/8.2
-> > users have to remove b43 & bcma before suspending [0], they complain
-> > about that since ever.
-> >
-> > Arend: I know you're also complaining for suspend in bcma. Can you
-> > comment on this?
-> >
-> > [0] http://ubuntuforums.org/showthread.php?t=1695746
-> 
-> User nephyrin on #bcm-users has confirmed this patch fixes
-> suspend&resume for him. Without this patch he got deadlock without
-> seeing any kernel panic logs - quite an ugly case.
-> 
-> I still think this patch may be worth taking as fix and backporting too.
+On carl9170, HW encryption is disabled on IBSS; the mac80211
+software-based encryption is used instead. As mac80211 supports IBSS
+RSN (per-STA GTK), claim its support in the carl9170 PHY.
 
-What patch specifically?  What is the git commit id of it in Linus's
-tree?  Without that information, telling stable@ about it is
-pointless...
+Signed-off-by: Nicolas Cavallari <cavallar@lri.fr>
+---
+ drivers/net/wireless/ath/carl9170/main.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
-greg k-h
+diff --git a/drivers/net/wireless/ath/carl9170/main.c b/drivers/net/wireless/ath/carl9170/main.c
+index f06e069..24c7f85 100644
+--- a/drivers/net/wireless/ath/carl9170/main.c
++++ b/drivers/net/wireless/ath/carl9170/main.c
+@@ -1796,6 +1796,9 @@ void *carl9170_alloc(size_t priv_size)
+ 		ar->noise[i] = -95; /* ATH_DEFAULT_NOISE_FLOOR */
+ 
+ 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
++
++	/* As IBSS Encryption is software-based, IBSS RSN is supported. */
++	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+ 	return ar;
+ 
+ err_nomem:
+-- 
+1.7.7.3
+
