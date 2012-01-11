@@ -1,210 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:41015 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753880Ab2AXLu0 (ORCPT
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:34580 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756434Ab2AKPlP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 06:50:26 -0500
-Subject: [PATCH] ath6kl: fix testmode when fw-2.bin or fw-3.bin is used
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Date: Tue, 24 Jan 2012 13:50:16 +0200
-Message-ID: <20120124115016.15053.44588.stgit@localhost6.localdomain6> (sfid-20120124_125030_130804_589FF048)
+	Wed, 11 Jan 2012 10:41:15 -0500
+Received: by obbup16 with SMTP id up16so995122obb.19
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2012 07:41:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <4F0D9BF8.7020001@broadcom.com>
+References: <CAC9WiBj0A54_R3NszGBEhzMAiZzL0NBmickE88avp0NDGHyjpg@mail.gmail.com>
+	<CAC9WiBhVWvvN-yqoYvBoD1uUi0P5e2cBu68Mva99wVxr7W0ibg@mail.gmail.com>
+	<4F0D7F6B.5000601@broadcom.com>
+	<CAC9WiBgp02u90rJNC64kKU8GN7jcP_YOSRXSBbR83kHvf3CneQ@mail.gmail.com>
+	<4F0D9BF8.7020001@broadcom.com>
+Date: Wed, 11 Jan 2012 16:41:14 +0100
+Message-ID: <CAC9WiBhvTfRS9P1eMj-Ev3O9gSJf7O9tAO5BSGT7XX2tnDdhtA@mail.gmail.com> (sfid-20120111_164119_396243_FE160914)
+Subject: Re: About the patch: "staging: brcm80211: only enable brcmsmac if
+ bcma is not set"
+From: Francis Moreau <francis.moro@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"gregkh@suse.de" <gregkh@suse.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Testmode (TCMD and ART) was not enabled when fw-2.bin or fw-3.bin files
-were available, fix that by fetching testmode file just after the
-board file but before rest of the firmware files are fetched.
+On Wed, Jan 11, 2012 at 3:26 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 01/11/2012 02:13 PM, Francis Moreau wrote:
+>> On Wed, Jan 11, 2012 at 1:24 PM, Arend van Spriel <arend@broadcom.com> wrote:
+>>> On 01/11/2012 12:40 PM, Francis Moreau wrote:
+>>>> Hi,
+>>>>
+>>>> This has finally been merged and is part of the 3.2 release.
+>>>>
+>>>> So now distros don't ship the brcmsmac driver anymore which is
+>>>> basically the only driver which can handle my card.
+>>>
+>>> I am not sure why you come to that conclusion,
+>>
+>> I checked on both OpenSuse and Mandriva, and they both have CONFIG_BCMA=m.
+>>
+>>> For kernel v3.3 the brcmsmac driver will be using bcma.
+>>
+>> Great.
+>>
+>> But v3.2...
+>>
+>
+> Given the configuration BCMA=m I agree that brcmsmac is probably not in
+> the distro in binary form. However, you can probably install the kernel
+> source package and rebuilt the kernel with BCMA=n and BRCMSMAC=m.
+>
+> Gr. AvS
+>
 
-I also added testmode field to struct ath6kl and moved the module parameter
-to core.c. Now all module parameters are grouped in one place.
+and now using the brcmsmac gives the following WARN:
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/core.c |    4 ++
- drivers/net/wireless/ath/ath6kl/core.h |    1 
- drivers/net/wireless/ath/ath6kl/init.c |   74 ++++++++++++++++++++------------
- 3 files changed, 51 insertions(+), 28 deletions(-)
+[   98.406709] ------------[ cut here ]------------
+[   98.406743] WARNING: at net/mac80211/rx.c:2979
+ieee80211_rx+0x91b/0x9e0 [mac80211]()
+[   98.406747] Hardware name: Vostro 3500
+[   98.406749] Modules linked in: rfcomm bridge stp bnep btusb
+bluetooth nfsd nfs lockd fscache auth_rpcgss nfs_acl sunrpc fuse
+af_packet ipv6 arc4 brcmsmac mac80211 brcmutil snd_hda_codec_hdmi
+snd_hda_codec_idt cfg80211 uvcvideo snd_hda_intel dell_laptop
+snd_hda_codec rfkill videodev snd_hwdep sg snd_seq_dummy snd_seq_oss
+snd_seq_midi_event snd_seq snd_seq_device snd_pcm_oss snd_pcm
+snd_timer snd_mixer_oss snd mei(C) r8169 mii media v4l2_compat_ioctl32
+soundcore snd_page_alloc sr_mod iTCO_wdt iTCO_vendor_support intel_ips
+crc8 cordic dcdbas i2c_i801 i915 drm_kms_helper drm i2c_algo_bit
+i2c_core coretemp binfmt_misc cpufreq_ondemand cpufreq_conservative
+cpufreq_powersave acpi_cpufreq freq_table mperf nvram dm_mod joydev
+dell_wmi sparse_keymap evdev kvm_intel wmi kvm video battery ata_piix
+ahci libahci libata sd_mod scsi_mod crc_t10dif ext4 jbd2 crc16
+uhci_hcd ohci_hcd ehci_hcd usbhid hid usbcore usb_common
+[   98.406857] Pid: 0, comm: swapper/0 Tainted: G        WC   3.2+ #1
+[   98.406861] Call Trace:
+[   98.406864]  <IRQ>  [<ffffffff8106809f>] warn_slowpath_common+0x7f/0xc0
+[   98.406880]  [<ffffffff810680fa>] warn_slowpath_null+0x1a/0x20
+[   98.406896]  [<ffffffffa050d2bb>] ieee80211_rx+0x91b/0x9e0 [mac80211]
+[   98.406902]  [<ffffffff8105776d>] ? update_curr+0x1cd/0x220
+[   98.406913]  [<ffffffffa04f0dd9>]
+ieee80211_tasklet_handler+0xb9/0x160 [mac80211]
+[   98.406919]  [<ffffffff8106f43d>] tasklet_action+0xcd/0x110
+[   98.406924]  [<ffffffff8106efda>] __do_softirq+0xaa/0x1e0
+[   98.406931]  [<ffffffff8146792c>] call_softirq+0x1c/0x30
+[   98.406938]  [<ffffffff81015255>] do_softirq+0x65/0xa0
+[   98.406942]  [<ffffffff8106edde>] irq_exit+0x8e/0xc0
+[   98.406948]  [<ffffffff814681e6>] do_IRQ+0x66/0xe0
+[   98.406954]  [<ffffffff8145da2e>] common_interrupt+0x6e/0x6e
+[   98.406957]  <EOI>  [<ffffffff8129e2e0>] ? intel_idle+0xe0/0x150
+[   98.406968]  [<ffffffff8129e2c6>] ? intel_idle+0xc6/0x150
+[   98.406975]  [<ffffffff8136e678>] cpuidle_idle_call+0xd8/0x1b0
+[   98.406980]  [<ffffffff8101302b>] cpu_idle+0xcb/0x120
+[   98.406987]  [<ffffffff814410c2>] rest_init+0x72/0x80
+[   98.406994]  [<ffffffff81ac7cd9>] start_kernel+0x3c5/0x3d0
+[   98.406999]  [<ffffffff81ac7346>] x86_64_start_reservations+0x131/0x135
+[   98.407004]  [<ffffffff81ac744d>] x86_64_start_kernel+0x103/0x112
+[   98.407009] ---[ end trace 4b7390abe635c92a ]---
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
-index d764afe..a15966a 100644
---- a/drivers/net/wireless/ath/ath6kl/core.c
-+++ b/drivers/net/wireless/ath/ath6kl/core.c
-@@ -28,11 +28,13 @@ unsigned int debug_mask;
- static bool suspend_cutpower;
- static unsigned int uart_debug;
- static unsigned int ath6kl_p2p;
-+static unsigned int testmode;
- 
- module_param(debug_mask, uint, 0644);
- module_param(suspend_cutpower, bool, 0444);
- module_param(uart_debug, uint, 0644);
- module_param(ath6kl_p2p, uint, 0644);
-+module_param(testmode, uint, 0644);
- 
- int ath6kl_core_init(struct ath6kl *ar)
- {
-@@ -76,6 +78,8 @@ int ath6kl_core_init(struct ath6kl *ar)
- 		goto err_power_off;
- 	}
- 
-+	ar->testmode = testmode;
-+
- 	ret = ath6kl_init_fetch_firmwares(ar);
- 	if (ret)
- 		goto err_htc_cleanup;
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 67b22e4..3fba54e 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -526,6 +526,7 @@ struct ath6kl {
- 	struct wiphy *wiphy;
- 
- 	enum ath6kl_state state;
-+	unsigned int testmode;
- 
- 	struct ath6kl_bmi bmi;
- 	const struct ath6kl_hif_ops *hif_ops;
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 167dc41..3c9a661 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -27,10 +27,6 @@
- #include "debug.h"
- #include "hif-ops.h"
- 
--static unsigned int testmode;
--
--module_param(testmode, uint, 0644);
--
- static const struct ath6kl_hw hw_list[] = {
- 	{
- 		.id				= AR6003_HW_2_0_VERSION,
-@@ -731,39 +727,54 @@ static int ath6kl_fetch_otp_file(struct ath6kl *ar)
- 	return 0;
- }
- 
--static int ath6kl_fetch_fw_file(struct ath6kl *ar)
-+static int ath6kl_fetch_testmode_file(struct ath6kl *ar)
- {
- 	char filename[100];
- 	int ret;
- 
--	if (ar->fw != NULL)
-+	if (ar->testmode == 0)
- 		return 0;
- 
--	if (testmode) {
--		ath6kl_dbg(ATH6KL_DBG_BOOT, "testmode %d\n",
--				testmode);
--		if (testmode == 2) {
--			if (ar->hw.fw.utf == NULL) {
--				ath6kl_warn("testmode 2 not supported\n");
--				return -EOPNOTSUPP;
--			}
-+	ath6kl_dbg(ATH6KL_DBG_BOOT, "testmode %d\n", ar->testmode);
- 
--			snprintf(filename, sizeof(filename), "%s/%s",
--				ar->hw.fw.dir, ar->hw.fw.utf);
--		} else {
--			if (ar->hw.fw.tcmd == NULL) {
--				ath6kl_warn("testmode 1 not supported\n");
--				return -EOPNOTSUPP;
--			}
-+	if (ar->testmode == 2) {
-+		if (ar->hw.fw.utf == NULL) {
-+			ath6kl_warn("testmode 2 not supported\n");
-+			return -EOPNOTSUPP;
-+		}
- 
--			snprintf(filename, sizeof(filename), "%s/%s",
--				ar->hw.fw.dir, ar->hw.fw.tcmd);
-+		snprintf(filename, sizeof(filename), "%s/%s",
-+			 ar->hw.fw.dir, ar->hw.fw.utf);
-+	} else {
-+		if (ar->hw.fw.tcmd == NULL) {
-+			ath6kl_warn("testmode 1 not supported\n");
-+			return -EOPNOTSUPP;
- 		}
--		set_bit(TESTMODE, &ar->flag);
- 
--		goto get_fw;
-+		snprintf(filename, sizeof(filename), "%s/%s",
-+			 ar->hw.fw.dir, ar->hw.fw.tcmd);
- 	}
- 
-+	set_bit(TESTMODE, &ar->flag);
-+
-+	ret = ath6kl_get_fw(ar, filename, &ar->fw, &ar->fw_len);
-+	if (ret) {
-+		ath6kl_err("Failed to get testmode %d firmware file %s: %d\n",
-+			   ar->testmode, filename, ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int ath6kl_fetch_fw_file(struct ath6kl *ar)
-+{
-+	char filename[100];
-+	int ret;
-+
-+	if (ar->fw != NULL)
-+		return 0;
-+
- 	/* FIXME: remove WARN_ON() as we won't support FW API 1 for long */
- 	if (WARN_ON(ar->hw.fw.fw == NULL))
- 		return -EINVAL;
-@@ -771,7 +782,6 @@ static int ath6kl_fetch_fw_file(struct ath6kl *ar)
- 	snprintf(filename, sizeof(filename), "%s/%s",
- 		 ar->hw.fw.dir, ar->hw.fw.fw);
- 
--get_fw:
- 	ret = ath6kl_get_fw(ar, filename, &ar->fw, &ar->fw_len);
- 	if (ret) {
- 		ath6kl_err("Failed to get firmware file %s: %d\n",
-@@ -812,7 +822,7 @@ static int ath6kl_fetch_testscript_file(struct ath6kl *ar)
- 	char filename[100];
- 	int ret;
- 
--	if (testmode != 2)
-+	if (ar->testmode != 2)
- 		return 0;
- 
- 	if (ar->fw_testscript != NULL)
-@@ -927,6 +937,10 @@ static int ath6kl_fetch_fw_apin(struct ath6kl *ar, const char *name)
- 			ath6kl_dbg(ATH6KL_DBG_BOOT, "found fw image ie (%zd B)\n",
- 				ie_len);
- 
-+			/* in testmode we already might have a fw file */
-+			if (ar->fw != NULL)
-+				break;
-+
- 			ar->fw = kmemdup(data, ie_len, GFP_KERNEL);
- 
- 			if (ar->fw == NULL) {
-@@ -1038,6 +1052,10 @@ int ath6kl_init_fetch_firmwares(struct ath6kl *ar)
- 	if (ret)
- 		return ret;
- 
-+	ret = ath6kl_fetch_testmode_file(ar);
-+	if (ret)
-+		return ret;
-+
- 	ret = ath6kl_fetch_fw_apin(ar, ATH6KL_FW_API3_FILE);
- 	if (ret == 0) {
- 		ar->fw_api = 3;
-@@ -1283,7 +1301,7 @@ static int ath6kl_upload_testscript(struct ath6kl *ar)
- 	u32 address, param;
- 	int ret;
- 
--	if (testmode != 2)
-+	if (ar->testmode != 2)
- 		return 0;
- 
- 	if (ar->fw_testscript == NULL)
+Could anybody tell me what's wrong ?
 
+Thanks
+-- 
+Francis
