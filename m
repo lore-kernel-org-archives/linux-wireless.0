@@ -1,288 +1,405 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39995 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751784Ab2AUWT4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jan 2012 17:19:56 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: ralf@linux-mips.org, linux-mips@linux-mips.org
-Cc: stern@rowland.harvard.edu, linux-usb@vger.kernel.org,
-	zajec5@gmail.com, linux-wireless@vger.kernel.org, m@bues.ch,
-	george@znau.edu.ua, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 4/7] USB: EHCI: Add a generic platform device driver
-Date: Sat, 21 Jan 2012 23:19:24 +0100
-Message-Id: <1327184367-8824-5-git-send-email-hauke@hauke-m.de> (sfid-20120121_232022_037280_007AA4D7)
-In-Reply-To: <1327184367-8824-1-git-send-email-hauke@hauke-m.de>
-References: <1327184367-8824-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:44375 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757387Ab2AKMkr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jan 2012 07:40:47 -0500
+Received: by yhjj63 with SMTP id j63so252170yhj.19
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2012 04:40:46 -0800 (PST)
+From: ilanelias78@gmail.com
+To: samuel@sortiz.org, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Ilan Elias <ilane@ti.com>
+Subject: [PATCH] NFC: Download TI NFC init script
+Date: Wed, 11 Jan 2012 14:42:48 +0200
+Message-Id: <1326285768-3073-1-git-send-email-ilane@ti.com> (sfid-20120111_134051_269239_A8A55A8B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a generic driver for platform devices. It works like the PCI
-driver and is based on it. This is for devices which do not have an own
-bus but their EHCI controller works like a PCI controller. It will be
-used for the Broadcom bcma and ssb USB EHCI controller.
+From: Ilan Elias <ilane@ti.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Download TI NFC init script during nfcwilink open operation,
+after the NFC channel is registered with TI shared transport.
+TI NFC init script is written in BTS format.
+First, read the chip version via a special vendor specific command.
+Second, we request the relevant BTS file from the user space, and
+then send the BTS commands to the chip.
+
+Signed-off-by: Ilan Elias <ilane@ti.com>
 ---
- drivers/usb/host/Kconfig         |   10 ++
- drivers/usb/host/ehci-hcd.c      |    5 +
- drivers/usb/host/ehci-platform.c |  211 ++++++++++++++++++++++++++++++++++++++
- 3 files changed, 226 insertions(+), 0 deletions(-)
- create mode 100644 drivers/usb/host/ehci-platform.c
+ drivers/nfc/nfcwilink.c |  290 ++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 284 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
-index 6651ed6..e7b5efe 100644
---- a/drivers/usb/host/Kconfig
-+++ b/drivers/usb/host/Kconfig
-@@ -403,6 +403,16 @@ config USB_OHCI_HCD_PLATFORM
+diff --git a/drivers/nfc/nfcwilink.c b/drivers/nfc/nfcwilink.c
+index 06c3642..50e5c67 100644
+--- a/drivers/nfc/nfcwilink.c
++++ b/drivers/nfc/nfcwilink.c
+@@ -28,6 +28,7 @@
+  */
+ #include <linux/platform_device.h>
+ #include <linux/module.h>
++#include <linux/firmware.h>
+ #include <linux/nfc.h>
+ #include <net/nfc/nci.h>
+ #include <net/nfc/nci_core.h>
+@@ -40,6 +41,17 @@
+ #define NFCWILINK_OFFSET_LEN_IN_HDR	1
+ #define NFCWILINK_LEN_SIZE		2
+ #define NFCWILINK_REGISTER_TIMEOUT	8000	/* 8 sec */
++#define NFCWILINK_CMD_TIMEOUT		5000	/* 5 sec */
++
++#define BTS_FILE_NAME_MAX_SIZE		40
++#define BTS_FILE_HDR_MAGIC		0x42535442
++#define BTS_FILE_CMD_MAX_LEN		0xff
++#define BTS_FILE_ACTION_TYPE_SEND_CMD	1
++
++#define NCI_VS_NFCC_INFO_CMD_GID	0x2f
++#define NCI_VS_NFCC_INFO_CMD_OID	0x12
++#define NCI_VS_NFCC_INFO_RSP_GID	0x4f
++#define NCI_VS_NFCC_INFO_RSP_OID	0x12
  
- 	  If unsure, say N.
+ struct nfcwilink_hdr {
+ 	u8 chnl;
+@@ -47,6 +59,36 @@ struct nfcwilink_hdr {
+ 	u16 len;
+ } __packed;
  
-+config USB_EHCI_HCD_PLATFORM
-+	bool "Generic EHCI driver for a platform device"
-+	depends on USB_EHCI_HCD && EXPERIMENTAL
-+	default n
-+	---help---
-+	  Adds an EHCI host driver for a generic platform device, which
-+	  provieds a memory space and an irq.
++struct nci_vs_nfcc_info_cmd {
++	u8 gid;
++	u8 oid;
++	u8 plen;
++} __packed;
 +
-+	  If unsure, say N.
++struct nci_vs_nfcc_info_rsp {
++	u8 gid;
++	u8 oid;
++	u8 plen;
++	u8 status;
++	u8 hw_id;
++	u8 sw_ver_x;
++	u8 sw_ver_z;
++	u8 patch_id;
++} __packed;
 +
- config USB_OHCI_BIG_ENDIAN_DESC
- 	bool
- 	depends on USB_OHCI_HCD
-diff --git a/drivers/usb/host/ehci-hcd.c b/drivers/usb/host/ehci-hcd.c
-index a007a9f..afe0984 100644
---- a/drivers/usb/host/ehci-hcd.c
-+++ b/drivers/usb/host/ehci-hcd.c
-@@ -1376,6 +1376,11 @@ MODULE_LICENSE ("GPL");
- #define        PLATFORM_DRIVER         ehci_mv_driver
- #endif
++struct bts_file_hdr {
++	u32 magic;
++	u32 ver;
++	u8 rfu[24];
++	u8 actions[0];
++} __packed;
++
++struct bts_file_action {
++	u16 type;
++	u16 len;
++	u8 data[0];
++} __packed;
++
+ struct nfcwilink {
+ 	struct platform_device		*pdev;
+ 	struct nci_dev			*ndev;
+@@ -54,14 +96,237 @@ struct nfcwilink {
  
-+#ifdef CONFIG_USB_EHCI_HCD_PLATFORM
-+#include "ehci-platform.c"
-+#define PLATFORM_DRIVER		ehci_platform_driver
-+#endif
+ 	char				st_register_cb_status;
+ 	long				(*st_write) (struct sk_buff *);
+-	struct completion		st_register_completed;
 +
- #if !defined(PCI_DRIVER) && !defined(PLATFORM_DRIVER) && \
-     !defined(PS3_SYSTEM_BUS_DRIVER) && !defined(OF_PLATFORM_DRIVER) && \
-     !defined(XILINX_OF_PLATFORM_DRIVER)
-diff --git a/drivers/usb/host/ehci-platform.c b/drivers/usb/host/ehci-platform.c
-new file mode 100644
-index 0000000..1c20c02
---- /dev/null
-+++ b/drivers/usb/host/ehci-platform.c
-@@ -0,0 +1,211 @@
-+/*
-+ * Generic platform ehci driver
-+ *
-+ * Copyright 2007 Steven Brown <sbrown@cortland.com>
-+ * Copyright 2010-2011 Hauke Mehrtens <hauke@hauke-m.de>
-+ *
-+ * Derived from the ohci-ssb driver
-+ * Copyright 2007 Michael Buesch <m@bues.ch>
-+ *
-+ * Derived from the EHCI-PCI driver
-+ * Copyright (c) 2000-2004 by David Brownell
-+ *
-+ * Derived from the ohci-pci driver
-+ * Copyright 1999 Roman Weissgaerber
-+ * Copyright 2000-2002 David Brownell
-+ * Copyright 1999 Linus Torvalds
-+ * Copyright 1999 Gregory P. Smith
-+ *
-+ * Licensed under the GNU/GPL. See COPYING for details.
-+ */
-+#include <linux/platform_device.h>
++	struct completion		completed;
 +
-+static int ehci_platform_reset(struct usb_hcd *hcd)
++	struct nci_vs_nfcc_info_rsp	nfcc_info;
+ };
+ 
+ /* NFCWILINK driver flags */
+ enum {
+ 	NFCWILINK_RUNNING,
++	NFCWILINK_FW_DOWNLOAD,
+ };
+ 
++static int nfcwilink_send(struct sk_buff *skb);
++
++static inline struct sk_buff *nfcwilink_skb_alloc(unsigned int len, gfp_t how)
 +{
-+	struct ehci_hcd *ehci = hcd_to_ehci(hcd);
-+	int retval;
++	struct sk_buff *skb;
 +
-+	ehci->caps = hcd->regs;
-+	ehci->regs = hcd->regs +
-+		HC_LENGTH(ehci, ehci_readl(ehci, &ehci->caps->hc_capbase));
++	skb = alloc_skb(len + NFCWILINK_HDR_LEN, how);
++	if (skb)
++		skb_reserve(skb, NFCWILINK_HDR_LEN);
 +
-+	dbg_hcs_params(ehci, "reset");
-+	dbg_hcc_params(ehci, "reset");
-+
-+	/* cache this readonly data; minimize chip reads */
-+	ehci->hcs_params = ehci_readl(ehci, &ehci->caps->hcs_params);
-+
-+	retval = ehci_halt(ehci);
-+	if (retval)
-+		return retval;
-+
-+	/* data structure init */
-+	retval = ehci_init(hcd);
-+	if (retval)
-+		return retval;
-+
-+	ehci_reset(ehci);
-+
-+	ehci_port_power(ehci, 1);
-+
-+	return retval;
++	return skb;
 +}
 +
-+static const struct hc_driver ehci_platform_hc_driver = {
-+	.description		= "platform-usb-ehci",
-+	.product_desc		= "Generic Platform EHCI Controller",
-+	.hcd_priv_size		= sizeof(struct ehci_hcd),
-+
-+	.irq			= ehci_irq,
-+	.flags			= HCD_MEMORY | HCD_USB2,
-+
-+	.reset			= ehci_platform_reset,
-+	.start			= ehci_run,
-+	.stop			= ehci_stop,
-+	.shutdown		= ehci_shutdown,
-+
-+	.urb_enqueue		= ehci_urb_enqueue,
-+	.urb_dequeue		= ehci_urb_dequeue,
-+	.endpoint_disable	= ehci_endpoint_disable,
-+	.endpoint_reset		= ehci_endpoint_reset,
-+
-+	.get_frame_number	= ehci_get_frame,
-+
-+	.hub_status_data	= ehci_hub_status_data,
-+	.hub_control		= ehci_hub_control,
-+#if defined(CONFIG_PM)
-+	.bus_suspend		= ehci_bus_suspend,
-+	.bus_resume		= ehci_bus_resume,
-+#endif
-+	.relinquish_port	= ehci_relinquish_port,
-+	.port_handed_over	= ehci_port_handed_over,
-+
-+	.update_device		= ehci_update_device,
-+
-+	.clear_tt_buffer_complete = ehci_clear_tt_buffer_complete,
-+};
-+
-+static int ehci_platform_attach(struct platform_device *dev)
++static void nfcwilink_fw_download_receive(struct nfcwilink *drv,
++						struct sk_buff *skb)
 +{
-+	struct usb_hcd *hcd;
-+	struct resource *res_irq, *res_mem;
-+	int err = -ENOMEM;
++	struct nci_vs_nfcc_info_rsp *rsp = (void *)skb->data;
 +
-+	hcd = usb_create_hcd(&ehci_platform_hc_driver, &dev->dev,
-+			     dev_name(&dev->dev));
-+	if (!hcd)
-+		goto err_return;
-+
-+	res_irq = platform_get_resource(dev, IORESOURCE_IRQ, 0);
-+	if (!res_irq) {
-+		err = -ENXIO;
-+		goto err_return;
++	/* Detect NCI_VS_NFCC_INFO_RSP and store the result */
++	if ((skb->len > 3) && (rsp->gid == NCI_VS_NFCC_INFO_RSP_GID) &&
++		(rsp->oid == NCI_VS_NFCC_INFO_RSP_OID)) {
++		memcpy(&drv->nfcc_info, rsp,
++			sizeof(struct nci_vs_nfcc_info_rsp));
 +	}
-+	res_mem = platform_get_resource(dev, IORESOURCE_MEM, 0);
-+	if (!res_mem) {
-+		err = -ENXIO;
-+		goto err_return;
++
++	kfree_skb(skb);
++
++	complete(&drv->completed);
++}
++
++static int nfcwilink_get_bts_file_name(struct nfcwilink *drv, char *file_name)
++{
++	struct nci_vs_nfcc_info_cmd *cmd;
++	struct sk_buff *skb;
++	unsigned long comp_ret;
++	int rc;
++
++	nfc_dev_dbg(&drv->pdev->dev, "get_bts_file_name entry");
++
++	skb = nfcwilink_skb_alloc(sizeof(struct nci_vs_nfcc_info_cmd),
++					GFP_KERNEL);
++	if (!skb) {
++		nfc_dev_err(&drv->pdev->dev,
++				"no memory for nci_vs_nfcc_info_cmd");
++		return -ENOMEM;
 +	}
-+	hcd->rsrc_start = res_mem->start;
-+	hcd->rsrc_len = res_mem->end - res_mem->start + 1;
 +
-+	/*
-+	 * start & size modified per sbutils.c
-+	 */
-+	hcd->regs = ioremap_nocache(hcd->rsrc_start, hcd->rsrc_len);
-+	if (!hcd->regs)
-+		goto err_put_hcd;
-+	err = usb_add_hcd(hcd, res_irq->start, IRQF_SHARED);
-+	if (err)
-+		goto err_iounmap;
++	skb->dev = (void *)drv->ndev;
 +
-+	platform_set_drvdata(dev, hcd);
++	cmd = (struct nci_vs_nfcc_info_cmd *)
++			skb_put(skb, sizeof(struct nci_vs_nfcc_info_cmd));
++	cmd->gid = NCI_VS_NFCC_INFO_CMD_GID;
++	cmd->oid = NCI_VS_NFCC_INFO_CMD_OID;
++	cmd->plen = 0;
 +
-+	return err;
++	drv->nfcc_info.plen = 0;
 +
-+err_iounmap:
-+	iounmap(hcd->regs);
-+err_put_hcd:
-+	usb_put_hcd(hcd);
-+err_return:
-+	return err;
-+}
++	rc = nfcwilink_send(skb);
++	if (rc)
++		return rc;
 +
-+static int ehci_platform_probe(struct platform_device *dev)
-+{
-+	int err;
++	comp_ret = wait_for_completion_timeout(&drv->completed,
++				msecs_to_jiffies(NFCWILINK_CMD_TIMEOUT));
++	nfc_dev_dbg(&drv->pdev->dev, "wait_for_completion_timeout returned %ld",
++			comp_ret);
++	if (comp_ret == 0) {
++		nfc_dev_err(&drv->pdev->dev,
++				"timeout on wait_for_completion_timeout");
++		return -ETIMEDOUT;
++	}
 +
-+	if (usb_disabled())
-+		return -ENODEV;
++	nfc_dev_dbg(&drv->pdev->dev, "nci_vs_nfcc_info_rsp: plen %d, status %d",
++			drv->nfcc_info.plen,
++			drv->nfcc_info.status);
 +
-+	err = ehci_platform_attach(dev);
++	if ((drv->nfcc_info.plen != 5) || (drv->nfcc_info.status != 0)) {
++		nfc_dev_err(&drv->pdev->dev,
++				"invalid nci_vs_nfcc_info_rsp");
++		return -EINVAL;
++	}
 +
-+	return err;
-+}
++	snprintf(file_name, BTS_FILE_NAME_MAX_SIZE,
++			"TINfcInit_%d.%d.%d.%d.bts",
++			drv->nfcc_info.hw_id,
++			drv->nfcc_info.sw_ver_x,
++			drv->nfcc_info.sw_ver_z,
++			drv->nfcc_info.patch_id);
 +
-+static int ehci_platform_remove(struct platform_device *dev)
-+{
-+	struct usb_hcd *hcd;
-+
-+	hcd = platform_get_drvdata(dev);
-+	if (!hcd)
-+		return -ENODEV;
-+
-+	usb_remove_hcd(hcd);
-+	iounmap(hcd->regs);
-+	release_mem_region(hcd->rsrc_start, hcd->rsrc_len);
-+	usb_put_hcd(hcd);
++	nfc_dev_info(&drv->pdev->dev, "nfcwilink FW file name: %s", file_name);
 +
 +	return 0;
 +}
 +
-+static void ehci_platform_shutdown(struct platform_device *dev)
++static int nfcwilink_send_bts_cmd(struct nfcwilink *drv, u8 *data, int len)
 +{
-+	struct usb_hcd *hcd;
++	struct nfcwilink_hdr *hdr = (struct nfcwilink_hdr *)data;
++	struct sk_buff *skb;
++	unsigned long comp_ret;
++	int rc;
 +
-+	hcd = platform_get_drvdata(dev);
-+	if (!hcd)
-+		return;
++	nfc_dev_dbg(&drv->pdev->dev, "send_bts_cmd entry");
 +
-+	if (hcd->driver->shutdown)
-+		hcd->driver->shutdown(hcd);
-+}
-+
-+#ifdef CONFIG_PM
-+
-+static int ehci_platform_suspend(struct platform_device *dev,
-+				 pm_message_t state)
-+{
-+	return 0;
-+}
-+
-+static int ehci_platform_resume(struct platform_device *dev)
-+{
-+	struct usb_hcd *hcd = platform_get_drvdata(dev);
-+
-+	ehci_finish_controller_resume(hcd);
-+	return 0;
-+}
-+
-+#else /* !CONFIG_PM */
-+#define ehci_platform_suspend	NULL
-+#define ehci_platform_resume	NULL
-+#endif /* CONFIG_PM */
-+
-+static const struct platform_device_id ehci_platform_table[] = {
-+	{ "ehci-platform", 0 },
-+	{ }
-+};
-+MODULE_DEVICE_TABLE(platform, ehci_platform_table);
-+
-+static struct platform_driver ehci_platform_driver = {
-+	.id_table	= ehci_platform_table,
-+	.probe		= ehci_platform_probe,
-+	.remove		= ehci_platform_remove,
-+	.shutdown	= ehci_platform_shutdown,
-+	.suspend	= ehci_platform_suspend,
-+	.resume		= ehci_platform_resume,
-+	.driver		= {
-+		.name	= "ehci-platform",
++	/* verify valid cmd for the NFC channel */
++	if ((len <= sizeof(struct nfcwilink_hdr)) ||
++		(len > BTS_FILE_CMD_MAX_LEN) ||
++		(hdr->chnl != NFCWILINK_CHNL) ||
++		(hdr->opcode != NFCWILINK_OPCODE)) {
++		nfc_dev_err(&drv->pdev->dev,
++			"ignoring invalid bts cmd, len %d, chnl %d, opcode %d",
++			len, hdr->chnl, hdr->opcode);
++		return 0;
 +	}
-+};
++
++	/* remove the ST header */
++	len -= sizeof(struct nfcwilink_hdr);
++	data += sizeof(struct nfcwilink_hdr);
++
++	skb = nfcwilink_skb_alloc(len, GFP_KERNEL);
++	if (!skb) {
++		nfc_dev_err(&drv->pdev->dev, "no memory for bts cmd");
++		return -ENOMEM;
++	}
++
++	skb->dev = (void *)drv->ndev;
++
++	memcpy(skb_put(skb, len), data, len);
++
++	rc = nfcwilink_send(skb);
++	if (rc)
++		return rc;
++
++	comp_ret = wait_for_completion_timeout(&drv->completed,
++				msecs_to_jiffies(NFCWILINK_CMD_TIMEOUT));
++	nfc_dev_dbg(&drv->pdev->dev, "wait_for_completion_timeout returned %ld",
++			comp_ret);
++	if (comp_ret == 0) {
++		nfc_dev_err(&drv->pdev->dev,
++				"timeout on wait_for_completion_timeout");
++		return -ETIMEDOUT;
++	}
++
++	return 0;
++}
++
++static int nfcwilink_download_fw(struct nfcwilink *drv)
++{
++	unsigned char file_name[BTS_FILE_NAME_MAX_SIZE];
++	const struct firmware *fw;
++	struct bts_file_action *action;
++	int len;
++	u8 *ptr;
++	int rc;
++
++	nfc_dev_dbg(&drv->pdev->dev, "download_fw entry");
++
++	set_bit(NFCWILINK_FW_DOWNLOAD, &drv->flags);
++
++	rc = nfcwilink_get_bts_file_name(drv, file_name);
++	if (rc)
++		goto exit;
++
++	rc = request_firmware(&fw, file_name, &drv->pdev->dev);
++	if (rc) {
++		nfc_dev_err(&drv->pdev->dev, "request_firmware failed %d", rc);
++
++		/* if the file is not found, don't exit with failure */
++		if (rc == -ENOENT)
++			rc = 0;
++
++		goto exit;
++	}
++
++	len = fw->size;
++	ptr = (u8 *)fw->data;
++
++	if ((len == 0) || (ptr == NULL)) {
++		nfc_dev_dbg(&drv->pdev->dev,
++				"request_firmware returned size %d", len);
++		goto release_fw;
++	}
++
++	if (((struct bts_file_hdr *)ptr)->magic != BTS_FILE_HDR_MAGIC) {
++		nfc_dev_err(&drv->pdev->dev, "wrong bts magic number");
++		rc = -EINVAL;
++		goto release_fw;
++	}
++
++	/* remove the BTS header */
++	len -= sizeof(struct bts_file_hdr);
++	ptr += sizeof(struct bts_file_hdr);
++
++	while (len > 0) {
++		action = (struct bts_file_action *)ptr;
++		nfc_dev_dbg(&drv->pdev->dev, "bts_file_action type %d, len %d",
++				action->type,
++				action->len);
++
++		switch (action->type) {
++		case BTS_FILE_ACTION_TYPE_SEND_CMD:
++			rc = nfcwilink_send_bts_cmd(drv, action->data,
++							action->len);
++			if (rc)
++				goto release_fw;
++			break;
++		}
++
++		/* advance to the next action */
++		len -= (sizeof(struct bts_file_action) + action->len);
++		ptr += (sizeof(struct bts_file_action) + action->len);
++	}
++
++release_fw:
++	release_firmware(fw);
++
++exit:
++	clear_bit(NFCWILINK_FW_DOWNLOAD, &drv->flags);
++	return rc;
++}
++
+ /* Called by ST when registration is complete */
+ static void nfcwilink_register_complete(void *priv_data, char data)
+ {
+@@ -73,7 +338,7 @@ static void nfcwilink_register_complete(void *priv_data, char data)
+ 	drv->st_register_cb_status = data;
+ 
+ 	/* complete the wait in nfc_st_open() */
+-	complete(&drv->st_register_completed);
++	complete(&drv->completed);
+ }
+ 
+ /* Called by ST when receive data is available */
+@@ -96,6 +361,11 @@ static long nfcwilink_receive(void *priv_data, struct sk_buff *skb)
+ 	(apart for the chnl byte, which is not received in the hdr) */
+ 	skb_pull(skb, (NFCWILINK_HDR_LEN-1));
+ 
++	if (test_bit(NFCWILINK_FW_DOWNLOAD, &drv->flags)) {
++		nfcwilink_fw_download_receive(drv, skb);
++		return 0;
++	}
++
+ 	skb->dev = (void *) drv->ndev;
+ 
+ 	/* Forward skb to NCI core layer */
+@@ -136,14 +406,14 @@ static int nfcwilink_open(struct nci_dev *ndev)
+ 
+ 	nfcwilink_proto.priv_data = drv;
+ 
+-	init_completion(&drv->st_register_completed);
++	init_completion(&drv->completed);
+ 	drv->st_register_cb_status = -EINPROGRESS;
+ 
+ 	rc = st_register(&nfcwilink_proto);
+ 	if (rc < 0) {
+ 		if (rc == -EINPROGRESS) {
+ 			comp_ret = wait_for_completion_timeout(
+-			&drv->st_register_completed,
++			&drv->completed,
+ 			msecs_to_jiffies(NFCWILINK_REGISTER_TIMEOUT));
+ 
+ 			nfc_dev_dbg(&drv->pdev->dev,
+@@ -171,6 +441,12 @@ static int nfcwilink_open(struct nci_dev *ndev)
+ 	BUG_ON(nfcwilink_proto.write == NULL);
+ 	drv->st_write = nfcwilink_proto.write;
+ 
++	if (nfcwilink_download_fw(drv)) {
++		nfc_dev_err(&drv->pdev->dev, "nfcwilink_download_fw failed %d",
++				rc);
++		/* open should succeed, even if the FW download failed */
++	}
++
+ 	goto exit;
+ 
+ clear_exit:
+@@ -208,8 +484,10 @@ static int nfcwilink_send(struct sk_buff *skb)
+ 
+ 	nfc_dev_dbg(&drv->pdev->dev, "send entry, len %d", skb->len);
+ 
+-	if (!test_bit(NFCWILINK_RUNNING, &drv->flags))
+-		return -EBUSY;
++	if (!test_bit(NFCWILINK_RUNNING, &drv->flags)) {
++		kfree_skb(skb);
++		return -EINVAL;
++	}
+ 
+ 	/* add the ST hdr to the start of the buffer */
+ 	hdr.len = skb->len;
 -- 
-1.7.5.4
+1.7.0.4
 
