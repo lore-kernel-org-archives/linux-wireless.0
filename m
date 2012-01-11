@@ -1,98 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:38924 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752785Ab2AWPQP (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:64914 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005Ab2AKXH2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jan 2012 10:16:15 -0500
-Date: Mon, 23 Jan 2012 10:10:14 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2012-01-03
-Message-ID: <20120123151013.GA9474@tuxdriver.com> (sfid-20120123_161642_031424_2851CCEA)
-References: <20120103033320.GG1472@joana>
- <20120123125655.GA20973@x220.ger.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20120123125655.GA20973@x220.ger.corp.intel.com>
+	Wed, 11 Jan 2012 18:07:28 -0500
+Received: by iabz25 with SMTP id z25so1744774iab.19
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2012 15:07:27 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 0/5] rtlwifi: Cleanup the macros that read/write the RX/TX descriptors
+Date: Wed, 11 Jan 2012 17:07:07 -0600
+Message-Id: <1326323232-21752-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120112_000732_545091_A137D0D8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a day off today.  I'll get back to merging tomorrow, including
-this request from Gustavo.
+Each of the drivers under rtlwifi contains its own copy of the macros described in
+the subject. In addition, there are macros defined for each field even if those
+particular bits are never accessed. The cleanup consists of moving all such
+macros to a special file, eliminate duplication, and removing all macros that
+are defined but not used. These changes remove over 1200 lines of source code.
 
-Thanks,
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-John
+Larry Finger (5):
+  rtlwifi: Move RX/TX macros into common file
+  rtl8192ce: Switch to use the combined macros file
+  rtl8192cu: Convert driver to use the new macros file
+  rtl8192de: Change driver to use new macros file
+  rtl8192se: Convert driver to use the new macro file
 
-On Mon, Jan 23, 2012 at 02:56:55PM +0200, Johan Hedberg wrote:
-> Hi John,
-> 
-> On Tue, Jan 03, 2012, Gustavo Padovan wrote:
-> > A couple of fixes for the 3.3 release. The majority of the fixes are related
-> > to the change from tasklets to workqueue in the Bluetooth Core. The rest are
-> > important fixes over the tree. Exception is "Bluetooth: Rename extfeatures¨,
-> > as the name says it is just a rename and no harm, but it is a preparation for
-> > a following fix.
-> > 
-> > Please pull, or let me know any concerns you have!
-> > 
-> > 	Gustavo
-> > 
-> > --
-> > The following changes since commit dc0d633e35643662f27a0b1c531da3cd6b204b9c:
-> > 
-> >   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next (2012-01-02 16:43:54 -0500)
-> > 
-> > are available in the git repository at:
-> > 
-> >   git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next master
-> > 
-> > Andre Guedes (5):
-> >       Bluetooth: Rename extfeatures
-> >       Bluetooth: Fix hci_cc_read_local_ext_features()
-> >       Bluetooth: Fix adv_work delay
-> >       Bluetooth: Queue adv_work on system workqueue
-> >       Bluetooth: Fix mgmt_stop_discovery_failed()
-> > 
-> > Andrei Emeltchenko (1):
-> >       Bluetooth: Correct packet len calculation
-> > 
-> > Gustavo F. Padovan (8):
-> >       Bluetooth: Fix bacpy in l2cap_core.c
-> >       Bluetooth: Fix context in rfcomm_sock_lock
-> >       Bluetooth: Fix context in RFCOMM tty
-> >       Bluetooth: Remove *_bh locks from SCO
-> >       Bluetooth: Remove local_bh_disable() from hci_sock.c
-> >       Bluetooth: Remove *_bh from socket list lock.
-> >       Bluetooth: Don't use *_bh locks anymore
-> >       Bluetooth: Keep chan->state and sk->sk_state in sync
-> > 
-> >  include/net/bluetooth/hci_core.h |    4 ++--
-> >  net/bluetooth/af_bluetooth.c     |    8 ++++----
-> >  net/bluetooth/hci_event.c        |   22 +++++++++++++---------
-> >  net/bluetooth/hci_sock.c         |    2 --
-> >  net/bluetooth/l2cap_core.c       |   26 +++++++++++++-------------
-> >  net/bluetooth/l2cap_sock.c       |    2 ++
-> >  net/bluetooth/mgmt.c             |    4 ++--
-> >  net/bluetooth/rfcomm/sock.c      |   12 ++++++------
-> >  net/bluetooth/rfcomm/tty.c       |   22 +++++++++++-----------
-> >  net/bluetooth/sco.c              |    8 ++++----
-> >  10 files changed, 57 insertions(+), 53 deletions(-)
-> > --
-> 
-> Are you planing to pull this? I've been waiting for that before making
-> any new pull requests from my (temporary) bluetooth-next tree[1]. If
-> that's not gonna happen I'll go ahead rebase my tree against latest
-> wireless-next (including these patches and all other ones that Marcel
-> has acked since Gustavo started his break), and make a new pull request
-> to you in the near future.
-> 
-> Johan
-> 
-> [1] http://git.kernel.org/?p=linux/kernel/git/jh/bluetooth-next.git;a=summary
-> 
+ drivers/net/wireless/rtlwifi/macros.h        |  460 ++++++++++++++++++++++++
+ drivers/net/wireless/rtlwifi/rtl8192ce/trx.h |  499 +-------------------------
+ drivers/net/wireless/rtlwifi/rtl8192cu/mac.c |    6 +-
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.c |  193 +++++-----
+ drivers/net/wireless/rtlwifi/rtl8192cu/trx.h |  310 +----------------
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.c |    4 +-
+ drivers/net/wireless/rtlwifi/rtl8192de/trx.h |  499 +-------------------------
+ drivers/net/wireless/rtlwifi/rtl8192se/def.h |  406 +---------------------
+ drivers/net/wireless/rtlwifi/rtl8192se/trx.c |  121 ++++---
+ 9 files changed, 635 insertions(+), 1863 deletions(-)
+ create mode 100644 drivers/net/wireless/rtlwifi/macros.h
 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.7
+
