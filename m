@@ -1,32 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38945 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751848Ab2AaFrj (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:59696 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757217Ab2AKN5V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 00:47:39 -0500
-Message-ID: <4F278050.8030407@sipsolutions.net> (sfid-20120131_064741_964249_248F5B51)
-Date: Mon, 30 Jan 2012 21:46:56 -0800
-From: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 11 Jan 2012 08:57:21 -0500
+Received: by pbdu13 with SMTP id u13so490450pbd.19
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2012 05:57:21 -0800 (PST)
 MIME-Version: 1.0
-To: Victor Goldenshtein <victorg@ti.com>
-CC: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
-	nbd@nbd.name
-Subject: Re: [RFC 5/9] nl80211/cfg80211: add ap channel switch command/event
-References: <1327581484-22047-1-git-send-email-victorg@ti.com> <1327581484-22047-6-git-send-email-victorg@ti.com>
-In-Reply-To: <1327581484-22047-6-git-send-email-victorg@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1326285768-3073-1-git-send-email-ilane@ti.com>
+References: <1326285768-3073-1-git-send-email-ilane@ti.com>
+From: Ohad Ben-Cohen <ohad@wizery.com>
+Date: Wed, 11 Jan 2012 15:57:00 +0200
+Message-ID: <CAK=WgbanHKn3r9VYocmFpoCu9YKOf-hL20GKOgm=qmU1S6A_-A@mail.gmail.com> (sfid-20120111_145730_029298_463B0067)
+Subject: Re: [PATCH] NFC: Download TI NFC init script
+To: ilanelias78@gmail.com
+Cc: samuel@sortiz.org, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, Ilan Elias <ilane@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1/26/2012 4:38 AM, Victor Goldenshtein wrote:
-> Add new NL80211_CMD_AP_CHANNEL_SWITCH command which
-> triggers a channel switch process, this command also
-> notifies usermode about channel switch complete event.
+Hi Ilan,
 
-I think this needs a little more explaining how it would be used with 
-hostapd adding the channel switch IEs into the beacon.
+On Wed, Jan 11, 2012 at 2:42 PM,  <ilanelias78@gmail.com> wrote:
+> From: Ilan Elias <ilane@ti.com>
+>
+> Download TI NFC init script during nfcwilink open operation,
+> after the NFC channel is registered with TI shared transport.
+> TI NFC init script is written in BTS format.
+> First, read the chip version via a special vendor specific command.
+> Second, we request the relevant BTS file from the user space, and
+> then send the BTS commands to the chip.
 
-johannes
+nfcwilink_open() begins by calling the shared transport's
+st_register() function, which also seem to be loading, parsing and
+sending a BTS firmware to the device.
+
+Does it mean that two firmwares are needed for these NFC devices ?
+
+>From a quick look it seems that much of the boilerplate code for the
+BTS handling is quite similar; any way to avoid some of the code
+duplication (something the shared transport code doesn't try very hard
+to do ;) ?
+
+Thanks,
+Ohad.
