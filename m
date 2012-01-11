@@ -1,53 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42913 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:58755 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752474Ab2AQJcD (ORCPT
+	with ESMTP id S1755954Ab2AKNP2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 04:32:03 -0500
-Subject: [PATCH] mac80211: fix debugfs key->station symlink
+	Wed, 11 Jan 2012 08:15:28 -0500
+Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.77)
+	(envelope-from <johannes@sipsolutions.net>)
+	id 1Rky1X-0001Pa-Mv
+	for linux-wireless@vger.kernel.org; Wed, 11 Jan 2012 14:15:27 +0100
+Subject: Re: [RFC/RFT 0/3] auth/assoc redesign
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <20120110153048.612308160@sipsolutions.net> (sfid-20120110_163315_162452_01A5E7B6)
+References: <20120110153048.612308160@sipsolutions.net>
+	 (sfid-20120110_163315_162452_01A5E7B6)
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 17 Jan 2012 10:32:01 +0100
-Message-ID: <1326792721.3342.6.camel@jlt3.sipsolutions.net> (sfid-20120117_103207_287140_C4040E8C)
+Date: Wed, 11 Jan 2012 14:15:26 +0100
+Message-ID: <1326287726.3417.2.camel@jlt3.sipsolutions.net> (sfid-20120111_141531_913351_5932A211)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+I found a number of bugs in these patches -- please download the latest
+versions from
 
-Since stations moved into a virtual interface
-subdirectory, this link has been broken. Fix it.
+> http://johannes.sipsolutions.net/patches/kernel/all/LATEST/
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/debugfs_key.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+if you want to test them.
 
---- a/net/mac80211/debugfs_key.c	2012-01-17 10:30:35.000000000 +0100
-+++ b/net/mac80211/debugfs_key.c	2012-01-17 10:30:38.000000000 +0100
-@@ -225,9 +225,9 @@ KEY_OPS(key);
- 			    key, &key_##name##_ops);
- 
- void ieee80211_debugfs_key_add(struct ieee80211_key *key)
--  {
-+{
- 	static int keycount;
--	char buf[50];
-+	char buf[100];
- 	struct sta_info *sta;
- 
- 	if (!key->local->debugfs.keys)
-@@ -244,7 +244,8 @@ void ieee80211_debugfs_key_add(struct ie
- 
- 	sta = key->sta;
- 	if (sta) {
--		sprintf(buf, "../../stations/%pM", sta->sta.addr);
-+		sprintf(buf, "../../netdev:%s/stations/%pM",
-+			sta->sdata->name, sta->sta.addr);
- 		key->debugfs.stalink =
- 			debugfs_create_symlink("station", key->debugfs.dir, buf);
- 	}
-
+johannes
 
