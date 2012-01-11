@@ -1,244 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:41413 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754662Ab2AaOkv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 09:40:51 -0500
-Received: by mail-ww0-f44.google.com with SMTP id dt10so26775wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 06:40:50 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 5/7] wl12xx: add RX data filter ACX commands
-Date: Tue, 31 Jan 2012 16:44:06 +0200
-Message-Id: <1328021048-8944-6-git-send-email-eliad@wizery.com> (sfid-20120131_154056_159148_2ADB994E)
-In-Reply-To: <1328021048-8944-1-git-send-email-eliad@wizery.com>
-References: <1328021048-8944-1-git-send-email-eliad@wizery.com>
+Received: from mx1.redhat.com ([209.132.183.28]:24696 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757871Ab2AKTu7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jan 2012 14:50:59 -0500
+Date: Wed, 11 Jan 2012 14:50:55 -0500
+From: Dave Jones <davej@redhat.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi worse than ever in current git.
+Message-ID: <20120111195055.GA5140@redhat.com> (sfid-20120111_205109_795526_BDF1B242)
+References: <20120110184917.GA26973@redhat.com>
+ <1326221614.5067.6.camel@dcbw.foobar.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB3063085@HASMSX103.ger.corp.intel.com>
+ <20120111014243.GA22066@redhat.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB306429E@HASMSX103.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB306429E@HASMSX103.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+On Wed, Jan 11, 2012 at 12:38:43PM +0000, Grumbach, Emmanuel wrote:
 
-(based on Pontus' patch)
+ > I am missing logs here... You seem to reauthenticate but I can't see disconnection... weird
 
-Added commands for setting a specific filter
-and controlling the behaviour RX data filters
-implemented by the FW.
+Ok, here's a fresh log.
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Ido Reis <idor@ti.com>
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/acx.c    |  105 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/wl12xx/acx.h    |   31 ++++++++++-
- drivers/net/wireless/wl12xx/wl12xx.h |   33 +++++++++++
- 3 files changed, 168 insertions(+), 1 deletions(-)
+wireless was working, (with 11n_disable=1)
 
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index bc96db0..668d337 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -1740,3 +1740,108 @@ out:
- 	return ret;
- 
- }
-+
-+int wl1271_acx_toggle_rx_data_filter(struct wl1271 *wl, bool enable,
-+				     u8 default_action)
-+{
-+	struct acx_rx_data_filter_state *acx;
-+	int ret;
-+
-+	wl1271_debug(DEBUG_ACX, "acx toggle rx data filter en: %d act: %d",
-+		     enable, default_action);
-+
-+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-+	if (!acx) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	acx->enable = enable ? 1 : 0;
-+	acx->default_action = default_action;
-+
-+	ret = wl1271_cmd_configure(wl, ACX_ENABLE_RX_DATA_FILTER, acx,
-+				   sizeof(*acx));
-+	if (ret < 0) {
-+		wl1271_warning("toggling rx data filter failed: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	kfree(acx);
-+	return ret;
-+}
-+
-+int wl1271_acx_set_rx_data_filter(struct wl1271 *wl, u8 index, bool enable,
-+				  struct wl12xx_rx_data_filter *filter)
-+{
-+	struct acx_rx_data_filter_cfg *acx;
-+	int fields_size = 0;
-+	int acx_size;
-+	int ret;
-+
-+	if (enable && !filter) {
-+		wl1271_warning("acx_set_rx_data_filter: enable but no filter");
-+		return -EINVAL;
-+	}
-+
-+	if (index >= WL1271_MAX_RX_DATA_FILTERS) {
-+		wl1271_warning("acx_set_rx_data_filter: invalid filter idx(%d)",
-+			       index);
-+		return -EINVAL;
-+	}
-+
-+	if (filter) {
-+		if (filter->action < FILTER_DROP ||
-+		    filter->action > FILTER_FW_HANDLE) {
-+			wl1271_warning("invalid filter action (%d)",
-+				       filter->action);
-+			return -EINVAL;
-+		}
-+
-+		if (filter->num_fields != 1 &&
-+		    filter->num_fields != 2) {
-+			wl1271_warning("invalid filter num_fields (%d)",
-+				       filter->num_fields);
-+			return -EINVAL;
-+		}
-+	}
-+
-+	wl1271_debug(DEBUG_ACX, "acx set rx data filter idx: %d, enable: %d",
-+		     index, enable);
-+
-+	if (enable) {
-+		fields_size = filter->fields_size;
-+
-+		wl1271_debug(DEBUG_ACX, "act: %d num_fields: %d field_size: %d",
-+		      filter->action, filter->num_fields, fields_size);
-+	}
-+
-+	acx_size = roundup(sizeof(*acx) + fields_size, 4);
-+	acx = kzalloc(acx_size, GFP_KERNEL);
-+
-+	if (!acx)
-+		return -ENOMEM;
-+
-+	acx->enable = enable ? 1 : 0;
-+	acx->index = index;
-+
-+	if (enable) {
-+		acx->num_fields = filter->num_fields;
-+		acx->action = filter->action;
-+
-+		memcpy(acx->fields, filter->fields, filter->fields_size);
-+	}
-+
-+	wl1271_dump(DEBUG_ACX, "RX_FILTER: ", acx, acx_size);
-+
-+	ret = wl1271_cmd_configure(wl, ACX_SET_RX_DATA_FILTER, acx,
-+				   acx_size);
-+	if (ret < 0) {
-+		wl1271_warning("setting rx data filter failed: %d", ret);
-+		goto out;
-+	}
-+
-+out:
-+	kfree(acx);
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
-index a28fc04..9d0d30b 100644
---- a/drivers/net/wireless/wl12xx/acx.h
-+++ b/drivers/net/wireless/wl12xx/acx.h
-@@ -1152,6 +1152,32 @@ struct wl12xx_acx_config_hangover {
- 	u8 padding[2];
- } __packed;
- 
-+
-+struct acx_rx_data_filter_state {
-+	struct acx_header header;
-+	u8 enable;
-+
-+	/* action of type FILTER_XXX */
-+	u8 default_action;
-+	u8 pad[2];
-+} __packed;
-+
-+
-+struct acx_rx_data_filter_cfg {
-+	struct acx_header header;
-+
-+	u8 enable;
-+
-+	/* range 0 - MAX_DATA_FILTERS */
-+	u8 index;
-+
-+	u8 action;
-+
-+	u8 num_fields;
-+
-+	struct wl12xx_rx_data_filter_field fields[0];
-+} __packed;
-+
- enum {
- 	ACX_WAKE_UP_CONDITIONS           = 0x0000,
- 	ACX_MEM_CFG                      = 0x0001,
-@@ -1310,5 +1336,8 @@ int wl1271_acx_set_inconnection_sta(struct wl1271 *wl, u8 *addr);
- int wl1271_acx_fm_coex(struct wl1271 *wl);
- int wl12xx_acx_set_rate_mgmt_params(struct wl1271 *wl);
- int wl12xx_acx_config_hangover(struct wl1271 *wl);
--
-+int wl1271_acx_toggle_rx_data_filter(struct wl1271 *wl, bool enable,
-+				     u8 default_action);
-+int wl1271_acx_set_rx_data_filter(struct wl1271 *wl, u8 index, bool enable,
-+				  struct wl12xx_rx_data_filter *filter);
- #endif /* __WL1271_ACX_H__ */
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 1463341..c18ad0a 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -277,6 +277,39 @@ struct wl1271_link {
- 	u8 ba_bitmap;
- };
- 
-+#define WL1271_MAX_RX_DATA_FILTERS 4
-+#define WL1271_RX_DATA_FILTER_MAX_FIELD_PATTERNS 8
-+
-+/* FW MAX FILTER SIZE is 98 bytes. The MAX_PATTERN_SIZE is imposed
-+ * after taking into account the mask bytes and other structs members
-+ */
-+#define WL1271_RX_DATA_FILTER_MAX_PATTERN_SIZE 43
-+#define WL1271_RX_DATA_FILTER_ETH_HEADER_SIZE 14
-+
-+#define WL1271_RX_DATA_FILTER_FLAG_MASK                BIT(0)
-+#define WL1271_RX_DATA_FILTER_FLAG_IP_HEADER           0
-+#define WL1271_RX_DATA_FILTER_FLAG_ETHERNET_HEADER     BIT(1)
-+
-+enum rx_data_filter_action {
-+	FILTER_DROP = 0,
-+	FILTER_SIGNAL = 1,
-+	FILTER_FW_HANDLE = 2
-+};
-+
-+struct wl12xx_rx_data_filter_field {
-+	__le16 offset;
-+	u8 len;
-+	u8 flags;
-+	u8 pattern[0];
-+} __packed;
-+
-+struct wl12xx_rx_data_filter {
-+	u8 action;
-+	int num_fields;
-+	int fields_size;
-+	struct wl12xx_rx_data_filter_field fields[0];
-+} __packed;
-+
- struct wl1271 {
- 	struct ieee80211_hw *hw;
- 	bool mac80211_registered;
--- 
-1.7.6.401.g6a319
+unload, and reload without the 11n_disable=1 ..
+
+[16421.730025] wlan0: deauthenticating from b8:c7:5d:0c:39:87 by local choice (reason=3)
+[16421.735002] ieee80211 phy0: failed to remove key (1, ff:ff:ff:ff:ff:ff) from hardware (-16)
+[16421.736095] ieee80211 phy0: failed to remove key (2, ff:ff:ff:ff:ff:ff) from hardware (-16)
+[16421.737548] ieee80211 phy0: failed to remove key (0, b8:c7:5d:0c:39:87) from hardware (-16)
+[16421.738400] wlan0: moving STA b8:c7:5d:0c:39:87 to state 2
+[16421.738646] wlan0: moving STA b8:c7:5d:0c:39:87 to state 1
+[16421.738878] wlan0: moving STA b8:c7:5d:0c:39:87 to state 0
+[16421.741175] cfg80211: Calling CRDA to update world regulatory domain
+[16421.777981] iwlwifi 0000:04:00.0: PCI INT A disabled
+[16421.803665] cfg80211: World regulatory domain updated:
+[16421.803924] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[16421.808846] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[16421.811357] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[16421.811739] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[16421.812193] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[16421.812566] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[16421.820504] cfg80211: Calling CRDA for country: US
+[16421.918341] cfg80211: Calling CRDA to update world regulatory domain
+[16421.949295] cfg80211: World regulatory domain updated:
+[16421.949559] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[16421.949966] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[16421.950851] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[16421.951528] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[16421.951911] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[16421.952651] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[16422.035828] Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
+[16422.036165] Copyright(c) 2003-2011 Intel Corporation
+[16422.036582] iwlwifi 0000:04:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
+[16422.036957] iwlwifi 0000:04:00.0: setting latency timer to 64
+[16422.037338] iwlwifi 0000:04:00.0: pci_resource_len = 0x00002000
+[16422.037620] iwlwifi 0000:04:00.0: pci_resource_base = ffffc90011560000
+[16422.037930] iwlwifi 0000:04:00.0: HW Revision ID = 0x0
+[16422.038381] iwlwifi 0000:04:00.0: irq 46 for MSI/MSI-X
+[16422.038915] iwlwifi 0000:04:00.0: CONFIG_IWLWIFI_DEBUG enabled
+[16422.041287] iwlwifi 0000:04:00.0: CONFIG_IWLWIFI_DEBUGFS enabled
+[16422.041569] iwlwifi 0000:04:00.0: CONFIG_IWLWIFI_DEVICE_TRACING enabled
+[16422.041881] iwlwifi 0000:04:00.0: CONFIG_IWLWIFI_DEVICE_TESTMODE enabled
+[16422.042213] iwlwifi 0000:04:00.0: CONFIG_IWLWIFI_P2P disabled
+[16422.042517] iwlwifi 0000:04:00.0: Detected Intel(R) Ultimate N WiFi Link 5300 AGN, REV=0x24
+[16422.043276] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
+[16422.075500] iwlwifi 0000:04:00.0: device EEPROM VER=0x120, CALIB=0x4
+[16422.075809] iwlwifi 0000:04:00.0: Device SKU: 0xF0
+[16422.076390] iwlwifi 0000:04:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
+[16422.121284] iwlwifi 0000:04:00.0: loaded firmware version 8.83.5.1 build 33692
+[16422.122291] Registered led device: phy0-led
+[16422.124681] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
+[16422.155786] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
+[16422.159119] iwlwifi 0000:04:00.0: Radio type=0x0-0x2-0x0
+[16422.201065] iwlwifi 0000:04:00.0: U iwl_trans_set_wr_ptrs Q 4  WrPtr: 0
+[16422.201065] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 0 on FIFO 3
+[16422.201065] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 1 on FIFO 2
+[16422.201065] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 2 on FIFO 1
+[16422.201065] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 3 on FIFO 0
+[16422.201065] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 4 on FIFO 7
+[16422.263369] cfg80211: Calling CRDA for country: US
+[16422.287176] cfg80211: Regulatory domain changed to country: US
+[16422.287457] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[16422.287849] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2700 mBm)
+[16422.288337] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1700 mBm)
+[16422.288703] cfg80211:   (5250000 KHz - 5330000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[16422.289090] cfg80211:   (5490000 KHz - 5600000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[16422.289455] cfg80211:   (5650000 KHz - 5710000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[16422.289824] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 3000 mBm)
+[16422.318523] iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
+[16422.321880] iwlwifi 0000:04:00.0: Radio type=0x0-0x2-0x0
+[16422.360115] iwlwifi 0000:04:00.0: U iwl_trans_set_wr_ptrs Q 4  WrPtr: 0
+[16422.360115] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 0 on FIFO 3
+[16422.360115] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 1 on FIFO 2
+[16422.360115] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 2 on FIFO 1
+[16422.360115] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 3 on FIFO 0
+[16422.360115] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 4 on FIFO 7
+[16422.376787] ADDRCONF(NETDEV_UP): wlan0: link is not ready
+[16427.671916] wlan0: authenticate with b8:c7:5d:0c:39:87 (try 1)
+[16427.674716] wlan0: authenticated
+[16427.678205] wlan0: associate with b8:c7:5d:0c:39:87 (try 1)
+[16427.681953] wlan0: RX AssocResp from b8:c7:5d:0c:39:87 (capab=0x431 status=0 aid=3)
+[16427.682325] wlan0: associated
+[16427.682473] wlan0: moving STA b8:c7:5d:0c:39:87 to state 1
+[16427.682731] wlan0: moving STA b8:c7:5d:0c:39:87 to state 2
+[16427.700757] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
+[16427.701667] cfg80211: Calling CRDA for country: US
+[16427.721184] cfg80211: Regulatory domain changed to country: US
+[16427.721455] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[16427.721829] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2700 mBm)
+[16427.722199] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1700 mBm)
+[16427.722566] cfg80211:   (5250000 KHz - 5330000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[16427.722924] cfg80211:   (5490000 KHz - 5600000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[16427.723289] cfg80211:   (5650000 KHz - 5710000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[16427.723651] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 3000 mBm)
+[16428.706438] wlan0: moving STA b8:c7:5d:0c:39:87 to state 3
+[16438.802048] wlan0: no IPv6 routers present
+
+wifi is back up.
+
+Shortly afterwards ..
+
+
+[16520.224964] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_start Can proceed: ssn = next_recl = 124
+[16520.228038] iwlwifi 0000:04:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 124
+[16520.228358] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate BA Queue 11 on FIFO 1
+[16520.229059] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra = b8:c7:5d:0c:39:87 tid = 0
+[16531.888296] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_stop Can proceed: ssn = next_recl = 631
+[16531.888793] iwlwifi 0000:04:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 0
+[16531.889247] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Deactivate AC/CMD Queue 11 on FIFO 0
+[16552.504609] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_start Can proceed: ssn = next_recl = 697
+[16552.508182] iwlwifi 0000:04:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 185
+[16552.508609] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate BA Queue 11 on FIFO 1
+[16552.509077] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra = b8:c7:5d:0c:39:87 tid = 0
+[16564.084058] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_stop Can proceed: ssn = next_recl = 1241
+[16564.084506] iwlwifi 0000:04:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 0
+[16564.084903] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Deactivate AC/CMD Queue 11 on FIFO 0
+[16568.975872] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_start Can proceed: ssn = next_recl = 1298
+[16568.978796] iwlwifi 0000:04:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 18
+[16568.979007] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate BA Queue 11 on FIFO 1
+[16568.979734] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra = b8:c7:5d:0c:39:87 tid = 0
+[16580.004052] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_stop Can't proceed: ssn 1491, next_recl = 150
+
+
+A possibly interesting datapoint, is that it seems I can make this happen faster
+if there's disk IO going on (I ran a make clean on a kernel tree in this case).
+Might be entirely coincidental, but thought I'd mention it..
+
+	Dave
 
