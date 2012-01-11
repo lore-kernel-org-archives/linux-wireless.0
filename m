@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:50391 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752606Ab2ABWMn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 17:12:43 -0500
-Date: Mon, 2 Jan 2012 22:12:36 +0000
-From: Matthew Garrett <mjg@redhat.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jack Stone <jwjstone@fastmail.fm>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Oliver Neukum <oliver@neukum.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-Message-ID: <20120102221235.GA16012@srcf.ucam.org> (sfid-20120102_231326_850340_41A3DC8F)
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
- <4F02165C.1060400@fastmail.fm>
- <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
- <20120102211904.GA15316@srcf.ucam.org>
- <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
- <20120102215028.GA15701@srcf.ucam.org>
- <CA+55aFz73GuHiOW1NoAuJLea_GKLepiZjrnrgpOKdQizPgnhoA@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:62428 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932560Ab2AKT2s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jan 2012 14:28:48 -0500
+Date: Wed, 11 Jan 2012 14:28:42 -0500
+From: Dave Jones <davej@redhat.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Dan Williams <dcbw@redhat.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi worse than ever in current git.
+Message-ID: <20120111192842.GA29305@redhat.com> (sfid-20120111_202859_125401_C48E9B57)
+References: <20120110184917.GA26973@redhat.com>
+ <1326221614.5067.6.camel@dcbw.foobar.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB3063085@HASMSX103.ger.corp.intel.com>
+ <20120111014243.GA22066@redhat.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB306429E@HASMSX103.ger.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+55aFz73GuHiOW1NoAuJLea_GKLepiZjrnrgpOKdQizPgnhoA@mail.gmail.com>
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB306429E@HASMSX103.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 02, 2012 at 02:03:27PM -0800, Linus Torvalds wrote:
-> On Mon, Jan 2, 2012 at 1:50 PM, Matthew Garrett <mjg@redhat.com> wrote:
-> > On Mon, Jan 02, 2012 at 01:27:03PM -0800, Linus Torvalds wrote:
-> >
-> >> If we didn't load the firmware before the suspend, then the resume
-> >> function of a device sure as hell had better not load it at resume
-> >> time either.
-> >
-> > If the hardware has lost its state then refusing to load the firmware at
-> > resume time isn't going to leave you with a working device.
-> 
-> What the heck is your problem?
-> 
-> Go back and read it.
-> 
-> If it wasn't loaded before, THEN IT WASN'T WORKING BEFORE EITHER! And
-> if it was loaded before, then it would be cached (and thus trivially
-> reloaded without having to invoke user-space or disk devices that may
-> not be running) and thus loading it would work.
+On Wed, Jan 11, 2012 at 12:38:43PM +0000, Grumbach, Emmanuel wrote:
+ > > [  173.145695] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_start Can proceed: ssn =
+ > > next_recl = 869
+ > > [  173.147133] iwlwifi 0000:04:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 101
+ > > [  173.147545] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate
+ > > BA Queue 11 on FIFO 1
+ > > [  173.148050] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra =
+ > > b8:c7:5d:0c:39:88 tid = 0
+ > 
+ > I am missing logs here... You seem to reauthenticate but I can't see disconnection... weird
+ 
+I'll recreate some clean logs in a few minutes..
+ 
+ > > [  192.805102] wlan0: authenticate with b8:c7:5d:0c:39:87 (try 1)
+ > > [  192.807392] wlan0: authenticated
+ > > [  192.814840] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_stop Can't proceed: ssn
+ > > 1633, next_recl = 139
+ > 
+ > Stop AGG before we are associated ?!
+ > Is that leftovers from the previous association that was torn down ?
+ 
+no idea.
 
-The kernel that loaded the firmware to make the device work is not 
-required to be the same kernel that we're running when we suspend. The 
-hardware keeps its firmware over warm reboots, and if it already has 
-loaded firmware then we have no way of knowing that it needs firmware at 
-all.
+ > > [  192.818669] wlan0: moving STA b8:c7:5d:0c:39:88 to state 2
+ > > [  192.818939] wlan0: moving STA b8:c7:5d:0c:39:88 to state 1
+ > > [  192.819206] wlan0: moving STA b8:c7:5d:0c:39:88 to state 0
+ > > [  192.824157] wlan0: associate with b8:c7:5d:0c:39:87 (try 1)
+ > 
+ > Associating to another AP ? A band maybe ?
+ 
+I only have one AP.
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+ > There are a few AMPDUs issues here but I guess the worst issue you are seeing is due to the passive channel thing.
+ > Does it feel better with 11n disabled ?
+ 
+5 hours of use this morning with 11n_disabled=1, and not a single problem.
+
+I'll re-enable 11n, and get you some cleaner logs shortly.
+
+	Dave
+
