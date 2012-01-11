@@ -1,28 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [206.117.179.246] ([206.117.179.246]:52996 "EHLO labridge.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753505Ab2A3QVE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 11:21:04 -0500
-Message-ID: <1327940443.25132.11.camel@joe2Laptop> (sfid-20120130_172129_681111_B14229FF)
-Subject: Re: [PATCH] [trivial] net: Fix typo in rtl8192de/dm.c
-From: Joe Perches <joe@perches.com>
-To: Masanari Iida <standby24x7@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, wlanfae@realtek.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	trivial@kernel.org
-Date: Mon, 30 Jan 2012 08:20:43 -0800
-In-Reply-To: <CALLJCT1q51mBLvciEXEL88iHS2Bk5bOmTUGsxEpw+X3VDjxmhA@mail.gmail.com>
-References: <1327930827-1719-1-git-send-email-standby24x7@gmail.com>
-	 <4F26B7B6.2080107@lwfinger.net>
-	 <CALLJCT1q51mBLvciEXEL88iHS2Bk5bOmTUGsxEpw+X3VDjxmhA@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:47321 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932324Ab2AKS7s (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jan 2012 13:59:48 -0500
+Subject: Re: [PATCH 1/2] wireless: Save original maximum regulatory
+ transmission power for the calucation of the local maximum transmit power
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Hong Wu <Hong.Wu@dspg.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <5EFF534737810441B0F97C2792E49C2DD20371@ILMAIL01.dspg.com>
+References: <5EFF534737810441B0F97C2792E49C2DD20371@ILMAIL01.dspg.com>
 Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 11 Jan 2012 19:59:45 +0100
+Message-ID: <1326308385.3417.11.camel@jlt3.sipsolutions.net> (sfid-20120111_195952_106742_2DFBBA5D)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-01-31 at 01:03 +0900, Masanari Iida wrote:
-> I will re-post this with correct subject.
+On Wed, 2012-01-11 at 20:33 +0200, Hong Wu wrote:
+> The local maximum transmit power for a channel is defined as the maximum
+> regulatory transmission power minus the local power constraint specified
+> for the channel in the Power Constraint element. (7.3.2.15 IEEE80211 2007)
 
-Better to redo this against linux-next too.
-RT_TRACE has changed.
+I have a feeling that looking at the code I understand what you're
+trying to fix, but please explain it better.
+
+johannes
 
