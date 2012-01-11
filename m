@@ -1,503 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:64914 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751038Ab2AKXHc (ORCPT
+Received: from mail54.messagelabs.com ([216.82.241.131]:37229 "HELO
+	mail54.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933111Ab2AKSdo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 18:07:32 -0500
-Received: by mail-iy0-f174.google.com with SMTP id z25so1744774iab.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2012 15:07:32 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 1/5] rtlwifi: Move RX/TX macros into common file
-Date: Wed, 11 Jan 2012 17:07:08 -0600
-Message-Id: <1326323232-21752-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120112_000736_484884_59998319)
-In-Reply-To: <1326323232-21752-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1326323232-21752-1-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 11 Jan 2012 13:33:44 -0500
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="ISO-8859-1"
+Subject: [PATCH 1/2] wireless: Save original maximum regulatory transmission power for the calucation of the local maximum transmit power
+Date: Wed, 11 Jan 2012 20:33:39 +0200
+Message-ID: <5EFF534737810441B0F97C2792E49C2DD20371@ILMAIL01.dspg.com> (sfid-20120111_193352_709004_29CFFC5A)
+From: "Hong Wu" <Hong.Wu@dspg.com>
+To: <linville@tuxdriver.com>
+Cc: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Each of the 4 drivers that use rtlwifi maintains its own set of macros
-that get and set the various fields in the RX and TX descriptors. To
-reduce the size of the source, and to help maintainability, these
-macros are combined into a single file. In addition, any macro that is
-defined, but not used, is deleted.
+The local maximum transmit power for a channel is defined as the maximum
+regulatory transmission power minus the local power constraint specified
+for the channel in the Power Constraint element. (7.3.2.15 IEEE80211 2007)
 
-This patch creates the new, combined macro file.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Hong Wu <hong.wu@dspg.com>
 ---
- drivers/net/wireless/rtlwifi/macros.h |  460 +++++++++++++++++++++++++++++++++
- 1 files changed, 460 insertions(+), 0 deletions(-)
- create mode 100644 drivers/net/wireless/rtlwifi/macros.h
+ include/net/cfg80211.h |    2 ++
+ net/wireless/reg.c     |   19 ++-----------------
+ 2 files changed, 4 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/macros.h b/drivers/net/wireless/rtlwifi/macros.h
-new file mode 100644
-index 0000000..19df8c9
---- /dev/null
-+++ b/drivers/net/wireless/rtlwifi/macros.h
-@@ -0,0 +1,460 @@
-+/******************************************************************************
-+ *
-+ * Copyright(c) 2012  Realtek Corporation.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ * You should have received a copy of the GNU General Public License along with
-+ * this program; if not, write to the Free Software Foundation, Inc.,
-+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
-+ *
-+ * The full GNU General Public License is included in this distribution in the
-+ * file called LICENSE.
-+ *
-+ * Contact Information:
-+ * wlanfae <wlanfae@realtek.com>
-+ * Realtek Corporation, No. 2, Innovation Road II, Hsinchu Science Park,
-+ * Hsinchu 300, Taiwan.
-+ *
-+ * Larry Finger <Larry.Finger@lwfinger.net>
-+ *
-+ *****************************************************************************/
-+
-+#ifndef __RTLWIFI_MAC_H__
-+#define __RTLWIFI_MAC_H__
-+
-+/* Define a macro that takes a le32 word, converts it to host ordering,
-+ * right shifts by a specified count, creates a mask of the specified
-+ * bit count, and extracts that number of bits.
-+ */
-+
-+#define SHIFT_AND_MASK_LE(__pdesc, __shift, __mask)		\
-+	((le32_to_cpu(*(((__le32 *)(__pdesc)))) >> (__shift)) &	\
-+	BIT_LEN_MASK_32(__mask))
-+
-+/* Define a macro that clears a bit field in an le32 word and
-+ * sets the specified value into that bit field. The resulting
-+ * value remains in le32 ordering; however, it is properly converted
-+ * to host ordering for the clear and set operations before conversion
-+ * back to le32.
-+ */
-+
-+#define SET_BITS_OFFSET_LE(__pdesc, __shift, __len, __val)	\
-+	(*(__le32 *)(__pdesc) =				\
-+	(cpu_to_le32((le32_to_cpu(*((__le32 *)(__pdesc))) &	\
-+	(~(BIT_OFFSET_LEN_MASK_32((__shift), __len)))) |		\
-+	(((u32)(__val) & BIT_LEN_MASK_32(__len)) << (__shift)))));
-+
-+/* Because the PCI Tx descriptors are chained at the
-+ * initialization and all the NextDescAddresses in
-+ * these descriptors cannot not be cleared (or
-+ * driver/HW cannot find the next descriptor), the
-+ * offset 36 (NextDescAddresses) is reserved when
-+ * the desc is cleared. */
-+#define CLEAR_PCI_TX_DESC_CONTENT(__pdesc, _size)		\
-+do {								\
-+	if (_size > TX_DESC_NEXT_DESC_OFFSET)			\
-+		memset(__pdesc, 0, TX_DESC_NEXT_DESC_OFFSET);	\
-+	else							\
-+		memset(__pdesc, 0, _size);			\
-+} while (0)
-+
-+/* macros to read/write various fields in RX or TX descriptors
-+ *
-+ * The organization is as follows:
-+ * 1. Macros that operate on the same dword are placed together.
-+ * 2. The macros for rtl8192ce are first. Most of these are also
-+ *    used for rtl8192de, but the register layout is different
-+ *    for rtl8192cu and rtl8192se.
-+ * 3. Special macros for other drivers will be given an _CU, _SE,
-+ *    and _DE suffix, and listed following those for rtl8192ce.
-+ */
-+
-+/*********************** DWORD 0 ***********************/
-+
-+#define SET_TX_DESC_PKT_SIZE(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc, 0, 16, __val)
-+#define SET_TX_DESC_OFFSET(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc, 16, 8, __val)
-+#define SET_TX_DESC_BMC(__pdesc, __val)			\
-+	SET_BITS_OFFSET_LE(__pdesc, 24, 1, __val)
-+#define SET_TX_DESC_HTC(__pdesc, __val)			\
-+	SET_BITS_OFFSET_LE(__pdesc, 25, 1, __val)
-+#define SET_TX_DESC_LAST_SEG(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc, 26, 1, __val)
-+#define SET_TX_DESC_FIRST_SEG(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc, 27, 1, __val)
-+#define SET_TX_DESC_LINIP(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc, 28, 1, __val)
-+#define SET_TX_DESC_OWN(__pdesc, __val)			\
-+	SET_BITS_OFFSET_LE(__pdesc, 31, 1, __val)
-+
-+#define GET_RX_DESC_PKT_LEN(__pdesc)			\
-+	SHIFT_AND_MASK_LE(__pdesc, 0, 14)
-+#define GET_RX_DESC_CRC32(__pdesc)			\
-+	SHIFT_AND_MASK_LE(__pdesc, 14, 1)
-+#define GET_RX_DESC_ICV(__pdesc)			\
-+	SHIFT_AND_MASK_LE(__pdesc, 15, 1)
-+#define GET_RX_DESC_DRV_INFO_SIZE(__pdesc)		\
-+	SHIFT_AND_MASK_LE(__pdesc, 16, 4)
-+#define GET_RX_DESC_SHIFT(__pdesc)			\
-+	SHIFT_AND_MASK_LE(__pdesc, 24, 2)
-+#define GET_RX_DESC_PHYST(__pdesc)			\
-+	SHIFT_AND_MASK_LE(__pdesc, 26, 1)
-+#define GET_RX_DESC_SWDEC(__pdesc)			\
-+	SHIFT_AND_MASK_LE(__pdesc, 27, 1)
-+#define GET_RX_DESC_OWN(__pdesc)			\
-+	SHIFT_AND_MASK_LE(__pdesc, 31, 1)
-+#define GET_TX_DESC_OWN(__pdesc)			\
-+	SHIFT_AND_MASK_LE(__pdesc, 31, 1)
-+/* Special macros for rtl8192cu */
-+#define GET_RX_DESC_PKT_LEN_CU(__rxdesc)		\
-+	SHIFT_AND_MASK_LE((__rxdesc), 0, 14)
-+#define GET_RX_DESC_CRC32_CU(__rxdesc)			\
-+	SHIFT_AND_MASK_LE(__rxdesc, 14, 1)
-+#define GET_RX_DESC_ICV_CU(__rxdesc)			\
-+	SHIFT_AND_MASK_LE(__rxdesc, 15, 1)
-+#define GET_RX_DESC_DRVINFO_SIZE_CU(__rxdesc)		\
-+	SHIFT_AND_MASK_LE(__rxdesc, 16, 4)
-+#define GET_RX_DESC_SHIFT_CU(__rxdesc)			\
-+	SHIFT_AND_MASK_LE(__rxdesc, 24, 2)
-+#define GET_RX_DESC_PHY_STATUS_CU(__rxdesc)		\
-+	SHIFT_AND_MASK_LE(__rxdesc, 26, 1)
-+#define GET_RX_DESC_SWDEC_CU(__rxdesc)			\
-+	SHIFT_AND_MASK_LE(__rxdesc, 27, 1)
-+/* Special macros for rtl8192se */
-+#define SET_RX_STATUS_DESC_PKT_LEN_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc, 0, 14, __val)
-+#define SET_RX_STATUS_DESC_EOR_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc, 30, 1, __val)
-+#define SET_RX_STATUS_DESC_OWN_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc, 31, 1, __val)
-+
-+#define GET_RX_STATUS_DESC_PKT_LEN_SE(__pdesc)		\
-+	SHIFT_AND_MASK_LE(__pdesc, 0, 14)
-+#define GET_RX_STATUS_DESC_CRC32_SE(__pdesc)		\
-+	SHIFT_AND_MASK_LE(__pdesc, 14, 1)
-+#define GET_RX_STATUS_DESC_ICV_SE(__pdesc)		\
-+	SHIFT_AND_MASK_LE(__pdesc, 15, 1)
-+#define GET_RX_STATUS_DESC_DRVINFO_SIZE_SE(__pdesc)	\
-+	SHIFT_AND_MASK_LE(__pdesc, 16, 4)
-+#define GET_RX_STATUS_DESC_SHIFT_SE(__pdesc)		\
-+	SHIFT_AND_MASK_LE(__pdesc, 24, 2)
-+#define GET_RX_STATUS_DESC_PHY_STATUS_SE(__pdesc)	\
-+	SHIFT_AND_MASK_LE(__pdesc, 26, 1)
-+#define GET_RX_STATUS_DESC_SWDEC_SE(__pdesc)		\
-+	SHIFT_AND_MASK_LE(__pdesc, 27, 1)
-+#define GET_RX_STATUS_DESC_OWN_SE(__pdesc)		\
-+	SHIFT_AND_MASK_LE(__pdesc, 31, 1)
-+
-+/*********************** DWORD 1 ***********************/
-+
-+#define SET_TX_DESC_MACID(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+4, 0, 5, __val)
-+#define SET_TX_DESC_AGG_BREAK(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+4, 5, 1, __val)
-+#define SET_TX_DESC_RDG_ENABLE(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+4, 7, 1, __val)
-+#define SET_TX_DESC_QUEUE_SEL(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+4, 8, 5, __val)
-+#define SET_TX_DESC_RATE_ID(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+4, 16, 4, __val)
-+#define SET_TX_DESC_SEC_TYPE(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+4, 22, 2, __val)
-+#define SET_TX_DESC_PKT_OFFSET(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+4, 24, 8, __val)
-+
-+#define GET_TX_DESC_MACID(__pdesc)			\
-+	SHIFT_AND_MASK_LE(__pdesc+4, 0, 5)
-+/* Special macros for rtl8192cu */
-+#define SET_TX_DESC_MACID_CU(__txdesc, __value)		\
-+	SET_BITS_OFFSET_LE(__txdesc+4, 0, 5, __value)
-+#define SET_TX_DESC_AGG_ENABLE_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+4, 5, 1, __value)
-+#define SET_TX_DESC_AGG_BREAK_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+4, 6, 1, __value)
-+#define SET_TX_DESC_RDG_ENABLE_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+4, 7, 1, __value)
-+#define SET_TX_DESC_QUEUE_SEL_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+4, 8, 5, __value)
-+#define GET_RX_DESC_PAGGR_CU(__rxdesc)			\
-+	SHIFT_AND_MASK_LE(__rxdesc+4, 14, 1)
-+#define GET_RX_DESC_FAGGR_CU(__rxdesc)			\
-+	SHIFT_AND_MASK_LE(__rxdesc+4, 15, 1)
-+#define SET_TX_DESC_RATE_ID_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+4, 16, 4, __value)
-+#define SET_TX_DESC_NAV_USE_HDR_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+4, 20, 1, __value)
-+#define SET_TX_DESC_SEC_TYPE_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+4, 22, 2, __value)
-+#define SET_TX_DESC_PKT_OFFSET_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+4, 26, 5, __value)
-+/* Special macros for rtl8192de */
-+#define SET_TX_DESC_AGG_ENABLE_DE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+4, 5, 1, __val)
-+#define SET_TX_DESC_PKT_OFFSET_DE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+4, 26, 8, __val)
-+/* Special macros for rtl8192se */
-+#define SET_TX_DESC_MACID_SE(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+4, 0, 5, __val)
-+#define SET_TX_DESC_QUEUE_SEL_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+4, 8, 5, __val)
-+#define GET_RX_STATUS_DESC_PAGGR_SE(__pdesc)		\
-+	SHIFT_AND_MASK_LE(__pdesc+4, 14, 1)
-+#define GET_RX_STATUS_DESC_FAGGR_SE(__pdesc)		\
-+	SHIFT_AND_MASK_LE(__pdesc+4, 15, 1)
-+#define SET_TX_DESC_NON_QOS_SE(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+4, 16, 1, __val)
-+#define SET_TX_DESC_SEC_TYPE_SE(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+4, 22, 2, __val)
-+
-+/*********************** DWORD 2 ***********************/
-+
-+#define SET_TX_DESC_MORE_FRAG(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+8, 17, 1, __val)
-+#define SET_TX_DESC_AMPDU_DENSITY(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+8, 20, 3, __val)
-+/* Special macros for rtl8192cu */
-+#define SET_TX_DESC_MORE_FRAG_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+8, 17, 1, __value)
-+#define SET_TX_DESC_AMPDU_DENSITY_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+8, 20, 3, __value)
-+/* Special macros for rtl8192se */
-+#define	SET_TX_DESC_RSVD_MACID_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(((__pdesc)+8), 24, 5, __val)
-+#define SET_TX_DESC_AGG_ENABLE_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+8, 29, 1, __val)
-+
-+/*********************** DWORD 3 ***********************/
-+
-+#define SET_TX_DESC_SEQ(__pdesc, __val)			\
-+	SET_BITS_OFFSET_LE(__pdesc+12, 16, 12, __val)
-+#define SET_TX_DESC_PKT_ID(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+12, 28, 4, __val)
-+/* Special macros for rtl8192cu */
-+#define GET_RX_DESC_RX_MCS_CU(__rxdesc)			\
-+	SHIFT_AND_MASK_LE(__rxdesc+12, 0, 6)
-+#define GET_RX_DESC_RX_HT_CU(__rxdesc)			\
-+	SHIFT_AND_MASK_LE(__rxdesc+12, 6, 1)
-+#define GET_RX_DESC_SPLCP_CU(__rxdesc)			\
-+	SHIFT_AND_MASK_LE(__rxdesc+12, 8, 1)
-+#define GET_RX_DESC_BW_CU(__rxdesc)			\
-+	SHIFT_AND_MASK_LE(__rxdesc+12, 9, 1)
-+#define SET_TX_DESC_SEQ_CU(__txdesc, __value)		\
-+	SET_BITS_OFFSET_LE(__txdesc+12, 16, 12, __value)
-+#define SET_TX_DESC_PKT_ID_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+12, 28, 4, __value)
-+/* Special macros for rtl8192se */
-+#define GET_RX_STATUS_DESC_RX_MCS_SE(__pdesc)		\
-+	SHIFT_AND_MASK_LE(__pdesc+12, 0, 6)
-+#define GET_RX_STATUS_DESC_RX_HT_SE(__pdesc)		\
-+	SHIFT_AND_MASK_LE(__pdesc+12, 6, 1)
-+#define GET_RX_STATUS_DESC_SPLCP_SE(__pdesc)		\
-+	SHIFT_AND_MASK_LE(__pdesc+12, 8, 1)
-+#define GET_RX_STATUS_DESC_BW_SE(__pdesc)		\
-+	SHIFT_AND_MASK_LE(__pdesc+12, 9, 1)
-+#define SET_TX_DESC_SEQ_SE(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+12, 16, 12, __val)
-+#define SET_TX_DESC_FRAG(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+12, 28, 4, __val)
-+
-+/*********************** DWORD 4 ***********************/
-+
-+#define SET_TX_DESC_RTS_RATE(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 0, 5, __val)
-+#define SET_TX_DESC_QOS(__pdesc, __val)			\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 6, 1, __val)
-+#define SET_TX_DESC_HWSEQ_EN(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 7, 1, __val)
-+#define SET_TX_DESC_USE_RATE(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 8, 1, __val)
-+#define SET_TX_DESC_DISABLE_FB(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 10, 1, __val)
-+#define SET_TX_DESC_CTS2SELF(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 11, 1, __val)
-+#define SET_TX_DESC_RTS_ENABLE(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 12, 1, __val)
-+#define SET_TX_DESC_HW_RTS_ENABLE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 13, 1, __val)
-+#define SET_TX_DESC_TX_SUB_CARRIER(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 20, 2, __val)
-+#define SET_TX_DESC_DATA_SHORT(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 24, 1, __val)
-+#define SET_TX_DESC_DATA_BW(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 25, 1, __val)
-+#define SET_TX_DESC_RTS_SHORT(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 26, 1, __val)
-+#define SET_TX_DESC_RTS_BW(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 27, 1, __val)
-+#define SET_TX_DESC_RTS_SC(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 28, 2, __val)
-+#define SET_TX_DESC_RTS_STBC(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 30, 2, __val)
-+/* Special macros for rtl8192cu */
-+#define SET_TX_DESC_RTS_RATE_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+16, 0, 5, __value)
-+#define SET_TX_DESC_QOS_CU(__txdesc, __value)		\
-+	SET_BITS_OFFSET_LE(__txdesc+16, 6, 1, __value)
-+#define SET_TX_DESC_HWSEQ_EN_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+16, 7, 1, __value)
-+#define SET_TX_DESC_USE_RATE_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+16, 8, 1, __value)
-+#define SET_TX_DESC_DISABLE_FB_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+16, 10, 1, __value)
-+#define SET_TX_DESC_CTS2SELF_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+16, 11, 1, __value)
-+#define SET_TX_DESC_RTS_ENABLE_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+16, 12, 1, __value)
-+#define SET_TX_DESC_HW_RTS_ENABLE_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+16, 13, 1, __value)
-+#define SET_TX_DESC_DATA_SC_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+16, 20, 2, __value)
-+#define SET_TX_DESC_DATA_BW_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+16, 25, 1, __value)
-+#define SET_TX_DESC_RTS_SHORT_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+16, 26, 1, __value)
-+#define SET_TX_DESC_RTS_BW_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+16, 27, 1, __value)
-+#define SET_TX_DESC_RTS_SC_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+16, 28, 2, __value)
-+#define SET_TX_DESC_RTS_STBC_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+16, 30, 2, __value)
-+/* Special macros for rtl8192se */
-+#define SET_TX_DESC_RTS_RATE_SE(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 0, 6, __val)
-+#define SET_TX_DESC_TXHT_SE(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 16, 1, __val)
-+#define SET_TX_DESC_CTS_ENABLE_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 11, 1, __val)
-+#define SET_TX_DESC_RTS_ENABLE_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 12, 1, __val)
-+#define SET_TX_DESC_RA_BRSR_ID_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 13, 3, __val)
-+#define SET_TX_DESC_TX_SHORT_SE(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 17, 1, __val)
-+#define SET_TX_DESC_TX_BANDWIDTH_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 18, 1, __val)
-+#define SET_TX_DESC_TX_SUB_CARRIER_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 19, 2, __val)
-+#define SET_TX_DESC_RTS_SHORT_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 25, 1, __val)
-+#define SET_TX_DESC_RTS_BANDWIDTH_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 26, 1, __val)
-+#define SET_TX_DESC_RTS_SUB_CARRIER_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 27, 2, __val)
-+#define SET_TX_DESC_RTS_STBC_SE(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 29, 2, __val)
-+#define SET_TX_DESC_USER_RATE_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+16, 31, 1, __val)
-+
-+/*********************** DWORD 5 ***********************/
-+
-+#define SET_TX_DESC_TX_RATE(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+20, 0, 6, __val)
-+#define SET_TX_DESC_DATA_SHORTGI(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+20, 6, 1, __val)
-+#define SET_TX_DESC_DATA_RATE_FB_LIMIT(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+20, 8, 5, __val)
-+#define SET_TX_DESC_RTS_RATE_FB_LIMIT(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+20, 13, 4, __val)
-+/* Special macros for rtl8192cu */
-+#define GET_RX_DESC_TSFL_CU(__rxdesc)		\
-+	SHIFT_AND_MASK_LE(__rxdesc+20, 0, 32)
-+#define SET_TX_DESC_DATA_SHORTGI_CU(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+20, 6, 1, __val)
-+#define SET_TX_DESC_DATA_RATE_FB_LIMIT_CU(__txdesc, __value) \
-+	SET_BITS_OFFSET_LE(__txdesc+20, 8, 5, __value)
-+#define SET_TX_DESC_RTS_RATE_FB_LIMIT_CU(__txdesc, __value) \
-+	SET_BITS_OFFSET_LE(__txdesc+20, 13, 4, __value)
-+/* Special macros for rtl8192se */
-+#define SET_TX_DESC_PACKET_ID_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+20, 0, 9, __val)
-+#define SET_TX_DESC_TX_RATE_SE(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+20, 9, 6, __val)
-+#define SET_TX_DESC_DATA_RATE_FB_LIMIT_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+20, 16, 5, __val)
-+#define GET_RX_STATUS_DESC_TSFL_SE(__pdesc)		\
-+	SHIFT_AND_MASK_LE(__pdesc+20, 0, 32)
-+
-+/*********************** DWORD 6 ***********************/
-+
-+#define SET_TX_DESC_MAX_AGG_NUM(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+24, 11, 5, __val)
-+/* Special macros for rtl8192cu */
-+#define SET_TX_DESC_MAX_AGG_NUM_CU(__txdesc, __value)	\
-+	SET_BITS_OFFSET_LE(__txdesc+24, 11, 5, __value)
-+/* Special macros for rtl8192se */
-+#define SET_RX_STATUS__DESC_BUFF_ADDR_SE(__pdesc, __val)\
-+	SET_BITS_OFFSET_LE(__pdesc+24, 0, 32, __val)
-+
-+/*********************** DWORD 7 ***********************/
-+
-+#define SET_TX_DESC_TX_BUFFER_SIZE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+28, 0, 16, __val)
-+/* Special macros for rtl8192cu */
-+#define SET_TX_DESC_TX_DESC_CHECKSUM_CU(__txdesc, __value) \
-+	SET_BITS_OFFSET_LE(__txdesc+28, 0, 16, __value)
-+/* Special macros for rtl8192se */
-+#define SET_TX_DESC_TX_BUFFER_SIZE_SE(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+28, 0, 16, __val)
-+
-+/*********************** DWORD 8 ***********************/
-+
-+#define SET_TX_DESC_TX_BUFFER_ADDRESS(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+32, 0, 32, __val)
-+
-+#define GET_TX_DESC_TX_BUFFER_ADDRESS(__pdesc)		\
-+	SHIFT_AND_MASK_LE(__pdesc+32, 0, 32)
-+/* Special macros for rtl8192se */
-+#define SET_TX_DESC_TX_BUFFER_ADDRESS_SE(__pdesc, __val)\
-+	SET_BITS_OFFSET_LE(__pdesc+32, 0, 32, __val)
-+#define GET_TX_DESC_TX_BUFFER_ADDRESS_SE(__pdesc)	\
-+	SHIFT_AND_MASK_LE(__pdesc+32, 0, 32)
-+
-+/*********************** DWORD 9 ***********************/
-+/* Special macros for rtl8192se */
-+#define SET_TX_DESC_NEXT_DESC_ADDRESS_SE(__pdesc, __val)\
-+	SET_BITS_OFFSET_LE(__pdesc+36, 0, 32, __val)
-+
-+/*********************** DWORD 10 ***********************/
-+
-+#define SET_TX_DESC_NEXT_DESC_ADDRESS(__pdesc, __val)	\
-+	SET_BITS_OFFSET_LE(__pdesc+40, 0, 32, __val)
-+
-+/*********************** DWORD 11 ***********************/
-+
-+#define SET_RX_DESC_PKT_LEN(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc, 0, 14, __val)
-+#define SET_RX_DESC_EOR(__pdesc, __val)			\
-+	SET_BITS_OFFSET_LE(__pdesc, 30, 1, __val)
-+#define SET_RX_DESC_OWN(__pdesc, __val)			\
-+	SET_BITS_OFFSET_LE(__pdesc, 31, 1, __val)
-+
-+#define GET_RX_DESC_PAGGR(__pdesc)			\
-+	SHIFT_AND_MASK_LE(__pdesc+4, 14, 1)
-+#define GET_RX_DESC_FAGGR(__pdesc)			\
-+	SHIFT_AND_MASK_LE(__pdesc+4, 15, 1)
-+
-+#define GET_RX_DESC_RXMCS(__pdesc)			\
-+	SHIFT_AND_MASK_LE(__pdesc+12, 0, 6)
-+#define GET_RX_DESC_RXHT(__pdesc)			\
-+	SHIFT_AND_MASK_LE(__pdesc+12, 6, 1)
-+#define GET_RX_DESC_SPLCP(__pdesc)			\
-+	SHIFT_AND_MASK_LE(__pdesc+12, 8, 1)
-+#define GET_RX_DESC_BW(__pdesc)				\
-+	SHIFT_AND_MASK_LE(__pdesc+12, 9, 1)
-+
-+#define GET_RX_DESC_TSFL(__pdesc)			\
-+	SHIFT_AND_MASK_LE(__pdesc+20, 0, 32)
-+
-+#define SET_RX_DESC_BUFF_ADDR(__pdesc, __val)		\
-+	SET_BITS_OFFSET_LE(__pdesc+24, 0, 32, __val)
-+
-+#endif
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 15f4be7..208a7b5 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -120,6 +120,7 @@ enum ieee80211_channel_flags {
+  * @band: band this channel belongs to.
+  * @max_antenna_gain: maximum antenna gain in dBi
+  * @max_power: maximum transmission power (in dBm)
++ * @max_reg_power: maximum regulatory transmission power (in dBm)
+  * @beacon_found: helper to regulatory code to indicate when a beacon
+  *   has been found on this channel. Use regulatory_hint_found_beacon()
+  *   to enable this, this is useful only on 5 GHz band.
+@@ -133,6 +134,7 @@ struct ieee80211_channel {
+      u32 flags;
+      int max_antenna_gain;
+      int max_power;
++     int max_reg_power;
+      bool beacon_found;
+      u32 orig_flags;
+      int orig_mag, orig_mpwr;
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index f65feaa..e9a0ac8 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -882,23 +882,8 @@ static void handle_channel(struct wiphy *wiphy,
+      chan->flags = flags | bw_flags | map_regdom_flags(reg_rule->flags);
+      chan->max_antenna_gain = min(chan->orig_mag,
+            (int) MBI_TO_DBI(power_rule->max_antenna_gain));
+-     if (chan->orig_mpwr) {
+-           /*
+-           * Devices that have their own custom regulatory domain
+-           * but also use WIPHY_FLAG_STRICT_REGULATORY will follow the
+-           * passed country IE power settings.
+-           */
+-           if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE &&
+-               wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY &&
+-               wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY) {
+-                 chan->max_power =
+-                       MBM_TO_DBM(power_rule->max_eirp);
+-           } else {
+-                 chan->max_power = min(chan->orig_mpwr,
+-                       (int) MBM_TO_DBM(power_rule->max_eirp));
+-           }
+-     } else
+-           chan->max_power = (int) MBM_TO_DBM(power_rule->max_eirp);
++     chan->max_reg_power = (int) MBM_TO_DBM(power_rule->max_eirp);
++     chan->max_power = min(chan->max_power, chan->max_reg_power);
+ }
+ 
+ static void handle_band(struct wiphy *wiphy,
 -- 
-1.7.7
+1.7.0.4
 
+
+
+
+______________________________________________________________________
+DSP Group, Inc. automatically scans all emails and attachments using MessageLabs Email Security System.
+_____________________________________________________________________
