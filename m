@@ -1,35 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49867 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752996Ab2AINFl (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:33072 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751038Ab2AKXHz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 08:05:41 -0500
-Subject: Re: [PATCH 2/2] iw: remove ifdefs for mcs mask
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-In-Reply-To: <1325793490-21501-5-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1325793490-21501-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1325793490-21501-5-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 Jan 2012 14:05:39 +0100
-Message-ID: <1326114339.3451.26.camel@jlt3.sipsolutions.net> (sfid-20120109_140544_355404_1370D7DB)
-Mime-Version: 1.0
+	Wed, 11 Jan 2012 18:07:55 -0500
+Received: by werm1 with SMTP id m1so937886wer.19
+        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2012 15:07:54 -0800 (PST)
+MIME-Version: 1.0
+Date: Wed, 11 Jan 2012 17:07:54 -0600
+Message-ID: <CAJ8GFOgazS1MWk+vaNHd=SCtenO+6fYty-_JqZVGX5+xa04dDg@mail.gmail.com> (sfid-20120112_000758_732655_A25408AB)
+Subject: carl9170: How to control transmit power?
+From: Harshal Chhaya <harshal@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-01-05 at 20:58 +0100, Simon Wunderlich wrote:
-> These are enums, not defines. Therefore the ifdef check can never be
-> true.
+Hello,
 
-The original idea was that in nl80211.h you do
+Does the carl9170 driver/firmware allow real-time updates to the tx
+power parameter?
 
-#define FOO FOO
+On my AR9170-based AP, I can't set the tx power using either 'iw' or 'iwconfig'.
 
-(like we already have for a few things) to trigger the ifdef, but I
-don't really care.
+'iw' fails with an error message:
 
-johannes
+root@OpenWrt:/etc/hostapd# iw wlan0 set txpower fixed 10
+command failed: Operation not supported (-95)
 
+
+'iwconfig' seems to update the information that's displayed but it
+doesn't affect the actual tx power
+
+root@OpenWrt:/# iwconfig wlan0
+wlan0     IEEE 802.11bgn  Mode:Master  Frequency:2.412 GHz  Tx-Power=7 dBm
+          RTS thr:off   Fragment thr:off
+          Power Management:off
+
+root@OpenWrt:/# iwconfig wlan0 txpower 11
+
+root@OpenWrt:/# iwconfig wlan0
+wlan0     IEEE 802.11bgn  Mode:Master  Frequency:2.412 GHz  Tx-Power=11 dBm
+          RTS thr:off   Fragment thr:off
+          Power Management:off
+
+
+Is there another way to set the tx power? I want to reduce the range
+of my AP and am trying to lower the tx power.
+
+Thanks,
+- Harshal
