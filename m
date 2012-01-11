@@ -1,48 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:62196 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751230Ab2AGPgb (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:65075 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753872Ab2AKMi6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jan 2012 10:36:31 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH] mac80211: minor cleanup
-Date: Sat, 7 Jan 2012 21:06:21 +0530
-Message-ID: <1325950581-6228-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120107_163634_924500_74E4535D)
+	Wed, 11 Jan 2012 07:38:58 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Dave Jones <davej@redhat.com>
+CC: Dan Williams <dcbw@redhat.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: RE: iwlwifi worse than ever in current git.
+Date: Wed, 11 Jan 2012 12:38:43 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB306429E@HASMSX103.ger.corp.intel.com> (sfid-20120111_133903_579810_850A1D97)
+References: <20120110184917.GA26973@redhat.com>
+ <1326221614.5067.6.camel@dcbw.foobar.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB3063085@HASMSX103.ger.corp.intel.com>
+ <20120111014243.GA22066@redhat.com>
+In-Reply-To: <20120111014243.GA22066@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+> [  173.145695] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_start Can proceed: ssn =
+> next_recl = 869
+> [  173.147133] iwlwifi 0000:04:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 101
+> [  173.147545] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate
+> BA Queue 11 on FIFO 1
+> [  173.148050] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra =
+> b8:c7:5d:0c:39:88 tid = 0
 
-we would have bailed out if 'ifibss->fixed_channel'
-is valid i.e. we had used 'fixed-freq' parameter in iw ibss
-join command. this is with the state 'IEEE80211_IBSS_MLME_JOINED'
-so no need to check for it
+I am missing logs here... You seem to reauthenticate but I can't see disconnection... weird
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- net/mac80211/ibss.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index f8a32bf..8875673 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -642,8 +642,7 @@ static void ieee80211_sta_merge_ibss(struct ieee80211_sub_if_data *sdata)
- 	       "IBSS networks with same SSID (merge)\n", sdata->name);
- 
- 	ieee80211_request_internal_scan(sdata,
--			ifibss->ssid, ifibss->ssid_len,
--			ifibss->fixed_channel ? ifibss->channel : NULL);
-+			ifibss->ssid, ifibss->ssid_len, NULL);
- }
- 
- static void ieee80211_sta_create_ibss(struct ieee80211_sub_if_data *sdata)
--- 
-1.7.0.4
+> [  192.805102] wlan0: authenticate with b8:c7:5d:0c:39:87 (try 1)
+> [  192.807392] wlan0: authenticated
+> [  192.814840] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_stop Can't proceed: ssn
+> 1633, next_recl = 139
+
+Stop AGG before we are associated ?!
+Is that leftovers from the previous association that was torn down ?
+
+> [  192.818669] wlan0: moving STA b8:c7:5d:0c:39:88 to state 2
+> [  192.818939] wlan0: moving STA b8:c7:5d:0c:39:88 to state 1
+> [  192.819206] wlan0: moving STA b8:c7:5d:0c:39:88 to state 0
+> [  192.824157] wlan0: associate with b8:c7:5d:0c:39:87 (try 1)
+
+Associating to another AP ? A band maybe ?
+
+> [  192.828014] wlan0: RX ReassocResp from b8:c7:5d:0c:39:87 (capab=0x431
+> status=0 aid=3)
+> [  192.828372] wlan0: associated
+> [  192.828515] wlan0: moving STA b8:c7:5d:0c:39:87 to state 1
+> [  192.828713] wlan0: moving STA b8:c7:5d:0c:39:87 to state 2
+> [  193.853664] wlan0: moving STA b8:c7:5d:0c:39:87 to state 3
+> [  278.421399] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_start Can proceed: ssn =
+> next_recl = 165
+> [  278.423946] iwlwifi 0000:04:00.0: U iwl_trans_set_wr_ptrs Q 12  WrPtr: 165
+> [  278.424007] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate
+> BA Queue 12 on FIFO 1
+> [  278.424835] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra =
+> b8:c7:5d:0c:39:87 tid = 0
+> [  285.176431] iwlwifi 0000:04:00.0: I iwl_stop_queue Stop hwq 12 ac 2 stop
+> count 1. Queue is full
+> [  290.304163] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_stop Can't proceed: ssn
+> 397, next_recl = 174
+> 
+> 
+> At this point I unloaded, and reloaded the module.
+> I had to do this several times until it finally came back up.
+> 
+> Shortly afterwards..
+> 
+> [  599.752969] wlan0: authenticate with b8:c7:5d:0c:39:87 (try 1)
+> [  599.755359] wlan0: authenticated
+> [  599.762131] iwlwifi 0000:04:00.0: I iwl_stop_queue Stop hwq 0 ac 0 stop
+> count 1. Tx on passive channel
+
+Interesting. The FW is complaining that you are Txing on a channel that is defined as passive channel...
+
+
+> [  599.774132] iwlwifi 0000:04:00.0: U iwl_trans_pcie_wake_any_queue Queue
+> Status: Q[0] stopped
+> [  599.774551] iwlwifi 0000:04:00.0: U iwl_wake_queue Wake hwq 0 ac 0.
+> Disassoc: flush queue
+> [  599.774921] iwlwifi 0000:04:00.0: U iwl_trans_pcie_wake_any_queue Queue
+> Status: Q[1] awake
+> [  599.775779] iwlwifi 0000:04:00.0: U iwl_trans_pcie_wake_any_queue Queue
+> Status: Q[2] awake
+> [  599.776515] iwlwifi 0000:04:00.0: U iwl_trans_pcie_wake_any_queue Queue
+> Status: Q[3] awake
+> [  599.777198] iwlwifi 0000:04:00.0: I iwl_stop_queue Stop hwq 0 ac 0 stop
+> count 1. Tx on passive channel
+
+Again.
+
+
+There are a few AMPDUs issues here but I guess the worst issue you are seeing is due to the passive channel thing.
+Does it feel better with 11n disabled ?
+
+
+
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
