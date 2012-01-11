@@ -1,61 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:53772 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750986Ab2AOIkQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jan 2012 03:40:16 -0500
-From: Joe Perches <joe@perches.com>
-To: linux-kernel@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Henry Ptasinski <henryp@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Kan Yan <kanyan@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 6/8] brcm80211: Use brcmu_dbg_hex_dump
-Date: Sun, 15 Jan 2012 00:38:43 -0800
-Message-Id: <7a7a6b670e004a3f35dd5f69627b638b3ec76f4c.1326616556.git.joe@perches.com> (sfid-20120115_094126_236324_BF91CB69)
-In-Reply-To: <cover.1326616556.git.joe@perches.com>
-References: <cover.1326616556.git.joe@perches.com>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50252 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757528Ab2AKOqG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 Jan 2012 09:46:06 -0500
+Date: Wed, 11 Jan 2012 09:30:11 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bastien ROUCARIES <roucaries.bastien@gmail.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Fwd: Warning in wifi card
+Message-ID: <20120111143011.GB11093@tuxdriver.com> (sfid-20120111_154629_572891_E1C5D1FB)
+References: <CAE2SPAbTDbGjuM6rNmjzw0X2fU_k431XkbwYuhvKtfXggOO=-w@mail.gmail.com>
+ <CAE2SPAaVtXWN+x8oaV2BkbLr6e700KizCc_39J2yp+XtWzFhXQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAE2SPAaVtXWN+x8oaV2BkbLr6e700KizCc_39J2yp+XtWzFhXQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert a couple of pr_debug/print_hex_dump to
-the standard utility.
+Please Cc linux-wireless@vger.kernel.org on such issues...
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/main.c |    9 +++------
- 1 files changed, 3 insertions(+), 6 deletions(-)
+On Wed, Jan 11, 2012 at 11:04:39AM +0100, Bastien ROUCARIES wrote:
+> I get the following warning using 3.1 after going back to suspend to ram.
+> 
+> Seems quite current a quick google search found
+> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/809777
+> 
+> Kernel failure message 1:
+> ------------[ cut here ]------------
+> WARNING: at /home/blank/debian/kernel/release/linux-2.6/linux-2.6-3.1.6/debian/build/source_amd64_none/drivers/net/wireless/iwlwifi/iwl-core.c:1367
+> iwl_mac_remove_interface+0x39/0x5e [iwlagn]()
+> Hardware name: Dell System XPS L502X
+> Modules linked in: nls_utf8 nls_cp437 vfat fat pciehp pci_hotplug
+> mmc_block sdhci_pci sdhci mmc_core jmb38x_ms memstick dell_wmi
+> aesni_intel cryptd aes_x86_64 aes_generic ecb btusb ip6table_filter
+> ip6_tables iptable_filter ip_tables ebtable_nat ebtables x_tables cn
+> parport_pc ppdev lp parport acpi_cpufreq mperf cpufreq_powersave
+> cpufreq_conservative cpufreq_userspace bnep rfcomm cpufreq_stats
+> bluetooth binfmt_misc uinput fuse nfsd nfs lockd fscache auth_rpcgss
+> nfs_acl sunrpc coretemp loop dm_crypt kvm_intel kvm snd_hda_codec_hdmi
+> snd_hda_codec_realtek arc4 snd_hda_intel snd_hda_codec joydev iwlagn
+> uvcvideo videodev media snd_hwdep v4l2_compat_ioctl32 snd_pcm_oss
+> snd_mixer_oss snd_pcm snd_seq_midi snd_rawmidi snd_seq_midi_event
+> snd_seq nouveau ttm i915 mac80211 drm_kms_helper drm snd_timer
+> snd_seq_device i2c_algo_bit i2c_i801 i2c_core snd cfg80211 mxm_wmi
+> pcspkr battery ac sparse_keymap iTCO_wdt iTCO_vendor_support soundcore
+> wmi dell_laptop power_supply psmouse video evdev serio_raw dcdbas
+> button rfkill processor snd_page_alloc ext4 mbcache jbd2 crc16 btrfs
+> zlib_deflate crc32c libcrc32c dm_mod sr_mod sd_mod cdrom crc_t10dif
+> ahci libahci libata scsi_mod r8169 mii xhci_hcd ehci_hcd usbcore
+> thermal thermal_sys [last unloaded: dell_wmi]
+> Pid: 27387, comm: kworker/0:1 Tainted: G        W    3.1.0-1-amd64 #1
+> Call Trace:
+>  [<ffffffff81045785>] ? warn_slowpath_common+0x78/0x8c
+>  [<ffffffffa04c54f8>] ? iwl_mac_remove_interface+0x39/0x5e [iwlagn]
+>  [<ffffffffa027dc01>] ? cfg80211_event_work+0x4/0x2c [cfg80211]
+>  [<ffffffffa034f539>] ? ieee80211_do_stop+0x319/0x46a [mac80211]
+>  [<ffffffff8104abe7>] ? _local_bh_enable_ip.isra.11+0x1e/0x88
+>  [<ffffffffa027dc8b>] ? cfg80211_rfkill_set_block+0x62/0x62 [cfg80211]
+>  [<ffffffffa034f69d>] ? ieee80211_stop+0x13/0x17 [mac80211]
+>  [<ffffffff8126e437>] ? __dev_close_many+0x84/0xb0
+>  [<ffffffff8126e532>] ? dev_close_many+0x88/0xee
+>  [<ffffffff8103539b>] ? should_resched+0x5/0x23
+>  [<ffffffff8127066f>] ? dev_close+0x37/0x46
+>  [<ffffffffa027dc66>] ? cfg80211_rfkill_set_block+0x3d/0x62 [cfg80211]
+>  [<ffffffff8105a74d>] ? process_one_work+0x163/0x284
+>  [<ffffffff8105b715>] ? worker_thread+0xc2/0x145
+>  [<ffffffff8105b653>] ? manage_workers.isra.23+0x15b/0x15b
+>  [<ffffffff8105e5e5>] ? kthread+0x76/0x7e
+>  [<ffffffff81334934>] ? kernel_thread_helper+0x4/0x10
+>  [<ffffffff8105e56f>] ? kthread_worker_fn+0x139/0x139
+>  [<ffffffff81334930>] ? gs_change+0x13/0x13
+> ---[ end trace f03a55c4c1238b61 ]---
+> 
+> 
+> Bastien
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index 14ab606..72701a4 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -5858,9 +5858,8 @@ void brcms_c_print_txdesc(struct d11txh *txh)
- 	struct ieee80211_rts rts = txh->rts_frame;
- 
- 	/* add plcp header along with txh descriptor */
--	pr_debug("Raw TxDesc + plcp header:\n");
--	print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
--			     txh, sizeof(struct d11txh) + 48);
-+	brcmu_dbg_hex_dump(txh, sizeof(struct d11txh) + 48,
-+			   "Raw TxDesc + plcp header:\n");
- 
- 	pr_debug("TxCtlLow: %04x ", mtcl);
- 	pr_debug("TxCtlHigh: %04x ", mtch);
-@@ -5986,9 +5985,7 @@ void brcms_c_print_rxh(struct d11rxhdr *rxh)
- 		{0, NULL}
- 	};
- 
--	pr_debug("Raw RxDesc:\n");
--	print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, rxh,
--			     sizeof(struct d11rxhdr));
-+	brcmu_dbg_hex_dump(rxh, sizeof(struct d11rxhdr), "Raw RxDesc:\n");
- 
- 	brcms_c_format_flags(macstat_flags, macstatus1, flagstr, 64);
- 
 -- 
-1.7.8.111.gad25c.dirty
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
