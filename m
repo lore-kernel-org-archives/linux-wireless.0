@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:39124 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751277Ab2AGWMk (ORCPT
+Received: from latitanza.investici.org ([82.94.249.234]:56662 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755478Ab2ALUjB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jan 2012 17:12:40 -0500
-Content-Type: text/plain; charset=UTF-8
-From: John Wyzer <john.wyzer@gmx.de>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: HT40 not working for Intel 5100 AGN ?
-In-reply-to: <1325965297-sup-3780@localhost>
-References: <1325965297-sup-3780@localhost>
-Date: Sat, 07 Jan 2012 23:12:21 +0100
-Message-Id: <1325974267-sup-3125@localhost> (sfid-20120107_231259_704751_48976D15)
+	Thu, 12 Jan 2012 15:39:01 -0500
+From: Antonio Quartulli <ordex@autistici.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCH 1/2] mac80211: send the Auth frame in IBSS
+Date: Thu, 12 Jan 2012 21:36:55 +0100
+Message-Id: <1326400616-1109-1-git-send-email-ordex@autistici.org> (sfid-20120112_213919_225705_C035B8FF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This was not a bug.
-I had to search for ages however to find out about the fact that HT40 only
-works with WPA2 and not with WPA. ;-)
+Now in IBSS mode, each station sends a Auth frame each time it finds a new
+station that is joining the IBSS
+
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+---
+
+This patch is based on the not yet committed patch
+"mac80211: fix IBSS auth frame DA"
 
 
-Excerpts from John Wyzer's message of 2012-01-07 20:42:33 +0100:
-> Kernel: git tag v3.2 
-> 
-> After modprobe:
-> Detected Intel(R) WiFi Link 5100 AGN, REV=0x54
-> 
-> If have an AP with openwrt configured to work with 802.11g+n, HT40+.
-> A different Laptop with Windows installed connects with 150Mb/s
-> 
-> The maximum bitrate for the aforementioned Intel card however is displayed by
-> iwconfig to be 54 Mb/s which seems to be confirmed by the actual transfer
-> rates.
-> The connection is being established by wpa_supplicant 0.7.3.
-> 
-> I tried researching this problem but did not really find it documented. Is this
-> a known issue or can I provide further information for debugging? 
-> 
-> Many thanks,
-> John
-> 
-> PS: please include me in the reply.
+ net/mac80211/ibss.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 9b70689..a7564e3 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -289,6 +289,14 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
+ 		    addr, sdata->name);
+ #endif
+ 
++#ifdef CONFIG_MAC80211_IBSS_DEBUG
++	printk(KERN_DEBUG "TX Auth SA=%pM DA=%pM BSSID=%pM"
++	       "(auth_transaction=1)\n", sdata->vif.addr,
++	       sdata->u.ibss.bssid, addr);
++#endif
++	ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, NULL, 0,
++			    addr, sdata->u.ibss.bssid, NULL, 0, 0);
++
+ 	sta_info_move_state(sta, IEEE80211_STA_AUTH);
+ 	sta_info_move_state(sta, IEEE80211_STA_ASSOC);
+ 	sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
+-- 
+1.7.3.4
+
