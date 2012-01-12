@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:46330 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751703Ab2ABMlo convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:42918 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751937Ab2ALLlZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 07:41:44 -0500
-Received: by wgbdr13 with SMTP id dr13so26575800wgb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 02 Jan 2012 04:41:43 -0800 (PST)
+	Thu, 12 Jan 2012 06:41:25 -0500
+Message-ID: <4F0EC61C.5090608@qca.qualcomm.com> (sfid-20120112_124149_870564_6F54442F)
+Date: Thu, 12 Jan 2012 13:38:04 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <20120102122018.30057.qmail@stuge.se>
-References: <1325490085-3806-1-git-send-email-zajec5@gmail.com>
-	<1325490085-3806-2-git-send-email-zajec5@gmail.com>
-	<20120102122018.30057.qmail@stuge.se>
-Date: Mon, 2 Jan 2012 13:41:42 +0100
-Message-ID: <CACna6rxiHydMmVOK18DO6X5COSUvZ+2c5=n-_oztBsP3NkxFhQ@mail.gmail.com> (sfid-20120102_134147_764697_DA9805CB)
-Subject: Re: [PATCH 2/3] bcma: SPROM: add macro for easier extraction
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	b43-dev@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/4] ath6kl: Initialize a variable properly
+References: <20235.48473.693136.780100@gargle.gargle.HOWL>
+In-Reply-To: <20235.48473.693136.780100@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 2 stycznia 2012 13:20 użytkownik Peter Stuge <peter@stuge.se> napisał:
-> Rafał Miłecki wrote:
->> +#define SPEX(_field, _offset, _mask, _shift) \
->> +     bus->sprom._field = ((sprom[SPOFF(_offset)] & (_mask)) >> (_shift))
->
-> Maybe this should take at least bus as parameter too?
+On 01/10/2012 06:23 AM, Sujith Manoharan wrote:
+> This prevents 'comp_pktq' from being used in an
+> incorrect manner.
+> 
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath6kl/htc.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+> index b017022..2d72190 100644
+> --- a/drivers/net/wireless/ath/ath6kl/htc.c
+> +++ b/drivers/net/wireless/ath/ath6kl/htc.c
+> @@ -2062,6 +2062,7 @@ int ath6kl_htc_rxmsg_pending_handler(struct htc_target *target,
+>  	enum htc_endpoint_id id;
+>  	int n_fetched = 0;
+>  
+> +	INIT_LIST_HEAD(&comp_pktq);
 
-I also like the proposed solution because it let me fit some lines 80
-chars length. See all the
-SSB_SROM8_*_PA_[0-2]
-from the next patch. Most of them are 80 char long ;)
 
--- 
-Rafał
+But there's also the same init later in the function, inside the while loop:
+
+		INIT_LIST_HEAD(&rx_pktq);
+		INIT_LIST_HEAD(&comp_pktq);
+
+Is this intentional?
+
+Kalle
