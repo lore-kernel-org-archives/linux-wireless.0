@@ -1,46 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:41000 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752193Ab2AaPnQ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:26182 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750951Ab2ALF3B convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 10:43:16 -0500
-Received: by vcge1 with SMTP id e1so116937vcg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 07:43:15 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Masanari Iida <standby24x7@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH] rtlwifi: Fix typo in dm.c
-Date: Tue, 31 Jan 2012 09:42:58 -0600
-Message-Id: <1328024578-7594-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120131_164324_580900_58828380)
+	Thu, 12 Jan 2012 00:29:01 -0500
+From: "Pachamuthu, Thirumalai" <tpachamu@qca.qualcomm.com>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>
+Subject: RE: [PATCH 2/4] ath6kl: Introduce new queue for uAPSD.
+Date: Thu, 12 Jan 2012 05:25:42 +0000
+Message-ID: <0118B7479E19DD469808F3B2CE43263BBCF5AA@aphydexd01a> (sfid-20120112_062906_986529_631C4B67)
+References: <1326095120-1603-1-git-send-email-tpachamu@qca.qualcomm.com>
+ <4F0D8036.8030306@qca.qualcomm.com>
+In-Reply-To: <4F0D8036.8030306@qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Masanari Iida <standby24x7@gmail.com>
+Kalle,
 
-Correct a spelling "disconnet" to "disconnect" in
-drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+> -----Original Message-----
+> From: Valo, Kalle
+> Sent: Wednesday, January 11, 2012 5:58 PM
+> To: Pachamuthu, Thirumalai
+> Cc: linux-wireless@vger.kernel.org; ath6kl-devel
+> Subject: Re: [PATCH 2/4] ath6kl: Introduce new queue for uAPSD.
+> 
+> On 01/09/2012 09:45 AM, Thirumalai wrote:
+> > Add apsd_info in necessary places to indicate which AC's uAPSD is
+> > enabled.
+> >
+> > A bit is added in the wmi header (bit 4 of info3) to specify uapsd
+> > trigger in rx direction (target to host) and end of service period in
+> > tx direction (host to target)
+> >
+> > Signed-off-by: Thirumalai <tpachamu@qca.qualcomm.com>
+> 
+> [...]
+> 
+> > +#define WMI_DATA_HDR_TRIGGER_MASK      0x1
+> > +#define WMI_DATA_HDR_TRIGGER_SHIFT     4
+> > +
+> > +#define WMI_DATA_HDR_EOSP_MASK      WMI_DATA_HDR_TRIGGER_MASK
+> > +#define WMI_DATA_HDR_EOSP_SHIFT     WMI_DATA_HDR_TRIGGER_SHIFT
+> 
+> This looks a bit odd, I can't see why you want to use trigger definitions for eosp.
+> Even if the values are same I don't see the benefit for using trigger values for
+> eosp. Is there a particular reason for this?
+> 
+> Kalle
 
-Signed-off-by: Masanari Iida <standby24x7@gmail.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192de/dm.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+The bit in the wmi header (bit 4 of info3) to specify TRIGGER in RX direction (target to host) and the same bit will be used as ESOP in TX direction (host to target). 
+Simply we reused the existing macro which made this confusion; I will make the following change in the next release.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-index 181ed6f..9fda1af 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-@@ -294,7 +294,7 @@ static void rtl92d_dm_find_minimum_rssi(struct ieee80211_hw *hw)
- 		de_digtable.min_undecorated_pwdb_for_dm =
- 		    rtlpriv->dm.UNDEC_SM_PWDB;
- 		RT_TRACE(rtlpriv, COMP_BB_POWERSAVING, DBG_LOUD,
--			 "AP Ext Port or disconnet PWDB = 0x%x\n",
-+			 "AP Ext Port or disconnect PWDB = 0x%x\n",
- 			 de_digtable.min_undecorated_pwdb_for_dm);
- 	}
- 
--- 
-1.7.7
+#define WMI_DATA_HDR_EOSP_MASK    1
+#define WMI_DATA_HDR_EOSP_SHIFT    4
 
+-Thirumalai
