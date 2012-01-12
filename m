@@ -1,34 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:59890 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932266Ab2AIRTj (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:44432 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751184Ab2ALGgQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 12:19:39 -0500
-Received: by obcwo16 with SMTP id wo16so4353935obc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 09 Jan 2012 09:19:39 -0800 (PST)
-Message-ID: <4F0B21A7.10009@lwfinger.net> (sfid-20120109_181942_763426_F2B0951F)
-Date: Mon, 09 Jan 2012 11:19:35 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Thu, 12 Jan 2012 01:36:16 -0500
+Date: Thu, 12 Jan 2012 09:34:50 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Jiri Kosina <jkosina@suse.cz>,
+	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] ipw2x00: signedness bug handling frame length
+Message-ID: <20120112063449.GA2408@elgon.mountain> (sfid-20120112_073620_870375_7E8284B9)
 MIME-Version: 1.0
-To: lina <lina.lastname@gmail.com>
-Subject: Re: modprob b43 not work after hilibernate
-References: <4F09AAE5.2080209@gmail.com>	<4F09BEC0.7080702@lwfinger.net>	<4F09C1E2.6020907@gmail.com> <CACna6rxMPnn1DHtMvsHtCG3y=_-sCKgb=L901MV96fj31BZ58A@mail.gmail.com> <4F0A686F.9050802@gmail.com>
-In-Reply-To: <4F0A686F.9050802@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/08/2012 10:09 PM, lina wrote:
-> On Monday 09,January,2012 05:44 AM, Rafał Miłecki wrote:
->> Does your kernel have
->> [PATCH] bcma: support for suspend and resume
->> applied?
->
-> I don't know how to check, googled for a while, found some thread, but did not
-> find the patch, is it in the kernel.org [patch] part, I thought the [full
-> source] is already patched?
+This is basically just a cleanup.  Large positive numbers get counted as
+negative but then get implicitly cast to positive again for the checks
+that matter.
 
-The mainline kernel v3.2-3191-g36e9db2 has that patch.
+This does make a small difference in ipw_handle_promiscuous_rx() when we
+test "if (unlikely((len + IPW_RX_FRAME_SIZE) > skb_tailroom(rxb->skb)))"
+It should return there, but we don't return until a couple lines later
+when we test "if (len > IPW_RX_BUF_SIZE - sizeof(struct ipw_rt_hdr)) {".
+The difference is that in the second test the sizeof() means that there
+is an implied cast to unsigned.
 
-Larry
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
+diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
+index 018a8de..4fcdac6 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/ipw2x00/ipw2200.c
+@@ -7848,7 +7848,7 @@ static void ipw_handle_data_packet_monitor(struct ipw_priv *priv,
+ 	 * more efficiently than we can parse it. ORDER MATTERS HERE */
+ 	struct ipw_rt_hdr *ipw_rt;
+ 
+-	short len = le16_to_cpu(pkt->u.frame.length);
++	unsigned short len = le16_to_cpu(pkt->u.frame.length);
+ 
+ 	/* We received data from the HW, so stop the watchdog */
+ 	dev->trans_start = jiffies;
+@@ -8023,7 +8023,7 @@ static void ipw_handle_promiscuous_rx(struct ipw_priv *priv,
+ 	s8 signal = frame->rssi_dbm - IPW_RSSI_TO_DBM;
+ 	s8 noise = (s8) le16_to_cpu(frame->noise);
+ 	u8 rate = frame->rate;
+-	short len = le16_to_cpu(pkt->u.frame.length);
++	unsigned short len = le16_to_cpu(pkt->u.frame.length);
+ 	struct sk_buff *skb;
+ 	int hdr_only = 0;
+ 	u16 filter = priv->prom_priv->filter;
