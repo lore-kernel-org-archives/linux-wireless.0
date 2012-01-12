@@ -1,56 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:35964 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751722Ab2A3XEX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 18:04:23 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
-	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/7] bcma: export bcma_pcie_read()
-Date: Tue, 31 Jan 2012 00:03:33 +0100
-Message-Id: <1327964617-7910-4-git-send-email-hauke@hauke-m.de> (sfid-20120131_000426_224577_DE6A45E5)
-In-Reply-To: <1327964617-7910-1-git-send-email-hauke@hauke-m.de>
-References: <1327964617-7910-1-git-send-email-hauke@hauke-m.de>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47508 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750718Ab2ALLTC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jan 2012 06:19:02 -0500
+Message-ID: <4F0EC128.5060700@qca.qualcomm.com> (sfid-20120112_121908_599049_8DDD06EF)
+Date: Thu, 12 Jan 2012 13:16:56 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: "Pachamuthu, Thirumalai" <tpachamu@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 2/4] ath6kl: Introduce new queue for uAPSD.
+References: <1326095120-1603-1-git-send-email-tpachamu@qca.qualcomm.com> <4F0D8036.8030306@qca.qualcomm.com> <0118B7479E19DD469808F3B2CE43263BBCF5AA@aphydexd01a>
+In-Reply-To: <0118B7479E19DD469808F3B2CE43263BBCF5AA@aphydexd01a>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will be needed by the host controller.
+On 01/12/2012 07:25 AM, Pachamuthu, Thirumalai wrote:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/bcma_private.h |    3 +++
- drivers/bcma/driver_pci.c   |    2 +-
- 2 files changed, 4 insertions(+), 1 deletions(-)
+>> -----Original Message-----
+>> From: Valo, Kalle
+>> Sent: Wednesday, January 11, 2012 5:58 PM
+>> To: Pachamuthu, Thirumalai
+>> Cc: linux-wireless@vger.kernel.org; ath6kl-devel
+>> Subject: Re: [PATCH 2/4] ath6kl: Introduce new queue for uAPSD.
+>>
+>> On 01/09/2012 09:45 AM, Thirumalai wrote:
+>>> Add apsd_info in necessary places to indicate which AC's uAPSD is
+>>> enabled.
+>>>
+>>> A bit is added in the wmi header (bit 4 of info3) to specify uapsd
+>>> trigger in rx direction (target to host) and end of service period in
+>>> tx direction (host to target)
+>>>
+>>> Signed-off-by: Thirumalai <tpachamu@qca.qualcomm.com>
+>>
+>> [...]
+>>
+>>> +#define WMI_DATA_HDR_TRIGGER_MASK      0x1
+>>> +#define WMI_DATA_HDR_TRIGGER_SHIFT     4
+>>> +
+>>> +#define WMI_DATA_HDR_EOSP_MASK      WMI_DATA_HDR_TRIGGER_MASK
+>>> +#define WMI_DATA_HDR_EOSP_SHIFT     WMI_DATA_HDR_TRIGGER_SHIFT
+>>
+>> This looks a bit odd, I can't see why you want to use trigger definitions for eosp.
+>> Even if the values are same I don't see the benefit for using trigger values for
+>> eosp. Is there a particular reason for this?
+>>
+>> Kalle
+> 
+> The bit in the wmi header (bit 4 of info3) to specify TRIGGER in RX direction (target to host) and the same bit will be used as ESOP in TX direction (host to target). 
+> Simply we reused the existing macro which made this confusion; I will make the following change in the next release.
+> 
+> #define WMI_DATA_HDR_EOSP_MASK    1
+> #define WMI_DATA_HDR_EOSP_SHIFT    4
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 0def898..6109da5 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -48,6 +48,9 @@ extern int __init bcma_host_pci_init(void);
- extern void __exit bcma_host_pci_exit(void);
- #endif /* CONFIG_BCMA_HOST_PCI */
- 
-+/* driver_pci.c */
-+u32 bcma_pcie_read(struct bcma_drv_pci *pc, u32 address);
-+
- #ifdef CONFIG_BCMA_DRIVER_PCI_HOSTMODE
- void bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc);
- #endif /* CONFIG_BCMA_DRIVER_PCI_HOSTMODE */
-diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
-index 970a38e..20ceebd 100644
---- a/drivers/bcma/driver_pci.c
-+++ b/drivers/bcma/driver_pci.c
-@@ -17,7 +17,7 @@
-  * R/W ops.
-  **************************************************/
- 
--static u32 bcma_pcie_read(struct bcma_drv_pci *pc, u32 address)
-+u32 bcma_pcie_read(struct bcma_drv_pci *pc, u32 address)
- {
- 	pcicore_write32(pc, BCMA_CORE_PCI_PCIEIND_ADDR, address);
- 	pcicore_read32(pc, BCMA_CORE_PCI_PCIEIND_ADDR);
--- 
-1.7.5.4
+Thanks, please do that. It is definitely clearer that way.
 
+Kalle
