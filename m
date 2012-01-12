@@ -1,140 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:59691 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753401Ab2ALQiE convert rfc822-to-8bit (ORCPT
+Received: from latitanza.investici.org ([82.94.249.234]:56676 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755507Ab2ALUjC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jan 2012 11:38:04 -0500
-Received: by eaal12 with SMTP id l12so715117eaa.19
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2012 08:38:03 -0800 (PST)
-MIME-Version: 1.0
-Date: Thu, 12 Jan 2012 10:38:02 -0600
-Message-ID: <CAE7DoPZvEud7_uN_JEiJ0CzZ2BGfDdzNn_EdOnGThLSshFsoSw@mail.gmail.com> (sfid-20120112_173810_163120_07864913)
-Subject: ath5k: no interrupts
-From: Ben Gardner <gardner.ben@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 12 Jan 2012 15:39:02 -0500
+From: Antonio Quartulli <ordex@autistici.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCH 2/2] mac80211: in IBSS use the Auth frame to trigger STA reinsertion
+Date: Thu, 12 Jan 2012 21:36:56 +0100
+Message-Id: <1326400616-1109-2-git-send-email-ordex@autistici.org> (sfid-20120112_213918_623589_679D1247)
+In-Reply-To: <1326400616-1109-1-git-send-email-ordex@autistici.org>
+References: <1326400616-1109-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am using Atheros AR5414 card in a custom Geode LX-based board.
-It is a mini-PCI card with PCI ID 168c:001b.
+In case of re-authentication of a node, in IBSS mode, the sta_info structure
+corresponding to it is first destroyed and then reinserted. In this way its
+internal state is reset.
 
-Under the 2.6.25 kernel, the ath5k driver works.
-Under the 3.0.9 and 3.2.0 kernels, the card does not work.
-By 'does not work' I mean that it can't find any access points.  After digging
-a bit, it looks like interrupts are not occurring.
+This operation is helpful in case of a node being rebooted which is joining the
+ad-hoc cell again before its purge timeout on the other nodes expires.
 
-Here is a snippet of the kernel log (Geode LX/3.0.9):
-[    1.712119] cfg80211: Calling CRDA to update world regulatory domain
-[    1.801089] ath5k 0000:00:0c.0: PCI INT A -> Link[LNKA] -> GSI 10
-(level, low) -> IRQ 10
-[    1.801270] ath5k 0000:00:0c.0: registered as 'phy0'
-[    2.468139] ath: EEPROM regdomain: 0x0
-[    2.468158] ath: EEPROM indicates default country code should be used
-[    2.468176] ath: doing EEPROM country->regdmn map search
-[    2.468200] ath: country maps to regdmn code: 0x3a
-[    2.468217] ath: Country alpha2 being used: US
-[    2.468233] ath: Regpair used: 0x3a
-[    2.468862] ieee80211 phy0: Selected rate control algorithm 'pid'
-[    2.471545] ath5k phy0: Atheros AR5414 chip found (MAC: 0xa5, PHY: 0x61)
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+---
+ net/mac80211/ibss.c |   94 +++++++++++++++++++++++++++++++--------------------
+ 1 files changed, 57 insertions(+), 37 deletions(-)
 
-~ # cat /proc/interrupts
-          CPU0
- 0:      43630    XT-PIC-XT-PIC    timer
- 2:          0    XT-PIC-XT-PIC    cascade
- 3:          1    XT-PIC-XT-PIC
- 4:          1    XT-PIC-XT-PIC
- 8:          0    XT-PIC-XT-PIC    rtc0
- 9:          0    XT-PIC-XT-PIC    acpi
-10:          0    XT-PIC-XT-PIC    ath
-11:       2373    XT-PIC-XT-PIC    ehci_hcd:usb1, ohci_hcd:usb2, eth0
-14:        418    XT-PIC-XT-PIC    pata_cs5536
-NMI:          0   Non-maskable interrupts
-LOC:          0   Local timer interrupts
-SPU:          0   Spurious interrupts
-PMI:          0   Performance monitoring interrupts
-IWI:          0   IRQ work interrupts
-ERR:          0
-MIS:          0
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index a7564e3..d80de75 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -35,32 +35,6 @@
+ 
+ #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
+ 
+-
+-static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
+-					struct ieee80211_mgmt *mgmt,
+-					size_t len)
+-{
+-	u16 auth_alg, auth_transaction;
+-
+-	lockdep_assert_held(&sdata->u.ibss.mtx);
+-
+-	if (len < 24 + 6)
+-		return;
+-
+-	auth_alg = le16_to_cpu(mgmt->u.auth.auth_alg);
+-	auth_transaction = le16_to_cpu(mgmt->u.auth.auth_transaction);
+-
+-	/*
+-	 * IEEE 802.11 standard does not require authentication in IBSS
+-	 * networks and most implementations do not seem to use it.
+-	 * However, try to reply to authentication attempts if someone
+-	 * has actually implemented this.
+-	 */
+-	if (auth_alg == WLAN_AUTH_OPEN && auth_transaction == 1)
+-		ieee80211_send_auth(sdata, 2, WLAN_AUTH_OPEN, NULL, 0, mgmt->sa,
+-				    sdata->u.ibss.bssid, NULL, 0, 0);
+-}
+-
+ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 				      const u8 *bssid, const int beacon_int,
+ 				      struct ieee80211_channel *chan,
+@@ -275,7 +249,8 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 				  cbss->tsf);
+ }
+ 
+-static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
++static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
++						  bool auth)
+ 	__acquires(RCU)
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+@@ -289,13 +264,15 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
+ 		    addr, sdata->name);
+ #endif
+ 
++	if (auth) {
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+-	printk(KERN_DEBUG "TX Auth SA=%pM DA=%pM BSSID=%pM"
+-	       "(auth_transaction=1)\n", sdata->vif.addr,
+-	       sdata->u.ibss.bssid, addr);
++		printk(KERN_DEBUG "TX Auth SA=%pM DA=%pM BSSID=%pM"
++		       "(auth_transaction=1)\n", sdata->vif.addr,
++		       sdata->u.ibss.bssid, addr);
+ #endif
+-	ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, NULL, 0,
+-			    addr, sdata->u.ibss.bssid, NULL, 0, 0);
++		ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, NULL, 0,
++				    addr, sdata->u.ibss.bssid, NULL, 0, 0);
++	}
+ 
+ 	sta_info_move_state(sta, IEEE80211_STA_AUTH);
+ 	sta_info_move_state(sta, IEEE80211_STA_ASSOC);
+@@ -312,7 +289,7 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
+ static struct sta_info *
+ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 		       const u8 *bssid, const u8 *addr,
+-		       u32 supp_rates)
++		       u32 supp_rates, bool auth)
+ 	__acquires(RCU)
+ {
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+@@ -354,7 +331,7 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 	sta->sta.supp_rates[band] = supp_rates |
+ 			ieee80211_mandatory_rates(local, band);
+ 
+-	return ieee80211_ibss_finish_sta(sta);
++	return ieee80211_ibss_finish_sta(sta, auth);
+ }
+ 
+ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+@@ -419,7 +396,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 			} else {
+ 				rcu_read_unlock();
+ 				sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid,
+-						mgmt->sa, supp_rates);
++						mgmt->sa, supp_rates, true);
+ 			}
+ 		}
+ 
+@@ -547,7 +524,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_sta_join_ibss(sdata, bss);
+ 		supp_rates = ieee80211_sta_get_rates(local, elems, band);
+ 		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
+-				       supp_rates);
++				       supp_rates, true);
+ 		rcu_read_unlock();
+ 	}
+ 
+@@ -784,6 +761,49 @@ static void ieee80211_sta_find_ibss(struct ieee80211_sub_if_data *sdata)
+ 	}
+ }
+ 
++static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
++					struct ieee80211_mgmt *mgmt,
++					size_t len)
++{
++	u16 auth_alg, auth_transaction;
++	size_t baselen;
++
++	lockdep_assert_held(&sdata->u.ibss.mtx);
++
++	if (len < 24 + 6)
++		return;
++
++	baselen = (u8 *) mgmt->u.auth.variable - (u8 *) mgmt;
++	if (baselen > len)
++		return;
++
++	auth_alg = le16_to_cpu(mgmt->u.auth.auth_alg);
++	auth_transaction = le16_to_cpu(mgmt->u.auth.auth_transaction);
++
++	if (auth_alg == WLAN_AUTH_OPEN && auth_transaction == 1) {
++#ifdef CONFIG_MAC80211_IBSS_DEBUG
++		printk(KERN_DEBUG "%s: RX Auth SA=%pM DA=%pM BSSID=%pM."
++		       "(auth_transaction=%d)\n",
++		       sdata->name, mgmt->sa, mgmt->da, mgmt->bssid,
++		       auth_transaction);
++#endif
++		if (sta_info_destroy_addr(sdata, mgmt->sa) != -ENOENT) {
++			ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0,
++					       false);
++			rcu_read_unlock();
++		}
++
++		/*
++		 * IEEE 802.11 standard does not require authentication in IBSS
++		 * networks and most implementations do not seem to use it.
++		 * However, try to reply to authentication attempts if someone
++		 * has actually implemented this.
++		 */
++		ieee80211_send_auth(sdata, 2, WLAN_AUTH_OPEN, NULL, 0,
++				    mgmt->sa, sdata->u.ibss.bssid, NULL, 0, 0);
++	}
++}
++
+ static void ieee80211_rx_mgmt_probe_req(struct ieee80211_sub_if_data *sdata,
+ 					struct sk_buff *req)
+ {
+@@ -952,7 +972,7 @@ void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
+ 		list_del(&sta->list);
+ 		spin_unlock_bh(&ifibss->incomplete_lock);
+ 
+-		ieee80211_ibss_finish_sta(sta);
++		ieee80211_ibss_finish_sta(sta, true);
+ 		rcu_read_unlock();
+ 		spin_lock_bh(&ifibss->incomplete_lock);
+ 	}
+-- 
+1.7.3.4
 
-The 'registers' from debugfs show that an interrupt is pending.
-~ # cat /debug/ieee80211/phy1/ath5k/registers
-AR5K_CR                  0x00000004
-AR5K_RXDP                0x1f3524e0
-AR5K_CFG                 0x00000100
-AR5K_IER                 0x00000001
-AR5K_BCR                 0x00000000
-AR5K_RTSD0               0x00000000
-AR5K_RTSD1               0x00000000
-AR5K_TXCFG               0x00000015
-AR5K_RXCFG               0x00000005
-AR5K_RXJLA               0x1f3524f0
-AR5K_MIBC                0x00000001
-AR5K_TOPS                0x00000008
-AR5K_RXNOFRM             0x00000000
-AR5K_TXNOFRM             0x00000000
-AR5K_RPGTO               0x00000000
-AR5K_RFCNT               0x0000001f
-AR5K_MISC                0x00000000
-AR5K_QCUDCU_CLKGT        0x00de96a1
-AR5K_ISR                 0x00000000
-AR5K_PISR                0x00045005
-AR5K_SISR0               0x00000000
-AR5K_SISR1               0x00000000
-AR5K_SISR2               0x88800000
-AR5K_SISR3               0x00000000
-AR5K_SISR4               0x00000000
-AR5K_IMR                 0x00000000
-AR5K_PIMR                0x800814b5
-AR5K_SIMR0               0x00cf0000
-AR5K_SIMR1               0x004f0000
-AR5K_SIMR2               0x00070000
-AR5K_SIMR3               0x00000000
-AR5K_SIMR4               0x00000000
-AR5K_DCM_ADDR            0x00000012
-AR5K_DCCFG               0x00000000
-AR5K_CCFG                0x00000000
-AR5K_CPC0                0x00000000
-AR5K_CPC1                0x00000000
-AR5K_CPC2                0x00000000
-AR5K_CPC3                0x00000000
-AR5K_CPCOVF              0x00000000
-AR5K_RESET_CTL           0x00000000
-AR5K_SLEEP_CTL           0x00000000
-AR5K_INTPEND             0x00000001
-AR5K_SFR                 0x00000000
-AR5K_PCICFG              0x00000014
-AR5K_GPIOCR              0x00008000
-AR5K_GPIODO              0x00000001
-AR5K_SREV                0x000000a5
-
-
-For comparison, I also have an older Geode GX-based board with the same Atheros
-card.  The exact same 3.0.9 image works just fine on that board.
-Here is the same group of kernel logs:
-[    6.033111] cfg80211: Calling CRDA to update world regulatory domain
-[    6.455114] ath5k 0000:00:0d.0: guessed PCI INT A -> IRQ 11
-[    6.455965] ath5k 0000:00:0d.0: registered as 'phy0'
-[    7.228768] ath: EEPROM regdomain: 0x0
-[    7.228800] ath: EEPROM indicates default country code should be used
-[    7.228828] ath: doing EEPROM country->regdmn map search
-[    7.228865] ath: country maps to regdmn code: 0x3a
-[    7.228893] ath: Country alpha2 being used: US
-[    7.228918] ath: Regpair used: 0x3a
-[    7.230164] ieee80211 phy0: Selected rate control algorithm 'pid'
-[    7.234204] ath5k phy0: Atheros AR5414 chip found (MAC: 0xa5, PHY: 0x61)
-
-The only significant difference is the line that shows the IRQ.
-
-
-At this point, I'm not sure if this is a problem with the ath5k driver or with
-the something else that changed in the kernel between the two versions, or with
-the CPU board itself.
-
-I have not yet done a bisect to see when the driver stopped working on the LX.
-I plan to do that next.
-
-Any suggestions as to what to look for would be helpful.
-
-Thanks,
-Ben
