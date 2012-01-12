@@ -1,40 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:57245 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932667Ab2AEPwO (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:63717 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753656Ab2ALQ1X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 10:52:14 -0500
-Subject: Re: [PATCH 2/2] NFC: Handle error during NCI data exchange
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: ilanelias78@gmail.com
-Cc: aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Ilan Elias <ilane@ti.com>
-In-Reply-To: <1324393061-32173-3-git-send-email-ilane@ti.com>
-References: <1324393061-32173-1-git-send-email-ilane@ti.com>
-	 <1324393061-32173-3-git-send-email-ilane@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 05 Jan 2012 16:57:59 +0100
-Message-ID: <1325779079.5354.15.camel@sortiz-mobl> (sfid-20120105_165221_811802_13216B8E)
-Mime-Version: 1.0
+	Thu, 12 Jan 2012 11:27:23 -0500
+Received: by eaal12 with SMTP id l12so710351eaa.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2012 08:27:22 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: =?UTF-8?q?=5BPATCH=201/2=5D=20MAINTAINERS=3A=20move=20BCMA=20to=20keep=20the=20list=20sorted?=
+Date: Thu, 12 Jan 2012 17:28:59 +0100
+Message-Id: <1326385740-11203-2-git-send-email-zajec5@gmail.com> (sfid-20120112_172743_005895_49342E3D)
+In-Reply-To: <1326385740-11203-1-git-send-email-zajec5@gmail.com>
+References: <1326385740-11203-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ilan,
+---
+ MAINTAINERS |   14 +++++++-------
+ 1 files changed, 7 insertions(+), 7 deletions(-)
 
-On Tue, 2011-12-20 at 16:57 +0200, ilanelias78@gmail.com wrote:
-> From: Ilan Elias <ilane@ti.com>
-> 
-> Add support for NCI Interface Error Notification.
-> When this notification is received and we're during a
-> data exchange transaction, indicate an error to the NFC
-> core layer via the data exchange callback.
-> 
-> Signed-off-by: Ilan Elias <ilane@ti.com>
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
-
-Cheers,
-Samuel.
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 4babed7..dc11e28 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -1595,6 +1595,13 @@ L:	linux-scsi@vger.kernel.org
+ S:	Supported
+ F:	drivers/scsi/bnx2fc/
+ 
++BROADCOM SPECIFIC AMBA DRIVER (BCMA)
++M:	Rafał Miłecki <zajec5@gmail.com>
++L:	linux-wireless@vger.kernel.org
++S:	Maintained
++F:	drivers/bcma/
++F:	include/linux/bcma/
++
+ BROCADE BFA FC SCSI DRIVER
+ M:	Jing Huang <huangj@brocade.com>
+ L:	linux-scsi@vger.kernel.org
+@@ -6101,13 +6108,6 @@ S:	Maintained
+ F:	drivers/ssb/
+ F:	include/linux/ssb/
+ 
+-BROADCOM SPECIFIC AMBA DRIVER (BCMA)
+-M:	Rafał Miłecki <zajec5@gmail.com>
+-L:	linux-wireless@vger.kernel.org
+-S:	Maintained
+-F:	drivers/bcma/
+-F:	include/linux/bcma/
+-
+ SONY VAIO CONTROL DEVICE DRIVER
+ M:	Mattia Dongili <malattia@linux.it>
+ L:	platform-driver-x86@vger.kernel.org
+-- 
+1.7.7
 
