@@ -1,287 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:33392 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753250Ab2AHCrU (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:10464 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751334Ab2ALLpk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jan 2012 21:47:20 -0500
-Received: by mail-iy0-f174.google.com with SMTP id h11so4842716iae.19
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jan 2012 18:47:19 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 7/8] rtl8192de: Update copyright dates
-Date: Sat,  7 Jan 2012 20:46:46 -0600
-Message-Id: <1325990807-13575-8-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120108_034728_866598_CEB7D3FB)
-In-Reply-To: <1325990807-13575-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1325990807-13575-1-git-send-email-Larry.Finger@lwfinger.net>
+	Thu, 12 Jan 2012 06:45:40 -0500
+Message-ID: <4F0EC79E.3050807@qca.qualcomm.com> (sfid-20120112_124544_148282_7571360B)
+Date: Thu, 12 Jan 2012 13:44:30 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 1/4] ath6kl: Fix SDIO error path
+References: <20235.48443.85318.763205@gargle.gargle.HOWL>
+In-Reply-To: <20235.48443.85318.763205@gargle.gargle.HOWL>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/rtlwifi/rtl8192de/def.h   |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/dm.c    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/dm.h    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/fw.c    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/fw.h    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/hw.c    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/hw.h    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/led.c   |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/led.h   |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/phy.c   |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/phy.h   |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/reg.h   |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/rf.c    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/rf.h    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/sw.c    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/sw.h    |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/table.c |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/table.h |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/trx.c   |    2 +-
- drivers/net/wireless/rtlwifi/rtl8192de/trx.h   |    2 +-
- 20 files changed, 20 insertions(+), 20 deletions(-)
+On 01/10/2012 06:23 AM, Sujith Manoharan wrote:
+> sdio_release_host() would be called twice if sdio_set_block_size()
+> fails for some reason, which would result in the following warning.
+> 
+> WARNING: at /home/sujith/dev/wireless-testing/drivers/mmc/core/core.c:828 mmc_release_host+0x42/0x50 [mmc_core]()
+> 
+> Call Trace:
+> [<ffffffff81064fdf>] warn_slowpath_common+0x7f/0xc0
+> [<ffffffff8106503a>] warn_slowpath_null+0x1a/0x20
+> [<ffffffffa03beb42>] mmc_release_host+0x42/0x50 [mmc_core]
+> [<ffffffffa03c917e>] sdio_release_host+0x1e/0x30 [mmc_core]
+> [<ffffffffa053fac7>] ath6kl_sdio_config+0xc7/0x110 [ath6kl_sdio]
+> [<ffffffffa053fd2c>] ath6kl_sdio_probe+0x21c/0x320 [ath6kl_sdio]
+> [<ffffffffa03beb2a>] ? mmc_release_host+0x2a/0x50 [mmc_core]
+> [<ffffffffa03c7d2a>] sdio_bus_probe+0xfa/0x130 [mmc_core]
+> [<ffffffff813015ae>] driver_probe_device+0x7e/0x1b0
+> [<ffffffff8130178b>] __driver_attach+0xab/0xb0
+> [<ffffffff813016e0>] ? driver_probe_device+0x1b0/0x1b0
+> [<ffffffff813016e0>] ? driver_probe_device+0x1b0/0x1b0
+> [<ffffffff81300504>] bus_for_each_dev+0x64/0xa0
+> [<ffffffff8130123e>] driver_attach+0x1e/0x20
+> [<ffffffff81300e80>] bus_add_driver+0x1b0/0x280
+> [<ffffffffa0065000>] ? 0xffffffffa0064fff
+> [<ffffffff81301d06>] driver_register+0x76/0x140
+> [<ffffffffa0065000>] ? 0xffffffffa0064fff
+> [<ffffffffa03c7b71>] sdio_register_driver+0x21/0x30 [mmc_core]
+> [<ffffffffa0065012>] ath6kl_sdio_init+0x12/0x35 [ath6kl_sdio]
+> [<ffffffff81002042>] do_one_initcall+0x42/0x180
+> [<ffffffff810b025f>] sys_init_module+0x8f/0x200
+> [<ffffffff81425ac2>] system_call_fastpath+0x16/0x1b
+> 
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/def.h b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
-index 9463047..eafdf76 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/def.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/def.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-index 32537c4..181ed6f 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.h b/drivers/net/wireless/rtlwifi/rtl8192de/dm.h
-index 6935465..91030ec 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
-index da58ca4..b59de75 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/fw.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/fw.h b/drivers/net/wireless/rtlwifi/rtl8192de/fw.h
-index 0c4d489..1ffacdd 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/fw.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/fw.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-index 88b4d07..265cea3 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/hw.h b/drivers/net/wireless/rtlwifi/rtl8192de/hw.h
-index ad44ffa..7c9f7a2 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/hw.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/hw.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/led.c b/drivers/net/wireless/rtlwifi/rtl8192de/led.c
-index f2358f2..76a57ae 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/led.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/led.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/led.h b/drivers/net/wireless/rtlwifi/rtl8192de/led.h
-index 57f4a3c..a29df30 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/led.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/led.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-index f27acc7..9581a19 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/phy.h b/drivers/net/wireless/rtlwifi/rtl8192de/phy.h
-index a52c824..f074952 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/phy.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/phy.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/reg.h b/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
-index 131acc3..9bc4623 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/reg.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/rf.c b/drivers/net/wireless/rtlwifi/rtl8192de/rf.c
-index 2e174f4..ff34d2d 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/rf.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/rf.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/rf.h b/drivers/net/wireless/rtlwifi/rtl8192de/rf.h
-index 74b9cfc..0fe1a48 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/rf.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/rf.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
-index 020e4e5..ca8f2df 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/sw.h b/drivers/net/wireless/rtlwifi/rtl8192de/sw.h
-index c95e47d..0e6035b 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/sw.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/sw.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/table.c b/drivers/net/wireless/rtlwifi/rtl8192de/table.c
-index bad7f94..8ea6f52 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/table.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/table.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/table.h b/drivers/net/wireless/rtlwifi/rtl8192de/table.h
-index 93f30ca..8b724a8 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/table.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/table.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/trx.c b/drivers/net/wireless/rtlwifi/rtl8192de/trx.c
-index 8f487ed..9aacd2f 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/trx.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/trx.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/trx.h b/drivers/net/wireless/rtlwifi/rtl8192de/trx.h
-index 4d55d0b..0dc736c 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192de/trx.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192de/trx.h
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Copyright(c) 2009-2010  Realtek Corporation.
-+ * Copyright(c) 2009-2012  Realtek Corporation.
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
--- 
-1.7.7
+Thanks, all four patches applied. Patch 4 has caused two checkpatch
+warnings, I fixed those. If my comment for patch 3 needs action (which I
+doubt), please send a followup patch.
 
+Kalle
