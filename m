@@ -1,175 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:58283 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932272Ab2AEN2a (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 08:28:30 -0500
-Subject: [PATCH v2 4/6] ath6kl: get rid of AR_DBG_LVL_CHECK()
-To: linville@tuxdriver.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: sfr@canb.auug.org.au, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-next@vger.kernel.org, ath6kl-devel@qualcomm.com,
-	davem@davemloft.net
-Date: Thu, 05 Jan 2012 15:28:12 +0200
-Message-ID: <20120105132812.22281.98859.stgit@x201> (sfid-20120105_142850_920594_D6360A6A)
-In-Reply-To: <20120105132523.22281.95999.stgit@x201>
-References: <20120105132523.22281.95999.stgit@x201>
+Received: from mail.wut.de ([194.77.229.25]:51611 "EHLO mail.wut.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753574Ab2ALOVE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jan 2012 09:21:04 -0500
+Message-ID: <4F0EEA1B.3040501@wut.de> (sfid-20120112_152109_885301_61827E02)
+Date: Thu, 12 Jan 2012 15:11:39 +0100
+From: =?ISO-8859-15?Q?Markus_K=F6nigshaus?= <m.koenigshaus@wut.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: linux-wireless@vger.kernel.org
+CC: Larry.Finger@lwfinger.net, georgia@realtek.com
+Subject: Problem with the rtl8192cu - kernelmodule after ifdown, ifup
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We don't need it as debug calls already have a log level and compiler
-should be smart enough to optimise away the code when ath6kl debug code
-is not enabled. Also it makes it easier to abstract core code to
-ath6kl_core.ko.
+Hello,
 
-In ath6kl_dump_registers() I had to change the debug level from ANY to IRQ
-as I removed the AR_DBG_LVL_CHECK() check before calling the function.
+I am using a USB WLAN - Stick with Realtek 8192 kernel driver. After 
+plugging it works fine, connecting to a WPA - network works. After 
+ifdown wlan0, ifup wlan0 the stick no longer works , it stucks on 
+scanning. Only a modprobe -r rtl8192cu; modprobe rtl8192cu fixes the 
+problem. The problem only appear if more than one wireless - network is 
+in range.The problem appear only in connection with the rtl8192cu 
+driver, other USB - sticks (with different Chipset) and other PCIE - 
+boards operate properly.
+In order to reproduce the behavior repeat the sequenceifdown wlan0, ifup 
+wlan0 a few times.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/debug.c |   35 ++++++++++++++-----------------
- drivers/net/wireless/ath/ath6kl/debug.h |    2 --
- drivers/net/wireless/ath/ath6kl/hif.c   |    5 ++--
- drivers/net/wireless/ath/ath6kl/wmi.c   |    3 ---
- 4 files changed, 18 insertions(+), 27 deletions(-)
+wpa_cli status->
+Selected interface 'wlan0'
+wpa_state=SCANNING
+< no change after 10 minutes>
 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index eb808b4..0d77129 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -82,31 +82,31 @@ void ath6kl_dump_registers(struct ath6kl_device *dev,
- 			   struct ath6kl_irq_enable_reg *irq_enable_reg)
- {
- 
--	ath6kl_dbg(ATH6KL_DBG_ANY, ("<------- Register Table -------->\n"));
-+	ath6kl_dbg(ATH6KL_DBG_IRQ, ("<------- Register Table -------->\n"));
- 
- 	if (irq_proc_reg != NULL) {
--		ath6kl_dbg(ATH6KL_DBG_ANY,
-+		ath6kl_dbg(ATH6KL_DBG_IRQ,
- 			"Host Int status:           0x%x\n",
- 			irq_proc_reg->host_int_status);
--		ath6kl_dbg(ATH6KL_DBG_ANY,
-+		ath6kl_dbg(ATH6KL_DBG_IRQ,
- 			   "CPU Int status:            0x%x\n",
- 			irq_proc_reg->cpu_int_status);
--		ath6kl_dbg(ATH6KL_DBG_ANY,
-+		ath6kl_dbg(ATH6KL_DBG_IRQ,
- 			   "Error Int status:          0x%x\n",
- 			irq_proc_reg->error_int_status);
--		ath6kl_dbg(ATH6KL_DBG_ANY,
-+		ath6kl_dbg(ATH6KL_DBG_IRQ,
- 			   "Counter Int status:        0x%x\n",
- 			irq_proc_reg->counter_int_status);
--		ath6kl_dbg(ATH6KL_DBG_ANY,
-+		ath6kl_dbg(ATH6KL_DBG_IRQ,
- 			   "Mbox Frame:                0x%x\n",
- 			irq_proc_reg->mbox_frame);
--		ath6kl_dbg(ATH6KL_DBG_ANY,
-+		ath6kl_dbg(ATH6KL_DBG_IRQ,
- 			   "Rx Lookahead Valid:        0x%x\n",
- 			irq_proc_reg->rx_lkahd_valid);
--		ath6kl_dbg(ATH6KL_DBG_ANY,
-+		ath6kl_dbg(ATH6KL_DBG_IRQ,
- 			   "Rx Lookahead 0:            0x%x\n",
- 			irq_proc_reg->rx_lkahd[0]);
--		ath6kl_dbg(ATH6KL_DBG_ANY,
-+		ath6kl_dbg(ATH6KL_DBG_IRQ,
- 			   "Rx Lookahead 1:            0x%x\n",
- 			irq_proc_reg->rx_lkahd[1]);
- 
-@@ -115,16 +115,16 @@ void ath6kl_dump_registers(struct ath6kl_device *dev,
- 			 * If the target supports GMBOX hardware, dump some
- 			 * additional state.
- 			 */
--			ath6kl_dbg(ATH6KL_DBG_ANY,
-+			ath6kl_dbg(ATH6KL_DBG_IRQ,
- 				"GMBOX Host Int status 2:   0x%x\n",
- 				irq_proc_reg->host_int_status2);
--			ath6kl_dbg(ATH6KL_DBG_ANY,
-+			ath6kl_dbg(ATH6KL_DBG_IRQ,
- 				"GMBOX RX Avail:            0x%x\n",
- 				irq_proc_reg->gmbox_rx_avail);
--			ath6kl_dbg(ATH6KL_DBG_ANY,
-+			ath6kl_dbg(ATH6KL_DBG_IRQ,
- 				"GMBOX lookahead alias 0:   0x%x\n",
- 				irq_proc_reg->rx_gmbox_lkahd_alias[0]);
--			ath6kl_dbg(ATH6KL_DBG_ANY,
-+			ath6kl_dbg(ATH6KL_DBG_IRQ,
- 				"GMBOX lookahead alias 1:   0x%x\n",
- 				irq_proc_reg->rx_gmbox_lkahd_alias[1]);
- 		}
-@@ -132,13 +132,13 @@ void ath6kl_dump_registers(struct ath6kl_device *dev,
- 	}
- 
- 	if (irq_enable_reg != NULL) {
--		ath6kl_dbg(ATH6KL_DBG_ANY,
-+		ath6kl_dbg(ATH6KL_DBG_IRQ,
- 			"Int status Enable:         0x%x\n",
- 			irq_enable_reg->int_status_en);
--		ath6kl_dbg(ATH6KL_DBG_ANY, "Counter Int status Enable: 0x%x\n",
-+		ath6kl_dbg(ATH6KL_DBG_IRQ, "Counter Int status Enable: 0x%x\n",
- 			irq_enable_reg->cntr_int_status_en);
- 	}
--	ath6kl_dbg(ATH6KL_DBG_ANY, "<------------------------------->\n");
-+	ath6kl_dbg(ATH6KL_DBG_IRQ, "<------------------------------->\n");
- }
- 
- static void dump_cred_dist(struct htc_endpoint_credit_dist *ep_dist)
-@@ -175,9 +175,6 @@ void dump_cred_dist_stats(struct htc_target *target)
- {
- 	struct htc_endpoint_credit_dist *ep_list;
- 
--	if (!AR_DBG_LVL_CHECK(ATH6KL_DBG_CREDIT))
--		return;
--
- 	list_for_each_entry(ep_list, &target->cred_dist_list, list)
- 		dump_cred_dist(ep_list);
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
-index e569c65..cb21d91 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.h
-+++ b/drivers/net/wireless/ath/ath6kl/debug.h
-@@ -56,8 +56,6 @@ int ath6kl_printk(const char *level, const char *fmt, ...);
- #define ath6kl_warn(fmt, ...)					\
- 	ath6kl_printk(KERN_WARNING, fmt, ##__VA_ARGS__)
- 
--#define AR_DBG_LVL_CHECK(mask)	(debug_mask & mask)
--
- enum ath6kl_war {
- 	ATH6KL_WAR_INVALID_RATE,
- };
-diff --git a/drivers/net/wireless/ath/ath6kl/hif.c b/drivers/net/wireless/ath/ath6kl/hif.c
-index 0772ef6..3d26c14 100644
---- a/drivers/net/wireless/ath/ath6kl/hif.c
-+++ b/drivers/net/wireless/ath/ath6kl/hif.c
-@@ -429,9 +429,8 @@ static int proc_pending_irqs(struct ath6kl_device *dev, bool *done)
- 		if (status)
- 			goto out;
- 
--		if (AR_DBG_LVL_CHECK(ATH6KL_DBG_IRQ))
--			ath6kl_dump_registers(dev, &dev->irq_proc_reg,
--					 &dev->irq_en_reg);
-+		ath6kl_dump_registers(dev, &dev->irq_proc_reg,
-+				      &dev->irq_en_reg);
- 
- 		/* Update only those registers that are enabled */
- 		host_int_status = dev->irq_proc_reg.host_int_status &
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index f6f2aa2..fbd886a 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -419,9 +419,6 @@ static int ath6kl_wmi_tx_complete_event_rx(u8 *datap, int len)
- 	ath6kl_dbg(ATH6KL_DBG_WMI, "comp: %d %d %d\n",
- 		   evt->num_msg, evt->msg_len, evt->msg_type);
- 
--	if (!AR_DBG_LVL_CHECK(ATH6KL_DBG_WMI))
--		return 0;
--
- 	for (index = 0; index < evt->num_msg; index++) {
- 		size = sizeof(struct wmi_tx_complete_event) +
- 		    (index * sizeof(struct tx_complete_msg_v1));
+dmesg ->
+rtl8192cu: MAC auto ON okay!
+rtl8192cu: Tx queue select: 0x05
+rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
+wlan0: authenticate with 00:08:54:9a:b2:5f (try 1)
+wlan0: authenticated
+wlan0: associate with 00:08:54:9a:b2:5f (try 1)
+wlan0: RX AssocResp from 00:08:54:9a:b2:5f (capab=0x411 status=0 aid=1)
+wlan0: associated
+< ifdown wlan0 >
+wlan0: disassociated from 00:08:54:9a:b2:5f (Reason: 14)
+wlan0: deauthenticating from 00:08:54:9a:b2:5f by local choice (reason=3)
+cfg80211: Calling CRDA for country: US
+rtl8192cu: MAC auto ON okay!
+rtl8192cu: Tx queue select: 0x05
+rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
+< ifup wlan0 >
+rtl8192cu: MAC auto ON okay!
+rtl8192cu: Tx queue select: 0x05
+rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
 
+
+cat /sys/class/net/wlan0/carrier -> 0
+cat /sys/class/net/wlan0/operstate -> down
+
+Kernelversion: 3.1.8
+
+modinfo rtl8192cu->
+filename:       kernel/drivers/net/wireless/rtlwifi/rtl8192cu/rtl8192cu.ko
+description:    Realtek 8192C/8188C 802.11n USB wireless
+author:         Larry Finger <Larry.Finger@lwfinger.net>
+author:         Georgia <georgia@realtek.com>
+license:        GPL
+vermagic:       3.1.8-WuT preempt mod_unload ARMv5
+firmware:       rtlwifi/rtl8192cufw.bin
+depends:        rtlwifi,rtl8192c-common
+
+lsusb ->
+Bus 001 Device 001: ID 1d6b:0002
+Bus 001 Device 003: ID 0bda:8176
+
+lsmod ->
+Module                  Size  Used by    Not tainted
+rtl8192cu              89196  0
+rtl8192c_common        53560  1 rtl8192cu
+rtlwifi                88269  1 rtl8192cu
+orion_wdt               3043  1
+
+iwlist wlan0 scan ->
+wlan0     No scan results
+
+
+After modprobe -r rtl8192cu; modprobe rtl8192cu
+
+cat /sys/class/net/wlan0/carrier ->1
+cat /sys/class/net/wlan0/operstate ->up
+
+< First scan only finds Cell 01 >
+
+iwlist wlan0 scan->
+wlan0     Scan completed :
+           Cell 01 - Address: 00:08:54:9A:B2:5F
+                     Channel:1
+                     Frequency:2.412 GHz (Channel 1)
+                     Quality=70/70  Signal level=-36 dBm
+                     Encryption key:on
+                     ESSID:"AP-KK"
+                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 6 Mb/s
+                               9 Mb/s; 12 Mb/s; 18 Mb/s
+                     Bit Rates:24 Mb/s; 36 Mb/s; 48 Mb/s; 54 Mb/s
+                     Mode:Master
+                     Extra:tsf=000000044859a0d7
+                     Extra: Last beacon: 20ms ago
+                     (Unknown Wireless Token 0x8C05)
+
+< Retry >
+
+iwlist wlan0 scan
+wlan0     Scan completed :
+           Cell 01 - Address: 00:08:54:9A:B2:5F
+                     Channel:1
+                     Frequency:2.412 GHz (Channel 1)
+                     Quality=69/70  Signal level=-41 dBm
+                     Encryption key:on
+                     ESSID:"AP-KK"
+                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 6 Mb/s
+                               9 Mb/s; 12 Mb/s; 18 Mb/s
+                     Bit Rates:24 Mb/s; 36 Mb/s; 48 Mb/s; 54 Mb/s
+                     Mode:Master
+                     Extra:tsf=000000044880b0d7
+                     Extra: Last beacon: 20ms ago
+                     (Unknown Wireless Token 0x8C05)
+           Cell 02 - Address: C8:3A:35:18:1B:D8
+                     Channel:6
+                     Frequency:2.437 GHz (Channel 6)
+                     Quality=69/70  Signal level=-41 dBm
+                     Encryption key:on
+                     ESSID:"Logilink"
+                     Bit Rates:1 Mb/s; 2 Mb/s; 5.5 Mb/s; 11 Mb/s; 9 Mb/s
+                               18 Mb/s; 36 Mb/s; 54 Mb/s
+                     Bit Rates:6 Mb/s; 12 Mb/s; 24 Mb/s; 48 Mb/s
+                     Mode:Master
+                     Extra:tsf=00000000dd4b9158
+                     Extra: Last beacon: 300ms ago
+                     (Unknown Wireless Token 0x8C05)
+
+Regards, Markus
+
+-- Unsere Aussagen koennen Irrtuemer und Missverstaendnisse enthalten.
+Bitte pruefen Sie die Aussagen fuer Ihren Fall, bevor Sie Entscheidungen 
+auf Grundlage dieser Aussagen treffen.
+Wiesemann & Theis GmbH, Porschestr. 12, D-42279 Wuppertal
+Geschaeftsfuehrer: Dipl.-Ing. Ruediger Theis
+Registergericht: Amtsgericht Wuppertal, HRB 6377 
+Tel. +49-202/2680-0, Fax +49-202/2680-265, http://www.wut.de
