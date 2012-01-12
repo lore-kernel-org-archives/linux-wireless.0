@@ -1,92 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:54285 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750853Ab2AQDAK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jan 2012 22:00:10 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1RmzHM-0005P0-L7
-	for linux-wireless@vger.kernel.org; Tue, 17 Jan 2012 04:00:08 +0100
-Received: from c-98-192-246-202.hsd1.de.comcast.net ([98.192.246.202])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2012 04:00:08 +0100
-Received: from gnorkus by c-98-192-246-202.hsd1.de.comcast.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2012 04:00:08 +0100
-To: linux-wireless@vger.kernel.org
-From: Gerhard J Norkus <gnorkus@comcast.net>
-Subject: RTL8192CU problems with EAPOL
-Date: Tue, 17 Jan 2012 02:54:32 +0000 (UTC)
-Message-ID: <loom.20120117T033430-62@post.gmane.org> (sfid-20120117_040015_111811_7C2E1005)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from investici.nine.ch ([217.150.252.179]:36747 "EHLO
+	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755539Ab2ALVhw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jan 2012 16:37:52 -0500
+Date: Thu, 12 Jan 2012 22:37:15 +0100
+From: Antonio Quartulli <ordex@autistici.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] mac80211: in IBSS use the Auth frame to trigger STA
+ reinsertion
+Message-ID: <20120112213714.GD3077@ritirata.org> (sfid-20120112_223755_864532_6F4EB142)
+References: <1326400616-1109-1-git-send-email-ordex@autistici.org>
+ <1326400616-1109-2-git-send-email-ordex@autistici.org>
+ <1326401451.3463.11.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1326401451.3463.11.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm using a BeagleBoard-xM with Ubuntu 11.10 on it.  The problem is with a 
-NetGear WNA1000M using the RTL8192CU firwmare.  I'm quite new to Linux, so 
-treat me gently please!  I'd really like Larry Finger to reply if possible, 
-since he seems to have done the most work on this.
+On Thu, Jan 12, 2012 at 09:50:51PM +0100, Johannes Berg wrote:
+> On Thu, 2012-01-12 at 21:36 +0100, Antonio Quartulli wrote:
+> 
+> > +static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
+> > +					struct ieee80211_mgmt *mgmt,
+> > +					size_t len)
+> > +{
+> > +	u16 auth_alg, auth_transaction;
+> > +	size_t baselen;
+> > +
+> > +	lockdep_assert_held(&sdata->u.ibss.mtx);
+> > +
+> > +	if (len < 24 + 6)
+> > +		return;
+> > +
+> > +	baselen = (u8 *) mgmt->u.auth.variable - (u8 *) mgmt;
+> > +	if (baselen > len)
+> > +		return;
+> > +
+> > +	auth_alg = le16_to_cpu(mgmt->u.auth.auth_alg);
+> > +	auth_transaction = le16_to_cpu(mgmt->u.auth.auth_transaction);
+> > +
+> > +	if (auth_alg == WLAN_AUTH_OPEN && auth_transaction == 1) {
+> 
+> negating & return would be easier to read & less indentation
 
-What happens is I cannot connect to my wireless access point that has been 
-setup using the following hostapd.conf:
+I agree :-)
 
-interface=wlan1
-driver=nl80211
-ssid=EnvisicAccessPoint
-hw_mode=g
-channel=1
-auth_algs=3
-wpa=3
-wpa_passphrase=GoofyPhrase
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP CCMP
-rsn_pairwise=CCMP
-macaddr_acl=0
-ignore_broadcast_ssid=0
-ctrl_interface=/var/run/hostapd
-ctrl_interface_group=0
-eapol_key_index_workaround=0
+> 
+> > +#ifdef CONFIG_MAC80211_IBSS_DEBUG
+> > +		printk(KERN_DEBUG "%s: RX Auth SA=%pM DA=%pM BSSID=%pM."
+> > +		       "(auth_transaction=%d)\n",
+> > +		       sdata->name, mgmt->sa, mgmt->da, mgmt->bssid,
+> > +		       auth_transaction);
+> > +#endif
+> > +		if (sta_info_destroy_addr(sdata, mgmt->sa) != -ENOENT) {
+> > +			ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0,
+> > +					       false);
+> > +			rcu_read_unlock();
+> > +		}
+> 
+> This doesn't seem to make sense, why not add the station even if we
+> didn't know about it before?
 
-I already have isc-dhcp-server running in the background pointing to wlan1.  I 
-launch hostapd using the following command:
+mh, at the beginning the idea was to avoid to interfere with the current sta_adding mechanism,
+so if a station was not there yet, then I didn't want to add it at that point.
 
-hostapd -dd /etc/hostapd/hostapd.conf
+But looking at the code now I can consider it a mistake, since it doesn't really
+make sense.
 
-I get a bunch of output to the console, and when I try to connect using my 
-Windows 7 machine, it seems like it's trying to negotiate a connection, however 
-it does not succeed and repeatedly gives me the following in the output log:
+I'll remove it in version 2 of this patch.
 
-WPA:  00:1a:73:bb:f8:11 WPA_PTK entering state PTKSTART
-wlan1:  STA 00:1a:73:bb:f8:11 WPA: sending 1/4 msg of 4-Way handshake
-WPA: Send EAPOL(version=2 secure=0 mic=0 ack=1 install=0 pairwise=8...
-wlan1: STA 00:1a:73:bb:f8:11 WPA:  EAPOL-Key timeout
+Thanks
 
-Eventually it unauthorizes the port and deauthenticates it.  I'm not sure how 
-to proceed so as to get a proper connection.  My BeagleBoard has the drivers 
-stored at /lib/modules/3.1.6-x6/kernel/drivers/net/wireless/rtlwifi/rtl8192cu 
-and the firmware stored at /lib/firmware/rtlwifi.
+p.s. In version 2 I will also write a more "understandable" commit message
 
-A dump of lsmod yields the following:
-Module               Size  Used by
-arc4                 1195  2
-rtl8192cu           89347  0
-rtl8192cu_common    62334  1 rtl8192cu
-rtlwifi             71274  1 rtl8192cu
-mac80211           259211  3 rtl8192cu,rtl8192c_common,rtlwifi
-cfg80211           164606  2 rtlwifi,mac80211
-rfkill              17026  1 cfg80211
-smsc95xx            10950  0
-usbhid              34524  0
-gpio_keys            6801  0
-rtc_ds1307           6350  0
-rtc_twl              4402  0
+> 
+> johannes
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Can you point me in the right direction?  I've burned many hours on this and 
-would like to use this dongle for a 3D scanner we're building...
+-- 
+Antonio Quartulli
 
-Thanks ahead of time!
-Sincerely,
-Gerhard J Norkus
-
+..each of us alone is worth nothing..
+Ernesto "Che" Guevara
