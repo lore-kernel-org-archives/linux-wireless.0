@@ -1,42 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:45733 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752843Ab2AXTPh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 14:15:37 -0500
-Received: by ggnb1 with SMTP id b1so2162226ggn.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2012 11:15:36 -0800 (PST)
+Received: from smtp1.u-psud.fr ([129.175.33.41]:53161 "EHLO smtp1.u-psud.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751153Ab2ALKKG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jan 2012 05:10:06 -0500
+Message-ID: <4F0EB16B.8070606@lri.fr> (sfid-20120112_111011_335488_166AD32D)
+Date: Thu, 12 Jan 2012 11:09:47 +0100
+From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
 MIME-Version: 1.0
-In-Reply-To: <1327431354.3625.186.camel@cumari>
-References: <1327421923-25586-1-git-send-email-eliad@wizery.com>
-	<1327421923-25586-2-git-send-email-eliad@wizery.com>
-	<1327431354.3625.186.camel@cumari>
-Date: Tue, 24 Jan 2012 21:15:36 +0200
-Message-ID: <CAB3XZEdw8VUuSNAibmGE6bHtthVaTCrRWD5LaKWo9zgTVvAFJw@mail.gmail.com> (sfid-20120124_201601_040179_CFDD04DC)
-Subject: Re: [PATCH 2/2] wl12xx: remove wl1271_tx_update_filters
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] carl9170: claim to support IBSS RSN.
+References: <1326296690-2644-1-git-send-email-cavallar@lri.fr> <201201111713.36373.chunkeey@googlemail.com>
+In-Reply-To: <201201111713.36373.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 24, 2012 at 8:55 PM, Luciano Coelho <coelho@ti.com> wrote:
-> On Tue, 2012-01-24 at 18:18 +0200, Eliad Peller wrote:
->> wl1271_tx_update_filters() is used as some workaround
->> to open filters while roaming on the same channel.
->>
->> However, it doesn't handle roaming to a different channel,
->> and it might also sleep in the tx path, which is a bug.
->>
->> With the new auth/assoc redesign, roaming is much simpler,
->> and this function is not needed anymore.
->
-> And is this okay without the redesign?
->
-yes.
-it will only break roaming on the same channel. but as roaming to
-another channel is already broken, and it also fixes a scheduling bug,
-i think it should be applied even before the redesign patches..
+On 11/01/2012 17:13, Christian Lamparter wrote:
+> On Wednesday, January 11, 2012 04:44:50 PM Nicolas Cavallari wrote:
+>> On carl9170, HW encryption is disabled on IBSS; the mac80211
+>> software-based encryption is used instead. As mac80211 supports IBSS
+>> RSN (per-STA GTK), claim its support in the carl9170 PHY.
+> 
+> Uh, was IBSS RSN fixed? Sure, if it works, why not. 
+> 
 
-Eliad.
+Fixed or not, it works for me and anyway there is this code in
+ieee80211_alloc_hw() :
+
+207aba60 573)   if (!ops->set_key)
+207aba60 574)           wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
+
+Which enables IBSS RSN on all SW-crypto-only devices.
