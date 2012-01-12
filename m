@@ -1,120 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:59600 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753431Ab2AaJyO (ORCPT
+Received: from moutng.kundenserver.de ([212.227.17.8]:64446 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755278Ab2ALX3a convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 04:54:14 -0500
-Received: by wgbdt10 with SMTP id dt10so63196wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 01:54:12 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 07/10] wl12xx: add dynamic_ps_timeout debugfs file
-Date: Tue, 31 Jan 2012 11:57:22 +0200
-Message-Id: <1328003845-3926-8-git-send-email-eliad@wizery.com> (sfid-20120131_105428_898912_A3B8E271)
-In-Reply-To: <1328003845-3926-1-git-send-email-eliad@wizery.com>
-References: <1328003845-3926-1-git-send-email-eliad@wizery.com>
+	Thu, 12 Jan 2012 18:29:30 -0500
+Date: Fri, 13 Jan 2012 00:29:13 +0100 (CET)
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+To: Julian Calaby <julian.calaby@gmail.com>
+cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Subject: Re: [PATCH] wireless: b43: fix Oops on card eject during transfer
+In-Reply-To: <Pine.LNX.4.64.1201061653050.18586@axis700.grange>
+Message-ID: <Pine.LNX.4.64.1201130028340.1646@axis700.grange> (sfid-20120113_002934_399437_FD673C56)
+References: <Pine.LNX.4.64.1201061256190.16279@axis700.grange>
+ <CAGRGNgUj3EUPKc0SX+3yCbygdbhS7_CN4hgR7ZAzjXuULw9fLg@mail.gmail.com>
+ <Pine.LNX.4.64.1201061653050.18586@axis700.grange>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Hi
 
-Enable read/write of dynamic_ps_timeout which controls the timeout
-of the dynamic PS implemented in the FW.
-dynamic_ps_timeout is the timeout (in msec) until going back to PS
-when there's no Rx/Tx
+I haven't seen this patch going into any tree or being included in any 
+pull request. What's the status?
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Thanks
+Guennadi
+
+On Fri, 6 Jan 2012, Guennadi Liakhovetski wrote:
+
+> Hi Julian
+> 
+> On Sat, 7 Jan 2012, Julian Calaby wrote:
+> 
+> > Hi Guennadi,
+> > 
+> > On Fri, Jan 6, 2012 at 22:58, Guennadi Liakhovetski
+> > <g.liakhovetski@gmx.de> wrote:
+> > > An Oops has once been observed, when the SDIO card had been ejected during
+> > > IO. The PC value shows, that the dev pointer in b43_op_stop() was NULL.
+> > >
+> > > Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+> > > ---
+> > >
+> > > Might also be good for stable
+> > >
+> > >  drivers/net/wireless/b43/main.c |    3 +++
+> > >  1 files changed, 3 insertions(+), 0 deletions(-)
+> > >
+> > > diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+> > > index 5634d9a..3849c25 100644
+> > > --- a/drivers/net/wireless/b43/main.c
+> > > +++ b/drivers/net/wireless/b43/main.c
+> > > @@ -4834,6 +4834,9 @@ static void b43_op_stop(struct ieee80211_hw *hw)
+> > >        cancel_work_sync(&(wl->beacon_update_trigger));
+> > >
+> > >        mutex_lock(&wl->mutex);
+> > > +       if (!dev)
+> > > +               goto out_unlock;
+> > 
+> > Is there any reason to take this mutex, then jump to a label that
+> > releases it immediately?
+> > 
+> > Would it be better to add a new label after the mutex_unlock() below
+> > and jump to there immediately after the cancel_work_sync() call above?
+> 
+> The reason is exactly that: to avoid adding one more label. It is an 
+> exceptional case, that that branch would be taken, so, there's no reason 
+> to optimize for it. Whereas adding one label would clutter the code 
+> needlessly, IMHO.
+> 
+> Thanks
+> Guennadi
+> ---
+> Guennadi Liakhovetski, Ph.D.
+> Freelance Open-Source Software Developer
+> http://www.open-technology.de/
+> 
+
 ---
- drivers/net/wireless/wl12xx/debugfs.c |   67 +++++++++++++++++++++++++++++++++
- 1 files changed, 67 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index 5e96e05..156a774 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -312,6 +312,72 @@ static const struct file_operations start_recovery_ops = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t dynamic_ps_timeout_read(struct file *file, char __user *user_buf,
-+			  size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+
-+	return wl1271_format_buffer(user_buf, count,
-+				    ppos, "%d\n",
-+				    wl->conf.conn.dynamic_ps_timeout);
-+}
-+
-+static ssize_t dynamic_ps_timeout_write(struct file *file,
-+				    const char __user *user_buf,
-+				    size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+	struct wl12xx_vif *wlvif;
-+	unsigned long value;
-+	int ret;
-+
-+	ret = kstrtoul_from_user(user_buf, count, 10, &value);
-+	if (ret < 0) {
-+		wl1271_warning("illegal value in dynamic_ps");
-+		return -EINVAL;
-+	}
-+
-+	if (value < 1 || value > 65535) {
-+		wl1271_warning("dyanmic_ps_timeout is not in valid range");
-+		return -ERANGE;
-+	}
-+
-+	mutex_lock(&wl->mutex);
-+
-+	wl->conf.conn.dynamic_ps_timeout = value;
-+
-+	if (wl->state == WL1271_STATE_OFF)
-+		goto out;
-+
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	/* In case we're already in PSM, trigger it again to set new timeout
-+	 * immediately without waiting for re-association
-+	 */
-+
-+	wl12xx_for_each_wlvif_sta(wl, wlvif) {
-+		if (test_bit(WLVIF_FLAG_PSM, &wlvif->flags))
-+			wl1271_ps_set_mode(wl, wlvif, STATION_AUTO_PS_MODE,
-+					   wlvif->basic_rate, true);
-+
-+	}
-+
-+	wl1271_ps_elp_sleep(wl);
-+
-+out:
-+	mutex_unlock(&wl->mutex);
-+	return count;
-+}
-+
-+static const struct file_operations dynamic_ps_timeout_ops = {
-+	.read = dynamic_ps_timeout_read,
-+	.write = dynamic_ps_timeout_write,
-+	.open = wl1271_open_file_generic,
-+	.llseek = default_llseek,
-+};
-+
- static ssize_t driver_state_read(struct file *file, char __user *user_buf,
- 				 size_t count, loff_t *ppos)
- {
-@@ -887,6 +953,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
- 	DEBUGFS_ADD(dtim_interval, rootdir);
- 	DEBUGFS_ADD(beacon_interval, rootdir);
- 	DEBUGFS_ADD(beacon_filtering, rootdir);
-+	DEBUGFS_ADD(dynamic_ps_timeout, rootdir);
- 
- 	streaming = debugfs_create_dir("rx_streaming", rootdir);
- 	if (!streaming || IS_ERR(streaming))
--- 
-1.7.6.401.g6a319
-
+Guennadi Liakhovetski, Ph.D.
+Freelance Open-Source Software Developer
+http://www.open-technology.de/
