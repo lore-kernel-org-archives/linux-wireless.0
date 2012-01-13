@@ -1,93 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from h118.nextmail.ru ([194.67.36.118]:42245 "EHLO h118.nextmail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751457Ab2AEHGM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 02:06:12 -0500
-To: =?koi8-r?B?TW9oYW1tZWQgU2hhZmk=?= <shafi.wireless@gmail.com>,
-	=?koi8-r?B?Sm9obiBXLiBMaW52aWxsZQ==?= <linville@tuxdriver.com>
-From: =?koi8-r?B?TVI=?= <g7af0ec1e3ea1e7b1@nextmail.ru>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: =?koi8-r?B?UmU6IGF0aDlrIGNyYXNoIDMuMi1yYzc=?=
-Date: Thu, 05 Jan 2012 10:59:29 +0400
-Message-ID: <NEXT-4f054a51a74772.60877329@nextmail.ru> (sfid-20120105_080615_543378_4A04C49A)
-Mime-Version: 1.0
-Content-type: text/plain;
-	 charset="koi8-r"
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:57588 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901Ab2AMD2i (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jan 2012 22:28:38 -0500
+Received: by yenq4 with SMTP id q4so58033yen.19
+        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2012 19:28:37 -0800 (PST)
+Message-ID: <4F0FA4DD.5020601@lwfinger.net> (sfid-20120113_042841_693024_F6A73644)
+Date: Thu, 12 Jan 2012 21:28:29 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: =?ISO-8859-15?Q?Markus_K=F6nigshaus?= <m.koenigshaus@wut.de>
+CC: linux-wireless@vger.kernel.org, georgia@realtek.com
+Subject: Re: Problem with the rtl8192cu - kernelmodule after ifdown, ifup
+References: <4F0EEA1B.3040501@wut.de>
+In-Reply-To: <4F0EEA1B.3040501@wut.de>
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- > Hi John,
+On 01/12/2012 08:11 AM, Markus Königshaus wrote:
+> Hello,
+>
+> I am using a USB WLAN - Stick with Realtek 8192 kernel driver. After plugging it
+> works fine, connecting to a WPA - network works. After ifdown wlan0, ifup wlan0
+> the stick no longer works , it stucks on scanning. Only a modprobe -r rtl8192cu;
+> modprobe rtl8192cu fixes the problem. The problem only appear if more than one
+> wireless - network is in range.The problem appear only in connection with the
+> rtl8192cu driver, other USB - sticks (with different Chipset) and other PCIE -
+> boards operate properly.
+> In order to reproduce the behavior repeat the sequenceifdown wlan0, ifup wlan0 a
+> few times.
+>
+> wpa_cli status->
+> Selected interface 'wlan0'
+> wpa_state=SCANNING
+> < no change after 10 minutes>
+>
+> dmesg ->
+> rtl8192cu: MAC auto ON okay!
+> rtl8192cu: Tx queue select: 0x05
+> rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
+> wlan0: authenticate with 00:08:54:9a:b2:5f (try 1)
+> wlan0: authenticated
+> wlan0: associate with 00:08:54:9a:b2:5f (try 1)
+> wlan0: RX AssocResp from 00:08:54:9a:b2:5f (capab=0x411 status=0 aid=1)
+> wlan0: associated
+> < ifdown wlan0 >
+> wlan0: disassociated from 00:08:54:9a:b2:5f (Reason: 14)
+> wlan0: deauthenticating from 00:08:54:9a:b2:5f by local choice (reason=3)
+> cfg80211: Calling CRDA for country: US
+> rtl8192cu: MAC auto ON okay!
+> rtl8192cu: Tx queue select: 0x05
+> rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
+> < ifup wlan0 >
+> rtl8192cu: MAC auto ON okay!
+> rtl8192cu: Tx queue select: 0x05
+> rtl8192c_common: Loading firmware file rtlwifi/rtl8192cufw.bin
+>
+>
+> cat /sys/class/net/wlan0/carrier -> 0
+> cat /sys/class/net/wlan0/operstate -> down
+>
+> Kernelversion: 3.1.8
+>
+> modinfo rtl8192cu->
+> filename: kernel/drivers/net/wireless/rtlwifi/rtl8192cu/rtl8192cu.ko
+> description: Realtek 8192C/8188C 802.11n USB wireless
+> author: Larry Finger <Larry.Finger@lwfinger.net>
+> author: Georgia <georgia@realtek.com>
+> license: GPL
+> vermagic: 3.1.8-WuT preempt mod_unload ARMv5
+> firmware: rtlwifi/rtl8192cufw.bin
+> depends: rtlwifi,rtl8192c-common
+>
+> lsusb ->
+> Bus 001 Device 001: ID 1d6b:0002
+> Bus 001 Device 003: ID 0bda:8176
 
-I am the stupid original submitter who only sent this to linux-kernel 
-initially.
- 
- > we will take a look at this.
- > 
- > i can later come up with few debug patches to narrow down the panic.
- > looks like a problem in ath_update_survey_stats(survey pointer). full
- > stack trace will be helpful
- > thanks.
- 
-What I have posted is the full call trace. Right above this is the stack 
-trace in hex:
+I will try to duplicate your results; however,there are two things I would like 
+you to try. First is to get a copy of the bleeding-edge compat-wireless code, 
+build and install the package, and test to see if it still fails. If it does, I 
+want you to load the driver with a 'debug=4' option. In other words, use
 
-Process kworker/u:2 (pid: 6668, threadinfo ffff880027cd4000, task 
-ffff880076a38000)
-Stack:
-  ffff880027cd5808 ffffffff81064830 ffff880027cd5808 ffff880147c51c80
-  ffff880027cd58b8 ffffffff8135a117 ffff880076a38620 0000000000011c80
-  0000000000011c80 ffff880076a38000 0000000000011c80 ffff880027cd5fd8
+modprobe -v rtl8192cu debug=4
 
-Currently I have booted Linux 3.0 kernel to check whether the problem is 
-already there. Unfortunately, with Linux 3.1 and 3.0 I often get the 
-following in dmesg (this is at module load; sometimes the driver just stops 
-working - then I get this on reloading the module):
+Then, after a failure occurs, send me the output of a dmesg command.
 
-ath9k 0000:03:00.0: enabling device (0000 -> 0002)
-ath9k 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-ath9k 0000:03:00.0: setting latency timer to 64
-ath9k 0000:03:00.0: Failed to initialize device
-ath9k 0000:03:00.0: PCI INT A disabled
-ath9k: probe of 0000:03:00.0 failed with error -5
-
-As far as I understood, some similar problem was fixed after Linux 3.1. 
-
- > >> My card is (as lspci says):
- > >>
- > >> 03:00.0 Network controller: Atheros Communications Inc. AR9285 
-Wireless
- > >> Network Adapter (PCI-Express) (rev 01)
- > >> š š š š Subsystem: Device 1a3b:1089
-
- > >> wq_worker_sleeping+0x10/0xa0
- > >> __schedule+0x427/0x7b0
- > >> ? call_rcu_sched+0x10/0x20
- > >> schedule+0x3a/0x50
- > >> do_exit+0x57c/0x840
- > >> ? kmsg_dump+0x45/0xe0
- > >> oops_end+0xa5/0xf0
- > >> no_context+0xf2/0x270
- > >> __bad_area_no_semaphore+0xe/0x10
- > >> do_page_fault+0x2ba/0x450
- > >> ? up+0x2d/0x50
- > >> ? console_unlock+0x1df/0x250
- > >> ? select_task_rq_fair+0x5be/0x970
- > >> page_fault+0x25/0x30
- > >> ? ath_update_survey_stats+0xb7/0x1c0 [ath9k]
- > >> ath9k_config+0x115/0x780 [ath9k]
- > >> ? queue_work+0x1a/0x20
- > >> ? queue_delayed_work+0x25/0x30
- > >> ? ieee80211_queue_delayed_work+0x46/0x60 [mac80211]
- > >> ? ath9k_flush+0x155/0x1d0 [ath9k]
- > >> ieee80211_hw_config+0xe2/0x160 [mac80211]
- > >> ieee80211_scan_work+0x243/0x5c0 [mac80211]
- > >> ? ieee80211_scan_rx+0x1c0/0x1c0 [mac80211]
- > >> process_one_work+0x111/0x390
- > >> worker_thread+0x162/0x340
- > >> manage_workers.clone.26+0x240/0x240
- > >> kthread+0x96/0xa0
- > >> kernel_thread_helper+0x4/0x10
- > >> ? kthread_worker_fn+0x190/0x190
- > >> ? gs_change+0x13/0x13
-
-
+Larry
