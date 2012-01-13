@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42655 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751397Ab2ADKnv (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:34406 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759301Ab2AMVzT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jan 2012 05:43:51 -0500
-Subject: Re: [PATCH v2 1/3] mac80211: check sta_apply_parameters() return
- value
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1325162501-7996-2-git-send-email-eliad@wizery.com> (sfid-20111229_134042_080500_86ED6831)
-References: <1325162501-7996-1-git-send-email-eliad@wizery.com>
-	 <1325162501-7996-2-git-send-email-eliad@wizery.com>
-	 (sfid-20111229_134042_080500_86ED6831)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 04 Jan 2012 11:43:48 +0100
-Message-ID: <1325673828.3339.28.camel@jlt3.sipsolutions.net> (sfid-20120104_114358_966680_69C3BF2A)
-Mime-Version: 1.0
+	Fri, 13 Jan 2012 16:55:19 -0500
+Received: by mail-ey0-f174.google.com with SMTP id l12so332533eaa.19
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2012 13:55:18 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: b43-dev@lists.infradead.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V3 2/2] MAINTAINERS: add b43 mailing list
+Date: Fri, 13 Jan 2012 22:55:06 +0100
+Message-Id: <1326491706-14970-2-git-send-email-zajec5@gmail.com> (sfid-20120113_225523_506104_045DCD75)
+In-Reply-To: <1326491706-14970-1-git-send-email-zajec5@gmail.com>
+References: <1326491706-14970-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-12-29 at 14:41 +0200, Eliad Peller wrote:
-> Bail out if sta_apply_parameters() returns an error.
 
-John, we're reworking patches 2 and 3, but can you pick up this one
-please?
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+V3: S-o-b
+---
+ MAINTAINERS |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Thanks,
-Johannes
-
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
->  net/mac80211/cfg.c |    7 ++++++-
->  1 files changed, 6 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 662125d..1c5388d 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -1001,6 +1001,7 @@ static int ieee80211_change_station(struct wiphy *wiphy,
->  	struct ieee80211_local *local = wiphy_priv(wiphy);
->  	struct sta_info *sta;
->  	struct ieee80211_sub_if_data *vlansdata;
-> +	int err;
->  
->  	mutex_lock(&local->sta_mtx);
->  
-> @@ -1040,7 +1041,11 @@ static int ieee80211_change_station(struct wiphy *wiphy,
->  		ieee80211_send_layer2_update(sta);
->  	}
->  
-> -	sta_apply_parameters(local, sta, params);
-> +	err = sta_apply_parameters(local, sta, params);
-> +	if (err) {
-> +		mutex_unlock(&local->sta_mtx);
-> +		return err;
-> +	}
->  
->  	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) && params->supported_rates)
->  		rate_control_rate_init(sta);
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index dc11e28..469efce 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -1419,6 +1419,7 @@ F:	net/ax25/
+ B43 WIRELESS DRIVER
+ M:	Stefano Brivio <stefano.brivio@polimi.it>
+ L:	linux-wireless@vger.kernel.org
++L:	b43-dev@lists.infradead.org (moderated for non-subscribers)
+ W:	http://linuxwireless.org/en/users/Drivers/b43
+ S:	Maintained
+ F:	drivers/net/wireless/b43/
+-- 
+1.7.7
 
