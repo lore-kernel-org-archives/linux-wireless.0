@@ -1,79 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:35991 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753622Ab2A3XEa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 18:04:30 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
-	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 6/7] bcma: add bus num counter
-Date: Tue, 31 Jan 2012 00:03:36 +0100
-Message-Id: <1327964617-7910-7-git-send-email-hauke@hauke-m.de> (sfid-20120131_000433_724604_DC6E5BB9)
-In-Reply-To: <1327964617-7910-1-git-send-email-hauke@hauke-m.de>
-References: <1327964617-7910-1-git-send-email-hauke@hauke-m.de>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54642 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752339Ab2AMPQJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jan 2012 10:16:09 -0500
+Date: Fri, 13 Jan 2012 10:08:01 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Stefano Brivio <stefano.brivio@polimi.it>
+Subject: Re: [PATCH] wireless: b43: fix Oops on card eject during transfer
+Message-ID: <20120113150800.GB18899@tuxdriver.com> (sfid-20120113_161615_319551_AD21E27D)
+References: <Pine.LNX.4.64.1201061256190.16279@axis700.grange>
+ <CAGRGNgUj3EUPKc0SX+3yCbygdbhS7_CN4hgR7ZAzjXuULw9fLg@mail.gmail.com>
+ <Pine.LNX.4.64.1201061653050.18586@axis700.grange>
+ <Pine.LNX.4.64.1201130028340.1646@axis700.grange>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <Pine.LNX.4.64.1201130028340.1646@axis700.grange>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we have two bcma buses on one computer the second will not work
-without this patch. Now each bus gets an own number.
+Well, you weren't interested in making the minor change suggested
+by Julian.  So I set it aside with the intent of making the change
+myself, then neglected to follow through. :-(  I'll try to get to
+that today.  Or, feel free to submit a new version yourself.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/bcma/main.c       |   12 +++++++++++-
- include/linux/bcma/bcma.h |    1 +
- 2 files changed, 12 insertions(+), 1 deletions(-)
+John
 
-diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-index 3363036..bcd1c01 100644
---- a/drivers/bcma/main.c
-+++ b/drivers/bcma/main.c
-@@ -13,6 +13,12 @@
- MODULE_DESCRIPTION("Broadcom's specific AMBA driver");
- MODULE_LICENSE("GPL");
- 
-+/* contains the number the next bus should get. */
-+static unsigned int bcma_bus_next_num = 0;
-+
-+/* bcma_buses_mutex locks the bcma_bus_next_num */
-+static DEFINE_MUTEX(bcma_buses_mutex);
-+
- static int bcma_bus_match(struct device *dev, struct device_driver *drv);
- static int bcma_device_probe(struct device *dev);
- static int bcma_device_remove(struct device *dev);
-@@ -93,7 +99,7 @@ static int bcma_register_cores(struct bcma_bus *bus)
- 
- 		core->dev.release = bcma_release_core_dev;
- 		core->dev.bus = &bcma_bus_type;
--		dev_set_name(&core->dev, "bcma%d:%d", 0/*bus->num*/, dev_id);
-+		dev_set_name(&core->dev, "bcma%d:%d", bus->num, dev_id);
- 
- 		switch (bus->hosttype) {
- 		case BCMA_HOSTTYPE_PCI:
-@@ -137,6 +143,10 @@ int __devinit bcma_bus_register(struct bcma_bus *bus)
- 	int err;
- 	struct bcma_device *core;
- 
-+	mutex_lock(&bcma_buses_mutex);
-+	bus->num = bcma_bus_next_num++;
-+	mutex_unlock(&bcma_buses_mutex);
-+
- 	/* Scan for devices (cores) */
- 	err = bcma_bus_scan(bus);
- 	if (err) {
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 024a6e2..b9f65fb 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -196,6 +196,7 @@ struct bcma_bus {
- 	struct list_head cores;
- 	u8 nr_cores;
- 	u8 init_done:1;
-+	u8 num;
- 
- 	struct bcma_drv_cc drv_cc;
- 	struct bcma_drv_pci drv_pci;
+On Fri, Jan 13, 2012 at 12:29:13AM +0100, Guennadi Liakhovetski wrote:
+> Hi
+> 
+> I haven't seen this patch going into any tree or being included in any 
+> pull request. What's the status?
+> 
+> Thanks
+> Guennadi
+> 
+> On Fri, 6 Jan 2012, Guennadi Liakhovetski wrote:
+> 
+> > Hi Julian
+> > 
+> > On Sat, 7 Jan 2012, Julian Calaby wrote:
+> > 
+> > > Hi Guennadi,
+> > > 
+> > > On Fri, Jan 6, 2012 at 22:58, Guennadi Liakhovetski
+> > > <g.liakhovetski@gmx.de> wrote:
+> > > > An Oops has once been observed, when the SDIO card had been ejected during
+> > > > IO. The PC value shows, that the dev pointer in b43_op_stop() was NULL.
+> > > >
+> > > > Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+> > > > ---
+> > > >
+> > > > Might also be good for stable
+> > > >
+> > > >  drivers/net/wireless/b43/main.c |    3 +++
+> > > >  1 files changed, 3 insertions(+), 0 deletions(-)
+> > > >
+> > > > diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+> > > > index 5634d9a..3849c25 100644
+> > > > --- a/drivers/net/wireless/b43/main.c
+> > > > +++ b/drivers/net/wireless/b43/main.c
+> > > > @@ -4834,6 +4834,9 @@ static void b43_op_stop(struct ieee80211_hw *hw)
+> > > >        cancel_work_sync(&(wl->beacon_update_trigger));
+> > > >
+> > > >        mutex_lock(&wl->mutex);
+> > > > +       if (!dev)
+> > > > +               goto out_unlock;
+> > > 
+> > > Is there any reason to take this mutex, then jump to a label that
+> > > releases it immediately?
+> > > 
+> > > Would it be better to add a new label after the mutex_unlock() below
+> > > and jump to there immediately after the cancel_work_sync() call above?
+> > 
+> > The reason is exactly that: to avoid adding one more label. It is an 
+> > exceptional case, that that branch would be taken, so, there's no reason 
+> > to optimize for it. Whereas adding one label would clutter the code 
+> > needlessly, IMHO.
+> > 
+> > Thanks
+> > Guennadi
+> > ---
+> > Guennadi Liakhovetski, Ph.D.
+> > Freelance Open-Source Software Developer
+> > http://www.open-technology.de/
+> > 
+> 
+> ---
+> Guennadi Liakhovetski, Ph.D.
+> Freelance Open-Source Software Developer
+> http://www.open-technology.de/
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 -- 
-1.7.5.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
