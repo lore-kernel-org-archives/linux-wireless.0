@@ -1,77 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:12162 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751230Ab2AGPgM (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:38265 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754672Ab2AMRrz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jan 2012 10:36:12 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qca.qualcomm.com>,
-	<m.sujith@gmail.com>, Felix Fietkau <nbd@openwrt.org>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH] ath9k_hw: fix a comment
-Date: Sat, 7 Jan 2012 21:06:02 +0530
-Message-ID: <1325950562-6169-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120107_163632_633619_A0E33735)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 13 Jan 2012 12:47:55 -0500
+Received: by eekd4 with SMTP id d4so1158114eek.19
+        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2012 09:47:54 -0800 (PST)
+References: <20120113115931.GC2214@redhat.com>
+In-Reply-To: <20120113115931.GC2214@redhat.com>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+	charset=us-ascii
+Message-Id: <A4A6BF76-E8FA-4038-B4CB-A92B99210155@gmail.com> (sfid-20120113_184759_920559_40B165DF)
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amir Hedayaty <hedayaty@gmail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: Re: [PATCH] rt2800pci: fix spurious interrupts generation
+Date: Fri, 13 Jan 2012 18:47:59 +0100
+To: Stanislaw Gruszka <sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On 13 jan. 2012, at 12:59, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
 
-also remove an unused macro and a function declaration
+> Same devices can generate interrupt without properly setting bit in
+> INT_SOURCE_CSR register (spurious interrupt), what will cause IRQ line
+> will be disabled by interrupts controller driver.
+> 
+> We discovered that clearing INT_MASK_CSR stops such behaviour. We
+> previously first read that register, and then clear all know interrupt
+> sources bits and do not touch reserved bits. After this patch, we write
+> to all register content (I believe writing to reserved bits on that
+> register will not cause any problems, I tested that on my rt2800pci
+> device).
+> 
+> This fix very bad performance problem, practically making device
+> unusable (since worked without interrupts), reported in:
+> https://bugzilla.redhat.com/show_bug.cgi?id=658451
+> 
+> We previously tried to workaround that issue in commit
+> 4ba7d9997869d25bd223dea7536fc1ce9fab3b3b "rt2800pci: handle spurious
+> interrupts", but it was reverted in commit
+> 82e5fc2a34fa9ffea38f00c4066b7e600a0ca5e6
+> as thing, that will prevent to detect real spurious interrupts.
+> 
+> Reported-and-tested-by: Amir Hedayaty <hedayaty@gmail.com>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |    2 +-
- drivers/net/wireless/ath/ath9k/ath9k.h      |    1 -
- drivers/net/wireless/ath/ath9k/calib.h      |    1 -
- 3 files changed, 1 insertions(+), 3 deletions(-)
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 2589b38..2b0bfb8 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -46,7 +46,7 @@ static const int m2ThreshExt_off = 127;
-  * @chan:
-  *
-  * This is the function to change channel on single-chip devices, that is
-- * all devices after ar9280.
-+ * for AR9300 family of chipsets.
-  *
-  * This function takes the channel value in MHz and sets
-  * hardware channel value. Assumes writes have been enabled to analog bus.
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index b30e9fc..171ccf7 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -679,7 +679,6 @@ void ath9k_deinit_device(struct ath_softc *sc);
- void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw);
- void ath9k_reload_chainmask_settings(struct ath_softc *sc);
- 
--void ath_radio_disable(struct ath_softc *sc, struct ieee80211_hw *hw);
- bool ath9k_uses_beacons(int type);
- 
- #ifdef CONFIG_ATH9K_PCI
-diff --git a/drivers/net/wireless/ath/ath9k/calib.h b/drivers/net/wireless/ath/ath9k/calib.h
-index 05b9dbf..3b33996 100644
---- a/drivers/net/wireless/ath/ath9k/calib.h
-+++ b/drivers/net/wireless/ath/ath9k/calib.h
-@@ -19,7 +19,6 @@
- 
- #include "hw.h"
- 
--#define AR_PHY_CCA_FILTERWINDOW_LENGTH_INIT     3
- #define AR_PHY_CCA_FILTERWINDOW_LENGTH          5
- 
- #define NUM_NF_READINGS       6
--- 
-1.7.0.4
-
+> ---
+> drivers/net/wireless/rt2x00/rt2800pci.c |   28 ++++++++--------------------
+> 1 files changed, 8 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+> index 4941a1a..dc88bae 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -422,7 +422,6 @@ static int rt2800pci_init_queues(struct rt2x00_dev *rt2x00dev)
+> static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
+>                 enum dev_state state)
+> {
+> -    int mask = (state == STATE_RADIO_IRQ_ON);
+>    u32 reg;
+>    unsigned long flags;
+> 
+> @@ -436,25 +435,14 @@ static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
+>    }
+> 
+>    spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
+> -    rt2x00pci_register_read(rt2x00dev, INT_MASK_CSR, &reg);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_RXDELAYINT, 0);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_TXDELAYINT, 0);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_RX_DONE, mask);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_AC0_DMA_DONE, 0);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_AC1_DMA_DONE, 0);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_AC2_DMA_DONE, 0);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_AC3_DMA_DONE, 0);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_HCCA_DMA_DONE, 0);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_MGMT_DMA_DONE, 0);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_MCU_COMMAND, 0);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_RXTX_COHERENT, 0);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_TBTT, mask);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_PRE_TBTT, mask);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_TX_FIFO_STATUS, mask);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_AUTO_WAKEUP, mask);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_GPTIMER, 0);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_RX_COHERENT, 0);
+> -    rt2x00_set_field32(&reg, INT_MASK_CSR_TX_COHERENT, 0);
+> +    reg = 0;
+> +    if (state == STATE_RADIO_IRQ_ON) {
+> +        rt2x00_set_field32(&reg, INT_MASK_CSR_RX_DONE, 1);
+> +        rt2x00_set_field32(&reg, INT_MASK_CSR_TBTT, 1);
+> +        rt2x00_set_field32(&reg, INT_MASK_CSR_PRE_TBTT, 1);
+> +        rt2x00_set_field32(&reg, INT_MASK_CSR_TX_FIFO_STATUS, 1);
+> +        rt2x00_set_field32(&reg, INT_MASK_CSR_AUTO_WAKEUP, 1);
+> +    }
+>    rt2x00pci_register_write(rt2x00dev, INT_MASK_CSR, reg);
+>    spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
+> 
+> -- 
+> 1.7.1
+> 
