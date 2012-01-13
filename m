@@ -1,65 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out5.smtp.messagingengine.com ([66.111.4.29]:46306 "EHLO
-	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753597Ab2ACAoY (ORCPT
+Received: from latitanza.investici.org ([82.94.249.234]:29339 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753170Ab2AMMyF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 19:44:24 -0500
-Received: from compute6.internal (compute6.nyi.mail.srv.osa [10.202.2.46])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id C6E2C214A1
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Jan 2012 19:44:23 -0500 (EST)
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> <201201022331.27562.marek.vasut@gmail.com> <4F023D02.1030403@fastmail.fm> <201201030131.15397.marek.vasut@gmail.com>
-In-Reply-To: <201201030131.15397.marek.vasut@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Subject: Re: loading firmware while usermodehelper disabled.
-From: Jack Stone <jwjstone@fastmail.fm>
-Date: Tue, 03 Jan 2012 00:44:07 +0000
-To: Marek Vasut <marek.vasut@gmail.com>
-CC: Linus Torvalds <torvalds@linux-foundation.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Oliver Neukum <oliver@neukum.org>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Message-ID: <c163595a-163e-4e68-ba0f-de5ca58e8de9@email.android.com> (sfid-20120103_014445_986286_3B0E31EE)
+	Fri, 13 Jan 2012 07:54:05 -0500
+From: Antonio Quartulli <ordex@autistici.org>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCH] mac80211: remove useless DA checking in ieee80211_rx_mgmt_probe_resp()
+Date: Fri, 13 Jan 2012 13:53:18 +0100
+Message-Id: <1326459198-8413-1-git-send-email-ordex@autistici.org> (sfid-20120113_135409_723854_8F7885A4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Actually the DA field has already been checked along the rx path (in
+prepare_for_handlers()) and this check is therefore useless at this point.
 
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+---
+ net/mac80211/ibss.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
-Marek Vasut <marek.vasut@gmail.com> wrote:
-
->> On 02/01/12 22:31, Marek Vasut wrote:
->> >> I don't think there is anyway to avoid the memory requirement if
->we want
->> >> to be able to resume transparently to user-space (or even resume
->at all
->> >> in some setups).
->> > 
->> > Well ... injecting firmware into kernel with some userland helper
->just
->> > before suspend is no-go?
->> 
->> Its a perfectly good idea but you still need the full memory
->requirement
->> during the suspend.
->
->Hm ... and we can't have memory type that "can be swapped-out, but must
->be 
->loaded back before suspend" in kernel, right?
-
-Nope. Kernel swapping is a big headache and Linux doesn't do it. The only thing we can do is drop any clean cache pages, but that has performance implications.
-
-Thanks,
-
-Jack
-
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index f8a32bf..6aacce9 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -854,9 +854,6 @@ static void ieee80211_rx_mgmt_probe_resp(struct ieee80211_sub_if_data *sdata,
+ 	size_t baselen;
+ 	struct ieee802_11_elems elems;
+ 
+-	if (memcmp(mgmt->da, sdata->vif.addr, ETH_ALEN))
+-		return; /* ignore ProbeResp to foreign address */
+-
+ 	baselen = (u8 *) mgmt->u.probe_resp.variable - (u8 *) mgmt;
+ 	if (baselen > len)
+ 		return;
 -- 
-Sent from my Android phone with K-9 Mail. Please excuse my brevity.
+1.7.3.4
+
