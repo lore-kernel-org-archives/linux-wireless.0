@@ -1,49 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:39376 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751174Ab2AVCss (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jan 2012 21:48:48 -0500
-Received: by yhoo21 with SMTP id o21so852734yho.19
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Jan 2012 18:48:47 -0800 (PST)
-Message-ID: <4F1B790C.20807@lwfinger.net> (sfid-20120122_034914_042285_DE010F4F)
-Date: Sat, 21 Jan 2012 20:48:44 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from foo.stuge.se ([212.116.89.98]:38132 "HELO foo.stuge.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752413Ab2AMBcv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 Jan 2012 20:32:51 -0500
+Message-ID: <20120113013248.30123.qmail@stuge.se> (sfid-20120113_023254_358166_957EB74A)
+Date: Fri, 13 Jan 2012 02:32:48 +0100
+From: Peter Stuge <peter@stuge.se>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	b43-dev <b43-dev@lists.infradead.org>
+Subject: Re: [PATCH] b43: add default option to avoid duplicating device
+	support with brcmsmac
+References: <1326315180-29398-1-git-send-email-linville@tuxdriver.com> <CACna6rxffpPhYVqKNttu79JET=NkBP4NrAayywQHWcj=mw=T9A@mail.gmail.com> <20120112161720.GI11093@tuxdriver.com>
 MIME-Version: 1.0
-To: Kristoffer Janke <privat@kjanke.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: p54usb (LM87) not correctly working with usb1
-References: <4F1A6F08.5040108@kjanke.com>
-In-Reply-To: <4F1A6F08.5040108@kjanke.com>
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120112161720.GI11093@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/21/2012 01:53 AM, Kristoffer Janke wrote:
-> Hello,
-> i have an older server that only has usb 1.1 ports and attached a "Siemens
-> Gigaset USB Adapter 54 V2" (chip: ISL3887, vid/pid: 0x083a/0x4521), with the
-> firmware http://daemonizer.de/prism54/prism54-fw/fw-usb/2.13.25.0.lm87.arm the
-> device comes up and everything looks fine.
->
-> the only problem is, that hostapd does not work correctly, no wlan client can
-> connect (but the device is in their list).
-> because i read somewhere that usb1.1 together with this device is not working
-> correctly with hostapd, i tried it on a different machine, routed the device
-> through virtual box usb driver and there it was working perfect; to check that
-> its really a usb1.1 problem, i disabled the usb2.0 controllers and retried on
-> that same machine -> not working, same behaviour as on the older server; i
-> tested it again with usb 2.0 -> worked, 1.1 -> non working, 2.0 -> working.
->
-> so it looks like there is something bahving wrong if the device is connected to
-> an usb 1.0/1.1 port.
->
-> im willing to debug this stuff if i get some pointers...
+John W. Linville wrote:
+> The summary line could be different as well, if you can think of a
+> better way to describe the issue.  I am open to suggestions.
 
-My Dell DW1450, which uses p54usb, does not work at all on a USB1.1 port. I 
-tried with 3.3-rc1 from wireless-testing and with a 2.6.30 kernel. The failure 
-does not appear to be a regression. With a 3.2 kernel, it it works fine on 
-USB2.0 ports.
+I think these terms are clear:
 
-Larry
+Community b43 driver
+Broadcom brcmsmac driver
 
+How to apply them I leave up to you. :)
+
+
+//Peter
