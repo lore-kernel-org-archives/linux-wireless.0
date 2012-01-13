@@ -1,57 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:42482 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752433Ab2AKNWv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 08:22:51 -0500
-Received: by lago2 with SMTP id o2so270957lag.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2012 05:22:50 -0800 (PST)
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
-To: coelho@ti.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] wl12xx: Make sure HW is available in sched scan ops
-Date: Wed, 11 Jan 2012 14:22:42 +0100
-Message-Id: <1326288162-9113-1-git-send-email-pontus.fuchs@gmail.com> (sfid-20120111_142255_273049_85258F52)
+Received: from mx1.redhat.com ([209.132.183.28]:22366 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752686Ab2AMMAR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 13 Jan 2012 07:00:17 -0500
+Date: Fri, 13 Jan 2012 12:59:32 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Amir Hedayaty <hedayaty@gmail.com>,
+	Ivo van Doorn <IvDoorn@gmail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH] rt2800pci: fix spurious interrupts generation
+Message-ID: <20120113115931.GC2214@redhat.com> (sfid-20120113_130023_133712_54173F5C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The sched_scan_(stop|start) ops fails to check for WL1271_STATE_OFF.
-This can lead to a race where the driver tries to access the HW
-while it's off.
+Same devices can generate interrupt without properly setting bit in
+INT_SOURCE_CSR register (spurious interrupt), what will cause IRQ line
+will be disabled by interrupts controller driver.
 
-Fix this by checking for WL1271_STATE_OFF before accessing the HW.
+We discovered that clearing INT_MASK_CSR stops such behaviour. We
+previously first read that register, and then clear all know interrupt
+sources bits and do not touch reserved bits. After this patch, we write
+to all register content (I believe writing to reserved bits on that
+register will not cause any problems, I tested that on my rt2800pci
+device).
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+This fix very bad performance problem, practically making device
+unusable (since worked without interrupts), reported in:
+https://bugzilla.redhat.com/show_bug.cgi?id=658451
+
+We previously tried to workaround that issue in commit
+4ba7d9997869d25bd223dea7536fc1ce9fab3b3b "rt2800pci: handle spurious
+interrupts", but it was reverted in commit
+82e5fc2a34fa9ffea38f00c4066b7e600a0ca5e6
+as thing, that will prevent to detect real spurious interrupts.
+
+Reported-and-tested-by: Amir Hedayaty <hedayaty@gmail.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/wl12xx/main.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800pci.c |   28 ++++++++--------------------
+ 1 files changed, 8 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index d5f55a1..915d56c 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3105,6 +3105,11 @@ static int wl1271_op_sched_scan_start(struct ieee80211_hw *hw,
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 4941a1a..dc88bae 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -422,7 +422,6 @@ static int rt2800pci_init_queues(struct rt2x00_dev *rt2x00dev)
+ static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
+ 				 enum dev_state state)
+ {
+-	int mask = (state == STATE_RADIO_IRQ_ON);
+ 	u32 reg;
+ 	unsigned long flags;
  
- 	mutex_lock(&wl->mutex);
+@@ -436,25 +435,14 @@ static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
+ 	}
  
-+	if (wl->state == WL1271_STATE_OFF) {
-+		ret = -EAGAIN;
-+		goto out;
+ 	spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
+-	rt2x00pci_register_read(rt2x00dev, INT_MASK_CSR, &reg);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_RXDELAYINT, 0);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_TXDELAYINT, 0);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_RX_DONE, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_AC0_DMA_DONE, 0);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_AC1_DMA_DONE, 0);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_AC2_DMA_DONE, 0);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_AC3_DMA_DONE, 0);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_HCCA_DMA_DONE, 0);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_MGMT_DMA_DONE, 0);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_MCU_COMMAND, 0);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_RXTX_COHERENT, 0);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_TBTT, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_PRE_TBTT, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_TX_FIFO_STATUS, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_AUTO_WAKEUP, mask);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_GPTIMER, 0);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_RX_COHERENT, 0);
+-	rt2x00_set_field32(&reg, INT_MASK_CSR_TX_COHERENT, 0);
++	reg = 0;
++	if (state == STATE_RADIO_IRQ_ON) {
++		rt2x00_set_field32(&reg, INT_MASK_CSR_RX_DONE, 1);
++		rt2x00_set_field32(&reg, INT_MASK_CSR_TBTT, 1);
++		rt2x00_set_field32(&reg, INT_MASK_CSR_PRE_TBTT, 1);
++		rt2x00_set_field32(&reg, INT_MASK_CSR_TX_FIFO_STATUS, 1);
++		rt2x00_set_field32(&reg, INT_MASK_CSR_AUTO_WAKEUP, 1);
 +	}
-+
- 	ret = wl1271_ps_elp_wakeup(wl);
- 	if (ret < 0)
- 		goto out;
-@@ -3136,6 +3141,9 @@ static void wl1271_op_sched_scan_stop(struct ieee80211_hw *hw,
+ 	rt2x00pci_register_write(rt2x00dev, INT_MASK_CSR, reg);
+ 	spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
  
- 	mutex_lock(&wl->mutex);
- 
-+	if (wl->state == WL1271_STATE_OFF)
-+		goto out;
-+
- 	ret = wl1271_ps_elp_wakeup(wl);
- 	if (ret < 0)
- 		goto out;
 -- 
-1.7.5.4
+1.7.1
 
