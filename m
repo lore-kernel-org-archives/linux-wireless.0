@@ -1,70 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:39475 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751302Ab2ACDdY convert rfc822-to-8bit (ORCPT
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:14894 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932173Ab2ANUwS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 22:33:24 -0500
-Date: Tue, 3 Jan 2012 01:33:20 -0200
-From: Gustavo Padovan <padovan@profusion.mobi>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: bluetooth-next 2012-01-03
-Message-ID: <20120103033320.GG1472@joana> (sfid-20120103_043340_720983_D4CB976B)
+	Sat, 14 Jan 2012 15:52:18 -0500
+Date: Sat, 14 Jan 2012 21:52:17 +0100 (CET)
+From: Jesper Juhl <jj@chaosbits.net>
+To: netdev@vger.kernel.org
+cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Jiri Benc <jbenc@suse.cz>
+Subject: [PATCH] Net, mac80211: Fix resource leak in
+ ieee80211_rx_h_mesh_fwding()
+Message-ID: <alpine.LNX.2.00.1201142149250.11547@swampdragon.chaosbits.net> (sfid-20120114_215237_995932_27B0CE53)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+We may leak the 'fwd_skb' we skb_copy() in ieee80211_rx_h_mesh_fwding() if 
+we take the 'else' branch in the 'if' statement just below. If we take 
+that branch we'll end up returning from the function and since we've not 
+assigned 'fwd_skb' to anything at that point, we leak it when the variable 
+goes out of scope.
 
-A couple of fixes for the 3.3 release. The majority of the fixes are related
-to the change from tasklets to workqueue in the Bluetooth Core. The rest are
-important fixes over the tree. Exception is "Bluetooth: Rename extfeatures¨,
-as the name says it is just a rename and no harm, but it is a preparation for
-a following fix.
+The simple fix seems to be to just kfree_skb(fwd_skb); just before we
+return. That is what this patch does.
 
-Please pull, or let me know any concerns you have!
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+---
+ net/mac80211/rx.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-	Gustavo
+ note: patch is only compile tested.
 
---
-The following changes since commit dc0d633e35643662f27a0b1c531da3cd6b204b9c:
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index f407427..7514091 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1979,6 +1979,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 		mesh_path_error_tx(ifmsh->mshcfg.element_ttl, fwd_hdr->addr3,
+ 				    0, reason, fwd_hdr->addr2, sdata);
+ 		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, dropped_frames_no_route);
++		kfree_skb(fwd_skb);
+ 		return RX_DROP_MONITOR;
+ 	}
+ 
+-- 
+1.7.8.3
 
-  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next (2012-01-02 16:43:54 -0500)
 
-are available in the git repository at:
+-- 
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next master
-
-Andre Guedes (5):
-      Bluetooth: Rename extfeatures
-      Bluetooth: Fix hci_cc_read_local_ext_features()
-      Bluetooth: Fix adv_work delay
-      Bluetooth: Queue adv_work on system workqueue
-      Bluetooth: Fix mgmt_stop_discovery_failed()
-
-Andrei Emeltchenko (1):
-      Bluetooth: Correct packet len calculation
-
-Gustavo F. Padovan (8):
-      Bluetooth: Fix bacpy in l2cap_core.c
-      Bluetooth: Fix context in rfcomm_sock_lock
-      Bluetooth: Fix context in RFCOMM tty
-      Bluetooth: Remove *_bh locks from SCO
-      Bluetooth: Remove local_bh_disable() from hci_sock.c
-      Bluetooth: Remove *_bh from socket list lock.
-      Bluetooth: Don't use *_bh locks anymore
-      Bluetooth: Keep chan->state and sk->sk_state in sync
-
- include/net/bluetooth/hci_core.h |    4 ++--
- net/bluetooth/af_bluetooth.c     |    8 ++++----
- net/bluetooth/hci_event.c        |   22 +++++++++++++---------
- net/bluetooth/hci_sock.c         |    2 --
- net/bluetooth/l2cap_core.c       |   26 +++++++++++++-------------
- net/bluetooth/l2cap_sock.c       |    2 ++
- net/bluetooth/mgmt.c             |    4 ++--
- net/bluetooth/rfcomm/sock.c      |   12 ++++++------
- net/bluetooth/rfcomm/tty.c       |   22 +++++++++++-----------
- net/bluetooth/sco.c              |    8 ++++----
- 10 files changed, 57 insertions(+), 53 deletions(-)
