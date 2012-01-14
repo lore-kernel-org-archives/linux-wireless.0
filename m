@@ -1,128 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38230 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758247Ab2AET6R (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:40296 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756207Ab2ANUPV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 14:58:17 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: [PATCH 2/2] iw: remove ifdefs for mcs mask
-Date: Thu,  5 Jan 2012 20:58:10 +0100
-Message-Id: <1325793490-21501-5-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20120105_205825_838394_55647120)
-In-Reply-To: <1325793490-21501-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1325793490-21501-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Sat, 14 Jan 2012 15:15:21 -0500
+MIME-Version: 1.0
+In-Reply-To: <4F11E1CE.2050008@lwfinger.net>
+References: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
+	<20120114175837.GA8504@tuxdriver.com>
+	<4F11C75F.9030105@lwfinger.net>
+	<4F11DEB8.7010708@broadcom.com>
+	<4F11E1CE.2050008@lwfinger.net>
+Date: Sat, 14 Jan 2012 22:15:19 +0200
+Message-ID: <CANUX_P2OGvazES0pGA+RnfWnHNJ6+0Rre9j0SOav_7idHNM-2A@mail.gmail.com> (sfid-20120114_211526_203627_9029B06A)
+Subject: Re: calling request_firmware() from module init will not work with
+ recent/future udev versions
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Kay Sievers <kay.sievers@vrfy.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Tom Gundersen <teg@jklm.no>,
+	Andy Whitcroft <apw@canonical.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are enums, not defines. Therefore the ifdef check can never be
-true.
+On Sat, Jan 14, 2012 at 22:13, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 01/14/2012 01:59 PM, Arend van Spriel wrote:
+>>
+>> On 01/14/2012 07:20 PM, Larry Finger wrote:
+>>>
+>>> On 01/14/2012 11:58 AM, John W. Linville wrote:
+>>>>
+>>>> Kay, thanks for the reports.  Drivers should definitely be loading
+>>>> firmware at IFF_UP time.
+>>>
+>>>
+>>> As the maintainer for several drivers with this problem, I need to make
+>>> some
+>>> changes. What call from mac80211 corresponds to IFF_UP?
+>>
+>>
+>> Hi, Larry
+>>
+>> The mac80211 start callback describes following:
+>>
+>>  * @start: Called before the first netdevice attached to the hardware
+>>  *     is enabled. This should turn on the hardware and must turn on
+>>  *     frame reception (for possibly enabled monitor interfaces.)
+>>  *     Returns negative error codes, these may be seen in userspace,
+>>  *     or zero.
+>>  *     When the device is started it should not have a MAC address
+>>  *     to avoid acknowledging frames before a non-monitor device
+>>  *     is added.
+>>  *     Must be implemented and can sleep.
+>>
+>> Seems to me a good place to do the firmware loading although it is not
+>> really IFF_UP.
+>>
+>>> I have looked into using asynchronous firmware loading, but I have not
+>>> yet found
+>>> a good implementation.
+>>>
+>>> Larry
+>>
+>>
+>> In brcmsmac we request the firmware in the probe function so not in
+>> module_init, but I guess upon driver registration in the module_init the
+>> probe is called.
+>
+>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- bitrate.c |   20 ++------------------
- 1 files changed, 2 insertions(+), 18 deletions(-)
+I looked once at the pci_register_driver, and if I remember well, the
+probe in called in the same context of pci_register_driver. The driver
+registration fires a bus enumeration.
+FWIW, drivers might need to fetch their fw before registering
+mac80211. This can happen if they need their fw to know their
+capabilities...
 
-diff --git a/bitrate.c b/bitrate.c
-index cefd150..22b863e 100644
---- a/bitrate.c
-+++ b/bitrate.c
-@@ -17,12 +17,10 @@ static int handle_bitrates(struct nl80211_state *state,
- 	uint8_t *legacy = NULL;
- 	int *n_legacy = NULL;
- 	bool have_mcs_24 = false, have_mcs_5 = false;
--#ifdef NL80211_TXRATE_MCS
- 	uint8_t mcs_24[77], mcs_5[77];
- 	int n_mcs_24 = 0, n_mcs_5 = 0;
- 	uint8_t *mcs = NULL;
- 	int *n_mcs = NULL;
--#endif
- 	enum {
- 		S_NONE,
- 		S_LEGACY,
-@@ -32,9 +30,7 @@ static int handle_bitrates(struct nl80211_state *state,
- 	for (i = 0; i < argc; i++) {
- 		char *end;
- 		double tmpd;
--#ifdef NL80211_TXRATE_MCS
- 		long tmpl;
--#endif
- 
- 		if (strcmp(argv[i], "legacy-2.4") == 0) {
- 			if (have_legacy_24)
-@@ -51,7 +47,6 @@ static int handle_bitrates(struct nl80211_state *state,
- 			n_legacy = &n_legacy_5;
- 			have_legacy_5 = true;
- 		}
--#ifdef NL80211_TXRATE_MCS
- 		else if (strcmp(argv[i], "mcs-2.4") == 0) {
- 			if (have_mcs_24)
- 				return 1;
-@@ -67,7 +62,6 @@ static int handle_bitrates(struct nl80211_state *state,
- 			n_mcs = &n_mcs_5;
- 			have_mcs_5 = true;
- 		}
--#endif
- 		else switch (parser_state) {
- 		case S_LEGACY:
- 			tmpd = strtod(argv[i], &end);
-@@ -78,7 +72,6 @@ static int handle_bitrates(struct nl80211_state *state,
- 			legacy[(*n_legacy)++] = tmpd * 2;
- 			break;
- 		case S_MCS:
--#ifdef NL80211_TXRATE_MCS
- 			tmpl = strtol(argv[i], &end, 0);
- 			if (*end != '\0')
- 				return 1;
-@@ -86,7 +79,6 @@ static int handle_bitrates(struct nl80211_state *state,
- 				return 1;
- 			mcs[(*n_mcs)++] = tmpl;
- 			break;
--#endif
- 		default:
- 			return 1;
- 		}
-@@ -102,10 +94,8 @@ static int handle_bitrates(struct nl80211_state *state,
- 			goto nla_put_failure;
- 		if (have_legacy_24)
- 			nla_put(msg, NL80211_TXRATE_LEGACY, n_legacy_24, legacy_24);
--#ifdef NL80211_TXRATE_MCS
- 		if (have_mcs_24)
- 			nla_put(msg, NL80211_TXRATE_MCS, n_mcs_24, mcs_24);
--#endif
- 		nla_nest_end(msg, nl_band);
- 	}
- 
-@@ -115,10 +105,8 @@ static int handle_bitrates(struct nl80211_state *state,
- 			goto nla_put_failure;
- 		if (have_legacy_5)
- 			nla_put(msg, NL80211_TXRATE_LEGACY, n_legacy_5, legacy_5);
--#ifdef NL80211_TXRATE_MCS
- 		if (have_mcs_5)
- 			nla_put(msg, NL80211_TXRATE_MCS, n_mcs_5, mcs_5);
--#endif
- 		nla_nest_end(msg, nl_band);
- 	}
- 
-@@ -130,13 +118,9 @@ static int handle_bitrates(struct nl80211_state *state,
- }
- 
- #define DESCR_LEGACY "[legacy-<2.4|5> <legacy rate in Mbps>*]"
--#ifdef NL80211_TXRATE_MCS
- #define DESCR DESCR_LEGACY " [mcs-<2.4|5> <MCS index>*]"
--#else
--#define DESCR DESCR_LEGACY
--#endif
- 
--COMMAND(set, bitrates, DESCR, NL80211_CMD_SET_TX_BITRATE_MASK, 0, CIB_NETDEV,
--	handle_bitrates,
-+COMMAND(set, bitrates, "[legacy-<2.4|5> <legacy rate in Mbps>*] [mcs-<2.4|5> <MCS index>*]",
-+	NL80211_CMD_SET_TX_BITRATE_MASK, 0, CIB_NETDEV, handle_bitrates,
- 	"Sets up the specified rate masks.\n"
- 	"Not passing any arguments would clear the existing mask (if any).");
--- 
-1.7.7.3
+>
+> The rtlwifi drivers also load the firmware in the probe function, but do so
+> synchronously, which is where they get in trouble with the new udev.
+>
+> I'm planning on converting to asynchronous firmware loading with a check in
+> the start routine.
+>
 
+so does iwlwifi
