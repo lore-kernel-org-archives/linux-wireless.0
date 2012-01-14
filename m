@@ -1,46 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:28749 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754017Ab2AILqu (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:59950 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755033Ab2ANPZr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 06:46:50 -0500
-Message-ID: <4F0AD3A1.5020100@qca.qualcomm.com> (sfid-20120109_124654_126883_CA80C432)
-Date: Mon, 9 Jan 2012 13:46:41 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Sat, 14 Jan 2012 10:25:47 -0500
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Thirumalai <tpachamu@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 0/4] Enable uAPSD support in AP mode
-References: <1326095083-1538-1-git-send-email-tpachamu@qca.qualcomm.com>	 (sfid-20120109_084754_846351_9C65331D) <1326099268.3451.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1326099268.3451.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
+From: Kay Sievers <kay.sievers@vrfy.org>
+Date: Sat, 14 Jan 2012 16:25:23 +0100
+Message-ID: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com> (sfid-20120114_162556_888923_085E9D1A)
+Subject: calling request_firmware() from module init will not work with
+ recent/future udev versions
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: Tom Gundersen <teg@jklm.no>, Andy Whitcroft <apw@canonical.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/2012 10:54 AM, Johannes Berg wrote:
-> On Mon, 2012-01-09 at 13:14 +0530, Thirumalai wrote:
->> In addition to legacy power save, this series of patch adds
->> support for uAPSD in AP mode.
->>
->> When connected station goes into suspend state, the driver will
->> start queuing pkts in the separate queue (called uapsd queue)
->> until the station ask for it. 
->>
->> The moment driver starting queuing, it will enable traffic indication
->> bit for the client connected to indicate data availability. 
->> Once station ask for the data (via Trigger frame), the driver will 
->> dequeue and send pkt one by one to the station.
-> 
-> The way you describe this sounds incorrect, but I'll leave it to Kalle
-> to figure out what you're doing and whether it is correct or not ... if
-> only some ACs are trigger-enabled those don't influence the TIM bit.
+Hey,
 
-Yeah, that does sound odd. Thirumalai, does the code really this way or
-is it just a problem with the description? (I need to study the code in
-detail still.)
+just a heads-up, when bug reports are coming in now. The kernel log
+might look like a kernel failure, but it's caused by recent userspace
+changes.
 
-Johannes, thanks for pointing this out.
+We changed udev to strictly enforce sequence order and dependency
+handling of events. This seems to break some netdev drivers which
+block in modprobe until the firmware from userspace is loaded into the
+driver.
 
-Kalle
+I think it's out of question, that nothing must block in module init
+and rely on a userspace transaction to be fulfilled to finish the
+init_module() syscall. If userspace is not running properly, nothing
+will work. Built-in drivers and the transition from initramfs to the
+real root can't be handled properly that way.
+
+These drivers need to be fixed to load their firmware during ifup,
+which would be the most flexible solution. That way, it should also
+work if the driver is built-in, or is loaded from initramfs and no
+firmware is available.
+Alternatively, the firmware request should be able to use the aync
+firmware_request API and not the blocking one.
+
+We might need to work around that in the current udev for now, but
+these drivers will definitely break in future udev versions.
+Userspace, these days, should not be in charge of papering over
+obvious kernel bugs like this.
+
+These are the drivers we received bug reports so far. We didn't look
+into any of details of the drivers, but according to the logs, they
+seem to block for 60 seconds in modprobe, when userspace is not
+behaving like expected:
+  bnx2/bnx2-mips-06-6.2.1.fw
+  rtlwifi/rtl8192sefw.bin
+  brcm/bcm43xx-0.fw
+
+Any help here would be appreciated.
+
+Thanks,
+Kay
