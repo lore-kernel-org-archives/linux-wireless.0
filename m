@@ -1,34 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sfca-50.vyatta.com ([76.74.103.50]:38167 "EHLO fiji.vyatta.com"
-	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751968Ab2AEStf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 13:49:35 -0500
-Message-Id: <20120105184000.461663809@vyatta.com> (sfid-20120105_194939_962725_269A72F5)
-Date: Thu, 05 Jan 2012 10:39:49 -0800
-From: Stephen Hemminger <shemminger@vyatta.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37061 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756026Ab2ANSBM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 14 Jan 2012 13:01:12 -0500
+Date: Sat, 14 Jan 2012 12:58:37 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Tom Gundersen <teg@jklm.no>,
+	Andy Whitcroft <apw@canonical.com>,
 	Arend van Spriel <arend@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] brcmf: make net_device_ops const
-References: <20120105183947.295358582@vyatta.com>
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: calling request_firmware() from module init will not work with
+ recent/future udev versions
+Message-ID: <20120114175837.GA8504@tuxdriver.com> (sfid-20120114_190121_606666_7C362791)
+References: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Kay, thanks for the reports.  Drivers should definitely be loading
+firmware at IFF_UP time.
 
-Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
+John
 
+On Sat, Jan 14, 2012 at 04:25:23PM +0100, Kay Sievers wrote:
+> Hey,
+> 
+> just a heads-up, when bug reports are coming in now. The kernel log
+> might look like a kernel failure, but it's caused by recent userspace
+> changes.
+> 
+> We changed udev to strictly enforce sequence order and dependency
+> handling of events. This seems to break some netdev drivers which
+> block in modprobe until the firmware from userspace is loaded into the
+> driver.
+> 
+> I think it's out of question, that nothing must block in module init
+> and rely on a userspace transaction to be fulfilled to finish the
+> init_module() syscall. If userspace is not running properly, nothing
+> will work. Built-in drivers and the transition from initramfs to the
+> real root can't be handled properly that way.
+> 
+> These drivers need to be fixed to load their firmware during ifup,
+> which would be the most flexible solution. That way, it should also
+> work if the driver is built-in, or is loaded from initramfs and no
+> firmware is available.
+> Alternatively, the firmware request should be able to use the aync
+> firmware_request API and not the blocking one.
+> 
+> We might need to work around that in the current udev for now, but
+> these drivers will definitely break in future udev versions.
+> Userspace, these days, should not be in charge of papering over
+> obvious kernel bugs like this.
+> 
+> These are the drivers we received bug reports so far. We didn't look
+> into any of details of the drivers, but according to the logs, they
+> seem to block for 60 seconds in modprobe, when userspace is not
+> behaving like expected:
+>   bnx2/bnx2-mips-06-6.2.1.fw
+>   rtlwifi/rtl8192sefw.bin
+>   brcm/bcm43xx-0.fw
+> 
+> Any help here would be appreciated.
+> 
+> Thanks,
+> Kay
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c	2012-01-05 09:50:35.768590224 -0800
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c	2012-01-05 10:02:57.488495190 -0800
-@@ -1123,7 +1123,7 @@ int brcmf_bus_start(struct brcmf_pub *dr
- 	return 0;
- }
- 
--static struct net_device_ops brcmf_netdev_ops_pri = {
-+static const struct net_device_ops brcmf_netdev_ops_pri = {
- 	.ndo_open = brcmf_netdev_open,
- 	.ndo_stop = brcmf_netdev_stop,
- 	.ndo_get_stats = brcmf_netdev_get_stats,
-
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
