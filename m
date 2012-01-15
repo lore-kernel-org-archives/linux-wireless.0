@@ -1,102 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:42255 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956Ab2AXIHF convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:39725 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750733Ab2AOPdj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 03:07:05 -0500
-Received: by dake40 with SMTP id e40so2070658dak.19
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2012 00:07:04 -0800 (PST)
+	Sun, 15 Jan 2012 10:33:39 -0500
 MIME-Version: 1.0
-In-Reply-To: <201201231744.q0NHi68I002597@mail.maya.org>
-References: <4EFF12D9.3010602@01019freenet.de>
-	<2766356.70ylY68Gqi@helmutmobil.site>
-	<4F040FEA.3080703@01019freenet.de>
-	<1408490.qSFZVkU7fA@helmutmobil.site>
-	<4F0562DF.3000200@dualc.maya.org>
-	<CAGXE3d8b5qtbhesPjRy3EXvkiwshUg0eZqcDBzb1OhKK3j6z6A@mail.gmail.com>
-	<4F0AEBAB.9020104@01019freenet.de>
-	<CAGXE3d-cOeTEHugbgWMoz8-Dymw0=JHxykdK4ZkBmCJZ9tSPmg@mail.gmail.com>
-	<201201100803.q0A83nsQ003757@mail.maya.org>
-	<CAGXE3d_jW7NFnekMfwn6JPXX0xB4UWM3ttbRVLv-ZbsoMOoWEw@mail.gmail.com>
-	<201201200730.q0K7U0oj004966@mail.maya.org>
-	<CAGXE3d_rCMYwoEBNjk+S7WvAmCkPMcq-Gpawm370-cSbjXy6rg@mail.gmail.com>
-	<4F1D84CE.8020403@maya.org>
-	<CAGXE3d_UPmcjgss+xMPBtkM22kBwGD23y8Fzxkr+6286W+EwbQ@mail.gmail.com>
-	<201201231744.q0NHi68I002597@mail.maya.org>
-Date: Tue, 24 Jan 2012 09:07:04 +0100
-Message-ID: <CAGXE3d8P0UjnZ7Z=gg1uoe0WUX+4jWmg=a2i9_nV5E6i-xcfLQ@mail.gmail.com> (sfid-20120124_090709_742081_6970F903)
-Subject: Re: Compat-wireless-3.2-rc6-3 is broken for rt2860 device
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1326621743.3448.1.camel@jlt3.sipsolutions.net>
+References: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
+ <1326621743.3448.1.camel@jlt3.sipsolutions.net>
+From: Kay Sievers <kay.sievers@vrfy.org>
+Date: Sun, 15 Jan 2012 16:33:18 +0100
+Message-ID: <CAPXgP13b0uu3DgOGRL-_WKx-aSQN-f0xL6OmjNPBGf9fg0satA@mail.gmail.com> (sfid-20120115_163349_503433_EF019EF7)
+Subject: Re: calling request_firmware() from module init will not work with
+ recent/future udev versions
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Tom Gundersen <teg@jklm.no>, Andy Whitcroft <apw@canonical.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 23, 2012 at 6:44 PM, Andreas Hartmann
-<andihartmann@01019freenet.de> wrote:
-> Am Mon, 23 Jan 2012 17:36:57 +0100
-> schrieb Helmut Schaa <helmut.schaa@googlemail.com>:
+On Sun, Jan 15, 2012 at 11:02, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> These drivers need to be fixed to load their firmware during ifup,
+>> which would be the most flexible solution. That way, it should also
+>> work if the driver is built-in, or is loaded from initramfs and no
+>> firmware is available.
+>> Alternatively, the firmware request should be able to use the aync
+>> firmware_request API and not the blocking one.
 >
->> On Mon, Jan 23, 2012 at 5:03 PM, Andreas Hartmann
->> <andihartmann@freenet.de> wrote:
->> > Helmut Schaa schrieb:
->> >> On Fri, Jan 20, 2012 at 8:29 AM, Andreas Hartmann
->> >> <andihartmann@01019freenet.de> wrote:
->> >>> All in one: Your workaround was a good idea, but unfortunately it
->> >>> doesn't "solve" / workaround the problem introduced with the patch
->> >>> "mac80211: retry sending failed BAR frames later instead of tearing
->> >>> down aggr" [1]. I don't know off any other solution at this time as to revert it.
->> >>
->> >> Ok, so we've got at least one hw issue here: rt2800 is not able to report
->> >> correct ACK state of BARs :(
->> >>
->> >> The interesting bit is that the legacy drivers tear the BA session down as
->> >> soon as the first AMPDU subframe failed. That's the same behavior as
->> >> mac80211 had before the mentioned patch.
->> >>
->> >> So, let's assume the generic way Felix implemented works for other devices
->> >> (like ath9k) we could go with a workaround inside rt2x00 to tear down
->> >> the BA session as soon as the first AMPDU frame failed.
->> >>
->> >> Mind to try that one (not even compile tested though :) ).
->> >
->> > hdr is missing. I tried to derive it like this:
->> >
->> > struct ieee80211_hdr *hdr=(void*)entry->skb->data;
->>
->> Looks correct but you should put it right before the ieee80211_is_data_qos check
->> not at the start of the function ...
->
-> I did it like this:
->
-> --- drivers/net/wireless/rt2x00/rt2x00dev.c.orig        2012-01-23 16:50:03.188718671 +0100
-> +++ drivers/net/wireless/rt2x00/rt2x00dev.c     2012-01-23 18:11:56.248553764 +0100
-> @@ -388,8 +388,17 @@
->                tx_info->status.ampdu_len = 1;
->                tx_info->status.ampdu_ack_len = success ? 1 : 0;
->
-> -               if (!success)
-> -                       tx_info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
-> +               struct ieee80211_hdr *hdr = (void*) entry->skb->data;
-> +               if (!success && tx_info->control.sta != NULL && ieee80211_is_data_qos(hdr->frame_control)) {
-> +                       /*
-> +                        * Tear down BA session
-> +                        */
-> +                       struct ieee80211_sta *sta = tx_info->control.sta;
-> +                       u8 *qc = ieee80211_get_qos_ctl(hdr);
-> +                       int tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
-> +
-> +                       ieee80211_stop_tx_ba_session(sta, tid);
-> +               }
->        }
->
->        if (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
->
->
-> but the machine does crash anyway. Could hdr be null, too?
+> Will udev now also return the async load only after root is booted if it
+> can't be satisfied earlier?
 
-Ok, I'll do some testing as soon as time allows and get back to you then.
+Not sure, let me explain what happens here, maybe it contains the answer:
 
-Helmut
+Udev gets an event for a pci device:
+  /devices/pci0000:00/0000:00:1c.1/0000:03:00.0
+
+This device has a modalias, which let's udev load the matching module
+into the kernel. The module_init() syscall triggers the firmware
+loading request, which causes another event:
+  /devices/pci0000:00/0000:00:1c.1/0000:03:00.0/firmware/0000:03:00.0
+
+This event is a direct child of the pci device and udev delays the
+execution of child devices until the parent devices return from
+handling. This dependency logic is needed for many things to ensure a
+proper operation, like partitions which need to make sure the events
+for the disk devices are handled before the partition events are
+started.
+
+Now the problem, the pcidev event is blocking in modprobe and waits
+for the child event it has generated to finish, but udev does not
+start the event because the parent still blocks in modprobe ->
+deadlock until default firmware timeout of 60 sec. What we want here,
+for several reasons not only udev's dependency logic, is that modprobe
+never waits for userspace transactions to finish.
+
+> There are a number of devices, particularly
+> wireless, that need firmware before they can register with mac80211 for
+> capability advertisement reasons.
+
+Right, ideally all firmware loading would be delayed until the netif
+is brought up, and that's what we shoudl use if possible. In all other
+cases, I think what iwlwifi is doing here looks fine from the
+userspace side. It does not register any netdev/mac80211 device, the
+firmware request is the only thing that it issued, and modprobe
+returns immediately, regardless of the firmware request handling.
+
+If userspace is not responding, the firmware request times out after
+60 seconds and the driver is not associated with any hardware. To
+retry the firmware loading, the module needs to be unloaded and
+reloaded, or the driver needs to be asked to bind to a device again by
+writing to the 'bind' in file in the sysfs driver directory.
+
+Firmware requests stay around in the system for by default 60 seconds.
+If the driver would be built-in the request would be issued long
+before userspace is ready, but udev's coldplug step during bootup will
+cause all events to be replayed, so it would catch also the
+outstanding firmware requests, and would be able to handle them.
+
+Kay
