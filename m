@@ -1,41 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:28881 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751221Ab2AXLjW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 06:39:22 -0500
-Message-ID: <4F1E9865.5040004@qca.qualcomm.com> (sfid-20120124_123926_251653_2DF096DE)
-Date: Tue, 24 Jan 2012 13:39:17 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: <rmani@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH v2 3/8] ath6kl: Add a new func to config default WOW patterns
- for non AP mode
-References: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com> <1327066544-23779-4-git-send-email-rmani@qca.qualcomm.com>
-In-Reply-To: <1327066544-23779-4-git-send-email-rmani@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from perches-mx.perches.com ([206.117.179.246]:53772 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750986Ab2AOIkQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Jan 2012 03:40:16 -0500
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 6/8] brcm80211: Use brcmu_dbg_hex_dump
+Date: Sun, 15 Jan 2012 00:38:43 -0800
+Message-Id: <7a7a6b670e004a3f35dd5f69627b638b3ec76f4c.1326616556.git.joe@perches.com> (sfid-20120115_094126_236324_BF91CB69)
+In-Reply-To: <cover.1326616556.git.joe@perches.com>
+References: <cover.1326616556.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/20/2012 03:35 PM, rmani@qca.qualcomm.com wrote:
-> From: Raja Mani <rmani@qca.qualcomm.com>
-> 
-> ath6kl_non_ap_add_default_wow_patterns() is added to configure
-> the below default patterns when the system enters into WOW
-> suspend in non AP mode.
-> 
->   * Unicast packet pattern
->   * mDNS/SSDP/LLMNR pattern
-> 
-> This func will be called from ath6kl_wow_suspend().
-> 
-> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+Convert a couple of pr_debug/print_hex_dump to
+the standard utility.
 
-> +static int ath6kl_non_ap_add_default_wow_patterns(struct ath6kl *ar,
-> +						     struct ath6kl_vif *vif)
-> +{
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
 
-Maybe ath6kl_wow_sta() or something like that?
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index 14ab606..72701a4 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -5858,9 +5858,8 @@ void brcms_c_print_txdesc(struct d11txh *txh)
+ 	struct ieee80211_rts rts = txh->rts_frame;
+ 
+ 	/* add plcp header along with txh descriptor */
+-	pr_debug("Raw TxDesc + plcp header:\n");
+-	print_hex_dump_bytes("", DUMP_PREFIX_OFFSET,
+-			     txh, sizeof(struct d11txh) + 48);
++	brcmu_dbg_hex_dump(txh, sizeof(struct d11txh) + 48,
++			   "Raw TxDesc + plcp header:\n");
+ 
+ 	pr_debug("TxCtlLow: %04x ", mtcl);
+ 	pr_debug("TxCtlHigh: %04x ", mtch);
+@@ -5986,9 +5985,7 @@ void brcms_c_print_rxh(struct d11rxhdr *rxh)
+ 		{0, NULL}
+ 	};
+ 
+-	pr_debug("Raw RxDesc:\n");
+-	print_hex_dump_bytes("", DUMP_PREFIX_OFFSET, rxh,
+-			     sizeof(struct d11rxhdr));
++	brcmu_dbg_hex_dump(rxh, sizeof(struct d11rxhdr), "Raw RxDesc:\n");
+ 
+ 	brcms_c_format_flags(macstat_flags, macstatus1, flagstr, 64);
+ 
+-- 
+1.7.8.111.gad25c.dirty
 
-Kalle
