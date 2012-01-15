@@ -1,30 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:59910 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753356Ab2ABRtr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 12:49:47 -0500
-Message-ID: <4F01D896.7070907@qca.qualcomm.com> (sfid-20120102_184952_325767_315D3D6B)
-Date: Mon, 2 Jan 2012 18:17:26 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: Advertise TX/RX support for frames in AP mode
-References: <20111227090353.GA14432@jouni.qca.qualcomm.com>
-In-Reply-To: <20111227090353.GA14432@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from perches-mx.perches.com ([206.117.179.246]:35879 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751285Ab2AOIjb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 Jan 2012 03:39:31 -0500
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Henry Ptasinski <henryp@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Kan Yan <kanyan@broadcom.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 2/8] brcmfmac: Convert printk(KERN_DEBUG to pr_debug
+Date: Sun, 15 Jan 2012 00:38:39 -0800
+Message-Id: <836088dbbb4916e162ac212d05a5e77a9ba451a1.1326616556.git.joe@perches.com> (sfid-20120115_094221_649613_57485479)
+In-Reply-To: <cover.1326616556.git.joe@perches.com>
+References: <cover.1326616556.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/27/2011 11:03 AM, Jouni Malinen wrote:
-> This is needed to fix current hostapd/wpa_supplicant AP operations for
-> frame registration. P2P GO mode already advertised these, but AP mode
-> was forgotten and could not be used after the hostapd/wpa_supplicant
-> frame registration changes.
-> 
-> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Allow dynamic debugging.
 
-Thanks, applied.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-Kalle
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
+index 8b2060b..f5ca9fc 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h
+@@ -39,13 +39,13 @@ do {									\
+ 	if (BRCMF_ERROR_VAL == BRCMF_##level##_VAL) {			\
+ 		if (brcmf_msg_level & BRCMF_##level##_VAL) {		\
+ 			if (net_ratelimit())				\
+-				printk(KERN_DEBUG "%s: " fmt,		\
+-				       __func__, ##__VA_ARGS__);	\
++				pr_debug("%s: " fmt,			\
++					 __func__, ##__VA_ARGS__);	\
+ 		}							\
+ 	} else {							\
+ 		if (brcmf_msg_level & BRCMF_##level##_VAL) {		\
+-			printk(KERN_DEBUG "%s: " fmt,			\
+-			       __func__, ##__VA_ARGS__);		\
++			pr_debug("%s: " fmt,				\
++				 __func__, ##__VA_ARGS__);		\
+ 		}							\
+ 	}								\
+ } while (0)
+-- 
+1.7.8.111.gad25c.dirty
+
