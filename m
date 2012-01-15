@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:35812 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751687Ab2ATGWo (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:57172 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933Ab2AOPu4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 01:22:44 -0500
-Received: by mail-lpp01m010-f43.google.com with SMTP id o2so149491lag.2
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2012 22:22:42 -0800 (PST)
-Subject: Re: [PATCH 2/2] mac80211: make CQM RSSI support per virtual
- interface
-From: Luciano Coelho <coelho@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20120119083102.873553392@sipsolutions.net>
-References: <20120119082956.486569312@sipsolutions.net>
-	 <20120119083102.873553392@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 20 Jan 2012 08:22:39 +0200
-Message-ID: <1327040559.4598.411.camel@cumari> (sfid-20120120_072246_479101_7DE8A0E5)
-Mime-Version: 1.0
+	Sun, 15 Jan 2012 10:50:56 -0500
+Message-ID: <4F12F5DD.3030904@gmail.com> (sfid-20120115_165146_032948_DF92F242)
+Date: Sun, 15 Jan 2012 07:50:53 -0800
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+MIME-Version: 1.0
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	netdev@kernel.org, linux-wireless@vger.kernel.org
+Subject: ath9k timeouts with the current Mainline
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-01-19 at 09:29 +0100, Johannes Berg wrote:
-> plain text document attachment (013-mac80211-cqm-rssi-per-vif.patch)
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> Similar to the previous beacon filtering patch,
-> make CQM RSSI support depend on the flags that
-> the driver set for virtual interfaces.
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-> ---
+not sure if the Internet provider just sucks, or I am hitting a wireless 
+issue. basically my connection times out after a few mins of being 
+up.(streaming radio is not solid).
+
+dmesg shows:
+
+[ 3322.827549] wlan1: authenticate with d8:c7:c8:a2:0f:40 (try 1)
+[ 3322.831778] wlan1: d8:c7:c8:a2:0f:40 denied authentication (status 17)
+[ 3386.310128] wlan1: authenticate with d8:c7:c8:a2:0d:80 (try 1)
+[ 3386.312010] wlan1: d8:c7:c8:a2:0d:80 denied authentication (status 17)
+[ 3389.481771] wlan1: direct probe to 00:18:0a:02:19:c3 (try 1/3)
+[ 3389.681095] wlan1: direct probe to 00:18:0a:02:19:c3 (try 2/3)
+[ 3389.881094] wlan1: direct probe to 00:18:0a:02:19:c3 (try 3/3)
+[ 3390.081092] wlan1: direct probe to 00:18:0a:02:19:c3 timed out
+[ 3458.618065] wlan1: direct probe to d8:c7:c8:a2:0d:80 (try 1/3)
+[ 3458.818079] wlan1: direct probe to d8:c7:c8:a2:0d:80 (try 2/3)
+[ 3459.018080] wlan1: direct probe to d8:c7:c8:a2:0d:80 (try 3/3)
+[ 3459.218058] wlan1: direct probe to d8:c7:c8:a2:0d:80 timed out
+[ 3466.518579] wlan1: direct probe to d8:c7:c8:a2:0d:80 (try 1/3)
+[ 3466.718111] wlan1: direct probe to d8:c7:c8:a2:0d:80 (try 2/3)
+[ 3466.918074] wlan1: direct probe to d8:c7:c8:a2:0d:80 (try 3/3)
+[ 3467.118077] wlan1: direct probe to d8:c7:c8:a2:0d:80 timed out
+[ 3474.424860] wlan1: authenticate with d8:c7:c8:a2:0d:80 (try 1)
+[ 3474.449681] wlan1: authenticated
+[ 3474.457133] wlan1: associate with d8:c7:c8:a2:0d:80 (try 1)
+[ 3474.471059] wlan1: RX AssocResp from d8:c7:c8:a2:0d:80 (capab=0x421 
+status=0 aid=13)
+[ 3474.471067] wlan1: associated
+[ 3474.471075] wlan1: moving STA d8:c7:c8:a2:0d:80 to state 1
+[ 3474.471080] wlan1: moving STA d8:c7:c8:a2:0d:80 to state 2
+[ 3474.473809] wlan1: moving STA d8:c7:c8:a2:0d:80 to state 3
+[ 3484.546077] wlan1: no IPv6 routers present
 
 
-For the wl1251 and wl12xx parts:
+card is:
+03:00.0 Network controller: Atheros Communications Inc. AR5008 Wireless 
+Network Adapter (rev 01)
 
-Acked-by: Luciano Coelho <coelho@ti.com>
+has anybody else seen/experienced anything like this?
 
--- 
-Cheers,
-Luca.
-
+Justin P. Mattock
