@@ -1,57 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from investici.nine.ch ([217.150.252.179]:58920 "EHLO
-	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753756Ab2AQOBD (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12476 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751825Ab2APXim (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 09:01:03 -0500
-Date: Tue, 17 Jan 2012 15:00:09 +0100
-From: Antonio Quartulli <ordex@autistici.org>
-To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCHv3 2/2] mac80211: in IBSS use the Auth frame to trigger
- STA reinsertion
-Message-ID: <20120117140008.GA2272@ritirata.org> (sfid-20120117_150107_545488_1462B60A)
-References: <1326737526-29750-1-git-send-email-ordex@autistici.org>
- <4F157505.3060306@lri.fr>
+	Mon, 16 Jan 2012 18:38:42 -0500
+Date: Mon, 16 Jan 2012 15:35:43 -0800
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Nikolay Martynov <mar.kolya@gmail.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH]  Add dma_zalloc_coherent to fix build with kernels older
+ than 3.2
+Message-ID: <20120116233543.GO4511@tux> (sfid-20120117_003846_863496_D7B6B9B5)
+References: <1326690475-9096-1-git-send-email-mar.kolya@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4F157505.3060306@lri.fr>
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1326690475-9096-1-git-send-email-mar.kolya@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Nicolas and thank you for testing my patch!
-
-On Tue, Jan 17, 2012 at 02:17:57 +0100, Nicolas Cavallari wrote:
-> I tested your patch, but quickly run into a race condition where i would
-> get Auth frame multiplication.
+On Mon, Jan 16, 2012 at 12:07:55AM -0500, Nikolay Martynov wrote:
 > 
-> The worst case apparently happen when A boots for the first time and the
-> first message that B receives is an Auth frame.  In that case, there are
-> several ieee80211_ibss_add_sta() calls running concurrently on B  (A and
-> B are SMP systems)  but only one succeeds,  except that your patch sends
-> Auth frames before the check, so B sends several Auth frames to A.
-> 
-> Then A proceed to reset B.  After A deletes B's sta_info,  but before
-> it reinserts it, some other code (ieee80211_ibss_rx_no_sta?) may call
-> ieee80211_ibss_add_sta()  concurrently,  sending more Auth frames...
-> increasing the odds of another race condition...
+> Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
 
-Thank you for debugging and having found the problem. Weird that I haven't seen
-it before.
+Applied and pushed, thanks!
 
-> 
-> By calling send_auth only when sta_info_insert_rcu() succeeds, i'm no
-> longer able to reproduce the Auth flood.
-
-Sounds like a good hint. Better to send the auth frame only if we have already added
-the new station to the list.
-
-I will fix it in the next version
-
-Regards,
-
--- 
-Antonio Quartulli
-
-..each of us alone is worth nothing..
-Ernesto "Che" Guevara
+ Luis
