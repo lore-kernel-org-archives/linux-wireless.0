@@ -1,138 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from investici.nine.ch ([217.150.252.179]:25886 "EHLO
-	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754037Ab2AaT0w (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:48786 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756581Ab2APUbO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 14:26:52 -0500
-From: Antonio Quartulli <ordex@autistici.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Antonio Quartulli <ordex@autistici.org>
-Subject: [PATCHv2] cfg80211/mac80211: userspace peer authorization in IBSS
-Date: Tue, 31 Jan 2012 20:25:47 +0100
-Message-Id: <1328037947-27630-1-git-send-email-ordex@autistici.org> (sfid-20120131_202656_071560_F8803699)
-In-Reply-To: <1326806209-18753-1-git-send-email-ordex@autistici.org>
-References: <1326806209-18753-1-git-send-email-ordex@autistici.org>
+	Mon, 16 Jan 2012 15:31:14 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH v2] b43: add default option to avoid duplicating device support with brcmsmac
+Date: Mon, 16 Jan 2012 15:22:12 -0500
+Message-Id: <1326745332-28769-1-git-send-email-linville@tuxdriver.com> (sfid-20120116_213118_666005_1F8D107D)
+In-Reply-To: <1326315180-29398-1-git-send-email-linville@tuxdriver.com>
+References: <1326315180-29398-1-git-send-email-linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the IBSS network is RSN-protected, let userspace authorize the stations
-instead of adding them as AUTHORIZED by default.
-
-Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- include/net/cfg80211.h     |    5 +++++
- net/mac80211/ibss.c        |    6 +++++-
- net/mac80211/ieee80211_i.h |    2 ++
- net/wireless/nl80211.c     |   20 ++++++++++++--------
- 4 files changed, 24 insertions(+), 9 deletions(-)
+The dual default lines were the only combination I could find that
+actually defaulted to "N" if brcmsmac was already enabled and to "Y"
+otherwise.  If anyone knows better magic for this, then please speak-up!
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 2964205..c557c45 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1151,6 +1151,10 @@ struct cfg80211_disassoc_request {
-  * @beacon_interval: beacon interval to use
-  * @privacy: this is a protected network, keys will be configured
-  *	after joining
-+ * @control_port: whether user space controls IEEE 802.1X port, i.e.,
-+ *	sets/clears %NL80211_STA_FLAG_AUTHORIZED. If true, the driver is
-+ *	required to assume that the port is unauthorized until authorized by
-+ *	user space. Otherwise, port is marked authorized by default.
-  * @basic_rates: bitmap of basic rates to use when creating the IBSS
-  * @mcast_rate: per-band multicast rate index + 1 (0: disabled)
-  */
-@@ -1165,6 +1169,7 @@ struct cfg80211_ibss_params {
- 	u32 basic_rates;
- 	bool channel_fixed;
- 	bool privacy;
-+	bool control_port;
- 	int mcast_rate[IEEE80211_NUM_BANDS];
+ drivers/net/wireless/b43/Kconfig |    6 ++++++
+ drivers/net/wireless/b43/main.c  |    2 ++
+ 2 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/b43/Kconfig b/drivers/net/wireless/b43/Kconfig
+index b97a40e..edb4ab2 100644
+--- a/drivers/net/wireless/b43/Kconfig
++++ b/drivers/net/wireless/b43/Kconfig
+@@ -31,6 +31,12 @@ config B43_BCMA
+ 	depends on B43 && BCMA
+ 	default y
+ 
++config B43_BCMA_EXTRA
++	bool "Hardware support that overlaps with Broadcom-supported brcmsmac driver"
++	depends on B43_BCMA
++	default n if BRCMSMAC || BRCMSMAC_MODULE
++	default	y
++
+ config B43_SSB
+ 	bool
+ 	depends on B43 && SSB
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 41c83d9..b1ae675 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -116,8 +116,10 @@ MODULE_PARM_DESC(pio, "Use PIO accesses by default: 0=DMA, 1=PIO");
+ #ifdef CONFIG_B43_BCMA
+ static const struct bcma_device_id b43_bcma_tbl[] = {
+ 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x11, BCMA_ANY_CLASS),
++#ifdef CONFIG_B43_BCMA_EXTRA
+ 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x17, BCMA_ANY_CLASS),
+ 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x18, BCMA_ANY_CLASS),
++#endif
+ 	BCMA_CORE(BCMA_MANUF_BCM, BCMA_CORE_80211, 0x1D, BCMA_ANY_CLASS),
+ 	BCMA_CORETABLE_END
  };
- 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 7b3a0b0..8361da4 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -268,7 +268,10 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
- 
- 	sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
- 	sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
--	sta_info_pre_move_state(sta, IEEE80211_STA_AUTHORIZED);
-+	/* authorize the station only if the network is not RSN protected. If
-+	 * not wait for the userspace to authorize it */
-+	if (!sta->sdata->u.ibss.control_port)
-+		sta_info_pre_move_state(sta, IEEE80211_STA_AUTHORIZED);
- 
- 	rate_control_rate_init(sta);
- 
-@@ -1075,6 +1078,7 @@ int ieee80211_ibss_join(struct ieee80211_sub_if_data *sdata,
- 		sdata->u.ibss.fixed_bssid = false;
- 
- 	sdata->u.ibss.privacy = params->privacy;
-+	sdata->u.ibss.control_port = params->control_port;
- 	sdata->u.ibss.basic_rates = params->basic_rates;
- 	memcpy(sdata->vif.bss_conf.mcast_rate, params->mcast_rate,
- 	       sizeof(params->mcast_rate));
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d47e8c1..a95d125 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -470,6 +470,8 @@ struct ieee80211_if_ibss {
- 	bool fixed_channel;
- 	bool privacy;
- 
-+	bool control_port;
-+
- 	u8 bssid[ETH_ALEN];
- 	u8 ssid[IEEE80211_MAX_SSID_LEN];
- 	u8 ssid_len, ie_len;
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c910b07..ca61c8a 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2654,13 +2654,6 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 		break;
- 	case NL80211_IFTYPE_P2P_CLIENT:
- 	case NL80211_IFTYPE_STATION:
--		/* disallow things sta doesn't support */
--		if (params.plink_action)
--			return -EINVAL;
--		if (params.ht_capa)
--			return -EINVAL;
--		if (params.listen_interval >= 0)
--			return -EINVAL;
- 		/*
- 		 * Don't allow userspace to change the TDLS_PEER flag,
- 		 * but silently ignore attempts to change it since we
-@@ -2668,7 +2661,15 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 		 * to change the flag.
- 		 */
- 		params.sta_flags_mask &= ~BIT(NL80211_STA_FLAG_TDLS_PEER);
--
-+		/* fall through */
-+	case NL80211_IFTYPE_ADHOC:
-+		/* disallow things sta doesn't support */
-+		if (params.plink_action)
-+			return -EINVAL;
-+		if (params.ht_capa)
-+			return -EINVAL;
-+		if (params.listen_interval >= 0)
-+			return -EINVAL;
- 		/* reject any changes other than AUTHORIZED */
- 		if (params.sta_flags_mask & ~BIT(NL80211_STA_FLAG_AUTHORIZED))
- 			return -EINVAL;
-@@ -4804,6 +4805,9 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 			return PTR_ERR(connkeys);
- 	}
- 
-+	ibss.control_port =
-+		nla_get_flag(info->attrs[NL80211_ATTR_CONTROL_PORT]);
-+
- 	err = cfg80211_join_ibss(rdev, dev, &ibss, connkeys);
- 	if (err)
- 		kfree(connkeys);
 -- 
-1.7.3.4
+1.7.4.4
 
