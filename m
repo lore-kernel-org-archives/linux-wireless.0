@@ -1,57 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:35368 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754155Ab2A0DL7 convert rfc822-to-8bit (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:46193 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753150Ab2APCrZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 22:11:59 -0500
-MIME-Version: 1.0
-In-Reply-To: <20120127015015.GA23291@gamma.logic.tuwien.ac.at>
-References: <20120124013625.GB18436@gamma.logic.tuwien.ac.at>
-	<CANUX_P3er0orBy8OhDuY1DfgD810UD-_HB_ukJnCA+W8e-VazQ@mail.gmail.com>
-	<20120125002250.GA20431@gamma.logic.tuwien.ac.at>
-	<CANUX_P0UREz_jZABu+Y_QYOh9tx_sKZSSkZpYHBEVtcU4QQdSA@mail.gmail.com>
-	<20120126003735.GA2346@gamma.logic.tuwien.ac.at>
-	<CANUX_P0H_WaWwnpjoBcMpZQY4xH=cbVhAKxWKXmz-HwFMcWS6w@mail.gmail.com>
-	<CANUX_P3XSCsWUJ9M55qeaK-DuPEMXODFPJiNk+BgnHN-=WECqw@mail.gmail.com>
-	<20120126232555.GB16330@gamma.logic.tuwien.ac.at>
-	<20120127015015.GA23291@gamma.logic.tuwien.ac.at>
-Date: Thu, 26 Jan 2012 19:11:57 -0800
-Message-ID: <CANUX_P3F58upbrw48AiMTV4DDZWsfveYp=mANAD9CQ2bPps0cA@mail.gmail.com> (sfid-20120127_041219_247324_085A0016)
-Subject: Re: iwlagn is getting even worse with 3.3-rc1
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Norbert Preining <preining@logic.at>
-Cc: linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	Dave Jones <davej@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sun, 15 Jan 2012 21:47:25 -0500
+Received: by ggdk6 with SMTP id k6so2394972ggd.19
+        for <linux-wireless@vger.kernel.org>; Sun, 15 Jan 2012 18:47:24 -0800 (PST)
+From: Fabio Estevam <festevam@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Fabio Estevam <festevam@gmail.com>,
+	Fabio Estevam <fabio.estevam@freescale.com>
+Subject: [PATCH] wireless: iwlwifi: iwl-scan.c: Fix build warning
+Date: Mon, 16 Jan 2012 00:47:12 -0200
+Message-Id: <1326682032-3060-1-git-send-email-festevam@gmail.com> (sfid-20120116_034742_712098_9E657DFE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Hi Emmanuel,
->
-> On Fr, 27 Jan 2012, Norbert Preining wrote:
->> First tests are promising, after reboot it was working immediately
->> without need to rfkill block/unblock. lso after suspend and resume.
->>
->> Will test more the next days and report back.
->
-> Unfortunately, at the university it is still a complete no-go.
-> Usually the connection works for a short time, then breaks down.
-> After that even unloading and loading the module did not reactivate
-> it, I cannot get a connection at all. But other units, or with
-> older kernel (it was 2.6.3X AFAIR) it was working without a glitch.
->
-> I uploaded a syslog output including kernel and network manager logs
-> to
->        http://www.logic.at/people/preining/syslog.log
-> (new one). This shows a session from loading the module up to giving up.
->
+Fix the following build warning:
 
-I glanced at the logs, and they look healthy from the wifi driver
-side. You just don't get any reply to DHCP_DISCOVER apparently... can
-you get a sniffer ?
-I am pretty sure that the packet in sent in the air, but if you can
-get a capture of that we could check that out.
+drivers/net/wireless/iwlwifi/iwl-scan.c: In function â€˜iwlagn_request_scanâ€™:
+drivers/net/wireless/iwlwifi/iwl-scan.c:572: warning: â€˜cmd_lenâ€™ may be used uninitialized in this function
+
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-scan.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 084aa2c..a645472 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -569,7 +569,7 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 	struct iwl_scan_cmd *scan;
+ 	struct iwl_rxon_context *ctx = &priv->contexts[IWL_RXON_CTX_BSS];
+ 	u32 rate_flags = 0;
+-	u16 cmd_len;
++	u16 cmd_len = 0;
+ 	u16 rx_chain = 0;
+ 	enum ieee80211_band band;
+ 	u8 n_probes = 0;
+-- 
+1.7.1
+
