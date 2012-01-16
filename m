@@ -1,42 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from investici.nine.ch ([217.150.252.179]:28102 "EHLO
-	confino.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751963Ab2AHL5i (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:61643 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755831Ab2APSlU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jan 2012 06:57:38 -0500
-From: Antonio Quartulli <ordex@autistici.org>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Antonio Quartulli <ordex@autistici.org>
-Subject: [PATCH] iw: add support for NL80211_CMD_DEL_STATION event
-Date: Sun,  8 Jan 2012 12:39:26 +0100
-Message-Id: <1326022766-1881-1-git-send-email-ordex@autistici.org> (sfid-20120108_125742_266016_159B2625)
+	Mon, 16 Jan 2012 13:41:20 -0500
+Date: Mon, 16 Jan 2012 10:41:15 -0800
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Vivek Natarajan <nataraja@qca.qualcomm.com>,
+	Felix Fietkau <nbd@openwrt.org>, <ath9k-devel@lists.ath9k.org>
+Subject: Re: [PATCH 1/1] ath9k: Fix kernel panic in AR2427 in AP mode
+Message-ID: <20120116184115.GG4511@tux> (sfid-20120116_194125_063667_F1561FE2)
+References: <1324828153-5656-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1324828153-5656-1-git-send-email-mohammed@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Actually iw event does not recognise the NL80211_CMD_DEL_STATION event. This
-patch makes it print the appropriate message.
+On Sun, Dec 25, 2011 at 09:19:13PM +0530, Mohammed Shafi Shajakhan wrote:
+> Cc: stable@kernel.org
+ 
 
-Signed-off-by: Antonio Quartulli <ordex@autistici.org>
----
- event.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+For future reference please use from now on stable@vger.kernel.org
+instead of the older one [1].
 
-diff --git a/event.c b/event.c
-index 18cde45..bc39662 100644
---- a/event.c
-+++ b/event.c
-@@ -321,6 +321,10 @@ static int print_event(struct nl_msg *msg, void *arg)
- 		mac_addr_n2a(macbuf, nla_data(tb[NL80211_ATTR_MAC]));
- 		printf("new station %s\n", macbuf);
- 		break;
-+	case NL80211_CMD_DEL_STATION:
-+		mac_addr_n2a(macbuf, nla_data(tb[NL80211_ATTR_MAC]));
-+		printf("del station %s\n", macbuf);
-+		break;
- 	case NL80211_CMD_JOIN_IBSS:
- 		mac_addr_n2a(macbuf, nla_data(tb[NL80211_ATTR_MAC]));
- 		printf("IBSS %s joined\n", macbuf);
--- 
-1.7.3.4
+[1] http://www.kroah.com/log/linux/stable-status-01-2012.html
+
+  Luis
 
