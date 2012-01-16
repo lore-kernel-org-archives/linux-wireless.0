@@ -1,75 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52032 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751796Ab2AZWzv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 17:55:51 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat-wireless: fix some config options
-Date: Thu, 26 Jan 2012 23:55:44 +0100
-Message-Id: <1327618544-23163-1-git-send-email-hauke@hauke-m.de> (sfid-20120126_235555_289866_6BE25926)
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:58580 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754417Ab2APOXn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jan 2012 09:23:43 -0500
+Received: by laah2 with SMTP id h2so912392laa.37
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2012 06:23:39 -0800 (PST)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH 1/2] wl12xx: move partition table definition to io.c
+Date: Mon, 16 Jan 2012 16:23:25 +0200
+Message-Id: <1326723806-15960-2-git-send-email-coelho@ti.com> (sfid-20120116_152347_055646_C1422F40)
+In-Reply-To: <1326723806-15960-1-git-send-email-coelho@ti.com>
+References: <1326723806-15960-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adds some missing config options interceded in the last time and remove
-some old now unused config options.
+Up till now we only needed to access the partition table in boot.c.
+But to add support for reading the MAC address from the FUSE in
+testmode, we will have to change the partition in testmode.c.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Thus, we move the partition table to io.c and export it via io.h.  It
+makes more sense to have it in the io part anyway.
+
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- config.mk |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/net/wireless/wl12xx/boot.c |   59 ------------------------------------
+ drivers/net/wireless/wl12xx/io.c   |   59 ++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/io.h   |    2 +
+ 3 files changed, 61 insertions(+), 59 deletions(-)
 
-diff --git a/config.mk b/config.mk
-index 4d2ad5c..9433ce9 100644
---- a/config.mk
-+++ b/config.mk
-@@ -281,6 +281,8 @@ CONFIG_ATH9K_COMMON=m
- # for long range considerations.
- CONFIG_ATH9K_RATE_CONTROL=y
+diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+index 8f9cf5a..9197a07 100644
+--- a/drivers/net/wireless/wl12xx/boot.c
++++ b/drivers/net/wireless/wl12xx/boot.c
+@@ -33,65 +33,6 @@
+ #include "event.h"
+ #include "rx.h"
  
-+CONFIG_ATH9K_BTCOEX_SUPPORT=y
+-static struct wl1271_partition_set part_table[PART_TABLE_LEN] = {
+-	[PART_DOWN] = {
+-		.mem = {
+-			.start = 0x00000000,
+-			.size  = 0x000177c0
+-		},
+-		.reg = {
+-			.start = REGISTERS_BASE,
+-			.size  = 0x00008800
+-		},
+-		.mem2 = {
+-			.start = 0x00000000,
+-			.size  = 0x00000000
+-		},
+-		.mem3 = {
+-			.start = 0x00000000,
+-			.size  = 0x00000000
+-		},
+-	},
+-
+-	[PART_WORK] = {
+-		.mem = {
+-			.start = 0x00040000,
+-			.size  = 0x00014fc0
+-		},
+-		.reg = {
+-			.start = REGISTERS_BASE,
+-			.size  = 0x0000a000
+-		},
+-		.mem2 = {
+-			.start = 0x003004f8,
+-			.size  = 0x00000004
+-		},
+-		.mem3 = {
+-			.start = 0x00040404,
+-			.size  = 0x00000000
+-		},
+-	},
+-
+-	[PART_DRPW] = {
+-		.mem = {
+-			.start = 0x00040000,
+-			.size  = 0x00014fc0
+-		},
+-		.reg = {
+-			.start = DRPW_BASE,
+-			.size  = 0x00006000
+-		},
+-		.mem2 = {
+-			.start = 0x00000000,
+-			.size  = 0x00000000
+-		},
+-		.mem3 = {
+-			.start = 0x00000000,
+-			.size  = 0x00000000
+-		}
+-	}
+-};
+-
+ static void wl1271_boot_set_ecpu_ctrl(struct wl1271 *wl, u32 flag)
+ {
+ 	u32 cpu_ctrl;
+diff --git a/drivers/net/wireless/wl12xx/io.c b/drivers/net/wireless/wl12xx/io.c
+index 079ad38..6ad0181 100644
+--- a/drivers/net/wireless/wl12xx/io.c
++++ b/drivers/net/wireless/wl12xx/io.c
+@@ -45,6 +45,65 @@
+ #define OCP_STATUS_REQ_FAILED 0x20000
+ #define OCP_STATUS_RESP_ERROR 0x30000
+ 
++struct wl1271_partition_set part_table[PART_TABLE_LEN] = {
++	[PART_DOWN] = {
++		.mem = {
++			.start = 0x00000000,
++			.size  = 0x000177c0
++		},
++		.reg = {
++			.start = REGISTERS_BASE,
++			.size  = 0x00008800
++		},
++		.mem2 = {
++			.start = 0x00000000,
++			.size  = 0x00000000
++		},
++		.mem3 = {
++			.start = 0x00000000,
++			.size  = 0x00000000
++		},
++	},
 +
- # PCI Drivers
- ifdef CONFIG_PCI
++	[PART_WORK] = {
++		.mem = {
++			.start = 0x00040000,
++			.size  = 0x00014fc0
++		},
++		.reg = {
++			.start = REGISTERS_BASE,
++			.size  = 0x0000a000
++		},
++		.mem2 = {
++			.start = 0x003004f8,
++			.size  = 0x00000004
++		},
++		.mem3 = {
++			.start = 0x00040404,
++			.size  = 0x00000000
++		},
++	},
++
++	[PART_DRPW] = {
++		.mem = {
++			.start = 0x00040000,
++			.size  = 0x00014fc0
++		},
++		.reg = {
++			.start = DRPW_BASE,
++			.size  = 0x00006000
++		},
++		.mem2 = {
++			.start = 0x00000000,
++			.size  = 0x00000000
++		},
++		.mem3 = {
++			.start = 0x00000000,
++			.size  = 0x00000000
++		}
++	}
++};
++
+ bool wl1271_set_block_size(struct wl1271 *wl)
+ {
+ 	if (wl->if_ops->set_block_size) {
+diff --git a/drivers/net/wireless/wl12xx/io.h b/drivers/net/wireless/wl12xx/io.h
+index d398cbc..458f1f1 100644
+--- a/drivers/net/wireless/wl12xx/io.h
++++ b/drivers/net/wireless/wl12xx/io.h
+@@ -43,6 +43,8 @@
  
-@@ -288,10 +290,10 @@ CONFIG_ATH5K_PCI=y
- CONFIG_ATH9K_PCI=y
+ #define HW_ACCESS_PRAM_MAX_RANGE	0x3c000
  
- CONFIG_IWLWIFI=m
-+CONFIG_IWLWIFI_P2P=y
- # CONFIG_IWLWIFI_DEBUG=y
- # CONFIG_IWLWIFI_DEBUGFS=y
- # CONFIG_IWLWIFI_DEVICE_TRACING=y
--# CONFIG_IWLWIFI_DEVICE_SVTOOL=y
- # CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE=y
++extern struct wl1271_partition_set part_table[PART_TABLE_LEN];
++
+ struct wl1271;
  
- CONFIG_IWLEGACY=m
-@@ -314,7 +316,6 @@ CONFIG_B43_PHY_LP=y
- CONFIG_B43_PHY_N=y
- CONFIG_B43_PHY_HT=y
- # CONFIG_B43_PHY_LCN=y
--# CONFIG_B43_FORCE_PIO=y
- # CONFIG_B43_DEBUG=y
- 
- CONFIG_B43LEGACY=m
-@@ -375,7 +376,7 @@ CONFIG_BCMA_BLOCKIO=y
- CONFIG_BCMA_HOST_PCI=y
- # CONFIG_BCMA_DEBUG=y
- CONFIG_B43_BCMA=y
--CONFIG_B43_BCMA_PIO=y
-+CONFIG_B43_BCMA_EXTRA=y
- 
- CONFIG_P54_PCI=m
- 
-@@ -614,6 +615,7 @@ endif #CONFIG_COMPAT_KERNEL_2_6_27
- 
- ifndef CONFIG_COMPAT_KERNEL_2_6_29
- CONFIG_BRCMFMAC=m
-+CONFIG_BRCMFMAC_SDIO=y
- endif #CONFIG_COMPAT_KERNEL_2_6_29
- 
- endif #CONFIG_MMC
+ void wl1271_disable_interrupts(struct wl1271 *wl);
 -- 
-1.7.5.4
+1.7.4.1
 
