@@ -1,71 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:58335 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751424Ab2APMmX (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:43932 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750808Ab2APMFk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jan 2012 07:42:23 -0500
-Received: from thor.infotech.tu-chemnitz.de ([134.109.4.200] helo=[10.0.20.2])
-	by cora.hrz.tu-chemnitz.de with esmtpsa (TLSv1:CAMELLIA256-SHA:256)
-	(Exim 4.76)
-	(envelope-from <marco.porsch@etit.tu-chemnitz.de>)
-	id 1RmlTX-0006Zp-1n
-	for linux-wireless@vger.kernel.org; Mon, 16 Jan 2012 13:15:47 +0100
-Message-ID: <4F1414F3.7020007@etit.tu-chemnitz.de> (sfid-20120116_134227_470249_C757A432)
-Date: Mon, 16 Jan 2012 13:15:47 +0100
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+	Mon, 16 Jan 2012 07:05:40 -0500
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: possible bug in sta_info.c : ieee80211_send_null_response
-Content-Type: multipart/mixed;
- boundary="------------050905060008050804000302"
+In-Reply-To: <1326704259.3510.3.camel@jlt3.sipsolutions.net>
+References: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
+ <1326621743.3448.1.camel@jlt3.sipsolutions.net> <CAPXgP13b0uu3DgOGRL-_WKx-aSQN-f0xL6OmjNPBGf9fg0satA@mail.gmail.com>
+ <1326704259.3510.3.camel@jlt3.sipsolutions.net>
+From: Kay Sievers <kay.sievers@vrfy.org>
+Date: Mon, 16 Jan 2012 13:05:19 +0100
+Message-ID: <CAPXgP12gM3_OVuxQAkRRarH_TpjVpbh5NpcTPWL0nEi4eoX+kw@mail.gmail.com> (sfid-20120116_130612_237183_C84BBB4A)
+Subject: Re: calling request_firmware() from module init will not work with
+ recent/future udev versions
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Tom Gundersen <teg@jklm.no>, Andy Whitcroft <apw@canonical.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------050905060008050804000302
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 8bit
+On Mon, Jan 16, 2012 at 09:57, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Sun, 2012-01-15 at 16:33 +0100, Kay Sievers wrote:
 
-Hi,
+> Let's say you have iwlwifi, built into the kernel, and an
+> initramfs that doesn't contain the iwlwifi firmware.
+> What will happen (last I checked anyway) is this: iwlwifi will do an
+> async firmware request, and the udev in initramfs will say "don't have
+> it", thus unbinding and you have to sysfs bind or module reload.
 
-in this function there is some effort to set the EOSP flag in QoS Null 
-frames:
+Right, currently. if no firmware is found, udev will write "-1" to the
+"loading" file in /sys, which will cancel the kernel's firmware
+request.
 
-if (reason == IEEE80211_FRAME_RELEASE_UAPSD)
-	nullfunc->qos_ctrl |=
-		cpu_to_le16(IEEE80211_QOS_CTL_EOSP);
+> What I'm was asking then is this: Can udev know that it is running from
+> initramfs (presumably that can't be too hard) and simply not reply to
+> async requests it doesn't have firmware for? Then once the real root is
+> mounted it could satisfy (or not) firmware requests from the real root.
 
-ieee80211_xmit is called at the end of the function. Which then calls 
-ieee80211_set_qos_hdr.
+We can surely change it to not cancel the firmware request.
 
-But ieee80211_set_qos_hdr will completely overwrite the QoS header again.
-So, what is wrong here?
+Either by making it aware that we run from initramfs, or by never
+cancelling any firmware request and just leave it hanging around for
+forever?
 
-Regards
-Marco
+We need to decide what's the best model here, if we want a timeout at
+all, if yes, how large it should be, and if and when we should cancel
+requests.
 
-
-
---------------050905060008050804000302
-Content-Type: text/x-vcard; charset=utf-8;
- name="marco_porsch.vcf"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
- filename="marco_porsch.vcf"
-
-begin:vcard
-fn:Marco Porsch
-n:Porsch;Marco
-org:Chemnitz University of Technology;Communication Networks
-adr;quoted-printable;quoted-printable:Fakult=3DC3=3DA4t f=3DC3=3DBCr Elek=
-trotechnik und Informationstechnik , Professur=3D
-	 Kommunikationsnetze;;Technische Universit=3DC3=3DA4t Chemnitz;Chemnitz;=
-;D - 09107;Germany
-email;internet:marco.porsch@etit.tu-chemnitz.de
-title:Dipl.-Ing.
-tel;work:+49 371 531 37523
-version:2.1
-end:vcard
-
-
---------------050905060008050804000302--
+Kay
