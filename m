@@ -1,53 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39200 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751503Ab2AUNoo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jan 2012 08:44:44 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat: add __cancel_delayed_work()
-Date: Sat, 21 Jan 2012 14:44:35 +0100
-Message-Id: <1327153475-28081-1-git-send-email-hauke@hauke-m.de> (sfid-20120121_144446_886897_97C1C5C2)
+Received: from he.sipsolutions.net ([78.46.109.217]:52861 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753178Ab2APNCJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jan 2012 08:02:09 -0500
+Subject: Re: possible bug in sta_info.c : ieee80211_send_null_response
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4F1414F3.7020007@etit.tu-chemnitz.de> (sfid-20120116_134227_470249_C757A432)
+References: <4F1414F3.7020007@etit.tu-chemnitz.de>
+	 (sfid-20120116_134227_470249_C757A432)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 16 Jan 2012 14:02:06 +0100
+Message-ID: <1326718926.3510.12.camel@jlt3.sipsolutions.net> (sfid-20120116_140213_311796_FC5A2286)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-__cancel_delayed_work is needed by include/net/bluetooth/l2cap.h and
-not available in old kernel versions. This was just copied from the
-kernel.
+On Mon, 2012-01-16 at 13:15 +0100, Marco Porsch wrote:
 
-This should also go into compat-wireless-stable-3.3.
+> ieee80211_xmit is called at the end of the function. Which then calls 
+> ieee80211_set_qos_hdr.
+> 
+> But ieee80211_set_qos_hdr will completely overwrite the QoS header again.
+> So, what is wrong here?
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.31.h |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+You, I think?
 
-diff --git a/include/linux/compat-2.6.31.h b/include/linux/compat-2.6.31.h
-index 25db973..a1244cb 100644
---- a/include/linux/compat-2.6.31.h
-+++ b/include/linux/compat-2.6.31.h
-@@ -215,6 +215,20 @@ extern long long atomic64_add_return(long long a, atomic64_t *v);
- 
- #endif
- 
-+/*
-+ * Like above, but uses del_timer() instead of del_timer_sync(). This means,
-+ * if it returns 0 the timer function may be running and the queueing is in
-+ * progress.
-+ */
-+static inline bool __cancel_delayed_work(struct delayed_work *work)
-+{
-+	bool ret;
-+
-+	ret = del_timer(&work->timer);
-+	if (ret)
-+		work_clear_pending(&work->work);
-+	return ret;
-+}
- 
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,31)) */
- 
--- 
-1.7.5.4
+
+void ieee80211_set_qos_hdr(struct ieee80211_sub_if_data *sdata,
+                           struct sk_buff *skb)
+...
+                /* preserve EOSP bit */
+                ack_policy = *p & IEEE80211_QOS_CTL_EOSP;
+...
+                /* qos header is 2 bytes */
+                *p++ = ack_policy | tid;   
+                *p = ieee80211_vif_is_mesh(&sdata->vif) ?
+                        (IEEE80211_QOS_CTL_MESH_CONTROL_PRESENT >> 8) :
+0;
+
+
+johannes
 
