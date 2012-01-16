@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:62232 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932214Ab2ARRQK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jan 2012 12:16:10 -0500
-MIME-Version: 1.0
-In-Reply-To: <1326874421-4654-1-git-send-email-coelho@ti.com>
-References: <1326874421-4654-1-git-send-email-coelho@ti.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Wed, 18 Jan 2012 09:15:46 -0800
-Message-ID: <CAB=NE6WFFPgQkBvn8uShMVG1+SExUFXfa9dW2jLGad62Sc5dOA@mail.gmail.com> (sfid-20120118_181617_847944_793EBB03)
-Subject: Re: [PATCH] compat-wireless: check if modprobe exists before using it
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	wlist@ti.com, idor@ti.com, assaf@ti.com, gil.barak@ti.com
-Content-Type: text/plain; charset=UTF-8
+Received: from h118.nextmail.ru ([194.67.36.118]:45858 "EHLO h118.nextmail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755237Ab2APPwR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jan 2012 10:52:17 -0500
+To: =?koi8-r?B?TW9oYW1tZWQgU2hhZmk=?= <shafi.wireless@gmail.com>
+From: =?koi8-r?B?TVI=?= <g7af0ec1e3ea1e7b1@nextmail.ru>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"=?koi8-r?B?UmFqa3VtYXIgTWFub2hhcmFu?=" <rmanohar@qca.qualcomm.com>
+Subject: =?koi8-r?B?UmU6IGF0aDlrIGNyYXNoIDMuMi1yYzc=?=
+Date: Mon, 16 Jan 2012 19:52:14 +0400
+Message-ID: <NEXT-4f1447aef25ba4.25243669@nextmail.ru> (sfid-20120116_165236_719474_C4A6C83C)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 18, 2012 at 12:13 AM, Luciano Coelho <coelho@ti.com> wrote:
-> If you're cross-compiling compat-wireless on a different host, you
-> can't reliably use modprobe.  The host system may not even have
-> modprobe, so it doesn't make sense to run modprobe, unless you're
-> installing the modules on the target machine.
->
-> The modprobe command was being used unconditionally to set the MADWIFI
-> and OLD_IWL variables.  This commit adds a check to see whether
-> modprobe exists before trying to use.  It also adds a dependency on
-> the modprobe commands to all recipes that rely on it, so we fail more
-> gracefully if modprobe doesn't exist in the system.
->
-> Reported by: William List <wlist@ti.com>
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
 
-Good point, I've propagated this into the linux-3.2.y and linux-3.1.y
-branches of compat-wireless as well so that if a new release is made
-the fixes go along with it.
+ > Turned out I got lucky previous time.
+ > 
+ >This time I went to the other AP, spent some time under it, roamed back 
+and
+ >
+ >WiFi didn't disappear. I didn't even lose XMPP connections in the 
+process.
+ >
+ > 
+ >Maybe debug printing (which prints a lot) managed to introduce some 
+extra 
+ > delays into some race condition.
+ > 
+ > I hope I will have time to test this more on Monday. Tomorrow I will be 
+ > using WiFi less than usual.
 
-  Luis
+Now I went a few time back and forth, spent a lot of time under previously 
+risky AP and still there are no problems..
+
+I wonder if maybe a congested AP could help.. But unclear how to obtain 
+that quickly and reliably.
+
+
