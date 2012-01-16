@@ -1,99 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:50664 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751477Ab2AVDLN convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jan 2012 22:11:13 -0500
-Message-ID: <1327201872.8004.85.camel@deadeye> (sfid-20120122_041115_264014_0ABED782)
-Subject: [PATCH 2/2] ipw2100: Fix order of device registration
-From: Ben Hutchings <ben@decadent.org.uk>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: 656813@bugs.debian.org
-Date: Sun, 22 Jan 2012 03:11:12 +0000
-In-Reply-To: <1327201775.8004.83.camel@deadeye>
-References: <1327201775.8004.83.camel@deadeye>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:48673 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754760Ab2APTWb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jan 2012 14:22:31 -0500
+Received: by eaac11 with SMTP id c11so314935eaa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2012 11:22:30 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: Re: [RFC] mac80211: Fix possible race between sta_unblock and network softirq
+Date: Mon, 16 Jan 2012 20:22:21 +0100
+Message-ID: <331689478.qzl2dPmWvj@helmutmobil.site> (sfid-20120116_202235_740425_527BDDCC)
+In-Reply-To: <1326732693.3510.21.camel@jlt3.sipsolutions.net>
+References: <1326728542-31697-1-git-send-email-helmut.schaa@googlemail.com> <1326732693.3510.21.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently cfg80211 fails to create a "phy80211" symlink in sysfs from
-the net device to the wiphy device.  The latter needs to be registered
-first.
+Am Montag, 16. Januar 2012, 17:51:33 schrieb Johannes Berg:
+> On Mon, 2012-01-16 at 16:42 +0100, Helmut Schaa wrote:
+> > Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> > ---
+> > 
+> > I'm currently writing some code for rt2800 that requires the driver
+> > to stop sending to a specific station for a short period of time
+> > (until all AMPDUs are finished to work around a hw issue that affects
+> > rate sampling with minstrel_ht). I decided to give
+> > ieee80211_sta_block_awake a try, however, the machine sometimes locked
+> > up while running some performance tests but due to a hw watchdog I
+> > wasn't able to get any sort of backtrace :(
+> > 
+> > So, while doing some review of the ieee80211_sta_block_awake I came
+> > across this and wondered if softirqs should be disabled when delivering
+> > the buffered frames in sta_unblock.
+> > 
+> > Using this patch I cannot reproduce the lockup anymore.
+> > 
+> > So, is there any special reason this single code path in sta_unblock
+> > doesn't disable softirqs?
+> 
+> This seems right
 
-Compile-tested only.
+The patch or the current approach without disable_bh?
 
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
----
-This appears to have the same bug as ipw2200.
+> -- not sure where the lockup would be though.
 
-Ben.
+Not sure either :( unfortunately I cannot disable the hw watchdog (and
+that has a timeout of only 2 seconds). Maybe I can reproduce it with
+a regular rt2800 PCI card ...
 
- drivers/net/wireless/ipw2x00/ipw2100.c |   24 +++++++++++++-----------
- 1 files changed, 13 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index a0e5c21..a5437e7 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -1956,10 +1956,8 @@ static int ipw2100_wdev_init(struct net_device *dev)
- 	}
- 
- 	set_wiphy_dev(wdev->wiphy, &priv->pci_dev->dev);
--	if (wiphy_register(wdev->wiphy)) {
--		ipw2100_down(priv);
-+	if (wiphy_register(wdev->wiphy))
- 		return -EIO;
--	}
- 	return 0;
- }
- 
-@@ -6337,6 +6335,11 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
- 	printk(KERN_INFO DRV_NAME
- 	       ": Detected Intel PRO/Wireless 2100 Network Connection\n");
- 
-+	err = ipw2100_wdev_init(dev);
-+	if (err)
-+		goto fail;
-+	registered = 1;
-+
- 	/* Bring up the interface.  Pre 0.46, after we registered the
- 	 * network device we would call ipw2100_up.  This introduced a race
- 	 * condition with newer hotplug configurations (network was coming
-@@ -6353,11 +6356,7 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
- 		       "Error calling register_netdev.\n");
- 		goto fail;
- 	}
--	registered = 1;
--
--	err = ipw2100_wdev_init(dev);
--	if (err)
--		goto fail;
-+	registered = 2;
- 
- 	mutex_lock(&priv->action_mutex);
- 
-@@ -6396,13 +6395,16 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
- 
-       fail_unlock:
- 	mutex_unlock(&priv->action_mutex);
--	wiphy_unregister(priv->ieee->wdev.wiphy);
--	kfree(priv->ieee->bg_band.channels);
-       fail:
- 	if (dev) {
--		if (registered)
-+		if (registered >= 2)
- 			unregister_netdev(dev);
- 
-+		if (registered) {
-+			wiphy_unregister(priv->ieee->wdev.wiphy);
-+			kfree(priv->ieee->bg_band.channels);
-+		}
-+
- 		ipw2100_hw_stop_adapter(priv);
- 
- 		ipw2100_disable_interrupts(priv);
--- 
-1.7.8.2
-
-
+Helmut
