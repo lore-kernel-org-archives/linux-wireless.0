@@ -1,90 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:64152 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752523Ab2ABWbc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:49780 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753675Ab2API5r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 17:31:32 -0500
-From: Marek Vasut <marek.vasut@gmail.com>
-To: Jack Stone <jwjstone@fastmail.fm>
-Subject: Re: loading firmware while usermodehelper disabled.
-Date: Mon, 2 Jan 2012 23:31:27 +0100
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Oliver Neukum <oliver@neukum.org>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Greg Kroah-Hartman" <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> <201201022252.20139.marek.vasut@gmail.com> <4F022846.8080305@fastmail.fm>
-In-Reply-To: <4F022846.8080305@fastmail.fm>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201201022331.27562.marek.vasut@gmail.com> (sfid-20120102_233150_860102_4DB6C9E8)
+	Mon, 16 Jan 2012 03:57:47 -0500
+Subject: Re: calling request_firmware() from module init will not work with
+ recent/future udev versions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Tom Gundersen <teg@jklm.no>, Andy Whitcroft <apw@canonical.com>
+In-Reply-To: <CAPXgP13b0uu3DgOGRL-_WKx-aSQN-f0xL6OmjNPBGf9fg0satA@mail.gmail.com> (sfid-20120115_163411_716244_29DE7A13)
+References: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
+	 <1326621743.3448.1.camel@jlt3.sipsolutions.net>
+	 <CAPXgP13b0uu3DgOGRL-_WKx-aSQN-f0xL6OmjNPBGf9fg0satA@mail.gmail.com>
+	 (sfid-20120115_163411_716244_29DE7A13)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 16 Jan 2012 09:57:39 +0100
+Message-ID: <1326704259.3510.3.camel@jlt3.sipsolutions.net> (sfid-20120116_095755_727205_DF776C58)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On 02/01/12 21:52, Marek Vasut wrote:
-> >> On 02/01/12 21:23, Linus Torvalds wrote:
-> >>> On Mon, Jan 2, 2012 at 1:09 PM, Jack Stone <jwjstone@fastmail.fm> wrote:
-> >>>> What about USB "class" drivers e.g. usb-storage. They handle any
-> >>>> device that reports itself as a usb mass storage device. There could
-> >>>> be a device that needs to be bootstrapped before it becomes a generic
-> >>>> usb mass storage device. Do we really want to have to write a new
-> >>>> driver that is almost identical to the generic driver but handles the
-> >>>> USB firmware correctly.
-> >>> 
-> >>> I'd hope that the generic driver just expose enough interfaces that
-> >>> you could basically do a "firmware-load" driver that just loads the
-> >>> firmware and then attaches the device to the generic driver.
-> >> 
-> >> Sounds workable.
-> >> 
-> >> To make the firmware caching easier I would propose one extra function
-> >> in addition to the aforemensioned get_firmware / put_firmware - a
-> >> find_firmware function to search the cache and return the appropriate
-> >> firmware blob. It should only be called if the caller already has a
-> >> refcount to the firmware, it's only use is to save every driver saving a
-> >> pointer to the firmware.
-> >> 
-> >> If noone beats me to it I will try and put together an RFC for a new
-> >> version.
-> > 
-> > The problem is on systems with limited resources, most notably RAM. If
-> > you plug in many devices at once, many firmwares will be cached at one
-> > point, efectivelly doing DoS attach on the machine?
-> > 
-> > Also, how will this solve the suspect-resume issue? What if the device
-> > suspends only occasionally -- like every 24 hours -- then you'd have the
-> > FW cached all the time too?
-> 
-> Yes, at least to begin with. If we can come up with a robust scheme
-> which doesn't require the firmware to be kept in memory then that would
-> also be workable.
-> 
-> For example, drivers which know they don't ever need the firmware again
-> wouldn't need to cache it. That would probably be quite a small list -
-> there are systems that cut power to USB devices over suspend and so
-> those devices would need the firmware reloading.
+On Sun, 2012-01-15 at 16:33 +0100, Kay Sievers wrote:
 
-That's the problem -- there are devices that can suspend, but in the end, the 
-port turns of the power to those devices and they loose fw anyway.
+> > Will udev now also return the async load only after root is booted if it
+> > can't be satisfied earlier?
 > 
-> I don't think there is anyway to avoid the memory requirement if we want
-> to be able to resume transparently to user-space (or even resume at all
-> in some setups).
-
-Well ... injecting firmware into kernel with some userland helper just before 
-suspend is no-go?
-
-M
-
+> Not sure, let me explain what happens here, maybe it contains the answer:
 > 
-> Thanks,
+> Udev gets an event for a pci device:
+>   /devices/pci0000:00/0000:00:1c.1/0000:03:00.0
 > 
-> Jack
+> This device has a modalias, which let's udev load the matching module
+> into the kernel. The module_init() syscall triggers the firmware
+> loading request, which causes another event:
+>   /devices/pci0000:00/0000:00:1c.1/0000:03:00.0/firmware/0000:03:00.0
+> 
+> This event is a direct child of the pci device and udev delays the
+> execution of child devices until the parent devices return from
+> handling. This dependency logic is needed for many things to ensure a
+> proper operation, like partitions which need to make sure the events
+> for the disk devices are handled before the partition events are
+> started.
+> 
+> Now the problem, the pcidev event is blocking in modprobe and waits
+> for the child event it has generated to finish, but udev does not
+> start the event because the parent still blocks in modprobe ->
+> deadlock until default firmware timeout of 60 sec. What we want here,
+> for several reasons not only udev's dependency logic, is that modprobe
+> never waits for userspace transactions to finish.
+
+Ok, thanks for the description. I guess to me that means nothing really
+changes much in the situation I'm thinking of.
+
+> If userspace is not responding, the firmware request times out after
+> 60 seconds and the driver is not associated with any hardware. To
+> retry the firmware loading, the module needs to be unloaded and
+> reloaded, or the driver needs to be asked to bind to a device again by
+> writing to the 'bind' in file in the sysfs driver directory.
+
+Right.
+
+> Firmware requests stay around in the system for by default 60 seconds.
+> If the driver would be built-in the request would be issued long
+> before userspace is ready, but udev's coldplug step during bootup will
+> cause all events to be replayed, so it would catch also the
+> outstanding firmware requests, and would be able to handle them.
+
+Hmm, right, but I don't think that matters for the issue I'm asking
+about. Let's say you have iwlwifi, built into the kernel, and an
+initramfs that doesn't contain the iwlwifi firmware.
+What will happen (last I checked anyway) is this: iwlwifi will do an
+async firmware request, and the udev in initramfs will say "don't have
+it", thus unbinding and you have to sysfs bind or module reload.
+
+What I'm was asking then is this: Can udev know that it is running from
+initramfs (presumably that can't be too hard) and simply not reply to
+async requests it doesn't have firmware for? Then once the real root is
+mounted it could satisfy (or not) firmware requests from the real root.
+
+johannes
+
