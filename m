@@ -1,31 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:40481 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751325Ab2AXLpt (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:35356 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756097Ab2APSsK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 06:45:49 -0500
-Message-ID: <4F1E99E2.2020600@qca.qualcomm.com> (sfid-20120124_124552_747892_9606D825)
-Date: Tue, 24 Jan 2012 13:45:38 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Mon, 16 Jan 2012 13:48:10 -0500
 MIME-Version: 1.0
-To: <rmani@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH v2 6/8] ath6kl: Return a proper error code when not in
- connected state
-References: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com> <1327066544-23779-7-git-send-email-rmani@qca.qualcomm.com>
-In-Reply-To: <1327066544-23779-7-git-send-email-rmani@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <1324933459-17242-1-git-send-email-asmadeus@codewreck.org>
+References: <1324933459-17242-1-git-send-email-asmadeus@codewreck.org>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 16 Jan 2012 10:47:48 -0800
+Message-ID: <CAB=NE6WAhddiUuf4yOfNAgqMF7GxM--ksDwEmvwdJdFYSjLGzA@mail.gmail.com> (sfid-20120116_195839_650615_90BAEED6)
+Subject: Re: [PATCH] compat-wireless: build: Throw error if space in path
+To: Dominique Martinet <asmadeus@codewreck.org>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/20/2012 03:35 PM, rmani@qca.qualcomm.com wrote:
-> From: Raja Mani <rmani@qca.qualcomm.com>
-> 
-> Error code ENOTCONN is more suitable than EINVAL to report
-> when the driver is not in connected state in ath6kl_wow_suspend().
-> 
-> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+On Mon, Dec 26, 2011 at 1:04 PM, Dominique Martinet
+<asmadeus@codewreck.org> wrote:
+> Because of make limitations, the build will fail if there are spaces in
+> the path leading to the compat-wireless directory.
+> I tried to make it work anyway for a while and, while it probably is
+> possible, it would involve rewriting part of kbuild and well...
+> This at least throws up nicely if there is a space in the path.
+>
 
-Does this fix a visible bug? Or did you find this during code review?
+Thanks, you are missing your Signed-off-by tag and for compat-wireless
+I use the same definition and practice of accepting patches only that
+abide by that. The purpose of the SOB tag is defined on the
+Documentation/SubmittingPatches file on the Linux kernel under the
+Developer's Certificate of Origin 1.1. For your convenience I have
+pasted here what it means:
 
-Kalle
+
+        Developer's Certificate of Origin 1.1
+
+        By making a contribution to this project, I certify that:
+
+        (a) The contribution was created in whole or in part by me and I
+            have the right to submit it under the open source license
+            indicated in the file; or
+
+        (b) The contribution is based upon previous work that, to the best
+            of my knowledge, is covered under an appropriate open source
+            license and I have the right under that license to submit that
+            work with modifications, whether created in whole or in part
+            by me, under the same open source license (unless I am
+            permitted to submit under a different license), as indicated
+            in the file; or
+
+        (c) The contribution was provided directly to me by some other
+            person who certified (a), (b) or (c) and I have not modified
+            it.
+
+        (d) I understand and agree that this project and the contribution
+            are public and that a record of the contribution (including all
+            personal information I submit with it, including my sign-off) is
+            maintained indefinitely and may be redistributed consistent with
+            this project or the open source license(s) involved.
+
+  Luis
