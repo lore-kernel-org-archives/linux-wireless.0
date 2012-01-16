@@ -1,54 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:39254 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753679Ab2A3WL4 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46810 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751276Ab2APMQw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 17:11:56 -0500
-Message-ID: <4F2715A7.9030101@gmail.com> (sfid-20120130_231234_096238_9C615D9D)
-Date: Mon, 30 Jan 2012 23:11:51 +0100
-From: Jiri Slaby <jirislaby@gmail.com>
-MIME-Version: 1.0
-To: Danny Kukawka <danny.kukawka@bisect.de>
-CC: ath5k-devel@lists.ath5k.org, Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 11/16] ath5k: make ath5k_modparam_no_hw_rfkill_switch
- real
-References: <1327960820-11867-1-git-send-email-danny.kukawka@bisect.de> <1327960820-11867-12-git-send-email-danny.kukawka@bisect.de>
-In-Reply-To: <1327960820-11867-12-git-send-email-danny.kukawka@bisect.de>
-Content-Type: text/plain; charset=ISO-8859-2
+	Mon, 16 Jan 2012 07:16:52 -0500
+Subject: Re: calling request_firmware() from module init will not work with
+ recent/future udev versions
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Tom Gundersen <teg@jklm.no>, Andy Whitcroft <apw@canonical.com>
+In-Reply-To: <CAPXgP12gM3_OVuxQAkRRarH_TpjVpbh5NpcTPWL0nEi4eoX+kw@mail.gmail.com> (sfid-20120116_130612_776092_70A618B1)
+References: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
+	 <1326621743.3448.1.camel@jlt3.sipsolutions.net>
+	 <CAPXgP13b0uu3DgOGRL-_WKx-aSQN-f0xL6OmjNPBGf9fg0satA@mail.gmail.com>
+	 <1326704259.3510.3.camel@jlt3.sipsolutions.net>
+	 <CAPXgP12gM3_OVuxQAkRRarH_TpjVpbh5NpcTPWL0nEi4eoX+kw@mail.gmail.com>
+	 (sfid-20120116_130612_776092_70A618B1)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 16 Jan 2012 13:16:49 +0100
+Message-ID: <1326716209.3510.7.camel@jlt3.sipsolutions.net> (sfid-20120116_131700_910031_326BA2C4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/30/2012 11:00 PM, Danny Kukawka wrote:
-> Make ath5k_modparam_no_hw_rfkill_switch real bool to fix:
-> 'warning: return from incompatible pointer type' compiler warning.
+On Mon, 2012-01-16 at 13:05 +0100, Kay Sievers wrote:
 
-Hi, I'm afraid you are too late:
-http://git.kernel.org/?p=linux/kernel/git/next/linux-next.git;a=commitdiff;h=11deb53328a06ad4edbf774f5c3b61c6dbb9104c
-
-> Signed-off-by: Danny Kukawka <danny.kukawka@bisect.de>
-> ---
->  drivers/net/wireless/ath/ath5k/base.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+> > What I'm was asking then is this: Can udev know that it is running from
+> > initramfs (presumably that can't be too hard) and simply not reply to
+> > async requests it doesn't have firmware for? Then once the real root is
+> > mounted it could satisfy (or not) firmware requests from the real root.
 > 
-> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-> index d366dad..ad2f115 100644
-> --- a/drivers/net/wireless/ath/ath5k/base.c
-> +++ b/drivers/net/wireless/ath/ath5k/base.c
-> @@ -80,7 +80,7 @@ static bool modparam_fastchanswitch;
->  module_param_named(fastchanswitch, modparam_fastchanswitch, bool, S_IRUGO);
->  MODULE_PARM_DESC(fastchanswitch, "Enable fast channel switching for AR2413/AR5413 radios.");
->  
-> -static int ath5k_modparam_no_hw_rfkill_switch;
-> +static bool ath5k_modparam_no_hw_rfkill_switch;
->  module_param_named(no_hw_rfkill_switch, ath5k_modparam_no_hw_rfkill_switch,
->  								bool, S_IRUGO);
->  MODULE_PARM_DESC(no_hw_rfkill_switch, "Ignore the GPIO RFKill switch state");
+> We can surely change it to not cancel the firmware request.
+> 
+> Either by making it aware that we run from initramfs, or by never
+> cancelling any firmware request and just leave it hanging around for
+> forever?
 
-thanks,
--- 
-js
+I think not cancelling it from initramfs and then providing or
+cancelling it once we have normal root mounted should be sufficient? I
+don't see how letting it hang around forever (a minute until it times
+out) would be useful.
+
+> We need to decide what's the best model here, if we want a timeout at
+> all, if yes, how large it should be, and if and when we should cancel
+> requests.
+
+I do think cancelling requests still gives us desirable behaviour in
+terms of being able to reproduce it etc., it's just that cancelling it
+when we have only partial data (from initramfs) isn't helpful.
+
+johannes
+
