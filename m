@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:16871 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751221Ab2AXLoX (ORCPT
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:55417 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753946Ab2APOXj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 06:44:23 -0500
-Message-ID: <4F1E998F.2000507@qca.qualcomm.com> (sfid-20120124_124426_721809_F23D78BB)
-Date: Tue, 24 Jan 2012 13:44:15 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: <rmani@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH v2 4/8] ath6kl: Move WOW patterns config code to a separate
- function.
-References: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com> <1327066544-23779-5-git-send-email-rmani@qca.qualcomm.com>
-In-Reply-To: <1327066544-23779-5-git-send-email-rmani@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Mon, 16 Jan 2012 09:23:39 -0500
+Received: by mail-lpp01m010-f45.google.com with SMTP id s15so2441898lag.18
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2012 06:23:37 -0800 (PST)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH 0/2] wl12xx: read MAC from fuse rom
+Date: Mon, 16 Jan 2012 16:23:24 +0200
+Message-Id: <1326723806-15960-1-git-send-email-coelho@ti.com> (sfid-20120116_152342_396408_D6402235)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/20/2012 03:35 PM, rmani@qca.qualcomm.com wrote:
-> From: Raja Mani <rmani@qca.qualcomm.com>
-> 
-> Move the user provided WOW patterns configuration code
-> from ath6kl_wow_suspend() to a separate function called
-> ath6kl_add_usr_wow_patterns().
-> 
-> It gives more modularity to the existing code.
-> 
-> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+Hi,
 
-> +static int ath6kl_add_usr_wow_patterns(struct ath6kl *ar,
-> +				       struct ath6kl_vif *vif,
-> +				       struct cfg80211_wowlan *wow,
-> +				       u32 *filter)
-> +{
+This patchset implements a new testmode command to read the MAC
+address from the fuse when available (it's only correctly burnt for
+newer PG versions).
 
-ath6kl_wow_usr()?
+In theory, we can read the MAC in either PLT or normal mode, but I
+wanted to restrict it to PLT so people don't start doing funny things
+without knowing what they're doing.
 
-Kalle
+Patches to use this new feature with ti-utils calibrator tool will
+soon be released.
+
+Cheers,
+Luca.
+
+Luciano Coelho (2):
+  wl12xx: move partition table definition to io.c
+  wl12xx: add operation to retrieve the MAC address from Fuse ROM
+
+ drivers/net/wireless/wl12xx/boot.c     |   62 +----------------------
+ drivers/net/wireless/wl12xx/boot.h     |   10 ----
+ drivers/net/wireless/wl12xx/io.c       |   59 +++++++++++++++++++++
+ drivers/net/wireless/wl12xx/io.h       |    2 +
+ drivers/net/wireless/wl12xx/reg.h      |   15 ++++++
+ drivers/net/wireless/wl12xx/testmode.c |   87 ++++++++++++++++++++++++++++++++
+ 6 files changed, 165 insertions(+), 70 deletions(-)
+
+-- 
+1.7.4.1
+
