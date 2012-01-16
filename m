@@ -1,75 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:35769 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759250Ab2AFWTr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jan 2012 17:19:47 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Kenny Hsu <kenny.hsu@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 4/7] iwlwifi: enhance testmode command sram_read
-Date: Fri,  6 Jan 2012 13:16:30 -0800
-Message-Id: <1325884593-31298-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120106_232018_427691_E916F754)
-In-Reply-To: <1325884593-31298-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1325884593-31298-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:48896 "EHLO
+	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753661Ab2APJll (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jan 2012 04:41:41 -0500
+Received: by mail-yx0-f176.google.com with SMTP id q7so1318052yen.7
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2012 01:41:40 -0800 (PST)
+From: Yoni Divinsky <yoni.divinsky@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <johannes@sipsolutions.net>, Yoni Divinsky <yoni.divinsky@ti.com>
+Subject: [PATCH] mac80211: fix tx->skb NULL pointer dereference
+Date: Mon, 16 Jan 2012 11:43:24 +0200
+Message-Id: <1326707004-3352-1-git-send-email-yoni.divinsky@ti.com> (sfid-20120116_104144_714044_0D0D9702)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kenny Hsu <kenny.hsu@intel.com>
+In function ieee80211_tx_h_encrypt the var info was
+initialized from tx->skb, since the fucntion
+is called after the function ieee80211_tx_h_fragment
+tx->skb is not valid anymore.
 
-This patch enables SRAM read function to support entire target memory.
-
-Signed-off-by: Kenny Hsu <kenny.hsu@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Yoni Divinsky <yoni.divinsky@ti.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-testmode.c |    7 +++----
- drivers/net/wireless/iwlwifi/iwl-testmode.h |    3 +++
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ net/mac80211/tx.c  |   10 +---------
+ net/mac80211/wpa.c |   19 +++++++++++++++++++
+ net/mac80211/wpa.h |    2 ++
+ 3 files changed, 22 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
-index 2fc2067..58575fd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
-@@ -733,7 +733,7 @@ static int iwl_testmode_ownership(struct ieee80211_hw *hw, struct nlattr **tb)
- static int iwl_testmode_sram(struct ieee80211_hw *hw, struct nlattr **tb)
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index edcd1c7..0a5558a 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1001,8 +1001,6 @@ ieee80211_tx_h_stats(struct ieee80211_tx_data *tx)
+ static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_encrypt(struct ieee80211_tx_data *tx)
  {
- 	struct iwl_priv *priv = hw->priv;
--	u32 base, ofs, size, maxsize;
-+	u32 ofs, size, maxsize;
+-	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+-
+ 	if (!tx->key)
+ 		return TX_CONTINUE;
  
- 	if (priv->testmode_sram.sram_readed)
- 		return -EBUSY;
-@@ -765,7 +765,7 @@ static int iwl_testmode_sram(struct ieee80211_hw *hw, struct nlattr **tb)
- 		IWL_DEBUG_INFO(priv, "Error, unsupported uCode type\n");
- 		return -ENOSYS;
+@@ -1017,13 +1015,7 @@ ieee80211_tx_h_encrypt(struct ieee80211_tx_data *tx)
+ 	case WLAN_CIPHER_SUITE_AES_CMAC:
+ 		return ieee80211_crypto_aes_cmac_encrypt(tx);
+ 	default:
+-		/* handle hw-only algorithm */
+-		if (info->control.hw_key) {
+-			ieee80211_tx_set_protected(tx);
+-			return TX_CONTINUE;
+-		}
+-		break;
+-
++		return ieee80211_crypto_default_encrypt(tx);
  	}
--	if ((ofs + size) > maxsize) {
-+	if ((ofs + size) > (maxsize + SRAM_DATA_SEG_OFFSET)) {
- 		IWL_DEBUG_INFO(priv, "Invalid offset/size: out of range\n");
- 		return -EINVAL;
- 	}
-@@ -776,8 +776,7 @@ static int iwl_testmode_sram(struct ieee80211_hw *hw, struct nlattr **tb)
- 		IWL_DEBUG_INFO(priv, "Error allocating memory\n");
- 		return -ENOMEM;
- 	}
--	base = 0x800000;
--	_iwl_read_targ_mem_words(bus(priv), base + ofs,
-+	_iwl_read_targ_mem_words(bus(priv), ofs,
- 					priv->testmode_sram.buff_addr,
- 					priv->testmode_sram.buff_size / 4);
- 	priv->testmode_sram.num_chunks =
-diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.h b/drivers/net/wireless/iwlwifi/iwl-testmode.h
-index 26138f1..9c6a67a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-testmode.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-testmode.h
-@@ -271,4 +271,7 @@ enum iwl_tm_attr_t {
- /* Maximum data size of each dump it packet */
- #define DUMP_CHUNK_SIZE		(PAGE_SIZE - 1024)
  
-+/* Address offset of data segment in SRAM */
-+#define SRAM_DATA_SEG_OFFSET   0x800000
+ 	return TX_DROP;
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 93aab07..3fd65ec 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -643,3 +643,22 @@ ieee80211_crypto_aes_cmac_decrypt(struct ieee80211_rx_data *rx)
+ 
+ 	return RX_CONTINUE;
+ }
 +
- #endif
++ieee80211_tx_result
++ieee80211_crypto_default_encrypt(struct ieee80211_tx_data *tx)
++{
++	struct sk_buff *skb;
++	struct ieee80211_tx_info *info = NULL;
++
++	skb_queue_walk(&tx->skbs, skb) {
++		info  = IEEE80211_SKB_CB(skb);
++
++		/* handle hw-only algorithm */
++		if (info == NULL || !info->control.hw_key)
++			return TX_DROP;
++	}
++
++	ieee80211_tx_set_protected(tx);
++
++	return TX_CONTINUE;
++}
+diff --git a/net/mac80211/wpa.h b/net/mac80211/wpa.h
+index baba060..9d6001a 100644
+--- a/net/mac80211/wpa.h
++++ b/net/mac80211/wpa.h
+@@ -32,5 +32,7 @@ ieee80211_tx_result
+ ieee80211_crypto_aes_cmac_encrypt(struct ieee80211_tx_data *tx);
+ ieee80211_rx_result
+ ieee80211_crypto_aes_cmac_decrypt(struct ieee80211_rx_data *rx);
++ieee80211_tx_result
++ieee80211_crypto_default_encrypt(struct ieee80211_tx_data *tx);
+ 
+ #endif /* WPA_H */
 -- 
 1.7.0.4
 
