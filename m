@@ -1,49 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:51974 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753521Ab2A0Nt1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jan 2012 08:49:27 -0500
-Received: by lagu2 with SMTP id u2so962189lag.19
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jan 2012 05:49:25 -0800 (PST)
-Message-ID: <4F22AB63.2090008@gmail.com> (sfid-20120127_144937_257502_6D99265A)
-Date: Fri, 27 Jan 2012 14:49:23 +0100
-From: =?UTF-8?B?TWFydGluIEh1bmRlYsO4bGw=?= <m.hundeboll@gmail.com>
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:46418 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754470Ab2APMfp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jan 2012 07:35:45 -0500
+Received: by mail-iy0-f172.google.com with SMTP id e16so9364724iaa.31
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2012 04:35:44 -0800 (PST)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Re: wl1271: ERROR watchdog interrupt received! starting recovery.
-References: <4F19397A.8080408@gmail.com>
-In-Reply-To: <4F19397A.8080408@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1326716492.3510.10.camel@jlt3.sipsolutions.net>
+References: <1326707004-3352-1-git-send-email-yoni.divinsky@ti.com>
+	<1326716492.3510.10.camel@jlt3.sipsolutions.net>
+Date: Mon, 16 Jan 2012 14:35:43 +0200
+Message-ID: <CANJm+iAiSHAEO2iHkKum_5KtdC9xVv9x3Di4nnshqW=X8J0Pog@mail.gmail.com> (sfid-20120116_133548_732887_D4FEC162)
+Subject: Re: [PATCH] mac80211: fix tx->skb NULL pointer dereference
+From: "Divinsky, Yonatan" <yoni.divinsky@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-01-20 10:52, Martin HundebÃ¸ll wrote:
-> I'm running an ad-hoc network with two pandaboards using the following commands to setup the network:
+On Mon, Jan 16, 2012 at 2:21 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2012-01-16 at 11:43 +0200, Yoni Divinsky wrote:
+>> In function ieee80211_tx_h_encrypt the var info was
+>> initialized from tx->skb, since the fucntion
+>> is called after the function ieee80211_tx_h_fragment
+>> tx->skb is not valid anymore.
 >
-> root@panda0 # ip link set dev wlan0 address 7e:78:47:8c:26:52
-> root@panda0 # iw dev wlan0 set type ibss
-> root@panda0 # ip link set dev wlan0 up
-> root@panda0 # iw dev wlan0 ibss join panda-mesh 2412 02:72:CF:28:19:1A
-> root@panda0 # iw phy phy0 set rts 100
-> root@panda0 # ip addr add 10.10.10.52/24 dev wlan0
+> Wow, that's quite a while ago, I guess nobody tests WAPI often? :-)
+Who said anything about WAPI ;-)
 >
-> and
+>> @@ -1001,8 +1001,6 @@ ieee80211_tx_h_stats(struct ieee80211_tx_data *tx)
+>>  static ieee80211_tx_result debug_noinline
+>>  ieee80211_tx_h_encrypt(struct ieee80211_tx_data *tx)
+>>  {
+>> -     struct ieee80211_tx_info *info = IEEE80211_SKB_CB(tx->skb);
+>> -
+>>       if (!tx->key)
+>>               return TX_CONTINUE;
+>>
+>> @@ -1017,13 +1015,7 @@ ieee80211_tx_h_encrypt(struct ieee80211_tx_data *tx)
+>>       case WLAN_CIPHER_SUITE_AES_CMAC:
+>>               return ieee80211_crypto_aes_cmac_encrypt(tx);
+>>       default:
+>> -             /* handle hw-only algorithm */
+>> -             if (info->control.hw_key) {
+>> -                     ieee80211_tx_set_protected(tx);
+>> -                     return TX_CONTINUE;
+>> -             }
+>> -             break;
+>> -
+>> +             return ieee80211_crypto_default_encrypt(tx);
 >
-> root@panda1 # ip link set dev wlan0 address 7e:78:47:8c:26:53
-> root@panda1 # iw dev wlan0 set type ibss
-> root@panda1 # ip link set dev wlan0 up
-> root@panda1 # iw dev wlan0 ibss join panda-mesh 2412 02:72:CF:28:19:1A
-> root@panda1 # iw phy phy0 set rts 100
-> root@panda1 # ip addr add 10.10.10.53/24 dev wlan0
->
-> After this, the nodes list each other in a station dump. I then run ping:
->
-> root@panda0 # ping 10.10.10.53
->
-> but only two requests are transmitted before the devices restart as seen in the attached dmesg logs. The tcpdump from panda1 is attached in tcpdump.txt. I have attached the kernel config and here is some additional info:
->
-I have investigated the issue further and it seems to be related to the rts-setting in the commands listed above. Since my last mail I have update to kernel v3.2.1 and now the watchdog interrupts continuously if I configure the RTS threshold to 62 bytes or less. Changing the threshold to 63 bytes or more stops the watchdog interrupt from occuring.
+> How about
+> ieee80211_require_hw_crypto() or something like that?
+To be consistent with the other encryptions I think it would
+be better to use something like: ieee80211_crypto_hw_encrypt(tx)
 
-Kind regards,
-Martin HundebÃ¸ll
+>
+>> +ieee80211_tx_result
+>> +ieee80211_crypto_default_encrypt(struct ieee80211_tx_data *tx)
+>> +{
+>> +     struct sk_buff *skb;
+>> +     struct ieee80211_tx_info *info = NULL;
+>> +
+>> +     skb_queue_walk(&tx->skbs, skb) {
+>> +             info  = IEEE80211_SKB_CB(skb);
+>> +
+>> +             /* handle hw-only algorithm */
+>> +             if (info == NULL || !info->control.hw_key)
+>> +                     return TX_DROP;
+>
+> info == NULL can't happen
+I agree,
+
+thanks,
+Yoni
+>
+> johannes
+>
