@@ -1,39 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:38135 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752642Ab2ALHlh (ORCPT
+Received: from bear.ext.ti.com ([192.94.94.41]:57514 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751255Ab2AQJnK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jan 2012 02:41:37 -0500
-Received: by lags15 with SMTP id s15so805276lag.4
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2012 23:41:34 -0800 (PST)
-Subject: Re: [PATCH v2] wl12xx: implement sta_state callback
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1325162958-8515-1-git-send-email-eliad@wizery.com>
-References: <1325162958-8515-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 12 Jan 2012 09:41:30 +0200
-Message-ID: <1326354090.32758.15.camel@cumari> (sfid-20120112_084140_338744_E6C28AB5)
-Mime-Version: 1.0
+	Tue, 17 Jan 2012 04:43:10 -0500
+From: "Elias, Ilan" <ilane@ti.com>
+To: Samuel Ortiz <samuel@sortiz.org>
+CC: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
+	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] NFC: Increase NCI deactivate timeout
+Date: Tue, 17 Jan 2012 09:42:56 +0000
+Message-ID: <B30D1FD582D6484ABF57420512E580350F5E0D88@DNCE03.ent.ti.com> (sfid-20120117_104314_848673_F44647F4)
+References: <1326022982-30205-1-git-send-email-ilane@ti.com>
+ <1326745622.22824.12.camel@sortiz-mobl>
+In-Reply-To: <1326745622.22824.12.camel@sortiz-mobl>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-12-29 at 14:49 +0200, Eliad Peller wrote: 
-> Update the fw regarding peer state and ht caps
-> only after the station was authorized.
-> 
-> Otherwise, the fw might try establishing BA session
-> before the sta is authorized.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
-> depends on "notify driver about changes in station state" patchset
+ Hi Samuel,
 
-Dropping this for now, since this will need to be updated according to
-the on-going changes in the state API.
+> > Increase NCI deactivate timeout from 5 sec to 30 sec.
+> > NCI deactivate procedure might take a long time,
+> > depending on the local and remote parameters.
+> 30 seconds sounds like a huge delay for receiving a reply to 
+> such command.
+> Would you care explaining how we can get that long of a timeout ?
+The controller in the Reader side uses a value called nRETRY (see NFC Forum Digital spec).
+This value is an internal implementation, valid range is 2 to 5.
+This value determines the number of re-transmissions.
 
--- 
-Cheers,
-Luca.
+The controller in the Tag side uses a value called FWI - Frame Waiting time Integer (see NFC Forum Digital spec).
+This value is an internal implementation, valid range is 1 to 14.
+This value determines (via some formula) the FWT - Frame Waiting Time, which is a timout.
+Max FWT value can be almost 5sec.
 
+So, the total max timeout can be 5sec for the first packet + 5sec for each of the 5 re-transmissions = 5 + 5x5 = 30 sec.
+
+> Cheers,
+> Samuel.
+
+Thanks & BR,
+Ilan
