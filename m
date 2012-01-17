@@ -1,62 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:55610 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754650Ab2AaPvV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 10:51:21 -0500
-Received: by mail-wi0-f174.google.com with SMTP id s10so83344wic.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 07:51:20 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/4] wl12xx: add new coex params
-Date: Tue, 31 Jan 2012 17:54:43 +0200
-Message-Id: <1328025283-22888-4-git-send-email-eliad@wizery.com> (sfid-20120131_165126_225564_19885254)
-In-Reply-To: <1328025283-22888-1-git-send-email-eliad@wizery.com>
-References: <1328025283-22888-1-git-send-email-eliad@wizery.com>
+Received: from mx1.redhat.com ([209.132.183.28]:43441 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752399Ab2AQLjP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jan 2012 06:39:15 -0500
+Date: Tue, 17 Jan 2012 12:38:50 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Roland Vossen <rvossen@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Patrick <ragamuffin@datacomm.ch>
+Subject: [PATCH] brcmsmac: fix tx queue flush infinite loop
+Message-ID: <20120117113849.GB3091@redhat.com> (sfid-20120117_123919_046996_5DFA2C42)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-new params were added to the coex params.
-Add them with default value of 0.
+This patch workaround live deadlock problem caused by infinite loop
+in brcms_c_wait_for_tx_completion(). I do not consider the patch as
+the proper fix, which should fix the real reason of tx queue flush
+failure, but patch helps with system lockup.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Reference:
+https://bugzilla.kernel.org/show_bug.cgi?id=42576
+
+Reported-and-tested-by: Patrick <ragamuffin@datacomm.ch>
+Cc: stable@vger.kernel.org # 3.2+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
-depends on the "wl12xx: update fw api" patchset
+ drivers/net/wireless/brcm80211/brcmsmac/main.c |   10 +++++++++-
+ 1 files changed, 9 insertions(+), 1 deletions(-)
 
- drivers/net/wireless/wl12xx/conf.h |    4 ++++
- drivers/net/wireless/wl12xx/main.c |    3 +++
- 2 files changed, 7 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index a179510..823535c 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -317,6 +317,10 @@ enum {
- 	CONF_AP_BT_ACL_VAL_BT_SERVE_TIME,
- 	CONF_AP_BT_ACL_VAL_WL_SERVE_TIME,
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+index f7ed340..f6affc6 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
+@@ -7981,13 +7981,21 @@ int brcms_c_get_curband(struct brcms_c_info *wlc)
  
-+	/* CTS Diluting params */
-+	CONF_SG_CTS_DILUTED_BAD_RX_PACKETS_TH,
-+	CONF_SG_CTS_CHOP_IN_DUAL_ANT_SCO_MASTER,
+ void brcms_c_wait_for_tx_completion(struct brcms_c_info *wlc, bool drop)
+ {
++	int timeout = 20;
 +
- 	CONF_SG_TEMP_PARAM_1,
- 	CONF_SG_TEMP_PARAM_2,
- 	CONF_SG_TEMP_PARAM_3,
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index d67acc3..2dea2ee 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -116,6 +116,9 @@ static struct conf_drv_settings default_conf = {
- 			[CONF_AP_CONNECTION_PROTECTION_TIME] = 0,
- 			[CONF_AP_BT_ACL_VAL_BT_SERVE_TIME] = 25,
- 			[CONF_AP_BT_ACL_VAL_WL_SERVE_TIME] = 25,
-+			/* CTS Diluting params */
-+			[CONF_SG_CTS_DILUTED_BAD_RX_PACKETS_TH] = 0,
-+			[CONF_SG_CTS_CHOP_IN_DUAL_ANT_SCO_MASTER] = 0,
- 		},
- 		.state = CONF_SG_PROTECTIVE,
- 	},
+ 	/* flush packet queue when requested */
+ 	if (drop)
+ 		brcmu_pktq_flush(&wlc->pkt_queue->q, false, NULL, NULL);
+ 
+ 	/* wait for queue and DMA fifos to run dry */
+-	while (!pktq_empty(&wlc->pkt_queue->q) || brcms_txpktpendtot(wlc) > 0)
++	while (!pktq_empty(&wlc->pkt_queue->q) || brcms_txpktpendtot(wlc) > 0) {
+ 		brcms_msleep(wlc->wl, 1);
++
++		if (--timeout == 0)
++			break;
++	}
++
++	WARN_ON_ONCE(timeout == 0);
+ }
+ 
+ void brcms_c_set_beacon_listen_interval(struct brcms_c_info *wlc, u8 interval)
 -- 
-1.7.6.401.g6a319
+1.7.1
 
