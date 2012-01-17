@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:50019 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752142Ab2AQHsV (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:48568 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750758Ab2AQBQR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 02:48:21 -0500
-Message-ID: <4F1527BD.3060608@qca.qualcomm.com> (sfid-20120117_084825_064961_4D74C802)
-Date: Tue, 17 Jan 2012 13:18:13 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Vivek Natarajan <nataraja@qca.qualcomm.com>,
-	Felix Fietkau <nbd@openwrt.org>, <ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH 1/1] ath9k: Fix kernel panic in AR2427 in AP mode
-References: <1324828153-5656-1-git-send-email-mohammed@qca.qualcomm.com> <20120116184115.GG4511@tux>
-In-Reply-To: <20120116184115.GG4511@tux>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Mon, 16 Jan 2012 20:16:17 -0500
+Date: Mon, 16 Jan 2012 20:15:07 -0500 (EST)
+Message-Id: <20120116.201507.597966888285215358.davem@davemloft.net> (sfid-20120117_021635_837816_29E6672C)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-01-16
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120116195435.GB12733@tuxdriver.com>
+References: <20120116195435.GB12733@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Mon, 16 Jan 2012 14:54:35 -0500
 
-On Tuesday 17 January 2012 12:11 AM, Luis R. Rodriguez wrote:
-> On Sun, Dec 25, 2011 at 09:19:13PM +0530, Mohammed Shafi Shajakhan wrote:
->> Cc: stable@kernel.org
->
->
-> For future reference please use from now on stable@vger.kernel.org
-> instead of the older one [1].
->
-> [1] http://www.kroah.com/log/linux/stable-status-01-2012.html
->
->    Luis
->
+> Here is a set of fixes for 3.3 that I let cook over the weekend...
+> 
+> Included is a fix for a signedness bug in ipw2x00 from Dan Carpenter, a
+> fix for an oops when ejecting a b43 card from Guennadi Liakhovetski
+> (with a minor modification by me as noted in the changelog), a mac80211
+> regresion fix from Johannes Berg for a bug related to station
+> management, and a final fix for the rt2800pci spurious interrupt issue
+> from Stanislaw Gruszka.
 
-ok, thank you.
+And Linus's patches to fix the brcmsmac driver aren't in here because?
 
--- 
-thanks,
-shafi
+If you don't integrate them, Linus is going to integrate them on his
+own before -rc1 is cut, so whatever you're "waiting for" is entirely
+and utterly pointless.
+
+Merge his bug fixes now, don't delay this kind of stuff, ever.
