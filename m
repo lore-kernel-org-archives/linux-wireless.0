@@ -1,64 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:15048 "EHLO c60.cesmail.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932320Ab2AIRE3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 12:04:29 -0500
-Date: Mon, 9 Jan 2012 11:54:44 -0500
-From: Pavel Roskin <proski@gnu.org>
-To: lina <lina.lastname@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: which one I can safely removed to lose some weight?
-Message-ID: <20120109115444.5fbcc0e3@mj> (sfid-20120109_180433_209208_649A9AEB)
-In-Reply-To: <4F098398.8090004@gmail.com>
-References: <4F098398.8090004@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:14537 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751906Ab2AQAOQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jan 2012 19:14:16 -0500
+Cc: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+Subject: [PATCH RESEND 0/2] wireless-regdb: DFS master changes
+Date: Mon, 16 Jan 2012 16:12:55 -0800
+Message-ID: <1326759177-14160-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120117_011427_726617_EA93B78A)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 08 Jan 2012 19:52:56 +0800
-lina <lina.lastname@gmail.com> wrote:
+From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 
-> after install the b43 related packages, my / become so heavy
-> suddenly, reached 84%.
+ * This is a simple resend. Everything else is the same except this line. *
 
+Now that DFS master patches are merged for cfg80211 wireless-regdb
+can use being updated with support for exposing the DFS region. This
+is a repost with no changes made, just a poke.
 
-> 
-> now
-> 
-> :/lib/modules/3.2.0-1-lina/updates/drivers/net/wireless# ls
-> adm8211.ko       brcm80211     libertas           orinoco
-> rtlwifi at76c50x-usb.ko  ipw2x00       libertas_tf
-> p54            wl1251 ath              iwlegacy
-> mac80211_hwsim.ko  rndis_wlan.ko  wl12xx b43
-> iwlwifi       mwifiex            rt2x00         zd1211rw
-> b43legacy        iwmc3200wifi  mwl8k.ko           rtl818x
-> 
-> root@dove:/lib/modules/3.2.0-1-lina/updates/drivers/net/wireless# du
-> -sh 141M    .
-> 
-> I wonder above director, which one I can safely remove:
-> 
-> # lspci | grep Broad
-> 02:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM57765 
-> Gigabit Ethernet PCIe (rev 10)
-> 02:00.1 SD Host controller: Broadcom Corporation NetXtreme BCM57765 
-> Memory Card Reader (rev 10)
-> 03:00.0 Network controller: Broadcom Corporation BCM4331
-> 802.11a/b/g/n (rev 02)
-> 
-> 
-> I can keep it, just in case there are some redundant packages to take 
-> the place,
+Zefir may next want to add a patch for whatever country he's looking to
+support with ETSI, for example. TI, may want to do the same :D
 
-I assume you are talking about some embedded system.  Remove the modules
-under drivers/ except those that are used during normal operation. The
-list of loaded modules is in /proc/modules.
+Luis R. Rodriguez (2):
+  wireless-regdb: Add master DFS region support
+  wireless-regdb: add FCC as the DFS region for US
 
-I can imagine that some modules may or may not be used dependent on
-the mode of operation (e.g. whether encryption is used), but they are
-not under drivers/
+ db.txt     |    2 +-
+ db2bin.py  |    2 +-
+ dbparse.py |   25 ++++++++++++++++++++-----
+ 3 files changed, 22 insertions(+), 7 deletions(-)
 
 -- 
-Regards,
-Pavel Roskin
+1.7.4.15.g7811d
+
