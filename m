@@ -1,195 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:55137 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754220Ab2ARDEV (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:38980 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750788Ab2AQAqp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 22:04:21 -0500
-Date: Tue, 17 Jan 2012 21:04:18 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: Move pr_fmt macros to a single location
-Message-ID: <4f1636b2.D5g8MJEc04WZglzi%Larry.Finger@lwfinger.net> (sfid-20120118_040443_882117_913B2005)
+	Mon, 16 Jan 2012 19:46:45 -0500
+Received: by iagf6 with SMTP id f6so3356599iag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2012 16:46:45 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1326723806-15960-3-git-send-email-coelho@ti.com>
+References: <1326723806-15960-1-git-send-email-coelho@ti.com> <1326723806-15960-3-git-send-email-coelho@ti.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 17 Jan 2012 11:46:24 +1100
+Message-ID: <CAGRGNgVfJeEji1EtU5u_GfHN9sgKGEkDRg9ko7JdkMqUUFvFyw@mail.gmail.com> (sfid-20120117_014709_822311_4E12C5BB)
+Subject: Re: [PATCH 2/2] wl12xx: add operation to retrieve the MAC address
+ from Fuse ROM
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Although the rtlwifi family of devices contains 11 copies of the pr_fmt
-macro, the macro is not defined for all routines that need it. By moving
-the macro to wifi.h, a single copy is available for all routines.
+Hi Luciano,
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+On Tue, Jan 17, 2012 at 01:23, Luciano Coelho <coelho@ti.com> wrote:
+> Add a testmode command to retrieve the MAC address that is stored in
+> the Fuse ROM in newer PGs.  In old PGs this operation is not
+> supported.
+>
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
+>  drivers/net/wireless/wl12xx/boot.c     |    3 +-
+>  drivers/net/wireless/wl12xx/boot.h     |   10 ----
+>  drivers/net/wireless/wl12xx/reg.h      |   15 ++++++
+>  drivers/net/wireless/wl12xx/testmode.c |   87 ++++++++++++++++++++++++++++++++
+>  4 files changed, 104 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/net/wireless/wl12xx/testmode.c b/drivers/net/wireless/wl12xx/testmode.c
+> index 25093c0..613e0b3 100644
+> --- a/drivers/net/wireless/wl12xx/testmode.c
+> +++ b/drivers/net/wireless/wl12xx/testmode.c
+> @@ -264,6 +266,89 @@ static int wl1271_tm_cmd_recover(struct wl1271 *wl, struct nlattr *tb[])
+>        return 0;
+>  }
+>
+> +static bool wl12xx_tm_mac_in_fuse(struct wl1271 *wl)
+> +{
+> +       bool supported = false;
+> +       u8 major, minor;
+> +
+> +       if (wl->chip.id == CHIP_ID_1283_PG20) {
+> +               major = (wl->hw_pg_ver & WL128X_PG_MAJOR_VER_MASK) >>
+> +                       WL128X_PG_MAJOR_VER_OFFSET;
+> +               minor = (wl->hw_pg_ver & WL128X_PG_MINOR_VER_MASK) >>
+> +                       WL128X_PG_MINOR_VER_OFFSET;
+> +
+> +               /* in wl128x we have the MAC address if the PG is >= (2, 1) */
+> +               if (major > 2 || (major == 2 && minor >= 1))
+> +                       supported = true;
+> +       } else {
+> +               major = (wl->hw_pg_ver & WL127X_PG_MAJOR_VER_MASK) >>
+> +                       WL127X_PG_MAJOR_VER_OFFSET;
+> +               minor = (wl->hw_pg_ver & WL127X_PG_MINOR_VER_MASK) >>
+> +                       WL127X_PG_MINOR_VER_OFFSET;
+> +
+> +               /* in wl127x we have the MAC address if the PG is >= (3, 1) */
+> +               if (major == 3 && minor >= 1)
 
- base.c               |    2 --
- cam.c                |    2 --
- rtl8192c/fw_common.c |    2 --
- rtl8192cu/hw.c       |    2 --
- rtl8192cu/mac.c      |    2 --
- rtl8192de/sw.c       |    2 --
- rtl8192se/hw.c       |    2 --
- rtl8192se/phy.c      |    2 --
- rtl8192se/rf.c       |    2 --
- rtl8192se/sw.c       |    2 --
- usb.c                |    2 --
- wifi.h               |    2 ++
- 12 files changed, 2 insertions(+), 22 deletions(-)
----
+Is this test correct? Do only major == 3 PGs support this command?
 
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/base.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/base.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/base.c
-@@ -27,8 +27,6 @@
-  *
-  *****************************************************************************/
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include <linux/ip.h>
- #include <linux/module.h>
- #include "wifi.h"
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/cam.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/cam.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/cam.c
-@@ -27,8 +27,6 @@
-  *
-  *****************************************************************************/
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include <linux/export.h>
- #include "wifi.h"
- #include "cam.h"
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-@@ -27,8 +27,6 @@
-  *
-  *****************************************************************************/
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include <linux/firmware.h>
- #include <linux/export.h>
- #include "../wifi.h"
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -27,8 +27,6 @@
-  *
-  *****************************************************************************/
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include "../wifi.h"
- #include "../efuse.h"
- #include "../base.h"
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
-@@ -27,8 +27,6 @@
-  *
- ****************************************************************************/
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include <linux/module.h>
- 
- #include "../wifi.h"
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
-@@ -27,8 +27,6 @@
-  *
-  *****************************************************************************/
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include <linux/vmalloc.h>
- #include <linux/module.h>
- 
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
-@@ -27,8 +27,6 @@
-  *
-  *****************************************************************************/
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include "../wifi.h"
- #include "../efuse.h"
- #include "../base.h"
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
-@@ -27,8 +27,6 @@
-  *
-  *****************************************************************************/
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include "../wifi.h"
- #include "../pci.h"
- #include "../ps.h"
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
-@@ -27,8 +27,6 @@
-  *
-  *****************************************************************************/
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include "../wifi.h"
- #include "reg.h"
- #include "def.h"
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-@@ -27,8 +27,6 @@
-  *
-  *****************************************************************************/
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include <linux/vmalloc.h>
- #include <linux/module.h>
- 
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/usb.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/usb.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/usb.c
-@@ -25,8 +25,6 @@
-  *
-  *****************************************************************************/
- 
--#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
--
- #include <linux/usb.h>
- #include <linux/export.h>
- #include "core.h"
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/wifi.h
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/wifi.h
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/wifi.h
-@@ -172,6 +172,8 @@ enum hardware_type {
- 	 _pdesc->rxmcs == DESC92_RATE5_5M ||		\
- 	 _pdesc->rxmcs == DESC92_RATE11M)
- 
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- enum scan_operation_backup_opt {
- 	SCAN_OPT_BACKUP = 0,
- 	SCAN_OPT_RESTORE,
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
