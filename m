@@ -1,61 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:54528 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750934Ab2AACVq (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:54430 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753524Ab2AQTdS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Dec 2011 21:21:46 -0500
-Date: Sat, 31 Dec 2011 21:21:45 -0500 (EST)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Oliver Neukum <oliver@neukum.org>
-cc: Matthew Garrett <mjg@redhat.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-In-Reply-To: <201112311659.48427.oliver@neukum.org>
-Message-ID: <Pine.LNX.4.44L0.1112312033240.28510-100000@netrider.rowland.org> (sfid-20120101_032222_802107_E492E78C)
+	Tue, 17 Jan 2012 14:33:18 -0500
+Received: by werb14 with SMTP id b14so1403596wer.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2012 11:33:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: =?ISO-8859-1?Q?Andr=E9s_Garc=EDa_Saavedra?=
+	<andres.garcia.saavedra@gmail.com>
+Date: Tue, 17 Jan 2012 20:32:55 +0100
+Message-ID: <CADxqDgEwdmR0k_Fvng10fCAb3W_UNyV2AH_R-Vyxp8WqbRafZg@mail.gmail.com> (sfid-20120117_203322_415588_31D225B1)
+Subject: [ atheros ] DCU transmit pause control/status register
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 31 Dec 2011, Oliver Neukum wrote:
+Hi,
 
-> Am Samstag, 31. Dezember 2011, 16:33:12 schrieb Alan Stern:
-> 
-> > Nothing has changed in the USB layer -- it has always been true that
-> > devices could be reset during a suspend/resume cycle.  This isn't a
-> > matter of how the stack is written or anything like that; some
-> > motherboards simply do not provide suspend power to their USB
-> > controllers.  Or the firmware reinitializes the controllers and
-> > attached devices during resume, forcing Linux's USB core to reset
-> > every device on the affected buses.
-> > 
-> > When it comes to suspend/resume, there are almost no guarantees.  :-(
-> 
-> We are definitely going through do_unbind_rebind(). But I don't think
-> it matters why we got there. We seem to be calling probe() too early.
-> And we need to guarantee that a driver can request firmware in probe()
-> 
-> So something has changed in the resume code path further up.
+I am looking of a way for pausing/continuing the actual transmission
+of packets in queues (for research purposes). I noticed these
+registers avaiblable in atheros cards: AR5K_DCU_TXP in ath5k o
+AR_D_TXPSE in ath9k.  Does anyone know how these work and can give me
+a hint?
 
-For at least a year and a half, it has been true that rebinding takes
-place during the complete phase of system resume.  Clearly that is too 
-early to load firmware.  When do you think we should do it instead?  
-And how should we keep track of which interfaces need rebinding?
+Thanks in advance,
 
-Alan Stern
-
-P.S.: Oliver, it looks like there's a bunch of dead code in
-usb_suspend_interface() and usb_resume_interface().  I don't see how
-either one can be executed with a driver that doesn't have both suspend
-and resume methods.  Such cases should be filtered out when
-usb_suspend() calls do_unbind_rebind().  The only odd thing that can
-happen is when a driver doesn't support reset-resume.  Do you agree?
-
+Andrés
