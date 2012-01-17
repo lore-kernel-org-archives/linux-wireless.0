@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19598 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932532Ab2ASSEj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jan 2012 13:04:39 -0500
-Date: Thu, 19 Jan 2012 13:04:34 -0500
-From: Dave Jones <davej@redhat.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	Dan Williams <dcbw@redhat.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi worse than ever in current git.
-Message-ID: <20120119180433.GA32306@redhat.com> (sfid-20120119_190444_789757_00854D09)
-References: <20120110184917.GA26973@redhat.com>
- <1326221614.5067.6.camel@dcbw.foobar.com>
- <0BA3FCBA62E2DC44AF3030971E174FB3063085@HASMSX103.ger.corp.intel.com>
- <20120111014243.GA22066@redhat.com>
- <0BA3FCBA62E2DC44AF3030971E174FB306429E@HASMSX103.ger.corp.intel.com>
- <20120111195055.GA5140@redhat.com>
- <0BA3FCBA62E2DC44AF3030971E174FB3064AF5@HASMSX103.ger.corp.intel.com>
- <CANUX_P3UHz-Pr_M1H5pAbmKDY70es7nxkWSDGXG6-hvrPAMCJw@mail.gmail.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:59638 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751472Ab2AQA54 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jan 2012 19:57:56 -0500
+Received: by wgbdq11 with SMTP id dq11so1274154wgb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2012 16:57:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANUX_P3UHz-Pr_M1H5pAbmKDY70es7nxkWSDGXG6-hvrPAMCJw@mail.gmail.com>
+In-Reply-To: <CAGRGNgVL-tmY8e2hk43hQQot6YwvEWcQYwoSHLtQGj4JR+Nk3w@mail.gmail.com>
+References: <86wr8rfbpf.fsf@sumi.keithp.com> <CA+55aFwdHKhLXF+Utbk0A2jcshSeQmQ91YxBzvqSa3wXCKh8BA@mail.gmail.com>
+ <CAGRGNgVL-tmY8e2hk43hQQot6YwvEWcQYwoSHLtQGj4JR+Nk3w@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Mon, 16 Jan 2012 16:57:34 -0800
+Message-ID: <CA+55aFz6qAY+q+Fes4gZdit1V_XQO7hcqp+V=ytuY=XYq2Tu8Q@mail.gmail.com> (sfid-20120117_015816_254099_047D36B4)
+Subject: Re: MBA resume wedge due to wireless fixed yet?
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Keith Packard <keithp@keithp.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 19, 2012 at 08:47:28AM +0200, Emmanuel Grumbach wrote:
- > >> [16580.004052] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_stop Can't proceed: ssn
- > >> 1491, next_recl = 150
- > >>
- > >
- > > I understand there is nothing afterwards... This is really weird. The sequence numbers here are really crazy...
- > > I need to think that over.
- > >
- > >>
- > 
- > Ok, I finally had a change to take a closer look at this. Please run
- > with debug=0xC0000000.
- > 
- > This will be noisy, but I guess we have no choice...
+On Mon, Jan 16, 2012 at 4:37 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> Hi all,
+>
+> I have a stupid question:
+>
+> On Tue, Jan 17, 2012 at 10:56, Linus Torvalds
+> <torvalds@linux-foundation.org> wrote:
+>> I have patches, but haven't committed them because I was kind of
+>> expecting them to go through the wireless tree.
+>
+> Then why were these patches never posted to linux-wireless?
 
-It is indeed noisy, and.. I can't reproduce the problem when that's set.
-Some timing related problem ?
+They were posted to at least netdev, they were cc'd to the top-level
+maintainers (both David and Linville), and the maintainers of the
+driver itself.
 
-	Dave
+wireless seems to have been overlooked, but they were certainly not
+hidden or kept private. I personally don't tend to remember the
+wireless list, because everything I get comes through David and is
+just "networking".
 
+                      Linus
