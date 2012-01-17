@@ -1,93 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.lang.hm ([64.81.33.126]:40230 "EHLO bifrost.lang.hm"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751477Ab2ACJdq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 04:33:46 -0500
-Date: Tue, 3 Jan 2012 01:24:15 -0800 (PST)
-From: david@lang.hm
-To: "Alexander E. Patrakov" <patrakov@gmail.com>
-cc: linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: loading firmware while usermodehelper disabled.
-In-Reply-To: <20120103151637.1388e204@home>
-Message-ID: <alpine.DEB.2.02.1201030119430.4979@asgard.lang.hm> (sfid-20120103_103352_573665_4BF24A78)
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> <4F02165C.1060400@fastmail.fm> <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com> <20120102211904.GA15316@srcf.ucam.org> <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
- <20120102215028.GA15701@srcf.ucam.org> <20120103151637.1388e204@home>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:52290 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750758Ab2AQDvi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jan 2012 22:51:38 -0500
+Received: by iagf6 with SMTP id f6so3577060iag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2012 19:51:38 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+In-Reply-To: <1326772102.4598.63.camel@cumari>
+References: <1326723806-15960-1-git-send-email-coelho@ti.com>
+ <1326723806-15960-3-git-send-email-coelho@ti.com> <CAGRGNgVfJeEji1EtU5u_GfHN9sgKGEkDRg9ko7JdkMqUUFvFyw@mail.gmail.com>
+ <1326772102.4598.63.camel@cumari>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 17 Jan 2012 14:51:16 +1100
+Message-ID: <CAGRGNgWjCYsyzWCn0-j-A7Cqv2Prdftzxvu6WkjMzOdvOxcunA@mail.gmail.com> (sfid-20120117_045141_113039_B17C76C3)
+Subject: Re: [PATCH 2/2] wl12xx: add operation to retrieve the MAC address
+ from Fuse ROM
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 3 Jan 2012, Alexander E. Patrakov wrote:
+Hi Luciano,
 
-> Matthew Garrett <mjg@redhat.com> wrote:
+On Tue, Jan 17, 2012 at 14:48, Luciano Coelho <coelho@ti.com> wrote:
+> On Tue, 2012-01-17 at 11:46 +1100, Julian Calaby wrote:
+>> Hi Luciano,
+>>
+>> On Tue, Jan 17, 2012 at 01:23, Luciano Coelho <coelho@ti.com> wrote:
+>> > Add a testmode command to retrieve the MAC address that is stored in
+>> > the Fuse ROM in newer PGs.  In old PGs this operation is not
+>> > supported.
+>> >
+>> > Signed-off-by: Luciano Coelho <coelho@ti.com>
+>> > ---
+>> >  drivers/net/wireless/wl12xx/boot.c     |    3 +-
+>> >  drivers/net/wireless/wl12xx/boot.h     |   10 ----
+>> >  drivers/net/wireless/wl12xx/reg.h      |   15 ++++++
+>> >  drivers/net/wireless/wl12xx/testmode.c |   87 ++++++++++++++++++++++++++++++++
+>> >  4 files changed, 104 insertions(+), 11 deletions(-)
+>> >
+>> > diff --git a/drivers/net/wireless/wl12xx/testmode.c b/drivers/net/wireless/wl12xx/testmode.c
+>> > index 25093c0..613e0b3 100644
+>> > --- a/drivers/net/wireless/wl12xx/testmode.c
+>> > +++ b/drivers/net/wireless/wl12xx/testmode.c
+>> > @@ -264,6 +266,89 @@ static int wl1271_tm_cmd_recover(struct wl1271 *wl, struct nlattr *tb[])
+>> >        return 0;
+>> >  }
+>> >
+>> > +static bool wl12xx_tm_mac_in_fuse(struct wl1271 *wl)
+>> > +{
+>> > +       bool supported = false;
+>> > +       u8 major, minor;
+>> > +
+>> > +       if (wl->chip.id == CHIP_ID_1283_PG20) {
+>> > +               major = (wl->hw_pg_ver & WL128X_PG_MAJOR_VER_MASK) >>
+>> > +                       WL128X_PG_MAJOR_VER_OFFSET;
+>> > +               minor = (wl->hw_pg_ver & WL128X_PG_MINOR_VER_MASK) >>
+>> > +                       WL128X_PG_MINOR_VER_OFFSET;
+>> > +
+>> > +               /* in wl128x we have the MAC address if the PG is >= (2, 1) */
+>> > +               if (major > 2 || (major == 2 && minor >= 1))
+>> > +                       supported = true;
+>> > +       } else {
+>> > +               major = (wl->hw_pg_ver & WL127X_PG_MAJOR_VER_MASK) >>
+>> > +                       WL127X_PG_MAJOR_VER_OFFSET;
+>> > +               minor = (wl->hw_pg_ver & WL127X_PG_MINOR_VER_MASK) >>
+>> > +                       WL127X_PG_MINOR_VER_OFFSET;
+>> > +
+>> > +               /* in wl127x we have the MAC address if the PG is >= (3, 1) */
+>> > +               if (major == 3 && minor >= 1)
+>>
+>> Is this test correct? Do only major == 3 PGs support this command?
 >
->> On Mon, Jan 02, 2012 at 01:27:03PM -0800, Linus Torvalds wrote:
->>
->>> If we didn't load the firmware before the suspend, then the resume
->>> function of a device sure as hell had better not load it at resume
->>> time either.
->>
->> If the hardware has lost its state then refusing to load the firmware
->> at resume time isn't going to leave you with a working device.
->>
->>> And for chrissake, don't bother making it more complicated than it
->>> is, just for some theoretical hardware or situation that nobody
->>> cares about.
->>
->> It's not theoretical hardware. This appears to be the current
->> behaviour of the isight devices. If you reboot they retain their
->> firmware. If you suspend, they don't. So if we have a flow like this:
->>
->> 1) user boots from cold. Device comes up with generic USB ID.
->> 2) isight_firmware loads and binds. Firmware is loaded. Device
->> disconnects and reconnects with an ID that's bound by the UVC driver.
->> 3) user reboots. Device comes up with UVC ID. isight_firmware doesn't
->> bind.
->> 4) user suspends.
->> 5) user resumes. isight_firmware binds and attempts to load firmware.
->>
->> then just caching the firmware is inadequate - we had never
->> previously seen the device on this boot, so we've never loaded it in
->> order to cache it. isight_firmware could unconditionally load the
->> firmware on module load just in case a device is plugged in, but that
->> seems even less elegant than caching it.
->
-> What a heated discussion due to, essentially, a non-technical, legal
-> issue! Remember that the whole "userspace firmware loader" saga
-> together with the asynchronous firmware interface started when Debian
-> started complaining over the non-freeness of the firmware being bundled
-> as a part of the kernel module as an array of bytes. That design,
-> however, never had such dependency issues. So maybe revert to it, with
-> the following changes, and solve the legal issue seen by Debian by
-> hiring a lawyer?
+> Yes, major == 3 and minor greater than or equal to 1.  Actually, there
+> can't be a major greater than 3, because it's only 2 bits, so 3 is the
+> maximum value.
 
-at the very least, there should be a simple compile option that says 
-'compile any firmware that may be needed into the kernel/module image' so 
-that those of us who are not worried about the distribution of firmware 
-blobs (or who don't believe that just splitting the firmware blobs into 
-a separate tree gains anything) can just opt out of this entire mess. As I 
-see it, today we have the option of manually specifying firmware blobs to 
-compile in, but no easy way to just include them all.
+Just wanted to check as it seemed odd compared to the block for the
+WL128X parts. I'm guessing TI never expected these parts to last long
+enough to have more than 3 major revisions =)
 
-> 1. Make firmware a special case of a data-only non-GPL kernel module.
-> Change the tainter so that it doesn't taint the kernel for data-only
-> modules.
-> 2. Make the actual driver depend on the relevant firmware modules for
-> all devices supported by it, even if the devices don't always need the
-> said firmware.
-> 3. Disallow building drivers that need firmware as non-modules.
+Thanks,
 
-Please do not do this one.
+-- 
+Julian Calaby
 
-David Lang
-
-> 4. Do something (e.g. split the driver into a core and a shim, or make
-> a fake firmware module) to allow the user to install without firmware
-> if he knows that it works with his hardware.
-> 5. Profit!
->
-> This way, as long as the driver is loaded, the necessary firmware is
-> also there, as a dependency.
->
->
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
