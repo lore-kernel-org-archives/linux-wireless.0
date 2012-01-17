@@ -1,43 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:39979 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751441Ab2ABDdh (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:40527 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753149Ab2AQSJC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jan 2012 22:33:37 -0500
-Date: Mon, 2 Jan 2012 03:33:20 +0000
-From: Matthew Garrett <mjg@redhat.com>
-To: Michael =?iso-8859-1?Q?B=FCsch?= <m@bues.ch>
-Cc: Oliver Neukum <oliver@neukum.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-Message-ID: <20120102033320.GA6184@srcf.ucam.org> (sfid-20120102_043341_642629_0D46AE2C)
-References: <201201011322.34483.oliver@neukum.org>
- <Pine.LNX.4.44L0.1201011105200.4534-100000@netrider.rowland.org>
- <CA+55aFw-ar6dnPvn5wy=3Tv8fc_7Witri2mV=cCvH+aMv+jH1Q@mail.gmail.com>
- <201201012227.56568.oliver@neukum.org>
- <20120101223913.3ff57d0f@milhouse>
+	Tue, 17 Jan 2012 13:09:02 -0500
+Subject: [PATCH v3 3/8] ath6kl: add ATH6KL_CONF_UART_DEBUG
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Tue, 17 Jan 2012 20:08:56 +0200
+Message-ID: <20120117180856.29995.25607.stgit@localhost6.localdomain6> (sfid-20120117_190906_493022_01D68971)
+In-Reply-To: <20120117180827.29995.67922.stgit@localhost6.localdomain6>
+References: <20120117180827.29995.67922.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20120101223913.3ff57d0f@milhouse>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 01, 2012 at 10:39:13PM +0100, Michael Büsch wrote:
+Add ATH6KL_CONF_UART_DEBUG which is set whenever uart_debug module
+parameter is enabled. This way we can keep the uart_debug parameter
+static when core.c file is introduced.
 
-> I don't get it. Why would a device enter a state after resume, that it was not
-> in at _any_ time before the machine was suspended?
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/core.h |    1 +
+ drivers/net/wireless/ath/ath6kl/init.c |    5 ++++-
+ 2 files changed, 5 insertions(+), 1 deletions(-)
 
-Load firmware. Do a warm reboot. The hardware may maintain the 
-initialised state, but the new kernel will never have loaded it.
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index a75c09e..5b48ed4 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -195,6 +195,7 @@ struct ath6kl_fw_ie {
+ #define ATH6KL_CONF_ENABLE_11N			BIT(2)
+ #define ATH6KL_CONF_ENABLE_TX_BURST		BIT(3)
+ #define ATH6KL_CONF_SUSPEND_CUTPOWER		BIT(4)
++#define ATH6KL_CONF_UART_DEBUG			BIT(5)
+ 
+ enum wlan_low_pwr_state {
+ 	WLAN_POWER_STATE_ON,
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 6baa855..911e2df 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -466,7 +466,7 @@ int ath6kl_configure_target(struct ath6kl *ar)
+ 	u8 fw_iftype, fw_mode = 0, fw_submode = 0;
+ 	int i, status;
+ 
+-	param = uart_debug;
++	param = !!(ar->conf_flags & ATH6KL_CONF_UART_DEBUG);
+ 	if (ath6kl_bmi_write(ar, ath6kl_get_hi_item_addr(ar,
+ 			     HI_ITEM(hi_serial_enable)), (u8 *)&param, 4)) {
+ 		ath6kl_err("bmi_write_memory for uart debug failed\n");
+@@ -1679,6 +1679,9 @@ int ath6kl_core_init(struct ath6kl *ar)
+ 	if (suspend_cutpower)
+ 		ar->conf_flags |= ATH6KL_CONF_SUSPEND_CUTPOWER;
+ 
++	if (uart_debug)
++		ar->conf_flags |= ATH6KL_CONF_UART_DEBUG;
++
+ 	ar->wiphy->flags |= WIPHY_FLAG_SUPPORTS_FW_ROAM |
+ 			    WIPHY_FLAG_HAVE_AP_SME |
+ 			    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
