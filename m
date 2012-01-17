@@ -1,159 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:44646 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750971Ab2A3Gvt (ORCPT
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:35958 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755085Ab2AQQHd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 01:51:49 -0500
-From: "Devendra.Naga" <devendra.aaru@gmail.com>
-To: <Larry.Finger@lwfinger.net>, <chaoming_li@realsil.com.cn>,
-	<linville@tuxdriver.com>, <paul.gortmaker@windriver.com>,
-	<joe@perches.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: "Devendra.Naga" <devendra.aaru@gmail.com>
-Subject: [PATCH 1/1] wireless: move ifs' in _rtl92c_store_pwrIndex_diffrate_offset into elseif statements
-Date: Mon, 30 Jan 2012 01:50:45 -0500
-Message-Id: <1327906245-8200-1-git-send-email-devendra.aaru@gmail.com> (sfid-20120130_075215_998940_B7B737C3)
+	Tue, 17 Jan 2012 11:07:33 -0500
+Received: by obcva7 with SMTP id va7so6004351obc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2012 08:07:33 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20111221113329.GA2235@redhat.com>
+References: <CAJZjf_xDm_RaFqxF-r+MAPyh_HcCb+yV4dNrfhr+LH0-z2zk8g@mail.gmail.com>
+ <CAJZjf_yEBb3BEf+-Fei78xBmJT1Y_Jr5fPUJNKwi6kvuVg24KA@mail.gmail.com>
+ <20111124125414.GA8077@redhat.com> <CAJZjf_zM2zBsoh66KcRwgi-jS7DF-qH5-sKrUoCB=hFTPES7LA@mail.gmail.com>
+ <20111221113329.GA2235@redhat.com>
+From: Pedro Francisco <pedrogfrancisco@gmail.com>
+Date: Tue, 17 Jan 2012 16:07:12 +0000
+Message-ID: <CAJZjf_xJYogUH7i+qp+cy5mxpX3dGTm0O--Ecv8=UMjg+J0vow@mail.gmail.com> (sfid-20120117_170737_234314_FBA11501)
+Subject: Re: iwl3945 firmware errors: tentative debugging
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org, ipw3945-devel@lists.sourceforge.net
+Content-Type: multipart/mixed; boundary=f46d0444ee55611a5504b6bb871d
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Devendra.Naga" <devendra.aaru@gmail.com>
+--f46d0444ee55611a5504b6bb871d
+Content-Type: text/plain; charset=ISO-8859-1
 
-        The regaddr is compared against different rates in each case and the powerlevels are set
-        accordingly. as this can match for the first if and we still check for other powerlevels too,
-        use else if ratherthan using if statements
-Signed-off-by: Devendra.Naga <devendra.aaru@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |   47 +++++++------------
- 1 files changed, 17 insertions(+), 30 deletions(-)
+Hi!
+Sorry for the delay!
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-index 22e998d..cb11e5a 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-@@ -260,106 +260,93 @@ void _rtl92c_store_pwrIndex_diffrate_offset(struct ieee80211_hw *hw,
- 			 "MCSTxPowerLevelOriginalOffset[%d][0] = 0x%x\n",
- 			 rtlphy->pwrgroup_cnt,
- 			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][0]);
--	}
--	if (regaddr == RTXAGC_A_RATE54_24) {
-+	} else if (regaddr == RTXAGC_A_RATE54_24) {
- 		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][1] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "MCSTxPowerLevelOriginalOffset[%d][1] = 0x%x\n",
- 			 rtlphy->pwrgroup_cnt,
- 			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][1]);
--	}
--	if (regaddr == RTXAGC_A_CCK1_MCS32) {
-+	} else if (regaddr == RTXAGC_A_CCK1_MCS32) {
- 		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][6] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "MCSTxPowerLevelOriginalOffset[%d][6] = 0x%x\n",
- 			 rtlphy->pwrgroup_cnt,
- 			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][6]);
--	}
--	if (regaddr == RTXAGC_B_CCK11_A_CCK2_11 && bitmask == 0xffffff00) {
-+	} else if (regaddr == RTXAGC_B_CCK11_A_CCK2_11 &&
-+		bitmask == 0xffffff00) {
- 		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][7] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "MCSTxPowerLevelOriginalOffset[%d][7] = 0x%x\n",
- 			 rtlphy->pwrgroup_cnt,
- 			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][7]);
--	}
--	if (regaddr == RTXAGC_A_MCS03_MCS00) {
-+	} else if (regaddr == RTXAGC_A_MCS03_MCS00) {
- 		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][2] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "MCSTxPowerLevelOriginalOffset[%d][2] = 0x%x\n",
- 			 rtlphy->pwrgroup_cnt,
- 			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][2]);
--	}
--	if (regaddr == RTXAGC_A_MCS07_MCS04) {
-+	} else if (regaddr == RTXAGC_A_MCS07_MCS04) {
- 		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][3] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "MCSTxPowerLevelOriginalOffset[%d][3] = 0x%x\n",
- 			 rtlphy->pwrgroup_cnt,
- 			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][3]);
--	}
--	if (regaddr == RTXAGC_A_MCS11_MCS08) {
-+	} else if (regaddr == RTXAGC_A_MCS11_MCS08) {
- 		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][4] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "MCSTxPowerLevelOriginalOffset[%d][4] = 0x%x\n",
- 			 rtlphy->pwrgroup_cnt,
- 			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][4]);
--	}
--	if (regaddr == RTXAGC_A_MCS15_MCS12) {
-+	} else if (regaddr == RTXAGC_A_MCS15_MCS12) {
- 		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][5] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "MCSTxPowerLevelOriginalOffset[%d][5] = 0x%x\n",
- 			 rtlphy->pwrgroup_cnt,
- 			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][5]);
--	}
--	if (regaddr == RTXAGC_B_RATE18_06) {
-+	} else if (regaddr == RTXAGC_B_RATE18_06) {
- 		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][8] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "MCSTxPowerLevelOriginalOffset[%d][8] = 0x%x\n",
- 			 rtlphy->pwrgroup_cnt,
- 			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][8]);
--	}
--	if (regaddr == RTXAGC_B_RATE54_24) {
-+	} else if (regaddr == RTXAGC_B_RATE54_24) {
- 		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][9] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "MCSTxPowerLevelOriginalOffset[%d][9] = 0x%x\n",
- 			 rtlphy->pwrgroup_cnt,
- 			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][9]);
--	}
--	if (regaddr == RTXAGC_B_CCK1_55_MCS32) {
-+	} else if (regaddr == RTXAGC_B_CCK1_55_MCS32) {
- 		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][14] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "MCSTxPowerLevelOriginalOffset[%d][14] = 0x%x\n",
- 			 rtlphy->pwrgroup_cnt,
- 			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][14]);
--	}
--	if (regaddr == RTXAGC_B_CCK11_A_CCK2_11 && bitmask == 0x000000ff) {
-+	} else if (regaddr == RTXAGC_B_CCK11_A_CCK2_11 &&
-+		bitmask == 0x000000ff) {
- 		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][15] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "MCSTxPowerLevelOriginalOffset[%d][15] = 0x%x\n",
- 			 rtlphy->pwrgroup_cnt,
- 			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][15]);
--	}
--	if (regaddr == RTXAGC_B_MCS03_MCS00) {
-+	} else if (regaddr == RTXAGC_B_MCS03_MCS00) {
- 		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][10] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "MCSTxPowerLevelOriginalOffset[%d][10] = 0x%x\n",
- 			 rtlphy->pwrgroup_cnt,
- 			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][10]);
--	}
--	if (regaddr == RTXAGC_B_MCS07_MCS04) {
-+	} else if (regaddr == RTXAGC_B_MCS07_MCS04) {
- 		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][11] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "MCSTxPowerLevelOriginalOffset[%d][11] = 0x%x\n",
- 			 rtlphy->pwrgroup_cnt,
- 			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][11]);
--	}
--	if (regaddr == RTXAGC_B_MCS11_MCS08) {
-+	} else if (regaddr == RTXAGC_B_MCS11_MCS08) {
- 		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][12] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "MCSTxPowerLevelOriginalOffset[%d][12] = 0x%x\n",
- 			 rtlphy->pwrgroup_cnt,
- 			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][12]);
--	}
--	if (regaddr == RTXAGC_B_MCS15_MCS12) {
-+	} else if (regaddr == RTXAGC_B_MCS15_MCS12) {
- 		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][13] = data;
- 		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
- 			 "MCSTxPowerLevelOriginalOffset[%d][13] = 0x%x\n",
+On Wed, Dec 21, 2011 at 11:33 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> Hi Pedro,
+>
+> On Tue, Nov 29, 2011 at 05:07:55PM +0000, Pedro Francisco wrote:
+>> My country has the following regulatory.bin lines:
+>>
+>> country PT:
+>> (2402.000 - 2482.000 @ 40.000), (N/A, 20.00)
+>> (5170.000 - >> 5250.000 @ 40.000), (N/A, 20.00)
+>> (5250.000 - 5330.000 @ 40.000), (N/A, 20.00), DFS <------ removed whole line
+>> (5490.000 - 5710.000 @ 40.000), (N/A, 27.00), DFS <------ removed whole line
+>>
+>> If I remove the last two lines, everything works as expected, i.e., NO
+>> "Microsode SW error". If I include any of the last two, the Microcode
+>> will issue an error.
+>>
+>> I've tried every combination of those lines except just one of
+>> "(5250.000 - 5330.000 @ 40.000), (N/A, 20.00), DFS" OR "(5490.000 -
+>> 5710.000 @ 40.000), (N/A, 27.00), DFS".
+>
+> Attached patch stop to trigger error on my setup with "iw dev wlan0 scan
+> passive". Can you check if it also fix problem on your normal wireless
+> workload?
+
+It does seem fixed! However: I had to tweak a little the patch
+(attached, for convenience of anyone else following the thread: "IL_"
+-> "IWL_", file to patch is different and paragraphs are different).
+
+Also, probably unrelated, I got _just once_ another firmware error
+("iwl3945 Command REPLY_RATE_SCALE failed: FW Error
+iwl3945 Error setting HW rate table: FFFFFFFB") but since the kernels
+have changed and I've also changed to the PAE kernel, it's probably
+unrelated to the patch (also I'm using swcrypto=0 which may help).
+I'll continue testing but unless there is some other issue I won't
+report back.
+
+Thank you for the fix!
 -- 
-1.7.5.4
+Pedro
 
+--f46d0444ee55611a5504b6bb871d
+Content-Type: text/x-patch; charset=US-ASCII;
+	name="iwlegacy-CUSTOM-PEDRO-do-not-promote-to-active-scan-on-transmistion-detect.patch"
+Content-Disposition: attachment;
+	filename="iwlegacy-CUSTOM-PEDRO-do-not-promote-to-active-scan-on-transmistion-detect.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gxj43lm31
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bGVnYWN5L2l3bDM5NDUtYmFzZS5j
+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsZWdhY3kvaXdsMzk0NS1iYXNlLmMKaW5kZXggNjZl
+ZTE1Ni4uOTZmNWQzMSAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsZWdhY3kv
+aXdsMzk0NS1iYXNlLmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsZWdhY3kvaXdsMzk0
+NS1iYXNlLmMKQEAgLTI2NTksMTIgKzI2NTksMTIgQEAgaW50IGl3bDM5NDVfcmVxdWVzdF9zY2Fu
+KHN0cnVjdCBpd2xfcHJpdiAqcHJpdiwgc3RydWN0IGllZWU4MDIxMV92aWYgKnZpZikKIAl9CiAK
+IAkvKgotCSAqIElmIGFjdGl2ZSBzY2FuaW5nIGlzIHJlcXVlc3RlZCBidXQgYSBjZXJ0YWluIGNo
+YW5uZWwKLQkgKiBpcyBtYXJrZWQgcGFzc2l2ZSwgd2UgY2FuIGRvIGFjdGl2ZSBzY2FubmluZyBp
+ZiB3ZQotCSAqIGRldGVjdCB0cmFuc21pc3Npb25zLgorCSAqIElmIGFjdGl2ZSBzY2FuaW5nIGlz
+IHJlcXVlc3RlZCBidXQgYSBjZXJ0YWluIGNoYW5uZWwgaXMgbWFya2VkCisJICogcGFzc2l2ZSwg
+d2UgY2FuIGRvIGFjdGl2ZSBzY2FubmluZyBpZiB3ZSBkZXRlY3QgdHJhbnNtaXNzaW9ucy4gRm9y
+CisJICogcGFzc2l2ZSBvbmx5IHNjYW5uaW5nIGRpc2FibGUgc3dpdGNoaW5nIHRvIGFjdGl2ZSBv
+biBhbnkgY2hhbm5lbC4KIAkgKi8KIAlzY2FuLT5nb29kX0NSQ190aCA9IGlzX2FjdGl2ZSA/IElX
+TF9HT09EX0NSQ19USF9ERUZBVUxUIDoKLQkJCQkJSVdMX0dPT0RfQ1JDX1RIX0RJU0FCTEVEOwor
+CQkJCQlJV0xfR09PRF9DUkNfVEhfTkVWRVI7CiAKIAlsZW4gPSBpd2xfbGVnYWN5X2ZpbGxfcHJv
+YmVfcmVxKHByaXYsIChzdHJ1Y3QgaWVlZTgwMjExX21nbXQgKilzY2FuLT5kYXRhLAogCQkJCQl2
+aWYtPmFkZHIsIHByaXYtPnNjYW5fcmVxdWVzdC0+aWUsCg==
+--f46d0444ee55611a5504b6bb871d--
