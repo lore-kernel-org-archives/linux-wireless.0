@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:36961 "EHLO mgw2.diku.dk"
+Received: from nautica.notk.org ([91.121.71.147]:40510 "EHLO nautica.notk.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751153Ab2AIJk6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 04:40:58 -0500
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Bing Zhao <bzhao@marvell.com>
-Cc: kernel-janitors@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
-Subject: [PATCH 4/4] drivers/net/wireless/mwifiex/scan.c: convert GFP_KERNEL to GFP_ATOMIC
-Date: Mon,  9 Jan 2012 10:40:50 +0100
-Message-Id: <1326102050-30265-4-git-send-email-Julia.Lawall@lip6.fr> (sfid-20120109_104202_730773_0D33809D)
+	id S1750715Ab2AQAIt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jan 2012 19:08:49 -0500
+From: Dominique Martinet <asmadeus@codewreck.org>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	Dominique Martinet <asmadeus@codewreck.org>
+Subject: [PATCH v2] compat-wireless: build: Throw error if space in path
+Date: Tue, 17 Jan 2012 01:08:12 +0100
+Message-Id: <1326758892-32135-1-git-send-email-asmadeus@codewreck.org> (sfid-20120117_010904_758548_2C83D669)
+In-Reply-To: <CAB=NE6WAhddiUuf4yOfNAgqMF7GxM--ksDwEmvwdJdFYSjLGzA@mail.gmail.com>
+References: <CAB=NE6WAhddiUuf4yOfNAgqMF7GxM--ksDwEmvwdJdFYSjLGzA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Julia Lawall <julia.lawall@lip6.fr>
+Because of make limitations, the build will fail if there are spaces in
+the path leading to the compat-wireless directory.
+I tried to make it work anyway for a while and, while it probably is
+possible, it would involve rewriting part of kbuild and well...
+This at least throws up nicely if there is a space in the path.
 
-The function is called with locks held and thus should not use GFP_KERNEL.
-
-The semantic patch that makes this report is available
-in scripts/coccinelle/locks/call_kern.cocci.
-
-More information about semantic patching is available at
-http://coccinelle.lip6.fr/
-
-Signed-off-by: Julia Lawall <julia.lawall@lip6.fr>
-
+Signed-off-by: Dominique Martinet <asmadeus@codewreck.org>
 ---
- drivers/net/wireless/mwifiex/scan.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ Makefile |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 6396d33..98f1ca9 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -2001,7 +2001,7 @@ mwifiex_save_curr_bcn(struct mwifiex_private *priv)
+diff --git a/Makefile b/Makefile
+index d3a9d93..c81d680 100644
+--- a/Makefile
++++ b/Makefile
+@@ -47,6 +47,13 @@ obj-$(CONFIG_COMPAT_BLUETOOTH_MODULES) += drivers/bluetooth/
+ else
  
- 		kfree(priv->curr_bcn_buf);
- 		priv->curr_bcn_buf = kmalloc(curr_bss->beacon_buf_size,
--						GFP_KERNEL);
-+						GFP_ATOMIC);
- 		if (!priv->curr_bcn_buf) {
- 			dev_err(priv->adapter->dev,
- 					"failed to alloc curr_bcn_buf\n");
+ export PWD :=	$(shell pwd)
++
++# The build will fail if there is any space in PWD.
++ifneq (,$(findstring  $() ,$(PWD)))
++$(error "The path to this compat-wireless directory has spaces in it." \
++	"Please put it somewhere where there is no space")
++endif
++
+ CFLAGS += \
+         -DCOMPAT_BASE_TREE="\"$(shell cat compat_base_tree)\"" \
+         -DCOMPAT_BASE_TREE_VERSION="\"$(shell cat compat_base_tree_version)\"" \
+-- 
+1.7.2.5
 
