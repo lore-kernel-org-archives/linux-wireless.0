@@ -1,53 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:57580 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752196Ab2AURCr convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jan 2012 12:02:47 -0500
-Received: by obcva7 with SMTP id va7so1778890obc.19
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Jan 2012 09:02:47 -0800 (PST)
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:36211 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751356Ab2AQETQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 Jan 2012 23:19:16 -0500
+Received: by ghbg16 with SMTP id g16so2131998ghb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2012 20:19:15 -0800 (PST)
+Message-ID: <4F14F6C1.2070709@lwfinger.net> (sfid-20120117_051925_257080_B1775CA7)
+Date: Mon, 16 Jan 2012 22:19:13 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <4F19262B.4000102@broadcom.com>
-References: <CAC9WiBj8VkYe7ku7rc-e_+d7yNEAtEiozs8tnR_A1T1H3XjiSA@mail.gmail.com>
-	<CAC9WiBh5-vS6UmCYCs911WAudmWDtsgDPmHim71LtvaC81HsWQ@mail.gmail.com>
-	<4F19262B.4000102@broadcom.com>
-Date: Sat, 21 Jan 2012 18:02:47 +0100
-Message-ID: <CAC9WiBi2Zo_WbDOhLnr-e8YV+xvDufTmg7PWQ0fZPtjVae-+hw@mail.gmail.com> (sfid-20120121_180250_808587_A3CE8F1C)
-Subject: Re: brcmsmac broken with 3.2
-From: Francis Moreau <francis.moro@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Alwin Beukers <alwin@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Gerhard J Norkus <gnorkus@comcast.net>
+CC: linux-wireless@vger.kernel.org,
+	'George0505' <george0505@realtek.com>,
+	'georgia' <georgia@realtek.com>
+Subject: Re: RTL8192CU problems with EAPOL
+References: <loom.20120117T033430-62@post.gmane.org>
+In-Reply-To: <loom.20120117T033430-62@post.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 20, 2012 at 9:30 AM, Arend van Spriel <arend@broadcom.com> wrote:
+On 01/16/2012 08:54 PM, Gerhard J Norkus wrote:
+> I'm using a BeagleBoard-xM with Ubuntu 11.10 on it.  The problem is with a
+> NetGear WNA1000M using the RTL8192CU firwmare.  I'm quite new to Linux, so
+> treat me gently please!  I'd really like Larry Finger to reply if possible,
+> since he seems to have done the most work on this.
 >
-> Did this problem occur with plain 3.2 kernel. I checked out the v3.2
-> mainline tag and looked at line 2979:ieee80211_rx():
-> 2975:        /*
-> 2976:         * The same happens when we're not even started,
-> 2977:         * but that's worth a warning.
-> 2978:         */
-> 2979:        if (WARN_ON(!local->started))
-> 2980:                goto drop;
+> What happens is I cannot connect to my wireless access point that has been
+> setup using the following hostapd.conf:
 >
->>> ieee80211_rx+0x91b/0x9e0 [mac80211]()
->>> [36370.370775] Hardware name: Vostro 3500
->>> [36370.370870] Pid: 0, comm: swapper/0 Tainted: G        WC O 3.2.0
+> interface=wlan1
+> driver=nl80211
+> ssid=EnvisicAccessPoint
+> hw_mode=g
+> channel=1
+> auth_algs=3
+> wpa=3
+> wpa_passphrase=GoofyPhrase
+> wpa_key_mgmt=WPA-PSK
+> wpa_pairwise=TKIP CCMP
+> rsn_pairwise=CCMP
+> macaddr_acl=0
+> ignore_broadcast_ssid=0
+> ctrl_interface=/var/run/hostapd
+> ctrl_interface_group=0
+> eapol_key_index_workaround=0
 >
-> I guess brcmsmac is sending up a received wireless packet to mac80211
-> and it is dropped, because mac80211 did not yet call the start callback.
-> It is just a warning so if you are having problems connecting to an AP
-> you may have other issues.
+> I already have isc-dhcp-server running in the background pointing to wlan1.  I
+> launch hostapd using the following command:
+>
+> hostapd -dd /etc/hostapd/hostapd.conf
+>
+> I get a bunch of output to the console, and when I try to connect using my
+> Windows 7 machine, it seems like it's trying to negotiate a connection, however
+> it does not succeed and repeatedly gives me the following in the output log:
+>
+> WPA:  00:1a:73:bb:f8:11 WPA_PTK entering state PTKSTART
+> wlan1:  STA 00:1a:73:bb:f8:11 WPA: sending 1/4 msg of 4-Way handshake
+> WPA: Send EAPOL(version=2 secure=0 mic=0 ack=1 install=0 pairwise=8...
+> wlan1: STA 00:1a:73:bb:f8:11 WPA:  EAPOL-Key timeout
+>
+> Eventually it unauthorizes the port and deauthenticates it.  I'm not sure how
+> to proceed so as to get a proper connection.  My BeagleBoard has the drivers
+> stored at /lib/modules/3.1.6-x6/kernel/drivers/net/wireless/rtlwifi/rtl8192cu
+> and the firmware stored at /lib/firmware/rtlwifi.
+>
+> A dump of lsmod yields the following:
+> Module               Size  Used by
+> arc4                 1195  2
+> rtl8192cu           89347  0
+> rtl8192cu_common    62334  1 rtl8192cu
+> rtlwifi             71274  1 rtl8192cu
+> mac80211           259211  3 rtl8192cu,rtl8192c_common,rtlwifi
+> cfg80211           164606  2 rtlwifi,mac80211
+> rfkill              17026  1 cfg80211
+> smsc95xx            10950  0
+> usbhid              34524  0
+> gpio_keys            6801  0
+> rtc_ds1307           6350  0
+> rtc_twl              4402  0
+>
+> Can you point me in the right direction?  I've burned many hours on this and
+> would like to use this dongle for a 3D scanner we're building...
 
-After this warning I can't connect to an AP anymore, I have to unload
-and reload the brcmsmac module.
+I was the person that took the Realtek vendor driver, and reworked it to meet 
+Linux standards for kernel code; however, I have never seen any documentation on 
+the hardware, thus my ability to fix things are limited.
 
-Thanks for your time.
--- 
-Francis
+I know that rtl8192cu does not work in AP mode, and I have spent some time 
+trying to find out why, but I have had limited success. The driver transmits 
+beacons, and starts the association process, but it never really transmits data 
+packets. I'm certain that it is only a minor point, but so far there is no solution.
+
+It is possible that the drivers on the Realtek site might work in AP mode, but I 
+have no experience with that. I would certainly recommend that you try them to 
+get your product working. As I recall, there are two varieties - one that has 
+its own MAC layer, and the one that uses mac80211, which is the one that I 
+converted. To use hostapd, you will need the latter.
+
+I added my contacts at Realtek to the Cc.
+
+Larry
