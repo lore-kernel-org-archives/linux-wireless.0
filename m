@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43689 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751659Ab2AIRxP (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:57258 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753540Ab2AQNFa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 12:53:15 -0500
-Message-ID: <4F0B2946.4040503@qca.qualcomm.com> (sfid-20120109_185318_984263_D10FD880)
-Date: Mon, 9 Jan 2012 19:52:06 +0200
+	Tue, 17 Jan 2012 08:05:30 -0500
+Subject: [PATCH 1/3] ath6kl: use netdev_features_t
+To: kvalo@qca.qualcomm.com
 From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Tue, 17 Jan 2012 15:05:19 +0200
+Message-ID: <20120117130519.22832.29908.stgit@localhost6.localdomain6> (sfid-20120117_140532_958607_1A1B1135)
 MIME-Version: 1.0
-To: <rmani@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH 0/8] Allow the user to define suspend mode
-References: <1326098182-9103-1-git-send-email-rmani@qca.qualcomm.com>
-In-Reply-To: <1326098182-9103-1-git-send-email-rmani@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/2012 10:36 AM, rmani@qca.qualcomm.com wrote:
+Commit c8f44affb7 ("net: introduce and use netdev_features_t for
+device features sets") added netdev_features_t to ndo_set_features.
+Change ath6kl to use the new type.
 
-> This series of patch enables the user to specify the suspend mode 
-> via module parameter (suspend_mode) while doing insmod of the driver.
-> 
->    To select Cut Power mode:
->       insmod ath6kl_sdio.ko suspend_mode = 1
-> 
->    To select Deep Sleep mode:
->       insmod ath6kl_sdio.ko suspend_mode = 2
-> 
->    To select WOW suspend mode:
->       insmod ath6kl_sdio.ko suspend_mode = 3
-> 
-> Existing module param 'suspend_cutpower' variable is renamed to 
-> 'suspend_mode' for this purspose.
+This fixes a warning:
 
-I'm not sure about this one. In a way this makes sense so that user can
-force the particular suspend mode, but on the other hand I'm not sure if
-this is a bit too much.
+ath6kl/main.c:1170: warning: initialization from incompatible pointer type
 
-J&J (John and Johannes), what do you think? Is this acceptable?
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/main.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Kalle
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index 0a6d6e2..3a3b2cc 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -1021,7 +1021,8 @@ static struct net_device_stats *ath6kl_get_stats(struct net_device *dev)
+ 	return &vif->net_stats;
+ }
+ 
+-static int ath6kl_set_features(struct net_device *dev, u32 features)
++static int ath6kl_set_features(struct net_device *dev,
++			       netdev_features_t features)
+ {
+ 	struct ath6kl_vif *vif = netdev_priv(dev);
+ 	struct ath6kl *ar = vif->ar;
+
