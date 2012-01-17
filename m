@@ -1,63 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:6488 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751545Ab2ASR0S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jan 2012 12:26:18 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
+Received: from latitanza.investici.org ([82.94.249.234]:42174 "EHLO
+	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756261Ab2AQXLz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 Jan 2012 18:11:55 -0500
+From: Antonio Quartulli <ordex@autistici.org>
+To: "John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 3.3] iwlwifi: fix PCI-E transport "inta" race
-Date: Thu, 19 Jan 2012 08:20:57 -0800
-Message-Id: <1326990057-31169-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120119_182622_400449_C04EDD28)
+	Johannes Berg <johannes@sipsolutions.net>,
+	Antonio Quartulli <ordex@autistici.org>
+Subject: [PATCHv5 2/2] mac80211: in IBSS use the Auth frame to trigger STA reinsertion
+Date: Wed, 18 Jan 2012 00:10:44 +0100
+Message-Id: <1326841844-6923-2-git-send-email-ordex@autistici.org> (sfid-20120118_001159_080784_9C74286C)
+In-Reply-To: <1326841844-6923-1-git-send-email-ordex@autistici.org>
+References: <1326841844-6923-1-git-send-email-ordex@autistici.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+In case of a node re-joining the cell the sta_info structure belonging to it is
+first destroyed and then reinserted. In this way its internal state is reset.
 
-When an interrupt comes in, we read the reason
-bits and collect them into "trans_pcie->inta".
-This happens with the spinlock held. However,
-there's a bug resetting this variable -- that
-happens after the spinlock has been released.
-This means that it is possible for interrupts
-to be missed if the reset happens after some
-other interrupt reasons were already added to
-the variable.
+The joining operation is recognised thank the Auth frame being received.
 
-I found this by code inspection, looking for a
-reason that we sometimes see random commands
-time out. It seems possible that this causes
-such behaviour, but I can't say for sure right
-now since it happens extremely infrequently on
-my test systems.
+This operation is helpful in case of a node being rebooted that is joining the
+ad-hoc cell again, before its purge timeout on other nodes expires.
 
-Cc: stable@vger.kernel.org [3.2]
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Antonio Quartulli <ordex@autistici.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/ibss.c |   85 +++++++++++++++++++++++++++++---------------------
+ 1 files changed, 49 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-index 752493f..65d1f05 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-@@ -972,11 +972,11 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
- 	}
- #endif
+diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
+index 1b6e9a8..0a4094f 100644
+--- a/net/mac80211/ibss.c
++++ b/net/mac80211/ibss.c
+@@ -36,31 +36,6 @@
+ #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
  
--	spin_unlock_irqrestore(&trans->shrd->lock, flags);
+ 
+-static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
+-					struct ieee80211_mgmt *mgmt,
+-					size_t len)
+-{
+-	u16 auth_alg, auth_transaction;
 -
- 	/* saved interrupt in inta variable now we can reset trans_pcie->inta */
- 	trans_pcie->inta = 0;
+-	lockdep_assert_held(&sdata->u.ibss.mtx);
+-
+-	if (len < 24 + 6)
+-		return;
+-
+-	auth_alg = le16_to_cpu(mgmt->u.auth.auth_alg);
+-	auth_transaction = le16_to_cpu(mgmt->u.auth.auth_transaction);
+-
+-	/*
+-	 * IEEE 802.11 standard does not require authentication in IBSS
+-	 * networks and most implementations do not seem to use it.
+-	 * However, try to reply to authentication attempts if someone
+-	 * has actually implemented this.
+-	 */
+-	if (auth_alg == WLAN_AUTH_OPEN && auth_transaction == 1)
+-		ieee80211_send_auth(sdata, 2, WLAN_AUTH_OPEN, NULL, 0, mgmt->sa,
+-				    sdata->u.ibss.bssid, NULL, 0, 0);
+-}
+-
+ static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 				      const u8 *bssid, const int beacon_int,
+ 				      struct ieee80211_channel *chan,
+@@ -275,7 +250,8 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
+ 				  cbss->tsf);
+ }
  
-+	spin_unlock_irqrestore(&trans->shrd->lock, flags);
+-static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
++static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
++						  bool auth)
+ 	__acquires(RCU)
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+@@ -298,20 +274,22 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
+ 	/* If it fails, maybe we raced another insertion? */
+ 	if (sta_info_insert_rcu(sta))
+ 		return sta_info_get(sdata, addr);
++	if (auth) {
+ #ifdef CONFIG_MAC80211_IBSS_DEBUG
+-	printk(KERN_DEBUG "TX Auth SA=%pM DA=%pM BSSID=%pM"
+-	       "(auth_transaction=1)\n", sdata->vif.addr,
+-	       sdata->u.ibss.bssid, addr);
++		printk(KERN_DEBUG "TX Auth SA=%pM DA=%pM BSSID=%pM"
++		       "(auth_transaction=1)\n", sdata->vif.addr,
++		       sdata->u.ibss.bssid, addr);
+ #endif
+-	ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, NULL, 0,
+-			    addr, sdata->u.ibss.bssid, NULL, 0, 0);
++		ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, NULL, 0,
++				    addr, sdata->u.ibss.bssid, NULL, 0, 0);
++	}
+ 	return sta;
+ }
+ 
+ static struct sta_info *
+ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 		       const u8 *bssid, const u8 *addr,
+-		       u32 supp_rates)
++		       u32 supp_rates, bool auth)
+ 	__acquires(RCU)
+ {
+ 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
+@@ -353,7 +331,42 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
+ 	sta->sta.supp_rates[band] = supp_rates |
+ 			ieee80211_mandatory_rates(local, band);
+ 
+-	return ieee80211_ibss_finish_sta(sta);
++	return ieee80211_ibss_finish_sta(sta, auth);
++}
 +
- 	/* Now service all interrupt bits discovered above. */
- 	if (inta & CSR_INT_BIT_HW_ERR) {
- 		IWL_ERR(trans, "Hardware error detected.  Restarting.\n");
++static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
++					struct ieee80211_mgmt *mgmt,
++					size_t len)
++{
++	u16 auth_alg, auth_transaction;
++
++	lockdep_assert_held(&sdata->u.ibss.mtx);
++
++	if (len < 24 + 6)
++		return;
++
++	auth_alg = le16_to_cpu(mgmt->u.auth.auth_alg);
++	auth_transaction = le16_to_cpu(mgmt->u.auth.auth_transaction);
++
++	if (auth_alg != WLAN_AUTH_OPEN || auth_transaction != 1)
++		return;
++#ifdef CONFIG_MAC80211_IBSS_DEBUG
++	printk(KERN_DEBUG "%s: RX Auth SA=%pM DA=%pM BSSID=%pM."
++	       "(auth_transaction=%d)\n",
++	       sdata->name, mgmt->sa, mgmt->da, mgmt->bssid, auth_transaction);
++#endif
++	sta_info_destroy_addr(sdata, mgmt->sa);
++	ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0, false);
++	rcu_read_unlock();
++
++	/*
++	 * IEEE 802.11 standard does not require authentication in IBSS
++	 * networks and most implementations do not seem to use it.
++	 * However, try to reply to authentication attempts if someone
++	 * has actually implemented this.
++	 */
++	ieee80211_send_auth(sdata, 2, WLAN_AUTH_OPEN, NULL, 0,
++			    mgmt->sa, sdata->u.ibss.bssid, NULL, 0, 0);
+ }
+ 
+ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+@@ -418,7 +431,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 			} else {
+ 				rcu_read_unlock();
+ 				sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid,
+-						mgmt->sa, supp_rates);
++						mgmt->sa, supp_rates, true);
+ 			}
+ 		}
+ 
+@@ -546,7 +559,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_sta_join_ibss(sdata, bss);
+ 		supp_rates = ieee80211_sta_get_rates(local, elems, band);
+ 		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
+-				       supp_rates);
++				       supp_rates, true);
+ 		rcu_read_unlock();
+ 	}
+ 
+@@ -951,7 +964,7 @@ void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
+ 		list_del(&sta->list);
+ 		spin_unlock_bh(&ifibss->incomplete_lock);
+ 
+-		ieee80211_ibss_finish_sta(sta);
++		ieee80211_ibss_finish_sta(sta, true);
+ 		rcu_read_unlock();
+ 		spin_lock_bh(&ifibss->incomplete_lock);
+ 	}
 -- 
-1.7.0.4
+1.7.3.4
 
