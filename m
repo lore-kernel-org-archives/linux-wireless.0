@@ -1,57 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:30882 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752999Ab2AYISZ (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:48583 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750758Ab2AQBRL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jan 2012 03:18:25 -0500
-Date: Wed, 25 Jan 2012 11:18:15 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: zajec5@gmail.com
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: re: b43: N-PHY: implement RSSI calibration for rev3+
-Message-ID: <20120125081815.GA19911@elgon.mountain> (sfid-20120125_091830_134310_16C13896)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Mon, 16 Jan 2012 20:17:11 -0500
+Date: Mon, 16 Jan 2012 20:17:03 -0500 (EST)
+Message-Id: <20120116.201703.109506071619281024.davem@davemloft.net> (sfid-20120117_021714_838299_2DFE893D)
+To: julian.calaby@gmail.com
+Cc: torvalds@linux-foundation.org, keithp@keithp.com,
+	linux-wireless@vger.kernel.org, zajec5@gmail.com
+Subject: Re: MBA resume wedge due to wireless fixed yet?
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CAGRGNgUhGs+30WpppKvH110qBMcSss3xKEoNH_Tv+ZEoKWRJhg@mail.gmail.com>
+References: <CAGRGNgVL-tmY8e2hk43hQQot6YwvEWcQYwoSHLtQGj4JR+Nk3w@mail.gmail.com>
+	<CA+55aFz6qAY+q+Fes4gZdit1V_XQO7hcqp+V=ytuY=XYq2Tu8Q@mail.gmail.com>
+	<CAGRGNgUhGs+30WpppKvH110qBMcSss3xKEoNH_Tv+ZEoKWRJhg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Rafał Miłecki,
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 17 Jan 2012 12:09:03 +1100
 
-The patch e0c9a0219a8f: "b43: N-PHY: implement RSSI calibration for 
-rev3+" from Jan 5, 2012, leads to the following Smatch warning:
-drivers/net/wireless/b43/phy_n.c +1381 b43_nphy_rev3_rssi_cal()
-	 error: buffer overflow 'results[j]' 4 <= 4
+> Hi,
+> 
+> On Tue, Jan 17, 2012 at 11:57, Linus Torvalds
+> <torvalds@linux-foundation.org> wrote:
+>> On Mon, Jan 16, 2012 at 4:37 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+>>> Hi all,
+>>>
+>>> I have a stupid question:
+>>>
+>>> On Tue, Jan 17, 2012 at 10:56, Linus Torvalds
+>>> <torvalds@linux-foundation.org> wrote:
+>>>> I have patches, but haven't committed them because I was kind of
+>>>> expecting them to go through the wireless tree.
+>>>
+>>> Then why were these patches never posted to linux-wireless?
+>>
+>> They were posted to at least netdev, they were cc'd to the top-level
+>> maintainers (both David and Linville), and the maintainers of the
+>> driver itself.
+> 
+> I noticed all the names for the driver maintainers but my eyes must
+> have skipped over David and Linville.
 
-
-+               for (i = 0; i < 4; i++) {
-+                       s32 curr;
-+                       s32 mind = 40;
-+                       s32 minpoll = 249;
-+                       u8 minvcm = 0;
-+                       if (2 * core != i)
-+                               continue;
-+                       for (j = 0; j < 8; j++) {
-+                               curr = results[j][i] * results[j][i] +
-+                                       results[j][i + 1] * results[j][i];
-                                                   ^^^^^
-On the last iteration through the loop "i + 1" = 4.
-
-+                               if (curr < mind) {
-+                                       mind = curr;
-+                                       minvcm = j;
-+                               }
-+                               if (results[j][i] < minpoll)
-+                                       minpoll = results[j][i];
-+                       }
-+                       vcm_final = minvcm;
-+                       results_min[i] = minpoll;
-+               }
-
-I don't know the code well enough to say if this can happen or not.
-Perhaps on the last iteration we always hit the "if (2 * core != i)
-continue" condition.  Anyway, since this is the first time this has hit
-linux-next, I thought I would let you know.
-
-regards,
-dan carpenter
-
+I poked John and told him he needs to integrate those changes ASAP.
