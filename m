@@ -1,64 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm2-vm0.bullet.mail.ukl.yahoo.com ([217.146.183.226]:21345 "HELO
-	nm2-vm0.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751547Ab2A1T6n (ORCPT
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:49270 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750758Ab2AQDs3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jan 2012 14:58:43 -0500
-From: Marek Lindner <lindner_marek@yahoo.de>
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Subject: Re: [PATCH] mac80211: minstrel_ht should not override user supplied rts setting
-Date: Sun, 29 Jan 2012 03:58:34 +0800
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-References: <1327735027-30121-1-git-send-email-lindner_marek@yahoo.de> <4F2443BB.3000602@openwrt.org> <CALSq=BahchLsgVVeFei+_FQAchMAAg2yU1drmpZTgt0pVoJbJg@mail.gmail.com>
-In-Reply-To: <CALSq=BahchLsgVVeFei+_FQAchMAAg2yU1drmpZTgt0pVoJbJg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201201290358.35433.lindner_marek@yahoo.de> (sfid-20120128_205846_982803_A8C98A93)
+	Mon, 16 Jan 2012 22:48:29 -0500
+Received: by lami14 with SMTP id i14so1923475lam.6
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2012 19:48:27 -0800 (PST)
+Subject: Re: [PATCH 2/2] wl12xx: add operation to retrieve the MAC address
+ from Fuse ROM
+From: Luciano Coelho <coelho@ti.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAGRGNgVfJeEji1EtU5u_GfHN9sgKGEkDRg9ko7JdkMqUUFvFyw@mail.gmail.com>
+References: <1326723806-15960-1-git-send-email-coelho@ti.com>
+	 <1326723806-15960-3-git-send-email-coelho@ti.com>
+	 <CAGRGNgVfJeEji1EtU5u_GfHN9sgKGEkDRg9ko7JdkMqUUFvFyw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 17 Jan 2012 05:48:22 +0200
+Message-ID: <1326772102.4598.63.camel@cumari> (sfid-20120117_044833_913355_3EB6154B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, January 29, 2012 03:17:32 Daniel Halperin wrote:
-> Adaptive RTS/CTS is important to control for interference---RTS/CTS is
-> there so that other Wi-Fi devices know not to interfere with your
-> flow. It may well be the case that this is not a major problem in
-> whatever your scenario you're working, Marek, but it makes a big
-> difference in a many bad corner cases.
+On Tue, 2012-01-17 at 11:46 +1100, Julian Calaby wrote: 
+> Hi Luciano,
+> 
+> On Tue, Jan 17, 2012 at 01:23, Luciano Coelho <coelho@ti.com> wrote:
+> > Add a testmode command to retrieve the MAC address that is stored in
+> > the Fuse ROM in newer PGs.  In old PGs this operation is not
+> > supported.
+> >
+> > Signed-off-by: Luciano Coelho <coelho@ti.com>
+> > ---
+> >  drivers/net/wireless/wl12xx/boot.c     |    3 +-
+> >  drivers/net/wireless/wl12xx/boot.h     |   10 ----
+> >  drivers/net/wireless/wl12xx/reg.h      |   15 ++++++
+> >  drivers/net/wireless/wl12xx/testmode.c |   87 ++++++++++++++++++++++++++++++++
+> >  4 files changed, 104 insertions(+), 11 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/wl12xx/testmode.c b/drivers/net/wireless/wl12xx/testmode.c
+> > index 25093c0..613e0b3 100644
+> > --- a/drivers/net/wireless/wl12xx/testmode.c
+> > +++ b/drivers/net/wireless/wl12xx/testmode.c
+> > @@ -264,6 +266,89 @@ static int wl1271_tm_cmd_recover(struct wl1271 *wl, struct nlattr *tb[])
+> >        return 0;
+> >  }
+> >
+> > +static bool wl12xx_tm_mac_in_fuse(struct wl1271 *wl)
+> > +{
+> > +       bool supported = false;
+> > +       u8 major, minor;
+> > +
+> > +       if (wl->chip.id == CHIP_ID_1283_PG20) {
+> > +               major = (wl->hw_pg_ver & WL128X_PG_MAJOR_VER_MASK) >>
+> > +                       WL128X_PG_MAJOR_VER_OFFSET;
+> > +               minor = (wl->hw_pg_ver & WL128X_PG_MINOR_VER_MASK) >>
+> > +                       WL128X_PG_MINOR_VER_OFFSET;
+> > +
+> > +               /* in wl128x we have the MAC address if the PG is >= (2, 1) */
+> > +               if (major > 2 || (major == 2 && minor >= 1))
+> > +                       supported = true;
+> > +       } else {
+> > +               major = (wl->hw_pg_ver & WL127X_PG_MAJOR_VER_MASK) >>
+> > +                       WL127X_PG_MAJOR_VER_OFFSET;
+> > +               minor = (wl->hw_pg_ver & WL127X_PG_MINOR_VER_MASK) >>
+> > +                       WL127X_PG_MINOR_VER_OFFSET;
+> > +
+> > +               /* in wl127x we have the MAC address if the PG is >= (3, 1) */
+> > +               if (major == 3 && minor >= 1)
+> 
+> Is this test correct? Do only major == 3 PGs support this command?
 
-I am very well aware of what RTS/CTS is for and I am not against using it. 
-However, having the rate algorithm overriding the user setting for a specific 
-rate is extremely hard to grasp or debug.
-To give you an understanding where I am coming from: In our networks we 
-experienced extremely variable throughput ranging from 30Mbit/s (single 
-stream) to 0.2 Mbit/s in the next second. As you can imagine we were trying to 
-figure out what was going on. After spending some time and losing hair I 
-noticed that the RTS/CTS implementation of our driver (ath9k) is buggy. Every 
-once in a while the nodes would "battle" each other with RTS/CTS packets. 
-Strange enough for us, sometimes no RTS packets were sent and sometimes they 
-would battle. All attempts to disable RTS/CTS for the mere sake of testing(!) 
-was impossible. First I thought ath9k did not properly implement the "iw rts" 
-setting but that wasn't the case. After losing more hair I realized that 
-minstrel_ht, a rate control algorithm(!), was overriding my rts settings but 
-not always(!). The only way to make RTS shut up was to apply the posted patch.
+Yes, major == 3 and minor greater than or equal to 1.  Actually, there
+can't be a major greater than 3, because it's only 2 bits, so 3 is the
+maximum value.
 
-We should make a difference between the idea (using RTS to increase the 
-reliability) and its implementation. No matter from which angle I look, the 
-current implementation gives me much pain.
+-- 
+Cheers,
+Luca.
 
-
-> I'm with Felix: I could see adding an option that means "force never
-> use RTS/CTS" but I think we're at the right operating point when
-> interpreting the standard "RTS/CTS threshold" option.
-
-Actually, this option exists already. It's just minstrel_ht overriding it:
-iw phy <phyname> set rts <rts threshold|off>
-Put special attention towards the "off" at the end.
-
-If we let the rate algorithm override our rts settings it should at least be 
-communicated. I found no such mention anywhere. 
-
-I'd like to further stress the point that no other rate algorithm does this. 
-We create incoherent and hard to debug behavior.
-
-Regards,
-Marek
