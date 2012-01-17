@@ -1,84 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:44523 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756422Ab2ADRn7 convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:51574 "EHLO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751356Ab2AQEC2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jan 2012 12:43:59 -0500
-MIME-Version: 1.0
-In-Reply-To: <4F048905.5060004@lwfinger.net>
-References: <4f034b6c.ypfAbSdXSgMHtfqa%Larry.Finger@lwfinger.net>
- <CALSq=BaJSURcKU8RkCxxG=Mht4y04dVefKMESuHmiEdhwzc2Eg@mail.gmail.com> <4F048905.5060004@lwfinger.net>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Wed, 4 Jan 2012 09:43:37 -0800
-Message-ID: <CALSq=BYvjtTxwRCKJ1BTJkyd6vHiUwHFSZ669wWisd_b50yB9Q@mail.gmail.com> (sfid-20120104_184416_818541_2C04F4F6)
-Subject: Re: [PATCH] rtl8192cu: Fix WARNING on suspend/resume
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: John W Linville <linville@tuxdriver.com>,
-	torvalds@linux-foundation.org, linux-kernel@vger.kernel.org,
-	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=windows-1252
+	Mon, 16 Jan 2012 23:02:28 -0500
+Received: by mail-lpp01m010-f41.google.com with SMTP id w12so100361lag.0
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2012 20:02:27 -0800 (PST)
+Subject: Re: [PATCH 2/2] wl12xx: add operation to retrieve the MAC address
+ from Fuse ROM
+From: Luciano Coelho <coelho@ti.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAGRGNgWjCYsyzWCn0-j-A7Cqv2Prdftzxvu6WkjMzOdvOxcunA@mail.gmail.com>
+References: <1326723806-15960-1-git-send-email-coelho@ti.com>
+	 <1326723806-15960-3-git-send-email-coelho@ti.com>
+	 <CAGRGNgVfJeEji1EtU5u_GfHN9sgKGEkDRg9ko7JdkMqUUFvFyw@mail.gmail.com>
+	 <1326772102.4598.63.camel@cumari>
+	 <CAGRGNgWjCYsyzWCn0-j-A7Cqv2Prdftzxvu6WkjMzOdvOxcunA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 17 Jan 2012 06:02:24 +0200
+Message-ID: <1326772944.4598.67.camel@cumari> (sfid-20120117_050232_628806_9197F293)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 4, 2012 at 9:14 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 01/04/2012 10:16 AM, Daniel Halperin wrote:
->>
->> Sorry, Larry, I didn't see this til it was included in John's mail this
->> morning.
->>
->> On Tue, Jan 3, 2012 at 10:39 AM, Larry Finger<Larry.Finger@lwfinger.net>
->>  wrote:
->>>
->>>
->>> +#ifdef CONFIG_PM
->>> +static int rtl8192cu_usb_suspend(struct usb_interface *pusb_intf,
->>> +                                pm_message_t message)
->>> +{
->>> +       /* Increase usage_count to Save loaded fw across suspend/resume
->>> */
->>> +       atomic_inc(&usage_count);
->>> +       return 0;
->>> +}
->>> +
->>> +static int rtl8192cu_usb_resume(struct usb_interface *pusb_intf)
->>> +{
->>> +       atomic_dec(&usage_count);       /* after resume, decrease usage
->>> count */
->>> +       return 0;
->>> +}
->>> +#endif
->>
->>
->> Based on the warning-fix I submitted yesterday, this probably produces
->> a warning if CONFIG_PM is set but not CONFIG_PM_SLEEP. My patch was
->> for an ethernet driver, but iwlwifi and ath5k appear to follow the
->> same pattern using CONFIG_PM_SLEEP instead of the above.
->>
->> See: http://www.spinics.net/lists/netdev/msg184717.html for the patch
->> and http://www.spinics.net/lists/netdev/msg184715.html for the
->> discussion.
->
->
-> Thanks for the note. I will prepare a revised patch.
->
-> What architecture gave the warning? Of x86_64, I was unable to get
-> CONFIG_PM_SLEEP without CONFIG_PM.
->
+On Tue, 2012-01-17 at 14:51 +1100, Julian Calaby wrote: 
+> On Tue, Jan 17, 2012 at 14:48, Luciano Coelho <coelho@ti.com> wrote:
+> > On Tue, 2012-01-17 at 11:46 +1100, Julian Calaby wrote:
+> >> > +               /* in wl127x we have the MAC address if the PG is >= (3, 1) */
+> >> > +               if (major == 3 && minor >= 1)
+> >>
+> >> Is this test correct? Do only major == 3 PGs support this command?
+> >
+> > Yes, major == 3 and minor greater than or equal to 1.  Actually, there
+> > can't be a major greater than 3, because it's only 2 bits, so 3 is the
+> > maximum value.
+> 
+> Just wanted to check as it seemed odd compared to the block for the
+> WL128X parts. I'm guessing TI never expected these parts to last long
+> enough to have more than 3 major revisions =)
 
-x86-64. I realized that I actually explained this problem rather
-clearly when I fixed it for iwlwifi 5 months ago. :)
-https://github.com/mirrors/linux/commit/f090fba305658fe6e464e2fbd25fad81957ece26
+Yeah, and 16 HW revisions in total is usually more than enough.  And, if
+really needed, there may be some bits elsewhere to be used.
 
-"""
-CC [M]  drivers/net/wireless/iwlwifi/iwl-pci.o
-  drivers/net/wireless/iwlwifi/iwl-pci.c:506: warning:
-‘iwl_pci_suspend’ defined but not used
-  drivers/net/wireless/iwlwifi/iwl-pci.c:519: warning:
-‘iwl_pci_resume’ defined but not used
+I understand your point and I actually had a similar check as for
+wl128x, but then I realized the "major >= 3" was useless and removed it.
 
-These are only used if CONFIG_PM_SLEEP is enabled. CONFIG_PM depends
-(CONFIG_PM_SLEEP || CONFIG_PM_RUNTIME), so it can be set without
-CONFIG_PM_SLEEP selected.
-"""
+Thanks for looking into this! :)
 
-Dan
+-- 
+Cheers,
+Luca.
+
