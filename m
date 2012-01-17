@@ -1,34 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:5601 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756509Ab2ARLtW (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42911 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752179Ab2AQJbe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jan 2012 06:49:22 -0500
-Message-ID: <4F16B1B3.3030209@qca.qualcomm.com> (sfid-20120118_124925_571247_E497A68E)
-Date: Wed, 18 Jan 2012 13:49:07 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Alex Yang <xiaojuny@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] Add testmode 2 for 6003 ART.
-References: <1326807149-3809-1-git-send-email-kvalo@qca.qualcomm.com>
-In-Reply-To: <1326807149-3809-1-git-send-email-kvalo@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Tue, 17 Jan 2012 04:31:34 -0500
+Subject: [PATCH] mac80211: clean up aggregation destruction
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: Yogesh Ashok Powar <yogesh.powar@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 17 Jan 2012 10:31:30 +0100
+Message-ID: <1326792690.3342.5.camel@jlt3.sipsolutions.net> (sfid-20120117_103139_114874_83D99F38)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/17/2012 03:32 PM, Kalle Valo wrote:
-> From: Alex Yang <xiaojuny@qca.qualcomm.com>
-> 
-> Add testmode 2 for 6003 ART. When you insmod ath6kl_sdio.ko
-> testmode=2, ath6kl will load ART firmware utf.bin and testscript
-> nullTestFlow.bin. These files should be put in the firmware folder.
-> 
-> Signed-off-by: Alex Yang <xiaojuny@qca.qualcomm.com> --- 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks, applied with following changes:
+Yogesh's patch to destroy aggregation sessions when
+stations are destroyed was needed, but unnecessarily
+complex. Clean up this code.
 
-   kvalo: add "ath6kl:" to the title, word wrap the commit log and remove
-    extra line in the code
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+(resent to include the list)
 
-Kalle
+ net/mac80211/sta_info.c |   31 ++++++++-----------------------
+ 1 file changed, 8 insertions(+), 23 deletions(-)
+
+--- a/net/mac80211/sta_info.c	2012-01-17 10:23:59.000000000 +0100
++++ b/net/mac80211/sta_info.c	2012-01-17 10:28:14.000000000 +0100
+@@ -763,35 +763,20 @@ int __must_check __sta_info_destroy(stru
+ 	}
+ #endif
+ 
+-	/* There could be some memory leaks because of ampdu tx pending queue
+-	 * not being freed before destroying the station info.
+-	 *
+-	 * Make sure that such queues are purged before freeing the station
+-	 * info.
+-	 * TODO: We have to somehow postpone the full destruction
+-	 * until the aggregation stop completes. Refer
+-	 * http://thread.gmane.org/gmane.linux.kernel.wireless.general/81936
++	/*
++	 * Destroy aggregation state here. It would be nice to wait for the
++	 * driver to finish aggregation stop and then clean up, but for now
++	 * drivers have to handle aggregation stop being requested, followed
++	 * directly by station destruction.
+ 	 */
+-
+-	mutex_lock(&sta->ampdu_mlme.mtx);
+-
+ 	for (i = 0; i < STA_TID_NUM; i++) {
+-		tid_tx = rcu_dereference_protected_tid_tx(sta, i);
++		tid_tx = rcu_dereference_raw(sta->ampdu_mlme.tid_tx[i]);
+ 		if (!tid_tx)
+ 			continue;
+-		if (skb_queue_len(&tid_tx->pending)) {
+-#ifdef CONFIG_MAC80211_HT_DEBUG
+-			wiphy_debug(local->hw.wiphy, "TX A-MPDU  purging %d "
+-				"packets for tid=%d\n",
+-				skb_queue_len(&tid_tx->pending), i);
+-#endif /* CONFIG_MAC80211_HT_DEBUG */
+-			__skb_queue_purge(&tid_tx->pending);
+-		}
+-		kfree_rcu(tid_tx, rcu_head);
++		__skb_queue_purge(&tid_tx->pending);
++		kfree(tid_tx);
+ 	}
+ 
+-	mutex_unlock(&sta->ampdu_mlme.mtx);
+-
+ 	sta_info_free(local, sta);
+ 
+ 	return 0;
+
+
+
