@@ -1,153 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:45180 "EHLO
-	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751963Ab2AZMjn (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57759 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753763Ab2AQPBS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 07:39:43 -0500
-Received: by ghrr18 with SMTP id r18so230683ghr.39
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 04:39:38 -0800 (PST)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
-	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
-	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
-	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
-	<nbd@nbd.name>
-Subject: [RFC 6/9] mac80211: add ap channel switch command/event
-Date: Thu, 26 Jan 2012 14:38:01 +0200
-Message-Id: <1327581484-22047-7-git-send-email-victorg@ti.com> (sfid-20120126_133953_381597_9794A966)
-In-Reply-To: <1327581484-22047-1-git-send-email-victorg@ti.com>
-References: <1327581484-22047-1-git-send-email-victorg@ti.com>
+	Tue, 17 Jan 2012 10:01:18 -0500
+Date: Tue, 17 Jan 2012 09:52:37 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com,
+	Alex Yang <xiaojuny@qca.qualcomm.com>
+Subject: Re: [PATCH] Add testmode 2 for 6003 ART.
+Message-ID: <20120117145237.GE12733@tuxdriver.com> (sfid-20120117_160131_786283_71DEB8C1)
+References: <1326807149-3809-1-git-send-email-kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1326807149-3809-1-git-send-email-kvalo@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New ieee80211_ap_process_chanswitch(), to handle a channel switch
-request for AP/GO.
+Please make sure to reference "ath6kl: " in your patch subject.
 
-New 'post_switch_block_tx' parameter in 'ieee80211_channel_switch'
-structure, which indicates whether transmission must be blocked after
-the scheduled channel switch, it should be set if the target channel
-is DFS channel.
+On Tue, Jan 17, 2012 at 03:32:29PM +0200, Kalle Valo wrote:
+> From: Alex Yang <xiaojuny@qca.qualcomm.com>
+> 
+> Add testmode 2 for 6003 ART. When you insmod ath6kl_sdio.ko testmode=2, ath6kl will load ART firmware utf.bin and testscript nullTestFlow.bin. These files should be put in the firmware folder.
+> 
+> Signed-off-by: Alex Yang <xiaojuny@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath6kl/core.h |    8 +++
+>  drivers/net/wireless/ath/ath6kl/init.c |  109 ++++++++++++++++++++++++++++++--
+>  2 files changed, 111 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+> index ba39539..f53594f 100644
+> --- a/drivers/net/wireless/ath/ath6kl/core.h
+> +++ b/drivers/net/wireless/ath/ath6kl/core.h
+> @@ -125,6 +125,8 @@ struct ath6kl_fw_ie {
+>  #define AR6003_HW_2_1_1_OTP_FILE		"otp.bin"
+>  #define AR6003_HW_2_1_1_FIRMWARE_FILE		"athwlan.bin"
+>  #define AR6003_HW_2_1_1_TCMD_FIRMWARE_FILE	"athtcmd_ram.bin"
+> +#define AR6003_HW_2_1_1_UTF_FIRMWARE_FILE	"utf.bin"
+> +#define AR6003_HW_2_1_1_TESTSCRIPT_FILE	"nullTestFlow.bin"
+>  #define AR6003_HW_2_1_1_PATCH_FILE		"data.patch.bin"
+>  #define AR6003_HW_2_1_1_BOARD_DATA_FILE "ath6k/AR6003/hw2.1.1/bdata.bin"
+>  #define AR6003_HW_2_1_1_DEFAULT_BOARD_DATA_FILE	\
+> @@ -592,6 +594,7 @@ struct ath6kl {
+>  		u32 board_addr;
+>  		u32 refclk_hz;
+>  		u32 uarttx_pin;
+> +		u32 testscript_addr;
+>  
+>  		struct ath6kl_hw_fw {
+>  			const char *dir;
+> @@ -599,6 +602,8 @@ struct ath6kl {
+>  			const char *fw;
+>  			const char *tcmd;
+>  			const char *patch;
+> +			const char *utf;
+> +			const char *testscript;
+>  		} fw;
+>  
+>  		const char *fw_board;
+> @@ -624,6 +629,9 @@ struct ath6kl {
+>  	u8 *fw_patch;
+>  	size_t fw_patch_len;
+>  
+> +	u8 *fw_testscript;
+> +	size_t fw_testscript_len;
+> +
+>  	unsigned int fw_api;
+>  	unsigned long fw_capabilities[ATH6KL_CAPABILITY_LEN];
+>  
+> diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+> index e5969c1..6227928 100644
+> --- a/drivers/net/wireless/ath/ath6kl/init.c
+> +++ b/drivers/net/wireless/ath/ath6kl/init.c
+> @@ -69,6 +69,7 @@ static const struct ath6kl_hw hw_list[] = {
+>  		.reserved_ram_size		= 512,
+>  		.refclk_hz			= 26000000,
+>  		.uarttx_pin			= 8,
+> +		.testscript_addr		= 0x57ef74,
+>  
+>  		.fw = {
+>  			.dir		= AR6003_HW_2_1_1_FW_DIR,
+> @@ -76,6 +77,8 @@ static const struct ath6kl_hw hw_list[] = {
+>  			.fw		= AR6003_HW_2_1_1_FIRMWARE_FILE,
+>  			.tcmd		= AR6003_HW_2_1_1_TCMD_FIRMWARE_FILE,
+>  			.patch		= AR6003_HW_2_1_1_PATCH_FILE,
+> +			.utf		= AR6003_HW_2_1_1_UTF_FIRMWARE_FILE,
+> +			.testscript	= AR6003_HW_2_1_1_TESTSCRIPT_FILE,
+>  		},
+>  
+>  		.fw_board		= AR6003_HW_2_1_1_BOARD_DATA_FILE,
+> @@ -620,6 +623,7 @@ void ath6kl_core_cleanup(struct ath6kl *ar)
+>  	kfree(ar->fw_otp);
+>  	kfree(ar->fw);
+>  	kfree(ar->fw_patch);
+> +	kfree(ar->fw_testscript);
+>  
+>  	ath6kl_deinit_ieee80211_hw(ar);
+>  }
+> @@ -771,14 +775,25 @@ static int ath6kl_fetch_fw_file(struct ath6kl *ar)
+>  		return 0;
+>  
+>  	if (testmode) {
+> -		if (ar->hw.fw.tcmd == NULL) {
+> -			ath6kl_warn("testmode not supported\n");
+> -			return -EOPNOTSUPP;
+> -		}
+> +		ath6kl_dbg(ATH6KL_DBG_BOOT, "testmode %d\n",
+> +				testmode);
+> +		if (testmode == 2) {
+> +			if (ar->hw.fw.utf == NULL) {
+> +				ath6kl_warn("testmode 2 not supported\n");
+> +				return -EOPNOTSUPP;
+> +			}
+>  
+> -		snprintf(filename, sizeof(filename), "%s/%s",
+> -			 ar->hw.fw.dir, ar->hw.fw.tcmd);
+> +			snprintf(filename, sizeof(filename), "%s/%s",
+> +				ar->hw.fw.dir, ar->hw.fw.utf);
+> +		} else {
+> +			if (ar->hw.fw.tcmd == NULL) {
+> +				ath6kl_warn("testmode 1 not supported\n");
+> +				return -EOPNOTSUPP;
+> +			}
+>  
+> +			snprintf(filename, sizeof(filename), "%s/%s",
+> +				ar->hw.fw.dir, ar->hw.fw.tcmd);
+> +		}
+>  		set_bit(TESTMODE, &ar->flag);
+>  
+>  		goto get_fw;
+> @@ -827,6 +842,35 @@ static int ath6kl_fetch_patch_file(struct ath6kl *ar)
+>  	return 0;
+>  }
+>  
+> +static int ath6kl_fetch_testscript_file(struct ath6kl *ar)
+> +{
+> +	char filename[100];
+> +	int ret;
+> +
+> +
+> +	if (testmode != 2)
+> +		return 0;
+> +
+> +	if (ar->fw_testscript != NULL)
+> +		return 0;
+> +
+> +	if (ar->hw.fw.testscript == NULL)
+> +		return 0;
+> +
+> +	snprintf(filename, sizeof(filename), "%s/%s",
+> +		ar->hw.fw.dir, ar->hw.fw.testscript);
+> +
+> +	ret = ath6kl_get_fw(ar, filename, &ar->fw_testscript,
+> +				&ar->fw_testscript_len);
+> +	if (ret) {
+> +		ath6kl_err("Failed to get testscript file %s: %d\n",
+> +			filename, ret);
+> +		return ret;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  static int ath6kl_fetch_fw_api1(struct ath6kl *ar)
+>  {
+>  	int ret;
+> @@ -843,6 +887,10 @@ static int ath6kl_fetch_fw_api1(struct ath6kl *ar)
+>  	if (ret)
+>  		return ret;
+>  
+> +	ret = ath6kl_fetch_testscript_file(ar);
+> +	if (ret)
+> +		return ret;
+> +
+>  	return 0;
+>  }
+>  
+> @@ -1266,6 +1314,50 @@ static int ath6kl_upload_patch(struct ath6kl *ar)
+>  	return 0;
+>  }
+>  
+> +static int ath6kl_upload_testscript(struct ath6kl *ar)
+> +{
+> +	u32 address, param;
+> +	int ret;
+> +
+> +	if (testmode != 2)
+> +		return 0;
+> +
+> +	if (ar->fw_testscript == NULL)
+> +		return 0;
+> +
+> +	address = ar->hw.testscript_addr;
+> +
+> +	ath6kl_dbg(ATH6KL_DBG_BOOT, "writing testscript to 0x%x (%zd B)\n",
+> +		address, ar->fw_testscript_len);
+> +
+> +	ret = ath6kl_bmi_write(ar, address, ar->fw_testscript,
+> +		ar->fw_testscript_len);
+> +	if (ret) {
+> +		ath6kl_err("Failed to write testscript file: %d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	param = address;
+> +	ath6kl_bmi_write(ar,
+> +			ath6kl_get_hi_item_addr(ar,
+> +			HI_ITEM(hi_ota_testscript)),
+> +			(unsigned char *) &param, 4);
+> +
+> +	param = 4096;
+> +	ath6kl_bmi_write(ar,
+> +			ath6kl_get_hi_item_addr(ar,
+> +			HI_ITEM(hi_end_ram_reserve_sz)),
+> +			(unsigned char *) &param, 4);
+> +
+> +	param = 1;
+> +	ath6kl_bmi_write(ar,
+> +			ath6kl_get_hi_item_addr(ar,
+> +			HI_ITEM(hi_test_apps_related)),
+> +			(unsigned char *) &param, 4);
+> +
+> +	return 0;
+> +}
+> +
+>  static int ath6kl_init_upload(struct ath6kl *ar)
+>  {
+>  	u32 param, options, sleep, address;
+> @@ -1374,6 +1466,11 @@ static int ath6kl_init_upload(struct ath6kl *ar)
+>  	if (status)
+>  		return status;
+>  
+> +	/* Download the test script */
+> +	status = ath6kl_upload_testscript(ar);
+> +	if (status)
+> +		return status;
+> +
+>  	/* Restore system sleep */
+>  	address = RTC_BASE_ADDRESS + SYSTEM_SLEEP_ADDRESS;
+>  	status = ath6kl_bmi_reg_write(ar, address, sleep);
+> -- 
+> 1.7.0.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-New ieee80211_ap_ch_switch_complete_notify() which notifies upper
-layers about channel switch complete event.
-
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
----
- include/net/mac80211.h |   15 +++++++++++++++
- net/mac80211/cfg.c     |   34 ++++++++++++++++++++++++++++++++++
- net/mac80211/mlme.c    |    9 +++++++++
- 3 files changed, 58 insertions(+), 0 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index d08b808..b0f4e67 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -841,12 +841,16 @@ struct ieee80211_conf {
-  *	the driver passed into mac80211.
-  * @block_tx: Indicates whether transmission must be blocked before the
-  *	scheduled channel switch, as indicated by the AP.
-+ * @post_switch_block_tx: Indicates whether transmission must be blocked after
-+ *	the scheduled channel switch, this should be set if the target channel
-+ *	is DFS channel.
-  * @channel: the new channel to switch to
-  * @count: the number of TBTT's until the channel switch event
-  */
- struct ieee80211_channel_switch {
- 	u64 timestamp;
- 	bool block_tx;
-+	bool post_switch_block_tx;
- 	struct ieee80211_channel *channel;
- 	u8 count;
- };
-@@ -3421,6 +3425,17 @@ void ieee80211_radar_detected_notify(struct ieee80211_vif *vif,
- 				     u16 freq, gfp_t gfp);
- 
- /**
-+ * ieee80211_ap_ch_switch_complete_notify - inform a configured connection that
-+ * channel switch is complete
-+ *
-+ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-+ * @gfp: context flags
-+ *
-+ */
-+void ieee80211_ap_ch_switch_complete_notify(struct ieee80211_vif *vif,
-+					    u16 freq, gfp_t gfp);
-+
-+/**
-  * ieee80211_get_operstate - get the operstate of the vif
-  *
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 2d85a97..89393c8 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -2044,6 +2044,39 @@ static int ieee80211_dfs_en_tx(struct wiphy *wiphy, struct net_device *dev)
- 	return ret;
- }
- 
-+static int ieee80211_ap_process_chanswitch(struct wiphy *wiphy,
-+					   struct net_device *dev,
-+					   u32 count, bool block_tx,
-+					   bool post_switch_block_tx,
-+					   u32 new_freq)
-+{
-+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-+	struct ieee80211_local *local = sdata->local;
-+	struct ieee80211_channel *new_ch;
-+	struct ieee80211_channel_switch ch_switch;
-+
-+	new_ch = ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
-+	if (!new_ch || new_ch->flags & IEEE80211_CHAN_DISABLED) {
-+		wiphy_debug(local->hw.wiphy,
-+			    "failed channel switch on freq: %d\n", new_freq);
-+		return -EINVAL;
-+	}
-+
-+	if (!local->ops->channel_switch)
-+		return -EOPNOTSUPP;
-+
-+	memset(&ch_switch, 0, sizeof(ch_switch));
-+	ch_switch.channel = new_ch;
-+	ch_switch.count = count;
-+	ch_switch.block_tx = block_tx;
-+	ch_switch.post_switch_block_tx = post_switch_block_tx;
-+
-+	mutex_lock(&local->mtx);
-+	drv_channel_switch(local, &ch_switch);
-+	mutex_unlock(&local->mtx);
-+	return 0;
-+}
-+
- static enum work_done_result
- ieee80211_offchan_tx_done(struct ieee80211_work *wk, struct sk_buff *skb)
- {
-@@ -2793,4 +2826,5 @@ struct cfg80211_ops mac80211_config_ops = {
- 	.set_noack_map = ieee80211_set_noack_map,
- 	.dfs_start_radar_detection = ieee80211_dfs_start_radar_detection,
- 	.dfs_en_tx = ieee80211_dfs_en_tx,
-+	.ap_channel_switch = ieee80211_ap_process_chanswitch,
- };
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 57aeb84..a39b8ed 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2878,6 +2878,15 @@ void ieee80211_radar_detected_notify(struct ieee80211_vif *vif,
- }
- EXPORT_SYMBOL(ieee80211_radar_detected_notify);
- 
-+void ieee80211_ap_ch_switch_complete_notify(struct ieee80211_vif *vif,
-+					    u16 freq, gfp_t gfp)
-+{
-+	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-+
-+	cfg80211_ap_ch_switch_complete_notify(sdata->dev, freq, gfp);
-+}
-+EXPORT_SYMBOL(ieee80211_ap_ch_switch_complete_notify);
-+
- unsigned char ieee80211_get_operstate(struct ieee80211_vif *vif)
- {
- 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
 -- 
-1.7.5.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
