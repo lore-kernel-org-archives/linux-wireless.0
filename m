@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:53979 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753461Ab2ACAhN (ORCPT
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:56746 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753695Ab2AQNFn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 19:37:13 -0500
-Date: Tue, 3 Jan 2012 00:37:02 +0000
-From: Matthew Garrett <mjg@redhat.com>
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Jack Stone <jwjstone@fastmail.fm>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Oliver Neukum <oliver@neukum.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-Message-ID: <20120103003701.GA17606@srcf.ucam.org> (sfid-20120103_013718_086504_7230ED0B)
-References: <20120102215028.GA15701@srcf.ucam.org>
- <CA+55aFz73GuHiOW1NoAuJLea_GKLepiZjrnrgpOKdQizPgnhoA@mail.gmail.com>
- <20120102221235.GA16012@srcf.ucam.org>
- <CA+55aFyHvmvast_kuNddU3iotReR1mOpKM4HGAw80ma8kn+2-g@mail.gmail.com>
- <20120102222920.GA16160@srcf.ucam.org>
- <CA+55aFyUK6X7ip2UXV9iT07=qezXfbw82wn6UKAN8JFQtYNs5Q@mail.gmail.com>
- <20120102230037.GA16458@srcf.ucam.org>
- <4F023E6B.2020307@fastmail.fm>
- <20120103001356.GA17183@srcf.ucam.org>
- <20120103002048.75c0104b@pyramind.ukuu.org.uk>
+	Tue, 17 Jan 2012 08:05:43 -0500
+Subject: [PATCH 2/3] ath6kl: remove -D__CHECK_ENDIAN__ from Makefile
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Tue, 17 Jan 2012 15:05:32 +0200
+Message-ID: <20120117130532.22832.21443.stgit@localhost6.localdomain6> (sfid-20120117_140545_640972_B9BA80DB)
+In-Reply-To: <20120117130519.22832.29908.stgit@localhost6.localdomain6>
+References: <20120117130519.22832.29908.stgit@localhost6.localdomain6>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120103002048.75c0104b@pyramind.ukuu.org.uk>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 03, 2012 at 12:20:48AM +0000, Alan Cox wrote:
-> > No, the uvcvideo driver would need to call out to load the firmware 
-> > loader driver, otherwise you'll never know to load the firmware loader 
-> > driver.
-> 
-> Does that not simply depend which driver has the relevant USB
-> identifiers ?
+As drivers/net/wireless/ath/Makefile contains the flag to enable
+endian checks there's no need to have it in ath6kl makefile anymore.
 
-If something presents as a class device then it's going to be picked up 
-by the class driver.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/Makefile |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+diff --git a/drivers/net/wireless/ath/ath6kl/Makefile b/drivers/net/wireless/ath/ath6kl/Makefile
+index 7070693..e24b617 100644
+--- a/drivers/net/wireless/ath/ath6kl/Makefile
++++ b/drivers/net/wireless/ath/ath6kl/Makefile
+@@ -33,5 +33,3 @@ ath6kl-y += txrx.o
+ ath6kl-y += wmi.o
+ ath6kl-y += sdio.o
+ ath6kl-$(CONFIG_NL80211_TESTMODE) += testmode.o
+-
+-ccflags-y += -D__CHECK_ENDIAN__
+
