@@ -1,28 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:57442 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:25163 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752654Ab2ABRrm (ORCPT
+	with ESMTP id S1750788Ab2AQAO1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 12:47:42 -0500
-Message-ID: <4F01DE07.3020502@qca.qualcomm.com> (sfid-20120102_184744_307525_6B47D61D)
-Date: Mon, 2 Jan 2012 18:40:39 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Mon, 16 Jan 2012 19:14:27 -0500
+Cc: <linux-wireless@vger.kernel.org>,
+	"Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+Subject: [PATCH 2/2] wireless-regdb: add FCC as the DFS region for US
+Date: Mon, 16 Jan 2012 16:12:57 -0800
+Message-ID: <1326759177-14160-3-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120117_011431_817523_E3553C25)
+In-Reply-To: <1326759177-14160-1-git-send-email-rodrigue@qca.qualcomm.com>
+References: <1326759177-14160-1-git-send-email-rodrigue@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Vivek Natarajan <nataraja@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: Remove redundant key_index check.
-References: <1325155719-4038-1-git-send-email-nataraja@qca.qualcomm.com>
-In-Reply-To: <1325155719-4038-1-git-send-email-nataraja@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/29/2011 12:48 PM, Vivek Natarajan wrote:
-> Less-than-zero comparison of an unsigned value is never true.
-> 
-> Signed-off-by: Vivek Natarajan <nataraja@qca.qualcomm.com>
+From: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
 
-Thanks, applied. I just changed the patch so that is WMI_MIN_KEY_INDEX
-completely removed.
+DFS master support in the US requires consideration for DFS
+requirements as defined by the FCC rules.
 
-Kalle
+Signed-off-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+---
+ db.txt |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/db.txt b/db.txt
+index f0b46d8..4b7e879 100644
+--- a/db.txt
++++ b/db.txt
+@@ -651,7 +651,7 @@ country TR:
+ country UA:
+ 	(2402 - 2482 @ 40), (N/A, 20)
+ 
+-country US:
++country US: DFS-FCC
+ 	(2402 - 2472 @ 40), (3, 27)
+ 	(5170 - 5250 @ 40), (3, 17)
+ 	(5250 - 5330 @ 40), (3, 20), DFS
+-- 
+1.7.4.15.g7811d
+
