@@ -1,39 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:37379 "EHLO
-	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752401Ab2AXS4A (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57760 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754199Ab2AQPBR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 13:56:00 -0500
-Received: by mail-lpp01m010-f44.google.com with SMTP id l5so654146lah.31
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2012 10:55:58 -0800 (PST)
-Subject: Re: [PATCH 2/2] wl12xx: remove wl1271_tx_update_filters
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1327421923-25586-2-git-send-email-eliad@wizery.com>
-References: <1327421923-25586-1-git-send-email-eliad@wizery.com>
-	 <1327421923-25586-2-git-send-email-eliad@wizery.com>
-Date: Tue, 24 Jan 2012 20:55:54 +0200
-Message-ID: <1327431354.3625.186.camel@cumari> (sfid-20120124_195603_545215_7C58CD22)
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+	Tue, 17 Jan 2012 10:01:17 -0500
+Date: Tue, 17 Jan 2012 09:48:03 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	Keith Packard <keithp@keithp.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: MBA resume wedge due to wireless fixed yet?
+Message-ID: <20120117144803.GD12733@tuxdriver.com> (sfid-20120117_160131_188019_1F1A0858)
+References: <86wr8rfbpf.fsf@sumi.keithp.com>
+ <CA+55aFwdHKhLXF+Utbk0A2jcshSeQmQ91YxBzvqSa3wXCKh8BA@mail.gmail.com>
+ <CAGRGNgVL-tmY8e2hk43hQQot6YwvEWcQYwoSHLtQGj4JR+Nk3w@mail.gmail.com>
+ <CA+55aFz6qAY+q+Fes4gZdit1V_XQO7hcqp+V=ytuY=XYq2Tu8Q@mail.gmail.com>
+ <CAGRGNgUhGs+30WpppKvH110qBMcSss3xKEoNH_Tv+ZEoKWRJhg@mail.gmail.com>
+ <CA+55aFxjSuFWn6WT=H+sZN3AGD1_E-2q6_NewZNjGAg6GBw=Pw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CA+55aFxjSuFWn6WT=H+sZN3AGD1_E-2q6_NewZNjGAg6GBw=Pw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-01-24 at 18:18 +0200, Eliad Peller wrote: 
-> wl1271_tx_update_filters() is used as some workaround
-> to open filters while roaming on the same channel.
+On Mon, Jan 16, 2012 at 05:19:01PM -0800, Linus Torvalds wrote:
+> On Mon, Jan 16, 2012 at 5:09 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> >
+> > I noticed all the names for the driver maintainers but my eyes must
+> > have skipped over David and Linville.
 > 
-> However, it doesn't handle roaming to a different channel,
-> and it might also sleep in the tx path, which is a bug.
+> Actually, they probably didn't. It looks like the series Rafał sent
+> out didn't have either David or Linville on it. And my series only had
+> Linville.
 > 
-> With the new auth/assoc redesign, roaming is much simpler,
-> and this function is not needed anymore.
+> I was sure I had David cc'd on some of it, but apparently that was
+> just in my confused mind.
 
-And is this okay without the redesign?
+I have them.  I merged 1/5 already, since Rafał marked it for
+"stable".  But Dave is right, we might as well merge the others
+now too.  I'll get to that ASAP.
 
-
+John
 -- 
-Cheers,
-Luca.
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
