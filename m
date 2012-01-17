@@ -1,98 +1,398 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:47742 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754953Ab2ACWHB convert rfc822-to-8bit (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:34249 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753097Ab2AQMJX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 17:07:01 -0500
-MIME-Version: 1.0
-In-Reply-To: <20120103205226.GA17131@kroah.com>
-References: <20111215191523.GA2561@tuxdriver.com>
-	<CACna6rw736JdkoM8zKxorCFd5oy08QTwWZ6PutoJPSr3ZN8hTg@mail.gmail.com>
-	<20111215213822.GB2561@tuxdriver.com>
-	<CACna6rz3qDpw4eJOoCXx7=z1719v7kS-Ou-WUseR9_vB-O2dag@mail.gmail.com>
-	<CACna6rxO2dC=Y3nv-d-w89MqyM0j0aumk=r5Yh_KEg=MwOcvEQ@mail.gmail.com>
-	<20120103205226.GA17131@kroah.com>
-Date: Tue, 3 Jan 2012 23:06:59 +0100
-Message-ID: <CACna6rwjrg6m3SEBxfYWgRSTN5_4-TuA0tdG6P2pFuUvwvvjZA@mail.gmail.com> (sfid-20120103_230725_239652_AA86B2B7)
-Subject: Re: pull request: wireless 2011-12-15
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Greg KH <greg@kroah.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 17 Jan 2012 07:09:23 -0500
+Received: by mail-yw0-f46.google.com with SMTP id o21so33558yho.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2012 04:09:22 -0800 (PST)
+From: ilanelias78@gmail.com
+To: samuel@sortiz.org, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Ilan Elias <ilane@ti.com>
+Subject: [PATCH v3 2/3] NFC: Download TI NFC init script
+Date: Tue, 17 Jan 2012 14:11:32 +0200
+Message-Id: <1326802293-11539-3-git-send-email-ilane@ti.com> (sfid-20120117_130926_721266_038D1847)
+In-Reply-To: <1326802293-11539-1-git-send-email-ilane@ti.com>
+References: <1326802293-11539-1-git-send-email-ilane@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 3 stycznia 2012 21:52 użytkownik Greg KH <greg@kroah.com> napisał:
-> On Mon, Dec 26, 2011 at 12:36:59AM +0100, Rafał Miłecki wrote:
->> W dniu 16 grudnia 2011 07:40 użytkownik Rafał Miłecki
->> <zajec5@gmail.com> napisał:
->> > W dniu 15 grudnia 2011 22:38 użytkownik John W. Linville
->> > <linville@tuxdriver.com> napisał:
->> >> On Thu, Dec 15, 2011 at 09:04:29PM +0100, Rafał Miłecki wrote:
->> >>> 2011/12/15 John W. Linville <linville@tuxdriver.com>:
->> >>> > commit 42a3b63bb2ca4996a3d1210a004eae2333f1119e
->> >>> >
->> >>> > Dave,
->> >>> >
->> >>> > Here are a few more fixes intended for the 3.2 release.  They are
->> >>> > all small and narrowly focused.
->> >>>
->> >>> John, I've made a mistake and didn't use [PATCH 3.2] header to make it
->> >>> clean my patch is fix. Could you take a look at
->> >>> [PATCH] bcma: support for suspend and resume
->> >>> please?
->> >>>
->> >>> It's not one-liner, but fixes lock ups, which I believe - we really
->> >>> want to avoid.
->> >>
->> >> It's late in the release cycle, and Dave specifically asked me to slow down.
->> >>
->> >> Are these suspend/resume lockups a regression?  Or have they always
->> >> been there?  Do they happen to everyone?
->> >
->> > The bug is present since first days of bcma. That's why I even decided
->> > to add stable to CC.
->> >
->> > Personally I've tested that only on 1 machine (I don't have more
->> > suspendable machines with mini PCIe slot). However all Macbook 8.1/8.2
->> > users have to remove b43 & bcma before suspending [0], they complain
->> > about that since ever.
->> >
->> > Arend: I know you're also complaining for suspend in bcma. Can you
->> > comment on this?
->> >
->> > [0] http://ubuntuforums.org/showthread.php?t=1695746
->>
->> User nephyrin on #bcm-users has confirmed this patch fixes
->> suspend&resume for him. Without this patch he got deadlock without
->> seeing any kernel panic logs - quite an ugly case.
->>
->> I still think this patch may be worth taking as fix and backporting too.
->
-> What patch specifically?  What is the git commit id of it in Linus's
-> tree?  Without that information, telling stable@ about it is
-> pointless...
+From: Ilan Elias <ilane@ti.com>
 
-Sorry Greg, it's about
+Download TI NFC init script during nfcwilink open operation,
+after the NFC channel is registered with TI shared transport.
+TI NFC init script is written in BTS format.
+First, read the chip version via a special vendor specific command.
+Second, we request the relevant BTS file from the user space, and
+then send the BTS commands to the chip.
 
-commit 775ab52142b02237a54184238e922251c59a2b5c
-Author: Rafał Miłecki <zajec5@gmail.com>
-Date:   Fri Dec 9 22:16:07 2011 +0100
+Signed-off-by: Ilan Elias <ilane@ti.com>
+---
+ drivers/nfc/nfcwilink.c |  288 ++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 284 insertions(+), 4 deletions(-)
 
-    bcma: support for suspend and resume
-
-    bcma used to lock up machine without enabling PCI or initializing CC.
-
-    Cc: stable@vger.kernel.org
-    Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-it's located in wireless-testing:
-git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-
-John didn't pass this to Linus yet.
-
+diff --git a/drivers/nfc/nfcwilink.c b/drivers/nfc/nfcwilink.c
+index ee60d08..90af28d 100644
+--- a/drivers/nfc/nfcwilink.c
++++ b/drivers/nfc/nfcwilink.c
+@@ -29,6 +29,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/module.h>
+ #include <linux/types.h>
++#include <linux/firmware.h>
+ #include <linux/nfc.h>
+ #include <net/nfc/nci.h>
+ #include <net/nfc/nci_core.h>
+@@ -41,6 +42,17 @@
+ #define NFCWILINK_OFFSET_LEN_IN_HDR	1
+ #define NFCWILINK_LEN_SIZE		2
+ #define NFCWILINK_REGISTER_TIMEOUT	8000	/* 8 sec */
++#define NFCWILINK_CMD_TIMEOUT		5000	/* 5 sec */
++
++#define BTS_FILE_NAME_MAX_SIZE		40
++#define BTS_FILE_HDR_MAGIC		0x42535442
++#define BTS_FILE_CMD_MAX_LEN		0xff
++#define BTS_FILE_ACTION_TYPE_SEND_CMD	1
++
++#define NCI_VS_NFCC_INFO_CMD_GID	0x2f
++#define NCI_VS_NFCC_INFO_CMD_OID	0x12
++#define NCI_VS_NFCC_INFO_RSP_GID	0x4f
++#define NCI_VS_NFCC_INFO_RSP_OID	0x12
+ 
+ struct nfcwilink_hdr {
+ 	__u8 chnl;
+@@ -48,6 +60,36 @@ struct nfcwilink_hdr {
+ 	__le16 len;
+ } __packed;
+ 
++struct nci_vs_nfcc_info_cmd {
++	__u8 gid;
++	__u8 oid;
++	__u8 plen;
++} __packed;
++
++struct nci_vs_nfcc_info_rsp {
++	__u8 gid;
++	__u8 oid;
++	__u8 plen;
++	__u8 status;
++	__u8 hw_id;
++	__u8 sw_ver_x;
++	__u8 sw_ver_z;
++	__u8 patch_id;
++} __packed;
++
++struct bts_file_hdr {
++	__le32 magic;
++	__le32 ver;
++	__u8 rfu[24];
++	__u8 actions[0];
++} __packed;
++
++struct bts_file_action {
++	__le16 type;
++	__le16 len;
++	__u8 data[0];
++} __packed;
++
+ struct nfcwilink {
+ 	struct platform_device		*pdev;
+ 	struct nci_dev			*ndev;
+@@ -55,14 +97,241 @@ struct nfcwilink {
+ 
+ 	char				st_register_cb_status;
+ 	long				(*st_write) (struct sk_buff *);
+-	struct completion		st_register_completed;
++
++	struct completion		completed;
++
++	struct nci_vs_nfcc_info_rsp	nfcc_info;
+ };
+ 
+ /* NFCWILINK driver flags */
+ enum {
+ 	NFCWILINK_RUNNING,
++	NFCWILINK_FW_DOWNLOAD,
+ };
+ 
++static int nfcwilink_send(struct sk_buff *skb);
++
++static inline struct sk_buff *nfcwilink_skb_alloc(unsigned int len, gfp_t how)
++{
++	struct sk_buff *skb;
++
++	skb = alloc_skb(len + NFCWILINK_HDR_LEN, how);
++	if (skb)
++		skb_reserve(skb, NFCWILINK_HDR_LEN);
++
++	return skb;
++}
++
++static void nfcwilink_fw_download_receive(struct nfcwilink *drv,
++						struct sk_buff *skb)
++{
++	struct nci_vs_nfcc_info_rsp *rsp = (void *)skb->data;
++
++	/* Detect NCI_VS_NFCC_INFO_RSP and store the result */
++	if ((skb->len > 3) && (rsp->gid == NCI_VS_NFCC_INFO_RSP_GID) &&
++		(rsp->oid == NCI_VS_NFCC_INFO_RSP_OID)) {
++		memcpy(&drv->nfcc_info, rsp,
++			sizeof(struct nci_vs_nfcc_info_rsp));
++	}
++
++	kfree_skb(skb);
++
++	complete(&drv->completed);
++}
++
++static int nfcwilink_get_bts_file_name(struct nfcwilink *drv, char *file_name)
++{
++	struct nci_vs_nfcc_info_cmd *cmd;
++	struct sk_buff *skb;
++	unsigned long comp_ret;
++	int rc;
++
++	nfc_dev_dbg(&drv->pdev->dev, "get_bts_file_name entry");
++
++	skb = nfcwilink_skb_alloc(sizeof(struct nci_vs_nfcc_info_cmd),
++					GFP_KERNEL);
++	if (!skb) {
++		nfc_dev_err(&drv->pdev->dev,
++				"no memory for nci_vs_nfcc_info_cmd");
++		return -ENOMEM;
++	}
++
++	skb->dev = (void *)drv->ndev;
++
++	cmd = (struct nci_vs_nfcc_info_cmd *)
++			skb_put(skb, sizeof(struct nci_vs_nfcc_info_cmd));
++	cmd->gid = NCI_VS_NFCC_INFO_CMD_GID;
++	cmd->oid = NCI_VS_NFCC_INFO_CMD_OID;
++	cmd->plen = 0;
++
++	drv->nfcc_info.plen = 0;
++
++	rc = nfcwilink_send(skb);
++	if (rc)
++		return rc;
++
++	comp_ret = wait_for_completion_timeout(&drv->completed,
++				msecs_to_jiffies(NFCWILINK_CMD_TIMEOUT));
++	nfc_dev_dbg(&drv->pdev->dev, "wait_for_completion_timeout returned %ld",
++			comp_ret);
++	if (comp_ret == 0) {
++		nfc_dev_err(&drv->pdev->dev,
++				"timeout on wait_for_completion_timeout");
++		return -ETIMEDOUT;
++	}
++
++	nfc_dev_dbg(&drv->pdev->dev, "nci_vs_nfcc_info_rsp: plen %d, status %d",
++			drv->nfcc_info.plen,
++			drv->nfcc_info.status);
++
++	if ((drv->nfcc_info.plen != 5) || (drv->nfcc_info.status != 0)) {
++		nfc_dev_err(&drv->pdev->dev,
++				"invalid nci_vs_nfcc_info_rsp");
++		return -EINVAL;
++	}
++
++	snprintf(file_name, BTS_FILE_NAME_MAX_SIZE,
++			"TINfcInit_%d.%d.%d.%d.bts",
++			drv->nfcc_info.hw_id,
++			drv->nfcc_info.sw_ver_x,
++			drv->nfcc_info.sw_ver_z,
++			drv->nfcc_info.patch_id);
++
++	nfc_dev_info(&drv->pdev->dev, "nfcwilink FW file name: %s", file_name);
++
++	return 0;
++}
++
++static int nfcwilink_send_bts_cmd(struct nfcwilink *drv, __u8 *data, int len)
++{
++	struct nfcwilink_hdr *hdr = (struct nfcwilink_hdr *)data;
++	struct sk_buff *skb;
++	unsigned long comp_ret;
++	int rc;
++
++	nfc_dev_dbg(&drv->pdev->dev, "send_bts_cmd entry");
++
++	/* verify valid cmd for the NFC channel */
++	if ((len <= sizeof(struct nfcwilink_hdr)) ||
++		(len > BTS_FILE_CMD_MAX_LEN) ||
++		(hdr->chnl != NFCWILINK_CHNL) ||
++		(hdr->opcode != NFCWILINK_OPCODE)) {
++		nfc_dev_err(&drv->pdev->dev,
++			"ignoring invalid bts cmd, len %d, chnl %d, opcode %d",
++			len, hdr->chnl, hdr->opcode);
++		return 0;
++	}
++
++	/* remove the ST header */
++	len -= sizeof(struct nfcwilink_hdr);
++	data += sizeof(struct nfcwilink_hdr);
++
++	skb = nfcwilink_skb_alloc(len, GFP_KERNEL);
++	if (!skb) {
++		nfc_dev_err(&drv->pdev->dev, "no memory for bts cmd");
++		return -ENOMEM;
++	}
++
++	skb->dev = (void *)drv->ndev;
++
++	memcpy(skb_put(skb, len), data, len);
++
++	rc = nfcwilink_send(skb);
++	if (rc)
++		return rc;
++
++	comp_ret = wait_for_completion_timeout(&drv->completed,
++				msecs_to_jiffies(NFCWILINK_CMD_TIMEOUT));
++	nfc_dev_dbg(&drv->pdev->dev, "wait_for_completion_timeout returned %ld",
++			comp_ret);
++	if (comp_ret == 0) {
++		nfc_dev_err(&drv->pdev->dev,
++				"timeout on wait_for_completion_timeout");
++		return -ETIMEDOUT;
++	}
++
++	return 0;
++}
++
++static int nfcwilink_download_fw(struct nfcwilink *drv)
++{
++	unsigned char file_name[BTS_FILE_NAME_MAX_SIZE];
++	const struct firmware *fw;
++	__u16 action_type, action_len;
++	__u8 *ptr;
++	int len, rc;
++
++	nfc_dev_dbg(&drv->pdev->dev, "download_fw entry");
++
++	set_bit(NFCWILINK_FW_DOWNLOAD, &drv->flags);
++
++	rc = nfcwilink_get_bts_file_name(drv, file_name);
++	if (rc)
++		goto exit;
++
++	rc = request_firmware(&fw, file_name, &drv->pdev->dev);
++	if (rc) {
++		nfc_dev_err(&drv->pdev->dev, "request_firmware failed %d", rc);
++
++		/* if the file is not found, don't exit with failure */
++		if (rc == -ENOENT)
++			rc = 0;
++
++		goto exit;
++	}
++
++	len = fw->size;
++	ptr = (__u8 *)fw->data;
++
++	if ((len == 0) || (ptr == NULL)) {
++		nfc_dev_dbg(&drv->pdev->dev,
++				"request_firmware returned size %d", len);
++		goto release_fw;
++	}
++
++	if (__le32_to_cpu(((struct bts_file_hdr *)ptr)->magic) !=
++			BTS_FILE_HDR_MAGIC) {
++		nfc_dev_err(&drv->pdev->dev, "wrong bts magic number");
++		rc = -EINVAL;
++		goto release_fw;
++	}
++
++	/* remove the BTS header */
++	len -= sizeof(struct bts_file_hdr);
++	ptr += sizeof(struct bts_file_hdr);
++
++	while (len > 0) {
++		action_type =
++			__le16_to_cpu(((struct bts_file_action *)ptr)->type);
++		action_len =
++			__le16_to_cpu(((struct bts_file_action *)ptr)->len);
++
++		nfc_dev_dbg(&drv->pdev->dev, "bts_file_action type %d, len %d",
++				action_type, action_len);
++
++		switch (action_type) {
++		case BTS_FILE_ACTION_TYPE_SEND_CMD:
++			rc = nfcwilink_send_bts_cmd(drv,
++					((struct bts_file_action *)ptr)->data,
++					action_len);
++			if (rc)
++				goto release_fw;
++			break;
++		}
++
++		/* advance to the next action */
++		len -= (sizeof(struct bts_file_action) + action_len);
++		ptr += (sizeof(struct bts_file_action) + action_len);
++	}
++
++release_fw:
++	release_firmware(fw);
++
++exit:
++	clear_bit(NFCWILINK_FW_DOWNLOAD, &drv->flags);
++	return rc;
++}
++
+ /* Called by ST when registration is complete */
+ static void nfcwilink_register_complete(void *priv_data, char data)
+ {
+@@ -74,7 +343,7 @@ static void nfcwilink_register_complete(void *priv_data, char data)
+ 	drv->st_register_cb_status = data;
+ 
+ 	/* complete the wait in nfc_st_open() */
+-	complete(&drv->st_register_completed);
++	complete(&drv->completed);
+ }
+ 
+ /* Called by ST when receive data is available */
+@@ -97,6 +366,11 @@ static long nfcwilink_receive(void *priv_data, struct sk_buff *skb)
+ 	(apart for the chnl byte, which is not received in the hdr) */
+ 	skb_pull(skb, (NFCWILINK_HDR_LEN-1));
+ 
++	if (test_bit(NFCWILINK_FW_DOWNLOAD, &drv->flags)) {
++		nfcwilink_fw_download_receive(drv, skb);
++		return 0;
++	}
++
+ 	skb->dev = (void *) drv->ndev;
+ 
+ 	/* Forward skb to NCI core layer */
+@@ -137,14 +411,14 @@ static int nfcwilink_open(struct nci_dev *ndev)
+ 
+ 	nfcwilink_proto.priv_data = drv;
+ 
+-	init_completion(&drv->st_register_completed);
++	init_completion(&drv->completed);
+ 	drv->st_register_cb_status = -EINPROGRESS;
+ 
+ 	rc = st_register(&nfcwilink_proto);
+ 	if (rc < 0) {
+ 		if (rc == -EINPROGRESS) {
+ 			comp_ret = wait_for_completion_timeout(
+-			&drv->st_register_completed,
++			&drv->completed,
+ 			msecs_to_jiffies(NFCWILINK_REGISTER_TIMEOUT));
+ 
+ 			nfc_dev_dbg(&drv->pdev->dev,
+@@ -172,6 +446,12 @@ static int nfcwilink_open(struct nci_dev *ndev)
+ 	BUG_ON(nfcwilink_proto.write == NULL);
+ 	drv->st_write = nfcwilink_proto.write;
+ 
++	if (nfcwilink_download_fw(drv)) {
++		nfc_dev_err(&drv->pdev->dev, "nfcwilink_download_fw failed %d",
++				rc);
++		/* open should succeed, even if the FW download failed */
++	}
++
+ 	goto exit;
+ 
+ clear_exit:
 -- 
-Rafał
+1.7.0.4
+
