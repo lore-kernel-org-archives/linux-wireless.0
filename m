@@ -1,53 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44672 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932621Ab2AEPdi (ORCPT
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:40665 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751266Ab2AQSJc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 10:33:38 -0500
-Message-Id: <20120105153228.762826182@sipsolutions.net> (sfid-20120105_163341_188923_D51A75DD)
-Date: Thu, 05 Jan 2012 16:30:47 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/8] mac80211: add NOTEXIST station state
-References: <20120105153043.568616380@sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 17 Jan 2012 13:09:32 -0500
+Subject: [PATCH v3 6/8] ath6kl: convert ath6kl_dbg() and ath6kl_dbg_dump()
+	into functions
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Tue, 17 Jan 2012 20:09:27 +0200
+Message-ID: <20120117180927.29995.1063.stgit@localhost6.localdomain6> (sfid-20120117_190935_450722_0FA2A980)
+In-Reply-To: <20120117180827.29995.67922.stgit@localhost6.localdomain6>
+References: <20120117180827.29995.67922.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+That way it's possible to not export debug_mask outside the upcoming
+ath6kl_core.ko and that makes it easier to ath6kl_core.ko in the
+following patch.
 
-This will be used by drivers later if they
-need to have stations inserted all the time,
-in mac80211 has no purpose, is never used
-and sta_state starts out in NONE.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- net/mac80211/sta_info.c |    2 ++
- net/mac80211/sta_info.h |    1 +
- 2 files changed, 3 insertions(+)
+ drivers/net/wireless/ath/ath6kl/debug.c |   30 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/debug.h |   25 ++++---------------------
+ 2 files changed, 34 insertions(+), 21 deletions(-)
 
---- a/net/mac80211/sta_info.h	2012-01-04 14:13:16.000000000 +0100
-+++ b/net/mac80211/sta_info.h	2012-01-04 14:19:42.000000000 +0100
-@@ -77,6 +77,7 @@ enum ieee80211_sta_info_flags {
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index bd2f1fa..4ba6560 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -57,6 +57,36 @@ int ath6kl_printk(const char *level, const char *fmt, ...)
  
- enum ieee80211_sta_state {
- 	/* NOTE: These need to be ordered correctly! */
-+	IEEE80211_STA_NOTEXIST,
- 	IEEE80211_STA_NONE,
- 	IEEE80211_STA_AUTH,
- 	IEEE80211_STA_ASSOC,
---- a/net/mac80211/sta_info.c	2012-01-04 14:13:16.000000000 +0100
-+++ b/net/mac80211/sta_info.c	2012-01-04 14:19:42.000000000 +0100
-@@ -295,6 +295,8 @@ struct sta_info *sta_info_alloc(struct i
- 	sta->sdata = sdata;
- 	sta->last_rx = jiffies;
+ #ifdef CONFIG_ATH6KL_DEBUG
  
-+	sta->sta_state = IEEE80211_STA_NONE;
++void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...)
++{
++	struct va_format vaf;
++	va_list args;
 +
- 	do_posix_clock_monotonic_gettime(&uptime);
- 	sta->last_connected = uptime.tv_sec;
- 	ewma_init(&sta->avg_signal, 1024, 8);
-
++	if (!(debug_mask & mask))
++		return;
++
++	va_start(args, fmt);
++
++	vaf.fmt = fmt;
++	vaf.va = &args;
++
++	ath6kl_printk(KERN_DEBUG, "%pV", &vaf);
++
++	va_end(args);
++}
++
++void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
++		     const char *msg, const char *prefix,
++		     const void *buf, size_t len)
++{
++	if (debug_mask & mask) {
++		if (msg)
++			ath6kl_dbg(mask, "%s\n", msg);
++
++		print_hex_dump_bytes(prefix, DUMP_PREFIX_OFFSET, buf, len);
++	}
++}
++
+ #define REG_OUTPUT_LEN_PER_LINE	25
+ #define REGTYPE_STR_LEN		100
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
+index 9dc3975..872a8ce 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.h
++++ b/drivers/net/wireless/ath/ath6kl/debug.h
+@@ -60,28 +60,11 @@ enum ath6kl_war {
+ };
+ 
+ #ifdef CONFIG_ATH6KL_DEBUG
+-#define ath6kl_dbg(mask, fmt, ...)					\
+-	({								\
+-	 int rtn;							\
+-	 if (debug_mask & mask)						\
+-		rtn = ath6kl_printk(KERN_DEBUG, fmt, ##__VA_ARGS__);	\
+-	 else								\
+-		rtn = 0;						\
+-									\
+-	 rtn;								\
+-	 })
+ 
+-static inline void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
+-				   const char *msg, const char *prefix,
+-				   const void *buf, size_t len)
+-{
+-	if (debug_mask & mask) {
+-		if (msg)
+-			ath6kl_dbg(mask, "%s\n", msg);
+-
+-		print_hex_dump_bytes(prefix, DUMP_PREFIX_OFFSET, buf, len);
+-	}
+-}
++void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...);
++void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
++		     const char *msg, const char *prefix,
++		     const void *buf, size_t len);
+ 
+ void ath6kl_dump_registers(struct ath6kl_device *dev,
+ 			   struct ath6kl_irq_proc_registers *irq_proc_reg,
 
