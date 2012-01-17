@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:47452 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752055Ab2AZQEK (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:51807 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750788Ab2AQAhn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 11:04:10 -0500
-Received: by obcva7 with SMTP id va7so678204obc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 08:04:09 -0800 (PST)
+	Mon, 16 Jan 2012 19:37:43 -0500
+Received: by iagf6 with SMTP id f6so3345857iag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2012 16:37:43 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4F20663C.3030500@broadcom.com>
-References: <CAD2CPUEu2ha6TeYrQ4WUdXU0-hdSAAJZR5PGWagSguE1DtBSfQ@mail.gmail.com>
-	<4F20663C.3030500@broadcom.com>
-Date: Thu, 26 Jan 2012 17:04:09 +0100
-Message-ID: <CAD2CPUH6s=UuWy0S--SjmA0WZHARVQ70qmBjh9XW9s+f2ZkoLg@mail.gmail.com> (sfid-20120126_170424_066708_28D4B16E)
-Subject: Re: [bcm4329] brcmfmac on kernel 2.6.35 (Andorid)
-From: Renzo Navas <renzoefra@gmail.com>
-To: Franky Lin <frankyl@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <CA+55aFwdHKhLXF+Utbk0A2jcshSeQmQ91YxBzvqSa3wXCKh8BA@mail.gmail.com>
+References: <86wr8rfbpf.fsf@sumi.keithp.com> <CA+55aFwdHKhLXF+Utbk0A2jcshSeQmQ91YxBzvqSa3wXCKh8BA@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 17 Jan 2012 11:37:22 +1100
+Message-ID: <CAGRGNgVL-tmY8e2hk43hQQot6YwvEWcQYwoSHLtQGj4JR+Nk3w@mail.gmail.com> (sfid-20120117_013747_045324_079DDCEE)
+Subject: Re: MBA resume wedge due to wireless fixed yet?
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Keith Packard <keithp@keithp.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Good Afternoon,
+Hi all,
 
-First, Franky thanks for the response it was very helpful to know what
-to expect and re-plan my project.
+I have a stupid question:
 
-As regards the hardware: basically I don't have many other choices,
-the University gave me a Nexus S to develop. I think I can have access
-to a Samsung Galaxy S, Galaxy S II and an HTC Dream HD, I have to find
-out if some of them has a wifi card which uses a softmac driver. The
-idea is going to the wild (to the city which has high density of open
-wifi APs) to test the algorithm -so I need some portable device-. I
-yet have to find out how much can I accomplish with the bcm4329.
+On Tue, Jan 17, 2012 at 10:56, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> I have patches, but haven't committed them because I was kind of
+> expecting them to go through the wireless tree.
 
+Then why were these patches never posted to linux-wireless?
 
-> For ICS we switch to a newer driver bcmdhd which use cfg80211 instead of
-> wext. If you want to use cfg80211 instead of wext, this should be a better
-> choice.
+Thanks,
 
-I'm interested on this "bcmdhd" driver which uses cfg80211,
-I have one request: is there an official source with the code of bcmdhd?
+-- 
 
+Julian Calaby
 
-Thanks for your attention again, and have a good day
-
-Renzo
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
