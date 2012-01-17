@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from senator.holtmann.net ([87.106.208.187]:40837 "EHLO
-	mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752463Ab2AWB6B (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:42913 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752474Ab2AQJcD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jan 2012 20:58:01 -0500
-Message-ID: <1327283783.1955.84.camel@aeonflux> (sfid-20120123_025812_353714_6FEB1564)
-Subject: Re: [PATCH COMMITTED] bluetooth: hci: Fix type of "enable_hs" to
- bool.
-From: Marcel Holtmann <marcel@holtmann.org>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org
-Date: Mon, 23 Jan 2012 02:56:23 +0100
-In-Reply-To: <20120122.144654.2252112633629547845.davem@davemloft.net>
-References: <20120122.144654.2252112633629547845.davem@davemloft.net>
+	Tue, 17 Jan 2012 04:32:03 -0500
+Subject: [PATCH] mac80211: fix debugfs key->station symlink
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 17 Jan 2012 10:32:01 +0100
+Message-ID: <1326792721.3342.6.camel@jlt3.sipsolutions.net> (sfid-20120117_103207_287140_C4040E8C)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+From: Johannes Berg <johannes.berg@intel.com>
 
-> net/bluetooth/hci_core.c: In function ‘__check_enable_hs’:
-> net/bluetooth/hci_core.c:2587:1: warning: return from incompatible pointer type [enabled by default]
-> 
-> Signed-off-by: David S. Miller <davem@davemloft.net>
-> ---
-> 
-> I noticed this while validating the build today, committed to 'net'.
+Since stations moved into a virtual interface
+subdirectory, this link has been broken. Fix it.
 
-and from your subject, I assume you rightfully just applied that patch
-to your tree.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/debugfs_key.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-I remember that I acked such a patch, but it seems it never made it
-anywhere in the end :(
-
-Regards
-
-Marcel
+--- a/net/mac80211/debugfs_key.c	2012-01-17 10:30:35.000000000 +0100
++++ b/net/mac80211/debugfs_key.c	2012-01-17 10:30:38.000000000 +0100
+@@ -225,9 +225,9 @@ KEY_OPS(key);
+ 			    key, &key_##name##_ops);
+ 
+ void ieee80211_debugfs_key_add(struct ieee80211_key *key)
+-  {
++{
+ 	static int keycount;
+-	char buf[50];
++	char buf[100];
+ 	struct sta_info *sta;
+ 
+ 	if (!key->local->debugfs.keys)
+@@ -244,7 +244,8 @@ void ieee80211_debugfs_key_add(struct ie
+ 
+ 	sta = key->sta;
+ 	if (sta) {
+-		sprintf(buf, "../../stations/%pM", sta->sta.addr);
++		sprintf(buf, "../../netdev:%s/stations/%pM",
++			sta->sdata->name, sta->sta.addr);
+ 		key->debugfs.stalink =
+ 			debugfs_create_symlink("station", key->debugfs.dir, buf);
+ 	}
 
 
