@@ -1,53 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38708 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751359Ab2ATMxw (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:37068 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752391Ab2AQIbV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 07:53:52 -0500
-Message-Id: <20120120125313.111967515@sipsolutions.net> (sfid-20120120_135356_463968_8998E77B)
-Date: Fri, 20 Jan 2012 13:52:37 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] cfg80211: fix a few -Wshadow warnings
-References: <20120120125235.243434836@sipsolutions.net>
-Mime-Version: 1.0
+	Tue, 17 Jan 2012 03:31:21 -0500
+From: "Elias, Ilan" <ilane@ti.com>
+To: Samuel Ortiz <samuel@sortiz.org>
+CC: "aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
+	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] NFC: Export new attributes sensb_res and sensf_res
+Date: Tue, 17 Jan 2012 08:31:02 +0000
+Message-ID: <B30D1FD582D6484ABF57420512E580350F5E0D0C@DNCE03.ent.ti.com> (sfid-20120117_093128_749474_53E06E01)
+References: <1326012961-29832-1-git-send-email-ilane@ti.com>
+ <1326736973.22824.9.camel@sortiz-mobl>
+In-Reply-To: <1326736973.22824.9.camel@sortiz-mobl>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Samuel, 
 
-It seems that -Wshadow is no longer default in
-sparse runs, but let's fix the warnings anyway.
+> > diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
+> > index 8696b77..d8aef2e 100644
+> > --- a/include/net/nfc/nfc.h
+> > +++ b/include/net/nfc/nfc.h
+> > @@ -66,6 +66,8 @@ struct nfc_ops {
+> >  #define NFC_TARGET_IDX_ANY -1
+> >  #define NFC_MAX_GT_LEN 48
+> >  #define NFC_MAX_NFCID1_LEN 10
+> > +#define NFC_MAX_SENSB_RES_LEN 12
+> > +#define NFC_MAX_SENSF_RES_LEN 18
+> I think those values should be exported to user space though
+> include/linux/nfc.h.
+> When fetching the byte stream from the netlink socket, you 
+> usually want
+> to check if it has a valid length in order to memcpy it to a static
+> array embedded with your target structure.
+> Same applies to NFC_MAX_NFCID1_LEN.
+Sure, I will move the definitions to include/linux/nfc.h.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/nl80211.c |    8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+> The rest of the code looks fine to me.
+> 
+> Cheers,
+> Samuel.
 
---- a/net/wireless/nl80211.c	2012-01-20 13:49:32.000000000 +0100
-+++ b/net/wireless/nl80211.c	2012-01-20 13:51:00.000000000 +0100
-@@ -427,10 +427,9 @@ static int nl80211_parse_key_new(struct
- 
- 	if (tb[NL80211_KEY_DEFAULT_TYPES]) {
- 		struct nlattr *kdt[NUM_NL80211_KEY_DEFAULT_TYPES];
--		int err = nla_parse_nested(kdt,
--					   NUM_NL80211_KEY_DEFAULT_TYPES - 1,
--					   tb[NL80211_KEY_DEFAULT_TYPES],
--					   nl80211_key_default_policy);
-+		err = nla_parse_nested(kdt, NUM_NL80211_KEY_DEFAULT_TYPES - 1,
-+				       tb[NL80211_KEY_DEFAULT_TYPES],
-+				       nl80211_key_default_policy);
- 		if (err)
- 			return err;
- 
-@@ -4781,7 +4780,6 @@ static int nl80211_join_ibss(struct sk_b
- 			nla_len(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
- 		struct ieee80211_supported_band *sband =
- 			wiphy->bands[ibss.channel->band];
--		int err;
- 
- 		err = ieee80211_get_ratemask(sband, rates, n_rates,
- 					     &ibss.basic_rates);
-
-
+Thanks & BR,
+Ilan
