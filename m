@@ -1,215 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:32932 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753573Ab2A3OzZ (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:58237 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751223Ab2AQBJY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 09:55:25 -0500
-Received: by werb13 with SMTP id b13so3523805wer.19
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 06:55:24 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/7] wl12xx: Set different wake up conditions in case of suspend
-Date: Mon, 30 Jan 2012 16:58:39 +0200
-Message-Id: <1327935525-24361-2-git-send-email-eliad@wizery.com> (sfid-20120130_155530_927611_9097203D)
-In-Reply-To: <1327935525-24361-1-git-send-email-eliad@wizery.com>
-References: <1327935525-24361-1-git-send-email-eliad@wizery.com>
+	Mon, 16 Jan 2012 20:09:24 -0500
+Received: by iagf6 with SMTP id f6so3382566iag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 16 Jan 2012 17:09:24 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CA+55aFz6qAY+q+Fes4gZdit1V_XQO7hcqp+V=ytuY=XYq2Tu8Q@mail.gmail.com>
+References: <86wr8rfbpf.fsf@sumi.keithp.com> <CA+55aFwdHKhLXF+Utbk0A2jcshSeQmQ91YxBzvqSa3wXCKh8BA@mail.gmail.com>
+ <CAGRGNgVL-tmY8e2hk43hQQot6YwvEWcQYwoSHLtQGj4JR+Nk3w@mail.gmail.com> <CA+55aFz6qAY+q+Fes4gZdit1V_XQO7hcqp+V=ytuY=XYq2Tu8Q@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 17 Jan 2012 12:09:03 +1100
+Message-ID: <CAGRGNgUhGs+30WpppKvH110qBMcSss3xKEoNH_Tv+ZEoKWRJhg@mail.gmail.com> (sfid-20120117_020928_267306_73615807)
+Subject: Re: MBA resume wedge due to wireless fixed yet?
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Keith Packard <keithp@keithp.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>,
+	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Hi,
 
-Added ability to set different wake up conditions for suspend/resume.
-Set default values to wake up every 3 DTIMs while suspended
-and every 1 DTIM while resumed
+On Tue, Jan 17, 2012 at 11:57, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Mon, Jan 16, 2012 at 4:37 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+>> Hi all,
+>>
+>> I have a stupid question:
+>>
+>> On Tue, Jan 17, 2012 at 10:56, Linus Torvalds
+>> <torvalds@linux-foundation.org> wrote:
+>>> I have patches, but haven't committed them because I was kind of
+>>> expecting them to go through the wireless tree.
+>>
+>> Then why were these patches never posted to linux-wireless?
+>
+> They were posted to at least netdev, they were cc'd to the top-level
+> maintainers (both David and Linville), and the maintainers of the
+> driver itself.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/acx.c  |   10 ++++---
- drivers/net/wireless/wl12xx/acx.h  |    3 +-
- drivers/net/wireless/wl12xx/conf.h |   13 +++++++++
- drivers/net/wireless/wl12xx/main.c |   51 +++++++++++++++++++++++++++++++++--
- drivers/net/wireless/wl12xx/ps.c   |    4 ++-
- 5 files changed, 72 insertions(+), 9 deletions(-)
+I noticed all the names for the driver maintainers but my eyes must
+have skipped over David and Linville.
 
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index af2c312..bc96db0 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -34,12 +34,14 @@
- #include "reg.h"
- #include "ps.h"
- 
--int wl1271_acx_wake_up_conditions(struct wl1271 *wl, struct wl12xx_vif *wlvif)
-+int wl1271_acx_wake_up_conditions(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-+				  u8 wake_up_event, u8 listen_interval)
- {
- 	struct acx_wake_up_condition *wake_up;
- 	int ret;
- 
--	wl1271_debug(DEBUG_ACX, "acx wake up conditions");
-+	wl1271_debug(DEBUG_ACX, "acx wake up conditions (wake_up_event %d listen_interval %d)",
-+		     wake_up_event, listen_interval);
- 
- 	wake_up = kzalloc(sizeof(*wake_up), GFP_KERNEL);
- 	if (!wake_up) {
-@@ -48,8 +50,8 @@ int wl1271_acx_wake_up_conditions(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	}
- 
- 	wake_up->role_id = wlvif->role_id;
--	wake_up->wake_up_event = wl->conf.conn.wake_up_event;
--	wake_up->listen_interval = wl->conf.conn.listen_interval;
-+	wake_up->wake_up_event = wake_up_event;
-+	wake_up->listen_interval = listen_interval;
- 
- 	ret = wl1271_cmd_configure(wl, ACX_WAKE_UP_CONDITIONS,
- 				   wake_up, sizeof(*wake_up));
-diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
-index 0749df5..a28fc04 100644
---- a/drivers/net/wireless/wl12xx/acx.h
-+++ b/drivers/net/wireless/wl12xx/acx.h
-@@ -1226,7 +1226,8 @@ enum {
- 
- 
- int wl1271_acx_wake_up_conditions(struct wl1271 *wl,
--				  struct wl12xx_vif *wlvif);
-+				  struct wl12xx_vif *wlvif,
-+				  u8 wake_up_event, u8 listen_interval);
- int wl1271_acx_sleep_auth(struct wl1271 *wl, u8 sleep_auth);
- int wl1271_acx_tx_power(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			int power);
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index 10e5e3d..d97aad6 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -810,6 +810,19 @@ struct conf_conn_settings {
- 	u8 listen_interval;
- 
- 	/*
-+	 * Firmware wakeup conditions during suspend
-+	 * Range: CONF_WAKE_UP_EVENT_*
-+	 */
-+	u8 suspend_wake_up_event;
-+
-+	/*
-+	 * Listen interval during suspend.
-+	 * Currently will be in DTIMs (1-10)
-+	 *
-+	 */
-+	u8 suspend_listen_interval;
-+
-+	/*
- 	 * Enable or disable the beacon filtering.
- 	 *
- 	 * Range: CONF_BCN_FILT_MODE_*
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 2bb1c24..29a00fc 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -218,6 +218,8 @@ static struct conf_drv_settings default_conf = {
- 	.conn = {
- 		.wake_up_event               = CONF_WAKE_UP_EVENT_DTIM,
- 		.listen_interval             = 1,
-+		.suspend_wake_up_event       = CONF_WAKE_UP_EVENT_N_DTIM,
-+		.suspend_listen_interval     = 3,
- 		.bcn_filt_mode               = CONF_BCN_FILT_MODE_ENABLED,
- 		.bcn_filt_ie_count           = 2,
- 		.bcn_filt_ie = {
-@@ -1561,6 +1563,35 @@ static struct notifier_block wl1271_dev_notifier = {
- };
- 
- #ifdef CONFIG_PM
-+static int wl1271_configure_suspend_sta(struct wl1271 *wl,
-+					struct wl12xx_vif *wlvif)
-+{
-+	int ret = 0;
-+
-+	mutex_lock(&wl->mutex);
-+
-+	if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
-+		goto out_unlock;
-+
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out_unlock;
-+
-+	ret = wl1271_acx_wake_up_conditions(wl, wlvif,
-+				    wl->conf.conn.suspend_wake_up_event,
-+				    wl->conf.conn.suspend_listen_interval);
-+
-+	if (ret < 0)
-+		wl1271_error("suspend: set wake up conditions failed: %d", ret);
-+
-+
-+	wl1271_ps_elp_sleep(wl);
-+
-+out_unlock:
-+	mutex_unlock(&wl->mutex);
-+	return ret;
-+
-+}
- 
- static int wl1271_configure_suspend_ap(struct wl1271 *wl,
- 				       struct wl12xx_vif *wlvif)
-@@ -1588,6 +1619,8 @@ out_unlock:
- static int wl1271_configure_suspend(struct wl1271 *wl,
- 				    struct wl12xx_vif *wlvif)
- {
-+	if (wlvif->bss_type == BSS_TYPE_STA_BSS)
-+		return wl1271_configure_suspend_sta(wl, wlvif);
- 	if (wlvif->bss_type == BSS_TYPE_AP_BSS)
- 		return wl1271_configure_suspend_ap(wl, wlvif);
- 	return 0;
-@@ -1596,10 +1629,11 @@ static int wl1271_configure_suspend(struct wl1271 *wl,
- static void wl1271_configure_resume(struct wl1271 *wl,
- 				    struct wl12xx_vif *wlvif)
- {
--	int ret;
-+	int ret = 0;
- 	bool is_ap = wlvif->bss_type == BSS_TYPE_AP_BSS;
-+	bool is_sta = wlvif->bss_type == BSS_TYPE_STA_BSS;
- 
--	if (!is_ap)
-+	if ((!is_ap) && (!is_sta))
- 		return;
- 
- 	mutex_lock(&wl->mutex);
-@@ -1607,7 +1641,18 @@ static void wl1271_configure_resume(struct wl1271 *wl,
- 	if (ret < 0)
- 		goto out;
- 
--	wl1271_acx_beacon_filter_opt(wl, wlvif, false);
-+	if (is_sta) {
-+		ret = wl1271_acx_wake_up_conditions(wl, wlvif,
-+				    wl->conf.conn.wake_up_event,
-+				    wl->conf.conn.listen_interval);
-+
-+		if (ret < 0)
-+			wl1271_error("resume: wake up conditions failed: %d",
-+				     ret);
-+
-+	} else if (is_ap) {
-+		ret = wl1271_acx_beacon_filter_opt(wl, wlvif, false);
-+	}
- 
- 	wl1271_ps_elp_sleep(wl);
- out:
-diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
-index e209e29..d197922 100644
---- a/drivers/net/wireless/wl12xx/ps.c
-+++ b/drivers/net/wireless/wl12xx/ps.c
-@@ -170,7 +170,9 @@ int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		wl1271_debug(DEBUG_PSM, "entering psm (mode=%d,timeout=%u)",
- 			     mode, timeout);
- 
--		ret = wl1271_acx_wake_up_conditions(wl, wlvif);
-+		ret = wl1271_acx_wake_up_conditions(wl, wlvif,
-+					    wl->conf.conn.wake_up_event,
-+					    wl->conf.conn.listen_interval);
- 		if (ret < 0) {
- 			wl1271_error("couldn't set wake up conditions");
- 			return ret;
+> wireless seems to have been overlooked, but they were certainly not
+> hidden or kept private. I personally don't tend to remember the
+> wireless list, because everything I get comes through David and is
+> just "networking".
+
+I wasn't accusing anyone of anything, just inquiring as to why Rafał
+and yourself had missed that particular list. As for overlooking it,
+I'd probably do the same in your position. =)
+
+Thanks,
+
 -- 
-1.7.6.401.g6a319
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
