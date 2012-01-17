@@ -1,63 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:56880 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752335Ab2ABWrS (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:34249 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753142Ab2AQMJT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 17:47:18 -0500
-MIME-Version: 1.0
-In-Reply-To: <20120102222920.GA16160@srcf.ucam.org>
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
- <4F02165C.1060400@fastmail.fm> <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
- <20120102211904.GA15316@srcf.ucam.org> <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
- <20120102215028.GA15701@srcf.ucam.org> <CA+55aFz73GuHiOW1NoAuJLea_GKLepiZjrnrgpOKdQizPgnhoA@mail.gmail.com>
- <20120102221235.GA16012@srcf.ucam.org> <CA+55aFyHvmvast_kuNddU3iotReR1mOpKM4HGAw80ma8kn+2-g@mail.gmail.com>
- <20120102222920.GA16160@srcf.ucam.org>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 2 Jan 2012 14:46:56 -0800
-Message-ID: <CA+55aFyUK6X7ip2UXV9iT07=qezXfbw82wn6UKAN8JFQtYNs5Q@mail.gmail.com> (sfid-20120102_234801_839408_518445C4)
-Subject: Re: loading firmware while usermodehelper disabled.
-To: Matthew Garrett <mjg@redhat.com>
-Cc: Jack Stone <jwjstone@fastmail.fm>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Oliver Neukum <oliver@neukum.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 17 Jan 2012 07:09:19 -0500
+Received: by mail-yw0-f46.google.com with SMTP id o21so33558yho.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2012 04:09:19 -0800 (PST)
+From: ilanelias78@gmail.com
+To: samuel@sortiz.org, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Ilan Elias <ilane@ti.com>
+Subject: [PATCH v3 1/3] NFC: Add endian annotations to nfcwilink driver
+Date: Tue, 17 Jan 2012 14:11:31 +0200
+Message-Id: <1326802293-11539-2-git-send-email-ilane@ti.com> (sfid-20120117_130922_876892_2B892874)
+In-Reply-To: <1326802293-11539-1-git-send-email-ilane@ti.com>
+References: <1326802293-11539-1-git-send-email-ilane@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 2, 2012 at 2:29 PM, Matthew Garrett <mjg@redhat.com> wrote:
->>
->> Why do you make up all these idiotic theoretical cases that nobody
->> cares about and has no relevance what-so-ever for the 99%?
->
-> Rebooting is a theoretical case?
+From: Ilan Elias <ilane@ti.com>
 
-Your forcing the issue to be some crazy one that "cannot be solved" is
-the theoretical case. I'm telling you that "reloading the firmware at
-resume time" is wrong, and trivially solved by loading it before
-resume time. You then make up all these invalid arguments about why
-it's somehow magically impossible, but you *literally* do it by
-refusing to look at what *is* possible.
+Add endian annotations to TI nfcwilink driver.
 
-It's *trivial* to attach the firmware driver and load the firmware
-even if the firmware isn't needed - because you know it *will* be
-needed if somebody suspends. Why not just do that? Why make up these
-horrible problems that are totally irrelevant?
+Signed-off-by: Ilan Elias <ilane@ti.com>
+---
+ drivers/nfc/nfcwilink.c |   11 ++++++-----
+ 1 files changed, 6 insertions(+), 5 deletions(-)
 
-You can match the driver by various things like DMI strings etc, if
-you really don't have a USB (or PCI or whatever) ID to match against.
-But in fact, almost always you at least have things like subvendor
-ID's etc that you *can* match against.
+diff --git a/drivers/nfc/nfcwilink.c b/drivers/nfc/nfcwilink.c
+index 06c3642..ee60d08 100644
+--- a/drivers/nfc/nfcwilink.c
++++ b/drivers/nfc/nfcwilink.c
+@@ -28,6 +28,7 @@
+  */
+ #include <linux/platform_device.h>
+ #include <linux/module.h>
++#include <linux/types.h>
+ #include <linux/nfc.h>
+ #include <net/nfc/nci.h>
+ #include <net/nfc/nci_core.h>
+@@ -42,9 +43,9 @@
+ #define NFCWILINK_REGISTER_TIMEOUT	8000	/* 8 sec */
+ 
+ struct nfcwilink_hdr {
+-	u8 chnl;
+-	u8 opcode;
+-	u16 len;
++	__u8 chnl;
++	__u8 opcode;
++	__le16 len;
+ } __packed;
+ 
+ struct nfcwilink {
+@@ -212,7 +213,7 @@ static int nfcwilink_send(struct sk_buff *skb)
+ 		return -EBUSY;
+ 
+ 	/* add the ST hdr to the start of the buffer */
+-	hdr.len = skb->len;
++	hdr.len = cpu_to_le16(skb->len);
+ 	memcpy(skb_push(skb, NFCWILINK_HDR_LEN), &hdr, NFCWILINK_HDR_LEN);
+ 
+ 	/* Insert skb to shared transport layer's transmit queue.
+@@ -239,7 +240,7 @@ static int nfcwilink_probe(struct platform_device *pdev)
+ {
+ 	static struct nfcwilink *drv;
+ 	int rc;
+-	u32 protocols;
++	__u32 protocols;
+ 
+ 	nfc_dev_dbg(&pdev->dev, "probe entry");
+ 
+-- 
+1.7.0.4
 
-So why are you actively trying to make something complicated that
-isn't? Why are you arguing against the simple solution that can easily
-be made to work for the odd and unusual case you are trying to push?
-
-                         Linus
