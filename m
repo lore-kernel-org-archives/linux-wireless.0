@@ -1,61 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:63297 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754510Ab2AaPw1 (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:46169 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751458Ab2AQKBa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 10:52:27 -0500
-Message-ID: <4F280E37.8030803@lwfinger.net> (sfid-20120131_165300_599822_36A7DD24)
-Date: Tue, 31 Jan 2012 09:52:23 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "Devendra.Naga" <devendra.aaru@gmail.com>
-CC: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: remove return in _rtl_pci_switch_clk_req
-References: <1327991295-6258-1-git-send-email-devendra.aaru@gmail.com>
-In-Reply-To: <1327991295-6258-1-git-send-email-devendra.aaru@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 17 Jan 2012 05:01:30 -0500
+Received: by yhnn56 with SMTP id n56so1573650yhn.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2012 02:01:30 -0800 (PST)
+From: ilanelias78@gmail.com
+To: samuel@sortiz.org, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Ilan Elias <ilane@ti.com>
+Subject: [PATCH v2] NFC: Add NCI data exchange timer
+Date: Tue, 17 Jan 2012 12:03:50 +0200
+Message-Id: <1326794630-11151-1-git-send-email-ilane@ti.com> (sfid-20120117_110134_936485_F2E7A0AD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/31/2012 12:28 AM, Devendra.Naga wrote:
-> From: "Devendra.Naga"<devendra.aaru@gmail.com>
->
-> the return value from _rtl_pci_switch_clk_req is not used by any of its callers.
->
-> Signed-off-by: Devendra.Naga<devendra.aaru@gmail.com>
-> ---
->   drivers/net/wireless/rtlwifi/pci.c |    4 +---
->   1 files changed, 1 insertions(+), 3 deletions(-)
+From: Ilan Elias <ilane@ti.com>
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Add NCI data exchange timer to catch timeouts,
+and call the data exchange callback with an error.
 
-Thanks,
+Signed-off-by: Ilan Elias <ilane@ti.com>
+---
+v2: remove 2 unrelated changes (Thanks Samuel)
 
-Larry
+ include/net/nfc/nci_core.h |    3 +++
+ net/nfc/nci/core.c         |   24 ++++++++++++++++++++++++
+ net/nfc/nci/data.c         |    4 ++++
+ 3 files changed, 31 insertions(+), 0 deletions(-)
 
->
-> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-> index 5cb2199..9a01909 100644
-> --- a/drivers/net/wireless/rtlwifi/pci.c
-> +++ b/drivers/net/wireless/rtlwifi/pci.c
-> @@ -198,7 +198,7 @@ static bool _rtl_pci_platform_switch_device_pci_aspm(
->   }
->
->   /*When we set 0x01 to enable clk request. Set 0x0 to disable clk req.*/
-> -static bool _rtl_pci_switch_clk_req(struct ieee80211_hw *hw, u8 value)
-> +static void _rtl_pci_switch_clk_req(struct ieee80211_hw *hw, u8 value)
->   {
->   	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
->   	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-> @@ -207,8 +207,6 @@ static bool _rtl_pci_switch_clk_req(struct ieee80211_hw *hw, u8 value)
->
->   	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE)
->   		udelay(100);
-> -
-> -	return true;
->   }
->
->   /*Disable RTL8192SE ASPM&  Disable Pci Bridge ASPM*/
+diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
+index f4963ea..9154663 100644
+--- a/include/net/nfc/nci_core.h
++++ b/include/net/nfc/nci_core.h
+@@ -41,6 +41,7 @@ enum {
+ 	NCI_DISCOVERY,
+ 	NCI_POLL_ACTIVE,
+ 	NCI_DATA_EXCHANGE,
++	NCI_DATA_EXCHANGE_TO,
+ };
+ 
+ /* NCI timeouts */
+@@ -49,6 +50,7 @@ enum {
+ #define NCI_RF_DISC_TIMEOUT			5000
+ #define NCI_RF_DEACTIVATE_TIMEOUT		30000
+ #define NCI_CMD_TIMEOUT				5000
++#define NCI_DATA_TIMEOUT			700
+ 
+ struct nci_dev;
+ 
+@@ -74,6 +76,7 @@ struct nci_dev {
+ 	atomic_t		credits_cnt;
+ 
+ 	struct timer_list	cmd_timer;
++	struct timer_list	data_timer;
+ 
+ 	struct workqueue_struct	*cmd_wq;
+ 	struct work_struct	cmd_work;
+diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
+index 7650139..815d28a 100644
+--- a/net/nfc/nci/core.c
++++ b/net/nfc/nci/core.c
+@@ -286,6 +286,7 @@ static int nci_close_device(struct nci_dev *ndev)
+ 
+ 	if (!test_and_clear_bit(NCI_UP, &ndev->flags)) {
+ 		del_timer_sync(&ndev->cmd_timer);
++		del_timer_sync(&ndev->data_timer);
+ 		mutex_unlock(&ndev->req_lock);
+ 		return 0;
+ 	}
+@@ -331,6 +332,15 @@ static void nci_cmd_timer(unsigned long arg)
+ 	queue_work(ndev->cmd_wq, &ndev->cmd_work);
+ }
+ 
++/* NCI data exchange timer function */
++static void nci_data_timer(unsigned long arg)
++{
++	struct nci_dev *ndev = (void *) arg;
++
++	set_bit(NCI_DATA_EXCHANGE_TO, &ndev->flags);
++	queue_work(ndev->rx_wq, &ndev->rx_work);
++}
++
+ static int nci_dev_up(struct nfc_dev *nfc_dev)
+ {
+ 	struct nci_dev *ndev = nfc_get_drvdata(nfc_dev);
+@@ -585,6 +595,8 @@ int nci_register_device(struct nci_dev *ndev)
+ 
+ 	setup_timer(&ndev->cmd_timer, nci_cmd_timer,
+ 			(unsigned long) ndev);
++	setup_timer(&ndev->data_timer, nci_data_timer,
++			(unsigned long) ndev);
+ 
+ 	mutex_init(&ndev->req_lock);
+ 
+@@ -722,6 +734,9 @@ static void nci_tx_work(struct work_struct *work)
+ 			 nci_plen(skb->data));
+ 
+ 		nci_send_frame(skb);
++
++		mod_timer(&ndev->data_timer,
++			jiffies + msecs_to_jiffies(NCI_DATA_TIMEOUT));
+ 	}
+ }
+ 
+@@ -753,6 +768,15 @@ static void nci_rx_work(struct work_struct *work)
+ 			break;
+ 		}
+ 	}
++
++	/* check if a data exchange timout has occurred */
++	if (test_bit(NCI_DATA_EXCHANGE_TO, &ndev->flags)) {
++		/* complete the data exchange transaction, if exists */
++		if (test_bit(NCI_DATA_EXCHANGE, &ndev->flags))
++			nci_data_exchange_complete(ndev, NULL, -ETIMEDOUT);
++
++		clear_bit(NCI_DATA_EXCHANGE_TO, &ndev->flags);
++	}
+ }
+ 
+ /* ----- NCI TX CMD worker thread ----- */
+diff --git a/net/nfc/nci/data.c b/net/nfc/nci/data.c
+index e5756b3..7880ae9 100644
+--- a/net/nfc/nci/data.c
++++ b/net/nfc/nci/data.c
+@@ -44,6 +44,10 @@ void nci_data_exchange_complete(struct nci_dev *ndev,
+ 
+ 	pr_debug("len %d, err %d\n", skb ? skb->len : 0, err);
+ 
++	/* data exchange is complete, stop the data timer */
++	del_timer_sync(&ndev->data_timer);
++	clear_bit(NCI_DATA_EXCHANGE_TO, &ndev->flags);
++
+ 	if (cb) {
+ 		ndev->data_exchange_cb = NULL;
+ 		ndev->data_exchange_cb_context = 0;
+-- 
+1.7.0.4
 
