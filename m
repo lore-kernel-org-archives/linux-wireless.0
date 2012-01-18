@@ -1,36 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.23]:32856 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753290Ab2AGTmq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jan 2012 14:42:46 -0500
-Content-Type: text/plain; charset=UTF-8
-From: John Wyzer <john.wyzer@gmx.de>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: HT40 not working for Intel 5100 AGN ?
-Date: Sat, 07 Jan 2012 20:42:33 +0100
-Message-Id: <1325965297-sup-3780@localhost> (sfid-20120107_204250_502483_56C12E73)
+Received: from mms2.broadcom.com ([216.31.210.18]:4210 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751380Ab2ARHd5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jan 2012 02:33:57 -0500
+Message-ID: <4F1675DB.6070307@broadcom.com> (sfid-20120118_083401_119834_1F0CC24B)
+Date: Wed, 18 Jan 2012 08:33:47 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: Dan <dannyai.mobile@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Brcmsmac drivers
+References: <F18570BE-C886-4182-9D73-943283F3EB8D@gmail.com>
+In-Reply-To: <F18570BE-C886-4182-9D73-943283F3EB8D@gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kernel: git tag v3.2 
+On 01/18/2012 01:08 AM, Dan wrote:
+> Hi Arend,
+> 
+> I have been trying to get my BCM4313 wireless adapter to work in monitor mode under Linux. 
+> 
+> No matter what I try. I can't seem to get aircrack to capture data from the APs. I can capture beacons but data is always zero within airodump-ng. 
+> 
+> Is this a missing feature in the driver? Or a bug in the driver?
 
-After modprobe:
-Detected Intel(R) WiFi Link 5100 AGN, REV=0x54
+If you are using a mainline v3.2 than it is a missing feature. It will
+arrive in mainline in v3.3-rc1.
 
-If have an AP with openwrt configured to work with 802.11g+n, HT40+.
-A different Laptop with Windows installed connects with 150Mb/s
+> I've also had trouble compiling the latest bleeding compat-wireless. When loading the brcmsmac module it complains of some unknown symbol bcma_sonething something. 
+> 
+> My next step is to try and compile the brcmsmac drivers straight from the Linux wireless testing GIT branch. 
 
-The maximum bitrate for the aforementioned Intel card however is displayed by
-iwconfig to be 54 Mb/s which seems to be confirmed by the actual transfer
-rates.
-The connection is being established by wpa_supplicant 0.7.3.
+Yes. The current wireless-testing should contain monitor mode.
 
-I tried researching this problem but did not really find it documented. Is this
-a known issue or can I provide further information for debugging? 
+> Do you know the reason why monitor mode is unable to pick up data from APs?? 
+> Maybe I need a different binary firmware or I need set some options in the driver.?
+> 
+> Thanks,
+> Dan
+> 
+> 
+> 
 
-Many thanks,
-John
-
-PS: please include me in the reply.
+Gr. AvS
 
