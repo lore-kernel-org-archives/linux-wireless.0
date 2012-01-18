@@ -1,45 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:44388 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753670Ab2AMTbJ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:5601 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756509Ab2ARLtW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jan 2012 14:31:09 -0500
-Date: Fri, 13 Jan 2012 14:20:27 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: [PATCH] b43: add default option to avoid duplicating device
- support with brcmsmac
-Message-ID: <20120113192027.GE18899@tuxdriver.com> (sfid-20120113_203114_328875_031CA8CA)
-References: <1326315180-29398-1-git-send-email-linville@tuxdriver.com>
- <CACna6rxffpPhYVqKNttu79JET=NkBP4NrAayywQHWcj=mw=T9A@mail.gmail.com>
- <CAGRGNgUkBUvoBJydcdprBXP0ufR+PQ6nXFXdW546xjHbQ-O2Bg@mail.gmail.com>
+	Wed, 18 Jan 2012 06:49:22 -0500
+Message-ID: <4F16B1B3.3030209@qca.qualcomm.com> (sfid-20120118_124925_571247_E497A68E)
+Date: Wed, 18 Jan 2012 13:49:07 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAGRGNgUkBUvoBJydcdprBXP0ufR+PQ6nXFXdW546xjHbQ-O2Bg@mail.gmail.com>
+To: Alex Yang <xiaojuny@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH] Add testmode 2 for 6003 ART.
+References: <1326807149-3809-1-git-send-email-kvalo@qca.qualcomm.com>
+In-Reply-To: <1326807149-3809-1-git-send-email-kvalo@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 13, 2012 at 01:07:03PM +1100, Julian Calaby wrote:
-> 2012/1/13 Rafał Miłecki <zajec5@gmail.com>:
-> > 2012/1/11 John W. Linville <linville@tuxdriver.com>:
-> >> +config B43_BCMA_EXTRA
-> >> +       bool "Support for devices also supported by brcmsmac"
-> >> +       depends on B43_BCMA
-> >> +       default n
-> >> +
-> >
-> > Is this really *the* solution? I wonder if we can do whatever you're
-> > trying to do in a better way? To let final users try both drivers
-> > without recompiling kernel?
+On 01/17/2012 03:32 PM, Kalle Valo wrote:
+> From: Alex Yang <xiaojuny@qca.qualcomm.com>
 > 
-> Another issue is that this should arguably be default y if brcmsmac is disabled.
+> Add testmode 2 for 6003 ART. When you insmod ath6kl_sdio.ko
+> testmode=2, ath6kl will load ART firmware utf.bin and testscript
+> nullTestFlow.bin. These files should be put in the firmware folder.
+> 
+> Signed-off-by: Alex Yang <xiaojuny@qca.qualcomm.com> --- 
 
-Can you help by suggesting the correct Kconfig magic to implement that?
+Thanks, applied with following changes:
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+   kvalo: add "ath6kl:" to the title, word wrap the commit log and remove
+    extra line in the code
+
+Kalle
