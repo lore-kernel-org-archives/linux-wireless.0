@@ -1,71 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out5.smtp.messagingengine.com ([66.111.4.29]:58910 "EHLO
-	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752792Ab2ACMTU (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:65023 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751758Ab2ARLOH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 07:19:20 -0500
-Received: from compute5.internal (compute5.nyi.mail.srv.osa [10.202.2.45])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 89CCC2070C
-	for <linux-wireless@vger.kernel.org>; Tue,  3 Jan 2012 07:19:19 -0500 (EST)
-Message-ID: <4F02F244.6040902@fastmail.fm> (sfid-20120103_131944_138496_6E5E05C2)
-Date: Tue, 03 Jan 2012 12:19:16 +0000
-From: Jack Stone <jwjstone@fastmail.fm>
-MIME-Version: 1.0
-To: Oliver Neukum <oliver@neukum.org>
-CC: Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Matthew Garrett <mjg@redhat.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> <4F0220F5.30309@fastmail.fm> <20120103004220.084d61f3@pyramind.ukuu.org.uk> <201201031257.47265.oliver@neukum.org>
-In-Reply-To: <201201031257.47265.oliver@neukum.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Wed, 18 Jan 2012 06:14:07 -0500
+Received: by yenm6 with SMTP id m6so702218yen.19
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jan 2012 03:14:06 -0800 (PST)
+From: ilanelias78@gmail.com
+To: samuel@sortiz.org, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Ilan Elias <ilane@ti.com>
+Subject: [PATCH 2/3] NFC: NFC core layer should not set the target_idx
+Date: Wed, 18 Jan 2012 13:16:13 +0200
+Message-Id: <1326885374-13318-3-git-send-email-ilane@ti.com> (sfid-20120118_121410_905182_1B9A339A)
+In-Reply-To: <1326885374-13318-1-git-send-email-ilane@ti.com>
+References: <1326885374-13318-1-git-send-email-ilane@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/01/12 11:57, Oliver Neukum wrote:
-> Am Dienstag, 3. Januar 2012, 01:42:20 schrieb Alan Cox:
->> In that case however you don't want some generic firmware module knowing
->> all this crap, your driver can just request_firmware() the stuff as
->> modprobe and free it up on the module unload. For a typical 8bit firmware
->> of a few K you'll free a ton more memory unloading the module than the
->> firmware ! That I think actually covers the majority of devices under
->> discussion.
-> 
-> I am afraid it doesn't, at least not fully.
-> We have many devices whose primary (operational) driver does not load
-> the firmware. That job is left to a secondary driver or user space.
-> 
-> We could leave those secondary drivers and their firmware in RAM after
-> their primary usage and except for a few pathological cases (which
-> can be solved with a few udev rules preventively loading drivers) we'd
-> be good, but we lack a mechanism for switching to a seconary driver
-> and back during resumption.
+From: Ilan Elias <ilane@ti.com>
 
-You don't mension the bus used so I'm going to use USB as an example.
+The NFC core layer should not set the target_idx.
+Instead, the driver layer (e.g. NCI, PN533) should set the
+target_idx, so that it will be able to identify the target
+when its I/F (e.g. activate_target) is called.
+This is required in order to support multiple targets.
+Note that currently supported drivers (PN533 and NCI) don't
+use the target_idx in their implementation.
 
-As I understand it the majority of devices that need firmware have two
-different identities: the "bootstrap" id and the "primary" id. If we
-always make sure we have the drivers for both bootsrap and primary ids
-loaded then we should have the firmware in memory. If the device has
-lost its firmware then it will reregister with the bootstrap id
-otherwise it will continue with the primary id. Either way the correct
-driver should pick it up and handle it.
+Signed-off-by: Ilan Elias <ilane@ti.com>
+---
+ include/net/nfc/nfc.h |    1 -
+ net/nfc/core.c        |    5 -----
+ net/nfc/rawsock.c     |   12 ------------
+ 3 files changed, 0 insertions(+), 18 deletions(-)
 
-That said, I guess there are more complicated / difficult pieces of
-hardware that might not do that. Is that the case here? Can we detect
-that the firmware needs reloading and have the primary driver "yield" to
-the firmware driver?
-
-Thanks,
-
-Jack
+diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
+index 819530d..d253278 100644
+--- a/include/net/nfc/nfc.h
++++ b/include/net/nfc/nfc.h
+@@ -87,7 +87,6 @@ struct nfc_genl_data {
+ 
+ struct nfc_dev {
+ 	unsigned idx;
+-	unsigned target_idx;
+ 	struct nfc_target *targets;
+ 	int n_targets;
+ 	int targets_generation;
+diff --git a/net/nfc/core.c b/net/nfc/core.c
+index 3ddf6e6..6089aca 100644
+--- a/net/nfc/core.c
++++ b/net/nfc/core.c
+@@ -431,15 +431,10 @@ EXPORT_SYMBOL(nfc_alloc_recv_skb);
+ int nfc_targets_found(struct nfc_dev *dev, struct nfc_target *targets,
+ 							int n_targets)
+ {
+-	int i;
+-
+ 	pr_debug("dev_name=%s n_targets=%d\n", dev_name(&dev->dev), n_targets);
+ 
+ 	dev->polling = false;
+ 
+-	for (i = 0; i < n_targets; i++)
+-		targets[i].idx = dev->target_idx++;
+-
+ 	spin_lock_bh(&dev->targets_lock);
+ 
+ 	dev->targets_generation++;
+diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
+index 2e2f8c6..5325439 100644
+--- a/net/nfc/rawsock.c
++++ b/net/nfc/rawsock.c
+@@ -92,18 +92,6 @@ static int rawsock_connect(struct socket *sock, struct sockaddr *_addr,
+ 		goto error;
+ 	}
+ 
+-	if (addr->target_idx > dev->target_idx - 1 ||
+-		addr->target_idx < dev->target_idx - dev->n_targets) {
+-		rc = -EINVAL;
+-		goto error;
+-	}
+-
+-	if (addr->target_idx > dev->target_idx - 1 ||
+-		addr->target_idx < dev->target_idx - dev->n_targets) {
+-		rc = -EINVAL;
+-		goto error;
+-	}
+-
+ 	rc = nfc_activate_target(dev, addr->target_idx, addr->nfc_protocol);
+ 	if (rc)
+ 		goto put_dev;
+-- 
+1.7.0.4
 
