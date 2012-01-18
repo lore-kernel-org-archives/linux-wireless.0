@@ -1,40 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from i118-21-156-233.s30.a048.ap.plala.or.jp ([118.21.156.233]:36679
-	"EHLO rinabert.homeip.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754594Ab2AaOd2 (ORCPT
+Received: from merlin.infradead.org ([205.233.59.134]:41806 "EHLO
+	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752156Ab2ARMdT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 09:33:28 -0500
-From: Masanari Iida <standby24x7@gmail.com>
-To: kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org
-Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
-	standby24x7@gmail.com
-Subject: [PATCH] [trivial] ath6kl: Fix typo in cfg80211.c
-Date: Tue, 31 Jan 2012 23:32:55 +0900
-Message-Id: <1328020375-2210-1-git-send-email-standby24x7@gmail.com> (sfid-20120131_153344_366483_52BD2A6E)
+	Wed, 18 Jan 2012 07:33:19 -0500
+Subject: Re: [PATCH v3 3/3] NFC: Free sk_buff if nfcwilink_send fails
+From: Samuel Ortiz <samuel@sortiz.org>
+Reply-To: Samuel Ortiz <samuel@sortiz.org>
+To: ilanelias78@gmail.com
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Ilan Elias <ilane@ti.com>
+In-Reply-To: <1326802293-11539-4-git-send-email-ilane@ti.com>
+References: <1326802293-11539-1-git-send-email-ilane@ti.com>
+	 <1326802293-11539-4-git-send-email-ilane@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 18 Jan 2012 13:39:27 +0100
+Message-ID: <1326890367.22824.29.camel@sortiz-mobl> (sfid-20120118_133322_161243_9BCA5A63)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct spelling "spported" to "supported" in
-drivers/net/wireless/ath/ath6kl/cfg80211.c
+Hi Ilan,
 
-Signed-off-by: Masanari Iida <standby24x7@gmail.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Tue, 2012-01-17 at 14:11 +0200, ilanelias78@gmail.com wrote:
+> From: Ilan Elias <ilane@ti.com>
+> 
+> Free sk_buff if nfcwilink_send fails.
+> 
+> Signed-off-by: Ilan Elias <ilane@ti.com>
+Acked-by: Samuel Ortiz <sameo@linux.intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 6c59a21..ee1715b 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -196,7 +196,7 @@ static int ath6kl_set_auth_type(struct ath6kl_vif *vif,
- 		break;
- 
- 	default:
--		ath6kl_err("%s: 0x%x not spported\n", __func__, auth_type);
-+		ath6kl_err("%s: 0x%x not supported\n", __func__, auth_type);
- 		return -ENOTSUPP;
- 	}
- 
--- 
-1.7.6.5
+Cheers,
+Samuel.
+
 
