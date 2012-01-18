@@ -1,49 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:43681 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752196Ab2AURBQ (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:50351 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756444Ab2ARTQ3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jan 2012 12:01:16 -0500
-Received: by obcva7 with SMTP id va7so1777950obc.19
-        for <linux-wireless@vger.kernel.org>; Sat, 21 Jan 2012 09:01:16 -0800 (PST)
+	Wed, 18 Jan 2012 14:16:29 -0500
+Received: by ggnb1 with SMTP id b1so425734ggn.19
+        for <linux-wireless@vger.kernel.org>; Wed, 18 Jan 2012 11:16:28 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4F1967BE.3050602@broadcom.com>
-References: <CAC9WiBj8VkYe7ku7rc-e_+d7yNEAtEiozs8tnR_A1T1H3XjiSA@mail.gmail.com>
-	<CAC9WiBh5-vS6UmCYCs911WAudmWDtsgDPmHim71LtvaC81HsWQ@mail.gmail.com>
-	<4F1967BE.3050602@broadcom.com>
-Date: Sat, 21 Jan 2012 18:01:16 +0100
-Message-ID: <CAC9WiBhERmWeJOWP59TOD3gYF7yV_4zcyg5yDZHrBbdh=7ykkw@mail.gmail.com> (sfid-20120121_180119_381274_AD331EA8)
-Subject: Re: brcmsmac broken with 3.2
-From: Francis Moreau <francis.moro@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Alwin Beukers <alwin@broadcom.com>,
-	Roland Vossen <rvossen@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1325604516-14280-1-git-send-email-linville@tuxdriver.com>
+References: <1325604516-14280-1-git-send-email-linville@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Wed, 18 Jan 2012 11:16:07 -0800
+Message-ID: <CAB=NE6VJK5wohCijn6QMr0FTMV1HXDh1YPOB8d3BvgeuSNS7LQ@mail.gmail.com> (sfid-20120118_201639_629764_EE2ACCBE)
+Subject: Re: [PATCH] Enable CONFIG_RT2800{PCI,USB}_RT53XX
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 20, 2012 at 2:10 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> On 01/19/2012 10:19 PM, Francis Moreau wrote:
->> Hi all,
->>
->> I'm wondering now why the brmsmac driver had been removed from the
->> staging driver tree if no one cares.
->>
->> Bye.
->>
->> On Thu, Jan 12, 2012 at 8:32 PM, Francis Moreau <francis.moro@gmail.com> wrote:
->>> Hello,
->>>
->>> I'm facing a new issue after upgrading from 3.1 to 3.2.
->>>
->>> It happens when switching on/off my wireless card (BCM4313 [14e4:4727]).
->>>
->
-> I forgot to ask. With switching on/off you mean the RFKILL switch?
->
+On Tue, Jan 3, 2012 at 7:28 AM, John W. Linville <linville@tuxdriver.com> wrote:
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+> ---
+> Any reason to treat these differently than the RT35XX devices?
 
-Yes.
+I think no one had just tested it.
 
--- 
-Francis
+Thanks, applied and pushed!
+
+mcgrof@tux ~/linux-stable (git::master)$ git describe --contains
+aca355b9784fbc960c9caa6b30f953a965296420
+v3.0-rc2~7^2~16^2~158
+
+So I've sucked this into the linux-3.[012].y branches of
+compat-wireless for the next stable release.
+
+  Luis
