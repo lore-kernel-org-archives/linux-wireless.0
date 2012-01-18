@@ -1,54 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:41787 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751465Ab2AEHai (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:55137 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754220Ab2ARDEV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 02:30:38 -0500
-Received: by obcwo16 with SMTP id wo16so236461obc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 04 Jan 2012 23:30:37 -0800 (PST)
-MIME-Version: 1.0
-Date: Thu, 5 Jan 2012 15:30:36 +0800
-Message-ID: <CAHzJmyaXGpZO3TFaMwqKZaYwO4brtxWENoekvGSdo20UVdUVZg@mail.gmail.com> (sfid-20120105_083042_277862_293CD895)
-Subject: ath9k_htc.ko
-From: Linx Zhang <linx.zhang@gmail.com>
+	Tue, 17 Jan 2012 22:04:21 -0500
+Date: Tue, 17 Jan 2012 21:04:18 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
-To: unlisted-recipients:; (no To-header on input)
+Subject: [PATCH] rtlwifi: Move pr_fmt macros to a single location
+Message-ID: <4f1636b2.D5g8MJEc04WZglzi%Larry.Finger@lwfinger.net> (sfid-20120118_040443_882117_913B2005)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All,
+Although the rtlwifi family of devices contains 11 copies of the pr_fmt
+macro, the macro is not defined for all routines that need it. By moving
+the macro to wifi.h, a single copy is available for all routines.
 
-Anyone knows how to setup Atheros USB wifi card(TP-LINK WN821N) as AP
-mode on the linux (Ubuntu 11.10)? I have tested below commands, but
-failed:
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-mypromp#iwconfig
-wlan0     IEEE 802.11bgn  ESSID:off/any
-          Mode:Managed  Access Point: Not-Associated   Tx-Power=20 dBm
-          Retry  long limit:7   RTS thr:off   Fragment thr:off
-          Encryption key:off
-          Power Management:off
+ base.c               |    2 --
+ cam.c                |    2 --
+ rtl8192c/fw_common.c |    2 --
+ rtl8192cu/hw.c       |    2 --
+ rtl8192cu/mac.c      |    2 --
+ rtl8192de/sw.c       |    2 --
+ rtl8192se/hw.c       |    2 --
+ rtl8192se/phy.c      |    2 --
+ rtl8192se/rf.c       |    2 --
+ rtl8192se/sw.c       |    2 --
+ usb.c                |    2 --
+ wifi.h               |    2 ++
+ 12 files changed, 2 insertions(+), 22 deletions(-)
+---
 
-mypromp#/wlanconfig ath create wlandev wlan0 wlanmode ap
-wlanconfig: ioctl: Operation not supported
-
-mypromp# lsmod
-Module                  Size  Used by
-ath9k_htc              51280  0
-ath9k_common            1661  1 ath9k_htc
-ath9k_hw              335589  2 ath9k_htc,ath9k_common
-ath                    13592  3 ath9k_htc,ath9k_common,ath9k_hw
-mac80211              224045  1 ath9k_htc
-cfg80211              151788  3 ath9k_htc,ath,mac80211
-compat                 15880  3 ath9k_htc,mac80211,cfg80211
-rfkill                 14626  1 cfg80211
-
-mypromp# lsusb
-Bus 001 Device 007: ID 0cf3:7015 Atheros Communications, Inc.
-
-Any comments or helps will be appreciated!
-
-Thanks.
-
-Morris
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/base.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/base.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/base.c
+@@ -27,8 +27,6 @@
+  *
+  *****************************************************************************/
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+-
+ #include <linux/ip.h>
+ #include <linux/module.h>
+ #include "wifi.h"
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/cam.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/cam.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/cam.c
+@@ -27,8 +27,6 @@
+  *
+  *****************************************************************************/
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+-
+ #include <linux/export.h>
+ #include "wifi.h"
+ #include "cam.h"
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
+@@ -27,8 +27,6 @@
+  *
+  *****************************************************************************/
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+-
+ #include <linux/firmware.h>
+ #include <linux/export.h>
+ #include "../wifi.h"
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -27,8 +27,6 @@
+  *
+  *****************************************************************************/
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+-
+ #include "../wifi.h"
+ #include "../efuse.h"
+ #include "../base.h"
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/mac.c
+@@ -27,8 +27,6 @@
+  *
+ ****************************************************************************/
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+-
+ #include <linux/module.h>
+ 
+ #include "../wifi.h"
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/sw.c
+@@ -27,8 +27,6 @@
+  *
+  *****************************************************************************/
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+-
+ #include <linux/vmalloc.h>
+ #include <linux/module.h>
+ 
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/hw.c
+@@ -27,8 +27,6 @@
+  *
+  *****************************************************************************/
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+-
+ #include "../wifi.h"
+ #include "../efuse.h"
+ #include "../base.h"
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/phy.c
+@@ -27,8 +27,6 @@
+  *
+  *****************************************************************************/
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+-
+ #include "../wifi.h"
+ #include "../pci.h"
+ #include "../ps.h"
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/rf.c
+@@ -27,8 +27,6 @@
+  *
+  *****************************************************************************/
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+-
+ #include "../wifi.h"
+ #include "reg.h"
+ #include "def.h"
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+@@ -27,8 +27,6 @@
+  *
+  *****************************************************************************/
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+-
+ #include <linux/vmalloc.h>
+ #include <linux/module.h>
+ 
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/usb.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/usb.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/usb.c
+@@ -25,8 +25,6 @@
+  *
+  *****************************************************************************/
+ 
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+-
+ #include <linux/usb.h>
+ #include <linux/export.h>
+ #include "core.h"
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/wifi.h
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/wifi.h
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/wifi.h
+@@ -172,6 +172,8 @@ enum hardware_type {
+ 	 _pdesc->rxmcs == DESC92_RATE5_5M ||		\
+ 	 _pdesc->rxmcs == DESC92_RATE11M)
+ 
++#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++
+ enum scan_operation_backup_opt {
+ 	SCAN_OPT_BACKUP = 0,
+ 	SCAN_OPT_RESTORE,
