@@ -1,45 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:33837 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751973Ab2AaHnT (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:61611 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756644Ab2ARCRw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 02:43:19 -0500
-Received: by lahi5 with SMTP id i5so2211979lah.4
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 23:43:17 -0800 (PST)
-Subject: Re: [PATCH 0/7] wl12xx: add some psm/suspend features
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1327935525-24361-1-git-send-email-eliad@wizery.com>
-References: <1327935525-24361-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 31 Jan 2012 09:43:13 +0200
-Message-ID: <1327995793.3626.128.camel@cumari> (sfid-20120131_084411_118648_3AE934FE)
-Mime-Version: 1.0
+	Tue, 17 Jan 2012 21:17:52 -0500
+Received: by mail-iy0-f174.google.com with SMTP id f6so5171125iag.19
+        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2012 18:17:52 -0800 (PST)
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: Javier Cardona <javier@cozybit.com>, johannes@sipsolutions.net,
+	linville@tuxdriver.com
+Subject: [PATCH] mac80211: Use the right headroom size for mesh mgmt frames
+Date: Tue, 17 Jan 2012 18:17:46 -0800
+Message-Id: <1326853066-12549-1-git-send-email-thomas@cozybit.com> (sfid-20120118_031814_403247_06F752B7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-01-30 at 16:58 +0200, Eliad Peller wrote: 
-> Add some psm / suspend features:
-> * Add the ability to force psm (by default, the fw uses dynamic ps)
-> * Use differnet wake up conditions on suspend
-> * Add pattern support to wowlan triggers
-> 
-> Eyal Shapira (4):
->   wl12xx: Set different wake up conditions in case of suspend
->   wl12xx: add suspend_listen_interval debugfs file
->   wl12xx: add forced_ps mode
->   wl12xx: add forced_ps debugfs file
-> 
-> Pontus Fuchs (3):
->   wl12xx: Add rx data filter commands
->   wl12xx: Add functions for managing rx data filters
->   wl12xx: Add support for WoWLAN packet pattern trigger
+From: Javier Cardona <javier@cozybit.com>
 
-Skipping this patchset on Eliad's request.  He will send a v2 with some
-squashes and new patches soon.
+Use local->tx_headroom instad of local->hw.extra_tx_headroom.
+local->tx_headroom is the max of hw.extra_tx_headroom required by the
+driver and the headroom required by mac80211 for status reporting.  On
+drivers where hw.extra_tx_headroom is smaller than what mac80211
+requires (e.g. ath5k), we would not reserve sufficient buffer space to
+report tx status.
 
+Also, don't reserve local->tx_headroom + local->hw.extra_tx_headroom.
+
+Reported-by: Simon Morgenthaler <s.morgenthaler@students.unibe.ch>
+Reported-by: Kai Scharwies <kai@scharwies.de>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+ net/mac80211/mesh_hwmp.c  |    8 ++++----
+ net/mac80211/mesh_plink.c |    4 ++--
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 73abb75..54df1b2 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -119,12 +119,12 @@ static int mesh_path_sel_frame_tx(enum mpath_frame_type action, u8 flags,
+ 	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.mesh_action) +
+ 		      sizeof(mgmt->u.action.u.mesh_action);
+ 
+-	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
++	skb = dev_alloc_skb(local->tx_headroom +
+ 			    hdr_len +
+ 			    2 + 37); /* max HWMP IE */
+ 	if (!skb)
+ 		return -1;
+-	skb_reserve(skb, local->hw.extra_tx_headroom);
++	skb_reserve(skb, local->tx_headroom);
+ 	mgmt = (struct ieee80211_mgmt *) skb_put(skb, hdr_len);
+ 	memset(mgmt, 0, hdr_len);
+ 	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+@@ -250,12 +250,12 @@ int mesh_path_error_tx(u8 ttl, u8 *target, __le32 target_sn,
+ 	if (time_before(jiffies, ifmsh->next_perr))
+ 		return -EAGAIN;
+ 
+-	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
++	skb = dev_alloc_skb(local->tx_headroom +
+ 			    hdr_len +
+ 			    2 + 15 /* PERR IE */);
+ 	if (!skb)
+ 		return -1;
+-	skb_reserve(skb, local->tx_headroom + local->hw.extra_tx_headroom);
++	skb_reserve(skb, local->tx_headroom);
+ 	mgmt = (struct ieee80211_mgmt *) skb_put(skb, hdr_len);
+ 	memset(mgmt, 0, hdr_len);
+ 	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 41ef1b4..a172517 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -172,7 +172,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 	int hdr_len = offsetof(struct ieee80211_mgmt, u.action.u.self_prot) +
+ 		      sizeof(mgmt->u.action.u.self_prot);
+ 
+-	skb = dev_alloc_skb(local->hw.extra_tx_headroom +
++	skb = dev_alloc_skb(local->tx_headroom +
+ 			    hdr_len +
+ 			    2 + /* capability info */
+ 			    2 + /* AID */
+@@ -186,7 +186,7 @@ static int mesh_plink_frame_tx(struct ieee80211_sub_if_data *sdata,
+ 			    sdata->u.mesh.ie_len);
+ 	if (!skb)
+ 		return -1;
+-	skb_reserve(skb, local->hw.extra_tx_headroom);
++	skb_reserve(skb, local->tx_headroom);
+ 	mgmt = (struct ieee80211_mgmt *) skb_put(skb, hdr_len);
+ 	memset(mgmt, 0, hdr_len);
+ 	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT |
 -- 
-Cheers,
-Luca.
+1.7.5.4
 
