@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:48866 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752088Ab2A2K5d (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jan 2012 05:57:33 -0500
-Received: by eekc14 with SMTP id c14so1087116eek.19
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Jan 2012 02:57:31 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] MAINTAINERS: update b43(legacy) mailing list
-Date: Sun, 29 Jan 2012 11:59:42 +0100
-Message-Id: <1327834782-4800-1-git-send-email-zajec5@gmail.com> (sfid-20120129_115736_774753_56A2D6DD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from h118.nextmail.ru ([194.67.36.118]:59563 "EHLO h118.nextmail.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932356Ab2ARRas (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 Jan 2012 12:30:48 -0500
+To: =?koi8-r?B?TW9oYW1tZWQgU2hhZmk=?= <shafi.wireless@gmail.com>
+From: =?koi8-r?B?TVI=?= <g7af0ec1e3ea1e7b1@nextmail.ru>
+CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	"=?koi8-r?B?UmFqa3VtYXIgTWFub2hhcmFu?=" <rmanohar@qca.qualcomm.com>
+Subject: =?koi8-r?B?UmU6IGF0aDlrIGNyYXNoIDMuMi1yYzc=?=
+Date: Wed, 18 Jan 2012 21:30:38 +0400
+Message-ID: <NEXT-4f1701be44f182.23501812@nextmail.ru> (sfid-20120118_183109_750516_FF2B2085)
+Mime-Version: 1.0
+Content-type: text/plain;
+	 charset="koi8-r"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+ > 2012/1/18 MR <g7af0ec1e3ea1e7b1@nextmail.ru>:
 
-Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
----
- MAINTAINERS |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ >> ö> I wonder if maybe a congested AP could help.. But unclear how to
+ >obtain
+ > > ö> that quickly and reliably.
+ > >
+ > > Even with debugging off WiFi works reliably across different 
+conditions.
+ > >
+ > 
+ > you can test frequent roaming with the attached script. also you can
+ > test roaming, after enabling ASPM(attached script, courtesy: Luis)
+ > please completely read and understand
+ > http://linuxwireless.org/en/users/Documentation/ASPM
+ > incorrect tweak may cause hardware issues.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 6e68daa1..1adb206 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1411,7 +1411,7 @@ F:	net/ax25/
- B43 WIRELESS DRIVER
- M:	Stefano Brivio <stefano.brivio@polimi.it>
- L:	linux-wireless@vger.kernel.org
--L:	b43-dev@lists.infradead.org (moderated for non-subscribers)
-+L:	b43-dev@lists.infradead.org
- W:	http://linuxwireless.org/en/users/Drivers/b43
- S:	Maintained
- F:	drivers/net/wireless/b43/
-@@ -1420,6 +1420,7 @@ B43LEGACY WIRELESS DRIVER
- M:	Larry Finger <Larry.Finger@lwfinger.net>
- M:	Stefano Brivio <stefano.brivio@polimi.it>
- L:	linux-wireless@vger.kernel.org
-+L:	b43-dev@lists.infradead.org
- W:	http://linuxwireless.org/en/users/Drivers/b43
- S:	Maintained
- F:	drivers/net/wireless/b43legacy/
--- 
-1.7.7
+Well, when I got the failure, exactly one roaming attempt happenned...
+
+ASPM seems disabled and from what I understood, it is a Bad Idea to enable 
+it before fully understanding why exactly it was disabled. I have no time to 
+acquire this understanding now.
+
+I read the roaming script. I need to get the scan results and then issue 
+"roam" in loop between all the APs I can access, right? Will try just to 
+collect some new testing data.
+
+Thanks for the patch - looks like it works fine so far.
+
 
