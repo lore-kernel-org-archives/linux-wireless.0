@@ -1,62 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39035 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:52466 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751810Ab2ABKjy (ORCPT
+	with ESMTP id S1756832Ab2AREKF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 05:39:54 -0500
-Subject: Re: [PATCH v2 1/3] mac80211: check sta_apply_parameters() return
- value
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1325162501-7996-2-git-send-email-eliad@wizery.com> (sfid-20111229_134042_080500_86ED6831)
-References: <1325162501-7996-1-git-send-email-eliad@wizery.com>
-	 <1325162501-7996-2-git-send-email-eliad@wizery.com>
-	 (sfid-20111229_134042_080500_86ED6831)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 02 Jan 2012 11:39:48 +0100
-Message-ID: <1325500788.3643.0.camel@jlt3.sipsolutions.net> (sfid-20120102_114013_491124_A6B6D451)
-Mime-Version: 1.0
+	Tue, 17 Jan 2012 23:10:05 -0500
+Received: from wireless by sipsolutions.net with local (Exim 4.77)
+	(envelope-from <wireless@sipsolutions.net>)
+	id 1RnMqZ-0005fC-1S
+	for linux-wireless@vger.kernel.org; Wed, 18 Jan 2012 05:10:03 +0100
+To: linux-wireless@vger.kernel.org
+Subject: [ANN] iw: v3.3
+Reply-to: linux-wireless@vger.kernel.org
+Message-Id: <E1RnMqZ-0005fC-1S@sipsolutions.net>
+From: wireless@sipsolutions.net
+Date: Wed, 18 Jan 2012 05:10:03 +0100
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-12-29 at 14:41 +0200, Eliad Peller wrote:
-> Bail out if sta_apply_parameters() returns an error.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
 
-Good catch,
+A new release of iw (v3.3) is available at:
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+http://wireless.kernel.org/download/iw/iw-3.3.tar.bz2
 
-> ---
->  net/mac80211/cfg.c |    7 ++++++-
->  1 files changed, 6 insertions(+), 1 deletions(-)
-> 
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 662125d..1c5388d 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -1001,6 +1001,7 @@ static int ieee80211_change_station(struct wiphy *wiphy,
->  	struct ieee80211_local *local = wiphy_priv(wiphy);
->  	struct sta_info *sta;
->  	struct ieee80211_sub_if_data *vlansdata;
-> +	int err;
->  
->  	mutex_lock(&local->sta_mtx);
->  
-> @@ -1040,7 +1041,11 @@ static int ieee80211_change_station(struct wiphy *wiphy,
->  		ieee80211_send_layer2_update(sta);
->  	}
->  
-> -	sta_apply_parameters(local, sta, params);
-> +	err = sta_apply_parameters(local, sta, params);
-> +	if (err) {
-> +		mutex_unlock(&local->sta_mtx);
-> +		return err;
-> +	}
->  
->  	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER) && params->supported_rates)
->  		rate_control_rate_init(sta);
+SHA1 sum: 5d167faf4e8a9b33d04170402f351b4da66a331f
 
+Here is the short log of the changes (since v3.2)
+included in this release:
+
+Antonio Quartulli (1):
+      iw: add support for NL80211_CMD_DEL_STATION event
+
+Ben Greear (1):
+      iw: Support ht-capability overrides mask.
+
+Bjarke Istrup Pedersen (1):
+      always use libnl 3.2 as 3.2, not 3.0
+
+Felix Fietkau (1):
+      iw: fix regression in tx power validation
+
+Gilles Espinasse (2):
+      Fix linking with libnl-3
+      fix compilation against libnl-3.x
+
+Johannes Berg (9):
+      use genl_ctrl_resolve()
+      Revert "Fix linking with libnl-3"
+      remove NLVERSION from Makefile
+      update nl80211.h
+      update nl80211.h
+      whitespace cleanups
+      update nl80211.h
+      parse NL80211_ATTR_FEATURE_FLAGS
+      update version to 3.3
+
+Nick Black (2):
+      use signed int where negative values are used
+      whitespace cleanups
+
+Simon Wunderlich (2):
+      iw: add support for NoAck per tid
+      iw: add HT options for ibss
+
+Yoni Divinsky (1):
+      iw: fix wifi wmm ie print function
 
