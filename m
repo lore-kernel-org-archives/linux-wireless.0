@@ -1,77 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60303 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752509Ab2ATM6n (ORCPT
+Received: from mailout-de.gmx.net ([213.165.64.23]:60698 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751828Ab2ARTxR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 07:58:43 -0500
-Message-Id: <20120120125740.332467077@sipsolutions.net> (sfid-20120120_135847_752407_4B44A8C5)
-Date: Fri, 20 Jan 2012 13:55:17 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 01/11] mac80211: move managed mode station state
- modification
-References: <20120120125516.000124996@sipsolutions.net>
-Mime-Version: 1.0
+	Wed, 18 Jan 2012 14:53:17 -0500
+From: "Stefan Lippers-Hollmann" <s.L-H@gmx.de>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH RESEND] crda: add nested support for libnl-3.2
+Date: Wed, 18 Jan 2012 20:53:03 +0100
+Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>
+References: <201112192127.25032.s.L-H@gmx.de>
+In-Reply-To: <201112192127.25032.s.L-H@gmx.de>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201201182053.08055.s.L-H@gmx.de> (sfid-20120118_205321_222155_52739303)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Skip libnl-3.1 due to broken .pc files.
 
-Move the station state modification right before insert,
-this just makes the current code more readable (you can
-tell that it's before insertion looking at a single
-screenful of code) right now, but some upcoming changes
-will require this.
+Tested to work with:
+- libnl-3.2.3 (Debian 3.2.3-1)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Changes-licensed-under: ISC
+Signed-off-by: Stefan Lippers-Hollmann <s.l-h@gmx.de>
 ---
- net/mac80211/mlme.c |   28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
+No changes since the intial submission, this patch is currently in use
+for crda in Debian/sid, Debian/wheezy and Ubuntu/precise.
+---
+ Makefile |   25 ++++++++++++++++---------
+ crda.c   |    4 ++--
+ 2 files changed, 18 insertions(+), 11 deletions(-)
 
---- a/net/mac80211/mlme.c	2012-01-20 13:54:17.000000000 +0100
-+++ b/net/mac80211/mlme.c	2012-01-20 13:54:18.000000000 +0100
-@@ -1587,20 +1587,6 @@ static bool ieee80211_assoc_success(stru
- 		return false;
- 	}
+diff --git a/Makefile b/Makefile
+index 084d8e5..5a8ed46 100644
+--- a/Makefile
++++ b/Makefile
+@@ -48,19 +48,26 @@ INSTALL ?= install
+ NL1FOUND := $(shell pkg-config --atleast-version=1 libnl-1 && echo Y)
+ NL2FOUND := $(shell pkg-config --atleast-version=2 libnl-2.0 && echo Y)
+ NL3FOUND := $(shell pkg-config --atleast-version=3 libnl-3.0 && echo Y)
++NL32FOUND := $(shell pkg-config --atleast-version=3 libnl-3.2 && echo Y)
  
--	err = sta_info_move_state(sta, IEEE80211_STA_AUTH);
--	if (!err)
--		err = sta_info_move_state(sta, IEEE80211_STA_ASSOC);
--	if (!err && !(ifmgd->flags & IEEE80211_STA_CONTROL_PORT))
--		err = sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
--	if (err) {
--		printk(KERN_DEBUG
--		       "%s: failed to move station %pM to desired state\n",
--		       sdata->name, sta->sta.addr);
--		WARN_ON(__sta_info_destroy(sta));
--		mutex_unlock(&sdata->local->sta_mtx);
--		return false;
--	}
--
- 	rates = 0;
- 	basic_rates = 0;
- 	sband = local->hw.wiphy->bands[wk->chan->band];
-@@ -1648,6 +1634,20 @@ static bool ieee80211_assoc_success(stru
- 	if (elems.wmm_param)
- 		set_sta_flag(sta, WLAN_STA_WME);
+-ifeq ($(NL3FOUND),Y)
++ifeq ($(NL32FOUND),Y)
+ CFLAGS += -DCONFIG_LIBNL30
+-NLLIBS += -lnl-genl
+-NLLIBNAME = libnl-3.0
++NLLIBS += $(shell pkg-config --libs libnl-genl-3.2)
++NLLIBNAME = libnl-3.2
+ else
+-	ifeq ($(NL2FOUND),Y)
+-	CFLAGS += -DCONFIG_LIBNL20
+-	NLLIBS += -lnl-genl
+-	NLLIBNAME = libnl-2.0
++	ifeq ($(NL3FOUND),Y)
++	CFLAGS += -DCONFIG_LIBNL30
++	NLLIBS += $(shell pkg-config --libs libnl-genl-3.0)
++	NLLIBNAME = libnl-3.0
+ 	else
+-		ifeq ($(NL1FOUND),Y)
+-		NLLIBNAME = libnl-1
++		ifeq ($(NL2FOUND),Y)
++		CFLAGS += -DCONFIG_LIBNL20
++		NLLIBS += -lnl-genl
++		NLLIBNAME = libnl-2.0
++		else
++			ifeq ($(NL1FOUND),Y)
++			NLLIBNAME = libnl-1
++			endif
+ 		endif
+ 	endif
+ endif
+diff --git a/crda.c b/crda.c
+index 1e2ff22..1db54a5 100644
+--- a/crda.c
++++ b/crda.c
+@@ -21,7 +21,7 @@
+ #include "regdb.h"
+ #include "reglib.h"
  
-+	err = sta_info_move_state(sta, IEEE80211_STA_AUTH);
-+	if (!err)
-+		err = sta_info_move_state(sta, IEEE80211_STA_ASSOC);
-+	if (!err && !(ifmgd->flags & IEEE80211_STA_CONTROL_PORT))
-+		err = sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
-+	if (err) {
-+		printk(KERN_DEBUG
-+		       "%s: failed to move station %pM to desired state\n",
-+		       sdata->name, sta->sta.addr);
-+		WARN_ON(__sta_info_destroy(sta));
-+		mutex_unlock(&sdata->local->sta_mtx);
-+		return false;
-+	}
-+
- 	/* sta_info_reinsert will also unlock the mutex lock */
- 	err = sta_info_reinsert(sta);
- 	sta = NULL;
-
+-#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30)
++#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30) && !defined(CONFIG_LIBNL32)
+ /* libnl 2.0 compatibility code */
+ static inline struct nl_handle *nl_socket_alloc(void)
+ {
+@@ -44,7 +44,7 @@ static inline int __genl_ctrl_alloc_cache(struct nl_handle *h, struct nl_cache *
+ 
+ #define genl_ctrl_alloc_cache __genl_ctrl_alloc_cache
+ #define nl_sock nl_handle
+-#endif /* CONFIG_LIBNL20 && CONFIG_LIBNL30 */
++#endif /* CONFIG_LIBNL20 && CONFIG_LIBNL30 && CONFIG_LIBNL32 */
+ 
+ struct nl80211_state {
+ 	struct nl_sock *nl_sock;
+-- 
+1.7.8.3
 
