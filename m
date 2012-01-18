@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:41174 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752710Ab2A3NnN (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:63066 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751915Ab2ARMLG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 08:43:13 -0500
-Received: by wics10 with SMTP id s10so3421963wic.19
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 05:43:12 -0800 (PST)
+	Wed, 18 Jan 2012 07:11:06 -0500
+Message-ID: <4F16B682.60302@qca.qualcomm.com> (sfid-20120118_131110_847513_1EA392AE)
+Date: Wed, 18 Jan 2012 14:09:38 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-From: Tom Gundersen <teg@jklm.no>
-Date: Mon, 30 Jan 2012 14:42:52 +0100
-Message-ID: <CAG-2HqUqwHo_xgqC79riQF2DA4DPz1Qy5ZARQK8GT+tf_-UKRg@mail.gmail.com> (sfid-20120130_144316_998822_69311B85)
-Subject: status of ipw2x00
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: linux-wireless@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
-Content-Type: text/plain; charset=UTF-8
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH v3 1/8] ath6kl: rename vif init and cleanup functions
+References: <20120117180827.29995.67922.stgit@localhost6.localdomain6>
+In-Reply-To: <20120117180827.29995.67922.stgit@localhost6.localdomain6>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi guys,
+On 01/17/2012 08:08 PM, Kalle Valo wrote:
+> ath6kl_cfg80211_vif_init/cleanup() follow more closely the style used
+> elsewhere in ath6kl.
+> 
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-I'm the udev maintainer for Arch Linux, and we have been running into
-some problems with the ipw2200 driver[0]. This was most probably
-exposed by changes in recent versions of udev, as outlined here [1]
-(so will eventually hit the other distros when they upgrade).
+All eight patches applied to ath6kl.git master branch.
 
-I see that the ipw2x00 drivers are listed as Orphaned in MANTAINERS,
-and I notice that 2000-series Wireless-N support was added to iwlagn.
+Now the reverted USB code is back and I will send a merge request to
+John as soon as he opens his tree. At least this time we should have
+plenty of time to sort out any build issues and no holiday season in
+sight :)
 
-Does this mean that we (as a dristro) should drop the ipw2x00 driver
-in favor of iwlagn, or do they actualy support different hardware? I
-was not able to find any reference to 2000-series Wireless-N chips on
-intel.com, so I'm not really sure what hardware this "Intel(R)
-Centrino(R) Wireless-N 2200D BGN" is referring to (if it is not [2].
-Furthermore, I noticed that the modaliases of the two drivers do not
-overlap, which should indicate that they do not support the same
-hardware, is that correct?
-
-If we are not able to drop the 2x00 drivers, are anyone still
-interested in working on them to fix the firmware loading?
-
-Any help appreciated.
-
-Cheers,
-
-Tom
-
-[0] <https://bugs.archlinux.org/task/28097>
-[1] <http://thread.gmane.org/gmane.linux.network/217729>
-[2] <http://www.intel.com/support/wireless/wlan/pro2200bg/sb/cs-009093.htm>
+Kalle
