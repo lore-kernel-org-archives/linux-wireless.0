@@ -1,168 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:42453 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752533Ab2A3Xi1 (ORCPT
+Received: from casper.infradead.org ([85.118.1.10]:34532 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750807Ab2ASMY2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 18:38:27 -0500
-Message-ID: <4F2729EF.8090309@lwfinger.net> (sfid-20120131_003845_833851_D8908C3F)
-Date: Mon, 30 Jan 2012 17:38:23 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "Devendra.Naga" <devendra.aaru@gmail.com>
-CC: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
-	paul.gortmaker@windriver.com, joe@perches.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] wireless: move ifs' in _rtl92c_store_pwrIndex_diffrate_offset
- into elseif statements
-References: <1327906245-8200-1-git-send-email-devendra.aaru@gmail.com>
-In-Reply-To: <1327906245-8200-1-git-send-email-devendra.aaru@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 19 Jan 2012 07:24:28 -0500
+Message-ID: <1326975859.2054.14.camel@shinybook.infradead.org> (sfid-20120119_132431_897401_01094B46)
+Subject: Re: [PATCH V3 2/2] MAINTAINERS: add b43 mailing list
+From: David Woodhouse <dwmw2@infradead.org>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org
+Date: Thu, 19 Jan 2012 23:24:19 +1100
+In-Reply-To: <1326491706-14970-2-git-send-email-zajec5@gmail.com>
+References: <1326491706-14970-1-git-send-email-zajec5@gmail.com>
+	 <1326491706-14970-2-git-send-email-zajec5@gmail.com>
+Content-Type: multipart/signed; micalg="sha1"; protocol="application/x-pkcs7-signature";
+	boundary="=-tkuwCVLaFSbJou+xN57y"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/30/2012 12:50 AM, Devendra.Naga wrote:
-> From: "Devendra.Naga"<devendra.aaru@gmail.com>
->
->          The regaddr is compared against different rates in each case and the powerlevels are set
->          accordingly. as this can match for the first if and we still check for other powerlevels too,
->          use else if ratherthan using if statements
-> Signed-off-by: Devendra.Naga<devendra.aaru@gmail.com>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |   47 +++++++------------
->   1 files changed, 17 insertions(+), 30 deletions(-)
 
-Another bad patch title. The component changed is rtlwifi: rtl8192c:, not wireless.
+--=-tkuwCVLaFSbJou+xN57y
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Larry
+On Fri, 2012-01-13 at 22:55 +0100, Rafa=C5=82 Mi=C5=82ecki wrote:
+> +L:     b43-dev@lists.infradead.org (moderated for non-subscribers)=20
 
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-> index 22e998d..cb11e5a 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-> @@ -260,106 +260,93 @@ void _rtl92c_store_pwrIndex_diffrate_offset(struct ieee80211_hw *hw,
->   			 "MCSTxPowerLevelOriginalOffset[%d][0] = 0x%x\n",
->   			 rtlphy->pwrgroup_cnt,
->   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][0]);
-> -	}
-> -	if (regaddr == RTXAGC_A_RATE54_24) {
-> +	} else if (regaddr == RTXAGC_A_RATE54_24) {
->   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][1] = data;
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
->   			 "MCSTxPowerLevelOriginalOffset[%d][1] = 0x%x\n",
->   			 rtlphy->pwrgroup_cnt,
->   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][1]);
-> -	}
-> -	if (regaddr == RTXAGC_A_CCK1_MCS32) {
-> +	} else if (regaddr == RTXAGC_A_CCK1_MCS32) {
->   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][6] = data;
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
->   			 "MCSTxPowerLevelOriginalOffset[%d][6] = 0x%x\n",
->   			 rtlphy->pwrgroup_cnt,
->   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][6]);
-> -	}
-> -	if (regaddr == RTXAGC_B_CCK11_A_CCK2_11&&  bitmask == 0xffffff00) {
-> +	} else if (regaddr == RTXAGC_B_CCK11_A_CCK2_11&&
-> +		bitmask == 0xffffff00) {
->   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][7] = data;
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
->   			 "MCSTxPowerLevelOriginalOffset[%d][7] = 0x%x\n",
->   			 rtlphy->pwrgroup_cnt,
->   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][7]);
-> -	}
-> -	if (regaddr == RTXAGC_A_MCS03_MCS00) {
-> +	} else if (regaddr == RTXAGC_A_MCS03_MCS00) {
->   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][2] = data;
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
->   			 "MCSTxPowerLevelOriginalOffset[%d][2] = 0x%x\n",
->   			 rtlphy->pwrgroup_cnt,
->   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][2]);
-> -	}
-> -	if (regaddr == RTXAGC_A_MCS07_MCS04) {
-> +	} else if (regaddr == RTXAGC_A_MCS07_MCS04) {
->   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][3] = data;
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
->   			 "MCSTxPowerLevelOriginalOffset[%d][3] = 0x%x\n",
->   			 rtlphy->pwrgroup_cnt,
->   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][3]);
-> -	}
-> -	if (regaddr == RTXAGC_A_MCS11_MCS08) {
-> +	} else if (regaddr == RTXAGC_A_MCS11_MCS08) {
->   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][4] = data;
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
->   			 "MCSTxPowerLevelOriginalOffset[%d][4] = 0x%x\n",
->   			 rtlphy->pwrgroup_cnt,
->   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][4]);
-> -	}
-> -	if (regaddr == RTXAGC_A_MCS15_MCS12) {
-> +	} else if (regaddr == RTXAGC_A_MCS15_MCS12) {
->   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][5] = data;
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
->   			 "MCSTxPowerLevelOriginalOffset[%d][5] = 0x%x\n",
->   			 rtlphy->pwrgroup_cnt,
->   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][5]);
-> -	}
-> -	if (regaddr == RTXAGC_B_RATE18_06) {
-> +	} else if (regaddr == RTXAGC_B_RATE18_06) {
->   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][8] = data;
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
->   			 "MCSTxPowerLevelOriginalOffset[%d][8] = 0x%x\n",
->   			 rtlphy->pwrgroup_cnt,
->   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][8]);
-> -	}
-> -	if (regaddr == RTXAGC_B_RATE54_24) {
-> +	} else if (regaddr == RTXAGC_B_RATE54_24) {
->   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][9] = data;
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
->   			 "MCSTxPowerLevelOriginalOffset[%d][9] = 0x%x\n",
->   			 rtlphy->pwrgroup_cnt,
->   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][9]);
-> -	}
-> -	if (regaddr == RTXAGC_B_CCK1_55_MCS32) {
-> +	} else if (regaddr == RTXAGC_B_CCK1_55_MCS32) {
->   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][14] = data;
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
->   			 "MCSTxPowerLevelOriginalOffset[%d][14] = 0x%x\n",
->   			 rtlphy->pwrgroup_cnt,
->   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][14]);
-> -	}
-> -	if (regaddr == RTXAGC_B_CCK11_A_CCK2_11&&  bitmask == 0x000000ff) {
-> +	} else if (regaddr == RTXAGC_B_CCK11_A_CCK2_11&&
-> +		bitmask == 0x000000ff) {
->   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][15] = data;
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
->   			 "MCSTxPowerLevelOriginalOffset[%d][15] = 0x%x\n",
->   			 rtlphy->pwrgroup_cnt,
->   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][15]);
-> -	}
-> -	if (regaddr == RTXAGC_B_MCS03_MCS00) {
-> +	} else if (regaddr == RTXAGC_B_MCS03_MCS00) {
->   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][10] = data;
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
->   			 "MCSTxPowerLevelOriginalOffset[%d][10] = 0x%x\n",
->   			 rtlphy->pwrgroup_cnt,
->   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][10]);
-> -	}
-> -	if (regaddr == RTXAGC_B_MCS07_MCS04) {
-> +	} else if (regaddr == RTXAGC_B_MCS07_MCS04) {
->   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][11] = data;
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
->   			 "MCSTxPowerLevelOriginalOffset[%d][11] = 0x%x\n",
->   			 rtlphy->pwrgroup_cnt,
->   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][11]);
-> -	}
-> -	if (regaddr == RTXAGC_B_MCS11_MCS08) {
-> +	} else if (regaddr == RTXAGC_B_MCS11_MCS08) {
->   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][12] = data;
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
->   			 "MCSTxPowerLevelOriginalOffset[%d][12] = 0x%x\n",
->   			 rtlphy->pwrgroup_cnt,
->   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][12]);
-> -	}
-> -	if (regaddr == RTXAGC_B_MCS15_MCS12) {
-> +	} else if (regaddr == RTXAGC_B_MCS15_MCS12) {
->   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][13] = data;
->   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
->   			 "MCSTxPowerLevelOriginalOffset[%d][13] = 0x%x\n",
+Er, is it really moderated for non-subscribers? Why? I don't think *I*
+set it up like that...
+
+--=20
+dwmw2
+
+--=-tkuwCVLaFSbJou+xN57y
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIITvzCCBi0w
+ggQVoAMCAQICAwCtOTANBgkqhkiG9w0BAQUFADBUMRQwEgYDVQQKEwtDQWNlcnQgSW5jLjEeMBwG
+A1UECxMVaHR0cDovL3d3dy5DQWNlcnQub3JnMRwwGgYDVQQDExNDQWNlcnQgQ2xhc3MgMyBSb290
+MB4XDTEwMDYxMjEwMDMwMFoXDTEyMDYxMTEwMDMwMFowgegxGDAWBgNVBAMTD0RhdmlkIFdvb2Ro
+b3VzZTEiMCAGCSqGSIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzEfMB0GCSqGSIb3DQEJARYQ
+ZGF2aWRAd29vZGhvdS5zZTEoMCYGCSqGSIb3DQEJARYZZGF2aWQud29vZGhvdXNlQGludGVsLmNv
+bTEkMCIGCSqGSIb3DQEJARYVZHdtdzJAbGludXguaW50ZWwuY29tMTcwNQYJKoZIhvcNAQkBFigx
+MDg3MmEwN2Y2ZDdlMWUwN2Y1NWZmMTcyYTAzYjMwMGVlYWFkMjAzMIIBIjANBgkqhkiG9w0BAQEF
+AAOCAQ8AMIIBCgKCAQEA29OPhNvMxBMW83psWdVhZDtmJvgN+tBEp1r6MZamONsR0k81a6fDFwJz
+M0fEzEbV/bDG102QyX/xXC/0IpKV4acnqESC+sTHUmRwxfRKGNmR6t2iwEs2Y5kQDF31JxbCt49w
+AlhLMAa+e1MBZ7vO0uDmRuJpS7+ZdHboq7cdk6dyoeumGv5sl6U/SPK9rL4KzULtqQaw6Wucd6MJ
+irIggEHfCNqeT5a+TyuH4zKCwv9nblIGXq9wt+yqu5t/RicGaKPnXSqo/WpJAGggaO8g92mnYlVl
+Wu/b9bYVISwQ8LI0sEtjN1WnP5AQO2f59bdPAVk4Rn25HceOO4NvlG47LwIDAQABo4IBcTCCAW0w
+DAYDVR0TAQH/BAIwADBWBglghkgBhvhCAQ0ESRZHVG8gZ2V0IHlvdXIgb3duIGNlcnRpZmljYXRl
+IGZvciBGUkVFIGhlYWQgb3ZlciB0byBodHRwOi8vd3d3LkNBY2VydC5vcmcwQAYDVR0lBDkwNwYI
+KwYBBQUHAwQGCCsGAQUFBwMCBgorBgEEAYI3CgMEBgorBgEEAYI3CgMDBglghkgBhvhCBAEwMgYI
+KwYBBQUHAQEEJjAkMCIGCCsGAQUFBzABhhZodHRwOi8vb2NzcC5jYWNlcnQub3JnMIGOBgNVHREE
+gYYwgYOBE2R3bXcyQGluZnJhZGVhZC5vcmeBEGRhdmlkQHdvb2Rob3Uuc2WBGWRhdmlkLndvb2Ro
+b3VzZUBpbnRlbC5jb22BFWR3bXcyQGxpbnV4LmludGVsLmNvbYEoMTA4NzJhMDdmNmQ3ZTFlMDdm
+NTVmZjE3MmEwM2IzMDBlZWFhZDIwMzANBgkqhkiG9w0BAQUFAAOCAgEAXm+SUO1/TSeGJK0D9pAm
+E9LTFkdlgbaD6HXGbS0TNUDyfLFkacc2F1JLoWcoFwcL6Rup5o/Rt4QYDBPWgF9EXFvqsc9SLrSe
+X6VwRj7vI40x19ThE2A1Y8DzBJ9+2MzIR6hd5n9axATCOIRhmZVjX1cRkwshEGvAn8mTYGhWttkx
+WhBcaAuCd9OOQqUwfxTUXiSfVumPUNrrbuvaH6MjrNjDrXdvicL26Y+AzFSJn3o8DShjjMhkUx9l
+qV46BpjSGIuvkHhcLkGJ3Y1YmtOX1hwT+Z+d/10WJh8ZG2FqIlJtPtqvHK5ol/KvdzMwmMBd4qFj
+YAO32vf7zde+jdTHNp2Mb15bJHhNdGOsZicpGue42fg3deZQFe1E2KBl9VO09fjncjt9YdhCUtxO
+buDnoOixY6YSJgSmGJB2Xs+TE5gps4UiiOYen+NeJkuwg5x9vmyraU061Uc0csfc/E5IoxhTX/Pc
+H+zXiER8aSjA/9MXQfrJM2xkY6UNKlDbCYSLKnH/O02eu7Hma6lB4wtcY8ECu7LJuFY2448Quolv
+SQfQLRvKauGFGUAhbPClOxObuv/fNzA+lfg8DX2y5jXDutnpvBGgsplKxoah01SZfR9zNqxodPx2
+srKhujBNB+WiAZntMf0xp4e0JPMlTFxm3tbY9wuBSyTJyueO9hUkbN4wggYtMIIEFaADAgECAgMA
+rTkwDQYJKoZIhvcNAQEFBQAwVDEUMBIGA1UEChMLQ0FjZXJ0IEluYy4xHjAcBgNVBAsTFWh0dHA6
+Ly93d3cuQ0FjZXJ0Lm9yZzEcMBoGA1UEAxMTQ0FjZXJ0IENsYXNzIDMgUm9vdDAeFw0xMDA2MTIx
+MDAzMDBaFw0xMjA2MTExMDAzMDBaMIHoMRgwFgYDVQQDEw9EYXZpZCBXb29kaG91c2UxIjAgBgkq
+hkiG9w0BCQEWE2R3bXcyQGluZnJhZGVhZC5vcmcxHzAdBgkqhkiG9w0BCQEWEGRhdmlkQHdvb2Ro
+b3Uuc2UxKDAmBgkqhkiG9w0BCQEWGWRhdmlkLndvb2Rob3VzZUBpbnRlbC5jb20xJDAiBgkqhkiG
+9w0BCQEWFWR3bXcyQGxpbnV4LmludGVsLmNvbTE3MDUGCSqGSIb3DQEJARYoMTA4NzJhMDdmNmQ3
+ZTFlMDdmNTVmZjE3MmEwM2IzMDBlZWFhZDIwMzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+ggEBANvTj4TbzMQTFvN6bFnVYWQ7Zib4DfrQRKda+jGWpjjbEdJPNWunwxcCczNHxMxG1f2wxtdN
+kMl/8Vwv9CKSleGnJ6hEgvrEx1JkcMX0ShjZkerdosBLNmOZEAxd9ScWwrePcAJYSzAGvntTAWe7
+ztLg5kbiaUu/mXR26Ku3HZOncqHrphr+bJelP0jyvay+Cs1C7akGsOlrnHejCYqyIIBB3wjank+W
+vk8rh+MygsL/Z25SBl6vcLfsqrubf0YnBmij510qqP1qSQBoIGjvIPdpp2JVZVrv2/W2FSEsEPCy
+NLBLYzdVpz+QEDtn+fW3TwFZOEZ9uR3HjjuDb5RuOy8CAwEAAaOCAXEwggFtMAwGA1UdEwEB/wQC
+MAAwVgYJYIZIAYb4QgENBEkWR1RvIGdldCB5b3VyIG93biBjZXJ0aWZpY2F0ZSBmb3IgRlJFRSBo
+ZWFkIG92ZXIgdG8gaHR0cDovL3d3dy5DQWNlcnQub3JnMEAGA1UdJQQ5MDcGCCsGAQUFBwMEBggr
+BgEFBQcDAgYKKwYBBAGCNwoDBAYKKwYBBAGCNwoDAwYJYIZIAYb4QgQBMDIGCCsGAQUFBwEBBCYw
+JDAiBggrBgEFBQcwAYYWaHR0cDovL29jc3AuY2FjZXJ0Lm9yZzCBjgYDVR0RBIGGMIGDgRNkd213
+MkBpbmZyYWRlYWQub3JngRBkYXZpZEB3b29kaG91LnNlgRlkYXZpZC53b29kaG91c2VAaW50ZWwu
+Y29tgRVkd213MkBsaW51eC5pbnRlbC5jb22BKDEwODcyYTA3ZjZkN2UxZTA3ZjU1ZmYxNzJhMDNi
+MzAwZWVhYWQyMDMwDQYJKoZIhvcNAQEFBQADggIBAF5vklDtf00nhiStA/aQJhPS0xZHZYG2g+h1
+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
+AAAAAA==
+
+
+--=-tkuwCVLaFSbJou+xN57y--
 
