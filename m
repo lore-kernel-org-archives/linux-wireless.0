@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from h118.nextmail.ru ([194.67.36.118]:48950 "EHLO h118.nextmail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750775Ab2AHHTl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jan 2012 02:19:41 -0500
-To: =?koi8-r?B?TW9oYW1tZWQgU2hhZmk=?= <shafi.wireless@gmail.com>
-From: =?koi8-r?B?TVI=?= <g7af0ec1e3ea1e7b1@nextmail.ru>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: =?koi8-r?B?UmU6IGF0aDlrIGNyYXNoIDMuMi1yYzc=?=
-Date: Sun, 08 Jan 2012 11:19:38 +0400
-Message-ID: <NEXT-4f09438ac7d220.32208778@nextmail.ru> (sfid-20120108_082034_455561_A0A43663)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41780 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751238Ab2ASGYY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jan 2012 01:24:24 -0500
+Message-ID: <4F17B712.6020907@qca.qualcomm.com> (sfid-20120119_072428_555325_40B555BB)
+Date: Thu, 19 Jan 2012 08:24:18 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Jonathan Bagg <jbagg@lenbrook.com>
+CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: ath6kl in compat wireless supports AP mode?
+References: <4F10AA2D.1060000@lenbrook.com>	<4F16AF8D.6070201@qca.qualcomm.com> <20246.46742.295455.729628@gargle.gargle.HOWL> <4F172101.3010207@lenbrook.com>
+In-Reply-To: <4F172101.3010207@lenbrook.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- >  > *does the other patch which remove some suspicious looking code, to
- >  > see if it improves the situation and avoids the warnings itself.
- > 
- >I have built and loaded the kernel with this patch. I even have netconsole
- >
- > apparently working. But ten hours have not elapsed yet. So far so good.
- > 
- > If it works till the 10th, I will test it with roaming, too. 
+On 01/18/2012 09:44 PM, Jonathan Bagg wrote:
 
-Around 23 hours have elapsed. 
+> I'm running....
+> Compat-wireless 3.1 (ath6kl still in staging) built against kernel 2.6.35.3
+>      mac80211 as module
+>      cfg80211 as module
+> hostapd v2.0-devel (git cloned today)
+> libnl-2.0
+> arm, freescale imx51
+> 
+> I tried hostapd v2.0-devel and no go.
 
-WiFi seems to be working 100% of time. It is always at least lightly loaded.
+If ath6kl is still in staging you have an ancient version and it will
+not support AP mode. Please try latest wireless-compat or use the latest
+kernel from ath6kl.git:
 
-Speedtests seems to gve slightly better upload results than I remember with 
-2.6.* (and I have a good enough ISP for WiFi to be the weakest link), so it 
-doesn't seem to be a performance regression, either.
+git://github.com/kvalo/ath6kl.git
 
-As for roaming while connected - I will try not to forget to test it on the 
-10th.
-
-
+Kalle
