@@ -1,240 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:33392 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752733Ab2AHCrM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 Jan 2012 21:47:12 -0500
-Received: by mail-iy0-f174.google.com with SMTP id h11so4842716iae.19
-        for <linux-wireless@vger.kernel.org>; Sat, 07 Jan 2012 18:47:12 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 2/8] rtl8192cu: Remove dead code never selected
-Date: Sat,  7 Jan 2012 20:46:41 -0600
-Message-Id: <1325990807-13575-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120108_034717_354366_35E28B00)
-In-Reply-To: <1325990807-13575-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1325990807-13575-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from mga02.intel.com ([134.134.136.20]:26533 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932705Ab2ASUil (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 Jan 2012 15:38:41 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Dave Jones <davej@redhat.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+CC: Dan Williams <dcbw@redhat.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: RE: iwlwifi worse than ever in current git.
+Date: Thu, 19 Jan 2012 20:38:35 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3079A3F@HASMSX103.ger.corp.intel.com> (sfid-20120119_213854_470197_3FA2EE8D)
+References: <20120110184917.GA26973@redhat.com>
+ <1326221614.5067.6.camel@dcbw.foobar.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB3063085@HASMSX103.ger.corp.intel.com>
+ <20120111014243.GA22066@redhat.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB306429E@HASMSX103.ger.corp.intel.com>
+ <20120111195055.GA5140@redhat.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB3064AF5@HASMSX103.ger.corp.intel.com>
+ <CANUX_P3UHz-Pr_M1H5pAbmKDY70es7nxkWSDGXG6-hvrPAMCJw@mail.gmail.com>
+ <20120119182955.GA1630@redhat.com>
+Content-Type: multipart/mixed;
+	boundary="_002_0BA3FCBA62E2DC44AF3030971E174FB3079A3FHASMSX103gercorpi_"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The original driver contained some conditional code that was not selected,
-but was not deleted in case it would be used later. That code can now be
-removed.
+--_002_0BA3FCBA62E2DC44AF3030971E174FB3079A3FHASMSX103gercorpi_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Reported-by: Joe Perches <joe@perches.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
----
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c |  170 ---------------------------
- 1 files changed, 0 insertions(+), 170 deletions(-)
+>=20
+> >
+> > On Thu, Jan 19, 2012 at 08:47:28AM +0200, Emmanuel Grumbach wrote:
+> >  > Ok, I finally had a change to take a closer look at this. Please run
+> >  > with debug=3D0xC0000000.
+> >  >
+> >  > This will be noisy, but I guess we have no choice...
+> >  > I will be travelling next week, so...
+> >
+> > Ah. Got it. I had to do a large download (a kernel tarball was enough) =
+to
+> > trigger it.
+> > Log is at http://davej.fedorapeople.org/iwl-debug.txt
+> >
+> > The download began at around 13:17 in the log.
+> > It hung shortly afterwards.
+> >
+> > 	Dave
+>=20
+> Thanks for that one. Really helpful. I need to send you a patch to get a
+> little more data. I don't know when I will be able to do it though.
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-index 516cf1b..51b7aa1 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
-@@ -339,144 +339,8 @@ static void _rtl92cu_read_board_type(struct ieee80211_hw *hw, u8 *contents)
- 	if (IS_HIGHT_PA(rtlefuse->board_type))
- 		rtlefuse->external_pa = 1;
- 	pr_info("Board Type %x\n", rtlefuse->board_type);
--
--#ifdef CONFIG_ANTENNA_DIVERSITY
--	/* Antenna Diversity setting. */
--	if (registry_par->antdiv_cfg == 2) /* 2: From Efuse */
--		rtl_efuse->antenna_cfg = (contents[EEPROM_RF_OPT1]&0x18)>>3;
--	else
--		rtl_efuse->antenna_cfg = registry_par->antdiv_cfg; /* 0:OFF, */
--
--	pr_info("Antenna Config %x\n", rtl_efuse->antenna_cfg);
--#endif
--}
--
--#ifdef CONFIG_BT_COEXIST
--static void _update_bt_param(_adapter *padapter)
--{
--	struct btcoexist_priv	 *pbtpriv = &(padapter->halpriv.bt_coexist);
--	struct registry_priv	*registry_par = &padapter->registrypriv;
--	if (2 != registry_par->bt_iso) {
--		/* 0:Low, 1:High, 2:From Efuse */
--		pbtpriv->BT_Ant_isolation = registry_par->bt_iso;
--	}
--	if (registry_par->bt_sco == 1) {
--		/* 0:Idle, 1:None-SCO, 2:SCO, 3:From Counter, 4.Busy,
--		 * 5.OtherBusy */
--		pbtpriv->BT_Service = BT_OtherAction;
--	} else if (registry_par->bt_sco == 2) {
--		pbtpriv->BT_Service = BT_SCO;
--	} else if (registry_par->bt_sco == 4) {
--		pbtpriv->BT_Service = BT_Busy;
--	} else if (registry_par->bt_sco == 5) {
--		pbtpriv->BT_Service = BT_OtherBusy;
--	} else {
--		pbtpriv->BT_Service = BT_Idle;
--	}
--	pbtpriv->BT_Ampdu = registry_par->bt_ampdu;
--	pbtpriv->bCOBT = _TRUE;
--	pbtpriv->BtEdcaUL = 0;
--	pbtpriv->BtEdcaDL = 0;
--	pbtpriv->BtRssiState = 0xff;
--	pbtpriv->bInitSet = _FALSE;
--	pbtpriv->bBTBusyTraffic = _FALSE;
--	pbtpriv->bBTTrafficModeSet = _FALSE;
--	pbtpriv->bBTNonTrafficModeSet = _FALSE;
--	pbtpriv->CurrentState = 0;
--	pbtpriv->PreviousState = 0;
--	pr_info("BT Coexistance = %s\n",
--		(pbtpriv->BT_Coexist == _TRUE) ? "enable" : "disable");
--	if (pbtpriv->BT_Coexist) {
--		if (pbtpriv->BT_Ant_Num == Ant_x2)
--			pr_info("BlueTooth BT_Ant_Num = Antx2\n");
--		else if (pbtpriv->BT_Ant_Num == Ant_x1)
--			pr_info("BlueTooth BT_Ant_Num = Antx1\n");
--		switch (pbtpriv->BT_CoexistType) {
--		case BT_2Wire:
--			pr_info("BlueTooth BT_CoexistType = BT_2Wire\n");
--			break;
--		case BT_ISSC_3Wire:
--			pr_info("BlueTooth BT_CoexistType = BT_ISSC_3Wire\n");
--			break;
--		case BT_Accel:
--			pr_info("BlueTooth BT_CoexistType = BT_Accel\n");
--			break;
--		case BT_CSR_BC4:
--			pr_info("BlueTooth BT_CoexistType = BT_CSR_BC4\n");
--			break;
--		case BT_CSR_BC8:
--			pr_info("BlueTooth BT_CoexistType = BT_CSR_BC8\n");
--			break;
--		case BT_RTL8756:
--			pr_info("BlueTooth BT_CoexistType = BT_RTL8756\n");
--			break;
--		default:
--			pr_info("BlueTooth BT_CoexistType = Unknown\n");
--			break;
--		}
--		pr_info("BlueTooth BT_Ant_isolation = %d\n",
--			pbtpriv->BT_Ant_isolation);
--		switch (pbtpriv->BT_Service) {
--		case BT_OtherAction:
--			pr_info("BlueTooth BT_Service = BT_OtherAction\n");
--			break;
--		case BT_SCO:
--			pr_info("BlueTooth BT_Service = BT_SCO\n");
--			break;
--		case BT_Busy:
--			pr_info("BlueTooth BT_Service = BT_Busy\n");
--			break;
--		case BT_OtherBusy:
--			pr_info("BlueTooth BT_Service = BT_OtherBusy\n");
--			break;
--		default:
--			pr_info("BlueTooth BT_Service = BT_Idle\n");
--			break;
--		}
--		pr_info("BT_RadioSharedType = 0x%x\n",
--			pbtpriv->BT_RadioSharedType);
--	}
- }
- 
--#define GET_BT_COEXIST(priv) (&priv->bt_coexist)
--
--static void _rtl92cu_read_bluetooth_coexistInfo(struct ieee80211_hw *hw,
--						u8 *contents,
--						bool bautoloadfailed);
--{
--	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(Adapter);
--	bool isNormal = IS_NORMAL_CHIP(pHalData->VersionID);
--	struct btcoexist_priv	 *pbtpriv = &pHalData->bt_coexist;
--	u8	rf_opt4;
--
--	_rtw_memset(pbtpriv, 0, sizeof(struct btcoexist_priv));
--	if (AutoloadFail) {
--		pbtpriv->BT_Coexist = _FALSE;
--		pbtpriv->BT_CoexistType = BT_2Wire;
--		pbtpriv->BT_Ant_Num = Ant_x2;
--		pbtpriv->BT_Ant_isolation = 0;
--		pbtpriv->BT_RadioSharedType = BT_Radio_Shared;
--		return;
--	}
--	if (isNormal) {
--		if (pHalData->BoardType == BOARD_USB_COMBO)
--			pbtpriv->BT_Coexist = _TRUE;
--		else
--			pbtpriv->BT_Coexist = ((PROMContent[EEPROM_RF_OPT3] &
--					      0x20) >> 5); /* bit[5] */
--		rf_opt4 = PROMContent[EEPROM_RF_OPT4];
--		pbtpriv->BT_CoexistType = ((rf_opt4&0xe)>>1); /* bit [3:1] */
--		pbtpriv->BT_Ant_Num = (rf_opt4&0x1); /* bit [0] */
--		pbtpriv->BT_Ant_isolation = ((rf_opt4&0x10)>>4); /* bit [4] */
--		pbtpriv->BT_RadioSharedType = ((rf_opt4&0x20)>>5); /* bit [5] */
--	} else {
--		pbtpriv->BT_Coexist = (PROMContent[EEPROM_RF_OPT4] >> 4) ?
--				       _TRUE : _FALSE;
--	}
--	_update_bt_param(Adapter);
--}
--#endif
--
- static void _rtl92cu_read_adapter_info(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -552,10 +416,6 @@ static void _rtl92cu_read_adapter_info(struct ieee80211_hw *hw)
- 		}
- 	}
- 	_rtl92cu_read_board_type(hw, hwinfo);
--#ifdef CONFIG_BT_COEXIST
--	_rtl92cu_read_bluetooth_coexistInfo(hw, hwinfo,
--					    rtlefuse->autoload_failflag);
--#endif
- }
- 
- static void _rtl92cu_hal_customized_behavior(struct ieee80211_hw *hw)
-@@ -1107,34 +967,6 @@ static void _InitPABias(struct ieee80211_hw *hw)
- 	}
- }
- 
--static void _InitAntenna_Selection(struct ieee80211_hw *hw)
--{
--#ifdef CONFIG_ANTENNA_DIVERSITY
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
--	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	struct rtl_phy *rtlphy = &(rtlpriv->phy);
--
--	if (pHalData->AntDivCfg == 0)
--		return;
--
--	if (rtlphy->rf_type == RF_1T1R) {
--		rtl_write_dword(rtlpriv, REG_LEDCFG0,
--				rtl_read_dword(rtlpriv,
--				REG_LEDCFG0)|BIT(23));
--		rtl_set_bbreg(hw, rFPGA0_XAB_RFPARAMETER, BIT(13), 0x01);
--		if (rtl_get_bbreg(hw, RFPGA0_XA_RFINTERFACEOE, 0x300) ==
--		    Antenna_A)
--			pHalData->CurAntenna = Antenna_A;
--		else
--			pHalData->CurAntenna = Antenna_B;
--	}
--#endif
--}
--
--static void _dump_registers(struct ieee80211_hw *hw)
--{
--}
--
- static void _update_mac_setting(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -1205,10 +1037,8 @@ int rtl92cu_hw_init(struct ieee80211_hw *hw)
- 	}
- 	_rtl92cu_hw_configure(hw);
- 	_InitPABias(hw);
--	_InitAntenna_Selection(hw);
- 	_update_mac_setting(hw);
- 	rtl92c_dm_init(hw);
--	_dump_registers(hw);
- 	return err;
- }
- 
--- 
-1.7.7
+Can you please retry with the patch attached ?
+Thanks
+---------------------------------------------------------------------
+Intel Israel (74) Limited
+
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
+
+--_002_0BA3FCBA62E2DC44AF3030971E174FB3079A3FHASMSX103gercorpi_
+Content-Type: application/octet-stream; name="ampdu_debug.patch"
+Content-Description: ampdu_debug.patch
+Content-Disposition: attachment; filename="ampdu_debug.patch"; size=2887;
+	creation-date="Thu, 19 Jan 2012 18:30:58 GMT";
+	modification-date="Thu, 19 Jan 2012 18:30:58 GMT"
+Content-Transfer-Encoding: base64
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFnbi10eC5jIGIv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtYWduLXR4LmMKaW5kZXggZDlkNzU4ZS4u
+NmQ5ZGYwZCAxMDA2NDQKLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtYWdu
+LXR4LmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtYWduLXR4LmMKQEAg
+LTgzOSwxMSArODM5LDEzIEBAIHN0YXRpYyB2b2lkIGl3bF9yeF9yZXBseV90eF9hZ2coc3RydWN0
+IGl3bF9wcml2ICpwcml2LAogCQkJICAgICAgQUdHX1RYX1NUQVRFX0FCT1JUX01TSykpCiAJCQlj
+b250aW51ZTsKIAorLyoKIAkJSVdMX0RFQlVHX1RYX1JFUExZKHByaXYsICJzdGF0dXMgJXMgKDB4
+JTA4eCksICIKIAkJCQkgICAidHJ5LWNvdW50ICgweCUwOHgpXG4iLAogCQkJCSAgIGl3bF9nZXRf
+YWdnX3R4X2ZhaWxfcmVhc29uKGZzdGF0dXMpLAogCQkJCSAgIGZzdGF0dXMgJiBBR0dfVFhfU1RB
+VFVTX01TSywKIAkJCQkgICBmc3RhdHVzICYgQUdHX1RYX1RSWV9NU0spOworKi8KIAl9CiB9CiAK
+QEAgLTEwMTYsOCArMTAxOCw4IEBAIGludCBpd2xhZ25fcnhfcmVwbHlfdHgoc3RydWN0IGl3bF9w
+cml2ICpwcml2LCBzdHJ1Y3QgaXdsX3J4X21lbV9idWZmZXIgKnJ4YiwKIAkJaXdsX3J4X3JlcGx5
+X3R4X2FnZyhwcml2LCB0eF9yZXNwKTsKIAogCWlmICh0eF9yZXNwLT5mcmFtZV9jb3VudCA9PSAx
+KSB7Ci0JCXUxNiBuZXh0X3JlY2xhaW1lZCA9IGxlMTZfdG9fY3B1KHR4X3Jlc3AtPnNlcV9jdGwp
+OwotCQluZXh0X3JlY2xhaW1lZCA9IFNFUV9UT19TTihuZXh0X3JlY2xhaW1lZCArIDB4MTApOwor
+CQl1MTYgbmV4dF9yZWNsYWltZWRfID0gbGUxNl90b19jcHUodHhfcmVzcC0+c2VxX2N0bCk7CisJ
+CXUxNiBuZXh0X3JlY2xhaW1lZCA9IFNFUV9UT19TTihuZXh0X3JlY2xhaW1lZF8gKyAweDEwKTsK
+IAogCQlpZiAoaXNfYWdnKSB7CiAJCQkvKiBJZiB0aGlzIGlzIGFuIGFnZ3JlZ2F0aW9uIHF1ZXVl
+LCB3ZSBjYW4gcmVseSBvbiB0aGUKQEAgLTEwMzcsOCArMTAzOSw4IEBAIGludCBpd2xhZ25fcnhf
+cmVwbHlfdHgoc3RydWN0IGl3bF9wcml2ICpwcml2LCBzdHJ1Y3QgaXdsX3J4X21lbV9idWZmZXIg
+KnJ4YiwKIAkJX19za2JfcXVldWVfaGVhZF9pbml0KCZza2JzKTsKIAkJcHJpdi0+dGlkX2RhdGFb
+c3RhX2lkXVt0aWRdLm5leHRfcmVjbGFpbWVkID0gbmV4dF9yZWNsYWltZWQ7CiAKLQkJSVdMX0RF
+QlVHX1RYX1JFUExZKHByaXYsICJOZXh0IHJlY2xhaW1lZCBwYWNrZXQ6JWQiLAotCQkJCQkgIG5l
+eHRfcmVjbGFpbWVkKTsKKwkJSVdMX0RFQlVHX1RYX1JFUExZKHByaXYsICJOZXh0IHJlY2xhaW1l
+ZCBwYWNrZXQ6JWQsIF8lZCBpc19BZ2cgJWQgU1NOICVkIiwKKwkJCQkJICBuZXh0X3JlY2xhaW1l
+ZCwgbmV4dF9yZWNsYWltZWRfLCBpc19hZ2csIHNzbik7CiAKIAkJLyp3ZSBjYW4gZnJlZSB1bnRp
+bCBzc24gJSBxLm5fYmQgbm90IGluY2x1c2l2ZSAqLwogCQlXQVJOX09OKGl3bF90cmFuc19yZWNs
+YWltKHRyYW5zKHByaXYpLCBzdGFfaWQsIHRpZCwgdHhxX2lkLApAQCAtMTE0OSwxNyArMTE1MSw2
+IEBAIGludCBpd2xhZ25fcnhfcmVwbHlfY29tcHJlc3NlZF9iYShzdHJ1Y3QgaXdsX3ByaXYgKnBy
+aXYsCiAJCXJldHVybiAwOwogCX0KIAotCV9fc2tiX3F1ZXVlX2hlYWRfaW5pdCgmcmVjbGFpbWVk
+X3NrYnMpOwotCi0JLyogUmVsZWFzZSBhbGwgVEZEcyBiZWZvcmUgdGhlIFNTTiwgaS5lLiBhbGwg
+VEZEcyBpbiBmcm9udCBvZgotCSAqIGJsb2NrLWFjayB3aW5kb3cgKHdlIGFzc3VtZSB0aGF0IHRo
+ZXkndmUgYmVlbiBzdWNjZXNzZnVsbHkKLQkgKiB0cmFuc21pdHRlZCAuLi4gaWYgbm90LCBpdCdz
+IHRvbyBsYXRlIGFueXdheSkuICovCi0JaWYgKGl3bF90cmFuc19yZWNsYWltKHRyYW5zKHByaXYp
+LCBzdGFfaWQsIHRpZCwgc2NkX2Zsb3csCi0JCQkgICAgICBiYV9yZXNwX3NjZF9zc24sIDAsICZy
+ZWNsYWltZWRfc2ticykpIHsKLQkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmcHJpdi0+c2hyZC0+
+c3RhX2xvY2ssIGZsYWdzKTsKLQkJcmV0dXJuIDA7Ci0JfQotCiAJSVdMX0RFQlVHX1RYX1JFUExZ
+KHByaXYsICJSRVBMWV9DT01QUkVTU0VEX0JBIFslZF0gUmVjZWl2ZWQgZnJvbSAlcE0sICIKIAkJ
+CSAgICJzdGFfaWQgPSAlZFxuIiwKIAkJCSAgIGFnZy0+d2FpdF9mb3JfYmEsCkBAIC0xMTcxLDYg
+KzExNjIsMTcgQEAgaW50IGl3bGFnbl9yeF9yZXBseV9jb21wcmVzc2VkX2JhKHN0cnVjdCBpd2xf
+cHJpdiAqcHJpdiwKIAkJCSAgICh1bnNpZ25lZCBsb25nIGxvbmcpbGU2NF90b19jcHUoYmFfcmVz
+cC0+Yml0bWFwKSwKIAkJCSAgIHNjZF9mbG93LCBiYV9yZXNwX3NjZF9zc24pOwogCisJX19za2Jf
+cXVldWVfaGVhZF9pbml0KCZyZWNsYWltZWRfc2ticyk7CisKKwkvKiBSZWxlYXNlIGFsbCBURkRz
+IGJlZm9yZSB0aGUgU1NOLCBpLmUuIGFsbCBURkRzIGluIGZyb250IG9mCisJICogYmxvY2stYWNr
+IHdpbmRvdyAod2UgYXNzdW1lIHRoYXQgdGhleSd2ZSBiZWVuIHN1Y2Nlc3NmdWxseQorCSAqIHRy
+YW5zbWl0dGVkIC4uLiBpZiBub3QsIGl0J3MgdG9vIGxhdGUgYW55d2F5KS4gKi8KKwlpZiAoaXds
+X3RyYW5zX3JlY2xhaW0odHJhbnMocHJpdiksIHN0YV9pZCwgdGlkLCBzY2RfZmxvdywKKwkJCSAg
+ICAgIGJhX3Jlc3Bfc2NkX3NzbiwgMCwgJnJlY2xhaW1lZF9za2JzKSkgeworCQlzcGluX3VubG9j
+a19pcnFyZXN0b3JlKCZwcml2LT5zaHJkLT5zdGFfbG9jaywgZmxhZ3MpOworCQlyZXR1cm4gMDsK
+Kwl9CisKIAkvKiBNYXJrIHRoYXQgdGhlIGV4cGVjdGVkIGJsb2NrLWFjayByZXNwb25zZSBhcnJp
+dmVkICovCiAJYWdnLT53YWl0X2Zvcl9iYSA9IGZhbHNlOwogCg==
+
+--_002_0BA3FCBA62E2DC44AF3030971E174FB3079A3FHASMSX103gercorpi_--
 
