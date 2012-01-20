@@ -1,67 +1,484 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49861 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753714Ab2AINE4 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:53511 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753773Ab2ATPx0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 08:04:56 -0500
-Subject: Re: [PATCHv2 2/2] mac80211: add support for mcs masks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-In-Reply-To: <1325793490-21501-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1325793490-21501-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1325793490-21501-3-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 Jan 2012 14:04:54 +0100
-Message-ID: <1326114294.3451.25.camel@jlt3.sipsolutions.net> (sfid-20120109_140459_343615_F1603F3E)
-Mime-Version: 1.0
+	Fri, 20 Jan 2012 10:53:26 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 6/6] ath6kl: Fix bug in maintaining aggregation state in AP mode
+Date: Fri, 20 Jan 2012 21:22:02 +0530
+Message-ID: <1327074722-3492-6-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120120_165343_029607_9646CADD)
+In-Reply-To: <1327074722-3492-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1327074722-3492-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-01-05 at 20:58 +0100, Simon Wunderlich wrote:
+Currently rx aggregation related states are maintained per
+vif, but this will not properly work when operating in AP mode.
+Aggregation is completely broken when more than one
+11n stations are connected to AP mode vif. Fix this issue
+by keeping station specific aggregation state in sta_list.
 
-> +static bool rate_idx_match_mcs_mask(struct ieee80211_tx_rate *rate,
-> +				    u8 mcs_mask[IEEE80211_HT_MCS_MASK_LEN])
-> +{
-> +	int i, j;
-> +	int ridx, rbit;
-> +
-> +	ridx = rate->idx / 8;
-> +	rbit = rate->idx % 8;
-> +
-> +	/* sanity check */
-> +	if (ridx < 0 || ridx > IEEE80211_HT_MCS_MASK_LEN)
-> +		return false;
-> +
-> +	/* See whether the selected rate or anything below it is allowed. */
-> +	for (i = ridx; i >= 0; i--) {
-> +		for (j = rbit; j >= 0; j--)
-> +			if (mcs_mask[i] & BIT(j)) {
-> +				rate->idx = i * 8 + j;
-> +				return true;
-> +			}
-> +		rbit = 7;
-> +	}
-> +
-> +	/* Try to find a higher rate that would be allowed */
-> +	ridx = (rate->idx + 1) / 8;
-> +	rbit = (rate->idx + 1) % 8;
-> +
-> +	for (i = ridx; i < IEEE80211_HT_MCS_MASK_LEN; i++) {
-> +		for (j = rbit; j < 8; j++)
-> +			if (mcs_mask[i] & BIT(j)) {
-> +				rate->idx = i * 8 + j;
-> +				return true;
-> +			}
-> +		rbit = 0;
-> +	}
-> +	return false;
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    5 +
+ drivers/net/wireless/ath/ath6kl/core.c     |   24 +++++
+ drivers/net/wireless/ath/ath6kl/core.h     |    4 +-
+ drivers/net/wireless/ath/ath6kl/init.c     |    4 +
+ drivers/net/wireless/ath/ath6kl/main.c     |    7 +-
+ drivers/net/wireless/ath/ath6kl/txrx.c     |  130 ++++++++++++++--------------
+ 6 files changed, 106 insertions(+), 68 deletions(-)
 
-All this logic is pretty complex, maybe we could translate the bitmap to
-an array of unsigned longs and use test_bit() instead of open-coding it
-for 8-bit words?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 8bf447a..fed7b80 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -2871,6 +2871,11 @@ struct ath6kl *ath6kl_cfg80211_create(void)
+ /* Note: ar variable must not be accessed after calling this! */
+ void ath6kl_cfg80211_destroy(struct ath6kl *ar)
+ {
++	int i;
++
++	for (i = 0; i < AP_MAX_NUM_STA; i++)
++		kfree(ar->sta_list[i].aggr_conn);
++
+ 	wiphy_free(ar->wiphy);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
+index d764afe..017441a 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.c
++++ b/drivers/net/wireless/ath/ath6kl/core.c
+@@ -34,6 +34,24 @@ module_param(suspend_cutpower, bool, 0444);
+ module_param(uart_debug, uint, 0644);
+ module_param(ath6kl_p2p, uint, 0644);
+ 
++static struct aggr_info_conn *ath6kl_alloc_aggr_conn(void)
++{
++	struct aggr_info_conn *aggr_conn;
++	struct rxtid *rxtid;
++	int i;
++
++	aggr_conn = kzalloc(sizeof(*aggr_conn), GFP_KERNEL);
++	if (!aggr_conn)
++		return NULL;
++
++	for (i = 0; i < NUM_OF_TIDS; i++) {
++		rxtid = &aggr_conn->rx_tid[i];
++		skb_queue_head_init(&rxtid->q);
++	}
++
++	return aggr_conn;
++}
++
+ int ath6kl_core_init(struct ath6kl *ar)
+ {
+ 	struct ath6kl_bmi_target_info targ_info;
+@@ -253,6 +271,12 @@ struct ath6kl *ath6kl_core_create(struct device *dev)
+ 		spin_lock_init(&ar->sta_list[ctr].psq_lock);
+ 		skb_queue_head_init(&ar->sta_list[ctr].psq);
+ 		skb_queue_head_init(&ar->sta_list[ctr].apsdq);
++		ar->sta_list[ctr].aggr_conn = ath6kl_alloc_aggr_conn();
++		if (!ar->sta_list[ctr].aggr_conn) {
++			ath6kl_err("Failed to allocate memory for sta aggregation information\n");
++			ath6kl_core_destroy(ar);
++			return NULL;
++		}
+ 	}
+ 
+ 	skb_queue_head_init(&ar->mcastpsq);
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 1b9054f..ed9fcc1 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -298,6 +298,7 @@ struct ath6kl_sta {
+ 	spinlock_t psq_lock;
+ 	u8 apsd_info;
+ 	struct sk_buff_head apsdq;
++	struct aggr_info_conn *aggr_conn;
+ };
+ 
+ struct ath6kl_version {
+@@ -713,6 +714,7 @@ void ath6kl_free_cookie(struct ath6kl *ar, struct ath6kl_cookie *cookie);
+ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev);
+ 
+ struct aggr_info *aggr_init(struct ath6kl_vif *vif);
++void aggr_conn_init(struct ath6kl_vif *vif, struct aggr_info_conn *aggr_conn);
+ void ath6kl_rx_refill(struct htc_target *target,
+ 		      enum htc_endpoint_id endpoint);
+ void ath6kl_refill_amsdu_rxbufs(struct ath6kl *ar, int count);
+@@ -720,7 +722,7 @@ struct htc_packet *ath6kl_alloc_amsdu_rxbuf(struct htc_target *target,
+ 					    enum htc_endpoint_id endpoint,
+ 					    int len);
+ void aggr_module_destroy(struct aggr_info *aggr_info);
+-void aggr_reset_state(struct aggr_info *aggr_info);
++void aggr_reset_state(struct aggr_info_conn *aggr_conn);
+ 
+ struct ath6kl_sta *ath6kl_find_sta(struct ath6kl_vif *vif, u8 * node_addr);
+ struct ath6kl_sta *ath6kl_find_sta_by_aid(struct ath6kl *ar, u8 aid);
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 167dc41..4d8eb1c 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1660,6 +1660,7 @@ void ath6kl_cleanup_vif(struct ath6kl_vif *vif, bool wmi_ready)
+ void ath6kl_stop_txrx(struct ath6kl *ar)
+ {
+ 	struct ath6kl_vif *vif, *tmp_vif;
++	int i;
+ 
+ 	set_bit(DESTROY_IN_PROGRESS, &ar->flag);
+ 
+@@ -1668,6 +1669,9 @@ void ath6kl_stop_txrx(struct ath6kl *ar)
+ 		return;
+ 	}
+ 
++	for (i = 0; i < AP_MAX_NUM_STA; i++)
++		aggr_reset_state(ar->sta_list[i].aggr_conn);
++
+ 	spin_lock_bh(&ar->list_lock);
+ 	list_for_each_entry_safe(vif, tmp_vif, &ar->vif_list, list) {
+ 		list_del(&vif->list);
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index acb4acb..39da1f9 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -74,6 +74,7 @@ static void ath6kl_add_new_sta(struct ath6kl_vif *vif, u8 *mac, u16 aid,
+ 
+ 	ar->sta_list_index = ar->sta_list_index | (1 << free_slot);
+ 	ar->ap_stats.sta[free_slot].aid = cpu_to_le32(aid);
++	aggr_conn_init(vif, sta->aggr_conn);
+ }
+ 
+ static void ath6kl_sta_cleanup(struct ath6kl *ar, u8 i)
+@@ -94,7 +95,7 @@ static void ath6kl_sta_cleanup(struct ath6kl *ar, u8 i)
+ 	sta->sta_flags = 0;
+ 
+ 	ar->sta_list_index = ar->sta_list_index & ~(1 << i);
+-
++	aggr_reset_state(sta->aggr_conn);
+ }
+ 
+ static u8 ath6kl_remove_sta(struct ath6kl *ar, u8 *mac, u16 reason)
+@@ -602,7 +603,7 @@ void ath6kl_connect_event(struct ath6kl_vif *vif, u16 channel, u8 *bssid,
+ 	netif_carrier_on(vif->ndev);
+ 	spin_unlock_bh(&vif->if_lock);
+ 
+-	aggr_reset_state(vif->aggr_cntxt);
++	aggr_reset_state(vif->aggr_cntxt->aggr_conn);
+ 	vif->reconnect_flag = 0;
+ 
+ 	if ((vif->nw_type == ADHOC_NETWORK) && ar->ibss_ps_enable) {
+@@ -924,7 +925,7 @@ void ath6kl_disconnect_event(struct ath6kl_vif *vif, u8 reason, u8 *bssid,
+ 				       assoc_resp_len, assoc_info,
+ 				       prot_reason_status);
+ 
+-	aggr_reset_state(vif->aggr_cntxt);
++	aggr_reset_state(vif->aggr_cntxt->aggr_conn);
+ 
+ 	del_timer(&vif->disconnect_timer);
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index eeb3a10..89086ec 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -22,12 +22,18 @@
+  * aid - tid_mux4..tid_mux7
+  */
+ #define ATH6KL_TID_MASK 0xf
++#define ATH6KL_AID_SHIFT 4
+ 
+ static inline u8 ath6kl_get_tid(u8 tid_mux)
+ {
+ 	return tid_mux & ATH6KL_TID_MASK;
+ }
+ 
++static inline u8 ath6kl_get_aid(u8 tid_mux)
++{
++	return tid_mux >> ATH6KL_AID_SHIFT;
++}
++
+ static u8 ath6kl_ibss_map_epid(struct sk_buff *skb, struct net_device *dev,
+ 			       u32 *map_no)
+ {
+@@ -1003,7 +1009,7 @@ static void aggr_slice_amsdu(struct aggr_info *p_aggr,
+ 	dev_kfree_skb(skb);
+ }
+ 
+-static void aggr_deque_frms(struct aggr_info *p_aggr, u8 tid,
++static void aggr_deque_frms(struct aggr_info_conn *agg_conn, u8 tid,
+ 			    u16 seq_no, u8 order)
+ {
+ 	struct sk_buff *skb;
+@@ -1011,12 +1017,7 @@ static void aggr_deque_frms(struct aggr_info *p_aggr, u8 tid,
+ 	struct skb_hold_q *node;
+ 	u16 idx, idx_end, seq_end;
+ 	struct rxtid_stats *stats;
+-	struct aggr_info_conn *agg_conn;
+ 
+-	if (!p_aggr || !p_aggr->aggr_conn)
+-		return;
+-
+-	agg_conn = p_aggr->aggr_conn;
+ 	rxtid = &agg_conn->rx_tid[tid];
+ 	stats = &agg_conn->stat[tid];
+ 
+@@ -1047,7 +1048,8 @@ static void aggr_deque_frms(struct aggr_info *p_aggr, u8 tid,
+ 
+ 		if (node->skb) {
+ 			if (node->is_amsdu)
+-				aggr_slice_amsdu(p_aggr, rxtid, node->skb);
++				aggr_slice_amsdu(agg_conn->aggr_info, rxtid,
++						 node->skb);
+ 			else
+ 				skb_queue_tail(&rxtid->q, node->skb);
+ 			node->skb = NULL;
+@@ -1066,7 +1068,7 @@ static void aggr_deque_frms(struct aggr_info *p_aggr, u8 tid,
+ 		ath6kl_deliver_frames_to_nw_stack(agg_conn->dev, skb);
+ }
+ 
+-static bool aggr_process_recv_frm(struct aggr_info *agg_info, u8 tid,
++static bool aggr_process_recv_frm(struct aggr_info_conn *agg_conn, u8 tid,
+ 				  u16 seq_no,
+ 				  bool is_amsdu, struct sk_buff *frame)
+ {
+@@ -1077,7 +1079,6 @@ static bool aggr_process_recv_frm(struct aggr_info *agg_info, u8 tid,
+ 	u16 idx, st, cur, end;
+ 	bool is_queued = false;
+ 	u16 extended_end;
+-	struct aggr_info_conn *agg_conn = agg_info->aggr_conn;
+ 
+ 	rxtid = &agg_conn->rx_tid[tid];
+ 	stats = &agg_conn->stat[tid];
+@@ -1086,7 +1087,7 @@ static bool aggr_process_recv_frm(struct aggr_info *agg_info, u8 tid,
+ 
+ 	if (!rxtid->aggr) {
+ 		if (is_amsdu) {
+-			aggr_slice_amsdu(agg_info, rxtid, frame);
++			aggr_slice_amsdu(agg_conn->aggr_info, rxtid, frame);
+ 			is_queued = true;
+ 			stats->num_amsdu++;
+ 			while ((skb = skb_dequeue(&rxtid->q)))
+@@ -1110,7 +1111,7 @@ static bool aggr_process_recv_frm(struct aggr_info *agg_info, u8 tid,
+ 		     (cur < end || cur > extended_end)) ||
+ 		    ((end > extended_end) && (cur > extended_end) &&
+ 		     (cur < end))) {
+-			aggr_deque_frms(agg_info, tid, 0, 0);
++			aggr_deque_frms(agg_conn, tid, 0, 0);
+ 			if (cur >= rxtid->hold_q_sz - 1)
+ 				rxtid->seq_next = cur - (rxtid->hold_q_sz - 1);
+ 			else
+@@ -1127,7 +1128,7 @@ static bool aggr_process_recv_frm(struct aggr_info *agg_info, u8 tid,
+ 				st = ATH6KL_MAX_SEQ_NO -
+ 					(rxtid->hold_q_sz - 2 - cur);
+ 
+-			aggr_deque_frms(agg_info, tid, st, 0);
++			aggr_deque_frms(agg_conn, tid, st, 0);
+ 		}
+ 
+ 		stats->num_oow++;
+@@ -1166,7 +1167,7 @@ static bool aggr_process_recv_frm(struct aggr_info *agg_info, u8 tid,
+ 
+ 	spin_unlock_bh(&rxtid->lock);
+ 
+-	aggr_deque_frms(agg_info, tid, 0, 1);
++	aggr_deque_frms(agg_conn, tid, 0, 1);
+ 
+ 	if (agg_conn->timer_scheduled)
+ 		rxtid->progress = true;
+@@ -1278,6 +1279,7 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ 	struct sk_buff *skb1 = NULL;
+ 	struct ethhdr *datap = NULL;
+ 	struct ath6kl_vif *vif;
++	struct aggr_info_conn *aggr_conn;
+ 	u16 seq_no, offset;
+ 	u8 tid, if_idx;
+ 
+@@ -1529,11 +1531,21 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ 
+ 	datap = (struct ethhdr *) skb->data;
+ 
+-	if (is_unicast_ether_addr(datap->h_dest) &&
+-	    aggr_process_recv_frm(vif->aggr_cntxt, tid, seq_no,
+-				  is_amsdu, skb))
+-		/* aggregation code will handle the skb */
+-		return;
++	if (is_unicast_ether_addr(datap->h_dest)) {
++		if (vif->nw_type == AP_NETWORK) {
++			conn = ath6kl_find_sta(vif, datap->h_source);
++			if (!conn)
++				return;
++			aggr_conn = conn->aggr_conn;
++		} else
++			aggr_conn = vif->aggr_cntxt->aggr_conn;
++
++		if (aggr_process_recv_frm(aggr_conn, tid, seq_no,
++		    is_amsdu, skb)) {
++			/* aggregation code will handle the skb */
++			return;
++		}
++	}
+ 
+ 	ath6kl_deliver_frames_to_nw_stack(vif->ndev, skb);
+ }
+@@ -1558,7 +1570,7 @@ static void aggr_timeout(unsigned long arg)
+ 			   rxtid->seq_next,
+ 			   ((rxtid->seq_next + rxtid->hold_q_sz-1) &
+ 			    ATH6KL_MAX_SEQ_NO));
+-		aggr_deque_frms(aggr_conn->aggr_info, i, 0, 0);
++		aggr_deque_frms(aggr_conn, i, 0, 0);
+ 	}
+ 
+ 	aggr_conn->timer_scheduled = false;
+@@ -1598,7 +1610,7 @@ static void aggr_delete_tid_state(struct aggr_info_conn *aggr_conn, u8 tid)
+ 	stats = &aggr_conn->stat[tid];
+ 
+ 	if (rxtid->aggr)
+-		aggr_deque_frms(aggr_conn->aggr_info, tid, 0, 0);
++		aggr_deque_frms(aggr_conn, tid, 0, 0);
+ 
+ 	rxtid->aggr = false;
+ 	rxtid->progress = false;
+@@ -1616,17 +1628,23 @@ static void aggr_delete_tid_state(struct aggr_info_conn *aggr_conn, u8 tid)
+ void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid_mux, u16 seq_no,
+ 			     u8 win_sz)
+ {
+-	struct aggr_info *p_aggr = vif->aggr_cntxt;
+-	struct aggr_info_conn *aggr_conn;
++	struct ath6kl_sta *sta;
++	struct aggr_info_conn *aggr_conn = NULL;
+ 	struct rxtid *rxtid;
+ 	struct rxtid_stats *stats;
+ 	u16 hold_q_size;
+-	u8 tid;
++	u8 tid, aid;
+ 
+-	if (!p_aggr || !p_aggr->aggr_conn)
+-		return;
++	if (vif->nw_type == AP_NETWORK) {
++		aid = ath6kl_get_aid(tid_mux);
++		sta = ath6kl_find_sta_by_aid(vif->ar, aid);
++		if (sta)
++			aggr_conn = sta->aggr_conn;
++	} else
++		aggr_conn = vif->aggr_cntxt->aggr_conn;
+ 
+-	aggr_conn = p_aggr->aggr_conn;
++	if (!aggr_conn)
++		return;
+ 
+ 	tid = ath6kl_get_tid(tid_mux);
+ 	if (tid >= NUM_OF_TIDS)
+@@ -1656,8 +1674,7 @@ void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid_mux, u16 seq_no,
+ 	rxtid->aggr = true;
+ }
+ 
+-static void aggr_conn_init(struct ath6kl_vif *vif,
+-			   struct aggr_info_conn *aggr_conn)
++void aggr_conn_init(struct ath6kl_vif *vif, struct aggr_info_conn *aggr_conn)
+ {
+ 	struct rxtid *rxtid;
+ 	u8 i;
+@@ -1709,39 +1726,46 @@ struct aggr_info *aggr_init(struct ath6kl_vif *vif)
+ 
+ void aggr_recv_delba_req_evt(struct ath6kl_vif *vif, u8 tid_mux)
+ {
+-	struct aggr_info *p_aggr = vif->aggr_cntxt;
++	struct ath6kl_sta *sta;
+ 	struct rxtid *rxtid;
+-	struct aggr_info_conn *aggr_conn;
+-	u8 tid;
++	struct aggr_info_conn *aggr_conn = NULL;
++	u8 tid, aid;
++
++	if (vif->nw_type == AP_NETWORK) {
++		aid = ath6kl_get_aid(tid_mux);
++		sta = ath6kl_find_sta_by_aid(vif->ar, aid);
++		if (sta)
++			aggr_conn = sta->aggr_conn;
++	} else
++		aggr_conn = vif->aggr_cntxt->aggr_conn;
+ 
+-	if (!p_aggr || !p_aggr->aggr_conn)
++	if (!aggr_conn)
+ 		return;
+ 
+ 	tid = ath6kl_get_tid(tid_mux);
+ 	if (tid >= NUM_OF_TIDS)
+ 		return;
+ 
+-	aggr_conn = p_aggr->aggr_conn;
+ 	rxtid = &aggr_conn->rx_tid[tid];
+ 
+ 	if (rxtid->aggr)
+ 		aggr_delete_tid_state(aggr_conn, tid);
+ }
+ 
+-void aggr_reset_state(struct aggr_info *aggr_info)
++void aggr_reset_state(struct aggr_info_conn *aggr_conn)
+ {
+ 	u8 tid;
+ 
+-	if (!aggr_info || !aggr_info->aggr_conn)
++	if (!aggr_conn)
+ 		return;
+ 
+-	if (aggr_info->aggr_conn->timer_scheduled) {
+-		del_timer(&aggr_info->aggr_conn->timer);
+-		aggr_info->aggr_conn->timer_scheduled = false;
++	if (aggr_conn->timer_scheduled) {
++		del_timer(&aggr_conn->timer);
++		aggr_conn->timer_scheduled = false;
+ 	}
+ 
+ 	for (tid = 0; tid < NUM_OF_TIDS; tid++)
+-		aggr_delete_tid_state(aggr_info->aggr_conn, tid);
++		aggr_delete_tid_state(aggr_conn, tid);
+ }
+ 
+ /* clean up our amsdu buffer list */
+@@ -1766,35 +1790,13 @@ void ath6kl_cleanup_amsdu_rxbufs(struct ath6kl *ar)
+ 	spin_unlock_bh(&ar->lock);
+ }
+ 
+-static void ath6kl_cleanup_aggr_conn(struct aggr_info_conn *aggr_conn)
+-{
+-	struct rxtid *rxtid;
+-	u8 i, k;
+-
+-	if (aggr_conn->timer_scheduled) {
+-		del_timer(&aggr_conn->timer);
+-		aggr_conn->timer_scheduled = false;
+-	}
+-
+-	for (i = 0; i < NUM_OF_TIDS; i++) {
+-		rxtid = &aggr_conn->rx_tid[i];
+-		if (rxtid->hold_q) {
+-			for (k = 0; k < rxtid->hold_q_sz; k++)
+-				dev_kfree_skb(rxtid->hold_q[k].skb);
+-			kfree(rxtid->hold_q);
+-		}
+-
+-		skb_queue_purge(&rxtid->q);
+-	}
+-	kfree(aggr_conn);
+-}
+-
+ void aggr_module_destroy(struct aggr_info *aggr_info)
+ {
+-	if (!aggr_info || !aggr_info->aggr_conn)
++	if (!aggr_info)
+ 		return;
+ 
+-	ath6kl_cleanup_aggr_conn(aggr_info->aggr_conn);
++	aggr_reset_state(aggr_info->aggr_conn);
++	kfree(aggr_info->aggr_conn);
+ 	skb_queue_purge(&aggr_info->rx_amsdu_freeq);
+ 	kfree(aggr_info);
+ }
+-- 
+1.7.0.4
 
