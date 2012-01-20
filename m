@@ -1,47 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from h118.nextmail.ru ([194.67.36.118]:59563 "EHLO h118.nextmail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932356Ab2ARRas (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jan 2012 12:30:48 -0500
-To: =?koi8-r?B?TW9oYW1tZWQgU2hhZmk=?= <shafi.wireless@gmail.com>
-From: =?koi8-r?B?TVI=?= <g7af0ec1e3ea1e7b1@nextmail.ru>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"=?koi8-r?B?UmFqa3VtYXIgTWFub2hhcmFu?=" <rmanohar@qca.qualcomm.com>
-Subject: =?koi8-r?B?UmU6IGF0aDlrIGNyYXNoIDMuMi1yYzc=?=
-Date: Wed, 18 Jan 2012 21:30:38 +0400
-Message-ID: <NEXT-4f1701be44f182.23501812@nextmail.ru> (sfid-20120118_183109_750516_FF2B2085)
+Received: from he.sipsolutions.net ([78.46.109.217]:60320 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753129Ab2ATM66 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Jan 2012 07:58:58 -0500
+Message-Id: <20120120125741.524447357@sipsolutions.net> (sfid-20120120_135902_021740_63CFA459)
+Date: Fri, 20 Jan 2012 13:55:26 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 10/11] cfg80211: export cfg80211_ref_bss
+References: <20120120125516.000124996@sipsolutions.net>
 Mime-Version: 1.0
-Content-type: text/plain;
-	 charset="koi8-r"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- > 2012/1/18 MR <g7af0ec1e3ea1e7b1@nextmail.ru>:
+From: Johannes Berg <johannes.berg@intel.com>
 
- >> š> I wonder if maybe a congested AP could help.. But unclear how to
- >obtain
- > > š> that quickly and reliably.
- > >
- > > Even with debugging off WiFi works reliably across different 
-conditions.
- > >
- > 
- > you can test frequent roaming with the attached script. also you can
- > test roaming, after enabling ASPM(attached script, courtesy: Luis)
- > please completely read and understand
- > http://linuxwireless.org/en/users/Documentation/ASPM
- > incorrect tweak may cause hardware issues.
+This is needed by mac80211 to keep a reference
+to a BSS alive for the auth process. Remove the
+old version of cfg80211_ref_bss() since it's
+not actually used.
 
-Well, when I got the failure, exactly one roaming attempt happenned...
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/cfg80211.h |   14 ++++++++++++++
+ net/wireless/core.h    |    5 -----
+ net/wireless/scan.c    |   12 ++++++++++++
+ 3 files changed, 26 insertions(+), 5 deletions(-)
 
-ASPM seems disabled and from what I understood, it is a Bad Idea to enable 
-it before fully understanding why exactly it was disabled. I have no time to 
-acquire this understanding now.
-
-I read the roaming script. I need to get the scan results and then issue 
-"roam" in loop between all the APs I can access, right? Will try just to 
-collect some new testing data.
-
-Thanks for the patch - looks like it works fine so far.
+--- a/include/net/cfg80211.h	2012-01-20 13:54:20.000000000 +0100
++++ b/include/net/cfg80211.h	2012-01-20 13:54:21.000000000 +0100
+@@ -2711,6 +2711,20 @@ struct cfg80211_bss *cfg80211_get_mesh(s
+ 				       struct ieee80211_channel *channel,
+ 				       const u8 *meshid, size_t meshidlen,
+ 				       const u8 *meshcfg);
++/**
++ * cfg80211_ref_bss - reference BSS struct
++ * @bss: the BSS struct to reference
++ *
++ * Increments the refcount of the given BSS struct.
++ */
++void cfg80211_ref_bss(struct cfg80211_bss *bss);
++
++/**
++ * cfg80211_put_bss - unref BSS struct
++ * @bss: the BSS struct
++ *
++ * Decrements the refcount of the given BSS struct.
++ */
+ void cfg80211_put_bss(struct cfg80211_bss *bss);
+ 
+ /**
+--- a/net/wireless/core.h	2012-01-20 13:54:20.000000000 +0100
++++ b/net/wireless/core.h	2012-01-20 13:54:21.000000000 +0100
+@@ -144,11 +144,6 @@ static inline struct cfg80211_internal_b
+ 	return container_of(pub, struct cfg80211_internal_bss, pub);
+ }
+ 
+-static inline void cfg80211_ref_bss(struct cfg80211_internal_bss *bss)
+-{
+-	kref_get(&bss->ref);
+-}
+-
+ static inline void cfg80211_hold_bss(struct cfg80211_internal_bss *bss)
+ {
+ 	atomic_inc(&bss->hold);
+--- a/net/wireless/scan.c	2012-01-20 13:54:09.000000000 +0100
++++ b/net/wireless/scan.c	2012-01-20 13:54:21.000000000 +0100
+@@ -861,6 +861,18 @@ cfg80211_inform_bss_frame(struct wiphy *
+ }
+ EXPORT_SYMBOL(cfg80211_inform_bss_frame);
+ 
++void cfg80211_ref_bss(struct cfg80211_bss *pub)
++{
++	struct cfg80211_internal_bss *bss;
++
++	if (!pub)
++		return;
++
++	bss = container_of(pub, struct cfg80211_internal_bss, pub);
++	kref_get(&bss->ref);
++}
++EXPORT_SYMBOL(cfg80211_ref_bss);
++
+ void cfg80211_put_bss(struct cfg80211_bss *pub)
+ {
+ 	struct cfg80211_internal_bss *bss;
 
 
