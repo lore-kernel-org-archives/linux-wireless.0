@@ -1,108 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:38265 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754672Ab2AMRrz convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:35812 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751687Ab2ATGWo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jan 2012 12:47:55 -0500
-Received: by eekd4 with SMTP id d4so1158114eek.19
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2012 09:47:54 -0800 (PST)
-References: <20120113115931.GC2214@redhat.com>
-In-Reply-To: <20120113115931.GC2214@redhat.com>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <A4A6BF76-E8FA-4038-B4CB-A92B99210155@gmail.com> (sfid-20120113_184759_920559_40B165DF)
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amir Hedayaty <hedayaty@gmail.com>,
-	Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: Re: [PATCH] rt2800pci: fix spurious interrupts generation
-Date: Fri, 13 Jan 2012 18:47:59 +0100
-To: Stanislaw Gruszka <sgruszka@redhat.com>
+	Fri, 20 Jan 2012 01:22:44 -0500
+Received: by mail-lpp01m010-f43.google.com with SMTP id o2so149491lag.2
+        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2012 22:22:42 -0800 (PST)
+Subject: Re: [PATCH 2/2] mac80211: make CQM RSSI support per virtual
+ interface
+From: Luciano Coelho <coelho@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20120119083102.873553392@sipsolutions.net>
+References: <20120119082956.486569312@sipsolutions.net>
+	 <20120119083102.873553392@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 20 Jan 2012 08:22:39 +0200
+Message-ID: <1327040559.4598.411.camel@cumari> (sfid-20120120_072246_479101_7DE8A0E5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13 jan. 2012, at 12:59, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-
-> Same devices can generate interrupt without properly setting bit in
-> INT_SOURCE_CSR register (spurious interrupt), what will cause IRQ line
-> will be disabled by interrupts controller driver.
+On Thu, 2012-01-19 at 09:29 +0100, Johannes Berg wrote:
+> plain text document attachment (013-mac80211-cqm-rssi-per-vif.patch)
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> We discovered that clearing INT_MASK_CSR stops such behaviour. We
-> previously first read that register, and then clear all know interrupt
-> sources bits and do not touch reserved bits. After this patch, we write
-> to all register content (I believe writing to reserved bits on that
-> register will not cause any problems, I tested that on my rt2800pci
-> device).
+> Similar to the previous beacon filtering patch,
+> make CQM RSSI support depend on the flags that
+> the driver set for virtual interfaces.
 > 
-> This fix very bad performance problem, practically making device
-> unusable (since worked without interrupts), reported in:
-> https://bugzilla.redhat.com/show_bug.cgi?id=658451
-> 
-> We previously tried to workaround that issue in commit
-> 4ba7d9997869d25bd223dea7536fc1ce9fab3b3b "rt2800pci: handle spurious
-> interrupts", but it was reverted in commit
-> 82e5fc2a34fa9ffea38f00c4066b7e600a0ca5e6
-> as thing, that will prevent to detect real spurious interrupts.
-> 
-> Reported-and-tested-by: Amir Hedayaty <hedayaty@gmail.com>
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 > ---
-> drivers/net/wireless/rt2x00/rt2800pci.c |   28 ++++++++--------------------
-> 1 files changed, 8 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-> index 4941a1a..dc88bae 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> @@ -422,7 +422,6 @@ static int rt2800pci_init_queues(struct rt2x00_dev *rt2x00dev)
-> static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
->                 enum dev_state state)
-> {
-> -    int mask = (state == STATE_RADIO_IRQ_ON);
->    u32 reg;
->    unsigned long flags;
-> 
-> @@ -436,25 +435,14 @@ static void rt2800pci_toggle_irq(struct rt2x00_dev *rt2x00dev,
->    }
-> 
->    spin_lock_irqsave(&rt2x00dev->irqmask_lock, flags);
-> -    rt2x00pci_register_read(rt2x00dev, INT_MASK_CSR, &reg);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_RXDELAYINT, 0);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_TXDELAYINT, 0);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_RX_DONE, mask);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_AC0_DMA_DONE, 0);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_AC1_DMA_DONE, 0);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_AC2_DMA_DONE, 0);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_AC3_DMA_DONE, 0);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_HCCA_DMA_DONE, 0);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_MGMT_DMA_DONE, 0);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_MCU_COMMAND, 0);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_RXTX_COHERENT, 0);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_TBTT, mask);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_PRE_TBTT, mask);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_TX_FIFO_STATUS, mask);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_AUTO_WAKEUP, mask);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_GPTIMER, 0);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_RX_COHERENT, 0);
-> -    rt2x00_set_field32(&reg, INT_MASK_CSR_TX_COHERENT, 0);
-> +    reg = 0;
-> +    if (state == STATE_RADIO_IRQ_ON) {
-> +        rt2x00_set_field32(&reg, INT_MASK_CSR_RX_DONE, 1);
-> +        rt2x00_set_field32(&reg, INT_MASK_CSR_TBTT, 1);
-> +        rt2x00_set_field32(&reg, INT_MASK_CSR_PRE_TBTT, 1);
-> +        rt2x00_set_field32(&reg, INT_MASK_CSR_TX_FIFO_STATUS, 1);
-> +        rt2x00_set_field32(&reg, INT_MASK_CSR_AUTO_WAKEUP, 1);
-> +    }
->    rt2x00pci_register_write(rt2x00dev, INT_MASK_CSR, reg);
->    spin_unlock_irqrestore(&rt2x00dev->irqmask_lock, flags);
-> 
-> -- 
-> 1.7.1
-> 
+
+
+For the wl1251 and wl12xx parts:
+
+Acked-by: Luciano Coelho <coelho@ti.com>
+
+-- 
+Cheers,
+Luca.
+
