@@ -1,63 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:59554 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030325Ab2AFPCS (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60314 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753070Ab2ATM6w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jan 2012 10:02:18 -0500
-Received: by iaeh11 with SMTP id h11so2726177iae.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jan 2012 07:02:17 -0800 (PST)
-Message-ID: <4F070CF4.5030708@gmail.com> (sfid-20120106_160221_594208_8FABEA93)
-Date: Fri, 06 Jan 2012 23:02:12 +0800
-From: lina <lina.lastname@gmail.com>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Fwd: how to uninstall the b43 and reinstall
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Fri, 20 Jan 2012 07:58:52 -0500
+Message-Id: <20120120125741.124452597@sipsolutions.net> (sfid-20120120_135856_885835_026847C4)
+Date: Fri, 20 Jan 2012 13:55:23 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 07/11] mac80211: call rate control only after init
+References: <20120120125516.000124996@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-a quick question, how to clear the b43?
+There are situations where we don't have the
+necessary rate control information yet for
+station entries, e.g. when associating. This
+currently doesn't really happen due to the
+dummy station handling; explicitly disabling
+rate control when it's not initialised will
+allow us to remove dummy stations.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/debugfs_sta.c |    4 ++--
+ net/mac80211/rate.c        |    2 +-
+ net/mac80211/rate.h        |    1 +
+ net/mac80211/sta_info.h    |    2 ++
+ 4 files changed, 6 insertions(+), 3 deletions(-)
 
-a detailed background stories as following:
+--- a/net/mac80211/debugfs_sta.c	2012-01-20 13:54:16.000000000 +0100
++++ b/net/mac80211/debugfs_sta.c	2012-01-20 13:54:20.000000000 +0100
+@@ -63,7 +63,7 @@ static ssize_t sta_flags_read(struct fil
+ 	test_sta_flag(sta, WLAN_STA_##flg) ? #flg "\n" : ""
+ 
+ 	int res = scnprintf(buf, sizeof(buf),
+-			    "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
++			    "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+ 			    TEST(AUTH), TEST(ASSOC), TEST(PS_STA),
+ 			    TEST(PS_DRIVER), TEST(AUTHORIZED),
+ 			    TEST(SHORT_PREAMBLE),
+@@ -71,7 +71,7 @@ static ssize_t sta_flags_read(struct fil
+ 			    TEST(MFP), TEST(BLOCK_BA), TEST(PSPOLL),
+ 			    TEST(UAPSD), TEST(SP), TEST(TDLS_PEER),
+ 			    TEST(TDLS_PEER_AUTH), TEST(4ADDR_EVENT),
+-			    TEST(INSERTED));
++			    TEST(INSERTED), TEST(RATE_CONTROL));
+ #undef TEST
+ 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+ }
+--- a/net/mac80211/rate.c	2012-01-20 13:54:17.000000000 +0100
++++ b/net/mac80211/rate.c	2012-01-20 13:54:20.000000000 +0100
+@@ -332,7 +332,7 @@ void rate_control_get_rate(struct ieee80
+ 	int i;
+ 	u32 mask;
+ 
+-	if (sta) {
++	if (sta && test_sta_flag(sta, WLAN_STA_RATE_CONTROL)) {
+ 		ista = &sta->sta;
+ 		priv_sta = sta->rate_ctrl_priv;
+ 	}
+--- a/net/mac80211/rate.h	2012-01-20 13:54:17.000000000 +0100
++++ b/net/mac80211/rate.h	2012-01-20 13:54:20.000000000 +0100
+@@ -58,6 +58,7 @@ static inline void rate_control_rate_ini
+ 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+ 
+ 	ref->ops->rate_init(ref->priv, sband, ista, priv_sta);
++	set_sta_flag(sta, WLAN_STA_RATE_CONTROL);
+ }
+ 
+ static inline void rate_control_rate_update(struct ieee80211_local *local,
+--- a/net/mac80211/sta_info.h	2012-01-20 13:54:19.000000000 +0100
++++ b/net/mac80211/sta_info.h	2012-01-20 13:54:20.000000000 +0100
+@@ -53,6 +53,7 @@
+  *	reply to other uAPSD trigger frames or PS-Poll.
+  * @WLAN_STA_4ADDR_EVENT: 4-addr event was already sent for this frame.
+  * @WLAN_STA_INSERTED: This station is inserted into the hash table.
++ * @WLAN_STA_RATE_CONTROL: rate control was initialized for this station.
+  */
+ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_AUTH,
+@@ -73,6 +74,7 @@ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_SP,
+ 	WLAN_STA_4ADDR_EVENT,
+ 	WLAN_STA_INSERTED,
++	WLAN_STA_RATE_CONTROL,
+ };
+ 
+ #define STA_TID_NUM 16
 
-
-I installed the b43 following the advice given by list,
-mainly from
-http://linuxwireless.org/en/users/Drivers/b43
-
-it WORKED.
-
-but yesterday I removed the old kernel 3.2-rc6, which is the one b43 worked,
-and installed the 3.2 from kernel.org. I guess it's latest, than 3.2-rc6 ?
-
-I don't know how to remove the b43 since the trial of
-make uninstall in pathTo/b43-fwcutter-015 not work.
-
-so I just did something like make install again, and then
-1 
-<http://linuxwireless.org/en/users/Drivers/b43#CA-d6bf7044c28bbe20619873aa0dd5f8faa0864c61_1> 
-export FIRMWARE_INSTALL_DIR="/lib/firmware"
-2 
-<http://linuxwireless.org/en/users/Drivers/b43#CA-d6bf7044c28bbe20619873aa0dd5f8faa0864c61_2> 
-wget http://www.lwfinger.com/b43-firmware/broadcom-wl-5.100.138.tar.bz2
-3 
-<http://linuxwireless.org/en/users/Drivers/b43#CA-d6bf7044c28bbe20619873aa0dd5f8faa0864c61_3> 
-tar xjf broadcom-wl-5.100.138.tar.bz2
-4 sudo b43-fwcutter -w "$FIRMWARE_INSTALL_DIR" 
-broadcom-wl-5.100.138/linux/wl_apsta.o
-
-dmesg showed me:
-[  127.434017] cfg80211: Calling CRDA to update world regulatory domain
-[  127.704793] b43-phy0: Broadcom 4331 WLAN found (core revision 29)
-[  127.704821] bcma: Switched to core: 0x812
-[  127.705237] b43-phy0 ERROR: FOUND UNSUPPORTED PHY (Analog 9, Type 7, 
-Revision 1)
-[  127.705244] b43: probe of bcma0:0 failed with error -95
-[  127.705260] Broadcom 43xx driver loaded [ Features: PMNLS ]
-[  431.367724] applesmc: FS! : read arg fail
-
-Thanks for any advice
 
