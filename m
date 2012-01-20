@@ -1,94 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1027 "EHLO mx1.redhat.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:2686 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755401Ab2AELIG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 06:08:06 -0500
-Date: Thu, 5 Jan 2012 12:07:45 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Michal Hocko <mhocko@suse.cz>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Subject: Re: iwl3945 didn't survive after s2ram failure
-Message-ID: <20120105110744.GA2222@redhat.com> (sfid-20120105_120821_622031_EADB61F1)
-References: <20111227105340.GD5344@tiehlicka.suse.cz>
- <20120103103457.GA3391@redhat.com>
- <20120103130306.GA3891@tiehlicka.suse.cz>
+	id S1753193Ab2ATPs5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Jan 2012 10:48:57 -0500
+Received: from mail-sj1-12.sj.broadcom.com (mail-sj1-12.sj.broadcom.com
+ [10.17.16.106]) by mail-irva-13.broadcom.com (Postfix) with ESMTP id
+ 0A367BC396 for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2012
+ 07:48:47 -0800 (PST)
+Received: from [10.0.2.15] (unknown [10.177.252.129]) by
+ mail-sj1-12.sj.broadcom.com (Postfix) with ESMTP id 76A4C207C0 for
+ <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2012 07:48:46 -0800 (PST)
+Message-ID: <4F198CDD.3000202@broadcom.com> (sfid-20120120_164901_602831_6BC45ADE)
+Date: Fri, 20 Jan 2012 16:48:45 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="RnlQjJ0d97Da+TV1"
-In-Reply-To: <20120103130306.GA3891@tiehlicka.suse.cz>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: pending regulatory request
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Upon loading the driver for my device I noticed a cfg80211 log about a
+'pending regulatory request'. Should I be worried?
 
---RnlQjJ0d97Da+TV1
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Jan 20 16:44:43 lb-bun-09 kernel: [97204.008291] cfg80211: 5735000 KHz -
+5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+Jan 20 16:44:43 lb-bun-09 kernel: [97204.012246] ieee80211 phy1:
+Selected rate control algorithm 'minstrel_ht'
+Jan 20 16:44:43 lb-bun-09 kernel: [97204.014378] cfg80211: Calling CRDA
+for country: X0
+Jan 20 16:44:43 lb-bun-09 kernel: [97204.014548] brcms_module_init:
+register returned 0
+Jan 20 16:44:43 lb-bun-09 kernel: [97204.036730] udev[13349]: renamed
+network interface wlan0 to wlan3
+Jan 20 16:44:43 lb-bun-09 kernel: [97204.055754] ieee80211 phy1:
+brcms_ops_bss_info_changed: qos enabled: false (implement)
+Jan 20 16:44:43 lb-bun-09 kernel: [97204.055767] ieee80211 phy1:
+brcms_ops_config: change power-save mode: false (implement)
+Jan 20 16:44:43 lb-bun-09 kernel: [97204.057178] ADDRCONF(NETDEV_UP):
+wlan3: link is not ready
+Jan 20 16:44:45 lb-bun-09 kernel: [97205.491348] cfg80211: Found new
+beacon on frequency: 5745 MHz (Ch 149) on phy1
+Jan 20 16:44:45 lb-bun-09 kernel: [97205.491362] cfg80211: Pending
+regulatory request, waiting for it to be processed...
 
-On Tue, Jan 03, 2012 at 02:03:06PM +0100, Michal Hocko wrote:
-> [ 5622.739466] ieee80211 phy0: U iwl_legacy_apm_init Init card's basic functions
-> [ 5622.740021] iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-[snip]
-> Yes and no change. I even tried to disable wireless in BIOS boot and
-> then enable it again. No change...
-> It seems somebody already had the same problem
-> https://bugzilla.redhat.com/show_bug.cgi?id=639184. My BIOS doesn't
-> provide any locator setting, unfortunatelly.
-> 
-> The message above says that the HW is still in a deep sleep state. Can
-> we somehow force waking it up?
-
-The message is a bit confusing, it happen when on device processor does
-not clear bit it suppose to. It can be in some sleep state, reset state
-or powered off. But this message could be triggered when there is PCIe
-connection problem, since we can not read properly register value, what
-seems to be issue here as value is 0xFFFFFFFF.
-
-> Or, can we just ignore the signature check and (maybe) fix it by another
-> suspend/resume cycle?
-
-Only interesting thing we do while resume in the driver is:
-pci_write_config_byte(pdev, PCI_CFG_RETRY_TIMEOUT, 0x00); 
-we do the same during erly stage of .probe function too.
-
-In the RH bugzilla case, it was regression. There are no iwlegacy
-changes between mentioned kernel versions. There are some APCI and pci
-changes. Can you try if any of these kernel boot parameters helps:
-pcie_aspm=off
-pcie_aspm=force
-pci=nocsr
-pci=use_csr
-
-More than that, I'm attaching a patch, there is very small chance
-it will help.
-
-Stanislaw
-
---RnlQjJ0d97Da+TV1
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="iwl3945.patch"
-
-diff --git a/drivers/net/wireless/iwlegacy/iwl3945-base.c b/drivers/net/wireless/iwlegacy/iwl3945-base.c
-index b282d86..94934eb 100644
---- a/drivers/net/wireless/iwlegacy/iwl3945-base.c
-+++ b/drivers/net/wireless/iwlegacy/iwl3945-base.c
-@@ -3700,8 +3700,8 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	/***************************
- 	 * 2. Initializing PCI bus
- 	 * *************************/
--	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1 |
--				PCIE_LINK_STATE_CLKPM);
-+	//pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S | PCIE_LINK_STATE_L1 |
-+	//			PCIE_LINK_STATE_CLKPM);
- 
- 	if (pci_enable_device(pdev)) {
- 		err = -ENODEV;
-@@ -3751,7 +3751,7 @@ static int iwl3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *e
- 	 * strange state ... like being left stranded by a primary kernel
- 	 * and this is now the kdump kernel trying to start up
- 	 */
--	iwl_write32(priv, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
-+	//iwl_write32(priv, CSR_RESET, CSR_RESET_REG_FLAG_NEVO_RESET);
- 
- 	/***********************
- 	 * 4. Read EEPROM
-
---RnlQjJ0d97Da+TV1--
