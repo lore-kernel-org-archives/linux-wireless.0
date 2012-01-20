@@ -1,64 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nautica.notk.org ([91.121.71.147]:42260 "EHLO nautica.notk.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757719Ab2ARPTA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jan 2012 10:19:00 -0500
-Date: Wed, 18 Jan 2012 16:18:43 +0100
-From: Dominique Martinet <asmadeus@codewreck.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-	linux-kbuild@vger.kernel.org
-Subject: Re: [PATCH v2] compat-wireless: build: Throw error if space in path
-Message-ID: <20120118151843.GA23506@nautica> (sfid-20120118_161906_831914_0B10CA05)
-References: <CAB=NE6WAhddiUuf4yOfNAgqMF7GxM--ksDwEmvwdJdFYSjLGzA@mail.gmail.com>
- <1326758892-32135-1-git-send-email-asmadeus@codewreck.org>
- <1326786261.3342.0.camel@jlt3.sipsolutions.net>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57047 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751196Ab2AUBqT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Jan 2012 20:46:19 -0500
+Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
+	(envelope-from <linville@tuxdriver.com>)
+	id 1RoQ25-0001T8-1v
+	for linux-wireless@vger.kernel.org; Fri, 20 Jan 2012 20:46:17 -0500
+Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
+	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id q0KCWVLt010847
+	for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2012 07:32:32 -0500
+Received: (from linville@localhost)
+	by linville-8530p.local (8.14.4/8.14.4/Submit) id q0KCWVS8010839
+	for linux-wireless@vger.kernel.org; Fri, 20 Jan 2012 07:32:31 -0500
+Date: Fri, 20 Jan 2012 07:32:31 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Subject: wireless-testing rebased on top of 3.3-rc1 (commit
+ ef370988d92a9dcd16a7bfbdafe511cd1db43d15)
+Message-ID: <20120120123228.GA7760@tuxdriver.com> (sfid-20120121_024641_897071_7E9EF3D0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1326786261.3342.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+The wireless-testing tree has been rebased on top of 3.3-rc1 (new head
+is commit ef370988d92a9dcd16a7bfbdafe511cd1db43d15).  It also includes
+the fixes I sent to davem that Linus didn't get in time for -rc1.
+Please refresh your development trees appropriately.
 
-(I added linux-kbuild@ in Cc because it also concerns them. The idea is
-to fail cleanly if there is a space in the path to the directory from
-which we want to build some modules. We can't detect some from kbuild
-itself given how params are given, so it started as a patch for the
-modules' Makefile instead)
+I am travelling through the weekend, so don't expect many more changes
+to wireless-testing until Monday or so -- sorry!
 
+Thanks,
 
-Johannes Berg wrote on Tue, Jan 17, 2012 :
-> I think it also fails if there's a colon in the path -- does anyone know
-> what the "forbidden" characters would be?
-
-I can confirm that it fails with a colon in path, although it's not
-documented anywhere in Documentation/kbuild/.. (I guess I've just
-volunteered to fix that, too :))
-
-I didn't find a proper list, but what I've seen fail is:
- - space " "
- - colon ":"
- - semicolon ";"
- - antislash "\"
- - dollar "$"
- - sharp "#" (although it fails later than the others)
- - ampersand "&"
- - parenthesis "(" and ")" - these fail somewhere else as well (even
- after fixing compat-wireless' Makefile with minor quoting)
- - backtick "`"
- - double quotes """ 
- - single quotes "'"
-
-what does work that's not necessarily obvious:
- - comma, brakets [], brakets {}
-
-
-... There might be many more I didn't come up with, but that does look
-like a fair start!
-Does anyone know of a more complete list?
-
-Regards,
+John
 -- 
-Dominique Martinet | Asmadeus
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
