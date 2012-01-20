@@ -1,105 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:19421 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754519Ab2AUJxc (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38708 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751359Ab2ATMxw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jan 2012 04:53:32 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH V2 5/6] ath6kl: Fix bug in using tid given by addba/delba req events
-Date: Sat, 21 Jan 2012 15:22:52 +0530
-Message-ID: <1327139573-7435-5-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120121_105352_186532_BA6BEEDB)
-In-Reply-To: <1327139573-7435-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1327139573-7435-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 20 Jan 2012 07:53:52 -0500
+Message-Id: <20120120125313.111967515@sipsolutions.net> (sfid-20120120_135356_463968_8998E77B)
+Date: Fri, 20 Jan 2012 13:52:37 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] cfg80211: fix a few -Wshadow warnings
+References: <20120120125235.243434836@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The tid which is given in addba/delba req event is not
-just tid but also muxed with the assoc id (MSB 4 bits)
-which can be used to determine the corresponding connected
-station in softap mode. The actual tid is LSB 4 bits. Using
-the tid as it is with rx_tid[] would result in OOB or invalid
-memory access in AP mode.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+It seems that -Wshadow is no longer default in
+sparse runs, but let's fix the warnings anyway.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath6kl/txrx.c |   25 +++++++++++++++++++++++--
- 1 files changed, 23 insertions(+), 2 deletions(-)
+ net/wireless/nl80211.c |    8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 8407d01..8cf7b2f 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -17,6 +17,17 @@
- #include "core.h"
- #include "debug.h"
+--- a/net/wireless/nl80211.c	2012-01-20 13:49:32.000000000 +0100
++++ b/net/wireless/nl80211.c	2012-01-20 13:51:00.000000000 +0100
+@@ -427,10 +427,9 @@ static int nl80211_parse_key_new(struct
  
-+/*
-+ * tid - tid_mux0..tid_mux3
-+ * aid - tid_mux4..tid_mux7
-+ */
-+#define ATH6KL_TID_MASK 0xf
-+
-+static inline u8 ath6kl_get_tid(u8 tid_mux)
-+{
-+	return tid_mux & ATH6KL_TID_MASK;
-+}
-+
- static u8 ath6kl_ibss_map_epid(struct sk_buff *skb, struct net_device *dev,
- 			       u32 *map_no)
- {
-@@ -1602,7 +1613,7 @@ static void aggr_delete_tid_state(struct aggr_info_conn *aggr_conn, u8 tid)
- 	memset(stats, 0, sizeof(struct rxtid_stats));
- }
+ 	if (tb[NL80211_KEY_DEFAULT_TYPES]) {
+ 		struct nlattr *kdt[NUM_NL80211_KEY_DEFAULT_TYPES];
+-		int err = nla_parse_nested(kdt,
+-					   NUM_NL80211_KEY_DEFAULT_TYPES - 1,
+-					   tb[NL80211_KEY_DEFAULT_TYPES],
+-					   nl80211_key_default_policy);
++		err = nla_parse_nested(kdt, NUM_NL80211_KEY_DEFAULT_TYPES - 1,
++				       tb[NL80211_KEY_DEFAULT_TYPES],
++				       nl80211_key_default_policy);
+ 		if (err)
+ 			return err;
  
--void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid, u16 seq_no,
-+void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid_mux, u16 seq_no,
- 			     u8 win_sz)
- {
- 	struct aggr_info *p_aggr = vif->aggr_cntxt;
-@@ -1610,12 +1621,17 @@ void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid, u16 seq_no,
- 	struct rxtid *rxtid;
- 	struct rxtid_stats *stats;
- 	u16 hold_q_size;
-+	u8 tid;
+@@ -4781,7 +4780,6 @@ static int nl80211_join_ibss(struct sk_b
+ 			nla_len(info->attrs[NL80211_ATTR_BSS_BASIC_RATES]);
+ 		struct ieee80211_supported_band *sband =
+ 			wiphy->bands[ibss.channel->band];
+-		int err;
  
- 	if (!p_aggr || !p_aggr->aggr_conn)
- 		return;
- 
- 	aggr_conn = p_aggr->aggr_conn;
- 
-+	tid = ath6kl_get_tid(tid_mux);
-+	if (tid >= NUM_OF_TIDS)
-+		return;
-+
- 	rxtid = &aggr_conn->rx_tid[tid];
- 	stats = &aggr_conn->stat[tid];
- 
-@@ -1691,15 +1707,20 @@ struct aggr_info *aggr_init(struct ath6kl_vif *vif)
- 	return p_aggr;
- }
- 
--void aggr_recv_delba_req_evt(struct ath6kl_vif *vif, u8 tid)
-+void aggr_recv_delba_req_evt(struct ath6kl_vif *vif, u8 tid_mux)
- {
- 	struct aggr_info *p_aggr = vif->aggr_cntxt;
- 	struct rxtid *rxtid;
- 	struct aggr_info_conn *aggr_conn;
-+	u8 tid;
- 
- 	if (!p_aggr || !p_aggr->aggr_conn)
- 		return;
- 
-+	tid = ath6kl_get_tid(tid_mux);
-+	if (tid >= NUM_OF_TIDS)
-+		return;
-+
- 	aggr_conn = p_aggr->aggr_conn;
- 	rxtid = &aggr_conn->rx_tid[tid];
- 
--- 
-1.7.0.4
+ 		err = ieee80211_get_ratemask(sband, rates, n_rates,
+ 					     &ibss.basic_rates);
+
 
