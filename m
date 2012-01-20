@@ -1,130 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60307 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:38706 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753038Ab2ATM6q (ORCPT
+	with ESMTP id S1752327Ab2ATMxv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 07:58:46 -0500
-Message-Id: <20120120125740.590880956@sipsolutions.net> (sfid-20120120_135851_796129_30A9979A)
-Date: Fri, 20 Jan 2012 13:55:19 +0100
+	Fri, 20 Jan 2012 07:53:51 -0500
+Message-Id: <20120120125312.956655635@sipsolutions.net> (sfid-20120120_135355_867515_B3532489)
+Date: Fri, 20 Jan 2012 13:52:36 +0100
 From: Johannes Berg <johannes@sipsolutions.net>
 To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 03/11] mac80211: dont program keys for stations not uploaded
-References: <20120120125516.000124996@sipsolutions.net>
+Subject: [PATCH 1/2] mac80211: fix a few -Wshadow warnings
+References: <20120120125235.243434836@sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-If a station couldn't be uploaded to the driver but
-is still kept (only in IBSS mode) we still shouldn't
-try to program the keys for it into hardware; fix
-this bug by skipping the key upload in this case.
+It seems that -Wshadow is no longer default in
+sparse runs, but let's fix the warnings anyway.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/key.c |   30 ++++++++++++++----------------
- 1 file changed, 14 insertions(+), 16 deletions(-)
+ net/mac80211/rx.c     |    3 ---
+ net/mac80211/status.c |    6 +++---
+ 2 files changed, 3 insertions(+), 6 deletions(-)
 
---- a/net/mac80211/key.c	2012-01-20 13:54:19.000000000 +0100
-+++ b/net/mac80211/key.c	2012-01-20 13:54:19.000000000 +0100
-@@ -54,14 +54,6 @@ static void assert_key_lock(struct ieee8
- 	lockdep_assert_held(&local->key_mtx);
- }
- 
--static struct ieee80211_sta *get_sta_for_key(struct ieee80211_key *key)
--{
--	if (key->sta)
--		return &key->sta->sta;
+--- a/net/mac80211/rx.c	2012-01-20 13:50:03.000000000 +0100
++++ b/net/mac80211/rx.c	2012-01-20 13:50:10.000000000 +0100
+@@ -2180,9 +2180,6 @@ ieee80211_rx_h_mgmt_check(struct ieee802
+ 	if (rx->sdata->vif.type == NL80211_IFTYPE_AP &&
+ 	    ieee80211_is_beacon(mgmt->frame_control) &&
+ 	    !(rx->flags & IEEE80211_RX_BEACON_REPORTED)) {
+-		struct ieee80211_rx_status *status;
 -
--	return NULL;
--}
--
- static void increment_tailroom_need_count(struct ieee80211_sub_if_data *sdata)
- {
- 	/*
-@@ -95,7 +87,7 @@ static void increment_tailroom_need_coun
- static int ieee80211_key_enable_hw_accel(struct ieee80211_key *key)
- {
- 	struct ieee80211_sub_if_data *sdata;
--	struct ieee80211_sta *sta;
-+	struct sta_info *sta;
- 	int ret;
+-		status = IEEE80211_SKB_RXCB(rx->skb);
+ 		cfg80211_report_obss_beacon(rx->local->hw.wiphy,
+ 					    rx->skb->data, rx->skb->len,
+ 					    status->freq, GFP_ATOMIC);
+--- a/net/mac80211/status.c	2012-01-20 13:50:03.000000000 +0100
++++ b/net/mac80211/status.c	2012-01-20 13:50:10.000000000 +0100
+@@ -350,7 +350,6 @@ void ieee80211_tx_status(struct ieee8021
+ 	bool send_to_cooked;
+ 	bool acked;
+ 	struct ieee80211_bar *bar;
+-	u16 tid;
+ 	int rtap_len;
  
- 	might_sleep();
-@@ -105,7 +97,7 @@ static int ieee80211_key_enable_hw_accel
+ 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
+@@ -412,7 +411,7 @@ void ieee80211_tx_status(struct ieee8021
+ 		}
  
- 	assert_key_lock(key->local);
+ 		if (!acked && ieee80211_is_back_req(fc)) {
+-			u16 control;
++			u16 tid, control;
  
--	sta = get_sta_for_key(key);
-+	sta = key->sta;
+ 			/*
+ 			 * BAR failed, store the last SSN and retry sending
+@@ -516,7 +515,8 @@ void ieee80211_tx_status(struct ieee8021
  
- 	/*
- 	 * If this is a per-STA GTK, check if it
-@@ -115,6 +107,9 @@ static int ieee80211_key_enable_hw_accel
- 	    !(key->local->hw.flags & IEEE80211_HW_SUPPORTS_PER_STA_GTK))
- 		goto out_unsupported;
- 
-+	if (sta && !sta->uploaded)
-+		goto out_unsupported;
+ 		if (ieee80211_is_nullfunc(hdr->frame_control) ||
+ 		    ieee80211_is_qos_nullfunc(hdr->frame_control)) {
+-			bool acked = info->flags & IEEE80211_TX_STAT_ACK;
++			acked = info->flags & IEEE80211_TX_STAT_ACK;
 +
- 	sdata = key->sdata;
- 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN) {
- 		/*
-@@ -125,7 +120,8 @@ static int ieee80211_key_enable_hw_accel
- 			goto out_unsupported;
- 	}
- 
--	ret = drv_set_key(key->local, SET_KEY, sdata, sta, &key->conf);
-+	ret = drv_set_key(key->local, SET_KEY, sdata,
-+			  sta ? &sta->sta : NULL, &key->conf);
- 
- 	if (!ret) {
- 		key->flags |= KEY_FLAG_UPLOADED_TO_HARDWARE;
-@@ -144,7 +140,8 @@ static int ieee80211_key_enable_hw_accel
- 	if (ret != -ENOSPC && ret != -EOPNOTSUPP)
- 		wiphy_err(key->local->hw.wiphy,
- 			  "failed to set key (%d, %pM) to hardware (%d)\n",
--			  key->conf.keyidx, sta ? sta->addr : bcast_addr, ret);
-+			  key->conf.keyidx,
-+			  sta ? sta->sta.addr : bcast_addr, ret);
- 
-  out_unsupported:
- 	switch (key->conf.cipher) {
-@@ -163,7 +160,7 @@ static int ieee80211_key_enable_hw_accel
- static void ieee80211_key_disable_hw_accel(struct ieee80211_key *key)
- {
- 	struct ieee80211_sub_if_data *sdata;
--	struct ieee80211_sta *sta;
-+	struct sta_info *sta;
- 	int ret;
- 
- 	might_sleep();
-@@ -176,7 +173,7 @@ static void ieee80211_key_disable_hw_acc
- 	if (!(key->flags & KEY_FLAG_UPLOADED_TO_HARDWARE))
- 		return;
- 
--	sta = get_sta_for_key(key);
-+	sta = key->sta;
- 	sdata = key->sdata;
- 
- 	if (!((key->conf.flags & IEEE80211_KEY_FLAG_GENERATE_MMIC) ||
-@@ -185,12 +182,13 @@ static void ieee80211_key_disable_hw_acc
- 		increment_tailroom_need_count(sdata);
- 
- 	ret = drv_set_key(key->local, DISABLE_KEY, sdata,
--			  sta, &key->conf);
-+			  sta ? &sta->sta : NULL, &key->conf);
- 
- 	if (ret)
- 		wiphy_err(key->local->hw.wiphy,
- 			  "failed to remove key (%d, %pM) from hardware (%d)\n",
--			  key->conf.keyidx, sta ? sta->addr : bcast_addr, ret);
-+			  key->conf.keyidx,
-+			  sta ? sta->sta.addr : bcast_addr, ret);
- 
- 	key->flags &= ~KEY_FLAG_UPLOADED_TO_HARDWARE;
- }
+ 			cfg80211_probe_status(skb->dev, hdr->addr1,
+ 					      cookie, acked, GFP_ATOMIC);
+ 		} else {
 
 
