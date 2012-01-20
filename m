@@ -1,67 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56117 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754055Ab2ANOIs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jan 2012 09:08:48 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:58336 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752420Ab2ATIVm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Jan 2012 03:21:42 -0500
+Received: by iagf6 with SMTP id f6so592059iag.19
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2012 00:21:41 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 3.3] ath9k_hw: fix interpretation of the rx KeyMiss flag
-Date: Sat, 14 Jan 2012 15:08:34 +0100
-Message-Id: <1326550114-76278-1-git-send-email-nbd@openwrt.org> (sfid-20120114_150851_546358_6C18D00C)
+Cc: johannes@sipsolutions.net, thomas@cozybit.com,
+	devel@lists.open80211s.org, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] iw: Add support of setting non-forwarding entity in Mesh
+Date: Sat, 21 Jan 2012 01:10:19 +0800
+Message-Id: <1327079419-27765-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120120_092210_041527_2F49FDE5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Documentation states that the KeyMiss flag is only valid if RxFrameOK is
-unset, however empirical evidence has shown that this is false.
-When KeyMiss is set (and RxFrameOK is 1), the hardware passes a valid frame
-which has not been decrypted. The driver then falsely marks the frame
-as decrypted, and when using CCMP this corrupts the rx CCMP PN, leading
-to connection hangs.
+This patch creates a new mesh parameter known as mesh_fwding. Mesh node will become
+non-forwarding entity if this parameter is set to 0. By default, it is set as 1.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Cc: stable@kernel.org
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |    5 +++--
- drivers/net/wireless/ath/ath9k/mac.c        |    5 +++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ mesh.c    |    2 ++
+ nl80211.h |    4 ++++
+ 2 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 88c81c5..09b8c9d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -557,10 +557,11 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
- 			rxs->rs_status |= ATH9K_RXERR_DECRYPT;
- 		else if (rxsp->status11 & AR_MichaelErr)
- 			rxs->rs_status |= ATH9K_RXERR_MIC;
--		if (rxsp->status11 & AR_KeyMiss)
--			rxs->rs_status |= ATH9K_RXERR_KEYMISS;
- 	}
- 
-+	if (rxsp->status11 & AR_KeyMiss)
-+		rxs->rs_status |= ATH9K_RXERR_KEYMISS;
-+
- 	return 0;
- }
- EXPORT_SYMBOL(ath9k_hw_process_rxdesc_edma);
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index fd3f19c..e196aba 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -618,10 +618,11 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
- 			rs->rs_status |= ATH9K_RXERR_DECRYPT;
- 		else if (ads.ds_rxstatus8 & AR_MichaelErr)
- 			rs->rs_status |= ATH9K_RXERR_MIC;
--		if (ads.ds_rxstatus8 & AR_KeyMiss)
--			rs->rs_status |= ATH9K_RXERR_KEYMISS;
- 	}
- 
-+	if (ads.ds_rxstatus8 & AR_KeyMiss)
-+		rs->rs_status |= ATH9K_RXERR_KEYMISS;
-+
- 	return 0;
- }
- EXPORT_SYMBOL(ath9k_hw_rxprocdesc);
--- 
-1.7.3.2
+diff --git a/mesh.c b/mesh.c
+index 37fd1cd..764cc32 100644
+--- a/mesh.c
++++ b/mesh.c
+@@ -177,6 +177,8 @@ const static struct mesh_param_descr _mesh_param_descrs[] =
+ 	_my_nla_put_u16, _parse_u16, _print_u16},
+ 	{"mesh_gate_announcements", NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
+ 	_my_nla_put_u8, _parse_u8, _print_u8},
++	{"mesh_fwding", NL80211_MESHCONF_FORWARDING,
++	_my_nla_put_u8, _parse_u8_as_bool, _print_u8},
+ };
+
+ static void print_all_mesh_param_descr(void)
+diff --git a/nl80211.h b/nl80211.h
+index a187606..92a1cc5 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -2098,6 +2098,9 @@ enum nl80211_mntr_flags {
+  * TUs) during which a mesh STA can send only one Action frame containing a
+  * PERR element.
+  *
++ * @NL80211_MESHCONF_FORWARDING: set Mesh STA as forwarding or non-forwarding
++ * or forwarding entity (default is TRUE - forwarding entity)
++ *
+  * @NL80211_MESHCONF_ATTR_MAX: highest possible mesh configuration attribute
+  *
+  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
+@@ -2122,6 +2125,7 @@ enum nl80211_meshconf_params {
+ 	NL80211_MESHCONF_HWMP_RANN_INTERVAL,
+ 	NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
+ 	NL80211_MESHCONF_HWMP_PERR_MIN_INTERVAL,
++	NL80211_MESHCONF_FORWARDING,
+
+ 	/* keep last */
+ 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
+--
+1.7.0.4
 
