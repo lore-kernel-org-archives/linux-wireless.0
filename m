@@ -1,49 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57760 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754199Ab2AQPBR (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:63553 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755776Ab2ATVmR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 10:01:17 -0500
-Date: Tue, 17 Jan 2012 09:48:03 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	Keith Packard <keithp@keithp.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Subject: Re: MBA resume wedge due to wireless fixed yet?
-Message-ID: <20120117144803.GD12733@tuxdriver.com> (sfid-20120117_160131_188019_1F1A0858)
-References: <86wr8rfbpf.fsf@sumi.keithp.com>
- <CA+55aFwdHKhLXF+Utbk0A2jcshSeQmQ91YxBzvqSa3wXCKh8BA@mail.gmail.com>
- <CAGRGNgVL-tmY8e2hk43hQQot6YwvEWcQYwoSHLtQGj4JR+Nk3w@mail.gmail.com>
- <CA+55aFz6qAY+q+Fes4gZdit1V_XQO7hcqp+V=ytuY=XYq2Tu8Q@mail.gmail.com>
- <CAGRGNgUhGs+30WpppKvH110qBMcSss3xKEoNH_Tv+ZEoKWRJhg@mail.gmail.com>
- <CA+55aFxjSuFWn6WT=H+sZN3AGD1_E-2q6_NewZNjGAg6GBw=Pw@mail.gmail.com>
+	Fri, 20 Jan 2012 16:42:17 -0500
+Received: by iacb35 with SMTP id b35so121068iac.19
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2012 13:42:17 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CA+55aFxjSuFWn6WT=H+sZN3AGD1_E-2q6_NewZNjGAg6GBw=Pw@mail.gmail.com>
+In-Reply-To: <1327091044.9857.8.camel@jlt3.sipsolutions.net>
+References: <20120119182033.5F60358073@lefflers.sfo.corp.google.com>
+	<1327069053.9857.3.camel@jlt3.sipsolutions.net>
+	<CA+yqC4Y-nKrX=jaGbPTk7LqsR+3jqPJssOEFuw0dPm+sMyMvGg@mail.gmail.com>
+	<1327091044.9857.8.camel@jlt3.sipsolutions.net>
+Date: Fri, 20 Jan 2012 13:42:15 -0800
+Message-ID: <CA+yqC4a9+KD-eXeQHQcfUngq=7GLG9CS_9Je3PUdEGhsssAmTg@mail.gmail.com> (sfid-20120120_224220_898735_CC6AEFDF)
+Subject: Re: [PATCH RESEND] mac80211: support fixed rate packet injection
+From: Sam Leffler <sleffler@chromium.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 16, 2012 at 05:19:01PM -0800, Linus Torvalds wrote:
-> On Mon, Jan 16, 2012 at 5:09 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+On Fri, Jan 20, 2012 at 12:24 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+>
+> On Fri, 2012-01-20 at 10:44 -0800, Sam Leffler wrote:
+> > On Fri, Jan 20, 2012 at 6:17 AM, Johannes Berg
+> > <johannes@sipsolutions.net> wrote:
+> > >
+> > > On Thu, 2012-01-12 at 09:53 -0800, Sam Leffler wrote:
+> > >
+> > > > + † † if (fixed_rate != -1) {
+> > > > + † † † † † † struct ieee80211_channel *chan = local->hw.conf.channel;
+> > > > + † † † † † † struct ieee80211_supported_band *sband =
+> > > > + † † † † † † † † † † local->hw.wiphy->bands[chan->band];
+> > > > + † † † † † † struct ieee80211_tx_rate *rates = info->control.rates;
+> > > > + † † † † † † int i;
+> > > > +
+> > > > + † † † † † † if (fixed_rate_flags & IEEE80211_TX_RC_MCS) {
+> > > > + † † † † † † † † † † WARN_ON(!sband->ht_cap.ht_supported);
+> > > > + † † † † † † † † † † rates[0].idx = fixed_rate;
+> > >
+> > > Unless I missed something, this would be *trivial* to trigger by
+> > > injection -- doesn't seem like a good idea to me.
+> > >
 > >
-> > I noticed all the names for the driver maintainers but my eyes must
-> > have skipped over David and Linville.
-> 
-> Actually, they probably didn't. It looks like the series Rafa≈Ç sent
-> out didn't have either David or Linville on it. And my series only had
-> Linville.
-> 
-> I was sure I had David cc'd on some of it, but apparently that was
-> just in my confused mind.
+> > Can unprivileged users inject packets? †Is your preference to generate
+> > an error or just suppress the warning?
+>
+> I'm not sure, but it doesn't really matter -- even printing an error
+> here is quite pointless.
+>
 
-I have them.  I merged 1/5 already, since Rafa≈Ç marked it for
-"stable".  But Dave is right, we might as well merge the others
-now too.  I'll get to that ASAP.
+Not sure why you say that. †If you submit a packet and it's tossed w/o
+any indication (e.g. you mistakenly set the channel wrong so the
+driver tosses the frame) then it's not obvious what's going on.
+Anyway, I'll remove the warning.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+-Sam
