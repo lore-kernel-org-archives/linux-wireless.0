@@ -1,74 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:44140 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753648Ab2A1Rhe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jan 2012 12:37:34 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 4/4] iwlwifi: always restrict scan dwell in P2P
-Date: Sat, 28 Jan 2012 08:30:52 -0800
-Message-Id: <1327768252-22742-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120128_183740_299826_D351C06B)
-In-Reply-To: <1327768252-22742-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1327768252-22742-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:57785 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752419Ab2ATNgz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Jan 2012 08:36:55 -0500
+From: <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH v2 3/8] ath6kl: Add a new func to config default WOW patterns for non AP mode
+Date: Fri, 20 Jan 2012 19:05:39 +0530
+Message-ID: <1327066544-23779-4-git-send-email-rmani@qca.qualcomm.com> (sfid-20120120_143659_322917_054F57FD)
+In-Reply-To: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com>
+References: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Raja Mani <rmani@qca.qualcomm.com>
 
-Whenever the PAN (P2P) context is active, it
-has timers in the uCode that prevent sleep,
-so scanning can't be out of channel for more
-than the beacon interval programmed into the
-device.
+ath6kl_non_ap_add_default_wow_patterns() is added to configure
+the below default patterns when the system enters into WOW
+suspend in non AP mode.
 
-Before this patch, a full scan including any
-passive channels when P2P was active would
-stall forever because it wouldn't find time
-to execute the passive requests (for default
-beacon intervals of 100 TU.)
+  * Unicast packet pattern
+  * mDNS/SSDP/LLMNR pattern
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+This func will be called from ath6kl_wow_suspend().
+
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-scan.c |   21 ++++++++++++++++++---
- 1 files changed, 18 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   40 ++++++++++++++++++++++++++++
+ 1 files changed, 40 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 2aea20b..7f2e3a1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -414,10 +414,25 @@ static u16 iwl_limit_dwell(struct iwl_priv *priv, u16 dwell_time)
- 	for_each_context(priv, ctx) {
- 		u16 value;
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 88cce8f..9ab92c4 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1802,6 +1802,46 @@ static int ath6kl_ap_add_default_wow_patterns(struct ath6kl *ar,
+ 	return 0;
+ }
  
--		if (!iwl_is_associated_ctx(ctx))
--			continue;
--		if (ctx->staging.dev_type == RXON_DEV_TYPE_P2P)
-+		switch (ctx->staging.dev_type) {
-+		case RXON_DEV_TYPE_P2P:
-+			/* no timing constraints */
- 			continue;
-+		case RXON_DEV_TYPE_ESS:
-+		default:
-+			/* timing constraints if associated */
-+			if (!iwl_is_associated_ctx(ctx))
-+				continue;
-+			break;
-+		case RXON_DEV_TYPE_CP:
-+		case RXON_DEV_TYPE_2STA:
-+			/*
-+			 * These seem to always have timers for TBTT
-+			 * active in uCode even when not associated yet.
-+			 */
-+			break;
-+		}
++static int ath6kl_non_ap_add_default_wow_patterns(struct ath6kl *ar,
++						     struct ath6kl_vif *vif)
++{
++	struct net_device *ndev = vif->ndev;
++	static const u8 discvr_pattern[] = { 0xe0, 0x00, 0x00, 0xf8 };
++	static const u8 discvr_mask[] = { 0xf0, 0x00, 0x00, 0xf8 };
++	u8 discvr_offset = 38;
++	u8 mac_mask[ETH_ALEN];
++	int ret;
 +
- 		value = ctx->beacon_int;
- 		if (!value)
- 			value = IWL_PASSIVE_DWELL_BASE;
++	/* Setup unicast pkt pattern */
++	memset(mac_mask, 0xff, ETH_ALEN);
++	ret = ath6kl_wmi_add_wow_pattern_cmd(ar->wmi,
++				vif->fw_vif_idx, WOW_LIST_ID,
++				ETH_ALEN, 0, ndev->dev_addr,
++				mac_mask);
++	if (ret) {
++		ath6kl_err("failed to add WOW unicast pattern\n");
++		return ret;
++	}
++
++	/*
++	 * Setup multicast pattern for mDNS 224.0.0.251,
++	 * SSDP 239.255.255.250 and LLMNR 224.0.0.252
++	 */
++	if ((ndev->flags & IFF_ALLMULTI) ||
++	    (ndev->flags & IFF_MULTICAST && netdev_mc_count(ndev) > 0)) {
++		ret = ath6kl_wmi_add_wow_pattern_cmd(ar->wmi,
++				vif->fw_vif_idx, WOW_LIST_ID,
++				sizeof(discvr_pattern), discvr_offset,
++				discvr_pattern, discvr_mask);
++		if (ret) {
++			ath6kl_err("failed to add WOW mDNS/SSDP/LLMNR pattern\n");
++			return ret;
++		}
++	}
++
++	return 0;
++}
++
+ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
+ {
+ 	struct in_device *in_dev;
 -- 
-1.7.0.4
+1.7.1
 
