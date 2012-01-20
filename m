@@ -1,88 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50252 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757528Ab2AKOqG (ORCPT
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:57765 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751187Ab2ATIOI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 09:46:06 -0500
-Date: Wed, 11 Jan 2012 09:30:11 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bastien ROUCARIES <roucaries.bastien@gmail.com>
-Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: Fwd: Warning in wifi card
-Message-ID: <20120111143011.GB11093@tuxdriver.com> (sfid-20120111_154629_572891_E1C5D1FB)
-References: <CAE2SPAbTDbGjuM6rNmjzw0X2fU_k431XkbwYuhvKtfXggOO=-w@mail.gmail.com>
- <CAE2SPAaVtXWN+x8oaV2BkbLr6e700KizCc_39J2yp+XtWzFhXQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAE2SPAaVtXWN+x8oaV2BkbLr6e700KizCc_39J2yp+XtWzFhXQ@mail.gmail.com>
+	Fri, 20 Jan 2012 03:14:08 -0500
+Received: by obcva7 with SMTP id va7so386247obc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2012 00:14:07 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, thomas@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH] {nl,cfg,mac}80211: Add support of setting non-forwarding entity in Mesh
+Date: Sat, 21 Jan 2012 01:02:16 +0800
+Message-Id: <1327078936-27576-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120120_091432_482904_91AA3317)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please Cc linux-wireless@vger.kernel.org on such issues...
+A mesh node that joins the mesh network is by default a forwarding entity. This patch allows
+the mesh node to set as non-forwarding entity. Whenever dot11MeshForwarding is set to 0, the
+mesh node can prevent itself from forwarding the traffic which is not destined to him.
 
-On Wed, Jan 11, 2012 at 11:04:39AM +0100, Bastien ROUCARIES wrote:
-> I get the following warning using 3.1 after going back to suspend to ram.
-> 
-> Seems quite current a quick google search found
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/809777
-> 
-> Kernel failure message 1:
-> ------------[ cut here ]------------
-> WARNING: at /home/blank/debian/kernel/release/linux-2.6/linux-2.6-3.1.6/debian/build/source_amd64_none/drivers/net/wireless/iwlwifi/iwl-core.c:1367
-> iwl_mac_remove_interface+0x39/0x5e [iwlagn]()
-> Hardware name: Dell System XPS L502X
-> Modules linked in: nls_utf8 nls_cp437 vfat fat pciehp pci_hotplug
-> mmc_block sdhci_pci sdhci mmc_core jmb38x_ms memstick dell_wmi
-> aesni_intel cryptd aes_x86_64 aes_generic ecb btusb ip6table_filter
-> ip6_tables iptable_filter ip_tables ebtable_nat ebtables x_tables cn
-> parport_pc ppdev lp parport acpi_cpufreq mperf cpufreq_powersave
-> cpufreq_conservative cpufreq_userspace bnep rfcomm cpufreq_stats
-> bluetooth binfmt_misc uinput fuse nfsd nfs lockd fscache auth_rpcgss
-> nfs_acl sunrpc coretemp loop dm_crypt kvm_intel kvm snd_hda_codec_hdmi
-> snd_hda_codec_realtek arc4 snd_hda_intel snd_hda_codec joydev iwlagn
-> uvcvideo videodev media snd_hwdep v4l2_compat_ioctl32 snd_pcm_oss
-> snd_mixer_oss snd_pcm snd_seq_midi snd_rawmidi snd_seq_midi_event
-> snd_seq nouveau ttm i915 mac80211 drm_kms_helper drm snd_timer
-> snd_seq_device i2c_algo_bit i2c_i801 i2c_core snd cfg80211 mxm_wmi
-> pcspkr battery ac sparse_keymap iTCO_wdt iTCO_vendor_support soundcore
-> wmi dell_laptop power_supply psmouse video evdev serio_raw dcdbas
-> button rfkill processor snd_page_alloc ext4 mbcache jbd2 crc16 btrfs
-> zlib_deflate crc32c libcrc32c dm_mod sr_mod sd_mod cdrom crc_t10dif
-> ahci libahci libata scsi_mod r8169 mii xhci_hcd ehci_hcd usbcore
-> thermal thermal_sys [last unloaded: dell_wmi]
-> Pid: 27387, comm: kworker/0:1 Tainted: G        W    3.1.0-1-amd64 #1
-> Call Trace:
->  [<ffffffff81045785>] ? warn_slowpath_common+0x78/0x8c
->  [<ffffffffa04c54f8>] ? iwl_mac_remove_interface+0x39/0x5e [iwlagn]
->  [<ffffffffa027dc01>] ? cfg80211_event_work+0x4/0x2c [cfg80211]
->  [<ffffffffa034f539>] ? ieee80211_do_stop+0x319/0x46a [mac80211]
->  [<ffffffff8104abe7>] ? _local_bh_enable_ip.isra.11+0x1e/0x88
->  [<ffffffffa027dc8b>] ? cfg80211_rfkill_set_block+0x62/0x62 [cfg80211]
->  [<ffffffffa034f69d>] ? ieee80211_stop+0x13/0x17 [mac80211]
->  [<ffffffff8126e437>] ? __dev_close_many+0x84/0xb0
->  [<ffffffff8126e532>] ? dev_close_many+0x88/0xee
->  [<ffffffff8103539b>] ? should_resched+0x5/0x23
->  [<ffffffff8127066f>] ? dev_close+0x37/0x46
->  [<ffffffffa027dc66>] ? cfg80211_rfkill_set_block+0x3d/0x62 [cfg80211]
->  [<ffffffff8105a74d>] ? process_one_work+0x163/0x284
->  [<ffffffff8105b715>] ? worker_thread+0xc2/0x145
->  [<ffffffff8105b653>] ? manage_workers.isra.23+0x15b/0x15b
->  [<ffffffff8105e5e5>] ? kthread+0x76/0x7e
->  [<ffffffff81334934>] ? kernel_thread_helper+0x4/0x10
->  [<ffffffff8105e56f>] ? kthread_worker_fn+0x139/0x139
->  [<ffffffff81334930>] ? gs_change+0x13/0x13
-> ---[ end trace f03a55c4c1238b61 ]---
-> 
-> 
-> Bastien
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+---
+ include/linux/nl80211.h       |    4 ++++
+ include/net/cfg80211.h        |    1 +
+ net/mac80211/cfg.c            |    2 ++
+ net/mac80211/debugfs_netdev.c |    1 +
+ net/mac80211/mesh_hwmp.c      |    2 +-
+ net/wireless/mesh.c           |    1 +
+ net/wireless/nl80211.c        |    5 +++++
+ 7 files changed, 15 insertions(+), 1 deletions(-)
 
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index a187606..92a1cc5 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -2098,6 +2098,9 @@ enum nl80211_mntr_flags {
+  * TUs) during which a mesh STA can send only one Action frame containing a
+  * PERR element.
+  *
++ * @NL80211_MESHCONF_FORWARDING: set Mesh STA as forwarding or non-forwarding
++ * or forwarding entity (default is TRUE - forwarding entity)
++ *
+  * @NL80211_MESHCONF_ATTR_MAX: highest possible mesh configuration attribute
+  *
+  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
+@@ -2122,6 +2125,7 @@ enum nl80211_meshconf_params {
+ 	NL80211_MESHCONF_HWMP_RANN_INTERVAL,
+ 	NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
+ 	NL80211_MESHCONF_HWMP_PERR_MIN_INTERVAL,
++	NL80211_MESHCONF_FORWARDING,
+ 
+ 	/* keep last */
+ 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 3de1c39..8f78acb 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -791,6 +791,7 @@ struct mesh_config {
+ 	 * mesh gate, but not necessarily using the gate announcement protocol.
+ 	 * Still keeping the same nomenclature to be in sync with the spec. */
+ 	bool  dot11MeshGateAnnouncementProtocol;
++	bool dot11MeshForwarding;
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 393b2a4..6252bee 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1299,6 +1299,8 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
+ 		conf->dot11MeshHWMPRannInterval =
+ 			nconf->dot11MeshHWMPRannInterval;
+ 	}
++	if (_chg_mesh_attr(NL80211_MESHCONF_FORWARDING, mask))
++		conf->dot11MeshForwarding = nconf->dot11MeshForwarding;
+ 	return 0;
+ }
+ 
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 8df2891..5b7c57f 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -421,6 +421,7 @@ IEEE80211_IF_FILE(dot11MeshGateAnnouncementProtocol,
+ 		u.mesh.mshcfg.dot11MeshGateAnnouncementProtocol, DEC);
+ IEEE80211_IF_FILE(dot11MeshHWMPRannInterval,
+ 		u.mesh.mshcfg.dot11MeshHWMPRannInterval, DEC);
++IEEE80211_IF_FILE(dot11MeshForwarding, u.mesh.mshcfg.dot11MeshForwarding, DEC);
+ #endif
+ 
+ 
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 73abb75..cae4071 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -575,7 +575,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 			ifmsh->mshstats.dropped_frames_ttl++;
+ 	}
+ 
+-	if (forward) {
++	if (forward && ifmsh->mshcfg.dot11MeshForwarding) {
+ 		u32 preq_id;
+ 		u8 hopcount, flags;
+ 
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 8c550df..9d3e3b6 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -55,6 +55,7 @@ const struct mesh_config default_mesh_config = {
+ 	.min_discovery_timeout = MESH_MIN_DISCOVERY_TIMEOUT,
+ 	.dot11MeshHWMPRannInterval = MESH_RANN_INTERVAL,
+ 	.dot11MeshGateAnnouncementProtocol = false,
++	.dot11MeshForwarding = true,
+ };
+ 
+ const struct mesh_setup default_mesh_setup = {
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ba43966..d88ec25 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3205,6 +3205,8 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
+ 			cur_params.dot11MeshHWMPRannInterval);
+ 	NLA_PUT_U8(msg, NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
+ 			cur_params.dot11MeshGateAnnouncementProtocol);
++	NLA_PUT_U8(msg, NL80211_MESHCONF_FORWARDING,
++			cur_params.dot11MeshForwarding);
+ 	nla_nest_end(msg, pinfoattr);
+ 	genlmsg_end(msg, hdr);
+ 	return genlmsg_reply(msg, info);
+@@ -3236,6 +3238,7 @@ static const struct nla_policy nl80211_meshconf_params_policy[NL80211_MESHCONF_A
+ 	[NL80211_MESHCONF_HWMP_ROOTMODE] = { .type = NLA_U8 },
+ 	[NL80211_MESHCONF_HWMP_RANN_INTERVAL] = { .type = NLA_U16 },
+ 	[NL80211_MESHCONF_GATE_ANNOUNCEMENTS] = { .type = NLA_U8 },
++	[NL80211_MESHCONF_FORWARDING] = { .type = NLA_U8 },
+ };
+ 
+ static const struct nla_policy
+@@ -3325,6 +3328,8 @@ do {\
+ 			dot11MeshGateAnnouncementProtocol, mask,
+ 			NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
+ 			nla_get_u8);
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshForwarding,
++			mask, NL80211_MESHCONF_FORWARDING, nla_get_u8);
+ 	if (mask_out)
+ 		*mask_out = mask;
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.0.4
+
