@@ -1,74 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:53268 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750992Ab2ASGra convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:6931 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752419Ab2ATNhF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jan 2012 01:47:30 -0500
+	Fri, 20 Jan 2012 08:37:05 -0500
+From: <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH v2 4/8] ath6kl: Move WOW patterns config code to a separate function.
+Date: Fri, 20 Jan 2012 19:05:40 +0530
+Message-ID: <1327066544-23779-5-git-send-email-rmani@qca.qualcomm.com> (sfid-20120120_143710_909283_FB24A685)
+In-Reply-To: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com>
+References: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB3064AF5@HASMSX103.ger.corp.intel.com>
-References: <20120110184917.GA26973@redhat.com>
-	<1326221614.5067.6.camel@dcbw.foobar.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB3063085@HASMSX103.ger.corp.intel.com>
-	<20120111014243.GA22066@redhat.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB306429E@HASMSX103.ger.corp.intel.com>
-	<20120111195055.GA5140@redhat.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB3064AF5@HASMSX103.ger.corp.intel.com>
-Date: Thu, 19 Jan 2012 08:47:28 +0200
-Message-ID: <CANUX_P3UHz-Pr_M1H5pAbmKDY70es7nxkWSDGXG6-hvrPAMCJw@mail.gmail.com> (sfid-20120119_074739_532754_752D919C)
-Subject: Re: iwlwifi worse than ever in current git.
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Dave Jones <davej@redhat.com>, Dan Williams <dcbw@redhat.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>
->> [16520.224964] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_start Can proceed: ssn =
->> next_recl = 124
->> [16520.228038] iwlwifi 0000:04:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 124
->> [16520.228358] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate
->> BA Queue 11 on FIFO 1
->> [16520.229059] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra =
->> b8:c7:5d:0c:39:87 tid = 0
->> [16531.888296] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_stop Can proceed: ssn =
->> next_recl = 631
->> [16531.888793] iwlwifi 0000:04:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 0
->> [16531.889247] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status
->> Deactivate AC/CMD Queue 11 on FIFO 0
->> [16552.504609] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_start Can proceed: ssn =
->> next_recl = 697
->> [16552.508182] iwlwifi 0000:04:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 185
->> [16552.508609] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate
->> BA Queue 11 on FIFO 1
->> [16552.509077] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra =
->> b8:c7:5d:0c:39:87 tid = 0
->> [16564.084058] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_stop Can proceed: ssn =
->> next_recl = 1241
->> [16564.084506] iwlwifi 0000:04:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 0
->> [16564.084903] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status
->> Deactivate AC/CMD Queue 11 on FIFO 0
->> [16568.975872] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_start Can proceed: ssn =
->> next_recl = 1298
->> [16568.978796] iwlwifi 0000:04:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 18
->> [16568.979007] iwlwifi 0000:04:00.0: U iwl_trans_tx_queue_set_status Activate
->> BA Queue 11 on FIFO 1
->> [16568.979734] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra =
->> b8:c7:5d:0c:39:87 tid = 0
->> [16580.004052] iwlwifi 0000:04:00.0: U iwlagn_tx_agg_stop Can't proceed: ssn
->> 1491, next_recl = 150
->>
->
-> I understand there is nothing afterwards... This is really weird. The sequence numbers here are really crazy...
-> I need to think that over.
->
->>
+From: Raja Mani <rmani@qca.qualcomm.com>
 
-Ok, I finally had a change to take a closer look at this. Please run
-with debug=0xC0000000.
+Move the user provided WOW patterns configuration code
+from ath6kl_wow_suspend() to a separate function called
+ath6kl_add_usr_wow_patterns().
 
-This will be noisy, but I guess we have no choice...
-I will be travelling next week, so...
+It gives more modularity to the existing code.
+
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |  108 +++++++++++++++------------
+ 1 files changed, 60 insertions(+), 48 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 9ab92c4..e244d83 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1723,6 +1723,64 @@ static int ath6kl_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
+ 	return 0;
+ }
+ 
++static int ath6kl_add_usr_wow_patterns(struct ath6kl *ar,
++				       struct ath6kl_vif *vif,
++				       struct cfg80211_wowlan *wow,
++				       u32 *filter)
++{
++	int ret, pos;
++	u8 mask[WOW_MASK_SIZE];
++	u16 i;
++
++	/* Configure the patterns that we received from the user. */
++	for (i = 0; i < wow->n_patterns; i++) {
++
++		/*
++		 * Convert given nl80211 specific mask value to equivalent
++		 * driver specific mask value and send it to the chip along
++		 * with patterns. For example, If the mask value defined in
++		 * struct cfg80211_wowlan is 0xA (equivalent binary is 1010),
++		 * then equivalent driver specific mask value is
++		 * "0xFF 0x00 0xFF 0x00".
++		 */
++		memset(&mask, 0, sizeof(mask));
++		for (pos = 0; pos < wow->patterns[i].pattern_len; pos++) {
++			if (wow->patterns[i].mask[pos / 8] & (0x1 << (pos % 8)))
++				mask[pos] = 0xFF;
++		}
++		/*
++		 * Note: Pattern's offset is not passed as part of wowlan
++		 * parameter from CFG layer. So it's always passed as ZERO
++		 * to the firmware. It means, given WOW patterns are always
++		 * matched from the first byte of received pkt in the firmware.
++		 */
++		ret = ath6kl_wmi_add_wow_pattern_cmd(ar->wmi,
++					vif->fw_vif_idx, WOW_LIST_ID,
++					wow->patterns[i].pattern_len,
++					0 /* pattern offset */,
++					wow->patterns[i].pattern, mask);
++		if (ret)
++			return ret;
++	}
++
++	if (wow->disconnect)
++		*filter |= WOW_FILTER_OPTION_NWK_DISASSOC;
++
++	if (wow->magic_pkt)
++		*filter |= WOW_FILTER_OPTION_MAGIC_PACKET;
++
++	if (wow->gtk_rekey_failure)
++		*filter |= WOW_FILTER_OPTION_GTK_ERROR;
++
++	if (wow->eap_identity_req)
++		*filter |= WOW_FILTER_OPTION_EAP_REQ;
++
++	if (wow->four_way_handshake)
++		*filter |= WOW_FILTER_OPTION_8021X_4WAYHS;
++
++	return 0;
++}
++
+ static int ath6kl_ap_add_default_wow_patterns(struct ath6kl *ar,
+ 		struct ath6kl_vif *vif)
+ {
+@@ -1847,10 +1905,10 @@ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
+ 	struct in_device *in_dev;
+ 	struct in_ifaddr *ifa;
+ 	struct ath6kl_vif *vif;
+-	int ret, pos, left;
++	int ret, left;
+ 	u32 filter = 0;
+ 	u16 i;
+-	u8 mask[WOW_MASK_SIZE], index = 0;
++	u8 index = 0;
+ 	__be32 ips[MAX_IP_ADDRS];
+ 
+ 	vif = ath6kl_vif_first(ar);
+@@ -1867,37 +1925,6 @@ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
+ 	for (i = 0; i < WOW_MAX_FILTERS_PER_LIST; i++)
+ 		ath6kl_wmi_del_wow_pattern_cmd(ar->wmi, vif->fw_vif_idx,
+ 					       WOW_LIST_ID, i);
+-	/* Configure new WOW patterns */
+-	for (i = 0; i < wow->n_patterns; i++) {
+-
+-		/*
+-		 * Convert given nl80211 specific mask value to equivalent
+-		 * driver specific mask value and send it to the chip along
+-		 * with patterns. For example, If the mask value defined in
+-		 * struct cfg80211_wowlan is 0xA (equivalent binary is 1010),
+-		 * then equivalent driver specific mask value is
+-		 * "0xFF 0x00 0xFF 0x00".
+-		 */
+-		memset(&mask, 0, sizeof(mask));
+-		for (pos = 0; pos < wow->patterns[i].pattern_len; pos++) {
+-			if (wow->patterns[i].mask[pos / 8] & (0x1 << (pos % 8)))
+-				mask[pos] = 0xFF;
+-		}
+-		/*
+-		 * Note: Pattern's offset is not passed as part of wowlan
+-		 * parameter from CFG layer. So it's always passed as ZERO
+-		 * to the firmware. It means, given WOW patterns are always
+-		 * matched from the first byte of received pkt in the firmware.
+-		 */
+-		ret = ath6kl_wmi_add_wow_pattern_cmd(ar->wmi,
+-					vif->fw_vif_idx, WOW_LIST_ID,
+-					wow->patterns[i].pattern_len,
+-					0 /* pattern offset */,
+-					wow->patterns[i].pattern, mask);
+-		if (ret)
+-			return ret;
+-	}
+-
+ 	/* Setup own IP addr for ARP agent. */
+ 	in_dev = __in_dev_get_rtnl(vif->ndev);
+ 	if (!in_dev)
+@@ -1925,21 +1952,6 @@ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
+ 	}
+ 
+ skip_arp:
+-	if (wow->disconnect)
+-		filter |= WOW_FILTER_OPTION_NWK_DISASSOC;
+-
+-	if (wow->magic_pkt)
+-		filter |= WOW_FILTER_OPTION_MAGIC_PACKET;
+-
+-	if (wow->gtk_rekey_failure)
+-		filter |= WOW_FILTER_OPTION_GTK_ERROR;
+-
+-	if (wow->eap_identity_req)
+-		filter |= WOW_FILTER_OPTION_EAP_REQ;
+-
+-	if (wow->four_way_handshake)
+-		filter |= WOW_FILTER_OPTION_8021X_4WAYHS;
+-
+ 	ret = ath6kl_wmi_set_wow_mode_cmd(ar->wmi, vif->fw_vif_idx,
+ 					  ATH6KL_WOW_MODE_ENABLE,
+ 					  filter,
+-- 
+1.7.1
+
