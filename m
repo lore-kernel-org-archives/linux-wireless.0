@@ -1,63 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm3-vm0.bullet.mail.ird.yahoo.com ([77.238.189.213]:24468 "HELO
-	nm3-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751484Ab2A1HBS convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jan 2012 02:01:18 -0500
-Message-ID: <1327733677.67732.YahooMailClassic@web29505.mail.ird.yahoo.com> (sfid-20120128_080141_995325_3923C4B1)
-Date: Sat, 28 Jan 2012 06:54:37 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: Fwd: Question regarding Linux RTL driver
-To: Nikola Gacic <empnik@gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:60312 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753070Ab2ATM6v (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 Jan 2012 07:58:51 -0500
+Message-Id: <20120120125741.005056157@sipsolutions.net> (sfid-20120120_135854_989109_1C93125D)
+Date: Fri, 20 Jan 2012 13:55:22 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Subject: [PATCH 06/11] mac80211: implement sta_add/sta_remove in sta_state
+References: <20120120125516.000124996@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(added CC'ed to the correct mailing list).
+From: Johannes Berg <johannes.berg@intel.com>
 
-No, what you did was wrong - unless you are recruiting for private consultants and want to pay for one-to-one consultation, the appropriate way of contacting is via/Cc'ing one of the mailing lists. (and go by the usual rules, like no html-styled e-mail, etc, which you also broke).
+Instead of maintaining separate sta_add/sta_remove
+callsites, implement it in sta_state when the driver
+has no sta_state implementation.
 
-That said - you have not mentioned any debugging information or any method you tried; nor code snipplets of your work. There is nothing to work on, other than "read my mind". So until you can do that, there is nothing to say.
+The only behavioural change this should cause is in
+secure mesh mode: with this the station entries will
+only be created after the stations are set to AUTH.
+Given which drivers support mesh, this seems to not
+be a problem.
 
---- On Thu, 26/1/12, Nikola Gacic <empnik@gmail.com> wrote:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/driver-ops.h |   11 ++++++++++-
+ net/mac80211/pm.c         |    2 --
+ net/mac80211/sta_info.c   |   23 +++++++++--------------
+ net/mac80211/util.c       |    2 --
+ 4 files changed, 19 insertions(+), 19 deletions(-)
 
-From: Nikola Gacic <empnik@gmail.com>
-Subject: Fwd: Question regarding Linux RTL driver
-To: htl10@users.sourceforge.net
-Date: Thursday, 26 January, 2012, 17:36
-
-Hello Mr. Leung,
-
-    I don't know if this is the right way for contacting you but I couldn't find the other way.
-    Firstly, I want to say that I am student at School of electrical Engineering in Belgrade and I am working on some embedded project where I tried to use you RTL8187 Linux driver to communicate with PIC32 microcontroller over USB.
-
-
-
-
-    I would appreciate any help with my problem. If you could spare some time to read this it would be great. I have several questions. Initialization worked fine I think (I get ACK packets), but when I try to finally send IN packet to endpoint 0x81 I get NAK packets all the time!
-
-
-
-
-    I checked code in microcontroller several times and, of course, maybe error could be somewhere in initialization, but would that block my IN packets to device? I know that PIC32 cannot work in high-speed mode, only  in full-speed, but in the datasheet for this dongle it says it can work in full-speed. So I want to know does USB card set its speed to full-speed automatically?
-
-
-
-
-    I think my understanding of driver code is good so you can give me some general guidelines regarding initialization if you don't want to go to details.Thank you in advance.
-
-Kind regards,
-Nikola Gacić
-
-
-
-
-
-
-
-
+--- a/net/mac80211/sta_info.c	2012-01-20 13:54:19.000000000 +0100
++++ b/net/mac80211/sta_info.c	2012-01-20 13:54:20.000000000 +0100
+@@ -365,7 +365,12 @@ static int sta_info_insert_drv_state(str
+ 	}
+ 
+ 	if (!err) {
+-		sta->uploaded = true;
++		/*
++		 * Drivers using legacy sta_add/sta_remove callbacks only
++		 * get uploaded set to true after sta_add is called.
++		 */
++		if (!local->ops->sta_add)
++			sta->uploaded = true;
+ 		return 0;
+ 	}
+ 
+@@ -417,18 +422,9 @@ static int sta_info_insert_finish(struct
+ 
+ 	if (!sta->dummy || dummy_reinsert) {
+ 		/* notify driver */
+-		err = drv_sta_add(local, sdata, &sta->sta);
+-		if (err) {
+-			if (sdata->vif.type != NL80211_IFTYPE_ADHOC)
+-				goto out_err;
+-			printk(KERN_DEBUG "%s: failed to add IBSS STA %pM to "
+-					  "driver (%d) - keeping it anyway.\n",
+-			       sdata->name, sta->sta.addr, err);
+-		} else {
+-			err = sta_info_insert_drv_state(local, sdata, sta);
+-			if (err)
+-				goto out_err;
+-		}
++		err = sta_info_insert_drv_state(local, sdata, sta);
++		if (err)
++			goto out_err;
+ 	}
+ 
+ 	if (!dummy_reinsert) {
+@@ -813,7 +809,6 @@ int __must_check __sta_info_destroy(stru
+ 	}
+ 
+ 	if (sta->uploaded) {
+-		drv_sta_remove(local, sdata, &sta->sta);
+ 		ret = drv_sta_state(local, sdata, sta, IEEE80211_STA_NONE,
+ 				    IEEE80211_STA_NOTEXIST);
+ 		WARN_ON_ONCE(ret != 0);
+--- a/net/mac80211/util.c	2012-01-20 13:54:19.000000000 +0100
++++ b/net/mac80211/util.c	2012-01-20 13:54:20.000000000 +0100
+@@ -1187,8 +1187,6 @@ int ieee80211_reconfig(struct ieee80211_
+ 		if (sta->uploaded) {
+ 			enum ieee80211_sta_state state;
+ 
+-			WARN_ON(drv_sta_add(local, sta->sdata, &sta->sta));
+-
+ 			for (state = IEEE80211_STA_NOTEXIST;
+ 			     state < sta->sta_state - 1; state++)
+ 				WARN_ON(drv_sta_state(local, sta->sdata, sta,
+--- a/net/mac80211/pm.c	2012-01-20 13:54:19.000000000 +0100
++++ b/net/mac80211/pm.c	2012-01-20 13:54:20.000000000 +0100
+@@ -100,8 +100,6 @@ int __ieee80211_suspend(struct ieee80211
+ 		if (sta->uploaded) {
+ 			enum ieee80211_sta_state state;
+ 
+-			drv_sta_remove(local, sta->sdata, &sta->sta);
+-
+ 			state = sta->sta_state;
+ 			for (; state > IEEE80211_STA_NOTEXIST; state--)
+ 				WARN_ON(drv_sta_state(local, sdata, sta,
+--- a/net/mac80211/driver-ops.h	2012-01-20 13:54:19.000000000 +0100
++++ b/net/mac80211/driver-ops.h	2012-01-20 13:54:20.000000000 +0100
+@@ -493,9 +493,18 @@ int drv_sta_state(struct ieee80211_local
+ 	check_sdata_in_driver(sdata);
+ 
+ 	trace_drv_sta_state(local, sdata, &sta->sta, old_state, new_state);
+-	if (local->ops->sta_state)
++	if (local->ops->sta_state) {
+ 		ret = local->ops->sta_state(&local->hw, &sdata->vif, &sta->sta,
+ 					    old_state, new_state);
++	} else if (old_state == IEEE80211_STA_AUTH &&
++		   new_state == IEEE80211_STA_ASSOC) {
++		ret = drv_sta_add(local, sdata, &sta->sta);
++		if (ret == 0)
++			sta->uploaded = true;
++	} else if (old_state == IEEE80211_STA_ASSOC &&
++		   new_state == IEEE80211_STA_AUTH) {
++		drv_sta_remove(local, sdata, &sta->sta);
++	}
+ 	trace_drv_return_int(local, ret);
+ 	return ret;
+ }
 
 
