@@ -1,68 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:53620 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752401Ab2A0KDR (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:19421 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754519Ab2AUJxc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jan 2012 05:03:17 -0500
-Received: by werb13 with SMTP id b13so1081688wer.19
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jan 2012 02:03:16 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH 2/3] mac80211: Fix incorrect num_sta_ps decrement in ap_sta_ps_end
-Date: Fri, 27 Jan 2012 11:02:52 +0100
-Message-Id: <1327658573-477-2-git-send-email-helmut.schaa@googlemail.com> (sfid-20120127_110319_764965_2DA5BA01)
-In-Reply-To: <1327658573-477-1-git-send-email-helmut.schaa@googlemail.com>
-References: <1327658573-477-1-git-send-email-helmut.schaa@googlemail.com>
+	Sat, 21 Jan 2012 04:53:32 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH V2 5/6] ath6kl: Fix bug in using tid given by addba/delba req events
+Date: Sat, 21 Jan 2012 15:22:52 +0530
+Message-ID: <1327139573-7435-5-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120121_105352_186532_BA6BEEDB)
+In-Reply-To: <1327139573-7435-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1327139573-7435-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the driver blocked this specific STA with the help of
-ieee80211_sta_block_awake we won't clear WLAN_STA_PS_STA later but
-still decrement num_sta_ps. Hence, the next data frame from this
-STA will trigger ap_sta_ps_end again and also decrement num_sta_ps
-again leading to an incorrect num_sta_ps counter.
+The tid which is given in addba/delba req event is not
+just tid but also muxed with the assoc id (MSB 4 bits)
+which can be used to determine the corresponding connected
+station in softap mode. The actual tid is LSB 4 bits. Using
+the tid as it is with rx_tid[] would result in OOB or invalid
+memory access in AP mode.
 
-This can result in problems with powersaving clients not waking up
-from PS because the TIM calculation might be skipped due to the
-incorrect num_sta_ps counter.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- net/mac80211/rx.c       |    1 -
- net/mac80211/sta_info.c |    4 +++-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath6kl/txrx.c |   25 +++++++++++++++++++++++--
+ 1 files changed, 23 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 3567586..f89617a 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1147,7 +1147,6 @@ static void ap_sta_ps_end(struct sta_info *sta)
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 8407d01..8cf7b2f 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -17,6 +17,17 @@
+ #include "core.h"
+ #include "debug.h"
+ 
++/*
++ * tid - tid_mux0..tid_mux3
++ * aid - tid_mux4..tid_mux7
++ */
++#define ATH6KL_TID_MASK 0xf
++
++static inline u8 ath6kl_get_tid(u8 tid_mux)
++{
++	return tid_mux & ATH6KL_TID_MASK;
++}
++
+ static u8 ath6kl_ibss_map_epid(struct sk_buff *skb, struct net_device *dev,
+ 			       u32 *map_no)
  {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 
--	atomic_dec(&sdata->bss->num_sta_ps);
- 
- #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
- 	printk(KERN_DEBUG "%s: STA %pM aid %d exits power save mode\n",
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 70a0de3..92b894c 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1007,9 +1007,11 @@ EXPORT_SYMBOL(ieee80211_find_sta);
- static void clear_sta_ps_flags(void *_sta)
- {
- 	struct sta_info *sta = _sta;
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
- 
- 	clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
--	clear_sta_flag(sta, WLAN_STA_PS_STA);
-+	if (test_and_clear_sta_flag(sta, WLAN_STA_PS_STA))
-+		atomic_dec(&sdata->bss->num_sta_ps);
+@@ -1602,7 +1613,7 @@ static void aggr_delete_tid_state(struct aggr_info_conn *aggr_conn, u8 tid)
+ 	memset(stats, 0, sizeof(struct rxtid_stats));
  }
  
- /* powersave support code */
+-void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid, u16 seq_no,
++void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid_mux, u16 seq_no,
+ 			     u8 win_sz)
+ {
+ 	struct aggr_info *p_aggr = vif->aggr_cntxt;
+@@ -1610,12 +1621,17 @@ void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid, u16 seq_no,
+ 	struct rxtid *rxtid;
+ 	struct rxtid_stats *stats;
+ 	u16 hold_q_size;
++	u8 tid;
+ 
+ 	if (!p_aggr || !p_aggr->aggr_conn)
+ 		return;
+ 
+ 	aggr_conn = p_aggr->aggr_conn;
+ 
++	tid = ath6kl_get_tid(tid_mux);
++	if (tid >= NUM_OF_TIDS)
++		return;
++
+ 	rxtid = &aggr_conn->rx_tid[tid];
+ 	stats = &aggr_conn->stat[tid];
+ 
+@@ -1691,15 +1707,20 @@ struct aggr_info *aggr_init(struct ath6kl_vif *vif)
+ 	return p_aggr;
+ }
+ 
+-void aggr_recv_delba_req_evt(struct ath6kl_vif *vif, u8 tid)
++void aggr_recv_delba_req_evt(struct ath6kl_vif *vif, u8 tid_mux)
+ {
+ 	struct aggr_info *p_aggr = vif->aggr_cntxt;
+ 	struct rxtid *rxtid;
+ 	struct aggr_info_conn *aggr_conn;
++	u8 tid;
+ 
+ 	if (!p_aggr || !p_aggr->aggr_conn)
+ 		return;
+ 
++	tid = ath6kl_get_tid(tid_mux);
++	if (tid >= NUM_OF_TIDS)
++		return;
++
+ 	aggr_conn = p_aggr->aggr_conn;
+ 	rxtid = &aggr_conn->rx_tid[tid];
+ 
 -- 
-1.7.7
+1.7.0.4
 
