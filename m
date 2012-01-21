@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:62239 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030320Ab2AFPrG (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:29107 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754638Ab2AUJxY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jan 2012 10:47:06 -0500
-Received: by ghbg21 with SMTP id g21so734786ghb.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jan 2012 07:47:04 -0800 (PST)
-Message-ID: <4F071775.4010308@gmail.com> (sfid-20120106_164711_099608_9BFC6FF4)
-Date: Fri, 06 Jan 2012 23:47:01 +0800
-From: lina <lina.lastname@gmail.com>
+	Sat, 21 Jan 2012 04:53:24 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH V2 4/6] ath6kl: Pass vif instead of ar to ath6kl_add_new_sta()
+Date: Sat, 21 Jan 2012 15:22:51 +0530
+Message-ID: <1327139573-7435-4-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120121_105457_419815_3A0D449B)
+In-Reply-To: <1327139573-7435-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1327139573-7435-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Fwd: how to uninstall the b43 and reinstall
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This will be used when initializing station specific aggregation
+information.
 
-a quick question, how to clear the b43?
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/main.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-
-a detailed background stories as following:
-
-
-I installed the b43 following the advice given by list,
-mainly from
-http://linuxwireless.org/en/users/Drivers/b43
-
-it WORKED.
-
-but yesterday I removed the old kernel 3.2-rc6, which is the one b43 worked,
-and installed the 3.2 from kernel.org. I guess it's latest, than 3.2-rc6 ?
-
-I don't know how to remove the b43 since the trial of
-make uninstall in pathTo/b43-fwcutter-015 not work.
-
-so I just did something like make install again, and then
-1 
-<http://linuxwireless.org/en/users/Drivers/b43#CA-d6bf7044c28bbe20619873aa0dd5f8faa0864c61_1> 
-export FIRMWARE_INSTALL_DIR="/lib/firmware"
-2 
-<http://linuxwireless.org/en/users/Drivers/b43#CA-d6bf7044c28bbe20619873aa0dd5f8faa0864c61_2> 
-wget http://www.lwfinger.com/b43-firmware/broadcom-wl-5.100.138.tar.bz2
-3 
-<http://linuxwireless.org/en/users/Drivers/b43#CA-d6bf7044c28bbe20619873aa0dd5f8faa0864c61_3> 
-tar xjf broadcom-wl-5.100.138.tar.bz2
-4 sudo b43-fwcutter -w "$FIRMWARE_INSTALL_DIR" 
-broadcom-wl-5.100.138/linux/wl_apsta.o
-
-dmesg showed me:
-[  127.434017] cfg80211: Calling CRDA to update world regulatory domain
-[  127.704793] b43-phy0: Broadcom 4331 WLAN found (core revision 29)
-[  127.704821] bcma: Switched to core: 0x812
-[  127.705237] b43-phy0 ERROR: FOUND UNSUPPORTED PHY (Analog 9, Type 7, 
-Revision 1)
-[  127.705244] b43: probe of bcma0:0 failed with error -95
-[  127.705260] Broadcom 43xx driver loaded [ Features: PMNLS ]
-[  431.367724] applesmc: FS! : read arg fail
-
-Thanks for any advice
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index 3a3b2cc..acb4acb 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -52,10 +52,11 @@ struct ath6kl_sta *ath6kl_find_sta_by_aid(struct ath6kl *ar, u8 aid)
+ 	return conn;
+ }
+ 
+-static void ath6kl_add_new_sta(struct ath6kl *ar, u8 *mac, u16 aid, u8 *wpaie,
+-			       size_t ielen, u8 keymgmt, u8 ucipher, u8 auth,
+-			       u8 apsd_info)
++static void ath6kl_add_new_sta(struct ath6kl_vif *vif, u8 *mac, u16 aid,
++			       u8 *wpaie, size_t ielen, u8 keymgmt,
++			       u8 ucipher, u8 auth, u8 apsd_info)
+ {
++	struct ath6kl *ar = vif->ar;
+ 	struct ath6kl_sta *sta;
+ 	u8 free_slot;
+ 
+@@ -430,7 +431,6 @@ void ath6kl_connect_ap_mode_sta(struct ath6kl_vif *vif, u16 aid, u8 *mac_addr,
+ 				u8 keymgmt, u8 ucipher, u8 auth,
+ 				u8 assoc_req_len, u8 *assoc_info, u8 apsd_info)
+ {
+-	struct ath6kl *ar = vif->ar;
+ 	u8 *ies = NULL, *wpa_ie = NULL, *pos;
+ 	size_t ies_len = 0;
+ 	struct station_info sinfo;
+@@ -484,7 +484,7 @@ void ath6kl_connect_ap_mode_sta(struct ath6kl_vif *vif, u16 aid, u8 *mac_addr,
+ 		pos += 2 + pos[1];
+ 	}
+ 
+-	ath6kl_add_new_sta(ar, mac_addr, aid, wpa_ie,
++	ath6kl_add_new_sta(vif, mac_addr, aid, wpa_ie,
+ 			   wpa_ie ? 2 + wpa_ie[1] : 0,
+ 			   keymgmt, ucipher, auth, apsd_info);
+ 
+-- 
+1.7.0.4
 
