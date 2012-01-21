@@ -1,37 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:48246 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752156Ab2ARMcB (ORCPT
+Received: from oproxy7-pub.bluehost.com ([67.222.55.9]:41703 "HELO
+	oproxy7-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751260Ab2AUSEe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jan 2012 07:32:01 -0500
-Subject: Re: [PATCH v3 1/3] NFC: Add endian annotations to nfcwilink driver
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: ilanelias78@gmail.com
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Ilan Elias <ilane@ti.com>
-In-Reply-To: <1326802293-11539-2-git-send-email-ilane@ti.com>
-References: <1326802293-11539-1-git-send-email-ilane@ti.com>
-	 <1326802293-11539-2-git-send-email-ilane@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 18 Jan 2012 13:38:10 +0100
-Message-ID: <1326890290.22824.27.camel@sortiz-mobl> (sfid-20120118_133205_852308_63048548)
-Mime-Version: 1.0
+	Sat, 21 Jan 2012 13:04:34 -0500
+Message-ID: <4F1B0BE4.7090401@xenotime.net> (sfid-20120121_190732_264908_95442908)
+Date: Sat, 21 Jan 2012 11:03:00 -0800
+From: Randy Dunlap <rdunlap@xenotime.net>
+MIME-Version: 1.0
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+CC: Linus Torvalds <torvalds@linux-foundation.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: [PATCH 8/14] kernel-doc: fix new warnings in cfg80211.h
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ilan,
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-On Tue, 2012-01-17 at 14:11 +0200, ilanelias78@gmail.com wrote:
-> From: Ilan Elias <ilane@ti.com>
-> 
-> Add endian annotations to TI nfcwilink driver.
-> 
-> Signed-off-by: Ilan Elias <ilane@ti.com>
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
+Fix new kernel-doc warnings:
 
-Cheers,
-Samuel.
+Warning(include/net/cfg80211.h:1165): No description found for parameter 'channel_type'
+Warning(include/net/cfg80211.h:2090): No description found for parameter 'probe_resp_offload'
 
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Cc:	Johannes Berg <johannes@sipsolutions.net>
+Cc:	linux-wireless@vger.kernel.org
+---
+ include/net/cfg80211.h |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
+--- lnx-33-rc1.orig/include/net/cfg80211.h
++++ lnx-33-rc1/include/net/cfg80211.h
+@@ -1140,6 +1140,7 @@ struct cfg80211_disassoc_request {
+  * @bssid: Fixed BSSID requested, maybe be %NULL, if set do not
+  *	search for IBSSs with a different BSSID.
+  * @channel: The channel to use if no IBSS can be found to join.
++ * @channel_type: channel type (HT mode)
+  * @channel_fixed: The channel should be fixed -- do not search for
+  *	IBSSs to join on other channels.
+  * @ie: information element(s) to include in the beacon
+@@ -1978,6 +1979,11 @@ struct wiphy_wowlan_support {
+  *	configured as RX antennas. Antenna configuration commands will be
+  *	rejected unless this or @available_antennas_tx is set.
+  *
++ * @probe_resp_offload:
++ *	 Bitmap of supported protocols for probe response offloading.
++ *	 See &enum nl80211_probe_resp_offload_support_attr. Only valid
++ *	 when the wiphy flag @WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD is set.
++ *
+  * @max_remain_on_channel_duration: Maximum time a remain-on-channel operation
+  *	may request, if implemented.
+  *
