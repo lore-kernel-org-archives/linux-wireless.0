@@ -1,25 +1,24 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:50362 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751169Ab2AKSaq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 13:30:46 -0500
-Subject: Re: [PATCH 1/2] wireless: Save original maximum regulatory
- transmission power for the calucation of the local maximum transmit power
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Hong Wu <Hong.Wu@dspg.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <5EFF534737810441B0F97C2792E49C2DD2036F@ILMAIL01.dspg.com>
-References: <5EFF534737810441B0F97C2792E49C2DD2036F@ILMAIL01.dspg.com>
-Content-Type: text/plain
-Date: Wed, 11 Jan 2012 19:30:41 +0100
-Message-ID: <1326306641.3417.10.camel@jlt3.sipsolutions.net> (sfid-20120111_193050_233874_9F2841EE)
+Received: from mga02.intel.com ([134.134.136.20]:58993 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752293Ab2AUQ47 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Jan 2012 11:56:59 -0500
+Subject: new iwlwifi 2000 uCode available
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: wey-yi.w.guy@intel.com
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 21 Jan 2012 07:51:20 -0800
+Message-ID: <1327161080.13074.448.camel@wwguy-huron> (sfid-20120121_175726_240397_19A92696)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please don't send HTML.
+Hi 
 
-johannes
+New release of version 18.168.6.1 uCode for Intel® Centrino Wireless-N
+2200 Series Wi-Fi Adapters is now
+available for download from http://intellinuxwireless.org/?n=Downloads
 
+Wey-Yi
 
