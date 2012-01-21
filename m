@@ -1,75 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4714 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752443Ab2A3Lqx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 06:46:53 -0500
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH v3 0/4] Allow the user to define suspend mode
-Date: Mon, 30 Jan 2012 17:13:08 +0530
-Message-ID: <1327923792-16408-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20120130_124656_998309_FB49F40B)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39960 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751775Ab2AUWTt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Jan 2012 17:19:49 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: ralf@linux-mips.org, linux-mips@linux-mips.org
+Cc: stern@rowland.harvard.edu, linux-usb@vger.kernel.org,
+	zajec5@gmail.com, linux-wireless@vger.kernel.org, m@bues.ch,
+	george@znau.edu.ua, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 1/7] bcma: scan for extra address space
+Date: Sat, 21 Jan 2012 23:19:21 +0100
+Message-Id: <1327184367-8824-2-git-send-email-hauke@hauke-m.de> (sfid-20120121_232016_755434_998FF425)
+In-Reply-To: <1327184367-8824-1-git-send-email-hauke@hauke-m.de>
+References: <1327184367-8824-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+Some cores like the USB core have two address spaces. In the USB host
+controller one address space is used for the OHCI and the other for the
+EHCI controller interface. The USB controller is the only core I found
+with two address spaces. This code is based on the AI scan function
+ai_scan() in shared/aiutils.c i the Broadcom SDK.
 
-This series of patch enables the user to specify the suspend mode 
-via module parameter (suspend_mode) while doing insmod of the driver.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/scan.c       |   18 +++++++++++++++++-
+ include/linux/bcma/bcma.h |    1 +
+ 2 files changed, 18 insertions(+), 1 deletions(-)
 
-   To select Cut Power mode:
-      insmod ath6kl_sdio.ko suspend_mode = 1
-
-   To select Deep Sleep mode:
-      insmod ath6kl_sdio.ko suspend_mode = 2
-
-   To select WOW suspend mode:
-      insmod ath6kl_sdio.ko suspend_mode = 3
-
-Existing module param 'suspend_cutpower' variable is renamed to 
-'suspend_mode' for this purspose.
-
-Additionally, If the user doesn't provide any WOW patterns, 
-the default WOW patterns will be configured while going to
-WOW suspend mode.
-
-V3 changes:
-
- * Module parameter suspend_mode data type is changed from
-   unsigned char to unsigned int.
- * Host sleep mode cmd processed event related changes are grouped into
-   a single patch.
- * All WOW pattern configuration changes are grouped into a single patch.
- * Renamed few func names,
-    ath6kl_set_sdio_pm_keep_pwr_wake_irq() => ath6kl_sdio_pm_caps()
-    ath6kl_ap_add_default_wow_patterns() => ath6kl_wow_ap()
-    ath6kl_non_ap_add_default_wow_patterns() => ath6kl_wow_sta()
-    ath6kl_add_usr_wow_patterns() => ath6kl_wow_usr()
-
-V2 changes:
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index cad9948..c12a7fe 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -286,6 +286,22 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 			return -EILSEQ;
+ 	}
  
- * Existing automatic suspend mode selection logic is retained.
- * Suspend mode retry logic is improved without using loop.
- * Small patches are folded with appropriate patches as per Kalle's comments.
- * New wmi function is added to process set host sleep mode cmd processed event.
-
-
-Raja Mani (4):
-  ath6kl: Re-architect suspend mode handling in ath6kl_sdio_suspend
-  ath6kl: Configure WOW patterns while going to wow_suspend
-  ath6kl: Wait for host sleep mode cmd processed event during WOW
-    suspend
-  ath6kl: Return a proper error code when not in connected state
-
- drivers/net/wireless/ath/ath6kl/cfg80211.c |  244 +++++++++++++++++++++++-----
- drivers/net/wireless/ath/ath6kl/core.c     |   12 +-
- drivers/net/wireless/ath/ath6kl/core.h     |    5 +-
- drivers/net/wireless/ath/ath6kl/sdio.c     |   86 ++++++----
- drivers/net/wireless/ath/ath6kl/wmi.c      |   20 +++-
- drivers/net/wireless/ath/ath6kl/wmi.h      |    5 +-
- 6 files changed, 290 insertions(+), 82 deletions(-)
++
++	/* First Slave Address Descriptor should be port 0:
++	 * the main register space for the core
++	 */
++	tmp = bcma_erom_get_addr_desc(bus, eromptr, SCAN_ADDR_TYPE_SLAVE, 0);
++	if (tmp <= 0) {
++		/* Try again to see if it is a bridge */
++		tmp = bcma_erom_get_addr_desc(bus, eromptr,
++					      SCAN_ADDR_TYPE_BRIDGE, 0);
++		if (tmp > 0) {
++			pr_info("found bridge\n");
++			return -ENXIO;
++		}
++	}
++	core->addr = tmp;
++
+ 	/* get & parse slave ports */
+ 	for (i = 0; i < ports[1]; i++) {
+ 		for (j = 0; ; j++) {
+@@ -298,7 +314,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 				break;
+ 			} else {
+ 				if (i == 0 && j == 0)
+-					core->addr = tmp;
++					core->addr1 = tmp;
+ 			}
+ 		}
+ 	}
+diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+index 83c209f..7fe41e1 100644
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -138,6 +138,7 @@ struct bcma_device {
+ 	u8 core_index;
+ 
+ 	u32 addr;
++	u32 addr1;
+ 	u32 wrap;
+ 
+ 	void __iomem *io_addr;
+-- 
+1.7.5.4
 
