@@ -1,124 +1,346 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44456 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751030Ab2AZHr1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 02:47:27 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH V2] ath6kl: Fix kernel panic during rx aggregation
-Date: Thu, 26 Jan 2012 13:17:18 +0530
-Message-ID: <1327564038-2455-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120126_084742_653086_E555A7BE)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:40061 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751824Ab2AUWU3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Jan 2012 17:20:29 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: ralf@linux-mips.org, linux-mips@linux-mips.org
+Cc: stern@rowland.harvard.edu, linux-usb@vger.kernel.org,
+	zajec5@gmail.com, linux-wireless@vger.kernel.org, m@bues.ch,
+	george@znau.edu.ua, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 6/7] USB: Add driver for the ssb bus
+Date: Sat, 21 Jan 2012 23:19:26 +0100
+Message-Id: <1327184367-8824-7-git-send-email-hauke@hauke-m.de> (sfid-20120121_232036_251888_E9A3D4EC)
+In-Reply-To: <1327184367-8824-1-git-send-email-hauke@hauke-m.de>
+References: <1327184367-8824-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"ath6kl: Define a structure for connection specific aggregation information"
-introduces this. In aggr_conn_init(), vif->aggr_cntxt is assigned to
-aggr_conn->aggr_info, but vif->aggr_cntxt is not initialized at this
-point, this would end up accessing an invalid pointer in aggregation
-receive path. Fix this by passing the correct aggr_info to aggr_conn_init().
-The panic trace would look like.
+This adds a USB driver using the generic platform device driver for the
+USB controller found on the Broadcom ssb bus. The ssb bus just
+exposes one device which serves the OHCI and the EHCI controller at the
+same time. This driver probes for this USB controller and creates and
+registers two new platform devices which will be probed by the new
+generic platform device driver. This makes it possible to use the EHCI
+and the OCHI controller on the ssb bus at the same time.
 
-[<ffffffff8159e02e>] panic+0xa1/0x1c6
-[<ffffffff8103773d>] ? kmsg_dump+0xfd/0x160
-[<ffffffff815a2f6a>] oops_end+0xea/0xf0
-[<ffffffff8102b95d>] no_context+0x11d/0x2d0
-[<ffffffff8102bc5d>] __bad_area_nosemaphore+0x14d/0x230
-[<ffffffff815a5c4d>] ? do_page_fault+0x30d/0x520
-[<ffffffff8102bd53>] bad_area_nosemaphore+0x13/0x20
-[<ffffffff815a5cfd>] do_page_fault+0x3bd/0x520
-[<ffffffff8108bd60>] ? __lock_acquire+0x320/0x1680
-[<ffffffff812e3a9d>] ? trace_hardirqs_off_thunk+0x3a/0x3c
-[<ffffffff815a2385>] page_fault+0x25/0x30
-[<ffffffffa0487a5f>] ? aggr_slice_amsdu+0xdf/0x170 [ath6kl_core]
-[<ffffffffa0487bac>] aggr_deque_frms+0xbc/0x190 [ath6kl_core]
-[<ffffffffa0488404>] ath6kl_rx+0x3e4/0xae0 [ath6kl_core]
-[<ffffffffa047ae77>] ath6kl_htc_rxmsg_pending_handler+0x8b7/0xf10 [ath6kl_core]
-[<ffffffffa00c82f0>] ? mmc_do_release_host+0x70/0x90 [mmc_core]
-[<ffffffffa00c833a>] ? mmc_release_host+0x2a/0x50 [mmc_core]
-[<ffffffffa04865c0>] ? ath6kl_alloc_amsdu_rxbuf+0x140/0x140 [ath6kl_core]
-[<ffffffffa0477772>] ath6kl_hif_intr_bh_handler+0x362/0x510 [ath6kl_core]
-[<ffffffffa01f1000>] ath6kl_sdio_irq_handler+0x60/0xb0 [ath6kl_sdio]
-[<ffffffffa00d30bc>] sdio_irq_thread+0xec/0x320 [mmc_core]
-[<ffffffffa00d2fd0>] ? sdio_claim_irq+0x220/0x220 [mmc_core]
-[<ffffffffa00d2fd0>] ? sdio_claim_irq+0x220/0x220 [mmc_core]
-[<ffffffff8105b21e>] kthread+0xbe/0xd0
-[<ffffffff815ab574>] kernel_thread_helper+0x4/0x10
-[<ffffffff815a2174>] ? retint_restore_args+0x13/0x13
-[<ffffffff8105b160>] ? __init_kthread_worker+0x70/0x70
-[<ffffffff815ab570>] ? gs_change+0x13/0x13
+The old ssb OHCI USB driver will be removed in the next step as this
+driver also provide an OHCI driver and an EHCI for the cores supporting
+it.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 ---
-V2 - Remove unnecessary reference to AP mode in commit log
+ drivers/usb/host/Kconfig   |   12 ++
+ drivers/usb/host/Makefile  |    1 +
+ drivers/usb/host/ssb-hcd.c |  270 ++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 283 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/usb/host/ssb-hcd.c
 
- drivers/net/wireless/ath/ath6kl/core.h |    3 ++-
- drivers/net/wireless/ath/ath6kl/main.c |    2 +-
- drivers/net/wireless/ath/ath6kl/txrx.c |    7 ++++---
- 3 files changed, 7 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index ed9fcc1..9c6aec6 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -714,7 +714,8 @@ void ath6kl_free_cookie(struct ath6kl *ar, struct ath6kl_cookie *cookie);
- int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev);
+diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
+index b15ce91..2825dc4 100644
+--- a/drivers/usb/host/Kconfig
++++ b/drivers/usb/host/Kconfig
+@@ -645,3 +645,15 @@ config USB_HCD_BCMA
+ 	  for ehci and ohci.
  
- struct aggr_info *aggr_init(struct ath6kl_vif *vif);
--void aggr_conn_init(struct ath6kl_vif *vif, struct aggr_info_conn *aggr_conn);
-+void aggr_conn_init(struct ath6kl_vif *vif, struct aggr_info *aggr_info,
-+		    struct aggr_info_conn *aggr_conn);
- void ath6kl_rx_refill(struct htc_target *target,
- 		      enum htc_endpoint_id endpoint);
- void ath6kl_refill_amsdu_rxbufs(struct ath6kl *ar, int count);
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index 39da1f9..b96d01a 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -74,7 +74,7 @@ static void ath6kl_add_new_sta(struct ath6kl_vif *vif, u8 *mac, u16 aid,
- 
- 	ar->sta_list_index = ar->sta_list_index | (1 << free_slot);
- 	ar->ap_stats.sta[free_slot].aid = cpu_to_le32(aid);
--	aggr_conn_init(vif, sta->aggr_conn);
-+	aggr_conn_init(vif, vif->aggr_cntxt, sta->aggr_conn);
- }
- 
- static void ath6kl_sta_cleanup(struct ath6kl *ar, u8 i)
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 62c1210..a3dc694 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -1674,7 +1674,8 @@ void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid_mux, u16 seq_no,
- 	rxtid->aggr = true;
- }
- 
--void aggr_conn_init(struct ath6kl_vif *vif, struct aggr_info_conn *aggr_conn)
-+void aggr_conn_init(struct ath6kl_vif *vif, struct aggr_info *aggr_info,
-+		    struct aggr_info_conn *aggr_conn)
- {
- 	struct rxtid *rxtid;
- 	u8 i;
-@@ -1684,7 +1685,7 @@ void aggr_conn_init(struct ath6kl_vif *vif, struct aggr_info_conn *aggr_conn)
- 	init_timer(&aggr_conn->timer);
- 	aggr_conn->timer.function = aggr_timeout;
- 	aggr_conn->timer.data = (unsigned long) aggr_conn;
--	aggr_conn->aggr_info = vif->aggr_cntxt;
-+	aggr_conn->aggr_info = aggr_info;
- 
- 	aggr_conn->timer_scheduled = false;
- 
-@@ -1716,7 +1717,7 @@ struct aggr_info *aggr_init(struct ath6kl_vif *vif)
- 		return NULL;
- 	}
- 
--	aggr_conn_init(vif, p_aggr->aggr_conn);
-+	aggr_conn_init(vif, p_aggr, p_aggr->aggr_conn);
- 
- 	skb_queue_head_init(&p_aggr->rx_amsdu_freeq);
- 	ath6kl_alloc_netbufs(&p_aggr->rx_amsdu_freeq, AGGR_NUM_OF_FREE_NETBUFS);
+ 	  If unsure, say N.
++
++config USB_HCD_SSB
++	tristate "SSB usb host driver"
++	depends on SSB && EXPERIMENTAL
++	select USB_OHCI_HCD_PLATFORM if USB_OHCI_HCD
++	select USB_EHCI_HCD_PLATFORM if USB_EHCI_HCD
++	help
++	  Enbale support for the EHCI and OCHI host controller on an bcma bus.
++	  It converts the bcma driver into two platform device drivers
++	  for ehci and ohci.
++
++	  If unsure, say N.
+diff --git a/drivers/usb/host/Makefile b/drivers/usb/host/Makefile
+index f2c2846..9c52966 100644
+--- a/drivers/usb/host/Makefile
++++ b/drivers/usb/host/Makefile
+@@ -38,3 +38,4 @@ obj-$(CONFIG_USB_FSL_MPH_DR_OF)	+= fsl-mph-dr-of.o
+ obj-$(CONFIG_USB_OCTEON2_COMMON) += octeon2-common.o
+ obj-$(CONFIG_MIPS_ALCHEMY)	+= alchemy-common.o
+ obj-$(CONFIG_USB_HCD_BCMA)	+= bcma-hcd.o
++obj-$(CONFIG_USB_HCD_SSB)	+= ssb-hcd.o
+diff --git a/drivers/usb/host/ssb-hcd.c b/drivers/usb/host/ssb-hcd.c
+new file mode 100644
+index 0000000..889b425
+--- /dev/null
++++ b/drivers/usb/host/ssb-hcd.c
+@@ -0,0 +1,270 @@
++/*
++ * Sonics Silicon Backplane
++ * Broadcom USB-core driver  (SSB bus glue)
++ *
++ * Copyright 2011 Hauke Mehrtens <hauke@hauke-m.de>
++ *
++ * Based on ssb-ohci driver
++ * Copyright 2007 Michael Buesch <m@bues.ch>
++ *
++ * Derived from the OHCI-PCI driver
++ * Copyright 1999 Roman Weissgaerber
++ * Copyright 2000-2002 David Brownell
++ * Copyright 1999 Linus Torvalds
++ * Copyright 1999 Gregory P. Smith
++ *
++ * Derived from the USBcore related parts of Broadcom-SB
++ * Copyright 2005-2011 Broadcom Corporation
++ *
++ * Licensed under the GNU/GPL. See COPYING for details.
++ */
++#include <linux/ssb/ssb.h>
++#include <linux/delay.h>
++#include <linux/platform_device.h>
++#include <linux/module.h>
++
++MODULE_AUTHOR("Hauke Mehrtens");
++MODULE_DESCRIPTION("Common USB driver for SSB Bus");
++MODULE_LICENSE("GPL");
++
++#define SSB_HCD_TMSLOW_HOSTMODE	(1 << 29)
++
++struct ssb_hcd_device {
++	struct platform_device *ehci_dev;
++	struct platform_device *ohci_dev;
++
++	u32 enable_flags;
++};
++
++static void __devinit ssb_hcd_5354wa(struct ssb_device *dev)
++{
++#ifdef CONFIG_SSB_DRIVER_MIPS
++	/* Work around for 5354 failures */
++	if (dev->id.revision == 2 && dev->bus->chip_id == 0x5354) {
++		/* Change syn01 reg */
++		ssb_write32(dev, 0x894, 0x00fe00fe);
++
++		/* Change syn03 reg */
++		ssb_write32(dev, 0x89c, ssb_read32(dev, 0x89c) | 0x1);
++	}
++#endif
++}
++
++static void __devinit ssb_hcd_usb20wa(struct ssb_device *dev)
++{
++	if (dev->id.coreid == SSB_DEV_USB20_HOST) {
++		/*
++		 * USB 2.0 special considerations:
++		 *
++		 * In addition to the standard SSB reset sequence, the Host
++		 * Control Register must be programmed to bring the USB core
++		 * and various phy components out of reset.
++		 */
++		ssb_write32(dev, 0x200, 0x7ff);
++
++		/* Change Flush control reg */
++		ssb_write32(dev, 0x400, ssb_read32(dev, 0x400) & ~8);
++		ssb_read32(dev, 0x400);
++
++		/* Change Shim control reg */
++		ssb_write32(dev, 0x304, ssb_read32(dev, 0x304) & ~0x100);
++		ssb_read32(dev, 0x304);
++
++		udelay(1);
++
++		ssb_hcd_5354wa(dev);
++	}
++}
++
++/* based on arch/mips/brcm-boards/bcm947xx/pcibios.c */
++static u32 __devinit ssb_hcd_init_chip(struct ssb_device *dev)
++{
++	u32 flags = 0;
++
++	if (dev->id.coreid == SSB_DEV_USB11_HOSTDEV)
++		/* Put the device into host-mode. */
++		flags |= SSB_HCD_TMSLOW_HOSTMODE;
++
++	ssb_device_enable(dev, flags);
++
++	ssb_hcd_usb20wa(dev);
++
++	return flags;
++}
++
++static struct platform_device * __devinit
++ssb_hcd_create_pdev(struct ssb_device *dev, char *name, u32 addr, u32 len)
++{
++	struct platform_device *hci_dev;
++	struct resource hci_res[2];
++	int ret = -ENOMEM;
++
++	memset(hci_res, 0, sizeof(hci_res));
++
++	hci_res[0].start = addr;
++	hci_res[0].end = hci_res[0].start + len - 1;
++	hci_res[0].flags = IORESOURCE_MEM;
++
++	hci_res[1].start = dev->irq;
++	hci_res[1].flags = IORESOURCE_IRQ;
++
++	hci_dev = platform_device_alloc(name, 0);
++	if (!hci_dev)
++		goto err_alloc;
++
++	hci_dev->dev.parent = dev->dev;
++	hci_dev->dev.dma_mask = &hci_dev->dev.coherent_dma_mask;
++
++	ret = platform_device_add_resources(hci_dev, hci_res, 2);
++	if (ret)
++		goto err_alloc;
++
++	ret = platform_device_add(hci_dev);
++	if (ret) {
++err_alloc:
++		platform_device_put(hci_dev);
++		return ERR_PTR(ret);
++	}
++
++	return hci_dev;
++}
++
++static int __devinit ssb_hcd_probe(struct ssb_device *dev,
++				   const struct ssb_device_id *id)
++{
++	int err, tmp;
++	int start, len;
++	u16 chipid_top;
++	struct ssb_hcd_device *usb_dev;
++
++	/* USBcores are only connected on embedded devices. */
++	chipid_top = (dev->bus->chip_id & 0xFF00);
++	if (chipid_top != 0x4700 && chipid_top != 0x5300)
++		return -ENODEV;
++
++	/* TODO: Probably need checks here; is the core connected? */
++
++	if (dma_set_mask(dev->dma_dev, DMA_BIT_MASK(32)) ||
++	    dma_set_coherent_mask(dev->dma_dev, DMA_BIT_MASK(32)))
++		return -EOPNOTSUPP;
++
++	usb_dev = kzalloc(sizeof(struct ssb_hcd_device), GFP_KERNEL);
++	if (!usb_dev)
++		return -ENOMEM;
++
++	/* We currently always attach SSB_DEV_USB11_HOSTDEV
++	 * as HOST OHCI. If we want to attach it as Client device,
++	 * we must branch here and call into the (yet to
++	 * be written) Client mode driver. Same for remove(). */
++	usb_dev->enable_flags = ssb_hcd_init_chip(dev);
++
++	tmp = ssb_read32(dev, SSB_ADMATCH0);
++
++	start = ssb_admatch_base(tmp);
++	len = ssb_admatch_size(tmp);
++	usb_dev->ohci_dev = ssb_hcd_create_pdev(dev, "ohci-platform", start,
++						len);
++	if (IS_ERR(usb_dev->ohci_dev)) {
++		err = PTR_ERR(usb_dev->ohci_dev);
++		goto err_free_usb_dev;
++	}
++
++	if (dev->id.coreid == SSB_DEV_USB20_HOST) {
++		start = ssb_admatch_base(tmp) + 0x800; /* ehci core offset */
++		len = 0x100; /* ehci reg block size */
++		usb_dev->ehci_dev = ssb_hcd_create_pdev(dev, "ehci-platform",
++							start, len);
++		if (IS_ERR(usb_dev->ehci_dev)) {
++			err = PTR_ERR(usb_dev->ehci_dev);
++			goto err_unregister_ohci_dev;
++		}
++	}
++
++	ssb_set_drvdata(dev, usb_dev);
++	return 0;
++
++err_unregister_ohci_dev:
++	platform_device_unregister(usb_dev->ohci_dev);
++err_free_usb_dev:
++	kfree(usb_dev);
++	return err;
++}
++
++static void __devexit ssb_hcd_remove(struct ssb_device *dev)
++{
++	struct ssb_hcd_device *usb_dev;
++	struct platform_device *ohci_dev;
++	struct platform_device *ehci_dev;
++
++	usb_dev = ssb_get_drvdata(dev);
++	if (!usb_dev)
++		return;
++
++	ohci_dev = usb_dev->ohci_dev;
++	ehci_dev = usb_dev->ehci_dev;
++
++	if (ohci_dev)
++		platform_device_unregister(ohci_dev);
++	if (ehci_dev)
++		platform_device_unregister(ehci_dev);
++
++	ssb_device_disable(dev, 0);
++}
++
++static void __devexit ssb_hcd_shutdown(struct ssb_device *dev)
++{
++	ssb_device_disable(dev, 0);
++}
++
++#ifdef CONFIG_PM
++
++static int ssb_hcd_suspend(struct ssb_device *dev, pm_message_t state)
++{
++	ssb_device_disable(dev, 0);
++
++	return 0;
++}
++
++static int ssb_hcd_resume(struct ssb_device *dev)
++{
++	struct ssb_hcd_device *usb_dev = ssb_get_drvdata(dev);
++
++	ssb_device_enable(dev, usb_dev->enable_flags);
++
++	return 0;
++}
++
++#else /* !CONFIG_PM */
++#define ssb_hcd_suspend	NULL
++#define ssb_hcd_resume	NULL
++#endif /* CONFIG_PM */
++
++static const struct ssb_device_id ssb_hcd_table[] __devinitconst = {
++	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_USB11_HOSTDEV, SSB_ANY_REV),
++	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_USB11_HOST, SSB_ANY_REV),
++	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_USB20_HOST, SSB_ANY_REV),
++	SSB_DEVTABLE_END
++};
++MODULE_DEVICE_TABLE(ssb, ssb_hcd_table);
++
++static struct ssb_driver ssb_hcd_driver = {
++	.name		= KBUILD_MODNAME,
++	.id_table	= ssb_hcd_table,
++	.probe		= ssb_hcd_probe,
++	.remove		= __devexit_p(ssb_hcd_remove),
++	.shutdown	= ssb_hcd_shutdown,
++	.suspend	= ssb_hcd_suspend,
++	.resume		= ssb_hcd_resume,
++};
++
++static int __init ssb_hcd_init(void)
++{
++	return ssb_driver_register(&ssb_hcd_driver);
++}
++module_init(ssb_hcd_init);
++
++static void __exit ssb_hcd_exit(void)
++{
++	ssb_driver_unregister(&ssb_hcd_driver);
++}
++module_exit(ssb_hcd_exit);
 -- 
-1.7.0.4
+1.7.5.4
 
