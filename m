@@ -1,113 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:35402 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753394Ab2A3Oz1 (ORCPT
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:43681 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752196Ab2AURBQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 09:55:27 -0500
-Received: by mail-wi0-f174.google.com with SMTP id s10so3498005wic.19
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 06:55:26 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/7] wl12xx: add suspend_listen_interval debugfs file
-Date: Mon, 30 Jan 2012 16:58:40 +0200
-Message-Id: <1327935525-24361-3-git-send-email-eliad@wizery.com> (sfid-20120130_155534_265083_0631197A)
-In-Reply-To: <1327935525-24361-1-git-send-email-eliad@wizery.com>
-References: <1327935525-24361-1-git-send-email-eliad@wizery.com>
+	Sat, 21 Jan 2012 12:01:16 -0500
+Received: by obcva7 with SMTP id va7so1777950obc.19
+        for <linux-wireless@vger.kernel.org>; Sat, 21 Jan 2012 09:01:16 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4F1967BE.3050602@broadcom.com>
+References: <CAC9WiBj8VkYe7ku7rc-e_+d7yNEAtEiozs8tnR_A1T1H3XjiSA@mail.gmail.com>
+	<CAC9WiBh5-vS6UmCYCs911WAudmWDtsgDPmHim71LtvaC81HsWQ@mail.gmail.com>
+	<4F1967BE.3050602@broadcom.com>
+Date: Sat, 21 Jan 2012 18:01:16 +0100
+Message-ID: <CAC9WiBhERmWeJOWP59TOD3gYF7yV_4zcyg5yDZHrBbdh=7ykkw@mail.gmail.com> (sfid-20120121_180119_381274_AD331EA8)
+Subject: Re: brcmsmac broken with 3.2
+From: Francis Moreau <francis.moro@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Alwin Beukers <alwin@broadcom.com>,
+	Roland Vossen <rvossen@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+On Fri, Jan 20, 2012 at 2:10 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 01/19/2012 10:19 PM, Francis Moreau wrote:
+>> Hi all,
+>>
+>> I'm wondering now why the brmsmac driver had been removed from the
+>> staging driver tree if no one cares.
+>>
+>> Bye.
+>>
+>> On Thu, Jan 12, 2012 at 8:32 PM, Francis Moreau <francis.moro@gmail.com> wrote:
+>>> Hello,
+>>>
+>>> I'm facing a new issue after upgrading from 3.1 to 3.2.
+>>>
+>>> It happens when switching on/off my wireless card (BCM4313 [14e4:4727]).
+>>>
+>
+> I forgot to ask. With switching on/off you mean the RFKILL switch?
+>
 
-Add read/write to suspend_dtim_interval file which
-controls the number of DTIM periods between wakeups
-while the host is suspended.
-The value while the host is resumed is controlled
-by the file dtim_interval which existed previously.
+Yes.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/debugfs.c |   59 +++++++++++++++++++++++++++++++++
- 1 files changed, 59 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index 4dcb3f7..15353fa 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -625,6 +625,64 @@ static const struct file_operations dtim_interval_ops = {
- 	.llseek = default_llseek,
- };
- 
-+
-+
-+static ssize_t suspend_dtim_interval_read(struct file *file,
-+					  char __user *user_buf,
-+					  size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+	u8 value;
-+
-+	if (wl->conf.conn.suspend_wake_up_event == CONF_WAKE_UP_EVENT_DTIM ||
-+	    wl->conf.conn.suspend_wake_up_event == CONF_WAKE_UP_EVENT_N_DTIM)
-+		value = wl->conf.conn.suspend_listen_interval;
-+	else
-+		value = 0;
-+
-+	return wl1271_format_buffer(user_buf, count, ppos, "%d\n", value);
-+}
-+
-+static ssize_t suspend_dtim_interval_write(struct file *file,
-+					   const char __user *user_buf,
-+					   size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+	unsigned long value;
-+	int ret;
-+
-+	ret = kstrtoul_from_user(user_buf, count, 10, &value);
-+	if (ret < 0) {
-+		wl1271_warning("illegal value for suspend_dtim_interval");
-+		return -EINVAL;
-+	}
-+
-+	if (value < 1 || value > 10) {
-+		wl1271_warning("suspend_dtim value is not in valid range");
-+		return -ERANGE;
-+	}
-+
-+	mutex_lock(&wl->mutex);
-+
-+	wl->conf.conn.suspend_listen_interval = value;
-+	/* for some reason there are different event types for 1 and >1 */
-+	if (value == 1)
-+		wl->conf.conn.suspend_wake_up_event = CONF_WAKE_UP_EVENT_DTIM;
-+	else
-+		wl->conf.conn.suspend_wake_up_event = CONF_WAKE_UP_EVENT_N_DTIM;
-+
-+	mutex_unlock(&wl->mutex);
-+	return count;
-+}
-+
-+
-+static const struct file_operations suspend_dtim_interval_ops = {
-+	.read = suspend_dtim_interval_read,
-+	.write = suspend_dtim_interval_write,
-+	.open = wl1271_open_file_generic,
-+	.llseek = default_llseek,
-+};
-+
- static ssize_t beacon_interval_read(struct file *file, char __user *user_buf,
- 				    size_t count, loff_t *ppos)
- {
-@@ -949,6 +1007,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
- 	DEBUGFS_ADD(driver_state, rootdir);
- 	DEBUGFS_ADD(vifs_state, rootdir);
- 	DEBUGFS_ADD(dtim_interval, rootdir);
-+	DEBUGFS_ADD(suspend_dtim_interval, rootdir);
- 	DEBUGFS_ADD(beacon_interval, rootdir);
- 	DEBUGFS_ADD(beacon_filtering, rootdir);
- 	DEBUGFS_ADD(dynamic_ps_timeout, rootdir);
 -- 
-1.7.6.401.g6a319
-
+Francis
