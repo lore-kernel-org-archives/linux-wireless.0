@@ -1,146 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:36961 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756621Ab2APUyu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jan 2012 15:54:50 -0500
-Subject: Re: [PATCH v2] NFC: Download TI NFC init script
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: ilanelias78@gmail.com
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Ilan Elias <ilane@ti.com>
-In-Reply-To: <1326296420-3568-1-git-send-email-ilane@ti.com>
-References: <1326296420-3568-1-git-send-email-ilane@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 16 Jan 2012 22:00:43 +0100
-Message-ID: <1326747643.22824.23.camel@sortiz-mobl> (sfid-20120116_215502_813197_BA8C3149)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:39170 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751775Ab2AUNns (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Jan 2012 08:43:48 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/3] compat-wireless: rename path_lookup
+Date: Sat, 21 Jan 2012 14:43:36 +0100
+Message-Id: <1327153416-27834-3-git-send-email-hauke@hauke-m.de> (sfid-20120121_144354_095806_AA598697)
+In-Reply-To: <1327153416-27834-1-git-send-email-hauke@hauke-m.de>
+References: <1327153416-27834-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ilan,
+path_lookup in net/mac80211/mesh_pathtbl.c consolidates with
+path_lookup in include/linux/namei.h used in old kernel versions.
 
-On Wed, 2012-01-11 at 17:40 +0200, ilanelias78@gmail.com wrote:
-> From: Ilan Elias <ilane@ti.com>
-> 
-> Download TI NFC init script during nfcwilink open operation,
-> after the NFC channel is registered with TI shared transport.
-> TI NFC init script is written in BTS format.
-> First, read the chip version via a special vendor specific command.
-> Second, we request the relevant BTS file from the user space, and
-> then send the BTS commands to the chip.
+This should also go into compat-wireless-stable-3.3.
 
-Some nitpicks again:
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ patches/49-rename_path_lookup.patch |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
+ create mode 100644 patches/49-rename_path_lookup.patch
 
-
-> +static int nfcwilink_download_fw(struct nfcwilink *drv)
-> +{
-> +	unsigned char file_name[BTS_FILE_NAME_MAX_SIZE];
-> +	const struct firmware *fw;
-> +	__u16 action_type, action_len;
-> +	__u8 *ptr;
-> +	int len, rc;
-> +
-> +	nfc_dev_dbg(&drv->pdev->dev, "download_fw entry");
-> +
-> +	set_bit(NFCWILINK_FW_DOWNLOAD, &drv->flags);
-> +
-> +	rc = nfcwilink_get_bts_file_name(drv, file_name);
-> +	if (rc)
-> +		goto exit;
-> +
-> +	rc = request_firmware(&fw, file_name, &drv->pdev->dev);
-> +	if (rc) {
-> +		nfc_dev_err(&drv->pdev->dev, "request_firmware failed %d", rc);
-> +
-> +		/* if the file is not found, don't exit with failure */
-> +		if (rc == -ENOENT)
-> +			rc = 0;
-> +
-> +		goto exit;
-> +	}
-> +
-> +	len = fw->size;
-> +	ptr = (__u8 *)fw->data;
-> +
-> +	if ((len == 0) || (ptr == NULL)) {
-> +		nfc_dev_dbg(&drv->pdev->dev,
-> +				"request_firmware returned size %d", len);
-> +		goto release_fw;
-> +	}
-> +
-> +	if (__le32_to_cpu(((struct bts_file_hdr *)ptr)->magic) !=
-> +			BTS_FILE_HDR_MAGIC) {
-> +		nfc_dev_err(&drv->pdev->dev, "wrong bts magic number");
-> +		rc = -EINVAL;
-> +		goto release_fw;
-> +	}
-> +
-> +	/* remove the BTS header */
-> +	len -= sizeof(struct bts_file_hdr);
-> +	ptr += sizeof(struct bts_file_hdr);
-> +
-> +	while (len > 0) {
-> +		action_type =
-> +			__le16_to_cpu(((struct bts_file_action *)ptr)->type);
-> +		action_len =
-> +			__le16_to_cpu(((struct bts_file_action *)ptr)->len);
-> +
-> +		nfc_dev_dbg(&drv->pdev->dev, "bts_file_action type %d, len %d",
-> +				action_type, action_len);
-> +
-> +		switch (action_type) {
-> +		case BTS_FILE_ACTION_TYPE_SEND_CMD:
-> +			rc = nfcwilink_send_bts_cmd(drv,
-> +					((struct bts_file_action *)ptr)->data,
-> +					action_len);
-> +			if (rc)
-> +				goto release_fw;
-> +			break;
-> +		}
-> +
-> +		/* advance to the next action */
-> +		len -= (sizeof(struct bts_file_action) + action_len);
-> +		ptr += (sizeof(struct bts_file_action) + action_len);
-> +	}
-I would somehow agree with Ohad here by saying that the BTS handling
-could (even though this one seems to be a simplified one) be factorized
-somehow. But I'm not going to comment any further on the ST code ;)
-
-
-
-> @@ -208,11 +489,13 @@ static int nfcwilink_send(struct sk_buff *skb)
->  
->  	nfc_dev_dbg(&drv->pdev->dev, "send entry, len %d", skb->len);
->  
-> -	if (!test_bit(NFCWILINK_RUNNING, &drv->flags))
-> -		return -EBUSY;
-> +	if (!test_bit(NFCWILINK_RUNNING, &drv->flags)) {
-> +		kfree_skb(skb);
-> +		return -EINVAL;
-> +	}
-This is not related to this patch.
-
-
->  	/* add the ST hdr to the start of the buffer */
-> -	hdr.len = skb->len;
-> +	hdr.len = cpu_to_le16(skb->len);
-Same here.
-
-
->  	memcpy(skb_push(skb, NFCWILINK_HDR_LEN), &hdr, NFCWILINK_HDR_LEN);
->  
->  	/* Insert skb to shared transport layer's transmit queue.
-> @@ -239,7 +522,7 @@ static int nfcwilink_probe(struct platform_device *pdev)
->  {
->  	static struct nfcwilink *drv;
->  	int rc;
-> -	u32 protocols;
-> +	__u32 protocols;
-Ditto.
-
-Cheers,
-Samuel.
+diff --git a/patches/49-rename_path_lookup.patch b/patches/49-rename_path_lookup.patch
+new file mode 100644
+index 0000000..a5c69c6
+--- /dev/null
++++ b/patches/49-rename_path_lookup.patch
+@@ -0,0 +1,14 @@
++path_lookup in net/mac80211/mesh_pathtbl.c consolidates with 
++path_lookup in include/linux/namei.h used in old kernel versions.
++
++--- a/net/mac80211/mesh_pathtbl.c
+++++ b/net/mac80211/mesh_pathtbl.c
++@@ -18,6 +18,8 @@
++ #include "ieee80211_i.h"
++ #include "mesh.h"
++ 
+++#define path_lookup general_path_lookup
+++
++ #ifdef CONFIG_MAC80211_VERBOSE_MPATH_DEBUG
++ #define mpath_dbg(fmt, args...)	printk(KERN_DEBUG fmt, ##args)
++ #else
+-- 
+1.7.5.4
 
