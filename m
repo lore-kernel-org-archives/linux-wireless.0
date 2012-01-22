@@ -1,215 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:46747 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754652Ab2AaOko (ORCPT
+Received: from netrider.rowland.org ([192.131.102.5]:50756 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751902Ab2AVDl1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 09:40:44 -0500
-Received: by mail-we0-f174.google.com with SMTP id b13so66758wer.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 06:40:43 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 1/7] wl12xx: Set different wake up conditions in case of suspend
-Date: Tue, 31 Jan 2012 16:44:02 +0200
-Message-Id: <1328021048-8944-2-git-send-email-eliad@wizery.com> (sfid-20120131_154050_614759_A0DAE43B)
-In-Reply-To: <1328021048-8944-1-git-send-email-eliad@wizery.com>
-References: <1328021048-8944-1-git-send-email-eliad@wizery.com>
+	Sat, 21 Jan 2012 22:41:27 -0500
+Date: Sat, 21 Jan 2012 22:41:26 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+cc: ralf@linux-mips.org, <linux-mips@linux-mips.org>,
+	USB list <linux-usb@vger.kernel.org>, <zajec5@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <m@bues.ch>, <george@znau.edu.ua>
+Subject: Re: [PATCH 4/7] USB: EHCI: Add a generic platform device driver
+In-Reply-To: <1327184367-8824-5-git-send-email-hauke@hauke-m.de>
+Message-ID: <Pine.LNX.4.44L0.1201212235050.32266-100000@netrider.rowland.org> (sfid-20120122_044133_444216_20BBF75C)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+On Sat, 21 Jan 2012, Hauke Mehrtens wrote:
 
-Added ability to set different wake up conditions for suspend/resume.
-Set default values to wake up every 3 DTIMs while suspended
-and every 1 DTIM while resumed
+> This adds a generic driver for platform devices. It works like the PCI
+> driver and is based on it. This is for devices which do not have an own
+> bus but their EHCI controller works like a PCI controller. It will be
+> used for the Broadcom bcma and ssb USB EHCI controller.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/acx.c  |   10 ++++---
- drivers/net/wireless/wl12xx/acx.h  |    3 +-
- drivers/net/wireless/wl12xx/conf.h |   13 +++++++++
- drivers/net/wireless/wl12xx/main.c |   51 +++++++++++++++++++++++++++++++++--
- drivers/net/wireless/wl12xx/ps.c   |    4 ++-
- 5 files changed, 72 insertions(+), 9 deletions(-)
+Before adding a generic platform driver for EHCI, you should give some
+to thought to how it might be generalized.  There are a lot of EHCI
+platform drivers, all differing in various major or minor respects.  
+It should be possible to replace a lot of them with the generic driver, 
+but first it will need some way to cope with a few minor quirks.
 
-diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-index af2c312..bc96db0 100644
---- a/drivers/net/wireless/wl12xx/acx.c
-+++ b/drivers/net/wireless/wl12xx/acx.c
-@@ -34,12 +34,14 @@
- #include "reg.h"
- #include "ps.h"
- 
--int wl1271_acx_wake_up_conditions(struct wl1271 *wl, struct wl12xx_vif *wlvif)
-+int wl1271_acx_wake_up_conditions(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-+				  u8 wake_up_event, u8 listen_interval)
- {
- 	struct acx_wake_up_condition *wake_up;
- 	int ret;
- 
--	wl1271_debug(DEBUG_ACX, "acx wake up conditions");
-+	wl1271_debug(DEBUG_ACX, "acx wake up conditions (wake_up_event %d listen_interval %d)",
-+		     wake_up_event, listen_interval);
- 
- 	wake_up = kzalloc(sizeof(*wake_up), GFP_KERNEL);
- 	if (!wake_up) {
-@@ -48,8 +50,8 @@ int wl1271_acx_wake_up_conditions(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	}
- 
- 	wake_up->role_id = wlvif->role_id;
--	wake_up->wake_up_event = wl->conf.conn.wake_up_event;
--	wake_up->listen_interval = wl->conf.conn.listen_interval;
-+	wake_up->wake_up_event = wake_up_event;
-+	wake_up->listen_interval = listen_interval;
- 
- 	ret = wl1271_cmd_configure(wl, ACX_WAKE_UP_CONDITIONS,
- 				   wake_up, sizeof(*wake_up));
-diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
-index 0749df5..a28fc04 100644
---- a/drivers/net/wireless/wl12xx/acx.h
-+++ b/drivers/net/wireless/wl12xx/acx.h
-@@ -1226,7 +1226,8 @@ enum {
- 
- 
- int wl1271_acx_wake_up_conditions(struct wl1271 *wl,
--				  struct wl12xx_vif *wlvif);
-+				  struct wl12xx_vif *wlvif,
-+				  u8 wake_up_event, u8 listen_interval);
- int wl1271_acx_sleep_auth(struct wl1271 *wl, u8 sleep_auth);
- int wl1271_acx_tx_power(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			int power);
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index 10e5e3d..d97aad6 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -810,6 +810,19 @@ struct conf_conn_settings {
- 	u8 listen_interval;
- 
- 	/*
-+	 * Firmware wakeup conditions during suspend
-+	 * Range: CONF_WAKE_UP_EVENT_*
-+	 */
-+	u8 suspend_wake_up_event;
-+
-+	/*
-+	 * Listen interval during suspend.
-+	 * Currently will be in DTIMs (1-10)
-+	 *
-+	 */
-+	u8 suspend_listen_interval;
-+
-+	/*
- 	 * Enable or disable the beacon filtering.
- 	 *
- 	 * Range: CONF_BCN_FILT_MODE_*
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 2bb1c24..29a00fc 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -218,6 +218,8 @@ static struct conf_drv_settings default_conf = {
- 	.conn = {
- 		.wake_up_event               = CONF_WAKE_UP_EVENT_DTIM,
- 		.listen_interval             = 1,
-+		.suspend_wake_up_event       = CONF_WAKE_UP_EVENT_N_DTIM,
-+		.suspend_listen_interval     = 3,
- 		.bcn_filt_mode               = CONF_BCN_FILT_MODE_ENABLED,
- 		.bcn_filt_ie_count           = 2,
- 		.bcn_filt_ie = {
-@@ -1561,6 +1563,35 @@ static struct notifier_block wl1271_dev_notifier = {
- };
- 
- #ifdef CONFIG_PM
-+static int wl1271_configure_suspend_sta(struct wl1271 *wl,
-+					struct wl12xx_vif *wlvif)
-+{
-+	int ret = 0;
-+
-+	mutex_lock(&wl->mutex);
-+
-+	if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
-+		goto out_unlock;
-+
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out_unlock;
-+
-+	ret = wl1271_acx_wake_up_conditions(wl, wlvif,
-+				    wl->conf.conn.suspend_wake_up_event,
-+				    wl->conf.conn.suspend_listen_interval);
-+
-+	if (ret < 0)
-+		wl1271_error("suspend: set wake up conditions failed: %d", ret);
-+
-+
-+	wl1271_ps_elp_sleep(wl);
-+
-+out_unlock:
-+	mutex_unlock(&wl->mutex);
-+	return ret;
-+
-+}
- 
- static int wl1271_configure_suspend_ap(struct wl1271 *wl,
- 				       struct wl12xx_vif *wlvif)
-@@ -1588,6 +1619,8 @@ out_unlock:
- static int wl1271_configure_suspend(struct wl1271 *wl,
- 				    struct wl12xx_vif *wlvif)
- {
-+	if (wlvif->bss_type == BSS_TYPE_STA_BSS)
-+		return wl1271_configure_suspend_sta(wl, wlvif);
- 	if (wlvif->bss_type == BSS_TYPE_AP_BSS)
- 		return wl1271_configure_suspend_ap(wl, wlvif);
- 	return 0;
-@@ -1596,10 +1629,11 @@ static int wl1271_configure_suspend(struct wl1271 *wl,
- static void wl1271_configure_resume(struct wl1271 *wl,
- 				    struct wl12xx_vif *wlvif)
- {
--	int ret;
-+	int ret = 0;
- 	bool is_ap = wlvif->bss_type == BSS_TYPE_AP_BSS;
-+	bool is_sta = wlvif->bss_type == BSS_TYPE_STA_BSS;
- 
--	if (!is_ap)
-+	if ((!is_ap) && (!is_sta))
- 		return;
- 
- 	mutex_lock(&wl->mutex);
-@@ -1607,7 +1641,18 @@ static void wl1271_configure_resume(struct wl1271 *wl,
- 	if (ret < 0)
- 		goto out;
- 
--	wl1271_acx_beacon_filter_opt(wl, wlvif, false);
-+	if (is_sta) {
-+		ret = wl1271_acx_wake_up_conditions(wl, wlvif,
-+				    wl->conf.conn.wake_up_event,
-+				    wl->conf.conn.listen_interval);
-+
-+		if (ret < 0)
-+			wl1271_error("resume: wake up conditions failed: %d",
-+				     ret);
-+
-+	} else if (is_ap) {
-+		ret = wl1271_acx_beacon_filter_opt(wl, wlvif, false);
-+	}
- 
- 	wl1271_ps_elp_sleep(wl);
- out:
-diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
-index e209e29..d197922 100644
---- a/drivers/net/wireless/wl12xx/ps.c
-+++ b/drivers/net/wireless/wl12xx/ps.c
-@@ -170,7 +170,9 @@ int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		wl1271_debug(DEBUG_PSM, "entering psm (mode=%d,timeout=%u)",
- 			     mode, timeout);
- 
--		ret = wl1271_acx_wake_up_conditions(wl, wlvif);
-+		ret = wl1271_acx_wake_up_conditions(wl, wlvif,
-+					    wl->conf.conn.wake_up_event,
-+					    wl->conf.conn.listen_interval);
- 		if (ret < 0) {
- 			wl1271_error("couldn't set wake up conditions");
- 			return ret;
--- 
-1.7.6.401.g6a319
+Please consider this, and think about which of the existing drivers 
+could be replaced.
+
+> --- /dev/null
+> +++ b/drivers/usb/host/ehci-platform.c
+> @@ -0,0 +1,211 @@
+> +/*
+> + * Generic platform ehci driver
+> + *
+> + * Copyright 2007 Steven Brown <sbrown@cortland.com>
+> + * Copyright 2010-2011 Hauke Mehrtens <hauke@hauke-m.de>
+> + *
+> + * Derived from the ohci-ssb driver
+> + * Copyright 2007 Michael Buesch <m@bues.ch>
+> + *
+> + * Derived from the EHCI-PCI driver
+> + * Copyright (c) 2000-2004 by David Brownell
+> + *
+> + * Derived from the ohci-pci driver
+> + * Copyright 1999 Roman Weissgaerber
+> + * Copyright 2000-2002 David Brownell
+> + * Copyright 1999 Linus Torvalds
+> + * Copyright 1999 Gregory P. Smith
+> + *
+> + * Licensed under the GNU/GPL. See COPYING for details.
+> + */
+> +#include <linux/platform_device.h>
+> +
+> +static int ehci_platform_reset(struct usb_hcd *hcd)
+> +{
+> +	struct ehci_hcd *ehci = hcd_to_ehci(hcd);
+> +	int retval;
+> +
+> +	ehci->caps = hcd->regs;
+> +	ehci->regs = hcd->regs +
+> +		HC_LENGTH(ehci, ehci_readl(ehci, &ehci->caps->hc_capbase));
+> +
+> +	dbg_hcs_params(ehci, "reset");
+> +	dbg_hcc_params(ehci, "reset");
+> +
+> +	/* cache this readonly data; minimize chip reads */
+> +	ehci->hcs_params = ehci_readl(ehci, &ehci->caps->hcs_params);
+> +
+> +	retval = ehci_halt(ehci);
+> +	if (retval)
+> +		return retval;
+> +
+> +	/* data structure init */
+> +	retval = ehci_init(hcd);
+> +	if (retval)
+> +		return retval;
+> +
+> +	ehci_reset(ehci);
+> +
+> +	ehci_port_power(ehci, 1);
+> +
+> +	return retval;
+> +}
+
+Most of this routine should be replaced with a call to ehci_setup.
+
+Alan Stern
 
