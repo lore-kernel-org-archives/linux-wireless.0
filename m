@@ -1,61 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:42361 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752220Ab2A3TOV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 14:14:21 -0500
-Message-ID: <4F26EC06.4050503@qca.qualcomm.com> (sfid-20120130_201424_763671_84F36AC1)
-Date: Mon, 30 Jan 2012 21:14:14 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH V2] ath6kl: Fix kernel panic during rx aggregation
-References: <1327564038-2455-1-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1327564038-2455-1-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:50664 "EHLO
+	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751477Ab2AVDLN convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 21 Jan 2012 22:11:13 -0500
+Message-ID: <1327201872.8004.85.camel@deadeye> (sfid-20120122_041115_264014_0ABED782)
+Subject: [PATCH 2/2] ipw2100: Fix order of device registration
+From: Ben Hutchings <ben@decadent.org.uk>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: 656813@bugs.debian.org
+Date: Sun, 22 Jan 2012 03:11:12 +0000
+In-Reply-To: <1327201775.8004.83.camel@deadeye>
+References: <1327201775.8004.83.camel@deadeye>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/26/2012 09:47 AM, Vasanthakumar Thiagarajan wrote:
-> "ath6kl: Define a structure for connection specific aggregation information"
-> introduces this. In aggr_conn_init(), vif->aggr_cntxt is assigned to
-> aggr_conn->aggr_info, but vif->aggr_cntxt is not initialized at this
-> point, this would end up accessing an invalid pointer in aggregation
-> receive path. Fix this by passing the correct aggr_info to aggr_conn_init().
-> The panic trace would look like.
-> 
-> [<ffffffff8159e02e>] panic+0xa1/0x1c6
-> [<ffffffff8103773d>] ? kmsg_dump+0xfd/0x160
-> [<ffffffff815a2f6a>] oops_end+0xea/0xf0
-> [<ffffffff8102b95d>] no_context+0x11d/0x2d0
-> [<ffffffff8102bc5d>] __bad_area_nosemaphore+0x14d/0x230
-> [<ffffffff815a5c4d>] ? do_page_fault+0x30d/0x520
-> [<ffffffff8102bd53>] bad_area_nosemaphore+0x13/0x20
-> [<ffffffff815a5cfd>] do_page_fault+0x3bd/0x520
-> [<ffffffff8108bd60>] ? __lock_acquire+0x320/0x1680
-> [<ffffffff812e3a9d>] ? trace_hardirqs_off_thunk+0x3a/0x3c
-> [<ffffffff815a2385>] page_fault+0x25/0x30
-> [<ffffffffa0487a5f>] ? aggr_slice_amsdu+0xdf/0x170 [ath6kl_core]
-> [<ffffffffa0487bac>] aggr_deque_frms+0xbc/0x190 [ath6kl_core]
-> [<ffffffffa0488404>] ath6kl_rx+0x3e4/0xae0 [ath6kl_core]
-> [<ffffffffa047ae77>] ath6kl_htc_rxmsg_pending_handler+0x8b7/0xf10 [ath6kl_core]
-> [<ffffffffa00c82f0>] ? mmc_do_release_host+0x70/0x90 [mmc_core]
-> [<ffffffffa00c833a>] ? mmc_release_host+0x2a/0x50 [mmc_core]
-> [<ffffffffa04865c0>] ? ath6kl_alloc_amsdu_rxbuf+0x140/0x140 [ath6kl_core]
-> [<ffffffffa0477772>] ath6kl_hif_intr_bh_handler+0x362/0x510 [ath6kl_core]
-> [<ffffffffa01f1000>] ath6kl_sdio_irq_handler+0x60/0xb0 [ath6kl_sdio]
-> [<ffffffffa00d30bc>] sdio_irq_thread+0xec/0x320 [mmc_core]
-> [<ffffffffa00d2fd0>] ? sdio_claim_irq+0x220/0x220 [mmc_core]
-> [<ffffffffa00d2fd0>] ? sdio_claim_irq+0x220/0x220 [mmc_core]
-> [<ffffffff8105b21e>] kthread+0xbe/0xd0
-> [<ffffffff815ab574>] kernel_thread_helper+0x4/0x10
-> [<ffffffff815a2174>] ? retint_restore_args+0x13/0x13
-> [<ffffffff8105b160>] ? __init_kthread_worker+0x70/0x70
-> [<ffffffff815ab570>] ? gs_change+0x13/0x13
-> 
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Currently cfg80211 fails to create a "phy80211" symlink in sysfs from
+the net device to the wiphy device.  The latter needs to be registered
+first.
 
-Thanks, applied.
+Compile-tested only.
 
-Kalle
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+This appears to have the same bug as ipw2200.
+
+Ben.
+
+ drivers/net/wireless/ipw2x00/ipw2100.c |   24 +++++++++++++-----------
+ 1 files changed, 13 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+index a0e5c21..a5437e7 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+@@ -1956,10 +1956,8 @@ static int ipw2100_wdev_init(struct net_device *dev)
+ 	}
+ 
+ 	set_wiphy_dev(wdev->wiphy, &priv->pci_dev->dev);
+-	if (wiphy_register(wdev->wiphy)) {
+-		ipw2100_down(priv);
++	if (wiphy_register(wdev->wiphy))
+ 		return -EIO;
+-	}
+ 	return 0;
+ }
+ 
+@@ -6337,6 +6335,11 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
+ 	printk(KERN_INFO DRV_NAME
+ 	       ": Detected Intel PRO/Wireless 2100 Network Connection\n");
+ 
++	err = ipw2100_wdev_init(dev);
++	if (err)
++		goto fail;
++	registered = 1;
++
+ 	/* Bring up the interface.  Pre 0.46, after we registered the
+ 	 * network device we would call ipw2100_up.  This introduced a race
+ 	 * condition with newer hotplug configurations (network was coming
+@@ -6353,11 +6356,7 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
+ 		       "Error calling register_netdev.\n");
+ 		goto fail;
+ 	}
+-	registered = 1;
+-
+-	err = ipw2100_wdev_init(dev);
+-	if (err)
+-		goto fail;
++	registered = 2;
+ 
+ 	mutex_lock(&priv->action_mutex);
+ 
+@@ -6396,13 +6395,16 @@ static int ipw2100_pci_init_one(struct pci_dev *pci_dev,
+ 
+       fail_unlock:
+ 	mutex_unlock(&priv->action_mutex);
+-	wiphy_unregister(priv->ieee->wdev.wiphy);
+-	kfree(priv->ieee->bg_band.channels);
+       fail:
+ 	if (dev) {
+-		if (registered)
++		if (registered >= 2)
+ 			unregister_netdev(dev);
+ 
++		if (registered) {
++			wiphy_unregister(priv->ieee->wdev.wiphy);
++			kfree(priv->ieee->bg_band.channels);
++		}
++
+ 		ipw2100_hw_stop_adapter(priv);
+ 
+ 		ipw2100_disable_interrupts(priv);
+-- 
+1.7.8.2
+
+
