@@ -1,82 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:56004 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758790Ab2AFQ6e convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jan 2012 11:58:34 -0500
-Received: by yenm11 with SMTP id m11so745930yen.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jan 2012 08:58:33 -0800 (PST)
-References: <4F070CF4.5030708@gmail.com> <4F07186D.7020708@lwfinger.net>
-In-Reply-To: <4F07186D.7020708@lwfinger.net>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <16960B23-D3DA-4104-8F38-662DFA8D0A3E@gmail.com> (sfid-20120106_175838_512791_0628302D)
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: lina <lina.lastname@gmail.com>
-Subject: Re: how to uninstall the b43 and reinstall
-Date: Sat, 7 Jan 2012 00:58:17 +0800
-To: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mout0.freenet.de ([195.4.92.90]:52808 "EHLO mout0.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753044Ab2AWRrH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jan 2012 12:47:07 -0500
+Message-Id: <201201231744.q0NHi68I002597@mail.maya.org> (sfid-20120123_184712_361863_33EDC231)
+Date: Mon, 23 Jan 2012 18:44:04 +0100
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: Compat-wireless-3.2-rc6-3 is broken for rt2860 device
+In-Reply-To: <CAGXE3d_UPmcjgss+xMPBtkM22kBwGD23y8Fzxkr+6286W+EwbQ@mail.gmail.com>
+References: <4EFF12D9.3010602@01019freenet.de>
+	<2766356.70ylY68Gqi@helmutmobil.site>
+	<4F040FEA.3080703@01019freenet.de>
+	<1408490.qSFZVkU7fA@helmutmobil.site>
+	<4F0562DF.3000200@dualc.maya.org>
+	<CAGXE3d8b5qtbhesPjRy3EXvkiwshUg0eZqcDBzb1OhKK3j6z6A@mail.gmail.com>
+	<4F0AEBAB.9020104@01019freenet.de>
+	<CAGXE3d-cOeTEHugbgWMoz8-Dymw0=JHxykdK4ZkBmCJZ9tSPmg@mail.gmail.com>
+	<201201100803.q0A83nsQ003757@mail.maya.org>
+	<CAGXE3d_jW7NFnekMfwn6JPXX0xB4UWM3ttbRVLv-ZbsoMOoWEw@mail.gmail.com>
+	<201201200730.q0K7U0oj004966@mail.maya.org>
+	<CAGXE3d_rCMYwoEBNjk+S7WvAmCkPMcq-Gpawm370-cSbjXy6rg@mail.gmail.com>
+	<4F1D84CE.8020403@maya.org>
+	<CAGXE3d_UPmcjgss+xMPBtkM22kBwGD23y8Fzxkr+6286W+EwbQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6 Jan, 2012, at 23:51, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+Am Mon, 23 Jan 2012 17:36:57 +0100
+schrieb Helmut Schaa <helmut.schaa@googlemail.com>:
 
-> On 01/06/2012 09:02 AM, lina wrote:
->> Hi,
->> 
->> a quick question, how to clear the b43?
->> 
->> 
->> a detailed background stories as following:
->> 
->> 
->> I installed the b43 following the advice given by list,
->> mainly from
->> http://linuxwireless.org/en/users/Drivers/b43
->> 
->> it WORKED.
->> 
->> but yesterday I removed the old kernel 3.2-rc6, which is the one b43 worked,
->> and installed the 3.2 from kernel.org. I guess it's latest, than 3.2-rc6 ?
->> 
->> I don't know how to remove the b43 since the trial of
->> make uninstall in pathTo/b43-fwcutter-015 not work.
->> 
->> so I just did something like make install again, and then
->> 1
->> <http://linuxwireless.org/en/users/Drivers/b43#CA-d6bf7044c28bbe20619873aa0dd5f8faa0864c61_1>
->> export FIRMWARE_INSTALL_DIR="/lib/firmware"
->> 2
->> <http://linuxwireless.org/en/users/Drivers/b43#CA-d6bf7044c28bbe20619873aa0dd5f8faa0864c61_2>
->> wget http://www.lwfinger.com/b43-firmware/broadcom-wl-5.100.138.tar.bz2
->> 3
->> <http://linuxwireless.org/en/users/Drivers/b43#CA-d6bf7044c28bbe20619873aa0dd5f8faa0864c61_3>
->> tar xjf broadcom-wl-5.100.138.tar.bz2
->> 4 sudo b43-fwcutter -w "$FIRMWARE_INSTALL_DIR"
->> broadcom-wl-5.100.138/linux/wl_apsta.o
->> 
->> dmesg showed me:
->> [ 127.434017] cfg80211: Calling CRDA to update world regulatory domain
->> [ 127.704793] b43-phy0: Broadcom 4331 WLAN found (core revision 29)
->> [ 127.704821] bcma: Switched to core: 0x812
->> [ 127.705237] b43-phy0 ERROR: FOUND UNSUPPORTED PHY (Analog 9, Type 7, Revision 1)
->> [ 127.705244] b43: probe of bcma0:0 failed with error -95
->> [ 127.705260] Broadcom 43xx driver loaded [ Features: PMNLS ]
->> [ 431.367724] applesmc: FS! : read arg fail
+> On Mon, Jan 23, 2012 at 5:03 PM, Andreas Hartmann
+> <andihartmann@freenet.de> wrote:
+> > Helmut Schaa schrieb:
+> >> On Fri, Jan 20, 2012 at 8:29 AM, Andreas Hartmann
+> >> <andihartmann@01019freenet.de> wrote:
+> >>> All in one: Your workaround was a good idea, but unfortunately it
+> >>> doesn't "solve" / workaround the problem introduced with the patch
+> >>> "mac80211: retry sending failed BAR frames later instead of tearing
+> >>> down aggr" [1]. I don't know off any other solution at this time as to revert it.
+> >>
+> >> Ok, so we've got at least one hw issue here: rt2800 is not able to report
+> >> correct ACK state of BARs :(
+> >>
+> >> The interesting bit is that the legacy drivers tear the BA session down as
+> >> soon as the first AMPDU subframe failed. That's the same behavior as
+> >> mac80211 had before the mentioned patch.
+> >>
+> >> So, let's assume the generic way Felix implemented works for other devices
+> >> (like ath9k) we could go with a workaround inside rt2x00 to tear down
+> >> the BA session as soon as the first AMPDU frame failed.
+> >>
+> >> Mind to try that one (not even compile tested though :) ).
+> >
+> > hdr is missing. I tried to derive it like this:
+> >
+> > struct ieee80211_hdr *hdr=(void*)entry->skb->data;
 > 
-> You are very confused. The only thing 
+> Looks correct but you should put it right before the ieee80211_is_data_qos check
+> not at the start of the function ...
 
-You are right.  I'm lost. And I'm the person who never learned how to read map.  I mean in daily life, I have map in hand, GPS.  But sometimes I can only find the way by asking people.  Sigh ...
+I did it like this:
 
-> you can "uninstall" is the firmware cutter. The driver b43 is part of the kernel. Installing a new kernel gets you a new version.
-> 
-> Your problem with the 4331 is that you are getting your kernel from the wrong source. If you want to run that device with 4331, you need code that will not be in a mainline kernel until 3.3-rc1, which will not be available for about 2 weeks. The kernel you need is the one found in the git tree of wireless-testing, or you need to build a recent compat-wireless package. I suspect that is what you did with 3.2-rc6.
-Yes, did remove old kernel also removed my old built compact-wireless? 
-Sorry im not in front of computer. Just check email by phone.
+--- drivers/net/wireless/rt2x00/rt2x00dev.c.orig	2012-01-23 16:50:03.188718671 +0100
++++ drivers/net/wireless/rt2x00/rt2x00dev.c	2012-01-23 18:11:56.248553764 +0100
+@@ -388,8 +388,17 @@
+ 		tx_info->status.ampdu_len = 1;
+ 		tx_info->status.ampdu_ack_len = success ? 1 : 0;
+ 
+-		if (!success)
+-			tx_info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
++		struct ieee80211_hdr *hdr = (void*) entry->skb->data;
++		if (!success && tx_info->control.sta != NULL && ieee80211_is_data_qos(hdr->frame_control)) {
++			/*
++			 * Tear down BA session
++			 */
++			struct ieee80211_sta *sta = tx_info->control.sta;
++			u8 *qc = ieee80211_get_qos_ctl(hdr);
++			int tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
++
++			ieee80211_stop_tx_ba_session(sta, tid);
++		}
+ 	}
+ 
+ 	if (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
 
-Thanks,
-> 
-> Larry
-> 
-> 
+
+but the machine does crash anyway. Could hdr be null, too?
+
+Andreas
