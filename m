@@ -1,71 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:44165 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752606Ab2ABVui (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:57570 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751122Ab2AWQg6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 16:50:38 -0500
-Date: Mon, 2 Jan 2012 21:50:28 +0000
-From: Matthew Garrett <mjg@redhat.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jack Stone <jwjstone@fastmail.fm>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Oliver Neukum <oliver@neukum.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-Message-ID: <20120102215028.GA15701@srcf.ucam.org> (sfid-20120102_225102_285659_C280AB95)
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
- <4F02165C.1060400@fastmail.fm>
- <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
- <20120102211904.GA15316@srcf.ucam.org>
- <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
+	Mon, 23 Jan 2012 11:36:58 -0500
+Received: by pbaa10 with SMTP id a10so1707683pba.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2012 08:36:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
+In-Reply-To: <4F1D84CE.8020403@maya.org>
+References: <4EFF12D9.3010602@01019freenet.de>
+	<2766356.70ylY68Gqi@helmutmobil.site>
+	<4F040FEA.3080703@01019freenet.de>
+	<1408490.qSFZVkU7fA@helmutmobil.site>
+	<4F0562DF.3000200@dualc.maya.org>
+	<CAGXE3d8b5qtbhesPjRy3EXvkiwshUg0eZqcDBzb1OhKK3j6z6A@mail.gmail.com>
+	<4F0AEBAB.9020104@01019freenet.de>
+	<CAGXE3d-cOeTEHugbgWMoz8-Dymw0=JHxykdK4ZkBmCJZ9tSPmg@mail.gmail.com>
+	<201201100803.q0A83nsQ003757@mail.maya.org>
+	<CAGXE3d_jW7NFnekMfwn6JPXX0xB4UWM3ttbRVLv-ZbsoMOoWEw@mail.gmail.com>
+	<201201200730.q0K7U0oj004966@mail.maya.org>
+	<CAGXE3d_rCMYwoEBNjk+S7WvAmCkPMcq-Gpawm370-cSbjXy6rg@mail.gmail.com>
+	<4F1D84CE.8020403@maya.org>
+Date: Mon, 23 Jan 2012 17:36:57 +0100
+Message-ID: <CAGXE3d_UPmcjgss+xMPBtkM22kBwGD23y8Fzxkr+6286W+EwbQ@mail.gmail.com> (sfid-20120123_173702_480412_7EDC9710)
+Subject: Re: Compat-wireless-3.2-rc6-3 is broken for rt2860 device
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Andreas Hartmann <andihartmann@freenet.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 02, 2012 at 01:27:03PM -0800, Linus Torvalds wrote:
+On Mon, Jan 23, 2012 at 5:03 PM, Andreas Hartmann
+<andihartmann@freenet.de> wrote:
+> Helmut Schaa schrieb:
+>> On Fri, Jan 20, 2012 at 8:29 AM, Andreas Hartmann
+>> <andihartmann@01019freenet.de> wrote:
+>>> All in one: Your workaround was a good idea, but unfortunately it
+>>> doesn't "solve" / workaround the problem introduced with the patch
+>>> "mac80211: retry sending failed BAR frames later instead of tearing
+>>> down aggr" [1]. I don't know off any other solution at this time as to revert it.
+>>
+>> Ok, so we've got at least one hw issue here: rt2800 is not able to report
+>> correct ACK state of BARs :(
+>>
+>> The interesting bit is that the legacy drivers tear the BA session down as
+>> soon as the first AMPDU subframe failed. That's the same behavior as
+>> mac80211 had before the mentioned patch.
+>>
+>> So, let's assume the generic way Felix implemented works for other devices
+>> (like ath9k) we could go with a workaround inside rt2x00 to tear down
+>> the BA session as soon as the first AMPDU frame failed.
+>>
+>> Mind to try that one (not even compile tested though :) ).
+>
+> hdr is missing. I tried to derive it like this:
+>
+> struct ieee80211_hdr *hdr=(void*)entry->skb->data;
 
-> If we didn't load the firmware before the suspend, then the resume
-> function of a device sure as hell had better not load it at resume
-> time either.
+Looks correct but you should put it right before the ieee80211_is_data_qos check
+not at the start of the function ...
 
-If the hardware has lost its state then refusing to load the firmware at 
-resume time isn't going to leave you with a working device.
+Also you might want to add " tx_info->control.sta != NULL" check in
+the same if clause.
 
-> And for chrissake, don't bother making it more complicated than it is,
-> just for some theoretical hardware or situation that nobody cares
-> about.
-
-It's not theoretical hardware. This appears to be the current behaviour 
-of the isight devices. If you reboot they retain their firmware. If you 
-suspend, they don't. So if we have a flow like this:
-
-1) user boots from cold. Device comes up with generic USB ID.
-2) isight_firmware loads and binds. Firmware is loaded. Device 
-disconnects and reconnects with an ID that's bound by the UVC driver.
-3) user reboots. Device comes up with UVC ID. isight_firmware doesn't 
-bind.
-4) user suspends.
-5) user resumes. isight_firmware binds and attempts to load firmware.
-
-then just caching the firmware is inadequate - we had never previously 
-seen the device on this boot, so we've never loaded it in order to cache 
-it. isight_firmware could unconditionally load the firmware on module 
-load just in case a device is plugged in, but that seems even less 
-elegant than caching it.
-
-Now this is obviously somewhat mitigated because isight_firmware won't 
-have been autoloaded at (3), so won't be there at (5) unless the user's 
-manually loaded it. But insmodding a driver shouldn't result in stuff 
-breaking later.
-
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Helmut
