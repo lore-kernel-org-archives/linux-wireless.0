@@ -1,98 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout4.freenet.de ([195.4.92.94]:34146 "EHLO mout4.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752615Ab2AYNCT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jan 2012 08:02:19 -0500
-Message-ID: <4F1FFC87.3060206@01019freenet.de> (sfid-20120125_140234_434159_6B78848A)
-Date: Wed, 25 Jan 2012 13:58:47 +0100
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:48516 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752057Ab2AWN3J (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jan 2012 08:29:09 -0500
+Received: by dake40 with SMTP id e40so1607872dak.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2012 05:29:09 -0800 (PST)
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 4/4] rt2800usb: remove PWR_PIN_CFG=0x3
- during init
-References: <1327410549-4714-1-git-send-email-sgruszka@redhat.com> <1327410549-4714-4-git-send-email-sgruszka@redhat.com> <201201241737.q0OHbmX5003698@mail.maya.org> <20120125095407.GA3406@redhat.com>
-In-Reply-To: <20120125095407.GA3406@redhat.com>
+In-Reply-To: <201201200730.q0K7U0oj004966@mail.maya.org>
+References: <4EFF12D9.3010602@01019freenet.de>
+	<2766356.70ylY68Gqi@helmutmobil.site>
+	<4F040FEA.3080703@01019freenet.de>
+	<1408490.qSFZVkU7fA@helmutmobil.site>
+	<4F0562DF.3000200@dualc.maya.org>
+	<CAGXE3d8b5qtbhesPjRy3EXvkiwshUg0eZqcDBzb1OhKK3j6z6A@mail.gmail.com>
+	<4F0AEBAB.9020104@01019freenet.de>
+	<CAGXE3d-cOeTEHugbgWMoz8-Dymw0=JHxykdK4ZkBmCJZ9tSPmg@mail.gmail.com>
+	<201201100803.q0A83nsQ003757@mail.maya.org>
+	<CAGXE3d_jW7NFnekMfwn6JPXX0xB4UWM3ttbRVLv-ZbsoMOoWEw@mail.gmail.com>
+	<201201200730.q0K7U0oj004966@mail.maya.org>
+Date: Mon, 23 Jan 2012 14:29:08 +0100
+Message-ID: <CAGXE3d_rCMYwoEBNjk+S7WvAmCkPMcq-Gpawm370-cSbjXy6rg@mail.gmail.com> (sfid-20120123_142927_220094_7311B02F)
+Subject: Re: Compat-wireless-3.2-rc6-3 is broken for rt2860 device
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka schrieb:
-> Hello
-> 
-> On Tue, Jan 24, 2012 at 06:37:45PM +0100, Andreas Hartmann wrote:
->> Stanislaw Gruszka schrieb:
->>> This seems to be only needed as workaround for hardware problem on 
->>> PCI devices.
->>
->> I tested this series (with all other resent patches applied) against a
->> rt3572usb based device (Linksys WUSB600N) on to different machines
->> (64bit smp (linux 3.2.1) and 32bit single core (linux 2.6.37.6)). I
->> couldn't see any functional change. Unfortunately it's as bad as
->> always :-(.
->>
->> But one thing is new: I'm getting now these errors in messages (with
->> kernel 3.2.1) in the moment of the stall (which never stops until the
->> module is unloaded (or I didn't display enough patience)):
->>
->>
->> Jan 24 18:10:23 nb kernel: [  798.289036] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
-> This is write to BBP_CSR_CFG. I don't know, which patch is is responsible
-> for that error (patch4 looks most suspicious), can you check those 4 patches
-> one by one, and tell us which is causing this error? 
+On Fri, Jan 20, 2012 at 8:29 AM, Andreas Hartmann
+<andihartmann@01019freenet.de> wrote:
+> All in one: Your workaround was a good idea, but unfortunately it
+> doesn't "solve" / workaround the problem introduced with the patch
+> "mac80211: retry sending failed BAR frames later instead of tearing
+> down aggr" [1]. I don't know off any other solution at this time as to revert it.
 
-I removed Patch 1 and 4 - the problem didn't change. I think it's not
-patch related, but system related: This was the first time, I tested
-with this notebook (because compiling is much more fast :-)) and to get
-more timing issues: this notebook is a Core i5 (the other was a
-CeleronM). Besides that, there is another kernel version (3.2 vs.
-2.6.37.6) and a completely new compat-wireless.
+Ok, so we've got at least one hw issue here: rt2800 is not able to report
+correct ACK state of BARs :(
 
-But I can say one more thing:
+The interesting bit is that the legacy drivers tear the BA session down as
+soon as the first AMPDU subframe failed. That's the same behavior as
+mac80211 had before the mentioned patch.
 
-If this error above came up, the device isn't detected any more. Even
-reloading of the complete wireless stack is useless:
+So, let's assume the generic way Felix implemented works for other devices
+(like ath9k) we could go with a workaround inside rt2x00 to tear down
+the BA session as soon as the first AMPDU frame failed.
 
-11329.157039] cfg80211: Calling CRDA to update world regulatory domain
-[11329.164191] cfg80211: World regulatory domain updated:
-[11329.164200] cfg80211:   (start_freq - end_freq @ bandwidth),
-(max_antenna_gain, max_eirp)
-[11329.164202] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300
-mBi, 2000 mBm)
-[11329.164204] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz), (300
-mBi, 2000 mBm)
-[11329.164206] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300
-mBi, 2000 mBm)
-[11329.164208] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300
-mBi, 2000 mBm)
-[11329.164209] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300
-mBi, 2000 mBm)
-[11329.246554] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request
-0x07 failed for offset 0x0580 with error -19.
-[11329.246585] phy0 -> rt2800_init_eeprom: Error - Invalid RT chipset
-detected.
-[11329.246590] phy0 -> rt2x00lib_probe_dev: Error - Failed to allocate
-device.
-[11329.246688] usbcore: registered new interface driver rt2800usb
-[11329.246863] usb 2-1.6: USB disconnect, device number 4
+Mind to try that one (not even compile tested though :) ).
 
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+---
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c
+b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index c930ce0..9038934 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -420,8 +420,16 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ 		tx_info->status.ampdu_len = 1;
+ 		tx_info->status.ampdu_ack_len = success ? 1 : 0;
 
-You have to replug the device to get it detected again.
+-		if (!success)
+-			tx_info->flags |= IEEE80211_TX_STAT_AMPDU_NO_BACK;
++		if (!success && ieee80211_is_data_qos(hdr->frame_control)) {
++			/*
++			 * Tear down BA session
++			 */
++			struct ieee80211_sta *sta = tx_info->control.sta;
++			u8 *qc = ieee80211_get_qos_ctl(hdr);
++			int tid = *qc & IEEE80211_QOS_CTL_TID_MASK;
++
++			ieee80211_stop_tx_ba_session(sta, tid);
++		}
+ 	}
 
-Some more details about what is concretely broken (tested with netperf):
-
-AP -> STA 	2.4 MBit/s (if it doesn't stall)
-STA -> AP	doesn't work at all
-
-BTW: the performance should be at this location about 65 MBit/s
-(AP->STA) or 55 MBit/s (STA-AP).
-
-
-Well, I think, that the device is just overrun. The USB-handling looks
-really odd. See here:
-http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2011-November/004278.html
-
-
-Kind regards,
-Andreas
+ 	if (rate_flags & IEEE80211_TX_RC_USE_RTS_CTS) {
