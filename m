@@ -1,58 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:50250 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751653Ab2AWSQC (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:62044 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752263Ab2AWM5I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jan 2012 13:16:02 -0500
-Received: by bkas6 with SMTP id s6so2710890bka.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2012 10:16:01 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Brad Bellomo <bvbellomo@gmail.com>
-Subject: Re: frustrated by carl9170
-Date: Mon, 23 Jan 2012 19:15:48 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <CALY7HC+gbzBmYJK3qQ0aMip_z6utA9jq2ZU6LtDrWpUOGn03CQ@mail.gmail.com>
-In-Reply-To: <CALY7HC+gbzBmYJK3qQ0aMip_z6utA9jq2ZU6LtDrWpUOGn03CQ@mail.gmail.com>
+	Mon, 23 Jan 2012 07:57:08 -0500
+Date: Mon, 23 Jan 2012 14:56:55 +0200
+From: Johan Hedberg <johan.hedberg@gmail.com>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2012-01-03
+Message-ID: <20120123125655.GA20973@x220.ger.corp.intel.com> (sfid-20120123_135725_923746_AF86E2E0)
+References: <20120103033320.GG1472@joana>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201201231915.48430.chunkeey@googlemail.com> (sfid-20120123_191607_467768_7AC4C1D8)
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20120103033320.GG1472@joana>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi John,
 
-On Monday, January 23, 2012 05:59:18 PM Brad Bellomo wrote:
-> I have a NetGear wireless n draft dongle that uses the carl9170 driver
-> on an Arch system.  This module works for anywhere from several
-> minutes to several hours.  Then I have lose all ability to use TCP/IP
-> over my wireless until I modprobe -r carl9170, modprobe carl9170, and
-> reconnect my network.  Although ar9170usb worked fine, I would rather
-> troubleshoot this than revert to a deprecated driver, or at worst
-> case, buy a better supported device.  I do not see anything relevant
-> in my dmesg log.  Does this device log errors somewhere else?  Is
-> carl9170 actively being developed?  I don't mind digging into code
-> myself, but if no one is working on carl9170, I would rather buy new
-> hardware (recommendations appreciated) than spend time fixing
-> something with no future.
-There's not a lot of debug information in your post. e.g.: what's
-the exact hardware? From where is the carl9170 driver coming from,
-[kernel-version, or compat-wireless?] what's the firmware version?
-Furthermore, a bit of background information about your setup wouldn't
-hurt either.
-[e.g.: What AP (and firmware)? Do you use HT20/HT40? which frequency band
-and encryption setting].
+On Tue, Jan 03, 2012, Gustavo Padovan wrote:
+> A couple of fixes for the 3.3 release. The majority of the fixes are related
+> to the change from tasklets to workqueue in the Bluetooth Core. The rest are
+> important fixes over the tree. Exception is "Bluetooth: Rename extfeatures¨,
+> as the name says it is just a rename and no harm, but it is a preparation for
+> a following fix.
+> 
+> Please pull, or let me know any concerns you have!
+> 
+> 	Gustavo
+> 
+> --
+> The following changes since commit dc0d633e35643662f27a0b1c531da3cd6b204b9c:
+> 
+>   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next (2012-01-02 16:43:54 -0500)
+> 
+> are available in the git repository at:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next master
+> 
+> Andre Guedes (5):
+>       Bluetooth: Rename extfeatures
+>       Bluetooth: Fix hci_cc_read_local_ext_features()
+>       Bluetooth: Fix adv_work delay
+>       Bluetooth: Queue adv_work on system workqueue
+>       Bluetooth: Fix mgmt_stop_discovery_failed()
+> 
+> Andrei Emeltchenko (1):
+>       Bluetooth: Correct packet len calculation
+> 
+> Gustavo F. Padovan (8):
+>       Bluetooth: Fix bacpy in l2cap_core.c
+>       Bluetooth: Fix context in rfcomm_sock_lock
+>       Bluetooth: Fix context in RFCOMM tty
+>       Bluetooth: Remove *_bh locks from SCO
+>       Bluetooth: Remove local_bh_disable() from hci_sock.c
+>       Bluetooth: Remove *_bh from socket list lock.
+>       Bluetooth: Don't use *_bh locks anymore
+>       Bluetooth: Keep chan->state and sk->sk_state in sync
+> 
+>  include/net/bluetooth/hci_core.h |    4 ++--
+>  net/bluetooth/af_bluetooth.c     |    8 ++++----
+>  net/bluetooth/hci_event.c        |   22 +++++++++++++---------
+>  net/bluetooth/hci_sock.c         |    2 --
+>  net/bluetooth/l2cap_core.c       |   26 +++++++++++++-------------
+>  net/bluetooth/l2cap_sock.c       |    2 ++
+>  net/bluetooth/mgmt.c             |    4 ++--
+>  net/bluetooth/rfcomm/sock.c      |   12 ++++++------
+>  net/bluetooth/rfcomm/tty.c       |   22 +++++++++++-----------
+>  net/bluetooth/sco.c              |    8 ++++----
+>  10 files changed, 57 insertions(+), 53 deletions(-)
+> --
 
-When the device "stops". Do you know if it fails to receive
-any data or if it has problems with outgoing traffic? Also what
-is wpa_supplicant doing at the time when it fails?
+Are you planing to pull this? I've been waiting for that before making
+any new pull requests from my (temporary) bluetooth-next tree[1]. If
+that's not gonna happen I'll go ahead rebase my tree against latest
+wireless-next (including these patches and all other ones that Marcel
+has acked since Gustavo started his break), and make a new pull request
+to you in the near future.
 
-The driver itself exports a debugfs interface under
-/sys/kernel/debug/ieee80211/phy$X/carl9170
+Johan
 
-Of course, you are welcome to debug and run experiments on your own.
-If you come across something peculiar (which can be reproduced) then
-let me know.
-
-Regards,
-	Chr
+[1] http://git.kernel.org/?p=linux/kernel/git/jh/bluetooth-next.git;a=summary
