@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1676 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751538Ab2AETjn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 14:39:43 -0500
-Message-ID: <4F05FC76.5070509@broadcom.com> (sfid-20120105_203946_144950_A00C9C08)
-Date: Thu, 5 Jan 2012 11:39:34 -0800
-From: "Franky Lin" <frankyl@broadcom.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:34152 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750757Ab2AWSJa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jan 2012 13:09:30 -0500
+Received: by ggnb1 with SMTP id b1so1484486ggn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2012 10:09:30 -0800 (PST)
 MIME-Version: 1.0
-To: "Stephen Hemminger" <shemminger@vyatta.com>
-cc: "Arend Van Spriel" <arend@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] brcmfmac: use existing net_device_stats
-References: <20120105183947.295358582@vyatta.com>
- <20120105184000.572918423@vyatta.com> <4F05F60C.5030406@broadcom.com>
- <20120105111554.57f411d0@nehalam.linuxnetplumber.net>
-In-Reply-To: <20120105111554.57f411d0@nehalam.linuxnetplumber.net>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+In-Reply-To: <CAB=NE6V26e6caZwCyO2chiZ_7iGVkoD_jtKsxfCLSHumrOp=Wg@mail.gmail.com>
+References: <1327338154-3806-1-git-send-email-eliad@wizery.com>
+	<CAB=NE6V26e6caZwCyO2chiZ_7iGVkoD_jtKsxfCLSHumrOp=Wg@mail.gmail.com>
+Date: Mon, 23 Jan 2012 20:09:30 +0200
+Message-ID: <CAB3XZEdo2zBRvyhv39jm98n146w_ppNmi-OR+VBTNj+ReuOyhg@mail.gmail.com> (sfid-20120123_190934_575269_FFEED40E)
+Subject: Re: [PATCH] compat-wireless: fix wl12xx driver-select
+From: Eliad Peller <eliad@wizery.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/2012 11:15 AM, Stephen Hemminger wrote:
-> On Thu, 5 Jan 2012 20:12:12 +0100
-> "Arend van Spriel"<arend@broadcom.com>  wrote:
->
->> On 01/05/2012 07:39 PM, Stephen Hemminger wrote:
->>> Minor space savings. Compile tested only.
->>>
+On Mon, Jan 23, 2012 at 7:23 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+> On Mon, Jan 23, 2012 at 9:02 AM, Eliad Peller <eliad@wizery.com> wrote:
+>> wl12xx is a possible choice for both group drivers and
+>> singular modules (making it impossible to build only
+>> the wl12xx module). change the group name to "ti" instead.
 >>
->> This is actually not going to work. The struct brcmf_if represents
->> individual interfaces which each have their own device statistics.
->>
+>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>> ---
 >
-> Why not, if you  look it is only used during the aggregation and return
-> of netdevice stats.
+> Is this a stable fix for linux-3.3.y branch of compat-wireless or only
+> for the master branch ?
 >
+this is a stable fix (not very important one, though. only avoids some
+redundant compilations).
 
-We only support one primary interface at the moment. But we have plan to 
-add P2P support using virtual interfaces. It would be better to have 
-individual stats for different interfaces.
-
-Thanks,
-Franky
-
+Eliad.
