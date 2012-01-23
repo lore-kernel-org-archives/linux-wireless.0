@@ -1,67 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37644 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751625Ab2ATNiz (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:42951 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753090Ab2AWS1C convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 08:38:55 -0500
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH v2 8/8] ath6kl: Wait for host sleep mode cmd processed event during WOW suspend
-Date: Fri, 20 Jan 2012 19:05:44 +0530
-Message-ID: <1327066544-23779-9-git-send-email-rmani@qca.qualcomm.com> (sfid-20120120_143859_119487_10F709C9)
-In-Reply-To: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com>
-References: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com>
+	Mon, 23 Jan 2012 13:27:02 -0500
+Received: by ggnb1 with SMTP id b1so1497283ggn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2012 10:27:02 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4F1DA06C.5080605@hauke-m.de>
+References: <1327153475-28081-1-git-send-email-hauke@hauke-m.de>
+ <CAB=NE6UBBRg53EjW3t8YEUoGLvQS00dnx6Z=-rmBa7pb-D_TCg@mail.gmail.com>
+ <201201231755.q0NHtQUR002682@mail.maya.org> <CAB=NE6VL5P2zpryoVHni6NjF1EpNML5Oe-A3n3YUXygcU1_K4w@mail.gmail.com>
+ <4F1DA06C.5080605@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 23 Jan 2012 10:26:41 -0800
+Message-ID: <CAB=NE6W3Vu6LDWK+O6jECRH2So76ZMGD14JtR1d=J-QyasZQfA@mail.gmail.com> (sfid-20120123_192707_827232_B26C0A27)
+Subject: Re: [PATCH] compat: add __cancel_delayed_work()
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: Andreas Hartmann <andihartmann@01019freenet.de>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+On Mon, Jan 23, 2012 at 10:01 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> On 01/23/2012 06:57 PM, Luis R. Rodriguez wrote:
+>> On Mon, Jan 23, 2012 at 9:55 AM, Andreas Hartmann
+>> <andihartmann@01019freenet.de> wrote:
+>>> Luis R. Rodriguez schrieb:
+>>>> On Sat, Jan 21, 2012 at 5:44 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>>>> __cancel_delayed_work is needed by include/net/bluetooth/l2cap.h and
+>>>>> not available in old kernel versions. This was just copied from the
+>>>>> kernel.
+>>>>>
+>>>>> This should also go into compat-wireless-stable-3.3.
+>>>>>
+>>>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>>>>
+>>>> Thanks! Applied all onto compat-wireless.git and compat.git, in
+>>>> addition to the linux-3.3.y branch for compat.git as you indicated for
+>>>> this patch. Will roll out a new tarball right away.
+>>>
+>>> BTW: I've to apply always the following patch to some older
+>>> compat-wireless packages (3.2 e.g) to get it compiled with kernel 3.1:
+>>>
+>>> --- drivers/misc/eeprom/Makefile.orig   2012-01-10 02:10:51.000000000 +0100
+>>> +++ drivers/misc/eeprom/Makefile        2012-01-10 05:14:40.082494612 +0100
+>>> @@ -1,3 +1,3 @@
+>>>  obj-$(CONFIG_EEPROM_93CX6)     += eeprom_93cx6.o
+>>> -obj-$(CONFIG_EEPROM_93XX46)    += eeprom_93xx46.o
+>>> +# obj-$(CONFIG_EEPROM_93XX46)  += eeprom_93xx46.o
+>>>  obj-$(CONFIG_EEPROM_DIGSY_MTC_CFG) += digsy_mtc_eeprom.o
+>>>
+>>> Is this eventually needed in 3.3, too?
+>>
+>> Why do you need this? Can you show your compile errors?
+>>
+>>   Luis
+>
+> This is fixed in HEAD in this commit:
+>
+> commit 0db9fae8c40674f65cf50c78e6587b9c9d9e2735
+> Author: Hauke Mehrtens <hauke@hauke-m.de>
+> Date:   Sat Dec 3 15:46:21 2011 +0100
+>
+>    compat-wireless: remove some modules from Makefile
+>
+> It should be backported to linux-3.1.y and linux-3.2.y. We just ship
+> eeprom_93cx6.c and nothing else in this directory.
 
-ath6kl_wow_suspend() has to wait until get an
-WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENT after sending
-set host sleep mode command.
+Thanks, I've applied this onto those branches and upon a new release
+those will get the fixes.
 
-This wait creates perfect sync with the firmware before
-the driver enter into wow suspend state.
-
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 038d63b..2d40fd0 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1976,11 +1976,25 @@ skip_arp:
- 	if (ret)
- 		return ret;
- 
-+	clear_bit(HOST_SLEEP_MODE_CMD_PROCESSED, &vif->flags);
-+
- 	ret = ath6kl_wmi_set_host_sleep_mode_cmd(ar->wmi, vif->fw_vif_idx,
- 						 ATH6KL_HOST_MODE_ASLEEP);
- 	if (ret)
- 		return ret;
- 
-+	left = wait_event_interruptible_timeout(ar->event_wq,
-+			test_bit(HOST_SLEEP_MODE_CMD_PROCESSED, &vif->flags),
-+			WMI_TIMEOUT);
-+	if (left == 0) {
-+		ath6kl_warn("timeout, didn't get host sleep cmd processed event\n");
-+		ret = -ETIMEDOUT;
-+	} else if (left < 0) {
-+		ath6kl_warn("error while waiting for host sleep cmd processed event %d\n",
-+			    left);
-+		ret = left;
-+	}
-+
- 	if (ar->tx_pending[ar->ctrl_ep]) {
- 		left = wait_event_interruptible_timeout(ar->event_wq,
- 				ar->tx_pending[ar->ctrl_ep] == 0, WMI_TIMEOUT);
--- 
-1.7.1
-
+  Luis
