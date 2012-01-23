@@ -1,44 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:45509 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932718Ab2ASUsz convert rfc822-to-8bit (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:53975 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751990Ab2AWR5n convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jan 2012 15:48:55 -0500
-Received: by wgbdq11 with SMTP id dq11so382990wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2012 12:48:54 -0800 (PST)
+	Mon, 23 Jan 2012 12:57:43 -0500
+Received: by ggnb1 with SMTP id b1so1475571ggn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2012 09:57:42 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20120119141644.GB3320@tuxdriver.com>
-References: <1326491706-14970-1-git-send-email-zajec5@gmail.com>
-	<1326491706-14970-2-git-send-email-zajec5@gmail.com>
-	<1326975859.2054.14.camel@shinybook.infradead.org>
-	<CACna6rynAD9Rxsbmxd2UROrfwEQt65yV=FUR8jGSsDgiBhRiww@mail.gmail.com>
-	<1326977309.2054.16.camel@shinybook.infradead.org>
-	<CAD3=kO+kLO5-1ZY-X=7TsdEBrgzqQQF8uEVwrtu2eGduhAC6jQ@mail.gmail.com>
-	<1326979070.2054.17.camel@shinybook.infradead.org>
-	<20120119141644.GB3320@tuxdriver.com>
-Date: Thu, 19 Jan 2012 21:48:54 +0100
-Message-ID: <CACna6rwnWJTj3R61Y+fAeb8BbpiAtcN+vBpZHhv9ta3xR0CDgA@mail.gmail.com> (sfid-20120119_214900_066339_6A9B5A4C)
-Subject: Re: [PATCH V3 2/2] MAINTAINERS: add b43 mailing list
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	Gregory Bellier <gregory.bellier@gmail.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+In-Reply-To: <201201231755.q0NHtQUR002682@mail.maya.org>
+References: <1327153475-28081-1-git-send-email-hauke@hauke-m.de>
+ <CAB=NE6UBBRg53EjW3t8YEUoGLvQS00dnx6Z=-rmBa7pb-D_TCg@mail.gmail.com> <201201231755.q0NHtQUR002682@mail.maya.org>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 23 Jan 2012 09:57:21 -0800
+Message-ID: <CAB=NE6VL5P2zpryoVHni6NjF1EpNML5Oe-A3n3YUXygcU1_K4w@mail.gmail.com> (sfid-20120123_185746_287508_5542B5E2)
+Subject: Re: [PATCH] compat: add __cancel_delayed_work()
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/1/19 John W. Linville <linville@tuxdriver.com>:
-> On Fri, Jan 20, 2012 at 12:17:50AM +1100, David Woodhouse wrote:
->> On Thu, 2012-01-19 at 14:16 +0100, Gregory Bellier wrote:
->> > Maybe you did that to avoid spamming… ?
+On Mon, Jan 23, 2012 at 9:55 AM, Andreas Hartmann
+<andihartmann@01019freenet.de> wrote:
+> Luis R. Rodriguez schrieb:
+>> On Sat, Jan 21, 2012 at 5:44 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>> __cancel_delayed_work is needed by include/net/bluetooth/l2cap.h and
+>>> not available in old kernel versions. This was just copied from the
+>>> kernel.
+>>>
+>>> This should also go into compat-wireless-stable-3.3.
+>>>
+>>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 >>
->> It's a crappy way to avoid spamming. We should be able to do better.
->> Filtering out all HTML goes a long way :)
+>> Thanks! Applied all onto compat-wireless.git and compat.git, in
+>> addition to the linux-3.3.y branch for compat.git as you indicated for
+>> this patch. Will roll out a new tarball right away.
 >
-> So...do we need another MAINTAINERS patch now?
+> BTW: I've to apply always the following patch to some older
+> compat-wireless packages (3.2 e.g) to get it compiled with kernel 3.1:
+>
+> --- drivers/misc/eeprom/Makefile.orig   2012-01-10 02:10:51.000000000 +0100
+> +++ drivers/misc/eeprom/Makefile        2012-01-10 05:14:40.082494612 +0100
+> @@ -1,3 +1,3 @@
+>  obj-$(CONFIG_EEPROM_93CX6)     += eeprom_93cx6.o
+> -obj-$(CONFIG_EEPROM_93XX46)    += eeprom_93xx46.o
+> +# obj-$(CONFIG_EEPROM_93XX46)  += eeprom_93xx46.o
+>  obj-$(CONFIG_EEPROM_DIGSY_MTC_CFG) += digsy_mtc_eeprom.o
+>
+> Is this eventually needed in 3.3, too?
 
-If we just make sure it's working well - yes.
+Why do you need this? Can you show your compile errors?
 
--- 
-Rafał
+  Luis
