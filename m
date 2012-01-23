@@ -1,44 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:50475 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756251Ab2AXUQP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 15:16:15 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] ath5k: use bool type for no_hw_rfkill_switch module parameter
-Date: Tue, 24 Jan 2012 15:01:32 -0500
-Message-Id: <1327435292-25050-1-git-send-email-linville@tuxdriver.com> (sfid-20120124_211621_342898_29BFB8CC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:36683 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751116Ab2AWPW1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jan 2012 10:22:27 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH -stable 3.0] iwlagn: check for SMPS mode
+Date: Mon, 23 Jan 2012 16:22:05 +0100
+Message-Id: <1327332125-10910-1-git-send-email-sgruszka@redhat.com> (sfid-20120123_162229_454182_65E27132)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Avoids this:
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-  CC [M]  drivers/net/wireless/ath/ath5k/base.o
-drivers/net/wireless/ath/ath5k/base.c: In function ‘__check_no_hw_rfkill_switch’:
-drivers/net/wireless/ath/ath5k/base.c:85:1: warning: return from incompatible pointer type
+commit b2ccccdca46273c7b321ecf5041c362cd950da20 upstream.
 
+Check and report WARN only when its invalid.
+
+Resolves:
+https://bugzilla.kernel.org/show_bug.cgi?id=42621
+https://bugzilla.redhat.com/show_bug.cgi?id=766071
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ath/ath5k/base.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    3 +++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 4ab835f..a339693 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -80,7 +80,7 @@ static bool modparam_fastchanswitch;
- module_param_named(fastchanswitch, modparam_fastchanswitch, bool, S_IRUGO);
- MODULE_PARM_DESC(fastchanswitch, "Enable fast channel switching for AR2413/AR5413 radios.");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 3bee0f1..9702b16 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1759,6 +1759,7 @@ static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
+ 	case IEEE80211_SMPS_STATIC:
+ 	case IEEE80211_SMPS_DYNAMIC:
+ 		return IWL_NUM_IDLE_CHAINS_SINGLE;
++	case IEEE80211_SMPS_AUTOMATIC:
+ 	case IEEE80211_SMPS_OFF:
+ 		return active_cnt;
+ 	default:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index eabbf1a..fd7ab4c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -573,6 +573,9 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
  
--static int ath5k_modparam_no_hw_rfkill_switch;
-+static bool ath5k_modparam_no_hw_rfkill_switch;
- module_param_named(no_hw_rfkill_switch, ath5k_modparam_no_hw_rfkill_switch,
- 								bool, S_IRUGO);
- MODULE_PARM_DESC(no_hw_rfkill_switch, "Ignore the GPIO RFKill switch state");
+ 	mutex_lock(&priv->mutex);
+ 
++	if (test_bit(STATUS_EXIT_PENDING, &priv->status))
++		goto out;
++
+ 	if (unlikely(test_bit(STATUS_SCANNING, &priv->status))) {
+ 		IWL_DEBUG_MAC80211(priv, "leave - scanning\n");
+ 		goto out;
 -- 
-1.7.4.4
+1.7.1
 
