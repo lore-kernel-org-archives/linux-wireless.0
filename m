@@ -1,33 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:43560 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751024Ab2ALQ1S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jan 2012 11:27:18 -0500
-Received: by eekd4 with SMTP id d4so828637eek.19
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2012 08:27:17 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 0/2] bcma/b43: update MAINTAINERS
-Date: Thu, 12 Jan 2012 17:28:58 +0100
-Message-Id: <1326385740-11203-1-git-send-email-zajec5@gmail.com> (sfid-20120112_172723_300241_8141971F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.neratec.ch ([80.75.119.105]:60925 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752691Ab2AWOk1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jan 2012 09:40:27 -0500
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Subject: [PATCH 0/2] Add STBC flag decoding for radiotap
+Date: Mon, 23 Jan 2012 15:27:39 +0100
+Message-Id: <1327328861-7223-1-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20120123_154034_977571_02F2E35B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John can you take that patches via your tree?
+These patches have been originally posted on radiotap.org on 3 Nov 2011
+and followed radiotap standardisation process.
 
-Rafał Miłecki (2):
-  MAINTAINERS: move BCMA to keep the list sorted
-  MAINTAINERS: add b43 mailing list
+Wireshark counterpart is on:
+https://bugs.wireshark.org/bugzilla/show_bug.cgi?id=6720
 
- MAINTAINERS |   15 ++++++++-------
- 1 files changed, 8 insertions(+), 7 deletions(-)
+
+Wojciech Dubowik (2):
+  mac80211: Add STBC RX flag to radiotap.     Signed-off-by: Wojciech
+    Dubowik <Wojciech.Dubowik@neratec.com>
+  ath9k: Add STBC flag to rx status     Signed-off-by: Wojciech Dubowik
+    <Wojciech.Dubowik@neratec.com>
+
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |    1 +
+ drivers/net/wireless/ath/ath9k/mac.c        |    2 ++
+ drivers/net/wireless/ath/ath9k/mac.h        |    4 +++-
+ drivers/net/wireless/ath/ath9k/recv.c       |    2 ++
+ include/net/ieee80211_radiotap.h            |    3 ++-
+ include/net/mac80211.h                      |    1 +
+ net/mac80211/rx.c                           |    5 ++++-
+ 7 files changed, 15 insertions(+), 3 deletions(-)
 
 -- 
-1.7.7
+1.7.4.1
 
