@@ -1,70 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:58508 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751539Ab2AZMj4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 07:39:56 -0500
-Received: by yenm10 with SMTP id m10so205981yen.0
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 04:39:55 -0800 (PST)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
-	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
-	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
-	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
-	<nbd@nbd.name>
-Subject: [RFC 9/9] mac80211: add DFS support to monitor interface
-Date: Thu, 26 Jan 2012 14:38:04 +0200
-Message-Id: <1327581484-22047-10-git-send-email-victorg@ti.com> (sfid-20120126_133959_899850_0DA830C1)
-In-Reply-To: <1327581484-22047-1-git-send-email-victorg@ti.com>
-References: <1327581484-22047-1-git-send-email-victorg@ti.com>
+Received: from mail.neratec.ch ([80.75.119.105]:60926 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752780Ab2AWOk2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jan 2012 09:40:28 -0500
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Subject: [PATCH 2/2] ath9k: Add STBC flag to rx status Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Date: Mon, 23 Jan 2012 15:27:41 +0100
+Message-Id: <1327328861-7223-3-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20120123_154032_145039_92305A51)
+In-Reply-To: <1327328861-7223-1-git-send-email-Wojciech.Dubowik@neratec.com>
+References: <1327328861-7223-1-git-send-email-Wojciech.Dubowik@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stop dropping packets if we are on 'radar channel'
-and the DFS is enabled/supported.
-
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
 ---
- net/mac80211/tx.c |   15 +++++++++------
- 1 files changed, 9 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |    1 +
+ drivers/net/wireless/ath/ath9k/mac.c        |    2 ++
+ drivers/net/wireless/ath/ath9k/mac.h        |    4 +++-
+ drivers/net/wireless/ath/ath9k/recv.c       |    2 ++
+ 4 files changed, 8 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index edcd1c7..2c728a4 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1569,6 +1569,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	struct ieee80211_sub_if_data *tmp_sdata, *sdata;
- 	u16 len_rthdr;
- 	int hdrlen;
-+	bool dfs_supported = !!(local->hw.wiphy->flags &
-+				WIPHY_FLAG_SUPPORTS_DFS);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 09b8c9d..f270854 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -503,6 +503,7 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+ 	rxs->rs_antenna = (MS(rxsp->status4, AR_RxAntenna) & 0x7);
+ 	rxs->rs_flags  = (rxsp->status4 & AR_GI) ? ATH9K_RX_GI : 0;
+ 	rxs->rs_flags  |= (rxsp->status4 & AR_2040) ? ATH9K_RX_2040 : 0;
++	rxs->rs_flags |= (rxsp->status4 & AR_RxSTBC) ? ATH9K_RX_STBC : 0;
  
- 	/*
- 	 * Frame injection is not allowed if beaconing is not allowed
-@@ -1581,15 +1583,16 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	 * flag.
- 	 *
- 	 * Since AP mode uses monitor interfaces to inject/TX management
--	 * frames we can make AP mode the exception to this rule once it
--	 * supports radar detection as its implementation can deal with
--	 * radar detection by itself. We can do that later by adding a
--	 * monitor flag interfaces used for AP support.
-+	 * frames we can make AP mode the exception to this rule, in the
-+	 * case the driver supports radar detection, allow usage of radar
-+	 * channels.
- 	 */
--	if ((chan->flags & (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_RADAR |
--	     IEEE80211_CHAN_PASSIVE_SCAN)))
-+	if ((!(chan->flags & IEEE80211_CHAN_RADAR) || !dfs_supported) &&
-+	    ((chan->flags & (IEEE80211_CHAN_NO_IBSS | IEEE80211_CHAN_RADAR |
-+	    IEEE80211_CHAN_PASSIVE_SCAN))))
- 		goto fail;
+ 	rxs->evm0 = rxsp->status6;
+ 	rxs->evm1 = rxsp->status7;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
+index e196aba..83171b6 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.c
++++ b/drivers/net/wireless/ath/ath9k/mac.c
+@@ -593,6 +593,8 @@ int ath9k_hw_rxprocdesc(struct ath_hw *ah, struct ath_desc *ds,
+ 		(ads.ds_rxstatus3 & AR_GI) ? ATH9K_RX_GI : 0;
+ 	rs->rs_flags |=
+ 		(ads.ds_rxstatus3 & AR_2040) ? ATH9K_RX_2040 : 0;
++	rs->rs_flags |=
++		(ads.ds_rxstatus3 & AR_RxSTBC) ? ATH9K_RX_STBC : 0;
  
-+
- 	/* check for not even having the fixed radiotap header part */
- 	if (unlikely(skb->len < sizeof(struct ieee80211_radiotap_header)))
- 		goto fail; /* too short to be possibly valid */
+ 	if (ads.ds_rxstatus8 & AR_PreDelimCRCErr)
+ 		rs->rs_flags |= ATH9K_RX_DELIM_CRC_PRE;
+diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
+index 11dbd14..d0fda0e 100644
+--- a/drivers/net/wireless/ath/ath9k/mac.h
++++ b/drivers/net/wireless/ath/ath9k/mac.h
+@@ -191,6 +191,7 @@ struct ath_htc_rx_status {
+ #define ATH9K_RX_DELIM_CRC_PRE    0x10
+ #define ATH9K_RX_DELIM_CRC_POST   0x20
+ #define ATH9K_RX_DECRYPT_BUSY     0x40
++#define ATH9K_RX_STBC             0x80
+ 
+ #define ATH9K_RXKEYIX_INVALID	((u8)-1)
+ #define ATH9K_TXKEYIX_INVALID	((u8)-1)
+@@ -531,7 +532,8 @@ struct ar5416_desc {
+ #define AR_2040             0x00000002
+ #define AR_Parallel40       0x00000004
+ #define AR_Parallel40_S     2
+-#define AR_RxStatusRsvd30   0x000000f8
++#define AR_RxSTBC           0x00000008
++#define AR_RxStatusRsvd30   0x000000f0
+ #define AR_RxAntenna	    0xffffff00
+ #define AR_RxAntenna_S	    8
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 0e666fb..ee94cfd 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -911,6 +911,8 @@ static int ath9k_process_rate(struct ath_common *common,
+ 			rxs->flag |= RX_FLAG_40MHZ;
+ 		if (rx_stats->rs_flags & ATH9K_RX_GI)
+ 			rxs->flag |= RX_FLAG_SHORT_GI;
++		if (rx_stats->rs_flags & ATH9K_RX_STBC)
++			rxs->flag |= RX_FLAG_STBC;
+ 		rxs->rate_idx = rx_stats->rs_rate & 0x7f;
+ 		return 0;
+ 	}
 -- 
-1.7.5.4
+1.7.4.1
 
