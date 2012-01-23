@@ -1,46 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:42462 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752619Ab2AaWwD convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 17:52:03 -0500
-Received: by obcva7 with SMTP id va7so527847obc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 14:52:03 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1327618544-23163-1-git-send-email-hauke@hauke-m.de>
-References: <1327618544-23163-1-git-send-email-hauke@hauke-m.de>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 31 Jan 2012 14:51:43 -0800
-Message-ID: <CAB=NE6VpEuBT8tzGGTz0DKCzSgxJHW3xwQuOchGLzWj2uhZ2uw@mail.gmail.com> (sfid-20120131_235208_475586_F05B35AD)
-Subject: Re: [PATCH] compat-wireless: fix some config options
-To: Hauke Mehrtens <hauke@hauke-m.de>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mail.neratec.ch ([80.75.119.105]:60927 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752669Ab2AWOk1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jan 2012 09:40:27 -0500
+From: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Subject: [PATCH 1/2] mac80211: Add STBC RX flag to radiotap. Signed-off-by: Wojciech Dubowik <Wojciech.Dubowik@neratec.com>
+Date: Mon, 23 Jan 2012 15:27:40 +0100
+Message-Id: <1327328861-7223-2-git-send-email-Wojciech.Dubowik@neratec.com> (sfid-20120123_154031_588584_A7A34697)
+In-Reply-To: <1327328861-7223-1-git-send-email-Wojciech.Dubowik@neratec.com>
+References: <1327328861-7223-1-git-send-email-Wojciech.Dubowik@neratec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 26, 2012 at 2:55 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> Adds some missing config options interceded in the last time and remove
-> some old now unused config options.
->
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  config.mk |    8 +++++---
->  1 files changed, 5 insertions(+), 3 deletions(-)
->
-> diff --git a/config.mk b/config.mk
-> index 4d2ad5c..9433ce9 100644
-> --- a/config.mk
-> +++ b/config.mk
-> @@ -281,6 +281,8 @@ CONFIG_ATH9K_COMMON=m
->  # for long range considerations.
->  CONFIG_ATH9K_RATE_CONTROL=y
->
-> +CONFIG_ATH9K_BTCOEX_SUPPORT=y
+---
+ include/net/ieee80211_radiotap.h |    3 ++-
+ include/net/mac80211.h           |    1 +
+ net/mac80211/rx.c                |    5 ++++-
+ 3 files changed, 7 insertions(+), 2 deletions(-)
 
-Senthil, just a heads up. Given that the default in Kconfig is "y" I
-will apply this patch. Not sure if we should also apply it to the
-stable compat-wireless series.
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index 7139254..e5b89c4 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -260,6 +260,7 @@ enum ieee80211_radiotap_type {
+ #define IEEE80211_RADIOTAP_MCS_HAVE_GI		0x04
+ #define IEEE80211_RADIOTAP_MCS_HAVE_FMT		0x08
+ #define IEEE80211_RADIOTAP_MCS_HAVE_FEC		0x10
++#define IEEE80211_RADIOTAP_MCS_HAVE_STBC	0x20
+ 
+ #define IEEE80211_RADIOTAP_MCS_BW_MASK		0x03
+ #define		IEEE80211_RADIOTAP_MCS_BW_20	0
+@@ -269,7 +270,7 @@ enum ieee80211_radiotap_type {
+ #define IEEE80211_RADIOTAP_MCS_SGI		0x04
+ #define IEEE80211_RADIOTAP_MCS_FMT_GF		0x08
+ #define IEEE80211_RADIOTAP_MCS_FEC_LDPC		0x10
+-
++#define IEEE80211_RADIOTAP_MCS_STBC		0x20
+ 
+ /* helpers */
+ static inline int ieee80211_get_radiotap_len(unsigned char *data)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index d49928b..aed6ef1 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -672,6 +672,7 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_HT		= 1<<9,
+ 	RX_FLAG_40MHZ		= 1<<10,
+ 	RX_FLAG_SHORT_GI	= 1<<11,
++	RX_FLAG_STBC		= 1<<12,
+ };
+ 
+ /**
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 7514091..da23b6b 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -204,12 +204,15 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 		rthdr->it_present |= cpu_to_le32(1 << IEEE80211_RADIOTAP_MCS);
+ 		*pos++ = IEEE80211_RADIOTAP_MCS_HAVE_MCS |
+ 			 IEEE80211_RADIOTAP_MCS_HAVE_GI |
+-			 IEEE80211_RADIOTAP_MCS_HAVE_BW;
++			 IEEE80211_RADIOTAP_MCS_HAVE_BW |
++			 IEEE80211_RADIOTAP_MCS_HAVE_STBC;
+ 		*pos = 0;
+ 		if (status->flag & RX_FLAG_SHORT_GI)
+ 			*pos |= IEEE80211_RADIOTAP_MCS_SGI;
+ 		if (status->flag & RX_FLAG_40MHZ)
+ 			*pos |= IEEE80211_RADIOTAP_MCS_BW_40;
++		if (status->flag & RX_FLAG_STBC)
++			*pos |= IEEE80211_RADIOTAP_MCS_STBC;
+ 		pos++;
+ 		*pos++ = status->rate_idx;
+ 	}
+-- 
+1.7.4.1
 
-  Luis
