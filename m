@@ -1,121 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:58375 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753593Ab2A3Ozb (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:63274 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751454Ab2AWRX4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 09:55:31 -0500
-Received: by wgbed3 with SMTP id ed3so4720629wgb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 06:55:30 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/7] wl12xx: add forced_ps debugfs file
-Date: Mon, 30 Jan 2012 16:58:42 +0200
-Message-Id: <1327935525-24361-5-git-send-email-eliad@wizery.com> (sfid-20120130_155537_554275_8B54F02E)
-In-Reply-To: <1327935525-24361-1-git-send-email-eliad@wizery.com>
-References: <1327935525-24361-1-git-send-email-eliad@wizery.com>
+	Mon, 23 Jan 2012 12:23:56 -0500
+Received: by ggnb1 with SMTP id b1so1448597ggn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2012 09:23:56 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1327338154-3806-1-git-send-email-eliad@wizery.com>
+References: <1327338154-3806-1-git-send-email-eliad@wizery.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 23 Jan 2012 09:23:35 -0800
+Message-ID: <CAB=NE6V26e6caZwCyO2chiZ_7iGVkoD_jtKsxfCLSHumrOp=Wg@mail.gmail.com> (sfid-20120123_182400_034546_A810F133)
+Subject: Re: [PATCH] compat-wireless: fix wl12xx driver-select
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+On Mon, Jan 23, 2012 at 9:02 AM, Eliad Peller <eliad@wizery.com> wrote:
+> wl12xx is a possible choice for both group drivers and
+> singular modules (making it impossible to build only
+> the wl12xx module). change the group name to "ti" instead.
+>
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-Added control over forced_ps option through debugfs.
-This can be either 1 or 0.
+Is this a stable fix for linux-3.3.y branch of compat-wireless or only
+for the master branch ?
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/debugfs.c |   70 +++++++++++++++++++++++++++++++++
- 1 files changed, 70 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index 02da445..1c26238 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -376,6 +376,75 @@ static const struct file_operations dynamic_ps_timeout_ops = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t forced_ps_read(struct file *file, char __user *user_buf,
-+			  size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+
-+	return wl1271_format_buffer(user_buf, count,
-+				    ppos, "%d\n",
-+				    wl->conf.conn.forced_ps);
-+}
-+
-+static ssize_t forced_ps_write(struct file *file,
-+				    const char __user *user_buf,
-+				    size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+	struct wl12xx_vif *wlvif;
-+	unsigned long value;
-+	int ret, ps_mode;
-+
-+	ret = kstrtoul_from_user(user_buf, count, 10, &value);
-+	if (ret < 0) {
-+		wl1271_warning("illegal value in forced_ps");
-+		return -EINVAL;
-+	}
-+
-+	if (value != 1 && value != 0) {
-+		wl1271_warning("forced_ps should be either 0 or 1");
-+		return -ERANGE;
-+	}
-+
-+	mutex_lock(&wl->mutex);
-+
-+	if (wl->conf.conn.forced_ps == value)
-+		goto out;
-+
-+	wl->conf.conn.forced_ps = value;
-+
-+	if (wl->state == WL1271_STATE_OFF)
-+		goto out;
-+
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	/* In case we're already in PSM, trigger it again to switch mode
-+	 * immediately without waiting for re-association
-+	 */
-+
-+	ps_mode = value ? STATION_POWER_SAVE_MODE : STATION_AUTO_PS_MODE;
-+
-+	wl12xx_for_each_wlvif_sta(wl, wlvif) {
-+		if (test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags))
-+			wl1271_ps_set_mode(wl, wlvif, ps_mode);
-+	}
-+
-+	wl1271_ps_elp_sleep(wl);
-+
-+out:
-+	mutex_unlock(&wl->mutex);
-+	return count;
-+}
-+
-+static const struct file_operations forced_ps_ops = {
-+	.read = forced_ps_read,
-+	.write = forced_ps_write,
-+	.open = wl1271_open_file_generic,
-+	.llseek = default_llseek,
-+};
-+
- static ssize_t driver_state_read(struct file *file, char __user *user_buf,
- 				 size_t count, loff_t *ppos)
- {
-@@ -1011,6 +1080,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
- 	DEBUGFS_ADD(beacon_interval, rootdir);
- 	DEBUGFS_ADD(beacon_filtering, rootdir);
- 	DEBUGFS_ADD(dynamic_ps_timeout, rootdir);
-+	DEBUGFS_ADD(forced_ps, rootdir);
- 
- 	streaming = debugfs_create_dir("rx_streaming", rootdir);
- 	if (!streaming || IS_ERR(streaming))
--- 
-1.7.6.401.g6a319
-
+  Luis
