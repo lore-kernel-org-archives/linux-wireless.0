@@ -1,54 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:53975 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751990Ab2AWR5n convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jan 2012 12:57:43 -0500
-Received: by ggnb1 with SMTP id b1so1475571ggn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2012 09:57:42 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201201231755.q0NHtQUR002682@mail.maya.org>
-References: <1327153475-28081-1-git-send-email-hauke@hauke-m.de>
- <CAB=NE6UBBRg53EjW3t8YEUoGLvQS00dnx6Z=-rmBa7pb-D_TCg@mail.gmail.com> <201201231755.q0NHtQUR002682@mail.maya.org>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 23 Jan 2012 09:57:21 -0800
-Message-ID: <CAB=NE6VL5P2zpryoVHni6NjF1EpNML5Oe-A3n3YUXygcU1_K4w@mail.gmail.com> (sfid-20120123_185746_287508_5542B5E2)
-Subject: Re: [PATCH] compat: add __cancel_delayed_work()
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:36684 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750824Ab2AWPWb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jan 2012 10:22:31 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH -stable 3.0] iwlegacy: 3945: fix hw passive scan on radar channels
+Date: Mon, 23 Jan 2012 16:22:28 +0100
+Message-Id: <1327332148-10983-1-git-send-email-sgruszka@redhat.com> (sfid-20120123_162233_798894_C1B3F071)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 23, 2012 at 9:55 AM, Andreas Hartmann
-<andihartmann@01019freenet.de> wrote:
-> Luis R. Rodriguez schrieb:
->> On Sat, Jan 21, 2012 at 5:44 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
->>> __cancel_delayed_work is needed by include/net/bluetooth/l2cap.h and
->>> not available in old kernel versions. This was just copied from the
->>> kernel.
->>>
->>> This should also go into compat-wireless-stable-3.3.
->>>
->>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->>
->> Thanks! Applied all onto compat-wireless.git and compat.git, in
->> addition to the linux-3.3.y branch for compat.git as you indicated for
->> this patch. Will roll out a new tarball right away.
->
-> BTW: I've to apply always the following patch to some older
-> compat-wireless packages (3.2 e.g) to get it compiled with kernel 3.1:
->
-> --- drivers/misc/eeprom/Makefile.orig   2012-01-10 02:10:51.000000000 +0100
-> +++ drivers/misc/eeprom/Makefile        2012-01-10 05:14:40.082494612 +0100
-> @@ -1,3 +1,3 @@
->  obj-$(CONFIG_EEPROM_93CX6)     += eeprom_93cx6.o
-> -obj-$(CONFIG_EEPROM_93XX46)    += eeprom_93xx46.o
-> +# obj-$(CONFIG_EEPROM_93XX46)  += eeprom_93xx46.o
->  obj-$(CONFIG_EEPROM_DIGSY_MTC_CFG) += digsy_mtc_eeprom.o
->
-> Is this eventually needed in 3.3, too?
+commit 68acc4afb040d98ddfd2cae0de09e2f4e1ee127f upstream.
 
-Why do you need this? Can you show your compile errors?
+Patch fix firmware error on "iw dev wlan0 scan passive" for
+hardware scanning (with disable_hw_scan=0 module parameter).
 
-  Luis
+ iwl3945 0000:03:00.0: Microcode SW error detected. Restarting 0x82000008.
+ iwl3945 0000:03:00.0: Loaded firmware version: 15.32.2.9
+ iwl3945 0000:03:00.0: Start IWL Error Log Dump:
+ iwl3945 0000:03:00.0: Status: 0x0002A2E4, count: 1
+ iwl3945 0000:03:00.0: Desc       Time       asrtPC blink2 ilink1  nmiPC   Line
+ iwl3945 0000:03:00.0: SYSASSERT     (0x5) 0041263900 0x13756 0x0031C 0x00000 764
+ iwl3945 0000:03:00.0: Error Reply type 0x000002FC cmd C_SCAN (0x80) seq 0x443E ser 0x00340000
+ iwl3945 0000:03:00.0: Command C_SCAN failed: FW Error
+ iwl3945 0000:03:00.0: Can't stop Rx DMA.
+
+We have disable ability to change passive scanning to active on
+particular channel when traffic is detected on that channel. Otherwise
+firmware will report error, when we try to do passive scan on radar
+channels.
+
+Reported-and-debugged-by: Pedro Francisco <pedrogfrancisco@gmail.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/iwl3945-base.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlegacy/iwl3945-base.c b/drivers/net/wireless/iwlegacy/iwl3945-base.c
+index 421d5c8..a935585 100644
+--- a/drivers/net/wireless/iwlegacy/iwl3945-base.c
++++ b/drivers/net/wireless/iwlegacy/iwl3945-base.c
+@@ -2910,14 +2910,13 @@ int iwl3945_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
+ 		IWL_WARN(priv, "Invalid scan band\n");
+ 		return -EIO;
+ 	}
+-
+ 	/*
+-	 * If active scaning is requested but a certain channel
+-	 * is marked passive, we can do active scanning if we
+-	 * detect transmissions.
++	 * If active scaning is requested but a certain channel is marked
++	 * passive, we can do active scanning if we detect transmissions. For
++	 * passive only scanning disable switching to active on any channel.
+ 	 */
+ 	scan->good_CRC_th = is_active ? IWL_GOOD_CRC_TH_DEFAULT :
+-					IWL_GOOD_CRC_TH_DISABLED;
++					IWL_GOOD_CRC_TH_NEVER;
+ 
+ 	if (!priv->is_internal_short_scan) {
+ 		scan->tx_cmd.len = cpu_to_le16(
+-- 
+1.7.1
+
