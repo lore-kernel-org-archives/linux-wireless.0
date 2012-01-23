@@ -1,64 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39162 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751777Ab2AUNnq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jan 2012 08:43:46 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/3] compat-wireless: backport dev_pm_ops for bcma
-Date: Sat, 21 Jan 2012 14:43:34 +0100
-Message-Id: <1327153416-27834-1-git-send-email-hauke@hauke-m.de> (sfid-20120121_144351_737474_E67DB5AB)
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:38924 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752785Ab2AWPQP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jan 2012 10:16:15 -0500
+Date: Mon, 23 Jan 2012 10:10:14 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2012-01-03
+Message-ID: <20120123151013.GA9474@tuxdriver.com> (sfid-20120123_161642_031424_2851CCEA)
+References: <20120103033320.GG1472@joana>
+ <20120123125655.GA20973@x220.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20120123125655.GA20973@x220.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-bcma now also uses dev_pm_ops which does not work with older kernel
-versions. Just backport it like it was done for the other drivers.
+I have a day off today.  I'll get back to merging tomorrow, including
+this request from Gustavo.
 
-This should also go into compat-wireless-stable-3.3.
+Thanks,
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- patches/11-dev-pm-ops.patch |   26 ++++++++++++++++++++++++++
- 1 files changed, 26 insertions(+), 0 deletions(-)
+John
 
-diff --git a/patches/11-dev-pm-ops.patch b/patches/11-dev-pm-ops.patch
-index d0446d8..6dd3e6c 100644
---- a/patches/11-dev-pm-ops.patch
-+++ b/patches/11-dev-pm-ops.patch
-@@ -7,6 +7,32 @@ calls on compat code with only slight modifications.
- 
- [1] http://lxr.linux.no/#linux+v2.6.29/include/linux/pm.h#L170
- 
-+--- a/drivers/bcma/host_pci.c
-++++ b/drivers/bcma/host_pci.c
-+@@ -255,6 +255,10 @@ static int bcma_host_pci_resume(struct d
-+ 
-+ static SIMPLE_DEV_PM_OPS(bcma_pm_ops, bcma_host_pci_suspend,
-+ 			 bcma_host_pci_resume);
-++
-++compat_pci_suspend(bcma_host_pci_suspend)
-++compat_pci_resume(bcma_host_pci_resume)
-++
-+ #define BCMA_PM_OPS	(&bcma_pm_ops)
-+ 
-+ #else /* CONFIG_PM */
-+@@ -278,7 +282,12 @@ static struct pci_driver bcma_pci_bridge
-+ 	.id_table = bcma_pci_bridge_tbl,
-+ 	.probe = bcma_host_pci_probe,
-+ 	.remove = bcma_host_pci_remove,
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
-+ 	.driver.pm = BCMA_PM_OPS,
-++#elif defined(CONFIG_PM)
-++	.suspend = bcma_host_pci_suspend_compat,
-++	.resume = bcma_host_pci_resume_compat,
-++#endif
-+ };
-+ 
-+ int __init bcma_host_pci_init(void)
- --- a/drivers/net/ethernet/atheros/atl1c/atl1c_main.c
- +++ b/drivers/net/ethernet/atheros/atl1c/atl1c_main.c
- @@ -2900,6 +2900,9 @@ static struct pci_error_handlers atl1c_e
+On Mon, Jan 23, 2012 at 02:56:55PM +0200, Johan Hedberg wrote:
+> Hi John,
+> 
+> On Tue, Jan 03, 2012, Gustavo Padovan wrote:
+> > A couple of fixes for the 3.3 release. The majority of the fixes are related
+> > to the change from tasklets to workqueue in the Bluetooth Core. The rest are
+> > important fixes over the tree. Exception is "Bluetooth: Rename extfeatures¨,
+> > as the name says it is just a rename and no harm, but it is a preparation for
+> > a following fix.
+> > 
+> > Please pull, or let me know any concerns you have!
+> > 
+> > 	Gustavo
+> > 
+> > --
+> > The following changes since commit dc0d633e35643662f27a0b1c531da3cd6b204b9c:
+> > 
+> >   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next (2012-01-02 16:43:54 -0500)
+> > 
+> > are available in the git repository at:
+> > 
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next master
+> > 
+> > Andre Guedes (5):
+> >       Bluetooth: Rename extfeatures
+> >       Bluetooth: Fix hci_cc_read_local_ext_features()
+> >       Bluetooth: Fix adv_work delay
+> >       Bluetooth: Queue adv_work on system workqueue
+> >       Bluetooth: Fix mgmt_stop_discovery_failed()
+> > 
+> > Andrei Emeltchenko (1):
+> >       Bluetooth: Correct packet len calculation
+> > 
+> > Gustavo F. Padovan (8):
+> >       Bluetooth: Fix bacpy in l2cap_core.c
+> >       Bluetooth: Fix context in rfcomm_sock_lock
+> >       Bluetooth: Fix context in RFCOMM tty
+> >       Bluetooth: Remove *_bh locks from SCO
+> >       Bluetooth: Remove local_bh_disable() from hci_sock.c
+> >       Bluetooth: Remove *_bh from socket list lock.
+> >       Bluetooth: Don't use *_bh locks anymore
+> >       Bluetooth: Keep chan->state and sk->sk_state in sync
+> > 
+> >  include/net/bluetooth/hci_core.h |    4 ++--
+> >  net/bluetooth/af_bluetooth.c     |    8 ++++----
+> >  net/bluetooth/hci_event.c        |   22 +++++++++++++---------
+> >  net/bluetooth/hci_sock.c         |    2 --
+> >  net/bluetooth/l2cap_core.c       |   26 +++++++++++++-------------
+> >  net/bluetooth/l2cap_sock.c       |    2 ++
+> >  net/bluetooth/mgmt.c             |    4 ++--
+> >  net/bluetooth/rfcomm/sock.c      |   12 ++++++------
+> >  net/bluetooth/rfcomm/tty.c       |   22 +++++++++++-----------
+> >  net/bluetooth/sco.c              |    8 ++++----
+> >  10 files changed, 57 insertions(+), 53 deletions(-)
+> > --
+> 
+> Are you planing to pull this? I've been waiting for that before making
+> any new pull requests from my (temporary) bluetooth-next tree[1]. If
+> that's not gonna happen I'll go ahead rebase my tree against latest
+> wireless-next (including these patches and all other ones that Marcel
+> has acked since Gustavo started his break), and make a new pull request
+> to you in the near future.
+> 
+> Johan
+> 
+> [1] http://git.kernel.org/?p=linux/kernel/git/jh/bluetooth-next.git;a=summary
+> 
+
 -- 
-1.7.5.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
