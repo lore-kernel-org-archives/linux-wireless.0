@@ -1,162 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from h118.nextmail.ru ([194.67.36.118]:59221 "EHLO h118.nextmail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752275Ab2AZWTg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 17:19:36 -0500
-To: =?koi8-r?B?TW9oYW1tZWQgU2hhZmk=?= <shafi.wireless@gmail.com>
-From: =?koi8-r?B?TVI=?= <g7af0ec1e3ea1e7b1@nextmail.ru>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"=?koi8-r?B?UmFqa3VtYXIgTWFub2hhcmFu?=" <rmanohar@qca.qualcomm.com>
-Subject: =?koi8-r?B?UmU6IGF0aDlrIGNyYXNoIDMuMi1yYzc=?=
-Date: Fri, 27 Jan 2012 02:19:34 +0400
-Message-ID: <NEXT-4f21d1760afcd0.53137187@nextmail.ru> (sfid-20120126_232019_174957_E6E65460)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from iolanthe.rowland.org ([192.131.102.54]:49379 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753351Ab2AWQ3p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jan 2012 11:29:45 -0500
+Date: Mon, 23 Jan 2012 11:29:43 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Hauke Mehrtens <hauke@hauke-m.de>, Greg KH <greg@kroah.com>
+cc: ralf@linux-mips.org, <linux-mips@linux-mips.org>,
+	USB list <linux-usb@vger.kernel.org>, <zajec5@gmail.com>,
+	<linux-wireless@vger.kernel.org>, <m@bues.ch>, <george@znau.edu.ua>
+Subject: Re: [PATCH 4/7] USB: EHCI: Add a generic platform device driver
+In-Reply-To: <20120122192346.GA1691@kroah.com>
+Message-ID: <Pine.LNX.4.44L0.1201231115280.1372-100000@iolanthe.rowland.org> (sfid-20120123_172951_046078_67156763)
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- > thanks , i am just looking at this tough to recreate warning and its
- > being reported by few users recently. please let us if you some more
- > information
+On Sun, 22 Jan 2012, Greg KH wrote:
 
-Another data point:
+> On Sun, Jan 22, 2012 at 04:02:13PM +0100, Hauke Mehrtens wrote:
+> > On 01/22/2012 04:41 AM, Alan Stern wrote:
+> > > On Sat, 21 Jan 2012, Hauke Mehrtens wrote:
+> > > 
+> > >> This adds a generic driver for platform devices. It works like the PCI
+> > >> driver and is based on it. This is for devices which do not have an own
+> > >> bus but their EHCI controller works like a PCI controller. It will be
+> > >> used for the Broadcom bcma and ssb USB EHCI controller.
+> > > 
+> > > Before adding a generic platform driver for EHCI, you should give some
+> > > to thought to how it might be generalized.  There are a lot of EHCI
+> > > platform drivers, all differing in various major or minor respects.  
+> > > It should be possible to replace a lot of them with the generic driver, 
+> > > but first it will need some way to cope with a few minor quirks.
+> > > 
+> > > Please consider this, and think about which of the existing drivers 
+> > > could be replaced.
+> > 
+> > For now I just build this for bcma and ssb based SoCs. Yes there are
+> > some drivers which could be replaced with this one, but most (all ??) of
+> > them do something special in the device probing and this have to be
+> > moved to somewhere else e.g. where the platform device is created.
+> > I could rename it so it would not be generic any more, but I think it is
+> > the wrong approach. ;-)
+> > I am not able and do not have the time to convert all EHCI platform
+> > drivers, where it is possible  to this generic platform driver, as I do
+> > not have the devices to test this and time is limited.
+> 
+> Time is not limited for us, sorry, this seems like the correct thing to
+> do, and because of that, we (well I at least) will not accept this patch
+> as-is.
+> 
+> Please go rework it to be as Alan suggested.
+> 
+> > If someone else wants to improve something on these "generic" platform
+> > drivers to make them work with an other device I am totally fine with it.
+> 
+> I think that someone just became you :)
+> 
+> Yes, this isn't fair, but it's how Linux kernel development works,
+> sorry.
 
-3.2.1 + fix + sign catcher
+The work doesn't have to be all done right away.  Still, I think it 
+makes sense to separate out the "generic platform" drivers from the 
+rest of this patch series.
 
-Similar warnings overflowing my /var/log partition...
+Some platform drivers require additional storage for things like
+pointers to clocks or OTG transceivers.  For example see ehci-mv.c,
+which allocates its own ehci_hcd_mv structure along with ehci_hcd.  
+Some other drivers even define their own private version of ehci_hcd,
+such as ehci-fsl.c.  If you can figure out a good way to expend the
+ehci_hcd structure so that it can accomodate the extra fields needed by
+all these drivers in a generic way, that would be an excellent start
+and well worth merging.  Maybe just adding a "void *platform_data"
+field would be enough.
 
-Note: ath9k per se worked; after reloading ath9k module situation returned 
-to normal. 
+As for special activities during device probing...  Many of these can 
+be handled later on, easily enough, by adding appropriate quirk flags.  
+We don't have to worry about that part right now.
 
-
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957493] ------------[ cut here ]-
------------
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957502] WARNING: at 
-drivers/net/wireless/ath/ath9k/rc.c:697 
-ath_rc_get_highest_rix.clone.18+0x159/0x200 [ath9k]()
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957504] Hardware name: N53Jn
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957505] Modules linked in: ath9k 
-ath5k xhci_hcd nls_iso8859_1 nls_cp437 vfat fat isofs nls_utf8 udf 
-crc_itu_t nfsd lockd nfs_acl auth_rpcgss sunrpc exportfs cryptd aes_x86_64 
-aes_generic af_packet snd_pcm_oss snd_mixer_oss cls_cgroup uvcvideo 
-videodev v4l2_compat_ioctl32 cdc_phonet phonet bsd_comp ppp_deflate 
-ppp_async crc_ccitt ppp_generic slhc cdc_acm rtc_cmos configs kvm_intel 
-kvm atl1c ide_cd_mod ide_core pktcdvd pata_atiixp ipip tunnel4 ftdi_sio 
-usbserial arc4 mac80211 ath9k_common ath9k_hw ath cfg80211 rfkill 8139too 
-mii fuse thermal ac tun usb_storage usb_libusual cpufreq_conservative 
-speedstep_lib cpufreq_powersave cpufreq_performance loop ipv6 
-snd_hda_codec_hdmi snd_hda_codec_realtek snd_hda_intel snd_hda_codec 
-snd_hwdep snd_pcm snd_timer snd soundcore snd_page_alloc battery 
-power_supply coretemp cpufreq_ondemand acpi_cpufreq freq_table processor 
-mperf fbcon tileblit font bitblit softcursor i915 drm_kms_helper drm 
-intel_agp i2c_algo_bit button intel_gtt agpgart vi
-Jan 27 00:15:56 401a0bf1 kernel: eo thermal_sys hwmon ext4 jbd2 crc16 
-sr_mod cdrom ahci libahci xtkbd ohci_hcd uhci_hcd ehci_hcd usbhid hid 
-usbcore usb_common btrfs zlib_deflate libcrc32c crc32c ext3 jbd mbcache 
-synaptics_i2c i2c_core sermouse psmouse evdev pcips2 sd_mod crc_t10dif 
-libata scsi_mod dm_mod unix [last unloaded: xhci_hcd]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957597] Pid: 20646, comm: 
-kworker/u:1 Tainted: G        W    3.2.1 #1
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957599] Call Trace:
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957606]  
-[warn_slowpath_common+0x7a/0xb0] warn_slowpath_common+0x7a/0xb0
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957606]  [<ffffffff8104c9ba>] 
-warn_slowpath_common+0x7a/0xb0
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957608]  
-[warn_slowpath_null+0x15/0x20] warn_slowpath_null+0x15/0x20
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957608]  [<ffffffff8104ca05>] 
-warn_slowpath_null+0x15/0x20
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957611]  
-[ath9k:ath_rc_get_highest_rix.clone.18+0x159/0x200] 
-ath_rc_get_highest_rix.clone.18+0x159/0x200 [ath9k]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957611]  [<ffffffffa0782769>] 
-ath_rc_get_highest_rix.clone.18+0x159/0x200 [ath9k]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957614]  
-[ath9k:ath_get_rate+0x86/0x480] ath_get_rate+0x86/0x480 [ath9k]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957614]  [<ffffffffa0782896>] 
-ath_get_rate+0x86/0x480 [ath9k]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957624]  
-[mac80211:rate_control_get_rate+0x86/0x160] 
-rate_control_get_rate+0x86/0x160 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957624]  [<ffffffffa053ea26>] 
-rate_control_get_rate+0x86/0x160 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957629]  
-[mac80211:invoke_tx_handlers+0x7fa/0x1170] invoke_tx_handlers+0x7fa/0x1170 
-[mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957629]  [<ffffffffa054849a>] 
-invoke_tx_handlers+0x7fa/0x1170 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957635]  
-[mac80211:ieee80211_tx+0x5b/0xb0] ieee80211_tx+0x5b/0xb0 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957635]  [<ffffffffa0548f6b>] 
-ieee80211_tx+0x5b/0xb0 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957639]  [__alloc_skb+0x82/0x160] 
-? __alloc_skb+0x82/0x160
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957639]  [<ffffffff812ac842>] ? 
-__alloc_skb+0x82/0x160
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957644]  
-[mac80211:ieee80211_xmit+0x87/0xb0] ieee80211_xmit+0x87/0xb0 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957644]  [<ffffffffa0549047>] 
-ieee80211_xmit+0x87/0xb0 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957649]  
-[mac80211:ieee80211_tx_skb+0x56/0x70] ieee80211_tx_skb+0x56/0x70 
-[mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957649]  [<ffffffffa0549e06>] 
-ieee80211_tx_skb+0x56/0x70 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957654]  
-[mac80211:ieee80211_send_nullfunc+0x51/0x70] 
-ieee80211_send_nullfunc+0x51/0x70 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957654]  [<ffffffffa0536f11>] 
-ieee80211_send_nullfunc+0x51/0x70 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957659]  
-[mac80211:ieee80211_rx_mgmt_beacon+0x4b3/0x660] 
-ieee80211_rx_mgmt_beacon+0x4b3/0x660 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957659]  [<ffffffffa0537f63>] 
-ieee80211_rx_mgmt_beacon+0x4b3/0x660 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957664]  
-[mac80211:ieee80211_sta_rx_queued_mgmt+0x27f/0x3b0] 
-ieee80211_sta_rx_queued_mgmt+0x27f/0x3b0 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957664]  [<ffffffffa05393cf>] 
-ieee80211_sta_rx_queued_mgmt+0x27f/0x3b0 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957669]  
-[mac80211:ieee80211_iface_work+0x22b/0x330] 
-ieee80211_iface_work+0x22b/0x330 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957669]  [<ffffffffa053ca2b>] 
-ieee80211_iface_work+0x22b/0x330 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957675]  
-[mac80211:ieee80211_iface_work+0x0/0x330] ? 
-ieee80211_teardown_sdata+0xd0/0xd0 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957675]  [<ffffffffa053c800>] ? 
-ieee80211_teardown_sdata+0xd0/0xd0 [mac80211]
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957679]  
-[process_one_work+0x111/0x390] process_one_work+0x111/0x390
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957679]  [<ffffffff81062eb1>] 
-process_one_work+0x111/0x390
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957682]  
-[worker_thread+0x162/0x340] worker_thread+0x162/0x340
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957682]  [<ffffffff81063d12>] 
-worker_thread+0x162/0x340
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957685]  
-[worker_thread+0x0/0x340] ? manage_workers.clone.26+0x240/0x240
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957685]  [<ffffffff81063bb0>] ? 
-manage_workers.clone.26+0x240/0x240
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957688]  [kthread+0x96/0xa0] 
-kthread+0x96/0xa0
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957688]  [<ffffffff81068936>] 
-kthread+0x96/0xa0
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957692]  
-[kernel_thread_helper+0x4/0x10] kernel_thread_helper+0x4/0x10
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957692]  [<ffffffff8135ef34>] 
-kernel_thread_helper+0x4/0x10
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957694]  [kthread+0x0/0xa0] ? 
-kthread_worker_fn+0x190/0x190
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957694]  [<ffffffff810688a0>] ? 
-kthread_worker_fn+0x190/0x190
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957697]  
-[kernel_thread_helper+0x0/0x10] ? gs_change+0x13/0x13
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957697]  [<ffffffff8135ef30>] ? 
-gs_change+0x13/0x13
-Jan 27 00:15:56 401a0bf1 kernel: [241491.957698] ---[ end trace 
-078f024285127110 ]---
-
-
+Alan Stern
 
