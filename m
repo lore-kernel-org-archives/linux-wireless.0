@@ -1,80 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37061 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756026Ab2ANSBM (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:43049 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753533Ab2AWS3J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jan 2012 13:01:12 -0500
-Date: Sat, 14 Jan 2012 12:58:37 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Tom Gundersen <teg@jklm.no>,
-	Andy Whitcroft <apw@canonical.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: calling request_firmware() from module init will not work with
- recent/future udev versions
-Message-ID: <20120114175837.GA8504@tuxdriver.com> (sfid-20120114_190121_606666_7C362791)
-References: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
+	Mon, 23 Jan 2012 13:29:09 -0500
+Received: by iacb35 with SMTP id b35so4077197iac.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2012 10:29:09 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
+In-Reply-To: <CAB3XZEdo2zBRvyhv39jm98n146w_ppNmi-OR+VBTNj+ReuOyhg@mail.gmail.com>
+References: <1327338154-3806-1-git-send-email-eliad@wizery.com>
+ <CAB=NE6V26e6caZwCyO2chiZ_7iGVkoD_jtKsxfCLSHumrOp=Wg@mail.gmail.com> <CAB3XZEdo2zBRvyhv39jm98n146w_ppNmi-OR+VBTNj+ReuOyhg@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Mon, 23 Jan 2012 10:28:48 -0800
+Message-ID: <CAB=NE6VgovpKT8gG9Z9AUihOMk7KXLMENBjuQCBAmowMd3TUtQ@mail.gmail.com> (sfid-20120123_192914_524452_A2EA1715)
+Subject: Re: [PATCH] compat-wireless: fix wl12xx driver-select
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kay, thanks for the reports.  Drivers should definitely be loading
-firmware at IFF_UP time.
+On Mon, Jan 23, 2012 at 10:09 AM, Eliad Peller <eliad@wizery.com> wrote:
+> On Mon, Jan 23, 2012 at 7:23 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+>> On Mon, Jan 23, 2012 at 9:02 AM, Eliad Peller <eliad@wizery.com> wrote:
+>>> wl12xx is a possible choice for both group drivers and
+>>> singular modules (making it impossible to build only
+>>> the wl12xx module). change the group name to "ti" instead.
+>>>
+>>> Signed-off-by: Eliad Peller <eliad@wizery.com>
+>>> ---
+>>
+>> Is this a stable fix for linux-3.3.y branch of compat-wireless or only
+>> for the master branch ?
+>>
+> this is a stable fix (not very important one, though. only avoids some
+> redundant compilations).
 
-John
+I just see this doing name changes for driver-select, how is this
+fixing anything?
 
-On Sat, Jan 14, 2012 at 04:25:23PM +0100, Kay Sievers wrote:
-> Hey,
-> 
-> just a heads-up, when bug reports are coming in now. The kernel log
-> might look like a kernel failure, but it's caused by recent userspace
-> changes.
-> 
-> We changed udev to strictly enforce sequence order and dependency
-> handling of events. This seems to break some netdev drivers which
-> block in modprobe until the firmware from userspace is loaded into the
-> driver.
-> 
-> I think it's out of question, that nothing must block in module init
-> and rely on a userspace transaction to be fulfilled to finish the
-> init_module() syscall. If userspace is not running properly, nothing
-> will work. Built-in drivers and the transition from initramfs to the
-> real root can't be handled properly that way.
-> 
-> These drivers need to be fixed to load their firmware during ifup,
-> which would be the most flexible solution. That way, it should also
-> work if the driver is built-in, or is loaded from initramfs and no
-> firmware is available.
-> Alternatively, the firmware request should be able to use the aync
-> firmware_request API and not the blocking one.
-> 
-> We might need to work around that in the current udev for now, but
-> these drivers will definitely break in future udev versions.
-> Userspace, these days, should not be in charge of papering over
-> obvious kernel bugs like this.
-> 
-> These are the drivers we received bug reports so far. We didn't look
-> into any of details of the drivers, but according to the logs, they
-> seem to block for 60 seconds in modprobe, when userspace is not
-> behaving like expected:
->   bnx2/bnx2-mips-06-6.2.1.fw
->   rtlwifi/rtl8192sefw.bin
->   brcm/bcm43xx-0.fw
-> 
-> Any help here would be appreciated.
-> 
-> Thanks,
-> Kay
-> --
-> To unsubscribe from this list: send the line "unsubscribe netdev" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+  Luis
