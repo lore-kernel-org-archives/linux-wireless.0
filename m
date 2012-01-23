@@ -1,52 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:38272 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752833Ab2AAUuW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jan 2012 15:50:22 -0500
-Date: Sun, 1 Jan 2012 21:50:00 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Marek Vasut <marek.vasut@gmail.com>,
-	Oliver Neukum <oliver@neukum.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	"Greg Kroah-Hartman" <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-Message-ID: <20120101215000.04b13f43@milhouse> (sfid-20120101_215106_804816_A37C0608)
-In-Reply-To: <20120101203945.0ebc2f55@pyramind.ukuu.org.uk>
-References: <20111230235421.GA6054@redhat.com>
-	<201201011054.47233.marek.vasut@gmail.com>
-	<201201011328.41311.oliver@neukum.org>
-	<201201011732.23069.marek.vasut@gmail.com>
-	<20120101203945.0ebc2f55@pyramind.ukuu.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:60216 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751779Ab2AWRbf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jan 2012 12:31:35 -0500
+Received: by iacb35 with SMTP id b35so4012456iac.19
+        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2012 09:31:35 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1327153475-28081-1-git-send-email-hauke@hauke-m.de>
+References: <1327153475-28081-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Mon, 23 Jan 2012 09:31:14 -0800
+Message-ID: <CAB=NE6UBBRg53EjW3t8YEUoGLvQS00dnx6Z=-rmBa7pb-D_TCg@mail.gmail.com> (sfid-20120123_183138_995095_5F8B8D06)
+Subject: Re: [PATCH] compat: add __cancel_delayed_work()
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 1 Jan 2012 20:39:45 +0000
-Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+On Sat, Jan 21, 2012 at 5:44 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> __cancel_delayed_work is needed by include/net/bluetooth/l2cap.h and
+> not available in old kernel versions. This was just copied from the
+> kernel.
+>
+> This should also go into compat-wireless-stable-3.3.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-> When you suspend the power gets killed so the device loses its firmware
-> and goes back to being a firmware requesting thing on resume.
-> 
-> Worse still - you don't easily know if the device is in fact new and was
-> added while suspended, or was always there.
-> 
-> So for those devices you do need to load the firmware into them
-> automatically after the resume to work out what they are and get the MAC
-> to see if its the same wireless card or not.
+Thanks! Applied all onto compat-wireless.git and compat.git, in
+addition to the linux-3.3.y branch for compat.git as you indicated for
+this patch. Will roll out a new tarball right away.
 
-Well, that does not prevent you from caching the firmware once you
-got it from userspace and keep it until module unload (or probably device
-close), so that it is already available on resume.
-
--- 
-Greetings, Michael.
+  Luis
