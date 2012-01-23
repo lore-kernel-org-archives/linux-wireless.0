@@ -1,59 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:53862 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751301Ab2AZVNH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 16:13:07 -0500
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P0H_WaWwnpjoBcMpZQY4xH=cbVhAKxWKXmz-HwFMcWS6w@mail.gmail.com>
-References: <20120124013625.GB18436@gamma.logic.tuwien.ac.at>
-	<CANUX_P3er0orBy8OhDuY1DfgD810UD-_HB_ukJnCA+W8e-VazQ@mail.gmail.com>
-	<20120125002250.GA20431@gamma.logic.tuwien.ac.at>
-	<CANUX_P0UREz_jZABu+Y_QYOh9tx_sKZSSkZpYHBEVtcU4QQdSA@mail.gmail.com>
-	<20120126003735.GA2346@gamma.logic.tuwien.ac.at>
-	<CANUX_P0H_WaWwnpjoBcMpZQY4xH=cbVhAKxWKXmz-HwFMcWS6w@mail.gmail.com>
-Date: Thu, 26 Jan 2012 13:13:05 -0800
-Message-ID: <CANUX_P3XSCsWUJ9M55qeaK-DuPEMXODFPJiNk+BgnHN-=WECqw@mail.gmail.com> (sfid-20120126_221341_533447_6EDA422A)
-Subject: Re: iwlagn is getting even worse with 3.3-rc1
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Norbert Preining <preining@logic.at>
-Cc: linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	Dave Jones <davej@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:30747 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750741Ab2AWPWN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jan 2012 10:22:13 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH -stable 3.2] iwlagn: check for SMPS mode
+Date: Mon, 23 Jan 2012 16:21:50 +0100
+Message-Id: <1327332110-10879-1-git-send-email-sgruszka@redhat.com> (sfid-20120123_162216_973526_6ECE5A3E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey Dave,
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
-Can you please try to patch attached to this thread. You and Norbert
-are suffering from the same issue. I am merging the mail threads here.
+commit b2ccccdca46273c7b321ecf5041c362cd950da20 upstream.
 
-On Wed, Jan 25, 2012 at 21:49, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
-> Hi Norbert,
->
->>
->> syslog output is at http://www.logic.at/people/preining/syslog.log
->> this is after a suspend and resume.
->>
->> first connection after resume succeeded at around kernel time 378.859794
->> then it worked for say 20sec or so, hard to say when exactely it dropped,
->> but defeinitely at kernel time 451 it was finished.
->>
->> After that nothing went out or in again.
->>
->> Hope you can make something out of that.
->>
->
-> Unfortunately, not really. I can see you are hitting PASSIVE_NO_RX,
-> meaning that the uCode complains that you are trying to Tx on a
-> passive channel on which it hasn't heard any beacon yet. But then we
-> finally get a beacon there, and open the queue again.
->
-> Anyway, can you try the attached patch ?
-> Note that I have no real way to test it (I have to admit I haven't
-> even compiled... I am not in my office).
-> I hope it might help.
+Check and report WARN only when its invalid
+
+Resolves:
+https://bugzilla.kernel.org/show_bug.cgi?id=42621
+https://bugzilla.redhat.com/show_bug.cgi?id=766071
+
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |    3 +++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 1a52ed2..6465983 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -827,6 +827,7 @@ static int iwl_get_idle_rx_chain_count(struct iwl_priv *priv, int active_cnt)
+ 	case IEEE80211_SMPS_STATIC:
+ 	case IEEE80211_SMPS_DYNAMIC:
+ 		return IWL_NUM_IDLE_CHAINS_SINGLE;
++	case IEEE80211_SMPS_AUTOMATIC:
+ 	case IEEE80211_SMPS_OFF:
+ 		return active_cnt;
+ 	default:
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 5c7c17c..d552fa3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -559,6 +559,9 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
+ 
+ 	mutex_lock(&priv->shrd->mutex);
+ 
++	if (test_bit(STATUS_EXIT_PENDING, &priv->shrd->status))
++		goto out;
++
+ 	if (unlikely(test_bit(STATUS_SCANNING, &priv->shrd->status))) {
+ 		IWL_DEBUG_MAC80211(priv, "leave - scanning\n");
+ 		goto out;
+-- 
+1.7.1
+
