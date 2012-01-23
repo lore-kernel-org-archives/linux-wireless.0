@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:44432 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751184Ab2ALGgQ (ORCPT
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:54391 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753111Ab2AWLUf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jan 2012 01:36:16 -0500
-Date: Thu, 12 Jan 2012 09:34:50 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Jiri Kosina <jkosina@suse.cz>,
-	Lucas De Marchi <lucas.demarchi@profusion.mobi>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] ipw2x00: signedness bug handling frame length
-Message-ID: <20120112063449.GA2408@elgon.mountain> (sfid-20120112_073620_870375_7E8284B9)
+	Mon, 23 Jan 2012 06:20:35 -0500
+Date: Mon, 23 Jan 2012 13:20:26 +0200
+From: Johan Hedberg <johan.hedberg@gmail.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+Subject: Re: [PATCH COMMITTED] bluetooth: hci: Fix type of "enable_hs" to
+ bool.
+Message-ID: <20120123112026.GA18050@x220> (sfid-20120123_122050_816068_D061DA53)
+References: <20120122.144654.2252112633629547845.davem@davemloft.net>
+ <1327283783.1955.84.camel@aeonflux>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1327283783.1955.84.camel@aeonflux>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is basically just a cleanup.  Large positive numbers get counted as
-negative but then get implicitly cast to positive again for the checks
-that matter.
+Hi Marcel,
 
-This does make a small difference in ipw_handle_promiscuous_rx() when we
-test "if (unlikely((len + IPW_RX_FRAME_SIZE) > skb_tailroom(rxb->skb)))"
-It should return there, but we don't return until a couple lines later
-when we test "if (len > IPW_RX_BUF_SIZE - sizeof(struct ipw_rt_hdr)) {".
-The difference is that in the second test the sizeof() means that there
-is an implied cast to unsigned.
+On Mon, Jan 23, 2012, Marcel Holtmann wrote:
+> Hi Dave,
+> 
+> > net/bluetooth/hci_core.c: In function ‘__check_enable_hs’:
+> > net/bluetooth/hci_core.c:2587:1: warning: return from incompatible pointer type [enabled by default]
+> > 
+> > Signed-off-by: David S. Miller <davem@davemloft.net>
+> > ---
+> > 
+> > I noticed this while validating the build today, committed to 'net'.
+> 
+> and from your subject, I assume you rightfully just applied that patch
+> to your tree.
+> 
+> I remember that I acked such a patch, but it seems it never made it
+> anywhere in the end :(
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+It's over here:
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/ipw2x00/ipw2200.c
-index 018a8de..4fcdac6 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -7848,7 +7848,7 @@ static void ipw_handle_data_packet_monitor(struct ipw_priv *priv,
- 	 * more efficiently than we can parse it. ORDER MATTERS HERE */
- 	struct ipw_rt_hdr *ipw_rt;
- 
--	short len = le16_to_cpu(pkt->u.frame.length);
-+	unsigned short len = le16_to_cpu(pkt->u.frame.length);
- 
- 	/* We received data from the HW, so stop the watchdog */
- 	dev->trans_start = jiffies;
-@@ -8023,7 +8023,7 @@ static void ipw_handle_promiscuous_rx(struct ipw_priv *priv,
- 	s8 signal = frame->rssi_dbm - IPW_RSSI_TO_DBM;
- 	s8 noise = (s8) le16_to_cpu(frame->noise);
- 	u8 rate = frame->rate;
--	short len = le16_to_cpu(pkt->u.frame.length);
-+	unsigned short len = le16_to_cpu(pkt->u.frame.length);
- 	struct sk_buff *skb;
- 	int hdr_only = 0;
- 	u16 filter = priv->prom_priv->filter;
+http://git.kernel.org/?p=linux/kernel/git/jh/bluetooth-next.git;a=commitdiff;h=174b9000541fdffbdc53cf9464efb1c8a1d777db
+
+Johan
