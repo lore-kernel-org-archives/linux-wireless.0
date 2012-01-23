@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:47508 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750718Ab2ALLTC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jan 2012 06:19:02 -0500
-Message-ID: <4F0EC128.5060700@qca.qualcomm.com> (sfid-20120112_121908_599049_8DDD06EF)
-Date: Thu, 12 Jan 2012 13:16:56 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:42349 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752037Ab2AWLGN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 23 Jan 2012 06:06:13 -0500
+Date: Mon, 23 Jan 2012 12:05:45 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	656813@bugs.debian.org
+Subject: Re: [PATCH 1/2] ipw2200: Fix order of device registration
+Message-ID: <20120123110543.GA3637@redhat.com> (sfid-20120123_120623_068104_376B6644)
+References: <1327201775.8004.83.camel@deadeye>
 MIME-Version: 1.0
-To: "Pachamuthu, Thirumalai" <tpachamu@qca.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 2/4] ath6kl: Introduce new queue for uAPSD.
-References: <1326095120-1603-1-git-send-email-tpachamu@qca.qualcomm.com> <4F0D8036.8030306@qca.qualcomm.com> <0118B7479E19DD469808F3B2CE43263BBCF5AA@aphydexd01a>
-In-Reply-To: <0118B7479E19DD469808F3B2CE43263BBCF5AA@aphydexd01a>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1327201775.8004.83.camel@deadeye>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/12/2012 07:25 AM, Pachamuthu, Thirumalai wrote:
+Hi Ben
 
->> -----Original Message-----
->> From: Valo, Kalle
->> Sent: Wednesday, January 11, 2012 5:58 PM
->> To: Pachamuthu, Thirumalai
->> Cc: linux-wireless@vger.kernel.org; ath6kl-devel
->> Subject: Re: [PATCH 2/4] ath6kl: Introduce new queue for uAPSD.
->>
->> On 01/09/2012 09:45 AM, Thirumalai wrote:
->>> Add apsd_info in necessary places to indicate which AC's uAPSD is
->>> enabled.
->>>
->>> A bit is added in the wmi header (bit 4 of info3) to specify uapsd
->>> trigger in rx direction (target to host) and end of service period in
->>> tx direction (host to target)
->>>
->>> Signed-off-by: Thirumalai <tpachamu@qca.qualcomm.com>
->>
->> [...]
->>
->>> +#define WMI_DATA_HDR_TRIGGER_MASK      0x1
->>> +#define WMI_DATA_HDR_TRIGGER_SHIFT     4
->>> +
->>> +#define WMI_DATA_HDR_EOSP_MASK      WMI_DATA_HDR_TRIGGER_MASK
->>> +#define WMI_DATA_HDR_EOSP_SHIFT     WMI_DATA_HDR_TRIGGER_SHIFT
->>
->> This looks a bit odd, I can't see why you want to use trigger definitions for eosp.
->> Even if the values are same I don't see the benefit for using trigger values for
->> eosp. Is there a particular reason for this?
->>
->> Kalle
+On Sun, Jan 22, 2012 at 03:09:35AM +0000, Ben Hutchings wrote:
+> Currently cfg80211 fails to create a "phy80211" symlink in sysfs from
+> the net device to the wiphy device.  The latter needs to be registered
+> first.
 > 
-> The bit in the wmi header (bit 4 of info3) to specify TRIGGER in RX direction (target to host) and the same bit will be used as ESOP in TX direction (host to target). 
-> Simply we reused the existing macro which made this confusion; I will make the following change in the next release.
+> Compile-tested only.
 > 
-> #define WMI_DATA_HDR_EOSP_MASK    1
-> #define WMI_DATA_HDR_EOSP_SHIFT    4
+> Reported-by: Cesare Leonardi <celeonar@gmail.com>
+> Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
 
-Thanks, please do that. It is definitely clearer that way.
+This problem was created by my changes (commit
+7cabafcea793c003503a118da58da358b0692930). I was aware of remove
+symlink, and I'm sorry for that, but I think this symlink is not
+necessary, i.e: dereferencing device/ieee80211/phy0 give the same
+data:
 
-Kalle
+[root@dhcp-27-172 wlan0]# readlink -f phy80211
+/sys/devices/pci0000:00/0000:00:1c.1/0000:03:00.0/ieee80211/phy0
+[root@dhcp-27-172 wlan0]# readlink -f device
+/sys/devices/pci0000:00/0000:00:1c.1/0000:03:00.0
+
+Of course user space application may relay on the link, but well
+fixing that in kernel is not so easy as it looks at first glace.
+Reverting commits causing this problem, will remove fix for
+another quite serious issue. Changing ipw2x00 or mac80211 is
+risky, as that initalization code is kinda fragile. The best way
+for fix, is change applications that relay on that link.
+
+Thanks
+Stanislaw
