@@ -1,30 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47321 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932324Ab2AKS7s (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50474 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756163Ab2AXUQP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 13:59:48 -0500
-Subject: Re: [PATCH 1/2] wireless: Save original maximum regulatory
- transmission power for the calucation of the local maximum transmit power
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Hong Wu <Hong.Wu@dspg.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-In-Reply-To: <5EFF534737810441B0F97C2792E49C2DD20371@ILMAIL01.dspg.com>
-References: <5EFF534737810441B0F97C2792E49C2DD20371@ILMAIL01.dspg.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 11 Jan 2012 19:59:45 +0100
-Message-ID: <1326308385.3417.11.camel@jlt3.sipsolutions.net> (sfid-20120111_195952_106742_2DFBBA5D)
-Mime-Version: 1.0
+	Tue, 24 Jan 2012 15:16:15 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] orinoco_usb: remove version definition
+Date: Tue, 24 Jan 2012 15:04:14 -0500
+Message-Id: <1327435454-27495-1-git-send-email-linville@tuxdriver.com> (sfid-20120124_211619_547734_E7122D5A)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-01-11 at 20:33 +0200, Hong Wu wrote:
-> The local maximum transmit power for a channel is defined as the maximum
-> regulatory transmission power minus the local power constraint specified
-> for the channel in the Power Constraint element. (7.3.2.15 IEEE80211 2007)
+Avoids this:
 
-I have a feeling that looking at the code I understand what you're
-trying to fix, but please explain it better.
+  CC [M]  drivers/net/wireless/orinoco/orinoco_usb.o
+drivers/net/wireless/orinoco/orinoco_usb.c:1759:13: warning: ‘version’ defined but not used
 
-johannes
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ drivers/net/wireless/orinoco/orinoco_usb.c |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
+index ae8ce56..f634d45 100644
+--- a/drivers/net/wireless/orinoco/orinoco_usb.c
++++ b/drivers/net/wireless/orinoco/orinoco_usb.c
+@@ -1754,11 +1754,6 @@ static struct usb_driver orinoco_driver = {
+ 	.id_table = ezusb_table,
+ };
+ 
+-/* Can't be declared "const" or the whole __initdata section will
+- * become const */
+-static char version[] __initdata = DRIVER_NAME " " DRIVER_VERSION
+-	" (Manuel Estrada Sainz)";
+-
+ module_usb_driver(orinoco_driver);
+ 
+ MODULE_AUTHOR("Manuel Estrada Sainz");
+-- 
+1.7.4.4
 
