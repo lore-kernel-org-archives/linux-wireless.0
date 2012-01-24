@@ -1,82 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:47687 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754398Ab2AaPTl (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:19212 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750885Ab2AXLay (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 10:19:41 -0500
-Received: by pbdu11 with SMTP id u11so244046pbd.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 07:19:40 -0800 (PST)
-Message-ID: <4F280689.1080402@canonical.com> (sfid-20120131_161944_881614_17EFAA26)
-Date: Tue, 31 Jan 2012 08:19:37 -0700
-From: Tim Gardner <rtg.canonical@gmail.com>
-Reply-To: tim.gardner@canonical.com
+	Tue, 24 Jan 2012 06:30:54 -0500
+Message-ID: <4F1E9667.1040504@qca.qualcomm.com> (sfid-20120124_123058_678797_8E775D5F)
+Date: Tue, 24 Jan 2012 13:30:47 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V3] rtlwifi: Convert to asynchronous firmware load
-References: <4f272b8e.6jAMcI3HDthxlb+q%Larry.Finger@lwfinger.net>
-In-Reply-To: <4f272b8e.6jAMcI3HDthxlb+q%Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH v2 1/8] ath6kl: Re-architect suspend mode handling in
+ ath6kl_sdio_suspend
+References: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com> <1327066544-23779-2-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1327066544-23779-2-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/30/2012 04:45 PM, Larry Finger wrote:
-> This patch addresses a kernel bugzilla report and two recent mail threads.
->
-> The kernel bugzilla report is https://bugzilla.kernel.org/show_bug.cgi?id=42632,
-> which reports a udev timeout on boot.
->
-> The first mail thread, which was on LKML (http://lkml.indiana.edu/hypermail/
-> linux/kernel/1112.3/00965.html) was for a WARNING that occurs after a
-> suspend/resume cycle for rtl8192cu.
->
-> The scond mail thread (http://marc.info/?l=linux-wireless&m=132655490826766&w=2)
-> concerned changes in udev that break drivers that delay while firmware is loaded
-> on modprobe.
->
-> This patch converts all rtlwifi-based drivers to use the asynchronous firmware
-> loading mechanism. Drivers rtl8192ce, rtl8192cu and rtl8192de share a common
-> callback routine. Driver rtl8192se needs different handling of the firmware,
-> thus it has its own code.
->
-> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
-> Cc: Stable<stable@vger.kernel.org>
-> ---
->
-> V2 - Add check for firmware load callback.
-> V3 - Removed some debugging code left in by accident.
->
-> ---
->
-> John,
->
-> This patch will apply to the wireless-testing git tree.
->
-> I have mixed feelings about the timing of the inclusion of this patch.
-> It is quite invasive, which would normally indicate that it go through
-> the normal process and ultimately be included in V3.4 to get further
-> testing. On the other hand, the number of bug reports is growing rapidly,
-> which argues for it to be included quickly and backported to stable.
->
-> I'll leave that decision to you. If you decide to push this to mainline
-> now, there is one additional complication due to conflicts with the series
-> of patches by Joe Perches that modified the debug printouts (commits
-> 804dd24 through 07839b1). I have a version of the patch for Linus's tree,
-> but that pushes the conflicts in a later merge in linux-next.
->
-> To improve the testing coverage, I will post the mainline patch at b.k.o,
-> bug #42632.
->
-> Larry
-> ---
->
+On 01/20/2012 03:35 PM, rmani@qca.qualcomm.com wrote:
+> From: Raja Mani <rmani@qca.qualcomm.com>
+> 
+> Using this patch, the user can bypass existing auto
+> suspend mode selection logic and force ath6kl to enter
+> into the suspend mode what he/she wants.
+> 
+> If the user doesn't choose any suspend mode while doing
+> insmod of the driver, auto suspend mode selection logic
+> will kick in and choose suspend mode based on the host
+> SDIO controller capability.
+> 
+> Generic module parameter is required to specify suspend
+> mode including Deep Sleep and WOW while doing insmod.
+> Renaming existing mod param variable suspend_cutpower
+> would be sufficient to meet this requirement.
+> 
+> New module parameter suspend_mode can take any one of
+> the below suspend state,
+>    1. cut power
+>    2. deep sleep
+>    3. wow
+> 
+> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 
+Few comments:
 
-d88e0b3162bded8190866d9a17f5e36c9bb0d29e in wireless-testing (which 
-includes 'rtlwifi: Convert to asynchronous firmware load') is working 
-well on my RTL8188CE [10ec:8176].
+> --- a/drivers/net/wireless/ath/ath6kl/core.c
+> +++ b/drivers/net/wireless/ath/ath6kl/core.c
+> @@ -25,12 +25,12 @@
+>  #include "cfg80211.h"
+>  
+>  unsigned int debug_mask;
+> -static bool suspend_cutpower;
+> +static unsigned char suspend_mode;
 
-rtg
--- 
-Tim Gardner tim.gardner@canonical.com
+IMHO uint is better, just like below.
+
+>  static unsigned int uart_debug;
+>  static unsigned int ath6kl_p2p;
+>  
+>  module_param(debug_mask, uint, 0644);
+> -module_param(suspend_cutpower, bool, 0444);
+> +module_param(suspend_mode, byte, 0644);
+>  module_param(uart_debug, uint, 0644);
+>  module_param(ath6kl_p2p, uint, 0644);
+
+> --- a/drivers/net/wireless/ath/ath6kl/sdio.c
+> +++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+> @@ -779,7 +779,7 @@ out:
+>  	return ret;
+>  }
+>  
+> -static int ath6kl_sdio_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
+> +static int ath6kl_set_sdio_pm_keep_pwr_wake_irq(struct ath6kl *ar)
+
+The function name doesn't need to be this long, ath6kl_sdio_pm_caps(),
+or something like that, is enough. And I'm not really sure if this
+function makes sense, it complicates the error handling.
+
+> +	if (ar->suspend_mode == WLAN_POWER_STATE_WOW ||
+> +	    (!ar->suspend_mode && wow)) {
+> +
+> +		ret = ath6kl_set_sdio_pm_keep_pwr_wake_irq(ar);
+> +		if (ret)
+> +			goto cut_pwr;
+
+This changes functionality so that if MMC_PM_WAKE_SDIO_IRQ is not
+supported we will fallback to cutpower, earlier we would go to deep
+sleep mode. I guess that's ok, but it still is a functionality change.
+
+Kalle
