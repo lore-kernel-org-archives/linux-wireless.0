@@ -1,63 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:56428 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751970Ab2A1TRx (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:34841 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754582Ab2AXErQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jan 2012 14:17:53 -0500
-Received: by vbbfc26 with SMTP id fc26so2034125vbb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 28 Jan 2012 11:17:52 -0800 (PST)
+	Mon, 23 Jan 2012 23:47:16 -0500
 MIME-Version: 1.0
-In-Reply-To: <4F2443BB.3000602@openwrt.org>
-References: <1327735027-30121-1-git-send-email-lindner_marek@yahoo.de>
- <1327735027-30121-2-git-send-email-lindner_marek@yahoo.de>
- <4F23F753.8070405@openwrt.org> <201201290243.47953.lindner_marek@yahoo.de> <4F2443BB.3000602@openwrt.org>
-From: Daniel Halperin <dhalperi@cs.washington.edu>
-Date: Sat, 28 Jan 2012 11:17:32 -0800
-Message-ID: <CALSq=BahchLsgVVeFei+_FQAchMAAg2yU1drmpZTgt0pVoJbJg@mail.gmail.com> (sfid-20120128_201821_764934_58AA0F95)
-Subject: Re: [PATCH] mac80211: minstrel_ht should not override user supplied
- rts setting
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Marek Lindner <lindner_marek@yahoo.de>,
-	linux-wireless@vger.kernel.org
+In-Reply-To: <20120124013625.GB18436@gamma.logic.tuwien.ac.at>
+References: <20120124013625.GB18436@gamma.logic.tuwien.ac.at>
+Date: Mon, 23 Jan 2012 20:47:14 -0800
+Message-ID: <CANUX_P3er0orBy8OhDuY1DfgD810UD-_HB_ukJnCA+W8e-VazQ@mail.gmail.com> (sfid-20120124_054804_209308_85EE3A63)
+Subject: Re: iwlagn is getting even worse with 3.3-rc1
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Norbert Preining <preining@logic.at>
+Cc: linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 28, 2012 at 10:51 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2012-01-28 7:43 PM, Marek Lindner wrote:
->> On Saturday, January 28, 2012 21:25:39 Felix Fietkau wrote:
->> If you think it is unsuitable do you mind elaborating what this setting is
->> for? As far as I can tell minstrel_ht is the only rate control algorithm that
->> decides to be smarter than the user configuring the device. Without mentioning
->> this anywhere! IMHO it should be minstrel_ht explaining why this makes sense,
->> not the other way round.
-> The user configurable RTS/CTS setting sets a threshold which is applied
-> to all transmission attempts with a packet size above it.
-> What minstrel_ht does is enable RTS/CTS only for on-chip retransmissions
-> of the second rate slot and below. That means as long as it doesn't fall
-> back to lower rates, no RTS/CTS gets used.
-> It's not about minstrel_ht being smarter than the user. It's about
-> adaptive control of RTS/CTS being smarter than a static setting.
+On Mon, Jan 23, 2012 at 17:36, Norbert Preining <preining@logic.at> wrote:
+> Dear all,
+>
+> (please cc)
+>
+> long time ago we had a long discussion about iwlagn regressions in 3.1.0
+> Up to 3.2 I still have regular problems on the university network
+> with stuck iwl driver not even realizing that nothing goes out or in.
+>
+> Today I switched to 3.3-rc1 to see it is getting even worse, now on my
+> home network I get stuck queue and no connection:
 >
 
-Adaptive RTS/CTS is important to control for interference---RTS/CTS is
-there so that other Wi-Fi devices know not to interfere with your
-flow. It may well be the case that this is not a major problem in
-whatever your scenario you're working, Marek, but it makes a big
-difference in a many bad corner cases.
-
-As Felix says, by not forcing RTS/CTS on until a retry, the user's
-RTS/CTS preference is used for the overwhelming majority of packets
-whose rates are chosen correctly (or a little too slow).
-
-I'm with Felix: I could see adding an option that means "force never
-use RTS/CTS" but I think we're at the right operating point when
-interpreting the standard "RTS/CTS threshold" option.
-
-(BUT @Felix: maybe max_tp_rate2 shouldn't use RTS/CTS---it's still
-trying to be aggressive, whereas max_prob_rate is the one where you
-*really* want the packet to get through. So maybe the first half of
-Marek's patch is worth keeping, though it *should* be a marginal
-difference in normal operating environments.)
-
-Dan
+Can you please run with debug flags 0x80000000 ?
+We will probably need to enable TX_REPLY too: 0xC0000000 but this one
+is noisy, so let's begin the 0x80000000
