@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14928 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:34613 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752045Ab2ACKvR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 05:51:17 -0500
-Date: Tue, 3 Jan 2012 11:51:07 +0100
+	id S1754943Ab2AXNJe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jan 2012 08:09:34 -0500
 From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Jonathan Nieder <jrnieder@gmail.com>
-Cc: Christoph Anton Mitterer <calestyo@scientia.net>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Dietsche <Gregory.Dietsche@cuw.edu>,
-	linux-kernel@vger.kernel.org
-Subject: Re: iwl4965: "MAC is in deep sleep!" freezes
-Message-ID: <20120103105107.GB3391@redhat.com> (sfid-20120103_115138_298731_53D562A6)
-References: <20110902233806.GA22157@elie>
- <20110905091918.GC2221@redhat.com>
- <265f56a4dc9f5d3edeca3d101e445353@imap.dd24.net>
- <20110908084913.GB2195@redhat.com>
- <1321228952.3362.15.camel@fermat.scientia.net>
- <20111114014615.GC16508@elie.hsd1.il.comcast.net>
- <1321466933.3364.16.camel@fermat.scientia.net>
- <20111118074552.GB2203@redhat.com>
- <1325171851.3907.33.camel@fermat.scientia.net>
- <20111229201149.GB1674@elie.Belkin>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20111229201149.GB1674@elie.Belkin>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 1/4] rt2800usb: initialize H2M_INT_SRC register
+Date: Tue, 24 Jan 2012 14:09:06 +0100
+Message-Id: <1327410549-4714-1-git-send-email-sgruszka@redhat.com> (sfid-20120124_140939_533998_E57CCD20)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 29, 2011 at 02:11:49PM -0600, Jonathan Nieder wrote:
-> Christoph Anton Mitterer wrote:
-> 
-> > The logging is basically identical to what I've send before.
-> >
-> > So either there is some weird hardware damage,.. or (as I suggested
-> > before) it might be just some different revision or so of the chipset,
-> > behaving different?!
+Ralink USB driver initialize H2M_INT_SRC to 0 after firmware load, and
+never touch this register later. It is not touched at all by Ralink PCI
+driver.
 
-Hmm, on my experience, software sucks much more than hardware, but we
-never can exclude hardware problem. I'm not sure if there are divergence
-between iwl4965 chipsets. Also I'm not sure if there are more than one
-chipsets revision at all. Christoph, you mentioned that you replaced you 
-motherboard. Did the problem start to happen after that? Did you
-correctly connect antennas cables to adapter. Does adapter sits
-tight in the mini PCIe slot?
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-> > Guess it's pointless to send you the same logging output again, but if
-> > you'd like to I can do so.
-> 
-> Yes, please do, or provide a link and summary so we don't have to hunt
-> it down.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 22a1a8f..3e194b7 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -448,6 +448,8 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
+ 	 */
+ 	rt2800_register_write(rt2x00dev, H2M_BBP_AGENT, 0);
+ 	rt2800_register_write(rt2x00dev, H2M_MAILBOX_CSR, 0);
++	if (rt2x00_is_usb(rt2x00dev))
++		rt2800_register_write(rt2x00dev, H2M_INT_SRC, 0);
+ 	msleep(1);
+ 
+ 	return 0;
+-- 
+1.7.1
 
-No, that's not needed if there are no good logs for compare. If possible
-try on some very old kernel, first kernel with iwl4965 support was 2.6.24.
-
-Thanks
-Stanislaw
