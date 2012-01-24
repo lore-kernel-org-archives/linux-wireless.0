@@ -1,62 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:44266 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755283Ab2AXJGo (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:49859 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754781Ab2AXIG3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 04:06:44 -0500
-Received: by mail-lpp01m010-f42.google.com with SMTP id g1so1035036lah.29
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2012 01:06:43 -0800 (PST)
+	Tue, 24 Jan 2012 03:06:29 -0500
+Received: by pbaa10 with SMTP id a10so2070623pba.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2012 00:06:28 -0800 (PST)
 MIME-Version: 1.0
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com, Ido Yariv <ido@wizery.com>
-Subject: [PATCH 2/8] wl12xx: Power off after flushing work
-Date: Tue, 24 Jan 2012 11:06:23 +0200
-Message-Id: <1327395989-29663-3-git-send-email-coelho@ti.com> (sfid-20120124_100650_166378_527319CF)
-In-Reply-To: <1327395989-29663-1-git-send-email-coelho@ti.com>
-References: <1327395989-29663-1-git-send-email-coelho@ti.com>
+In-Reply-To: <20120124072946.GB2420@redhat.com>
+References: <4F040FEA.3080703@01019freenet.de>
+	<1408490.qSFZVkU7fA@helmutmobil.site>
+	<4F0562DF.3000200@dualc.maya.org>
+	<CAGXE3d8b5qtbhesPjRy3EXvkiwshUg0eZqcDBzb1OhKK3j6z6A@mail.gmail.com>
+	<4F0AEBAB.9020104@01019freenet.de>
+	<CAGXE3d-cOeTEHugbgWMoz8-Dymw0=JHxykdK4ZkBmCJZ9tSPmg@mail.gmail.com>
+	<201201100803.q0A83nsQ003757@mail.maya.org>
+	<CAGXE3d_jW7NFnekMfwn6JPXX0xB4UWM3ttbRVLv-ZbsoMOoWEw@mail.gmail.com>
+	<201201200730.q0K7U0oj004966@mail.maya.org>
+	<CAGXE3d_rCMYwoEBNjk+S7WvAmCkPMcq-Gpawm370-cSbjXy6rg@mail.gmail.com>
+	<20120124072946.GB2420@redhat.com>
+Date: Tue, 24 Jan 2012 09:06:28 +0100
+Message-ID: <CAGXE3d8vPU2ousKU5ANv5pL55QtWFizPyEnW2tHDHPeGBUgKzg@mail.gmail.com> (sfid-20120124_090632_678133_5D10378A)
+Subject: Re: Compat-wireless-3.2-rc6-3 is broken for rt2860 device
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Andreas Hartmann <andihartmann@01019freenet.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ido Yariv <ido@wizery.com>
+On Tue, Jan 24, 2012 at 8:29 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Mon, Jan 23, 2012 at 02:29:08PM +0100, Helmut Schaa wrote:
+>> On Fri, Jan 20, 2012 at 8:29 AM, Andreas Hartmann
+>> <andihartmann@01019freenet.de> wrote:
+>> > All in one: Your workaround was a good idea, but unfortunately it
+>> > doesn't "solve" / workaround the problem introduced with the patch
+>> > "mac80211: retry sending failed BAR frames later instead of tearing
+>> > down aggr" [1]. I don't know off any other solution at this time as to revert it.
+>>
+>> Ok, so we've got at least one hw issue here: rt2800 is not able to report
+>> correct ACK state of BARs :(
+>
+> Whould it help, if rt2800 driver will not filter out BAR frames?
 
-When stopping plt, the chip is powered off before all current work items
-are flushed and interrupts are disabled. This might introduce a race in
-which the driver tries to communicate with a powered off chip.
+I don't think so since we're having problems with tx aggregation and not rx.
+Also, BARs are not handled at all in mac80211 AFAIK.
 
-Fix this by powering off the device only after interrupts are disabled
-and all work items are flushed.
-
-Signed-off-by: Ido Yariv <ido@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index fc4d4d5..bf356a8 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -1406,8 +1406,6 @@ int wl1271_plt_stop(struct wl1271 *wl)
- 		goto out;
- 	}
- 
--	wl1271_power_off(wl);
--
- 	wl->state = WL1271_STATE_OFF;
- 	wl->rx_counter = 0;
- 
-@@ -1417,6 +1415,11 @@ int wl1271_plt_stop(struct wl1271 *wl)
- 	wl1271_flush_deferred_work(wl);
- 	cancel_work_sync(&wl->netstack_work);
- 	cancel_work_sync(&wl->recovery_work);
-+
-+	mutex_lock(&wl->mutex);
-+	wl1271_power_off(wl);
-+	mutex_unlock(&wl->mutex);
-+
- out:
- 	return ret;
- }
--- 
-1.7.4.1
-
+Helmut
