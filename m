@@ -1,62 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:63553 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755776Ab2ATVmR convert rfc822-to-8bit (ORCPT
+Received: from smtp12.services.sfr.fr ([93.17.128.68]:50758 "EHLO
+	smtp12.services.sfr.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755692Ab2AXKfb convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 16:42:17 -0500
-Received: by iacb35 with SMTP id b35so121068iac.19
-        for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2012 13:42:17 -0800 (PST)
+	Tue, 24 Jan 2012 05:35:31 -0500
+Date: Tue, 24 Jan 2012 11:25:52 +0100 (CET)
+From: Milan Bouchet-Valat <nalimilan@club-internet.fr>
+Reply-To: Milan Bouchet-Valat <nalimilan@club-internet.fr>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Message-ID: <24107995.140239.1327400752025.JavaMail.www@wsfrf1232> (sfid-20120124_113534_756370_472D7985)
+In-Reply-To: <4F1A8C55.6010900@broadcom.com>
+References: <1327067694.2590.6.camel@milan> <4F199EAC.3050602@broadcom.com>
+ <1327080177.3285.26.camel@milan> <4F1A8C55.6010900@broadcom.com>
+Subject: Re: Re: BCM4313 doesn't work after suspend (brcmsmac on
+ compat-wireless-next)
 MIME-Version: 1.0
-In-Reply-To: <1327091044.9857.8.camel@jlt3.sipsolutions.net>
-References: <20120119182033.5F60358073@lefflers.sfo.corp.google.com>
-	<1327069053.9857.3.camel@jlt3.sipsolutions.net>
-	<CA+yqC4Y-nKrX=jaGbPTk7LqsR+3jqPJssOEFuw0dPm+sMyMvGg@mail.gmail.com>
-	<1327091044.9857.8.camel@jlt3.sipsolutions.net>
-Date: Fri, 20 Jan 2012 13:42:15 -0800
-Message-ID: <CA+yqC4a9+KD-eXeQHQcfUngq=7GLG9CS_9Je3PUdEGhsssAmTg@mail.gmail.com> (sfid-20120120_224220_898735_CC6AEFDF)
-Subject: Re: [PATCH RESEND] mac80211: support fixed rate packet injection
-From: Sam Leffler <sleffler@chromium.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 20, 2012 at 12:24 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
->
-> On Fri, 2012-01-20 at 10:44 -0800, Sam Leffler wrote:
-> > On Fri, Jan 20, 2012 at 6:17 AM, Johannes Berg
-> > <johannes@sipsolutions.net> wrote:
-> > >
-> > > On Thu, 2012-01-12 at 09:53 -0800, Sam Leffler wrote:
-> > >
-> > > > +     if (fixed_rate != -1) {
-> > > > +             struct ieee80211_channel *chan = local->hw.conf.channel;
-> > > > +             struct ieee80211_supported_band *sband =
-> > > > +                     local->hw.wiphy->bands[chan->band];
-> > > > +             struct ieee80211_tx_rate *rates = info->control.rates;
-> > > > +             int i;
-> > > > +
-> > > > +             if (fixed_rate_flags & IEEE80211_TX_RC_MCS) {
-> > > > +                     WARN_ON(!sband->ht_cap.ht_supported);
-> > > > +                     rates[0].idx = fixed_rate;
-> > >
-> > > Unless I missed something, this would be *trivial* to trigger by
-> > > injection -- doesn't seem like a good idea to me.
-> > >
-> >
-> > Can unprivileged users inject packets?  Is your preference to generate
-> > an error or just suppress the warning?
->
-> I'm not sure, but it doesn't really matter -- even printing an error
-> here is quite pointless.
->
+Le samedi 21 janvier 2012 Ã  10:58 +0100, Arend van Spriel a Ã©crit :
+> I just checked and the suspend/resume patches from Linus were applied on
+> January 17th. So you need to pick up the patches (see thread "[0/5]
+> bcma/brcmsmac suspend/resume cleanups and fixes" on netdev list).
+I just tried the new compat-wireless package built yesterday, and indeed the problem is gone! Funny that I reported it just when it was fixed. I hope it will be backported to 3.2.
 
-Not sure why you say that.  If you submit a packet and it's tossed w/o
-any indication (e.g. you mistakenly set the channel wrong so the
-driver tosses the frame) then it's not obvious what's going on.
-Anyway, I'll remove the warning.
+Now I've another problem to debug, I'll send a mail soon.
 
--Sam
+Keep up the good work!
