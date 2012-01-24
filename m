@@ -1,33 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58755 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755954Ab2AKNP2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 08:15:28 -0500
-Received: by sipsolutions.net with esmtpsa (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.77)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1Rky1X-0001Pa-Mv
-	for linux-wireless@vger.kernel.org; Wed, 11 Jan 2012 14:15:27 +0100
-Subject: Re: [RFC/RFT 0/3] auth/assoc redesign
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <20120110153048.612308160@sipsolutions.net> (sfid-20120110_163315_162452_01A5E7B6)
-References: <20120110153048.612308160@sipsolutions.net>
-	 (sfid-20120110_163315_162452_01A5E7B6)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 11 Jan 2012 14:15:26 +0100
-Message-ID: <1326287726.3417.2.camel@jlt3.sipsolutions.net> (sfid-20120111_141531_913351_5932A211)
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:2500 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754664Ab2AXNJd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jan 2012 08:09:33 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 2/4] rt2800: disable DMA after firmware load
+Date: Tue, 24 Jan 2012 14:09:07 +0100
+Message-Id: <1327410549-4714-2-git-send-email-sgruszka@redhat.com> (sfid-20120124_140937_346486_0AD2A592)
+In-Reply-To: <1327410549-4714-1-git-send-email-sgruszka@redhat.com>
+References: <1327410549-4714-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I found a number of bugs in these patches -- please download the latest
-versions from
+We can receive frames just after firmware load with current code, so
+disable DMA just after firmware is loaded, not before.
 
-> http://johannes.sipsolutions.net/patches/kernel/all/LATEST/
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   21 +++++++++------------
+ 1 files changed, 9 insertions(+), 12 deletions(-)
 
-if you want to test them.
-
-johannes
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 3e194b7..165535c 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -412,18 +412,6 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
+ 	}
+ 
+ 	/*
+-	 * Disable DMA, will be reenabled later when enabling
+-	 * the radio.
+-	 */
+-	rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
+-	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
+-	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_DMA_BUSY, 0);
+-	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
+-	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_RX_DMA_BUSY, 0);
+-	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_TX_WRITEBACK_DONE, 1);
+-	rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
+-
+-	/*
+ 	 * Write firmware to the device.
+ 	 */
+ 	rt2800_drv_write_firmware(rt2x00dev, data, len);
+@@ -444,6 +432,15 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
+ 	}
+ 
+ 	/*
++	 * Disable DMA, will be reenabled later when enabling
++	 * the radio.
++	 */
++	rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
++	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
++	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
++	rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
++
++	/*
+ 	 * Initialize firmware.
+ 	 */
+ 	rt2800_register_write(rt2x00dev, H2M_BBP_AGENT, 0);
+-- 
+1.7.1
 
