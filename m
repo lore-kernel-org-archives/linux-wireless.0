@@ -1,42 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out003.kontent.com ([81.88.40.217]:46302 "EHLO
-	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505Ab2AAJqk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jan 2012 04:46:40 -0500
-From: Oliver Neukum <oliver@neukum.org>
-To: Marek Vasut <marek.vasut@gmail.com>
-Subject: Re: loading firmware while usermodehelper disabled.
-Date: Sun, 1 Jan 2012 10:48:18 +0100
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	"Greg Kroah-Hartman" <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-References: <20111230235421.GA6054@redhat.com> <CA+55aFyqm4FbW=--7U4ULk1EBb6RLP0sRgtokODBYnZNiJXWew@mail.gmail.com> <201112311939.19170.marek.vasut@gmail.com>
-In-Reply-To: <201112311939.19170.marek.vasut@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201201011048.18953.oliver@neukum.org> (sfid-20120101_104711_307508_D4DFC155)
+Received: from mout6.freenet.de ([195.4.92.96]:38137 "EHLO mout6.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756192Ab2AXRkY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jan 2012 12:40:24 -0500
+Message-Id: <201201241737.q0OHbmX5003698@mail.maya.org> (sfid-20120124_184028_330919_A726E699)
+Date: Tue, 24 Jan 2012 18:37:45 +0100
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 4/4] rt2800usb: remove PWR_PIN_CFG=0x3
+ during init
+In-Reply-To: <1327410549-4714-4-git-send-email-sgruszka@redhat.com>
+References: <1327410549-4714-1-git-send-email-sgruszka@redhat.com> <1327410549-4714-4-git-send-email-sgruszka@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Samstag, 31. Dezember 2011, 19:39:18 schrieb Marek Vasut:
+Hi Stanislaw,
 
-> maybe we should implement such thing into the firmware loader itself? Allow it 
-> -- for example via some node in /dev -- to force loading firmware into some 
-> buffer in kernel just before suspend so it'll certainly be readily available at 
-> resume time?
+Stanislaw Gruszka schrieb:
+> This seems to be only needed as workaround for hardware problem on 
+> PCI devices.
 
-This is difficult. We don't know at suspend time which firmware we will
-need at resume time. We could keep a record of firmware we needed
-to get to the state we are, but this is a very complex scheme.
+I tested this series (with all other resent patches applied) against a
+rt3572usb based device (Linksys WUSB600N) on to different machines
+(64bit smp (linux 3.2.1) and 32bit single core (linux 2.6.37.6)). I
+couldn't see any functional change. Unfortunately it's as bad as
+always :-(.
 
-	Regards
-		Oliver
+But one thing is new: I'm getting now these errors in messages (with
+kernel 3.2.1) in the moment of the stall (which never stops until the
+module is unloaded (or I didn't display enough patience)):
+
+
+Jan 24 18:10:23 nb kernel: [  798.289036] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:24 nb kernel: [  798.701293] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:24 nb kernel: [  799.113537] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x101c with error -71.
+Jan 24 18:10:25 nb kernel: [  799.525923] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:25 nb kernel: [  799.938177] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:25 nb kernel: [  800.350428] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x101c with error -71.
+Jan 24 18:10:26 nb kernel: [  800.762682] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:26 nb kernel: [  801.174804] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:27 nb kernel: [  801.586928] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:27 nb kernel: [  801.999047] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:28 nb kernel: [  802.411208] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:28 nb kernel: [  802.823413] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:28 nb kernel: [  803.235584] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:28 nb kernel: [  803.278183] tx session timer expired on tid 0
+Jan 24 18:10:29 nb kernel: [  803.647830] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:29 nb kernel: [  804.059961] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:30 nb kernel: [  804.472326] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:30 nb kernel: [  804.884463] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:30 nb kernel: [  805.296625] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:31 nb kernel: [  805.708686] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:31 nb kernel: [  806.120842] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:32 nb kernel: [  806.533120] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:32 nb kernel: [  806.945222] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:33 nb kernel: [  807.357495] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:33 nb kernel: [  807.769588] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:33 nb kernel: [  808.181876] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:34 nb kernel: [  808.594125] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:10:34 nb kernel: [  809.006261] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+...
+Jan 24 18:11:07 nb kernel: [  841.590496] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:11:07 nb kernel: [  841.590604] phy0 -> rt2x00usb_regbusy_read: Error - Indirect register access failed: offset=0x0000101c, value=0xffff8800
+Jan 24 18:11:07 nb kernel: [  842.003019] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+Jan 24 18:11:08 nb kernel: [  842.415369] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x101c with error -71.
+
+
+Kind regards,
+Andreas
