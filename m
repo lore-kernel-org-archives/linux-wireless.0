@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46419 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754477Ab2AKMtd (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:4979 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753859Ab2AXLqi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 07:49:33 -0500
-Subject: Re: [PATCH] NFC: Download TI NFC init script
-From: Johannes Berg <johannes@sipsolutions.net>
-To: ilanelias78@gmail.com
-Cc: samuel@sortiz.org, lauro.venancio@openbossa.org,
-	aloisio.almeida@openbossa.org, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, Ilan Elias <ilane@ti.com>
-In-Reply-To: <1326285768-3073-1-git-send-email-ilane@ti.com> (sfid-20120111_134051_269239_A8A55A8B)
-References: <1326285768-3073-1-git-send-email-ilane@ti.com>
-	 (sfid-20120111_134051_269239_A8A55A8B)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 11 Jan 2012 13:49:19 +0100
-Message-ID: <1326286159.3417.1.camel@jlt3.sipsolutions.net> (sfid-20120111_134936_842572_3398ECC4)
-Mime-Version: 1.0
+	Tue, 24 Jan 2012 06:46:38 -0500
+Message-ID: <4F1E9A19.7080406@qca.qualcomm.com> (sfid-20120124_124642_199102_E994D733)
+Date: Tue, 24 Jan 2012 13:46:33 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH v2 7/8] ath6kl: Add a support to handle the host sleep
+ mode cmd processed event
+References: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com> <1327066544-23779-8-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1327066544-23779-8-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-01-11 at 14:42 +0200, ilanelias78@gmail.com wrote:
+On 01/20/2012 03:35 PM, rmani@qca.qualcomm.com wrote:
+> From: Raja Mani <rmani@qca.qualcomm.com>
+> 
+> For every WMI_SET_HOST_SLEEP_MODE_CMDID command (send from the host),
+> the firmware sends WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID as
+> an acknowledgement to the host.
+> 
+> In order to being sync with the firmware, the host has to wait for
+> this event before going to the suspend state.
+> 
+> This patch adds,
+>  * New command WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID in
+>    WMI event table.
+>  * New WMI function ath6kl_wmi_host_sleep_mode_cmd_prcd_evt_rx()
+>    to process the event.
+>  * New flag HOST_SLEEP_MODE_CMD_PROCESSED in VIF flags to record
+>    the arrival of the event.
+> 
+> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 
-> @@ -47,6 +59,36 @@ struct nfcwilink_hdr {
->  	u16 len;
->  } __packed;
+You could fold patches 7 and 8 as they are one logical change.
 
-> +struct bts_file_hdr {
-> +	u32 magic;
-
-All this new stuff, but also the old stuff above, seems to be missing
-endian annotations.
-
-johannes
-
+Kalle
