@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ukfsn.org ([77.75.108.3]:38665 "EHLO mail.ukfsn.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753278Ab2AQM4s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 07:56:48 -0500
-Received: from localhost (smtp-filter.ukfsn.org [192.168.54.205])
-	by mail.ukfsn.org (Postfix) with ESMTP id D6BB1DECCA
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2012 12:29:36 +0000 (GMT)
-Received: from mail.ukfsn.org ([192.168.54.25])
-	by localhost (smtp-filter.ukfsn.org [192.168.54.205]) (amavisd-new, port 10024)
-	with ESMTP id jzEyYJ2yVzp3 for <linux-wireless@vger.kernel.org>;
-	Tue, 17 Jan 2012 12:58:05 +0000 (GMT)
-Received: from stargate.localnet (unknown [84.45.236.142])
-	by mail.ukfsn.org (Postfix) with ESMTP id 30A1BDECC1
-	for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2012 12:29:36 +0000 (GMT)
-From: David Goodenough <david.goodenough@btconnect.com>
-To: linux-wireless@vger.kernel.org
-Subject: why can the distance only be set on a phy not a dev
-Date: Tue, 17 Jan 2012 12:29:33 +0000
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24411 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751978Ab2AXLgN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jan 2012 06:36:13 -0500
+Message-ID: <4F1E97A5.1030403@qca.qualcomm.com> (sfid-20120124_123626_722687_86BDE598)
+Date: Tue, 24 Jan 2012 13:36:05 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Message-Id: <201201171229.33901.david.goodenough@btconnect.com> (sfid-20120117_135652_146253_52D9EF91)
+To: <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH v2 2/8] ath6kl: Add a new func to configure default WOW
+ patterns for AP mode
+References: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com> <1327066544-23779-3-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1327066544-23779-3-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using the iw command, most things can either be directed to a dev or
-a phy, but a distance can only be set on a phy.
+On 01/20/2012 03:35 PM, rmani@qca.qualcomm.com wrote:
+> From: Raja Mani <rmani@qca.qualcomm.com>
+> 
+> ath6kl_ap_add_default_wow_patterns() is added to configure
+> the below default patterns when the system enters into WOW
+> suspend in AP mode.
+> 
+>   * Unicast IP, EAPOL-like and ARP packet pattern
+>   * ARP packet pattern
+>   * mDNS/SSDP/LLMNR pattern
+>   * DHCP broadcast pattern
+> 
+> This will be called from ath6kl_wow_suspend() func.
+> 
+> In addition, two argument variable's ('filter' and 'mask)
+> data type in ath6kl_wmi_add_wow_pattern_cmd() are changed
+> from 'u8 *' to 'const u8 *'. This is needed to make all
+> pattern and mask arrays to be 'static const u8' in
+> the caller function.
+> 
+> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 
-This leads to problems as I do not know which phy is connected to a 
-dev (or at least I do not know how to find out which phy is connected
-to a dev), and so in my Debian /etc/network/interfaces file I have:-
+You could fold patches 2-5 into one patch as they seem to be the same
+logical change. At least patches 4 and 5 need to be folded, otherwise
+wow will be broken between the patches.
 
-iface wlan0 inet manual
-	pre-up iw dev wlan0 interface add mesh0 type mp
+> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> @@ -1723,6 +1723,85 @@ static int ath6kl_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
+>  	return 0;
+>  }
+>  
+> +static int ath6kl_ap_add_default_wow_patterns(struct ath6kl *ar,
+> +		struct ath6kl_vif *vif)
+> +{
 
-iface mesh0 inet static
-    address 10.101.11.254
-    netmask 255.255.255.0
-    pre-up iw dev mesh0 set channel 153
-    post-up iw phy phy0 set distance 3500
-    up iw dev mesh0 mesh join MeshId
+ath6kl_wow_ap() or similar would be a lot shorter name.
 
-so in the mesh0 stanza I have a reference to phy0 which is hard
-coded and if it changes subject to error.
-
-So either I need to be able to set distance to dev mesh0, or have
-some means or working out which phy corresponds to dev mesh0.
-
-Any ideas?
-
-David
+Kalle
