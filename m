@@ -1,193 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:59393 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933189Ab2AIWql (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 17:46:41 -0500
-Date: Mon, 09 Jan 2012 16:46:37 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>,
-	torvalds@linux-foundation.org
-Cc: chaoming_li@realsil.com.cn, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH V2] rtl8192cu: Fix WARNING on suspend/resume
-Message-ID: <4f0b6e4d.P81fZnkPWac6eQEc%Larry.Finger@lwfinger.net> (sfid-20120109_234657_731491_5474A284)
+Received: from mms1.broadcom.com ([216.31.210.17]:1484 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755784Ab2AXKel (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jan 2012 05:34:41 -0500
+Message-ID: <4F1E8931.8070605@broadcom.com> (sfid-20120124_113500_365980_11B06AC4)
+Date: Tue, 24 Jan 2012 11:34:25 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: 3.3.0-rc1 kernel becomes unresponsive
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A recent LKML thread (http://lkml.indiana.edu/hypermail/linux/kernel/1112.3/00965.html)
-discusses warnings that occur during a suspend/resume cycle. The driver
-attempts to read the firmware file before userspace is ready, leading to the
-following warning:
+I moved my development work to 3.3.0-rc1 from wireless-testing
+repository. After loading the brcmfmac driver (12 sec.) I suddenly see
+the BUG message 'scheduling while atomic' and it fills up the entire log
+with the machine becoming totally unresponsive.
 
-WARNING: at drivers/base/firmware_class.c:537 _request_firmware+0x3f6/0x420()
+Any suggestions on where to start looking. What type of problems could
+cause this?
 
-For rtl8192cu, the problem is fixed by storing the firmware in a global buffer
-rather than one allocated per device. The usage count is increased when
-suspending and decreased when resuming. This way, the firmware is retained
-through a suspend/resume cycle, and does not have to be reread.
+Gr. AvS
+----------------------------------------------------------------------------------------
 
-This patch should fix the bug reported in
-https://bugzilla.redhat.com/show_bug.cgi?id=771002.
+Jan 24 04:53:07 lb-bun-10 kernel: [63122.211870] usbcore: registered new
+interface driver brcmfmac
+Jan 24 04:53:08 lb-bun-10 kernel: [63122.300516] udev[7158]: renamed
+network interface wlan0 to wlan1
+Jan 24 04:53:08 lb-bun-10 kernel: [63122.325482] ERROR @brcmf_run_iscan
+: error (-3)
+Jan 24 04:53:09 lb-bun-10 kernel: [63123.695387] cfg80211: Found new
+beacon on frequency: 5745 MHz (Ch 149) on
+ phy0
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106731] BUG: scheduling while
+atomic: swapper/0/0/0x10000100
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106737] Modules linked in:
+brcmfmac(O) brcmutil(O) cfg80211(O) sdhci_pci sdhci mmc_core aes_generic
+arc4 binfmt_misc snd_hda_codec_hdmi snd_hda_codec_idt snd_hda_intel
+snd_hda_codec intel_agp nouveau snd_hwdep snd_pcm snd_seq_midi
+snd_rawmidi snd_seq_midi_event snd_seq snd_timer snd_seq_device snd
+soundcore snd_page_alloc dell_laptop psmouse intel_gtt dell_wmi ttm
+drm_kms_helper drm serio_raw intel_ips mxm_wmi dcdbas agpgart
+sparse_keymap video firewire_ohci ahci libahci firewire_core crc_itu_t
+e1000e [last unloaded: mmc_core]
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106794] Modules linked in:
+brcmfmac(O) brcmutil(O) cfg80211(O) sdhci_pci sdhci mmc_core aes_generic
+arc4 binfmt_misc snd_hda_codec_hdmi snd_hda_codec_idt snd_hda_intel
+snd_hda_codec intel_agp nouveau snd_hwdep snd_pcm snd_seq_midi
+snd_rawmidi snd_seq_midi_event snd_seq snd_timer snd_seq_device snd
+soundcore snd_page_alloc dell_laptop psmouse intel_gtt dell_wmi ttm
+drm_kms_helper drm serio_raw intel_ips mxm_wmi dcdbas agpgart
+sparse_keymap video firewire_ohci ahci libahci firewire_core crc_itu_t
+e1000e [last unloaded: mmc_core]
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106840]
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106845] Pid: 0, comm: swapper/0
+Tainted: G           O 3.3.0-rc1-wl-testing #2 Dell Inc. Latitude
+E6410/07XJP9
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106853] EIP: 0060:[<c12be284>]
+EFLAGS: 00000202 CPU: 0
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106863] EIP is at
+intel_idle+0xb4/0x110
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106867] EAX: 00000000 EBX:
+000018ec ECX: 00000000 EDX: 000018ec
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106870] ESI: 00000000 EDI:
+00000008 EBP: c169df70 ESP: c169df54
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106874]  DS: 007b ES: 007b FS:
+00d8 GS: 00e0 SS: 0068
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106878] Process swapper/0 (pid:
+0, ti=f500c000 task=c16a1de0 task.ti=
+c169c000)
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106882] Stack:
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106884]  00000020 f5409e5c
+00000003 00000000 000000cc c16d2000 f5409e
+5c c169df94
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106892]  c13beb8b 00000000
+00000000 00000003 c169f000 c16f1010 000000
+00 c169f000
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106900]  c169dfb4 c1001d84
+0dc4807d 0000000f 39547204 0c134087 c172d0
+60 0008d800
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106909] Call Trace:
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106919]  [<c13beb8b>]
+cpuidle_idle_call+0xab/0x1d0
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106926]  [<c1001d84>]
+cpu_idle+0xa4/0xf0
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106933]  [<c149d2cd>]
+rest_init+0x5d/0x70
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106942]  [<c16f5853>]
+start_kernel+0x38a/0x390
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106947]  [<c16f52f3>] ?
+kernel_init+0x145/0x145
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106953]  [<c16f5075>]
+i386_start_kernel+0x75/0x79
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.106955] Code: f6 89 e0 25 00 e0
+ff ff 8b 40 08 a8 08 75 08 b1 01 8b 4
+5 e4 0f 01 c9 e8 7b 85 db ff 29 d8 19 f2 e8 d2 86 d7 ff 89 c6 89 d3 fb
+90 <8d> 74 26 00 85 3d a0 28 6d c1 75 0
+d 8d 55 f0 b8 05 00 00 00 e8
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.107009] Call Trace:
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.107014]  [<c13beb8b>]
+cpuidle_idle_call+0xab/0x1d0
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.107018]  [<c1001d84>]
+cpu_idle+0xa4/0xf0
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.107023]  [<c149d2cd>]
+rest_init+0x5d/0x70
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.107028]  [<c16f5853>]
+start_kernel+0x38a/0x390
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.107033]  [<c16f52f3>] ?
+kernel_init+0x145/0x145
+Jan 24 04:53:20 lb-bun-10 kernel: [63135.107038]  [<c16f5075>]
+i386_start_kernel+0x75/0x79
 
-Note: This patch also touches rtl8192ce as the "firmware" loaded message
-is now printed in the wrong place.
-
-Reported-by: Mohammed Arafa <bugzilla@in-egypt.net>
-Reported-by: Dave Jones <davej@redhat.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Stable <stable@vger.kernel.org>
----
-
-V2 - revised to avoid warning noted by Daniel Halperin.
----
-
-John,
-
-As I missed the V3.2 cutoff, this can be given normal -next processing.
-
-Sorry for any problems that were caused.
-
-Larry
----
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c
-@@ -263,7 +263,6 @@ int rtl92c_download_fw(struct ieee80211_
- 	if (!rtlhal->pfirmware)
- 		return 1;
- 
--	pr_info("Loading firmware file %s\n", rtlpriv->cfg->fw_name);
- 	pfwheader = (struct rtl92c_firmware_header *)rtlhal->pfirmware;
- 	pfwdata = (u8 *) rtlhal->pfirmware;
- 	fwsize = rtlhal->fwsize;
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192ce/sw.c
-@@ -186,6 +186,7 @@ int rtl92c_init_sw_vars(struct ieee80211
- 	memcpy(rtlpriv->rtlhal.pfirmware, firmware->data, firmware->size);
- 	rtlpriv->rtlhal.fwsize = firmware->size;
- 	release_firmware(firmware);
-+	pr_info("rtl8192ce: Loaded firmware file %s\n", rtlpriv->cfg->fw_name);
- 
- 	return 0;
- }
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/sw.c
-@@ -43,6 +43,8 @@
- #include "hw.h"
- #include <linux/vmalloc.h>
- #include <linux/module.h>
-+#include <linux/atomic.h>
-+#include <linux/types.h>
- 
- MODULE_AUTHOR("Georgia		<georgia@realtek.com>");
- MODULE_AUTHOR("Ziv Huang	<ziv_huang@realtek.com>");
-@@ -51,6 +53,10 @@ MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("Realtek 8192C/8188C 802.11n USB wireless");
- MODULE_FIRMWARE("rtlwifi/rtl8192cufw.bin");
- 
-+static char *rtl8192cu_firmware;		/* pointer to firmware */
-+static int firmware_size;
-+static atomic_t usage_count;
-+
- static int rtl92cu_init_sw_vars(struct ieee80211_hw *hw)
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-@@ -62,12 +68,21 @@ static int rtl92cu_init_sw_vars(struct i
- 	rtlpriv->dm.disable_framebursting = 0;
- 	rtlpriv->dm.thermalvalue = 0;
- 	rtlpriv->dbg.global_debuglevel = rtlpriv->cfg->mod_params->debug;
--	rtlpriv->rtlhal.pfirmware = vmalloc(0x4000);
--	if (!rtlpriv->rtlhal.pfirmware) {
-+
-+	if (rtl8192cu_firmware) {
-+		/* firmware already loaded - true for suspend/resume
-+		 * and multiple instances of the device */
-+		rtlpriv->rtlhal.pfirmware = rtl8192cu_firmware;
-+		rtlpriv->rtlhal.fwsize = firmware_size;
-+		return 0;
-+	}
-+	rtl8192cu_firmware = vzalloc(0x4000);
-+	if (!rtl8192cu_firmware) {
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
- 			 "Can't alloc buffer for fw\n");
- 		return 1;
- 	}
-+
- 	/* request fw */
- 	err = request_firmware(&firmware, rtlpriv->cfg->fw_name,
- 			rtlpriv->io.dev);
-@@ -82,9 +97,14 @@ static int rtl92cu_init_sw_vars(struct i
- 		release_firmware(firmware);
- 		return 1;
- 	}
--	memcpy(rtlpriv->rtlhal.pfirmware, firmware->data, firmware->size);
-+	pr_info("rtl8192cu: Loaded firmware from file %s\n",
-+		rtlpriv->cfg->fw_name);
-+	memcpy(rtl8192cu_firmware, firmware->data, firmware->size);
-+	firmware_size = firmware->size;
- 	rtlpriv->rtlhal.fwsize = firmware->size;
-+	rtlpriv->rtlhal.pfirmware = rtl8192cu_firmware;
- 	release_firmware(firmware);
-+	atomic_inc(&usage_count);
- 
- 	return 0;
- }
-@@ -93,12 +113,30 @@ static void rtl92cu_deinit_sw_vars(struc
- {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 
--	if (rtlpriv->rtlhal.pfirmware) {
--		vfree(rtlpriv->rtlhal.pfirmware);
-+	atomic_dec(&usage_count);
-+	if (!atomic_read(&usage_count) && rtlpriv->rtlhal.pfirmware) {
-+		vfree(rtl8192cu_firmware);
-+		rtl8192cu_firmware = NULL;
- 		rtlpriv->rtlhal.pfirmware = NULL;
- 	}
- }
- 
-+#ifdef CONFIG_PM_SLEEP
-+static int rtl8192cu_usb_suspend(struct usb_interface *pusb_intf,
-+				 pm_message_t message)
-+{
-+	/* Increase usage_count to Save loaded fw across suspend/resume */
-+	atomic_inc(&usage_count);
-+	return 0;
-+}
-+
-+static int rtl8192cu_usb_resume(struct usb_interface *pusb_intf)
-+{
-+	atomic_dec(&usage_count);	/* after resume, decrease usage count */
-+	return 0;
-+}
-+#endif
-+
- static struct rtl_hal_ops rtl8192cu_hal_ops = {
- 	.init_sw_vars = rtl92cu_init_sw_vars,
- 	.deinit_sw_vars = rtl92cu_deinit_sw_vars,
-@@ -374,11 +412,10 @@ static struct usb_driver rtl8192cu_drive
- 	.disconnect = rtl_usb_disconnect,
- 	.id_table = rtl8192c_usb_ids,
- 
--#ifdef CONFIG_PM
--	/* .suspend = rtl_usb_suspend, */
--	/* .resume = rtl_usb_resume, */
--	/* .reset_resume = rtl8192c_resume, */
--#endif /* CONFIG_PM */
-+#ifdef CONFIG_PM_SLEEP
-+	.suspend = rtl8192cu_usb_suspend,
-+	.resume = rtl8192cu_usb_resume,
-+#endif /* CONFIG_PM_SLEEP */
- #ifdef CONFIG_AUTOSUSPEND
- 	.supports_autosuspend = 1,
- #endif
