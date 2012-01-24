@@ -1,38 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:44850 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752312Ab2ACXTV (ORCPT
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:47847 "HELO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755383Ab2AXJGs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 18:19:21 -0500
-Date: Tue, 03 Jan 2012 18:18:13 -0500 (EST)
-Message-Id: <20120103.181813.578384244467512432.davem@davemloft.net> (sfid-20120104_001946_682470_96B3B1C1)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull request: wireless-next 2011-01-03
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120103210912.GB24318@tuxdriver.com>
-References: <20120103210912.GB24318@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 24 Jan 2012 04:06:48 -0500
+Received: by mail-lpp01m010-f46.google.com with SMTP id c1so2152295lah.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2012 01:06:47 -0800 (PST)
+MIME-Version: 1.0
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH 4/8] wl12xx: cancel delayed elp work and clear flags when stopping PLT
+Date: Tue, 24 Jan 2012 11:06:25 +0200
+Message-Id: <1327395989-29663-5-git-send-email-coelho@ti.com> (sfid-20120124_100657_403088_58F5D109)
+In-Reply-To: <1327395989-29663-1-git-send-email-coelho@ti.com>
+References: <1327395989-29663-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 3 Jan 2012 16:09:13 -0500
+In some cases a race condition can happen if we don't cancel any
+pending ELP work before stopping PLT.  With this commit we cancel ELP
+work and clear the wl->flags bitmask.  Also clean up the wl elements
+after powering off.
 
-> commit 57adc1fcbae2c13104ce291b40f23e40a414fa87
-> 
-> Dave,
-> 
-> I had planned to send a pull request before Christmas, but apparently
-> I forgot.  So, I reckon this batch of updates got a little extra
-> testing in linux-next over the past week or so. :-)
-> 
-> This one is kinda big, with pulls from the ath6kl, bluetooth, iwlwifi,
-> and wl12xx trees.  The brcm80211 team showed a lot of activity,
-> and both the mwifies and the b43 guys made good showings as well.
-> A couple of NFC updates and a handful of other bits round things out.
-> 
-> Please let me know if there are problems!
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
 
-Pulled, thanks John.
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 27ca324..6ec22b3 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1420,17 +1420,18 @@ int wl1271_plt_stop(struct wl1271 *wl)
+ 		goto out;
+ 	}
+ 
+-	wl->state = WL1271_STATE_OFF;
+-	wl->rx_counter = 0;
+-
+ 	mutex_unlock(&wl->mutex);
+ 
+ 	wl1271_flush_deferred_work(wl);
+ 	cancel_work_sync(&wl->netstack_work);
+ 	cancel_work_sync(&wl->recovery_work);
++	cancel_delayed_work_sync(&wl->elp_work);
+ 
+ 	mutex_lock(&wl->mutex);
+ 	wl1271_power_off(wl);
++	wl->flags = 0;
++	wl->state = WL1271_STATE_OFF;
++	wl->rx_counter = 0;
+ 	mutex_unlock(&wl->mutex);
+ 
+ out:
+-- 
+1.7.4.1
+
