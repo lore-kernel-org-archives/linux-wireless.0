@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:34846 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932488Ab2AEQiM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 11:38:12 -0500
-Message-ID: <1325781489.22154.19.camel@joe2Laptop> (sfid-20120105_173831_196738_E1B42A86)
-Subject: Re: [PATCH v2 5/6] ath6kl: convert ath6kl_dbg() and
- ath6kl_dbg_dump() into functions
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, sfr@canb.auug.org.au,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-next@vger.kernel.org,
-	ath6kl-devel@qualcomm.com, davem@davemloft.net
-Date: Thu, 05 Jan 2012 08:38:09 -0800
-In-Reply-To: <20120105132834.22281.78822.stgit@x201>
-References: <20120105132523.22281.95999.stgit@x201>
-	 <20120105132834.22281.78822.stgit@x201>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:58100 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754713Ab2AXJGl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jan 2012 04:06:41 -0500
+Received: by laho5 with SMTP id o5so750123lah.4
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2012 01:06:38 -0800 (PST)
+MIME-Version: 1.0
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH 0/8] wl12xx: some fixes and improvements for PLT mode
+Date: Tue, 24 Jan 2012 11:06:21 +0200
+Message-Id: <1327395989-29663-1-git-send-email-coelho@ti.com> (sfid-20120124_100649_553080_F51E9933)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-01-05 at 15:28 +0200, Kalle Valo wrote:
+Hi,
 
-Hey Kalle.
+This patchset fixes some bugs in PLT mode and adds support for 2 MAC
+addresses based on the NVS file or in the device's fuse ROM.
 
-> diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-[]
-> +void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...)
-[]
-> +	ath6kl_printk(KERN_DEBUG, "%pV", &vaf);
-[
-> diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
-[]
-> +void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...);
+This two patches I sent as part of the "wl12xx: read MAC from fuse
+rom" series are superseded by this set.
 
-You need to add
+Cheers,
+Luca.
+ 
 
-__printf(2, 3)
+Ido Yariv (3):
+  wl12xx: Acquire lock before stopping plt
+  wl12xx: Power off after flushing work
+  wl12xx: Fix potential interrupt storm
 
-to the prototype.
+Luciano Coelho (5):
+  wl12xx: cancel delayed elp work and clear flags when stopping PLT
+  wl12xx: move partition table definition to io.c
+  wl12xx: read chip ID and HW PG version during probe
+  wl12xx: use two MAC addresses based on the NVS or from fuse ROM
+  wl12xx: add testmode operation to read the BD_ADDR from Fuse ROM
 
-If it's not there, the printf formats and arguments aren't verified.
-%pV could do the wrong/bad things.
+ drivers/net/wireless/wl12xx/boot.c     |  102 ++-------------
+ drivers/net/wireless/wl12xx/boot.h     |   10 --
+ drivers/net/wireless/wl12xx/debug.h    |    1 +
+ drivers/net/wireless/wl12xx/io.c       |   59 +++++++++
+ drivers/net/wireless/wl12xx/io.h       |    2 +
+ drivers/net/wireless/wl12xx/main.c     |  216 ++++++++++++++++++++++++++------
+ drivers/net/wireless/wl12xx/reg.h      |   27 ++++
+ drivers/net/wireless/wl12xx/testmode.c |   50 ++++++++
+ drivers/net/wireless/wl12xx/wl12xx.h   |    7 +-
+ 9 files changed, 335 insertions(+), 139 deletions(-)
 
+-- 
+1.7.4.1
 
