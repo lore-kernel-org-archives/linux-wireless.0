@@ -1,82 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:35420 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750736Ab2ATFQg convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:37984 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755425Ab2AXJGx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 00:16:36 -0500
+	Tue, 24 Jan 2012 04:06:53 -0500
+Received: by mail-lpp01m010-f48.google.com with SMTP id z14so1338292lag.21
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2012 01:06:52 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <NEXT-4f18f0a4c42917.06465691@nextmail.ru>
-References: <NEXT-4f18f0a4c42917.06465691@nextmail.ru>
-Date: Fri, 20 Jan 2012 10:46:35 +0530
-Message-ID: <CAD2nsn2GjkoUWaDLxZmkxHm+af9s2fVkt8uGN+v-rS-hCgx2-w@mail.gmail.com> (sfid-20120120_061726_732284_C43C6D24)
-Subject: Re: ath9k crash 3.2-rc7
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: MR <g7af0ec1e3ea1e7b1@nextmail.ru>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH 6/8] wl12xx: read chip ID and HW PG version during probe
+Date: Tue, 24 Jan 2012 11:06:27 +0200
+Message-Id: <1327395989-29663-7-git-send-email-coelho@ti.com> (sfid-20120124_100705_611176_B451889C)
+In-Reply-To: <1327395989-29663-1-git-send-email-coelho@ti.com>
+References: <1327395989-29663-1-git-send-email-coelho@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+In order to read the MAC addresses from the fuse ROM, we need to know
+the chip ID and the HW PG version.  We need to know the MAC address
+during probe, because that's when we register our HW with mac80211.
 
-2012/1/20 MR <g7af0ec1e3ea1e7b1@nextmail.ru>:
->  > I read the roaming script. I need to get the scan results and then
-> issue
->  > "roam" in loop between all the APs I can access, right? Will try just
-> to
->  > collect some new testing data.
->  >
->  > Thanks for the patch - looks like it works fine so far.
->
-> Got a fresh trace... No idea how it happened, to be honest.
->
-> First, I got a few surprisingly non-lethal
->
-> Jan 18 11:39:16 401a0bf1 kernel: [401292.709527] ath: Failed to stop TX
-> DMA, queues=0x005!
-> Jan 18 11:39:16 401a0bf1 kernel: [401292.726868] ath: Failed to stop TX
-> DMA, queues=0x005!
->
-> Jan 19 04:19:28 401a0bf1 kernel: [452270.295826] ath: Failed to stop TX
-> DMA, queues=0x005!
-> Jan 19 04:19:28 401a0bf1 kernel: [452270.313079] ath: Failed to stop TX
-> DMA, queues=0x005!
->
-> On Jan 19, I sshed quite a few gigabytes over cpio/ssh
->
-> Got memory allocation warnings, log sample in the end of message. WiFi
-> driver is mentioned in the stack, but looks mostly harmless.
->
-> Then I suspended (succesfully) and when I got home I checked my email
-> succesfully using WiFi.
->
-> Then I did my standard mistake (closing the lid without stopping
-> screensaver: after some time I get a GL screensaver with DPMS-Off state
-> which is bad for i915 for some reason).
->
-> I got failed GPU hangcheck at
->
-> Jan 19 23:41:39 401a0bf1 kernel: [49726.973809]
-> [drm:i915_hangcheck_elapsed] *ERROR* Hangcheck timer elapsed... GPU hung
-> and in two seconds X server was gone (I was asleep by that time)
->
-> Then..
->
-> Jan 20 06:37:41 401a0bf1 kernel: [74665.029637] ath: Timeout while waiting
-> for nf to load: AR_PHY_AGC_CONTROL=0x40d22
-> Jan 20 06:37:41 401a0bf1 kernel: [74665.362365] ath: Failed to stop TX
-> DMA, queues=0x005!
-> Jan 20 06:37:41 401a0bf1 kernel: [74665.371028] ------------[ cut here ]--
-> ----------
-> Jan 20 06:37:41 401a0bf1 kernel: [74665.371038] WARNING: at
-> drivers/net/wireless/ath/ath9k/rc.c:697
-> ath_rc_get_highest_rix.clone.18+0x159/0x200 [ath9k]()
+To prepare for that, this patch reads the chip ID and HW PG version
+during probe instead of doing it at boot time.  We power the chip on
+briefly in order to do that.
 
-thanks , i am just looking at this tough to recreate warning and its
-being reported by few users recently. please let us if you some more
-information
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/boot.c  |   15 ---------
+ drivers/net/wireless/wl12xx/debug.h |    1 +
+ drivers/net/wireless/wl12xx/main.c  |   59 ++++++++++++++++++++++++++--------
+ 3 files changed, 46 insertions(+), 29 deletions(-)
 
-
+diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+index 84d2951..599919e 100644
+--- a/drivers/net/wireless/wl12xx/boot.c
++++ b/drivers/net/wireless/wl12xx/boot.c
+@@ -488,19 +488,6 @@ static int wl1271_boot_write_irq_polarity(struct wl1271 *wl)
+ 	return 0;
+ }
+ 
+-static void wl1271_boot_hw_version(struct wl1271 *wl)
+-{
+-	u32 fuse;
+-
+-	if (wl->chip.id == CHIP_ID_1283_PG20)
+-		fuse = wl1271_top_reg_read(wl, WL128X_REG_FUSE_DATA_2_1);
+-	else
+-		fuse = wl1271_top_reg_read(wl, WL127X_REG_FUSE_DATA_2_1);
+-	fuse = (fuse & PG_VER_MASK) >> PG_VER_OFFSET;
+-
+-	wl->hw_pg_ver = (s8)fuse;
+-}
+-
+ static int wl128x_switch_tcxo_to_fref(struct wl1271 *wl)
+ {
+ 	u16 spare_reg;
+@@ -694,8 +681,6 @@ int wl1271_load_firmware(struct wl1271 *wl)
+ 	u32 tmp, clk;
+ 	int selected_clock = -1;
+ 
+-	wl1271_boot_hw_version(wl);
+-
+ 	if (wl->chip.id == CHIP_ID_1283_PG20) {
+ 		ret = wl128x_boot_clk(wl, &selected_clock);
+ 		if (ret < 0)
+diff --git a/drivers/net/wireless/wl12xx/debug.h b/drivers/net/wireless/wl12xx/debug.h
+index b85fd8c4..ec0fdc2 100644
+--- a/drivers/net/wireless/wl12xx/debug.h
++++ b/drivers/net/wireless/wl12xx/debug.h
+@@ -51,6 +51,7 @@ enum {
+ 	DEBUG_FILTERS   = BIT(15),
+ 	DEBUG_ADHOC     = BIT(16),
+ 	DEBUG_AP	= BIT(17),
++	DEBUG_PROBE	= BIT(18),
+ 	DEBUG_MASTER	= (DEBUG_ADHOC | DEBUG_AP),
+ 	DEBUG_ALL	= ~0,
+ };
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 6ec22b3..315ffec 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -1232,10 +1232,9 @@ static int wl1271_setup(struct wl1271 *wl)
+ 	return 0;
+ }
+ 
+-static int wl1271_chip_wakeup(struct wl1271 *wl)
++static int wl12xx_set_power_on(struct wl1271 *wl)
+ {
+-	struct wl1271_partition_set partition;
+-	int ret = 0;
++	int ret;
+ 
+ 	msleep(WL1271_PRE_POWER_ON_SLEEP);
+ 	ret = wl1271_power_on(wl);
+@@ -1245,20 +1244,22 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
+ 	wl1271_io_reset(wl);
+ 	wl1271_io_init(wl);
+ 
+-	/* We don't need a real memory partition here, because we only want
+-	 * to use the registers at this point. */
+-	memset(&partition, 0, sizeof(partition));
+-	partition.reg.start = REGISTERS_BASE;
+-	partition.reg.size = REGISTERS_DOWN_SIZE;
+-	wl1271_set_partition(wl, &partition);
++	wl1271_set_partition(wl, &wl12xx_part_table[PART_DOWN]);
+ 
+ 	/* ELP module wake up */
+ 	wl1271_fw_wakeup(wl);
+ 
+-	/* whal_FwCtrl_BootSm() */
++out:
++	return ret;
++}
+ 
+-	/* 0. read chip id from CHIP_ID */
+-	wl->chip.id = wl1271_read32(wl, CHIP_ID_B);
++static int wl1271_chip_wakeup(struct wl1271 *wl)
++{
++	int ret = 0;
++
++	ret = wl12xx_set_power_on(wl);
++	if (ret < 0)
++		goto out;
+ 
+ 	/*
+ 	 * For wl127x based devices we could use the default block
+@@ -4855,6 +4856,29 @@ static struct bin_attribute fwlog_attr = {
+ 	.read = wl1271_sysfs_read_fwlog,
+ };
+ 
++static int wl12xx_get_hw_info(struct wl1271 *wl)
++{
++	int ret;
++	u32 die_info;
++
++	ret = wl12xx_set_power_on(wl);
++	if (ret < 0)
++		goto out;
++
++	wl->chip.id = wl1271_read32(wl, CHIP_ID_B);
++
++	if (wl->chip.id == CHIP_ID_1283_PG20)
++		die_info = wl1271_top_reg_read(wl, WL128X_REG_FUSE_DATA_2_1);
++	else
++		die_info = wl1271_top_reg_read(wl, WL127X_REG_FUSE_DATA_2_1);
++
++	wl->hw_pg_ver = (s8) (die_info & PG_VER_MASK) >> PG_VER_OFFSET;
++
++	wl1271_power_off(wl);
++out:
++	return ret;
++}
++
+ static int wl1271_register_hw(struct wl1271 *wl)
+ {
+ 	int ret;
+@@ -4862,6 +4886,12 @@ static int wl1271_register_hw(struct wl1271 *wl)
+ 	if (wl->mac80211_registered)
+ 		return 0;
+ 
++	ret = wl12xx_get_hw_info(wl);
++	if (ret < 0) {
++		wl1271_error("couldn't get hw info");
++		goto out;
++	}
++
+ 	ret = wl1271_fetch_nvs(wl);
+ 	if (ret == 0) {
+ 		/* NOTE: The wl->nvs->nvs element must be first, in
+@@ -4883,7 +4913,7 @@ static int wl1271_register_hw(struct wl1271 *wl)
+ 	ret = ieee80211_register_hw(wl->hw);
+ 	if (ret < 0) {
+ 		wl1271_error("unable to register mac80211 hw: %d", ret);
+-		return ret;
++		goto out;
+ 	}
+ 
+ 	wl->mac80211_registered = true;
+@@ -4894,7 +4924,8 @@ static int wl1271_register_hw(struct wl1271 *wl)
+ 
+ 	wl1271_notice("loaded");
+ 
+-	return 0;
++out:
++	return ret;
+ }
+ 
+ static void wl1271_unregister_hw(struct wl1271 *wl)
 -- 
-shafi
+1.7.4.1
+
