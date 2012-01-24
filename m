@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:64707 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751854Ab2ABIiK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 03:38:10 -0500
-From: Marek Vasut <marek.vasut@gmail.com>
-To: =?iso-8859-1?q?G=E1bor_Stefanik?= <netrolller.3d@gmail.com>
-Subject: Re: loading firmware while usermodehelper disabled.
-Date: Mon, 2 Jan 2012 09:38:06 +0100
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Oliver Neukum <oliver@neukum.org>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Greg Kroah-Hartman" <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-References: <201201011322.34483.oliver@neukum.org> <201201020517.19624.marek.vasut@gmail.com> <CA+XFjiqbU=WF+Ee7YdzQRZr4YZ00xhiMcOYawkQ9pX7DuYjbeQ@mail.gmail.com>
-In-Reply-To: <CA+XFjiqbU=WF+Ee7YdzQRZr4YZ00xhiMcOYawkQ9pX7DuYjbeQ@mail.gmail.com>
+Received: from mout0.freenet.de ([195.4.92.90]:60620 "EHLO mout0.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750895Ab2AXV4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jan 2012 16:56:20 -0500
+Received: from [195.4.92.141] (helo=mjail1.freenet.de)
+	by mout0.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
+	id 1RpoLh-0005sV-9c
+	for linux-wireless@vger.kernel.org; Tue, 24 Jan 2012 22:56:17 +0100
+Received: from localhost ([::1]:57892 helo=mjail1.freenet.de)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1RpoLh-00005M-5L
+	for linux-wireless@vger.kernel.org; Tue, 24 Jan 2012 22:56:17 +0100
+Received: from [195.4.92.21] (port=55768 helo=11.mx.freenet.de)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1RpoIb-0006pJ-4c
+	for linux-wireless@vger.kernel.org; Tue, 24 Jan 2012 22:53:05 +0100
+Received: from [2002:4fde:916:2:5054:ff:feb8:40bd] (port=48114 helo=mail.maya.org)
+	by 11.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
+	id 1RpoIa-0000mM-Mu
+	for linux-wireless@vger.kernel.org; Tue, 24 Jan 2012 22:53:05 +0100
+Message-ID: <4F1F2837.5090307@maya.org> (sfid-20120124_225624_236872_01C564FD)
+Date: Tue, 24 Jan 2012 22:52:55 +0100
+From: Andreas Hartmann <andihartmann@freenet.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Message-Id: <201201020938.07149.marek.vasut@gmail.com> (sfid-20120102_093818_748433_9FCD1416)
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: ath9k get's completely knocked out by rt3572 device
+References: <4F1EF618.6080108@01019freenet.de> <13411135.eH6opTgxBo@helmutmobil.site>
+In-Reply-To: <13411135.eH6opTgxBo@helmutmobil.site>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Mon, Jan 2, 2012 at 5:17 AM, Marek Vasut <marek.vasut@gmail.com> wrote:
-> > FYI this is not only problem with USB, but with PCMCIA too for example.
-> > 
-> > M
+Helmut Schaa schrieb:
+> Am Dienstag, 24. Januar 2012, 19:19:04 schrieb Andreas Hartmann:
+>> - At the moment of stopping netperf on rt3572, the ath9k device
+>> instantly started sending / receiving data again as expected.
+> [...]
+>> Does anybody has an idea what could cause this situation? Or is this normal?
 > 
-> Also, PCI Express. Some Nvidia graphics cards only assume their real
-> PCI device ID during video POST (which can happen either as part of
-> system POST, if the card is primary, or during Linux startup/resume,
-> for a secondary card).
+> Your netperf traffic is in the direction STA -> AP or also in the other
+> direction?
 
-Now that's really screwed. Is that "nvidia/intel optimus" also affected by this 
-? (that thing where you have two GPUs in one laptop).
+In both directions (serially). It's a script, which does the following:
 
-M
+while true
+do
+	netperf -H host -t TCP_STREAM 	 # (STA -> AP)
+	netperf -H host -t TCP_MAERTS    # (AP -> STA)
+	netperf -H host -t TCP_SENDFILE  # (STA -> AP)
+done
+
+
+Andreas
