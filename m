@@ -1,178 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:6931 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752419Ab2ATNhF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 08:37:05 -0500
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH v2 4/8] ath6kl: Move WOW patterns config code to a separate function.
-Date: Fri, 20 Jan 2012 19:05:40 +0530
-Message-ID: <1327066544-23779-5-git-send-email-rmani@qca.qualcomm.com> (sfid-20120120_143710_909283_FB24A685)
-In-Reply-To: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com>
-References: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:65382 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754713Ab2AXH3x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 Jan 2012 02:29:53 -0500
+Date: Tue, 24 Jan 2012 08:29:46 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+Cc: Andreas Hartmann <andihartmann@01019freenet.de>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: Compat-wireless-3.2-rc6-3 is broken for rt2860 device
+Message-ID: <20120124072946.GB2420@redhat.com> (sfid-20120124_083009_216657_2F3B1229)
+References: <4F040FEA.3080703@01019freenet.de>
+ <1408490.qSFZVkU7fA@helmutmobil.site>
+ <4F0562DF.3000200@dualc.maya.org>
+ <CAGXE3d8b5qtbhesPjRy3EXvkiwshUg0eZqcDBzb1OhKK3j6z6A@mail.gmail.com>
+ <4F0AEBAB.9020104@01019freenet.de>
+ <CAGXE3d-cOeTEHugbgWMoz8-Dymw0=JHxykdK4ZkBmCJZ9tSPmg@mail.gmail.com>
+ <201201100803.q0A83nsQ003757@mail.maya.org>
+ <CAGXE3d_jW7NFnekMfwn6JPXX0xB4UWM3ttbRVLv-ZbsoMOoWEw@mail.gmail.com>
+ <201201200730.q0K7U0oj004966@mail.maya.org>
+ <CAGXE3d_rCMYwoEBNjk+S7WvAmCkPMcq-Gpawm370-cSbjXy6rg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGXE3d_rCMYwoEBNjk+S7WvAmCkPMcq-Gpawm370-cSbjXy6rg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+On Mon, Jan 23, 2012 at 02:29:08PM +0100, Helmut Schaa wrote:
+> On Fri, Jan 20, 2012 at 8:29 AM, Andreas Hartmann
+> <andihartmann@01019freenet.de> wrote:
+> > All in one: Your workaround was a good idea, but unfortunately it
+> > doesn't "solve" / workaround the problem introduced with the patch
+> > "mac80211: retry sending failed BAR frames later instead of tearing
+> > down aggr" [1]. I don't know off any other solution at this time as to revert it.
+> 
+> Ok, so we've got at least one hw issue here: rt2800 is not able to report
+> correct ACK state of BARs :(
 
-Move the user provided WOW patterns configuration code
-from ath6kl_wow_suspend() to a separate function called
-ath6kl_add_usr_wow_patterns().
+Whould it help, if rt2800 driver will not filter out BAR frames?
 
-It gives more modularity to the existing code.
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 22a1a8f..20418be 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1205,8 +1205,7 @@ void rt2800_config_filter(struct rt2x00_dev *rt2x00dev,
+ 			   !(filter_flags & FIF_PSPOLL));
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BA,
+ 			   !(filter_flags & FIF_CONTROL));
+-	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BAR,
+-			   !(filter_flags & FIF_CONTROL));
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_BAR, 0);
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_CNTL,
+ 			   !(filter_flags & FIF_CONTROL));
+ 	rt2800_register_write(rt2x00dev, RX_FILTER_CFG, reg);
 
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |  108 +++++++++++++++------------
- 1 files changed, 60 insertions(+), 48 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 9ab92c4..e244d83 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1723,6 +1723,64 @@ static int ath6kl_flush_pmksa(struct wiphy *wiphy, struct net_device *netdev)
- 	return 0;
- }
- 
-+static int ath6kl_add_usr_wow_patterns(struct ath6kl *ar,
-+				       struct ath6kl_vif *vif,
-+				       struct cfg80211_wowlan *wow,
-+				       u32 *filter)
-+{
-+	int ret, pos;
-+	u8 mask[WOW_MASK_SIZE];
-+	u16 i;
-+
-+	/* Configure the patterns that we received from the user. */
-+	for (i = 0; i < wow->n_patterns; i++) {
-+
-+		/*
-+		 * Convert given nl80211 specific mask value to equivalent
-+		 * driver specific mask value and send it to the chip along
-+		 * with patterns. For example, If the mask value defined in
-+		 * struct cfg80211_wowlan is 0xA (equivalent binary is 1010),
-+		 * then equivalent driver specific mask value is
-+		 * "0xFF 0x00 0xFF 0x00".
-+		 */
-+		memset(&mask, 0, sizeof(mask));
-+		for (pos = 0; pos < wow->patterns[i].pattern_len; pos++) {
-+			if (wow->patterns[i].mask[pos / 8] & (0x1 << (pos % 8)))
-+				mask[pos] = 0xFF;
-+		}
-+		/*
-+		 * Note: Pattern's offset is not passed as part of wowlan
-+		 * parameter from CFG layer. So it's always passed as ZERO
-+		 * to the firmware. It means, given WOW patterns are always
-+		 * matched from the first byte of received pkt in the firmware.
-+		 */
-+		ret = ath6kl_wmi_add_wow_pattern_cmd(ar->wmi,
-+					vif->fw_vif_idx, WOW_LIST_ID,
-+					wow->patterns[i].pattern_len,
-+					0 /* pattern offset */,
-+					wow->patterns[i].pattern, mask);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	if (wow->disconnect)
-+		*filter |= WOW_FILTER_OPTION_NWK_DISASSOC;
-+
-+	if (wow->magic_pkt)
-+		*filter |= WOW_FILTER_OPTION_MAGIC_PACKET;
-+
-+	if (wow->gtk_rekey_failure)
-+		*filter |= WOW_FILTER_OPTION_GTK_ERROR;
-+
-+	if (wow->eap_identity_req)
-+		*filter |= WOW_FILTER_OPTION_EAP_REQ;
-+
-+	if (wow->four_way_handshake)
-+		*filter |= WOW_FILTER_OPTION_8021X_4WAYHS;
-+
-+	return 0;
-+}
-+
- static int ath6kl_ap_add_default_wow_patterns(struct ath6kl *ar,
- 		struct ath6kl_vif *vif)
- {
-@@ -1847,10 +1905,10 @@ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
- 	struct in_device *in_dev;
- 	struct in_ifaddr *ifa;
- 	struct ath6kl_vif *vif;
--	int ret, pos, left;
-+	int ret, left;
- 	u32 filter = 0;
- 	u16 i;
--	u8 mask[WOW_MASK_SIZE], index = 0;
-+	u8 index = 0;
- 	__be32 ips[MAX_IP_ADDRS];
- 
- 	vif = ath6kl_vif_first(ar);
-@@ -1867,37 +1925,6 @@ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
- 	for (i = 0; i < WOW_MAX_FILTERS_PER_LIST; i++)
- 		ath6kl_wmi_del_wow_pattern_cmd(ar->wmi, vif->fw_vif_idx,
- 					       WOW_LIST_ID, i);
--	/* Configure new WOW patterns */
--	for (i = 0; i < wow->n_patterns; i++) {
--
--		/*
--		 * Convert given nl80211 specific mask value to equivalent
--		 * driver specific mask value and send it to the chip along
--		 * with patterns. For example, If the mask value defined in
--		 * struct cfg80211_wowlan is 0xA (equivalent binary is 1010),
--		 * then equivalent driver specific mask value is
--		 * "0xFF 0x00 0xFF 0x00".
--		 */
--		memset(&mask, 0, sizeof(mask));
--		for (pos = 0; pos < wow->patterns[i].pattern_len; pos++) {
--			if (wow->patterns[i].mask[pos / 8] & (0x1 << (pos % 8)))
--				mask[pos] = 0xFF;
--		}
--		/*
--		 * Note: Pattern's offset is not passed as part of wowlan
--		 * parameter from CFG layer. So it's always passed as ZERO
--		 * to the firmware. It means, given WOW patterns are always
--		 * matched from the first byte of received pkt in the firmware.
--		 */
--		ret = ath6kl_wmi_add_wow_pattern_cmd(ar->wmi,
--					vif->fw_vif_idx, WOW_LIST_ID,
--					wow->patterns[i].pattern_len,
--					0 /* pattern offset */,
--					wow->patterns[i].pattern, mask);
--		if (ret)
--			return ret;
--	}
--
- 	/* Setup own IP addr for ARP agent. */
- 	in_dev = __in_dev_get_rtnl(vif->ndev);
- 	if (!in_dev)
-@@ -1925,21 +1952,6 @@ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
- 	}
- 
- skip_arp:
--	if (wow->disconnect)
--		filter |= WOW_FILTER_OPTION_NWK_DISASSOC;
--
--	if (wow->magic_pkt)
--		filter |= WOW_FILTER_OPTION_MAGIC_PACKET;
--
--	if (wow->gtk_rekey_failure)
--		filter |= WOW_FILTER_OPTION_GTK_ERROR;
--
--	if (wow->eap_identity_req)
--		filter |= WOW_FILTER_OPTION_EAP_REQ;
--
--	if (wow->four_way_handshake)
--		filter |= WOW_FILTER_OPTION_8021X_4WAYHS;
--
- 	ret = ath6kl_wmi_set_wow_mode_cmd(ar->wmi, vif->fw_vif_idx,
- 					  ATH6KL_WOW_MODE_ENABLE,
- 					  filter,
--- 
-1.7.1
 
