@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:58259 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752028Ab2A3KBh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 05:01:37 -0500
-From: "Devendra.Naga" <devendra.aaru@gmail.com>
-To: <Larry.Finger@lwfinger.net>, <chaoming_li@realsil.com.cn>,
-	<linville@tuxdriver.com>, <paul.gortmaker@windriver.com>,
-	<joe@perches.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: "Devendra.Naga" <devendra.aaru@gmail.com>
-Subject: [PATCH 1/1] wireless: in _rtl92c_phy_calculate_bit_shift remove comparing bitmask against 1
-Date: Mon, 30 Jan 2012 05:00:55 -0500
-Message-Id: <1327917655-6494-1-git-send-email-devendra.aaru@gmail.com> (sfid-20120130_110200_378575_828D313A)
+Received: from mms1.broadcom.com ([216.31.210.17]:1038 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751419Ab2AYUcX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jan 2012 15:32:23 -0500
+Message-ID: <4F20663C.3030500@broadcom.com> (sfid-20120125_213227_857950_57A0109F)
+Date: Wed, 25 Jan 2012 12:29:48 -0800
+From: "Franky Lin" <frankyl@broadcom.com>
+MIME-Version: 1.0
+To: "Renzo Navas" <renzoefra@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [bcm4329] brcmfmac on kernel 2.6.35 (Andorid)
+References: <CAD2CPUEu2ha6TeYrQ4WUdXU0-hdSAAJZR5PGWagSguE1DtBSfQ@mail.gmail.com>
+In-Reply-To: <CAD2CPUEu2ha6TeYrQ4WUdXU0-hdSAAJZR5PGWagSguE1DtBSfQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Devendra.Naga" <devendra.aaru@gmail.com>
+Hi Renzo,
 
-in _rtl92c_phy_calculate_bit_shift everytime the right shifted bitmask
-is AND with 1 and compared against 1. i.e.
-        if ((bitmask >> i) & 0x1 == 1)
-                break;
-which in the if condition is anyway becomes a 1 or 0.
+First of all, is it really a good choice to use a fullmac dongle to do 
+the scan algorithm investigation? For brcmfmac, all scanning 
+implementation is in dongle firmware which is not open source. There is 
+nothing much you can do with it. A softmac pci nic probably can meet you 
+requirement.
 
-Signed-off-by: Devendra.Naga <devendra.aaru@gmail.com>
----
- drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On 01/25/2012 10:03 AM, Renzo Navas wrote:
+>    * Is it factible to use the brcmfmac driver on a kernel 2.6.35,
+> specifically one made for Android (CyanogenMod 7) kernel?
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-index 22e998d..a76b223 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-@@ -177,7 +177,7 @@ u32 _rtl92c_phy_calculate_bit_shift(u32 bitmask)
- 	u32 i;
- 
- 	for (i = 0; i <= 31; i++) {
--		if (((bitmask >> i) & 0x1) == 1)
-+		if ((bitmask >> i) & 0x1)
- 			break;
- 	}
- 	return i;
--- 
-1.7.5.4
+brcmfmac doesn't have any android support for sure(wake lock, bt coex, 
+WIFI_CONTROL_FUNC and etc.).
+
+> For the next 4 following months I will be modifying the bcm4329 driver
+> for a Nexus S cellphone (aliases: samsung Ccespo, herring),
+> particularly the scanning algorithm.
+>
+> So far all the android kernel versions for android use a deprecated
+> driver called the "bcm4329" -which uses WirelessExtensions-:
+
+For ICS we switch to a newer driver bcmdhd which use cfg80211 instead of 
+wext. If you want to use cfg80211 instead of wext, this should be a 
+better choice.
+
+> On both testimonies seems to conclude that porting "brcmfmac" for
+> android has not been successful.
+
+We do have android support on the roadmap but it's not a high priority 
+task because of several reasons.
+
+Franky
 
