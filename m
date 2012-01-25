@@ -1,59 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:52525 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752493Ab2A3Xfp (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:62482 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752692Ab2AYHxo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 18:35:45 -0500
-Message-ID: <4F27294D.30302@lwfinger.net> (sfid-20120131_003600_535078_70C5CC2D)
-Date: Mon, 30 Jan 2012 17:35:41 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 25 Jan 2012 02:53:44 -0500
+Received: by pbaa10 with SMTP id a10so2826107pba.19
+        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2012 23:53:44 -0800 (PST)
 MIME-Version: 1.0
-To: "Devendra.Naga" <devendra.aaru@gmail.com>
-CC: chaoming_li@realsil.com.cn, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/1] wireless: remove return in _rtl_pci_switch_clk_req
-References: <1327927591-28070-1-git-send-email-devendra.aaru@gmail.com>
-In-Reply-To: <1327927591-28070-1-git-send-email-devendra.aaru@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4F1F2837.5090307@maya.org>
+References: <4F1EF618.6080108@01019freenet.de>
+	<13411135.eH6opTgxBo@helmutmobil.site>
+	<4F1F2837.5090307@maya.org>
+Date: Wed, 25 Jan 2012 08:53:43 +0100
+Message-ID: <CAGXE3d_a9qOtyj8RFYgOjebmB=MProO8V7FsoF=NMJ41q2xyGA@mail.gmail.com> (sfid-20120125_085436_074660_46F9237D)
+Subject: Re: ath9k get's completely knocked out by rt3572 device
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Andreas Hartmann <andihartmann@freenet.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/30/2012 06:46 AM, Devendra.Naga wrote:
-> From: "Devendra.Naga"<devendra.aaru@gmail.com>
+On Tue, Jan 24, 2012 at 10:52 PM, Andreas Hartmann
+<andihartmann@freenet.de> wrote:
+> Helmut Schaa schrieb:
+>> Am Dienstag, 24. Januar 2012, 19:19:04 schrieb Andreas Hartmann:
+>>> - At the moment of stopping netperf on rt3572, the ath9k device
+>>> instantly started sending / receiving data again as expected.
+>> [...]
+>>> Does anybody has an idea what could cause this situation? Or is this normal?
+>>
+>> Your netperf traffic is in the direction STA -> AP or also in the other
+>> direction?
 >
-> the return value from _rtl_pci_switch_clk_req is not used by any of its callers.
+> In both directions (serially). It's a script, which does the following:
 >
-> Signed-off-by: Devendra.Naga<devendra.aaru@gmail.com>
-> ---
->   drivers/net/wireless/rtlwifi/pci.c |    3 +--
->   1 files changed, 1 insertions(+), 2 deletions(-)
+> while true
+> do
+>        netperf -H host -t TCP_STREAM    # (STA -> AP)
+>        netperf -H host -t TCP_MAERTS    # (AP -> STA)
+>        netperf -H host -t TCP_SENDFILE  # (STA -> AP)
+> done
 
-The patch is OK, but the patch subject is bad. You should have "[PATCH] 
-rtlwifi:...". Your patch is for rtlwifi, not wireless.
+Can you reproduce the ath9k tx starving issue with just STA->AP traffic too?
+And what about pure AP->STA traffic?
 
-Larry
-
->
-> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-> index 4326fd1..35f4a0d 100644
-> --- a/drivers/net/wireless/rtlwifi/pci.c
-> +++ b/drivers/net/wireless/rtlwifi/pci.c
-> @@ -198,7 +198,7 @@ static bool _rtl_pci_platform_switch_device_pci_aspm(
->   }
->
->   /*When we set 0x01 to enable clk request. Set 0x0 to disable clk req.*/
-> -static bool _rtl_pci_switch_clk_req(struct ieee80211_hw *hw, u8 value)
-> +static void _rtl_pci_switch_clk_req(struct ieee80211_hw *hw, u8 value)
->   {
->   	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
->   	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-> @@ -208,7 +208,6 @@ static bool _rtl_pci_switch_clk_req(struct ieee80211_hw *hw, u8 value)
->   	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE)
->   		udelay(100);
->
-> -	return true;
->   }
->
->   /*Disable RTL8192SE ASPM&  Disable Pci Bridge ASPM*/
-
+Helmut
