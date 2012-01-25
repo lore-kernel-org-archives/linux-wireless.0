@@ -1,76 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:41260 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757855Ab2AEDlN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jan 2012 22:41:13 -0500
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 0/7] rtlwifi: debug macros and uses neatening
-Date: Wed,  4 Jan 2012 19:40:38 -0800
-Message-Id: <cover.1325734202.git.joe@perches.com> (sfid-20120105_044206_628698_B52FA02F)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:32672 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752904Ab2AYQK2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jan 2012 11:10:28 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH V3 5/6] ath6kl: Fix bug in using tid given by addba/delba req events
+Date: Wed, 25 Jan 2012 21:37:53 +0530
+Message-ID: <1327507674-2561-5-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120125_171031_041888_9A123BFE)
+In-Reply-To: <1327507674-2561-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1327507674-2561-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Shrinks the objects a fair bit too.
+The tid which is given in addba/delba req event is not
+just tid but also muxed with the assoc id (MSB 4 bits)
+which can be used to determine the corresponding connected
+station in softap mode. The actual tid is LSB 4 bits. Using
+the tid as it is with rx_tid[] would result in OOB or invalid
+memory access in AP mode.
 
-Joe Perches (7):
-  rtlwifi: Neaten RT_ASSERT, RT_TRACE, RTPRINT, RT_PRINT_DATA macros
-  rtlwifi: Standardize RT_PRINT_DATA macro and uses
-  rtlwifi: Convert RT_TRACE macro to use ##__VA_ARGS__
-  rtlwifi: Convert RTPRINT macro to use ##__VA_ARGS__
-  rtlwifi: Convert RT_ASSERT macro to use ##__VA_ARGS__
-  rtlwifi: Remove duplicate __func__
-  rtlwifi: Optimize RT_TRACE macro use of KBUILD_MODNAME for size
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/txrx.c |   25 +++++++++++++++++++++++--
+ 1 files changed, 23 insertions(+), 2 deletions(-)
 
- drivers/net/wireless/rtlwifi/base.c                |   56 +-
- drivers/net/wireless/rtlwifi/cam.c                 |   81 ++--
- drivers/net/wireless/rtlwifi/core.c                |  124 ++--
- drivers/net/wireless/rtlwifi/debug.h               |   85 ++--
- drivers/net/wireless/rtlwifi/efuse.c               |   61 +-
- drivers/net/wireless/rtlwifi/pci.c                 |  211 +++----
- drivers/net/wireless/rtlwifi/ps.c                  |   31 +-
- drivers/net/wireless/rtlwifi/rc.c                  |    2 +-
- drivers/net/wireless/rtlwifi/regd.c                |   12 +-
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c  |  189 +++---
- drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c  |   84 ++--
- drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |  211 +++---
- drivers/net/wireless/rtlwifi/rtl8192ce/dm.c        |   24 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |  262 ++++----
- drivers/net/wireless/rtlwifi/rtl8192ce/led.c       |   16 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/phy.c       |  108 ++--
- drivers/net/wireless/rtlwifi/rtl8192ce/rf.c        |   83 ++--
- drivers/net/wireless/rtlwifi/rtl8192ce/sw.c        |    8 +-
- drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |   23 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/dm.c        |   24 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/hw.c        |  257 ++++----
- drivers/net/wireless/rtlwifi/rtl8192cu/led.c       |   15 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/mac.c       |  105 ++--
- drivers/net/wireless/rtlwifi/rtl8192cu/phy.c       |  121 ++--
- drivers/net/wireless/rtlwifi/rtl8192cu/rf.c        |   71 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/sw.c        |    6 +-
- drivers/net/wireless/rtlwifi/rtl8192cu/trx.c       |   42 +-
- drivers/net/wireless/rtlwifi/rtl8192de/dm.c        |  239 +++----
- drivers/net/wireless/rtlwifi/rtl8192de/fw.c        |  117 ++--
- drivers/net/wireless/rtlwifi/rtl8192de/hw.c        |  188 +++---
- drivers/net/wireless/rtlwifi/rtl8192de/led.c       |   14 +-
- drivers/net/wireless/rtlwifi/rtl8192de/phy.c       |  682 ++++++++++----------
- drivers/net/wireless/rtlwifi/rtl8192de/rf.c        |   95 ++--
- drivers/net/wireless/rtlwifi/rtl8192de/sw.c        |    8 +-
- drivers/net/wireless/rtlwifi/rtl8192de/trx.c       |   26 +-
- drivers/net/wireless/rtlwifi/rtl8192se/dm.c        |   30 +-
- drivers/net/wireless/rtlwifi/rtl8192se/fw.c        |   66 +-
- drivers/net/wireless/rtlwifi/rtl8192se/hw.c        |  244 ++++----
- drivers/net/wireless/rtlwifi/rtl8192se/led.c       |   15 +-
- drivers/net/wireless/rtlwifi/rtl8192se/phy.c       |  204 +++---
- drivers/net/wireless/rtlwifi/rtl8192se/rf.c        |   60 +-
- drivers/net/wireless/rtlwifi/rtl8192se/sw.c        |    8 +-
- drivers/net/wireless/rtlwifi/rtl8192se/trx.c       |   18 +-
- drivers/net/wireless/rtlwifi/usb.c                 |   39 +-
- 44 files changed, 2084 insertions(+), 2281 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index 90e3187..ef95b2e 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -17,6 +17,17 @@
+ #include "core.h"
+ #include "debug.h"
+ 
++/*
++ * tid - tid_mux0..tid_mux3
++ * aid - tid_mux4..tid_mux7
++ */
++#define ATH6KL_TID_MASK 0xf
++
++static inline u8 ath6kl_get_tid(u8 tid_mux)
++{
++	return tid_mux & ATH6KL_TID_MASK;
++}
++
+ static u8 ath6kl_ibss_map_epid(struct sk_buff *skb, struct net_device *dev,
+ 			       u32 *map_no)
+ {
+@@ -1602,7 +1613,7 @@ static void aggr_delete_tid_state(struct aggr_info_conn *aggr_conn, u8 tid)
+ 	memset(stats, 0, sizeof(struct rxtid_stats));
+ }
+ 
+-void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid, u16 seq_no,
++void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid_mux, u16 seq_no,
+ 			     u8 win_sz)
+ {
+ 	struct aggr_info *p_aggr = vif->aggr_cntxt;
+@@ -1610,12 +1621,17 @@ void aggr_recv_addba_req_evt(struct ath6kl_vif *vif, u8 tid, u16 seq_no,
+ 	struct rxtid *rxtid;
+ 	struct rxtid_stats *stats;
+ 	u16 hold_q_size;
++	u8 tid;
+ 
+ 	if (!p_aggr || !p_aggr->aggr_conn)
+ 		return;
+ 
+ 	aggr_conn = p_aggr->aggr_conn;
+ 
++	tid = ath6kl_get_tid(tid_mux);
++	if (tid >= NUM_OF_TIDS)
++		return;
++
+ 	rxtid = &aggr_conn->rx_tid[tid];
+ 	stats = &aggr_conn->stat[tid];
+ 
+@@ -1691,15 +1707,20 @@ struct aggr_info *aggr_init(struct ath6kl_vif *vif)
+ 	return p_aggr;
+ }
+ 
+-void aggr_recv_delba_req_evt(struct ath6kl_vif *vif, u8 tid)
++void aggr_recv_delba_req_evt(struct ath6kl_vif *vif, u8 tid_mux)
+ {
+ 	struct aggr_info *p_aggr = vif->aggr_cntxt;
+ 	struct rxtid *rxtid;
+ 	struct aggr_info_conn *aggr_conn;
++	u8 tid;
+ 
+ 	if (!p_aggr || !p_aggr->aggr_conn)
+ 		return;
+ 
++	tid = ath6kl_get_tid(tid_mux);
++	if (tid >= NUM_OF_TIDS)
++		return;
++
+ 	aggr_conn = p_aggr->aggr_conn;
+ 	rxtid = &aggr_conn->rx_tid[tid];
+ 
 -- 
-1.7.8.111.gad25c.dirty
+1.7.0.4
 
