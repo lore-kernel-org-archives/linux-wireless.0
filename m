@@ -1,66 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out002.kontent.com ([81.88.40.216]:39274 "EHLO
-	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751444Ab2AAMWZ (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:46293 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752681Ab2AYMX4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jan 2012 07:22:25 -0500
-From: Oliver Neukum <oliver@neukum.org>
-To: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: loading firmware while usermodehelper disabled.
-Date: Sun, 1 Jan 2012 13:22:34 +0100
-Cc: Matthew Garrett <mjg@redhat.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Greg Kroah-Hartman" <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-References: <Pine.LNX.4.44L0.1112312033240.28510-100000@netrider.rowland.org>
-In-Reply-To: <Pine.LNX.4.44L0.1112312033240.28510-100000@netrider.rowland.org>
+	Wed, 25 Jan 2012 07:23:56 -0500
+Received: by pbaa10 with SMTP id a10so2981564pba.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jan 2012 04:23:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201201011322.34483.oliver@neukum.org> (sfid-20120101_132301_180906_10FA5F3F)
+In-Reply-To: <4F1FDEAE.2020009@01019freenet.de>
+References: <4F1EF618.6080108@01019freenet.de>
+	<13411135.eH6opTgxBo@helmutmobil.site>
+	<4F1FBA09.3000003@01019freenet.de>
+	<4F1FDEAE.2020009@01019freenet.de>
+Date: Wed, 25 Jan 2012 13:23:55 +0100
+Message-ID: <CAGXE3d9Lrk+ginqqbxVM+v_+fpnhu=y_R=TGdyoy+ZWuLtfbtQ@mail.gmail.com> (sfid-20120125_132420_496785_5C9A6FFE)
+Subject: Re: ath9k get's completely knocked out by rt3572 device
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Sonntag, 1. Januar 2012, 03:21:45 schrieb Alan Stern:
-> On Sat, 31 Dec 2011, Oliver Neukum wrote:
+On Wed, Jan 25, 2012 at 11:51 AM, Andreas Hartmann
+<andihartmann@01019freenet.de> wrote:
+> As promised, I repeated the test before with another AP. The destination
+> host of netperf was the same. See below!
 
-> > We are definitely going through do_unbind_rebind(). But I don't think
-> > it matters why we got there. We seem to be calling probe() too early.
-> > And we need to guarantee that a driver can request firmware in probe()
-> > 
-> > So something has changed in the resume code path further up.
-> 
-> For at least a year and a half, it has been true that rebinding takes
+So, in total it looks a little bit better then with the rt2800pci AP
+but still the
+airtime is distributed not equally but the Ralink STA seems to get a higher
+amount of airtime :(
 
-Yes, so I don't understand why we haven't been hitting this issue
-all that time.
+Maybe the ralink driver treats the channel access parameters differently?
 
-> place during the complete phase of system resume.  Clearly that is too 
-> early to load firmware.  When do you think we should do it instead?
-
-I think we ought to delay until right after user space is unfrozen.
-The devices are gone anyway, so we lose nothing but have the ability
-to call helpers.
- 
-> And how should we keep track of which interfaces need rebinding?
-
-I guess this calls for a brute force approach. We can kick khubd and have
-it walk all busses checking for  needs_binding.
-
-> P.S.: Oliver, it looks like there's a bunch of dead code in
-> usb_suspend_interface() and usb_resume_interface().  I don't see how
-> either one can be executed with a driver that doesn't have both suspend
-> and resume methods.  Such cases should be filtered out when
-> usb_suspend() calls do_unbind_rebind().  The only odd thing that can
-> happen is when a driver doesn't support reset-resume.  Do you agree?
-
-I agree.
-
-	Regards
-		Oliver
+Helmut
