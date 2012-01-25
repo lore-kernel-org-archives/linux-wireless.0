@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:38543 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751794Ab2AKOpe convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:55193 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751178Ab2AYFcq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 09:45:34 -0500
-From: "Elias, Ilan" <ilane@ti.com>
-To: Ohad Ben-Cohen <ohad@wizery.com>
-CC: "samuel@sortiz.org" <samuel@sortiz.org>,
-	"lauro.venancio@openbossa.org" <lauro.venancio@openbossa.org>,
-	"aloisio.almeida@openbossa.org" <aloisio.almeida@openbossa.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] NFC: Download TI NFC init script
-Date: Wed, 11 Jan 2012 14:45:17 +0000
-Message-ID: <B30D1FD582D6484ABF57420512E580350F5D1C88@DLEE74.ent.ti.com> (sfid-20120111_154538_325813_24C0BCB8)
-References: <1326285768-3073-1-git-send-email-ilane@ti.com>
- <CAK=WgbanHKn3r9VYocmFpoCu9YKOf-hL20GKOgm=qmU1S6A_-A@mail.gmail.com>
-In-Reply-To: <CAK=WgbanHKn3r9VYocmFpoCu9YKOf-hL20GKOgm=qmU1S6A_-A@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 25 Jan 2012 00:32:46 -0500
 MIME-Version: 1.0
+In-Reply-To: <20120125002250.GA20431@gamma.logic.tuwien.ac.at>
+References: <20120124013625.GB18436@gamma.logic.tuwien.ac.at>
+	<CANUX_P3er0orBy8OhDuY1DfgD810UD-_HB_ukJnCA+W8e-VazQ@mail.gmail.com>
+	<20120125002250.GA20431@gamma.logic.tuwien.ac.at>
+Date: Tue, 24 Jan 2012 21:32:45 -0800
+Message-ID: <CANUX_P0UREz_jZABu+Y_QYOh9tx_sKZSSkZpYHBEVtcU4QQdSA@mail.gmail.com> (sfid-20120125_063301_185108_55DB6EF0)
+Subject: Re: iwlagn is getting even worse with 3.3-rc1
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Norbert Preining <preining@logic.at>
+Cc: linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- Hi Ohad,
+On Tue, Jan 24, 2012 at 16:22, Norbert Preining <preining@logic.at> wrote:
+> Hi Emmanuel,
+>
+> On Mo, 23 Jan 2012, Emmanuel Grumbach wrote:
+>> Can you please run with debug flags 0x80000000 ?
+>
+> Here we go. Booting into 3.3-rc1 tries to connect, the connection seems
+> to be established, but nothing actually goes out/in.
+> Main problem seems to be:
+>        iwlagn_tx_agg_stop Can't proceed: ssn 340, next_recl = 329
+>
+> rfkill block wifi ; sleep 10; rfkill unblock wifi
+>
+> helps.
+>
+> I attach the dmesg of all wifi related things since boot.
+>
 
-> > Download TI NFC init script during nfcwilink open operation,
-> > after the NFC channel is registered with TI shared transport.
-> > TI NFC init script is written in BTS format.
-> > First, read the chip version via a special vendor specific command.
-> > Second, we request the relevant BTS file from the user space, and
-> > then send the BTS commands to the chip.
-> 
-> nfcwilink_open() begins by calling the shared transport's
-> st_register() function, which also seem to be loading, parsing and
-> sending a BTS firmware to the device.
-> 
-> Does it mean that two firmwares are needed for these NFC devices ?
-Yes, TI NFC chip requires 2 different init scripts:
-1) General init script for all cores (HCI commands), which comes first
-2) NFC init script only for the NFC core (NCI commands), which comes second
- 
-> From a quick look it seems that much of the boilerplate code for the
-> BTS handling is quite similar; any way to avoid some of the code
-> duplication (something the shared transport code doesn't try very hard
-> to do ;) ?
-There are several major differences between the two:
-1) The vesion read in st_kim is the BT chip version, using the standard HCI_Read_Local_Version_Information command. This version is regarded as the general chip version.
-The version read in the nfcwilink is a different version using a special vendor specific NCI command. This version is regarded as the NFC chip version.
-2) The NFC init script is in NCI commands, while the general init script is in HCI commands.
-3) In NFC, we want a simplified BTS init script, e.g. with only ACTION_SEND_COMMAND. No waiting, sleeping or other actions...
+yeah... looks like the same issue as Dave. Can you please try with 0xc0000000 ?
+it will be noisy so be prepared...
 
-To summarize, it's a new core with different commands (NCI and not HCI).
-We chose BTS to make it simple and familiar, but it's a simplified BTS, and we handle the actions differently.
-
-Thanks & BR,
-Ilan
+I will send a patch to clarify one thing about mgmt frames, but as I
+said I am not in my office until end of next week.
