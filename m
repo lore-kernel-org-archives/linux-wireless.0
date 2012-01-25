@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:23596 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751185Ab2ACJ6t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 04:58:49 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH] ath6kl: Change ielen in ath6kl_add_new_sta() from u8 to size_t
-Date: Tue, 3 Jan 2012 15:28:53 +0530
-Message-ID: <1325584733-7854-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120103_105853_416224_572D873E)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from lo.gmane.org ([80.91.229.12]:46017 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751399Ab2AYLUJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jan 2012 06:20:09 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Rq0tc-0000mK-94
+	for linux-wireless@vger.kernel.org; Wed, 25 Jan 2012 12:20:08 +0100
+Received: from ewi1530.ewi.utwente.nl ([130.89.12.225])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jan 2012 12:20:08 +0100
+Received: from timon by ewi1530.ewi.utwente.nl with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jan 2012 12:20:08 +0100
+To: linux-wireless@vger.kernel.org
+From: Timon ter Braak <timon@terbraak.org>
+Subject: Re: Realtek rtl8192se in AP mode?
+Date: Wed, 25 Jan 2012 12:15:08 +0100
+Message-ID: <jfoo7s$4n9$1@dough.gmane.org> (sfid-20120125_122014_213341_F55A7622)
+References: <CAP6E9idrT=gu6cnKqMzVMVEXqRHdyuADgBNJTdCebt1Rf1dcfg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <CAP6E9idrT=gu6cnKqMzVMVEXqRHdyuADgBNJTdCebt1Rf1dcfg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Otherwise if (ielen <= ATH6KL_MAX_IE) is dead code. It looks safe to
-change the type of ielen from u8 to size_t instead of removing this
-if check, this ielen can have the length of more than one ies in future.
+On 26/12/11 1:59 , Jean-Luc Duprat wrote:
+> I am trying to find out whether the Realtek rtl8192se is
+> known to be stable and reliable in AP mode.  It certainly
+> became functional with kernel 3.0 and I can get the interface
+> into master mode, but whenever I try to connect to it my laptop reports
+> connection timeouts.  Digging a little more with wireshark, it
+> seems that authentication packets exchanged, but no association
+> packets are coming through...
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/main.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I can confirm this issue. With another chip/device I have an AP running 
+fine for years now, but with my new system I have been unsuccessful.
+I have tried a variety of settings, and I am quite confident that it 
+will not work until the driver/firmware is fixed.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index c44eca2..347e987 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -53,7 +53,7 @@ struct ath6kl_sta *ath6kl_find_sta_by_aid(struct ath6kl *ar, u8 aid)
- }
- 
- static void ath6kl_add_new_sta(struct ath6kl *ar, u8 *mac, u16 aid, u8 *wpaie,
--			u8 ielen, u8 keymgmt, u8 ucipher, u8 auth)
-+			size_t ielen, u8 keymgmt, u8 ucipher, u8 auth)
- {
- 	struct ath6kl_sta *sta;
- 	u8 free_slot;
--- 
-1.7.0.4
+Realtek just released a new driver, but until now I was unable to 
+download and test it (permission denied):
+
+http://www.realtek.com.tw/downloads/downloadsView.aspx?Langid=1&PNid=21&PFid=48&Level=5&Conn=4&ProdID=230&DownTypeID=3&GetDown=false&Downloads=true&SortByDesc=1
+
+Timon
 
