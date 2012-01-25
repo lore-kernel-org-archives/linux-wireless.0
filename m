@@ -1,56 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60301 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752509Ab2ATM6m (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:32147 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755227Ab2AYQWy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 07:58:42 -0500
-Message-Id: <20120120125516.000124996@sipsolutions.net> (sfid-20120120_135845_820468_851FFECD)
-Date: Fri, 20 Jan 2012 13:55:16 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 00/11] station management & auth/assoc redesign
-Mime-Version: 1.0
+	Wed, 25 Jan 2012 11:22:54 -0500
+Message-ID: <4F202C59.9020800@qca.qualcomm.com> (sfid-20120125_172257_940856_FAA9088D)
+Date: Wed, 25 Jan 2012 18:22:49 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH V2 1/6] ath6kl: Make sure to delete rx aggregation timer
+ in aggr_reset_state()
+References: <1327139573-7435-1-git-send-email-vthiagar@qca.qualcomm.com> <4F1EA5F0.50908@qca.qualcomm.com> <20120125160320.GA4888@chvasanth-lnx>
+In-Reply-To: <20120125160320.GA4888@chvasanth-lnx>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the combination series of the station management
-and auth/assoc redesign patches.
+On 01/25/2012 06:03 PM, Vasanthakumar Thiagarajan wrote:
+> On Tue, Jan 24, 2012 at 02:37:04PM +0200, Kalle Valo wrote:
+>> On 01/21/2012 11:52 AM, Vasanthakumar Thiagarajan wrote:
+>>> The timer which is used to flush rx aggregation frames needs to
+>>> be disabled when resetting the aggregation state. This is found
+>>> in code review.
+>>>
+>>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+>>
+>> Thanks, all six patches applied.
+> 
+> I'm really sorry that this patch set introduces a crash in accessing
+> invalid pointer through vif->aggr_cntxt. I'll send the next version
+> fixing this.
 
-Together, they give drivers more flexibility as to when
-to add the station entry to the device for connections.
-The auth/assoc redesign also simplifies the connection
-establishment process.
+Sorry, it's too late as I have already applied the patches. You need to
+create a new patch on top of ath6kl.git which fixes the issue.
 
-Combined diffstat:
-
- Documentation/DocBook/80211.tmpl |    1 
- include/net/cfg80211.h           |   53 -
- include/net/mac80211.h           |   30 
- net/mac80211/Makefile            |    4 
- net/mac80211/cfg.c               |    6 
- net/mac80211/debugfs_sta.c       |    4 
- net/mac80211/driver-ops.h        |   35 
- net/mac80211/driver-trace.h      |   32 
- net/mac80211/ieee80211_i.h       |   77 +-
- net/mac80211/iface.c             |    4 
- net/mac80211/key.c               |   38 -
- net/mac80211/main.c              |   13 
- net/mac80211/mlme.c              | 1412 +++++++++++++++++++++++++++------------
- net/mac80211/pm.c                |   23 
- net/mac80211/rate.c              |    2 
- net/mac80211/rate.h              |    1 
- net/mac80211/rx.c                |   22 
- net/mac80211/sta_info.c          |  274 +++----
- net/mac80211/sta_info.h          |   42 -
- net/mac80211/util.c              |   23 
- net/mac80211/work.c              |  815 ----------------------
- net/wireless/core.h              |   14 
- net/wireless/mlme.c              |  322 +-------
- net/wireless/nl80211.c           |   18 
- net/wireless/scan.c              |   12 
- net/wireless/sme.c               |   41 -
- 26 files changed, 1453 insertions(+), 1865 deletions(-)
-
-johannes
-
+Kalle
