@@ -1,37 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:54356 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755188Ab2AEQys (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 11:54:48 -0500
-Message-ID: <1325782484.22154.25.camel@joe2Laptop> (sfid-20120105_175513_181828_A112B5BB)
-Subject: Re: [PATCH 2/7] rtlwifi: Standardize RT_PRINT_DATA macro and uses
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Thu, 05 Jan 2012 08:54:44 -0800
-In-Reply-To: <4F05D361.6040809@lwfinger.net>
-References: <cover.1325734202.git.joe@perches.com>
-	 <e7d4163a9897f33145d8a07be54f507ab68e0243.1325734203.git.joe@perches.com>
-	 <20120105114314.GD2222@redhat.com> <1325780947.22154.14.camel@joe2Laptop>
-	 <4F05D361.6040809@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:3559 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751076Ab2AYIR7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jan 2012 03:17:59 -0500
+Message-ID: <4F1FBAA9.4040405@broadcom.com> (sfid-20120125_091826_380000_78219AC9)
+Date: Wed, 25 Jan 2012 09:17:45 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Francis Moreau" <francis.moro@gmail.com>
+cc: "Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: Re: kernel 3.2.1: BUG: scheduling while atomic:
+ swapper/0/0/0x10000100
+References: <CAC9WiBgpBCWZVjAQkJWSpXhC_dK1KKPfAHZvxVgaLV8BUsc41Q@mail.gmail.com>
+In-Reply-To: <CAC9WiBgpBCWZVjAQkJWSpXhC_dK1KKPfAHZvxVgaLV8BUsc41Q@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-01-05 at 10:44 -0600, Larry Finger wrote:
-> On 01/05/2012 10:29 AM, Joe Perches wrote:
-> > It does seem odd though to have a DBG_EMERG and not always
-> > emit it.
-> Those are always logged, no matter what debug level is set.
+On 01/24/2012 04:59 PM, Francis Moreau wrote:
+> Hi,
+> 
+> Just in case someone is interested, I've been hit by this:
+> 
+> [  236.734640] BUG: scheduling while atomic: swapper/0/0/0x10000100
 
-Well, not _always_...
-	$ echo -1 > /whatever/rtlwifi/debug_level_param
-or whatever is appropriate.
+Hi Francis
 
-cheers, Joe
+I hit that problem yesterday as well on 3.3.0-rc1. I suspected it came
+from my development changes on brcmfmac, but you are not using that.
+Still I am looking into it trying some kernel hacking options in Kconfig.
+
+Gr. AvS
 
