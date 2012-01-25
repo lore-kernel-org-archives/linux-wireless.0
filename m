@@ -1,63 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:53494 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755035Ab2AFOVp convert rfc822-to-8bit (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:60366 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752818Ab2AYMw0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jan 2012 09:21:45 -0500
-Received: by iaeh11 with SMTP id h11so2682985iae.19
-        for <linux-wireless@vger.kernel.org>; Fri, 06 Jan 2012 06:21:45 -0800 (PST)
+	Wed, 25 Jan 2012 07:52:26 -0500
+Received: by ghrr11 with SMTP id r11so1332905ghr.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jan 2012 04:52:25 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.64.1201061256190.16279@axis700.grange>
-References: <Pine.LNX.4.64.1201061256190.16279@axis700.grange>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sat, 7 Jan 2012 01:21:24 +1100
-Message-ID: <CAGRGNgUj3EUPKc0SX+3yCbygdbhS7_CN4hgR7ZAzjXuULw9fLg@mail.gmail.com> (sfid-20120106_152149_001300_5EBB00CC)
-Subject: Re: [PATCH] wireless: b43: fix Oops on card eject during transfer
-To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1327435292-25050-1-git-send-email-linville@tuxdriver.com>
+References: <1327435292-25050-1-git-send-email-linville@tuxdriver.com>
+Date: Wed, 25 Jan 2012 14:52:25 +0200
+Message-ID: <CAFtRNNzWM=Dg4-qjkoU0YiNaA2LwHw6U93xCKo2AQxPdm8tn=A@mail.gmail.com> (sfid-20120125_135229_850833_69371486)
+Subject: Re: [PATCH] ath5k: use bool type for no_hw_rfkill_switch module parameter
+From: Nick Kossifidis <mickflemm@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Guennadi,
-
-On Fri, Jan 6, 2012 at 22:58, Guennadi Liakhovetski
-<g.liakhovetski@gmx.de> wrote:
-> An Oops has once been observed, when the SDIO card had been ejected during
-> IO. The PC value shows, that the dev pointer in b43_op_stop() was NULL.
+2012/1/24 John W. Linville <linville@tuxdriver.com>:
+> Avoids this:
 >
-> Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+>  CC [M]  drivers/net/wireless/ath/ath5k/base.o
+> drivers/net/wireless/ath/ath5k/base.c: In function ‘__check_no_hw_rfkill_switch’:
+> drivers/net/wireless/ath/ath5k/base.c:85:1: warning: return from incompatible pointer type
+>
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 > ---
+>  drivers/net/wireless/ath/ath5k/base.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 >
-> Might also be good for stable
+> diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
+> index 4ab835f..a339693 100644
+> --- a/drivers/net/wireless/ath/ath5k/base.c
+> +++ b/drivers/net/wireless/ath/ath5k/base.c
+> @@ -80,7 +80,7 @@ static bool modparam_fastchanswitch;
+>  module_param_named(fastchanswitch, modparam_fastchanswitch, bool, S_IRUGO);
+>  MODULE_PARM_DESC(fastchanswitch, "Enable fast channel switching for AR2413/AR5413 radios.");
 >
-> �drivers/net/wireless/b43/main.c | � �3 +++
-> �1 files changed, 3 insertions(+), 0 deletions(-)
+> -static int ath5k_modparam_no_hw_rfkill_switch;
+> +static bool ath5k_modparam_no_hw_rfkill_switch;
+>  module_param_named(no_hw_rfkill_switch, ath5k_modparam_no_hw_rfkill_switch,
+>                                                                bool, S_IRUGO);
+>  MODULE_PARM_DESC(no_hw_rfkill_switch, "Ignore the GPIO RFKill switch state");
+> --
+> 1.7.4.4
 >
-> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> index 5634d9a..3849c25 100644
-> --- a/drivers/net/wireless/b43/main.c
-> +++ b/drivers/net/wireless/b43/main.c
-> @@ -4834,6 +4834,9 @@ static void b43_op_stop(struct ieee80211_hw *hw)
-> � � � �cancel_work_sync(&(wl->beacon_update_trigger));
->
-> � � � �mutex_lock(&wl->mutex);
-> + � � � if (!dev)
-> + � � � � � � � goto out_unlock;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Is there any reason to take this mutex, then jump to a label that
-releases it immediately?
+Thanks John !
 
-Would it be better to add a new label after the mutex_unlock() below
-and jump to there immediately after the cancel_work_sync() call above?
-
-Thanks,
+Acked-by: Nick Kossifidis <mickflemm@gmail.com>
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+GPG ID: 0xEE878588
+As you read this post global entropy rises. Have Fun ;-)
+Nick
