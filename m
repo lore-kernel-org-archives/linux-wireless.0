@@ -1,84 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:38024 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752008Ab2AETDx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 14:03:53 -0500
-Message-ID: <4F05F415.2080803@lwfinger.net> (sfid-20120105_200411_967882_03DB79BF)
-Date: Thu, 05 Jan 2012 13:03:49 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:58840 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752772Ab2AYIf5 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jan 2012 03:35:57 -0500
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/7] rtlwifi: debug macros and uses neatening
-References: <cover.1325734202.git.joe@perches.com>
-In-Reply-To: <cover.1325734202.git.joe@perches.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <4F1FBAA9.4040405@broadcom.com>
+References: <CAC9WiBgpBCWZVjAQkJWSpXhC_dK1KKPfAHZvxVgaLV8BUsc41Q@mail.gmail.com>
+	<4F1FBAA9.4040405@broadcom.com>
+Date: Wed, 25 Jan 2012 09:35:56 +0100
+Message-ID: <CAC9WiBjpsLuJhzw+vZsPC2bA73mad444Gq32DRL_gCri2MqaMw@mail.gmail.com> (sfid-20120125_093641_032633_2970B8C5)
+Subject: Re: kernel 3.2.1: BUG: scheduling while atomic: swapper/0/0/0x10000100
+From: Francis Moreau <francis.moro@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/04/2012 09:40 PM, Joe Perches wrote:
-> Shrinks the objects a fair bit too.
+Hi Arend,
+
+On Wed, Jan 25, 2012 at 9:17 AM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 01/24/2012 04:59 PM, Francis Moreau wrote:
+>> Hi,
+>>
+>> Just in case someone is interested, I've been hit by this:
+>>
+>> [  236.734640] BUG: scheduling while atomic: swapper/0/0/0x10000100
 >
-> Joe Perches (7):
->    rtlwifi: Neaten RT_ASSERT, RT_TRACE, RTPRINT, RT_PRINT_DATA macros
->    rtlwifi: Standardize RT_PRINT_DATA macro and uses
->    rtlwifi: Convert RT_TRACE macro to use ##__VA_ARGS__
->    rtlwifi: Convert RTPRINT macro to use ##__VA_ARGS__
->    rtlwifi: Convert RT_ASSERT macro to use ##__VA_ARGS__
->    rtlwifi: Remove duplicate __func__
->    rtlwifi: Optimize RT_TRACE macro use of KBUILD_MODNAME for size
->
->   drivers/net/wireless/rtlwifi/base.c                |   56 +-
->   drivers/net/wireless/rtlwifi/cam.c                 |   81 ++--
->   drivers/net/wireless/rtlwifi/core.c                |  124 ++--
->   drivers/net/wireless/rtlwifi/debug.h               |   85 ++--
->   drivers/net/wireless/rtlwifi/efuse.c               |   61 +-
->   drivers/net/wireless/rtlwifi/pci.c                 |  211 +++----
->   drivers/net/wireless/rtlwifi/ps.c                  |   31 +-
->   drivers/net/wireless/rtlwifi/rc.c                  |    2 +-
->   drivers/net/wireless/rtlwifi/regd.c                |   12 +-
->   drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c  |  189 +++---
->   drivers/net/wireless/rtlwifi/rtl8192c/fw_common.c  |   84 ++--
->   drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |  211 +++---
->   drivers/net/wireless/rtlwifi/rtl8192ce/dm.c        |   24 +-
->   drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |  262 ++++----
->   drivers/net/wireless/rtlwifi/rtl8192ce/led.c       |   16 +-
->   drivers/net/wireless/rtlwifi/rtl8192ce/phy.c       |  108 ++--
->   drivers/net/wireless/rtlwifi/rtl8192ce/rf.c        |   83 ++--
->   drivers/net/wireless/rtlwifi/rtl8192ce/sw.c        |    8 +-
->   drivers/net/wireless/rtlwifi/rtl8192ce/trx.c       |   23 +-
->   drivers/net/wireless/rtlwifi/rtl8192cu/dm.c        |   24 +-
->   drivers/net/wireless/rtlwifi/rtl8192cu/hw.c        |  257 ++++----
->   drivers/net/wireless/rtlwifi/rtl8192cu/led.c       |   15 +-
->   drivers/net/wireless/rtlwifi/rtl8192cu/mac.c       |  105 ++--
->   drivers/net/wireless/rtlwifi/rtl8192cu/phy.c       |  121 ++--
->   drivers/net/wireless/rtlwifi/rtl8192cu/rf.c        |   71 +-
->   drivers/net/wireless/rtlwifi/rtl8192cu/sw.c        |    6 +-
->   drivers/net/wireless/rtlwifi/rtl8192cu/trx.c       |   42 +-
->   drivers/net/wireless/rtlwifi/rtl8192de/dm.c        |  239 +++----
->   drivers/net/wireless/rtlwifi/rtl8192de/fw.c        |  117 ++--
->   drivers/net/wireless/rtlwifi/rtl8192de/hw.c        |  188 +++---
->   drivers/net/wireless/rtlwifi/rtl8192de/led.c       |   14 +-
->   drivers/net/wireless/rtlwifi/rtl8192de/phy.c       |  682 ++++++++++----------
->   drivers/net/wireless/rtlwifi/rtl8192de/rf.c        |   95 ++--
->   drivers/net/wireless/rtlwifi/rtl8192de/sw.c        |    8 +-
->   drivers/net/wireless/rtlwifi/rtl8192de/trx.c       |   26 +-
->   drivers/net/wireless/rtlwifi/rtl8192se/dm.c        |   30 +-
->   drivers/net/wireless/rtlwifi/rtl8192se/fw.c        |   66 +-
->   drivers/net/wireless/rtlwifi/rtl8192se/hw.c        |  244 ++++----
->   drivers/net/wireless/rtlwifi/rtl8192se/led.c       |   15 +-
->   drivers/net/wireless/rtlwifi/rtl8192se/phy.c       |  204 +++---
->   drivers/net/wireless/rtlwifi/rtl8192se/rf.c        |   60 +-
->   drivers/net/wireless/rtlwifi/rtl8192se/sw.c        |    8 +-
->   drivers/net/wireless/rtlwifi/rtl8192se/trx.c       |   18 +-
->   drivers/net/wireless/rtlwifi/usb.c                 |   39 +-
->   44 files changed, 2084 insertions(+), 2281 deletions(-)
+> I hit that problem yesterday as well on 3.3.0-rc1. I suspected it came
+> from my development changes on brcmfmac, but you are not using that.
 
-All 7 are
+I'm not sure it's related to the brcmfmac, because the RFKILL switch
+was off when it happened.
 
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+Were you writting/reading from/to a SD card by any chances when it did trigger ?
 
-Larry
+-- 
+Francis
