@@ -1,73 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63616 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753355Ab2AIIhu (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:46283 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753222Ab2AYMmy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 03:37:50 -0500
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH 6/8] ath6kl: Configure WOW patterns while going to wow_suspend
-Date: Mon, 9 Jan 2012 14:06:20 +0530
-Message-ID: <1326098182-9103-7-git-send-email-rmani@qca.qualcomm.com> (sfid-20120109_093753_251562_634FA0F1)
-In-Reply-To: <1326098182-9103-1-git-send-email-rmani@qca.qualcomm.com>
-References: <1326098182-9103-1-git-send-email-rmani@qca.qualcomm.com>
+	Wed, 25 Jan 2012 07:42:54 -0500
+Received: by ghrr11 with SMTP id r11so1328937ghr.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jan 2012 04:42:53 -0800 (PST)
+Message-ID: <4F1FF8C9.4050803@lwfinger.net> (sfid-20120125_134303_840397_4F6E8883)
+Date: Wed, 25 Jan 2012 06:42:49 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: zajec5@gmail.com, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org
+Subject: Re: b43: N-PHY: implement RSSI calibration for rev3+
+References: <20120125081815.GA19911@elgon.mountain>
+In-Reply-To: <20120125081815.GA19911@elgon.mountain>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+On 01/25/2012 02:18 AM, Dan Carpenter wrote:
+> Hello Rafał Miłecki,
+>
+> The patch e0c9a0219a8f: "b43: N-PHY: implement RSSI calibration for
+> rev3+" from Jan 5, 2012, leads to the following Smatch warning:
+> drivers/net/wireless/b43/phy_n.c +1381 b43_nphy_rev3_rssi_cal()
+> 	 error: buffer overflow 'results[j]' 4<= 4
+>
+>
+> +               for (i = 0; i<  4; i++) {
+> +                       s32 curr;
+> +                       s32 mind = 40;
+> +                       s32 minpoll = 249;
+> +                       u8 minvcm = 0;
+> +                       if (2 * core != i)
+> +                               continue;
+> +                       for (j = 0; j<  8; j++) {
+> +                               curr = results[j][i] * results[j][i] +
+> +                                       results[j][i + 1] * results[j][i];
+>                                                     ^^^^^
+> On the last iteration through the loop "i + 1" = 4.
+>
+> +                               if (curr<  mind) {
+> +                                       mind = curr;
+> +                                       minvcm = j;
+> +                               }
+> +                               if (results[j][i]<  minpoll)
+> +                                       minpoll = results[j][i];
+> +                       }
+> +                       vcm_final = minvcm;
+> +                       results_min[i] = minpoll;
+> +               }
+>
+> I don't know the code well enough to say if this can happen or not.
+> Perhaps on the last iteration we always hit the "if (2 * core != i)
+> continue" condition.  Anyway, since this is the first time this has hit
+> linux-next, I thought I would let you know.
 
-First preference is given to the user configured WOW patterns.
-If the user doesn't configure any patterns (for ex, via iw command),
-the default patterns will be configured while going to WOW suspend.
+The condition you point out will occur for i equals 3. As 2 * anything will 
+never be equal to 3, the continue will definitely be executed for that case.
 
-Make use of ath6kl_ap_add_default_wow_patterns() and
-ath6kl_non_ap_add_default_wow_patterns() func to configure
-default WOW patterns.
+This idea would need further investigation, but it certainly appears the the for 
+loop could be changed to "for (i = 0; i < 4; i += 2)", which would accomplish 
+the same end and should have the side effect of silencing the Smatch warning.
 
-Additionally, new conditional check is added to make sure user
-configured pattern count is within the limit (WOW_MAX_FILTERS_PER_LIST).
-
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   17 +++++++++++++++++
- 1 files changed, 17 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 347c5a4..a8880af 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1923,10 +1923,27 @@ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
- 	if (!test_bit(CONNECTED, &vif->flags))
- 		return -EINVAL;
- 
-+	if (wow && (wow->n_patterns > WOW_MAX_FILTERS_PER_LIST))
-+		return -EINVAL;
-+
- 	/* Clear existing WOW patterns */
- 	for (i = 0; i < WOW_MAX_FILTERS_PER_LIST; i++)
- 		ath6kl_wmi_del_wow_pattern_cmd(ar->wmi, vif->fw_vif_idx,
- 					       WOW_LIST_ID, i);
-+	/*
-+	 * Skip the default WOW pattern configuration if the driver
-+	 * receives any WOW patterns from the user.
-+	 */
-+	if (wow)
-+		ret = ath6kl_add_usr_wow_patterns(ar, vif, wow, &filter);
-+	else if (vif->nw_type == AP_NETWORK)
-+		ret = ath6kl_ap_add_default_wow_patterns(ar, vif);
-+	else
-+		ret = ath6kl_non_ap_add_default_wow_patterns(ar, vif);
-+
-+	if (ret)
-+		return ret;
-+
- 	/* Setup own IP addr for ARP agent. */
- 	in_dev = __in_dev_get_rtnl(vif->ndev);
- 	if (!in_dev)
--- 
-1.7.1
+Larry
 
