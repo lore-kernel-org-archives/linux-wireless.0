@@ -1,39 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:45621 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752143Ab2ASObV (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:34698 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752047Ab2AYMLs convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jan 2012 09:31:21 -0500
-Date: Thu, 19 Jan 2012 09:16:45 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: Gregory Bellier <gregory.bellier@gmail.com>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: [PATCH V3 2/2] MAINTAINERS: add b43 mailing list
-Message-ID: <20120119141644.GB3320@tuxdriver.com> (sfid-20120119_153134_118849_F7469529)
-References: <1326491706-14970-1-git-send-email-zajec5@gmail.com>
- <1326491706-14970-2-git-send-email-zajec5@gmail.com>
- <1326975859.2054.14.camel@shinybook.infradead.org>
- <CACna6rynAD9Rxsbmxd2UROrfwEQt65yV=FUR8jGSsDgiBhRiww@mail.gmail.com>
- <1326977309.2054.16.camel@shinybook.infradead.org>
- <CAD3=kO+kLO5-1ZY-X=7TsdEBrgzqQQF8uEVwrtu2eGduhAC6jQ@mail.gmail.com>
- <1326979070.2054.17.camel@shinybook.infradead.org>
+	Wed, 25 Jan 2012 07:11:48 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1326979070.2054.17.camel@shinybook.infradead.org>
+In-Reply-To: <4F1FD2AA.9020708@broadcom.com>
+References: <CAC9WiBgpBCWZVjAQkJWSpXhC_dK1KKPfAHZvxVgaLV8BUsc41Q@mail.gmail.com>
+	<4F1FBAA9.4040405@broadcom.com>
+	<CAC9WiBjpsLuJhzw+vZsPC2bA73mad444Gq32DRL_gCri2MqaMw@mail.gmail.com>
+	<4F1FD2AA.9020708@broadcom.com>
+Date: Wed, 25 Jan 2012 07:11:46 -0500
+Message-ID: <CA+5PVA73WHfnurWiyY4w9f4_mw=vUdpaNmAavHZtt+xYfo8Kcw@mail.gmail.com> (sfid-20120125_131208_982615_AC91FE05)
+Subject: Re: kernel 3.2.1: BUG: scheduling while atomic: swapper/0/0/0x10000100
+From: Josh Boyer <jwboyer@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Francis Moreau <francis.moro@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 20, 2012 at 12:17:50AM +1100, David Woodhouse wrote:
-> On Thu, 2012-01-19 at 14:16 +0100, Gregory Bellier wrote:
-> > Maybe you did that to avoid spammingâ€¦ ?
-> 
-> It's a crappy way to avoid spamming. We should be able to do better.
-> Filtering out all HTML goes a long way :)
+On Wed, Jan 25, 2012 at 5:00 AM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 01/25/2012 09:35 AM, Francis Moreau wrote:
+>> Hi Arend,
+>>
+>> On Wed, Jan 25, 2012 at 9:17 AM, Arend van Spriel <arend@broadcom.com> wrote:
+>>> On 01/24/2012 04:59 PM, Francis Moreau wrote:
+>>>> Hi,
+>>>>
+>>>> Just in case someone is interested, I've been hit by this:
+>>>>
+>>>> [  236.734640] BUG: scheduling while atomic: swapper/0/0/0x10000100
+>>>
+>>> I hit that problem yesterday as well on 3.3.0-rc1. I suspected it came
+>>> from my development changes on brcmfmac, but you are not using that.
+>>
+>> I'm not sure it's related to the brcmfmac, because the RFKILL switch
+>> was off when it happened.
+>>
+>> Were you writting/reading from/to a SD card by any chances when it did trigger ?
+>>
+>
+> Nope. It was a USB device driver. Maybe it was conincidental that it
+> happened shortly after loading the driver, but I tend to mistrust my own
+> stuff ;-). I posted a question in my issue yesterday (see [1]).
 
-So...do we need another MAINTAINERS patch now?
+We've had a few similar issues reported in Fedora yesterday after we
+rebased to 3.2.1.
+I've not found a common trend yet, but there is definitely an issue on
+some hardware in
+3.2.1
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+josh
