@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:34087 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754639Ab2AaPqf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 10:46:35 -0500
-Message-ID: <4F280CD7.9080002@lwfinger.net> (sfid-20120131_164652_119569_6F51438F)
-Date: Tue, 31 Jan 2012 09:46:31 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:11431 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754955Ab2AYJy2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 25 Jan 2012 04:54:28 -0500
+Date: Wed, 25 Jan 2012 10:54:08 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: Re: [rt2x00-users] [PATCH 4/4] rt2800usb: remove PWR_PIN_CFG=0x3
+ during init
+Message-ID: <20120125095407.GA3406@redhat.com> (sfid-20120125_105431_795152_151C5DC0)
+References: <1327410549-4714-1-git-send-email-sgruszka@redhat.com>
+ <1327410549-4714-4-git-send-email-sgruszka@redhat.com>
+ <201201241737.q0OHbmX5003698@mail.maya.org>
 MIME-Version: 1.0
-To: Masanari Iida <standby24x7@gmail.com>
-CC: linux-wireless@vger.kernel.org, trivial@kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] [trivial] rtlwifi: Fix typo in dm.c
-References: <1328016875-1684-1-git-send-email-standby24x7@gmail.com>
-In-Reply-To: <1328016875-1684-1-git-send-email-standby24x7@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201201241737.q0OHbmX5003698@mail.maya.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/31/2012 07:34 AM, Masanari Iida wrote:
-> Correct a spelling "disconnet" to "disconnect" in
-> drivers/net/wireless/rtlwifi/rtl8192de/dm.c
->
-> Signed-off-by: Masanari Iida<standby24x7@gmail.com>
-> ---
->   drivers/net/wireless/rtlwifi/rtl8192de/dm.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-> index 3cd0736..5087fe4 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
-> @@ -296,7 +296,7 @@ static void rtl92d_dm_find_minimum_rssi(struct ieee80211_hw *hw)
->   		de_digtable.min_undecorated_pwdb_for_dm =
->   		    rtlpriv->dm.UNDEC_SM_PWDB;
->   		RT_TRACE(rtlpriv, COMP_BB_POWERSAVING, DBG_LOUD,
-> -			 ("AP Ext Port or disconnet PWDB = 0x%x\n",
-> +			 ("AP Ext Port or disconnect PWDB = 0x%x\n",
->   			  de_digtable.min_undecorated_pwdb_for_dm));
->   	}
+Hello
 
-Due to the changes in RT_TRACE, this patch would not apply to the 
-wireless-testing tree. I fixed it and submitted a good version with my 
-Signed-off-by. Thanks for noticing this, but please use the correct tree when 
-submitting patches.
+On Tue, Jan 24, 2012 at 06:37:45PM +0100, Andreas Hartmann wrote:
+> Stanislaw Gruszka schrieb:
+> > This seems to be only needed as workaround for hardware problem on 
+> > PCI devices.
+> 
+> I tested this series (with all other resent patches applied) against a
+> rt3572usb based device (Linksys WUSB600N) on to different machines
+> (64bit smp (linux 3.2.1) and 32bit single core (linux 2.6.37.6)). I
+> couldn't see any functional change. Unfortunately it's as bad as
+> always :-(.
+> 
+> But one thing is new: I'm getting now these errors in messages (with
+> kernel 3.2.1) in the moment of the stall (which never stops until the
+> module is unloaded (or I didn't display enough patience)):
+> 
+> 
+> Jan 24 18:10:23 nb kernel: [  798.289036] phy0 -> rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x101c with error -71.
+This is write to BBP_CSR_CFG. I don't know, which patch is is responsible
+for that error (patch4 looks most suspicious), can you check those 4 patches
+one by one, and tell us which is causing this error? 
 
-Larry
-
+Thanks
+Stanislaw
