@@ -1,429 +1,307 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60328 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751570Ab2ATNB3 (ORCPT
+Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:51928 "EHLO
+	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754794Ab2AYAXF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 08:01:29 -0500
-Subject: [PATCH 05/11 (resend for list)] mac80211: add sta_state callback
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>
-In-Reply-To: <20120120125516.000124996@sipsolutions.net> (sfid-20120120_135845_820468_851FFECD)
-References: <20120120125516.000124996@sipsolutions.net>
-	 (sfid-20120120_135845_820468_851FFECD)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 20 Jan 2012 14:01:28 +0100
-Message-ID: <1327064488.9857.1.camel@jlt3.sipsolutions.net> (sfid-20120120_140133_619265_06E711F9)
-Mime-Version: 1.0
+	Tue, 24 Jan 2012 19:23:05 -0500
+Date: Wed, 25 Jan 2012 09:22:51 +0900
+From: Norbert Preining <preining@logic.at>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: Re: iwlagn is getting even worse with 3.3-rc1
+Message-ID: <20120125002250.GA20431@gamma.logic.tuwien.ac.at> (sfid-20120125_012327_425527_AE16D4DC)
+References: <20120124013625.GB18436@gamma.logic.tuwien.ac.at> <CANUX_P3er0orBy8OhDuY1DfgD810UD-_HB_ukJnCA+W8e-VazQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="qMm9M+Fa2AknHoGS"
+In-Reply-To: <CANUX_P3er0orBy8OhDuY1DfgD810UD-_HB_ukJnCA+W8e-VazQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-(based on Eliad's patch)
+--qMm9M+Fa2AknHoGS
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Add a callback to notify the low-level driver whenever
-the state of a station changes. The driver is only
-notified when the station is actually in the mac80211
-hash table, not for pre-insert state transitions.
+Hi Emmanuel,
 
-To allow the driver to replace sta_add/remove calls
-with this, call extra transitions with the NOTEXIST
-state.
+On Mo, 23 Jan 2012, Emmanuel Grumbach wrote:
+> Can you please run with debug flags 0x80000000 ?
 
-This callback can fail, so we need to be careful in
-handling it when a station is inserted, particularly
-in the IBSS case where we still keep the station entry
-around for mac80211 purposes.
+Here we go. Booting into 3.3-rc1 tries to connect, the connection seems
+to be established, but nothing actually goes out/in.
+Main problem seems to be:
+	iwlagn_tx_agg_stop Can't proceed: ssn 340, next_recl = 329
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
-v2: call drv_sta_state() within the sta addition process (thanks Johannes)
-Johannes:
-v3: - call drv_sta_state() in suspend
-    - introduce NOTEXIST state
-    - don't put old state into driver visible data but pass it to the
-      callback -- also fixes a reconfig bug
-    - make exclusive (forbid having sta_add/remove and sta_state)
-    - allow drv_sta_state() to fail and unwind initial
-      addition if it does
-v4: - handle updates correctly when state change fails
+rfkill block wifi ; sleep 10; rfkill unblock wifi
 
- include/net/mac80211.h      |   30 ++++++++++++
- net/mac80211/driver-ops.h   |   22 +++++++++
- net/mac80211/driver-trace.h |   32 +++++++++++++
- net/mac80211/main.c         |    3 +
- net/mac80211/pm.c           |   10 +++-
- net/mac80211/sta_info.c     |  106 ++++++++++++++++++++++++++++++++++++--------
- net/mac80211/sta_info.h     |    9 ---
- net/mac80211/util.c         |   10 +++-
- 8 files changed, 194 insertions(+), 28 deletions(-)
+helps.
 
---- a/include/net/mac80211.h	2012-01-20 13:54:17.000000000 +0100
-+++ b/include/net/mac80211.h	2012-01-20 13:54:19.000000000 +0100
-@@ -982,6 +982,25 @@ enum set_key_cmd {
- };
- 
- /**
-+ * enum ieee80211_sta_state - station state
-+ *
-+ * @IEEE80211_STA_NOTEXIST: station doesn't exist at all,
-+ *	this is a special state for add/remove transitions
-+ * @IEEE80211_STA_NONE: station exists without special state
-+ * @IEEE80211_STA_AUTH: station is authenticated
-+ * @IEEE80211_STA_ASSOC: station is associated
-+ * @IEEE80211_STA_AUTHORIZED: station is authorized (802.1X)
-+ */
-+enum ieee80211_sta_state {
-+	/* NOTE: These need to be ordered correctly! */
-+	IEEE80211_STA_NOTEXIST,
-+	IEEE80211_STA_NONE,
-+	IEEE80211_STA_AUTH,
-+	IEEE80211_STA_ASSOC,
-+	IEEE80211_STA_AUTHORIZED,
-+};
-+
-+/**
-  * struct ieee80211_sta - station table entry
-  *
-  * A station table entry represents a station we are possibly
-@@ -1974,6 +1993,13 @@ enum ieee80211_frame_release_type {
-  *	in AP mode, this callback will not be called when the flag
-  *	%IEEE80211_HW_AP_LINK_PS is set. Must be atomic.
-  *
-+ * @sta_state: Notifies low level driver about state transition of a
-+ *	station (which can be the AP, a client, IBSS/WDS/mesh peer etc.)
-+ *	This callback is mutually exclusive with @sta_add/@sta_remove.
-+ *	It must not fail for down transitions but may fail for transitions
-+ *	up the list of states.
-+ *	The callback can sleep.
-+ *
-  * @conf_tx: Configure TX queue parameters (EDCF (aifs, cw_min, cw_max),
-  *	bursting) for a hardware TX queue.
-  *	Returns a negative error code on failure.
-@@ -2193,6 +2219,10 @@ struct ieee80211_ops {
- 			  struct ieee80211_sta *sta);
- 	void (*sta_notify)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			enum sta_notify_cmd, struct ieee80211_sta *sta);
-+	int (*sta_state)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-+			 struct ieee80211_sta *sta,
-+			 enum ieee80211_sta_state old_state,
-+			 enum ieee80211_sta_state new_state);
- 	int (*conf_tx)(struct ieee80211_hw *hw,
- 		       struct ieee80211_vif *vif, u16 queue,
- 		       const struct ieee80211_tx_queue_params *params);
---- a/net/mac80211/driver-ops.h	2012-01-20 13:54:19.000000000 +0100
-+++ b/net/mac80211/driver-ops.h	2012-01-20 13:54:19.000000000 +0100
-@@ -478,6 +478,28 @@ static inline void drv_sta_remove(struct
- 	trace_drv_return_void(local);
- }
- 
-+static inline __must_check
-+int drv_sta_state(struct ieee80211_local *local,
-+		  struct ieee80211_sub_if_data *sdata,
-+		  struct sta_info *sta,
-+		  enum ieee80211_sta_state old_state,
-+		  enum ieee80211_sta_state new_state)
-+{
-+	int ret = 0;
-+
-+	might_sleep();
-+
-+	sdata = get_bss_sdata(sdata);
-+	check_sdata_in_driver(sdata);
-+
-+	trace_drv_sta_state(local, sdata, &sta->sta, old_state, new_state);
-+	if (local->ops->sta_state)
-+		ret = local->ops->sta_state(&local->hw, &sdata->vif, &sta->sta,
-+					    old_state, new_state);
-+	trace_drv_return_int(local, ret);
-+	return ret;
-+}
-+
- static inline int drv_conf_tx(struct ieee80211_local *local,
- 			      struct ieee80211_sub_if_data *sdata, u16 queue,
- 			      const struct ieee80211_tx_queue_params *params)
---- a/net/mac80211/driver-trace.h	2012-01-20 13:54:09.000000000 +0100
-+++ b/net/mac80211/driver-trace.h	2012-01-20 13:54:19.000000000 +0100
-@@ -635,6 +635,38 @@ TRACE_EVENT(drv_sta_notify,
- 	)
- );
- 
-+TRACE_EVENT(drv_sta_state,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 struct ieee80211_sta *sta,
-+		 enum ieee80211_sta_state old_state,
-+		 enum ieee80211_sta_state new_state),
-+
-+	TP_ARGS(local, sdata, sta, old_state, new_state),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+		STA_ENTRY
-+		__field(u32, old_state)
-+		__field(u32, new_state)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+		STA_ASSIGN;
-+		__entry->old_state = old_state;
-+		__entry->new_state = new_state;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT  VIF_PR_FMT  STA_PR_FMT " state: %d->%d",
-+		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG,
-+		__entry->old_state, __entry->new_state
-+	)
-+);
-+
- TRACE_EVENT(drv_sta_add,
- 	TP_PROTO(struct ieee80211_local *local,
- 		 struct ieee80211_sub_if_data *sdata,
---- a/net/mac80211/sta_info.c	2012-01-20 13:54:19.000000000 +0100
-+++ b/net/mac80211/sta_info.c	2012-01-20 13:54:19.000000000 +0100
-@@ -351,6 +351,38 @@ static int sta_info_insert_check(struct
- 	return 0;
- }
- 
-+static int sta_info_insert_drv_state(struct ieee80211_local *local,
-+				     struct ieee80211_sub_if_data *sdata,
-+				     struct sta_info *sta)
-+{
-+	enum ieee80211_sta_state state;
-+	int err = 0;
-+
-+	for (state = IEEE80211_STA_NOTEXIST; state < sta->sta_state; state++) {
-+		err = drv_sta_state(local, sdata, sta, state, state + 1);
-+		if (err)
-+			break;
-+	}
-+
-+	if (!err) {
-+		sta->uploaded = true;
-+		return 0;
-+	}
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_ADHOC) {
-+		printk(KERN_DEBUG
-+		       "%s: failed to move IBSS STA %pM to state %d (%d) - keeping it anyway.\n",
-+		       sdata->name, sta->sta.addr, state + 1, err);
-+		err = 0;
-+	}
-+
-+	/* unwind on error */
-+	for (; state > IEEE80211_STA_NOTEXIST; state--)
-+		WARN_ON(drv_sta_state(local, sdata, sta, state, state - 1));
-+
-+	return err;
-+}
-+
- /*
-  * should be called with sta_mtx locked
-  * this function replaces the mutex lock
-@@ -392,8 +424,11 @@ static int sta_info_insert_finish(struct
- 			printk(KERN_DEBUG "%s: failed to add IBSS STA %pM to "
- 					  "driver (%d) - keeping it anyway.\n",
- 			       sdata->name, sta->sta.addr, err);
--		} else
--			sta->uploaded = true;
-+		} else {
-+			err = sta_info_insert_drv_state(local, sdata, sta);
-+			if (err)
-+				goto out_err;
-+		}
- 	}
- 
- 	if (!dummy_reinsert) {
-@@ -770,15 +805,19 @@ int __must_check __sta_info_destroy(stru
- 		RCU_INIT_POINTER(sdata->u.vlan.sta, NULL);
- 
- 	while (sta->sta_state > IEEE80211_STA_NONE) {
--		int err = sta_info_move_state(sta, sta->sta_state - 1);
--		if (err) {
-+		ret = sta_info_move_state(sta, sta->sta_state - 1);
-+		if (ret) {
- 			WARN_ON_ONCE(1);
- 			break;
- 		}
- 	}
- 
--	if (sta->uploaded)
-+	if (sta->uploaded) {
- 		drv_sta_remove(local, sdata, &sta->sta);
-+		ret = drv_sta_state(local, sdata, sta, IEEE80211_STA_NONE,
-+				    IEEE80211_STA_NOTEXIST);
-+		WARN_ON_ONCE(ret != 0);
-+	}
- 
- 	/*
- 	 * At this point, after we wait for an RCU grace period,
-@@ -1404,20 +1443,58 @@ int sta_info_move_state(struct sta_info
- 	if (sta->sta_state == new_state)
- 		return 0;
- 
-+	/* check allowed transitions first */
-+
-+	switch (new_state) {
-+	case IEEE80211_STA_NONE:
-+		if (sta->sta_state != IEEE80211_STA_AUTH)
-+			return -EINVAL;
-+		break;
-+	case IEEE80211_STA_AUTH:
-+		if (sta->sta_state != IEEE80211_STA_NONE &&
-+		    sta->sta_state != IEEE80211_STA_ASSOC)
-+			return -EINVAL;
-+		break;
-+	case IEEE80211_STA_ASSOC:
-+		if (sta->sta_state != IEEE80211_STA_AUTH &&
-+		    sta->sta_state != IEEE80211_STA_AUTHORIZED)
-+			return -EINVAL;
-+		break;
-+	case IEEE80211_STA_AUTHORIZED:
-+		if (sta->sta_state != IEEE80211_STA_ASSOC)
-+			return -EINVAL;
-+		break;
-+	default:
-+		WARN(1, "invalid state %d", new_state);
-+		return -EINVAL;
-+	}
-+
-+	printk(KERN_DEBUG "%s: moving STA %pM to state %d\n",
-+		sta->sdata->name, sta->sta.addr, new_state);
-+
-+	/*
-+	 * notify the driver before the actual changes so it can
-+	 * fail the transition
-+	 */
-+	if (test_sta_flag(sta, WLAN_STA_INSERTED)) {
-+		int err = drv_sta_state(sta->local, sta->sdata, sta,
-+					sta->sta_state, new_state);
-+		if (err)
-+			return err;
-+	}
-+
-+	/* reflect the change in all state variables */
-+
- 	switch (new_state) {
- 	case IEEE80211_STA_NONE:
- 		if (sta->sta_state == IEEE80211_STA_AUTH)
- 			clear_bit(WLAN_STA_AUTH, &sta->_flags);
--		else
--			return -EINVAL;
- 		break;
- 	case IEEE80211_STA_AUTH:
- 		if (sta->sta_state == IEEE80211_STA_NONE)
- 			set_bit(WLAN_STA_AUTH, &sta->_flags);
- 		else if (sta->sta_state == IEEE80211_STA_ASSOC)
- 			clear_bit(WLAN_STA_ASSOC, &sta->_flags);
--		else
--			return -EINVAL;
- 		break;
- 	case IEEE80211_STA_ASSOC:
- 		if (sta->sta_state == IEEE80211_STA_AUTH) {
-@@ -1426,24 +1503,19 @@ int sta_info_move_state(struct sta_info
- 			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
- 				atomic_dec(&sta->sdata->u.ap.num_sta_authorized);
- 			clear_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
--		} else
--			return -EINVAL;
-+		}
- 		break;
- 	case IEEE80211_STA_AUTHORIZED:
- 		if (sta->sta_state == IEEE80211_STA_ASSOC) {
- 			if (sta->sdata->vif.type == NL80211_IFTYPE_AP)
- 				atomic_inc(&sta->sdata->u.ap.num_sta_authorized);
- 			set_bit(WLAN_STA_AUTHORIZED, &sta->_flags);
--		} else
--			return -EINVAL;
-+		}
- 		break;
- 	default:
--		WARN(1, "invalid state %d", new_state);
--		return -EINVAL;
-+		break;
- 	}
- 
--	printk(KERN_DEBUG "%s: moving STA %pM to state %d\n",
--		sta->sdata->name, sta->sta.addr, new_state);
- 	sta->sta_state = new_state;
- 
- 	return 0;
---- a/net/mac80211/util.c	2012-01-20 13:54:19.000000000 +0100
-+++ b/net/mac80211/util.c	2012-01-20 13:54:19.000000000 +0100
-@@ -1184,8 +1184,16 @@ int ieee80211_reconfig(struct ieee80211_
- 	/* add STAs back */
- 	mutex_lock(&local->sta_mtx);
- 	list_for_each_entry(sta, &local->sta_list, list) {
--		if (sta->uploaded)
-+		if (sta->uploaded) {
-+			enum ieee80211_sta_state state;
-+
- 			WARN_ON(drv_sta_add(local, sta->sdata, &sta->sta));
-+
-+			for (state = IEEE80211_STA_NOTEXIST;
-+			     state < sta->sta_state - 1; state++)
-+				WARN_ON(drv_sta_state(local, sta->sdata, sta,
-+						      state, state + 1));
-+		}
- 	}
- 	mutex_unlock(&local->sta_mtx);
- 
---- a/net/mac80211/main.c	2012-01-20 13:54:09.000000000 +0100
-+++ b/net/mac80211/main.c	2012-01-20 13:54:19.000000000 +0100
-@@ -534,6 +534,9 @@ struct ieee80211_hw *ieee80211_alloc_hw(
- 	int priv_size, i;
- 	struct wiphy *wiphy;
- 
-+	if (WARN_ON(ops->sta_state && (ops->sta_add || ops->sta_remove)))
-+		return NULL;
-+
- 	/* Ensure 32-byte alignment of our private data and hw private data.
- 	 * We use the wiphy priv data for both our ieee80211_local and for
- 	 * the driver's private data
---- a/net/mac80211/sta_info.h	2012-01-20 13:54:19.000000000 +0100
-+++ b/net/mac80211/sta_info.h	2012-01-20 13:54:19.000000000 +0100
-@@ -75,15 +75,6 @@ enum ieee80211_sta_info_flags {
- 	WLAN_STA_INSERTED,
- };
- 
--enum ieee80211_sta_state {
--	/* NOTE: These need to be ordered correctly! */
--	IEEE80211_STA_NOTEXIST,
--	IEEE80211_STA_NONE,
--	IEEE80211_STA_AUTH,
--	IEEE80211_STA_ASSOC,
--	IEEE80211_STA_AUTHORIZED,
--};
--
- #define STA_TID_NUM 16
- #define ADDBA_RESP_INTERVAL HZ
- #define HT_AGG_MAX_RETRIES		15
---- a/net/mac80211/pm.c	2012-01-20 13:54:19.000000000 +0100
-+++ b/net/mac80211/pm.c	2012-01-20 13:54:19.000000000 +0100
-@@ -97,9 +97,17 @@ int __ieee80211_suspend(struct ieee80211
- 	/* tear down aggregation sessions and remove STAs */
- 	mutex_lock(&local->sta_mtx);
- 	list_for_each_entry(sta, &local->sta_list, list) {
--		if (sta->uploaded)
-+		if (sta->uploaded) {
-+			enum ieee80211_sta_state state;
-+
- 			drv_sta_remove(local, sta->sdata, &sta->sta);
- 
-+			state = sta->sta_state;
-+			for (; state > IEEE80211_STA_NOTEXIST; state--)
-+				WARN_ON(drv_sta_state(local, sdata, sta,
-+						      state, state - 1));
-+		}
-+
- 		mesh_plink_quiesce(sta);
- 	}
- 	mutex_unlock(&local->sta_mtx);
+I attach the dmesg of all wifi related things since boot.
 
+Best wishes
 
+Norbert
+------------------------------------------------------------------------
+Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
+JAIST, Japan                                 TeX Live & Debian Developer
+DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
+------------------------------------------------------------------------
+WHAPLODE DROVE (n.)
+A homicidal golf stroke.
+			--- Douglas Adams, The Meaning of Liff
+
+--qMm9M+Fa2AknHoGS
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="dmesg.txt"
+
+[   35.768085] cfg80211: Calling CRDA to update world regulatory domain
+[   35.980591] Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
+[   35.982187] Copyright(c) 2003-2011 Intel Corporation
+[   35.983888] iwlwifi 0000:06:00.0: pci_resource_len = 0x00002000
+[   35.985471] iwlwifi 0000:06:00.0: pci_resource_base = ffffc900041bc000
+[   35.986981] iwlwifi 0000:06:00.0: HW Revision ID = 0x0
+[   35.988618] iwlwifi 0000:06:00.0: irq 47 for MSI/MSI-X
+[   35.988681] iwlwifi 0000:06:00.0: CONFIG_IWLWIFI_DEBUG enabled
+[   35.990170] iwlwifi 0000:06:00.0: CONFIG_IWLWIFI_DEBUGFS enabled
+[   35.991651] iwlwifi 0000:06:00.0: CONFIG_IWLWIFI_DEVICE_TRACING disabled
+[   35.993136] iwlwifi 0000:06:00.0: CONFIG_IWLWIFI_DEVICE_TESTMODE disabled
+[   35.994616] iwlwifi 0000:06:00.0: CONFIG_IWLWIFI_P2P disabled
+[   35.996112] iwlwifi 0000:06:00.0: Detected Intel(R) WiFi Link 5100 AGN, REV=0x54
+[   35.997658] iwlwifi 0000:06:00.0: L1 Enabled; Disabling L0S
+[   36.012102] firewire_core: created device fw0: GUID 0800460302b0163b, S400
+[   36.020947] iwlwifi 0000:06:00.0: device EEPROM VER=0x11e, CALIB=0x4
+[   36.022379] iwlwifi 0000:06:00.0: Device SKU: 0xF0
+[   36.023793] iwlwifi 0000:06:00.0: Tunable channels: 13 802.11bg, 24 802.11a channels
+[   36.623830] iwlwifi 0000:06:00.0: loaded firmware version 8.83.5.1 build 33692 (EXP)
+[   36.625485] Registered led device: phy0-led
+[   36.653785] ieee80211 phy0: Selected rate control algorithm 'iwl-agn-rs'
+
+...
+
+[   37.015237] cfg80211: World regulatory domain updated:
+[   37.016730] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[   37.018157] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   37.019581] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[   37.021011] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[   37.022390] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   37.023744] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+
+...
+
+[   45.598110] iwlwifi 0000:06:00.0: L1 Enabled; Disabling L0S
+[   45.602018] iwlwifi 0000:06:00.0: Radio type=0x1-0x2-0x0
+[   45.642289] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 4  WrPtr: 0
+[   45.642359] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 0 on FIFO 3
+[   45.642424] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 1 on FIFO 2
+[   45.642486] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 2 on FIFO 1
+[   45.642549] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 3 on FIFO 0
+[   45.642610] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 4 on FIFO 7
+[   45.717238] iwlwifi 0000:06:00.0: L1 Enabled; Disabling L0S
+[   45.720267] iwlwifi 0000:06:00.0: Radio type=0x1-0x2-0x0
+[   45.762302] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 4  WrPtr: 0
+[   45.762335] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 0 on FIFO 3
+[   45.762347] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 1 on FIFO 2
+[   45.762360] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 2 on FIFO 1
+[   45.762372] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 3 on FIFO 0
+[   45.762385] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate AC/CMD Queue 4 on FIFO 7
+
+...
+
+[   53.589698] wlan0: authenticate with 00:0a:79:eb:56:10 (try 1)
+[   53.598039] wlan0: authenticated
+[   53.602978] wlan0: associate with 00:0a:79:eb:56:10 (try 1)
+[   53.616050] wlan0: RX AssocResp from 00:0a:79:eb:56:10 (capab=0x411 status=0 aid=3)
+[   53.616054] wlan0: associated
+[   53.616058] wlan0: moving STA 00:0a:79:eb:56:10 to state 1
+[   53.616060] wlan0: moving STA 00:0a:79:eb:56:10 to state 2
+[   53.625011] cfg80211: Calling CRDA for country: JP
+[   53.629833] cfg80211: Regulatory domain changed to country: JP
+[   53.629836] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[   53.629839] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+[   53.629842] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz), (N/A, 2000 mBm)
+[   53.629844] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (N/A, 2000 mBm)
+[   53.629846] cfg80211:   (4910000 KHz - 4930000 KHz @ 10000 KHz), (N/A, 2300 mBm)
+[   53.629849] cfg80211:   (4910000 KHz - 4990000 KHz @ 40000 KHz), (N/A, 2300 mBm)
+[   53.629851] cfg80211:   (4930000 KHz - 4950000 KHz @ 10000 KHz), (N/A, 2300 mBm)
+[   53.629854] cfg80211:   (5030000 KHz - 5045000 KHz @ 10000 KHz), (N/A, 2300 mBm)
+[   53.629856] cfg80211:   (5030000 KHz - 5090000 KHz @ 40000 KHz), (N/A, 2300 mBm)
+[   53.629859] cfg80211:   (5050000 KHz - 5060000 KHz @ 10000 KHz), (N/A, 2300 mBm)
+[   53.629861] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+[   53.629864] cfg80211:   (5250000 KHz - 5330000 KHz @ 40000 KHz), (N/A, 2000 mBm)
+[   53.629866] cfg80211:   (5490000 KHz - 5710000 KHz @ 40000 KHz), (N/A, 2300 mBm)
+[   53.891052] wlan0: moving STA 00:0a:79:eb:56:10 to state 3
+[   54.149647] Rx A-MPDU request on tid 0 result 0
+[   65.575106] Open BA session requested for 00:0a:79:eb:56:10 tid 0
+[   65.592289] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_start Can proceed: ssn = next_recl = 66
+[   65.592307] activated addBA response timer on tid 0
+[   65.594292] switched off addBA timer for tid 0
+[   65.594300] Aggregation is on for tid 0
+[   65.594397] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 66
+[   65.594486] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate BA Queue 11 on FIFO 1
+[   65.594496] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:0a:79:eb:56:10 tid = 0
+[   73.331722] Rx A-MPDU request on tid 6 result 0
+[   73.331806] unexpected AddBA Req from 00:0a:79:eb:56:10 on tid 6
+[   73.331815] Rx BA session stop requested for 00:0a:79:eb:56:10 tid 6 recipient reason: 32
+[   73.333589] Rx A-MPDU request on tid 6 result 0
+[   74.417278] Open BA session requested for 00:0a:79:eb:56:10 tid 6
+[   74.440231] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_start Can proceed: ssn = next_recl = 13
+[   74.440252] activated addBA response timer on tid 6
+[   74.442198] switched off addBA timer for tid 6
+[   74.442204] Aggregation is on for tid 6
+[   74.442331] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 12  WrPtr: 13
+[   74.442436] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate BA Queue 12 on FIFO 3
+[   74.442446] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:0a:79:eb:56:10 tid = 6
+[   74.629141] ieee80211 phy0: release an RX reorder frame due to timeout on earlier frames
+[   74.629151] ieee80211 phy0: release an RX reorder frame due to timeout on earlier frames
+[   89.536080] tx session timer expired on tid 6
+[   89.536109] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 6
+[   89.560113] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_stop Can proceed: ssn = next_recl = 26
+[   89.560172] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 12  WrPtr: 0
+[   89.560251] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Deactivate AC/CMD Queue 12 on FIFO 0
+[   89.560273] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 6
+[  102.896068] tx session timer expired on tid 0
+[  102.896116] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 0
+[  102.916116] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_stop Can proceed: ssn = next_recl = 163
+[  102.916176] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 0
+[  102.916253] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Deactivate AC/CMD Queue 11 on FIFO 0
+[  102.916273] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 0
+[  108.838002] Open BA session requested for 00:0a:79:eb:56:10 tid 0
+[  108.856257] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_start Can proceed: ssn = next_recl = 167
+[  108.856276] activated addBA response timer on tid 0
+[  109.856064] addBA response timer expired on tid 0
+[  109.856110] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 0
+[  109.872130] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_stop Can proceed: ssn = next_recl = 167
+[  109.872177] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 0
+[  109.872232] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Deactivate AC/CMD Queue 11 on FIFO 0
+[  112.755165] switched off addBA timer for tid 0
+[  112.755168] got addBA resp for tid 0 but we already gave up
+[  112.755178] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 0
+[  114.418021] Open BA session requested for 00:0a:79:eb:56:10 tid 6
+[  114.448976] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_start Can proceed: ssn = next_recl = 27
+[  114.448994] activated addBA response timer on tid 6
+[  114.452114] switched off addBA timer for tid 6
+[  114.452122] Aggregation is on for tid 6
+[  114.452230] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 27
+[  114.452319] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate BA Queue 11 on FIFO 3
+[  114.452329] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:0a:79:eb:56:10 tid = 6
+[  119.381587] Open BA session requested for 00:0a:79:eb:56:10 tid 0
+[  119.400274] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_start Can proceed: ssn = next_recl = 184
+[  119.400293] activated addBA response timer on tid 0
+[  119.402287] switched off addBA timer for tid 0
+[  119.402294] Aggregation is on for tid 0
+[  119.402390] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 12  WrPtr: 184
+[  119.402479] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate BA Queue 12 on FIFO 1
+[  119.402489] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:0a:79:eb:56:10 tid = 0
+[  119.584066] tx session timer expired on tid 6
+[  119.584109] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 6
+[  119.604111] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_stop Can proceed: ssn = next_recl = 27
+[  119.604168] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 0
+[  119.604246] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Deactivate AC/CMD Queue 11 on FIFO 0
+[  119.604265] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 6
+[  131.184092] tx session timer expired on tid 0
+[  131.184141] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 0
+[  131.204121] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_stop Can proceed: ssn = next_recl = 255
+[  131.204180] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 12  WrPtr: 0
+[  131.204258] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Deactivate AC/CMD Queue 12 on FIFO 0
+[  131.204280] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 0
+[  139.198746] Open BA session requested for 00:0a:79:eb:56:10 tid 0
+[  139.220255] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_start Can proceed: ssn = next_recl = 262
+[  139.220273] activated addBA response timer on tid 0
+[  139.222218] switched off addBA timer for tid 0
+[  139.222225] Aggregation is on for tid 0
+[  139.222322] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 6
+[  139.222411] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate BA Queue 11 on FIFO 1
+[  139.222421] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:0a:79:eb:56:10 tid = 0
+[  144.352068] tx session timer expired on tid 0
+[  144.352114] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 0
+[  144.368114] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_stop Can proceed: ssn = next_recl = 263
+[  144.368172] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 0
+[  144.368249] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Deactivate AC/CMD Queue 11 on FIFO 0
+[  144.368269] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 0
+[  150.289509] Open BA session requested for 00:0a:79:eb:56:10 tid 0
+[  150.308286] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_start Can proceed: ssn = next_recl = 268
+[  150.308307] activated addBA response timer on tid 0
+[  150.310290] switched off addBA timer for tid 0
+[  150.310296] Aggregation is on for tid 0
+[  150.310393] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 12
+[  150.310483] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate BA Queue 11 on FIFO 1
+[  150.310493] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:0a:79:eb:56:10 tid = 0
+[  170.640067] tx session timer expired on tid 0
+[  170.640114] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 0
+[  170.660139] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_stop Can proceed: ssn = next_recl = 280
+[  170.660198] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 0
+[  170.660276] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Deactivate AC/CMD Queue 11 on FIFO 0
+[  172.557483] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 0
+[  177.553796] Open BA session requested for 00:0a:79:eb:56:10 tid 0
+[  177.572273] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_start Can proceed: ssn = next_recl = 286
+[  177.572291] activated addBA response timer on tid 0
+[  177.574282] switched off addBA timer for tid 0
+[  177.574289] Aggregation is on for tid 0
+[  177.574385] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 30
+[  177.574476] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate BA Queue 11 on FIFO 1
+[  177.574486] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:0a:79:eb:56:10 tid = 0
+[  184.688066] tx session timer expired on tid 0
+[  184.688111] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 0
+[  184.708131] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_stop Can proceed: ssn = next_recl = 289
+[  184.708188] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 0
+[  184.708266] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Deactivate AC/CMD Queue 11 on FIFO 0
+[  184.708286] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 0
+[  192.842284] Open BA session requested for 00:0a:79:eb:56:10 tid 0
+[  192.868302] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_start Can proceed: ssn = next_recl = 298
+[  192.868320] activated addBA response timer on tid 0
+[  192.870209] switched off addBA timer for tid 0
+[  192.870216] Aggregation is on for tid 0
+[  192.870312] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 42
+[  192.870402] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate BA Queue 11 on FIFO 1
+[  192.870412] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:0a:79:eb:56:10 tid = 0
+[  206.418315] Open BA session requested for 00:0a:79:eb:56:10 tid 6
+[  206.436268] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_start Can proceed: ssn = next_recl = 37
+[  206.436287] activated addBA response timer on tid 6
+[  206.438335] switched off addBA timer for tid 6
+[  206.438342] Aggregation is on for tid 6
+[  206.438437] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 12  WrPtr: 37
+[  206.438527] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate BA Queue 12 on FIFO 3
+[  206.438537] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:0a:79:eb:56:10 tid = 6
+[  212.544076] tx session timer expired on tid 6
+[  212.544125] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 6
+[  212.560113] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_stop Can proceed: ssn = next_recl = 38
+[  212.560172] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 12  WrPtr: 0
+[  212.560250] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Deactivate AC/CMD Queue 12 on FIFO 0
+[  212.560270] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 6
+[  218.304086] tx session timer expired on tid 0
+[  218.304131] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 0
+[  218.324119] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_stop Can proceed: ssn = next_recl = 317
+[  218.324176] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 0
+[  218.324254] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Deactivate AC/CMD Queue 11 on FIFO 0
+[  218.324274] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 0
+[  230.017770] Open BA session requested for 00:0a:79:eb:56:10 tid 0
+[  230.036272] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_start Can proceed: ssn = next_recl = 326
+[  230.036290] activated addBA response timer on tid 0
+[  230.038258] switched off addBA timer for tid 0
+[  230.038265] Aggregation is on for tid 0
+[  230.038361] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 70
+[  230.038450] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate BA Queue 11 on FIFO 1
+[  230.038461] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:0a:79:eb:56:10 tid = 0
+[  239.584087] tx session timer expired on tid 0
+[  239.584134] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 0
+[  239.604118] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_stop Can proceed: ssn = next_recl = 331
+[  239.604176] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 0
+[  239.604253] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Deactivate AC/CMD Queue 11 on FIFO 0
+[  239.604273] Stopping Tx BA session for 00:0a:79:eb:56:10 tid 0
+[  241.484939] Open BA session requested for 00:0a:79:eb:56:10 tid 0
+[  241.512277] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_start Can proceed: ssn = next_recl = 333
+[  241.512282] activated addBA response timer on tid 0
+[  241.514167] switched off addBA timer for tid 0
+[  241.514169] Aggregation is on for tid 0
+[  241.514252] iwlwifi 0000:06:00.0: U iwl_trans_set_wr_ptrs Q 11  WrPtr: 77
+[  241.514336] iwlwifi 0000:06:00.0: U iwl_trans_tx_queue_set_status Activate BA Queue 11 on FIFO 1
+[  241.514339] iwlwifi 0000:06:00.0: Tx aggregation enabled on ra = 00:0a:79:eb:56:10 tid = 0
+[  253.808089] tx session timer expired on tid 0
+[  253.808111] Tx BA session stop requested for 00:0a:79:eb:56:10 tid 0
+[  253.828117] iwlwifi 0000:06:00.0: U iwlagn_tx_agg_stop Can't proceed: ssn 340, next_recl = 329
+
+--qMm9M+Fa2AknHoGS--
