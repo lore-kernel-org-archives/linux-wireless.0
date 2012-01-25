@@ -1,170 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:41413 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754495Ab2AaOks (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:43591 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750757Ab2AYSDT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 09:40:48 -0500
-Received: by wgbdt10 with SMTP id dt10so26775wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 06:40:47 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 3/7] wl12xx: add forced_ps mode
-Date: Tue, 31 Jan 2012 16:44:04 +0200
-Message-Id: <1328021048-8944-4-git-send-email-eliad@wizery.com> (sfid-20120131_154055_621865_B2903EB4)
-In-Reply-To: <1328021048-8944-1-git-send-email-eliad@wizery.com>
-References: <1328021048-8944-1-git-send-email-eliad@wizery.com>
+	Wed, 25 Jan 2012 13:03:19 -0500
+Received: by iacb35 with SMTP id b35so7076826iac.19
+        for <linux-wireless@vger.kernel.org>; Wed, 25 Jan 2012 10:03:19 -0800 (PST)
+MIME-Version: 1.0
+Date: Wed, 25 Jan 2012 19:03:19 +0100
+Message-ID: <CAD2CPUEu2ha6TeYrQ4WUdXU0-hdSAAJZR5PGWagSguE1DtBSfQ@mail.gmail.com> (sfid-20120125_190322_674431_1ECC0AEB)
+Subject: [bcm4329] brcmfmac on kernel 2.6.35 (Andorid)
+From: Renzo Navas <renzoefra@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+Good evening to everyone,
 
-For certain WiFi certification tests forcing PS
-is necessary. Since DPS is now enabled in the FW
-and this can't be achieved by using netlatency
-this required a new config option.
+This is my first email here (so I am a bit 'afraid'), I am brand new
+to kernel development,
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/conf.h    |    6 ++++++
- drivers/net/wireless/wl12xx/debugfs.c |    2 +-
- drivers/net/wireless/wl12xx/main.c    |   25 +++++++++++++++++++------
- drivers/net/wireless/wl12xx/ps.c      |    8 ++++----
- drivers/net/wireless/wl12xx/wl12xx.h  |    2 +-
- 5 files changed, 31 insertions(+), 12 deletions(-)
+I will try to go to the point and then add some more background.
+My principal question -any answer would help-:
 
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index d97aad6..f29fbfd 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -934,6 +934,12 @@ struct conf_conn_settings {
- 	u16 dynamic_ps_timeout;
- 
- 	/*
-+	 * Specifies whether dynamic PS should be disabled and PSM forced.
-+	 * This is required for certain WiFi certification tests.
-+	 */
-+	u8 forced_ps;
-+
-+	/*
- 	 *
- 	 * Specifies the interval of the connection keep-alive null-func
- 	 * frame in ms.
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index 15353fa..02da445 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -358,7 +358,7 @@ static ssize_t dynamic_ps_timeout_write(struct file *file,
- 	 */
- 
- 	wl12xx_for_each_wlvif_sta(wl, wlvif) {
--		if (test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags))
-+		if (test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags))
- 			wl1271_ps_set_mode(wl, wlvif, STATION_AUTO_PS_MODE);
- 	}
- 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 29a00fc..f2960df 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -244,6 +244,7 @@ static struct conf_drv_settings default_conf = {
- 		.psm_exit_retries            = 16,
- 		.psm_entry_nullfunc_retries  = 3,
- 		.dynamic_ps_timeout          = 100,
-+		.forced_ps                   = false,
- 		.keep_alive_interval         = 55000,
- 		.max_listen_interval         = 20,
- 	},
-@@ -2481,17 +2482,29 @@ static int wl12xx_config_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 
- 		if ((conf->flags & IEEE80211_CONF_PS) &&
- 		    test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags) &&
--		    !test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags)) {
-+		    !test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags)) {
- 
--			wl1271_debug(DEBUG_PSM, "auto ps enabled");
-+			int ps_mode;
-+			char *ps_mode_str;
-+
-+			if (wl->conf.conn.forced_ps) {
-+				ps_mode = STATION_POWER_SAVE_MODE;
-+				ps_mode_str = "forced";
-+			} else {
-+				ps_mode = STATION_AUTO_PS_MODE;
-+				ps_mode_str = "auto";
-+			}
-+
-+			wl1271_debug(DEBUG_PSM, "%s ps enabled", ps_mode_str);
-+
-+			ret = wl1271_ps_set_mode(wl, wlvif, ps_mode);
- 
--			ret = wl1271_ps_set_mode(wl, wlvif,
--						 STATION_AUTO_PS_MODE);
- 			if (ret < 0)
--				wl1271_warning("enter auto ps failed %d", ret);
-+				wl1271_warning("enter %s ps failed %d",
-+					       ps_mode_str, ret);
- 
- 		} else if (!(conf->flags & IEEE80211_CONF_PS) &&
--			   test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags)) {
-+			   test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags)) {
- 
- 			wl1271_debug(DEBUG_PSM, "auto ps disabled");
- 
-diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
-index d197922..fa993c2 100644
---- a/drivers/net/wireless/wl12xx/ps.c
-+++ b/drivers/net/wireless/wl12xx/ps.c
-@@ -56,7 +56,7 @@ void wl1271_elp_work(struct work_struct *work)
- 		if (wlvif->bss_type == BSS_TYPE_AP_BSS)
- 			goto out;
- 
--		if (!test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags) &&
-+		if (!test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags) &&
- 		    test_bit(WLVIF_FLAG_IN_USE, &wlvif->flags))
- 			goto out;
- 	}
-@@ -84,7 +84,7 @@ void wl1271_ps_elp_sleep(struct wl1271 *wl)
- 		if (wlvif->bss_type == BSS_TYPE_AP_BSS)
- 			return;
- 
--		if (!test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags) &&
-+		if (!test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags) &&
- 		    test_bit(WLVIF_FLAG_IN_USE, &wlvif->flags))
- 			return;
- 	}
-@@ -182,7 +182,7 @@ int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		if (ret < 0)
- 			return ret;
- 
--		set_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags);
-+		set_bit(WLVIF_FLAG_IN_PS, &wlvif->flags);
- 
- 		/* enable beacon early termination. Not relevant for 5GHz */
- 		if (wlvif->band == IEEE80211_BAND_2GHZ) {
-@@ -205,7 +205,7 @@ int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		if (ret < 0)
- 			return ret;
- 
--		clear_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags);
-+		clear_bit(WLVIF_FLAG_IN_PS, &wlvif->flags);
- 		break;
- 	case STATION_POWER_SAVE_MODE:
- 	default:
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 9cc7051..1463341 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -254,7 +254,7 @@ enum wl12xx_vif_flags {
- 	WLVIF_FLAG_STA_ASSOCIATED,
- 	WLVIF_FLAG_IBSS_JOINED,
- 	WLVIF_FLAG_AP_STARTED,
--	WLVIF_FLAG_IN_AUTO_PS,
-+	WLVIF_FLAG_IN_PS,
- 	WLVIF_FLAG_STA_STATE_SENT,
- 	WLVIF_FLAG_RX_STREAMING_STARTED,
- 	WLVIF_FLAG_PSPOLL_FAILURE,
--- 
-1.7.6.401.g6a319
+  * Is it factible to use the brcmfmac driver on a kernel 2.6.35,
+specifically one made for Android (CyanogenMod 7) kernel?
 
+
+
+That's my only question. Now I will try to give more information that
+my help to understand what I want:
+
+
+For the next 4 following months I will be modifying the bcm4329 driver
+for a Nexus S cellphone (aliases: samsung Ccespo, herring),
+particularly the scanning algorithm.
+
+So far all the android kernel versions for android use a deprecated
+driver called the "bcm4329" -which uses WirelessExtensions-:
+
+* https://github.com/CyanogenMod/cm-kernel/tree/android-msm-2.6.37/drivers/net/wireless/bcm4329
+* https://github.com/CyanogenMod/samsung-kernel-crespo/tree/android-samsung-2.6.35/drivers/net/wireless/bcm4329
+
+So as I will spend the next 4 months investigating/experimenting with
+a bcm4329 driver,
+I think that whatever results -or not- that I will come across after
+this time (it's academic research, and will end up in a thesis about
+scanning algorithms), It will be better-worthy for all the community,
+if that results are achieved on the brcmfmac driver and not on this
+'bcm4329' old-only-android driver.
+
+I have found only these attemps of some people trying to do this:
+
+   * On this same list: thread "brcmfmac + compat wireless + 2.6.35"
+http://thread.gmane.org/gmane.linux.kernel.wireless.general/81301/
+   * On "freesmartphone" proyect:
+http://wiki.freesmartphone.org/index.php/HardwareComparison column
+"Nexus S" row "Wifi":
+                        "bcm4329: * we must make brcmfmac work(trough
+making a dummy IRQ handler for function 2 of the sdio chip) * Require
+a non-free firmware"
+
+On both testimonies seems to conclude that porting "brcmfmac" for
+android has not been successful.
+
+Thank you very much for your attention, and I'm glad to have
+discovered this nice community.
+
+Greetings,
+
+Renzo Navas
