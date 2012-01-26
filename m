@@ -1,41 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:57047 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751196Ab2AUBqT (ORCPT
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:36869 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751963Ab2AZMju (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 20:46:19 -0500
-Received: from uucp by smtp.tuxdriver.com with local-rmail (Exim 4.63)
-	(envelope-from <linville@tuxdriver.com>)
-	id 1RoQ25-0001T8-1v
-	for linux-wireless@vger.kernel.org; Fri, 20 Jan 2012 20:46:17 -0500
-Received: from linville-8530p.local (linville-8530p.local [127.0.0.1])
-	by linville-8530p.local (8.14.4/8.14.4) with ESMTP id q0KCWVLt010847
-	for <linux-wireless@vger.kernel.org>; Fri, 20 Jan 2012 07:32:32 -0500
-Received: (from linville@localhost)
-	by linville-8530p.local (8.14.4/8.14.4/Submit) id q0KCWVS8010839
-	for linux-wireless@vger.kernel.org; Fri, 20 Jan 2012 07:32:31 -0500
-Date: Fri, 20 Jan 2012 07:32:31 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Subject: wireless-testing rebased on top of 3.3-rc1 (commit
- ef370988d92a9dcd16a7bfbdafe511cd1db43d15)
-Message-ID: <20120120123228.GA7760@tuxdriver.com> (sfid-20120121_024641_897071_7E9EF3D0)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 26 Jan 2012 07:39:50 -0500
+Received: by mail-gy0-f176.google.com with SMTP id g2so205274ghb.21
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 04:39:49 -0800 (PST)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
+	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
+	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
+	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
+	<nbd@nbd.name>
+Subject: [RFC 8/9] mac80211: add DFS capabilities flag
+Date: Thu, 26 Jan 2012 14:38:03 +0200
+Message-Id: <1327581484-22047-9-git-send-email-victorg@ti.com> (sfid-20120126_133954_523017_60AB8ACA)
+In-Reply-To: <1327581484-22047-1-git-send-email-victorg@ti.com>
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wireless-testing tree has been rebased on top of 3.3-rc1 (new head
-is commit ef370988d92a9dcd16a7bfbdafe511cd1db43d15).  It also includes
-the fixes I sent to davem that Linus didn't get in time for -rc1.
-Please refresh your development trees appropriately.
+Add new IEEE80211_HW_SUPPORTS_RADAR_DETECTION attribute which
+indicates that hw supports radar detection.
 
-I am travelling through the weekend, so don't expect many more changes
-to wireless-testing until Monday or so -- sorry!
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+---
+ include/net/mac80211.h |    3 +++
+ net/mac80211/main.c    |    3 +++
+ 2 files changed, 6 insertions(+), 0 deletions(-)
 
-Thanks,
-
-John
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index b0f4e67..90564b4 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1138,6 +1138,8 @@ enum sta_notify_cmd {
+  * @IEEE80211_HW_TX_AMPDU_SETUP_IN_HW: The device handles TX A-MPDU session
+  *	setup strictly in HW. mac80211 should not attempt to do this in
+  *	software.
++ *
++ * @IEEE80211_HW_SUPPORTS_RADAR_DETECTION: Hardware supports radar detection.
+  */
+ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_HAS_RATE_CONTROL			= 1<<0,
+@@ -1164,6 +1166,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_SUPPORTS_PER_STA_GTK		= 1<<21,
+ 	IEEE80211_HW_AP_LINK_PS				= 1<<22,
+ 	IEEE80211_HW_TX_AMPDU_SETUP_IN_HW		= 1<<23,
++	IEEE80211_HW_SUPPORTS_RADAR_DETECTION		= 1<<24,
+ };
+ 
+ /**
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 0a0d94a..4ec847c 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -866,6 +866,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if (local->hw.wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS)
+ 		local->hw.wiphy->flags |= WIPHY_FLAG_TDLS_EXTERNAL_SETUP;
+ 
++	if (local->hw.flags & IEEE80211_HW_SUPPORTS_RADAR_DETECTION)
++		local->hw.wiphy->flags |= WIPHY_FLAG_SUPPORTS_DFS;
++
+ 	result = wiphy_register(local->hw.wiphy);
+ 	if (result < 0)
+ 		goto fail_wiphy_register;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.5.4
+
