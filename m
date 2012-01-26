@@ -1,38 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:56746 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753695Ab2AQNFn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 08:05:43 -0500
-Subject: [PATCH 2/3] ath6kl: remove -D__CHECK_ENDIAN__ from Makefile
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Date: Tue, 17 Jan 2012 15:05:32 +0200
-Message-ID: <20120117130532.22832.21443.stgit@localhost6.localdomain6> (sfid-20120117_140545_640972_B9BA80DB)
-In-Reply-To: <20120117130519.22832.29908.stgit@localhost6.localdomain6>
-References: <20120117130519.22832.29908.stgit@localhost6.localdomain6>
+Received: from mx1.redhat.com ([209.132.183.28]:38654 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751048Ab2AZKlQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jan 2012 05:41:16 -0500
+Date: Thu, 26 Jan 2012 11:41:14 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Luigi Tarenga <luigi.tarenga@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: PROBLEM: unable to associate to some AP with new iwl_legacy
+ driver
+Message-ID: <20120126104112.GA2451@redhat.com> (sfid-20120126_114120_122054_B2E872CE)
+References: <CAKkO-EgieZkXTAeHn7XkTQG8EXHEHP6zUOedGUre0+CRjBMS9g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKkO-EgieZkXTAeHn7XkTQG8EXHEHP6zUOedGUre0+CRjBMS9g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As drivers/net/wireless/ath/Makefile contains the flag to enable
-endian checks there's no need to have it in ath6kl makefile anymore.
+Hi.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/Makefile |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+On Wed, Jan 25, 2012 at 04:25:20PM +0100, Luigi Tarenga wrote:
+> I sent a bug report to the wrong team (ilw@linux.intel.com), I hope
+> this time I get it right :)
+> 
+> [1.] One line summary of the problem:
+> unable to associate to some AP with new iwl_legacy driver
+> 
+> [2.] Full description of the problem/report:
+> I'm unable to connect to one of mine AP with a 4965AGN with new 3.2 kernel.
+> Using stock Centos 6.2 kernel it works while with custom kernel 3.2 compiled
+> from vanilla wpa_supplicant return a timeout error during the
+> authentication phase.
+> Using another WNIC (ralink rt2870) with new 3.2 kernel on the same AP
+> works fine.
+> The AP is D-Link DIR-300 with OpenWrt compiled from trunk, it's based
+> on the RT3050F SoC.
+> With the 4965AGN I can connect other AP correctly, I'm not sure if the bug is on
+> other layer or on AP, what makes me think about a problem on the
+> iwl4965/iwl_legacy
+> is the fact that from the Centos kernel I can connect to the very same AP.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/Makefile b/drivers/net/wireless/ath/ath6kl/Makefile
-index 7070693..e24b617 100644
---- a/drivers/net/wireless/ath/ath6kl/Makefile
-+++ b/drivers/net/wireless/ath/ath6kl/Makefile
-@@ -33,5 +33,3 @@ ath6kl-y += txrx.o
- ath6kl-y += wmi.o
- ath6kl-y += sdio.o
- ath6kl-$(CONFIG_NL80211_TESTMODE) += testmode.o
--
--ccflags-y += -D__CHECK_ENDIAN__
+Please provide verbose debug logs on working and not working kernel 
+for compare.
 
+Kernel has to be compiled with CONFIG_IWLWIFI_LEGACY_DEBUG or
+CONFIG_IWLWIFI_DEBUG, or CONFIG_IWLEGACY_DEBUG (depend on kernel
+version). On CentOS, kernel-debug should has proper option enabled.
+
+Please configure syslog to log debug messages into /var/log/kernel
+(some hint here: https://fedoraproject.org/wiki/DebugWireless), restart
+syslog, then do:
+
+modprobe -r iwl4965
+echo > /var/log/kernel
+modprobe iwl4965 debug=0x47ffffff
+wait for association failure (bad kernel) or association success (good kernel)
+modprobe -r iwl4965
+
+And post me compress /var/log/kernel files.
+
+On CentOS there is iwlagn module instead of iwl4965.
+
+Would be great if you can find two consecutive kernel versions
+where the things get broken. Most likely this is 2.6.38 -> 2.6.39
+regression where the iwlwifi driver split into iwlegacy happen.
+And provide logs from there. But if you don't want to bother
+with trying different kernel version, verbose logs from CentOS
+and 3.2 are fine, just will be a bit harder for me to analyze
+them.
+
+Thanks
+Stanislaw
