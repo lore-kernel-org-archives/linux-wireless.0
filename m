@@ -1,65 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:43314 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753783Ab2ANKnj (ORCPT
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:55554 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751560Ab2AZMme (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jan 2012 05:43:39 -0500
-From: Antonio Quartulli <ordex@autistici.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	Antonio Quartulli <ordex@autistici.org>
-Subject: [PATCH] ath5k: claim support for IBSS RSN
-Date: Sat, 14 Jan 2012 11:42:43 +0100
-Message-Id: <1326537763-1831-1-git-send-email-ordex@autistici.org> (sfid-20120114_114346_892010_1859D154)
+	Thu, 26 Jan 2012 07:42:34 -0500
+Received: by ggnp1 with SMTP id p1so200819ggn.23
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 04:42:33 -0800 (PST)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <hostap@lists.shmoo.com>
+Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
+	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
+	<adrian.chadd@gmail.com>, <j@w1.fi>, <johannes@sipsolutions.net>,
+	<coelho@ti.com>, <assaf@ti.com>, <yoni.divinsky@ti.com>,
+	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>
+Subject: [RFC 3/7] hostapd: add dfs events
+Date: Thu, 26 Jan 2012 14:41:25 +0200
+Message-Id: <1327581689-22090-4-git-send-email-victorg@ti.com> (sfid-20120126_134237_064991_63A77977)
+In-Reply-To: <1327581689-22090-1-git-send-email-victorg@ti.com>
+References: <1327581689-22090-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Disable group keys programming when using IBSS RSN. Keys will be managed using
-software. In this way IBSS RSN can correctly work.
+Add EVENT_RADAR_DETECTED and EVENT_CHANNEL_SWITCH_COMPLETE
+events.
 
-Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+EVENT_RADAR_DETECTED indicates that radar was detected on
+operational channel. EVENT_CHANNEL_SWITCH_COMPLETE indicates
+that device has finished the channel switch process.
+
+Signed-off-by: Boris Presman <boris.presman@ti.com>
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
 ---
- drivers/net/wireless/ath/ath5k/base.c         |    3 +++
- drivers/net/wireless/ath/ath5k/mac80211-ops.c |    8 ++++++++
- 2 files changed, 11 insertions(+), 0 deletions(-)
+ src/ap/drv_callbacks.c      |   40 ++++++++++++++++++++++++++++++++++++++++
+ src/drivers/driver.h        |   22 +++++++++++++++++++++-
+ src/drivers/driver_common.c |    2 ++
+ 3 files changed, 63 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath5k/base.c b/drivers/net/wireless/ath/ath5k/base.c
-index 178a4dd..7ad9dea 100644
---- a/drivers/net/wireless/ath/ath5k/base.c
-+++ b/drivers/net/wireless/ath/ath5k/base.c
-@@ -2442,6 +2442,9 @@ ath5k_init_ah(struct ath5k_hw *ah, const struct ath_bus_ops *bus_ops)
- 		BIT(NL80211_IFTYPE_ADHOC) |
- 		BIT(NL80211_IFTYPE_MESH_POINT);
+diff --git a/src/ap/drv_callbacks.c b/src/ap/drv_callbacks.c
+index b7febdc..d5079c4 100644
+--- a/src/ap/drv_callbacks.c
++++ b/src/ap/drv_callbacks.c
+@@ -464,6 +464,37 @@ static void hostapd_event_eapol_rx(struct hostapd_data *hapd, const u8 *src,
+ 	ieee802_1x_receive(hapd, src, data, data_len);
+ }
  
-+	/* SW support for IBSS_RSN is provided by mac80211 */
-+	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
++static void hostapd_event_radar_detected(struct hostapd_data *hapd,
++		struct radar_detected *radar)
++{
++	if (!hapd->iconf->ieee80211h)
++		return;
 +
- 	/* both antennas can be configured as RX or TX */
- 	hw->wiphy->available_antennas_tx = 0x3;
- 	hw->wiphy->available_antennas_rx = 0x3;
-diff --git a/drivers/net/wireless/ath/ath5k/mac80211-ops.c b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-index 6ed4c07..af4c7ec 100644
---- a/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-+++ b/drivers/net/wireless/ath/ath5k/mac80211-ops.c
-@@ -483,6 +483,14 @@ ath5k_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	if (ath5k_modparam_nohwcrypt)
- 		return -EOPNOTSUPP;
- 
-+	if (vif->type == NL80211_IFTYPE_ADHOC &&
-+	    (key->cipher == WLAN_CIPHER_SUITE_TKIP ||
-+	     key->cipher == WLAN_CIPHER_SUITE_CCMP) &&
-+	    !(key->flags & IEEE80211_KEY_FLAG_PAIRWISE)) {
-+		/* don't program group keys when using IBSS_RSN */
-+		return -EOPNOTSUPP;
++	if ((!(hapd->iface->dfs_state & DFS_INIT_PHASE_CAC)) &&
++	    (hapd->iface->freq != radar->freq)) {
++		wpa_printf(MSG_WARNING, "False radar detection, op_freq(%d) != "
++			   "radar_freq(%d)", hapd->iface->freq, radar->freq);
++		return;
 +	}
 +
- 	switch (key->cipher) {
- 	case WLAN_CIPHER_SUITE_WEP40:
- 	case WLAN_CIPHER_SUITE_WEP104:
++	if (ieee802_11_radar_detected(hapd))
++		ieee802_11_start_channel_switch(hapd, TRUE);
++	else
++		wpa_printf(MSG_DEBUG, "False radar detection");
++}
++
++static void hostapd_event_complete_channel_switch(struct hostapd_data *hapd,
++		struct channel_switch_complete *channel_switch)
++{
++	if (hapd->next_channel->freq != channel_switch->freq) {
++		wpa_printf(MSG_WARNING, "Switched to wrong freq, next_freq(%d) "
++			   "!= ch_switch_freq(%d)", hapd->next_channel->freq,
++			   channel_switch->freq);
++	}
++
++	if (channel_switch->status)
++		ieee802_11_complete_channel_switch(hapd);
++}
+ 
+ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
+ 			  union wpa_event_data *data)
+@@ -576,6 +607,15 @@ void wpa_supplicant_event(void *ctx, enum wpa_event_type event,
+ 			break;
+ 		hostapd_event_sta_low_ack(hapd, data->low_ack.addr);
+ 		break;
++	case EVENT_RADAR_DETECTED:
++		if (data)
++			hostapd_event_radar_detected(hapd, &data->radar_detected);
++		break;
++	case EVENT_CHANNEL_SWITCH_COMPLETE:
++		if (data)
++			hostapd_event_complete_channel_switch(hapd,
++				&data->channel_switch_complete);
++		break;
+ #ifdef NEED_AP_MLME
+ 	case EVENT_RX_ACTION:
+ 		if (data->rx_action.da == NULL || data->rx_action.sa == NULL ||
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index 1f2e521..68bf2e7 100644
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -2973,7 +2973,17 @@ enum wpa_event_type {
+ 	/**
+ 	 * EVENT_EAPOL_TX_STATUS - notify of EAPOL TX status
+ 	 */
+-	EVENT_EAPOL_TX_STATUS
++	EVENT_EAPOL_TX_STATUS,
++
++	/**
++	 * EVENT_RADAR_DETECTED - notify of radar detection
++	 */
++	EVENT_RADAR_DETECTED,
++
++	/**
++	 * EVENT_CHANNEL_SWITCH_COMPLETE - notify of channel switch complete
++	 */
++	EVENT_CHANNEL_SWITCH_COMPLETE
+ };
+ 
+ 
+@@ -3563,6 +3573,16 @@ union wpa_event_data {
+ 		int data_len;
+ 		int ack;
+ 	} eapol_tx_status;
++
++	struct radar_detected {
++		int status;
++		int freq;
++	} radar_detected;
++
++	struct channel_switch_complete {
++		int status;
++		int freq;
++	} channel_switch_complete;
+ };
+ 
+ /**
+diff --git a/src/drivers/driver_common.c b/src/drivers/driver_common.c
+index 26ca8d6..8e0492a 100644
+--- a/src/drivers/driver_common.c
++++ b/src/drivers/driver_common.c
+@@ -83,6 +83,8 @@ const char * event_to_string(enum wpa_event_type event)
+ 	E2S(SCHED_SCAN_STOPPED);
+ 	E2S(DRIVER_CLIENT_POLL_OK);
+ 	E2S(EAPOL_TX_STATUS);
++	E2S(RADAR_DETECTED);
++	E2S(CHANNEL_SWITCH_COMPLETE);
+ 	}
+ 
+ 	return "UNKNOWN";
 -- 
-1.7.3.4
+1.7.5.4
 
