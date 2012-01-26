@@ -1,64 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:52507 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932235Ab2AEToU (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:35690 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751560Ab2AZMmj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 14:44:20 -0500
-MIME-Version: 1.0
-In-Reply-To: <20120105141913.GA3937@tiehlicka.suse.cz>
-References: <20111227105340.GD5344@tiehlicka.suse.cz>
-	<20120103103457.GA3391@redhat.com>
-	<20120103130306.GA3891@tiehlicka.suse.cz>
-	<20120105110744.GA2222@redhat.com>
-	<20120105141913.GA3937@tiehlicka.suse.cz>
-Date: Thu, 5 Jan 2012 11:44:17 -0800
-Message-ID: <CAE9FiQVi_TN29mUtvHG6ZqWRCkyE6H5eG5z350uXrub=zUmYgA@mail.gmail.com> (sfid-20120105_204436_146323_2325F31F)
-Subject: Re: iwl3945 didn't survive after s2ram failure
-From: Yinghai Lu <yinghai@kernel.org>
-To: Michal Hocko <mhocko@suse.cz>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 26 Jan 2012 07:42:39 -0500
+Received: by mail-yw0-f43.google.com with SMTP id g71so190658yhg.2
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 04:42:38 -0800 (PST)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <hostap@lists.shmoo.com>
+Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
+	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
+	<adrian.chadd@gmail.com>, <j@w1.fi>, <johannes@sipsolutions.net>,
+	<coelho@ti.com>, <assaf@ti.com>, <yoni.divinsky@ti.com>,
+	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>
+Subject: [RFC 4/7] hostapd: add dfs support into interface init flow
+Date: Thu, 26 Jan 2012 14:41:26 +0200
+Message-Id: <1327581689-22090-5-git-send-email-victorg@ti.com> (sfid-20120126_134241_640732_10A15C9D)
+In-Reply-To: <1327581689-22090-1-git-send-email-victorg@ti.com>
+References: <1327581689-22090-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 5, 2012 at 6:19 AM, Michal Hocko <mhocko@suse.cz> wrote:
+Implement Channel Availability Check (CAC) during initialization
+phase. According to DFS requirements the AP should monitor 'radar
+channels' for potential radar interference for a minimum CAC time
+prior enabling the transmissions.
 
->
-> Looking in the history it seems that 497f16f2 [pci: Fix hotplug of
-> Express Module with pci bridges] might be related. It fixes an issue
-> introduced by bbef98ab [PCI: defer enablement of SRIOV BARS] which is a
-> part of my 3.2.0-rc6-00005-ga36bfdd problematic version. But I do not
-> understand details of the patch so I cannot tell that for 100%.
-> Yinghai Lu, is it possible that I the problem I have seen is somehow
-> related? For reference the thread started at
-> https://lkml.org/lkml/2011/12/27/65
+Add dfs support into hw features, allow the usage of the radar
+channels if ieee80211h is enabled in the hostapd.conf and the
+driver supports radar detection.
 
-you have one bridge that BIOS does not assign resource to it.
-so kernel will allocate resource to it.
+Parse and handle driver's DFS capabilities, userspace applications
+must be fully synchronized with device capabilities to detect radar
+patterns in the air which may influence userspace behavior.
 
-[    0.331694] pci 0000:00:1c.2: BAR 8: assigned [mem 0x80100000-0x803fffff]
-[    0.331825] pci 0000:00:1c.2: BAR 9: assigned [mem
-0x80400000-0x805fffff 64bit pref]
-[    0.332041] pci 0000:00:1c.2: BAR 7: assigned [io  0x4000-0x4fff]
-[    0.334271] pci 0000:05:00.0: BAR 0: assigned [mem 0x80100000-0x80100fff]
-[    0.334455] pci 0000:05:00.0: BAR 0: set to [mem
-0x80100000-0x80100fff] (PCI address [0x80100000-0x80100fff])
-[    0.334666] pci 0000:00:1c.2: PCI bridge to [bus 05-05]
-[    0.334794] pci 0000:00:1c.2:   bridge window [io  0x4000-0x4fff]
-[    0.334926] pci 0000:00:1c.2:   bridge window [mem 0x80100000-0x803fffff]
-[    0.335058] pci 0000:00:1c.2:   bridge window [mem
-0x80400000-0x805fffff 64bit pref]
+Signed-off-by: Boris Presman <boris.presman@ti.com>
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+---
+ src/ap/hostapd.c             |   17 +++++++++++------
+ src/ap/hw_features.c         |   30 ++++++++++++++++++++----------
+ src/ap/hw_features.h         |    9 +++++++++
+ src/drivers/driver.h         |    5 +++++
+ src/drivers/driver_nl80211.c |    7 +++++++
+ src/utils/eloop.c            |    4 ++++
+ src/utils/eloop.h            |    7 +++++++
+ 7 files changed, 63 insertions(+), 16 deletions(-)
 
-yes, the commit fix the problem.
+diff --git a/src/ap/hostapd.c b/src/ap/hostapd.c
+index ce37922..411b681 100644
+--- a/src/ap/hostapd.c
++++ b/src/ap/hostapd.c
+@@ -708,6 +708,12 @@ static int setup_interface(struct hostapd_iface *iface)
+ 				   "be completed in a callback");
+ 			return 0;
+ 		}
++
++		if (iface->current_mode->dfs_supported &&
++		    iface->conf->ieee80211h) {
++			wpa_printf(MSG_DEBUG, "DFS support is enabled");
++			iface->dfs_state |= DFS_ENABLED;
++		}
+ 	}
+ 	return hostapd_setup_interface_complete(iface, 0);
+ }
+@@ -733,14 +739,13 @@ int hostapd_setup_interface_complete(struct hostapd_iface *iface, int err)
+ 			   hostapd_hw_mode_txt(hapd->iconf->hw_mode),
+ 			   hapd->iconf->channel, iface->freq);
+ 
+-		if (hostapd_set_freq(hapd, hapd->iconf->hw_mode, iface->freq,
+-				     hapd->iconf->channel,
+-				     hapd->iconf->ieee80211n,
+-				     hapd->iconf->secondary_channel)) {
+-			wpa_printf(MSG_ERROR, "Could not set channel for "
+-				   "kernel driver");
++		if (hostapd_check_set_freq(hapd)) {
++			wpa_printf(MSG_ERROR, "Couldn't check/set freq");
+ 			return -1;
+ 		}
++
++		eloop_enable();
++		wpa_printf(MSG_DEBUG, "Continuing with init flow");
+ 	}
+ 
+ 	if (iface->current_mode) {
+diff --git a/src/ap/hw_features.c b/src/ap/hw_features.c
+index d64fbeb..1804978 100644
+--- a/src/ap/hw_features.c
++++ b/src/ap/hw_features.c
+@@ -70,26 +70,36 @@ int hostapd_get_hw_features(struct hostapd_iface *iface)
+ 
+ 	for (i = 0; i < num_modes; i++) {
+ 		struct hostapd_hw_modes *feature = &modes[i];
++		u8 dfs_enabled = (hapd->iconf->ieee80211h &&
++				  feature->dfs_supported);
+ 		/* set flag for channels we can use in current regulatory
+ 		 * domain */
+ 		for (j = 0; j < feature->num_channels; j++) {
++			u8 dfs = FALSE;
+ 			/*
+ 			 * Disable all channels that are marked not to allow
+-			 * IBSS operation or active scanning. In addition,
+-			 * disable all channels that require radar detection,
+-			 * since that (in addition to full DFS) is not yet
+-			 * supported.
++			 * IBSS operation or active scanning.
++			 * Use radar channels only if the driver supports
++			 * DFS.
+ 			 */
+-			if (feature->channels[j].flag &
+-			    (HOSTAPD_CHAN_NO_IBSS |
+-			     HOSTAPD_CHAN_PASSIVE_SCAN |
+-			     HOSTAPD_CHAN_RADAR))
++			if ((feature->channels[j].flag &
++			    HOSTAPD_CHAN_RADAR) && dfs_enabled) {
++				dfs = TRUE;
++			} else if (feature->channels[j].flag &
++				   (HOSTAPD_CHAN_NO_IBSS |
++				   HOSTAPD_CHAN_PASSIVE_SCAN |
++				   HOSTAPD_CHAN_DISABLED)) {
+ 				feature->channels[j].flag |=
+ 					HOSTAPD_CHAN_DISABLED;
+-			if (feature->channels[j].flag & HOSTAPD_CHAN_DISABLED)
++			}
++
++			if (feature->channels[j].flag & HOSTAPD_CHAN_DISABLED) {
+ 				continue;
+-			wpa_printf(MSG_MSGDUMP, "Allowed channel: mode=%d "
++			}
++
++			wpa_printf(MSG_WARNING, "Allowed %schannel: mode=%d "
+ 				   "chan=%d freq=%d MHz max_tx_power=%d dBm",
++				   dfs ? "(DFS) " : "",
+ 				   feature->mode,
+ 				   feature->channels[j].chan,
+ 				   feature->channels[j].freq,
+diff --git a/src/ap/hw_features.h b/src/ap/hw_features.h
+index c8a7f60..a8442b5 100644
+--- a/src/ap/hw_features.h
++++ b/src/ap/hw_features.h
+@@ -46,6 +46,11 @@ static inline int hostapd_select_hw_mode(struct hostapd_iface *iface)
+ 	return -100;
+ }
+ 
++static inline int hostapd_select_radar_detector(struct hostapd_iface *iface)
++{
++	return -1;
++}
++
+ static inline const char * hostapd_hw_mode_txt(int mode)
+ {
+ 	return NULL;
+@@ -67,6 +72,10 @@ static inline int hostapd_prepare_rates(struct hostapd_iface *iface,
+ 	return 0;
+ }
+ 
++static inline int hostapd_get_channel_flag(struct hostapd_data *hapd, int chan)
++{
++	return 0;
++}
+ #endif /* NEED_AP_MLME */
+ 
+ #endif /* HW_FEATURES_H */
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index 68bf2e7..ed256d2 100644
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -110,6 +110,11 @@ struct hostapd_hw_modes {
+ 	u8 a_mpdu_params;
+ 
+ 	unsigned int flags; /* HOSTAPD_MODE_FLAG_* */
++
++	/**
++	 * dfs_supported - DFS radar detection is supported in driver/HW.
++	 */
++	u8 dfs_supported;
+ };
+ 
+ 
+diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
+index 82f5664..f1e6ca2 100644
+--- a/src/drivers/driver_nl80211.c
++++ b/src/drivers/driver_nl80211.c
+@@ -4692,6 +4692,13 @@ static int phy_info_handler(struct nl_msg *msg, void *arg)
+ 		mode->flags = HOSTAPD_MODE_FLAG_HT_INFO_KNOWN;
+ 		*(phy_info->num_modes) += 1;
+ 
++		if (tb_msg[NL80211_ATTR_FEATURE_FLAGS]) {
++			u32 drv_feature_flags =
++				nla_get_u32(tb_msg[NL80211_ATTR_FEATURE_FLAGS]);
++			mode->dfs_supported = !!(drv_feature_flags &
++						 NL80211_FEATURE_DFS);
++		}
++
+ 		nla_parse(tb_band, NL80211_BAND_ATTR_MAX, nla_data(nl_band),
+ 			  nla_len(nl_band), NULL);
+ 
+diff --git a/src/utils/eloop.c b/src/utils/eloop.c
+index b550c63..9f1fb34 100644
+--- a/src/utils/eloop.c
++++ b/src/utils/eloop.c
+@@ -576,6 +576,10 @@ void eloop_terminate(void)
+ 	eloop.terminate = 1;
+ }
+ 
++void eloop_enable(void)
++{
++	eloop.terminate = 0;
++}
+ 
+ void eloop_destroy(void)
+ {
+diff --git a/src/utils/eloop.h b/src/utils/eloop.h
+index a656bf8..0aeb0f0 100644
+--- a/src/utils/eloop.h
++++ b/src/utils/eloop.h
+@@ -287,6 +287,13 @@ void eloop_run(void);
+ void eloop_terminate(void);
+ 
+ /**
++ * eloop_enable - Enable event loop
++ *
++ * Enables the event loop.
++ */
++void eloop_enable(void);
++
++/**
+  * eloop_destroy - Free any resources allocated for the event loop
+  *
+  * After calling eloop_destroy(), other eloop_* functions must not be called
+-- 
+1.7.5.4
 
-in the commit log i already said:
-
-|    That should fix regression like BIOS does not assign correct resource to
-|    bridge.
-
-
-Thanks
-
-Yinghai Lu
