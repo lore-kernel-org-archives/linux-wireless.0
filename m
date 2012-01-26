@@ -1,112 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ukfsn.org ([77.75.108.3]:32777 "EHLO mail.ukfsn.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751447Ab2AZT1W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 14:27:22 -0500
-Received: from localhost (smtp-filter.ukfsn.org [192.168.54.205])
-	by mail.ukfsn.org (Postfix) with ESMTP id 45A74DEBA5
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 19:27:19 +0000 (GMT)
-Received: from mail.ukfsn.org ([192.168.54.25])
-	by localhost (smtp-filter.ukfsn.org [192.168.54.205]) (amavisd-new, port 10024)
-	with ESMTP id lJ596PwJlx40 for <linux-wireless@vger.kernel.org>;
-	Thu, 26 Jan 2012 19:58:36 +0000 (GMT)
-Received: from stargate.localnet (unknown [84.45.236.142])
-	by mail.ukfsn.org (Postfix) with ESMTP id CD901DEB9E
-	for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 19:27:18 +0000 (GMT)
-From: David Goodenough <david.goodenough@btconnect.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 0/7] hostap: add DFS master ability
-Date: Thu, 26 Jan 2012 19:27:17 +0000
-References: <1327581689-22090-1-git-send-email-victorg@ti.com>
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:53356 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751161Ab2AZMmX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jan 2012 07:42:23 -0500
+Received: by yhjj72 with SMTP id j72so184318yhj.36
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 04:42:22 -0800 (PST)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <hostap@lists.shmoo.com>
+Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
+	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
+	<adrian.chadd@gmail.com>, <j@w1.fi>, <johannes@sipsolutions.net>,
+	<coelho@ti.com>, <assaf@ti.com>, <yoni.divinsky@ti.com>,
+	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>
+Subject: [RFC 1/7] hostapd: implement dfs drv ops functions
+Date: Thu, 26 Jan 2012 14:41:23 +0200
+Message-Id: <1327581689-22090-2-git-send-email-victorg@ti.com> (sfid-20120126_134227_069604_3CFFC812)
 In-Reply-To: <1327581689-22090-1-git-send-email-victorg@ti.com>
+References: <1327581689-22090-1-git-send-email-victorg@ti.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201201261927.17754.david.goodenough@btconnect.com> (sfid-20120126_202725_836168_C7299246)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 26 Jan 2012, Victor Goldenshtein wrote:
-> This patch set (with nl/cfg/mac80211 patch series) adds support for DFS
-> (Dynamic Frequency Selection) according 802.11h.
-> 
-> 
-> Main idea
-> ===================
-> 
-> DFS master algorithm is implemented in the hostapd, while nl/cfg/mac80211
-> will pipe relevant commands/events to the driver/hostapd.
-As I understand it hostapd is not involved in mesh (802.11s) networks,
-so how does this integrate there?  As I understand it 802.11s is entirely
-done in the kernel.
+Add nl80211 driver operation functions:
+hostapd_enable_tx – to enable tx on DFS channel after
+channel availability check.
+hostapd_channel_switch – to handle channel switch request.
+hostapd_start_radar_detection – to enable radar detection
+on DFS channel.
 
-David
-> 
-> Based on the assumption that the device/driver supports radar interference
-> detection i.e., it is capable to generate radar_detected event by using
-> different pattern detection techniques:
-> 
-> 
-> 1. Pattern detection in the HW: the device generates 'radar_detected'
-> event. 2. Pattern detection in the driver: the driver receives radar
-> pulses from the device and generates 'radar detected' event.
-> 
-> 
-> Main DFS procedures
-> ===================
-> 
-> 1. Hostapd gets driver's dfs capabilities.
-> 
-> 2. If 80211h is enabled in the hostapd.conf and the driver supports one of
-> the above radar detection techniques, hostapd may use DFS channels.
-> 
-> 3. Hostapd selects an operational channel (default from hostapd.conf), if
-> selected channel is a DFS channel, hostapd sends start_radar_detection
-> command to the device/driver which starts monitoring for radar
-> interference while hostapd sets a timer for a CAC (Channel Availability
-> Check) time, which is 60 seconds.
-> 
-> 4. As CAC timer expires and no radar has been detected, hostapd may
-> continue with the init flow, otherwise if interference is detected hostapd
-> selects another channel (random selection) and repeats the CAC on the new
-> channel (in case the new channel is also a DFS channel), while the
-> original channel is added to a "black list" for a period of
-> ''No-Occupancy'' time (time that the channel can't be used/selected).
-> 
-> 5. While using the channel the device/driver continuously monitors for
-> potential radar interference. If interference is detected hostapd notified
-> with 'radar detected' event, which selects a new channel and triggers a
-> channel switch procedure, if the new channel is also a DFS channel,
-> hostapd performs the CAC test, once it's successfully passed hostapd
-> instructs the driver to initiate the transmission on the channel.
-> 
-> 
-> Victor Goldenshtein (7):
->   hostapd: implement dfs drv ops functions
->   hostapd: add channel switch ability
->   hostapd: add dfs events
->   hostapd: add dfs support into interface init flow
->   nl80211: add support to enable TX on oper-channel
->   nl80211: add channel switch command/event
->   nl80211: add start radar detection command/event
-> 
->  hostapd/config_file.c        |   10 +++
->  src/ap/ap_config.h           |    4 +
->  src/ap/ap_drv_ops.c          |   34 +++++++++
->  src/ap/ap_drv_ops.h          |    4 +
->  src/ap/beacon.c              |   16 ++++
->  src/ap/drv_callbacks.c       |   40 +++++++++++
->  src/ap/hostapd.c             |  158
-> ++++++++++++++++++++++++++++++++++++++++-- src/ap/hostapd.h             | 
->  10 +++
->  src/ap/hw_features.c         |   48 ++++++++++---
->  src/ap/hw_features.h         |   10 +++
->  src/ap/ieee802_11.c          |  116 +++++++++++++++++++++++++++++++
->  src/ap/ieee802_11.h          |    4 +
->  src/drivers/driver.h         |   87 +++++++++++++++++++++++-
->  src/drivers/driver_common.c  |    2 +
->  src/drivers/driver_nl80211.c |  125 +++++++++++++++++++++++++++++++++
->  src/utils/eloop.c            |    4 +
->  src/utils/eloop.h            |    7 ++
->  17 files changed, 662 insertions(+), 17 deletions(-)
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+---
+ src/ap/ap_config.h   |    3 +++
+ src/ap/ap_drv_ops.c  |   34 ++++++++++++++++++++++++++++++++++
+ src/ap/ap_drv_ops.h  |    4 ++++
+ src/drivers/driver.h |   34 ++++++++++++++++++++++++++++++++++
+ 4 files changed, 75 insertions(+), 0 deletions(-)
+
+diff --git a/src/ap/ap_config.h b/src/ap/ap_config.h
+index 485092d..eddc9b7 100644
+--- a/src/ap/ap_config.h
++++ b/src/ap/ap_config.h
+@@ -410,6 +410,9 @@ struct hostapd_config {
+ 
+ 	int ieee80211d;
+ 
++	/* DFS */
++	int channel_switch_count;
++
+ 	struct hostapd_tx_queue_params tx_queue[NUM_TX_QUEUES];
+ 
+ 	/*
+diff --git a/src/ap/ap_drv_ops.c b/src/ap/ap_drv_ops.c
+index 429c187..628f90e 100644
+--- a/src/ap/ap_drv_ops.c
++++ b/src/ap/ap_drv_ops.c
+@@ -590,3 +590,37 @@ int hostapd_drv_sta_disassoc(struct hostapd_data *hapd,
+ 	return hapd->driver->sta_disassoc(hapd->drv_priv, hapd->own_addr, addr,
+ 					  reason);
+ }
++
++
++int hostapd_enable_tx(struct hostapd_data *hapd)
++{
++	if (!hapd->driver || !hapd->driver->enable_tx)
++		return 0;
++	return hapd->driver->enable_tx(hapd->drv_priv);
++}
++
++
++int hostapd_channel_switch(struct hostapd_data *hapd, int channel, int freq,
++			   u8 tx_block, u8 post_switch_block_tx)
++{
++	struct hostapd_channel_switch params;
++
++	if (!hapd->driver || !hapd->driver->channel_switch)
++		return 0;
++
++	params.channel = channel;
++	params.freq = freq;
++	params.tx_block = tx_block;
++	params.post_switch_block_tx = post_switch_block_tx;
++	params.ch_switch_count = hapd->iface->conf->channel_switch_count;
++
++	return hapd->driver->channel_switch(hapd->drv_priv, &params);
++}
++
++int hostapd_start_radar_detection(struct hostapd_data *hapd)
++{
++	if (!hapd->driver || !hapd->driver->start_radar_detection)
++		return 0;
++
++	return hapd->driver->start_radar_detection(hapd->drv_priv);
++}
+diff --git a/src/ap/ap_drv_ops.h b/src/ap/ap_drv_ops.h
+index 835cdde..051f6fa 100644
+--- a/src/ap/ap_drv_ops.h
++++ b/src/ap/ap_drv_ops.h
+@@ -100,6 +100,10 @@ int hostapd_sta_assoc(struct hostapd_data *hapd, const u8 *addr,
+ 		      int reassoc, u16 status, const u8 *ie, size_t len);
+ int hostapd_add_tspec(struct hostapd_data *hapd, const u8 *addr,
+ 		      u8 *tspec_ie, size_t tspec_ielen);
++int hostapd_enable_tx(struct hostapd_data *hapd);
++int hostapd_channel_switch(struct hostapd_data *hapd, int channel, int freq,
++			   u8 tx_block, u8 post_switch_block_tx);
++int hostapd_start_radar_detection(struct hostapd_data *hapd);
+ 
+ 
+ #include "drivers/driver.h"
+diff --git a/src/drivers/driver.h b/src/drivers/driver.h
+index d72c83b..512b4c3 100644
+--- a/src/drivers/driver.h
++++ b/src/drivers/driver.h
+@@ -847,6 +847,17 @@ struct hostapd_freq_params {
+ 				 * enabled, secondary channel above primary */
+ };
+ 
++struct hostapd_channel_switch {
++	int freq;
++	int channel;
++	int tx_block;			/* immediately block the tx on the
++					 * operational channel
++					 * (prior channel switch) */
++	int post_switch_block_tx;	/* block tx on the target ch (after
++					 * channel switch) */
++	int ch_switch_count;
++};
++
+ enum wpa_driver_if_type {
+ 	/**
+ 	 * WPA_IF_STATION - Station mode interface
+@@ -2483,6 +2494,29 @@ struct wpa_driver_ops {
+ 	 */
+ 	void (*poll_client)(void *priv, const u8 *own_addr,
+ 			    const u8 *addr, int qos);
++
++	/**
++	 * enable_tx - Enable TX
++	 * @priv: Private driver interface data
++	 * Returns: 0 on success, -1 on failure
++	 */
++	int (*enable_tx)(void *priv);
++
++	/**
++	 * channel_switch - Perform a channel switch
++	 * @priv: Private driver interface data
++	 * @params: Channels switch parameters
++	 * Returns: 0 on success, -1 on failure
++	 */
++	int (*channel_switch)(void *priv,
++			      struct hostapd_channel_switch *params);
++
++	/**
++	 * start_radar_detection - Listen for radar interference on the channel.
++	 * @priv: Private driver interface data
++	 * Returns: 0 on success, -1 on failure
++	 */
++	int (*start_radar_detection)(void *priv);
+ };
+ 
+ 
+-- 
+1.7.5.4
 
