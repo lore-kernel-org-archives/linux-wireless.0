@@ -1,49 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 93-97-239-3.zone5.bethere.co.uk ([93.97.239.3]:47516 "EHLO
-	pond-weed.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752115Ab2AANo0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jan 2012 08:44:26 -0500
-Received: from buffy.scoobygang ([192.168.158.102])
-	by pond-weed.com with esmtps (TLS1.0:DHE_RSA_AES_128_CBC_SHA1:16)
-	(Exim 4.72)
-	(envelope-from <john@pond-weed.com>)
-	id 1RhL18-0006c9-52
-	for linux-wireless@vger.kernel.org; Sun, 01 Jan 2012 13:00:02 +0000
-Date: Sun, 1 Jan 2012 13:00:00 +0000
-From: John Williams <john@pond-weed.com>
-To: linux-wireless@vger.kernel.org
-Subject: Re: [Question] Realtek USB 0bda:8176 as AP?
-Message-ID: <20120101130000.57429e74@buffy.scoobygang> (sfid-20120101_144430_579737_43300AEA)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail.neratec.ch ([80.75.119.105]:48915 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752709Ab2AZPeN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jan 2012 10:34:13 -0500
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
+Cc: rodrigue@qca.qualcomm.com, nbd@openwrt.org, adrian.chadd@gmail.com,
+	kgiori@qca.qualcomm.com, shafi.wireless@gmail.com
+Subject: [RFC 0/2] ath9k: DFS pattern detector
+Date: Thu, 26 Jan 2012 16:34:02 +0100
+Message-Id: <1327592044-3319-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20120126_163417_887595_49504751)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello list,
+D(FS)-day today!
 
-I see there was a discussion on this list about three months ago about
-using an RTL8192CU (usb 0bda:8176) in access point mode. I've just
-bought one and I've got the same problem: hostapd just prints this in a
-loop until it gives up:
+The first patch proposes a generic DFS pattern detector
+built into the common ath module to be used by ath9k for
+radar detection.
 
-WPA: 00:24:23:0c:9c:2f WPA_PTK entering state PTKSTART
-wlan0: STA 00:24:23:0c:9c:2f WPA: sending 1/4 msg of 4-Way Handshake
-WPA: Send EAPOL(version=2 secure=0 mic=0 ack=1 install=0 pairwise=8
-  kde_len=0 keyidx=0 encr=0) 
-IEEE 802.1X: 00:24:23:0c:9c:2f TX status -version=2 type=3 
-  length=95 - ack=1 
-wlan0: STA 00:24:23:0c:9c:2f
-WPA: EAPOL-Key timeout
+Some DFS components are not yet ready to allow working
+integration of the detector into ath9k. To get some hands
+on and test the detector (long) before the required
+functionalities are available, the second patch proposes
+a framework for stand-alone testing the detector from
+user space.
 
-This is with the driver from compat_wireless as of 2011-12-29.
 
-It works fine with the driver downloaded from the realtek website
-(provided that I also use their patched version of hostapd), so it's
-not a hardware problem.
+Zefir Kurtisi (2):
+  ath9k: add DFS pattern detector
+  ath9k/dfs_pattern_detector: add standalone testing
 
-If anyone could point me to the area in the driver where it is supposed
-to receive the missing message, I would be happy to have a go at
-debugging it.
+ drivers/net/wireless/ath/Makefile                  |   10 +
+ .../net/wireless/ath/dfs_pattern_detector/Makefile |    7 +
+ .../ath/dfs_pattern_detector/detector_elem.c       |   92 ++++++
+ .../ath/dfs_pattern_detector/detector_elem.h       |   45 +++
+ .../dfs_pattern_detector/dfs_pattern_detector.h    |   92 ++++++
+ .../net/wireless/ath/dfs_pattern_detector/module.c |   20 ++
+ .../ath/dfs_pattern_detector/pattern_detector.c    |  294 ++++++++++++++++++++
+ .../ath/dfs_pattern_detector/pulse_queue.c         |  168 +++++++++++
+ .../ath/dfs_pattern_detector/pulse_queue.h         |   77 +++++
+ .../ath/dfs_pattern_detector/pulse_sequence.c      |  280 +++++++++++++++++++
+ .../ath/dfs_pattern_detector/pulse_sequence.h      |   89 ++++++
+ .../ath/dfs_pattern_detector/radar_types.c         |   52 ++++
+ .../ath/dfs_pattern_detector/radar_types.h         |   95 +++++++
+ .../ath/dfs_pattern_detector/testing/Makefile      |   44 +++
+ .../testing/dfs_netlink_relay.c                    |  115 ++++++++
+ .../ath/dfs_pattern_detector/testing/dfs_tester.c  |  101 +++++++
+ .../net/wireless/ath/dfs_pattern_detector/utils.c  |   45 +++
+ .../net/wireless/ath/dfs_pattern_detector/utils.h  |   30 ++
+ 18 files changed, 1656 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/Makefile
+ create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/detector_elem.c
+ create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/detector_elem.h
+ create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/dfs_pattern_detector.h
+ create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/module.c
+ create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/pattern_detector.c
+ create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/pulse_queue.c
+ create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/pulse_queue.h
+ create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/pulse_sequence.c
+ create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/pulse_sequence.h
+ create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/radar_types.c
+ create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/radar_types.h
+ create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/testing/Makefile
+ create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/testing/dfs_netlink_relay.c
+ create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/testing/dfs_tester.c
+ create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/utils.c
+ create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/utils.h
 
-Regards,
-John Williams
+-- 
+1.7.4.1
+
