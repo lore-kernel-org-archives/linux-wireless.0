@@ -1,73 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:57304 "EHLO purkki.adurom.net"
+Received: from lo.gmane.org ([80.91.229.12]:37113 "EHLO lo.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753162Ab2A2Rfn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jan 2012 12:35:43 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Drivers that use synchronous firmware loading
-References: <4F24BF84.1020209@lwfinger.net>
-Date: Sun, 29 Jan 2012 19:35:38 +0200
-In-Reply-To: <4F24BF84.1020209@lwfinger.net> (Larry Finger's message of "Sat,
-	28 Jan 2012 21:39:48 -0600")
-Message-ID: <87mx96csyd.fsf@purkki.adurom.net> (sfid-20120129_183611_463706_0369F636)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	id S1751154Ab2AZIqL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jan 2012 03:46:11 -0500
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1RqKyA-0001Ix-4u
+	for linux-wireless@vger.kernel.org; Thu, 26 Jan 2012 09:46:10 +0100
+Received: from ewi1530.ewi.utwente.nl ([130.89.12.225])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 09:46:10 +0100
+Received: from timon by ewi1530.ewi.utwente.nl with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 09:46:10 +0100
+To: linux-wireless@vger.kernel.org
+From: Timon ter Braak <timon@terbraak.org>
+Subject: Re: Realtek rtl8192se in AP mode?
+Date: Thu, 26 Jan 2012 09:45:58 +0100
+Message-ID: <jfr3s6$ff7$1@dough.gmane.org> (sfid-20120126_094618_788231_78DBF0CE)
+References: <CAP6E9idrT=gu6cnKqMzVMVEXqRHdyuADgBNJTdCebt1Rf1dcfg@mail.gmail.com> <jfoo7s$4n9$1@dough.gmane.org> <4F207641.2090908@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <4F207641.2090908@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+On 25/1/12 22:38 , Larry Finger wrote:
+> If all the Realtek FTP sites fail, please let me know, and I will mail
+> you the vendor source. I have not attached it here as it is too big for
+> the ML.
 
-> To all wireless developers:
->
-> As you may have noticed, the udev layer is being changed. One of the
-> side effects is that the kernel may timeout when a driver uses
-> synchronous firmware loading. My rtlwifi drivers were affected, and a
-> kernel bugzilla has been logged against rtl8192se. I suggest that the
-> maintainers should be proactive, and convert to asynchronous loading
-> as soon as possible.
+I tried all mirrors, even with a proper FTP client; I am just not 
+allowed to connect anonymously. I would appreciate it if you could 
+provide me with the newest driver.
 
-Thanks for the summary, this was really useful.
+I see that you (Larry) are (somewhat) involved in the wireless drivers, 
+noticing some related posts. If needed, I could provide you with 
+some/more test data, regarding this chip.
 
-> In wireless-testing, the files listed below contain calls to
-> read_firmware() rather than read_firmware_nowait():
->
-> drivers/net/wireless/at76c50x-usb.c
-> drivers/net/wireless/ath/ath6kl/init.c
-> drivers/net/wireless/ath/ath9k/hif_usb.c
-> drivers/net/wireless/atmel.c
-> drivers/net/wireless/b43/main.c
-> drivers/net/wireless/b43legacy/main.c
-> drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-> drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-> drivers/net/wireless/ipw2x00/ipw2100.c
-> drivers/net/wireless/iwlegacy/3945-mac.c
-> drivers/net/wireless/iwlegacy/4965-mac.c
-> drivers/net/wireless/iwlwifi/iwl-agn.c
-> drivers/net/wireless/libertas/main.c
-> drivers/net/wireless/libertas/if_usb.c
-> drivers/net/wireless/libertas_tf/if_usb.c
-> drivers/net/wireless/mwifiex/main.c
-> drivers/net/wireless/mwl8k.c
-> drivers/net/wireless/orinoco/fw.c
-> drivers/net/wireless/orinoco/orinoco_usb.c
-> drivers/net/wireless/p54/p54spi.c
-> drivers/net/wireless/p54/p54usb.c
-> drivers/net/wireless/p54/p54pci.c
-> drivers/net/wireless/prism54/islpci_dev.c
-> drivers/net/wireless/rt2x00/rt2x00firmware.c
-> drivers/net/wireless/wl1251/main.c
-> drivers/net/wireless/zd1201.c
-> drivers/net/wireless/zd1211rw/zd_usb.c
->
-> Some of the drivers above may be exempt as their firmware is built
-> into the kernel. I did not check for that case.
+Timon
 
-But isn't the issue only when a firmware is requested synchronously
-during module init? For example, IIRC wl1251 loads the module during
-hw start and that should be safe, even when making a synchronous call.
-Or did I misunderstood something?
-
--- 
-Kalle Valo
