@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:32876 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751500Ab2A2Cgm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jan 2012 21:36:42 -0500
-Message-ID: <4F24B0B5.1060101@openwrt.org> (sfid-20120129_033648_152486_9B1650EC)
-Date: Sun, 29 Jan 2012 03:36:37 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:39799 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751323Ab2AZIuI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jan 2012 03:50:08 -0500
+Received: by qadc10 with SMTP id c10so1415003qad.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 00:50:07 -0800 (PST)
+Message-ID: <4F211384.5080105@gmail.com> (sfid-20120126_095013_134658_A0BF546A)
+Date: Thu, 26 Jan 2012 00:49:08 -0800
+From: Don deJuan <donjuansjiz@gmail.com>
 MIME-Version: 1.0
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-CC: Marek Lindner <lindner_marek@yahoo.de>,
-	Daniel Halperin <dhalperi@cs.washington.edu>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: minstrel_ht should not override user supplied
- rts setting
-References: <1327735027-30121-1-git-send-email-lindner_marek@yahoo.de> <201201290409.07368.lindner_marek@yahoo.de> <CALSq=BbhM6vLOJt9MGi2BhHKO0-NzAm73WohLDy4YC7x9rpDmw@mail.gmail.com> <201201290435.14048.lindner_marek@yahoo.de> <20120128221452.GB22180@pandem0nium>
-In-Reply-To: <20120128221452.GB22180@pandem0nium>
-Content-Type: text/plain; charset=UTF-8
+To: linux-wireless@vger.kernel.org
+Subject: Re: Realtek rtl8192se in AP mode?
+References: <CAP6E9idrT=gu6cnKqMzVMVEXqRHdyuADgBNJTdCebt1Rf1dcfg@mail.gmail.com> <jfoo7s$4n9$1@dough.gmane.org> <4F207641.2090908@lwfinger.net> <jfr3s6$ff7$1@dough.gmane.org>
+In-Reply-To: <jfr3s6$ff7$1@dough.gmane.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-01-28 11:14 PM, Simon Wunderlich wrote:
-> I agree to Marek here - if I want to disable RTS (for whatever reason), I type
-> 
-> iw phy0 set rts off
-> 
-> I would expect to see no RTS frames coming from my WiFi card at all. If the
-> rate control algorithm (whether ath9k or minstrel_ht) wants to be clever, it should
-> still respect this decision. The oven in my kitchen also has a temperature regulator,
-> but if I turn it off I also don't want my oven to be too clever and burn down the house. ;)
-> 
-> I know, apples and oranges, but I hope this makes this point understandable. I also
-> had quite a debugging night to find the reason for these "wild rts" frames.
-> 
-> Can't we add something two states, like:
->  * "RTS really off" and
->  * "RTS usually off, but rc's may still use it" ?
-If you send a patch for that, I'm ok with it. The default should be RTS
-off, but rc may still use it.
+On 01/26/2012 12:45 AM, Timon ter Braak wrote:
+> On 25/1/12 22:38 , Larry Finger wrote:
+>> If all the Realtek FTP sites fail, please let me know, and I will mail
+>> you the vendor source. I have not attached it here as it is too big for
+>> the ML.
+>
+> I tried all mirrors, even with a proper FTP client; I am just not
+> allowed to connect anonymously. I would appreciate it if you could
+> provide me with the newest driver.
+>
+> I see that you (Larry) are (somewhat) involved in the wireless drivers,
+> noticing some related posts. If needed, I could provide you with
+> some/more test data, regarding this chip.
+>
+> Timon
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
 
-- Feli
+I would be happy to provide any needed testing/info on this driver as 
+well, I have 2 laptops that use this card.
