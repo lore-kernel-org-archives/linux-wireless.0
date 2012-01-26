@@ -1,88 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:51996 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753449Ab2AZWxG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 17:53:06 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH] compat: move br_port_exists() to compat-2.6.36.h
-Date: Thu, 26 Jan 2012 23:51:45 +0100
-Message-Id: <1327618305-23077-1-git-send-email-hauke@hauke-m.de> (sfid-20120126_235311_057961_DDCE51C1)
+Received: from mms1.broadcom.com ([216.31.210.17]:4130 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751670Ab2AZJFP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jan 2012 04:05:15 -0500
+Message-ID: <4F21173A.9060405@broadcom.com> (sfid-20120126_100601_197008_E08B2925)
+Date: Thu, 26 Jan 2012 10:04:58 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Josh Boyer" <jwboyer@gmail.com>
+cc: "Francis Moreau" <francis.moro@gmail.com>,
+	"Linux Kernel Mailing List" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	"Greg KH" <greg@kroah.com>
+Subject: Re: kernel 3.2.1: BUG: scheduling while atomic:
+ swapper/0/0/0x10000100
+References: <CAC9WiBgpBCWZVjAQkJWSpXhC_dK1KKPfAHZvxVgaLV8BUsc41Q@mail.gmail.com>
+ <4F1FBAA9.4040405@broadcom.com>
+ <CAC9WiBjpsLuJhzw+vZsPC2bA73mad444Gq32DRL_gCri2MqaMw@mail.gmail.com>
+ <4F1FD2AA.9020708@broadcom.com>
+ <CA+5PVA73WHfnurWiyY4w9f4_mw=vUdpaNmAavHZtt+xYfo8Kcw@mail.gmail.com>
+ <CAC9WiBgzg-dD5Sba9Cd_uvsfMxqQib+vsXXDyMSMSR_Y7P_CCw@mail.gmail.com>
+ <CA+5PVA4Cq5BRfKEa1uckVbtCGKhKmuw1tujQ19T3wk3c5CcsAQ@mail.gmail.com>
+In-Reply-To: <CA+5PVA4Cq5BRfKEa1uckVbtCGKhKmuw1tujQ19T3wk3c5CcsAQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-br_port_exists() was moved to a new compat-*.h file for every new
-kernel release, as it is not in mainline. This patch moves it to compat-
-2.6.36.h so it has not to be moved any more for a new kernel version.
+On 01/25/2012 05:49 PM, Josh Boyer wrote:
+> On Wed, Jan 25, 2012 at 11:37 AM, Francis Moreau <francis.moro@gmail.com> wrote:
+>> Hello,
+>>
+>> On Wed, Jan 25, 2012 at 1:11 PM, Josh Boyer <jwboyer@gmail.com> wrote:
+>>>
+>>> We've had a few similar issues reported in Fedora yesterday after we
+>>> rebased to 3.2.1.
+>>
+>> From which kernel did you rebase to 3.2.1 ?
+> 
+> Fedora 16 went from 3.1.9 to 3.2.1 earlier this week.  We hadn't been getting
+> reports like this until 3.2.1 showed up.  I asked one of the reporters to try
+> 3.2.0 and they say it recreates there still, so it seems the issue showed up
+> with the 3.2 release.  One user managed to capture the trace below using a
+> kernel with a variety of debug options turned on.  It isn't the same backtrace
+> but it might be related.
+> 
+> backtrace:
+> :BUG: sleeping function called from invalid context at
+> drivers/base/power/runtime.c:785
+> :in_atomic(): 1, irqs_disabled(): 0, pid: 0, name: swapper/0
+> :1 lock held by swapper/0/0:
+> : #0:  (&chip->rts51x_suspend_timer){+.-...}, at: [<ffffffff8108d711>]
+> run_timer_softirq+0x111/0x600
+> :Pid: 0, comm: swapper/0 Tainted: G        W    3.2.0-2.fc17.x86_64.debug #1
+> :Call Trace:
+> : <IRQ>  [<ffffffff8105ee7a>] __might_sleep+0x13a/0x1f0
+> : [<ffffffffa00180b0>] ? rts51x_modi_suspend_timer+0x50/0x50 [ums_realtek]
+> : [<ffffffff813fdee3>] __pm_runtime_idle+0xa3/0xb0
+> : [<ffffffffa00180b0>] ? rts51x_modi_suspend_timer+0x50/0x50 [ums_realtek]
+> : [<ffffffff8146ed30>] usb_autopm_put_interface+0x30/0x40
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/compat-2.6.36.h |   15 +++++++++++++++
- include/linux/compat-3.3.h    |   17 -----------------
- 2 files changed, 15 insertions(+), 17 deletions(-)
+This trace seems to indicate what is wrong. At least for this one user.
+The usb_autopm_put_interface() call seems result in a sleep and the
+rts51x_suspend_timer_fn is holding a lock. Below the code indicated in
+the trace.
 
-diff --git a/include/linux/compat-2.6.36.h b/include/linux/compat-2.6.36.h
-index b5d9975..314fb35 100644
---- a/include/linux/compat-2.6.36.h
-+++ b/include/linux/compat-2.6.36.h
-@@ -142,6 +142,8 @@ extern struct workqueue_struct *system_nrt_wq;
- void compat_system_workqueue_create(void);
- void compat_system_workqueue_destroy(void);
- 
-+#define br_port_exists(dev)	(dev->br_port)
-+
- #else
- 
- static inline void compat_system_workqueue_create(void)
-@@ -152,6 +154,19 @@ static inline void compat_system_workqueue_destroy(void)
- {
- }
- 
-+/*
-+ * This is not part of The 2.6.37 kernel yet but we
-+ * we use it to optimize the backport code we
-+ * need to implement. Instead of using ifdefs
-+ * to check what version of the check we use
-+ * we just replace all checks on current code
-+ * with this. I'll submit this upstream too, that
-+ * way all we'd have to do is to implement this
-+ * for older kernels, then we would not have to
-+ * edit the upstrema code for backport efforts.
-+ */
-+#define br_port_exists(dev)	(dev->priv_flags & IFF_BRIDGE_PORT)
-+
- #endif /* (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,36)) */
- 
- #endif /* LINUX_26_36_COMPAT_H */
-diff --git a/include/linux/compat-3.3.h b/include/linux/compat-3.3.h
-index 821333c..4965f23 100644
---- a/include/linux/compat-3.3.h
-+++ b/include/linux/compat-3.3.h
-@@ -8,23 +8,6 @@
- /* include to override NL80211_FEATURE_SK_TX_STATUS */
- #include <linux/nl80211.h>
- 
--/*
-- * This is not part of The 2.6.37 kernel yet but we
-- * we use it to optimize the backport code we
-- * need to implement. Instead of using ifdefs
-- * to check what version of the check we use
-- * we just replace all checks on current code
-- * with this. I'll submit this upstream too, that
-- * way all we'd have to do is to implement this
-- * for older kernels, then we would not have to
-- * edit the upstrema code for backport efforts.
-- */
--#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
--#define br_port_exists(dev)	(dev->priv_flags & IFF_BRIDGE_PORT)
--#else
--#define br_port_exists(dev)	(dev->br_port)
--#endif
--
- static inline void skb_complete_wifi_ack(struct sk_buff *skb, bool acked)
- {
- 	WARN_ON(1);
--- 
-1.7.5.4
+runtime.c:
+768 /**
+769  * __pm_runtime_idle - Entry point for runtime idle operations.
+770  * @dev: Device to send idle notification for.
+771  * @rpmflags: Flag bits.
+772  *
+773  * If the RPM_GET_PUT flag is set, decrement the device's usage
+count and
+774  * return immediately if it is larger than zero.  Then carry out an idle
+775  * notification, either synchronous or asynchronous.
+776  *
+777  * This routine may be called in atomic context if the RPM_ASYNC
+flag is set,
+778  * or if pm_runtime_irq_safe() has been called.
+779  */
+780 int __pm_runtime_idle(struct device *dev, int rpmflags)
+781 {
+782         unsigned long flags;
+783         int retval;
+784
+785         might_sleep_if(!(rpmflags & RPM_ASYNC) && !dev->power.irq_safe);
+
+This issue can either be caused in ums_realtek module or the usb autopm
+code. Have not looked into that.
+
+Gr. AvS
 
