@@ -1,75 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:51235 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753461Ab2ABX7t (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:56552 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751163Ab2AZOKc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 18:59:49 -0500
-Date: Tue, 3 Jan 2012 00:00:16 +0000
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Matthew Garrett <mjg@redhat.com>,
-	Jack Stone <jwjstone@fastmail.fm>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Oliver Neukum <oliver@neukum.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-Message-ID: <20120103000016.640012da@pyramind.ukuu.org.uk> (sfid-20120103_010047_048602_224DE61A)
-In-Reply-To: <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
-	<4F02165C.1060400@fastmail.fm>
-	<CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
-	<20120102211904.GA15316@srcf.ucam.org>
-	<CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Thu, 26 Jan 2012 09:10:32 -0500
+Received: by bkas6 with SMTP id s6so460854bka.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 06:10:30 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Victor Goldenshtein <victorg@ti.com>
+Subject: Re: [RFC 9/9] mac80211: add DFS support to monitor interface
+Date: Thu, 26 Jan 2012 15:10:18 +0100
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, johannes@sipsolutions.net,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name
+References: <1327581484-22047-1-git-send-email-victorg@ti.com> <1327581484-22047-10-git-send-email-victorg@ti.com>
+In-Reply-To: <1327581484-22047-10-git-send-email-victorg@ti.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Message-Id: <201201261510.18387.chunkeey@googlemail.com> (sfid-20120126_151035_717559_CBC8173E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2 Jan 2012 13:27:03 -0800
-Linus Torvalds <torvalds@linux-foundation.org> wrote:
-
-> On Mon, Jan 2, 2012 at 1:19 PM, Matthew Garrett <mjg@redhat.com> wrote:
-> > On Mon, Jan 02, 2012 at 12:48:48PM -0800, Linus Torvalds wrote:
-> >
-> >> Why are you guys making it any more complicated than that?
-> >
-> > Because it's inadequate. You can't guarantee that we ever loaded
-> > firmware.
+On Thursday, January 26, 2012 01:38:04 PM Victor Goldenshtein wrote:
+> Stop dropping packets if we are on 'radar channel'
+> and the DFS is enabled/supported.
 > 
-> If we didn't load the firmware before the suspend, then the resume
-> function of a device sure as hell had better not load it at resume
-> time either.
+> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+> ---
+>  net/mac80211/tx.c |   15 +++++++++------
+>  1 files changed, 9 insertions(+), 6 deletions(-)
+> 
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index edcd1c7..2c728a4 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1581,15 +1583,16 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+>  	 * flag.
+>  	 *
+>  	 * Since AP mode uses monitor interfaces to inject/TX management
+> -	 * frames we can make AP mode the exception to this rule once it
+> -	 * supports radar detection as its implementation can deal with
+> -	 * radar detection by itself. We can do that later by adding a
+> -	 * monitor flag interfaces used for AP support.
+> +	 * frames we can make AP mode the exception to this rule, in the
+> +	 * case the driver supports radar detection, allow usage of radar
+> +	 * channels.
+>  	 */
 
-Get a clue. It is very common that devices keep firmware over OS warm
-boots, particularly if onboard. "Lesser" beings than yourself consider it
-a feature of good hardware design for fast booting and it works happily
-in "lesser" OS products such Windows.
+Hey, that's great!
 
-If you'd like a typical worked example the Fujitsu Q550 has a 3G modem on
-it. So in the following cases we don't load firmware at boot but we do
-need to after hibernate/resume
+I have one question: Wasn't the monitor interface [for AP mode] being
+rendered obsolete by Johannes cfg80211-internal-ap-mlme work? If so,
+then we could save us the work here, right?
 
-Boot windows, reboot to Linux
-Boot Linux, reboot to Linux (first loads, second doesn't)
+BTW, what about cfg80211_can_beacon_sec_chan in net/wireless/chan.c?
+I think it needs to be updated or else we can't have HT40 [secondary
+channels] on frequencies which require DFS.
 
-Break that and you have a regression and Linus says regressions are wrong
-and we don't do them.
-
-> And don't make the stupid argument that we don't know. That's just
-> inane. Either the driver loads the firmware at startup, or it doesn't.
-
-Wrong.
-
-> Fix the 99%. Screw the crazy shit, don't even bother worrying about it
-> until *after* the 99% is fixed.
-
-This is the 99%. This is PC hardware, the 99% is crazy shit.
-
-Alan
+Regards,
+	Chr
