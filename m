@@ -1,141 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7699 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752443Ab2A3LrR (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:56701 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753853Ab2AZVdt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 06:47:17 -0500
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH v3 3/4] ath6kl: Wait for host sleep mode cmd processed event during WOW suspend
-Date: Mon, 30 Jan 2012 17:13:11 +0530
-Message-ID: <1327923792-16408-4-git-send-email-rmani@qca.qualcomm.com> (sfid-20120130_124721_621635_21D3CE1E)
-In-Reply-To: <1327923792-16408-1-git-send-email-rmani@qca.qualcomm.com>
-References: <1327923792-16408-1-git-send-email-rmani@qca.qualcomm.com>
+	Thu, 26 Jan 2012 16:33:49 -0500
+Date: Thu, 26 Jan 2012 15:33:44 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Problems associating with RTL8188CE
+Message-ID: <20120126213344.GC14465@ubuntu-macmini> (sfid-20120126_223400_350032_F10226C3)
+References: <4EE7B85E.3070802@lwfinger.net>
+ <20111213212606.GB30788@thinkpad-t410>
+ <4EE82CC6.2030307@lwfinger.net>
+ <20111214162333.GB19410@thinkpad-t410>
+ <4EE8D150.8090100@lwfinger.net>
+ <20111214164902.GD19410@thinkpad-t410>
+ <4EE8D5A1.7040600@lwfinger.net>
+ <20111214171234.GE19410@thinkpad-t410>
+ <4EE8E035.90501@lwfinger.net>
+ <20111214175804.GG19410@thinkpad-t410>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20111214175804.GG19410@thinkpad-t410>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+On Wed, Dec 14, 2011 at 11:58:04AM -0600, Seth Forshee wrote:
+> On Wed, Dec 14, 2011 at 11:43:17AM -0600, Larry Finger wrote:
+> > Seth,
+> > 
+> > As expected, my RTL8188SE came right up.
+> > 
+> > The lspci -nnv details for my card are
+> > 
+> > 06:00.0 0280: 10ec:8176 (rev 01)
+> >         Subsystem: 10ec:8176
+> >         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+> > ParErr- Stepping- SERR+ FastB2B- DisINTx-
+> >         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast
+> > >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+> >         Latency: 0, Cache Line Size: 64 bytes
+> >         Interrupt: pin A routed to IRQ 21
+> >         Region 0: I/O ports at 4000 [size=256]
+> >         Region 2: Memory at f8000000 (64-bit, non-prefetchable) [size=16K]
+> >         Capabilities: <access denied>
+> >         Kernel driver in use: rtl8192ce
+> > 
+> > Does yours also have 10ec:8176 as the PCI ID?
+> 
+> Yes.
+> 
+> 07:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
+> 	Subsystem: Realtek Semiconductor Co., Ltd. Device [10ec:8184]
+> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+> 	Latency: 0, Cache Line Size: 32 bytes
+> 	Interrupt: pin A routed to IRQ 17
+> 	Region 0: I/O ports at 2000 [size=256]
+> 	Region 2: Memory at f0100000 (64-bit, non-prefetchable) [size=16K]
+> 	Capabilities: <access denied>
+> 	Kernel driver in use: rtl8192ce
+> 	Kernel modules: rtl8192ce
 
-For every WMI_SET_HOST_SLEEP_MODE_CMDID command (send from the host),
-the firmware sends WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID as
-an acknowledgement to the host.
+Sorry for the long silence on this, I was busy with some other things.
+But I've been playing with it again this week and uncovered some new
+information regarding the failures.
 
-In order to being sync with the firmware, the host has to wait for
-WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENT event before going to
-the suspend state. This patch ensures ath6kl_wow_suspend() waits
-until it gets this event after sending set host sleep mode command.
+I noticed the other day that the rtl8188ce was no longer having trouble
+associating with this AP. After playing around in the router settings I
+discovered that it works fine so long as the router isn't on channel 1.
+So then I configured my other router to use channel 1, and then I
+started seeing problems with that router as well.
 
-This patch adds,
- * New command WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID in
-   WMI event table.
- * New WMI function ath6kl_wmi_host_sleep_mode_cmd_prcd_evt_rx()
-   to process the event.
- * New flag HOST_SLEEP_MODE_CMD_PROCESSED in VIF flags to record
-   the arrival of the event.
+I also tried the rtl8192ce driver from Realtek's website, and I'm having
+better luck with that driver.
 
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   15 +++++++++++++++
- drivers/net/wireless/ath/ath6kl/core.h     |    1 +
- drivers/net/wireless/ath/ath6kl/wmi.c      |   17 +++++++++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.h      |    2 ++
- 4 files changed, 35 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index e676cfc..1902e2f 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1975,11 +1975,26 @@ skip_arp:
- 	if (ret)
- 		return ret;
- 
-+	clear_bit(HOST_SLEEP_MODE_CMD_PROCESSED, &vif->flags);
-+
- 	ret = ath6kl_wmi_set_host_sleep_mode_cmd(ar->wmi, vif->fw_vif_idx,
- 						 ATH6KL_HOST_MODE_ASLEEP);
- 	if (ret)
- 		return ret;
- 
-+	left = wait_event_interruptible_timeout(ar->event_wq,
-+			test_bit(HOST_SLEEP_MODE_CMD_PROCESSED, &vif->flags),
-+			WMI_TIMEOUT);
-+	if (left == 0) {
-+		ath6kl_warn("timeout, didn't get host sleep cmd "
-+			    "processed event\n");
-+		ret = -ETIMEDOUT;
-+	} else if (left < 0) {
-+		ath6kl_warn("error while waiting for host sleep cmd "
-+			    "processed event %d\n", left);
-+		ret = left;
-+	}
-+
- 	if (ar->tx_pending[ar->ctrl_ep]) {
- 		left = wait_event_interruptible_timeout(ar->event_wq,
- 				ar->tx_pending[ar->ctrl_ep] == 0, WMI_TIMEOUT);
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index ab232c5..998a745 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -451,6 +451,7 @@ enum ath6kl_vif_state {
- 	DTIM_PERIOD_AVAIL,
- 	WLAN_ENABLED,
- 	STATS_UPDATE_PEND,
-+	HOST_SLEEP_MODE_CMD_PROCESSED,
- };
- 
- struct ath6kl_vif {
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 9c8e4df..18fa9aa 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -2590,6 +2590,18 @@ int ath6kl_wmi_set_host_sleep_mode_cmd(struct wmi *wmi, u8 if_idx,
- 	return ret;
- }
- 
-+/* This command has zero length payload */
-+static int ath6kl_wmi_host_sleep_mode_cmd_prcd_evt_rx(struct wmi *wmi,
-+						      struct ath6kl_vif *vif)
-+{
-+	struct ath6kl *ar = wmi->parent_dev;
-+
-+	set_bit(HOST_SLEEP_MODE_CMD_PROCESSED, &vif->flags);
-+	wake_up(&ar->event_wq);
-+
-+	return 0;
-+}
-+
- int ath6kl_wmi_set_wow_mode_cmd(struct wmi *wmi, u8 if_idx,
- 				enum ath6kl_wow_mode wow_mode,
- 				u32 filter, u16 host_req_delay)
-@@ -3556,6 +3568,11 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_TX_COMPLETE_EVENTID\n");
- 		ret = ath6kl_wmi_tx_complete_event_rx(datap, len);
- 		break;
-+	case WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI,
-+			   "WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID");
-+		ret = ath6kl_wmi_host_sleep_mode_cmd_prcd_evt_rx(wmi, vif);
-+		break;
- 	case WMI_REMAIN_ON_CHNL_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_REMAIN_ON_CHNL_EVENTID\n");
- 		ret = ath6kl_wmi_remain_on_chnl_event_rx(wmi, datap, len, vif);
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 85698ef..e791986 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -1357,6 +1357,8 @@ enum wmi_event_id {
- 	WMI_P2P_START_SDPD_EVENTID,
- 	WMI_P2P_SDPD_RX_EVENTID,
- 
-+	WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID = 0x1047,
-+
- 	WMI_THIN_RESERVED_START_EVENTID = 0x8000,
- 	/* Events in this range are reserved for thinmode */
- 	WMI_THIN_RESERVED_END_EVENTID = 0x8fff,
--- 
-1.7.1
-
+Seth
