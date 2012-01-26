@@ -1,58 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm2-vm0.bullet.mail.ukl.yahoo.com ([217.146.183.226]:24828 "HELO
-	nm2-vm0.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751547Ab2A1UJQ (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:54808 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751759Ab2AZX6z convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jan 2012 15:09:16 -0500
-From: Marek Lindner <lindner_marek@yahoo.de>
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-Subject: Re: [PATCH] mac80211: minstrel_ht should not override user supplied rts setting
-Date: Sun, 29 Jan 2012 04:09:06 +0800
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-References: <1327735027-30121-1-git-send-email-lindner_marek@yahoo.de> <201201290358.35433.lindner_marek@yahoo.de> <CALSq=BYOaFSa4zuK0j8vFavjR38wC86Hqcd-sbYZ3b+CBGReJw@mail.gmail.com>
-In-Reply-To: <CALSq=BYOaFSa4zuK0j8vFavjR38wC86Hqcd-sbYZ3b+CBGReJw@mail.gmail.com>
+	Thu, 26 Jan 2012 18:58:55 -0500
+Received: by pbaa10 with SMTP id a10so1126621pba.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 15:58:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201201290409.07368.lindner_marek@yahoo.de> (sfid-20120128_210942_367869_250E2AB8)
+In-Reply-To: <4F21E1EF.1020608@lwfinger.net>
+References: <CAOVbLLHPdC3XkuTs6OapNMFkSbWaRq54D5U3RDY=N4ugZfEKKQ@mail.gmail.com>
+	<CAOVbLLHK=3K5KfYs7V+9PyE2joWTewuXvpS7RzU63GJS0C2=ug@mail.gmail.com>
+	<CAOVbLLH_RXSzXeQ-g7--6QrUBGD63o-9-7a7NjKc=LM8UL2+GA@mail.gmail.com>
+	<CAOVbLLEzuyBkQv0a238SfDrNXi3hf72Kzyjv8L=m9hokhGjx5A@mail.gmail.com>
+	<CAOVbLLFcja-DV1bEq9C2U8q5eohc7O0AE=oymfjMMBOBi4D52g@mail.gmail.com>
+	<4F21A01E.20105@lwfinger.net>
+	<CAOVbLLHirAKiDehW=79dv1ku1pB0JdpA9SfFkLTcLk5NZctX7A@mail.gmail.com>
+	<4F21E1EF.1020608@lwfinger.net>
+Date: Fri, 27 Jan 2012 00:58:55 +0100
+Message-ID: <CAOVbLLH7=n+9j4Wv+RZk2BOrVYwv-To=gd6aUUb9m2b_yCYhmA@mail.gmail.com> (sfid-20120127_005859_562090_9C92D8EF)
+Subject: Re: Question regarding Linux RTL driver
+From: Nikola Gacic <empnik@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, January 29, 2012 04:03:41 you wrote:
-> On Sat, Jan 28, 2012 at 11:58 AM, Marek Lindner <lindner_marek@yahoo.de> 
-wrote:
-> > On Sunday, January 29, 2012 03:17:32 Daniel Halperin wrote:
-> >> Adaptive RTS/CTS is important to control for interference---RTS/CTS is
-> >> there so that other Wi-Fi devices know not to interfere with your
-> >> flow. It may well be the case that this is not a major problem in
-> >> whatever your scenario you're working, Marek, but it makes a big
-> >> difference in a many bad corner cases.
-> > 
-> > I am very well aware of what RTS/CTS is for and I am not against using
-> > it. However, having the rate algorithm overriding the user setting for a
-> > specific rate is extremely hard to grasp or debug.
-> > To give you an understanding where I am coming from: In our networks we
-> > experienced extremely variable throughput ranging from 30Mbit/s (single
-> > stream) to 0.2 Mbit/s in the next second. As you can imagine we were
-> > trying to figure out what was going on. After spending some time and
-> > losing hair I noticed that the RTS/CTS implementation of our driver
-> > (ath9k) is buggy. Every once in a while the nodes would "battle" each
-> > other with RTS/CTS packets. Strange enough for us, sometimes no RTS
-> > packets were sent and sometimes they would battle. All attempts to
-> > disable RTS/CTS for the mere sake of testing(!) was impossible. First I
-> > thought ath9k did not properly implement the "iw rts" setting but that
-> > wasn't the case. After losing more hair I realized that minstrel_ht, a
-> > rate control algorithm(!), was overriding my rts settings but not
-> > always(!). The only way to make RTS shut up was to apply the posted
-> > patch.
-> 
-> Can you explain what the low-level behavior of an RTS/CTS "battle" is?
-> 
-> Abstractly, the behavior you're describing sounds like a buggy driver
-> that doesn't obey overheard RTS or CTS packets.
+I put some printk() functions in driver functions to print arguments
+in log and then I used these same arguments in my code for firmware in
+microcontroller.
 
-I certainly can explain it but this is for another thread and unrelated to the 
-points raised before.
+Good idea with aircrack and injecting raw packets. I will check this right now.
 
-Regards,
-Marek
+Nikola
+
+On Fri, Jan 27, 2012 at 12:29 AM, Larry Finger
+<Larry.Finger@lwfinger.net> wrote:
+> On 01/26/2012 04:44 PM, Nikola Gacic wrote:
+>>
+>> I don't know which device is RTL8187L but this device definitely isn't
+>> RTL8187B
+>> because it doesn't use RTL8187B routines and field
+>> rtl8187_priv.is_rtl8187b is
+>> FALSE.
+>
+>
+> If you only have the 3 endpoints, then it is an RTL8187L.
+>
+>> I am using MANAGED  BSS STATION  interface  for device, but I also tried
+>> MONITOR
+>> interface to try to capture beacons from AP on any channel. It was the
+>> same, I
+>> can't read anything from 0x81 endpoint because I am always getting NAK
+>> packets.
+>>
+>> If I am not mistaken endpoint 2 is used for sending and 0x81 for
+>> receiving, but
+>> enumeration shows there is endpoint 3 also. Do you remember what is it
+>> used for?
+>
+>
+> No, we do not use it, and you are correct in that the endpoint with the
+> address 0x81 is used for input, and the one for address 0x02 for output.
+>
+>> I again inspected rtl8187_start() routine and I am now inspecting
+>> rtl8187_probe() again but it is much bigger and I will need more time. Is
+>> the
+>> rtl8187_probe() crucial for initializing device or just for getting device
+>> information and allocating resources? I mean, will some false bits when
+>> writing
+>> to endpoint 0 cause the device to stop responding in this routine?
+>
+>
+> The devices are very sensitive to the initialization. A mistake there could
+> completely lock the device. I have never tried to use raw in/out on any of
+> these devices. If I were to do what you are trying, I would use the ioctl's
+> that are used by aircrack to inject packets. Those should setup the receiver
+> correctly. In particular, the RX descriptor would be critical.
+>
+> Have you been using usbmon to look at the traffic between the CPU and the
+> device?
+>
+> Larry
