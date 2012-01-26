@@ -1,39 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:41650 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755508Ab2ASRhL (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:63379 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751181Ab2AZMJZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 Jan 2012 12:37:11 -0500
-Received: by bkas6 with SMTP id s6so163524bka.19
-        for <linux-wireless@vger.kernel.org>; Thu, 19 Jan 2012 09:37:10 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20120119083102.873553392@sipsolutions.net>
-References: <20120119082956.486569312@sipsolutions.net> <20120119083102.873553392@sipsolutions.net>
-From: Arik Nemtsov <anamtsov@gmail.com>
-Date: Thu, 19 Jan 2012 19:36:53 +0200
-Message-ID: <CA+XVXff7LdscHL046d0h=s7W9b-YdfLa24EVSed9yrdv0OU75A@mail.gmail.com> (sfid-20120119_183716_042901_2DB0C403)
-Subject: Re: [PATCH 2/2] mac80211: make CQM RSSI support per virtual interface
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 26 Jan 2012 07:09:25 -0500
+Received: by mail-we0-f174.google.com with SMTP id b13so321544wer.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 04:09:25 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] wl12xx: don't release/claim sdio on suspend/resume
+Date: Thu, 26 Jan 2012 14:12:32 +0200
+Message-Id: <1327579952-4595-2-git-send-email-eliad@wizery.com> (sfid-20120126_130929_074395_F1394E54)
+In-Reply-To: <1327579952-4595-1-git-send-email-eliad@wizery.com>
+References: <1327579952-4595-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 19, 2012 at 10:29, Johannes Berg <johannes@sipsolutions.net> wrote:
->
-> From: Johannes Berg <johannes.berg@intel.com>
->
-> Similar to the previous beacon filtering patch,
-> make CQM RSSI support depend on the flags that
-> the driver set for virtual interfaces.
+Since we reverted to claiming the host only when needed,
+we no longer need to release/claim the host on suspend/resume.
 
-Up until now we circumvented the issue by having mode specific HW
-flags (e.g. IEEE80211_HW_AP_LINK_PS). Usually the mode of the FW
-determines the HW capabilities and this is enough.
-It also has the advantages of only touching mode-specific code-paths.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/sdio.c |   11 -----------
+ 1 files changed, 0 insertions(+), 11 deletions(-)
 
-Since this is a STA-mode only flag I assume this is something for
-multi-role (multiple stations)?
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index 099c2c9..ce3b9a9 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -324,9 +324,6 @@ static int wl1271_suspend(struct device *dev)
+ 			dev_err(dev, "error while trying to keep power\n");
+ 			goto out;
+ 		}
+-
+-		/* release host */
+-		sdio_release_host(func);
+ 	}
+ out:
+ 	return ret;
+@@ -334,15 +331,7 @@ out:
+ 
+ static int wl1271_resume(struct device *dev)
+ {
+-	struct sdio_func *func = dev_to_sdio_func(dev);
+-	struct wl12xx_sdio_glue *glue = sdio_get_drvdata(func);
+-	struct wl1271 *wl = platform_get_drvdata(glue->core);
+-
+ 	dev_dbg(dev, "wl1271 resume\n");
+-	if (wl->wow_enabled) {
+-		/* claim back host */
+-		sdio_claim_host(func);
+-	}
+ 
+ 	return 0;
+ }
+-- 
+1.7.6.401.g6a319
 
-Arik
