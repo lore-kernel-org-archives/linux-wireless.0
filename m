@@ -1,118 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:51250 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751538Ab2AVESR (ORCPT
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:36125 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751131Ab2AZMjI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jan 2012 23:18:17 -0500
-Message-ID: <1327205891.8004.105.camel@deadeye> (sfid-20120122_051838_686322_343EE9FB)
-Subject: Re: [PATCH 1/2] ipw2200: Fix order of device registration
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	656813@bugs.debian.org
-Date: Sun, 22 Jan 2012 04:18:11 +0000
-In-Reply-To: <201201220432.34482.s.L-H@gmx.de>
-References: <1327201775.8004.83.camel@deadeye>
-	 <201201220432.34482.s.L-H@gmx.de>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-WLXoTTCOfHbQ650GbcSj"
-Mime-Version: 1.0
+	Thu, 26 Jan 2012 07:39:08 -0500
+Received: by mail-yx0-f173.google.com with SMTP id l8so190120yen.32
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 04:39:07 -0800 (PST)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
+	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
+	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
+	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
+	<nbd@nbd.name>
+Subject: [RFC 1/9] nl80211/cfg80211: add radar detection command/event
+Date: Thu, 26 Jan 2012 14:37:56 +0200
+Message-Id: <1327581484-22047-2-git-send-email-victorg@ti.com> (sfid-20120126_133911_792458_B8899139)
+In-Reply-To: <1327581484-22047-1-git-send-email-victorg@ti.com>
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add start radar detection command, which triggers radar
+detection in the driver/FW, this command will also notify
+usermode with 'radar detected' event.
 
---=-WLXoTTCOfHbQ650GbcSj
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+---
+ include/linux/nl80211.h |    5 ++++
+ include/net/cfg80211.h  |   16 ++++++++++++
+ net/wireless/mlme.c     |   10 ++++++++
+ net/wireless/nl80211.c  |   59 ++++++++++++++++++++++++++++++++++++++++++++++-
+ net/wireless/nl80211.h  |    6 ++++
+ 5 files changed, 95 insertions(+), 1 deletions(-)
 
-On Sun, 2012-01-22 at 04:32 +0100, Stefan Lippers-Hollmann wrote:
-> Hi
->=20
-> On Sunday 22 January 2012, Ben Hutchings wrote:
-> > Currently cfg80211 fails to create a "phy80211" symlink in sysfs from
-> > the net device to the wiphy device.  The latter needs to be registered
-> > first.
-> >=20
-> > Compile-tested only.
-> >=20
-> > Reported-by: Cesare Leonardi <celeonar@gmail.com>
-> > Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
-> > ---
-> >  drivers/net/wireless/ipw2x00/ipw2200.c |   23 ++++++++++++-----------
-> >  1 files changed, 12 insertions(+), 11 deletions(-)
->=20
-> I've tested this patch on my ipw2200 (inside an Acer TravelMate 292LMi).
-> While the original
-[...]
-> is almost cosmetic, without any apparent ill-effects, applying that=20
-> patch to kernel 3.2.1 (not exactly Debian's - e.g. I need acerhk/=20
-> dritek to disable rfkill for that card, but it should be close enough)=
-=20
-> results in this trace:
->=20
-> [    5.708938] libipw: 802.11 data/management/control stack, git-1.1.13
-> [    5.708942] libipw: Copyright (C) 2004-2005 Intel Corporation <jketren=
-o@linux.intel.com>
-> [=E2=80=A6]
-> [    5.785178] ipw2200: Intel(R) PRO/Wireless 2200/2915 Network Driver, 1=
-.2.2kmprq
-> [    5.785184] ipw2200: Copyright(c) 2003-2006 Intel Corporation
-> [    5.785323] ipw2200 0000:02:02.0: power state changed by ACPI to D0
-> [    5.785330] ipw2200 0000:02:02.0: power state changed by ACPI to D0
-> [    5.785344] ipw2200 0000:02:02.0: PCI INT A -> Link[LNKC] -> GSI 10 (l=
-evel, low) -> IRQ 10
-> [    5.785370] ipw2200: Detected Intel PRO/Wireless 2200BG Network Connec=
-tion
-> [    5.785416] ------------[ cut here ]------------
-> [    5.785435] WARNING: at /tmp/buildd/linux-aptosid-3.2/debian/build/sou=
-rce_i386_none/net/wireless/core.c:562 wiphy_register+0x45/0x38d [cfg80211](=
-)
-[...]
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index 0f5ff37..5bffba0 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -541,6 +541,9 @@
+  * @NL80211_CMD_SET_NOACK_MAP: sets a bitmap for the individual TIDs whether
+  *      No Acknowledgement Policy should be applied.
+  *
++ * @NL80211_CMD_DFS_RADAR_DETECTION: Start radar detection in the
++ *	driver/HW. Once radar detected usermode notified with this event.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -680,6 +683,8 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_SET_NOACK_MAP,
+ 
++	NL80211_CMD_DFS_RADAR_DETECTION,
++
+ 	/* add new commands above here */
+ 
+ 	/* used to define NL80211_CMD_MAX below */
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 15f4be7..b47217b 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1482,6 +1482,8 @@ struct cfg80211_gtk_rekey_data {
+  *	later passes to cfg80211_probe_status().
+  *
+  * @set_noack_map: Set the NoAck Map for the TIDs.
++ *
++ * @dfs_start_radar_detection: Start radar detection in the driver.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -1680,6 +1682,9 @@ struct cfg80211_ops {
+ 				  u16 noack_map);
+ 
+ 	struct ieee80211_channel *(*get_channel)(struct wiphy *wiphy);
++
++	int    (*dfs_start_radar_detection)(struct wiphy *wiphy,
++					    struct net_device *dev);
+ };
+ 
+ /*
+@@ -3216,6 +3221,17 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
+ 			      gfp_t gfp);
+ 
+ /**
++ * cfg80211_radar_detected_notify - radar detection event
++ * @dev: network device
++ * @freq: radar detected on this channel frequency
++ * @gfp: context flags
++ *
++ * This function is called when a radar is detected on the current channel.
++ */
++void cfg80211_radar_detected_notify(struct net_device *dev,
++				    u16 freq, gfp_t gfp);
++
++/**
+  * cfg80211_cqm_pktloss_notify - notify userspace about packetloss to peer
+  * @dev: network device
+  * @peer: peer's MAC address
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index 438dfc1..6ef723d 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -1109,6 +1109,16 @@ void cfg80211_cqm_rssi_notify(struct net_device *dev,
+ }
+ EXPORT_SYMBOL(cfg80211_cqm_rssi_notify);
+ 
++void cfg80211_radar_detected_notify(struct net_device *dev, u16 freq, gfp_t gfp)
++{
++	struct wireless_dev *wdev = dev->ieee80211_ptr;
++	struct wiphy *wiphy = wdev->wiphy;
++	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
++
++	nl80211_send_radar_detected_notify(rdev, freq, dev, gfp);
++}
++EXPORT_SYMBOL(cfg80211_radar_detected_notify);
++
+ void cfg80211_cqm_pktloss_notify(struct net_device *dev,
+ 				 const u8 *peer, u32 num_packets, gfp_t gfp)
+ {
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index b3d3cf8..e96bfc5 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -4044,6 +4044,20 @@ static int nl80211_stop_sched_scan(struct sk_buff *skb,
+ 	return err;
+ }
+ 
++static int nl80211_dfs_start_radar_detection(struct sk_buff *skb,
++					     struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++
++	ASSERT_RDEV_LOCK(rdev);
++
++	if (!rdev->ops->dfs_start_radar_detection)
++		return -EOPNOTSUPP;
++
++	return rdev->ops->dfs_start_radar_detection(&rdev->wiphy, dev);
++}
++
+ static int nl80211_send_bss(struct sk_buff *msg, struct netlink_callback *cb,
+ 			    u32 seq, int flags,
+ 			    struct cfg80211_registered_device *rdev,
+@@ -6711,7 +6725,14 @@ static struct genl_ops nl80211_ops[] = {
+ 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
+-
++	{
++		.cmd = NL80211_CMD_DFS_RADAR_DETECTION,
++		.doit = nl80211_dfs_start_radar_detection,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
+ };
+ 
+ static struct genl_multicast_group nl80211_mlme_mcgrp = {
+@@ -7748,6 +7769,42 @@ void nl80211_pmksa_candidate_notify(struct cfg80211_registered_device *rdev,
+ }
+ 
+ void
++nl80211_send_radar_detected_notify(struct cfg80211_registered_device *rdev,
++				   u16 freq, struct net_device *netdev,
++				   gfp_t gfp)
++{
++	struct sk_buff *msg;
++	void *hdr;
++
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
++	if (!msg)
++		return;
++
++	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_DFS_RADAR_DETECTION);
++	if (!hdr) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
++	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
++	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
++
++	if (genlmsg_end(msg, hdr) < 0) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	genlmsg_multicast_netns(wiphy_net(&rdev->wiphy), msg, 0,
++				nl80211_mlme_mcgrp.id, gfp);
++	return;
++
++ nla_put_failure:
++	genlmsg_cancel(msg, hdr);
++	nlmsg_free(msg);
++}
++
++void
+ nl80211_send_cqm_pktloss_notify(struct cfg80211_registered_device *rdev,
+ 				struct net_device *netdev, const u8 *peer,
+ 				u32 num_packets, gfp_t gfp)
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index 12bf4d1..075bcc9 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -104,6 +104,12 @@ nl80211_send_cqm_rssi_notify(struct cfg80211_registered_device *rdev,
+ 			     struct net_device *netdev,
+ 			     enum nl80211_cqm_rssi_threshold_event rssi_event,
+ 			     gfp_t gfp);
++
++void
++nl80211_send_radar_detected_notify(struct cfg80211_registered_device *rdev,
++				   u16 freq, struct net_device *netdev,
++				   gfp_t gfp);
++
+ void
+ nl80211_send_cqm_pktloss_notify(struct cfg80211_registered_device *rdev,
+ 				struct net_device *netdev, const u8 *peer,
+-- 
+1.7.5.4
 
-Which is:
-
-        if (!have_band) {
-                WARN_ON(1);
-                return -EINVAL;
-        }
-
-and have_band is set if any element of wiphy->bands[] is non-NULL.
-
-ipw_wdev_init() clearly does initialise wiphy->bands... except that it
-seems to depend on the regulatory area having been determined already,
-which I suppose must be done during the callback from netdev
-registration (ipw_net_init()).  Judging by the comment about this in
-ipw2100.c, it's probably important that initialisation is done in this
-order.
-
-So maybe cfg80211 should instead tolerate registration in this order?
-
-Ben.
-
---=20
-Ben Hutchings
-Knowledge is power.  France is bacon.
-
---=-WLXoTTCOfHbQ650GbcSj
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIVAwUATxuOA+e/yOyVhhEJAQqjpxAAk+qmOjI5V0/HxnU9Z0cv8VdYrz+pNmmN
-Nw3i1cg0M0bMQnWHQKMRK+sz56rG8bqupFU9VOP8j545gg95GVMSBUoVXfSu39WL
-Q73nZ0Fy7/XI65E9neLLPgEChC4tNKEzlVIZu2DoTsRR9BY139yNPk+iy5EdPofK
-z+Ar9C4e3CfxpvU1NKx9Bk5mYAzQGpWj2Krec37xhGzpTlhyKHFvmGlhxYrZS/NS
-vQDKb+xb2BR32tj9oI+VKcQbf8jNszjcrrs/BQ+h+W0p0P8ul0dzE/PgSHgcdi7s
-s8xfwwbhJMYvvSP4CNKVpSIh+Uo2L1ZqJ4Y3NkZRjHrqIkMV6EofB3MK20tXsSyJ
-UnlNXQW9lZirzDA0VkGT6fUlqAhUnsFicrlnf+rIFOo1q/ZrpaNWzHrQnZXQsYBw
-w2xtzBJOJgQwrdn5zbrYCpllRD921I177eqWdf1RpwAMyVEx7q5zzQKRDJYetAj8
-4AsPrIt81zb8fNbRG7EAQaNNQlCPfH5dbxu3spAa7Bnk3IKJuv7JpxeuDVcKf+2l
-IIC8iRm+kquSgQp6qIgfB3Qh7hpIQPGK9+G5IXYrCOBohwodq14cxzLIe+jQBQcb
-vtd9O3t7Myz3Bvk08hp82YoJs/BML3CB3WkFgh4oCaN0vxG5zeHWLXuc/0oTHP8o
-FkiWYiKJuCI=
-=jst8
------END PGP SIGNATURE-----
-
---=-WLXoTTCOfHbQ650GbcSj--
