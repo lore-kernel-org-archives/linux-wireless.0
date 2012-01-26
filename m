@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:49241 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751055Ab2AHLlD (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:53862 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751301Ab2AZVNH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jan 2012 06:41:03 -0500
-Received: by yenm11 with SMTP id m11so1216304yen.19
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jan 2012 03:41:02 -0800 (PST)
-From: ilanelias78@gmail.com
-To: aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
-	samuel@sortiz.org, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Ilan Elias <ilane@ti.com>
-Subject: [PATCH] NFC: Increase NCI deactivate timeout
-Date: Sun,  8 Jan 2012 13:43:02 +0200
-Message-Id: <1326022982-30205-1-git-send-email-ilane@ti.com> (sfid-20120108_124109_014269_5C86FE8A)
+	Thu, 26 Jan 2012 16:13:07 -0500
+MIME-Version: 1.0
+In-Reply-To: <CANUX_P0H_WaWwnpjoBcMpZQY4xH=cbVhAKxWKXmz-HwFMcWS6w@mail.gmail.com>
+References: <20120124013625.GB18436@gamma.logic.tuwien.ac.at>
+	<CANUX_P3er0orBy8OhDuY1DfgD810UD-_HB_ukJnCA+W8e-VazQ@mail.gmail.com>
+	<20120125002250.GA20431@gamma.logic.tuwien.ac.at>
+	<CANUX_P0UREz_jZABu+Y_QYOh9tx_sKZSSkZpYHBEVtcU4QQdSA@mail.gmail.com>
+	<20120126003735.GA2346@gamma.logic.tuwien.ac.at>
+	<CANUX_P0H_WaWwnpjoBcMpZQY4xH=cbVhAKxWKXmz-HwFMcWS6w@mail.gmail.com>
+Date: Thu, 26 Jan 2012 13:13:05 -0800
+Message-ID: <CANUX_P3XSCsWUJ9M55qeaK-DuPEMXODFPJiNk+BgnHN-=WECqw@mail.gmail.com> (sfid-20120126_221341_533447_6EDA422A)
+Subject: Re: iwlagn is getting even worse with 3.3-rc1
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Norbert Preining <preining@logic.at>
+Cc: linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	Dave Jones <davej@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Elias <ilane@ti.com>
+Hey Dave,
 
-Increase NCI deactivate timeout from 5 sec to 30 sec.
-NCI deactivate procedure might take a long time,
-depending on the local and remote parameters.
+Can you please try to patch attached to this thread. You and Norbert
+are suffering from the same issue. I am merging the mail threads here.
 
-Signed-off-by: Ilan Elias <ilane@ti.com>
----
- include/net/nfc/nci_core.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/include/net/nfc/nci_core.h b/include/net/nfc/nci_core.h
-index bccd89e..f4963ea 100644
---- a/include/net/nfc/nci_core.h
-+++ b/include/net/nfc/nci_core.h
-@@ -47,7 +47,7 @@ enum {
- #define NCI_RESET_TIMEOUT			5000
- #define NCI_INIT_TIMEOUT			5000
- #define NCI_RF_DISC_TIMEOUT			5000
--#define NCI_RF_DEACTIVATE_TIMEOUT		5000
-+#define NCI_RF_DEACTIVATE_TIMEOUT		30000
- #define NCI_CMD_TIMEOUT				5000
- 
- struct nci_dev;
--- 
-1.7.0.4
-
+On Wed, Jan 25, 2012 at 21:49, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> Hi Norbert,
+>
+>>
+>> syslog output is at http://www.logic.at/people/preining/syslog.log
+>> this is after a suspend and resume.
+>>
+>> first connection after resume succeeded at around kernel time 378.859794
+>> then it worked for say 20sec or so, hard to say when exactely it dropped,
+>> but defeinitely at kernel time 451 it was finished.
+>>
+>> After that nothing went out or in again.
+>>
+>> Hope you can make something out of that.
+>>
+>
+> Unfortunately, not really. I can see you are hitting PASSIVE_NO_RX,
+> meaning that the uCode complains that you are trying to Tx on a
+> passive channel on which it hasn't heard any beacon yet. But then we
+> finally get a beacon there, and open the queue again.
+>
+> Anyway, can you try the attached patch ?
+> Note that I have no real way to test it (I have to admit I haven't
+> even compiled... I am not in my office).
+> I hope it might help.
