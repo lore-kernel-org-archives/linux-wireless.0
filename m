@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.u-psud.fr ([129.175.33.41]:62379 "EHLO smtp1.u-psud.fr"
+Received: from mga09.intel.com ([134.134.136.24]:49232 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753165Ab2A3Iyc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 03:54:32 -0500
-Message-ID: <4F265AB6.6010004@lri.fr> (sfid-20120130_095435_357718_532C255B)
-Date: Mon, 30 Jan 2012 09:54:14 +0100
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+	id S1752109Ab2AZURl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jan 2012 15:17:41 -0500
+Date: Thu, 26 Jan 2012 21:23:47 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch] nfc: NULL vs zero in nci_activate_target()
+Message-ID: <20120126202347.GA2305@sortiz-mobl> (sfid-20120126_211751_384689_68FD8506)
+References: <20120126061330.GA15856@elgon.mountain>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Do not scan for IBSS merge with a fixed BSSID.
-References: <1327581394-15368-1-git-send-email-cavallar@lri.fr> (sfid-20120126_133659_805161_39F32A75) <4F237C16.5050100@sipsolutions.net>
-In-Reply-To: <4F237C16.5050100@sipsolutions.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120126061330.GA15856@elgon.mountain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28/01/2012 05:39, Johannes Berg wrote:
-> On 1/26/2012 4:36 AM, Nicolas Cavallari wrote:
+Hi Dan,
+
+On Thu, Jan 26, 2012 at 09:13:31AM +0300, Dan Carpenter wrote:
+> This is a pointer so it should be NULL instead of zero.  Sparse
+> complains about this stuff:
+> net/nfc/nci/core.c:447:37: warning: Using plain integer as NULL pointer
 > 
->> -    if (ifibss->fixed_channel)
->> +    if (ifibss->fixed_bssid)
->>           return;
->>
->>       printk(KERN_DEBUG "%s: No active IBSS STAs - trying to scan for
->> other "
->>              "IBSS networks with same SSID (merge)\n", sdata->name);
-> 
-> Just from the looks of it, this doesn't seem right. If you're fixing the
-> BSSID, you're still asking for automatic channel selection and merging
-> with other peers using the same BSSID on different channels, so I
-> disagree with your commit message quite completely.
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Acked-by: Samuel Ortiz <sameo@linux.intel.com>
 
-I didn't know that. In fact, from my understanding of the current
-source, if you fix the BSSID, you won't merge, period. And even if you
-don't fix the BSSID, if you found a BSS with the same BSSID but a
-different channel, you still won't merge.
+Cheers,
+Samuel.
 
-And now, if you are alone and you fixed your channel, you won't try to
-merge with other BSS in the same channel.
-
-If you believe that the condition should be "fixed_bssid &&
-fixed_channel", i can send another patch.
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
