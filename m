@@ -1,39 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:51567 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752641Ab2A1QoV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jan 2012 11:44:21 -0500
-Message-ID: <4F2425E1.7090407@lwfinger.net> (sfid-20120128_174441_261829_97EB78A9)
-Date: Sat, 28 Jan 2012 10:44:17 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mx1.redhat.com ([209.132.183.28]:49426 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751450Ab2AZLeq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jan 2012 06:34:46 -0500
+Date: Thu, 26 Jan 2012 12:34:22 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Francis Moreau <francis.moro@gmail.com>,
+	Josh Boyer <jwboyer@gmail.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Greg KH <greg@kroah.com>
+Subject: Re: kernel 3.2.1: BUG: scheduling while atomic:
+ swapper/0/0/0x10000100
+Message-ID: <20120126113414.GD2451@redhat.com> (sfid-20120126_123503_019719_2AE49F0E)
+References: <CAC9WiBgpBCWZVjAQkJWSpXhC_dK1KKPfAHZvxVgaLV8BUsc41Q@mail.gmail.com>
+ <4F1FBAA9.4040405@broadcom.com>
+ <CAC9WiBjpsLuJhzw+vZsPC2bA73mad444Gq32DRL_gCri2MqaMw@mail.gmail.com>
+ <4F1FD2AA.9020708@broadcom.com>
+ <CA+5PVA73WHfnurWiyY4w9f4_mw=vUdpaNmAavHZtt+xYfo8Kcw@mail.gmail.com>
+ <CAC9WiBgzg-dD5Sba9Cd_uvsfMxqQib+vsXXDyMSMSR_Y7P_CCw@mail.gmail.com>
+ <CA+5PVA4Cq5BRfKEa1uckVbtCGKhKmuw1tujQ19T3wk3c5CcsAQ@mail.gmail.com>
+ <4F21173A.9060405@broadcom.com>
+ <CAC9WiBjmsaH2NYaCLjoihw_O4NCM1LiUVst8PJCZwP2xTE=BMA@mail.gmail.com>
+ <4F2121BB.4050001@broadcom.com>
 MIME-Version: 1.0
-To: "devendra.aaru" <devendra.aaru@gmail.com>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: so many if conditions in _rtl92c_store_pwrIndex_diffrate_offset.
-References: <CAHdPZaMWC6_bGXXJvjbmJDz-JDF7gx8QUTd2e8iW=5+ecTPiSg@mail.gmail.com>
-In-Reply-To: <CAHdPZaMWC6_bGXXJvjbmJDz-JDF7gx8QUTd2e8iW=5+ecTPiSg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F2121BB.4050001@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/28/2012 12:31 AM, devendra.aaru wrote:
-> Hi wireless folks,
->
-> in _rtl92c_store_pwrIndex_diffrate_offset (
-> drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c), there are lot of
-> if conditions, checking the register address.
-> my understanding is that if the register address matches to a
-> particular rate, we set the txpower level to a particular group. but
-> it is even possible with the switch or if else if statements,
->   please correct me if i am wrong.
+On Thu, Jan 26, 2012 at 10:49:47AM +0100, Arend van Spriel wrote:
+> >>> backtrace:
+> >>> :BUG: sleeping function called from invalid context at
+> >>> drivers/base/power/runtime.c:785
+> >>> :in_atomic(): 1, irqs_disabled(): 0, pid: 0, name: swapper/0
+> >>> :1 lock held by swapper/0/0:
+> >>> : #0:  (&chip->rts51x_suspend_timer){+.-...}, at: [<ffffffff8108d711>]
+> >>> run_timer_softirq+0x111/0x600
+> >>> :Pid: 0, comm: swapper/0 Tainted: G        W    3.2.0-2.fc17.x86_64.debug #1
+> >>> :Call Trace:
+> >>> : <IRQ>  [<ffffffff8105ee7a>] __might_sleep+0x13a/0x1f0
+> >>> : [<ffffffffa00180b0>] ? rts51x_modi_suspend_timer+0x50/0x50 [ums_realtek]
+> >>> : [<ffffffff813fdee3>] __pm_runtime_idle+0xa3/0xb0
+> >>> : [<ffffffffa00180b0>] ? rts51x_modi_suspend_timer+0x50/0x50 [ums_realtek]
+> >>> : [<ffffffff8146ed30>] usb_autopm_put_interface+0x30/0x40
+> >>
+> >> This trace seems to indicate what is wrong. At least for this one user.
+> >> The usb_autopm_put_interface() call seems result in a sleep and the
+> >> rts51x_suspend_timer_fn is holding a lock. Below the code indicated in
+> >> the trace.
+> >>
+> >> runtime.c:
+> >> 768 /**
+> >> 769  * __pm_runtime_idle - Entry point for runtime idle operations.
+> >> 770  * @dev: Device to send idle notification for.
+> >> 771  * @rpmflags: Flag bits.
+> >> 772  *
+> >> 773  * If the RPM_GET_PUT flag is set, decrement the device's usage
+> >> count and
+> >> 774  * return immediately if it is larger than zero.  Then carry out an idle
+> >> 775  * notification, either synchronous or asynchronous.
+> >> 776  *
+> >> 777  * This routine may be called in atomic context if the RPM_ASYNC
+> >> flag is set,
+> >> 778  * or if pm_runtime_irq_safe() has been called.
+> >> 779  */
+> >> 780 int __pm_runtime_idle(struct device *dev, int rpmflags)
+> >> 781 {
+> >> 782         unsigned long flags;
+> >> 783         int retval;
+> >> 784
+> >> 785         might_sleep_if(!(rpmflags & RPM_ASYNC) && !dev->power.irq_safe);
+> >>
+> >> This issue can either be caused in ums_realtek module or the usb autopm
+> >> code. Have not looked into that.
+> >>
+> > 
+> > Just a wild guess: it seems that we're affected using different HW
+> > configs with different USB devices, so it would indicate that usb
+> > autopm is the culprit.
 
-Of course, that routine could be recoded using either a switch or if else 
-statements. Unfortunately, I have more pressing matters to attend to. You can, 
-however, submit a patch to change it and send it to the linux-wireless mailing 
-list. You must follow the instructions in Documentation/SubmittingPatches, and 
-the patch must apply using the wireless-testing git tree.
+Except Arend, all other users reporting that have ums_realtek, so they
+hit that driver issue. I just posted ums_realtek fix.
 
-Larry
+Arend issue is different, it happens on different kernel version 3.3-rc1 vs 3.2.
 
+Stanislaw 
+ 
