@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:37412 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751733Ab2A3MrE (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:50911 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751660Ab2AZSQV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 07:47:04 -0500
-From: "Devendra.Naga" <devendra.aaru@gmail.com>
-To: <Larry.Finger@lwfinger.net>, <chaoming_li@realsil.com.cn>,
-	<linville@tuxdriver.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: "Devendra.Naga" <devendra.aaru@gmail.com>
-Subject: [PATCH 1/1] wireless: remove return in _rtl_pci_switch_clk_req
-Date: Mon, 30 Jan 2012 07:46:31 -0500
-Message-Id: <1327927591-28070-1-git-send-email-devendra.aaru@gmail.com> (sfid-20120130_134727_954015_FE8A2267)
+	Thu, 26 Jan 2012 13:16:21 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] compat: use kconfig.h in compat-2.6.h for 3.1 and later kernels
+Date: Thu, 26 Jan 2012 13:00:56 -0500
+Message-Id: <1327600856-29635-1-git-send-email-linville@tuxdriver.com> (sfid-20120126_191624_303256_BECA3C93)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Devendra.Naga" <devendra.aaru@gmail.com>
+This file was introduced in commit 2a11c8ea20bf850b3a2c60db8c2e7497d28aba99
+and included in 3.1 and later kernels.  It includes <generated/autoconf.h>
+itself, as well as some other definitions that are used elsewhere.
 
-the return value from _rtl_pci_switch_clk_req is not used by any of its callers.
-
-Signed-off-by: Devendra.Naga <devendra.aaru@gmail.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
 ---
- drivers/net/wireless/rtlwifi/pci.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ include/linux/compat-2.6.h |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-index 4326fd1..35f4a0d 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -198,7 +198,7 @@ static bool _rtl_pci_platform_switch_device_pci_aspm(
- }
+diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
+index c23e94a..3ccd051 100644
+--- a/include/linux/compat-2.6.h
++++ b/include/linux/compat-2.6.h
+@@ -2,7 +2,9 @@
+ #define LINUX_26_COMPAT_H
  
- /*When we set 0x01 to enable clk request. Set 0x0 to disable clk req.*/
--static bool _rtl_pci_switch_clk_req(struct ieee80211_hw *hw, u8 value)
-+static void _rtl_pci_switch_clk_req(struct ieee80211_hw *hw, u8 value)
- {
- 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-@@ -208,7 +208,6 @@ static bool _rtl_pci_switch_clk_req(struct ieee80211_hw *hw, u8 value)
- 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE)
- 		udelay(100);
- 
--	return true;
- }
- 
- /*Disable RTL8192SE ASPM & Disable Pci Bridge ASPM*/
+ #include <linux/version.h>
+-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0))
++#include <linux/kconfig.h>
++#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
+ #include <generated/autoconf.h>
+ #else
+ #include <linux/autoconf.h>
 -- 
-1.7.5.4
+1.7.4.4
 
