@@ -1,87 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail54.messagelabs.com ([216.82.241.131]:37229 "HELO
-	mail54.messagelabs.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S933111Ab2AKSdo convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:41344 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751131Ab2AZMjN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 13:33:44 -0500
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="ISO-8859-1"
-Subject: [PATCH 1/2] wireless: Save original maximum regulatory transmission power for the calucation of the local maximum transmit power
-Date: Wed, 11 Jan 2012 20:33:39 +0200
-Message-ID: <5EFF534737810441B0F97C2792E49C2DD20371@ILMAIL01.dspg.com> (sfid-20120111_193352_709004_29CFFC5A)
-From: "Hong Wu" <Hong.Wu@dspg.com>
-To: <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>
+	Thu, 26 Jan 2012 07:39:13 -0500
+Received: by yhoo47 with SMTP id o47so189210yho.38
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 04:39:12 -0800 (PST)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: <kgiori@qca.qualcomm.com>, <mcgrof@frijolero.org>,
+	<zefir.kurtisi@neratec.com>, <adrian.chadd@gmail.com>, <j@w1.fi>,
+	<johannes@sipsolutions.net>, <coelho@ti.com>, <assaf@ti.com>,
+	<yoni.divinsky@ti.com>, <igalc@ti.com>, <adrian@freebsd.org>,
+	<nbd@nbd.name>
+Subject: [RFC 2/9] mac80211: add radar detection command/event
+Date: Thu, 26 Jan 2012 14:37:57 +0200
+Message-Id: <1327581484-22047-3-git-send-email-victorg@ti.com> (sfid-20120126_133917_038528_619D55A7)
+In-Reply-To: <1327581484-22047-1-git-send-email-victorg@ti.com>
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The local maximum transmit power for a channel is defined as the maximum
-regulatory transmission power minus the local power constraint specified
-for the channel in the Power Constraint element. (7.3.2.15 IEEE80211 2007)
+Add command to trigger radar detection in the driver/FW.
+Once radar detected usermode notified with 'radar detected'
+event.
 
-Signed-off-by: Hong Wu <hong.wu@dspg.com>
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
 ---
- include/net/cfg80211.h |    2 ++
- net/wireless/reg.c     |   19 ++-----------------
- 2 files changed, 4 insertions(+), 17 deletions(-)
+ include/net/mac80211.h      |   13 +++++++++++++
+ net/mac80211/cfg.c          |   17 +++++++++++++++++
+ net/mac80211/driver-ops.h   |   12 ++++++++++++
+ net/mac80211/driver-trace.h |    6 ++++++
+ net/mac80211/mlme.c         |    9 +++++++++
+ 5 files changed, 57 insertions(+), 0 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 15f4be7..208a7b5 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -120,6 +120,7 @@ enum ieee80211_channel_flags {
-  * @band: band this channel belongs to.
-  * @max_antenna_gain: maximum antenna gain in dBi
-  * @max_power: maximum transmission power (in dBm)
-+ * @max_reg_power: maximum regulatory transmission power (in dBm)
-  * @beacon_found: helper to regulatory code to indicate when a beacon
-  *   has been found on this channel. Use regulatory_hint_found_beacon()
-  *   to enable this, this is useful only on 5 GHz band.
-@@ -133,6 +134,7 @@ struct ieee80211_channel {
-      u32 flags;
-      int max_antenna_gain;
-      int max_power;
-+     int max_reg_power;
-      bool beacon_found;
-      u32 orig_flags;
-      int orig_mag, orig_mpwr;
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index f65feaa..e9a0ac8 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -882,23 +882,8 @@ static void handle_channel(struct wiphy *wiphy,
-      chan->flags = flags | bw_flags | map_regdom_flags(reg_rule->flags);
-      chan->max_antenna_gain = min(chan->orig_mag,
-            (int) MBI_TO_DBI(power_rule->max_antenna_gain));
--     if (chan->orig_mpwr) {
--           /*
--           * Devices that have their own custom regulatory domain
--           * but also use WIPHY_FLAG_STRICT_REGULATORY will follow the
--           * passed country IE power settings.
--           */
--           if (initiator == NL80211_REGDOM_SET_BY_COUNTRY_IE &&
--               wiphy->flags & WIPHY_FLAG_CUSTOM_REGULATORY &&
--               wiphy->flags & WIPHY_FLAG_STRICT_REGULATORY) {
--                 chan->max_power =
--                       MBM_TO_DBM(power_rule->max_eirp);
--           } else {
--                 chan->max_power = min(chan->orig_mpwr,
--                       (int) MBM_TO_DBM(power_rule->max_eirp));
--           }
--     } else
--           chan->max_power = (int) MBM_TO_DBM(power_rule->max_eirp);
-+     chan->max_reg_power = (int) MBM_TO_DBM(power_rule->max_eirp);
-+     chan->max_power = min(chan->max_power, chan->max_reg_power);
- }
- 
- static void handle_band(struct wiphy *wiphy,
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 2a7523e..de3a97ee 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2236,6 +2236,8 @@ struct ieee80211_ops {
+ 					u16 tids, int num_frames,
+ 					enum ieee80211_frame_release_type reason,
+ 					bool more_data);
++	int (*hw_dfs_start_radar_detection)(struct ieee80211_hw *hw,
++					    struct ieee80211_vif *vif);
+ };
+ 
+ /**
+@@ -3406,6 +3408,17 @@ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ 			       gfp_t gfp);
+ 
+ /**
++ * ieee80211_radar_detected_notify - inform a configured connection that
++ * radar was detected on the current channel
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ * @freq: frequency of the 'radar detected' channel.
++ * @gfp: context flags.
++ */
++void ieee80211_radar_detected_notify(struct ieee80211_vif *vif,
++				     u16 freq, gfp_t gfp);
++
++/**
+  * ieee80211_get_operstate - get the operstate of the vif
+  *
+  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 850bb96..080a2a4 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -2013,6 +2013,22 @@ static int ieee80211_cancel_remain_on_channel(struct wiphy *wiphy,
+ 	return ieee80211_wk_cancel_remain_on_channel(sdata, cookie);
+ }
+ 
++static int ieee80211_dfs_start_radar_detection(struct wiphy *wiphy,
++					       struct net_device *dev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
++	struct ieee80211_local *local = sdata->local;
++	int ret = -ENOENT;
++
++	if (!local->ops->hw_dfs_start_radar_detection)
++		return -EOPNOTSUPP;
++
++	mutex_lock(&local->mtx);
++	ret = drv_dfs_en_radar_detection(local, sdata);
++	mutex_unlock(&local->mtx);
++	return ret;
++}
++
+ static enum work_done_result
+ ieee80211_offchan_tx_done(struct ieee80211_work *wk, struct sk_buff *skb)
+ {
+@@ -2760,4 +2776,5 @@ struct cfg80211_ops mac80211_config_ops = {
+ 	.probe_client = ieee80211_probe_client,
+ 	.get_channel = ieee80211_wiphy_get_channel,
+ 	.set_noack_map = ieee80211_set_noack_map,
++	.dfs_start_radar_detection = ieee80211_dfs_start_radar_detection,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index e8960ae..b84cade 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -309,6 +309,18 @@ static inline void drv_cancel_hw_scan(struct ieee80211_local *local,
+ 	trace_drv_return_void(local);
+ }
+ 
++static inline int drv_dfs_en_radar_detection(struct ieee80211_local *local,
++					 struct ieee80211_sub_if_data *sdata)
++{
++	int ret;
++
++	might_sleep();
++
++	trace_drv_dfs_en_radar_detection(local, sdata);
++	ret = local->ops->hw_dfs_start_radar_detection(&local->hw, &sdata->vif);
++	return ret;
++}
++
+ static inline int
+ drv_sched_scan_start(struct ieee80211_local *local,
+ 		     struct ieee80211_sub_if_data *sdata,
+diff --git a/net/mac80211/driver-trace.h b/net/mac80211/driver-trace.h
+index 6e9df8f..75cca02 100644
+--- a/net/mac80211/driver-trace.h
++++ b/net/mac80211/driver-trace.h
+@@ -498,6 +498,12 @@ DEFINE_EVENT(local_sdata_evt, drv_cancel_hw_scan,
+ 	TP_ARGS(local, sdata)
+ );
+ 
++DEFINE_EVENT(local_sdata_evt, drv_dfs_en_radar_detection,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata),
++	TP_ARGS(local, sdata)
++);
++
+ DEFINE_EVENT(local_sdata_evt, drv_sched_scan_start,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata),
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index ecb4c84..57aeb84 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2869,6 +2869,15 @@ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ }
+ EXPORT_SYMBOL(ieee80211_cqm_rssi_notify);
+ 
++void ieee80211_radar_detected_notify(struct ieee80211_vif *vif,
++				     u16 freq, gfp_t gfp)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++
++	cfg80211_radar_detected_notify(sdata->dev, freq, gfp);
++}
++EXPORT_SYMBOL(ieee80211_radar_detected_notify);
++
+ unsigned char ieee80211_get_operstate(struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
 -- 
-1.7.0.4
+1.7.5.4
 
-
-
-
-______________________________________________________________________
-DSP Group, Inc. automatically scans all emails and attachments using MessageLabs Email Security System.
-_____________________________________________________________________
