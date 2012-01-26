@@ -1,71 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:62327 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753113Ab2ABVXo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 16:23:44 -0500
+Received: from nbd.name ([46.4.11.11]:55927 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752894Ab2AZPxH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jan 2012 10:53:07 -0500
+Message-ID: <4F2176DE.9010604@openwrt.org> (sfid-20120126_165312_472272_186BB207)
+Date: Thu, 26 Jan 2012 16:53:02 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <4F021CF4.9050205@fastmail.fm>
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org>
- <4F02165C.1060400@fastmail.fm> <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com>
- <4F0219AB.6010505@fastmail.fm> <CA+55aFx=AEG7X2Y-LoHchgPdwNpeSkBG1J7eXprmO=czEJOD2A@mail.gmail.com>
- <4F021CF4.9050205@fastmail.fm>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Mon, 2 Jan 2012 13:23:21 -0800
-Message-ID: <CA+55aFx2NMDSY8rmsToU-zxe+bR-gzsxc8HajNWNWfykVJqd9w@mail.gmail.com> (sfid-20120102_222401_623886_F35C0813)
-Subject: Re: loading firmware while usermodehelper disabled.
-To: Jack Stone <jwjstone@fastmail.fm>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Oliver Neukum <oliver@neukum.org>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+CC: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	rodrigue@qca.qualcomm.com, adrian.chadd@gmail.com,
+	kgiori@qca.qualcomm.com, shafi.wireless@gmail.com
+Subject: Re: [RFC 1/2] ath9k: add DFS pattern detector
+References: <1327592044-3319-1-git-send-email-zefir.kurtisi@neratec.com> <1327592044-3319-2-git-send-email-zefir.kurtisi@neratec.com>
+In-Reply-To: <1327592044-3319-2-git-send-email-zefir.kurtisi@neratec.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 2, 2012 at 1:09 PM, Jack Stone <jwjstone@fastmail.fm> wrote:
->
-> What about USB "class" drivers e.g. usb-storage. They handle any device
-> that reports itself as a usb mass storage device. There could be a
-> device that needs to be bootstrapped before it becomes a generic usb
-> mass storage device. Do we really want to have to write a new driver
-> that is almost identical to the generic driver but handles the USB
-> firmware correctly.
+On 2012-01-26 4:34 PM, Zefir Kurtisi wrote:
+> This adds a DFS pattern detector to the common ath module. It takes
+> pulse events reported by ath9k and reports in place whether a
+> pattern was detected. On detection, caller must report a radar event
+> to the DFS management component in the upper layer.
+> 
+> Currently the ETSI DFS domain is supported with detector lines for
+> the patterns defined by EN-301-893 v1.5.1. Support for FCC and JP
+> will be added gradually.
+> 
+> The detector is independent of the underlying HW, but located in
+> the ath driver since so far it is used by ath9k only. It might
+> move up to mac80211 as soon as other non-Atheros drivers start
+> using it.
+> 
+> NOTE: since DFS requires some more components on different layers
+> that are currently missing, the detector is not functionally
+> integrated yet. When ath9k is build with a certified DFS config
+> option, the detector is included in ath.ko. All it does there is
+> wasting kernel memory and waiting to be used by ath9k.
+> 
+> USAGE: to use the detector, wiphy drivers must
+>  - use dfs_pattern_detector.h as interface
+>  - have a struct dfs_pattern_detector *dpd per wiphy
+>  - on wiphy creation, instantiate a detector with
+>    dpd = dfs_pattern_detector_init(enum dfs_domain)
+>  - forward any radar pulse detected to dpd->add_pulse()
+>  - report radar event if add_pulse() returns RADAR_DETECTED
+>  - on wiphy destruction call dpd->exit()
+> 
+> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+> ---
+>  drivers/net/wireless/ath/Makefile                  |   10 +
+>  .../ath/dfs_pattern_detector/detector_elem.c       |   92 ++++++
+>  .../ath/dfs_pattern_detector/detector_elem.h       |   45 +++
+>  .../dfs_pattern_detector/dfs_pattern_detector.h    |   92 ++++++
+>  .../ath/dfs_pattern_detector/pattern_detector.c    |  294 ++++++++++++++++++++
+>  .../ath/dfs_pattern_detector/pulse_queue.c         |  168 +++++++++++
+>  .../ath/dfs_pattern_detector/pulse_queue.h         |   77 +++++
+>  .../ath/dfs_pattern_detector/pulse_sequence.c      |  280 +++++++++++++++++++
+>  .../ath/dfs_pattern_detector/pulse_sequence.h      |   89 ++++++
+>  .../ath/dfs_pattern_detector/radar_types.c         |   52 ++++
+>  .../ath/dfs_pattern_detector/radar_types.h         |   95 +++++++
+>  .../net/wireless/ath/dfs_pattern_detector/utils.c  |   45 +++
+>  .../net/wireless/ath/dfs_pattern_detector/utils.h  |   30 ++
+>  13 files changed, 1369 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/detector_elem.c
+>  create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/detector_elem.h
+>  create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/dfs_pattern_detector.h
+>  create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/pattern_detector.c
+>  create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/pulse_queue.c
+>  create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/pulse_queue.h
+>  create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/pulse_sequence.c
+>  create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/pulse_sequence.h
+>  create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/radar_types.c
+>  create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/radar_types.h
+>  create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/utils.c
+>  create mode 100644 drivers/net/wireless/ath/dfs_pattern_detector/utils.h
+> 
+> diff --git a/drivers/net/wireless/ath/Makefile b/drivers/net/wireless/ath/Makefile
+> index d716b74..10f9554 100644
+> --- a/drivers/net/wireless/ath/Makefile
+> +++ b/drivers/net/wireless/ath/Makefile
+> @@ -11,4 +11,14 @@ ath-objs :=	main.o \
+>  		key.o
+>  
+>  ath-$(CONFIG_ATH_DEBUG) += debug.o
+> +
+> +# include DFS pattern detector if we have certified HW
+> +ath-$(CONFIG_ATH9K_DFS_CERTIFIED)	+= \
+> +			dfs_pattern_detector/pulse_queue.o \
+> +			dfs_pattern_detector/pulse_sequence.o \
+> +			dfs_pattern_detector/detector_elem.o \
+> +			dfs_pattern_detector/pattern_detector.o \
+> +			dfs_pattern_detector/radar_types.o \
+> +			dfs_pattern_detector/utils.o
+> +
+>  ccflags-y += -D__CHECK_ENDIAN__
+> diff --git a/drivers/net/wireless/ath/dfs_pattern_detector/pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector/pattern_detector.c
+> new file mode 100644
+> index 0000000..2d634fe
+> --- /dev/null
+> +++ b/drivers/net/wireless/ath/dfs_pattern_detector/pattern_detector.c
+> @@ -0,0 +1,294 @@
+[...]
+> +/**
+> + * struct pattern_detector - overloading base dfs_pattern_detector
+> + *
+> + * @exit(): destructor
+> + * @add_pulse(): add radar pulse to detector
+> + * @num_radar_types: number of different radar types
+> + * @last_pulse_ts: time stamp of last valid pulse
+> + * @radar_detector_specs: array of radar detection specs
+> + * @channel_detectors: list connecting channel_detector elements
+> + */
+> +struct pattern_detector {
+> +	void (*exit)(struct pattern_detector *_this);
+> +	enum dfs_detector_result (*add_pulse)
+> +		(struct pattern_detector *_this, struct pulse_event *pe);
+> +
+> +	u8 num_radar_types;
+> +	u64 last_pulse_ts;
+> +	struct radar_detector_specs *radar_spec;
+> +	struct list_head channel_detectors;
+> +};
+To overload it this way is quite fragile. It's better to embed struct
+dfs_pattern_detector here. In places where you need to go from the
+struct dfs_pattern_detector to this struct, you can then use the
+container_of macro, to get at least some form of type safety.
 
-I'd hope that the generic driver just expose enough interfaces that
-you could basically do a "firmware-load" driver that just loads the
-firmware and then attaches the device to the generic driver.
-
-So instead of duplicating the driver, or teaching the generic driver
-about magic setup stuff, you could do a "specialized" driver for that
-particular device (more likely, that manufacturers devices) and then
-have some way to hand it over.
-
-Of course, in the end it does matter what the "class" is. For storage
-devices, we really do want the kernel to handle things for us
-entirely. For other kinds of devices (and the isight camera does come
-to mind) I suspect it's entirely fine to just say "whatever, we don't
-care enough, just have some udev rules, load things from user space,
-and no, you cannot have a videochat active over a suspend/resume
-event".
-
-So while I think kernel drivers should generally strive for "you can
-suspend/resume without user space even noticing", I do think that it
-depends on the particular device just *how* strict you should be about
-that rule. Some devices just don't need that kind of attention.
-
-IOW, I think the kernel should *strive* for doing the right thing, and
-I think the firmware loader right now makes it unnecessarily hard to
-do things right, but at the same time there are no black-and-white
-absolute rules. There are always going to be exceptions where somebody
-says "this is a crap device, and it's simply not worth worrying
-about".
-
-                   Linus
+- Felix
