@@ -1,86 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:34193 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751390Ab2AZOF2 (ORCPT
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:39460 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752505Ab2AZPu4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 09:05:28 -0500
-Received: by bkas6 with SMTP id s6so456560bka.19
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 06:05:27 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Brad Bellomo <bvbellomo@gmail.com>
-Subject: Re: frustrated by carl9170
-Date: Thu, 26 Jan 2012 15:05:13 +0100
-Cc: linux-wireless@vger.kernel.org
-References: <CALY7HC+gbzBmYJK3qQ0aMip_z6utA9jq2ZU6LtDrWpUOGn03CQ@mail.gmail.com> <201201231915.48430.chunkeey@googlemail.com> <CALY7HCJ_9kh7YYk4YBzVkzK9180vf3H7mun-Gp7eCPNACK8pyA@mail.gmail.com>
-In-Reply-To: <CALY7HCJ_9kh7YYk4YBzVkzK9180vf3H7mun-Gp7eCPNACK8pyA@mail.gmail.com>
+	Thu, 26 Jan 2012 10:50:56 -0500
+Received: by mail-ww0-f41.google.com with SMTP id dt11so158958wgb.0
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 07:50:54 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201201261505.13271.chunkeey@googlemail.com> (sfid-20120126_150531_736163_B7804824)
+In-Reply-To: <201201261510.18387.chunkeey@googlemail.com>
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>
+	<1327581484-22047-10-git-send-email-victorg@ti.com>
+	<201201261510.18387.chunkeey@googlemail.com>
+Date: Thu, 26 Jan 2012 17:50:54 +0200
+Message-ID: <CAK80WHYT==LYjK+99eYVNzHx9c+sSw7BRULfj4pctLzawrhRug@mail.gmail.com> (sfid-20120126_165059_970666_2CBBE15A)
+Subject: Re: [RFC 9/9] mac80211: add DFS support to monitor interface
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, johannes@sipsolutions.net,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please keep the CC.
+On Thu, Jan 26, 2012 at 4:10 PM, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+>
+> Hey, that's great!
+>
+> I have one question: Wasn't the monitor interface [for AP mode] being
+> rendered obsolete by Johannes cfg80211-internal-ap-mlme work? If so,
+> then we could save us the work here, right?
 
-On Wednesday, January 25, 2012 02:39:38 AM Brad Bellomo wrote:
-> There isn't much debug information as I was hoping people would help
-> tell me how to debug this, rather than trying to debug it for me via
-> e-mail.
-Ok, but then were do we start? There's a lot more than just a driver
-and a firmware that could be buggy. So, if you want to debug this
-all by yourself, then be prepared to be frustrated a whole lot more.
+Yep, you're right.
 
-> Does this driver log anything outside what I see as dmesg or
-> debugfs?
-No, the more interesting stuff is logged by the stack above.
-You can take a look what the wpa_supplicant is doing in the
-syslog [or wpa_cli] and mac80211/cfg80211 has an event viewer
-[iw event] and trace points [needs to be enabled in the
-kernel config at compile time of course]
+> BTW, what about cfg80211_can_beacon_sec_chan in net/wireless/chan.c?
+> I think it needs to be updated or else we can't have HT40 [secondary
+> channels] on frequencies which require DFS.
 
-> I don't have a debug directory under my kernel, is there
-> something I need to do?
-There no directory called debug? Well, then I assume that
-the "debug Filesystem" (CONFIG_DEBUG_FS) wasn't enabled at
-compile time. I'm afraid you have to enable it yourself
-and build a kernel. I hope ARCH Linux has a few good wiki-pages
-on the subject because you'll definitely need it.
+DFS is not supported with HT40 in this initial release, updating the
+cfg80211_can_beacon_sec_chan is not enough, we should also check that
+there is no radar interference on the secondary channel (if it's a
+radar channel).
 
-> Is this driver being actively developed or should I just give
-> up and buy new hardware?
-I think it is :D.  But seriously, if you want to buy something else
-go ahead. There's ath9k_htc, but you may end up having the same
-problem [so, I would go for cheap products first].
-
-> If it helps:
-> 
-> I am using a NETGEAR WNDA3100.
-Not really, I have three of those and they are working fine in my
-setup. Of course, I'm aware that my testing environment is just "mine"
-so I won't even think about claiming that the driver/fw will always
-work anytime for anyone anywhere.
-
-> The question about outgoing or incoming or both being stopped is a
-> good one, but I don't know how to check this.  I won't be able to ping
-> to or from the machine either way.
-Well, the debugfs interface exports a few statistics like tx and rx counters.
-But you could also setup a monitor interface and wait until it dies.
-If you still see incoming frames [e.g.: beacons from the AP] you know that
-the device is still able to receive. And if you see ACKs and other responses
-directed to your device MAC you know that it also sends alright. 
- 
-> I have replaced both the firmware and driver many times
-> troubleshooting this problem, so I don't know where the current driver
-> came from, but believe I am using the driver from the 3.0 kernel and
-> firmware 1.9.4.  All other versions that I have tried that load (i.e.
-> not mismatched driver/firmware) behave the same.
-good to know.
- 
-> I am unsure about HT20/HT40 - I have not messed with this, so it is
-> probably the default.
-ar9170usb never supported 11n, so you may want to modprobe the module
-with a noht=1 parameter to see if it also misbehaves when 11n is
-turned off.
-
-Reagards,
-	Chr
+-- 
+Thanks,
+Victor.
