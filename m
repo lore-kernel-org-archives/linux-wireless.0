@@ -1,51 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:51042 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755001Ab2AXKdv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 05:33:51 -0500
-Received: by lagp5 with SMTP id p5so2170467lag.38
-        for <linux-wireless@vger.kernel.org>; Tue, 24 Jan 2012 02:33:48 -0800 (PST)
+Received: from mms3.broadcom.com ([216.31.210.19]:1371 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752122Ab2AZSz5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jan 2012 13:55:57 -0500
+Message-ID: <4F21A1AD.10605@broadcom.com> (sfid-20120126_195600_604973_EA4A6856)
+Date: Thu, 26 Jan 2012 10:55:41 -0800
+From: "Franky Lin" <frankyl@broadcom.com>
 MIME-Version: 1.0
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: coelho@ti.com
-Subject: [PATCH] wl12xx: remove unnecessary shadow declaration
-Date: Tue, 24 Jan 2012 12:33:38 +0200
-Message-Id: <1327401218-1427-1-git-send-email-coelho@ti.com> (sfid-20120124_113354_496755_753623C5)
+To: "Renzo Navas" <renzoefra@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [bcm4329] brcmfmac on kernel 2.6.35 (Andorid)
+References: <CAD2CPUEu2ha6TeYrQ4WUdXU0-hdSAAJZR5PGWagSguE1DtBSfQ@mail.gmail.com>
+ <4F20663C.3030500@broadcom.com>
+ <CAD2CPUH6s=UuWy0S--SjmA0WZHARVQ70qmBjh9XW9s+f2ZkoLg@mail.gmail.com>
+In-Reply-To: <CAD2CPUH6s=UuWy0S--SjmA0WZHARVQ70qmBjh9XW9s+f2ZkoLg@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The vif variable was being declared inside one of the internal blocks
-of wl1271_event_process.  This is not necessary, since this variable
-is already declared in the function context.
+On 01/26/2012 08:04 AM, Renzo Navas wrote:
+> As regards the hardware: basically I don't have many other choices,
+> the University gave me a Nexus S to develop. I think I can have access
+> to a Samsung Galaxy S, Galaxy S II and an HTC Dream HD, I have to find
+> out if some of them has a wifi card which uses a softmac driver.
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- drivers/net/wireless/wl12xx/event.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Galaxy S is using bcm4329, Galsxy S II is using 4330. Both are fullmac 
+dongle.
 
-diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-index d3280df68..cfc38ea 100644
---- a/drivers/net/wireless/wl12xx/event.c
-+++ b/drivers/net/wireless/wl12xx/event.c
-@@ -344,7 +344,6 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
- 
- 		/* TODO: configure only the relevant vif */
- 		wl12xx_for_each_wlvif_sta(wl, wlvif) {
--			struct ieee80211_vif *vif = wl12xx_wlvif_to_vif(wlvif);
- 			bool success;
- 
- 			if (!test_and_clear_bit(WLVIF_FLAG_CS_PROGRESS,
-@@ -352,6 +351,8 @@ static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
- 				continue;
- 
- 			success = mbox->channel_switch_status ? false : true;
-+			vif = wl12xx_wlvif_to_vif(wlvif);
-+
- 			ieee80211_chswitch_done(vif, success);
- 		}
- 	}
--- 
-1.7.4.1
+  The
+> idea is going to the wild (to the city which has high density of open
+> wifi APs) to test the algorithm -so I need some portable device-. I
+> yet have to find out how much can I accomplish with the bcm4329.
+
+Some laptop products are using Broadcom PCIE NIC(DELL, Macbook Air and 
+so on). Do you have access to any laptop? We can try to figure out 
+what's in there.
+
+> I'm interested on this "bcmdhd" driver which uses cfg80211,
+> I have one request: is there an official source with the code of bcmdhd?
+
+git clone https://android.googlesource.com/kernel/omap.git
+drivers/net/wireless
+
+Any scan request will be wrapped as an iovar and sent to the dongle. 
+Scan results are sent back to the driver as a dongle event.
+
+Hope this can help.
+
+Franky
 
