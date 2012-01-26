@@ -1,102 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nick.hrz.tu-chemnitz.de ([134.109.228.11]:52764 "EHLO
-	nick.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752625Ab2ADQvs (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:64107 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751796Ab2AZWvZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jan 2012 11:51:48 -0500
-Date: Wed, 4 Jan 2012 17:51:44 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: Re: [PATCH 2/2] mac80211: add support for mcs masks
-Message-ID: <20120104165144.GA3381@pandem0nium> (sfid-20120104_175152_022862_24CBC9BC)
-References: <1324304099-18327-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1324304099-18327-3-git-send-email-siwu@hrz.tu-chemnitz.de>
- <1325600690.3316.12.camel@jlt3.sipsolutions.net>
+	Thu, 26 Jan 2012 17:51:25 -0500
+Received: by dadi2 with SMTP id i2so871269dad.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 14:51:25 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="RnlQjJ0d97Da+TV1"
-In-Reply-To: <1325600690.3316.12.camel@jlt3.sipsolutions.net>
+In-Reply-To: <CAOVbLLHirAKiDehW=79dv1ku1pB0JdpA9SfFkLTcLk5NZctX7A@mail.gmail.com>
+References: <CAOVbLLHPdC3XkuTs6OapNMFkSbWaRq54D5U3RDY=N4ugZfEKKQ@mail.gmail.com>
+	<CAOVbLLHK=3K5KfYs7V+9PyE2joWTewuXvpS7RzU63GJS0C2=ug@mail.gmail.com>
+	<CAOVbLLH_RXSzXeQ-g7--6QrUBGD63o-9-7a7NjKc=LM8UL2+GA@mail.gmail.com>
+	<CAOVbLLEzuyBkQv0a238SfDrNXi3hf72Kzyjv8L=m9hokhGjx5A@mail.gmail.com>
+	<CAOVbLLFcja-DV1bEq9C2U8q5eohc7O0AE=oymfjMMBOBi4D52g@mail.gmail.com>
+	<4F21A01E.20105@lwfinger.net>
+	<CAOVbLLHirAKiDehW=79dv1ku1pB0JdpA9SfFkLTcLk5NZctX7A@mail.gmail.com>
+Date: Thu, 26 Jan 2012 23:51:25 +0100
+Message-ID: <CAOVbLLGpEYU+WvQ=v8Obz4WmYs65wQNq4k+EB+89n-3Ao1b6NQ@mail.gmail.com> (sfid-20120126_235145_126056_340A3EA2)
+Subject: Re: Question regarding Linux RTL driver
+From: Nikola Gacic <empnik@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+OK, thank you for your answer. Sorry for reporting this late. I will
+send mails to mailing list too.
 
---RnlQjJ0d97Da+TV1
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I don't know which device is RTL8187L but this device definitely isn't
+RTL8187B because it doesn't use RTL8187B routines and field
+rtl8187_priv.is_rtl8187b is FALSE.
 
-Hello Johannes,
+I am using MANAGED  BSS STATION  interface  for device, but I also
+tried MONITOR interface to try to capture beacons from AP on any
+channel. It was the same, I can't read anything from 0x81 endpoint
+because I am always getting NAK packets.
 
-thanks for all the comments, I can agree to all points you made in this mail
-and for the other one and will provide a PATCHv2 which should fix this.
+If I am not mistaken endpoint 2 is used for sending and 0x81 for
+receiving, but enumeration shows there is endpoint 3 also. Do you
+remember what is it used for?
 
-One issue is left which I'd like to discuss, please see below.
+I again inspected rtl8187_start() routine and I am now inspecting
+rtl8187_probe() again but it is much bigger and I will need more time.
+Is the rtl8187_probe() crucial for initializing device or just for
+getting device information and allocating resources? I mean, will some
+false bits when writing to endpoint 0 cause the device to stop
+responding in this routine?
 
-On Tue, Jan 03, 2012 at 03:24:50PM +0100, Johannes Berg wrote:
-> > @@ -358,10 +462,14 @@ void rate_control_get_rate(struct ieee80211_sub_i=
-f_data *sdata,
-> >  	 * the common case.
-> >  	 */
-> >  	mask =3D sdata->rc_rateidx_mask[info->band];
-> > +	memcpy(mcs_mask, sdata->rc_rateidx_mcs_mask[info->band],
-> > +	       sizeof(mcs_mask));
->=20
-> Do we really have to do this? Might not a pointer be better?
->=20
-> >  	if (mask !=3D (1 << txrc->sband->n_bitrates) - 1) {
-> >  		if (sta) {
-> >  			/* Filter out rates that the STA does not support */
-> >  			mask &=3D sta->sta.supp_rates[info->band];
-> > +			for (i =3D 0; i < sizeof(mcs_mask); i++)
-> > +				mcs_mask[i] &=3D sta->sta.ht_cap.mcs.rx_mask[i];
->=20
-> Oh, so it's filtered by station ... hm ok I guess unless we tie
-> lifetimes together we have to do this.
->=20
-> Maybe we could update all stations in the slow-path (changes in the HT
-> mask) and then just use the already masked version in the sta entry in
-> the fastpath here?
+Thanks,
+Nikola
 
-You are right that this definitly adds some load on the fastpath (Although
-I don't know how much the compiler optimizes here anyway, its only 10 bytes
-which are set and masked).
-
-Currently I see two approaches here:
-
-1.) move the masking into the station handling code (when a new station joi=
-ns).
-    We would also need to iterate over the connected station when changing
-    the mcs_mask while the interface is up.
-    --> this will probably need to change at quite some palces and might be=
- race-risky
-2.) keep the masking in the rate_control_get_rate() function, but mask only
-    once (first time) and keep the result in the station struct. Next time =
-we
-    enter it, we use the already masked result. We could then use a flag to
-    remember that we already computed the mask and just use it, and another
-    flag to signalize if the mcs_mask was modified externally
-    --> this is not racy and rather simple, but adds some flags
-
-Maybe you have an even better idea, please let me know what you think. :)
-
-Cheers,
-	Simon
-
---RnlQjJ0d97Da+TV1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk8Eg6AACgkQrzg/fFk7axahsACfTg4Jd1o4+FRVETq5PBSwuoe4
-TXoAnjTIoSyQC5Jc27CsCT8+eBc5waJ9
-=yr7O
------END PGP SIGNATURE-----
-
---RnlQjJ0d97Da+TV1--
+On Thu, Jan 26, 2012 at 7:49 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>
+> On 01/26/2012 11:37 AM, Nikola Gacic wrote:
+>>
+>> Hello Mr. Finger,
+>>
+>>     I don't know if this is the right way for contacting you but I couldn't
+>> find the other way.
+>>     Firstly, I want to say that I am student at School of electrical
+>> Engineering in Belgrade and I am working on some embedded project where I tried
+>> to use you RTL8187 Linux driver to communicate with PIC32 microcontroller over USB.
+>>     I would appreciate any help with my problem. If you could spare some time
+>> to read this it would be great. I have several questions. Initialization worked
+>> fine I think (I get ACK packets), but when I try to finally send IN packet to
+>> endpoint 0x81 I get NAK packets all the time!
+>>     I checked code in microcontroller several times and, of course, maybe error
+>> could be somewhere in initialization, but would that block my IN packets to
+>> device? I know that PIC32 cannot work in high-speed mode, only  in full-speed,
+>> but in the datasheet for this dongle it says it can work in full-speed. So I
+>> want to know does USB card set its speed to full-speed automatically?
+>>     I think my understanding of driver code is good so you can give me some
+>> general guidelines regarding initialization if you don't want to go to
+>> details.Thank you in advance.
+>
+>
+> Contacting me is OK, but all communication should also be Cc'd to the linux-wireless mailing list.
+>
+> Could you please give me some more details? Is this setup as an ad-hoc wireless connection? I know that rtl8187 does not work in AP mode, but I'm not sure about ad-hoc mode, and I am unable to test that at the moment.
+>
+> Which device are you using - RTL8187L, or RTL8187B? The USB ID should tell that.
+>
+> Yes, the device will work with USB1.1 hardware, and it might even work with USB1.0, but I have never tested that.
+>
+> Larry
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
+>
