@@ -1,51 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58403 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751472Ab2A1EjA (ORCPT
+Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:38749 "EHLO
+	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752211Ab2AZMmz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jan 2012 23:39:00 -0500
-Message-ID: <4F237BC3.3060208@sipsolutions.net> (sfid-20120128_053905_379573_415D1D17)
-Date: Fri, 27 Jan 2012 20:38:27 -0800
-From: Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Do not encrypt EAPOL frames in IBSS Mode.
-References: <1327581742-15460-1-git-send-email-cavallar@lri.fr> (sfid-20120126_134252_162490_7A6AB3DA)
-In-Reply-To: <1327581742-15460-1-git-send-email-cavallar@lri.fr> (sfid-20120126_134252_162490_7A6AB3DA)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 26 Jan 2012 07:42:55 -0500
+Received: by mail-gx0-f177.google.com with SMTP id h4so242386ggn.22
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 04:42:54 -0800 (PST)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <hostap@lists.shmoo.com>
+Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
+	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
+	<adrian.chadd@gmail.com>, <j@w1.fi>, <johannes@sipsolutions.net>,
+	<coelho@ti.com>, <assaf@ti.com>, <yoni.divinsky@ti.com>,
+	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>
+Subject: [RFC 7/7] nl80211: add start radar detection command/event
+Date: Thu, 26 Jan 2012 14:41:29 +0200
+Message-Id: <1327581689-22090-8-git-send-email-victorg@ti.com> (sfid-20120126_134305_752566_FB6F22CB)
+In-Reply-To: <1327581689-22090-1-git-send-email-victorg@ti.com>
+References: <1327581689-22090-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1/26/2012 4:42 AM, Nicolas Cavallari wrote:
-> Currently, EAPOL Frames in IBSS mode are encrypted if a PTK
-> is available.  This patch turn off encryption for all EAPOL
-> frames when on IBSS mode, as there is no suitable userspace
-> calls to configure the control port protocol and settings.
->
-> IBSS RSN sort-of worked without this patch because PTKs
-> are only installed after the completion of a successful
-> EAPOL exchange,  so unicast operations would work,  but
-> multicast and rekeying would often fail.
->
-> Signed-off-by: Nicolas Cavallari<cavallar@lri.fr>
-> ---
->   net/mac80211/ibss.c |    2 ++
->   1 files changed, 2 insertions(+), 0 deletions(-)
->
-> diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-> index bed30ba..9d8e699 100644
-> --- a/net/mac80211/ibss.c
-> +++ b/net/mac80211/ibss.c
-> @@ -1022,6 +1022,8 @@ void ieee80211_ibss_setup_sdata(struct ieee80211_sub_if_data *sdata)
->   {
->   	struct ieee80211_if_ibss *ifibss =&sdata->u.ibss;
->
-> +	sdata->control_port_no_encrypt = true;
+Add command to trigger radar detection in the driver/HW.
+Once radar detection has started, the driver/device shall
+continuously monitor the Operating Channel (In-Service
+Monitoring) to ensure that there is no radar interferences
+on that channel. Process radar detection event in
+do_process_drv_event().
 
-In addition to my earlier comment about this being totally wrong -- if 
-you REALLY wanted it, you should probably just add the few API tweaks to 
-be able to set it from userspace and tweak your userspace.
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+---
+ src/drivers/driver_nl80211.c |   37 +++++++++++++++++++++++++++++++++++++
+ 1 files changed, 37 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
+index 744e736..2d52c72 100644
+--- a/src/drivers/driver_nl80211.c
++++ b/src/drivers/driver_nl80211.c
+@@ -2145,6 +2145,16 @@ static void do_process_drv_event(struct wpa_driver_nl80211_data *drv,
+ 		wpa_supplicant_event(drv->ctx, EVENT_CHANNEL_SWITCH_COMPLETE,
+ 				     &data);
+ 		break;
++	case NL80211_CMD_DFS_RADAR_DETECTION:
++		os_memset(&data, 0, sizeof(data));
++		if (tb[NL80211_ATTR_WIPHY_FREQ]) {
++			data.radar_detected.freq =
++				    nla_get_u16(tb[NL80211_ATTR_WIPHY_FREQ]);
++		}
++		data.radar_detected.status = TRUE;
++		wpa_printf(MSG_DEBUG, "nl80211: Radar detected event");
++		wpa_supplicant_event(drv->ctx, EVENT_RADAR_DETECTED, &data);
++		break;
+ 	default:
+ 		wpa_printf(MSG_DEBUG, "nl80211: Ignored unknown event "
+ 			   "(cmd=%d)", cmd);
+@@ -8706,6 +8716,32 @@ nla_put_failure:
+ }
+ 
+ 
++static int wpa_driver_nl80211_start_radar_detection(void *priv)
++{
++	struct i802_bss *bss = priv;
++	struct wpa_driver_nl80211_data *drv = bss->drv;
++	struct nl_msg *msg;
++	int ret;
++
++	wpa_printf(MSG_DEBUG, "nl80211: Start radar detection");
++
++	msg = nlmsg_alloc();
++	if (!msg)
++		return -1;
++
++	nl80211_cmd(bss->drv, msg, 0, NL80211_CMD_DFS_RADAR_DETECTION);
++	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, drv->ifindex);
++
++	ret = send_and_recv_msgs(drv, msg, NULL, NULL);
++	if (ret == 0)
++		return 0;
++	wpa_printf(MSG_DEBUG, "nl80211: Failed to start radar detection: "
++		   "%d (%s)", ret, strerror(-ret));
++nla_put_failure:
++	return -1;
++}
++
++
+ #ifdef CONFIG_TDLS
+ 
+ static int nl80211_send_tdls_mgmt(void *priv, const u8 *dst, u8 action_code,
+@@ -9001,6 +9037,7 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
+ 	.set_p2p_powersave = nl80211_set_p2p_powersave,
+ 	.enable_tx = wpa_driver_nl80211_enable_dfs_tx,
+ 	.channel_switch = wpa_driver_nl80211_channel_switch,
++	.start_radar_detection = wpa_driver_nl80211_start_radar_detection,
+ #ifdef CONFIG_TDLS
+ 	.send_tdls_mgmt = nl80211_send_tdls_mgmt,
+ 	.tdls_oper = nl80211_tdls_oper,
+-- 
+1.7.5.4
+
