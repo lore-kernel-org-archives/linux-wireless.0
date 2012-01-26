@@ -1,54 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:47541 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752700Ab2A3L54 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 06:57:56 -0500
-Received: by mail-ww0-f44.google.com with SMTP id ed3so4506776wgb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 03:57:56 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 11/12] wl12xx: enable/disable BET with AUTO_PS/ACTIVE
-Date: Mon, 30 Jan 2012 14:00:56 +0200
-Message-Id: <1327924857-1250-12-git-send-email-eliad@wizery.com> (sfid-20120130_125832_048052_55E0F366)
-In-Reply-To: <1327924857-1250-1-git-send-email-eliad@wizery.com>
-References: <1327924857-1250-1-git-send-email-eliad@wizery.com>
+Received: from smtp203.alice.it ([82.57.200.99]:60790 "EHLO smtp203.alice.it"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752180Ab2AZRA3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jan 2012 12:00:29 -0500
+From: "Denis 'GNUtoo' Carikli" <GNUtoo@no-log.org>
+To: Renzo Navas <renzoefra@gmail.com>
+Subject: Re: [bcm4329] brcmfmac on kernel 2.6.35 (Andorid)
+Date: Thu, 26 Jan 2012 17:54:23 +0100
+Cc: linux-wireless@vger.kernel.org
+References: <CAD2CPUEu2ha6TeYrQ4WUdXU0-hdSAAJZR5PGWagSguE1DtBSfQ@mail.gmail.com>
+In-Reply-To: <CAD2CPUEu2ha6TeYrQ4WUdXU0-hdSAAJZR5PGWagSguE1DtBSfQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Message-Id: <201201261754.23507.GNUtoo@no-log.org> (sfid-20120126_180032_992567_DC5D681D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+>I have found only these attemps of some people trying to do this:
+I was involved in it and indeed I didn't succeed with 2.6.35, but I'll retry 
+soon with the 3.0.
 
-While the FW with dynamic PS controls BET when going to PSM and back
-internally within the FW, there's still a need to enable it from the driver
-at least once (so enable on every entry to AUTO_PS)
-and disable it once we explicitly go back to STATION_ACTIVE_MODE.
-BET isn't relevant for 5GHz
+Basically it hanged without producing any interesting logs, maybe I shoud try 
+to make panic go on serial port(it made the phone not boot when I activated 
+the console on the serial port on 2.6.35).
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/ps.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
-index 5074c2a..d7a91d3 100644
---- a/drivers/net/wireless/wl12xx/ps.c
-+++ b/drivers/net/wireless/wl12xx/ps.c
-@@ -181,6 +181,13 @@ int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			return ret;
- 
- 		set_bit(WLVIF_FLAG_PSM, &wlvif->flags);
-+
-+		/* enable beacon early termination. Not relevant for 5GHz */
-+		if (wlvif->band == IEEE80211_BAND_2GHZ) {
-+			ret = wl1271_acx_bet_enable(wl, wlvif, true);
-+			if (ret < 0)
-+				return ret;
-+		}
- 		break;
- 	case STATION_ACTIVE_MODE:
- 		wl1271_debug(DEBUG_PSM, "leaving psm");
--- 
-1.7.6.401.g6a319
-
+Denis.
