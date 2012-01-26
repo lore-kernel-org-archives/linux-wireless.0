@@ -1,69 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:56941 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751255Ab2AQKTq (ORCPT
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:55895 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751560Ab2AZMmo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 05:19:46 -0500
-Received: by lahc1 with SMTP id c1so1417518lah.19
-        for <linux-wireless@vger.kernel.org>; Tue, 17 Jan 2012 02:19:44 -0800 (PST)
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: Remove dummy STA on deauth
-Date: Tue, 17 Jan 2012 11:19:37 +0100
-Message-Id: <1326795577-29650-1-git-send-email-pontus.fuchs@gmail.com> (sfid-20120117_111950_717206_DA4AE268)
+	Thu, 26 Jan 2012 07:42:44 -0500
+Received: by mail-gy0-f177.google.com with SMTP id z22so185868ghb.36
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 04:42:43 -0800 (PST)
+From: Victor Goldenshtein <victorg@ti.com>
+To: <hostap@lists.shmoo.com>
+Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
+	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
+	<adrian.chadd@gmail.com>, <j@w1.fi>, <johannes@sipsolutions.net>,
+	<coelho@ti.com>, <assaf@ti.com>, <yoni.divinsky@ti.com>,
+	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>
+Subject: [RFC 5/7] nl80211: add support to enable TX on oper-channel
+Date: Thu, 26 Jan 2012 14:41:27 +0200
+Message-Id: <1327581689-22090-6-git-send-email-victorg@ti.com> (sfid-20120126_134246_471951_FCD17A24)
+In-Reply-To: <1327581689-22090-1-git-send-email-victorg@ti.com>
+References: <1327581689-22090-1-git-send-email-victorg@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Under certain conditions a dummy STA entry could be left in the
-station list. This causes subsequent connection attempts to fail.
+Once a channel has been passes the channel availability
+check (CAC) the ap may start the tx with
+wpa_driver_nl80211_enable_dfs_tx().
 
-Logs look like this:
+Add wpa_driver_nl80211_enable_dfs_tx() + init drv_ops.
 
-authenticate with 00:23:69:aa:dd:7b (try 1)
-authenticated
-failed to insert Dummy STA entry for the AP (error -17)
-deauthenticating from 00:23:69:aa:dd:7b by local choice (reason=2)
-
-Fix this by making sure to remove the dummy STA on deauth.
-
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Boris Presman <boris.presman@ti.com>
+Signed-off-by: Victor Goldenshtein <victorg@ti.com>
 ---
+ src/drivers/driver_nl80211.c |   27 +++++++++++++++++++++++++++
+ 1 files changed, 27 insertions(+), 0 deletions(-)
 
-The problem was introduced by the following commit added in v3.1:
-mac80211: fix race condition between assoc_done and first EAP packet
-
-This problem is fixed in the recent patch series from 
-Johannes Berg: [PATCH 0/8] more station handling refactoring
-
-If you need a smaller fix this might fit you.
-
- net/mac80211/mlme.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index ecb4c84..8bd8d4d 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2751,6 +2751,7 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
- 	struct ieee80211_work *wk;
-+	struct sta_info *dummy;
- 	u8 bssid[ETH_ALEN];
- 	bool assoc_bss = false;
+diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
+index f1e6ca2..e3d6a3c 100644
+--- a/src/drivers/driver_nl80211.c
++++ b/src/drivers/driver_nl80211.c
+@@ -8627,6 +8627,32 @@ static int nl80211_set_p2p_powersave(void *priv, int legacy_ps, int opp_ps,
+ }
  
-@@ -2810,6 +2811,11 @@ int ieee80211_mgd_deauth(struct ieee80211_sub_if_data *sdata,
- 	if (assoc_bss)
- 		sta_info_flush(sdata->local, sdata);
  
-+	/* Make sure to remove dummy STA if it's there */
-+	dummy = sta_info_get_bss_rx(sdata, req->bss->bssid);
-+	if (dummy)
-+		sta_info_destroy_addr(sdata, req->bss->bssid);
++static int wpa_driver_nl80211_enable_dfs_tx(void *priv)
++{
++	struct i802_bss *bss = priv;
++	struct wpa_driver_nl80211_data *drv = bss->drv;
++	struct nl_msg *msg;
++	int ret;
 +
- 	mutex_lock(&sdata->local->mtx);
- 	ieee80211_recalc_idle(sdata->local);
- 	mutex_unlock(&sdata->local->mtx);
++	wpa_printf(MSG_DEBUG, "nl80211: Enable DFS tx");
++
++	msg = nlmsg_alloc();
++	if (!msg)
++		return -1;
++
++	nl80211_cmd(bss->drv, msg, 0, NL80211_CMD_DFS_ENABLE_TX);
++	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, drv->ifindex);
++
++	ret = send_and_recv_msgs(drv, msg, NULL, NULL);
++	if (ret == 0)
++		return 0;
++	wpa_printf(MSG_DEBUG, "nl80211: Failed to enable DFS tx: "
++		   "%d (%s)", ret, strerror(-ret));
++nla_put_failure:
++	return -1;
++}
++
++
+ #ifdef CONFIG_TDLS
+ 
+ static int nl80211_send_tdls_mgmt(void *priv, const u8 *dst, u8 action_code,
+@@ -8920,6 +8946,7 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
+ 	.set_rekey_info = nl80211_set_rekey_info,
+ 	.poll_client = nl80211_poll_client,
+ 	.set_p2p_powersave = nl80211_set_p2p_powersave,
++	.enable_tx = wpa_driver_nl80211_enable_dfs_tx,
+ #ifdef CONFIG_TDLS
+ 	.send_tdls_mgmt = nl80211_send_tdls_mgmt,
+ 	.tdls_oper = nl80211_tdls_oper,
 -- 
 1.7.5.4
 
