@@ -1,50 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39170 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751775Ab2AUNns (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jan 2012 08:43:48 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: mcgrof@gmail.com, mcgrof@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 3/3] compat-wireless: rename path_lookup
-Date: Sat, 21 Jan 2012 14:43:36 +0100
-Message-Id: <1327153416-27834-3-git-send-email-hauke@hauke-m.de> (sfid-20120121_144354_095806_AA598697)
-In-Reply-To: <1327153416-27834-1-git-send-email-hauke@hauke-m.de>
-References: <1327153416-27834-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:53620 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752401Ab2A0KDR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jan 2012 05:03:17 -0500
+Received: by werb13 with SMTP id b13so1081688wer.19
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jan 2012 02:03:16 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH 2/3] mac80211: Fix incorrect num_sta_ps decrement in ap_sta_ps_end
+Date: Fri, 27 Jan 2012 11:02:52 +0100
+Message-Id: <1327658573-477-2-git-send-email-helmut.schaa@googlemail.com> (sfid-20120127_110319_764965_2DA5BA01)
+In-Reply-To: <1327658573-477-1-git-send-email-helmut.schaa@googlemail.com>
+References: <1327658573-477-1-git-send-email-helmut.schaa@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-path_lookup in net/mac80211/mesh_pathtbl.c consolidates with
-path_lookup in include/linux/namei.h used in old kernel versions.
+If the driver blocked this specific STA with the help of
+ieee80211_sta_block_awake we won't clear WLAN_STA_PS_STA later but
+still decrement num_sta_ps. Hence, the next data frame from this
+STA will trigger ap_sta_ps_end again and also decrement num_sta_ps
+again leading to an incorrect num_sta_ps counter.
 
-This should also go into compat-wireless-stable-3.3.
+This can result in problems with powersaving clients not waking up
+from PS because the TIM calculation might be skipped due to the
+incorrect num_sta_ps counter.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- patches/49-rename_path_lookup.patch |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
- create mode 100644 patches/49-rename_path_lookup.patch
+ net/mac80211/rx.c       |    1 -
+ net/mac80211/sta_info.c |    4 +++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/patches/49-rename_path_lookup.patch b/patches/49-rename_path_lookup.patch
-new file mode 100644
-index 0000000..a5c69c6
---- /dev/null
-+++ b/patches/49-rename_path_lookup.patch
-@@ -0,0 +1,14 @@
-+path_lookup in net/mac80211/mesh_pathtbl.c consolidates with 
-+path_lookup in include/linux/namei.h used in old kernel versions.
-+
-+--- a/net/mac80211/mesh_pathtbl.c
-++++ b/net/mac80211/mesh_pathtbl.c
-+@@ -18,6 +18,8 @@
-+ #include "ieee80211_i.h"
-+ #include "mesh.h"
-+ 
-++#define path_lookup general_path_lookup
-++
-+ #ifdef CONFIG_MAC80211_VERBOSE_MPATH_DEBUG
-+ #define mpath_dbg(fmt, args...)	printk(KERN_DEBUG fmt, ##args)
-+ #else
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 3567586..f89617a 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1147,7 +1147,6 @@ static void ap_sta_ps_end(struct sta_info *sta)
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 
+-	atomic_dec(&sdata->bss->num_sta_ps);
+ 
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+ 	printk(KERN_DEBUG "%s: STA %pM aid %d exits power save mode\n",
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 70a0de3..92b894c 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1007,9 +1007,11 @@ EXPORT_SYMBOL(ieee80211_find_sta);
+ static void clear_sta_ps_flags(void *_sta)
+ {
+ 	struct sta_info *sta = _sta;
++	struct ieee80211_sub_if_data *sdata = sta->sdata;
+ 
+ 	clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
+-	clear_sta_flag(sta, WLAN_STA_PS_STA);
++	if (test_and_clear_sta_flag(sta, WLAN_STA_PS_STA))
++		atomic_dec(&sdata->bss->num_sta_ps);
+ }
+ 
+ /* powersave support code */
 -- 
-1.7.5.4
+1.7.7
 
