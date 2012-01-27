@@ -1,55 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:39782 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752668Ab2ACMYi (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:49973 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754774Ab2A0Cq3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 07:24:38 -0500
-Date: Tue, 3 Jan 2012 12:24:24 +0000
-From: Matthew Garrett <mjg@redhat.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-	Jack Stone <jwjstone@fastmail.fm>,
-	Oliver Neukum <oliver@neukum.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-Message-ID: <20120103122424.GA24367@srcf.ucam.org> (sfid-20120103_132452_841071_7A1A06C9)
-References: <20120102215028.GA15701@srcf.ucam.org>
- <Pine.LNX.4.44L0.1201022136190.20386-100000@netrider.rowland.org>
- <20120103032505.GA19702@srcf.ucam.org>
- <CA+55aFxnOBJZBb5KC7HC3z9Whk585SaHeCx9zyie3MMsfsvExw@mail.gmail.com>
+	Thu, 26 Jan 2012 21:46:29 -0500
+Received: by wics10 with SMTP id s10so890805wic.19
+        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 18:46:27 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CA+55aFxnOBJZBb5KC7HC3z9Whk585SaHeCx9zyie3MMsfsvExw@mail.gmail.com>
+Date: Thu, 26 Jan 2012 21:46:27 -0500
+Message-ID: <CALGY4ft1y00caq9xEhMkm4L3jO9pt0NDXYjUO+TLS12w8ZAT5g@mail.gmail.com> (sfid-20120127_034641_702894_2116F3F8)
+Subject: iwlwifi regression
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 02, 2012 at 09:53:46PM -0800, Linus Torvalds wrote:
-> On Mon, Jan 2, 2012 at 7:25 PM, Matthew Garrett <mjg@redhat.com> wrote:
-> > On Mon, Jan 02, 2012 at 09:45:58PM -0500, Alan Stern wrote:
-> >
-> >> Wait a second.  Why does isight_firmware bind at this time?  Binding to
-> >> new devices is handled by khubd, which doesn't start running again
-> >> until after the resume is finished (the device appears to be new
-> >> because its descriptors have changed).  At that point there should be
-> >> no trouble reloading the firmware.
-> >
-> > Then why are we getting this warning? The firmware is only loaded in the
-> > probe function.
-> 
-> The USB suspend/resume function does that "unbind/rebind" dance, and
-> that causes a "device_attach()". Which causes a probe() to be called.
-> 
-> Should it do that? I think not, not if the ID's haven't changed. But I
-> don't know the USB layer all that well.
+Hi.
 
-The IDs will have changed due to the firmware falling out.
+  I seeing regression in iwlwifi using intel 5300 card. It used to
+work fine but after one upgrade is started to fail. Symptom: at some
+point card stops transmitting or receiving any data, but still holds
+connection. No specific errors in logs. Disconnecting/reconnecting
+helps for very short period.
+  I was able to track it down and it looks like the problem was
+introduced in next-20111222. I.e. next-20111221 is fine, next-20111222
+is not (compat-wireless-2011-12-18 is fine, 2011-12-23 is broken).
+
+  I tried to look into diff between next-20111221 and next-20111222
+but it looks quite large and I do not really know how to bisect it
+further. So I'd appreciate any hint on this.
+  I'd be happy to provide any additional information and can try
+patches locally.
+  Thanks!
 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Truthfully yours,
+Martynov Nikolay.
+Email: mar.kolya@gmail.com
