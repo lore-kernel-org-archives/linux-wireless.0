@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:40923 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752190Ab2AVSET (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:57405 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752452Ab2A0DG3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 Jan 2012 13:04:19 -0500
-Received: by qcsf13 with SMTP id f13so1182862qcs.19
-        for <linux-wireless@vger.kernel.org>; Sun, 22 Jan 2012 10:04:18 -0800 (PST)
-Message-ID: <4F1C4F88.5030601@gmail.com> (sfid-20120122_190424_080608_EEF5A744)
-Date: Sun, 22 Jan 2012 13:03:52 -0500
-From: Richard Farina <sidhayn@gmail.com>
+	Thu, 26 Jan 2012 22:06:29 -0500
+Date: Thu, 26 Jan 2012 21:06:23 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Problems associating with RTL8188CE
+Message-ID: <20120127030623.GA26774@ubuntu-macmini> (sfid-20120127_040637_468664_E0E73FDD)
+References: <4EE82CC6.2030307@lwfinger.net>
+ <20111214162333.GB19410@thinkpad-t410>
+ <4EE8D150.8090100@lwfinger.net>
+ <20111214164902.GD19410@thinkpad-t410>
+ <4EE8D5A1.7040600@lwfinger.net>
+ <20111214171234.GE19410@thinkpad-t410>
+ <4EE8E035.90501@lwfinger.net>
+ <20111214175804.GG19410@thinkpad-t410>
+ <20120126213344.GC14465@ubuntu-macmini>
+ <4F21E6CF.5040006@lwfinger.net>
 MIME-Version: 1.0
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: new iwlwifi 6030 uCode available
-References: <1327161548.13074.458.camel@wwguy-huron>  <4F1B3137.3090701@gmail.com> <1327246318.13074.460.camel@wwguy-huron>
-In-Reply-To: <1327246318.13074.460.camel@wwguy-huron>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F21E6CF.5040006@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/22/2012 10:31 AM, Guy, Wey-Yi wrote:
-> Hi Richard,
->
-> patch already submit to David Woodhouse for for firmware tree. Hope it
-> will merge soon.
->
-> Thanks
-> Wey
-Thank you very much.  I saw that the firmware git has been recently 
-reactivated so hopefully patches will get in sooner rather than later.
+On Thu, Jan 26, 2012 at 05:50:39PM -0600, Larry Finger wrote:
+> On 01/26/2012 03:33 PM, Seth Forshee wrote:
+> >Sorry for the long silence on this, I was busy with some other things.
+> >But I've been playing with it again this week and uncovered some new
+> >information regarding the failures.
+> >
+> >I noticed the other day that the rtl8188ce was no longer having trouble
+> >associating with this AP. After playing around in the router settings I
+> >discovered that it works fine so long as the router isn't on channel 1.
+> >So then I configured my other router to use channel 1, and then I
+> >started seeing problems with that router as well.
+> >
+> >I also tried the rtl8192ce driver from Realtek's website, and I'm having
+> >better luck with that driver.
+> 
+> Seth,
+> 
+> Are those AP's 802.11n devices that allow HT features on channel 1?
+> I do not know if we support that or not. On my 802.11n device, it
+> automatically switches to channel 3 when I enable HT, and that
+> works.
+> 
+> I can connect to an 802.11g AP on channel 1 with no trouble.
 
--Rick
->
-> On Sat, 2012-01-21 at 16:42 -0500, Richard Farina wrote:
->> On 01/21/2012 10:59 AM, Guy, Wey-Yi wrote:
->>> Hi
->>>
->>> New release of version 18.168.6.1 uCode for Intel® Centrino Advanced-N
->>> 6235 Series Wi-Fi Adapters is now
->>> available for download from http://intellinuxwireless.org/?n=Downloads
->> Any chance these are going to be added to the firmware tree anytime soon
->> or should I just be making a new patch for my linux-firmware package?
->>
->> Thanks,
->> Rick
->>> The same image also could be use for 6230, 1030 and 130 series of Wi-Fi
->>> Adapters
->>>
->>> Wey-Yi
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->
->
+Whether or not HT is enabled makes no difference. One is an older
+802.11g router, and on the other I see the same problems with or without
+HT enabled.
 
+Seth
