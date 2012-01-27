@@ -1,40 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18269 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752690Ab2AJEU3 (ORCPT
+Received: from smtp23.services.sfr.fr ([93.17.128.20]:29271 "EHLO
+	smtp23.services.sfr.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751525Ab2A0K0q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 23:20:29 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20235.48473.693136.780100@gargle.gargle.HOWL> (sfid-20120110_052033_316603_028D2263)
-Date: Tue, 10 Jan 2012 09:53:53 +0530
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/4] ath6kl: Initialize a variable properly
+	Fri, 27 Jan 2012 05:26:46 -0500
+Message-ID: <1327660003.21888.14.camel@milan> (sfid-20120127_112649_975486_09F6FF3F)
+Subject: Re: BCM4313 keeps disconnecting with brcmsmac and multiple APs
+From: Milan Bouchet-Valat <nalimilan@club.fr>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Milan Bouchet-Valat <nalimilan@club-internet.fr>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 27 Jan 2012 11:26:43 +0100
+In-Reply-To: <4F227784.10309@broadcom.com>
+References: <22905678.140637.1327401110095.JavaMail.www@wsfrf1232>
+	 <4F227784.10309@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This prevents 'comp_pktq' from being used in an
-incorrect manner.
+Le vendredi 27 janvier 2012 à 11:08 +0100, Arend van Spriel a écrit :
+> Another thing to consider. I notice that you have a bluetooth device in
+> there as well. Can you disable that (if possible) and try again.
+I'll try that, but sadly not before Tuesday as I'm not in the right
+place ATM.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/htc.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+> Does your AP have DFS enabled?
+I'll ask my IT staff about that. Or is there a way to get this
+information from the logs or iwconfig?
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-index b017022..2d72190 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc.c
-@@ -2062,6 +2062,7 @@ int ath6kl_htc_rxmsg_pending_handler(struct htc_target *target,
- 	enum htc_endpoint_id id;
- 	int n_fetched = 0;
- 
-+	INIT_LIST_HEAD(&comp_pktq);
- 	*num_pkts = 0;
- 
- 	/*
--- 
-1.7.8.3
 
+Thanks!
