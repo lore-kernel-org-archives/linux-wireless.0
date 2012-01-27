@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:35356 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756097Ab2APSsK (ORCPT
+Received: from mms2.broadcom.com ([216.31.210.18]:1033 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752159Ab2A0Lhn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jan 2012 13:48:10 -0500
+	Fri, 27 Jan 2012 06:37:43 -0500
+Message-ID: <4F228C76.2010109@broadcom.com> (sfid-20120127_123808_343384_F9554CAA)
+Date: Fri, 27 Jan 2012 12:37:26 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1324933459-17242-1-git-send-email-asmadeus@codewreck.org>
-References: <1324933459-17242-1-git-send-email-asmadeus@codewreck.org>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 16 Jan 2012 10:47:48 -0800
-Message-ID: <CAB=NE6WAhddiUuf4yOfNAgqMF7GxM--ksDwEmvwdJdFYSjLGzA@mail.gmail.com> (sfid-20120116_195839_650615_90BAEED6)
-Subject: Re: [PATCH] compat-wireless: build: Throw error if space in path
-To: Dominique Martinet <asmadeus@codewreck.org>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: "Milan Bouchet-Valat" <nalimilan@club.fr>
+cc: "Milan Bouchet-Valat" <nalimilan@club-internet.fr>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: BCM4313 keeps disconnecting with brcmsmac and multiple APs
+References: <22905678.140637.1327401110095.JavaMail.www@wsfrf1232>
+ <4F227784.10309@broadcom.com> <1327660003.21888.14.camel@milan>
+In-Reply-To: <1327660003.21888.14.camel@milan>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 26, 2011 at 1:04 PM, Dominique Martinet
-<asmadeus@codewreck.org> wrote:
-> Because of make limitations, the build will fail if there are spaces in
-> the path leading to the compat-wireless directory.
-> I tried to make it work anyway for a while and, while it probably is
-> possible, it would involve rewriting part of kbuild and well...
-> This at least throws up nicely if there is a space in the path.
->
+On 01/27/2012 11:26 AM, Milan Bouchet-Valat wrote:
+> Le vendredi 27 janvier 2012 à 11:08 +0100, Arend van Spriel a écrit :
+>> Another thing to consider. I notice that you have a bluetooth device in
+>> there as well. Can you disable that (if possible) and try again.
+> I'll try that, but sadly not before Tuesday as I'm not in the right
+> place ATM.
 
-Thanks, you are missing your Signed-off-by tag and for compat-wireless
-I use the same definition and practice of accepting patches only that
-abide by that. The purpose of the SOB tag is defined on the
-Documentation/SubmittingPatches file on the Linux kernel under the
-Developer's Certificate of Origin 1.1. For your convenience I have
-pasted here what it means:
+Ok. To disable bluetooth you could use the rfkill utility:
 
+$ rfkill block bluetooth
 
-        Developer's Certificate of Origin 1.1
+>> Does your AP have DFS enabled?
+> I'll ask my IT staff about that. Or is there a way to get this
+> information from the logs or iwconfig?
+> 
 
-        By making a contribution to this project, I certify that:
+I actually did mean whether the AP has automatic channel selection. I am
+not sure whether it is advertised in the beacons.
 
-        (a) The contribution was created in whole or in part by me and I
-            have the right to submit it under the open source license
-            indicated in the file; or
+Gr. AvS
 
-        (b) The contribution is based upon previous work that, to the best
-            of my knowledge, is covered under an appropriate open source
-            license and I have the right under that license to submit that
-            work with modifications, whether created in whole or in part
-            by me, under the same open source license (unless I am
-            permitted to submit under a different license), as indicated
-            in the file; or
-
-        (c) The contribution was provided directly to me by some other
-            person who certified (a), (b) or (c) and I have not modified
-            it.
-
-        (d) I understand and agree that this project and the contribution
-            are public and that a record of the contribution (including all
-            personal information I submit with it, including my sign-off) is
-            maintained indefinitely and may be redistributed consistent with
-            this project or the open source license(s) involved.
-
-  Luis
