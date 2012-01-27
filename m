@@ -1,56 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2526 "EHLO mms2.broadcom.com"
+Received: from mail.neratec.ch ([80.75.119.105]:43164 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752599Ab2AUJ64 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jan 2012 04:58:56 -0500
-Message-ID: <4F1A8C55.6010900@broadcom.com> (sfid-20120121_105859_822637_F79D46C6)
-Date: Sat, 21 Jan 2012 10:58:45 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+	id S1752688Ab2A0PKA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jan 2012 10:10:00 -0500
+Message-ID: <4F22BE44.4000705@neratec.com> (sfid-20120127_161008_398367_6700E9AC)
+Date: Fri, 27 Jan 2012 16:09:56 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-To: "Milan Bouchet-Valat" <nalimilan@club.fr>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: BCM4313 doesn't work after suspend (brcmsmac on
- compat-wireless-next)
-References: <1327067694.2590.6.camel@milan>
- <4F199EAC.3050602@broadcom.com> <1327080177.3285.26.camel@milan>
-In-Reply-To: <1327080177.3285.26.camel@milan>
-Content-Type: text/plain;
- charset=utf-8
+To: Felix Fietkau <nbd@openwrt.org>
+CC: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	rodrigue@qca.qualcomm.com, adrian.chadd@gmail.com,
+	kgiori@qca.qualcomm.com, shafi.wireless@gmail.com
+Subject: Re: [RFC 1/2] ath9k: add DFS pattern detector
+References: <1327592044-3319-1-git-send-email-zefir.kurtisi@neratec.com> <1327592044-3319-2-git-send-email-zefir.kurtisi@neratec.com> <4F2176DE.9010604@openwrt.org>
+In-Reply-To: <4F2176DE.9010604@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/20/2012 06:22 PM, Milan Bouchet-Valat wrote:
-> Hi and thanks for the reply!
+On 01/26/2012 04:53 PM, Felix Fietkau wrote:
+> On 2012-01-26 4:34 PM, Zefir Kurtisi wrote:
+> [...]
+>> +/**
+>> + * struct pattern_detector - overloading base dfs_pattern_detector
+>> + *
+>> + * @exit(): destructor
+>> + * @add_pulse(): add radar pulse to detector
+>> + * @num_radar_types: number of different radar types
+>> + * @last_pulse_ts: time stamp of last valid pulse
+>> + * @radar_detector_specs: array of radar detection specs
+>> + * @channel_detectors: list connecting channel_detector elements
+>> + */
+>> +struct pattern_detector {
+>> +	void (*exit)(struct pattern_detector *_this);
+>> +	enum dfs_detector_result (*add_pulse)
+>> +		(struct pattern_detector *_this, struct pulse_event *pe);
+>> +
+>> +	u8 num_radar_types;
+>> +	u64 last_pulse_ts;
+>> +	struct radar_detector_specs *radar_spec;
+>> +	struct list_head channel_detectors;
+>> +};
+> To overload it this way is quite fragile. It's better to embed struct
+> dfs_pattern_detector here. In places where you need to go from the
+> struct dfs_pattern_detector to this struct, you can then use the
+> container_of macro, to get at least some form of type safety.
 > 
-> Le vendredi 20 janvier 2012 à 18:04 +0100, Arend van Spriel a écrit :
->> I am not sure when compat-wireless-next was generated, but several
->> patches were made for suspend/resume.
-> It was generated on January 17th, with sources from the 16th. Is that
-> recent enough?at
+> - Felix
 
-I just checked and the suspend/resume patches from Linus were applied on
-January 17th. So you need to pick up the patches (see thread "[0/5]
-bcma/brcmsmac suspend/resume cleanups and fixes" on netdev list).
+Hi Felix,
 
-> (Packages are from
-> http://people.redhat.com/sgruszka/compat-wireless-next/F-16/)
-> 
->> You also need bcma patches. Is
->> bcma included in the compat-wireless package.
-> I'm not sure I understand. The bcma module is indeed installed from
-> compat-wireless-next and loaded:
-> $ lsmod|grep bcma
-> bcma                   23804  2 brcmsmac,b43
-> 
-> $ uname -r
-> 3.1.9-1.fc16.x86_64
-> 
-> $ find /lib/modules/3.1.9-1.fc16.x86_64 -name bcma
-> /lib/modules/3.1.9-1.fc16.x86_64/updates/drivers/bcma
-> /lib/modules/3.1.9-1.fc16.x86_64/backports/drivers/bcma
+thanks for taking a look.
 
-That answers my question. bcma is indeed part of compat-wireless.
+Actually, for this initial post we do not need any polymorphism at all, I could basically make this derived class the interface in the PATCH to come.
 
-Gr. AvS
+Though (since I am used to this coding style) I'd like to understand your concern. By 'fragile' you are referring to the risk of base and derived class diverging, right? If it is that, I see that one is in trouble if you let that happen. Here with the base class being defined as external interface holding just two function pointers I thought the risk is negligible.
 
+But generally you're right of course. I'll take it into account for the PATCH.
+
+
+Thanks
+Zefir
