@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:59112 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756590Ab2AKLkz convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 06:40:55 -0500
-Received: by obbup16 with SMTP id up16so732459obb.19
-        for <linux-wireless@vger.kernel.org>; Wed, 11 Jan 2012 03:40:54 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:43326 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754176Ab2A0Qm2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jan 2012 11:42:28 -0500
+Date: Fri, 27 Jan 2012 17:42:21 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Kernel BUG due to kernel page fault
+Message-ID: <20120127164219.GE19323@redhat.com> (sfid-20120127_174243_816028_125B42D2)
+References: <4F21D57F.7090103@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <CAC9WiBj0A54_R3NszGBEhzMAiZzL0NBmickE88avp0NDGHyjpg@mail.gmail.com>
-References: <CAC9WiBj0A54_R3NszGBEhzMAiZzL0NBmickE88avp0NDGHyjpg@mail.gmail.com>
-Date: Wed, 11 Jan 2012 12:40:54 +0100
-Message-ID: <CAC9WiBhVWvvN-yqoYvBoD1uUi0P5e2cBu68Mva99wVxr7W0ibg@mail.gmail.com> (sfid-20120111_124058_720432_C3D8162E)
-Subject: Re: About the patch: "staging: brcm80211: only enable brcmsmac if
- bcma is not set"
-From: Francis Moreau <francis.moro@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, gregkh@suse.de
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F21D57F.7090103@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Thu, Jan 26, 2012 at 04:36:47PM -0600, Larry Finger wrote:
+> Modules linked in: fuse autofs4 snd_pcm_oss snd_mixer_oss snd_seq
+> snd_seq_device edd nfs nfsd lockd auth_rpcgss nfs_acl sunrpc
+> exportfs ipv6 vboxpci(O) vboxnetadp(O) vboxnetflt(O) vboxdrv(O)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ 
+> RIP: 0010:[<ffffffff811e3ecb>]  [<ffffffff811e3ecb>] strnlen+0xb/0x30
+[snip]
+> Call Trace:
+>  [<ffffffff811e58ae>] string.isra.4+0x3e/0xd0
+>  [<ffffffff811e6889>] vsnprintf+0x219/0x600
+>  [<ffffffff81153093>] seq_printf+0x53/0x80
+>  [<ffffffff811e21db>] ? radix_tree_lookup+0xb/0x10
+>  [<ffffffff810ba5ab>] show_interrupts+0x24b/0x300
+>  [<ffffffff81153474>] seq_read+0x2b4/0x3f0
+>  [<ffffffff811531c0>] ? seq_lseek+0x100/0x100
+>  [<ffffffff8118b651>] proc_reg_read+0x81/0xc0
+>  [<ffffffff8112f967>] vfs_read+0xa7/0x160
+>  [<ffffffff8112fa65>] sys_read+0x45/0x90
+>  [<ffffffff813a33a2>] system_call_fastpath+0x16/0x1b
 
-On Thu, Sep 8, 2011 at 10:46 AM, Francis Moreau <francis.moro@gmail.com> wrote:
-> Hello,
->
-> I have a question regarding the following patch:
-> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/75638
->
-> The commit message says:
->
->   brcmsmac doesn't yet use bcma, but both drivers attempt to claim the same
->   device.  For now, turn of brcmsmac if bcma is enabled.
->
-> I think it's not quite complete:  both driver claim the same devices
-> (actually that's not entirely true since b43/bcma can drive on more
-> card) but in the case of b43/bcma not all cards are actually working.
-> For example I'm using BCM4313 card with an unsupported phy
-> (B43_PHYTYPE_LCN) so it's basically not supported by b43/bcma.
->
-> So I'm wondering if b43/bcma should be simply disabled until it got
-> the same level of support as brcmsmac ?
+This is call trace from cat /proc/interrupts, seems something pass
+malformed string to request_irq(). I do not think this is rtlwifi,
+rather that vbox thing.
 
-This has finally been merged and is part of the 3.2 release.
-
-So now distros don't ship the brcmsmac driver anymore which is
-basically the only driver which can handle my card.
-
-did you really intend to do that ?
-
-Thanks
--- 
-Francis
+Stanislaw
