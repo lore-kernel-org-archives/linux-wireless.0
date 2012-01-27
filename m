@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [206.117.179.246] ([206.117.179.246]:60610 "EHLO labridge.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753070Ab2A3XpY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 18:45:24 -0500
-Message-ID: <1327967103.4230.7.camel@joe2Laptop> (sfid-20120131_004552_086299_54A2412C)
-Subject: Re: [PATCH 1/1] wireless: remove return in _rtl_pci_switch_clk_req
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "Devendra.Naga" <devendra.aaru@gmail.com>,
-	chaoming_li@realsil.com.cn, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Mon, 30 Jan 2012 15:45:03 -0800
-In-Reply-To: <4F27294D.30302@lwfinger.net>
-References: <1327927591-28070-1-git-send-email-devendra.aaru@gmail.com>
-	 <4F27294D.30302@lwfinger.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:58378 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752758Ab2A0KUB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 Jan 2012 05:20:01 -0500
+Message-ID: <4F227A4D.80701@openwrt.org> (sfid-20120127_112007_558783_92BE06B8)
+Date: Fri, 27 Jan 2012 11:19:58 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: Milan Bouchet-Valat <nalimilan@club-internet.fr>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: BCM4313 keeps disconnecting with brcmsmac and multiple APs
+References: <22905678.140637.1327401110095.JavaMail.www@wsfrf1232> <4F22646E.1010507@broadcom.com>
+In-Reply-To: <4F22646E.1010507@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-01-30 at 17:35 -0600, Larry Finger wrote:
-> The patch is OK, but the patch subject is bad. You should have "[PATCH] 
-> rtlwifi:...". Your patch is for rtlwifi, not wireless.
+On 2012-01-27 9:46 AM, Arend van Spriel wrote:
+> On 01/24/2012 11:31 AM, Milan Bouchet-Valat wrote:
+>> [  297.365453] wlan0: Wrong control channel in association response: configured center-freq: 2437 hti-cfreq: 2462  hti->control_chan: 11 band: 0.  Disabling HT.
+> 
+> Hi Felix,
+> 
+> My guess is that this message is coming from minstrel_ht. Could you
+> explain what it means?
+It's not minstrel_ht, it's this piece of code from net/mac80211/mlme.c:
 
-Hi Devendra.
+    if (enable_ht) {
+        hti_cfreq = ieee80211_channel_to_frequency(hti->control_chan,
+                               sband->band);
+        /* check that channel matches the right operating channel */
+        if (local->hw.conf.channel->center_freq != hti_cfreq) {
+            /* Some APs mess this up, evidently.
+             * Netgear WNDR3700 sometimes reports 4 higher than
+             * the actual channel, for instance.
+             */
+            printk(KERN_DEBUG
+                   "%s: Wrong control channel in association"
+                   " response: configured center-freq: %d"
+                   " hti-cfreq: %d  hti->control_chan: %d"
+                   " band: %d.  Disabling HT.\n",
+                   sdata->name,
+                   local->hw.conf.channel->center_freq,
+                   hti_cfreq, hti->control_chan,
+                   sband->band);
+            enable_ht = false;
+        }
+    }
 
-A reasonable rule of thumb is use the deepest directory
-path basename you can to prefix the patch.
-Something like:
 
-[PATCH] $(basename $(dirname $file)): terse description
-
-If you are patching drivers/net/ethernet/realtek/apt.c
-this becomes:
-
-[PATCH] realtek: terse description
-
-There are some exceptions though.  One of them
-is if the patch is in staging, prefix with
-[PATCH] staging: $(basename $(dirname $file)): description
-
-cheers, Joe
-
+- Felix
