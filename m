@@ -1,275 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34306 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751398Ab2ADK24 (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:57628 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752562Ab2A0KDE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jan 2012 05:28:56 -0500
-Subject: [PATCH] mac80211: station state transition error handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 04 Jan 2012 11:28:53 +0100
-Message-ID: <1325672933.3339.17.camel@jlt3.sipsolutions.net> (sfid-20120104_112900_005299_0DDC4453)
-Mime-Version: 1.0
+	Fri, 27 Jan 2012 05:03:04 -0500
+Received: by wics10 with SMTP id s10so1071014wic.19
+        for <linux-wireless@vger.kernel.org>; Fri, 27 Jan 2012 02:03:02 -0800 (PST)
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Subject: [PATCH 1/3] mac80211: Fix incorrect num_sta_ps decrement in __sta_info_destroy
+Date: Fri, 27 Jan 2012 11:02:51 +0100
+Message-Id: <1327658573-477-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20120127_110309_519457_58B39473)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+When WLAN_STA_PS_DRIVER is set by ieee80211_sta_block_awake the
+num_sta_ps counter is not incremented. Hence, we shouldn't decrement
+it in __sta_info_destroy if only WLAN_STA_PS_DRIVER is set. This
+could result in an incorrect num_sta_ps counter leading to strange side
+effects with associated powersaving clients.
 
-In the future, when we start notifying drivers,
-state transitions could potentially fail. To make
-it easier to distinguish between programming bugs
-and driver failures:
- * rename sta_info_move_state() to
-   sta_info_pre_move_state() which can only be
-   called before the station is inserted (and
-   check this with a new station flag).
- * rename sta_info_move_state_checked() to just
-   plain sta_info_move_state(), as it will be
-   the regular function that can fail for more
-   than just one reason (bad transition or an
-   error from the driver)
+Fix this by only decrementing num_sta_ps when WLAN_STA_PS_STA was set
+before.
 
-This makes the programming model easier -- one of
-the functions can only be called before insertion
-and can't fail, the other can fail.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
 ---
- net/mac80211/cfg.c         |   22 ++++++++--------------
- net/mac80211/debugfs_sta.c |    5 +++--
- net/mac80211/ibss.c        |    6 +++---
- net/mac80211/iface.c       |    6 +++---
- net/mac80211/mesh_plink.c  |    6 +++---
- net/mac80211/mlme.c        |   17 +++++++++++++----
- net/mac80211/sta_info.c    |   12 ++++++++----
- net/mac80211/sta_info.h    |   16 +++++++++++-----
- 8 files changed, 52 insertions(+), 38 deletions(-)
+ net/mac80211/sta_info.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
---- a/net/mac80211/debugfs_sta.c	2012-01-03 18:26:37.000000000 +0100
-+++ b/net/mac80211/debugfs_sta.c	2012-01-03 18:26:51.000000000 +0100
-@@ -63,14 +63,15 @@ static ssize_t sta_flags_read(struct fil
- 	test_sta_flag(sta, WLAN_STA_##flg) ? #flg "\n" : ""
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 5b4ab21..70a0de3 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -750,12 +750,10 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
  
- 	int res = scnprintf(buf, sizeof(buf),
--			    "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
-+			    "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
- 			    TEST(AUTH), TEST(ASSOC), TEST(PS_STA),
- 			    TEST(PS_DRIVER), TEST(AUTHORIZED),
- 			    TEST(SHORT_PREAMBLE),
- 			    TEST(WME), TEST(WDS), TEST(CLEAR_PS_FILT),
- 			    TEST(MFP), TEST(BLOCK_BA), TEST(PSPOLL),
- 			    TEST(UAPSD), TEST(SP), TEST(TDLS_PEER),
--			    TEST(TDLS_PEER_AUTH));
-+			    TEST(TDLS_PEER_AUTH), TEST(4ADDR_EVENT),
-+			    TEST(INSERTED));
- #undef TEST
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
- }
---- a/net/mac80211/sta_info.h	2012-01-03 18:26:37.000000000 +0100
-+++ b/net/mac80211/sta_info.h	2012-01-03 18:26:51.000000000 +0100
-@@ -52,6 +52,7 @@
-  * @WLAN_STA_SP: Station is in a service period, so don't try to
-  *	reply to other uAPSD trigger frames or PS-Poll.
-  * @WLAN_STA_4ADDR_EVENT: 4-addr event was already sent for this frame.
-+ * @WLAN_STA_INSERTED: This station is inserted into the hash table.
-  */
- enum ieee80211_sta_info_flags {
- 	WLAN_STA_AUTH,
-@@ -71,6 +72,7 @@ enum ieee80211_sta_info_flags {
- 	WLAN_STA_UAPSD,
- 	WLAN_STA_SP,
- 	WLAN_STA_4ADDR_EVENT,
-+	WLAN_STA_INSERTED,
- };
+ 	sta->dead = true;
  
- enum ieee80211_sta_state {
-@@ -427,13 +429,17 @@ static inline int test_and_set_sta_flag(
- 	return test_and_set_bit(flag, &sta->_flags);
- }
+-	if (test_sta_flag(sta, WLAN_STA_PS_STA) ||
+-	    test_sta_flag(sta, WLAN_STA_PS_DRIVER)) {
++	if (test_sta_flag(sta, WLAN_STA_PS_STA)) {
+ 		BUG_ON(!sdata->bss);
  
--int sta_info_move_state_checked(struct sta_info *sta,
--				enum ieee80211_sta_state new_state);
-+int sta_info_move_state(struct sta_info *sta,
-+			enum ieee80211_sta_state new_state);
+ 		clear_sta_flag(sta, WLAN_STA_PS_STA);
+-		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
  
--static inline void sta_info_move_state(struct sta_info *sta,
--				       enum ieee80211_sta_state new_state)
-+static inline void sta_info_pre_move_state(struct sta_info *sta,
-+					   enum ieee80211_sta_state new_state)
- {
--	int ret = sta_info_move_state_checked(sta, new_state);
-+	int ret;
-+
-+	WARN_ON_ONCE(test_sta_flag(sta, WLAN_STA_INSERTED));
-+
-+	ret = sta_info_move_state(sta, new_state);
- 	WARN_ON_ONCE(ret);
- }
- 
---- a/net/mac80211/sta_info.c	2012-01-03 18:26:37.000000000 +0100
-+++ b/net/mac80211/sta_info.c	2012-01-03 18:26:51.000000000 +0100
-@@ -405,6 +405,8 @@ static int sta_info_insert_finish(struct
- 		sta_info_hash_add(local, sta);
- 
- 		list_add(&sta->list, &local->sta_list);
-+
-+		set_sta_flag(sta, WLAN_STA_INSERTED);
- 	} else {
- 		sta->dummy = false;
- 	}
-@@ -765,8 +767,10 @@ static int __must_check __sta_info_destr
- 	if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
- 		RCU_INIT_POINTER(sdata->u.vlan.sta, NULL);
- 
--	while (sta->sta_state > IEEE80211_STA_NONE)
--		sta_info_move_state(sta, sta->sta_state - 1);
-+	while (sta->sta_state > IEEE80211_STA_NONE) {
-+		int err = sta_info_move_state(sta, sta->sta_state - 1);
-+		WARN_ON_ONCE(err != 0);
-+	}
- 
- 	if (sta->uploaded) {
- 		if (sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-@@ -1405,8 +1409,8 @@ void ieee80211_sta_set_buffered(struct i
- }
- EXPORT_SYMBOL(ieee80211_sta_set_buffered);
- 
--int sta_info_move_state_checked(struct sta_info *sta,
--				enum ieee80211_sta_state new_state)
-+int sta_info_move_state(struct sta_info *sta,
-+			enum ieee80211_sta_state new_state)
- {
- 	might_sleep();
- 
---- a/net/mac80211/cfg.c	2012-01-03 18:26:37.000000000 +0100
-+++ b/net/mac80211/cfg.c	2012-01-03 18:26:51.000000000 +0100
-@@ -776,12 +776,10 @@ static int sta_apply_parameters(struct i
- 
- 		if (set & BIT(NL80211_STA_FLAG_AUTHENTICATED) &&
- 		    !test_sta_flag(sta, WLAN_STA_AUTH)) {
--			ret = sta_info_move_state_checked(sta,
--					IEEE80211_STA_AUTH);
-+			ret = sta_info_move_state(sta, IEEE80211_STA_AUTH);
- 			if (ret)
- 				return ret;
--			ret = sta_info_move_state_checked(sta,
--					IEEE80211_STA_ASSOC);
-+			ret = sta_info_move_state(sta, IEEE80211_STA_ASSOC);
- 			if (ret)
- 				return ret;
- 		}
-@@ -789,11 +787,9 @@ static int sta_apply_parameters(struct i
- 
- 	if (mask & BIT(NL80211_STA_FLAG_AUTHORIZED)) {
- 		if (set & BIT(NL80211_STA_FLAG_AUTHORIZED))
--			ret = sta_info_move_state_checked(sta,
--					IEEE80211_STA_AUTHORIZED);
-+			ret = sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
- 		else
--			ret = sta_info_move_state_checked(sta,
--					IEEE80211_STA_ASSOC);
-+			ret = sta_info_move_state(sta, IEEE80211_STA_ASSOC);
- 		if (ret)
- 			return ret;
- 	}
-@@ -805,12 +801,10 @@ static int sta_apply_parameters(struct i
- 
- 		if (!(set & BIT(NL80211_STA_FLAG_AUTHENTICATED)) &&
- 		    test_sta_flag(sta, WLAN_STA_AUTH)) {
--			ret = sta_info_move_state_checked(sta,
--					IEEE80211_STA_AUTH);
-+			ret = sta_info_move_state(sta, IEEE80211_STA_AUTH);
- 			if (ret)
- 				return ret;
--			ret = sta_info_move_state_checked(sta,
--					IEEE80211_STA_NONE);
-+			ret = sta_info_move_state(sta, IEEE80211_STA_NONE);
- 			if (ret)
- 				return ret;
- 		}
-@@ -944,8 +938,8 @@ static int ieee80211_add_station(struct
- 	if (!sta)
- 		return -ENOMEM;
- 
--	sta_info_move_state(sta, IEEE80211_STA_AUTH);
--	sta_info_move_state(sta, IEEE80211_STA_ASSOC);
-+	sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
-+	sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
- 
- 	err = sta_apply_parameters(local, sta, params);
- 	if (err) {
---- a/net/mac80211/ibss.c	2012-01-03 18:26:37.000000000 +0100
-+++ b/net/mac80211/ibss.c	2012-01-03 18:26:51.000000000 +0100
-@@ -289,9 +289,9 @@ static struct sta_info *ieee80211_ibss_f
- 		    addr, sdata->name);
- #endif
- 
--	sta_info_move_state(sta, IEEE80211_STA_AUTH);
--	sta_info_move_state(sta, IEEE80211_STA_ASSOC);
--	sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
-+	sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
-+	sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
-+	sta_info_pre_move_state(sta, IEEE80211_STA_AUTHORIZED);
- 
- 	rate_control_rate_init(sta);
- 
---- a/net/mac80211/iface.c	2012-01-03 18:26:37.000000000 +0100
-+++ b/net/mac80211/iface.c	2012-01-03 18:26:51.000000000 +0100
-@@ -318,9 +318,9 @@ static int ieee80211_do_open(struct net_
- 			goto err_del_interface;
- 		}
- 
--		sta_info_move_state(sta, IEEE80211_STA_AUTH);
--		sta_info_move_state(sta, IEEE80211_STA_ASSOC);
--		sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
-+		sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
-+		sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
-+		sta_info_pre_move_state(sta, IEEE80211_STA_AUTHORIZED);
- 
- 		res = sta_info_insert(sta);
- 		if (res) {
---- a/net/mac80211/mesh_plink.c	2012-01-03 18:26:37.000000000 +0100
-+++ b/net/mac80211/mesh_plink.c	2012-01-03 18:26:51.000000000 +0100
-@@ -96,9 +96,9 @@ static struct sta_info *mesh_plink_alloc
- 	if (!sta)
- 		return NULL;
- 
--	sta_info_move_state(sta, IEEE80211_STA_AUTH);
--	sta_info_move_state(sta, IEEE80211_STA_ASSOC);
--	sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
-+	sta_info_pre_move_state(sta, IEEE80211_STA_AUTH);
-+	sta_info_pre_move_state(sta, IEEE80211_STA_ASSOC);
-+	sta_info_pre_move_state(sta, IEEE80211_STA_AUTHORIZED);
- 
- 	set_sta_flag(sta, WLAN_STA_WME);
- 
---- a/net/mac80211/mlme.c	2012-01-03 18:26:37.000000000 +0100
-+++ b/net/mac80211/mlme.c	2012-01-03 18:26:51.000000000 +0100
-@@ -1585,10 +1585,19 @@ static bool ieee80211_assoc_success(stru
- 		return false;
- 	}
- 
--	sta_info_move_state(sta, IEEE80211_STA_AUTH);
--	sta_info_move_state(sta, IEEE80211_STA_ASSOC);
--	if (!(ifmgd->flags & IEEE80211_STA_CONTROL_PORT))
--		sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
-+	err = sta_info_move_state(sta, IEEE80211_STA_AUTH);
-+	if (!err)
-+		err = sta_info_move_state(sta, IEEE80211_STA_ASSOC);
-+	if (!err && !(ifmgd->flags & IEEE80211_STA_CONTROL_PORT))
-+		err = sta_info_move_state(sta, IEEE80211_STA_AUTHORIZED);
-+	if (err) {
-+		printk(KERN_DEBUG
-+		       "%s: failed to move station %pM to desired state\n",
-+		       sdata->name, sta->sta.addr);
-+		sta_info_destroy_addr(sdata, sta->sta.addr);
-+		mutex_unlock(&sdata->local->sta_mtx);
-+		return false;
-+	}
- 
- 	rates = 0;
- 	basic_rates = 0;
-
+ 		atomic_dec(&sdata->bss->num_sta_ps);
+ 		sta_info_recalc_tim(sta);
+-- 
+1.7.7
 
