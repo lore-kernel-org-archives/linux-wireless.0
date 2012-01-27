@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:13035 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751467Ab2AEL1N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 06:27:13 -0500
-Date: Thu, 5 Jan 2012 12:26:49 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Michal Hocko <mhocko@suse.cz>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Subject: Re: iwl3945 didn't survive after s2ram failure
-Message-ID: <20120105112648.GB2222@redhat.com> (sfid-20120105_122746_896673_A13B5EA1)
-References: <20111227105340.GD5344@tiehlicka.suse.cz>
- <20120103103457.GA3391@redhat.com>
- <20120103122311.GC3391@redhat.com>
- <20120103130733.GB3891@tiehlicka.suse.cz>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:35368 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754155Ab2A0DL7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 Jan 2012 22:11:59 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120103130733.GB3891@tiehlicka.suse.cz>
+In-Reply-To: <20120127015015.GA23291@gamma.logic.tuwien.ac.at>
+References: <20120124013625.GB18436@gamma.logic.tuwien.ac.at>
+	<CANUX_P3er0orBy8OhDuY1DfgD810UD-_HB_ukJnCA+W8e-VazQ@mail.gmail.com>
+	<20120125002250.GA20431@gamma.logic.tuwien.ac.at>
+	<CANUX_P0UREz_jZABu+Y_QYOh9tx_sKZSSkZpYHBEVtcU4QQdSA@mail.gmail.com>
+	<20120126003735.GA2346@gamma.logic.tuwien.ac.at>
+	<CANUX_P0H_WaWwnpjoBcMpZQY4xH=cbVhAKxWKXmz-HwFMcWS6w@mail.gmail.com>
+	<CANUX_P3XSCsWUJ9M55qeaK-DuPEMXODFPJiNk+BgnHN-=WECqw@mail.gmail.com>
+	<20120126232555.GB16330@gamma.logic.tuwien.ac.at>
+	<20120127015015.GA23291@gamma.logic.tuwien.ac.at>
+Date: Thu, 26 Jan 2012 19:11:57 -0800
+Message-ID: <CANUX_P3F58upbrw48AiMTV4DDZWsfveYp=mANAD9CQ2bPps0cA@mail.gmail.com> (sfid-20120127_041219_247324_085A0016)
+Subject: Re: iwlagn is getting even worse with 3.3-rc1
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Norbert Preining <preining@logic.at>
+Cc: linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	Dave Jones <davej@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 03, 2012 at 02:07:33PM +0100, Michal Hocko wrote:
-> On Tue 03-01-12 13:23:12, Stanislaw Gruszka wrote:
-> > On Tue, Jan 03, 2012 at 11:34:58AM +0100, Stanislaw Gruszka wrote:
-> [...]
-> > > If anything other will not help, is possible to rewrite eeprom, I don't
-> > > know how to do this, but I know that tool for that exist:
-> > > http://code.google.com/p/iwleeprom/
-> > Actually I do not think we overwrite eeprom, seems problem is at pci-e
-> > bus level. Simply we can not communicate with device through pci-e bus.
-> > That is kind a silly, but you can check if removing cart from slot
-> > and put it back again (assuring it correctly connected) helps.
-> 
-> I am not sure whether the wireless is integrated (this is a laptop) and
-> I am little bit reluctant to open it as the warranty seems to be still
-> valid and I would break it if I get inside.
-Wow, laptop with so old wifi adapter has still a warranty. That good news,
-you can ask vendor for fixing the problem :-)
+> Hi Emmanuel,
+>
+> On Fr, 27 Jan 2012, Norbert Preining wrote:
+>> First tests are promising, after reboot it was working immediately
+>> without need to rfkill block/unblock. lso after suspend and resume.
+>>
+>> Will test more the next days and report back.
+>
+> Unfortunately, at the university it is still a complete no-go.
+> Usually the connection works for a short time, then breaks down.
+> After that even unloading and loading the module did not reactivate
+> it, I cannot get a connection at all. But other units, or with
+> older kernel (it was 2.6.3X AFAIR) it was working without a glitch.
+>
+> I uploaded a syslog output including kernel and network manager logs
+> to
+>        http://www.logic.at/people/preining/syslog.log
+> (new one). This shows a session from loading the module up to giving up.
+>
 
-> I have just realized that I haven't provided lspci output so just in
-> case it is helpful:
-I tried to reproduce on my laptop by suspend and removing power sources,
-device initialize properly during boot.
-
-I'm still wondering why we can break anything by power off during
-suspend. Maybe there is some BIOS facility that power off PCIe device
-or bridge during suspend, and now it in powered off state. Hard to tell,
-except mentioned in other email pci* boot parameter try to change PCIe
-related BIOS settings if there are any. 
-
-Stanislaw
+I glanced at the logs, and they look healthy from the wifi driver
+side. You just don't get any reply to DHCP_DISCOVER apparently... can
+you get a sniffer ?
+I am pretty sure that the packet in sent in the air, but if you can
+get a capture of that we could check that out.
