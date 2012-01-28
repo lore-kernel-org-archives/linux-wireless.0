@@ -1,59 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:56700 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753048Ab2A3XkF (ORCPT
+Received: from nm21-vm3.bullet.mail.ukl.yahoo.com ([217.12.10.35]:49065 "HELO
+	nm21-vm3.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751253Ab2A1HXL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 18:40:05 -0500
-Received: by ghrr11 with SMTP id r11so2079720ghr.19
-        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 15:40:04 -0800 (PST)
-Message-ID: <4F272A51.2050508@lwfinger.net> (sfid-20120131_004010_013598_11C400FA)
-Date: Mon, 30 Jan 2012 17:40:01 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Hin-Tak Leung <htl10@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org,
-	Herton Ronaldo Krzesinski <herton@canonical.com>
-Subject: Re: rtl8187 behavior change/breakage with 3.2.1-3.fc16.x86_64<->3.2.2-1.fc16.x86_64
-References: <4F25BD09.3060607@lwfinger.net> <1327924292.6683.YahooMailClassic@web29506.mail.ird.yahoo.com> <20120130183924.GA2493@tuxdriver.com>
-In-Reply-To: <20120130183924.GA2493@tuxdriver.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Sat, 28 Jan 2012 02:23:11 -0500
+From: Marek Lindner <lindner_marek@yahoo.de>
+To: linux-wireless@vger.kernel.org
+Cc: nbd@openwrt.org, Marek Lindner <lindner_marek@yahoo.de>
+Subject: [PATCH] mac80211: minstrel_ht should not override user supplied rts setting
+Date: Sat, 28 Jan 2012 15:17:07 +0800
+Message-Id: <1327735027-30121-2-git-send-email-lindner_marek@yahoo.de> (sfid-20120128_082346_182122_66887F30)
+In-Reply-To: <1327735027-30121-1-git-send-email-lindner_marek@yahoo.de>
+References: <1327735027-30121-1-git-send-email-lindner_marek@yahoo.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/30/2012 12:39 PM, John W. Linville wrote:
-> On Mon, Jan 30, 2012 at 11:51:32AM +0000, Hin-Tak Leung wrote:
->> --- On Sun, 29/1/12, Larry Finger<Larry.Finger@lwfinger.net>  wrote:
->>
->>>> This may be a fedora-specific problem - I noticed that
->>> just after booting into the new fedora kernel
->>> (3.2.2-1.fc16.x86_64), I am getting a strange message from
->>> the kernel:
->>>>
->>>> rtl8187: Invalid hwaddr! Using randomly generated MAC
->>> address
->>
->>
->>> I just checked, and rtl8187 works fine with my RTL8187L
->>> using 3.3-rc1 from
->>> wireless-testing. I don't know where the problem occurs.
->>
->> Thanks for looking. It is mostly likely a fedora-specific problem then. Unless John has any idea, I'll eventually unpacking the fedora kernel source if the problem persists for another kernel.
->>
->> Cheers,
->> Hin-Tak
->>
->> P.S. Herton's e-mail seems to have changed.
->
-> When I integrated compat-wireless into the Fedora kernels, I
-> left it using the in-kernel eeprom_93cx6 driver.  Apparently some
-> incompatiblity has krept-in, and several wireless drives stopped
-> working.  I have changed the fedora kernels to use the version of
-> eeprom_93cx6 now, so the next build should work alright.
+Signed-off-by: Marek Lindner <lindner_marek@yahoo.de>
+---
+ net/mac80211/rc80211_minstrel_ht.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-John,
-
-Thanks for chasing down this problem.
-
-Larry
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index ff5f7b8..9b889d7 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -644,10 +644,10 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 				false, false);
+ 		else
+ 			minstrel_ht_set_rate(mp, mi, &ar[1], mi->max_tp_rate2,
+-				false, true);
++				false, false);
+ 
+ 		minstrel_ht_set_rate(mp, mi, &ar[2], mi->max_prob_rate,
+-				     false, !sample);
++				     false, false);
+ 
+ 		ar[3].count = 0;
+ 		ar[3].idx = -1;
+@@ -658,7 +658,7 @@ minstrel_ht_get_rate(void *priv, struct ieee80211_sta *sta, void *priv_sta,
+ 		 * max_tp_rate -> max_prob_rate by default.
+ 		 */
+ 		minstrel_ht_set_rate(mp, mi, &ar[1], mi->max_prob_rate,
+-				     false, !sample);
++				     false, false);
+ 
+ 		ar[2].count = 0;
+ 		ar[2].idx = -1;
+-- 
+1.7.5.4
 
