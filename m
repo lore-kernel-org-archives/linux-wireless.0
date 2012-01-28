@@ -1,69 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:50557 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030367Ab2AFQB0 convert rfc822-to-8bit (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:41612 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751656Ab2A1QZh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jan 2012 11:01:26 -0500
-Date: Fri, 6 Jan 2012 17:01:22 +0100 (CET)
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-To: Julian Calaby <julian.calaby@gmail.com>
-cc: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Stefano Brivio <stefano.brivio@polimi.it>
-Subject: Re: [PATCH] wireless: b43: fix Oops on card eject during transfer
-In-Reply-To: <CAGRGNgUj3EUPKc0SX+3yCbygdbhS7_CN4hgR7ZAzjXuULw9fLg@mail.gmail.com>
-Message-ID: <Pine.LNX.4.64.1201061653050.18586@axis700.grange> (sfid-20120106_170130_221225_1D58CE8D)
-References: <Pine.LNX.4.64.1201061256190.16279@axis700.grange>
- <CAGRGNgUj3EUPKc0SX+3yCbygdbhS7_CN4hgR7ZAzjXuULw9fLg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+	Sat, 28 Jan 2012 11:25:37 -0500
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
+	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
+	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+Subject: [PATCH 2/2] iw: remove ifdefs for mcs mask
+Date: Sat, 28 Jan 2012 17:25:35 +0100
+Message-Id: <1327767935-16984-5-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20120128_172614_307720_3A83CDE3)
+In-Reply-To: <1327767935-16984-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+References: <1327767935-16984-1-git-send-email-siwu@hrz.tu-chemnitz.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julian
+These are enums, not defines. Therefore the ifdef check can never be
+true.
 
-On Sat, 7 Jan 2012, Julian Calaby wrote:
-
-> Hi Guennadi,
-> 
-> On Fri, Jan 6, 2012 at 22:58, Guennadi Liakhovetski
-> <g.liakhovetski@gmx.de> wrote:
-> > An Oops has once been observed, when the SDIO card had been ejected during
-> > IO. The PC value shows, that the dev pointer in b43_op_stop() was NULL.
-> >
-> > Signed-off-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-> > ---
-> >
-> > Might also be good for stable
-> >
-> >  drivers/net/wireless/b43/main.c |    3 +++
-> >  1 files changed, 3 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-> > index 5634d9a..3849c25 100644
-> > --- a/drivers/net/wireless/b43/main.c
-> > +++ b/drivers/net/wireless/b43/main.c
-> > @@ -4834,6 +4834,9 @@ static void b43_op_stop(struct ieee80211_hw *hw)
-> >        cancel_work_sync(&(wl->beacon_update_trigger));
-> >
-> >        mutex_lock(&wl->mutex);
-> > +       if (!dev)
-> > +               goto out_unlock;
-> 
-> Is there any reason to take this mutex, then jump to a label that
-> releases it immediately?
-> 
-> Would it be better to add a new label after the mutex_unlock() below
-> and jump to there immediately after the cancel_work_sync() call above?
-
-The reason is exactly that: to avoid adding one more label. It is an 
-exceptional case, that that branch would be taken, so, there's no reason 
-to optimize for it. Whereas adding one label would clutter the code 
-needlessly, IMHO.
-
-Thanks
-Guennadi
+Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
+Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
 ---
-Guennadi Liakhovetski, Ph.D.
-Freelance Open-Source Software Developer
-http://www.open-technology.de/
+ bitrate.c |   20 ++------------------
+ 1 files changed, 2 insertions(+), 18 deletions(-)
+
+diff --git a/bitrate.c b/bitrate.c
+index cefd150..22b863e 100644
+--- a/bitrate.c
++++ b/bitrate.c
+@@ -17,12 +17,10 @@ static int handle_bitrates(struct nl80211_state *state,
+ 	uint8_t *legacy = NULL;
+ 	int *n_legacy = NULL;
+ 	bool have_mcs_24 = false, have_mcs_5 = false;
+-#ifdef NL80211_TXRATE_MCS
+ 	uint8_t mcs_24[77], mcs_5[77];
+ 	int n_mcs_24 = 0, n_mcs_5 = 0;
+ 	uint8_t *mcs = NULL;
+ 	int *n_mcs = NULL;
+-#endif
+ 	enum {
+ 		S_NONE,
+ 		S_LEGACY,
+@@ -32,9 +30,7 @@ static int handle_bitrates(struct nl80211_state *state,
+ 	for (i = 0; i < argc; i++) {
+ 		char *end;
+ 		double tmpd;
+-#ifdef NL80211_TXRATE_MCS
+ 		long tmpl;
+-#endif
+ 
+ 		if (strcmp(argv[i], "legacy-2.4") == 0) {
+ 			if (have_legacy_24)
+@@ -51,7 +47,6 @@ static int handle_bitrates(struct nl80211_state *state,
+ 			n_legacy = &n_legacy_5;
+ 			have_legacy_5 = true;
+ 		}
+-#ifdef NL80211_TXRATE_MCS
+ 		else if (strcmp(argv[i], "mcs-2.4") == 0) {
+ 			if (have_mcs_24)
+ 				return 1;
+@@ -67,7 +62,6 @@ static int handle_bitrates(struct nl80211_state *state,
+ 			n_mcs = &n_mcs_5;
+ 			have_mcs_5 = true;
+ 		}
+-#endif
+ 		else switch (parser_state) {
+ 		case S_LEGACY:
+ 			tmpd = strtod(argv[i], &end);
+@@ -78,7 +72,6 @@ static int handle_bitrates(struct nl80211_state *state,
+ 			legacy[(*n_legacy)++] = tmpd * 2;
+ 			break;
+ 		case S_MCS:
+-#ifdef NL80211_TXRATE_MCS
+ 			tmpl = strtol(argv[i], &end, 0);
+ 			if (*end != '\0')
+ 				return 1;
+@@ -86,7 +79,6 @@ static int handle_bitrates(struct nl80211_state *state,
+ 				return 1;
+ 			mcs[(*n_mcs)++] = tmpl;
+ 			break;
+-#endif
+ 		default:
+ 			return 1;
+ 		}
+@@ -102,10 +94,8 @@ static int handle_bitrates(struct nl80211_state *state,
+ 			goto nla_put_failure;
+ 		if (have_legacy_24)
+ 			nla_put(msg, NL80211_TXRATE_LEGACY, n_legacy_24, legacy_24);
+-#ifdef NL80211_TXRATE_MCS
+ 		if (have_mcs_24)
+ 			nla_put(msg, NL80211_TXRATE_MCS, n_mcs_24, mcs_24);
+-#endif
+ 		nla_nest_end(msg, nl_band);
+ 	}
+ 
+@@ -115,10 +105,8 @@ static int handle_bitrates(struct nl80211_state *state,
+ 			goto nla_put_failure;
+ 		if (have_legacy_5)
+ 			nla_put(msg, NL80211_TXRATE_LEGACY, n_legacy_5, legacy_5);
+-#ifdef NL80211_TXRATE_MCS
+ 		if (have_mcs_5)
+ 			nla_put(msg, NL80211_TXRATE_MCS, n_mcs_5, mcs_5);
+-#endif
+ 		nla_nest_end(msg, nl_band);
+ 	}
+ 
+@@ -130,13 +118,9 @@ static int handle_bitrates(struct nl80211_state *state,
+ }
+ 
+ #define DESCR_LEGACY "[legacy-<2.4|5> <legacy rate in Mbps>*]"
+-#ifdef NL80211_TXRATE_MCS
+ #define DESCR DESCR_LEGACY " [mcs-<2.4|5> <MCS index>*]"
+-#else
+-#define DESCR DESCR_LEGACY
+-#endif
+ 
+-COMMAND(set, bitrates, DESCR, NL80211_CMD_SET_TX_BITRATE_MASK, 0, CIB_NETDEV,
+-	handle_bitrates,
++COMMAND(set, bitrates, "[legacy-<2.4|5> <legacy rate in Mbps>*] [mcs-<2.4|5> <MCS index>*]",
++	NL80211_CMD_SET_TX_BITRATE_MASK, 0, CIB_NETDEV, handle_bitrates,
+ 	"Sets up the specified rate masks.\n"
+ 	"Not passing any arguments would clear the existing mask (if any).");
+-- 
+1.7.7.3
+
