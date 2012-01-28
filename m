@@ -1,77 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out5.smtp.messagingengine.com ([66.111.4.29]:54331 "EHLO
-	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753362Ab2ABXcD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 18:32:03 -0500
-Received: from compute6.internal (compute6.nyi.mail.srv.osa [10.202.2.46])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 8699220E65
-	for <linux-wireless@vger.kernel.org>; Mon,  2 Jan 2012 18:32:02 -0500 (EST)
-Message-ID: <4F023E6B.2020307@fastmail.fm> (sfid-20120103_003223_630668_39E1E17B)
-Date: Mon, 02 Jan 2012 23:31:55 +0000
-From: Jack Stone <jwjstone@fastmail.fm>
+Received: from nm3-vm0.bullet.mail.ird.yahoo.com ([77.238.189.213]:24468 "HELO
+	nm3-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751484Ab2A1HBS convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Jan 2012 02:01:18 -0500
+Message-ID: <1327733677.67732.YahooMailClassic@web29505.mail.ird.yahoo.com> (sfid-20120128_080141_995325_3923C4B1)
+Date: Sat, 28 Jan 2012 06:54:37 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: Fwd: Question regarding Linux RTL driver
+To: Nikola Gacic <empnik@gmail.com>
+Cc: linux-wireless@vger.kernel.org
 MIME-Version: 1.0
-To: Matthew Garrett <mjg@redhat.com>
-CC: Linus Torvalds <torvalds@linux-foundation.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Oliver Neukum <oliver@neukum.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-References: <4F02165C.1060400@fastmail.fm> <CA+55aFwf06vRraVqtz8_2qWjxH0V=Yj5m7mEy3XVbA7+qj5k5A@mail.gmail.com> <20120102211904.GA15316@srcf.ucam.org> <CA+55aFwJuuvqcsgHnZ4-VhUhbVvL6beKogo1adgYyZt_ZM=H7A@mail.gmail.com> <20120102215028.GA15701@srcf.ucam.org> <CA+55aFz73GuHiOW1NoAuJLea_GKLepiZjrnrgpOKdQizPgnhoA@mail.gmail.com> <20120102221235.GA16012@srcf.ucam.org> <CA+55aFyHvmvast_kuNddU3iotReR1mOpKM4HGAw80ma8kn+2-g@mail.gmail.com> <20120102222920.GA16160@srcf.ucam.org> <CA+55aFyUK6X7ip2UXV9iT07=qezXfbw82wn6UKAN8JFQtYNs5Q@mail.gmail.com> <20120102230037.GA16458@srcf.ucam.org>
-In-Reply-To: <20120102230037.GA16458@srcf.ucam.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/01/12 23:00, Matthew Garrett wrote:
-> On Mon, Jan 02, 2012 at 02:46:56PM -0800, Linus Torvalds wrote:
-> 
->> It's *trivial* to attach the firmware driver and load the firmware
->> even if the firmware isn't needed - because you know it *will* be
->> needed if somebody suspends. Why not just do that? Why make up these
->> horrible problems that are totally irrelevant?
-> 
-> It means adding complexity to drivers that don't currently care about 
-> it, and carrying that cost even for hardware that doesn't need it. It 
-> can certainly be made to work, but it's inelegant. We could avoid this 
-> specific instance of the problem by just punting responsibility to 
-> userland instead.
-> 
-> It's clear that we can solve this. All I'm saying is that just making 
-> the firmware loader cache things isn't a solution in itself. In this 
-> specific case, it means merging the isight_firmware driver into 
-> uvcvideo, which is something the uvcvideo maintainer didn't seem keen on 
-> a few years ago.
-> 
+(added CC'ed to the correct mailing list).
 
-Rather than merging the drivers we could make the uvcvideo (or any other
-generic driver) driver expose a "subdriver" interface that allows
-another module to bind to the specific ID and add extra handling to
-certain events. We could then use that interface to provide a firmware
-driver for each device that needs it. The firmware driver could bind to
-the bootstrap device and to the uvcvideo subdriver interface and it
-would then have all the lifetime info we need. [Credit to Linus for
-suggesting this idea]
+No, what you did was wrong - unless you are recruiting for private consultants and want to pay for one-to-one consultation, the appropriate way of contacting is via/Cc'ing one of the mailing lists. (and go by the usual rules, like no html-styled e-mail, etc, which you also broke).
 
-You mensioned earlier about not being able to tell the difference
-between a device that needs firmware and one that needs flash (e.g. they
-use exactly the same ids). It doesn't really matter - we just assume
-that it might need firmware and load it anyway. It uses more memory but
-is robust.
+That said - you have not mentioned any debugging information or any method you tried; nor code snipplets of your work. There is nothing to work on, other than "read my mind". So until you can do that, there is nothing to say.
 
-Also, as Linus mensioned, for some devices we just don't care. For
-example, if we drop a video call over suspend it's not ideal but it
-doesn't prevent the system from resuming. Lets concentrate on fixing all
-the cases that could prevent resume (the "99%") and fix the other
-devices later.
+--- On Thu, 26/1/12, Nikola Gacic <empnik@gmail.com> wrote:
 
-Thanks,
+From: Nikola Gacic <empnik@gmail.com>
+Subject: Fwd: Question regarding Linux RTL driver
+To: htl10@users.sourceforge.net
+Date: Thursday, 26 January, 2012, 17:36
 
-Jack
+Hello Mr. Leung,
+
+    I don't know if this is the right way for contacting you but I couldn't find the other way.
+    Firstly, I want to say that I am student at School of electrical Engineering in Belgrade and I am working on some embedded project where I tried to use you RTL8187 Linux driver to communicate with PIC32 microcontroller over USB.
+
+
+
+
+    I would appreciate any help with my problem. If you could spare some time to read this it would be great. I have several questions. Initialization worked fine I think (I get ACK packets), but when I try to finally send IN packet to endpoint 0x81 I get NAK packets all the time!
+
+
+
+
+    I checked code in microcontroller several times and, of course, maybe error could be somewhere in initialization, but would that block my IN packets to device? I know that PIC32 cannot work in high-speed mode, only  in full-speed, but in the datasheet for this dongle it says it can work in full-speed. So I want to know does USB card set its speed to full-speed automatically?
+
+
+
+
+    I think my understanding of driver code is good so you can give me some general guidelines regarding initialization if you don't want to go to details.Thank you in advance.
+
+Kind regards,
+Nikola Gacić
+
+
+
+
+
+
+
+
+
+
