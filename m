@@ -1,82 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16510 "EHLO mx1.redhat.com"
+Received: from gmmr4.centrum.cz ([46.255.227.253]:48349 "EHLO gmmr4.centrum.cz"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751652Ab2AaIOy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 03:14:54 -0500
-Date: Tue, 31 Jan 2012 09:14:22 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH 2/4] rt2800: radio 3xxx: program RF_R1
- during channel switch
-Message-ID: <20120131081422.GB2438@redhat.com> (sfid-20120131_091457_833227_433C434F)
-References: <1327936679-12576-1-git-send-email-sgruszka@redhat.com>
- <1327936679-12576-2-git-send-email-sgruszka@redhat.com>
- <4F271479.4090303@gmail.com>
+	id S1752424Ab2A1O4S (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Jan 2012 09:56:18 -0500
+Received: from mail1007.cent (unknown [10.32.3.101])
+	by gmmr4.centrum.cz (Postfix) with ESMTP id 946BA1A001CA2
+	for <linux-wireless@vger.kernel.org>; Sat, 28 Jan 2012 15:45:44 +0100 (CET)
+To: <linux-wireless@vger.kernel.org>
+Subject: connection interrupted for rt61pci in master mode
+Date: Sat, 28 Jan 2012 15:45:44 +0100
+From: <trencan@centrum.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F271479.4090303@gmail.com>
+Message-Id: <20120128154544.70E060CD@centrum.cz> (sfid-20120128_155621_700454_A21897F4)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 30, 2012 at 11:06:49PM +0100, Gertjan van Wingerde wrote:
-> On 01/30/12 16:17, Stanislaw Gruszka wrote:
-> > +	rt2800_rfcsr_read(rt2x00dev, 1, &rfcsr);
-> > +	rt2x00_set_field8(&rfcsr, RFCSR1_RX0_PD, 0);
-> > +	rt2x00_set_field8(&rfcsr, RFCSR1_TX0_PD, 0);
-> > +	if (rt2x00_rt(rt2x00dev, RT3390)) {
-> > +		rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD,
-> > +				  rt2x00dev->default_ant.rx_chain_num == 1);
-> > +		rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD,
-> > +				  rt2x00dev->default_ant.tx_chain_num == 1);
-> > +	} else {
-> > +		rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 0);
-> > +		rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 0);
-> > +		rt2x00_set_field8(&rfcsr, RFCSR1_RX2_PD, 0);
-> > +		rt2x00_set_field8(&rfcsr, RFCSR1_TX2_PD, 0);
-> > +
-> > +		switch (rt2x00dev->default_ant.tx_chain_num) {
-> > +		case 1:
-> > +			rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 1);
-> > +			/* fall through */
-> > +		case 2:
-> > +			rt2x00_set_field8(&rfcsr, RFCSR1_TX2_PD, 1);
-> > +			break;
-> > +		}
-> > +
-> > +		switch (rt2x00dev->default_ant.rx_chain_num) {
-> > +		case 1:
-> > +			rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 1);
-> > +			/* fall through */
-> > +		case 2:
-> > +			rt2x00_set_field8(&rfcsr, RFCSR1_RX2_PD, 1);
-> > +			break;
-> > +		}
-> > +	}
-> > +	rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
-> > +
-> >  	rt2800_rfcsr_read(rt2x00dev, 23, &rfcsr);
-> >  	rt2x00_set_field8(&rfcsr, RFCSR23_FREQ_OFFSET, rt2x00dev->freq_offset);
-> >  	rt2800_rfcsr_write(rt2x00dev, 23, rfcsr);
-> 
-> To be honest, I think that this can be simplied to a single case for
-> both RT30xx and RT33xx. Just take the RT30xx branch of the added
-> if-statement and it should just work fine on both chipset families.
-> 
-> Yes, I am aware the Ralink driver has slightly different code here, but
-> that just seems to be because they work with knowledge of the
-> limitations of RT33xx, which ensures that tx_chain_num and rx_chain_num
-> can never be 2 on that chipset, but still handling it doesn't harm. It
-> would merely result in better readable code.
 
-Not only the code is different, but RF_R1 register value we program
-is different for 30xx and 33xx when chain_num == 1 (changed by
-RFCSR1_{RX2,TX2)_PD bit).
+Hello,
 
-I'm not against merging these two cases and program different values
-into register than Ralink driver do, but maybe in the next linux
-release (counting from release of that change), so any breakage
-eventually caused by that merge could be easily detected.
+I have RaLink RT2561/RT61 802.11g PCI wireless card and use it in master mode as AP. I have latest Mandriva 2011.0 distro with kernel 2.6.38.7-desktop-1mnb2. Driver for wifi card is rt61pci. If I connect via wifi from another PC then after some small time I get connection interrupted and I must disconnect and reconnect again. I tried latest compat-wireless-3.3-rc1-2 and also latest hostapd-0.7.3, but still same issue. In previous Mandriva version 2010.2 I had kernel 2.6.33.7-desktop-2mnb, hostapd-0.6.7 and it worked perfectly. Hostapd uses driver=nl80211, mode=g, channel=11. There are no errors in messages. I know it is not issue of the client machine, since same behavior I have if I connect to AP with HTC smartphone. Is it any known bug of rt61pci driver or hostapd?
 
-Stanislaw
+Thanks.
+
+Regards.
