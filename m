@@ -1,66 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:34184 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932525Ab2AISvq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 13:51:46 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-CC: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Mon, 9 Jan 2012 10:49:19 -0800
-Subject: RE: [PATCH 4/4] drivers/net/wireless/mwifiex/scan.c: convert
- GFP_KERNEL to GFP_ATOMIC
-Message-ID: <477F20668A386D41ADCC57781B1F7043083601A973@SC-VEXCH1.marvell.com> (sfid-20120109_195207_330130_B8DAD76E)
-References: <1326102050-30265-4-git-send-email-Julia.Lawall@lip6.fr>
-In-Reply-To: <1326102050-30265-4-git-send-email-Julia.Lawall@lip6.fr>
-Content-Type: text/plain; charset=US-ASCII
-MIME-Version: 1.0
+Received: from mga03.intel.com ([143.182.124.21]:44140 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753093Ab2A1Rhd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Jan 2012 12:37:33 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 0/4] update for 3.4: iwlwifi 2012-01-28
+Date: Sat, 28 Jan 2012 08:30:48 -0800
+Message-Id: <1327768252-22742-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120128_183736_716553_4D3B7E39)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julia,
+We fix scan dwell problem in P2P
+We also adding LED disable option in module parameter 
 
-Thanks for the patch.
+Johannes Berg (2):
+  iwlwifi: fix uCode event tracing
+  iwlwifi: always restrict scan dwell in P2P
 
-> Subject: [PATCH 4/4] drivers/net/wireless/mwifiex/scan.c: convert GFP_KERNEL to GFP_ATOMIC
-> 
-> From: Julia Lawall <julia.lawall@lip6.fr>
-> 
-> The function is called with locks held and thus should not use GFP_KERNEL.
-> 
-> The semantic patch that makes this report is available
-> in scripts/coccinelle/locks/call_kern.cocci.
-> 
-> More information about semantic patching is available at
-> http://coccinelle.lip6.fr/
-> 
-> Signed-off-by: Julia Lawall <julia.lawall@lip6.fr>
+Wey-Yi Guy (2):
+  iwlwifi: fix typo
+  iwlwifi: add option to disalbe LED
 
-Acked-by: Bing Zhao <bzhao@marvell.com>
-
-Regards,
-Bing
-
-> 
-> ---
->  drivers/net/wireless/mwifiex/scan.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-> index 6396d33..98f1ca9 100644
-> --- a/drivers/net/wireless/mwifiex/scan.c
-> +++ b/drivers/net/wireless/mwifiex/scan.c
-> @@ -2001,7 +2001,7 @@ mwifiex_save_curr_bcn(struct mwifiex_private *priv)
-> 
->  		kfree(priv->curr_bcn_buf);
->  		priv->curr_bcn_buf = kmalloc(curr_bss->beacon_buf_size,
-> -						GFP_KERNEL);
-> +						GFP_ATOMIC);
->  		if (!priv->curr_bcn_buf) {
->  			dev_err(priv->adapter->dev,
->  					"failed to alloc curr_bcn_buf\n");
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |  101 +++++++++++++++++++--------
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c  |    7 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-led.c      |    4 +
+ drivers/net/wireless/iwlwifi/iwl-scan.c     |   21 +++++-
+ drivers/net/wireless/iwlwifi/iwl-shared.h   |    2 +
+ drivers/net/wireless/iwlwifi/iwl-testmode.h |    8 +-
+ 7 files changed, 105 insertions(+), 40 deletions(-)
 
