@@ -1,346 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:40061 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751824Ab2AUWU3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jan 2012 17:20:29 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: ralf@linux-mips.org, linux-mips@linux-mips.org
-Cc: stern@rowland.harvard.edu, linux-usb@vger.kernel.org,
-	zajec5@gmail.com, linux-wireless@vger.kernel.org, m@bues.ch,
-	george@znau.edu.ua, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 6/7] USB: Add driver for the ssb bus
-Date: Sat, 21 Jan 2012 23:19:26 +0100
-Message-Id: <1327184367-8824-7-git-send-email-hauke@hauke-m.de> (sfid-20120121_232036_251888_E9A3D4EC)
-In-Reply-To: <1327184367-8824-1-git-send-email-hauke@hauke-m.de>
-References: <1327184367-8824-1-git-send-email-hauke@hauke-m.de>
+Received: from nm2-vm0.bullet.mail.ukl.yahoo.com ([217.146.183.226]:21345 "HELO
+	nm2-vm0.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751547Ab2A1T6n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Jan 2012 14:58:43 -0500
+From: Marek Lindner <lindner_marek@yahoo.de>
+To: Daniel Halperin <dhalperi@cs.washington.edu>
+Subject: Re: [PATCH] mac80211: minstrel_ht should not override user supplied rts setting
+Date: Sun, 29 Jan 2012 03:58:34 +0800
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+References: <1327735027-30121-1-git-send-email-lindner_marek@yahoo.de> <4F2443BB.3000602@openwrt.org> <CALSq=BahchLsgVVeFei+_FQAchMAAg2yU1drmpZTgt0pVoJbJg@mail.gmail.com>
+In-Reply-To: <CALSq=BahchLsgVVeFei+_FQAchMAAg2yU1drmpZTgt0pVoJbJg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201201290358.35433.lindner_marek@yahoo.de> (sfid-20120128_205846_982803_A8C98A93)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a USB driver using the generic platform device driver for the
-USB controller found on the Broadcom ssb bus. The ssb bus just
-exposes one device which serves the OHCI and the EHCI controller at the
-same time. This driver probes for this USB controller and creates and
-registers two new platform devices which will be probed by the new
-generic platform device driver. This makes it possible to use the EHCI
-and the OCHI controller on the ssb bus at the same time.
+On Sunday, January 29, 2012 03:17:32 Daniel Halperin wrote:
+> Adaptive RTS/CTS is important to control for interference---RTS/CTS is
+> there so that other Wi-Fi devices know not to interfere with your
+> flow. It may well be the case that this is not a major problem in
+> whatever your scenario you're working, Marek, but it makes a big
+> difference in a many bad corner cases.
 
-The old ssb OHCI USB driver will be removed in the next step as this
-driver also provide an OHCI driver and an EHCI for the cores supporting
-it.
+I am very well aware of what RTS/CTS is for and I am not against using it. 
+However, having the rate algorithm overriding the user setting for a specific 
+rate is extremely hard to grasp or debug.
+To give you an understanding where I am coming from: In our networks we 
+experienced extremely variable throughput ranging from 30Mbit/s (single 
+stream) to 0.2 Mbit/s in the next second. As you can imagine we were trying to 
+figure out what was going on. After spending some time and losing hair I 
+noticed that the RTS/CTS implementation of our driver (ath9k) is buggy. Every 
+once in a while the nodes would "battle" each other with RTS/CTS packets. 
+Strange enough for us, sometimes no RTS packets were sent and sometimes they 
+would battle. All attempts to disable RTS/CTS for the mere sake of testing(!) 
+was impossible. First I thought ath9k did not properly implement the "iw rts" 
+setting but that wasn't the case. After losing more hair I realized that 
+minstrel_ht, a rate control algorithm(!), was overriding my rts settings but 
+not always(!). The only way to make RTS shut up was to apply the posted patch.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- drivers/usb/host/Kconfig   |   12 ++
- drivers/usb/host/Makefile  |    1 +
- drivers/usb/host/ssb-hcd.c |  270 ++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 283 insertions(+), 0 deletions(-)
- create mode 100644 drivers/usb/host/ssb-hcd.c
+We should make a difference between the idea (using RTS to increase the 
+reliability) and its implementation. No matter from which angle I look, the 
+current implementation gives me much pain.
 
-diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
-index b15ce91..2825dc4 100644
---- a/drivers/usb/host/Kconfig
-+++ b/drivers/usb/host/Kconfig
-@@ -645,3 +645,15 @@ config USB_HCD_BCMA
- 	  for ehci and ohci.
- 
- 	  If unsure, say N.
-+
-+config USB_HCD_SSB
-+	tristate "SSB usb host driver"
-+	depends on SSB && EXPERIMENTAL
-+	select USB_OHCI_HCD_PLATFORM if USB_OHCI_HCD
-+	select USB_EHCI_HCD_PLATFORM if USB_EHCI_HCD
-+	help
-+	  Enbale support for the EHCI and OCHI host controller on an bcma bus.
-+	  It converts the bcma driver into two platform device drivers
-+	  for ehci and ohci.
-+
-+	  If unsure, say N.
-diff --git a/drivers/usb/host/Makefile b/drivers/usb/host/Makefile
-index f2c2846..9c52966 100644
---- a/drivers/usb/host/Makefile
-+++ b/drivers/usb/host/Makefile
-@@ -38,3 +38,4 @@ obj-$(CONFIG_USB_FSL_MPH_DR_OF)	+= fsl-mph-dr-of.o
- obj-$(CONFIG_USB_OCTEON2_COMMON) += octeon2-common.o
- obj-$(CONFIG_MIPS_ALCHEMY)	+= alchemy-common.o
- obj-$(CONFIG_USB_HCD_BCMA)	+= bcma-hcd.o
-+obj-$(CONFIG_USB_HCD_SSB)	+= ssb-hcd.o
-diff --git a/drivers/usb/host/ssb-hcd.c b/drivers/usb/host/ssb-hcd.c
-new file mode 100644
-index 0000000..889b425
---- /dev/null
-+++ b/drivers/usb/host/ssb-hcd.c
-@@ -0,0 +1,270 @@
-+/*
-+ * Sonics Silicon Backplane
-+ * Broadcom USB-core driver  (SSB bus glue)
-+ *
-+ * Copyright 2011 Hauke Mehrtens <hauke@hauke-m.de>
-+ *
-+ * Based on ssb-ohci driver
-+ * Copyright 2007 Michael Buesch <m@bues.ch>
-+ *
-+ * Derived from the OHCI-PCI driver
-+ * Copyright 1999 Roman Weissgaerber
-+ * Copyright 2000-2002 David Brownell
-+ * Copyright 1999 Linus Torvalds
-+ * Copyright 1999 Gregory P. Smith
-+ *
-+ * Derived from the USBcore related parts of Broadcom-SB
-+ * Copyright 2005-2011 Broadcom Corporation
-+ *
-+ * Licensed under the GNU/GPL. See COPYING for details.
-+ */
-+#include <linux/ssb/ssb.h>
-+#include <linux/delay.h>
-+#include <linux/platform_device.h>
-+#include <linux/module.h>
-+
-+MODULE_AUTHOR("Hauke Mehrtens");
-+MODULE_DESCRIPTION("Common USB driver for SSB Bus");
-+MODULE_LICENSE("GPL");
-+
-+#define SSB_HCD_TMSLOW_HOSTMODE	(1 << 29)
-+
-+struct ssb_hcd_device {
-+	struct platform_device *ehci_dev;
-+	struct platform_device *ohci_dev;
-+
-+	u32 enable_flags;
-+};
-+
-+static void __devinit ssb_hcd_5354wa(struct ssb_device *dev)
-+{
-+#ifdef CONFIG_SSB_DRIVER_MIPS
-+	/* Work around for 5354 failures */
-+	if (dev->id.revision == 2 && dev->bus->chip_id == 0x5354) {
-+		/* Change syn01 reg */
-+		ssb_write32(dev, 0x894, 0x00fe00fe);
-+
-+		/* Change syn03 reg */
-+		ssb_write32(dev, 0x89c, ssb_read32(dev, 0x89c) | 0x1);
-+	}
-+#endif
-+}
-+
-+static void __devinit ssb_hcd_usb20wa(struct ssb_device *dev)
-+{
-+	if (dev->id.coreid == SSB_DEV_USB20_HOST) {
-+		/*
-+		 * USB 2.0 special considerations:
-+		 *
-+		 * In addition to the standard SSB reset sequence, the Host
-+		 * Control Register must be programmed to bring the USB core
-+		 * and various phy components out of reset.
-+		 */
-+		ssb_write32(dev, 0x200, 0x7ff);
-+
-+		/* Change Flush control reg */
-+		ssb_write32(dev, 0x400, ssb_read32(dev, 0x400) & ~8);
-+		ssb_read32(dev, 0x400);
-+
-+		/* Change Shim control reg */
-+		ssb_write32(dev, 0x304, ssb_read32(dev, 0x304) & ~0x100);
-+		ssb_read32(dev, 0x304);
-+
-+		udelay(1);
-+
-+		ssb_hcd_5354wa(dev);
-+	}
-+}
-+
-+/* based on arch/mips/brcm-boards/bcm947xx/pcibios.c */
-+static u32 __devinit ssb_hcd_init_chip(struct ssb_device *dev)
-+{
-+	u32 flags = 0;
-+
-+	if (dev->id.coreid == SSB_DEV_USB11_HOSTDEV)
-+		/* Put the device into host-mode. */
-+		flags |= SSB_HCD_TMSLOW_HOSTMODE;
-+
-+	ssb_device_enable(dev, flags);
-+
-+	ssb_hcd_usb20wa(dev);
-+
-+	return flags;
-+}
-+
-+static struct platform_device * __devinit
-+ssb_hcd_create_pdev(struct ssb_device *dev, char *name, u32 addr, u32 len)
-+{
-+	struct platform_device *hci_dev;
-+	struct resource hci_res[2];
-+	int ret = -ENOMEM;
-+
-+	memset(hci_res, 0, sizeof(hci_res));
-+
-+	hci_res[0].start = addr;
-+	hci_res[0].end = hci_res[0].start + len - 1;
-+	hci_res[0].flags = IORESOURCE_MEM;
-+
-+	hci_res[1].start = dev->irq;
-+	hci_res[1].flags = IORESOURCE_IRQ;
-+
-+	hci_dev = platform_device_alloc(name, 0);
-+	if (!hci_dev)
-+		goto err_alloc;
-+
-+	hci_dev->dev.parent = dev->dev;
-+	hci_dev->dev.dma_mask = &hci_dev->dev.coherent_dma_mask;
-+
-+	ret = platform_device_add_resources(hci_dev, hci_res, 2);
-+	if (ret)
-+		goto err_alloc;
-+
-+	ret = platform_device_add(hci_dev);
-+	if (ret) {
-+err_alloc:
-+		platform_device_put(hci_dev);
-+		return ERR_PTR(ret);
-+	}
-+
-+	return hci_dev;
-+}
-+
-+static int __devinit ssb_hcd_probe(struct ssb_device *dev,
-+				   const struct ssb_device_id *id)
-+{
-+	int err, tmp;
-+	int start, len;
-+	u16 chipid_top;
-+	struct ssb_hcd_device *usb_dev;
-+
-+	/* USBcores are only connected on embedded devices. */
-+	chipid_top = (dev->bus->chip_id & 0xFF00);
-+	if (chipid_top != 0x4700 && chipid_top != 0x5300)
-+		return -ENODEV;
-+
-+	/* TODO: Probably need checks here; is the core connected? */
-+
-+	if (dma_set_mask(dev->dma_dev, DMA_BIT_MASK(32)) ||
-+	    dma_set_coherent_mask(dev->dma_dev, DMA_BIT_MASK(32)))
-+		return -EOPNOTSUPP;
-+
-+	usb_dev = kzalloc(sizeof(struct ssb_hcd_device), GFP_KERNEL);
-+	if (!usb_dev)
-+		return -ENOMEM;
-+
-+	/* We currently always attach SSB_DEV_USB11_HOSTDEV
-+	 * as HOST OHCI. If we want to attach it as Client device,
-+	 * we must branch here and call into the (yet to
-+	 * be written) Client mode driver. Same for remove(). */
-+	usb_dev->enable_flags = ssb_hcd_init_chip(dev);
-+
-+	tmp = ssb_read32(dev, SSB_ADMATCH0);
-+
-+	start = ssb_admatch_base(tmp);
-+	len = ssb_admatch_size(tmp);
-+	usb_dev->ohci_dev = ssb_hcd_create_pdev(dev, "ohci-platform", start,
-+						len);
-+	if (IS_ERR(usb_dev->ohci_dev)) {
-+		err = PTR_ERR(usb_dev->ohci_dev);
-+		goto err_free_usb_dev;
-+	}
-+
-+	if (dev->id.coreid == SSB_DEV_USB20_HOST) {
-+		start = ssb_admatch_base(tmp) + 0x800; /* ehci core offset */
-+		len = 0x100; /* ehci reg block size */
-+		usb_dev->ehci_dev = ssb_hcd_create_pdev(dev, "ehci-platform",
-+							start, len);
-+		if (IS_ERR(usb_dev->ehci_dev)) {
-+			err = PTR_ERR(usb_dev->ehci_dev);
-+			goto err_unregister_ohci_dev;
-+		}
-+	}
-+
-+	ssb_set_drvdata(dev, usb_dev);
-+	return 0;
-+
-+err_unregister_ohci_dev:
-+	platform_device_unregister(usb_dev->ohci_dev);
-+err_free_usb_dev:
-+	kfree(usb_dev);
-+	return err;
-+}
-+
-+static void __devexit ssb_hcd_remove(struct ssb_device *dev)
-+{
-+	struct ssb_hcd_device *usb_dev;
-+	struct platform_device *ohci_dev;
-+	struct platform_device *ehci_dev;
-+
-+	usb_dev = ssb_get_drvdata(dev);
-+	if (!usb_dev)
-+		return;
-+
-+	ohci_dev = usb_dev->ohci_dev;
-+	ehci_dev = usb_dev->ehci_dev;
-+
-+	if (ohci_dev)
-+		platform_device_unregister(ohci_dev);
-+	if (ehci_dev)
-+		platform_device_unregister(ehci_dev);
-+
-+	ssb_device_disable(dev, 0);
-+}
-+
-+static void __devexit ssb_hcd_shutdown(struct ssb_device *dev)
-+{
-+	ssb_device_disable(dev, 0);
-+}
-+
-+#ifdef CONFIG_PM
-+
-+static int ssb_hcd_suspend(struct ssb_device *dev, pm_message_t state)
-+{
-+	ssb_device_disable(dev, 0);
-+
-+	return 0;
-+}
-+
-+static int ssb_hcd_resume(struct ssb_device *dev)
-+{
-+	struct ssb_hcd_device *usb_dev = ssb_get_drvdata(dev);
-+
-+	ssb_device_enable(dev, usb_dev->enable_flags);
-+
-+	return 0;
-+}
-+
-+#else /* !CONFIG_PM */
-+#define ssb_hcd_suspend	NULL
-+#define ssb_hcd_resume	NULL
-+#endif /* CONFIG_PM */
-+
-+static const struct ssb_device_id ssb_hcd_table[] __devinitconst = {
-+	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_USB11_HOSTDEV, SSB_ANY_REV),
-+	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_USB11_HOST, SSB_ANY_REV),
-+	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_USB20_HOST, SSB_ANY_REV),
-+	SSB_DEVTABLE_END
-+};
-+MODULE_DEVICE_TABLE(ssb, ssb_hcd_table);
-+
-+static struct ssb_driver ssb_hcd_driver = {
-+	.name		= KBUILD_MODNAME,
-+	.id_table	= ssb_hcd_table,
-+	.probe		= ssb_hcd_probe,
-+	.remove		= __devexit_p(ssb_hcd_remove),
-+	.shutdown	= ssb_hcd_shutdown,
-+	.suspend	= ssb_hcd_suspend,
-+	.resume		= ssb_hcd_resume,
-+};
-+
-+static int __init ssb_hcd_init(void)
-+{
-+	return ssb_driver_register(&ssb_hcd_driver);
-+}
-+module_init(ssb_hcd_init);
-+
-+static void __exit ssb_hcd_exit(void)
-+{
-+	ssb_driver_unregister(&ssb_hcd_driver);
-+}
-+module_exit(ssb_hcd_exit);
--- 
-1.7.5.4
 
+> I'm with Felix: I could see adding an option that means "force never
+> use RTS/CTS" but I think we're at the right operating point when
+> interpreting the standard "RTS/CTS threshold" option.
+
+Actually, this option exists already. It's just minstrel_ht overriding it:
+iw phy <phyname> set rts <rts threshold|off>
+Put special attention towards the "off" at the end.
+
+If we let the rate algorithm override our rts settings it should at least be 
+communicated. I found no such mention anywhere. 
+
+I'd like to further stress the point that no other rate algorithm does this. 
+We create incoherent and hard to debug behavior.
+
+Regards,
+Marek
