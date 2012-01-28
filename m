@@ -1,33 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:63274 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751454Ab2AWRX4 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45082 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752244Ab2A1EbF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jan 2012 12:23:56 -0500
-Received: by ggnb1 with SMTP id b1so1448597ggn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 23 Jan 2012 09:23:56 -0800 (PST)
+	Fri, 27 Jan 2012 23:31:05 -0500
+Message-ID: <4F2379E6.9050303@sipsolutions.net> (sfid-20120128_053152_085582_972EFC0D)
+Date: Fri, 27 Jan 2012 20:30:30 -0800
+From: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <1327338154-3806-1-git-send-email-eliad@wizery.com>
-References: <1327338154-3806-1-git-send-email-eliad@wizery.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Mon, 23 Jan 2012 09:23:35 -0800
-Message-ID: <CAB=NE6V26e6caZwCyO2chiZ_7iGVkoD_jtKsxfCLSHumrOp=Wg@mail.gmail.com> (sfid-20120123_182400_034546_A810F133)
-Subject: Re: [PATCH] compat-wireless: fix wl12xx driver-select
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Kernel BUG due to kernel page fault
+References: <4F21D57F.7090103@lwfinger.net> (sfid-20120126_233645_796686_E4D04A53)
+In-Reply-To: <4F21D57F.7090103@lwfinger.net> (sfid-20120126_233645_796686_E4D04A53)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 23, 2012 at 9:02 AM, Eliad Peller <eliad@wizery.com> wrote:
-> wl12xx is a possible choice for both group drivers and
-> singular modules (making it impossible to build only
-> the wl12xx module). change the group name to "ti" instead.
->
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+Larry,
 
-Is this a stable fix for linux-3.3.y branch of compat-wireless or only
-for the master branch ?
+On 1/26/2012 2:36 PM, Larry Finger wrote:
+> I am trying to convert the rtlwifi family of drivers to use asynchronous
+> firmware loading. With recent changes in udev, many problems are being
+> reported. See Bug 42632] at b.k.o.
 
-  Luis
+I'm not sure what caused your problem, but your email reminded me of an 
+issue we had with asynchronous firmware loading that you may want to 
+consider.
+
+When request_firmware_async() is called, it eventually calls the 
+callback you give it. This may, however, be a long time later (I think 
+the current default timeout is 1 minute). In the meantime, the module 
+could be unloaded by the user, and then the system crashes as soon as 
+the firmwaer code attempts to invoke the callback.
+
+To fix this, we have a completion in iwlwifi that some exit code path 
+waits for to make sure this scenario doesn't happen.
+
+I think you should implement that.
+
+A better fix would probably be to make request_firmware_async() take a 
+struct module * argument and pass THIS_MODULE to it, and make the 
+firmware code handle this, but currently it doesn't.
+
+johannes
