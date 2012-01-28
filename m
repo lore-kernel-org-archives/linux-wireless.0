@@ -1,48 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [206.117.179.246] ([206.117.179.246]:35703 "EHLO labridge.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751975Ab2A3Vnd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 16:43:33 -0500
-Message-ID: <1327959791.25132.56.camel@joe2Laptop> (sfid-20120130_224336_257761_1F03C4BD)
-Subject: Re: micro-project proposal -- WARN_ON -> WARN_ON_ONCE under
- drivers/net/wireless
-From: Joe Perches <joe@perches.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 30 Jan 2012 13:43:11 -0800
-In-Reply-To: <20120130192811.GD2493@tuxdriver.com>
-References: <20120130192811.GD2493@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:59250 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751960Ab2A1XCz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Jan 2012 18:02:55 -0500
+Message-ID: <4F247E9B.2060908@lwfinger.net> (sfid-20120129_000321_997812_5E261D2A)
+Date: Sat, 28 Jan 2012 17:02:51 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: LKML <linux-kernel@vger.kernel.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Kernel BUG due to kernel page fault
+References: <4F21D57F.7090103@lwfinger.net> (sfid-20120126_233645_796686_E4D04A53) <4F2379E6.9050303@sipsolutions.net>
+In-Reply-To: <4F2379E6.9050303@sipsolutions.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-01-30 at 14:28 -0500, John W. Linville wrote:
-> Anyone looking for a little "janitorial" project to do under the
-> drivers/net/wireless tree?
-> 
-> find drivers/net/wireless/ -type f -exec grep -H WARN_ON {} \; | \
-> 	grep -v WARN_ON_ONCE | wc -l
-> 653
-> 
-> That looks like an awful lot of "WARN_ON" calls.  Do all of them
-> really need to SPAM the log files every single time they are hit?
-> Couldn't a lot of them be WARN_ON_ONCE instead?
-> 
-> Patches welcome...
-> 
-> John
+On 01/27/2012 10:30 PM, Johannes Berg wrote:
+> Larry,
+>
+> On 1/26/2012 2:36 PM, Larry Finger wrote:
+>> I am trying to convert the rtlwifi family of drivers to use asynchronous
+>> firmware loading. With recent changes in udev, many problems are being
+>> reported. See Bug 42632] at b.k.o.
+>
+> I'm not sure what caused your problem, but your email reminded me of an issue we
+> had with asynchronous firmware loading that you may want to consider.
+>
+> When request_firmware_async() is called, it eventually calls the callback you
+> give it. This may, however, be a long time later (I think the current default
+> timeout is 1 minute). In the meantime, the module could be unloaded by the user,
+> and then the system crashes as soon as the firmwaer code attempts to invoke the
+> callback.
+>
+> To fix this, we have a completion in iwlwifi that some exit code path waits for
+> to make sure this scenario doesn't happen.
+>
+> I think you should implement that.
+>
+> A better fix would probably be to make request_firmware_async() take a struct
+> module * argument and pass THIS_MODULE to it, and make the firmware code handle
+> this, but currently it doesn't.
 
-$ grep -rP --include=*.[ch] "\bWARN_ON\s*\(" drivers/net/wireless | \
-  wc -l
-280
+Thanks for explaining why the completion queue is in iwlwifi. That was easy to 
+implement.
 
-There are also:
-$ grep -rP --include=*.[ch] "\bWARN_ON\s*\(" drivers/net/wireless | \
-  grep "define"
-drivers/net/wireless/b43legacy/b43legacy.h:# define B43legacy_WARN_ON(x)	WARN_ON(x)
-drivers/net/wireless/b43/b43.h:# define B43_WARN_ON(x)	WARN_ON(x)
-
-Any reason anyone can think of this
-shouldn't be a sed conversion?
+Larry
 
