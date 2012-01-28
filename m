@@ -1,59 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40502 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752717Ab2AaOF2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 09:05:28 -0500
-Date: Tue, 31 Jan 2012 15:05:13 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Luigi Tarenga <luigi.tarenga@gmail.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: PROBLEM: rt2800lib return -128db when signal is stronger than
- -12db
-Message-ID: <20120131140512.GC2950@redhat.com> (sfid-20120131_150531_413249_16E369AE)
-References: <CAKkO-EgF=NKpj-duK5oOTCMdbOnc0HwmBT9oc9FhtqT5KqZgeg@mail.gmail.com>
+Received: from nm5-vm0.bullet.mail.ukl.yahoo.com ([217.146.183.232]:39925 "HELO
+	nm5-vm0.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752674Ab2A1Sny (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Jan 2012 13:43:54 -0500
+From: Marek Lindner <lindner_marek@yahoo.de>
+To: Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH] mac80211: minstrel_ht should not override user supplied rts setting
+Date: Sun, 29 Jan 2012 02:43:47 +0800
+Cc: linux-wireless@vger.kernel.org
+References: <1327735027-30121-1-git-send-email-lindner_marek@yahoo.de> <1327735027-30121-2-git-send-email-lindner_marek@yahoo.de> <4F23F753.8070405@openwrt.org>
+In-Reply-To: <4F23F753.8070405@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKkO-EgF=NKpj-duK5oOTCMdbOnc0HwmBT9oc9FhtqT5KqZgeg@mail.gmail.com>
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201201290243.47953.lindner_marek@yahoo.de> (sfid-20120128_194546_889652_C55DDC1A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 30, 2012 at 03:23:15PM +0100, Luigi Tarenga wrote:
-> -	int rssi0 = rt2x00_get_field32(rxwi_w2, RXWI_W2_RSSI0);
-> -	int rssi1 = rt2x00_get_field32(rxwi_w2, RXWI_W2_RSSI1);
-> -	int rssi2 = rt2x00_get_field32(rxwi_w2, RXWI_W2_RSSI2);
-> +	s8 rssi0 = rt2x00_get_field32(rxwi_w2, RXWI_W2_RSSI0);
-> +	s8 rssi1 = rt2x00_get_field32(rxwi_w2, RXWI_W2_RSSI1);
-> +	s8 rssi2 = rt2x00_get_field32(rxwi_w2, RXWI_W2_RSSI2);
->  	u16 eeprom;
->  	u8 offset0;
->  	u8 offset1;
-> @@ -539,11 +539,12 @@
->  	/*
->  	 * Convert the value from the descriptor into the RSSI value
->  	 * If the value in the descriptor is 0, it is considered invalid
-> -	 * and the default (extremely low) rssi value is assumed
-> +	 * and the default (extremely low) rssi value is assumed.
-> +         * HW rssiX values go from -13 (strongest) to positive number
-> (weakest).
->  	 */
-> -	rssi0 = (rssi0) ? (-12 - offset0 - rt2x00dev->lna_gain - rssi0) : -128;
-> -	rssi1 = (rssi1) ? (-12 - offset1 - rt2x00dev->lna_gain - rssi1) : -128;
-> -	rssi2 = (rssi2) ? (-12 - offset2 - rt2x00dev->lna_gain - rssi2) : -128;
-> +	rssi0 = (rssi0) ? (-13 - offset0 - rt2x00dev->lna_gain - rssi0) : -128;
-> +	rssi1 = (rssi1) ? (-13 - offset1 - rt2x00dev->lna_gain - rssi1) : -128;
-> +	rssi2 = (rssi2) ? (-13 - offset2 - rt2x00dev->lna_gain - rssi2) : -128;
+On Saturday, January 28, 2012 21:25:39 Felix Fietkau wrote:
+> On 2012-01-28 8:17 AM, Marek Lindner wrote:
+> > Signed-off-by: Marek Lindner <lindner_marek@yahoo.de>
+> 
+> NACK, minstrel_ht sets RTS/CTS only from the second rate retry slot on,
+> to increase the success probability during retransmissions. For the
+> first slot, it is unset. The user supplied rts setting is not suitable
+> for configuring RTS/CTS usage this way, so if you want to disable it
+> entirely, you'd need to add a new setting for that.
 
-Not sure if change -12 to -13 is needed, seems not compatible with
-vendor driver. If you just change rssiX type to s8, will it
-fix the problem? That seems to be correct and enough to fix
-(example why this make difference: 0xc0 gives s8: -64 int: 192).
+If you think it is unsuitable do you mind elaborating what this setting is 
+for? As far as I can tell minstrel_ht is the only rate control algorithm that 
+decides to be smarter than the user configuring the device. Without mentioning 
+this anywhere! IMHO it should be minstrel_ht explaining why this makes sense, 
+not the other way round.
 
-If you will be reposting please follow
-http://linux.yyz.us/patch-format.html
-especially add Signed-off-by: line.
-
-Thanks
-Stanislaw
+Regards,
+Marek
