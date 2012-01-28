@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:61051 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754292Ab2AFOfE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jan 2012 09:35:04 -0500
+Received: from nbd.name ([46.4.11.11]:53709 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752054Ab2A1UU2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Jan 2012 15:20:28 -0500
+Message-ID: <4F245888.2070202@openwrt.org> (sfid-20120128_212040_524409_F0DF5589)
+Date: Sat, 28 Jan 2012 21:20:24 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <NEXT-4f06ee5c00c505.33406970@nextmail.ru>
-References: <NEXT-4f06ee5c00c505.33406970@nextmail.ru>
-Date: Fri, 6 Jan 2012 20:05:03 +0530
-Message-ID: <CAD2nsn0PJU+ZuZfuVOzsvN0yq76JdgYpwkoeS8yfvKQSiO8VfA@mail.gmail.com> (sfid-20120106_153509_012079_929B99FA)
-Subject: Re: ath9k crash 3.2-rc7
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: MR <g7af0ec1e3ea1e7b1@nextmail.ru>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+To: Marek Lindner <lindner_marek@yahoo.de>
+CC: Daniel Halperin <dhalperi@cs.washington.edu>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: minstrel_ht should not override user supplied
+ rts setting
+References: <1327735027-30121-1-git-send-email-lindner_marek@yahoo.de> <4F2443BB.3000602@openwrt.org> <CALSq=BahchLsgVVeFei+_FQAchMAAg2yU1drmpZTgt0pVoJbJg@mail.gmail.com> <201201290358.35433.lindner_marek@yahoo.de>
+In-Reply-To: <201201290358.35433.lindner_marek@yahoo.de>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/1/6 MR <g7af0ec1e3ea1e7b1@nextmail.ru>:
->  >:(  i had put those warnings to prevent the crash itself and what's causing
->  >it.
->  > may be i had missed that pos can be < 0 in addition to (pos > 37).
->  > i am just looking at those areas of code for some other issue. hope i
->  > can a find a fix
->  > for both of them
->
-> I am building kernel with pos<0 check added...
+On 2012-01-28 8:58 PM, Marek Lindner wrote:
+>> I'm with Felix: I could see adding an option that means "force never
+>> use RTS/CTS" but I think we're at the right operating point when
+>> interpreting the standard "RTS/CTS threshold" option.
+> 
+> Actually, this option exists already. It's just minstrel_ht overriding it:
+> iw phy <phyname> set rts <rts threshold|off>
+> Put special attention towards the "off" at the end.
+> 
+> If we let the rate algorithm override our rts settings it should at least be 
+> communicated. I found no such mention anywhere. 
+> 
+> I'd like to further stress the point that no other rate algorithm does this. 
+> We create incoherent and hard to debug behavior.
+Which rate algorithms did you check to come to that conclusion? I just
+looked at the ath9k rate control algorithm and it does the same ;)
 
-thanks!  if it does not works, i have only one more idea(a patch
-which removes some suspicious code which abuses a pointer any way that
-has to be fixed properly ). otherwise i need to recreate the issue and
-capture the stack trace completely, put debug prints. i ran an
-overnight test but was unable to recreate the issue. later today AN  i
-got a crash accidentally but only once, after that never.
-
->
-> I hoped for some ad-hoc stress-test recommendation, but I guess this will have
-> to wait.
->
->
-
-
-
--- 
-shafi
+- Felix
