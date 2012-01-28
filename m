@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37910 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754605Ab2AUJxI (ORCPT
+Received: from nm16-vm0.bullet.mail.ukl.yahoo.com ([217.146.183.254]:29628
+	"HELO nm16-vm0.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751761Ab2A1UXv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 21 Jan 2012 04:53:08 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH V2 2/6] ath6kl: Fix memory leak when unloading ath6kl_sdio
-Date: Sat, 21 Jan 2012 15:22:49 +0530
-Message-ID: <1327139573-7435-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120121_105453_914300_9EA5D481)
-In-Reply-To: <1327139573-7435-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1327139573-7435-1-git-send-email-vthiagar@qca.qualcomm.com>
+	Sat, 28 Jan 2012 15:23:51 -0500
+From: Marek Lindner <lindner_marek@yahoo.de>
+To: Felix Fietkau <nbd@openwrt.org>
+Subject: Re: [PATCH] mac80211: minstrel_ht should not override user supplied rts setting
+Date: Sun, 29 Jan 2012 04:23:44 +0800
+Cc: Daniel Halperin <dhalperi@cs.washington.edu>,
+	linux-wireless@vger.kernel.org
+References: <1327735027-30121-1-git-send-email-lindner_marek@yahoo.de> <201201290358.35433.lindner_marek@yahoo.de> <4F245888.2070202@openwrt.org>
+In-Reply-To: <4F245888.2070202@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201201290423.45141.lindner_marek@yahoo.de> (sfid-20120128_212355_294935_966D0193)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch "ath6kl: create core.c" removes wiphy_free() from
-ath6kl_cfg80211_cleanup() and misses to free wiphy in
-ath6kl_sdio_remove(). This patch fixes this regression.
+On Sunday, January 29, 2012 04:20:24 you wrote:
+> On 2012-01-28 8:58 PM, Marek Lindner wrote:
+> >> I'm with Felix: I could see adding an option that means "force never
+> >> use RTS/CTS" but I think we're at the right operating point when
+> >> interpreting the standard "RTS/CTS threshold" option.
+> > 
+> > Actually, this option exists already. It's just minstrel_ht overriding
+> > it: iw phy <phyname> set rts <rts threshold|off>
+> > Put special attention towards the "off" at the end.
+> > 
+> > If we let the rate algorithm override our rts settings it should at least
+> > be communicated. I found no such mention anywhere.
+> > 
+> > I'd like to further stress the point that no other rate algorithm does
+> > this. We create incoherent and hard to debug behavior.
+> 
+> Which rate algorithms did you check to come to that conclusion? I just
+> looked at the ath9k rate control algorithm and it does the same ;)
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/sdio.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+I checked net/mac80211/rc80211_* since that is where minstrel_ht is living.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index 7bb6107..d9f5591 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -1314,6 +1314,7 @@ static void ath6kl_sdio_remove(struct sdio_func *func)
- 	cancel_work_sync(&ar_sdio->wr_async_work);
- 
- 	ath6kl_core_cleanup(ar_sdio->ar);
-+	ath6kl_core_destroy(ar_sdio->ar);
- 
- 	kfree(ar_sdio->dma_buffer);
- 	kfree(ar_sdio);
--- 
-1.7.0.4
-
+Regards,
+Marek
