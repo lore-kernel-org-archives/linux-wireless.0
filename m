@@ -1,34 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44516 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752050Ab2AaFpv (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:37870 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753610Ab2A2Th4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 00:45:51 -0500
-Message-ID: <4F277FE3.8090006@sipsolutions.net> (sfid-20120131_064555_022926_F8F0D0F1)
-Date: Mon, 30 Jan 2012 21:45:07 -0800
-From: Johannes Berg <johannes@sipsolutions.net>
+	Sun, 29 Jan 2012 14:37:56 -0500
+Received: by yenm6 with SMTP id m6so1482114yen.19
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Jan 2012 11:37:56 -0800 (PST)
+Message-ID: <4F25A011.2090208@lwfinger.net> (sfid-20120129_203800_344516_9447CE43)
+Date: Sun, 29 Jan 2012 13:37:53 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Victor Goldenshtein <victorg@ti.com>
-CC: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
-	nbd@nbd.name
-Subject: Re: [RFC 4/9] mac80211: add ability to enable TX on op-channel
-References: <1327581484-22047-1-git-send-email-victorg@ti.com> <1327581484-22047-5-git-send-email-victorg@ti.com>
-In-Reply-To: <1327581484-22047-5-git-send-email-victorg@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Andres Cimmarusti <acimmarusti@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: hardware donation
+References: <CAH=dYrG2Jp6vook+2XQM0Q5GV4xXJTnvgrz4q=eovd3Z6Tb5BQ@mail.gmail.com>
+In-Reply-To: <CAH=dYrG2Jp6vook+2XQM0Q5GV4xXJTnvgrz4q=eovd3Z6Tb5BQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1/26/2012 4:37 AM, Victor Goldenshtein wrote:
-> Prior starting tx on DFS channels, the DFS master
-> device shall perform a Channel Availability Check
-> to ensure that there is no radar interference on
-> those channels. Once CAC done, the tx can be
-> enabled with ieee80211_dfs_en_tx().
+On 01/29/2012 01:11 PM, Andres Cimmarusti wrote:
+> Hi Linux wireless developers,
+>
+> I have an unused Realtek wireless mini-pci card for use in laptops.
+> It's advertised under linux as:
+>
+> PCI: 10EC:8172 Realtek Semiconductor Co., Ltd. RTL8191SEvB Wireless
+> LAN Controller
+>
+> I recently changed it for an Intel one and now I have no use for it. I
+> was wondering if I can donate it to you, the developers, so that it
+> can be used for testing. I had trouble with it : frequently dropped
+> connections.
+>
+> Where should I send it?
 
-How do you expect this to be used by the device? It seems that it should 
-have the side effect of lifting some TX-prohibited flag instead?
+I would be happy to add it to my collection. I'll send you my address in a 
+separate email.
 
-johannes
+Larry
+
