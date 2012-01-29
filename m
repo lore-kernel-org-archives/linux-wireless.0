@@ -1,48 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out002.kontent.com ([81.88.40.216]:43001 "EHLO
-	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751444Ab2AAM1B (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 Jan 2012 07:27:01 -0500
-From: Oliver Neukum <oliver@neukum.org>
-To: Marek Vasut <marek.vasut@gmail.com>
-Subject: Re: loading firmware while usermodehelper disabled.
-Date: Sun, 1 Jan 2012 13:28:41 +0100
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Matthew Garrett <mjg@redhat.com>,
-	"Greg Kroah-Hartman" <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-References: <20111230235421.GA6054@redhat.com> <201201011048.18953.oliver@neukum.org> <201201011054.47233.marek.vasut@gmail.com>
-In-Reply-To: <201201011054.47233.marek.vasut@gmail.com>
+Received: from purkki.adurom.net ([80.68.90.206]:57304 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753162Ab2A2Rfn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Jan 2012 12:35:43 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Drivers that use synchronous firmware loading
+References: <4F24BF84.1020209@lwfinger.net>
+Date: Sun, 29 Jan 2012 19:35:38 +0200
+In-Reply-To: <4F24BF84.1020209@lwfinger.net> (Larry Finger's message of "Sat,
+	28 Jan 2012 21:39:48 -0600")
+Message-ID: <87mx96csyd.fsf@purkki.adurom.net> (sfid-20120129_183611_463706_0369F636)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201201011328.41311.oliver@neukum.org> (sfid-20120101_132731_027612_A602148C)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Sonntag, 1. Januar 2012, 10:54:47 schrieb Marek Vasut:
-> > Am Samstag, 31. Dezember 2011, 19:39:18 schrieb Marek Vasut:
-> > > maybe we should implement such thing into the firmware loader itself?
-> > > Allow it -- for example via some node in /dev -- to force loading
-> > > firmware into some buffer in kernel just before suspend so it'll
-> > > certainly be readily available at resume time?
-> > 
-> > This is difficult. We don't know at suspend time which firmware we will
-> > need at resume time.
-> 
-> That's not actually true ... you can ask the drivers if they need to load 
-> firmware after resume ... that can be implemented and udev can handle it. The 
-> driver should know if the hardware it's controlling is stupid or not.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-Device IDs can morph due to a power loss. After resumption another driver
-would bind.
+> To all wireless developers:
+>
+> As you may have noticed, the udev layer is being changed. One of the
+> side effects is that the kernel may timeout when a driver uses
+> synchronous firmware loading. My rtlwifi drivers were affected, and a
+> kernel bugzilla has been logged against rtl8192se. I suggest that the
+> maintainers should be proactive, and convert to asynchronous loading
+> as soon as possible.
 
-	Regards
-		Oliver
+Thanks for the summary, this was really useful.
+
+> In wireless-testing, the files listed below contain calls to
+> read_firmware() rather than read_firmware_nowait():
+>
+> drivers/net/wireless/at76c50x-usb.c
+> drivers/net/wireless/ath/ath6kl/init.c
+> drivers/net/wireless/ath/ath9k/hif_usb.c
+> drivers/net/wireless/atmel.c
+> drivers/net/wireless/b43/main.c
+> drivers/net/wireless/b43legacy/main.c
+> drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
+> drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+> drivers/net/wireless/ipw2x00/ipw2100.c
+> drivers/net/wireless/iwlegacy/3945-mac.c
+> drivers/net/wireless/iwlegacy/4965-mac.c
+> drivers/net/wireless/iwlwifi/iwl-agn.c
+> drivers/net/wireless/libertas/main.c
+> drivers/net/wireless/libertas/if_usb.c
+> drivers/net/wireless/libertas_tf/if_usb.c
+> drivers/net/wireless/mwifiex/main.c
+> drivers/net/wireless/mwl8k.c
+> drivers/net/wireless/orinoco/fw.c
+> drivers/net/wireless/orinoco/orinoco_usb.c
+> drivers/net/wireless/p54/p54spi.c
+> drivers/net/wireless/p54/p54usb.c
+> drivers/net/wireless/p54/p54pci.c
+> drivers/net/wireless/prism54/islpci_dev.c
+> drivers/net/wireless/rt2x00/rt2x00firmware.c
+> drivers/net/wireless/wl1251/main.c
+> drivers/net/wireless/zd1201.c
+> drivers/net/wireless/zd1211rw/zd_usb.c
+>
+> Some of the drivers above may be exempt as their firmware is built
+> into the kernel. I did not check for that case.
+
+But isn't the issue only when a firmware is requested synchronously
+during module init? For example, IIRC wl1251 loads the module during
+hw start and that should be safe, even when making a synchronous call.
+Or did I misunderstood something?
+
+-- 
+Kalle Valo
