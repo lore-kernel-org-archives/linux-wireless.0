@@ -1,52 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mtaweb11.services.sfr.fr ([93.17.128.28]:17251 "EHLO
-	smtp11.services.sfr.fr" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752261Ab2AaN5m convert rfc822-to-8bit (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:40230 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753027Ab2A2Vli (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 08:57:42 -0500
-Date: Tue, 31 Jan 2012 14:57:41 +0100 (CET)
-From: Milan Bouchet-Valat <nalimilan@club-internet.fr>
-Reply-To: Milan Bouchet-Valat <nalimilan@club-internet.fr>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Message-ID: <13367957.180704.1328018261479.JavaMail.www@wsfrf1118> (sfid-20120131_145803_170893_646E268B)
-In-Reply-To: <4F228C76.2010109@broadcom.com>
-References: <22905678.140637.1327401110095.JavaMail.www@wsfrf1232>
- <4F227784.10309@broadcom.com> <1327660003.21888.14.camel@milan>
- <4F228C76.2010109@broadcom.com>
-Subject: Re: Re: BCM4313 keeps disconnecting with brcmsmac and multiple APs
+	Sun, 29 Jan 2012 16:41:38 -0500
+Received: by ghrr11 with SMTP id r11so1495947ghr.19
+        for <linux-wireless@vger.kernel.org>; Sun, 29 Jan 2012 13:41:37 -0800 (PST)
+Message-ID: <4F25BD09.3060607@lwfinger.net> (sfid-20120129_224141_512840_7889DAC4)
+Date: Sun, 29 Jan 2012 15:41:29 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: htl10@users.sourceforge.net
+CC: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>, herton@mandriva.com.br
+Subject: Re: rtl8187 behavior change/breakage with 3.2.1-3.fc16.x86_64<->3.2.2-1.fc16.x86_64
+References: <1327869629.89221.YahooMailClassic@web29503.mail.ird.yahoo.com>
+In-Reply-To: <1327869629.89221.YahooMailClassic@web29503.mail.ird.yahoo.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Just noticed my Webmail got the quotations wrong. New attempt:)
+On 01/29/2012 02:40 PM, Hin-Tak Leung wrote:
+> This may be a fedora-specific problem - I noticed that just after booting into the new fedora kernel (3.2.2-1.fc16.x86_64), I am getting a strange message from the kernel:
+>
+> rtl8187: Invalid hwaddr! Using randomly generated MAC address
+>
+> And it is setting my rtl8187 to an alien mac address instead of the usual one I have. The previous (3.2.1-3.fc16.x86_64) works correctly, and as far as I go back through my /var/log/message, had never had this problem ever.
+>
+> The relevant changelog in the fedora package is this, so this might be a compat-wireless 3.3-rc1-2 problem? I checked rhbz 784345 which looked unrelated, although it is realtek (another driver).
+>
+> --------------
+>
+> * Wed Jan 25 2012 Josh Boyer<jwboyer@redhat.com>  - 3.2.2-1
+> - Linux 3.2.2
+> - Add patch to invalidate parent cache when fsync is called on a partition
+>    (rhbz 783211)
+> - Test fix for realtek_async_autopm oops from Stanislaw Gruszka (rhbz 784345)
 
-Le vendredi 27 janvier 2012 à 12:37 +0100, Arend van Spriel a écrit :
-On 01/27/2012 11:26 AM, Milan Bouchet-Valat wrote:
-> > Le vendredi 27 janvier 2012 à 11:08 +0100, Arend van Spriel a écrit :
-> >> Another thing to consider. I notice that you have a bluetooth device in
-> >> there as well. Can you disable that (if possible) and try again.
-> > I'll try that, but sadly not before Tuesday as I'm not in the right
-> > place ATM.
-> 
-> Ok. To disable bluetooth you could use the rfkill utility:
-> 
-> $ rfkill block bluetooth
-Yes, I did that, but it doesn't fix the problem.
+The wireless device in 784345 uses iwlwifi. The Realtek device is a wired interface.
 
->> Does your AP have DFS enabled?
-> > I'll ask my IT staff about that. Or is there a way to get this
-> > information from the logs or iwconfig?
-> > 
-> 
-> I actually did mean whether the AP has automatic channel selection. I am
-> not sure whether it is advertised in the beacons.
-I think you found the origin of the problem. I ran iwlist scan after  the bug happened, and my network's APs are visible on 3 different  channels (1, 6 and 11). When everything was fine, it was only on channel  11. The most surprising thing is that the precise AP I'm associated  with is now visible on two channels (1 and 11).
+> * Wed Jan 25 2012 John W. Linville<linville@redhat.com>
+> - modpost: add option to allow external modules to avoid taint
+> - Make integrated compat-wireless take advantage of the above
+>
+> * Wed Jan 25 2012 Josh Boyer<jwboyer@redhat.com>
+> - Backport patch to fix oops in rds (rhbz 718790)
+>
+> * Tue Jan 24 2012 John W. Linville<linville@redhat.com>
+> - Update compat-wireless snapshot to version 3.3-rc1-2
+>
+> * Tue Jan 24 2012 Josh Boyer<jwboyer@redhat.com>
+> - Re-enable the ARCMSR module (rhbz 784287)
+> - Add back a set of patches that were erroneously dropped during the rebase
+> - Re-enable the LIRC_STAGING drivers (rhbz 784398)
+> --------------------------------
 
-Another weird  fact is that after reloading brcmsmac (I had to do it twice to be able  to reconnect), I still see my APs on these different 3 channels, and  still it works fine. But maybe the channel change is what triggers the  bug.
+I just checked, and rtl8187 works fine with my RTL8187L using 3.3-rc1 from 
+wireless-testing. I don't know where the problem occurs.
 
-As you see, this is a very crowded place, with other  networks using the same channels. This is probably not an ideal setup,  but it's great to stress-test the drivers. ;-)
+Larry
 
 
-Regards
