@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:59950 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755033Ab2ANPZr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jan 2012 10:25:47 -0500
+Received: from nbd.name ([46.4.11.11]:32876 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751500Ab2A2Cgm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 28 Jan 2012 21:36:42 -0500
+Message-ID: <4F24B0B5.1060101@openwrt.org> (sfid-20120129_033648_152486_9B1650EC)
+Date: Sun, 29 Jan 2012 03:36:37 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-From: Kay Sievers <kay.sievers@vrfy.org>
-Date: Sat, 14 Jan 2012 16:25:23 +0100
-Message-ID: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com> (sfid-20120114_162556_888923_085E9D1A)
-Subject: calling request_firmware() from module init will not work with
- recent/future udev versions
-To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Cc: Tom Gundersen <teg@jklm.no>, Andy Whitcroft <apw@canonical.com>
+To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+CC: Marek Lindner <lindner_marek@yahoo.de>,
+	Daniel Halperin <dhalperi@cs.washington.edu>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: minstrel_ht should not override user supplied
+ rts setting
+References: <1327735027-30121-1-git-send-email-lindner_marek@yahoo.de> <201201290409.07368.lindner_marek@yahoo.de> <CALSq=BbhM6vLOJt9MGi2BhHKO0-NzAm73WohLDy4YC7x9rpDmw@mail.gmail.com> <201201290435.14048.lindner_marek@yahoo.de> <20120128221452.GB22180@pandem0nium>
+In-Reply-To: <20120128221452.GB22180@pandem0nium>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey,
+On 2012-01-28 11:14 PM, Simon Wunderlich wrote:
+> I agree to Marek here - if I want to disable RTS (for whatever reason), I type
+> 
+> iw phy0 set rts off
+> 
+> I would expect to see no RTS frames coming from my WiFi card at all. If the
+> rate control algorithm (whether ath9k or minstrel_ht) wants to be clever, it should
+> still respect this decision. The oven in my kitchen also has a temperature regulator,
+> but if I turn it off I also don't want my oven to be too clever and burn down the house. ;)
+> 
+> I know, apples and oranges, but I hope this makes this point understandable. I also
+> had quite a debugging night to find the reason for these "wild rts" frames.
+> 
+> Can't we add something two states, like:
+>  * "RTS really off" and
+>  * "RTS usually off, but rc's may still use it" ?
+If you send a patch for that, I'm ok with it. The default should be RTS
+off, but rc may still use it.
 
-just a heads-up, when bug reports are coming in now. The kernel log
-might look like a kernel failure, but it's caused by recent userspace
-changes.
-
-We changed udev to strictly enforce sequence order and dependency
-handling of events. This seems to break some netdev drivers which
-block in modprobe until the firmware from userspace is loaded into the
-driver.
-
-I think it's out of question, that nothing must block in module init
-and rely on a userspace transaction to be fulfilled to finish the
-init_module() syscall. If userspace is not running properly, nothing
-will work. Built-in drivers and the transition from initramfs to the
-real root can't be handled properly that way.
-
-These drivers need to be fixed to load their firmware during ifup,
-which would be the most flexible solution. That way, it should also
-work if the driver is built-in, or is loaded from initramfs and no
-firmware is available.
-Alternatively, the firmware request should be able to use the aync
-firmware_request API and not the blocking one.
-
-We might need to work around that in the current udev for now, but
-these drivers will definitely break in future udev versions.
-Userspace, these days, should not be in charge of papering over
-obvious kernel bugs like this.
-
-These are the drivers we received bug reports so far. We didn't look
-into any of details of the drivers, but according to the logs, they
-seem to block for 60 seconds in modprobe, when userspace is not
-behaving like expected:
-  bnx2/bnx2-mips-06-6.2.1.fw
-  rtlwifi/rtl8192sefw.bin
-  brcm/bcm43xx-0.fw
-
-Any help here would be appreciated.
-
-Thanks,
-Kay
+- Feli
