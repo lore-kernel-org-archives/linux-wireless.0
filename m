@@ -1,37 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:51408 "HELO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752151Ab2AMHkT (ORCPT
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:20198 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751531Ab2A2Udv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jan 2012 02:40:19 -0500
-Received: by mail-wi0-f179.google.com with SMTP id hm6so141257wib.38
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2012 23:40:18 -0800 (PST)
+	Sun, 29 Jan 2012 15:33:51 -0500
+Date: Sun, 29 Jan 2012 21:34:04 +0100 (CET)
+From: Jesper Juhl <jj@chaosbits.net>
+To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] bcma: Fix mem leak in bcma_bus_scan()
+Message-ID: <alpine.LNX.2.00.1201292131480.27749@swampdragon.chaosbits.net> (sfid-20120129_213411_093334_6676F7E0)
 MIME-Version: 1.0
-In-Reply-To: <CA+iijVngKNhUpc7PD4x=DUtqbc-oTiuGmQeLDU1bzRWn59huHQ@mail.gmail.com>
-References: <CA+iijV=DsMbj+2mqz_mvhox5zeppvXp9YXpn9NeRTkS2W59rJg@mail.gmail.com>
-	<CA+iijVngKNhUpc7PD4x=DUtqbc-oTiuGmQeLDU1bzRWn59huHQ@mail.gmail.com>
-Date: Fri, 13 Jan 2012 15:40:18 +0800
-Message-ID: <CA+iijVnD-aBsq38j0TGXqtRkXV7yNVqVeH8CryUY3-RHrdc8Lw@mail.gmail.com> (sfid-20120113_084023_675463_70CF891A)
-Subject: Re: Wifi Alliance certification for Wl12xx hardware based wireless stack
-From: Sivalingam Sundaram <siva_sundaram@bradycorp.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- Hello,
+bcma_bus_scan() leaks 'struct bcma_device' bytes if
+bcma_get_next_core() returns error.
 
- Has Wl12xx ( Wl1271) based wireless stack gone through Wifi Alliance
-certification.
+Restructure the code so we always kfree() the memory we allocate to
+the variable 'core' before it goes out of scope.
 
- Specifically
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+---
+ drivers/bcma/scan.c |   19 +++++++++++--------
+ 1 files changed, 11 insertions(+), 8 deletions(-)
 
- Wifi Certified b,g,n
- WPA2 Personal Certification
-WPA2 Enterprise Certification (EAP )
- WiFi-Direct certification.
+ Note: Patch is compile tested only.
 
- Thanks
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index cad9948..3a2f672 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -399,15 +399,18 @@ int bcma_bus_scan(struct bcma_bus *bus)
+ 		core->bus = bus;
+ 
+ 		err = bcma_get_next_core(bus, &eromptr, NULL, core_num, core);
+-		if (err == -ENODEV) {
+-			core_num++;
+-			continue;
+-		} else if (err == -ENXIO)
+-			continue;
+-		else if (err == -ESPIPE)
+-			break;
+-		else if (err < 0)
++		if (err < 0) {
++			kfree(core);
++			if (err == -ENODEV) {
++				core_num++;
++				continue;
++			} else if (err == -ENXIO) {
++				continue;
++			} else if (err == -ESPIPE) {
++				break;
++			}
+ 			return err;
++		}
+ 
+ 		core->core_index = core_num++;
+ 		bus->nr_cores++;
+-- 
+1.7.8.4
 
- regards
- Siva
+
+-- 
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
+
