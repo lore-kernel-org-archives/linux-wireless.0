@@ -1,60 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44571 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752668Ab2ACMXi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 07:23:38 -0500
-Date: Tue, 3 Jan 2012 13:23:12 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Michal Hocko <mhocko@suse.cz>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-wireless@vger.kernel.org
-Subject: Re: iwl3945 didn't survive after s2ram failure
-Message-ID: <20120103122311.GC3391@redhat.com> (sfid-20120103_132354_925583_E9C70707)
-References: <20111227105340.GD5344@tiehlicka.suse.cz>
- <20120103103457.GA3391@redhat.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:55163 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752309Ab2A3LCW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jan 2012 06:02:22 -0500
+Received: by iacb35 with SMTP id b35so5028675iac.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 03:02:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120103103457.GA3391@redhat.com>
+In-Reply-To: <201201301035.19044.david.goodenough@btconnect.com>
+References: <1327581689-22090-1-git-send-email-victorg@ti.com>
+ <201201261927.17754.david.goodenough@btconnect.com> <CAK80WHZr484-9Ap2hxm1S59rBAh8z2hHOZ3c5w+cNLSakK_Cgg@mail.gmail.com>
+ <201201301035.19044.david.goodenough@btconnect.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 30 Jan 2012 22:02:00 +1100
+Message-ID: <CAGRGNgVhSdTNnmfw0=KHYEEz1r=5=uQbUNvPwTXODnS3LJmr=w@mail.gmail.com> (sfid-20120130_120226_157238_9CA1BDAC)
+Subject: Re: [RFC 0/7] hostap: add DFS master ability
+To: David Goodenough <david.goodenough@btconnect.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 03, 2012 at 11:34:58AM +0100, Stanislaw Gruszka wrote:
-> On Tue, Dec 27, 2011 at 11:53:40AM +0100, Michal Hocko wrote:
-> > my laptop died (due to drained batteries) while it was suspended to
-> > RAM and the wireless didn't get back to life after I booted again.
-> 
-> I wonder how we could kill hardware that way ...
-> 
-> > Dmesg says:
-> > cfg80211: Calling CRDA to update world regulatory domain
-> > iwl3945: Intel(R) PRO/Wireless 3945ABG/BG Network Connection driver for Linux, in-tree:s
-> > iwl3945: Copyright(c) 2003-2011 Intel Corporation
-> > iwl3945 0000:05:00.0: PCI INT A -> GSI 18 (level, low) -> IRQ 18
-> > iwl3945 0000:05:00.0: setting latency timer to 64
-> > iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-> > iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-> > iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-> > iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-> > iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-> > iwl3945 0000:05:00.0: MAC is in deep sleep!.  CSR_GP_CNTRL = 0xFFFFFFFF
-> > iwl3945 0000:05:00.0: bad EEPROM signature,EEPROM_GP=0x00000007
-> > iwl3945 0000:05:00.0: EEPROM not found, EEPROM_GP=0xffffffff
-> > iwl3945 0000:05:00.0: Unable to init EEPROM
-> > iwl3945 0000:05:00.0: PCI INT A disabled
-> > iwl3945: probe of 0000:05:00.0 failed with error -2
-> > 
-> > Is there anything I can do to resurrect it?
-> 
-> No idea. Please provide logs with debug=0x47ffffff option.
-> 
-> Did you try to totally power-off the laptop by removing
-> battery (and power cable of course) ?
-> 
-> If anything other will not help, is possible to rewrite eeprom, I don't
-> know how to do this, but I know that tool for that exist:
-> http://code.google.com/p/iwleeprom/
-Actually I do not think we overwrite eeprom, seems problem is at pci-e
-bus level. Simply we can not communicate with device through pci-e bus.
-That is kind a silly, but you can check if removing cart from slot
-and put it back again (assuring it correctly connected) helps.
- 
-Stanislaw 
+On Mon, Jan 30, 2012 at 21:35, David Goodenough
+<david.goodenough@btconnect.com> wrote:
+> On Monday 30 Jan 2012, Goldenshtein, Victor wrote:
+>> On Thu, Jan 26, 2012 at 9:27 PM, David Goodenough
+>>
+>> <david.goodenough@btconnect.com> wrote:
+>> > As I understand it hostapd is not involved in mesh (802.11s) networks,
+>> > so how does this integrate there?  As I understand it 802.11s is entirely
+>> > done in the kernel.
+>>
+>> At this point we don't have any plans to extend DFS support to mesh
+>> networks.
+> That is fine, and obviously your choice.  My point is simply that provision
+> so that someone else can add it would be sensible, and in particular to
+> assume that anything that could have mesh support would have a userland
+> component kind of locks it out as I understand 802.11s support at the
+> moment.
+
+I understand that using *secure* mesh requires a userspace component:
+
+http://o11s.org/trac/wiki/HOWTO
+
+Arguably there's no reason why a separate userspace component couldn't
+handle DFS for mesh interfaces. A project for the future could be to
+split it out of hostapd so it can be re-used for interfaces that
+aren't managed by hostapd.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
