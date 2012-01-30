@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:34336 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752463Ab2AQLMF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 06:12:05 -0500
-Subject: Re: [PATCH] NFC: Increase NCI deactivate timeout
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: ilanelias78@gmail.com
-Cc: aloisio.almeida@openbossa.org, lauro.venancio@openbossa.org,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Ilan Elias <ilane@ti.com>
-In-Reply-To: <1326022982-30205-1-git-send-email-ilane@ti.com>
-References: <1326022982-30205-1-git-send-email-ilane@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 17 Jan 2012 12:18:11 +0100
-Message-ID: <1326799091.22824.25.camel@sortiz-mobl> (sfid-20120117_121208_162509_58E711A5)
-Mime-Version: 1.0
+Received: from server19320154104.serverpool.info ([193.201.54.104]:35943 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752495Ab2A3XES (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jan 2012 18:04:18 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
+	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 0/7] bcma: add PCIe host controller
+Date: Tue, 31 Jan 2012 00:03:30 +0100
+Message-Id: <1327964617-7910-1-git-send-email-hauke@hauke-m.de> (sfid-20120131_000422_180067_92ED491A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ilan,
+These patches are adding support for a PCIe Host controller found on 
+some Broadcom SoCs using bcma as the System bus. This was tested with 
+one BCM4716 based device, a Netgear WNDR3400 with a BCM43224 connected 
+through PCIe.
+These patches are based on wireless-testing.
 
-On Sun, 2012-01-08 at 13:43 +0200, ilanelias78@gmail.com wrote:
-> From: Ilan Elias <ilane@ti.com>
-> 
-> Increase NCI deactivate timeout from 5 sec to 30 sec.
-> NCI deactivate procedure might take a long time,
-> depending on the local and remote parameters.
-> 
-> Signed-off-by: Ilan Elias <ilane@ti.com>
-Thanks for the explanations:
+Hauke Mehrtens (7):
+  bcma: add the core unit number
+  bcma: add constants for PCI and use them
+  bcma: export bcma_pcie_read()
+  bcma: make some functions __devinit
+  bcma: add PCIe host controller
+  bcma: add bus num counter
+  bcma: add extra sprom check
 
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
+ arch/mips/pci/pci-bcm47xx.c                 |   49 ++-
+ drivers/bcma/bcma_private.h                 |    8 +-
+ drivers/bcma/driver_pci.c                   |  168 ++++-----
+ drivers/bcma/driver_pci_host.c              |  578 ++++++++++++++++++++++++++-
+ drivers/bcma/host_pci.c                     |    4 +-
+ drivers/bcma/main.c                         |   14 +-
+ drivers/bcma/scan.c                         |   14 +
+ drivers/bcma/sprom.c                        |    7 +
+ include/linux/bcma/bcma.h                   |    2 +
+ include/linux/bcma/bcma_driver_chipcommon.h |   16 +
+ include/linux/bcma/bcma_driver_pci.h        |  125 ++++++-
+ include/linux/bcma/bcma_regs.h              |   27 ++
+ 12 files changed, 908 insertions(+), 104 deletions(-)
 
-Cheers,
-Samuel.
-
+-- 
+1.7.5.4
 
