@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:37870 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753610Ab2A2Th4 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:52840 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752541Ab2A3NwH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jan 2012 14:37:56 -0500
-Received: by yenm6 with SMTP id m6so1482114yen.19
-        for <linux-wireless@vger.kernel.org>; Sun, 29 Jan 2012 11:37:56 -0800 (PST)
-Message-ID: <4F25A011.2090208@lwfinger.net> (sfid-20120129_203800_344516_9447CE43)
-Date: Sun, 29 Jan 2012 13:37:53 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 30 Jan 2012 08:52:07 -0500
+Received: by iacb35 with SMTP id b35so5200190iac.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 05:52:06 -0800 (PST)
 MIME-Version: 1.0
-To: Andres Cimmarusti <acimmarusti@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: hardware donation
-References: <CAH=dYrG2Jp6vook+2XQM0Q5GV4xXJTnvgrz4q=eovd3Z6Tb5BQ@mail.gmail.com>
-In-Reply-To: <CAH=dYrG2Jp6vook+2XQM0Q5GV4xXJTnvgrz4q=eovd3Z6Tb5BQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <87fwexco94.fsf@purkki.adurom.net>
+References: <1327924857-1250-1-git-send-email-eliad@wizery.com>
+	<87fwexco94.fsf@purkki.adurom.net>
+Date: Mon, 30 Jan 2012 15:52:06 +0200
+Message-ID: <CAB3XZEfaQAD0p2VJ28znznaB3P_3z3NvEiROJTbyCW+su2gLzg@mail.gmail.com> (sfid-20120130_145219_517648_0B0FF2EB)
+Subject: Re: [PATCH 00/12] wl12xx: update fw api
+From: Eliad Peller <eliad@wizery.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Luciano Coelho <coelho@ti.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/29/2012 01:11 PM, Andres Cimmarusti wrote:
-> Hi Linux wireless developers,
+On Mon, Jan 30, 2012 at 3:29 PM, Kalle Valo <kvalo@adurom.com> wrote:
+> Eliad Peller <eliad@wizery.com> writes:
 >
-> I have an unused Realtek wireless mini-pci card for use in laptops.
-> It's advertised under linux as:
+>> The fw api was changed in the latest FWs (6.3.5.0.95 for wl127x
+>> and 7.3.5.0.95 for wl128x).
+>>
+>> Along with some small adjustments, the main changes
+>> inroduced by this patheset are configuring the
+>> templates per-role, and moving to IEEE80211_HW_SUPPORTS_DYNAMIC_PS
+>> mode.
 >
-> PCI: 10EC:8172 Realtek Semiconductor Co., Ltd. RTL8191SEvB Wireless
-> LAN Controller
+> I didn't look so carefully, but doesn't this break bisect? I mean if you
+> change the firmware api in small patches wl12xx can't work properly
+> until all patches are applied, right?
 >
-> I recently changed it for an Intel one and now I have no use for it. I
-> was wondering if I can donate it to you, the developers, so that it
-> can be used for testing. I had trouble with it : frequently dropped
-> connections.
+> I would say that a huge patch doing all the necessary changes in one go
+> is better, even it's ugly.
 >
-> Where should I send it?
+yes. it will break bisect (although it shouldn't break compilations).
+i guess it's a matter of taste, but i think keeping the patches
+manageable is more important than being able to bisect.
 
-I would be happy to add it to my collection. I'll send you my address in a 
-separate email.
-
-Larry
-
+Eliad.
