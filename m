@@ -1,41 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:56108 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753781Ab2AHQFX (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:31895 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751551Ab2A3GM1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 8 Jan 2012 11:05:23 -0500
-Received: by iaeh11 with SMTP id h11so5461783iae.19
-        for <linux-wireless@vger.kernel.org>; Sun, 08 Jan 2012 08:05:23 -0800 (PST)
-Message-ID: <4F09BEC0.7080702@lwfinger.net> (sfid-20120108_170527_478155_40AF15E1)
-Date: Sun, 08 Jan 2012 10:05:20 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 30 Jan 2012 01:12:27 -0500
+Message-ID: <4F2634C2.2070305@qca.qualcomm.com> (sfid-20120130_071253_776572_1DCC9460)
+Date: Mon, 30 Jan 2012 11:42:18 +0530
+From: Raja Mani <rmani@qca.qualcomm.com>
 MIME-Version: 1.0
-To: lina <lina.lastname@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: modprob b43 not work after hilibernate
-References: <4F09AAE5.2080209@gmail.com>
-In-Reply-To: <4F09AAE5.2080209@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH v2 0/8] Allow the user to define suspend mode
+References: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com> <4F1E9A52.7070202@qca.qualcomm.com>
+In-Reply-To: <4F1E9A52.7070202@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/08/2012 08:40 AM, lina wrote:
-> Hi,
+On Tuesday 24 January 2012 05:17 PM, Kalle Valo wrote:
+> Hi Raja,
 >
-> after hibernation,
+> On 01/20/2012 03:35 PM, rmani@qca.qualcomm.com wrote:
 >
-> I tried modprob b43 and /etc/initi.d/network-manager restart not work,
+>> This series of patch enables the user to specify the suspend mode
+>> via module parameter (suspend_mode) while doing insmod of the driver.
+>>
+>>     To select Cut Power mode:
+>>        insmod ath6kl_sdio.ko suspend_mode = 1
+>>
+>>     To select Deep Sleep mode:
+>>        insmod ath6kl_sdio.ko suspend_mode = 2
+>>
+>>     To select WOW suspend mode:
+>>        insmod ath6kl_sdio.ko suspend_mode = 3
+>>
+>> Existing module param 'suspend_cutpower' variable is renamed to
+>> 'suspend_mode' for this purspose.
+>>
+>> Additionally, If the user doesn't provide any WOW patterns,
+>> the default WOW patterns will be configured while going to
+>> WOW suspend mode.
+>>
+>> V2 changes:
+>>
+>>   * Existing automatic suspend mode selection logic is retained.
+>>   * Suspend mode retry logic is improved without using loop.
+>>   * Small patches are folded with appropriate patches as per Kalle's comments.
+>>   * New wmi function is added to process set host sleep mode cmd processed event.
 >
-> is it reboot the only option. ( I googled it seems, not so sure)
+> Thanks, this is much better now. I reviewed the patches and found only
+> minor issues.
 
-Hibernation involves so many parts of the computer that it is hard to tell what 
-is happening. If unloading and reloading b43 using modprobe does not help, then 
-it is not solely a problem with b43.
+Thanks for your review. I'll take care your comments in V3.
 
-You need to provide a better description of what you are doing. Include specific 
-output from dmesg and the exact commands you are trying. You should also include 
-what distro you are running, your kernel version, and what brand and model of 
-computer you are using.
-
-Larry
-
+>
+> Kalle
