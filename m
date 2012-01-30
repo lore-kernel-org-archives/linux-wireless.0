@@ -1,30 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:53803 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754566Ab2AXMkG (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:36532 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753374Ab2A3QDE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 Jan 2012 07:40:06 -0500
-Message-ID: <4F1EA5F0.50908@qca.qualcomm.com> (sfid-20120124_134011_809014_B769B69A)
-Date: Tue, 24 Jan 2012 14:37:04 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Mon, 30 Jan 2012 11:03:04 -0500
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH V2 1/6] ath6kl: Make sure to delete rx aggregation timer
- in aggr_reset_state()
-References: <1327139573-7435-1-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1327139573-7435-1-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+In-Reply-To: <4F26B7B6.2080107@lwfinger.net>
+References: <1327930827-1719-1-git-send-email-standby24x7@gmail.com>
+	<4F26B7B6.2080107@lwfinger.net>
+Date: Tue, 31 Jan 2012 01:03:02 +0900
+Message-ID: <CALLJCT1q51mBLvciEXEL88iHS2Bk5bOmTUGsxEpw+X3VDjxmhA@mail.gmail.com> (sfid-20120130_170421_317544_A743D3E0)
+Subject: Re: [PATCH] [trivial] net: Fix typo in rtl8192de/dm.c
+From: Masanari Iida <standby24x7@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: wlanfae@realtek.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, trivial@kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/21/2012 11:52 AM, Vasanthakumar Thiagarajan wrote:
-> The timer which is used to flush rx aggregation frames needs to
-> be disabled when resetting the aggregation state. This is found
-> in code review.
-> 
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-
-Thanks, all six patches applied.
-
-Kalle
+On Tue, Jan 31, 2012 at 12:31 AM, Larry Finger
+<Larry.Finger@lwfinger.net> wrote:
+> On 01/30/2012 07:40 AM, Masanari Iida wrote:
+>>
+>> Correct spelling "disconnet" to "disconnect" in
+>> drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+>>
+>> Signed-off-by: Masanari Iida<standby24x7@gmail.com>
+>> ---
+>>  drivers/net/wireless/rtlwifi/rtl8192de/dm.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+>
+> The patch is OK, but by convention, the subject should say "[PATCH] rtlwifi:
+> rtl8192dm: Fix typo in dm.c". By getting rtlwifi in it, searching the git
+> log is a lot easier.
+>
+> Larry
+>
+I will re-post this with correct subject.
+Masanari
