@@ -1,106 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:47921 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757359Ab2ADXKM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 Jan 2012 18:10:12 -0500
-Subject: [PATCH 5/6] ath6kl: convert ath6kl_dbg() and ath6kl_dbg_dump() into
- functions
-To: linville@tuxdriver.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: sfr@canb.auug.org.au, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-next@vger.kernel.org, ath6kl-devel@qualcomm.com,
-	davem@davemloft.net
-Date: Thu, 05 Jan 2012 01:09:50 +0200
-Message-ID: <20120104230950.32306.21264.stgit@x201> (sfid-20120105_001024_113765_4F9C82D6)
-In-Reply-To: <20120104230429.32306.75965.stgit@x201>
-References: <20120104230429.32306.75965.stgit@x201>
+Received: from zmc.proxad.net ([212.27.53.206]:45007 "EHLO zmc.proxad.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752531Ab2A3RZg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jan 2012 12:25:36 -0500
+Message-ID: <4F26D27A.9010909@freebox.fr> (sfid-20120130_182554_187837_3BB2ED81)
+Date: Mon, 30 Jan 2012 18:25:14 +0100
+From: Florian Fainelli <ffainelli@freebox.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+To: Yogesh Ashok Powar <yogeshp@marvell.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lennert Buytenhek <buytenh@wantstofly.org>
+Subject: Re: [PATCH] mwl8k: Configuring correct MAC address in broadcast key
+References: <20120127130434.GA5718@hertz.marvell.com>
+In-Reply-To: <20120127130434.GA5718@hertz.marvell.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-That way it's possible to not export debug_mask outside the upcoming
-ath6kl_core.ko and that makes it easier to ath6kl_core.ko in the
-following patch.
+Hello,
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/debug.c |   24 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/debug.h |   25 ++++---------------------
- 2 files changed, 28 insertions(+), 21 deletions(-)
+On 01/27/12 14:04, Yogesh Ashok Powar wrote:
+> While configuring the broadcast key in the hardware, in
+> multi-BSS environment, BSSes other than first were
+> incorrectly configured with the MAC address of first
+> BSS. Fixing it with correct MAC addresses.
+>
+> Signed-off-by: Yogesh Ashok Powar<yogeshp@marvell.com>
+> ---
+> (resent to include the linux-wireless list)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
-index 0d77129..1d216e9 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.c
-+++ b/drivers/net/wireless/ath/ath6kl/debug.c
-@@ -57,6 +57,30 @@ int ath6kl_printk(const char *level, const char *fmt, ...)
- 
- #ifdef CONFIG_ATH6KL_DEBUG
- 
-+void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...)
-+{
-+	va_list args;
-+
-+	if (!(debug_mask & mask))
-+		return;
-+
-+	va_start(args, fmt);
-+	ath6kl_printk(KERN_DEBUG, fmt, &args);
-+	va_end(args);
-+}
-+
-+void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
-+		     const char *msg, const char *prefix,
-+		     const void *buf, size_t len)
-+{
-+	if (debug_mask & mask) {
-+		if (msg)
-+			ath6kl_dbg(mask, "%s\n", msg);
-+
-+		print_hex_dump_bytes(prefix, DUMP_PREFIX_OFFSET, buf, len);
-+	}
-+}
-+
- #define REG_OUTPUT_LEN_PER_LINE	25
- #define REGTYPE_STR_LEN		100
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/debug.h b/drivers/net/wireless/ath/ath6kl/debug.h
-index cb21d91..c4be6e5 100644
---- a/drivers/net/wireless/ath/ath6kl/debug.h
-+++ b/drivers/net/wireless/ath/ath6kl/debug.h
-@@ -61,28 +61,11 @@ enum ath6kl_war {
- };
- 
- #ifdef CONFIG_ATH6KL_DEBUG
--#define ath6kl_dbg(mask, fmt, ...)					\
--	({								\
--	 int rtn;							\
--	 if (debug_mask & mask)						\
--		rtn = ath6kl_printk(KERN_DEBUG, fmt, ##__VA_ARGS__);	\
--	 else								\
--		rtn = 0;						\
--									\
--	 rtn;								\
--	 })
- 
--static inline void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
--				   const char *msg, const char *prefix,
--				   const void *buf, size_t len)
--{
--	if (debug_mask & mask) {
--		if (msg)
--			ath6kl_dbg(mask, "%s\n", msg);
--
--		print_hex_dump_bytes(prefix, DUMP_PREFIX_OFFSET, buf, len);
--	}
--}
-+void ath6kl_dbg(enum ATH6K_DEBUG_MASK mask, const char *fmt, ...);
-+void ath6kl_dbg_dump(enum ATH6K_DEBUG_MASK mask,
-+		     const char *msg, const char *prefix,
-+		     const void *buf, size_t len);
- 
- void ath6kl_dump_registers(struct ath6kl_device *dev,
- 			   struct ath6kl_irq_proc_registers *irq_proc_reg,
+You might want to get this fix included for the stable 3.0, 3.1 and 3.2 
+releases since mwl8k_set_key() was introduced in 2.6.39 with:
+fcdc403c31ed5bb5f3baf42f4e2b5e7198fef0c0: mwl8k: Enable HW encryption 
+for AP mode
 
+>
+>
+>   drivers/net/wireless/mwl8k.c |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
+> index dd5aeaf..fd12547 100644
+> --- a/drivers/net/wireless/mwl8k.c
+> +++ b/drivers/net/wireless/mwl8k.c
+> @@ -4093,7 +4093,7 @@ static int mwl8k_set_key(struct ieee80211_hw *hw,
+>   		return -EOPNOTSUPP;
+>
+>   	if (sta == NULL)
+> -		addr = hw->wiphy->perm_addr;
+> +		addr = vif->addr;
+>   	else
+>   		addr = sta->addr;
+>
