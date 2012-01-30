@@ -1,48 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out003.kontent.com ([81.88.40.217]:58235 "EHLO
-	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750879Ab2ACHju (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:54282 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753601Ab2A3PId (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 02:39:50 -0500
-From: Oliver Neukum <oliver@neukum.org>
-To: Jack Stone <jwjstone@fastmail.fm>
-Subject: Re: loading firmware while usermodehelper disabled.
-Date: Tue, 3 Jan 2012 08:41:32 +0100
-Cc: Marek Vasut <marek.vasut@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Matthew Garrett <mjg@redhat.com>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Greg Kroah-Hartman" <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> <201201030131.15397.marek.vasut@gmail.com> <c163595a-163e-4e68-ba0f-de5ca58e8de9@email.android.com>
-In-Reply-To: <c163595a-163e-4e68-ba0f-de5ca58e8de9@email.android.com>
+	Mon, 30 Jan 2012 10:08:33 -0500
+Received: by werb13 with SMTP id b13so3536021wer.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 07:08:32 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201201030841.32402.oliver@neukum.org> (sfid-20120103_083956_114765_1560DD3A)
+In-Reply-To: <1327935323.3630.3.camel@jlt3.sipsolutions.net>
+References: <CAG-2HqUqwHo_xgqC79riQF2DA4DPz1Qy5ZARQK8GT+tf_-UKRg@mail.gmail.com>
+ <1327935323.3630.3.camel@jlt3.sipsolutions.net>
+From: Tom Gundersen <teg@jklm.no>
+Date: Mon, 30 Jan 2012 16:08:12 +0100
+Message-ID: <CAG-2HqXikXhCighRnc8ovEB0YJm=0DRgxAcyBDnFpQw_vRGcww@mail.gmail.com> (sfid-20120130_160838_764486_18F47034)
+Subject: Re: status of ipw2x00
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag, 3. Januar 2012, 01:44:07 schrieb Jack Stone:
-> >> Its a perfectly good idea but you still need the full memory
-> >requirement
-> >> during the suspend.
-> >
-> >Hm ... and we can't have memory type that "can be swapped-out, but must
-> >be 
-> >loaded back before suspend" in kernel, right?
-> 
-> Nope. Kernel swapping is a big headache and Linux doesn't do it. The only thing we can do is drop any clean cache pages, but that has performance implications.
+Hi Johannes,
 
-There is however a notifier chain that is called early enough
-to still load stuff from disk so that the additional burden on memory
-would be used only when it might be needed.
+On Mon, Jan 30, 2012 at 3:55 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Yes, it's unfortunate but true -- ipw 2200 and the current 2200 devices
+> are completely different hardware, there's no overlap.
 
-	Regards
-		Oliver
+Thanks for the clarification.
+
+Tom
