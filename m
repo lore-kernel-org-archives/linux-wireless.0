@@ -1,58 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:57172 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750933Ab2AOPu4 (ORCPT
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:52382 "EHLO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751777Ab2A3Tsn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jan 2012 10:50:56 -0500
-Message-ID: <4F12F5DD.3030904@gmail.com> (sfid-20120115_165146_032948_DF92F242)
-Date: Sun, 15 Jan 2012 07:50:53 -0800
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-MIME-Version: 1.0
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	netdev@kernel.org, linux-wireless@vger.kernel.org
-Subject: ath9k timeouts with the current Mainline
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 30 Jan 2012 14:48:43 -0500
+Received: by mail-lpp01m010-f49.google.com with SMTP id r15so3684727lag.22
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 11:48:41 -0800 (PST)
+Subject: Re: [PATCH 06/12] wl12xx: Driver-FW API changes
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1327924857-1250-7-git-send-email-eliad@wizery.com>
+References: <1327924857-1250-1-git-send-email-eliad@wizery.com>
+	 <1327924857-1250-7-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 30 Jan 2012 21:48:38 +0200
+Message-ID: <1327952918.3626.106.camel@cumari> (sfid-20120130_204845_436684_305CF3B9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-not sure if the Internet provider just sucks, or I am hitting a wireless 
-issue. basically my connection times out after a few mins of being 
-up.(streaming radio is not solid).
+On Mon, 2012-01-30 at 14:00 +0200, Eliad Peller wrote: 
+> From: Eyal Shapira <eyal@wizery.com>
+> 
+> - New ACX enum
+> - Added DFS commands
+> - Changes to channel switch command/event
+> - Added reset_tsf to ap role start command
+> - Added ACX for PROTECTION configuration
+> 
+> Signed-off-by: Eyal Shapira <eyal@wizery.com>
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-dmesg shows:
-
-[ 3322.827549] wlan1: authenticate with d8:c7:c8:a2:0f:40 (try 1)
-[ 3322.831778] wlan1: d8:c7:c8:a2:0f:40 denied authentication (status 17)
-[ 3386.310128] wlan1: authenticate with d8:c7:c8:a2:0d:80 (try 1)
-[ 3386.312010] wlan1: d8:c7:c8:a2:0d:80 denied authentication (status 17)
-[ 3389.481771] wlan1: direct probe to 00:18:0a:02:19:c3 (try 1/3)
-[ 3389.681095] wlan1: direct probe to 00:18:0a:02:19:c3 (try 2/3)
-[ 3389.881094] wlan1: direct probe to 00:18:0a:02:19:c3 (try 3/3)
-[ 3390.081092] wlan1: direct probe to 00:18:0a:02:19:c3 timed out
-[ 3458.618065] wlan1: direct probe to d8:c7:c8:a2:0d:80 (try 1/3)
-[ 3458.818079] wlan1: direct probe to d8:c7:c8:a2:0d:80 (try 2/3)
-[ 3459.018080] wlan1: direct probe to d8:c7:c8:a2:0d:80 (try 3/3)
-[ 3459.218058] wlan1: direct probe to d8:c7:c8:a2:0d:80 timed out
-[ 3466.518579] wlan1: direct probe to d8:c7:c8:a2:0d:80 (try 1/3)
-[ 3466.718111] wlan1: direct probe to d8:c7:c8:a2:0d:80 (try 2/3)
-[ 3466.918074] wlan1: direct probe to d8:c7:c8:a2:0d:80 (try 3/3)
-[ 3467.118077] wlan1: direct probe to d8:c7:c8:a2:0d:80 timed out
-[ 3474.424860] wlan1: authenticate with d8:c7:c8:a2:0d:80 (try 1)
-[ 3474.449681] wlan1: authenticated
-[ 3474.457133] wlan1: associate with d8:c7:c8:a2:0d:80 (try 1)
-[ 3474.471059] wlan1: RX AssocResp from d8:c7:c8:a2:0d:80 (capab=0x421 
-status=0 aid=13)
-[ 3474.471067] wlan1: associated
-[ 3474.471075] wlan1: moving STA d8:c7:c8:a2:0d:80 to state 1
-[ 3474.471080] wlan1: moving STA d8:c7:c8:a2:0d:80 to state 2
-[ 3474.473809] wlan1: moving STA d8:c7:c8:a2:0d:80 to state 3
-[ 3484.546077] wlan1: no IPv6 routers present
+I think this shold also be squashed with the previous one.  Especially
+because this commit log says it does things that were actually already
+done in the previous one. ;)
 
 
-card is:
-03:00.0 Network controller: Atheros Communications Inc. AR5008 Wireless 
-Network Adapter (rev 01)
+-- 
+Cheers,
+Luca.
 
-has anybody else seen/experienced anything like this?
-
-Justin P. Mattock
