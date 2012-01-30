@@ -1,47 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:38694 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753094Ab2AaRaR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 12:30:17 -0500
-Received: by pbdu11 with SMTP id u11so339515pbd.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 09:30:16 -0800 (PST)
-Message-ID: <4F282525.2050305@canonical.com> (sfid-20120131_183021_854058_7614B750)
-Date: Tue, 31 Jan 2012 10:30:13 -0700
-From: Tim Gardner <rtg.canonical@gmail.com>
-Reply-To: tim.gardner@canonical.com
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Tim Gardner <rtg.canonical@gmail.com>,
-	John W Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH V3] rtlwifi: Convert to asynchronous firmware load
-References: <4f272b8e.6jAMcI3HDthxlb+q%Larry.Finger@lwfinger.net> <4F280689.1080402@canonical.com> <4F2818F5.6000802@lwfinger.net>
-In-Reply-To: <4F2818F5.6000802@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:30172 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752679Ab2A3PSm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jan 2012 10:18:42 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 3/4] rt2800: radio 3xxx: add channel switch calibration routines
+Date: Mon, 30 Jan 2012 16:17:58 +0100
+Message-Id: <1327936679-12576-3-git-send-email-sgruszka@redhat.com> (sfid-20120130_161845_447156_29B45B1A)
+In-Reply-To: <1327936679-12576-1-git-send-email-sgruszka@redhat.com>
+References: <1327936679-12576-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/31/2012 09:38 AM, Larry Finger wrote:
-> On 01/31/2012 09:19 AM, Tim Gardner wrote:
->>
->>
->> d88e0b3162bded8190866d9a17f5e36c9bb0d29e in wireless-testing (which
->> includes
->> 'rtlwifi: Convert to asynchronous firmware load') is working well on my
->> RTL8188CE [10ec:8176].
->
-> Thanks for the feedback. Note: The patch was merged before V3 was
-> available, thus you will also need the "rtlwifi: Remove extra debugging
-> message accidentally left in" patch that I just sent to John.
->
-> Larry
->
+Synchronize code with Ralink driver:
+2011_0719_RT3070_RT3370_RT5370_RT5372_Linux_STA_V2.5.0.3_DPO
+Based on functions:
+RT33xx_ChipSwitchChannel
+RT30xx_ChipSwitchChannel
 
-I didn't notice any spamming in the logs, but then I didn't really abuse 
-it much. I mostly ran through a few boot and suspend/resume cycles to 
-make sure firmware was loading.
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/rt2x00/rt2800lib.c |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
-rtg
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index a841918..b5dcc48 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1700,6 +1700,13 @@ static void rt2800_config_channel_rf3xxx(struct rt2x00_dev *rt2x00dev,
+ 	}
+ 	rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
+ 
++	rt2800_rfcsr_read(rt2x00dev, 30, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 1);
++	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
++	msleep(1);
++	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
++	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
++
+ 	rt2800_rfcsr_read(rt2x00dev, 23, &rfcsr);
+ 	rt2x00_set_field8(&rfcsr, RFCSR23_FREQ_OFFSET, rt2x00dev->freq_offset);
+ 	rt2800_rfcsr_write(rt2x00dev, 23, rfcsr);
+@@ -1710,6 +1717,13 @@ static void rt2800_config_channel_rf3xxx(struct rt2x00_dev *rt2x00dev,
+ 	rt2800_rfcsr_read(rt2x00dev, 7, &rfcsr);
+ 	rt2x00_set_field8(&rfcsr, RFCSR7_RF_TUNING, 1);
+ 	rt2800_rfcsr_write(rt2x00dev, 7, rfcsr);
++
++	rt2800_rfcsr_read(rt2x00dev, 30, &rfcsr);
++	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 1);
++	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
++	msleep(1);
++	rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
++	rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+ }
+ 
+ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
 -- 
-Tim Gardner tim.gardner@canonical.com
+1.7.1
+
