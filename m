@@ -1,43 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:43581 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751041Ab2ACDZR (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:47536 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752543Ab2A3L5g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 Jan 2012 22:25:17 -0500
-Date: Tue, 3 Jan 2012 03:25:05 +0000
-From: Matthew Garrett <mjg@redhat.com>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Jack Stone <jwjstone@fastmail.fm>,
-	Oliver Neukum <oliver@neukum.org>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Greg Kroah-Hartman <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Subject: Re: loading firmware while usermodehelper disabled.
-Message-ID: <20120103032505.GA19702@srcf.ucam.org> (sfid-20120103_042603_412043_12096BB3)
-References: <20120102215028.GA15701@srcf.ucam.org>
- <Pine.LNX.4.44L0.1201022136190.20386-100000@netrider.rowland.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <Pine.LNX.4.44L0.1201022136190.20386-100000@netrider.rowland.org>
+	Mon, 30 Jan 2012 06:57:36 -0500
+Received: by wics10 with SMTP id s10so3321396wic.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 03:57:35 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 00/12] wl12xx: update fw api
+Date: Mon, 30 Jan 2012 14:00:45 +0200
+Message-Id: <1327924857-1250-1-git-send-email-eliad@wizery.com> (sfid-20120130_125744_097103_D29E7A23)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 02, 2012 at 09:45:58PM -0500, Alan Stern wrote:
+The fw api was changed in the latest FWs (6.3.5.0.95 for wl127x
+and 7.3.5.0.95 for wl128x).
 
-> Wait a second.  Why does isight_firmware bind at this time?  Binding to
-> new devices is handled by khubd, which doesn't start running again
-> until after the resume is finished (the device appears to be new
-> because its descriptors have changed).  At that point there should be
-> no trouble reloading the firmware.
+Along with some small adjustments, the main changes
+inroduced by this patheset are configuring the
+templates per-role, and moving to IEEE80211_HW_SUPPORTS_DYNAMIC_PS
+mode.
 
-Then why are we getting this warning? The firmware is only loaded in the 
-probe function.
+Eliad Peller (5):
+  wl12xx: fw api change - add role_id to set_template
+  wl12xx: use dev_role_id for scans
+  wl12xx: use dev_role_id for sched scan
+  wl12xx: fw api change - add role_id to tsf_info
+  wl12xx: fw api change - update cmd/acx/event enums
+
+Eyal Shapira (7):
+  wl12xx: Driver-FW API changes
+  wl12xx: remove PS management code
+  wl12xx: add support for HW dynamic PS
+  wl12xx: add dynamic_ps_timeout debugfs file
+  wl12xx: remove 2 unused parameters in wl1271_ps_set_mode()
+  wl12xx: enable/disable BET with AUTO_PS/ACTIVE
+  wl12xx: change WLVIF_FLAG_PSM name and remove
+    WLVIF_FLAG_PSM_REQUESTED
+
+ drivers/net/wireless/wl12xx/acx.c     |    7 +-
+ drivers/net/wireless/wl12xx/acx.h     |  146 ++++++++++++++++---------------
+ drivers/net/wireless/wl12xx/boot.c    |    3 +-
+ drivers/net/wireless/wl12xx/cmd.c     |   55 ++++++++----
+ drivers/net/wireless/wl12xx/cmd.h     |  145 +++++++++++++++++-------------
+ drivers/net/wireless/wl12xx/conf.h    |   13 ++--
+ drivers/net/wireless/wl12xx/debugfs.c |   66 ++++++++++++++-
+ drivers/net/wireless/wl12xx/event.c   |  151 -------------------------------
+ drivers/net/wireless/wl12xx/event.h   |   20 +++--
+ drivers/net/wireless/wl12xx/init.c    |   45 ++++++---
+ drivers/net/wireless/wl12xx/main.c    |  158 +++++++--------------------------
+ drivers/net/wireless/wl12xx/ps.c      |   32 +++++--
+ drivers/net/wireless/wl12xx/ps.h      |    2 +-
+ drivers/net/wireless/wl12xx/scan.c    |   42 ++++++---
+ drivers/net/wireless/wl12xx/wl12xx.h  |   13 +--
+ 15 files changed, 399 insertions(+), 499 deletions(-)
 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+1.7.6.401.g6a319
+
