@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm24-vm7.bullet.mail.ird.yahoo.com ([212.82.109.198]:44200 "HELO
-	nm24-vm7.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752582Ab2A2Uqz convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 Jan 2012 15:46:55 -0500
-Message-ID: <1327869629.89221.YahooMailClassic@web29503.mail.ird.yahoo.com> (sfid-20120129_214659_547682_0995EABF)
-Date: Sun, 29 Jan 2012 20:40:29 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: rtl8187 behavior change/breakage with 3.2.1-3.fc16.x86_64<->3.2.2-1.fc16.x86_64
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	herton@mandriva.com.br
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:35525 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753425Ab2A3UNb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jan 2012 15:13:31 -0500
+Received: by eekc14 with SMTP id c14so1562445eek.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 12:13:30 -0800 (PST)
+From: Florian Fainelli <florian@openwrt.org>
+To: Dan Williams <dcbw@redhat.com>
+Subject: Re: MAINTAINER NEEDED -- Re: status of ipw2x00
+Date: Mon, 30 Jan 2012 21:13:26 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Tom Gundersen <teg@jklm.no>,
+	"Wey-Yi Guy" <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
+References: <CAG-2HqUqwHo_xgqC79riQF2DA4DPz1Qy5ZARQK8GT+tf_-UKRg@mail.gmail.com> <20120130184446.GB2493@tuxdriver.com> <1327953315.1789.23.camel@dcbw.foobar.com>
+In-Reply-To: <1327953315.1789.23.camel@dcbw.foobar.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201201302113.26344.florian@openwrt.org> (sfid-20120130_211335_094176_9C28A013)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This may be a fedora-specific problem - I noticed that just after booting into the new fedora kernel (3.2.2-1.fc16.x86_64), I am getting a strange message from the kernel:
+On Monday 30 January 2012 20:55:15 Dan Williams wrote:
+> On Mon, 2012-01-30 at 13:44 -0500, John W. Linville wrote:
+> > On Mon, Jan 30, 2012 at 02:42:52PM +0100, Tom Gundersen wrote:
+> > > If we are not able to drop the 2x00 drivers, are anyone still
+> > > interested in working on them to fix the firmware loading?
+> > 
+> > Anyone out there looking for a project?  A way to "break-in" to the
+> > public Linux community without the risk of breaking anything too
+> > important? :-)
+> > 
+> > If someone wants to be the ipw2x00 maintainer, all they need to do
+> > is start sending some non-broken patches...
+> 
+> I'd be willing to donate an ipw2200 to somebody who steps up to maintain
+> the driver.  I'll even consider paying postage.  Note that you'll need
+> to have a machine with a MiniPCI slot, or a desktop machine with PCI and
+> a PCI->MiniPCI adapter card.
 
-rtl8187: Invalid hwaddr! Using randomly generated MAC address
-
-And it is setting my rtl8187 to an alien mac address instead of the usual one I have. The previous (3.2.1-3.fc16.x86_64) works correctly, and as far as I go back through my /var/log/message, had never had this problem ever.
-
-The relevant changelog in the fedora package is this, so this might be a compat-wireless 3.3-rc1-2 problem? I checked rhbz 784345 which looked unrelated, although it is realtek (another driver).
-
---------------
-
-* Wed Jan 25 2012 Josh Boyer <jwboyer@redhat.com> - 3.2.2-1
-- Linux 3.2.2
-- Add patch to invalidate parent cache when fsync is called on a partition 
-  (rhbz 783211)
-- Test fix for realtek_async_autopm oops from Stanislaw Gruszka (rhbz 784345)
-
-* Wed Jan 25 2012 John W. Linville <linville@redhat.com>
-- modpost: add option to allow external modules to avoid taint
-- Make integrated compat-wireless take advantage of the above
-
-* Wed Jan 25 2012 Josh Boyer <jwboyer@redhat.com>
-- Backport patch to fix oops in rds (rhbz 718790)
-
-* Tue Jan 24 2012 John W. Linville <linville@redhat.com>
-- Update compat-wireless snapshot to version 3.3-rc1-2
-
-* Tue Jan 24 2012 Josh Boyer <jwboyer@redhat.com>
-- Re-enable the ARCMSR module (rhbz 784287)
-- Add back a set of patches that were erroneously dropped during the rebase
-- Re-enable the LIRC_STAGING drivers (rhbz 784398)
---------------------------------
+I can also send a mini-pci ipw2200-based board to anyone interested. Hint: 
+having two cards is also convenient.
+--
+Florian
