@@ -1,27 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12476 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751825Ab2APXim (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jan 2012 18:38:42 -0500
-Date: Mon, 16 Jan 2012 15:35:43 -0800
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-CC: <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH]  Add dma_zalloc_coherent to fix build with kernels older
- than 3.2
-Message-ID: <20120116233543.GO4511@tux> (sfid-20120117_003846_863496_D7B6B9B5)
-References: <1326690475-9096-1-git-send-email-mar.kolya@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1326690475-9096-1-git-send-email-mar.kolya@gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:35964 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751722Ab2A3XEX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jan 2012 18:04:23 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
+	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 3/7] bcma: export bcma_pcie_read()
+Date: Tue, 31 Jan 2012 00:03:33 +0100
+Message-Id: <1327964617-7910-4-git-send-email-hauke@hauke-m.de> (sfid-20120131_000426_224577_DE6A45E5)
+In-Reply-To: <1327964617-7910-1-git-send-email-hauke@hauke-m.de>
+References: <1327964617-7910-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 16, 2012 at 12:07:55AM -0500, Nikolay Martynov wrote:
-> 
-> Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+This will be needed by the host controller.
 
-Applied and pushed, thanks!
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/bcma/bcma_private.h |    3 +++
+ drivers/bcma/driver_pci.c   |    2 +-
+ 2 files changed, 4 insertions(+), 1 deletions(-)
 
- Luis
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index 0def898..6109da5 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -48,6 +48,9 @@ extern int __init bcma_host_pci_init(void);
+ extern void __exit bcma_host_pci_exit(void);
+ #endif /* CONFIG_BCMA_HOST_PCI */
+ 
++/* driver_pci.c */
++u32 bcma_pcie_read(struct bcma_drv_pci *pc, u32 address);
++
+ #ifdef CONFIG_BCMA_DRIVER_PCI_HOSTMODE
+ void bcma_core_pci_hostmode_init(struct bcma_drv_pci *pc);
+ #endif /* CONFIG_BCMA_DRIVER_PCI_HOSTMODE */
+diff --git a/drivers/bcma/driver_pci.c b/drivers/bcma/driver_pci.c
+index 970a38e..20ceebd 100644
+--- a/drivers/bcma/driver_pci.c
++++ b/drivers/bcma/driver_pci.c
+@@ -17,7 +17,7 @@
+  * R/W ops.
+  **************************************************/
+ 
+-static u32 bcma_pcie_read(struct bcma_drv_pci *pc, u32 address)
++u32 bcma_pcie_read(struct bcma_drv_pci *pc, u32 address)
+ {
+ 	pcicore_write32(pc, BCMA_CORE_PCI_PCIEIND_ADDR, address);
+ 	pcicore_read32(pc, BCMA_CORE_PCI_PCIEIND_ADDR);
+-- 
+1.7.5.4
+
