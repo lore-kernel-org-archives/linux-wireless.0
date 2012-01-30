@@ -1,32 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51514 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751656Ab2A1T2t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jan 2012 14:28:49 -0500
-Message-ID: <4F244C6D.3060304@openwrt.org> (sfid-20120128_202852_805542_F666B47A)
-Date: Sat, 28 Jan 2012 20:28:45 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Daniel Halperin <dhalperi@cs.washington.edu>
-CC: Marek Lindner <lindner_marek@yahoo.de>,
+Received: from he.sipsolutions.net ([78.46.109.217]:51469 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751834Ab2A3Ak6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 29 Jan 2012 19:40:58 -0500
+Subject: Re: [PATCH] mac80211: Do not scan for IBSS merge with a fixed
+ BSSID.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: minstrel_ht should not override user supplied
- rts setting
-References: <1327735027-30121-1-git-send-email-lindner_marek@yahoo.de> <1327735027-30121-2-git-send-email-lindner_marek@yahoo.de> <4F23F753.8070405@openwrt.org> <201201290243.47953.lindner_marek@yahoo.de> <4F2443BB.3000602@openwrt.org> <CALSq=BahchLsgVVeFei+_FQAchMAAg2yU1drmpZTgt0pVoJbJg@mail.gmail.com>
-In-Reply-To: <CALSq=BahchLsgVVeFei+_FQAchMAAg2yU1drmpZTgt0pVoJbJg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1327581394-15368-1-git-send-email-cavallar@lri.fr> (sfid-20120126_133659_805161_39F32A75)
+References: <1327581394-15368-1-git-send-email-cavallar@lri.fr>
+	 (sfid-20120126_133659_805161_39F32A75)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 29 Jan 2012 16:40:47 -0800
+Message-ID: <1327884047.4225.0.camel@jlt3.sipsolutions.net> (sfid-20120130_014101_693773_D1EECEAF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-01-28 8:17 PM, Daniel Halperin wrote:
-> (BUT @Felix: maybe max_tp_rate2 shouldn't use RTS/CTS---it's still
-> trying to be aggressive, whereas max_prob_rate is the one where you
-> *really* want the packet to get through. So maybe the first half of
-> Marek's patch is worth keeping, though it *should* be a marginal
-> difference in normal operating environments.)
-I thought about this as well, but decided to keep it even for
-max_tp_rate2, since with long A-MPDUs, the extra time needed by RTS/CTS
-compared to the A-MPDU transmission time isn't that much, and
-max_prob_rate is usually quite a bit slower.
+On Thu, 2012-01-26 at 13:36 +0100, Nicolas Cavallari wrote:
+> Currently, when we are on an IBSS network with no active station,
+> we would scan for other BSSID, even if fixed_bssid is on,  due to
+> a bug in ibss.c,  where fixed_channel would be checked instead of
+> fixed_bssid.  This would trigger useless scans where scan results
+> would not be used anyway.
+> 
+> This patch also reverts commit 39d02a7d90602d4557ee05db2a157a4e0,
+> which assumed that the ifibss->fixed_channel check was legitimate
+> to disable single-channel scans.  IBSS single-channel scan should
+> now be fixed.
 
-- Felix
+John, please revert f1e3be1561c43b6bbe2426e34849fb1486dc313b
+
+johannes
+
