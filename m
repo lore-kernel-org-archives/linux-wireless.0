@@ -1,170 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38223 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758249Ab2AET6R (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:47541 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752651Ab2A3L5s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 14:58:17 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: [PATCHv2 1/2] nl80211: add support for mcs masks
-Date: Thu,  5 Jan 2012 20:58:07 +0100
-Message-Id: <1325793490-21501-2-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20120105_205826_971333_45DB2E08)
-In-Reply-To: <1325793490-21501-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1325793490-21501-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Mon, 30 Jan 2012 06:57:48 -0500
+Received: by wgbed3 with SMTP id ed3so4506776wgb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 03:57:46 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 06/12] wl12xx: Driver-FW API changes
+Date: Mon, 30 Jan 2012 14:00:51 +0200
+Message-Id: <1327924857-1250-7-git-send-email-eliad@wizery.com> (sfid-20120130_125753_277041_7C6EFA2A)
+In-Reply-To: <1327924857-1250-1-git-send-email-eliad@wizery.com>
+References: <1327924857-1250-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allow to set mcs masks through nl80211. We also allow to set MCS
-rates but no legacy rates (and vice versa).
+From: Eyal Shapira <eyal@wizery.com>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
+- New ACX enum
+- Added DFS commands
+- Changes to channel switch command/event
+- Added reset_tsf to ap role start command
+- Added ACX for PROTECTION configuration
+
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- include/linux/nl80211.h |    4 +++
- include/net/cfg80211.h  |    3 +-
- net/wireless/nl80211.c  |   61 ++++++++++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 65 insertions(+), 3 deletions(-)
+ drivers/net/wireless/wl12xx/cmd.c  |   10 ++++++++--
+ drivers/net/wireless/wl12xx/cmd.h  |   17 ++++++++++++-----
+ drivers/net/wireless/wl12xx/main.c |    2 +-
+ 3 files changed, 21 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
-index 0f5ff37..225272c 100644
---- a/include/linux/nl80211.h
-+++ b/include/linux/nl80211.h
-@@ -1475,6 +1475,7 @@ enum nl80211_attrs {
- #define NL80211_ATTR_FEATURE_FLAGS NL80211_ATTR_FEATURE_FLAGS
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index c4990da..88e94c5 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -715,6 +715,8 @@ int wl12xx_cmd_role_start_ap(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	cmd->ap.beacon_interval = cpu_to_le16(wlvif->beacon_int);
+ 	cmd->ap.dtim_interval = bss_conf->dtim_period;
+ 	cmd->ap.beacon_expiry = WL1271_AP_DEF_BEACON_EXP;
++	/* FIXME: Change when adding DFS */
++	cmd->ap.reset_tsf = 1;  /* By default reset AP TSF */
+ 	cmd->channel = wlvif->channel;
  
- #define NL80211_MAX_SUPP_RATES			32
-+#define NL80211_MAX_SUPP_HT_RATES		77
- #define NL80211_MAX_SUPP_REG_RULES		32
- #define NL80211_TKIP_DATA_OFFSET_ENCR_KEY	0
- #define NL80211_TKIP_DATA_OFFSET_TX_MIC_KEY	16
-@@ -2401,12 +2402,15 @@ enum nl80211_key_attributes {
-  *	in an array of rates as defined in IEEE 802.11 7.3.2.2 (u8 values with
-  *	1 = 500 kbps) but without the IE length restriction (at most
-  *	%NL80211_MAX_SUPP_RATES in a single array).
-+ * @NL80211_TXRATE_MCS: HT (MCS) rates allowed for TX rate selection
-+ *	in an array of MCS numbers.
-  * @__NL80211_TXRATE_AFTER_LAST: internal
-  * @NL80211_TXRATE_MAX: highest TX rate attribute
-  */
- enum nl80211_tx_rate_attributes {
- 	__NL80211_TXRATE_INVALID,
- 	NL80211_TXRATE_LEGACY,
-+	NL80211_TXRATE_MCS,
- 
- 	/* keep last */
- 	__NL80211_TXRATE_AFTER_LAST,
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 15f4be7..2b23757 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1228,8 +1228,7 @@ enum wiphy_params_flags {
- struct cfg80211_bitrate_mask {
- 	struct {
- 		u32 legacy;
--		/* TODO: add support for masking MCS rates; e.g.: */
--		/* u8 mcs[IEEE80211_HT_MCS_MASK_LEN]; */
-+		u8 mcs[IEEE80211_HT_MCS_MASK_LEN];
- 	} control[IEEE80211_NUM_BANDS];
- };
- /**
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b3d3cf8..1f510fa 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5364,9 +5364,39 @@ static u32 rateset_to_mask(struct ieee80211_supported_band *sband,
- 	return mask;
+ 	if (!bss_conf->hidden_ssid) {
+@@ -1756,6 +1758,7 @@ out:
  }
  
-+static bool ht_rateset_to_mask(struct ieee80211_supported_band *sband,
-+			       u8 *rates, u8 rates_len,
-+			       u8 mcs[IEEE80211_HT_MCS_MASK_LEN])
-+{
-+	u8 i;
-+
-+	memset(mcs, 0, IEEE80211_HT_MCS_MASK_LEN);
-+
-+	for (i = 0; i < rates_len; i++) {
-+		int ridx, rbit;
-+
-+		ridx = rates[i] / 8;
-+		rbit = BIT(rates[i] % 8);
-+
-+		/* check validity */
-+		if ((ridx < 0) || (ridx > IEEE80211_HT_MCS_MASK_LEN))
-+			return false;
-+
-+		/* check availability */
-+		if (sband->ht_cap.mcs.rx_mask[ridx] & rbit)
-+			mcs[ridx] |= rbit;
-+		else
-+			return false;
-+	}
-+
-+	return true;
-+}
-+
- static const struct nla_policy nl80211_txattr_policy[NL80211_TXRATE_MAX + 1] = {
- 	[NL80211_TXRATE_LEGACY] = { .type = NLA_BINARY,
- 				    .len = NL80211_MAX_SUPP_RATES },
-+	[NL80211_TXRATE_MCS] = { .type = NLA_BINARY,
-+				 .len = NL80211_MAX_SUPP_HT_RATES },
- };
- 
- static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
-@@ -5392,12 +5422,20 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
- 		sband = rdev->wiphy.bands[i];
- 		mask.control[i].legacy =
- 			sband ? (1 << sband->n_bitrates) - 1 : 0;
-+		if (sband)
-+			memcpy(mask.control[i].mcs,
-+			       sband->ht_cap.mcs.rx_mask,
-+			       sizeof(mask.control[i].mcs));
-+		else
-+			memset(mask.control[i].mcs, 0,
-+			       sizeof(mask.control[i].mcs));
+ int wl12xx_cmd_channel_switch(struct wl1271 *wl,
++			      struct wl12xx_vif *wlvif,
+ 			      struct ieee80211_channel_switch *ch_switch)
+ {
+ 	struct wl12xx_cmd_channel_switch *cmd;
+@@ -1769,10 +1772,13 @@ int wl12xx_cmd_channel_switch(struct wl1271 *wl,
+ 		goto out;
  	}
  
- 	/*
- 	 * The nested attribute uses enum nl80211_band as the index. This maps
- 	 * directly to the enum ieee80211_band values used in cfg80211.
- 	 */
-+	BUILD_BUG_ON(NL80211_MAX_SUPP_HT_RATES > IEEE80211_HT_MCS_MASK_LEN * 8);
- 	nla_for_each_nested(tx_rates, info->attrs[NL80211_ATTR_TX_RATES], rem)
- 	{
- 		enum ieee80211_band band = nla_type(tx_rates);
-@@ -5413,7 +5451,28 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
- 				sband,
- 				nla_data(tb[NL80211_TXRATE_LEGACY]),
- 				nla_len(tb[NL80211_TXRATE_LEGACY]));
--			if (mask.control[band].legacy == 0)
-+		}
-+		if (tb[NL80211_TXRATE_MCS]) {
-+			if (!ht_rateset_to_mask(
-+					sband,
-+					nla_data(tb[NL80211_TXRATE_MCS]),
-+					nla_len(tb[NL80211_TXRATE_MCS]),
-+					mask.control[band].mcs))
-+				return -EINVAL;
-+		}
++	cmd->role_id = wlvif->role_id;
+ 	cmd->channel = ch_switch->channel->hw_value;
+ 	cmd->switch_time = ch_switch->count;
+-	cmd->tx_suspend = ch_switch->block_tx;
+-	cmd->flush = 0; /* this value is ignored by the FW */
++	cmd->stop_tx = ch_switch->block_tx;
 +
-+		if (mask.control[band].legacy == 0) {
-+			/* don't allow empty legacy rates if HT
-+			 * is not even supported. */
-+			if (!rdev->wiphy.bands[band]->ht_cap.ht_supported)
-+				return -EINVAL;
++	/* FIXME: control from mac80211 in the future */
++	cmd->post_switch_tx_disable = 0;  /* Enable TX on the target channel */
+ 
+ 	ret = wl1271_cmd_send(wl, CMD_CHANNEL_SWITCH, cmd, sizeof(*cmd), 0);
+ 	if (ret < 0) {
+diff --git a/drivers/net/wireless/wl12xx/cmd.h b/drivers/net/wireless/wl12xx/cmd.h
+index faf046b..edd240d 100644
+--- a/drivers/net/wireless/wl12xx/cmd.h
++++ b/drivers/net/wireless/wl12xx/cmd.h
+@@ -91,6 +91,7 @@ int wl12xx_cmd_config_fwlog(struct wl1271 *wl);
+ int wl12xx_cmd_start_fwlog(struct wl1271 *wl);
+ int wl12xx_cmd_stop_fwlog(struct wl1271 *wl);
+ int wl12xx_cmd_channel_switch(struct wl1271 *wl,
++			      struct wl12xx_vif *wlvif,
+ 			      struct ieee80211_channel_switch *ch_switch);
+ int wl12xx_cmd_stop_channel_switch(struct wl1271 *wl);
+ int wl12xx_allocate_link(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+@@ -344,7 +345,9 @@ struct wl12xx_cmd_role_start {
+ 			u8 ssid_len;
+ 			u8 ssid[IEEE80211_MAX_SSID_LEN];
+ 
+-			u8 padding_1[5];
++			u8 reset_tsf;
 +
-+			for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
-+				if (mask.control[band].mcs[i])
-+					break;
++			u8 padding_1[4];
+ 		} __packed ap;
+ 	};
+ } __packed;
+@@ -704,14 +707,18 @@ struct wl12xx_cmd_stop_fwlog {
+ struct wl12xx_cmd_channel_switch {
+ 	struct wl1271_cmd_header header;
+ 
++	u8 role_id;
 +
-+			/* legacy and mcs rates may not be both empty */
-+			if (i == IEEE80211_HT_MCS_MASK_LEN)
- 				return -EINVAL;
- 		}
- 	}
+ 	/* The new serving channel */
+ 	u8 channel;
+ 	/* Relative time of the serving channel switch in TBTT units */
+ 	u8 switch_time;
+-	/* 1: Suspend TX till switch time; 0: Do not suspend TX */
+-	u8 tx_suspend;
+-	/* 1: Flush TX at switch time; 0: Do not flush */
+-	u8 flush;
++	/* Stop the role TX, should expect it after radar detection */
++	u8 stop_tx;
++	/* The target channel tx status 1-stopped 0-open*/
++	u8 post_switch_tx_disable;
++
++	u8 padding[3];
+ } __packed;
+ 
+ struct wl12xx_cmd_stop_channel_switch {
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 1c73c01..eac5d52 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -4381,7 +4381,7 @@ static void wl12xx_op_channel_switch(struct ieee80211_hw *hw,
+ 
+ 	/* TODO: change mac80211 to pass vif as param */
+ 	wl12xx_for_each_wlvif_sta(wl, wlvif) {
+-		ret = wl12xx_cmd_channel_switch(wl, ch_switch);
++		ret = wl12xx_cmd_channel_switch(wl, wlvif, ch_switch);
+ 
+ 		if (!ret)
+ 			set_bit(WLVIF_FLAG_CS_PROGRESS, &wlvif->flags);
 -- 
-1.7.7.3
+1.7.6.401.g6a319
 
