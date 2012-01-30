@@ -1,89 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:40367 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758290Ab2AEUQm (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:35402 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753608Ab2A3Oze (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 Jan 2012 15:16:42 -0500
-Message-ID: <4F060527.5080801@lwfinger.net> (sfid-20120105_211648_086170_6AA78DEB)
-Date: Thu, 05 Jan 2012 14:16:39 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Ben Hutchings <bhutchings@solarflare.com>
-CC: Fabio Estevam <festevam@gmail.com>,
-	David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, gwingerde@gmail.com,
-	linville@tuxdriver.com, fabio.estevam@freescale.com
-Subject: Re: [PATCH v2] drivers: net: Fix dependency for EEPROM_93CX6
-References: <1325770673-17309-1-git-send-email-festevam@gmail.com>  <4F05CBA9.1070602@lwfinger.net>  <20120105.122004.1170447281304011158.davem@davemloft.net>  <CAOMZO5AuZ_MHW3C1uNK7PyRz=XRHXhn2pvKCwk7iXLDd0YkDOQ@mail.gmail.com>  <CAOMZO5DTDpp8+9FOjPXGFQtQPg7Pv5qfAwFO3UC6AUdEDgpHYg@mail.gmail.com> <1325791078.3764.30.camel@bwh-desktop>
-In-Reply-To: <1325791078.3764.30.camel@bwh-desktop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Mon, 30 Jan 2012 09:55:34 -0500
+Received: by mail-wi0-f174.google.com with SMTP id s10so3498005wic.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 06:55:34 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 6/7] wl12xx: Add functions for managing rx data filters
+Date: Mon, 30 Jan 2012 16:58:44 +0200
+Message-Id: <1327935525-24361-7-git-send-email-eliad@wizery.com> (sfid-20120130_155542_279259_9989FAFB)
+In-Reply-To: <1327935525-24361-1-git-send-email-eliad@wizery.com>
+References: <1327935525-24361-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/2012 01:17 PM, Ben Hutchings wrote:
-> On Thu, 2012-01-05 at 17:02 -0200, Fabio Estevam wrote:
->> On Thu, Jan 5, 2012 at 4:06 PM, Fabio Estevam<festevam@gmail.com>  wrote:
->>
->>> I have tried selecting MISC_DEVICES in the Kconfig's, but the warning remains.
->>>
->>> I agree with Ben's comment: "That seems like a bug, since MISC_DEVICES
->>> doesn't by itself select any
->>> code.  (It's also not a meaningful category and maybe ought not to be an
->>> option at all.)"
->>
->> What about the aproach below?
->>
->> drivers/misc/Kconfig |   12 ++----------
->>   1 files changed, 2 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
->> index 6a1a092..9c7a474 100644
->> --- a/drivers/misc/Kconfig
->> +++ b/drivers/misc/Kconfig
->> @@ -10,15 +10,8 @@ config SENSORS_LIS3LV02D
->>   	select INPUT_POLLDEV
->>   	default n
->>
->> -menuconfig MISC_DEVICES
->> -	bool "Misc devices"
->> -	---help---
->> -	  Say Y here to get to see options for device drivers from various
->> -	  different categories. This option alone does not add any kernel code.
->> -
->> -	  If you say N, all options in this submenu will be skipped and disabled.
->> +menu "Misc devices"
->>
->> -if MISC_DEVICES
->>
->>   config AD525X_DPOT
->>   	tristate "Analog Devices Digital Potentiometers"
->> @@ -516,5 +509,4 @@ source "drivers/misc/ti-st/Kconfig"
->>   source "drivers/misc/lis3lv02d/Kconfig"
->>   source "drivers/misc/carma/Kconfig"
->>   source "drivers/misc/altera-stapl/Kconfig"
->> -
->> -endif # MISC_DEVICES
->> +endmenu
->
-> Yes, that's what I was thinking of.
->
->> This would remove the unneeded dependency of MISC_DEVICES.
->>
->> I know I need to take extra care not to break other things, but just
->> would like to get a feedback if this approach goes into the right
->> direction.
->
-> Right, you'll have to delete all dependencies on MISC_DEVICES.  Maybe
-> remove it from defconfigs as well, though I'm not sure whether it's
-> normal to do that at the same time.
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-I also think this is the correct approach.
+These functions will make sure filters are set according to what the
+firmware expects. It also stores the filter state in the driver.
 
-In the drivers/ tree, there are two mentions of MISC_DEVICES left:
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Ido Reis <idor@ti.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/rx.c     |  105 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/wl12xx/rx.h     |   14 ++++-
+ drivers/net/wireless/wl12xx/wl12xx.h |   21 +++++++
+ 3 files changed, 139 insertions(+), 1 deletions(-)
 
-finger@larrylap:~/wireless-testing-new> grep -r MISC_DEVICES drivers/*
-drivers/misc/Kconfig:# This one has to live outside of the MISC_DEVICES conditional,
-drivers/mmc/host/Kconfig:       select MISC_DEVICES
-
-Larry
+diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
+index 4fbd2a7..3468db3 100644
+--- a/drivers/net/wireless/wl12xx/rx.c
++++ b/drivers/net/wireless/wl12xx/rx.c
+@@ -282,3 +282,108 @@ void wl12xx_rx(struct wl1271 *wl, struct wl12xx_fw_status *status)
+ 
+ 	wl12xx_rearm_rx_streaming(wl, active_hlids);
+ }
++
++/*
++ * Global on / off for RX packet filtering in firmware
++ */
++int wl1271_rx_data_filtering_enable(struct wl1271 *wl, bool enable,
++				    enum rx_data_filter_action policy)
++{
++	int ret;
++
++	if (policy < FILTER_DROP || policy > FILTER_FW_HANDLE) {
++		wl1271_warning("filter policy value is not in valid range");
++		return -ERANGE;
++	}
++
++	if (enable < 0 || enable > 1) {
++		wl1271_warning("filter enable value is not in valid range");
++		return -ERANGE;
++	}
++
++	ret = wl1271_acx_toggle_rx_data_filter(wl, enable, policy);
++
++	if (ret)
++		return ret;
++
++	wl->rx_data_filter_enabled = enable;
++	wl->rx_data_filter_policy = policy;
++	return 0;
++}
++
++int wl1271_rx_data_filter_enable(struct wl1271 *wl,
++				 struct wl12xx_rx_data_filter *f, int nr,
++				 bool enable)
++{
++	int ret;
++
++	if (f->enabled == enable)
++		return 0;
++
++	ret = wl1271_acx_set_rx_data_filter(wl, enable, nr, f->action,
++					    f->pattern, f->len, f->offset);
++	if (ret) {
++		wl1271_error("Failed to enable/disable rx data filter");
++		return ret;
++	}
++
++	f->enabled = enable;
++	return 0;
++}
++
++int wl1271_rx_data_filter_set_action(struct wl12xx_rx_data_filter *f,
++				     enum rx_data_filter_action action)
++{
++	if (f->enabled)
++		return -EBUSY;
++
++	if (action < FILTER_DROP || action > FILTER_FW_HANDLE) {
++		wl1271_warning("filter action is not in valid range");
++		return -ERANGE;
++	}
++
++	f->action = action;
++	return 0;
++}
++
++int wl1271_rx_data_filter_set_offset(struct wl12xx_rx_data_filter *f,
++				     u16 offset)
++{
++	if (f->enabled)
++		return -EBUSY;
++
++	if (offset > USHRT_MAX-1) {
++		wl1271_warning("illegal value for filter offset");
++		return -ERANGE;
++	}
++
++	f->offset = offset;
++	return 0;
++}
++
++int wl1271_rx_data_filter_set_pattern(struct wl12xx_rx_data_filter *f, u8 *buf,
++				      u8 len)
++{
++	if (f->enabled)
++		return -EBUSY;
++	if (len > WL1271_RX_DATA_FILTER_MAX_PATTERN_SIZE)
++		return -E2BIG;
++
++	memcpy(f->pattern, buf, len);
++	f->len = len;
++	return 0;
++}
++
++/* Unset any active filters */
++void wl1271_rx_data_filters_clear_all(struct wl1271 *wl)
++{
++	int i;
++	struct wl12xx_rx_data_filter *f;
++
++	for (i = 0; i < WL1271_MAX_RX_DATA_FILTERS; i++) {
++		f  = &wl->rx_data_filters[i];
++		if (!f->enabled)
++			continue;
++		wl1271_rx_data_filter_enable(wl, f, i, 0);
++	}
++}
+diff --git a/drivers/net/wireless/wl12xx/rx.h b/drivers/net/wireless/wl12xx/rx.h
+index 86ba6b1..019d6ce 100644
+--- a/drivers/net/wireless/wl12xx/rx.h
++++ b/drivers/net/wireless/wl12xx/rx.h
+@@ -128,5 +128,17 @@ struct wl1271_rx_descriptor {
+ 
+ void wl12xx_rx(struct wl1271 *wl, struct wl12xx_fw_status *status);
+ u8 wl1271_rate_to_idx(int rate, enum ieee80211_band band);
+-
++void wl1271_set_default_filters(struct wl1271 *wl);
++int wl1271_rx_data_filtering_enable(struct wl1271 *wl, bool enable,
++				    enum rx_data_filter_action policy);
++int wl1271_rx_data_filter_enable(struct wl1271 *wl,
++				 struct wl12xx_rx_data_filter *f, int nr,
++				 bool enable);
++int wl1271_rx_data_filter_set_action(struct wl12xx_rx_data_filter *f,
++				     enum rx_data_filter_action action);
++int wl1271_rx_data_filter_set_offset(struct wl12xx_rx_data_filter *f,
++				     u16 offset);
++int wl1271_rx_data_filter_set_pattern(struct wl12xx_rx_data_filter *f, u8 *buf,
++				      u8 len);
++void wl1271_rx_data_filters_clear_all(struct wl1271 *wl);
+ #endif
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index d29de3f..66bda55 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -292,6 +292,14 @@ enum rx_data_filter_action {
+ 	FILTER_FW_HANDLE = 2
+ };
+ 
++struct wl12xx_rx_data_filter {
++	bool enabled;
++	enum rx_data_filter_action action;
++	u8 len;
++	u16 offset;
++	u8 pattern[WL1271_MAX_RX_DATA_FILTER_SIZE];
++};
++
+ struct wl1271 {
+ 	struct ieee80211_hw *hw;
+ 	bool mac80211_registered;
+@@ -491,6 +499,19 @@ struct wl1271 {
+ 
+ 	/* last wlvif we transmitted from */
+ 	struct wl12xx_vif *last_wlvif;
++
++	/* AP-mode - work to add stations back on AP reconfig */
++	struct work_struct ap_start_work;
++
++	/* Global on/off switch for rx all rx filters */
++	bool rx_data_filter_enabled;
++
++	/* Default action for packets not matching any rule */
++	enum rx_data_filter_action rx_data_filter_policy;
++
++	/* RX Data filter rule descriptors */
++	struct wl12xx_rx_data_filter
++				rx_data_filters[WL1271_MAX_RX_DATA_FILTERS];
+ };
+ 
+ struct wl1271_station {
+-- 
+1.7.6.401.g6a319
 
