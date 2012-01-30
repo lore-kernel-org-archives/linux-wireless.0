@@ -1,107 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17765 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752419Ab2ATNh3 (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:35402 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753394Ab2A3Oz1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 Jan 2012 08:37:29 -0500
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH v2 7/8] ath6kl: Add a support to handle the host sleep mode cmd processed event
-Date: Fri, 20 Jan 2012 19:05:43 +0530
-Message-ID: <1327066544-23779-8-git-send-email-rmani@qca.qualcomm.com> (sfid-20120120_143732_912719_98B52707)
-In-Reply-To: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com>
-References: <1327066544-23779-1-git-send-email-rmani@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 30 Jan 2012 09:55:27 -0500
+Received: by mail-wi0-f174.google.com with SMTP id s10so3498005wic.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 06:55:26 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/7] wl12xx: add suspend_listen_interval debugfs file
+Date: Mon, 30 Jan 2012 16:58:40 +0200
+Message-Id: <1327935525-24361-3-git-send-email-eliad@wizery.com> (sfid-20120130_155534_265083_0631197A)
+In-Reply-To: <1327935525-24361-1-git-send-email-eliad@wizery.com>
+References: <1327935525-24361-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+From: Eyal Shapira <eyal@wizery.com>
 
-For every WMI_SET_HOST_SLEEP_MODE_CMDID command (send from the host),
-the firmware sends WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID as
-an acknowledgement to the host.
+Add read/write to suspend_dtim_interval file which
+controls the number of DTIM periods between wakeups
+while the host is suspended.
+The value while the host is resumed is controlled
+by the file dtim_interval which existed previously.
 
-In order to being sync with the firmware, the host has to wait for
-this event before going to the suspend state.
-
-This patch adds,
- * New command WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID in
-   WMI event table.
- * New WMI function ath6kl_wmi_host_sleep_mode_cmd_prcd_evt_rx()
-   to process the event.
- * New flag HOST_SLEEP_MODE_CMD_PROCESSED in VIF flags to record
-   the arrival of the event.
-
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath6kl/core.h |    1 +
- drivers/net/wireless/ath/ath6kl/wmi.c  |   17 +++++++++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.h  |    2 ++
- 3 files changed, 20 insertions(+), 0 deletions(-)
+ drivers/net/wireless/wl12xx/debugfs.c |   59 +++++++++++++++++++++++++++++++++
+ 1 files changed, 59 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 1ddff66..b62cff9 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -445,6 +445,7 @@ enum ath6kl_vif_state {
- 	DTIM_PERIOD_AVAIL,
- 	WLAN_ENABLED,
- 	STATS_UPDATE_PEND,
-+	HOST_SLEEP_MODE_CMD_PROCESSED,
+diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+index 4dcb3f7..15353fa 100644
+--- a/drivers/net/wireless/wl12xx/debugfs.c
++++ b/drivers/net/wireless/wl12xx/debugfs.c
+@@ -625,6 +625,64 @@ static const struct file_operations dtim_interval_ops = {
+ 	.llseek = default_llseek,
  };
  
- struct ath6kl_vif {
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 9c8e4df..18fa9aa 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -2590,6 +2590,18 @@ int ath6kl_wmi_set_host_sleep_mode_cmd(struct wmi *wmi, u8 if_idx,
- 	return ret;
- }
- 
-+/* This command has zero length payload */
-+static int ath6kl_wmi_host_sleep_mode_cmd_prcd_evt_rx(struct wmi *wmi,
-+						      struct ath6kl_vif *vif)
++
++
++static ssize_t suspend_dtim_interval_read(struct file *file,
++					  char __user *user_buf,
++					  size_t count, loff_t *ppos)
 +{
-+	struct ath6kl *ar = wmi->parent_dev;
++	struct wl1271 *wl = file->private_data;
++	u8 value;
 +
-+	set_bit(HOST_SLEEP_MODE_CMD_PROCESSED, &vif->flags);
-+	wake_up(&ar->event_wq);
++	if (wl->conf.conn.suspend_wake_up_event == CONF_WAKE_UP_EVENT_DTIM ||
++	    wl->conf.conn.suspend_wake_up_event == CONF_WAKE_UP_EVENT_N_DTIM)
++		value = wl->conf.conn.suspend_listen_interval;
++	else
++		value = 0;
 +
-+	return 0;
++	return wl1271_format_buffer(user_buf, count, ppos, "%d\n", value);
 +}
 +
- int ath6kl_wmi_set_wow_mode_cmd(struct wmi *wmi, u8 if_idx,
- 				enum ath6kl_wow_mode wow_mode,
- 				u32 filter, u16 host_req_delay)
-@@ -3556,6 +3568,11 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_TX_COMPLETE_EVENTID\n");
- 		ret = ath6kl_wmi_tx_complete_event_rx(datap, len);
- 		break;
-+	case WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI,
-+			   "WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID");
-+		ret = ath6kl_wmi_host_sleep_mode_cmd_prcd_evt_rx(wmi, vif);
-+		break;
- 	case WMI_REMAIN_ON_CHNL_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_REMAIN_ON_CHNL_EVENTID\n");
- 		ret = ath6kl_wmi_remain_on_chnl_event_rx(wmi, datap, len, vif);
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 85698ef..e791986 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -1357,6 +1357,8 @@ enum wmi_event_id {
- 	WMI_P2P_START_SDPD_EVENTID,
- 	WMI_P2P_SDPD_RX_EVENTID,
- 
-+	WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID = 0x1047,
++static ssize_t suspend_dtim_interval_write(struct file *file,
++					   const char __user *user_buf,
++					   size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++	unsigned long value;
++	int ret;
 +
- 	WMI_THIN_RESERVED_START_EVENTID = 0x8000,
- 	/* Events in this range are reserved for thinmode */
- 	WMI_THIN_RESERVED_END_EVENTID = 0x8fff,
++	ret = kstrtoul_from_user(user_buf, count, 10, &value);
++	if (ret < 0) {
++		wl1271_warning("illegal value for suspend_dtim_interval");
++		return -EINVAL;
++	}
++
++	if (value < 1 || value > 10) {
++		wl1271_warning("suspend_dtim value is not in valid range");
++		return -ERANGE;
++	}
++
++	mutex_lock(&wl->mutex);
++
++	wl->conf.conn.suspend_listen_interval = value;
++	/* for some reason there are different event types for 1 and >1 */
++	if (value == 1)
++		wl->conf.conn.suspend_wake_up_event = CONF_WAKE_UP_EVENT_DTIM;
++	else
++		wl->conf.conn.suspend_wake_up_event = CONF_WAKE_UP_EVENT_N_DTIM;
++
++	mutex_unlock(&wl->mutex);
++	return count;
++}
++
++
++static const struct file_operations suspend_dtim_interval_ops = {
++	.read = suspend_dtim_interval_read,
++	.write = suspend_dtim_interval_write,
++	.open = wl1271_open_file_generic,
++	.llseek = default_llseek,
++};
++
+ static ssize_t beacon_interval_read(struct file *file, char __user *user_buf,
+ 				    size_t count, loff_t *ppos)
+ {
+@@ -949,6 +1007,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_ADD(driver_state, rootdir);
+ 	DEBUGFS_ADD(vifs_state, rootdir);
+ 	DEBUGFS_ADD(dtim_interval, rootdir);
++	DEBUGFS_ADD(suspend_dtim_interval, rootdir);
+ 	DEBUGFS_ADD(beacon_interval, rootdir);
+ 	DEBUGFS_ADD(beacon_filtering, rootdir);
+ 	DEBUGFS_ADD(dynamic_ps_timeout, rootdir);
 -- 
-1.7.1
+1.7.6.401.g6a319
 
