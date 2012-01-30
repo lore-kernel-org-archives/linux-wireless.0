@@ -1,61 +1,372 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:61806 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756672Ab2AJUki (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 Jan 2012 15:40:38 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Dan Williams <dcbw@redhat.com>, Dave Jones <davej@redhat.com>
-CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: RE: iwlwifi worse than ever in current git.
-Date: Tue, 10 Jan 2012 20:40:32 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3063085@HASMSX103.ger.corp.intel.com> (sfid-20120110_214048_748044_36D00286)
-References: <20120110184917.GA26973@redhat.com>
- <1326221614.5067.6.camel@dcbw.foobar.com>
-In-Reply-To: <1326221614.5067.6.camel@dcbw.foobar.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:47536 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752543Ab2A3L5p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jan 2012 06:57:45 -0500
+Received: by mail-wi0-f174.google.com with SMTP id s10so3321396wic.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 03:57:45 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 05/12] wl12xx: fw api change - update cmd/acx/event enums
+Date: Mon, 30 Jan 2012 14:00:50 +0200
+Message-Id: <1327924857-1250-6-git-send-email-eliad@wizery.com> (sfid-20120130_125752_702429_8503C22C)
+In-Reply-To: <1327924857-1250-1-git-send-email-eliad@wizery.com>
+References: <1327924857-1250-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQoNCklzIHRoYXQgc2VyaWVzIEkgYWRkZWQgYSBkZWJ1ZyBmbGFnIHRoYXQgdGVsbHMgdXMg
-d2hhdCBoYXBwZW5zIHdpdGggdGhlIHF1ZXVlczogcGxlYXNlIGVuYWJsZSB0aGUgMzFzdCBiaXQ6
-IDB4ODAwMDAwMDANCg0KSnVzdCBkZWJ1Zz0weDgwMDAwMDAwIGFzIGEgbW9kdWxlIHBhcmFtZXRl
-ci4NCg0KPiANCj4gT24gVHVlLCAyMDEyLTAxLTEwIGF0IDEzOjQ5IC0wNTAwLCBEYXZlIEpvbmVz
-IHdyb3RlOg0KPiA+IEZvciB0aGUgbGFzdCBmZXcgcmVsZWFzZXMsIGl3bHdpZmkgaGFzIGJlZW4g
-Z2V0dGluZyBjb25zaXN0ZW50bHkgd29yc2UNCj4gPiB3cnQgcmVsaWFiaWxpdHkgZm9yIG1lLiAg
-VGhlIGZhaWx1cmUgbW9kZSBoYXMgdmFyaWVkLCBmcm9tIHRoZSBjaGlwIGp1c3QNCj4gPiBsb2Nr
-aW5nIHVwIHdpdGggbm8gdHgvcnggb2YgcGFja2V0cyB3aXRoIG5vdGhpbmcgYmVpbmcgbG9nZ2Vk
-LCB0bw0KPiA+IG1pY3JvY29kZSB3YXJuaW5ncywgYW5kIHNwZXdpbmcgJ1R4IGFnZ3JlZ2F0aW9u
-IGVuYWJsZWQnIG1lc3NhZ2VzIG92ZXIgYW5kDQo+IG92ZXIuDQo+IA0KPiBZb3UgbWlnaHQgd2Fu
-dCB0byBDQyBsaW51eC13aXJlbGVzc0B2Z2VyIHRvby4uLg0KPiANCj4gPiBUaGUgbWVyZ2UgcG9z
-dCAzLjIgaGFzIG1hZGUgdGhlc2UgcHJvYmxlbXMgYSBsb3Qgd29yc2UuICBCZWZvcmUsIHRoZXNl
-DQo+ID4gbG9jay11cHMgd2VyZSBoYXBwZW5pbmcgb25jZSBvciB0d2ljZSBhIGRheS4gTm93IHRo
-ZXkgaGFwcGVuIHNldmVyYWwgdGltZXMNCj4gYW4gaG91cg0KPiA+IChhbmQgYWZ0ZXIgdGhlIGZp
-cnN0IG9uZSwgdGhleSBzZWVtIG1vcmUgZnJlcXVlbnQpLiBXaGVuIHRoZXkgaGFwcGVuLA0KPiA+
-IHVubG9hZGluZyBhbmQgcmVsb2FkaW5nIHRoZSBtb2R1bGUgaXMgdGhlIG9ubHkgd2F5IGZvciBt
-ZSB0byBnZXQgd29ya2luZw0KPiB3aXJlbGVzcyBhZ2Fpbi4NCj4gPiBUaGV5IG1heSBoYXBwZW4g
-bW9yZSBmcmVxdWVudGx5IHdoZW4gdGhlIGxhcHRvcCBpcyBub3QgaWRsZS4NCj4gPg0KPiA+IEkg
-ZGlkIGEgYmlzZWN0IG9mIHRoZSBjaGFuZ2VzIHNpbmNlIDMuMiwgd2hpY2ggcG9pbnRlZCBhdA0K
-PiA3NmJjMTBmY2QxMjhhZDAyOGNmNzdjNjJlMTc5Y2QyMGRjMmZmZWNmDQo+ID4gYXMgYmVpbmcg
-dGhlIGN1bHByaXQsIGJ1dCB0byBiZSBob25lc3QgSSdtIG5vdCAxMDAlIGNvbnZpbmNlZC4NCj4g
-Pg0KPiA+IEJlY2F1c2UgZXZlcnkgc3RlcCBvZiB0aGUgd2F5IGR1cmluZyB0aGUgYmlzZWN0LCBJ
-IHNhdyBkaWZmZXJlbnQgZmFpbHVyZQ0KPiBtb2RlcywNCj4gPiBzbyB3aGVuIEkgbWFya2VkIHNv
-bWV0aGluZyBhcyAnZ29vZCcsIGl0IG1lYW50ICJkb2Vzbid0IGxvY2sgdXAgaW4gdGhlIHNhbWUN
-Cj4gd2F5IiwNCj4gPiBldmVuIHRob3VnaCBpdCBtYXkgYmUgc3ltcHRvbWF0aWMgb2YgdGhlIHNh
-bWUgcHJvYmxlbS4NCj4gPg0KPiA+IFRoZSBzcGVjaWZpYyBjaGlwIEknbSB1c2luZyBpcyBhIDUz
-MDAgaW4gYSBEZWxsIEFkYW1vLCBjb25uZWN0aW5nIHRvDQo+ID4gYW4gQXBwbGUgYWlycG9ydCBl
-eHRyZW1lIChjdXJyZW50IG1vZGVsKSBpbiBOIG1vZGUuDQo+ID4NCj4gPiAJRGF2ZQ0KPiA+DQo+
-ID4gLS0NCj4gPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAi
-dW5zdWJzY3JpYmUgbmV0ZGV2IiBpbg0KPiA+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpv
-cmRvbW9Admdlci5rZXJuZWwub3JnDQo+ID4gTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgaHR0cDov
-L3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo+IA0KDQotLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0K
-SW50ZWwgSXNyYWVsICg3NCkgTGltaXRlZAoKVGhpcyBlLW1haWwgYW5kIGFueSBhdHRhY2htZW50
-cyBtYXkgY29udGFpbiBjb25maWRlbnRpYWwgbWF0ZXJpYWwgZm9yCnRoZSBzb2xlIHVzZSBvZiB0
-aGUgaW50ZW5kZWQgcmVjaXBpZW50KHMpLiBBbnkgcmV2aWV3IG9yIGRpc3RyaWJ1dGlvbgpieSBv
-dGhlcnMgaXMgc3RyaWN0bHkgcHJvaGliaXRlZC4gSWYgeW91IGFyZSBub3QgdGhlIGludGVuZGVk
-CnJlY2lwaWVudCwgcGxlYXNlIGNvbnRhY3QgdGhlIHNlbmRlciBhbmQgZGVsZXRlIGFsbCBjb3Bp
-ZXMuCg==
+Update enums/structs to the new fw api.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/acx.h   |  137 ++++++++++++++++++-----------------
+ drivers/net/wireless/wl12xx/boot.c  |    2 +-
+ drivers/net/wireless/wl12xx/cmd.c   |    2 +-
+ drivers/net/wireless/wl12xx/cmd.h   |  105 ++++++++++++++-------------
+ drivers/net/wireless/wl12xx/event.h |   15 +++--
+ 5 files changed, 135 insertions(+), 126 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+index a5bf761..0749df5 100644
+--- a/drivers/net/wireless/wl12xx/acx.h
++++ b/drivers/net/wireless/wl12xx/acx.h
+@@ -1153,74 +1153,75 @@ struct wl12xx_acx_config_hangover {
+ } __packed;
+ 
+ enum {
+-	ACX_WAKE_UP_CONDITIONS      = 0x0002,
+-	ACX_MEM_CFG                 = 0x0003,
+-	ACX_SLOT                    = 0x0004,
+-	ACX_AC_CFG                  = 0x0007,
+-	ACX_MEM_MAP                 = 0x0008,
+-	ACX_AID                     = 0x000A,
+-	ACX_MEDIUM_USAGE            = 0x000F,
+-	ACX_TX_QUEUE_CFG            = 0x0011, /* FIXME: only used by wl1251 */
+-	ACX_STATISTICS              = 0x0013, /* Debug API */
+-	ACX_PWR_CONSUMPTION_STATISTICS = 0x0014,
+-	ACX_FEATURE_CFG             = 0x0015,
+-	ACX_TID_CFG                 = 0x001A,
+-	ACX_PS_RX_STREAMING         = 0x001B,
+-	ACX_BEACON_FILTER_OPT       = 0x001F,
+-	ACX_NOISE_HIST              = 0x0021,
+-	ACX_HDK_VERSION             = 0x0022, /* ??? */
+-	ACX_PD_THRESHOLD            = 0x0023,
+-	ACX_TX_CONFIG_OPT           = 0x0024,
+-	ACX_CCA_THRESHOLD           = 0x0025,
+-	ACX_EVENT_MBOX_MASK         = 0x0026,
+-	ACX_CONN_MONIT_PARAMS       = 0x002D,
+-	ACX_BCN_DTIM_OPTIONS        = 0x0031,
+-	ACX_SG_ENABLE               = 0x0032,
+-	ACX_SG_CFG                  = 0x0033,
+-	ACX_FM_COEX_CFG             = 0x0034,
+-	ACX_BEACON_FILTER_TABLE     = 0x0038,
+-	ACX_ARP_IP_FILTER           = 0x0039,
+-	ACX_ROAMING_STATISTICS_TBL  = 0x003B,
+-	ACX_RATE_POLICY             = 0x003D,
+-	ACX_CTS_PROTECTION          = 0x003E,
+-	ACX_SLEEP_AUTH              = 0x003F,
+-	ACX_PREAMBLE_TYPE	    = 0x0040,
+-	ACX_ERROR_CNT               = 0x0041,
+-	ACX_IBSS_FILTER		    = 0x0044,
+-	ACX_SERVICE_PERIOD_TIMEOUT  = 0x0045,
+-	ACX_TSF_INFO                = 0x0046,
+-	ACX_CONFIG_PS_WMM           = 0x0049,
+-	ACX_ENABLE_RX_DATA_FILTER   = 0x004A,
+-	ACX_SET_RX_DATA_FILTER      = 0x004B,
+-	ACX_GET_DATA_FILTER_STATISTICS = 0x004C,
+-	ACX_RX_CONFIG_OPT           = 0x004E,
+-	ACX_FRAG_CFG                = 0x004F,
+-	ACX_BET_ENABLE              = 0x0050,
+-	ACX_RSSI_SNR_TRIGGER        = 0x0051,
+-	ACX_RSSI_SNR_WEIGHTS        = 0x0052,
+-	ACX_KEEP_ALIVE_MODE         = 0x0053,
+-	ACX_SET_KEEP_ALIVE_CONFIG   = 0x0054,
+-	ACX_BA_SESSION_INIT_POLICY  = 0x0055,
+-	ACX_BA_SESSION_RX_SETUP     = 0x0056,
+-	ACX_PEER_HT_CAP             = 0x0057,
+-	ACX_HT_BSS_OPERATION        = 0x0058,
+-	ACX_COEX_ACTIVITY           = 0x0059,
+-	ACX_BURST_MODE              = 0x005C,
+-	ACX_SET_RATE_MGMT_PARAMS    = 0x005D,
+-	ACX_SET_RATE_ADAPT_PARAMS   = 0x0060,
+-	ACX_SET_DCO_ITRIM_PARAMS    = 0x0061,
+-	ACX_GEN_FW_CMD              = 0x0070,
+-	ACX_HOST_IF_CFG_BITMAP      = 0x0071,
+-	ACX_MAX_TX_FAILURE          = 0x0072,
+-	ACX_UPDATE_INCONNECTION_STA_LIST = 0x0073,
+-	DOT11_RX_MSDU_LIFE_TIME     = 0x1004,
+-	DOT11_CUR_TX_PWR            = 0x100D,
+-	DOT11_RX_DOT11_MODE         = 0x1012,
+-	DOT11_RTS_THRESHOLD         = 0x1013,
+-	DOT11_GROUP_ADDRESS_TBL     = 0x1014,
+-	ACX_PM_CONFIG               = 0x1016,
+-	ACX_CONFIG_PS               = 0x1017,
+-	ACX_CONFIG_HANGOVER         = 0x1018,
++	ACX_WAKE_UP_CONDITIONS           = 0x0000,
++	ACX_MEM_CFG                      = 0x0001,
++	ACX_SLOT                         = 0x0002,
++	ACX_AC_CFG                       = 0x0003,
++	ACX_MEM_MAP                      = 0x0004,
++	ACX_AID                          = 0x0005,
++	ACX_MEDIUM_USAGE                 = 0x0006,
++	ACX_STATISTICS                   = 0x0007,
++	ACX_PWR_CONSUMPTION_STATISTICS   = 0x0008,
++	ACX_TID_CFG                      = 0x0009,
++	ACX_PS_RX_STREAMING              = 0x000A,
++	ACX_BEACON_FILTER_OPT            = 0x000B,
++	ACX_NOISE_HIST                   = 0x000C,
++	ACX_HDK_VERSION                  = 0x000D,
++	ACX_PD_THRESHOLD                 = 0x000E,
++	ACX_TX_CONFIG_OPT                = 0x000F,
++	ACX_CCA_THRESHOLD                = 0x0010,
++	ACX_EVENT_MBOX_MASK              = 0x0011,
++	ACX_CONN_MONIT_PARAMS            = 0x0012,
++	ACX_DISABLE_BROADCASTS           = 0x0013,
++	ACX_BCN_DTIM_OPTIONS             = 0x0014,
++	ACX_SG_ENABLE                    = 0x0015,
++	ACX_SG_CFG                       = 0x0016,
++	ACX_FM_COEX_CFG                  = 0x0017,
++	ACX_BEACON_FILTER_TABLE          = 0x0018,
++	ACX_ARP_IP_FILTER                = 0x0019,
++	ACX_ROAMING_STATISTICS_TBL       = 0x001A,
++	ACX_RATE_POLICY                  = 0x001B,
++	ACX_CTS_PROTECTION               = 0x001C,
++	ACX_SLEEP_AUTH                   = 0x001D,
++	ACX_PREAMBLE_TYPE                = 0x001E,
++	ACX_ERROR_CNT                    = 0x001F,
++	ACX_IBSS_FILTER                  = 0x0020,
++	ACX_SERVICE_PERIOD_TIMEOUT       = 0x0021,
++	ACX_TSF_INFO                     = 0x0022,
++	ACX_CONFIG_PS_WMM                = 0x0023,
++	ACX_ENABLE_RX_DATA_FILTER        = 0x0024,
++	ACX_SET_RX_DATA_FILTER           = 0x0025,
++	ACX_GET_DATA_FILTER_STATISTICS   = 0x0026,
++	ACX_RX_CONFIG_OPT                = 0x0027,
++	ACX_FRAG_CFG                     = 0x0028,
++	ACX_BET_ENABLE                   = 0x0029,
++	ACX_RSSI_SNR_TRIGGER             = 0x002A,
++	ACX_RSSI_SNR_WEIGHTS             = 0x002B,
++	ACX_KEEP_ALIVE_MODE              = 0x002C,
++	ACX_SET_KEEP_ALIVE_CONFIG        = 0x002D,
++	ACX_BA_SESSION_INIT_POLICY       = 0x002E,
++	ACX_BA_SESSION_RX_SETUP          = 0x002F,
++	ACX_PEER_HT_CAP                  = 0x0030,
++	ACX_HT_BSS_OPERATION             = 0x0031,
++	ACX_COEX_ACTIVITY                = 0x0032,
++	ACX_BURST_MODE                   = 0x0033,
++	ACX_SET_RATE_MGMT_PARAMS         = 0x0034,
++	ACX_GET_RATE_MGMT_PARAMS         = 0x0035,
++	ACX_SET_RATE_ADAPT_PARAMS        = 0x0036,
++	ACX_SET_DCO_ITRIM_PARAMS         = 0x0037,
++	ACX_GEN_FW_CMD                   = 0x0038,
++	ACX_HOST_IF_CFG_BITMAP           = 0x0039,
++	ACX_MAX_TX_FAILURE               = 0x003A,
++	ACX_UPDATE_INCONNECTION_STA_LIST = 0x003B,
++	DOT11_RX_MSDU_LIFE_TIME          = 0x003C,
++	DOT11_CUR_TX_PWR                 = 0x003D,
++	DOT11_RTS_THRESHOLD              = 0x003E,
++	DOT11_GROUP_ADDRESS_TBL          = 0x003F,
++	ACX_PM_CONFIG                    = 0x0040,
++	ACX_CONFIG_PS                    = 0x0041,
++	ACX_CONFIG_HANGOVER              = 0x0042,
++	ACX_FEATURE_CFG                  = 0x0043,
++	ACX_PROTECTION_CFG               = 0x0044,
+ };
+ 
+ 
+diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
+index 8f9cf5a..7843028 100644
+--- a/drivers/net/wireless/wl12xx/boot.c
++++ b/drivers/net/wireless/wl12xx/boot.c
+@@ -508,7 +508,7 @@ static int wl1271_boot_run_firmware(struct wl1271 *wl)
+ 	wl->event_mask = BSS_LOSE_EVENT_ID |
+ 		SCAN_COMPLETE_EVENT_ID |
+ 		PS_REPORT_EVENT_ID |
+-		DISCONNECT_EVENT_COMPLETE_ID |
++		ROLE_STOP_COMPLETE_EVENT_ID |
+ 		RSSI_SNR_TRIGGER_0_EVENT_ID |
+ 		PSPOLL_DELIVERY_FAILURE_EVENT_ID |
+ 		SOFT_GEMINI_SENSE_EVENT_ID |
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index 10dba19..c4990da 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -566,7 +566,7 @@ static int wl12xx_cmd_role_stop_dev(struct wl1271 *wl,
+ 		goto out_free;
+ 	}
+ 
+-	ret = wl1271_cmd_wait_for_event(wl, DISCONNECT_EVENT_COMPLETE_ID);
++	ret = wl1271_cmd_wait_for_event(wl, ROLE_STOP_COMPLETE_EVENT_ID);
+ 	if (ret < 0) {
+ 		wl1271_error("cmd role stop dev event completion error");
+ 		goto out_free;
+diff --git a/drivers/net/wireless/wl12xx/cmd.h b/drivers/net/wireless/wl12xx/cmd.h
+index 8e8035d..faf046b 100644
+--- a/drivers/net/wireless/wl12xx/cmd.h
++++ b/drivers/net/wireless/wl12xx/cmd.h
+@@ -98,62 +98,65 @@ int wl12xx_allocate_link(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ void wl12xx_free_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid);
+ 
+ enum wl1271_commands {
+-	CMD_INTERROGATE     = 1,    /*use this to read information elements*/
+-	CMD_CONFIGURE       = 2,    /*use this to write information elements*/
+-	CMD_ENABLE_RX       = 3,
+-	CMD_ENABLE_TX       = 4,
+-	CMD_DISABLE_RX      = 5,
+-	CMD_DISABLE_TX      = 6,
+-	CMD_SCAN            = 8,
+-	CMD_STOP_SCAN       = 9,
+-	CMD_SET_KEYS        = 12,
+-	CMD_READ_MEMORY     = 13,
+-	CMD_WRITE_MEMORY    = 14,
+-	CMD_SET_TEMPLATE    = 19,
+-	CMD_TEST            = 23,
+-	CMD_NOISE_HIST      = 28,
+-	CMD_QUIET_ELEMENT_SET_STATE  = 29,
+-	CMD_SET_BCN_MODE    = 33,
+-	CMD_MEASUREMENT      = 34,
+-	CMD_STOP_MEASUREMENT = 35,
+-	CMD_SET_PS_MODE      = 37,
+-	CMD_CHANNEL_SWITCH   = 38,
+-	CMD_STOP_CHANNEL_SWICTH = 39,
+-	CMD_AP_DISCOVERY     = 40,
+-	CMD_STOP_AP_DISCOVERY = 41,
+-	CMD_HEALTH_CHECK     = 45,
+-	CMD_DEBUG            = 46,
+-	CMD_TRIGGER_SCAN_TO  = 47,
+-	CMD_CONNECTION_SCAN_CFG      = 48,
+-	CMD_CONNECTION_SCAN_SSID_CFG = 49,
+-	CMD_START_PERIODIC_SCAN      = 50,
+-	CMD_STOP_PERIODIC_SCAN       = 51,
+-	CMD_SET_PEER_STATE           = 52,
+-	CMD_REMAIN_ON_CHANNEL        = 53,
+-	CMD_CANCEL_REMAIN_ON_CHANNEL = 54,
+-
+-	CMD_CONFIG_FWLOGGER          = 55,
+-	CMD_START_FWLOGGER           = 56,
+-	CMD_STOP_FWLOGGER            = 57,
+-
+-	/* AP commands */
+-	CMD_ADD_PEER                 = 62,
+-	CMD_REMOVE_PEER              = 63,
++	CMD_INTERROGATE	= 1, /* use this to read information elements */
++	CMD_CONFIGURE	= 2, /* use this to write information elements */
++	CMD_ENABLE_RX	= 3,
++	CMD_ENABLE_TX	= 4,
++	CMD_DISABLE_RX	= 5,
++	CMD_DISABLE_TX	= 6,
++	CMD_SCAN	= 7,
++	CMD_STOP_SCAN	= 8,
++	CMD_SET_KEYS	= 9,
++	CMD_READ_MEMORY	= 10,
++	CMD_WRITE_MEMORY	= 11,
++	CMD_SET_TEMPLATE	= 12,
++	CMD_TEST		= 13,
++	CMD_NOISE_HIST		= 14,
++	CMD_QUIET_ELEMENT_SET_STATE = 15,
++	CMD_SET_BCN_MODE	= 16,
++
++	CMD_MEASUREMENT		= 17,
++	CMD_STOP_MEASUREMENT	= 18,
++	CMD_SET_PS_MODE		= 19,
++	CMD_CHANNEL_SWITCH	= 20,
++	CMD_STOP_CHANNEL_SWICTH = 21,
++	CMD_AP_DISCOVERY	= 22,
++	CMD_STOP_AP_DISCOVERY	= 23,
++	CMD_HEALTH_CHECK	= 24,
++	CMD_DEBUG		= 25,
++	CMD_TRIGGER_SCAN_TO	= 26,
++	CMD_CONNECTION_SCAN_CFG	= 27,
++	CMD_CONNECTION_SCAN_SSID_CFG	= 28,
++	CMD_START_PERIODIC_SCAN	= 29,
++	CMD_STOP_PERIODIC_SCAN	= 30,
++	CMD_SET_PEER_STATE	= 31,
++	CMD_REMAIN_ON_CHANNEL	= 32,
++	CMD_CANCEL_REMAIN_ON_CHANNEL	= 33,
++	CMD_CONFIG_FWLOGGER		= 34,
++	CMD_START_FWLOGGER			= 35,
++	CMD_STOP_FWLOGGER			= 36,
++
++	/* Access point commands */
++	CMD_ADD_PEER		= 37,
++	CMD_REMOVE_PEER		= 38,
+ 
+ 	/* Role API */
+-	CMD_ROLE_ENABLE              = 70,
+-	CMD_ROLE_DISABLE             = 71,
+-	CMD_ROLE_START               = 72,
+-	CMD_ROLE_STOP                = 73,
++	CMD_ROLE_ENABLE		= 39,
++	CMD_ROLE_DISABLE	= 40,
++	CMD_ROLE_START		= 41,
++	CMD_ROLE_STOP		= 42,
+ 
+-	/* WIFI Direct */
+-	CMD_WFD_START_DISCOVERY      = 80,
+-	CMD_WFD_STOP_DISCOVERY	     = 81,
+-	CMD_WFD_ATTRIBUTE_CONFIG     = 82,
++	/* DFS */
++	CMD_START_RADAR_DETECTION	= 43,
++	CMD_STOP_RADAR_DETECTION	= 44,
+ 
+-	CMD_NOP                      = 100,
++	/* WIFI Direct */
++	CMD_WFD_START_DISCOVERY	= 45,
++	CMD_WFD_STOP_DISCOVERY	= 46,
++	CMD_WFD_ATTRIBUTE_CONFIG	= 47,
++	CMD_NOP			= 48,
++	CMD_LAST_COMMAND,
+ 
+-	NUM_COMMANDS,
+ 	MAX_COMMAND_ID = 0xFFFF,
+ };
+ 
+diff --git a/drivers/net/wireless/wl12xx/event.h b/drivers/net/wireless/wl12xx/event.h
+index 1d878ba..b41f730 100644
+--- a/drivers/net/wireless/wl12xx/event.h
++++ b/drivers/net/wireless/wl12xx/event.h
+@@ -53,8 +53,8 @@ enum {
+ 	AP_DISCOVERY_COMPLETE_EVENT_ID		 = BIT(12),
+ 	PS_REPORT_EVENT_ID			 = BIT(13),
+ 	PSPOLL_DELIVERY_FAILURE_EVENT_ID	 = BIT(14),
+-	DISCONNECT_EVENT_COMPLETE_ID		 = BIT(15),
+-	/* BIT(16) is reserved */
++	ROLE_STOP_COMPLETE_EVENT_ID		 = BIT(15),
++	RADAR_DETECTED_EVENT_ID                  = BIT(16),
+ 	CHANNEL_SWITCH_COMPLETE_EVENT_ID	 = BIT(17),
+ 	BSS_LOSE_EVENT_ID			 = BIT(18),
+ 	REGAINED_BSS_EVENT_ID			 = BIT(19),
+@@ -94,7 +94,7 @@ struct event_mailbox {
+ 	u8 soft_gemini_sense_info;
+ 	u8 soft_gemini_protective_info;
+ 	s8 rssi_snr_trigger_metric[NUM_OF_RSSI_SNR_TRIGGERS];
+-	u8 channel_switch_status;
++	u8 change_auto_mode_timeout;
+ 	u8 scheduled_scan_status;
+ 	u8 ps_status;
+ 	/* tuned channel (roc) */
+@@ -119,12 +119,17 @@ struct event_mailbox {
+ 	u8 rx_ba_allowed;
+ 	u8 reserved_6[2];
+ 
++	/* Channel switch results */
++
++	u8 channel_switch_role_id;
++	u8 channel_switch_status;
++	u8 reserved_7[2];
++
+ 	u8 ps_poll_delivery_failure_role_ids;
+ 	u8 stopped_role_ids;
+ 	u8 started_role_ids;
+-	u8 change_auto_mode_timeout;
+ 
+-	u8 reserved_7[12];
++	u8 reserved_8[9];
+ } __packed;
+ 
+ int wl1271_event_unmask(struct wl1271 *wl);
+-- 
+1.7.6.401.g6a319
 
