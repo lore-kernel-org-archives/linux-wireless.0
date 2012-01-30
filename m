@@ -1,84 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:62044 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752263Ab2AWM5I (ORCPT
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:37412 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751733Ab2A3MrE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 Jan 2012 07:57:08 -0500
-Date: Mon, 23 Jan 2012 14:56:55 +0200
-From: Johan Hedberg <johan.hedberg@gmail.com>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull request: bluetooth-next 2012-01-03
-Message-ID: <20120123125655.GA20973@x220.ger.corp.intel.com> (sfid-20120123_135725_923746_AF86E2E0)
-References: <20120103033320.GG1472@joana>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20120103033320.GG1472@joana>
+	Mon, 30 Jan 2012 07:47:04 -0500
+From: "Devendra.Naga" <devendra.aaru@gmail.com>
+To: <Larry.Finger@lwfinger.net>, <chaoming_li@realsil.com.cn>,
+	<linville@tuxdriver.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: "Devendra.Naga" <devendra.aaru@gmail.com>
+Subject: [PATCH 1/1] wireless: remove return in _rtl_pci_switch_clk_req
+Date: Mon, 30 Jan 2012 07:46:31 -0500
+Message-Id: <1327927591-28070-1-git-send-email-devendra.aaru@gmail.com> (sfid-20120130_134727_954015_FE8A2267)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+From: "Devendra.Naga" <devendra.aaru@gmail.com>
 
-On Tue, Jan 03, 2012, Gustavo Padovan wrote:
-> A couple of fixes for the 3.3 release. The majority of the fixes are related
-> to the change from tasklets to workqueue in the Bluetooth Core. The rest are
-> important fixes over the tree. Exception is "Bluetooth: Rename extfeatures¨,
-> as the name says it is just a rename and no harm, but it is a preparation for
-> a following fix.
-> 
-> Please pull, or let me know any concerns you have!
-> 
-> 	Gustavo
-> 
-> --
-> The following changes since commit dc0d633e35643662f27a0b1c531da3cd6b204b9c:
-> 
->   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next (2012-01-02 16:43:54 -0500)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/padovan/bluetooth-next master
-> 
-> Andre Guedes (5):
->       Bluetooth: Rename extfeatures
->       Bluetooth: Fix hci_cc_read_local_ext_features()
->       Bluetooth: Fix adv_work delay
->       Bluetooth: Queue adv_work on system workqueue
->       Bluetooth: Fix mgmt_stop_discovery_failed()
-> 
-> Andrei Emeltchenko (1):
->       Bluetooth: Correct packet len calculation
-> 
-> Gustavo F. Padovan (8):
->       Bluetooth: Fix bacpy in l2cap_core.c
->       Bluetooth: Fix context in rfcomm_sock_lock
->       Bluetooth: Fix context in RFCOMM tty
->       Bluetooth: Remove *_bh locks from SCO
->       Bluetooth: Remove local_bh_disable() from hci_sock.c
->       Bluetooth: Remove *_bh from socket list lock.
->       Bluetooth: Don't use *_bh locks anymore
->       Bluetooth: Keep chan->state and sk->sk_state in sync
-> 
->  include/net/bluetooth/hci_core.h |    4 ++--
->  net/bluetooth/af_bluetooth.c     |    8 ++++----
->  net/bluetooth/hci_event.c        |   22 +++++++++++++---------
->  net/bluetooth/hci_sock.c         |    2 --
->  net/bluetooth/l2cap_core.c       |   26 +++++++++++++-------------
->  net/bluetooth/l2cap_sock.c       |    2 ++
->  net/bluetooth/mgmt.c             |    4 ++--
->  net/bluetooth/rfcomm/sock.c      |   12 ++++++------
->  net/bluetooth/rfcomm/tty.c       |   22 +++++++++++-----------
->  net/bluetooth/sco.c              |    8 ++++----
->  10 files changed, 57 insertions(+), 53 deletions(-)
-> --
+the return value from _rtl_pci_switch_clk_req is not used by any of its callers.
 
-Are you planing to pull this? I've been waiting for that before making
-any new pull requests from my (temporary) bluetooth-next tree[1]. If
-that's not gonna happen I'll go ahead rebase my tree against latest
-wireless-next (including these patches and all other ones that Marcel
-has acked since Gustavo started his break), and make a new pull request
-to you in the near future.
+Signed-off-by: Devendra.Naga <devendra.aaru@gmail.com>
+---
+ drivers/net/wireless/rtlwifi/pci.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-Johan
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index 4326fd1..35f4a0d 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -198,7 +198,7 @@ static bool _rtl_pci_platform_switch_device_pci_aspm(
+ }
+ 
+ /*When we set 0x01 to enable clk request. Set 0x0 to disable clk req.*/
+-static bool _rtl_pci_switch_clk_req(struct ieee80211_hw *hw, u8 value)
++static void _rtl_pci_switch_clk_req(struct ieee80211_hw *hw, u8 value)
+ {
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+@@ -208,7 +208,6 @@ static bool _rtl_pci_switch_clk_req(struct ieee80211_hw *hw, u8 value)
+ 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE)
+ 		udelay(100);
+ 
+-	return true;
+ }
+ 
+ /*Disable RTL8192SE ASPM & Disable Pci Bridge ASPM*/
+-- 
+1.7.5.4
 
-[1] http://git.kernel.org/?p=linux/kernel/git/jh/bluetooth-next.git;a=summary
