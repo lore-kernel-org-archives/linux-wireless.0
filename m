@@ -1,48 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3048 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751341Ab2AOJSG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jan 2012 04:18:06 -0500
-Message-ID: <4F1299C4.7020902@broadcom.com> (sfid-20120115_101857_312728_D0D78F0C)
-Date: Sun, 15 Jan 2012 10:17:56 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Joe Perches" <joe@perches.com>
-cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Brett Rudley" <brudley@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH 3/8] brcm80211: Add and use brcmX_dbg_dump_hex
-References: <cover.1326616556.git.joe@perches.com>
- <289e8a2dcdbb03315ba41788a358f5afc4bacb1b.1326616556.git.joe@perches.com>
-In-Reply-To: <289e8a2dcdbb03315ba41788a358f5afc4bacb1b.1326616556.git.joe@perches.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:47536 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752694Ab2A3L5x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jan 2012 06:57:53 -0500
+Received: by mail-wi0-f174.google.com with SMTP id s10so3321396wic.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 03:57:52 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 09/12] wl12xx: add dynamic_ps_timeout debugfs file
+Date: Mon, 30 Jan 2012 14:00:54 +0200
+Message-Id: <1327924857-1250-10-git-send-email-eliad@wizery.com> (sfid-20120130_125757_619492_D807CB9D)
+In-Reply-To: <1327924857-1250-1-git-send-email-eliad@wizery.com>
+References: <1327924857-1250-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/15/2012 09:38 AM, Joe Perches wrote:
+From: Eyal Shapira <eyal@wizery.com>
 
-> +#ifdef DEBUG
-> +extern __printf(3, 4)
+Enable read/write of dynamic_ps_timeout which controls the timeout
+of the dynamic PS implemented in the FW.
+dynamic_ps_timeout is the timeout (in msec) until going back to PS
+when there's no Rx/Tx
 
-Just curious if I can learn something here. What does the __printf(3, 4) do?
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/debugfs.c |   67 +++++++++++++++++++++++++++++++++
+ 1 files changed, 67 insertions(+), 0 deletions(-)
 
-> +void brcmu_dbg_hex_dump(const void *data, size_t size, const char *fmt, ...);
-> +#else
-> +__printf(3, 4)
-> +static inline
-> +void brcmu_dbg_hex_dump(const void *data, size_t size, const char *fmt, ...)
-> +{
-> +}
-> +#endif
-> +
->  #endif				/* _BRCMU_UTILS_H_ */
-
-Gr. AvS
+diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+index 5e96e05..156a774 100644
+--- a/drivers/net/wireless/wl12xx/debugfs.c
++++ b/drivers/net/wireless/wl12xx/debugfs.c
+@@ -312,6 +312,72 @@ static const struct file_operations start_recovery_ops = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t dynamic_ps_timeout_read(struct file *file, char __user *user_buf,
++			  size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++
++	return wl1271_format_buffer(user_buf, count,
++				    ppos, "%d\n",
++				    wl->conf.conn.dynamic_ps_timeout);
++}
++
++static ssize_t dynamic_ps_timeout_write(struct file *file,
++				    const char __user *user_buf,
++				    size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++	struct wl12xx_vif *wlvif;
++	unsigned long value;
++	int ret;
++
++	ret = kstrtoul_from_user(user_buf, count, 10, &value);
++	if (ret < 0) {
++		wl1271_warning("illegal value in dynamic_ps");
++		return -EINVAL;
++	}
++
++	if (value < 1 || value > 65535) {
++		wl1271_warning("dyanmic_ps_timeout is not in valid range");
++		return -ERANGE;
++	}
++
++	mutex_lock(&wl->mutex);
++
++	wl->conf.conn.dynamic_ps_timeout = value;
++
++	if (wl->state == WL1271_STATE_OFF)
++		goto out;
++
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out;
++
++	/* In case we're already in PSM, trigger it again to set new timeout
++	 * immediately without waiting for re-association
++	 */
++
++	wl12xx_for_each_wlvif_sta(wl, wlvif) {
++		if (test_bit(WLVIF_FLAG_PSM, &wlvif->flags))
++			wl1271_ps_set_mode(wl, wlvif, STATION_AUTO_PS_MODE,
++					   wlvif->basic_rate, true);
++
++	}
++
++	wl1271_ps_elp_sleep(wl);
++
++out:
++	mutex_unlock(&wl->mutex);
++	return count;
++}
++
++static const struct file_operations dynamic_ps_timeout_ops = {
++	.read = dynamic_ps_timeout_read,
++	.write = dynamic_ps_timeout_write,
++	.open = wl1271_open_file_generic,
++	.llseek = default_llseek,
++};
++
+ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
+ 				 size_t count, loff_t *ppos)
+ {
+@@ -887,6 +953,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_ADD(dtim_interval, rootdir);
+ 	DEBUGFS_ADD(beacon_interval, rootdir);
+ 	DEBUGFS_ADD(beacon_filtering, rootdir);
++	DEBUGFS_ADD(dynamic_ps_timeout, rootdir);
+ 
+ 	streaming = debugfs_create_dir("rx_streaming", rootdir);
+ 	if (!streaming || IS_ERR(streaming))
+-- 
+1.7.6.401.g6a319
 
