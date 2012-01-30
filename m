@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:34406 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759301Ab2AMVzT (ORCPT
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:58259 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752028Ab2A3KBh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jan 2012 16:55:19 -0500
-Received: by mail-ey0-f174.google.com with SMTP id l12so332533eaa.19
-        for <linux-wireless@vger.kernel.org>; Fri, 13 Jan 2012 13:55:18 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V3 2/2] MAINTAINERS: add b43 mailing list
-Date: Fri, 13 Jan 2012 22:55:06 +0100
-Message-Id: <1326491706-14970-2-git-send-email-zajec5@gmail.com> (sfid-20120113_225523_506104_045DCD75)
-In-Reply-To: <1326491706-14970-1-git-send-email-zajec5@gmail.com>
-References: <1326491706-14970-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 30 Jan 2012 05:01:37 -0500
+From: "Devendra.Naga" <devendra.aaru@gmail.com>
+To: <Larry.Finger@lwfinger.net>, <chaoming_li@realsil.com.cn>,
+	<linville@tuxdriver.com>, <paul.gortmaker@windriver.com>,
+	<joe@perches.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: "Devendra.Naga" <devendra.aaru@gmail.com>
+Subject: [PATCH 1/1] wireless: in _rtl92c_phy_calculate_bit_shift remove comparing bitmask against 1
+Date: Mon, 30 Jan 2012 05:00:55 -0500
+Message-Id: <1327917655-6494-1-git-send-email-devendra.aaru@gmail.com> (sfid-20120130_110200_378575_828D313A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: "Devendra.Naga" <devendra.aaru@gmail.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V3: S-o-b
----
- MAINTAINERS |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+in _rtl92c_phy_calculate_bit_shift everytime the right shifted bitmask
+is AND with 1 and compared against 1. i.e.
+        if ((bitmask >> i) & 0x1 == 1)
+                break;
+which in the if condition is anyway becomes a 1 or 0.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index dc11e28..469efce 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1419,6 +1419,7 @@ F:	net/ax25/
- B43 WIRELESS DRIVER
- M:	Stefano Brivio <stefano.brivio@polimi.it>
- L:	linux-wireless@vger.kernel.org
-+L:	b43-dev@lists.infradead.org (moderated for non-subscribers)
- W:	http://linuxwireless.org/en/users/Drivers/b43
- S:	Maintained
- F:	drivers/net/wireless/b43/
+Signed-off-by: Devendra.Naga <devendra.aaru@gmail.com>
+---
+ drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
+index 22e998d..a76b223 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
+@@ -177,7 +177,7 @@ u32 _rtl92c_phy_calculate_bit_shift(u32 bitmask)
+ 	u32 i;
+ 
+ 	for (i = 0; i <= 31; i++) {
+-		if (((bitmask >> i) & 0x1) == 1)
++		if ((bitmask >> i) & 0x1)
+ 			break;
+ 	}
+ 	return i;
 -- 
-1.7.7
+1.7.5.4
 
