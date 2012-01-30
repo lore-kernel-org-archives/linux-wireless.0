@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:30031 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755340Ab2AYQIB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jan 2012 11:08:01 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH V3 1/6] ath6kl: Make sure to delete rx aggregation timer in aggr_reset_state()
-Date: Wed, 25 Jan 2012 21:37:49 +0530
-Message-ID: <1327507674-2561-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120125_170817_706035_8A9B5210)
+Received: from purkki.adurom.net ([80.68.90.206]:47712 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751722Ab2A3N33 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jan 2012 08:29:29 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Luciano Coelho <coelho@ti.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/12] wl12xx: update fw api
+References: <1327924857-1250-1-git-send-email-eliad@wizery.com>
+Date: Mon, 30 Jan 2012 15:29:27 +0200
+In-Reply-To: <1327924857-1250-1-git-send-email-eliad@wizery.com> (Eliad
+	Peller's message of "Mon, 30 Jan 2012 14:00:45 +0200")
+Message-ID: <87fwexco94.fsf@purkki.adurom.net> (sfid-20120130_142933_239662_A7FE56AC)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The timer which is used to flush rx aggregation frames needs to
-be disabled when resetting the aggregation state. This is found
-in code review.
+Eliad Peller <eliad@wizery.com> writes:
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/txrx.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+> The fw api was changed in the latest FWs (6.3.5.0.95 for wl127x
+> and 7.3.5.0.95 for wl128x).
+>
+> Along with some small adjustments, the main changes
+> inroduced by this patheset are configuring the
+> templates per-role, and moving to IEEE80211_HW_SUPPORTS_DYNAMIC_PS
+> mode.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index dd63371..cb7421a 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -1685,6 +1685,11 @@ void aggr_reset_state(struct aggr_info *aggr_info)
- {
- 	u8 tid;
- 
-+	if (aggr_info->timer_scheduled) {
-+		del_timer(&aggr_info->timer);
-+		aggr_info->timer_scheduled = false;
-+	}
-+
- 	for (tid = 0; tid < NUM_OF_TIDS; tid++)
- 		aggr_delete_tid_state(aggr_info, tid);
- }
+I didn't look so carefully, but doesn't this break bisect? I mean if you
+change the firmware api in small patches wl12xx can't work properly
+until all patches are applied, right?
+
+I would say that a huge patch doing all the necessary changes in one go
+is better, even it's ugly.
+
 -- 
-1.7.0.4
-
+Kalle Valo
