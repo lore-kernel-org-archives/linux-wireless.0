@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out003.kontent.com ([81.88.40.217]:59087 "EHLO
-	smtp-out003.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752286Ab2ACL4F (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:55194 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753703Ab2A3VwT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 06:56:05 -0500
-From: Oliver Neukum <oliver@neukum.org>
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: loading firmware while usermodehelper disabled.
-Date: Tue, 3 Jan 2012 12:57:47 +0100
-Cc: Jack Stone <jwjstone@fastmail.fm>,
-	Matthew Garrett <mjg@redhat.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Dave Jones <davej@redhat.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"Greg Kroah-Hartman" <gregkh@suse.de>,
-	USB list <linux-usb@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-References: <Pine.LNX.4.44L0.1201021041550.10702-100000@netrider.rowland.org> <4F0220F5.30309@fastmail.fm> <20120103004220.084d61f3@pyramind.ukuu.org.uk>
-In-Reply-To: <20120103004220.084d61f3@pyramind.ukuu.org.uk>
+	Mon, 30 Jan 2012 16:52:19 -0500
+Received: by eaal13 with SMTP id l13so1272922eaa.19
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 13:52:18 -0800 (PST)
+From: Florian Fainelli <florian@openwrt.org>
+To: Julian Calaby <julian.calaby@gmail.com>
+Subject: Re: MAINTAINER NEEDED -- Re: status of ipw2x00
+Date: Mon, 30 Jan 2012 22:52:15 +0100
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Tom Gundersen <teg@jklm.no>,
+	"Wey-Yi Guy" <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
+References: <CAG-2HqUqwHo_xgqC79riQF2DA4DPz1Qy5ZARQK8GT+tf_-UKRg@mail.gmail.com> <20120130184446.GB2493@tuxdriver.com> <CAGRGNgXVMqUEAQ5Os1hySLWBcYTNetj8-+64SLJs3DpMArEKqQ@mail.gmail.com>
+In-Reply-To: <CAGRGNgXVMqUEAQ5Os1hySLWBcYTNetj8-+64SLJs3DpMArEKqQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
-Message-Id: <201201031257.47265.oliver@neukum.org> (sfid-20120103_125624_448274_09E13933)
+Message-Id: <201201302252.15435.florian@openwrt.org> (sfid-20120130_225225_732585_38CC7023)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag, 3. Januar 2012, 01:42:20 schrieb Alan Cox:
-> In that case however you don't want some generic firmware module knowing
-> all this crap, your driver can just request_firmware() the stuff as
-> modprobe and free it up on the module unload. For a typical 8bit firmware
-> of a few K you'll free a ton more memory unloading the module than the
-> firmware ! That I think actually covers the majority of devices under
-> discussion.
+On Monday 30 January 2012 22:47:06 Julian Calaby wrote:
+> Hi,
+> 
+> On Tue, Jan 31, 2012 at 05:44, John W. Linville <linville@tuxdriver.com> 
+wrote:
+> > On Mon, Jan 30, 2012 at 02:42:52PM +0100, Tom Gundersen wrote:
+> >> If we are not able to drop the 2x00 drivers, are anyone still
+> >> interested in working on them to fix the firmware loading?
+> > 
+> > Anyone out there looking for a project?  A way to "break-in" to the
+> > public Linux community without the risk of breaking anything too
+> > important? :-)
+> > 
+> > If someone wants to be the ipw2x00 maintainer, all they need to do
+> > is start sending some non-broken patches...
+> 
+> I'd love to do this, and even have the hardware already, but I lack the
+> time =(
 
-I am afraid it doesn't, at least not fully.
-We have many devices whose primary (operational) driver does not load
-the firmware. That job is left to a secondary driver or user space.
-
-We could leave those secondary drivers and their firmware in RAM after
-their primary usage and except for a few pathological cases (which
-can be solved with a few udev rules preventively loading drivers) we'd
-be good, but we lack a mechanism for switching to a seconary driver
-and back during resumption.
-
-	Regards
-		Oliver
+Maybe if you receive more hardware you will get some motivation again for 
+doing it :)
+-- 
+Florian
