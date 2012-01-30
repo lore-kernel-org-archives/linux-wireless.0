@@ -1,42 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:48265 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753865Ab2ARMco (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 Jan 2012 07:32:44 -0500
-Subject: Re: [PATCH v3 2/3] NFC: Download TI NFC init script
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: ilanelias78@gmail.com
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Ilan Elias <ilane@ti.com>
-In-Reply-To: <1326802293-11539-3-git-send-email-ilane@ti.com>
-References: <1326802293-11539-1-git-send-email-ilane@ti.com>
-	 <1326802293-11539-3-git-send-email-ilane@ti.com>
+Received: from [206.117.179.246] ([206.117.179.246]:52996 "EHLO labridge.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753505Ab2A3QVE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jan 2012 11:21:04 -0500
+Message-ID: <1327940443.25132.11.camel@joe2Laptop> (sfid-20120130_172129_681111_B14229FF)
+Subject: Re: [PATCH] [trivial] net: Fix typo in rtl8192de/dm.c
+From: Joe Perches <joe@perches.com>
+To: Masanari Iida <standby24x7@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, wlanfae@realtek.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	trivial@kernel.org
+Date: Mon, 30 Jan 2012 08:20:43 -0800
+In-Reply-To: <CALLJCT1q51mBLvciEXEL88iHS2Bk5bOmTUGsxEpw+X3VDjxmhA@mail.gmail.com>
+References: <1327930827-1719-1-git-send-email-standby24x7@gmail.com>
+	 <4F26B7B6.2080107@lwfinger.net>
+	 <CALLJCT1q51mBLvciEXEL88iHS2Bk5bOmTUGsxEpw+X3VDjxmhA@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 18 Jan 2012 13:38:54 +0100
-Message-ID: <1326890334.22824.28.camel@sortiz-mobl> (sfid-20120118_133247_229796_35AC55AF)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ilan,
+On Tue, 2012-01-31 at 01:03 +0900, Masanari Iida wrote:
+> I will re-post this with correct subject.
 
-On Tue, 2012-01-17 at 14:11 +0200, ilanelias78@gmail.com wrote:
-> From: Ilan Elias <ilane@ti.com>
-> 
-> Download TI NFC init script during nfcwilink open operation,
-> after the NFC channel is registered with TI shared transport.
-> TI NFC init script is written in BTS format.
-> First, read the chip version via a special vendor specific command.
-> Second, we request the relevant BTS file from the user space, and
-> then send the BTS commands to the chip.
-> 
-> Signed-off-by: Ilan Elias <ilane@ti.com>
-Acked-by: Samuel Ortiz <sameo@linux.intel.com>
-
-Cheers,
-Samuel.
-
+Better to redo this against linux-next too.
+RT_TRACE has changed.
 
