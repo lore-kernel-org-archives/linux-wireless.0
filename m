@@ -1,34 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33056 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752171Ab2AQHoY (ORCPT
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:33959 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752937Ab2A3Nzh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 02:44:24 -0500
-Subject: Re: [PATCH v2] compat-wireless: build: Throw error if space in path
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dominique Martinet <asmadeus@codewreck.org>
-Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
-	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-In-Reply-To: <1326758892-32135-1-git-send-email-asmadeus@codewreck.org> (sfid-20120117_010904_758548_2C83D669)
-References: <CAB=NE6WAhddiUuf4yOfNAgqMF7GxM--ksDwEmvwdJdFYSjLGzA@mail.gmail.com>
-	 <1326758892-32135-1-git-send-email-asmadeus@codewreck.org>
-	 (sfid-20120117_010904_758548_2C83D669)
+	Mon, 30 Jan 2012 08:55:37 -0500
+Received: by mail-lpp01m010-f44.google.com with SMTP id l5so2585543lah.31
+        for <linux-wireless@vger.kernel.org>; Mon, 30 Jan 2012 05:55:36 -0800 (PST)
+Subject: Re: [PATCH 00/12] wl12xx: update fw api
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: Kalle Valo <kvalo@adurom.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <CAB3XZEfaQAD0p2VJ28znznaB3P_3z3NvEiROJTbyCW+su2gLzg@mail.gmail.com>
+References: <1327924857-1250-1-git-send-email-eliad@wizery.com>
+	 <87fwexco94.fsf@purkki.adurom.net>
+	 <CAB3XZEfaQAD0p2VJ28znznaB3P_3z3NvEiROJTbyCW+su2gLzg@mail.gmail.com>
 Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 17 Jan 2012 08:44:21 +0100
-Message-ID: <1326786261.3342.0.camel@jlt3.sipsolutions.net> (sfid-20120117_084429_847965_AF31344A)
+Date: Mon, 30 Jan 2012 15:55:33 +0200
+Message-ID: <1327931733.3626.72.camel@cumari> (sfid-20120130_145541_786382_BF40636B)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-01-17 at 01:08 +0100, Dominique Martinet wrote:
-> Because of make limitations, the build will fail if there are spaces in
-> the path leading to the compat-wireless directory.
-> I tried to make it work anyway for a while and, while it probably is
-> possible, it would involve rewriting part of kbuild and well...
-> This at least throws up nicely if there is a space in the path.
+On Mon, 2012-01-30 at 15:52 +0200, Eliad Peller wrote: 
+> On Mon, Jan 30, 2012 at 3:29 PM, Kalle Valo <kvalo@adurom.com> wrote:
+> > Eliad Peller <eliad@wizery.com> writes:
+> >
+> >> The fw api was changed in the latest FWs (6.3.5.0.95 for wl127x
+> >> and 7.3.5.0.95 for wl128x).
+> >>
+> >> Along with some small adjustments, the main changes
+> >> inroduced by this patheset are configuring the
+> >> templates per-role, and moving to IEEE80211_HW_SUPPORTS_DYNAMIC_PS
+> >> mode.
+> >
+> > I didn't look so carefully, but doesn't this break bisect? I mean if you
+> > change the firmware api in small patches wl12xx can't work properly
+> > until all patches are applied, right?
+> >
+> > I would say that a huge patch doing all the necessary changes in one go
+> > is better, even it's ugly.
+> >
+> yes. it will break bisect (although it shouldn't break compilations).
+> i guess it's a matter of taste, but i think keeping the patches
+> manageable is more important than being able to bisect.
 
-I think it also fails if there's a colon in the path -- does anyone know
-what the "forbidden" characters would be?
+I tend to agree with Eliad.  If we do all in one go, git blame will be
+horrible.
 
-johannes
+But it's a good point and I'm not fully convinced what is the best way
+to go. :\
+
+-- 
+Cheers,
+Luca.
 
