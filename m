@@ -1,16 +1,16 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:33919 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751678Ab2A3Lnu (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7699 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752443Ab2A3LrR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 Jan 2012 06:43:50 -0500
+	Mon, 30 Jan 2012 06:47:17 -0500
 From: <rmani@qca.qualcomm.com>
 To: <kvalo@qca.qualcomm.com>
 CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
 	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH v3 1/4] ath6kl: Re-architect suspend mode handling in ath6kl_sdio_suspend
-Date: Mon, 30 Jan 2012 17:13:09 +0530
-Message-ID: <1327923792-16408-2-git-send-email-rmani@qca.qualcomm.com> (sfid-20120130_124419_417397_44BD983A)
+Subject: [PATCH v3 3/4] ath6kl: Wait for host sleep mode cmd processed event during WOW suspend
+Date: Mon, 30 Jan 2012 17:13:11 +0530
+Message-ID: <1327923792-16408-4-git-send-email-rmani@qca.qualcomm.com> (sfid-20120130_124721_621635_21D3CE1E)
 In-Reply-To: <1327923792-16408-1-git-send-email-rmani@qca.qualcomm.com>
 References: <1327923792-16408-1-git-send-email-rmani@qca.qualcomm.com>
 MIME-Version: 1.0
@@ -20,216 +20,122 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Raja Mani <rmani@qca.qualcomm.com>
 
-Using this patch, the user can bypass existing auto
-suspend mode selection logic and force ath6kl to enter
-into the suspend mode what he/she wants.
+For every WMI_SET_HOST_SLEEP_MODE_CMDID command (send from the host),
+the firmware sends WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID as
+an acknowledgement to the host.
 
-If the user doesn't choose any suspend mode while doing
-insmod of the driver, auto suspend mode selection logic
-will kick in and choose suspend mode based on the host
-SDIO controller capability.
+In order to being sync with the firmware, the host has to wait for
+WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENT event before going to
+the suspend state. This patch ensures ath6kl_wow_suspend() waits
+until it gets this event after sending set host sleep mode command.
 
-Generic module parameter is required to specify suspend
-mode including Deep Sleep and WOW while doing insmod.
-Renaming existing mod param variable suspend_cutpower
-would be sufficient to meet this requirement.
-
-New module parameter suspend_mode can take any one of
-the below suspend state,
-   1. cut power
-   2. deep sleep
-   3. wow
+This patch adds,
+ * New command WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID in
+   WMI event table.
+ * New WMI function ath6kl_wmi_host_sleep_mode_cmd_prcd_evt_rx()
+   to process the event.
+ * New flag HOST_SLEEP_MODE_CMD_PROCESSED in VIF flags to record
+   the arrival of the event.
 
 Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath6kl/core.c |   12 +++--
- drivers/net/wireless/ath/ath6kl/core.h |    4 +-
- drivers/net/wireless/ath/ath6kl/sdio.c |   86 ++++++++++++++++++++------------
- 3 files changed, 64 insertions(+), 38 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   15 +++++++++++++++
+ drivers/net/wireless/ath/ath6kl/core.h     |    1 +
+ drivers/net/wireless/ath/ath6kl/wmi.c      |   17 +++++++++++++++++
+ drivers/net/wireless/ath/ath6kl/wmi.h      |    2 ++
+ 4 files changed, 35 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
-index 0d92e71..a0b7684 100644
---- a/drivers/net/wireless/ath/ath6kl/core.c
-+++ b/drivers/net/wireless/ath/ath6kl/core.c
-@@ -25,12 +25,12 @@
- #include "cfg80211.h"
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index e676cfc..1902e2f 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1975,11 +1975,26 @@ skip_arp:
+ 	if (ret)
+ 		return ret;
  
- unsigned int debug_mask;
--static bool suspend_cutpower;
-+static unsigned int suspend_mode;
- static unsigned int uart_debug;
- static unsigned int ath6kl_p2p;
++	clear_bit(HOST_SLEEP_MODE_CMD_PROCESSED, &vif->flags);
++
+ 	ret = ath6kl_wmi_set_host_sleep_mode_cmd(ar->wmi, vif->fw_vif_idx,
+ 						 ATH6KL_HOST_MODE_ASLEEP);
+ 	if (ret)
+ 		return ret;
  
- module_param(debug_mask, uint, 0644);
--module_param(suspend_cutpower, bool, 0444);
-+module_param(suspend_mode, uint, 0644);
- module_param(uart_debug, uint, 0644);
- module_param(ath6kl_p2p, uint, 0644);
- 
-@@ -143,8 +143,12 @@ int ath6kl_core_init(struct ath6kl *ar)
- 	ar->conf_flags = ATH6KL_CONF_IGNORE_ERP_BARKER |
- 			 ATH6KL_CONF_ENABLE_11N | ATH6KL_CONF_ENABLE_TX_BURST;
- 
--	if (suspend_cutpower)
--		ar->conf_flags |= ATH6KL_CONF_SUSPEND_CUTPOWER;
-+	if (suspend_mode &&
-+		suspend_mode >= WLAN_POWER_STATE_CUT_PWR &&
-+		suspend_mode <= WLAN_POWER_STATE_WOW)
-+		ar->suspend_mode = suspend_mode;
-+	else
-+		ar->suspend_mode = 0;
- 
- 	if (uart_debug)
- 		ar->conf_flags |= ATH6KL_CONF_UART_DEBUG;
++	left = wait_event_interruptible_timeout(ar->event_wq,
++			test_bit(HOST_SLEEP_MODE_CMD_PROCESSED, &vif->flags),
++			WMI_TIMEOUT);
++	if (left == 0) {
++		ath6kl_warn("timeout, didn't get host sleep cmd "
++			    "processed event\n");
++		ret = -ETIMEDOUT;
++	} else if (left < 0) {
++		ath6kl_warn("error while waiting for host sleep cmd "
++			    "processed event %d\n", left);
++		ret = left;
++	}
++
+ 	if (ar->tx_pending[ar->ctrl_ep]) {
+ 		left = wait_event_interruptible_timeout(ar->event_wq,
+ 				ar->tx_pending[ar->ctrl_ep] == 0, WMI_TIMEOUT);
 diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index ed9fcc1..ab232c5 100644
+index ab232c5..998a745 100644
 --- a/drivers/net/wireless/ath/ath6kl/core.h
 +++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -196,8 +196,7 @@ struct ath6kl_fw_ie {
- #define ATH6KL_CONF_IGNORE_PS_FAIL_EVT_IN_SCAN  BIT(1)
- #define ATH6KL_CONF_ENABLE_11N			BIT(2)
- #define ATH6KL_CONF_ENABLE_TX_BURST		BIT(3)
--#define ATH6KL_CONF_SUSPEND_CUTPOWER		BIT(4)
--#define ATH6KL_CONF_UART_DEBUG			BIT(5)
-+#define ATH6KL_CONF_UART_DEBUG			BIT(4)
+@@ -451,6 +451,7 @@ enum ath6kl_vif_state {
+ 	DTIM_PERIOD_AVAIL,
+ 	WLAN_ENABLED,
+ 	STATS_UPDATE_PEND,
++	HOST_SLEEP_MODE_CMD_PROCESSED,
+ };
  
- enum wlan_low_pwr_state {
- 	WLAN_POWER_STATE_ON,
-@@ -618,6 +617,7 @@ struct ath6kl {
- 	} hw;
- 
- 	u16 conf_flags;
-+	u16 suspend_mode;
- 	wait_queue_head_t event_wq;
- 	struct ath6kl_mbox_info mbox_info;
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index d9f5591..07dcf00 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -779,7 +779,7 @@ out:
+ struct ath6kl_vif {
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index 9c8e4df..18fa9aa 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -2590,6 +2590,18 @@ int ath6kl_wmi_set_host_sleep_mode_cmd(struct wmi *wmi, u8 if_idx,
  	return ret;
  }
  
--static int ath6kl_sdio_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
-+static int ath6kl_set_sdio_pm_caps(struct ath6kl *ar)
- {
- 	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
- 	struct sdio_func *func = ar_sdio->func;
-@@ -790,60 +790,82 @@ static int ath6kl_sdio_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
- 
- 	ath6kl_dbg(ATH6KL_DBG_SUSPEND, "sdio suspend pm_caps 0x%x\n", flags);
- 
--	if (!(flags & MMC_PM_KEEP_POWER) ||
--	    (ar->conf_flags & ATH6KL_CONF_SUSPEND_CUTPOWER)) {
--		/* as host doesn't support keep power we need to cut power */
--		return ath6kl_cfg80211_suspend(ar, ATH6KL_CFG_SUSPEND_CUTPOWER,
--					       NULL);
--	}
-+	if (!(flags & MMC_PM_WAKE_SDIO_IRQ) ||
-+	    !(flags & MMC_PM_KEEP_POWER))
-+		return -EINVAL;
- 
- 	ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
- 	if (ret) {
--		printk(KERN_ERR "ath6kl: set sdio pm flags failed: %d\n",
--		       ret);
-+		ath6kl_err("set sdio keep pwr flag failed: %d\n", ret);
- 		return ret;
- 	}
- 
--	if (!(flags & MMC_PM_WAKE_SDIO_IRQ))
--		goto deepsleep;
--
- 	/* sdio irq wakes up host */
-+	ret = sdio_set_host_pm_flags(func, MMC_PM_WAKE_SDIO_IRQ);
-+	if (ret)
-+		ath6kl_err("set sdio wake irq flag failed: %d\n", ret);
++/* This command has zero length payload */
++static int ath6kl_wmi_host_sleep_mode_cmd_prcd_evt_rx(struct wmi *wmi,
++						      struct ath6kl_vif *vif)
++{
++	struct ath6kl *ar = wmi->parent_dev;
 +
-+	return ret;
++	set_bit(HOST_SLEEP_MODE_CMD_PROCESSED, &vif->flags);
++	wake_up(&ar->event_wq);
++
++	return 0;
 +}
 +
-+static int ath6kl_sdio_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
-+{
-+	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
-+	struct sdio_func *func = ar_sdio->func;
-+	mmc_pm_flag_t flags;
-+	int ret;
+ int ath6kl_wmi_set_wow_mode_cmd(struct wmi *wmi, u8 if_idx,
+ 				enum ath6kl_wow_mode wow_mode,
+ 				u32 filter, u16 host_req_delay)
+@@ -3556,6 +3568,11 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
+ 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_TX_COMPLETE_EVENTID\n");
+ 		ret = ath6kl_wmi_tx_complete_event_rx(datap, len);
+ 		break;
++	case WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID:
++		ath6kl_dbg(ATH6KL_DBG_WMI,
++			   "WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID");
++		ret = ath6kl_wmi_host_sleep_mode_cmd_prcd_evt_rx(wmi, vif);
++		break;
+ 	case WMI_REMAIN_ON_CHNL_EVENTID:
+ 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_REMAIN_ON_CHNL_EVENTID\n");
+ 		ret = ath6kl_wmi_remain_on_chnl_event_rx(wmi, datap, len, vif);
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
+index 85698ef..e791986 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.h
++++ b/drivers/net/wireless/ath/ath6kl/wmi.h
+@@ -1357,6 +1357,8 @@ enum wmi_event_id {
+ 	WMI_P2P_START_SDPD_EVENTID,
+ 	WMI_P2P_SDPD_RX_EVENTID,
  
- 	if (ar->state == ATH6KL_STATE_SCHED_SCAN) {
-+		ath6kl_dbg(ATH6KL_DBG_SUSPEND, "sched scan is in progress\n");
++	WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID = 0x1047,
 +
-+		ret = ath6kl_set_sdio_pm_caps(ar);
-+		if (ret)
-+			goto cut_pwr;
-+
- 		ret =  ath6kl_cfg80211_suspend(ar,
- 					       ATH6KL_CFG_SUSPEND_SCHED_SCAN,
- 					       NULL);
--		if (ret) {
--			ath6kl_warn("Schedule scan suspend failed: %d", ret);
--			return ret;
--		}
--
--		ret = sdio_set_host_pm_flags(func, MMC_PM_WAKE_SDIO_IRQ);
- 		if (ret)
--			ath6kl_warn("set sdio wake irq flag failed: %d\n", ret);
-+			goto cut_pwr;
- 
--		return ret;
-+		return 0;
- 	}
- 
--	if (wow) {
--		/*
--		 * The host sdio controller is capable of keep power and
--		 * sdio irq wake up at this point. It's fine to continue
--		 * wow suspend operation.
--		 */
-+	if (ar->suspend_mode == WLAN_POWER_STATE_WOW ||
-+	    (!ar->suspend_mode && wow)) {
-+
-+		ret = ath6kl_set_sdio_pm_caps(ar);
-+		if (ret)
-+			goto cut_pwr;
-+
- 		ret = ath6kl_cfg80211_suspend(ar, ATH6KL_CFG_SUSPEND_WOW, wow);
- 		if (ret)
--			return ret;
-+			goto cut_pwr;
-+
-+		return 0;
-+	}
-+
-+	if (ar->suspend_mode == WLAN_POWER_STATE_DEEP_SLEEP ||
-+	    !ar->suspend_mode) {
- 
--		ret = sdio_set_host_pm_flags(func, MMC_PM_WAKE_SDIO_IRQ);
-+		flags = sdio_get_host_pm_caps(func);
-+		if (!(flags & MMC_PM_KEEP_POWER))
-+			goto cut_pwr;
-+
-+		ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
- 		if (ret)
--			ath6kl_err("set sdio wake irq flag failed: %d\n", ret);
-+			goto cut_pwr;
- 
--		return ret;
-+		ret = ath6kl_cfg80211_suspend(ar, ATH6KL_CFG_SUSPEND_DEEPSLEEP,
-+					      NULL);
-+		if (ret)
-+			goto cut_pwr;
-+
-+		return 0;
- 	}
- 
--deepsleep:
--	return ath6kl_cfg80211_suspend(ar, ATH6KL_CFG_SUSPEND_DEEPSLEEP, NULL);
-+cut_pwr:
-+	return ath6kl_cfg80211_suspend(ar, ATH6KL_CFG_SUSPEND_CUTPOWER, NULL);
- }
- 
- static int ath6kl_sdio_resume(struct ath6kl *ar)
+ 	WMI_THIN_RESERVED_START_EVENTID = 0x8000,
+ 	/* Events in this range are reserved for thinmode */
+ 	WMI_THIN_RESERVED_END_EVENTID = 0x8fff,
 -- 
 1.7.1
 
