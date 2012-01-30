@@ -1,100 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:38749 "EHLO
-	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752211Ab2AZMmz (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:42361 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752220Ab2A3TOV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 Jan 2012 07:42:55 -0500
-Received: by mail-gx0-f177.google.com with SMTP id h4so242386ggn.22
-        for <linux-wireless@vger.kernel.org>; Thu, 26 Jan 2012 04:42:54 -0800 (PST)
-From: Victor Goldenshtein <victorg@ti.com>
-To: <hostap@lists.shmoo.com>
-Cc: <linux-wireless@vger.kernel.org>, <kgiori@qca.qualcomm.com>,
-	<mcgrof@frijolero.org>, <zefir.kurtisi@neratec.com>,
-	<adrian.chadd@gmail.com>, <j@w1.fi>, <johannes@sipsolutions.net>,
-	<coelho@ti.com>, <assaf@ti.com>, <yoni.divinsky@ti.com>,
-	<igalc@ti.com>, <adrian@freebsd.org>, <nbd@nbd.name>
-Subject: [RFC 7/7] nl80211: add start radar detection command/event
-Date: Thu, 26 Jan 2012 14:41:29 +0200
-Message-Id: <1327581689-22090-8-git-send-email-victorg@ti.com> (sfid-20120126_134305_752566_FB6F22CB)
-In-Reply-To: <1327581689-22090-1-git-send-email-victorg@ti.com>
-References: <1327581689-22090-1-git-send-email-victorg@ti.com>
+	Mon, 30 Jan 2012 14:14:21 -0500
+Message-ID: <4F26EC06.4050503@qca.qualcomm.com> (sfid-20120130_201424_763671_84F36AC1)
+Date: Mon, 30 Jan 2012 21:14:14 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH V2] ath6kl: Fix kernel panic during rx aggregation
+References: <1327564038-2455-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1327564038-2455-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add command to trigger radar detection in the driver/HW.
-Once radar detection has started, the driver/device shall
-continuously monitor the Operating Channel (In-Service
-Monitoring) to ensure that there is no radar interferences
-on that channel. Process radar detection event in
-do_process_drv_event().
+On 01/26/2012 09:47 AM, Vasanthakumar Thiagarajan wrote:
+> "ath6kl: Define a structure for connection specific aggregation information"
+> introduces this. In aggr_conn_init(), vif->aggr_cntxt is assigned to
+> aggr_conn->aggr_info, but vif->aggr_cntxt is not initialized at this
+> point, this would end up accessing an invalid pointer in aggregation
+> receive path. Fix this by passing the correct aggr_info to aggr_conn_init().
+> The panic trace would look like.
+> 
+> [<ffffffff8159e02e>] panic+0xa1/0x1c6
+> [<ffffffff8103773d>] ? kmsg_dump+0xfd/0x160
+> [<ffffffff815a2f6a>] oops_end+0xea/0xf0
+> [<ffffffff8102b95d>] no_context+0x11d/0x2d0
+> [<ffffffff8102bc5d>] __bad_area_nosemaphore+0x14d/0x230
+> [<ffffffff815a5c4d>] ? do_page_fault+0x30d/0x520
+> [<ffffffff8102bd53>] bad_area_nosemaphore+0x13/0x20
+> [<ffffffff815a5cfd>] do_page_fault+0x3bd/0x520
+> [<ffffffff8108bd60>] ? __lock_acquire+0x320/0x1680
+> [<ffffffff812e3a9d>] ? trace_hardirqs_off_thunk+0x3a/0x3c
+> [<ffffffff815a2385>] page_fault+0x25/0x30
+> [<ffffffffa0487a5f>] ? aggr_slice_amsdu+0xdf/0x170 [ath6kl_core]
+> [<ffffffffa0487bac>] aggr_deque_frms+0xbc/0x190 [ath6kl_core]
+> [<ffffffffa0488404>] ath6kl_rx+0x3e4/0xae0 [ath6kl_core]
+> [<ffffffffa047ae77>] ath6kl_htc_rxmsg_pending_handler+0x8b7/0xf10 [ath6kl_core]
+> [<ffffffffa00c82f0>] ? mmc_do_release_host+0x70/0x90 [mmc_core]
+> [<ffffffffa00c833a>] ? mmc_release_host+0x2a/0x50 [mmc_core]
+> [<ffffffffa04865c0>] ? ath6kl_alloc_amsdu_rxbuf+0x140/0x140 [ath6kl_core]
+> [<ffffffffa0477772>] ath6kl_hif_intr_bh_handler+0x362/0x510 [ath6kl_core]
+> [<ffffffffa01f1000>] ath6kl_sdio_irq_handler+0x60/0xb0 [ath6kl_sdio]
+> [<ffffffffa00d30bc>] sdio_irq_thread+0xec/0x320 [mmc_core]
+> [<ffffffffa00d2fd0>] ? sdio_claim_irq+0x220/0x220 [mmc_core]
+> [<ffffffffa00d2fd0>] ? sdio_claim_irq+0x220/0x220 [mmc_core]
+> [<ffffffff8105b21e>] kthread+0xbe/0xd0
+> [<ffffffff815ab574>] kernel_thread_helper+0x4/0x10
+> [<ffffffff815a2174>] ? retint_restore_args+0x13/0x13
+> [<ffffffff8105b160>] ? __init_kthread_worker+0x70/0x70
+> [<ffffffff815ab570>] ? gs_change+0x13/0x13
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-Signed-off-by: Victor Goldenshtein <victorg@ti.com>
----
- src/drivers/driver_nl80211.c |   37 +++++++++++++++++++++++++++++++++++++
- 1 files changed, 37 insertions(+), 0 deletions(-)
+Thanks, applied.
 
-diff --git a/src/drivers/driver_nl80211.c b/src/drivers/driver_nl80211.c
-index 744e736..2d52c72 100644
---- a/src/drivers/driver_nl80211.c
-+++ b/src/drivers/driver_nl80211.c
-@@ -2145,6 +2145,16 @@ static void do_process_drv_event(struct wpa_driver_nl80211_data *drv,
- 		wpa_supplicant_event(drv->ctx, EVENT_CHANNEL_SWITCH_COMPLETE,
- 				     &data);
- 		break;
-+	case NL80211_CMD_DFS_RADAR_DETECTION:
-+		os_memset(&data, 0, sizeof(data));
-+		if (tb[NL80211_ATTR_WIPHY_FREQ]) {
-+			data.radar_detected.freq =
-+				    nla_get_u16(tb[NL80211_ATTR_WIPHY_FREQ]);
-+		}
-+		data.radar_detected.status = TRUE;
-+		wpa_printf(MSG_DEBUG, "nl80211: Radar detected event");
-+		wpa_supplicant_event(drv->ctx, EVENT_RADAR_DETECTED, &data);
-+		break;
- 	default:
- 		wpa_printf(MSG_DEBUG, "nl80211: Ignored unknown event "
- 			   "(cmd=%d)", cmd);
-@@ -8706,6 +8716,32 @@ nla_put_failure:
- }
- 
- 
-+static int wpa_driver_nl80211_start_radar_detection(void *priv)
-+{
-+	struct i802_bss *bss = priv;
-+	struct wpa_driver_nl80211_data *drv = bss->drv;
-+	struct nl_msg *msg;
-+	int ret;
-+
-+	wpa_printf(MSG_DEBUG, "nl80211: Start radar detection");
-+
-+	msg = nlmsg_alloc();
-+	if (!msg)
-+		return -1;
-+
-+	nl80211_cmd(bss->drv, msg, 0, NL80211_CMD_DFS_RADAR_DETECTION);
-+	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, drv->ifindex);
-+
-+	ret = send_and_recv_msgs(drv, msg, NULL, NULL);
-+	if (ret == 0)
-+		return 0;
-+	wpa_printf(MSG_DEBUG, "nl80211: Failed to start radar detection: "
-+		   "%d (%s)", ret, strerror(-ret));
-+nla_put_failure:
-+	return -1;
-+}
-+
-+
- #ifdef CONFIG_TDLS
- 
- static int nl80211_send_tdls_mgmt(void *priv, const u8 *dst, u8 action_code,
-@@ -9001,6 +9037,7 @@ const struct wpa_driver_ops wpa_driver_nl80211_ops = {
- 	.set_p2p_powersave = nl80211_set_p2p_powersave,
- 	.enable_tx = wpa_driver_nl80211_enable_dfs_tx,
- 	.channel_switch = wpa_driver_nl80211_channel_switch,
-+	.start_radar_detection = wpa_driver_nl80211_start_radar_detection,
- #ifdef CONFIG_TDLS
- 	.send_tdls_mgmt = nl80211_send_tdls_mgmt,
- 	.tdls_oper = nl80211_tdls_oper,
--- 
-1.7.5.4
-
+Kalle
