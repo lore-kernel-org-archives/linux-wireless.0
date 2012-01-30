@@ -1,34 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foo.stuge.se ([212.116.89.98]:38132 "HELO foo.stuge.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752413Ab2AMBcv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jan 2012 20:32:51 -0500
-Message-ID: <20120113013248.30123.qmail@stuge.se> (sfid-20120113_023254_358166_957EB74A)
-Date: Fri, 13 Jan 2012 02:32:48 +0100
-From: Peter Stuge <peter@stuge.se>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	b43-dev <b43-dev@lists.infradead.org>
-Subject: Re: [PATCH] b43: add default option to avoid duplicating device
-	support with brcmsmac
-References: <1326315180-29398-1-git-send-email-linville@tuxdriver.com> <CACna6rxffpPhYVqKNttu79JET=NkBP4NrAayywQHWcj=mw=T9A@mail.gmail.com> <20120112161720.GI11093@tuxdriver.com>
+Received: from gmmr2.centrum.cz ([46.255.227.252]:37031 "EHLO gmmr2.centrum.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751933Ab2A3SSW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 30 Jan 2012 13:18:22 -0500
+To: "Helmut Schaa" <helmut.schaa@googlemail.com>
+Subject: Re: connection interrupted for rt61pci in master mode
+Date: Mon, 30 Jan 2012 19:18:20 +0100
+From: <trencan@centrum.cz>
+Cc: <linux-wireless@vger.kernel.org>
+References: <20120128154544.70E060CD@centrum.cz> <1385650.dcoDil3T5I@helmutmobil.site>
+In-Reply-To: <1385650.dcoDil3T5I@helmutmobil.site>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20120112161720.GI11093@tuxdriver.com>
+Message-Id: <20120130191820.F4F520E8@centrum.cz> (sfid-20120130_191825_745051_DAD14B4F)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John W. Linville wrote:
-> The summary line could be different as well, if you can think of a
-> better way to describe the issue.  I am open to suggestions.
 
-I think these terms are clear:
+Hello,
 
-Community b43 driver
-Broadcom brcmsmac driver
+I made the test again, got connection interrupted on client, but folder "/sys/kernel/debug/ieee80211/phy0/" was empty on server, no rt2800pci inside. Do I make anything wrongly?
 
-How to apply them I leave up to you. :)
+Thanks.
+Michal
 
 
-//Peter
+______________________________________________________________
+> Od: "Helmut Schaa" <helmut.schaa@googlemail.com>
+> Komu: <trencan@centrum.cz>
+> Datum: 29.01.2012 21:15
+> Předmět: Re: connection interrupted for rt61pci in master mode
+>
+> CC: linux-wireless@vger.kernel.org
+>Am Samstag, 28. Januar 2012, 15:45:44 schrieb trencan@centrum.cz:
+>> I have RaLink RT2561/RT61 802.11g PCI wireless card and use it in master
+>> mode as AP. I have latest Mandriva 2011.0 distro with kernel
+>> 2.6.38.7-desktop-1mnb2. Driver for wifi card is rt61pci. If I connect
+>> via wifi from another PC then after some small time I get connection
+>> interrupted and I must disconnect and reconnect again. I tried latest
+>> compat-wireless-3.3-rc1-2 and also latest hostapd-0.7.3, but still 
+>> same issue. In previous Mandriva version 2010.2 I had kernel
+>> 2.6.33.7-desktop-2mnb, hostapd-0.6.7 and it worked perfectly.
+>> Hostapd uses driver=nl80211, mode=g, channel=11. There are no errors
+>> in messages. I know it is not issue of the client machine, since same
+>> behavior I have if I connect to AP with HTC smartphone. Is it any
+>> known bug of rt61pci driver or hostapd?
+>
+>Not known (to me) yet but might be a bug in rt61pci. Could you please
+>provide the output of
+>	cat /sys/kernel/debug/ieee80211/phy0/rt2800pci/queues/*
+>?
+>
+>Thanks,
+>Helmut
+>
