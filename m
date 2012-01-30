@@ -1,128 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:41612 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751656Ab2A1QZh (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:25116 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752118Ab2A3TLD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 Jan 2012 11:25:37 -0500
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Johannes Berg <johannes@sipsolutions.net>,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-Subject: [PATCH 2/2] iw: remove ifdefs for mcs mask
-Date: Sat, 28 Jan 2012 17:25:35 +0100
-Message-Id: <1327767935-16984-5-git-send-email-siwu@hrz.tu-chemnitz.de> (sfid-20120128_172614_307720_3A83CDE3)
-In-Reply-To: <1327767935-16984-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1327767935-16984-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+	Mon, 30 Jan 2012 14:11:03 -0500
+Message-ID: <4F26EB38.1020001@qca.qualcomm.com> (sfid-20120130_201108_083128_12E2AF94)
+Date: Mon, 30 Jan 2012 21:10:48 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: fix testmode when fw-2.bin or fw-3.bin is used
+References: <20120124115016.15053.44588.stgit@localhost6.localdomain6>
+In-Reply-To: <20120124115016.15053.44588.stgit@localhost6.localdomain6>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are enums, not defines. Therefore the ifdef check can never be
-true.
+On 01/24/2012 01:50 PM, Kalle Valo wrote:
+> Testmode (TCMD and ART) was not enabled when fw-2.bin or fw-3.bin files
+> were available, fix that by fetching testmode file just after the
+> board file but before rest of the firmware files are fetched.
+> 
+> I also added testmode field to struct ath6kl and moved the module parameter
+> to core.c. Now all module parameters are grouped in one place.
+> 
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Signed-off-by: Simon Wunderlich <siwu@hrz.tu-chemnitz.de>
-Signed-off-by: Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
----
- bitrate.c |   20 ++------------------
- 1 files changed, 2 insertions(+), 18 deletions(-)
+Applied.
 
-diff --git a/bitrate.c b/bitrate.c
-index cefd150..22b863e 100644
---- a/bitrate.c
-+++ b/bitrate.c
-@@ -17,12 +17,10 @@ static int handle_bitrates(struct nl80211_state *state,
- 	uint8_t *legacy = NULL;
- 	int *n_legacy = NULL;
- 	bool have_mcs_24 = false, have_mcs_5 = false;
--#ifdef NL80211_TXRATE_MCS
- 	uint8_t mcs_24[77], mcs_5[77];
- 	int n_mcs_24 = 0, n_mcs_5 = 0;
- 	uint8_t *mcs = NULL;
- 	int *n_mcs = NULL;
--#endif
- 	enum {
- 		S_NONE,
- 		S_LEGACY,
-@@ -32,9 +30,7 @@ static int handle_bitrates(struct nl80211_state *state,
- 	for (i = 0; i < argc; i++) {
- 		char *end;
- 		double tmpd;
--#ifdef NL80211_TXRATE_MCS
- 		long tmpl;
--#endif
- 
- 		if (strcmp(argv[i], "legacy-2.4") == 0) {
- 			if (have_legacy_24)
-@@ -51,7 +47,6 @@ static int handle_bitrates(struct nl80211_state *state,
- 			n_legacy = &n_legacy_5;
- 			have_legacy_5 = true;
- 		}
--#ifdef NL80211_TXRATE_MCS
- 		else if (strcmp(argv[i], "mcs-2.4") == 0) {
- 			if (have_mcs_24)
- 				return 1;
-@@ -67,7 +62,6 @@ static int handle_bitrates(struct nl80211_state *state,
- 			n_mcs = &n_mcs_5;
- 			have_mcs_5 = true;
- 		}
--#endif
- 		else switch (parser_state) {
- 		case S_LEGACY:
- 			tmpd = strtod(argv[i], &end);
-@@ -78,7 +72,6 @@ static int handle_bitrates(struct nl80211_state *state,
- 			legacy[(*n_legacy)++] = tmpd * 2;
- 			break;
- 		case S_MCS:
--#ifdef NL80211_TXRATE_MCS
- 			tmpl = strtol(argv[i], &end, 0);
- 			if (*end != '\0')
- 				return 1;
-@@ -86,7 +79,6 @@ static int handle_bitrates(struct nl80211_state *state,
- 				return 1;
- 			mcs[(*n_mcs)++] = tmpl;
- 			break;
--#endif
- 		default:
- 			return 1;
- 		}
-@@ -102,10 +94,8 @@ static int handle_bitrates(struct nl80211_state *state,
- 			goto nla_put_failure;
- 		if (have_legacy_24)
- 			nla_put(msg, NL80211_TXRATE_LEGACY, n_legacy_24, legacy_24);
--#ifdef NL80211_TXRATE_MCS
- 		if (have_mcs_24)
- 			nla_put(msg, NL80211_TXRATE_MCS, n_mcs_24, mcs_24);
--#endif
- 		nla_nest_end(msg, nl_band);
- 	}
- 
-@@ -115,10 +105,8 @@ static int handle_bitrates(struct nl80211_state *state,
- 			goto nla_put_failure;
- 		if (have_legacy_5)
- 			nla_put(msg, NL80211_TXRATE_LEGACY, n_legacy_5, legacy_5);
--#ifdef NL80211_TXRATE_MCS
- 		if (have_mcs_5)
- 			nla_put(msg, NL80211_TXRATE_MCS, n_mcs_5, mcs_5);
--#endif
- 		nla_nest_end(msg, nl_band);
- 	}
- 
-@@ -130,13 +118,9 @@ static int handle_bitrates(struct nl80211_state *state,
- }
- 
- #define DESCR_LEGACY "[legacy-<2.4|5> <legacy rate in Mbps>*]"
--#ifdef NL80211_TXRATE_MCS
- #define DESCR DESCR_LEGACY " [mcs-<2.4|5> <MCS index>*]"
--#else
--#define DESCR DESCR_LEGACY
--#endif
- 
--COMMAND(set, bitrates, DESCR, NL80211_CMD_SET_TX_BITRATE_MASK, 0, CIB_NETDEV,
--	handle_bitrates,
-+COMMAND(set, bitrates, "[legacy-<2.4|5> <legacy rate in Mbps>*] [mcs-<2.4|5> <MCS index>*]",
-+	NL80211_CMD_SET_TX_BITRATE_MASK, 0, CIB_NETDEV, handle_bitrates,
- 	"Sets up the specified rate masks.\n"
- 	"Not passing any arguments would clear the existing mask (if any).");
--- 
-1.7.7.3
-
+Kalle
