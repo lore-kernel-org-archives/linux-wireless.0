@@ -1,64 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39407 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753827Ab2ACPpx (ORCPT
+Received: from mtaweb11.services.sfr.fr ([93.17.128.28]:30278 "EHLO
+	smtp11.services.sfr.fr" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753061Ab2AaO5g convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 10:45:53 -0500
-Date: Tue, 3 Jan 2012 10:35:36 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luis Rodriguez <mcgrof@frijolero.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: compat-wireless patch Re: [PATCH] Enable
- CONFIG_RT2800{PCI,USB}_RT53XX
-Message-ID: <20120103153535.GA24318@tuxdriver.com> (sfid-20120103_164557_290815_8A9415DD)
-References: <1325604516-14280-1-git-send-email-linville@tuxdriver.com>
+	Tue, 31 Jan 2012 09:57:36 -0500
+Date: Tue, 31 Jan 2012 15:57:35 +0100 (CET)
+From: Milan Bouchet-Valat <nalimilan@club-internet.fr>
+Reply-To: Milan Bouchet-Valat <nalimilan@club-internet.fr>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org
+Message-ID: <1471699.185047.1328021855281.JavaMail.www@wsfrf1118> (sfid-20120131_155740_143013_805EDDCB)
+In-Reply-To: <13367957.180704.1328018261479.JavaMail.www@wsfrf1118>
+References: <22905678.140637.1327401110095.JavaMail.www@wsfrf1232>
+ <4F227784.10309@broadcom.com> <1327660003.21888.14.camel@milan>
+ <4F228C76.2010109@broadcom.com>
+ <13367957.180704.1328018261479.JavaMail.www@wsfrf1118>
+Subject: Re: Re: BCM4313 keeps disconnecting with brcmsmac and multiple APs
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1325604516-14280-1-git-send-email-linville@tuxdriver.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 03, 2012 at 10:28:36AM -0500, John W. Linville wrote:
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
-> Any reason to treat these differently than the RT35XX devices?
+Le mardi 31 janvier 2012 à 15:44 +0100, Arend van Spriel a écrit :
+> Could you provide another log trace in which it goes wrong.
+Sure. Attached is /var/log/messages from the point where I resumed my computer this afternoon: you can see that the disconnection issue I described happened at 14:16. Then the NetworkManager auth dialog showed up twice, and I reloaded brcmsmac twice before it reconnected correctly.
 
-Obviously, this is a compat-wireless patch -- duh! :-)
+> I am
+> wondering whether it attempts to connect to a different AP or not. I
+> assume each AP has the same SSID and security configration, right?
+Same security configuration, yes (WPA2 and WPA1). If by SSID you mean ESSID, yes; but isn't it what defines a wireless network? I must be missing something.
 
-John
 
-> 
->  config.mk |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/config.mk b/config.mk
-> index e44b814..4d2ad5c 100644
-> --- a/config.mk
-> +++ b/config.mk
-> @@ -393,7 +393,7 @@ ifdef CONFIG_CRC_CCITT
->  CONFIG_RT2800PCI=m
->  CONFIG_RT2800PCI_RT33XX=y
->  CONFIG_RT2800PCI_RT35XX=y
-> -# CONFIG_RT2800PCI_RT53XX=y
-> +CONFIG_RT2800PCI_RT53XX=y
->  endif #CONFIG_CRC_CCITT
->  NEED_RT2X00=y
->  
-> @@ -523,7 +523,7 @@ ifdef CONFIG_CRC_CCITT
->  CONFIG_RT2800USB=m
->  CONFIG_RT2800USB_RT33XX=y
->  CONFIG_RT2800USB_RT35XX=y
-> -# CONFIG_RT2800USB_RT53XX=y
-> +CONFIG_RT2800USB_RT53XX=y
->  CONFIG_RT2800USB_UNKNOWN=y
->  endif #CONFIG_CRC_CCITT
->  CONFIG_RT2X00_LIB_USB=m
-> -- 
-> 1.7.4.4
-> 
-> 
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Regards
