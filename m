@@ -1,184 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:63113 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755734Ab2APSN6 (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:46747 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754652Ab2AaOko (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 Jan 2012 13:13:58 -0500
-From: Antonio Quartulli <ordex@autistici.org>
-To: " \"John W. Linville\"" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org,
-	Antonio Quartulli <ordex@autistici.org>
-Subject: [PATCHv3 2/2] mac80211: in IBSS use the Auth frame to trigger STA reinsertion
-Date: Mon, 16 Jan 2012 19:12:06 +0100
-Message-Id: <1326737526-29750-1-git-send-email-ordex@autistici.org> (sfid-20120116_191401_981142_914AF279)
+	Tue, 31 Jan 2012 09:40:44 -0500
+Received: by mail-we0-f174.google.com with SMTP id b13so66758wer.19
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 06:40:43 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 1/7] wl12xx: Set different wake up conditions in case of suspend
+Date: Tue, 31 Jan 2012 16:44:02 +0200
+Message-Id: <1328021048-8944-2-git-send-email-eliad@wizery.com> (sfid-20120131_154050_614759_A0DAE43B)
+In-Reply-To: <1328021048-8944-1-git-send-email-eliad@wizery.com>
+References: <1328021048-8944-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of a node re-joining the cell the sta_info structure belonging to it is
-first destroyed and then reinserted. In this way its internal state is reset.
+From: Eyal Shapira <eyal@wizery.com>
 
-The joining operation is recognised thank the Auth frame being received.
+Added ability to set different wake up conditions for suspend/resume.
+Set default values to wake up every 3 DTIMs while suspended
+and every 1 DTIM while resumed
 
-This operation is helpful in case of a node being rebooted that is joining the
-ad-hoc cell again, before its purge timeout on other nodes expires.
-
-Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
+ drivers/net/wireless/wl12xx/acx.c  |   10 ++++---
+ drivers/net/wireless/wl12xx/acx.h  |    3 +-
+ drivers/net/wireless/wl12xx/conf.h |   13 +++++++++
+ drivers/net/wireless/wl12xx/main.c |   51 +++++++++++++++++++++++++++++++++--
+ drivers/net/wireless/wl12xx/ps.c   |    4 ++-
+ 5 files changed, 72 insertions(+), 9 deletions(-)
 
-- moved ieee80211_rx_mgmt_auth_ibss() after ieee80211_ibss_add_sta() definition
-
-
- net/mac80211/ibss.c |   85 +++++++++++++++++++++++++++++---------------------
- 1 files changed, 49 insertions(+), 36 deletions(-)
-
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index a7564e3..f6f5009 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -36,31 +36,6 @@
- #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index af2c312..bc96db0 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -34,12 +34,14 @@
+ #include "reg.h"
+ #include "ps.h"
  
- 
--static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
--					struct ieee80211_mgmt *mgmt,
--					size_t len)
--{
--	u16 auth_alg, auth_transaction;
--
--	lockdep_assert_held(&sdata->u.ibss.mtx);
--
--	if (len < 24 + 6)
--		return;
--
--	auth_alg = le16_to_cpu(mgmt->u.auth.auth_alg);
--	auth_transaction = le16_to_cpu(mgmt->u.auth.auth_transaction);
--
--	/*
--	 * IEEE 802.11 standard does not require authentication in IBSS
--	 * networks and most implementations do not seem to use it.
--	 * However, try to reply to authentication attempts if someone
--	 * has actually implemented this.
--	 */
--	if (auth_alg == WLAN_AUTH_OPEN && auth_transaction == 1)
--		ieee80211_send_auth(sdata, 2, WLAN_AUTH_OPEN, NULL, 0, mgmt->sa,
--				    sdata->u.ibss.bssid, NULL, 0, 0);
--}
--
- static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 				      const u8 *bssid, const int beacon_int,
- 				      struct ieee80211_channel *chan,
-@@ -275,7 +250,8 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 				  cbss->tsf);
- }
- 
--static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
-+static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
-+						  bool auth)
- 	__acquires(RCU)
+-int wl1271_acx_wake_up_conditions(struct wl1271 *wl, struct wl12xx_vif *wlvif)
++int wl1271_acx_wake_up_conditions(struct wl1271 *wl, struct wl12xx_vif *wlvif,
++				  u8 wake_up_event, u8 listen_interval)
  {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-@@ -289,13 +265,15 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
- 		    addr, sdata->name);
- #endif
+ 	struct acx_wake_up_condition *wake_up;
+ 	int ret;
  
-+	if (auth) {
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
--	printk(KERN_DEBUG "TX Auth SA=%pM DA=%pM BSSID=%pM"
--	       "(auth_transaction=1)\n", sdata->vif.addr,
--	       sdata->u.ibss.bssid, addr);
-+		printk(KERN_DEBUG "TX Auth SA=%pM DA=%pM BSSID=%pM"
-+		       "(auth_transaction=1)\n", sdata->vif.addr,
-+		       sdata->u.ibss.bssid, addr);
- #endif
--	ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, NULL, 0,
--			    addr, sdata->u.ibss.bssid, NULL, 0, 0);
-+		ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, NULL, 0,
-+				    addr, sdata->u.ibss.bssid, NULL, 0, 0);
-+	}
+-	wl1271_debug(DEBUG_ACX, "acx wake up conditions");
++	wl1271_debug(DEBUG_ACX, "acx wake up conditions (wake_up_event %d listen_interval %d)",
++		     wake_up_event, listen_interval);
  
- 	sta_info_move_state(sta, IEEE80211_STA_AUTH);
- 	sta_info_move_state(sta, IEEE80211_STA_ASSOC);
-@@ -312,7 +290,7 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
- static struct sta_info *
- ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
- 		       const u8 *bssid, const u8 *addr,
--		       u32 supp_rates)
-+		       u32 supp_rates, bool auth)
- 	__acquires(RCU)
- {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-@@ -354,7 +332,42 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
- 	sta->sta.supp_rates[band] = supp_rates |
- 			ieee80211_mandatory_rates(local, band);
+ 	wake_up = kzalloc(sizeof(*wake_up), GFP_KERNEL);
+ 	if (!wake_up) {
+@@ -48,8 +50,8 @@ int wl1271_acx_wake_up_conditions(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	}
  
--	return ieee80211_ibss_finish_sta(sta);
-+	return ieee80211_ibss_finish_sta(sta, auth);
-+}
-+
-+static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
-+					struct ieee80211_mgmt *mgmt,
-+					size_t len)
-+{
-+	u16 auth_alg, auth_transaction;
-+
-+	lockdep_assert_held(&sdata->u.ibss.mtx);
-+
-+	if (len < 24 + 6)
-+		return;
-+
-+	auth_alg = le16_to_cpu(mgmt->u.auth.auth_alg);
-+	auth_transaction = le16_to_cpu(mgmt->u.auth.auth_transaction);
-+
-+	if (auth_alg != WLAN_AUTH_OPEN || auth_transaction != 1)
-+		return;
-+#ifdef CONFIG_MAC80211_IBSS_DEBUG
-+	printk(KERN_DEBUG "%s: RX Auth SA=%pM DA=%pM BSSID=%pM."
-+	       "(auth_transaction=%d)\n",
-+	       sdata->name, mgmt->sa, mgmt->da, mgmt->bssid, auth_transaction);
-+#endif
-+	sta_info_destroy_addr(sdata, mgmt->sa);
-+	ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0, false);
-+	rcu_read_unlock();
+ 	wake_up->role_id = wlvif->role_id;
+-	wake_up->wake_up_event = wl->conf.conn.wake_up_event;
+-	wake_up->listen_interval = wl->conf.conn.listen_interval;
++	wake_up->wake_up_event = wake_up_event;
++	wake_up->listen_interval = listen_interval;
+ 
+ 	ret = wl1271_cmd_configure(wl, ACX_WAKE_UP_CONDITIONS,
+ 				   wake_up, sizeof(*wake_up));
+diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+index 0749df5..a28fc04 100644
+--- a/drivers/net/wireless/wl12xx/acx.h
++++ b/drivers/net/wireless/wl12xx/acx.h
+@@ -1226,7 +1226,8 @@ enum {
+ 
+ 
+ int wl1271_acx_wake_up_conditions(struct wl1271 *wl,
+-				  struct wl12xx_vif *wlvif);
++				  struct wl12xx_vif *wlvif,
++				  u8 wake_up_event, u8 listen_interval);
+ int wl1271_acx_sleep_auth(struct wl1271 *wl, u8 sleep_auth);
+ int wl1271_acx_tx_power(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 			int power);
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index 10e5e3d..d97aad6 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -810,6 +810,19 @@ struct conf_conn_settings {
+ 	u8 listen_interval;
+ 
+ 	/*
++	 * Firmware wakeup conditions during suspend
++	 * Range: CONF_WAKE_UP_EVENT_*
++	 */
++	u8 suspend_wake_up_event;
 +
 +	/*
-+	 * IEEE 802.11 standard does not require authentication in IBSS
-+	 * networks and most implementations do not seem to use it.
-+	 * However, try to reply to authentication attempts if someone
-+	 * has actually implemented this.
++	 * Listen interval during suspend.
++	 * Currently will be in DTIMs (1-10)
++	 *
 +	 */
-+	ieee80211_send_auth(sdata, 2, WLAN_AUTH_OPEN, NULL, 0,
-+			    mgmt->sa, sdata->u.ibss.bssid, NULL, 0, 0);
- }
++	u8 suspend_listen_interval;
++
++	/*
+ 	 * Enable or disable the beacon filtering.
+ 	 *
+ 	 * Range: CONF_BCN_FILT_MODE_*
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 2bb1c24..29a00fc 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -218,6 +218,8 @@ static struct conf_drv_settings default_conf = {
+ 	.conn = {
+ 		.wake_up_event               = CONF_WAKE_UP_EVENT_DTIM,
+ 		.listen_interval             = 1,
++		.suspend_wake_up_event       = CONF_WAKE_UP_EVENT_N_DTIM,
++		.suspend_listen_interval     = 3,
+ 		.bcn_filt_mode               = CONF_BCN_FILT_MODE_ENABLED,
+ 		.bcn_filt_ie_count           = 2,
+ 		.bcn_filt_ie = {
+@@ -1561,6 +1563,35 @@ static struct notifier_block wl1271_dev_notifier = {
+ };
  
- static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
-@@ -419,7 +432,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 			} else {
- 				rcu_read_unlock();
- 				sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid,
--						mgmt->sa, supp_rates);
-+						mgmt->sa, supp_rates, true);
- 			}
- 		}
+ #ifdef CONFIG_PM
++static int wl1271_configure_suspend_sta(struct wl1271 *wl,
++					struct wl12xx_vif *wlvif)
++{
++	int ret = 0;
++
++	mutex_lock(&wl->mutex);
++
++	if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
++		goto out_unlock;
++
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out_unlock;
++
++	ret = wl1271_acx_wake_up_conditions(wl, wlvif,
++				    wl->conf.conn.suspend_wake_up_event,
++				    wl->conf.conn.suspend_listen_interval);
++
++	if (ret < 0)
++		wl1271_error("suspend: set wake up conditions failed: %d", ret);
++
++
++	wl1271_ps_elp_sleep(wl);
++
++out_unlock:
++	mutex_unlock(&wl->mutex);
++	return ret;
++
++}
  
-@@ -547,7 +560,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_sta_join_ibss(sdata, bss);
- 		supp_rates = ieee80211_sta_get_rates(local, elems, band);
- 		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
--				       supp_rates);
-+				       supp_rates, true);
- 		rcu_read_unlock();
- 	}
+ static int wl1271_configure_suspend_ap(struct wl1271 *wl,
+ 				       struct wl12xx_vif *wlvif)
+@@ -1588,6 +1619,8 @@ out_unlock:
+ static int wl1271_configure_suspend(struct wl1271 *wl,
+ 				    struct wl12xx_vif *wlvif)
+ {
++	if (wlvif->bss_type == BSS_TYPE_STA_BSS)
++		return wl1271_configure_suspend_sta(wl, wlvif);
+ 	if (wlvif->bss_type == BSS_TYPE_AP_BSS)
+ 		return wl1271_configure_suspend_ap(wl, wlvif);
+ 	return 0;
+@@ -1596,10 +1629,11 @@ static int wl1271_configure_suspend(struct wl1271 *wl,
+ static void wl1271_configure_resume(struct wl1271 *wl,
+ 				    struct wl12xx_vif *wlvif)
+ {
+-	int ret;
++	int ret = 0;
+ 	bool is_ap = wlvif->bss_type == BSS_TYPE_AP_BSS;
++	bool is_sta = wlvif->bss_type == BSS_TYPE_STA_BSS;
  
-@@ -952,7 +965,7 @@ void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
- 		list_del(&sta->list);
- 		spin_unlock_bh(&ifibss->incomplete_lock);
+-	if (!is_ap)
++	if ((!is_ap) && (!is_sta))
+ 		return;
  
--		ieee80211_ibss_finish_sta(sta);
-+		ieee80211_ibss_finish_sta(sta, true);
- 		rcu_read_unlock();
- 		spin_lock_bh(&ifibss->incomplete_lock);
- 	}
+ 	mutex_lock(&wl->mutex);
+@@ -1607,7 +1641,18 @@ static void wl1271_configure_resume(struct wl1271 *wl,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	wl1271_acx_beacon_filter_opt(wl, wlvif, false);
++	if (is_sta) {
++		ret = wl1271_acx_wake_up_conditions(wl, wlvif,
++				    wl->conf.conn.wake_up_event,
++				    wl->conf.conn.listen_interval);
++
++		if (ret < 0)
++			wl1271_error("resume: wake up conditions failed: %d",
++				     ret);
++
++	} else if (is_ap) {
++		ret = wl1271_acx_beacon_filter_opt(wl, wlvif, false);
++	}
+ 
+ 	wl1271_ps_elp_sleep(wl);
+ out:
+diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
+index e209e29..d197922 100644
+--- a/drivers/net/wireless/wl12xx/ps.c
++++ b/drivers/net/wireless/wl12xx/ps.c
+@@ -170,7 +170,9 @@ int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		wl1271_debug(DEBUG_PSM, "entering psm (mode=%d,timeout=%u)",
+ 			     mode, timeout);
+ 
+-		ret = wl1271_acx_wake_up_conditions(wl, wlvif);
++		ret = wl1271_acx_wake_up_conditions(wl, wlvif,
++					    wl->conf.conn.wake_up_event,
++					    wl->conf.conn.listen_interval);
+ 		if (ret < 0) {
+ 			wl1271_error("couldn't set wake up conditions");
+ 			return ret;
 -- 
-1.7.3.4
+1.7.6.401.g6a319
 
