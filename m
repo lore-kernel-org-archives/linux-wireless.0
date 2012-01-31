@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32147 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755227Ab2AYQWy (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:41000 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752193Ab2AaPnQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jan 2012 11:22:54 -0500
-Message-ID: <4F202C59.9020800@qca.qualcomm.com> (sfid-20120125_172257_940856_FAA9088D)
-Date: Wed, 25 Jan 2012 18:22:49 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH V2 1/6] ath6kl: Make sure to delete rx aggregation timer
- in aggr_reset_state()
-References: <1327139573-7435-1-git-send-email-vthiagar@qca.qualcomm.com> <4F1EA5F0.50908@qca.qualcomm.com> <20120125160320.GA4888@chvasanth-lnx>
-In-Reply-To: <20120125160320.GA4888@chvasanth-lnx>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Tue, 31 Jan 2012 10:43:16 -0500
+Received: by vcge1 with SMTP id e1so116937vcg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 07:43:15 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Masanari Iida <standby24x7@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH] rtlwifi: Fix typo in dm.c
+Date: Tue, 31 Jan 2012 09:42:58 -0600
+Message-Id: <1328024578-7594-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120131_164324_580900_58828380)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/25/2012 06:03 PM, Vasanthakumar Thiagarajan wrote:
-> On Tue, Jan 24, 2012 at 02:37:04PM +0200, Kalle Valo wrote:
->> On 01/21/2012 11:52 AM, Vasanthakumar Thiagarajan wrote:
->>> The timer which is used to flush rx aggregation frames needs to
->>> be disabled when resetting the aggregation state. This is found
->>> in code review.
->>>
->>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
->>
->> Thanks, all six patches applied.
-> 
-> I'm really sorry that this patch set introduces a crash in accessing
-> invalid pointer through vif->aggr_cntxt. I'll send the next version
-> fixing this.
+From: Masanari Iida <standby24x7@gmail.com>
 
-Sorry, it's too late as I have already applied the patches. You need to
-create a new patch on top of ath6kl.git which fixes the issue.
+Correct a spelling "disconnet" to "disconnect" in
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c
 
-Kalle
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+index 181ed6f..9fda1af 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+@@ -294,7 +294,7 @@ static void rtl92d_dm_find_minimum_rssi(struct ieee80211_hw *hw)
+ 		de_digtable.min_undecorated_pwdb_for_dm =
+ 		    rtlpriv->dm.UNDEC_SM_PWDB;
+ 		RT_TRACE(rtlpriv, COMP_BB_POWERSAVING, DBG_LOUD,
+-			 "AP Ext Port or disconnet PWDB = 0x%x\n",
++			 "AP Ext Port or disconnect PWDB = 0x%x\n",
+ 			 de_digtable.min_undecorated_pwdb_for_dm);
+ 	}
+ 
+-- 
+1.7.7
+
