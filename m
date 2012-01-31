@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:51016 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750986Ab2AOIjD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 Jan 2012 03:39:03 -0500
-From: Joe Perches <joe@perches.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 0/8] brcm80211: Logging cleanups
-Date: Sun, 15 Jan 2012 00:38:37 -0800
-Message-Id: <cover.1326616556.git.joe@perches.com> (sfid-20120115_094020_776393_7FDD332B)
+Received: from he.sipsolutions.net ([78.46.109.217]:44453 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105Ab2AaFms (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jan 2012 00:42:48 -0500
+Message-ID: <4F277F29.2080205@sipsolutions.net> (sfid-20120131_064250_619113_D6122069)
+Date: Mon, 30 Jan 2012 21:42:01 -0800
+From: Johannes Berg <johannes@sipsolutions.net>
+MIME-Version: 1.0
+To: Victor Goldenshtein <victorg@ti.com>
+CC: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name
+Subject: Re: [RFC 2/9] mac80211: add radar detection command/event
+References: <1327581484-22047-1-git-send-email-victorg@ti.com> <1327581484-22047-3-git-send-email-victorg@ti.com>
+In-Reply-To: <1327581484-22047-3-git-send-email-victorg@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches (8):
-  brcm80211: Use normal DEBUG define
-  brcmfmac: Convert printk(KERN_DEBUG to pr_debug
-  brcm80211: Add and use brcmX_dbg_dump_hex
-  brcmfmac: Remove useless #ifdef DEBUG
-  brcm80211: Convert printk(KERN_DEBUG to pr_debug
-  brcm80211: Use brcmu_dbg_hex_dump
-  brcm80211: Use pr_fmt and pr_<level>
-  brcmfmac: Trivial typo of "couldn" to "could" fix
+On 1/26/2012 4:37 AM, Victor Goldenshtein wrote:
+> +	int (*hw_dfs_start_radar_detection)(struct ieee80211_hw *hw,
+> +					    struct ieee80211_vif *vif);
 
- drivers/net/wireless/brcm80211/Makefile            |    2 +-
- drivers/net/wireless/brcm80211/brcmfmac/bcmsdh.c   |    2 +
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    3 +
- drivers/net/wireless/brcm80211/brcmfmac/dhd.h      |    4 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_cdc.c  |    2 +
- .../net/wireless/brcm80211/brcmfmac/dhd_common.c   |   17 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_dbg.h  |   20 ++-
- .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |    6 +-
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |  216 ++++++++------------
- .../net/wireless/brcm80211/brcmfmac/sdio_chip.c    |    2 +
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    6 +-
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.h  |   36 ++--
- drivers/net/wireless/brcm80211/brcmsmac/aiutils.c  |    4 +-
- drivers/net/wireless/brcm80211/brcmsmac/ampdu.c    |    2 +-
- drivers/net/wireless/brcm80211/brcmsmac/dma.c      |    8 +-
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |   24 +-
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.h  |    2 +-
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |  194 ++++++++----------
- drivers/net/wireless/brcm80211/brcmsmac/main.h     |    6 +-
- .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |    5 +-
- drivers/net/wireless/brcm80211/brcmutil/utils.c    |   26 ++-
- .../net/wireless/brcm80211/include/brcmu_utils.h   |   15 ++-
- 22 files changed, 298 insertions(+), 304 deletions(-)
+This name is getting ridiculously long -- no need for the hw_ prefix either.
 
--- 
-1.7.8.111.gad25c.dirty
+> +void ieee80211_radar_detected_notify(struct ieee80211_vif *vif,
+> +				     u16 freq, gfp_t gfp);
 
+Btw, why not a channel pointer? Most APIs use that.
+
+> +static int ieee80211_dfs_start_radar_detection(struct wiphy *wiphy,
+> +					       struct net_device *dev)
+> +{
+> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+> +	struct ieee80211_local *local = sdata->local;
+> +	int ret = -ENOENT;
+
+??? No need for a default value.
+
+> +	if (!local->ops->hw_dfs_start_radar_detection)
+> +		return -EOPNOTSUPP;
+> +
+> +	mutex_lock(&local->mtx);
+> +	ret = drv_dfs_en_radar_detection(local, sdata);
+> +	mutex_unlock(&local->mtx);
+
+Why even lock here? That's not protecting anything.
+
+> +static inline int drv_dfs_en_radar_detection(struct ieee80211_local *local,
+> +					 struct ieee80211_sub_if_data *sdata)
+> +{
+> +	int ret;
+> +
+> +	might_sleep();
+> +
+> +	trace_drv_dfs_en_radar_detection(local, sdata);
+> +	ret = local->ops->hw_dfs_start_radar_detection(&local->hw,&sdata->vif);
+
+trace_drv_ret_int()
+
+johannes
