@@ -1,44 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:36739 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752056Ab2AKM1m (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44516 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752050Ab2AaFpv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 Jan 2012 07:27:42 -0500
-Message-ID: <4F0D8036.8030306@qca.qualcomm.com> (sfid-20120111_132745_819767_6500C1AC)
-Date: Wed, 11 Jan 2012 14:27:34 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Tue, 31 Jan 2012 00:45:51 -0500
+Message-ID: <4F277FE3.8090006@sipsolutions.net> (sfid-20120131_064555_022926_F8F0D0F1)
+Date: Mon, 30 Jan 2012 21:45:07 -0800
+From: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-To: Thirumalai <tpachamu@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 2/4] ath6kl: Introduce new queue for uAPSD.
-References: <1326095120-1603-1-git-send-email-tpachamu@qca.qualcomm.com>
-In-Reply-To: <1326095120-1603-1-git-send-email-tpachamu@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: Victor Goldenshtein <victorg@ti.com>
+CC: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name
+Subject: Re: [RFC 4/9] mac80211: add ability to enable TX on op-channel
+References: <1327581484-22047-1-git-send-email-victorg@ti.com> <1327581484-22047-5-git-send-email-victorg@ti.com>
+In-Reply-To: <1327581484-22047-5-git-send-email-victorg@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/2012 09:45 AM, Thirumalai wrote:
-> Add apsd_info in necessary places to indicate which
-> AC's uAPSD is enabled.
-> 
-> A bit is added in the wmi header (bit 4 of info3)
-> to specify uapsd trigger in rx direction (target to host)
-> and end of service period in tx direction (host to target)
-> 
-> Signed-off-by: Thirumalai <tpachamu@qca.qualcomm.com>
+On 1/26/2012 4:37 AM, Victor Goldenshtein wrote:
+> Prior starting tx on DFS channels, the DFS master
+> device shall perform a Channel Availability Check
+> to ensure that there is no radar interference on
+> those channels. Once CAC done, the tx can be
+> enabled with ieee80211_dfs_en_tx().
 
-[...]
+How do you expect this to be used by the device? It seems that it should 
+have the side effect of lifting some TX-prohibited flag instead?
 
-> +#define WMI_DATA_HDR_TRIGGER_MASK      0x1
-> +#define WMI_DATA_HDR_TRIGGER_SHIFT     4
-> +
-> +#define WMI_DATA_HDR_EOSP_MASK      WMI_DATA_HDR_TRIGGER_MASK
-> +#define WMI_DATA_HDR_EOSP_SHIFT     WMI_DATA_HDR_TRIGGER_SHIFT
-
-This looks a bit odd, I can't see why you want to use trigger
-definitions for eosp. Even if the values are same I don't see the
-benefit for using trigger values for eosp. Is there a particular reason
-for this?
-
-Kalle
+johannes
