@@ -1,181 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from latitanza.investici.org ([82.94.249.234]:42174 "EHLO
-	latitanza.investici.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756261Ab2AQXLz (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:48217 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754639Ab2AaPvT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 Jan 2012 18:11:55 -0500
-From: Antonio Quartulli <ordex@autistici.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Antonio Quartulli <ordex@autistici.org>
-Subject: [PATCHv5 2/2] mac80211: in IBSS use the Auth frame to trigger STA reinsertion
-Date: Wed, 18 Jan 2012 00:10:44 +0100
-Message-Id: <1326841844-6923-2-git-send-email-ordex@autistici.org> (sfid-20120118_001159_080784_9C74286C)
-In-Reply-To: <1326841844-6923-1-git-send-email-ordex@autistici.org>
-References: <1326841844-6923-1-git-send-email-ordex@autistici.org>
+	Tue, 31 Jan 2012 10:51:19 -0500
+Received: by mail-ww0-f44.google.com with SMTP id dt10so118881wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 07:51:19 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/4] wl12xx: add TX_HW_ATTR_HOST_ENCRYPT flag
+Date: Tue, 31 Jan 2012 17:54:42 +0200
+Message-Id: <1328025283-22888-3-git-send-email-eliad@wizery.com> (sfid-20120131_165124_530917_88177AA3)
+In-Reply-To: <1328025283-22888-1-git-send-email-eliad@wizery.com>
+References: <1328025283-22888-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of a node re-joining the cell the sta_info structure belonging to it is
-first destroyed and then reinserted. In this way its internal state is reset.
+In WEP shared authentication, we encrypt the auth frame
+in the host, and we want the fw to pass it as-is.
+Use the TX_HW_ATTR_HOST_ENCRYPT flag in order to indicate
+it to the fw.
 
-The joining operation is recognised thank the Auth frame being received.
-
-This operation is helpful in case of a node being rebooted that is joining the
-ad-hoc cell again, before its purge timeout on other nodes expires.
-
-Signed-off-by: Antonio Quartulli <ordex@autistici.org>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- net/mac80211/ibss.c |   85 +++++++++++++++++++++++++++++---------------------
- 1 files changed, 49 insertions(+), 36 deletions(-)
+depends on the "wl12xx: update fw api" patchset
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 1b6e9a8..0a4094f 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -36,31 +36,6 @@
- #define IEEE80211_IBSS_MAX_STA_ENTRIES 128
+ drivers/net/wireless/wl12xx/tx.c |   17 +++++++++++++----
+ drivers/net/wireless/wl12xx/tx.h |    1 +
+ 2 files changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index ee313e7..1f5cc2a 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -255,16 +255,20 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 	int aligned_len, ac, rate_idx;
+ 	s64 hosttime;
+ 	u16 tx_attr = 0;
++	__le16 frame_control;
++	struct ieee80211_hdr *hdr;
++	u8 *frame_start;
+ 	bool is_dummy;
  
+ 	desc = (struct wl1271_tx_hw_descr *) skb->data;
++	frame_start = (u8 *)(desc + 1);
++	hdr = (struct ieee80211_hdr *)(frame_start + extra);
++	frame_control = hdr->frame_control;
  
--static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
--					struct ieee80211_mgmt *mgmt,
--					size_t len)
--{
--	u16 auth_alg, auth_transaction;
--
--	lockdep_assert_held(&sdata->u.ibss.mtx);
--
--	if (len < 24 + 6)
--		return;
--
--	auth_alg = le16_to_cpu(mgmt->u.auth.auth_alg);
--	auth_transaction = le16_to_cpu(mgmt->u.auth.auth_transaction);
--
--	/*
--	 * IEEE 802.11 standard does not require authentication in IBSS
--	 * networks and most implementations do not seem to use it.
--	 * However, try to reply to authentication attempts if someone
--	 * has actually implemented this.
--	 */
--	if (auth_alg == WLAN_AUTH_OPEN && auth_transaction == 1)
--		ieee80211_send_auth(sdata, 2, WLAN_AUTH_OPEN, NULL, 0, mgmt->sa,
--				    sdata->u.ibss.bssid, NULL, 0, 0);
--}
--
- static void __ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 				      const u8 *bssid, const int beacon_int,
- 				      struct ieee80211_channel *chan,
-@@ -275,7 +250,8 @@ static void ieee80211_sta_join_ibss(struct ieee80211_sub_if_data *sdata,
- 				  cbss->tsf);
- }
- 
--static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
-+static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta,
-+						  bool auth)
- 	__acquires(RCU)
- {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-@@ -298,20 +274,22 @@ static struct sta_info *ieee80211_ibss_finish_sta(struct sta_info *sta)
- 	/* If it fails, maybe we raced another insertion? */
- 	if (sta_info_insert_rcu(sta))
- 		return sta_info_get(sdata, addr);
-+	if (auth) {
- #ifdef CONFIG_MAC80211_IBSS_DEBUG
--	printk(KERN_DEBUG "TX Auth SA=%pM DA=%pM BSSID=%pM"
--	       "(auth_transaction=1)\n", sdata->vif.addr,
--	       sdata->u.ibss.bssid, addr);
-+		printk(KERN_DEBUG "TX Auth SA=%pM DA=%pM BSSID=%pM"
-+		       "(auth_transaction=1)\n", sdata->vif.addr,
-+		       sdata->u.ibss.bssid, addr);
- #endif
--	ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, NULL, 0,
--			    addr, sdata->u.ibss.bssid, NULL, 0, 0);
-+		ieee80211_send_auth(sdata, 1, WLAN_AUTH_OPEN, NULL, 0,
-+				    addr, sdata->u.ibss.bssid, NULL, 0, 0);
-+	}
- 	return sta;
- }
- 
- static struct sta_info *
- ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
- 		       const u8 *bssid, const u8 *addr,
--		       u32 supp_rates)
-+		       u32 supp_rates, bool auth)
- 	__acquires(RCU)
- {
- 	struct ieee80211_if_ibss *ifibss = &sdata->u.ibss;
-@@ -353,7 +331,42 @@ ieee80211_ibss_add_sta(struct ieee80211_sub_if_data *sdata,
- 	sta->sta.supp_rates[band] = supp_rates |
- 			ieee80211_mandatory_rates(local, band);
- 
--	return ieee80211_ibss_finish_sta(sta);
-+	return ieee80211_ibss_finish_sta(sta, auth);
-+}
-+
-+static void ieee80211_rx_mgmt_auth_ibss(struct ieee80211_sub_if_data *sdata,
-+					struct ieee80211_mgmt *mgmt,
-+					size_t len)
-+{
-+	u16 auth_alg, auth_transaction;
-+
-+	lockdep_assert_held(&sdata->u.ibss.mtx);
-+
-+	if (len < 24 + 6)
-+		return;
-+
-+	auth_alg = le16_to_cpu(mgmt->u.auth.auth_alg);
-+	auth_transaction = le16_to_cpu(mgmt->u.auth.auth_transaction);
-+
-+	if (auth_alg != WLAN_AUTH_OPEN || auth_transaction != 1)
-+		return;
-+#ifdef CONFIG_MAC80211_IBSS_DEBUG
-+	printk(KERN_DEBUG "%s: RX Auth SA=%pM DA=%pM BSSID=%pM."
-+	       "(auth_transaction=%d)\n",
-+	       sdata->name, mgmt->sa, mgmt->da, mgmt->bssid, auth_transaction);
-+#endif
-+	sta_info_destroy_addr(sdata, mgmt->sa);
-+	ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa, 0, false);
-+	rcu_read_unlock();
-+
-+	/*
-+	 * IEEE 802.11 standard does not require authentication in IBSS
-+	 * networks and most implementations do not seem to use it.
-+	 * However, try to reply to authentication attempts if someone
-+	 * has actually implemented this.
-+	 */
-+	ieee80211_send_auth(sdata, 2, WLAN_AUTH_OPEN, NULL, 0,
-+			    mgmt->sa, sdata->u.ibss.bssid, NULL, 0, 0);
- }
- 
- static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
-@@ -418,7 +431,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 			} else {
- 				rcu_read_unlock();
- 				sta = ieee80211_ibss_add_sta(sdata, mgmt->bssid,
--						mgmt->sa, supp_rates);
-+						mgmt->sa, supp_rates, true);
- 			}
- 		}
- 
-@@ -546,7 +559,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_sta_join_ibss(sdata, bss);
- 		supp_rates = ieee80211_sta_get_rates(local, elems, band);
- 		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
--				       supp_rates);
-+				       supp_rates, true);
- 		rcu_read_unlock();
+ 	/* relocate space for security header */
+ 	if (extra) {
+-		void *framestart = skb->data + sizeof(*desc);
+-		u16 fc = *(u16 *)(framestart + extra);
+-		int hdrlen = ieee80211_hdrlen(cpu_to_le16(fc));
+-		memmove(framestart, framestart + extra, hdrlen);
++		int hdrlen = ieee80211_hdrlen(frame_control);
++		memmove(frame_start, hdr, hdrlen);
  	}
  
-@@ -951,7 +964,7 @@ void ieee80211_ibss_work(struct ieee80211_sub_if_data *sdata)
- 		list_del(&sta->list);
- 		spin_unlock_bh(&ifibss->incomplete_lock);
- 
--		ieee80211_ibss_finish_sta(sta);
-+		ieee80211_ibss_finish_sta(sta, true);
- 		rcu_read_unlock();
- 		spin_lock_bh(&ifibss->incomplete_lock);
+ 	/* configure packet life time */
+@@ -353,6 +357,11 @@ static void wl1271_tx_fill_hdr(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 			     desc->wl127x_mem.total_mem_blocks);
  	}
+ 
++	/* for WEP shared auth - no fw encryption is needed */
++	if (ieee80211_is_auth(frame_control) &&
++	    ieee80211_has_protected(frame_control))
++		tx_attr |= TX_HW_ATTR_HOST_ENCRYPT;
++
+ 	desc->tx_attr = cpu_to_le16(tx_attr);
+ }
+ 
+diff --git a/drivers/net/wireless/wl12xx/tx.h b/drivers/net/wireless/wl12xx/tx.h
+index 2dbb24e..7ceb3ce 100644
+--- a/drivers/net/wireless/wl12xx/tx.h
++++ b/drivers/net/wireless/wl12xx/tx.h
+@@ -39,6 +39,7 @@
+ #define TX_HW_ATTR_LAST_WORD_PAD         (BIT(10) | BIT(11))
+ #define TX_HW_ATTR_TX_CMPLT_REQ          BIT(12)
+ #define TX_HW_ATTR_TX_DUMMY_REQ          BIT(13)
++#define TX_HW_ATTR_HOST_ENCRYPT          BIT(14)
+ 
+ #define TX_HW_ATTR_OFST_SAVE_RETRIES     0
+ #define TX_HW_ATTR_OFST_HEADER_PAD       1
 -- 
-1.7.3.4
+1.7.6.401.g6a319
 
