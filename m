@@ -1,43 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1033 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752159Ab2A0Lhn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jan 2012 06:37:43 -0500
-Message-ID: <4F228C76.2010109@broadcom.com> (sfid-20120127_123808_343384_F9554CAA)
-Date: Fri, 27 Jan 2012 12:37:26 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:42462 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752619Ab2AaWwD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jan 2012 17:52:03 -0500
+Received: by obcva7 with SMTP id va7so527847obc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 14:52:03 -0800 (PST)
 MIME-Version: 1.0
-To: "Milan Bouchet-Valat" <nalimilan@club.fr>
-cc: "Milan Bouchet-Valat" <nalimilan@club-internet.fr>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: BCM4313 keeps disconnecting with brcmsmac and multiple APs
-References: <22905678.140637.1327401110095.JavaMail.www@wsfrf1232>
- <4F227784.10309@broadcom.com> <1327660003.21888.14.camel@milan>
-In-Reply-To: <1327660003.21888.14.camel@milan>
-Content-Type: text/plain;
- charset=utf-8
+In-Reply-To: <1327618544-23163-1-git-send-email-hauke@hauke-m.de>
+References: <1327618544-23163-1-git-send-email-hauke@hauke-m.de>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 31 Jan 2012 14:51:43 -0800
+Message-ID: <CAB=NE6VpEuBT8tzGGTz0DKCzSgxJHW3xwQuOchGLzWj2uhZ2uw@mail.gmail.com> (sfid-20120131_235208_475586_F05B35AD)
+Subject: Re: [PATCH] compat-wireless: fix some config options
+To: Hauke Mehrtens <hauke@hauke-m.de>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/27/2012 11:26 AM, Milan Bouchet-Valat wrote:
-> Le vendredi 27 janvier 2012 à 11:08 +0100, Arend van Spriel a écrit :
->> Another thing to consider. I notice that you have a bluetooth device in
->> there as well. Can you disable that (if possible) and try again.
-> I'll try that, but sadly not before Tuesday as I'm not in the right
-> place ATM.
+On Thu, Jan 26, 2012 at 2:55 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> Adds some missing config options interceded in the last time and remove
+> some old now unused config options.
+>
+> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+> ---
+>  config.mk |    8 +++++---
+>  1 files changed, 5 insertions(+), 3 deletions(-)
+>
+> diff --git a/config.mk b/config.mk
+> index 4d2ad5c..9433ce9 100644
+> --- a/config.mk
+> +++ b/config.mk
+> @@ -281,6 +281,8 @@ CONFIG_ATH9K_COMMON=m
+>  # for long range considerations.
+>  CONFIG_ATH9K_RATE_CONTROL=y
+>
+> +CONFIG_ATH9K_BTCOEX_SUPPORT=y
 
-Ok. To disable bluetooth you could use the rfkill utility:
+Senthil, just a heads up. Given that the default in Kconfig is "y" I
+will apply this patch. Not sure if we should also apply it to the
+stable compat-wireless series.
 
-$ rfkill block bluetooth
-
->> Does your AP have DFS enabled?
-> I'll ask my IT staff about that. Or is there a way to get this
-> information from the logs or iwconfig?
-> 
-
-I actually did mean whether the AP has automatic channel selection. I am
-not sure whether it is advertised in the beacons.
-
-Gr. AvS
-
+  Luis
