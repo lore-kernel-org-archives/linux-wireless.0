@@ -1,36 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52073 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754612Ab2AYQDo (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:41413 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754495Ab2AaOks (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 Jan 2012 11:03:44 -0500
-Date: Wed, 25 Jan 2012 21:33:22 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH V2 1/6] ath6kl: Make sure to delete rx aggregation timer
- in aggr_reset_state()
-Message-ID: <20120125160320.GA4888@chvasanth-lnx> (sfid-20120125_170348_052482_AF9C35E6)
-References: <1327139573-7435-1-git-send-email-vthiagar@qca.qualcomm.com>
- <4F1EA5F0.50908@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4F1EA5F0.50908@qca.qualcomm.com>
+	Tue, 31 Jan 2012 09:40:48 -0500
+Received: by wgbdt10 with SMTP id dt10so26775wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 06:40:47 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 3/7] wl12xx: add forced_ps mode
+Date: Tue, 31 Jan 2012 16:44:04 +0200
+Message-Id: <1328021048-8944-4-git-send-email-eliad@wizery.com> (sfid-20120131_154055_621865_B2903EB4)
+In-Reply-To: <1328021048-8944-1-git-send-email-eliad@wizery.com>
+References: <1328021048-8944-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 24, 2012 at 02:37:04PM +0200, Kalle Valo wrote:
-> On 01/21/2012 11:52 AM, Vasanthakumar Thiagarajan wrote:
-> > The timer which is used to flush rx aggregation frames needs to
-> > be disabled when resetting the aggregation state. This is found
-> > in code review.
-> > 
-> > Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-> 
-> Thanks, all six patches applied.
+From: Eyal Shapira <eyal@wizery.com>
 
-I'm really sorry that this patch set introduces a crash in accessing
-invalid pointer through vif->aggr_cntxt. I'll send the next version
-fixing this.
+For certain WiFi certification tests forcing PS
+is necessary. Since DPS is now enabled in the FW
+and this can't be achieved by using netlatency
+this required a new config option.
 
-Vasanth
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/conf.h    |    6 ++++++
+ drivers/net/wireless/wl12xx/debugfs.c |    2 +-
+ drivers/net/wireless/wl12xx/main.c    |   25 +++++++++++++++++++------
+ drivers/net/wireless/wl12xx/ps.c      |    8 ++++----
+ drivers/net/wireless/wl12xx/wl12xx.h  |    2 +-
+ 5 files changed, 31 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index d97aad6..f29fbfd 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -934,6 +934,12 @@ struct conf_conn_settings {
+ 	u16 dynamic_ps_timeout;
+ 
+ 	/*
++	 * Specifies whether dynamic PS should be disabled and PSM forced.
++	 * This is required for certain WiFi certification tests.
++	 */
++	u8 forced_ps;
++
++	/*
+ 	 *
+ 	 * Specifies the interval of the connection keep-alive null-func
+ 	 * frame in ms.
+diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+index 15353fa..02da445 100644
+--- a/drivers/net/wireless/wl12xx/debugfs.c
++++ b/drivers/net/wireless/wl12xx/debugfs.c
+@@ -358,7 +358,7 @@ static ssize_t dynamic_ps_timeout_write(struct file *file,
+ 	 */
+ 
+ 	wl12xx_for_each_wlvif_sta(wl, wlvif) {
+-		if (test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags))
++		if (test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags))
+ 			wl1271_ps_set_mode(wl, wlvif, STATION_AUTO_PS_MODE);
+ 	}
+ 
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 29a00fc..f2960df 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -244,6 +244,7 @@ static struct conf_drv_settings default_conf = {
+ 		.psm_exit_retries            = 16,
+ 		.psm_entry_nullfunc_retries  = 3,
+ 		.dynamic_ps_timeout          = 100,
++		.forced_ps                   = false,
+ 		.keep_alive_interval         = 55000,
+ 		.max_listen_interval         = 20,
+ 	},
+@@ -2481,17 +2482,29 @@ static int wl12xx_config_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 
+ 		if ((conf->flags & IEEE80211_CONF_PS) &&
+ 		    test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags) &&
+-		    !test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags)) {
++		    !test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags)) {
+ 
+-			wl1271_debug(DEBUG_PSM, "auto ps enabled");
++			int ps_mode;
++			char *ps_mode_str;
++
++			if (wl->conf.conn.forced_ps) {
++				ps_mode = STATION_POWER_SAVE_MODE;
++				ps_mode_str = "forced";
++			} else {
++				ps_mode = STATION_AUTO_PS_MODE;
++				ps_mode_str = "auto";
++			}
++
++			wl1271_debug(DEBUG_PSM, "%s ps enabled", ps_mode_str);
++
++			ret = wl1271_ps_set_mode(wl, wlvif, ps_mode);
+ 
+-			ret = wl1271_ps_set_mode(wl, wlvif,
+-						 STATION_AUTO_PS_MODE);
+ 			if (ret < 0)
+-				wl1271_warning("enter auto ps failed %d", ret);
++				wl1271_warning("enter %s ps failed %d",
++					       ps_mode_str, ret);
+ 
+ 		} else if (!(conf->flags & IEEE80211_CONF_PS) &&
+-			   test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags)) {
++			   test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags)) {
+ 
+ 			wl1271_debug(DEBUG_PSM, "auto ps disabled");
+ 
+diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
+index d197922..fa993c2 100644
+--- a/drivers/net/wireless/wl12xx/ps.c
++++ b/drivers/net/wireless/wl12xx/ps.c
+@@ -56,7 +56,7 @@ void wl1271_elp_work(struct work_struct *work)
+ 		if (wlvif->bss_type == BSS_TYPE_AP_BSS)
+ 			goto out;
+ 
+-		if (!test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags) &&
++		if (!test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags) &&
+ 		    test_bit(WLVIF_FLAG_IN_USE, &wlvif->flags))
+ 			goto out;
+ 	}
+@@ -84,7 +84,7 @@ void wl1271_ps_elp_sleep(struct wl1271 *wl)
+ 		if (wlvif->bss_type == BSS_TYPE_AP_BSS)
+ 			return;
+ 
+-		if (!test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags) &&
++		if (!test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags) &&
+ 		    test_bit(WLVIF_FLAG_IN_USE, &wlvif->flags))
+ 			return;
+ 	}
+@@ -182,7 +182,7 @@ int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		if (ret < 0)
+ 			return ret;
+ 
+-		set_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags);
++		set_bit(WLVIF_FLAG_IN_PS, &wlvif->flags);
+ 
+ 		/* enable beacon early termination. Not relevant for 5GHz */
+ 		if (wlvif->band == IEEE80211_BAND_2GHZ) {
+@@ -205,7 +205,7 @@ int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		if (ret < 0)
+ 			return ret;
+ 
+-		clear_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags);
++		clear_bit(WLVIF_FLAG_IN_PS, &wlvif->flags);
+ 		break;
+ 	case STATION_POWER_SAVE_MODE:
+ 	default:
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 9cc7051..1463341 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -254,7 +254,7 @@ enum wl12xx_vif_flags {
+ 	WLVIF_FLAG_STA_ASSOCIATED,
+ 	WLVIF_FLAG_IBSS_JOINED,
+ 	WLVIF_FLAG_AP_STARTED,
+-	WLVIF_FLAG_IN_AUTO_PS,
++	WLVIF_FLAG_IN_PS,
+ 	WLVIF_FLAG_STA_STATE_SENT,
+ 	WLVIF_FLAG_RX_STREAMING_STARTED,
+ 	WLVIF_FLAG_PSPOLL_FAILURE,
+-- 
+1.7.6.401.g6a319
+
