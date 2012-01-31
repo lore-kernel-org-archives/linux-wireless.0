@@ -1,35 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from h118.nextmail.ru ([194.67.36.118]:39697 "EHLO h118.nextmail.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755502Ab2AIHkR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 02:40:17 -0500
-To: =?koi8-r?B?TW9oYW1tZWQgU2hhZmk=?= <shafi.wireless@gmail.com>
-From: =?koi8-r?B?TVI=?= <g7af0ec1e3ea1e7b1@nextmail.ru>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	"=?koi8-r?B?UmFqa3VtYXIgTWFub2hhcmFu?=" <rmanohar@qca.qualcomm.com>
-Subject: =?koi8-r?B?UmU6IGF0aDlrIGNyYXNoIDMuMi1yYzc=?=
-Date: Mon, 09 Jan 2012 11:40:14 +0400
-Message-ID: <NEXT-4f0a99de7f4ef4.35302262@nextmail.ru> (sfid-20120109_084022_046513_B9B4DA4D)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from he.sipsolutions.net ([78.46.109.217]:44505 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751071Ab2AaFoR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jan 2012 00:44:17 -0500
+Message-ID: <4F277F85.1090901@sipsolutions.net> (sfid-20120131_064420_942073_C26F10E6)
+Date: Mon, 30 Jan 2012 21:43:33 -0800
+From: Johannes Berg <johannes@sipsolutions.net>
+MIME-Version: 1.0
+To: Victor Goldenshtein <victorg@ti.com>
+CC: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name
+Subject: Re: [RFC 3/9] nl80211/cfg80211: add ability to enable TX on op-channel
+References: <1327581484-22047-1-git-send-email-victorg@ti.com> <1327581484-22047-4-git-send-email-victorg@ti.com>
+In-Reply-To: <1327581484-22047-4-git-send-email-victorg@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- >> So, I am building 3.2 with two patches: over/under-flow catcher (pity
- >that
- >> it seems to be on a multiple-times-per-second codepath and just leaving
- >the
- > > checks there for everyone is suboptimal) and allegedely proper fix. Both
- > > applied OK with a small offset.
- > 
- > as per our assumption, we should not see those over/underflow errors,
- > with the patch
- > above mentioned. please let us know if you hit upon this warnings,
- > even after the proper fix.
+On 1/26/2012 4:37 AM, Victor Goldenshtein wrote:
+> The dfs master device should monitor radar channels
+> for potential radar interference for a minimum of
+> CAC (channel availability check) time, during this
+> period no tx can occur. If no radar interference
+> is detected the dfs master may initiate the tx with
+> new NL80211_CMD_DFS_ENABLE_TX command.
 
-In my experience (and as I understand the situation) if garbage is writen to 
-the "chan", it is caught by the check and device is dead-until-reboot anyway. 
-On 3.0, even without checks device was dead-until-reboot, but no crash 
-happened. All these checks do is converting "panic" to "WiFi broken" for 3.2.
+So do we think that no safeguards here at all are acceptable? Not even 
+checking that radar detection was enabled, CAC time expired, etc.?
 
-
+johannes
