@@ -1,53 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:57628 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752562Ab2A0KDE (ORCPT
+Received: from i118-21-156-233.s30.a048.ap.plala.or.jp ([118.21.156.233]:36670
+	"EHLO rinabert.homeip.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754424Ab2AaOYR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 Jan 2012 05:03:04 -0500
-Received: by wics10 with SMTP id s10so1071014wic.19
-        for <linux-wireless@vger.kernel.org>; Fri, 27 Jan 2012 02:03:02 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH 1/3] mac80211: Fix incorrect num_sta_ps decrement in __sta_info_destroy
-Date: Fri, 27 Jan 2012 11:02:51 +0100
-Message-Id: <1327658573-477-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20120127_110309_519457_58B39473)
+	Tue, 31 Jan 2012 09:24:17 -0500
+From: Masanari Iida <standby24x7@gmail.com>
+To: samuel.ortiz@intel.com, ilw@linux.intel.com,
+	linux-wireless@vger.kernel.org
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	standby24x7@gmail.com
+Subject: [PATCH] [trivial] iwmc3200wifi: Fix typo in trace.h
+Date: Tue, 31 Jan 2012 23:23:45 +0900
+Message-Id: <1328019825-2067-1-git-send-email-standby24x7@gmail.com> (sfid-20120131_152433_194717_33B4816F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When WLAN_STA_PS_DRIVER is set by ieee80211_sta_block_awake the
-num_sta_ps counter is not incremented. Hence, we shouldn't decrement
-it in __sta_info_destroy if only WLAN_STA_PS_DRIVER is set. This
-could result in an incorrect num_sta_ps counter leading to strange side
-effects with associated powersaving clients.
+Correct spelling "embeded" to "embedded" in
+drivers/net/wireless/iwmc3200wifi/trace.h
 
-Fix this by only decrementing num_sta_ps when WLAN_STA_PS_STA was set
-before.
-
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
 ---
- net/mac80211/sta_info.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwmc3200wifi/trace.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 5b4ab21..70a0de3 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -750,12 +750,10 @@ static int __must_check __sta_info_destroy(struct sta_info *sta)
+diff --git a/drivers/net/wireless/iwmc3200wifi/trace.h b/drivers/net/wireless/iwmc3200wifi/trace.h
+index abb4805..f5f7070 100644
+--- a/drivers/net/wireless/iwmc3200wifi/trace.h
++++ b/drivers/net/wireless/iwmc3200wifi/trace.h
+@@ -144,7 +144,7 @@ TRACE_EVENT(iwm_tx_packets,
  
- 	sta->dead = true;
- 
--	if (test_sta_flag(sta, WLAN_STA_PS_STA) ||
--	    test_sta_flag(sta, WLAN_STA_PS_DRIVER)) {
-+	if (test_sta_flag(sta, WLAN_STA_PS_STA)) {
- 		BUG_ON(!sdata->bss);
- 
- 		clear_sta_flag(sta, WLAN_STA_PS_STA);
--		clear_sta_flag(sta, WLAN_STA_PS_DRIVER);
- 
- 		atomic_dec(&sdata->bss->num_sta_ps);
- 		sta_info_recalc_tim(sta);
+ 	TP_printk(
+ 		IWM_PR_FMT " Tx %spacket: eot %d, seq 0x%x, sta_color 0x%x, "
+-		"ra_tid 0x%x, credit_group 0x%x, embeded_packets %d, %d bytes",
++		"ra_tid 0x%x, credit_group 0x%x, embedded_packets %d, %d bytes",
+ 		IWM_PR_ARG, !__entry->eot ? "concatenated " : "",
+ 		__entry->eot, __entry->seq, __entry->color, __entry->ra_tid,
+ 		__entry->credit_group, __entry->npkt, __entry->bytes
 -- 
-1.7.7
+1.7.6.5
 
