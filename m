@@ -1,36 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:3714 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752805Ab2AMRZZ (ORCPT
+Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:49388 "EHLO
+	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752942Ab2AaT0a convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 Jan 2012 12:25:25 -0500
-Cc: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Message-ID: <4F1068F8.8040800@qca.qualcomm.com> (sfid-20120113_182529_498307_95A8D7C0)
-Date: Fri, 13 Jan 2012 19:25:12 +0200
+	Tue, 31 Jan 2012 14:26:30 -0500
+Subject: [PATCH] ath6kl: fix compiler warning in ath6kl_init_hw_params()
+To: kvalo@qca.qualcomm.com
 From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Tue, 31 Jan 2012 21:26:22 +0200
+Message-ID: <20120131192622.12404.74061.stgit@localhost6.localdomain6> (sfid-20120131_202634_337402_2B26A3AF)
 MIME-Version: 1.0
-To: Thirumalai Pachamuthu <tpachamu@qca.qualcomm.com>
-Subject: Re: [PATCH v2] ath6kl: Add support for uAPSD
-References: <1326372699-6344-1-git-send-email-tpachamu@qca.qualcomm.com> <1326372699-6344-2-git-send-email-tpachamu@qca.qualcomm.com> <4F101AA9.90004@qca.qualcomm.com>
-In-Reply-To: <4F101AA9.90004@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/13/2012 01:51 PM, Kalle Valo wrote:
->> +static bool ath6kl_process_uapsdq(struct ath6kl_sta *conn,
->> > +				struct ath6kl_vif *vif,
->> > +				struct sk_buff *skb,
->> > +				u32 *flags)
->> > +{
->> > +	struct ath6kl *ar = vif->ar;
->> > +	bool is_apsdq_empty = false;
->> > +	struct ethhdr *datap = (struct ethhdr *) skb->data;
->> > +	u8 up = 0;
->
-> This is initilised in an else branch I added below.
+Both Luis and John reported that they see a compiler warning:
 
-This actually creates a compiler warning which I missed. I'll send a
-separate patch which reverts up initilisation back to the original.
+drivers/net/wireless/ath/ath6kl/init.c: In function 'ath6kl_init_hw_params':
+drivers/net/wireless/ath/ath6kl/init.c:1377:26: warning: ‘hw’
+may be used uninitialized in this function
 
-Kalle
+Oddly enough I have never seen it. But AFAICT the code is correct and
+hw is not used uninitalized so add uninitialized_var() to inform that to
+the compiler.
+
+Reported-by: Luis R. Rodriguez <mcgrof@qca.qualcomm.com>
+Reported-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/init.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index bf56e5f..0d76c37 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1470,7 +1470,7 @@ static int ath6kl_init_upload(struct ath6kl *ar)
+ 
+ int ath6kl_init_hw_params(struct ath6kl *ar)
+ {
+-	const struct ath6kl_hw *hw;
++	const struct ath6kl_hw *uninitialized_var(hw);
+ 	int i;
+ 
+ 	for (i = 0; i < ARRAY_SIZE(hw_list); i++) {
+
