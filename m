@@ -1,59 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:14894 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932173Ab2ANUwS (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:49614 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753361Ab2AaJyG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 Jan 2012 15:52:18 -0500
-Date: Sat, 14 Jan 2012 21:52:17 +0100 (CET)
-From: Jesper Juhl <jj@chaosbits.net>
-To: netdev@vger.kernel.org
-cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Jiri Benc <jbenc@suse.cz>
-Subject: [PATCH] Net, mac80211: Fix resource leak in
- ieee80211_rx_h_mesh_fwding()
-Message-ID: <alpine.LNX.2.00.1201142149250.11547@swampdragon.chaosbits.net> (sfid-20120114_215237_995932_27B0CE53)
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+	Tue, 31 Jan 2012 04:54:06 -0500
+Received: by mail-wi0-f174.google.com with SMTP id s10so4215776wic.19
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 01:54:05 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 03/10] wl12xx: fw api change - add role_id to tsf_info
+Date: Tue, 31 Jan 2012 11:57:18 +0200
+Message-Id: <1328003845-3926-4-git-send-email-eliad@wizery.com> (sfid-20120131_105416_298360_7B6BA2A3)
+In-Reply-To: <1328003845-3926-1-git-send-email-eliad@wizery.com>
+References: <1328003845-3926-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We may leak the 'fwd_skb' we skb_copy() in ieee80211_rx_h_mesh_fwding() if 
-we take the 'else' branch in the 'if' statement just below. If we take 
-that branch we'll end up returning from the function and since we've not 
-assigned 'fwd_skb' to anything at that point, we leak it when the variable 
-goes out of scope.
+The ACX_TSF_INFO command now takes role_id as param.
+change the struct accordingly, and pass the wlvif
+to the wl1271_acx_tsf_info() function.
 
-The simple fix seems to be to just kfree_skb(fwd_skb); just before we
-return. That is what this patch does.
-
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- net/mac80211/rx.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/wl12xx/acx.c  |    7 +++++--
+ drivers/net/wireless/wl12xx/acx.h  |    9 ++++++---
+ drivers/net/wireless/wl12xx/main.c |    3 ++-
+ 3 files changed, 13 insertions(+), 6 deletions(-)
 
- note: patch is only compile tested.
-
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index f407427..7514091 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1979,6 +1979,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 		mesh_path_error_tx(ifmsh->mshcfg.element_ttl, fwd_hdr->addr3,
- 				    0, reason, fwd_hdr->addr2, sdata);
- 		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, dropped_frames_no_route);
-+		kfree_skb(fwd_skb);
- 		return RX_DROP_MONITOR;
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index 7537c40..af2c312 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -1459,9 +1459,10 @@ out:
+ 	return ret;
+ }
+ 
+-int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime)
++int wl12xx_acx_tsf_info(struct wl1271 *wl, struct wl12xx_vif *wlvif,
++			u64 *mactime)
+ {
+-	struct wl1271_acx_fw_tsf_information *tsf_info;
++	struct wl12xx_acx_fw_tsf_information *tsf_info;
+ 	int ret;
+ 
+ 	tsf_info = kzalloc(sizeof(*tsf_info), GFP_KERNEL);
+@@ -1470,6 +1471,8 @@ int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime)
+ 		goto out;
  	}
  
++	tsf_info->role_id = wlvif->role_id;
++
+ 	ret = wl1271_cmd_interrogate(wl, ACX_TSF_INFO,
+ 				     tsf_info, sizeof(*tsf_info));
+ 	if (ret < 0) {
+diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+index 69892b4..a5bf761 100644
+--- a/drivers/net/wireless/wl12xx/acx.h
++++ b/drivers/net/wireless/wl12xx/acx.h
+@@ -995,15 +995,17 @@ struct wl1271_acx_ba_receiver_setup {
+ 	u8 padding[2];
+ } __packed;
+ 
+-struct wl1271_acx_fw_tsf_information {
++struct wl12xx_acx_fw_tsf_information {
+ 	struct acx_header header;
+ 
++	u8 role_id;
++	u8 padding1[3];
+ 	__le32 current_tsf_high;
+ 	__le32 current_tsf_low;
+ 	__le32 last_bttt_high;
+ 	__le32 last_tbtt_low;
+ 	u8 last_dtim_count;
+-	u8 padding[3];
++	u8 padding2[3];
+ } __packed;
+ 
+ struct wl1271_acx_ps_rx_streaming {
+@@ -1296,7 +1298,8 @@ int wl12xx_acx_set_ba_initiator_policy(struct wl1271 *wl,
+ 				       struct wl12xx_vif *wlvif);
+ int wl12xx_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
+ 				       u16 ssn, bool enable, u8 peer_hlid);
+-int wl1271_acx_tsf_info(struct wl1271 *wl, u64 *mactime);
++int wl12xx_acx_tsf_info(struct wl1271 *wl, struct wl12xx_vif *wlvif,
++			u64 *mactime);
+ int wl1271_acx_ps_rx_streaming(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 			       bool enable);
+ int wl1271_acx_ap_max_tx_retry(struct wl1271 *wl, struct wl12xx_vif *wlvif);
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index d209184..7bbc970 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -4021,6 +4021,7 @@ static u64 wl1271_op_get_tsf(struct ieee80211_hw *hw,
+ {
+ 
+ 	struct wl1271 *wl = hw->priv;
++	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+ 	u64 mactime = ULLONG_MAX;
+ 	int ret;
+ 
+@@ -4035,7 +4036,7 @@ static u64 wl1271_op_get_tsf(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	ret = wl1271_acx_tsf_info(wl, &mactime);
++	ret = wl12xx_acx_tsf_info(wl, wlvif, &mactime);
+ 	if (ret < 0)
+ 		goto out_sleep;
+ 
 -- 
-1.7.8.3
-
-
--- 
-Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
-Don't top-post http://www.catb.org/jargon/html/T/top-post.html
-Plain text mails only, please.
+1.7.6.401.g6a319
 
