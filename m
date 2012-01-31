@@ -1,59 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37751 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751979Ab2BXGHa (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:46837 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753613Ab2AaXPE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 01:07:30 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [RFC 1/3] ath9k: completely zero intialize valid_phy_rate_idx
-Date: Fri, 24 Feb 2012 11:37:19 +0530
-Message-ID: <1330063641-4524-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120224_070734_164798_E167FF83)
+	Tue, 31 Jan 2012 18:15:04 -0500
+Received: by iacb35 with SMTP id b35so591116iac.19
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 15:15:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4F1F0810.2000306@gmail.com>
+References: <4F1F0810.2000306@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Tue, 31 Jan 2012 15:14:44 -0800
+Message-ID: <CAB=NE6VaU53v_qKuN_dBY+LhBxF5W0OLczGvJYg_if_nCn3nqQ@mail.gmail.com> (sfid-20120201_001509_795510_59D5A3D6)
+Subject: Re: [compat-wireless] modprobe -l is legacy compatibility mode and is
+ being removed from some distros
+To: Richard Farina <sidhayn@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Tue, Jan 24, 2012 at 11:35 AM, Richard Farina <sidhayn@gmail.com> wrote:
+> module-init-tools has been deprecated in favor of kmod in Arch Linux, and
+> kmod doesn't have the legacy --list option for modprobe.
+> This patch fixes the areas of the Makefile which actually needed the output
+> of modprobe -l. The other 100's of uses are just to echo info to the screen
+> which in this case will simply fail in an extremely noisy fashion yet
+> non-fatal way.
+>
+> Please apply to all branches.
+>
+> Signed-of-By: Rick Farina <sidhayn@gmail.com>
+>
+> diff -Naur compat-wireless-3.3-rc1-2/Makefile
+> compat-wireless-3.3-rc1-2-modinfo-migration/Makefile
+> --- compat-wireless-3.3-rc1-2/Makefile    2012-01-21 02:00:21.000000000
+> -0500
 
-its better to zero initialize the 'valid_phy_rate_idx' array completely
+This patch form is not valid. Not sure if it was your SMTP or what but
+its busted and I cannot apply it even if I try to salvage it manually.
+Please consider using git on top of the latest master branch:
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/rc.c |    2 +-
- drivers/net/wireless/ath/ath9k/rc.h |    2 --
- 2 files changed, 1 insertions(+), 3 deletions(-)
+git://github.com/mcgrof/compat-wireless.git
 
-diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
-index a427a16..424864b 100644
---- a/drivers/net/wireless/ath/ath9k/rc.c
-+++ b/drivers/net/wireless/ath/ath9k/rc.c
-@@ -1228,7 +1228,7 @@ static void ath_rc_init(struct ath_softc *sc,
- 	ath_rc_init_valid_rate_idx(ath_rc_priv);
- 
- 	for (i = 0; i < WLAN_RC_PHY_MAX; i++) {
--		for (j = 0; j < MAX_TX_RATE_PHY; j++)
-+		for (j = 0; j < RATE_TABLE_SIZE; j++)
- 			ath_rc_priv->valid_phy_rateidx[i][j] = 0;
- 		ath_rc_priv->valid_phy_ratecnt[i] = 0;
- 	}
-diff --git a/drivers/net/wireless/ath/ath9k/rc.h b/drivers/net/wireless/ath/ath9k/rc.h
-index b7a4bcd..75f8e9b 100644
---- a/drivers/net/wireless/ath/ath9k/rc.h
-+++ b/drivers/net/wireless/ath/ath9k/rc.h
-@@ -25,8 +25,6 @@ struct ath_softc;
- 
- #define ATH_RATE_MAX     30
- #define RATE_TABLE_SIZE  72
--#define MAX_TX_RATE_PHY  48
--
- 
- #define RC_INVALID	0x0000
- #define RC_LEGACY	0x0001
--- 
-1.7.0.4
+And then please consider sending me patches using ssmtp or something
+that will respect the form so that I can apply the patch accordingly.
+For instructions you can read:
 
+http://wireless.kernel.org/en/developers/Documentation/git-guide
+
+You can read the ssmtp section, it covers gmail.
+
+> +++ compat-wireless-3.3-rc1-2-modinfo-migration/Makefile    2012-01-24
+> 14:27:20.000000000 -0500
+> @@ -9,11 +9,6 @@
+>  # Sometimes not available in the path
+>  MODPROBE := /sbin/modprobe
+>
+> -ifneq ($(wildcard $(MODPROBE)),)
+> -MADWIFI=$(shell $(MODPROBE) -l ath_pci)
+> -OLD_IWL=$(shell $(MODPROBE) -l iwl4965)
+> -endif
+> -
+>  DESTDIR?=
+>
+>  ifneq ($(KERNELRELEASE),)
+> @@ -188,7 +183,7 @@
+>     @install scripts/athload    $(DESTDIR)/usr/sbin/
+>     @install scripts/b43load    $(DESTDIR)/usr/sbin/
+>     @install scripts/iwl-load    $(DESTDIR)/usr/sbin/
+> -    @if [ ! -z "$(MADWIFI)" ] && [ -z "$(DESTDIR)" ]; then \
+> +    @if [ `modinfo ath_pci > /dev/null 2>&1` ] && [ -z "$(DESTDIR)" ]; then
+> \
+
+This check never values to true for me. Did you test it?
+
+$ if [ `modinfo ath9k > /dev/null 2>&1` ] ; then echo module exists;
+else echo module does not exist; fi
+
+module does not exist
+
+So at least for me this check does not work. Also consider using
+something like $(modinfo ath9k), it looks a lot nicer than the
+`modinfo ath9k` stuff.
+
+>         echo ;\
+>         echo -n "Note: madwifi detected, we're going to disable it. "  ;\
+>         echo "If you would like to enable it later you can run:"  ;\
+> @@ -197,7 +192,7 @@
+>         echo Running athenable ath5k...;\
+>         /usr/sbin/athenable ath5k ;\
+>     fi
+> -    @if [ ! -z "$(OLD_IWL)" ] && [ -z "$(DESTDIR)" ]; then \
+> +    @if [ `modinfo iwl4965 > /dev/null 2>&1` ] && [ -z "$(DESTDIR)" ]; then
+> \
+
+Same here.
+
+  Luis
