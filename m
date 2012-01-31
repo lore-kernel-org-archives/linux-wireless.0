@@ -1,65 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:44111 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754125Ab2ACVvV (ORCPT
+Received: from mail-yw0-f42.google.com ([209.85.213.42]:61006 "EHLO
+	mail-yw0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105Ab2AaHMD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 16:51:21 -0500
-Received: by eekc4 with SMTP id c4so16236349eek.19
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2012 13:51:20 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: Re: Compat-wireless-3.2-rc6-3 is broken for rt2860 device
-Date: Tue, 03 Jan 2012 22:51:11 +0100
-Message-ID: <2766356.70ylY68Gqi@helmutmobil.site> (sfid-20120103_225124_703874_CABD1F67)
-In-Reply-To: <4EFF71F8.6070208@01019freenet.de>
-References: <4EFF12D9.3010602@01019freenet.de> <4EFF71F8.6070208@01019freenet.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+	Tue, 31 Jan 2012 02:12:03 -0500
+From: "Devendra.Naga" <devendra.aaru@gmail.com>
+To: <Larry.Finger@lwfinger.net>, <chaoming_li@realsil.com.cn>,
+	<linville@tuxdriver.com>, <paul.gortmaker@windriver.com>,
+	<joe@perches.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: "Devendra.Naga" <devendra.aaru@gmail.com>
+Subject: [PATCH] rtlwifi/rtl8192c: in _rtl92c_phy_calculate_bit_shift remove comparing bitmask against 1
+Date: Tue, 31 Jan 2012 02:11:03 -0500
+Message-Id: <1327993863-6810-1-git-send-email-devendra.aaru@gmail.com> (sfid-20120131_081226_382132_F94AD7EA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andreas,
+From: "Devendra.Naga" <devendra.aaru@gmail.com>
 
-Am Samstag, 31. Dezember 2011, 21:35:04 schrieb Andreas Hartmann:
-> Andreas Hartmann schrieb:
-> > Hello,
-> > 
-> > I tested compat-wireless-3.2-rc6-3 with kernel 3.1 and a rt2860 device
-> > running in AP mode (80211.n - 40 MHz). During
-> > 
-> > netperf -t TCP_STREAM -H ap
-> > 
-> > the data stream mostly stalls (-> the device receives data) after a few
-> > seconds and never comes up any more. The connection is completely death.
-> > I have to restart wpa_supplicant to get it working again.
-> > 
-> > 
-> > 
-> > I tried to isolate the problem the following way:
-> > 
-> > 1. Running compat-wireless-3.2-rc6-3 with the rt2x00 level from
-> > compat-wireless-3.1.1-1. The problem didn't gone.
-> > 
-> > 2. Running compat-wireless-3.1.1-1 with the rt2x00 based changes in
-> > compat-wireless-3.2-rc6-3. I can't see the problem any more.
-> > 
-> > 
-> > That's why I think, that the problem must be outside the rt2x00 changes.
-> > But there are many changes outside :-).
-> 
-> 
-> Removing this patch
-> 
-> mac80211: retry sending failed BAR frames later instead of tearing down
-> aggr (http://www.spinics.net/lists/linux-wireless/msg76379.html) makes
-> it working again.
-> 
-> Device is: RaLink RT2800 802.11n PCI
+in _rtl92c_phy_calculate_bit_shift everytime the right shifted bitmask
+is AND with 1 and compared against 1. i.e.
+       if ((bitmask >> i) & 0x1 == 1)
+               break;
+which in the if condition is anyway becomes a 1 or 0.
 
-What's the client device connected to the rt2x00 AP? Mind to send a
-802.11 capture wen this stall happens?
+Signed-off-by: Devendra.Naga <devendra.aaru@gmail.com>
+---
+ drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks and a happy new year,
-Helmut
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
+index 22e998d..a76b223 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
+@@ -177,7 +177,7 @@ u32 _rtl92c_phy_calculate_bit_shift(u32 bitmask)
+ 	u32 i;
+ 
+ 	for (i = 0; i <= 31; i++) {
+-		if (((bitmask >> i) & 0x1) == 1)
++		if ((bitmask >> i) & 0x1)
+ 			break;
+ 	}
+ 	return i;
+-- 
+1.7.5.4
+
