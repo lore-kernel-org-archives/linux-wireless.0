@@ -1,40 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:33502 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754247Ab2ALQmR (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:34087 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754639Ab2AaPqf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 Jan 2012 11:42:17 -0500
-Received: by eekd4 with SMTP id d4so836361eek.19
-        for <linux-wireless@vger.kernel.org>; Thu, 12 Jan 2012 08:42:16 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: b43-dev@lists.infradead.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V2 2/2] MAINTAINERS: add b43 mailing list
-Date: Thu, 12 Jan 2012 17:44:00 +0100
-Message-Id: <1326386640-11677-1-git-send-email-zajec5@gmail.com> (sfid-20120112_174227_032714_1F1760A3)
+	Tue, 31 Jan 2012 10:46:35 -0500
+Message-ID: <4F280CD7.9080002@lwfinger.net> (sfid-20120131_164652_119569_6F51438F)
+Date: Tue, 31 Jan 2012 09:46:31 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Masanari Iida <standby24x7@gmail.com>
+CC: linux-wireless@vger.kernel.org, trivial@kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] [trivial] rtlwifi: Fix typo in dm.c
+References: <1328016875-1684-1-git-send-email-standby24x7@gmail.com>
+In-Reply-To: <1328016875-1684-1-git-send-email-standby24x7@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
----
-V2: add "(moderated for non-subscribers)"
----
- MAINTAINERS |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+On 01/31/2012 07:34 AM, Masanari Iida wrote:
+> Correct a spelling "disconnet" to "disconnect" in
+> drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+>
+> Signed-off-by: Masanari Iida<standby24x7@gmail.com>
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192de/dm.c |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+> index 3cd0736..5087fe4 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+> @@ -296,7 +296,7 @@ static void rtl92d_dm_find_minimum_rssi(struct ieee80211_hw *hw)
+>   		de_digtable.min_undecorated_pwdb_for_dm =
+>   		    rtlpriv->dm.UNDEC_SM_PWDB;
+>   		RT_TRACE(rtlpriv, COMP_BB_POWERSAVING, DBG_LOUD,
+> -			 ("AP Ext Port or disconnet PWDB = 0x%x\n",
+> +			 ("AP Ext Port or disconnect PWDB = 0x%x\n",
+>   			  de_digtable.min_undecorated_pwdb_for_dm));
+>   	}
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index dc11e28..469efce 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1419,6 +1419,7 @@ F:	net/ax25/
- B43 WIRELESS DRIVER
- M:	Stefano Brivio <stefano.brivio@polimi.it>
- L:	linux-wireless@vger.kernel.org
-+L:	b43-dev@lists.infradead.org (moderated for non-subscribers)
- W:	http://linuxwireless.org/en/users/Drivers/b43
- S:	Maintained
- F:	drivers/net/wireless/b43/
--- 
-1.7.7
+Due to the changes in RT_TRACE, this patch would not apply to the 
+wireless-testing tree. I fixed it and submitted a good version with my 
+Signed-off-by. Thanks for noticing this, but please use the correct tree when 
+submitting patches.
+
+Larry
 
