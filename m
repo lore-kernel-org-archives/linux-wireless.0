@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:32890 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753550Ab2AINBX (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:42277 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751968Ab2AaGhT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 Jan 2012 08:01:23 -0500
-Subject: Re: [PATCHv2 1/2] nl80211: add support for mcs masks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Simon Wunderlich <siwu@hrz.tu-chemnitz.de>,
-	Mathias Kretschmer <mathias.kretschmer@fokus.fraunhofer.de>
-In-Reply-To: <1325793490-21501-2-git-send-email-siwu@hrz.tu-chemnitz.de>
-References: <1325793490-21501-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <1325793490-21501-2-git-send-email-siwu@hrz.tu-chemnitz.de>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 09 Jan 2012 14:01:20 +0100
-Message-ID: <1326114080.3451.23.camel@jlt3.sipsolutions.net> (sfid-20120109_140128_783177_4396F58F)
-Mime-Version: 1.0
+	Tue, 31 Jan 2012 01:37:19 -0500
+From: "Devendra.Naga" <devendra.aaru@gmail.com>
+To: <Larry.Finger@lwfinger.net>, <chaoming_li@realsil.com.cn>,
+	<linville@tuxdriver.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: "Devendra.Naga" <devendra.aaru@gmail.com>
+Subject: [PATCH] rtlwifi: remove return in _rtl_pci_switch_clk_req
+Date: Tue, 31 Jan 2012 01:28:15 -0500
+Message-Id: <1327991295-6258-1-git-send-email-devendra.aaru@gmail.com> (sfid-20120131_073745_088203_B95B9088)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-01-05 at 20:58 +0100, Simon Wunderlich wrote:
+From: "Devendra.Naga" <devendra.aaru@gmail.com>
 
-> @@ -5413,7 +5451,28 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
->  				sband,
->  				nla_data(tb[NL80211_TXRATE_LEGACY]),
->  				nla_len(tb[NL80211_TXRATE_LEGACY]));
-> -			if (mask.control[band].legacy == 0)
-> +		}
-> +		if (tb[NL80211_TXRATE_MCS]) {
-> +			if (!ht_rateset_to_mask(
-> +					sband,
-> +					nla_data(tb[NL80211_TXRATE_MCS]),
-> +					nla_len(tb[NL80211_TXRATE_MCS]),
-> +					mask.control[band].mcs))
-> +				return -EINVAL;
-> +		}
-> +
-> +		if (mask.control[band].legacy == 0) {
-> +			/* don't allow empty legacy rates if HT
-> +			 * is not even supported. */
-> +			if (!rdev->wiphy.bands[band]->ht_cap.ht_supported)
-> +				return -EINVAL;
-> +
-> +			for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
-> +				if (mask.control[band].mcs[i])
-> +					break;
-> +
-> +			/* legacy and mcs rates may not be both empty */
-> +			if (i == IEEE80211_HT_MCS_MASK_LEN)
->  				return -EINVAL;
+the return value from _rtl_pci_switch_clk_req is not used by any of its callers.
 
-Ok ... what if you now associate to a non-HT AP? I don't really care
-what happens as long as we don't hit a ton of warnings?
+Signed-off-by: Devendra.Naga <devendra.aaru@gmail.com>
+---
+ drivers/net/wireless/rtlwifi/pci.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index 5cb2199..9a01909 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -198,7 +198,7 @@ static bool _rtl_pci_platform_switch_device_pci_aspm(
+ }
+ 
+ /*When we set 0x01 to enable clk request. Set 0x0 to disable clk req.*/
+-static bool _rtl_pci_switch_clk_req(struct ieee80211_hw *hw, u8 value)
++static void _rtl_pci_switch_clk_req(struct ieee80211_hw *hw, u8 value)
+ {
+ 	struct rtl_pci *rtlpci = rtl_pcidev(rtl_pcipriv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+@@ -207,8 +207,6 @@ static bool _rtl_pci_switch_clk_req(struct ieee80211_hw *hw, u8 value)
+ 
+ 	if (rtlhal->hw_type == HARDWARE_TYPE_RTL8192SE)
+ 		udelay(100);
+-
+-	return true;
+ }
+ 
+ /*Disable RTL8192SE ASPM & Disable Pci Bridge ASPM*/
+-- 
+1.7.5.4
 
