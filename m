@@ -1,70 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:51104 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752572Ab2ACOKl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 Jan 2012 09:10:41 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1Ri54Z-00030y-F1
-	for linux-wireless@vger.kernel.org; Tue, 03 Jan 2012 15:10:39 +0100
-Received: from ii143133.directconnect.no ([84.247.143.133])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2012 15:10:39 +0100
-Received: from ltson36 by ii143133.directconnect.no with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Tue, 03 Jan 2012 15:10:39 +0100
-To: linux-wireless@vger.kernel.org
-From: Thanh Son Le <ltson36@yahoo.com>
-Subject: [PATCH 0/2] add support for mcs masks
-Date: Tue, 3 Jan 2012 14:10:27 +0000 (UTC)
-Message-ID: <loom.20120103T150820-24@post.gmane.org> (sfid-20120103_151056_571554_B91708A9)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from i118-21-156-233.s30.a048.ap.plala.or.jp ([118.21.156.233]:36657
+	"EHLO rinabert.homeip.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753492Ab2AaNfK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jan 2012 08:35:10 -0500
+From: Masanari Iida <standby24x7@gmail.com>
+To: larry.finger@lwfinger.net, linux-wireless@vger.kernel.org
+Cc: standby24x7@gmail.com, trivial@kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3] [trivial] rtlwifi: Fix typo in dm.c
+Date: Tue, 31 Jan 2012 22:34:35 +0900
+Message-Id: <1328016875-1684-1-git-send-email-standby24x7@gmail.com> (sfid-20120131_143531_540743_C77602FF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Simon
+Correct a spelling "disconnet" to "disconnect" in
+drivers/net/wireless/rtlwifi/rtl8192de/dm.c
 
-I have read your patches on adding supports for MCS rates, both iw and compat-
-wireless, it seems interesting.
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+---
+ drivers/net/wireless/rtlwifi/rtl8192de/dm.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-For evaluation purpose, I have added the patches to Compat-wireless and IW. It 
-seems compiling and running fine.
-
-But when I tried to set up the rate, through iw set bitrates command, it does 
-not work. Please refer to the following dumping message for further details:
-----------------------------------------------
-root@Openwrt:/sys/kernel/debug/ieee80211/phy0# iw dev wlan0.sta1 set bitrates 
-mcs-5 14
-root@Openwrt:/sys/kernel/debug/ieee80211/phy0# iw dev wlan0.sta1 station dump
-Station 00:xx::xx:xx:xx (on wlan0.sta1)
-        inactive time:  490 ms
-        rx bytes:       1739675
-        rx packets:     15179
-        tx bytes:       7421803
-        tx packets:     14051
-        tx retries:     714
-        tx failed:      139
-        signal:         -45 dBm
-        signal_ctl0:    -46 dBm
-        signal_ctl1:    -45 dBm
-        tx bitrate:     6.0 MBit/s
-        rx bitrate:     6.0 MBit/s
-root@Javelin:/sys/kernel/debug/ieee80211/phy0# 
---------------------------------------------------------------------------------
--------
-
-I have tested both with ack and noack, but it still does not work
-Both AP and STA are in WDS.
-
-Can you check for me whether the set command is correct and whether it can work 
-in AP/STA mode ?
-
-Once again, Thanks you very much for your kind helps and considerations and I 
-look forward to receiving information from you.
-
-Yours sincerely
-
-Le
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+index 3cd0736..5087fe4 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192de/dm.c
+@@ -296,7 +296,7 @@ static void rtl92d_dm_find_minimum_rssi(struct ieee80211_hw *hw)
+ 		de_digtable.min_undecorated_pwdb_for_dm =
+ 		    rtlpriv->dm.UNDEC_SM_PWDB;
+ 		RT_TRACE(rtlpriv, COMP_BB_POWERSAVING, DBG_LOUD,
+-			 ("AP Ext Port or disconnet PWDB = 0x%x\n",
++			 ("AP Ext Port or disconnect PWDB = 0x%x\n",
+ 			  de_digtable.min_undecorated_pwdb_for_dm));
+ 	}
+ 
+-- 
+1.7.6.5
 
