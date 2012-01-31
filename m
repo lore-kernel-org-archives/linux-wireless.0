@@ -1,65 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44453 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751105Ab2AaFms (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 00:42:48 -0500
-Message-ID: <4F277F29.2080205@sipsolutions.net> (sfid-20120131_064250_619113_D6122069)
-Date: Mon, 30 Jan 2012 21:42:01 -0800
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mga02.intel.com ([134.134.136.20]:51925 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753372Ab2AaOzV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jan 2012 09:55:21 -0500
+Date: Tue, 31 Jan 2012 16:01:56 +0100
+From: Samuel Ortiz <samuel.ortiz@intel.com>
+To: Masanari Iida <standby24x7@gmail.com>
+Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org,
+	trivial@kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] [trivial] iwmc3200wifi: Fix typo in trace.h
+Message-ID: <20120131150154.GA3411@sortiz-mobl> (sfid-20120131_155536_516182_6C630ACC)
+References: <1328019825-2067-1-git-send-email-standby24x7@gmail.com>
 MIME-Version: 1.0
-To: Victor Goldenshtein <victorg@ti.com>
-CC: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
-	nbd@nbd.name
-Subject: Re: [RFC 2/9] mac80211: add radar detection command/event
-References: <1327581484-22047-1-git-send-email-victorg@ti.com> <1327581484-22047-3-git-send-email-victorg@ti.com>
-In-Reply-To: <1327581484-22047-3-git-send-email-victorg@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1328019825-2067-1-git-send-email-standby24x7@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1/26/2012 4:37 AM, Victor Goldenshtein wrote:
-> +	int (*hw_dfs_start_radar_detection)(struct ieee80211_hw *hw,
-> +					    struct ieee80211_vif *vif);
+On Tue, Jan 31, 2012 at 11:23:45PM +0900, Masanari Iida wrote:
+> Correct spelling "embeded" to "embedded" in
+> drivers/net/wireless/iwmc3200wifi/trace.h
+> 
+> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+Acked-by: Samuel Ortiz <sameo@linux.intel.com>
 
-This name is getting ridiculously long -- no need for the hw_ prefix either.
+Cheers,
+Samuel.
 
-> +void ieee80211_radar_detected_notify(struct ieee80211_vif *vif,
-> +				     u16 freq, gfp_t gfp);
+-- 
+Intel Open Source Technology Centre
+http://oss.intel.com/
+---------------------------------------------------------------------
+Intel Corporation SAS (French simplified joint stock company)
+Registered headquarters: "Les Montalets"- 2, rue de Paris, 
+92196 Meudon Cedex, France
+Registration Number:  302 456 199 R.C.S. NANTERRE
+Capital: 4,572,000 Euros
 
-Btw, why not a channel pointer? Most APIs use that.
+This e-mail and any attachments may contain confidential material for
+the sole use of the intended recipient(s). Any review or distribution
+by others is strictly prohibited. If you are not the intended
+recipient, please contact the sender and delete all copies.
 
-> +static int ieee80211_dfs_start_radar_detection(struct wiphy *wiphy,
-> +					       struct net_device *dev)
-> +{
-> +	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-> +	struct ieee80211_local *local = sdata->local;
-> +	int ret = -ENOENT;
-
-??? No need for a default value.
-
-> +	if (!local->ops->hw_dfs_start_radar_detection)
-> +		return -EOPNOTSUPP;
-> +
-> +	mutex_lock(&local->mtx);
-> +	ret = drv_dfs_en_radar_detection(local, sdata);
-> +	mutex_unlock(&local->mtx);
-
-Why even lock here? That's not protecting anything.
-
-> +static inline int drv_dfs_en_radar_detection(struct ieee80211_local *local,
-> +					 struct ieee80211_sub_if_data *sdata)
-> +{
-> +	int ret;
-> +
-> +	might_sleep();
-> +
-> +	trace_drv_dfs_en_radar_detection(local, sdata);
-> +	ret = local->ops->hw_dfs_start_radar_detection(&local->hw,&sdata->vif);
-
-trace_drv_ret_int()
-
-johannes
