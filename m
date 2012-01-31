@@ -1,83 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:35769 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750995Ab2AFWTq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 Jan 2012 17:19:46 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 0/7] update for 3.4: iwlwifi 2012-01-06
-Date: Fri,  6 Jan 2012 13:16:26 -0800
-Message-Id: <1325884593-31298-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120106_232002_744812_6A8D64A1)
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:59600 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753431Ab2AaJyO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 Jan 2012 04:54:14 -0500
+Received: by wgbdt10 with SMTP id dt10so63196wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 01:54:12 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 07/10] wl12xx: add dynamic_ps_timeout debugfs file
+Date: Tue, 31 Jan 2012 11:57:22 +0200
+Message-Id: <1328003845-3926-8-git-send-email-eliad@wizery.com> (sfid-20120131_105428_898912_A3B8E271)
+In-Reply-To: <1328003845-3926-1-git-send-email-eliad@wizery.com>
+References: <1328003845-3926-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We add and improve the features support for testmode
-We also update the Copyright to 2012
+From: Eyal Shapira <eyal@wizery.com>
 
-Kenny Hsu (4):
-  iwlwifi: update testmode command of direct register access
-  iwlwifi: enhance testmode command sram_read
-  iwlwifi: update error dump in testmode command sram_read
-  iwlwifi: add testmode cmd IWL_TM_CMD_APP2DEV_GET_FW_INFO
+Enable read/write of dynamic_ps_timeout which controls the timeout
+of the dynamic PS implemented in the FW.
+dynamic_ps_timeout is the timeout (in msec) until going back to PS
+when there's no Rx/Tx
 
-Wey-Yi Guy (3):
-  iwlwifi: don't process the info from uCode if does not has ownership
-  iwlwifi: Sanity check for sta_id
-  iwlwifi: update Copyright
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/debugfs.c |   67 +++++++++++++++++++++++++++++++++
+ 1 files changed, 67 insertions(+), 0 deletions(-)
 
- drivers/net/wireless/iwlwifi/iwl-1000.c           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-2000.c           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-calib.c      |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-calib.h      |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-hw.h         |    4 +-
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.h         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rx.c         |   30 +++++-----
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-sta.c        |   13 +++--
- drivers/net/wireless/iwlwifi/iwl-agn-tt.c         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-tt.h         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.h            |    4 +-
- drivers/net/wireless/iwlwifi/iwl-bus.h            |    4 +-
- drivers/net/wireless/iwlwifi/iwl-cfg.h            |    4 +-
- drivers/net/wireless/iwlwifi/iwl-commands.h       |    4 +-
- drivers/net/wireless/iwlwifi/iwl-core.c           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-core.h           |    4 +-
- drivers/net/wireless/iwlwifi/iwl-csr.h            |    4 +-
- drivers/net/wireless/iwlwifi/iwl-debug.h          |    2 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c        |    2 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-devtrace.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-devtrace.h       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.c         |    4 +-
- drivers/net/wireless/iwlwifi/iwl-eeprom.h         |    4 +-
- drivers/net/wireless/iwlwifi/iwl-fh.h             |    4 +-
- drivers/net/wireless/iwlwifi/iwl-io.c             |    2 +-
- drivers/net/wireless/iwlwifi/iwl-io.h             |    2 +-
- drivers/net/wireless/iwlwifi/iwl-led.c            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-led.h            |    2 +-
- drivers/net/wireless/iwlwifi/iwl-mac80211.c       |    2 +-
- drivers/net/wireless/iwlwifi/iwl-pci.c            |    4 +-
- drivers/net/wireless/iwlwifi/iwl-power.c          |    2 +-
- drivers/net/wireless/iwlwifi/iwl-power.h          |    2 +-
- drivers/net/wireless/iwlwifi/iwl-prph.h           |    4 +-
- drivers/net/wireless/iwlwifi/iwl-scan.c           |    2 +-
- drivers/net/wireless/iwlwifi/iwl-shared.h         |    6 +-
- drivers/net/wireless/iwlwifi/iwl-testmode.c       |   64 ++++++++++++++++----
- drivers/net/wireless/iwlwifi/iwl-testmode.h       |   26 +++++++-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |    4 +-
- drivers/net/wireless/iwlwifi/iwl-trans.c          |    4 +-
- drivers/net/wireless/iwlwifi/iwl-trans.h          |    4 +-
- drivers/net/wireless/iwlwifi/iwl-ucode.c          |    2 +-
- drivers/net/wireless/iwlwifi/iwl-wifi.h           |    4 +-
- 53 files changed, 166 insertions(+), 105 deletions(-)
+diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+index 5e96e05..156a774 100644
+--- a/drivers/net/wireless/wl12xx/debugfs.c
++++ b/drivers/net/wireless/wl12xx/debugfs.c
+@@ -312,6 +312,72 @@ static const struct file_operations start_recovery_ops = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t dynamic_ps_timeout_read(struct file *file, char __user *user_buf,
++			  size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++
++	return wl1271_format_buffer(user_buf, count,
++				    ppos, "%d\n",
++				    wl->conf.conn.dynamic_ps_timeout);
++}
++
++static ssize_t dynamic_ps_timeout_write(struct file *file,
++				    const char __user *user_buf,
++				    size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++	struct wl12xx_vif *wlvif;
++	unsigned long value;
++	int ret;
++
++	ret = kstrtoul_from_user(user_buf, count, 10, &value);
++	if (ret < 0) {
++		wl1271_warning("illegal value in dynamic_ps");
++		return -EINVAL;
++	}
++
++	if (value < 1 || value > 65535) {
++		wl1271_warning("dyanmic_ps_timeout is not in valid range");
++		return -ERANGE;
++	}
++
++	mutex_lock(&wl->mutex);
++
++	wl->conf.conn.dynamic_ps_timeout = value;
++
++	if (wl->state == WL1271_STATE_OFF)
++		goto out;
++
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out;
++
++	/* In case we're already in PSM, trigger it again to set new timeout
++	 * immediately without waiting for re-association
++	 */
++
++	wl12xx_for_each_wlvif_sta(wl, wlvif) {
++		if (test_bit(WLVIF_FLAG_PSM, &wlvif->flags))
++			wl1271_ps_set_mode(wl, wlvif, STATION_AUTO_PS_MODE,
++					   wlvif->basic_rate, true);
++
++	}
++
++	wl1271_ps_elp_sleep(wl);
++
++out:
++	mutex_unlock(&wl->mutex);
++	return count;
++}
++
++static const struct file_operations dynamic_ps_timeout_ops = {
++	.read = dynamic_ps_timeout_read,
++	.write = dynamic_ps_timeout_write,
++	.open = wl1271_open_file_generic,
++	.llseek = default_llseek,
++};
++
+ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
+ 				 size_t count, loff_t *ppos)
+ {
+@@ -887,6 +953,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_ADD(dtim_interval, rootdir);
+ 	DEBUGFS_ADD(beacon_interval, rootdir);
+ 	DEBUGFS_ADD(beacon_filtering, rootdir);
++	DEBUGFS_ADD(dynamic_ps_timeout, rootdir);
+ 
+ 	streaming = debugfs_create_dir("rx_streaming", rootdir);
+ 	if (!streaming || IS_ERR(streaming))
+-- 
+1.7.6.401.g6a319
 
