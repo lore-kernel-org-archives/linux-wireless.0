@@ -1,40 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:34915 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754548Ab2BYETe (ORCPT
+Received: from e33.co.us.ibm.com ([32.97.110.151]:50714 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756767Ab2BATnY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 23:19:34 -0500
-Received: by daed14 with SMTP id d14so3190091dae.19
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2012 20:19:34 -0800 (PST)
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: hauke@hauke-m.de, nbd@nbd.name, linville@tuxdriver.com,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>
-Subject: [PATCH 0/4] compat: fix compiling against all kernels
-Date: Fri, 24 Feb 2012 20:19:25 -0800
-Message-Id: <1330143569-30296-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120225_051938_548369_38972D51)
+	Wed, 1 Feb 2012 14:43:24 -0500
+Received: from /spool/local
+	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-wireless@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
+	Wed, 1 Feb 2012 12:43:23 -0700
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org
+Cc: mingo@elte.hu, laijs@cn.fujitsu.com, dipankar@in.ibm.com,
+	akpm@linux-foundation.org, mathieu.desnoyers@polymtl.ca,
+	josh@joshtriplett.org, niv@us.ibm.com, tglx@linutronix.de,
+	peterz@infradead.org, rostedt@goodmis.org, Valdis.Kletnieks@vt.edu,
+	dhowells@redhat.com, eric.dumazet@gmail.com, darren@dvhart.com,
+	fweisbec@gmail.com, patches@linaro.org,
+	"Paul E. McKenney" <paul.mckenney@linaro.org>,
+	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH RFC tip/core/rcu 11/41] mac80211: Convert call_rcu() to kfree_rcu()
+Date: Wed,  1 Feb 2012 11:41:29 -0800
+Message-Id: <1328125319-5205-11-git-send-email-paulmck@linux.vnet.ibm.com> (sfid-20120201_204836_629858_1BD4EA9E)
+In-Reply-To: <1328125319-5205-1-git-send-email-paulmck@linux.vnet.ibm.com>
+References: <20120201194131.GA10028@linux.vnet.ibm.com>
+ <1328125319-5205-1-git-send-email-paulmck@linux.vnet.ibm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <mcgrof@frijolero.org>
+From: "Paul E. McKenney" <paul.mckenney@linaro.org>
 
-I was tired of seeing ckmake fail against different kernels, this
-series of patches fixes compilation against all supported kernels.
-The modpost one was tricky.
+The call_rcu() in mesh_gate_del() invokes mesh_gate_node_reclaim(),
+which simply calls kfree().  So convert the call_rcu() to kfree_rcu(),
+allowing mesh_gate_node_reclaim() to be eliminated.
 
-Luis R. Rodriguez (4):
-  compat: fix compilation warning for compat_firmware_class on 2.6.26
-  compat: clean ckmake log of color output
-  compat: avoid NOSTDINC_FLAGS during modpost
-  compat: fix compat_firmware class for all kernels
+Signed-off-by: Paul E. McKenney <paul.mckenney@linaro.org>
+Signed-off-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+---
+ net/mac80211/mesh_pathtbl.c |    8 +-------
+ 1 files changed, 1 insertions(+), 7 deletions(-)
 
- Makefile                       |   27 ++++++++++++++++-----------
- bin/ckmake                     |    3 +++
- compat/compat_firmware_class.c |    6 +++---
- scripts/skip-colors            |    2 ++
- 4 files changed, 24 insertions(+), 14 deletions(-)
- create mode 100755 scripts/skip-colors
-
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index edf167e..30420bc 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -413,12 +413,6 @@ struct mesh_path *mesh_path_lookup_by_idx(int idx, struct ieee80211_sub_if_data
+ 	return NULL;
+ }
+ 
+-static void mesh_gate_node_reclaim(struct rcu_head *rp)
+-{
+-	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
+-	kfree(node);
+-}
+-
+ /**
+  * mesh_path_add_gate - add the given mpath to a mesh gate to our path table
+  * @mpath: gate path to add to table
+@@ -479,7 +473,7 @@ static int mesh_gate_del(struct mesh_table *tbl, struct mesh_path *mpath)
+ 		if (gate->mpath == mpath) {
+ 			spin_lock_bh(&tbl->gates_lock);
+ 			hlist_del_rcu(&gate->list);
+-			call_rcu(&gate->rcu, mesh_gate_node_reclaim);
++			kfree_rcu(gate, rcu);
+ 			spin_unlock_bh(&tbl->gates_lock);
+ 			mpath->sdata->u.mesh.num_gates--;
+ 			mpath->is_gate = false;
 -- 
-1.7.4.15.g7811d
+1.7.8
 
