@@ -1,56 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:58357 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757152Ab2BGW4w (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:52482 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752824Ab2BAQck (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 17:56:52 -0500
-From: Prasanna Kumar <kumarpra@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] add support for AR6003 2048 byte board file
-Date: Tue, 7 Feb 2012 14:58:54 -0800
-Message-ID: <1328655534-8660-1-git-send-email-kumarpra@qca.qualcomm.com> (sfid-20120207_235656_947051_2ABB5556)
-In-Reply-To: <no>
-References: <no>
+	Wed, 1 Feb 2012 11:32:40 -0500
+Received: by iacb35 with SMTP id b35so1718829iac.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Feb 2012 08:32:40 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1328111519.3297.0.camel@jlt3.sipsolutions.net>
+References: <1328098003-28004-1-git-send-email-eliad@wizery.com>
+	<1328111519.3297.0.camel@jlt3.sipsolutions.net>
+Date: Wed, 1 Feb 2012 18:32:40 +0200
+Message-ID: <CAB3XZEcNcALwUKjvxr=hJixkogyZH3rYVCyARfEX_5vu1nodBg@mail.gmail.com> (sfid-20120201_173243_802956_0FE4A041)
+Subject: Re: [PATCH] mac80211: timeout a single frame in the rx reorder buffer
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR6003 2.1.1 supports both 1792 and 2048 byte board files.
-Add support for 2048 byte board file.
+On Wed, Feb 1, 2012 at 5:51 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2012-02-01 at 14:06 +0200, Eliad Peller wrote:
+>> The current code checks for stored_mpdu_num > 1, causing
+>> the reorder_timer to be triggered indefinitely, but the
+>> frame is never timed-out (until the next packet is received)
+>
+> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+>
+> Looks kinda obvious & trivial, want to CC stable?
+>
+Sure. i'll resend.
 
-Signed-off-by: Prasanna Kumar <kumarpra@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/init.c   |    2 ++
- drivers/net/wireless/ath/ath6kl/target.h |    1 +
- 2 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index d1d89b5..47b9897 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1142,6 +1142,8 @@ static int ath6kl_upload_board_file(struct ath6kl *ar)
- 	case TARGET_TYPE_AR6003:
- 		board_data_size = AR6003_BOARD_DATA_SZ;
- 		board_ext_data_size = AR6003_BOARD_EXT_DATA_SZ;
-+		if (ar->fw_board_len > (board_data_size + board_ext_data_size))
-+			board_ext_data_size = AR6003_BOARD_EXT_DATA_SZ_V2;
- 		break;
- 	case TARGET_TYPE_AR6004:
- 		board_data_size = AR6004_BOARD_DATA_SZ;
-diff --git a/drivers/net/wireless/ath/ath6kl/target.h b/drivers/net/wireless/ath/ath6kl/target.h
-index 108a723..b51cd19 100644
---- a/drivers/net/wireless/ath/ath6kl/target.h
-+++ b/drivers/net/wireless/ath/ath6kl/target.h
-@@ -19,6 +19,7 @@
- 
- #define AR6003_BOARD_DATA_SZ		1024
- #define AR6003_BOARD_EXT_DATA_SZ	768
-+#define AR6003_BOARD_EXT_DATA_SZ_V2	1024
- 
- #define AR6004_BOARD_DATA_SZ     6144
- #define AR6004_BOARD_EXT_DATA_SZ 0
--- 
-1.7.0.2
-
+Eliad.
