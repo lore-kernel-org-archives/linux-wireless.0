@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59056 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752505Ab2BTJqO (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:55594 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753771Ab2BAIRi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Feb 2012 04:46:14 -0500
-Subject: Re: will these methods work with firmware loading?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	driverdevel <devel@driverdev.osuosl.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	linux-hotplug@vger.kernel.org
-In-Reply-To: <4F414230.5040506@lwfinger.net> (sfid-20120219_194128_235089_6C62CE24)
-References: <4F414230.5040506@lwfinger.net>
-	 (sfid-20120219_194128_235089_6C62CE24)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 20 Feb 2012 10:46:07 +0100
-Message-ID: <1329731167.3458.4.camel@jlt3.sipsolutions.net> (sfid-20120220_104627_825350_8AFFED55)
-Mime-Version: 1.0
+	Wed, 1 Feb 2012 03:17:38 -0500
+Received: by pbdu11 with SMTP id u11so880611pbd.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Feb 2012 00:17:38 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6UOxOio_yp4chFkcUQ_g2RkOouddViRajZjERvHSkhjUw@mail.gmail.com>
+References: <1327600856-29635-1-git-send-email-linville@tuxdriver.com> <CAB=NE6UOxOio_yp4chFkcUQ_g2RkOouddViRajZjERvHSkhjUw@mail.gmail.com>
+From: Alfonso Fiore <alfonso.fiore@gmail.com>
+Date: Wed, 1 Feb 2012 09:17:08 +0100
+Message-ID: <CAO=xpBHCcEzFwbM4L90Br2aR=-s53UP7MVAwq9fts7dPeNaydw@mail.gmail.com> (sfid-20120201_091742_139655_2014050E)
+Subject: Re: [PATCH] compat: use kconfig.h in compat-2.6.h for 3.1 and later kernels
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+On Wed, Feb 1, 2012 at 8:10 AM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+> On Thu, Jan 26, 2012 at 10:00 AM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+>> This file was introduced in commit 2a11c8ea20bf850b3a2c60db8c2e7497d28aba99
+>> and included in 3.1 and later kernels.  It includes <generated/autoconf.h>
+>> itself, as well as some other definitions that are used elsewhere.
+>>
+>> Signed-off-by: John W. Linville <linville@tuxdriver.com>
+>
+> Apologies for the delay, and thanks a lot, applied and pushed!
 
-> I know that changing the request_firmware() call to request_firmware_nowait() 
-> solves the problem; however, that gives some trouble for driver b43legacy as it 
-> loads 3 or 4 firmware files depending on the hardware version. When I launch the 
-> 3 or 4 nowait requests, I get an error because the system is trying to start 
-> several tasks with the same name.
-> 
-> Would it be OK to load the first file with the nowait version, and issue a 
-> request_firmware() for the others from the callback routine? I think that would 
-> not cause any problems, but I would like to get confirmation from an expert.
+Hi,
 
-That should work -- I just looked at the firmware code and it spawns a
-new thread for every "nowait" request (and it calls the callback in that
-thread's context), so it won't block against itself.
+thank you.
 
-> Similarly, if I were to create a work queue, init and schedule it from 
-> module_init(), and then use synchronous loads to get the firmware from the work 
-> queue callback, would that get around the boot problem? I know it works as I 
-> have trial patches; however, my version of udev is not one affected. This method 
-> is very easy to implement, but again I would like confirmation from an expert.
+how can I test this? I see the bleeding edge package has not been
+update during the last seven days. Will it be updated soon or should I
+test with git?
 
-We discussed that before, and technically it should work, I'm just a bit
-worried about udev treating asynchronous and synchronous requests
-differently and that causing issues, but somebody who knows udev better
-will have to comment on that.
-
-johannes
-
+cheers,
+alfonso
