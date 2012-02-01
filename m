@@ -1,25 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:50326 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757331Ab2BHRFd (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:39300 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755673Ab2BACSP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 12:05:33 -0500
-Received: by qcqw6 with SMTP id w6so430718qcq.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2012 09:05:32 -0800 (PST)
+	Tue, 31 Jan 2012 21:18:15 -0500
+Received: by vbjk17 with SMTP id k17so625490vbj.19
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 18:18:14 -0800 (PST)
 MIME-Version: 1.0
-Date: Thu, 9 Feb 2012 01:05:32 +0800
-Message-ID: <CAG9cJmnuyjxLFe5Wc4okDmOw4ik0aC_vT8xi5rEhfUJGbiczcg@mail.gmail.com> (sfid-20120208_180536_675225_673D85A7)
-Subject: something about compact-wireless
-From: lina <lina.lastname@gmail.com>
+Date: Wed, 1 Feb 2012 07:48:14 +0530
+Message-ID: <CA+cdTWaGcDasoAQc8h7hdexpfwp4dtu-3EqcPNGp4b-UK9xgrw@mail.gmail.com> (sfid-20120201_031827_179244_6C04F653)
+Subject: Regarding carl9170 wifi linux driver
+From: Prashant Badsheshi <prashant.badsheshi@gmail.com>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi,
 
-The question i am going to ask might sounds silly, please forgive,
+We are planning to use the below wifi dongle as station and AP.
 
-do I need the compact-wireless in future? something about it's history?
+https://www.thinkpenguin.com/gnu-linux/penguin-wireless-n-usb-adapter
 
-thanks
+
+
+We got the linux driver from the below path
+
+git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
+
+
+
+We found the driver source in drivers/net/wireless/ath/carl9170.
+
+
+
+Our Question:
+
+Is the carl9170 driver present in the above folder is a complete open
+source driver?
+
+Or is it not complete driver and is there any NON-GPL code that is not
+provided as an open source?
+
+Please clarify it. Your immediate response would be really appreciated.
+
+
+
+Also it would be great if there is any design document or programmer’s
+document for the above mentioned Wifi dongle chipset available.
+
+
+
+Regards,
+
+Prashant
