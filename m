@@ -1,33 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:40346 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751890Ab2BXFnW (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:42713 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754024Ab2BARcC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 00:43:22 -0500
-Received: by wgbdt10 with SMTP id dt10so1731795wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 21:43:20 -0800 (PST)
+	Wed, 1 Feb 2012 12:32:02 -0500
+Message-ID: <4F297706.3060404@candelatech.com> (sfid-20120201_183207_636846_70EEB4D6)
+Date: Wed, 01 Feb 2012 09:31:50 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <4F471F40.8060503@posedge.com>
-References: <f17c700977012ada368da4f339b9c639@posedge.com>
-	<1329933458.4657.2.camel@jlt3.sipsolutions.net>
-	<1329937072.4657.4.camel@jlt3.sipsolutions.net>
-	<4F471F40.8060503@posedge.com>
-Date: Thu, 23 Feb 2012 21:43:20 -0800
-Message-ID: <CAJ-Vmong58rRX_sMA3Zgg+17=ebAGmG9U+9rGC8Fw4q_=B2hDg@mail.gmail.com> (sfid-20120224_064325_907083_6BD415A8)
-Subject: Re: [RFCv2] cfg80211: 80Mhz Bandwidth channel flags in 5Gig band
-From: Adrian Chadd <adrian@freebsd.org>
-To: Mahesh <maheshp@posedge.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Paul Stewart <pstew@google.com>
+Subject: Re: [PATCH 1/2] ath9k: recover the chip from tx/rx stuck
+References: <1328112335-19265-1-git-send-email-rmanohar@qca.qualcomm.com>
+In-Reply-To: <1328112335-19265-1-git-send-email-rmanohar@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 02/01/2012 08:05 AM, Rajkumar Manoharan wrote:
+> In the following scenario, where the distance b/w STA and AP is ~10m
+> or in a shield environment by placing an attenuator with reduced AP
+> txpower, the station started reporting with beacon loss and got
+> disconnected whenever the chariot endpoint was initiated with BiDi
+> traffic. In such state, two different stuck cases were observed.
+>
+>    * rx clear is stuck at low for more than 100ms
+>    * dcu chain and complete state is stuck.
+>
+> This patch detects the stuck state if the beacons are not received for
+> more than 300ms. In the above matching conditions, trigger a chip
+> reset to recover. This issue was originally reported in 3.0 kernel with
+> AR9382 chip by having two stations associated with two different APs in
+> the same channel and was attenuated/controlled by Azimuth ADEPT-n box.
 
-Since what your _actual_ commit is doing is "begin fleshing out
-802.11ac support", I suggest someone spark a discussion or two about
-it first..
+Can't the AP be configured for larger beacon intervals?  Maybe have it
+be some multiple of that instead of a fixed 300ms?
 
+Thanks,
+Ben
 
-adrian
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
