@@ -1,112 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53011 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754079Ab2BWKQX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 05:16:23 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 6/6] iwlwifi: reintroduce iwl_enable_rfkill_int
-Date: Thu, 23 Feb 2012 11:16:08 +0100
-Message-Id: <1329992168-19990-6-git-send-email-sgruszka@redhat.com> (sfid-20120223_111627_825523_2D229977)
-In-Reply-To: <1329992168-19990-1-git-send-email-sgruszka@redhat.com>
-References: <1329992168-19990-1-git-send-email-sgruszka@redhat.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:15093 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752673Ab2BAJEV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Feb 2012 04:04:21 -0500
+From: Chilam Ng <chilamng@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath6kl-devel@qualcomm.com>
+Subject: [PATCH] ath6kl: initialize the 'nominal_phy' field in the 'wmi_create_pstream_cmd' struct for create_qos command
+Date: Wed, 1 Feb 2012 01:03:37 -0800
+Message-ID: <1328087017-6283-1-git-send-email-chilamng@qca.qualcomm.com> (sfid-20120201_100428_881187_30A9532B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If device is disabled by rfkill switch, do not enable all interrupts,
-but only CSR_INT_BIT_RF_KILL to receive rfkill state change. Unblocking
-other interrupts might cause problems, since driver can not be prepared
-for receive them.
+The nominal_phy field is uninitialized. Initialize it to min_phy_rate for create_qos
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Chilam Ng <chilamng@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    6 ++++++
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |    6 ++----
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |   14 +++++++-------
- 3 files changed, 15 insertions(+), 11 deletions(-)
+ drivers/net/wireless/ath/ath6kl/debug.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-index 561865f..d5f3d2f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
-@@ -338,6 +338,12 @@ static inline void iwl_enable_interrupts(struct iwl_trans *trans)
- 	iwl_write32(trans, CSR_INT_MASK, trans_pcie->inta_mask);
- }
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 6b546dc..c066c29 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -1441,6 +1441,8 @@ static ssize_t ath6kl_create_qos_write(struct file *file,
+ 		return -EINVAL;
+ 	pstream.medium_time = cpu_to_le32(val32);
  
-+static inline void iwl_enable_rfkill_int(struct iwl_trans *trans)
-+{
-+	IWL_DEBUG_ISR(trans, "Enabling rfkill interrupt\n");
-+	iwl_write32(trans, CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
-+}
++	pstream.nominal_phy = ((le32_to_cpu(pstream.min_phy_rate) / 1000) / 1000);
 +
- /*
-  * we have 8 bits used like this:
-  *
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-index a38a5b3..4175cb8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-@@ -1150,10 +1150,8 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
- 	if (test_bit(STATUS_INT_ENABLED, &trans->shrd->status))
- 		iwl_enable_interrupts(trans);
- 	/* Re-enable RF_KILL if it occurred */
--	else if (handled & CSR_INT_BIT_RF_KILL) {
--		IWL_DEBUG_ISR(trans, "Enabling rfkill interrupt\n");
--		iwl_write32(trans, CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
--	}
-+	else if (handled & CSR_INT_BIT_RF_KILL)
-+		iwl_enable_rfkill_int(trans);
- }
+ 	ath6kl_wmi_create_pstream_cmd(ar->wmi, vif->fw_vif_idx, &pstream);
  
- /******************************************************************************
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index a0e716f..33f119a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1045,7 +1045,7 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans, struct fw_img *fw)
- 
- 	if (iwl_is_rfkill(trans->shrd)) {
- 		iwl_set_hw_rfkill_state(priv(trans), true);
--		iwl_enable_interrupts(trans);
-+		iwl_enable_rfkill_int(trans);
- 		return -ERFKILL;
- 	}
- 
-@@ -1538,8 +1538,7 @@ static void iwl_trans_pcie_stop_hw(struct iwl_trans *trans)
- 	iwl_write32(trans, CSR_INT, 0xFFFFFFFF);
- 
- 	/* Even if we stop the HW, we still want the RF kill interrupt */
--	IWL_DEBUG_ISR(trans, "Enabling rfkill interrupt\n");
--	iwl_write32(trans, CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
-+	iwl_enable_rfkill_int(trans);
- }
- 
- static int iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
-@@ -1650,16 +1649,17 @@ static int iwl_trans_pcie_resume(struct iwl_trans *trans)
- {
- 	bool hw_rfkill = false;
- 
--	iwl_enable_interrupts(trans);
--
- 	if (!(iwl_read32(trans, CSR_GP_CNTRL) &
- 				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW))
- 		hw_rfkill = true;
- 
--	if (hw_rfkill)
-+	if (hw_rfkill) {
- 		set_bit(STATUS_RF_KILL_HW, &trans->shrd->status);
--	else
-+		iwl_enable_rfkill_int(trans);
-+	} else {
- 		clear_bit(STATUS_RF_KILL_HW, &trans->shrd->status);
-+		iwl_enable_interrupts(trans);
-+	}
- 
- 	iwl_set_hw_rfkill_state(priv(trans), hw_rfkill);
- 
+ 	return count;
 -- 
-1.7.1
+1.7.7.2
 
