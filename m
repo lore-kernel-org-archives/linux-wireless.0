@@ -1,465 +1,244 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:61987 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751656Ab2BPFco (ORCPT
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:64622 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753655Ab2BAAzb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Feb 2012 00:32:44 -0500
-Received: by pbcun15 with SMTP id un15so2127402pbc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 21:32:44 -0800 (PST)
-From: John Li <john.li.mediatek@gmail.com>
-To: users@rt2x00.serialmonkey.com
-Cc: linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	John Li <chen-yang.li@mediatek.com>
-Subject: [PATCH] rt2x00:Add RT5372 chipset support
-Date: Thu, 16 Feb 2012 13:32:32 +0800
-Message-Id: <1329370352-6009-1-git-send-email-john.li.mediatek@gmail.com> (sfid-20120216_063248_911831_121BBEAA)
+	Tue, 31 Jan 2012 19:55:31 -0500
+Received: by qcqw6 with SMTP id w6so367473qcq.19
+        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 16:55:30 -0800 (PST)
+Message-ID: <4F288D79.8040001@gmail.com> (sfid-20120201_015534_727020_D747B4BC)
+Date: Tue, 31 Jan 2012 19:55:21 -0500
+From: Richard Farina <sidhayn@gmail.com>
+MIME-Version: 1.0
+To: Alfonso Fiore <alfonso.fiore@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: compat-wireless can't compile under kernel 3.2.0 both 3.3-rc1-2
+ and 2012-01-26 - error: missing binary operator before token "("
+References: <CAO=xpBGCABtjPstHcxcPHL7MGXSa7nQw4ZtwJkfZiTq=DPAE1w@mail.gmail.com> <20120201001521.GA1721@tuxdriver.com> <CAO=xpBFwEzTuidOMj02JPjV_mHyiqFpj-CE59Tw6kyqrocRSJA@mail.gmail.com>
+In-Reply-To: <CAO=xpBFwEzTuidOMj02JPjV_mHyiqFpj-CE59Tw6kyqrocRSJA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: John Li <chen-yang.li@mediatek.com>
+On 01/31/12 19:32, Alfonso Fiore wrote:
+> Hi John,
+>
+> thank you.
+>
+> sorry for jumping the gun, but I've been fighting various driver
+> problems for weeks and now I feel so close...
+>
+> I tried to apply your patch and I imagine I did right since the error changed...
+>
+> I created a text file patch.txt and then from the folder of
+> compat-wireless I did:
+> patch -p1 < patch.txt
+> patching file include/linux/compat-2.6.h (output)
+>
+> ---
+>  include/linux/compat-2.6.h |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
+>
+> diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
+> index c23e94a..3ccd051 100644
+> --- a/include/linux/compat-2.6.h
+> +++ b/include/linux/compat-2.6.h
+> @@ -2,7 +2,9 @@
+>  #define LINUX_26_COMPAT_H
+>
+>  #include <linux/version.h>
+> -#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
+> +#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0))
+> +#include <linux/kconfig.h>
+> +#elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
+>  #include <generated/autoconf.h>
+>  #else
+>  #include <linux/autoconf.h>
+> --
+>
+> but make still complains:
+>
+> compat-wireless-2012-01-26$ make
+> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
+> make -C /lib/modules/3.2.0-interlaced2+/build
+> M=/home/alfonso/wifi/compat-wireless-2012-01-26 modules
+> make[1]: Entering directory `/home/alfonso/tests/kernel/linux_keithp'
+>   LD      /home/alfonso/wifi/compat-wireless-2012-01-26/compat/built-in.o
+>   CC [M]  /home/alfonso/wifi/compat-wireless-2012-01-26/compat/main.o
+> In file included from
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:40:0,
+>                  from <command-line>:0:
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-3.3.h:28:20:
+> error: static declaration of âskb_complete_wifi_ackâ follows
+> non-static declaration
+> include/linux/skbuff.h:2260:6: note: previous declaration of
+> âskb_complete_wifi_ackâ was here
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-3.3.h:34:13:
+> error: conflicting types for ânetdev_features_tâ
+> include/linux/netdev_features.h:15:13: note: previous declaration of
+> ânetdev_features_tâ was here
+> make[3]: *** [/home/alfonso/wifi/compat-wireless-2012-01-26/compat/main.o]
+> Error 1
+> make[2]: *** [/home/alfonso/wifi/compat-wireless-2012-01-26/compat] Error 2
+> make[1]: *** [_module_/home/alfonso/wifi/compat-wireless-2012-01-26] Error 2
+> make[1]: Leaving directory `/home/alfonso/tests/kernel/linux_keithp'
+> make: *** [modules] Error 2
+>
+> Did I do something wrong?
+>
+> thank you,
+> alfonso
+>
+> On Wed, Feb 1, 2012 at 1:15 AM, John W. Linville <linville@tuxdriver.com> wrote:
+>> Luis needs to apply "compat: use kconfig.h in compat-2.6.h for 3.1
+>> and later kernels" that I posted earlier.
+>>
+>> John
+>>
+>> On Wed, Feb 01, 2012 at 01:06:01AM +0100, Alfonso Fiore wrote:
+>>> Hi,
+>>>
+>>> I'm facing a bug you fixed in compat-wireless-3.3-rc1-2: rt2800pci:
+>>> fix spurious interrupts generation
+>>> But I must run a 3.2.0 kernel with some patches for my display driver
+>>> (cause I'm greedy and I want both to see the screen and access
+>>> internet)
+>>>
+>>> I tested in kernel 3.0.0 and I can compile and see the bug is fixed.
+>>>
+>>> but when I try to compile under 3.2.0 I get the following error:
+>>>
+>>> $ make
+Did you remember to run "make clean" after applying the patch?
 
-Signed-off-by: John Li <chen-yang.li@mediatek.com>
----
- drivers/net/wireless/rt2x00/rt2800.h    |    1 +
- drivers/net/wireless/rt2x00/rt2800lib.c |  153 ++++++++++++++++++++++++++-----
- drivers/net/wireless/rt2x00/rt2800pci.c |    3 +-
- drivers/net/wireless/rt2x00/rt2800usb.c |   14 +++
- drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
- 5 files changed, 147 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 2571a2f..56b78c8 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -68,6 +68,7 @@
- #define RF3322				0x000c
- #define RF3053				0x000d
- #define RF5370				0x5370
-+#define RF5372				0x5372
- #define RF5390				0x5390
- 
- /*
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 22a1a8f..7c6c1b5 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -402,7 +402,8 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
- 
- 	if (rt2x00_is_pci(rt2x00dev)) {
- 		if (rt2x00_rt(rt2x00dev, RT3572) ||
--		    rt2x00_rt(rt2x00dev, RT5390)) {
-+		    rt2x00_rt(rt2x00dev, RT5390) ||
-+		    rt2x00_rt(rt2x00dev, RT5392)) {
- 			rt2800_register_read(rt2x00dev, AUX_CTRL, &reg);
- 			rt2x00_set_field32(&reg, AUX_CTRL_FORCE_PCIE_CLK, 1);
- 			rt2x00_set_field32(&reg, AUX_CTRL_WAKE_PCIE_EN, 1);
-@@ -1906,7 +1907,8 @@ static void rt2800_config_channel_rf53xx(struct rt2x00_dev *rt2x00dev,
- 						   r55_nonbt_rev[idx]);
- 				rt2800_rfcsr_write(rt2x00dev, 59,
- 						   r59_nonbt_rev[idx]);
--			} else if (rt2x00_rt(rt2x00dev, RT5390)) {
-+			} else if (rt2x00_rt(rt2x00dev, RT5390) ||
-+					   rt2x00_rt(rt2x00dev, RT5392)) {
- 				static const char r59_non_bt[] = {0x8f, 0x8f,
- 					0x8f, 0x8f, 0x8f, 0x8f, 0x8f, 0x8d,
- 					0x8a, 0x88, 0x88, 0x87, 0x87, 0x86};
-@@ -1956,6 +1958,7 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 		rt2800_config_channel_rf3052(rt2x00dev, conf, rf, info);
- 		break;
- 	case RF5370:
-+	case RF5372:
- 	case RF5390:
- 		rt2800_config_channel_rf53xx(rt2x00dev, conf, rf, info);
- 		break;
-@@ -1972,7 +1975,8 @@ static void rt2800_config_channel(struct rt2x00_dev *rt2x00dev,
- 	rt2800_bbp_write(rt2x00dev, 86, 0);
- 
- 	if (rf->channel <= 14) {
--		if (!rt2x00_rt(rt2x00dev, RT5390)) {
-+		if (!rt2x00_rt(rt2x00dev, RT5390) ||
-+			!rt2x00_rt(rt2x00dev, RT5392)) {
- 			if (test_bit(CAPABILITY_EXTERNAL_LNA_BG,
- 				     &rt2x00dev->cap_flags)) {
- 				rt2800_bbp_write(rt2x00dev, 82, 0x62);
-@@ -2502,7 +2506,8 @@ static u8 rt2800_get_default_vgc(struct rt2x00_dev *rt2x00dev)
- 		    rt2x00_rt(rt2x00dev, RT3071) ||
- 		    rt2x00_rt(rt2x00dev, RT3090) ||
- 		    rt2x00_rt(rt2x00dev, RT3390) ||
--		    rt2x00_rt(rt2x00dev, RT5390))
-+		    rt2x00_rt(rt2x00dev, RT5390) ||
-+		    rt2x00_rt(rt2x00dev, RT5392))
- 			return 0x1c + (2 * rt2x00dev->lna_gain);
- 		else
- 			return 0x2e + rt2x00dev->lna_gain;
-@@ -2637,7 +2642,8 @@ static int rt2800_init_registers(struct rt2x00_dev *rt2x00dev)
- 	} else if (rt2x00_rt(rt2x00dev, RT3572)) {
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000400);
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
--	} else if (rt2x00_rt(rt2x00dev, RT5390)) {
-+	} else if (rt2x00_rt(rt2x00dev, RT5390) ||
-+			   rt2x00_rt(rt2x00dev, RT5392)) {
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
- 		rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
-@@ -3013,7 +3019,8 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 		     rt2800_wait_bbp_ready(rt2x00dev)))
- 		return -EACCES;
- 
--	if (rt2x00_rt(rt2x00dev, RT5390)) {
-+	if (rt2x00_rt(rt2x00dev, RT5390) ||
-+		rt2x00_rt(rt2x00dev, RT5392)) {
- 		rt2800_bbp_read(rt2x00dev, 4, &value);
- 		rt2x00_set_field8(&value, BBP4_MAC_IF_CTRL, 1);
- 		rt2800_bbp_write(rt2x00dev, 4, value);
-@@ -3021,19 +3028,22 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 
- 	if (rt2800_is_305x_soc(rt2x00dev) ||
- 	    rt2x00_rt(rt2x00dev, RT3572) ||
--	    rt2x00_rt(rt2x00dev, RT5390))
-+	    rt2x00_rt(rt2x00dev, RT5390) ||
-+	    rt2x00_rt(rt2x00dev, RT5392))
- 		rt2800_bbp_write(rt2x00dev, 31, 0x08);
- 
- 	rt2800_bbp_write(rt2x00dev, 65, 0x2c);
- 	rt2800_bbp_write(rt2x00dev, 66, 0x38);
- 
--	if (rt2x00_rt(rt2x00dev, RT5390))
-+	if (rt2x00_rt(rt2x00dev, RT5390) ||
-+		rt2x00_rt(rt2x00dev, RT5392))
- 		rt2800_bbp_write(rt2x00dev, 68, 0x0b);
- 
- 	if (rt2x00_rt_rev(rt2x00dev, RT2860, REV_RT2860C)) {
- 		rt2800_bbp_write(rt2x00dev, 69, 0x16);
- 		rt2800_bbp_write(rt2x00dev, 73, 0x12);
--	} else if (rt2x00_rt(rt2x00dev, RT5390)) {
-+	} else if (rt2x00_rt(rt2x00dev, RT5390) ||
-+			   rt2x00_rt(rt2x00dev, RT5392)) {
- 		rt2800_bbp_write(rt2x00dev, 69, 0x12);
- 		rt2800_bbp_write(rt2x00dev, 73, 0x13);
- 		rt2800_bbp_write(rt2x00dev, 75, 0x46);
-@@ -3051,7 +3061,8 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 	    rt2x00_rt(rt2x00dev, RT3090) ||
- 	    rt2x00_rt(rt2x00dev, RT3390) ||
- 	    rt2x00_rt(rt2x00dev, RT3572) ||
--	    rt2x00_rt(rt2x00dev, RT5390)) {
-+	    rt2x00_rt(rt2x00dev, RT5390) ||
-+	    rt2x00_rt(rt2x00dev, RT5392)) {
- 		rt2800_bbp_write(rt2x00dev, 79, 0x13);
- 		rt2800_bbp_write(rt2x00dev, 80, 0x05);
- 		rt2800_bbp_write(rt2x00dev, 81, 0x33);
-@@ -3063,64 +3074,88 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 	}
- 
- 	rt2800_bbp_write(rt2x00dev, 82, 0x62);
--	if (rt2x00_rt(rt2x00dev, RT5390))
-+	if (rt2x00_rt(rt2x00dev, RT5390) ||
-+		rt2x00_rt(rt2x00dev, RT5392))
- 		rt2800_bbp_write(rt2x00dev, 83, 0x7a);
- 	else
- 		rt2800_bbp_write(rt2x00dev, 83, 0x6a);
- 
- 	if (rt2x00_rt_rev(rt2x00dev, RT2860, REV_RT2860D))
- 		rt2800_bbp_write(rt2x00dev, 84, 0x19);
--	else if (rt2x00_rt(rt2x00dev, RT5390))
-+	else if (rt2x00_rt(rt2x00dev, RT5390) ||
-+			 rt2x00_rt(rt2x00dev, RT5392))
- 		rt2800_bbp_write(rt2x00dev, 84, 0x9a);
- 	else
- 		rt2800_bbp_write(rt2x00dev, 84, 0x99);
- 
--	if (rt2x00_rt(rt2x00dev, RT5390))
-+	if (rt2x00_rt(rt2x00dev, RT5390) ||
-+		rt2x00_rt(rt2x00dev, RT5392))
- 		rt2800_bbp_write(rt2x00dev, 86, 0x38);
- 	else
- 		rt2800_bbp_write(rt2x00dev, 86, 0x00);
- 
-+	if (rt2x00_rt(rt2x00dev, RT5392))
-+		rt2800_bbp_write(rt2x00dev, 88, 0x90);
-+
- 	rt2800_bbp_write(rt2x00dev, 91, 0x04);
- 
--	if (rt2x00_rt(rt2x00dev, RT5390))
-+	if (rt2x00_rt(rt2x00dev, RT5390) ||
-+		rt2x00_rt(rt2x00dev, RT5392))
- 		rt2800_bbp_write(rt2x00dev, 92, 0x02);
- 	else
- 		rt2800_bbp_write(rt2x00dev, 92, 0x00);
- 
-+	if (rt2x00_rt(rt2x00dev, RT5392)) {
-+		rt2800_bbp_write(rt2x00dev, 95, 0x9a);
-+		rt2800_bbp_write(rt2x00dev, 98, 0x12);
-+	}
-+
- 	if (rt2x00_rt_rev_gte(rt2x00dev, RT3070, REV_RT3070F) ||
- 	    rt2x00_rt_rev_gte(rt2x00dev, RT3071, REV_RT3071E) ||
- 	    rt2x00_rt_rev_gte(rt2x00dev, RT3090, REV_RT3090E) ||
- 	    rt2x00_rt_rev_gte(rt2x00dev, RT3390, REV_RT3390E) ||
- 	    rt2x00_rt(rt2x00dev, RT3572) ||
- 	    rt2x00_rt(rt2x00dev, RT5390) ||
-+	    rt2x00_rt(rt2x00dev, RT5392) ||
- 	    rt2800_is_305x_soc(rt2x00dev))
- 		rt2800_bbp_write(rt2x00dev, 103, 0xc0);
- 	else
- 		rt2800_bbp_write(rt2x00dev, 103, 0x00);
- 
--	if (rt2x00_rt(rt2x00dev, RT5390))
-+	if (rt2x00_rt(rt2x00dev, RT5390) ||
-+		rt2x00_rt(rt2x00dev, RT5392))
- 		rt2800_bbp_write(rt2x00dev, 104, 0x92);
- 
- 	if (rt2800_is_305x_soc(rt2x00dev))
- 		rt2800_bbp_write(rt2x00dev, 105, 0x01);
--	else if (rt2x00_rt(rt2x00dev, RT5390))
-+	else if (rt2x00_rt(rt2x00dev, RT5390) ||
-+			 rt2x00_rt(rt2x00dev, RT5392))
- 		rt2800_bbp_write(rt2x00dev, 105, 0x3c);
- 	else
- 		rt2800_bbp_write(rt2x00dev, 105, 0x05);
- 
- 	if (rt2x00_rt(rt2x00dev, RT5390))
- 		rt2800_bbp_write(rt2x00dev, 106, 0x03);
-+	else if (rt2x00_rt(rt2x00dev, RT5392))
-+		rt2800_bbp_write(rt2x00dev, 106, 0x12);
- 	else
- 		rt2800_bbp_write(rt2x00dev, 106, 0x35);
- 
--	if (rt2x00_rt(rt2x00dev, RT5390))
-+	if (rt2x00_rt(rt2x00dev, RT5390) ||
-+		rt2x00_rt(rt2x00dev, RT5392))
- 		rt2800_bbp_write(rt2x00dev, 128, 0x12);
- 
-+	if (rt2x00_rt(rt2x00dev, RT5392)) {
-+		rt2800_bbp_write(rt2x00dev, 134, 0xd0);
-+		rt2800_bbp_write(rt2x00dev, 135, 0xf6);
-+	}
-+
- 	if (rt2x00_rt(rt2x00dev, RT3071) ||
- 	    rt2x00_rt(rt2x00dev, RT3090) ||
- 	    rt2x00_rt(rt2x00dev, RT3390) ||
- 	    rt2x00_rt(rt2x00dev, RT3572) ||
--	    rt2x00_rt(rt2x00dev, RT5390)) {
-+	    rt2x00_rt(rt2x00dev, RT5390) ||
-+	    rt2x00_rt(rt2x00dev, RT5392)) {
- 		rt2800_bbp_read(rt2x00dev, 138, &value);
- 
- 		rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF0, &eeprom);
-@@ -3132,7 +3167,8 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
- 		rt2800_bbp_write(rt2x00dev, 138, value);
- 	}
- 
--	if (rt2x00_rt(rt2x00dev, RT5390)) {
-+	if (rt2x00_rt(rt2x00dev, RT5390) ||
-+		rt2x00_rt(rt2x00dev, RT5392)) {
- 		int ant, div_mode;
- 
- 		rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF1, &eeprom);
-@@ -3258,13 +3294,15 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 	    !rt2x00_rt(rt2x00dev, RT3390) &&
- 	    !rt2x00_rt(rt2x00dev, RT3572) &&
- 	    !rt2x00_rt(rt2x00dev, RT5390) &&
-+	    !rt2x00_rt(rt2x00dev, RT5392) &&
- 	    !rt2800_is_305x_soc(rt2x00dev))
- 		return 0;
- 
- 	/*
- 	 * Init RF calibration.
- 	 */
--	if (rt2x00_rt(rt2x00dev, RT5390)) {
-+	if (rt2x00_rt(rt2x00dev, RT5390) ||
-+		rt2x00_rt(rt2x00dev, RT5392)) {
- 		rt2800_rfcsr_read(rt2x00dev, 2, &rfcsr);
- 		rt2x00_set_field8(&rfcsr, RFCSR2_RESCAL_EN, 1);
- 		rt2800_rfcsr_write(rt2x00dev, 2, rfcsr);
-@@ -3482,6 +3520,66 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 			rt2800_rfcsr_write(rt2x00dev, 61, 0xdd);
- 		rt2800_rfcsr_write(rt2x00dev, 62, 0x00);
- 		rt2800_rfcsr_write(rt2x00dev, 63, 0x00);
-+	}	else if (rt2x00_rt(rt2x00dev, RT5392)) {
-+			rt2800_rfcsr_write(rt2x00dev, 1, 0x17);
-+			rt2800_rfcsr_write(rt2x00dev, 2, 0x80);
-+			rt2800_rfcsr_write(rt2x00dev, 3, 0x88);
-+			rt2800_rfcsr_write(rt2x00dev, 5, 0x10);
-+			rt2800_rfcsr_write(rt2x00dev, 6, 0xe0);
-+			rt2800_rfcsr_write(rt2x00dev, 7, 0x00);
-+			rt2800_rfcsr_write(rt2x00dev, 10, 0x53);
-+			rt2800_rfcsr_write(rt2x00dev, 11, 0x4a);
-+			rt2800_rfcsr_write(rt2x00dev, 12, 0x46);
-+			rt2800_rfcsr_write(rt2x00dev, 13, 0x9f);
-+			rt2800_rfcsr_write(rt2x00dev, 14, 0x00);
-+			rt2800_rfcsr_write(rt2x00dev, 15, 0x00);
-+			rt2800_rfcsr_write(rt2x00dev, 16, 0x00);
-+			rt2800_rfcsr_write(rt2x00dev, 18, 0x03);
-+			rt2800_rfcsr_write(rt2x00dev, 19, 0x4d);
-+			rt2800_rfcsr_write(rt2x00dev, 20, 0x00);
-+			rt2800_rfcsr_write(rt2x00dev, 21, 0x8d);
-+			rt2800_rfcsr_write(rt2x00dev, 22, 0x20);
-+			rt2800_rfcsr_write(rt2x00dev, 23, 0x0b);
-+			rt2800_rfcsr_write(rt2x00dev, 24, 0x44);
-+			rt2800_rfcsr_write(rt2x00dev, 25, 0x80);
-+			rt2800_rfcsr_write(rt2x00dev, 26, 0x82);
-+			rt2800_rfcsr_write(rt2x00dev, 27, 0x09);
-+			rt2800_rfcsr_write(rt2x00dev, 28, 0x00);
-+			rt2800_rfcsr_write(rt2x00dev, 29, 0x10);
-+			rt2800_rfcsr_write(rt2x00dev, 30, 0x10);
-+			rt2800_rfcsr_write(rt2x00dev, 31, 0x80);
-+			rt2800_rfcsr_write(rt2x00dev, 32, 0x20);
-+			rt2800_rfcsr_write(rt2x00dev, 33, 0xC0);
-+			rt2800_rfcsr_write(rt2x00dev, 34, 0x07);
-+			rt2800_rfcsr_write(rt2x00dev, 35, 0x12);
-+			rt2800_rfcsr_write(rt2x00dev, 36, 0x00);
-+			rt2800_rfcsr_write(rt2x00dev, 37, 0x08);
-+			rt2800_rfcsr_write(rt2x00dev, 38, 0x89);
-+			rt2800_rfcsr_write(rt2x00dev, 39, 0x1b);
-+			rt2800_rfcsr_write(rt2x00dev, 40, 0x0f);
-+			rt2800_rfcsr_write(rt2x00dev, 41, 0xbb);
-+			rt2800_rfcsr_write(rt2x00dev, 42, 0xd5);
-+			rt2800_rfcsr_write(rt2x00dev, 43, 0x9b);
-+			rt2800_rfcsr_write(rt2x00dev, 44, 0x0e);
-+			rt2800_rfcsr_write(rt2x00dev, 45, 0xa2);
-+			rt2800_rfcsr_write(rt2x00dev, 46, 0x73);
-+			rt2800_rfcsr_write(rt2x00dev, 47, 0x0c);
-+			rt2800_rfcsr_write(rt2x00dev, 48, 0x10);
-+			rt2800_rfcsr_write(rt2x00dev, 49, 0x94);
-+			rt2800_rfcsr_write(rt2x00dev, 50, 0x94);
-+			rt2800_rfcsr_write(rt2x00dev, 51, 0x3a);
-+			rt2800_rfcsr_write(rt2x00dev, 52, 0x48);
-+			rt2800_rfcsr_write(rt2x00dev, 53, 0x44);
-+			rt2800_rfcsr_write(rt2x00dev, 54, 0x38);
-+			rt2800_rfcsr_write(rt2x00dev, 55, 0x43);
-+			rt2800_rfcsr_write(rt2x00dev, 56, 0xa1);
-+			rt2800_rfcsr_write(rt2x00dev, 57, 0x00);
-+			rt2800_rfcsr_write(rt2x00dev, 58, 0x39);
-+			rt2800_rfcsr_write(rt2x00dev, 59, 0x07);
-+			rt2800_rfcsr_write(rt2x00dev, 60, 0x45);
-+			rt2800_rfcsr_write(rt2x00dev, 61, 0x91);
-+			rt2800_rfcsr_write(rt2x00dev, 62, 0x39);
-+			rt2800_rfcsr_write(rt2x00dev, 63, 0x07);
- 	}
- 
- 	if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F)) {
-@@ -3549,7 +3647,8 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 			rt2800_init_rx_filter(rt2x00dev, true, 0x27, 0x15);
- 	}
- 
--	if (!rt2x00_rt(rt2x00dev, RT5390)) {
-+	if (!rt2x00_rt(rt2x00dev, RT5390) ||
-+		!rt2x00_rt(rt2x00dev, RT5392)) {
- 		/*
- 		 * Set back to initial state
- 		 */
-@@ -3577,7 +3676,8 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 	rt2x00_set_field32(&reg, OPT_14_CSR_BIT0, 1);
- 	rt2800_register_write(rt2x00dev, OPT_14_CSR, reg);
- 
--	if (!rt2x00_rt(rt2x00dev, RT5390)) {
-+	if (!rt2x00_rt(rt2x00dev, RT5390) ||
-+		!rt2x00_rt(rt2x00dev, RT5392)) {
- 		rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
- 		rt2x00_set_field8(&rfcsr, RFCSR17_TX_LO1_EN, 0);
- 		if (rt2x00_rt(rt2x00dev, RT3070) ||
-@@ -3645,7 +3745,8 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
- 		rt2800_rfcsr_write(rt2x00dev, 27, rfcsr);
- 	}
- 
--	if (rt2x00_rt(rt2x00dev, RT5390)) {
-+	if (rt2x00_rt(rt2x00dev, RT5390) ||
-+		rt2x00_rt(rt2x00dev, RT5392)) {
- 		rt2800_rfcsr_read(rt2x00dev, 38, &rfcsr);
- 		rt2x00_set_field8(&rfcsr, RFCSR38_RX_LO1_EN, 0);
- 		rt2800_rfcsr_write(rt2x00dev, 38, rfcsr);
-@@ -3929,7 +4030,8 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	 * RT53xx: defined in "EEPROM_CHIP_ID" field
- 	 */
- 	rt2800_register_read(rt2x00dev, MAC_CSR0, &reg);
--	if (rt2x00_get_field32(reg, MAC_CSR0_CHIPSET) == RT5390)
-+	if (rt2x00_get_field32(reg, MAC_CSR0_CHIPSET) == RT5390 ||
-+		rt2x00_get_field32(reg, MAC_CSR0_CHIPSET) == RT5392)
- 		rt2x00_eeprom_read(rt2x00dev, EEPROM_CHIP_ID, &value);
- 	else
- 		value = rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_RF_TYPE);
-@@ -3947,6 +4049,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	case RT3390:
- 	case RT3572:
- 	case RT5390:
-+	case RT5392:
- 		break;
- 	default:
- 		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
-@@ -3965,6 +4068,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
- 	case RF3052:
- 	case RF3320:
- 	case RF5370:
-+	case RF5372:
- 	case RF5390:
- 		break;
- 	default:
-@@ -4271,6 +4375,7 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 		   rt2x00_rf(rt2x00dev, RF3022) ||
- 		   rt2x00_rf(rt2x00dev, RF3320) ||
- 		   rt2x00_rf(rt2x00dev, RF5370) ||
-+		   rt2x00_rf(rt2x00dev, RF5372) ||
- 		   rt2x00_rf(rt2x00dev, RF5390)) {
- 		spec->num_channels = 14;
- 		spec->channels = rf_vals_3x;
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 837b460..bf0f83c 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -480,7 +480,8 @@ static int rt2800pci_init_registers(struct rt2x00_dev *rt2x00dev)
- 
- 	if (rt2x00_is_pcie(rt2x00dev) &&
- 	    (rt2x00_rt(rt2x00dev, RT3572) ||
--	     rt2x00_rt(rt2x00dev, RT5390))) {
-+	     rt2x00_rt(rt2x00dev, RT5390) ||
-+	     rt2x00_rt(rt2x00dev, RT5392))) {
- 		rt2x00pci_register_read(rt2x00dev, AUX_CTRL, &reg);
- 		rt2x00_set_field32(&reg, AUX_CTRL_FORCE_PCIE_CLK, 1);
- 		rt2x00_set_field32(&reg, AUX_CTRL_WAKE_PCIE_EN, 1);
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index 7f21005..6565113 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -1101,12 +1101,26 @@ static struct usb_device_id rt2800usb_device_table[] = {
- 	{ USB_DEVICE(0x5a57, 0x0284) },
- #endif
- #ifdef CONFIG_RT2800USB_RT53XX
-+	/* Alpha */
-+	{ USB_DEVICE(0x2001, 0x3c15) },
-+	{ USB_DEVICE(0x2001, 0x3c19) },
-+	/* Arcadyan */
-+	{ USB_DEVICE(0x043e, 0x7a12) },
- 	/* Azurewave */
- 	{ USB_DEVICE(0x13d3, 0x3329) },
- 	{ USB_DEVICE(0x13d3, 0x3365) },
-+	/* LG innotek */
-+	{ USB_DEVICE(0x043e, 0x7a22) },
-+	/* Panasonic */
-+	{ USB_DEVICE(0x04da, 0x1801) },
-+	{ USB_DEVICE(0x04da, 0x1800) },
-+	/* Philips */
-+	{ USB_DEVICE(0x0471, 0x2104) },
- 	/* Ralink */
- 	{ USB_DEVICE(0x148f, 0x5370) },
- 	{ USB_DEVICE(0x148f, 0x5372) },
-+	/* Unknown */
-+	{ USB_DEVICE(0x04da, 0x23f6) },
- #endif
- #ifdef CONFIG_RT2800USB_UNKNOWN
- 	/*
-diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-index b03b22c..bf743cd 100644
---- a/drivers/net/wireless/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/rt2x00/rt2x00.h
-@@ -192,6 +192,7 @@ struct rt2x00_chip {
- #define RT3593		0x3593
- #define RT3883		0x3883	/* WSOC */
- #define RT5390		0x5390  /* 2.4GHz */
-+#define RT5392		0x5392  /* 2.4GHz */
- 
- 	u16 rf;
- 	u16 rev;
--- 
-1.7.6.5
+-Rick
+>>> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
+>>> make -C /lib/modules/3.2.0-interlaced2+/build
+>>> M=/home/alfonso/wifi/compat-wireless-2012-01-26 modules
+>>> make[1]: Entering directory `/home/alfonso/tests/kernel/linux_keithp'
+>>>   LD      /home/alfonso/wifi/compat-wireless-2012-01-26/compat/built-in.o
+>>>   CC [M]  /home/alfonso/wifi/compat-wireless-2012-01-26/compat/main.o
+>>> In file included from include/net/net_namespace.h:13:0,
+>>>                  from
+>>> /home/alfonso/wifi/compat-wireless-2012-01-26/include/net/net_namespace.h:7,
+>>>                  from include/linux/netdevice.h:49,
+>>>                  from
+>>> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5,
+>>>                  from
+>>> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
+>>>                  from <command-line>:0:
+>>> include/net/netns/mib.h:15:5: warning: "IS_ENABLED" is not defined [-Wundef]
+>>> include/net/netns/mib.h:15:15: error: missing binary operator before token "("
+>>> In file included from include/net/net_namespace.h:23:0,
+>>>                  from
+>>> /home/alfonso/wifi/compat-wireless-2012-01-26/include/net/net_namespace.h:7,
+>>>                  from include/linux/netdevice.h:49,
+>>>                  from
+>>> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5,
+>>>                  from
+>>> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
+>>>                  from <command-line>:0:
+>>> include/net/netns/xfrm.h:59:5: warning: "IS_ENABLED" is not defined [-Wundef]
+>>> include/net/netns/xfrm.h:59:15: error: missing binary operator before token "("
+>>> In file included from
+>>> /home/alfonso/wifi/compat-wireless-2012-01-26/include/net/net_namespace.h:7:0,
+>>>                  from include/linux/netdevice.h:49,
+>>>                  from
+>>> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5,
+>>>                  from
+>>> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
+>>>                  from <command-line>:0:
+>>> include/net/net_namespace.h:80:5: warning: "IS_ENABLED" is not defined [-Wundef]
+>>> include/net/net_namespace.h:80:15: error: missing binary operator
+>>> before token "("
+>>> In file included from include/linux/netdevice.h:54:0,
+>>>                  from
+>>> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5,
+>>>                  from
+>>> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
+>>>                  from <command-line>:0:
+>>> include/net/netprio_cgroup.h: In function ātask_netprio_stateā:
+>>> include/net/netprio_cgroup.h:44:5: warning: "IS_ENABLED" is not
+>>> defined [-Wundef]
+>>> include/net/netprio_cgroup.h:44:15: error: missing binary operator
+>>> before token "("
+>>> In file included from
+>>> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5:0,
+>>>                  from
+>>> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
+>>>                  from <command-line>:0:
+>>> include/linux/netdevice.h: At top level:
+>>> include/linux/netdevice.h:147:39: error: missing binary operator
+>>> before token "("
+>>> include/linux/netdevice.h:153:7: warning: "IS_ENABLED" is not defined [-Wundef]
+>>> include/linux/netdevice.h:153:17: error: missing binary operator
+>>> before token "("
+>>> include/linux/netdevice.h:159:6: warning: "IS_ENABLED" is not defined [-Wundef]
+>>> include/linux/netdevice.h:159:16: error: missing binary operator
+>>> before token "("
+>>> include/linux/netdevice.h:964:5: warning: "IS_ENABLED" is not defined [-Wundef]
+>>> include/linux/netdevice.h:964:15: error: missing binary operator
+>>> before token "("
+>>> include/linux/netdevice.h:981:5: warning: "IS_ENABLED" is not defined [-Wundef]
+>>> include/linux/netdevice.h:981:15: error: missing binary operator
+>>> before token "("
+>>> include/linux/netdevice.h:1123:5: warning: "IS_ENABLED" is not defined [-Wundef]
+>>> include/linux/netdevice.h:1123:15: error: missing binary operator
+>>> before token "("
+>>> include/linux/netdevice.h:1126:5: warning: "IS_ENABLED" is not defined [-Wundef]
+>>> include/linux/netdevice.h:1126:15: error: missing binary operator
+>>> before token "("
+>>> include/linux/netdevice.h:1289:5: warning: "IS_ENABLED" is not defined [-Wundef]
+>>> include/linux/netdevice.h:1289:15: error: missing binary operator
+>>> before token "("
+>>> include/linux/netdevice.h:1293:5: warning: "IS_ENABLED" is not defined [-Wundef]
+>>> include/linux/netdevice.h:1293:15: error: missing binary operator
+>>> before token "("
+>>> include/linux/netdevice.h: In function ānetdev_uses_dsa_tagsā:
+>>> include/linux/netdevice.h:1397:9: error: āstruct net_deviceā has no
+>>> member named ādsa_ptrā
+>>> include/linux/netdevice.h:1398:31: error: āstruct net_deviceā has no
+>>> member named ādsa_ptrā
+>>> include/linux/netdevice.h: In function ānetdev_uses_trailer_tagsā:
+>>> include/linux/netdevice.h:1416:9: error: āstruct net_deviceā has no
+>>> member named ādsa_ptrā
+>>> include/linux/netdevice.h:1417:35: error: āstruct net_deviceā has no
+>>> member named ādsa_ptrā
+>>> In file included from
+>>> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:38:0,
+>>>                  from <command-line>:0:
+>>> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-3.3.h:
+>>> At top level:
+>>> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-3.3.h:28:20:
+>>> error: static declaration of āskb_complete_wifi_ackā follows
+>>> non-static declaration
+>>> include/linux/skbuff.h:2260:6: note: previous declaration of
+>>> āskb_complete_wifi_ackā was here
+>>> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-3.3.h:34:13:
+>>> error: conflicting types for ānetdev_features_tā
+>>> include/linux/netdev_features.h:15:13: note: previous declaration of
+>>> ānetdev_features_tā was here
+>>> make[3]: *** [/home/alfonso/wifi/compat-wireless-2012-01-26/compat/main.o]
+>>> Error 1
+>>> make[2]: *** [/home/alfonso/wifi/compat-wireless-2012-01-26/compat] Error 2
+>>> make[1]: *** [_module_/home/alfonso/wifi/compat-wireless-2012-01-26] Error 2
+>>> make[1]: Leaving directory `/home/alfonso/tests/kernel/linux_keithp'
+>>> make: *** [modules] Error 2
+>>>
+>>> Thank you for you help,
+>>> alfonso
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>> --
+>> John W. Linville                Someday the world will need a hero, and you
+>> linville@tuxdriver.com                  might be all we have.  Be ready.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
