@@ -1,43 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:55265 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751294Ab2BHJ5m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 04:57:42 -0500
-Message-ID: <4F3244DF.8020909@adurom.com> (sfid-20120208_105745_816745_A39974E4)
-Date: Wed, 08 Feb 2012 11:48:15 +0200
-From: Kalle Valo <kvalo@adurom.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:41871 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754243Ab2BATOm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Feb 2012 14:14:42 -0500
+Message-ID: <4F298F19.7000102@hauke-m.de> (sfid-20120201_201445_632264_B65AF5A9)
+Date: Wed, 01 Feb 2012 20:14:33 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-To: Naveen Gangadharan <ngangadh@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: Fix firmware crash dump
-References: <1328684012-2209-1-git-send-email-ngangadh@qca.qualcomm.com>
-In-Reply-To: <1328684012-2209-1-git-send-email-ngangadh@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] compat: add __cancel_delayed_work()
+References: <1327153475-28081-1-git-send-email-hauke@hauke-m.de> <CAB=NE6UBBRg53EjW3t8YEUoGLvQS00dnx6Z=-rmBa7pb-D_TCg@mail.gmail.com>
+In-Reply-To: <CAB=NE6UBBRg53EjW3t8YEUoGLvQS00dnx6Z=-rmBa7pb-D_TCg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/08/2012 08:53 AM, Naveen Gangadharan wrote:
-> Fixed a bug when we dump the firmware crash log.
+On 01/23/2012 06:31 PM, Luis R. Rodriguez wrote:
+> On Sat, Jan 21, 2012 at 5:44 AM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>> __cancel_delayed_work is needed by include/net/bluetooth/l2cap.h and
+>> not available in old kernel versions. This was just copied from the
+>> kernel.
+>>
+>> This should also go into compat-wireless-stable-3.3.
+>>
+>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
 > 
-> Signed-off-by: Naveen Gangadharan <ngangadh@qca.qualcomm.com>
+> Thanks! Applied all onto compat-wireless.git and compat.git, in
+> addition to the linux-3.3.y branch for compat.git as you indicated for
+> this patch. Will roll out a new tarball right away.
+> 
+>   Luis
 
-Thanks, applied with these changes:
+This patch is not in the master branch of compat, it is just in the
+linux-3.3.y branch. Could you please add this to master.
+It is commit ed1b6816e893ee7a158ecd30687970faf4facc21 in linux-3.3.y.
 
-commit 3b96d49a79021ce4c1ca26aecd784d16aeb91a7c
-Author: Naveen Gangadharan <ngangadh@qca.qualcomm.com>
-Date:   Tue Feb 7 22:53:32 2012 -0800
-
-    ath6kl: Fix firmware crash dump
-
-    The firmware crash dump printout was wrong as it was using incorrect
-    offsets.
-
-    kvalo: improve commit log, change the "%d:" to print word indexes,
-not bytes
-
-    Signed-off-by: Naveen Gangadharan <ngangadh@qca.qualcomm.com>
-    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-
-Kalle
+Hauke
