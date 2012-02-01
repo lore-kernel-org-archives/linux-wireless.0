@@ -1,47 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:41320 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754284Ab2B2UBF (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56011 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752625Ab2BAAPr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 15:01:05 -0500
-Message-ID: <4F4E83FD.3060506@lwfinger.net> (sfid-20120229_210135_988856_B1D327C1)
-Date: Wed, 29 Feb 2012 14:01:01 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 31 Jan 2012 19:15:47 -0500
+Date: Tue, 31 Jan 2012 19:15:21 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Alfonso Fiore <alfonso.fiore@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: compat-wireless can't compile under kernel 3.2.0 both 3.3-rc1-2
+ and 2012-01-26 - error: missing binary operator before token "("
+Message-ID: <20120201001521.GA1721@tuxdriver.com> (sfid-20120201_011551_246710_E7885B7E)
+References: <CAO=xpBGCABtjPstHcxcPHL7MGXSa7nQw4ZtwJkfZiTq=DPAE1w@mail.gmail.com>
 MIME-Version: 1.0
-To: Max Filippov <jcmvbkbc@gmail.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	chunkeey@web.de, m@bues.ch, linux-kernel@vger.kernel.org,
-	devel@driverdev.osuosl.org
-Subject: Re: [RFC/RFT 5/5] p54spi: Load firmware from work queue and not from
- probe routine
-References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net> <1329161826-11135-6-git-send-email-Larry.Finger@lwfinger.net> <4F4E4B8B.8090508@lwfinger.net> <CAMo8BfK5=YwZYepFoP5SqgDQMPvUeQobqNiBCMM5=eTwUT5e0A@mail.gmail.com>
-In-Reply-To: <CAMo8BfK5=YwZYepFoP5SqgDQMPvUeQobqNiBCMM5=eTwUT5e0A@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAO=xpBGCABtjPstHcxcPHL7MGXSa7nQw4ZtwJkfZiTq=DPAE1w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/29/2012 01:54 PM, Max Filippov wrote:
->>> Drivers that load firmware from their probe routine have problems with the
->>> latest versions of udev as they get timeouts while waiting for user
->>> space to start. The problem is fixed by loading the firmware and starting
->>> mac80211 from a delayed_work queue. By using this method, most of the
->>> original code is preserved.
->>>
->>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
->>> ---
->>> This one is compile-tested only.
->>>
->>> Larry
->>> ---
->>
->>
->> Any testing done here?
->
-> insmod immediately followed by rmmod causes NULL pointer dereference.
-> The same always happens on rmmode when the firmware image is absent:
+Luis needs to apply "compat: use kconfig.h in compat-2.6.h for 3.1
+and later kernels" that I posted earlier.
 
-Thanks for testing.
+John
 
-Larry
+On Wed, Feb 01, 2012 at 01:06:01AM +0100, Alfonso Fiore wrote:
+> Hi,
+> 
+> I'm facing a bug you fixed in compat-wireless-3.3-rc1-2: rt2800pci:
+> fix spurious interrupts generation
+> But I must run a 3.2.0 kernel with some patches for my display driver
+> (cause I'm greedy and I want both to see the screen and access
+> internet)
+> 
+> I tested in kernel 3.0.0 and I can compile and see the bug is fixed.
+> 
+> but when I try to compile under 3.2.0 I get the following error:
+> 
+> $ make
+> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
+> make -C /lib/modules/3.2.0-interlaced2+/build
+> M=/home/alfonso/wifi/compat-wireless-2012-01-26 modules
+> make[1]: Entering directory `/home/alfonso/tests/kernel/linux_keithp'
+>   LD      /home/alfonso/wifi/compat-wireless-2012-01-26/compat/built-in.o
+>   CC [M]  /home/alfonso/wifi/compat-wireless-2012-01-26/compat/main.o
+> In file included from include/net/net_namespace.h:13:0,
+>                  from
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/net/net_namespace.h:7,
+>                  from include/linux/netdevice.h:49,
+>                  from
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5,
+>                  from
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
+>                  from <command-line>:0:
+> include/net/netns/mib.h:15:5: warning: "IS_ENABLED" is not defined [-Wundef]
+> include/net/netns/mib.h:15:15: error: missing binary operator before token "("
+> In file included from include/net/net_namespace.h:23:0,
+>                  from
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/net/net_namespace.h:7,
+>                  from include/linux/netdevice.h:49,
+>                  from
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5,
+>                  from
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
+>                  from <command-line>:0:
+> include/net/netns/xfrm.h:59:5: warning: "IS_ENABLED" is not defined [-Wundef]
+> include/net/netns/xfrm.h:59:15: error: missing binary operator before token "("
+> In file included from
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/net/net_namespace.h:7:0,
+>                  from include/linux/netdevice.h:49,
+>                  from
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5,
+>                  from
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
+>                  from <command-line>:0:
+> include/net/net_namespace.h:80:5: warning: "IS_ENABLED" is not defined [-Wundef]
+> include/net/net_namespace.h:80:15: error: missing binary operator
+> before token "("
+> In file included from include/linux/netdevice.h:54:0,
+>                  from
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5,
+>                  from
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
+>                  from <command-line>:0:
+> include/net/netprio_cgroup.h: In function âtask_netprio_stateâ:
+> include/net/netprio_cgroup.h:44:5: warning: "IS_ENABLED" is not
+> defined [-Wundef]
+> include/net/netprio_cgroup.h:44:15: error: missing binary operator
+> before token "("
+> In file included from
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5:0,
+>                  from
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
+>                  from <command-line>:0:
+> include/linux/netdevice.h: At top level:
+> include/linux/netdevice.h:147:39: error: missing binary operator
+> before token "("
+> include/linux/netdevice.h:153:7: warning: "IS_ENABLED" is not defined [-Wundef]
+> include/linux/netdevice.h:153:17: error: missing binary operator
+> before token "("
+> include/linux/netdevice.h:159:6: warning: "IS_ENABLED" is not defined [-Wundef]
+> include/linux/netdevice.h:159:16: error: missing binary operator
+> before token "("
+> include/linux/netdevice.h:964:5: warning: "IS_ENABLED" is not defined [-Wundef]
+> include/linux/netdevice.h:964:15: error: missing binary operator
+> before token "("
+> include/linux/netdevice.h:981:5: warning: "IS_ENABLED" is not defined [-Wundef]
+> include/linux/netdevice.h:981:15: error: missing binary operator
+> before token "("
+> include/linux/netdevice.h:1123:5: warning: "IS_ENABLED" is not defined [-Wundef]
+> include/linux/netdevice.h:1123:15: error: missing binary operator
+> before token "("
+> include/linux/netdevice.h:1126:5: warning: "IS_ENABLED" is not defined [-Wundef]
+> include/linux/netdevice.h:1126:15: error: missing binary operator
+> before token "("
+> include/linux/netdevice.h:1289:5: warning: "IS_ENABLED" is not defined [-Wundef]
+> include/linux/netdevice.h:1289:15: error: missing binary operator
+> before token "("
+> include/linux/netdevice.h:1293:5: warning: "IS_ENABLED" is not defined [-Wundef]
+> include/linux/netdevice.h:1293:15: error: missing binary operator
+> before token "("
+> include/linux/netdevice.h: In function ânetdev_uses_dsa_tagsâ:
+> include/linux/netdevice.h:1397:9: error: âstruct net_deviceâ has no
+> member named âdsa_ptrâ
+> include/linux/netdevice.h:1398:31: error: âstruct net_deviceâ has no
+> member named âdsa_ptrâ
+> include/linux/netdevice.h: In function ânetdev_uses_trailer_tagsâ:
+> include/linux/netdevice.h:1416:9: error: âstruct net_deviceâ has no
+> member named âdsa_ptrâ
+> include/linux/netdevice.h:1417:35: error: âstruct net_deviceâ has no
+> member named âdsa_ptrâ
+> In file included from
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:38:0,
+>                  from <command-line>:0:
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-3.3.h:
+> At top level:
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-3.3.h:28:20:
+> error: static declaration of âskb_complete_wifi_ackâ follows
+> non-static declaration
+> include/linux/skbuff.h:2260:6: note: previous declaration of
+> âskb_complete_wifi_ackâ was here
+> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-3.3.h:34:13:
+> error: conflicting types for ânetdev_features_tâ
+> include/linux/netdev_features.h:15:13: note: previous declaration of
+> ânetdev_features_tâ was here
+> make[3]: *** [/home/alfonso/wifi/compat-wireless-2012-01-26/compat/main.o]
+> Error 1
+> make[2]: *** [/home/alfonso/wifi/compat-wireless-2012-01-26/compat] Error 2
+> make[1]: *** [_module_/home/alfonso/wifi/compat-wireless-2012-01-26] Error 2
+> make[1]: Leaving directory `/home/alfonso/tests/kernel/linux_keithp'
+> make: *** [modules] Error 2
+> 
+> Thank you for you help,
+> alfonso
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-
+-- 
+John W. Linville                Someday the world will need a hero, and you
+linville@tuxdriver.com                  might be all we have.  Be ready.
