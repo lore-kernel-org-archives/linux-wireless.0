@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46383 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756226Ab2BGUdr (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:50918 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752853Ab2BAQor (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 15:33:47 -0500
-Subject: Re: REGRESSION: crash in wireless-testing smoketest
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <4F315E7E.7040203@broadcom.com>
-References: <4F313815.3020107@broadcom.com>
-	 ( sfid-20120207_154219_853529_011888C8) <4F313C53.2040604@sipsolutions.net>
-	 <4F315E7E.7040203@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 07 Feb 2012 21:32:56 +0100
-Message-ID: <1328646776.4223.0.camel@jlt3.sipsolutions.net> (sfid-20120207_213352_585517_C487E8A7)
-Mime-Version: 1.0
+	Wed, 1 Feb 2012 11:44:47 -0500
+Received: by wics10 with SMTP id s10so1055524wic.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Feb 2012 08:44:45 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] mac80211: timeout a single frame in the rx reorder buffer
+Date: Wed,  1 Feb 2012 18:48:09 +0200
+Message-Id: <1328114889-15627-1-git-send-email-eliad@wizery.com> (sfid-20120201_174451_052054_D6EB60FC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-02-07 at 18:25 +0100, Arend van Spriel wrote:
+The current code checks for stored_mpdu_num > 1, causing
+the reorder_timer to be triggered indefinitely, but the
+frame is never timed-out (until the next packet is received)
 
-> >> The brcmsmac driver does not provide a sta_remove callback. I suspect
-> >> that is causing the issue here. Can you confirm?
-> > 
-> > I'm on a business trip right now, but I can take a look. Did it really 
-> > *crash*? You said so in the subject but have no crash data.
-> > 
-> > johannes
-> > 
-> 
-> The logs did not catch it before the crash. I dug a bit deeper and it
-> does not seem the missing sta_remove is a problem as drv_sta_remove
-> checks the function pointer being non-NULL before using it.
-> 
-> Can you recommend a kernel hacking option so the log may give a better clue?
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+Cc: <stable@vger.kernel.org>
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
+---
+v2: cc stable
 
-Not really, I suppose this is automated and you don't capture the
-(serial) console?
+ net/mac80211/rx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-johannes
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index f407427..7e3980f 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -611,7 +611,7 @@ static void ieee80211_sta_reorder_release(struct ieee80211_hw *hw,
+ 	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
+ 						tid_agg_rx->buf_size;
+ 	if (!tid_agg_rx->reorder_buf[index] &&
+-	    tid_agg_rx->stored_mpdu_num > 1) {
++	    tid_agg_rx->stored_mpdu_num) {
+ 		/*
+ 		 * No buffers ready to be released, but check whether any
+ 		 * frames in the reorder buffer have timed out.
+-- 
+1.7.6.401.g6a319
 
