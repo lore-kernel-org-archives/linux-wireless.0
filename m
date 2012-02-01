@@ -1,72 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:59382 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752599Ab2B0PGN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 10:06:13 -0500
-Received: by bkcik5 with SMTP id ik5so325975bkc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2012 07:06:12 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-Date: Sat, 25 Feb 2012 21:36:36 +0100
-Subject: [PATCH -wt] carl9170: fix frame delivery if sta is in powersave mode
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, Nicolas.Cavallari@lri.fr
-Message-Id: <20120227150559.10F46100171@blech.mobile> (sfid-20120227_160617_466308_947BBE12)
+Received: from mga01.intel.com ([192.55.52.88]:37747 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753147Ab2BAPxM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Feb 2012 10:53:12 -0500
+Subject: Re: iwlagn is getting even worse with 3.3-rc1
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Dave Jones <davej@redhat.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Norbert Preining <preining@logic.at>,
+	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+In-Reply-To: <20120201154335.GA8494@redhat.com>
+References: <20120124013625.GB18436@gamma.logic.tuwien.ac.at>
+	 <CANUX_P3er0orBy8OhDuY1DfgD810UD-_HB_ukJnCA+W8e-VazQ@mail.gmail.com>
+	 <20120125002250.GA20431@gamma.logic.tuwien.ac.at>
+	 <CANUX_P0UREz_jZABu+Y_QYOh9tx_sKZSSkZpYHBEVtcU4QQdSA@mail.gmail.com>
+	 <20120126003735.GA2346@gamma.logic.tuwien.ac.at>
+	 <CANUX_P0H_WaWwnpjoBcMpZQY4xH=cbVhAKxWKXmz-HwFMcWS6w@mail.gmail.com>
+	 <CANUX_P3XSCsWUJ9M55qeaK-DuPEMXODFPJiNk+BgnHN-=WECqw@mail.gmail.com>
+	 <20120126232555.GB16330@gamma.logic.tuwien.ac.at>
+	 <CANUX_P0z2800ip=yfW15zELqhDNFrHbTvDY3OF59PuxizN=XSA@mail.gmail.com>
+	 <20120131024143.GA10418@redhat.com>  <20120201154335.GA8494@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 01 Feb 2012 06:45:55 -0800
+Message-ID: <1328107555.7290.13.camel@wwguy-huron> (sfid-20120201_165332_175131_18FAC520)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nicolas Cavallari discovered that carl9170 has some
-serious problems delivering data to sleeping stations.
+On Wed, 2012-02-01 at 10:43 -0500, Dave Jones wrote:
+> On Mon, Jan 30, 2012 at 09:41:43PM -0500, Dave Jones wrote:
+>  
+>  >  > > Generally fine.
+>  >  > >
+>  >  > > Thanks, more reports later.
+>  >  > 
+>  >  > Dave ?
+>  > 
+>  > after running with it all evening, it seems to be working fine so far.
+> 
+> Two days later, it hasn't locked up at all, so this is definitly fixing my problem.
+> 
+> One thing though, dmesg is flooded with these..
+> 
+> [ 4384.849732] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra = b8:c7:5d:0c:39:87 tid = 0
+> [ 4434.332275] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra = b8:c7:5d:0c:39:87 tid = 0
+> [ 4475.309883] iwlwifi 0000:04:00.0: Tx aggregation enabled on ra = b8:c7:5d:0c:39:87 tid = 0
+> 
+> Can it be supressed if the ra hasn't changed ?
 
-It turns out that the driver was not honoring two
-important flags (IEEE80211_TX_CTL_NO_PS_BUFFER and
-IEEE80211_TX_CTL_CLEAR_PS_FILT) which are set on
-frames that should be sent although the receiving
-station is still in powersave mode.
+John has a patch to fix this :-)
 
-Reported-by: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
-John, to make your life a little bit easier, I rebased my
-patch on top of Johannes' 
-[PATCH] mac80211: handle non-bufferable MMPDUs correctly.
+Wey
+> 
 
-changes:
-	IEEE80211_TX_CTL_POLL_RESPONSE was renamed to
-	IEEE80211_TX_CTL_NO_PS_BUFFER (johannes patch)
----
- drivers/net/wireless/ath/carl9170/tx.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
-index 8d52ddd..aed3051 100644
---- a/drivers/net/wireless/ath/carl9170/tx.c
-+++ b/drivers/net/wireless/ath/carl9170/tx.c
-@@ -1236,6 +1236,7 @@ static bool carl9170_tx_ps_drop(struct ar9170 *ar, struct sk_buff *skb)
- {
- 	struct ieee80211_sta *sta;
- 	struct carl9170_sta_info *sta_info;
-+	struct ieee80211_tx_info *tx_info;
- 
- 	rcu_read_lock();
- 	sta = __carl9170_get_tx_sta(ar, skb);
-@@ -1243,12 +1244,13 @@ static bool carl9170_tx_ps_drop(struct ar9170 *ar, struct sk_buff *skb)
- 		goto out_rcu;
- 
- 	sta_info = (void *) sta->drv_priv;
--	if (unlikely(sta_info->sleeping)) {
--		struct ieee80211_tx_info *tx_info;
-+	tx_info = IEEE80211_SKB_CB(skb);
- 
-+	if (unlikely(sta_info->sleeping) &&
-+	    !(tx_info->flags & (IEEE80211_TX_CTL_NO_PS_BUFFER |
-+				IEEE80211_TX_CTL_CLEAR_PS_FILT))) {
- 		rcu_read_unlock();
- 
--		tx_info = IEEE80211_SKB_CB(skb);
- 		if (tx_info->flags & IEEE80211_TX_CTL_AMPDU)
- 			atomic_dec(&ar->tx_ampdu_upload);
- 
--- 
-1.7.9.1
 
