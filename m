@@ -1,83 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1294 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932073Ab2BHMov (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 07:44:51 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Felix Fietkau" <nbd@openwrt.org>
-Subject: [PATCH v2] mac80211: minstrel_ht: fix NULL pointer dereference
- during auth/assoc
-Date: Wed, 8 Feb 2012 13:44:37 +0100
-Message-ID: <1328705077-31360-1-git-send-email-arend@broadcom.com> (sfid-20120208_134454_777265_F4B66B0B)
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:56583 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753277Ab2BAKaf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Feb 2012 05:30:35 -0500
+Received: by dadp15 with SMTP id p15so755616dad.19
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Feb 2012 02:30:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1327936679-12576-3-git-send-email-sgruszka@redhat.com>
+References: <1327936679-12576-1-git-send-email-sgruszka@redhat.com>
+	<1327936679-12576-3-git-send-email-sgruszka@redhat.com>
+Date: Wed, 1 Feb 2012 11:30:35 +0100
+Message-ID: <CAGXE3d_Yp3FRbeYHvLYTdtMc+OVJp2gW70yB-L1Diug7yAp9uw@mail.gmail.com> (sfid-20120201_113039_227393_AA64EC10)
+Subject: Re: [PATCH 3/4] rt2800: radio 3xxx: add channel switch calibration routines
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the following NULL pointer dereference:
-
-> I rerun the test on a kernel with some more lock checking and got lucky.
+On Mon, Jan 30, 2012 at 4:17 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> Synchronize code with Ralink driver:
+> 2011_0719_RT3070_RT3370_RT5370_RT5372_Linux_STA_V2.5.0.3_DPO
+> Based on functions:
+> RT33xx_ChipSwitchChannel
+> RT30xx_ChipSwitchChannel
 >
-> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512283] wlan0: authenticate
-> with 98:fc:11:8e:94:57
-> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512515] wlan0: send auth to
-> 98:fc:11:8e:94:57 (try 1/3)
-> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514184] BUG: unable to handle
-> kernel NULL pointer dereference at 00000004
-> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514233] IP: [<f8648f08>]
-> minstrel_tx_status+0x48/0xe0 [mac80211]
+> Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |   14 ++++++++++++++
+>  1 files changed, 14 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index a841918..b5dcc48 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -1700,6 +1700,13 @@ static void rt2800_config_channel_rf3xxx(struct rt2x00_dev *rt2x00dev,
+>        }
+>        rt2800_rfcsr_write(rt2x00dev, 1, rfcsr);
+>
+> +       rt2800_rfcsr_read(rt2x00dev, 30, &rfcsr);
+> +       rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 1);
+> +       rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+> +       msleep(1);
+> +       rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
+> +       rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+> +
+>        rt2800_rfcsr_read(rt2x00dev, 23, &rfcsr);
+>        rt2x00_set_field8(&rfcsr, RFCSR23_FREQ_OFFSET, rt2x00dev->freq_offset);
+>        rt2800_rfcsr_write(rt2x00dev, 23, rfcsr);
+> @@ -1710,6 +1717,13 @@ static void rt2800_config_channel_rf3xxx(struct rt2x00_dev *rt2x00dev,
+>        rt2800_rfcsr_read(rt2x00dev, 7, &rfcsr);
+>        rt2x00_set_field8(&rfcsr, RFCSR7_RF_TUNING, 1);
+>        rt2800_rfcsr_write(rt2x00dev, 7, rfcsr);
+> +
+> +       rt2800_rfcsr_read(rt2x00dev, 30, &rfcsr);
+> +       rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 1);
+> +       rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+> +       msleep(1);
+> +       rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 0);
+> +       rt2800_rfcsr_write(rt2x00dev, 30, rfcsr);
+>  }
 
-static inline int
-rix_to_ndx(struct minstrel_sta_info *mi, int rix)
-{
-        int i = rix;
-        for (i = rix; i >= 0; i--)
-                if (mi->r[i].rix == rix)
-  48:   3b 58 04                cmp    0x4(%eax),%ebx
-  4b:   74 4b                   je     98 <minstrel_tx_status+0x98>
-  4d:   83 c2 01                add    $0x1,%edx
+This was also introduced for later chipsets only but since Ralink left the
+code in for all chipsets I guess this is ok ...
 
-It fails because of mi->r[i] being a NULL pointer. It is allocated in
-minstel_alloc_sta, but minstrel_ht_alloc_sta does not call that function.
-
-struct minstrel_ht_sta_priv holds a union with struct minstrel_ht_sta and
-struct minstrel_sta_info. During authenticate the bool is_ht is false so
-minstrel_ht_tx_status calls minstrel_tx_status, but minstrel_sta_info::r
-is not set until rate_init which is after assoc.
-
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-John,
-
-This one with tab indent instead of spaces. Noticed just after sending
-the first patch.
-
-Gr. AvS
----
- net/mac80211/rc80211_minstrel_ht.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index ff5f7b8..a58c348 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -813,6 +813,9 @@ minstrel_ht_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp)
- 	if (!msp->sample_table)
- 		goto error1;
- 
-+	msp->legacy.r = msp->ratelist;
-+	msp->legacy.sample_table = msp->sample_table;
-+
- 	return msp;
- 
- error1:
--- 
-1.7.5.4
-
-
+Helmut
