@@ -1,118 +1,328 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from que21.charter.net ([209.225.8.22]:47719 "EHLO que21.charter.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754620Ab2B0StZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 13:49:25 -0500
-From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
-To: sgruszka@redhat.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Greg Dietsche <Gregory.Dietsche@cuw.edu>
-Subject: [PATCH 3/4] iwlegacy: remove enum iw_calib and related code
-Date: Mon, 27 Feb 2012 12:25:32 -0600
-Message-Id: <1330367133-26465-4-git-send-email-Gregory.Dietsche@cuw.edu> (sfid-20120227_195003_120293_0822646F)
-In-Reply-To: <1330367133-26465-1-git-send-email-Gregory.Dietsche@cuw.edu>
-References: <1330367133-26465-1-git-send-email-Gregory.Dietsche@cuw.edu>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:39561 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752522Ab2BAQFT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Feb 2012 11:05:19 -0500
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Paul Stewart <pstew@google.com>
+Subject: [PATCH 1/2] ath9k: recover the chip from tx/rx stuck
+Date: Wed, 1 Feb 2012 21:35:34 +0530
+Message-ID: <1328112335-19265-1-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120201_170525_140990_1567832E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the enum il_calib. It defined one identifier: IL_CALIB_MAX.
-Remove the function il4965_calib_free_results. It was doing nothing
-because IL_CALIB_MAX is zero. Next, remove calib_results from the
-il_priv structure and also remove the associated return
-type/struct il_calib_result.
+In the following scenario, where the distance b/w STA and AP is ~10m
+or in a shield environment by placing an attenuator with reduced AP
+txpower, the station started reporting with beacon loss and got
+disconnected whenever the chariot endpoint was initiated with BiDi
+traffic. In such state, two different stuck cases were observed.
 
-Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+  * rx clear is stuck at low for more than 100ms
+  * dcu chain and complete state is stuck.
+
+This patch detects the stuck state if the beacons are not received for
+more than 300ms. In the above matching conditions, trigger a chip
+reset to recover. This issue was originally reported in 3.0 kernel with
+AR9382 chip by having two stations associated with two different APs in
+the same channel and was attenuated/controlled by Azimuth ADEPT-n box.
+
+Cc: Paul Stewart <pstew@google.com>
+Reported-by: Gary Morain <gmorain@google.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlegacy/4965-calib.c |   12 ------------
- drivers/net/wireless/iwlegacy/4965-mac.c   |    1 -
- drivers/net/wireless/iwlegacy/4965.h       |    1 -
- drivers/net/wireless/iwlegacy/common.h     |   18 ------------------
- 4 files changed, 0 insertions(+), 32 deletions(-)
+ drivers/net/wireless/ath/ath.h         |    1 +
+ drivers/net/wireless/ath/ath9k/ath9k.h |    4 +
+ drivers/net/wireless/ath/ath9k/init.c  |    1 +
+ drivers/net/wireless/ath/ath9k/main.c  |  142 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/recv.c  |    4 +
+ drivers/net/wireless/ath/hw.c          |    5 +
+ 6 files changed, 157 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-calib.c b/drivers/net/wireless/iwlegacy/4965-calib.c
-index 47c20e3..e78bdef 100644
---- a/drivers/net/wireless/iwlegacy/4965-calib.c
-+++ b/drivers/net/wireless/iwlegacy/4965-calib.c
-@@ -79,18 +79,6 @@ struct stats_general_data {
- 	u32 beacon_energy_c;
- };
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index efc0111..f11f397 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -150,6 +150,7 @@ struct ath_common {
+ 	spinlock_t cc_lock;
+ 	struct ath_cycle_counters cc_ani;
+ 	struct ath_cycle_counters cc_survey;
++	struct ath_cycle_counters cc_rxpoll;
  
--void
--il4965_calib_free_results(struct il_priv *il)
--{
--	int i;
--
--	for (i = 0; i < IL_CALIB_MAX; i++) {
--		kfree(il->calib_results[i].buf);
--		il->calib_results[i].buf = NULL;
--		il->calib_results[i].buf_len = 0;
--	}
--}
--
- /*****************************************************************************
-  * RUNTIME calibrations framework
-  *****************************************************************************/
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 2d01db0..3160e37 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -6347,7 +6347,6 @@ err:
- static void
- il4965_uninit_drv(struct il_priv *il)
- {
--	il4965_calib_free_results(il);
- 	il_free_geos(il);
- 	il_free_channel_map(il);
- 	kfree(il->scan_cmd);
-diff --git a/drivers/net/wireless/iwlegacy/4965.h b/drivers/net/wireless/iwlegacy/4965.h
-index 208a456..1db6776 100644
---- a/drivers/net/wireless/iwlegacy/4965.h
-+++ b/drivers/net/wireless/iwlegacy/4965.h
-@@ -927,7 +927,6 @@ void il4965_chain_noise_calibration(struct il_priv *il, void *stat_resp);
- void il4965_sensitivity_calibration(struct il_priv *il, void *resp);
- void il4965_init_sensitivity(struct il_priv *il);
- void il4965_reset_run_time_calib(struct il_priv *il);
--void il4965_calib_free_results(struct il_priv *il);
+ 	struct ath_regulatory regulatory;
+ 	struct ath_regulatory reg_world_copy;
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 171ccf7..748a277 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -306,6 +306,7 @@ struct ath_rx_edma {
+ struct ath_rx {
+ 	u8 defant;
+ 	u8 rxotherant;
++	bool stop_rx_poll;
+ 	u32 *rxlink;
+ 	unsigned int rxfilter;
+ 	spinlock_t rxbuflock;
+@@ -431,6 +432,8 @@ void ath9k_set_beaconing_status(struct ath_softc *sc, bool status);
+ void ath_reset_work(struct work_struct *work);
+ void ath_hw_check(struct work_struct *work);
+ void ath_hw_pll_work(struct work_struct *work);
++void ath_rx_poll_work(unsigned long data);
++void ath_start_rx_poll(struct ath_softc *sc, const u32 msec);
+ void ath_paprd_calibrate(struct work_struct *work);
+ void ath_ani_calibrate(unsigned long data);
+ void ath_start_ani(struct ath_common *common);
+@@ -650,6 +653,7 @@ struct ath_softc {
+ 	struct ath_beacon_config cur_beacon_conf;
+ 	struct delayed_work tx_complete_work;
+ 	struct delayed_work hw_pll_work;
++	struct timer_list rx_poll_timer;
+ 	struct ath_btcoex btcoex;
+ 	struct ath_mci_coex mci_coex;
  
- /* Debug */
- #ifdef CONFIG_IWLEGACY_DEBUGFS
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index 6ed9871..d0de922 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -961,21 +961,6 @@ enum il4965_calib_enabled_state {
- 	IL_CALIB_ENABLED = 1,
- };
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index abf9435..df49b38 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -844,6 +844,7 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
+ 	INIT_WORK(&sc->hw_check_work, ath_hw_check);
+ 	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
+ 	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
++	setup_timer(&sc->rx_poll_timer, ath_rx_poll_work, (unsigned long)sc);
+ 	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
  
--/*
-- * enum il_calib
-- * defines the order in which results of initial calibrations
-- * should be sent to the runtime uCode
-- */
--enum il_calib {
--	IL_CALIB_MAX,
--};
--
--/* Opaque calibration results */
--struct il_calib_result {
--	void *buf;
--	size_t buf_len;
--};
--
- enum ucode_type {
- 	UCODE_NONE = 0,
- 	UCODE_INIT,
-@@ -1195,9 +1180,6 @@ struct il_priv {
- 	s32 temperature;	/* degrees Kelvin */
- 	s32 last_temperature;
+ 	ath_init_leds(sc);
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index ec82e92..b4322cb 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -241,6 +241,7 @@ static bool ath_prepare_reset(struct ath_softc *sc, bool retry_tx, bool flush)
  
--	/* init calibration results */
--	struct il_calib_result calib_results[IL_CALIB_MAX];
--
- 	/* Scan related variables */
- 	unsigned long scan_start;
- 	unsigned long scan_start_tsf;
+ 	sc->hw_busy_count = 0;
+ 	del_timer_sync(&common->ani.timer);
++	del_timer_sync(&sc->rx_poll_timer);
+ 
+ 	ath9k_debug_samp_bb_mac(sc);
+ 	ath9k_hw_disable_interrupts(ah);
+@@ -282,6 +283,7 @@ static bool ath_complete_reset(struct ath_softc *sc, bool start)
+ 
+ 		ieee80211_queue_delayed_work(sc->hw, &sc->tx_complete_work, 0);
+ 		ieee80211_queue_delayed_work(sc->hw, &sc->hw_pll_work, HZ/2);
++		ath_start_rx_poll(sc, 100);
+ 		if (!common->disable_ani)
+ 			ath_start_ani(common);
+ 	}
+@@ -1179,6 +1181,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 	mutex_lock(&sc->mutex);
+ 
+ 	ath_cancel_work(sc);
++	del_timer_sync(&sc->rx_poll_timer);
+ 
+ 	if (sc->sc_flags & SC_OP_INVALID) {
+ 		ath_dbg(common, ANY, "Device not present\n");
+@@ -1418,6 +1421,141 @@ static void ath9k_do_vif_add_setup(struct ieee80211_hw *hw,
+ 	}
+ }
+ 
++static bool ath9k_check_dcu_chain_state(u32 dma_dbg, int max_limit,
++					int *hang_state, int *hang_pos)
++{
++	static u32 hang_sign[] = {5, 6, 9};
++	u32 chain_state, dcs_pos, i;
++
++	for (dcs_pos = 0; dcs_pos < max_limit; dcs_pos++) {
++		chain_state = (dma_dbg >> (5 * dcs_pos)) & 0x1f;
++		for (i = 0; i < 3; i++) {
++			if (chain_state == hang_sign[i]) {
++				*hang_state = chain_state;
++				*hang_pos = dcs_pos;
++				return true;
++			}
++		}
++	}
++	return false;
++}
++
++#define DCU_COMPLETE_STATE  1
++#define NUM_STATUS_READS    50
++static bool ath9k_detect_mac_hang(struct ath_hw *ah)
++{
++	u32 chain_state, comp_state, dcs_reg = AR_DMADBG_4;
++	u32 i, hang_pos, hang_state;
++
++	comp_state = REG_READ(ah, AR_DMADBG_6);
++
++	if ((comp_state & 0x3) != DCU_COMPLETE_STATE) {
++		ath_dbg(ath9k_hw_common(ah), RESET,
++			"MAC Hang signature not found at DCU complete\n");
++		return false;
++	}
++
++	chain_state = REG_READ(ah, dcs_reg);
++	if (ath9k_check_dcu_chain_state(chain_state, 6, &hang_state, &hang_pos))
++		goto hang_check_iter;
++
++	dcs_reg = AR_DMADBG_5;
++	chain_state = REG_READ(ah, dcs_reg);
++	if (ath9k_check_dcu_chain_state(chain_state, 4, &hang_state, &hang_pos))
++		goto hang_check_iter;
++
++	ath_dbg(ath9k_hw_common(ah), RESET,
++		"MAC Hang signature 1 not found\n");
++	return false;
++
++hang_check_iter:
++	ath_dbg(ath9k_hw_common(ah), RESET,
++		"DCU registers: chain %08x complete %08x Hang: state %d pos %d\n",
++		chain_state, comp_state, hang_state, hang_pos);
++
++	for (i = 0; i < NUM_STATUS_READS; i++) {
++		chain_state = REG_READ(ah, dcs_reg);
++		chain_state = (chain_state >> (5 * hang_pos)) & 0x1f;
++		comp_state = REG_READ(ah, AR_DMADBG_6);
++
++		if (((comp_state & 0x3) != DCU_COMPLETE_STATE) ||
++		    (chain_state != hang_state))
++			return false;
++	}
++
++	ath_dbg(ath9k_hw_common(ah), RESET, "MAC Hang signature 1 found\n");
++
++	return true;
++}
++
++void ath_start_rx_poll(struct ath_softc *sc, const u32 msec)
++{
++	if (!AR_SREV_9300_20_OR_LATER(sc->sc_ah))
++		return;
++
++	if (!(sc->sc_flags & SC_OP_PRIM_STA_VIF))
++		return;
++
++	mod_timer(&sc->rx_poll_timer, jiffies + msecs_to_jiffies(msec));
++}
++
++void ath_rx_poll_work(unsigned long data)
++{
++	struct ath_softc *sc = (struct ath_softc *)data;
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	static u32 iteration, match_count;
++	static u64 last_run;
++	unsigned long flags;
++	u32 rx_clear, rx, tx, delay = 10;
++
++	spin_lock_bh(&sc->rx.rxbuflock);
++	if (jiffies_to_msecs(jiffies - last_run) > 30)
++		iteration = match_count = 0;
++	else {
++		if (sc->rx.stop_rx_poll && iteration) {
++			spin_unlock_bh(&sc->rx.rxbuflock);
++			iteration = match_count = 0;
++			return;
++		}
++		iteration += 1;
++	}
++	sc->rx.stop_rx_poll = false;
++	spin_unlock_bh(&sc->rx.rxbuflock);
++	sc->ps_flags |= PS_WAIT_FOR_BEACON;
++	ath9k_ps_wakeup(sc);
++
++	spin_lock_irqsave(&common->cc_lock, flags);
++	ath_hw_cycle_counters_update(common);
++
++	rx_clear = common->cc_rxpoll.rx_busy * 100 / common->cc_rxpoll.cycles;
++	rx = common->cc_rxpoll.rx_frame * 100 / common->cc_rxpoll.cycles;
++	tx = common->cc_rxpoll.tx_frame * 100 / common->cc_rxpoll.cycles;
++	memset(&common->cc_rxpoll, 0, sizeof(common->cc_rxpoll));
++	spin_unlock_irqrestore(&common->cc_lock, flags);
++
++	last_run = jiffies;
++	if (rx_clear > 98) {
++		ath_dbg(common, RESET,
++			"rx clear %d match count %d iteration %d\n",
++		       rx_clear, match_count, iteration);
++		if (match_count++ > 9)
++			goto queue_reset_work;
++	} else if (ath9k_detect_mac_hang(ah))
++		goto queue_reset_work;
++	else if (iteration >= 15) {
++		iteration = match_count = 0;
++		delay = 200;
++	}
++	ath9k_ps_restore(sc);
++	ath_start_rx_poll(sc, delay);
++	return;
++
++queue_reset_work:
++	ath9k_ps_restore(sc);
++	ieee80211_queue_work(sc->hw, &sc->hw_reset_work);
++	iteration = match_count = 0;
++}
+ 
+ static int ath9k_add_interface(struct ieee80211_hw *hw,
+ 			       struct ieee80211_vif *vif)
+@@ -1948,6 +2086,8 @@ static void ath9k_bss_iter(void *data, u8 *mac, struct ieee80211_vif *vif)
+ 		if (!common->disable_ani) {
+ 			sc->sc_flags |= SC_OP_ANI_RUN;
+ 			ath_start_ani(common);
++			sc->rx.stop_rx_poll = false;
++			ath_start_rx_poll(sc, 300);
+ 		}
+ 
+ 	}
+@@ -1984,6 +2124,7 @@ static void ath9k_config_bss(struct ath_softc *sc, struct ieee80211_vif *vif)
+ 		/* Stop ANI */
+ 		sc->sc_flags &= ~SC_OP_ANI_RUN;
+ 		del_timer_sync(&common->ani.timer);
++		del_timer_sync(&sc->rx_poll_timer);
+ 		memset(&sc->caldata, 0, sizeof(sc->caldata));
+ 	}
+ }
+@@ -2027,6 +2168,7 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ 		} else {
+ 			sc->sc_flags &= ~SC_OP_ANI_RUN;
+ 			del_timer_sync(&common->ani.timer);
++			del_timer_sync(&sc->rx_poll_timer);
+ 		}
+ 	}
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index 0e666fb..989b1ee 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -1837,6 +1837,10 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
+ 		if (sc->sc_flags & SC_OP_RXFLUSH)
+ 			goto requeue_drop_frag;
+ 
++		if (rs.is_mybeacon) {
++			sc->rx.stop_rx_poll = true;
++			ath_start_rx_poll(sc, 300);
++		}
+ 		rxs->mactime = (tsf & ~0xffffffffULL) | rs.rs_tstamp;
+ 		if (rs.rs_tstamp > tsf_lower &&
+ 		    unlikely(rs.rs_tstamp - tsf_lower > 0x10000000))
+diff --git a/drivers/net/wireless/ath/hw.c b/drivers/net/wireless/ath/hw.c
+index 19befb3..f1821ea 100644
+--- a/drivers/net/wireless/ath/hw.c
++++ b/drivers/net/wireless/ath/hw.c
+@@ -166,6 +166,11 @@ void ath_hw_cycle_counters_update(struct ath_common *common)
+ 	common->cc_survey.rx_busy += busy;
+ 	common->cc_survey.rx_frame += rx;
+ 	common->cc_survey.tx_frame += tx;
++
++	common->cc_rxpoll.cycles += cycles;
++	common->cc_rxpoll.rx_busy += busy;
++	common->cc_rxpoll.rx_frame += rx;
++	common->cc_rxpoll.tx_frame += tx;
+ }
+ EXPORT_SYMBOL(ath_hw_cycle_counters_update);
+ 
 -- 
-1.7.6.4
+1.7.9
 
