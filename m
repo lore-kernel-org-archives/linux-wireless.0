@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:47341 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752459Ab2BCG0u (ORCPT
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:44280 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932106Ab2BBQGy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 01:26:50 -0500
-Subject: Re: [PATCH 00/11] station management & auth/assoc redesign
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org
-In-Reply-To: <20120202205227.GC2568@tuxdriver.com>
-References: <20120120125516.000124996@sipsolutions.net>
-	 <CAB3XZEdjn3nk8_pnb6ZaW7CbFXgJg44bkVykx8m5iHY=t+vnqA@mail.gmail.com>
-	 <4F2AA822.2040303@sipsolutions.net>  <20120202205227.GC2568@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 02 Feb 2012 22:26:26 -0800
-Message-ID: <1328250386.4023.2.camel@jlt3.sipsolutions.net> (sfid-20120203_072653_811426_E4DDF3A7)
-Mime-Version: 1.0
+	Thu, 2 Feb 2012 11:06:54 -0500
+Received: by wibhq12 with SMTP id hq12so2802743wib.35
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 08:06:52 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <4F277FE3.8090006@sipsolutions.net>
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>
+	<1327581484-22047-5-git-send-email-victorg@ti.com>
+	<4F277FE3.8090006@sipsolutions.net>
+Date: Thu, 2 Feb 2012 18:06:52 +0200
+Message-ID: <CAK80WHaiOp2f08ErSiLdoSOcN1A1EbFX4x02wGPQY1WJJrKK-g@mail.gmail.com> (sfid-20120202_170658_274803_836BF79A)
+Subject: Re: [RFC 4/9] mac80211: add ability to enable TX on op-channel
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-02-02 at 15:52 -0500, John W. Linville wrote:
+On Tue, Jan 31, 2012 at 7:45 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On 1/26/2012 4:37 AM, Victor Goldenshtein wrote:
+>>
+>> Prior starting tx on DFS channels, the DFS master
+>> device shall perform a Channel Availability Check
+>> to ensure that there is no radar interference on
+>> those channels. Once CAC done, the tx can be
+>> enabled with ieee80211_dfs_en_tx().
+>
+>
+> How do you expect this to be used by the device? It seems that it should
+> have the side effect of lifting some TX-prohibited flag instead?
 
-> > I haven't kept track, and I have no idea why it wouldn't be?
-> 
-> The patches didn't apply.  I haven't taken the time yet to work it out.
-> 
-> If you would like to repost a patchset that applies cleanly on top
-> of the current base, that would probably speed it up. :-)
+In wl12xx driver we starting the AP role, and clearing FLAG_DFS_CAC_IN_PROGRESS.
+Maybe the function name is misleading here ? maybe we should rename it
+to something like resume_dfs_cac() - because it is called at the end
+of the CAC test.
 
-Ok, so ... you're going to run into issues either way. The reason they
-don't apply to wireless-next is that I created them on top of
-wireless-testing, and that has 
+The other question is whether we want to add DFS flags into mac? I
+mean something like FLAG_DFS_CAC_IN_PROGRESS.
 
-commit bc4934bc61d0a11fd62c5187ff83645628f8be8b
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Wed Jan 18 14:10:25 2012 +0100
-
-    mac80211: fix work removal on deauth request
-
-which my patches are diffed against. I could rediff them against
-wireless-next, but then you're going to run into merge issues when you
-try to merge that back -- it may be easier to put the commit above into
-wireless-next as well to avoid this?
-
-In any case, let me know what you want me to do -- it may have to wait a
-bit as I'm travelling back home tomorrow, only to leave again on Sunday
-for more travel.
-
-johannes
-
+-- 
+Thanks,
+Victor.
