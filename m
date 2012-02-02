@@ -1,126 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:51613 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754011Ab2B0VSL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 16:18:11 -0500
-Date: Mon, 27 Feb 2012 13:18:06 -0800
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: <linux-wireless@vger.kernel.org>, <nbd@nbd.name>,
-	<linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>
-Subject: Re: [PATCH 0/5] compat / compat-wireless: merge autoconf generation
-Message-ID: <20120227211806.GB5646@tux> (sfid-20120227_221826_085002_7FE82C2B)
-References: <1330134726-1634-1-git-send-email-rodrigue@qca.qualcomm.com>
- <4F48C08A.5070501@hauke-m.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4F48C08A.5070501@hauke-m.de>
+Received: from mga01.intel.com ([192.55.52.88]:7687 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755339Ab2BCARA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 19:17:00 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Amit Beka <amit.beka@intel.com>,
+	Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 28/28] iwlwifi: range check to testmode direct reg access
+Date: Thu,  2 Feb 2012 15:09:19 -0800
+Message-Id: <1328224159-18134-29-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120203_011722_301170_4A098B5C)
+In-Reply-To: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 25, 2012 at 12:05:46PM +0100, Hauke Mehrtens wrote:
-> On 02/25/2012 02:52 AM, Luis R. Rodriguez wrote:
-> > From: Luis R. Rodriguez <mcgrof@frijolero.org>
-> > 
-> > While testing ckmake cross compiling compat through different kernels I
-> > realized that compat was failing to build on some kernels but compat-wireless
-> > was not. The reason for this turned out to be that compat did not have an
-> > autoconf for the CONFIG_COMPAT_KERNEL_* variables. In order to make use
-> > of a variable properly in code on kernel we need two things: a makefile
-> > equivalent and a header file that defines it. The compat project had
-> > only makefile variable generation while compat-wireless had makefile
-> > variable generation with a *few* variables propagated to actual code.
-> > 
-> > To avoid issues with this any further I've decided to try merging the
-> > autoconf effort for both projects and taking leads on what compat does
-> > first.
-> > 
-> > compat then does the CONFIG_COMPAT_KERNEL_* trickery and generates a
-> > clean .config for us. This in turn generates our compat's compat_autoconf.h.
-> > The compat-wireless project leverages this work by dropping its own
-> > Makefile hackery in favor of the same work and later also uses the same
-> > .config to expand its own compat_autoconf.h.
-> > 
-> > John, I could use some extra help on reviewing the RHEL stuff. I'm going
-> > to push this stuff out now to help with testing.
-> > 
-> > compat:
-> > 
-> > Luis R. Rodriguez (2):
-> >   compat: fix few compilations by adding compat_autoconf.h support
-> >   compat: add some initial RHEL support
-> > 
-> >  .gitignore                      |   10 ++++
-> >  Makefile                        |   59 ++++++++++------------
-> >  include/linux/compat_autoconf.h |   37 --------------
-> >  scripts/gen-compat-autoconf.sh  |  105 +++++++++++++++++++++++++++++++++++++++
-> >  scripts/gen-compat-config.sh    |   60 ++++++++++++++++++++++
-> >  5 files changed, 201 insertions(+), 70 deletions(-)
-> >  delete mode 100644 include/linux/compat_autoconf.h
-> >  create mode 100755 scripts/gen-compat-autoconf.sh
-> >  create mode 100755 scripts/gen-compat-config.sh
-> > 
-> > compat-wireless:
-> > 
-> > Luis R. Rodriguez (3):
-> >   compat-wireless: fix old checks on KERNEL_SUBLEVEL
-> >   compat-wireless: start using CONFIG_COMPAT_KERNEL_ in code
-> >   compat-wireless: use compat's CONFIG_COMPAT_KERNEL_* variables
-> >  Makefile                       |   22 ++++++++++++++++------
-> >  config.mk                      |   24 ++++--------------------
-> >  scripts/check_config.sh        |    9 +++++----
-> >  scripts/gen-compat-autoconf.sh |   13 +++++++------
-> >  4 files changed, 32 insertions(+), 36 deletions(-)
-> > 
-> 
-> This patch series breaks parallel build.
-> Before these patches where applied parallel build was no problem I just
-> saw two error at the beginning, but after this patch series it does not
-> work any more.
-> 
-> These are the current error messages at the beginning and then it
-> compiles sequential.
-> 
-> Hauke
-> 
-> hauke@hauke:~/compat-wireless/compat-wireless$ make -j5
-> make[1]: warning: jobserver unavailable: using -j1.  Add `+' to parent
-> make rule.
-> make[1]: warning: jobserver unavailable: using -j1.  Add `+' to parent
-> make rule.
-> ./scripts/gen-compat-autoconf.sh .config config.mk >
-> include/linux/compat_autoconf.h
-> make[1]: warning: jobserver unavailable: using -j1.  Add `+' to parent
-> make rule.
-> make[1]: warning: jobserver unavailable: using -j1.  Add `+' to parent
-> make rule.
-> make -C /home/hauke/compat-wireless/compat-wireless modules
-> make[1]: Entering directory `/home/hauke/compat-wireless/compat-wireless'
-> make[1]: warning: jobserver unavailable: using -j1.  Add `+' to parent
-> make rule.
-> make -C /lib/modules/3.0.0-16-generic/build
-> M=/home/hauke/compat-wireless/compat-wireless modules
-> make[2]: Entering directory `/usr/src/linux-headers-3.0.0-16-generic'
->   LD      /home/hauke/compat-wireless/compat-wireless/compat/built-in.o
+From: Amit Beka <amit.beka@intel.com>
 
-I had at first the below cheasy fix, but now I have an even better one
-that does not require recursion. I'll post and merge. Thanks for reporting
-this.
+Added a check on the direct register access.
+Checks that the address is in the lower ragnge (0x0-0x2000),
+which belongs to CSR, HBUS and FH registers.
 
-diff --git a/Makefile b/Makefile
-index d96d098..d11da17 100644
---- a/Makefile
-+++ b/Makefile
-@@ -62,8 +62,8 @@ install: modules
- $(COMPAT_AUTOCONF): ;
+Signed-off-by: Amit Beka <amit.beka@intel.com>
+Signed-off-by: Wey-Yi W Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-testmode.c |   18 ++++++++++++++++--
+ 1 files changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+index 7c17b9d..df7ab33 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+@@ -79,6 +79,7 @@
+ #include "iwl-testmode.h"
+ #include "iwl-trans.h"
+ #include "iwl-bus.h"
++#include "iwl-fh.h"
  
- $(COMPAT_CONFIG):
--	@$(PWD)/scripts/gen-compat-config.sh > $(PWD)/$(COMPAT_CONFIG)
--	@$(PWD)/scripts/gen-compat-autoconf.sh $(COMPAT_CONFIG) > $(PWD)/$(COMPAT_AUTOCONF)
-+	+@$(PWD)/scripts/gen-compat-config.sh > $(PWD)/$(COMPAT_CONFIG)
-+	+@$(PWD)/scripts/gen-compat-autoconf.sh $(COMPAT_CONFIG) > $(PWD)/$(COMPAT_AUTOCONF)
- 	@$(MAKE) -C $(PWD) modules
+ /* The TLVs used in the gnl message policy between the kernel module and
+  * user space application. iwl_testmode_gnl_msg_policy is to be carried
+@@ -288,7 +289,7 @@ static int iwl_testmode_ucode(struct ieee80211_hw *hw, struct nlattr **tb)
+ static int iwl_testmode_reg(struct ieee80211_hw *hw, struct nlattr **tb)
+ {
+ 	struct iwl_priv *priv = hw->priv;
+-	u32 ofs, val32;
++	u32 ofs, val32, cmd;
+ 	u8 val8;
+ 	struct sk_buff *skb;
+ 	int status = 0;
+@@ -300,7 +301,20 @@ static int iwl_testmode_reg(struct ieee80211_hw *hw, struct nlattr **tb)
+ 	ofs = nla_get_u32(tb[IWL_TM_ATTR_REG_OFFSET]);
+ 	IWL_INFO(priv, "testmode register access command offset 0x%x\n", ofs);
  
- kkinstall: modules
+-	switch (nla_get_u32(tb[IWL_TM_ATTR_COMMAND])) {
++	/* Allow access only to FH/CSR/HBUS in direct mode.
++	Since we don't have the upper bounds for the CSR and HBUS segments,
++	we will use only the upper bound of FH for sanity check. */
++	cmd = nla_get_u32(tb[IWL_TM_ATTR_COMMAND]);
++	if ((cmd == IWL_TM_CMD_APP2DEV_DIRECT_REG_READ32 ||
++		cmd == IWL_TM_CMD_APP2DEV_DIRECT_REG_WRITE32 ||
++		cmd == IWL_TM_CMD_APP2DEV_DIRECT_REG_WRITE8) &&
++		(ofs >= FH_MEM_UPPER_BOUND)) {
++		IWL_DEBUG_INFO(priv, "offset out of segment (0x0 - 0x%x)\n",
++			FH_MEM_UPPER_BOUND);
++		return -EINVAL;
++	}
++
++	switch (cmd) {
+ 	case IWL_TM_CMD_APP2DEV_DIRECT_REG_READ32:
+ 		val32 = iwl_read_direct32(trans(priv), ofs);
+ 		IWL_INFO(priv, "32bit value to read 0x%x\n", val32);
+-- 
+1.7.0.4
+
