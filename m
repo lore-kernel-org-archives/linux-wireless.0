@@ -1,115 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:10956 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752385Ab2BQUXx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Feb 2012 15:23:53 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 09/26] iwlwifi: move fw_index from iwl_priv to iwl_nic
-Date: Fri, 17 Feb 2012 11:13:37 -0800
-Message-Id: <1329506034-1394-10-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120217_212358_233872_E65DA8A6)
-In-Reply-To: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:49670 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753140Ab2BBIEv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 03:04:51 -0500
+Received: by pbdu11 with SMTP id u11so1809307pbd.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 00:04:51 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAGXE3d9eDaf9h3xa0oZvOWW_m2h0oYY64Zn9EQnZ664h4uxdVg@mail.gmail.com>
+References: <20120128154544.70E060CD@centrum.cz>
+	<1385650.dcoDil3T5I@helmutmobil.site>
+	<20120130191820.F4F520E8@centrum.cz>
+	<CAGXE3d_wHuNT7Q+Ubj5qR-DgA78AeYXe7MfnFS4rv+iHjtMJbA@mail.gmail.com>
+	<20120131212136.652477E0@centrum.cz>
+	<CAGXE3d9eDaf9h3xa0oZvOWW_m2h0oYY64Zn9EQnZ664h4uxdVg@mail.gmail.com>
+Date: Thu, 2 Feb 2012 09:04:51 +0100
+Message-ID: <CAGXE3d9ddVwT7_HUz8COfLLp_pWTHeuE+kku62ZGruiemB=-Nw@mail.gmail.com> (sfid-20120202_090456_493506_171CA7D5)
+Subject: Re: connection interrupted for rt61pci in master mode
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: trencan@centrum.cz
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Don Fry <donald.h.fry@intel.com>
+On Wed, Feb 1, 2012 at 9:00 AM, Helmut Schaa
+<helmut.schaa@googlemail.com> wrote:
+> On Tue, Jan 31, 2012 at 9:21 PM,  <trencan@centrum.cz> wrote:
+>> One of them "dump" was still continuosly growing. I stopped catting after connection interrupted occured. Do you need all them three? Should I send it only to your email? Packed dump file has 820kB. Queue and Crypto are of small sizes.
+>
+> I'd only like to see the content of "queue" when the problem happens.
 
-Delete fw_index from iwl_priv and use iwl_nic instead.
+Was the output you've send me from the time the problem occured?
+At least the queues are not stuck somehow, so must be something else ...
 
-Signed-off-by: Don Fry <donald.h.fry@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h   |    1 -
- drivers/net/wireless/iwlwifi/iwl-ucode.c |   23 ++++++++++++-----------
- 2 files changed, 12 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index f3dc67c..008287f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -788,7 +788,6 @@ struct iwl_priv {
- 	struct mac_address addresses[2];
- 
- 	/* uCode images, save to reload in case of failure */
--	int fw_index;			/* firmware we're trying to load */
- 	char firmware_name[25];
- 
- 	struct iwl_rxon_context contexts[NUM_IWL_RXON_CTX];
-diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.c b/drivers/net/wireless/iwlwifi/iwl-ucode.c
-index ca3cd8a..c3ac2cc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-ucode.c
-@@ -690,23 +690,24 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context);
- 
- int __must_check iwl_request_firmware(struct iwl_priv *priv, bool first)
- {
-+	struct iwl_nic *nic = nic(priv);
- 	const char *name_pre = cfg(priv)->fw_name_pre;
- 	char tag[8];
- 
- 	if (first) {
- #ifdef CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
--		priv->fw_index = UCODE_EXPERIMENTAL_INDEX;
-+		nic->fw_index = UCODE_EXPERIMENTAL_INDEX;
- 		strcpy(tag, UCODE_EXPERIMENTAL_TAG);
--	} else if (priv->fw_index == UCODE_EXPERIMENTAL_INDEX) {
-+	} else if (nic->fw_index == UCODE_EXPERIMENTAL_INDEX) {
- #endif
--		priv->fw_index = cfg(priv)->ucode_api_max;
--		sprintf(tag, "%d", priv->fw_index);
-+		nic->fw_index = cfg(priv)->ucode_api_max;
-+		sprintf(tag, "%d", nic->fw_index);
- 	} else {
--		priv->fw_index--;
--		sprintf(tag, "%d", priv->fw_index);
-+		nic->fw_index--;
-+		sprintf(tag, "%d", nic->fw_index);
- 	}
- 
--	if (priv->fw_index < cfg(priv)->ucode_api_min) {
-+	if (nic->fw_index < cfg(priv)->ucode_api_min) {
- 		IWL_ERR(priv, "no suitable firmware found!\n");
- 		return -ENOENT;
- 	}
-@@ -714,7 +715,7 @@ int __must_check iwl_request_firmware(struct iwl_priv *priv, bool first)
- 	sprintf(priv->firmware_name, "%s%s%s", name_pre, tag, ".ucode");
- 
- 	IWL_DEBUG_INFO(priv, "attempting to load firmware %s'%s'\n",
--		       (priv->fw_index == UCODE_EXPERIMENTAL_INDEX)
-+		       (nic->fw_index == UCODE_EXPERIMENTAL_INDEX)
- 				? "EXPERIMENTAL " : "",
- 		       priv->firmware_name);
- 
-@@ -1032,7 +1033,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 	memset(&pieces, 0, sizeof(pieces));
- 
- 	if (!ucode_raw) {
--		if (priv->fw_index <= api_ok)
-+		if (nic->fw_index <= api_ok)
- 			IWL_ERR(priv,
- 				"request for firmware file '%s' failed.\n",
- 				priv->firmware_name);
-@@ -1069,7 +1070,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 	 * on the API version read from firmware header from here on forward
- 	 */
- 	/* no api version check required for experimental uCode */
--	if (priv->fw_index != UCODE_EXPERIMENTAL_INDEX) {
-+	if (nic->fw_index != UCODE_EXPERIMENTAL_INDEX) {
- 		if (api_ver < api_min || api_ver > api_max) {
- 			IWL_ERR(priv,
- 				"Driver unable to support your firmware API. "
-@@ -1094,7 +1095,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 
- 	if (build)
- 		sprintf(buildstr, " build %u%s", build,
--		       (priv->fw_index == UCODE_EXPERIMENTAL_INDEX)
-+		       (nic->fw_index == UCODE_EXPERIMENTAL_INDEX)
- 				? " (EXP)" : "");
- 	else
- 		buildstr[0] = '\0';
--- 
-1.7.0.4
-
+Helmut
