@@ -1,119 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:38405 "EHLO bues.ch"
+Received: from nbd.name ([46.4.11.11]:47100 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751329Ab2BMVyb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 16:54:31 -0500
-Date: Mon, 13 Feb 2012 21:57:23 +0000
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	chunkeey@web.de, Max Filippov <jcmvbkbc@gmail.com>,
-	linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: Re: [RFC/RFT 5/5] p54spi: Load firmware from work queue and not
- from probe routine
-Message-ID: <20120213215723.565e8a8d@Nokia-N900> (sfid-20120213_225503_941954_3B43B472)
-In-Reply-To: <1329161826-11135-6-git-send-email-Larry.Finger@lwfinger.net>
-References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
-	<1329161826-11135-6-git-send-email-Larry.Finger@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1755735Ab2BBM2n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 07:28:43 -0500
+Message-ID: <4F2A8173.7050603@openwrt.org> (sfid-20120202_132846_851087_34D79569)
+Date: Thu, 02 Feb 2012 13:28:35 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Laurent Bonnans <bonnans.l@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re:
+References: <CAAJ3AHeF5-yD_+a6HiA3Ty-yjizM4hOqS+nnZimbJULuX0s--A@mail.gmail.com> <CAD2nsn2RTzkx_1ApoyPixfim6j5sY7kscW4QAzoVu49HyTNJjA@mail.gmail.com> <CAD2nsn0c=cUdD8kQWNprGr7GJ6t1Y+c=LA2KZ+sSVgrsb3oedQ@mail.gmail.com> <20120201162730.GA29685@tuxdriver.com> <4F2970B3.4090203@openwrt.org> <CAD2nsn14odYg7AL1CD4KFymTAdC=h2YeM-WOok40ZNPnvVLD=w@mail.gmail.com>
+In-Reply-To: <CAD2nsn14odYg7AL1CD4KFymTAdC=h2YeM-WOok40ZNPnvVLD=w@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 13 Feb 2012 13:37:06 -0600
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
-
-> Drivers that load firmware from their probe routine have problems with the
-> latest versions of udev as they get timeouts while waiting for user
-> space to start. The problem is fixed by loading the firmware and starting
-> mac80211 from a delayed_work queue. By using this method, most of the
-> original code is preserved.
+On 2012-02-02 6:37 AM, Mohammed Shafi wrote:
+> Hi Felix,
 > 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
-> This one is compile-tested only.
+> On Wed, Feb 1, 2012 at 10:34 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> On 2012-02-01 5:27 PM, John W. Linville wrote:
+>>> On Wed, Feb 01, 2012 at 04:44:08PM +0530, Mohammed Shafi wrote:
+>>>> On Tue, Jan 31, 2012 at 11:28 AM, Mohammed Shafi
+>>>> <shafi.wireless@gmail.com> wrote:
+>>>> > On Tue, Jan 31, 2012 at 1:13 AM, Laurent Bonnans <bonnans.l@gmail.com> wrote:
+>>>> >> Since the update from linux 3.2.1 to 3.2.2, dhcp stopped working on
+>>>> >> some APs on my laptop with an AR9285 Wireless card.
+>>>> >>
+>>>> >> dhcp works fine on an open wifi network but receives no response on a
+>>>> >> wep network I use. I haven't been able to test it on a third network
+>>>> >> for now.
+>>>> >
+>>>> >  reverting  "ath9k_hw: fix interpretation of the rx KeyMiss flag" does
+>>>> > helps.  i  need to analyze
+>>>> > if it exposes some real issue which need to be fixed.
+>>>> >
+>>>>
+>>>> this seems to be a problem in WEP alone, where the key miss is always
+>>>> set for this case and RX_FLAG_DECRYPTED is not set. mac80211 trys to
+>>>> decrypt,  but fails due to ICV mismatch.
+>>>
+>>> OK...any way to differentiate this case at that point in the code?
+>>>
+>>> John
+>> Please try this patch:
+>>
+>> ---
+>> --- a/drivers/net/wireless/ath/ath9k/recv.c
+>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+>> @@ -823,6 +823,15 @@ static bool ath9k_rx_accept(struct ath_c
+>>                (ATH9K_RXERR_DECRYPT | ATH9K_RXERR_CRC | ATH9K_RXERR_MIC |
+>>                 ATH9K_RXERR_KEYMISS));
+>>
+>> +       /*
+>> +        * First 4 slots are reserved for WEP, and for packets using them,
+>> +        * ATH9K_RXERR_KEYMISS can be reported even though decryption was
+>> +        * successful, since no MAC address based key cache lookup was
+>> +        * performed.
+>> +        */
+>> +       if (rx_stats->rs_keyix < 4)
+>> +               rx_stats->rs_status &= ~ATH9K_RXERR_KEYMISS;
+>> +
+>>        if (!rx_stats->rs_datalen)
+>>                return false;
+>>         /*
 > 
-> Larry
-> ---
->  drivers/net/wireless/p54/p54spi.c |   38 ++++++++++++++++++++++++++----------
->  drivers/net/wireless/p54/p54spi.h |    1 +
->  2 files changed, 28 insertions(+), 11 deletions(-)
 > 
-> diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-> index 7faed62..87c2634 100644
-> --- a/drivers/net/wireless/p54/p54spi.c
-> +++ b/drivers/net/wireless/p54/p54spi.c
-> @@ -595,6 +595,30 @@ static void p54spi_op_stop(struct ieee80211_hw *dev)
->  	cancel_work_sync(&priv->work);
->  }
->  
-> +static void p54s_load_firmware(struct work_struct *work)
-> +{
-> +	struct p54s_priv *priv = container_of(to_delayed_work(work),
-> +				 struct p54s_priv, firmware_load);
-> +	struct ieee80211_hw *hw = priv->hw;
-> +	int ret;
-> +
-> +	ret = p54spi_request_firmware(hw);
-> +	if (ret < 0)
-> +		goto err_free_common;
-> +
-> +	ret = p54spi_request_eeprom(hw);
-> +	if (ret)
-> +		goto err_free_common;
-> +
-> +	ret = p54_register_common(hw, &priv->spi->dev);
-> +	if (ret)
-> +		goto err_free_common;
-> +	return;
-> +
-> +err_free_common:
-> +	dev_err(&priv->spi->dev, "Failed to read firmware\n");
-> +}
-> +
->  static int __devinit p54spi_probe(struct spi_device *spi)
->  {
->  	struct p54s_priv *priv = NULL;
-> @@ -658,17 +682,9 @@ static int __devinit p54spi_probe(struct spi_device *spi)
->  	priv->common.stop = p54spi_op_stop;
->  	priv->common.tx = p54spi_op_tx;
->  
-> -	ret = p54spi_request_firmware(hw);
-> -	if (ret < 0)
-> -		goto err_free_common;
-> -
-> -	ret = p54spi_request_eeprom(hw);
-> -	if (ret)
-> -		goto err_free_common;
-> -
-> -	ret = p54_register_common(hw, &priv->spi->dev);
-> -	if (ret)
-> -		goto err_free_common;
-> +	/* setup and start delayed work to load firmware */
-> +	INIT_DELAYED_WORK(&priv->firmware_load, p54s_load_firmware);
-> +	schedule_delayed_work(&priv->firmware_load, HZ);
+> unfortunately as the rx_keyix is always 'INVALID' (as obtained from
+> the descriptor) this check does not seems to help
+You're right. I read up on what the other codebases do here, and I have
+a better patch here:
 
-Why delay it one second?
-That seems arbitrary. Just use a non-delayed workqueue. That should be good enough.
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -823,6 +823,14 @@ static bool ath9k_rx_accept(struct ath_c
+ 		(ATH9K_RXERR_DECRYPT | ATH9K_RXERR_CRC | ATH9K_RXERR_MIC |
+ 		 ATH9K_RXERR_KEYMISS));
+ 
++	/*
++	 * Key miss events are only relevant for pairwise keys where the
++	 * descriptor does contain a valid key index. This has been observed
++	 * mostly with CCMP encryption.
++	 */
++	if (rx_stats->rs_keyix == ATH9K_RXKEYIX_INVALID)
++		rx_stats->rs_status &= ~ATH9K_RXERR_KEYMISS;
++
+ 	if (!rx_stats->rs_datalen)
+ 		return false;
+         /*
 
->  
->  	return 0;
->  
-> diff --git a/drivers/net/wireless/p54/p54spi.h b/drivers/net/wireless/p54/p54spi.h
-> index dfaa62a..5f7714b 100644
-> --- a/drivers/net/wireless/p54/p54spi.h
-> +++ b/drivers/net/wireless/p54/p54spi.h
-> @@ -120,6 +120,7 @@ struct p54s_priv {
->  
->  	enum fw_state fw_state;
->  	const struct firmware *firmware;
-> +	struct delayed_work firmware_load;
->  };
->  
->  #endif /* P54SPI_H */
-
-I think we have to cancel the work in the remove handler. Just in case the device was removed
-before fw load wq could run.
-
--- 
-Greetings, Michael.
