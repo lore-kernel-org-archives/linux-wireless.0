@@ -1,118 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:58959 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752994Ab2BEPpn convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:59063 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751778Ab2BBKAN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Feb 2012 10:45:43 -0500
-Received: by qcqw6 with SMTP id w6so2972367qcq.19
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Feb 2012 07:45:42 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAObL_7E2eW9aqz3VLsBU-=4+kMXrfPvfz6wCNUEdDHuJWVaSLA@mail.gmail.com>
-References: <CAObL_7E2eW9aqz3VLsBU-=4+kMXrfPvfz6wCNUEdDHuJWVaSLA@mail.gmail.com>
-Date: Sun, 5 Feb 2012 16:45:42 +0100
-Message-ID: <CAFZTsKk9ojw9_XodisHf-dtHpL1n6xSRmmWDVniZ-Ps4-JLwvA@mail.gmail.com> (sfid-20120205_164611_779769_331C8C83)
-Subject: Re: 6300agn: queue stuck and driver doesn't recover
-From: Alexander Schnaidt <alex.schnaidt@googlemail.com>
-To: Andrew Lutomirski <luto@mit.edu>
-Cc: ilw@linux.intel.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Thu, 2 Feb 2012 05:00:13 -0500
+Received: by werb13 with SMTP id b13so1662686wer.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 02:00:11 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>, Eliad Peller <eliad@wizery.com>
+Subject: [PATCH v3 1/4] wl12xx: Set different wake up conditions in case of suspend
+Date: Thu,  2 Feb 2012 12:03:39 +0200
+Message-Id: <1328177022-26646-2-git-send-email-eliad@wizery.com> (sfid-20120202_110018_164452_681DD1E6)
+In-Reply-To: <1328177022-26646-1-git-send-email-eliad@wizery.com>
+References: <1328177022-26646-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 4, 2012 at 11:42 PM, Andrew Lutomirski <luto@mit.edu> wrote:
->
-> I've recently started to notice wireless failures -- after being
-> connected for a few minutes, the connection dies.  Other devices on
-> the same network continue to work.  'iw dev wlan0 disconnect' will fix
-> it.
->
-> I'm not at all sure, but I think this is a 3.2 regression.  My kernel
->  is 3.2.2-1.fc16.x86_64.
-Hi!
+From: Eyal Shapira <eyal@wizery.com>
 
-I am experiencing a similar regression on every kernel >=3.2.
-Connected to a wpa protected AP, every application
-loses it's connection after a period of time. If I let it be, it
-eventually reconnects
-and continues for a while until the cycle repeats itself.
+Added ability to set different wake up conditions for suspend/resume.
+Set default values to wake up every 3 DTIMs while suspended
+and every 1 DTIM while resumed
 
-03:00.0 Network controller: Intel Corporation Ultimate N WiFi Link 5300
-        Subsystem: Intel Corporation Device 1011
-        Flags: bus master, fast devsel, latency 0, IRQ 48
-        Memory at f2500000 (64-bit, non-prefetchable) [size=8K]
-        Capabilities: <access denied>
-        Kernel driver in use: iwlwifi
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/acx.c  |   10 ++++---
+ drivers/net/wireless/wl12xx/acx.h  |    3 +-
+ drivers/net/wireless/wl12xx/conf.h |   13 +++++++++
+ drivers/net/wireless/wl12xx/main.c |   51 +++++++++++++++++++++++++++++++++--
+ drivers/net/wireless/wl12xx/ps.c   |    4 ++-
+ 5 files changed, 72 insertions(+), 9 deletions(-)
 
-Networkmanager, netcfg or wicd do not report any problems. The logs
-are clean and only ever mention the reconnection-event itself.
+diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
+index af2c312..bc96db0 100644
+--- a/drivers/net/wireless/wl12xx/acx.c
++++ b/drivers/net/wireless/wl12xx/acx.c
+@@ -34,12 +34,14 @@
+ #include "reg.h"
+ #include "ps.h"
+ 
+-int wl1271_acx_wake_up_conditions(struct wl1271 *wl, struct wl12xx_vif *wlvif)
++int wl1271_acx_wake_up_conditions(struct wl1271 *wl, struct wl12xx_vif *wlvif,
++				  u8 wake_up_event, u8 listen_interval)
+ {
+ 	struct acx_wake_up_condition *wake_up;
+ 	int ret;
+ 
+-	wl1271_debug(DEBUG_ACX, "acx wake up conditions");
++	wl1271_debug(DEBUG_ACX, "acx wake up conditions (wake_up_event %d listen_interval %d)",
++		     wake_up_event, listen_interval);
+ 
+ 	wake_up = kzalloc(sizeof(*wake_up), GFP_KERNEL);
+ 	if (!wake_up) {
+@@ -48,8 +50,8 @@ int wl1271_acx_wake_up_conditions(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	}
+ 
+ 	wake_up->role_id = wlvif->role_id;
+-	wake_up->wake_up_event = wl->conf.conn.wake_up_event;
+-	wake_up->listen_interval = wl->conf.conn.listen_interval;
++	wake_up->wake_up_event = wake_up_event;
++	wake_up->listen_interval = listen_interval;
+ 
+ 	ret = wl1271_cmd_configure(wl, ACX_WAKE_UP_CONDITIONS,
+ 				   wake_up, sizeof(*wake_up));
+diff --git a/drivers/net/wireless/wl12xx/acx.h b/drivers/net/wireless/wl12xx/acx.h
+index 0749df5..a28fc04 100644
+--- a/drivers/net/wireless/wl12xx/acx.h
++++ b/drivers/net/wireless/wl12xx/acx.h
+@@ -1226,7 +1226,8 @@ enum {
+ 
+ 
+ int wl1271_acx_wake_up_conditions(struct wl1271 *wl,
+-				  struct wl12xx_vif *wlvif);
++				  struct wl12xx_vif *wlvif,
++				  u8 wake_up_event, u8 listen_interval);
+ int wl1271_acx_sleep_auth(struct wl1271 *wl, u8 sleep_auth);
+ int wl1271_acx_tx_power(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 			int power);
+diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+index 10e5e3d..d97aad6 100644
+--- a/drivers/net/wireless/wl12xx/conf.h
++++ b/drivers/net/wireless/wl12xx/conf.h
+@@ -810,6 +810,19 @@ struct conf_conn_settings {
+ 	u8 listen_interval;
+ 
+ 	/*
++	 * Firmware wakeup conditions during suspend
++	 * Range: CONF_WAKE_UP_EVENT_*
++	 */
++	u8 suspend_wake_up_event;
++
++	/*
++	 * Listen interval during suspend.
++	 * Currently will be in DTIMs (1-10)
++	 *
++	 */
++	u8 suspend_listen_interval;
++
++	/*
+ 	 * Enable or disable the beacon filtering.
+ 	 *
+ 	 * Range: CONF_BCN_FILT_MODE_*
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 2bb1c24..29a00fc 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -218,6 +218,8 @@ static struct conf_drv_settings default_conf = {
+ 	.conn = {
+ 		.wake_up_event               = CONF_WAKE_UP_EVENT_DTIM,
+ 		.listen_interval             = 1,
++		.suspend_wake_up_event       = CONF_WAKE_UP_EVENT_N_DTIM,
++		.suspend_listen_interval     = 3,
+ 		.bcn_filt_mode               = CONF_BCN_FILT_MODE_ENABLED,
+ 		.bcn_filt_ie_count           = 2,
+ 		.bcn_filt_ie = {
+@@ -1561,6 +1563,35 @@ static struct notifier_block wl1271_dev_notifier = {
+ };
+ 
+ #ifdef CONFIG_PM
++static int wl1271_configure_suspend_sta(struct wl1271 *wl,
++					struct wl12xx_vif *wlvif)
++{
++	int ret = 0;
++
++	mutex_lock(&wl->mutex);
++
++	if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
++		goto out_unlock;
++
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out_unlock;
++
++	ret = wl1271_acx_wake_up_conditions(wl, wlvif,
++				    wl->conf.conn.suspend_wake_up_event,
++				    wl->conf.conn.suspend_listen_interval);
++
++	if (ret < 0)
++		wl1271_error("suspend: set wake up conditions failed: %d", ret);
++
++
++	wl1271_ps_elp_sleep(wl);
++
++out_unlock:
++	mutex_unlock(&wl->mutex);
++	return ret;
++
++}
+ 
+ static int wl1271_configure_suspend_ap(struct wl1271 *wl,
+ 				       struct wl12xx_vif *wlvif)
+@@ -1588,6 +1619,8 @@ out_unlock:
+ static int wl1271_configure_suspend(struct wl1271 *wl,
+ 				    struct wl12xx_vif *wlvif)
+ {
++	if (wlvif->bss_type == BSS_TYPE_STA_BSS)
++		return wl1271_configure_suspend_sta(wl, wlvif);
+ 	if (wlvif->bss_type == BSS_TYPE_AP_BSS)
+ 		return wl1271_configure_suspend_ap(wl, wlvif);
+ 	return 0;
+@@ -1596,10 +1629,11 @@ static int wl1271_configure_suspend(struct wl1271 *wl,
+ static void wl1271_configure_resume(struct wl1271 *wl,
+ 				    struct wl12xx_vif *wlvif)
+ {
+-	int ret;
++	int ret = 0;
+ 	bool is_ap = wlvif->bss_type == BSS_TYPE_AP_BSS;
++	bool is_sta = wlvif->bss_type == BSS_TYPE_STA_BSS;
+ 
+-	if (!is_ap)
++	if ((!is_ap) && (!is_sta))
+ 		return;
+ 
+ 	mutex_lock(&wl->mutex);
+@@ -1607,7 +1641,18 @@ static void wl1271_configure_resume(struct wl1271 *wl,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	wl1271_acx_beacon_filter_opt(wl, wlvif, false);
++	if (is_sta) {
++		ret = wl1271_acx_wake_up_conditions(wl, wlvif,
++				    wl->conf.conn.wake_up_event,
++				    wl->conf.conn.listen_interval);
++
++		if (ret < 0)
++			wl1271_error("resume: wake up conditions failed: %d",
++				     ret);
++
++	} else if (is_ap) {
++		ret = wl1271_acx_beacon_filter_opt(wl, wlvif, false);
++	}
+ 
+ 	wl1271_ps_elp_sleep(wl);
+ out:
+diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
+index e209e29..d197922 100644
+--- a/drivers/net/wireless/wl12xx/ps.c
++++ b/drivers/net/wireless/wl12xx/ps.c
+@@ -170,7 +170,9 @@ int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		wl1271_debug(DEBUG_PSM, "entering psm (mode=%d,timeout=%u)",
+ 			     mode, timeout);
+ 
+-		ret = wl1271_acx_wake_up_conditions(wl, wlvif);
++		ret = wl1271_acx_wake_up_conditions(wl, wlvif,
++					    wl->conf.conn.wake_up_event,
++					    wl->conf.conn.listen_interval);
+ 		if (ret < 0) {
+ 			wl1271_error("couldn't set wake up conditions");
+ 			return ret;
+-- 
+1.7.6.401.g6a319
 
-Now, running wpa_supplicant interactively spits out some info:
-
-[alex@lx200s ~]$ sudo wpa_supplicant -D wext -i wlan0 -c wpstest.conf
-Password:
-Trying to associate with 00:1f:3f:13:47:1d (SSID='MyFancyAP' freq=2417 MHz)
-Associated with 00:1f:3f:13:47:1d
-WPA: Key negotiation completed with 00:1f:3f:13:47:1d [PTK=TKIP GTK=TKIP]
-CTRL-EVENT-CONNECTED - Connection to 00:1f:3f:13:47:1d
-completed (auth) [id=0 id_str=]
-WPA: Group rekeying completed with 00:1f:3f:13:47:1d [GTK=TKIP]
-WPA: Group rekeying completed with 00:1f:3f:13:47:1d [GTK=TKIP]
-CTRL-EVENT-DISCONNECTED bssid=00:1f:3f:13:47:1d reason=0
-Trying to associate with 00:1f:3f:13:47:1d (SSID='MyFancyAP' freq=2417 MHz)
-Associated with 00:1f:3f:13:47:1d
-WPA: Key negotiation completed with 00:1f:3f:13:47:1d [PTK=TKIP GTK=TKIP]
-CTRL-EVENT-CONNECTED - Connection to 00:1f:3f:13:47:1d
-completed (reauth) [id=0 id_str=]
-^CCTRL-EVENT-TERMINATING - signal 2 received
-
-The connection *always* stalls at the second group rekeying event.
-When the third group rekeying happens wpa_supplicant(?) re-associates the
-connection and the cycle repeats.
-
-Here's the the dmesg output during the time frame:
-
-[ 126.172145] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
-[ 126.172530] iwlwifi 0000:03:00.0: Radio type=0x0-0x2-0x0
-[ 126.322917] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
-[ 126.323315] iwlwifi 0000:03:00.0: Radio type=0x0-0x2-0x0
-[ 129.644682] wlan0: authenticate with 00:1f:3f:13:47:1d (try 1)
-[ 129.647687] wlan0: authenticated
-[ 129.649798] wlan0: associate with 00:1f:3f:13:47:1d (try 1)
-[ 129.653886] wlan0: RX AssocResp from 00:1f:3f:13:47:1d
-(capab=0x31 status=0 aid=2)
-[ 129.653895] wlan0: associated
-[ 1506.536175] wlan0: deauthenticated from 00:1f:3f:13:47:1d (Reason: 2)
-[ 1506.600035] cfg80211: Calling CRDA to update world regulatory domain
-[ 1509.857439] wlan0: authenticate with 00:1f:3f:13:47:1d (try 1)
-[ 1509.860511] wlan0: authenticated
-[ 1509.862438] wlan0: associate with 00:1f:3f:13:47:1d (try 1)
-[ 1509.866443] wlan0: RX AssocResp from 00:1f:3f:13:47:1d
-(capab=0x31 status=0 aid=2)
-[ 1509.866451] wlan0: associated
-
-At 1506.5 the re-association happens.
-
-I can't influence the interval of the wpa rekeying of my wlan-router, so I'm
-not sure if this is related.
-The amount of network traffic doesn't seem to influence this behavior, either.
-
-I tried to bisect it but ended up at:
-
-commit 3c607d27c818cf4a5d28f2c73b18a88f8fbdfa33
-Author: Don Fry <donald.h.fry@intel.com>
-Date:   Fri Sep 30 11:40:20 2011 -0700
-
-    iwlagn: rename iwlagn module iwlwifi and alias to iwlagn.
-
-    Rename the iwlagn module as iwlwifi in preparation for future
-    changes.  Add an alias to iwlagn for backward compatibility.
-
-    Signed-off-by: Don Fry <donald.h.fry@intel.com>
-    Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-    Signed-off-by: John W. Linville <linville@tuxdriver.com>
-
-That doesn't make a lot of sense to me but I wanted to mention it
-
-I'll gladly provide more info.
-
-alex
