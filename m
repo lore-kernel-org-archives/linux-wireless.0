@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34288 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756027Ab2B0Xb5 (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:65011 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751778Ab2BBKAK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 18:31:57 -0500
-Date: Mon, 27 Feb 2012 18:29:47 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: wireless-testing fail compiling
-Message-ID: <20120227232946.GG26664@tuxdriver.com> (sfid-20120228_003201_455572_5A20029B)
-References: <1330374499.12612.18.camel@wwguy-huron>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1330374499.12612.18.camel@wwguy-huron>
+	Thu, 2 Feb 2012 05:00:10 -0500
+Received: by wics10 with SMTP id s10so1599679wic.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 02:00:09 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3 0/4] wl12xx: add some psm/suspend features
+Date: Thu,  2 Feb 2012 12:03:38 +0200
+Message-Id: <1328177022-26646-1-git-send-email-eliad@wizery.com> (sfid-20120202_110015_582535_F9989962)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 27, 2012 at 12:28:19PM -0800, Guy, Wey-Yi wrote:
-> build break in the latest wireless-testing
-> 
-> fs/autofs4/inode.c: In function ‘autofs4_fill_super’:
-> fs/autofs4/inode.c:228: error: implicit declaration of function
-> ‘is_compat_task’
-> make[2]: *** [fs/autofs4/inode.o] Error 1
-> make[1]: *** [fs/autofs4] Error 2
-> make: *** [fs] Error 2
-> 
-> 
-> fs/autofs4/dev-ioctl.c: In function ‘autofs_dev_ioctl_setpipefd’:
-> fs/autofs4/dev-ioctl.c:388: error: implicit declaration of function
-> ‘is_compat_task’
-> make[2]: *** [fs/autofs4/dev-ioctl.o] Error 1
+Add some psm / suspend features:
+* Add the ability to force psm (by default, the fw uses dynamic ps)
+* Use differnet wake up conditions on suspend
 
-It looks like that line was added in commit
-a32744d4abae24572eff7269bc17895c41bd0085, which came into
-wireless-testing as part of 3.3-rc5.
+(depends on the "wl12xx: update fw api" patchset)
 
-FWIW, it built for me.  I'm using a config derived from what is in
-Fedora 17.  Maybe you should try a clean build?
+v3: remove the rx-filters patches
 
-John
+Eyal Shapira (4):
+  wl12xx: Set different wake up conditions in case of suspend
+  wl12xx: add suspend_listen_interval debugfs file
+  wl12xx: add forced_ps mode
+  wl12xx: add forced_ps debugfs file
+
+ drivers/net/wireless/wl12xx/acx.c     |   10 ++-
+ drivers/net/wireless/wl12xx/acx.h     |    3 +-
+ drivers/net/wireless/wl12xx/conf.h    |   19 +++++
+ drivers/net/wireless/wl12xx/debugfs.c |  131 ++++++++++++++++++++++++++++++++-
+ drivers/net/wireless/wl12xx/main.c    |   76 +++++++++++++++++--
+ drivers/net/wireless/wl12xx/ps.c      |   12 ++-
+ drivers/net/wireless/wl12xx/wl12xx.h  |    2 +-
+ 7 files changed, 232 insertions(+), 21 deletions(-)
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.6.401.g6a319
+
