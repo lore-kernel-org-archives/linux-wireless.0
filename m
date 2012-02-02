@@ -1,109 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:58127 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753199Ab2BCKMz convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:36249 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753317Ab2BBHpB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 05:12:55 -0500
-Received: by vcge1 with SMTP id e1so2463453vcg.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2012 02:12:54 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4F2A8173.7050603@openwrt.org>
-References: <CAAJ3AHeF5-yD_+a6HiA3Ty-yjizM4hOqS+nnZimbJULuX0s--A@mail.gmail.com>
-	<CAD2nsn2RTzkx_1ApoyPixfim6j5sY7kscW4QAzoVu49HyTNJjA@mail.gmail.com>
-	<CAD2nsn0c=cUdD8kQWNprGr7GJ6t1Y+c=LA2KZ+sSVgrsb3oedQ@mail.gmail.com>
-	<20120201162730.GA29685@tuxdriver.com>
-	<4F2970B3.4090203@openwrt.org>
-	<CAD2nsn14odYg7AL1CD4KFymTAdC=h2YeM-WOok40ZNPnvVLD=w@mail.gmail.com>
-	<4F2A8173.7050603@openwrt.org>
-Date: Fri, 3 Feb 2012 15:42:54 +0530
-Message-ID: <CAD2nsn1UONGkFWvy=7Cb_QM6x4vr=cj_O2W9CWaB3vNRUgw5EQ@mail.gmail.com> (sfid-20120203_111259_998799_EA528751)
-Subject: Re:
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Laurent Bonnans <bonnans.l@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 2 Feb 2012 02:45:01 -0500
+Received: by lagk11 with SMTP id k11so1172054lag.29
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Feb 2012 23:44:59 -0800 (PST)
+Subject: Re: [PATCH v2 4/7] wl12xx: add forced_ps debugfs file
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1328021048-8944-5-git-send-email-eliad@wizery.com>
+References: <1328021048-8944-1-git-send-email-eliad@wizery.com>
+	 <1328021048-8944-5-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 02 Feb 2012 09:44:56 +0200
+Message-ID: <1328168696.3626.247.camel@cumari> (sfid-20120202_084506_172092_F5F3B4EF)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 2, 2012 at 5:58 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2012-02-02 6:37 AM, Mohammed Shafi wrote:
->> Hi Felix,
->>
->> On Wed, Feb 1, 2012 at 10:34 PM, Felix Fietkau <nbd@openwrt.org> wrote:
->>> On 2012-02-01 5:27 PM, John W. Linville wrote:
->>>> On Wed, Feb 01, 2012 at 04:44:08PM +0530, Mohammed Shafi wrote:
->>>>> On Tue, Jan 31, 2012 at 11:28 AM, Mohammed Shafi
->>>>> <shafi.wireless@gmail.com> wrote:
->>>>> > On Tue, Jan 31, 2012 at 1:13 AM, Laurent Bonnans <bonnans.l@gmail.com> wrote:
->>>>> >> Since the update from linux 3.2.1 to 3.2.2, dhcp stopped working on
->>>>> >> some APs on my laptop with an AR9285 Wireless card.
->>>>> >>
->>>>> >> dhcp works fine on an open wifi network but receives no response on a
->>>>> >> wep network I use. I haven't been able to test it on a third network
->>>>> >> for now.
->>>>> >
->>>>> >  reverting  "ath9k_hw: fix interpretation of the rx KeyMiss flag" does
->>>>> > helps.  i  need to analyze
->>>>> > if it exposes some real issue which need to be fixed.
->>>>> >
->>>>>
->>>>> this seems to be a problem in WEP alone, where the key miss is always
->>>>> set for this case and RX_FLAG_DECRYPTED is not set. mac80211 trys to
->>>>> decrypt,  but fails due to ICV mismatch.
->>>>
->>>> OK...any way to differentiate this case at that point in the code?
->>>>
->>>> John
->>> Please try this patch:
->>>
->>> ---
->>> --- a/drivers/net/wireless/ath/ath9k/recv.c
->>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
->>> @@ -823,6 +823,15 @@ static bool ath9k_rx_accept(struct ath_c
->>>                (ATH9K_RXERR_DECRYPT | ATH9K_RXERR_CRC | ATH9K_RXERR_MIC |
->>>                 ATH9K_RXERR_KEYMISS));
->>>
->>> +       /*
->>> +        * First 4 slots are reserved for WEP, and for packets using them,
->>> +        * ATH9K_RXERR_KEYMISS can be reported even though decryption was
->>> +        * successful, since no MAC address based key cache lookup was
->>> +        * performed.
->>> +        */
->>> +       if (rx_stats->rs_keyix < 4)
->>> +               rx_stats->rs_status &= ~ATH9K_RXERR_KEYMISS;
->>> +
->>>        if (!rx_stats->rs_datalen)
->>>                return false;
->>>         /*
->>
->>
->> unfortunately as the rx_keyix is always 'INVALID' (as obtained from
->> the descriptor) this check does not seems to help
-> You're right. I read up on what the other codebases do here, and I have
-> a better patch here:
->
-> --- a/drivers/net/wireless/ath/ath9k/recv.c
-> +++ b/drivers/net/wireless/ath/ath9k/recv.c
-> @@ -823,6 +823,14 @@ static bool ath9k_rx_accept(struct ath_c
->                (ATH9K_RXERR_DECRYPT | ATH9K_RXERR_CRC | ATH9K_RXERR_MIC |
->                 ATH9K_RXERR_KEYMISS));
->
-> +       /*
-> +        * Key miss events are only relevant for pairwise keys where the
-> +        * descriptor does contain a valid key index. This has been observed
-> +        * mostly with CCMP encryption.
-> +        */
-> +       if (rx_stats->rs_keyix == ATH9K_RXKEYIX_INVALID)
-> +               rx_stats->rs_status &= ~ATH9K_RXERR_KEYMISS;
-> +
->        if (!rx_stats->rs_datalen)
->                return false;
->         /*
->
+On Tue, 2012-01-31 at 16:44 +0200, Eliad Peller wrote: 
+> From: Eyal Shapira <eyal@wizery.com>
+> 
+> Added control over forced_ps option through debugfs.
+> This can be either 1 or 0.
+> 
+> Signed-off-by: Eyal Shapira <eyal@wizery.com>
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-this works for me (WEP key configured).
+Ah, now I see it. :)
+
+This should be squashed with the previous one.  And I think it should
+probably be the same file (ie. "dynamic_ps_timeout") that should include
+this feature.  Maybe passing -1 to enable forced PS?
 
 -- 
-shafi
+Cheers,
+Luca.
+
