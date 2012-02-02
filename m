@@ -1,90 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49526 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752191Ab2BYUn7 (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:56803 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933479Ab2BBWJL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Feb 2012 15:43:59 -0500
-Message-Id: <20120225204145.794866318@sipsolutions.net> (sfid-20120225_214404_329985_A211B0C9)
-Date: Sat, 25 Feb 2012 21:40:45 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] mac80211: fix auth/assoc data & timer leak
-References: <20120225204044.168176239@sipsolutions.net>
-Mime-Version: 1.0
+	Thu, 2 Feb 2012 17:09:11 -0500
+Received: by vbjk17 with SMTP id k17so2129482vbj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 14:09:10 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1328112335-19265-2-git-send-email-rmanohar@qca.qualcomm.com>
+References: <1328112335-19265-1-git-send-email-rmanohar@qca.qualcomm.com>
+	<1328112335-19265-2-git-send-email-rmanohar@qca.qualcomm.com>
+Date: Thu, 2 Feb 2012 14:09:10 -0800
+Message-ID: <CAJ-Vmon56yyyvU46oXBJaFpUcFWa0008S5tyBm31qTY5y2CO+g@mail.gmail.com> (sfid-20120202_230918_845362_0098D8FB)
+Subject: Re: [PATCH 2/2] ath9k_hw: improve ANI processing and rx desensitizing parameters
+From: Adrian Chadd <adrian@freebsd.org>
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Paul Stewart <pstew@google.com>,
+	Susinder Gulasekaran <susinder@qca.qualcomm.com>,
+	Suresh Chandrasekaran <csuresh@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi, questions below:
 
-When removing an interface while it is in the
-process of authenticating or associating, we
-leak the auth_data or assoc_data, and leave
-the timer pending. The timer then crashes the
-system when it fires as its data is gone.
+On 1 February 2012 08:05, Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
+>
+> This patch improves ANI operations by switching among the immunity
+> levels based on PHY errors and beacon rssi which will adjust receiver
+> desensitizing parameters. The changes are
 
-Fix this by explicitly deleting all the data
-when the interface is removed. This uncovered
-another bug -- this problem should have been
-detected by the sta_info_flush() warning but
-that function doesn't ever return non-zero,
-I'll fix that in a separate patch.
+What environments are you seeing this bad behaviour in? I'd just like
+to be sure that this won't mess up the behaviour of ANI for other
+chips, other environments and other operating modes.
 
-Reported-by: Hieu Nguyen <hieux.c.nguyen@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/iface.c       |    2 ++
- net/mac80211/mlme.c        |   12 ++++++++++++
- 3 files changed, 15 insertions(+), 0 deletions(-)
+> * Irrespective of opmode, the Weak Signal Detection is with the current
+>  immunity level value.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index feddd8a..38bfca3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1181,6 +1181,7 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 				  struct sk_buff *skb);
- void ieee80211_sta_reset_beacon_monitor(struct ieee80211_sub_if_data *sdata);
- void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata);
-+void ieee80211_mgd_teardown(struct ieee80211_sub_if_data *sdata);
- 
- /* IBSS code */
- void ieee80211_ibss_notify_scan_completed(struct ieee80211_local *local);
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index a495587..e2e45dc 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -654,6 +654,8 @@ static void ieee80211_teardown_sdata(struct net_device *dev)
- 
- 	if (ieee80211_vif_is_mesh(&sdata->vif))
- 		mesh_rmc_free(sdata);
-+	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
-+		ieee80211_mgd_teardown(sdata);
- 
- 	flushed = sta_info_flush(local, sdata);
- 	WARN_ON(flushed);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 2d8a2b6..b1c40f7 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3532,6 +3532,18 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
- 	return 0;
- }
- 
-+void ieee80211_mgd_teardown(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+
-+	mutex_lock(&ifmgd->mtx);
-+	if (ifmgd->assoc_data)
-+		ieee80211_destroy_assoc_data(sdata, false);
-+	if (ifmgd->auth_data)
-+		ieee80211_destroy_auth_data(sdata, false);
-+	mutex_unlock(&ifmgd->mtx);
-+}
-+
- void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
- 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
- 			       gfp_t gfp)
+I didn't think that weak signal detection was a single bit in the PHY.
+It looks like you've just deleted all the threshold settings and are
+turning on/off using low self correlation.
+
+Have a read of the (very early, AR5212 era?) ANI patent:
+
+http://www.freepatentsonline.com/7349503.pdf
+
+If this has changed (ie, if in Osprey it's done differently) then it
+should likely be documented in the driver somewhere.
+
+IF this all works then great, but I'd really like to try and better
+understand/document the "why" aspects of it. ANI is .. fiddly, and
+there aren't any tools available for ath9k (+freebsd) wireless
+developers to really understand the impact of ANI.
+
+Thanks,
 
 
+
+Adrian
