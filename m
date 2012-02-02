@@ -1,113 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:61977 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756625Ab2BJBFo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 20:05:44 -0500
-Date: Thu, 09 Feb 2012 19:05:37 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: chunkeey@web.de
-Cc: m@bues.ch, jcmvbkbc@gmail.com, linux-kernel@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
-Subject: [RFC/RFT] p54spi: Convert driver to use asynchronous firmware
- loading
-Message-ID: <4f346d61.3S6x22TS5RH2gGO5%Larry.Finger@lwfinger.net> (sfid-20120210_020607_357160_AEE3D02B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga11.intel.com ([192.55.52.93]:22467 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753848Ab2BCAQv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 19:16:51 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 03/28] iwlwifi: separate the APM from the EEPROM
+Date: Thu,  2 Feb 2012 15:08:54 -0800
+Message-Id: <1328224159-18134-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120203_011745_221513_9AE4639F)
+In-Reply-To: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers that load firmware from their probe routine have problems with the
-latest versions of udev as they get timeouts while waiting for user
-space to start. The problem is fixed by using request_firmware_nowait()
-and delaying the start of mac80211 until the firmware is loaded.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-To prevent the possibility of the driver being unloaded while the firmware
-loading callback is still active, a completion queue entry is used.
+There is no link between the two. Ensure that the NIC is on outside
+the code of the EEPROM handling.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |    4 ++++
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |    4 ----
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-This conversion of p54spi to use asynchronous firmware loading is based
-on the method used in p54usb. As I do not have the hardware, it is only
-compile tested. I would appreciate any feedback from people that have the
-hardware.
-
-Larry
----
-
-Index: wireless-testing-new/drivers/net/wireless/p54/p54spi.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/p54/p54spi.c
-+++ wireless-testing-new/drivers/net/wireless/p54/p54spi.c
-@@ -163,25 +163,41 @@ static int p54spi_spi_write_dma(struct p
- 	return 0;
- }
- 
--static int p54spi_request_firmware(struct ieee80211_hw *dev)
-+
-+static void p54s_load_firmware_cb(const struct firmware *firmware,
-+				  void *context)
- {
-+	struct ieee80211_hw *dev = context;
- 	struct p54s_priv *priv = dev->priv;
- 	int ret;
- 
--	/* FIXME: should driver use it's own struct device? */
--	ret = request_firmware(&priv->firmware, "3826.arm", &priv->spi->dev);
--
--	if (ret < 0) {
--		dev_err(&priv->spi->dev, "request_firmware() failed: %d", ret);
--		return ret;
-+	if (!firmware) {
-+		/* alternate firmware not found */
-+		dev_err(&priv->spi->dev, "Firmware loading failed\n");
-+		return;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 9d9185f..f3bd6a3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1848,8 +1848,12 @@ int iwl_probe(struct iwl_bus *bus, const struct iwl_trans_ops *trans_ops,
+ 	/*****************
+ 	 * 4. Read EEPROM
+ 	 *****************/
++	/* switch the NIC on before accessing the EEPROM */
++	iwl_apm_init(priv);
+ 	/* Read the EEPROM */
+ 	err = iwl_eeprom_init(priv, hw_rev);
++	/* Reset chip to save power until we load uCode during "up". */
++	iwl_apm_stop(priv);
+ 	if (err) {
+ 		IWL_ERR(priv, "Unable to init EEPROM\n");
+ 		goto out_free_trans;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index e27d9f5..ce214e0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -676,8 +676,6 @@ int iwl_eeprom_init(struct iwl_priv *priv, u32 hw_rev)
  	}
-+	complete(&priv->fw_loaded);
-+	priv->firmware = firmware;
+ 	e = (__le16 *)shrd->eeprom;
  
- 	ret = p54_parse_firmware(dev, priv->firmware);
--	if (ret) {
-+	if (ret)
- 		release_firmware(priv->firmware);
-+}
-+
-+static int p54spi_request_firmware(struct ieee80211_hw *dev)
-+{
-+	struct p54s_priv *priv = dev->priv;
-+	int ret;
-+
-+	init_completion(&priv->fw_loaded);
-+	/* FIXME: should driver use it's own struct device? */
-+	ret = request_firmware_nowait(THIS_MODULE, 1, "3826.arm",
-+				      &priv->spi->dev, GFP_KERNEL, dev,
-+				      p54s_load_firmware_cb);
-+	if (ret < 0) {
-+		dev_err(&priv->spi->dev, "request_firmware() failed: %d", ret);
- 		return ret;
- 	}
+-	iwl_apm_init(priv);
 -
- 	return 0;
+ 	ret = iwl_eeprom_verify_signature(trans(priv));
+ 	if (ret < 0) {
+ 		IWL_ERR(priv, "EEPROM not found, EEPROM_GP=0x%08x\n", gp);
+@@ -758,8 +756,6 @@ done:
+ err:
+ 	if (ret)
+ 		iwl_eeprom_free(priv->shrd);
+-	/* Reset chip to save power until we load uCode during "up". */
+-	iwl_apm_stop(priv);
+ alloc_err:
+ 	return ret;
  }
- 
-@@ -681,6 +697,7 @@ static int __devexit p54spi_remove(struc
- {
- 	struct p54s_priv *priv = dev_get_drvdata(&spi->dev);
- 
-+	wait_for_completion(&priv->fw_loaded);
- 	p54_unregister_common(priv->hw);
- 
- 	free_irq(gpio_to_irq(p54spi_gpio_irq), spi);
-Index: wireless-testing-new/drivers/net/wireless/p54/p54spi.h
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/p54/p54spi.h
-+++ wireless-testing-new/drivers/net/wireless/p54/p54spi.h
-@@ -120,6 +120,7 @@ struct p54s_priv {
- 
- 	enum fw_state fw_state;
- 	const struct firmware *firmware;
-+	struct completion fw_loaded;
- };
- 
- #endif /* P54SPI_H */
+-- 
+1.7.0.4
+
