@@ -1,84 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hermes.mlbassoc.com ([64.234.241.98]:48247 "EHLO
-	mail.chez-thomas.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751205Ab2B2To2 (ORCPT
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:36394 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753317Ab2BBHnL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 14:44:28 -0500
-Message-ID: <4F4E801A.1090701@mlbassoc.com> (sfid-20120229_204431_778371_A31E40F5)
-Date: Wed, 29 Feb 2012 12:44:26 -0700
-From: Gary Thomas <gary@mlbassoc.com>
-MIME-Version: 1.0
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Luciano Coelho <coelho@ti.com>
-Subject: Re: Help building compat-wireless
-References: <4F4E47BC.8000306@mlbassoc.com> <4F4E731B.7080704@mlbassoc.com>
-In-Reply-To: <4F4E731B.7080704@mlbassoc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Thu, 2 Feb 2012 02:43:11 -0500
+Received: by mail-lpp01m010-f53.google.com with SMTP id d3so1218830lah.26
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Feb 2012 23:43:10 -0800 (PST)
+Subject: Re: [PATCH v2 3/7] wl12xx: add forced_ps mode
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1328021048-8944-4-git-send-email-eliad@wizery.com>
+References: <1328021048-8944-1-git-send-email-eliad@wizery.com>
+	 <1328021048-8944-4-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 02 Feb 2012 09:43:06 +0200
+Message-ID: <1328168586.3626.245.camel@cumari> (sfid-20120202_084338_650094_5DD2E8F5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-02-29 11:48, Gary Thomas wrote:
-> On 2012-02-29 08:43, Gary Thomas wrote:
->> I'm struggling a bit to build compat-wireless in a cross-build environment.
->> I normally don't build kernels in-tree, rather I use a build tree, e.g.
->> % cd <linux-source>
->> % mkdir /tmp/kernel_build
->> % make O=/tmp/kernel_build <some_config>
->> % make O=/tmp/kernel_build uImage
->>
->> I can't see how to use this setup with the compat-wireless package.
->> I tried [all the combinations I could think of] something like this:
->> % cd <compat-wireless>
->> % make KLIB=<linux-source> KLIB_BUILD=/tmp/kernel_build
->> However, this seems to not work as all I get are errors like this:
->> /local/compat-wireless-2012-02-28/config.mk:242: "WARNING: CONFIG_CFG80211_WEXT will be deactivated or not working because kernel was compiled with CONFIG_WIRELESS_EXT=n. Tools
->> using wext interface like iwconfig will not work. To activate it build your kernel e.g. with CONFIG_LIBIPW=m."
->>
->> Does this process work in my workflow? What do I need to do to
->> get it going?
->
-> I managed to get past this, using this
-> % make KLIB=/tmp/kernel_build KLIB_BUILD=/tmp/kernel_build
-> but to get it to actually build anything, I had to append the
-> 'modules' target, e.g.
-> % make KLIB=/tmp/kernel_build KLIB_BUILD=/tmp/kernel_build modules
->
-> Next problems:
-> * How do I select sub-options? I only want WL12xx support with SDIO, but
-> that requires some sub-options to be set that don't appear to happen.
-> I get the main wl12xx module, but not wl12xx_sdio or wl12xx_platform_data
-> * There are a number of files which don't build against my 2.6.37 kernel,
-> but none of these are important to me (they are in the bluetooth driver
-> which I don't need, but nonetheless it gets built)
-> * The make/install is terribly broken for cross-builds.
->
-> I hacked my way past these problems and finally got some modules which
-> I can try. Sadly, they don't work at all:
-> # modprobe wl12xx_sdio
-> wl12xx: loaded
-> # ifconfig wlan0 up
-> wl1271_sdio mmc1:0001:2: sdio write failed (-110)
-> wl1271_sdio mmc1:0001:2: sdio write failed (-110)
-> ...
+On Tue, 2012-01-31 at 16:44 +0200, Eliad Peller wrote: 
+> From: Eyal Shapira <eyal@wizery.com>
+> 
+> For certain WiFi certification tests forcing PS
+> is necessary. Since DPS is now enabled in the FW
+> and this can't be achieved by using netlatency
+> this required a new config option.
+> 
+> Signed-off-by: Eyal Shapira <eyal@wizery.com>
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-Sadly, this one was my fault - one of my build hacks got in the way :-(
+[...]
 
-Now, I'm getting this error:
-   wl12xx: ERROR could not get firmware ti-connectivity/wl127x-fw-4-sr.bin: -2
-But this file is not available at the Linux firmware tree (git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git)
+> diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
+> index d97aad6..f29fbfd 100644
+> --- a/drivers/net/wireless/wl12xx/conf.h
+> +++ b/drivers/net/wireless/wl12xx/conf.h
+> @@ -934,6 +934,12 @@ struct conf_conn_settings {
+>  	u16 dynamic_ps_timeout;
+>  
+>  	/*
+> +	 * Specifies whether dynamic PS should be disabled and PSM forced.
+> +	 * This is required for certain WiFi certification tests.
+> +	 */
+> +	u8 forced_ps;
+> +
+> +	/*
 
-Where can I find it?
+We are kind of abusing the conf struct.  Originally it contained the
+stuff that was coming from the INI file, now we're putting everything
+there.  It's okay for now, but just a reminder that we need to clean all
+this up at some point (soon!).
 
->
-> Note: This driver in my kernel tree gets much farther than this - it
-> will actually download firmware and talk to the device, so I'm pretty
-> perplexed by this failure.
->
-> Any help greatly appreciated
->
+
+> diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+> index 15353fa..02da445 100644
+> --- a/drivers/net/wireless/wl12xx/debugfs.c
+> +++ b/drivers/net/wireless/wl12xx/debugfs.c
+> @@ -358,7 +358,7 @@ static ssize_t dynamic_ps_timeout_write(struct file *file,
+>          */
+>  
+>         wl12xx_for_each_wlvif_sta(wl, wlvif) {
+> -               if (test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags))
+> +               if (test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags))
+>                         wl1271_ps_set_mode(wl, wlvif, STATION_AUTO_PS_MODE);
+>         }
+
+Don't you want to change this file so that we can dynamically change from auto-PS to forced-PS?
+
+> diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+> index 29a00fc..f2960df 100644
+> --- a/drivers/net/wireless/wl12xx/main.c
+> +++ b/drivers/net/wireless/wl12xx/main.c
+> @@ -244,6 +244,7 @@ static struct conf_drv_settings default_conf = {
+>                 .psm_exit_retries            = 16,
+>                 .psm_entry_nullfunc_retries  = 3,
+>                 .dynamic_ps_timeout          = 100,
+> +               .forced_ps                   = false,
+>                 .keep_alive_interval         = 55000,
+>                 .max_listen_interval         = 20,
+>         },
+
+This is hardcoded and would require the driver to be recompiled in order
+to enable this feature.  Is that even allowed during certification (ie.
+use two different binaries for different testcases)?
+
 
 -- 
-------------------------------------------------------------
-Gary Thomas                 |  Consulting for the
-MLB Associates              |    Embedded world
-------------------------------------------------------------
+Cheers,
+Luca.
+
