@@ -1,83 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:46185 "HELO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753669Ab2BBEmn (ORCPT
+Received: from na3sys009aog123.obsmtp.com ([74.125.149.149]:44202 "EHLO
+	na3sys009aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754318Ab2BBJbd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Feb 2012 23:42:43 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.3] mwifiex: handle association failure case correctly
-Date: Wed,  1 Feb 2012 20:41:43 -0800
-Message-Id: <1328157705-21564-1-git-send-email-bzhao@marvell.com> (sfid-20120202_054311_941777_BA78FE92)
+	Thu, 2 Feb 2012 04:31:33 -0500
+Received: by lboi15 with SMTP id i15so471877lbo.21
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 01:31:30 -0800 (PST)
+Subject: Re: [PATCH v2 0/7] wl12xx: add some psm/suspend features
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1328021048-8944-1-git-send-email-eliad@wizery.com>
+References: <1328021048-8944-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 02 Feb 2012 11:31:27 +0200
+Message-ID: <1328175087.3626.298.camel@cumari> (sfid-20120202_103139_239901_ADFA8192)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+On Tue, 2012-01-31 at 16:44 +0200, Eliad Peller wrote: 
+> Add some psm / suspend features:
+> * Add the ability to force psm (by default, the fw uses dynamic ps)
+> * Use differnet wake up conditions on suspend
+> * Add pattern support to wowlan triggers
+> 
+> (depends on the "wl12xx: update fw api" patchset)
+> 
+> v2: the rx filters patches were squashed and rewritten (thanks Eyal!)
+> 
+> Eyal Shapira (7):
+>   wl12xx: Set different wake up conditions in case of suspend
+>   wl12xx: add suspend_listen_interval debugfs file
+>   wl12xx: add forced_ps mode
+>   wl12xx: add forced_ps debugfs file
+>   wl12xx: add RX data filter ACX commands
+>   wl12xx: add RX data filters management functions
+>   wl12xx: support wowlan wakeup patterns
+> 
+>  drivers/net/wireless/wl12xx/acx.c     |  115 +++++++++++++-
+>  drivers/net/wireless/wl12xx/acx.h     |   34 ++++-
+>  drivers/net/wireless/wl12xx/conf.h    |   19 +++
+>  drivers/net/wireless/wl12xx/debugfs.c |  131 ++++++++++++++++-
+>  drivers/net/wireless/wl12xx/main.c    |  272 +++++++++++++++++++++++++++++++--
+>  drivers/net/wireless/wl12xx/ps.c      |   12 +-
+>  drivers/net/wireless/wl12xx/rx.c      |   61 ++++++++
+>  drivers/net/wireless/wl12xx/rx.h      |    8 +-
+>  drivers/net/wireless/wl12xx/wl12xx.h  |   38 +++++-
+>  9 files changed, 662 insertions(+), 28 deletions(-)
 
-Currently even if association is failed "iw link" shows some
-information about connected BSS and "Tx timeout" error is seen in
-dmesg log.
+Eliad, could you split this patchset in two? I can take the first part,
+about forced PS when you send v2.
 
-This patch fixes below issues in the code to handle assoc failure
-case correctly.
-1) "status" variable in mwifiex_wait_queue_complete() is not
-correctly updated. Hence driver doesn't inform cfg80211 stack
-about association failure.
-2) During association network queues are stopped but carrier is
-not cleared, which gives Tx timeout error in failure case
+The WoWLAN part needs to be reworked.  Let's split it out so that it
+doesn't hold the forced PS back.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/sta_ioctl.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
-index 470ca75..b0fbf5d 100644
---- a/drivers/net/wireless/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
-@@ -54,7 +54,7 @@ int mwifiex_copy_mcast_addr(struct mwifiex_multicast_list *mlist,
- int mwifiex_wait_queue_complete(struct mwifiex_adapter *adapter)
- {
- 	bool cancel_flag = false;
--	int status = adapter->cmd_wait_q.status;
-+	int status;
- 	struct cmd_ctrl_node *cmd_queued;
- 
- 	if (!adapter->cmd_queued)
-@@ -79,6 +79,8 @@ int mwifiex_wait_queue_complete(struct mwifiex_adapter *adapter)
- 		mwifiex_cancel_pending_ioctl(adapter);
- 		dev_dbg(adapter->dev, "cmd cancel\n");
- 	}
-+
-+	status = adapter->cmd_wait_q.status;
- 	adapter->cmd_wait_q.status = 0;
- 
- 	return status;
-@@ -240,6 +242,8 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
- 
- 		if (!netif_queue_stopped(priv->netdev))
- 			mwifiex_stop_net_dev_queue(priv->netdev, adapter);
-+		if (netif_carrier_ok(priv->netdev))
-+			netif_carrier_off(priv->netdev);
- 
- 		/* Clear any past association response stored for
- 		 * application retrieval */
-@@ -271,6 +275,8 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
- 
- 		if (!netif_queue_stopped(priv->netdev))
- 			mwifiex_stop_net_dev_queue(priv->netdev, adapter);
-+		if (netif_carrier_ok(priv->netdev))
-+			netif_carrier_off(priv->netdev);
- 
- 		if (!ret) {
- 			dev_dbg(adapter->dev, "info: network found in scan"
 -- 
-1.7.0.2
+Cheers,
+Luca.
 
