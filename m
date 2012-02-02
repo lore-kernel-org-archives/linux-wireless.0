@@ -1,43 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:65439 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758083Ab2B2P7W (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 10:59:22 -0500
-Received: by iagj37 with SMTP id j37so2815087iag.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 07:59:22 -0800 (PST)
-Message-ID: <4F4E4B52.4070701@lwfinger.net> (sfid-20120229_165926_820834_88EEE52C)
-Date: Wed, 29 Feb 2012 09:59:14 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: Larry Finger <Larry.Finger@lwfinger.net>, linville@tuxdriver.com,
-	chunkeey@web.de
-Subject: Re: [PATCH 4/5] p54pci: Load firmware from work queue and not from
- probe routine
-References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net> <1329161826-11135-5-git-send-email-Larry.Finger@lwfinger.net>
-In-Reply-To: <1329161826-11135-5-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:22467 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753848Ab2BCAQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 19:16:50 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 00/28] update for 3.4: iwlwifi 2012-02-02
+Date: Thu,  2 Feb 2012 15:08:51 -0800
+Message-Id: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120203_011654_090202_2893B100)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/13/2012 01:37 PM, Larry Finger wrote:
-> Drivers that load firmware from their probe routine have problems with the
-> latest versions of udev as they get timeouts while waiting for user
-> space to start. The problem is fixed by loading the firmware and starting
-> mac80211 from a delayed_work queue. By using this method, most of the
-> original code is preserved.
->
-> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
-> ---
->
-> This patch is compile tested only.
->
-> Larry
+We doing a lot of preparation works and get ready to split the driver into
+two separate layers in order to accommodate the new architecture.
 
-Has anyone tested this patch? I would like to submit this series.
+Amit Beka (1):
+  iwlwifi: range check to testmode direct reg access
 
-Thanks,
+Don Fry (3):
+  iwlwifi: clarify comment
+  iwlwifi: move bcast_sta_id init to common routine
+  iwlwifi: move all ucode routines to iwl-ucode.c
 
-Larry
+Emmanuel Grumbach (22):
+  iwlwifi: add fw_alive to transport layer API, kill tx_start
+  iwlwifi: separate the APM from the EEPROM
+  iwlwifi: move the shrd memory from priv
+  iwlwifi: allocate the transport from the bus layer
+  iwlwifi: move the bus configuration to transport
+  iwlwifi: the read / write register ops move to transport
+  iwlwifi: give trans to all the read / write functions
+  iwlwifi: remove the pointer to dev from the bus layer
+  iwlwifi: don't use the bus for ucode fw_desc any more
+  iwlwifi: rename trans_ops->request_irq to trans_ops->start_hw
+  iwlwifi: move prepare_card_hw to start_hw
+  iwlwifi: move apm_init to start_hw
+  iwlwifi: introduce trans_ops->stop_hw
+  iwlwifi: move the RF kill logic from iwl_probe to transport
+  iwlwifi: consolidate the start_device flow
+  iwlwifi: kill bus_apm_config
+  iwlwifi: kill bus_is_pm_supported
+  iwlwifi: kill bus_get_hw_id_string
+  iwlwifi: kill bus_get_hw_id
+  iwlwifi: move hw_rev to transport layer
+  iwlwifi: stop_hw replace enable_rfkill_int
+  iwlwifi: debug print in tx_queue_set_status is more clear
+
+Gregory Greenman (1):
+  iwlwifi: Connect IDI transport to driver.
+
+Johannes Berg (1):
+  iwlwifi: release IRQ in error path
+
+these patches are also available from wireless-next branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
+
+ drivers/net/wireless/iwlwifi/iwl-1000.c           |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-2000.c           |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c           |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c           |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c         |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.c         |   14 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c            |  713 +-------------------
+ drivers/net/wireless/iwlwifi/iwl-agn.h            |    3 +-
+ drivers/net/wireless/iwlwifi/iwl-bus.h            |   64 --
+ drivers/net/wireless/iwlwifi/iwl-core.c           |  128 +----
+ drivers/net/wireless/iwlwifi/iwl-core.h           |    6 -
+ drivers/net/wireless/iwlwifi/iwl-debug.h          |   16 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c        |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h            |  109 ---
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c         |   65 +-
+ drivers/net/wireless/iwlwifi/iwl-io.c             |  193 +++---
+ drivers/net/wireless/iwlwifi/iwl-io.h             |   60 +-
+ drivers/net/wireless/iwlwifi/iwl-led.c            |    9 +-
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c       |   36 +-
+ drivers/net/wireless/iwlwifi/iwl-pci.c            |  229 +------
+ drivers/net/wireless/iwlwifi/iwl-power.c          |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-shared.h         |    2 -
+ drivers/net/wireless/iwlwifi/iwl-testmode.c       |   36 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |   18 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |  103 ++--
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |   55 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |  661 +++++++++++++++----
+ drivers/net/wireless/iwlwifi/iwl-trans.h          |  133 +++--
+ drivers/net/wireless/iwlwifi/iwl-ucode.c          |  740 ++++++++++++++++++---
+ drivers/net/wireless/iwlwifi/iwl-ucode.h          |  178 +++++
+ 30 files changed, 1837 insertions(+), 1776 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-ucode.h
 
