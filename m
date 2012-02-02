@@ -1,67 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1702 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752101Ab2BTJVc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Feb 2012 04:21:32 -0500
-Message-ID: <4F421044.6080101@broadcom.com> (sfid-20120220_102136_228253_D7C7B94E)
-Date: Mon, 20 Feb 2012 10:20:04 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Hauke Mehrtens" <hauke@hauke-m.de>
-cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Saul St. John" <saul.stjohn@gmail.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC] use alternate SPROM offset for 43224
-References: <20120214040120.GA2077@eris.garyseven.net>
- <CACna6rwXEjsJEPK4EZ9pbh2sGJgvt05JRfo2HkeDKpT26YORwg@mail.gmail.com>
- <CAG=dh1pTDSkkhgXGOv=n8uferq61-Db0EFGexO=ZZ+oN6w8_hQ@mail.gmail.com>
- <CACna6rw=ZJe28ahRQFU-_9+BD8+L5SNV_xdwxLxUdNk-b3HHxg@mail.gmail.com>
- <20120214185202.GA5339@eris.garyseven.net>
- <4F3ABFB0.3020502@lwfinger.net> <4F3AC20E.8080502@hauke-m.de>
- <4F3ADA6E.4050301@lwfinger.net>
- <400C43189542CE41BC0A5B252FC90136BC8414D128@SJEXCHCCR02.corp.ad.broadcom.com>
- <4F411729.5070705@hauke-m.de>
-In-Reply-To: <4F411729.5070705@hauke-m.de>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:44744 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751778Ab2BBKAS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 05:00:18 -0500
+Received: by wgbdt10 with SMTP id dt10so2349897wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 02:00:17 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>, Eliad Peller <eliad@wizery.com>
+Subject: [PATCH v3 4/4] wl12xx: add forced_ps debugfs file
+Date: Thu,  2 Feb 2012 12:03:42 +0200
+Message-Id: <1328177022-26646-5-git-send-email-eliad@wizery.com> (sfid-20120202_110027_307938_C3D45CAE)
+In-Reply-To: <1328177022-26646-1-git-send-email-eliad@wizery.com>
+References: <1328177022-26646-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/19/2012 04:37 PM, Hauke Mehrtens wrote:
-> On 02/14/2012 11:39 PM, Arend Van Spriel wrote:
->>> Sent: dinsdag 14 februari 2012 23:04
->>>
->>> On 02/14/2012 02:20 PM, Hauke Mehrtens wrote:
->>>>>>   I think it is more complicated than the above. On my 43224, I get
->>> the
->>>>>>   message "No SPROM available", which arises because
->>> bcma_sprom_get() is
->>>>>>   returning -ENOENT. The reason is that the value tested in "if
->>>>>>   (!(sromctrl&   BCMA_CC_SROM_CONTROL_PRESENT))" is zero. The
->>> contents of
->>>>>>   sromctl are 0x12, and the mask is 1.
->>>> This check is the main part of ai_is_sprom_available() in brcmsmac.
->>> If
->>>> this check fails, like in your case, brcmsmac tries otp_read_pci() to
->>>> read out the sprom, which is not implemented in bcma.
->>>
->>> I will try implementing a similar routine in bcma.
->>>
->>
->> I started adding proper OTP support in BCMA, but I am currently working on async firmware loading feature. Different chipsets can either have an external SPROM or on-chip OTP. Some have both, but only one holds the data.
->>
->> Gr. AvS
-> Nice to hear you are working on OTP support in bcma. In that process,
-> are you also working on making brcmsmac using the sprom provided by bcma?
->
-> Hauke
->
->
+From: Eyal Shapira <eyal@wizery.com>
 
-Yep, no sense having it implemented in two places. I think I will do it 
-in one patch series.
+Added control over forced_ps option through debugfs.
+This can be either 1 or 0.
 
-Gr. AvS
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/debugfs.c |   70 +++++++++++++++++++++++++++++++++
+ 1 files changed, 70 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+index 02da445..1c26238 100644
+--- a/drivers/net/wireless/wl12xx/debugfs.c
++++ b/drivers/net/wireless/wl12xx/debugfs.c
+@@ -376,6 +376,75 @@ static const struct file_operations dynamic_ps_timeout_ops = {
+ 	.llseek = default_llseek,
+ };
+ 
++static ssize_t forced_ps_read(struct file *file, char __user *user_buf,
++			  size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++
++	return wl1271_format_buffer(user_buf, count,
++				    ppos, "%d\n",
++				    wl->conf.conn.forced_ps);
++}
++
++static ssize_t forced_ps_write(struct file *file,
++				    const char __user *user_buf,
++				    size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++	struct wl12xx_vif *wlvif;
++	unsigned long value;
++	int ret, ps_mode;
++
++	ret = kstrtoul_from_user(user_buf, count, 10, &value);
++	if (ret < 0) {
++		wl1271_warning("illegal value in forced_ps");
++		return -EINVAL;
++	}
++
++	if (value != 1 && value != 0) {
++		wl1271_warning("forced_ps should be either 0 or 1");
++		return -ERANGE;
++	}
++
++	mutex_lock(&wl->mutex);
++
++	if (wl->conf.conn.forced_ps == value)
++		goto out;
++
++	wl->conf.conn.forced_ps = value;
++
++	if (wl->state == WL1271_STATE_OFF)
++		goto out;
++
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out;
++
++	/* In case we're already in PSM, trigger it again to switch mode
++	 * immediately without waiting for re-association
++	 */
++
++	ps_mode = value ? STATION_POWER_SAVE_MODE : STATION_AUTO_PS_MODE;
++
++	wl12xx_for_each_wlvif_sta(wl, wlvif) {
++		if (test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags))
++			wl1271_ps_set_mode(wl, wlvif, ps_mode);
++	}
++
++	wl1271_ps_elp_sleep(wl);
++
++out:
++	mutex_unlock(&wl->mutex);
++	return count;
++}
++
++static const struct file_operations forced_ps_ops = {
++	.read = forced_ps_read,
++	.write = forced_ps_write,
++	.open = wl1271_open_file_generic,
++	.llseek = default_llseek,
++};
++
+ static ssize_t driver_state_read(struct file *file, char __user *user_buf,
+ 				 size_t count, loff_t *ppos)
+ {
+@@ -1011,6 +1080,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_ADD(beacon_interval, rootdir);
+ 	DEBUGFS_ADD(beacon_filtering, rootdir);
+ 	DEBUGFS_ADD(dynamic_ps_timeout, rootdir);
++	DEBUGFS_ADD(forced_ps, rootdir);
+ 
+ 	streaming = debugfs_create_dir("rx_streaming", rootdir);
+ 	if (!streaming || IS_ERR(streaming))
+-- 
+1.7.6.401.g6a319
 
