@@ -1,62 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3211 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751568Ab2BTKCD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Feb 2012 05:02:03 -0500
-Message-ID: <4F421A0E.8030805@broadcom.com> (sfid-20120220_110255_440931_235AF71A)
-Date: Mon, 20 Feb 2012 11:01:50 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:45363 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754677Ab2BBX7c (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 18:59:32 -0500
+Message-ID: <4F2B235E.9040004@gmail.com> (sfid-20120203_005950_139773_45C16EFD)
+Date: Thu, 02 Feb 2012 16:59:26 -0700
+From: Tim Gardner <rtg.canonical@gmail.com>
 MIME-Version: 1.0
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-cc: LKML <linux-kernel@vger.kernel.org>,
-	driverdevel <devel@driverdev.osuosl.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>,
-	"Kay Sievers" <kay.sievers@vrfy.org>
-Subject: Re: will these methods work with firmware loading?
-References: <4F414230.5040506@lwfinger.net>
-In-Reply-To: <4F414230.5040506@lwfinger.net>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Tim Gardner <tim.gardner@canonical.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: Fix PCI probe error path orphaned memory
+References: <1328215686-126550-1-git-send-email-tim.gardner@canonical.com> <4F2B1BB7.6020608@lwfinger.net>
+In-Reply-To: <4F2B1BB7.6020608@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/19/2012 07:40 PM, Larry Finger wrote:
-> I sent a previous messages to most of these lists, but got no answer, thus a
-> second try.
+On 02/02/2012 04:26 PM, Larry Finger wrote:
+> On 02/02/2012 02:48 PM, Tim Gardner wrote:
+>> Memory allocated by ieee80211_alloc_hw() will get orphaned
+>> if any subsequent initializations fail.
+>>
+>> Also don't pci_set_drvdata(pdev, NULL) until just before disabling
+>> the PCI device. Functions called by rtl_deinit_core(hw) may eventually
+>> need
+>> the context (when its actually implemented).
+>>
+>> Cc: Larry Finger<Larry.Finger@lwfinger.net>
+>> Cc: Chaoming Li<chaoming_li@realsil.com.cn>
+>> Cc: John W. Linville<linville@tuxdriver.com>
+>> Cc: linux-wireless@vger.kernel.org
+>> Cc: netdev@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org
+>> Signed-off-by: Tim Gardner<tim.gardner@canonical.com>
+>> ---
+>> drivers/net/wireless/rtlwifi/pci.c | 19 ++++++++++++-------
+>> 1 files changed, 12 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rtlwifi/pci.c
+>> b/drivers/net/wireless/rtlwifi/pci.c
+>> index 5cb2199..6b18063 100644
+>> --- a/drivers/net/wireless/rtlwifi/pci.c
+>> +++ b/drivers/net/wireless/rtlwifi/pci.c
+>> @@ -1760,8 +1760,8 @@ int __devinit rtl_pci_probe(struct pci_dev *pdev,
+>> if (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32))) {
+>> RT_ASSERT(false,
+>> "Unable to obtain 32bit DMA for consistent allocations\n");
+>> - pci_disable_device(pdev);
+>> - return -ENOMEM;
+>> + err = -ENOMEM;
+>> + goto fail1;
 >
-> When a driver loads firmware synchronously in the module_init() path using
-> request_firmware(), then there is trouble with timeouts when booting.
+> I would probably added a new label after the ieee80211_free_hw() and
+> used it here to avoid the "if (hw)" test, but that is a matter of
+> choice. In any case this patch is correct.
 >
-> I know that changing the request_firmware() call to request_firmware_nowait()
-> solves the problem; however, that gives some trouble for driver b43legacy as it
-> loads 3 or 4 firmware files depending on the hardware version. When I launch the
-> 3 or 4 nowait requests, I get an error because the system is trying to start
-> several tasks with the same name.
+> ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+>
+> Thanks,
+>
+> Larry
+>
 
-Yep, the nowait api just kicks off a kernel thread for the firmware request.
+Actually, I started doing that but it turned into a huge patch, so I 
+just decided to solved the immediate issue (discovered by inspection). 
+There are some other setup/teardown nonorthogonalities that need fixing 
+first (which I'm pursuing as time allows).
 
-> Would it be OK to load the first file with the nowait version, and issue a
-> request_firmware() for the others from the callback routine? I think that would
-> not cause any problems, but I would like to get confirmation from an expert.
-
-No expert, but that is what I did although the chaining of firmware 
-requests does not feel great. Especially for handling error flows. 
-Johannes Berg and Kay Sievers mentioned need to unbind/rebind the driver 
-upon failed firmware load, but I don't like the idea of building a 
-timer-controlled retry mechanism.
-
-> Similarly, if I were to create a work queue, init and schedule it from
-> module_init(), and then use synchronous loads to get the firmware from the work
-> queue callback, would that get around the boot problem? I know it works as I
-> have trial patches; however, my version of udev is not one affected. This method
-> is very easy to implement, but again I would like confirmation from an expert.
-
-What boot problem are you referring to? The blocking modprobe? For that 
-problem I would say yes. Also here the problem of handling error flows 
-exist. If the driver is kicked of during boot with a initramfs missing 
-the firmware, should we retry until the real root is mounted?
-
-Gr. AvS
-
+rtg
+-- 
+Tim Gardner tim.gardner@canonical.com
