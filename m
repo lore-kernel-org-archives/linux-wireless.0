@@ -1,114 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32341 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753790Ab2BVHMZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 02:12:25 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20292.38223.843239.225165@gargle.gargle.HOWL> (sfid-20120222_081228_720292_ABD39B0D)
-Date: Wed, 22 Feb 2012 12:42:15 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 24/26] ath9k_hw: Remove HW revision checks
+Received: from mga01.intel.com ([192.55.52.88]:30243 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754266Ab2BCAQ5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 19:16:57 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 18/28] iwlwifi: kill bus_is_pm_supported
+Date: Thu,  2 Feb 2012 15:09:09 -0800
+Message-Id: <1328224159-18134-19-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120203_011735_031287_E06DC9DE)
+In-Reply-To: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-They are not needed since MCI will be enabled only for
-AR9462 v2.0
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Get this information from the transport layer which is now in charge
+of the APM too.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |   34 ++++++++-------------------
- 1 files changed, 10 insertions(+), 24 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-bus.h        |    7 -------
+ drivers/net/wireless/iwlwifi/iwl-pci.c        |   20 --------------------
+ drivers/net/wireless/iwlwifi/iwl-power.c      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    1 +
+ drivers/net/wireless/iwlwifi/iwl-trans.h      |    2 ++
+ 5 files changed, 4 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 8d3659c..591ca35 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -22,9 +22,6 @@
+diff --git a/drivers/net/wireless/iwlwifi/iwl-bus.h b/drivers/net/wireless/iwlwifi/iwl-bus.h
+index d385f69..2b0b48e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-bus.h
++++ b/drivers/net/wireless/iwlwifi/iwl-bus.h
+@@ -120,12 +120,10 @@ struct iwl_bus;
  
- static void ar9003_mci_reset_req_wakeup(struct ath_hw *ah)
- {
--	if (!AR_SREV_9462_20(ah))
--		return;
+ /**
+  * struct iwl_bus_ops - bus specific operations
+- * @get_pm_support: must returns true if the bus can go to sleep
+  * @get_hw_id_string: prints the hw_id in the provided buffer
+  * @get_hw_id: get hw_id in u32
+  */
+ struct iwl_bus_ops {
+-	bool (*get_pm_support)(struct iwl_bus *bus);
+ 	void (*get_hw_id_string)(struct iwl_bus *bus, char buf[], int buf_len);
+ 	u32 (*get_hw_id)(struct iwl_bus *bus);
+ };
+@@ -149,11 +147,6 @@ struct iwl_bus {
+ 	char bus_specific[0] __attribute__((__aligned__(sizeof(void *))));
+ };
+ 
+-static inline bool bus_get_pm_support(struct iwl_bus *bus)
+-{
+-	return bus->ops->get_pm_support(bus);
+-}
 -
- 	REG_RMW_FIELD(ah, AR_MCI_COMMAND2,
- 		      AR_MCI_COMMAND2_RESET_REQ_WAKEUP, 1);
- 	udelay(1);
-@@ -496,14 +493,9 @@ static void ar9003_mci_observation_set_up(struct ath_hw *ah)
+ static inline void bus_get_hw_id_string(struct iwl_bus *bus, char buf[],
+ 		int buf_len)
+ {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index 353022d..0c16efe 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -87,25 +87,6 @@ struct iwl_pci_bus {
+ #define IWL_BUS_GET_PCI_DEV(_iwl_bus) \
+ 			((IWL_BUS_GET_PCI_BUS(_iwl_bus))->pci_dev)
  
- 	REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL, AR_GPIO_JTAG_DISABLE);
+-static u16 iwl_pciexp_link_ctrl(struct iwl_bus *bus)
+-{
+-	int pos;
+-	u16 pci_lnk_ctl;
+-
+-	struct pci_dev *pci_dev = IWL_BUS_GET_PCI_DEV(bus);
+-
+-	pos = pci_pcie_cap(pci_dev);
+-	pci_read_config_word(pci_dev, pos + PCI_EXP_LNKCTL, &pci_lnk_ctl);
+-	return pci_lnk_ctl;
+-}
+-
+-static bool iwl_pci_is_pm_supported(struct iwl_bus *bus)
+-{
+-	u16 lctl = iwl_pciexp_link_ctrl(bus);
+-
+-	return !(lctl & PCI_CFG_LINK_CTRL_VAL_L0S_EN);
+-}
+-
+ static void iwl_pci_get_hw_id_string(struct iwl_bus *bus, char buf[],
+ 			      int buf_len)
+ {
+@@ -123,7 +104,6 @@ static u32 iwl_pci_get_hw_id(struct iwl_bus *bus)
+ }
  
--	if (AR_SREV_9462_20_OR_LATER(ah)) {
--		REG_RMW_FIELD(ah, AR_PHY_GLB_CONTROL,
--			      AR_GLB_DS_JTAG_DISABLE, 1);
--		REG_RMW_FIELD(ah, AR_PHY_GLB_CONTROL,
--			      AR_GLB_WLAN_UART_INTF_EN, 0);
--		REG_SET_BIT(ah, AR_GLB_GPIO_CONTROL,
--			    ATH_MCI_CONFIG_MCI_OBS_GPIO);
--	}
-+	REG_RMW_FIELD(ah, AR_PHY_GLB_CONTROL, AR_GLB_DS_JTAG_DISABLE, 1);
-+	REG_RMW_FIELD(ah, AR_PHY_GLB_CONTROL, AR_GLB_WLAN_UART_INTF_EN, 0);
-+	REG_SET_BIT(ah, AR_GLB_GPIO_CONTROL, ATH_MCI_CONFIG_MCI_OBS_GPIO);
+ static const struct iwl_bus_ops bus_ops_pci = {
+-	.get_pm_support = iwl_pci_is_pm_supported,
+ 	.get_hw_id_string = iwl_pci_get_hw_id_string,
+ 	.get_hw_id = iwl_pci_get_hw_id,
+ };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
+index c7394ef..fd008c4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-power.c
++++ b/drivers/net/wireless/iwlwifi/iwl-power.c
+@@ -436,7 +436,7 @@ int iwl_power_update_mode(struct iwl_priv *priv, bool force)
+ /* initialize to default */
+ void iwl_power_initialize(struct iwl_priv *priv)
+ {
+-	priv->power_data.bus_pm = bus_get_pm_support(bus(priv));
++	priv->power_data.bus_pm = trans(priv)->pm_support;
  
- 	REG_RMW_FIELD(ah, AR_BTCOEX_CTRL2, AR_BTCOEX_CTRL2_GPIO_OBS_SEL, 0);
- 	REG_RMW_FIELD(ah, AR_BTCOEX_CTRL2, AR_BTCOEX_CTRL2_MAC_BB_OBS_SEL, 1);
-@@ -1053,9 +1045,7 @@ static void ar9003_mci_send_2g5g_status(struct ath_hw *ah, bool wait_done)
- 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
- 	u32 new_flags, to_set, to_clear;
+ 	priv->power_data.debug_sleep_level_override = -1;
  
--	if (AR_SREV_9462_20(ah) &&
--	    mci->update_2g5g &&
--	    (mci->bt_state != MCI_BT_SLEEP)) {
-+	if (mci->update_2g5g && (mci->bt_state != MCI_BT_SLEEP)) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index c9fe888..8ebb5a5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -676,6 +676,7 @@ static void iwl_apm_config(struct iwl_trans *trans)
+ 		dev_printk(KERN_INFO, trans->dev,
+ 			   "L1 Disabled; Enabling L0S\n");
+ 	}
++	trans->pm_support = !(lctl & PCI_CFG_LINK_CTRL_VAL_L0S_EN);
+ }
  
- 		if (mci->is_2g) {
- 			new_flags = MCI_2G_FLAGS;
-@@ -1193,14 +1183,13 @@ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done)
- 			REG_CLR_BIT(ah, AR_MCI_TX_CTRL,
- 				    AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
+ /*
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 4d1ae65..7f6963f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -239,6 +239,7 @@ struct iwl_calib_result {
+  * @ucode_init: init ucode image
+  * @ucode_wowlan: wake on wireless ucode image (optional)
+  * @nvm_device_type: indicates OTP or eeprom
++ * @pm_support: set to true in start_hw if link pm is supported
+  * @calib_results: list head for init calibration results
+  */
+ struct iwl_trans {
+@@ -257,6 +258,7 @@ struct iwl_trans {
  
--			if (AR_SREV_9462_20(ah)) {
- 				REG_CLR_BIT(ah, AR_PHY_GLB_CONTROL,
- 					    AR_BTCOEX_CTRL_BT_OWN_SPDT_CTRL);
-+
- 				if (!(mci->config &
- 				      ATH_MCI_CONFIG_DISABLE_OSLA)) {
- 					REG_SET_BIT(ah, AR_BTCOEX_CTRL,
- 					AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN);
--				}
- 			}
- 		} else {
- 			ath_dbg(common, MCI, "MCI Send LNA take\n");
-@@ -1210,12 +1199,10 @@ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done)
- 			REG_SET_BIT(ah, AR_MCI_TX_CTRL,
- 				    AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
+ 	/* eeprom related variables */
+ 	int    nvm_device_type;
++	bool pm_support;
  
--			if (AR_SREV_9462_20(ah)) {
--				REG_SET_BIT(ah, AR_PHY_GLB_CONTROL,
--					    AR_BTCOEX_CTRL_BT_OWN_SPDT_CTRL);
--				REG_CLR_BIT(ah, AR_BTCOEX_CTRL,
--					AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN);
--			}
-+			REG_SET_BIT(ah, AR_PHY_GLB_CONTROL,
-+				    AR_BTCOEX_CTRL_BT_OWN_SPDT_CTRL);
-+			REG_CLR_BIT(ah, AR_BTCOEX_CTRL,
-+				    AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN);
- 
- 			ar9003_mci_send_2g5g_status(ah, true);
- 		}
-@@ -1532,8 +1519,7 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
- 		ar9003_mci_reset_req_wakeup(ah);
- 		mci->update_2g5g = true;
- 
--		if ((AR_SREV_9462_20_OR_LATER(ah)) &&
--		    (mci->config & ATH_MCI_CONFIG_MCI_OBS_MASK)) {
-+		if (mci->config & ATH_MCI_CONFIG_MCI_OBS_MASK) {
- 			/* Check if we still have control of the GPIOs */
- 			if ((REG_READ(ah, AR_GLB_GPIO_CONTROL) &
- 				      ATH_MCI_CONFIG_MCI_OBS_GPIO) !=
+ 	/* init calibration results */
+ 	struct list_head calib_results;
 -- 
-1.7.9.1
+1.7.0.4
 
