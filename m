@@ -1,48 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:26238 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755341Ab2B0XZ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 18:25:28 -0500
-Subject: Re: [PATCH -iwlwifi] iwlwifi: make tx_cmd_pool kmem cache global
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <CANUX_P3JObf0OzAT4L5w7ksry89Ovz2QyAde+DZZUMR6eBt5Hw@mail.gmail.com>
-References: <1330350725-5815-1-git-send-email-sgruszka@redhat.com>
-	 <1330353016.12612.13.camel@wwguy-huron>
-	 <CANUX_P2Xia4HgF_ooUCTRN0+EqX8dx9Wc1rFiDbiNBdgzu9k5Q@mail.gmail.com>
-	 <1330364928.12612.15.camel@wwguy-huron>
-	 <CANUX_P3JObf0OzAT4L5w7ksry89Ovz2QyAde+DZZUMR6eBt5Hw@mail.gmail.com>
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:60812 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753140Ab2BBIJy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 03:09:54 -0500
+Received: by lagz14 with SMTP id z14so2049889lag.27
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 00:09:51 -0800 (PST)
+Subject: Re: [PATCH v2 4/7] wl12xx: add forced_ps debugfs file
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1328168696.3626.247.camel@cumari>
+References: <1328021048-8944-1-git-send-email-eliad@wizery.com>
+	 <1328021048-8944-5-git-send-email-eliad@wizery.com>
+	 <1328168696.3626.247.camel@cumari>
 Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 27 Feb 2012 14:14:16 -0800
-Message-ID: <1330380856.12612.20.camel@wwguy-huron> (sfid-20120228_002548_813027_FE43D23E)
+Date: Thu, 02 Feb 2012 10:09:48 +0200
+Message-ID: <1328170188.3626.256.camel@cumari> (sfid-20120202_091019_965002_BF9D73F2)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-02-27 at 22:20 +0200, Emmanuel Grumbach wrote:
-> On Mon, Feb 27, 2012 at 19:48, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> > On Mon, 2012-02-27 at 19:55 +0200, Emmanuel Grumbach wrote:
-> >> I guess that Sanislaw patch is defining one single pool for all the
-> >> devices, which means that we won't try to allocate a few pools with
-> >> the same name, which leads to this warning.
-> >>
-> > That I got it, but is really the "only" way to do it, I am really not a
-> > fan of global variable.
-> >
-> I guess we can have a pool for "iwl_dev_cmd_<PCI_DEV_ID>" or something
-> like this. But I don't see what is the problem with the global
-> variable besides the namespace pollution which is not very problematic
-> since we don't export this variable. It is a singleton in terms of
-> "Software design pattern" (I hate these buzzwords), and this is the
-> way to implement this in C AFAICT.
+On Thu, 2012-02-02 at 09:44 +0200, Luciano Coelho wrote: 
+> On Tue, 2012-01-31 at 16:44 +0200, Eliad Peller wrote: 
+> > From: Eyal Shapira <eyal@wizery.com>
+> > 
+> > Added control over forced_ps option through debugfs.
+> > This can be either 1 or 0.
+> > 
+> > Signed-off-by: Eyal Shapira <eyal@wizery.com>
+> > Signed-off-by: Eliad Peller <eliad@wizery.com>
+> > ---
+> 
+> Ah, now I see it. :)
+> 
+> This should be squashed with the previous one.
 
-it is not a problem, just "global" is not something what I prefer, but
-it is ok if it is the most easy way to address the problem and not
-having side-effect.
+Changed my mind, no need to squash.
 
-Thanks
-Wey
+
+-- 
+Cheers,
+Luca.
 
