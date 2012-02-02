@@ -1,37 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:49670 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753140Ab2BBIEv convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:36207 "EHLO
+	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932413Ab2BBQIk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 03:04:51 -0500
-Received: by pbdu11 with SMTP id u11so1809307pbd.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 00:04:51 -0800 (PST)
+	Thu, 2 Feb 2012 11:08:40 -0500
+Received: by mail-wi0-f175.google.com with SMTP id hq7so2300626wib.20
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 08:08:36 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAGXE3d9eDaf9h3xa0oZvOWW_m2h0oYY64Zn9EQnZ664h4uxdVg@mail.gmail.com>
-References: <20120128154544.70E060CD@centrum.cz>
-	<1385650.dcoDil3T5I@helmutmobil.site>
-	<20120130191820.F4F520E8@centrum.cz>
-	<CAGXE3d_wHuNT7Q+Ubj5qR-DgA78AeYXe7MfnFS4rv+iHjtMJbA@mail.gmail.com>
-	<20120131212136.652477E0@centrum.cz>
-	<CAGXE3d9eDaf9h3xa0oZvOWW_m2h0oYY64Zn9EQnZ664h4uxdVg@mail.gmail.com>
-Date: Thu, 2 Feb 2012 09:04:51 +0100
-Message-ID: <CAGXE3d9ddVwT7_HUz8COfLLp_pWTHeuE+kku62ZGruiemB=-Nw@mail.gmail.com> (sfid-20120202_090456_493506_171CA7D5)
-Subject: Re: connection interrupted for rt61pci in master mode
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: trencan@centrum.cz
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4F2781B4.9080004@sipsolutions.net>
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>
+	<1327581484-22047-9-git-send-email-victorg@ti.com>
+	<4F2781B4.9080004@sipsolutions.net>
+Date: Thu, 2 Feb 2012 18:08:36 +0200
+Message-ID: <CAK80WHZr_VZhJAbfdsWTsf_ZYXrBXhnzT+m3WVBH3Q6fvn1JAA@mail.gmail.com> (sfid-20120202_170844_129828_7E607AF2)
+Subject: Re: [RFC 8/9] mac80211: add DFS capabilities flag
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 1, 2012 at 9:00 AM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> On Tue, Jan 31, 2012 at 9:21 PM,  <trencan@centrum.cz> wrote:
->> One of them "dump" was still continuosly growing. I stopped catting after connection interrupted occured. Do you need all them three? Should I send it only to your email? Packed dump file has 820kB. Queue and Crypto are of small sizes.
+On Tue, Jan 31, 2012 at 7:52 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On 1/26/2012 4:38 AM, Victor Goldenshtein wrote:
+>>
+>> Add new IEEE80211_HW_SUPPORTS_RADAR_DETECTION attribute which
+>> indicates that hw supports radar detection.
 >
-> I'd only like to see the content of "queue" when the problem happens.
+>
+> No need, driver can set the nl80211 flags directly.
 
-Was the output you've send me from the time the problem occured?
-At least the queues are not stuck somehow, so must be something else ...
+ok.
 
-Helmut
+
+Thanks for the review,
+Victor.
