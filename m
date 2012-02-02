@@ -1,204 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9180 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754002Ab2BCMIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 07:08:19 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 14/25] iwlegacy: remove ctx interface_modes
-Date: Fri,  3 Feb 2012 13:07:14 +0100
-Message-Id: <1328270845-16891-15-git-send-email-sgruszka@redhat.com> (sfid-20120203_130843_871412_6DBFFC12)
-In-Reply-To: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
-References: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:44744 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932158Ab2BBVnD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 16:43:03 -0500
+Message-ID: <4F2B035E.6000401@hauke-m.de> (sfid-20120202_224308_220766_16764C2B)
+Date: Thu, 02 Feb 2012 22:42:54 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Alfonso Fiore <alfonso.fiore@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: can't compile latest compat-wireless under kernel 3.2 even using
+ git
+References: <CAO=xpBFTW5b1iLnYbX7KQrjEdO0MKX86+8wooEF=DJz=+UJXZw@mail.gmail.com> <4F299D85.3080906@hauke-m.de> <CAO=xpBF29QocL3fnvophm9gO4ATKFhBCCGiPe9mka0mXAuPbfA@mail.gmail.com>
+In-Reply-To: <CAO=xpBF29QocL3fnvophm9gO4ATKFhBCCGiPe9mka0mXAuPbfA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/3945-mac.c |    6 ++----
- drivers/net/wireless/iwlegacy/4965-mac.c |    6 ++----
- drivers/net/wireless/iwlegacy/common.c   |   29 ++++-------------------------
- drivers/net/wireless/iwlegacy/common.h   |    2 --
- drivers/net/wireless/rt2x00/rt2800usb.c  |   16 ++--------------
- 5 files changed, 10 insertions(+), 49 deletions(-)
+On 02/02/2012 07:22 PM, Alfonso Fiore wrote:
+> On Wed, Feb 1, 2012 at 9:16 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>
+>> What kernel are you compiling against? skb_complete_wifi_ack() is not
+>> declared in linux kernel 3.2.2, just in 3.3-rc2. It looks like the
+>> kernel you are compiling against has some modifications conflicting with
+>> compat-wireless.
+> 
+> With some tricks I managed to compile compat-wireless against my
+> custom kernel, but that didn't solve my problem. Apparently when I
+> thought the latest compat-wireless fixed my problem I was wrong, it
+> was just a random glitch.
+> Or most probably I completely screwed up my drivers by juggling two kernels.
+> Anyway, I booted with 3.0.0-15, recompiled (with make clean) both
+> (rebooting each time) compat-wireless-3.3-rc1-2 and
+> compat-wireless-2012-01-26 and I still get a very limited performance
+> over wireless (max 300 KB/sec).
+> 
+> *** Is there a chance to activate some logging that could give you an idea
+> on why my wireless is not performing? ***
+Most drivers and the wireless subsystem itself have some config otpions
+to activate debug output. Search in the config.mk in compat-wirless for
+the debug options for your devicve and activate them by editing
+config.mk and rebuilding compat-wireless
 
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index 52cac0c..7c81f5a 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -3557,7 +3557,8 @@ il3945_setup_mac(struct il_priv *il)
- 	/* Tell mac80211 our characteristics */
- 	hw->flags = IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_SPECTRUM_MGMT;
- 
--	hw->wiphy->interface_modes = il->ctx.interface_modes;
-+	hw->wiphy->interface_modes =
-+	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
- 
- 	hw->wiphy->flags |=
- 	    WIPHY_FLAG_CUSTOM_REGULATORY | WIPHY_FLAG_DISABLE_BEACON_HINTS |
-@@ -3617,9 +3618,6 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	il->cmd_queue = IL39_CMD_QUEUE_NUM;
- 
--	il->ctx.interface_modes =
--	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
--
- 	/*
- 	 * Disabling hardware scan means that mac80211 will perform scans
- 	 * "the hard way", rather than using device's scan.
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 35d868c..1dd0014 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -5454,8 +5454,8 @@ il4965_mac_setup_register(struct il_priv *il, u32 max_probe_length)
- 	hw->sta_data_size = sizeof(struct il_station_priv);
- 	hw->vif_data_size = sizeof(struct il_vif_priv);
- 
--	hw->wiphy->interface_modes |= il->ctx.interface_modes;
--	hw->wiphy->interface_modes |= il->ctx.exclusive_interface_modes;
-+	hw->wiphy->interface_modes =
-+	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
- 
- 	hw->wiphy->flags |=
- 	    WIPHY_FLAG_CUSTOM_REGULATORY | WIPHY_FLAG_DISABLE_BEACON_HINTS;
-@@ -6141,8 +6141,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	il->ctx.is_active = true;
- 	il->ctx.ac_to_fifo = il4965_bss_ac_to_fifo;
- 	il->ctx.ac_to_queue = il4965_bss_ac_to_queue;
--	il->ctx.exclusive_interface_modes = BIT(NL80211_IFTYPE_ADHOC);
--	il->ctx.interface_modes = BIT(NL80211_IFTYPE_STATION);
- 
- 	SET_IEEE80211_DEV(hw, &pdev->dev);
- 
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index ac26985..7f4c6bf 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -4566,7 +4566,6 @@ il_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 	struct il_priv *il = hw->priv;
- 	struct il_vif_priv *vif_priv = (void *)vif->drv_priv;
- 	int err;
--	u32 modes;
- 
- 	D_MAC80211("enter: type %d, addr %pM\n", vif->type, vif->addr);
- 
-@@ -4578,15 +4577,7 @@ il_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 		goto out;
- 	}
- 
--	/* check if busy context is exclusive */
--	if (il->ctx.vif &&
--	    (il->ctx.exclusive_interface_modes & BIT(il->ctx.vif->type))) {
--		err = -EINVAL;
--		goto out;
--	}
--
--	modes = il->ctx.interface_modes | il->ctx.exclusive_interface_modes;
--	if (!(modes & BIT(vif->type))) {
-+	if (il->ctx.vif) {
- 		err = -EOPNOTSUPP;
- 		goto out;
- 	}
-@@ -4979,10 +4970,10 @@ il_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- {
- 	struct il_priv *il = hw->priv;
- 	struct il_rxon_context *ctx = il_rxon_ctx_from_vif(vif);
--	u32 modes;
- 	int err;
- 
--	newtype = ieee80211_iftype_p2p(newtype, newp2p);
-+	if (newp2p)
-+		return -EOPNOTSUPP;
- 
- 	mutex_lock(&il->mutex);
- 
-@@ -4995,22 +4986,10 @@ il_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		goto out;
- 	}
- 
--	modes = ctx->interface_modes | ctx->exclusive_interface_modes;
--	if (!(modes & BIT(newtype))) {
--		err = -EOPNOTSUPP;
--		goto out;
--	}
--
--	if ((il->ctx.exclusive_interface_modes & BIT(il->ctx.vif->type)) ||
--	    (il->ctx.exclusive_interface_modes & BIT(newtype))) {
--		err = -EINVAL;
--		goto out;
--	}
--
- 	/* success */
- 	il_teardown_interface(il, vif, true);
- 	vif->type = newtype;
--	vif->p2p = newp2p;
-+	vif->p2p = false;
- 	err = il_setup_interface(il, ctx);
- 	WARN_ON(err);
- 	/*
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index a872175..eddf22d 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1165,8 +1165,6 @@ struct il_rxon_context {
- 	 */
- 	bool always_active, is_active;
- 
--	u32 interface_modes, exclusive_interface_modes;
--
- 	struct il_qos_info qos_data;
- 
- 	struct {
-diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-index f0074bc..0807c09 100644
---- a/drivers/net/wireless/rt2x00/rt2800usb.c
-+++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-@@ -272,17 +272,6 @@ static void rt2800usb_disable_radio(struct rt2x00_dev *rt2x00dev)
- 	rt2x00usb_disable_radio(rt2x00dev);
- }
- 
--static int rt2800usb_set_state(struct rt2x00_dev *rt2x00dev,
--			       enum dev_state state)
--{
--	if (state == STATE_AWAKE)
--		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, 0xff, 0, 2);
--	else
--		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0xff, 2);
--
--	return 0;
--}
--
- static int rt2800usb_set_device_state(struct rt2x00_dev *rt2x00dev,
- 				      enum dev_state state)
- {
-@@ -295,7 +284,7 @@ static int rt2800usb_set_device_state(struct rt2x00_dev *rt2x00dev,
- 		 * to be woken up. After that it needs a bit of time
- 		 * to be fully awake and then the radio can be enabled.
- 		 */
--		rt2800usb_set_state(rt2x00dev, STATE_AWAKE);
-+		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, 0xff, 0, 0);
- 		msleep(1);
- 		retval = rt2800usb_enable_radio(rt2x00dev);
- 		break;
-@@ -305,7 +294,6 @@ static int rt2800usb_set_device_state(struct rt2x00_dev *rt2x00dev,
- 		 * be put to sleep for powersaving.
- 		 */
- 		rt2800usb_disable_radio(rt2x00dev);
--		rt2800usb_set_state(rt2x00dev, STATE_SLEEP);
- 		break;
- 	case STATE_RADIO_IRQ_ON:
- 	case STATE_RADIO_IRQ_OFF:
-@@ -315,7 +303,7 @@ static int rt2800usb_set_device_state(struct rt2x00_dev *rt2x00dev,
- 	case STATE_SLEEP:
- 	case STATE_STANDBY:
- 	case STATE_AWAKE:
--		retval = rt2800usb_set_state(rt2x00dev, state);
-+		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0xff, 2);
- 		break;
- 	default:
- 		retval = -ENOTSUPP;
--- 
-1.7.1
+> Twice, randomly, I've seen it going as fast as wired (accessing the
+> internet) so I imagine it's something than can be fixed.
+> I also test both speedtest.net and wget from a local mirror, so it's
+> not a fluctuating link.
+Now it is interestingly to know what Wifi device you are using and what
+Access point.
+> 
+> In case you wonder how I compiled the git version of compat-wireless
+> for my custom kernel, here is how (and it works, but with the same
+> sub-standard performances as compat-wireless-2012-01-26 under 3.0.0):
+> 
+> Ok so first I compiled linux-next:
+> 
+> cd linux-next/
+> cp /boot/config-3.0.0-15-generic-pae .config
+> yes '' | make oldconfig
+> make-kpkg clean
+> CONCURRENCY_LEVEL=`getconf _NPROCESSORS_ONLN` fakeroot make-kpkg
+> --initrd --append-to-version=-linux-next kernel_image kernel_headers
+> 
+> then I went into my current kernel and changed links:
+> 
+> cd /lib/modules/3.2.0-interlaced2+
+> sudo mv source source_true
+> sudo mv build build_true
+> sudo ln -s /storage/wireless/linux-next source
+> sudo ln -s /storage/wireless/linux-next build
+> 
+> then I compiled compat-wireless
+> 
+> cd /storage/wireless/compat-wireless/
+> make clean
+> make (compilation went well)
+> 
+> then put back the links:
+> 
+> cd /lib/modules/3.2.0-interlaced2+
+> sudo mv build_true build
+> sudo mv source_true source
+> 
+> and installed compat-wireless:
+> cd /storage/wireless/compat-wireless/
+> sudo make install
+That looks bad.
+The easiest and safest ways would be to remove the skb_complete_wifi_ack
+backport from include/linux/compat-3.3.h in compat-wireless.
 
+Hauke
