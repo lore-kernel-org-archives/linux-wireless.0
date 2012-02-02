@@ -1,113 +1,238 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:56975 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753254Ab2B2TyJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 14:54:09 -0500
-MIME-Version: 1.0
-In-Reply-To: <4F4E4B8B.8090508@lwfinger.net>
-References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
-	<1329161826-11135-6-git-send-email-Larry.Finger@lwfinger.net>
-	<4F4E4B8B.8090508@lwfinger.net>
-Date: Wed, 29 Feb 2012 22:54:08 +0300
-Message-ID: <CAMo8BfK5=YwZYepFoP5SqgDQMPvUeQobqNiBCMM5=eTwUT5e0A@mail.gmail.com> (sfid-20120229_205428_575099_D6D15393)
-Subject: Re: [RFC/RFT 5/5] p54spi: Load firmware from work queue and not from
- probe routine
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	chunkeey@web.de, m@bues.ch, linux-kernel@vger.kernel.org,
-	devel@driverdev.osuosl.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:37622 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754370Ab2BCAQx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 19:16:53 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 14/28] iwlwifi: introduce trans_ops->stop_hw
+Date: Thu,  2 Feb 2012 15:09:05 -0800
+Message-Id: <1328224159-18134-15-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120203_011756_952369_54BC90A4)
+In-Reply-To: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> Drivers that load firmware from their probe routine have problems with the
->> latest versions of udev as they get timeouts while waiting for user
->> space to start. The problem is fixed by loading the firmware and starting
->> mac80211 from a delayed_work queue. By using this method, most of the
->> original code is preserved.
->>
->> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
->> ---
->> This one is compile-tested only.
->>
->> Larry
->> ---
->
->
-> Any testing done here?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-insmod immediately followed by rmmod causes NULL pointer dereference.
-The same always happens on rmmode when the firmware image is absent:
+This handler stops the HW and puts it in low power state.
+It will allow to clean up the flows in the upper layers.
 
-[   52.482696] calling  p54spi_init+0x0/0x30 [p54spi] @ 941
-[   52.486053] initcall p54spi_init+0x0/0x30 [p54spi] returned 0 after
-3071 usecs
-[   53.522430] p54spi spi2.0: request_firmware() failed: -2
-[   53.522521] p54spi spi2.0: Failed to read firmware
-[   56.337036] Unable to handle kernel NULL pointer dereference at
-virtual address 00000044
-[   56.337188] pgd = c6c2c000
-[   56.337219] [00000044] *pgd=87b07831, *pte=00000000, *ppte=00000000
-[   56.337341] Internal error: Oops: 17 [#1] PREEMPT
-[   56.337402] Modules linked in: p54spi(-)
-[   56.337493] CPU: 0    Not tainted  (3.3.0-rc3-11564-g1465640 #12)
-[   56.337585] PC is at drain_workqueue+0x10/0x1b4
-[   56.337677] LR is at drain_workqueue+0x10/0x1b4
-[   56.337738] pc : [<c0043340>]    lr : [<c0043340>]    psr: 80000013
-[   56.337768] sp : c79e3eb8  ip : 00000000  fp : bed7cc1c
-[   56.337890] r10: 00000000  r9 : c79e2000  r8 : c0012a48
-[   56.337951] r7 : c7863634  r6 : c7863600  r5 : bf00115c  r4 : 00000000
-[   56.338043] r3 : 00000000  r2 : 00000000  r1 : c040c844  r0 : 00000001
-[   56.338134] Flags: Nzcv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment user
-[   56.338226] Control: 00c5387d  Table: 86c2c000  DAC: 00000015
-[   56.338317] Process rmmod (pid: 950, stack limit = 0xc79e2268)
-[   56.338378] Stack: (0xc79e3eb8 to 0xc79e4000)
-[   56.338470] 3ea0:
-    00000000 bf00115c
-[   56.338592] 3ec0: c7863600 c7863634 c0012a48 c79e2000 00000000
-c00434f0 c7816300 bf00115c
-[   56.338714] 3ee0: c7863600 c0278c38 c7816fa0 bf000ba0 c7863600
-bf001ff8 bf001ff8 c01aa53c
-[   56.338836] 3f00: c01aa524 c0195808 c7863600 c79e2000 bf001ff8
-c01958fc bf001ff8 00000000
-[   56.338989] 3f20: c03e3d44 bed7cbf8 c0012a48 c0194c88 bf002030
-00000000 00000013 c0061dc8
-[   56.339111] 3f40: c79cdf20 73343570 b6006970 c008577c ffffffff
-c6ca0180 c79cdf20 c0086774
-[   56.339233] 3f60: b6f23000 b6f22000 bed7cc1c c01466f0 c6ca01b4
-00000000 b6f22000 00ca0180
-[   56.339355] 3f80: bf002030 00000880 c79e3f8c 00000000 b6f233ff
-00000880 bed7cbf8 bed7ce97
-[   56.339508] 3fa0: 00000081 c00128a0 00000880 bed7cbf8 bed7cbf8
-00000880 bed7cbec 00000000
-[   56.339630] 3fc0: 00000880 bed7cbf8 bed7ce97 00000081 00000001
-00000001 00011fe4 bed7cc1c
-[   56.339752] 3fe0: 00000880 bed7cbf8 00009004 b6e908bc 60000010
-bed7cbf8 00000000 00000000
-[   56.339904] [<c0043340>] (drain_workqueue+0x10/0x1b4) from
-[<c00434f0>] (destroy_workqueue+0xc/0x150)
-[   56.340057] [<c00434f0>] (destroy_workqueue+0xc/0x150) from
-[<c0278c38>] (ieee80211_unregister_hw+0xbc/0xe4)
-[   56.340209] [<c0278c38>] (ieee80211_unregister_hw+0xbc/0xe4) from
-[<bf000ba0>] (p54spi_remove+0x1c/0x58 [p54spi])
-[   56.340393] [<bf000ba0>] (p54spi_remove+0x1c/0x58 [p54spi]) from
-[<c01aa53c>] (spi_drv_remove+0x18/0x1c)
-[   56.340576] [<c01aa53c>] (spi_drv_remove+0x18/0x1c) from
-[<c0195808>] (__device_release_driver+0x7c/0xbc)
-[   56.340728] [<c0195808>] (__device_release_driver+0x7c/0xbc) from
-[<c01958fc>] (driver_detach+0xb4/0xdc)
-[   56.340850] [<c01958fc>] (driver_detach+0xb4/0xdc) from
-[<c0194c88>] (bus_remove_driver+0x8c/0xb4)
-[   56.341003] [<c0194c88>] (bus_remove_driver+0x8c/0xb4) from
-[<c0061dc8>] (sys_delete_module+0x1c8/0x234)
-[   56.341186] [<c0061dc8>] (sys_delete_module+0x1c8/0x234) from
-[<c00128a0>] (ret_fast_syscall+0x0/0x30)
-[   56.341308] Code: e92d47f0 e1a04000 e3a00001 eb002dbb (e5943044)
-[   56.341552] ---[ end trace 79a2a071aae86862 ]---
-[   56.341644] note: rmmod[950] exited with preempt_count 1
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c        |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c       |   40 ------------------
+ drivers/net/wireless/iwlwifi/iwl-shared.h     |    1 -
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   54 ++++++++++++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-trans.h      |    8 ++++
+ 5 files changed, 61 insertions(+), 44 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 3aeaa89..8846246 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1839,7 +1839,7 @@ int iwl_probe(struct iwl_bus *bus, const struct iwl_trans_ops *trans_ops,
+ 	/* Read the EEPROM */
+ 	err = iwl_eeprom_init(priv, hw_rev);
+ 	/* Reset chip to save power until we load uCode during "up". */
+-	iwl_apm_stop(priv);
++	iwl_trans_stop_hw(trans(priv));
+ 	if (err) {
+ 		IWL_ERR(priv, "Unable to init EEPROM\n");
+ 		goto out_free_traffic_mem;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 3ba59fa..95f2c33 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -883,46 +883,6 @@ void iwlagn_fw_error(struct iwl_priv *priv, bool ondemand)
+ 	}
+ }
+ 
+-static int iwl_apm_stop_master(struct iwl_priv *priv)
+-{
+-	int ret = 0;
+-
+-	/* stop device's busmaster DMA activity */
+-	iwl_set_bit(trans(priv), CSR_RESET, CSR_RESET_REG_FLAG_STOP_MASTER);
+-
+-	ret = iwl_poll_bit(trans(priv), CSR_RESET,
+-			CSR_RESET_REG_FLAG_MASTER_DISABLED,
+-			CSR_RESET_REG_FLAG_MASTER_DISABLED, 100);
+-	if (ret)
+-		IWL_WARN(priv, "Master Disable Timed Out, 100 usec\n");
+-
+-	IWL_DEBUG_INFO(priv, "stop master\n");
+-
+-	return ret;
+-}
+-
+-void iwl_apm_stop(struct iwl_priv *priv)
+-{
+-	IWL_DEBUG_INFO(priv, "Stop card, put in low power state\n");
+-
+-	clear_bit(STATUS_DEVICE_ENABLED, &priv->shrd->status);
+-
+-	/* Stop device's DMA activity */
+-	iwl_apm_stop_master(priv);
+-
+-	/* Reset the entire device */
+-	iwl_set_bit(trans(priv), CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
+-
+-	udelay(10);
+-
+-	/*
+-	 * Clear "initialization complete" bit to move adapter from
+-	 * D0A* (powered-up Active) --> D0U* (Uninitialized) state.
+-	 */
+-	iwl_clear_bit(trans(priv), CSR_GP_CNTRL,
+-		      CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
+-}
+-
+ int iwl_set_tx_power(struct iwl_priv *priv, s8 tx_power, bool force)
+ {
+ 	int ret;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 338a55f..63d4a4f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -543,7 +543,6 @@ int iwlagn_hw_valid_rtc_data_addr(u32 addr);
+ void iwl_set_hw_rfkill_state(struct iwl_priv *priv, bool state);
+ void iwl_nic_config(struct iwl_priv *priv);
+ void iwl_free_skb(struct iwl_priv *priv, struct sk_buff *skb);
+-void iwl_apm_stop(struct iwl_priv *priv);
+ void iwlagn_fw_error(struct iwl_priv *priv, bool ondemand);
+ const char *get_cmd_string(u8 cmd);
+ bool iwl_check_for_ct_kill(struct iwl_priv *priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 335d4b1..43e894f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -714,6 +714,46 @@ out:
+ 	return ret;
+ }
+ 
++static int iwl_apm_stop_master(struct iwl_trans *trans)
++{
++	int ret = 0;
++
++	/* stop device's busmaster DMA activity */
++	iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_STOP_MASTER);
++
++	ret = iwl_poll_bit(trans, CSR_RESET,
++			CSR_RESET_REG_FLAG_MASTER_DISABLED,
++			CSR_RESET_REG_FLAG_MASTER_DISABLED, 100);
++	if (ret)
++		IWL_WARN(trans, "Master Disable Timed Out, 100 usec\n");
++
++	IWL_DEBUG_INFO(trans, "stop master\n");
++
++	return ret;
++}
++
++static void iwl_apm_stop(struct iwl_trans *trans)
++{
++	IWL_DEBUG_INFO(trans, "Stop card, put in low power state\n");
++
++	clear_bit(STATUS_DEVICE_ENABLED, &trans->shrd->status);
++
++	/* Stop device's DMA activity */
++	iwl_apm_stop_master(trans);
++
++	/* Reset the entire device */
++	iwl_set_bit(trans, CSR_RESET, CSR_RESET_REG_FLAG_SW_RESET);
++
++	udelay(10);
++
++	/*
++	 * Clear "initialization complete" bit to move adapter from
++	 * D0A* (powered-up Active) --> D0U* (Uninitialized) state.
++	 */
++	iwl_clear_bit(trans, CSR_GP_CNTRL,
++		      CSR_GP_CNTRL_REG_FLAG_INIT_DONE);
++}
++
+ static int iwl_nic_init(struct iwl_trans *trans)
+ {
+ 	unsigned long flags;
+@@ -1118,7 +1158,7 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
+ 			CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+ 
+ 	/* Stop the device, and put it in low power state */
+-	iwl_apm_stop(priv(trans));
++	iwl_apm_stop(trans);
+ 
+ 	/* Upon stop, the APM issues an interrupt if HW RF kill is set.
+ 	 * Clean again the interrupt here
+@@ -1361,6 +1401,15 @@ error:
+ 	return err;
+ }
+ 
++static void iwl_trans_pcie_stop_hw(struct iwl_trans *trans)
++{
++	iwl_apm_stop(trans);
++
++	/* Even if we stop the HW, we still want the RF kill interrupt */
++	IWL_DEBUG_ISR(trans, "Enabling rfkill interrupt\n");
++	iwl_write32(trans, CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
++}
++
+ static int iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
+ 		      int txq_id, int ssn, u32 status,
+ 		      struct sk_buff_head *skbs)
+@@ -1455,7 +1504,7 @@ static int iwl_trans_pcie_suspend(struct iwl_trans *trans)
+ 	 * things already :-)
+ 	 */
+ 	if (!trans->shrd->wowlan) {
+-		iwl_apm_stop(priv(trans));
++		iwl_apm_stop(trans);
+ 	} else {
+ 		iwl_disable_interrupts(trans);
+ 		iwl_clear_bit(trans, CSR_GP_CNTRL,
+@@ -2024,6 +2073,7 @@ static int iwl_trans_pcie_dbgfs_register(struct iwl_trans *trans,
+ 
+ const struct iwl_trans_ops trans_ops_pcie = {
+ 	.start_hw = iwl_trans_pcie_start_hw,
++	.stop_hw = iwl_trans_pcie_stop_hw,
+ 	.fw_alive = iwl_trans_pcie_fw_alive,
+ 	.start_device = iwl_trans_pcie_start_device,
+ 	.stop_device = iwl_trans_pcie_stop_device,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 55b5dc3..d0b6146 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -134,6 +134,8 @@ struct iwl_host_cmd {
+ /**
+  * struct iwl_trans_ops - transport specific operations
+  * @start_hw: starts the HW- from that point on, the HW can send interrupts
++ * @stop_hw: stops the HW- from that point on, the HW will be in low power but
++ *	will still issue interrupt if the HW RF kill is triggered.
+  * @start_device: allocates and inits all the resources for the transport
+  *                layer.
+  * @fw_alive: called when the fw sends alive notification
+@@ -163,6 +165,7 @@ struct iwl_host_cmd {
+ struct iwl_trans_ops {
+ 
+ 	int (*start_hw)(struct iwl_trans *iwl_trans);
++	void (*stop_hw)(struct iwl_trans *iwl_trans);
+ 	int (*start_device)(struct iwl_trans *trans);
+ 	void (*fw_alive)(struct iwl_trans *trans);
+ 	void (*stop_device)(struct iwl_trans *trans);
+@@ -271,6 +274,11 @@ static inline int iwl_trans_start_hw(struct iwl_trans *trans)
+ 	return trans->ops->start_hw(trans);
+ }
+ 
++static inline void iwl_trans_stop_hw(struct iwl_trans *trans)
++{
++	trans->ops->stop_hw(trans);
++}
++
+ static inline void iwl_trans_fw_alive(struct iwl_trans *trans)
+ {
+ 	trans->ops->fw_alive(trans);
 -- 
-Thanks.
--- Max
+1.7.0.4
+
