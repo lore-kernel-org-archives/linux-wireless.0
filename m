@@ -1,57 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4317 "EHLO mms2.broadcom.com"
+Received: from mga01.intel.com ([192.55.52.88]:7687 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751619Ab2BPME2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Feb 2012 07:04:28 -0500
-Message-ID: <4F3CF0C1.3090304@broadcom.com> (sfid-20120216_130432_082401_A349B4F4)
-Date: Thu, 16 Feb 2012 13:04:17 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "Kay Sievers" <kay.sievers@vrfy.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Tom Gundersen" <teg@jklm.no>, "Andy Whitcroft" <apw@canonical.com>
-Subject: Re: calling request_firmware() from module init will not work
- with recent/future udev versions
-References: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
- <1326621743.3448.1.camel@jlt3.sipsolutions.net>
- <CAPXgP13b0uu3DgOGRL-_WKx-aSQN-f0xL6OmjNPBGf9fg0satA@mail.gmail.com> (
- sfid-20120115_163411_716244_29DE7A13)
- <1326704259.3510.3.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1326704259.3510.3.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+	id S1755251Ab2BCAQ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 19:16:58 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 22/28] iwlwifi: stop_hw replace enable_rfkill_int
+Date: Thu,  2 Feb 2012 15:09:13 -0800
+Message-Id: <1328224159-18134-23-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120203_011718_999759_BFCFB69B)
+In-Reply-To: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/16/2012 09:57 AM, Johannes Berg wrote:
->> Now the problem, the pcidev event is blocking in modprobe and waits
->> >  for the child event it has generated to finish, but udev does not
->> >  start the event because the parent still blocks in modprobe ->
->> >  deadlock until default firmware timeout of 60 sec. What we want here,
->> >  for several reasons not only udev's dependency logic, is that modprobe
->> >  never waits for userspace transactions to finish.
-> Ok, thanks for the description. I guess to me that means nothing really
-> changes much in the situation I'm thinking of.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I am working on changes in brcm80211 driver and the behaviour changes 
-slightly. The async firmware request basically kicks of a kernel thread 
-to do the actual request. So the probe finishes successfully regardless 
-what the results will be of the actual firmware request. Hence the 
-driver is associated with the hardware.
+This trans_ops->stop_hw leaves the RFKILL interrupt enabled,
+we can call that one instead of enable_rfkill_int. By that,
+we reduce the numbers of acceesses to the NIC from the upper
+layers.
 
->> >  If userspace is not responding, the firmware request times out after
->> >  60 seconds and the driver is not associated with any hardware. To
->> >  retry the firmware loading, the module needs to be unloaded and
->> >  reloaded, or the driver needs to be asked to bind to a device again by
->> >  writing to the 'bind' in file in the sysfs driver directory.
-> Right.
->
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.h          |    6 ------
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c      |    7 ++++---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    6 ++++--
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c    |    2 ++
+ 4 files changed, 10 insertions(+), 11 deletions(-)
 
-If my previous statement is true, what does it mean regarding retrying 
-the firmware loading?
-
-Gr. AvS
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index e74bfb7..8d60dcf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -297,12 +297,6 @@ static inline bool iwl_advanced_bt_coexist(struct iwl_priv *priv)
+ 	       cfg(priv)->bt_params->advanced_bt_coexist;
+ }
+ 
+-static inline void iwl_enable_rfkill_int(struct iwl_priv *priv)
+-{
+-	IWL_DEBUG_ISR(priv, "Enabling rfkill interrupt\n");
+-	iwl_write32(trans(priv), CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
+-}
+-
+ extern bool bt_siso_mode;
+ 
+ #endif /* __iwl_core_h__ */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index 78bc1e8..7177fd7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -346,9 +346,10 @@ static void iwlagn_mac_stop(struct ieee80211_hw *hw)
+ 	flush_workqueue(priv->shrd->workqueue);
+ 
+ 	/* User space software may expect getting rfkill changes
+-	 * even if interface is down */
+-	iwl_write32(trans(priv), CSR_INT, 0xFFFFFFFF);
+-	iwl_enable_rfkill_int(priv);
++	 * even if interface is down, trans->down will leave the RF
++	 * kill interrupt enabled
++	 */
++	iwl_trans_stop_hw(trans(priv));
+ 
+ 	IWL_DEBUG_MAC80211(priv, "leave\n");
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index 731f287..78abff0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -1149,8 +1149,10 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
+ 	if (test_bit(STATUS_INT_ENABLED, &trans->shrd->status))
+ 		iwl_enable_interrupts(trans);
+ 	/* Re-enable RF_KILL if it occurred */
+-	else if (handled & CSR_INT_BIT_RF_KILL)
+-		iwl_enable_rfkill_int(priv(trans));
++	else if (handled & CSR_INT_BIT_RF_KILL) {
++		IWL_DEBUG_ISR(trans, "Enabling rfkill interrupt\n");
++		iwl_write32(trans, CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
++	}
+ }
+ 
+ /******************************************************************************
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index ed2a921..ec26950 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1532,6 +1532,8 @@ static void iwl_trans_pcie_stop_hw(struct iwl_trans *trans)
+ {
+ 	iwl_apm_stop(trans);
+ 
++	iwl_write32(trans, CSR_INT, 0xFFFFFFFF);
++
+ 	/* Even if we stop the HW, we still want the RF kill interrupt */
+ 	IWL_DEBUG_ISR(trans, "Enabling rfkill interrupt\n");
+ 	iwl_write32(trans, CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
+-- 
+1.7.0.4
 
