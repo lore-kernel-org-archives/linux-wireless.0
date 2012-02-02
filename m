@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25449 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:37622 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756548Ab2BMKYa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 05:24:30 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
+	id S1755275Ab2BCAQ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 19:16:58 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 18/24] iwlegacy: check correct il_poll_bit error value
-Date: Mon, 13 Feb 2012 11:23:25 +0100
-Message-Id: <1329128611-6815-19-git-send-email-sgruszka@redhat.com> (sfid-20120213_112436_205698_76662D54)
-In-Reply-To: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
-References: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 23/28] iwlwifi: debug print in tx_queue_set_status is more clear
+Date: Thu,  2 Feb 2012 15:09:14 -0800
+Message-Id: <1328224159-18134-24-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120203_011706_388806_5B2AEE1E)
+In-Reply-To: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/common.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index f343f27..d0d408e 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -4136,7 +4136,7 @@ _il_apm_stop_master(struct il_priv *il)
- 	ret =
- 	    _il_poll_bit(il, CSR_RESET, CSR_RESET_REG_FLAG_MASTER_DISABLED,
- 			 CSR_RESET_REG_FLAG_MASTER_DISABLED, 100);
--	if (ret)
-+	if (ret < 0)
- 		IL_WARN("Master Disable Timed Out, 100 usec\n");
+The message was misleading when a queue is deactivated. The fifo
+number is irrelevant then, so don't print it.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index 5e095ac..08e0a7d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -431,9 +431,12 @@ void iwl_trans_tx_queue_set_status(struct iwl_trans *trans,
  
- 	D_INFO("stop master\n");
+ 	txq->sched_retry = scd_retry;
+ 
+-	IWL_DEBUG_TX_QUEUES(trans, "%s %s Queue %d on FIFO %d\n",
+-		       active ? "Activate" : "Deactivate",
+-		       scd_retry ? "BA" : "AC/CMD", txq_id, tx_fifo_id);
++	if (active)
++		IWL_DEBUG_TX_QUEUES(trans, "Activate %s Queue %d on FIFO %d\n",
++			scd_retry ? "BA" : "AC/CMD", txq_id, tx_fifo_id);
++	else
++		IWL_DEBUG_TX_QUEUES(trans, "Deactivate %s Queue %d\n",
++			scd_retry ? "BA" : "AC/CMD", txq_id);
+ }
+ 
+ static inline int get_fifo_from_tid(struct iwl_trans_pcie *trans_pcie,
 -- 
-1.7.1
+1.7.0.4
 
