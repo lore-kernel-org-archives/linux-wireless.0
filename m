@@ -1,42 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:33888 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756557Ab2BWSKT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 13:10:19 -0500
-Received: by wics10 with SMTP id s10so942191wic.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 10:10:17 -0800 (PST)
+Received: from nbd.name ([46.4.11.11]:44285 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756151Ab2BBOWd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 09:22:33 -0500
+Message-ID: <4F2A9C26.5070201@openwrt.org> (sfid-20120202_152236_276666_414C673A)
+Date: Thu, 02 Feb 2012 15:22:30 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1328818149-4826-15-git-send-email-arend@broadcom.com>
-References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
-	<1328818149-4826-15-git-send-email-arend@broadcom.com>
-Date: Thu, 23 Feb 2012 19:10:17 +0100
-Message-ID: <CACna6rxgGuCNY19Dn=VcgUH=EORNr72x4CTbR61srSZmcM+h-w@mail.gmail.com> (sfid-20120223_191025_162926_9F36EFB4)
-Subject: Re: [PATCH 14/15] brcm80211: fmac: add USB support for bcm43235/6/8 chipsets
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	"M. Lambert" <lambertm@westman.wave.ca>
+To: =?UTF-8?B?TWFydGluIEh1bmRlYsO4bGw=?= <m.hundeboll@gmail.com>
+CC: Seth Forshee <seth.forshee@canonical.com>,
+	linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+Subject: Re: CTS timeout issue with AR9285
+References: <20120202042521.GA20635@ubuntu-macmini> <4F2A830A.8000905@openwrt.org> <4F2A9A9D.4000108@gmail.com>
+In-Reply-To: <4F2A9A9D.4000108@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/2/9 Arend van Spriel <arend@broadcom.com>:
-> This patch extends the use of the brcmfmac driver with support for
-> chipsets with a USB host interface. The first chipsets supported are
-> the bcm43235, bcm43236, and bcm43238 for which firmware has been
-> submitted.
+On 2012-02-02 3:15 PM, Martin Hundebøll wrote:
+> Hi Felix,
+> 
+> On 2012-02-02 13:35, Felix Fietkau wrote:
+>> Please try this patch:
+>>
+>> --- a/drivers/net/wireless/ath/ath9k/hw.c
+>> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+>> @@ -1061,13 +1061,16 @@ void ath9k_hw_init_global_settings(struc
+>>
+>>   	/*
+>>   	 * Workaround for early ACK timeouts, add an offset to match the
+>> -	 * initval's 64us ack timeout value.
+>> +	 * initval's 64us ack timeout value. Use 48us for the CTS timeout.
+>>   	 * This was initially only meant to work around an issue with delayed
+>>   	 * BA frames in some implementations, but it has been found to fix ACK
+>>   	 * timeout issues in other cases as well.
+>>   	 */
+>> -	if (conf->channel&&  conf->channel->band == IEEE80211_BAND_2GHZ)
+>> +	if (conf->channel&&  conf->channel->band == IEEE80211_BAND_2GHZ) {
+>>   		acktimeout += 64 - sifstime - ah->slottime;
+>> +		ctstimeout += 48 - sifstime - ah->slottime;
+>> +	}
+>> +
+>>
+>>   	ath9k_hw_set_sifs_time(ah, sifstime);
+>>   	ath9k_hw_setslottime(ah, slottime);
+> 
+> I have been seeing the same issues with the Atheros 9170 USB chipset
+> using the carl9170 driver and firmware, where RST are transmitted
+> repeatidly, even though a CTS-reply is seen on the air. I suspect the
+> issue to be related to this one, but I am unable to locate any
+> calculation or setting of CTS timeout in the driver or firmware.
+> 
+> Can anyone point me in the right direction to tune the CTS timeout
+> with the 9170 chip?
+I think your carl9170 CTS issue is likely to be something else, since
+AR9170 is using a completely different 802.11 MAC (Zydas design instead
+of Atheros).
 
-Can you say something more about the firmware? AFAICS brcm directory
-in linux-firmware.git contains:
-brcmfmac43236b.bin
-brcmfmac4329.bin
-brcmfmac4330.bin
-
-
-> +#define BRCMF_USB_FW_NAME      "brcm/brcmfmac-usb.bin"
-
-However your driver seems to require *only* brcmfmac-usb.bin firmware file...
-
--- 
-Rafał
+- Felix
