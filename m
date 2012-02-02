@@ -1,33 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47663 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751092Ab2BPLnv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Feb 2012 06:43:51 -0500
-Date: Thu, 16 Feb 2012 12:43:49 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Maciej Marcin Piechotka <uzytkownik2@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [iwlwifi 5000] Linux 3.3.0-rc2 drops wifi connection (regression
- from 3.2) - "No buffer space available"
-Message-ID: <20120216114348.GC25833@redhat.com> (sfid-20120216_124354_765346_797D84B9)
-References: <1328667237.1747.26.camel@localhost.localdomain>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:60382 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754939Ab2BBEJp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Feb 2012 23:09:45 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1328667237.1747.26.camel@localhost.localdomain>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20266.3200.403302.486325@gargle.gargle.HOWL> (sfid-20120202_050948_879110_FA77074A)
+Date: Thu, 2 Feb 2012 09:39:36 +0530
+To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Paul Stewart <pstew@google.com>
+Subject: Re: [PATCH 1/2] ath9k: recover the chip from tx/rx stuck
+In-Reply-To: <20120202035652.GB25988@vmraj-lnx.users.atheros.com>
+References: <1328112335-19265-1-git-send-email-rmanohar@qca.qualcomm.com>
+	<20265.65072.546108.448327@gargle.gargle.HOWL>
+	<20120202035652.GB25988@vmraj-lnx.users.atheros.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 08, 2012 at 02:13:57AM +0000, Maciej Marcin Piechotka wrote:
-> Hello,
-> 
-> Linux 3.3.0 drops connections from WiFi on 3.3 (worked on 3.2).
-> If I try to ping anything:
-> 
-> ping: sendmsg: No buffer space available
-> 
-> When I disable/enable WiFi by rfkill it works ok. I haven't found what
-> determines the period before it happens.
+Rajkumar Manoharan wrote:
+> On Thu, Feb 02, 2012 at 08:38:32AM +0530, Sujith Manoharan wrote:
+> > Rajkumar Manoharan wrote:
+> > > +void ath_start_rx_poll(struct ath_softc *sc, const u32 msec)
+> > > +{
+> > > +	if (!AR_SREV_9300_20_OR_LATER(sc->sc_ah))
+> > > +		return;
+> > 
+> > I have not reviewed the patch, but to do such workarounds for an entire
+> > family of chips is overkill. Has it been confirmed that the other
+> > chips falling under this SREV check require this snafu ?
+> >
+> unfortunately this snafu is applicable for all ar9380 MAC based chips ;)
+> and confirmed the same.
 
-What show dmesg?
+Ok. But this stuff really needs to be verified for other chips.
+These 'poll' workarounds are piling up.
 
-Stanislaw
+Sujith
