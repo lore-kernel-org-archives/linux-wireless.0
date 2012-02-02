@@ -1,43 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:50821 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752995Ab2BOQqn (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:59063 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753983Ab2BBKAO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 11:46:43 -0500
-Received: by mail-bk0-f45.google.com with SMTP id e19so1443718bku.18
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 08:46:34 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6V9Yk1OK0uMU=gyxHKuRmHqYdKi9KBmtz8hYhdcpgrhKQ@mail.gmail.com>
-References: <1327581484-22047-1-git-send-email-victorg@ti.com>
-	<1327581484-22047-7-git-send-email-victorg@ti.com>
-	<4F27814A.9060906@sipsolutions.net>
-	<CAK80WHZw9PRr_wjazJiPUo1vrCpjgyrSx9ydHwLGoJEp3qNwDA@mail.gmail.com>
-	<1328562215.3466.3.camel@jlt3.sipsolutions.net>
-	<CAK80WHbESx0xtpp2LujPb2-+DXMCJ3NjC6e8KcHvcbKx2tJ7=A@mail.gmail.com>
-	<CAB=NE6V9Yk1OK0uMU=gyxHKuRmHqYdKi9KBmtz8hYhdcpgrhKQ@mail.gmail.com>
-Date: Wed, 15 Feb 2012 18:46:34 +0200
-Message-ID: <CAK80WHZ-FUb1s7EehV0w1=H-QtRGFkcUTuGbg5E=bJr-7VZwpg@mail.gmail.com> (sfid-20120215_174655_308817_EDE3038A)
-Subject: Re: [RFC 6/9] mac80211: add ap channel switch command/event
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian.chadd@gmail.com, j@w1.fi,
-	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name
-Content-Type: text/plain; charset=ISO-8859-1
+	Thu, 2 Feb 2012 05:00:14 -0500
+Received: by mail-we0-f174.google.com with SMTP id b13so1662686wer.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 02:00:14 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>, Eliad Peller <eliad@wizery.com>
+Subject: [PATCH v3 2/4] wl12xx: add suspend_listen_interval debugfs file
+Date: Thu,  2 Feb 2012 12:03:40 +0200
+Message-Id: <1328177022-26646-3-git-send-email-eliad@wizery.com> (sfid-20120202_110025_230469_FDD7EB21)
+In-Reply-To: <1328177022-26646-1-git-send-email-eliad@wizery.com>
+References: <1328177022-26646-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 10, 2012 at 1:04 AM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
-> Then you need to ensure that a capability is checked and if this
-> capability is required but not available yet in mac80211 DFS cannot be
-> started.
->
+From: Eyal Shapira <eyal@wizery.com>
 
-Good point, I will add this check.
+Add read/write to suspend_dtim_interval file which
+controls the number of DTIM periods between wakeups
+while the host is suspended.
+The value while the host is resumed is controlled
+by the file dtim_interval which existed previously.
 
+Signed-off-by: Eyal Shapira <eyal@wizery.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/debugfs.c |   59 +++++++++++++++++++++++++++++++++
+ 1 files changed, 59 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+index 4dcb3f7..15353fa 100644
+--- a/drivers/net/wireless/wl12xx/debugfs.c
++++ b/drivers/net/wireless/wl12xx/debugfs.c
+@@ -625,6 +625,64 @@ static const struct file_operations dtim_interval_ops = {
+ 	.llseek = default_llseek,
+ };
+ 
++
++
++static ssize_t suspend_dtim_interval_read(struct file *file,
++					  char __user *user_buf,
++					  size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++	u8 value;
++
++	if (wl->conf.conn.suspend_wake_up_event == CONF_WAKE_UP_EVENT_DTIM ||
++	    wl->conf.conn.suspend_wake_up_event == CONF_WAKE_UP_EVENT_N_DTIM)
++		value = wl->conf.conn.suspend_listen_interval;
++	else
++		value = 0;
++
++	return wl1271_format_buffer(user_buf, count, ppos, "%d\n", value);
++}
++
++static ssize_t suspend_dtim_interval_write(struct file *file,
++					   const char __user *user_buf,
++					   size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++	unsigned long value;
++	int ret;
++
++	ret = kstrtoul_from_user(user_buf, count, 10, &value);
++	if (ret < 0) {
++		wl1271_warning("illegal value for suspend_dtim_interval");
++		return -EINVAL;
++	}
++
++	if (value < 1 || value > 10) {
++		wl1271_warning("suspend_dtim value is not in valid range");
++		return -ERANGE;
++	}
++
++	mutex_lock(&wl->mutex);
++
++	wl->conf.conn.suspend_listen_interval = value;
++	/* for some reason there are different event types for 1 and >1 */
++	if (value == 1)
++		wl->conf.conn.suspend_wake_up_event = CONF_WAKE_UP_EVENT_DTIM;
++	else
++		wl->conf.conn.suspend_wake_up_event = CONF_WAKE_UP_EVENT_N_DTIM;
++
++	mutex_unlock(&wl->mutex);
++	return count;
++}
++
++
++static const struct file_operations suspend_dtim_interval_ops = {
++	.read = suspend_dtim_interval_read,
++	.write = suspend_dtim_interval_write,
++	.open = wl1271_open_file_generic,
++	.llseek = default_llseek,
++};
++
+ static ssize_t beacon_interval_read(struct file *file, char __user *user_buf,
+ 				    size_t count, loff_t *ppos)
+ {
+@@ -949,6 +1007,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
+ 	DEBUGFS_ADD(driver_state, rootdir);
+ 	DEBUGFS_ADD(vifs_state, rootdir);
+ 	DEBUGFS_ADD(dtim_interval, rootdir);
++	DEBUGFS_ADD(suspend_dtim_interval, rootdir);
+ 	DEBUGFS_ADD(beacon_interval, rootdir);
+ 	DEBUGFS_ADD(beacon_filtering, rootdir);
+ 	DEBUGFS_ADD(dynamic_ps_timeout, rootdir);
 -- 
-Thanks,
-Victor.
+1.7.6.401.g6a319
+
