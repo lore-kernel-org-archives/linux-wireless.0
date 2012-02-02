@@ -1,71 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from msr8.hinet.net ([168.95.4.108]:62708 "EHLO msr8.hinet.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756410Ab2BHB6t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 20:58:49 -0500
-Date: Wed, 8 Feb 2012 09:58:25 +0800
-From: Ali Bahar <ali@internetdog.org>
-To: dganic@bmail.ru
-Cc: wlanfae@realtek.com, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: drivers realtek rtl8191su [rtl8712 ]
-Message-ID: <20120208015824.GA6145@internetdog.org> (sfid-20120208_025853_090840_8CEFA3B8)
-Reply-To: ali@internetdog.org
-References: <web-16212948@mail-be01.sovam.com>
- <20120207020837.GA29465@internetdog.org>
- <web-10842365@mail-be03.sovam.com>
+Received: from mailout-de.gmx.net ([213.165.64.23]:58650 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756074Ab2BBT3J (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 14:29:09 -0500
+Date: Thu, 2 Feb 2012 20:29:06 +0100
+From: Daniel =?iso-8859-1?Q?Gl=F6ckner?= <daniel-gl@gmx.net>
+To: Alfonso Fiore <alfonso.fiore@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: how to setup a wireless bridge (wds) without iwpriv?
+Message-ID: <20120202192906.GA1592@minime.bse> (sfid-20120202_202915_073938_F19584D8)
+References: <CAO=xpBGPi7o+gi3bTb=9iML=bSqBog6okz-Z7X7tywqiwb=FaA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <web-10842365@mail-be03.sovam.com>
+In-Reply-To: <CAO=xpBGPi7o+gi3bTb=9iML=bSqBog6okz-Z7X7tywqiwb=FaA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Alexander,
+Hi Alfonso,
 
-
-On Tue, Feb 07, 2012 at 07:53:44PM +0300, dganic@bmail.ru wrote:
-> Thank you Ali for your reply email. One can wonder why you continue
-> to develop this driver, and still the most interesting place: (Maybe
-
-as you have figured out by now, Larry Finger is the main guy for this
-driver, not me. I just submitted a few patches this past summer.
-
-
-> you can help me by passing this information in any other developer
-> in a position to write the full realization of this driver? The
-> average user like me, they are unlikely to be listen, and you as the
-> developer will have to listen. Perhaps you have the opportunity to
-> publish this information in the Linux kernel mailing list or
-> linuxdrivers.org? or have any contacts who can I turn? itself does
-
-Larry and the linux-wireless list were CCed in my original reply. When
-you have issues, you can directly email the list yourself.
-
-take care,
-ali
-
-
-
-> not implement realtek drivers for their devices under Linux?
+On Thu, Feb 02, 2012 at 07:22:30PM +0100, Alfonso Fiore wrote:
+> Since wireless on my PC doesn't work properly, I'd like to create a
+> wireless bridge to allow a PC to get an IP address from the wireless
+> network without NAT.
 > 
-> with respect, Alexander Anishchenko
-> 
-> On Tue, 7 Feb 2012 10:08:37 +0800
->  Ali Bahar <ali@internetdog.org> wrote:
->  Hi dganic,
->  On Mon, Feb 06, 2012 at 09:17:33PM +0300, dganic@bmail.ru wrote:
-> >Subject: drivers realtek rtl8191su [rtl8712 ]
-> >
-> >Good day, https://github.com/torvalds/linux/blob/master/drivers/staging/rtl8712/TODO,
-> >there indicated that in a short time you make a "switch to use
-> >MAC80211" and as what about "nl80211" I want to do from wi fi card,
-> >access point, by means of hostapd, but in this implementation, the
-> >driver who is at the core, this is impossible, in which release of
-> >the kernel will be implemented this functionality the driver?
->  Yes, I was the one who had volunteered to try the implementation.
-> But,
->  unfortunately, I can't work on this driver anymore; I stopped in
->  September. So, as far as I know, this is not going to happen anytime
->  soon.
->  regards,
->  ali
+> (ISP wireless router - 192.168.1.1) <---wireless---> (ALIX setup as
+> bridge) <---wired---> (PC - 192.168.1.x)
+
+I use proxy ARP to achieve this with WPA:
+
+route add -net 192.168.1.0/25 dev wlan0
+route add -net 192.168.1.128/25 dev eth0
+echo 1 >/proc/sys/net/ipv4/conf/wlan0/proxy_arp
+echo 1 >/proc/sys/net/ipv4/conf/eth0/proxy_arp
+echo 1 >/proc/sys/net/ipv4/ip_forward
+
+But it only works if you know beforehand on which interface your ALIX
+will see an IP address. You could run the DHCP server on your ALIX to
+make it more deterministic.
+
+  Daniel
