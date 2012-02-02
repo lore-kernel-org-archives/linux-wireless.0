@@ -1,47 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33172 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751766Ab2BWMXC (ORCPT
+Received: from violet.fr.zoreil.com ([92.243.8.30]:55192 "EHLO
+	violet.fr.zoreil.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754061Ab2BBKyJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 07:23:02 -0500
-Subject: Re: [PATCH 3/6] iwlwifi: cleanup/fix memory barriers
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1329992168-19990-3-git-send-email-sgruszka@redhat.com> (sfid-20120223_111622_464410_98E63752)
-References: <1329992168-19990-1-git-send-email-sgruszka@redhat.com>
-	 <1329992168-19990-3-git-send-email-sgruszka@redhat.com>
-	 (sfid-20120223_111622_464410_98E63752)
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 23 Feb 2012 13:22:58 +0100
-Message-ID: <1329999778.3448.2.camel@jlt3.sipsolutions.net> (sfid-20120223_132307_124556_8D43BC27)
+	Thu, 2 Feb 2012 05:54:09 -0500
+Date: Thu, 2 Feb 2012 11:42:34 +0100
+From: Francois Romieu <romieu@fr.zoreil.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Tom Gundersen <teg@jklm.no>, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
+Subject: Re: MAINTAINER NEEDED -- Re: status of ipw2x00
+Message-ID: <20120202104234.GA31469@electric-eye.fr.zoreil.com> (sfid-20120202_115413_927731_CFA4100D)
+References: <CAG-2HqUqwHo_xgqC79riQF2DA4DPz1Qy5ZARQK8GT+tf_-UKRg@mail.gmail.com> <20120130184446.GB2493@tuxdriver.com>
 Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120130184446.GB2493@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-02-23 at 11:16 +0100, Stanislaw Gruszka wrote:
+John W. Linville <linville@tuxdriver.com> :
+[...]
+> Anyone out there looking for a project?  A way to "break-in" to the
+> public Linux community without the risk of breaking anything too
+> important? :-)
 
->  	__iwl_clear_bit(trans, CSR_GP_CNTRL,
->  			CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
-> +	/*
-> +	 * In above we are reading CSR_GP_CNTRL register, what will flush any
-> +	 * previous writes, but still want write, which clear MAC_ACCESS_REQ
-> +	 * bit, be performed on PCI bus before any other writes scheduled on
-> +	 * different CPUs (after we drop reg_lock).
-> +	 */
-> +	mmiowb();
->  }
+You are talking about my laptop.
 
-I changed this comment to the, imho, more readable
+Ok, I'll break it myself.
 
-        /*
-         * Above we read the CSR_GP_CNTRL register, which will flush
-         * any previous writes, but we need the write that clears the
-         * MAC_ACCESS_REQ bit to be performed before any other writes
-         * scheduled on different CPUs (after we drop reg_lock).
-         */
-
-johannes
-
+-- 
+Ueimor
