@@ -1,89 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38491 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756458Ab2BGUQf (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:58320 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754775Ab2BBKSm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 15:16:35 -0500
-Date: Tue, 7 Feb 2012 21:16:33 +0100
-From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-To: David Miller <davem@davemloft.net>
-Cc: simon.wunderlich@s2003.tu-chemnitz.de, netdev@vger.kernel.org,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	Patrick McHardy <kaber@trash.net>,
-	Jamal Hadi Salim <hadi@cyberus.ca>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Marek Lindner <lindner_marek@yahoo.de>,
-	Sven Eckelmann <sven@narfation.org>,
-	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
-	coreteam@netfilter.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] skbuff: Add new tc classify variable
-Message-ID: <20120207201633.GB26533@pandem0nium> (sfid-20120207_211645_472839_AF6AC045)
-References: <1328639948-25232-1-git-send-email-siwu@hrz.tu-chemnitz.de>
- <20120207.135841.1753473725075272902.davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="aVD9QWMuhilNxW9f"
-In-Reply-To: <20120207.135841.1753473725075272902.davem@davemloft.net>
+	Thu, 2 Feb 2012 05:18:42 -0500
+Received: by mail-we0-f174.google.com with SMTP id b13so1675044wer.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 02:18:42 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/3] wl12xx: Revert "wl12xx: disable auto-arp"
+Date: Thu,  2 Feb 2012 12:22:10 +0200
+Message-Id: <1328178131-28938-3-git-send-email-eliad@wizery.com> (sfid-20120202_111846_026469_8FEA258F)
+In-Reply-To: <1328178131-28938-1-git-send-email-eliad@wizery.com>
+References: <1328178131-28938-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This reverts commit e5e2f24b3eec67a7a35d43654a997f98ca21aff2.
 
---aVD9QWMuhilNxW9f
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The encryption consideration on auto-arp configuration,
+along with a fw fix, seem to resolve the crashes that
+occured when auto-arp was enabled, so we can re-enable it now.
 
-Hello David,
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-On Tue, Feb 07, 2012 at 01:58:41PM -0500, David Miller wrote:
-> From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-> Date: Tue,  7 Feb 2012 19:39:08 +0100
->=20
-> > The linux traffic control mechanism has different ways to select the
-> > correct class of a qdisc. A common way to do this is to use tc filters
-> > that are directly attached to a qdisc. Another approach is to use the
-> > iptables classify module. The latter one can reduce the amount of work
-> > necessary to process a packet when iptables is already involved in the
-> > packet classification.
->=20
-> Do not bloat up sk_buff any more.  Add this, and the other existing
-> tc_* members to the qdisc SKB control block instead.
->=20
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index f22c8b1..a50c116 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -3836,7 +3836,8 @@ sta_not_found:
+ 			}
+ 
+ 			ret = wl1271_acx_arp_ip_filter(wl, wlvif,
+-				ACX_ARP_FILTER_ARP_FILTERING,
++				(ACX_ARP_FILTER_ARP_FILTERING |
++				 ACX_ARP_FILTER_AUTO_ARP),
+ 				addr);
+ 		} else {
+ 			wlvif->ip_addr = 0;
+-- 
+1.7.6.401.g6a319
 
-Thanks for your feedback!
-
-I guess you mean skb->cb, but this is also used within mac80211 for various=
- things
-(quoting include/net/mac80211.h):
-
- * struct ieee80211_tx_info - skb transmit information
- *
- * This structure is placed in skb->cb for three uses:
- *  (1) mac80211 TX control - mac80211 tells the driver what to do
- *  (2) driver internal use (if applicable)
- *  (3) TX status information - driver tells mac80211 what happened
-
-We could give it a try, but we most probably run into conflicts again.
-
-I've messed up the CCs in my initial mail (and just resent it) - sorry abou=
-t that.
-Maybe the mac80211 guys have a suggestion as well :)
-
-Cheers,
-	Simon
-
---aVD9QWMuhilNxW9f
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk8xhqEACgkQrzg/fFk7axbRoQCgxHGS8m8aSBvHs2Tyllbx/lmu
-Z+wAn1g2l77zpxyp4a1Slv0m8jl7cs1K
-=MyYW
------END PGP SIGNATURE-----
-
---aVD9QWMuhilNxW9f--
