@@ -1,95 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:44318 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755427Ab2BBLvP (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38342 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754175Ab2BBXVh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 06:51:15 -0500
-Received: by mail-wi0-f174.google.com with SMTP id s10so1677445wic.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 03:51:15 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>, Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyal@wizey.com>
-Subject: [PATCH 4/4] wl12xx: add split_scan_timeout debugfs file
-Date: Thu,  2 Feb 2012 13:54:29 +0200
-Message-Id: <1328183669-21059-5-git-send-email-eliad@wizery.com> (sfid-20120202_125120_623999_36B4401E)
-In-Reply-To: <1328183669-21059-1-git-send-email-eliad@wizery.com>
-References: <1328183669-21059-1-git-send-email-eliad@wizery.com>
+	Thu, 2 Feb 2012 18:21:37 -0500
+Message-ID: <4F2B1A5D.80000@sipsolutions.net> (sfid-20120203_002147_357415_FBE3F140)
+Date: Thu, 02 Feb 2012 15:21:01 -0800
+From: Johannes Berg <johannes@sipsolutions.net>
+MIME-Version: 1.0
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/11] station management & auth/assoc redesign
+References: <20120120125516.000124996@sipsolutions.net> <CAB3XZEdjn3nk8_pnb6ZaW7CbFXgJg44bkVykx8m5iHY=t+vnqA@mail.gmail.com> <4F2AA822.2040303@sipsolutions.net> <20120202205227.GC2568@tuxdriver.com>
+In-Reply-To: <20120202205227.GC2568@tuxdriver.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+On 2/2/2012 12:52 PM, John W. Linville wrote:
 
-Add control over split_scan_timeout through
-debugfs. Values are in ms while 0 will disable split scan.
+> The patches didn't apply.  I haven't taken the time yet to work it out.
+>
+> If you would like to repost a patchset that applies cleanly on top
+> of the current base, that would probably speed it up. :-)
 
-Signed-off-by: Eyal Shapira <eyal@wizey.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/debugfs.c |   43 +++++++++++++++++++++++++++++++++
- 1 files changed, 43 insertions(+), 0 deletions(-)
+Oh ok, sure, I can do that tonight.
 
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index f063c70..00dbe15 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -445,6 +445,48 @@ static const struct file_operations forced_ps_ops = {
- 	.llseek = default_llseek,
- };
- 
-+static ssize_t split_scan_timeout_read(struct file *file, char __user *user_buf,
-+			  size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+
-+	return wl1271_format_buffer(user_buf, count,
-+				    ppos, "%d\n",
-+				    wl->conf.scan.split_scan_timeout / 1000);
-+}
-+
-+static ssize_t split_scan_timeout_write(struct file *file,
-+				    const char __user *user_buf,
-+				    size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+	unsigned long value;
-+	int ret;
-+
-+	ret = kstrtoul_from_user(user_buf, count, 10, &value);
-+	if (ret < 0) {
-+		wl1271_warning("illegal value in split_scan_timeout");
-+		return -EINVAL;
-+	}
-+
-+	if (value == 0)
-+		wl1271_info("split scan will be disabled");
-+
-+	mutex_lock(&wl->mutex);
-+
-+	wl->conf.scan.split_scan_timeout = value * 1000;
-+
-+	mutex_unlock(&wl->mutex);
-+	return count;
-+}
-+
-+static const struct file_operations split_scan_timeout_ops = {
-+	.read = split_scan_timeout_read,
-+	.write = split_scan_timeout_write,
-+	.open = wl1271_open_file_generic,
-+	.llseek = default_llseek,
-+};
-+
- static ssize_t driver_state_read(struct file *file, char __user *user_buf,
- 				 size_t count, loff_t *ppos)
- {
-@@ -1082,6 +1124,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
- 	DEBUGFS_ADD(beacon_filtering, rootdir);
- 	DEBUGFS_ADD(dynamic_ps_timeout, rootdir);
- 	DEBUGFS_ADD(forced_ps, rootdir);
-+	DEBUGFS_ADD(split_scan_timeout, rootdir);
- 
- 	streaming = debugfs_create_dir("rx_streaming", rootdir);
- 	if (!streaming || IS_ERR(streaming))
--- 
-1.7.6.401.g6a319
-
+johannes
