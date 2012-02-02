@@ -1,42 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from purkki.adurom.net ([80.68.90.206]:40853 "EHLO purkki.adurom.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753316Ab2B2Ig3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 03:36:29 -0500
-From: Kalle Valo <kvalo@adurom.com>
-To: Ronald Wahl <ronald.wahl@raritan.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Occasional truncated scan results
-References: <4F4CE4D6.6020108@raritan.com>
-	<1330440166.3368.7.camel@jlt3.sipsolutions.net>
-	<4F4CEFA6.2090005@raritan.com>
-	<1330442659.3368.13.camel@jlt3.sipsolutions.net>
-	<4F4CF454.8050207@raritan.com>
-Date: Wed, 29 Feb 2012 10:36:27 +0200
-In-Reply-To: <4F4CF454.8050207@raritan.com> (Ronald Wahl's message of "Tue, 28
-	Feb 2012 16:35:48 +0100")
-Message-ID: <87linmavec.fsf@purkki.adurom.net> (sfid-20120229_093633_268744_44BEBE5B)
+Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:44843 "EHLO
+	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932106Ab2BBQGU convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 11:06:20 -0500
+Received: by mail-ww0-f49.google.com with SMTP id dt13so2151535wgb.30
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 08:06:19 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F277E8D.5040809@sipsolutions.net>
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>
+	<1327581484-22047-2-git-send-email-victorg@ti.com>
+	<4F277E8D.5040809@sipsolutions.net>
+Date: Thu, 2 Feb 2012 18:06:19 +0200
+Message-ID: <CAK80WHbh13duicPjTEWpTpbjiCiJUu6R_ZArYce5D7wUu1PnMA@mail.gmail.com> (sfid-20120202_170624_366675_58E2DB6C)
+Subject: Re: [RFC 1/9] nl80211/cfg80211: add radar detection command/event
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ronald Wahl <ronald.wahl@raritan.com> writes:
-
->> Ok. Yes, this could be fixed by making sure that a single BSS is
->> atomically written or not written -- probably simply by rolling back at
->> the end of the function if it didn't fit and returning an error etc. If
->> you wanted to work on this, I'd review&  accept the patch, but I have no
->> intention whatsoever to do this myself :-)
+On Tue, Jan 31, 2012 at 7:39 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> Why DFS & radar detection? I mean, why not just call it CMD_RADAR_DETECT or
+> so?
 >
-> I'll first check if I can use the nl80211 interface in all cases. If
-> not I'll probably come up with a patch. Thanks!
 
-Even if switching to nl80211 would require a lot of effort from you I
-still strongly recommend switching. That will save you a lot of
-time in the future and the investment will surely pay back. PHBs like
-that :)
+will rename it to CMD_RADAR_DETECT
+
+>> + *
+>> + * @dfs_start_radar_detection: Start radar detection in the driver.
+>
+>
+> ditto here
+
+will rename it to start_radar_detection
+
+>
+>
+>> @@ -3216,6 +3221,17 @@ void cfg80211_cqm_rssi_notify(struct net_device
+>> *dev,
+>>                              gfp_t gfp);
+>>
+>>  /**
+>> + * cfg80211_radar_detected_notify - radar detection event
+>
+>
+> The _notify suffix seems useless, maybe remove it?
+>
+
+most of the function here use this suffix, but I don't mind to remove it ..
+
+>
+>> + * @dev: network device
+>> + * @freq: radar detected on this channel frequency
+>
+>
+> unit?
+>
+
+ok
+
+>
+>> +static int nl80211_dfs_start_radar_detection(struct sk_buff *skb,
+>> +                                            struct genl_info *info)
+>> +{
+>> +       struct cfg80211_registered_device *rdev = info->user_ptr[0];
+>> +       struct net_device *dev = info->user_ptr[1];
+>> +
+>> +       ASSERT_RDEV_LOCK(rdev);
+>
+>
+> That assert isn't really worth much here.
+>
+
+will remove it also from: nl80211_dfs_en_tx, nl80211_ap_channel_switch
+
+>
+> How do you *end* radar detection? What channel does it apply to? Any channel
+> you're on? The channel you were on when it was enabled?
+
+Once we start radar detection, it should continuously monitor for
+radar until we switch from this channel. The command applies to
+current operational channel.
+
 
 -- 
-Kalle Valo
+Thanks,
+Victor.
