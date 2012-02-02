@@ -1,128 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44532 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:7687 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754036Ab2BCMI0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 07:08:26 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 19/25] iwlegacy: get rid of ctx->is_active
-Date: Fri,  3 Feb 2012 13:07:19 +0100
-Message-Id: <1328270845-16891-20-git-send-email-sgruszka@redhat.com> (sfid-20120203_130834_148025_137DB2FE)
-In-Reply-To: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
-References: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
+	id S1755286Ab2BCAQ7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 19:16:59 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 25/28] iwlwifi: move bcast_sta_id init to common routine
+Date: Thu,  2 Feb 2012 15:09:16 -0800
+Message-Id: <1328224159-18134-26-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120203_011713_229012_6C0CA8E4)
+In-Reply-To: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/4965-mac.c |    3 ---
- drivers/net/wireless/iwlegacy/4965.c     |    3 ---
- drivers/net/wireless/iwlegacy/common.c   |   21 +++------------------
- drivers/net/wireless/iwlegacy/common.h   |    7 -------
- 4 files changed, 3 insertions(+), 31 deletions(-)
+From: Don Fry <donald.h.fry@intel.com>
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 1c3c85e..1a54c1a 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -6134,9 +6134,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	il = hw->priv;
- 	/* At this point both hw and il are allocated. */
+There is nothing device specific in the initialization of the
+bcast_sta_id so move it to the common inititalization routine.
+
+Signed-off-by: Don Fry <donald.h.fry@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c |    2 --
+ drivers/net/wireless/iwlwifi/iwl-2000.c |    2 --
+ drivers/net/wireless/iwlwifi/iwl-5000.c |    4 ----
+ drivers/net/wireless/iwlwifi/iwl-6000.c |    2 --
+ drivers/net/wireless/iwlwifi/iwl-agn.c  |    1 +
+ 5 files changed, 1 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index f7a555b..8c1466c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -128,8 +128,6 @@ static int iwl1000_hw_set_hw_params(struct iwl_priv *priv)
+ 			iwlagn_mod_params.num_of_queues;
  
--	il->ctx.always_active = true;
--	il->ctx.is_active = true;
+ 	hw_params(priv).max_txq_num = cfg(priv)->base_params->num_of_queues;
+-	priv->contexts[IWL_RXON_CTX_BSS].bcast_sta_id = IWLAGN_BROADCAST_ID;
 -
- 	SET_IEEE80211_DEV(hw, &pdev->dev);
+ 	hw_params(priv).max_data_size = IWLAGN_RTC_DATA_SIZE;
+ 	hw_params(priv).max_inst_size = IWLAGN_RTC_INST_SIZE;
  
- 	D_INFO("*** LOAD DRIVER ***\n");
-diff --git a/drivers/net/wireless/iwlegacy/4965.c b/drivers/net/wireless/iwlegacy/4965.c
-index 8d0fd60..7b0192a 100644
---- a/drivers/net/wireless/iwlegacy/4965.c
-+++ b/drivers/net/wireless/iwlegacy/4965.c
-@@ -1419,9 +1419,6 @@ il4965_commit_rxon(struct il_priv *il, struct il_rxon_context *ctx)
- 	if (!il_is_alive(il))
- 		return -EBUSY;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index 8760034..d4f5f3b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -124,8 +124,6 @@ static int iwl2000_hw_set_hw_params(struct iwl_priv *priv)
+ 			iwlagn_mod_params.num_of_queues;
  
--	if (!ctx->is_active)
--		return 0;
+ 	hw_params(priv).max_txq_num = cfg(priv)->base_params->num_of_queues;
+-	priv->contexts[IWL_RXON_CTX_BSS].bcast_sta_id = IWLAGN_BROADCAST_ID;
 -
- 	/* always get timestamp with Rx frame */
- 	il->staging.flags |= RXON_FLG_TSF2HOST_MSK;
+ 	hw_params(priv).max_data_size = IWL60_RTC_DATA_SIZE;
+ 	hw_params(priv).max_inst_size = IWL60_RTC_INST_SIZE;
  
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index db2e8bb..13bd3a8 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -4537,7 +4537,6 @@ static int
- il_setup_interface(struct il_priv *il, struct il_rxon_context *ctx)
- {
- 	struct ieee80211_vif *vif = ctx->vif;
--	int err;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 5245a14..dc9317d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -170,8 +170,6 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+ 			iwlagn_mod_params.num_of_queues;
  
- 	lockdep_assert_held(&il->mutex);
- 
-@@ -4548,16 +4547,7 @@ il_setup_interface(struct il_priv *il, struct il_rxon_context *ctx)
- 	 */
- 	il->iw_mode = vif->type;
- 
--	ctx->is_active = true;
+ 	hw_params(priv).max_txq_num = cfg(priv)->base_params->num_of_queues;
+-	priv->contexts[IWL_RXON_CTX_BSS].bcast_sta_id = IWLAGN_BROADCAST_ID;
 -
--	err = il_set_mode(il, ctx);
--	if (err) {
--		if (!ctx->always_active)
--			ctx->is_active = false;
--		return err;
--	}
+ 	hw_params(priv).max_data_size = IWLAGN_RTC_DATA_SIZE;
+ 	hw_params(priv).max_inst_size = IWLAGN_RTC_INST_SIZE;
+ 
+@@ -199,8 +197,6 @@ static int iwl5150_hw_set_hw_params(struct iwl_priv *priv)
+ 			iwlagn_mod_params.num_of_queues;
+ 
+ 	hw_params(priv).max_txq_num = cfg(priv)->base_params->num_of_queues;
+-	priv->contexts[IWL_RXON_CTX_BSS].bcast_sta_id = IWLAGN_BROADCAST_ID;
 -
--	return 0;
-+	return il_set_mode(il, ctx);
- }
+ 	hw_params(priv).max_data_size = IWLAGN_RTC_DATA_SIZE;
+ 	hw_params(priv).max_inst_size = IWLAGN_RTC_INST_SIZE;
  
- int
-@@ -4612,11 +4602,9 @@ il_teardown_interface(struct il_priv *il, struct ieee80211_vif *vif,
- 		il_force_scan_end(il);
- 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 464b887..c36fb85 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -145,8 +145,6 @@ static int iwl6000_hw_set_hw_params(struct iwl_priv *priv)
+ 			iwlagn_mod_params.num_of_queues;
  
--	if (!mode_change) {
-+	if (!mode_change)
- 		il_set_mode(il, ctx);
--		if (!ctx->always_active)
--			ctx->is_active = false;
--	}
-+
- }
- 
- void
-@@ -5227,9 +5215,6 @@ il_update_qos(struct il_priv *il, struct il_rxon_context *ctx)
- 	if (test_bit(S_EXIT_PENDING, &il->status))
- 		return;
- 
--	if (!ctx->is_active)
--		return;
+ 	hw_params(priv).max_txq_num = cfg(priv)->base_params->num_of_queues;
+-	priv->contexts[IWL_RXON_CTX_BSS].bcast_sta_id = IWLAGN_BROADCAST_ID;
 -
- 	il->qos_data.def_qos_parm.qos_flags = 0;
+ 	hw_params(priv).max_data_size = IWL60_RTC_DATA_SIZE;
+ 	hw_params(priv).max_inst_size = IWL60_RTC_INST_SIZE;
  
- 	if (il->qos_data.qos_active)
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index e085131..51c1eec 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1154,13 +1154,6 @@ struct il_force_reset {
- 
- struct il_rxon_context {
- 	struct ieee80211_vif *vif;
--
--	/*
--	 * We could use the vif to indicate active, but we
--	 * also need it to be active during disabling when
--	 * we already removed the vif for type setting.
--	 */
--	bool always_active, is_active;
- };
- 
- struct il_power_mgr {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 82f8836..c41c394 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -513,6 +513,7 @@ static void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags)
+ 	priv->contexts[IWL_RXON_CTX_BSS].qos_cmd = REPLY_QOS_PARAM;
+ 	priv->contexts[IWL_RXON_CTX_BSS].ap_sta_id = IWL_AP_ID;
+ 	priv->contexts[IWL_RXON_CTX_BSS].wep_key_cmd = REPLY_WEPKEY;
++	priv->contexts[IWL_RXON_CTX_BSS].bcast_sta_id = IWLAGN_BROADCAST_ID;
+ 	priv->contexts[IWL_RXON_CTX_BSS].exclusive_interface_modes =
+ 		BIT(NL80211_IFTYPE_ADHOC);
+ 	priv->contexts[IWL_RXON_CTX_BSS].interface_modes =
 -- 
-1.7.1
+1.7.0.4
 
