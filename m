@@ -1,96 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:36689 "EHLO
-	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757989Ab2B2RTe (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:53541 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756246Ab2BBOU5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 12:19:34 -0500
-Subject: [PATCH 07/12] ath6kl: add ath6kl_bmi_read_hi32()
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Date: Wed, 29 Feb 2012 19:19:29 +0200
-Message-ID: <20120229171929.24264.39824.stgit@localhost6.localdomain6> (sfid-20120229_181940_305846_7AA9F40C)
-In-Reply-To: <20120229171525.24264.22062.stgit@localhost6.localdomain6>
-References: <20120229171525.24264.22062.stgit@localhost6.localdomain6>
+	Thu, 2 Feb 2012 09:20:57 -0500
+Date: Thu, 2 Feb 2012 08:20:53 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Subject: Re: CTS timeout issue with AR9285
+Message-ID: <20120202142053.GA24483@ubuntu-macmini> (sfid-20120202_152100_774590_5BEBDF76)
+References: <20120202042521.GA20635@ubuntu-macmini>
+ <CAD2nsn0tk_A18vjsCzgO2_7swuM=VPghyTaiHjkHAUc3h3+MiQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAD2nsn0tk_A18vjsCzgO2_7swuM=VPghyTaiHjkHAUc3h3+MiQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are few 32 bit reads from the host interest area. Add
-ath6kl_bmi_read_hi32() to make it easier to do that. As code is cleaner
-this also fixes few checkpatch warnings.
+On Thu, Feb 02, 2012 at 04:58:23PM +0530, Mohammed Shafi wrote:
+> On Thu, Feb 2, 2012 at 9:55 AM, Seth Forshee <seth.forshee@canonical.com> wrote:
+> > I recently updated a machine with AR9285 wireless from kernel version
+> > 3.0 to 3.2 and saw that wireless had become slow and unreliable. It
+> > seems that the problem is extremely frequent CTS timeouts, which began
+> > happening with commit adb5066 (ath9k_hw: do not apply the 2.4 ghz ack
+> > timeout workaround to cts). Restoring the CTS timeout to the value prior
+> > to this commit on top of 3.2 gets performance back to what it was with
+> > 3.0.
+> 
+> does the environment is a noisy one (or) clear one
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/bmi.h  |    7 +++++++
- drivers/net/wireless/ath/ath6kl/init.c |   20 ++++----------------
- 2 files changed, 11 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/bmi.h b/drivers/net/wireless/ath/ath6kl/bmi.h
-index e6a7330..3c5b382 100644
---- a/drivers/net/wireless/ath/ath6kl/bmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/bmi.h
-@@ -231,6 +231,13 @@ struct ath6kl_bmi_target_info {
- 		ath6kl_bmi_write(ar, addr, (u8 *) &v, sizeof(v));	\
- 	})
- 
-+#define ath6kl_bmi_read_hi32(ar, item, val)				\
-+	({								\
-+		u32 addr, *check_type = val;				\
-+		(void) (check_type == val);				\
-+		addr = ath6kl_get_hi_item_addr(ar, HI_ITEM(item));	\
-+		ath6kl_bmi_read(ar, addr, (u8 *) val, 4);		\
-+	})
- 
- int ath6kl_bmi_init(struct ath6kl *ar);
- void ath6kl_bmi_cleanup(struct ath6kl *ar);
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index da5900d..d1d121d 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -501,10 +501,7 @@ int ath6kl_configure_target(struct ath6kl *ar)
- 	/* set the firmware mode to STA/IBSS/AP */
- 	param = 0;
- 
--	if (ath6kl_bmi_read(ar,
--			    ath6kl_get_hi_item_addr(ar,
--			    HI_ITEM(hi_option_flag)),
--			    (u8 *)&param, 4) != 0) {
-+	if (ath6kl_bmi_read_hi32(ar, hi_option_flag, &param) != 0) {
- 		ath6kl_err("bmi_read_memory for setting fwmode failed\n");
- 		return -EIO;
- 	}
-@@ -1074,17 +1071,11 @@ static int ath6kl_upload_board_file(struct ath6kl *ar)
- 		ath6kl_bmi_write_hi32(ar, hi_board_data,
- 				      ar->hw.board_addr);
- 	} else {
--		ath6kl_bmi_read(ar,
--				ath6kl_get_hi_item_addr(ar,
--				HI_ITEM(hi_board_data)),
--				(u8 *) &board_address, 4);
-+		ath6kl_bmi_read_hi32(ar, hi_board_data, &board_address);
- 	}
- 
- 	/* determine where in target ram to write extended board data */
--	ath6kl_bmi_read(ar,
--			ath6kl_get_hi_item_addr(ar,
--			HI_ITEM(hi_board_ext_data)),
--			(u8 *) &board_ext_address, 4);
-+	ath6kl_bmi_read_hi32(ar, hi_board_ext_data, &board_ext_address);
- 
- 	if (ar->target_type == TARGET_TYPE_AR6003 &&
- 	    board_ext_address == 0) {
-@@ -1177,10 +1168,7 @@ static int ath6kl_upload_otp(struct ath6kl *ar)
- 	}
- 
- 	/* read firmware start address */
--	ret = ath6kl_bmi_read(ar,
--			      ath6kl_get_hi_item_addr(ar,
--						      HI_ITEM(hi_app_start)),
--			      (u8 *) &address, sizeof(address));
-+	ret = ath6kl_bmi_read_hi32(ar, hi_app_start, &address);
- 
- 	if (ret) {
- 		ath6kl_err("Failed to read hi_app_start: %d\n", ret);
-
+It's relatively clear, there isn't much activity at all on the channel
+besides this card and the AP. And like I said, other cards aren't having
+this problem. Using wireshark I can also see that RTS frames are being
+sent repeatedly even though the AP responds with CTS frames.
