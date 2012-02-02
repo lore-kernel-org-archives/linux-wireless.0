@@ -1,59 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m020-f174.google.com ([209.85.217.174]:37468 "EHLO
-	mail-lpp01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756163Ab2BBOQC (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:38173 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756186Ab2BBPOZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 09:16:02 -0500
-Received: by lbom4 with SMTP id m4so365431lbo.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 06:16:00 -0800 (PST)
-Message-ID: <4F2A9A9D.4000108@gmail.com> (sfid-20120202_151607_798813_2579EF3C)
-Date: Thu, 02 Feb 2012 15:15:57 +0100
-From: =?UTF-8?B?TWFydGluIEh1bmRlYsO4bGw=?= <m.hundeboll@gmail.com>
+	Thu, 2 Feb 2012 10:14:25 -0500
+Message-ID: <4F2AA822.2040303@sipsolutions.net> (sfid-20120202_161428_675529_0F46E9B2)
+Date: Thu, 02 Feb 2012 07:13:38 -0800
+From: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Seth Forshee <seth.forshee@canonical.com>,
-	linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-Subject: Re: CTS timeout issue with AR9285
-References: <20120202042521.GA20635@ubuntu-macmini> <4F2A830A.8000905@openwrt.org>
-In-Reply-To: <4F2A830A.8000905@openwrt.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Eliad Peller <eliad@wizery.com>
+CC: John Linville <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 00/11] station management & auth/assoc redesign
+References: <20120120125516.000124996@sipsolutions.net> <CAB3XZEdjn3nk8_pnb6ZaW7CbFXgJg44bkVykx8m5iHY=t+vnqA@mail.gmail.com> (sfid-20120202_084538_130926_46201062)
+In-Reply-To: <CAB3XZEdjn3nk8_pnb6ZaW7CbFXgJg44bkVykx8m5iHY=t+vnqA@mail.gmail.com> (sfid-20120202_084538_130926_46201062)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Felix,
+On 2/1/2012 11:45 PM, Eliad Peller wrote:
+> On Fri, Jan 20, 2012 at 2:55 PM, Johannes Berg
+> <johannes@sipsolutions.net>  wrote:
+>> This is the combination series of the station management
+>> and auth/assoc redesign patches.
+>>
+>> Together, they give drivers more flexibility as to when
+>> to add the station entry to the device for connections.
+>> The auth/assoc redesign also simplifies the connection
+>> establishment process.
+>>
+> is this patchset going to get applied soon?
+> (no rush, i just noticed that newer patches were already applied)
 
-On 2012-02-02 13:35, Felix Fietkau wrote:
-> Please try this patch:
->
-> --- a/drivers/net/wireless/ath/ath9k/hw.c
-> +++ b/drivers/net/wireless/ath/ath9k/hw.c
-> @@ -1061,13 +1061,16 @@ void ath9k_hw_init_global_settings(struc
->
->   	/*
->   	 * Workaround for early ACK timeouts, add an offset to match the
-> -	 * initval's 64us ack timeout value.
-> +	 * initval's 64us ack timeout value. Use 48us for the CTS timeout.
->   	 * This was initially only meant to work around an issue with delayed
->   	 * BA frames in some implementations, but it has been found to fix ACK
->   	 * timeout issues in other cases as well.
->   	 */
-> -	if (conf->channel&&  conf->channel->band == IEEE80211_BAND_2GHZ)
-> +	if (conf->channel&&  conf->channel->band == IEEE80211_BAND_2GHZ) {
->   		acktimeout += 64 - sifstime - ah->slottime;
-> +		ctstimeout += 48 - sifstime - ah->slottime;
-> +	}
-> +
->
->   	ath9k_hw_set_sifs_time(ah, sifstime);
->   	ath9k_hw_setslottime(ah, slottime);
+I haven't kept track, and I have no idea why it wouldn't be?
 
-I have been seeing the same issues with the Atheros 9170 USB chipset using the carl9170 driver and firmware, where RST are transmitted repeatidly, even though a CTS-reply is seen on the air. I suspect the issue to be related to this one, but I am unable to locate any calculation or setting of CTS timeout in the driver or firmware.
-
-Can anyone point me in the right direction to tune the CTS timeout with the 9170 chip?
-
-Regards,
-Martin Hundebøll
+johannes
