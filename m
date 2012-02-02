@@ -1,70 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:30770 "EHLO mga09.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:57810 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753223Ab2B0PKu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 10:10:50 -0500
-Subject: Re: iwlwifi WPA-TKIP crypto failure after group rekeying
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ben Hutchings <ben@decadent.org.uk>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	651199@bugs.debian.org, Andreas Gustafsson <olangu@impressions.se>,
-	Marco d'Itri <md@Linux.IT>,
-	Gabriel Kerneis <kerneis@pps.jussieu.fr>
-In-Reply-To: <1330333354.3483.6.camel@jlt3.sipsolutions.net>
-References: <1330320802.8460.105.camel@deadeye>
-	 (sfid-20120227_063327_782741_C11A1DED)  <1330333354.3483.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 27 Feb 2012 05:59:38 -0800
-Message-ID: <1330351178.12612.3.camel@wwguy-huron> (sfid-20120227_161055_804666_59EBD9B1)
-Mime-Version: 1.0
+	id S1754168Ab2BCAQv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 19:16:51 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Gregory Greenman <gregory.greenman@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 02/28] iwlwifi: Connect IDI transport to driver.
+Date: Thu,  2 Feb 2012 15:08:53 -0800
+Message-Id: <1328224159-18134-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120203_011741_538126_6E096929)
+In-Reply-To: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben/Johannes,
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-On Mon, 2012-02-27 at 10:02 +0100, Johannes Berg wrote:
-> Hi Ben,
-> 
-> Thanks for the report.
-> 
-> On Mon, 2012-02-27 at 05:33 +0000, Ben Hutchings wrote:
-> > Several Debian users (cc'd) have reported a regression in iwlagn in
-> > Linux 3.1, not fixed in 3.2.  The full bug log is at:
-> > 
-> > http://bugs.debian.org/651199
-> > 
-> > To summarise, a WPA-TKIP managed connection stops passing traffic and
-> > the kernel log shows the message "WPA: Group rekeying".  This apparently
-> > doesn't happen if the connection is in heavy use at the time or with
-> > module parameter swcrypto=1.  WPA2 is not affected either.
-> 
-> I think this is due to my patch "iwlagn: rewrite HW crypto" which
-> accidentally broke key *removal* (of all things), which causes issues
-> when the first GTK is removed on the second rekeying.
-> 
-> This patch
-> http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=commitdiff;h=5dcbf480473f6c3f06ad2426b7517038a2a18911
-> 
-> should fix it. Wey has sent it to John, but he hasn't picked it up yet
-> for some reason -- it's also marked for stable.
-> 
-> It'd be great to get confirmation that this is the problem, I'm not sure
-> I'll find time today to reproduce the problem.
-> 
-John merge the patch 5 days ago anf yuo can find it in wireless-testing
-tree
+This patch connects IDI transport to driver. It does so
+by using a number of ifdefs at this stage.
+IDI is a new transport that is under development.
 
-authorJohannes Berg <johannes.berg@intel.com> Fri, 17 Feb 2012 17:47:14
-+0000 (09:47 -0800) committerJohn W. Linville <linville@tuxdriver.com>
-Tue, 21 Feb 2012 19:45:26 +0000 (14:45 -0500)
-commit5dcbf480473f6c3f06ad2426b7517038a2a18911
-tree66d2cbefee018ff46d499e0aeab573aa94558353tree | snapshot
-parent7be081539e540517d5e1fcbf96b8080074afbf08commit | diff
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-pci.c           |    4 ++++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |   13 ++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c    |    7 ++++++-
+ drivers/net/wireless/iwlwifi/iwl-trans.h         |    1 +
+ 4 files changed, 23 insertions(+), 2 deletions(-)
 
-Wey
-
-> 
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index 03702a2..2c46063 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -454,7 +454,11 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	bus->irq = pdev->irq;
+ 	bus->ops = &bus_ops_pci;
+ 
++#ifdef CONFIG_IWLWIFI_IDI
++	err = iwl_probe(bus, &trans_ops_idi, cfg);
++#else
+ 	err = iwl_probe(bus, &trans_ops_pcie, cfg);
++#endif
+ 	if (err)
+ 		goto out_disable_msi;
+ 	return 0;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index 2822b7e..b94c953 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -35,6 +35,10 @@
+ #include "iwl-io.h"
+ #include "iwl-trans-pcie-int.h"
+ 
++#ifdef CONFIG_IWLWIFI_IDI
++#include "iwl-amfh.h"
++#endif
++
+ /******************************************************************************
+  *
+  * RX path functions
+@@ -1100,8 +1104,11 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
+ 		/* Disable periodic interrupt; we use it as just a one-shot. */
+ 		iwl_write8(bus(trans), CSR_INT_PERIODIC_REG,
+ 			    CSR_INT_PERIODIC_DIS);
++#ifdef CONFIG_IWLWIFI_IDI
++		iwl_amfh_rx_handler();
++#else
+ 		iwl_rx_handle(trans);
+-
++#endif
+ 		/*
+ 		 * Enable periodic interrupt in 8 msec only if we received
+ 		 * real RX interrupt (instead of just periodic int), to catch
+@@ -1123,7 +1130,11 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
+ 		isr_stats->tx++;
+ 		handled |= CSR_INT_BIT_FH_TX;
+ 		/* Wake up uCode load routine, now that load is complete */
++#ifdef CONFIG_IWLWIFI_IDI
++		trans->shrd->trans->ucode_write_complete = 1;
++#else
+ 		trans->ucode_write_complete = 1;
++#endif
+ 		wake_up(&trans->shrd->wait_command_queue);
+ 	}
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index affa56f..0b4280c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -647,8 +647,10 @@ static int iwl_nic_init(struct iwl_trans *trans)
+ 
+ 	iwl_nic_config(priv(trans));
+ 
++#ifndef CONFIG_IWLWIFI_IDI
+ 	/* Allocate the RX queue, or reset if it is already allocated */
+ 	iwl_rx_init(trans);
++#endif
+ 
+ 	/* Allocate or reset and init all Tx and Command queues */
+ 	if (iwl_tx_init(trans))
+@@ -1016,8 +1018,9 @@ static void iwl_trans_pcie_stop_device(struct iwl_trans *trans)
+ 	 */
+ 	if (test_bit(STATUS_DEVICE_ENABLED, &trans->shrd->status)) {
+ 		iwl_trans_tx_stop(trans);
++#ifndef CONFIG_IWLWIFI_IDI
+ 		iwl_trans_rx_stop(trans);
+-
++#endif
+ 		/* Power-down device's busmaster DMA clocks */
+ 		iwl_write_prph(bus(trans), APMG_CLK_DIS_REG,
+ 			       APMG_CLK_VAL_DMA_CLK_RQT);
+@@ -1298,7 +1301,9 @@ static void iwl_trans_pcie_free(struct iwl_trans *trans)
+ {
+ 	iwl_calib_free_results(trans);
+ 	iwl_trans_pcie_tx_free(trans);
++#ifndef CONFIG_IWLWIFI_IDI
+ 	iwl_trans_pcie_rx_free(trans);
++#endif
+ 	free_irq(bus(trans)->irq, trans);
+ 	iwl_free_isr_ict(trans);
+ 	trans->shrd->trans = NULL;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 9795a23..2a6649c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -383,6 +383,7 @@ static inline int iwl_trans_resume(struct iwl_trans *trans)
+ * Transport layers implementations
+ ******************************************************/
+ extern const struct iwl_trans_ops trans_ops_pcie;
++extern const struct iwl_trans_ops trans_ops_idi;
+ 
+ int iwl_alloc_fw_desc(struct iwl_bus *bus, struct fw_desc *desc,
+ 		      const void *data, size_t len);
+-- 
+1.7.0.4
 
