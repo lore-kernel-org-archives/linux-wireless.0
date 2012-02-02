@@ -1,116 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:25292 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754830Ab2BBK7P (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:39318 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754314Ab2BBSXO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 05:59:15 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: Jouni Malinen <jouni@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	Balasubramanian senthilkumar <senthilb@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	<stable@vger.kernel.org>, Gary Morain <gmorain@google.com>,
-	Paul Stewart <pstew@google.com>
-Subject: [PATCH 1/1] ath9k: Fix kernel panic during driver initilization
-Date: Thu, 2 Feb 2012 16:29:05 +0530
-Message-ID: <1328180345-5175-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120202_115920_429617_324CD24E)
+	Thu, 2 Feb 2012 13:23:14 -0500
+Received: by pbdu11 with SMTP id u11so2221332pbd.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 10:23:13 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4F299D85.3080906@hauke-m.de>
+References: <CAO=xpBFTW5b1iLnYbX7KQrjEdO0MKX86+8wooEF=DJz=+UJXZw@mail.gmail.com>
+ <4F299D85.3080906@hauke-m.de>
+From: Alfonso Fiore <alfonso.fiore@gmail.com>
+Date: Thu, 2 Feb 2012 19:22:43 +0100
+Message-ID: <CAO=xpBF29QocL3fnvophm9gO4ATKFhBCCGiPe9mka0mXAuPbfA@mail.gmail.com> (sfid-20120202_192317_927073_4CD35F3E)
+Subject: Re: can't compile latest compat-wireless under kernel 3.2 even using git
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On Wed, Feb 1, 2012 at 9:16 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>
+> What kernel are you compiling against? skb_complete_wifi_ack() is not
+> declared in linux kernel 3.2.2, just in 3.3-rc2. It looks like the
+> kernel you are compiling against has some modifications conflicting with
+> compat-wireless.
 
-all works need to be initialized before ieee80211_register_hw
-to prevent mac80211 call backs such as drv_start, drv_config
-getting started. otherwise we would queue/cancel works before
-initializing them and it leads to kernel panic.
-this issue can be recreated with the following script
-in Chrome laptops with AR928X cards, with background scan
-running (or) Network manager is running
+With some tricks I managed to compile compat-wireless against my
+custom kernel, but that didn't solve my problem. Apparently when I
+thought the latest compat-wireless fixed my problem I was wrong, it
+was just a random glitch.
+Or most probably I completely screwed up my drivers by juggling two kernels.
+Anyway, I booted with 3.0.0-15, recompiled (with make clean) both
+(rebooting each time) compat-wireless-3.3-rc1-2 and
+compat-wireless-2012-01-26 and I still get a very limited performance
+over wireless (max 300 KB/sec).
 
-while true
-do
-sudo modprobe -v ath9k
-sleep 3
-sudo modprobe -r ath9k
-sleep 3
-done
+*** Is there a chance to activate some logging that could give you an idea
+on why my wireless is not performing? ***
 
-	 EIP: [<81040a47>] __cancel_work_timer+0xb8/0xe1 SS:ESP 0068:f6be9d70
-	 ---[ end trace 4f86d6139a9900ef ]---
-	 Registered led device: ath9k-phy0
-	 ieee80211 phy0: Atheros AR9280 Rev:2 mem=0xf88a0000,
-	 irq=16
-	 Kernel panic - not syncing: Fatal exception
-	 Pid: 456, comm: wpa_supplicant Tainted: G      D
-	 3.0.13 #1
-	Call Trace:
-	 [<81379e21>] panic+0x53/0x14a
-	 [<81004a30>] oops_end+0x73/0x81
-	 [<81004b53>] die+0x4c/0x55
-	 [<81002710>] do_trap+0x7c/0x83
-	 [<81002855>] ? do_bounds+0x58/0x58
-	 [<810028cc>] do_invalid_op+0x77/0x81
-	 [<81040a47>] ? __cancel_work_timer+0xb8/0xe1
-	 [<810489ec>] ? sched_clock_cpu+0x81/0x11f
-	 [<8103f809>] ? wait_on_work+0xe2/0xf7
-	 [<8137f807>] error_code+0x67/0x6c
-	 [<810300d8>] ? wait_consider_task+0x4ba/0x84c
-	 [<81040a47>] ? __cancel_work_timer+0xb8/0xe1
-	 [<810380c9>] ? try_to_del_timer_sync+0x5f/0x67
-	 [<81040a91>] cancel_work_sync+0xf/0x11
-	 [<f88d7b7c>] ath_set_channel+0x62/0x25c [ath9k]
-	 [<f88d67d1>] ? ath9k_tx_last_beacon+0x26a/0x85c [ath9k]
-	 [<f88d8899>] ath_radio_disable+0x3f1/0x68e [ath9k]
-	 [<f90d0edb>] ieee80211_hw_config+0x111/0x116 [mac80211]
-	 [<f90dd95c>] __ieee80211_recalc_idle+0x919/0xa37 [mac80211]
-	 [<f90dda76>] __ieee80211_recalc_idle+0xa33/0xa37 [mac80211]
-	 [<812dbed8>] __dev_open+0x82/0xab
+Twice, randomly, I've seen it going as fast as wired (accessing the
+internet) so I imagine it's something than can be fixed.
+I also test both speedtest.net and wget from a local mirror, so it's
+not a fluctuating link.
 
-Cc: <stable@vger.kernel.org>
-Cc: Gary Morain <gmorain@google.com>
-Cc: Paul Stewart <pstew@google.com>
-Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Tested-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/init.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+In case you wonder how I compiled the git version of compat-wireless
+for my custom kernel, here is how (and it works, but with the same
+sub-standard performances as compat-wireless-2012-01-26 under 3.0.0):
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index abf9435..53a005d 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -822,6 +822,11 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
- 		ARRAY_SIZE(ath9k_tpt_blink));
- #endif
- 
-+	INIT_WORK(&sc->hw_reset_work, ath_reset_work);
-+	INIT_WORK(&sc->hw_check_work, ath_hw_check);
-+	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
-+	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
-+
- 	/* Register with mac80211 */
- 	error = ieee80211_register_hw(hw);
- 	if (error)
-@@ -840,10 +845,6 @@ int ath9k_init_device(u16 devid, struct ath_softc *sc,
- 			goto error_world;
- 	}
- 
--	INIT_WORK(&sc->hw_reset_work, ath_reset_work);
--	INIT_WORK(&sc->hw_check_work, ath_hw_check);
--	INIT_WORK(&sc->paprd_work, ath_paprd_calibrate);
--	INIT_DELAYED_WORK(&sc->hw_pll_work, ath_hw_pll_work);
- 	sc->last_rssi = ATH_RSSI_DUMMY_MARKER;
- 
- 	ath_init_leds(sc);
--- 
-1.7.0.4
+Ok so first I compiled linux-next:
 
+cd linux-next/
+cp /boot/config-3.0.0-15-generic-pae .config
+yes '' | make oldconfig
+make-kpkg clean
+CONCURRENCY_LEVEL=`getconf _NPROCESSORS_ONLN` fakeroot make-kpkg
+--initrd --append-to-version=-linux-next kernel_image kernel_headers
+
+then I went into my current kernel and changed links:
+
+cd /lib/modules/3.2.0-interlaced2+
+sudo mv source source_true
+sudo mv build build_true
+sudo ln -s /storage/wireless/linux-next source
+sudo ln -s /storage/wireless/linux-next build
+
+then I compiled compat-wireless
+
+cd /storage/wireless/compat-wireless/
+make clean
+make (compilation went well)
+
+then put back the links:
+
+cd /lib/modules/3.2.0-interlaced2+
+sudo mv build_true build
+sudo mv source_true source
+
+and installed compat-wireless:
+cd /storage/wireless/compat-wireless/
+sudo make install
+
+thanks for any idea,
+alfonso
