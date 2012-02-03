@@ -1,61 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:57792 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758476Ab2BIXLk convert rfc822-to-8bit (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:58127 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753199Ab2BCKMz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 18:11:40 -0500
-Received: by iacb35 with SMTP id b35so3166015iac.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2012 15:11:40 -0800 (PST)
+	Fri, 3 Feb 2012 05:12:55 -0500
+Received: by vcge1 with SMTP id e1so2463453vcg.19
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2012 02:12:54 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAK80WHZpAAG_NWcuGUK2FJ_UwOhFXraVVkugR3W5FZEHCb6Z0A@mail.gmail.com>
-References: <1327581484-22047-1-git-send-email-victorg@ti.com>
- <1327581484-22047-8-git-send-email-victorg@ti.com> <4F27819A.1030200@sipsolutions.net>
- <CAK80WHZpAAG_NWcuGUK2FJ_UwOhFXraVVkugR3W5FZEHCb6Z0A@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 9 Feb 2012 15:11:20 -0800
-Message-ID: <CAB=NE6WkArbBkiT6A4eEKEo6k2EJ2SsxjoNoPHp5BDWZNR3t8g@mail.gmail.com> (sfid-20120210_001143_262665_E9A04E8A)
-Subject: Re: [RFC 7/9] nl80211/cfg80211: add DFS feature flag
-To: "Goldenshtein, Victor" <victorg@ti.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian.chadd@gmail.com, j@w1.fi,
-	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4F2A8173.7050603@openwrt.org>
+References: <CAAJ3AHeF5-yD_+a6HiA3Ty-yjizM4hOqS+nnZimbJULuX0s--A@mail.gmail.com>
+	<CAD2nsn2RTzkx_1ApoyPixfim6j5sY7kscW4QAzoVu49HyTNJjA@mail.gmail.com>
+	<CAD2nsn0c=cUdD8kQWNprGr7GJ6t1Y+c=LA2KZ+sSVgrsb3oedQ@mail.gmail.com>
+	<20120201162730.GA29685@tuxdriver.com>
+	<4F2970B3.4090203@openwrt.org>
+	<CAD2nsn14odYg7AL1CD4KFymTAdC=h2YeM-WOok40ZNPnvVLD=w@mail.gmail.com>
+	<4F2A8173.7050603@openwrt.org>
+Date: Fri, 3 Feb 2012 15:42:54 +0530
+Message-ID: <CAD2nsn1UONGkFWvy=7Cb_QM6x4vr=cj_O2W9CWaB3vNRUgw5EQ@mail.gmail.com> (sfid-20120203_111259_998799_EA528751)
+Subject: Re:
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Laurent Bonnans <bonnans.l@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 2, 2012 at 8:08 AM, Goldenshtein, Victor <victorg@ti.com> wrote:
-> On Tue, Jan 31, 2012 at 7:52 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On 1/26/2012 4:38 AM, Victor Goldenshtein wrote:
+On Thu, Feb 2, 2012 at 5:58 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2012-02-02 6:37 AM, Mohammed Shafi wrote:
+>> Hi Felix,
+>>
+>> On Wed, Feb 1, 2012 at 10:34 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>> On 2012-02-01 5:27 PM, John W. Linville wrote:
+>>>> On Wed, Feb 01, 2012 at 04:44:08PM +0530, Mohammed Shafi wrote:
+>>>>> On Tue, Jan 31, 2012 at 11:28 AM, Mohammed Shafi
+>>>>> <shafi.wireless@gmail.com> wrote:
+>>>>> > On Tue, Jan 31, 2012 at 1:13 AM, Laurent Bonnans <bonnans.l@gmail.com> wrote:
+>>>>> >> Since the update from linux 3.2.1 to 3.2.2, dhcp stopped working on
+>>>>> >> some APs on my laptop with an AR9285 Wireless card.
+>>>>> >>
+>>>>> >> dhcp works fine on an open wifi network but receives no response on a
+>>>>> >> wep network I use. I haven't been able to test it on a third network
+>>>>> >> for now.
+>>>>> >
+>>>>> >  reverting  "ath9k_hw: fix interpretation of the rx KeyMiss flag" does
+>>>>> > helps.  i  need to analyze
+>>>>> > if it exposes some real issue which need to be fixed.
+>>>>> >
+>>>>>
+>>>>> this seems to be a problem in WEP alone, where the key miss is always
+>>>>> set for this case and RX_FLAG_DECRYPTED is not set. mac80211 trys to
+>>>>> decrypt,  but fails due to ICV mismatch.
+>>>>
+>>>> OK...any way to differentiate this case at that point in the code?
+>>>>
+>>>> John
+>>> Please try this patch:
 >>>
->>> +static int nl80211_put_feature_flags(struct wiphy *wiphy,
->>> + Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â  Â struct sk_buff *msg)
->>> +{
->>> + Â  Â  Â  if (wiphy->flags& Â WIPHY_FLAG_SUPPORTS_DFS)
+>>> ---
+>>> --- a/drivers/net/wireless/ath/ath9k/recv.c
+>>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+>>> @@ -823,6 +823,15 @@ static bool ath9k_rx_accept(struct ath_c
+>>>                (ATH9K_RXERR_DECRYPT | ATH9K_RXERR_CRC | ATH9K_RXERR_MIC |
+>>>                 ATH9K_RXERR_KEYMISS));
 >>>
->>> + Â  Â  Â  Â  Â  Â  Â  wiphy->features |= NL80211_FEATURE_DFS;
+>>> +       /*
+>>> +        * First 4 slots are reserved for WEP, and for packets using them,
+>>> +        * ATH9K_RXERR_KEYMISS can be reported even though decryption was
+>>> +        * successful, since no MAC address based key cache lookup was
+>>> +        * performed.
+>>> +        */
+>>> +       if (rx_stats->rs_keyix < 4)
+>>> +               rx_stats->rs_status &= ~ATH9K_RXERR_KEYMISS;
 >>> +
->>> +
->>> + Â  Â  Â  NLA_PUT_U32(msg, NL80211_ATTR_FEATURE_FLAGS, wiphy->features);
->>> +
->>> + Â  Â  Â  return 0;
->>> +nla_put_failure:
->>> + Â  Â  Â  return -ENOBUFS;
->>> +}
+>>>        if (!rx_stats->rs_datalen)
+>>>                return false;
+>>>         /*
 >>
 >>
->> I think you misunderstood the new feature flags -- they're supposed to be
->> set by the driver directly, not indirectly via wiphy->flags.
->>
+>> unfortunately as the rx_keyix is always 'INVALID' (as obtained from
+>> the descriptor) this check does not seems to help
+> You're right. I read up on what the other codebases do here, and I have
+> a better patch here:
 >
-> yep, I guess you're right.
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -823,6 +823,14 @@ static bool ath9k_rx_accept(struct ath_c
+>                (ATH9K_RXERR_DECRYPT | ATH9K_RXERR_CRC | ATH9K_RXERR_MIC |
+>                 ATH9K_RXERR_KEYMISS));
+>
+> +       /*
+> +        * Key miss events are only relevant for pairwise keys where the
+> +        * descriptor does contain a valid key index. This has been observed
+> +        * mostly with CCMP encryption.
+> +        */
+> +       if (rx_stats->rs_keyix == ATH9K_RXKEYIX_INVALID)
+> +               rx_stats->rs_status &= ~ATH9K_RXERR_KEYMISS;
+> +
+>        if (!rx_stats->rs_datalen)
+>                return false;
+>         /*
+>
 
-While a it, consider adding one for the requirement of sending the
-channel switch announcement within mac80211, not the driver. In that
-case, although a DFS feature may be available in the driver, DFS
-should not be enabled on the driver through nl80211 unless that
-feature gets implemented in mac80211.
+this works for me (WEP key configured).
 
-  Luis
+-- 
+shafi
