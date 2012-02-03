@@ -1,59 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:8488 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757573Ab2BOIhf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 03:37:35 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20283.28341.982945.926756@gargle.gargle.HOWL> (sfid-20120215_093738_883350_2E58D243)
-Date: Wed, 15 Feb 2012 14:07:09 +0530
-To: Ben Greear <greearb@candelatech.com>
-CC: <ath9k-devel@venema.h4ckr.net>, <linux-wireless@vger.kernel.org>,
-	<linville@tuxdriver.com>
-Subject: Re: [ath9k-devel] [PATCH 3/7] ath9k: Merge wiphy and misc debugfs files
-In-Reply-To: <20283.14537.284629.215476@gargle.gargle.HOWL>
-References: <20280.43962.403799.188541@gargle.gargle.HOWL>
-	<4F3947A1.2060103@candelatech.com>
-	<20281.48485.409968.741657@gargle.gargle.HOWL>
-	<4F39BF5F.3030408@candelatech.com>
-	<20281.52354.478076.479135@gargle.gargle.HOWL>
-	<20120214073855.6843.qmail@stuge.se>
-	<20282.7088.898987.229335@gargle.gargle.HOWL>
-	<4F3A9ACB.3010009@candelatech.com>
-	<20282.43026.335779.405152@gargle.gargle.HOWL>
-	<4F3AAB3F.7030308@candelatech.com>
-	<20283.14537.284629.215476@gargle.gargle.HOWL>
+Received: from mx1.redhat.com ([209.132.183.28]:33845 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756871Ab2BCQcu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 11:32:50 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v2 03/25] iwlegacy: get rid of ctx->rxon_timing_cmd
+Date: Fri,  3 Feb 2012 17:31:39 +0100
+Message-Id: <1328286721-11309-4-git-send-email-sgruszka@redhat.com> (sfid-20120203_173253_513856_0D12A014)
+In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sujith Manoharan wrote:
-> Ben Greear wrote:
-> > I was thinking about adding a method that grabbed as many registers
-> > as I have info for and dumping them with printk when DMA errors
-> > hit.  This would make kernel splats more useful.
-> > 
-> > And also have a debugfs file called 'registers' or similar that one
-> > could cat out and get similar info.  And this can let folks look
-> > at steady-state or whatever.
-> > 
-> > But, the logic to turn the register bit values into strings would
-> > be in the driver (and thus add some code size bloat).
-> > 
-> > My hope is that this would allow a better chance of understanding
-> > the stop-DMA errors that some people get reliably (but which I can never reliably
-> > reproduce).
-> > 
-> > I'm not sure how that plays into your 'event log' idea, but maybe
-> > one will help the other.
-> 
-> I was thinking more on the lines of instrumentation, but what you are
-> describing here looks like a VERBOSE_DEBUG option is needed.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/3945-mac.c |    1 -
+ drivers/net/wireless/iwlegacy/4965-mac.c |    1 -
+ drivers/net/wireless/iwlegacy/common.c   |    2 +-
+ drivers/net/wireless/iwlegacy/common.h   |    2 +-
+ 4 files changed, 2 insertions(+), 4 deletions(-)
 
-Huh.
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index 8de8355..5ca8a78 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -3619,7 +3619,6 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	il->ctx.ctxid = 0;
+ 
+-	il->ctx.rxon_timing_cmd = C_RXON_TIMING;
+ 	il->ctx.rxon_assoc_cmd = C_RXON_ASSOC;
+ 	il->ctx.qos_cmd = C_QOS_PARAM;
+ 	il->ctx.ap_sta_id = IL_AP_ID;
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 2368f3a..9539acc 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -6135,7 +6135,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	il->ctx.always_active = true;
+ 	il->ctx.is_active = true;
+-	il->ctx.rxon_timing_cmd = C_RXON_TIMING;
+ 	il->ctx.rxon_assoc_cmd = C_RXON_ASSOC;
+ 	il->ctx.qos_cmd = C_QOS_PARAM;
+ 	il->ctx.ap_sta_id = IL_AP_ID;
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 2b56226..9025214 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -3664,7 +3664,7 @@ il_send_rxon_timing(struct il_priv *il, struct il_rxon_context *ctx)
+ 		le32_to_cpu(il->timing.beacon_init_val),
+ 		le16_to_cpu(il->timing.atim_win));
+ 
+-	return il_send_cmd_pdu(il, il->ctx.rxon_timing_cmd, sizeof(il->timing),
++	return il_send_cmd_pdu(il, C_RXON_TIMING, sizeof(il->timing),
+ 			       &il->timing);
+ }
+ EXPORT_SYMBOL(il_send_rxon_timing);
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index 80c60e5..d1d5055 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1175,7 +1175,7 @@ struct il_rxon_context {
+ 
+ 	u8 bcast_sta_id, ap_sta_id;
+ 
+-	u8 rxon_assoc_cmd, rxon_timing_cmd;
++	u8 rxon_assoc_cmd;
+ 	u8 qos_cmd;
+ 	u8 wep_key_cmd;
+ 
+-- 
+1.7.1
 
-This discussion amounts to nothing. The stuff that was removed was dumping
-the information present in mac80211.
-
-Sujith
