@@ -1,59 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:44231 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754267Ab2BANRp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Feb 2012 08:17:45 -0500
-Received: by bkcjm19 with SMTP id jm19so1012180bkc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Feb 2012 05:17:43 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Prashant Badsheshi <prashant.badsheshi@gmail.com>
-Subject: Re: Regarding carl9170 wifi linux driver
-Date: Wed, 1 Feb 2012 14:17:28 +0100
+Received: from mx1.redhat.com ([209.132.183.28]:1369 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753943Ab2BCQcW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 11:32:22 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org
-References: <CA+cdTWaGcDasoAQc8h7hdexpfwp4dtu-3EqcPNGp4b-UK9xgrw@mail.gmail.com>
-In-Reply-To: <CA+cdTWaGcDasoAQc8h7hdexpfwp4dtu-3EqcPNGp4b-UK9xgrw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="windows-1252"
-Message-Id: <201202011417.28603.chunkeey@googlemail.com> (sfid-20120201_141748_541415_DAF7D342)
+Subject: [PATCH v2 00/25] iwlegacy update 2012-02-03
+Date: Fri,  3 Feb 2012 17:31:36 +0100
+Message-Id: <1328286721-11309-1-git-send-email-sgruszka@redhat.com> (sfid-20120203_173225_481302_2F7B2016)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, February 01, 2012 03:18:14 AM Prashant Badsheshi wrote:
-> We are planning to use the below wifi dongle as station and AP.
-> https://www.thinkpenguin.com/gnu-linux/penguin-wireless-n-usb-adapter
-The chip AR9170 is getting on a bit. But ok.
- 
-> We got the linux driver from the below path
-> git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless-testing.git
-> 
-> We found the driver source in drivers/net/wireless/ath/carl9170.
+This patch set include various cleanups, mostly patches intended
+to remove unused "ctx" structure.
 
-A (compiled) firmware is available from:
-http://wireless.kernel.org/en/users/Drivers/carl9170
+v2 compile with CONFIG_IWLEGACY_DEBUGFS and does not change
+rt2x00 driver.
 
-and the firmware source from:
-https://github.com/chunkeey/carl9170fw
- 
-> Our Question:
-> 
-> Is the carl9170 driver present in the above folder is a complete open
-> source driver?
-The driver and firmware are GPLv2 code.
+ 3945-mac.c   |  186 ++++++----------
+ 3945-rs.c    |    7 
+ 3945.c       |  111 ++++-----
+ 3945.h       |    6 
+ 4965-calib.c |   24 --
+ 4965-mac.c   |  512 ++++++++++++++++++++++++----------------------
+ 4965-rs.c    |   48 +---
+ 4965.c       |  328 +++++++++--------------------
+ 4965.h       |   22 -
+ common.c     |  656 +++++++++++++++++++++++------------------------------------
+ common.h     |  234 +++++++--------------
+ debug.c      |   43 +--
+ 12 files changed, 909 insertions(+), 1268 deletions(-)
 
-> Also it would be great if there is any design document or programmer’s
-> document for the above mentioned Wifi dongle chipset available.
-Well, the original vendor firmware:
-http://linuxwireless.org/en/users/Drivers/ar9170.fw
-and the original vendor driver:
-[ The most up-to-date version is available from the
-kernel git. Just revert "staging: remove the Atheros otus vendor driver"
-cff55f50b882b197a52c4cf0108a43c615d1fdba ] 
-
-For more [HW design docs, register file, etc...] you need to talk to
-Qualcomm Atheros. But if there's an open issue/specific question I
-would be glad to help as well [or forward the request].
-
-Regards,
-	Chr
