@@ -1,95 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:51901 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754754Ab2BXEPt convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 23:15:49 -0500
-Received: by obcva7 with SMTP id va7so2322484obc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 20:15:49 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6XHpOdKsTFM3x_aMF7+jL6NKuB9_wS0eQRBYqAbQVw1ww@mail.gmail.com>
-References: <20120221060932.8A38C20517@glenhelen.mtv.corp.google.com>
-	<20120221131946.AC1AD20578@glenhelen.mtv.corp.google.com>
-	<1330004364.3448.8.camel@jlt3.sipsolutions.net>
-	<CA+yqC4bcLz5xBTqOV_C4cjm4MDwEaifbJNi9dCSh7CTbjPiXBg@mail.gmail.com>
-	<1330009145.3448.13.camel@jlt3.sipsolutions.net>
-	<CAMcMvshr_1gx0y55ne5wia03OaSASZAh1vvJyeY02v1yTwU4aQ@mail.gmail.com>
-	<CAB=NE6XHpOdKsTFM3x_aMF7+jL6NKuB9_wS0eQRBYqAbQVw1ww@mail.gmail.com>
-Date: Thu, 23 Feb 2012 20:15:48 -0800
-Message-ID: <CAMcMvsj1L_QnRrEHRhVDNpCGPkT_LY+qbJSt9v2bvkkLNH57Aw@mail.gmail.com> (sfid-20120224_051553_748917_2D6AEA92)
-Subject: Re: [RFCv2] mac80211: Don't let regulatory make us deaf
-From: Paul Stewart <pstew@chromium.org>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Sam Leffler <sleffler@google.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:9180 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754002Ab2BCMIT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 07:08:19 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 14/25] iwlegacy: remove ctx interface_modes
+Date: Fri,  3 Feb 2012 13:07:14 +0100
+Message-Id: <1328270845-16891-15-git-send-email-sgruszka@redhat.com> (sfid-20120203_130843_871412_6DBFFC12)
+In-Reply-To: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
+References: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 23, 2012 at 5:53 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
-> On Thu, Feb 23, 2012 at 7:14 AM, Paul Stewart <pstew@chromium.org> wrote:
->> On Thu, Feb 23, 2012 at 6:59 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->>>
->>> On Thu, 2012-02-23 at 06:53 -0800, Sam Leffler wrote:
->>> > On Thu, Feb 23, 2012 at 5:39 AM, Johannes Berg
->>> > <johannes@sipsolutions.net> wrote:
->>> > > On Mon, 2012-02-20 at 21:25 -0800, Paul Stewart wrote:
->>> > >> When regulatory information changes our HT behavior (e.g,
->>> > >> when we get a country code from the AP we have just associated
->>> > >> with), we should use this information to change the power with
->>> > >> which we transmit, and what channels we transmit.  Sometimes
->>> > >> the channel parameters we derive from regulatory information
->>> > >> contradicts the parameters we used in association.  For example,
->>> > >> we could have associated specifying HT40, but the regulatory
->>> > >> rules we apply may forbid HT40 operation.
->>> > >>
->>> > >> In the situation above, we should reconfigure ourselves to
->>> > >> transmit in HT20 only, however it makes no sense for us to
->>> > >> disable receive in HT40, since if we associated with these
->>> > >> parameters, the AP has every reason to expect we can and
->>> > >> will receive packets this way.  The code in mac80211 does
->>> > >> not have the capability of sending the appropriate action
->>> > >> frames to signal a change in HT behaviour so the AP has
->>> > >> no clue we can no longer receive frames encoded this way.
->>> > >> In some broken AP implementations, this can leave us
->>> > >> effectively deaf if the AP never retries in lower HT rates.
->>> > >>
->>> > >> This change breaks up the channel_type parameter in the
->>> > >> ieee80211_enable_ht function into a separate receive and
->>> > >> transmit part.  It honors the channel flags set by regulatory
->>> > >> in order to configure the rate control algorithm, but uses
->>> > >> the capability flags to configure the channel on the radio,
->>> > >> since these were used in association to set the AP's transmit
->>> > >> rate.
->>> > >
->>> > > Quite the stupid APs, obviously ...
->>> >
->>> > Actually the AP is operating correctly (modulo the question of whether
->>> > HT40 may be used in kr).
->>>
->>> Ah, yes. I was thinking the AP was actually saying you can't use 40 MHz,
->>> but it's obviously just saying that you're in KR and our database says
->>> you then can't use 40 Mhz...
->>
->> More succinctly, Sam is posing the possibility that a STA we should
->> ignore regulatory on TX as well as RX in this situation, since the AP
->> clearly negotiated HT40 with us.
->
-> If the AP was right and we were allowed to use this that'd be fine but
-> consider the case where the AP is wrong, they'd we'd be doing the
-> wrong thing. If the AP believes HT40 is allowed but our wireless-regdb
-> disagrees we trust our wireless-regdb more, by design.
->
-> Did I understand your question correctly?
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/3945-mac.c |    6 ++----
+ drivers/net/wireless/iwlegacy/4965-mac.c |    6 ++----
+ drivers/net/wireless/iwlegacy/common.c   |   29 ++++-------------------------
+ drivers/net/wireless/iwlegacy/common.h   |    2 --
+ drivers/net/wireless/rt2x00/rt2800usb.c  |   16 ++--------------
+ 5 files changed, 10 insertions(+), 49 deletions(-)
 
-I think you did.  As such, I'll clean the code up as per Johannes'
-suggestion, fix up another call to rate_control_rate_update I found in
-rx.c and add a [PATCH] to this thread.
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index 52cac0c..7c81f5a 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -3557,7 +3557,8 @@ il3945_setup_mac(struct il_priv *il)
+ 	/* Tell mac80211 our characteristics */
+ 	hw->flags = IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_SPECTRUM_MGMT;
+ 
+-	hw->wiphy->interface_modes = il->ctx.interface_modes;
++	hw->wiphy->interface_modes =
++	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
+ 
+ 	hw->wiphy->flags |=
+ 	    WIPHY_FLAG_CUSTOM_REGULATORY | WIPHY_FLAG_DISABLE_BEACON_HINTS |
+@@ -3617,9 +3618,6 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	il->cmd_queue = IL39_CMD_QUEUE_NUM;
+ 
+-	il->ctx.interface_modes =
+-	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
+-
+ 	/*
+ 	 * Disabling hardware scan means that mac80211 will perform scans
+ 	 * "the hard way", rather than using device's scan.
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 35d868c..1dd0014 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -5454,8 +5454,8 @@ il4965_mac_setup_register(struct il_priv *il, u32 max_probe_length)
+ 	hw->sta_data_size = sizeof(struct il_station_priv);
+ 	hw->vif_data_size = sizeof(struct il_vif_priv);
+ 
+-	hw->wiphy->interface_modes |= il->ctx.interface_modes;
+-	hw->wiphy->interface_modes |= il->ctx.exclusive_interface_modes;
++	hw->wiphy->interface_modes =
++	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
+ 
+ 	hw->wiphy->flags |=
+ 	    WIPHY_FLAG_CUSTOM_REGULATORY | WIPHY_FLAG_DISABLE_BEACON_HINTS;
+@@ -6141,8 +6141,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	il->ctx.is_active = true;
+ 	il->ctx.ac_to_fifo = il4965_bss_ac_to_fifo;
+ 	il->ctx.ac_to_queue = il4965_bss_ac_to_queue;
+-	il->ctx.exclusive_interface_modes = BIT(NL80211_IFTYPE_ADHOC);
+-	il->ctx.interface_modes = BIT(NL80211_IFTYPE_STATION);
+ 
+ 	SET_IEEE80211_DEV(hw, &pdev->dev);
+ 
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index ac26985..7f4c6bf 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -4566,7 +4566,6 @@ il_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	struct il_priv *il = hw->priv;
+ 	struct il_vif_priv *vif_priv = (void *)vif->drv_priv;
+ 	int err;
+-	u32 modes;
+ 
+ 	D_MAC80211("enter: type %d, addr %pM\n", vif->type, vif->addr);
+ 
+@@ -4578,15 +4577,7 @@ il_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 		goto out;
+ 	}
+ 
+-	/* check if busy context is exclusive */
+-	if (il->ctx.vif &&
+-	    (il->ctx.exclusive_interface_modes & BIT(il->ctx.vif->type))) {
+-		err = -EINVAL;
+-		goto out;
+-	}
+-
+-	modes = il->ctx.interface_modes | il->ctx.exclusive_interface_modes;
+-	if (!(modes & BIT(vif->type))) {
++	if (il->ctx.vif) {
+ 		err = -EOPNOTSUPP;
+ 		goto out;
+ 	}
+@@ -4979,10 +4970,10 @@ il_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ {
+ 	struct il_priv *il = hw->priv;
+ 	struct il_rxon_context *ctx = il_rxon_ctx_from_vif(vif);
+-	u32 modes;
+ 	int err;
+ 
+-	newtype = ieee80211_iftype_p2p(newtype, newp2p);
++	if (newp2p)
++		return -EOPNOTSUPP;
+ 
+ 	mutex_lock(&il->mutex);
+ 
+@@ -4995,22 +4986,10 @@ il_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		goto out;
+ 	}
+ 
+-	modes = ctx->interface_modes | ctx->exclusive_interface_modes;
+-	if (!(modes & BIT(newtype))) {
+-		err = -EOPNOTSUPP;
+-		goto out;
+-	}
+-
+-	if ((il->ctx.exclusive_interface_modes & BIT(il->ctx.vif->type)) ||
+-	    (il->ctx.exclusive_interface_modes & BIT(newtype))) {
+-		err = -EINVAL;
+-		goto out;
+-	}
+-
+ 	/* success */
+ 	il_teardown_interface(il, vif, true);
+ 	vif->type = newtype;
+-	vif->p2p = newp2p;
++	vif->p2p = false;
+ 	err = il_setup_interface(il, ctx);
+ 	WARN_ON(err);
+ 	/*
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index a872175..eddf22d 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1165,8 +1165,6 @@ struct il_rxon_context {
+ 	 */
+ 	bool always_active, is_active;
+ 
+-	u32 interface_modes, exclusive_interface_modes;
+-
+ 	struct il_qos_info qos_data;
+ 
+ 	struct {
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index f0074bc..0807c09 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -272,17 +272,6 @@ static void rt2800usb_disable_radio(struct rt2x00_dev *rt2x00dev)
+ 	rt2x00usb_disable_radio(rt2x00dev);
+ }
+ 
+-static int rt2800usb_set_state(struct rt2x00_dev *rt2x00dev,
+-			       enum dev_state state)
+-{
+-	if (state == STATE_AWAKE)
+-		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, 0xff, 0, 2);
+-	else
+-		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0xff, 2);
+-
+-	return 0;
+-}
+-
+ static int rt2800usb_set_device_state(struct rt2x00_dev *rt2x00dev,
+ 				      enum dev_state state)
+ {
+@@ -295,7 +284,7 @@ static int rt2800usb_set_device_state(struct rt2x00_dev *rt2x00dev,
+ 		 * to be woken up. After that it needs a bit of time
+ 		 * to be fully awake and then the radio can be enabled.
+ 		 */
+-		rt2800usb_set_state(rt2x00dev, STATE_AWAKE);
++		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, 0xff, 0, 0);
+ 		msleep(1);
+ 		retval = rt2800usb_enable_radio(rt2x00dev);
+ 		break;
+@@ -305,7 +294,6 @@ static int rt2800usb_set_device_state(struct rt2x00_dev *rt2x00dev,
+ 		 * be put to sleep for powersaving.
+ 		 */
+ 		rt2800usb_disable_radio(rt2x00dev);
+-		rt2800usb_set_state(rt2x00dev, STATE_SLEEP);
+ 		break;
+ 	case STATE_RADIO_IRQ_ON:
+ 	case STATE_RADIO_IRQ_OFF:
+@@ -315,7 +303,7 @@ static int rt2800usb_set_device_state(struct rt2x00_dev *rt2x00dev,
+ 	case STATE_SLEEP:
+ 	case STATE_STANDBY:
+ 	case STATE_AWAKE:
+-		retval = rt2800usb_set_state(rt2x00dev, state);
++		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0xff, 2);
+ 		break;
+ 	default:
+ 		retval = -ENOTSUPP;
+-- 
+1.7.1
 
---
-Paul
-
->
->  Luis
