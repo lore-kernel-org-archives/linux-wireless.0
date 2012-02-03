@@ -1,108 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:4587 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753291Ab2BINEX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 08:04:23 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	<stable@vger.kernel.org>, Gary Morain <gmorain@google.com>,
-	Paul Stewart <pstew@google.com>,
-	Abhijit Pradhan <abhijit@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: [RFC] mac80211: Fix a rwlock bad magic bug
-Date: Thu, 9 Feb 2012 18:34:03 +0530
-Message-ID: <1328792643-6734-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120209_140428_886744_1B43F76F)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:7352 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753505Ab2BCMH7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 07:07:59 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 07/25] iwlegacy: get rid of ap_sta_id
+Date: Fri,  3 Feb 2012 13:07:07 +0100
+Message-Id: <1328270845-16891-8-git-send-email-sgruszka@redhat.com> (sfid-20120203_130804_580511_BD286728)
+In-Reply-To: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
+References: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-
-read_lock(&tpt_trig->trig.leddev_list_lock) is accessed via the path
-ieee80211_open (->) ieee80211_do_open (->) ieee80211_mod_tpt_led_trig
-(->) ieee80211_start_tpt_led_trig (->) tpt_trig_timer before initializing
-it.
-the intilization of this read/write lock happens via the path
-ieee80211_led_init (->) led_trigger_register, but we are doing
-'ieee80211_led_init'  after 'ieeee80211_if_add' where we
-register netdev_ops.
-so we access leddev_list_lock before initializing it and causes the
-following bug in chrome laptops with AR928X cards with the following
-script
-
-while true
-do
-sudo modprobe -v ath9k
-sleep 3
-sudo modprobe -r ath9k
-sleep 3
-done
-
-	BUG: rwlock bad magic on CPU#1, wpa_supplicant/358, f5b9eccc
-	Pid: 358, comm: wpa_supplicant Not tainted 3.0.13 #1
-	Call Trace:
-
-	[<8137b9df>] rwlock_bug+0x3d/0x47
-	[<81179830>] do_raw_read_lock+0x19/0x29
-	[<8137f063>] _raw_read_lock+0xd/0xf
-	[<f9081957>] tpt_trig_timer+0xc3/0x145 [mac80211]
-	[<f9081f3a>] ieee80211_mod_tpt_led_trig+0x152/0x174 [mac80211]
-	[<f9076a3f>] ieee80211_do_open+0x11e/0x42e [mac80211]
-	[<f9075390>] ? ieee80211_check_concurrent_iface+0x26/0x13c [mac80211]
-	[<f9076d97>] ieee80211_open+0x48/0x4c [mac80211]
-	[<812dbed8>] __dev_open+0x82/0xab
-	[<812dc0c9>] __dev_change_flags+0x9c/0x113
-	[<812dc1ae>] dev_change_flags+0x18/0x44
-	[<8132144f>] devinet_ioctl+0x243/0x51a
-	[<81321ba9>] inet_ioctl+0x93/0xac
-	[<812cc951>] sock_ioctl+0x1c6/0x1ea
-	[<812cc78b>] ? might_fault+0x20/0x20
-	[<810b1ebb>] do_vfs_ioctl+0x46e/0x4a2
-	[<810a6ebb>] ? fget_light+0x2f/0x70
-	[<812ce549>] ? sys_recvmsg+0x3e/0x48
-	[<810b1f35>] sys_ioctl+0x46/0x69
-	[<8137fa77>] sysenter_do_call+0x12/0x2
-
-Cc: <stable@vger.kernel.org>
-Cc: Gary Morain <gmorain@google.com>
-Cc: Paul Stewart <pstew@google.com>
-Cc: Abhijit Pradhan <abhijit@qca.qualcomm.com>
-Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Tested-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- net/mac80211/main.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlegacy/3945-mac.c |    1 -
+ drivers/net/wireless/iwlegacy/4965-mac.c |    3 +--
+ drivers/net/wireless/iwlegacy/common.c   |    2 +-
+ drivers/net/wireless/iwlegacy/common.h   |    2 +-
+ 4 files changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 831a5bd..2306d75 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -909,6 +909,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 		wiphy_debug(local->hw.wiphy, "Failed to initialize wep: %d\n",
- 			    result);
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index 4a01acb..8072ae8 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -3619,7 +3619,6 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  
-+	ieee80211_led_init(local);
-+
- 	rtnl_lock();
+ 	il->ctx.ctxid = 0;
  
- 	result = ieee80211_init_rate_ctrl_alg(local,
-@@ -930,8 +932,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+-	il->ctx.ap_sta_id = IL_AP_ID;
+ 	il->ctx.interface_modes =
+ 	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
+ 	il->ctx.ibss_devtype = RXON_DEV_TYPE_IBSS;
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index a2955a4..f2b03cd 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -2906,7 +2906,7 @@ il4965_set_default_wep_key(struct il_priv *il, struct il_rxon_context *ctx,
  
- 	rtnl_unlock();
+ 	keyconf->flags &= ~IEEE80211_KEY_FLAG_GENERATE_IV;
+ 	keyconf->hw_key_idx = HW_KEY_DEFAULT;
+-	il->stations[ctx->ap_sta_id].keyinfo.cipher = keyconf->cipher;
++	il->stations[IL_AP_ID].keyinfo.cipher = keyconf->cipher;
  
--	ieee80211_led_init(local);
--
- 	local->network_latency_notifier.notifier_call =
- 		ieee80211_max_network_latency;
- 	result = pm_qos_add_notifier(PM_QOS_NETWORK_LATENCY,
+ 	ctx->wep_keys[keyconf->keyidx].key_size = keyconf->keylen;
+ 	memcpy(&ctx->wep_keys[keyconf->keyidx].key, &keyconf->key,
+@@ -6135,7 +6135,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	il->ctx.always_active = true;
+ 	il->ctx.is_active = true;
+-	il->ctx.ap_sta_id = IL_AP_ID;
+ 	il->ctx.ac_to_fifo = il4965_bss_ac_to_fifo;
+ 	il->ctx.ac_to_queue = il4965_bss_ac_to_queue;
+ 	il->ctx.exclusive_interface_modes = BIT(NL80211_IFTYPE_ADHOC);
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index b95f832..d30a206 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -1899,7 +1899,7 @@ il_prep_station(struct il_priv *il, struct il_rxon_context *ctx,
+ 	u16 rate;
+ 
+ 	if (is_ap)
+-		sta_id = ctx->ap_sta_id;
++		sta_id = IL_AP_ID;
+ 	else if (is_broadcast_ether_addr(addr))
+ 		sta_id = ctx->bcast_sta_id;
+ 	else
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index 46835f9..cf7352f 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1173,7 +1173,7 @@ struct il_rxon_context {
+ 
+ 	struct il_qos_info qos_data;
+ 
+-	u8 bcast_sta_id, ap_sta_id;
++	u8 bcast_sta_id;
+ 
+ 	struct il_wep_key wep_keys[WEP_KEYS_MAX];
+ 	u8 key_mapping_keys;
 -- 
-1.7.0.4
+1.7.1
 
