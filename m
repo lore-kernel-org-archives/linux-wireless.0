@@ -1,58 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wp188.webpack.hosteurope.de ([80.237.132.195]:42903 "EHLO
-	wp188.webpack.hosteurope.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758177Ab2BJPCW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Feb 2012 10:02:22 -0500
-From: Danny Kukawka <danny.kukawka@bisect.de>
+Received: from mx1.redhat.com ([209.132.183.28]:58032 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753943Ab2BCQc7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 11:32:59 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Danny Kukawka <dkukawka@suse.de>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jiri Pirko <jpirko@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org,
-	orinoco-devel@lists.sourceforge.net, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] orinoco_usb: fix -Wunused-variable, remove version
-Date: Fri, 10 Feb 2012 16:02:13 +0100
-Message-Id: <1328886133-22757-1-git-send-email-danny.kukawka@bisect.de> (sfid-20120210_160252_350651_20E9365A)
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v2 15/25] iwlegacy: move qos_data out of ctx structure
+Date: Fri,  3 Feb 2012 17:31:51 +0100
+Message-Id: <1328286721-11309-16-git-send-email-sgruszka@redhat.com> (sfid-20120203_173307_613081_6D8EF21D)
+In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit d632eb1bf22e11def74e4e53cc47d790fbdba105 removed
-usage of version[], remove no longer needed variable and
-print version instead in ezusb_probe().
-
-Signed-off-by: Danny Kukawka <danny.kukawka@bisect.de>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/orinoco/orinoco_usb.c |    7 ++-----
- 1 files changed, 2 insertions(+), 5 deletions(-)
+ drivers/net/wireless/iwlegacy/common.c |   24 ++++++++++++------------
+ drivers/net/wireless/iwlegacy/common.h |    4 ++--
+ drivers/net/wireless/iwlegacy/debug.c  |    9 ++++-----
+ 3 files changed, 18 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/orinoco/orinoco_usb.c b/drivers/net/wireless/orinoco/orinoco_usb.c
-index ae8ce56..2b413cf 100644
---- a/drivers/net/wireless/orinoco/orinoco_usb.c
-+++ b/drivers/net/wireless/orinoco/orinoco_usb.c
-@@ -1583,6 +1583,8 @@ static int ezusb_probe(struct usb_interface *interface,
- 	int retval = 0;
- 	int i;
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 7f4c6bf..c93fa1b 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -4496,15 +4496,15 @@ il_mac_conf_tx(struct ieee80211_hw *hw, struct ieee80211_vif *vif, u16 queue,
  
-+	printk(KERN_DEBUG DRIVER_NAME " " DRIVER_VERSION);
-+
- 	priv = alloc_orinocodev(sizeof(*upriv), &udev->dev,
- 				ezusb_hard_reset, NULL);
- 	if (!priv) {
-@@ -1754,11 +1756,6 @@ static struct usb_driver orinoco_driver = {
- 	.id_table = ezusb_table,
- };
+ 	spin_lock_irqsave(&il->lock, flags);
  
--/* Can't be declared "const" or the whole __initdata section will
-- * become const */
--static char version[] __initdata = DRIVER_NAME " " DRIVER_VERSION
--	" (Manuel Estrada Sainz)";
+-	il->ctx.qos_data.def_qos_parm.ac[q].cw_min =
++	il->qos_data.def_qos_parm.ac[q].cw_min =
+ 	    cpu_to_le16(params->cw_min);
+-	il->ctx.qos_data.def_qos_parm.ac[q].cw_max =
++	il->qos_data.def_qos_parm.ac[q].cw_max =
+ 	    cpu_to_le16(params->cw_max);
+-	il->ctx.qos_data.def_qos_parm.ac[q].aifsn = params->aifs;
+-	il->ctx.qos_data.def_qos_parm.ac[q].edca_txop =
++	il->qos_data.def_qos_parm.ac[q].aifsn = params->aifs;
++	il->qos_data.def_qos_parm.ac[q].edca_txop =
+ 	    cpu_to_le16((params->txop * 32));
+ 
+-	il->ctx.qos_data.def_qos_parm.ac[q].reserved1 = 0;
++	il->qos_data.def_qos_parm.ac[q].reserved1 = 0;
+ 
+ 	spin_unlock_irqrestore(&il->lock, flags);
+ 
+@@ -5230,20 +5230,20 @@ il_update_qos(struct il_priv *il, struct il_rxon_context *ctx)
+ 	if (!ctx->is_active)
+ 		return;
+ 
+-	ctx->qos_data.def_qos_parm.qos_flags = 0;
++	il->qos_data.def_qos_parm.qos_flags = 0;
+ 
+-	if (ctx->qos_data.qos_active)
+-		ctx->qos_data.def_qos_parm.qos_flags |=
++	if (il->qos_data.qos_active)
++		il->qos_data.def_qos_parm.qos_flags |=
+ 		    QOS_PARAM_FLG_UPDATE_EDCA_MSK;
+ 
+ 	if (ctx->ht.enabled)
+-		ctx->qos_data.def_qos_parm.qos_flags |= QOS_PARAM_FLG_TGN_MSK;
++		il->qos_data.def_qos_parm.qos_flags |= QOS_PARAM_FLG_TGN_MSK;
+ 
+ 	D_QOS("send QoS cmd with Qos active=%d FLAGS=0x%X\n",
+-	      ctx->qos_data.qos_active, ctx->qos_data.def_qos_parm.qos_flags);
++	      il->qos_data.qos_active, il->qos_data.def_qos_parm.qos_flags);
+ 
+ 	il_send_cmd_pdu_async(il, C_QOS_PARAM, sizeof(struct il_qosparam_cmd),
+-			      &ctx->qos_data.def_qos_parm, NULL);
++			      &il->qos_data.def_qos_parm, NULL);
+ }
+ 
+ /**
+@@ -5596,7 +5596,7 @@ il_mac_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		unsigned long flags;
+ 
+ 		spin_lock_irqsave(&il->lock, flags);
+-		ctx->qos_data.qos_active = bss_conf->qos;
++		il->qos_data.qos_active = bss_conf->qos;
+ 		il_update_qos(il, ctx);
+ 		spin_unlock_irqrestore(&il->lock, flags);
+ 	}
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index eddf22d..18375cb 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1165,8 +1165,6 @@ struct il_rxon_context {
+ 	 */
+ 	bool always_active, is_active;
+ 
+-	struct il_qos_info qos_data;
 -
- module_usb_driver(orinoco_driver);
+ 	struct {
+ 		bool non_gf_sta_present;
+ 		u8 protection;
+@@ -1278,6 +1276,8 @@ struct il_priv {
  
- MODULE_AUTHOR("Manuel Estrada Sainz");
+ 	struct il_rxon_context ctx;
+ 
++	struct il_qos_info qos_data;
++
+ 	/*
+ 	 * We declare this const so it can only be
+ 	 * changed via explicit cast within the
+diff --git a/drivers/net/wireless/iwlegacy/debug.c b/drivers/net/wireless/iwlegacy/debug.c
+index f3cb45e..3a9609a 100644
+--- a/drivers/net/wireless/iwlegacy/debug.c
++++ b/drivers/net/wireless/iwlegacy/debug.c
+@@ -644,7 +644,6 @@ il_dbgfs_qos_read(struct file *file, char __user *user_buf, size_t count,
+ 		  loff_t *ppos)
+ {
+ 	struct il_priv *il = file->private_data;
+-	struct il_rxon_context *ctx = &il->ctx;
+ 	int pos = 0, i;
+ 	char buf[256];
+ 	const size_t bufsz = sizeof(buf);
+@@ -656,10 +655,10 @@ il_dbgfs_qos_read(struct file *file, char __user *user_buf, size_t count,
+ 		pos +=
+ 		    scnprintf(buf + pos, bufsz - pos,
+ 			      "AC[%d]\t%u\t%u\t%u\t%u\n", i,
+-			      ctx->qos_data.def_qos_parm.ac[i].cw_min,
+-			      ctx->qos_data.def_qos_parm.ac[i].cw_max,
+-			      ctx->qos_data.def_qos_parm.ac[i].aifsn,
+-			      ctx->qos_data.def_qos_parm.ac[i].edca_txop);
++			      il->qos_data.def_qos_parm.ac[i].cw_min,
++			      il->qos_data.def_qos_parm.ac[i].cw_max,
++			      il->qos_data.def_qos_parm.ac[i].aifsn,
++			      il->qos_data.def_qos_parm.ac[i].edca_txop);
+ 	}
+ 
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
 -- 
-1.7.7.3
+1.7.1
 
