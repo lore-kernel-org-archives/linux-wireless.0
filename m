@@ -1,117 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:53602 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753706Ab2BGXed convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 18:34:33 -0500
-Received: by iacb35 with SMTP id b35so10779549iac.19
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 15:34:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <BC8BC73D12649F439B502B4CB6FD58B1053E2D3F@BE23.exg4.exghost.com>
-References: <BC8BC73D12649F439B502B4CB6FD58B1053E2D3F@BE23.exg4.exghost.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 8 Feb 2012 10:34:13 +1100
-Message-ID: <CAGRGNgWPzrBw27SAhpvgwpv-=WpPE49KJDJBK6iHXCXDgBNgUA@mail.gmail.com> (sfid-20120208_003437_276957_4529135D)
-Subject: Re: [PATCH] rtlwifi: Hopefully not mangled this time -- Handle
- previous allocation failures when freeing device memory
-To: Simon Graham <simon.graham@virtualcomputer.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:18447 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753916Ab2BCMIJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 07:08:09 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 13/25] iwlegacy: get rid of ctx->station_flags
+Date: Fri,  3 Feb 2012 13:07:13 +0100
+Message-Id: <1328270845-16891-14-git-send-email-sgruszka@redhat.com> (sfid-20120203_130819_316884_393B4EEE)
+In-Reply-To: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
+References: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simon,
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/common.c |    2 +-
+ drivers/net/wireless/iwlegacy/common.h |    2 --
+ 2 files changed, 1 insertions(+), 3 deletions(-)
 
-It's still mangled.
-
-There's a file in Documentation that details how to get the best out of mailers.
-
-I'm guessing you're using some variant of Microsoft Outlook (as your
-mail is going through an Exchange server) which, IIRC simply refuses
-not to mangle patches.
-
-Also, remember that the subject of the email (everything except the
-[PATCH] at the start) becomes part of the commit log, so if you want
-to mark that a patch is being re-sent, do it after the '---' line in
-the commit log, and change the [PATCH] in the subject to [PATCH v2] or
-whatever.
-
-Thanks,
-
-Julian Calaby
-
-On Wed, Feb 8, 2012 at 10:23, Simon Graham
-<simon.graham@virtualcomputer.com> wrote:
-> Handle previous allocation failures when freeing device memory
->
-> Signed-off-by: Simon Graham <simon.graham@virtualcomputer.com>
-> ---
->  drivers/net/wireless/rtlwifi/pci.c |   24 ++++++++++++++----------
->  1 files changed, 14 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/pci.c
-> b/drivers/net/wireless/rtlwifi/pci.c
-> index c5f6a32..fb84707 100644
-> --- a/drivers/net/wireless/rtlwifi/pci.c
-> +++ b/drivers/net/wireless/rtlwifi/pci.c
-> @@ -1148,10 +1148,12 @@ static void _rtl_pci_free_tx_ring(struct
-> ieee80211_hw *hw,
->                ring->idx = (ring->idx + 1) % ring->entries;
->        }
->
-> -       pci_free_consistent(rtlpci->pdev,
-> -                           sizeof(*ring->desc) * ring->entries,
-> -                           ring->desc, ring->dma);
-> -       ring->desc = NULL;
-> +       if (ring->desc) {
-> +               pci_free_consistent(rtlpci->pdev,
-> +                               sizeof(*ring->desc) * ring->entries,
-> +                               ring->desc, ring->dma);
-> +               ring->desc = NULL;
-> +       }
->  }
->
->  static void _rtl_pci_free_rx_ring(struct rtl_pci *rtlpci)
-> @@ -1175,13 +1177,14 @@ static void _rtl_pci_free_rx_ring(struct rtl_pci
-> *rtlpci)
->                        kfree_skb(skb);
->                }
->
-> -               pci_free_consistent(rtlpci->pdev,
-> -
-> sizeof(*rtlpci->rx_ring[rx_queue_idx].
-> -                                          desc) * rtlpci->rxringcount,
-> -                                   rtlpci->rx_ring[rx_queue_idx].desc,
-> -                                   rtlpci->rx_ring[rx_queue_idx].dma);
-> -               rtlpci->rx_ring[rx_queue_idx].desc = NULL;
-> +               if (rtlpci->rx_ring[rx_queue_idx].desc) {
-> +                       pci_free_consistent(rtlpci->pdev,
-> +
-> sizeof(*rtlpci->rx_ring[rx_queue_idx].
-> +                                              desc) *
-> rtlpci->rxringcount,
-> +
-> rtlpci->rx_ring[rx_queue_idx].desc,
-> +
-> rtlpci->rx_ring[rx_queue_idx].dma);
-> +                       rtlpci->rx_ring[rx_queue_idx].desc = NULL;
-> +               }
->        }
->  }
->
-> --
-> 1.7.8.3
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 7c7ea77..ac26985 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -1950,7 +1950,7 @@ il_prep_station(struct il_priv *il, struct il_rxon_context *ctx,
+ 	memcpy(station->sta.sta.addr, addr, ETH_ALEN);
+ 	station->sta.mode = 0;
+ 	station->sta.sta.sta_id = sta_id;
+-	station->sta.station_flags = ctx->station_flags;
++	station->sta.station_flags = 0;
+ 
+ 	if (sta) {
+ 		struct il_station_priv_common *sta_priv;
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index 811e768..a872175 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1169,8 +1169,6 @@ struct il_rxon_context {
+ 
+ 	struct il_qos_info qos_data;
+ 
+-	__le32 station_flags;
+-
+ 	struct {
+ 		bool non_gf_sta_present;
+ 		u8 protection;
 -- 
-Julian Calaby
+1.7.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
