@@ -1,39 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1749 "EHLO MMS3.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:2663 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753289Ab2BELry (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Feb 2012 06:47:54 -0500
-Message-ID: <4F2E6C34.6060903@broadcom.com> (sfid-20120205_124757_783890_949D624B)
-Date: Sun, 5 Feb 2012 12:47:00 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Frank A. Kingswood" <frank@kingswood-consulting.co.uk>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Kernel panic with brcm4313 (kernel 3.2.2)
-References: <jgjoab$l54$1@dough.gmane.org>
-In-Reply-To: <jgjoab$l54$1@dough.gmane.org>
-Content-Type: text/plain;
- charset=iso-8859-1
+	id S1756862Ab2BCQce (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 11:32:34 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v2 05/25] iwlegacy: get rid of qos_cmd
+Date: Fri,  3 Feb 2012 17:31:41 +0100
+Message-Id: <1328286721-11309-6-git-send-email-sgruszka@redhat.com> (sfid-20120203_173238_392633_D79A2BA8)
+In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/04/2012 06:02 PM, Frank A. Kingswood wrote:
-> Hi,
-> 
-> On a new (Samsung 305U1A) laptop with BRCM4313 wireless I have not been 
-> able to use the wireless at all, although occasionally a flicker of life
-> can be seen in it.
-> 
-> "iwconfig scan" usually fails to report more than one access point. 
-> Disabling the local AP makes it show up a different one, suggesting it
-> is actually able to see it but somewhere fails to pass the data along.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/3945-mac.c |    1 -
+ drivers/net/wireless/iwlegacy/4965-mac.c |    1 -
+ drivers/net/wireless/iwlegacy/common.c   |    2 +-
+ drivers/net/wireless/iwlegacy/common.h   |    1 -
+ 4 files changed, 1 insertions(+), 4 deletions(-)
 
-Could you sent me the output of 'iwconfig scan' or better 'iw scan'?
-What is the SSID of the 'local AP'?
-
-> Fiddling with NetworkManager produces this kernel panic:
-
-What does 'Fiddling with NetworkManager' mean exactly?
-
-Gr. AvS
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index e5857df..bbbac26 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -3619,7 +3619,6 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	il->ctx.ctxid = 0;
+ 
+-	il->ctx.qos_cmd = C_QOS_PARAM;
+ 	il->ctx.ap_sta_id = IL_AP_ID;
+ 	il->ctx.wep_key_cmd = C_WEPKEY;
+ 	il->ctx.interface_modes =
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index bd83299..2ee5de3 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -6135,7 +6135,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	il->ctx.always_active = true;
+ 	il->ctx.is_active = true;
+-	il->ctx.qos_cmd = C_QOS_PARAM;
+ 	il->ctx.ap_sta_id = IL_AP_ID;
+ 	il->ctx.wep_key_cmd = C_WEPKEY;
+ 	il->ctx.ac_to_fifo = il4965_bss_ac_to_fifo;
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 9025214..b95f832 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -5269,7 +5269,7 @@ il_update_qos(struct il_priv *il, struct il_rxon_context *ctx)
+ 	D_QOS("send QoS cmd with Qos active=%d FLAGS=0x%X\n",
+ 	      ctx->qos_data.qos_active, ctx->qos_data.def_qos_parm.qos_flags);
+ 
+-	il_send_cmd_pdu_async(il, ctx->qos_cmd, sizeof(struct il_qosparam_cmd),
++	il_send_cmd_pdu_async(il, C_QOS_PARAM, sizeof(struct il_qosparam_cmd),
+ 			      &ctx->qos_data.def_qos_parm, NULL);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index d8e309a..b08ddd1 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1175,7 +1175,6 @@ struct il_rxon_context {
+ 
+ 	u8 bcast_sta_id, ap_sta_id;
+ 
+-	u8 qos_cmd;
+ 	u8 wep_key_cmd;
+ 
+ 	struct il_wep_key wep_keys[WEP_KEYS_MAX];
+-- 
+1.7.1
 
