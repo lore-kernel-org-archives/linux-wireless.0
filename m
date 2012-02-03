@@ -1,195 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:39247 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753790Ab2BVHMC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 02:12:02 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20292.38200.953531.598399@gargle.gargle.HOWL> (sfid-20120222_081207_915294_E686A385)
-Date: Wed, 22 Feb 2012 12:41:52 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 20/26] ath9k: Remove ATH_BTCOEX_CFG_NONE checks
+Received: from mx1.redhat.com ([209.132.183.28]:15749 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754036Ab2BCMIP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 07:08:15 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 12/25] iwlegacy: move wep_keys out of context
+Date: Fri,  3 Feb 2012 13:07:12 +0100
+Message-Id: <1328270845-16891-13-git-send-email-sgruszka@redhat.com> (sfid-20120203_130826_239645_72278F6D)
+In-Reply-To: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
+References: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since BTCOEX code can be compiled out cleanly now,
-remove these checks.
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ath/ath9k/btcoex.c       |   21 ---------------------
- drivers/net/wireless/ath/ath9k/gpio.c         |    9 ---------
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |   11 -----------
- drivers/net/wireless/ath/ath9k/hw.h           |    2 +-
- 4 files changed, 1 insertions(+), 42 deletions(-)
+ drivers/net/wireless/iwlegacy/4965-mac.c |   58 ++++++++++++++++++-----------
+ drivers/net/wireless/iwlegacy/common.h   |   19 ++--------
+ 2 files changed, 39 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index 5365959..ec32719 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -68,9 +68,6 @@ void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum)
- 	u32 i, idx;
- 	bool rxclear_polarity = ath_bt_config.bt_rxclear_polarity;
- 
--	if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_NONE)
--		return;
--
- 	if (AR_SREV_9300_20_OR_LATER(ah))
- 		rxclear_polarity = !ath_bt_config.bt_rxclear_polarity;
- 
-@@ -136,9 +133,6 @@ void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index ecb7b54..35d868c 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -2808,7 +2808,7 @@ static int
+ il4965_static_wepkey_cmd(struct il_priv *il, struct il_rxon_context *ctx,
+ 			 bool send_if_empty)
  {
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+-	int i, not_empty = 0;
++	int i;
+ 	u8 buff[sizeof(struct il_wep_cmd) +
+ 		sizeof(struct il_wep_key) * WEP_KEYS_MAX];
+ 	struct il_wep_cmd *wep_cmd = (struct il_wep_cmd *)buff;
+@@ -2818,6 +2818,7 @@ il4965_static_wepkey_cmd(struct il_priv *il, struct il_rxon_context *ctx,
+ 		.data = wep_cmd,
+ 		.flags = CMD_SYNC,
+ 	};
++	bool not_empty = false;
  
--	if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_NONE)
--		return;
--
- 	/* connect bt_active to baseband */
- 	REG_CLR_BIT(ah, AR_GPIO_INPUT_EN_VAL,
- 		    (AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_DEF |
-@@ -161,9 +155,6 @@ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
- {
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+ 	might_sleep();
  
--	if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_NONE)
--		return;
--
- 	/* btcoex 3-wire */
- 	REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL,
- 			(AR_GPIO_INPUT_EN_VAL_BT_PRIORITY_BB |
-@@ -214,9 +205,6 @@ static void ath9k_hw_btcoex_enable_2wire(struct ath_hw *ah)
- {
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+@@ -2825,24 +2826,23 @@ il4965_static_wepkey_cmd(struct il_priv *il, struct il_rxon_context *ctx,
+ 	       cmd_size + (sizeof(struct il_wep_key) * WEP_KEYS_MAX));
  
--	if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_NONE)
--		return;
--
- 	/* Configure the desired GPIO port for TX_FRAME output */
- 	ath9k_hw_cfg_output(ah, btcoex_hw->wlanactive_gpio,
- 			    AR_GPIO_OUTPUT_MUX_AS_TX_FRAME);
-@@ -228,9 +216,6 @@ void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
- {
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+ 	for (i = 0; i < WEP_KEYS_MAX; i++) {
++		u8 key_size = il->_4965.wep_keys[i].key_size;
++
+ 		wep_cmd->key[i].key_idx = i;
+-		if (ctx->wep_keys[i].key_size) {
++		if (key_size) {
+ 			wep_cmd->key[i].key_offset = i;
+-			not_empty = 1;
+-		} else {
++			not_empty = true;
++		} else
+ 			wep_cmd->key[i].key_offset = WEP_INVALID_OFFSET;
+-		}
  
--	if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_NONE)
--		return;
--
- 	btcoex_hw->bt_coex_weights = SM(bt_weight, AR_BTCOEX_BT_WGHT) |
- 				     SM(wlan_weight, AR_BTCOEX_WL_WGHT);
- }
-@@ -319,9 +304,6 @@ void ath9k_hw_btcoex_disable(struct ath_hw *ah)
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
- 	int i;
- 
--	if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_NONE)
--		return;
--
- 	btcoex_hw->enabled = false;
- 	if (btcoex_hw->scheme == ATH_BTCOEX_CFG_MCI) {
- 		ath9k_hw_btcoex_bt_stomp(ah, ATH_BTCOEX_STOMP_NONE);
-@@ -370,9 +352,6 @@ static void ar9003_btcoex_bt_stomp(struct ath_hw *ah,
- void ath9k_hw_btcoex_bt_stomp(struct ath_hw *ah,
- 			      enum ath_stomp_type stomp_type)
- {
--	if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_NONE)
--		return;
--
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		ar9003_btcoex_bt_stomp(ah, stomp_type);
- 		return;
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 4da486b..1f1a5c6 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -251,9 +251,6 @@ static int ath_init_btcoex_timer(struct ath_softc *sc)
- {
- 	struct ath_btcoex *btcoex = &sc->btcoex;
- 
--	if (ath9k_hw_get_btcoex_scheme(sc->sc_ah) == ATH_BTCOEX_CFG_NONE)
--		return 0;
--
- 	btcoex->btcoex_period = ATH_BTCOEX_DEF_BT_PERIOD * 1000;
- 	btcoex->btcoex_no_stomp = (100 - ATH_BTCOEX_DEF_DUTY_CYCLE) *
- 		btcoex->btcoex_period / 100;
-@@ -286,9 +283,6 @@ void ath9k_btcoex_timer_resume(struct ath_softc *sc)
- 
- 	ath_dbg(ath9k_hw_common(ah), BTCOEX, "Starting btcoex timers\n");
- 
--	if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_NONE)
--		return;
--
- 	/* make sure duty cycle timer is also stopped when resuming */
- 	if (btcoex->hw_timer_enabled)
- 		ath9k_gen_timer_stop(sc->sc_ah, btcoex->no_stomp_timer);
-@@ -309,9 +303,6 @@ void ath9k_btcoex_timer_pause(struct ath_softc *sc)
- 	struct ath_btcoex *btcoex = &sc->btcoex;
- 	struct ath_hw *ah = sc->sc_ah;
- 
--	if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_NONE)
--		return;
--
- 	del_timer_sync(&btcoex->period_timer);
- 
- 	if (btcoex->hw_timer_enabled)
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-index 6aa7674..1c10e2e 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-@@ -119,9 +119,6 @@ static void ath_htc_init_btcoex_work(struct ath9k_htc_priv *priv)
- {
- 	struct ath_btcoex *btcoex = &priv->btcoex;
- 
--	if (ath9k_hw_get_btcoex_scheme(priv->ah) == ATH_BTCOEX_CFG_NONE)
--		return;
--
- 	btcoex->btcoex_period = ATH_BTCOEX_DEF_BT_PERIOD;
- 	btcoex->btcoex_no_stomp = (100 - ATH_BTCOEX_DEF_DUTY_CYCLE) *
- 		btcoex->btcoex_period / 100;
-@@ -140,9 +137,6 @@ static void ath_htc_resume_btcoex_work(struct ath9k_htc_priv *priv)
- 	struct ath_btcoex *btcoex = &priv->btcoex;
- 	struct ath_hw *ah = priv->ah;
- 
--	if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_NONE)
--		return;
--
- 	ath_dbg(ath9k_hw_common(ah), BTCOEX, "Starting btcoex work\n");
- 
- 	btcoex->bt_priority_cnt = 0;
-@@ -157,9 +151,6 @@ static void ath_htc_resume_btcoex_work(struct ath9k_htc_priv *priv)
-  */
- static void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv)
- {
--	if (ath9k_hw_get_btcoex_scheme(priv->ah) == ATH_BTCOEX_CFG_NONE)
--		return;
--
- 	cancel_delayed_work_sync(&priv->coex_period_work);
- 	cancel_delayed_work_sync(&priv->duty_cycle_work);
- }
-@@ -195,8 +186,6 @@ void ath9k_htc_init_btcoex(struct ath9k_htc_priv *priv, char *product)
- 
- 	if (product && strncmp(product, ATH_HTC_BTCOEX_PRODUCT_ID, 5) == 0) {
- 		ah->btcoex_hw.scheme = ATH_BTCOEX_CFG_3WIRE;
--		if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_NONE)
--			return;
+-		wep_cmd->key[i].key_size = ctx->wep_keys[i].key_size;
+-		memcpy(&wep_cmd->key[i].key[3], ctx->wep_keys[i].key,
+-		       ctx->wep_keys[i].key_size);
++		wep_cmd->key[i].key_size = key_size;
++		memcpy(&wep_cmd->key[i].key[3], il->_4965.wep_keys[i].key, key_size);
  	}
  
- 	switch (ath9k_hw_get_btcoex_scheme(priv->ah)) {
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index d627399..5e4d8dc 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -1075,7 +1075,7 @@ ath9k_hw_get_btcoex_scheme(struct ath_hw *ah)
- {
- 	return ATH_BTCOEX_CFG_NONE;
- }
--#endif
-+#endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
+ 	wep_cmd->global_key_type = WEP_KEY_WEP_TYPE;
+ 	wep_cmd->num_keys = WEP_KEYS_MAX;
  
- #define ATH9K_CLOCK_RATE_CCK		22
- #define ATH9K_CLOCK_RATE_5GHZ_OFDM	40
+ 	cmd_size += sizeof(struct il_wep_key) * WEP_KEYS_MAX;
+-
+ 	cmd.len = cmd_size;
+ 
+ 	if (not_empty || send_if_empty)
+@@ -2864,19 +2864,20 @@ il4965_remove_default_wep_key(struct il_priv *il, struct il_rxon_context *ctx,
+ 			      struct ieee80211_key_conf *keyconf)
+ {
+ 	int ret;
++	int idx = keyconf->keyidx;
+ 
+ 	lockdep_assert_held(&il->mutex);
+ 
+-	D_WEP("Removing default WEP key: idx=%d\n", keyconf->keyidx);
++	D_WEP("Removing default WEP key: idx=%d\n", idx);
+ 
+-	memset(&ctx->wep_keys[keyconf->keyidx], 0, sizeof(ctx->wep_keys[0]));
++	memset(&il->_4965.wep_keys[idx], 0, sizeof(struct il_wep_key));
+ 	if (il_is_rfkill(il)) {
+ 		D_WEP("Not sending C_WEPKEY command due to RFKILL.\n");
+ 		/* but keys in device are clear anyway so return success */
+ 		return 0;
+ 	}
+ 	ret = il4965_static_wepkey_cmd(il, ctx, 1);
+-	D_WEP("Remove default WEP key: idx=%d ret=%d\n", keyconf->keyidx, ret);
++	D_WEP("Remove default WEP key: idx=%d ret=%d\n", idx, ret);
+ 
+ 	return ret;
+ }
+@@ -2886,11 +2887,12 @@ il4965_set_default_wep_key(struct il_priv *il, struct il_rxon_context *ctx,
+ 			   struct ieee80211_key_conf *keyconf)
+ {
+ 	int ret;
++	int len = keyconf->keylen;
++	int idx = keyconf->keyidx;
+ 
+ 	lockdep_assert_held(&il->mutex);
+ 
+-	if (keyconf->keylen != WEP_KEY_LEN_128 &&
+-	    keyconf->keylen != WEP_KEY_LEN_64) {
++	if (len != WEP_KEY_LEN_128 && len != WEP_KEY_LEN_64) {
+ 		D_WEP("Bad WEP key length %d\n", keyconf->keylen);
+ 		return -EINVAL;
+ 	}
+@@ -2899,14 +2901,12 @@ il4965_set_default_wep_key(struct il_priv *il, struct il_rxon_context *ctx,
+ 	keyconf->hw_key_idx = HW_KEY_DEFAULT;
+ 	il->stations[IL_AP_ID].keyinfo.cipher = keyconf->cipher;
+ 
+-	ctx->wep_keys[keyconf->keyidx].key_size = keyconf->keylen;
+-	memcpy(&ctx->wep_keys[keyconf->keyidx].key, &keyconf->key,
+-	       keyconf->keylen);
++	il->_4965.wep_keys[idx].key_size = len;
++	memcpy(&il->_4965.wep_keys[idx].key, &keyconf->key, len);
+ 
+ 	ret = il4965_static_wepkey_cmd(il, ctx, false);
+-	D_WEP("Set default WEP key: len=%d idx=%d ret=%d\n", keyconf->keylen,
+-	      keyconf->keyidx, ret);
+ 
++	D_WEP("Set default WEP key: len=%d idx=%d ret=%d\n", len, idx, ret);
+ 	return ret;
+ }
+ 
+@@ -3106,7 +3106,7 @@ il4965_remove_dynamic_key(struct il_priv *il, struct il_rxon_context *ctx,
+ 
+ 	lockdep_assert_held(&il->mutex);
+ 
+-	ctx->key_mapping_keys--;
++	il->_4965.key_mapping_keys--;
+ 
+ 	spin_lock_irqsave(&il->sta_lock, flags);
+ 	key_flags = le16_to_cpu(il->stations[sta_id].sta.key.key_flags);
+@@ -3164,7 +3164,7 @@ il4965_set_dynamic_key(struct il_priv *il, struct il_rxon_context *ctx,
+ 
+ 	lockdep_assert_held(&il->mutex);
+ 
+-	ctx->key_mapping_keys++;
++	il->_4965.key_mapping_keys++;
+ 	keyconf->hw_key_idx = HW_KEY_DYNAMIC;
+ 
+ 	switch (keyconf->cipher) {
+@@ -5067,6 +5067,20 @@ __il4965_down(struct il_priv *il)
+ 	del_timer_sync(&il->watchdog);
+ 
+ 	il_clear_ucode_stations(il, NULL);
++
++	/* FIXME: race conditions ? */
++	spin_lock_irq(&il->sta_lock);
++	/*
++	 * Remove all key information that is not stored as part
++	 * of station information since mac80211 may not have had
++	 * a chance to remove all the keys. When device is
++	 * reconfigured by mac80211 after an error all keys will
++	 * be reconfigured.
++	 */
++	memset(il->_4965.wep_keys, 0, sizeof(il->_4965.wep_keys));
++	il->_4965.key_mapping_keys = 0;
++	spin_unlock_irq(&il->sta_lock);
++
+ 	il_dealloc_bcast_stations(il);
+ 	il_clear_driver_stations(il);
+ 
+@@ -5613,7 +5627,7 @@ il4965_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	if ((key->cipher == WLAN_CIPHER_SUITE_WEP40 ||
+ 	     key->cipher == WLAN_CIPHER_SUITE_WEP104) && !sta) {
+ 		if (cmd == SET_KEY)
+-			is_default_wep_key = !ctx->key_mapping_keys;
++			is_default_wep_key = !il->_4965.key_mapping_keys;
+ 		else
+ 			is_default_wep_key =
+ 			    (key->hw_key_idx == HW_KEY_DEFAULT);
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index 89922e0..811e768 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1169,9 +1169,6 @@ struct il_rxon_context {
+ 
+ 	struct il_qos_info qos_data;
+ 
+-	struct il_wep_key wep_keys[WEP_KEYS_MAX];
+-	u8 key_mapping_keys;
+-
+ 	__le32 station_flags;
+ 
+ 	struct {
+@@ -1417,6 +1414,9 @@ struct il_priv {
+ 			u8 phy_calib_chain_noise_reset_cmd;
+ 			u8 phy_calib_chain_noise_gain_cmd;
+ 
++			u8 key_mapping_keys;
++			struct il_wep_key wep_keys[WEP_KEYS_MAX];
++
+ 			struct il_notif_stats stats;
+ #ifdef CONFIG_IWLEGACY_DEBUGFS
+ 			struct il_notif_stats accum_stats;
+@@ -2318,24 +2318,11 @@ static inline void
+ il_clear_driver_stations(struct il_priv *il)
+ {
+ 	unsigned long flags;
+-	struct il_rxon_context *ctx = &il->ctx;
+ 
+ 	spin_lock_irqsave(&il->sta_lock, flags);
+ 	memset(il->stations, 0, sizeof(il->stations));
+ 	il->num_stations = 0;
+-
+ 	il->ucode_key_table = 0;
+-
+-	/*
+-	 * Remove all key information that is not stored as part
+-	 * of station information since mac80211 may not have had
+-	 * a chance to remove all the keys. When device is
+-	 * reconfigured by mac80211 after an error all keys will
+-	 * be reconfigured.
+-	 */
+-	memset(ctx->wep_keys, 0, sizeof(ctx->wep_keys));
+-	ctx->key_mapping_keys = 0;
+-
+ 	spin_unlock_irqrestore(&il->sta_lock, flags);
+ }
+ 
 -- 
-1.7.9.1
+1.7.1
 
