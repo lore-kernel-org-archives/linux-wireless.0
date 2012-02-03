@@ -1,50 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60490 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751301Ab2BPNAj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Feb 2012 08:00:39 -0500
-Date: Thu, 16 Feb 2012 14:00:21 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Florian Fainelli <florian@openwrt.org>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com, gwingerde@gmail.com,
-	Ivo Van Doorn <ivdoorn@gmail.com>,
-	Andreas Hartmann <andihartmann@freenet.de>
-Subject: Re: Poor RT2880 performance
-Message-ID: <20120216130020.GG25833@redhat.com> (sfid-20120216_140043_013320_A3989346)
-References: <4F390ED3.8010400@openwrt.org>
- <CAGXE3d90az_g3KyzPp-4NQoM2zmXaNSVo=7piM=q8EK9WdBp7A@mail.gmail.com>
- <4F3961FB.7020409@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <4F3961FB.7020409@openwrt.org>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:55381 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754981Ab2BCCsg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Feb 2012 21:48:36 -0500
+Received: by qadc10 with SMTP id c10so466944qad.19
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 18:48:35 -0800 (PST)
+From: Rick Farina <sidhayn@gmail.com>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org, Rick Farina <sidhayn@gmail.com>
+Subject: [PATCH 1/2] replace modprobe -l with modinfo
+Date: Thu,  2 Feb 2012 21:48:21 -0500
+Message-Id: <1328237302-13423-1-git-send-email-sidhayn@gmail.com> (sfid-20120203_034839_677857_1A87E220)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 13, 2012 at 08:18:19PM +0100, Florian Fainelli wrote:
-> Le 02/13/12 14:45, Helmut Schaa a écrit :
-> >On Mon, Feb 13, 2012 at 2:23 PM, Florian Fainelli<florian@openwrt.org>  wrote:
-> >>I am playing with a RT2880-F based AP, with a N connected station, in a
-> >>residential environment.
-> >Mind to provide the RF and RT chipset identifications? rt2x00 should print them
-> >out during module load (at least when compiled with debugging options).
-> 
-> Sure, here are the HW infos of the AP:
-> Ralink RT2880   id:1 rev:1 running at 266.66 MHz
-> phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 2860, rf:
-> 0001, rev: 0101.
+modprobe -l is either deprecated or removed, so let's replace it.
 
-Did you try to revert commit (if you use kernel, which include it) ?
+Signed-of-by: Rick Farina <sidhayn@gmail.com>
+---
+ Makefile |   11 ++---------
+ 1 files changed, 2 insertions(+), 9 deletions(-)
 
-commit f0425beda4d404a6e751439b562100b902ba9c98
-Author: Felix Fietkau <nbd@openwrt.org>
-Date:   Sun Aug 28 21:11:01 2011 +0200
-
-    mac80211: retry sending failed BAR frames later instead of tearing
-
-It was already identified that it couse performace issues on rt2860
-based APs.
-
-Stanislaw
+diff --git a/Makefile b/Makefile
+index e3d9128..1f8ab91 100644
+--- a/Makefile
++++ b/Makefile
+@@ -6,13 +6,6 @@ else
+ export KLIB:=          /lib/modules/$(shell uname -r)
+ endif
+ export KLIB_BUILD ?=	$(KLIB)/build
+-# Sometimes not available in the path
+-MODPROBE := /sbin/modprobe
+-
+-ifneq ($(wildcard $(MODPROBE)),)
+-MADWIFI=$(shell $(MODPROBE) -l ath_pci)
+-OLD_IWL=$(shell $(MODPROBE) -l iwl4965)
+-endif
+ 
+ DESTDIR?=
+ 
+@@ -188,7 +181,7 @@ install-scripts: $(MODPROBE)
+ 	@install scripts/athload	$(DESTDIR)/usr/sbin/
+ 	@install scripts/b43load	$(DESTDIR)/usr/sbin/
+ 	@install scripts/iwl-load	$(DESTDIR)/usr/sbin/
+-	@if [ ! -z "$(MADWIFI)" ] && [ -z "$(DESTDIR)" ]; then \
++	@if `modinfo ath_pci > /dev/null 2>&1` && [ -z "$(DESTDIR)" ]; then \
+ 		echo ;\
+ 		echo -n "Note: madwifi detected, we're going to disable it. "  ;\
+ 		echo "If you would like to enable it later you can run:"  ;\
+@@ -197,7 +190,7 @@ install-scripts: $(MODPROBE)
+ 		echo Running athenable ath5k...;\
+ 		/usr/sbin/athenable ath5k ;\
+ 	fi
+-	@if [ ! -z "$(OLD_IWL)" ] && [ -z "$(DESTDIR)" ]; then \
++	@if `modinfo iwl4965 > /dev/null 2>&1` && [ -z "$(DESTDIR)" ]; then \
+ 		echo ;\
+ 		echo -n "Note: iwl4965 detected, we're going to disable it. "  ;\
+ 		echo "If you would like to enable it later you can run:"  ;\
+-- 
+1.7.3.4
 
