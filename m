@@ -1,47 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:62031 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756682Ab2BNPDR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 10:03:17 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH 2/2] ath6kl: Remove bogus non-NULL pointer check
-Date: Tue, 14 Feb 2012 20:33:00 +0530
-Message-ID: <1329231780-18929-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120214_160319_410827_1953E40D)
-In-Reply-To: <1329231780-18929-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1329231780-18929-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:25534 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754002Ab2BCMIO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 07:08:14 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 15/25] iwlegacy: move qos_data out of ctx structure
+Date: Fri,  3 Feb 2012 13:07:15 +0100
+Message-Id: <1328270845-16891-16-git-send-email-sgruszka@redhat.com> (sfid-20120203_130821_225510_F0B5D55B)
+In-Reply-To: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
+References: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In ath6kl_cfg80211_add_key(), params is checked for non-NULL
-but this pointer has been deferenced many times before this check. This
-gives the following smatch warning. add_key() can never carry NULL as
-params, remove this bogus check.
-
-ath6kl_cfg80211_add_key(86) warn: variable dereferenced before check 'params'
-
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/iwlegacy/common.c |   24 ++++++++++++------------
+ drivers/net/wireless/iwlegacy/common.h |    4 ++--
+ drivers/net/wireless/iwlegacy/debug.c  |    8 ++++----
+ 3 files changed, 18 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index a91f521..313787e 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1059,7 +1059,7 @@ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 7f4c6bf..c93fa1b 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -4496,15 +4496,15 @@ il_mac_conf_tx(struct ieee80211_hw *hw, struct ieee80211_vif *vif, u16 queue,
  
- 	if (vif->nw_type == AP_NETWORK && !pairwise &&
- 	    (key_type == TKIP_CRYPT || key_type == AES_CRYPT ||
--	     key_type == WAPI_CRYPT) && params) {
-+	     key_type == WAPI_CRYPT)) {
- 		ar->ap_mode_bkey.valid = true;
- 		ar->ap_mode_bkey.key_index = key_index;
- 		ar->ap_mode_bkey.key_type = key_type;
+ 	spin_lock_irqsave(&il->lock, flags);
+ 
+-	il->ctx.qos_data.def_qos_parm.ac[q].cw_min =
++	il->qos_data.def_qos_parm.ac[q].cw_min =
+ 	    cpu_to_le16(params->cw_min);
+-	il->ctx.qos_data.def_qos_parm.ac[q].cw_max =
++	il->qos_data.def_qos_parm.ac[q].cw_max =
+ 	    cpu_to_le16(params->cw_max);
+-	il->ctx.qos_data.def_qos_parm.ac[q].aifsn = params->aifs;
+-	il->ctx.qos_data.def_qos_parm.ac[q].edca_txop =
++	il->qos_data.def_qos_parm.ac[q].aifsn = params->aifs;
++	il->qos_data.def_qos_parm.ac[q].edca_txop =
+ 	    cpu_to_le16((params->txop * 32));
+ 
+-	il->ctx.qos_data.def_qos_parm.ac[q].reserved1 = 0;
++	il->qos_data.def_qos_parm.ac[q].reserved1 = 0;
+ 
+ 	spin_unlock_irqrestore(&il->lock, flags);
+ 
+@@ -5230,20 +5230,20 @@ il_update_qos(struct il_priv *il, struct il_rxon_context *ctx)
+ 	if (!ctx->is_active)
+ 		return;
+ 
+-	ctx->qos_data.def_qos_parm.qos_flags = 0;
++	il->qos_data.def_qos_parm.qos_flags = 0;
+ 
+-	if (ctx->qos_data.qos_active)
+-		ctx->qos_data.def_qos_parm.qos_flags |=
++	if (il->qos_data.qos_active)
++		il->qos_data.def_qos_parm.qos_flags |=
+ 		    QOS_PARAM_FLG_UPDATE_EDCA_MSK;
+ 
+ 	if (ctx->ht.enabled)
+-		ctx->qos_data.def_qos_parm.qos_flags |= QOS_PARAM_FLG_TGN_MSK;
++		il->qos_data.def_qos_parm.qos_flags |= QOS_PARAM_FLG_TGN_MSK;
+ 
+ 	D_QOS("send QoS cmd with Qos active=%d FLAGS=0x%X\n",
+-	      ctx->qos_data.qos_active, ctx->qos_data.def_qos_parm.qos_flags);
++	      il->qos_data.qos_active, il->qos_data.def_qos_parm.qos_flags);
+ 
+ 	il_send_cmd_pdu_async(il, C_QOS_PARAM, sizeof(struct il_qosparam_cmd),
+-			      &ctx->qos_data.def_qos_parm, NULL);
++			      &il->qos_data.def_qos_parm, NULL);
+ }
+ 
+ /**
+@@ -5596,7 +5596,7 @@ il_mac_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		unsigned long flags;
+ 
+ 		spin_lock_irqsave(&il->lock, flags);
+-		ctx->qos_data.qos_active = bss_conf->qos;
++		il->qos_data.qos_active = bss_conf->qos;
+ 		il_update_qos(il, ctx);
+ 		spin_unlock_irqrestore(&il->lock, flags);
+ 	}
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index eddf22d..18375cb 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1165,8 +1165,6 @@ struct il_rxon_context {
+ 	 */
+ 	bool always_active, is_active;
+ 
+-	struct il_qos_info qos_data;
+-
+ 	struct {
+ 		bool non_gf_sta_present;
+ 		u8 protection;
+@@ -1278,6 +1276,8 @@ struct il_priv {
+ 
+ 	struct il_rxon_context ctx;
+ 
++	struct il_qos_info qos_data;
++
+ 	/*
+ 	 * We declare this const so it can only be
+ 	 * changed via explicit cast within the
+diff --git a/drivers/net/wireless/iwlegacy/debug.c b/drivers/net/wireless/iwlegacy/debug.c
+index b1b8926..61e3f43 100644
+--- a/drivers/net/wireless/iwlegacy/debug.c
++++ b/drivers/net/wireless/iwlegacy/debug.c
+@@ -657,10 +657,10 @@ il_dbgfs_qos_read(struct file *file, char __user *user_buf, size_t count,
+ 		pos +=
+ 		    scnprintf(buf + pos, bufsz - pos,
+ 			      "AC[%d]\t%u\t%u\t%u\t%u\n", i,
+-			      ctx->qos_data.def_qos_parm.ac[i].cw_min,
+-			      ctx->qos_data.def_qos_parm.ac[i].cw_max,
+-			      ctx->qos_data.def_qos_parm.ac[i].aifsn,
+-			      ctx->qos_data.def_qos_parm.ac[i].edca_txop);
++			      il->qos_data.def_qos_parm.ac[i].cw_min,
++			      il->qos_data.def_qos_parm.ac[i].cw_max,
++			      il->qos_data.def_qos_parm.ac[i].aifsn,
++			      il->qos_data.def_qos_parm.ac[i].edca_txop);
+ 	}
+ 
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
 -- 
-1.7.0.4
+1.7.1
 
