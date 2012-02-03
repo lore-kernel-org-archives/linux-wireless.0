@@ -1,76 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1649 "EHLO MMS3.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:9474 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750939Ab2BPNKx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Feb 2012 08:10:53 -0500
-Message-ID: <4F3D0012.9070808@broadcom.com> (sfid-20120216_141058_314031_F0327EC5)
-Date: Thu, 16 Feb 2012 14:09:38 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: "Kay Sievers" <kay.sievers@vrfy.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Tom Gundersen" <teg@jklm.no>, "Andy Whitcroft" <apw@canonical.com>
-Subject: Re: calling request_firmware() from module init will not work
- with recent/future udev versions
-References: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
- <1326621743.3448.1.camel@jlt3.sipsolutions.net>
- <CAPXgP13b0uu3DgOGRL-_WKx-aSQN-f0xL6OmjNPBGf9fg0satA@mail.gmail.com> (
- sfid-20120115_163411_716244_29DE7A13)
- <1326704259.3510.3.camel@jlt3.sipsolutions.net>
- <4F3CF0C1.3090304@broadcom.com>
- <1329395881.3915.7.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1329395881.3915.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+	id S1756865Ab2BCQct (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 11:32:49 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v2 02/25] iwlegacy: get rid of ctx->rxon_cmd
+Date: Fri,  3 Feb 2012 17:31:38 +0100
+Message-Id: <1328286721-11309-3-git-send-email-sgruszka@redhat.com> (sfid-20120203_173251_419511_FDC1ADE1)
+In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/16/2012 01:38 PM, Johannes Berg wrote:
-> On Thu, 2012-02-16 at 13:04 +0100, Arend van Spriel wrote:
->> On 01/16/2012 09:57 AM, Johannes Berg wrote:
->>>> Now the problem, the pcidev event is blocking in modprobe and waits
->>>>>   for the child event it has generated to finish, but udev does not
->>>>>   start the event because the parent still blocks in modprobe ->
->>>>>   deadlock until default firmware timeout of 60 sec. What we want here,
->>>>>   for several reasons not only udev's dependency logic, is that modprobe
->>>>>   never waits for userspace transactions to finish.
->>> Ok, thanks for the description. I guess to me that means nothing really
->>> changes much in the situation I'm thinking of.
->>
->> I am working on changes in brcm80211 driver and the behaviour changes
->> slightly. The async firmware request basically kicks of a kernel thread
->> to do the actual request. So the probe finishes successfully regardless
->> what the results will be of the actual firmware request. Hence the
->> driver is associated with the hardware.
->
-> This is true.
->
->>>>>   If userspace is not responding, the firmware request times out after
->>>>>   60 seconds and the driver is not associated with any hardware. To
->>>>>   retry the firmware loading, the module needs to be unloaded and
->>>>>   reloaded, or the driver needs to be asked to bind to a device again by
->>>>>   writing to the 'bind' in file in the sysfs driver directory.
->>> Right.
->>>
->>
->> If my previous statement is true, what does it mean regarding retrying
->> the firmware loading?
->
-> When the firmware loading fails, the driver should unbind from the
-> device that it failed for, and the retrying behaviour doesn't change
-> (and requires a rebind)
->
-> johannes
->
->
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/3945-mac.c |    1 -
+ drivers/net/wireless/iwlegacy/4965-mac.c |    1 -
+ drivers/net/wireless/iwlegacy/4965.c     |    6 +++---
+ drivers/net/wireless/iwlegacy/common.h   |    2 +-
+ 4 files changed, 4 insertions(+), 6 deletions(-)
 
-Thanks, Johannes
-
-That helps. My driver was happily bound to the device until unloading 
-the driver or unplugging the device.
-
-Gr. AvS
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index 980566f..8de8355 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -3619,7 +3619,6 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	il->ctx.ctxid = 0;
+ 
+-	il->ctx.rxon_cmd = C_RXON;
+ 	il->ctx.rxon_timing_cmd = C_RXON_TIMING;
+ 	il->ctx.rxon_assoc_cmd = C_RXON_ASSOC;
+ 	il->ctx.qos_cmd = C_QOS_PARAM;
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 6a77f41..2368f3a 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -6135,7 +6135,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	il->ctx.always_active = true;
+ 	il->ctx.is_active = true;
+-	il->ctx.rxon_cmd = C_RXON;
+ 	il->ctx.rxon_timing_cmd = C_RXON_TIMING;
+ 	il->ctx.rxon_assoc_cmd = C_RXON_ASSOC;
+ 	il->ctx.qos_cmd = C_QOS_PARAM;
+diff --git a/drivers/net/wireless/iwlegacy/4965.c b/drivers/net/wireless/iwlegacy/4965.c
+index b34de14..8926108 100644
+--- a/drivers/net/wireless/iwlegacy/4965.c
++++ b/drivers/net/wireless/iwlegacy/4965.c
+@@ -1472,7 +1472,7 @@ il4965_commit_rxon(struct il_priv *il, struct il_rxon_context *ctx)
+ 		active_rxon->filter_flags &= ~RXON_FILTER_ASSOC_MSK;
+ 
+ 		ret =
+-		    il_send_cmd_pdu(il, ctx->rxon_cmd,
++		    il_send_cmd_pdu(il, C_RXON,
+ 				    sizeof(struct il_rxon_cmd), active_rxon);
+ 
+ 		/* If the mask clearing failed then we set
+@@ -1503,7 +1503,7 @@ il4965_commit_rxon(struct il_priv *il, struct il_rxon_context *ctx)
+ 	 */
+ 	if (!new_assoc) {
+ 		ret =
+-		    il_send_cmd_pdu(il, ctx->rxon_cmd,
++		    il_send_cmd_pdu(il, C_RXON,
+ 				    sizeof(struct il_rxon_cmd), &il->staging);
+ 		if (ret) {
+ 			IL_ERR("Error setting new RXON (%d)\n", ret);
+@@ -1525,7 +1525,7 @@ il4965_commit_rxon(struct il_priv *il, struct il_rxon_context *ctx)
+ 		 * RXON assoc doesn't clear the station table in uCode,
+ 		 */
+ 		ret =
+-		    il_send_cmd_pdu(il, ctx->rxon_cmd,
++		    il_send_cmd_pdu(il, C_RXON,
+ 				    sizeof(struct il_rxon_cmd), &il->staging);
+ 		if (ret) {
+ 			IL_ERR("Error setting new RXON (%d)\n", ret);
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index ba801c7..80c60e5 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1175,7 +1175,7 @@ struct il_rxon_context {
+ 
+ 	u8 bcast_sta_id, ap_sta_id;
+ 
+-	u8 rxon_cmd, rxon_assoc_cmd, rxon_timing_cmd;
++	u8 rxon_assoc_cmd, rxon_timing_cmd;
+ 	u8 qos_cmd;
+ 	u8 wep_key_cmd;
+ 
+-- 
+1.7.1
 
