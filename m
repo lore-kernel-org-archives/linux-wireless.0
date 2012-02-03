@@ -1,73 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:1475 "EHLO
-	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756428Ab2BFW7E (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Feb 2012 17:59:04 -0500
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>
-Subject: [PATCH 7/8] rt2x00: Fix RT3572 channel switch RFCSR 7 programming.
-Date: Mon,  6 Feb 2012 23:45:12 +0100
-Message-Id: <1328568313-26267-8-git-send-email-gwingerde@gmail.com> (sfid-20120206_235911_977556_DDF68256)
-In-Reply-To: <1328568313-26267-7-git-send-email-gwingerde@gmail.com>
-References: <1328568313-26267-1-git-send-email-gwingerde@gmail.com>
- <1328568313-26267-2-git-send-email-gwingerde@gmail.com>
- <1328568313-26267-3-git-send-email-gwingerde@gmail.com>
- <1328568313-26267-4-git-send-email-gwingerde@gmail.com>
- <1328568313-26267-5-git-send-email-gwingerde@gmail.com>
- <1328568313-26267-6-git-send-email-gwingerde@gmail.com>
- <1328568313-26267-7-git-send-email-gwingerde@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:44395 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756878Ab2BCQcz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 11:32:55 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v2 13/25] iwlegacy: get rid of ctx->station_flags
+Date: Fri,  3 Feb 2012 17:31:49 +0100
+Message-Id: <1328286721-11309-14-git-send-email-sgruszka@redhat.com> (sfid-20120203_173338_610316_BA288D07)
+In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Align with the v2.5.0.0 Ralink RT3572 driver.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/common.c |    2 +-
+ drivers/net/wireless/iwlegacy/common.h |    2 --
+ 2 files changed, 1 insertions(+), 3 deletions(-)
 
-Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 8aabd0d..c6648b0 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -1819,10 +1819,12 @@ struct mac_iveiv_entry {
-  * RFCSR 7:
-  */
- #define RFCSR7_RF_TUNING		FIELD8(0x01)
--#define RFCSR7_R02				FIELD8(0x07)
--#define RFCSR7_R3				FIELD8(0x08)
--#define RFCSR7_R45				FIELD8(0x30)
--#define RFCSR7_R67				FIELD8(0xc0)
-+#define RFCSR7_BIT1			FIELD8(0x02)
-+#define RFCSR7_BIT2			FIELD8(0x04)
-+#define RFCSR7_BIT3			FIELD8(0x08)
-+#define RFCSR7_BIT4			FIELD8(0x10)
-+#define RFCSR7_BIT5			FIELD8(0x20)
-+#define RFCSR7_BITS67			FIELD8(0xc0)
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 7c7ea77..ac26985 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -1950,7 +1950,7 @@ il_prep_station(struct il_priv *il, struct il_rxon_context *ctx,
+ 	memcpy(station->sta.sta.addr, addr, ETH_ALEN);
+ 	station->sta.mode = 0;
+ 	station->sta.sta.sta_id = sta_id;
+-	station->sta.station_flags = ctx->station_flags;
++	station->sta.station_flags = 0;
  
- /*
-  * RFCSR 11:
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 2afb798..28dc6ba 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -1865,7 +1865,12 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
- 		rt2800_rfcsr_write(rt2x00dev, 27, 0x00);
- 		rt2800_rfcsr_write(rt2x00dev, 29, 0x9b);
- 	} else {
--		rt2800_rfcsr_write(rt2x00dev, 7, 0x14);
-+		rt2800_rfcsr_read(rt2x00dev, 7, &rfcsr);
-+		rt2x00_set_field8(&rfcsr, RFCSR7_BIT2, 1);
-+		rt2x00_set_field8(&rfcsr, RFCSR7_BIT3, 0);
-+		rt2x00_set_field8(&rfcsr, RFCSR7_BIT4, 1);
-+		rt2x00_set_field8(&rfcsr, RFCSR7_BITS67, 0);
-+		rt2800_rfcsr_write(rt2x00dev, 7, rfcsr);
- 		rt2800_rfcsr_write(rt2x00dev, 9, 0xc0);
- 		rt2800_rfcsr_write(rt2x00dev, 10, 0xf1);
- 		rt2800_rfcsr_write(rt2x00dev, 11, 0x00);
+ 	if (sta) {
+ 		struct il_station_priv_common *sta_priv;
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index 811e768..a872175 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1169,8 +1169,6 @@ struct il_rxon_context {
+ 
+ 	struct il_qos_info qos_data;
+ 
+-	__le32 station_flags;
+-
+ 	struct {
+ 		bool non_gf_sta_present;
+ 		u8 protection;
 -- 
-1.7.9
+1.7.1
 
