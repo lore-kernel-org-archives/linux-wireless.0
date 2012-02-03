@@ -1,35 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foo.stuge.se ([212.116.89.98]:33906 "HELO foo.stuge.se"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S965299Ab2B2SJf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 13:09:35 -0500
-Message-ID: <20120229180929.32495.qmail@stuge.se> (sfid-20120229_190938_862753_20CAC969)
-Date: Wed, 29 Feb 2012 19:09:29 +0100
-From: Peter Stuge <peter@stuge.se>
-To: Matt Chen <machen@suse.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: [ath9k-devel] Any recommendation of direct access the GPIO
-	from specific address ?
-References: <CALx5=V8BDFXD7KGBFia0MAkb2iv3x5dupGXTkKEDJ24DLJVx1g@mail.gmail.com>
+Received: from dm-mail03.mozilla.org ([63.245.208.213]:49431 "EHLO
+	dm-mail03.mozilla.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751176Ab2BCW5c (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 17:57:32 -0500
+Message-ID: <4F2C61A0.7070802@mozilla.com> (sfid-20120203_235735_413313_F1CF37D0)
+Date: Fri, 03 Feb 2012 14:37:20 -0800
+From: John Schoenick <jschoenick@mozilla.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALx5=V8BDFXD7KGBFia0MAkb2iv3x5dupGXTkKEDJ24DLJVx1g@mail.gmail.com>
+To: Seth Forshee <seth.forshee@canonical.com>
+CC: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Scott Sanbar <scott.sanbar@gmail.com>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Re: BCM4331 fails to associate after suspend
+References: <20120203222818.GA3749@ubuntu-mba>
+In-Reply-To: <20120203222818.GA3749@ubuntu-mba>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Matt Chen wrote:
-> So it would detect the GPIO status in every 5 seconds. But the ath9k I
-> run in different platform, with the same modules, it works different
-> way. The LED for one is working very fast, in another one is working
-> so slow.
-> 
-> I would like to clarify it is driver or BIOS issues.
+On 02/03/2012 02:28 PM, Seth Forshee wrote:
+> I've been looking into some association problems seen with a MacBook Pro
+> 8,2 that has BCM4331 wireless, which I've confirmed still exist in
+> wireless-testing. The association failures reliably start appearing
+> after the machine is resumed from s3 without external power applied
+> (whether or not power is applied when the machine is suspended doesn't
+> matter).
+>
+> When the association failures are happening the BCM4331 seems to be able
+> to receive packets okay, as it can scan successfully. Transmissions
+> don't work though; no frames from the BCM4331 are ever seen on the air,
+> as though the tx path is off. Reloading both the b43 and bcma drivers
+> gets things working again, but reloading just b43 does not.
+>
+> I've been looking around a bit in the b43 and bcma drivers, but so far I
+> haven't found the reason why this happens. Any help would be
+> appreciated. Let me know if there's additional information I can
+> provide.
+>
+> Thanks,
+> Seth
+>
+> _______________________________________________
+> b43-dev mailing list
+> b43-dev@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/b43-dev
 
-It sounds like a hardware issue, meaning on the mainboard. Some
-designs signal the kernel about rfkill directly, others do not. When
-the design does not signal the kernel, the kernel only discovers it
-after 5 seconds when the ath9k driver looks at it's GPIO pin.
-
-
-//Peter
+I can add that reloading the modules after a suspend/resumes restores 
+functionality, though oddly adding them to SUSPEND_MODULES in pm-utils 
+config does not.
