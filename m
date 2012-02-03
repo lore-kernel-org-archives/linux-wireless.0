@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:42914 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755863Ab2BXE7F (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44936 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753465Ab2BCGEK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 23:59:05 -0500
-Received: by qcqw6 with SMTP id w6so270431qcq.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 20:59:04 -0800 (PST)
-Message-ID: <4F4718EF.3010300@gmail.com> (sfid-20120224_055908_929938_ADF0B46C)
-Date: Thu, 23 Feb 2012 23:58:23 -0500
-From: Richard Farina <sidhayn@gmail.com>
+	Fri, 3 Feb 2012 01:04:10 -0500
+Date: Fri, 3 Feb 2012 11:34:26 +0530
+From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+To: Adrian Chadd <adrian@freebsd.org>
+CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
+	<linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	Paul Stewart <pstew@google.com>
+Subject: Re: [PATCH 1/2] ath9k: recover the chip from tx/rx stuck
+Message-ID: <20120203060424.GB15811@vmraj-lnx.users.atheros.com> (sfid-20120203_070414_838426_A3A1B4DD)
+References: <1328112335-19265-1-git-send-email-rmanohar@qca.qualcomm.com>
+ <20265.65072.546108.448327@gargle.gargle.HOWL>
+ <20120202035652.GB25988@vmraj-lnx.users.atheros.com>
+ <20266.3200.403302.486325@gargle.gargle.HOWL>
+ <CAJ-VmomK0cD5rYbSYOQ7xwJLADdbD=a4JVG1bcd4QdTpV+uN2Q@mail.gmail.com>
 MIME-Version: 1.0
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] [compat-wireless] replace modprobe -l with functional
- equivilent
-References: <1329667396-20357-1-git-send-email-sidhayn@gmail.com> <CAB=NE6VSR8_uhsoDkgh2SmjgDerSX2CXztt2cVxYTEQSgTaYwg@mail.gmail.com>
-In-Reply-To: <CAB=NE6VSR8_uhsoDkgh2SmjgDerSX2CXztt2cVxYTEQSgTaYwg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAJ-VmomK0cD5rYbSYOQ7xwJLADdbD=a4JVG1bcd4QdTpV+uN2Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/23/12 20:39, Luis R. Rodriguez wrote:
-> On Sun, Feb 19, 2012 at 8:03 AM, Rick Farina <sidhayn@gmail.com> wrote:
->> modprobe -l is either deprecated or removed, so let's replace it
->>
->> Signed-off-by: Rick Farina <sidhayn@gmail.com>
-> Did you test this when one of those modules is present?
-ozzie compat-wireless # $(modinfo compat > /dev/null 2>&1) && echo yes
-yes
-ozzie compat-wireless #
-
-
-The logic is sound, I use the same test in another script and it works
-great.  It's a bit unusual I realize, but it works and it's all I could
-think of.  It tests the exit value of modinfo which is true when the
-module exists and false when it doesn't.  Simple as I could manage.
-
--Rick
-
+On Thu, Feb 02, 2012 at 01:58:21PM -0800, Adrian Chadd wrote:
+> On 1 February 2012 20:09, Sujith Manoharan <c_manoha@qca.qualcomm.com>wrote:
+> 
+> 
+> > > > I have not reviewed the patch, but to do such workarounds for an entire
+> > > > family of chips is overkill. Has it been confirmed that the other
+> > > > chips falling under this SREV check require this snafu ?
+> > > >
+> > > unfortunately this snafu is applicable for all ar9380 MAC based chips ;)
+> > > and confirmed the same.
+> >
+> > Ok. But this stuff really needs to be verified for other chips.
+> > These 'poll' workarounds are piling up.
+> >
+> 
+> Hi,
+> 
+> Is there a bugzilla.kernel.org bug for this particular behaviour? And if
+> you can dig up the internal bug number, please  post it privately.
 >
->   Luis
->
+No. This issue was originally reported by Google in their setup.
 
+--
+Rajkumar
