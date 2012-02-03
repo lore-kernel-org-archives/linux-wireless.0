@@ -1,54 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:57076 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753253Ab2BOSfO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 13:35:14 -0500
-Received: by vcge1 with SMTP id e1so962620vcg.19
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 10:35:13 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAB3XZEcv57uTvTN-rddc7p2LPoU0Tv_V3PqWyYpM_NajmFB1OQ@mail.gmail.com>
-References: <CAG6hwVNXru0bN+MZNf+vwN=LGFn9G8EpzK+A=FOCHwe0yYCbyQ@mail.gmail.com>
- <20120215040307.GA4387@shredder> <CAB3XZEcv57uTvTN-rddc7p2LPoU0Tv_V3PqWyYpM_NajmFB1OQ@mail.gmail.com>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Wed, 15 Feb 2012 10:34:53 -0800
-Message-ID: <CAG6hwVPhox575NKk5mOx8Q8Eangk8sVvZAi7fembFBF1yk40ww@mail.gmail.com> (sfid-20120215_193522_873317_30977AEC)
-Subject: Re: wl12xx: BUG: scheduling while atomic: kworker
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:27539 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756865Ab2BCQc6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 11:32:58 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v2 10/25] iwlegacy: get rid of ctxid
+Date: Fri,  3 Feb 2012 17:31:46 +0100
+Message-Id: <1328286721-11309-11-git-send-email-sgruszka@redhat.com> (sfid-20120203_173314_968690_01E51EC5)
+In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Eliad,
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/3945-mac.c |    2 --
+ drivers/net/wireless/iwlegacy/4965-mac.c |    2 --
+ drivers/net/wireless/iwlegacy/common.c   |    6 ------
+ drivers/net/wireless/iwlegacy/common.h   |    4 +---
+ drivers/net/wireless/iwlegacy/debug.c    |    1 -
+ 5 files changed, 1 insertions(+), 14 deletions(-)
 
-On Wed, Feb 15, 2012 at 2:00 AM, Eliad Peller <eliad@wizery.com> wrote:
-> On Wed, Feb 15, 2012 at 6:03 AM, Thomas Pedersen <thomas@cozybit.com> wrote:
->> Sorry, gmail ate the formatting. Resending:
->>
->> # [  151.065338] BUG: scheduling while atomic: kworker/0:1/425/0x00000200
->
->> [  151.249053] [<bf0f2170>] (wl12xx_sdio_raw_write+0x50/0xa4 [wl12xx_sdio]) from [<bf0c710c>] (wl1271_cm)
->> [  151.261260] [<bf0c710c>] (wl1271_cmd_send+0x80/0x3b4 [wl12xx]) from [<bf0c98f4>] (wl12xx_start_dev+0x)
->> [  151.272674] [<bf0c98f4>] (wl12xx_start_dev+0x90/0x144 [wl12xx]) from [<bf0cab2c>] (wl12xx_tx_get_hlid)
->> [  151.284179] [<bf0cab2c>] (wl12xx_tx_get_hlid+0xc8/0xcc [wl12xx]) from [<bf0c36c4>] (wl1271_op_tx+0x44)
->> [  151.284179] [<bf0c36c4>] (wl1271_op_tx+0x44/0x150 [wl12xx]) from [<bf059ce8>] (__ieee80211_tx.isra.4+)
->> [  151.307586] [<bf059ce8>] (__ieee80211_tx.isra.4+0x150/0x2c0 [mac80211]) from [<bf059f18>] (ieee80211_)
->> [  151.319702] [<bf059f18>] (ieee80211_tx+0xc0/0xf4 [mac80211]) from [<bf05a008>] (ieee80211_xmit+0xbc/0)
->> [  151.330841] [<bf05a008>] (ieee80211_xmit+0xbc/0x150 [mac80211]) from [<bf05b2a8>] (ieee80211_tx_skb_t)
->> [  151.342956] [<bf05b2a8>] (ieee80211_tx_skb_tid+0x3c/0x48 [mac80211]) from [<bf06f998>] (ieee80211_pro)
->> [  151.355773] [<bf06f998>] (ieee80211_probe_auth+0x128/0x2f8 [mac80211]) from [<bf073774>] (ieee80211_m)
->> [  151.355773] [<bf073774>] (ieee80211_mgd_auth+0x218/0x3b0 [mac80211]) from [<bf016e94>]
->
-> this should be applied:
-> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/84311
->
-> and you'll probably also need to apply
-> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/84312
->
-> if you want your device to be able to connect :)
->
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index 15dcafb..52cac0c 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -3617,8 +3617,6 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	il->cmd_queue = IL39_CMD_QUEUE_NUM;
+ 
+-	il->ctx.ctxid = 0;
+-
+ 	il->ctx.interface_modes =
+ 	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
+ 
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 33725e1..3209970 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -6132,8 +6132,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	il = hw->priv;
+ 	/* At this point both hw and il are allocated. */
+ 
+-	il->ctx.ctxid = 0;
+-
+ 	il->ctx.always_active = true;
+ 	il->ctx.is_active = true;
+ 	il->ctx.ac_to_fifo = il4965_bss_ac_to_fifo;
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 19ed867..7c7ea77 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -1951,7 +1951,6 @@ il_prep_station(struct il_priv *il, struct il_rxon_context *ctx,
+ 	station->sta.mode = 0;
+ 	station->sta.sta.sta_id = sta_id;
+ 	station->sta.station_flags = ctx->station_flags;
+-	station->ctxid = ctx->ctxid;
+ 
+ 	if (sta) {
+ 		struct il_station_priv_common *sta_priv;
+@@ -2191,9 +2190,6 @@ il_clear_ucode_stations(struct il_priv *il, struct il_rxon_context *ctx)
+ 
+ 	spin_lock_irqsave(&il->sta_lock, flags_spin);
+ 	for (i = 0; i < il->hw_params.max_stations; i++) {
+-		if (ctx && ctx->ctxid != il->stations[i].ctxid)
+-			continue;
+-
+ 		if (il->stations[i].used & IL_STA_UCODE_ACTIVE) {
+ 			D_INFO("Clearing ucode active for station %d\n", i);
+ 			il->stations[i].used &= ~IL_STA_UCODE_ACTIVE;
+@@ -2234,8 +2230,6 @@ il_restore_stations(struct il_priv *il, struct il_rxon_context *ctx)
+ 	D_ASSOC("Restoring all known stations ... start.\n");
+ 	spin_lock_irqsave(&il->sta_lock, flags_spin);
+ 	for (i = 0; i < il->hw_params.max_stations; i++) {
+-		if (ctx->ctxid != il->stations[i].ctxid)
+-			continue;
+ 		if ((il->stations[i].used & IL_STA_DRIVER_ACTIVE) &&
+ 		    !(il->stations[i].used & IL_STA_UCODE_ACTIVE)) {
+ 			D_ASSOC("Restoring sta %pM\n",
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index 8eac571..8df2286 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -735,7 +735,7 @@ struct il_qos_info {
+ struct il_station_entry {
+ 	struct il_addsta_cmd sta;
+ 	struct il_tid_data tid[MAX_TID_COUNT];
+-	u8 used, ctxid;
++	u8 used;
+ 	struct il_hw_key keyinfo;
+ 	struct il_link_quality_cmd *lq;
+ };
+@@ -1168,8 +1168,6 @@ struct il_rxon_context {
+ 
+ 	bool ht_need_multiple_chains;
+ 
+-	int ctxid;
+-
+ 	u32 interface_modes, exclusive_interface_modes;
+ 
+ 	struct il_qos_info qos_data;
+diff --git a/drivers/net/wireless/iwlegacy/debug.c b/drivers/net/wireless/iwlegacy/debug.c
+index 6e3841b..f3cb45e 100644
+--- a/drivers/net/wireless/iwlegacy/debug.c
++++ b/drivers/net/wireless/iwlegacy/debug.c
+@@ -649,7 +649,6 @@ il_dbgfs_qos_read(struct file *file, char __user *user_buf, size_t count,
+ 	char buf[256];
+ 	const size_t bufsz = sizeof(buf);
+ 
+-	pos += scnprintf(buf + pos, bufsz - pos, "context %d:\n", ctx->ctxid);
+ 	for (i = 0; i < AC_NUM; i++) {
+ 		pos +=
+ 		    scnprintf(buf + pos, bufsz - pos,
+-- 
+1.7.1
 
-That did it, thanks!
-
-Thomas
