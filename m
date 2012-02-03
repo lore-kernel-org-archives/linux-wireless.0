@@ -1,166 +1,364 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ee0-f74.google.com ([74.125.83.74]:53782 "EHLO
-	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753717Ab2BUNTt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Feb 2012 08:19:49 -0500
-Received: by eekb15 with SMTP id b15so234677eek.1
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2012 05:19:47 -0800 (PST)
-MIME-Version: 1.0
-Received: from glenhelen.mtv.corp.google.com (glenhelen.mtv.corp.google.com [172.22.72.223])
-	by hpza9.eem.corp.google.com (Postfix) with ESMTP id 71E855C0050
-	for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2012 05:19:47 -0800 (PST)
-In-Reply-To: <20120221060932.8A38C20517@glenhelen.mtv.corp.google.com>
-References: <20120221060932.8A38C20517@glenhelen.mtv.corp.google.com>
-From: Paul Stewart <pstew@chromium.org>
-Date: Mon, 20 Feb 2012 21:25:54 -0800
-Subject: [RFCv2] mac80211: Don't let regulatory make us deaf
-To: linux-wireless@vger.kernel.org
-Message-Id: <20120221131946.AC1AD20578@glenhelen.mtv.corp.google.com> (sfid-20120221_142005_568435_B65411B9)
+Received: from mx1.redhat.com ([209.132.183.28]:54057 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756865Ab2BCQdP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 11:33:15 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v2 24/25] iwlegacy: remove struct il_tx_info
+Date: Fri,  3 Feb 2012 17:32:00 +0100
+Message-Id: <1328286721-11309-25-git-send-email-sgruszka@redhat.com> (sfid-20120203_173321_991819_4FAD966D)
+In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When regulatory information changes our HT behavior (e.g,
-when we get a country code from the AP we have just associated
-with), we should use this information to change the power with
-which we transmit, and what channels we transmit.  Sometimes
-the channel parameters we derive from regulatory information
-contradicts the parameters we used in association.  For example,
-we could have associated specifying HT40, but the regulatory
-rules we apply may forbid HT40 operation.
+It's just wrapper to sk_buff pointers ...
 
-In the situation above, we should reconfigure ourselves to
-transmit in HT20 only, however it makes no sense for us to
-disable receive in HT40, since if we associated with these
-parameters, the AP has every reason to expect we can and
-will receive packets this way.  The code in mac80211 does
-not have the capability of sending the appropriate action
-frames to signal a change in HT behaviour so the AP has
-no clue we can no longer receive frames encoded this way.
-In some broken AP implementations, this can leave us
-effectively deaf if the AP never retries in lower HT rates.
-
-This change breaks up the channel_type parameter in the
-ieee80211_enable_ht function into a separate receive and
-transmit part.  It honors the channel flags set by regulatory
-in order to configure the rate control algorithm, but uses
-the capability flags to configure the channel on the radio,
-since these were used in association to set the AP's transmit
-rate.
-
-Signed-off-by: Paul Stewart <pstew@chromium.org>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- net/mac80211/chan.c        |   24 ++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h |    3 +++
- net/mac80211/mlme.c        |   16 ++++++++--------
- 3 files changed, 35 insertions(+), 8 deletions(-)
+ drivers/net/wireless/iwlegacy/3945-mac.c |    4 +--
+ drivers/net/wireless/iwlegacy/3945.c     |   18 +++++++---------
+ drivers/net/wireless/iwlegacy/4965-mac.c |   33 ++++++++++++-----------------
+ drivers/net/wireless/iwlegacy/4965.c     |   18 +++++++++-------
+ drivers/net/wireless/iwlegacy/common.c   |   24 ++++++++++-----------
+ drivers/net/wireless/iwlegacy/common.h   |   18 +--------------
+ 6 files changed, 46 insertions(+), 69 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index d1f7abd..494580a 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -3,6 +3,7 @@
-  */
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index 40ce692..aa8f5c0 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -538,9 +538,7 @@ il3945_tx_skb(struct il_priv *il, struct sk_buff *skb)
  
- #include <linux/nl80211.h>
-+#include <net/cfg80211.h>
- #include "ieee80211_i.h"
+ 	idx = il_get_cmd_idx(q, q->write_ptr, 0);
  
- static enum ieee80211_chan_mode
-@@ -134,3 +135,26 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
+-	/* Set up driver data for this TFD */
+-	memset(&(txq->txb[q->write_ptr]), 0, sizeof(struct il_tx_info));
+-	txq->txb[q->write_ptr].skb = skb;
++	txq->skbs[q->write_ptr] = skb;
  
- 	return result;
- }
-+
-+/*
-+ * ieee80211_get_xmit_channel_type returns the channel type we should
-+ * use for packet transmission, given the channel capability and
-+ * whatever regulatory flags we have been given.
-+ */
-+enum nl80211_channel_type ieee80211_get_xmit_channel_type(
-+				struct ieee80211_local *local,
-+				enum nl80211_channel_type channel_type) {
-+	switch (channel_type) {
-+	case NL80211_CHAN_HT40PLUS:
-+		if ((local->hw.conf.channel->flags &
-+		    IEEE80211_CHAN_NO_HT40PLUS))
-+			return NL80211_CHAN_HT20;
-+		break;
-+	case NL80211_CHAN_HT40MINUS:
-+		if ((local->hw.conf.channel->flags &
-+		    IEEE80211_CHAN_NO_HT40MINUS))
-+			return NL80211_CHAN_HT20;
-+		break;
-+	}
-+	return channel_type;
-+}
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 74594f0..0a3c7df 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1468,6 +1468,9 @@ bool ieee80211_set_channel_type(struct ieee80211_local *local,
- 				enum nl80211_channel_type chantype);
- enum nl80211_channel_type
- ieee80211_ht_info_to_channel_type(struct ieee80211_ht_info *ht_info);
-+enum nl80211_channel_type ieee80211_get_xmit_channel_type(
-+					struct ieee80211_local *local,
-+					enum nl80211_channel_type channel_type);
+ 	/* Init first empty entry in queue's array of Tx/cmd buffers */
+ 	out_cmd = txq->cmd[idx];
+diff --git a/drivers/net/wireless/iwlegacy/3945.c b/drivers/net/wireless/iwlegacy/3945.c
+index 7c21a57..6c1ae5f 100644
+--- a/drivers/net/wireless/iwlegacy/3945.c
++++ b/drivers/net/wireless/iwlegacy/3945.c
+@@ -293,16 +293,16 @@ il3945_tx_queue_reclaim(struct il_priv *il, int txq_id, int idx)
+ {
+ 	struct il_tx_queue *txq = &il->txq[txq_id];
+ 	struct il_queue *q = &txq->q;
+-	struct il_tx_info *tx_info;
++	struct sk_buff *skb;
  
- #ifdef CONFIG_MAC80211_NOINLINE
- #define debug_noinline noinline
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 52133da..3bcf4e3 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -188,6 +188,7 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 	bool enable_ht = true;
- 	enum nl80211_channel_type prev_chantype;
- 	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
-+	enum nl80211_channel_type xmit_channel_type;
+ 	BUG_ON(txq_id == IL39_CMD_QUEUE_NUM);
  
- 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+ 	for (idx = il_queue_inc_wrap(idx, q->n_bd); q->read_ptr != idx;
+ 	     q->read_ptr = il_queue_inc_wrap(q->read_ptr, q->n_bd)) {
  
-@@ -228,19 +229,18 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 		    (hti->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
- 			switch(hti->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
- 			case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
--				if (!(local->hw.conf.channel->flags &
--				    IEEE80211_CHAN_NO_HT40PLUS))
--					channel_type = NL80211_CHAN_HT40PLUS;
-+				channel_type = NL80211_CHAN_HT40PLUS;
- 				break;
- 			case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
--				if (!(local->hw.conf.channel->flags &
--				    IEEE80211_CHAN_NO_HT40MINUS))
--					channel_type = NL80211_CHAN_HT40MINUS;
-+				channel_type = NL80211_CHAN_HT40MINUS;
- 				break;
- 			}
- 		}
+-		tx_info = &txq->txb[txq->q.read_ptr];
+-		ieee80211_tx_status_irqsafe(il->hw, tx_info->skb);
+-		tx_info->skb = NULL;
++		skb = txq->skbs[txq->q.read_ptr];
++		ieee80211_tx_status_irqsafe(il->hw, skb);
++		txq->skbs[txq->q.read_ptr] = NULL;
+ 		il->ops->lib->txq_free_tfd(il, txq);
  	}
  
-+	xmit_channel_type =
-+		ieee80211_get_xmit_channel_type(local, channel_type);
+@@ -336,7 +336,7 @@ il3945_hdl_tx(struct il_priv *il, struct il_rx_buf *rxb)
+ 	}
+ 
+ 	txq->time_stamp = jiffies;
+-	info = IEEE80211_SKB_CB(txq->txb[txq->q.read_ptr].skb);
++	info = IEEE80211_SKB_CB(txq->skbs[txq->q.read_ptr]);
+ 	ieee80211_tx_info_clear_status(info);
+ 
+ 	/* Fill the MRR chain with some info about on-chip retransmissions */
+@@ -660,15 +660,13 @@ il3945_hw_txq_free_tfd(struct il_priv *il, struct il_tx_queue *txq)
+ 				 PCI_DMA_TODEVICE);
+ 
+ 	/* free SKB */
+-	if (txq->txb) {
+-		struct sk_buff *skb;
+-
+-		skb = txq->txb[txq->q.read_ptr].skb;
++	if (txq->skbs) {
++		struct sk_buff *skb = txq->skbs[txq->q.read_ptr];
+ 
+ 		/* can be called from irqs-disabled context */
+ 		if (skb) {
+ 			dev_kfree_skb_any(skb);
+-			txq->txb[txq->q.read_ptr].skb = NULL;
++			txq->skbs[txq->q.read_ptr] = NULL;
+ 		}
+ 	}
+ }
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 49dd1e0..2a52e7b 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -1753,9 +1753,7 @@ il4965_tx_skb(struct il_priv *il, struct sk_buff *skb)
+ 
+ 	spin_unlock(&il->sta_lock);
+ 
+-	/* Set up driver data for this TFD */
+-	memset(&(txq->txb[q->write_ptr]), 0, sizeof(struct il_tx_info));
+-	txq->txb[q->write_ptr].skb = skb;
++	txq->skbs[q->write_ptr] = skb;
+ 
+ 	/* Set up first empty entry in queue's array of Tx/cmd buffers */
+ 	out_cmd = txq->cmd[q->write_ptr];
+@@ -2435,14 +2433,14 @@ il4965_non_agg_tx_status(struct il_priv *il, const u8 *addr1)
+ }
+ 
+ static void
+-il4965_tx_status(struct il_priv *il, struct il_tx_info *tx_info, bool is_agg)
++il4965_tx_status(struct il_priv *il, struct sk_buff *skb, bool is_agg)
+ {
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx_info->skb->data;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 
+ 	if (!is_agg)
+ 		il4965_non_agg_tx_status(il, hdr->addr1);
+ 
+-	ieee80211_tx_status_irqsafe(il->hw, tx_info->skb);
++	ieee80211_tx_status_irqsafe(il->hw, skb);
+ }
+ 
+ int
+@@ -2450,9 +2448,9 @@ il4965_tx_queue_reclaim(struct il_priv *il, int txq_id, int idx)
+ {
+ 	struct il_tx_queue *txq = &il->txq[txq_id];
+ 	struct il_queue *q = &txq->q;
+-	struct il_tx_info *tx_info;
+ 	int nfreed = 0;
+ 	struct ieee80211_hdr *hdr;
++	struct sk_buff *skb;
+ 
+ 	if (idx >= q->n_bd || il_queue_used(q, idx) == 0) {
+ 		IL_ERR("Read idx for DMA queue txq id (%d), idx %d, "
+@@ -2464,19 +2462,18 @@ il4965_tx_queue_reclaim(struct il_priv *il, int txq_id, int idx)
+ 	for (idx = il_queue_inc_wrap(idx, q->n_bd); q->read_ptr != idx;
+ 	     q->read_ptr = il_queue_inc_wrap(q->read_ptr, q->n_bd)) {
+ 
+-		tx_info = &txq->txb[txq->q.read_ptr];
++		skb = txq->skbs[txq->q.read_ptr];
+ 
+-		if (WARN_ON_ONCE(tx_info->skb == NULL))
++		if (WARN_ON_ONCE(skb == NULL))
+ 			continue;
+ 
+-		hdr = (struct ieee80211_hdr *)tx_info->skb->data;
++		hdr = (struct ieee80211_hdr *) skb->data;
+ 		if (ieee80211_is_data_qos(hdr->frame_control))
+ 			nfreed++;
+ 
+-		il4965_tx_status(il, tx_info,
+-				 txq_id >= IL4965_FIRST_AMPDU_QUEUE);
+-		tx_info->skb = NULL;
++		il4965_tx_status(il, skb, txq_id >= IL4965_FIRST_AMPDU_QUEUE);
+ 
++		txq->skbs[txq->q.read_ptr] = NULL;
+ 		il->ops->lib->txq_free_tfd(il, txq);
+ 	}
+ 	return nfreed;
+@@ -2540,7 +2537,7 @@ il4965_tx_status_reply_compressed_ba(struct il_priv *il, struct il_ht_agg *agg,
+ 
+ 	D_TX_REPLY("Bitmap %llx\n", (unsigned long long)bitmap);
+ 
+-	info = IEEE80211_SKB_CB(il->txq[scd_flow].txb[agg->start_idx].skb);
++	info = IEEE80211_SKB_CB(il->txq[scd_flow].skbs[agg->start_idx]);
+ 	memset(&info->status, 0, sizeof(info->status));
+ 	info->flags |= IEEE80211_TX_STAT_ACK;
+ 	info->flags |= IEEE80211_TX_STAT_AMPDU;
+@@ -3624,15 +3621,13 @@ il4965_hw_txq_free_tfd(struct il_priv *il, struct il_tx_queue *txq)
+ 				 PCI_DMA_TODEVICE);
+ 
+ 	/* free SKB */
+-	if (txq->txb) {
+-		struct sk_buff *skb;
+-
+-		skb = txq->txb[txq->q.read_ptr].skb;
++	if (txq->skbs) {
++		struct sk_buff *skb = txq->skbs[txq->q.read_ptr];
+ 
+ 		/* can be called from irqs-disabled context */
+ 		if (skb) {
+ 			dev_kfree_skb_any(skb);
+-			txq->txb[txq->q.read_ptr].skb = NULL;
++			txq->skbs[txq->q.read_ptr] = NULL;
+ 		}
+ 	}
+ }
+diff --git a/drivers/net/wireless/iwlegacy/4965.c b/drivers/net/wireless/iwlegacy/4965.c
+index cf1d016..17a6922 100644
+--- a/drivers/net/wireless/iwlegacy/4965.c
++++ b/drivers/net/wireless/iwlegacy/4965.c
+@@ -1873,7 +1873,7 @@ il4965_tx_status_reply_tx(struct il_priv *il, struct il_ht_agg *agg,
+ 		D_TX_REPLY("FrameCnt = %d, StartIdx=%d idx=%d\n",
+ 			   agg->frame_count, agg->start_idx, idx);
+ 
+-		info = IEEE80211_SKB_CB(il->txq[txq_id].txb[idx].skb);
++		info = IEEE80211_SKB_CB(il->txq[txq_id].skbs[idx]);
+ 		info->status.rates[0].count = tx_resp->failure_frame + 1;
+ 		info->flags &= ~IEEE80211_TX_CTL_AMPDU;
+ 		info->flags |= il4965_tx_status_to_mac80211(status);
+@@ -1888,6 +1888,7 @@ il4965_tx_status_reply_tx(struct il_priv *il, struct il_ht_agg *agg,
+ 		/* Two or more frames were attempted; expect block-ack */
+ 		u64 bitmap = 0;
+ 		int start = agg->start_idx;
++		struct sk_buff *skb;
+ 
+ 		/* Construct bit-map of pending frames within Tx win */
+ 		for (i = 0; i < agg->frame_count; i++) {
+@@ -1905,12 +1906,10 @@ il4965_tx_status_reply_tx(struct il_priv *il, struct il_ht_agg *agg,
+ 			D_TX_REPLY("FrameCnt = %d, txq_id=%d idx=%d\n",
+ 				   agg->frame_count, txq_id, idx);
+ 
+-			hdr = il_tx_queue_get_hdr(il, txq_id, idx);
+-			if (!hdr) {
+-				IL_ERR("BUG_ON idx doesn't point to valid skb"
+-				       " idx=%d, txq_id=%d\n", idx, txq_id);
++			skb = il->txq[txq_id].skbs[idx];
++			if (WARN_ON_ONCE(skb == NULL))
+ 				return -1;
+-			}
++			hdr = (struct ieee80211_hdr *) skb->data;
+ 
+ 			sc = le16_to_cpu(hdr->seq_ctrl);
+ 			if (idx != (SEQ_TO_SN(sc) & 0xff)) {
+@@ -2018,6 +2017,7 @@ il4965_hdl_tx(struct il_priv *il, struct il_rx_buf *rxb)
+ 	int txq_id = SEQ_TO_QUEUE(sequence);
+ 	int idx = SEQ_TO_IDX(sequence);
+ 	struct il_tx_queue *txq = &il->txq[txq_id];
++	struct sk_buff *skb;
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_tx_info *info;
+ 	struct il4965_tx_resp *tx_resp = (void *)&pkt->u.raw[0];
+@@ -2036,10 +2036,12 @@ il4965_hdl_tx(struct il_priv *il, struct il_rx_buf *rxb)
+ 	}
+ 
+ 	txq->time_stamp = jiffies;
+-	info = IEEE80211_SKB_CB(txq->txb[txq->q.read_ptr].skb);
 +
- 	if (local->tmp_channel)
- 		local->tmp_channel_type = channel_type;
++	skb = txq->skbs[txq->q.read_ptr];
++	info = IEEE80211_SKB_CB(skb);
+ 	memset(&info->status, 0, sizeof(info->status));
  
-@@ -268,13 +268,13 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
- 	/* channel_type change automatically detected */
- 	ieee80211_hw_config(local, 0);
+-	hdr = il_tx_queue_get_hdr(il, txq_id, idx);
++	hdr = (struct ieee80211_hdr *) skb->data;
+ 	if (ieee80211_is_data_qos(hdr->frame_control)) {
+ 		qc = ieee80211_get_qos_ctl(hdr);
+ 		tid = qc[0] & 0xf;
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 1173521..04ec38e 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -2755,8 +2755,8 @@ il_tx_queue_free(struct il_priv *il, int txq_id)
+ 				  txq->tfds, txq->q.dma_addr);
  
--	if (prev_chantype != channel_type) {
-+	if (prev_chantype != xmit_channel_type) {
- 		rcu_read_lock();
- 		sta = sta_info_get(sdata, bssid);
- 		if (sta)
- 			rate_control_rate_update(local, sband, sta,
- 						 IEEE80211_RC_HT_CHANGED,
--						 channel_type);
-+						 xmit_channel_type);
- 		rcu_read_unlock();
+ 	/* De-alloc array of per-TFD driver data */
+-	kfree(txq->txb);
+-	txq->txb = NULL;
++	kfree(txq->skbs);
++	txq->skbs = NULL;
  
- 		if (beacon_htcap_ie)
+ 	/* deallocate arrays */
+ 	kfree(txq->cmd);
+@@ -2930,23 +2930,21 @@ il_tx_queue_alloc(struct il_priv *il, struct il_tx_queue *txq, u32 id)
+ 	/* Driver ilate data, only for Tx (not command) queues,
+ 	 * not shared with device. */
+ 	if (id != il->cmd_queue) {
+-		txq->txb = kcalloc(TFD_QUEUE_SIZE_MAX, sizeof(txq->txb[0]),
+-				   GFP_KERNEL);
+-		if (!txq->txb) {
+-			IL_ERR("kmalloc for auxiliary BD "
+-			       "structures failed\n");
++		txq->skbs = kcalloc(TFD_QUEUE_SIZE_MAX, sizeof(struct skb *),
++				    GFP_KERNEL);
++		if (!txq->skbs) {
++			IL_ERR("Fail to alloc skbs\n");
+ 			goto error;
+ 		}
+-	} else {
+-		txq->txb = NULL;
+-	}
++	} else
++		txq->skbs = NULL;
+ 
+ 	/* Circular buffer of transmit frame descriptors (TFDs),
+ 	 * shared with device */
+ 	txq->tfds =
+ 	    dma_alloc_coherent(dev, tfd_sz, &txq->q.dma_addr, GFP_KERNEL);
+ 	if (!txq->tfds) {
+-		IL_ERR("pci_alloc_consistent(%zd) failed\n", tfd_sz);
++		IL_ERR("Fail to alloc TFDs\n");
+ 		goto error;
+ 	}
+ 	txq->q.id = id;
+@@ -2954,8 +2952,8 @@ il_tx_queue_alloc(struct il_priv *il, struct il_tx_queue *txq, u32 id)
+ 	return 0;
+ 
+ error:
+-	kfree(txq->txb);
+-	txq->txb = NULL;
++	kfree(txq->skbs);
++	txq->skbs = NULL;
+ 
+ 	return -ENOMEM;
+ }
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index 21ed70a..527a1b9 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -143,11 +143,6 @@ struct il_queue {
+ 				 * space less than this */
+ };
+ 
+-/* One for each TFD */
+-struct il_tx_info {
+-	struct sk_buff *skb;
+-};
+-
+ /**
+  * struct il_tx_queue - Tx Queue for DMA
+  * @q: generic Rx/Tx queue descriptor
+@@ -155,7 +150,7 @@ struct il_tx_info {
+  * @cmd: array of command/TX buffer pointers
+  * @meta: array of meta data for each command/tx buffer
+  * @dma_addr_cmd: physical address of cmd/tx buffer array
+- * @txb: array of per-TFD driver data
++ * @skbs: array of per-TFD socket buffer pointers
+  * @time_stamp: time (in jiffies) of last read_ptr change
+  * @need_update: indicates need to update read/write idx
+  * @sched_retry: indicates queue is high-throughput aggregation (HT AGG) enabled
+@@ -171,7 +166,7 @@ struct il_tx_queue {
+ 	void *tfds;
+ 	struct il_device_cmd **cmd;
+ 	struct il_cmd_meta *meta;
+-	struct il_tx_info *txb;
++	struct sk_buff **skbs;
+ 	unsigned long time_stamp;
+ 	u8 need_update;
+ 	u8 sched_retry;
+@@ -1482,15 +1477,6 @@ il_txq_ctx_deactivate(struct il_priv *il, int txq_id)
+ 	clear_bit(txq_id, &il->txq_ctx_active_msk);
+ }
+ 
+-static inline struct ieee80211_hdr *
+-il_tx_queue_get_hdr(struct il_priv *il, int txq_id, int idx)
+-{
+-	if (il->txq[txq_id].txb[idx].skb)
+-		return (struct ieee80211_hdr *)il->txq[txq_id].txb[idx].skb->
+-		    data;
+-	return NULL;
+-}
+-
+ static inline int
+ il_is_associated(struct il_priv *il)
+ {
 -- 
-1.7.7.3
+1.7.1
 
