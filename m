@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:35901 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758184Ab2B2RUD convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:35970 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755492Ab2BCOSm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 12:20:03 -0500
-Received: by ghrr11 with SMTP id r11so963567ghr.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 09:20:02 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAB3XZEcp3F1ZV1MpnBrdF3uL1dpgP1zFCUB+VYFAzEMU1Zzw8A@mail.gmail.com>
-References: <CAMcMvsj2XMFarr1+fqdSv88ZLrXLquK7wgF8LsTYDBfvHFwgrA@mail.gmail.com>
-	<20120225012039.4E62720353@glenhelen.mtv.corp.google.com>
-	<CAB3XZEcp3F1ZV1MpnBrdF3uL1dpgP1zFCUB+VYFAzEMU1Zzw8A@mail.gmail.com>
-Date: Wed, 29 Feb 2012 09:20:02 -0800
-Message-ID: <CAMcMvsitdrMqMUti=b-cEM6KypGH=SWPhJWnr7xY0sc7_KWOvw@mail.gmail.com> (sfid-20120229_182017_791571_CC908C55)
-Subject: Re: [RFCv3] mac80211: Filter duplicate IE ids
-From: Paul Stewart <pstew@chromium.org>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org, sleffler@chromium.org,
-	johannes@sipsolutions.net
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 3 Feb 2012 09:18:42 -0500
+Received: by lbjn8 with SMTP id n8so851127lbj.30
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2012 06:18:39 -0800 (PST)
+Subject: Re: [PATCH 2/2] cleanup modprobe calls
+From: Luciano Coelho <coelho@ti.com>
+To: Richard Farina <sidhayn@gmail.com>
+Cc: mcgrof@gmail.com, linux-wireless@vger.kernel.org
+In-Reply-To: <4F2BEB9D.20909@gmail.com>
+References: <1328237302-13423-1-git-send-email-sidhayn@gmail.com>
+	 <1328237302-13423-2-git-send-email-sidhayn@gmail.com>
+	 <1328248669.3626.328.camel@cumari>  <4F2BEB9D.20909@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 03 Feb 2012 16:18:30 +0200
+Message-ID: <1328278711.3626.367.camel@cumari> (sfid-20120203_151845_557574_3A53E547)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 25, 2012 at 11:14 PM, Eliad Peller <eliad@wizery.com> wrote:
->
-> On Fri, Feb 24, 2012 at 3:59 AM, Paul Stewart <pstew@chromium.org> wrote:
-> > mac80211 is lenient with respect to reception of corrupted beacons.
-> > Even if the frame is corrupted as a whole, the available IE elements
-> > are still passed back and accepted, sometimes replacing legitimate
-> > data.  It is unknown to what extent this "feature" is made use of,
-> > but it is clear that in some cases, this is detrimental.  One such
-> > case is reported in http://crosbug.com/26832 where an AP corrupts
-> > its beacons but not its probe responses.
+On Fri, 2012-02-03 at 09:13 -0500, Richard Farina wrote: 
+> On 02/03/12 00:57, Luciano Coelho wrote:
+> > On Thu, 2012-02-02 at 21:48 -0500, Rick Farina wrote: 
+> >> There were a lot of needless calls to "modprobe -l <drivername>" and even more confusingly $(MODPROBE).
+> >> None of this is needed on a modern distro, and it errors on when modprobe -l is removed (such as KMOD in Arch Linux)
+> >>
+> >> Signed-of-By: Rick Farina <sidhayn@gmail.com>
+> >> ---
+> > I agree with this.  The modprobes are just there in order to list which
+> > of the relevant modules you have in your system.  There is little value
+> > in this and, if considered really necessary, there surely must be other
+> > ways to find out?
 > >
-> > One approach would be to completely reject frames with invaid data
-> > (for example, if the last tag extends beyond the end of the enclosing
-> > PDU).  The enclosed approach is much more conservative: we simply
-> > prevent later IEs from overwriting the state from previous ones.
-> > This approach hopes that there might be some salient data in the
-> > IE stream before the corruption, and seeks to at least prevent that
-> > data from being overwritten.  This approach will fix the case above.
-> >
-> [...]
->
-> > @@ -705,7 +730,8 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t
-> > len,
-> >                        if (!elems->quiet_elem) {
-> >                                elems->quiet_elem = pos;
-> >                                elems->quiet_elem_len = elen;
-> > -                       }
-> > +                       } else
-> > +                               elem_parse_failed = true;
-> >                        elems->num_of_quiet_elem++;
->
-> i'm not familiar with this IE, but num_of_quiet_elem, which defined as:
->        u8 num_of_quiet_elem;   /* can be more the one */
-> suggests we should treat it differently.
+> Although I've never liked all this scrolling, I would have recoded it
+> rather than removed it if I knew how.  At the present time there is no
+> way which I know to replicate this functionality. I suppose a find
+> statement could be added but honestly I just don't see it as necessary,
+> or any cleaner.
 
-Thanks.  You're absolutely right.  I'm cooking up a new patch.  If
-anyone has a list of IE elements that are okay to be repeated, that'd
-be nice, but for now I'm assuming (as I've found in practice) that the
-default should be to be upset if one is repeated.
+Well, at least we should use something else then $(MODPROBE) -l.  It
+would be nice to make it more generic.  "-l" is a modprobe specific
+option, maybe it could be moved to the variable itself so it could be
+changed for another command with the same effect? Maybe change it to
+$(FINDMODULE) and assign it to "modprobe -l" by default?
 
->
-> Eliad.
+-- 
+Cheers,
+Luca.
+
