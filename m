@@ -1,43 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34890 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751470Ab2BPOjJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Feb 2012 09:39:09 -0500
-Subject: Re: calling request_firmware() from module init will not work with
- recent/future udev versions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kay Sievers <kay.sievers@vrfy.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Tom Gundersen <teg@jklm.no>, Andy Whitcroft <apw@canonical.com>
-In-Reply-To: <4F3D0012.9070808@broadcom.com>
-References: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
-	 <1326621743.3448.1.camel@jlt3.sipsolutions.net>
-	 <CAPXgP13b0uu3DgOGRL-_WKx-aSQN-f0xL6OmjNPBGf9fg0satA@mail.gmail.com>
-	 ( sfid-20120115_163411_716244_29DE7A13) <1326704259.3510.3.camel@jlt3.sipsolutions.net>
-	 <4F3CF0C1.3090304@broadcom.com>
-	 <1329395881.3915.7.camel@jlt3.sipsolutions.net>
-	 <4F3D0012.9070808@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 16 Feb 2012 15:39:05 +0100
-Message-ID: <1329403145.3915.10.camel@jlt3.sipsolutions.net> (sfid-20120216_153921_586251_AA7D60E4)
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:55425 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756889Ab2BCQdE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 11:33:04 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v2 14/25] iwlegacy: remove ctx interface_modes
+Date: Fri,  3 Feb 2012 17:31:50 +0100
+Message-Id: <1328286721-11309-15-git-send-email-sgruszka@redhat.com> (sfid-20120203_173325_458090_BB117A06)
+In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-02-16 at 14:09 +0100, Arend van Spriel wrote:
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/3945-mac.c |    6 ++----
+ drivers/net/wireless/iwlegacy/4965-mac.c |    6 ++----
+ drivers/net/wireless/iwlegacy/common.c   |   29 ++++-------------------------
+ drivers/net/wireless/iwlegacy/common.h   |    2 --
+ 4 files changed, 8 insertions(+), 35 deletions(-)
 
-
-> > When the firmware loading fails, the driver should unbind from the
-> > device that it failed for, and the retrying behaviour doesn't change
-> > (and requires a rebind)
-
-> That helps. My driver was happily bound to the device until unloading 
-> the driver or unplugging the device.
-
-Right, if it fails you should call device_release_driver()
-
-johannes
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index 52cac0c..7c81f5a 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -3557,7 +3557,8 @@ il3945_setup_mac(struct il_priv *il)
+ 	/* Tell mac80211 our characteristics */
+ 	hw->flags = IEEE80211_HW_SIGNAL_DBM | IEEE80211_HW_SPECTRUM_MGMT;
+ 
+-	hw->wiphy->interface_modes = il->ctx.interface_modes;
++	hw->wiphy->interface_modes =
++	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
+ 
+ 	hw->wiphy->flags |=
+ 	    WIPHY_FLAG_CUSTOM_REGULATORY | WIPHY_FLAG_DISABLE_BEACON_HINTS |
+@@ -3617,9 +3618,6 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	il->cmd_queue = IL39_CMD_QUEUE_NUM;
+ 
+-	il->ctx.interface_modes =
+-	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
+-
+ 	/*
+ 	 * Disabling hardware scan means that mac80211 will perform scans
+ 	 * "the hard way", rather than using device's scan.
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 35d868c..1dd0014 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -5454,8 +5454,8 @@ il4965_mac_setup_register(struct il_priv *il, u32 max_probe_length)
+ 	hw->sta_data_size = sizeof(struct il_station_priv);
+ 	hw->vif_data_size = sizeof(struct il_vif_priv);
+ 
+-	hw->wiphy->interface_modes |= il->ctx.interface_modes;
+-	hw->wiphy->interface_modes |= il->ctx.exclusive_interface_modes;
++	hw->wiphy->interface_modes =
++	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
+ 
+ 	hw->wiphy->flags |=
+ 	    WIPHY_FLAG_CUSTOM_REGULATORY | WIPHY_FLAG_DISABLE_BEACON_HINTS;
+@@ -6141,8 +6141,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	il->ctx.is_active = true;
+ 	il->ctx.ac_to_fifo = il4965_bss_ac_to_fifo;
+ 	il->ctx.ac_to_queue = il4965_bss_ac_to_queue;
+-	il->ctx.exclusive_interface_modes = BIT(NL80211_IFTYPE_ADHOC);
+-	il->ctx.interface_modes = BIT(NL80211_IFTYPE_STATION);
+ 
+ 	SET_IEEE80211_DEV(hw, &pdev->dev);
+ 
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index ac26985..7f4c6bf 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -4566,7 +4566,6 @@ il_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 	struct il_priv *il = hw->priv;
+ 	struct il_vif_priv *vif_priv = (void *)vif->drv_priv;
+ 	int err;
+-	u32 modes;
+ 
+ 	D_MAC80211("enter: type %d, addr %pM\n", vif->type, vif->addr);
+ 
+@@ -4578,15 +4577,7 @@ il_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ 		goto out;
+ 	}
+ 
+-	/* check if busy context is exclusive */
+-	if (il->ctx.vif &&
+-	    (il->ctx.exclusive_interface_modes & BIT(il->ctx.vif->type))) {
+-		err = -EINVAL;
+-		goto out;
+-	}
+-
+-	modes = il->ctx.interface_modes | il->ctx.exclusive_interface_modes;
+-	if (!(modes & BIT(vif->type))) {
++	if (il->ctx.vif) {
+ 		err = -EOPNOTSUPP;
+ 		goto out;
+ 	}
+@@ -4979,10 +4970,10 @@ il_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ {
+ 	struct il_priv *il = hw->priv;
+ 	struct il_rxon_context *ctx = il_rxon_ctx_from_vif(vif);
+-	u32 modes;
+ 	int err;
+ 
+-	newtype = ieee80211_iftype_p2p(newtype, newp2p);
++	if (newp2p)
++		return -EOPNOTSUPP;
+ 
+ 	mutex_lock(&il->mutex);
+ 
+@@ -4995,22 +4986,10 @@ il_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		goto out;
+ 	}
+ 
+-	modes = ctx->interface_modes | ctx->exclusive_interface_modes;
+-	if (!(modes & BIT(newtype))) {
+-		err = -EOPNOTSUPP;
+-		goto out;
+-	}
+-
+-	if ((il->ctx.exclusive_interface_modes & BIT(il->ctx.vif->type)) ||
+-	    (il->ctx.exclusive_interface_modes & BIT(newtype))) {
+-		err = -EINVAL;
+-		goto out;
+-	}
+-
+ 	/* success */
+ 	il_teardown_interface(il, vif, true);
+ 	vif->type = newtype;
+-	vif->p2p = newp2p;
++	vif->p2p = false;
+ 	err = il_setup_interface(il, ctx);
+ 	WARN_ON(err);
+ 	/*
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index a872175..eddf22d 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1165,8 +1165,6 @@ struct il_rxon_context {
+ 	 */
+ 	bool always_active, is_active;
+ 
+-	u32 interface_modes, exclusive_interface_modes;
+-
+ 	struct il_qos_info qos_data;
+ 
+ 	struct {
+-- 
+1.7.1
 
