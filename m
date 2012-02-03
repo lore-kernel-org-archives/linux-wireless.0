@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([195.4.92.90]:54934 "EHLO mout0.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752271Ab2B1Kgj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Feb 2012 05:36:39 -0500
-Received: from [195.4.92.141] (helo=mjail1.freenet.de)
-	by mout0.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
-	id 1S2KQ9-0008TB-GM
-	for linux-wireless@vger.kernel.org; Tue, 28 Feb 2012 11:36:37 +0100
-Received: from localhost ([::1]:50334 helo=mjail1.freenet.de)
-	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1S2KQ8-0006LH-VI
-	for linux-wireless@vger.kernel.org; Tue, 28 Feb 2012 11:36:37 +0100
-Received: from [195.4.92.25] (port=58144 helo=15.mx.freenet.de)
-	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1S2KNf-00033N-O9
-	for linux-wireless@vger.kernel.org; Tue, 28 Feb 2012 11:34:03 +0100
-Received: from [2002:4fde:298:2:5054:ff:feb8:40bd] (port=53603 helo=mail.maya.org)
-	by 15.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
-	id 1S2KNf-0004of-6T
-	for linux-wireless@vger.kernel.org; Tue, 28 Feb 2012 11:34:03 +0100
-Received: from [192.168.1.6] (dualc.maya.org [192.168.1.6])
-	by mail.maya.org (8.14.4/8.13.8) with ESMTP id q1SAXvJL004179
-	for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2012 11:33:58 +0100
-Message-ID: <4F4CAD95.1000102@01019freenet.de> (sfid-20120228_113646_889972_DEA60E04)
-Date: Tue, 28 Feb 2012 11:33:57 +0100
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:41220 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755492Ab2BCOOB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 09:14:01 -0500
+Received: by qadc10 with SMTP id c10so741297qad.19
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2012 06:14:00 -0800 (PST)
+Message-ID: <4F2BEB9D.20909@gmail.com> (sfid-20120203_151406_283192_8C40E522)
+Date: Fri, 03 Feb 2012 09:13:49 -0500
+From: Richard Farina <sidhayn@gmail.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: compat-wireless install-scripts section broken since 2012-02-26
-Content-Type: text/plain; charset=ISO-8859-15
+To: Luciano Coelho <coelho@ti.com>
+CC: mcgrof@gmail.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] cleanup modprobe calls
+References: <1328237302-13423-1-git-send-email-sidhayn@gmail.com>  <1328237302-13423-2-git-send-email-sidhayn@gmail.com> <1328248669.3626.328.camel@cumari>
+In-Reply-To: <1328248669.3626.328.camel@cumari>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+On 02/03/12 00:57, Luciano Coelho wrote:
+> On Thu, 2012-02-02 at 21:48 -0500, Rick Farina wrote: 
+>> There were a lot of needless calls to "modprobe -l <drivername>" and even more confusingly $(MODPROBE).
+>> None of this is needed on a modern distro, and it errors on when modprobe -l is removed (such as KMOD in Arch Linux)
+>>
+>> Signed-of-By: Rick Farina <sidhayn@gmail.com>
+>> ---
+> I agree with this.  The modprobes are just there in order to list which
+> of the relevant modules you have in your system.  There is little value
+> in this and, if considered really necessary, there surely must be other
+> ways to find out?
+>
+Although I've never liked all this scrolling, I would have recoded it
+rather than removed it if I knew how.  At the present time there is no
+way which I know to replicate this functionality. I suppose a find
+statement could be added but honestly I just don't see it as necessary,
+or any cleaner.
 
-I'm getting the following error during make install:
-
-make install-scripts
-/bin/sh: -c: line 0: syntax error near unexpected token `;'
-/bin/sh: -c: line 0: `if ; then \'
-make: *** [install-scripts] Error 1
-
-
-Problem are these lines (one example - first line is the problem):
-
-@if $(modinfo ath_pci > /dev/null 2>&1); then \
-       echo -n "Note: madwifi detected, we're going to disable it. "  ;\
-       echo "If you would like to enable it later you can run:"  ;\
-       echo "    sudo athenable madwifi"  ;\
-       echo ;\
-       echo Running athenable ath5k...;\
-       $(DESTDIR)/usr/sbin/athenable ath5k ;\
-fi
-
-
-
-Kind regards,
-Andreas
+thanks,
+Rick Farina
