@@ -1,79 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:50714 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756767Ab2BATnY (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:39919 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757744Ab2BCU6F convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Feb 2012 14:43:24 -0500
-Received: from /spool/local
-	by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-wireless@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
-	Wed, 1 Feb 2012 12:43:23 -0700
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-To: linux-kernel@vger.kernel.org
-Cc: mingo@elte.hu, laijs@cn.fujitsu.com, dipankar@in.ibm.com,
-	akpm@linux-foundation.org, mathieu.desnoyers@polymtl.ca,
-	josh@joshtriplett.org, niv@us.ibm.com, tglx@linutronix.de,
-	peterz@infradead.org, rostedt@goodmis.org, Valdis.Kletnieks@vt.edu,
-	dhowells@redhat.com, eric.dumazet@gmail.com, darren@dvhart.com,
-	fweisbec@gmail.com, patches@linaro.org,
-	"Paul E. McKenney" <paul.mckenney@linaro.org>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH RFC tip/core/rcu 11/41] mac80211: Convert call_rcu() to kfree_rcu()
-Date: Wed,  1 Feb 2012 11:41:29 -0800
-Message-Id: <1328125319-5205-11-git-send-email-paulmck@linux.vnet.ibm.com> (sfid-20120201_204836_629858_1BD4EA9E)
-In-Reply-To: <1328125319-5205-1-git-send-email-paulmck@linux.vnet.ibm.com>
-References: <20120201194131.GA10028@linux.vnet.ibm.com>
- <1328125319-5205-1-git-send-email-paulmck@linux.vnet.ibm.com>
+	Fri, 3 Feb 2012 15:58:05 -0500
+Received: by bkcjm19 with SMTP id jm19so3401044bkc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2012 12:58:03 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20120130184446.GB2493@tuxdriver.com>
+References: <CAG-2HqUqwHo_xgqC79riQF2DA4DPz1Qy5ZARQK8GT+tf_-UKRg@mail.gmail.com>
+	<20120130184446.GB2493@tuxdriver.com>
+Date: Fri, 3 Feb 2012 23:58:03 +0300
+Message-ID: <CA++WF2PnEzS5CAfryaPrJSs3Xb3s0WK1zR7N5o8+ud2HiU5GCw@mail.gmail.com> (sfid-20120203_215859_621856_96135E27)
+Subject: Re: MAINTAINER NEEDED -- Re: status of ipw2x00
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Tom Gundersen <teg@jklm.no>, Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Paul E. McKenney" <paul.mckenney@linaro.org>
+Hi John,
 
-The call_rcu() in mesh_gate_del() invokes mesh_gate_node_reclaim(),
-which simply calls kfree().  So convert the call_rcu() to kfree_rcu(),
-allowing mesh_gate_node_reclaim() to be eliminated.
+On 30 January 2012 21:44, John W. Linville <linville@tuxdriver.com> wrote:
+> On Mon, Jan 30, 2012 at 02:42:52PM +0100, Tom Gundersen wrote:
+>
+>> If we are not able to drop the 2x00 drivers, are anyone still
+>> interested in working on them to fix the firmware loading?
+>
+> Anyone out there looking for a project?  A way to "break-in" to the
+> public Linux community without the risk of breaking anything too
+> important? :-)
+>
+> If someone wants to be the ipw2x00 maintainer, all they need to do
+> is start sending some non-broken patches...
 
-Signed-off-by: Paul E. McKenney <paul.mckenney@linaro.org>
-Signed-off-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
----
- net/mac80211/mesh_pathtbl.c |    8 +-------
- 1 files changed, 1 insertions(+), 7 deletions(-)
+I would volunteer taking ipw2x00 driver maintenance if it is ok with everyone.
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index edf167e..30420bc 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -413,12 +413,6 @@ struct mesh_path *mesh_path_lookup_by_idx(int idx, struct ieee80211_sub_if_data
- 	return NULL;
- }
- 
--static void mesh_gate_node_reclaim(struct rcu_head *rp)
--{
--	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
--	kfree(node);
--}
--
- /**
-  * mesh_path_add_gate - add the given mpath to a mesh gate to our path table
-  * @mpath: gate path to add to table
-@@ -479,7 +473,7 @@ static int mesh_gate_del(struct mesh_table *tbl, struct mesh_path *mpath)
- 		if (gate->mpath == mpath) {
- 			spin_lock_bh(&tbl->gates_lock);
- 			hlist_del_rcu(&gate->list);
--			call_rcu(&gate->rcu, mesh_gate_node_reclaim);
-+			kfree_rcu(gate, rcu);
- 			spin_unlock_bh(&tbl->gates_lock);
- 			mpath->sdata->u.mesh.num_gates--;
- 			mpath->is_gate = false;
--- 
-1.7.8
+I have already sent a few patches to ipw2x00:
+f961e34ebef84b532ec6c477f73b66d9a8b0ddbc and
+6e6ae9ddf0bc19ce066ed2f66f7a52b827e4514e.
 
+Stanislav.
