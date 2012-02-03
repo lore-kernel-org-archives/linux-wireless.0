@@ -1,289 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:34898 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753718Ab2BFKoQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Feb 2012 05:44:16 -0500
-Received: by mail-wi0-f174.google.com with SMTP id s10so4057049wic.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2012 02:44:15 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>, Gery Kahn <geryk@ti.com>
-Subject: [PATCH 1/4] wl12xx: Use a dedicated fw for PLT
-Date: Mon,  6 Feb 2012 12:47:54 +0200
-Message-Id: <1328525277-25334-2-git-send-email-eliad@wizery.com> (sfid-20120206_114420_413138_7DDA565A)
-In-Reply-To: <1328525277-25334-1-git-send-email-eliad@wizery.com>
-References: <1328525277-25334-1-git-send-email-eliad@wizery.com>
+Received: from mx1.redhat.com ([209.132.183.28]:31923 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754234Ab2BCMIa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 07:08:30 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 25/25] iwlegacy: remove set_hw_params callback
+Date: Fri,  3 Feb 2012 13:07:25 +0100
+Message-Id: <1328270845-16891-26-git-send-email-sgruszka@redhat.com> (sfid-20120203_130836_585507_A67CD52D)
+In-Reply-To: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
+References: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A special PLT firmware is used for calibration.
+We do not need that callback, settings parameters can be done locally.
 
-Add multiple fw support by introducing a new fw_type member,
-representing the currently saved fw (the actual fw state
-can be determined by wl->state).
-
-Signed-off-by: Gery Kahn <geryk@ti.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/wl12xx/debugfs.c |    2 +-
- drivers/net/wireless/wl12xx/main.c    |   53 +++++++++++++++++++++-----------
- drivers/net/wireless/wl12xx/rx.c      |    2 +-
- drivers/net/wireless/wl12xx/sdio.c    |    2 +
- drivers/net/wireless/wl12xx/spi.c     |    2 +
- drivers/net/wireless/wl12xx/wl12xx.h  |   11 ++++++-
- 6 files changed, 51 insertions(+), 21 deletions(-)
+ drivers/net/wireless/iwlegacy/4965-mac.c |   66 +++++++++++++++++++++++---
+ drivers/net/wireless/iwlegacy/4965.c     |   76 ------------------------------
+ drivers/net/wireless/iwlegacy/common.h   |    2 -
+ 3 files changed, 59 insertions(+), 85 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index 00dbe15..e1cf727 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -113,7 +113,7 @@ static void wl1271_debugfs_update_stats(struct wl1271 *wl)
- 	if (ret < 0)
- 		goto out;
- 
--	if (wl->state == WL1271_STATE_ON &&
-+	if (wl->state == WL1271_STATE_ON && !wl->plt &&
- 	    time_after(jiffies, wl->stats.fw_stats_update +
- 		       msecs_to_jiffies(WL1271_DEBUGFS_STATS_LIFETIME))) {
- 		wl1271_acx_statistics(wl, wl->stats.fw_stats);
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 52efe7d..591a3d7 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -993,16 +993,29 @@ out:
- 	return IRQ_HANDLED;
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 2a52e7b..235812a 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -6079,7 +6079,34 @@ il4965_hw_detect(struct il_priv *il)
+ 	D_INFO("HW Revision ID = 0x%X\n", il->rev_id);
  }
  
--static int wl1271_fetch_firmware(struct wl1271 *wl)
-+static int wl12xx_fetch_firmware(struct wl1271 *wl, bool plt)
- {
- 	const struct firmware *fw;
- 	const char *fw_name;
-+	enum wl12xx_fw_type fw_type;
- 	int ret;
- 
--	if (wl->chip.id == CHIP_ID_1283_PG20)
--		fw_name = WL128X_FW_NAME;
--	else
--		fw_name	= WL127X_FW_NAME;
-+	if (plt) {
-+		fw_type = WL12XX_FW_TYPE_PLT;
-+		if (wl->chip.id == CHIP_ID_1283_PG20)
-+			fw_name = WL128X_PLT_FW_NAME;
-+		else
-+			fw_name	= WL127X_PLT_FW_NAME;
-+	} else {
-+		fw_type = WL12XX_FW_TYPE_NORMAL;
-+		if (wl->chip.id == CHIP_ID_1283_PG20)
-+			fw_name = WL128X_FW_NAME;
-+		else
-+			fw_name	= WL127X_FW_NAME;
-+	}
+-static int
++static struct il_sensitivity_ranges il4965_sensitivity = {
++	.min_nrg_cck = 97,
++	.max_nrg_cck = 0,	/* not used, set to 0 */
 +
-+	if (wl->fw_type == fw_type)
-+		return 0;
- 
- 	wl1271_debug(DEBUG_BOOT, "booting firmware %s", fw_name);
- 
-@@ -1021,6 +1034,7 @@ static int wl1271_fetch_firmware(struct wl1271 *wl)
- 	}
- 
- 	vfree(wl->fw);
-+	wl->fw_type = WL12XX_FW_TYPE_NONE;
- 	wl->fw_len = fw->size;
- 	wl->fw = vmalloc(wl->fw_len);
- 
-@@ -1032,7 +1046,7 @@ static int wl1271_fetch_firmware(struct wl1271 *wl)
- 
- 	memcpy(wl->fw, fw->data, wl->fw_len);
- 	ret = 0;
--
-+	wl->fw_type = fw_type;
- out:
- 	release_firmware(fw);
- 
-@@ -1160,7 +1174,7 @@ static void wl1271_recovery_work(struct work_struct *work)
- 
- 	mutex_lock(&wl->mutex);
- 
--	if (wl->state != WL1271_STATE_ON)
-+	if (wl->state != WL1271_STATE_ON || wl->plt)
- 		goto out_unlock;
- 
- 	/* Avoid a recursive recovery */
-@@ -1240,7 +1254,7 @@ static int wl1271_setup(struct wl1271 *wl)
- 	return 0;
- }
- 
--static int wl1271_chip_wakeup(struct wl1271 *wl)
-+static int wl12xx_chip_wakeup(struct wl1271 *wl, bool plt)
- {
- 	struct wl1271_partition_set partition;
- 	int ret = 0;
-@@ -1315,11 +1329,9 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
- 		goto out;
- 	}
- 
--	if (wl->fw == NULL) {
--		ret = wl1271_fetch_firmware(wl);
--		if (ret < 0)
--			goto out;
--	}
-+	ret = wl12xx_fetch_firmware(wl, plt);
-+	if (ret < 0)
-+		goto out;
- 
- 	/* No NVS from netlink, try to get it from the filesystem */
- 	if (wl->nvs == NULL) {
-@@ -1351,7 +1363,7 @@ int wl1271_plt_start(struct wl1271 *wl)
- 
- 	while (retries) {
- 		retries--;
--		ret = wl1271_chip_wakeup(wl);
-+		ret = wl12xx_chip_wakeup(wl, true);
- 		if (ret < 0)
- 			goto power_off;
- 
-@@ -1363,7 +1375,8 @@ int wl1271_plt_start(struct wl1271 *wl)
- 		if (ret < 0)
- 			goto irq_disable;
- 
--		wl->state = WL1271_STATE_PLT;
-+		wl->plt = true;
-+		wl->state = WL1271_STATE_ON;
- 		wl1271_notice("firmware booted in PLT mode (%s)",
- 			      wl->chip.fw_ver_str);
- 
-@@ -1405,7 +1418,7 @@ static int __wl1271_plt_stop(struct wl1271 *wl)
- 
- 	wl1271_notice("power down");
- 
--	if (wl->state != WL1271_STATE_PLT) {
-+	if (!wl->plt) {
- 		wl1271_error("cannot power down because not in PLT "
- 			     "state: %d", wl->state);
- 		ret = -EBUSY;
-@@ -1415,6 +1428,7 @@ static int __wl1271_plt_stop(struct wl1271 *wl)
- 	wl1271_power_off(wl);
- 
- 	wl->state = WL1271_STATE_OFF;
-+	wl->plt = false;
- 	wl->rx_counter = 0;
- 
- 	mutex_unlock(&wl->mutex);
-@@ -1972,7 +1986,7 @@ static bool wl12xx_init_fw(struct wl1271 *wl)
- 
- 	while (retries) {
- 		retries--;
--		ret = wl1271_chip_wakeup(wl);
-+		ret = wl12xx_chip_wakeup(wl, false);
- 		if (ret < 0)
- 			goto power_off;
- 
-@@ -2072,6 +2086,7 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 		goto out;
- 	}
- 
++	.auto_corr_min_ofdm = 85,
++	.auto_corr_min_ofdm_mrc = 170,
++	.auto_corr_min_ofdm_x1 = 105,
++	.auto_corr_min_ofdm_mrc_x1 = 220,
 +
- 	ret = wl12xx_init_vif_data(wl, vif);
- 	if (ret < 0)
- 		goto out;
-@@ -4870,7 +4885,7 @@ static int wl1271_register_hw(struct wl1271 *wl)
- 
- static void wl1271_unregister_hw(struct wl1271 *wl)
- {
--	if (wl->state == WL1271_STATE_PLT)
-+	if (wl->plt)
- 		__wl1271_plt_stop(wl);
- 
- 	unregister_netdevice_notifier(&wl1271_dev_notifier);
-@@ -5049,6 +5064,7 @@ static struct ieee80211_hw *wl1271_alloc_hw(void)
- 	spin_lock_init(&wl->wl_lock);
- 
- 	wl->state = WL1271_STATE_OFF;
-+	wl->fw_type = WL12XX_FW_TYPE_NONE;
- 	mutex_init(&wl->mutex);
- 
- 	/* Apply default driver configuration. */
-@@ -5116,6 +5132,7 @@ static int wl1271_free_hw(struct wl1271 *wl)
- 
- 	vfree(wl->fw);
- 	wl->fw = NULL;
-+	wl->fw_type = WL12XX_FW_TYPE_NONE;
- 	kfree(wl->nvs);
- 	wl->nvs = NULL;
- 
-diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
-index 4fbd2a7..cfa6071 100644
---- a/drivers/net/wireless/wl12xx/rx.c
-+++ b/drivers/net/wireless/wl12xx/rx.c
-@@ -113,7 +113,7 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
- 	 * In PLT mode we seem to get frames and mac80211 warns about them,
- 	 * workaround this by not retrieving them at all.
- 	 */
--	if (unlikely(wl->state == WL1271_STATE_PLT))
-+	if (unlikely(wl->plt))
- 		return -EINVAL;
- 
- 	/* the data read starts with the descriptor */
-diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
-index ce3b9a9..1c0264c 100644
---- a/drivers/net/wireless/wl12xx/sdio.c
-+++ b/drivers/net/wireless/wl12xx/sdio.c
-@@ -372,3 +372,5 @@ MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
- MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
- MODULE_FIRMWARE(WL127X_FW_NAME);
- MODULE_FIRMWARE(WL128X_FW_NAME);
-+MODULE_FIRMWARE(WL127X_PLT_FW_NAME);
-+MODULE_FIRMWARE(WL128X_PLT_FW_NAME);
-diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
-index 92caa7c..5c2d4a0 100644
---- a/drivers/net/wireless/wl12xx/spi.c
-+++ b/drivers/net/wireless/wl12xx/spi.c
-@@ -435,4 +435,6 @@ MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
- MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
- MODULE_FIRMWARE(WL127X_FW_NAME);
- MODULE_FIRMWARE(WL128X_FW_NAME);
-+MODULE_FIRMWARE(WL127X_PLT_FW_NAME);
-+MODULE_FIRMWARE(WL128X_PLT_FW_NAME);
- MODULE_ALIAS("spi:wl1271");
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 70b15b5..348d1f6 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -37,6 +37,8 @@
- 
- #define WL127X_FW_NAME "ti-connectivity/wl127x-fw-4-sr.bin"
- #define WL128X_FW_NAME "ti-connectivity/wl128x-fw-4-sr.bin"
-+#define WL127X_PLT_FW_NAME "ti-connectivity/wl127x-fw-4-plt.bin"
-+#define WL128X_PLT_FW_NAME "ti-connectivity/wl128x-fw-4-plt.bin"
- 
- /*
-  * wl127x and wl128x are using the same NVS file name. However, the
-@@ -90,7 +92,12 @@
- enum wl1271_state {
- 	WL1271_STATE_OFF,
- 	WL1271_STATE_ON,
--	WL1271_STATE_PLT,
++	.auto_corr_max_ofdm = 120,
++	.auto_corr_max_ofdm_mrc = 210,
++	.auto_corr_max_ofdm_x1 = 140,
++	.auto_corr_max_ofdm_mrc_x1 = 270,
++
++	.auto_corr_min_cck = 125,
++	.auto_corr_max_cck = 200,
++	.auto_corr_min_cck_mrc = 200,
++	.auto_corr_max_cck_mrc = 400,
++
++	.nrg_th_cck = 100,
++	.nrg_th_ofdm = 100,
++
++	.barker_corr_th_min = 190,
++	.barker_corr_th_min_mrc = 390,
++	.nrg_th_cca = 62,
 +};
 +
-+enum wl12xx_fw_type {
-+	WL12XX_FW_TYPE_NONE,
-+	WL12XX_FW_TYPE_NORMAL,
-+	WL12XX_FW_TYPE_PLT,
++static void
+ il4965_set_hw_params(struct il_priv *il)
+ {
+ 	il->hw_params.bcast_id = IL4965_BROADCAST_ID;
+@@ -6095,8 +6122,36 @@ il4965_set_hw_params(struct il_priv *il)
+ 	if (il->cfg->mod_params->disable_11n)
+ 		il->cfg->sku &= ~IL_SKU_N;
+ 
+-	/* Device-specific setup */
+-	return il->ops->lib->set_hw_params(il);
++	if (il->cfg->mod_params->num_of_queues >= IL_MIN_NUM_QUEUES &&
++	    il->cfg->mod_params->num_of_queues <= IL49_NUM_QUEUES)
++		il->cfg->num_of_queues =
++		    il->cfg->mod_params->num_of_queues;
++
++	il->hw_params.max_txq_num = il->cfg->num_of_queues;
++	il->hw_params.dma_chnl_num = FH49_TCSR_CHNL_NUM;
++	il->hw_params.scd_bc_tbls_size =
++	    il->cfg->num_of_queues *
++	    sizeof(struct il4965_scd_bc_tbl);
++
++	il->hw_params.tfd_size = sizeof(struct il_tfd);
++	il->hw_params.max_stations = IL4965_STATION_COUNT;
++	il->hw_params.max_data_size = IL49_RTC_DATA_SIZE;
++	il->hw_params.max_inst_size = IL49_RTC_INST_SIZE;
++	il->hw_params.max_bsm_size = BSM_SRAM_SIZE;
++	il->hw_params.ht40_channel = BIT(IEEE80211_BAND_5GHZ);
++
++	il->hw_params.rx_wrt_ptr_reg = FH49_RSCSR_CHNL0_WPTR;
++
++	il->hw_params.tx_chains_num = il4965_num_of_ant(il->cfg->valid_tx_ant);
++	il->hw_params.rx_chains_num = il4965_num_of_ant(il->cfg->valid_rx_ant);
++	il->hw_params.valid_tx_ant = il->cfg->valid_tx_ant;
++	il->hw_params.valid_rx_ant = il->cfg->valid_rx_ant;
++
++	il->hw_params.ct_kill_threshold =
++	   CELSIUS_TO_KELVIN(CT_KILL_THRESHOLD_LEGACY);
++
++	il->hw_params.sens = &il4965_sensitivity;
++	il->hw_params.beacon_time_tsf_bits = IL4965_EXT_BEACON_TIME_POS;
+ }
+ 
+ static int
+@@ -6230,10 +6285,7 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/************************
+ 	 * 5. Setup HW constants
+ 	 ************************/
+-	if (il4965_set_hw_params(il)) {
+-		IL_ERR("failed to set hw parameters\n");
+-		goto out_free_eeprom;
+-	}
++	il4965_set_hw_params(il);
+ 
+ 	/*******************
+ 	 * 6. Setup il
+diff --git a/drivers/net/wireless/iwlegacy/4965.c b/drivers/net/wireless/iwlegacy/4965.c
+index 17a6922..79e4e79 100644
+--- a/drivers/net/wireless/iwlegacy/4965.c
++++ b/drivers/net/wireless/iwlegacy/4965.c
+@@ -569,81 +569,6 @@ il4965_chain_noise_reset(struct il_priv *il)
+ 	}
+ }
+ 
+-static struct il_sensitivity_ranges il4965_sensitivity = {
+-	.min_nrg_cck = 97,
+-	.max_nrg_cck = 0,	/* not used, set to 0 */
+-
+-	.auto_corr_min_ofdm = 85,
+-	.auto_corr_min_ofdm_mrc = 170,
+-	.auto_corr_min_ofdm_x1 = 105,
+-	.auto_corr_min_ofdm_mrc_x1 = 220,
+-
+-	.auto_corr_max_ofdm = 120,
+-	.auto_corr_max_ofdm_mrc = 210,
+-	.auto_corr_max_ofdm_x1 = 140,
+-	.auto_corr_max_ofdm_mrc_x1 = 270,
+-
+-	.auto_corr_min_cck = 125,
+-	.auto_corr_max_cck = 200,
+-	.auto_corr_min_cck_mrc = 200,
+-	.auto_corr_max_cck_mrc = 400,
+-
+-	.nrg_th_cck = 100,
+-	.nrg_th_ofdm = 100,
+-
+-	.barker_corr_th_min = 190,
+-	.barker_corr_th_min_mrc = 390,
+-	.nrg_th_cca = 62,
+-};
+-
+-static void
+-il4965_set_ct_threshold(struct il_priv *il)
+-{
+-	/* want Kelvin */
+-	il->hw_params.ct_kill_threshold =
+-	    CELSIUS_TO_KELVIN(CT_KILL_THRESHOLD_LEGACY);
+-}
+-
+-/**
+- * il4965_hw_set_hw_params
+- *
+- * Called when initializing driver
+- */
+-static int
+-il4965_hw_set_hw_params(struct il_priv *il)
+-{
+-	if (il->cfg->mod_params->num_of_queues >= IL_MIN_NUM_QUEUES &&
+-	    il->cfg->mod_params->num_of_queues <= IL49_NUM_QUEUES)
+-		il->cfg->num_of_queues =
+-		    il->cfg->mod_params->num_of_queues;
+-
+-	il->hw_params.max_txq_num = il->cfg->num_of_queues;
+-	il->hw_params.dma_chnl_num = FH49_TCSR_CHNL_NUM;
+-	il->hw_params.scd_bc_tbls_size =
+-	    il->cfg->num_of_queues *
+-	    sizeof(struct il4965_scd_bc_tbl);
+-	il->hw_params.tfd_size = sizeof(struct il_tfd);
+-	il->hw_params.max_stations = IL4965_STATION_COUNT;
+-	il->hw_params.max_data_size = IL49_RTC_DATA_SIZE;
+-	il->hw_params.max_inst_size = IL49_RTC_INST_SIZE;
+-	il->hw_params.max_bsm_size = BSM_SRAM_SIZE;
+-	il->hw_params.ht40_channel = BIT(IEEE80211_BAND_5GHZ);
+-
+-	il->hw_params.rx_wrt_ptr_reg = FH49_RSCSR_CHNL0_WPTR;
+-
+-	il->hw_params.tx_chains_num = il4965_num_of_ant(il->cfg->valid_tx_ant);
+-	il->hw_params.rx_chains_num = il4965_num_of_ant(il->cfg->valid_rx_ant);
+-	il->hw_params.valid_tx_ant = il->cfg->valid_tx_ant;
+-	il->hw_params.valid_rx_ant = il->cfg->valid_rx_ant;
+-
+-	il4965_set_ct_threshold(il);
+-
+-	il->hw_params.sens = &il4965_sensitivity;
+-	il->hw_params.beacon_time_tsf_bits = IL4965_EXT_BEACON_TIME_POS;
+-
+-	return 0;
+-}
+-
+ static s32
+ il4965_math_div_round(s32 num, s32 denom, s32 * res)
+ {
+@@ -2276,7 +2201,6 @@ static struct il_hcmd_utils_ops il4965_hcmd_utils = {
  };
  
- enum wl1271_partition_type {
-@@ -294,6 +301,8 @@ struct wl1271 {
- 	spinlock_t wl_lock;
+ static struct il_lib_ops il4965_lib = {
+-	.set_hw_params = il4965_hw_set_hw_params,
+ 	.txq_update_byte_cnt_tbl = il4965_txq_update_byte_cnt_tbl,
+ 	.txq_attach_buf_to_tfd = il4965_hw_txq_attach_buf_to_tfd,
+ 	.txq_free_tfd = il4965_hw_txq_free_tfd,
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index 527a1b9..7080956 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1592,8 +1592,6 @@ struct il_temp_ops {
+ };
  
- 	enum wl1271_state state;
-+	enum wl12xx_fw_type fw_type;
-+	bool plt;
- 	struct mutex mutex;
- 
- 	unsigned long flags;
+ struct il_lib_ops {
+-	/* set hw dependent parameters */
+-	int (*set_hw_params) (struct il_priv *il);
+ 	/* Handling TX */
+ 	void (*txq_update_byte_cnt_tbl) (struct il_priv *il,
+ 					 struct il_tx_queue *txq,
 -- 
-1.7.6.401.g6a319
+1.7.1
 
