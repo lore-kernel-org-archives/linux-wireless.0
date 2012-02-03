@@ -1,74 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:40813 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932175Ab2BIXvN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 18:51:13 -0500
-Received: by yenm8 with SMTP id m8so1232709yen.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2012 15:51:13 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1328818149-4826-10-git-send-email-arend@broadcom.com>
-References: <1328818149-4826-1-git-send-email-arend@broadcom.com> <1328818149-4826-10-git-send-email-arend@broadcom.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 10 Feb 2012 10:50:53 +1100
-Message-ID: <CAGRGNgXPE3T_jTFDvxAQ_Of4kNQSOGwwAy_-Na3iR24xvnLEZA@mail.gmail.com> (sfid-20120210_005119_671572_BFB32A70)
-Subject: Re: [PATCH 09/15] brcm80211: fmac: move module entry points to dhd_linux.c
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:59682 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754036Ab2BCMIU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 07:08:20 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 17/25] iwlegacy: get rid of ctx->ac_to_fifo
+Date: Fri,  3 Feb 2012 13:07:17 +0100
+Message-Id: <1328270845-16891-18-git-send-email-sgruszka@redhat.com> (sfid-20120203_130828_327405_733949DA)
+In-Reply-To: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
+References: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/4965-mac.c |   17 ++++++++---------
+ drivers/net/wireless/iwlegacy/common.h   |    1 -
+ 2 files changed, 8 insertions(+), 10 deletions(-)
 
-Quick query:
-
-On Fri, Feb 10, 2012 at 07:09, Arend van Spriel <arend@broadcom.com> wrote:
-> The module_init/exit functions are moved to dhd_linux.c to prepare
-> for supporting multiple host interface types.
->
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
->  .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    7 +----
->  drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    6 +++++
->  .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   24 ++++++++++++++++++++
->  3 files changed, 32 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-> index eff0073..ff7fc0e 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
-> @@ -1183,3 +1183,27 @@ exit:
->        return ret;
->  }
->  #endif                         /* DEBUG */
-> +
-> +static int __init brcmfmac_init(void)
-> +{
-> +       int ret = 0;
-> +
-> +#ifdef CONFIG_BRCMFMAC_SDIO
-> +       ret = brcmf_sdio_init();
-> +       if (ret)
-> +               goto fail;
-> +#endif
-
-I assume that the USB driver init will be added here as a separate #ifdef block.
-
-If this is the case, doesn't this mean that on a system with both the
-USB and SDIO drivers enabled in .config, you won't be able to load the
-USB driver without the SDIO driver or vice-versa?
-
-The model that most other drivers I've seen use is to have
-bus-specific modules and a common code module.
-
-Thanks,
-
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 94984c8..731bb8c 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -1458,8 +1458,15 @@ il4965_get_ac_from_tid(u16 tid)
+ static inline int
+ il4965_get_fifo_from_tid(struct il_rxon_context *ctx, u16 tid)
+ {
++	const u8 ac_to_fifo[] = {
++		IL_TX_FIFO_VO,
++		IL_TX_FIFO_VI,
++		IL_TX_FIFO_BE,
++		IL_TX_FIFO_BK,
++	};
++
+ 	if (likely(tid < ARRAY_SIZE(tid_to_ac)))
+-		return ctx->ac_to_fifo[tid_to_ac[tid]];
++		return ac_to_fifo[tid_to_ac[tid]];
+ 
+ 	/* no support for TIDs 8-15 yet */
+ 	return -EINVAL;
+@@ -6104,13 +6111,6 @@ il4965_set_hw_params(struct il_priv *il)
+ 	return il->cfg->ops->lib->set_hw_params(il);
+ }
+ 
+-static const u8 il4965_bss_ac_to_fifo[] = {
+-	IL_TX_FIFO_VO,
+-	IL_TX_FIFO_VI,
+-	IL_TX_FIFO_BE,
+-	IL_TX_FIFO_BK,
+-};
+-
+ static const u8 il4965_bss_ac_to_queue[] = {
+ 	0, 1, 2, 3,
+ };
+@@ -6139,7 +6139,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	il->ctx.always_active = true;
+ 	il->ctx.is_active = true;
+-	il->ctx.ac_to_fifo = il4965_bss_ac_to_fifo;
+ 	il->ctx.ac_to_queue = il4965_bss_ac_to_queue;
+ 
+ 	SET_IEEE80211_DEV(hw, &pdev->dev);
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index df4d160..e0e4d01 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1155,7 +1155,6 @@ struct il_force_reset {
+ struct il_rxon_context {
+ 	struct ieee80211_vif *vif;
+ 
+-	const u8 *ac_to_fifo;
+ 	const u8 *ac_to_queue;
+ 
+ 	/*
 -- 
-Julian Calaby
+1.7.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
