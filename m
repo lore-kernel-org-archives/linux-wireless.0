@@ -1,184 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:10956 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:65039 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752385Ab2BQUXy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Feb 2012 15:23:54 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
+	id S1756880Ab2BCQc4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 11:32:56 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 15/26] iwlwifi: iwl_set_hw_params returns always 0
-Date: Fri, 17 Feb 2012 11:13:43 -0800
-Message-Id: <1329506034-1394-16-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120217_212416_249136_3216E4D6)
-In-Reply-To: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v2 12/25] iwlegacy: move wep_keys out of context
+Date: Fri,  3 Feb 2012 17:31:48 +0100
+Message-Id: <1328286721-11309-13-git-send-email-sgruszka@redhat.com> (sfid-20120203_173305_286257_BD76F34E)
+In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-Remove the return value.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-1000.c |    4 +---
- drivers/net/wireless/iwlwifi/iwl-2000.c |    4 +---
- drivers/net/wireless/iwlwifi/iwl-5000.c |    8 ++------
- drivers/net/wireless/iwlwifi/iwl-6000.c |    3 +--
- drivers/net/wireless/iwlwifi/iwl-agn.c  |   10 +++-------
- drivers/net/wireless/iwlwifi/iwl-core.h |    2 +-
- 6 files changed, 9 insertions(+), 22 deletions(-)
+ drivers/net/wireless/iwlegacy/4965-mac.c |   58 ++++++++++++++++++-----------
+ drivers/net/wireless/iwlegacy/common.h   |   19 ++--------
+ 2 files changed, 39 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
-index 8c1466c..91c4a72 100644
---- a/drivers/net/wireless/iwlwifi/iwl-1000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
-@@ -120,7 +120,7 @@ static struct iwl_sensitivity_ranges iwl1000_sensitivity = {
- 	.nrg_th_cca = 62,
- };
- 
--static int iwl1000_hw_set_hw_params(struct iwl_priv *priv)
-+static void iwl1000_hw_set_hw_params(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index ecb7b54..35d868c 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -2808,7 +2808,7 @@ static int
+ il4965_static_wepkey_cmd(struct il_priv *il, struct il_rxon_context *ctx,
+ 			 bool send_if_empty)
  {
- 	if (iwlagn_mod_params.num_of_queues >= IWL_MIN_NUM_QUEUES &&
- 	    iwlagn_mod_params.num_of_queues <= IWLAGN_NUM_QUEUES)
-@@ -146,8 +146,6 @@ static int iwl1000_hw_set_hw_params(struct iwl_priv *priv)
+-	int i, not_empty = 0;
++	int i;
+ 	u8 buff[sizeof(struct il_wep_cmd) +
+ 		sizeof(struct il_wep_key) * WEP_KEYS_MAX];
+ 	struct il_wep_cmd *wep_cmd = (struct il_wep_cmd *)buff;
+@@ -2818,6 +2818,7 @@ il4965_static_wepkey_cmd(struct il_priv *il, struct il_rxon_context *ctx,
+ 		.data = wep_cmd,
+ 		.flags = CMD_SYNC,
+ 	};
++	bool not_empty = false;
  
- 	/* Set initial sensitivity parameters */
- 	hw_params(priv).sens = &iwl1000_sensitivity;
+ 	might_sleep();
+ 
+@@ -2825,24 +2826,23 @@ il4965_static_wepkey_cmd(struct il_priv *il, struct il_rxon_context *ctx,
+ 	       cmd_size + (sizeof(struct il_wep_key) * WEP_KEYS_MAX));
+ 
+ 	for (i = 0; i < WEP_KEYS_MAX; i++) {
++		u8 key_size = il->_4965.wep_keys[i].key_size;
++
+ 		wep_cmd->key[i].key_idx = i;
+-		if (ctx->wep_keys[i].key_size) {
++		if (key_size) {
+ 			wep_cmd->key[i].key_offset = i;
+-			not_empty = 1;
+-		} else {
++			not_empty = true;
++		} else
+ 			wep_cmd->key[i].key_offset = WEP_INVALID_OFFSET;
+-		}
+ 
+-		wep_cmd->key[i].key_size = ctx->wep_keys[i].key_size;
+-		memcpy(&wep_cmd->key[i].key[3], ctx->wep_keys[i].key,
+-		       ctx->wep_keys[i].key_size);
++		wep_cmd->key[i].key_size = key_size;
++		memcpy(&wep_cmd->key[i].key[3], il->_4965.wep_keys[i].key, key_size);
+ 	}
+ 
+ 	wep_cmd->global_key_type = WEP_KEY_WEP_TYPE;
+ 	wep_cmd->num_keys = WEP_KEYS_MAX;
+ 
+ 	cmd_size += sizeof(struct il_wep_key) * WEP_KEYS_MAX;
 -
--	return 0;
+ 	cmd.len = cmd_size;
+ 
+ 	if (not_empty || send_if_empty)
+@@ -2864,19 +2864,20 @@ il4965_remove_default_wep_key(struct il_priv *il, struct il_rxon_context *ctx,
+ 			      struct ieee80211_key_conf *keyconf)
+ {
+ 	int ret;
++	int idx = keyconf->keyidx;
+ 
+ 	lockdep_assert_held(&il->mutex);
+ 
+-	D_WEP("Removing default WEP key: idx=%d\n", keyconf->keyidx);
++	D_WEP("Removing default WEP key: idx=%d\n", idx);
+ 
+-	memset(&ctx->wep_keys[keyconf->keyidx], 0, sizeof(ctx->wep_keys[0]));
++	memset(&il->_4965.wep_keys[idx], 0, sizeof(struct il_wep_key));
+ 	if (il_is_rfkill(il)) {
+ 		D_WEP("Not sending C_WEPKEY command due to RFKILL.\n");
+ 		/* but keys in device are clear anyway so return success */
+ 		return 0;
+ 	}
+ 	ret = il4965_static_wepkey_cmd(il, ctx, 1);
+-	D_WEP("Remove default WEP key: idx=%d ret=%d\n", keyconf->keyidx, ret);
++	D_WEP("Remove default WEP key: idx=%d ret=%d\n", idx, ret);
+ 
+ 	return ret;
+ }
+@@ -2886,11 +2887,12 @@ il4965_set_default_wep_key(struct il_priv *il, struct il_rxon_context *ctx,
+ 			   struct ieee80211_key_conf *keyconf)
+ {
+ 	int ret;
++	int len = keyconf->keylen;
++	int idx = keyconf->keyidx;
+ 
+ 	lockdep_assert_held(&il->mutex);
+ 
+-	if (keyconf->keylen != WEP_KEY_LEN_128 &&
+-	    keyconf->keylen != WEP_KEY_LEN_64) {
++	if (len != WEP_KEY_LEN_128 && len != WEP_KEY_LEN_64) {
+ 		D_WEP("Bad WEP key length %d\n", keyconf->keylen);
+ 		return -EINVAL;
+ 	}
+@@ -2899,14 +2901,12 @@ il4965_set_default_wep_key(struct il_priv *il, struct il_rxon_context *ctx,
+ 	keyconf->hw_key_idx = HW_KEY_DEFAULT;
+ 	il->stations[IL_AP_ID].keyinfo.cipher = keyconf->cipher;
+ 
+-	ctx->wep_keys[keyconf->keyidx].key_size = keyconf->keylen;
+-	memcpy(&ctx->wep_keys[keyconf->keyidx].key, &keyconf->key,
+-	       keyconf->keylen);
++	il->_4965.wep_keys[idx].key_size = len;
++	memcpy(&il->_4965.wep_keys[idx].key, &keyconf->key, len);
+ 
+ 	ret = il4965_static_wepkey_cmd(il, ctx, false);
+-	D_WEP("Set default WEP key: len=%d idx=%d ret=%d\n", keyconf->keylen,
+-	      keyconf->keyidx, ret);
+ 
++	D_WEP("Set default WEP key: len=%d idx=%d ret=%d\n", len, idx, ret);
+ 	return ret;
  }
  
- static struct iwl_lib_ops iwl1000_lib = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
-index d4f5f3b..75f0e50 100644
---- a/drivers/net/wireless/iwlwifi/iwl-2000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
-@@ -116,7 +116,7 @@ static struct iwl_sensitivity_ranges iwl2000_sensitivity = {
- 	.nrg_th_cca = 62,
- };
+@@ -3106,7 +3106,7 @@ il4965_remove_dynamic_key(struct il_priv *il, struct il_rxon_context *ctx,
  
--static int iwl2000_hw_set_hw_params(struct iwl_priv *priv)
-+static void iwl2000_hw_set_hw_params(struct iwl_priv *priv)
- {
- 	if (iwlagn_mod_params.num_of_queues >= IWL_MIN_NUM_QUEUES &&
- 	    iwlagn_mod_params.num_of_queues <= IWLAGN_NUM_QUEUES)
-@@ -142,8 +142,6 @@ static int iwl2000_hw_set_hw_params(struct iwl_priv *priv)
+ 	lockdep_assert_held(&il->mutex);
  
- 	/* Set initial sensitivity parameters */
- 	hw_params(priv).sens = &iwl2000_sensitivity;
+-	ctx->key_mapping_keys--;
++	il->_4965.key_mapping_keys--;
+ 
+ 	spin_lock_irqsave(&il->sta_lock, flags);
+ 	key_flags = le16_to_cpu(il->stations[sta_id].sta.key.key_flags);
+@@ -3164,7 +3164,7 @@ il4965_set_dynamic_key(struct il_priv *il, struct il_rxon_context *ctx,
+ 
+ 	lockdep_assert_held(&il->mutex);
+ 
+-	ctx->key_mapping_keys++;
++	il->_4965.key_mapping_keys++;
+ 	keyconf->hw_key_idx = HW_KEY_DYNAMIC;
+ 
+ 	switch (keyconf->cipher) {
+@@ -5067,6 +5067,20 @@ __il4965_down(struct il_priv *il)
+ 	del_timer_sync(&il->watchdog);
+ 
+ 	il_clear_ucode_stations(il, NULL);
++
++	/* FIXME: race conditions ? */
++	spin_lock_irq(&il->sta_lock);
++	/*
++	 * Remove all key information that is not stored as part
++	 * of station information since mac80211 may not have had
++	 * a chance to remove all the keys. When device is
++	 * reconfigured by mac80211 after an error all keys will
++	 * be reconfigured.
++	 */
++	memset(il->_4965.wep_keys, 0, sizeof(il->_4965.wep_keys));
++	il->_4965.key_mapping_keys = 0;
++	spin_unlock_irq(&il->sta_lock);
++
+ 	il_dealloc_bcast_stations(il);
+ 	il_clear_driver_stations(il);
+ 
+@@ -5613,7 +5627,7 @@ il4965_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 	if ((key->cipher == WLAN_CIPHER_SUITE_WEP40 ||
+ 	     key->cipher == WLAN_CIPHER_SUITE_WEP104) && !sta) {
+ 		if (cmd == SET_KEY)
+-			is_default_wep_key = !ctx->key_mapping_keys;
++			is_default_wep_key = !il->_4965.key_mapping_keys;
+ 		else
+ 			is_default_wep_key =
+ 			    (key->hw_key_idx == HW_KEY_DEFAULT);
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index 89922e0..811e768 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1169,9 +1169,6 @@ struct il_rxon_context {
+ 
+ 	struct il_qos_info qos_data;
+ 
+-	struct il_wep_key wep_keys[WEP_KEYS_MAX];
+-	u8 key_mapping_keys;
 -
--	return 0;
- }
+ 	__le32 station_flags;
  
- static struct iwl_lib_ops iwl2000_lib = {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
-index dc9317d..458e677 100644
---- a/drivers/net/wireless/iwlwifi/iwl-5000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
-@@ -162,7 +162,7 @@ static void iwl5000_set_ct_threshold(struct iwl_priv *priv)
- 	hw_params(priv).ct_kill_threshold = CT_KILL_THRESHOLD_LEGACY;
- }
+ 	struct {
+@@ -1417,6 +1414,9 @@ struct il_priv {
+ 			u8 phy_calib_chain_noise_reset_cmd;
+ 			u8 phy_calib_chain_noise_gain_cmd;
  
--static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
-+static void iwl5000_hw_set_hw_params(struct iwl_priv *priv)
++			u8 key_mapping_keys;
++			struct il_wep_key wep_keys[WEP_KEYS_MAX];
++
+ 			struct il_notif_stats stats;
+ #ifdef CONFIG_IWLEGACY_DEBUGFS
+ 			struct il_notif_stats accum_stats;
+@@ -2318,24 +2318,11 @@ static inline void
+ il_clear_driver_stations(struct il_priv *il)
  {
- 	if (iwlagn_mod_params.num_of_queues >= IWL_MIN_NUM_QUEUES &&
- 	    iwlagn_mod_params.num_of_queues <= IWLAGN_NUM_QUEUES)
-@@ -185,11 +185,9 @@ static int iwl5000_hw_set_hw_params(struct iwl_priv *priv)
+ 	unsigned long flags;
+-	struct il_rxon_context *ctx = &il->ctx;
  
- 	/* Set initial sensitivity parameters */
- 	hw_params(priv).sens = &iwl5000_sensitivity;
+ 	spin_lock_irqsave(&il->sta_lock, flags);
+ 	memset(il->stations, 0, sizeof(il->stations));
+ 	il->num_stations = 0;
 -
--	return 0;
- }
- 
--static int iwl5150_hw_set_hw_params(struct iwl_priv *priv)
-+static void iwl5150_hw_set_hw_params(struct iwl_priv *priv)
- {
- 	if (iwlagn_mod_params.num_of_queues >= IWL_MIN_NUM_QUEUES &&
- 	    iwlagn_mod_params.num_of_queues <= IWLAGN_NUM_QUEUES)
-@@ -212,8 +210,6 @@ static int iwl5150_hw_set_hw_params(struct iwl_priv *priv)
- 
- 	/* Set initial sensitivity parameters */
- 	hw_params(priv).sens = &iwl5150_sensitivity;
+ 	il->ucode_key_table = 0;
 -
--	return 0;
+-	/*
+-	 * Remove all key information that is not stored as part
+-	 * of station information since mac80211 may not have had
+-	 * a chance to remove all the keys. When device is
+-	 * reconfigured by mac80211 after an error all keys will
+-	 * be reconfigured.
+-	 */
+-	memset(ctx->wep_keys, 0, sizeof(ctx->wep_keys));
+-	ctx->key_mapping_keys = 0;
+-
+ 	spin_unlock_irqrestore(&il->sta_lock, flags);
  }
  
- static void iwl5150_temperature(struct iwl_priv *priv)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
-index c36fb85..19e4103 100644
---- a/drivers/net/wireless/iwlwifi/iwl-6000.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
-@@ -137,7 +137,7 @@ static struct iwl_sensitivity_ranges iwl6000_sensitivity = {
- 	.nrg_th_cca = 62,
- };
- 
--static int iwl6000_hw_set_hw_params(struct iwl_priv *priv)
-+static void iwl6000_hw_set_hw_params(struct iwl_priv *priv)
- {
- 	if (iwlagn_mod_params.num_of_queues >= IWL_MIN_NUM_QUEUES &&
- 	    iwlagn_mod_params.num_of_queues <= IWLAGN_NUM_QUEUES)
-@@ -165,7 +165,6 @@ static int iwl6000_hw_set_hw_params(struct iwl_priv *priv)
- 	/* Set initial sensitivity parameters */
- 	hw_params(priv).sens = &iwl6000_sensitivity;
- 
--	return 0;
- }
- 
- static int iwl6000_hw_channel_switch(struct iwl_priv *priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index cf1a353..68b9e5e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1082,7 +1082,7 @@ static void iwl_uninit_drv(struct iwl_priv *priv)
- #define IWL_RX_BUF_SIZE_4K (4 * 1024)
- #define IWL_RX_BUF_SIZE_8K (8 * 1024)
- 
--static int iwl_set_hw_params(struct iwl_priv *priv)
-+static void iwl_set_hw_params(struct iwl_priv *priv)
- {
- 	if (iwlagn_mod_params.amsdu_size_8K)
- 		hw_params(priv).rx_page_order =
-@@ -1102,7 +1102,7 @@ static int iwl_set_hw_params(struct iwl_priv *priv)
- 	hw_params(priv).wd_timeout = cfg(priv)->base_params->wd_timeout;
- 
- 	/* Device-specific setup */
--	return cfg(priv)->lib->set_hw_params(priv);
-+	cfg(priv)->lib->set_hw_params(priv);
- }
- 
- 
-@@ -1239,11 +1239,7 @@ int iwl_probe(struct iwl_bus *bus, const struct iwl_trans_ops *trans_ops,
- 	/************************
- 	 * 5. Setup HW constants
- 	 ************************/
--	if (iwl_set_hw_params(priv)) {
--		err = -ENOENT;
--		IWL_ERR(priv, "failed to set hw parameters\n");
--		goto out_free_eeprom;
--	}
-+	iwl_set_hw_params(priv);
- 
- 	/*******************
- 	 * 6. Setup priv
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 8d60dcf..49370dd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -76,7 +76,7 @@ struct iwl_cmd;
- 
- struct iwl_lib_ops {
- 	/* set hw dependent parameters */
--	int (*set_hw_params)(struct iwl_priv *priv);
-+	void (*set_hw_params)(struct iwl_priv *priv);
- 	/* setup BT Rx handler */
- 	void (*bt_rx_handler_setup)(struct iwl_priv *priv);
- 	/* setup BT related deferred work */
 -- 
-1.7.0.4
+1.7.1
 
