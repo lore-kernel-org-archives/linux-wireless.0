@@ -1,58 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60983 "EHLO nbd.name"
+Received: from mx1.redhat.com ([209.132.183.28]:3472 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753260Ab2BETxh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Feb 2012 14:53:37 -0500
-Message-ID: <4F2EDE23.5070505@openwrt.org> (sfid-20120205_205428_383111_CA9117E0)
-Date: Sun, 05 Feb 2012 20:53:07 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Jurica Vukadin <u.ra604@googlemail.com>
-CC: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: regression, 3.2.2 stable: ath9k won't associate anymore
-References: <CANtv1eXSbOSp90BEfuWdL+6_7CFPJ5Hpn=Va3Jopbr7s011JLg@mail.gmail.com>
-In-Reply-To: <CANtv1eXSbOSp90BEfuWdL+6_7CFPJ5Hpn=Va3Jopbr7s011JLg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1753848Ab2BCMIH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 07:08:07 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 04/25] iwlegacy: get rid of C_RXON_ASSOC
+Date: Fri,  3 Feb 2012 13:07:04 +0100
+Message-Id: <1328270845-16891-5-git-send-email-sgruszka@redhat.com> (sfid-20120203_130815_998912_2D571FC0)
+In-Reply-To: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
+References: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-02-05 8:45 PM, Jurica Vukadin wrote:
-> Hi,
-> 
-> commit "b4a82a0 ath9k_hw: fix interpretation of the rx KeyMiss flag"
-> caused my card to stop associating with the router.
-> Reverting it fixes the issue. Encryption is WEP, if that matters; I
-> haven't tried others.
-> 
-> The device is "10:00.0 Network controller: Atheros Communications Inc.
-> AR9287 Wireless Network Adapter (PCI-Express) (rev 01)"
-> 
-> excerpt from dmesg before the revert:
-> Feb  5 20:00:56 smaug kernel: [    7.468770] ath9k 0000:10:00.0: PCI
-> INT A -> GSI 17 (level, low) -> IRQ 17
-> Feb  5 20:00:56 smaug kernel: [    7.468787] ath9k 0000:10:00.0:
-> setting latency timer to 64
-> Feb  5 20:00:56 smaug kernel: [    7.558116] ath: EEPROM regdomain: 0x6a
-> Feb  5 20:00:56 smaug kernel: [    7.558118] ath: EEPROM indicates we
-> should expect a direct regpair map
-> Feb  5 20:00:56 smaug kernel: [    7.558121] ath: Country alpha2 being used: 00
-> Feb  5 20:00:56 smaug kernel: [    7.558122] ath: Regpair used: 0x6a
-> Feb  5 20:00:56 smaug kernel: [    8.044750] ieee80211 phy0: Selected
-> rate control algorithm 'ath9k_rate_control'
-> Feb  5 20:00:56 smaug kernel: [    8.045371] Registered led device: ath9k-phy0
-> Feb  5 20:01:01 smaug kernel: [   16.161078] wlan0: authenticate with
-> 00:01:e3:4a:9e:be (try 1)
-> Feb  5 20:01:01 smaug kernel: [   16.163159] wlan0: authenticated
-> Feb  5 20:01:01 smaug kernel: [   16.197844] wlan0: associate with
-> 00:01:e3:4a:9e:be (try 1)
-> Feb  5 20:01:01 smaug kernel: [   16.200307] wlan0: RX AssocResp from
-> 00:01:e3:4a:9e:be (capab=0x431 status=0 aid=4)
-> Feb  5 20:01:01 smaug kernel: [   16.200312] wlan0: associated
-> Feb  5 20:01:31 smaug kernel: [   46.185930] wlan0: deauthenticating
-> from 00:01:e3:4a:9e:be by local choice (reason=3)
-The issue is WEP specific, a fix has been found and confirmed. I'll
-submit it for inclusion soon.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/3945-mac.c |    1 -
+ drivers/net/wireless/iwlegacy/4965-mac.c |    1 -
+ drivers/net/wireless/iwlegacy/common.h   |    1 -
+ 3 files changed, 0 insertions(+), 3 deletions(-)
 
-- Felix
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index 5ca8a78..e5857df 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -3619,7 +3619,6 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	il->ctx.ctxid = 0;
+ 
+-	il->ctx.rxon_assoc_cmd = C_RXON_ASSOC;
+ 	il->ctx.qos_cmd = C_QOS_PARAM;
+ 	il->ctx.ap_sta_id = IL_AP_ID;
+ 	il->ctx.wep_key_cmd = C_WEPKEY;
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 9539acc..bd83299 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -6135,7 +6135,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	il->ctx.always_active = true;
+ 	il->ctx.is_active = true;
+-	il->ctx.rxon_assoc_cmd = C_RXON_ASSOC;
+ 	il->ctx.qos_cmd = C_QOS_PARAM;
+ 	il->ctx.ap_sta_id = IL_AP_ID;
+ 	il->ctx.wep_key_cmd = C_WEPKEY;
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index d1d5055..d8e309a 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1175,7 +1175,6 @@ struct il_rxon_context {
+ 
+ 	u8 bcast_sta_id, ap_sta_id;
+ 
+-	u8 rxon_assoc_cmd;
+ 	u8 qos_cmd;
+ 	u8 wep_key_cmd;
+ 
+-- 
+1.7.1
+
