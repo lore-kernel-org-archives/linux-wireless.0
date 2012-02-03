@@ -1,74 +1,227 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36939 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752180Ab2BTNUD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Feb 2012 08:20:03 -0500
-Subject: [PATCH] mac80211: fix associated vs. idle race
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Eliad Peller <eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 20 Feb 2012 14:19:58 +0100
-Message-ID: <1329743998.3458.19.camel@jlt3.sipsolutions.net> (sfid-20120220_142008_621515_90E66724)
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:27750 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756865Ab2BCQdN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 11:33:13 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH v2 25/25] iwlegacy: remove set_hw_params callback
+Date: Fri,  3 Feb 2012 17:32:01 +0100
+Message-Id: <1328286721-11309-26-git-send-email-sgruszka@redhat.com> (sfid-20120203_173319_746312_CC7F913E)
+In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+We do not need that callback, settings parameters can be done locally.
 
-Eliad reports that if a scan finishes in the
-middle of processing associated (however it
-happens), the interface can go idle. This is
-because we set assoc_data to NULL before we
-set associated. Change the order so any idle
-check will find either one of them.
-
-Doing this requires duplicating the TX sync
-processing, but I already have a patch to
-delete that completely and will submit that
-as soon as my driver changes to no longer
-require it are submitted.
-
-Reported-by: Eliad Peller <eliad@wizery.com>
-Tested-by: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- net/mac80211/mlme.c |   16 +++++++++++++++-
- 1 file changed, 15 insertions(+), 1 deletion(-)
+ drivers/net/wireless/iwlegacy/4965-mac.c |   66 +++++++++++++++++++++++---
+ drivers/net/wireless/iwlegacy/4965.c     |   76 ------------------------------
+ drivers/net/wireless/iwlegacy/common.h   |    2 -
+ 3 files changed, 59 insertions(+), 85 deletions(-)
 
---- a/net/mac80211/mlme.c	2012-02-20 14:17:48.000000000 +0100
-+++ b/net/mac80211/mlme.c	2012-02-20 14:17:52.000000000 +0100
-@@ -2238,14 +2238,28 @@ ieee80211_rx_mgmt_assoc_resp(struct ieee
- 	} else {
- 		printk(KERN_DEBUG "%s: associated\n", sdata->name);
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 2a52e7b..235812a 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -6079,7 +6079,34 @@ il4965_hw_detect(struct il_priv *il)
+ 	D_INFO("HW Revision ID = 0x%X\n", il->rev_id);
+ }
  
--		ieee80211_destroy_assoc_data(sdata, true);
-+		/* tell driver about sync done first */
-+		if (assoc_data->synced) {
-+			drv_finish_tx_sync(sdata->local, sdata,
-+					   assoc_data->bss->bssid,
-+					   IEEE80211_TX_SYNC_ASSOC);
-+			assoc_data->synced = false;
-+		}
- 
- 		if (!ieee80211_assoc_success(sdata, *bss, mgmt, len)) {
- 			/* oops -- internal error -- send timeout for now */
-+			ieee80211_destroy_assoc_data(sdata, true);
- 			sta_info_destroy_addr(sdata, mgmt->bssid);
- 			cfg80211_put_bss(*bss);
- 			return RX_MGMT_CFG80211_ASSOC_TIMEOUT;
- 		}
+-static int
++static struct il_sensitivity_ranges il4965_sensitivity = {
++	.min_nrg_cck = 97,
++	.max_nrg_cck = 0,	/* not used, set to 0 */
 +
-+		/*
-+		 * destroy assoc_data afterwards, as otherwise an idle
-+		 * recalc after assoc_data is NULL but before associated
-+		 * is set can cause the interface to go idle
-+		 */
-+		ieee80211_destroy_assoc_data(sdata, true);
- 	}
++	.auto_corr_min_ofdm = 85,
++	.auto_corr_min_ofdm_mrc = 170,
++	.auto_corr_min_ofdm_x1 = 105,
++	.auto_corr_min_ofdm_mrc_x1 = 220,
++
++	.auto_corr_max_ofdm = 120,
++	.auto_corr_max_ofdm_mrc = 210,
++	.auto_corr_max_ofdm_x1 = 140,
++	.auto_corr_max_ofdm_mrc_x1 = 270,
++
++	.auto_corr_min_cck = 125,
++	.auto_corr_max_cck = 200,
++	.auto_corr_min_cck_mrc = 200,
++	.auto_corr_max_cck_mrc = 400,
++
++	.nrg_th_cck = 100,
++	.nrg_th_ofdm = 100,
++
++	.barker_corr_th_min = 190,
++	.barker_corr_th_min_mrc = 390,
++	.nrg_th_cca = 62,
++};
++
++static void
+ il4965_set_hw_params(struct il_priv *il)
+ {
+ 	il->hw_params.bcast_id = IL4965_BROADCAST_ID;
+@@ -6095,8 +6122,36 @@ il4965_set_hw_params(struct il_priv *il)
+ 	if (il->cfg->mod_params->disable_11n)
+ 		il->cfg->sku &= ~IL_SKU_N;
  
- 	return RX_MGMT_CFG80211_RX_ASSOC;
-
+-	/* Device-specific setup */
+-	return il->ops->lib->set_hw_params(il);
++	if (il->cfg->mod_params->num_of_queues >= IL_MIN_NUM_QUEUES &&
++	    il->cfg->mod_params->num_of_queues <= IL49_NUM_QUEUES)
++		il->cfg->num_of_queues =
++		    il->cfg->mod_params->num_of_queues;
++
++	il->hw_params.max_txq_num = il->cfg->num_of_queues;
++	il->hw_params.dma_chnl_num = FH49_TCSR_CHNL_NUM;
++	il->hw_params.scd_bc_tbls_size =
++	    il->cfg->num_of_queues *
++	    sizeof(struct il4965_scd_bc_tbl);
++
++	il->hw_params.tfd_size = sizeof(struct il_tfd);
++	il->hw_params.max_stations = IL4965_STATION_COUNT;
++	il->hw_params.max_data_size = IL49_RTC_DATA_SIZE;
++	il->hw_params.max_inst_size = IL49_RTC_INST_SIZE;
++	il->hw_params.max_bsm_size = BSM_SRAM_SIZE;
++	il->hw_params.ht40_channel = BIT(IEEE80211_BAND_5GHZ);
++
++	il->hw_params.rx_wrt_ptr_reg = FH49_RSCSR_CHNL0_WPTR;
++
++	il->hw_params.tx_chains_num = il4965_num_of_ant(il->cfg->valid_tx_ant);
++	il->hw_params.rx_chains_num = il4965_num_of_ant(il->cfg->valid_rx_ant);
++	il->hw_params.valid_tx_ant = il->cfg->valid_tx_ant;
++	il->hw_params.valid_rx_ant = il->cfg->valid_rx_ant;
++
++	il->hw_params.ct_kill_threshold =
++	   CELSIUS_TO_KELVIN(CT_KILL_THRESHOLD_LEGACY);
++
++	il->hw_params.sens = &il4965_sensitivity;
++	il->hw_params.beacon_time_tsf_bits = IL4965_EXT_BEACON_TIME_POS;
+ }
+ 
+ static int
+@@ -6230,10 +6285,7 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/************************
+ 	 * 5. Setup HW constants
+ 	 ************************/
+-	if (il4965_set_hw_params(il)) {
+-		IL_ERR("failed to set hw parameters\n");
+-		goto out_free_eeprom;
+-	}
++	il4965_set_hw_params(il);
+ 
+ 	/*******************
+ 	 * 6. Setup il
+diff --git a/drivers/net/wireless/iwlegacy/4965.c b/drivers/net/wireless/iwlegacy/4965.c
+index 17a6922..79e4e79 100644
+--- a/drivers/net/wireless/iwlegacy/4965.c
++++ b/drivers/net/wireless/iwlegacy/4965.c
+@@ -569,81 +569,6 @@ il4965_chain_noise_reset(struct il_priv *il)
+ 	}
+ }
+ 
+-static struct il_sensitivity_ranges il4965_sensitivity = {
+-	.min_nrg_cck = 97,
+-	.max_nrg_cck = 0,	/* not used, set to 0 */
+-
+-	.auto_corr_min_ofdm = 85,
+-	.auto_corr_min_ofdm_mrc = 170,
+-	.auto_corr_min_ofdm_x1 = 105,
+-	.auto_corr_min_ofdm_mrc_x1 = 220,
+-
+-	.auto_corr_max_ofdm = 120,
+-	.auto_corr_max_ofdm_mrc = 210,
+-	.auto_corr_max_ofdm_x1 = 140,
+-	.auto_corr_max_ofdm_mrc_x1 = 270,
+-
+-	.auto_corr_min_cck = 125,
+-	.auto_corr_max_cck = 200,
+-	.auto_corr_min_cck_mrc = 200,
+-	.auto_corr_max_cck_mrc = 400,
+-
+-	.nrg_th_cck = 100,
+-	.nrg_th_ofdm = 100,
+-
+-	.barker_corr_th_min = 190,
+-	.barker_corr_th_min_mrc = 390,
+-	.nrg_th_cca = 62,
+-};
+-
+-static void
+-il4965_set_ct_threshold(struct il_priv *il)
+-{
+-	/* want Kelvin */
+-	il->hw_params.ct_kill_threshold =
+-	    CELSIUS_TO_KELVIN(CT_KILL_THRESHOLD_LEGACY);
+-}
+-
+-/**
+- * il4965_hw_set_hw_params
+- *
+- * Called when initializing driver
+- */
+-static int
+-il4965_hw_set_hw_params(struct il_priv *il)
+-{
+-	if (il->cfg->mod_params->num_of_queues >= IL_MIN_NUM_QUEUES &&
+-	    il->cfg->mod_params->num_of_queues <= IL49_NUM_QUEUES)
+-		il->cfg->num_of_queues =
+-		    il->cfg->mod_params->num_of_queues;
+-
+-	il->hw_params.max_txq_num = il->cfg->num_of_queues;
+-	il->hw_params.dma_chnl_num = FH49_TCSR_CHNL_NUM;
+-	il->hw_params.scd_bc_tbls_size =
+-	    il->cfg->num_of_queues *
+-	    sizeof(struct il4965_scd_bc_tbl);
+-	il->hw_params.tfd_size = sizeof(struct il_tfd);
+-	il->hw_params.max_stations = IL4965_STATION_COUNT;
+-	il->hw_params.max_data_size = IL49_RTC_DATA_SIZE;
+-	il->hw_params.max_inst_size = IL49_RTC_INST_SIZE;
+-	il->hw_params.max_bsm_size = BSM_SRAM_SIZE;
+-	il->hw_params.ht40_channel = BIT(IEEE80211_BAND_5GHZ);
+-
+-	il->hw_params.rx_wrt_ptr_reg = FH49_RSCSR_CHNL0_WPTR;
+-
+-	il->hw_params.tx_chains_num = il4965_num_of_ant(il->cfg->valid_tx_ant);
+-	il->hw_params.rx_chains_num = il4965_num_of_ant(il->cfg->valid_rx_ant);
+-	il->hw_params.valid_tx_ant = il->cfg->valid_tx_ant;
+-	il->hw_params.valid_rx_ant = il->cfg->valid_rx_ant;
+-
+-	il4965_set_ct_threshold(il);
+-
+-	il->hw_params.sens = &il4965_sensitivity;
+-	il->hw_params.beacon_time_tsf_bits = IL4965_EXT_BEACON_TIME_POS;
+-
+-	return 0;
+-}
+-
+ static s32
+ il4965_math_div_round(s32 num, s32 denom, s32 * res)
+ {
+@@ -2276,7 +2201,6 @@ static struct il_hcmd_utils_ops il4965_hcmd_utils = {
+ };
+ 
+ static struct il_lib_ops il4965_lib = {
+-	.set_hw_params = il4965_hw_set_hw_params,
+ 	.txq_update_byte_cnt_tbl = il4965_txq_update_byte_cnt_tbl,
+ 	.txq_attach_buf_to_tfd = il4965_hw_txq_attach_buf_to_tfd,
+ 	.txq_free_tfd = il4965_hw_txq_free_tfd,
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index 527a1b9..7080956 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1592,8 +1592,6 @@ struct il_temp_ops {
+ };
+ 
+ struct il_lib_ops {
+-	/* set hw dependent parameters */
+-	int (*set_hw_params) (struct il_priv *il);
+ 	/* Handling TX */
+ 	void (*txq_update_byte_cnt_tbl) (struct il_priv *il,
+ 					 struct il_tx_queue *txq,
+-- 
+1.7.1
 
