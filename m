@@ -1,37 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43244 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751409Ab2B0Nuz (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47341 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752459Ab2BCG0u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 08:50:55 -0500
-Message-ID: <4F4B8A38.6060606@qca.qualcomm.com> (sfid-20120227_145059_745366_92D1953E)
-Date: Mon, 27 Feb 2012 15:50:48 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Naveen Gangadharan <ngangadh@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: Add unicast mgmt frame buffering
-References: <1328752296-3801-1-git-send-email-ngangadh@qca.qualcomm.com>
-In-Reply-To: <1328752296-3801-1-git-send-email-ngangadh@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Fri, 3 Feb 2012 01:26:50 -0500
+Subject: Re: [PATCH 00/11] station management & auth/assoc redesign
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <20120202205227.GC2568@tuxdriver.com>
+References: <20120120125516.000124996@sipsolutions.net>
+	 <CAB3XZEdjn3nk8_pnb6ZaW7CbFXgJg44bkVykx8m5iHY=t+vnqA@mail.gmail.com>
+	 <4F2AA822.2040303@sipsolutions.net>  <20120202205227.GC2568@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 02 Feb 2012 22:26:26 -0800
+Message-ID: <1328250386.4023.2.camel@jlt3.sipsolutions.net> (sfid-20120203_072653_811426_E4DDF3A7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/09/2012 03:51 AM, Naveen Gangadharan wrote:
-> PS buffering of unicast Action frames that are sent in a context
-> of a BSS. In AP mode when the recepient station goes to powersave
-> and PS_POLL flag is not set, we would buffer the frames. Send out
-> unicast mgmt bufferred frame when PS_POLL is received.
-> 
-> This fixes a bug in P2P GO behavior when sending a GO Discoverability
-> Request to a client that is in sleep mode.
-> 
-> Signed-off-by: Thirumalai Pachamuthu <tpachamu@qca.qualcomm.com>
-> Signed-off-by: Naveen Gangadharan <ngangadh@qca.qualcomm.com>
-> Signed-off-by: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
+On Thu, 2012-02-02 at 15:52 -0500, John W. Linville wrote:
 
-Thanks, applied with some indentation fixes (which are new and not in
-CodingStyle yet).
+> > I haven't kept track, and I have no idea why it wouldn't be?
+> 
+> The patches didn't apply.  I haven't taken the time yet to work it out.
+> 
+> If you would like to repost a patchset that applies cleanly on top
+> of the current base, that would probably speed it up. :-)
 
-Kalle
+Ok, so ... you're going to run into issues either way. The reason they
+don't apply to wireless-next is that I created them on top of
+wireless-testing, and that has 
+
+commit bc4934bc61d0a11fd62c5187ff83645628f8be8b
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Wed Jan 18 14:10:25 2012 +0100
+
+    mac80211: fix work removal on deauth request
+
+which my patches are diffed against. I could rediff them against
+wireless-next, but then you're going to run into merge issues when you
+try to merge that back -- it may be easier to put the commit above into
+wireless-next as well to avoid this?
+
+In any case, let me know what you want me to do -- it may have to wait a
+bit as I'm travelling back home tomorrow, only to leave again on Sunday
+for more travel.
+
+johannes
+
