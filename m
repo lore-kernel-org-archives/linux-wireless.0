@@ -1,54 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout4.freenet.de ([195.4.92.94]:39982 "EHLO mout4.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753816Ab2BGF7d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 00:59:33 -0500
-Received: from [195.4.92.140] (helo=mjail0.freenet.de)
-	by mout4.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
-	id 1Rue5T-0005do-PF
-	for linux-wireless@vger.kernel.org; Tue, 07 Feb 2012 06:59:31 +0100
-Received: from localhost ([::1]:46001 helo=mjail0.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1Rue5T-0000ak-OU
-	for linux-wireless@vger.kernel.org; Tue, 07 Feb 2012 06:59:31 +0100
-Received: from [195.4.92.17] (port=57302 helo=7.mx.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1Rue2n-0008RQ-PJ
-	for linux-wireless@vger.kernel.org; Tue, 07 Feb 2012 06:56:45 +0100
-Received: from [2002:4fde:13c8:2:5054:ff:feb8:40bd] (port=60393 helo=mail.maya.org)
-	by 7.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
-	id 1Rue2n-0004Tx-EN
-	for linux-wireless@vger.kernel.org; Tue, 07 Feb 2012 06:56:45 +0100
-Message-ID: <4F30BD13.4080409@maya.org> (sfid-20120207_065937_419238_06252ADC)
-Date: Tue, 07 Feb 2012 06:56:35 +0100
-From: Andreas Hartmann <andihartmann@freenet.de>
+Received: from nm20.bullet.mail.ukl.yahoo.com ([217.146.183.194]:24622 "HELO
+	nm20.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751008Ab2BDGIn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Feb 2012 01:08:43 -0500
+From: Marek Lindner <lindner_marek@yahoo.de>
+To: Seth Forshee <seth.forshee@canonical.com>
+Subject: Re: CTS timeout issue with AR9285
+Date: Sat, 4 Feb 2012 14:08:35 +0800
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
+References: <20120202042521.GA20635@ubuntu-macmini> <4F2A830A.8000905@openwrt.org> <20120202143843.GB24483@ubuntu-macmini>
+In-Reply-To: <20120202143843.GB24483@ubuntu-macmini>
 MIME-Version: 1.0
-To: trencan@centrum.cz
-CC: linux-wireless@vger.kernel.org
-Subject: Re: connection interrupted for rt61pci in master mode
-References: <20120128154544.70E060CD@centrum.cz>
-In-Reply-To: <20120128154544.70E060CD@centrum.cz>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Message-Id: <201202041408.35588.lindner_marek@yahoo.de> (sfid-20120204_070911_781131_04E4EB1B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-trencan@centrum.cz schrieb:
+On Thursday, February 02, 2012 22:38:43 Seth Forshee wrote:
+> On Thu, Feb 02, 2012 at 01:35:22PM +0100, Felix Fietkau wrote:
+> > On 2012-02-02 5:25 AM, Seth Forshee wrote:
+> > > I recently updated a machine with AR9285 wireless from kernel version
+> > > 3.0 to 3.2 and saw that wireless had become slow and unreliable. It
+> > > seems that the problem is extremely frequent CTS timeouts, which began
+> > > happening with commit adb5066 (ath9k_hw: do not apply the 2.4 ghz ack
+> > > timeout workaround to cts). Restoring the CTS timeout to the value
+> > > prior to this commit on top of 3.2 gets performance back to what it
+> > > was with 3.0.
+> > > 
+> > > I don't have any other ath9k cards lying around, but various other
+> > > cards are working fine with this router. Any ideas what's wrong here?
+> > 
+> > Please try this patch:
+> > 
+> > --- a/drivers/net/wireless/ath/ath9k/hw.c
+> > +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> > @@ -1061,13 +1061,16 @@ void ath9k_hw_init_global_settings(struc
+> > 
+> >  	/*
+> >  	
+> >  	 * Workaround for early ACK timeouts, add an offset to match the
+> > 
+> > -	 * initval's 64us ack timeout value.
+> > +	 * initval's 64us ack timeout value. Use 48us for the CTS timeout.
+> > 
+> >  	 * This was initially only meant to work around an issue with delayed
+> >  	 * BA frames in some implementations, but it has been found to fix 
+ACK
+> >  	 * timeout issues in other cases as well.
+> >  	 */
+> > 
+> > -	if (conf->channel && conf->channel->band == IEEE80211_BAND_2GHZ)
+> > +	if (conf->channel && conf->channel->band == IEEE80211_BAND_2GHZ) {
+> > 
+> >  		acktimeout += 64 - sifstime - ah->slottime;
+> > 
+> > +		ctstimeout += 48 - sifstime - ah->slottime;
+> > +	}
+> > +
+> > 
+> >  	ath9k_hw_set_sifs_time(ah, sifstime);
+> >  	ath9k_hw_setslottime(ah, slottime);
 > 
-> Hello,
-> 
-> I have RaLink RT2561/RT61 802.11g PCI wireless card and use it in
-> master mode as AP. I have latest Mandriva 2011.0 distro with kernel
-> 2.6.38.7-desktop-1mnb2. Driver for wifi card is rt61pci. If I connect
-> via wifi from another PC then after some small time I get connection
-> interrupted and I must disconnect and reconnect again. I tried latest
-> compat-wireless-3.3-rc1-2 and also latest hostapd-0.7.3, but still
-> same issue. In previous Mandriva version 2010.2 I had kernel
-> 2.6.33.7-desktop-2mnb, hostapd-0.6.7 and it worked perfectly. Hostapd
-> uses driver=nl80211, mode=g, channel=11.
+> The wireless seems to be working fine with this patch.
 
-What about the machine rt61pci runs on? Does the machine have one single
-core cpu or is it a multi core / processor machine (smp)?
-
+I second this - my rts/cts problems went away as well after applying this 
+patch.
 
 Regards,
-Andreas
+Marek
