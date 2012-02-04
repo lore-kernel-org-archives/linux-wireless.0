@@ -1,58 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm27-vm0.access.bullet.mail.mud.yahoo.com ([66.94.236.227]:28090
-	"HELO nm27-vm0.access.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754577Ab2BOKlT (ORCPT
+Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:50685 "HELO
+	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754390Ab2BDEgT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 05:41:19 -0500
-Message-ID: <EB4DA10182044DDE952EF2C4B81CF6B3@7CF9T2X> (sfid-20120215_114123_283380_83A343D5)
-From: "Fu yingang" <yingang.fu@borqs.com>
-To: "Luciano Coelho" <coelho@ti.com>, "Eliad Peller" <eliad@wizery.com>
-Cc: <linux-wireless@vger.kernel.org>
-References: <1328178131-28938-1-git-send-email-eliad@wizery.com> <1329301121.19569.43.camel@cumari>
-Subject: Re: [PATCH 0/3] wl12xx: re-enable auto-arp
-Date: Wed, 15 Feb 2012 18:41:18 +0800
-MIME-Version: 1.0
-Content-Type: text/plain;
-	format=flowed;
-	charset="UTF-8";
-	reply-type=original
+	Fri, 3 Feb 2012 23:36:19 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.3] mwifiex: add NULL checks in driver unload path
+Date: Fri,  3 Feb 2012 20:34:02 -0800
+Message-Id: <1328330042-26523-1-git-send-email-bzhao@marvell.com> (sfid-20120204_053623_775612_EEEFAE4E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hi, all
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Where can i find the latest code?
+If driver load is failed, sometimes few pointers may remain
+uninitialized ex. priv->wdev, priv->netdev, adapter->sleep_cfm
+This will cause NULL pointer dereferance while unloading the
+driver.
 
-Thanks
-Yingang
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/init.c |    3 ++-
+ drivers/net/wireless/mwifiex/main.c |   12 ++++++++----
+ 2 files changed, 10 insertions(+), 5 deletions(-)
 
------ Original Message ----- 
-From: "Luciano Coelho" <coelho@ti.com>
-To: "Eliad Peller" <eliad@wizery.com>
-Cc: <linux-wireless@vger.kernel.org>
-Sent: Wednesday, February 15, 2012 6:18 PM
-Subject: Re: [PATCH 0/3] wl12xx: re-enable auto-arp
-
-
-> On Thu, 2012-02-02 at 12:22 +0200, Eliad Peller wrote:
->> auto-arp used to cause various issues when enabled. however,
->> after some fixes both in the driver and fw side, it seems to
->> work well. re-enable it.
->>
->> Eliad Peller (3):
->>   wl12xx: consider encryption and QoS in auto arp template
->>   wl12xx: Revert "wl12xx: disable auto-arp"
->>   wl12xx: configure arp filtering only after association
->
-> Applied this set, thanks.
->
-> -- 
-> Cheers,
-> Luca.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" 
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html 
+diff --git a/drivers/net/wireless/mwifiex/init.c b/drivers/net/wireless/mwifiex/init.c
+index 83cc10f..ca59cc0 100644
+--- a/drivers/net/wireless/mwifiex/init.c
++++ b/drivers/net/wireless/mwifiex/init.c
+@@ -383,7 +383,8 @@ mwifiex_free_adapter(struct mwifiex_adapter *adapter)
+ 
+ 	adapter->if_ops.cleanup_if(adapter);
+ 
+-	dev_kfree_skb_any(adapter->sleep_cfm);
++	if (adapter->sleep_cfm)
++		dev_kfree_skb_any(adapter->sleep_cfm);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/mwifiex/main.c b/drivers/net/wireless/mwifiex/main.c
+index 80e4456..790a379 100644
+--- a/drivers/net/wireless/mwifiex/main.c
++++ b/drivers/net/wireless/mwifiex/main.c
+@@ -811,7 +811,9 @@ int mwifiex_remove_card(struct mwifiex_adapter *adapter, struct semaphore *sem)
+ 			continue;
+ 
+ 		rtnl_lock();
+-		mwifiex_del_virtual_intf(priv->wdev->wiphy, priv->netdev);
++		if (priv->wdev && priv->netdev)
++			mwifiex_del_virtual_intf(priv->wdev->wiphy,
++						 priv->netdev);
+ 		rtnl_unlock();
+ 	}
+ 
+@@ -819,9 +821,11 @@ int mwifiex_remove_card(struct mwifiex_adapter *adapter, struct semaphore *sem)
+ 	if (!priv)
+ 		goto exit_remove;
+ 
+-	wiphy_unregister(priv->wdev->wiphy);
+-	wiphy_free(priv->wdev->wiphy);
+-	kfree(priv->wdev);
++	if (priv->wdev) {
++		wiphy_unregister(priv->wdev->wiphy);
++		wiphy_free(priv->wdev->wiphy);
++		kfree(priv->wdev);
++	}
+ 
+ 	mwifiex_terminate_workqueue(adapter);
+ 
+-- 
+1.7.0.2
 
