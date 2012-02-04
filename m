@@ -1,88 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:37560 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758658Ab2BJA1G convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:60041 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753573Ab2BDB0U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 19:27:06 -0500
-Received: by iacb35 with SMTP id b35so3243404iac.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2012 16:27:06 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1328837032-26137-1-git-send-email-stas.yakovlev@gmail.com>
-References: <1328837032-26137-1-git-send-email-stas.yakovlev@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 10 Feb 2012 11:26:46 +1100
-Message-ID: <CAGRGNgWVsGt08gxoyaoG7sG7NgubF+qqjk=LaCruRJiUe1fuig@mail.gmail.com> (sfid-20120210_012711_951925_9D3FA999)
-Subject: Re: [PATCH] ipw2x00: remove ipw2100_rates_11b[]
-To: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 3 Feb 2012 20:26:20 -0500
+Received: by mail-pw0-f46.google.com with SMTP id u11so3334452pbd.19
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2012 17:26:20 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+To: linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Subject: [RFC 09/11] crda: make country2rd() static
+Date: Fri,  3 Feb 2012 17:25:46 -0800
+Message-Id: <1328318748-21044-10-git-send-email-mcgrof@frijolero.org> (sfid-20120204_022637_010020_B7F1308E)
+In-Reply-To: <1328318748-21044-1-git-send-email-mcgrof@frijolero.org>
+References: <1328318748-21044-1-git-send-email-mcgrof@frijolero.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislav,
+Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
+---
+ reglib.c |    5 +++--
+ reglib.h |    4 ----
+ 2 files changed, 3 insertions(+), 6 deletions(-)
 
-On Fri, Feb 10, 2012 at 12:23, Stanislav Yakovlev
-<stas.yakovlev@gmail.com> wrote:
-> It's just a duplicate of ipw2100_bg_rates[].
-
-Looks sensible to me.
-
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-> Signed-off-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-> ---
->  drivers/net/wireless/ipw2x00/ipw2100.c |   11 ++---------
->  1 files changed, 2 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-> index a0e5c21..63567fb 100644
-> --- a/drivers/net/wireless/ipw2x00/ipw2100.c
-> +++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-> @@ -309,13 +309,6 @@ static const long ipw2100_frequencies[] = {
->
->  #define FREQ_COUNT     ARRAY_SIZE(ipw2100_frequencies)
->
-> -static const long ipw2100_rates_11b[] = {
-> -       1000000,
-> -       2000000,
-> -       5500000,
-> -       11000000
-> -};
-> -
->  static struct ieee80211_rate ipw2100_bg_rates[] = {
->        { .bitrate = 10 },
->        { .bitrate = 20, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-> @@ -323,7 +316,7 @@ static struct ieee80211_rate ipw2100_bg_rates[] = {
->        { .bitrate = 110, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
->  };
->
-> -#define RATE_COUNT ARRAY_SIZE(ipw2100_rates_11b)
-> +#define RATE_COUNT ARRAY_SIZE(ipw2100_bg_rates)
->
->  /* Pre-decl until we get the code solid and then we can clean it up */
->  static void ipw2100_tx_send_commands(struct ipw2100_priv *priv);
-> @@ -6896,7 +6889,7 @@ static int ipw2100_wx_get_range(struct net_device *dev,
->        range->num_bitrates = RATE_COUNT;
->
->        for (i = 0; i < RATE_COUNT && i < IW_MAX_BITRATES; i++) {
-> -               range->bitrate[i] = ipw2100_rates_11b[i];
-> +               range->bitrate[i] = ipw2100_bg_rates[i].bitrate * 100 * 1000;
->        }
->
->        range->min_rts = MIN_RTS_THRESHOLD;
-> --
-> 1.7.2.5
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/reglib.c b/reglib.c
+index 759c676..3cb7f72 100644
+--- a/reglib.c
++++ b/reglib.c
+@@ -186,8 +186,9 @@ static void reg_rule2rd(uint8_t *db, int dblen,
+ }
+ 
+ /* Converts a file regdomain to ieee80211_regdomain, easier to manage */
+-struct ieee80211_regdomain *country2rd(uint8_t *db, int dblen,
+-	struct regdb_file_reg_country *country)
++static struct ieee80211_regdomain *
++country2rd(uint8_t *db, int dblen,
++	   struct regdb_file_reg_country *country)
+ {
+ 	struct regdb_file_reg_rules_collection *rcoll;
+ 	struct ieee80211_regdomain *rd;
+diff --git a/reglib.h b/reglib.h
+index bec6359..42c7999 100644
+--- a/reglib.h
++++ b/reglib.h
+@@ -75,10 +75,6 @@ static inline uint32_t min(uint32_t a, uint32_t b)
+ void *crda_get_file_ptr(uint8_t *db, int dblen, int structlen, uint32_t ptr);
+ int crda_verify_db_signature(uint8_t *db, int dblen, int siglen);
+ 
+-/* File reg db entry -> rd converstion utilities */
+-struct ieee80211_regdomain *country2rd(uint8_t *db, int dblen,
+-	struct regdb_file_reg_country *country);
+-
+ struct ieee80211_regdomain *
+ reglib_get_country_idx(unsigned int idx, const char *file);
+ 
 -- 
-Julian Calaby
+1.7.4.15.g7811d
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
