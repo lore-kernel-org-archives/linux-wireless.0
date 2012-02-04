@@ -1,63 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:3242 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753978Ab2B0GcS (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:60041 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751518Ab2BDB0R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 01:32:18 -0500
-Message-ID: <4F4B236D.4020504@qca.qualcomm.com> (sfid-20120227_073222_060613_D4C7B1AD)
-Date: Mon, 27 Feb 2012 08:32:13 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Ruthy Zaphir <ruthyz@siano-ms.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: ath6kl latest git returns SDIo err -84 at init time
-References: <D945C405928A9949A0F33C69E64A1A3B010BCA73@s-mail.siano-ms.ent>
-In-Reply-To: <D945C405928A9949A0F33C69E64A1A3B010BCA73@s-mail.siano-ms.ent>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Fri, 3 Feb 2012 20:26:17 -0500
+Received: by mail-pw0-f46.google.com with SMTP id u11so3334452pbd.19
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2012 17:26:17 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+To: linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Subject: [RFC 08/11] crda: clean header files
+Date: Fri,  3 Feb 2012 17:25:45 -0800
+Message-Id: <1328318748-21044-9-git-send-email-mcgrof@frijolero.org> (sfid-20120204_022626_149822_0587EC95)
+In-Reply-To: <1328318748-21044-1-git-send-email-mcgrof@frijolero.org>
+References: <1328318748-21044-1-git-send-email-mcgrof@frijolero.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ruthy,
+Remove unused headers now that we have an object
+(soon to be library) using what it has to separately.
 
-Sorry for the late reply, I was sick.
+Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
+---
+ crda.c      |    3 ---
+ intersect.c |    3 ---
+ regdbdump.c |    3 ---
+ 3 files changed, 0 insertions(+), 9 deletions(-)
 
-On 02/20/2012 12:47 PM, Ruthy Zaphir wrote:
+diff --git a/crda.c b/crda.c
+index 344fd60..c6dc3d4 100644
+--- a/crda.c
++++ b/crda.c
+@@ -6,8 +6,6 @@
+ 
+ #include <errno.h>
+ #include <stdio.h>
+-#include <sys/mman.h>
+-#include <sys/stat.h>
+ #include <fcntl.h>
+ #include <arpa/inet.h>
+ #include <unistd.h>
+@@ -19,7 +17,6 @@
+ #include <netlink/attr.h>
+ #include "nl80211.h"
+ 
+-#include "regdb.h"
+ #include "reglib.h"
+ 
+ #if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30) && !defined(CONFIG_LIBNL32)
+diff --git a/intersect.c b/intersect.c
+index 6d3d393..012750d 100644
+--- a/intersect.c
++++ b/intersect.c
+@@ -1,9 +1,6 @@
+ #include <errno.h>
+ #include <stdlib.h>
+ #include <stdio.h>
+-#include <sys/mman.h>
+-#include <sys/stat.h>
+-#include <fcntl.h>
+ #include <arpa/inet.h> /* ntohl */
+ #include <string.h>
+ 
+diff --git a/regdbdump.c b/regdbdump.c
+index 6d4cf56..6f9592a 100644
+--- a/regdbdump.c
++++ b/regdbdump.c
+@@ -1,7 +1,4 @@
+-#include <errno.h>
+ #include <stdio.h>
+-
+-#include "regdb.h"
+ #include "reglib.h"
+ 
+ int main(int argc, char **argv)
+-- 
+1.7.4.15.g7811d
 
->  I am using a SD45 finger evaluation board & cloned yesterday the latest
->  ath6kl git and tested it on my linux laptop(with kernel 2.6.35 but I
-> also tried with a newer one with linux 3.0 ) that has
->  an SDIO slot.
-> 
->  I am getting the below errors after few first read/write and I am
-> starving
->  to understand what is the cause of it.
-> 
->  We are building a product with AR6103 integrated and I would like to
->  overcome that issue.
-> 
->  Thanks in advance for any support,
-> 
->  Hope to get good news :-)
->  Ruthy
-> 
->>
->> [39668.250460] mmc0: new SDIO card at address 0001
->> [39668.250726] sdio new func 1 vendor 0x271 device 0x301 block
-> 0x800/0x200
->> [39668.250814] 4-bit async irq mode enabled
->> [39668.357814] rd addr 0x450 buf 0xf5f082d0 len 4 ret 0
->> [39668.367833] wr addr 0xff4 buf 0xf5cc0000 len 12 ret 0
->> [39668.377722] rd addr 0x450 buf 0xf5f082d0 len 4 ret 0
->> [39668.387733] wr addr 0xff4 buf 0xf5cc0000 len 12 ret 0
->> [39668.397629] rd addr 0x450 buf 0xf5f082d0 len 4 ret -84
->> [39668.407572] ath6kl_sdio: probe of mmc0:0001:1 failed with error -84
-
--84 is -EILSEQ and the SDIO subsystm returns that error when we read
-from address 0x450. I don't know why that happens, but my first thought
-was that there's a problem with the SDIO bus. On what platform are you
-testing this? Can you slow down the SDIO bus just to test if that helps?
-
-I haven't tested SD45 myself, so this can be also SD45 specific problem.
-Can you enable full logs (0xffffffff) so that we can see packet contents?
-
-Kalle
