@@ -1,66 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:35259 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754793Ab2BUTNB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Feb 2012 14:13:01 -0500
-Message-ID: <4F43EC77.6030409@hauke-m.de> (sfid-20120221_201315_036266_0F5570A9)
-Date: Tue, 21 Feb 2012 20:11:51 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: zajec5@gmail.com, b43-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, m@bues.ch
-Subject: Re: [RFC] b43: fix memory leak on bcm5354
-References: <1329781099-17342-1-git-send-email-hauke@hauke-m.de> <4F42EBFC.4060307@lwfinger.net>
-In-Reply-To: <4F42EBFC.4060307@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:60041 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752149Ab2BDB0C (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Feb 2012 20:26:02 -0500
+Received: by pbdu11 with SMTP id u11so3334452pbd.19
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2012 17:26:01 -0800 (PST)
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+To: linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Subject: [RFC 03/11] crda: make intersect.c use reglib_for_each_country()
+Date: Fri,  3 Feb 2012 17:25:40 -0800
+Message-Id: <1328318748-21044-4-git-send-email-mcgrof@frijolero.org> (sfid-20120204_022639_433011_5F853506)
+In-Reply-To: <1328318748-21044-1-git-send-email-mcgrof@frijolero.org>
+References: <1328318748-21044-1-git-send-email-mcgrof@frijolero.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/21/2012 01:57 AM, Larry Finger wrote:
-> On 02/20/2012 05:38 PM, Hauke Mehrtens wrote:
->> When using the bcm5354 with a recent firmware>= 478.104 it runs into a
->> memory very shortly after doing an active scan or any thing else where
-> 
-> You are missing a word after memory.
-It leaked to somewhere else. ;-)
+Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
+---
+ intersect.c |   93 +++++++---------------------------------------------------
+ 1 files changed, 12 insertions(+), 81 deletions(-)
 
->> packages are send. This was cased by a gpio misconfiguration, the
->> firmware triggered the GPIO pins used for buttons on some devices and
->> that caused an other driver (OpenWrt diag) listening for these buttons
->> to send many user space messages.
->> This patch fixes the bug for my devices (Asus WL-520GU) and makes it
->> work with firmware 666.2, but I do not know if this patch is correct.
->> The spec for this part is out of date:
->> http://bcm-specs.sipsolutions.net/GPIO
-> 
-> I just updated the specs based on additional info I found. Everything I
-> see say that there are 4 bits for the LEDs. Do you have a source for
-> what you posted below?
-Thanks for updating the spec, but this is nothing special for the
-bcm5354. My device just has one WLAN LED, like many SoCs.
+diff --git a/intersect.c b/intersect.c
+index 2e5dacf..6d3d393 100644
+--- a/intersect.c
++++ b/intersect.c
+@@ -182,101 +182,26 @@ static struct ieee80211_regdomain *regdom_intersect(
+ 
+ int main(int argc, char **argv)
+ {
+-	int fd;
+-	struct stat stat;
+-	uint8_t *db;
+-	struct regdb_file_header *header;
+-	struct regdb_file_reg_country *countries;
+-	int dblen, siglen, num_countries, i, r = 0;
++	int r = 0;
+ 	struct ieee80211_regdomain *prev_world = NULL, *rd = NULL, *world = NULL;
+ 	int intersected = 0;
++	unsigned int idx = 0;
+ 
+ 	if (argc != 2) {
+-		fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
+-		return 2;
+-	}
+-
+-	fd = open(argv[1], O_RDONLY);
+-	if (fd < 0) {
+-		perror("failed to open db file");
+-		return 2;
+-	}
+-
+-	if (fstat(fd, &stat)) {
+-		perror("failed to fstat db file");
+-		return 2;
+-	}
+-
+-	dblen = stat.st_size;
+-
+-	db = mmap(NULL, dblen, PROT_READ, MAP_PRIVATE, fd, 0);
+-	if (db == MAP_FAILED) {
+-		perror("failed to mmap db file");
+-		return 2;
+-	}
+-
+-	header = crda_get_file_ptr(db, dblen, sizeof(*header), 0);
+-
+-	if (ntohl(header->magic) != REGDB_MAGIC) {
+-		fprintf(stderr, "Invalid database magic\n");
+-		return 2;
+-	}
+-
+-	if (ntohl(header->version) != REGDB_VERSION) {
+-		fprintf(stderr, "Invalid database version\n");
+-		return 2;
+-	}
+-
+-	siglen = ntohl(header->signature_length);
+-	/* adjust dblen so later sanity checks don't run into the signature */
+-	dblen -= siglen;
+-
+-	if (dblen <= (int)sizeof(*header)) {
+-		fprintf(stderr, "Invalid signature length %d\n", siglen);
+-		return 2;
+-	}
+-
+-	/* verify signature */
+-	if (!crda_verify_db_signature(db, dblen, siglen))
++		fprintf(stderr, "You must specify a file\n");
+ 		return -EINVAL;
+-
+-	num_countries = ntohl(header->reg_country_num);
+-
+-	if (num_countries <= 0)
+-		return 0;
+-
+-	countries = crda_get_file_ptr(db, dblen,
+-			sizeof(struct regdb_file_reg_country) * num_countries,
+-			header->reg_country_ptr);
++	}
+ 
+ 	/* We intersect only when we have to rd structures ready */
+-	for (i = 0; i < num_countries; i++) {
+-		struct regdb_file_reg_country *country = countries + i;
+-
+-		if (is_world_regdom((const char *) country->alpha2))
++	reglib_for_each_country(rd, idx, argv[1]) {
++		if (is_world_regdom((const char *) rd->alpha2))
+ 			continue;
+ 
+-		/* Gets the rd for the current country */
+-		rd = country2rd(db, dblen, country);
+-		if (!rd) {
+-			r = -ENOMEM;
+-			fprintf(stderr, "Could not covert country "
+-				"(%.2s) to rd\n", country->alpha2);
+-			goto out;
+-		}
+-
+-		if (num_countries == 1) {
+-			world = rd;
+-			rd = NULL;
+-			break;
+-		}
+-
+ 		if (!prev_world) {
+ 			prev_world = rd;
+ 			continue;
+ 		}
+ 
+-
+ 		if (world) {
+ 			free(prev_world);
+ 			prev_world = world;
+@@ -318,6 +243,12 @@ int main(int argc, char **argv)
+ 		intersected++;
+ 	}
+ 
++	if (idx == 1) {
++		world = rd;
++		rd = NULL;
++	}
++
++
+ 	if (intersected > 1)
+ 		printf("%d regulatory domains intersected\n", intersected);
+ 	else
+-- 
+1.7.4.15.g7811d
 
->> GPIO pin layout:
->> pin#    name    type
->> 0    power    led
->> 1    wlan    led
->> 2    reset    button
->> 3    ses    buttom
-
-This is from the Asus WL-520GU section of the the OpenWrt diag driver
-[0] and I verified it myself on this device.
-
->> related nvram configuration:
->> wl0gpio2=11
->> wl0gpio3=11
->> wl0gpio0=11
->> wl0gpio1=0x02
->> reset_gpio=2
-
-This was extracted from the nvram of the Asus W-520GU with "nvram show
-|grep gpio". This was a used device, so I do not know if someone else
-already did some modifications to the nvram.
-
-Hauke
-
-[0]: https://dev.openwrt.org/browser/trunk/package/broadcom-diag/src/diag.c
