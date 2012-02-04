@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44395 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756878Ab2BCQcz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 11:32:55 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v2 13/25] iwlegacy: get rid of ctx->station_flags
-Date: Fri,  3 Feb 2012 17:31:49 +0100
-Message-Id: <1328286721-11309-14-git-send-email-sgruszka@redhat.com> (sfid-20120203_173338_610316_BA288D07)
-In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
-References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+Received: from shards.monkeyblade.net ([198.137.202.13]:36057 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752158Ab2BDVM1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Feb 2012 16:12:27 -0500
+Date: Sat, 04 Feb 2012 16:11:19 -0500 (EST)
+Message-Id: <20120204.161119.1004038103064439060.davem@davemloft.net> (sfid-20120204_221307_780263_3F6F55C1)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-02-03
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120203192917.GE15601@tuxdriver.com>
+References: <20120203192917.GE15601@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/common.c |    2 +-
- drivers/net/wireless/iwlegacy/common.h |    2 --
- 2 files changed, 1 insertions(+), 3 deletions(-)
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Fri, 3 Feb 2012 14:29:18 -0500
 
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index 7c7ea77..ac26985 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -1950,7 +1950,7 @@ il_prep_station(struct il_priv *il, struct il_rxon_context *ctx,
- 	memcpy(station->sta.sta.addr, addr, ETH_ALEN);
- 	station->sta.mode = 0;
- 	station->sta.sta.sta_id = sta_id;
--	station->sta.station_flags = ctx->station_flags;
-+	station->sta.station_flags = 0;
- 
- 	if (sta) {
- 		struct il_station_priv_common *sta_priv;
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index 811e768..a872175 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1169,8 +1169,6 @@ struct il_rxon_context {
- 
- 	struct il_qos_info qos_data;
- 
--	__le32 station_flags;
--
- 	struct {
- 		bool non_gf_sta_present;
- 		u8 protection;
--- 
-1.7.1
+> Here is a little batch of fixes intended for 3.3...
+> 
+> We have a fix from Eliad Peller for an off-by-one error in mac80211 that
+> was preventing a timeout.  Emmanuel Grumbach provides an iwlwifi fix to
+> avoid incorrect manipulations on non-QoS frames that were stalling the
+> Tx queues.  Hauke Mehrtens provides another off-by-one fix, this one for
+> the SSB bus.  Jesper Juhl provies us with a fix for a memory leak in the
+> BCMA code.  A fix to avoid some log spam from iwlwifi is provided by me.
+> Finally, Luigi Tarenga provides an rt2800 fix to correctly report signal
+> strength.
+ ...
+> The following changes since commit 29830406415c227a54af429d7b300aabd4754237:
+> 
+>   can: peak_pci: Fix the way channels are linked together (2012-02-03 00:26:27 +0100)
+> 
+> are available in the git repository at:
+>   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
 
+Pulled, thanks John.
