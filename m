@@ -1,84 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:21217 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751731Ab2BVB40 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Feb 2012 20:56:26 -0500
-From: "Allan, Bruce W" <bruce.w.allan@intel.com>
-To: Joe Perches <joe@perches.com>
-CC: David Miller <davem@davemloft.net>,
-	Andy Whitcroft <apw@shadowen.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"andrei.emeltchenko.news@gmail.com"
-	<andrei.emeltchenko.news@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] checkpatch: Add some --strict coding style checks
-Date: Wed, 22 Feb 2012 01:56:25 +0000
-Message-ID: <804857E1F29AAC47BF68C404FC60A18429B8F2@ORSMSX102.amr.corp.intel.com> (sfid-20120222_025647_249787_A5C668EB)
-References: <20120221151435.GA19354@tuxdriver.com>
-	 <20120221.144417.1445117001833888214.davem@davemloft.net>
-	 <CAMXE1-qB8_5oGey2=Ypa5BitZnye3YqdM=yB8oKCGLvoZu_8HQ@mail.gmail.com>
-	 <20120221.154053.2103818562080068513.davem@davemloft.net>
-	 <1329857959.5143.11.camel@joe2Laptop>
-	 <804857E1F29AAC47BF68C404FC60A18429B3EE@ORSMSX102.amr.corp.intel.com>
- <1329874581.5143.22.camel@joe2Laptop>
-In-Reply-To: <1329874581.5143.22.camel@joe2Laptop>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mailout-de.gmx.net ([213.165.64.23]:44963 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753888Ab2BERUB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Feb 2012 12:20:01 -0500
+From: Marc Dietrich <marvin24@gmx.de>
+To: linux-tegra@vger.kernel.org
+Cc: Stephen Warren <swarren@nvidia.com>,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Rhyland Klein <rklein@nvidia.com>
+Subject: [PATCH 1/3] net: rfkill-gpio: add device tree support
+Date: Sun,  5 Feb 2012 18:18:40 +0100
+Message-Id: <215249735783e9fe35db1c594d901f591725de50.1328461986.git.marvin24@gmx.de> (sfid-20120205_182015_712339_4AF88BC9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2UgUGVyY2hlcyBbbWFpbHRv
-OmpvZUBwZXJjaGVzLmNvbV0NCj4gU2VudDogVHVlc2RheSwgRmVicnVhcnkgMjEsIDIwMTIgNToz
-NiBQTQ0KPiBUbzogQWxsYW4sIEJydWNlIFcNCj4gQ2M6IERhdmlkIE1pbGxlcjsgQW5keSBXaGl0
-Y3JvZnQ7IEFuZHJldyBNb3J0b247DQo+IGFuZHJlaS5lbWVsdGNoZW5rby5uZXdzQGdtYWlsLmNv
-bTsgbGludmlsbGVAdHV4ZHJpdmVyLmNvbTsgbGludXgtDQo+IHdpcmVsZXNzQHZnZXIua2VybmVs
-Lm9yZzsgbmV0ZGV2QHZnZXIua2VybmVsLm9yZzsgbGludXgtDQo+IGtlcm5lbEB2Z2VyLmtlcm5l
-bC5vcmcNCj4gU3ViamVjdDogUkU6IFtQQVRDSF0gY2hlY2twYXRjaDogQWRkIHNvbWUgLS1zdHJp
-Y3QgY29kaW5nIHN0eWxlIGNoZWNrcw0KPiANCj4gT24gVHVlLCAyMDEyLTAyLTIxIGF0IDIyOjA5
-ICswMDAwLCBBbGxhbiwgQnJ1Y2UgVyB3cm90ZToNCj4gPiBUaGlzIGFwcGVhcnMgdG8gZmFsc2Vs
-eSBjb21wbGFpbiBhYm91dCBwYXJlbnRoZXNpcyBhbGlnbm1lbnQgaW4NCj4gPiBjb25kaXRpb25h
-bCBzdGF0ZW1lbnRzIHdpdGggbXVsdGlwbGUgb3BlbmluZyBwYXJlbnRoZXNlcy4NCj4gDQo+IEhl
-eSBBbGxhbi4NCj4gDQo+IENhbiB5b3UgdHJ5IHRoaXMgb25lIHBsZWFzZT8NCj4gLS0tDQo+ICBz
-Y3JpcHRzL2NoZWNrcGF0Y2gucGwgfCAgIDU4DQo+ICsrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysNCj4gIDEgZmlsZXMgY2hhbmdlZCwgNTggaW5zZXJ0aW9u
-cygrKSwgMCBkZWxldGlvbnMoLSkNCj4gDQo+IGRpZmYgLS1naXQgYS9zY3JpcHRzL2NoZWNrcGF0
-Y2gucGwgYi9zY3JpcHRzL2NoZWNrcGF0Y2gucGwNCj4gaW5kZXggYTNiOTc4Mi4uZTk1NDE5ZSAx
-MDA3NTUNCj4gLS0tIGEvc2NyaXB0cy9jaGVja3BhdGNoLnBsDQo+ICsrKyBiL3NjcmlwdHMvY2hl
-Y2twYXRjaC5wbA0KPiBAQCAtMTMzMCw2ICsxMzMwLDM1IEBAIHN1YiBjaGVja19hYnNvbHV0ZV9m
-aWxlIHsNCj4gIAl9DQo+ICB9DQo+IA0KPiArc3ViIHBvc19sYXN0X29wZW5wYXJlbiB7DQo+ICsN
-Cj4gKwlteSAoJGFyZ3MpID0gQF87DQo+ICsNCj4gKwlteSAkcG9zID0gMDsNCj4gKwlteSAkbGVu
-ID0gbGVuZ3RoKCRhcmdzKTsNCj4gKw0KPiArCW15ICRvcGVucyA9ICRhcmdzID1+IHRyL1woL1wo
-LzsNCj4gKwlteSAkY2xvc2VzID0gJGFyZ3MgPX4gdHIvXCkvXCkvOw0KPiArDQo+ICsJbXkgJGxh
-c3Rfb3BlbnBhcmVuID0gMDsNCj4gKw0KPiArCWlmICgoJG9wZW5zID09IDApIHx8ICgkY2xvc2Vz
-ID49ICRvcGVucykpIHsNCj4gKwkJcmV0dXJuIDA7DQo+ICsJfQ0KPiArDQo+ICsJZm9yICgkcG9z
-ID0gMDsgJHBvcyA8ICRsZW47ICRwb3MrKykgew0KPiArCQlpZiAoc3Vic3RyKCRhcmdzLCAkcG9z
-KSA9fiAvXigkRnVuY0FyZykvKSB7DQo+ICsJCQkkcG9zICs9IGxlbmd0aCgkMSk7DQo+ICsJCX0N
-Cj4gKw0KPiArCQlpZiAoc3Vic3RyKCRhcmdzLCAkcG9zLCAxKSBlcSAnKCcpIHsNCj4gKwkJCSRs
-YXN0X29wZW5wYXJlbiA9ICRwb3M7DQo+ICsJCX0NCj4gKwl9DQo+ICsNCj4gKwlyZXR1cm4gJGxh
-c3Rfb3BlbnBhcmVuICsgMTsNCj4gK30NCj4gKw0KPiAgc3ViIHByb2Nlc3Mgew0KPiAgCW15ICRm
-aWxlbmFtZSA9IHNoaWZ0Ow0KPiANCj4gQEAgLTE3ODMsNiArMTgxMiwzNSBAQCBzdWIgcHJvY2Vz
-cyB7DQo+ICAJCQkgICAgICJwbGVhc2UsIG5vIHNwYWNlIGJlZm9yZSB0YWJzXG4iIC4gJGhlcmV2
-ZXQpOw0KPiAgCQl9DQo+IA0KPiArIyBjaGVjayBmb3IgJiYgb3IgfHwgYXQgdGhlIHN0YXJ0IG9m
-IGEgbGluZQ0KPiArCQlpZiAoJHJhd2xpbmUgPX4gL15cK1xzKigmJnxcfFx8KS8pIHsNCj4gKwkJ
-CUNISygiTE9HSUNBTF9DT05USU5VQVRJT05TIiwNCj4gKwkJCSAgICAiTG9naWNhbCBjb250aW51
-YXRpb25zIHNob3VsZCBiZSBvbiB0aGUgcHJldmlvdXMNCj4gbGluZVxuIiAuICRoZXJlcHJldik7
-DQo+ICsJCX0NCj4gKw0KPiArIyBjaGVjayBtdWx0aS1saW5lIHN0YXRlbWVudCBpbmRlbnRhdGlv
-biBtYXRjaGVzIHByZXZpb3VzIGxpbmUNCj4gKwkJaWYgKCRwcmV2bGluZSA9fiAvXlwrKFx0Kiko
-aWYNCj4gXCh8JElkZW50XCgpLiooXCZcJnxcfFx8fCwpXHMqJC8gJiYgJHJhd2xpbmUgPX4gL15c
-KyhbIFx0XSopLykgew0KPiArCQkJJHByZXZsaW5lID1+IC9eXCsoXHQqKShpZg0KPiBcKHwkSWRl
-bnRcKCkoLiopKFwmXCZ8XHxcfHwsKVxzKiQvOw0KPiArCQkJbXkgJG9sZGluZGVudCA9ICQxOw0K
-PiArCQkJbXkgJGlmX29yX2Z1bmMgPSAkMjsNCj4gKwkJCW15ICRhcmdzID0gJDM7DQo+ICsNCj4g
-KwkJCW15ICRwb3MgPSBwb3NfbGFzdF9vcGVucGFyZW4oJGFyZ3MpOw0KPiArDQo+ICsJCQlteSAk
-bGVuID0gbGVuZ3RoKCRpZl9vcl9mdW5jKSArICRwb3M7DQo+ICsJCQkkcmF3bGluZSA9fiAvXlwr
-KFsgXHRdKikvOw0KPiArCQkJbXkgJG5ld2luZGVudCA9ICQxOw0KPiArDQo+ICsJCQlteSAkZ29v
-ZGluZGVudCA9ICRvbGRpbmRlbnQgLg0KPiArCQkJCQkgIlx0IiB4ICgkbGVuIC8gOCkgLg0KPiAr
-CQkJCQkgIiAiICB4ICgkbGVuICUgOCk7DQo+ICsNCj4gKwkJCWlmICgkbmV3aW5kZW50IG5lICRn
-b29kaW5kZW50KSB7DQo+ICsJCQkJQ0hLKCJQQVJFTlRIRVNJU19BTElHTk1FTlQiLA0KPiArCQkJ
-CSAgICAiQWxpZ25tZW50IHNob3VsZCBtYXRjaCBvcGVuDQo+IHBhcmVudGhlc2lzXG4iIC4gJGhl
-cmVwcmV2KTsNCj4gKwkJCX0NCj4gKwkJfQ0KPiArDQo+ICAjIGNoZWNrIGZvciBzcGFjZXMgYXQg
-dGhlIGJlZ2lubmluZyBvZiBhIGxpbmUuDQo+ICAjIEV4Y2VwdGlvbnM6DQo+ICAjICAxKSB3aXRo
-aW4gY29tbWVudHMNCj4gDQoNCkl0J3MgYmV0dGVyLCBidXQgdGhlcmUgYXJlIHN0aWxsIGluc3Rh
-bmNlcyBvZiBmYWxzZSBoaXRzIEFGQUlDVC4NCg0KQnJ1Y2UuDQoNCg==
+This adds device tree support for rfkill-gpio. The optional platform
+paramters gpio_runtime_close and gpio_runtime_setup are not implemented.
+
+Cc: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: Rhyland Klein <rklein@nvidia.com>
+Signed-off-by: Marc Dietrich <marvin24@gmx.de>
+---
+ include/linux/rfkill-gpio.h |    2 +-
+ net/rfkill/rfkill-gpio.c    |   60 ++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 60 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/rfkill-gpio.h b/include/linux/rfkill-gpio.h
+index 4d09f6e..76a9674 100644
+--- a/include/linux/rfkill-gpio.h
++++ b/include/linux/rfkill-gpio.h
+@@ -35,7 +35,7 @@
+  */
+ 
+ struct rfkill_gpio_platform_data {
+-	char			*name;
++	const char		*name;
+ 	int			reset_gpio;
+ 	int			shutdown_gpio;
+ 	const char		*power_clk_name;
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 865adb6..6b4c5e8 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -21,6 +21,7 @@
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/rfkill.h>
++#include <linux/of_gpio.h>
+ #include <linux/platform_device.h>
+ #include <linux/clk.h>
+ #include <linux/slab.h>
+@@ -77,13 +78,70 @@ static const struct rfkill_ops rfkill_gpio_ops = {
+ 	.set_block = rfkill_gpio_set_power,
+ };
+ 
++#ifdef CONFIG_OF
++static struct rfkill_gpio_platform_data * __devinit
++			rfkill_gpio_parse_pdata(struct platform_device *pdev)
++{
++	struct rfkill_gpio_platform_data *pdata, *rfkill;
++	struct device_node *np = pdev->dev.of_node, *child;
++	int count = 0;
++
++	for_each_child_of_node(np, child)
++		count++;
++	if (!count)
++		return NULL;
++
++	pdata = devm_kzalloc(&pdev->dev,
++				sizeof(struct rfkill_gpio_platform_data) *
++				count, GFP_KERNEL);
++	if (!pdata)
++		return NULL;
++
++	rfkill = pdata;
++
++	for_each_child_of_node(np, child) {
++		of_property_read_string(child, "label", &rfkill->name);
++		if (!rfkill->name)
++			rfkill->name = child->name;
++		rfkill->reset_gpio = of_get_named_gpio(child, "reset-gpio", 0);
++		rfkill->shutdown_gpio = of_get_named_gpio(child,
++							  "shutdown-gpio", 0);
++		of_property_read_u32(child, "type", &rfkill->type);
++		of_property_read_string(child, "clock",
++					&rfkill->power_clk_name);
++
++		rfkill += sizeof(struct rfkill_gpio_platform_data);
++	}
++
++	return pdata;
++}
++
++static const struct of_device_id of_rfkill_gpio_match[] = {
++	{ .compatible = "rfkill-gpio", },
++	{},
++};
++
++#else
++static inline struct rfkill_gpio_platform_data
++			*rfkill_gpio_parse_pdata(struct platform_device *pdev)
++{
++	return NULL;
++}
++
++#define of_rfkill_gpio_match NULL
++#endif
++
+ static int rfkill_gpio_probe(struct platform_device *pdev)
+ {
+ 	struct rfkill_gpio_data *rfkill;
+ 	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
++	struct device_node *np = pdev->dev.of_node;
+ 	int ret = 0;
+ 	int len = 0;
+ 
++	if (np)
++		pdata = rfkill_gpio_parse_pdata(pdev);
++
+ 	if (!pdata) {
+ 		pr_warn("%s: No platform data specified\n", __func__);
+ 		return -EINVAL;
+@@ -210,13 +268,13 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
+ 
+ 	return 0;
+ }
+-
+ static struct platform_driver rfkill_gpio_driver = {
+ 	.probe = rfkill_gpio_probe,
+ 	.remove = __devexit_p(rfkill_gpio_remove),
+ 	.driver = {
+ 		   .name = "rfkill_gpio",
+ 		   .owner = THIS_MODULE,
++		   .of_match_table = of_rfkill_gpio_match,
+ 	},
+ };
+ 
+-- 
+1.7.5.4
+
