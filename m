@@ -1,45 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39625 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753727Ab2AaXOG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 18:14:06 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, m@bues.ch, b43-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 1/4] ssb: fix cardbus slot in hostmode
-Date: Wed,  1 Feb 2012 00:13:53 +0100
-Message-Id: <1328051636-15449-2-git-send-email-hauke@hauke-m.de> (sfid-20120201_001412_916717_9B3A55DE)
-In-Reply-To: <1328051636-15449-1-git-send-email-hauke@hauke-m.de>
-References: <1328051636-15449-1-git-send-email-hauke@hauke-m.de>
+Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:56765 "EHLO
+	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752413Ab2BEOCQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Feb 2012 09:02:16 -0500
+Subject: [PATCH] zd1211rw: firmware needs duration_id to be set zero for
+ frames other than pspoll
+To: linux-wireless@vger.kernel.org
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: Tomas.Vanek@fbl.cz, "John W. Linville" <linville@tuxdriver.com>
+Date: Sun, 05 Feb 2012 15:51:53 +0200
+Message-ID: <20120205135153.4342.81123.stgit@localhost6.localdomain6> (sfid-20120205_150245_029166_DC5F24FC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ssb supports one extra device on the cardbus. This results in two
-devices in total, one beeing the host controller itself and the other
-the external device connected to the hostcontroller over cardbus.
+From: Tomas Vanek <Tomas.Vanek@fbl.cz>
 
-This makes the cardbus slot work on the Linksys WRT150N.
+Some devices (iwl5100) cannot connect to zd1211rw based AP. It appears that
+zd1211 firmware messes up duration_id field if it is not set to zero by driver.
 
-Reported-by: Aaron Z <aaronz@pls-net.org>
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Sniffing traffic shows that zd1211 is transmitting frames with duration_id bits
+14 and 15 set and other bits appearing random. Setting duration_id at driver to
+zero results zd1211 outputting sane duration_id. This means that firmware is
+setting correct values itself and expects duration_id to be zero in first
+place.
+
+Looking at vendor driver shows that only PSPoll frames have duration_id set by
+driver, for other frames duration_id left zero.
+
+Original bug-report and attached patch at:
+  http://sourceforge.net/mailarchive/message.php?msg_id=28759111
+
+Reported-by: Tomas Vanek <Tomas.Vanek@fbl.cz>
+[modified original patch from bug-report, added check for pspoll frame]
+Signed-off-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 ---
- drivers/ssb/driver_pcicore.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/zd1211rw/zd_mac.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ssb/driver_pcicore.c b/drivers/ssb/driver_pcicore.c
-index 520e828..49d2091 100644
---- a/drivers/ssb/driver_pcicore.c
-+++ b/drivers/ssb/driver_pcicore.c
-@@ -75,7 +75,7 @@ static u32 get_cfgspace_addr(struct ssb_pcicore *pc,
- 	u32 tmp;
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index 0a70149..98a574a 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -866,6 +866,14 @@ static int fill_ctrlset(struct zd_mac *mac,
  
- 	/* We do only have one cardbus device behind the bridge. */
--	if (pc->cardbusmode && (dev >= 1))
-+	if (pc->cardbusmode && (dev > 1))
- 		goto out;
+ 	ZD_ASSERT(frag_len <= 0xffff);
  
- 	if (bus == 0) {
--- 
-1.7.5.4
++	/*
++	 * Firmware computes the duration itself (for all frames except PSPoll)
++	 * and needs the field set to 0 at input, otherwise firmware messes up
++	 * duration_id and sets bits 14 and 15 on.
++	 */
++	if (!ieee80211_is_pspoll(hdr->frame_control))
++		hdr->duration_id = 0;
++
+ 	txrate = ieee80211_get_tx_rate(mac->hw, info);
+ 
+ 	cs->modulation = txrate->hw_value;
 
