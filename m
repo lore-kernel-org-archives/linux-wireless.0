@@ -1,49 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f53.google.com ([209.85.216.53]:39052 "EHLO
-	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751746Ab2BVOXm (ORCPT
+Received: from mailrelay005.isp.belgacom.be ([195.238.6.171]:35521 "EHLO
+	mailrelay005.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751799Ab2BEINg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 09:23:42 -0500
-Received: by qafk1 with SMTP id k1so217357qaf.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Feb 2012 06:23:42 -0800 (PST)
+	Sun, 5 Feb 2012 03:13:36 -0500
+Message-ID: <4F2E39F6.70803@computer.org> (sfid-20120205_091437_050901_A38C6543)
+Date: Sun, 05 Feb 2012 09:12:38 +0100
+From: Jan Ceuleers <jan.ceuleers@computer.org>
 MIME-Version: 1.0
-Date: Wed, 22 Feb 2012 15:23:41 +0100
-Message-ID: <CAFED-j=pt4zyuWP9g6rhjzDDwxmrw01w1Lek=k5i7rzekezpAA@mail.gmail.com> (sfid-20120222_152346_033605_A986F9A5)
-Subject: compat-wireless-2012-02-21 compilation issue (2.6.35-32)
-From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Devendra.Naga" <devendra.aaru@gmail.com>
+CC: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	linville@tuxdriver.com, paul.gortmaker@windriver.com,
+	joe@perches.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1] wireless: move ifs' in _rtl92c_store_pwrIndex_diffrate_offset
+ into elseif statements
+References: <1327906245-8200-1-git-send-email-devendra.aaru@gmail.com>
+In-Reply-To: <1327906245-8200-1-git-send-email-devendra.aaru@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 01/30/2012 07:50 AM, Devendra.Naga wrote:
+> From: "Devendra.Naga"<devendra.aaru@gmail.com>
+>
+>          The regaddr is compared against different rates in each case and the powerlevels are set
+>          accordingly. as this can match for the first if and we still check for other powerlevels too,
+>          use else if ratherthan using if statements
+> Signed-off-by: Devendra.Naga<devendra.aaru@gmail.com>
+If this is correct, and I'm not saying it is or isn't, would it not be 
+clearer to turn this whole section into a switch statement? The cases 
+that requiring fiddling with the bitmask would need to be dealt with in 
+the default: case.
 
-I have compilation issue.
-Is there any patch available?
+Why was it written as a series of if statements to begin with: can (or 
+could) any of these if statements change the value of regaddr such that 
+later ifs evaluate differently? From reading only the patch the answer 
+seems to be "no", so that looks good.
 
+Or what about turning this into a data-driven section? It looks like 
+values of regaddr are being translated into offsets into 
+rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt]. Can this be done with a lookup 
+table?
 
-jadz@uw000950:~/builds/community/compat-wireless-2012-02-21$ make
-make -C /lib/modules/2.6.35-32-generic/build
-M=/home/xpujadz/builds/community/compat-wireless-2012-02-21 modules
-make[1]: Entering directory `/usr/src/linux-headers-2.6.35-32-generic'
-  Building modules, stage 2.
-  MODPOST 9 modules
-WARNING: "__tracepoint_drv_return_void"
-[/home/xpujadz/builds/community/compat-wireless-2012-02-21/net/mac80211/mac80211.ko]
-undefined!
-WARNING: "__tracepoint_drv_bss_info_changed"
-[/home/xpujadz/builds/community/compat-wireless-2012-02-21/net/mac80211/mac80211.ko]
-undefined!
-WARNING: "__tracepoint_api_stop_tx_ba_session"
-[/home/xpujadz/builds/community/compat-wireless-2012-02-21/net/mac80211/mac80211.ko]
-undefined!
-WARNING: "__tracepoint_drv_configure_filter"
-[/home/xpujadz/builds/community/compat-wireless-2012-02-21/net/mac80211/mac80211.ko]
-undefined!
+> ---
+>   drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |   47 +++++++------------
+>   1 files changed, 17 insertions(+), 30 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
+> index 22e998d..cb11e5a 100644
+> --- a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
+> +++ b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
+> @@ -260,106 +260,93 @@ void _rtl92c_store_pwrIndex_diffrate_offset(struct ieee80211_hw *hw,
+>   			 "MCSTxPowerLevelOriginalOffset[%d][0] = 0x%x\n",
+>   			 rtlphy->pwrgroup_cnt,
+>   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][0]);
+> -	}
+> -	if (regaddr == RTXAGC_A_RATE54_24) {
+> +	} else if (regaddr == RTXAGC_A_RATE54_24) {
+>   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][1] = data;
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+>   			 "MCSTxPowerLevelOriginalOffset[%d][1] = 0x%x\n",
+>   			 rtlphy->pwrgroup_cnt,
+>   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][1]);
+> -	}
+> -	if (regaddr == RTXAGC_A_CCK1_MCS32) {
+> +	} else if (regaddr == RTXAGC_A_CCK1_MCS32) {
+>   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][6] = data;
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+>   			 "MCSTxPowerLevelOriginalOffset[%d][6] = 0x%x\n",
+>   			 rtlphy->pwrgroup_cnt,
+>   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][6]);
+> -	}
+> -	if (regaddr == RTXAGC_B_CCK11_A_CCK2_11&&  bitmask == 0xffffff00) {
+> +	} else if (regaddr == RTXAGC_B_CCK11_A_CCK2_11&&
+> +		bitmask == 0xffffff00) {
+>   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][7] = data;
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+>   			 "MCSTxPowerLevelOriginalOffset[%d][7] = 0x%x\n",
+>   			 rtlphy->pwrgroup_cnt,
+>   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][7]);
+> -	}
+> -	if (regaddr == RTXAGC_A_MCS03_MCS00) {
+> +	} else if (regaddr == RTXAGC_A_MCS03_MCS00) {
+>   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][2] = data;
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+>   			 "MCSTxPowerLevelOriginalOffset[%d][2] = 0x%x\n",
+>   			 rtlphy->pwrgroup_cnt,
+>   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][2]);
+> -	}
+> -	if (regaddr == RTXAGC_A_MCS07_MCS04) {
+> +	} else if (regaddr == RTXAGC_A_MCS07_MCS04) {
+>   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][3] = data;
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+>   			 "MCSTxPowerLevelOriginalOffset[%d][3] = 0x%x\n",
+>   			 rtlphy->pwrgroup_cnt,
+>   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][3]);
+> -	}
+> -	if (regaddr == RTXAGC_A_MCS11_MCS08) {
+> +	} else if (regaddr == RTXAGC_A_MCS11_MCS08) {
+>   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][4] = data;
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+>   			 "MCSTxPowerLevelOriginalOffset[%d][4] = 0x%x\n",
+>   			 rtlphy->pwrgroup_cnt,
+>   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][4]);
+> -	}
+> -	if (regaddr == RTXAGC_A_MCS15_MCS12) {
+> +	} else if (regaddr == RTXAGC_A_MCS15_MCS12) {
+>   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][5] = data;
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+>   			 "MCSTxPowerLevelOriginalOffset[%d][5] = 0x%x\n",
+>   			 rtlphy->pwrgroup_cnt,
+>   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][5]);
+> -	}
+> -	if (regaddr == RTXAGC_B_RATE18_06) {
+> +	} else if (regaddr == RTXAGC_B_RATE18_06) {
+>   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][8] = data;
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+>   			 "MCSTxPowerLevelOriginalOffset[%d][8] = 0x%x\n",
+>   			 rtlphy->pwrgroup_cnt,
+>   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][8]);
+> -	}
+> -	if (regaddr == RTXAGC_B_RATE54_24) {
+> +	} else if (regaddr == RTXAGC_B_RATE54_24) {
+>   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][9] = data;
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+>   			 "MCSTxPowerLevelOriginalOffset[%d][9] = 0x%x\n",
+>   			 rtlphy->pwrgroup_cnt,
+>   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][9]);
+> -	}
+> -	if (regaddr == RTXAGC_B_CCK1_55_MCS32) {
+> +	} else if (regaddr == RTXAGC_B_CCK1_55_MCS32) {
+>   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][14] = data;
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+>   			 "MCSTxPowerLevelOriginalOffset[%d][14] = 0x%x\n",
+>   			 rtlphy->pwrgroup_cnt,
+>   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][14]);
+> -	}
+> -	if (regaddr == RTXAGC_B_CCK11_A_CCK2_11&&  bitmask == 0x000000ff) {
+> +	} else if (regaddr == RTXAGC_B_CCK11_A_CCK2_11&&
+> +		bitmask == 0x000000ff) {
+>   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][15] = data;
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+>   			 "MCSTxPowerLevelOriginalOffset[%d][15] = 0x%x\n",
+>   			 rtlphy->pwrgroup_cnt,
+>   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][15]);
+> -	}
+> -	if (regaddr == RTXAGC_B_MCS03_MCS00) {
+> +	} else if (regaddr == RTXAGC_B_MCS03_MCS00) {
+>   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][10] = data;
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+>   			 "MCSTxPowerLevelOriginalOffset[%d][10] = 0x%x\n",
+>   			 rtlphy->pwrgroup_cnt,
+>   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][10]);
+> -	}
+> -	if (regaddr == RTXAGC_B_MCS07_MCS04) {
+> +	} else if (regaddr == RTXAGC_B_MCS07_MCS04) {
+>   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][11] = data;
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+>   			 "MCSTxPowerLevelOriginalOffset[%d][11] = 0x%x\n",
+>   			 rtlphy->pwrgroup_cnt,
+>   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][11]);
+> -	}
+> -	if (regaddr == RTXAGC_B_MCS11_MCS08) {
+> +	} else if (regaddr == RTXAGC_B_MCS11_MCS08) {
+>   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][12] = data;
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+>   			 "MCSTxPowerLevelOriginalOffset[%d][12] = 0x%x\n",
+>   			 rtlphy->pwrgroup_cnt,
+>   			 rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][12]);
+> -	}
+> -	if (regaddr == RTXAGC_B_MCS15_MCS12) {
+> +	} else if (regaddr == RTXAGC_B_MCS15_MCS12) {
+>   		rtlphy->MCS_TXPWR[rtlphy->pwrgroup_cnt][13] = data;
+>   		RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
+>   			 "MCSTxPowerLevelOriginalOffset[%d][13] = 0x%x\n",
 
-uname:
-Linux uw000950 2.6.35-32-generic #64~lucid1-Ubuntu SMP Tue Jan 3
-15:41:36 UTC 2012 x86_64 GNU/Linux
-
-BR
-Janusz
