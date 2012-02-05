@@ -1,113 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:59063 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753983Ab2BBKAO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 05:00:14 -0500
-Received: by mail-we0-f174.google.com with SMTP id b13so1662686wer.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 02:00:14 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>, Eliad Peller <eliad@wizery.com>
-Subject: [PATCH v3 2/4] wl12xx: add suspend_listen_interval debugfs file
-Date: Thu,  2 Feb 2012 12:03:40 +0200
-Message-Id: <1328177022-26646-3-git-send-email-eliad@wizery.com> (sfid-20120202_110025_230469_FDD7EB21)
-In-Reply-To: <1328177022-26646-1-git-send-email-eliad@wizery.com>
-References: <1328177022-26646-1-git-send-email-eliad@wizery.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:1749 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753289Ab2BELry (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Feb 2012 06:47:54 -0500
+Message-ID: <4F2E6C34.6060903@broadcom.com> (sfid-20120205_124757_783890_949D624B)
+Date: Sun, 5 Feb 2012 12:47:00 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Frank A. Kingswood" <frank@kingswood-consulting.co.uk>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Kernel panic with brcm4313 (kernel 3.2.2)
+References: <jgjoab$l54$1@dough.gmane.org>
+In-Reply-To: <jgjoab$l54$1@dough.gmane.org>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+On 02/04/2012 06:02 PM, Frank A. Kingswood wrote:
+> Hi,
+> 
+> On a new (Samsung 305U1A) laptop with BRCM4313 wireless I have not been 
+> able to use the wireless at all, although occasionally a flicker of life
+> can be seen in it.
+> 
+> "iwconfig scan" usually fails to report more than one access point. 
+> Disabling the local AP makes it show up a different one, suggesting it
+> is actually able to see it but somewhere fails to pass the data along.
 
-Add read/write to suspend_dtim_interval file which
-controls the number of DTIM periods between wakeups
-while the host is suspended.
-The value while the host is resumed is controlled
-by the file dtim_interval which existed previously.
+Could you sent me the output of 'iwconfig scan' or better 'iw scan'?
+What is the SSID of the 'local AP'?
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/debugfs.c |   59 +++++++++++++++++++++++++++++++++
- 1 files changed, 59 insertions(+), 0 deletions(-)
+> Fiddling with NetworkManager produces this kernel panic:
 
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index 4dcb3f7..15353fa 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -625,6 +625,64 @@ static const struct file_operations dtim_interval_ops = {
- 	.llseek = default_llseek,
- };
- 
-+
-+
-+static ssize_t suspend_dtim_interval_read(struct file *file,
-+					  char __user *user_buf,
-+					  size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+	u8 value;
-+
-+	if (wl->conf.conn.suspend_wake_up_event == CONF_WAKE_UP_EVENT_DTIM ||
-+	    wl->conf.conn.suspend_wake_up_event == CONF_WAKE_UP_EVENT_N_DTIM)
-+		value = wl->conf.conn.suspend_listen_interval;
-+	else
-+		value = 0;
-+
-+	return wl1271_format_buffer(user_buf, count, ppos, "%d\n", value);
-+}
-+
-+static ssize_t suspend_dtim_interval_write(struct file *file,
-+					   const char __user *user_buf,
-+					   size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+	unsigned long value;
-+	int ret;
-+
-+	ret = kstrtoul_from_user(user_buf, count, 10, &value);
-+	if (ret < 0) {
-+		wl1271_warning("illegal value for suspend_dtim_interval");
-+		return -EINVAL;
-+	}
-+
-+	if (value < 1 || value > 10) {
-+		wl1271_warning("suspend_dtim value is not in valid range");
-+		return -ERANGE;
-+	}
-+
-+	mutex_lock(&wl->mutex);
-+
-+	wl->conf.conn.suspend_listen_interval = value;
-+	/* for some reason there are different event types for 1 and >1 */
-+	if (value == 1)
-+		wl->conf.conn.suspend_wake_up_event = CONF_WAKE_UP_EVENT_DTIM;
-+	else
-+		wl->conf.conn.suspend_wake_up_event = CONF_WAKE_UP_EVENT_N_DTIM;
-+
-+	mutex_unlock(&wl->mutex);
-+	return count;
-+}
-+
-+
-+static const struct file_operations suspend_dtim_interval_ops = {
-+	.read = suspend_dtim_interval_read,
-+	.write = suspend_dtim_interval_write,
-+	.open = wl1271_open_file_generic,
-+	.llseek = default_llseek,
-+};
-+
- static ssize_t beacon_interval_read(struct file *file, char __user *user_buf,
- 				    size_t count, loff_t *ppos)
- {
-@@ -949,6 +1007,7 @@ static int wl1271_debugfs_add_files(struct wl1271 *wl,
- 	DEBUGFS_ADD(driver_state, rootdir);
- 	DEBUGFS_ADD(vifs_state, rootdir);
- 	DEBUGFS_ADD(dtim_interval, rootdir);
-+	DEBUGFS_ADD(suspend_dtim_interval, rootdir);
- 	DEBUGFS_ADD(beacon_interval, rootdir);
- 	DEBUGFS_ADD(beacon_filtering, rootdir);
- 	DEBUGFS_ADD(dynamic_ps_timeout, rootdir);
--- 
-1.7.6.401.g6a319
+What does 'Fiddling with NetworkManager' mean exactly?
+
+Gr. AvS
 
