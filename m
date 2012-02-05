@@ -1,62 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29007 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753795Ab2BUJYY (ORCPT
+Received: from moutng.kundenserver.de ([212.227.17.8]:65258 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750763Ab2BET7g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Feb 2012 04:24:24 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Sun, 5 Feb 2012 14:59:36 -0500
+Date: Sun, 5 Feb 2012 20:59:24 +0100
+From: Thierry Reding <thierry.reding@avionic-design.de>
+To: Marc Dietrich <marvin24@gmx.de>
+Cc: linux-tegra@vger.kernel.org, Stephen Warren <swarren@nvidia.com>,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Rhyland Klein <rklein@nvidia.com>
+Subject: Re: [PATCH 1/3] net: rfkill-gpio: add device tree support
+Message-ID: <20120205195924.GA18267@avionic-0098.adnet.avionic-design.de> (sfid-20120205_205939_975394_5817AE30)
+References: <215249735783e9fe35db1c594d901f591725de50.1328461986.git.marvin24@gmx.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20291.25276.574723.574583@gargle.gargle.HOWL> (sfid-20120221_102428_504615_662EB119)
-Date: Tue, 21 Feb 2012 14:54:12 +0530
-To: <linux-wireless@vger.kernel.org>
-CC: <ath9k-devel@lists.ath9k.org>
-Subject: [RFC/WIP 22/22] ath9k: Modify ATH9K_BTCOEX_SUPPORT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="cWoXeonUoKmBZSoM"
+In-Reply-To: <215249735783e9fe35db1c594d901f591725de50.1328461986.git.marvin24@gmx.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ATH9K_BTCOEX_SUPPORT is now used by both ath9k and ath9k_htc
-to enable BT coexistence. Fix Kbuild to allow this.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/Kconfig |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
+--cWoXeonUoKmBZSoM
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
-index dc6be4a..595a272 100644
---- a/drivers/net/wireless/ath/ath9k/Kconfig
-+++ b/drivers/net/wireless/ath/ath9k/Kconfig
-@@ -6,6 +6,14 @@ config ATH9K_DFS_DEBUGFS
- 	def_bool y
- 	depends on ATH9K_DEBUGFS && ATH9K_DFS_CERTIFIED
- 
-+config ATH9K_BTCOEX_SUPPORT
-+	bool "Atheros bluetooth coexistence support"
-+	depends on (ATH9K || ATH9K_HTC)
-+	default y
-+	---help---
-+	  Say Y, if you want to use the ath9k/ath9k_htc radios together with
-+	  Bluetooth modules in the same system.
-+
- config ATH9K
- 	tristate "Atheros 802.11n wireless cards support"
- 	depends on MAC80211
-@@ -81,14 +89,6 @@ config ATH9K_RATE_CONTROL
- 	  Say Y, if you want to use the ath9k specific rate control
- 	  module instead of minstrel_ht.
- 
--config ATH9K_BTCOEX_SUPPORT
--	bool "Atheros ath9k bluetooth coexistence support"
--	depends on ATH9K
--	default y
--	---help---
--	  Say Y, if you want to use the ath9k radios together with
--	  Bluetooth modules in the same system.
--
- config ATH9K_HTC
-        tristate "Atheros HTC based wireless cards support"
-        depends on USB && MAC80211
--- 
-1.7.9.1
+* Marc Dietrich wrote:
+> +#ifdef CONFIG_OF
+[...]
+> +#else
+[...]
+> +#define of_rfkill_gpio_match NULL
 
+This can be dropped, see below.
+
+> +#endif
+> +
+>  static int rfkill_gpio_probe(struct platform_device *pdev)
+>  {
+>  	struct rfkill_gpio_data *rfkill;
+>  	struct rfkill_gpio_platform_data *pdata =3D pdev->dev.platform_data;
+> +	struct device_node *np =3D pdev->dev.of_node;
+>  	int ret =3D 0;
+>  	int len =3D 0;
+> =20
+> +	if (np)
+> +		pdata =3D rfkill_gpio_parse_pdata(pdev);
+> +
+>  	if (!pdata) {
+>  		pr_warn("%s: No platform data specified\n", __func__);
+>  		return -EINVAL;
+> @@ -210,13 +268,13 @@ static int rfkill_gpio_remove(struct platform_devic=
+e *pdev)
+> =20
+>  	return 0;
+>  }
+> -
+
+Are you removing this line on purpose?
+
+>  static struct platform_driver rfkill_gpio_driver =3D {
+>  	.probe =3D rfkill_gpio_probe,
+>  	.remove =3D __devexit_p(rfkill_gpio_remove),
+>  	.driver =3D {
+>  		   .name =3D "rfkill_gpio",
+>  		   .owner =3D THIS_MODULE,
+> +		   .of_match_table =3D of_rfkill_gpio_match,
+
+I think the canonical way to do this is of_match_ptr() and leave out the
+definition to NULL in the !CONFIG_OF above.
+
+Thierry
+
+--cWoXeonUoKmBZSoM
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk8u35wACgkQZ+BJyKLjJp/p+QCff0z2Od44D8yJlA6ZzBFD0aQZ
+YzAAnREqWiOX3+Ul674jviPzY/QgHsdz
+=Ij7q
+-----END PGP SIGNATURE-----
+
+--cWoXeonUoKmBZSoM--
