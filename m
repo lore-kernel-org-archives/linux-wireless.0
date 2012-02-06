@@ -1,64 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56727 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757421Ab2BXPga (ORCPT
+Received: from cpsmtpb-ews10.kpnxchange.com ([213.75.39.15]:3292 "EHLO
+	cpsmtpb-ews10.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756415Ab2BFW7H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 10:36:30 -0500
-Subject: Re: [RFC] mac80211: Filter duplicate IE ids
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@chromium.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAMcMvsihYU93DjdqKYHW2xKiNbFD1YBqESx6NAkgKARCf-FjDQ@mail.gmail.com> (sfid-20120224_162609_881741_F7CCCE9D)
-References: <20120224033729.9256A205A0@glenhelen.mtv.corp.google.com>
-	 <1330068877.3426.6.camel@jlt3.sipsolutions.net>
-	 <CAMcMvsi_v=gb9UF3tHSZ11fnh83iE9bK7nSiwL1GB-tDqW47jQ@mail.gmail.com>
-	 <1330093741.3426.19.camel@jlt3.sipsolutions.net>
-	 <CAMcMvsihYU93DjdqKYHW2xKiNbFD1YBqESx6NAkgKARCf-FjDQ@mail.gmail.com>
-	 (sfid-20120224_162609_881741_F7CCCE9D)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 24 Feb 2012 16:36:28 +0100
-Message-ID: <1330097788.3426.29.camel@jlt3.sipsolutions.net> (sfid-20120224_163636_140387_62EC7816)
-Mime-Version: 1.0
+	Mon, 6 Feb 2012 17:59:07 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 6/8] rt2x00: Align RT3572 channel switch RFCSR 1 programming with Ralink driver.
+Date: Mon,  6 Feb 2012 23:45:11 +0100
+Message-Id: <1328568313-26267-7-git-send-email-gwingerde@gmail.com> (sfid-20120206_235920_971802_6580D97C)
+In-Reply-To: <1328568313-26267-6-git-send-email-gwingerde@gmail.com>
+References: <1328568313-26267-1-git-send-email-gwingerde@gmail.com>
+ <1328568313-26267-2-git-send-email-gwingerde@gmail.com>
+ <1328568313-26267-3-git-send-email-gwingerde@gmail.com>
+ <1328568313-26267-4-git-send-email-gwingerde@gmail.com>
+ <1328568313-26267-5-git-send-email-gwingerde@gmail.com>
+ <1328568313-26267-6-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-02-24 at 07:25 -0800, Paul Stewart wrote:
+Align with the v2.5.0.0 Ralink RT3572 driver.
 
-> >> > I suppose better to accept such service degradation than not connect,
-> >> > but I wonder if we should log a warning when we actually try to use such
-> >> > an AP?
-> >>
-> >> Let me know where you'd like it.
-> >
-> > How about having a flag in the BSS struct (ieee80211_bss) and printing a
-> > message when we use that BSS struct for assoc? E.g. in
-> > ieee80211_mgd_assoc()? I'm not sure I fully understand where this
-> > actually has any effect.
-> 
-> How do we clear this flag?  Let's say we got one corrupted beacon and
-> from then on, everything was ducky.  We set the flag flag on the
-> corrupted beacon.  Do we clear it on an unblemished probe response?
-> Are these really two flags, since beacons and probe responses
-> sometimes have different subsets of info, or does a valid probe
-> response clear both flags?
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-Huh, good questions. Which info do we end up using? Just the one that
-was not corrupted? I think we always use the last IEs, no?
-
-Hmm. You said in the bug that supported rates were really only affected,
-and this caused an issue with the supported rates that we send, because
-we restrict ourselves to the rates the AP advertises (due to other buggy
-APs ...)
-
-Maybe then it doesn't matter all that much.
-
-OTOH, why should we ever reset the flag? Eventually the BSS entry will
-be deleted anyway? And if we keep reconnecting to it, maybe there's some
-other bug?
-
-I'm not really sure -- open to suggestions. I just think that in order
-to actually notice such things in the future we should print something
-so we don't get confused.
-
-johannes
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index 66af6f4..2afb798 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1806,11 +1806,12 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
+ 	rt2800_rfcsr_write(rt2x00dev, 13, rfcsr);
+ 
+ 	rt2800_rfcsr_read(rt2x00dev, 1, &rfcsr);
+-	rt2x00_set_field8(&rfcsr, RFCSR1_RF_BLOCK_EN, 1);
+ 	rt2x00_set_field8(&rfcsr, RFCSR1_RX0_PD, 0);
+ 	rt2x00_set_field8(&rfcsr, RFCSR1_TX0_PD, 0);
+ 	rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 0);
+ 	rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 0);
++	rt2x00_set_field8(&rfcsr, RFCSR1_RX2_PD, 0);
++	rt2x00_set_field8(&rfcsr, RFCSR1_TX2_PD, 0);
+ 	if (test_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags)) {
+ 		if (rf->channel <= 14) {
+ 			rt2x00_set_field8(&rfcsr, RFCSR1_RX0_PD, 1);
+-- 
+1.7.9
 
