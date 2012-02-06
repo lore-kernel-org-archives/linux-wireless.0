@@ -1,46 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:34591 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751251Ab2BOTeS (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:54635 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753003Ab2BFQQe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 14:34:18 -0500
-Message-ID: <4F3C08B4.8010103@canonical.com> (sfid-20120215_203441_648063_2D298136)
-Date: Wed, 15 Feb 2012 12:34:12 -0700
-From: Tim Gardner <rtg.canonical@gmail.com>
-Reply-To: tim.gardner@canonical.com
+	Mon, 6 Feb 2012 11:16:34 -0500
+Date: Mon, 6 Feb 2012 11:07:28 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: hauke@hauke-m.de, kernel-team@lists.ubuntu.com,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] compat: add compat kernel checker and downloader
+Message-ID: <20120206160727.GA21048@tuxdriver.com> (sfid-20120206_171650_680688_574C2382)
+References: <1328312594-31934-1-git-send-email-mcgrof@frijolero.org>
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	Tim Gardner <tim.gardner@canonical.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] rtlwifi: rtl8192se firmware load can overflow target
- buffer
-References: <1328833192-10681-1-git-send-email-Larry.Finger@lwfinger.net> <20120215185525.GE4379@tuxdriver.com> <4F3C0421.20506@lwfinger.net>
-In-Reply-To: <4F3C0421.20506@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1328312594-31934-1-git-send-email-mcgrof@frijolero.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/15/2012 12:14 PM, Larry Finger wrote:
-> On 02/15/2012 12:55 PM, John W. Linville wrote:
->> Is this a fix that should go to 3.3?
->
-> That code has been in the driver since 3.0 and it should probably be
-> packported. On the other hand, Tim's report is the first one. My
-> suggestion is that it go into 3.4.
->
-> In addition, I am working on a fix that will completely eliminate all
-> this fixed storage.
->
-> Larry
->
->
+On Fri, Feb 03, 2012 at 03:43:14PM -0800, Luis R. Rodriguez wrote:
+> This adds get-compat-kernels, a utility that is intended
+> to be Linux distribution agnostic that downloads and installs
+> all kernel headers for all supported kernel releases of compat.
+> You also have the option of specifying you want to also install
+> the actual kernel image (get-compat-kernels -i).
+> 
+> We start off by adding support for Ubuntu on x86_64 as that
+> is what a few of us maintaining compat and compat-wireless run.
+> Just for kernel headers (default run of get-compat-kernels),
+> you'll need currently 205 M of hard drive space.
+> 
+> Once done with running get-compat-kernels, you can then
+> start running ckmake to verify your compat kernel changes
+> won't bust compilation against any known supported kernel.
+> 
+> I'd like to start requiring runs against this script for
+> patch submissions. Eventually we can try to add the same
+> runs against compat-wireless so we can verify integrity
+> against compilation for different kernel versions.
+> 
+> Support for different Linux distributios is welcomed.
+> 
+> Debug log goes out to ckmake.log
+> 
+> Example output:
+> 
+> mcgrof@tux ~/compat (git::master)$ ckmake
+> Trying kernel                  3.3.0-030300rc2-generic  [OK]
+> Trying kernel                     3.2.2-030202-generic  [OK]
+> Trying kernel                    3.1.10-030110-generic  [OK]
+> Trying kernel                    3.0.18-030018-generic  [OK]
+> Trying kernel                  2.6.39-02063904-generic  [OK]
+> Trying kernel                         2.6.38-8-generic  [OK]
+> Trying kernel                        2.6.38-13-generic  [OK]
+> Trying kernel                        2.6.38-12-generic  [OK]
+> Trying kernel                        2.6.38-11-generic  [OK]
+> Trying kernel                        2.6.38-10-generic  [OK]
+> Trying kernel                  2.6.38-02063808-generic  [OK]
+> Trying kernel                  2.6.37-02063706-generic  [OK]
+> Trying kernel                  2.6.36-02063604-generic  [OK]
+> Trying kernel                  2.6.35-02063512-generic  [OK]
+> Trying kernel                  2.6.34-02063410-generic  [OK]
+> Trying kernel                  2.6.33-02063305-generic  [OK]
+> Trying kernel                  2.6.32-02063255-generic  [OK]
+> Trying kernel                        2.6.31-22-generic  [OK]
+> Trying kernel                  2.6.31-02063113-generic  [OK]
+> Trying kernel                  2.6.30-02063010-generic  [OK]
+> Trying kernel                  2.6.29-02062906-generic  [OK]
+> Trying kernel                  2.6.28-02062810-generic  [OK]
+> Trying kernel                    2.6.27-020627-generic  [OK]
+> Trying kernel                    2.6.26-020626-generic  [OK]
+> Trying kernel                    2.6.25-020625-generic  [OK]
+> Trying kernel                    2.6.24-020624-generic  [OK]
+> 
+> Cc: kernel-team@lists.ubuntu.com
+> Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
 
-I'm fine with it being 3.4 material. The patch addresses an unlikely 
-scenario.
+I'm not sure this makes any sense.  I thought the point of the compat
+project was to support upstream kernels, not distro ones?  I'm not
+even sure I know how to replicate the above process in Fedora, since
+we would only have kernels available from a given release in each
+release's repository.
 
-rtg
+John
 -- 
-Tim Gardner tim.gardner@canonical.com
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
