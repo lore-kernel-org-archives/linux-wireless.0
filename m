@@ -1,51 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36119 "EHLO mx1.redhat.com"
+Received: from gmmr4.centrum.cz ([46.255.227.253]:35435 "EHLO gmmr4.centrum.cz"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754538Ab2BHVIh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 16:08:37 -0500
-Message-ID: <1328735392.2226.0.camel@dcbw.foobar.com> (sfid-20120208_220855_212114_8C3C24E1)
-Subject: Re: [PATCH] iwlwifi: Return correct failure code on error
-From: Dan Williams <dcbw@redhat.com>
-To: Simon Graham <simon.graham@virtualcomputer.com>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
-Date: Wed, 08 Feb 2012 15:09:52 -0600
-In-Reply-To: <20120208210509.GA1250@simgr-precise.oldroadcomputing.net>
-References: <20120208210509.GA1250@simgr-precise.oldroadcomputing.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1755468Ab2BFTSE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Feb 2012 14:18:04 -0500
+To: "Helmut Schaa" <helmut.schaa@googlemail.com>
+Subject: Re: connection interrupted for rt61pci in master mode
+Date: Mon, 06 Feb 2012 20:18:01 +0100
+From: <trencan@centrum.cz>
+Cc: <linux-wireless@vger.kernel.org>
+References: <20120128154544.70E060CD@centrum.cz>, <1385650.dcoDil3T5I@helmutmobil.site>, <20120130191820.F4F520E8@centrum.cz>, <CAGXE3d_wHuNT7Q+Ubj5qR-DgA78AeYXe7MfnFS4rv+iHjtMJbA@mail.gmail.com>, <20120131212136.652477E0@centrum.cz>, <CAGXE3d9eDaf9h3xa0oZvOWW_m2h0oYY64Zn9EQnZ664h4uxdVg@mail.gmail.com> <CAGXE3d9ddVwT7_HUz8COfLLp_pWTHeuE+kku62ZGruiemB=-Nw@mail.gmail.com>
+In-Reply-To: <CAGXE3d9ddVwT7_HUz8COfLLp_pWTHeuE+kku62ZGruiemB=-Nw@mail.gmail.com>
+MIME-Version: 1.0
+Message-Id: <20120206201801.C06DB951@centrum.cz> (sfid-20120206_201809_088245_DCBD2EED)
+Content-Type: multipart/mixed;
+	boundary="_ca29_-------e6f175cb2bc557538777d41733aaacae"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-02-08 at 16:05 -0500, Simon Graham wrote:
-> Callers of rtl_pci_init expect zero to be returned on error. Returning
-> the error code leads to, amongst other things, divide by zero panics
-> attempting to use the ring size that was never set.
 
-You probably want to resent with the subject:
+This is a multi-part message in MIME format.
+--_ca29_-------e6f175cb2bc557538777d41733aaacae
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-[PATCH] rtlwifi: return correct failure code on error
+Hello,
 
-instead of 'iwlwifi' which is the Intel wifi driver.
+I send another queue file, is there seen root cause of connection interrupted?
 
-Dan
+Thanks.
 
-> ---
->  drivers/net/wireless/rtlwifi/pci.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-> index fb84707..f0ce366 100644
-> --- a/drivers/net/wireless/rtlwifi/pci.c
-> +++ b/drivers/net/wireless/rtlwifi/pci.c
-> @@ -1492,7 +1492,7 @@ static int rtl_pci_init(struct ieee80211_hw *hw, struct pci_dev *pdev)
->  	if (err) {
->  		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
->  			 "tx ring initialization failed\n");
-> -		return err;
-> +		return 0;
->  	}
->  
->  	return 1;
+Michal
 
+______________________________________________________________
+> Od: "Helmut Schaa" <helmut.schaa@googlemail.com>
+> Komu: <trencan@centrum.cz>
+> Datum: 02.02.2012 09:04
+> Předmět: Re: connection interrupted for rt61pci in master mode
+>
+> CC: linux-wireless@vger.kernel.org
+>On Wed, Feb 1, 2012 at 9:00 AM, Helmut Schaa
+><helmut.schaa@googlemail.com> wrote:
+>> On Tue, Jan 31, 2012 at 9:21 PM,  <trencan@centrum.cz> wrote:
+>>> One of them "dump" was still continuosly growing. I stopped catting after connection interrupted occured. Do you need all them three? Should I send it only to your email? Packed dump file has 820kB. Queue and Crypto are of small sizes.
+>>
+>> I'd only like to see the content of "queue" when the problem happens.
+>
+>Was the output you've send me from the time the problem occured?
+>At least the queues are not stuck somehow, so must be something else ...
+>
+>Helmut
+>
 
+--_ca29_-------e6f175cb2bc557538777d41733aaacae
+Content-Type: text/plain; name="queue.log"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="queue.log"
+
+cWlkCWZsYWdzCQljb3VudAlsaW1pdAlsZW5ndGgJaW5kZXgJZG1hIGRvbmUJZG9uZQoxNAkw
+eDAwMDAwMDAxCTg1ODIzCTMyCTAJMzEJMzEJCTMxCjAJMHgwMDAwMDAwMQkxNjEJMzIJMAkx
+CTAJCTEKMQkweDAwMDAwMDAxCTAJMzIJMAkwCTAJCTAKMgkweDAwMDAwMDAxCTE3ODcyCTMy
+CTAJMTYJMAkJMTYKMwkweDAwMDAwMDAxCTAJMzIJMAkwCTAJCTAKMTYJMHgwMDAwMDAwMQkw
+CTQJMAkwCTAJCTAK
+--_ca29_-------e6f175cb2bc557538777d41733aaacae--
