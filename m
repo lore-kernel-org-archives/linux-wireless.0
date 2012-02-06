@@ -1,107 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:33695 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754501Ab2BVU7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 15:59:09 -0500
-From: Jakub Kicinski <kubakici@wp.pl>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Jakub Kicinski <kubakici@wp.pl>
-Subject: [PATCH v3 1/2] rt2800: Add documentation on MCU requests
-Date: Wed, 22 Feb 2012 21:58:57 +0100
-Message-Id: <1329944338-4696-1-git-send-email-kubakici@wp.pl> (sfid-20120222_215914_227615_7B9933B8)
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:42091 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755397Ab2BFQ4V convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Feb 2012 11:56:21 -0500
+Received: by wics10 with SMTP id s10so4315296wic.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2012 08:56:20 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20120204142502.GA10858@ubuntu-mba>
+References: <20120203222818.GA3749@ubuntu-mba>
+	<4F2D0C07.1010704@broadcom.com>
+	<20120204142502.GA10858@ubuntu-mba>
+Date: Mon, 6 Feb 2012 17:56:20 +0100
+Message-ID: <CACna6ryR2xm2EAJaV4vCO8WebR5pXCyFknEMrf8ynVF+HYrxTw@mail.gmail.com> (sfid-20120206_175627_805663_D8CC96D7)
+Subject: Re: BCM4331 fails to associate after suspend
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Scott Sanbar <scott.sanbar@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add documentation on MCU communication, some of known commands and
-their arguments. Supplement command ids.
+2012/2/4 Seth Forshee <seth.forshee@canonical.com>:
+> On Sat, Feb 04, 2012 at 11:44:23AM +0100, Arend van Spriel wrote:
+>> On 02/03/2012 11:28 PM, Seth Forshee wrote:
+>> >
+>> > I've been looking around a bit in the b43 and bcma drivers, but so far I
+>> > haven't found the reason why this happens. Any help would be
+>> > appreciated. Let me know if there's additional information I can
+>> > provide.
+>> >
+>>
+>> With which kernel version do you see these issues? BCMA suspend/resume
+>> code has a fix in 3.3-rc1. So if you are seeing it on a 3.2 kernel,
+>> please give it a try.
+>
+> I've tried 3.3-rc2 and the wirless-testing tree, and the problem still
+> exists in both.
 
-Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>  
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
----
- drivers/net/wireless/rt2x00/rt2800.h    |   15 ++++++++++++++-
- drivers/net/wireless/rt2x00/rt2800pci.c |    8 +++++---
- 2 files changed, 19 insertions(+), 4 deletions(-)
+I don't have access to suspendable machine with Mini PCIe card, not to
+mention BCM4331 which is available for Mac-specific slot only (or
+routers as embedded wifi). It may be b43 needs to fix but I'm not
+really able to work on that. Plus the whole BCM4331 code is really
+tricky, as it comes from RE based on dumps only :(
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index 06acabd..3ab1f7f 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -1627,6 +1627,7 @@ struct mac_iveiv_entry {
- 
- /*
-  * H2M_MAILBOX_CSR: Host-to-MCU Mailbox.
-+ * CMD_TOKEN: Command id, 0xff disable status reporting.
-  */
- #define H2M_MAILBOX_CSR			0x7010
- #define H2M_MAILBOX_CSR_ARG0		FIELD32(0x000000ff)
-@@ -1636,6 +1637,8 @@ struct mac_iveiv_entry {
- 
- /*
-  * H2M_MAILBOX_CID:
-+ * Free slots contain 0xff. MCU will store command's token to lowest free slot.
-+ * If all slots are occupied status will be dropped.
-  */
- #define H2M_MAILBOX_CID			0x7014
- #define H2M_MAILBOX_CID_CMD0		FIELD32(0x000000ff)
-@@ -1645,6 +1648,7 @@ struct mac_iveiv_entry {
- 
- /*
-  * H2M_MAILBOX_STATUS:
-+ * Command status will be saved to same slot as command id.
-  */
- #define H2M_MAILBOX_STATUS		0x701c
- 
-@@ -2288,6 +2292,12 @@ struct mac_iveiv_entry {
- 
- /*
-  * MCU mailbox commands.
-+ * MCU_SLEEP - go to power-save mode.
-+ *             arg1: 1: save as much power as possible, 0: save less power.
-+ *             status: 1: success, 2: already asleep,
-+ *                     3: maybe MAC is busy so can't finish this task.
-+ * MCU_RADIO_OFF
-+ *             arg0: 0: do power-saving, NOT turn off radio.
-  */
- #define MCU_SLEEP			0x30
- #define MCU_WAKEUP			0x31
-@@ -2308,7 +2318,10 @@ struct mac_iveiv_entry {
- /*
-  * MCU mailbox tokens
-  */
--#define TOKEN_WAKUP			3
-+#define TOKEN_SLEEP			1
-+#define TOKEN_RADIO_OFF			2
-+#define TOKEN_WAKEUP			3
-+
- 
- /*
-  * DMA descriptor defines.
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 6ad6929..891547c 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -521,14 +521,16 @@ static int rt2800pci_set_state(struct rt2x00_dev *rt2x00dev,
- 			       enum dev_state state)
- {
- 	if (state == STATE_AWAKE) {
--		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, TOKEN_WAKUP, 0, 0x02);
--		rt2800pci_mcu_status(rt2x00dev, TOKEN_WAKUP);
-+		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, TOKEN_WAKEUP,
-+				   0, 0x02);
-+		rt2800pci_mcu_status(rt2x00dev, TOKEN_WAKEUP);
- 	} else if (state == STATE_SLEEP) {
- 		rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_STATUS,
- 					 0xffffffff);
- 		rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_CID,
- 					 0xffffffff);
--		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0x01, 0xff, 0x01);
-+		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, TOKEN_SLEEP,
-+				   0xff, 0x01);
- 	}
- 
- 	return 0;
 -- 
-1.7.7.6
-
+Rafał
