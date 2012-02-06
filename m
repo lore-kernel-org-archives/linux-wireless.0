@@ -1,46 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4344 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752505Ab2BTKdA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Feb 2012 05:33:00 -0500
-Message-ID: <4F422152.3030603@broadcom.com> (sfid-20120220_113325_738596_F8FDDCEA)
-Date: Mon, 20 Feb 2012 11:32:50 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:55744 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753261Ab2BFOao (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Feb 2012 09:30:44 -0500
+Message-ID: <4F2FE40D.9020307@qca.qualcomm.com> (sfid-20120206_153047_963119_6E0BC2C2)
+Date: Mon, 6 Feb 2012 16:30:37 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Kay Sievers" <kay.sievers@vrfy.org>
-cc: "Larry Finger" <Larry.Finger@lwfinger.net>,
-	LKML <linux-kernel@vger.kernel.org>,
-	driverdevel <devel@driverdev.osuosl.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>
-Subject: Re: will these methods work with firmware loading?
-References: <4F414230.5040506@lwfinger.net>
- <4F421A0E.8030805@broadcom.com>
- <CAPXgP10qa_g6R=pOWd8JuXpw0wPdJ4rP7B_4YHDU91mhC0N6Vg@mail.gmail.com>
-In-Reply-To: <CAPXgP10qa_g6R=pOWd8JuXpw0wPdJ4rP7B_4YHDU91mhC0N6Vg@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+To: <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH] ath6kl: Check wow state before sending control and data
+ pkt
+References: <1328536613-17521-1-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1328536613-17521-1-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/20/2012 11:19 AM, Kay Sievers wrote:
->> For that
->> >  problem I would say yes. Also here the problem of handling error flows
->> >  exist. If the driver is kicked of during boot with a initramfs missing the
->> >  firmware, should we retry until the real root is mounted?
-> I don't think so. Drivers are not supposed to know about bootup or
-> initramfs issues. If they want, they can disable the timeout, and wait
-> for userspace to handle the request any time later, but they should
-> not try to be smart here.
->
-> Currently, firmware requests are cancelled if the firmware isn't
-> found, but that's a userspace issue, and nothing the kernel should try
-> to work around.
+On 02/06/2012 03:56 PM, rmani@qca.qualcomm.com wrote:
+> From: Raja Mani <rmani@qca.qualcomm.com>
+> 
+> * TX operation (ctrl tx and data tx) has to be controlled based on
+>   WOW suspend state. i.e, control packets are allowed to send from
+>   the host until the suspend state goes ATH6KL_STATE_WOW and
+>   the data packets are allowed until WOW suspend operation starts.
+> 
+> * Similary, wow resume is NOT allowed if WOW suspend is in progress.
+> 
+> Both of the above scenarios are taken care in this patch.
+> 
+> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 
-I can not agree more. I prefer to keep my driver happily unaware. I will 
-just take the firmware loading away from the module init path and stop 
-worrying about userspace issues ;-)
+What user visible bug are you fixing here?
 
-Gr. AvS
+> --- a/drivers/net/wireless/ath/ath6kl/txrx.c
+> +++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+> @@ -284,6 +284,10 @@ int ath6kl_control_tx(void *devt, struct sk_buff *skb,
+>  	int status = 0;
+>  	struct ath6kl_cookie *cookie = NULL;
+>  
+> +#ifdef CONFIG_PM
+> +	if (ar->wow_state == ATH6KL_WOW_STATE_SUSPENDED)
+> +		return -EACCES;
+> +#endif
+>  	spin_lock_bh(&ar->lock);
+>  
+>  	ath6kl_dbg(ATH6KL_DBG_WLAN_TX,
+> @@ -352,7 +356,12 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
+>  	ath6kl_dbg(ATH6KL_DBG_WLAN_TX,
+>  		   "%s: skb=0x%p, data=0x%p, len=0x%x\n", __func__,
+>  		   skb, skb->data, skb->len);
+> -
+> +#ifdef CONFIG_PM
+> +	if (ar->wow_state != ATH6KL_WOW_STATE_NONE) {
+> +		dev_kfree_skb(skb);
+> +		return 0;
+> +	}
+> +#endif
 
+I think we should be more proactive than reactive. For example, we
+should stop netdev queues to make sure that there are no data packets
+transmitted. And we should do the same for ath6kl_control_tx() callers,
+I guess that means cfg80211 ops?
+
+But we could add warnings here to make sure that we are not transmitting
+any packets in a wrong state.
+
+Kalle
