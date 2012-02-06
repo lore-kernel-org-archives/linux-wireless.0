@@ -1,64 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1039 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752937Ab2BRRjJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Feb 2012 12:39:09 -0500
-Date: Sat, 18 Feb 2012 18:39:01 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFT/FYI] mac80211: revert on-channel work optimisations
-Message-ID: <20120218173900.GC11478@redhat.com> (sfid-20120218_183921_267306_7406761A)
-References: <1320772222.24797.22.camel@jlt3.sipsolutions.net>
- <4EB96416.5040700@candelatech.com>
- <1329493491.3786.6.camel@jlt3.sipsolutions.net>
- <4F3E7CA5.7010207@candelatech.com>
- <1329502761.3330.0.camel@jlt3.sipsolutions.net>
- <4F3E9EBE.60602@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F3E9EBE.60602@candelatech.com>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:34898 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753718Ab2BFKoV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Feb 2012 05:44:21 -0500
+Received: by mail-wi0-f174.google.com with SMTP id s10so4057049wic.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2012 02:44:20 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 4/4] wl12xx: delete wl->vif (and allow multiple vifs)
+Date: Mon,  6 Feb 2012 12:47:57 +0200
+Message-Id: <1328525277-25334-5-git-send-email-eliad@wizery.com> (sfid-20120206_114425_762317_073BC1BA)
+In-Reply-To: <1328525277-25334-1-git-send-email-eliad@wizery.com>
+References: <1328525277-25334-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 17, 2012 at 10:38:54AM -0800, Ben Greear wrote:
-> On 02/17/2012 10:19 AM, Johannes Berg wrote:
-> >On Fri, 2012-02-17 at 08:13 -0800, Ben Greear wrote:
-> >
-> >>>Given the auth/assoc redesign that went in now, are you still carrying
-> >>>this? Does the redesign address your problem?
-> >>
-> >>I haven't looked yet...still stuck back on 3.0 kernel for the
-> >>most part.
-> >>
-> >>I should be moving to 3.3 sometime soon, and will see how it works.
-> >>
-> >>I was thinking that I would ignore the work logic for now and probably
-> >>just focus on re-applying the on-channel scan optimization first.
-> >>
-> >>Are you done, or mostly done with the re-architecture you were working on?
-> >
-> >Yes, I'm done.
-> >
-> >>I know you didn't like the scan optimization from before...do you have any
-> >>ideas on how it might be done more to your liking?
-> >
-> >I, umm, don't even remember what that was about :)
-> 
-> The basic idea is that if the user requests that we only
-> scan a single channel, and that channel is the operating channel,
-> we should be able to scan without interrupting any other
-> packet transmission/reception, and without kicking the NIC to make it go off/on
-> channel, etc.
-> 
-> Basically I had to complicate the scan state machine
-> in order to minimize going off-channel (if indeed we are only
-> scanning one current channel).
-I think no change in scan state machine in needed at all. It could be
-simply marked as another type of scan i.e. SCAN_CURRENT_CHAN.
-Configure filters at start, send probe request if active, 
-add additional flag check in rx_handlers, reconfigure filters
-at end.
+Delete the global wl->vif (and the checks on it),
+so multiple vifs could be added.
 
-Stanislaw
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c   |   11 -----------
+ drivers/net/wireless/wl12xx/wl12xx.h |    2 --
+ 2 files changed, 0 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index eeb80f5..0434afa 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2160,13 +2160,6 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out_unlock;
+ 
+-	if (wl->vif) {
+-		wl1271_debug(DEBUG_MAC80211,
+-			     "multiple vifs are not supported yet");
+-		ret = -EBUSY;
+-		goto out;
+-	}
+-
+ 	/*
+ 	 * in some very corner case HW recovery scenarios its possible to
+ 	 * get here before __wl1271_op_remove_interface is complete, so
+@@ -2240,7 +2233,6 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	wl->vif = vif;
+ 	list_add(&wlvif->list, &wl->wlvif_list);
+ 	set_bit(WLVIF_FLAG_INITIALIZED, &wlvif->flags);
+ 
+@@ -2273,8 +2265,6 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
+ 	if (!test_and_clear_bit(WLVIF_FLAG_INITIALIZED, &wlvif->flags))
+ 		return;
+ 
+-	wl->vif = NULL;
+-
+ 	/* because of hardware recovery, we may get here twice */
+ 	if (wl->state != WL1271_STATE_ON)
+ 		return;
+@@ -5155,7 +5145,6 @@ static struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	wl->rx_counter = 0;
+ 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
+ 	wl->band = IEEE80211_BAND_2GHZ;
+-	wl->vif = NULL;
+ 	wl->flags = 0;
+ 	wl->sg_enabled = true;
+ 	wl->hw_pg_ver = -1;
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 021d84f..89467b2 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -440,8 +440,6 @@ struct wl1271 {
+ 	struct wl12xx_fw_status *fw_status;
+ 	struct wl1271_tx_hw_res_if *tx_res_if;
+ 
+-	struct ieee80211_vif *vif;
+-
+ 	/* Current chipset configuration */
+ 	struct conf_drv_settings conf;
+ 
+-- 
+1.7.6.401.g6a319
+
