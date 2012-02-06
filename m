@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58969 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757190Ab2BHTqf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 14:46:35 -0500
-Date: Wed, 8 Feb 2012 14:44:54 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	arend@broadcom.com
-Subject: Re: [PATCH] mac80211: do not call rate control .tx_status before
- .rate_init
-Message-ID: <20120208194453.GC2929@tuxdriver.com> (sfid-20120208_204638_435884_FD5D28E4)
-References: <1328725031-35464-1-git-send-email-nbd@openwrt.org>
- <20120208192536.GB2929@tuxdriver.com>
- <4F32CF18.4010300@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F32CF18.4010300@openwrt.org>
+Received: from mx1.redhat.com ([209.132.183.28]:42882 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755351Ab2BFQJc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Feb 2012 11:09:32 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [RFC 1/4] iwlwifi: dump stack when fail to gain access to the device
+Date: Mon,  6 Feb 2012 17:09:21 +0100
+Message-Id: <1328544564-8696-1-git-send-email-sgruszka@redhat.com> (sfid-20120206_170935_330207_3F73DF0A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 08, 2012 at 08:38:00PM +0100, Felix Fietkau wrote:
-> On 2012-02-08 8:25 PM, John W. Linville wrote:
-> > On Wed, Feb 08, 2012 at 07:17:11PM +0100, Felix Fietkau wrote:
-> >> Most rate control implementations assume .get_rate and .tx_status are only
-> >> called once the per-station data has been fully initialized.
-> >> minstrel_ht crashes if this assumption is violated.
-> >> 
-> >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> >> Tested-by: Arend van Spriel <arend@broadcom.com>
-> >> ---
-> >>  net/mac80211/rate.h |    2 +-
-> >>  1 files changed, 1 insertions(+), 1 deletions(-)
-> >> 
-> >> diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
-> >> index 5fc3135..fbb1efd 100644
-> >> --- a/net/mac80211/rate.h
-> >> +++ b/net/mac80211/rate.h
-> >> @@ -37,7 +37,7 @@ static inline void rate_control_tx_status(struct ieee80211_local *local,
-> >>  	struct ieee80211_sta *ista = &sta->sta;
-> >>  	void *priv_sta = sta->rate_ctrl_priv;
-> >>  
-> >> -	if (!ref)
-> >> +	if (!ref || !test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
-> >>  		return;
-> >>  
-> >>  	ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
-> > 
-> > Any reason not to apply this for 3.3?  Or stable?
-> I think 3.3 doesn't have that sta flag, the issue was probably
-> introduced with the 3.4 changes.
-> I don't remember something like this appearing in earlier versions.
+Print dump stack when the device is not responding. This should give
+some more clue about the reason of failure. Also change the message we
+print, since "MAC in deep sleep" is kinda confusing.
 
-Cool, thanks.
+On the way add unlikely(), as fail to gain NIC access is hmm ...
+unlikely.
 
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-io.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
+index 83fdff3..ce6d9c1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.c
++++ b/drivers/net/wireless/iwlwifi/iwl-io.c
+@@ -120,10 +120,10 @@ int iwl_grab_nic_access_silent(struct iwl_bus *bus)
+ int iwl_grab_nic_access(struct iwl_bus *bus)
+ {
+ 	int ret = iwl_grab_nic_access_silent(bus);
+-	if (ret) {
++	if (unlikely(ret)) {
+ 		u32 val = iwl_read32(bus, CSR_GP_CNTRL);
+-		IWL_ERR(bus,
+-			"MAC is in deep sleep!. CSR_GP_CNTRL = 0x%08X\n", val);
++		WARN_ONCE(1, "Timeout waiting for ucode processor access "
++			     "(CSR_GP_CNTRL 0x%08x)\n", val);
+ 	}
+ 
+ 	return ret;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.1
+
