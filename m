@@ -1,39 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:59586 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753992Ab2BGXL6 (ORCPT
+Received: from cpsmtpb-ews04.kpnxchange.com ([213.75.39.7]:1473 "EHLO
+	cpsmtpb-ews04.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756432Ab2BFW7F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 18:11:58 -0500
-Received: by iacb35 with SMTP id b35so10757372iac.19
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 15:11:58 -0800 (PST)
-Message-ID: <4F31AFBB.1000907@lwfinger.net> (sfid-20120208_001201_780360_8E69DCA7)
-Date: Tue, 07 Feb 2012 17:11:55 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Simon Graham <simon.graham@virtualcomputer.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	chaoming_li@realsil.com.cn
-Subject: Re: [PATCH] rtlwifi: Handle previous allocation failures when freeing
- device memory
-References: <BC8BC73D12649F439B502B4CB6FD58B1053E2C92@BE23.exg4.exghost.com> <4F319DCA.7080507@lwfinger.net> <BC8BC73D12649F439B502B4CB6FD58B1053E2D11@BE23.exg4.exghost.com>
-In-Reply-To: <BC8BC73D12649F439B502B4CB6FD58B1053E2D11@BE23.exg4.exghost.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 6 Feb 2012 17:59:05 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 5/8] rt2x00: Fix RFCSR 12 & 13 programming on RT3572 channel switching.
+Date: Mon,  6 Feb 2012 23:45:10 +0100
+Message-Id: <1328568313-26267-6-git-send-email-gwingerde@gmail.com> (sfid-20120206_235931_117638_3F14654F)
+In-Reply-To: <1328568313-26267-5-git-send-email-gwingerde@gmail.com>
+References: <1328568313-26267-1-git-send-email-gwingerde@gmail.com>
+ <1328568313-26267-2-git-send-email-gwingerde@gmail.com>
+ <1328568313-26267-3-git-send-email-gwingerde@gmail.com>
+ <1328568313-26267-4-git-send-email-gwingerde@gmail.com>
+ <1328568313-26267-5-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/07/2012 04:37 PM, Simon Graham wrote:
->
-> Which looks like rtl_pci_probe is calling rtl_pci_free_rx_ring which is
-> freeing a NULL pointer...
->
-> We have not seen this specific crash since adding the change in my
-> proposed patch.
+Align with v2.5.0.0 Ralink RT3572 driver for 2.4GHz band channel switch.
 
-After taking another look at the code, I can see paths that would call the free 
-routines incorrectly. Your fix is probably easier that doing it "the right way".
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-BTW, your mailer mangled the patch. If you don't know how to fix that, attach it 
-to mail and send it to me privately. I'll send it to John.
-
-Larry
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index cb841f4..66af6f4 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1783,8 +1783,7 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
+ 	if (rf->channel <= 14) {
+ 		rt2x00_set_field8(&rfcsr, RFCSR12_DR0, 3);
+ 		rt2x00_set_field8(&rfcsr, RFCSR12_TX_POWER,
+-				(info->default_power1 & 0x3) |
+-				((info->default_power1 & 0xC) << 1));
++				  info->default_power1);
+ 	} else {
+ 		rt2x00_set_field8(&rfcsr, RFCSR12_DR0, 7);
+ 		rt2x00_set_field8(&rfcsr, RFCSR12_TX_POWER,
+@@ -1797,8 +1796,7 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
+ 	if (rf->channel <= 14) {
+ 		rt2x00_set_field8(&rfcsr, RFCSR13_DR0, 3);
+ 		rt2x00_set_field8(&rfcsr, RFCSR13_TX_POWER,
+-				(info->default_power2 & 0x3) |
+-				((info->default_power2 & 0xC) << 1));
++				  info->default_power2);
+ 	} else {
+ 		rt2x00_set_field8(&rfcsr, RFCSR13_DR0, 7);
+ 		rt2x00_set_field8(&rfcsr, RFCSR13_TX_POWER,
+-- 
+1.7.9
 
