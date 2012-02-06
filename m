@@ -1,28 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:10612 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753804Ab2BUONT (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34355 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754852Ab2BFQOD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Feb 2012 09:13:19 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Mon, 6 Feb 2012 11:14:03 -0500
+Message-ID: <4F2FFC25.8000705@sipsolutions.net> (sfid-20120206_171411_512422_A0BED489)
+Date: Mon, 06 Feb 2012 17:13:25 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20291.42604.545286.901746@gargle.gargle.HOWL> (sfid-20120221_151323_327059_5322B456)
-Date: Tue, 21 Feb 2012 19:43:00 +0530
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: Re: [RFC/WIP 09/22] ath9k: Initialize BTCOEX scheme using a helper
-In-Reply-To: <CAD2nsn2bPffcbPcJAn1BG25Q-XTR8sJCHFwh_siGmneme7JpYQ@mail.gmail.com>
-References: <20291.25199.584747.537695@gargle.gargle.HOWL>
-	<CAD2nsn2bPffcbPcJAn1BG25Q-XTR8sJCHFwh_siGmneme7JpYQ@mail.gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC 3/4] iwlwifi: cleanup/fix memory barriers
+References: <1328544564-8696-1-git-send-email-sgruszka@redhat.com> <1328544564-8696-3-git-send-email-sgruszka@redhat.com> (sfid-20120206_170940_538104_F123CA7E)
+In-Reply-To: <1328544564-8696-3-git-send-email-sgruszka@redhat.com> (sfid-20120206_170940_538104_F123CA7E)
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi wrote:
-> is it possible to move it to gpio.c, except we are initializing btcoex
-> related GPIO pins so logically gpio.c could be a good idea. pls let me
-> know if i had missed something
+On 2/6/2012 5:09 PM, Stanislaw Gruszka wrote:
+> wmb(), rmb() are not needed when writel(), readl() are used as
+> accessors for MMIO. We use them indirectly via iowrite32(),
+> ioread32().
+>
+> What is needed mmiowb(), for synchronizing writes coming from
+> different CPUs on PCIe bridge (see in patch comments). This
+> fortunately is not needed on x86, where mmiowb() is just
+> defined as compiler barrier. As iwlwifi devices are most likely
+> not used on anything other than x86, this is not so important
+> fix.
 
-The coex parameters in ath_hw are initialized, so btcoex.c is okay.
+Technically, PCIe bridges can reorder writes as well, so we really need 
+to do a dummy read somewhere -- we were discussing this internally 
+recently as well.
 
-Sujith
+johannes
