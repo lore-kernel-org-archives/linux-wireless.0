@@ -1,45 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tqs.de ([62.157.136.18]:34510 "EHLO mail2.tqs.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752104Ab2B0Kjp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 05:39:45 -0500
-Subject: [PATCH] Staging: rtl8712: Change double device ID back to original
-	value
-To: linville@example.com
-From: Martin Krause <martin.krause@tqs.de>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Date: Mon, 27 Feb 2012 11:29:56 +0100
-Message-ID: <20120227102857.21246.43090.stgit@localhost.localdomain> (sfid-20120227_113948_799691_3BE2FE4A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from cpsmtpb-ews08.kpnxchange.com ([213.75.39.13]:3254 "EHLO
+	cpsmtpb-ews08.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756283Ab2BFW7G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Feb 2012 17:59:06 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 4/8] rt2x00: Use saved BBP 25 and 26 values when configuring channel on RT3572.
+Date: Mon,  6 Feb 2012 23:45:09 +0100
+Message-Id: <1328568313-26267-5-git-send-email-gwingerde@gmail.com> (sfid-20120206_235916_561912_BDD55622)
+In-Reply-To: <1328568313-26267-4-git-send-email-gwingerde@gmail.com>
+References: <1328568313-26267-1-git-send-email-gwingerde@gmail.com>
+ <1328568313-26267-2-git-send-email-gwingerde@gmail.com>
+ <1328568313-26267-3-git-send-email-gwingerde@gmail.com>
+ <1328568313-26267-4-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the rtl8712 staging driver the 0bda:8172 usb device id exists two times.
-It seems that this was an error when integrating the original Realtek
-driver into the kernel. This patch changes the double device id back to the
-value used in the last Realtek driver
-(rtl8712_8188_8191_8192SU_usb_linux_v2.6.6.0.20110401).
+This brings the rt2800 channel switching code for RT3572 closer to the
+v2.5.0.0 Ralink RT3572 driver.
 
-Signed-off-by: Martin Krause <martin.krause@tqs.de>
----
-I tested this patch on a powerpc board (p2020 based) with a WIFIHU Radicom 
-wireless module with a RTL8191SU chip on it (usb device id 0bda:8192).
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
- drivers/staging/rtl8712/usb_intf.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/staging/rtl8712/usb_intf.c b/drivers/staging/rtl8712/usb_intf.c
-index 9bade18..bb247ce 100644
---- a/drivers/staging/rtl8712/usb_intf.c
-+++ b/drivers/staging/rtl8712/usb_intf.c
-@@ -104,7 +104,7 @@ static struct usb_device_id rtl871x_usb_id_tbl[] = {
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 7c05dee..8aabd0d 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -2444,6 +2444,8 @@ struct mac_iveiv_entry {
+ struct rt2800_drv_data {
+ 	u8 calibration_bw20;
+ 	u8 calibration_bw40;
++	u8 bbp25;
++	u8 bbp26;
+ };
  
- /* RTL8191SU */
- 	/* Realtek */
--	{USB_DEVICE(0x0BDA, 0x8172)},
-+	{USB_DEVICE(0x0BDA, 0x8192)},
- 	/* Amigo */
- 	{USB_DEVICE(0x0EB0, 0x9061)},
- 	/* ASUS/EKB */
+ #endif /* RT2800_H */
+diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+index fad0e77..cb841f4 100644
+--- a/drivers/net/wireless/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+@@ -1754,8 +1754,8 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
+ 	u32 reg;
+ 
+ 	if (rf->channel <= 14) {
+-		rt2800_bbp_write(rt2x00dev, 25, 0x15);
+-		rt2800_bbp_write(rt2x00dev, 26, 0x85);
++		rt2800_bbp_write(rt2x00dev, 25, drv_data->bbp25);
++		rt2800_bbp_write(rt2x00dev, 26, drv_data->bbp26);
+ 	} else {
+ 		rt2800_bbp_write(rt2x00dev, 25, 0x09);
+ 		rt2800_bbp_write(rt2x00dev, 26, 0xff);
+@@ -3623,6 +3623,12 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+ 			rt2800_init_rx_filter(rt2x00dev, true, 0x27, 0x15);
+ 	}
+ 
++	/*
++	 * Save BBP 25 & 26 values for later use in channel switching
++	 */
++	rt2800_bbp_read(rt2x00dev, 25, &drv_data->bbp25);
++	rt2800_bbp_read(rt2x00dev, 26, &drv_data->bbp26);
++
+ 	if (!rt2x00_rt(rt2x00dev, RT5390)) {
+ 		/*
+ 		 * Set back to initial state
+-- 
+1.7.9
 
