@@ -1,122 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:6736 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753578Ab2BVHLF (ORCPT
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:49352 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753428Ab2BFOcS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 02:11:05 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20292.38143.523349.904708@gargle.gargle.HOWL> (sfid-20120222_081113_646249_708CCBD9)
-Date: Wed, 22 Feb 2012 12:40:55 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 10/26] ath9k_hw: Use a helper function to get MCI ISR
+	Mon, 6 Feb 2012 09:32:18 -0500
+Received: by mail-lpp01m020-f172.google.com with SMTP id gk8so1016451lbb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2012 06:32:17 -0800 (PST)
+Message-ID: <1328538734.7324.139.camel@cumari> (sfid-20120206_153221_616826_31862621)
+Subject: Re: [PATCH v2 5/7] wl12xx: add RX data filter ACX commands
+From: Luciano Coelho <coelho@ti.com>
+To: Kalle Valo <kvalo@adurom.com>
+Cc: Eliad Peller <eliad@wizery.com>, eyal@wizery.com,
+	linux-wireless@vger.kernel.org
+Date: Mon, 06 Feb 2012 16:32:14 +0200
+In-Reply-To: <877h00cay9.fsf@purkki.adurom.net>
+References: <1328021048-8944-1-git-send-email-eliad@wizery.com>
+	 <1328021048-8944-6-git-send-email-eliad@wizery.com>
+	 <1328170983.3626.265.camel@cumari> <877h00cay9.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |   29 +-------------------------
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |   25 +++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h         |    1 +
- 3 files changed, 28 insertions(+), 27 deletions(-)
+On Mon, 2012-02-06 at 16:07 +0200, Kalle Valo wrote: 
+> Luciano Coelho <coelho@ti.com> writes:
+> 
+> >> +	if (index >= WL1271_MAX_RX_DATA_FILTERS) {
+> >> +		wl1271_warning("acx_set_rx_data_filter: invalid filter idx(%d)",
+> >> +			       index);
+> >> +		return -EINVAL;
+> >> +	}
+> >
+> > Should we use BUG_ON instead? This is only used internally in the
+> > driver, so if it get here, it's a bug.  And if the filters come from
+> > userspace, we should validate them before continuing anyway.
+> 
+> BUG_ON() is evil and wireless drivers should really not use it,
+> WARN_ON_ONCE() and return with an error is much more user friendly.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 39cb482..575f36a 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -180,7 +180,6 @@ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
- 	u32 mask2 = 0;
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	struct ath_common *common = ath9k_hw_common(ah);
--	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
- 	u32 sync_cause = 0, async_cause;
- 
- 	async_cause = REG_READ(ah, AR_INTR_ASYNC_CAUSE);
-@@ -302,32 +301,8 @@ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
- 			ar9003_hw_bb_watchdog_read(ah);
- 	}
- 
--	if (async_cause & AR_INTR_ASYNC_MASK_MCI) {
--		u32 raw_intr, rx_msg_intr;
--
--		rx_msg_intr = REG_READ(ah, AR_MCI_INTERRUPT_RX_MSG_RAW);
--		raw_intr = REG_READ(ah, AR_MCI_INTERRUPT_RAW);
--
--		if ((raw_intr == 0xdeadbeef) || (rx_msg_intr == 0xdeadbeef))
--			ath_dbg(common, MCI,
--				"MCI gets 0xdeadbeef during MCI int processing new raw_intr=0x%08x, new rx_msg_raw=0x%08x, raw_intr=0x%08x, rx_msg_raw=0x%08x\n",
--				raw_intr, rx_msg_intr, mci->raw_intr,
--				mci->rx_msg_intr);
--		else {
--			mci->rx_msg_intr |= rx_msg_intr;
--			mci->raw_intr |= raw_intr;
--			*masked |= ATH9K_INT_MCI;
--
--			if (rx_msg_intr & AR_MCI_INTERRUPT_RX_MSG_CONT_INFO)
--				mci->cont_status =
--					REG_READ(ah, AR_MCI_CONT_STATUS);
--
--			REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_RAW, rx_msg_intr);
--			REG_WRITE(ah, AR_MCI_INTERRUPT_RAW, raw_intr);
--			ath_dbg(common, MCI, "AR_INTR_SYNC_MCI\n");
--
--		}
--	}
-+	if (async_cause & AR_INTR_ASYNC_MASK_MCI)
-+		ar9003_mci_get_isr(ah, masked);
- 
- 	if (sync_cause) {
- 		if (sync_cause & AR_INTR_SYNC_RADM_CPL_TIMEOUT) {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 2cd607f..1a01788e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -412,6 +412,31 @@ void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
- }
- EXPORT_SYMBOL(ar9003_mci_get_interrupt);
- 
-+void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
-+	u32 raw_intr, rx_msg_intr;
-+
-+	rx_msg_intr = REG_READ(ah, AR_MCI_INTERRUPT_RX_MSG_RAW);
-+	raw_intr = REG_READ(ah, AR_MCI_INTERRUPT_RAW);
-+
-+	if ((raw_intr == 0xdeadbeef) || (rx_msg_intr == 0xdeadbeef)) {
-+		ath_dbg(common, MCI,
-+			"MCI gets 0xdeadbeef during int processing\n");
-+	} else {
-+		mci->rx_msg_intr |= rx_msg_intr;
-+		mci->raw_intr |= raw_intr;
-+		*masked |= ATH9K_INT_MCI;
-+
-+		if (rx_msg_intr & AR_MCI_INTERRUPT_RX_MSG_CONT_INFO)
-+			mci->cont_status = REG_READ(ah, AR_MCI_CONT_STATUS);
-+
-+		REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_RAW, rx_msg_intr);
-+		REG_WRITE(ah, AR_MCI_INTERRUPT_RAW, raw_intr);
-+	}
-+}
-+
- void ar9003_mci_2g5g_changed(struct ath_hw *ah, bool is_2g)
- {
- 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index c8261d4..a81c4e7 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -1230,6 +1230,7 @@ void ar9003_mci_send_lna_transfer(struct ath_hw *ah, bool wait_done);
- void ar9003_mci_sync_bt_state(struct ath_hw *ah);
- void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
- 			      u32 *rx_msg_intr);
-+void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
- 
- #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- static inline enum ath_btcoex_scheme
+Yeah, BUG_ON() is evil, but sometimes it can be good to have.  I don't
+agree with "wireless drivers should really not use it".  There are 181
+occurrences in wireless-testing/master right now[1].  I'm not saying
+this measure is either accurate or an excuse to use it where we
+shouldn't, but it shows that it really has widespread usage in wireless
+drivers.
+
+My point was that this can only happen very early, when the driver is
+being initialized.  But this is not exactly this case, it only happens
+when we suspend or resume, so you're right here.
+
+Maybe in this case we should check with a BUILD_BUG_ON somehow.
+
+And actually, I nacked this part of the patchset, they definitely need
+to be reworked.  Eliad already sent v2 of the first 4, leaving 5/6/7
+out.
+
+In any case, thanks a lot for your comment, Kalle! :)
+
+
+[1]
+luca@cumari:~/kernel/wl12xx$ find drivers/net/wireless/ -name '*.[ch]' -exec grep -e '\<BUG_ON\>' {} \;|wc -l
+181
+
+
 -- 
-1.7.9.1
+Cheers,
+Luca.
 
