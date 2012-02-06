@@ -1,79 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:49451 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752255Ab2B1KJz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Feb 2012 05:09:55 -0500
-Received: by bkcik5 with SMTP id ik5so1064047bkc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2012 02:09:54 -0800 (PST)
+Received: from mail.neratec.ch ([80.75.119.105]:33143 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754808Ab2BFOsI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Feb 2012 09:48:08 -0500
+Message-ID: <4F2FE825.6020700@neratec.com> (sfid-20120206_154812_242687_B81C8372)
+Date: Mon, 06 Feb 2012 15:48:05 +0100
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 MIME-Version: 1.0
-In-Reply-To: <1330422678.18637.28.camel@cumari>
-References: <1330382494-31148-1-git-send-email-arik@wizery.com>
- <1330382494-31148-3-git-send-email-arik@wizery.com> <1330422678.18637.28.camel@cumari>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Tue, 28 Feb 2012 12:09:39 +0200
-Message-ID: <CA+XVXfeWotOQky8TouJSzhNxCzR4TR3uPYPJ0wDOYzkFhekqig@mail.gmail.com> (sfid-20120228_110959_681416_6DA04A0A)
-Subject: Re: [PATCH 3/7] wl12xx: reset link Tx queues when freeing it
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
+To: "Goldenshtein, Victor" <victorg@ti.com>
+CC: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, adrian.chadd@gmail.com, j@w1.fi,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name
+Subject: Re: [RFC 3/9] nl80211/cfg80211: add ability to enable TX on op-channel
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>	<1327581484-22047-4-git-send-email-victorg@ti.com>	<4F277F85.1090901@sipsolutions.net>	<CAK80WHbAE0+NhLgLAxE+6BmkHFy2hw=sNV1TBjjOTajhHcdxRw@mail.gmail.com>	<4F2B18AA.90809@neratec.com>	<4F2FB6A0.5030901@gmail.com> <CAK80WHa_06axdbeOV33BKwOC9FPRZA_4xJeo0f6VOYVjqAcBHw@mail.gmail.com>
+In-Reply-To: <CAK80WHa_06axdbeOV33BKwOC9FPRZA_4xJeo0f6VOYVjqAcBHw@mail.gmail.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 28, 2012 at 11:51, Luciano Coelho <coelho@ti.com> wrote:
-> On Tue, 2012-02-28 at 00:41 +0200, Arik Nemtsov wrote:
->> Before, the link was first freed (invalidating it in the map), and later
->> on vif removal, all valid wlvif-related links were reset. Since these
->> links were already invalid, we failed to reset them.
->> The bug was made worse by op_stop, which set the tx_queue_count to 0
->> arbitrarily. This resulted in a negative tx_queue_count in some scenarios.
->>
->> Fix this by resetting the Tx-queues of a link when freeing it. Add a
->> WARN_ON and reset all link Tx-queues in op_stop, to avoid a negative
->> tx_queue_count.
->>
->> Signed-off-by: Arik Nemtsov <arik@wizery.com>
->> ---
->
-> [...]
->
->> diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
->> index 6446e4d..311b5a2 100644
->> --- a/drivers/net/wireless/wl12xx/tx.c
->> +++ b/drivers/net/wireless/wl12xx/tx.c
->> @@ -527,6 +527,7 @@ static struct sk_buff *wl12xx_lnk_skb_dequeue(struct wl1271 *wl,
->>       if (skb) {
->>               int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
->>               spin_lock_irqsave(&wl->wl_lock, flags);
->> +             WARN_ON(wl->tx_queue_count[q] <= 0);
->>               wl->tx_queue_count[q]--;
->>               spin_unlock_irqrestore(&wl->wl_lock, flags);
->>       }
->> @@ -602,6 +603,7 @@ static struct sk_buff *wl1271_skb_dequeue(struct wl1271 *wl)
->>               skb = wl->dummy_packet;
->>               q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
->>               spin_lock_irqsave(&wl->wl_lock, flags);
->> +             WARN_ON(wl->tx_queue_count[q] <= 0);
->>               wl->tx_queue_count[q]--;
->>               spin_unlock_irqrestore(&wl->wl_lock, flags);
->>       }
->
-> [...]
->
->> @@ -973,8 +974,14 @@ void wl12xx_tx_reset(struct wl1271 *wl, bool reset_tx_queues)
->>       struct sk_buff *skb;
->>       struct ieee80211_tx_info *info;
->>
->> -     for (i = 0; i < NUM_TX_QUEUES; i++)
->> -             wl->tx_queue_count[i] = 0;
->> +     /* only reset the queues if something bad happened */
->> +     if (WARN_ON(wl1271_tx_total_queue_count(wl) != 0)) {
->
-> Let's make all these WARN_ONs as WARN_ON_ONCE as it is recommended
-> nowadays.  This will make Kalle Valo happier. :)
->
-> I can do a quick sed before I apply this, if you agree.
+On 02/06/2012 02:01 PM, Goldenshtein, Victor wrote:
+> On Mon, Feb 6, 2012 at 1:16 PM, zefir.kurtisi@gmail.com 
+> <zefir.kurtisi@gmail.com> wrote:
+>> I noticed this issue working on interfacing ath9k to your DFS
+>> management component. When a DFS channel is initially set, the
+>> driver has no information whether to block TX or not (as opposed to
+>> ap_process_chanswitch() providing these flags). What is the
+>> assumption here? Is the driver required to check itself whether a
+>> DFS channel is set and raise some internal tx_disabled flag to be
+>> reset via hw_dfs_en_tx()? With all the logic being located in
+>> hostap, this looks inconsistent (but doable).
+>> 
+> 
+> When a DFS channel is initially set (with hostapd_set_freq()) the AP 
+> is during early init phase and obviously not transmitting anything
+> yet at this point, the AP should start the tx (transmitting beacons)
+> only after hostapd_setup_bss() call, which is blocked until we
+> validate the channel for radar clearness. If during the CAC tes a
+> radar is detected we select and set another frequency/channel (still
+> with hostapd_set_freq()) and start the radar detection once again for
+> the new freq. Once the channel pass the "channel availability check"
+> we continue with the init flow as usual. IMHO the driver doesn't need
+> to block anything at this point and no flag is required.
+> 
+> In wl12xx we have one "FLAG_DFS_CAC_IN_PROGRESS" which basically 
+> indicates that we're in the middle of a CAC test and no tx can occur 
+> during this period. This flag is set during 
+> "hw_dfs_start_radar_detection()" and unset during hw_dfs_en_tx(),
+> this is one of the reason that I thought to change the
+> "hw_dfs_en_tx()" to something like "dfs_resume_cac()", in this case
+> it would be also aligned with "hostapd_resume_dfs_cac()" callback,
+> what do you think about this?
+> 
+So the driver does not need to be aware of disabled TX condition at all, since hostapd ensures that no TX will happen during CAC? What is then your FLAG_DFS_CAC_IN_PROGRESS used for?
 
-Sure thing.
+As for the naming, I'd maybe call them just dfs_start_cac() and dfs_end_cac(), but am also fine with the 'resume' variant.
+ 
+> 
+>> Aside from that, I managed to interface ath9k to the proposed
+>> component. So far, it enables me to set up a DFS monitor to
+>> physically test my pattern detectors, while it fails to run in
+>> master mode. Need to go through the trace logs to isolate the
+>> problem and will report then.
+>> 
+> 
+> We're planning to release wl12xx DFS RFC which might help better 
+> understand the DFS implementation from driver's point of view.
+> 
+> 
+Yeah, having a working reference implementation would definitively help.
 
-Arik
+
+Thanks,
+Zefir
+
