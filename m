@@ -1,80 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12231 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755046Ab2BFPFY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Feb 2012 10:05:24 -0500
-Date: Mon, 6 Feb 2012 20:35:16 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath6kl: add blocking debugfs file for retrieving
- firmware logs
-Message-ID: <20120206150515.GA4024@chvasanth-lnx> (sfid-20120206_160528_002678_CFBB9A7C)
-References: <20120206062327.20231.11602.stgit@localhost6.localdomain6>
- <20120206062340.20231.55630.stgit@localhost6.localdomain6>
- <20120206090654.GA3260@chvasanth-lnx>
- <4F2FC989.5000306@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4F2FC989.5000306@qca.qualcomm.com>
+Received: from c60.cesmail.net ([216.154.195.49]:61087 "EHLO c60.cesmail.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755848Ab2BFWkK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Feb 2012 17:40:10 -0500
+Date: Mon, 6 Feb 2012 17:40:02 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: David Gibson <hermes@gibson.dropbear.id.au>
+Cc: Linus Torvalds <torvalds@osdl.org>,
+	orinoco-users@lists.sourceforge.net,
+	orinoco-devel@lists.sourceforge.net,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [Orinoco-users] orinoco: Remove old mailing lists from
+ MAINTAINERS
+Message-ID: <20120206174002.31e13f75@mj> (sfid-20120206_234014_893696_8F1C6CF2)
+In-Reply-To: <20120206030724.GC18754@truffala.fritz.box>
+References: <20120206030724.GC18754@truffala.fritz.box>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 06, 2012 at 02:37:29PM +0200, Kalle Valo wrote:
-> On 02/06/2012 11:06 AM, Vasanthakumar Thiagarajan wrote:
-> > On Mon, Feb 06, 2012 at 08:23:40AM +0200, Kalle Valo wrote:
-> >> When debugging firmware issues it's not always enough to get
-> >> the latest firmware logs, sometimes we need to get logs from a longer
-> >> period. To make this possible, add a debugfs file named fwlog_block. When
-> >> reading from this file ath6kl will send firmware logs whenever available
-> >> and otherwise it will block and wait for new logs.
-> >>
-> >> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> 
-> [...]
-> 
-> >> +	not_copied = copy_to_user(user_buf, buf, len);
-> >> +	if (not_copied != 0) {
-> >> +		ret_cnt = -EFAULT;
-> >> +		goto out;
-> >> +	}
-> >> +
-> >> +	*ppos = *ppos + len;
-> > 
-> > Why not to use simple_read_from_buffer()?, looks like it can also
-> > takes care of len == 0 case in the following check.
-> > 
-> > if (pos >= available || !count)
-> >         return 0;
-> > 
-> > when available (len) is 0, pos = available with
-> > ath6kl_fwlog_block_read().
-> 
-> I actually used simple_read_from_buffer() first, but the problem is that
-> it assumes that there's just one buffer from which the data is copied.
-> But in this case there can be multiple buffers from which I copy data.
-> 
-> Ok, that was a bit confusing, let's try to explain a bit differently :)
-> 
-> If 'ppos > 0' (for example during the second function call)
-> simple_read_from_buffer() will try to copy from 'user_buf + ppos' but I
-> would want to copy from 'user_buf'.
+On Mon, 6 Feb 2012 14:07:24 +1100
+David Gibson <hermes@gibson.dropbear.id.au> wrote:
 
-I think you mean s/user_buf/buf. Are you not making sure that the
-length of the data is not more than the requested one which is
-passed to copy_to_user() so that read() is always called with
-*ppos=0?. The following code seems to do that
+> The two orinoco mailing lists on sourceforge were set up many years
+> ago and are now more or less moribund.  I'd like to shut them down, so
+> I don't have to keep filtering the spam from them (which is most of
+> what comes through now).  In preparation, this patch removes the
+> reference to them from the MAINTAINERS file.  Any remaining discussion
+> of this approaching obsolete driver can go to the linux-wireless list.
+> 
+> Please apply.
+> 
+> Signed-off-by: David Gibson <hermes@gibson.dropbear.id.au>
 
- while ((skb = __skb_dequeue(&ar->debug.fwlog_queue))) {
-+               if (skb->len > count - len) {
-+                       /* not enough space, put skb back and leave
-*/
-+                       __skb_queue_head(&ar->debug.fwlog_queue,
-skb);
-+                       break;
-+               }
+Acked-by: Pavel Roskin <proski@gnu.org>
 
-May be my understanding is wrong. 
+> Index: working-2.6/MAINTAINERS
+> ===================================================================
+> --- working-2.6.orig/MAINTAINERS	2012-02-06 12:24:27.933527295
+> +1100 +++ working-2.6/MAINTAINERS	2012-02-06
+> 12:24:38.273578556 +1100 @@ -4906,8 +4906,6 @@ F:	fs/ocfs2/
+>  
+>  ORINOCO DRIVER
+>  L:	linux-wireless@vger.kernel.org
+> -L:	orinoco-users@lists.sourceforge.net
+> -L:	orinoco-devel@lists.sourceforge.net
+>  W:	http://linuxwireless.org/en/users/Drivers/orinoco
+>  W:	http://www.nongnu.org/orinoco/
+>  S:	Orphan
 
-Vasanth
+-- 
+Regards,
+Pavel Roskin
