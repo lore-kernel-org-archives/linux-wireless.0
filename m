@@ -1,53 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ackle.nomi.cz ([81.31.33.35]:59142 "EHLO ackle.nomi.cz"
+Received: from purkki.adurom.net ([80.68.90.206]:34314 "EHLO purkki.adurom.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759796Ab2BJS1O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Feb 2012 13:27:14 -0500
-Date: Fri, 10 Feb 2012 19:09:29 +0100
-From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
-To: wwguy <wey-yi.w.guy@intel.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn: memory corruption with WPA enterprise
-Message-ID: <20120210180929.GA17733@nomi.cz> (sfid-20120210_192717_776950_EE4FF261)
-References: <20111110160703.GA2775@redhat.com> <20111110163051.GA24533@nomi.cz> <20111111054731.GA2292@redhat.com> <20111111150105.GA25437@nomi.cz> <20111114140714.GD2513@redhat.com> <20111119181106.GA5515@nomi.cz> <1321755233.22510.1.camel@wwguy-ubuntu> <20111120032016.GA14520@nomi.cz> <1321763314.22510.4.camel@wwguy-ubuntu> <20111120204007.GA7273@nomi.cz>
+	id S1753657Ab2BFOHP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Feb 2012 09:07:15 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: Eliad Peller <eliad@wizery.com>, eyal@wizery.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 5/7] wl12xx: add RX data filter ACX commands
+References: <1328021048-8944-1-git-send-email-eliad@wizery.com>
+	<1328021048-8944-6-git-send-email-eliad@wizery.com>
+	<1328170983.3626.265.camel@cumari>
+Date: Mon, 06 Feb 2012 16:07:10 +0200
+In-Reply-To: <1328170983.3626.265.camel@cumari> (Luciano Coelho's message of
+	"Thu, 02 Feb 2012 10:23:03 +0200")
+Message-ID: <877h00cay9.fsf@purkki.adurom.net> (sfid-20120206_150720_416037_DE2F6BC3)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20111120204007.GA7273@nomi.cz>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi guys,
+Luciano Coelho <coelho@ti.com> writes:
 
-On Sun, Nov 20, 2011 at 09:40:07PM +0100, Tomáš Janoušek wrote:
-> > Yes, I will try your configuration when I get back  to the office Monday
+>> +	if (index >= WL1271_MAX_RX_DATA_FILTERS) {
+>> +		wl1271_warning("acx_set_rx_data_filter: invalid filter idx(%d)",
+>> +			       index);
+>> +		return -EINVAL;
+>> +	}
+>
+> Should we use BUG_ON instead? This is only used internally in the
+> driver, so if it get here, it's a bug.  And if the filters come from
+> userspace, we should validate them before continuing anyway.
 
-Did you have any luck? I just found out something which is almost completely
-insane.
+BUG_ON() is evil and wireless drivers should really not use it,
+WARN_ON_ONCE() and return with an error is much more user friendly.
 
-For the last few months, I've happily used a 64-bit kernel and have had no
-problems whatsoever. About a week ago, I started using virtual machines in
-KVM. And today I found that I have exactly the same problem, but only _inside_
-the virtual machine. I can't reliably scp a file from the internet to my
-virtual machine. It works fine when I scp to the host, it works fine when I'm
-on a WPA-PSK network. And it happens even if I tell kvm to emulate e1000, not
-only with virtio-net. How strange is that?
-
-And while this is happening, the host is running just fine. The host has a
-64-bit kernel with a 32-bit userspace, so if something was wrong with the
-32-bit mode of my processor, it would've appeared on the host as well, no?
-
-It's also worth mentioning that if I build openssl with "no-asm 386", scp
-works just fine. So it doesn't look like a memory corruption after all. It
-seems as if certain CPU instructions didn't work properly if running on a
-32-bit kernel with a WiFi adapter doing something. But how can it be
-that those same CPU instructions work on a 64-bit host with 32-bit userspace?
-At the same time! That's just completely insane, and I can't think of an
-explanation. Shall I get a new CPU perhaps? :-)
-
-Please, give me any ideas that you might have.
-
-Regards,
 -- 
-Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
+Kalle Valo
