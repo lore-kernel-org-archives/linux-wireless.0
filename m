@@ -1,149 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:37622 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754523Ab2BCAQw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 19:16:52 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 12/28] iwlwifi: move prepare_card_hw to start_hw
-Date: Thu,  2 Feb 2012 15:09:03 -0800
-Message-Id: <1328224159-18134-13-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120203_011759_872729_FA36F506)
-In-Reply-To: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:37845 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751266Ab2BFVEL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Feb 2012 16:04:11 -0500
+Subject: Re: [RFC 6/9] mac80211: add ap channel switch command/event
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Goldenshtein, Victor" <victorg@ti.com>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name
+In-Reply-To: <CAK80WHZw9PRr_wjazJiPUo1vrCpjgyrSx9ydHwLGoJEp3qNwDA@mail.gmail.com>
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>
+	 <1327581484-22047-7-git-send-email-victorg@ti.com>
+	 <4F27814A.9060906@sipsolutions.net>
+	 <CAK80WHZw9PRr_wjazJiPUo1vrCpjgyrSx9ydHwLGoJEp3qNwDA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 06 Feb 2012 22:03:35 +0100
+Message-ID: <1328562215.3466.3.camel@jlt3.sipsolutions.net> (sfid-20120206_220415_165509_B83B23EA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Thu, 2012-02-02 at 18:07 +0200, Goldenshtein, Victor wrote:
+> On Tue, Jan 31, 2012 at 7:51 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On 1/26/2012 4:38 AM, Victor Goldenshtein wrote:
+> >>
+> >> New ieee80211_ap_process_chanswitch(), to handle a channel switch
+> >> request for AP/GO.
+> >>
+> >> New 'post_switch_block_tx' parameter in 'ieee80211_channel_switch'
+> >> structure, which indicates whether transmission must be blocked after
+> >> the scheduled channel switch, it should be set if the target channel
+> >> is DFS channel.
+> >>
+> >> New ieee80211_ap_ch_switch_complete_notify() which notifies upper
+> >> layers about channel switch complete event.
+> >
+> >
+> > Shouldn't mac80211 have some non-offload implementation for this?
 
-Kill the trans_ops->prepare_card_hw which is now useless.
+> What do you mean by "non-offload"?
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c        |    6 ------
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   22 +++++++++++++++-------
- drivers/net/wireless/iwlwifi/iwl-trans.h      |    8 --------
- 3 files changed, 15 insertions(+), 21 deletions(-)
+When the driver doesn't explicitly implement channel switch for this and
+other things, mac80211 could (should?) manage it.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 1c00691..5ab7f68 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1833,12 +1833,6 @@ int iwl_probe(struct iwl_bus *bus, const struct iwl_trans_ops *trans_ops,
- 	if (err)
- 		goto out_free_traffic_mem;
- 
--	if (iwl_trans_prepare_card_hw(trans(priv))) {
--		err = -EIO;
--		IWL_WARN(priv, "Failed, HW not ready\n");
--		goto out_free_traffic_mem;
--	}
--
- 	/*****************
- 	 * 4. Read EEPROM
- 	 *****************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index ffbafb9..d1ab57a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -690,13 +690,14 @@ static int iwl_set_hw_ready(struct iwl_trans *trans)
- }
- 
- /* Note: returns standard 0/-ERROR code */
--static int iwl_trans_pcie_prepare_card_hw(struct iwl_trans *trans)
-+static int iwl_prepare_card_hw(struct iwl_trans *trans)
- {
- 	int ret;
- 
- 	IWL_DEBUG_INFO(trans, "iwl_trans_prepare_card_hw enter\n");
- 
- 	ret = iwl_set_hw_ready(trans);
-+	/* If the card is ready, exit 0 */
- 	if (ret >= 0)
- 		return 0;
- 
-@@ -788,7 +789,7 @@ static int iwl_trans_pcie_start_device(struct iwl_trans *trans)
- 	trans_pcie->mcast_queue[IWL_RXON_CTX_PAN] = IWL_IPAN_MCAST_QUEUE;
- 
- 	if ((hw_params(trans).sku & EEPROM_SKU_CAP_AMT_ENABLE) &&
--	     iwl_trans_pcie_prepare_card_hw(trans)) {
-+	     iwl_prepare_card_hw(trans)) {
- 		IWL_WARN(trans, "Exit HW not ready\n");
- 		return -EIO;
- 	}
-@@ -1254,16 +1255,24 @@ static int iwl_trans_pcie_start_hw(struct iwl_trans *trans)
- 		if (err) {
- 			IWL_ERR(trans, "Error allocating IRQ %d\n",
- 				trans->irq);
--			iwl_free_isr_ict(trans);
--			tasklet_kill(&trans_pcie->irq_tasklet);
--			return err;
-+			goto error;
- 		}
- 
- 		INIT_WORK(&trans_pcie->rx_replenish, iwl_bg_rx_replenish);
- 		trans_pcie->irq_requested = true;
- 	}
- 
--	return 0;
-+	err = iwl_prepare_card_hw(trans);
-+	if (err) {
-+		IWL_ERR(trans, "Error while preparing HW: %d", err);
-+		goto error;
-+	}
-+	return err;
-+
-+error:
-+	iwl_free_isr_ict(trans);
-+	tasklet_kill(&trans_pcie->irq_tasklet);
-+	return err;
- }
- 
- static int iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
-@@ -1931,7 +1940,6 @@ const struct iwl_trans_ops trans_ops_pcie = {
- 	.start_hw = iwl_trans_pcie_start_hw,
- 	.fw_alive = iwl_trans_pcie_fw_alive,
- 	.start_device = iwl_trans_pcie_start_device,
--	.prepare_card_hw = iwl_trans_pcie_prepare_card_hw,
- 	.stop_device = iwl_trans_pcie_stop_device,
- 
- 	.wake_any_queue = iwl_trans_pcie_wake_any_queue,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index ddc3a06..55b5dc3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -136,8 +136,6 @@ struct iwl_host_cmd {
-  * @start_hw: starts the HW- from that point on, the HW can send interrupts
-  * @start_device: allocates and inits all the resources for the transport
-  *                layer.
-- * @prepare_card_hw: claim the ownership on the HW. Will be called during
-- *                   probe.
-  * @fw_alive: called when the fw sends alive notification
-  * @wake_any_queue: wake all the queues of a specfic context IWL_RXON_CTX_*
-  * @stop_device:stops the whole device (embedded CPU put to reset)
-@@ -167,7 +165,6 @@ struct iwl_trans_ops {
- 	int (*start_hw)(struct iwl_trans *iwl_trans);
- 	int (*start_device)(struct iwl_trans *trans);
- 	void (*fw_alive)(struct iwl_trans *trans);
--	int (*prepare_card_hw)(struct iwl_trans *trans);
- 	void (*stop_device)(struct iwl_trans *trans);
- 
- 	void (*wake_any_queue)(struct iwl_trans *trans,
-@@ -284,11 +281,6 @@ static inline int iwl_trans_start_device(struct iwl_trans *trans)
- 	return trans->ops->start_device(trans);
- }
- 
--static inline int iwl_trans_prepare_card_hw(struct iwl_trans *trans)
--{
--	return trans->ops->prepare_card_hw(trans);
--}
--
- static inline void iwl_trans_stop_device(struct iwl_trans *trans)
- {
- 	trans->ops->stop_device(trans);
--- 
-1.7.0.4
+> The mechanism is different from the client-side channel switch, but
+> the "ieee80211_channel_switch" struct is almost the same (new
+> post_switch_block_tx). Do you prefer to create a new
+> "ieee80211_ap_channel_switch" struct + new driver callback ? something
+> like drv_ap_channel_switch ?
+
+I think that would be cleaner in terms of API, since not all drivers
+will support both.
+
+> >> +static int ieee80211_ap_process_chanswitch(struct wiphy *wiphy,
+> >> +                                          struct net_device *dev,
+> >> +                                          u32 count, bool block_tx,
+> >> +                                          bool post_switch_block_tx,
+> >> +                                          u32 new_freq)
+> >> +{
+> >> +       struct ieee80211_sub_if_data *sdata =
+> >> IEEE80211_DEV_TO_SUB_IF(dev);
+> >> +       struct ieee80211_local *local = sdata->local;
+> >> +       struct ieee80211_channel *new_ch;
+> >> +       struct ieee80211_channel_switch ch_switch;
+> >> +
+> >> +       new_ch = ieee80211_get_channel(sdata->local->hw.wiphy, new_freq);
+> >> +       if (!new_ch || new_ch->flags&  IEEE80211_CHAN_DISABLED) {
+> >>
+> >> +               wiphy_debug(local->hw.wiphy,
+> >> +                           "failed channel switch on freq: %d\n",
+> >> new_freq);
+> >> +               return -EINVAL;
+> >> +       }
+> >
+> >
+> > That code should obviously be in cfg80211.
+> >
+> 
+> Why ? and where exactly ?
+
+Why? because all drivers will need to make this check. Wherever cfg80211
+calls into this, of course, and then you'd cal in with a channel pointer
+rather than the new freq.
+
+johannes
 
