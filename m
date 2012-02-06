@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41409 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752488Ab2B0Kzl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 05:55:41 -0500
-Date: Mon, 27 Feb 2012 11:55:38 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Walter Goldens <goldenstranger@yahoo.com>
-Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
-Subject: Re: [rt2x00] rt2800usb and RT3070 issues with 54G AP
-Message-ID: <20120227105538.GE4104@redhat.com> (sfid-20120227_115545_048083_820EB6AC)
-References: <20120218165631.GA2922@redhat.com>
- <1329756774.86563.YahooMailClassic@web161602.mail.bf1.yahoo.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:34999 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754563Ab2BFSll (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Feb 2012 13:41:41 -0500
+Received: by ggnh1 with SMTP id h1so2964400ggn.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2012 10:41:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1329756774.86563.YahooMailClassic@web161602.mail.bf1.yahoo.com>
+From: Pedro Francisco <pedrogfrancisco@gmail.com>
+Date: Mon, 6 Feb 2012 18:41:21 +0000
+Message-ID: <CAJZjf_y_fSYv0U8y8APLJAvWe=xKWpa_poLc9h7qjQuRSj_rGw@mail.gmail.com> (sfid-20120206_194145_522108_67FB340C)
+Subject: iwl3945: WPA2+swcrypto=0: receives broadcast only
+To: linux-wireless@vger.kernel.org
+Cc: ipw3945-devel@lists.sourceforge.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 20, 2012 at 08:52:54AM -0800, Walter Goldens wrote:
-> > Looks like this could be related with Power-Save. Seems APs
-> > does not
-> > handle PS well (between each ICMP packed our station is put
-> > in
-> > the sleep mode) . Vendor driver has  PS disabled, hence
-> > problem
-> > is not observable.
-> > 
-> > Try "iwconfig wlan0 power off" and see if it helps. 
-> > 
-> > Stanislaw
-> 
-> Hello again,
-> 
-> Unfortunately, disabling PS does not fix the problem:
+Hi!
+When I connect to a WPA2 AP with swcrypto=0 I get the following kinds
+of traffic:
+ARP (Broadcast)
+DHCP (255.255.255.255)
+IGMP (224.0.0.22 and 224.0.0.1)
 
-I'm able to reproduce that problem locally, I'm adding debug
-that problem to my TODO list ...
+If I do a normal DHCP, I get no response. If I do "dhclient -B",
+requesting BOOTP broadcast flag, I get an IP, as expected. However ARP
+requests go unresponded as expected.
 
-Stanislaw
+The closest I've found relative to this is
+http://bugzilla.intellinuxwireless.org/show_bug.cgi?id=1872 . It is
+however reported as fixed on *both* "software/hardware crypto with
+WPA2 PSK and EAP" (2009-01-06).
+
+It seems curious I can receive broadcast traffic but not traffic specific to me.
+I'd present the debug of iwl3945 but apparently that option was
+removed from iwl3945 module?
+
+Thanks in Advance,
+-- 
+Pedro F.
