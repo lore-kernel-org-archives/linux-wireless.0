@@ -1,58 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33362 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932074Ab2B1Omt (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:26040 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753428Ab2BFOOe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Feb 2012 09:42:49 -0500
-Subject: Re: Occasional truncated scan results
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ronald Wahl <ronald.wahl@raritan.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <4F4CE4D6.6020108@raritan.com> (sfid-20120228_152950_864254_C21F9143)
-References: <4F4CE4D6.6020108@raritan.com>
-	 (sfid-20120228_152950_864254_C21F9143)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 28 Feb 2012 15:42:46 +0100
-Message-ID: <1330440166.3368.7.camel@jlt3.sipsolutions.net> (sfid-20120228_154253_156335_FE984F06)
-Mime-Version: 1.0
+	Mon, 6 Feb 2012 09:14:34 -0500
+Message-ID: <4F2FE044.2000106@qca.qualcomm.com> (sfid-20120206_151438_223505_90D87A48)
+Date: Mon, 6 Feb 2012 16:14:28 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH] ath6kl: Check wow state before sending control and data
+ pkt
+References: <1328536613-17521-1-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1328536613-17521-1-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-> After some playing with different wireless devices I discovered that 
-> this is not limited to specific drivers so I digged a bit in the scan 
-> code in net/wireless/scan.c and found the culprit: The scan result is 
-> put together with the iwe_stream_* functions that place data into a 
-> provided buffer if enough space is available in the buffer. Otherwise 
-> the functions do just nothing. Before a BSS is added there is a check if 
-> some minimum space is available but after the BSS has been added it is 
-> not clear how many data actually has been placed into the buffer. So 
-> especially (but not neccessarily only) the last BSS is prone to be 
-> incomplete. I my case all the IEs were missing and this was persistent 
-> over some time (the persitence behavior seems to differs between drivers 
-> - probably depends on how the scanning is implemented).
+On 02/06/2012 03:56 PM, rmani@qca.qualcomm.com wrote:
+> From: Raja Mani <rmani@qca.qualcomm.com>
 > 
-> Currently I implemented a heuristic that checks if some minimum space 
-> (currently 256 bytes) is still free _after_ adding a BSS and otherwise 
-> return -E2BIG so the user space can provide a larger buffer but this is 
-> a crappy hack.
+> * TX operation (ctrl tx and data tx) has to be controlled based on
+>   WOW suspend state. i.e, control packets are allowed to send from
+>   the host until the suspend state goes ATH6KL_STATE_WOW and
+>   the data packets are allowed until WOW suspend operation starts.
 > 
-> Can the code be changed in some way to more reliably detect if some data 
-> did not fit into the buffer and report this to user space?
+> * Similary, wow resume is NOT allowed if WOW suspend is in progress.
+> 
+> Both of the above scenarios are taken care in this patch.
+> 
+> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 
-Unfortunately not. The maximum buffer size userspace can provide is
-limited to 64k. In busy environments, this size can be exceeded. As a
-result, if we do this, you can't get *any* scan results in such
-environments. I believe the current code is almost the best we can do
-for wireless extensions, but it may be possible to implement never
-truncating a single BSS entry.
+[...]
 
-That said, there's a very simple fix for this. Since you're talking
-about net/wireless/scan.c, you're obviously using a driver with cfg80211
-support. Ditch wireless extensions completely and use nl80211 instead,
-you'll be much happier overall as it has no such limitations and more
-features.
+> +enum ath6kl_wow_state {
+> +	ATH6KL_WOW_STATE_NONE,
+> +	ATH6KL_WOW_STATE_SUSPENDING,
+> +	ATH6KL_WOW_STATE_SUSPENDED,
+> +};
+> +
+>  struct ath6kl {
+>  	struct device *dev;
+>  	struct wiphy *wiphy;
+>  
+>  	enum ath6kl_state state;
+> +	enum ath6kl_wow_state wow_state;
+>  	unsigned int testmode;
 
-johannes
+To be honest, adding a new state variable scares me. I don't see how we
+are able to maintain two different state variables, the end result would
+be a total mess.
 
+I recommend to look at this problem by adding a new state to enum
+ath6kl_state. That would make it a lot easier to handle all the
+different states.
+
+(I haven't looked rest of your patch yet.)
+
+Kalle
