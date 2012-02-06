@@ -1,79 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from e38.co.us.ibm.com ([32.97.110.159]:39155 "EHLO
-	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757545Ab2BDBqG (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:40268 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754033Ab2BFWew (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 20:46:06 -0500
-Received: from /spool/local
-	by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-wireless@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
-	Fri, 3 Feb 2012 18:46:06 -0700
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-To: linux-kernel@vger.kernel.org
-Cc: mingo@elte.hu, laijs@cn.fujitsu.com, dipankar@in.ibm.com,
-	akpm@linux-foundation.org, mathieu.desnoyers@polymtl.ca,
-	josh@joshtriplett.org, niv@us.ibm.com, tglx@linutronix.de,
-	peterz@infradead.org, rostedt@goodmis.org, Valdis.Kletnieks@vt.edu,
-	dhowells@redhat.com, eric.dumazet@gmail.com, darren@dvhart.com,
-	fweisbec@gmail.com, patches@linaro.org,
-	"Paul E. McKenney" <paul.mckenney@linaro.org>,
-	"Paul E. McKenney" <paulmck@linux.vnet.ibm.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH tip/core/rcu 11/47] mac80211: Convert call_rcu() to kfree_rcu(), drop mesh_gate_node_reclaim()
-Date: Fri,  3 Feb 2012 17:44:46 -0800
-Message-Id: <1328319922-30828-11-git-send-email-paulmck@linux.vnet.ibm.com> (sfid-20120204_025134_227871_E42E55DE)
-In-Reply-To: <1328319922-30828-1-git-send-email-paulmck@linux.vnet.ibm.com>
-References: <20120204014452.GA29811@linux.vnet.ibm.com>
- <1328319922-30828-1-git-send-email-paulmck@linux.vnet.ibm.com>
+	Mon, 6 Feb 2012 17:34:52 -0500
+Date: Mon, 6 Feb 2012 16:34:47 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Scott Sanbar <scott.sanbar@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
+Subject: Re: BCM4331 fails to associate after suspend
+Message-ID: <20120206223447.GE31938@ubuntu-macmini> (sfid-20120206_233455_718913_E44EEEC6)
+References: <20120203222818.GA3749@ubuntu-mba>
+ <4F2D0C07.1010704@broadcom.com>
+ <20120204142502.GA10858@ubuntu-mba>
+ <CACna6ryR2xm2EAJaV4vCO8WebR5pXCyFknEMrf8ynVF+HYrxTw@mail.gmail.com>
+ <20120206173757.GC31938@ubuntu-macmini>
+ <4F302647.2070102@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <4F302647.2070102@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Paul E. McKenney" <paul.mckenney@linaro.org>
+On Mon, Feb 06, 2012 at 08:13:11PM +0100, Hauke Mehrtens wrote:
+> On 02/06/2012 06:37 PM, Seth Forshee wrote:
+> > On Mon, Feb 06, 2012 at 05:56:20PM +0100, Rafał Miłecki wrote:
+> >> 2012/2/4 Seth Forshee <seth.forshee@canonical.com>:
+> >>> On Sat, Feb 04, 2012 at 11:44:23AM +0100, Arend van Spriel wrote:
+> >>>> On 02/03/2012 11:28 PM, Seth Forshee wrote:
+> >>>>>
+> >>>>> I've been looking around a bit in the b43 and bcma drivers, but so far I
+> >>>>> haven't found the reason why this happens. Any help would be
+> >>>>> appreciated. Let me know if there's additional information I can
+> >>>>> provide.
+> >>>>>
+> >>>>
+> >>>> With which kernel version do you see these issues? BCMA suspend/resume
+> >>>> code has a fix in 3.3-rc1. So if you are seeing it on a 3.2 kernel,
+> >>>> please give it a try.
+> >>>
+> >>> I've tried 3.3-rc2 and the wirless-testing tree, and the problem still
+> >>> exists in both.
+> >>
+> >> I don't have access to suspendable machine with Mini PCIe card, not to
+> >> mention BCM4331 which is available for Mac-specific slot only (or
+> >> routers as embedded wifi). It may be b43 needs to fix but I'm not
+> >> really able to work on that. Plus the whole BCM4331 code is really
+> >> tricky, as it comes from RE based on dumps only :(
+> > 
+> > Okay, I'll keep poking at it to see if I can come up with anything. If
+> > you've got any suggestions on things I should be looking at or trying,
+> > I'm all ears.
+> > 
+> > Seth
+> 
+> According to the Broadcom SDK for SoCs bcma_pcicore_serdes_workaround()
+> should be called when coming out of standby/hibernate.
+> The code wl uses to do the same thing as bcma does is open source. You
+> find it in the GPL package of many Broadcom based Wifi Routers.
 
-The call_rcu() in mesh_gate_del() invokes mesh_gate_node_reclaim(),
-which simply calls kfree().  So convert the call_rcu() to kfree_rcu(),
-allowing mesh_gate_node_reclaim() to be eliminated.
+Thanks for the suggestion. Unfortunately calling
+bcma_pcicore_serdes_workaround() during resume doesn't help. I'll look
+at the wl code to see if I can learn anything there.
 
-Signed-off-by: Paul E. McKenney <paul.mckenney@linaro.org>
-Signed-off-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
----
- net/mac80211/mesh_pathtbl.c |    8 +-------
- 1 files changed, 1 insertions(+), 7 deletions(-)
-
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index edf167e..30420bc 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -413,12 +413,6 @@ struct mesh_path *mesh_path_lookup_by_idx(int idx, struct ieee80211_sub_if_data
- 	return NULL;
- }
- 
--static void mesh_gate_node_reclaim(struct rcu_head *rp)
--{
--	struct mpath_node *node = container_of(rp, struct mpath_node, rcu);
--	kfree(node);
--}
--
- /**
-  * mesh_path_add_gate - add the given mpath to a mesh gate to our path table
-  * @mpath: gate path to add to table
-@@ -479,7 +473,7 @@ static int mesh_gate_del(struct mesh_table *tbl, struct mesh_path *mpath)
- 		if (gate->mpath == mpath) {
- 			spin_lock_bh(&tbl->gates_lock);
- 			hlist_del_rcu(&gate->list);
--			call_rcu(&gate->rcu, mesh_gate_node_reclaim);
-+			kfree_rcu(gate, rcu);
- 			spin_unlock_bh(&tbl->gates_lock);
- 			mpath->sdata->u.mesh.num_gates--;
- 			mpath->is_gate = false;
--- 
-1.7.8
-
+Seth
