@@ -1,135 +1,289 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:58730 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932278Ab2BJRsW (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:34898 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753718Ab2BFKoQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Feb 2012 12:48:22 -0500
-Received: by pbcun15 with SMTP id un15so2608235pbc.19
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Feb 2012 09:48:22 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4F34BF3C.9030809@01019freenet.de>
-References: <CAO=xpBHy9p4yzhxaWTfG+jjw7f_OzbACmxxPnDL8AmLBS-JdwQ@mail.gmail.com>
- <CAO=xpBGT7ovdSOV77AV6wpUcTDFYr0t8GEab474mVmZm0-BhVA@mail.gmail.com>
- <20120207171538.3336af0c@mj> <CAO=xpBGRs_kYtt_w6aG2dFjO4Pgd9MrjPwn7YfuLe7bw3mGiPg@mail.gmail.com>
- <4F34BF3C.9030809@01019freenet.de>
-From: Alfonso Fiore <alfonso.fiore@gmail.com>
-Date: Fri, 10 Feb 2012 18:47:52 +0100
-Message-ID: <CAO=xpBFKOAdTEi1DMfJxWCCv9oEtJpuLjuN4uNPNRgN1iWG85Q@mail.gmail.com> (sfid-20120210_184827_533815_84D9B95E)
-Subject: Re: Setting up an AP @ 5 GHz 802.11a - hostapd refuses [Could not
- select hw_mode and channel. (-1)]
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 6 Feb 2012 05:44:16 -0500
+Received: by mail-wi0-f174.google.com with SMTP id s10so4057049wic.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2012 02:44:15 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>, Gery Kahn <geryk@ti.com>
+Subject: [PATCH 1/4] wl12xx: Use a dedicated fw for PLT
+Date: Mon,  6 Feb 2012 12:47:54 +0200
+Message-Id: <1328525277-25334-2-git-send-email-eliad@wizery.com> (sfid-20120206_114420_413138_7DDA565A)
+In-Reply-To: <1328525277-25334-1-git-send-email-eliad@wizery.com>
+References: <1328525277-25334-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 10, 2012 at 7:54 AM, Andreas Hartmann
-<andihartmann@01019freenet.de> wrote:
->
-> I always have to issue a "depmod -a" after make install. You can check
-> if the new modules are used afterwards with
-> "modinfo modname[without .ko]" and check the given path. It should
-> contain "updates".
-> Sometimes, it is necessary for me to insert a "depmod -a" even before
-> make install, because of missing files, which are needed by the
-> installation and which are created by depmod -a.
+A special PLT firmware is used for calibration.
 
-Hi Andreas,
+Add multiple fw support by introducing a new fw_type member,
+representing the currently saved fw (the actual fw state
+can be determined by wl->state).
 
-I hope you can help me a bit further cause I don't know what's going on...
+Signed-off-by: Gery Kahn <geryk@ti.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/debugfs.c |    2 +-
+ drivers/net/wireless/wl12xx/main.c    |   53 +++++++++++++++++++++-----------
+ drivers/net/wireless/wl12xx/rx.c      |    2 +-
+ drivers/net/wireless/wl12xx/sdio.c    |    2 +
+ drivers/net/wireless/wl12xx/spi.c     |    2 +
+ drivers/net/wireless/wl12xx/wl12xx.h  |   11 ++++++-
+ 6 files changed, 51 insertions(+), 21 deletions(-)
 
-# lsmod | grep 80211
-mac80211              157166  1 ath5k
-cfg80211              111132  3 ath5k,ath,mac80211
-rfkill                  6676  1 cfg80211
+diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
+index 00dbe15..e1cf727 100644
+--- a/drivers/net/wireless/wl12xx/debugfs.c
++++ b/drivers/net/wireless/wl12xx/debugfs.c
+@@ -113,7 +113,7 @@ static void wl1271_debugfs_update_stats(struct wl1271 *wl)
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	if (wl->state == WL1271_STATE_ON &&
++	if (wl->state == WL1271_STATE_ON && !wl->plt &&
+ 	    time_after(jiffies, wl->stats.fw_stats_update +
+ 		       msecs_to_jiffies(WL1271_DEBUGFS_STATS_LIFETIME))) {
+ 		wl1271_acx_statistics(wl, wl->stats.fw_stats);
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 52efe7d..591a3d7 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -993,16 +993,29 @@ out:
+ 	return IRQ_HANDLED;
+ }
+ 
+-static int wl1271_fetch_firmware(struct wl1271 *wl)
++static int wl12xx_fetch_firmware(struct wl1271 *wl, bool plt)
+ {
+ 	const struct firmware *fw;
+ 	const char *fw_name;
++	enum wl12xx_fw_type fw_type;
+ 	int ret;
+ 
+-	if (wl->chip.id == CHIP_ID_1283_PG20)
+-		fw_name = WL128X_FW_NAME;
+-	else
+-		fw_name	= WL127X_FW_NAME;
++	if (plt) {
++		fw_type = WL12XX_FW_TYPE_PLT;
++		if (wl->chip.id == CHIP_ID_1283_PG20)
++			fw_name = WL128X_PLT_FW_NAME;
++		else
++			fw_name	= WL127X_PLT_FW_NAME;
++	} else {
++		fw_type = WL12XX_FW_TYPE_NORMAL;
++		if (wl->chip.id == CHIP_ID_1283_PG20)
++			fw_name = WL128X_FW_NAME;
++		else
++			fw_name	= WL127X_FW_NAME;
++	}
++
++	if (wl->fw_type == fw_type)
++		return 0;
+ 
+ 	wl1271_debug(DEBUG_BOOT, "booting firmware %s", fw_name);
+ 
+@@ -1021,6 +1034,7 @@ static int wl1271_fetch_firmware(struct wl1271 *wl)
+ 	}
+ 
+ 	vfree(wl->fw);
++	wl->fw_type = WL12XX_FW_TYPE_NONE;
+ 	wl->fw_len = fw->size;
+ 	wl->fw = vmalloc(wl->fw_len);
+ 
+@@ -1032,7 +1046,7 @@ static int wl1271_fetch_firmware(struct wl1271 *wl)
+ 
+ 	memcpy(wl->fw, fw->data, wl->fw_len);
+ 	ret = 0;
+-
++	wl->fw_type = fw_type;
+ out:
+ 	release_firmware(fw);
+ 
+@@ -1160,7 +1174,7 @@ static void wl1271_recovery_work(struct work_struct *work)
+ 
+ 	mutex_lock(&wl->mutex);
+ 
+-	if (wl->state != WL1271_STATE_ON)
++	if (wl->state != WL1271_STATE_ON || wl->plt)
+ 		goto out_unlock;
+ 
+ 	/* Avoid a recursive recovery */
+@@ -1240,7 +1254,7 @@ static int wl1271_setup(struct wl1271 *wl)
+ 	return 0;
+ }
+ 
+-static int wl1271_chip_wakeup(struct wl1271 *wl)
++static int wl12xx_chip_wakeup(struct wl1271 *wl, bool plt)
+ {
+ 	struct wl1271_partition_set partition;
+ 	int ret = 0;
+@@ -1315,11 +1329,9 @@ static int wl1271_chip_wakeup(struct wl1271 *wl)
+ 		goto out;
+ 	}
+ 
+-	if (wl->fw == NULL) {
+-		ret = wl1271_fetch_firmware(wl);
+-		if (ret < 0)
+-			goto out;
+-	}
++	ret = wl12xx_fetch_firmware(wl, plt);
++	if (ret < 0)
++		goto out;
+ 
+ 	/* No NVS from netlink, try to get it from the filesystem */
+ 	if (wl->nvs == NULL) {
+@@ -1351,7 +1363,7 @@ int wl1271_plt_start(struct wl1271 *wl)
+ 
+ 	while (retries) {
+ 		retries--;
+-		ret = wl1271_chip_wakeup(wl);
++		ret = wl12xx_chip_wakeup(wl, true);
+ 		if (ret < 0)
+ 			goto power_off;
+ 
+@@ -1363,7 +1375,8 @@ int wl1271_plt_start(struct wl1271 *wl)
+ 		if (ret < 0)
+ 			goto irq_disable;
+ 
+-		wl->state = WL1271_STATE_PLT;
++		wl->plt = true;
++		wl->state = WL1271_STATE_ON;
+ 		wl1271_notice("firmware booted in PLT mode (%s)",
+ 			      wl->chip.fw_ver_str);
+ 
+@@ -1405,7 +1418,7 @@ static int __wl1271_plt_stop(struct wl1271 *wl)
+ 
+ 	wl1271_notice("power down");
+ 
+-	if (wl->state != WL1271_STATE_PLT) {
++	if (!wl->plt) {
+ 		wl1271_error("cannot power down because not in PLT "
+ 			     "state: %d", wl->state);
+ 		ret = -EBUSY;
+@@ -1415,6 +1428,7 @@ static int __wl1271_plt_stop(struct wl1271 *wl)
+ 	wl1271_power_off(wl);
+ 
+ 	wl->state = WL1271_STATE_OFF;
++	wl->plt = false;
+ 	wl->rx_counter = 0;
+ 
+ 	mutex_unlock(&wl->mutex);
+@@ -1972,7 +1986,7 @@ static bool wl12xx_init_fw(struct wl1271 *wl)
+ 
+ 	while (retries) {
+ 		retries--;
+-		ret = wl1271_chip_wakeup(wl);
++		ret = wl12xx_chip_wakeup(wl, false);
+ 		if (ret < 0)
+ 			goto power_off;
+ 
+@@ -2072,6 +2086,7 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 		goto out;
+ 	}
+ 
++
+ 	ret = wl12xx_init_vif_data(wl, vif);
+ 	if (ret < 0)
+ 		goto out;
+@@ -4870,7 +4885,7 @@ static int wl1271_register_hw(struct wl1271 *wl)
+ 
+ static void wl1271_unregister_hw(struct wl1271 *wl)
+ {
+-	if (wl->state == WL1271_STATE_PLT)
++	if (wl->plt)
+ 		__wl1271_plt_stop(wl);
+ 
+ 	unregister_netdevice_notifier(&wl1271_dev_notifier);
+@@ -5049,6 +5064,7 @@ static struct ieee80211_hw *wl1271_alloc_hw(void)
+ 	spin_lock_init(&wl->wl_lock);
+ 
+ 	wl->state = WL1271_STATE_OFF;
++	wl->fw_type = WL12XX_FW_TYPE_NONE;
+ 	mutex_init(&wl->mutex);
+ 
+ 	/* Apply default driver configuration. */
+@@ -5116,6 +5132,7 @@ static int wl1271_free_hw(struct wl1271 *wl)
+ 
+ 	vfree(wl->fw);
+ 	wl->fw = NULL;
++	wl->fw_type = WL12XX_FW_TYPE_NONE;
+ 	kfree(wl->nvs);
+ 	wl->nvs = NULL;
+ 
+diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
+index 4fbd2a7..cfa6071 100644
+--- a/drivers/net/wireless/wl12xx/rx.c
++++ b/drivers/net/wireless/wl12xx/rx.c
+@@ -113,7 +113,7 @@ static int wl1271_rx_handle_data(struct wl1271 *wl, u8 *data, u32 length,
+ 	 * In PLT mode we seem to get frames and mac80211 warns about them,
+ 	 * workaround this by not retrieving them at all.
+ 	 */
+-	if (unlikely(wl->state == WL1271_STATE_PLT))
++	if (unlikely(wl->plt))
+ 		return -EINVAL;
+ 
+ 	/* the data read starts with the descriptor */
+diff --git a/drivers/net/wireless/wl12xx/sdio.c b/drivers/net/wireless/wl12xx/sdio.c
+index ce3b9a9..1c0264c 100644
+--- a/drivers/net/wireless/wl12xx/sdio.c
++++ b/drivers/net/wireless/wl12xx/sdio.c
+@@ -372,3 +372,5 @@ MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
+ MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
+ MODULE_FIRMWARE(WL127X_FW_NAME);
+ MODULE_FIRMWARE(WL128X_FW_NAME);
++MODULE_FIRMWARE(WL127X_PLT_FW_NAME);
++MODULE_FIRMWARE(WL128X_PLT_FW_NAME);
+diff --git a/drivers/net/wireless/wl12xx/spi.c b/drivers/net/wireless/wl12xx/spi.c
+index 92caa7c..5c2d4a0 100644
+--- a/drivers/net/wireless/wl12xx/spi.c
++++ b/drivers/net/wireless/wl12xx/spi.c
+@@ -435,4 +435,6 @@ MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
+ MODULE_AUTHOR("Juuso Oikarinen <juuso.oikarinen@nokia.com>");
+ MODULE_FIRMWARE(WL127X_FW_NAME);
+ MODULE_FIRMWARE(WL128X_FW_NAME);
++MODULE_FIRMWARE(WL127X_PLT_FW_NAME);
++MODULE_FIRMWARE(WL128X_PLT_FW_NAME);
+ MODULE_ALIAS("spi:wl1271");
+diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
+index 70b15b5..348d1f6 100644
+--- a/drivers/net/wireless/wl12xx/wl12xx.h
++++ b/drivers/net/wireless/wl12xx/wl12xx.h
+@@ -37,6 +37,8 @@
+ 
+ #define WL127X_FW_NAME "ti-connectivity/wl127x-fw-4-sr.bin"
+ #define WL128X_FW_NAME "ti-connectivity/wl128x-fw-4-sr.bin"
++#define WL127X_PLT_FW_NAME "ti-connectivity/wl127x-fw-4-plt.bin"
++#define WL128X_PLT_FW_NAME "ti-connectivity/wl128x-fw-4-plt.bin"
+ 
+ /*
+  * wl127x and wl128x are using the same NVS file name. However, the
+@@ -90,7 +92,12 @@
+ enum wl1271_state {
+ 	WL1271_STATE_OFF,
+ 	WL1271_STATE_ON,
+-	WL1271_STATE_PLT,
++};
++
++enum wl12xx_fw_type {
++	WL12XX_FW_TYPE_NONE,
++	WL12XX_FW_TYPE_NORMAL,
++	WL12XX_FW_TYPE_PLT,
+ };
+ 
+ enum wl1271_partition_type {
+@@ -294,6 +301,8 @@ struct wl1271 {
+ 	spinlock_t wl_lock;
+ 
+ 	enum wl1271_state state;
++	enum wl12xx_fw_type fw_type;
++	bool plt;
+ 	struct mutex mutex;
+ 
+ 	unsigned long flags;
+-- 
+1.7.6.401.g6a319
 
-# lshw -C network
-  *-network:0
-       description: Ethernet interface
-       product: VT6105M [Rhine-III]
-       vendor: VIA Technologies, Inc.
-       physical id: 9
-       bus info: pci@0000:00:09.0
-       logical name: eth0
-       version: 96
-       serial: 00:0d:b9:16:4b:0c
-       size: 100MB/s
-       capacity: 100MB/s
-       width: 32 bits
-       clock: 33MHz
-       capabilities: pm bus_master cap_list ethernet physical tp mii
-10bt 10bt-fd 100bt 100bt-fd autonegotiation
-       configuration: autonegotiation=on broadcast=yes
-driver=via-rhine driverversion=1.5.0 duplex=full latency=64 link=yes
-maxlatency=8 mingnt=3 multicast=yes port=MII speed=100MB/s
-       resources: irq:11 ioport:fc00(size=256) memory:effff000-effff0ff
-  *-network:1
-       description: Wireless interface
-       product: AR5413 802.11abg NIC
-       vendor: Atheros Communications Inc.
-       physical id: c
-       bus info: pci@0000:00:0c.0
-       logical name: wlan0
-       version: 01
-       serial: 00:0b:6b:2e:25:d5
-       width: 32 bits
-       clock: 33MHz
-       capabilities: pm bus_master cap_list ethernet physical wireless logical
-       configuration: broadcast=yes driver=ath5k
-driverversion=3.0.0-voyage firmware=N/A latency=168 link=yes
-maxlatency=28 mingnt=10 multicast=yes wireless=IEEE 802.11abg
-       resources: irq:10 memory:effd0000-effdffff
-
-both commands confirm I'm using the ath5k driver (as I knew).
-
-# modinfo ath5k
-filename:
-/lib/modules/3.0.0-voyage/kernel/drivers/net/wireless/ath/ath5k/ath5k.ko
-license:        Dual BSD/GPL
-description:    Support for 5xxx series of Atheros 802.11 wireless LAN cards.
-author:         Nick Kossifidis
-author:         Jiri Slaby
-alias:          pci:v0000168Cd0000001Dsv*sd*bc*sc*i*
-alias:          pci:v0000168Cd0000001Csv*sd*bc*sc*i*
-alias:          pci:v0000168Cd0000001Bsv*sd*bc*sc*i*
-alias:          pci:v0000168Cd0000001Asv*sd*bc*sc*i*
-alias:          pci:v0000168Cd00000019sv*sd*bc*sc*i*
-alias:          pci:v0000168Cd00000018sv*sd*bc*sc*i*
-alias:          pci:v0000168Cd00000017sv*sd*bc*sc*i*
-alias:          pci:v0000168Cd00000016sv*sd*bc*sc*i*
-alias:          pci:v0000168Cd00000015sv*sd*bc*sc*i*
-alias:          pci:v0000168Cd00000014sv*sd*bc*sc*i*
-alias:          pci:v0000168Cd00001014sv*sd*bc*sc*i*
-alias:          pci:v000010B7d00000013sv*sd*bc*sc*i*
-alias:          pci:v0000A727d00000013sv*sd*bc*sc*i*
-alias:          pci:v0000168Cd00000013sv*sd*bc*sc*i*
-alias:          pci:v0000168Cd00000012sv*sd*bc*sc*i*
-alias:          pci:v0000168Cd00000011sv*sd*bc*sc*i*
-alias:          pci:v0000168Cd00000007sv*sd*bc*sc*i*
-alias:          pci:v0000168Cd00000207sv*sd*bc*sc*i*
-depends:        mac80211,cfg80211,ath
-intree:         Y
-vermagic:       3.0.0-voyage SMP preempt mod_unload 486
-parm:           debug:uint
-parm:           nohwcrypt:Disable hardware encryption. (bool)
-parm:           all_channels:Expose all channels the device can use. (bool)
-parm:           fastchanswitch:Enable fast channel switching for
-AR2413/AR5413 radios. (bool)
-
-# find / | grep ath5k.ko
-/lib/modules/3.0.0-voyage/kernel/drivers/net/wireless/ath/ath5k/ath5k.ko
-/lib/modules/3.0.0/updates/drivers/net/wireless/ath/ath5k/ath5k.ko
-/root/compat-wireless-3.3-rc1-2/drivers/net/wireless/ath/ath5k/ath5k.ko
-/root/compat-wireless-3.3-rc1-2/drivers/net/wireless/ath/ath5k/.ath5k.ko.cmd
-
-I tried depmod -a and also a simple reboot (which I always do after
-make install) but the "updates" module is never loaded.
-
-Any idea?
-
-thanks,
-alfonso
-
->
-> Kind regards,
-> Andreas
