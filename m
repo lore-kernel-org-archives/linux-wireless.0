@@ -1,189 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:57165 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754288Ab2BBIXJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 03:23:09 -0500
-Received: by lahc1 with SMTP id c1so1177446lah.20
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 00:23:07 -0800 (PST)
-Subject: Re: [PATCH v2 5/7] wl12xx: add RX data filter ACX commands
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>, eyal@wizery.com
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1328021048-8944-6-git-send-email-eliad@wizery.com>
-References: <1328021048-8944-1-git-send-email-eliad@wizery.com>
-	 <1328021048-8944-6-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 02 Feb 2012 10:23:03 +0200
-Message-ID: <1328170983.3626.265.camel@cumari> (sfid-20120202_092314_956221_E177C89D)
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:29741 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755351Ab2BFQJf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Feb 2012 11:09:35 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [RFC 3/4] iwlwifi: cleanup/fix memory barriers
+Date: Mon,  6 Feb 2012 17:09:23 +0100
+Message-Id: <1328544564-8696-3-git-send-email-sgruszka@redhat.com> (sfid-20120206_170940_538104_F123CA7E)
+In-Reply-To: <1328544564-8696-1-git-send-email-sgruszka@redhat.com>
+References: <1328544564-8696-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-01-31 at 16:44 +0200, Eliad Peller wrote: 
-> From: Eyal Shapira <eyal@wizery.com>
-> 
-> (based on Pontus' patch)
-> 
-> Added commands for setting a specific filter
-> and controlling the behaviour RX data filters
-> implemented by the FW.
-> 
-> Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-> Signed-off-by: Ido Reis <idor@ti.com>
-> Signed-off-by: Eyal Shapira <eyal@wizery.com>
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+wmb(), rmb() are not needed when writel(), readl() are used as
+accessors for MMIO. We use them indirectly via iowrite32(),
+ioread32().
 
-Why is Ido's sign-off here? (just curious)
+What is needed mmiowb(), for synchronizing writes coming from
+different CPUs on PCIe bridge (see in patch comments). This
+fortunately is not needed on x86, where mmiowb() is just
+defined as compiler barrier. As iwlwifi devices are most likely
+not used on anything other than x86, this is not so important
+fix.
 
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c           |    1 -
+ drivers/net/wireless/iwlwifi/iwl-io.c            |   12 +++++++-----
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    1 -
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-> diff --git a/drivers/net/wireless/wl12xx/acx.c b/drivers/net/wireless/wl12xx/acx.c
-> index bc96db0..668d337 100644
-> --- a/drivers/net/wireless/wl12xx/acx.c
-> +++ b/drivers/net/wireless/wl12xx/acx.c
-> @@ -1740,3 +1740,108 @@ out:
->  	return ret;
->  
->  }
-> +
-> +int wl1271_acx_toggle_rx_data_filter(struct wl1271 *wl, bool enable,
-> +				     u8 default_action)
-
-Instead of "toggle" we usually have "enable" in the function name.  This
-is not very important, obviously, but if we get a v3 of this patch, you
-could change it for a little more consistency. ;)
-
-
-> {
-> +	struct acx_rx_data_filter_state *acx;
-> +	int ret;
-> +
-> +	wl1271_debug(DEBUG_ACX, "acx toggle rx data filter en: %d act: %d",
-> +		     enable, default_action);
-> +
-> +	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-> +	if (!acx) {
-> +		ret = -ENOMEM;
-> +		goto out;
-> +	}
-> +
-> +	acx->enable = enable ? 1 : 0;
-
-Do we really need this? We usually trust that enable will be either true
-(1) or false (0).
-
-
-> +int wl1271_acx_set_rx_data_filter(struct wl1271 *wl, u8 index, bool enable,
-> +				  struct wl12xx_rx_data_filter *filter)
-> +{
-> +	struct acx_rx_data_filter_cfg *acx;
-> +	int fields_size = 0;
-> +	int acx_size;
-> +	int ret;
-> +
-> +	if (enable && !filter) {
-> +		wl1271_warning("acx_set_rx_data_filter: enable but no filter");
-> +		return -EINVAL;
-> +	}
-> +
-> +	if (index >= WL1271_MAX_RX_DATA_FILTERS) {
-> +		wl1271_warning("acx_set_rx_data_filter: invalid filter idx(%d)",
-> +			       index);
-> +		return -EINVAL;
-> +	}
-
-Should we use BUG_ON instead? This is only used internally in the
-driver, so if it get here, it's a bug.  And if the filters come from
-userspace, we should validate them before continuing anyway.
-
-
-> +	if (filter) {
-> +		if (filter->action < FILTER_DROP ||
-> +		    filter->action > FILTER_FW_HANDLE) {
-> +			wl1271_warning("invalid filter action (%d)",
-> +				       filter->action);
-> +			return -EINVAL;
-> +		}
-> +
-> +		if (filter->num_fields != 1 &&
-> +		    filter->num_fields != 2) {
-> +			wl1271_warning("invalid filter num_fields (%d)",
-> +				       filter->num_fields);
-> +			return -EINVAL;
-> +		}
-
-Same for these two.
-
-
-
-> +	acx_size = roundup(sizeof(*acx) + fields_size, 4);
-
-ALIGN()?
-
-
-> +	acx = kzalloc(acx_size, GFP_KERNEL);
-> +
-> +	if (!acx)
-> +		return -ENOMEM;
-> +
-> +	acx->enable = enable ? 1 : 0;
-
-Same as above.
-
-
-> diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-> index 1463341..c18ad0a 100644
-> --- a/drivers/net/wireless/wl12xx/wl12xx.h
-> +++ b/drivers/net/wireless/wl12xx/wl12xx.h
-> @@ -277,6 +277,39 @@ struct wl1271_link {
->  	u8 ba_bitmap;
->  };
->  
-> +#define WL1271_MAX_RX_DATA_FILTERS 4
-> +#define WL1271_RX_DATA_FILTER_MAX_FIELD_PATTERNS 8
-
-This is too long for a macro?
-
-
-> +/* FW MAX FILTER SIZE is 98 bytes. The MAX_PATTERN_SIZE is imposed
-> + * after taking into account the mask bytes and other structs members
-> + */
-
-This is slightly off according to the coding-style. ;)
-
-Also s/structs/struct/
-
-
-> +#define WL1271_RX_DATA_FILTER_MAX_PATTERN_SIZE 43
-> +#define WL1271_RX_DATA_FILTER_ETH_HEADER_SIZE 14
-> +
-> +#define WL1271_RX_DATA_FILTER_FLAG_MASK                BIT(0)
-> +#define WL1271_RX_DATA_FILTER_FLAG_IP_HEADER           0
-> +#define WL1271_RX_DATA_FILTER_FLAG_ETHERNET_HEADER     BIT(1)
-
-It would also be nice to find some smaller names for these.
-
-
-> +struct wl12xx_rx_data_filter_field {
-> +	__le16 offset;
-> +	u8 len;
-> +	u8 flags;
-> +	u8 pattern[0];
-> +} __packed;
-> +
-> +struct wl12xx_rx_data_filter {
-> +	u8 action;
-> +	int num_fields;
-> +	int fields_size;
-> +	struct wl12xx_rx_data_filter_field fields[0];
-> +} __packed;
-
-No need for __packed here.  These are internal structs and not part of
-the FW API.
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 2642bf9..6636149 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -336,7 +336,6 @@ static void iwl_print_cont_event_trace(struct iwl_priv *priv, u32 base,
+ 
+ 	/* Set starting address; reads will auto-increment */
+ 	iwl_write32(bus(priv), HBUS_TARG_MEM_RADDR, ptr);
+-	rmb();
+ 
+ 	/*
+ 	 * Refuse to read more than would have fit into the log from
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
+index b5d0bcb..111182b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.c
++++ b/drivers/net/wireless/iwlwifi/iwl-io.c
+@@ -135,6 +135,13 @@ void iwl_release_nic_access(struct iwl_bus *bus)
+ 	lockdep_assert_held(&bus->reg_lock);
+ 	__iwl_clear_bit(bus, CSR_GP_CNTRL,
+ 			CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++	/*
++	 * In above we are reading CSR_GP_CNTRL register, what will flush any
++	 * previous writes, but still want to write, which clear MAC_ACCESS_REQ
++	 * bit, be performed on PCI bus, before any other writes scheduled on
++	 * different CPUs after we drop reg_lock.
++	 */
++	mmiowb();
+ }
+ 
+ u32 iwl_read_direct32(struct iwl_bus *bus, u32 reg)
+@@ -181,7 +188,6 @@ int iwl_poll_direct_bit(struct iwl_bus *bus, u32 addr, u32 mask,
+ static inline u32 __iwl_read_prph(struct iwl_bus *bus, u32 reg)
+ {
+ 	iwl_write32(bus, HBUS_TARG_PRPH_RADDR, reg | (3 << 24));
+-	rmb();
+ 	return iwl_read32(bus, HBUS_TARG_PRPH_RDAT);
+ }
+ 
+@@ -189,7 +195,6 @@ static inline void __iwl_write_prph(struct iwl_bus *bus, u32 addr, u32 val)
+ {
+ 	iwl_write32(bus, HBUS_TARG_PRPH_WADDR,
+ 		    ((addr & 0x0000FFFF) | (3 << 24)));
+-	wmb();
+ 	iwl_write32(bus, HBUS_TARG_PRPH_WDAT, val);
+ }
+ 
+@@ -268,7 +273,6 @@ void _iwl_read_targ_mem_words(struct iwl_bus *bus, u32 addr,
+ 	spin_lock_irqsave(&bus->reg_lock, flags);
+ 	if (likely(iwl_grab_nic_access(bus))) {
+ 		iwl_write32(bus, HBUS_TARG_MEM_RADDR, addr);
+-		rmb();
+ 		for (offs = 0; offs < words; offs++)
+ 			vals[offs] = iwl_read32(bus, HBUS_TARG_MEM_RDAT);
+ 		iwl_release_nic_access(bus);
+@@ -295,8 +299,6 @@ int _iwl_write_targ_mem_words(struct iwl_bus *bus, u32 addr,
+ 	spin_lock_irqsave(&bus->reg_lock, flags);
+ 	if (likely(iwl_grab_nic_access(bus))) {
+ 		iwl_write32(bus, HBUS_TARG_MEM_WADDR, addr);
+-		wmb();
+-
+ 		for (offs = 0; offs < words; offs++)
+ 			iwl_write32(bus, HBUS_TARG_MEM_WDAT, vals[offs]);
+ 		iwl_release_nic_access(bus);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index 7b7899d..3564b86 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -747,7 +747,6 @@ static int iwl_print_event_log(struct iwl_trans *trans, u32 start_idx,
+ 
+ 	/* Set starting address; reads will auto-increment */
+ 	iwl_write32(bus(trans), HBUS_TARG_MEM_RADDR, ptr);
+-	rmb();
+ 
+ 	/* "time" is actually "data" for mode 0 (no timestamp).
+ 	* place event id # at far right for easier visual parsing. */
 -- 
-Cheers,
-Luca.
+1.7.1
 
