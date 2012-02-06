@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:59621 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757768Ab2B2LDc (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Wed, 29 Feb 2012 06:03:32 -0500
-Received: by bkcik5 with SMTP id ik5so2143351bkc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 03:03:21 -0800 (PST)
-MIME-Version: 1.0
-Date: Wed, 29 Feb 2012 19:03:21 +0800
-Message-ID: <CALx5=V8BDFXD7KGBFia0MAkb2iv3x5dupGXTkKEDJ24DLJVx1g@mail.gmail.com> (sfid-20120229_120336_920233_A898FB6F)
-Subject: [ath9k-devel] Any recommendation of direct access the GPIO from
- specific address ?
-From: Matt Chen <machen@suse.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:58339 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755326Ab2BFPmh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Feb 2012 10:42:37 -0500
+Received: by qcqw6 with SMTP id w6so3440087qcq.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2012 07:42:37 -0800 (PST)
+From: Rick Farina <sidhayn@gmail.com>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org, Rick Farina <sidhayn@gmail.com>
+Subject: [PATCH] add missing =y to CONFIG_RT2X00_LIB_DEBUGFS
+Date: Mon,  6 Feb 2012 10:42:16 -0500
+Message-Id: <1328542936-20963-1-git-send-email-sidhayn@gmail.com> (sfid-20120206_164240_953675_62562151)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi list,
+When editing config.mk with a sed script the missing =y on this line
+causes issue. Since this line is commented out by default this means no
+changes to the default behavior and sed scripts will be able to edit the
+config.mk file much more easily.
 
-I am working on verifying the ath9k_rfkill_poll_state() function. It
-would execute the ath_is_rfkill_set() the read the GPIO and change the
-LED. I found the POLL_INTERVAL would take 5 secs according the
-definition in net/rfkill/core.c
-#define POLL_INTERVAL (5 * HZ)
-So it would detect the GPIO status in every 5 seconds. But the ath9k I
-run in different platform, with the same modules, it works different
-way. The LED for one is working very fast, in another one is working
-so slow.
+Signed-of-By: Rick Farina <sidhayn@gmail.com>
+---
+ config.mk |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-I would like to clarify it is driver or BIOS issues. The way I come
-out is manually to change the GPIO status, see how the driver work.
-But so far I only found the devmen2 to access the specific address of
-GPIO. Any other good ways recommended ?
-And another question is the address defined in reg.h correct to access
-? Such as
-#define AR_GPIO_IN    (AR_SERV_9340(ah)) ? 0x402c : 0x404c)
-can I access the value of 0x404c directly?
+diff --git a/config.mk b/config.mk
+index 9433ce9..a9d189e 100644
+--- a/config.mk
++++ b/config.mk
+@@ -639,7 +639,7 @@ CONFIG_RT2X00_LIB_LEDS=y
+ endif #CONFIG_LEDS_CLASS
+ endif #CONFIG_COMPAT_KERNEL_2_6_25
+ # CONFIG_RT2X00_DEBUG=y
+-# CONFIG_RT2X00_LIB_DEBUGFS
++# CONFIG_RT2X00_LIB_DEBUGFS=y
+ endif
+ 
+ # p54
+-- 
+1.7.3.4
 
-Thank you for your patience. :)
