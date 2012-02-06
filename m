@@ -1,76 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm20.bullet.mail.ukl.yahoo.com ([217.146.183.194]:24622 "HELO
-	nm20.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751008Ab2BDGIn (ORCPT
+Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:1475 "EHLO
+	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756437Ab2BFW7G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Feb 2012 01:08:43 -0500
-From: Marek Lindner <lindner_marek@yahoo.de>
-To: Seth Forshee <seth.forshee@canonical.com>
-Subject: Re: CTS timeout issue with AR9285
-Date: Sat, 4 Feb 2012 14:08:35 +0800
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>
-References: <20120202042521.GA20635@ubuntu-macmini> <4F2A830A.8000905@openwrt.org> <20120202143843.GB24483@ubuntu-macmini>
-In-Reply-To: <20120202143843.GB24483@ubuntu-macmini>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Message-Id: <201202041408.35588.lindner_marek@yahoo.de> (sfid-20120204_070911_781131_04E4EB1B)
+	Mon, 6 Feb 2012 17:59:06 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 1/8] rt2x00: Introduce concept of driver data in struct rt2x00_dev.
+Date: Mon,  6 Feb 2012 23:45:06 +0100
+Message-Id: <1328568313-26267-2-git-send-email-gwingerde@gmail.com> (sfid-20120206_235918_716180_054DF437)
+In-Reply-To: <1328568313-26267-1-git-send-email-gwingerde@gmail.com>
+References: <1328568313-26267-1-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, February 02, 2012 22:38:43 Seth Forshee wrote:
-> On Thu, Feb 02, 2012 at 01:35:22PM +0100, Felix Fietkau wrote:
-> > On 2012-02-02 5:25 AM, Seth Forshee wrote:
-> > > I recently updated a machine with AR9285 wireless from kernel version
-> > > 3.0 to 3.2 and saw that wireless had become slow and unreliable. It
-> > > seems that the problem is extremely frequent CTS timeouts, which began
-> > > happening with commit adb5066 (ath9k_hw: do not apply the 2.4 ghz ack
-> > > timeout workaround to cts). Restoring the CTS timeout to the value
-> > > prior to this commit on top of 3.2 gets performance back to what it
-> > > was with 3.0.
-> > > 
-> > > I don't have any other ath9k cards lying around, but various other
-> > > cards are working fine with this router. Any ideas what's wrong here?
-> > 
-> > Please try this patch:
-> > 
-> > --- a/drivers/net/wireless/ath/ath9k/hw.c
-> > +++ b/drivers/net/wireless/ath/ath9k/hw.c
-> > @@ -1061,13 +1061,16 @@ void ath9k_hw_init_global_settings(struc
-> > 
-> >  	/*
-> >  	
-> >  	 * Workaround for early ACK timeouts, add an offset to match the
-> > 
-> > -	 * initval's 64us ack timeout value.
-> > +	 * initval's 64us ack timeout value. Use 48us for the CTS timeout.
-> > 
-> >  	 * This was initially only meant to work around an issue with delayed
-> >  	 * BA frames in some implementations, but it has been found to fix 
-ACK
-> >  	 * timeout issues in other cases as well.
-> >  	 */
-> > 
-> > -	if (conf->channel && conf->channel->band == IEEE80211_BAND_2GHZ)
-> > +	if (conf->channel && conf->channel->band == IEEE80211_BAND_2GHZ) {
-> > 
-> >  		acktimeout += 64 - sifstime - ah->slottime;
-> > 
-> > +		ctstimeout += 48 - sifstime - ah->slottime;
-> > +	}
-> > +
-> > 
-> >  	ath9k_hw_set_sifs_time(ah, sifstime);
-> >  	ath9k_hw_setslottime(ah, slottime);
-> 
-> The wireless seems to be working fine with this patch.
+We are getting more and more fields in struct rt2x00_dev that are
+specific to one or two of the low-level drivers. Instead of putting
+these fields inside the main structure and thus clobbering all low-level
+drivers with these fields, introduce the concept of driver data inside
+struct rt2x00_dev, whose size is indicated by the low-level driver and
+which can be populated by the low-level driver.
 
-I second this - my rts/cts problems went away as well after applying this 
-patch.
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Regards,
-Marek
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index b03b22c..b4260bfb6 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -647,6 +647,7 @@ struct rt2x00lib_ops {
+  */
+ struct rt2x00_ops {
+ 	const char *name;
++	const unsigned int drv_data_size;
+ 	const unsigned int max_sta_intf;
+ 	const unsigned int max_ap_intf;
+ 	const unsigned int eeprom_size;
+@@ -742,6 +743,11 @@ struct rt2x00_dev {
+ 	const struct rt2x00_ops *ops;
+ 
+ 	/*
++	 * Driver data.
++	 */
++	void *drv_data;
++
++	/*
+ 	 * IEEE80211 control structure.
+ 	 */
+ 	struct ieee80211_hw *hw;
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index c3e1aa7..bae5b01 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -1121,6 +1121,18 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+ {
+ 	int retval = -ENOMEM;
+ 
++	/*
++	 * Allocate the driver data memory, if necessary.
++	 */
++	if (rt2x00dev->ops->drv_data_size > 0) {
++		rt2x00dev->drv_data = kzalloc(rt2x00dev->ops->drv_data_size,
++			                      GFP_KERNEL);
++		if (!rt2x00dev->drv_data) {
++			retval = -ENOMEM;
++			goto exit;
++		}
++	}
++
+ 	spin_lock_init(&rt2x00dev->irqmask_lock);
+ 	mutex_init(&rt2x00dev->csr_mutex);
+ 
+@@ -1261,6 +1273,12 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+ 	 * Free queue structures.
+ 	 */
+ 	rt2x00queue_free(rt2x00dev);
++
++	/*
++	 * Free the driver data.
++	 */
++	if (rt2x00dev->drv_data)
++		kfree(rt2x00dev->drv_data);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_remove_dev);
+ 
+-- 
+1.7.9
+
