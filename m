@@ -1,64 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1563 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757787Ab2BIUJZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 15:09:25 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 10/15] brcm80211: fmac: only return success in
- brcmf_sdbrcm_bus_init() when true
-Date: Thu, 9 Feb 2012 21:09:04 +0100
-Message-ID: <1328818149-4826-11-git-send-email-arend@broadcom.com> (sfid-20120209_211026_364645_A38C1BC1)
-In-Reply-To: <1328818149-4826-1-git-send-email-arend@broadcom.com>
-References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:32838 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755298Ab2BFPwv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Feb 2012 10:52:51 -0500
+Received: by qadc10 with SMTP id c10so2144827qad.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2012 07:52:50 -0800 (PST)
+Message-ID: <4F2FF742.5070309@gmail.com> (sfid-20120206_165254_871024_8D6546F3)
+Date: Mon, 06 Feb 2012 10:52:34 -0500
+From: Richard Farina <sidhayn@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: mcgrof@gmail.com
+CC: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Calling make directly is not permitted
+References: <1328542694-20777-1-git-send-email-sidhayn@gmail.com>
+In-Reply-To: <1328542694-20777-1-git-send-email-sidhayn@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function brcmf_sdbrcm_bus_init() always returned success except for
-firmware download failure. However, also when enabling SDIO function 2
-is failing the function should return failure. This patch fixes that.
+On 02/06/12 10:38, Rick Farina wrote:
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+I apologize, both this patch and my "add missing =y" patch should have
+had compat-wireless in the subject line. I'm still learning to use git
+send-email.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-index b20029e..47a192d 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
-@@ -3467,13 +3467,12 @@ static int brcmf_sdbrcm_bus_init(struct device *dev)
- 
- 		/* Set bus state according to enable result */
- 		bus_if->state = BRCMF_BUS_DATA;
--	}
--
--	else {
-+	} else {
- 		/* Disable F2 again */
- 		enable = SDIO_FUNC_ENABLE_1;
- 		brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_0,
- 				       SDIO_CCCR_IOEx, enable, NULL);
-+		ret = -ENODEV;
- 	}
- 
- 	/* Restore previous clock setting */
-@@ -3481,7 +3480,7 @@ static int brcmf_sdbrcm_bus_init(struct device *dev)
- 			       SBSDIO_FUNC1_CHIPCLKCSR, saveclk, &err);
- 
- 	/* If we didn't come up, turn off backplane clock */
--	if (bus_if->state != BRCMF_BUS_DATA)
-+	if (!ret)
- 		brcmf_sdbrcm_clkctl(bus, CLK_NONE, false);
- 
- exit:
--- 
-1.7.5.4
+Anyone want to tell me how to make git stop add myself to the cc just
+because the SOB line is in the commit message? Am I supposed to add the
+SOB some other way?
 
+Thanks!
+
+-Rick
+> make was being called directly, fix to $(MAKE)
+>
+> Signed-of-By: Rick Farina <sidhayn@gmail.com>
+> ---
+>  Makefile |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/Makefile b/Makefile
+> index d586f45..440bd91 100644
+> --- a/Makefile
+> +++ b/Makefile
+> @@ -115,7 +115,7 @@ btuninstall:
+>  	@echo
+>  
+>  btclean:
+> -	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) BT=TRUE clean
+> +	$(MAKE) -C /lib/modules/$(shell uname -r)/build M=$(PWD) BT=TRUE clean
+>  	@rm -f $(CREL_PRE)*
+>  
+>  install: uninstall install-modules install-scripts
 
