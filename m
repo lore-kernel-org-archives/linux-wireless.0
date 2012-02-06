@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:36370 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755805Ab2BHPhb (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:57725 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752873Ab2BFLQx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 10:37:31 -0500
-Received: by iacb35 with SMTP id b35so1019340iac.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2012 07:37:31 -0800 (PST)
-Message-ID: <4F3296B8.2050007@lwfinger.net> (sfid-20120208_163735_287121_2A8E8229)
-Date: Wed, 08 Feb 2012 09:37:28 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 6 Feb 2012 06:16:53 -0500
+Received: by bkcjm19 with SMTP id jm19so4573280bkc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2012 03:16:51 -0800 (PST)
+Message-ID: <4F2FB6A0.5030901@gmail.com> (sfid-20120206_121657_111442_70918D9B)
+Date: Mon, 06 Feb 2012 12:16:48 +0100
+From: "zefir.kurtisi@gmail.com" <zefir.kurtisi@gmail.com>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
+To: "Goldenshtein, Victor" <victorg@ti.com>
 CC: Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: REGRESSION: crash in wireless-testing smoketest
-References: <4F313815.3020107@broadcom.com> ( sfid-20120207_154219_853529_011888C8) <4F313C53.2040604@sipsolutions.net> <4F315E7E.7040203@broadcom.com> <1328646776.4223.0.camel@jlt3.sipsolutions.net> <4F32484B.7020409@broadcom.com> <4F327273.5090301@sipsolutions.net> <4F327C30.8060802@broadcom.com>
-In-Reply-To: <4F327C30.8060802@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, adrian.chadd@gmail.com, j@w1.fi,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name
+Subject: Re: [RFC 3/9] nl80211/cfg80211: add ability to enable TX on op-channel
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>	<1327581484-22047-4-git-send-email-victorg@ti.com>	<4F277F85.1090901@sipsolutions.net> <CAK80WHbAE0+NhLgLAxE+6BmkHFy2hw=sNV1TBjjOTajhHcdxRw@mail.gmail.com> <4F2B18AA.90809@neratec.com>
+In-Reply-To: <4F2B18AA.90809@neratec.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/08/2012 07:44 AM, Arend van Spriel wrote:
-> On 02/08/2012 02:02 PM, Johannes Berg wrote:
->>> I rerun the test on a kernel with some more lock checking and got lucky.
+On 02/03/2012 05:06 PM, zefir.kurtisi@gmail.com wrote:
+> On 02.02.2012 17:06, Goldenshtein, Victor wrote:
+>> On Tue, Jan 31, 2012 at 7:43 AM, Johannes Berg
+>> <johannes@sipsolutions.net>  wrote:
+>>> On 1/26/2012 4:37 AM, Victor Goldenshtein wrote:
+>>>>
+>>>> The dfs master device should monitor radar channels
+>>>> for potential radar interference for a minimum of
+>>>> CAC (channel availability check) time, during this
+>>>> period no tx can occur. If no radar interference
+>>>> is detected the dfs master may initiate the tx with
+>>>> new NL80211_CMD_DFS_ENABLE_TX command.
 >>>
->>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512283] wlan0: authenticate
->>> with 98:fc:11:8e:94:57
->>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512515] wlan0: send auth to
->>> 98:fc:11:8e:94:57 (try 1/3)
->>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514184] BUG: unable to handle
->>> kernel NULL pointer dereference at 00000004
+>>>
+>>> So do we think that no safeguards here at all are acceptable? Not even
+>>> checking that radar detection was enabled, CAC time expired, etc.?
 >>
->> ...
+>> We can add a check whether dfs is supported by the driver
+>> (rdev->wiphy.features&  NL80211_FEATURE_DFS).
 >>
->>> Apparently, minstrel_ht expects some tx_status field filled in by
->>> brcmsmac/mac80211. Have not found the problem yet.
+>> The nl/cfg/mac doesn't have the info whether the radar detection is
+>> enabled and definitely doesn't heard about CAC time, on other hand the
+>> driver which starts/handles radar detection know whether it started or
+>> not. I think the driver should perform this simple "sanity" checks,
+>> otherwise we"ll need to save different DFS states in the mac, not sure
+>> that this is what we want.
 >>
->> So the patch you sent fixes this? Just making sure it's not a different
->> thing.
 >>
->> johannes
 >>
->
-> Yes. I should probably have referred to this thread.
+> I noticed this issue working on interfacing ath9k to your DFS 
+> [ ... more unfinished garbage ]
 
-I have also seen the same crash in minstrel_tx_status, but it showed up in the 
-middle of revising p54usb to use asynchronous firmware loading, and I thought I 
-had some kind of subtle timing problem in the initialization. I certainly will 
-test the patch and report back.
+Sorry folks for that garbage. My Thunderbird crashed in the middle of writing and for some reason sent out the draft after restart (which I noticed right now).
 
-Larry
+So, what I really wanted to comment is:
 
+I noticed this issue working on interfacing ath9k to your DFS management component. When a DFS channel is initially set, the driver has no information whether to block TX or not (as opposed to ap_process_chanswitch() providing these flags). What is the assumption here? Is the driver required to check itself whether a DFS channel is set and raise some internal tx_disabled flag to be reset via hw_dfs_en_tx()? With all the logic being located in hostap, this looks inconsistent (but doable).
+
+Aside from that, I managed to interface ath9k to the proposed component. So far, it enables me to set up a DFS monitor to physically test my pattern detectors, while it fails to run in master mode. Need to go through the trace logs to isolate the problem and will report then.
+
+
+Thanks
+Zefir
