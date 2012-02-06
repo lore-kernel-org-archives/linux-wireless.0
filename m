@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:58128 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756474Ab2BHUBj (ORCPT
+Received: from cpsmtpb-ews02.kpnxchange.com ([213.75.39.5]:3881 "EHLO
+	cpsmtpb-ews02.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756431Ab2BFW7F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 15:01:39 -0500
-Date: Wed, 8 Feb 2012 14:57:44 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Joe Perches <joe@perches.com>
-Cc: "Devendra.Naga" <devendra.aaru@gmail.com>,
-	Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	paul.gortmaker@windriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi/rtl8192c: in _rtl92c_phy_calculate_bit_shift
- remove comparing bitmask against 1
-Message-ID: <20120208195744.GD2929@tuxdriver.com> (sfid-20120208_210158_765132_D4ADBAFE)
-References: <1327993863-6810-1-git-send-email-devendra.aaru@gmail.com>
- <1327995440.1804.16.camel@joe2Laptop>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1327995440.1804.16.camel@joe2Laptop>
+	Mon, 6 Feb 2012 17:59:05 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	<linux-wireless@vger.kernel.org>
+Cc: Ivo van Doorn <IvDoorn@gmail.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>
+Subject: [PATCH 3/8] rt2x00: Update comment on freq_offset field in struct rt2x00_dev.
+Date: Mon,  6 Feb 2012 23:45:08 +0100
+Message-Id: <1328568313-26267-4-git-send-email-gwingerde@gmail.com> (sfid-20120206_235926_220887_ED4F0CB7)
+In-Reply-To: <1328568313-26267-3-git-send-email-gwingerde@gmail.com>
+References: <1328568313-26267-1-git-send-email-gwingerde@gmail.com>
+ <1328568313-26267-2-git-send-email-gwingerde@gmail.com>
+ <1328568313-26267-3-git-send-email-gwingerde@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 30, 2012 at 11:37:20PM -0800, Joe Perches wrote:
-> On Tue, 2012-01-31 at 02:11 -0500, Devendra.Naga wrote:
-> > From: "Devendra.Naga" <devendra.aaru@gmail.com>
-> []
-> > diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-> []
-> > @@ -177,7 +177,7 @@ u32 _rtl92c_phy_calculate_bit_shift(u32 bitmask)
-> >  	u32 i;
-> >  
-> >  	for (i = 0; i <= 31; i++) {
-> > -		if (((bitmask >> i) & 0x1) == 1)
-> > +		if ((bitmask >> i) & 0x1)
-> >  			break;
-> >  	}
-> >  	return i;
-> 
-> Perhaps this is simpler and faster:
-> 
-> {
-> 	u32 rtn = (u32)ffs((int)bitmask);
-> 	if (rtn)
-> 		return rtn - 1;
-> 	return 32;
-> }
+The comment states that the field is only used for rt61pci and rt73usb.
+However, it is now used by rt2800pci and rt2800usb as well, so the
+comment is not correct anymore.
 
-Are you planning to revise your patch based on Joe's suggestion?
+Update the comment to not state any low-level drivers anymore.
 
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+
+diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+index 5bd2f22..ed2ae6e 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/rt2x00/rt2x00.h
+@@ -892,7 +892,7 @@ struct rt2x00_dev {
+ 	u8 rssi_offset;
+ 
+ 	/*
+-	 * Frequency offset (for rt61pci & rt73usb).
++	 * Frequency offset.
+ 	 */
+ 	u8 freq_offset;
+ 
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.9
+
