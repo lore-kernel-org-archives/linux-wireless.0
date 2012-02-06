@@ -1,73 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30205 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756896Ab2BCQdL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 11:33:11 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v2 20/25] iwlegacy: remove il_setup_interface()
-Date: Fri,  3 Feb 2012 17:31:56 +0100
-Message-Id: <1328286721-11309-21-git-send-email-sgruszka@redhat.com> (sfid-20120203_173336_123745_B477B6E6)
-In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
-References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8230 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754193Ab2BFMhg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Feb 2012 07:37:36 -0500
+Message-ID: <4F2FC989.5000306@qca.qualcomm.com> (sfid-20120206_133741_067570_0F8DE3A8)
+Date: Mon, 6 Feb 2012 14:37:29 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ath6kl: add blocking debugfs file for retrieving
+ firmware logs
+References: <20120206062327.20231.11602.stgit@localhost6.localdomain6> <20120206062340.20231.55630.stgit@localhost6.localdomain6> <20120206090654.GA3260@chvasanth-lnx>
+In-Reply-To: <20120206090654.GA3260@chvasanth-lnx>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/common.c |   22 +++-------------------
- 1 files changed, 3 insertions(+), 19 deletions(-)
+On 02/06/2012 11:06 AM, Vasanthakumar Thiagarajan wrote:
+> On Mon, Feb 06, 2012 at 08:23:40AM +0200, Kalle Valo wrote:
+>> When debugging firmware issues it's not always enough to get
+>> the latest firmware logs, sometimes we need to get logs from a longer
+>> period. To make this possible, add a debugfs file named fwlog_block. When
+>> reading from this file ath6kl will send firmware logs whenever available
+>> and otherwise it will block and wait for new logs.
+>>
+>> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index 13bd3a8..ea2fa97 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -4533,23 +4533,6 @@ il_set_mode(struct il_priv *il, struct il_rxon_context *ctx)
- 	return il_commit_rxon(il, ctx);
- }
- 
--static int
--il_setup_interface(struct il_priv *il, struct il_rxon_context *ctx)
--{
--	struct ieee80211_vif *vif = ctx->vif;
--
--	lockdep_assert_held(&il->mutex);
--
--	/*
--	 * This variable will be correct only when there's just
--	 * a single context, but all code using it is for hardware
--	 * that supports only one context.
--	 */
--	il->iw_mode = vif->type;
--
--	return il_set_mode(il, ctx);
--}
--
- int
- il_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- {
-@@ -4574,8 +4557,9 @@ il_mac_add_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 
- 	vif_priv->ctx = &il->ctx;
- 	il->ctx.vif = vif;
-+	il->iw_mode = vif->type;
- 
--	err = il_setup_interface(il, &il->ctx);
-+	err = il_set_mode(il, &il->ctx);
- 	if (err) {
- 		il->ctx.vif = NULL;
- 		il->iw_mode = NL80211_IFTYPE_STATION;
-@@ -4978,7 +4962,7 @@ il_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	il_teardown_interface(il, vif, true);
- 	vif->type = newtype;
- 	vif->p2p = false;
--	err = il_setup_interface(il, ctx);
-+	err = il_set_mode(il, ctx);
- 	WARN_ON(err);
- 	/*
- 	 * We've switched internally, but submitting to the
--- 
-1.7.1
+[...]
 
+>> +	not_copied = copy_to_user(user_buf, buf, len);
+>> +	if (not_copied != 0) {
+>> +		ret_cnt = -EFAULT;
+>> +		goto out;
+>> +	}
+>> +
+>> +	*ppos = *ppos + len;
+> 
+> Why not to use simple_read_from_buffer()?, looks like it can also
+> takes care of len == 0 case in the following check.
+> 
+> if (pos >= available || !count)
+>         return 0;
+> 
+> when available (len) is 0, pos = available with
+> ath6kl_fwlog_block_read().
+
+I actually used simple_read_from_buffer() first, but the problem is that
+it assumes that there's just one buffer from which the data is copied.
+But in this case there can be multiple buffers from which I copy data.
+
+Ok, that was a bit confusing, let's try to explain a bit differently :)
+
+If 'ppos > 0' (for example during the second function call)
+simple_read_from_buffer() will try to copy from 'user_buf + ppos' but I
+would want to copy from 'user_buf'.
+
+Kalle
