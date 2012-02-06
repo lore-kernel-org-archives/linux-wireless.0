@@ -1,120 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:27539 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756865Ab2BCQc6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 11:32:58 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v2 10/25] iwlegacy: get rid of ctxid
-Date: Fri,  3 Feb 2012 17:31:46 +0100
-Message-Id: <1328286721-11309-11-git-send-email-sgruszka@redhat.com> (sfid-20120203_173314_968690_01E51EC5)
-In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
-References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:34898 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754545Ab2BFKoT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Feb 2012 05:44:19 -0500
+Received: by mail-wi0-f174.google.com with SMTP id s10so4057049wic.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2012 02:44:18 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 3/4] wl12xx: enter forced-psm on fw change
+Date: Mon,  6 Feb 2012 12:47:56 +0200
+Message-Id: <1328525277-25334-4-git-send-email-eliad@wizery.com> (sfid-20120206_114423_469841_BBA7933E)
+In-Reply-To: <1328525277-25334-1-git-send-email-eliad@wizery.com>
+References: <1328525277-25334-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/3945-mac.c |    2 --
- drivers/net/wireless/iwlegacy/4965-mac.c |    2 --
- drivers/net/wireless/iwlegacy/common.c   |    6 ------
- drivers/net/wireless/iwlegacy/common.h   |    4 +---
- drivers/net/wireless/iwlegacy/debug.c    |    1 -
- 5 files changed, 1 insertions(+), 14 deletions(-)
+Enter forced psm when changing fw, in order to make the
+sta a bit more disconnection-persistent.
+(DPM doesn't know about the incoming recovery, so it
+won't enter psm by itself)
 
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index 15dcafb..52cac0c 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -3617,8 +3617,6 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index a3c464f..eeb80f5 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2127,6 +2127,19 @@ static bool wl12xx_need_fw_change(struct wl1271 *wl,
+ 	return false;
+ }
  
- 	il->cmd_queue = IL39_CMD_QUEUE_NUM;
++/*
++ * Enter "forced psm". Make sure the sta is in psm against the ap,
++ * to make the fw switch a bit more disconnection-persistent.
++ */
++static void wl12xx_force_active_psm(struct wl1271 *wl)
++{
++	struct wl12xx_vif *wlvif;
++
++	wl12xx_for_each_wlvif_sta(wl, wlvif) {
++		wl1271_ps_set_mode(wl, wlvif, STATION_POWER_SAVE_MODE);
++	}
++}
++
+ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 				   struct ieee80211_vif *vif)
+ {
+@@ -2178,6 +2191,7 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
+ 	}
  
--	il->ctx.ctxid = 0;
--
- 	il->ctx.interface_modes =
- 	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
- 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 33725e1..3209970 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -6132,8 +6132,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	il = hw->priv;
- 	/* At this point both hw and il are allocated. */
- 
--	il->ctx.ctxid = 0;
--
- 	il->ctx.always_active = true;
- 	il->ctx.is_active = true;
- 	il->ctx.ac_to_fifo = il4965_bss_ac_to_fifo;
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index 19ed867..7c7ea77 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -1951,7 +1951,6 @@ il_prep_station(struct il_priv *il, struct il_rxon_context *ctx,
- 	station->sta.mode = 0;
- 	station->sta.sta.sta_id = sta_id;
- 	station->sta.station_flags = ctx->station_flags;
--	station->ctxid = ctx->ctxid;
- 
- 	if (sta) {
- 		struct il_station_priv_common *sta_priv;
-@@ -2191,9 +2190,6 @@ il_clear_ucode_stations(struct il_priv *il, struct il_rxon_context *ctx)
- 
- 	spin_lock_irqsave(&il->sta_lock, flags_spin);
- 	for (i = 0; i < il->hw_params.max_stations; i++) {
--		if (ctx && ctx->ctxid != il->stations[i].ctxid)
--			continue;
--
- 		if (il->stations[i].used & IL_STA_UCODE_ACTIVE) {
- 			D_INFO("Clearing ucode active for station %d\n", i);
- 			il->stations[i].used &= ~IL_STA_UCODE_ACTIVE;
-@@ -2234,8 +2230,6 @@ il_restore_stations(struct il_priv *il, struct il_rxon_context *ctx)
- 	D_ASSOC("Restoring all known stations ... start.\n");
- 	spin_lock_irqsave(&il->sta_lock, flags_spin);
- 	for (i = 0; i < il->hw_params.max_stations; i++) {
--		if (ctx->ctxid != il->stations[i].ctxid)
--			continue;
- 		if ((il->stations[i].used & IL_STA_DRIVER_ACTIVE) &&
- 		    !(il->stations[i].used & IL_STA_UCODE_ACTIVE)) {
- 			D_ASSOC("Restoring sta %pM\n",
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index 8eac571..8df2286 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -735,7 +735,7 @@ struct il_qos_info {
- struct il_station_entry {
- 	struct il_addsta_cmd sta;
- 	struct il_tid_data tid[MAX_TID_COUNT];
--	u8 used, ctxid;
-+	u8 used;
- 	struct il_hw_key keyinfo;
- 	struct il_link_quality_cmd *lq;
- };
-@@ -1168,8 +1168,6 @@ struct il_rxon_context {
- 
- 	bool ht_need_multiple_chains;
- 
--	int ctxid;
--
- 	u32 interface_modes, exclusive_interface_modes;
- 
- 	struct il_qos_info qos_data;
-diff --git a/drivers/net/wireless/iwlegacy/debug.c b/drivers/net/wireless/iwlegacy/debug.c
-index 6e3841b..f3cb45e 100644
---- a/drivers/net/wireless/iwlegacy/debug.c
-+++ b/drivers/net/wireless/iwlegacy/debug.c
-@@ -649,7 +649,6 @@ il_dbgfs_qos_read(struct file *file, char __user *user_buf, size_t count,
- 	char buf[256];
- 	const size_t bufsz = sizeof(buf);
- 
--	pos += scnprintf(buf + pos, bufsz - pos, "context %d:\n", ctx->ctxid);
- 	for (i = 0; i < AC_NUM; i++) {
- 		pos +=
- 		    scnprintf(buf + pos, bufsz - pos,
+ 	if (wl12xx_need_fw_change(wl, vif_count, true)) {
++		wl12xx_force_active_psm(wl);
+ 		mutex_unlock(&wl->mutex);
+ 		wl1271_recovery_work(&wl->recovery_work);
+ 		return 0;
+@@ -2370,6 +2384,7 @@ static void wl1271_op_remove_interface(struct ieee80211_hw *hw,
+ 	}
+ 	WARN_ON(iter != wlvif);
+ 	if (wl12xx_need_fw_change(wl, vif_count, false)) {
++		wl12xx_force_active_psm(wl);
+ 		wl12xx_queue_recovery_work(wl);
+ 		cancel_recovery = false;
+ 	}
 -- 
-1.7.1
+1.7.6.401.g6a319
 
