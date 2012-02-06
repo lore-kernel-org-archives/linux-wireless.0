@@ -1,37 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:8058 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754288Ab2BBIXT (ORCPT
+Received: from mx0.aculab.com ([213.249.233.131]:60866 "HELO mx0.aculab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752873Ab2BFL1E convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 03:23:19 -0500
-Message-ID: <4F2A47F0.8090500@qca.qualcomm.com> (sfid-20120202_092322_462530_040F31BD)
-Date: Thu, 2 Feb 2012 10:23:12 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Mon, 6 Feb 2012 06:27:04 -0500
+Received: from mx0.aculab.com ([127.0.0.1])
+ by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
+ id 26350-06 for <linux-wireless@vger.kernel.org>;
+ Mon,  6 Feb 2012 11:27:01 +0000 (GMT)
 MIME-Version: 1.0
-To: Chilam Ng <chilamng@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: initialize the 'nominal_phy' field in the 'wmi_create_pstream_cmd'
- struct for create_qos command
-References: <1328087017-6283-1-git-send-email-chilamng@qca.qualcomm.com>
-In-Reply-To: <1328087017-6283-1-git-send-email-chilamng@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: RE: [PATCH 1/1] wireless: move ifs' in _rtl92c_store_pwrIndex_diffrate_offset into elseif statements
+Date: Mon, 6 Feb 2012 11:26:37 -0000
+Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B6E58@saturn3.aculab.com> (sfid-20120206_122726_446926_9C555D05)
+In-Reply-To: <4F2EA8D8.4080907@lwfinger.net>
+From: "David Laight" <David.Laight@ACULAB.COM>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>,
+	"Jan Ceuleers" <jan.ceuleers@computer.org>
+Cc: "Devendra.Naga" <devendra.aaru@gmail.com>,
+	<chaoming_li@realsil.com.cn>, <linville@tuxdriver.com>,
+	<paul.gortmaker@windriver.com>, <joe@perches.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/01/2012 11:03 AM, Chilam Ng wrote:
-> The nominal_phy field is uninitialized. Initialize it to min_phy_rate for create_qos
-> 
-> Signed-off-by: Chilam Ng <chilamng@qca.qualcomm.com>
+> Yes, it is correct. It might be clearer if it were written as 
+> a switch statement, but that would be a lot more intrusive.
+> Besides, have you ever looked at the way gcc compiles a switch?
 
-Thanks, applied with a small change:
+How gcc compiles a switch statement depends (amongst other
+things) on whether the labels form a 'dense set' or not.
+If they are dense it will usually generate a jump table.
+If they are not dense it will compare against the 'middle'
+entry first and generate a tree of conditionals.
+An 'else if' chain is a linear search.
 
-> +	pstream.nominal_phy = ((le32_to_cpu(pstream.min_phy_rate) / 1000) / 1000);
+If the performance of the code matters in can be worth
+an explicit test for the common case outside the switch.
+Alternatively an 'if else' chain with every conditional
+marked 'unlikely' should generate exactly one mispredicted
+branch (if you can force static branch prediction).
 
-Checkpatch complained that this line was too long so I simplified the
-equation:
+There are further constraints that apply to some cpus.
 
-pstream.nominal_phy = le32_to_cpu(pstream.min_phy_rate) / 1000000;
+Mostly it isn't worth worrying about - although a lot of
+code can be significantly sped up by avoiding/containing
+register spills and mis-predicted branches.
 
-Please holler if I did the math wrong :)
+The code is question seemed to be checking bits, not
+an ordinal - so changing to a case might be problematic.
+(Could more than one bit bet set????)
 
-Kalle
+	David
+
+
