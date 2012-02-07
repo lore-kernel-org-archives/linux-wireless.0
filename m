@@ -1,81 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:38721 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752998Ab2BUWJQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Feb 2012 17:09:16 -0500
-From: "Allan, Bruce W" <bruce.w.allan@intel.com>
-To: Joe Perches <joe@perches.com>, David Miller <davem@davemloft.net>,
-	Andy Whitcroft <apw@shadowen.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-CC: "andrei.emeltchenko.news@gmail.com"
-	<andrei.emeltchenko.news@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] checkpatch: Add some --strict coding style checks
-Date: Tue, 21 Feb 2012 22:09:09 +0000
-Message-ID: <804857E1F29AAC47BF68C404FC60A18429B3EE@ORSMSX102.amr.corp.intel.com> (sfid-20120221_230920_780958_BE128270)
-References: <20120221151435.GA19354@tuxdriver.com>
-	 <20120221.144417.1445117001833888214.davem@davemloft.net>
-	 <CAMXE1-qB8_5oGey2=Ypa5BitZnye3YqdM=yB8oKCGLvoZu_8HQ@mail.gmail.com>
-	 <20120221.154053.2103818562080068513.davem@davemloft.net>
- <1329857959.5143.11.camel@joe2Laptop>
-In-Reply-To: <1329857959.5143.11.camel@joe2Laptop>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:60683 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756005Ab2BGMvY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Feb 2012 07:51:24 -0500
+Received: by vbjk17 with SMTP id k17so4572126vbj.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 04:51:23 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1328568313-26267-4-git-send-email-gwingerde@gmail.com>
+References: <1328568313-26267-1-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-2-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-3-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-4-git-send-email-gwingerde@gmail.com>
+Date: Tue, 7 Feb 2012 13:51:23 +0100
+Message-ID: <CAOZOX0Xd1N-UJLwKLbu0NDc1MWs2AREeOZf3XajGXQo7pEV+Yw@mail.gmail.com> (sfid-20120207_135127_181349_7D3CF176)
+Subject: Re: [PATCH 3/8] rt2x00: Update comment on freq_offset field in struct rt2x00_dev.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1rZXJuZWwtb3duZXJA
-dmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgta2VybmVsLQ0KPiBvd25lckB2Z2VyLmtlcm5l
-bC5vcmddIE9uIEJlaGFsZiBPZiBKb2UgUGVyY2hlcw0KPiBTZW50OiBUdWVzZGF5LCBGZWJydWFy
-eSAyMSwgMjAxMiAxMjo1OSBQTQ0KPiBUbzogRGF2aWQgTWlsbGVyOyBBbmR5IFdoaXRjcm9mdDsg
-QW5kcmV3IE1vcnRvbg0KPiBDYzogYW5kcmVpLmVtZWx0Y2hlbmtvLm5ld3NAZ21haWwuY29tOyBs
-aW52aWxsZUB0dXhkcml2ZXIuY29tOyBsaW51eC0NCj4gd2lyZWxlc3NAdmdlci5rZXJuZWwub3Jn
-OyBuZXRkZXZAdmdlci5rZXJuZWwub3JnOyBsaW51eC0NCj4ga2VybmVsQHZnZXIua2VybmVsLm9y
-Zw0KPiBTdWJqZWN0OiBbUEFUQ0hdIGNoZWNrcGF0Y2g6IEFkZCBzb21lIC0tc3RyaWN0IGNvZGlu
-ZyBzdHlsZSBjaGVja3MNCj4gDQo+IEFyZ3VtZW50IGFsaWdubWVudCBhY3Jvc3MgbXVsdGlwbGUg
-bGluZXMgc2hvdWxkDQo+IG1hdGNoIHRoZSBvcGVuIHBhcmVudGhlc2lzLg0KPiANCj4gTG9naWNh
-bCBjb250aW51YXRpb25zIHNob3VsZCBiZSBhdCB0aGUgZW5kIG9mDQo+IHRoZSBwcmV2aW91cyBs
-aW5lLCBub3QgdGhlIHN0YXJ0IG9mIGEgbmV3IGxpbmUuDQo+IA0KPiBUaGVzZSBhcmUgbm90IHJl
-cXVpcmVkIGJ5IENvZGluZ1N0eWxlIHNvIG1ha2UgdGhlDQo+IHRlc3RzIGFjdGl2ZSBvbmx5IHdo
-ZW4gdXNpbmcgLS1zdHJpY3QuDQo+IA0KPiBUZXN0ZWQgd2l0aDoNCj4gaW50IGZvbyh2b2lkKQ0K
-PiB7DQo+IAlpZiAoZm9vICYmDQo+IAkgICAgYmFyKCkpDQo+IAkJYmF6KCk7DQo+IA0KPiAJaWYg
-KGZvbyAmJg0KPiAJICAgICBiYXIoKSkNCj4gCQliYXooKTsNCj4gDQo+IAlmb29fc29tZV9sb25n
-X2Z1bmN0aW9uKGJhciwNCj4gCQkJICAgICAgIGJheik7DQo+IA0KPiAJZm9vX3NvbWVfbG9uZ19m
-dW5jdGlvbihiYXIsDQo+IAkJYmF6KTsNCj4gDQo+IAlyZXR1cm4gMDsNCj4gfQ0KPiANCj4gU2ln
-bmVkLW9mZi1ieTogSm9lIFBlcmNoZXMgPGpvZUBwZXJjaGVzLmNvbT4NCj4gLS0tDQo+ICBzY3Jp
-cHRzL2NoZWNrcGF0Y2gucGwgfCAgIDIyICsrKysrKysrKysrKysrKysrKysrKysNCj4gIDEgZmls
-ZXMgY2hhbmdlZCwgMjIgaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkNCj4gDQo+IGRpZmYg
-LS1naXQgYS9zY3JpcHRzL2NoZWNrcGF0Y2gucGwgYi9zY3JpcHRzL2NoZWNrcGF0Y2gucGwNCj4g
-aW5kZXggYTNiOTc4Mi4uNjI5OTQ0ZSAxMDA3NTUNCj4gLS0tIGEvc2NyaXB0cy9jaGVja3BhdGNo
-LnBsDQo+ICsrKyBiL3NjcmlwdHMvY2hlY2twYXRjaC5wbA0KPiBAQCAtMTc4Myw2ICsxNzgzLDI4
-IEBAIHN1YiBwcm9jZXNzIHsNCj4gIAkJCSAgICAgInBsZWFzZSwgbm8gc3BhY2UgYmVmb3JlIHRh
-YnNcbiIgLiAkaGVyZXZldCk7DQo+ICAJCX0NCj4gDQo+ICsjIGNoZWNrIGZvciAmJiBvciB8fCBh
-dCB0aGUgc3RhcnQgb2YgYSBsaW5lDQo+ICsJCWlmICgkcmF3bGluZSA9fiAvXlwrXHMqKCYmfFx8
-XHwpLykgew0KPiArCQkJQ0hLKCJMT0dJQ0FMX0NPTlRJTlVBVElPTlMiLA0KPiArCQkJICAgICJM
-b2dpY2FsIGNvbnRpbnVhdGlvbnMgc2hvdWxkIGJlIG9uIHRoZSBwcmV2aW91cw0KPiBsaW5lXG4i
-IC4gJGhlcmVwcmV2KTsNCj4gKwkJfQ0KPiArDQo+ICsjIGNoZWNrIG11bHRpLWxpbmUgc3RhdGVt
-ZW50IGluZGVudGF0aW9uIG1hdGNoZXMgcHJldmlvdXMgbGluZQ0KPiArCQlpZiAoJHByZXZsaW5l
-ID1+IC9eXCsoXHQqKShpZg0KPiBcKHwkSWRlbnRcKCkuKihcJlwmfFx8XHx8LClccyokLyAmJiAk
-cmF3bGluZSA9fiAvXlwrKFsgXHRdKikvKSB7DQo+ICsJCQkkcHJldmxpbmUgPX4gL15cKyhcdCop
-KGlmDQo+IFwofCRJZGVudFwoKS4qKFwmXCZ8XHxcfHwsKVxzKiQvOw0KPiArCQkJbXkgJG9sZGlu
-ZGVudCA9ICQxOw0KPiArCQkJbXkgJGlmX29yX2Z1bmMgPSAkMjsNCj4gKwkJCSRyYXdsaW5lID1+
-IC9eXCsoWyBcdF0qKS87DQo+ICsJCQlteSAkbmV3aW5kZW50ID0gJDE7DQo+ICsJCQlteSAkZ29v
-ZGluZGVudCA9ICRvbGRpbmRlbnQgLg0KPiArCQkJCQkgIlx0IiB4IChsZW5ndGgoJGlmX29yX2Z1
-bmMpIC8gOCkgLg0KPiArCQkJCQkgIiAiICB4IChsZW5ndGgoJGlmX29yX2Z1bmMpICUgOCk7DQo+
-ICsJCQlpZiAoJG5ld2luZGVudCBuZSAiJGdvb2RpbmRlbnQiKSB7DQo+ICsJCQkJQ0hLKCJQQVJF
-TlRIRVNJU19BTElHTk1FTlQiLA0KPiArCQkJCSAgICAiQWxpZ25tZW50IHNob3VsZCBtYXRjaCBv
-cGVuDQo+IHBhcmVudGhlc2lzXG4iIC4gJGhlcmVwcmV2KTsNCj4gKwkJCX0NCj4gKwkJfQ0KPiAr
-DQo+ICAjIGNoZWNrIGZvciBzcGFjZXMgYXQgdGhlIGJlZ2lubmluZyBvZiBhIGxpbmUuDQo+ICAj
-IEV4Y2VwdGlvbnM6DQo+ICAjICAxKSB3aXRoaW4gY29tbWVudHMNCg0KVGhpcyBhcHBlYXJzIHRv
-IGZhbHNlbHkgY29tcGxhaW4gYWJvdXQgcGFyZW50aGVzaXMgYWxpZ25tZW50IGluIGNvbmRpdGlv
-bmFsIHN0YXRlbWVudHMgd2l0aCBtdWx0aXBsZSBvcGVuaW5nIHBhcmVudGhlc2VzLiAgRm9yIGV4
-YW1wbGUsIHRoZXNlIHdpbGwgcmVwb3J0IGEgY2hlY2sgY29uZGl0aW9uOg0KDQoJaWYgKHRlc3Rf
-YW5kX3NldF9iaXQobnIsDQoJCQkJICAgYWRkcikpDQoJCWJheigpOw0KDQoJaWYgKCEoZnVuY19h
-KHgpICYmDQoJCWZ1bmNfYih5KSkpDQoJCWJheigpOw0KDQpBc3N1bWluZyBteSBzdHVwaWQgbWFp
-bGVyIHdpbGwgc2NyZXcgdXAgdGhlIGluZGVudGF0aW9uIGFib3ZlLCB0aGUgJ2EnIGluIGFkZHIg
-aW4gdGhlIGZpcnN0IGV4YW1wbGUgaXMgbWVhbnQgdG8gYmUgaW1tZWRpYXRlbHkgYmVsb3cgdGhl
-ICduJyBpbiBuciwgYW5kIHRoZSB0d28gJ2YncyBpbiBmdW5jXyogYXJlIG1lYW50IHRvIGJlIHZl
-cnRpY2FsbHkgbGluZWQgdXAgaW4gdGhlIHNlY29uZCBleGFtcGxlLg0KDQoNCg==
+On Mon, Feb 6, 2012 at 11:45 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> The comment states that the field is only used for rt61pci and rt73usb.
+> However, it is now used by rt2800pci and rt2800usb as well, so the
+> comment is not correct anymore.
+>
+> Update the comment to not state any low-level drivers anymore.
+>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+> index 5bd2f22..ed2ae6e 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> @@ -892,7 +892,7 @@ struct rt2x00_dev {
+>        u8 rssi_offset;
+>
+>        /*
+> -        * Frequency offset (for rt61pci & rt73usb).
+> +        * Frequency offset.
+>         */
+>        u8 freq_offset;
+>
+> --
+> 1.7.9
+>
