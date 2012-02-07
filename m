@@ -1,63 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24856 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757390Ab2BYBwR (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:65355 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756586Ab2BGXGU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 20:52:17 -0500
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <hauke@hauke-m.de>, <nbd@nbd.name>, <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>
-Subject: [PATCH 2/5] compat: add some initial RHEL support
-Date: Fri, 24 Feb 2012 17:52:03 -0800
-Message-ID: <1330134726-1634-3-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120225_025223_363951_398844EA)
-In-Reply-To: <1330134726-1634-1-git-send-email-rodrigue@qca.qualcomm.com>
-References: <1330134726-1634-1-git-send-email-rodrigue@qca.qualcomm.com>
+	Tue, 7 Feb 2012 18:06:20 -0500
+Received: by ghrr11 with SMTP id r11so3491813ghr.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 15:06:19 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <201202072247.08793.david.goodenough@btconnect.com>
+References: <87pqgkxn25.fsf@nemi.mork.no> <20120207195415.GG5560@tuxdriver.com>
+ <CAB=NE6VVcQgum4mQ5eooS2yXo-NNXHvujsUwpbEwNdQQSreaBA@mail.gmail.com> <201202072247.08793.david.goodenough@btconnect.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Tue, 7 Feb 2012 15:05:59 -0800
+Message-ID: <CAB=NE6X=WNYjmiZp76hqu8=1r4OHK4n_9GzUM3aDTJ4euTm56w@mail.gmail.com> (sfid-20120208_000623_943128_2FD4A4F0)
+Subject: Re: [wireless-regdb] wireless-regdb: Update regulatory rules for
+ Norway (NO)
+To: David Goodenough <david.goodenough@btconnect.com>,
+	wireless-regdb@lists.infradead.org,
+	Michael Green <green@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <mcgrof@frijolero.org>
+On Tue, Feb 7, 2012 at 2:47 PM, David Goodenough
+<david.goodenough@btconnect.com> wrote:
+> On Tuesday 07 Feb 2012, Luis R. Rodriguez wrote:
+>> On Tue, Feb 7, 2012 at 11:54 AM, John W. Linville
+>>
+>> <linville@tuxdriver.com> wrote:
+>> > Well, sorry for the delay...  I will take this silence as "no
+>> > objection". :-)
+>>
+>> Sorry, I did get a reply by Michael Green on 11/28/2011 but I never
+>> followed up with the list. Apologies as well with the delay, but here
+>> is our review.
+>>
+>> The European Union has some harmonized European radio conformance spec
+>> and QCA's interpretation and position is that that spec overrides
+>> deviations for end products for specific countries like the one being
+>> recommended for Norway. This also means that QCA does not deviate for
+>> EU countries on specs, even if countries have their own quirks, for
+>> any country in the EU.
+> Except that Norway is not in the EU.
 
-This adds a series of CONFIG_COMPAT_${RHEL_MAJOR}_${i} tags
-for each known RHEL version that we supercede. I cannot
-verify if this is correct but this is my translation of
-this to script:
+Technically that is true, but Norway follows EEA (European economic
+area) agreements and uses CE Marking and ETSI spec for conformance,
+same as all the other "EU" countries.
 
-RHEL_MAJOR := $(shell grep ^RHEL_MAJOR $(KLIB_BUILD)/Makefile | sed -n 's/.*= *\(.*\)/\1/p')
-ifneq ($(RHEL_MAJOR),)
-RHEL_MINOR := $(shell grep ^RHEL_MINOR $(KLIB_BUILD)/Makefile | sed -n 's/.*= *\(.*\)/\1/p')
-COMPAT_RHEL_VERSIONS := $(shell I=$(RHEL_MINOR); while [ "$$I" -ge 0 ]; do echo $$I; I=$$(($$I - 1)); done)
-$(foreach ver,$(COMPAT_RHEL_VERSIONS),$(eval CONFIG_COMPAT_RHEL_$(RHEL_MAJOR)_$(ver)=y))
+The full list that follow harmonized ETSI conformance standards:
 
-Cc: John W. Linville <linville@tuxdriver.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
----
- scripts/gen-compat-config.sh |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+Austria, Belgium, Bulgaria, Cyprus, Czech Rep, Denmark, Estonia, Finland,
+France, Germany, Greece, Hungary, Iceland, Ireland, Italy, Liechtenstein,
+Latvia, Lithuania, Luxembourg, Malta, Netherlands, Norway, Poland, Portugal,
+Romania, Slovakia, Slovenia, Spain, Sweden, Switzerland, U.K.
 
-diff --git a/scripts/gen-compat-config.sh b/scripts/gen-compat-config.sh
-index 82b439c..656e8d3 100755
---- a/scripts/gen-compat-config.sh
-+++ b/scripts/gen-compat-config.sh
-@@ -41,6 +41,16 @@ for i in $(seq ${KERNEL_SUBLEVEL} ${COMPAT_LATEST_VERSION}); do
- 	echo "CONFIG_COMPAT_KERNEL_3_${i}=y"
- done
- 
-+# The purpose of these seem to be the inverse of the above other varibales.
-+# The RHEL checks seem to annotate the existance of RHEL minor versions.
-+RHEL_MAJOR=$(grep ^RHEL_MAJOR ${KLIB_BUILD}/Makefile | sed -n 's/.*= *\(.*\)/\1/p')
-+if [[ ! -z ${RHEL_MAJOR} ]]; then
-+	RHEL_MINOR=$(grep ^RHEL_MINOR $(KLIB_BUILD)/Makefile | sed -n 's/.*= *\(.*\)/\1/p')
-+	for i in $(seq 0 ${RHEL_MINOR}); do
-+		echo "CONFIG_COMPAT_${RHEL_MAJOR}_${i}=y"
-+	done
-+fi
-+
- if [[ ${CONFIG_COMPAT_KERNEL_2_6_33} -eq "y" ]]; then
- 	echo "CONFIG_COMPAT_FIRMWARE_CLASS=m"
- fi
--- 
-1.7.4.15.g7811d
+31 countries
 
+  Luis
