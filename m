@@ -1,307 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:25428 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751382Ab2BMGUx (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:51877 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756350Ab2BGMuR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 01:20:53 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Tue, 7 Feb 2012 07:50:17 -0500
+Received: by vbjk17 with SMTP id k17so4571551vbj.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 04:50:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20280.43962.403799.188541@gargle.gargle.HOWL> (sfid-20120213_072057_133562_0A749150)
-Date: Mon, 13 Feb 2012 11:50:42 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 3/7] ath9k: Merge wiphy and misc debugfs files
+In-Reply-To: <1328568313-26267-2-git-send-email-gwingerde@gmail.com>
+References: <1328568313-26267-1-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-2-git-send-email-gwingerde@gmail.com>
+Date: Tue, 7 Feb 2012 13:50:16 +0100
+Message-ID: <CAOZOX0WW8Mw8SKvG0itMUHLdJktaMimgYVTMkc=DJmPUHrb40w@mail.gmail.com> (sfid-20120207_135022_941534_4C6E28B8)
+Subject: Re: [PATCH 1/8] rt2x00: Introduce concept of driver data in struct rt2x00_dev.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch merges the 'wiphy' and 'misc' debugfs files
-and consolidates the information.
+On Mon, Feb 6, 2012 at 11:45 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> We are getting more and more fields in struct rt2x00_dev that are
+> specific to one or two of the low-level drivers. Instead of putting
+> these fields inside the main structure and thus clobbering all low-level
+> drivers with these fields, introduce the concept of driver data inside
+> struct rt2x00_dev, whose size is indicated by the low-level driver and
+> which can be populated by the low-level driver.
+>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Information about the current channel and other HT parameters
-can be obtained from both mac80211 and iw. Remove such
-redundant data.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-The reset statistics have been removed, they will be re-added in
-a subsequent patch (in a new debugfs file).
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/debug.c |  224 +++++++++-----------------------
- 1 files changed, 64 insertions(+), 160 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index dc45cf9..b2c6069 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -451,109 +451,6 @@ static const struct file_operations fops_interrupt = {
- 	.llseek = default_llseek,
- };
- 
--static const char *channel_type_str(enum nl80211_channel_type t)
--{
--	switch (t) {
--	case NL80211_CHAN_NO_HT:
--		return "no ht";
--	case NL80211_CHAN_HT20:
--		return "ht20";
--	case NL80211_CHAN_HT40MINUS:
--		return "ht40-";
--	case NL80211_CHAN_HT40PLUS:
--		return "ht40+";
--	default:
--		return "???";
--	}
--}
--
--static ssize_t read_file_wiphy(struct file *file, char __user *user_buf,
--			       size_t count, loff_t *ppos)
--{
--	struct ath_softc *sc = file->private_data;
--	struct ieee80211_channel *chan = sc->hw->conf.channel;
--	struct ieee80211_conf *conf = &(sc->hw->conf);
--	char buf[512];
--	unsigned int len = 0;
--	u8 addr[ETH_ALEN];
--	u32 tmp;
--
--	len += snprintf(buf + len, sizeof(buf) - len,
--			"%s (chan=%d  center-freq: %d MHz  channel-type: %d (%s))\n",
--			wiphy_name(sc->hw->wiphy),
--			ieee80211_frequency_to_channel(chan->center_freq),
--			chan->center_freq,
--			conf->channel_type,
--			channel_type_str(conf->channel_type));
--
--	ath9k_ps_wakeup(sc);
--	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_STA_ID0), addr);
--	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_STA_ID1) & 0xffff, addr + 4);
--	len += snprintf(buf + len, sizeof(buf) - len,
--			"addr: %pM\n", addr);
--	put_unaligned_le32(REG_READ_D(sc->sc_ah, AR_BSSMSKL), addr);
--	put_unaligned_le16(REG_READ_D(sc->sc_ah, AR_BSSMSKU) & 0xffff, addr + 4);
--	len += snprintf(buf + len, sizeof(buf) - len,
--			"addrmask: %pM\n", addr);
--	tmp = ath9k_hw_getrxfilter(sc->sc_ah);
--	ath9k_ps_restore(sc);
--	len += snprintf(buf + len, sizeof(buf) - len,
--			"rfilt: 0x%x", tmp);
--	if (tmp & ATH9K_RX_FILTER_UCAST)
--		len += snprintf(buf + len, sizeof(buf) - len, " UCAST");
--	if (tmp & ATH9K_RX_FILTER_MCAST)
--		len += snprintf(buf + len, sizeof(buf) - len, " MCAST");
--	if (tmp & ATH9K_RX_FILTER_BCAST)
--		len += snprintf(buf + len, sizeof(buf) - len, " BCAST");
--	if (tmp & ATH9K_RX_FILTER_CONTROL)
--		len += snprintf(buf + len, sizeof(buf) - len, " CONTROL");
--	if (tmp & ATH9K_RX_FILTER_BEACON)
--		len += snprintf(buf + len, sizeof(buf) - len, " BEACON");
--	if (tmp & ATH9K_RX_FILTER_PROM)
--		len += snprintf(buf + len, sizeof(buf) - len, " PROM");
--	if (tmp & ATH9K_RX_FILTER_PROBEREQ)
--		len += snprintf(buf + len, sizeof(buf) - len, " PROBEREQ");
--	if (tmp & ATH9K_RX_FILTER_PHYERR)
--		len += snprintf(buf + len, sizeof(buf) - len, " PHYERR");
--	if (tmp & ATH9K_RX_FILTER_MYBEACON)
--		len += snprintf(buf + len, sizeof(buf) - len, " MYBEACON");
--	if (tmp & ATH9K_RX_FILTER_COMP_BAR)
--		len += snprintf(buf + len, sizeof(buf) - len, " COMP_BAR");
--	if (tmp & ATH9K_RX_FILTER_PSPOLL)
--		len += snprintf(buf + len, sizeof(buf) - len, " PSPOLL");
--	if (tmp & ATH9K_RX_FILTER_PHYRADAR)
--		len += snprintf(buf + len, sizeof(buf) - len, " PHYRADAR");
--	if (tmp & ATH9K_RX_FILTER_MCAST_BCAST_ALL)
--		len += snprintf(buf + len, sizeof(buf) - len, " MCAST_BCAST_ALL");
--
--	len += snprintf(buf + len, sizeof(buf) - len,
--		       "\n\nReset causes:\n"
--		       "  baseband hang: %d\n"
--		       "  baseband watchdog: %d\n"
--		       "  fatal hardware error interrupt: %d\n"
--		       "  tx hardware error: %d\n"
--		       "  tx path hang: %d\n"
--		       "  pll rx hang: %d\n",
--		       sc->debug.stats.reset[RESET_TYPE_BB_HANG],
--		       sc->debug.stats.reset[RESET_TYPE_BB_WATCHDOG],
--		       sc->debug.stats.reset[RESET_TYPE_FATAL_INT],
--		       sc->debug.stats.reset[RESET_TYPE_TX_ERROR],
--		       sc->debug.stats.reset[RESET_TYPE_TX_HANG],
--		       sc->debug.stats.reset[RESET_TYPE_PLL_HANG]);
--
--	if (len > sizeof(buf))
--		len = sizeof(buf);
--
--	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
--}
--
--static const struct file_operations fops_wiphy = {
--	.read = read_file_wiphy,
--	.open = ath9k_debugfs_open,
--	.owner = THIS_MODULE,
--	.llseek = default_llseek,
--};
--
- #define PR_QNUM(_n) sc->tx.txq_map[_n]->axq_qnum
- #define PR(str, elem)							\
- 	do {								\
-@@ -763,84 +660,93 @@ static ssize_t read_file_misc(struct file *file, char __user *user_buf,
- {
- 	struct ath_softc *sc = file->private_data;
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	struct ath_hw *ah = sc->sc_ah;
- 	struct ieee80211_hw *hw = sc->hw;
--	char *buf;
--	unsigned int len = 0, size = 8000;
-+	struct ath9k_vif_iter_data iter_data;
-+	char buf[512];
-+	unsigned int len = 0;
- 	ssize_t retval = 0;
- 	unsigned int reg;
--	struct ath9k_vif_iter_data iter_data;
-+	u32 rxfilter;
- 
--	ath9k_calculate_iter_data(hw, NULL, &iter_data);
--	
--	buf = kzalloc(size, GFP_KERNEL);
--	if (buf == NULL)
--		return -ENOMEM;
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+			"BSSID: %pM\n", common->curbssid);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+			"BSSID-MASK: %pM\n", common->bssidmask);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+			"OPMODE: %s\n", ath_opmode_to_string(sc->sc_ah->opmode));
- 
- 	ath9k_ps_wakeup(sc);
--	len += snprintf(buf + len, size - len,
--			"curbssid: %pM\n"
--			"OP-Mode: %s(%i)\n"
--			"Beacon-Timer-Register: 0x%x\n",
--			common->curbssid,
--			ath_opmode_to_string(sc->sc_ah->opmode),
--			(int)(sc->sc_ah->opmode),
--			REG_READ(ah, AR_BEACON_PERIOD));
--
--	reg = REG_READ(ah, AR_TIMER_MODE);
-+	rxfilter = ath9k_hw_getrxfilter(sc->sc_ah);
- 	ath9k_ps_restore(sc);
--	len += snprintf(buf + len, size - len, "Timer-Mode-Register: 0x%x (",
--			reg);
--	if (reg & AR_TBTT_TIMER_EN)
--		len += snprintf(buf + len, size - len, "TBTT ");
--	if (reg & AR_DBA_TIMER_EN)
--		len += snprintf(buf + len, size - len, "DBA ");
--	if (reg & AR_SWBA_TIMER_EN)
--		len += snprintf(buf + len, size - len, "SWBA ");
--	if (reg & AR_HCF_TIMER_EN)
--		len += snprintf(buf + len, size - len, "HCF ");
--	if (reg & AR_TIM_TIMER_EN)
--		len += snprintf(buf + len, size - len, "TIM ");
--	if (reg & AR_DTIM_TIMER_EN)
--		len += snprintf(buf + len, size - len, "DTIM ");
--	len += snprintf(buf + len, size - len, ")\n");
-+
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+			"RXFILTER: 0x%x", rxfilter);
-+
-+	if (rxfilter & ATH9K_RX_FILTER_UCAST)
-+		len += snprintf(buf + len, sizeof(buf) - len, " UCAST");
-+	if (rxfilter & ATH9K_RX_FILTER_MCAST)
-+		len += snprintf(buf + len, sizeof(buf) - len, " MCAST");
-+	if (rxfilter & ATH9K_RX_FILTER_BCAST)
-+		len += snprintf(buf + len, sizeof(buf) - len, " BCAST");
-+	if (rxfilter & ATH9K_RX_FILTER_CONTROL)
-+		len += snprintf(buf + len, sizeof(buf) - len, " CONTROL");
-+	if (rxfilter & ATH9K_RX_FILTER_BEACON)
-+		len += snprintf(buf + len, sizeof(buf) - len, " BEACON");
-+	if (rxfilter & ATH9K_RX_FILTER_PROM)
-+		len += snprintf(buf + len, sizeof(buf) - len, " PROM");
-+	if (rxfilter & ATH9K_RX_FILTER_PROBEREQ)
-+		len += snprintf(buf + len, sizeof(buf) - len, " PROBEREQ");
-+	if (rxfilter & ATH9K_RX_FILTER_PHYERR)
-+		len += snprintf(buf + len, sizeof(buf) - len, " PHYERR");
-+	if (rxfilter & ATH9K_RX_FILTER_MYBEACON)
-+		len += snprintf(buf + len, sizeof(buf) - len, " MYBEACON");
-+	if (rxfilter & ATH9K_RX_FILTER_COMP_BAR)
-+		len += snprintf(buf + len, sizeof(buf) - len, " COMP_BAR");
-+	if (rxfilter & ATH9K_RX_FILTER_PSPOLL)
-+		len += snprintf(buf + len, sizeof(buf) - len, " PSPOLL");
-+	if (rxfilter & ATH9K_RX_FILTER_PHYRADAR)
-+		len += snprintf(buf + len, sizeof(buf) - len, " PHYRADAR");
-+	if (rxfilter & ATH9K_RX_FILTER_MCAST_BCAST_ALL)
-+		len += snprintf(buf + len, sizeof(buf) - len, " MCAST_BCAST_ALL");
-+	if (rxfilter & ATH9K_RX_FILTER_CONTROL_WRAPPER)
-+		len += snprintf(buf + len, sizeof(buf) - len, " CONTROL_WRAPPER");
-+
-+	len += snprintf(buf + len, sizeof(buf) - len, "\n");
- 
- 	reg = sc->sc_ah->imask;
--	len += snprintf(buf + len, size - len, "imask: 0x%x (", reg);
-+
-+	len += snprintf(buf + len, sizeof(buf) - len, "INTERRUPT-MASK: 0x%x", reg);
-+
- 	if (reg & ATH9K_INT_SWBA)
--		len += snprintf(buf + len, size - len, "SWBA ");
-+		len += snprintf(buf + len, sizeof(buf) - len, " SWBA");
- 	if (reg & ATH9K_INT_BMISS)
--		len += snprintf(buf + len, size - len, "BMISS ");
-+		len += snprintf(buf + len, sizeof(buf) - len, " BMISS");
- 	if (reg & ATH9K_INT_CST)
--		len += snprintf(buf + len, size - len, "CST ");
-+		len += snprintf(buf + len, sizeof(buf) - len, " CST");
- 	if (reg & ATH9K_INT_RX)
--		len += snprintf(buf + len, size - len, "RX ");
-+		len += snprintf(buf + len, sizeof(buf) - len, " RX");
- 	if (reg & ATH9K_INT_RXHP)
--		len += snprintf(buf + len, size - len, "RXHP ");
-+		len += snprintf(buf + len, sizeof(buf) - len, " RXHP");
- 	if (reg & ATH9K_INT_RXLP)
--		len += snprintf(buf + len, size - len, "RXLP ");
-+		len += snprintf(buf + len, sizeof(buf) - len, " RXLP");
- 	if (reg & ATH9K_INT_BB_WATCHDOG)
--		len += snprintf(buf + len, size - len, "BB_WATCHDOG ");
--	/* there are other IRQs if one wanted to add them. */
--	len += snprintf(buf + len, size - len, ")\n");
-+		len += snprintf(buf + len, sizeof(buf) - len, " BB_WATCHDOG");
- 
--	len += snprintf(buf + len, size - len,
--			"VIF Counts: AP: %i STA: %i MESH: %i WDS: %i"
--			" ADHOC: %i OTHER: %i nvifs: %hi beacon-vifs: %hi\n",
-+	len += snprintf(buf + len, sizeof(buf) - len, "\n");
-+
-+	ath9k_calculate_iter_data(hw, NULL, &iter_data);
-+
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+			"VIF-COUNTS: AP: %i STA: %i MESH: %i WDS: %i"
-+			" ADHOC: %i OTHER: %i TOTAL: %hi BEACON-VIF: %hi\n",
- 			iter_data.naps, iter_data.nstations, iter_data.nmeshes,
- 			iter_data.nwds, iter_data.nadhocs, iter_data.nothers,
- 			sc->nvifs, sc->nbcnvifs);
- 
--	len += snprintf(buf + len, size - len,
--			"Calculated-BSSID-Mask: %pM\n",
--			iter_data.mask);
--
--	if (len > size)
--		len = size;
-+	if (len > sizeof(buf))
-+		len = sizeof(buf);
- 
- 	retval = simple_read_from_buffer(user_buf, count, ppos, buf, len);
--	kfree(buf);
--
- 	return retval;
- }
- 
-@@ -1637,8 +1543,6 @@ int ath9k_init_debug(struct ath_hw *ah)
- 			    &fops_dma);
- 	debugfs_create_file("interrupt", S_IRUSR, sc->debug.debugfs_phy, sc,
- 			    &fops_interrupt);
--	debugfs_create_file("wiphy", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
--			    sc, &fops_wiphy);
- 	debugfs_create_file("xmit", S_IRUSR, sc->debug.debugfs_phy, sc,
- 			    &fops_xmit);
- 	debugfs_create_file("stations", S_IRUSR, sc->debug.debugfs_phy, sc,
--- 
-1.7.9
-
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+> index b03b22c..b4260bfb6 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> @@ -647,6 +647,7 @@ struct rt2x00lib_ops {
+>  */
+>  struct rt2x00_ops {
+>        const char *name;
+> +       const unsigned int drv_data_size;
+>        const unsigned int max_sta_intf;
+>        const unsigned int max_ap_intf;
+>        const unsigned int eeprom_size;
+> @@ -742,6 +743,11 @@ struct rt2x00_dev {
+>        const struct rt2x00_ops *ops;
+>
+>        /*
+> +        * Driver data.
+> +        */
+> +       void *drv_data;
+> +
+> +       /*
+>         * IEEE80211 control structure.
+>         */
+>        struct ieee80211_hw *hw;
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> index c3e1aa7..bae5b01 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> @@ -1121,6 +1121,18 @@ int rt2x00lib_probe_dev(struct rt2x00_dev *rt2x00dev)
+>  {
+>        int retval = -ENOMEM;
+>
+> +       /*
+> +        * Allocate the driver data memory, if necessary.
+> +        */
+> +       if (rt2x00dev->ops->drv_data_size > 0) {
+> +               rt2x00dev->drv_data = kzalloc(rt2x00dev->ops->drv_data_size,
+> +                                             GFP_KERNEL);
+> +               if (!rt2x00dev->drv_data) {
+> +                       retval = -ENOMEM;
+> +                       goto exit;
+> +               }
+> +       }
+> +
+>        spin_lock_init(&rt2x00dev->irqmask_lock);
+>        mutex_init(&rt2x00dev->csr_mutex);
+>
+> @@ -1261,6 +1273,12 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+>         * Free queue structures.
+>         */
+>        rt2x00queue_free(rt2x00dev);
+> +
+> +       /*
+> +        * Free the driver data.
+> +        */
+> +       if (rt2x00dev->drv_data)
+> +               kfree(rt2x00dev->drv_data);
+>  }
+>  EXPORT_SYMBOL_GPL(rt2x00lib_remove_dev);
+>
+> --
+> 1.7.9
+>
