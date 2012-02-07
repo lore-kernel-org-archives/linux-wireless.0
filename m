@@ -1,63 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12557 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753218Ab2B1F2L (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Feb 2012 00:28:11 -0500
-Date: Tue, 28 Feb 2012 10:58:14 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: Re: [PATCH] ath6kl: Fix random system lockup
-Message-ID: <20120228052811.GC2892@vasanth-laptop> (sfid-20120228_062815_243846_CDADA282)
-References: <1328772432-21074-1-git-send-email-vthiagar@qca.qualcomm.com>
- <4F4B9085.6080603@qca.qualcomm.com>
+Received: from msr9.hinet.net ([168.95.4.109]:50612 "EHLO msr9.hinet.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752080Ab2BGF00 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Feb 2012 00:26:26 -0500
+Date: Tue, 7 Feb 2012 10:08:37 +0800
+From: Ali Bahar <ali@internetdog.org>
+To: dganic@bmail.ru
+Cc: wlanfae@realtek.com, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: drivers realtek rtl8191su [rtl8712 ]
+Message-ID: <20120207020837.GA29465@internetdog.org> (sfid-20120207_062629_961155_CD6ABA6D)
+Reply-To: ali@internetdog.org
+References: <web-16212948@mail-be01.sovam.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4F4B9085.6080603@qca.qualcomm.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <web-16212948@mail-be01.sovam.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 27, 2012 at 04:17:41PM +0200, Kalle Valo wrote:
-> On 02/09/2012 09:27 AM, Vasanthakumar Thiagarajan wrote:
-> > From: Raja Mani <rmani@qca.qualcomm.com>
-> > 
-> > The commit "ath6kl: Use a mutex_lock to avoid
-> > race in diabling and handling irq" introduces a
-> > state where ath6kl_sdio_irq_handler() would be waiting
-> > to claim the sdio function for receive indefinitely
-> > when things happen in the following order.
-> > 
-> > ath6kl_sdio_irq_handler()
-> > 	- aquires mtx_irq
-> > 	- sdio_release_host()
-> > 					ath6kl_sdio_irq_disable()
-> > 						- sdio_claim_host()
-> > 						- sleep on mtx_irq
-> > 	ath6kl_hif_intr_bh_handler()
-> > 		- (indefinitely) wait for the sdio
-> > 		  function to be released to exclusively claim
-> > 		  it again for receive operation.
-> > 
-> > Fix this by replacing the mtx_irq with an atomic
-> > variable and a wait_queue.
-> > 
-> > Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
-> > Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Hi dganic,
+
+
+On Mon, Feb 06, 2012 at 09:17:33PM +0300, dganic@bmail.ru wrote:
+> Subject: drivers realtek rtl8191su [rtl8712 ]
 > 
-> I would really like to avoid using atomic variable if at all possible. I
-> was trying to think other options and what if we take in
-> ath6kl_sdio_irq_disable() mtx_irq before calling sdio_claim_host().
-> Wouldn't that solve the deadlock?
+> Good day, https://github.com/torvalds/linux/blob/master/drivers/staging/rtl8712/TODO,
+> there indicated that in a short time you make a "switch to use
+> MAC80211" and as what about "nl80211" I want to do from wi fi card,
+> access point, by means of hostapd, but in this implementation, the
+> driver who is at the core, this is impossible, in which release of
+> the kernel will be implemented this functionality the driver?
 
-Ok, the goal is to process any pending interrupts before disabling the interrupt.
-Taking mutex before sdio_claim_host() would have a deadlock condition like the following
+Yes, I was the one who had volunteered to try the implementation. But,
+unfortunately, I can't work on this driver anymore; I stopped in
+September. So, as far as I know, this is not going to happen anytime
+soon.
 
-sdio_claim_host()			ath6kl_sdio_irq_disable()
-						- Acquire mtx_irq
-ath6kl_sdio_irq_handler() 			- Trying to claim sdio func() 
-  - waiting on mtx_irq
+regards,
+ali
 
 
-Vasanth	
+> 
+> 
+> A little more information:
+> 
+> [htpc@dga-htpc ~]$ lsmod
+> Module Size Used by
+> appletalk 26298 0
+> ipx 20395 0
+> p8022 1171 1 ipx
+> psnap 1973 2 appletalk,ipx
+> llc 3761 2 p8022,psnap
+> p8023 1068 1 ipx
+> ipv6 290983 16
+> nvidia 11695959 40
+> snd_hda_codec_hdmi 22092 4
+> iTCO_wdt 12717 0
+> snd_hda_intel 22122 1
+> r8712u 169296 0
+> iTCO_vendor_support 1929 1 iTCO_wdt
+> snd_hda_codec 77927 2 snd_hda_codec_hdmi,snd_hda_
+> intel
+> joydev 9895 1
+> usbhid 35256 0
+> hid 81635 1 usbhid
+> pcspkr 1819 0
+> evdev 9530 4
+> snd_hwdep 6325 1 snd_hda_codec
+> i2c_i801 8187 0
+> psmouse 55192 0
+> intel_agp 10904 0
+> intel_gtt 14423 1 intel_agp
+> snd_pcm 73952 4 snd_hda_codec_hdmi,snd_hda_intel,snd_hda_codec
+> r8169 42643 0
+> mii 3995 1 r8169
+> serio_raw 4294 0
+> processor 24256 0
+> snd_timer 19416 1 snd_pcm
+> i2c_core 20133 2 nvidia,i2c_i801
+> snd 57818 7 snd_hda_codec_hdmi,snd_hda_intel,snd_hda_codec,snd_hwdep,snd_pcm,snd_timer
+> soundcore 6146 1 snd
+> snd_page_alloc 7121 2 snd_hda_intel,snd_pcm
+> button 4470 0
+> ext4 370462 1
+> mbcache 5817 1 ext4
+> jbd2 71074 1 ext4
+> crc16 1297 1 ext4
+> sd_mod 28307 2
+> uhci_hcd 23084 0
+> ahci 21217 1
+> libahci 18885 1 ahci
+> libata 173297 2 ahci,libahci
+> scsi_mod 131546 2 sd_mod,libata
+> ehci_hcd 39543 0
+> usbcore 142576 5 r8712u,usbhid,uhci_hcd,ehci_hcd
+> 
+> /etc/hostapd/hostapd.conf:
+> 
+> interface=wlan0
+> driver=nl80211
+> logger_syslog=-1
+> logger_syslog_level=2
+> logger_stdout=-1
+> logger_stdout_level=2
+> dump_file=/tmp/hostapd.dump
+> #ctrl_interface=/var/run/hostapd
+> #ctrl_interface_group=0
+> ssid=dganic-htpc
+> country_code=RU
+> hw_mode=g
+> channel=11
+> beacon_int=100
+> dtim_period=2
+> max_num_sta=255
+> rts_threshold=2347
+> fragm_threshold=2346
+> macaddr_acl=0
+> wpa=2
+> wpa_passphrase=50177011aa
+> wpa_pairwise=TKIP CCMP
+> rsn_pairwise=CCMP
+> 
+> [htpc@dga-htpc ~]$ sudo hostapd -dd /etc/hostapd/hostapd.conf
+> Configuration file: /etc/hostapd/hostapd.conf
+> nl80211: 'nl80211' generic netlink not found
+> nl80211 driver initialization failed.
+> 
+> Thank you in advance for your reply, I hope for your support, sorry
+> for the very poor English.
