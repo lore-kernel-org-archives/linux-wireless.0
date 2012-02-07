@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:38157 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755470Ab2BHGxj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 01:53:39 -0500
-From: Naveen Gangadharan <ngangadh@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath6kl: Fix firmware crash dump
-Date: Tue, 7 Feb 2012 22:53:32 -0800
-Message-ID: <1328684012-2209-1-git-send-email-ngangadh@qca.qualcomm.com> (sfid-20120208_075407_935448_61508D31)
+Received: from mout4.freenet.de ([195.4.92.94]:39982 "EHLO mout4.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753816Ab2BGF7d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Feb 2012 00:59:33 -0500
+Received: from [195.4.92.140] (helo=mjail0.freenet.de)
+	by mout4.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
+	id 1Rue5T-0005do-PF
+	for linux-wireless@vger.kernel.org; Tue, 07 Feb 2012 06:59:31 +0100
+Received: from localhost ([::1]:46001 helo=mjail0.freenet.de)
+	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1Rue5T-0000ak-OU
+	for linux-wireless@vger.kernel.org; Tue, 07 Feb 2012 06:59:31 +0100
+Received: from [195.4.92.17] (port=57302 helo=7.mx.freenet.de)
+	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1Rue2n-0008RQ-PJ
+	for linux-wireless@vger.kernel.org; Tue, 07 Feb 2012 06:56:45 +0100
+Received: from [2002:4fde:13c8:2:5054:ff:feb8:40bd] (port=60393 helo=mail.maya.org)
+	by 7.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
+	id 1Rue2n-0004Tx-EN
+	for linux-wireless@vger.kernel.org; Tue, 07 Feb 2012 06:56:45 +0100
+Message-ID: <4F30BD13.4080409@maya.org> (sfid-20120207_065937_419238_06252ADC)
+Date: Tue, 07 Feb 2012 06:56:35 +0100
+From: Andreas Hartmann <andihartmann@freenet.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: trencan@centrum.cz
+CC: linux-wireless@vger.kernel.org
+Subject: Re: connection interrupted for rt61pci in master mode
+References: <20120128154544.70E060CD@centrum.cz>
+In-Reply-To: <20120128154544.70E060CD@centrum.cz>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixed a bug when we dump the firmware crash log.
+trencan@centrum.cz schrieb:
+> 
+> Hello,
+> 
+> I have RaLink RT2561/RT61 802.11g PCI wireless card and use it in
+> master mode as AP. I have latest Mandriva 2011.0 distro with kernel
+> 2.6.38.7-desktop-1mnb2. Driver for wifi card is rt61pci. If I connect
+> via wifi from another PC then after some small time I get connection
+> interrupted and I must disconnect and reconnect again. I tried latest
+> compat-wireless-3.3-rc1-2 and also latest hostapd-0.7.3, but still
+> same issue. In previous Mandriva version 2010.2 I had kernel
+> 2.6.33.7-desktop-2mnb, hostapd-0.6.7 and it worked perfectly. Hostapd
+> uses driver=nl80211, mode=g, channel=11.
 
-Signed-off-by: Naveen Gangadharan <ngangadh@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/hif.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+What about the machine rt61pci runs on? Does the machine have one single
+core cpu or is it a multi core / processor machine (smp)?
 
-diff --git a/drivers/net/wireless/ath/ath6kl/hif.c b/drivers/net/wireless/ath/ath6kl/hif.c
-index e911737..78d0018 100644
---- a/drivers/net/wireless/ath/ath6kl/hif.c
-+++ b/drivers/net/wireless/ath/ath6kl/hif.c
-@@ -106,7 +106,7 @@ static void ath6kl_hif_dump_fw_crash(struct ath6kl *ar)
- 
- 	BUILD_BUG_ON(REG_DUMP_COUNT_AR6003 % 4);
- 
--	for (i = 0; i < REG_DUMP_COUNT_AR6003 / 4; i++) {
-+	for (i = 0; i < REG_DUMP_COUNT_AR6003; i += 4) {
- 		ath6kl_info("%d: 0x%8.8x 0x%8.8x 0x%8.8x 0x%8.8x\n",
- 			    4 * i,
- 			    le32_to_cpu(regdump_val[i]),
--- 
-1.7.0.4
 
+Regards,
+Andreas
