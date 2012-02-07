@@ -1,74 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm14-vm0.bullet.mail.ird.yahoo.com ([77.238.189.193]:29963 "HELO
-	nm14-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753817Ab2BVVvj convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 16:51:39 -0500
-Message-ID: <1329947497.90659.YahooMailClassic@web29504.mail.ird.yahoo.com> (sfid-20120222_225142_752050_8A45EE00)
-Date: Wed, 22 Feb 2012 21:51:37 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [PATCH] rtl8187: Add Ad-hoc mode
-To: Attila Fazekas <turul64@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Herton Ronaldo Krzesinski <herton@canonical.com>
-In-Reply-To: <CAFmNhL=5TSTZ94ZrSUztG9Hs28Mqk8vMB7rS51SNgE2RCK5s7g@mail.gmail.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:45192 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752439Ab2BGRW0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Feb 2012 12:22:26 -0500
+Received: by yenm8 with SMTP id m8so3116710yen.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 09:22:26 -0800 (PST)
+Message-ID: <4F315DCE.4060704@lwfinger.net> (sfid-20120207_182229_889753_72A9DFA2)
+Date: Tue, 07 Feb 2012 11:22:22 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+To: dganic@bmail.ru
+CC: ali@internetdog.org, wlanfae@realtek.com,
+	linux-wireless@vger.kernel.org
+Subject: Re: drivers realtek rtl8191su [rtl8712 ]
+References: <web-16212948@mail-be01.sovam.com> <20120207020837.GA29465@internetdog.org> <web-10842365@mail-be03.sovam.com>
+In-Reply-To: <web-10842365@mail-be03.sovam.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Tue, 21/2/12, Attila Fazekas <turul64@gmail.com> wrote:
+On 02/07/2012 10:53 AM, dganic@bmail.ru wrote:
+> Thank you Ali for your reply email. One can wonder why you continue to develop
+> this driver, and still the most interesting place: (Maybe you can help me by
+> passing this information in any other developer in a position to write the full
+> realization of this driver? The average user like me, they are unlikely to be
+> listen, and you as the developer will have to listen. Perhaps you have the
+> opportunity to publish this information in the Linux kernel mailing list or
+> linuxdrivers.org? or have any contacts who can I turn? itself does not implement
+> realtek drivers for their devices under Linux?
 
-> I think it is worth the effort.
-> 
-> Hostapd AFAIK is not working with rtl8187 now.
-> Until we can make it work in master mode, the adhoc mode
-> could be an
-> alternative. I think even if we can use it in master mode,
-> ad-hoc mode
-> should be implemented.
+Alexander,
 
-You (and others) could comment on the issue of not-working hostapd a bit more; we might want to get it working properly anyway.
+I am not quite sure what you are asking, but let me explain the situation as I 
+understand it.
 
-As Larry requested - please send the patch without munching from your 
-e-mail client. Since you are on gmail, I could offer a little advice on git-send-email, which may or may not be something you already know. This is what I do to send patches from my gmail account (change "name" and "acct" and "FILLTHISIN" and "patch-file" to suit yourself), and you could add --cc a few of us there also: 
+There is a Linux driver for the RTL8191SU devices. It is in the staging sub-tree 
+and is called r8712u. This driver has been available since kernel 2.6.37. It is 
+stable, and handles the HT rates quite well. The one thing it does not do is 
+work as an AP. It cannot be used with hostapd. The reason is that modern 
+versions of hostapd use the features of mac80211 through the nl80211 interface, 
+but r8712u has its own IEEE802.11 stack and does not implement mac80211.
 
-git send-email --from 'name <acct@gmail.com>' \
---to linux-wireless@vger.kernel.org --to linville@tuxdriver.com \
---smtp-server smtp.gmail.com --smtp-server-port 465 --smtp-user \ acct@gmail.com --smtp-pass FILLTHISIN --smtp-ssl patch-file
+The ultimate fix will be to rewrite the driver to utilize mac80211, which will 
+be a major undertaking. It is on my TODO list, but it has low priority. Realtek 
+does not plan to do that rewrite, thus it will be up to the community.
 
-You can do "man git-send-email" (all git man pages uses "git-something" to document the "git something" sub commands, with a dash between) to read about all the switches and what they are supposed to do.
+I hope this message helps you understand what is happening.
 
-> About refactoring:
-> 
-> rtl8180_beacon_work()
-> Now is almost the same, I think it is possible to make it
-> generic by a
-> macro, or by creating new source/object file linked to both
-> driver, or
-> even possible to create a common module.
-> But, this function will be different if someone will be able
-> to add
-> some hardware aided beacon timestamp update. (If I can have
-> more
-> information about this hardware I'll try it)
-> Creating a new common module just for one small function,
-> IMHO not
-> worth the effort.
-> Please advice.
-> 
-> struct rtl8187_vif, struct rtl8180_vif  now are the
-> same, they might
-> be the same in the future as well.
-> We can remove them and create new one named rtl818x_vif in
-> the rtl818x.h .
-> Shall I do it ?
-
-I haven't got a strong opinion on this - but we probably like to try your patch out first :-).
-
-Thanks for the work!
-
-Hin-Tak
+Larry
