@@ -1,78 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:42993 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751107Ab2BHJWB (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:49199 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753609Ab2BGKOa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 04:22:01 -0500
-Message-ID: <1328692916.2284.5.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC> (sfid-20120208_102214_292873_4D9A71B3)
-Subject: Re: [PATCH] skbuff: Add new tc classify variable
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	Patrick McHardy <kaber@trash.net>,
-	Jamal Hadi Salim <hadi@cyberus.ca>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Marek Lindner <lindner_marek@yahoo.de>,
-	Sven Eckelmann <sven@narfation.org>,
-	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
-	coreteam@netfilter.org, linux-wireless@vger.kernel.org
-Date: Wed, 08 Feb 2012 10:21:56 +0100
-In-Reply-To: <20120207201633.GB26533@pandem0nium>
-References: <1328639948-25232-1-git-send-email-siwu@hrz.tu-chemnitz.de>
-	 <20120207.135841.1753473725075272902.davem@davemloft.net>
-	 <20120207201633.GB26533@pandem0nium>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 7 Feb 2012 05:14:30 -0500
+Message-ID: <4F30F980.9010206@qca.qualcomm.com> (sfid-20120207_111434_335960_AD7D72E5)
+Date: Tue, 7 Feb 2012 15:44:24 +0530
+From: Raja Mani <rmani@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH] ath6kl: Check wow state before sending control and data
+ pkt
+References: <1328536613-17521-1-git-send-email-rmani@qca.qualcomm.com> <4F2FE044.2000106@qca.qualcomm.com>
+In-Reply-To: <4F2FE044.2000106@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Le mardi 07 février 2012 à 21:16 +0100, Simon Wunderlich a écrit :
-> Hello David,
-> 
-> On Tue, Feb 07, 2012 at 01:58:41PM -0500, David Miller wrote:
-> > From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
-> > Date: Tue,  7 Feb 2012 19:39:08 +0100
-> > 
-> > > The linux traffic control mechanism has different ways to select the
-> > > correct class of a qdisc. A common way to do this is to use tc filters
-> > > that are directly attached to a qdisc. Another approach is to use the
-> > > iptables classify module. The latter one can reduce the amount of work
-> > > necessary to process a packet when iptables is already involved in the
-> > > packet classification.
-> > 
-> > Do not bloat up sk_buff any more.  Add this, and the other existing
-> > tc_* members to the qdisc SKB control block instead.
-> > 
-> 
-> Thanks for your feedback!
-> 
-> I guess you mean skb->cb, but this is also used within mac80211 for various things
-> (quoting include/net/mac80211.h):
-> 
->  * struct ieee80211_tx_info - skb transmit information
->  *
->  * This structure is placed in skb->cb for three uses:
->  *  (1) mac80211 TX control - mac80211 tells the driver what to do
->  *  (2) driver internal use (if applicable)
->  *  (3) TX status information - driver tells mac80211 what happened
-> 
-> We could give it a try, but we most probably run into conflicts again.
-> 
-> I've messed up the CCs in my initial mail (and just resent it) - sorry about that.
-> Maybe the mac80211 guys have a suggestion as well :)
-> 
+On Monday 06 February 2012 07:44 PM, Kalle Valo wrote:
+> On 02/06/2012 03:56 PM, rmani@qca.qualcomm.com wrote:
+>> From: Raja Mani<rmani@qca.qualcomm.com>
+>>
+>> * TX operation (ctrl tx and data tx) has to be controlled based on
+>>    WOW suspend state. i.e, control packets are allowed to send from
+>>    the host until the suspend state goes ATH6KL_STATE_WOW and
+>>    the data packets are allowed until WOW suspend operation starts.
+>>
+>> * Similary, wow resume is NOT allowed if WOW suspend is in progress.
+>>
+>> Both of the above scenarios are taken care in this patch.
+>>
+>> Signed-off-by: Raja Mani<rmani@qca.qualcomm.com>
+>
+> [...]
+>
+>> +enum ath6kl_wow_state {
+>> +	ATH6KL_WOW_STATE_NONE,
+>> +	ATH6KL_WOW_STATE_SUSPENDING,
+>> +	ATH6KL_WOW_STATE_SUSPENDED,
+>> +};
+>> +
+>>   struct ath6kl {
+>>   	struct device *dev;
+>>   	struct wiphy *wiphy;
+>>
+>>   	enum ath6kl_state state;
+>> +	enum ath6kl_wow_state wow_state;
+>>   	unsigned int testmode;
+>
+> To be honest, adding a new state variable scares me. I don't see how we
+> are able to maintain two different state variables, the end result would
+> be a total mess.
 
-I really dont understand what the conflict might be.
+ath6kl_wow_state is a just sub state of WOW. It roles over only in WOW
+mode. However i understand your point.
 
-As long as skb is in Qdisc layer, Qdisc owns skb->cb[] (a part of it
-actually, see current discussions about IB on netdev)
+>
+> I recommend to look at this problem by adding a new state to enum
+> ath6kl_state. That would make it a lot easier to handle all the
+> different states.
 
-As soon as packet is given to device (mac80211), cb[] can be reused.
+The condition to stop ctrl and data pkt transfer are different.
+Ctrl pkt should be stopped when wow_suspended (after sending
+set_host_sleep_cmd_mode). Data pkt should be dropped before
+the moment we configure set_ip_cmd().
 
-Or are you saying tc_class also might be needed by mac80211 in the
-future ?
+This where we need a state WOW_SUSPENDING and WOW_SUSPENDED.
+enum ath6kl_state has over all ath6kl suspend state (cut pwr, deep
+sleep,wow). IMHO, mixing WOW sub states there is not good approach.
 
+If you feel maintaining separate state is not good idea, i could think
+of introducing two new flag WOW_SUSPENDING,  WOW_SUSPENDED in ar->flag.
 
+I may be wrong, What do you say?
 
+>
+> (I haven't looked rest of your patch yet.)
+>
+> Kalle
