@@ -1,63 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:55779 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753776Ab2BIPQJ (ORCPT
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:45138 "EHLO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753706Ab2BGKjh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 10:16:09 -0500
-Received: by ggnh1 with SMTP id h1so884424ggn.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2012 07:16:08 -0800 (PST)
-Message-ID: <4F33E30D.8030407@lwfinger.net> (sfid-20120209_161613_747528_51CC291C)
-Date: Thu, 09 Feb 2012 09:15:25 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Simon Graham <simon.graham@virtualcomputer.com>,
-	linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org, chaoming_li@realsil.com.cn
-Subject: Re: [PATCH v3] rtlwifi: Modify rtl_pci_init to return 0 on success
-References: <1328799314-28867-1-git-send-email-simon.graham@virtualcomputer.com>
-In-Reply-To: <1328799314-28867-1-git-send-email-simon.graham@virtualcomputer.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 7 Feb 2012 05:39:37 -0500
+Received: by mail-lpp01m010-f49.google.com with SMTP id m7so5539372laa.22
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 02:39:36 -0800 (PST)
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: coelho@ti.com
+Subject: [PATCH] wl12xx: fix typo in fwlog module param description
+Date: Tue,  7 Feb 2012 12:39:28 +0200
+Message-Id: <1328611168-22994-1-git-send-email-coelho@ti.com> (sfid-20120207_113941_113563_9531F53D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/09/2012 08:55 AM, Simon Graham wrote:
-> Fixes problem where caller would think routine succeeded when it failed
-> leading to divide by zero panic.
->
-> Signed-off-by: Simon Graham<simon.graham@virtualcomputer.com>
-> ---
+Fix a copy and paste bug in the MODULE_PARAM_DESC for fwlog.
 
-ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Simon: Congratulations - your mailer mangling problem seems to be fixed.
-
-John: This is V3.3 and stable material. This bug goes back to at least 2.6.39.
-
-Larry
-
->   drivers/net/wireless/rtlwifi/pci.c |    4 ++--
->   1 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-> index fb84707..16ec0c1 100644
-> --- a/drivers/net/wireless/rtlwifi/pci.c
-> +++ b/drivers/net/wireless/rtlwifi/pci.c
-> @@ -1495,7 +1495,7 @@ static int rtl_pci_init(struct ieee80211_hw *hw, struct pci_dev *pdev)
->   		return err;
->   	}
->
-> -	return 1;
-> +	return 0;
->   }
->
->   static int rtl_pci_start(struct ieee80211_hw *hw)
-> @@ -1866,7 +1866,7 @@ int __devinit rtl_pci_probe(struct pci_dev *pdev,
->   	}
->
->   	/* Init PCI sw */
-> -	err = !rtl_pci_init(hw, pdev);
-> +	err = rtl_pci_init(hw, pdev);
->   	if (err) {
->   		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Failed to init PCI\n");
->   		goto fail3;
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index b9c70c6..eb3eaae 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -5443,7 +5443,7 @@ module_param_named(debug_level, wl12xx_debug_level, uint, S_IRUSR | S_IWUSR);
+ MODULE_PARM_DESC(debug_level, "wl12xx debugging level");
+ 
+ module_param_named(fwlog, fwlog_param, charp, 0);
+-MODULE_PARM_DESC(keymap,
++MODULE_PARM_DESC(fwlog,
+ 		 "FW logger options: continuous, ondemand, dbgpins or disable");
+ 
+ module_param(bug_on_recovery, bool, S_IRUSR | S_IWUSR);
+-- 
+1.7.5.4
 
