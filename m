@@ -1,114 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:50603 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759593Ab2BJR5H (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:39487 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756506Ab2BGMwM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Feb 2012 12:57:07 -0500
-Received: by qcqw6 with SMTP id w6so1787960qcq.19
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Feb 2012 09:57:06 -0800 (PST)
+	Tue, 7 Feb 2012 07:52:12 -0500
+Received: by mail-vx0-f174.google.com with SMTP id e1so4592507vcg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 04:52:11 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAObL_7Ha5JKBcxBFAG1VDvF0rcAxvWkLVe2Opi4mCcL0kR2YFg@mail.gmail.com>
-References: <CAObL_7E2eW9aqz3VLsBU-=4+kMXrfPvfz6wCNUEdDHuJWVaSLA@mail.gmail.com>
-	<CAFZTsKk9ojw9_XodisHf-dtHpL1n6xSRmmWDVniZ-Ps4-JLwvA@mail.gmail.com>
-	<1328455870.7290.43.camel@wwguy-huron>
-	<1DC40B07CD6EC041A66726C271A73AE611F67E@IRSMSX102.ger.corp.intel.com>
-	<CAFZTsKnjkJSmMdNpNkQWzUggNcN+3Qx0OGVXzuPDsXr8+h1SiA@mail.gmail.com>
-	<1328563980.3466.10.camel@jlt3.sipsolutions.net>
-	<CAObL_7Ha5JKBcxBFAG1VDvF0rcAxvWkLVe2Opi4mCcL0kR2YFg@mail.gmail.com>
-Date: Fri, 10 Feb 2012 18:57:05 +0100
-Message-ID: <CAFZTsKmpDOv6aHBT70-0_0muaTNvqPJQpqqC-04OisGC4_Ymog@mail.gmail.com> (sfid-20120210_185713_194710_6261A25C)
-Subject: Re: [Ilw] Re: 6300agn: queue stuck and driver doesn't recover
-From: Alexander Schnaidt <alex.schnaidt@googlemail.com>
-To: Andrew Lutomirski <luto@mit.edu>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: multipart/mixed; boundary=0023544707605e401804b89fdb08
+In-Reply-To: <1328568313-26267-7-git-send-email-gwingerde@gmail.com>
+References: <1328568313-26267-1-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-2-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-3-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-4-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-5-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-6-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-7-git-send-email-gwingerde@gmail.com>
+Date: Tue, 7 Feb 2012 13:52:11 +0100
+Message-ID: <CAOZOX0X611UkCWE_q2B3xc35D80snmMGD06-DBkD+7AyEJr-sA@mail.gmail.com> (sfid-20120207_135220_264005_50E6812E)
+Subject: Re: [PATCH 6/8] rt2x00: Align RT3572 channel switch RFCSR 1
+ programming with Ralink driver.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---0023544707605e401804b89fdb08
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
->> Ok this makes sense. A few other people also recently reported this. I'm
->> currently (still) away from home so I can't reproduce this issue, and I
->> didn't find anything by just looking at the code. Traces for mac80211
->> and iwlwifi subsystems would be useful to look at in this case, I think,
->> if you want to record the failure case see:
->> http://wireless.kernel.org/en/developers/Documentation/mac80211/tracing
->> (-e mac80211 -e iwlwifi). If you do record it, please don't send the
->> traces to the list, bzip2 it and send it to me directly.
+On Mon, Feb 6, 2012 at 11:45 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> Align with the v2.5.0.0 Ralink RT3572 driver.
 >
-> I just reproduced the problem (or at least the similar problem
-> affecting me) with swcrypto=3D1. =C2=A0I'll try to get a trace.
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 66af6f4..2afb798 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -1806,11 +1806,12 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
+>        rt2800_rfcsr_write(rt2x00dev, 13, rfcsr);
 >
-> --Andy
-
-Hey!
-
-Before you get started; Johannes Berg already came up with a patch for this=
-.
-Unfortunately the discussion drifted off the list so i reattach the patch h=
-ere.
-I hope that's fine with Johannes.
-
-Applying it against 3.3.0-rc2 fixes my problem, you might want to give it a=
- try.
-
-alex
-
-Here's Johannes' original message:
-
->From: Berg, Johannes <johannes.berg@intel.com>
->Date: Tue, Feb 7, 2012 at 11:50 PM
+>        rt2800_rfcsr_read(rt2x00dev, 1, &rfcsr);
+> -       rt2x00_set_field8(&rfcsr, RFCSR1_RF_BLOCK_EN, 1);
+>        rt2x00_set_field8(&rfcsr, RFCSR1_RX0_PD, 0);
+>        rt2x00_set_field8(&rfcsr, RFCSR1_TX0_PD, 0);
+>        rt2x00_set_field8(&rfcsr, RFCSR1_RX1_PD, 0);
+>        rt2x00_set_field8(&rfcsr, RFCSR1_TX1_PD, 0);
+> +       rt2x00_set_field8(&rfcsr, RFCSR1_RX2_PD, 0);
+> +       rt2x00_set_field8(&rfcsr, RFCSR1_TX2_PD, 0);
+>        if (test_bit(CAPABILITY_BT_COEXIST, &rt2x00dev->cap_flags)) {
+>                if (rf->channel <= 14) {
+>                        rt2x00_set_field8(&rfcsr, RFCSR1_RX0_PD, 1);
+> --
+> 1.7.9
 >
->Great, thanks. I attached a more complete patch, if you want to give it a =
-try -- I'll be putting that into the tree.
->
->johannes
-
---0023544707605e401804b89fdb08
-Content-Type: application/octet-stream; name="crypto-fix.patch"
-Content-Disposition: attachment; filename="crypto-fix.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gyhikp6h0
-
-Y29tbWl0IDg2ZjkxOTk2NjhlODAzNTkzM2M5YzVhMWU0MmJlOWRlM2EzMjBjZDcKQXV0aG9yOiBK
-b2hhbm5lcyBCZXJnIDxqb2hhbm5lcy5iZXJnQGludGVsLmNvbT4KRGF0ZTogICBUdWUgRmViIDcg
-MjE6MTg6MzMgMjAxMiArMDEwMAoKICAgIGl3bHdpZmk6IGZpeCBrZXkgcmVtb3ZhbAogICAgCiAg
-ICBXaGVuIHRyeWluZyB0byByZW1vdmUgYSBrZXksIHdlIGFsd2F5cyBzZW5kIGtleQogICAgZmxh
-Z3MganVzdCBzZXR0aW5nIHRoZSBrZXkgdHlwZSwgbm90IGluY2x1ZGluZwogICAgdGhlIG11bHRp
-Y2FzdCBmbGFnIGFuZCB0aGUga2V5IElELiBBcyBhIHJlc3VsdCwKICAgIHdoZW5ldmVyIGFueSBr
-ZXkgd2FzIHJlbW92ZWQsIHRoZSB1bmljYXN0IGtleSAwCiAgICB3b3VsZCBiZSByZW1vdmVkLCBj
-YXVzaW5nIGEgY29tcGxldGUgY29ubmVjdGlvbgogICAgbG9zcyBhZnRlciB0aGUgc2Vjb25kIHJl
-a2V5ICh0aGUgZmlyc3QgZG9lc24ndAogICAgY2F1c2UgYSBrZXkgcmVtb3ZhbCkuIEZpeCB0aGUg
-a2V5IHJlbW92YWwgY29kZQogICAgdG8gaW5jbHVkZSB0aGUga2V5IElEIGFuZCBtdWx0aWNhc3Qg
-ZmxhZywgdGh1cwogICAgcmVtb3ZpbmcgdGhlIGNvcnJlY3Qga2V5LgogICAgCiAgICBDaGFuZ2Ut
-SWQ6IElmNjQzMjdkNzhhMDcyNDBiNmQ4NmYzOWZkZWU0YWQ2ZDQzOGJjNGYwCiAgICBDYzogc3Rh
-YmxlQHZnZXIua2VybmVsLm9yZwogICAgUmVwb3J0ZWQtYnk6IEFsZXhhbmRlciBTY2huYWlkdCA8
-YWxleC5zY2huYWlkdEBnb29nbGVtYWlsLmNvbT4KICAgIFNpZ25lZC1vZmYtYnk6IEpvaGFubmVz
-IEJlcmcgPGpvaGFubmVzLmJlcmdAaW50ZWwuY29tPgoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL2l3bHdpZmkvaXdsLWFnbi1zdGEuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2l3
-bHdpZmkvaXdsLWFnbi1zdGEuYwppbmRleCBkNmFhYjAwLi5mMTI5OGNkIDEwMDY0NAotLS0gYS9k
-cml2ZXJzL25ldC93aXJlbGVzcy9pd2x3aWZpL2l3bC1hZ24tc3RhLmMKKysrIGIvZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtYWduLXN0YS5jCkBAIC0xMTkwLDYgKzExOTAsNyBAQCBp
-bnQgaXdsX3JlbW92ZV9keW5hbWljX2tleShzdHJ1Y3QgaXdsX3ByaXYgKnByaXYsCiAJdW5zaWdu
-ZWQgbG9uZyBmbGFnczsKIAlzdHJ1Y3QgaXdsX2FkZHN0YV9jbWQgc3RhX2NtZDsKIAl1OCBzdGFf
-aWQgPSBpd2xhZ25fa2V5X3N0YV9pZChwcml2LCBjdHgtPnZpZiwgc3RhKTsKKwlfX2xlMTYga2V5
-X2ZsYWdzOwogCiAJLyogaWYgc3RhdGlvbiBpc24ndCB0aGVyZSwgbmVpdGhlciBpcyB0aGUga2V5
-ICovCiAJaWYgKHN0YV9pZCA9PSBJV0xfSU5WQUxJRF9TVEFUSU9OKQpAQCAtMTIxNSw3ICsxMjE2
-LDE0IEBAIGludCBpd2xfcmVtb3ZlX2R5bmFtaWNfa2V5KHN0cnVjdCBpd2xfcHJpdiAqcHJpdiwK
-IAkJSVdMX0VSUihwcml2LCAib2Zmc2V0ICVkIG5vdCB1c2VkIGluIHVDb2RlIGtleSB0YWJsZS5c
-biIsCiAJCQlrZXljb25mLT5od19rZXlfaWR4KTsKIAotCXN0YV9jbWQua2V5LmtleV9mbGFncyA9
-IFNUQV9LRVlfRkxHX05PX0VOQyB8IFNUQV9LRVlfRkxHX0lOVkFMSUQ7CisJa2V5X2ZsYWdzID0g
-Y3B1X3RvX2xlMTYoa2V5Y29uZi0+a2V5aWR4IDw8IFNUQV9LRVlfRkxHX0tFWUlEX1BPUyk7CisJ
-a2V5X2ZsYWdzIHw9IFNUQV9LRVlfRkxHX01BUF9LRVlfTVNLIHwgU1RBX0tFWV9GTEdfTk9fRU5D
-IHwKKwkJICAgICBTVEFfS0VZX0ZMR19JTlZBTElEOworCisJaWYgKCEoa2V5Y29uZi0+ZmxhZ3Mg
-JiBJRUVFODAyMTFfS0VZX0ZMQUdfUEFJUldJU0UpKQorCQlrZXlfZmxhZ3MgfD0gU1RBX0tFWV9N
-VUxUSUNBU1RfTVNLOworCisJc3RhX2NtZC5rZXkua2V5X2ZsYWdzID0ga2V5X2ZsYWdzOwogCXN0
-YV9jbWQua2V5LmtleV9vZmZzZXQgPSBXRVBfSU5WQUxJRF9PRkZTRVQ7CiAJc3RhX2NtZC5zdGEu
-bW9kaWZ5X21hc2sgPSBTVEFfTU9ESUZZX0tFWV9NQVNLOwogCXN0YV9jbWQubW9kZSA9IFNUQV9D
-T05UUk9MX01PRElGWV9NU0s7Cg==
---0023544707605e401804b89fdb08--
