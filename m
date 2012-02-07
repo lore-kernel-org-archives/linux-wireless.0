@@ -1,486 +1,247 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:35524 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4745 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753790Ab2BVHL2 (ORCPT
+	with ESMTP id S1756737Ab2BGJdm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 02:11:28 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Tue, 7 Feb 2012 04:33:42 -0500
+From: Chilam Ng <chilamng@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath6kl-devel@qualcomm.com>
+Subject: [PATCH] ath6kl: prioritize Tx bundling based on AC priorities
+Date: Tue, 7 Feb 2012 01:33:00 -0800
+Message-ID: <1328607180-551-1-git-send-email-chilamng@qca.qualcomm.com> (sfid-20120207_103420_095257_B89CFAD5)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20292.38166.172540.624239@gargle.gargle.HOWL> (sfid-20120222_081132_235867_997947B3)
-Date: Wed, 22 Feb 2012 12:41:18 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 14/26] ath9k_hw: Cleanup MCI bits from hw.h
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch moves all the MCI-specific declarations that have been
-dumped unceremoniously in hw.h to ar9003_mci.h
+Tx bundling is the more efficient use of SDIO bus and allows more packet
+transfers with fewer bus transactions, and is a way to improve overall
+throughput. However, Tx bundling has only 4 scatter request resources available.
+When there are multiple traffic streams of different priorities, it's possible
+that lower priority traffic may hog all the scatter requests and lock out the
+higher prioirty traffic from bundling.
+Tx bundling is now enabled per AC. When an AC do a scatter request and
+the remaining scatter request resources is lower than a configurable
+threshold, it will disable Tx bundling for all AC's of lower priorities.
+When an AC has Tx bundling disabled and has no Tx bundles sent in a
+consecutive and configurable number of packets, Tx bundling will be re-enabled
+for that AC.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Chilam Ng <chilamng@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |    1 +
- drivers/net/wireless/ath/ath9k/ar9003_mci.h |  195 +++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.c         |    1 +
- drivers/net/wireless/ath/ath9k/hw.h         |  195 ---------------------------
- drivers/net/wireless/ath/ath9k/mci.h        |    2 +
- 5 files changed, 199 insertions(+), 195 deletions(-)
+ drivers/net/wireless/ath/ath6kl/hif.h  |    2 +
+ drivers/net/wireless/ath/ath6kl/htc.c  |   77 +++++++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath6kl/htc.h  |    7 +++-
+ drivers/net/wireless/ath/ath6kl/sdio.c |    2 +
+ 4 files changed, 80 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 575f36a..51687e3 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -16,6 +16,7 @@
- #include <linux/export.h>
- #include "hw.h"
- #include "ar9003_mac.h"
-+#include "ar9003_mci.h"
+diff --git a/drivers/net/wireless/ath/ath6kl/hif.h b/drivers/net/wireless/ath/ath6kl/hif.h
+index 699a036..0674b1d 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif.h
++++ b/drivers/net/wireless/ath/ath6kl/hif.h
+@@ -197,6 +197,8 @@ struct hif_scatter_req {
+ 	u8 *virt_dma_buf;
  
- static void ar9003_hw_rx_enable(struct ath_hw *hw)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-index 798da11..39bbf67 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
-@@ -99,4 +99,199 @@ enum mci_gpm_coex_bt_update_flags_op {
- 					 ATH_MCI_CONFIG_MCI_OBS_BT)
- #define ATH_MCI_CONFIG_MCI_OBS_GPIO     0x0000002F
- 
-+enum mci_message_header {		/* length of payload */
-+	MCI_LNA_CTRL     = 0x10,        /* len = 0 */
-+	MCI_CONT_NACK    = 0x20,        /* len = 0 */
-+	MCI_CONT_INFO    = 0x30,        /* len = 4 */
-+	MCI_CONT_RST     = 0x40,        /* len = 0 */
-+	MCI_SCHD_INFO    = 0x50,        /* len = 16 */
-+	MCI_CPU_INT      = 0x60,        /* len = 4 */
-+	MCI_SYS_WAKING   = 0x70,        /* len = 0 */
-+	MCI_GPM          = 0x80,        /* len = 16 */
-+	MCI_LNA_INFO     = 0x90,        /* len = 1 */
-+	MCI_LNA_STATE    = 0x94,
-+	MCI_LNA_TAKE     = 0x98,
-+	MCI_LNA_TRANS    = 0x9c,
-+	MCI_SYS_SLEEPING = 0xa0,        /* len = 0 */
-+	MCI_REQ_WAKE     = 0xc0,        /* len = 0 */
-+	MCI_DEBUG_16     = 0xfe,        /* len = 2 */
-+	MCI_REMOTE_RESET = 0xff         /* len = 16 */
-+};
+ 	struct hif_scatter_item scat_list[1];
 +
-+enum ath_mci_gpm_coex_profile_type {
-+	MCI_GPM_COEX_PROFILE_UNKNOWN,
-+	MCI_GPM_COEX_PROFILE_RFCOMM,
-+	MCI_GPM_COEX_PROFILE_A2DP,
-+	MCI_GPM_COEX_PROFILE_HID,
-+	MCI_GPM_COEX_PROFILE_BNEP,
-+	MCI_GPM_COEX_PROFILE_VOICE,
-+	MCI_GPM_COEX_PROFILE_MAX
-+};
-+
-+/* MCI GPM/Coex opcode/type definitions */
-+enum {
-+	MCI_GPM_COEX_W_GPM_PAYLOAD      = 1,
-+	MCI_GPM_COEX_B_GPM_TYPE         = 4,
-+	MCI_GPM_COEX_B_GPM_OPCODE       = 5,
-+	/* MCI_GPM_WLAN_CAL_REQ, MCI_GPM_WLAN_CAL_DONE */
-+	MCI_GPM_WLAN_CAL_W_SEQUENCE     = 2,
-+
-+	/* MCI_GPM_COEX_VERSION_QUERY */
-+	/* MCI_GPM_COEX_VERSION_RESPONSE */
-+	MCI_GPM_COEX_B_MAJOR_VERSION    = 6,
-+	MCI_GPM_COEX_B_MINOR_VERSION    = 7,
-+	/* MCI_GPM_COEX_STATUS_QUERY */
-+	MCI_GPM_COEX_B_BT_BITMAP        = 6,
-+	MCI_GPM_COEX_B_WLAN_BITMAP      = 7,
-+	/* MCI_GPM_COEX_HALT_BT_GPM */
-+	MCI_GPM_COEX_B_HALT_STATE       = 6,
-+	/* MCI_GPM_COEX_WLAN_CHANNELS */
-+	MCI_GPM_COEX_B_CHANNEL_MAP      = 6,
-+	/* MCI_GPM_COEX_BT_PROFILE_INFO */
-+	MCI_GPM_COEX_B_PROFILE_TYPE     = 6,
-+	MCI_GPM_COEX_B_PROFILE_LINKID   = 7,
-+	MCI_GPM_COEX_B_PROFILE_STATE    = 8,
-+	MCI_GPM_COEX_B_PROFILE_ROLE     = 9,
-+	MCI_GPM_COEX_B_PROFILE_RATE     = 10,
-+	MCI_GPM_COEX_B_PROFILE_VOTYPE   = 11,
-+	MCI_GPM_COEX_H_PROFILE_T        = 12,
-+	MCI_GPM_COEX_B_PROFILE_W        = 14,
-+	MCI_GPM_COEX_B_PROFILE_A        = 15,
-+	/* MCI_GPM_COEX_BT_STATUS_UPDATE */
-+	MCI_GPM_COEX_B_STATUS_TYPE      = 6,
-+	MCI_GPM_COEX_B_STATUS_LINKID    = 7,
-+	MCI_GPM_COEX_B_STATUS_STATE     = 8,
-+	/* MCI_GPM_COEX_BT_UPDATE_FLAGS */
-+	MCI_GPM_COEX_W_BT_FLAGS         = 6,
-+	MCI_GPM_COEX_B_BT_FLAGS_OP      = 10
-+};
-+
-+enum mci_gpm_subtype {
-+	MCI_GPM_BT_CAL_REQ      = 0,
-+	MCI_GPM_BT_CAL_GRANT    = 1,
-+	MCI_GPM_BT_CAL_DONE     = 2,
-+	MCI_GPM_WLAN_CAL_REQ    = 3,
-+	MCI_GPM_WLAN_CAL_GRANT  = 4,
-+	MCI_GPM_WLAN_CAL_DONE   = 5,
-+	MCI_GPM_COEX_AGENT      = 0x0c,
-+	MCI_GPM_RSVD_PATTERN    = 0xfe,
-+	MCI_GPM_RSVD_PATTERN32  = 0xfefefefe,
-+	MCI_GPM_BT_DEBUG        = 0xff
-+};
-+
-+enum mci_bt_state {
-+	MCI_BT_SLEEP,
-+	MCI_BT_AWAKE,
-+	MCI_BT_CAL_START,
-+	MCI_BT_CAL
-+};
-+
-+/* Type of state query */
-+enum mci_state_type {
-+	MCI_STATE_ENABLE,
-+	MCI_STATE_INIT_GPM_OFFSET,
-+	MCI_STATE_NEXT_GPM_OFFSET,
-+	MCI_STATE_LAST_GPM_OFFSET,
-+	MCI_STATE_BT,
-+	MCI_STATE_SET_BT_SLEEP,
-+	MCI_STATE_SET_BT_AWAKE,
-+	MCI_STATE_SET_BT_CAL_START,
-+	MCI_STATE_SET_BT_CAL,
-+	MCI_STATE_LAST_SCHD_MSG_OFFSET,
-+	MCI_STATE_REMOTE_SLEEP,
-+	MCI_STATE_CONT_RSSI_POWER,
-+	MCI_STATE_CONT_PRIORITY,
-+	MCI_STATE_CONT_TXRX,
-+	MCI_STATE_RESET_REQ_WAKE,
-+	MCI_STATE_SEND_WLAN_COEX_VERSION,
-+	MCI_STATE_SET_BT_COEX_VERSION,
-+	MCI_STATE_SEND_WLAN_CHANNELS,
-+	MCI_STATE_SEND_VERSION_QUERY,
-+	MCI_STATE_SEND_STATUS_QUERY,
-+	MCI_STATE_NEED_FLUSH_BT_INFO,
-+	MCI_STATE_SET_CONCUR_TX_PRI,
-+	MCI_STATE_RECOVER_RX,
-+	MCI_STATE_NEED_FTP_STOMP,
-+	MCI_STATE_NEED_TUNING,
-+	MCI_STATE_DEBUG,
-+	MCI_STATE_MAX
-+};
-+
-+enum mci_gpm_coex_opcode {
-+	MCI_GPM_COEX_VERSION_QUERY,
-+	MCI_GPM_COEX_VERSION_RESPONSE,
-+	MCI_GPM_COEX_STATUS_QUERY,
-+	MCI_GPM_COEX_HALT_BT_GPM,
-+	MCI_GPM_COEX_WLAN_CHANNELS,
-+	MCI_GPM_COEX_BT_PROFILE_INFO,
-+	MCI_GPM_COEX_BT_STATUS_UPDATE,
-+	MCI_GPM_COEX_BT_UPDATE_FLAGS
-+};
-+
-+#define MCI_GPM_NOMORE  0
-+#define MCI_GPM_MORE    1
-+#define MCI_GPM_INVALID 0xffffffff
-+
-+#define MCI_GPM_RECYCLE(_p_gpm)	do {			  \
-+	*(((u32 *)_p_gpm) + MCI_GPM_COEX_W_GPM_PAYLOAD) = \
-+				MCI_GPM_RSVD_PATTERN32;   \
-+} while (0)
-+
-+#define MCI_GPM_TYPE(_p_gpm)	\
-+	(*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_TYPE) & 0xff)
-+
-+#define MCI_GPM_OPCODE(_p_gpm)	\
-+	(*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_OPCODE) & 0xff)
-+
-+#define MCI_GPM_SET_CAL_TYPE(_p_gpm, _cal_type)	do {			   \
-+	*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_TYPE) = (_cal_type) & 0xff;\
-+} while (0)
-+
-+#define MCI_GPM_SET_TYPE_OPCODE(_p_gpm, _type, _opcode) do {		   \
-+	*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_TYPE) = (_type) & 0xff;	   \
-+	*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_OPCODE) = (_opcode) & 0xff;\
-+} while (0)
-+
-+#define MCI_GPM_IS_CAL_TYPE(_type) ((_type) <= MCI_GPM_WLAN_CAL_DONE)
-+
-+bool ar9003_mci_send_message(struct ath_hw *ah, u8 header, u32 flag,
-+			     u32 *payload, u8 len, bool wait_done,
-+			     bool check_bt);
-+void ar9003_mci_stop_bt(struct ath_hw *ah, bool sava_fullsleep);
-+void ar9003_mci_mute_bt(struct ath_hw *ah);
-+u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data);
-+void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable);
-+void ar9003_mci_init_cal_done(struct ath_hw *ah);
-+void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
-+		      u16 len, u32 sched_addr);
-+void ar9003_mci_cleanup(struct ath_hw *ah);
-+void ar9003_mci_send_coex_halt_bt_gpm(struct ath_hw *ah, bool halt,
-+				      bool wait_done);
-+u32 ar9003_mci_wait_for_gpm(struct ath_hw *ah, u8 gpm_type,
-+			    u8 gpm_opcode, int time_out);
-+void ar9003_mci_2g5g_changed(struct ath_hw *ah, bool is_2g);
-+void ar9003_mci_set_full_sleep(struct ath_hw *ah);
-+void ar9003_mci_disable_interrupt(struct ath_hw *ah);
-+void ar9003_mci_enable_interrupt(struct ath_hw *ah);
-+void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done);
-+void ar9003_mci_check_bt(struct ath_hw *ah);
-+bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan);
-+int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
-+			 struct ath9k_hw_cal_data *caldata);
-+void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
-+		      bool is_full_sleep);
-+bool ar9003_mci_check_int(struct ath_hw *ah, u32 ints);
-+void ar9003_mci_remote_reset(struct ath_hw *ah, bool wait_done);
-+void ar9003_mci_send_sys_waking(struct ath_hw *ah, bool wait_done);
-+void ar9003_mci_send_lna_transfer(struct ath_hw *ah, bool wait_done);
-+void ar9003_mci_sync_bt_state(struct ath_hw *ah);
-+void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
-+			      u32 *rx_msg_intr);
-+void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
-+
-+static inline bool ar9003_mci_is_ready(struct ath_hw *ah)
-+{
-+	return ah->btcoex_hw.mci.ready;
-+}
-+
- #endif
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 475e4ca..5f2e30c 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -23,6 +23,7 @@
- #include "hw-ops.h"
- #include "rc.h"
- #include "ar9003_mac.h"
-+#include "ar9003_mci.h"
- 
- static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 1b41d11..daceba7 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -432,161 +432,6 @@ enum ath9k_rx_qtype {
- 	ATH9K_RX_QUEUE_MAX,
++	u32 scat_q_depth;
  };
  
--enum mci_message_header {		/* length of payload */
--	MCI_LNA_CTRL     = 0x10,        /* len = 0 */
--	MCI_CONT_NACK    = 0x20,        /* len = 0 */
--	MCI_CONT_INFO    = 0x30,        /* len = 4 */
--	MCI_CONT_RST     = 0x40,        /* len = 0 */
--	MCI_SCHD_INFO    = 0x50,        /* len = 16 */
--	MCI_CPU_INT      = 0x60,        /* len = 4 */
--	MCI_SYS_WAKING   = 0x70,        /* len = 0 */
--	MCI_GPM          = 0x80,        /* len = 16 */
--	MCI_LNA_INFO     = 0x90,        /* len = 1 */
--	MCI_LNA_STATE    = 0x94,
--	MCI_LNA_TAKE     = 0x98,
--	MCI_LNA_TRANS    = 0x9c,
--	MCI_SYS_SLEEPING = 0xa0,        /* len = 0 */
--	MCI_REQ_WAKE     = 0xc0,        /* len = 0 */
--	MCI_DEBUG_16     = 0xfe,        /* len = 2 */
--	MCI_REMOTE_RESET = 0xff         /* len = 16 */
--};
--
--enum ath_mci_gpm_coex_profile_type {
--	MCI_GPM_COEX_PROFILE_UNKNOWN,
--	MCI_GPM_COEX_PROFILE_RFCOMM,
--	MCI_GPM_COEX_PROFILE_A2DP,
--	MCI_GPM_COEX_PROFILE_HID,
--	MCI_GPM_COEX_PROFILE_BNEP,
--	MCI_GPM_COEX_PROFILE_VOICE,
--	MCI_GPM_COEX_PROFILE_MAX
--};
--
--/* MCI GPM/Coex opcode/type definitions */
--enum {
--	MCI_GPM_COEX_W_GPM_PAYLOAD      = 1,
--	MCI_GPM_COEX_B_GPM_TYPE         = 4,
--	MCI_GPM_COEX_B_GPM_OPCODE       = 5,
--	/* MCI_GPM_WLAN_CAL_REQ, MCI_GPM_WLAN_CAL_DONE */
--	MCI_GPM_WLAN_CAL_W_SEQUENCE     = 2,
--
--	/* MCI_GPM_COEX_VERSION_QUERY */
--	/* MCI_GPM_COEX_VERSION_RESPONSE */
--	MCI_GPM_COEX_B_MAJOR_VERSION    = 6,
--	MCI_GPM_COEX_B_MINOR_VERSION    = 7,
--	/* MCI_GPM_COEX_STATUS_QUERY */
--	MCI_GPM_COEX_B_BT_BITMAP        = 6,
--	MCI_GPM_COEX_B_WLAN_BITMAP      = 7,
--	/* MCI_GPM_COEX_HALT_BT_GPM */
--	MCI_GPM_COEX_B_HALT_STATE       = 6,
--	/* MCI_GPM_COEX_WLAN_CHANNELS */
--	MCI_GPM_COEX_B_CHANNEL_MAP      = 6,
--	/* MCI_GPM_COEX_BT_PROFILE_INFO */
--	MCI_GPM_COEX_B_PROFILE_TYPE     = 6,
--	MCI_GPM_COEX_B_PROFILE_LINKID   = 7,
--	MCI_GPM_COEX_B_PROFILE_STATE    = 8,
--	MCI_GPM_COEX_B_PROFILE_ROLE     = 9,
--	MCI_GPM_COEX_B_PROFILE_RATE     = 10,
--	MCI_GPM_COEX_B_PROFILE_VOTYPE   = 11,
--	MCI_GPM_COEX_H_PROFILE_T        = 12,
--	MCI_GPM_COEX_B_PROFILE_W        = 14,
--	MCI_GPM_COEX_B_PROFILE_A        = 15,
--	/* MCI_GPM_COEX_BT_STATUS_UPDATE */
--	MCI_GPM_COEX_B_STATUS_TYPE      = 6,
--	MCI_GPM_COEX_B_STATUS_LINKID    = 7,
--	MCI_GPM_COEX_B_STATUS_STATE     = 8,
--	/* MCI_GPM_COEX_BT_UPDATE_FLAGS */
--	MCI_GPM_COEX_W_BT_FLAGS         = 6,
--	MCI_GPM_COEX_B_BT_FLAGS_OP      = 10
--};
--
--enum mci_gpm_subtype {
--	MCI_GPM_BT_CAL_REQ      = 0,
--	MCI_GPM_BT_CAL_GRANT    = 1,
--	MCI_GPM_BT_CAL_DONE     = 2,
--	MCI_GPM_WLAN_CAL_REQ    = 3,
--	MCI_GPM_WLAN_CAL_GRANT  = 4,
--	MCI_GPM_WLAN_CAL_DONE   = 5,
--	MCI_GPM_COEX_AGENT      = 0x0c,
--	MCI_GPM_RSVD_PATTERN    = 0xfe,
--	MCI_GPM_RSVD_PATTERN32  = 0xfefefefe,
--	MCI_GPM_BT_DEBUG        = 0xff
--};
--
--enum mci_bt_state {
--	MCI_BT_SLEEP,
--	MCI_BT_AWAKE,
--	MCI_BT_CAL_START,
--	MCI_BT_CAL
--};
--
--/* Type of state query */
--enum mci_state_type {
--	MCI_STATE_ENABLE,
--	MCI_STATE_INIT_GPM_OFFSET,
--	MCI_STATE_NEXT_GPM_OFFSET,
--	MCI_STATE_LAST_GPM_OFFSET,
--	MCI_STATE_BT,
--	MCI_STATE_SET_BT_SLEEP,
--	MCI_STATE_SET_BT_AWAKE,
--	MCI_STATE_SET_BT_CAL_START,
--	MCI_STATE_SET_BT_CAL,
--	MCI_STATE_LAST_SCHD_MSG_OFFSET,
--	MCI_STATE_REMOTE_SLEEP,
--	MCI_STATE_CONT_RSSI_POWER,
--	MCI_STATE_CONT_PRIORITY,
--	MCI_STATE_CONT_TXRX,
--	MCI_STATE_RESET_REQ_WAKE,
--	MCI_STATE_SEND_WLAN_COEX_VERSION,
--	MCI_STATE_SET_BT_COEX_VERSION,
--	MCI_STATE_SEND_WLAN_CHANNELS,
--	MCI_STATE_SEND_VERSION_QUERY,
--	MCI_STATE_SEND_STATUS_QUERY,
--	MCI_STATE_NEED_FLUSH_BT_INFO,
--	MCI_STATE_SET_CONCUR_TX_PRI,
--	MCI_STATE_RECOVER_RX,
--	MCI_STATE_NEED_FTP_STOMP,
--	MCI_STATE_NEED_TUNING,
--	MCI_STATE_DEBUG,
--	MCI_STATE_MAX
--};
--
--enum mci_gpm_coex_opcode {
--	MCI_GPM_COEX_VERSION_QUERY,
--	MCI_GPM_COEX_VERSION_RESPONSE,
--	MCI_GPM_COEX_STATUS_QUERY,
--	MCI_GPM_COEX_HALT_BT_GPM,
--	MCI_GPM_COEX_WLAN_CHANNELS,
--	MCI_GPM_COEX_BT_PROFILE_INFO,
--	MCI_GPM_COEX_BT_STATUS_UPDATE,
--	MCI_GPM_COEX_BT_UPDATE_FLAGS
--};
--
--#define MCI_GPM_NOMORE  0
--#define MCI_GPM_MORE    1
--#define MCI_GPM_INVALID 0xffffffff
--
--#define MCI_GPM_RECYCLE(_p_gpm)	do {			  \
--	*(((u32 *)_p_gpm) + MCI_GPM_COEX_W_GPM_PAYLOAD) = \
--				MCI_GPM_RSVD_PATTERN32;   \
--} while (0)
--
--#define MCI_GPM_TYPE(_p_gpm)	\
--	(*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_TYPE) & 0xff)
--
--#define MCI_GPM_OPCODE(_p_gpm)	\
--	(*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_OPCODE) & 0xff)
--
--#define MCI_GPM_SET_CAL_TYPE(_p_gpm, _cal_type)	do {			   \
--	*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_TYPE) = (_cal_type) & 0xff;\
--} while (0)
--
--#define MCI_GPM_SET_TYPE_OPCODE(_p_gpm, _type, _opcode) do {		   \
--	*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_TYPE) = (_type) & 0xff;	   \
--	*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_OPCODE) = (_opcode) & 0xff;\
--} while (0)
--
--#define MCI_GPM_IS_CAL_TYPE(_type) ((_type) <= MCI_GPM_WLAN_CAL_DONE)
--
- struct ath9k_beacon_state {
- 	u32 bs_nexttbtt;
- 	u32 bs_nextdtim;
-@@ -1205,46 +1050,6 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning);
- void ath9k_hw_proc_mib_event(struct ath_hw *ah);
- void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan);
+ struct ath6kl_irq_proc_registers {
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index 2d72190..75d7a21 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -22,6 +22,9 @@
  
--bool ar9003_mci_send_message(struct ath_hw *ah, u8 header, u32 flag,
--			     u32 *payload, u8 len, bool wait_done,
--			     bool check_bt);
--void ar9003_mci_stop_bt(struct ath_hw *ah, bool sava_fullsleep);
--void ar9003_mci_mute_bt(struct ath_hw *ah);
--u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data);
--void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable);
--void ar9003_mci_init_cal_done(struct ath_hw *ah);
--void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
--		      u16 len, u32 sched_addr);
--void ar9003_mci_cleanup(struct ath_hw *ah);
--void ar9003_mci_send_coex_halt_bt_gpm(struct ath_hw *ah, bool halt,
--				      bool wait_done);
--u32 ar9003_mci_wait_for_gpm(struct ath_hw *ah, u8 gpm_type,
--			    u8 gpm_opcode, int time_out);
--void ar9003_mci_2g5g_changed(struct ath_hw *ah, bool is_2g);
--void ar9003_mci_set_full_sleep(struct ath_hw *ah);
--void ar9003_mci_disable_interrupt(struct ath_hw *ah);
--void ar9003_mci_enable_interrupt(struct ath_hw *ah);
--void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done);
--void ar9003_mci_check_bt(struct ath_hw *ah);
--bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan);
--int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
--			 struct ath9k_hw_cal_data *caldata);
--void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
--		      bool is_full_sleep);
--bool ar9003_mci_check_int(struct ath_hw *ah, u32 ints);
--void ar9003_mci_remote_reset(struct ath_hw *ah, bool wait_done);
--void ar9003_mci_send_sys_waking(struct ath_hw *ah, bool wait_done);
--void ar9003_mci_send_lna_transfer(struct ath_hw *ah, bool wait_done);
--void ar9003_mci_sync_bt_state(struct ath_hw *ah);
--void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
--			      u32 *rx_msg_intr);
--void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
--
--static inline bool ar9003_mci_is_ready(struct ath_hw *ah)
--{
--	return ah->btcoex_hw.mci.ready;
--}
--
- #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- static inline enum ath_btcoex_scheme
- ath9k_hw_get_btcoex_scheme(struct ath_hw *ah)
-diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
-index b805bf2..c841444 100644
---- a/drivers/net/wireless/ath/ath9k/mci.h
-+++ b/drivers/net/wireless/ath/ath9k/mci.h
-@@ -17,6 +17,8 @@
- #ifndef MCI_H
- #define MCI_H
+ #define CALC_TXRX_PADDED_LEN(dev, len)  (__ALIGN_MASK((len), (dev)->block_mask))
  
-+#include "ar9003_mci.h"
++/* threshold to re-enable Tx bundling for an AC*/
++#define TX_RESUME_BUNDLE_THRESHOLD	1500
 +
- #define ATH_MCI_SCHED_BUF_SIZE		(16 * 16) /* 16 entries, 4 dword each */
- #define ATH_MCI_GPM_MAX_ENTRY		16
- #define ATH_MCI_GPM_BUF_SIZE		(ATH_MCI_GPM_MAX_ENTRY * 16)
+ /* Functions for Tx credit handling */
+ static void ath6kl_credit_deposit(struct ath6kl_htc_credit_info *cred_info,
+ 				  struct htc_endpoint_credit_dist *ep_dist,
+@@ -744,6 +747,12 @@ static void ath6kl_htc_tx_bundle(struct htc_endpoint *endpoint,
+ 	struct hif_scatter_req *scat_req = NULL;
+ 	int n_scat, n_sent_bundle = 0, tot_pkts_bundle = 0;
+ 	int status;
++	u32 txb_mask;
++	u8 ac = WMM_NUM_AC;
++
++	if ((HTC_CTRL_RSVD_SVC != endpoint->svc_id) ||
++		(WMI_CONTROL_SVC != endpoint->svc_id))
++		ac = target->dev->ar->ep2ac_map[endpoint->eid];
+ 
+ 	while (true) {
+ 		status = 0;
+@@ -763,6 +772,31 @@ static void ath6kl_htc_tx_bundle(struct htc_endpoint *endpoint,
+ 			break;
+ 		}
+ 
++		if ((ac < WMM_NUM_AC) && (ac != WMM_AC_BK)) {
++			if (WMM_AC_BE == ac)
++				/*
++				 * BE, BK have priorities and bit
++				 * positions reversed
++				 */
++				txb_mask = (1 << WMM_AC_BK);
++			else
++				/*
++				 * any AC with priority lower than
++				 * itself
++				 */
++				txb_mask = ((1 << ac) - 1);
++		/*
++		 * when the scatter request resources drop below a
++		 * certain threshold, disable Tx bundling for all
++		 * AC's with priority lower than the current requesting
++		 * AC. Otherwise re-enable Tx bundling for them
++		 */
++		if (scat_req->scat_q_depth < ATH6KL_SCATTER_REQS)
++			target->tx_bndl_mask &= ~txb_mask;
++		else
++			target->tx_bndl_mask |= txb_mask;
++		}
++
+ 		ath6kl_dbg(ATH6KL_DBG_HTC, "htc tx pkts to scatter: %d\n",
+ 			   n_scat);
+ 
+@@ -806,6 +840,7 @@ static void ath6kl_htc_tx_from_queue(struct htc_target *target,
+ 	struct htc_packet *packet;
+ 	int bundle_sent;
+ 	int n_pkts_bundle;
++	u8 ac = WMM_NUM_AC;
+ 
+ 	spin_lock_bh(&target->tx_lock);
+ 
+@@ -823,6 +858,10 @@ static void ath6kl_htc_tx_from_queue(struct htc_target *target,
+ 	 */
+ 	INIT_LIST_HEAD(&txq);
+ 
++	if ((HTC_CTRL_RSVD_SVC != endpoint->svc_id) ||
++		(WMI_CONTROL_SVC != endpoint->svc_id))
++		ac = target->dev->ar->ep2ac_map[endpoint->eid];
++
+ 	while (true) {
+ 
+ 		if (list_empty(&endpoint->txq))
+@@ -840,15 +879,18 @@ static void ath6kl_htc_tx_from_queue(struct htc_target *target,
+ 
+ 		while (true) {
+ 			/* try to send a bundle on each pass */
+-			if ((target->tx_bndl_enable) &&
++			if ((target->tx_bndl_mask) &&
+ 			    (get_queue_depth(&txq) >=
+ 			    HTC_MIN_HTC_MSGS_TO_BUNDLE)) {
+ 				int temp1 = 0, temp2 = 0;
+ 
+-				ath6kl_htc_tx_bundle(endpoint, &txq,
+-						     &temp1, &temp2);
+-				bundle_sent += temp1;
+-				n_pkts_bundle += temp2;
++				/* check if bundling is enabled for an AC */
++				if (target->tx_bndl_mask & (1 << ac)) {
++					ath6kl_htc_tx_bundle(endpoint, &txq,
++							     &temp1, &temp2);
++					bundle_sent += temp1;
++					n_pkts_bundle += temp2;
++				}
+ 			}
+ 
+ 			if (list_empty(&txq))
+@@ -867,6 +909,26 @@ static void ath6kl_htc_tx_from_queue(struct htc_target *target,
+ 
+ 		endpoint->ep_st.tx_bundles += bundle_sent;
+ 		endpoint->ep_st.tx_pkt_bundled += n_pkts_bundle;
++
++		/*
++		 * if an AC has bundling disabled and no tx bundling
++		 * has occured continously for a certain number of TX,
++		 * enable tx bundling for this AC
++		 */
++		if (!bundle_sent) {
++			if (!(target->tx_bndl_mask & (1 << ac)) &&
++				(ac < WMM_NUM_AC)) {
++				if (++target->ac_tx_count[ac] >=
++					TX_RESUME_BUNDLE_THRESHOLD) {
++					target->ac_tx_count[ac] = 0;
++					target->tx_bndl_mask |= (1 << ac);
++				}
++			}
++		} else {
++			/* tx bundling will reset the counter */
++			if (ac < WMM_NUM_AC)
++				target->ac_tx_count[ac] = 0;
++		}
+ 	}
+ 
+ 	endpoint->tx_proc_cnt = 0;
+@@ -2517,7 +2579,8 @@ static void htc_setup_msg_bndl(struct htc_target *target)
+ 		   target->max_rx_bndl_sz, target->max_tx_bndl_sz);
+ 
+ 	if (target->max_tx_bndl_sz)
+-		target->tx_bndl_enable = true;
++		/* tx_bndl_mask is enabled per AC, each has 1 bit */
++		target->tx_bndl_mask = (1 << WMM_NUM_AC) - 1;
+ 
+ 	if (target->max_rx_bndl_sz)
+ 		target->rx_bndl_enable = true;
+@@ -2532,7 +2595,7 @@ static void htc_setup_msg_bndl(struct htc_target *target)
+ 		 * padding will spill into the next credit buffer
+ 		 * which is fatal.
+ 		 */
+-		target->tx_bndl_enable = false;
++		target->tx_bndl_mask = 0;
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
+index 57672e1..b85716e 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.h
++++ b/drivers/net/wireless/ath/ath6kl/htc.h
+@@ -87,6 +87,8 @@
+ #define WMI_DATA_VO_SVC   MAKE_SERVICE_ID(WMI_SERVICE_GROUP, 4)
+ #define WMI_MAX_SERVICES  5
+ 
++#define WMM_NUM_AC  4
++
+ /* reserved and used to flush ALL packets */
+ #define HTC_TX_PACKET_TAG_ALL          0
+ #define HTC_SERVICE_TX_PACKET_TAG      1
+@@ -531,7 +533,7 @@ struct htc_target {
+ 	/* max messages per bundle for HTC */
+ 	int msg_per_bndl_max;
+ 
+-	bool tx_bndl_enable;
++	u32 tx_bndl_mask;
+ 	int rx_bndl_enable;
+ 	int max_rx_bndl_sz;
+ 	int max_tx_bndl_sz;
+@@ -543,6 +545,9 @@ struct htc_target {
+ 	int max_xfer_szper_scatreq;
+ 
+ 	int chk_irq_status_cnt;
++
++	/* counts the number of Tx without bundling continously per AC */
++	u32 ac_tx_count[WMM_NUM_AC];
+ };
+ 
+ void *ath6kl_htc_create(struct ath6kl *ar);
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 7bb6107..9f84486 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -601,6 +601,8 @@ static struct hif_scatter_req *ath6kl_sdio_scatter_req_get(struct ath6kl *ar)
+ 		node = list_first_entry(&ar_sdio->scat_req,
+ 					struct hif_scatter_req, list);
+ 		list_del(&node->list);
++
++		node->scat_q_depth = get_queue_depth(&ar_sdio->scat_req);
+ 	}
+ 
+ 	spin_unlock_bh(&ar_sdio->scat_lock);
 -- 
-1.7.9.1
+1.7.7.2
 
