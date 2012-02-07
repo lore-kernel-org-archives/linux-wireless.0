@@ -1,73 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19535 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756865Ab2BCQcr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 11:32:47 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v2 06/25] iwlegacy: get rid of wep_key_cmd
-Date: Fri,  3 Feb 2012 17:31:42 +0100
-Message-Id: <1328286721-11309-7-git-send-email-sgruszka@redhat.com> (sfid-20120203_173249_472337_EA9C9D25)
-In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
-References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:39487 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756494Ab2BGMvz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Feb 2012 07:51:55 -0500
+Received: by mail-vx0-f174.google.com with SMTP id e1so4592507vcg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 04:51:55 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1328568313-26267-6-git-send-email-gwingerde@gmail.com>
+References: <1328568313-26267-1-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-2-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-3-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-4-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-5-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-6-git-send-email-gwingerde@gmail.com>
+Date: Tue, 7 Feb 2012 13:51:55 +0100
+Message-ID: <CAOZOX0XrqZuA9xaz6x8wEyc8gryD7+a7Q6mNGvPvn21E4ZH+Tw@mail.gmail.com> (sfid-20120207_135209_998459_54895A0F)
+Subject: Re: [PATCH 5/8] rt2x00: Fix RFCSR 12 & 13 programming on RT3572
+ channel switching.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/3945-mac.c |    1 -
- drivers/net/wireless/iwlegacy/4965-mac.c |    3 +--
- drivers/net/wireless/iwlegacy/common.h   |    2 --
- 3 files changed, 1 insertions(+), 5 deletions(-)
+On Mon, Feb 6, 2012 at 11:45 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> Align with v2.5.0.0 Ralink RT3572 driver for 2.4GHz band channel switch.
+>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index bbbac26..4a01acb 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -3620,7 +3620,6 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	il->ctx.ctxid = 0;
- 
- 	il->ctx.ap_sta_id = IL_AP_ID;
--	il->ctx.wep_key_cmd = C_WEPKEY;
- 	il->ctx.interface_modes =
- 	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
- 	il->ctx.ibss_devtype = RXON_DEV_TYPE_IBSS;
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 2ee5de3..a2955a4 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -2823,7 +2823,7 @@ il4965_static_wepkey_cmd(struct il_priv *il, struct il_rxon_context *ctx,
- 	struct il_wep_cmd *wep_cmd = (struct il_wep_cmd *)buff;
- 	size_t cmd_size = sizeof(struct il_wep_cmd);
- 	struct il_host_cmd cmd = {
--		.id = ctx->wep_key_cmd,
-+		.id = C_WEPKEY,
- 		.data = wep_cmd,
- 		.flags = CMD_SYNC,
- 	};
-@@ -6136,7 +6136,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	il->ctx.always_active = true;
- 	il->ctx.is_active = true;
- 	il->ctx.ap_sta_id = IL_AP_ID;
--	il->ctx.wep_key_cmd = C_WEPKEY;
- 	il->ctx.ac_to_fifo = il4965_bss_ac_to_fifo;
- 	il->ctx.ac_to_queue = il4965_bss_ac_to_queue;
- 	il->ctx.exclusive_interface_modes = BIT(NL80211_IFTYPE_ADHOC);
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index b08ddd1..46835f9 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1175,8 +1175,6 @@ struct il_rxon_context {
- 
- 	u8 bcast_sta_id, ap_sta_id;
- 
--	u8 wep_key_cmd;
--
- 	struct il_wep_key wep_keys[WEP_KEYS_MAX];
- 	u8 key_mapping_keys;
- 
--- 
-1.7.1
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index cb841f4..66af6f4 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -1783,8 +1783,7 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
+>        if (rf->channel <= 14) {
+>                rt2x00_set_field8(&rfcsr, RFCSR12_DR0, 3);
+>                rt2x00_set_field8(&rfcsr, RFCSR12_TX_POWER,
+> -                               (info->default_power1 & 0x3) |
+> -                               ((info->default_power1 & 0xC) << 1));
+> +                                 info->default_power1);
+>        } else {
+>                rt2x00_set_field8(&rfcsr, RFCSR12_DR0, 7);
+>                rt2x00_set_field8(&rfcsr, RFCSR12_TX_POWER,
+> @@ -1797,8 +1796,7 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
+>        if (rf->channel <= 14) {
+>                rt2x00_set_field8(&rfcsr, RFCSR13_DR0, 3);
+>                rt2x00_set_field8(&rfcsr, RFCSR13_TX_POWER,
+> -                               (info->default_power2 & 0x3) |
+> -                               ((info->default_power2 & 0xC) << 1));
+> +                                 info->default_power2);
+>        } else {
+>                rt2x00_set_field8(&rfcsr, RFCSR13_DR0, 7);
+>                rt2x00_set_field8(&rfcsr, RFCSR13_TX_POWER,
+> --
+> 1.7.9
+>
