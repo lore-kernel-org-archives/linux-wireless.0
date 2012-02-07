@@ -1,135 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:30401 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755462Ab2BYJLx (ORCPT
+Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:38491 "EHLO
+	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756458Ab2BGUQf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Feb 2012 04:11:53 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH V2 5/5] ath6kl: Defer wiphy and netdev registration till the end of ath6kl_core_init()
-Date: Sat, 25 Feb 2012 14:41:08 +0530
-Message-ID: <1330161068-8413-5-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120225_101211_095981_20682EAD)
-In-Reply-To: <1330161068-8413-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1330161068-8413-1-git-send-email-vthiagar@qca.qualcomm.com>
+	Tue, 7 Feb 2012 15:16:35 -0500
+Date: Tue, 7 Feb 2012 21:16:33 +0100
+From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+To: David Miller <davem@davemloft.net>
+Cc: simon.wunderlich@s2003.tu-chemnitz.de, netdev@vger.kernel.org,
+	Pablo Neira Ayuso <pablo@netfilter.org>,
+	Patrick McHardy <kaber@trash.net>,
+	Jamal Hadi Salim <hadi@cyberus.ca>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Marek Lindner <lindner_marek@yahoo.de>,
+	Sven Eckelmann <sven@narfation.org>,
+	netfilter-devel@vger.kernel.org, netfilter@vger.kernel.org,
+	coreteam@netfilter.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] skbuff: Add new tc classify variable
+Message-ID: <20120207201633.GB26533@pandem0nium> (sfid-20120207_211645_472839_AF6AC045)
+References: <1328639948-25232-1-git-send-email-siwu@hrz.tu-chemnitz.de>
+ <20120207.135841.1753473725075272902.davem@davemloft.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="aVD9QWMuhilNxW9f"
+In-Reply-To: <20120207.135841.1753473725075272902.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes the wiphy and initial netdev registration the last step
-in dev initialization. Apart from the fact that this looks right,
-it fixes a FIXME in ath6kl_core_init() where mac address is copied into
-netdev->dev_addr, ath6kl_interface_add() takes care of this as well.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
-V2 - Remove reference to regulatory in commit log, even without
-     this patch regulatory information can be initialized.
+--aVD9QWMuhilNxW9f
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
- drivers/net/wireless/ath/ath6kl/core.c |   76 +++++++++++++------------------
- 1 files changed, 32 insertions(+), 44 deletions(-)
+Hello David,
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
-index 930ff9d..5564fa8 100644
---- a/drivers/net/wireless/ath/ath6kl/core.c
-+++ b/drivers/net/wireless/ath/ath6kl/core.c
-@@ -98,38 +98,6 @@ int ath6kl_core_init(struct ath6kl *ar)
- 
- 	ath6kl_dbg(ATH6KL_DBG_TRC, "%s: got wmi @ 0x%p.\n", __func__, ar->wmi);
- 
--	ret = ath6kl_cfg80211_init(ar);
--	if (ret)
--		goto err_node_cleanup;
--
--	ret = ath6kl_debug_init(ar);
--	if (ret) {
--		wiphy_unregister(ar->wiphy);
--		goto err_node_cleanup;
--	}
--
--	for (i = 0; i < ar->vif_max; i++)
--		ar->avail_idx_map |= BIT(i);
--
--	rtnl_lock();
--
--	/* Add an initial station interface */
--	ndev = ath6kl_interface_add(ar, "wlan%d", NL80211_IFTYPE_STATION, 0,
--				    INFRA_NETWORK);
--
--	rtnl_unlock();
--
--	if (!ndev) {
--		ath6kl_err("Failed to instantiate a network device\n");
--		ret = -ENOMEM;
--		wiphy_unregister(ar->wiphy);
--		goto err_debug_init;
--	}
--
--
--	ath6kl_dbg(ATH6KL_DBG_TRC, "%s: name=%s dev=0x%p, ar=0x%p\n",
--			__func__, ndev->name, ndev, ar);
--
- 	/* setup access class priority mappings */
- 	ar->ac_stream_pri_map[WMM_AC_BK] = 0; /* lowest  */
- 	ar->ac_stream_pri_map[WMM_AC_BE] = 1;
-@@ -166,24 +134,44 @@ int ath6kl_core_init(struct ath6kl *ar)
- 	ath6kl_rx_refill(ar->htc_target, ar->ctrl_ep);
- 	ath6kl_rx_refill(ar->htc_target, ar->ac2ep_map[WMM_AC_BE]);
- 
--	/*
--	 * Set mac address which is received in ready event
--	 * FIXME: Move to ath6kl_interface_add()
--	 */
--	memcpy(ndev->dev_addr, ar->mac_addr, ETH_ALEN);
-+	ret = ath6kl_cfg80211_init(ar);
-+	if (ret)
-+		goto err_rxbuf_cleanup;
- 
--	return ret;
-+	ret = ath6kl_debug_init(ar);
-+	if (ret) {
-+		wiphy_unregister(ar->wiphy);
-+		goto err_rxbuf_cleanup;
-+	}
-+
-+	for (i = 0; i < ar->vif_max; i++)
-+		ar->avail_idx_map |= BIT(i);
- 
--err_rxbuf_cleanup:
--	ath6kl_htc_flush_rx_buf(ar->htc_target);
--	ath6kl_cleanup_amsdu_rxbufs(ar);
- 	rtnl_lock();
--	ath6kl_cfg80211_vif_cleanup(netdev_priv(ndev));
-+
-+	/* Add an initial station interface */
-+	ndev = ath6kl_interface_add(ar, "wlan%d", NL80211_IFTYPE_STATION, 0,
-+				    INFRA_NETWORK);
-+
- 	rtnl_unlock();
--	wiphy_unregister(ar->wiphy);
-+
-+	if (!ndev) {
-+		ath6kl_err("Failed to instantiate a network device\n");
-+		ret = -ENOMEM;
-+		wiphy_unregister(ar->wiphy);
-+		goto err_debug_init;
-+	}
-+
-+	ath6kl_dbg(ATH6KL_DBG_TRC, "%s: name=%s dev=0x%p, ar=0x%p\n",
-+			__func__, ndev->name, ndev, ar);
-+
-+	return ret;
-+
- err_debug_init:
- 	ath6kl_debug_cleanup(ar);
--err_node_cleanup:
-+err_rxbuf_cleanup:
-+	ath6kl_htc_flush_rx_buf(ar->htc_target);
-+	ath6kl_cleanup_amsdu_rxbufs(ar);
- 	ath6kl_wmi_shutdown(ar->wmi);
- 	clear_bit(WMI_ENABLED, &ar->flag);
- 	ar->wmi = NULL;
--- 
-1.7.0.4
+On Tue, Feb 07, 2012 at 01:58:41PM -0500, David Miller wrote:
+> From: Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>
+> Date: Tue,  7 Feb 2012 19:39:08 +0100
+>=20
+> > The linux traffic control mechanism has different ways to select the
+> > correct class of a qdisc. A common way to do this is to use tc filters
+> > that are directly attached to a qdisc. Another approach is to use the
+> > iptables classify module. The latter one can reduce the amount of work
+> > necessary to process a packet when iptables is already involved in the
+> > packet classification.
+>=20
+> Do not bloat up sk_buff any more.  Add this, and the other existing
+> tc_* members to the qdisc SKB control block instead.
+>=20
 
+Thanks for your feedback!
+
+I guess you mean skb->cb, but this is also used within mac80211 for various=
+ things
+(quoting include/net/mac80211.h):
+
+ * struct ieee80211_tx_info - skb transmit information
+ *
+ * This structure is placed in skb->cb for three uses:
+ *  (1) mac80211 TX control - mac80211 tells the driver what to do
+ *  (2) driver internal use (if applicable)
+ *  (3) TX status information - driver tells mac80211 what happened
+
+We could give it a try, but we most probably run into conflicts again.
+
+I've messed up the CCs in my initial mail (and just resent it) - sorry abou=
+t that.
+Maybe the mac80211 guys have a suggestion as well :)
+
+Cheers,
+	Simon
+
+--aVD9QWMuhilNxW9f
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iEYEARECAAYFAk8xhqEACgkQrzg/fFk7axbRoQCgxHGS8m8aSBvHs2Tyllbx/lmu
+Z+wAn1g2l77zpxyp4a1Slv0m8jl7cs1K
+=MyYW
+-----END PGP SIGNATURE-----
+
+--aVD9QWMuhilNxW9f--
