@@ -1,72 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:35710 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753016Ab2BGHIN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 02:08:13 -0500
-Received: by werb13 with SMTP id b13so4795324wer.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2012 23:08:12 -0800 (PST)
+Received: from gmmr3.centrum.cz ([46.255.225.251]:51720 "EHLO gmmr3.centrum.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754296Ab2BGGOq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Feb 2012 01:14:46 -0500
+To: "Andreas Hartmann" <andihartmann@01019freenet.de>
+Subject: Re: connection interrupted for rt61pci in master mode
+Date: Tue, 07 Feb 2012 07:14:44 +0100
+From: <trencan@centrum.cz>
+Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
+References: <20120128154544.70E060CD@centrum.cz> <4F30BEED.4010905@01019freenet.de>
+In-Reply-To: <4F30BEED.4010905@01019freenet.de>
 MIME-Version: 1.0
-In-Reply-To: <CACna6rx7E9tM82iyYP=eRnTU+QZA1rMfdk8vNnX5k1_jbc5DqQ@mail.gmail.com>
-References: <20120203222818.GA3749@ubuntu-mba>
-	<4F2D0C07.1010704@broadcom.com>
-	<20120204142502.GA10858@ubuntu-mba>
-	<CACna6ryR2xm2EAJaV4vCO8WebR5pXCyFknEMrf8ynVF+HYrxTw@mail.gmail.com>
-	<20120206173757.GC31938@ubuntu-macmini>
-	<4F302647.2070102@hauke-m.de>
-	<20120206223447.GE31938@ubuntu-macmini>
-	<CACna6rx7E9tM82iyYP=eRnTU+QZA1rMfdk8vNnX5k1_jbc5DqQ@mail.gmail.com>
-Date: Tue, 7 Feb 2012 08:08:11 +0100
-Message-ID: <CACna6rzDNfAMq+RHO_X2y3XrQn3oFJxmf9bsR2mzLs3X0o3dSA@mail.gmail.com> (sfid-20120207_080816_791326_A5F7A380)
-Subject: Re: BCM4331 fails to associate after suspend
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Seth Forshee <seth.forshee@canonical.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	Arend van Spriel <arend@broadcom.com>,
-	Scott Sanbar <scott.sanbar@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
+Message-Id: <20120207071444.8C823024@centrum.cz> (sfid-20120207_071449_404653_F1AD2AF6)
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 7 lutego 2012 08:04 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
-> 2012/2/6 Seth Forshee <seth.forshee@canonical.com>:
->> On Mon, Feb 06, 2012 at 08:13:11PM +0100, Hauke Mehrtens wrote:
->>> According to the Broadcom SDK for SoCs bcma_pcicore_serdes_workaround()
->>> should be called when coming out of standby/hibernate.
->>> The code wl uses to do the same thing as bcma does is open source. You
->>> find it in the GPL package of many Broadcom based Wifi Routers.
->>
->> Thanks for the suggestion. Unfortunately calling
->> bcma_pcicore_serdes_workaround() during resume doesn't help. I'll look
->> at the wl code to see if I can learn anything there.
->
-> Can you try
->
->
-> diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
-> index febbc0a..a097a26 100644
-> --- a/drivers/bcma/main.c
-> +++ b/drivers/bcma/main.c
-> @@ -267,6 +267,13 @@ int bcma_bus_resume(struct bcma_bus *bus)
->                bcma_core_chipcommon_init(&bus->drv_cc);
->        }
->
-> +       /* Init PCIE core */
-> +       core = bcma_find_core(bus, BCMA_CORE_PCIE);
-> +       if (core) {
-> +               bus->drv_pci.setup_done = false;
-> +               bcma_core_pci_init(&bus->drv_pci);
-> +       }
-> +
->        list_for_each_entry(core, &bus->cores, list) {
->                struct device_driver *drv = core->dev.driver;
->                if (drv) {
 
-If this doesn't work out of box, please check if reloading b43 is
-enough. AFAIR now you have to reload both: b43 and bcma. I hope this
-patch will let you avoid reloading at least bcma.
+Machine has "Intel Core i5-2500K" with 4 cores without Hyper-Threading.
 
--- 
-Rafał
+Regards.
+Michal
+
+______________________________________________________________
+> Od: "Andreas Hartmann" <andihartmann@01019freenet.de>
+> Komu: <trencan@centrum.cz>
+> Datum: 07.02.2012 07:07
+> Předmět: Re: connection interrupted for rt61pci in master mode
+>
+>trencan@centrum.cz schrieb:
+>> 
+>> Hello,
+>> 
+>> I have RaLink RT2561/RT61 802.11g PCI wireless card and use it in
+>> master mode as AP. I have latest Mandriva 2011.0 distro with kernel
+>> 2.6.38.7-desktop-1mnb2. Driver for wifi card is rt61pci. If I connect
+>> via wifi from another PC then after some small time I get connection
+>> interrupted and I must disconnect and reconnect again. I tried latest
+>> compat-wireless-3.3-rc1-2 and also latest hostapd-0.7.3, but still
+>> same issue. In previous Mandriva version 2010.2 I had kernel
+>> 2.6.33.7-desktop-2mnb, hostapd-0.6.7 and it worked perfectly. Hostapd
+>> uses driver=nl80211, mode=g, channel=11.
+>
+>What about the machine rt61pci runs on? Does the machine have one single
+>core cpu or is it a multi core / processor machine (smp)?
+>
+>
+>Regards,
+>Andreas
+>
