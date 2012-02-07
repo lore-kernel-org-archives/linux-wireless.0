@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:59320 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755616Ab2B1BFs (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53469 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755499Ab2BGUq4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 20:05:48 -0500
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <hauke@hauke-m.de>, <nbd@nbd.name>, <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>
-Subject: [PATCH 1/7] compat: fix parallel builds
-Date: Mon, 27 Feb 2012 17:05:35 -0800
-Message-ID: <1330391141-19909-2-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120228_020552_906482_DC5EA3F3)
-In-Reply-To: <1330391141-19909-1-git-send-email-rodrigue@qca.qualcomm.com>
-References: <1330391141-19909-1-git-send-email-rodrigue@qca.qualcomm.com>
+	Tue, 7 Feb 2012 15:46:56 -0500
+Date: Tue, 7 Feb 2012 15:42:48 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	Robert =?iso-8859-1?Q?Gr=F8nning?= <slimg@iggu.org>
+Subject: Re: [wireless-regdb] wireless-regdb: Update regulatory rules for
+ Norway (NO)
+Message-ID: <20120207204248.GJ5560@tuxdriver.com> (sfid-20120207_214659_310527_0834377F)
+References: <87pqgkxn25.fsf@nemi.mork.no>
+ <20111128181912.GB2681@tuxdriver.com>
+ <20120207195415.GG5560@tuxdriver.com>
+ <87vcni74w4.fsf@nemi.mork.no>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <87vcni74w4.fsf@nemi.mork.no>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <mcgrof@frijolero.org>
+On Tue, Feb 07, 2012 at 09:41:31PM +0100, Bjørn Mork wrote:
+> "John W. Linville" <linville@tuxdriver.com> writes:
+> 
+> > Well, sorry for the delay...  I will take this silence as "no
+> > objection". :-)
+> >
+> > Bjørn, could you give me a "Signed-off-by" line as well?
+> 
+> Sure.  Is this sufficient, or do you need the patch resent with it
+> included?
+> 
+> 
+> Signed-off-by: Bjørn Mork <bjorn@mork.no>
 
-We broke parallel builds by breaking GNU Make's heuristics.
-GNU Make does not whether or not target commands are sub-make
-commands or not, these must be explicitly annotated. To tell
-GNU Make that target command is going to be a sub-process
-we can use the $(MAKE) variable for a command. Another option
-is to tell GNU Make that a target command is *not* a sub-make
-command instead explicitly by prepending a command with a plus,
-"+" prior to the command. This will force GNU Make to avoid
-supporting certain flags for those targets but more importantly,
-it will also ensure that during execution of commands that are
-*not* sub-make commands it will yield the jobserver to ensure
-file descriptor / job sanity.
+Well, that's fine.  But be sure to read Luis's reply.  I'm not sure
+we should take this patch.
 
-Annotate to GNU Make two commands that we issue are *not* sub-make
-commands. This avoids stop the job server for these commands but
-also allows GNU Make to figure out the heuristics to run the job
-server for further sub-make commands -- in this case the recursive
-call to make.
-
-Reported-by: Hauke Mehrtens <hauke@hauke-m.de>
-Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
----
- Makefile |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/Makefile b/Makefile
-index d96d098..d11da17 100644
---- a/Makefile
-+++ b/Makefile
-@@ -62,8 +62,8 @@ install: modules
- $(COMPAT_AUTOCONF): ;
- 
- $(COMPAT_CONFIG):
--	@$(PWD)/scripts/gen-compat-config.sh > $(PWD)/$(COMPAT_CONFIG)
--	@$(PWD)/scripts/gen-compat-autoconf.sh $(COMPAT_CONFIG) > $(PWD)/$(COMPAT_AUTOCONF)
-+	+@$(PWD)/scripts/gen-compat-config.sh > $(PWD)/$(COMPAT_CONFIG)
-+	+@$(PWD)/scripts/gen-compat-autoconf.sh $(COMPAT_CONFIG) > $(PWD)/$(COMPAT_AUTOCONF)
- 	@$(MAKE) -C $(PWD) modules
- 
- install: modules
+John
 -- 
-1.7.4.15.g7811d
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
