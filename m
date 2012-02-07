@@ -1,36 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:33648 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361Ab2BMNyb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 08:54:31 -0500
-Received: by pbcun15 with SMTP id un15so4565823pbc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Feb 2012 05:54:31 -0800 (PST)
+Received: from mms1.broadcom.com ([216.31.210.17]:3842 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755661Ab2BGR0O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Feb 2012 12:26:14 -0500
+Message-ID: <4F315E7E.7040203@broadcom.com> (sfid-20120207_182623_054134_A489AA09)
+Date: Tue, 7 Feb 2012 18:25:18 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20120210012321.CA97C17F947@vari.ath.cx>
-References: <20120210012321.CA97C17F947@vari.ath.cx>
-Date: Mon, 13 Feb 2012 14:54:30 +0100
-Message-ID: <CAGXE3d8096hu2Gm+5VzSJca9GHaUqFKDR6L8fFBr-VmYdJmbuw@mail.gmail.com> (sfid-20120213_145434_383490_7FADFFCD)
-Subject: Re: phy1 -> rt2x00queue_write_tx_frame: Error - Arrived at non-free
- entry in the non-full queue 2.
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Mj <madis@cyber.ee>
-Cc: IvDoorn@gmail.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: REGRESSION: crash in wireless-testing smoketest
+References: <4F313815.3020107@broadcom.com> (
+ sfid-20120207_154219_853529_011888C8)
+ <4F313C53.2040604@sipsolutions.net>
+In-Reply-To: <4F313C53.2040604@sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 10, 2012 at 2:23 AM, Mj <madis@cyber.ee> wrote:
-> phy1 -> rt2x00queue_write_tx_frame: Error - Arrived at non-free entry in the non-full queue 2.
->
-> I get this error fairly regularly (about once per day or two) and
-> the wireless stops working after that. Work-around is suspending
-> the laptop (EeePC 1000) and waking it again - after that
-> the rt2800pci driver seems to get into working state again.
+On 02/07/2012 03:59 PM, Johannes Berg wrote:
+> On 2/7/2012 3:41 PM, Arend van Spriel wrote:
+>> Hi Johannes,
+>>
+>> For the brcm80211 drivers we have nightly tests running on both internal
+>> repo and wireless-testing. Last nights test failed for wireless-testing
+>> and it occurred during AUTH/ASSOC. I bisected the issue to following commit:
+>>
+>> commit 7852e36186d2a1983c215836d7e3d7b8927c930d
+>> Author: Johannes Berg<johannes.berg@intel.com>
+>> Date:   Fri Jan 20 13:55:24 2012 +0100
+>>
+>>      mac80211: remove dummy STA support
+>>
+>>      The dummy STA support was added because I didn't
+>>      want to change the driver API at the time. Now
+>>      that we have state transitions triggering station
+>>      add/remove in the driver, we only call add once a
+>>      station reaches ASSOCIATED, so we can remove the
+>>      dummy station stuff again.
+>>
+>>      While at it, tighten the RX check and accept only
+>>      port control (EAP) frames from the AP station if
+>>      it's not associated yet -- in other cases there's
+>>      no race.
+>>
+>>      Signed-off-by: Johannes Berg<johannes.berg@intel.com>
+>>      Signed-off-by: John W. Linville<linville@tuxdriver.com>
+>>
+>> The brcmsmac driver does not provide a sta_remove callback. I suspect
+>> that is causing the issue here. Can you confirm?
+> 
+> I'm on a business trip right now, but I can take a look. Did it really 
+> *crash*? You said so in the subject but have no crash data.
+> 
+> johannes
+> 
 
-Mind to compile rt2x00 with debugfs support and check the queue length
-in /sys/kernel/debug/ieee80211/netdev:wlan0/rt2800pci/queues when this
-issue appears?
+The logs did not catch it before the crash. I dug a bit deeper and it
+does not seem the missing sta_remove is a problem as drv_sta_remove
+checks the function pointer being non-NULL before using it.
 
-Thanks,
-Helmut
+Can you recommend a kernel hacking option so the log may give a better clue?
+
+Gr. AvS
+
