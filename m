@@ -1,95 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:45939 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755680Ab2BXEZa convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 23:25:30 -0500
-Received: by obcva7 with SMTP id va7so2328806obc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 20:25:29 -0800 (PST)
+Received: from mail.ukfsn.org ([77.75.108.3]:35731 "EHLO mail.ukfsn.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756081Ab2BGWrN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Feb 2012 17:47:13 -0500
+Received: from localhost (smtp-filter.ukfsn.org [192.168.54.205])
+	by mail.ukfsn.org (Postfix) with ESMTP id B9EEFDEB6D
+	for <linux-wireless@vger.kernel.org>; Tue,  7 Feb 2012 22:47:12 +0000 (GMT)
+Received: from mail.ukfsn.org ([192.168.54.25])
+	by localhost (smtp-filter.ukfsn.org [192.168.54.205]) (amavisd-new, port 10024)
+	with ESMTP id xIF8hmopMfp4 for <linux-wireless@vger.kernel.org>;
+	Tue,  7 Feb 2012 23:21:28 +0000 (GMT)
+Received: from stargate.localnet (unknown [84.45.236.142])
+	by mail.ukfsn.org (Postfix) with ESMTP id 6ECEBDEB9E
+	for <linux-wireless@vger.kernel.org>; Tue,  7 Feb 2012 22:47:12 +0000 (GMT)
+From: David Goodenough <david.goodenough@btconnect.com>
+To: linux-wireless@vger.kernel.org
+Subject: Re: [wireless-regdb] wireless-regdb: Update regulatory rules for Norway (NO)
+Date: Tue, 7 Feb 2012 22:47:08 +0000
+References: <87pqgkxn25.fsf@nemi.mork.no> <20120207195415.GG5560@tuxdriver.com> <CAB=NE6VVcQgum4mQ5eooS2yXo-NNXHvujsUwpbEwNdQQSreaBA@mail.gmail.com>
+In-Reply-To: <CAB=NE6VVcQgum4mQ5eooS2yXo-NNXHvujsUwpbEwNdQQSreaBA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6XHpOdKsTFM3x_aMF7+jL6NKuB9_wS0eQRBYqAbQVw1ww@mail.gmail.com>
-References: <20120221060932.8A38C20517@glenhelen.mtv.corp.google.com>
-	<20120221131946.AC1AD20578@glenhelen.mtv.corp.google.com>
-	<1330004364.3448.8.camel@jlt3.sipsolutions.net>
-	<CA+yqC4bcLz5xBTqOV_C4cjm4MDwEaifbJNi9dCSh7CTbjPiXBg@mail.gmail.com>
-	<1330009145.3448.13.camel@jlt3.sipsolutions.net>
-	<CAMcMvshr_1gx0y55ne5wia03OaSASZAh1vvJyeY02v1yTwU4aQ@mail.gmail.com>
-	<CAB=NE6XHpOdKsTFM3x_aMF7+jL6NKuB9_wS0eQRBYqAbQVw1ww@mail.gmail.com>
-Date: Thu, 23 Feb 2012 20:25:29 -0800
-Message-ID: <CA+yqC4az=eOHPZOj2PBc3VMVJGiRadueuvM9+Y6S+r+GT7YKuw@mail.gmail.com> (sfid-20120224_052533_563892_FF016814)
-Subject: Re: [RFCv2] mac80211: Don't let regulatory make us deaf
-From: Sam Leffler <sleffler@google.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: Paul Stewart <pstew@chromium.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201202072247.08793.david.goodenough@btconnect.com> (sfid-20120207_234720_242339_A4BF12C5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 23, 2012 at 5:53 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
-> On Thu, Feb 23, 2012 at 7:14 AM, Paul Stewart <pstew@chromium.org> wrote:
->> On Thu, Feb 23, 2012 at 6:59 AM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->>>
->>> On Thu, 2012-02-23 at 06:53 -0800, Sam Leffler wrote:
->>> > On Thu, Feb 23, 2012 at 5:39 AM, Johannes Berg
->>> > <johannes@sipsolutions.net> wrote:
->>> > > On Mon, 2012-02-20 at 21:25 -0800, Paul Stewart wrote:
->>> > >> When regulatory information changes our HT behavior (e.g,
->>> > >> when we get a country code from the AP we have just associated
->>> > >> with), we should use this information to change the power with
->>> > >> which we transmit, and what channels we transmit. �Sometimes
->>> > >> the channel parameters we derive from regulatory information
->>> > >> contradicts the parameters we used in association. �For example,
->>> > >> we could have associated specifying HT40, but the regulatory
->>> > >> rules we apply may forbid HT40 operation.
->>> > >>
->>> > >> In the situation above, we should reconfigure ourselves to
->>> > >> transmit in HT20 only, however it makes no sense for us to
->>> > >> disable receive in HT40, since if we associated with these
->>> > >> parameters, the AP has every reason to expect we can and
->>> > >> will receive packets this way. �The code in mac80211 does
->>> > >> not have the capability of sending the appropriate action
->>> > >> frames to signal a change in HT behaviour so the AP has
->>> > >> no clue we can no longer receive frames encoded this way.
->>> > >> In some broken AP implementations, this can leave us
->>> > >> effectively deaf if the AP never retries in lower HT rates.
->>> > >>
->>> > >> This change breaks up the channel_type parameter in the
->>> > >> ieee80211_enable_ht function into a separate receive and
->>> > >> transmit part. �It honors the channel flags set by regulatory
->>> > >> in order to configure the rate control algorithm, but uses
->>> > >> the capability flags to configure the channel on the radio,
->>> > >> since these were used in association to set the AP's transmit
->>> > >> rate.
->>> > >
->>> > > Quite the stupid APs, obviously ...
->>> >
->>> > Actually the AP is operating correctly (modulo the question of whether
->>> > HT40 may be used in kr).
->>>
->>> Ah, yes. I was thinking the AP was actually saying you can't use 40 MHz,
->>> but it's obviously just saying that you're in KR and our database says
->>> you then can't use 40 Mhz...
->>
->> More succinctly, Sam is posing the possibility that a STA we should
->> ignore regulatory on TX as well as RX in this situation, since the AP
->> clearly negotiated HT40 with us.
->
-> If the AP was right and we were allowed to use this that'd be fine but
-> consider the case where the AP is wrong, they'd we'd be doing the
-> wrong thing. If the AP believes HT40 is allowed but our wireless-regdb
-> disagrees we trust our wireless-regdb more, by design.
->
-> Did I understand your question correctly?
+On Tuesday 07 Feb 2012, Luis R. Rodriguez wrote:
+> On Tue, Feb 7, 2012 at 11:54 AM, John W. Linville
+> 
+> <linville@tuxdriver.com> wrote:
+> > Well, sorry for the delay...  I will take this silence as "no
+> > objection". :-)
+> 
+> Sorry, I did get a reply by Michael Green on 11/28/2011 but I never
+> followed up with the list. Apologies as well with the delay, but here
+> is our review.
+> 
+> The European Union has some harmonized European radio conformance spec
+> and QCA's interpretation and position is that that spec overrides
+> deviations for end products for specific countries like the one being
+> recommended for Norway. This also means that QCA does not deviate for
+> EU countries on specs, even if countries have their own quirks, for
+> any country in the EU.
+Except that Norway is not in the EU.
 
-Yes, the point is that one must trust the AP otherwise you potentially
-have a sta that is not operating correctly within the BSS.  There are
-obvious limits (e.g. you don't raise the tx power cap above the h/w
-limit) but in this case it makes no sense to have a sta sticking to
-HT20 when the AP says the BSS is using HT40.  The local regulatory
-state should be used when starting up a master (ibss or infra) but
-overriding an AP in most cases will result in confusion.
+David
+> 
+> Supporting changes like these are a deviation from what QCA is used to
+> using and testing and we unfortunately cannot verify any individual
+> country specific changes like the one proposed for the EU. It is also
+> our sentiment that we stand to gain more if we simply unify the EU
+> requirements through the harmonized spec, it provides simplicity, its
+> what we use and we can help in that regards. If wireless-regdb decides
+> to take a different path we simply will not be able to verify and
+> validate these changes. I'd be surprised if any other 802.11 vendor
+> differs from this position.
+> 
+>   Luis
+> 
+> > Bjørn, could you give me a "Signed-off-by" line as well?
+> > 
+> > Thanks,
+> > 
+> > John
+> > 
+> > On Mon, Nov 28, 2011 at 01:19:12PM -0500, John W. Linville wrote:
+> >> Any comments from the regulatory experts in the group?
+> >> 
+> >> On Tue, Nov 22, 2011 at 03:13:22PM +0100, Bjørn Mork wrote:
+> >> > As mentioned by Robert Grønning <slimg at iggu.org> in June, Norway
+> >> > does allow a few more bands than what's currently in the database.
+> >> >  In particular, the old ISM band at 5725 - 5875 MHz is and has
+> >> > "always" been allowed.
+> >> > 
+> >> > The regulations [1] have some weird restrictions wrt power densities
+> >> > etc which I have no idea how to describe in a format suitable for the
+> >> > db. I've tried my best to make sure the entries are within the rules.
+> >> > 
+> >> > The regulations also allow up to 1 W eirp in the band 5470 - 5725 MHz,
+> >> > and up to 4 W eirp in the bands 5725 - 5795 MHz and 5815 - 5850 MHz if
+> >> > TPC is in use. The limits are reduced by 3dB without TPC.  As I don't
+> >> > know how to express the TPC requirement, I've chosen to put the
+> >> > reduced limits (500 mW and 2 W) in the db entries.  This also matches
+> >> > the German (DE) entry for 5470 - 5725 MHz, so I guess it must make
+> >> > some sense...
+> >> > 
+> >> > I also have no idea which SI prefixes you allow in the database, so
+> >> > I've used whatever was in the regulations.  Please adjust as needed
+> >> > if only mW or dB is acceptable.  Or let me know and I'll provide an
+> >> > updated patch.
+> >> > 
+> >> > 
+> >> > Patch attached.
+> >> > 
+> >> > 
+> >> > 
+> >> > 
+> >> > References:
+> >> > 
+> >> > [1] Current Norwegian regulations:
+> >> >  
+> >> > http://www.lovdata.no/cgi-wift/ldles?doc=/sf/sf/sf-20090602-0580.html
+> >> > 
+> >> > [2] The Norwegian Post and Telecommunications Authority provides an
+> >> > unofficial english translation of these regulations:
+> >> > http://www.npt.no/ikbViewer/Content/103810/Regulations_concerning_gen
+> >> > eral_authorisations_for_the_use_of_radio_frequencies.pdf
+> >> > 
+> >> > 
+> >> > [3] Appendix 1 of ERC/REC 70-03 provides generic information about
+> >> > licensing status for Short Range Devices (SRD) in most CEPT
+> >> > countries:
+> >> > http://www.ecodocdb.dk/doks/filedownload.aspx?fileid=1694&fileurl=htt
+> >> > p://www.erodocdb.dk/Docs/doc98/official/pdf/REC7003E.PDF
+> >> > 
+> >> > 
+> >> > 
+> >> > 
+> >> > Bjørn
+> >> > 
+> >> > diff --git a/db.txt b/db.txt
+> >> > index e63a43e..375187f 100644
+> >> > --- a/db.txt
+> >> > +++ b/db.txt
+> >> > @@ -469,11 +469,20 @@ country NL:
+> >> >     (5250 - 5330 @ 40), (N/A, 20), DFS
+> >> >     (5490 - 5710 @ 40), (N/A, 27), DFS
+> >> > 
+> >> > +# Data from
+> >> > http://www.lovdata.no/cgi-wift/ldles?doc=/sf/sf/sf-20090602-0580.html
+> >> > country NO:
+> >> > -   (2402 - 2482 @ 40), (N/A, 20)
+> >> > -   (5170 - 5250 @ 40), (N/A, 20)
+> >> > -   (5250 - 5330 @ 40), (N/A, 20), DFS
+> >> > -   (5490 - 5710 @ 40), (N/A, 27), DFS
+> >> > +   # § 7 (2)
+> >> > +   (2400 - 2483.5 @ 40), (N/A, 100 mW)
+> >> > +   # § 7 (3)
+> >> > +   (5150 - 5350 @ 40), (N/A, 200 mW)
+> >> > +   # § 7 (4)
+> >> > +   (5470 - 5725 @ 40), (N/A, 500 mW), DFS
+> >> > +   # § 7 (5)
+> >> > +   (5725 - 5795 @ 40), (N/A, 2 W), DFS
+> >> > +   (5815 - 5850 @ 40), (N/A, 2 W), DFS
+> >> > +   # § 7 (6)
+> >> > +   (5725 - 5795 @ 40), (23, 1 W), DFS, PTP-ONLY
+> >> > +   (5815 - 5850 @ 40), (23, 1 W), DFS, PTP-ONLY
+> >> > 
+> >> >  country NP:
+> >> >     (2402 - 2482 @ 40), (N/A, 20)
+> >> 
+> >> --
+> >> John W. Linville              Someday the world will need a hero, and
+> >> you linville@tuxdriver.com                        might be all we have.
+> >>  Be ready. --
+> >> To unsubscribe from this list: send the line "unsubscribe
+> >> linux-wireless" in the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> > --
+> > John W. Linville                Someday the world will need a hero, and
+> > you linville@tuxdriver.com                  might be all we have.  Be
+> > ready.
+> > 
+> > _______________________________________________
+> > wireless-regdb mailing list
+> > wireless-regdb@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/wireless-regdb
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+> in the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
--Sam
