@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gold.linx.net ([195.66.232.40]:41397 "EHLO gold.linx.net"
+Received: from mms1.broadcom.com ([216.31.210.17]:4359 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752084Ab2BTSfF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Feb 2012 13:35:05 -0500
-Message-ID: <4F4291A0.4090004@linx.net> (sfid-20120220_193510_448215_DE065620)
-Date: Mon, 20 Feb 2012 18:32:00 +0000
-From: Tony Vroon <tony@linx.net>
+	id S1750911Ab2BGOmQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Feb 2012 09:42:16 -0500
+Message-ID: <4F313815.3020107@broadcom.com> (sfid-20120207_154219_853529_011888C8)
+Date: Tue, 7 Feb 2012 15:41:25 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-To: william white-acre <white-acre@inbox.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: firmware needed
-References: <DCA87CC0C56.0000060Bwhite-acre@inbox.com>
-In-Reply-To: <DCA87CC0C56.0000060Bwhite-acre@inbox.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: REGRESSION: crash in wireless-testing smoketest
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hi Johannes,
 
-On 20/02/12 17:38, william white-acre wrote:
-> conexant HDA D110 MDCV.92
+For the brcm80211 drivers we have nightly tests running on both internal
+repo and wireless-testing. Last nights test failed for wireless-testing
+and it occurred during AUTH/ASSOC. I bisected the issue to following commit:
 
-This sounds like an analog modem to me, particularly because of the
-"MDCV.92", which most likely means "MoDem Controller V.92". i.e. a 56K
-modem. Could you get us an lspci of the box at all?
+commit 7852e36186d2a1983c215836d7e3d7b8927c930d
+Author: Johannes Berg <johannes.berg@intel.com>
+Date:   Fri Jan 20 13:55:24 2012 +0100
 
-Regards,
-Tony V.
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+    mac80211: remove dummy STA support
 
-iEYEARECAAYFAk9CkaAACgkQp5vW4rUFj5r/MgCgm0jgmcctdkQLOtygjLXEH9C3
-JBoAn2w2QUiciuQIWiflOxD/BB5QR1EV
-=jvA1
------END PGP SIGNATURE-----
+    The dummy STA support was added because I didn't
+    want to change the driver API at the time. Now
+    that we have state transitions triggering station
+    add/remove in the driver, we only call add once a
+    station reaches ASSOCIATED, so we can remove the
+    dummy station stuff again.
+
+    While at it, tighten the RX check and accept only
+    port control (EAP) frames from the AP station if
+    it's not associated yet -- in other cases there's
+    no race.
+
+    Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+    Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+The brcmsmac driver does not provide a sta_remove callback. I suspect
+that is causing the issue here. Can you confirm?
+
+Gr. AvS
+
