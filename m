@@ -1,167 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:34360 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751639Ab2BOMXF (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:41998 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756126Ab2BGUBl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 07:23:05 -0500
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: Add provision to define suspend policy in disconnected state.
-Date: Wed, 15 Feb 2012 17:52:08 +0530
-Message-ID: <1329308528-2925-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20120215_132310_836547_F0869DD1)
+	Tue, 7 Feb 2012 15:01:41 -0500
+Date: Tue, 7 Feb 2012 14:54:15 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: =?iso-8859-1?Q?Bj=F8rn?= Mork <bjorn@mork.no>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	Robert =?iso-8859-1?Q?Gr=F8nning?= <slimg@iggu.org>
+Subject: Re: wireless-regdb: Update regulatory rules for Norway (NO)
+Message-ID: <20120207195415.GG5560@tuxdriver.com> (sfid-20120207_210146_997291_328A5AC6)
+References: <87pqgkxn25.fsf@nemi.mork.no>
+ <20111128181912.GB2681@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20111128181912.GB2681@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+Well, sorry for the delay...  I will take this silence as "no
+objection". :-)
 
-It gives flexibility to the user to define suspend policy
-when the suspend mode is set to WOW and the device is in 
-disconnected state at the time of suspend.
+Bjørn, could you give me a "Signed-off-by" line as well?
 
-Some bits (bit 4 to 7) of existing mod parameter suspend_mode
-is used for that purpose. There is no change in the existing
-way of defining suspend mode.
+Thanks,
 
-To force cut power:
-  suspend_mode=0x1
+John
 
-To force deep sleep:
-  suspend_mode=0x2
+On Mon, Nov 28, 2011 at 01:19:12PM -0500, John W. Linville wrote:
+> Any comments from the regulatory experts in the group?
+> 
+> On Tue, Nov 22, 2011 at 03:13:22PM +0100, Bjørn Mork wrote:
+> > As mentioned by Robert Grønning <slimg at iggu.org> in June, Norway does
+> > allow a few more bands than what's currently in the database.  In
+> > particular, the old ISM band at 5725 - 5875 MHz is and has "always" been
+> > allowed.
+> > 
+> > The regulations [1] have some weird restrictions wrt power densities etc
+> > which I have no idea how to describe in a format suitable for the db.
+> > I've tried my best to make sure the entries are within the rules.
+> > 
+> > The regulations also allow up to 1 W eirp in the band 5470 - 5725 MHz,
+> > and up to 4 W eirp in the bands 5725 - 5795 MHz and 5815 - 5850 MHz if
+> > TPC is in use. The limits are reduced by 3dB without TPC.  As I don't
+> > know how to express the TPC requirement, I've chosen to put the reduced
+> > limits (500 mW and 2 W) in the db entries.  This also matches the German
+> > (DE) entry for 5470 - 5725 MHz, so I guess it must make some sense...
+> > 
+> > I also have no idea which SI prefixes you allow in the database, so I've
+> > used whatever was in the regulations.  Please adjust as needed if only
+> > mW or dB is acceptable.  Or let me know and I'll provide an updated patch.
+> > 
+> > 
+> > Patch attached.
+> > 
+> > 
+> > 
+> > 
+> > References:
+> > 
+> > [1] Current Norwegian regulations:
+> >   http://www.lovdata.no/cgi-wift/ldles?doc=/sf/sf/sf-20090602-0580.html
+> > 
+> > [2] The Norwegian Post and Telecommunications Authority provides an unofficial english translation of these regulations:
+> >   http://www.npt.no/ikbViewer/Content/103810/Regulations_concerning_general_authorisations_for_the_use_of_radio_frequencies.pdf
+> > 
+> > 
+> > [3] Appendix 1 of ERC/REC 70-03 provides generic information about licensing
+> >   status for Short Range Devices (SRD) in most CEPT countries:
+> >   http://www.ecodocdb.dk/doks/filedownload.aspx?fileid=1694&fileurl=http://www.erodocdb.dk/Docs/doc98/official/pdf/REC7003E.PDF
+> > 
+> > 
+> > 
+> > 
+> > Bjørn
+> 
+> > diff --git a/db.txt b/db.txt
+> > index e63a43e..375187f 100644
+> > --- a/db.txt
+> > +++ b/db.txt
+> > @@ -469,11 +469,20 @@ country NL:
+> >  	(5250 - 5330 @ 40), (N/A, 20), DFS
+> >  	(5490 - 5710 @ 40), (N/A, 27), DFS
+> >  
+> > +# Data from http://www.lovdata.no/cgi-wift/ldles?doc=/sf/sf/sf-20090602-0580.html
+> >  country NO:
+> > -	(2402 - 2482 @ 40), (N/A, 20)
+> > -	(5170 - 5250 @ 40), (N/A, 20)
+> > -	(5250 - 5330 @ 40), (N/A, 20), DFS
+> > -	(5490 - 5710 @ 40), (N/A, 27), DFS
+> > +	# § 7 (2)
+> > +	(2400 - 2483.5 @ 40), (N/A, 100 mW)
+> > +	# § 7 (3)
+> > +	(5150 - 5350 @ 40), (N/A, 200 mW)
+> > +	# § 7 (4)
+> > +	(5470 - 5725 @ 40), (N/A, 500 mW), DFS
+> > +	# § 7 (5)
+> > +	(5725 - 5795 @ 40), (N/A, 2 W), DFS
+> > +	(5815 - 5850 @ 40), (N/A, 2 W), DFS
+> > +	# § 7 (6)
+> > +	(5725 - 5795 @ 40), (23, 1 W), DFS, PTP-ONLY
+> > +	(5815 - 5850 @ 40), (23, 1 W), DFS, PTP-ONLY
+> >  
+> >  country NP:
+> >  	(2402 - 2482 @ 40), (N/A, 20)
+> 
+> 
+> -- 
+> John W. Linville		Someday the world will need a hero, and you
+> linville@tuxdriver.com			might be all we have.  Be ready.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-To force wow (deep sleep is the default mode
-in disconnected state):
-  suspend_mode=0x3
-
-To force wow in connected state and cut power
-in disconnected state:
-  suspend_mode=0x13
-
-To force wow in connected state and deep sleep
-in disconnected state:
-  suspend_mode=0x23
-
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    1 -
- drivers/net/wireless/ath/ath6kl/core.c     |   26 ++++++++++++++++++++++----
- drivers/net/wireless/ath/ath6kl/core.h     |    1 +
- drivers/net/wireless/ath/ath6kl/sdio.c     |   18 +++++++++++++-----
- 4 files changed, 36 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 484400d..003f320 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2063,7 +2063,6 @@ int ath6kl_cfg80211_suspend(struct ath6kl *ar,
- 
- 		ret = ath6kl_wow_suspend(ar, wow);
- 		if (ret) {
--			ath6kl_err("wow suspend failed: %d\n", ret);
- 			ar->state = prev_state;
- 			return ret;
- 		}
-diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
-index c4926cf..37c92a1 100644
---- a/drivers/net/wireless/ath/ath6kl/core.c
-+++ b/drivers/net/wireless/ath/ath6kl/core.c
-@@ -41,6 +41,7 @@ int ath6kl_core_init(struct ath6kl *ar)
- {
- 	struct ath6kl_bmi_target_info targ_info;
- 	struct net_device *ndev;
-+	u16 pri_suspend_mode, wow2_suspend_mode;
- 	int ret = 0, i;
- 
- 	ar->ath6kl_wq = create_singlethread_workqueue("ath6kl");
-@@ -148,13 +149,30 @@ int ath6kl_core_init(struct ath6kl *ar)
- 	ar->conf_flags = ATH6KL_CONF_IGNORE_ERP_BARKER |
- 			 ATH6KL_CONF_ENABLE_11N | ATH6KL_CONF_ENABLE_TX_BURST;
- 
--	if (suspend_mode &&
--		suspend_mode >= WLAN_POWER_STATE_CUT_PWR &&
--		suspend_mode <= WLAN_POWER_STATE_WOW)
--		ar->suspend_mode = suspend_mode;
-+	/*
-+	 * Usage of module parameter 'suspend_mode':
-+	 * Bit 3 to 0 - Primary suspend mode (deep sleep/cur pwr/wow).
-+	 * Bit 7 to 4 - Suspend mode to use if the primary suspend mode
-+	 *		is set to WoW and the device is not connected at
-+	 *		the time of suspend.
-+	 */
-+	pri_suspend_mode = suspend_mode & 0xF;
-+	wow2_suspend_mode = (suspend_mode >> 4) & 0xF;
-+
-+	if (pri_suspend_mode &&
-+	    pri_suspend_mode >= WLAN_POWER_STATE_CUT_PWR &&
-+	    pri_suspend_mode <= WLAN_POWER_STATE_WOW)
-+		ar->suspend_mode = pri_suspend_mode;
- 	else
- 		ar->suspend_mode = 0;
- 
-+	if (pri_suspend_mode == WLAN_POWER_STATE_WOW &&
-+	    (wow2_suspend_mode == WLAN_POWER_STATE_CUT_PWR ||
-+	     wow2_suspend_mode == WLAN_POWER_STATE_DEEP_SLEEP))
-+		ar->wow2_suspend_mode = wow2_suspend_mode;
-+	else
-+		ar->wow2_suspend_mode = 0;
-+
- 	if (uart_debug)
- 		ar->conf_flags |= ATH6KL_CONF_UART_DEBUG;
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index adfe8e8..808253e 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -623,6 +623,7 @@ struct ath6kl {
- 
- 	u16 conf_flags;
- 	u16 suspend_mode;
-+	u16 wow2_suspend_mode;
- 	wait_queue_head_t event_wq;
- 	struct ath6kl_mbox_info mbox_info;
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index fb6eb0f..a47f648 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -816,6 +816,7 @@ static int ath6kl_sdio_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
- 	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
- 	struct sdio_func *func = ar_sdio->func;
- 	mmc_pm_flag_t flags;
-+	bool try_deepsleep = false;
- 	int ret;
- 
- 	if (ar->state == ATH6KL_STATE_SCHED_SCAN) {
-@@ -842,14 +843,21 @@ static int ath6kl_sdio_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
- 			goto cut_pwr;
- 
- 		ret = ath6kl_cfg80211_suspend(ar, ATH6KL_CFG_SUSPEND_WOW, wow);
--		if (ret)
--			goto cut_pwr;
--
--		return 0;
-+		if (ret && ret != -ENOTCONN)
-+			ath6kl_err("wow suspend failed: %d\n", ret);
-+
-+		if (ret && (!ar->wow2_suspend_mode ||
-+			 ar->wow2_suspend_mode == WLAN_POWER_STATE_DEEP_SLEEP))
-+				try_deepsleep = true;
-+		else if (ret &&
-+			 ar->wow2_suspend_mode == WLAN_POWER_STATE_CUT_PWR)
-+				goto cut_pwr;
-+		if (!ret)
-+			return 0;
- 	}
- 
- 	if (ar->suspend_mode == WLAN_POWER_STATE_DEEP_SLEEP ||
--	    !ar->suspend_mode) {
-+	    !ar->suspend_mode || try_deepsleep) {
- 
- 		flags = sdio_get_host_pm_caps(func);
- 		if (!(flags & MMC_PM_KEEP_POWER))
 -- 
-1.7.1
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
