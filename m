@@ -1,70 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2141 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756409Ab2BMJZu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 04:25:50 -0500
-Date: Mon, 13 Feb 2012 10:25:39 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
-Cc: wwguy <wey-yi.w.guy@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn: memory corruption with WPA enterprise
-Message-ID: <20120213092538.GA6214@redhat.com> (sfid-20120213_102609_320594_E87E66DA)
-References: <20111110163051.GA24533@nomi.cz>
- <20111111054731.GA2292@redhat.com>
- <20111111150105.GA25437@nomi.cz>
- <20111114140714.GD2513@redhat.com>
- <20111119181106.GA5515@nomi.cz>
- <1321755233.22510.1.camel@wwguy-ubuntu>
- <20111120032016.GA14520@nomi.cz>
- <1321763314.22510.4.camel@wwguy-ubuntu>
- <20111120204007.GA7273@nomi.cz>
- <20120210180929.GA17733@nomi.cz>
+Received: from youngberry.canonical.com ([91.189.89.112]:43359 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753877Ab2BGP3Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Feb 2012 10:29:25 -0500
+Date: Tue, 7 Feb 2012 09:29:21 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Arend van Spriel <arend@broadcom.com>,
+	Scott Sanbar <scott.sanbar@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
+Subject: Re: BCM4331 fails to associate after suspend
+Message-ID: <20120207152921.GA8464@ubuntu-macmini> (sfid-20120207_162928_702453_5F57A608)
+References: <20120203222818.GA3749@ubuntu-mba>
+ <4F2D0C07.1010704@broadcom.com>
+ <20120204142502.GA10858@ubuntu-mba>
+ <CACna6ryR2xm2EAJaV4vCO8WebR5pXCyFknEMrf8ynVF+HYrxTw@mail.gmail.com>
+ <20120206173757.GC31938@ubuntu-macmini>
+ <4F302647.2070102@hauke-m.de>
+ <20120206223447.GE31938@ubuntu-macmini>
+ <CACna6rx7E9tM82iyYP=eRnTU+QZA1rMfdk8vNnX5k1_jbc5DqQ@mail.gmail.com>
+ <CACna6rzDNfAMq+RHO_X2y3XrQn3oFJxmf9bsR2mzLs3X0o3dSA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20120210180929.GA17733@nomi.cz>
+In-Reply-To: <CACna6rzDNfAMq+RHO_X2y3XrQn3oFJxmf9bsR2mzLs3X0o3dSA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 10, 2012 at 07:09:29PM +0100, Tomáš Janoušek wrote:
-> On Sun, Nov 20, 2011 at 09:40:07PM +0100, Tomáš Janoušek wrote:
-> > > Yes, I will try your configuration when I get back  to the office Monday
+On Tue, Feb 07, 2012 at 08:08:11AM +0100, Rafał Miłecki wrote:
+> W dniu 7 lutego 2012 08:04 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
+> > 2012/2/6 Seth Forshee <seth.forshee@canonical.com>:
+> >> On Mon, Feb 06, 2012 at 08:13:11PM +0100, Hauke Mehrtens wrote:
+> >>> According to the Broadcom SDK for SoCs bcma_pcicore_serdes_workaround()
+> >>> should be called when coming out of standby/hibernate.
+> >>> The code wl uses to do the same thing as bcma does is open source. You
+> >>> find it in the GPL package of many Broadcom based Wifi Routers.
+> >>
+> >> Thanks for the suggestion. Unfortunately calling
+> >> bcma_pcicore_serdes_workaround() during resume doesn't help. I'll look
+> >> at the wl code to see if I can learn anything there.
+> >
+> > Can you try
+> >
+> >
+> > diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+> > index febbc0a..a097a26 100644
+> > --- a/drivers/bcma/main.c
+> > +++ b/drivers/bcma/main.c
+> > @@ -267,6 +267,13 @@ int bcma_bus_resume(struct bcma_bus *bus)
+> >                bcma_core_chipcommon_init(&bus->drv_cc);
+> >        }
+> >
+> > +       /* Init PCIE core */
+> > +       core = bcma_find_core(bus, BCMA_CORE_PCIE);
+> > +       if (core) {
+> > +               bus->drv_pci.setup_done = false;
+> > +               bcma_core_pci_init(&bus->drv_pci);
+> > +       }
+> > +
+> >        list_for_each_entry(core, &bus->cores, list) {
+> >                struct device_driver *drv = core->dev.driver;
+> >                if (drv) {
 > 
-> Did you have any luck?
-I think I tried to reproduce that problem and failed, but honestly I do
-not remember right now ...
+> If this doesn't work out of box, please check if reloading b43 is
+> enough. AFAIR now you have to reload both: b43 and bcma. I hope this
+> patch will let you avoid reloading at least bcma.
 
-> I just found out something which is almost completely
-> insane.
-> 
-> For the last few months, I've happily used a 64-bit kernel and have had no
-> problems whatsoever. About a week ago, I started using virtual machines in
-> KVM. And today I found that I have exactly the same problem, but only _inside_
-> the virtual machine. I can't reliably scp a file from the internet to my
-> virtual machine. It works fine when I scp to the host, it works fine when I'm
-> on a WPA-PSK network. And it happens even if I tell kvm to emulate e1000, not
-> only with virtio-net. How strange is that?
->
-> And while this is happening, the host is running just fine. The host has a
-> 64-bit kernel with a 32-bit userspace, so if something was wrong with the
-> 32-bit mode of my processor, it would've appeared on the host as well, no?
-> 
-> It's also worth mentioning that if I build openssl with "no-asm 386", scp
-> works just fine. So it doesn't look like a memory corruption after all. It
-> seems as if certain CPU instructions didn't work properly if running on a
-> 32-bit kernel with a WiFi adapter doing something. But how can it be
-> that those same CPU instructions work on a 64-bit host with 32-bit userspace?
-> At the same time! That's just completely insane, and I can't think of an
-> explanation. Shall I get a new CPU perhaps? :-)
+I tried exactly that yesterday, but it doesn't fix the issue. I just
+checked to see if it allows reloading only b43, and it does not. I still
+have to reload bcma to get the wireless working again.
 
-Currently there are discussion about compilator problems that
-can result a corruption
-http://lwn.net/Articles/478657/
-Perhaps this problem is something similar.
-
-Also, if you look at lspci -vt, does it show that corruption happen
-only  when PCI bridge is used (however that would not explain why it
-only happens with WPA enterprise).
-
-Stanislaw
+Seth
