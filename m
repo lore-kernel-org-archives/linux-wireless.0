@@ -1,80 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server514f.exghost.com ([72.32.253.73]:4961 "EHLO
-	server514.appriver.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756161Ab2BGVmH convert rfc822-to-8bit (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:35710 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753016Ab2BGHIN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 16:42:07 -0500
+	Tue, 7 Feb 2012 02:08:13 -0500
+Received: by werb13 with SMTP id b13so4795324wer.19
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2012 23:08:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: [PATCH] rtlwifi: Handle previous allocation failures when freeing device memory
-Date: Tue, 7 Feb 2012 15:31:59 -0600
-Message-ID: <BC8BC73D12649F439B502B4CB6FD58B1053E2C92@BE23.exg4.exghost.com> (sfid-20120207_224211_537199_E4E789CD)
-From: "Simon Graham" <simon.graham@virtualcomputer.com>
-To: <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>, <Larry.Finger@lwfinger.net>,
-	<chaoming_li@realsil.com.cn>
+In-Reply-To: <CACna6rx7E9tM82iyYP=eRnTU+QZA1rMfdk8vNnX5k1_jbc5DqQ@mail.gmail.com>
+References: <20120203222818.GA3749@ubuntu-mba>
+	<4F2D0C07.1010704@broadcom.com>
+	<20120204142502.GA10858@ubuntu-mba>
+	<CACna6ryR2xm2EAJaV4vCO8WebR5pXCyFknEMrf8ynVF+HYrxTw@mail.gmail.com>
+	<20120206173757.GC31938@ubuntu-macmini>
+	<4F302647.2070102@hauke-m.de>
+	<20120206223447.GE31938@ubuntu-macmini>
+	<CACna6rx7E9tM82iyYP=eRnTU+QZA1rMfdk8vNnX5k1_jbc5DqQ@mail.gmail.com>
+Date: Tue, 7 Feb 2012 08:08:11 +0100
+Message-ID: <CACna6rzDNfAMq+RHO_X2y3XrQn3oFJxmf9bsR2mzLs3X0o3dSA@mail.gmail.com> (sfid-20120207_080816_791326_A5F7A380)
+Subject: Re: BCM4331 fails to associate after suspend
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Arend van Spriel <arend@broadcom.com>,
+	Scott Sanbar <scott.sanbar@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Handle previous allocation failures when freeing device memory
+W dniu 7 lutego 2012 08:04 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
+> 2012/2/6 Seth Forshee <seth.forshee@canonical.com>:
+>> On Mon, Feb 06, 2012 at 08:13:11PM +0100, Hauke Mehrtens wrote:
+>>> According to the Broadcom SDK for SoCs bcma_pcicore_serdes_workaround()
+>>> should be called when coming out of standby/hibernate.
+>>> The code wl uses to do the same thing as bcma does is open source. You
+>>> find it in the GPL package of many Broadcom based Wifi Routers.
+>>
+>> Thanks for the suggestion. Unfortunately calling
+>> bcma_pcicore_serdes_workaround() during resume doesn't help. I'll look
+>> at the wl code to see if I can learn anything there.
+>
+> Can you try
+>
+>
+> diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+> index febbc0a..a097a26 100644
+> --- a/drivers/bcma/main.c
+> +++ b/drivers/bcma/main.c
+> @@ -267,6 +267,13 @@ int bcma_bus_resume(struct bcma_bus *bus)
+>                bcma_core_chipcommon_init(&bus->drv_cc);
+>        }
+>
+> +       /* Init PCIE core */
+> +       core = bcma_find_core(bus, BCMA_CORE_PCIE);
+> +       if (core) {
+> +               bus->drv_pci.setup_done = false;
+> +               bcma_core_pci_init(&bus->drv_pci);
+> +       }
+> +
+>        list_for_each_entry(core, &bus->cores, list) {
+>                struct device_driver *drv = core->dev.driver;
+>                if (drv) {
 
-Signed-off-by: Simon Graham <simon.graham@virtualcomputer.com>
----
- drivers/net/wireless/rtlwifi/pci.c |   24 ++++++++++++++----------
- 1 files changed, 14 insertions(+), 10 deletions(-)
+If this doesn't work out of box, please check if reloading b43 is
+enough. AFAIR now you have to reload both: b43 and bcma. I hope this
+patch will let you avoid reloading at least bcma.
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.c
-b/drivers/net/wireless/rtlwifi/pci.c
-index c5f6a32..fb84707 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -1148,10 +1148,12 @@ static void _rtl_pci_free_tx_ring(struct
-ieee80211_hw *hw,
- 		ring->idx = (ring->idx + 1) % ring->entries;
- 	}
- 
--	pci_free_consistent(rtlpci->pdev,
--			    sizeof(*ring->desc) * ring->entries,
--			    ring->desc, ring->dma);
--	ring->desc = NULL;
-+	if (ring->desc) {
-+		pci_free_consistent(rtlpci->pdev,
-+				    sizeof(*ring->desc) * ring->entries,
-+				    ring->desc, ring->dma);
-+		ring->desc = NULL;
-+	}
- }
- 
- static void _rtl_pci_free_rx_ring(struct rtl_pci *rtlpci)
-@@ -1175,12 +1177,14 @@ static void _rtl_pci_free_rx_ring(struct rtl_pci
-*rtlpci)
- 			kfree_skb(skb);
- 		}
- 
--		pci_free_consistent(rtlpci->pdev,
--				sizeof(*rtlpci->rx_ring[rx_queue_idx].
--				       desc) * rtlpci->rxringcount,
--				rtlpci->rx_ring[rx_queue_idx].desc,
--				rtlpci->rx_ring[rx_queue_idx].dma);
--		rtlpci->rx_ring[rx_queue_idx].desc = NULL;
-+		if (rtlpci->rx_ring[rx_queue_idx].desc) {
-+			pci_free_consistent(rtlpci->pdev,
-+
-sizeof(*rtlpci->rx_ring[rx_queue_idx].
-+						 desc) *
-rtlpci->rxringcount,
-+
-rtlpci->rx_ring[rx_queue_idx].desc,
-+
-rtlpci->rx_ring[rx_queue_idx].dma);
-+			rtlpci->rx_ring[rx_queue_idx].desc = NULL;
-+		}
- 	}
- }
- 
 -- 
-1.7.8.3
-
-
-
+Rafał
