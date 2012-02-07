@@ -1,186 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:37622 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755196Ab2BCAQ5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 19:16:57 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 17/28] iwlwifi: kill bus_apm_config
-Date: Thu,  2 Feb 2012 15:09:08 -0800
-Message-Id: <1328224159-18134-18-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120203_011730_198758_221434A8)
-In-Reply-To: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:39487 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756376Ab2BGMvk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Feb 2012 07:51:40 -0500
+Received: by vcge1 with SMTP id e1so4592507vcg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 04:51:39 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1328568313-26267-5-git-send-email-gwingerde@gmail.com>
+References: <1328568313-26267-1-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-2-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-3-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-4-git-send-email-gwingerde@gmail.com>
+	<1328568313-26267-5-git-send-email-gwingerde@gmail.com>
+Date: Tue, 7 Feb 2012 13:51:39 +0100
+Message-ID: <CAOZOX0UfTBDOokm364SKVPSxS-+OXqVuFpSdQQsa2grc1xBgUg@mail.gmail.com> (sfid-20120207_135143_422705_7E6FE828)
+Subject: Re: [PATCH 4/8] rt2x00: Use saved BBP 25 and 26 values when
+ configuring channel on RT3572.
+From: Ivo Van Doorn <ivdoorn@gmail.com>
+To: Gertjan van Wingerde <gwingerde@gmail.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org,
+	Helmut Schaa <helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Mon, Feb 6, 2012 at 11:45 PM, Gertjan van Wingerde
+<gwingerde@gmail.com> wrote:
+> This brings the rt2800 channel switching code for RT3572 closer to the
+> v2.5.0.0 Ralink RT3572 driver.
+>
+> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-This handler was called from the transport layer only. Merge it
-to the transport's apm_init.
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-bus.h        |    7 ---
- drivers/net/wireless/iwlwifi/iwl-pci.c        |   29 --------------
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   50 +++++++++++++++++++++++--
- 3 files changed, 46 insertions(+), 40 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-bus.h b/drivers/net/wireless/iwlwifi/iwl-bus.h
-index 2065c5b..d385f69 100644
---- a/drivers/net/wireless/iwlwifi/iwl-bus.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-bus.h
-@@ -121,13 +121,11 @@ struct iwl_bus;
- /**
-  * struct iwl_bus_ops - bus specific operations
-  * @get_pm_support: must returns true if the bus can go to sleep
-- * @apm_config: will be called during the config of the APM
-  * @get_hw_id_string: prints the hw_id in the provided buffer
-  * @get_hw_id: get hw_id in u32
-  */
- struct iwl_bus_ops {
- 	bool (*get_pm_support)(struct iwl_bus *bus);
--	void (*apm_config)(struct iwl_bus *bus);
- 	void (*get_hw_id_string)(struct iwl_bus *bus, char buf[], int buf_len);
- 	u32 (*get_hw_id)(struct iwl_bus *bus);
- };
-@@ -156,11 +154,6 @@ static inline bool bus_get_pm_support(struct iwl_bus *bus)
- 	return bus->ops->get_pm_support(bus);
- }
- 
--static inline void bus_apm_config(struct iwl_bus *bus)
--{
--	bus->ops->apm_config(bus);
--}
--
- static inline void bus_get_hw_id_string(struct iwl_bus *bus, char buf[],
- 		int buf_len)
- {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
-index 6451739..353022d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-pci.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
-@@ -106,34 +106,6 @@ static bool iwl_pci_is_pm_supported(struct iwl_bus *bus)
- 	return !(lctl & PCI_CFG_LINK_CTRL_VAL_L0S_EN);
- }
- 
--static void iwl_pci_apm_config(struct iwl_bus *bus)
--{
--	/*
--	 * HW bug W/A for instability in PCIe bus L0S->L1 transition.
--	 * Check if BIOS (or OS) enabled L1-ASPM on this device.
--	 * If so (likely), disable L0S, so device moves directly L0->L1;
--	 *    costs negligible amount of power savings.
--	 * If not (unlikely), enable L0S, so there is at least some
--	 *    power savings, even without L1.
--	 */
--	u16 lctl = iwl_pciexp_link_ctrl(bus);
--
--	if ((lctl & PCI_CFG_LINK_CTRL_VAL_L1_EN) ==
--				PCI_CFG_LINK_CTRL_VAL_L1_EN) {
--		/* L1-ASPM enabled; disable(!) L0S */
--		iwl_set_bit(trans(bus), CSR_GIO_REG,
--				CSR_GIO_REG_VAL_L0S_ENABLED);
--		dev_printk(KERN_INFO, trans(bus)->dev,
--			   "L1 Enabled; Disabling L0S\n");
--	} else {
--		/* L1-ASPM disabled; enable(!) L0S */
--		iwl_clear_bit(trans(bus), CSR_GIO_REG,
--				CSR_GIO_REG_VAL_L0S_ENABLED);
--		dev_printk(KERN_INFO, trans(bus)->dev,
--			   "L1 Disabled; Enabling L0S\n");
--	}
--}
--
- static void iwl_pci_get_hw_id_string(struct iwl_bus *bus, char buf[],
- 			      int buf_len)
- {
-@@ -152,7 +124,6 @@ static u32 iwl_pci_get_hw_id(struct iwl_bus *bus)
- 
- static const struct iwl_bus_ops bus_ops_pci = {
- 	.get_pm_support = iwl_pci_is_pm_supported,
--	.apm_config = iwl_pci_apm_config,
- 	.get_hw_id_string = iwl_pci_get_hw_id_string,
- 	.get_hw_id = iwl_pci_get_hw_id,
- };
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index 1030a25..c9fe888 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -633,6 +633,51 @@ static void iwl_set_pwr_vmain(struct iwl_trans *trans)
- 			       ~APMG_PS_CTRL_MSK_PWR_SRC);
- }
- 
-+/* PCI registers */
-+#define PCI_CFG_RETRY_TIMEOUT	0x041
-+#define PCI_CFG_LINK_CTRL_VAL_L0S_EN	0x01
-+#define PCI_CFG_LINK_CTRL_VAL_L1_EN	0x02
-+
-+static u16 iwl_pciexp_link_ctrl(struct iwl_trans *trans)
-+{
-+	int pos;
-+	u16 pci_lnk_ctl;
-+	struct iwl_trans_pcie *trans_pcie =
-+		IWL_TRANS_GET_PCIE_TRANS(trans);
-+
-+	struct pci_dev *pci_dev = trans_pcie->pci_dev;
-+
-+	pos = pci_pcie_cap(pci_dev);
-+	pci_read_config_word(pci_dev, pos + PCI_EXP_LNKCTL, &pci_lnk_ctl);
-+	return pci_lnk_ctl;
-+}
-+
-+static void iwl_apm_config(struct iwl_trans *trans)
-+{
-+	/*
-+	 * HW bug W/A for instability in PCIe bus L0S->L1 transition.
-+	 * Check if BIOS (or OS) enabled L1-ASPM on this device.
-+	 * If so (likely), disable L0S, so device moves directly L0->L1;
-+	 *    costs negligible amount of power savings.
-+	 * If not (unlikely), enable L0S, so there is at least some
-+	 *    power savings, even without L1.
-+	 */
-+	u16 lctl = iwl_pciexp_link_ctrl(trans);
-+
-+	if ((lctl & PCI_CFG_LINK_CTRL_VAL_L1_EN) ==
-+				PCI_CFG_LINK_CTRL_VAL_L1_EN) {
-+		/* L1-ASPM enabled; disable(!) L0S */
-+		iwl_set_bit(trans, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
-+		dev_printk(KERN_INFO, trans->dev,
-+			   "L1 Enabled; Disabling L0S\n");
-+	} else {
-+		/* L1-ASPM disabled; enable(!) L0S */
-+		iwl_clear_bit(trans, CSR_GIO_REG, CSR_GIO_REG_VAL_L0S_ENABLED);
-+		dev_printk(KERN_INFO, trans->dev,
-+			   "L1 Disabled; Enabling L0S\n");
-+	}
-+}
-+
- /*
-  * Start up NIC's basic functionality after it has been reset
-  * (e.g. after platform boot, or shutdown via iwl_apm_stop())
-@@ -669,7 +714,7 @@ static int iwl_apm_init(struct iwl_trans *trans)
- 	iwl_set_bit(trans, CSR_HW_IF_CONFIG_REG,
- 				    CSR_HW_IF_CONFIG_REG_BIT_HAP_WAKE_L1A);
- 
--	bus_apm_config(bus(trans));
-+	iwl_apm_config(trans);
- 
- 	/* Configure analog phase-lock-loop before activating to D0A */
- 	if (cfg(trans)->base_params->pll_cfg_val)
-@@ -2187,9 +2232,6 @@ const struct iwl_trans_ops trans_ops_pcie = {
- 	.read32 = iwl_trans_pcie_read32,
- };
- 
--/* PCI registers */
--#define PCI_CFG_RETRY_TIMEOUT	0x041
--
- struct iwl_trans *iwl_trans_pcie_alloc(struct iwl_shared *shrd,
- 				       struct pci_dev *pdev,
- 				       const struct pci_device_id *ent)
--- 
-1.7.0.4
-
+> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+> index 7c05dee..8aabd0d 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800.h
+> +++ b/drivers/net/wireless/rt2x00/rt2800.h
+> @@ -2444,6 +2444,8 @@ struct mac_iveiv_entry {
+>  struct rt2800_drv_data {
+>        u8 calibration_bw20;
+>        u8 calibration_bw40;
+> +       u8 bbp25;
+> +       u8 bbp26;
+>  };
+>
+>  #endif /* RT2800_H */
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index fad0e77..cb841f4 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -1754,8 +1754,8 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
+>        u32 reg;
+>
+>        if (rf->channel <= 14) {
+> -               rt2800_bbp_write(rt2x00dev, 25, 0x15);
+> -               rt2800_bbp_write(rt2x00dev, 26, 0x85);
+> +               rt2800_bbp_write(rt2x00dev, 25, drv_data->bbp25);
+> +               rt2800_bbp_write(rt2x00dev, 26, drv_data->bbp26);
+>        } else {
+>                rt2800_bbp_write(rt2x00dev, 25, 0x09);
+>                rt2800_bbp_write(rt2x00dev, 26, 0xff);
+> @@ -3623,6 +3623,12 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
+>                        rt2800_init_rx_filter(rt2x00dev, true, 0x27, 0x15);
+>        }
+>
+> +       /*
+> +        * Save BBP 25 & 26 values for later use in channel switching
+> +        */
+> +       rt2800_bbp_read(rt2x00dev, 25, &drv_data->bbp25);
+> +       rt2800_bbp_read(rt2x00dev, 26, &drv_data->bbp26);
+> +
+>        if (!rt2x00_rt(rt2x00dev, RT5390)) {
+>                /*
+>                 * Set back to initial state
+> --
+> 1.7.9
+>
