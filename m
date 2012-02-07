@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:33508 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757464Ab2B2RSm (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:58357 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757152Ab2BGW4w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 12:18:42 -0500
-Subject: [PATCH 01/12] ath6kl: fix pointer style
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Date: Wed, 29 Feb 2012 19:18:30 +0200
-Message-ID: <20120229171830.24264.51379.stgit@localhost6.localdomain6> (sfid-20120229_181845_559929_1B4B0280)
-In-Reply-To: <20120229171525.24264.22062.stgit@localhost6.localdomain6>
-References: <20120229171525.24264.22062.stgit@localhost6.localdomain6>
+	Tue, 7 Feb 2012 17:56:52 -0500
+From: Prasanna Kumar <kumarpra@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] add support for AR6003 2048 byte board file
+Date: Tue, 7 Feb 2012 14:58:54 -0800
+Message-ID: <1328655534-8660-1-git-send-email-kumarpra@qca.qualcomm.com> (sfid-20120207_235656_947051_2ABB5556)
+In-Reply-To: <no>
+References: <no>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-reported by checkpatch:
+AR6003 2.1.1 supports both 1792 and 2048 byte board files.
+Add support for 2048 byte board file.
 
-ath6kl/core.h:748: ERROR: "foo * bar" should be "foo *bar"
-ath6kl/core.h:751: ERROR: "foo * bar" should be "foo *bar"
-
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Prasanna Kumar <kumarpra@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath6kl/core.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath6kl/init.c   |    2 ++
+ drivers/net/wireless/ath/ath6kl/target.h |    1 +
+ 2 files changed, 3 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 5bbc595..d80b421 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -745,10 +745,10 @@ struct htc_packet *ath6kl_alloc_amsdu_rxbuf(struct htc_target *target,
- void aggr_module_destroy(struct aggr_info *aggr_info);
- void aggr_reset_state(struct aggr_info_conn *aggr_conn);
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index d1d89b5..47b9897 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1142,6 +1142,8 @@ static int ath6kl_upload_board_file(struct ath6kl *ar)
+ 	case TARGET_TYPE_AR6003:
+ 		board_data_size = AR6003_BOARD_DATA_SZ;
+ 		board_ext_data_size = AR6003_BOARD_EXT_DATA_SZ;
++		if (ar->fw_board_len > (board_data_size + board_ext_data_size))
++			board_ext_data_size = AR6003_BOARD_EXT_DATA_SZ_V2;
+ 		break;
+ 	case TARGET_TYPE_AR6004:
+ 		board_data_size = AR6004_BOARD_DATA_SZ;
+diff --git a/drivers/net/wireless/ath/ath6kl/target.h b/drivers/net/wireless/ath/ath6kl/target.h
+index 108a723..b51cd19 100644
+--- a/drivers/net/wireless/ath/ath6kl/target.h
++++ b/drivers/net/wireless/ath/ath6kl/target.h
+@@ -19,6 +19,7 @@
  
--struct ath6kl_sta *ath6kl_find_sta(struct ath6kl_vif *vif, u8 * node_addr);
-+struct ath6kl_sta *ath6kl_find_sta(struct ath6kl_vif *vif, u8 *node_addr);
- struct ath6kl_sta *ath6kl_find_sta_by_aid(struct ath6kl *ar, u8 aid);
+ #define AR6003_BOARD_DATA_SZ		1024
+ #define AR6003_BOARD_EXT_DATA_SZ	768
++#define AR6003_BOARD_EXT_DATA_SZ_V2	1024
  
--void ath6kl_ready_event(void *devt, u8 * datap, u32 sw_ver, u32 abi_ver);
-+void ath6kl_ready_event(void *devt, u8 *datap, u32 sw_ver, u32 abi_ver);
- int ath6kl_control_tx(void *devt, struct sk_buff *skb,
- 		      enum htc_endpoint_id eid);
- void ath6kl_connect_event(struct ath6kl_vif *vif, u16 channel,
+ #define AR6004_BOARD_DATA_SZ     6144
+ #define AR6004_BOARD_EXT_DATA_SZ 0
+-- 
+1.7.0.2
 
