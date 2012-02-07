@@ -1,127 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:35163 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757042Ab2BYC33 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 21:29:29 -0500
-Received: by qcqw6 with SMTP id w6so142880qcq.19
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2012 18:29:28 -0800 (PST)
-From: Rick Farina <sidhayn@gmail.com>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org, Rick Farina <sidhayn@gmail.com>
-Subject: [PATCH]v5 compat-wireless: replace modprobe -l with functional equivilent
-Date: Fri, 24 Feb 2012 21:28:40 -0500
-Message-Id: <1330136920-15954-1-git-send-email-sidhayn@gmail.com> (sfid-20120225_032932_723127_EFFD4298)
+Received: from mout2.freenet.de ([195.4.92.92]:38686 "EHLO mout2.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752964Ab2BGHhS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Feb 2012 02:37:18 -0500
+Message-ID: <4F30D3EE.2010501@01019freenet.de> (sfid-20120207_083745_628042_60C4158A)
+Date: Tue, 07 Feb 2012 08:34:06 +0100
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+MIME-Version: 1.0
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: trencan@centrum.cz, linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: connection interrupted for rt61pci in master mode
+References: <20120128154544.70E060CD@centrum.cz> <4F30BEED.4010905@01019freenet.de> <20120207071444.8C823024@centrum.cz>
+In-Reply-To: <20120207071444.8C823024@centrum.cz>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-modprobe -l is either deprecated or removed, so let's replace it
-testing [ -z "$(DESTDIR)" ] appeared to only be need due to the fact
-that *enable was run directly instead of being run with $(DESTDIR)/
+Hello Helmut,
 
-Testing for module presence should now work properly on modern distros
-and *enable will be run properly with or without $(DESTDIR) being set.
+could it be potentially a problem with smp or does the fix you provided
+for rt2860 based wlan devices applies too for rt61pci?
 
-Signed-off-by: Rick Farina <sidhayn@gmail.com>
----
- Makefile |   30 ++++++++++--------------------
- 1 files changed, 10 insertions(+), 20 deletions(-)
+I'm thinking about that, because I saw the same problems here some time
+ago. And probably I can see it too with rt2800usb [1].
 
-diff --git a/Makefile b/Makefile
-index 5393b40..ef2f671 100644
---- a/Makefile
-+++ b/Makefile
-@@ -6,15 +6,6 @@ else
- export KLIB:=          /lib/modules/$(shell uname -r)
- endif
- export KLIB_BUILD ?=	$(KLIB)/build
--# Sometimes not available in the path
--MODPROBE := /sbin/modprobe
--export MAKE
--
--ifneq ($(wildcard $(MODPROBE)),)
--MADWIFI=$(shell $(MODPROBE) -l ath_pci)
--OLD_IWL=$(shell $(MODPROBE) -l iwl4965)
--OLD_ALX=$(shell $(MODPROBE) -l atl1c)
--endif
- 
- DESTDIR?=
- 
-@@ -109,7 +100,7 @@ $(CREL_CHECK):
- 
- btinstall: btuninstall bt-install-modules
- 
--bt-install-modules: bt $(MODPROBE)
-+bt-install-modules: bt
- 	$(MAKE) -C $(KLIB_BUILD) M=$(PWD) $(KMODDIR_ARG) $(KMODPATH_ARG) BT=TRUE \
- 		modules_install
- 	@/sbin/depmod -ae
-@@ -121,7 +112,7 @@ bt-install-modules: bt $(MODPROBE)
- 	@echo And then load the needed bluetooth modules. If unsure reboot.
- 	@echo
- 
--btuninstall: $(MODPROBE)
-+btuninstall:
- 	@# New location, matches upstream
- 	@rm -rf $(KLIB)/$(KMODDIR)/net/bluetooth/
- 	@rm -rf $(KLIB)/$(KMODDIR)/drivers/bluetooth/
-@@ -141,7 +132,7 @@ install-modules: modules
- 		modules_install
- 	@./scripts/update-initramfs
- 
--install-scripts: $(MODPROBE)
-+install-scripts:
- 	@# All the scripts we can use
- 	@mkdir -p $(DESTDIR)/usr/lib/compat-wireless/
- 	@install scripts/modlib.sh	$(DESTDIR)/usr/lib/compat-wireless/
-@@ -154,32 +145,31 @@ install-scripts: $(MODPROBE)
- 	@install scripts/athload	$(DESTDIR)/usr/sbin/
- 	@install scripts/b43load	$(DESTDIR)/usr/sbin/
- 	@install scripts/iwl-load	$(DESTDIR)/usr/sbin/
--	@if [ ! -z "$(MADWIFI)" ] && [ -z "$(DESTDIR)" ]; then \
--		echo ;\
-+	@if $(modinfo ath_pci > /dev/null 2>&1); then \
- 		echo -n "Note: madwifi detected, we're going to disable it. "  ;\
- 		echo "If you would like to enable it later you can run:"  ;\
- 		echo "    sudo athenable madwifi"  ;\
- 		echo ;\
- 		echo Running athenable ath5k...;\
--		/usr/sbin/athenable ath5k ;\
-+		$(DESTDIR)/usr/sbin/athenable ath5k ;\
- 	fi
--	@if [ ! -z "$(OLD_IWL)" ] && [ -z "$(DESTDIR)" ]; then \
-+	@if $(modinfo iwl4965 > /dev/null 2>&1); then \
- 		echo ;\
- 		echo -n "Note: iwl4965 detected, we're going to disable it. "  ;\
- 		echo "If you would like to enable it later you can run:"  ;\
- 		echo "    sudo iwl-load iwl4965"  ;\
- 		echo ;\
- 		echo Running iwl-enable iwlagn...;\
--		/usr/sbin/iwl-enable iwlagn ;\
-+		$(DESTDIR)/usr/sbin/iwl-enable iwlagn ;\
- 	fi
--	@if [ ! -z "$(OLD_ALX)" ] && [ -z "$(DESTDIR)" ]; then \
-+	@if $(modinfo atl1c > /dev/null 2>&1); then \
- 		echo ;\
- 		echo -n "Note: atl1c detected, we're going to disable it. "  ;\
- 		echo "If you would like to enable it later you can run:"  ;\
- 		echo "    sudo alx-load atl1c"  ;\
- 		echo ;\
- 		echo Running alx-enable alx...;\
--		/usr/sbin/alx-enable alx;\
-+		$(DESTDIR)/usr/sbin/alx-enable alx;\
- 	fi
- 	@# If on distributions like Mandriva which like to
- 	@# compress their modules this will find out and do
-@@ -205,7 +195,7 @@ install-scripts: $(MODPROBE)
- 	@echo If unsure reboot.
- 	@echo
- 
--uninstall: $(MODPROBE)
-+uninstall:
- 	@# New location, matches upstream
- 	@rm -rf $(KLIB)/$(KMODDIR)/compat/
- 	@rm -rf $(KLIB)/$(KMODDIR)/net/mac80211/
--- 
-1.7.3.4
 
+@Michal:
+Just to verify (or falsify) this hypothesis: Could you please reboot the
+machine with the additional kernel option maxcpus=0 (you can enter it in
+the grub console) to just use cpu 0 (please verify with "cat
+/proc/cpuinfo"). If the problem disappears, it's most probably smp related.
+
+Another question: you didn't activate 802.11n. Is this correct?
+
+
+Regards,
+Andreas
+
+trencan@centrum.cz schrieb:
+> 
+> Machine has "Intel Core i5-2500K" with 4 cores without Hyper-Threading.
+> 
+> Regards.
+> Michal
+
+
+Regards,
+Andreas
+
+
+[1]
+http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2012-February/004556.html
