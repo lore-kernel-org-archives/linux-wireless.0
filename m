@@ -1,63 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34288 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750907Ab2BPMiG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Feb 2012 07:38:06 -0500
-Subject: Re: calling request_firmware() from module init will not work with
- recent/future udev versions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kay Sievers <kay.sievers@vrfy.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Tom Gundersen <teg@jklm.no>, Andy Whitcroft <apw@canonical.com>
-In-Reply-To: <4F3CF0C1.3090304@broadcom.com>
-References: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
-	 <1326621743.3448.1.camel@jlt3.sipsolutions.net>
-	 <CAPXgP13b0uu3DgOGRL-_WKx-aSQN-f0xL6OmjNPBGf9fg0satA@mail.gmail.com>
-	 ( sfid-20120115_163411_716244_29DE7A13) <1326704259.3510.3.camel@jlt3.sipsolutions.net>
-	 <4F3CF0C1.3090304@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 16 Feb 2012 13:38:01 +0100
-Message-ID: <1329395881.3915.7.camel@jlt3.sipsolutions.net> (sfid-20120216_133812_506453_302AD0AE)
-Mime-Version: 1.0
+Received: from mail.tpi.com ([70.99.223.143]:3689 "EHLO mail.tpi.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754889Ab2BHVI2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Feb 2012 16:08:28 -0500
+From: Tim Gardner <tim.gardner@canonical.com>
+To: Larry.Finger@lwfinger.net
+Cc: Tim Gardner <tim.gardner@canonical.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl8192se firmware load can overflow target buffer
+Date: Wed,  8 Feb 2012 14:08:10 -0700
+Message-Id: <1328735291-33220-1-git-send-email-tim.gardner@canonical.com> (sfid-20120208_220854_039195_8815ED95)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-02-16 at 13:04 +0100, Arend van Spriel wrote:
-> On 01/16/2012 09:57 AM, Johannes Berg wrote:
-> >> Now the problem, the pcidev event is blocking in modprobe and waits
-> >> >  for the child event it has generated to finish, but udev does not
-> >> >  start the event because the parent still blocks in modprobe ->
-> >> >  deadlock until default firmware timeout of 60 sec. What we want here,
-> >> >  for several reasons not only udev's dependency logic, is that modprobe
-> >> >  never waits for userspace transactions to finish.
-> > Ok, thanks for the description. I guess to me that means nothing really
-> > changes much in the situation I'm thinking of.
-> 
-> I am working on changes in brcm80211 driver and the behaviour changes 
-> slightly. The async firmware request basically kicks of a kernel thread 
-> to do the actual request. So the probe finishes successfully regardless 
-> what the results will be of the actual firmware request. Hence the 
-> driver is associated with the hardware.
+The firmware file size check does not use the
+correct limit.
 
-This is true.
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+---
+ drivers/net/wireless/rtlwifi/rtl8192se/fw.h |    3 ++-
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c |    2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-> >> >  If userspace is not responding, the firmware request times out after
-> >> >  60 seconds and the driver is not associated with any hardware. To
-> >> >  retry the firmware loading, the module needs to be unloaded and
-> >> >  reloaded, or the driver needs to be asked to bind to a device again by
-> >> >  writing to the 'bind' in file in the sysfs driver directory.
-> > Right.
-> >
-> 
-> If my previous statement is true, what does it mean regarding retrying 
-> the firmware loading?
-
-When the firmware loading fails, the driver should unbind from the
-device that it failed for, and the retrying behaviour doesn't change
-(and requires a rebind)
-
-johannes
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
+index babe85d..5c377fc 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
+@@ -30,6 +30,7 @@
+ #define __REALTEK_FIRMWARE92S_H__
+ 
+ #define RTL8190_MAX_FIRMWARE_CODE_SIZE		64000
++#define RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE	164000
+ #define RTL8190_CPU_START_OFFSET		0x80
+ /* Firmware Local buffer size. 64k */
+ #define	MAX_FIRMWARE_CODE_SIZE			0xFF00
+@@ -217,7 +218,7 @@ struct rt_firmware {
+ 	u8 fw_emem[RTL8190_MAX_FIRMWARE_CODE_SIZE];
+ 	u32 fw_imem_len;
+ 	u32 fw_emem_len;
+-	u8 sz_fw_tmpbuffer[164000];
++	u8 sz_fw_tmpbuffer[RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE];
+ 	u32 sz_fw_tmpbufferlen;
+ 	u16 cmdpacket_fragthresold;
+ };
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+index ca38dd9..155da0a 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+@@ -105,7 +105,7 @@ static void rtl92se_fw_cb(const struct firmware *firmware, void *context)
+ 		rtlpriv->max_fw_size = 0;
+ 		return;
+ 	}
+-	if (firmware->size > rtlpriv->max_fw_size) {
++	if (firmware->size >= RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 "Firmware is too big!\n");
+ 		release_firmware(firmware);
+-- 
+1.7.9
 
