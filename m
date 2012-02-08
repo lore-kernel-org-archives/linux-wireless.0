@@ -1,56 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:34553 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757982Ab2BOKQE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 05:16:04 -0500
-Received: by lagp5 with SMTP id p5so1015723lag.2
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 02:16:01 -0800 (PST)
-Message-ID: <1329300958.19569.40.camel@cumari> (sfid-20120215_111609_677368_473BCCE5)
-Subject: Re: [PATCH v2 00/10] wl12xx: update fw api
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 15 Feb 2012 12:15:58 +0200
-In-Reply-To: <1328003845-3926-1-git-send-email-eliad@wizery.com>
-References: <1328003845-3926-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:3838 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750736Ab2BHNoc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Feb 2012 08:44:32 -0500
+Message-ID: <4F327C30.8060802@broadcom.com> (sfid-20120208_144435_256503_C8E30EF4)
+Date: Wed, 8 Feb 2012 14:44:16 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: REGRESSION: crash in wireless-testing smoketest
+References: <4F313815.3020107@broadcom.com> (
+ sfid-20120207_154219_853529_011888C8)
+ <4F313C53.2040604@sipsolutions.net> <4F315E7E.7040203@broadcom.com>
+ <1328646776.4223.0.camel@jlt3.sipsolutions.net>
+ <4F32484B.7020409@broadcom.com> <4F327273.5090301@sipsolutions.net>
+In-Reply-To: <4F327273.5090301@sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-01-31 at 11:57 +0200, Eliad Peller wrote: 
-> The fw api was changed in the latest FWs (6.3.5.0.95 for wl127x
-> and 7.3.5.0.95 for wl128x).
+On 02/08/2012 02:02 PM, Johannes Berg wrote:
+>> I rerun the test on a kernel with some more lock checking and got lucky.
+>>
+>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512283] wlan0: authenticate
+>> with 98:fc:11:8e:94:57
+>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512515] wlan0: send auth to
+>> 98:fc:11:8e:94:57 (try 1/3)
+>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514184] BUG: unable to handle
+>> kernel NULL pointer dereference at 00000004
 > 
-> Along with some small adjustments, the main changes
-> inroduced by this patheset are configuring the
-> templates per-role, and moving to IEEE80211_HW_SUPPORTS_DYNAMIC_PS
-> mode.
+> ...
 > 
-> v2:
-> 	- prevent the driver from working in the transitional
-> 	  commits (thanks Kalle & Luca)
-> 	- squash some patches (thanks Luca)
+>> Apparently, minstrel_ht expects some tx_status field filled in by
+>> brcmsmac/mac80211. Have not found the problem yet.
 > 
-> Eliad Peller (4):
->   wl12xx: fw api change - add role_id to set_template
->   wl12xx: use dev_role_id for scans
->   wl12xx: fw api change - add role_id to tsf_info
->   wl12xx: fw api change - update cmd/acx/event enums
+> So the patch you sent fixes this? Just making sure it's not a different 
+> thing.
 > 
-> Eyal Shapira (6):
->   wl12xx: remove PS management code
->   wl12xx: add support for HW dynamic PS
->   wl12xx: add dynamic_ps_timeout debugfs file
->   wl12xx: remove 2 unused parameters in wl1271_ps_set_mode()
->   wl12xx: enable/disable BET with AUTO_PS/ACTIVE
->   wl12xx: change WLVIF_FLAG_PSM name and remove
->     WLVIF_FLAG_PSM_REQUESTED
+> johannes
+> 
 
-Applied this series, thanks guys!
+Yes. I should probably have referred to this thread.
 
--- 
-Cheers,
-Luca.
+Gr. AvS
 
