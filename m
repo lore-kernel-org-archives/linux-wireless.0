@@ -1,174 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:56469 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752228Ab2BES1B convert rfc822-to-8bit (ORCPT
+Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:45859 "EHLO
+	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755755Ab2BHQBH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Feb 2012 13:27:01 -0500
-Received: by qadc10 with SMTP id c10so1688842qad.19
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Feb 2012 10:27:00 -0800 (PST)
+	Wed, 8 Feb 2012 11:01:07 -0500
+Message-ID: <20120208180102.18346jfdlm9wakw8@www.81.fi> (sfid-20120208_170111_167100_90528AA4)
+Date: Wed, 08 Feb 2012 18:01:02 +0200
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: Florian Fainelli <florian@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
+	Ulrich Kunitz <kune@deine-taler.de>,
+	zd1211-devs@lists.sourceforge.net
+Subject: Re: zd1211rw firmware loading timeout
+References: <201111291544.28692.florian@openwrt.org>
+ <CAFAL1Txx=qn3WXdRrtaYPVySY2vx+HinKk-NgthR+2ufcYNMwA@mail.gmail.com>
+ <20120208151536.92555oyai8wffqww@www.81.fi> <4F3275DD.2000107@openwrt.org>
+In-Reply-To: <4F3275DD.2000107@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1328455870.7290.43.camel@wwguy-huron>
-References: <CAObL_7E2eW9aqz3VLsBU-=4+kMXrfPvfz6wCNUEdDHuJWVaSLA@mail.gmail.com>
-	<CAFZTsKk9ojw9_XodisHf-dtHpL1n6xSRmmWDVniZ-Ps4-JLwvA@mail.gmail.com>
-	<1328455870.7290.43.camel@wwguy-huron>
-Date: Sun, 5 Feb 2012 19:27:00 +0100
-Message-ID: <CAFZTsKmjsBufp+JVS+ZWJyM561RSCDwM=ZQ89G0W0brHuy2RSQ@mail.gmail.com> (sfid-20120205_192733_101744_0751FA10)
-Subject: Re: [Ilw] Re: 6300agn: queue stuck and driver doesn't recover
-From: Alexander Schnaidt <alex.schnaidt@googlemail.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Andrew Lutomirski <luto@mit.edu>, ilw@linux.intel.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 5, 2012 at 4:31 PM, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> Hi,
+Quoting Florian Fainelli <florian@openwrt.org>:
+
+> Hello Jussi,
 >
-> On Sun, 2012-02-05 at 16:45 +0100, Alexander Schnaidt wrote:
->> On Sat, Feb 4, 2012 at 11:42 PM, Andrew Lutomirski <luto@mit.edu> wrote:
->> >
->> > I've recently started to notice wireless failures -- after being
->> > connected for a few minutes, the connection dies.  Other devices on
->> > the same network continue to work.  'iw dev wlan0 disconnect' will fix
->> > it.
->> >
->> > I'm not at all sure, but I think this is a 3.2 regression.  My kernel
->> >  is 3.2.2-1.fc16.x86_64.
->> Hi!
+> On 02/08/12 14:15, Jussi Kivilinna wrote:
+>> Quoting Florian Fainelli <florian@openwrt.org>:
 >>
->> I am experiencing a similar regression on every kernel >=3.2.
->> Connected to a wpa protected AP, every application
->> loses it's connection after a period of time. If I let it be, it
->> eventually reconnects
->> and continues for a while until the cycle repeats itself.
+>>>
+>>> Hello,
+>>>
+>>> I am running Debian testing kernel 3.1.0-1-amd64, using a 079b:0062 Sagem
+>>> XG-76NA 802.11bg stick.
+>>>
+>>> Upon zd1211rw interface
+>>> bringup (ifconfig wlan0 up) I get the following timeout:
+>>>
+>>> [  950.330573] zd1211rw 1-3:1.0: phy2
+>>> [  955.108510] zd1211rw 1-3:1.0: firmware version 4725
+>>> [  955.148532] zd1211rw 1-3:1.0: zd1211b chip 079b:0062 v4810 high 00-19-70
+>>> AL2230_RF pa0 g--NS
+>>> [snip]
+>>> [  955.204072] zd1211rw 1-3:1.0: error ioread32(CR_REG1): -110
+>>>
+>>> A second ifconfig wlan0 up brings the interface up without problems.
+>>>
+>>> After a bit more debugging, the call trace is the following:
+>>>
+>>> [10241.028130] zd1211rw 1-3:1.0: zd_chip_lock_phy_regs: error
+>>> ioread32(CR_REG1): -110
+>>> [10241.028140] zd1211rw 1-3:1.0: zd_switch_radio_on: failed to  
+>>> lock PHY regs
+>>> [10241.028148] zd1211rw 1-3:1.0: zd_op_start: failed to set radio on
+>>>
+>>> The following small modification works around the issue:
+>>>
+>>> diff --git a/zd_mac.c b/zd_mac.c
+>>> index cabfae1..6bfb673 100644
+>>> --- a/zd_mac.c
+>>> +++ b/zd_mac.c
+>>> @@ -306,9 +306,14 @@ int zd_op_start(struct ieee80211_hw *hw)
+>>>       r = set_mc_hash(mac);
+>>>       if (r)
+>>>               goto disable_int;
+>>> +
+>>> +       msleep(10);
+>>> +
+>>>       r = zd_chip_switch_radio_on(chip);
+>>> -       if (r < 0)
+>>> +       if (r < 0) {
+>>> +               dev_err(zd_chip_dev(chip), "%s: failed to set radio on\n",
+>>> __func__);
+>>>               goto disable_int;
+>>> +       }
+>>>       r = zd_chip_enable_rxtx(chip);
+>>>       if (r < 0)
+>>>               goto disable_radio;
+>>>
+>>> Is it possible that some chips require more time between a  
+>>> set_mc_hash and a
+>>> radio on? Or in general that consequent writes to the PHY regs  
+>>> should be timed
+>>> appropriately?
 >>
->> 03:00.0 Network controller: Intel Corporation Ultimate N WiFi Link 5300
->>         Subsystem: Intel Corporation Device 1011
->>         Flags: bus master, fast devsel, latency 0, IRQ 48
->>         Memory at f2500000 (64-bit, non-prefetchable) [size=8K]
->>         Capabilities: <access denied>
->>         Kernel driver in use: iwlwifi
+>> Yes, it is possible. Vendor driver appears to have quite alot  
+>> sleeps spread around in RF-chip handling code. I might have seen  
+>> this myself sometimes when zd1211 device has firmware freeze and  
+>> has to be reseted. But since freeze is hard to reproduce and reset  
+>> didn't fail always, I didn't bother with it.
 >>
->> Networkmanager, netcfg or wicd do not report any problems. The logs
->> are clean and only ever mention the reconnection-event itself.
->>
->> Now, running wpa_supplicant interactively spits out some info:
->>
->> [alex@lx200s ~]$ sudo wpa_supplicant -D wext -i wlan0 -c wpstest.conf
->> Password:
->> Trying to associate with 00:1f:3f:13:47:1d (SSID='MyFancyAP' freq=2417 MHz)
->> Associated with 00:1f:3f:13:47:1d
->> WPA: Key negotiation completed with 00:1f:3f:13:47:1d [PTK=TKIP GTK=TKIP]
->> CTRL-EVENT-CONNECTED - Connection to 00:1f:3f:13:47:1d
->> completed (auth) [id=0 id_str=]
->> WPA: Group rekeying completed with 00:1f:3f:13:47:1d [GTK=TKIP]
->> WPA: Group rekeying completed with 00:1f:3f:13:47:1d [GTK=TKIP]
->> CTRL-EVENT-DISCONNECTED bssid=00:1f:3f:13:47:1d reason=0
->> Trying to associate with 00:1f:3f:13:47:1d (SSID='MyFancyAP' freq=2417 MHz)
->> Associated with 00:1f:3f:13:47:1d
->> WPA: Key negotiation completed with 00:1f:3f:13:47:1d [PTK=TKIP GTK=TKIP]
->> CTRL-EVENT-CONNECTED - Connection to 00:1f:3f:13:47:1d
->> completed (reauth) [id=0 id_str=]
->> ^CCTRL-EVENT-TERMINATING - signal 2 received
->>
->> The connection *always* stalls at the second group rekeying event.
->> When the third group rekeying happens wpa_supplicant(?) re-associates the
->> connection and the cycle repeats.
->>
->> Here's the the dmesg output during the time frame:
->>
->> [ 126.172145] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
->> [ 126.172530] iwlwifi 0000:03:00.0: Radio type=0x0-0x2-0x0
->> [ 126.322917] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
->> [ 126.323315] iwlwifi 0000:03:00.0: Radio type=0x0-0x2-0x0
->> [ 129.644682] wlan0: authenticate with 00:1f:3f:13:47:1d (try 1)
->> [ 129.647687] wlan0: authenticated
->> [ 129.649798] wlan0: associate with 00:1f:3f:13:47:1d (try 1)
->> [ 129.653886] wlan0: RX AssocResp from 00:1f:3f:13:47:1d
->> (capab=0x31 status=0 aid=2)
->> [ 129.653895] wlan0: associated
->> [ 1506.536175] wlan0: deauthenticated from 00:1f:3f:13:47:1d (Reason: 2)
->> [ 1506.600035] cfg80211: Calling CRDA to update world regulatory domain
->> [ 1509.857439] wlan0: authenticate with 00:1f:3f:13:47:1d (try 1)
->> [ 1509.860511] wlan0: authenticated
->> [ 1509.862438] wlan0: associate with 00:1f:3f:13:47:1d (try 1)
->> [ 1509.866443] wlan0: RX AssocResp from 00:1f:3f:13:47:1d
->> (capab=0x31 status=0 aid=2)
->> [ 1509.866451] wlan0: associated
->>
->> At 1506.5 the re-association happens.
->>
->> I can't influence the interval of the wpa rekeying of my wlan-router, so I'm
->> not sure if this is related.
->> The amount of network traffic doesn't seem to influence this behavior, either.
->>
->> I tried to bisect it but ended up at:
->>
->> commit 3c607d27c818cf4a5d28f2c73b18a88f8fbdfa33
->> Author: Don Fry <donald.h.fry@intel.com>
->> Date:   Fri Sep 30 11:40:20 2011 -0700
->>
->>     iwlagn: rename iwlagn module iwlwifi and alias to iwlagn.
->>
->>     Rename the iwlagn module as iwlwifi in preparation for future
->>     changes.  Add an alias to iwlagn for backward compatibility.
->>
->>     Signed-off-by: Don Fry <donald.h.fry@intel.com>
->>     Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
->>     Signed-off-by: John W. Linville <linville@tuxdriver.com>
->>
->> That doesn't make a lot of sense to me but I wanted to mention it
->>
->> I'll gladly provide more info.
+>> Can you give your "Signed-off-by" line for the patch?
 >
-> I agree that does not make much sense, but we will take a look into it.
-> btw, could you try the attach patch and see if it help?
->
-> thanks
-> Wey
->>
->> _______________________________________________
->> ilw mailing list
->> ilw@linux.intel.com
->> http://linux.intel.com/mailman/listinfo/ilw
+> Sure, I will resubmit this patch, do you also want me to keep the  
+> line showing the error?
 >
 
-Applied the patch against 3.2-rc2.
-Observing the same behavior; dmesg gained some extended output.
-Here is a complete cycle from loading the module to re-association.
+Yes, do that or add URL to original mail. Thanks.
 
-[  368.927325] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
-[  368.927707] iwlwifi 0000:03:00.0: Radio type=0x0-0x2-0x0
-[  369.074907] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
-[  369.075332] iwlwifi 0000:03:00.0: Radio type=0x0-0x2-0x0
-[  369.119379] ADDRCONF(NETDEV_UP): wlan0: link is not ready
-[  372.475697] wlan0: authenticate with 00:1f:3f:13:47:1d (try 1)
-[  372.478739] wlan0: authenticated
-[  372.480701] wlan0: associate with 00:1f:3f:13:47:1d (try 1)
-[  372.484821] wlan0: RX AssocResp from 00:1f:3f:13:47:1d
-(capab=0x31 status=0 aid=2)
-[  372.484830] wlan0: associated
-[  372.484838] wlan0: moving STA 00:1f:3f:13:47:1d to state 1
-[  372.484843] wlan0: moving STA 00:1f:3f:13:47:1d to state 2
-[  372.484849] wlan0: moving STA 00:1f:3f:13:47:1d to state 3
-[  372.494324] ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-[  382.786111] wlan0: no IPv6 routers present
-[ 1644.937825] wlan0: deauthenticated from 00:1f:3f:13:47:1d (Reason: 2)
-[ 1644.948276] wlan0: moving STA 00:1f:3f:13:47:1d to state 2
-[ 1644.948284] wlan0: moving STA 00:1f:3f:13:47:1d to state 1
-[ 1644.948289] wlan0: moving STA 00:1f:3f:13:47:1d to state 0
-[ 1644.963173] cfg80211: Calling CRDA to update world regulatory domain
-[ 1648.242734] wlan0: authenticate with 00:1f:3f:13:47:1d (try 1)
-[ 1648.245786] wlan0: authenticated
-[ 1648.247750] wlan0: associate with 00:1f:3f:13:47:1d (try 1)
-[ 1648.251843] wlan0: RX AssocResp from 00:1f:3f:13:47:1d (capab=0x31
-status=0 aid=2)
-[ 1648.251852] wlan0: associated
-[ 1648.251859] wlan0: moving STA 00:1f:3f:13:47:1d to state 1
-[ 1648.251865] wlan0: moving STA 00:1f:3f:13:47:1d to state 2
-[ 1648.251871] wlan0: moving STA 00:1f:3f:13:47:1d to state 3
+>>
+>> -Jussi
+>>
+>>>
+>>> When I googled for this timeout issue, I could see quite some  
+>>> reports of other
+>>> people having this error while the chip was already operating.
+>>>
+>>> Thanks
+>>> -- 
+>>> Florian
+>>> -- 
+>>> To unsubscribe from this list: send the line "unsubscribe  
+>>> linux-wireless" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>>
+>>
+>>
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+>
 
-Thanks
 
-alex
+
