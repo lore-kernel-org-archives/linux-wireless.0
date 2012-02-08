@@ -1,126 +1,371 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44636 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753403Ab2BOSbq convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:61475 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750717Ab2BHNma convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 13:31:46 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	magnus.maatta@logica.com
-Subject: [PATCH 3.3] ath9k_hw: prevent writes to const data on AR9160
-Date: Wed, 15 Feb 2012 19:31:20 +0100
-Message-Id: <1329330680-62602-1-git-send-email-nbd@openwrt.org> (sfid-20120215_193203_734265_4F19F74E)
+	Wed, 8 Feb 2012 08:42:30 -0500
+Received: by pbcun15 with SMTP id un15so571476pbc.19
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2012 05:42:30 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1328706551-11263-1-git-send-email-john.li.mediatek@gmail.com>
+References: <1328706551-11263-1-git-send-email-john.li.mediatek@gmail.com>
+Date: Wed, 8 Feb 2012 14:42:29 +0100
+Message-ID: <CAGXE3d892zotM9U1arGwa_ivTKxi4E=j2ELHY5NJKLFT3Dn05Q@mail.gmail.com> (sfid-20120208_144234_731463_5E5AD392)
+Subject: Re: [PATCH] rt2x00:Add VCO recalibration
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: John Li <john.li.mediatek@gmail.com>
+Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	John Li <chen-yang.li@mediatek.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Duplicate the data for iniAddac early on, to avoid having to do redundant
-memcpy calls later. While we're at it, make AR5416 < v2.2 use the same
-codepath. Fixes a reported crash on x86.
+Hi again,
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Reported-by: Magnus M√§√§tt√§ <magnus.maatta@logica.com>
-Cc: stable@vger.kernel.org
----
- drivers/net/wireless/ath/ath9k/ar5008_phy.c |   25 +------------------------
- drivers/net/wireless/ath/ath9k/ar9002_hw.c  |   19 +++++++++++++++++++
- drivers/net/wireless/ath/ath9k/hw.h         |    1 -
- 3 files changed, 20 insertions(+), 25 deletions(-)
+On Wed, Feb 8, 2012 at 2:09 PM, John Li <john.li.mediatek@gmail.com> wrote:
+> From: John Li <chen-yang.li@mediatek.com>
+>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index f901a17..86a891f 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -489,8 +489,6 @@ static int ar5008_hw_rf_alloc_ext_banks(struct ath_hw *ah)
- 	ATH_ALLOC_BANK(ah->analogBank6Data, ah->iniBank6.ia_rows);
- 	ATH_ALLOC_BANK(ah->analogBank6TPCData, ah->iniBank6TPC.ia_rows);
- 	ATH_ALLOC_BANK(ah->analogBank7Data, ah->iniBank7.ia_rows);
--	ATH_ALLOC_BANK(ah->addac5416_21,
--		       ah->iniAddac.ia_rows * ah->iniAddac.ia_columns);
- 	ATH_ALLOC_BANK(ah->bank6Temp, ah->iniBank6.ia_rows);
- 
- 	return 0;
-@@ -519,7 +517,6 @@ static void ar5008_hw_rf_free_ext_banks(struct ath_hw *ah)
- 	ATH_FREE_BANK(ah->analogBank6Data);
- 	ATH_FREE_BANK(ah->analogBank6TPCData);
- 	ATH_FREE_BANK(ah->analogBank7Data);
--	ATH_FREE_BANK(ah->addac5416_21);
- 	ATH_FREE_BANK(ah->bank6Temp);
- 
- #undef ATH_FREE_BANK
-@@ -805,27 +802,7 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
- 	if (ah->eep_ops->set_addac)
- 		ah->eep_ops->set_addac(ah, chan);
- 
--	if (AR_SREV_5416_22_OR_LATER(ah)) {
--		REG_WRITE_ARRAY(&ah->iniAddac, 1, regWrites);
--	} else {
--		struct ar5416IniArray temp;
--		u32 addacSize =
--			sizeof(u32) * ah->iniAddac.ia_rows *
--			ah->iniAddac.ia_columns;
--
--		/* For AR5416 2.0/2.1 */
--		memcpy(ah->addac5416_21,
--		       ah->iniAddac.ia_array, addacSize);
--
--		/* override CLKDRV value at [row, column] = [31, 1] */
--		(ah->addac5416_21)[31 * ah->iniAddac.ia_columns + 1] = 0;
--
--		temp.ia_array = ah->addac5416_21;
--		temp.ia_columns = ah->iniAddac.ia_columns;
--		temp.ia_rows = ah->iniAddac.ia_rows;
--		REG_WRITE_ARRAY(&temp, 1, regWrites);
--	}
--
-+	REG_WRITE_ARRAY(&ah->iniAddac, 1, regWrites);
- 	REG_WRITE(ah, AR_PHY_ADC_SERIAL_CTL, AR_PHY_SEL_INTERNAL_ADDAC);
- 
- 	ENABLE_REGWRITE_BUFFER(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-index 11f192a..d190411 100644
---- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-@@ -180,6 +180,25 @@ static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
- 		INIT_INI_ARRAY(&ah->iniAddac, ar5416Addac,
- 			       ARRAY_SIZE(ar5416Addac), 2);
- 	}
-+
-+	/* iniAddac needs to be modified for these chips */
-+	if (AR_SREV_9160(ah) || !AR_SREV_5416_22_OR_LATER(ah)) {
-+		struct ar5416IniArray *addac = &ah->iniAddac;
-+		u32 size = sizeof(u32) * addac->ia_rows * addac->ia_columns;
-+		u32 *data;
-+
-+		data = kmalloc(size, GFP_KERNEL);
-+		if (!data)
-+			return;
-+
-+		memcpy(data, addac->ia_array, size);
-+		addac->ia_array = data;
-+
-+		if (!AR_SREV_5416_22_OR_LATER(ah)) {
-+			/* override CLKDRV value */
-+			INI_RA(addac, 31,1) = 0;
-+		}
-+	}
- }
- 
- /* Support for Japan ch.14 (2484) spread */
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 6a29004..c8261d4 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -940,7 +940,6 @@ struct ath_hw {
- 	u32 *analogBank6Data;
- 	u32 *analogBank6TPCData;
- 	u32 *analogBank7Data;
--	u32 *addac5416_21;
- 	u32 *bank6Temp;
- 
- 	u8 txpower_limit;
--- 
-1.7.3.2
+This should have a comment here. However, the description you've put into the
+actual code is enough I guess. Still some nitpicking inlined ...
 
+> Signed-off-by: John Li <chen-yang.li@mediatek.com>
+> ---
+> †drivers/net/wireless/rt2x00/rt2800.h † † † | † †8 +++
+> †drivers/net/wireless/rt2x00/rt2800lib.c † †| † 65 ++++++++++++++++++++++++++++
+> †drivers/net/wireless/rt2x00/rt2800lib.h † †| † †1 +
+> †drivers/net/wireless/rt2x00/rt2800pci.c † †| † †1 +
+> †drivers/net/wireless/rt2x00/rt2800usb.c † †| † †1 +
+> †drivers/net/wireless/rt2x00/rt2x00.h † † † | † 11 +++++
+> †drivers/net/wireless/rt2x00/rt2x00config.c | † †3 +
+> †drivers/net/wireless/rt2x00/rt2x00dev.c † †| † †2 +
+> †drivers/net/wireless/rt2x00/rt2x00lib.h † †| † 13 ++++++
+> †drivers/net/wireless/rt2x00/rt2x00link.c † | † 38 ++++++++++++++++
+> †10 files changed, 143 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+> index 2571a2f..51069b8 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800.h
+> +++ b/drivers/net/wireless/rt2x00/rt2800.h
+> @@ -985,6 +985,14 @@
+> †#define TX_PIN_CFG_RFTR_POL † † † † † †FIELD32(0x00020000)
+> †#define TX_PIN_CFG_TRSW_EN † † † † † † FIELD32(0x00040000)
+> †#define TX_PIN_CFG_TRSW_POL † † † † † †FIELD32(0x00080000)
+> +#define TX_PIN_CFG_PA_PE_A2_EN † † † † FIELD32(0x01000000)
+> +#define TX_PIN_CFG_PA_PE_G2_EN † † † † FIELD32(0x02000000)
+> +#define TX_PIN_CFG_PA_PE_A2_POL † † † † † † † †FIELD32(0x04000000)
+> +#define TX_PIN_CFG_PA_PE_G2_POL † † † † † † † †FIELD32(0x08000000)
+> +#define TX_PIN_CFG_LNA_PE_A2_EN † † † † † † † †FIELD32(0x10000000)
+> +#define TX_PIN_CFG_LNA_PE_G2_EN † † † † † † † †FIELD32(0x20000000)
+> +#define TX_PIN_CFG_LNA_PE_A2_POL † † † FIELD32(0x40000000)
+> +#define TX_PIN_CFG_LNA_PE_G2_POL † † † FIELD32(0x80000000)
+
+Nice, thanks for the definitions.
+
+> †/*
+> †* TX_BAND_CFG: 0x1 use upper 20MHz, 0x0 use lower 20MHz
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 22a1a8f..2fbd762 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -2414,6 +2414,71 @@ void rt2800_gain_calibration(struct rt2x00_dev *rt2x00dev)
+> †}
+> †EXPORT_SYMBOL_GPL(rt2800_gain_calibration);
+>
+> +void rt2800_vco_calibration(struct rt2x00_dev *rt2x00dev)
+> +{
+> + † † † u32 † † tx_pin;
+> + † † † u8 † † †rfcsr;
+> +
+> + † † † /*
+> + † † † †* A voltage-controlled oscillator(VCO) is an electronic oscillator designed to be controlled in oscillation frequency by a voltage input.
+> + † † † †* Maybe the temperature will affect the frequency of oscillation to be shifted.
+> + † † † †* The VCO calibration will be called periodically to adjust the frequency to be precision.
+> + † † † */
+> +
+
+Kernel coding style typically requires to have a max of 80 chars per
+line. The comment
+looks a bit too long :)
+
+You can verify that on your own by running scripts/checkpatch.pl
+before submitting a patch.
+
+> + † † † switch (rt2x00dev->chip.rf) {
+> + † † † case RF2020:
+> + † † † case RF3020:
+> + † † † case RF3021:
+> + † † † case RF3022:
+> + † † † case RF3320:
+> + † † † case RF3052:
+> + † † † † † † † rt2800_rfcsr_read(rt2x00dev, 7, &rfcsr);
+> + † † † † † † † rt2x00_set_field8(&rfcsr, RFCSR7_RF_TUNING, 1);
+> + † † † † † † † rt2800_rfcsr_write(rt2x00dev, 7, rfcsr);
+> + † † † † † † † break;
+> + † † † case RF5370:
+> + † † † case RF5372:
+> + † † † case RF5390:
+> + † † † † † † † rt2800_rfcsr_read(rt2x00dev, 3, &rfcsr);
+> + † † † † † † † rt2x00_set_field8(&rfcsr, RFCSR30_RF_CALIBRATION, 1);
+> + † † † † † † † rt2800_rfcsr_write(rt2x00dev, 3, rfcsr);
+> + † † † † † † † break;
+> + † † † default:
+> + † † † † † † † return;
+> + † † † }
+> +
+> + † † † mdelay(1);
+> +
+> + † † † rt2800_register_read(rt2x00dev, TX_PIN_CFG, &tx_pin);
+> + † † † if (rt2x00dev->rf_channel <= 14)
+> + † † † {
+
+Kernel coding style! The bracket belongs in the same line as the if clause.
+
+> + † † † † † † † rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G0_EN, 1);
+> + † † † † † † † if (rt2x00dev->default_ant.tx_chain_num >= 2)
+> + † † † † † † † {
+> + † † † † † † † † † † † rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G1_EN, 1);
+> + † † † † † † † † † † † if (rt2x00dev->default_ant.tx_chain_num == 3)
+> + † † † † † † † † † † † {
+> + † † † † † † † † † † † † † † † rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_G2_EN, 1);
+> + † † † † † † † † † † † }
+
+Here, no braces required here since you have only one line ...
+
+> + † † † † † † † }
+> + † † † }
+> + † † † else
+> + † † † {
+> + † † † † † † † rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A0_EN, 1);
+> + † † † † † † † if (rt2x00dev->default_ant.tx_chain_num >= 2)
+> + † † † † † † † {
+> + † † † † † † † † † † † rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A1_EN, 1);
+> + † † † † † † † † † † † if (rt2x00dev->default_ant.tx_chain_num == 3)
+> + † † † † † † † † † † † {
+> + † † † † † † † † † † † † † † † rt2x00_set_field32(&tx_pin, TX_PIN_CFG_PA_PE_A2_EN, 1);
+> + † † † † † † † † † † † }
+> + † † † † † † † }
+> + † † † }
+> + † † † rt2800_register_write(rt2x00dev, TX_PIN_CFG, tx_pin);
+> +
+> +}
+> +EXPORT_SYMBOL_GPL(rt2800_vco_calibration);
+> +
+> †static void rt2800_config_retry_limit(struct rt2x00_dev *rt2x00dev,
+> † † † † † † † † † † † † † † † † † † †struct rt2x00lib_conf *libconf)
+> †{
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.h b/drivers/net/wireless/rt2x00/rt2800lib.h
+> index 8c3c281..419e36c 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.h
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.h
+> @@ -184,6 +184,7 @@ void rt2800_reset_tuner(struct rt2x00_dev *rt2x00dev, struct link_qual *qual);
+> †void rt2800_link_tuner(struct rt2x00_dev *rt2x00dev, struct link_qual *qual,
+> † † † † † † † † † † † const u32 count);
+> †void rt2800_gain_calibration(struct rt2x00_dev *rt2x00dev);
+> +void rt2800_vco_calibration(struct rt2x00_dev *rt2x00dev);
+>
+> †int rt2800_enable_radio(struct rt2x00_dev *rt2x00dev);
+> †void rt2800_disable_radio(struct rt2x00_dev *rt2x00dev);
+> diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+> index 837b460..25fd45c 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+> @@ -1050,6 +1050,7 @@ static const struct rt2x00lib_ops rt2800pci_rt2x00_ops = {
+> † † † †.reset_tuner † † † † † †= rt2800_reset_tuner,
+> † † † †.link_tuner † † † † † † = rt2800_link_tuner,
+> † † † †.gain_calibration † † † = rt2800_gain_calibration,
+> + † † † .vco_calibration † † † †= rt2800_vco_calibration,
+> † † † †.start_queue † † † † † †= rt2800pci_start_queue,
+> † † † †.kick_queue † † † † † † = rt2800pci_kick_queue,
+> † † † †.stop_queue † † † † † † = rt2800pci_stop_queue,
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index 7f21005..2fab90e 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -783,6 +783,7 @@ static const struct rt2x00lib_ops rt2800usb_rt2x00_ops = {
+> † † † †.reset_tuner † † † † † †= rt2800_reset_tuner,
+> † † † †.link_tuner † † † † † † = rt2800_link_tuner,
+> † † † †.gain_calibration † † † = rt2800_gain_calibration,
+> + † † † .vco_calibration † † † †= rt2800_vco_calibration,
+> † † † †.watchdog † † † † † † † = rt2800usb_watchdog,
+> † † † †.start_queue † † † † † †= rt2800usb_start_queue,
+> † † † †.kick_queue † † † † † † = rt2x00usb_kick_queue,
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+> index b03b22c..b865e16 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> @@ -355,6 +355,11 @@ struct link {
+> † † † † * Work structure for scheduling periodic AGC adjustments.
+> † † † † */
+> † † † †struct delayed_work agc_work;
+> +
+> + † † † /*
+> + † † † †* Work structure for scheduling periodic VCO calibration.
+> + † † † †*/
+> + † † † struct delayed_work vco_work;
+> †};
+>
+> †enum rt2x00_delayed_flags {
+> @@ -579,6 +584,7 @@ struct rt2x00lib_ops {
+> † † † †void (*link_tuner) (struct rt2x00_dev *rt2x00dev,
+> † † † † † † † † † † † † † †struct link_qual *qual, const u32 count);
+> † † † †void (*gain_calibration) (struct rt2x00_dev *rt2x00dev);
+> + † † † void (*vco_calibration) (struct rt2x00_dev *rt2x00dev);
+>
+> † † † †/*
+> † † † † * Data queue handlers.
+> @@ -979,6 +985,11 @@ struct rt2x00_dev {
+> † † † †struct tasklet_struct autowake_tasklet;
+>
+> † † † †/*
+> + † † † †* Used for VCO periodic calibration.
+> + † † † †*/
+> + † † † int rf_channel;
+> +
+> + † † † /*
+> † † † † * Protect the interrupt mask register.
+> † † † † */
+> † † † †spinlock_t irqmask_lock;
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00config.c b/drivers/net/wireless/rt2x00/rt2x00config.c
+> index b704e5b..006b939 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00config.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00config.c
+> @@ -232,6 +232,9 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
+> † † † † † † † †memcpy(&libconf.channel,
+> † † † † † † † † † † † &rt2x00dev->spec.channels_info[hw_value],
+> † † † † † † † † † † † sizeof(libconf.channel));
+> +
+> + † † † † † † † /* Used for VCO periodic calibration */
+> + † † † † † † † rt2x00dev->rf_channel = libconf.rf.channel;
+> † † † †}
+>
+> † † † †if (test_bit(REQUIRE_PS_AUTOWAKE, &rt2x00dev->cap_flags) &&
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> index c3e1aa7..f78266e 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+> @@ -88,6 +88,7 @@ int rt2x00lib_enable_radio(struct rt2x00_dev *rt2x00dev)
+> † † † †rt2x00queue_start_queues(rt2x00dev);
+> † † † †rt2x00link_start_tuner(rt2x00dev);
+> † † † †rt2x00link_start_agc(rt2x00dev);
+> + † † † rt2x00link_start_vcocal(rt2x00dev);
+>
+> † † † †/*
+> † † † † * Start watchdog monitoring.
+> @@ -111,6 +112,7 @@ void rt2x00lib_disable_radio(struct rt2x00_dev *rt2x00dev)
+> † † † † * Stop all queues
+> † † † † */
+> † † † †rt2x00link_stop_agc(rt2x00dev);
+> + † † † rt2x00link_stop_vcocal(rt2x00dev);
+> † † † †rt2x00link_stop_tuner(rt2x00dev);
+> † † † †rt2x00queue_stop_queues(rt2x00dev);
+> † † † †rt2x00queue_flush_queues(rt2x00dev, true);
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00lib.h b/drivers/net/wireless/rt2x00/rt2x00lib.h
+> index 4cdf247..78bd43b 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00lib.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00lib.h
+> @@ -33,6 +33,7 @@
+> †#define WATCHDOG_INTERVAL † † †round_jiffies_relative(HZ)
+> †#define LINK_TUNE_INTERVAL † † round_jiffies_relative(HZ)
+> †#define AGC_INTERVAL † † † † † round_jiffies_relative(4 * HZ)
+> +#define VCO_INTERVAL † † † † † round_jiffies_relative(10 * HZ) /* 10 sec */
+>
+> †/*
+> †* rt2x00_rate: Per rate device information
+> @@ -278,12 +279,24 @@ void rt2x00link_stop_watchdog(struct rt2x00_dev *rt2x00dev);
+> †void rt2x00link_start_agc(struct rt2x00_dev *rt2x00dev);
+>
+> †/**
+> + * rt2x00link_start_vcocal - Start periodic VCO calibration
+> + * @rt2x00dev: Pointer to &struct rt2x00_dev.
+> + */
+> +void rt2x00link_start_vcocal(struct rt2x00_dev *rt2x00dev);
+> +
+> +/**
+> †* rt2x00link_stop_agc - Stop periodic gain calibration
+> †* @rt2x00dev: Pointer to &struct rt2x00_dev.
+> †*/
+> †void rt2x00link_stop_agc(struct rt2x00_dev *rt2x00dev);
+>
+> †/**
+> + * rt2x00link_stop_vcocal - Stop periodic VCO calibration
+> + * @rt2x00dev: Pointer to &struct rt2x00_dev.
+> + */
+> +void rt2x00link_stop_vcocal(struct rt2x00_dev *rt2x00dev);
+> +
+> +/**
+> †* rt2x00link_register - Initialize link tuning & watchdog functionality
+> †* @rt2x00dev: Pointer to &struct rt2x00_dev.
+> †*
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00link.c b/drivers/net/wireless/rt2x00/rt2x00link.c
+> index ea10b00..5da1dab 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00link.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00link.c
+> @@ -447,11 +447,27 @@ void rt2x00link_start_agc(struct rt2x00_dev *rt2x00dev)
+> † † † † † † † † † † † † † † † † † † † † † † AGC_INTERVAL);
+> †}
+>
+> +void rt2x00link_start_vcocal(struct rt2x00_dev *rt2x00dev)
+> +{
+> + † † † struct link *link = &rt2x00dev->link;
+> +
+> + † † † if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags) &&
+> + † † † † † rt2x00dev->ops->lib->vco_calibration)
+> + † † † † † † † ieee80211_queue_delayed_work(rt2x00dev->hw,
+> + † † † † † † † † † † † † † † † † † † † † † †&link->vco_work,
+> + † † † † † † † † † † † † † † † † † † † † † †VCO_INTERVAL);
+> +}
+> +
+> †void rt2x00link_stop_agc(struct rt2x00_dev *rt2x00dev)
+> †{
+> † † † †cancel_delayed_work_sync(&rt2x00dev->link.agc_work);
+> †}
+>
+> +void rt2x00link_stop_vcocal(struct rt2x00_dev *rt2x00dev)
+> +{
+> + † † † cancel_delayed_work_sync(&rt2x00dev->link.vco_work);
+> +}
+> +
+> †static void rt2x00link_agc(struct work_struct *work)
+> †{
+> † † † †struct rt2x00_dev *rt2x00dev =
+> @@ -473,9 +489,31 @@ static void rt2x00link_agc(struct work_struct *work)
+> † † † † † † † † † † † † † † † † † † † † † † AGC_INTERVAL);
+> †}
+>
+> +static void rt2x00link_vcocal(struct work_struct *work)
+> +{
+> + † † † struct rt2x00_dev *rt2x00dev =
+> + † † † † † container_of(work, struct rt2x00_dev, link.vco_work.work);
+> + † † † struct link *link = &rt2x00dev->link;
+> +
+> + † † † /*
+> + † † † †* When the radio is shutting down we should
+> + † † † †* immediately cease the VCO calibration.
+> + † † † †*/
+> + † † † if (!test_bit(DEVICE_STATE_ENABLED_RADIO, &rt2x00dev->flags))
+> + † † † † † † † return;
+> +
+> + † † † rt2x00dev->ops->lib->vco_calibration(rt2x00dev);
+> +
+> + † † † if (test_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags))
+> + † † † † † † † ieee80211_queue_delayed_work(rt2x00dev->hw,
+> + † † † † † † † † † † † † † † † † † † † † † †&link->vco_work,
+> + † † † † † † † † † † † † † † † † † † † † † †VCO_INTERVAL);
+> +}
+> +
+> †void rt2x00link_register(struct rt2x00_dev *rt2x00dev)
+> †{
+> † † † †INIT_DELAYED_WORK(&rt2x00dev->link.agc_work, rt2x00link_agc);
+> + † † † INIT_DELAYED_WORK(&rt2x00dev->link.vco_work, rt2x00link_vcocal);
+> † † † †INIT_DELAYED_WORK(&rt2x00dev->link.watchdog_work, rt2x00link_watchdog);
+> † † † †INIT_DELAYED_WORK(&rt2x00dev->link.work, rt2x00link_tuner);
+> †}
+> --
+> 1.7.6.5
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at †http://vger.kernel.org/majordomo-info.html
