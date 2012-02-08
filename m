@@ -1,87 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:34898 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753718Ab2BFKoV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Feb 2012 05:44:21 -0500
-Received: by mail-wi0-f174.google.com with SMTP id s10so4057049wic.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2012 02:44:20 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 4/4] wl12xx: delete wl->vif (and allow multiple vifs)
-Date: Mon,  6 Feb 2012 12:47:57 +0200
-Message-Id: <1328525277-25334-5-git-send-email-eliad@wizery.com> (sfid-20120206_114425_762317_073BC1BA)
-In-Reply-To: <1328525277-25334-1-git-send-email-eliad@wizery.com>
-References: <1328525277-25334-1-git-send-email-eliad@wizery.com>
+Received: from nbd.name ([46.4.11.11]:47813 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757334Ab2BHRGJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Feb 2012 12:06:09 -0500
+Message-ID: <4F32AB79.9040307@openwrt.org> (sfid-20120208_180614_597394_C4593F8C)
+Date: Wed, 08 Feb 2012 18:06:01 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2] mac80211: minstrel_ht: fix NULL pointer dereference
+ during auth/assoc
+References: <1328705077-31360-1-git-send-email-arend@broadcom.com> <4F329DE5.20408@openwrt.org> <4F32A263.5050909@broadcom.com>
+In-Reply-To: <4F32A263.5050909@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Delete the global wl->vif (and the checks on it),
-so multiple vifs could be added.
+On 2012-02-08 5:27 PM, Arend van Spriel wrote:
+> On 02/08/2012 05:08 PM, Felix Fietkau wrote:
+>> On 2012-02-08 1:44 PM, Arend van Spriel wrote:
+>>> This patch fixes the following NULL pointer dereference:
+>>>
+>>>> I rerun the test on a kernel with some more lock checking and got lucky.
+>>>>
+>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512283] wlan0: authenticate
+>>>> with 98:fc:11:8e:94:57
+>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512515] wlan0: send auth to
+>>>> 98:fc:11:8e:94:57 (try 1/3)
+>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514184] BUG: unable to handle
+>>>> kernel NULL pointer dereference at 00000004
+>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514233] IP: [<f8648f08>]
+>>>> minstrel_tx_status+0x48/0xe0 [mac80211]
+>>>
+>>> static inline int
+>>> rix_to_ndx(struct minstrel_sta_info *mi, int rix)
+>>> {
+>>>         int i = rix;
+>>>         for (i = rix; i >= 0; i--)
+>>>                 if (mi->r[i].rix == rix)
+>>>   48:   3b 58 04                cmp    0x4(%eax),%ebx
+>>>   4b:   74 4b                   je     98 <minstrel_tx_status+0x98>
+>>>   4d:   83 c2 01                add    $0x1,%edx
+>>>
+>>> It fails because of mi->r[i] being a NULL pointer. It is allocated in
+>>> minstel_alloc_sta, but minstrel_ht_alloc_sta does not call that function.
+>>>
+>>> struct minstrel_ht_sta_priv holds a union with struct minstrel_ht_sta and
+>>> struct minstrel_sta_info. During authenticate the bool is_ht is false so
+>>> minstrel_ht_tx_status calls minstrel_tx_status, but minstrel_sta_info::r
+>>> is not set until rate_init which is after assoc.
+>> I'm not sure this is the right fix. If I understand the issue correctly,
+>> mi->r is only NULL because .rate_init has not been called yet, which is
+>> a bug that other rate control modules might trip over as well, maybe in
+>> more subtle ways. If this is the case, then I believe this bug should be
+>> fixed in mac80211 instead.
+>> 
+>> Maybe it would even be a good idea to set a flag after calling
+>> rate_control_rate_init, and calling WARN_ON or even BUG_ON when doing tx
+>> before that.
+>> 
+>> - Felix
+>> 
+> 
+> Hi Felix,
+> 
+> I am not sure I can agree. minstrel_ht allocates the struct
+> minstrel_ht_sta_priv initializing is_ht to false thereby choosing a
+> default and zero'ing the legacy field. When setting is_ht to false
+> consequently the contents of the legacy field should be properly set as
+> is done in minstrel_ht_update_caps (at use_legacy label).
+Right, minstrel_ht_update_caps initializes that field, and it's always
+called from .rate_init.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c   |   11 -----------
- drivers/net/wireless/wl12xx/wl12xx.h |    2 --
- 2 files changed, 0 insertions(+), 13 deletions(-)
+While the non-HT minstrel initializes that field earlier (because it is
+not stored anywhere else), it still also assumes that it isn't asked to
+do tx until .rate_init is called.
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index eeb80f5..0434afa 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -2160,13 +2160,6 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 	if (ret < 0)
- 		goto out_unlock;
- 
--	if (wl->vif) {
--		wl1271_debug(DEBUG_MAC80211,
--			     "multiple vifs are not supported yet");
--		ret = -EBUSY;
--		goto out;
--	}
--
- 	/*
- 	 * in some very corner case HW recovery scenarios its possible to
- 	 * get here before __wl1271_op_remove_interface is complete, so
-@@ -2240,7 +2233,6 @@ static int wl1271_op_add_interface(struct ieee80211_hw *hw,
- 	if (ret < 0)
- 		goto out;
- 
--	wl->vif = vif;
- 	list_add(&wlvif->list, &wl->wlvif_list);
- 	set_bit(WLVIF_FLAG_INITIALIZED, &wlvif->flags);
- 
-@@ -2273,8 +2265,6 @@ static void __wl1271_op_remove_interface(struct wl1271 *wl,
- 	if (!test_and_clear_bit(WLVIF_FLAG_INITIALIZED, &wlvif->flags))
- 		return;
- 
--	wl->vif = NULL;
--
- 	/* because of hardware recovery, we may get here twice */
- 	if (wl->state != WL1271_STATE_ON)
- 		return;
-@@ -5155,7 +5145,6 @@ static struct ieee80211_hw *wl1271_alloc_hw(void)
- 	wl->rx_counter = 0;
- 	wl->power_level = WL1271_DEFAULT_POWER_LEVEL;
- 	wl->band = IEEE80211_BAND_2GHZ;
--	wl->vif = NULL;
- 	wl->flags = 0;
- 	wl->sg_enabled = true;
- 	wl->hw_pg_ver = -1;
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 021d84f..89467b2 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -440,8 +440,6 @@ struct wl1271 {
- 	struct wl12xx_fw_status *fw_status;
- 	struct wl1271_tx_hw_res_if *tx_res_if;
- 
--	struct ieee80211_vif *vif;
--
- 	/* Current chipset configuration */
- 	struct conf_drv_settings conf;
- 
--- 
-1.7.6.401.g6a319
+It doesn't matter whether it crashes in non-HT minstrel or not, the main
+issue is that assumptions of both minstrel and minstrel_ht (and possibly
+other rate control implementations) are being violated by mac80211.
 
+Before we can address that problem, we need to decide whether we want to
+change the code to no longer require .rate_init before tx (which I think
+is a bad idea, since there's no list of supported rates available yet at
+that point in time), or if we change mac80211 to no longer violate those
+assumptions. In either case, this patch is insufficient.
+
+- Felix
