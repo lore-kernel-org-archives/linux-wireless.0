@@ -1,90 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3575 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757247Ab2BHTx6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 14:53:58 -0500
-Message-ID: <4F32D2CC.8090908@broadcom.com> (sfid-20120208_205401_552463_AD2250D9)
-Date: Wed, 8 Feb 2012 20:53:48 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:53934 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754563Ab2BHJk5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Feb 2012 04:40:57 -0500
+Message-ID: <4F324321.7030004@qca.qualcomm.com> (sfid-20120208_104107_731424_AC494A8A)
+Date: Wed, 8 Feb 2012 15:10:49 +0530
+From: Raja Mani <rmani@qca.qualcomm.com>
 MIME-Version: 1.0
-To: "Arend van Spriel" <arend@broadcom.com>
-cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Felix Fietkau" <nbd@openwrt.org>
-Subject: Re: [PATCH v2] mac80211: minstrel_ht: fix NULL pointer
- dereference during auth/assoc
-References: <1328705077-31360-1-git-send-email-arend@broadcom.com>
-In-Reply-To: <1328705077-31360-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH] ath6kl: Check wow state before sending control and data
+ pkt
+References: <1328536613-17521-1-git-send-email-rmani@qca.qualcomm.com> <4F2FE044.2000106@qca.qualcomm.com> <4F30F980.9010206@qca.qualcomm.com> <4F31280F.9000306@qca.qualcomm.com>
+In-Reply-To: <4F31280F.9000306@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/08/2012 01:44 PM, Arend van Spriel wrote:
-> This patch fixes the following NULL pointer dereference:
-> 
->> I rerun the test on a kernel with some more lock checking and got lucky.
+On Tuesday 07 February 2012 07:03 PM, Kalle Valo wrote:
+> On 02/07/2012 12:14 PM, Raja Mani wrote:
+>> On Monday 06 February 2012 07:44 PM, Kalle Valo wrote:
+>>> On 02/06/2012 03:56 PM, rmani@qca.qualcomm.com wrote:
+>>>>
+>>>> +enum ath6kl_wow_state {
+>>>> +	ATH6KL_WOW_STATE_NONE,
+>>>> +	ATH6KL_WOW_STATE_SUSPENDING,
+>>>> +	ATH6KL_WOW_STATE_SUSPENDED,
+>>>> +};
+>>>> +
+>>>>    struct ath6kl {
+>>>>    	struct device *dev;
+>>>>    	struct wiphy *wiphy;
+>>>>
+>>>>    	enum ath6kl_state state;
+>>>> +	enum ath6kl_wow_state wow_state;
+>>>>    	unsigned int testmode;
+>>>
+>>> To be honest, adding a new state variable scares me. I don't see how we
+>>> are able to maintain two different state variables, the end result would
+>>> be a total mess.
 >>
->> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512283] wlan0: authenticate
->> with 98:fc:11:8e:94:57
->> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512515] wlan0: send auth to
->> 98:fc:11:8e:94:57 (try 1/3)
->> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514184] BUG: unable to handle
->> kernel NULL pointer dereference at 00000004
->> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514233] IP: [<f8648f08>]
->> minstrel_tx_status+0x48/0xe0 [mac80211]
-> 
-> static inline int
-> rix_to_ndx(struct minstrel_sta_info *mi, int rix)
-> {
->         int i = rix;
->         for (i = rix; i >= 0; i--)
->                 if (mi->r[i].rix == rix)
->   48:   3b 58 04                cmp    0x4(%eax),%ebx
->   4b:   74 4b                   je     98 <minstrel_tx_status+0x98>
->   4d:   83 c2 01                add    $0x1,%edx
-> 
-> It fails because of mi->r[i] being a NULL pointer. It is allocated in
-> minstel_alloc_sta, but minstrel_ht_alloc_sta does not call that function.
-> 
-> struct minstrel_ht_sta_priv holds a union with struct minstrel_ht_sta and
-> struct minstrel_sta_info. During authenticate the bool is_ht is false so
-> minstrel_ht_tx_status calls minstrel_tx_status, but minstrel_sta_info::r
-> is not set until rate_init which is after assoc.
-> 
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Cc: Felix Fietkau <nbd@openwrt.org>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
-> John,
-> 
-> This one with tab indent instead of spaces. Noticed just after sending
-> the first patch.
-> 
-> Gr. AvS
-> ---
->  net/mac80211/rc80211_minstrel_ht.c |    3 +++
->  1 files changed, 3 insertions(+), 0 deletions(-)
-> 
-> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-> index ff5f7b8..a58c348 100644
-> --- a/net/mac80211/rc80211_minstrel_ht.c
-> +++ b/net/mac80211/rc80211_minstrel_ht.c
-> @@ -813,6 +813,9 @@ minstrel_ht_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp)
->  	if (!msp->sample_table)
->  		goto error1;
->  
-> +	msp->legacy.r = msp->ratelist;
-> +	msp->legacy.sample_table = msp->sample_table;
-> +
->  	return msp;
->  
->  error1:
+>> ath6kl_wow_state is a just sub state of WOW. It roles over only in WOW
+>> mode. However i understand your point.
+>
+> It's not just a substate as it's separately checked in txrx.c.
+>
+>>> I recommend to look at this problem by adding a new state to enum
+>>> ath6kl_state. That would make it a lot easier to handle all the
+>>> different states.
+>>
+>> The condition to stop ctrl and data pkt transfer are different.
+>> Ctrl pkt should be stopped when wow_suspended (after sending
+>> set_host_sleep_cmd_mode). Data pkt should be dropped before
+>> the moment we configure set_ip_cmd().
+>
+> Don't think about dropping packets, instead try to make sure that the
+> packet flow is _stopped_. Dropping packets should be the last resort,
+> instead we need to go to the source of the packets. For data packets
+> this means that we need to stop netdev queues. For control packets we
+> need to make sure that cfg80211 ops in cfg80211.c don't issue any new
+> wmi commands. And maybe we should also consider debugfs and wmi events
+> as they can also issue new wmi commands.
+>
+>> This where we need a state WOW_SUSPENDING and WOW_SUSPENDED.
+>> enum ath6kl_state has over all ath6kl suspend state (cut pwr, deep
+>> sleep,wow). IMHO, mixing WOW sub states there is not good approach.
+>
+> How is this problem related only to WoW? Doesn't it apply to all suspend
+> modes?
+>
+>> If you feel maintaining separate state is not good idea, i could think
+>> of introducing two new flag WOW_SUSPENDING,  WOW_SUSPENDED in ar->flag.
+>
+> After a quick thought having a SUSPENDING state makes, but I can't see
+> the reason for name WOW_SUSPENDING. WOW_SUSPENDED is unclear for me,
+> what's the difference to ATH6KL_STATE_WOW?
 
-Hi John,
+Thanks your review. I'll submit V2 by considering all your comments.
 
-As Felix submitted a replacement patch, please drop this one.
-
-Gr. AvS
-
+>
+> Kalle
