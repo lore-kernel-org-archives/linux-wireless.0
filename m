@@ -1,77 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:50291 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754851Ab2B0Xrc convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 18:47:32 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Mon, 27 Feb 2012 15:44:58 -0800
-Subject: RE: [PATCH 3.3] mwifiex: reset encryption mode flag before
- association
-Message-ID: <477F20668A386D41ADCC57781B1F70430836762846@SC-VEXCH1.marvell.com> (sfid-20120228_004735_945265_64CDDA5B)
-References: <1330148136-28867-1-git-send-email-bzhao@marvell.com>
- <20120227182312.GB26664@tuxdriver.com>
-In-Reply-To: <20120227182312.GB26664@tuxdriver.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:58128 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756474Ab2BHUBj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Feb 2012 15:01:39 -0500
+Date: Wed, 8 Feb 2012 14:57:44 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Joe Perches <joe@perches.com>
+Cc: "Devendra.Naga" <devendra.aaru@gmail.com>,
+	Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	paul.gortmaker@windriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi/rtl8192c: in _rtl92c_phy_calculate_bit_shift
+ remove comparing bitmask against 1
+Message-ID: <20120208195744.GD2929@tuxdriver.com> (sfid-20120208_210158_765132_D4ADBAFE)
+References: <1327993863-6810-1-git-send-email-devendra.aaru@gmail.com>
+ <1327995440.1804.16.camel@joe2Laptop>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1327995440.1804.16.camel@joe2Laptop>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
-
-> Subject: Re: [PATCH 3.3] mwifiex: reset encryption mode flag before association
+On Mon, Jan 30, 2012 at 11:37:20PM -0800, Joe Perches wrote:
+> On Tue, 2012-01-31 at 02:11 -0500, Devendra.Naga wrote:
+> > From: "Devendra.Naga" <devendra.aaru@gmail.com>
+> []
+> > diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
+> []
+> > @@ -177,7 +177,7 @@ u32 _rtl92c_phy_calculate_bit_shift(u32 bitmask)
+> >  	u32 i;
+> >  
+> >  	for (i = 0; i <= 31; i++) {
+> > -		if (((bitmask >> i) & 0x1) == 1)
+> > +		if ((bitmask >> i) & 0x1)
+> >  			break;
+> >  	}
+> >  	return i;
 > 
-> On Fri, Feb 24, 2012 at 09:35:35PM -0800, Bing Zhao wrote:
-> > From: Amitkumar Karwar <akarwar@marvell.com>
-> >
-> > Recent commit
-> > "mwifiex: clear previous security setting during association"
-> > fixes association failure problems observed in some corner cases
-> > by clearing previous security setting before each association.
-> >
-> > We should reset encryption mode flag as well. This patch takes care
-> > of it.
-> >
-> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> > Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> > ---
-> >  drivers/net/wireless/mwifiex/cfg80211.c |    1 +
-> >  1 files changed, 1 insertions(+), 0 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-> > index 8d8ee63..e4e6d7d 100644
-> > --- a/drivers/net/wireless/mwifiex/cfg80211.c
-> > +++ b/drivers/net/wireless/mwifiex/cfg80211.c
-> > @@ -872,6 +872,7 @@ mwifiex_cfg80211_assoc(struct mwifiex_private *priv, size_t ssid_len, u8 *ssid,
-> >  	priv->sec_info.wpa_enabled = false;
-> >  	priv->sec_info.wpa2_enabled = false;
-> >  	priv->wep_key_curr_index = 0;
-> > +	priv->sec_info.encryption_mode = 0;
-> >  	ret = mwifiex_set_encode(priv, NULL, 0, 0, 1);
-> >
-> >  	if (mode == NL80211_IFTYPE_ADHOC) {
+> Perhaps this is simpler and faster:
 > 
-> What bug does this fix?  Does it need to be fixed in 3.3?  Or can it wait for 3.4?
+> {
+> 	u32 rtn = (u32)ffs((int)bitmask);
+> 	if (rtn)
+> 		return rtn - 1;
+> 	return 32;
+> }
 
-This one line code should be part of this patch:
-[PATCH 3.3] mwifiex: clear previous security setting during association (in wireless.git)
+Are you planning to revise your patch based on Joe's suggestion?
 
-They altogether fix an association corner case issue. I'd prefer have it for 3.3.
-
-Of course it's your call if you think that's more suitable for 3.4.
-
-Thanks,
-Bing
-
-> 
-> John
-> --
-> John W. Linville		Someday the world will need a hero, and you
-> linville@tuxdriver.com			might be all we have.  Be ready.
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
