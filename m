@@ -1,59 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:49917 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753557Ab2BRWwe (ORCPT
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:37820 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756522Ab2BHBUM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Feb 2012 17:52:34 -0500
-References: <20120218185419.79376027@xenia.leun.net> (sfid-20120218_193621_030111_7D470738)
-In-Reply-To: <20120218185419.79376027@xenia.leun.net> (sfid-20120218_193621_030111_7D470738)
+	Tue, 7 Feb 2012 20:20:12 -0500
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Subject: Re: Cannot put ath9k interface to different namespace?
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Sat, 18 Feb 2012 23:52:52 +0100
-To: Michael Leun <lkml20120218@newton.leun.net>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-CC: mcgrof@qca.qualcomm.com, jouni@qca.qualcomm.com,
-	vthiagar@qca.qualcomm.com, senthilb@qca.qualcomm.com,
+In-Reply-To: <CAB=NE6VS79S4R6wQddQCqPfoYPyRbPzSdAYN2Mxfi-4G_sfCvg@mail.gmail.com>
+References: <1328312594-31934-1-git-send-email-mcgrof@frijolero.org>
+ <20120206160727.GA21048@tuxdriver.com> <20120207041958.GA32377@bombadil.infradead.org>
+ <CAB=NE6VS79S4R6wQddQCqPfoYPyRbPzSdAYN2Mxfi-4G_sfCvg@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Tue, 7 Feb 2012 17:19:52 -0800
+Message-ID: <CAB=NE6Wv3PEJj5zKfK2o869ntxuU3V+Nv2dgKX1eDtk3zQ04dA@mail.gmail.com> (sfid-20120208_022033_111397_65BA2B7B)
+Subject: Re: [PATCH] compat: add compat kernel checker and downloader
+To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	Andy Whitcroft <apw@canonical.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>, hauke@hauke-m.de,
+	kernel-team@lists.ubuntu.com, linux-wireless@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Message-ID: <e7ff035b-562a-4222-80c4-eb501a3fcd6b@email.android.com> (sfid-20120218_235403_584059_6B7FBB9A)
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-You have to put the entire wiphy into the netns with iw, not just one virtual interface. 
+On Mon, Feb 6, 2012 at 8:56 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+> Come to think of it.. we could bastardize Ubuntu's PPA packages for
+> mainline kernels, translate the deb packages into tar files and some
+> sort of grub-update or whatever scrip to run in the end? That still
+> seems like a lot of work.
+>
+> The current option allows us to use either distro kernels or whatever
+> you have installed.. not sure how else to improve this. Didn't we have
+> some sort of distro agnostic package crap? Maybe?
 
-Michael Leun <lkml20120218@newton.leun.net> wrote:
+Or -- Andy -- any chance we can get some of the deb contents unpacked
+into a distro-agostic tarball of some sort that we can use ? I ask
+given that you guys already host the sources and all that.
 
->Hi,
->
->tried to put ath9k_htc interface to namespace, does not work:
->
->jill:/home/ml # ip link set netns 4001 dev wlan3
->RTNETLINK answers: Invalid argument
->
->Also does not work with ath9k, but does work with other wlan devices
->(tried zd1201, r8712u, thats what I've here at the moment).
->
->When trying, device was down.
->
->Is there some trick to do it or is there some support from driver for
->that missing?
->
->Any plans to fix that? Would that be big effort?
->
->Thanks.
->
->-- 
->MfG,
->
->Michael Leun
->
->--
->To unsubscribe from this list: send the line "unsubscribe
->linux-wireless" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Sent from my tablet. Please excuse my brevity.
+  Luis
