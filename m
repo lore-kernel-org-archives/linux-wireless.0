@@ -1,69 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:16438 "EHLO mga01.intel.com"
+Received: from canardo.mork.no ([148.122.252.1]:38746 "EHLO canardo.mork.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753057Ab2B0PlZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 10:41:25 -0500
-Subject: Re: [PATCH -iwlwifi] iwlwifi: make tx_cmd_pool kmem cache global
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <1330350725-5815-1-git-send-email-sgruszka@redhat.com>
-References: <1330350725-5815-1-git-send-email-sgruszka@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 27 Feb 2012 06:30:16 -0800
-Message-ID: <1330353016.12612.13.camel@wwguy-huron> (sfid-20120227_164128_324454_9D6D659A)
-Mime-Version: 1.0
+	id S1750706Ab2BHIzx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Feb 2012 03:55:53 -0500
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Michael Green <green@qca.qualcomm.com>,
+	Tomas Winkler <tomas.winkler@intel.com>,
+	linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	Robert =?utf-8?Q?Gr=C3=B8nning?= <slimg@iggu.org>
+Subject: Re: [wireless-regdb] wireless-regdb: Update regulatory rules for Norway (NO)
+References: <87pqgkxn25.fsf@nemi.mork.no>
+	<20111128181912.GB2681@tuxdriver.com>
+	<20120207195415.GG5560@tuxdriver.com>
+	<CAB=NE6VVcQgum4mQ5eooS2yXo-NNXHvujsUwpbEwNdQQSreaBA@mail.gmail.com>
+Date: Wed, 08 Feb 2012 09:55:09 +0100
+In-Reply-To: <CAB=NE6VVcQgum4mQ5eooS2yXo-NNXHvujsUwpbEwNdQQSreaBA@mail.gmail.com>
+	(Luis R. Rodriguez's message of "Tue, 7 Feb 2012 12:37:59 -0800")
+Message-ID: <87mx8t7lhu.fsf@nemi.mork.no> (sfid-20120208_095556_743244_EABB5892)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+"Luis R. Rodriguez" <mcgrof@frijolero.org> writes:
+> On Tue, Feb 7, 2012 at 11:54 AM, John W. Linville
+> <linville@tuxdriver.com> wrote:
+>> Well, sorry for the delay...  I will take this silence as "no
+>> objection". :-)
+>
+> Sorry, I did get a reply by Michael Green on 11/28/2011 but I never
+> followed up with the list. Apologies as well with the delay, but here
+> is our review.
+>
+> The European Union has some harmonized European radio conformance spec
+> and QCA's interpretation and position is that that spec overrides
+> deviations for end products for specific countries like the one being
+> recommended for Norway. This also means that QCA does not deviate for
+> EU countries on specs, even if countries have their own quirks, for
+> any country in the EU.
+>
+> Supporting changes like these are a deviation from what QCA is used to
+> using and testing and we unfortunately cannot verify any individual
+> country specific changes like the one proposed for the EU. It is also
+> our sentiment that we stand to gain more if we simply unify the EU
+> requirements through the harmonized spec, it provides simplicity, its
+> what we use and we can help in that regards. If wireless-regdb decides
+> to take a different path we simply will not be able to verify and
+> validate these changes. I'd be surprised if any other 802.11 vendor
+> differs from this position.
 
-On Mon, 2012-02-27 at 14:52 +0100, Stanislaw Gruszka wrote:
-> Otherwise we are not able to run more than one device per driver:
-> 
-> [   24.743045] kmem_cache_create: duplicate cache iwl_dev_cmd
-> [   24.743051] Pid: 3165, comm: NetworkManager Not tainted 3.3.0-rc2-wl+ #5
-> [   24.743054] Call Trace:
-> [   24.743066]  [<ffffffff811717d5>] kmem_cache_create+0x655/0x700
-> [   24.743073]  [<ffffffff81061415>] ? destroy_timer_on_stack+0x15/0x20
-> [   24.743079]  [<ffffffff814e26ed>] ? schedule_timeout+0x1dd/0x330
-> [   24.743083]  [<ffffffff810617c0>] ? lock_timer_base+0x70/0x70
-> [   24.743101]  [<ffffffffa03b9f8b>] iwl_alive_notify+0x1cb/0x1f0 [iwlwifi]
-> [   24.743111]  [<ffffffffa03ba442>] iwl_load_ucode_wait_alive+0x1b2/0x220 [iwlwifi]
-> [   24.743118]  [<ffffffff810b1fbd>] ? trace_hardirqs_on+0xd/0x10
-> [   24.743127]  [<ffffffffa03b9700>] ? iwlagn_mac_setup_register+0x2e0/0x2e0 [iwlwifi]
-> [   24.743133]  [<ffffffff814e60b4>] ? _raw_spin_unlock_bh+0x34/0x40
-> [   24.743142]  [<ffffffffa03ba893>] iwl_run_init_ucode+0x73/0x100 [iwlwifi]
-> [   24.743152]  [<ffffffffa03b8fa1>] __iwl_up+0x81/0x220 [iwlwifi]
-> [   24.743161]  [<ffffffffa03b91c0>] iwlagn_mac_start+0x80/0x190 [iwlwifi]
-> [   24.743188]  [<ffffffffa03307b3>] ieee80211_do_open+0x293/0x770 [mac80211]
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
-> I tested patch on wireless testing tree, and then rebased to -iwlwifi
-> tree, where did compile check only. This is basically a bugfix, but
-> seems nobody except me (*) use more than one iwlwifi device per system,
-> so I do not cc stable. 
-> 
+I fully agree.
 
-I am not totally understand what your patch doing, you make a global
-iwl_tx_cmd_pool structure, how that fix the multiple devices problem?
-global variable is not really a good programming exercise, true?
+However, this should really be taken up with the regulatory bodies
+deviating from the conformance spec.  It cannot simply be fixed by
+ignoring it in the regulatory database. That just implies that the
+regulatory database deviates from the regulations, and that's no good...
 
-> (*) I wonder why Intel developers do not run many devices in their
-> systems. I think they should - one new device and a few older. Then
-> perhaps we will stop seeing so many breakage on older devices caused
-> by adding support for new hardware and features.
-> 
-
-Yes, I am totally agree and we will start doing that
-
-btw, thanks for the help, I will merge all the patches from you on our
-internal tree first.
-
-Thanks
-Wey
+But if you want to put this change on hold and work towards harmonizing
+the regulations instead, then I'm fine with that solution.
 
 
-
+Bjørn
