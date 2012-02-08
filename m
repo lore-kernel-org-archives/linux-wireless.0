@@ -1,48 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:33257 "EHLO ozlabs.org"
+Received: from nbd.name ([46.4.11.11]:54452 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752002Ab2BFDH2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Feb 2012 22:07:28 -0500
-Date: Mon, 6 Feb 2012 14:07:24 +1100
-From: David Gibson <hermes@gibson.dropbear.id.au>
-To: Linus Torvalds <torvalds@osdl.org>, Pavel Roskin <proski@gnu.org>
-Cc: orinoco-users@lists.sourceforge.net,
-	orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: orinoco: Remove old mailing lists from MAINTAINERS
-Message-ID: <20120206030724.GC18754@truffala.fritz.box> (sfid-20120206_040745_291793_361B8BB4)
+	id S1753685Ab2BHRcc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Feb 2012 12:32:32 -0500
+Message-ID: <4F32B111.8020006@openwrt.org> (sfid-20120208_183247_018103_4713DA66)
+Date: Wed, 08 Feb 2012 18:29:53 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Arend van Spriel <arend@broadcom.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2] mac80211: minstrel_ht: fix NULL pointer dereference
+ during auth/assoc
+References: <1328705077-31360-1-git-send-email-arend@broadcom.com> <4F329DE5.20408@openwrt.org> <4F32A263.5050909@broadcom.com> <4F32AB79.9040307@openwrt.org>
+In-Reply-To: <4F32AB79.9040307@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The two orinoco mailing lists on sourceforge were set up many years
-ago and are now more or less moribund.  I'd like to shut them down, so
-I don't have to keep filtering the spam from them (which is most of
-what comes through now).  In preparation, this patch removes the
-reference to them from the MAINTAINERS file.  Any remaining discussion
-of this approaching obsolete driver can go to the linux-wireless list.
+On 2012-02-08 6:06 PM, Felix Fietkau wrote:
+> On 2012-02-08 5:27 PM, Arend van Spriel wrote:
+>> On 02/08/2012 05:08 PM, Felix Fietkau wrote:
+>>> On 2012-02-08 1:44 PM, Arend van Spriel wrote:
+>>>> This patch fixes the following NULL pointer dereference:
+>>>>
+>>>>> I rerun the test on a kernel with some more lock checking and got lucky.
+>>>>>
+>>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512283] wlan0: authenticate
+>>>>> with 98:fc:11:8e:94:57
+>>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512515] wlan0: send auth to
+>>>>> 98:fc:11:8e:94:57 (try 1/3)
+>>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514184] BUG: unable to handle
+>>>>> kernel NULL pointer dereference at 00000004
+>>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514233] IP: [<f8648f08>]
+>>>>> minstrel_tx_status+0x48/0xe0 [mac80211]
+>>>>
+>>>> static inline int
+>>>> rix_to_ndx(struct minstrel_sta_info *mi, int rix)
+>>>> {
+>>>>         int i = rix;
+>>>>         for (i = rix; i >= 0; i--)
+>>>>                 if (mi->r[i].rix == rix)
+>>>>   48:   3b 58 04                cmp    0x4(%eax),%ebx
+>>>>   4b:   74 4b                   je     98 <minstrel_tx_status+0x98>
+>>>>   4d:   83 c2 01                add    $0x1,%edx
+>>>>
+>>>> It fails because of mi->r[i] being a NULL pointer. It is allocated in
+>>>> minstel_alloc_sta, but minstrel_ht_alloc_sta does not call that function.
+>>>>
+>>>> struct minstrel_ht_sta_priv holds a union with struct minstrel_ht_sta and
+>>>> struct minstrel_sta_info. During authenticate the bool is_ht is false so
+>>>> minstrel_ht_tx_status calls minstrel_tx_status, but minstrel_sta_info::r
+>>>> is not set until rate_init which is after assoc.
+>>> I'm not sure this is the right fix. If I understand the issue correctly,
+>>> mi->r is only NULL because .rate_init has not been called yet, which is
+>>> a bug that other rate control modules might trip over as well, maybe in
+>>> more subtle ways. If this is the case, then I believe this bug should be
+>>> fixed in mac80211 instead.
+>>> 
+>>> Maybe it would even be a good idea to set a flag after calling
+>>> rate_control_rate_init, and calling WARN_ON or even BUG_ON when doing tx
+>>> before that.
+>>> 
+>>> - Felix
+>>> 
+>> 
+>> Hi Felix,
+>> 
+>> I am not sure I can agree. minstrel_ht allocates the struct
+>> minstrel_ht_sta_priv initializing is_ht to false thereby choosing a
+>> default and zero'ing the legacy field. When setting is_ht to false
+>> consequently the contents of the legacy field should be properly set as
+>> is done in minstrel_ht_update_caps (at use_legacy label).
+> Right, minstrel_ht_update_caps initializes that field, and it's always
+> called from .rate_init.
+> 
+> While the non-HT minstrel initializes that field earlier (because it is
+> not stored anywhere else), it still also assumes that it isn't asked to
+> do tx until .rate_init is called.
+> 
+> It doesn't matter whether it crashes in non-HT minstrel or not, the main
+> issue is that assumptions of both minstrel and minstrel_ht (and possibly
+> other rate control implementations) are being violated by mac80211.
+> 
+> Before we can address that problem, we need to decide whether we want to
+> change the code to no longer require .rate_init before tx (which I think
+> is a bad idea, since there's no list of supported rates available yet at
+> that point in time), or if we change mac80211 to no longer violate those
+> assumptions. In either case, this patch is insufficient.
+Actually, I took a quick look at the code and it seems to be easier
+than I thought. mac80211 sets a flag after rate_control_rate_init
+already, only the tx status path is lacking a check for it. This simple
+patch should take care of it, please test:
 
-Please apply.
-
-Signed-off-by: David Gibson <hermes@gibson.dropbear.id.au>
-
-Index: working-2.6/MAINTAINERS
-===================================================================
---- working-2.6.orig/MAINTAINERS	2012-02-06 12:24:27.933527295 +1100
-+++ working-2.6/MAINTAINERS	2012-02-06 12:24:38.273578556 +1100
-@@ -4906,8 +4906,6 @@ F:	fs/ocfs2/
+---
+--- a/net/mac80211/rate.h
++++ b/net/mac80211/rate.h
+@@ -37,7 +37,7 @@ static inline void rate_control_tx_statu
+ 	struct ieee80211_sta *ista = &sta->sta;
+ 	void *priv_sta = sta->rate_ctrl_priv;
  
- ORINOCO DRIVER
- L:	linux-wireless@vger.kernel.org
--L:	orinoco-users@lists.sourceforge.net
--L:	orinoco-devel@lists.sourceforge.net
- W:	http://linuxwireless.org/en/users/Drivers/orinoco
- W:	http://www.nongnu.org/orinoco/
- S:	Orphan
+-	if (!ref)
++	if (!ref || !test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
+ 		return;
+ 
+ 	ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
 
--- 
-David Gibson			| I'll have my music baroque, and my code
-david AT gibson.dropbear.id.au	| minimalist, thank you.  NOT _the_ _other_
-				| _way_ _around_!
-http://www.ozlabs.org/~dgibson
