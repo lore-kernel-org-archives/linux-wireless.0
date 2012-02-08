@@ -1,65 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:35416 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757749Ab2B2NCs convert rfc822-to-8bit (ORCPT
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.125]:55614 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756842Ab2BHAHl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 08:02:48 -0500
+	Tue, 7 Feb 2012 19:07:41 -0500
+Date: Tue, 07 Feb 2012 18:07:38 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: simon.graham@virtualcomputer.com, linux-wireless@vger.kernel.org
+Subject: [PATCH V2] rtlwifi: Handle previous allocation failures when
+ freeing device memory
+Message-ID: <4f31bcca.a/idtjYoA2MEwh/h%Larry.Finger@lwfinger.net> (sfid-20120208_010746_211916_73142984)
 MIME-Version: 1.0
-In-Reply-To: <CAGRGNgWngBAx4TRqW3sJ9EUEGW=YFgRD3vcqHMatWsyB=oDTOg@mail.gmail.com>
-References: <CAFxU49m76xaLGv9CFhKcZBhE-8QgT1KSuhnZRcVwzP2ogrGpbQ@mail.gmail.com>
- <CAGRGNgWngBAx4TRqW3sJ9EUEGW=YFgRD3vcqHMatWsyB=oDTOg@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 1 Mar 2012 00:02:27 +1100
-Message-ID: <CAGRGNgV5vmLptT5mFCs02xD_6+SxqO25BA2e67kH6_mcNhi-8w@mail.gmail.com> (sfid-20120229_140305_071497_86C6E6C9)
-Subject: Re: [PATCH] mac80211: improve PID rate control mechanism by avoiding
- rate oscillation problem
-To: YIN Wei <yinwei168@gmail.com>
-Cc: johannes <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	mattias.nissler@gmx.de, stefano.brivio@polimi.it
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Yin,
+From: Simon Graham <simon.graham@virtualcomputer.com>
 
-One final thing:
+Handle previous allocation failures when freeing device memory
 
-On Wed, Feb 29, 2012 at 23:59, Julian Calaby <julian.calaby@gmail.com> wrote:
->> @@ -318,22 +578,61 @@ rate_control_pid_rate_init(void *priv, s
->>                        rinfo[i].diff = i * pinfo->norm_offset;
->>        }
->>        for (i = 1; i < sband->n_bitrates; i++) {
->> -               s = false;
->> +               s = 0;
->
-> Why are you using integers with a boolean variable?
->
->>                for (j = 0; j < sband->n_bitrates - i; j++)
->>                        if (unlikely(sband->bitrates[rinfo[j].index].bitrate >
->> -                                    sband->bitrates[rinfo[j + 1].index].bitrate)) {
->> +                               sband->bitrates[rinfo[j + 1].index].bitrate)) {
+Signed-off-by: Simon Graham <simon.graham@virtualcomputer.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+---
 
-This whitespace change should be dropped.
+V2 - fix mailer mangling
+---
 
->>                                tmp = rinfo[j].index;
->>                                rinfo[j].index = rinfo[j + 1].index;
->>                                rinfo[j + 1].index = tmp;
->>                                rinfo[rinfo[j].index].rev_index = j;
->>                                rinfo[rinfo[j + 1].index].rev_index = j + 1;
->> -                               s = true;
->> +                               s = 1;
->>                        }
->>                if (!s)
->>                        break;
+ pci.c |   16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
+---
 
-In fact, this entire hunk should be dropped.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/pci.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/pci.c
+@@ -1148,10 +1148,12 @@ static void _rtl_pci_free_tx_ring(struct
+ 		ring->idx = (ring->idx + 1) % ring->entries;
+ 	}
+ 
+-	pci_free_consistent(rtlpci->pdev,
+-			    sizeof(*ring->desc) * ring->entries,
+-			    ring->desc, ring->dma);
+-	ring->desc = NULL;
++	if (ring->desc) {
++		pci_free_consistent(rtlpci->pdev,
++				    sizeof(*ring->desc) * ring->entries,
++				    ring->desc, ring->dma);
++		ring->desc = NULL;
++	}
+ }
+ 
+ static void _rtl_pci_free_rx_ring(struct rtl_pci *rtlpci)
+@@ -1175,12 +1177,14 @@ static void _rtl_pci_free_rx_ring(struct
+ 			kfree_skb(skb);
+ 		}
+ 
+-		pci_free_consistent(rtlpci->pdev,
++		if (rtlpci->rx_ring[rx_queue_idx].desc) {
++			pci_free_consistent(rtlpci->pdev,
+ 				    sizeof(*rtlpci->rx_ring[rx_queue_idx].
+ 					   desc) * rtlpci->rxringcount,
+ 				    rtlpci->rx_ring[rx_queue_idx].desc,
+ 				    rtlpci->rx_ring[rx_queue_idx].dma);
+-		rtlpci->rx_ring[rx_queue_idx].desc = NULL;
++			rtlpci->rx_ring[rx_queue_idx].desc = NULL;
++		}
+ 	}
+ }
+ 
