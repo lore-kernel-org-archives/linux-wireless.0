@@ -1,29 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bluegene.sat.lt ([88.119.145.12]:49406 "HELO bluegene.sat.lt"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1757286Ab2BNWnh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 17:43:37 -0500
-Date: Wed, 15 Feb 2012 00:36:47 +0200
-From: Nerijus Baliunas <nerijus@users.sourceforge.net>
-Subject: iwl3945 cannot connect to zd1211rw AP
-To: linux-wireless@vger.kernel.org
-Message-ID: <Mahogany-0.68.0-758-20120215-003647.00@nerijus.sat.lt> (sfid-20120214_234339_750852_6869D1C6)
+Received: from nbd.name ([46.4.11.11]:59085 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757241Ab2BHQIN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Feb 2012 11:08:13 -0500
+Message-ID: <4F329DE5.20408@openwrt.org> (sfid-20120208_170824_026055_76B8E4B2)
+Date: Wed, 08 Feb 2012 17:08:05 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+To: Arend van Spriel <arend@broadcom.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2] mac80211: minstrel_ht: fix NULL pointer dereference
+ during auth/assoc
+References: <1328705077-31360-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1328705077-31360-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 2012-02-08 1:44 PM, Arend van Spriel wrote:
+> This patch fixes the following NULL pointer dereference:
+> 
+>> I rerun the test on a kernel with some more lock checking and got lucky.
+>>
+>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512283] wlan0: authenticate
+>> with 98:fc:11:8e:94:57
+>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512515] wlan0: send auth to
+>> 98:fc:11:8e:94:57 (try 1/3)
+>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514184] BUG: unable to handle
+>> kernel NULL pointer dereference at 00000004
+>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514233] IP: [<f8648f08>]
+>> minstrel_tx_status+0x48/0xe0 [mac80211]
+> 
+> static inline int
+> rix_to_ndx(struct minstrel_sta_info *mi, int rix)
+> {
+>         int i = rix;
+>         for (i = rix; i >= 0; i--)
+>                 if (mi->r[i].rix == rix)
+>   48:   3b 58 04                cmp    0x4(%eax),%ebx
+>   4b:   74 4b                   je     98 <minstrel_tx_status+0x98>
+>   4d:   83 c2 01                add    $0x1,%edx
+> 
+> It fails because of mi->r[i] being a NULL pointer. It is allocated in
+> minstel_alloc_sta, but minstrel_ht_alloc_sta does not call that function.
+> 
+> struct minstrel_ht_sta_priv holds a union with struct minstrel_ht_sta and
+> struct minstrel_sta_info. During authenticate the bool is_ht is false so
+> minstrel_ht_tx_status calls minstrel_tx_status, but minstrel_sta_info::r
+> is not set until rate_init which is after assoc.
+I'm not sure this is the right fix. If I understand the issue correctly,
+mi->r is only NULL because .rate_init has not been called yet, which is
+a bug that other rate control modules might trip over as well, maybe in
+more subtle ways. If this is the case, then I believe this bug should be
+fixed in mac80211 instead.
 
-Client is Intel 3945abg and AP is ZyDAS ZD1211B (3.2.5 Fedora PAE kernel, hostapd 0.7.3).
-When client is WinXP or Linux 3.0.0, I get only:
-hostapd: wlan0: STA 00:18:de... IEEE 802.11: did not acknowledge authentication response
-messages in AP's syslog; when client is Linux kernel 3.1.6 - no messages in AP.
+Maybe it would even be a good idea to set a flag after calling
+rate_control_rate_init, and calling WARN_ON or even BUG_ON when doing tx
+before that.
 
-Other chipsets connect to this AP successfully, and this client can connect to another
-wifi stick on the same AP (rt2800usb).
-
-Is it a iwl3945 or zd1211rw problem? How can I debug it?
-
-Regards,
-Nerijus
+- Felix
