@@ -1,163 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56011 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752625Ab2BAAPr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 19:15:47 -0500
-Date: Tue, 31 Jan 2012 19:15:21 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Alfonso Fiore <alfonso.fiore@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: compat-wireless can't compile under kernel 3.2.0 both 3.3-rc1-2
- and 2012-01-26 - error: missing binary operator before token "("
-Message-ID: <20120201001521.GA1721@tuxdriver.com> (sfid-20120201_011551_246710_E7885B7E)
-References: <CAO=xpBGCABtjPstHcxcPHL7MGXSa7nQw4ZtwJkfZiTq=DPAE1w@mail.gmail.com>
+Received: from nbd.name ([46.4.11.11]:51128 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755825Ab2BHRk6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Feb 2012 12:40:58 -0500
+Message-ID: <4F32B3A5.5020903@openwrt.org> (sfid-20120208_184102_398868_40FBAA1E)
+Date: Wed, 08 Feb 2012 18:40:53 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAO=xpBGCABtjPstHcxcPHL7MGXSa7nQw4ZtwJkfZiTq=DPAE1w@mail.gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH v2] mac80211: minstrel_ht: fix NULL pointer dereference
+ during auth/assoc
+References: <1328705077-31360-1-git-send-email-arend@broadcom.com> <4F329DE5.20408@openwrt.org> <4F32A263.5050909@broadcom.com> <4F32AB79.9040307@openwrt.org> <4F32B111.8020006@openwrt.org> <4F32B251.8090101@broadcom.com>
+In-Reply-To: <4F32B251.8090101@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luis needs to apply "compat: use kconfig.h in compat-2.6.h for 3.1
-and later kernels" that I posted earlier.
+On 2012-02-08 6:35 PM, Arend van Spriel wrote:
+> On 02/08/2012 06:29 PM, Felix Fietkau wrote:
+>> On 2012-02-08 6:06 PM, Felix Fietkau wrote:
+>>> On 2012-02-08 5:27 PM, Arend van Spriel wrote:
+>>>> On 02/08/2012 05:08 PM, Felix Fietkau wrote:
+>>>>> On 2012-02-08 1:44 PM, Arend van Spriel wrote:
+>>>>>> This patch fixes the following NULL pointer dereference:
+>>>>>>
+>>>>>>> I rerun the test on a kernel with some more lock checking and got lucky.
+>>>>>>>
+>>>>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512283] wlan0: authenticate
+>>>>>>> with 98:fc:11:8e:94:57
+>>>>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512515] wlan0: send auth to
+>>>>>>> 98:fc:11:8e:94:57 (try 1/3)
+>>>>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514184] BUG: unable to handle
+>>>>>>> kernel NULL pointer dereference at 00000004
+>>>>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514233] IP: [<f8648f08>]
+>>>>>>> minstrel_tx_status+0x48/0xe0 [mac80211]
+>>>>>>
+>>>>>> static inline int
+>>>>>> rix_to_ndx(struct minstrel_sta_info *mi, int rix)
+>>>>>> {
+>>>>>>         int i = rix;
+>>>>>>         for (i = rix; i >= 0; i--)
+>>>>>>                 if (mi->r[i].rix == rix)
+>>>>>>   48:   3b 58 04                cmp    0x4(%eax),%ebx
+>>>>>>   4b:   74 4b                   je     98 <minstrel_tx_status+0x98>
+>>>>>>   4d:   83 c2 01                add    $0x1,%edx
+>>>>>>
+>>>>>> It fails because of mi->r[i] being a NULL pointer. It is allocated in
+>>>>>> minstel_alloc_sta, but minstrel_ht_alloc_sta does not call that function.
+>>>>>>
+>>>>>> struct minstrel_ht_sta_priv holds a union with struct minstrel_ht_sta and
+>>>>>> struct minstrel_sta_info. During authenticate the bool is_ht is false so
+>>>>>> minstrel_ht_tx_status calls minstrel_tx_status, but minstrel_sta_info::r
+>>>>>> is not set until rate_init which is after assoc.
+>>>>> I'm not sure this is the right fix. If I understand the issue correctly,
+>>>>> mi->r is only NULL because .rate_init has not been called yet, which is
+>>>>> a bug that other rate control modules might trip over as well, maybe in
+>>>>> more subtle ways. If this is the case, then I believe this bug should be
+>>>>> fixed in mac80211 instead.
+>>>>>
+>>>>> Maybe it would even be a good idea to set a flag after calling
+>>>>> rate_control_rate_init, and calling WARN_ON or even BUG_ON when doing tx
+>>>>> before that.
+>>>>>
+>>>>> - Felix
+>>>>>
+>>>>
+>>>> Hi Felix,
+>>>>
+>>>> I am not sure I can agree. minstrel_ht allocates the struct
+>>>> minstrel_ht_sta_priv initializing is_ht to false thereby choosing a
+>>>> default and zero'ing the legacy field. When setting is_ht to false
+>>>> consequently the contents of the legacy field should be properly set as
+>>>> is done in minstrel_ht_update_caps (at use_legacy label).
+>>> Right, minstrel_ht_update_caps initializes that field, and it's always
+>>> called from .rate_init.
+>>>
+>>> While the non-HT minstrel initializes that field earlier (because it is
+>>> not stored anywhere else), it still also assumes that it isn't asked to
+>>> do tx until .rate_init is called.
+>>>
+>>> It doesn't matter whether it crashes in non-HT minstrel or not, the main
+>>> issue is that assumptions of both minstrel and minstrel_ht (and possibly
+>>> other rate control implementations) are being violated by mac80211.
+>>>
+>>> Before we can address that problem, we need to decide whether we want to
+>>> change the code to no longer require .rate_init before tx (which I think
+>>> is a bad idea, since there's no list of supported rates available yet at
+>>> that point in time), or if we change mac80211 to no longer violate those
+>>> assumptions. In either case, this patch is insufficient.
+>> Actually, I took a quick look at the code and it seems to be easier
+>> than I thought. mac80211 sets a flag after rate_control_rate_init
+>> already, only the tx status path is lacking a check for it. This simple
+>> patch should take care of it, please test:
+>> 
+> 
+> I will test it. So basically we don't want to do rate control for
+> management frames like AUTH and ASSOC?
+Right. That's already handled like this by the current code, only the tx
+status path was left out (probably accidentally).
 
-John
-
-On Wed, Feb 01, 2012 at 01:06:01AM +0100, Alfonso Fiore wrote:
-> Hi,
-> 
-> I'm facing a bug you fixed in compat-wireless-3.3-rc1-2: rt2800pci:
-> fix spurious interrupts generation
-> But I must run a 3.2.0 kernel with some patches for my display driver
-> (cause I'm greedy and I want both to see the screen and access
-> internet)
-> 
-> I tested in kernel 3.0.0 and I can compile and see the bug is fixed.
-> 
-> but when I try to compile under 3.2.0 I get the following error:
-> 
-> $ make
-> ./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
-> make -C /lib/modules/3.2.0-interlaced2+/build
-> M=/home/alfonso/wifi/compat-wireless-2012-01-26 modules
-> make[1]: Entering directory `/home/alfonso/tests/kernel/linux_keithp'
->   LD      /home/alfonso/wifi/compat-wireless-2012-01-26/compat/built-in.o
->   CC [M]  /home/alfonso/wifi/compat-wireless-2012-01-26/compat/main.o
-> In file included from include/net/net_namespace.h:13:0,
->                  from
-> /home/alfonso/wifi/compat-wireless-2012-01-26/include/net/net_namespace.h:7,
->                  from include/linux/netdevice.h:49,
->                  from
-> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5,
->                  from
-> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
->                  from <command-line>:0:
-> include/net/netns/mib.h:15:5: warning: "IS_ENABLED" is not defined [-Wundef]
-> include/net/netns/mib.h:15:15: error: missing binary operator before token "("
-> In file included from include/net/net_namespace.h:23:0,
->                  from
-> /home/alfonso/wifi/compat-wireless-2012-01-26/include/net/net_namespace.h:7,
->                  from include/linux/netdevice.h:49,
->                  from
-> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5,
->                  from
-> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
->                  from <command-line>:0:
-> include/net/netns/xfrm.h:59:5: warning: "IS_ENABLED" is not defined [-Wundef]
-> include/net/netns/xfrm.h:59:15: error: missing binary operator before token "("
-> In file included from
-> /home/alfonso/wifi/compat-wireless-2012-01-26/include/net/net_namespace.h:7:0,
->                  from include/linux/netdevice.h:49,
->                  from
-> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5,
->                  from
-> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
->                  from <command-line>:0:
-> include/net/net_namespace.h:80:5: warning: "IS_ENABLED" is not defined [-Wundef]
-> include/net/net_namespace.h:80:15: error: missing binary operator
-> before token "("
-> In file included from include/linux/netdevice.h:54:0,
->                  from
-> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5,
->                  from
-> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
->                  from <command-line>:0:
-> include/net/netprio_cgroup.h: In function âtask_netprio_stateâ:
-> include/net/netprio_cgroup.h:44:5: warning: "IS_ENABLED" is not
-> defined [-Wundef]
-> include/net/netprio_cgroup.h:44:15: error: missing binary operator
-> before token "("
-> In file included from
-> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5:0,
->                  from
-> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
->                  from <command-line>:0:
-> include/linux/netdevice.h: At top level:
-> include/linux/netdevice.h:147:39: error: missing binary operator
-> before token "("
-> include/linux/netdevice.h:153:7: warning: "IS_ENABLED" is not defined [-Wundef]
-> include/linux/netdevice.h:153:17: error: missing binary operator
-> before token "("
-> include/linux/netdevice.h:159:6: warning: "IS_ENABLED" is not defined [-Wundef]
-> include/linux/netdevice.h:159:16: error: missing binary operator
-> before token "("
-> include/linux/netdevice.h:964:5: warning: "IS_ENABLED" is not defined [-Wundef]
-> include/linux/netdevice.h:964:15: error: missing binary operator
-> before token "("
-> include/linux/netdevice.h:981:5: warning: "IS_ENABLED" is not defined [-Wundef]
-> include/linux/netdevice.h:981:15: error: missing binary operator
-> before token "("
-> include/linux/netdevice.h:1123:5: warning: "IS_ENABLED" is not defined [-Wundef]
-> include/linux/netdevice.h:1123:15: error: missing binary operator
-> before token "("
-> include/linux/netdevice.h:1126:5: warning: "IS_ENABLED" is not defined [-Wundef]
-> include/linux/netdevice.h:1126:15: error: missing binary operator
-> before token "("
-> include/linux/netdevice.h:1289:5: warning: "IS_ENABLED" is not defined [-Wundef]
-> include/linux/netdevice.h:1289:15: error: missing binary operator
-> before token "("
-> include/linux/netdevice.h:1293:5: warning: "IS_ENABLED" is not defined [-Wundef]
-> include/linux/netdevice.h:1293:15: error: missing binary operator
-> before token "("
-> include/linux/netdevice.h: In function ânetdev_uses_dsa_tagsâ:
-> include/linux/netdevice.h:1397:9: error: âstruct net_deviceâ has no
-> member named âdsa_ptrâ
-> include/linux/netdevice.h:1398:31: error: âstruct net_deviceâ has no
-> member named âdsa_ptrâ
-> include/linux/netdevice.h: In function ânetdev_uses_trailer_tagsâ:
-> include/linux/netdevice.h:1416:9: error: âstruct net_deviceâ has no
-> member named âdsa_ptrâ
-> include/linux/netdevice.h:1417:35: error: âstruct net_deviceâ has no
-> member named âdsa_ptrâ
-> In file included from
-> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:38:0,
->                  from <command-line>:0:
-> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-3.3.h:
-> At top level:
-> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-3.3.h:28:20:
-> error: static declaration of âskb_complete_wifi_ackâ follows
-> non-static declaration
-> include/linux/skbuff.h:2260:6: note: previous declaration of
-> âskb_complete_wifi_ackâ was here
-> /home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-3.3.h:34:13:
-> error: conflicting types for ânetdev_features_tâ
-> include/linux/netdev_features.h:15:13: note: previous declaration of
-> ânetdev_features_tâ was here
-> make[3]: *** [/home/alfonso/wifi/compat-wireless-2012-01-26/compat/main.o]
-> Error 1
-> make[2]: *** [/home/alfonso/wifi/compat-wireless-2012-01-26/compat] Error 2
-> make[1]: *** [_module_/home/alfonso/wifi/compat-wireless-2012-01-26] Error 2
-> make[1]: Leaving directory `/home/alfonso/tests/kernel/linux_keithp'
-> make: *** [modules] Error 2
-> 
-> Thank you for you help,
-> alfonso
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-John W. Linville                Someday the world will need a hero, and you
-linville@tuxdriver.com                  might be all we have.  Be ready.
+- Felix
