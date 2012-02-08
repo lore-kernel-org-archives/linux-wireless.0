@@ -1,32 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:46188 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751099Ab2BIIF2 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50338 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751074Ab2BHJcj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 03:05:28 -0500
-Message-ID: <4F337E26.6030901@sipsolutions.net> (sfid-20120209_090531_541752_BCE5AF1D)
-Date: Thu, 09 Feb 2012 09:04:54 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
+	Wed, 8 Feb 2012 04:32:39 -0500
+Message-ID: <4F324130.6060104@qca.qualcomm.com> (sfid-20120208_103244_301878_530CEC68)
+Date: Wed, 8 Feb 2012 11:32:32 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Arend van Spriel <arend@broadcom.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] mac80211: minstrel_ht: fix NULL pointer dereference
- during auth/assoc
-References: <1328705077-31360-1-git-send-email-arend@broadcom.com> <4F329DE5.20408@openwrt.org> <4F32A263.5050909@broadcom.com> <4F32AB79.9040307@openwrt.org> <4F32B111.8020006@openwrt.org> <4F32B251.8090101@broadcom.com> <4F32B3A5.5020903@openwrt.org>
-In-Reply-To: <4F32B3A5.5020903@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH] ath6kl: Update license header
+References: <1328539553-9616-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1328539553-9616-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/8/2012 6:40 PM, Felix Fietkau wrote:
->> I will test it. So basically we don't want to do rate control for
->> management frames like AUTH and ASSOC?
-> Right. That's already handled like this by the current code, only the tx
-> status path was left out (probably accidentally).
+On 02/06/2012 04:45 PM, Vasanthakumar Thiagarajan wrote:
+> Update license header with the copyright to Qualcomm Atheros, Inc.
+> for the year 2011-2012.
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-Yes, my mistake, I forgot about TX status path. Thanks everyone for 
-taking care of this!
+Thanks, applied.
 
-johannes
+Kalle
