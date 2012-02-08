@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12487 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756415Ab2BAPSI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Feb 2012 10:18:08 -0500
-Date: Wed, 1 Feb 2012 16:17:40 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH 5/4] rt2800: document RF_R03 register bits [7:4]
-Message-ID: <20120201151739.GD10045@redhat.com> (sfid-20120201_161813_024137_0C0A9572)
-References: <1327936679-12576-1-git-send-email-sgruszka@redhat.com>
- <1327936679-12576-4-git-send-email-sgruszka@redhat.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:52587 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756990Ab2BHC4A (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Feb 2012 21:56:00 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1327936679-12576-4-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <CAB=NE6Wv3PEJj5zKfK2o869ntxuU3V+Nv2dgKX1eDtk3zQ04dA@mail.gmail.com>
+References: <1328312594-31934-1-git-send-email-mcgrof@frijolero.org>
+ <20120206160727.GA21048@tuxdriver.com> <20120207041958.GA32377@bombadil.infradead.org>
+ <CAB=NE6VS79S4R6wQddQCqPfoYPyRbPzSdAYN2Mxfi-4G_sfCvg@mail.gmail.com> <CAB=NE6Wv3PEJj5zKfK2o869ntxuU3V+Nv2dgKX1eDtk3zQ04dA@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Tue, 7 Feb 2012 18:55:40 -0800
+Message-ID: <CAB=NE6URWAgUgF+6bOsRBeeXnQ4VjYf1tWuUkkvMviCLOCxeqA@mail.gmail.com> (sfid-20120208_035636_997056_4B48D61E)
+Subject: Re: [PATCH] compat: add compat kernel checker and downloader
+To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
+	Andy Whitcroft <apw@canonical.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>, hauke@hauke-m.de,
+	kernel-team@lists.ubuntu.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Taken from:
-2011_0719_RT3070_RT3370_RT5370_RT5372_Linux_STA_V2.5.0.3_DPO
-(based on function RT33xx_ChipSwitchChannel)
+On Tue, Feb 7, 2012 at 5:19 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+> On Mon, Feb 6, 2012 at 8:56 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+>> Come to think of it.. we could bastardize Ubuntu's PPA packages for
+>> mainline kernels, translate the deb packages into tar files and some
+>> sort of grub-update or whatever scrip to run in the end? That still
+>> seems like a lot of work.
+>>
+>> The current option allows us to use either distro kernels or whatever
+>> you have installed.. not sure how else to improve this. Didn't we have
+>> some sort of distro agnostic package crap? Maybe?
+>
+> Or -- Andy -- any chance we can get some of the deb contents unpacked
+> into a distro-agostic tarball of some sort that we can use ? I ask
+> given that you guys already host the sources and all that.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/rt2x00/rt2800.h |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+Just to not waste anyone's time it seems pkgadd from IRC has a
+distro-agnostic dpkg -x type of solution in the works, that could use
+these same debs.
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-index c92fb2e..fac9ece 100644
---- a/drivers/net/wireless/rt2x00/rt2800.h
-+++ b/drivers/net/wireless/rt2x00/rt2800.h
-@@ -1799,6 +1799,9 @@ struct mac_iveiv_entry {
-  * RFCSR 3:
-  */
- #define RFCSR3_K			FIELD8(0x0f)
-+/* Bits [7-4] for RF3320 (RT3370/RT3390), on other chipsets reserved */
-+#define RFCSR3_PA1_BIAS_CCK		FIELD8(0x70);
-+#define RFCSR3_PA2_CASCODE_BIAS_CCKK	FIELD8(0x80);
- 
- /*
-  * FRCSR 5:
--- 
-1.7.1
+http://paste.debian.net/155521/
 
+  Luis
