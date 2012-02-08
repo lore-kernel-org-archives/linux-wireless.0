@@ -1,94 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9331 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756865Ab2BCQct (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 11:32:49 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v2 09/25] iwlegacy: get rid of *_devtype
-Date: Fri,  3 Feb 2012 17:31:45 +0100
-Message-Id: <1328286721-11309-10-git-send-email-sgruszka@redhat.com> (sfid-20120203_173256_991729_942758E2)
-In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
-References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:46491 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751362Ab2BHJl6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Feb 2012 04:41:58 -0500
+Message-ID: <4F324361.1050300@qca.qualcomm.com> (sfid-20120208_104202_054671_8E4A25C2)
+Date: Wed, 8 Feb 2012 11:41:53 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Prasanna Kumar <kumarpra@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] add support for AR6003 2048 byte board file
+References: <no> <1328655534-8660-1-git-send-email-kumarpra@qca.qualcomm.com>
+In-Reply-To: <1328655534-8660-1-git-send-email-kumarpra@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/3945-mac.c |    3 ---
- drivers/net/wireless/iwlegacy/4965-mac.c |    4 ----
- drivers/net/wireless/iwlegacy/common.c   |    6 +++---
- drivers/net/wireless/iwlegacy/common.h   |    1 -
- 4 files changed, 3 insertions(+), 11 deletions(-)
+On 02/08/2012 12:58 AM, Prasanna Kumar wrote:
+> AR6003 2.1.1 supports both 1792 and 2048 byte board files.
+> Add support for 2048 byte board file.
+> 
+> Signed-off-by: Prasanna Kumar <kumarpra@qca.qualcomm.com>
 
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index b11701f..15dcafb 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -3621,9 +3621,6 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	il->ctx.interface_modes =
- 	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
--	il->ctx.ibss_devtype = RXON_DEV_TYPE_IBSS;
--	il->ctx.station_devtype = RXON_DEV_TYPE_ESS;
--	il->ctx.unused_devtype = RXON_DEV_TYPE_ESS;
- 
- 	/*
- 	 * Disabling hardware scan means that mac80211 will perform scans
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index af78862..33725e1 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -6140,10 +6140,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	il->ctx.ac_to_queue = il4965_bss_ac_to_queue;
- 	il->ctx.exclusive_interface_modes = BIT(NL80211_IFTYPE_ADHOC);
- 	il->ctx.interface_modes = BIT(NL80211_IFTYPE_STATION);
--	il->ctx.ap_devtype = RXON_DEV_TYPE_AP;
--	il->ctx.ibss_devtype = RXON_DEV_TYPE_IBSS;
--	il->ctx.station_devtype = RXON_DEV_TYPE_ESS;
--	il->ctx.unused_devtype = RXON_DEV_TYPE_ESS;
- 
- 	SET_IEEE80211_DEV(hw, &pdev->dev);
- 
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index b7567a8..19ed867 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -4002,17 +4002,17 @@ il_connection_init_rx_config(struct il_priv *il, struct il_rxon_context *ctx)
- 	memset(&il->staging, 0, sizeof(il->staging));
- 
- 	if (!ctx->vif) {
--		il->staging.dev_type = ctx->unused_devtype;
-+		il->staging.dev_type = RXON_DEV_TYPE_ESS;
- 	} else
- 		switch (ctx->vif->type) {
- 
- 		case NL80211_IFTYPE_STATION:
--			il->staging.dev_type = ctx->station_devtype;
-+			il->staging.dev_type = RXON_DEV_TYPE_ESS;
- 			il->staging.filter_flags = RXON_FILTER_ACCEPT_GRP_MSK;
- 			break;
- 
- 		case NL80211_IFTYPE_ADHOC:
--			il->staging.dev_type = ctx->ibss_devtype;
-+			il->staging.dev_type = RXON_DEV_TYPE_IBSS;
- 			il->staging.flags = RXON_FLG_SHORT_PREAMBLE_MSK;
- 			il->staging.filter_flags =
- 			    RXON_FILTER_BCON_AWARE_MSK |
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index 66d0c1d..8eac571 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1171,7 +1171,6 @@ struct il_rxon_context {
- 	int ctxid;
- 
- 	u32 interface_modes, exclusive_interface_modes;
--	u8 unused_devtype, ap_devtype, ibss_devtype, station_devtype;
- 
- 	struct il_qos_info qos_data;
- 
--- 
-1.7.1
+Thanks, applied but I added "ath6kl:" to the title.
 
+Kalle
