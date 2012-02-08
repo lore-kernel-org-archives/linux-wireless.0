@@ -1,56 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:12672 "EHLO c60.cesmail.net"
+Received: from mms2.broadcom.com ([216.31.210.18]:2860 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756299Ab2BGWPo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 17:15:44 -0500
-Date: Tue, 7 Feb 2012 17:15:38 -0500
-From: Pavel Roskin <proski@gnu.org>
-To: Alfonso Fiore <alfonso.fiore@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Setting up an AP @ 5 GHz 802.11a - hostapd refuses [Could not
- select hw_mode and channel. (-1)]
-Message-ID: <20120207171538.3336af0c@mj> (sfid-20120207_231548_803767_678DF44F)
-In-Reply-To: <CAO=xpBGT7ovdSOV77AV6wpUcTDFYr0t8GEab474mVmZm0-BhVA@mail.gmail.com>
-References: <CAO=xpBHy9p4yzhxaWTfG+jjw7f_OzbACmxxPnDL8AmLBS-JdwQ@mail.gmail.com>
-	<CAO=xpBGT7ovdSOV77AV6wpUcTDFYr0t8GEab474mVmZm0-BhVA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	id S1754496Ab2BHPGn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Feb 2012 10:06:43 -0500
+Message-ID: <4F328F76.2040406@broadcom.com> (sfid-20120208_160646_925523_984628F0)
+Date: Wed, 8 Feb 2012 16:06:30 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Claudio Rossi" <rossi.claudio.82@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: __floatunsidf and __fixunsdfsi undefined
+References: <CAO1ZyKm1V6FF5aqbdRimdtJRZ+n9exkdUWh06P+i0uqcwweR4A@mail.gmail.com>
+In-Reply-To: <CAO1ZyKm1V6FF5aqbdRimdtJRZ+n9exkdUWh06P+i0uqcwweR4A@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 7 Feb 2012 09:20:53 +0100
-Alfonso Fiore <alfonso.fiore@gmail.com> wrote:
-
-> I also found out about ath_info
-> http://madwifi-project.org/wiki/UserDocs/AthInfo and I rewrote my
-> regdomain:
-> ./ath_info -v -g 4:0 -w 0xeffd0000 regdomain 0x68
-
-That may be dangerous.  Not all cards work with ath_info, and some can
-be broken by it permanently.  It's much safer to adjust
-ath_regd_sanitize() in drivers/net/wireless/ath/regd.c.
-
-That way, you can play with different regdomain settings.
-
->                         * 2472 MHz [13] (20.0 dBm)
->                         * 2484 MHz [14] (disabled)
+On 02/08/2012 03:41 PM, Claudio Rossi wrote:
+> Dear all,
+>  I am trying to compile compat-wireless-3.2-rc6-3 on
+> a2.6.32-37-generic i686 GNU/Linux.
+> Everything goes well until I enter in phase 2, and I receive the
+> following WARNING which prevent the mac80211 modules to work properly
+> if installed
 > 
-> *** But why I still can't access any channel at 5 GHz? *** and what's
-> the meaning of (disabled)? Is this due to a hardware limitation?
+> make -C /lib/modules/2.6.32-37-generic/build
+> M=/home/claudio/Programs/compat-wireless-3.2-rc6-3 modules
+> make[1]: Entering directory `/usr/src/linux-headers-2.6.32-37-generic'
+>   Building modules, stage 2.
+>   MODPOST 9 modules
+> WARNING: "__floatunsidf"
+> [/home/claudio/Programs/compat-wireless-3.2-rc6-3/net/mac80211/mac80211.ko]
+> undefined!
+> WARNING: "__fixunsdfsi"
+> [/home/claudio/Programs/compat-wireless-3.2-rc6-3/net/mac80211/mac80211.ko]
+> undefined!
+> make[1]: Leaving directory `/usr/src/linux-headers-2.6.32-37-generic'
+> 
+> the first time I compiled and installed the compat-wireless-3.2-rc6-3
+> it worked, but now it is not.
+> 
+> My distribution (UBUNTU 10.04) already comes with ath9k and mac80211.
+> 
+> Could  somebody give me an hint? I am a newbie at this
+> 
+> Thank you
+> 
+> Claudio
+> 
+> 
 
-I believe it's a regdomain limitation.
+If I am not mistaken, those symbols should be provided by gcc. Maybe
+this is a known gcc issue. Try your favorite search engine.
 
-> This is the situation at 5 Ghz:
+Gr. AvS
 
->                         * 5260 MHz [52] (30.0 dBm) (passive scanning,
-> no IBSS, radar detection)
-
-I think it means it should be possible to use the band as long as DFS
-is implemented, but it's not (in ath5k).
-
-Try other regdomains, I think some should enable 5GHz unconditionally,
-but please keep in mind that you may be breaking regulations.
-
--- 
-Regards,
-Pavel Roskin
