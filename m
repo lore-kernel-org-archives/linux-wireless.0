@@ -1,47 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2070 "EHLO MMS3.broadcom.com"
+Received: from c60.cesmail.net ([216.154.195.49]:40707 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753656Ab2BVQPh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 11:15:37 -0500
-Message-ID: <4F451459.2050807@broadcom.com> (sfid-20120222_171616_585564_9964B708)
-Date: Wed, 22 Feb 2012 17:14:17 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-cc: wireless <linux-wireless@vger.kernel.org>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"Kan Yan" <kanyan@broadcom.com>,
-	"Roland Vossen" <rvossen@broadcom.com>,
-	"Henry Ptasinski" <henryp@broadcom.com>,
-	"Brett Rudley" <brudley@broadcom.com>
-Subject: Re: Instability in brcmsmac
-References: <4F416159.9000305@lwfinger.net>
-In-Reply-To: <4F416159.9000305@lwfinger.net>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	id S1754133Ab2BHXCF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Feb 2012 18:02:05 -0500
+Date: Wed, 8 Feb 2012 18:01:52 -0500
+From: Pavel Roskin <proski@gnu.org>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@openwrt.org>, johannes@sipsolutions.net,
+	arend@broadcom.com
+Subject: Re: [PATCH] mac80211: do not call rate control .tx_status before
+ .rate_init
+Message-ID: <20120208180152.082cff4e@mj> (sfid-20120209_000209_905589_AB0AA716)
+In-Reply-To: <20120208194453.GC2929@tuxdriver.com>
+References: <1328725031-35464-1-git-send-email-nbd@openwrt.org>
+	<20120208192536.GB2929@tuxdriver.com>
+	<4F32CF18.4010300@openwrt.org>
+	<20120208194453.GC2929@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/19/2012 09:53 PM, Larry Finger wrote:
-> Arend,
->
-> I have just started testing brcmsmac with my BCM43224 card. I find it rather
-> unstable. A typical cycle between authentication and disassociating is as follows:
->
-> The period of time that the interface is up ranges from 10 - 200 seconds. The
-> connection is WPA-TKIP and the kernel is master-2012-02-15-510-g20b79b4 from
-> wireless-testing with local patches applied to other drivers. Both brcmsmac and
-> bcma are untouched.
->
+On Wed, 8 Feb 2012 14:44:54 -0500
+"John W. Linville" <linville@tuxdriver.com> wrote:
 
-Hi Larry,
+> On Wed, Feb 08, 2012 at 08:38:00PM +0100, Felix Fietkau wrote:
+> > On 2012-02-08 8:25 PM, John W. Linville wrote:
+> > > On Wed, Feb 08, 2012 at 07:17:11PM +0100, Felix Fietkau wrote:
+> > >> Most rate control implementations assume .get_rate
+> > >> and .tx_status are only called once the per-station data has
+> > >> been fully initialized. minstrel_ht crashes if this assumption
+> > >> is violated.
+> > >> 
+> > >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> > >> Tested-by: Arend van Spriel <arend@broadcom.com>
+> > >> ---
+> > >>  net/mac80211/rate.h |    2 +-
+> > >>  1 files changed, 1 insertions(+), 1 deletions(-)
+> > >> 
+> > >> diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
+> > >> index 5fc3135..fbb1efd 100644
+> > >> --- a/net/mac80211/rate.h
+> > >> +++ b/net/mac80211/rate.h
+> > >> @@ -37,7 +37,7 @@ static inline void
+> > >> rate_control_tx_status(struct ieee80211_local *local, struct
+> > >> ieee80211_sta *ista = &sta->sta; void *priv_sta =
+> > >> sta->rate_ctrl_priv; 
+> > >> -	if (!ref)
+> > >> +	if (!ref || !test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
+> > >>  		return;
+> > >>  
+> > >>  	ref->ops->tx_status(ref->priv, sband, ista, priv_sta,
+> > >> skb);
+> > > 
+> > > Any reason not to apply this for 3.3?  Or stable?
+> > I think 3.3 doesn't have that sta flag, the issue was probably
+> > introduced with the 3.4 changes.
+> > I don't remember something like this appearing in earlier versions.
+> 
+> Cool, thanks.
 
-I tried reproducing this, but not luck so far. Could you provide me with 
-syslog including both kernel messages and wpa_supplicant. From the log 
-you provided it seems mac80211 triggers the disassoc. It could be a 
-beacon timeout, but I would like to be sure. More debug output from 
-mac80211 itself would also be helpful to understand the issue.
+I believe 3.3 is affected.  At least it looks like the Fedora bug 768639
+(https://bugzilla.redhat.com/show_bug.cgi?id=768639) is caused by
+calling .tx_status at a wrong time.  Fedora kernels use
+compat-wireless-3.3.  I'm going to test the bleeding edge
+compat-wireless with the patch by Felix to see if it fixes things.
 
-Gr. AvS
+The lack of the WLAN_STA_RATE_CONTROL flag doesn't mean that the old
+behavior was correct.  The flag was introduced to correct that behavior.
 
+The oldest report is dated 2011-12-17 and it's about Linux 3.2.0-rc5
+with compat-wireless-2011-12-01.
+
+-- 
+Regards,
+Pavel Roskin
