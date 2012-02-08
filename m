@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:44374 "EHLO
-	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759011Ab2BOKTb (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34409 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756445Ab2BHTbj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 05:19:31 -0500
-Received: by mail-lpp01m010-f53.google.com with SMTP id d3so863129lah.12
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 02:19:30 -0800 (PST)
-Message-ID: <1329301167.19569.44.camel@cumari> (sfid-20120215_111940_563548_D4872E57)
-Subject: Re: [PATCH] wl12xx: declare support for hw scan while idle
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 15 Feb 2012 12:19:27 +0200
-In-Reply-To: <1328181335-8155-1-git-send-email-eliad@wizery.com>
-References: <1328181335-8155-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 8 Feb 2012 14:31:39 -0500
+Date: Wed, 8 Feb 2012 14:25:36 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	arend@broadcom.com
+Subject: Re: [PATCH] mac80211: do not call rate control .tx_status before
+ .rate_init
+Message-ID: <20120208192536.GB2929@tuxdriver.com> (sfid-20120208_203142_642953_E32E31B7)
+References: <1328725031-35464-1-git-send-email-nbd@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1328725031-35464-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-02-02 at 13:15 +0200, Eliad Peller wrote: 
-> By allowing hw scan while idle, we no longer
-> need the redundant ROC/CROC that are done
-> on idle off/on, which helps simplifying the
-> state machine of the driver.
+On Wed, Feb 08, 2012 at 07:17:11PM +0100, Felix Fietkau wrote:
+> Most rate control implementations assume .get_rate and .tx_status are only
+> called once the per-station data has been fully initialized.
+> minstrel_ht crashes if this assumption is violated.
 > 
-> This way, we can also allow scanning while
-> there is an ongoing sched scan (otherwise,
-> we won't be able to ROC on idle-off)
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> Tested-by: Arend van Spriel <arend@broadcom.com>
 > ---
-> depends on "mac80211: support hw scan while idle"
+>  net/mac80211/rate.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
->  drivers/net/wireless/wl12xx/main.c |    7 ++-----
->  drivers/net/wireless/wl12xx/scan.c |   13 -------------
->  2 files changed, 2 insertions(+), 18 deletions(-)
+> diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
+> index 5fc3135..fbb1efd 100644
+> --- a/net/mac80211/rate.h
+> +++ b/net/mac80211/rate.h
+> @@ -37,7 +37,7 @@ static inline void rate_control_tx_status(struct ieee80211_local *local,
+>  	struct ieee80211_sta *ista = &sta->sta;
+>  	void *priv_sta = sta->rate_ctrl_priv;
+>  
+> -	if (!ref)
+> +	if (!ref || !test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
+>  		return;
+>  
+>  	ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
 
-Applied, thanks!
+Any reason not to apply this for 3.3?  Or stable?
 
-
+John
 -- 
-Cheers,
-Luca.
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
