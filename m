@@ -1,70 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tpi.com ([70.99.223.143]:3689 "EHLO mail.tpi.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754889Ab2BHVI2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 16:08:28 -0500
-From: Tim Gardner <tim.gardner@canonical.com>
-To: Larry.Finger@lwfinger.net
-Cc: Tim Gardner <tim.gardner@canonical.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192se firmware load can overflow target buffer
-Date: Wed,  8 Feb 2012 14:08:10 -0700
-Message-Id: <1328735291-33220-1-git-send-email-tim.gardner@canonical.com> (sfid-20120208_220854_039195_8815ED95)
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:33742 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750846Ab2BHGHY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Feb 2012 01:07:24 -0500
+Received: by daed14 with SMTP id d14so205953dae.19
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 22:07:24 -0800 (PST)
+From: John Li <john.li.mediatek@gmail.com>
+To: users@rt2x00.serialmonkey.com
+Cc: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	John Li <chen-yang.li@mediatek.com>
+Subject: [PATCH] rt2x00:Fix typo
+Date: Wed,  8 Feb 2012 14:06:48 +0800
+Message-Id: <1328681208-5734-1-git-send-email-john.li.mediatek@gmail.com> (sfid-20120208_070726_571001_59FF0435)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware file size check does not use the
-correct limit.
+From: John Li <chen-yang.li@mediatek.com>
 
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: John W. Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192se/fw.h |    3 ++-
- drivers/net/wireless/rtlwifi/rtl8192se/sw.c |    2 +-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rt2x00/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
-index babe85d..5c377fc 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
-@@ -30,6 +30,7 @@
- #define __REALTEK_FIRMWARE92S_H__
+diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
+index a0a7854..299c387 100644
+--- a/drivers/net/wireless/rt2x00/Kconfig
++++ b/drivers/net/wireless/rt2x00/Kconfig
+@@ -163,7 +163,7 @@ config RT2800USB_RT53XX
+        depends on EXPERIMENTAL
+        ---help---
+          This adds support for rt53xx wireless chipset family to the
+-         rt2800pci driver.
++         rt2800usb driver.
+          Supported chips: RT5370
  
- #define RTL8190_MAX_FIRMWARE_CODE_SIZE		64000
-+#define RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE	164000
- #define RTL8190_CPU_START_OFFSET		0x80
- /* Firmware Local buffer size. 64k */
- #define	MAX_FIRMWARE_CODE_SIZE			0xFF00
-@@ -217,7 +218,7 @@ struct rt_firmware {
- 	u8 fw_emem[RTL8190_MAX_FIRMWARE_CODE_SIZE];
- 	u32 fw_imem_len;
- 	u32 fw_emem_len;
--	u8 sz_fw_tmpbuffer[164000];
-+	u8 sz_fw_tmpbuffer[RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE];
- 	u32 sz_fw_tmpbufferlen;
- 	u16 cmdpacket_fragthresold;
- };
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-index ca38dd9..155da0a 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-@@ -105,7 +105,7 @@ static void rtl92se_fw_cb(const struct firmware *firmware, void *context)
- 		rtlpriv->max_fw_size = 0;
- 		return;
- 	}
--	if (firmware->size > rtlpriv->max_fw_size) {
-+	if (firmware->size >= RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE) {
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
- 			 "Firmware is too big!\n");
- 		release_firmware(firmware);
+ config RT2800USB_UNKNOWN
 -- 
-1.7.9
+1.7.6.5
 
