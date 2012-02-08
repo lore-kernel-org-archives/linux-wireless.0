@@ -1,70 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from gmmr5.centrum.cz ([46.255.225.250]:47821 "EHLO gmmr5.centrum.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755499Ab2BGUsE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 15:48:04 -0500
-To: "Andreas Hartmann" <andihartmann@01019freenet.de>,
-	"Helmut Schaa" <helmut.schaa@googlemail.com>
-Subject: Re: connection interrupted for rt61pci in master mode
-Date: Tue, 07 Feb 2012 21:48:01 +0100
-From: <trencan@centrum.cz>
-Cc: "linux-wireless" <linux-wireless@vger.kernel.org>
-References: <20120128154544.70E060CD@centrum.cz>, <4F30BEED.4010905@01019freenet.de>, <20120207071444.8C823024@centrum.cz> <4F30D3EE.2010501@01019freenet.de>
-In-Reply-To: <4F30D3EE.2010501@01019freenet.de>
+Received: from cpsmtpb-ews10.kpnxchange.com ([213.75.39.15]:2813 "EHLO
+	cpsmtpb-ews10.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754289Ab2BHWDE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Feb 2012 17:03:04 -0500
+Message-ID: <4F32F116.6040106@gmail.com> (sfid-20120208_230307_298874_E04400F6)
+Date: Wed, 08 Feb 2012 23:03:02 +0100
+From: Gertjan van Wingerde <gwingerde@gmail.com>
 MIME-Version: 1.0
-Message-Id: <20120207214801.21BCB62B@centrum.cz> (sfid-20120207_214809_098831_FAF43AD8)
-Content-Type: text/plain; charset=UTF-8
+To: John Li <john.li.mediatek@gmail.com>
+CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>,
+	John Li <chen-yang.li@mediatek.com>
+Subject: Re: [PATCH] rt2x00:Add debug message for new chipset
+References: <1328707524-11415-1-git-send-email-john.li.mediatek@gmail.com>
+In-Reply-To: <1328707524-11415-1-git-send-email-john.li.mediatek@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 02/08/12 14:25, John Li wrote:
+> From: John Li <chen-yang.li@mediatek.com>
+> 
+> Signed-off-by: John Li <chen-yang.li@mediatek.com>
 
-I tried maxcpus=0 and verified that really only one cpu core is used but didn't help (so not smp problem). I realized that sometimes when I see connection interrupted, then after few seconds it recovers and network is again functional. 802.11n is disabled. One more thing, when i do "ifup wlan0" I get following output:
-NETLINK: Packet too small or truncated! 56!=16!=996
-is it OK?
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
 
-Regards.
-Michal
+> ---
+>  drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
+> index 22a1a8f..6bdf6d6 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
+> @@ -3949,7 +3949,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+>  	case RT5390:
+>  		break;
+>  	default:
+> -		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
+> +		ERROR(rt2x00dev, "Invalid RT chipset 0x%04x detected.\n", rt2x00dev->chip.rt);
+>  		return -ENODEV;
+>  	}
+>  
+> @@ -3968,7 +3968,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
+>  	case RF5390:
+>  		break;
+>  	default:
+> -		ERROR(rt2x00dev, "Invalid RF chipset 0x%x detected.\n",
+> +		ERROR(rt2x00dev, "Invalid RF chipset 0x%04x detected.\n",
+>  		      rt2x00dev->chip.rf);
+>  		return -ENODEV;
+>  	}
 
-______________________________________________________________
-> Od: "Andreas Hartmann" <andihartmann@01019freenet.de>
-> Komu: Helmut Schaa <helmut.schaa@googlemail.com>
-> Datum: 07.02.2012 08:37
-> Předmět: Re: connection interrupted for rt61pci in master mode
->
-> CC: "linux-wireless" <linux-wireless@vger.kernel.org>
->Hello Helmut,
->
->could it be potentially a problem with smp or does the fix you provided
->for rt2860 based wlan devices applies too for rt61pci?
->
->I'm thinking about that, because I saw the same problems here some time
->ago. And probably I can see it too with rt2800usb [1].
->
->
->@Michal:
->Just to verify (or falsify) this hypothesis: Could you please reboot the
->machine with the additional kernel option maxcpus=0 (you can enter it in
->the grub console) to just use cpu 0 (please verify with "cat
->/proc/cpuinfo"). If the problem disappears, it's most probably smp related.
->
->Another question: you didn't activate 802.11n. Is this correct?
->
->
->Regards,
->Andreas
->
->trencan@centrum.cz schrieb:
->> 
->> Machine has "Intel Core i5-2500K" with 4 cores without Hyper-Threading.
->> 
->> Regards.
->> Michal
->
->
->Regards,
->Andreas
->
->
->[1]
->http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2012-February/004556.html
->
+
+-- 
+---
+Gertjan
