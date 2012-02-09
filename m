@@ -1,57 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:55720 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755449Ab2B2Ijx (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:57792 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758476Ab2BIXLk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 03:39:53 -0500
-Received: by mail-lpp01m010-f50.google.com with SMTP id m13so8925620lah.37
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 00:39:51 -0800 (PST)
-Message-ID: <1330504788.18637.90.camel@cumari> (sfid-20120229_093958_816044_0280A68C)
-Subject: Re: [PATCH 3/7] wl12xx: reset link Tx queues when freeing it
-From: Luciano Coelho <coelho@ti.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org
-Date: Wed, 29 Feb 2012 10:39:48 +0200
-In-Reply-To: <87pqcyavn5.fsf@purkki.adurom.net>
-References: <1330382494-31148-1-git-send-email-arik@wizery.com>
-	 <1330382494-31148-3-git-send-email-arik@wizery.com>
-	 <1330422678.18637.28.camel@cumari> <87pqcyavn5.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 9 Feb 2012 18:11:40 -0500
+Received: by iacb35 with SMTP id b35so3166015iac.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2012 15:11:40 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAK80WHZpAAG_NWcuGUK2FJ_UwOhFXraVVkugR3W5FZEHCb6Z0A@mail.gmail.com>
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>
+ <1327581484-22047-8-git-send-email-victorg@ti.com> <4F27819A.1030200@sipsolutions.net>
+ <CAK80WHZpAAG_NWcuGUK2FJ_UwOhFXraVVkugR3W5FZEHCb6Z0A@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 9 Feb 2012 15:11:20 -0800
+Message-ID: <CAB=NE6WkArbBkiT6A4eEKEo6k2EJ2SsxjoNoPHp5BDWZNR3t8g@mail.gmail.com> (sfid-20120210_001143_262665_E9A04E8A)
+Subject: Re: [RFC 7/9] nl80211/cfg80211: add DFS feature flag
+To: "Goldenshtein, Victor" <victorg@ti.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian.chadd@gmail.com, j@w1.fi,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-02-29 at 10:31 +0200, Kalle Valo wrote: 
-> Luciano Coelho <coelho@ti.com> writes:
-> 
-> >> @@ -973,8 +974,14 @@ void wl12xx_tx_reset(struct wl1271 *wl, bool reset_tx_queues)
-> >>  	struct sk_buff *skb;
-> >>  	struct ieee80211_tx_info *info;
-> >>  
-> >> -	for (i = 0; i < NUM_TX_QUEUES; i++)
-> >> -		wl->tx_queue_count[i] = 0;
-> >> +	/* only reset the queues if something bad happened */
-> >> +	if (WARN_ON(wl1271_tx_total_queue_count(wl) != 0)) {
-> >
-> > Let's make all these WARN_ONs as WARN_ON_ONCE as it is recommended
-> > nowadays.  This will make Kalle Valo happier. :)
-> 
-> Hehe. Actually the dislike against WARN_ON() was started by John, I
-> again started the war to killing BUG_ON() :)
+On Thu, Feb 2, 2012 at 8:08 AM, Goldenshtein, Victor <victorg@ti.com> wrote:
+> On Tue, Jan 31, 2012 at 7:52 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On 1/26/2012 4:38 AM, Victor Goldenshtein wrote:
+>>>
+>>> +static int nl80211_put_feature_flags(struct wiphy *wiphy,
+>>> +                                    struct sk_buff *msg)
+>>> +{
+>>> +       if (wiphy->flags&  WIPHY_FLAG_SUPPORTS_DFS)
+>>>
+>>> +               wiphy->features |= NL80211_FEATURE_DFS;
+>>> +
+>>> +
+>>> +       NLA_PUT_U32(msg, NL80211_ATTR_FEATURE_FLAGS, wiphy->features);
+>>> +
+>>> +       return 0;
+>>> +nla_put_failure:
+>>> +       return -ENOBUFS;
+>>> +}
+>>
+>>
+>> I think you misunderstood the new feature flags -- they're supposed to be
+>> set by the driver directly, not indirectly via wiphy->flags.
+>>
+>
+> yep, I guess you're right.
 
-Right, John's email was where I got the "recommended" from. ;)
+While a it, consider adding one for the requirement of sending the
+channel switch announcement within mac80211, not the driver. In that
+case, although a DFS feature may be available in the driver, DFS
+should not be enabled on the driver through nl80211 unless that
+feature gets implemented in mac80211.
 
-
-> But nevertheless, this changes makes also me happy. I have seen cases
-> where the whole system reboots because of WARN_ON() spam, so
-> WARN_ON_ONCE() is much better in in cases where's a possibility that it
-> will get printed a lot. Of course printk_ratelimit() is another option,
-> but for some reason it isn't that popular.
-
-Yeah, I totally agree.  Especially when we have a loop, WARN_ON_ONCE
-should be sufficient, in my opinion.
-
--- 
-Cheers,
-Luca.
-
+  Luis
