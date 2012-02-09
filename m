@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:65011 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751778Ab2BBKAK (ORCPT
+Received: from i118-21-156-233.s30.a048.ap.plala.or.jp ([118.21.156.233]:37563
+	"EHLO rinabert.homeip.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754281Ab2BIPaP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 05:00:10 -0500
-Received: by wics10 with SMTP id s10so1599679wic.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 02:00:09 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v3 0/4] wl12xx: add some psm/suspend features
-Date: Thu,  2 Feb 2012 12:03:38 +0200
-Message-Id: <1328177022-26646-1-git-send-email-eliad@wizery.com> (sfid-20120202_110015_582535_F9989962)
+	Thu, 9 Feb 2012 10:30:15 -0500
+From: Masanari Iida <standby24x7@gmail.com>
+To: dsd@gentoo.org, kune@deine-taler.de, linux-wireless@vger.kernel.org
+Cc: standby24x7@gmail.com, trivial@kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] [trivial] zd1211rw: Fix typo in zd_usb.c and zd_mac.c
+Date: Fri, 10 Feb 2012 00:29:32 +0900
+Message-Id: <1328801372-2532-1-git-send-email-standby24x7@gmail.com> (sfid-20120209_163035_248669_E1BFEC39)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add some psm / suspend features:
-* Add the ability to force psm (by default, the fw uses dynamic ps)
-* Use differnet wake up conditions on suspend
+Correct spelling "reseting" to "resetting" in
+drivers/net/wireless/zd1211rw/zd_usb.c
+drivers/net/wireless/zd1211rw/zd_mac.c
 
-(depends on the "wl12xx: update fw api" patchset)
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+---
+ drivers/net/wireless/zd1211rw/zd_mac.c |    2 +-
+ drivers/net/wireless/zd1211rw/zd_usb.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-v3: remove the rx-filters patches
-
-Eyal Shapira (4):
-  wl12xx: Set different wake up conditions in case of suspend
-  wl12xx: add suspend_listen_interval debugfs file
-  wl12xx: add forced_ps mode
-  wl12xx: add forced_ps debugfs file
-
- drivers/net/wireless/wl12xx/acx.c     |   10 ++-
- drivers/net/wireless/wl12xx/acx.h     |    3 +-
- drivers/net/wireless/wl12xx/conf.h    |   19 +++++
- drivers/net/wireless/wl12xx/debugfs.c |  131 ++++++++++++++++++++++++++++++++-
- drivers/net/wireless/wl12xx/main.c    |   76 +++++++++++++++++--
- drivers/net/wireless/wl12xx/ps.c      |   12 ++-
- drivers/net/wireless/wl12xx/wl12xx.h  |    2 +-
- 7 files changed, 232 insertions(+), 21 deletions(-)
-
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index 0a70149..a8370eb 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -846,7 +846,7 @@ reset_device:
+ 
+ 	/* semaphore stuck, reset device to avoid fw freeze later */
+ 	dev_warn(zd_mac_dev(mac), "CR_BCN_FIFO_SEMAPHORE stuck, "
+-				  "reseting device...");
++				  "resetting device...");
+ 	usb_queue_reset_device(mac->chip.usb.intf);
+ 
+ 	return r;
+diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+index 785bdbe..f766b3e 100644
+--- a/drivers/net/wireless/zd1211rw/zd_usb.c
++++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+@@ -1104,7 +1104,7 @@ static void zd_tx_watchdog_handler(struct work_struct *work)
+ 		goto out;
+ 
+ 	/* TX halted, try reset */
+-	dev_warn(zd_usb_dev(usb), "TX-stall detected, reseting device...");
++	dev_warn(zd_usb_dev(usb), "TX-stall detected, resetting device...");
+ 
+ 	usb_queue_reset_device(usb->intf);
+ 
 -- 
-1.7.6.401.g6a319
+1.7.6.5
 
