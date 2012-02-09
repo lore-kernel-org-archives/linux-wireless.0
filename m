@@ -1,233 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65039 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756880Ab2BCQc4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 11:32:56 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v2 12/25] iwlegacy: move wep_keys out of context
-Date: Fri,  3 Feb 2012 17:31:48 +0100
-Message-Id: <1328286721-11309-13-git-send-email-sgruszka@redhat.com> (sfid-20120203_173305_286257_BD76F34E)
-In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
-References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43017 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754076Ab2BIOaq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Feb 2012 09:30:46 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	<stable@vger.kernel.org>, Gary Morain <gmorain@google.com>,
+	Paul Stewart <pstew@google.com>,
+	Abhijit Pradhan <abhijit@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: [PATCH] mac80211: Fix a rwlock bad magic bug
+Date: Thu, 9 Feb 2012 19:59:43 +0530
+Message-ID: <1328797783-7452-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120209_153051_425751_DC994938)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/4965-mac.c |   58 ++++++++++++++++++-----------
- drivers/net/wireless/iwlegacy/common.h   |   19 ++--------
- 2 files changed, 39 insertions(+), 38 deletions(-)
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index ecb7b54..35d868c 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -2808,7 +2808,7 @@ static int
- il4965_static_wepkey_cmd(struct il_priv *il, struct il_rxon_context *ctx,
- 			 bool send_if_empty)
- {
--	int i, not_empty = 0;
-+	int i;
- 	u8 buff[sizeof(struct il_wep_cmd) +
- 		sizeof(struct il_wep_key) * WEP_KEYS_MAX];
- 	struct il_wep_cmd *wep_cmd = (struct il_wep_cmd *)buff;
-@@ -2818,6 +2818,7 @@ il4965_static_wepkey_cmd(struct il_priv *il, struct il_rxon_context *ctx,
- 		.data = wep_cmd,
- 		.flags = CMD_SYNC,
- 	};
-+	bool not_empty = false;
+read_lock(&tpt_trig->trig.leddev_list_lock) is accessed via the path
+ieee80211_open (->) ieee80211_do_open (->) ieee80211_mod_tpt_led_trig
+(->) ieee80211_start_tpt_led_trig (->) tpt_trig_timer before initializing
+it.
+the intilization of this read/write lock happens via the path
+ieee80211_led_init (->) led_trigger_register, but we are doing
+'ieee80211_led_init'  after 'ieeee80211_if_add' where we
+register netdev_ops.
+so we access leddev_list_lock before initializing it and causes the
+following bug in chrome laptops with AR928X cards with the following
+script
+
+while true
+do
+sudo modprobe -v ath9k
+sleep 3
+sudo modprobe -r ath9k
+sleep 3
+done
+
+	BUG: rwlock bad magic on CPU#1, wpa_supplicant/358, f5b9eccc
+	Pid: 358, comm: wpa_supplicant Not tainted 3.0.13 #1
+	Call Trace:
+
+	[<8137b9df>] rwlock_bug+0x3d/0x47
+	[<81179830>] do_raw_read_lock+0x19/0x29
+	[<8137f063>] _raw_read_lock+0xd/0xf
+	[<f9081957>] tpt_trig_timer+0xc3/0x145 [mac80211]
+	[<f9081f3a>] ieee80211_mod_tpt_led_trig+0x152/0x174 [mac80211]
+	[<f9076a3f>] ieee80211_do_open+0x11e/0x42e [mac80211]
+	[<f9075390>] ? ieee80211_check_concurrent_iface+0x26/0x13c [mac80211]
+	[<f9076d97>] ieee80211_open+0x48/0x4c [mac80211]
+	[<812dbed8>] __dev_open+0x82/0xab
+	[<812dc0c9>] __dev_change_flags+0x9c/0x113
+	[<812dc1ae>] dev_change_flags+0x18/0x44
+	[<8132144f>] devinet_ioctl+0x243/0x51a
+	[<81321ba9>] inet_ioctl+0x93/0xac
+	[<812cc951>] sock_ioctl+0x1c6/0x1ea
+	[<812cc78b>] ? might_fault+0x20/0x20
+	[<810b1ebb>] do_vfs_ioctl+0x46e/0x4a2
+	[<810a6ebb>] ? fget_light+0x2f/0x70
+	[<812ce549>] ? sys_recvmsg+0x3e/0x48
+	[<810b1f35>] sys_ioctl+0x46/0x69
+	[<8137fa77>] sysenter_do_call+0x12/0x2
+
+Cc: <stable@vger.kernel.org>
+Cc: Gary Morain <gmorain@google.com>
+Cc: Paul Stewart <pstew@google.com>
+Cc: Abhijit Pradhan <abhijit@qca.qualcomm.com>
+Cc: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Acked-by: Johannes Berg <johannes.berg@intel.com>
+Tested-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ net/mac80211/main.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 831a5bd..2306d75 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -909,6 +909,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 		wiphy_debug(local->hw.wiphy, "Failed to initialize wep: %d\n",
+ 			    result);
  
- 	might_sleep();
- 
-@@ -2825,24 +2826,23 @@ il4965_static_wepkey_cmd(struct il_priv *il, struct il_rxon_context *ctx,
- 	       cmd_size + (sizeof(struct il_wep_key) * WEP_KEYS_MAX));
- 
- 	for (i = 0; i < WEP_KEYS_MAX; i++) {
-+		u8 key_size = il->_4965.wep_keys[i].key_size;
++	ieee80211_led_init(local);
 +
- 		wep_cmd->key[i].key_idx = i;
--		if (ctx->wep_keys[i].key_size) {
-+		if (key_size) {
- 			wep_cmd->key[i].key_offset = i;
--			not_empty = 1;
--		} else {
-+			not_empty = true;
-+		} else
- 			wep_cmd->key[i].key_offset = WEP_INVALID_OFFSET;
--		}
+ 	rtnl_lock();
  
--		wep_cmd->key[i].key_size = ctx->wep_keys[i].key_size;
--		memcpy(&wep_cmd->key[i].key[3], ctx->wep_keys[i].key,
--		       ctx->wep_keys[i].key_size);
-+		wep_cmd->key[i].key_size = key_size;
-+		memcpy(&wep_cmd->key[i].key[3], il->_4965.wep_keys[i].key, key_size);
- 	}
+ 	result = ieee80211_init_rate_ctrl_alg(local,
+@@ -930,8 +932,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
  
- 	wep_cmd->global_key_type = WEP_KEY_WEP_TYPE;
- 	wep_cmd->num_keys = WEP_KEYS_MAX;
+ 	rtnl_unlock();
  
- 	cmd_size += sizeof(struct il_wep_key) * WEP_KEYS_MAX;
+-	ieee80211_led_init(local);
 -
- 	cmd.len = cmd_size;
- 
- 	if (not_empty || send_if_empty)
-@@ -2864,19 +2864,20 @@ il4965_remove_default_wep_key(struct il_priv *il, struct il_rxon_context *ctx,
- 			      struct ieee80211_key_conf *keyconf)
- {
- 	int ret;
-+	int idx = keyconf->keyidx;
- 
- 	lockdep_assert_held(&il->mutex);
- 
--	D_WEP("Removing default WEP key: idx=%d\n", keyconf->keyidx);
-+	D_WEP("Removing default WEP key: idx=%d\n", idx);
- 
--	memset(&ctx->wep_keys[keyconf->keyidx], 0, sizeof(ctx->wep_keys[0]));
-+	memset(&il->_4965.wep_keys[idx], 0, sizeof(struct il_wep_key));
- 	if (il_is_rfkill(il)) {
- 		D_WEP("Not sending C_WEPKEY command due to RFKILL.\n");
- 		/* but keys in device are clear anyway so return success */
- 		return 0;
- 	}
- 	ret = il4965_static_wepkey_cmd(il, ctx, 1);
--	D_WEP("Remove default WEP key: idx=%d ret=%d\n", keyconf->keyidx, ret);
-+	D_WEP("Remove default WEP key: idx=%d ret=%d\n", idx, ret);
- 
- 	return ret;
- }
-@@ -2886,11 +2887,12 @@ il4965_set_default_wep_key(struct il_priv *il, struct il_rxon_context *ctx,
- 			   struct ieee80211_key_conf *keyconf)
- {
- 	int ret;
-+	int len = keyconf->keylen;
-+	int idx = keyconf->keyidx;
- 
- 	lockdep_assert_held(&il->mutex);
- 
--	if (keyconf->keylen != WEP_KEY_LEN_128 &&
--	    keyconf->keylen != WEP_KEY_LEN_64) {
-+	if (len != WEP_KEY_LEN_128 && len != WEP_KEY_LEN_64) {
- 		D_WEP("Bad WEP key length %d\n", keyconf->keylen);
- 		return -EINVAL;
- 	}
-@@ -2899,14 +2901,12 @@ il4965_set_default_wep_key(struct il_priv *il, struct il_rxon_context *ctx,
- 	keyconf->hw_key_idx = HW_KEY_DEFAULT;
- 	il->stations[IL_AP_ID].keyinfo.cipher = keyconf->cipher;
- 
--	ctx->wep_keys[keyconf->keyidx].key_size = keyconf->keylen;
--	memcpy(&ctx->wep_keys[keyconf->keyidx].key, &keyconf->key,
--	       keyconf->keylen);
-+	il->_4965.wep_keys[idx].key_size = len;
-+	memcpy(&il->_4965.wep_keys[idx].key, &keyconf->key, len);
- 
- 	ret = il4965_static_wepkey_cmd(il, ctx, false);
--	D_WEP("Set default WEP key: len=%d idx=%d ret=%d\n", keyconf->keylen,
--	      keyconf->keyidx, ret);
- 
-+	D_WEP("Set default WEP key: len=%d idx=%d ret=%d\n", len, idx, ret);
- 	return ret;
- }
- 
-@@ -3106,7 +3106,7 @@ il4965_remove_dynamic_key(struct il_priv *il, struct il_rxon_context *ctx,
- 
- 	lockdep_assert_held(&il->mutex);
- 
--	ctx->key_mapping_keys--;
-+	il->_4965.key_mapping_keys--;
- 
- 	spin_lock_irqsave(&il->sta_lock, flags);
- 	key_flags = le16_to_cpu(il->stations[sta_id].sta.key.key_flags);
-@@ -3164,7 +3164,7 @@ il4965_set_dynamic_key(struct il_priv *il, struct il_rxon_context *ctx,
- 
- 	lockdep_assert_held(&il->mutex);
- 
--	ctx->key_mapping_keys++;
-+	il->_4965.key_mapping_keys++;
- 	keyconf->hw_key_idx = HW_KEY_DYNAMIC;
- 
- 	switch (keyconf->cipher) {
-@@ -5067,6 +5067,20 @@ __il4965_down(struct il_priv *il)
- 	del_timer_sync(&il->watchdog);
- 
- 	il_clear_ucode_stations(il, NULL);
-+
-+	/* FIXME: race conditions ? */
-+	spin_lock_irq(&il->sta_lock);
-+	/*
-+	 * Remove all key information that is not stored as part
-+	 * of station information since mac80211 may not have had
-+	 * a chance to remove all the keys. When device is
-+	 * reconfigured by mac80211 after an error all keys will
-+	 * be reconfigured.
-+	 */
-+	memset(il->_4965.wep_keys, 0, sizeof(il->_4965.wep_keys));
-+	il->_4965.key_mapping_keys = 0;
-+	spin_unlock_irq(&il->sta_lock);
-+
- 	il_dealloc_bcast_stations(il);
- 	il_clear_driver_stations(il);
- 
-@@ -5613,7 +5627,7 @@ il4965_mac_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 	if ((key->cipher == WLAN_CIPHER_SUITE_WEP40 ||
- 	     key->cipher == WLAN_CIPHER_SUITE_WEP104) && !sta) {
- 		if (cmd == SET_KEY)
--			is_default_wep_key = !ctx->key_mapping_keys;
-+			is_default_wep_key = !il->_4965.key_mapping_keys;
- 		else
- 			is_default_wep_key =
- 			    (key->hw_key_idx == HW_KEY_DEFAULT);
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index 89922e0..811e768 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1169,9 +1169,6 @@ struct il_rxon_context {
- 
- 	struct il_qos_info qos_data;
- 
--	struct il_wep_key wep_keys[WEP_KEYS_MAX];
--	u8 key_mapping_keys;
--
- 	__le32 station_flags;
- 
- 	struct {
-@@ -1417,6 +1414,9 @@ struct il_priv {
- 			u8 phy_calib_chain_noise_reset_cmd;
- 			u8 phy_calib_chain_noise_gain_cmd;
- 
-+			u8 key_mapping_keys;
-+			struct il_wep_key wep_keys[WEP_KEYS_MAX];
-+
- 			struct il_notif_stats stats;
- #ifdef CONFIG_IWLEGACY_DEBUGFS
- 			struct il_notif_stats accum_stats;
-@@ -2318,24 +2318,11 @@ static inline void
- il_clear_driver_stations(struct il_priv *il)
- {
- 	unsigned long flags;
--	struct il_rxon_context *ctx = &il->ctx;
- 
- 	spin_lock_irqsave(&il->sta_lock, flags);
- 	memset(il->stations, 0, sizeof(il->stations));
- 	il->num_stations = 0;
--
- 	il->ucode_key_table = 0;
--
--	/*
--	 * Remove all key information that is not stored as part
--	 * of station information since mac80211 may not have had
--	 * a chance to remove all the keys. When device is
--	 * reconfigured by mac80211 after an error all keys will
--	 * be reconfigured.
--	 */
--	memset(ctx->wep_keys, 0, sizeof(ctx->wep_keys));
--	ctx->key_mapping_keys = 0;
--
- 	spin_unlock_irqrestore(&il->sta_lock, flags);
- }
- 
+ 	local->network_latency_notifier.notifier_call =
+ 		ieee80211_max_network_latency;
+ 	result = pm_qos_add_notifier(PM_QOS_NETWORK_LATENCY,
 -- 
-1.7.1
+1.7.0.4
 
