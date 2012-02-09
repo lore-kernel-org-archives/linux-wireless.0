@@ -1,95 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:37777 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752906Ab2BHP4m (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 10:56:42 -0500
-Received: by yhoo21 with SMTP id o21so288793yho.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2012 07:56:42 -0800 (PST)
-Message-ID: <4F329B34.6020001@lwfinger.net> (sfid-20120208_165646_416153_B4F0B83D)
-Date: Wed, 08 Feb 2012 09:56:36 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:3937 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757814Ab2BIUJ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Feb 2012 15:09:27 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 06/15] brcm80211: fmac: resolve smatch issues in
+ brcmfmac code
+Date: Thu, 9 Feb 2012 21:09:00 +0100
+Message-ID: <1328818149-4826-7-git-send-email-arend@broadcom.com> (sfid-20120209_211026_937738_88E6EC96)
+In-Reply-To: <1328818149-4826-1-git-send-email-arend@broadcom.com>
+References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>, linville@tuxdriver.com
-CC: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH v2] mac80211: minstrel_ht: fix NULL pointer dereference
- during auth/assoc
-References: <1328705077-31360-1-git-send-email-arend@broadcom.com>
-In-Reply-To: <1328705077-31360-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/08/2012 06:44 AM, Arend van Spriel wrote:
-> This patch fixes the following NULL pointer dereference:
->
->> I rerun the test on a kernel with some more lock checking and got lucky.
->>
->> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512283] wlan0: authenticate
->> with 98:fc:11:8e:94:57
->> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512515] wlan0: send auth to
->> 98:fc:11:8e:94:57 (try 1/3)
->> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514184] BUG: unable to handle
->> kernel NULL pointer dereference at 00000004
->> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514233] IP: [<f8648f08>]
->> minstrel_tx_status+0x48/0xe0 [mac80211]
->
-> static inline int
-> rix_to_ndx(struct minstrel_sta_info *mi, int rix)
-> {
->          int i = rix;
->          for (i = rix; i>= 0; i--)
->                  if (mi->r[i].rix == rix)
->    48:   3b 58 04                cmp    0x4(%eax),%ebx
->    4b:   74 4b                   je     98<minstrel_tx_status+0x98>
->    4d:   83 c2 01                add    $0x1,%edx
->
-> It fails because of mi->r[i] being a NULL pointer. It is allocated in
-> minstel_alloc_sta, but minstrel_ht_alloc_sta does not call that function.
->
-> struct minstrel_ht_sta_priv holds a union with struct minstrel_ht_sta and
-> struct minstrel_sta_info. During authenticate the bool is_ht is false so
-> minstrel_ht_tx_status calls minstrel_tx_status, but minstrel_sta_info::r
-> is not set until rate_init which is after assoc.
->
-> Cc: Johannes Berg<johannes@sipsolutions.net>
-> Cc: Felix Fietkau<nbd@openwrt.org>
-> Signed-off-by: Arend van Spriel<arend@broadcom.com>
-> ---
-> John,
->
-> This one with tab indent instead of spaces. Noticed just after sending
-> the first patch.
->
-> Gr. AvS
-> ---
->   net/mac80211/rc80211_minstrel_ht.c |    3 +++
->   1 files changed, 3 insertions(+), 0 deletions(-)
->
-> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-> index ff5f7b8..a58c348 100644
-> --- a/net/mac80211/rc80211_minstrel_ht.c
-> +++ b/net/mac80211/rc80211_minstrel_ht.c
-> @@ -813,6 +813,9 @@ minstrel_ht_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp)
->   	if (!msp->sample_table)
->   		goto error1;
->
-> +	msp->legacy.r = msp->ratelist;
-> +	msp->legacy.sample_table = msp->sample_table;
-> +
->   	return msp;
->
->   error1:
+This patch resolves the following smatch issues:
 
-This patch fixes the problem I was having with minstrel_tx_status with p54usb.
+wl_cfg80211.c +1377 brcmf_cfg80211_connect(65) warn: min_t truncates
+here '(sme->ssid_len)' (4294967295 vs 9223372036854775807)
+dhd_sdio.c +1275 brcmf_sdbrcm_rxglom(156) warn: min_t truncates here
+'(pfirst->len)' (2147483647 vs 4294967295)
+dhd_sdio.c +1457 brcmf_sdbrcm_rxglom(338) warn: min_t truncates here
+'(pfirst->len)' (2147483647 vs 4294967295)
+bcmsdh_sdmmc.c +300 brcmf_sdioh_request_buffer(10) warn: variable
+dereferenced before check 'pkt' (see line 295)
 
-John: If you want, you may add a
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    3 ++-
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-Tested-by: Larry Finger <Larry.Finger@lwfinger.net>
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index ac71ade..b698a76 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -294,13 +294,14 @@ int brcmf_sdioh_request_buffer(struct brcmf_sdio_dev *sdiodev,
+ 			       struct sk_buff *pkt)
+ {
+ 	int status;
+-	uint pkt_len = pkt->len;
++	uint pkt_len;
+ 	bool fifo = (fix_inc == SDIOH_DATA_FIX);
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+ 	if (pkt == NULL)
+ 		return -EINVAL;
++	pkt_len = pkt->len;
+ 
+ 	brcmf_pm_resume_wait(sdiodev, &sdiodev->request_buffer_wait);
+ 	if (brcmf_pm_resume_error(sdiodev))
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 74c95a5..e95a883 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -1376,7 +1376,7 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
+ 	memset(&join_params, 0, sizeof(join_params));
+ 	join_params_size = sizeof(join_params.ssid_le);
+ 
+-	ssid.SSID_len = min_t(u32, sizeof(ssid.SSID), sme->ssid_len);
++	ssid.SSID_len = min_t(u32, sizeof(ssid.SSID), (u32)sme->ssid_len);
+ 	memcpy(&join_params.ssid_le.SSID, sme->ssid, ssid.SSID_len);
+ 	memcpy(&ssid.SSID, sme->ssid, ssid.SSID_len);
+ 	join_params.ssid_le.SSID_len = cpu_to_le32(ssid.SSID_len);
+-- 
+1.7.5.4
 
-Arend: Thanks for finding this problem and fixing it.
-
-Larry
 
