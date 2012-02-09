@@ -1,102 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:34122 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753578Ab2BVHLD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 02:11:03 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20292.38126.569839.919049@gargle.gargle.HOWL> (sfid-20120222_081108_187103_03BB5A85)
-Date: Wed, 22 Feb 2012 12:40:38 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 07/26] ath9k: Calculate ampdu limit using a helper
+Received: from perches-mx.perches.com ([206.117.179.246]:33045 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758014Ab2BIXIk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Feb 2012 18:08:40 -0500
+Message-ID: <1328828918.29329.21.camel@joe2Laptop> (sfid-20120210_000845_270016_2BC46301)
+Subject: RE: [PATCH net-next] drivers/net: Remove boolean comparisons to
+ true/false
+From: Joe Perches <joe@perches.com>
+To: "Allan, Bruce W" <bruce.w.allan@intel.com>,
+	Julia Lawall <julia.lawall@lip6.fr>
+Cc: "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+	David Miller <davem@davemloft.net>,
+	"David.Laight@ACULAB.COM" <David.Laight@ACULAB.COM>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 09 Feb 2012 15:08:38 -0800
+In-Reply-To: <804857E1F29AAC47BF68C404FC60A1842709C1@ORSMSX102.amr.corp.intel.com>
+References: <1328783282-17760-5-git-send-email-jeffrey.t.kirsher@intel.com>
+	 <AE90C24D6B3A694183C094C60CF0A2F6026B6E62@saturn3.aculab.com>
+	 <20120209.133413.349832435589531136.davem@davemloft.net>
+	 <1328822243.29329.11.camel@joe2Laptop>
+	 <1328822935.2242.1.camel@jtkirshe-mobl>
+	 <804857E1F29AAC47BF68C404FC60A1842709C1@ORSMSX102.amr.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/gpio.c  |   14 ++++++++++++++
- drivers/net/wireless/ath/ath9k/xmit.c  |   19 +++++++++----------
- 3 files changed, 24 insertions(+), 10 deletions(-)
+On Thu, 2012-02-09 at 22:36 +0000, Allan, Bruce W wrote:
+> > On Thu, 2012-02-09 at 13:17 -0800, Joe Perches wrote:
+> > > Booleans should not be compared to true or false
+> > > but be directly tested or tested with !.
+> > >
+> > > Done via cocci script:
+> > >
+> > > @@
+> > > bool t;
+> > > @@
+> > > - t == true
+> > > + t
+> > > @@
+> > > bool t;
+> > > @@
+> > > - t != true
+> > > + !t
+> > > @@
+> > > bool t;
+> > > @@
+> > > - t == false
+> > > + !t
+> > > @@
+> > > bool t;
+> > > @@
+> > > - t != false
+> > > + t
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index acf5372..23145ce 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -461,6 +461,7 @@ void ath9k_stop_btcoex(struct ath_softc *sc);
- void ath9k_btcoex_timer_resume(struct ath_softc *sc);
- void ath9k_btcoex_timer_pause(struct ath_softc *sc);
- void ath9k_btcoex_handle_interrupt(struct ath_softc *sc, u32 status);
-+u16 ath9k_btcoex_aggr_limit(struct ath_softc *sc, u32 max_4ms_framelen);
- 
- /********************/
- /*   LED Control    */
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index a24aa67..e870251 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -318,6 +318,20 @@ void ath9k_btcoex_timer_pause(struct ath_softc *sc)
- 	btcoex->hw_timer_enabled = false;
- }
- 
-+u16 ath9k_btcoex_aggr_limit(struct ath_softc *sc, u32 max_4ms_framelen)
-+{
-+	struct ath_mci_profile *mci = &sc->btcoex.mci;
-+	u16 aggr_limit = 0;
-+
-+	if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI) && mci->aggr_limit)
-+		aggr_limit = (max_4ms_framelen * mci->aggr_limit) >> 4;
-+	else if (sc->sc_flags & SC_OP_BT_PRIORITY_DETECTED)
-+		aggr_limit = min((max_4ms_framelen * 3) / 8,
-+				 (u32)ATH_AMPDU_LIMIT_MAX);
-+
-+	return aggr_limit;
-+}
-+
- void ath9k_btcoex_handle_interrupt(struct ath_softc *sc, u32 status)
- {
- 	struct ath_hw *ah = sc->sc_ah;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 3182408..5dd27d2 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -647,9 +647,8 @@ static u32 ath_lookup_rate(struct ath_softc *sc, struct ath_buf *bf,
- 	struct sk_buff *skb;
- 	struct ieee80211_tx_info *tx_info;
- 	struct ieee80211_tx_rate *rates;
--	struct ath_mci_profile *mci = &sc->btcoex.mci;
- 	u32 max_4ms_framelen, frmlen;
--	u16 aggr_limit, legacy = 0;
-+	u16 aggr_limit, bt_aggr_limit, legacy = 0;
- 	int i;
- 
- 	skb = bf->bf_mpdu;
-@@ -694,14 +693,14 @@ static u32 ath_lookup_rate(struct ath_softc *sc, struct ath_buf *bf,
- 	if (tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE || legacy)
- 		return 0;
- 
--	if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI) && mci->aggr_limit)
--		aggr_limit = (max_4ms_framelen * mci->aggr_limit) >> 4;
--	else if (sc->sc_flags & SC_OP_BT_PRIORITY_DETECTED)
--		aggr_limit = min((max_4ms_framelen * 3) / 8,
--				 (u32)ATH_AMPDU_LIMIT_MAX);
--	else
--		aggr_limit = min(max_4ms_framelen,
--				 (u32)ATH_AMPDU_LIMIT_MAX);
-+	aggr_limit = min(max_4ms_framelen, (u32)ATH_AMPDU_LIMIT_MAX);
-+
-+	/*
-+	 * Override the default aggregation limit for BTCOEX.
-+	 */
-+	bt_aggr_limit = ath9k_btcoex_aggr_limit(sc, max_4ms_framelen);
-+	if (bt_aggr_limit)
-+		aggr_limit = bt_aggr_limit;
- 
- 	/*
- 	 * h/w can accept aggregates up to 16 bit lengths (65535).
--- 
-1.7.9.1
+> Has the cocci script been (or will it be) added to ./scripts/coccinelle?
+
+These are pretty trivial scripts.
+
+You're welcome to add it or combine it
+with the one Rusty did to convert
+bool foo = 1
+to
+bool foo = true
+
+https://lkml.org/lkml/2011/12/19/15
 
