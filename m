@@ -1,42 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.u-psud.fr ([129.175.33.41]:56140 "EHLO smtp1.u-psud.fr"
+Received: from mms3.broadcom.com ([216.31.210.19]:1562 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752154Ab2BWR2A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 12:28:00 -0500
-Message-ID: <4F46771F.9000200@lri.fr> (sfid-20120223_182805_305598_57B1B374)
-Date: Thu, 23 Feb 2012 18:27:59 +0100
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+	id S1757633Ab2BIUJZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Feb 2012 15:09:25 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 15/15] brcm80211: fmac: make sdio firmware filename
+ specific
+Date: Thu, 9 Feb 2012 21:09:09 +0100
+Message-ID: <1328818149-4826-16-git-send-email-arend@broadcom.com> (sfid-20120209_211017_651335_52BBF119)
+In-Reply-To: <1328818149-4826-1-git-send-email-arend@broadcom.com>
+References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] carl9170: Fix memory accounting when sta is in power-save
- mode.
-References: <1330012414-26559-1-git-send-email-cavallar@lri.fr> <201202231752.44125.chunkeey@googlemail.com>
-In-Reply-To: <201202231752.44125.chunkeey@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23/02/2012 17:52, Christian Lamparter wrote:
-> On Thursday, February 23, 2012 04:53:34 PM Nicolas Cavallari wrote:
->> While this seems to fix my problem, there could still be problems remaining
->> in this code path.  Particularly carl9170_tx_status will do lots of things
->> like incrementing counters and waking up mac80211 queues...
-> That should be alright. As a rule of thumb, for every call to
-> carl9170_tx_accounting [called by carl9170_op_tx tx handler]
-> we need to call carl9170_tx_status. If the station is still in
-> ps mode, mac80211 will cache the station's frames and sets
-> the TIM bits. 
+The sdio driver part uses firmware name brcmfmac.bin. With addition
+of usb this name is too generic. This patch renames the filename
+to brcmfmac-sdio.bin.
 
-Part of the reason i wrote this, is because, while this patch fixes the
-memory accounting problem and prevent the AP from stopping working, the
-powersaving station sometimes cannot communicate with the AP anymore
-(other stations can). The station uses ath9k, and is just really doing a
-background scan. The first traces that i have just indicate that the
-station entered powersave mode, then sends probe requests and probe
-requests directed to the AP, then sends authentication requests to the
-AP (?), but the AP does not respond to any of them...
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-I did thoses traces with an external device in monitor mode, so i may
-have missed some packets. I'll try with a monitor vif on the AP interface.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 253fc20..0b467b0 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -309,10 +309,10 @@ struct rte_console {
+ /* Flags for SDH calls */
+ #define F2SYNC	(SDIO_REQ_4BYTE | SDIO_REQ_FIXED)
+ 
+-#define BRCMFMAC_FW_NAME	"brcm/brcmfmac.bin"
+-#define BRCMFMAC_NV_NAME	"brcm/brcmfmac.txt"
+-MODULE_FIRMWARE(BRCMFMAC_FW_NAME);
+-MODULE_FIRMWARE(BRCMFMAC_NV_NAME);
++#define BRCMF_SDIO_FW_NAME	"brcm/brcmfmac-sdio.bin"
++#define BRCMF_SDIO_NV_NAME	"brcm/brcmfmac-sdio.txt"
++MODULE_FIRMWARE(BRCMF_SDIO_FW_NAME);
++MODULE_FIRMWARE(BRCMF_SDIO_NV_NAME);
+ 
+ #define BRCMF_IDLE_IMMEDIATE	(-1)	/* Enter idle immediately */
+ #define BRCMF_IDLE_ACTIVE	0	/* Do not request any SD clock change
+@@ -3202,7 +3202,7 @@ static int brcmf_sdbrcm_download_code_file(struct brcmf_sdio *bus)
+ 
+ 	brcmf_dbg(INFO, "Enter\n");
+ 
+-	ret = request_firmware(&bus->firmware, BRCMFMAC_FW_NAME,
++	ret = request_firmware(&bus->firmware, BRCMF_SDIO_FW_NAME,
+ 			       &bus->sdiodev->func[2]->dev);
+ 	if (ret) {
+ 		brcmf_dbg(ERROR, "Fail to request firmware %d\n", ret);
+@@ -3299,7 +3299,7 @@ static int brcmf_sdbrcm_download_nvram(struct brcmf_sdio *bus)
+ 	char *bufp;
+ 	int ret;
+ 
+-	ret = request_firmware(&bus->firmware, BRCMFMAC_NV_NAME,
++	ret = request_firmware(&bus->firmware, BRCMF_SDIO_NV_NAME,
+ 			       &bus->sdiodev->func[2]->dev);
+ 	if (ret) {
+ 		brcmf_dbg(ERROR, "Fail to request nvram %d\n", ret);
+-- 
+1.7.5.4
+
+
