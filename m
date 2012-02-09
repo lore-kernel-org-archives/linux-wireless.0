@@ -1,70 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:40268 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754033Ab2BFWew (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34431 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751738Ab2BINgr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Feb 2012 17:34:52 -0500
-Date: Mon, 6 Feb 2012 16:34:47 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Scott Sanbar <scott.sanbar@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
-Subject: Re: BCM4331 fails to associate after suspend
-Message-ID: <20120206223447.GE31938@ubuntu-macmini> (sfid-20120206_233455_718913_E44EEEC6)
-References: <20120203222818.GA3749@ubuntu-mba>
- <4F2D0C07.1010704@broadcom.com>
- <20120204142502.GA10858@ubuntu-mba>
- <CACna6ryR2xm2EAJaV4vCO8WebR5pXCyFknEMrf8ynVF+HYrxTw@mail.gmail.com>
- <20120206173757.GC31938@ubuntu-macmini>
- <4F302647.2070102@hauke-m.de>
+	Thu, 9 Feb 2012 08:36:47 -0500
+Message-ID: <4F33CBD0.3020400@sipsolutions.net> (sfid-20120209_143651_458679_E6005945)
+Date: Thu, 09 Feb 2012 14:36:16 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <4F302647.2070102@hauke-m.de>
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, stable@vger.kernel.org,
+	Gary Morain <gmorain@google.com>,
+	Paul Stewart <pstew@google.com>,
+	Abhijit Pradhan <abhijit@qca.qualcomm.com>,
+	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Subject: Re: [RFC] mac80211: Fix a rwlock bad magic bug
+References: <1328792643-6734-1-git-send-email-mohammed@qca.qualcomm.com>
+In-Reply-To: <1328792643-6734-1-git-send-email-mohammed@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 06, 2012 at 08:13:11PM +0100, Hauke Mehrtens wrote:
-> On 02/06/2012 06:37 PM, Seth Forshee wrote:
-> > On Mon, Feb 06, 2012 at 05:56:20PM +0100, Rafał Miłecki wrote:
-> >> 2012/2/4 Seth Forshee <seth.forshee@canonical.com>:
-> >>> On Sat, Feb 04, 2012 at 11:44:23AM +0100, Arend van Spriel wrote:
-> >>>> On 02/03/2012 11:28 PM, Seth Forshee wrote:
-> >>>>>
-> >>>>> I've been looking around a bit in the b43 and bcma drivers, but so far I
-> >>>>> haven't found the reason why this happens. Any help would be
-> >>>>> appreciated. Let me know if there's additional information I can
-> >>>>> provide.
-> >>>>>
-> >>>>
-> >>>> With which kernel version do you see these issues? BCMA suspend/resume
-> >>>> code has a fix in 3.3-rc1. So if you are seeing it on a 3.2 kernel,
-> >>>> please give it a try.
-> >>>
-> >>> I've tried 3.3-rc2 and the wirless-testing tree, and the problem still
-> >>> exists in both.
-> >>
-> >> I don't have access to suspendable machine with Mini PCIe card, not to
-> >> mention BCM4331 which is available for Mac-specific slot only (or
-> >> routers as embedded wifi). It may be b43 needs to fix but I'm not
-> >> really able to work on that. Plus the whole BCM4331 code is really
-> >> tricky, as it comes from RE based on dumps only :(
-> > 
-> > Okay, I'll keep poking at it to see if I can come up with anything. If
-> > you've got any suggestions on things I should be looking at or trying,
-> > I'm all ears.
-> > 
-> > Seth
-> 
-> According to the Broadcom SDK for SoCs bcma_pcicore_serdes_workaround()
-> should be called when coming out of standby/hibernate.
-> The code wl uses to do the same thing as bcma does is open source. You
-> find it in the GPL package of many Broadcom based Wifi Routers.
+On 2/9/2012 2:04 PM, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>
+> read_lock(&tpt_trig->trig.leddev_list_lock) is accessed via the path
+> ieee80211_open (->) ieee80211_do_open (->) ieee80211_mod_tpt_led_trig
+> (->) ieee80211_start_tpt_led_trig (->) tpt_trig_timer before initializing
+> it.
+> the intilization of this read/write lock happens via the path
+> ieee80211_led_init (->) led_trigger_register, but we are doing
+> 'ieee80211_led_init'  after 'ieeee80211_if_add' where we
+> register netdev_ops.
+> so we access leddev_list_lock before initializing it and causes the
+> following bug in chrome laptops with AR928X cards with the following
+> script
+>
+> while true
+> do
+> sudo modprobe -v ath9k
+> sleep 3
+> sudo modprobe -r ath9k
+> sleep 3
+> done
+>
+> 	BUG: rwlock bad magic on CPU#1, wpa_supplicant/358, f5b9eccc
+> 	Pid: 358, comm: wpa_supplicant Not tainted 3.0.13 #1
+> 	Call Trace:
+>
+> 	[<8137b9df>] rwlock_bug+0x3d/0x47
+> 	[<81179830>] do_raw_read_lock+0x19/0x29
+> 	[<8137f063>] _raw_read_lock+0xd/0xf
+> 	[<f9081957>] tpt_trig_timer+0xc3/0x145 [mac80211]
+> 	[<f9081f3a>] ieee80211_mod_tpt_led_trig+0x152/0x174 [mac80211]
+> 	[<f9076a3f>] ieee80211_do_open+0x11e/0x42e [mac80211]
+> 	[<f9075390>] ? ieee80211_check_concurrent_iface+0x26/0x13c [mac80211]
+> 	[<f9076d97>] ieee80211_open+0x48/0x4c [mac80211]
+> 	[<812dbed8>] __dev_open+0x82/0xab
+> 	[<812dc0c9>] __dev_change_flags+0x9c/0x113
+> 	[<812dc1ae>] dev_change_flags+0x18/0x44
+> 	[<8132144f>] devinet_ioctl+0x243/0x51a
+> 	[<81321ba9>] inet_ioctl+0x93/0xac
+> 	[<812cc951>] sock_ioctl+0x1c6/0x1ea
+> 	[<812cc78b>] ? might_fault+0x20/0x20
+> 	[<810b1ebb>] do_vfs_ioctl+0x46e/0x4a2
+> 	[<810a6ebb>] ? fget_light+0x2f/0x70
+> 	[<812ce549>] ? sys_recvmsg+0x3e/0x48
+> 	[<810b1f35>] sys_ioctl+0x46/0x69
+> 	[<8137fa77>] sysenter_do_call+0x12/0x2
+>
+> Cc:<stable@vger.kernel.org>
+> Cc: Gary Morain<gmorain@google.com>
+> Cc: Paul Stewart<pstew@google.com>
+> Cc: Abhijit Pradhan<abhijit@qca.qualcomm.com>
+> Cc: Vasanthakumar Thiagarajan<vthiagar@qca.qualcomm.com>
+> Cc: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
+> Tested-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
 
-Thanks for the suggestion. Unfortunately calling
-bcma_pcicore_serdes_workaround() during resume doesn't help. I'll look
-at the wl code to see if I can learn anything there.
+Acked-by: Johannes Berg <johannes.berg@intel.com>
 
-Seth
+
+> ---
+>   net/mac80211/main.c |    4 ++--
+>   1 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+> index 831a5bd..2306d75 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -909,6 +909,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+>   		wiphy_debug(local->hw.wiphy, "Failed to initialize wep: %d\n",
+>   			    result);
+>
+> +	ieee80211_led_init(local);
+> +
+>   	rtnl_lock();
+>
+>   	result = ieee80211_init_rate_ctrl_alg(local,
+> @@ -930,8 +932,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+>
+>   	rtnl_unlock();
+>
+> -	ieee80211_led_init(local);
+> -
+>   	local->network_latency_notifier.notifier_call =
+>   		ieee80211_max_network_latency;
+>   	result = pm_qos_add_notifier(PM_QOS_NETWORK_LATENCY,
+
