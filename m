@@ -1,87 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout0.freenet.de ([195.4.92.90]:59040 "EHLO mout0.freenet.de"
+Received: from mms1.broadcom.com ([216.31.210.17]:3964 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755209Ab2BJVSg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Feb 2012 16:18:36 -0500
-Received: from [195.4.92.140] (helo=mjail0.freenet.de)
-	by mout0.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
-	id 1RvxrV-00048g-5n
-	for linux-wireless@vger.kernel.org; Fri, 10 Feb 2012 22:18:33 +0100
-Received: from localhost ([::1]:59476 helo=mjail0.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1RvxrV-0000K3-59
-	for linux-wireless@vger.kernel.org; Fri, 10 Feb 2012 22:18:33 +0100
-Received: from [195.4.92.25] (port=56952 helo=15.mx.freenet.de)
-	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
-	id 1Rvxp0-00081S-Td
-	for linux-wireless@vger.kernel.org; Fri, 10 Feb 2012 22:15:58 +0100
-Received: from [2002:4fde:60c:2:5054:ff:feb8:40bd] (port=59529 helo=mail.maya.org)
-	by 15.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
-	id 1Rvxp0-0003Hm-G3
-	for linux-wireless@vger.kernel.org; Fri, 10 Feb 2012 22:15:58 +0100
-Message-ID: <4F358902.3040009@01019freenet.de> (sfid-20120210_221841_122212_7081539D)
-Date: Fri, 10 Feb 2012 22:15:46 +0100
-From: Andreas Hartmann <andihartmann@01019freenet.de>
+	id S1757857Ab2BIUJ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Feb 2012 15:09:27 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 03/15] brcm80211: smac: remove redundant assignments
+ from txpwrctrl_pwr_setup_nphy
+Date: Thu, 9 Feb 2012 21:08:57 +0100
+Message-ID: <1328818149-4826-4-git-send-email-arend@broadcom.com> (sfid-20120209_210933_143953_D943DFD5)
+In-Reply-To: <1328818149-4826-1-git-send-email-arend@broadcom.com>
+References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Alfonso Fiore <alfonso.fiore@gmail.com>
-CC: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-Subject: Re: Setting up an AP @ 5 GHz 802.11a - hostapd refuses [Could not
- select hw_mode and channel. (-1)]
-References: <CAO=xpBHy9p4yzhxaWTfG+jjw7f_OzbACmxxPnDL8AmLBS-JdwQ@mail.gmail.com> <CAO=xpBGT7ovdSOV77AV6wpUcTDFYr0t8GEab474mVmZm0-BhVA@mail.gmail.com> <20120207171538.3336af0c@mj> <CAO=xpBGRs_kYtt_w6aG2dFjO4Pgd9MrjPwn7YfuLe7bw3mGiPg@mail.gmail.com> <4F34BF3C.9030809@01019freenet.de> <CAO=xpBFKOAdTEi1DMfJxWCCv9oEtJpuLjuN4uNPNRgN1iWG85Q@mail.gmail.com>
-In-Reply-To: <CAO=xpBFKOAdTEi1DMfJxWCCv9oEtJpuLjuN4uNPNRgN1iWG85Q@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alfonso Fiore schrieb:
-> On Fri, Feb 10, 2012 at 7:54 AM, Andreas Hartmann
-[...]
-> # find / | grep ath5k.ko
-> /lib/modules/3.0.0-voyage/kernel/drivers/net/wireless/ath/ath5k/ath5k.ko
-> /lib/modules/3.0.0/updates/drivers/net/wireless/ath/ath5k/ath5k.ko
-> /root/compat-wireless-3.3-rc1-2/drivers/net/wireless/ath/ath5k/ath5k.ko
-> /root/compat-wireless-3.3-rc1-2/drivers/net/wireless/ath/ath5k/.ath5k.ko.cmd
-> 
-> I tried depmod -a and also a simple reboot (which I always do after
-> make install) but the "updates" module is never loaded.
-> 
-> Any idea?
+The function wlc_phy_txpwrctrl_pwr_setup_nphy() does assign a local
+variable target_pwr_qtrdbm in several code paths, but in the end all
+code paths are coming to an assignment of that variable which does
+override all previous. So those early and redundant assignments have
+been removed.
 
-Sorry for being late. I worked on my machine and wasn't able to read any
-mails.
+Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |   21 +-------------------
+ 1 files changed, 1 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
+index c27ec7a..9595ecd 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
+@@ -17824,8 +17824,6 @@ static void wlc_phy_txpwrctrl_pwr_setup_nphy(struct brcms_phy *pi)
+ 	if (pi->sh->sromrev < 4) {
+ 		idle_tssi[0] = pi->nphy_pwrctrl_info[0].idle_tssi_2g;
+ 		idle_tssi[1] = pi->nphy_pwrctrl_info[1].idle_tssi_2g;
+-		target_pwr_qtrdbm[0] = 13 * 4;
+-		target_pwr_qtrdbm[1] = 13 * 4;
+ 		a1[0] = -424;
+ 		a1[1] = -424;
+ 		b0[0] = 5612;
+@@ -17839,10 +17837,6 @@ static void wlc_phy_txpwrctrl_pwr_setup_nphy(struct brcms_phy *pi)
+ 		case WL_CHAN_FREQ_RANGE_2G:
+ 			idle_tssi[0] = pi->nphy_pwrctrl_info[0].idle_tssi_2g;
+ 			idle_tssi[1] = pi->nphy_pwrctrl_info[1].idle_tssi_2g;
+-			target_pwr_qtrdbm[0] =
+-				pi->nphy_pwrctrl_info[0].max_pwr_2g;
+-			target_pwr_qtrdbm[1] =
+-				pi->nphy_pwrctrl_info[1].max_pwr_2g;
+ 			a1[0] = pi->nphy_pwrctrl_info[0].pwrdet_2g_a1;
+ 			a1[1] = pi->nphy_pwrctrl_info[1].pwrdet_2g_a1;
+ 			b0[0] = pi->nphy_pwrctrl_info[0].pwrdet_2g_b0;
+@@ -17853,10 +17847,6 @@ static void wlc_phy_txpwrctrl_pwr_setup_nphy(struct brcms_phy *pi)
+ 		case WL_CHAN_FREQ_RANGE_5GL:
+ 			idle_tssi[0] = pi->nphy_pwrctrl_info[0].idle_tssi_5g;
+ 			idle_tssi[1] = pi->nphy_pwrctrl_info[1].idle_tssi_5g;
+-			target_pwr_qtrdbm[0] =
+-				pi->nphy_pwrctrl_info[0].max_pwr_5gl;
+-			target_pwr_qtrdbm[1] =
+-				pi->nphy_pwrctrl_info[1].max_pwr_5gl;
+ 			a1[0] = pi->nphy_pwrctrl_info[0].pwrdet_5gl_a1;
+ 			a1[1] = pi->nphy_pwrctrl_info[1].pwrdet_5gl_a1;
+ 			b0[0] = pi->nphy_pwrctrl_info[0].pwrdet_5gl_b0;
+@@ -17867,10 +17857,6 @@ static void wlc_phy_txpwrctrl_pwr_setup_nphy(struct brcms_phy *pi)
+ 		case WL_CHAN_FREQ_RANGE_5GM:
+ 			idle_tssi[0] = pi->nphy_pwrctrl_info[0].idle_tssi_5g;
+ 			idle_tssi[1] = pi->nphy_pwrctrl_info[1].idle_tssi_5g;
+-			target_pwr_qtrdbm[0] =
+-				pi->nphy_pwrctrl_info[0].max_pwr_5gm;
+-			target_pwr_qtrdbm[1] =
+-				pi->nphy_pwrctrl_info[1].max_pwr_5gm;
+ 			a1[0] = pi->nphy_pwrctrl_info[0].pwrdet_5gm_a1;
+ 			a1[1] = pi->nphy_pwrctrl_info[1].pwrdet_5gm_a1;
+ 			b0[0] = pi->nphy_pwrctrl_info[0].pwrdet_5gm_b0;
+@@ -17881,10 +17867,6 @@ static void wlc_phy_txpwrctrl_pwr_setup_nphy(struct brcms_phy *pi)
+ 		case WL_CHAN_FREQ_RANGE_5GH:
+ 			idle_tssi[0] = pi->nphy_pwrctrl_info[0].idle_tssi_5g;
+ 			idle_tssi[1] = pi->nphy_pwrctrl_info[1].idle_tssi_5g;
+-			target_pwr_qtrdbm[0] =
+-				pi->nphy_pwrctrl_info[0].max_pwr_5gh;
+-			target_pwr_qtrdbm[1] =
+-				pi->nphy_pwrctrl_info[1].max_pwr_5gh;
+ 			a1[0] = pi->nphy_pwrctrl_info[0].pwrdet_5gh_a1;
+ 			a1[1] = pi->nphy_pwrctrl_info[1].pwrdet_5gh_a1;
+ 			b0[0] = pi->nphy_pwrctrl_info[0].pwrdet_5gh_b0;
+@@ -17895,8 +17877,6 @@ static void wlc_phy_txpwrctrl_pwr_setup_nphy(struct brcms_phy *pi)
+ 		default:
+ 			idle_tssi[0] = pi->nphy_pwrctrl_info[0].idle_tssi_2g;
+ 			idle_tssi[1] = pi->nphy_pwrctrl_info[1].idle_tssi_2g;
+-			target_pwr_qtrdbm[0] = 13 * 4;
+-			target_pwr_qtrdbm[1] = 13 * 4;
+ 			a1[0] = -424;
+ 			a1[1] = -424;
+ 			b0[0] = 5612;
+@@ -17907,6 +17887,7 @@ static void wlc_phy_txpwrctrl_pwr_setup_nphy(struct brcms_phy *pi)
+ 		}
+ 	}
+ 
++	/* use the provided transmit power */
+ 	target_pwr_qtrdbm[0] = (s8) pi->tx_power_max;
+ 	target_pwr_qtrdbm[1] = (s8) pi->tx_power_max;
+ 
+-- 
+1.7.5.4
 
 
-I do have a config file for depmod in /etc/depmod.d called
-00-system.conf, which has the following entries:
-
---------------------------------------------------------------------
-#
-# /etc/depmod.conf - configuration file for the depmod(8) command,
-# for its format see depmod.conf(5).
-#
-# Please don't edit this file, place your settings into the /etc/depmod.d
-# directory.
-
-
-# search order:
-# 1 updates/ (KMPs)
-# 2 extra/ (KMPs or manually compiled modules)
-# 3 weak-updates/ (KMPs built for older kernels)
-# 4 everything else
-search updates extra weak-updates built-in
-
-# do not generate modules.*map files
-make_map_files no
-----------------------------------------------------------------------
-
-Version of my inittools is: module-init-tools-3.12-6.1.x86_64. I don't
-have a depmod.conf file.
-
-After creating / changing this file, issue depmod -a again!
-
-
-
-Hope that helps!
-
-Regards,
-Andreas
