@@ -1,107 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:41653 "EHLO
-	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757018Ab2BHNPk convert rfc822-to-8bit (ORCPT
+Received: from server514c.exghost.com ([72.32.253.76]:3715 "EHLO
+	server514.appriver.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752265Ab2BIO4z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 08:15:40 -0500
-Message-ID: <20120208151536.92555oyai8wffqww@www.81.fi> (sfid-20120208_141607_178927_A55F0111)
-Date: Wed, 08 Feb 2012 15:15:36 +0200
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: Florian Fainelli <florian@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	zd1211-devs@lists.sourceforge.net
-Subject: Re: zd1211rw firmware loading timeout
-References: <201111291544.28692.florian@openwrt.org>
- <CAFAL1Txx=qn3WXdRrtaYPVySY2vx+HinKk-NgthR+2ufcYNMwA@mail.gmail.com>
-In-Reply-To: <CAFAL1Txx=qn3WXdRrtaYPVySY2vx+HinKk-NgthR+2ufcYNMwA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+	Thu, 9 Feb 2012 09:56:55 -0500
+From: Simon Graham <simon.graham@virtualcomputer.com>
+To: linux-wireless@vger.kernel.org
+Cc: Simon Graham <simon.graham@virtualcomputer.com>,
+	linville@tuxdriver.com, Larry.Finger@lwfinger.net,
+	chaoming_li@realsil.com.cn
+Subject: [PATCH v3] rtlwifi: Modify rtl_pci_init to return 0 on success
+Date: Thu,  9 Feb 2012 09:55:13 -0500
+Message-Id: <1328799314-28867-1-git-send-email-simon.graham@virtualcomputer.com> (sfid-20120209_155658_870108_8712132F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Florian Fainelli <florian@openwrt.org>:
+Fixes problem where caller would think routine succeeded when it failed
+leading to divide by zero panic.
 
->
-> Hello,
->
-> I am running Debian testing kernel 3.1.0-1-amd64, using a 079b:0062 Sagem
-> XG-76NA 802.11bg stick.
->
-> Upon zd1211rw interface
-> bringup (ifconfig wlan0 up) I get the following timeout:
->
-> [  950.330573] zd1211rw 1-3:1.0: phy2
-> [  955.108510] zd1211rw 1-3:1.0: firmware version 4725
-> [  955.148532] zd1211rw 1-3:1.0: zd1211b chip 079b:0062 v4810 high 00-19-70
-> AL2230_RF pa0 g--NS
-> [snip]
-> [  955.204072] zd1211rw 1-3:1.0: error ioread32(CR_REG1): -110
->
-> A second ifconfig wlan0 up brings the interface up without problems.
->
-> After a bit more debugging, the call trace is the following:
->
-> [10241.028130] zd1211rw 1-3:1.0: zd_chip_lock_phy_regs: error
-> ioread32(CR_REG1): -110
-> [10241.028140] zd1211rw 1-3:1.0: zd_switch_radio_on: failed to lock PHY regs
-> [10241.028148] zd1211rw 1-3:1.0: zd_op_start: failed to set radio on
->
-> The following small modification works around the issue:
->
-> diff --git a/zd_mac.c b/zd_mac.c
-> index cabfae1..6bfb673 100644
-> --- a/zd_mac.c
-> +++ b/zd_mac.c
-> @@ -306,9 +306,14 @@ int zd_op_start(struct ieee80211_hw *hw)
->        r = set_mc_hash(mac);
->        if (r)
->                goto disable_int;
-> +
-> +       msleep(10);
-> +
->        r = zd_chip_switch_radio_on(chip);
-> -       if (r < 0)
-> +       if (r < 0) {
-> +               dev_err(zd_chip_dev(chip), "%s: failed to set radio on\n",
-> __func__);
->                goto disable_int;
-> +       }
->        r = zd_chip_enable_rxtx(chip);
->        if (r < 0)
->                goto disable_radio;
->
-> Is it possible that some chips require more time between a set_mc_hash and a
-> radio on? Or in general that consequent writes to the PHY regs  
-> should be timed
-> appropriately?
+Signed-off-by: Simon Graham <simon.graham@virtualcomputer.com>
+---
+ drivers/net/wireless/rtlwifi/pci.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Yes, it is possible. Vendor driver appears to have quite alot sleeps  
-spread around in RF-chip handling code. I might have seen this myself  
-sometimes when zd1211 device has firmware freeze and has to be  
-reseted. But since freeze is hard to reproduce and reset didn't fail  
-always, I didn't bother with it.
-
-Can you give your "Signed-off-by" line for the patch?
-
--Jussi
-
->
-> When I googled for this timeout issue, I could see quite some  
-> reports of other
-> people having this error while the chip was already operating.
->
-> Thanks
-> --
-> Florian
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
-
+diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
+index fb84707..16ec0c1 100644
+--- a/drivers/net/wireless/rtlwifi/pci.c
++++ b/drivers/net/wireless/rtlwifi/pci.c
+@@ -1495,7 +1495,7 @@ static int rtl_pci_init(struct ieee80211_hw *hw, struct pci_dev *pdev)
+ 		return err;
+ 	}
+ 
+-	return 1;
++	return 0;
+ }
+ 
+ static int rtl_pci_start(struct ieee80211_hw *hw)
+@@ -1866,7 +1866,7 @@ int __devinit rtl_pci_probe(struct pci_dev *pdev,
+ 	}
+ 
+ 	/* Init PCI sw */
+-	err = !rtl_pci_init(hw, pdev);
++	err = rtl_pci_init(hw, pdev);
+ 	if (err) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG, "Failed to init PCI\n");
+ 		goto fail3;
+-- 
+1.7.9
 
