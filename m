@@ -1,59 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18479 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756204Ab2B1Hlt (ORCPT
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:46654 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756597Ab2BIAzI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Feb 2012 02:41:49 -0500
-Message-ID: <4F4C8525.70205@qca.qualcomm.com> (sfid-20120228_084153_676842_BD2B1E8D)
-Date: Tue, 28 Feb 2012 09:41:25 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Wed, 8 Feb 2012 19:55:08 -0500
+Message-ID: <4F331967.3070900@lwfinger.net> (sfid-20120209_015538_040530_F27F59DD)
+Date: Wed, 08 Feb 2012 18:55:03 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 2/2] ath6kl: Fix memory leak of rx packets in endpoint
- 0
-References: <1328886633-2823-1-git-send-email-vthiagar@qca.qualcomm.com> <1328886633-2823-2-git-send-email-vthiagar@qca.qualcomm.com> <4F4BBBE5.4060101@qca.qualcomm.com> <20120228042632.GA2892@vasanth-laptop>
-In-Reply-To: <20120228042632.GA2892@vasanth-laptop>
-Content-Type: text/plain; charset="ISO-8859-1"
+To: Ben Hutchings <bhutchings@solarflare.com>
+CC: Tim Gardner <tim.gardner@canonical.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: rtl8192se firmware load can overflow target
+ buffer
+References: <1328735291-33220-1-git-send-email-tim.gardner@canonical.com> <1328737514.2627.14.camel@bwh-desktop>
+In-Reply-To: <1328737514.2627.14.camel@bwh-desktop>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/28/2012 06:26 AM, Vasanthakumar Thiagarajan wrote:
-> On Mon, Feb 27, 2012 at 07:22:45PM +0200, Kalle Valo wrote:
->> On 02/10/2012 05:10 PM, Vasanthakumar Thiagarajan wrote:
->>> htc_packet and htc_packet->buf_start are separately allocated
->>> for endpoint 0. This is different for other endpoints where
->>> packets are allocated as skb where htc_packet is skb->head
->>> and they are freed properly. Free htc_packet and htc_packet->buf_start
->>> separatly for endpoint 0.
->>>
->>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-
-[...]
-
->>> +			/*
->>> +			 * packets in rx_bufq of endpoint 0 have originally
->>> +			 * been queued from target->free_ctrl_rxbuf where
->>> +			 * packet and packet->buf_start are allocated
->>> +			 * separately using kmalloc(). For other endpoint
->>> +			 * rx_bufq, it is allocated as skb where packet is
->>> +			 * skb->head. Take care of this difference while freeing
->>> +			 * the memory.
->>> +			 */
->>> +			if (packet->endpoint == ENDPOINT_0) {
->>> +				kfree(packet->buf_start);
->>> +				kfree(packet);
->>> +			} else {
->>> +				dev_kfree_skb(packet->pkt_cntxt);
->>> +			}
+On 02/08/2012 03:45 PM, Ben Hutchings wrote:
+> On Wed, 2012-02-08 at 14:08 -0700, Tim Gardner wrote:
+>> The firmware file size check does not use the
+>> correct limit.
 >>
->> I didn't look at the code, but my question would it be possible to use
->> skbs also with endpoint 0? That would be more consistent aproach than
->> testing for a particular endpoint.
-> 
-> Yeah, using skbs for control buffer is the right thing, but for the time being
-> we can have this fix in.
+>> Cc: Larry Finger<Larry.Finger@lwfinger.net>
+>> Cc: Chaoming Li<chaoming_li@realsil.com.cn>
+>> Cc: John W. Linville<linville@tuxdriver.com>
+>> Cc: linux-wireless@vger.kernel.org
+>> Cc: netdev@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org
+>> Signed-off-by: Tim Gardner<tim.gardner@canonical.com>
+>> ---
+>>   drivers/net/wireless/rtlwifi/rtl8192se/fw.h |    3 ++-
+>>   drivers/net/wireless/rtlwifi/rtl8192se/sw.c |    2 +-
+>>   2 files changed, 3 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
+>> index babe85d..5c377fc 100644
+>> --- a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
+>> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
+>> @@ -30,6 +30,7 @@
+>>   #define __REALTEK_FIRMWARE92S_H__
+>>
+>>   #define RTL8190_MAX_FIRMWARE_CODE_SIZE		64000
+>> +#define RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE	164000
+>>   #define RTL8190_CPU_START_OFFSET		0x80
+>>   /* Firmware Local buffer size. 64k */
+>>   #define	MAX_FIRMWARE_CODE_SIZE			0xFF00
+>> @@ -217,7 +218,7 @@ struct rt_firmware {
+>>   	u8 fw_emem[RTL8190_MAX_FIRMWARE_CODE_SIZE];
+>>   	u32 fw_imem_len;
+>>   	u32 fw_emem_len;
+>> -	u8 sz_fw_tmpbuffer[164000];
+>> +	u8 sz_fw_tmpbuffer[RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE];
+>>   	u32 sz_fw_tmpbufferlen;
+>>   	u16 cmdpacket_fragthresold;
+>>   };
+>> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+>> index ca38dd9..155da0a 100644
+>> --- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+>> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+>> @@ -105,7 +105,7 @@ static void rtl92se_fw_cb(const struct firmware *firmware, void *context)
+>>   		rtlpriv->max_fw_size = 0;
+>>   		return;
+>>   	}
+>> -	if (firmware->size>  rtlpriv->max_fw_size) {
+>> +	if (firmware->size>= RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE) {
+>
+> This appears to reject a firmware blob which is exactly the maximum
+> size, which looks wrong.  Also doesn't this make the max_fw_size field
+> redundant?
+>
+> Ben.
+>
+>>   		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+>>   			 "Firmware is too big!\n");
+>>   		release_firmware(firmware);
+>
 
-Ok, fair enough. Let's do it like this.
+For all the drivers under rtlwifi, max_fw_size is set to zero whenever the 
+required firmware file is not found. In the original version with synchronous 
+firmware loading, the existence of the required file and it's size were known 
+immediately, but with the asynch loading now used, that info is not known until 
+later. Thus a parameter is used. In addition, rtl8192ce, rtl8192cu, and 
+rtl8192de all share the same asynchronous loading callback routine, but each has 
+a different firmware size. The parameter max_fw_size contains that info as well.
 
-Kalle
+The patch is NACKed.
+
+Larry
