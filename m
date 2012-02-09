@@ -1,69 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:60026 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754851Ab2B0Xru convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 18:47:50 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Mon, 27 Feb 2012 15:47:32 -0800
-Subject: RE: [PATCH 3.3] mwifiex: remove redundant scan operation
-Message-ID: <477F20668A386D41ADCC57781B1F70430836762847@SC-VEXCH1.marvell.com> (sfid-20120228_004753_182640_44378963)
-References: <1330148136-28867-1-git-send-email-bzhao@marvell.com>
- <1330148136-28867-2-git-send-email-bzhao@marvell.com>
- <20120227182333.GC26664@tuxdriver.com>
-In-Reply-To: <20120227182333.GC26664@tuxdriver.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mms3.broadcom.com ([216.31.210.19]:1563 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757787Ab2BIUJZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Feb 2012 15:09:25 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 10/15] brcm80211: fmac: only return success in
+ brcmf_sdbrcm_bus_init() when true
+Date: Thu, 9 Feb 2012 21:09:04 +0100
+Message-ID: <1328818149-4826-11-git-send-email-arend@broadcom.com> (sfid-20120209_211026_364645_A38C1BC1)
+In-Reply-To: <1328818149-4826-1-git-send-email-arend@broadcom.com>
+References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+The function brcmf_sdbrcm_bus_init() always returned success except for
+firmware download failure. However, also when enabling SDIO function 2
+is failing the function should return failure. This patch fixes that.
 
-> Subject: Re: [PATCH 3.3] mwifiex: remove redundant scan operation
-> 
-> On Fri, Feb 24, 2012 at 09:35:36PM -0800, Bing Zhao wrote:
-> > From: Amitkumar Karwar <akarwar@marvell.com>
-> >
-> > It should have been removed by commit "mwifiex: use cfg80211 dynamic
-> > scan..." (7c6fa2a843..) after adding code to avoid an extra scan
-> > during association because scan entries are valid for 15 seconds in
-> > cfg80211 stack.
-> >
-> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> > Signed-off-by: Bing Zhao <bzhao@marvell.com>
-> > ---
-> >  drivers/net/wireless/mwifiex/cfg80211.c |    6 ------
-> >  1 files changed, 0 insertions(+), 6 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-> > index e4e6d7d..7b98ce0 100644
-> > --- a/drivers/net/wireless/mwifiex/cfg80211.c
-> > +++ b/drivers/net/wireless/mwifiex/cfg80211.c
-> > @@ -924,12 +924,6 @@ mwifiex_cfg80211_assoc(struct mwifiex_private *priv, size_t ssid_len, u8 *ssid,
-> >  		}
-> >  	}
-> >  done:
-> > -	/* Do specific SSID scanning */
-> > -	if (mwifiex_request_scan(priv, &req_ssid)) {
-> > -		dev_err(priv->adapter->dev, "scan error\n");
-> > -		return -EFAULT;
-> > -	}
-> > -
-> >  	/*
-> >  	 * Scan entries are valid for some time (15 sec). So we can save one
-> >  	 * active scan time if we just try cfg80211_get_bss first. If it fails
-> 
-> It seems like this could wait to be fixed in 3.4?
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-Yes, this one can be applied for 3.4.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index b20029e..47a192d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -3467,13 +3467,12 @@ static int brcmf_sdbrcm_bus_init(struct device *dev)
+ 
+ 		/* Set bus state according to enable result */
+ 		bus_if->state = BRCMF_BUS_DATA;
+-	}
+-
+-	else {
++	} else {
+ 		/* Disable F2 again */
+ 		enable = SDIO_FUNC_ENABLE_1;
+ 		brcmf_sdcard_cfg_write(bus->sdiodev, SDIO_FUNC_0,
+ 				       SDIO_CCCR_IOEx, enable, NULL);
++		ret = -ENODEV;
+ 	}
+ 
+ 	/* Restore previous clock setting */
+@@ -3481,7 +3480,7 @@ static int brcmf_sdbrcm_bus_init(struct device *dev)
+ 			       SBSDIO_FUNC1_CHIPCLKCSR, saveclk, &err);
+ 
+ 	/* If we didn't come up, turn off backplane clock */
+-	if (bus_if->state != BRCMF_BUS_DATA)
++	if (!ret)
+ 		brcmf_sdbrcm_clkctl(bus, CLK_NONE, false);
+ 
+ exit:
+-- 
+1.7.5.4
 
-Thanks,
-Bing
 
