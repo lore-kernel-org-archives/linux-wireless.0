@@ -1,23 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:60438 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754675Ab2BXMwL (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:47632 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756576Ab2BIQn5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 07:52:11 -0500
-Message-Id: <20120224125050.809601111@sipsolutions.net> (sfid-20120224_135221_048798_306DEC31)
-Date: Fri, 24 Feb 2012 13:50:50 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 0/4] clean up deauth/disassoc
-Mime-Version: 1.0
+	Thu, 9 Feb 2012 11:43:57 -0500
+Message-ID: <4F33F7C8.2090105@lwfinger.net> (sfid-20120209_174419_824640_F81FC7F5)
+Date: Thu, 09 Feb 2012 10:43:52 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: tim.gardner@canonical.com
+CC: Tim Gardner <rtg.canonical@gmail.com>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: rtl8192se firmware load can overflow target
+ buffer
+References: <1328735291-33220-1-git-send-email-tim.gardner@canonical.com> <1328737514.2627.14.camel@bwh-desktop> <4F332FC3.7000808@lwfinger.net> <4F33DAFC.1000502@canonical.com>
+In-Reply-To: <4F33DAFC.1000502@canonical.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here are a few patches to clean up the code
-and flow for deauth/disassoc.
+On 02/09/2012 08:41 AM, Tim Gardner wrote:
+>
+> I agree with you about the semantics of rtlpriv->max_fw_size, but I don't agree
+> that the size check is correct. While rtlpriv->max_fw_size has been set to
+> sizeof(struct rt_firmware), that value is _way_ bigger then the size of the
+> target buffer.
+>
+> sizeof(struct rt_firmware) == 64000+64000+164000 plus some change
+>
+> The target buffer size is only 164000 bytes.
+>
+> I've attached v2 of the patch that is simpler and may serve to better illustrate
+> my point. By the way, Ben Hutchings was right about the original patch having an
+> off by one error. This version also clears rtlpriv->max_fw_size if the size
+> check fails. Probably should have mentioned that in the commit log.
 
-Given the auth/assoc redesign this seems much
-more natural.
+I agree that Ben is right.
 
-johannes
+This thread forced me to go back to square one in analyzing the situation. For 
+the other drivers in the rtlwifi family, the firmware file contains an image 
+that is directly stuffed into the device. For the RTL8192SE devices, it is more 
+complicated. The structure is described in struct rt_firmware. At the moment, 
+the arrays there are grossly oversized. They could be as follows:
+
+struct rt_firmware {
+         struct fw_hdr *pfwheader;
+         enum fw_status fwstatus;
+         u16 firmwareversion;
+         u8 fw_imem[RTL8190_MAX_IMEM_CODE_SIZE];
+         u8 fw_emem[RTL8190_MAX_DMEM_CODE_SIZE];
+         u32 fw_imem_len;
+         u32 fw_emem_len;
+         u8 sz_fw_tmpbuffer[RTL8190_MAX_FIRMWARE_SIZE];
+         u32 sz_fw_tmpbufferlen;
+         u16 cmdpacket_fragthresold;
+};
+
+with
+
+RTL8190_MAX_IMEM_CODE_SIZE = 54000 (current fw is 51,208), 
+RTL8190_MAX_DMEM_CODE_SIZE = 40000 (current fw is 37,520), and 
+RTL8190_MAX_FIRMWARE_SIZE = 90000 (it holds the raw firmware image, which is 
+currently 88,856).
+
+Ultimately, all three arrays should be eliminated. Now that we are using 
+asynchronous loading, the kernel should keep its cached data and not copy it 
+into the driver's private storage when a pointer will suffice. All the drivers 
+need this change, but that can wait for now.
+
+I will ACK the patch if you resumit it with
+#define RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE	90000
+
+Larry
