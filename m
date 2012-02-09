@@ -1,69 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [129.175.33.41] ([129.175.33.41]:52341 "EHLO smtp1.u-psud.fr"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1755195Ab2BXNf3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 08:35:29 -0500
-Message-ID: <4F4791FC.9080707@lri.fr> (sfid-20120224_143533_449788_ED2A82B4)
-Date: Fri, 24 Feb 2012 14:34:52 +0100
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Received: from mms1.broadcom.com ([216.31.210.17]:3932 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754570Ab2BIUJ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Feb 2012 15:09:27 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>,
+	"Stanislaw Gruszka" <sgruszka@redhat.com>
+Subject: [PATCH 04/15] brcm80211: smac: fix endless retry of A-MPDU
+ transmissions
+Date: Thu, 9 Feb 2012 21:08:58 +0100
+Message-ID: <1328818149-4826-5-git-send-email-arend@broadcom.com> (sfid-20120209_211027_503145_415A0465)
+In-Reply-To: <1328818149-4826-1-git-send-email-arend@broadcom.com>
+References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-CC: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] carl9170: Fix memory accounting when sta is in power-save
- mode.
-References: <1330012414-26559-1-git-send-email-cavallar@lri.fr> <201202231752.44125.chunkeey@googlemail.com> <4F46771F.9000200@lri.fr> <201202231908.16364.chunkeey@googlemail.com> <4F468AC1.1050100@lri.fr>
-In-Reply-To: <4F468AC1.1050100@lri.fr>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23/02/2012 19:51, Nicolas Cavallari wrote:
-> On 23/02/2012 19:08, Christian Lamparter wrote:
->> On Thursday, February 23, 2012 06:27:59 PM Nicolas Cavallari wrote:
->>> On 23/02/2012 17:52, Christian Lamparter wrote:
->>>> On Thursday, February 23, 2012 04:53:34 PM Nicolas Cavallari wrote:
->>>>> While this seems to fix my problem, there could still be problems remaining
->>>>> in this code path.  Particularly carl9170_tx_status will do lots of things
->>>>> like incrementing counters and waking up mac80211 queues...
->>>> That should be alright. As a rule of thumb, for every call to
->>>> carl9170_tx_accounting [called by carl9170_op_tx tx handler]
->>>> we need to call carl9170_tx_status. If the station is still in
->>>> ps mode, mac80211 will cache the station's frames and sets
->>>> the TIM bits. 
->>> Part of the reason i wrote this, is because, while this patch fixes the
->>> memory accounting problem and prevent the AP from stopping working, the
->>> powersaving station sometimes cannot communicate with the AP anymore
->>> (other stations can). The station uses ath9k, and is just really doing a
->>> background scan. The first traces that i have just indicate that the
->>> station entered powersave mode, then sends probe requests and probe
->>> requests directed to the AP, then sends authentication requests to the
->>> AP (?), but the AP does not respond to any of them...
->>>
->> Do you run an 802.11n ap on carl9170?
-> No, it's a 802.11g currently.
-> My current wild guess is that, the responses to those requests are
-> somehow still queued ...
+The A-MPDU code checked against a retry limit, but it was using
+the wrong variable to do so. This patch fixes this to assure
+proper retry mechanism.
 
-And i was right...
+This problem had a side-effect causing the mac80211 flush callback
+to remain waiting forever as well. That side effect has been fixed
+by commit by Stanislaw Gruszka:
 
-/*
- * Ignore doze->wake transitions that are
- * indicated by non-data frames, the standard
- * is unclear here, but for example going to
- * PS mode and then scanning would cause a
- * doze->wake transition for the probe request,
- * and that is clearly undesirable.
- */
-if (ieee80211_is_data(hdr->frame_control) &&
-    !ieee80211_has_pm(hdr->frame_control))
-	ap_sta_ps_end(sta);
+commit f96b08a7e6f69c0f0a576554df3df5b1b519c479
+Date:   Tue Jan 17 12:38:50 2012 +0100
 
-As (re)associations requests and Auth frames are not data frames,
-mac80211 still considers that the station is still in powersave mode, so
-it still queues frames, and even queues the responses to the auth
-frames. Except that the station disassociated silently, and is trying to
-re-associate after a short time.
+    brcmsmac: fix tx queue flush infinite loop
 
-Shouldn't mac80211 transition the sta to "awake" when receiving
-auth/assoc frames ?
+    Reference:
+    https://bugzilla.kernel.org/show_bug.cgi?id=42576
+
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+index d89dcb1..c1ce831 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+@@ -1051,17 +1051,13 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
+ 		}
+ 		/* either retransmit or send bar if ack not recd */
+ 		if (!ack_recd) {
+-			struct ieee80211_tx_rate *txrate =
+-			    tx_info->status.rates;
+-			if (retry && (txrate[0].count < (int)retry_limit)) {
++			if (retry && (ini->txretry[index] < (int)retry_limit)) {
+ 				ini->txretry[index]++;
+ 				ini->tx_in_transit--;
+ 				/*
+ 				 * Use high prededence for retransmit to
+ 				 * give some punch
+ 				 */
+-				/* brcms_c_txq_enq(wlc, scb, p,
+-				 * BRCMS_PRIO_TO_PREC(tid)); */
+ 				brcms_c_txq_enq(wlc, scb, p,
+ 						BRCMS_PRIO_TO_HI_PREC(tid));
+ 			} else {
+-- 
+1.7.5.4
+
+
