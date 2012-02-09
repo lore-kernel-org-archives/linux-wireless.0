@@ -1,131 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:47268 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757113Ab2BWV3S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 16:29:18 -0500
-Received: by pbcun15 with SMTP id un15so1852030pbc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 13:29:18 -0800 (PST)
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Received: from mms1.broadcom.com ([216.31.210.17]:3969 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757882Ab2BIUJ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Feb 2012 15:09:27 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Subject: [PATCH] net/wireless: ipw2x00: Use IW_HANDLER macro from linux/wireless.h
-Date: Thu, 23 Feb 2012 17:31:24 -0500
-Message-Id: <1330036284-7572-1-git-send-email-stas.yakovlev@gmail.com> (sfid-20120223_222924_508086_163EA040)
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 08/15] brcm80211: fmac: use specific types in struct
+ brcmf_bus
+Date: Thu, 9 Feb 2012 21:09:02 +0100
+Message-ID: <1328818149-4826-9-git-send-email-arend@broadcom.com> (sfid-20120209_211004_325909_8E5CB9D5)
+In-Reply-To: <1328818149-4826-1-git-send-email-arend@broadcom.com>
+References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use IW_HANDLER macro in ipw2100.c to declare wireless handlers.
+The fields bus_priv and drvr are defined as void pointer. It is
+preferred to have specific types for compiler type checking. To
+prepare for other bus types the bus_priv field is defined as a
+union containing the sdio bus private structure reference.
 
-Note: ipw2200.c already uses it.
-
-Signed-off-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ipw2x00/ipw2100.c |   90 ++++++++++++-------------------
- 1 files changed, 35 insertions(+), 55 deletions(-)
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    4 ++--
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    7 +++++--
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   10 +++++-----
+ 3 files changed, 12 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index a0e5c21..da41b8c 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -8108,61 +8108,41 @@ static int ipw2100_wx_get_crc_check(struct net_device *dev,
- #endif				/* CONFIG_IPW2100_MONITOR */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+index b698a76..1d2b74d 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
+@@ -489,7 +489,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
+ 		sdiodev->func[0] = func->card->sdio_func[0];
+ 		sdiodev->func[1] = func;
+ 		sdiodev->bus_if = bus_if;
+-		bus_if->bus_priv = sdiodev;
++		bus_if->bus_priv.sdio = sdiodev;
+ 		bus_if->type = SDIO_BUS;
+ 		bus_if->align = BRCMF_SDALIGN;
+ 		dev_set_drvdata(&func->card->dev, sdiodev);
+@@ -530,7 +530,7 @@ static void brcmf_ops_sdio_remove(struct sdio_func *func)
  
- static iw_handler ipw2100_wx_handlers[] = {
--	NULL,			/* SIOCSIWCOMMIT */
--	ipw2100_wx_get_name,	/* SIOCGIWNAME */
--	NULL,			/* SIOCSIWNWID */
--	NULL,			/* SIOCGIWNWID */
--	ipw2100_wx_set_freq,	/* SIOCSIWFREQ */
--	ipw2100_wx_get_freq,	/* SIOCGIWFREQ */
--	ipw2100_wx_set_mode,	/* SIOCSIWMODE */
--	ipw2100_wx_get_mode,	/* SIOCGIWMODE */
--	NULL,			/* SIOCSIWSENS */
--	NULL,			/* SIOCGIWSENS */
--	NULL,			/* SIOCSIWRANGE */
--	ipw2100_wx_get_range,	/* SIOCGIWRANGE */
--	NULL,			/* SIOCSIWPRIV */
--	NULL,			/* SIOCGIWPRIV */
--	NULL,			/* SIOCSIWSTATS */
--	NULL,			/* SIOCGIWSTATS */
--	NULL,			/* SIOCSIWSPY */
--	NULL,			/* SIOCGIWSPY */
--	NULL,			/* SIOCGIWTHRSPY */
--	NULL,			/* SIOCWIWTHRSPY */
--	ipw2100_wx_set_wap,	/* SIOCSIWAP */
--	ipw2100_wx_get_wap,	/* SIOCGIWAP */
--	ipw2100_wx_set_mlme,	/* SIOCSIWMLME */
--	NULL,			/* SIOCGIWAPLIST -- deprecated */
--	ipw2100_wx_set_scan,	/* SIOCSIWSCAN */
--	ipw2100_wx_get_scan,	/* SIOCGIWSCAN */
--	ipw2100_wx_set_essid,	/* SIOCSIWESSID */
--	ipw2100_wx_get_essid,	/* SIOCGIWESSID */
--	ipw2100_wx_set_nick,	/* SIOCSIWNICKN */
--	ipw2100_wx_get_nick,	/* SIOCGIWNICKN */
--	NULL,			/* -- hole -- */
--	NULL,			/* -- hole -- */
--	ipw2100_wx_set_rate,	/* SIOCSIWRATE */
--	ipw2100_wx_get_rate,	/* SIOCGIWRATE */
--	ipw2100_wx_set_rts,	/* SIOCSIWRTS */
--	ipw2100_wx_get_rts,	/* SIOCGIWRTS */
--	ipw2100_wx_set_frag,	/* SIOCSIWFRAG */
--	ipw2100_wx_get_frag,	/* SIOCGIWFRAG */
--	ipw2100_wx_set_txpow,	/* SIOCSIWTXPOW */
--	ipw2100_wx_get_txpow,	/* SIOCGIWTXPOW */
--	ipw2100_wx_set_retry,	/* SIOCSIWRETRY */
--	ipw2100_wx_get_retry,	/* SIOCGIWRETRY */
--	ipw2100_wx_set_encode,	/* SIOCSIWENCODE */
--	ipw2100_wx_get_encode,	/* SIOCGIWENCODE */
--	ipw2100_wx_set_power,	/* SIOCSIWPOWER */
--	ipw2100_wx_get_power,	/* SIOCGIWPOWER */
--	NULL,			/* -- hole -- */
--	NULL,			/* -- hole -- */
--	ipw2100_wx_set_genie,	/* SIOCSIWGENIE */
--	ipw2100_wx_get_genie,	/* SIOCGIWGENIE */
--	ipw2100_wx_set_auth,	/* SIOCSIWAUTH */
--	ipw2100_wx_get_auth,	/* SIOCGIWAUTH */
--	ipw2100_wx_set_encodeext,	/* SIOCSIWENCODEEXT */
--	ipw2100_wx_get_encodeext,	/* SIOCGIWENCODEEXT */
--	NULL,			/* SIOCSIWPMKSA */
-+	IW_HANDLER(SIOCGIWNAME, ipw2100_wx_get_name),
-+	IW_HANDLER(SIOCSIWFREQ, ipw2100_wx_set_freq),
-+	IW_HANDLER(SIOCGIWFREQ, ipw2100_wx_get_freq),
-+	IW_HANDLER(SIOCSIWMODE, ipw2100_wx_set_mode),
-+	IW_HANDLER(SIOCGIWMODE, ipw2100_wx_get_mode),
-+	IW_HANDLER(SIOCGIWRANGE, ipw2100_wx_get_range),
-+	IW_HANDLER(SIOCSIWAP, ipw2100_wx_set_wap),
-+	IW_HANDLER(SIOCGIWAP, ipw2100_wx_get_wap),
-+	IW_HANDLER(SIOCSIWMLME, ipw2100_wx_set_mlme),
-+	IW_HANDLER(SIOCSIWSCAN, ipw2100_wx_set_scan),
-+	IW_HANDLER(SIOCGIWSCAN, ipw2100_wx_get_scan),
-+	IW_HANDLER(SIOCSIWESSID, ipw2100_wx_set_essid),
-+	IW_HANDLER(SIOCGIWESSID, ipw2100_wx_get_essid),
-+	IW_HANDLER(SIOCSIWNICKN, ipw2100_wx_set_nick),
-+	IW_HANDLER(SIOCGIWNICKN, ipw2100_wx_get_nick),
-+	IW_HANDLER(SIOCSIWRATE, ipw2100_wx_set_rate),
-+	IW_HANDLER(SIOCGIWRATE, ipw2100_wx_get_rate),
-+	IW_HANDLER(SIOCSIWRTS, ipw2100_wx_set_rts),
-+	IW_HANDLER(SIOCGIWRTS, ipw2100_wx_get_rts),
-+	IW_HANDLER(SIOCSIWFRAG, ipw2100_wx_set_frag),
-+	IW_HANDLER(SIOCGIWFRAG, ipw2100_wx_get_frag),
-+	IW_HANDLER(SIOCSIWTXPOW, ipw2100_wx_set_txpow),
-+	IW_HANDLER(SIOCGIWTXPOW, ipw2100_wx_get_txpow),
-+	IW_HANDLER(SIOCSIWRETRY, ipw2100_wx_set_retry),
-+	IW_HANDLER(SIOCGIWRETRY, ipw2100_wx_get_retry),
-+	IW_HANDLER(SIOCSIWENCODE, ipw2100_wx_set_encode),
-+	IW_HANDLER(SIOCGIWENCODE, ipw2100_wx_get_encode),
-+	IW_HANDLER(SIOCSIWPOWER, ipw2100_wx_set_power),
-+	IW_HANDLER(SIOCGIWPOWER, ipw2100_wx_get_power),
-+	IW_HANDLER(SIOCSIWGENIE, ipw2100_wx_set_genie),
-+	IW_HANDLER(SIOCGIWGENIE, ipw2100_wx_get_genie),
-+	IW_HANDLER(SIOCSIWAUTH, ipw2100_wx_set_auth),
-+	IW_HANDLER(SIOCGIWAUTH, ipw2100_wx_get_auth),
-+	IW_HANDLER(SIOCSIWENCODEEXT, ipw2100_wx_set_encodeext),
-+	IW_HANDLER(SIOCGIWENCODEEXT, ipw2100_wx_get_encodeext),
- };
+ 	if (func->num == 2) {
+ 		bus_if = dev_get_drvdata(&func->dev);
+-		sdiodev = bus_if->bus_priv;
++		sdiodev = bus_if->bus_priv.sdio;
+ 		brcmf_dbg(TRACE, "F2 found, calling brcmf_sdio_remove...\n");
+ 		brcmf_sdio_remove(sdiodev);
+ 		dev_set_drvdata(&func->card->dev, NULL);
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+index ad9be24..567a966 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h
+@@ -39,8 +39,11 @@ struct dngl_stats {
+ /* interface structure between common and bus layer */
+ struct brcmf_bus {
+ 	u8 type;		/* bus type */
+-	void *bus_priv;		/* pointer to bus private structure */
+-	void *drvr;		/* pointer to driver pub structure brcmf_pub */
++	union {
++		/* pointer to sdio private structure */
++		struct brcmf_sdio_dev *sdio;
++	} bus_priv;
++	struct brcmf_pub *drvr;	/* pointer to driver pub structure brcmf_pub */
+ 	enum brcmf_bus_state state;
+ 	uint maxctl;		/* Max size rxctl request from proto to bus */
+ 	bool drvr_up;		/* Status flag of driver up/down */
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+index 6e4b5e8..b20029e 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c
+@@ -2277,7 +2277,7 @@ static void brcmf_sdbrcm_bus_stop(struct device *dev)
+ 	uint retries;
+ 	int err;
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv;
++	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+ 	struct brcmf_sdio *bus = sdiodev->bus;
  
- #define IPW2100_PRIV_SET_MONITOR	SIOCIWFIRSTPRIV
+ 	brcmf_dbg(TRACE, "Enter\n");
+@@ -2627,7 +2627,7 @@ static int brcmf_sdbrcm_bus_txdata(struct device *dev, struct sk_buff *pkt)
+ 	int ret = -EBADE;
+ 	uint datalen, prec;
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv;
++	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+ 	struct brcmf_sdio *bus = sdiodev->bus;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+@@ -2869,7 +2869,7 @@ brcmf_sdbrcm_bus_txctl(struct device *dev, unsigned char *msg, uint msglen)
+ 	u8 doff = 0;
+ 	int ret = -1;
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv;
++	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+ 	struct brcmf_sdio *bus = sdiodev->bus;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+@@ -2978,7 +2978,7 @@ brcmf_sdbrcm_bus_rxctl(struct device *dev, unsigned char *msg, uint msglen)
+ 	uint rxlen = 0;
+ 	bool pending;
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv;
++	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+ 	struct brcmf_sdio *bus = sdiodev->bus;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+@@ -3389,7 +3389,7 @@ brcmf_sdbrcm_download_firmware(struct brcmf_sdio *bus)
+ static int brcmf_sdbrcm_bus_init(struct device *dev)
+ {
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv;
++	struct brcmf_sdio_dev *sdiodev = bus_if->bus_priv.sdio;
+ 	struct brcmf_sdio *bus = sdiodev->bus;
+ 	unsigned long timeout;
+ 	uint retries = 0;
 -- 
-1.7.2.5
+1.7.5.4
+
 
