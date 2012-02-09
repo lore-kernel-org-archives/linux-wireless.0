@@ -1,102 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:39807 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753741Ab2BUJW4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Feb 2012 04:22:56 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Received: from nbd.name ([46.4.11.11]:43396 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756671Ab2BIAv6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Feb 2012 19:51:58 -0500
+Message-ID: <4F3318A7.5030809@openwrt.org> (sfid-20120209_015211_303796_A4C43865)
+Date: Thu, 09 Feb 2012 01:51:51 +0100
+From: Felix Fietkau <nbd@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20291.25188.459551.766850@gargle.gargle.HOWL> (sfid-20120221_102301_181483_F40CAABA)
-Date: Tue, 21 Feb 2012 14:52:44 +0530
-To: <linux-wireless@vger.kernel.org>
-CC: <ath9k-devel@lists.ath9k.org>
-Subject: [RFC/WIP 07/22] ath9k: Calculate ampdu limit using a helper
+To: Pavel Roskin <proski@gnu.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	arend@broadcom.com
+Subject: Re: [PATCH] mac80211: do not call rate control .tx_status before
+ .rate_init
+References: <1328725031-35464-1-git-send-email-nbd@openwrt.org> <20120208192536.GB2929@tuxdriver.com> <4F32CF18.4010300@openwrt.org> <20120208194453.GC2929@tuxdriver.com> <20120208180152.082cff4e@mj>
+In-Reply-To: <20120208180152.082cff4e@mj>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/gpio.c  |   14 ++++++++++++++
- drivers/net/wireless/ath/ath9k/xmit.c  |   19 +++++++++----------
- 3 files changed, 24 insertions(+), 10 deletions(-)
+On 2012-02-09 12:01 AM, Pavel Roskin wrote:
+> On Wed, 8 Feb 2012 14:44:54 -0500
+> "John W. Linville" <linville@tuxdriver.com> wrote:
+> 
+>> On Wed, Feb 08, 2012 at 08:38:00PM +0100, Felix Fietkau wrote:
+>> > On 2012-02-08 8:25 PM, John W. Linville wrote:
+>> > > On Wed, Feb 08, 2012 at 07:17:11PM +0100, Felix Fietkau wrote:
+>> > >> Most rate control implementations assume .get_rate
+>> > >> and .tx_status are only called once the per-station data has
+>> > >> been fully initialized. minstrel_ht crashes if this assumption
+>> > >> is violated.
+>> > >> 
+>> > >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> > >> Tested-by: Arend van Spriel <arend@broadcom.com>
+>> > >> ---
+>> > >>  net/mac80211/rate.h |    2 +-
+>> > >>  1 files changed, 1 insertions(+), 1 deletions(-)
+>> > >> 
+>> > >> diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
+>> > >> index 5fc3135..fbb1efd 100644
+>> > >> --- a/net/mac80211/rate.h
+>> > >> +++ b/net/mac80211/rate.h
+>> > >> @@ -37,7 +37,7 @@ static inline void
+>> > >> rate_control_tx_status(struct ieee80211_local *local, struct
+>> > >> ieee80211_sta *ista = &sta->sta; void *priv_sta =
+>> > >> sta->rate_ctrl_priv; 
+>> > >> -	if (!ref)
+>> > >> +	if (!ref || !test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
+>> > >>  		return;
+>> > >>  
+>> > >>  	ref->ops->tx_status(ref->priv, sband, ista, priv_sta,
+>> > >> skb);
+>> > > 
+>> > > Any reason not to apply this for 3.3?  Or stable?
+>> > I think 3.3 doesn't have that sta flag, the issue was probably
+>> > introduced with the 3.4 changes.
+>> > I don't remember something like this appearing in earlier versions.
+>> 
+>> Cool, thanks.
+> 
+> I believe 3.3 is affected.  At least it looks like the Fedora bug 768639
+> (https://bugzilla.redhat.com/show_bug.cgi?id=768639) is caused by
+> calling .tx_status at a wrong time.  Fedora kernels use
+> compat-wireless-3.3.  I'm going to test the bleeding edge
+> compat-wireless with the patch by Felix to see if it fixes things.
+> 
+> The lack of the WLAN_STA_RATE_CONTROL flag doesn't mean that the old
+> behavior was correct.  The flag was introduced to correct that behavior.
+> 
+> The oldest report is dated 2011-12-17 and it's about Linux 3.2.0-rc5
+> with compat-wireless-2011-12-01.
+Only .get_rate and .tx_status are affected, wireless-testing commit
+e1936e9407138b483e6d1332dd944afec8131f30 adds one of the checks, and my
+commit adds the other. Maybe John could merge those two to 3.3.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index acf5372..23145ce 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -461,6 +461,7 @@ void ath9k_stop_btcoex(struct ath_softc *sc);
- void ath9k_btcoex_timer_resume(struct ath_softc *sc);
- void ath9k_btcoex_timer_pause(struct ath_softc *sc);
- void ath9k_btcoex_handle_interrupt(struct ath_softc *sc, u32 status);
-+u16 ath9k_btcoex_aggr_limit(struct ath_softc *sc, u32 max_4ms_framelen);
- 
- /********************/
- /*   LED Control    */
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index a24aa67..e870251 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -318,6 +318,20 @@ void ath9k_btcoex_timer_pause(struct ath_softc *sc)
- 	btcoex->hw_timer_enabled = false;
- }
- 
-+u16 ath9k_btcoex_aggr_limit(struct ath_softc *sc, u32 max_4ms_framelen)
-+{
-+	struct ath_mci_profile *mci = &sc->btcoex.mci;
-+	u16 aggr_limit = 0;
-+
-+	if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI) && mci->aggr_limit)
-+		aggr_limit = (max_4ms_framelen * mci->aggr_limit) >> 4;
-+	else if (sc->sc_flags & SC_OP_BT_PRIORITY_DETECTED)
-+		aggr_limit = min((max_4ms_framelen * 3) / 8,
-+				 (u32)ATH_AMPDU_LIMIT_MAX);
-+
-+	return aggr_limit;
-+}
-+
- void ath9k_btcoex_handle_interrupt(struct ath_softc *sc, u32 status)
- {
- 	struct ath_hw *ah = sc->sc_ah;
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 3182408..5dd27d2 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -647,9 +647,8 @@ static u32 ath_lookup_rate(struct ath_softc *sc, struct ath_buf *bf,
- 	struct sk_buff *skb;
- 	struct ieee80211_tx_info *tx_info;
- 	struct ieee80211_tx_rate *rates;
--	struct ath_mci_profile *mci = &sc->btcoex.mci;
- 	u32 max_4ms_framelen, frmlen;
--	u16 aggr_limit, legacy = 0;
-+	u16 aggr_limit, bt_aggr_limit, legacy = 0;
- 	int i;
- 
- 	skb = bf->bf_mpdu;
-@@ -694,14 +693,14 @@ static u32 ath_lookup_rate(struct ath_softc *sc, struct ath_buf *bf,
- 	if (tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE || legacy)
- 		return 0;
- 
--	if ((sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI) && mci->aggr_limit)
--		aggr_limit = (max_4ms_framelen * mci->aggr_limit) >> 4;
--	else if (sc->sc_flags & SC_OP_BT_PRIORITY_DETECTED)
--		aggr_limit = min((max_4ms_framelen * 3) / 8,
--				 (u32)ATH_AMPDU_LIMIT_MAX);
--	else
--		aggr_limit = min(max_4ms_framelen,
--				 (u32)ATH_AMPDU_LIMIT_MAX);
-+	aggr_limit = min(max_4ms_framelen, (u32)ATH_AMPDU_LIMIT_MAX);
-+
-+	/*
-+	 * Override the default aggregation limit for BTCOEX.
-+	 */
-+	bt_aggr_limit = ath9k_btcoex_aggr_limit(sc, max_4ms_framelen);
-+	if (bt_aggr_limit)
-+		aggr_limit = bt_aggr_limit;
- 
- 	/*
- 	 * h/w can accept aggregates up to 16 bit lengths (65535).
--- 
-1.7.9.1
-
+- Felix
