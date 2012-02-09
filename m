@@ -1,72 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43225 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757131Ab2BPGXT (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:41761 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757894Ab2BIXFF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Feb 2012 01:23:19 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Thu, 9 Feb 2012 18:05:05 -0500
+Received: by iacb35 with SMTP id b35so3159675iac.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2012 15:05:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20284.41156.597649.143177@gargle.gargle.HOWL> (sfid-20120216_072323_204582_A338E32F)
-Date: Thu, 16 Feb 2012 11:53:00 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH v2 9/9] ath9k: Fix descriptor length for AR9462
+In-Reply-To: <CAK80WHbESx0xtpp2LujPb2-+DXMCJ3NjC6e8KcHvcbKx2tJ7=A@mail.gmail.com>
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>
+ <1327581484-22047-7-git-send-email-victorg@ti.com> <4F27814A.9060906@sipsolutions.net>
+ <CAK80WHZw9PRr_wjazJiPUo1vrCpjgyrSx9ydHwLGoJEp3qNwDA@mail.gmail.com>
+ <1328562215.3466.3.camel@jlt3.sipsolutions.net> <CAK80WHbESx0xtpp2LujPb2-+DXMCJ3NjC6e8KcHvcbKx2tJ7=A@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 9 Feb 2012 15:04:44 -0800
+Message-ID: <CAB=NE6V9Yk1OK0uMU=gyxHKuRmHqYdKi9KBmtz8hYhdcpgrhKQ@mail.gmail.com> (sfid-20120210_000510_554062_DCD49B77)
+Subject: Re: [RFC 6/9] mac80211: add ap channel switch command/event
+To: "Goldenshtein, Victor" <victorg@ti.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian.chadd@gmail.com, j@w1.fi,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Change the descriptor length to 24 and explicitly
-set the control field 23 to zero. Not doing so would
-result in dropping of frames.
+On Thu, Feb 9, 2012 at 12:02 PM, Goldenshtein, Victor <victorg@ti.com> wrote:
+> On Mon, Feb 6, 2012 at 11:03 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> When the driver doesn't explicitly implement channel switch for this and
+>> other things, mac80211 could (should?) manage it.
+>>
+>
+> I guess it can be implemented at some later point.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_mac.c |    6 +++++-
- drivers/net/wireless/ath/ath9k/ar9003_mac.h |    3 ++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
+Then you need to ensure that a capability is checked and if this
+capability is required but not available yet in mac80211 DFS cannot be
+started.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-index 09b8c9d..39cb482 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
-@@ -28,11 +28,14 @@ ar9003_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
- 	struct ar9003_txc *ads = ds;
- 	int checksum = 0;
- 	u32 val, ctl12, ctl17;
-+	u8 desc_len;
-+
-+	desc_len = (AR_SREV_9462(ah) ? 0x18 : 0x17);
- 
- 	val = (ATHEROS_VENDOR_ID << AR_DescId_S) |
- 	      (1 << AR_TxRxDesc_S) |
- 	      (1 << AR_CtrlStat_S) |
--	      (i->qcu << AR_TxQcuNum_S) | 0x17;
-+	      (i->qcu << AR_TxQcuNum_S) | desc_len;
- 
- 	checksum += val;
- 	ACCESS_ONCE(ads->info) = val;
-@@ -81,6 +84,7 @@ ar9003_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
- 	ads->ctl20 = 0;
- 	ads->ctl21 = 0;
- 	ads->ctl22 = 0;
-+	ads->ctl23 = 0;
- 
- 	ctl17 = SM(i->keytype, AR_EncrType);
- 	if (!i->is_first) {
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.h b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-index e203b51..cbf60b0 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
-@@ -92,7 +92,8 @@ struct ar9003_txc {
- 	u32 ctl20;  /* DMA control 20 */
- 	u32 ctl21;  /* DMA control 21 */
- 	u32 ctl22;  /* DMA control 22 */
--	u32 pad[9]; /* pad to cache line (128 bytes/32 dwords) */
-+	u32 ctl23;  /* DMA control 23 */
-+	u32 pad[8]; /* pad to cache line (128 bytes/32 dwords) */
- } __packed __aligned(4);
- 
- struct ar9003_txs {
--- 
-1.7.9.1
-
+  Luis
