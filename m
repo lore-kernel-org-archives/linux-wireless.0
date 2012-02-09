@@ -1,80 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:40101 "EHLO
-	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757512Ab2B2RS1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 12:18:27 -0500
-Subject: [PATCH 00/12] ath6kl: checkpatch fixes
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Date: Wed, 29 Feb 2012 19:18:18 +0200
-Message-ID: <20120229171525.24264.22062.stgit@localhost6.localdomain6> (sfid-20120229_181830_752738_30E844AD)
+Received: from mms1.broadcom.com ([216.31.210.17]:3942 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757887Ab2BIUJ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Feb 2012 15:09:27 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 01/15] brcm80211: update the maintainers listed for
+ brcm80211 drivers
+Date: Thu, 9 Feb 2012 21:08:55 +0100
+Message-ID: <1328818149-4826-2-git-send-email-arend@broadcom.com> (sfid-20120209_211002_354263_4DF54656)
+In-Reply-To: <1328818149-4826-1-git-send-email-arend@broadcom.com>
+References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Here are quite a few checkpatch fixes and other cleanups.
+Henry Ptasinski is not working on the brcm80211 driver so taking
+his name/email out of the MAINTAINERS file.
 
-Especially I would like to people review these two macros, they ended up
-a bit too clever and I'm sure there are issues:
-
-#define ath6kl_bmi_write_hi32(ar, item, val)				\
-	({								\
-		u32 addr;						\
-		__le32 v;						\
-									\
-		addr = ath6kl_get_hi_item_addr(ar, HI_ITEM(item));	\
-		v = cpu_to_le32(val);					\
-		ath6kl_bmi_write(ar, addr, (u8 *) &v, sizeof(v));	\
-	})
-
-#define ath6kl_bmi_read_hi32(ar, item, val)				\
-	({								\
-		u32 addr, *check_type = val;				\
-		__le32 tmp;						\
-		int ret;						\
-									\
-		(void) (check_type == val);				\
-		addr = ath6kl_get_hi_item_addr(ar, HI_ITEM(item));	\
-		ret = ath6kl_bmi_read(ar, addr, (u8 *) &tmp, 4);	\
-		*val = le32_to_cpu(tmp);				\
-		ret;							\
-	})
-
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
+ MAINTAINERS |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-Kalle Valo (12):
-      ath6kl: fix pointer style
-      ath6kl: fix checkpatch error with EPSTAT() macro
-      ath6kl: alignment should match open parenthesis
-      ath6kl: logical continuations should be on the previous line
-      ath6kl: remove multiple assignments
-      ath6kl: add ath6kl_bmi_write_hi32()
-      ath6kl: add ath6kl_bmi_read_hi32()
-      ath6kl: fix error handling ath6kl_target_config_wlan_params()
-      ath6kl: fix open paranthesis alignment in ath6kl_cfg80211_connect()
-      ath6kl: document all spinlocks
-      ath6kl: fix too long lines
-      ath6kl: make ath6kl_bmi_[read|write]_hi32() endian safe
+diff --git a/MAINTAINERS b/MAINTAINERS
+index ea653fd..50b85eba 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -1575,7 +1575,6 @@ F:	drivers/net/ethernet/broadcom/tg3.*
+ 
+ BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER
+ M:	Brett Rudley <brudley@broadcom.com>
+-M:	Henry Ptasinski <henryp@broadcom.com>
+ M:	Roland Vossen <rvossen@broadcom.com>
+ M:	Arend van Spriel <arend@broadcom.com>
+ M:	Franky (Zhenhui) Lin <frankyl@broadcom.com>
+-- 
+1.7.5.4
 
-
- drivers/net/wireless/ath/ath6kl/bmi.c      |    6 -
- drivers/net/wireless/ath/ath6kl/bmi.h      |   23 +++
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   46 ++++--
- drivers/net/wireless/ath/ath6kl/core.c     |    6 -
- drivers/net/wireless/ath/ath6kl/core.h     |   25 +++
- drivers/net/wireless/ath/ath6kl/debug.c    |   58 ++++----
- drivers/net/wireless/ath/ath6kl/hif.c      |    6 -
- drivers/net/wireless/ath/ath6kl/hif.h      |    1 
- drivers/net/wireless/ath/ath6kl/htc.c      |  105 +++++++-------
- drivers/net/wireless/ath/ath6kl/htc.h      |    7 +
- drivers/net/wireless/ath/ath6kl/init.c     |  203 ++++++++++------------------
- drivers/net/wireless/ath/ath6kl/main.c     |   22 ++-
- drivers/net/wireless/ath/ath6kl/sdio.c     |   11 +-
- drivers/net/wireless/ath/ath6kl/txrx.c     |   18 +-
- drivers/net/wireless/ath/ath6kl/wmi.c      |   31 ++--
- drivers/net/wireless/ath/ath6kl/wmi.h      |    6 +
- 16 files changed, 295 insertions(+), 279 deletions(-)
 
