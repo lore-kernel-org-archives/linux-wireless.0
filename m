@@ -1,112 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34431 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751738Ab2BINgr (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:33073 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752228Ab2BINrX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 08:36:47 -0500
-Message-ID: <4F33CBD0.3020400@sipsolutions.net> (sfid-20120209_143651_458679_E6005945)
-Date: Thu, 09 Feb 2012 14:36:16 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, stable@vger.kernel.org,
-	Gary Morain <gmorain@google.com>,
-	Paul Stewart <pstew@google.com>,
-	Abhijit Pradhan <abhijit@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Subject: Re: [RFC] mac80211: Fix a rwlock bad magic bug
-References: <1328792643-6734-1-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1328792643-6734-1-git-send-email-mohammed@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 9 Feb 2012 08:47:23 -0500
+Message-ID: <1328795289.25876.5.camel@blackout-netbook> (sfid-20120209_144740_515978_CB5F4F2D)
+Subject: [PATCH] [trivial] Correcting typos in rtlwifi/base.c
+From: Tristan Pourcelot <tristan.pourcelot@gmail.com>
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Thu, 09 Feb 2012 14:48:09 +0100
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/9/2012 2:04 PM, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
->
-> read_lock(&tpt_trig->trig.leddev_list_lock) is accessed via the path
-> ieee80211_open (->) ieee80211_do_open (->) ieee80211_mod_tpt_led_trig
-> (->) ieee80211_start_tpt_led_trig (->) tpt_trig_timer before initializing
-> it.
-> the intilization of this read/write lock happens via the path
-> ieee80211_led_init (->) led_trigger_register, but we are doing
-> 'ieee80211_led_init'  after 'ieeee80211_if_add' where we
-> register netdev_ops.
-> so we access leddev_list_lock before initializing it and causes the
-> following bug in chrome laptops with AR928X cards with the following
-> script
->
-> while true
-> do
-> sudo modprobe -v ath9k
-> sleep 3
-> sudo modprobe -r ath9k
-> sleep 3
-> done
->
-> 	BUG: rwlock bad magic on CPU#1, wpa_supplicant/358, f5b9eccc
-> 	Pid: 358, comm: wpa_supplicant Not tainted 3.0.13 #1
-> 	Call Trace:
->
-> 	[<8137b9df>] rwlock_bug+0x3d/0x47
-> 	[<81179830>] do_raw_read_lock+0x19/0x29
-> 	[<8137f063>] _raw_read_lock+0xd/0xf
-> 	[<f9081957>] tpt_trig_timer+0xc3/0x145 [mac80211]
-> 	[<f9081f3a>] ieee80211_mod_tpt_led_trig+0x152/0x174 [mac80211]
-> 	[<f9076a3f>] ieee80211_do_open+0x11e/0x42e [mac80211]
-> 	[<f9075390>] ? ieee80211_check_concurrent_iface+0x26/0x13c [mac80211]
-> 	[<f9076d97>] ieee80211_open+0x48/0x4c [mac80211]
-> 	[<812dbed8>] __dev_open+0x82/0xab
-> 	[<812dc0c9>] __dev_change_flags+0x9c/0x113
-> 	[<812dc1ae>] dev_change_flags+0x18/0x44
-> 	[<8132144f>] devinet_ioctl+0x243/0x51a
-> 	[<81321ba9>] inet_ioctl+0x93/0xac
-> 	[<812cc951>] sock_ioctl+0x1c6/0x1ea
-> 	[<812cc78b>] ? might_fault+0x20/0x20
-> 	[<810b1ebb>] do_vfs_ioctl+0x46e/0x4a2
-> 	[<810a6ebb>] ? fget_light+0x2f/0x70
-> 	[<812ce549>] ? sys_recvmsg+0x3e/0x48
-> 	[<810b1f35>] sys_ioctl+0x46/0x69
-> 	[<8137fa77>] sysenter_do_call+0x12/0x2
->
-> Cc:<stable@vger.kernel.org>
-> Cc: Gary Morain<gmorain@google.com>
-> Cc: Paul Stewart<pstew@google.com>
-> Cc: Abhijit Pradhan<abhijit@qca.qualcomm.com>
-> Cc: Vasanthakumar Thiagarajan<vthiagar@qca.qualcomm.com>
-> Cc: Rajkumar Manoharan<rmanohar@qca.qualcomm.com>
-> Tested-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
-> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
-
-Acked-by: Johannes Berg <johannes.berg@intel.com>
+This patch correct some typos in a comment.
 
 
-> ---
->   net/mac80211/main.c |    4 ++--
->   1 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-> index 831a5bd..2306d75 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -909,6 +909,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
->   		wiphy_debug(local->hw.wiphy, "Failed to initialize wep: %d\n",
->   			    result);
->
-> +	ieee80211_led_init(local);
-> +
->   	rtnl_lock();
->
->   	result = ieee80211_init_rate_ctrl_alg(local,
-> @@ -930,8 +932,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
->
->   	rtnl_unlock();
->
-> -	ieee80211_led_init(local);
-> -
->   	local->network_latency_notifier.notifier_call =
->   		ieee80211_max_network_latency;
->   	result = pm_qos_add_notifier(PM_QOS_NETWORK_LATENCY,
+>From 79bce2d3fb5c2e3c78ff39f3c9a0f10c20be9221 Mon Sep 17 00:00:00 2001
+From: Tristan Pourcelot <tristan.pourcelot@gmail.com>
+Date: Thu, 9 Feb 2012 14:45:28 +0100
+Subject: [PATCH] Correcting typos in rtlwifi/base.c
+
+
+Signed-off-by: Tristan Pourcelot <tristan.pourcelot@gmail.com>
+---
+ drivers/net/wireless/rtlwifi/base.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/rtlwifi/base.c
+b/drivers/net/wireless/rtlwifi/base.c
+index 8d6eb0f..08e4b28 100644
+--- a/drivers/net/wireless/rtlwifi/base.c
++++ b/drivers/net/wireless/rtlwifi/base.c
+@@ -40,10 +40,10 @@
+ #include "regd.h"
+ 
+ /*
+- *NOTICE!!!: This file will be very big, we hsould
+- *keep it clear under follwing roles:
++ *NOTICE!!!: This file will be very big, we should
++ *keep it clear under following roles:
+  *
+- *This file include follwing part, so, if you add new
++ *This file include following parts, so, if you add new
+  *functions into this file, please check which part it
+  *should includes. or check if you should add new part
+  *for this file:
+-- 
+1.7.9
+
+
+
+
 
