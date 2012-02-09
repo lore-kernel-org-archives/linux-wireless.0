@@ -1,30 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:40389 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755168Ab2BNJXc (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:40813 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932175Ab2BIXvN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 04:23:32 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Thu, 9 Feb 2012 18:51:13 -0500
+Received: by yenm8 with SMTP id m8so1232709yen.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2012 15:51:13 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20282.10258.858715.688562@gargle.gargle.HOWL> (sfid-20120214_102337_928910_46E71AD0)
-Date: Tue, 14 Feb 2012 14:53:30 +0530
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<ath9k-devel@lists.ath9k.org>
-Subject: Re: [PATCH 3/4] ath9k: Modify CCK spur mitigation for AR9462
-In-Reply-To: <CAD2nsn3sVaAea1iBRAgp7-j733BznjrB6sU_i5V1SZ0_kpC1fA@mail.gmail.com>
-References: <20282.7600.287048.11418@gargle.gargle.HOWL>
-	<CAD2nsn3sVaAea1iBRAgp7-j733BznjrB6sU_i5V1SZ0_kpC1fA@mail.gmail.com>
+In-Reply-To: <1328818149-4826-10-git-send-email-arend@broadcom.com>
+References: <1328818149-4826-1-git-send-email-arend@broadcom.com> <1328818149-4826-10-git-send-email-arend@broadcom.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 10 Feb 2012 10:50:53 +1100
+Message-ID: <CAGRGNgXPE3T_jTFDvxAQ_Of4kNQSOGwwAy_-Na3iR24xvnLEZA@mail.gmail.com> (sfid-20120210_005119_671572_BFB32A70)
+Subject: Re: [PATCH 09/15] brcm80211: fmac: move module entry points to dhd_linux.c
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi wrote:
-> i saw this some time back ,the check will not take care of this logic
-> 
-> if (AR_SREV_9462(ah) && (i == 0 || i == 3))
-> 			continue;
+Hi,
 
-Yep, looks like this is already handled. Thanks for catching this.
+Quick query:
 
-Sujith
+On Fri, Feb 10, 2012 at 07:09, Arend van Spriel <arend@broadcom.com> wrote:
+> The module_init/exit functions are moved to dhd_linux.c to prepare
+> for supporting multiple host interface types.
+>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+>  .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    7 +----
+>  drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |    6 +++++
+>  .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   24 ++++++++++++++++++++
+>  3 files changed, 32 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+> index eff0073..ff7fc0e 100644
+> --- a/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+> +++ b/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c
+> @@ -1183,3 +1183,27 @@ exit:
+>        return ret;
+>  }
+>  #endif                         /* DEBUG */
+> +
+> +static int __init brcmfmac_init(void)
+> +{
+> +       int ret = 0;
+> +
+> +#ifdef CONFIG_BRCMFMAC_SDIO
+> +       ret = brcmf_sdio_init();
+> +       if (ret)
+> +               goto fail;
+> +#endif
+
+I assume that the USB driver init will be added here as a separate #ifdef block.
+
+If this is the case, doesn't this mean that on a system with both the
+USB and SDIO drivers enabled in .config, you won't be able to load the
+USB driver without the SDIO driver or vice-versa?
+
+The model that most other drivers I've seen use is to have
+bus-specific modules and a common code module.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
