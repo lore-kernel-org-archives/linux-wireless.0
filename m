@@ -1,53 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:64691 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754927Ab2BSVTt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Feb 2012 16:19:49 -0500
-Received: by iacb35 with SMTP id b35so6719632iac.19
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Feb 2012 13:19:49 -0800 (PST)
-Message-ID: <4F416772.5030703@lwfinger.net> (sfid-20120219_221953_507145_9476D4FC)
-Date: Sun, 19 Feb 2012 15:19:46 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mms1.broadcom.com ([216.31.210.17]:3966 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757863Ab2BIUJ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Feb 2012 15:09:27 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 00/15] brcm80211: resolve brcmsmac issues and brcmfmac
+ usb support
+Date: Thu, 9 Feb 2012 21:08:54 +0100
+Message-ID: <1328818149-4826-1-git-send-email-arend@broadcom.com> (sfid-20120209_210959_266412_4FDEF97F)
 MIME-Version: 1.0
-To: Attila Fazekas <turul64@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Herton Ronaldo Krzesinski <herton@canonical.com>,
-	Hin-Tak Leung <htl10@users.sourceforge.net>
-Subject: Re: [PATCH] rtl8187: Add Ad-hoc mode
-References: <CAFmNhL=zp66TRZvi0e=05zJuFjm=pon1gKHXJYN6_uUs_erm4g@mail.gmail.com>
-In-Reply-To: <CAFmNhL=zp66TRZvi0e=05zJuFjm=pon1gKHXJYN6_uUs_erm4g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/19/2012 01:54 PM, Attila Fazekas wrote:
-> Add AD-HOC support to the rtl8187 based on the rtl8180 source
->
-> Signed-off-by: Attila Fazekas<turul64@gmail.com>
-> ---
-> diff --git a/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> index 638fbef..f8f9186 100644
-> --- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> +++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> @@ -232,6 +232,7 @@ static void rtl8187_tx(struct ieee80211_hw *dev,
-> struct sk_buff *skb)
->   {
->   	struct rtl8187_priv *priv = dev->priv;
->   	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-> +	struct ieee80211_hdr *tx_hdr = 	(struct ieee80211_hdr *)(skb->data);
->   	unsigned int ep;
->   	void *buf;
->   	struct urb *urb;
-> @@ -249,7 +250,7 @@ static void rtl8187_tx(struct ieee80211_hw *dev,
-> struct sk_buff *skb)
+This patch series contains patches for a couple of issue in brcmsmac. The A-MPDU
+endless retry fix is a long standing issue that exists in previous kernels. So
+it should go to 3.3 kernel.
 
-This patch was mangled by your mailer. See how the line above is wrapped? In 
-addition, the tabs seem to have been replaced by spaces.
+For the brcmfmac driver support has been added for USB chipsets. Firmware has
+been submitted for bcm43235, bcm43236, and bcm43238 chipsets.
 
-To test what works, you should mail a patch to yourself and see if the version 
-extracted from your mailer still applies.
+Arend van Spriel (14):
+  brcm80211: update the maintainers listed for brcm80211 drivers
+  brcm80211: smac: fix unintended fallthru in wlc_phy_radio_init_2057()
+  brcm80211: smac: remove redundant assignments from
+    txpwrctrl_pwr_setup_nphy
+  brcm80211: smac: fix endless retry of A-MPDU transmissions
+  brcm80211: smac: remove smatch warnings from brcmsmac code
+  brcm80211: fmac: resolve smatch issues in brcmfmac code
+  brcm80211: fmac: use specific types in struct brcmf_bus
+  brcm80211: fmac: move module entry points to dhd_linux.c
+  brcm80211: fmac: only return success in brcmf_sdbrcm_bus_init() when
+    true
+  brcm80211: fmac: update bus state in common driver part
+  brcm80211: fmac: change allocation flag in brcmf_enq_event() function
+  brcm80211: fmac: use spinlock calls saving irq flags in
+    brcmf_enq_event()
+  brcm80211: fmac: add USB support for bcm43235/6/8 chipsets
+  brcm80211: fmac: make sdio firmware filename specific
 
-Larry
+Franky Lin (1):
+  brcm80211: fmac: make sure cancel_work_sync only called after
+    INIT_WORK
+
+ MAINTAINERS                                        |    1 -
+ drivers/net/wireless/brcm80211/Kconfig             |   17 +-
+ drivers/net/wireless/brcm80211/brcmfmac/Makefile   |    6 +-
+ .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |   14 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_bus.h  |   17 +-
+ .../net/wireless/brcm80211/brcmfmac/dhd_linux.c    |   59 +-
+ drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   32 +-
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c      | 1623 ++++++++++++++++++++
+ drivers/net/wireless/brcm80211/brcmfmac/usb.h      |   84 +
+ drivers/net/wireless/brcm80211/brcmfmac/usb_rdl.h  |   75 +
+ .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |   13 +-
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.c    |    6 +-
+ .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    4 +-
+ drivers/net/wireless/brcm80211/brcmsmac/main.c     |    1 -
+ .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |   28 +-
+ drivers/net/wireless/brcm80211/brcmsmac/srom.c     |   14 +-
+ 16 files changed, 1905 insertions(+), 89 deletions(-)
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/usb.c
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/usb.h
+ create mode 100644 drivers/net/wireless/brcm80211/brcmfmac/usb_rdl.h
+
+-- 
+1.7.5.4
+
+
