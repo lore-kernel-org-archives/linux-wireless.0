@@ -1,95 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:44843 "EHLO
-	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932106Ab2BBQGU convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 11:06:20 -0500
-Received: by mail-ww0-f49.google.com with SMTP id dt13so2151535wgb.30
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 08:06:19 -0800 (PST)
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:47153 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751541Ab2BIKyy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Feb 2012 05:54:54 -0500
+Received: by bkcjm19 with SMTP id jm19so1605416bkc.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2012 02:54:53 -0800 (PST)
+Message-ID: <4F33A5DE.8020208@openwrt.org> (sfid-20120209_115457_998289_C79F8A03)
+Date: Thu, 09 Feb 2012 11:54:22 +0100
+From: Florian Fainelli <florian@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <4F277E8D.5040809@sipsolutions.net>
-References: <1327581484-22047-1-git-send-email-victorg@ti.com>
-	<1327581484-22047-2-git-send-email-victorg@ti.com>
-	<4F277E8D.5040809@sipsolutions.net>
-Date: Thu, 2 Feb 2012 18:06:19 +0200
-Message-ID: <CAK80WHbh13duicPjTEWpTpbjiCiJUu6R_ZArYce5D7wUu1PnMA@mail.gmail.com> (sfid-20120202_170624_366675_58E2DB6C)
-Subject: Re: [RFC 1/9] nl80211/cfg80211: add radar detection command/event
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
-	nbd@nbd.name
-Content-Type: text/plain; charset=ISO-8859-1
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	dsd@gentoo.org, kune@deine-taler.de, jussi.kivilinna@mbnet.fi
+Subject: Re: [PATCH] zd1211rw: wait between setting hash table and powering
+ radio on
+References: <20120208180102.18346jfdlm9wakw8@www.81.fi> <1328783095-8330-1-git-send-email-florian@openwrt.org> <CAGRGNgX-_s_EsbBLxs6UNJd7=3Yk0HECfxb-HSB_-r6cDyyuuA@mail.gmail.com>
+In-Reply-To: <CAGRGNgX-_s_EsbBLxs6UNJd7=3Yk0HECfxb-HSB_-r6cDyyuuA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 31, 2012 at 7:39 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Why DFS & radar detection? I mean, why not just call it CMD_RADAR_DETECT or
-> so?
->
+Hi Julian,
 
-will rename it to CMD_RADAR_DETECT
-
->> + *
->> + * @dfs_start_radar_detection: Start radar detection in the driver.
+On 02/09/12 11:40, Julian Calaby wrote:
+> Hi Florian,
 >
+> A couple of minor points:
 >
-> ditto here
-
-will rename it to start_radar_detection
-
->
->
->> @@ -3216,6 +3221,17 @@ void cfg80211_cqm_rssi_notify(struct net_device
->> *dev,
->>                              gfp_t gfp);
+> On Thu, Feb 9, 2012 at 21:24, Florian Fainelli<florian@openwrt.org>  wrote:
+>> I am running Debian testing kernel 3.1.0-1-amd64, using a 079b:0062 Sagem
+>> XG-76NA 802.11bg stick.
 >>
->>  /**
->> + * cfg80211_radar_detected_notify - radar detection event
->
->
-> The _notify suffix seems useless, maybe remove it?
->
+>> Upon zd1211rw interface
+>> bringup (ifconfig wlan0 up) I get the following timeout:
+>>
+>> [  950.330573] zd1211rw 1-3:1.0: phy2
+>> [  955.108510] zd1211rw 1-3:1.0: firmware version 4725
+>> [  955.148532] zd1211rw 1-3:1.0: zd1211b chip 079b:0062 v4810 high 00-19-70
+>> AL2230_RF pa0 g--NS
+>> [snip]
+>> [  955.204072] zd1211rw 1-3:1.0: error ioread32(CR_REG1): -110
+>>
+>> A second ifconfig wlan0 up brings the interface up without problems.
+>>
+>> After a bit more debugging, the call trace is the following:
+>>
+>> [10241.028130] zd1211rw 1-3:1.0: zd_chip_lock_phy_regs: error
+>> ioread32(CR_REG1): -110
+>> [10241.028140] zd1211rw 1-3:1.0: zd_switch_radio_on: failed to lock PHY regs
+>> [10241.028148] zd1211rw 1-3:1.0: zd_op_start: failed to set radio on
+>>
+>> Adding a 10 milliseconds delay between the call to set_mc_hash() and
+>> zd_chip_switch_radio_on() allows successful interface bringups in all
+>> cases and matches what the vendor driver did.
+>>
+>> Signed-off-by: Florian Fainelli<florian@openwrt.org>
+>> ---
+>>   drivers/net/wireless/zd1211rw/zd_mac.c |    7 ++++++-
+>>   1 files changed, 6 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+>> index 98a574a..bed634c 100644
+>> --- a/drivers/net/wireless/zd1211rw/zd_mac.c
+>> +++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+>> @@ -306,9 +306,14 @@ int zd_op_start(struct ieee80211_hw *hw)
+>>         r = set_mc_hash(mac);
+>>         if (r)
+>>                 goto disable_int;
+>> +       msleep(10);
+> You might want to stick a comment in here to tell future developers
+> why we're doing this.
 
-most of the function here use this suffix, but I don't mind to remove it ..
+I was counting on the commit message to actually provide the detailed 
+explanation, but you are right, some comment might be appropriate here 
+as well.
 
 >
->> + * @dev: network device
->> + * @freq: radar detected on this channel frequency
->
->
-> unit?
->
-
-ok
-
->
->> +static int nl80211_dfs_start_radar_detection(struct sk_buff *skb,
->> +                                            struct genl_info *info)
->> +{
->> +       struct cfg80211_registered_device *rdev = info->user_ptr[0];
->> +       struct net_device *dev = info->user_ptr[1];
 >> +
->> +       ASSERT_RDEV_LOCK(rdev);
+>>         r = zd_chip_switch_radio_on(chip);
+>> -       if (r<  0)
+>> +       if (r<  0) {
+>> +               dev_err(zd_chip_dev(chip),
+>> +                       "%s: failed to set radio on\n", __func__);
+>>                 goto disable_int;
+>> +       }
+> It might also be an idea to have it re-try powering on the radio
+> after, say 100 msecs, just in case 10 msecs isn't enough for whatever
+> is causing this issue.
+
+Here I would rather let the error be printed in the kernel log for 
+people to report an issue if 10 msecs proves not to be enough for some 
+systems.
+
 >
+>>         r = zd_chip_enable_rxtx(chip);
+>>         if (r<  0)
+>>                 goto disable_radio;
+> Thanks,
 >
-> That assert isn't really worth much here.
->
 
-will remove it also from: nl80211_dfs_en_tx, nl80211_ap_channel_switch
-
->
-> How do you *end* radar detection? What channel does it apply to? Any channel
-> you're on? The channel you were on when it was enabled?
-
-Once we start radar detection, it should continuously monitor for
-radar until we switch from this channel. The command applies to
-current operational channel.
-
-
--- 
-Thanks,
-Victor.
