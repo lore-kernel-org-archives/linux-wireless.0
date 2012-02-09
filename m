@@ -1,37 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3315 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756592Ab2BNKHa convert rfc822-to-8bit (ORCPT
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:35781 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753825Ab2BIVEO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 05:07:30 -0500
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: "Saul St. John" <saul.stjohn@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-cc: =?iso-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
-Date: Tue, 14 Feb 2012 02:07:13 -0800
-Subject: RE: [RFC] use alternate SPROM offset for 43224
-Message-ID: <400C43189542CE41BC0A5B252FC90136BC8414CAF4@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20120214_110737_267868_792DF8CE)
-References: <20120214040120.GA2077@eris.garyseven.net>
-In-Reply-To: <20120214040120.GA2077@eris.garyseven.net>
+	Thu, 9 Feb 2012 16:04:14 -0500
+Received: by lboi8 with SMTP id i8so960683lbo.25
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2012 13:04:06 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <1328562090.3466.1.camel@jlt3.sipsolutions.net>
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>
+	<1327581484-22047-4-git-send-email-victorg@ti.com>
+	<4F277F85.1090901@sipsolutions.net>
+	<CAK80WHbAE0+NhLgLAxE+6BmkHFy2hw=sNV1TBjjOTajhHcdxRw@mail.gmail.com>
+	<1328562090.3466.1.camel@jlt3.sipsolutions.net>
+Date: Thu, 9 Feb 2012 23:04:05 +0200
+Message-ID: <CAK80WHZF5f1R-iCPRgd3N2J2N-JM9P6qY6pVj_=Twej-RVjd4w@mail.gmail.com> (sfid-20120209_220421_994618_E482192F)
+Subject: Re: [RFC 3/9] nl80211/cfg80211: add ability to enable TX on op-channel
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> owner@vger.kernel.org] On Behalf Of Saul St. John
-> Sent: dinsdag 14 februari 2012 5:01
-> 
-> I don't know if this is correct in the general sense, but the wireless
-> on my
-> mid-2010 MacBook Pro doesn't work without it.
-> 
-> Signed-off-by: Saul St. John <saul.stjohn@gmail.com>
+On Mon, Feb 6, 2012 at 11:01 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> I'm just trying to make sure that you're OK with a simple two-line iw
+> patch being sufficient to start transmitting on radar channels ...
+>
+>> I think the driver should perform this simple "sanity" checks,
+>> otherwise we"ll need to save different DFS states in the mac, not sure
+>> that this is what we want.
+>
+> I disagree -- adding this in each driver, which will surely end up with
+> slightly different semantics, seems like a recipe for disaster.
+>
 
-Does this patch solve the same issue as [1] with title:
+Zefir Kurtisi and myself thought to rename the start_radar detection +
+en_tx functions to something like
+dfs_start_cac() and dfs_resume_cac(), these two will set/reset
+WIPHY_FLAG_DFS_CAC_IN_PROGRESS flag, which should add some additional
+protection.
+Are you OK with this ?
 
-[PATCH] bcma: don't fail for bad SPROM CRC
 
-Gr. AvS
-
-[1] http://www.spinics.net/lists/netdev/msg187943.html
-
+-- 
+Thanks,
+Victor.
