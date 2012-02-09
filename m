@@ -1,96 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:57781 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757300Ab2BOONA (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:32770 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753239Ab2BIRZz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 09:13:00 -0500
-Date: Wed, 15 Feb 2012 16:12:49 +0200
-From: Johan Hedberg <johan.hedberg@gmail.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: pull request: bluetooth 2012-02-15
-Message-ID: <20120215141249.GA28935@x220.ger.corp.intel.com> (sfid-20120215_151306_313816_F423006C)
+	Thu, 9 Feb 2012 12:25:55 -0500
+Message-ID: <4F34019E.60007@canonical.com> (sfid-20120209_182621_001566_55E0E333)
+Date: Thu, 09 Feb 2012 10:25:50 -0700
+From: Tim Gardner <rtg.canonical@gmail.com>
+Reply-To: tim.gardner@canonical.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: Tim Gardner <rtg.canonical@gmail.com>,
+	Ben Hutchings <bhutchings@solarflare.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] rtlwifi: rtl8192se firmware load can overflow target
+ buffer
+References: <1328735291-33220-1-git-send-email-tim.gardner@canonical.com> <1328737514.2627.14.camel@bwh-desktop> <4F332FC3.7000808@lwfinger.net> <4F33DAFC.1000502@canonical.com> <4F33F7C8.2090105@lwfinger.net>
+In-Reply-To: <4F33F7C8.2090105@lwfinger.net>
+Content-Type: multipart/mixed;
+ boundary="------------020302060405040907050708"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+This is a multi-part message in MIME format.
+--------------020302060405040907050708
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Here's one (hopefully) last set of important Bluetooth fixes intended
-for 3.3:
+On 02/09/2012 09:43 AM, Larry Finger wrote:
+> On 02/09/2012 08:41 AM, Tim Gardner wrote:
+>>
+>> I agree with you about the semantics of rtlpriv->max_fw_size, but I
+>> don't agree
+>> that the size check is correct. While rtlpriv->max_fw_size has been
+>> set to
+>> sizeof(struct rt_firmware), that value is _way_ bigger then the size
+>> of the
+>> target buffer.
+>>
+>> sizeof(struct rt_firmware) == 64000+64000+164000 plus some change
+>>
+>> The target buffer size is only 164000 bytes.
+>>
+>> I've attached v2 of the patch that is simpler and may serve to better
+>> illustrate
+>> my point. By the way, Ben Hutchings was right about the original patch
+>> having an
+>> off by one error. This version also clears rtlpriv->max_fw_size if the
+>> size
+>> check fails. Probably should have mentioned that in the commit log.
+>
+> I agree that Ben is right.
+>
+> This thread forced me to go back to square one in analyzing the
+> situation. For the other drivers in the rtlwifi family, the firmware
+> file contains an image that is directly stuffed into the device. For the
+> RTL8192SE devices, it is more complicated. The structure is described in
+> struct rt_firmware. At the moment, the arrays there are grossly
+> oversized. They could be as follows:
+>
+> struct rt_firmware {
+> struct fw_hdr *pfwheader;
+> enum fw_status fwstatus;
+> u16 firmwareversion;
+> u8 fw_imem[RTL8190_MAX_IMEM_CODE_SIZE];
+> u8 fw_emem[RTL8190_MAX_DMEM_CODE_SIZE];
+> u32 fw_imem_len;
+> u32 fw_emem_len;
+> u8 sz_fw_tmpbuffer[RTL8190_MAX_FIRMWARE_SIZE];
+> u32 sz_fw_tmpbufferlen;
+> u16 cmdpacket_fragthresold;
+> };
+>
+> with
+>
+> RTL8190_MAX_IMEM_CODE_SIZE = 54000 (current fw is 51,208),
+> RTL8190_MAX_DMEM_CODE_SIZE = 40000 (current fw is 37,520), and
+> RTL8190_MAX_FIRMWARE_SIZE = 90000 (it holds the raw firmware image,
+> which is currently 88,856).
+>
+> Ultimately, all three arrays should be eliminated. Now that we are using
+> asynchronous loading, the kernel should keep its cached data and not
+> copy it into the driver's private storage when a pointer will suffice.
+> All the drivers need this change, but that can wait for now.
+>
+> I will ACK the patch if you resumit it with
+> #define RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE 90000
+>
+> Larry
 
-- One important SSP fix which fixes security level upgrade handling
-  (this was breaking connections with many devices).
-- An update to btusb fixing invalid flag usage with usb_submit_urb() as
-  well as one new vendor ID for a Broadcom device.
-- One compilation warning fix for a bogus inline declaration
-- Fix proper timeout value for l2cap_set_timer and sk_sndtimeo and
-  hci_conn_put
-- Fix a lockdep warning with Bluetooth sockets
-- Deadlock fix in hci_conn_hold
-- RFCOMM reference counting fix
-- QUIRK_NO_RESET fix which was breaking suspend with some laptops
-- Two fixes related to synchronization with cancel_delayed_work()
+v3 expands the commit log a bit. It doesn't apply to stable 3.2.y, but 
+could easily be backported. If I remember I'll do it when its merged in 
+Linus' tree.
 
-Johan
+rtg
+-- 
+Tim Gardner tim.gardner@canonical.com
 
+--------------020302060405040907050708
+Content-Type: text/x-patch;
+ name="0001-rtlwifi-rtl8192se-firmware-load-can-overflow-target-.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-rtlwifi-rtl8192se-firmware-load-can-overflow-target-.pa";
+ filename*1="tch"
+
+>From 1c26d8e099c2720aebf106daeb7814114051a596 Mon Sep 17 00:00:00 2001
+From: Tim Gardner <tim.gardner@canonical.com>
+Date: Wed, 8 Feb 2012 13:11:47 -0700
+Subject: [PATCH v3] rtlwifi: rtl8192se firmware load can overflow target buffer
+
+Define RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE which represents the
+maximimum possible firmware file size. Use it in the definition
+of the buffer which receives the firmware file data.
+
+Set RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE closer to the actual size of
+the firmware file, e.g., 90000 (down from hard coded 164000). The current
+size of rtlwifi/rtl8192sefw.bin is 88856.
+
+Set max_fw_size to RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE for the size limit
+check. Fix the error case where max_fw_size is not cleared if the size
+limit check fails.
+
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: John W. Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
 ---
+ drivers/net/wireless/rtlwifi/rtl8192se/fw.h |    3 ++-
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c |    3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-The following changes since commit c27111e5b8d6b1e9296f7075cdc35872f672b524:
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
+index babe85d..b4afff6 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
+@@ -30,6 +30,7 @@
+ #define __REALTEK_FIRMWARE92S_H__
+ 
+ #define RTL8190_MAX_FIRMWARE_CODE_SIZE		64000
++#define RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE	90000
+ #define RTL8190_CPU_START_OFFSET		0x80
+ /* Firmware Local buffer size. 64k */
+ #define	MAX_FIRMWARE_CODE_SIZE			0xFF00
+@@ -217,7 +218,7 @@ struct rt_firmware {
+ 	u8 fw_emem[RTL8190_MAX_FIRMWARE_CODE_SIZE];
+ 	u32 fw_imem_len;
+ 	u32 fw_emem_len;
+-	u8 sz_fw_tmpbuffer[164000];
++	u8 sz_fw_tmpbuffer[RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE];
+ 	u32 sz_fw_tmpbufferlen;
+ 	u16 cmdpacket_fragthresold;
+ };
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+index ca38dd9..345d752 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+@@ -108,6 +108,7 @@ static void rtl92se_fw_cb(const struct firmware *firmware, void *context)
+ 	if (firmware->size > rtlpriv->max_fw_size) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 "Firmware is too big!\n");
++		rtlpriv->max_fw_size = 0;
+ 		release_firmware(firmware);
+ 		return;
+ 	}
+@@ -232,7 +233,7 @@ static int rtl92s_init_sw_vars(struct ieee80211_hw *hw)
+ 		return 1;
+ 	}
+ 
+-	rtlpriv->max_fw_size = sizeof(struct rt_firmware);
++	rtlpriv->max_fw_size = RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE;
+ 
+ 	pr_info("Driver for Realtek RTL8192SE/RTL8191SE\n"
+ 		"Loading firmware %s\n", rtlpriv->cfg->fw_name);
+-- 
+1.7.9
 
-  rtlwifi: Modify rtl_pci_init to return 0 on success (2012-02-09 15:17:29 -0500)
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jh/bluetooth.git master
-
-for you to fetch changes up to 24d2b8c0ac5c8ec41c26ed432238b0e027184882:
-
-  Bluetooth: Fix possible use after free in delete path (2012-02-15 13:09:26 +0200)
-
-----------------------------------------------------------------
-Andre Guedes (1):
-      Bluetooth: Fix potential deadlock
-
-Andrzej Kaczmarek (2):
-      Bluetooth: Fix sk_sndtimeo initialization for L2CAP socket
-      Bluetooth: l2cap_set_timer needs jiffies as timeout value
-
-Daniel Wagner (1):
-      Bluetooth: Don't mark non xfer isoc endpoint URBs with URB_ISO_ASAP
-
-Johan Hedberg (2):
-      Bluetooth: Remove bogus inline declaration from l2cap_chan_connect
-      Bluetooth: Add missing QUIRK_NO_RESET test to hci_dev_do_close
-
-Manoj Iyer (1):
-      Bluetooth: btusb: Add vendor specific ID (0a5c 21f3) for BCM20702A0
-
-Octavian Purdila (2):
-      Bluetooth: silence lockdep warning
-      Bluetooth: Fix RFCOMM session reference counting issue
-
-Peter Hurley (1):
-      Bluetooth: Fix l2cap conn failures for ssp devices
-
-Ulisses Furquim (2):
-      Bluetooth: Remove usage of __cancel_delayed_work()
-      Bluetooth: Fix possible use after free in delete path
-
-Vinicius Costa Gomes (1):
-      Bluetooth: Fix using an absolute timeout on hci_conn_put()
-
- drivers/bluetooth/btusb.c         |    4 +---
- include/net/bluetooth/bluetooth.h |    2 ++
- include/net/bluetooth/hci_core.h  |    6 +++---
- include/net/bluetooth/l2cap.h     |   12 ++++++------
- net/bluetooth/af_bluetooth.c      |   12 +++++-------
- net/bluetooth/hci_conn.c          |    4 ++++
- net/bluetooth/hci_core.c          |    3 ++-
- net/bluetooth/l2cap_core.c        |   24 ++++++++++++++----------
- net/bluetooth/l2cap_sock.c        |    4 +++-
- net/bluetooth/rfcomm/core.c       |   18 ++++++++++++------
- net/bluetooth/rfcomm/sock.c       |    2 ++
- 11 files changed, 54 insertions(+), 37 deletions(-)
-
+--------------020302060405040907050708--
