@@ -1,58 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:44318 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755427Ab2BBLvH (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:34886 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758274Ab2BIXTx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 06:51:07 -0500
-Received: by wics10 with SMTP id s10so1677445wic.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 03:51:06 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/4] wl12xx: don't fail on AP scan
-Date: Thu,  2 Feb 2012 13:54:26 +0200
-Message-Id: <1328183669-21059-2-git-send-email-eliad@wizery.com> (sfid-20120202_125112_290179_FA9EB237)
-In-Reply-To: <1328183669-21059-1-git-send-email-eliad@wizery.com>
-References: <1328183669-21059-1-git-send-email-eliad@wizery.com>
+	Thu, 9 Feb 2012 18:19:53 -0500
+Received: by iacb35 with SMTP id b35so3173964iac.19
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2012 15:19:53 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1327581689-22090-2-git-send-email-victorg@ti.com>
+References: <1327581689-22090-1-git-send-email-victorg@ti.com> <1327581689-22090-2-git-send-email-victorg@ti.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 9 Feb 2012 15:19:33 -0800
+Message-ID: <CAB=NE6Vz0GX=XpcycGyGbsLYDt556BrW11P0RHEnCCOD9HB7XA@mail.gmail.com> (sfid-20120210_001957_414425_9CC98290)
+Subject: Re: [RFC 1/7] hostapd: implement dfs drv ops functions
+To: Victor Goldenshtein <victorg@ti.com>
+Cc: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org,
+	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, johannes@sipsolutions.net,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AP role uses its own role_id for scans, so there's
-no reason to fail the scan if dev_role_id is invalid.
+On Thu, Jan 26, 2012 at 4:41 AM, Victor Goldenshtein <victorg@ti.com> wrote:
+> Add nl80211 driver operation functions:
+> hostapd_enable_tx – to enable tx on DFS channel after
+> channel availability check.
+> hostapd_channel_switch – to handle channel switch request.
+> hostapd_start_radar_detection – to enable radar detection
+> on DFS channel.
+>
+> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+> ---
+>  src/ap/ap_config.h   |    3 +++
+>  src/ap/ap_drv_ops.c  |   34 ++++++++++++++++++++++++++++++++++
+>  src/ap/ap_drv_ops.h  |    4 ++++
+>  src/drivers/driver.h |   34 ++++++++++++++++++++++++++++++++++
+>  4 files changed, 75 insertions(+), 0 deletions(-)
+>
+> diff --git a/src/ap/ap_config.h b/src/ap/ap_config.h
+> index 485092d..eddc9b7 100644
+> --- a/src/ap/ap_config.h
+> +++ b/src/ap/ap_config.h
+> @@ -410,6 +410,9 @@ struct hostapd_config {
+>
+>        int ieee80211d;
+>
+> +       /* DFS */
+> +       int channel_switch_count;
+> +
+>        struct hostapd_tx_queue_params tx_queue[NUM_TX_QUEUES];
+>
+>        /*
+> diff --git a/src/ap/ap_drv_ops.c b/src/ap/ap_drv_ops.c
+> index 429c187..628f90e 100644
+> --- a/src/ap/ap_drv_ops.c
+> +++ b/src/ap/ap_drv_ops.c
+> @@ -590,3 +590,37 @@ int hostapd_drv_sta_disassoc(struct hostapd_data *hapd,
+>        return hapd->driver->sta_disassoc(hapd->drv_priv, hapd->own_addr, addr,
+>                                          reason);
+>  }
+> +
+> +
+> +int hostapd_enable_tx(struct hostapd_data *hapd)
+> +{
+> +       if (!hapd->driver || !hapd->driver->enable_tx)
+> +               return 0;
+> +       return hapd->driver->enable_tx(hapd->drv_priv);
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/scan.c |   13 +++++++------
- 1 files changed, 7 insertions(+), 6 deletions(-)
+No checks on if the channel is DFS, if we started DFS, etc?
 
-diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
-index 848a165..e3566ca 100644
---- a/drivers/net/wireless/wl12xx/scan.c
-+++ b/drivers/net/wireless/wl12xx/scan.c
-@@ -175,16 +175,17 @@ static int wl1271_scan_send(struct wl1271 *wl, struct ieee80211_vif *vif,
- 	if (passive)
- 		scan_options |= WL1271_SCAN_OPT_PASSIVE;
- 
--	if (WARN_ON(wlvif->role_id == WL12XX_INVALID_ROLE_ID ||
--		    wlvif->dev_role_id == WL12XX_INVALID_ROLE_ID)) {
--		ret = -EINVAL;
--		goto out;
--	}
--	if (test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
-+	if (wlvif->bss_type == BSS_TYPE_AP_BSS ||
-+	    test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags))
- 		cmd->params.role_id = wlvif->role_id;
- 	else
- 		cmd->params.role_id = wlvif->dev_role_id;
- 
-+	if (WARN_ON(cmd->params.role_id == WL12XX_INVALID_ROLE_ID)) {
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+
- 	cmd->params.scan_options = cpu_to_le16(scan_options);
- 
- 	cmd->params.n_ch = wl1271_get_scan_channels(wl, wl->scan.req,
--- 
-1.7.6.401.g6a319
-
+  Luis
