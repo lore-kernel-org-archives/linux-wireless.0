@@ -1,64 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4123 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932091Ab2BAQKs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Feb 2012 11:10:48 -0500
-Message-ID: <4F2963F8.9060804@broadcom.com> (sfid-20120201_171053_155434_EA08B29E)
-Date: Wed, 1 Feb 2012 17:10:32 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:1305 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752268Ab2BIKRl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Feb 2012 05:17:41 -0500
+From: Chilam Ng <chilamng@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath6kl-devel@qualcomm.com>
+Subject: [PATCH] ath6kl: assign Tx packet drop threshold per endpoint based on AC priority
+Date: Thu, 9 Feb 2012 02:17:01 -0800
+Message-ID: <1328782621-5251-1-git-send-email-chilamng@qca.qualcomm.com> (sfid-20120209_111745_421314_C5108745)
 MIME-Version: 1.0
-To: "balbi@ti.com" <balbi@ti.com>
-cc: "stefano.brivio@polimi.it" <stefano.brivio@polimi.it>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
-Subject: Re: Dell e6410 with b43
-References: <20120201123324.GG20238@legolas.emea.dhcp.ti.com>
-In-Reply-To: <20120201123324.GG20238@legolas.emea.dhcp.ti.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/01/2012 01:33 PM, Felipe Balbi wrote:
-> Hi all,
-> 
-> is Dell e6410's b43 wireless card supported by the open source driver ?
-> 
-> Here's lspci dump:
-> 
-> 02:00.0 Network controller [0280]: Broadcom Corporation BCM43224 802.11a/b/g/n [14e4:4353] (rev 01)
-> 	Subsystem: Dell Wireless 1520 Half-size Mini PCIe Card [1028:000e]
-> 	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-> 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-> 	Latency: 0, Cache Line Size: 64 bytes
-> 	Interrupt: pin A routed to IRQ 10
-> 	Region 0: Memory at f4100000 (64-bit, non-prefetchable) [size=16K]
-> 	Capabilities: [40] Power Management version 3
-> 		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-> 		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=2 PME-
-> 	Capabilities: [58] Vendor Specific Information: Len=78 <?>
-> 	Capabilities: [48] MSI: Enable- Count=1/1 Maskable- 64bit+
-> 		Address: 0000000000000000  Data: 0000
-> 	Capabilities: [d0] Express (v1) Endpoint, MSI 00
-> 		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <4us, L1 unlimited
-> 			ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-> 		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-> 			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-> 			MaxPayload 128 bytes, MaxReadReq 128 bytes
-> 		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
-> 		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0 <4us, L1 <64us
-> 			ClockPM+ Surprise- LLActRep+ BwNot-
-> 		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
-> 			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-> 		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
-> 
-> It's at least not listed under http://linuxwireless.org/en/users/Devices/PCI
-> 
-> If it is supported, which firmware should I use ? (kernel is 3.3-rc2)
-> 
+Tx packets will begin to drop when there are multiple traffic priorities
+and the current traffic is not the highest priority and the remaining
+cookies drop below a certain number, which is fixed for all AC. It is
+possilbe that lower priority AC have more traffic which will consume
+more cookies and lock out higher priority AC from having any. Assign
+each endpoint (AC) with a different Tx-packet-drop threshold so lower
+priority AC is more likely to drop packets and the cookies become more
+available to higher priority AC.
 
-It is also supported with b43, but you may need to select Kconfig option
-for that.
+Signed-off-by: Chilam Ng <chilamng@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/htc.c  |    9 +++++++++
+ drivers/net/wireless/ath/ath6kl/htc.h  |    1 +
+ drivers/net/wireless/ath/ath6kl/txrx.c |    3 ++-
+ 3 files changed, 12 insertions(+), 1 deletions(-)
 
-Gr. AvS
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+index 7d4e835..93e819d 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.c
++++ b/drivers/net/wireless/ath/ath6kl/htc.c
+@@ -2482,6 +2482,15 @@ int ath6kl_htc_conn_service(struct htc_target *target,
+ 	endpoint->cred_dist.endpoint = assigned_ep;
+ 	endpoint->cred_dist.cred_sz = target->tgt_cred_sz;
+ 
++	switch (endpoint->svc_id) {
++	case WMI_DATA_BK_SVC:
++		endpoint->tx_drop_packet_threshold = MAX_DEF_COOKIE_NUM / 3;
++		break;
++	default:
++		endpoint->tx_drop_packet_threshold = MAX_HI_COOKIE_NUM;
++		break;
++	}
++
+ 	if (conn_req->max_rxmsg_sz) {
+ 		/*
+ 		 * Override cred_per_msg calculation, this optimizes
+diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
+index b85716e..1d90fe6 100644
+--- a/drivers/net/wireless/ath/ath6kl/htc.h
++++ b/drivers/net/wireless/ath/ath6kl/htc.h
+@@ -500,6 +500,7 @@ struct htc_endpoint {
+ 	u8 seqno;
+ 	u32 conn_flags;
+ 	struct htc_endpoint_stats ep_st;
++	u16 tx_drop_packet_threshold;
+ };
+ 
+ struct htc_control_buffer {
+diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
+index dd63371..294e269 100644
+--- a/drivers/net/wireless/ath/ath6kl/txrx.c
++++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+@@ -576,7 +576,8 @@ enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
+ 	 */
+ 	if (ar->ac_stream_pri_map[ar->ep2ac_map[endpoint]] <
+ 	    ar->hiac_stream_active_pri &&
+-	    ar->cookie_count <= MAX_HI_COOKIE_NUM)
++	    ar->cookie_count <=
++			target->endpoint[endpoint].tx_drop_packet_threshold)
+ 		/*
+ 		 * Give preference to the highest priority stream by
+ 		 * dropping the packets which overflowed.
+-- 
+1.7.7.2
 
