@@ -1,239 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2503 "EHLO MMS3.broadcom.com"
+Received: from mga02.intel.com ([134.134.136.20]:4643 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754797Ab2BWVxM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 16:53:12 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linux-wireless@vger.kernel.org
-cc: "Arend van Spriel" <arend@broadcom.com>,
-	"Saul St. John" <saul.stjohn@gmail.com>,
-	"Rafal Milecki" <zajec5@gmail.com>,
-	"Hauke Mehrtens" <hauke@hauke-m.de>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: [RFC] bcma: add support for on-chip OTP memory used for SPROM
- storage
-Date: Thu, 23 Feb 2012 22:52:57 +0100
-Message-ID: <1330033977-5741-1-git-send-email-arend@broadcom.com> (sfid-20120223_225316_612440_D9A72CED)
+	id S1753210Ab2BIWgW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Feb 2012 17:36:22 -0500
+From: "Allan, Bruce W" <bruce.w.allan@intel.com>
+To: "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+	Joe Perches <joe@perches.com>
+CC: David Miller <davem@davemloft.net>,
+	"David.Laight@ACULAB.COM" <David.Laight@ACULAB.COM>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH net-next] drivers/net: Remove boolean comparisons to
+ true/false
+Date: Thu, 9 Feb 2012 22:36:16 +0000
+Message-ID: <804857E1F29AAC47BF68C404FC60A1842709C1@ORSMSX102.amr.corp.intel.com> (sfid-20120209_233628_329123_1DAF4FC9)
+References: <1328783282-17760-5-git-send-email-jeffrey.t.kirsher@intel.com>
+	 <AE90C24D6B3A694183C094C60CF0A2F6026B6E62@saturn3.aculab.com>
+	 <20120209.133413.349832435589531136.davem@davemloft.net>
+	 <1328822243.29329.11.camel@joe2Laptop>
+ <1328822935.2242.1.camel@jtkirshe-mobl>
+In-Reply-To: <1328822935.2242.1.camel@jtkirshe-mobl>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wireless Broadcom chips can have either their SPROM data stored
-on either external SPROM or on-chip OTP memory. Both are accessed
-through the same register space. This patch adds support for the
-on-chip OTP memory.
-
-Tested with:
-BCM43224 OTP and SPROM
-BCM4331 SPROM
-BCM4313 OTP
-
-This patch is in response so gmane article [1].
-
-[1] http://article.gmane.org/gmane.linux.kernel.wireless.general/85426
-
-Cc: Saul St. John <saul.stjohn@gmail.com>
-Cc: Rafal Milecki <zajec5@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-Determining the offset for OTP sprom data turned out to be
-easier as it boils down to reading a register. This change
-collides with patch posted by Hauke:
-
-bcma: add support for sprom not found on the device.
-
-Now working on changes in brcmsmac to start using the sprom
-data stored in struct bcma_bus. Feel free to comment this patch.
-
-Gr. AvS
----
- drivers/bcma/sprom.c                        |  118 ++++++++++++++++++++++++---
- include/linux/bcma/bcma_driver_chipcommon.h |    9 ++
- 2 files changed, 115 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
-index ca77525..4dd537c 100644
---- a/drivers/bcma/sprom.c
-+++ b/drivers/bcma/sprom.c
-@@ -246,22 +246,121 @@ static void bcma_sprom_extract_r8(struct bcma_bus *bus, const u16 *sprom)
- 	     SSB_SROM8_FEM_ANTSWLUT_SHIFT);
- }
- 
-+/*
-+ * Indicates the presence of external SPROM.
-+ */
-+static bool bcma_sprom_ext_available(struct bcma_bus *bus)
-+{
-+	u32 chip_status;
-+	u32 srom_control;
-+	u32 present_mask;
-+
-+	if (bus->drv_cc.core->id.rev >= 31) {
-+		if (!(bus->drv_cc.capabilities & BCMA_CC_CAP_SPROM))
-+				return false;
-+
-+		srom_control = bcma_read32(bus->drv_cc.core,
-+					   BCMA_CC_SROM_CONTROL);
-+		return !!(srom_control & BCMA_CC_SROM_CONTROL_PRESENT);
-+	}
-+
-+	/* older chipcommon revisions use chip status register */
-+	chip_status = bcma_read32(bus->drv_cc.core, BCMA_CC_CHIPSTAT);
-+	switch (bus->chipinfo.id) {
-+	case 0x4313:
-+		present_mask = BCMA_CC_CHIPST_4313_SPROM_PRESENT;
-+		break;
-+
-+	case 0x4331:
-+		present_mask = BCMA_CC_CHIPST_4331_SPROM_PRESENT;
-+		break;
-+
-+	default:
-+		return true;
-+	}
-+
-+	return (chip_status & present_mask) == present_mask;
-+}
-+
-+/*
-+ * Indicates that on-chip OTP memory is present and enabled.
-+ */
-+static bool bcma_sprom_onchip_available(struct bcma_bus *bus)
-+{
-+	u32 chip_status;
-+	u32 otpsize = 0;
-+	bool present;
-+
-+	chip_status = bcma_read32(bus->drv_cc.core, BCMA_CC_CHIPSTAT);
-+	switch (bus->chipinfo.id) {
-+	case 0x4313:
-+		present = chip_status & BCMA_CC_CHIPST_4313_OTP_PRESENT;
-+		break;
-+
-+	case 0x4331:
-+		present = chip_status & BCMA_CC_CHIPST_4331_OTP_PRESENT;
-+		break;
-+
-+	case 43224:
-+	case 43225:
-+		/* for these chips OTP is always available */
-+		present = true;
-+		break;
-+
-+	default:
-+		present = false;
-+		break;
-+	}
-+
-+	if (present) {
-+		otpsize = bus->drv_cc.capabilities & BCMA_CC_CAP_OTPS;
-+		otpsize >>= BCMA_CC_CAP_OTPS_SHIFT;
-+	}
-+
-+	return otpsize != 0;
-+}
-+
-+/*
-+ * Verify OTP is filled and determine the byte
-+ * offset where SPROM data is located.
-+ *
-+ * On error, returns 0; byte offset otherwise.
-+ */
-+static int bcma_sprom_onchip_offset(struct bcma_bus *bus)
-+{
-+	struct bcma_device *cc = bus->drv_cc.core;
-+	u32 offset;
-+
-+	/* verify OTP status */
-+	if ((bcma_read32(cc, BCMA_CC_OTPS) & BCMA_CC_OTPS_GU_PROG_HW) == 0)
-+		return 0;
-+
-+	/* obtain bit offset from otplayout register */
-+	offset = (bcma_read32(cc, BCMA_CC_OTPL) & BCMA_CC_OTPL_GURGN_OFFSET);
-+	return BCMA_CC_SPROM + (offset >> 3);
-+}
-+
- int bcma_sprom_get(struct bcma_bus *bus)
- {
--	u16 offset;
-+	u16 offset = BCMA_CC_SPROM;
- 	u16 *sprom;
--	u32 sromctrl;
- 	int err = 0;
- 
- 	if (!bus->drv_cc.core)
- 		return -EOPNOTSUPP;
- 
--	if (!(bus->drv_cc.capabilities & BCMA_CC_CAP_SPROM))
--		return -ENOENT;
-+	if (!bcma_sprom_ext_available(bus)) {
-+		/*
-+		 * External SPROM takes precedence so check
-+		 * on-chip OTP only when no external SPROM
-+		 * is present.
-+		 */
-+		if (!bcma_sprom_onchip_available(bus))
-+			return -ENOENT;
- 
--	if (bus->drv_cc.core->id.rev >= 32) {
--		sromctrl = bcma_read32(bus->drv_cc.core, BCMA_CC_SROM_CONTROL);
--		if (!(sromctrl & BCMA_CC_SROM_CONTROL_PRESENT))
-+		/* determine offset */
-+		offset = bcma_sprom_onchip_offset(bus);
-+		if (!offset)
- 			return -ENOENT;
- 	}
- 
-@@ -273,11 +372,6 @@ int bcma_sprom_get(struct bcma_bus *bus)
- 	if (bus->chipinfo.id == 0x4331)
- 		bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, false);
- 
--	/* Most cards have SPROM moved by additional offset 0x30 (48 dwords).
--	 * According to brcm80211 this applies to cards with PCIe rev >= 6
--	 * TODO: understand this condition and use it */
--	offset = (bus->chipinfo.id == 0x4331) ? BCMA_CC_SPROM :
--		BCMA_CC_SPROM_PCIE6;
- 	pr_debug("SPROM offset 0x%x\n", offset);
- 	bcma_sprom_read(bus, offset, sprom);
- 
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index e72938b..d963510 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -56,6 +56,9 @@
- #define	 BCMA_CC_OTPS_HW_PROTECT	0x00000001
- #define	 BCMA_CC_OTPS_SW_PROTECT	0x00000002
- #define	 BCMA_CC_OTPS_CID_PROTECT	0x00000004
-+#define  BCMA_CC_OTPS_GU_PROG_IND	0x00000F00	/* General Use programmed indication */
-+#define  BCMA_CC_OTPS_GU_PROG_IND_SHIFT	8
-+#define  BCMA_CC_OTPS_GU_PROG_HW	0x00000100	/* HW region programmed */
- #define BCMA_CC_OTPC			0x0014		/* OTP control */
- #define	 BCMA_CC_OTPC_RECWAIT		0xFF000000
- #define	 BCMA_CC_OTPC_PROGWAIT		0x00FFFF00
-@@ -72,6 +75,8 @@
- #define	 BCMA_CC_OTPP_READ		0x40000000
- #define	 BCMA_CC_OTPP_START		0x80000000
- #define	 BCMA_CC_OTPP_BUSY		0x80000000
-+#define BCMA_CC_OTPL			0x001C		/* OTP layout */
-+#define  BCMA_CC_OTPL_GURGN_OFFSET	0x00000FFF	/* offset of general use region */
- #define BCMA_CC_IRQSTAT			0x0020
- #define BCMA_CC_IRQMASK			0x0024
- #define	 BCMA_CC_IRQ_GPIO		0x00000001	/* gpio intr */
-@@ -79,6 +84,10 @@
- #define	 BCMA_CC_IRQ_WDRESET		0x80000000	/* watchdog reset occurred */
- #define BCMA_CC_CHIPCTL			0x0028		/* Rev >= 11 only */
- #define BCMA_CC_CHIPSTAT		0x002C		/* Rev >= 11 only */
-+#define  BCMA_CC_CHIPST_4313_SPROM_PRESENT	1
-+#define  BCMA_CC_CHIPST_4313_OTP_PRESENT	2
-+#define  BCMA_CC_CHIPST_4331_SPROM_PRESENT	2
-+#define	 BCMA_CC_CHIPST_4331_OTP_PRESENT	4
- #define BCMA_CC_JCMD			0x0030		/* Rev >= 10 only */
- #define  BCMA_CC_JCMD_START		0x80000000
- #define  BCMA_CC_JCMD_BUSY		0x80000000
--- 
-1.7.5.4
-
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBuZXRkZXYtb3duZXJAdmdlci5r
+ZXJuZWwub3JnIFttYWlsdG86bmV0ZGV2LQ0KPiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJl
+aGFsZiBPZiBKZWZmIEtpcnNoZXINCj4gU2VudDogVGh1cnNkYXksIEZlYnJ1YXJ5IDA5LCAyMDEy
+IDE6MjkgUE0NCj4gVG86IEpvZSBQZXJjaGVzDQo+IENjOiBEYXZpZCBNaWxsZXI7IERhdmlkLkxh
+aWdodEBBQ1VMQUIuQ09NOyBuZXRkZXZAdmdlci5rZXJuZWwub3JnOw0KPiBsaW51eC13aXJlbGVz
+cw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIG5ldC1uZXh0XSBkcml2ZXJzL25ldDogUmVtb3ZlIGJv
+b2xlYW4gY29tcGFyaXNvbnMNCj4gdG8gdHJ1ZS9mYWxzZQ0KPiANCj4gT24gVGh1LCAyMDEyLTAy
+LTA5IGF0IDEzOjE3IC0wODAwLCBKb2UgUGVyY2hlcyB3cm90ZToNCj4gPiBCb29sZWFucyBzaG91
+bGQgbm90IGJlIGNvbXBhcmVkIHRvIHRydWUgb3IgZmFsc2UNCj4gPiBidXQgYmUgZGlyZWN0bHkg
+dGVzdGVkIG9yIHRlc3RlZCB3aXRoICEuDQo+ID4NCj4gPiBEb25lIHZpYSBjb2NjaSBzY3JpcHQ6
+DQo+ID4NCj4gPiBAQA0KPiA+IGJvb2wgdDsNCj4gPiBAQA0KPiA+IC0gdCA9PSB0cnVlDQo+ID4g
+KyB0DQo+ID4gQEANCj4gPiBib29sIHQ7DQo+ID4gQEANCj4gPiAtIHQgIT0gdHJ1ZQ0KPiA+ICsg
+IXQNCj4gPiBAQA0KPiA+IGJvb2wgdDsNCj4gPiBAQA0KPiA+IC0gdCA9PSBmYWxzZQ0KPiA+ICsg
+IXQNCj4gPiBAQA0KPiA+IGJvb2wgdDsNCj4gPiBAQA0KPiA+IC0gdCAhPSBmYWxzZQ0KPiA+ICsg
+dA0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogSm9lIFBlcmNoZXMgPGpvZUBwZXJjaGVzLmNvbT4N
+Cj4gPiAtLS0NCj4gPiAgZHJpdmVycy9uZXQvZXRoZXJuZXQvYnJvYWRjb20vYm54MngvYm54Mnhf
+Y21uLmggICAgfCAgICAzICstLQ0KPiA+ICBkcml2ZXJzL25ldC9ldGhlcm5ldC9icm9jYWRlL2Ju
+YS9iZmFfY2VlLmMgICAgICAgICB8ICAgIDggKysrKy0tLS0NCj4gPiAgZHJpdmVycy9uZXQvZXRo
+ZXJuZXQvYnJvY2FkZS9ibmEvYmZhX2lvYy5jICAgICAgICAgfCAgICAyICstDQo+ID4gIGRyaXZl
+cnMvbmV0L2V0aGVybmV0L2ludGVsL2l4Z2IvaXhnYl9lZS5jICAgICAgICAgIHwgICAxMg0KPiA+
+ICsrKysrLS0tLS0tLQ0KPiA+ICBkcml2ZXJzL25ldC9ldGhlcm5ldC9pbnRlbC9peGdiZS9peGdi
+ZV84MjU5OC5jICAgICB8ICAgIDQgKystLQ0KPiA+ICBkcml2ZXJzL25ldC9ldGhlcm5ldC9pbnRl
+bC9peGdiZS9peGdiZV9zcmlvdi5jICAgICB8ICAgIDIgKy0NCj4gPiAgZHJpdmVycy9uZXQvZXRo
+ZXJuZXQvaW50ZWwvaXhnYmUvaXhnYmVfeDU0MC5jICAgICAgfCAgICAyICstDQo+ID4gIC4uLi9u
+ZXQvZXRoZXJuZXQvb2tpLXNlbWkvcGNoX2diZS9wY2hfZ2JlX21haW4uYyAgIHwgICAgMiArLQ0K
+PiA+ICBkcml2ZXJzL25ldC9waHkvYnJvYWRjb20uYyAgICAgICAgICAgICAgICAgICAgICAgICB8
+ICAgIDYgKystLS0tDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg1ay9hbmkuYyAg
+ICAgICAgICAgICAgIHwgICAgOCArKysrLS0tLQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9h
+dGgvYXRoOWsvYW5pLmMgICAgICAgICAgICAgICB8ICAgIDYgKysrLS0tDQo+ID4gIGRyaXZlcnMv
+bmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9ody1vcHMuaCAgICAgICAgICAgIHwgICAgMiArLQ0KPiA+
+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvaHcuYyAgICAgICAgICAgICAgICB8ICAg
+IDUgKystLS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJjbTgwMjExL2JyY21mbWFjL2Ro
+ZF9zZGlvLmMgfCAgIDE2DQo+ID4gKysrKysrKy0tLS0tLS0tLQ0KPiA+ICBkcml2ZXJzL25ldC93
+aXJlbGVzcy9icmNtODAyMTEvYnJjbXNtYWMvbWFpbi5jICAgICB8ICAgIDQgKystLQ0KPiA+ICAu
+Li4vbmV0L3dpcmVsZXNzL2JyY204MDIxMS9icmNtc21hYy9waHkvcGh5X24uYyAgICB8ICAgIDIg
+Ky0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJhbnMtcGNpZS10eC5j
+ICAgfCAgICA0ICsrLS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJh
+bnMtcGNpZS5jICAgICAgfCAgICAyICstDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL213bDhr
+LmMgICAgICAgICAgICAgICAgICAgICAgIHwgICAgNSArKy0tLQ0KPiA+ICBkcml2ZXJzL25ldC93
+aXJlbGVzcy9ydGx3aWZpL2VmdXNlLmMgICAgICAgICAgICAgICB8ICAgIDIgKy0NCj4gPiAgZHJp
+dmVycy9uZXQvd2lyZWxlc3MvcnRsd2lmaS9wcy5jICAgICAgICAgICAgICAgICAgfCAgICAzICst
+LQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0bDgxOTJjL2RtX2NvbW1vbi5j
+ICB8ICAgIDQgKystLQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0bDgxOTJj
+L3BoeV9jb21tb24uYyB8ICAgIDggKysrKy0tLS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+cnRsd2lmaS9ydGw4MTkyY2UvaHcuYyAgICAgICAgfCAgICA5ICsrKystLS0tLQ0KPiA+ICBkcml2
+ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0bDgxOTJjZS9waHkuYyAgICAgICB8ICAgIDMgKy0t
+DQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL3J0bHdpZmkvcnRsODE5MmNlL3JmLmMgICAgICAg
+IHwgICAgMiArLQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0bDgxOTJjdS9w
+aHkuYyAgICAgICB8ICAgIDMgKy0tDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL3J0bHdpZmkv
+cnRsODE5MmN1L3JmLmMgICAgICAgIHwgICAgMiArLQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVz
+cy9ydGx3aWZpL3J0bDgxOTJkZS9kbS5jICAgICAgICB8ICAgIDIgKy0NCj4gPiAgZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvcnRsd2lmaS9ydGw4MTkyZGUvaHcuYyAgICAgICAgfCAgICA5ICsrKystLS0t
+LQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0bDgxOTJkZS9waHkuYyAgICAg
+ICB8ICAgMTEgKysrKystLS0tDQo+IC0tDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL3J0bHdp
+ZmkvcnRsODE5MmRlL3JmLmMgICAgICAgIHwgICAgMiArLQ0KPiA+ICBkcml2ZXJzL25ldC93aXJl
+bGVzcy9ydGx3aWZpL3J0bDgxOTJzZS9mdy5jICAgICAgICB8ICAgIDYgKysrLS0tDQo+ID4gIGRy
+aXZlcnMvbmV0L3dpcmVsZXNzL3J0bHdpZmkvcnRsODE5MnNlL2h3LmMgICAgICAgIHwgICAxMCAr
+KysrKy0tLS0NCj4gLQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0bDgxOTJz
+ZS9waHkuYyAgICAgICB8ICAgMTMNCj4gPiArKysrKystLS0tLS0tDQo+ID4gIGRyaXZlcnMvbmV0
+L3dpcmVsZXNzL3J0bHdpZmkvcnRsODE5MnNlL3JmLmMgICAgICAgIHwgICAgMiArLQ0KPiA+ICAz
+NiBmaWxlcyBjaGFuZ2VkLCA4NSBpbnNlcnRpb25zKCspLCAxMDEgZGVsZXRpb25zKC0pDQo+IA0K
+PiBUaGUgaXhnYmUgY2hhbmdlcyBsb29rIGZpbmUsIGFuZCBJIGRvIG5vdCBzZWUgYW55IGlzc3Vl
+cyB3aXRoIHRoZQ0KPiBjaGFuZ2VzLg0KPiANCj4gUmV2aWV3ZWQtYnk6IEplZmYgS2lyc2hlciA8
+amVmZnJleS50LmtpcnNoZXJAaW50ZWwuY29tPg0KDQpIYXMgdGhlIGNvY2NpIHNjcmlwdCBiZWVu
+IChvciB3aWxsIGl0IGJlKSBhZGRlZCB0byAuL3NjcmlwdHMvY29jY2luZWxsZT8NCg0K
