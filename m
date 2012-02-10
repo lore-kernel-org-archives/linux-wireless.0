@@ -1,118 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37423 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:10533 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753795Ab2BUJYG (ORCPT
+	with ESMTP id S1750845Ab2BJPKl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Feb 2012 04:24:06 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Fri, 10 Feb 2012 10:10:41 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 1/2] ath6kl: Make sure to allocate rx buffers after the endpoint connection
+Date: Fri, 10 Feb 2012 20:40:32 +0530
+Message-ID: <1328886633-2823-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120210_161046_111260_011E33FA)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20291.25258.47951.187283@gargle.gargle.HOWL> (sfid-20120221_102411_707601_C4EC22E0)
-Date: Tue, 21 Feb 2012 14:53:54 +0530
-To: <linux-wireless@vger.kernel.org>
-CC: <ath9k-devel@lists.ath9k.org>
-Subject: [RFC/WIP 19/22] ath9k_htc: Use CONFIG_ATH9K_BTCOEX_SUPPORT
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k_htc can also make use of CONFIG_ATH9K_BTCOEX_SUPPORT
-to be compiled without BTCOEX support.
+Rx buffers should be allocated for control and best effort endpoints only
+after the enpoints connection is esablished. But this is done before the
+endpoint connection is complete, we don't even the control and BE endpoints
+that time. Move the buffer allocation after endpoint connection is over,
+after ath6kl_init_hw_start(). Found in review, never seen any real issue
+with this.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          |   18 +++++++++++++++---
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |   10 +++++++---
- 2 files changed, 22 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath6kl/core.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 8046be6..1357952 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -400,12 +400,21 @@ struct ath_btcoex {
- 	u32 btscan_no_stomp;
- };
+diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
+index c4926cf..ce7d9b5 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.c
++++ b/drivers/net/wireless/ath/ath6kl/core.c
+@@ -136,10 +136,6 @@ int ath6kl_core_init(struct ath6kl *ar)
+ 	ar->ac_stream_pri_map[WMM_AC_VI] = 2;
+ 	ar->ac_stream_pri_map[WMM_AC_VO] = 3; /* highest */
  
-+#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- void ath9k_htc_init_btcoex(struct ath9k_htc_priv *priv, char *product);
- void ath9k_htc_start_btcoex(struct ath9k_htc_priv *priv);
- void ath9k_htc_stop_btcoex(struct ath9k_htc_priv *priv);
--void ath_htc_init_btcoex_work(struct ath9k_htc_priv *priv);
--void ath_htc_resume_btcoex_work(struct ath9k_htc_priv *priv);
--void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv);
-+#else
-+static inline void ath9k_htc_init_btcoex(struct ath9k_htc_priv *priv, char *product)
-+{
-+}
-+static inline void ath9k_htc_start_btcoex(struct ath9k_htc_priv *priv)
-+{
-+}
-+static inline void ath9k_htc_stop_btcoex(struct ath9k_htc_priv *priv)
-+{
-+}
-+#endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
+-	/* give our connected endpoints some buffers */
+-	ath6kl_rx_refill(ar->htc_target, ar->ctrl_ep);
+-	ath6kl_rx_refill(ar->htc_target, ar->ac2ep_map[WMM_AC_BE]);
+-
+ 	/* allocate some buffers that handle larger AMSDU frames */
+ 	ath6kl_refill_amsdu_rxbufs(ar, ATH6KL_MAX_AMSDU_RX_BUFFERS);
  
- #define OP_INVALID		   BIT(0)
- #define OP_SCANNING		   BIT(1)
-@@ -486,7 +495,10 @@ struct ath9k_htc_priv {
- 	int cabq;
- 	int hwq_map[WME_NUM_AC];
- 
-+#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- 	struct ath_btcoex btcoex;
-+#endif
-+
- 	struct delayed_work coex_period_work;
- 	struct delayed_work duty_cycle_work;
- #ifdef CONFIG_ATH9K_HTC_DEBUGFS
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-index 2c61d36..6aa7674 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-@@ -22,6 +22,8 @@
- 
- #define ATH_HTC_BTCOEX_PRODUCT_ID "wb193"
- 
-+#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
-+
- /*
-  * Detects if there is any priority bt traffic
-  */
-@@ -113,7 +115,7 @@ static void ath_btcoex_duty_cycle_work(struct work_struct *work)
- 	ath9k_hw_btcoex_enable(priv->ah);
- }
- 
--void ath_htc_init_btcoex_work(struct ath9k_htc_priv *priv)
-+static void ath_htc_init_btcoex_work(struct ath9k_htc_priv *priv)
- {
- 	struct ath_btcoex *btcoex = &priv->btcoex;
- 
-@@ -133,7 +135,7 @@ void ath_htc_init_btcoex_work(struct ath9k_htc_priv *priv)
-  * (Re)start btcoex work
-  */
- 
--void ath_htc_resume_btcoex_work(struct ath9k_htc_priv *priv)
-+static void ath_htc_resume_btcoex_work(struct ath9k_htc_priv *priv)
- {
- 	struct ath_btcoex *btcoex = &priv->btcoex;
- 	struct ath_hw *ah = priv->ah;
-@@ -153,7 +155,7 @@ void ath_htc_resume_btcoex_work(struct ath9k_htc_priv *priv)
- /*
-  * Cancel btcoex and bt duty cycle work.
-  */
--void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv)
-+static void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv)
- {
- 	if (ath9k_hw_get_btcoex_scheme(priv->ah) == ATH_BTCOEX_CFG_NONE)
- 		return;
-@@ -216,6 +218,8 @@ void ath9k_htc_init_btcoex(struct ath9k_htc_priv *priv, char *product)
+@@ -182,6 +178,10 @@ int ath6kl_core_init(struct ath6kl *ar)
+ 		goto err_rxbuf_cleanup;
  	}
- }
  
-+#endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
++	/* give our connected endpoints some buffers */
++	ath6kl_rx_refill(ar->htc_target, ar->ctrl_ep);
++	ath6kl_rx_refill(ar->htc_target, ar->ac2ep_map[WMM_AC_BE]);
 +
- /*******/
- /* LED */
- /*******/
+ 	/*
+ 	 * Set mac address which is received in ready event
+ 	 * FIXME: Move to ath6kl_interface_add()
 -- 
-1.7.9.1
+1.7.0.4
 
