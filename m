@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:50057 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754289Ab2B2Gir (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 01:38:47 -0500
-Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
-	by rcsinet15.oracle.com (Sentrion-MTA-4.2.2/Sentrion-MTA-4.2.2) with ESMTP id q1T6cjwK012954
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 06:38:46 GMT
-Received: from acsmt356.oracle.com (acsmt356.oracle.com [141.146.40.156])
-	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id q1T6ciIu017469
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 06:38:44 GMT
-Received: from abhmt103.oracle.com (abhmt103.oracle.com [141.146.116.55])
-	by acsmt356.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id q1T6ciR7003388
-	for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 00:38:44 -0600
-Date: Wed, 29 Feb 2012 09:38:41 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: linux-wireless@vger.kernel.org
-Subject: checking for integer overflows in cfg80211_roamed_bss()
-Message-ID: <20120229063841.GG18031@elgon.mountain> (sfid-20120229_073850_391425_67F24184)
+Received: from mms3.broadcom.com ([216.31.210.19]:2976 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758463Ab2BJJxZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Feb 2012 04:53:25 -0500
+Message-ID: <4F34E860.1020805@broadcom.com> (sfid-20120210_105334_744516_1B10F11B)
+Date: Fri, 10 Feb 2012 10:50:24 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: "David Laight" <David.Laight@ACULAB.COM>
+cc: "Joe Perches" <joe@perches.com>,
+	"David Miller" <davem@davemloft.net>,
+	"jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH net-next] drivers/net: Remove boolean comparisons to
+ true/false
+References: <AE90C24D6B3A694183C094C60CF0A2F6026B6E65@saturn3.aculab.com>
+In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B6E65@saturn3.aculab.com>
+Content-Type: text/plain;
+ charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I just sent a patch for a places that didn't cap "req_ie_len" and
-"resp_ie_len" properly leading to integer overflows in
-cfg80211_roamed_bss().  If there was a good way, I'd like to cap those
-values inside cfg80211_roamed_bss() as well.  What is a good limit to
-use?
+On 02/10/2012 10:32 AM, David Laight wrote:
+>  
+>> -	u32 func_encode = func |
+>> -			((is_Pf == true ? 1 : 0) <<
+> IGU_FID_ENCODE_IS_PF_SHIFT);
+>> +	u32 func_encode = func | (is_Pf ? 1 : 0) <<
+> IGU_FID_ENCODE_IS_PF_SHIFT;
+> 
+> This sort of thing is why I personally don't like 'bool' at all.
+> If 'is_Pf' were an integer type that is known to only contain 0 or 1
+> then the code can just be:
 
-devel/net/wireless/sme.c
-   653  
-   654          ev = kzalloc(sizeof(*ev) + req_ie_len + resp_ie_len, gfp);
-   655          if (!ev) {
-   656                  cfg80211_put_bss(bss);
-   657                  return;
-   658          }
-   659  
+Properly chosing the bool type is not what is being handled by the
+patch. Easiest way to convert would be using double inversion:
 
-regards,
-dan carpenter
+u32 func_encode = func | (!!is_Pf << IGU_FID_ENCODE_IS_PF_SHIFT);
+
+The parenthesis are not needed due to operator precedence, but is more
+clear this way (to me at least).
+
+Gr. AvS
+
