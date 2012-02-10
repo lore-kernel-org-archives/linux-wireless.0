@@ -1,51 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51822 "EHLO nbd.name"
+Received: from bues.ch ([80.190.117.144]:60807 "EHLO bues.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751851Ab2B0MHZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 07:07:25 -0500
-Message-ID: <4F4B71F2.1020709@openwrt.org> (sfid-20120227_130729_182747_BE98FF6D)
-Date: Mon, 27 Feb 2012 13:07:14 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: David Fries <david@fries.net>
-CC: Nick Kossifidis <mickflemm@gmail.com>,
-	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Subject: Re: ath5k phy0: gain calibration timeout
-References: <20120227031232.GA1190@spacedout.fries.net>
-In-Reply-To: <20120227031232.GA1190@spacedout.fries.net>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S1754268Ab2BJKlO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Feb 2012 05:41:14 -0500
+Date: Fri, 10 Feb 2012 11:40:58 +0100
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: chunkeey@web.de, jcmvbkbc@gmail.com, linux-kernel@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
+Subject: Re: [RFC/RFT] p54spi: Convert driver to use asynchronous firmware
+ loading
+Message-ID: <20120210114058.771f0e27@milhouse> (sfid-20120210_114200_836815_8938ED60)
+In-Reply-To: <4f346d61.3S6x22TS5RH2gGO5%Larry.Finger@lwfinger.net>
+References: <4f346d61.3S6x22TS5RH2gGO5%Larry.Finger@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-02-27 4:12 AM, David Fries wrote:
-> Wireless network stopped working after 22 hours with ath5k, I have the
-> following message repeating, suspending to ram and back was enough to
-> get it talking again.
-> ath5k phy0: gain calibration timeout (2462MHz)
-> 
-> I previously was running 3.2-rc5 for a month and a half straight
-> without any wireless issues, I just upgraded to 3.3-rc1, the message
-> started 22 hours after booting the newer kernel.  This ath5k is
-> running hostapd 1:0.7.3-4 with WPA-EAP and had no clients for the 12
-> hours before the calibration message started, and had no clients for
-> hours after until I tried to connect and found I couldn't.
-> While I was unable to connect, I flipped
-> the laptop rfkill switch and the gain calibration timeouts continued,
-> disabling rfkill and they still continued.  That's when I did a
-> suspend to memory and resume and found it recovered.  While it was
-> working I tried rfkill and it no longer was talking after disabling
-> rfkill, I thought it was resuming previously, but I don't use that
-> very often.
-> 
-> I revered the following two comments and will see if I run into any
-> more problems.  I can test patches.
-> ath5k: We always do full calibration on AR5210
-> dafae6af0336958e9e2eb67cc5e4e31d6d13b308
-> ath5k: Calibration re-work
-> ce169aca0d823d38465127023e3d571816e6666c
-Please try applying the following two patches:
-http://nbd.name/gitweb.cgi?p=openwrt.git;a=blob_plain;f=package/mac80211/patches/440-ath5k_calibrate_no_queue_stop.patch;hb=HEAD
-http://nbd.name/gitweb.cgi?p=openwrt.git;a=blob_plain;f=package/mac80211/patches/441-ath5k_no_agc_recalibration.patch;hb=HEAD
+On Thu, 09 Feb 2012 19:05:37 -0600
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-- Felix
+> Index: wireless-testing-new/drivers/net/wireless/p54/p54spi.c
+> ===================================================================
+> --- wireless-testing-new.orig/drivers/net/wireless/p54/p54spi.c
+> +++ wireless-testing-new/drivers/net/wireless/p54/p54spi.c
+> @@ -163,25 +163,41 @@ static int p54spi_spi_write_dma(struct p
+>  	return 0;
+>  }
+>  
+> -static int p54spi_request_firmware(struct ieee80211_hw *dev)
+> +
+> +static void p54s_load_firmware_cb(const struct firmware *firmware,
+> +				  void *context)
+>  {
+> +	struct ieee80211_hw *dev = context;
+>  	struct p54s_priv *priv = dev->priv;
+>  	int ret;
+>  
+> -	/* FIXME: should driver use it's own struct device? */
+> -	ret = request_firmware(&priv->firmware, "3826.arm", &priv->spi->dev);
+> -
+> -	if (ret < 0) {
+> -		dev_err(&priv->spi->dev, "request_firmware() failed: %d", ret);
+> -		return ret;
+> +	if (!firmware) {
+> +		/* alternate firmware not found */
+> +		dev_err(&priv->spi->dev, "Firmware loading failed\n");
+> +		return;
+>  	}
+> +	complete(&priv->fw_loaded);
+> +	priv->firmware = firmware;
+>  
+>  	ret = p54_parse_firmware(dev, priv->firmware);
+> -	if (ret) {
+> +	if (ret)
+>  		release_firmware(priv->firmware);
+> +}
+> +
+> +static int p54spi_request_firmware(struct ieee80211_hw *dev)
+> +{
+> +	struct p54s_priv *priv = dev->priv;
+> +	int ret;
+> +
+> +	init_completion(&priv->fw_loaded);
+> +	/* FIXME: should driver use it's own struct device? */
+> +	ret = request_firmware_nowait(THIS_MODULE, 1, "3826.arm",
+> +				      &priv->spi->dev, GFP_KERNEL, dev,
+> +				      p54s_load_firmware_cb);
+> +	if (ret < 0) {
+> +		dev_err(&priv->spi->dev, "request_firmware() failed: %d", ret);
+>  		return ret;
+>  	}
+> -
+>  	return 0;
+>  }
+
+I think we need a wait_for_completion in op_start. We need to make sure firmware load is finished.
+It might currently work, though, because we have the other fw_comp completion.
+Please also rename your new completion to fw_requested or something like this to avoid
+confusion with the real fw-loaded completion.
+
+Also, what about eeprom request?
+
+> @@ -681,6 +697,7 @@ static int __devexit p54spi_remove(struc
+>  {
+>  	struct p54s_priv *priv = dev_get_drvdata(&spi->dev);
+>  
+> +	wait_for_completion(&priv->fw_loaded);
+>  	p54_unregister_common(priv->hw);
+>  
+>  	free_irq(gpio_to_irq(p54spi_gpio_irq), spi);
+> Index: wireless-testing-new/drivers/net/wireless/p54/p54spi.h
+> ===================================================================
+> --- wireless-testing-new.orig/drivers/net/wireless/p54/p54spi.h
+> +++ wireless-testing-new/drivers/net/wireless/p54/p54spi.h
+> @@ -120,6 +120,7 @@ struct p54s_priv {
+>  
+>  	enum fw_state fw_state;
+>  	const struct firmware *firmware;
+> +	struct completion fw_loaded;
+>  };
+>  
+>  #endif /* P54SPI_H */
+> 
+
+
+
+-- 
+Greetings, Michael.
