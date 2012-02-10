@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:6942 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755681Ab2B1BF4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 20:05:56 -0500
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <hauke@hauke-m.de>, <nbd@nbd.name>, <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>
-Subject: [PATCH 0/7] compat: optimize build
-Date: Mon, 27 Feb 2012 17:05:34 -0800
-Message-ID: <1330391141-19909-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120228_020604_445450_087686FB)
+Received: from ackle.nomi.cz ([81.31.33.35]:59142 "EHLO ackle.nomi.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759796Ab2BJS1O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Feb 2012 13:27:14 -0500
+Date: Fri, 10 Feb 2012 19:09:29 +0100
+From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+To: wwguy <wey-yi.w.guy@intel.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+Message-ID: <20120210180929.GA17733@nomi.cz> (sfid-20120210_192717_776950_EE4FF261)
+References: <20111110160703.GA2775@redhat.com> <20111110163051.GA24533@nomi.cz> <20111111054731.GA2292@redhat.com> <20111111150105.GA25437@nomi.cz> <20111114140714.GD2513@redhat.com> <20111119181106.GA5515@nomi.cz> <1321755233.22510.1.camel@wwguy-ubuntu> <20111120032016.GA14520@nomi.cz> <1321763314.22510.4.camel@wwguy-ubuntu> <20111120204007.GA7273@nomi.cz>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20111120204007.GA7273@nomi.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <mcgrof@frijolero.org>
+Hi guys,
 
-Hauke reported that parallel building was borked with the latest
-autoconf fixes on compat. This series addresses that but also optimizes
-things a bit further now now that I've gone down the rabbit hole of
-reviewing make -d and also studying GNU Make's jobserver [0]. The thing
-that impresses me was the inherent expectation and support by GNU Make
-on recursion when you'd expect it to be supported. Unfortunately none
-of this was documented well but I hope this series and my rants helps
-with spreading some of the documentation love on this.
+On Sun, Nov 20, 2011 at 09:40:07PM +0100, Tomáš Janoušek wrote:
+> > Yes, I will try your configuration when I get back  to the office Monday
 
-[0] http://mcgrof.blogspot.com/2012/02/gnu-things-are-gnu-simplicity-of-gnu.html
+Did you have any luck? I just found out something which is almost completely
+insane.
 
-Luis R. Rodriguez (7):
-  compat: fix parallel builds
-  compat: move definition of COMPAT_CONFIG and COMPAT_AUTOCONF
-  compat: explicitly define paths for local configs
-  compat: remove dubious clean at install target
-  compat: split COMPAT_CONFIG and COMPAT_AUTOCONF targets
-  compat: avoid unnecessary recursion to include a file
-  compat: optimize building by extending .PHONY
+For the last few months, I've happily used a 64-bit kernel and have had no
+problems whatsoever. About a week ago, I started using virtual machines in
+KVM. And today I found that I have exactly the same problem, but only _inside_
+the virtual machine. I can't reliably scp a file from the internet to my
+virtual machine. It works fine when I scp to the host, it works fine when I'm
+on a WPA-PSK network. And it happens even if I tell kvm to emulate e1000, not
+only with virtio-net. How strange is that?
 
- Makefile |   27 +++++++++++----------------
- 1 files changed, 11 insertions(+), 16 deletions(-)
+And while this is happening, the host is running just fine. The host has a
+64-bit kernel with a 32-bit userspace, so if something was wrong with the
+32-bit mode of my processor, it would've appeared on the host as well, no?
 
+It's also worth mentioning that if I build openssl with "no-asm 386", scp
+works just fine. So it doesn't look like a memory corruption after all. It
+seems as if certain CPU instructions didn't work properly if running on a
+32-bit kernel with a WiFi adapter doing something. But how can it be
+that those same CPU instructions work on a 64-bit host with 32-bit userspace?
+At the same time! That's just completely insane, and I can't think of an
+explanation. Shall I get a new CPU perhaps? :-)
+
+Please, give me any ideas that you might have.
+
+Regards,
 -- 
-1.7.4.15.g7811d
-
+Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
