@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0.aculab.com ([213.249.233.131]:60866 "HELO mx0.aculab.com"
+Received: from mx0.aculab.com ([213.249.233.131]:59829 "HELO mx0.aculab.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752873Ab2BFL1E convert rfc822-to-8bit (ORCPT
+	id S1753511Ab2BJJdI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Feb 2012 06:27:04 -0500
+	Fri, 10 Feb 2012 04:33:08 -0500
 Received: from mx0.aculab.com ([127.0.0.1])
  by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
- id 26350-06 for <linux-wireless@vger.kernel.org>;
- Mon,  6 Feb 2012 11:27:01 +0000 (GMT)
+ id 27422-03 for <linux-wireless@vger.kernel.org>;
+ Fri, 10 Feb 2012 09:33:05 +0000 (GMT)
 MIME-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
-Subject: RE: [PATCH 1/1] wireless: move ifs' in _rtl92c_store_pwrIndex_diffrate_offset into elseif statements
-Date: Mon, 6 Feb 2012 11:26:37 -0000
-Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B6E58@saturn3.aculab.com> (sfid-20120206_122726_446926_9C555D05)
-In-Reply-To: <4F2EA8D8.4080907@lwfinger.net>
+Subject: RE: [PATCH net-next] drivers/net: Remove boolean comparisons to true/false
+Date: Fri, 10 Feb 2012 09:32:39 -0000
+Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B6E65@saturn3.aculab.com> (sfid-20120210_103325_927025_FF43B054)
+In-Reply-To: <1328822243.29329.11.camel@joe2Laptop>
 From: "David Laight" <David.Laight@ACULAB.COM>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Jan Ceuleers" <jan.ceuleers@computer.org>
-Cc: "Devendra.Naga" <devendra.aaru@gmail.com>,
-	<chaoming_li@realsil.com.cn>, <linville@tuxdriver.com>,
-	<paul.gortmaker@windriver.com>, <joe@perches.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
+To: "Joe Perches" <joe@perches.com>,
+	"David Miller" <davem@davemloft.net>
+Cc: <jeffrey.t.kirsher@intel.com>, <netdev@vger.kernel.org>,
+	"linux-wireless" <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Yes, it is correct. It might be clearer if it were written as 
-> a switch statement, but that would be a lot more intrusive.
-> Besides, have you ever looked at the way gcc compiles a switch?
+ 
+> -	u32 func_encode = func |
+> -			((is_Pf == true ? 1 : 0) <<
+IGU_FID_ENCODE_IS_PF_SHIFT);
+> +	u32 func_encode = func | (is_Pf ? 1 : 0) <<
+IGU_FID_ENCODE_IS_PF_SHIFT;
 
-How gcc compiles a switch statement depends (amongst other
-things) on whether the labels form a 'dense set' or not.
-If they are dense it will usually generate a jump table.
-If they are not dense it will compare against the 'middle'
-entry first and generate a tree of conditionals.
-An 'else if' chain is a linear search.
+This sort of thing is why I personally don't like 'bool' at all.
+If 'is_Pf' were an integer type that is known to only contain 0 or 1
+then the code can just be:
+	u32 func_encode = func | is_Pf << IGU_FID_ENCODE_IS_PF_SHIFT;
+although that is still valid when is_Pf is bool, the compiler
+is required to generate code on every access that converts
+all non-zero values to 1 - so the generated code is likely
+to be 'is_Pf ? 1 : 0'.
 
-If the performance of the code matters in can be worth
-an explicit test for the common case outside the switch.
-Alternatively an 'if else' chain with every conditional
-marked 'unlikely' should generate exactly one mispredicted
-branch (if you can force static branch prediction).
-
-There are further constraints that apply to some cpus.
-
-Mostly it isn't worth worrying about - although a lot of
-code can be significantly sped up by avoiding/containing
-register spills and mis-predicted branches.
-
-The code is question seemed to be checking bits, not
-an ordinal - so changing to a case might be problematic.
-(Could more than one bit bet set????)
+The generated code is particularly horrid for boolean arithmetic.
+IIRC:
+   bool_var &= bool_var_1;
+typically requires a sequence of compare and branch instructions.
 
 	David
 
