@@ -1,55 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48395 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755325Ab2BWKQV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 05:16:21 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 5/6] iwlwifi: print DMA stop timeout message only if that error happened
-Date: Thu, 23 Feb 2012 11:16:07 +0100
-Message-Id: <1329992168-19990-5-git-send-email-sgruszka@redhat.com> (sfid-20120223_111626_401628_A994E846)
-In-Reply-To: <1329992168-19990-1-git-send-email-sgruszka@redhat.com>
-References: <1329992168-19990-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:54920 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757799Ab2BJAUG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Feb 2012 19:20:06 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Tim Gardner <tim.gardner@canonical.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH v3] rtlwifi: rtl8192se firmware load can overflow target buffer
+Date: Thu,  9 Feb 2012 18:19:52 -0600
+Message-Id: <1328833192-10681-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120210_012019_440357_9C480C02)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwl_poll_direct_bit() return negative error value on timeout, positive
-values does not indicate an error.
+From: Tim Gardner <tim.gardner@canonical.com>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Define RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE which represents the
+maximimum possible firmware file size. Use it in the definition
+of the buffer which receives the firmware file data.
+
+Set RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE closer to the actual size of
+the firmware file, e.g., 90000 (down from hard coded 164000). The current
+size of rtlwifi/rtl8192sefw.bin is 88856.
+
+Set max_fw_size to RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE for the size limit
+check. Fix the error case where max_fw_size is not cleared if the size
+limit check fails.
+
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+ drivers/net/wireless/rtlwifi/rtl8192se/fw.h |    3 ++-
+ drivers/net/wireless/rtlwifi/rtl8192se/sw.c |    3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index b6909b4..a0e716f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1209,7 +1209,7 @@ static void iwl_trans_pcie_fw_alive(struct iwl_trans *trans)
-  */
- static int iwl_trans_tx_stop(struct iwl_trans *trans)
- {
--	int ch, txq_id;
-+	int ch, txq_id, ret;
- 	unsigned long flags;
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
+index babe85d..b4afff6 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
+@@ -30,6 +30,7 @@
+ #define __REALTEK_FIRMWARE92S_H__
  
-@@ -1222,9 +1222,10 @@ static int iwl_trans_tx_stop(struct iwl_trans *trans)
- 	for (ch = 0; ch < FH_TCSR_CHNL_NUM; ch++) {
- 		iwl_write_direct32(trans,
- 				   FH_TCSR_CHNL_TX_CONFIG_REG(ch), 0x0);
--		if (iwl_poll_direct_bit(trans, FH_TSSR_TX_STATUS_REG,
-+		ret = iwl_poll_direct_bit(trans, FH_TSSR_TX_STATUS_REG,
- 				    FH_TSSR_TX_STATUS_REG_MSK_CHNL_IDLE(ch),
--				    1000))
-+				    1000);
-+		if (ret < 0)
- 			IWL_ERR(trans, "Failing on timeout while stopping"
- 			    " DMA channel %d [0x%08x]", ch,
- 			    iwl_read_direct32(trans,
+ #define RTL8190_MAX_FIRMWARE_CODE_SIZE		64000
++#define RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE	90000
+ #define RTL8190_CPU_START_OFFSET		0x80
+ /* Firmware Local buffer size. 64k */
+ #define	MAX_FIRMWARE_CODE_SIZE			0xFF00
+@@ -217,7 +218,7 @@ struct rt_firmware {
+ 	u8 fw_emem[RTL8190_MAX_FIRMWARE_CODE_SIZE];
+ 	u32 fw_imem_len;
+ 	u32 fw_emem_len;
+-	u8 sz_fw_tmpbuffer[164000];
++	u8 sz_fw_tmpbuffer[RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE];
+ 	u32 sz_fw_tmpbufferlen;
+ 	u16 cmdpacket_fragthresold;
+ };
+diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+index ca38dd9..345d752 100644
+--- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
++++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
+@@ -108,6 +108,7 @@ static void rtl92se_fw_cb(const struct firmware *firmware, void *context)
+ 	if (firmware->size > rtlpriv->max_fw_size) {
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 "Firmware is too big!\n");
++		rtlpriv->max_fw_size = 0;
+ 		release_firmware(firmware);
+ 		return;
+ 	}
+@@ -232,7 +233,7 @@ static int rtl92s_init_sw_vars(struct ieee80211_hw *hw)
+ 		return 1;
+ 	}
+ 
+-	rtlpriv->max_fw_size = sizeof(struct rt_firmware);
++	rtlpriv->max_fw_size = RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE;
+ 
+ 	pr_info("Driver for Realtek RTL8192SE/RTL8191SE\n"
+ 		"Loading firmware %s\n", rtlpriv->cfg->fw_name);
 -- 
-1.7.1
+1.7.9
 
