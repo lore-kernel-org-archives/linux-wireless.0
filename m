@@ -1,103 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3664 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758330Ab2BIUVy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 15:21:54 -0500
-Message-ID: <4F342AD6.8000205@broadcom.com> (sfid-20120209_212223_193741_F48FCB13)
-Date: Thu, 9 Feb 2012 21:21:42 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail1-relais-roc.national.inria.fr ([192.134.164.82]:6950 "EHLO
+	mail1-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751452Ab2BJGqE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Feb 2012 01:46:04 -0500
+Date: Fri, 10 Feb 2012 07:46:01 +0100 (CET)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Joe Perches <joe@perches.com>
+cc: "Allan, Bruce W" <bruce.w.allan@intel.com>,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	"Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+	David Miller <davem@davemloft.net>,
+	"David.Laight@ACULAB.COM" <David.Laight@ACULAB.COM>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH net-next] drivers/net: Remove boolean comparisons to
+ true/false
+In-Reply-To: <1328828918.29329.21.camel@joe2Laptop>
+Message-ID: <alpine.DEB.2.02.1202100745050.1981@hadrien> (sfid-20120210_074614_857281_F28F20F3)
+References: <1328783282-17760-5-git-send-email-jeffrey.t.kirsher@intel.com>  <AE90C24D6B3A694183C094C60CF0A2F6026B6E62@saturn3.aculab.com>  <20120209.133413.349832435589531136.davem@davemloft.net>  <1328822243.29329.11.camel@joe2Laptop>
+ <1328822935.2242.1.camel@jtkirshe-mobl>  <804857E1F29AAC47BF68C404FC60A1842709C1@ORSMSX102.amr.corp.intel.com> <1328828918.29329.21.camel@joe2Laptop>
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-cc: "Felix Fietkau" <nbd@openwrt.org>, "Pavel Roskin" <proski@gnu.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"johannes@sipsolutions.net" <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: do not call rate control .tx_status
- before .rate_init
-References: <1328725031-35464-1-git-send-email-nbd@openwrt.org>
- <20120208192536.GB2929@tuxdriver.com> <4F32CF18.4010300@openwrt.org>
- <20120208194453.GC2929@tuxdriver.com> <20120208180152.082cff4e@mj>
- <4F3318A7.5030809@openwrt.org> <20120209201411.GB29948@tuxdriver.com>
-In-Reply-To: <20120209201411.GB29948@tuxdriver.com>
-Content-Type: text/plain;
- charset=iso-8859-1
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/09/2012 09:14 PM, John W. Linville wrote:
-> On Thu, Feb 09, 2012 at 01:51:51AM +0100, Felix Fietkau wrote:
->> On 2012-02-09 12:01 AM, Pavel Roskin wrote:
->>> On Wed, 8 Feb 2012 14:44:54 -0500
->>> "John W. Linville" <linville@tuxdriver.com> wrote:
->>>
->>>> On Wed, Feb 08, 2012 at 08:38:00PM +0100, Felix Fietkau wrote:
->>>>> On 2012-02-08 8:25 PM, John W. Linville wrote:
->>>>>> On Wed, Feb 08, 2012 at 07:17:11PM +0100, Felix Fietkau wrote:
->>>>>>> Most rate control implementations assume .get_rate
->>>>>>> and .tx_status are only called once the per-station data has
->>>>>>> been fully initialized. minstrel_ht crashes if this assumption
->>>>>>> is violated.
->>>>>>>
->>>>>>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->>>>>>> Tested-by: Arend van Spriel <arend@broadcom.com>
->>>>>>> ---
->>>>>>>  net/mac80211/rate.h |    2 +-
->>>>>>>  1 files changed, 1 insertions(+), 1 deletions(-)
->>>>>>>
->>>>>>> diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
->>>>>>> index 5fc3135..fbb1efd 100644
->>>>>>> --- a/net/mac80211/rate.h
->>>>>>> +++ b/net/mac80211/rate.h
->>>>>>> @@ -37,7 +37,7 @@ static inline void
->>>>>>> rate_control_tx_status(struct ieee80211_local *local, struct
->>>>>>> ieee80211_sta *ista = &sta->sta; void *priv_sta =
->>>>>>> sta->rate_ctrl_priv; 
->>>>>>> -	if (!ref)
->>>>>>> +	if (!ref || !test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
->>>>>>>  		return;
->>>>>>>  
->>>>>>>  	ref->ops->tx_status(ref->priv, sband, ista, priv_sta,
->>>>>>> skb);
->>>>>>
->>>>>> Any reason not to apply this for 3.3?  Or stable?
->>>>> I think 3.3 doesn't have that sta flag, the issue was probably
->>>>> introduced with the 3.4 changes.
->>>>> I don't remember something like this appearing in earlier versions.
+On Thu, 9 Feb 2012, Joe Perches wrote:
+
+> On Thu, 2012-02-09 at 22:36 +0000, Allan, Bruce W wrote:
+>>> On Thu, 2012-02-09 at 13:17 -0800, Joe Perches wrote:
+>>>> Booleans should not be compared to true or false
+>>>> but be directly tested or tested with !.
 >>>>
->>>> Cool, thanks.
->>>
->>> I believe 3.3 is affected.  At least it looks like the Fedora bug 768639
->>> (https://bugzilla.redhat.com/show_bug.cgi?id=768639) is caused by
->>> calling .tx_status at a wrong time.  Fedora kernels use
->>> compat-wireless-3.3.  I'm going to test the bleeding edge
->>> compat-wireless with the patch by Felix to see if it fixes things.
->>>
->>> The lack of the WLAN_STA_RATE_CONTROL flag doesn't mean that the old
->>> behavior was correct.  The flag was introduced to correct that behavior.
->>>
->>> The oldest report is dated 2011-12-17 and it's about Linux 3.2.0-rc5
->>> with compat-wireless-2011-12-01.
->> Only .get_rate and .tx_status are affected, wireless-testing commit
->> e1936e9407138b483e6d1332dd944afec8131f30 adds one of the checks, and my
->> commit adds the other. Maybe John could merge those two to 3.3.
-> 
-> At least one of them will cause some merge issues.  Can someone try
-> the attached patches to verify that they actually fix a real problem
-> in 3.3? 
-> 
-> Thanks!
-> 
-> John
+>>>> Done via cocci script:
+>>>>
+>>>> @@
+>>>> bool t;
+>>>> @@
+>>>> - t == true
+>>>> + t
+>>>> @@
+>>>> bool t;
+>>>> @@
+>>>> - t != true
+>>>> + !t
+>>>> @@
+>>>> bool t;
+>>>> @@
+>>>> - t == false
+>>>> + !t
+>>>> @@
+>>>> bool t;
+>>>> @@
+>>>> - t != false
+>>>> + t
+>
+>> Has the cocci script been (or will it be) added to ./scripts/coccinelle?
+>
+> These are pretty trivial scripts.
+>
+> You're welcome to add it or combine it
+> with the one Rusty did to convert
+> bool foo = 1
+> to
+> bool foo = true
+>
+> https://lkml.org/lkml/2011/12/19/15
 
-Hi John,
+It would indeed seem nice to put them all together.  I can do that.
 
-This patch fixes NULL deref issue I found and bisected in
-wireless-testing earlier this week (see [1]). I don't think gives a
-problem with 3.3 at the moment.
-
-Gr. AvS
-
-[1] http://www.spinics.net/lists/linux-wireless/msg84575.html
-
-
-
-
+julia
