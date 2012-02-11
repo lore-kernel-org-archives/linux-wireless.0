@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from c60.cesmail.net ([216.154.195.49]:61087 "EHLO c60.cesmail.net"
+Received: from c60.cesmail.net ([216.154.195.49]:6755 "EHLO c60.cesmail.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755848Ab2BFWkK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Feb 2012 17:40:10 -0500
-Date: Mon, 6 Feb 2012 17:40:02 -0500
+	id S1755014Ab2BKPCM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Feb 2012 10:02:12 -0500
 From: Pavel Roskin <proski@gnu.org>
-To: David Gibson <hermes@gibson.dropbear.id.au>
-Cc: Linus Torvalds <torvalds@osdl.org>,
-	orinoco-users@lists.sourceforge.net,
-	orinoco-devel@lists.sourceforge.net,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [Orinoco-users] orinoco: Remove old mailing lists from
- MAINTAINERS
-Message-ID: <20120206174002.31e13f75@mj> (sfid-20120206_234014_893696_8F1C6CF2)
-In-Reply-To: <20120206030724.GC18754@truffala.fritz.box>
-References: <20120206030724.GC18754@truffala.fritz.box>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: [PATCH] ath9k: stop on rates with idx -1 in ath9k rate control's
+ .tx_status
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	John W Linville <linville@tuxdriver.com>
+Date: Sat, 11 Feb 2012 10:01:53 -0500
+Message-ID: <20120211150152.4823.8570.stgit@ae> (sfid-20120211_160217_105712_42A27EBA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 6 Feb 2012 14:07:24 +1100
-David Gibson <hermes@gibson.dropbear.id.au> wrote:
+Rate control algorithms are supposed to stop processing when they
+encounter a rate with the index -1.  Checking for rate->count not being
+zero is not enough.
 
-> The two orinoco mailing lists on sourceforge were set up many years
-> ago and are now more or less moribund.  I'd like to shut them down, so
-> I don't have to keep filtering the spam from them (which is most of
-> what comes through now).  In preparation, this patch removes the
-> reference to them from the MAINTAINERS file.  Any remaining discussion
-> of this approaching obsolete driver can go to the linux-wireless list.
-> 
-> Please apply.
-> 
-> Signed-off-by: David Gibson <hermes@gibson.dropbear.id.au>
+Allowing a rate with negative index leads to memory corruption in
+ath_debug_stat_rc().
 
-Acked-by: Pavel Roskin <proski@gnu.org>
+One consequence of the bug is discussed at
+https://bugzilla.redhat.com/show_bug.cgi?id=768639
 
-> Index: working-2.6/MAINTAINERS
-> ===================================================================
-> --- working-2.6.orig/MAINTAINERS	2012-02-06 12:24:27.933527295
-> +1100 +++ working-2.6/MAINTAINERS	2012-02-06
-> 12:24:38.273578556 +1100 @@ -4906,8 +4906,6 @@ F:	fs/ocfs2/
->  
->  ORINOCO DRIVER
->  L:	linux-wireless@vger.kernel.org
-> -L:	orinoco-users@lists.sourceforge.net
-> -L:	orinoco-devel@lists.sourceforge.net
->  W:	http://linuxwireless.org/en/users/Drivers/orinoco
->  W:	http://www.nongnu.org/orinoco/
->  S:	Orphan
+Signed-off-by: Pavel Roskin <proski@gnu.org>
+Cc: stable@vger.kernel.org
+---
 
--- 
-Regards,
-Pavel Roskin
+ drivers/net/wireless/ath/ath9k/rc.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index 635b592..a427a16 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1346,7 +1346,7 @@ static void ath_tx_status(void *priv, struct ieee80211_supported_band *sband,
+ 	fc = hdr->frame_control;
+ 	for (i = 0; i < sc->hw->max_rates; i++) {
+ 		struct ieee80211_tx_rate *rate = &tx_info->status.rates[i];
+-		if (!rate->count)
++		if (rate->idx < 0 || !rate->count)
+ 			break;
+ 
+ 		final_ts_idx = i;
