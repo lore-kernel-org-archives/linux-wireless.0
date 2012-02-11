@@ -1,121 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:47882 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758440Ab2BNRFz convert rfc822-to-8bit (ORCPT
+Received: from cpsmtpb-ews05.kpnxchange.com ([213.75.39.8]:3369 "EHLO
+	cpsmtpb-ews05.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751696Ab2BKU6O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 12:05:55 -0500
-Date: Tue, 14 Feb 2012 18:05:51 +0100
-From: Jakub Kicinski <kubakici@wp.pl>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [rt2x00-users] [PATCH v2 1/4] rt2800pci: remove
- rt2800pci_set_state function
-Message-ID: <20120214180551.70389f5e@north> (sfid-20120214_180602_730250_A004DC16)
-In-Reply-To: <CAL1gcdPWEf_qYcjp8nYuZNkJUR=pA93P3-hi5xhokvUm1t-Ljg@mail.gmail.com>
-References: <1329108519-5342-1-git-send-email-kubakici@wp.pl>
- <1329108519-5342-2-git-send-email-kubakici@wp.pl>
- <CAL1gcdPWEf_qYcjp8nYuZNkJUR=pA93P3-hi5xhokvUm1t-Ljg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Sat, 11 Feb 2012 15:58:14 -0500
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>
+Cc: <users@rt2x00.serialmonkey.com>,
+	Gertjan van Wingerde <gwingerde@gmail.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH] rt2x00: Add support for D-Link DWA-127 to rt2800usb.
+Date: Sat, 11 Feb 2012 21:58:09 +0100
+Message-Id: <1328993889-28763-1-git-send-email-gwingerde@gmail.com> (sfid-20120211_215834_286082_4587A2F3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 14 Feb 2012 11:47:37 +0100 Gertjan van Wingerde <gwingerde@gmail.com> wrote:
-> On Mon, Feb 13, 2012 at 5:48 AM, Jakub Kicinski <kubakici@wp.pl> wrote:
-> > rt2800pci_set_state was introduced to group requests preceded with
-> > common introduction. As that introduction is no longer used
-> > rt2800pci_set_state can be removed.
-> >
-> > Note that this patch changes behaviour for STATE_DEEP_SLEEP and
-> > STATE_STANDBY, but those states are not used in rt2800 anyway.
-> >
-> > Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
-> 
-> I know this patch has been out there for a while, but I only now have
-> taken a good look at it.
-> First of all, I think that it would have been easy to not change the
-> behaviour for STATE_DEEP_SLEEP
-> and STATE_STANDBY, even though these are not used in rt2800. They can
-> simply be put as their
-> own cases in the switch statement in which nothing is done.
+This is an RT3070 based device.
 
-True, I have decided to make the change because:
- 1) I couldn't find any reason to treat those states differently than 
-    normal SLEEP;
- 2) rt61pci and rt2500pci treats them equally;
- 3) the differentiation was introduced by Jay in 7f6e144f and the change
-    looks like it may have not been 100% intentional. At least my newbie
-    mind is telling me that. No one asked about it at the time and commit
-    message also doesn't explain this change.
+Cc: <stable@vger.kernel.org>
+Reported-by: Mikhail Kryshen <mikhail@kryshen.net>
+Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800usb.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Please let me know if this reasoning makes any sense to you.
+diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+index d009b6b..0074c4e 100644
+--- a/drivers/net/wireless/rt2x00/rt2800usb.c
++++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+@@ -921,6 +921,7 @@ static struct usb_device_id rt2800usb_device_table[] = {
+ 	{ USB_DEVICE(0x07d1, 0x3c13) },
+ 	{ USB_DEVICE(0x07d1, 0x3c15) },
+ 	{ USB_DEVICE(0x07d1, 0x3c16) },
++	{ USB_DEVICE(0x2001, 0x3c1b) },
+ 	/* Draytek */
+ 	{ USB_DEVICE(0x07fa, 0x7712) },
+ 	/* DVICO */
+-- 
+1.7.9
 
-> Also some comments to the actual code below.
-> 
-> > ---
-> >  drivers/net/wireless/rt2x00/rt2800pci.c |   38 ++++++++++--------------------
-> >  1 files changed, 13 insertions(+), 25 deletions(-)
-> >
-> > diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-> > index 6ad6929..6ab4637 100644
-> > --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> > +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> > @@ -517,23 +517,6 @@ static void rt2800pci_disable_radio(struct rt2x00_dev *rt2x00dev)
-> >        }
-> >  }
-> >
-> > -static int rt2800pci_set_state(struct rt2x00_dev *rt2x00dev,
-> > -                              enum dev_state state)
-> > -{
-> > -       if (state == STATE_AWAKE) {
-> > -               rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, TOKEN_WAKUP, 0, 0x02);
-> > -               rt2800pci_mcu_status(rt2x00dev, TOKEN_WAKUP);
-> > -       } else if (state == STATE_SLEEP) {
-> > -               rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_STATUS,
-> > -                                        0xffffffff);
-> > -               rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_CID,
-> > -                                        0xffffffff);
-> > -               rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0x01, 0xff, 0x01);
-> > -       }
-> > -
-> > -       return 0;
-> > -}
-> > -
-> >  static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
-> >                                      enum dev_state state)
-> >  {
-> > @@ -546,7 +529,7 @@ static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
-> >                 * to be woken up. After that it needs a bit of time
-> >                 * to be fully awake and then the radio can be enabled.
-> >                 */
-> > -               rt2800pci_set_state(rt2x00dev, STATE_AWAKE);
-> > +               rt2800pci_set_device_state(rt2x00dev, STATE_AWAKE);
-> >                msleep(1);
-> >                retval = rt2800pci_enable_radio(rt2x00dev);
-> >                break;
-> 
-> I don't like this recursive call, but this is removed in patch 4, so I
-> don't mind it here.
->
-> > @@ -556,17 +539,22 @@ static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
-> >                 * be put to sleep for powersaving.
-> >                 */
-> >                rt2800pci_disable_radio(rt2x00dev);
-> > -               rt2800pci_set_state(rt2x00dev, STATE_SLEEP);
-> > -               break;
-> > -       case STATE_RADIO_IRQ_ON:
-> > -       case STATE_RADIO_IRQ_OFF:
-> > -               rt2800pci_toggle_irq(rt2x00dev, state);
-> > -               break;
-> > +               /* fall through */
-> 
-> I don't really like this falling through, which is just there out of
-> convenience, as the states have
-> some common code. However, in reality these states have not a lot in
-> common, so just a bit
-> of code duplication would have been better here, IMHO.
-
-Ok, I will change that and perhaps put that "duplicated" code into 
-rt2800pci_disable_radio to keep switch statement short.
-
-  -- Kuba
