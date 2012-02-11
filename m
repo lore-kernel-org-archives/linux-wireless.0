@@ -1,49 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:50923 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750788Ab2BVIko (ORCPT
+Received: from i118-21-156-233.s30.a048.ap.plala.or.jp ([118.21.156.233]:46743
+	"EHLO rinabert.homeip.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753318Ab2BKL55 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 03:40:44 -0500
-MIME-Version: 1.0
-In-Reply-To: <20120222003747.GA9808@gamma.logic.tuwien.ac.at>
-References: <20120124013625.GB18436@gamma.logic.tuwien.ac.at>
-	<CANUX_P3er0orBy8OhDuY1DfgD810UD-_HB_ukJnCA+W8e-VazQ@mail.gmail.com>
-	<20120125002250.GA20431@gamma.logic.tuwien.ac.at>
-	<CANUX_P0UREz_jZABu+Y_QYOh9tx_sKZSSkZpYHBEVtcU4QQdSA@mail.gmail.com>
-	<20120126003735.GA2346@gamma.logic.tuwien.ac.at>
-	<CANUX_P0H_WaWwnpjoBcMpZQY4xH=cbVhAKxWKXmz-HwFMcWS6w@mail.gmail.com>
-	<CANUX_P3XSCsWUJ9M55qeaK-DuPEMXODFPJiNk+BgnHN-=WECqw@mail.gmail.com>
-	<20120126232555.GB16330@gamma.logic.tuwien.ac.at>
-	<20120127015015.GA23291@gamma.logic.tuwien.ac.at>
-	<CANUX_P3F58upbrw48AiMTV4DDZWsfveYp=mANAD9CQ2bPps0cA@mail.gmail.com>
-	<20120222003747.GA9808@gamma.logic.tuwien.ac.at>
-Date: Wed, 22 Feb 2012 10:40:43 +0200
-Message-ID: <CAOJsxLENnvYn+xkDufQeTcgbKBsrrf=hw=g_ejCrts7ZNPa-Cg@mail.gmail.com> (sfid-20120222_094059_492602_FE0C5C0B)
-Subject: Re: iwlagn is getting even worse with 3.3-rc1
-From: Pekka Enberg <penberg@kernel.org>
-To: Norbert Preining <preining@logic.at>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	Dave Jones <davej@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Sat, 11 Feb 2012 06:57:57 -0500
+From: Masanari Iida <standby24x7@gmail.com>
+To: j@w1.fi, linux-wireless@vger.kernel.org
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	standby24x7@gmail.com
+Subject: [PATCH] [trivial] hostap: Fix typo in hostap_hw.c
+Date: Sat, 11 Feb 2012 20:56:59 +0900
+Message-Id: <1328961419-1682-1-git-send-email-standby24x7@gmail.com> (sfid-20120211_125817_116615_D02A59D6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 22, 2012 at 2:37 AM, Norbert Preining <preining@logic.at> wrote:
-> I still see that, on 3.3-rc4, and it is the same as usual. The interface
-> believes it is up and connected, but nothing works.
->
-> I am *100%* sure that this is related to the driver, because in old
-> revisions (somewhen around 2.6.27 or so) it was working without
-> any problem, and when it started I reported it long time ago.
+Correct spelling "reseting" to "resetting" in
+drivers/net/wireless/hostap/hostap_hw.c
 
-It's definitely a kernel regression, no question about it. Was 3.3-rc1
-already broken for you? It shouldn't be that difficult to find the
-offending commit with git bisect if it's that easy to reproduce for
-you.
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+---
+ drivers/net/wireless/hostap/hostap_hw.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-                        Pekka
+diff --git a/drivers/net/wireless/hostap/hostap_hw.c b/drivers/net/wireless/hostap/hostap_hw.c
+index aa15cc4..50f87b6 100644
+--- a/drivers/net/wireless/hostap/hostap_hw.c
++++ b/drivers/net/wireless/hostap/hostap_hw.c
+@@ -1466,7 +1466,7 @@ static int prism2_hw_enable(struct net_device *dev, int initial)
+ 	 * before it starts acting as an AP, so reset port automatically
+ 	 * here just in case */
+ 	if (initial && prism2_reset_port(dev)) {
+-		printk("%s: MAC port 0 reseting failed\n", dev->name);
++		printk("%s: MAC port 0 resetting failed\n", dev->name);
+ 		return 1;
+ 	}
+ 
+@@ -1557,7 +1557,7 @@ static void prism2_hw_reset(struct net_device *dev)
+ 	static long last_reset = 0;
+ 
+ 	/* do not reset card more than once per second to avoid ending up in a
+-	 * busy loop reseting the card */
++	 * busy loop resetting the card */
+ 	if (time_before_eq(jiffies, last_reset + HZ))
+ 		return;
+ 	last_reset = jiffies;
+-- 
+1.7.6.5
+
