@@ -1,24 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60215 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752326Ab2BOSxg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 13:53:36 -0500
-Message-ID: <4F3BFF2B.8080706@openwrt.org> (sfid-20120215_195339_228617_DDA2BE7E)
-Date: Wed, 15 Feb 2012 19:53:31 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-we0-f174.google.com ([74.125.82.174]:60399 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754861Ab2BKTiw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Feb 2012 14:38:52 -0500
+Received: by werb13 with SMTP id b13so2717148wer.19
+        for <linux-wireless@vger.kernel.org>; Sat, 11 Feb 2012 11:38:50 -0800 (PST)
 MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
-	magnus.maatta@logica.com
-Subject: Re: [PATCH 3.3] ath9k_hw: prevent writes to const data on AR9160
-References: <1329330680-62602-1-git-send-email-nbd@openwrt.org> <20120215183047.GD4379@tuxdriver.com>
-In-Reply-To: <20120215183047.GD4379@tuxdriver.com>
+In-Reply-To: <20120211150152.4823.8570.stgit@ae>
+References: <20120211150152.4823.8570.stgit@ae>
+Date: Sat, 11 Feb 2012 11:38:50 -0800
+Message-ID: <CAJ-VmonJBKuwYtd681Y9gaWxEiNwap8mQfvDjOHiy9Eynn5ayA@mail.gmail.com> (sfid-20120211_203855_808960_55EDAC7C)
+Subject: Re: [PATCH] ath9k: stop on rates with idx -1 in ath9k rate control's .tx_status
+From: Adrian Chadd <adrian@freebsd.org>
+To: Pavel Roskin <proski@gnu.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	John W Linville <linville@tuxdriver.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-02-15 7:30 PM, John W. Linville wrote:
-> Do you have a link to the reported crash?
-It was reported on IRC, the trace is here: http://pastebin.com/wvxXwLs4
+Hi!
 
-- Felix
+On 11 February 2012 07:01, Pavel Roskin <proski@gnu.org> wrote:
+> Rate control algorithms are supposed to stop processing when they
+> encounter a rate with the index -1.  Checking for rate->count not being
+> zero is not enough.
+>
+> Allowing a rate with negative index leads to memory corruption in
+> ath_debug_stat_rc().
+>
+> One consequence of the bug is discussed at
+> https://bugzilla.redhat.com/show_bug.cgi?id=768639
+>
+> Signed-off-by: Pavel Roskin <proski@gnu.org>
+> Cc: stable@vger.kernel.org
+
+Great catch!
+
+
+
+Adrian
