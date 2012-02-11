@@ -1,61 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:1584 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753601Ab2B0GOR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 01:14:17 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH] ath6kl: Register driver ht capabilities in wiphy
-Date: Mon, 27 Feb 2012 11:44:19 +0530
-Message-ID: <1330323259-13399-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120227_071421_261796_F9A6D0DD)
+Received: from mout4.freenet.de ([195.4.92.94]:49425 "EHLO mout4.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754674Ab2BKO4u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Feb 2012 09:56:50 -0500
+Received: from [195.4.92.140] (helo=mjail0.freenet.de)
+	by mout4.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
+	id 1RwBe1-00023Y-Cn
+	for linux-wireless@vger.kernel.org; Sat, 11 Feb 2012 13:01:34 +0100
+Received: from localhost ([::1]:45394 helo=mjail0.freenet.de)
+	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1RwBe0-0006l0-U0
+	for linux-wireless@vger.kernel.org; Sat, 11 Feb 2012 13:01:33 +0100
+Received: from [195.4.92.17] (port=57893 helo=7.mx.freenet.de)
+	by mjail0.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1RwBbn-0002bG-02
+	for linux-wireless@vger.kernel.org; Sat, 11 Feb 2012 12:59:15 +0100
+Received: from [2002:4fde:13d9:2:5054:ff:feb8:40bd] (port=38602 helo=mail.maya.org)
+	by 7.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
+	id 1RwBbm-0004JQ-J1
+	for linux-wireless@vger.kernel.org; Sat, 11 Feb 2012 12:59:14 +0100
+Message-ID: <4F365804.2050705@01019freenet.de> (sfid-20120211_155653_981422_39DBB39C)
+Date: Sat, 11 Feb 2012 12:59:00 +0100
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Alfonso Fiore <alfonso.fiore@gmail.com>
+CC: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
+Subject: Re: Setting up an AP @ 5 GHz 802.11a - hostapd refuses [Could not
+ select hw_mode and channel. (-1)]
+References: <CAO=xpBHy9p4yzhxaWTfG+jjw7f_OzbACmxxPnDL8AmLBS-JdwQ@mail.gmail.com> <CAO=xpBGT7ovdSOV77AV6wpUcTDFYr0t8GEab474mVmZm0-BhVA@mail.gmail.com> <20120207171538.3336af0c@mj> <CAO=xpBGRs_kYtt_w6aG2dFjO4Pgd9MrjPwn7YfuLe7bw3mGiPg@mail.gmail.com> <4F34BF3C.9030809@01019freenet.de> <CAO=xpBFKOAdTEi1DMfJxWCCv9oEtJpuLjuN4uNPNRgN1iWG85Q@mail.gmail.com> <4F358902.3040009@01019freenet.de> <CAO=xpBEvmd7=0EK68+MUQMgFVXL47tQYGc-2X8Rt0NfJdszUkw@mail.gmail.com>
+In-Reply-To: <CAO=xpBEvmd7=0EK68+MUQMgFVXL47tQYGc-2X8Rt0NfJdszUkw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Register driver's ht capabilities in wiphy to avoid failures
-in setting ht channels from hostapd.
+Alfonso Fiore schrieb:
+> On Fri, Feb 10, 2012 at 10:15 PM, Andreas Hartmann
+> <andihartmann@01019freenet.de> wrote:
+>>
+>> Alfonso Fiore schrieb:
+>>> On Fri, Feb 10, 2012 at 7:54 AM, Andreas Hartmann
+>> [...]
+>>> # find / | grep ath5k.ko
+>>> /lib/modules/3.0.0-voyage/kernel/drivers/net/wireless/ath/ath5k/ath5k.ko
+>>> /lib/modules/3.0.0/updates/drivers/net/wireless/ath/ath5k/ath5k.ko
+>>> /root/compat-wireless-3.3-rc1-2/drivers/net/wireless/ath/ath5k/ath5k.ko
+>>> /root/compat-wireless-3.3-rc1-2/drivers/net/wireless/ath/ath5k/.ath5k.ko.cmd
+>>>
+>>> I tried depmod -a and also a simple reboot (which I always do after
+>>> make install) but the "updates" module is never loaded.
+>>>
+>>> Any idea?
+>>
+>> Sorry for being late. I worked on my machine and wasn't able to read any
+>> mails.
+>>
+>>
+>> I do have a config file for depmod in /etc/depmod.d called
+>> 00-system.conf, which has the following entries:
+> 
+> Hi Andreas,
+> 
+> I do not have a /etc/depmod.d folder. I imagine it is something about
+> my embedded distribution (voyage 0.8.0).
+> 
+> I asked for help there. I will post back is they have any suggestion.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+This is a good idea especially as I don't know anything of this
+distribution and don't have it here for testing.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index af3d0ab..c73f2ac 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -69,6 +69,10 @@ static struct ieee80211_rate ath6kl_rates[] = {
- #define ath6kl_g_rates     (ath6kl_rates + 0)
- #define ath6kl_g_rates_size    12
- 
-+#define ath6kl_g_htcap (IEEE80211_HT_CAP_SUP_WIDTH_20_40 | \
-+			IEEE80211_HT_CAP_SGI_20		 | \
-+			IEEE80211_HT_CAP_SGI_40)
-+
- static struct ieee80211_channel ath6kl_2ghz_channels[] = {
- 	CHAN2G(1, 2412, 0),
- 	CHAN2G(2, 2417, 0),
-@@ -113,6 +117,8 @@ static struct ieee80211_supported_band ath6kl_band_2ghz = {
- 	.channels = ath6kl_2ghz_channels,
- 	.n_bitrates = ath6kl_g_rates_size,
- 	.bitrates = ath6kl_g_rates,
-+	.ht_cap.cap = ath6kl_g_htcap,
-+	.ht_cap.ht_supported = true,
- };
- 
- static struct ieee80211_supported_band ath6kl_band_5ghz = {
-@@ -120,6 +126,8 @@ static struct ieee80211_supported_band ath6kl_band_5ghz = {
- 	.channels = ath6kl_5ghz_a_channels,
- 	.n_bitrates = ath6kl_a_rates_size,
- 	.bitrates = ath6kl_a_rates,
-+	.ht_cap.cap = ath6kl_g_htcap,
-+	.ht_cap.ht_supported = true,
- };
- 
- #define CCKM_KRK_CIPHER_SUITE 0x004096ff /* use for KRK */
--- 
-1.7.0.4
+I hope you get some help there. Maybe man depmod or man depmod.conf
+knows something more? E.g., I don't have a /etc/depmod.conf file. Maybe
+you have one?
 
+
+Good luck,
+regards,
+Andreas
