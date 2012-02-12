@@ -1,55 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:33868 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751694Ab2BRMXU convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:44718 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754330Ab2BLTIb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Feb 2012 07:23:20 -0500
-Received: by vbjk17 with SMTP id k17so2782717vbj.19
-        for <linux-wireless@vger.kernel.org>; Sat, 18 Feb 2012 04:23:20 -0800 (PST)
+	Sun, 12 Feb 2012 14:08:31 -0500
+Message-ID: <4F380E2C.3050303@lwfinger.net> (sfid-20120212_200847_368437_F6D0ACFF)
+Date: Sun, 12 Feb 2012 13:08:28 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1329421499-10237-1-git-send-email-juhosg@openwrt.org>
-References: <1329421499-10237-1-git-send-email-juhosg@openwrt.org>
-Date: Sat, 18 Feb 2012 13:23:20 +0100
-Message-ID: <CAOZOX0U0=uufmEGS47gEiVYU6Kk-ZrsCMpatSF3RoX4P+=r29A@mail.gmail.com> (sfid-20120218_132350_537795_ABE0EC05)
-Subject: Re: [PATCH] rt2x00: fix a possible NULL pointer dereference
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: LKML <linux-kernel@vger.kernel.org>,
+	driverdevel <devel@driverdev.osuosl.org>,
+	wireless <linux-wireless@vger.kernel.org>
+Subject: Question about loading firmware
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 16, 2012 at 8:44 PM, Gabor Juhos <juhosg@openwrt.org> wrote:
-> The 'rt2x00lib_probe_dev' function tries to
-> allocate the workqueue. If the allocation
-> fails, 'rt2x00_lib_remove_dev' is called on
-> the error path. Because 'rt2x00dev->workqueue'
-> is NULL in this case, the 'destroy_workqueue'
-> call will cause a NULL pointer dereference.
->
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+Drivers b43 and b43legacy both load their firmware from their probe routines, 
+which is a problem with the latest udev implementations, and I'm trying to fix 
+that problem.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+The complication is that they need to load several (3 or 4) firmware files. When 
+I tried to use request_firmware_nowait() to load them in parallel, I got 
+warnings that I was trying to create a duplicate name in sysfs. I presume this 
+is because each of the tasks has the same name - I used the default THIS_MODULE 
+value for the first argument. I'm not sure that I could change that - I don't 
+see any examples in the existing source.
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00dev.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> index bae5b01..d62e64f 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
-> @@ -1232,7 +1232,8 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
->                cancel_work_sync(&rt2x00dev->rxdone_work);
->                cancel_work_sync(&rt2x00dev->txdone_work);
->        }
-> -       destroy_workqueue(rt2x00dev->workqueue);
-> +       if (rt2x00dev->workqueue)
-> +               destroy_workqueue(rt2x00dev->workqueue);
->
->        /*
->         * Free the tx status fifo.
-> --
-> 1.7.2.1
->
+If I changed the probe routine to start a workqueue item that called the 
+firmware loading routines, could I safely use request_firmware() in that case? 
+If so, it would be a clean solution.
+
+Thanks,
+
+Larry
+
