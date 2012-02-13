@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41971 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756532Ab2B2Rm0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 12:42:26 -0500
-Message-ID: <4F4E635A.3060003@qca.qualcomm.com> (sfid-20120229_184231_521073_B508CF0F)
-Date: Wed, 29 Feb 2012 19:41:46 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/12] ath6kl: checkpatch fixes
-References: <20120229171525.24264.22062.stgit@localhost6.localdomain6> <1330537026.13689.1.camel@joe2Laptop>
-In-Reply-To: <1330537026.13689.1.camel@joe2Laptop>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mx1.redhat.com ([209.132.183.28]:34899 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751634Ab2BMKXr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Feb 2012 05:23:47 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 01/24] iwlegacy: dump stack when fail to gain access to the device
+Date: Mon, 13 Feb 2012 11:23:08 +0100
+Message-Id: <1329128611-6815-2-git-send-email-sgruszka@redhat.com> (sfid-20120213_112351_109980_3D7E1851)
+In-Reply-To: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
+References: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/29/2012 07:37 PM, Joe Perches wrote:
-> On Wed, 2012-02-29 at 19:18 +0200, Kalle Valo wrote:
->> Here are quite a few checkpatch fixes and other cleanups.
->>
->> Especially I would like to people review these two macros, they ended up
->> a bit too clever and I'm sure there are issues:
->>
->> #define ath6kl_bmi_write_hi32(ar, item, val)				\
->> 	({								\
->> 		u32 addr;						\
->> 		__le32 v;						\
->> 									\
->> 		addr = ath6kl_get_hi_item_addr(ar, HI_ITEM(item));	\
->> 		v = cpu_to_le32(val);					\
->> 		ath6kl_bmi_write(ar, addr, (u8 *) &v, sizeof(v));	\
->> 	})
->>
->> #define ath6kl_bmi_read_hi32(ar, item, val)				\
->> 	({								\
->> 		u32 addr, *check_type = val;				\
->> 		__le32 tmp;						\
->> 		int ret;						\
->> 									\
->> 		(void) (check_type == val);				\
->> 		addr = ath6kl_get_hi_item_addr(ar, HI_ITEM(item));	\
->> 		ret = ath6kl_bmi_read(ar, addr, (u8 *) &tmp, 4);	\
->> 		*val = le32_to_cpu(tmp);				\
->> 		ret;							\
->> 	})
-> 
-> Why not just make these functions?
+Print dump stack when the device is not responding. This should give
+some more clue about the reason of failure. Also change the message we
+print, since "MAC in deep sleep" is kinda confusing.
 
-Because of the HI_ITEM() macro I can't pass the item parameter to a
-function:
+On the way add unlikely(), as fail to gain NIC access is hmm ...
+unlikely.
 
-#define HI_ITEM(item)  offsetof(struct host_interest, item)
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/common.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-I'm planning to change how host interest address are handled at some
-point, but I don't have time to do that right now.
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 04ec38e..3900967 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -111,9 +111,10 @@ _il_grab_nic_access(struct il_priv *il)
+ 	    _il_poll_bit(il, CSR_GP_CNTRL, CSR_GP_CNTRL_REG_VAL_MAC_ACCESS_EN,
+ 			 (CSR_GP_CNTRL_REG_FLAG_MAC_CLOCK_READY |
+ 			  CSR_GP_CNTRL_REG_FLAG_GOING_TO_SLEEP), 15000);
+-	if (ret < 0) {
++	if (unlikely(ret < 0)) {
+ 		val = _il_rd(il, CSR_GP_CNTRL);
+-		IL_ERR("MAC is in deep sleep!.  CSR_GP_CNTRL = 0x%08X\n", val);
++		WARN_ONCE(1, "Timeout waiting for ucode processor access "
++			     "(CSR_GP_CNTRL 0x%08x)\n", val);
+ 		_il_wr(il, CSR_RESET, CSR_RESET_REG_FLAG_FORCE_NMI);
+ 		return -EIO;
+ 	}
+-- 
+1.7.1
 
-Kalle
