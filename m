@@ -1,55 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3960 "EHLO mms1.broadcom.com"
+Received: from bues.ch ([80.190.117.144]:38405 "EHLO bues.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757893Ab2BIUJ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 15:09:27 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 02/15] brcm80211: smac: fix unintended fallthru in
- wlc_phy_radio_init_2057()
-Date: Thu, 9 Feb 2012 21:08:56 +0100
-Message-ID: <1328818149-4826-3-git-send-email-arend@broadcom.com> (sfid-20120209_211007_697769_69C43B52)
-In-Reply-To: <1328818149-4826-1-git-send-email-arend@broadcom.com>
-References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751329Ab2BMVyb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Feb 2012 16:54:31 -0500
+Date: Mon, 13 Feb 2012 21:57:23 +0000
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	chunkeey@web.de, Max Filippov <jcmvbkbc@gmail.com>,
+	linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: Re: [RFC/RFT 5/5] p54spi: Load firmware from work queue and not
+ from probe routine
+Message-ID: <20120213215723.565e8a8d@Nokia-N900> (sfid-20120213_225503_941954_3B43B472)
+In-Reply-To: <1329161826-11135-6-git-send-email-Larry.Finger@lwfinger.net>
+References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
+	<1329161826-11135-6-git-send-email-Larry.Finger@lwfinger.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The radio initialization for 2057 rev 5 was using the incorrect
-register table for the initialization. This patch fixes that.
+On Mon, 13 Feb 2012 13:37:06 -0600
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-Reported-by: Larry Finger <Larry.Finger@lwfinger.net>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+> Drivers that load firmware from their probe routine have problems with the
+> latest versions of udev as they get timeouts while waiting for user
+> space to start. The problem is fixed by loading the firmware and starting
+> mac80211 from a delayed_work queue. By using this method, most of the
+> original code is preserved.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> This one is compile-tested only.
+> 
+> Larry
+> ---
+>  drivers/net/wireless/p54/p54spi.c |   38 ++++++++++++++++++++++++++----------
+>  drivers/net/wireless/p54/p54spi.h |    1 +
+>  2 files changed, 28 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+> index 7faed62..87c2634 100644
+> --- a/drivers/net/wireless/p54/p54spi.c
+> +++ b/drivers/net/wireless/p54/p54spi.c
+> @@ -595,6 +595,30 @@ static void p54spi_op_stop(struct ieee80211_hw *dev)
+>  	cancel_work_sync(&priv->work);
+>  }
+>  
+> +static void p54s_load_firmware(struct work_struct *work)
+> +{
+> +	struct p54s_priv *priv = container_of(to_delayed_work(work),
+> +				 struct p54s_priv, firmware_load);
+> +	struct ieee80211_hw *hw = priv->hw;
+> +	int ret;
+> +
+> +	ret = p54spi_request_firmware(hw);
+> +	if (ret < 0)
+> +		goto err_free_common;
+> +
+> +	ret = p54spi_request_eeprom(hw);
+> +	if (ret)
+> +		goto err_free_common;
+> +
+> +	ret = p54_register_common(hw, &priv->spi->dev);
+> +	if (ret)
+> +		goto err_free_common;
+> +	return;
+> +
+> +err_free_common:
+> +	dev_err(&priv->spi->dev, "Failed to read firmware\n");
+> +}
+> +
+>  static int __devinit p54spi_probe(struct spi_device *spi)
+>  {
+>  	struct p54s_priv *priv = NULL;
+> @@ -658,17 +682,9 @@ static int __devinit p54spi_probe(struct spi_device *spi)
+>  	priv->common.stop = p54spi_op_stop;
+>  	priv->common.tx = p54spi_op_tx;
+>  
+> -	ret = p54spi_request_firmware(hw);
+> -	if (ret < 0)
+> -		goto err_free_common;
+> -
+> -	ret = p54spi_request_eeprom(hw);
+> -	if (ret)
+> -		goto err_free_common;
+> -
+> -	ret = p54_register_common(hw, &priv->spi->dev);
+> -	if (ret)
+> -		goto err_free_common;
+> +	/* setup and start delayed work to load firmware */
+> +	INIT_DELAYED_WORK(&priv->firmware_load, p54s_load_firmware);
+> +	schedule_delayed_work(&priv->firmware_load, HZ);
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-index ec7450d..c27ec7a 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/phy/phy_n.c
-@@ -19989,12 +19989,11 @@ static void wlc_phy_radio_init_2057(struct brcms_phy *pi)
- 		switch (pi->pubpi.radiorev) {
- 		case 5:
- 
--			if (pi->pubpi.radiover == 0x0)
-+			if (NREV_IS(pi->pubpi.phy_rev, 8))
- 				regs_2057_ptr = regs_2057_rev5;
--			else if (pi->pubpi.radiover == 0x1)
-+			else if (NREV_IS(pi->pubpi.phy_rev, 9))
- 				regs_2057_ptr = regs_2057_rev5v1;
--			else
--				break;
-+			break;
- 
- 		case 7:
- 
+Why delay it one second?
+That seems arbitrary. Just use a non-delayed workqueue. That should be good enough.
+
+>  
+>  	return 0;
+>  
+> diff --git a/drivers/net/wireless/p54/p54spi.h b/drivers/net/wireless/p54/p54spi.h
+> index dfaa62a..5f7714b 100644
+> --- a/drivers/net/wireless/p54/p54spi.h
+> +++ b/drivers/net/wireless/p54/p54spi.h
+> @@ -120,6 +120,7 @@ struct p54s_priv {
+>  
+>  	enum fw_state fw_state;
+>  	const struct firmware *firmware;
+> +	struct delayed_work firmware_load;
+>  };
+>  
+>  #endif /* P54SPI_H */
+
+I think we have to cancel the work in the remove handler. Just in case the device was removed
+before fw load wq could run.
+
 -- 
-1.7.5.4
-
-
+Greetings, Michael.
