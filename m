@@ -1,180 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:50109 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752817Ab2BBRDN (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:63126 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754025Ab2BMDcI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 12:03:13 -0500
-Received: by wgbgn7 with SMTP id gn7so217583wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 09:03:11 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>, Eyal Shapira <eyal@wizery.com>
-Subject: [PATCH v4 3/4] wl12xx: add forced_ps mode
-Date: Thu,  2 Feb 2012 19:06:45 +0200
-Message-Id: <1328202405-20572-1-git-send-email-eliad@wizery.com> (sfid-20120202_180317_151711_46594AAE)
+	Sun, 12 Feb 2012 22:32:08 -0500
+Received: by iacb35 with SMTP id b35so3629600iac.19
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Feb 2012 19:32:07 -0800 (PST)
+Message-ID: <4F388424.8050100@lwfinger.net> (sfid-20120213_043211_737005_ED19CD60)
+Date: Sun, 12 Feb 2012 21:31:48 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Prashant Badsheshi <prashant.badsheshi@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Regarding Realtek wifi RTL8192
+References: <CA+cdTWYUQrM3s-0VL3_H-FWo=BvOQLhr-a_ZH5sSPvsBRmtxKg@mail.gmail.com>
+In-Reply-To: <CA+cdTWYUQrM3s-0VL3_H-FWo=BvOQLhr-a_ZH5sSPvsBRmtxKg@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+On 02/12/2012 09:24 PM, Prashant Badsheshi wrote:
+> Hi,
+> What is the difference between between
+>
+> RTL8192CE vs RTL8192SE vs RTL8192CU
 
-For certain WiFi certification tests forcing PS
-is necessary. Since DPS is now enabled in the FW
-and this can't be achieved by using netlatency
-this required a new config option.
+The chips are the difference. In addition, the ones that end in E are PCI, the 
+one with U is USB. The wireless chips used for the C models are similar.
 
-Signed-off-by: Eyal Shapira <eyal@wizery.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
-v4: reapply change i erroneously moved (the case labels)
+If you want to know what the technical differences, you should go to 
+www.realtek.com. They are the people that make them.
 
- drivers/net/wireless/wl12xx/conf.h    |    6 ++++++
- drivers/net/wireless/wl12xx/debugfs.c |    2 +-
- drivers/net/wireless/wl12xx/main.c    |   25 +++++++++++++++++++------
- drivers/net/wireless/wl12xx/ps.c      |   10 +++++-----
- drivers/net/wireless/wl12xx/wl12xx.h  |    2 +-
- 5 files changed, 32 insertions(+), 13 deletions(-)
+Larry
 
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index d97aad6..f29fbfd 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -934,6 +934,12 @@ struct conf_conn_settings {
- 	u16 dynamic_ps_timeout;
- 
- 	/*
-+	 * Specifies whether dynamic PS should be disabled and PSM forced.
-+	 * This is required for certain WiFi certification tests.
-+	 */
-+	u8 forced_ps;
-+
-+	/*
- 	 *
- 	 * Specifies the interval of the connection keep-alive null-func
- 	 * frame in ms.
-diff --git a/drivers/net/wireless/wl12xx/debugfs.c b/drivers/net/wireless/wl12xx/debugfs.c
-index 15353fa..02da445 100644
---- a/drivers/net/wireless/wl12xx/debugfs.c
-+++ b/drivers/net/wireless/wl12xx/debugfs.c
-@@ -358,7 +358,7 @@ static ssize_t dynamic_ps_timeout_write(struct file *file,
- 	 */
- 
- 	wl12xx_for_each_wlvif_sta(wl, wlvif) {
--		if (test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags))
-+		if (test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags))
- 			wl1271_ps_set_mode(wl, wlvif, STATION_AUTO_PS_MODE);
- 	}
- 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 29a00fc..f2960df 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -244,6 +244,7 @@ static struct conf_drv_settings default_conf = {
- 		.psm_exit_retries            = 16,
- 		.psm_entry_nullfunc_retries  = 3,
- 		.dynamic_ps_timeout          = 100,
-+		.forced_ps                   = false,
- 		.keep_alive_interval         = 55000,
- 		.max_listen_interval         = 20,
- 	},
-@@ -2481,17 +2482,29 @@ static int wl12xx_config_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 
- 		if ((conf->flags & IEEE80211_CONF_PS) &&
- 		    test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags) &&
--		    !test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags)) {
-+		    !test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags)) {
- 
--			wl1271_debug(DEBUG_PSM, "auto ps enabled");
-+			int ps_mode;
-+			char *ps_mode_str;
-+
-+			if (wl->conf.conn.forced_ps) {
-+				ps_mode = STATION_POWER_SAVE_MODE;
-+				ps_mode_str = "forced";
-+			} else {
-+				ps_mode = STATION_AUTO_PS_MODE;
-+				ps_mode_str = "auto";
-+			}
-+
-+			wl1271_debug(DEBUG_PSM, "%s ps enabled", ps_mode_str);
-+
-+			ret = wl1271_ps_set_mode(wl, wlvif, ps_mode);
- 
--			ret = wl1271_ps_set_mode(wl, wlvif,
--						 STATION_AUTO_PS_MODE);
- 			if (ret < 0)
--				wl1271_warning("enter auto ps failed %d", ret);
-+				wl1271_warning("enter %s ps failed %d",
-+					       ps_mode_str, ret);
- 
- 		} else if (!(conf->flags & IEEE80211_CONF_PS) &&
--			   test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags)) {
-+			   test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags)) {
- 
- 			wl1271_debug(DEBUG_PSM, "auto ps disabled");
- 
-diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
-index d197922..23d6750 100644
---- a/drivers/net/wireless/wl12xx/ps.c
-+++ b/drivers/net/wireless/wl12xx/ps.c
-@@ -56,7 +56,7 @@ void wl1271_elp_work(struct work_struct *work)
- 		if (wlvif->bss_type == BSS_TYPE_AP_BSS)
- 			goto out;
- 
--		if (!test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags) &&
-+		if (!test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags) &&
- 		    test_bit(WLVIF_FLAG_IN_USE, &wlvif->flags))
- 			goto out;
- 	}
-@@ -84,7 +84,7 @@ void wl1271_ps_elp_sleep(struct wl1271 *wl)
- 		if (wlvif->bss_type == BSS_TYPE_AP_BSS)
- 			return;
- 
--		if (!test_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags) &&
-+		if (!test_bit(WLVIF_FLAG_IN_PS, &wlvif->flags) &&
- 		    test_bit(WLVIF_FLAG_IN_USE, &wlvif->flags))
- 			return;
- 	}
-@@ -167,6 +167,7 @@ int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 
- 	switch (mode) {
- 	case STATION_AUTO_PS_MODE:
-+	case STATION_POWER_SAVE_MODE:
- 		wl1271_debug(DEBUG_PSM, "entering psm (mode=%d,timeout=%u)",
- 			     mode, timeout);
- 
-@@ -182,7 +183,7 @@ int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		if (ret < 0)
- 			return ret;
- 
--		set_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags);
-+		set_bit(WLVIF_FLAG_IN_PS, &wlvif->flags);
- 
- 		/* enable beacon early termination. Not relevant for 5GHz */
- 		if (wlvif->band == IEEE80211_BAND_2GHZ) {
-@@ -205,9 +206,8 @@ int wl1271_ps_set_mode(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		if (ret < 0)
- 			return ret;
- 
--		clear_bit(WLVIF_FLAG_IN_AUTO_PS, &wlvif->flags);
-+		clear_bit(WLVIF_FLAG_IN_PS, &wlvif->flags);
- 		break;
--	case STATION_POWER_SAVE_MODE:
- 	default:
- 		wl1271_warning("trying to set ps to unsupported mode %d", mode);
- 		ret = -EINVAL;
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index 9cc7051..1463341 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -254,7 +254,7 @@ enum wl12xx_vif_flags {
- 	WLVIF_FLAG_STA_ASSOCIATED,
- 	WLVIF_FLAG_IBSS_JOINED,
- 	WLVIF_FLAG_AP_STARTED,
--	WLVIF_FLAG_IN_AUTO_PS,
-+	WLVIF_FLAG_IN_PS,
- 	WLVIF_FLAG_STA_STATE_SENT,
- 	WLVIF_FLAG_RX_STREAMING_STARTED,
- 	WLVIF_FLAG_PSPOLL_FAILURE,
--- 
-1.7.6.401.g6a319
 
