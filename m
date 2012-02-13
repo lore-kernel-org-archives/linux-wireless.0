@@ -1,68 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:48847 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753638Ab2AaXQF convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 18:16:05 -0500
-Received: by obcva7 with SMTP id va7so548785obc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 15:16:05 -0800 (PST)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:58598 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751386Ab2BMGV3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Feb 2012 01:21:29 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <4F27F4DC.6080101@gmail.com>
-References: <4F1F0810.2000306@gmail.com> <4F25BCAE.3040709@hauke-m.de> <4F27F4DC.6080101@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 31 Jan 2012 15:15:45 -0800
-Message-ID: <CAB=NE6WzrBy+yEzgtNbS7yAyuVkXDumMG-XEwQ96P6ztzV=iEg@mail.gmail.com> (sfid-20120201_001609_445408_49E270B1)
-Subject: Re: [compat-wireless] modprobe -l is legacy compatibility mode and is
- being removed from some distros
-To: Richard Farina <sidhayn@gmail.com>,
-	Rusty Russell <rusty@rustcorp.com.au>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20280.44003.603490.847317@gargle.gargle.HOWL> (sfid-20120213_072132_249485_13EF0634)
+Date: Mon, 13 Feb 2012 11:51:23 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 6/7] ath9k: Fix phyerr debug statistics
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 31, 2012 at 6:04 AM, Richard Farina <sidhayn@gmail.com> wrote:
-> On 01/29/2012 04:39 PM, Hauke Mehrtens wrote:
->>
->> On 01/24/2012 08:35 PM, Richard Farina wrote:
->>>
->>> module-init-tools has been deprecated in favor of kmod in Arch Linux,
->>> and kmod doesn't have the legacy --list option for modprobe.
->>> This patch fixes the areas of the Makefile which actually needed the
->>> output of modprobe -l. The other 100's of uses are just to echo info to
->>> the screen which in this case will simply fail in an extremely noisy
->>> fashion yet non-fatal way.
->>>
->>> Please apply to all branches.
->>>
->>> Signed-of-By: Rick Farina<sidhayn@gmail.com>
->>>
->>> diff -Naur compat-wireless-3.3-rc1-2/Makefile
->>> compat-wireless-3.3-rc1-2-modinfo-migration/Makefile
->>> --- compat-wireless-3.3-rc1-2/Makefile    2012-01-21 02:00:21.000000000
->>> -0500
->>> +++ compat-wireless-3.3-rc1-2-modinfo-migration/Makefile    2012-01-24
->>> 14:27:20.000000000 -0500
->>> @@ -9,11 +9,6 @@
->>>  # Sometimes not available in the path
->>>  MODPROBE := /sbin/modprobe
->>>
->>> -ifneq ($(wildcard $(MODPROBE)),)
->>> -MADWIFI=$(shell $(MODPROBE) -l ath_pci)
->>> -OLD_IWL=$(shell $(MODPROBE) -l iwl4965)
->>> -endif
->>> -
->>
->> What happens if modinfo is not available? I do not know on what systems
->> this is the case, but I do not think that modinfo is available when
->> modprobe is not.
->
-> AFAIK this is never the case.  modinfo is packaged with module-init-tools
-> and on Arch module-init-tools has been replaced by KMOD which also includes
-> modinfo.  It would seem to me that at this point modinfo is a required tool
-> and is always packaged with modprobe.
+Validate the phyerr value against the max. size of the
+statistics array properly.
 
-Rusty, should all Linux distributions that carry modprobe also have modinfo ?
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 5a838fc..228c181 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -987,8 +987,6 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+ #define RX_SAMP_DBG(c) (sc->debug.bb_mac_samp[sc->debug.sampidx].rs\
+ 			[sc->debug.rsidx].c)
+ 
+-	u32 phyerr;
+-
+ 	RX_STAT_INC(rx_pkts_all);
+ 	sc->debug.stats.rxstats.rx_bytes_all += rs->rs_datalen;
+ 
+@@ -1007,8 +1005,8 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+ 
+ 	if (rs->rs_status & ATH9K_RXERR_PHY) {
+ 		RX_STAT_INC(phy_err);
+-		phyerr = rs->rs_phyerr & 0x24;
+-		RX_PHY_ERR_INC(phyerr);
++		if (rs->rs_phyerr < ATH9K_PHYERR_MAX)
++			RX_PHY_ERR_INC(rs->rs_phyerr);
+ 	}
+ 
+ 	sc->debug.stats.rxstats.rs_rssi_ctl0 = rs->rs_rssi_ctl0;
+-- 
+1.7.9
+
