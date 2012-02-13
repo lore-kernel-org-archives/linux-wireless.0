@@ -1,37 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38173 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756186Ab2BBPOZ (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:59173 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752326Ab2BMFue (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 10:14:25 -0500
-Message-ID: <4F2AA822.2040303@sipsolutions.net> (sfid-20120202_161428_675529_0F46E9B2)
-Date: Thu, 02 Feb 2012 07:13:38 -0800
-From: Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-To: Eliad Peller <eliad@wizery.com>
-CC: John Linville <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/11] station management & auth/assoc redesign
-References: <20120120125516.000124996@sipsolutions.net> <CAB3XZEdjn3nk8_pnb6ZaW7CbFXgJg44bkVykx8m5iHY=t+vnqA@mail.gmail.com> (sfid-20120202_084538_130926_46201062)
-In-Reply-To: <CAB3XZEdjn3nk8_pnb6ZaW7CbFXgJg44bkVykx8m5iHY=t+vnqA@mail.gmail.com> (sfid-20120202_084538_130926_46201062)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 13 Feb 2012 00:50:34 -0500
+Date: Mon, 13 Feb 2012 00:50:25 -0500 (EST)
+Message-Id: <20120213.005025.199077040083086801.davem@davemloft.net> (sfid-20120213_065048_318134_0B602165)
+To: joe@perches.com
+Cc: David.Laight@ACULAB.COM, jeffrey.t.kirsher@intel.com,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH net-next] drivers/net: Remove boolean comparisons to
+ true/false
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1328822243.29329.11.camel@joe2Laptop>
+References: <AE90C24D6B3A694183C094C60CF0A2F6026B6E62@saturn3.aculab.com>
+	<20120209.133413.349832435589531136.davem@davemloft.net>
+	<1328822243.29329.11.camel@joe2Laptop>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/1/2012 11:45 PM, Eliad Peller wrote:
-> On Fri, Jan 20, 2012 at 2:55 PM, Johannes Berg
-> <johannes@sipsolutions.net>  wrote:
->> This is the combination series of the station management
->> and auth/assoc redesign patches.
->>
->> Together, they give drivers more flexibility as to when
->> to add the station entry to the device for connections.
->> The auth/assoc redesign also simplifies the connection
->> establishment process.
->>
-> is this patchset going to get applied soon?
-> (no rush, i just noticed that newer patches were already applied)
+From: Joe Perches <joe@perches.com>
+Date: Thu, 09 Feb 2012 13:17:23 -0800
 
-I haven't kept track, and I have no idea why it wouldn't be?
+> Booleans should not be compared to true or false
+> but be directly tested or tested with !.
+> 
+> Done via cocci script:
+ ...
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-johannes
+Applied.
