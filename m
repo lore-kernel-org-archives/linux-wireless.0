@@ -1,87 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:36987 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751300Ab2BNIig (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:37599 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753834Ab2BMXlw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 03:38:36 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Mon, 13 Feb 2012 18:41:52 -0500
+Received: by iacb35 with SMTP id b35so5183443iac.19
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Feb 2012 15:41:52 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20282.7563.135394.237916@gargle.gargle.HOWL> (sfid-20120214_093840_405354_8398F757)
-Date: Tue, 14 Feb 2012 14:08:35 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 1/4] ath9k: Initialize NF values properly
+In-Reply-To: <4F399C96.3090701@lwfinger.net>
+References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
+ <1329161826-11135-3-git-send-email-Larry.Finger@lwfinger.net>
+ <CAGRGNgVC4moLEnBKvjmPpnuSxs-yppGVx5Bn+0FhtwGAo_JrEQ@mail.gmail.com> <4F399C96.3090701@lwfinger.net>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 14 Feb 2012 10:41:32 +1100
+Message-ID: <CAGRGNgV7c34ofqCy+9CDcXSz3o48KtUYsa+nr4cVb0inj8yLrA@mail.gmail.com> (sfid-20120214_004156_326510_01336993)
+Subject: Re: [RFC/RFT 2/5] b43: Load firmware from a work queue and not from
+ the probe routine
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	zajec5@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using AR_SREV_* macros for setting up the chip-specific NF
-values will make adding support for new chips hard. Use separate
-macros for each chip. Currently, AR9462 has the same value for
-all NF limits.
+Hi Larry,
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   15 +++++++++++----
- drivers/net/wireless/ath/ath9k/ar9003_phy.h |   13 +++++++++----
- 2 files changed, 20 insertions(+), 8 deletions(-)
+On Tue, Feb 14, 2012 at 10:28, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 02/13/2012 05:06 PM, Julian Calaby wrote:
+>>
+>> Hi Larry,
+>>
+>> On Tue, Feb 14, 2012 at 06:37, Larry Finger<Larry.Finger@lwfinger.net>
+>>  wrote:
+>>>
+>>> Recent changes in udev are causing problems for drivers that load
+>>> firmware
+>>> from the probe routine. As b43 has such a structure, it must be changed.
+>>> As this driver loads more than 1 firmware file, changing to the
+>>> asynchronous routine
+>>> request_firmware_nowait() would be complicated. In this implementation,
+>>> the probe
+>>> routine starts a delayed_work queue that calls the firmware loading
+>>> routines when
+>>> the delay (1 sec) expires..
+>>>
+>>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+>>> ---
+>>> diff --git a/drivers/net/wireless/b43/b43.h
+>>> b/drivers/net/wireless/b43/b43.h
+>>> index 835462d..532ba79 100644
+>>> --- a/drivers/net/wireless/b43/b43.h
+>>> +++ b/drivers/net/wireless/b43/b43.h
+>>> @@ -932,6 +932,9 @@ struct b43_wl {
+>>>        /* Flag that implement the queues stopping. */
+>>>        bool tx_queue_stopped[B43_QOS_QUEUE_NUM];
+>>>
+>>> +       /* delayed firmware loading */
+>>> +       struct delayed_work firmware_load;
+>>> +
+>>>        /* The device LEDs. */
+>>>        struct b43_leds leds;
+>>>
+>>> diff --git a/drivers/net/wireless/b43/main.c
+>>> b/drivers/net/wireless/b43/main.c
+>>> index 1b540d2..903e1ea 100644
+>>> --- a/drivers/net/wireless/b43/main.c
+>>> +++ b/drivers/net/wireless/b43/main.c
+>>> @@ -2427,9 +2433,17 @@ static int b43_request_firmware(struct b43_wldev
+>>> *dev)
+>>>        b43_print_fw_helptext(dev->wl, 1);
+>>>        err = -ENOENT;
+>>
+>>
+>> Should something be done here rather than immediately going to
+>> register the card with ieee80211?
+>
+>
+> I don't think so. When firmware is loaded from the probe routine, it
+> registers the card as the next step. I did miss the step that registers the
+> leds - that has now been added.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 2b0bfb8..70e27d2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1099,13 +1099,20 @@ static void ar9003_hw_set_nf_limits(struct ath_hw *ah)
- {
- 	ah->nf_2g.max = AR_PHY_CCA_MAX_GOOD_VAL_9300_2GHZ;
- 	ah->nf_2g.min = AR_PHY_CCA_MIN_GOOD_VAL_9300_2GHZ;
--	if (AR_SREV_9330(ah))
--		ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9330_2GHZ;
--	else
--		ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9300_2GHZ;
-+	ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9300_2GHZ;
- 	ah->nf_5g.max = AR_PHY_CCA_MAX_GOOD_VAL_9300_5GHZ;
- 	ah->nf_5g.min = AR_PHY_CCA_MIN_GOOD_VAL_9300_5GHZ;
- 	ah->nf_5g.nominal = AR_PHY_CCA_NOM_VAL_9300_5GHZ;
-+
-+	if (AR_SREV_9330(ah))
-+		ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9330_2GHZ;
-+
-+	if (AR_SREV_9462(ah)) {
-+		ah->nf_2g.min = AR_PHY_CCA_MIN_GOOD_VAL_9462_2GHZ;
-+		ah->nf_2g.nominal = AR_PHY_CCA_NOM_VAL_9462_2GHZ;
-+		ah->nf_5g.min = AR_PHY_CCA_MIN_GOOD_VAL_9462_5GHZ;
-+		ah->nf_5g.nominal = AR_PHY_CCA_NOM_VAL_9462_5GHZ;
-+	}
- }
- 
- /*
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index ed64114..aca24bf 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -325,13 +325,18 @@
- 
- #define AR_PHY_RX_OCGAIN        (AR_AGC_BASE + 0x200)
- 
--#define AR_PHY_CCA_NOM_VAL_9300_2GHZ          (AR_SREV_9462(ah) ? -127 : -110)
--#define AR_PHY_CCA_NOM_VAL_9300_5GHZ          (AR_SREV_9462(ah) ? -127 : -115)
--#define AR_PHY_CCA_MIN_GOOD_VAL_9300_2GHZ     (AR_SREV_9462(ah) ? -127 : -125)
--#define AR_PHY_CCA_MIN_GOOD_VAL_9300_5GHZ     (AR_SREV_9462(ah) ? -127 : -125)
-+#define AR_PHY_CCA_NOM_VAL_9300_2GHZ          -110
-+#define AR_PHY_CCA_NOM_VAL_9300_5GHZ          -115
-+#define AR_PHY_CCA_MIN_GOOD_VAL_9300_2GHZ     -125
-+#define AR_PHY_CCA_MIN_GOOD_VAL_9300_5GHZ     -125
- #define AR_PHY_CCA_MAX_GOOD_VAL_9300_2GHZ     -95
- #define AR_PHY_CCA_MAX_GOOD_VAL_9300_5GHZ     -100
- 
-+#define AR_PHY_CCA_NOM_VAL_9462_2GHZ          -127
-+#define AR_PHY_CCA_MIN_GOOD_VAL_9462_2GHZ     -127
-+#define AR_PHY_CCA_NOM_VAL_9462_5GHZ          -127
-+#define AR_PHY_CCA_MIN_GOOD_VAL_9462_5GHZ     -127
-+
- #define AR_PHY_CCA_NOM_VAL_9330_2GHZ          -118
- 
- /*
+My point here is that in the original flow, the -ENOENT would have
+been returned to b43_chip_init() and the hardware would never have
+been registered with mac80211. After this patch, it appears that if
+the firmware cannot be found, it still registers the hardware with
+mac80211.
+
+Thanks,
+
 -- 
-1.7.9
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
