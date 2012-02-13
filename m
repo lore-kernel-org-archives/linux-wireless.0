@@ -1,51 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:34296 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753103Ab2BVGeU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 01:34:20 -0500
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: Lower SDIO pad drive strength for hw2.1.1 board
-Date: Wed, 22 Feb 2012 12:03:51 +0530
-Message-ID: <1329892431-1499-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20120222_073436_915148_EE5A06FD)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx3.wp.pl ([212.77.101.7]:58146 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756139Ab2BMEza (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 12 Feb 2012 23:55:30 -0500
+From: Jakub Kicinski <kubakici@wp.pl>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Jakub Kicinski <kubakici@wp.pl>
+Subject: [PATCH v2 3/4] rt2800: Add documentation on MCU requests
+Date: Mon, 13 Feb 2012 05:48:38 +0100
+Message-Id: <1329108519-5342-4-git-send-email-kubakici@wp.pl> (sfid-20120213_055558_899381_43808D66)
+In-Reply-To: <1329108519-5342-1-git-send-email-kubakici@wp.pl>
+References: <1329108519-5342-1-git-send-email-kubakici@wp.pl>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+Add documentation on MCU communication, some of known commands and
+their arguments. Supplement command ids.
 
-Without this change, SDIO shuts down due to CRC error during
-data communication to the firmware in some of the platform.
-for example, scan request issued to the firmware doesn't
-return scan completed events and cause the socket interface
-to always return -16 (device busy).
-
-SDIO pad drive strength should be reduced for hw2.1.1 board
-to avoid such errors.
-
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
 ---
- drivers/net/wireless/ath/ath6kl/init.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/net/wireless/rt2x00/rt2800.h    |   14 +++++++++++++-
+ drivers/net/wireless/rt2x00/rt2800pci.c |    8 +++++---
+ 2 files changed, 18 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 72f1b4f..6033946 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -1406,7 +1406,8 @@ static int ath6kl_init_upload(struct ath6kl *ar)
- 		return status;
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 06acabd..4d771db 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -1627,6 +1627,7 @@ struct mac_iveiv_entry {
  
- 	/* WAR to avoid SDIO CRC err */
--	if (ar->version.target_ver == AR6003_HW_2_0_VERSION) {
-+	if (ar->version.target_ver == AR6003_HW_2_0_VERSION ||
-+	    ar->version.target_ver == AR6003_HW_2_1_1_VERSION) {
- 		ath6kl_err("temporary war to avoid sdio crc error\n");
+ /*
+  * H2M_MAILBOX_CSR: Host-to-MCU Mailbox.
++ * CMD_TOKEN: Command id, 0xff disable status reporting
+  */
+ #define H2M_MAILBOX_CSR			0x7010
+ #define H2M_MAILBOX_CSR_ARG0		FIELD32(0x000000ff)
+@@ -1636,6 +1637,8 @@ struct mac_iveiv_entry {
  
- 		param = 0x20;
+ /*
+  * H2M_MAILBOX_CID:
++ * Free slots contain 0xff. MCU will store command's token to lowest free slot.
++ * If all slots are occupied status will be dropped.
+  */
+ #define H2M_MAILBOX_CID			0x7014
+ #define H2M_MAILBOX_CID_CMD0		FIELD32(0x000000ff)
+@@ -1645,6 +1648,7 @@ struct mac_iveiv_entry {
+ 
+ /*
+  * H2M_MAILBOX_STATUS:
++ * Command status will be saved to same slot as command id.
+  */
+ #define H2M_MAILBOX_STATUS		0x701c
+ 
+@@ -2288,6 +2292,12 @@ struct mac_iveiv_entry {
+ 
+ /*
+  * MCU mailbox commands.
++ * MCU_SLEEP - go to power-save mode.
++ *             arg1: 1: save as much power as possible, 0: save less power
++ *             status: 1: success, 2: already asleep,
++ *                     3: maybe MAC is busy so can't finish this task
++ * MCU_RADIO_OFF
++ *             arg0: 0: do power-saving, NOT turn off radio
+  */
+ #define MCU_SLEEP			0x30
+ #define MCU_WAKEUP			0x31
+@@ -2308,7 +2318,9 @@ struct mac_iveiv_entry {
+ /*
+  * MCU mailbox tokens
+  */
+-#define TOKEN_WAKUP			3
++#define TOKEN_SLEEP			1
++#define TOKEN_RADIO_OFF			2
++#define TOKEN_WAKEUP			3
+ 
+ /*
+  * DMA descriptor defines.
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 6ab4637..f184a4f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -546,11 +546,13 @@ static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
+ 		/* PCIe devices won't report status after SLEEP request. */
+ 		rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_STATUS, ~0);
+ 		rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_CID, ~0);
+-		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0x01, 0xff, 0x01);
++		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, TOKEN_SLEEP,
++				   0xff, 0x01);
+ 		break;
+ 	case STATE_AWAKE:
+-		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, TOKEN_WAKUP, 0, 0x02);
+-		rt2800pci_mcu_status(rt2x00dev, TOKEN_WAKUP);
++		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, TOKEN_WAKEUP,
++				   0, 0x02);
++		rt2800pci_mcu_status(rt2x00dev, TOKEN_WAKEUP);
+ 		break;
+ 	case STATE_RADIO_IRQ_ON:
+ 	case STATE_RADIO_IRQ_OFF:
 -- 
-1.7.1
+1.7.7.6
 
