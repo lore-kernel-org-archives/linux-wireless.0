@@ -1,32 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout6.freenet.de ([195.4.92.96]:43831 "EHLO mout6.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756350Ab2BHHAH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 02:00:07 -0500
-Message-ID: <4F321CDA.7020607@01019freenet.de> (sfid-20120208_080031_815353_2D28D722)
-Date: Wed, 08 Feb 2012 07:57:30 +0100
-From: Andreas Hartmann <andihartmann@01019freenet.de>
-MIME-Version: 1.0
-To: trencan@centrum.cz
-CC: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: connection interrupted for rt61pci in master mode
-References: <20120128154544.70E060CD@centrum.cz>, <4F30BEED.4010905@01019freenet.de>, <20120207071444.8C823024@centrum.cz> <4F30D3EE.2010501@01019freenet.de> <20120207214801.21BCB62B@centrum.cz>
-In-Reply-To: <20120207214801.21BCB62B@centrum.cz>
-Content-Type: text/plain; charset=UTF-8
+Received: from he.sipsolutions.net ([78.46.109.217]:40818 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750946Ab2BMONK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Feb 2012 09:13:10 -0500
+Subject: RTLWIFI_DEBUG bug
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 13 Feb 2012 15:13:07 +0100
+Message-ID: <1329142387.3365.6.camel@jlt3.sipsolutions.net> (sfid-20120213_151314_357491_E31444E2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Michal,
+config RTLWIFI_DEBUG
+        tristate "Additional debugging output"
+        depends on RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE
+        default y
 
-trencan@centrum.cz schrieb:
-> 
-> I tried maxcpus=0 and verified that really only one cpu core is used
-> but didn't help (so not smp problem).
+should be
 
-Thank you for examining! At least a smp related problem should be
-eliminated now!
+config RTLWIFI_DEBUG
+        bool "..."
 
+as otherwise
 
-Kind regards,
-Andreas
++#ifdef CONFIG_RTLWIFI_DEBUG
+
+can never be true in a modular build.
+
+johannes
+
