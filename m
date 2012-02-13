@@ -1,80 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:52402 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751764Ab2BDWme (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Feb 2012 17:42:34 -0500
-Received: by obcva7 with SMTP id va7so5563543obc.19
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Feb 2012 14:42:34 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:29343 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751333Ab2BMNJL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Feb 2012 08:09:11 -0500
+Date: Mon, 13 Feb 2012 14:09:04 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+Message-ID: <20120213130903.GA7355@redhat.com> (sfid-20120213_140915_328768_EA543A70)
+References: <20111111054731.GA2292@redhat.com>
+ <20111111150105.GA25437@nomi.cz>
+ <20111114140714.GD2513@redhat.com>
+ <20111119181106.GA5515@nomi.cz>
+ <1321755233.22510.1.camel@wwguy-ubuntu>
+ <20111120032016.GA14520@nomi.cz>
+ <1321763314.22510.4.camel@wwguy-ubuntu>
+ <20111120204007.GA7273@nomi.cz>
+ <20120210180929.GA17733@nomi.cz>
+ <20120213092538.GA6214@redhat.com>
 MIME-Version: 1.0
-From: Andrew Lutomirski <luto@mit.edu>
-Date: Sat, 4 Feb 2012 14:42:14 -0800
-Message-ID: <CAObL_7E2eW9aqz3VLsBU-=4+kMXrfPvfz6wCNUEdDHuJWVaSLA@mail.gmail.com> (sfid-20120204_234238_548136_9F1CD9F9)
-Subject: 6300agn: queue stuck and driver doesn't recover
-To: ilw@linux.intel.com, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20120213092538.GA6214@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've recently started to notice wireless failures -- after being
-connected for a few minutes, the connection dies.  Other devices on
-the same network continue to work.  'iw dev wlan0 disconnect' will fix
-it.
+On Mon, Feb 13, 2012 at 10:25:39AM +0100, Stanislaw Gruszka wrote:
+> On Fri, Feb 10, 2012 at 07:09:29PM +0100, Tomáš Janoušek wrote:
+> > On Sun, Nov 20, 2011 at 09:40:07PM +0100, Tomáš Janoušek wrote:
+> > > > Yes, I will try your configuration when I get back  to the office Monday
+> > 
+> > Did you have any luck?
+> I think I tried to reproduce that problem and failed, but honestly I do
+> not remember right now ...
+> 
+> > I just found out something which is almost completely
+> > insane.
+> > 
+> > For the last few months, I've happily used a 64-bit kernel and have had no
+> > problems whatsoever. About a week ago, I started using virtual machines in
+> > KVM. And today I found that I have exactly the same problem, but only _inside_
+> > the virtual machine. I can't reliably scp a file from the internet to my
+> > virtual machine. It works fine when I scp to the host, it works fine when I'm
+> > on a WPA-PSK network. And it happens even if I tell kvm to emulate e1000, not
+> > only with virtio-net. How strange is that?
+> >
+> > And while this is happening, the host is running just fine. The host has a
+> > 64-bit kernel with a 32-bit userspace, so if something was wrong with the
+> > 32-bit mode of my processor, it would've appeared on the host as well, no?
+> > 
+> > It's also worth mentioning that if I build openssl with "no-asm 386", scp
+> > works just fine. So it doesn't look like a memory corruption after all. It
+> > seems as if certain CPU instructions didn't work properly if running on a
+> > 32-bit kernel with a WiFi adapter doing something. But how can it be
+> > that those same CPU instructions work on a 64-bit host with 32-bit userspace?
+> > At the same time! That's just completely insane, and I can't think of an
+> > explanation. Shall I get a new CPU perhaps? :-)
+> 
+> Currently there are discussion about compilator problems that
+> can result a corruption
+> http://lwn.net/Articles/478657/
+> Perhaps this problem is something similar.
+> 
+> Also, if you look at lspci -vt, does it show that corruption happen
+> only  when PCI bridge is used (however that would not explain why it
+> only happens with WPA enterprise).
 
-I'm not at all sure, but I think this is a 3.2 regression.  My kernel
-is 3.2.2-1.fc16.x86_64.
+I also found this bug report
+https://bugzilla.kernel.org/show_bug.cgi?id=37742
+where one user report iwlwifi corruption catched by IOMMU.
 
-My device reports as:
+Tomáš, I do not remember, do you have the same problems on
+older kernels i.e < 3.0
 
-[    9.971111] iwlwifi 0000:03:00.0: PCI INT A -> GSI 17 (level, low) -> IRQ 17
-[    9.971121] iwlwifi 0000:03:00.0: setting latency timer to 64
-[    9.971155] iwlwifi 0000:03:00.0: pci_resource_len = 0x00002000
-[    9.971156] iwlwifi 0000:03:00.0: pci_resource_base = ffffc900050dc000
-[    9.971158] iwlwifi 0000:03:00.0: HW Revision ID = 0x35
-[    9.971256] iwlwifi 0000:03:00.0: irq 50 for MSI/MSI-X
-[    9.971307] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUG disabled
-[    9.971309] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUGFS disabled
-[    9.971310] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEVICE_TRACING disabled
-[    9.971312] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEVICE_TESTMODE disabled
-[    9.971313] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_P2P disabled
-[    9.971319] iwlwifi 0000:03:00.0: Detected Intel(R) Centrino(R)
-Ultimate-N 6300 AGN, REV=0x74
-[    9.971373] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
-[    9.981946] iwlwifi 0000:03:00.0: device EEPROM VER=0x436, CALIB=0x6
-[    9.981949] iwlwifi 0000:03:00.0: Device SKU: 0x1F0
-[    9.981951] iwlwifi 0000:03:00.0: Valid Tx ant: 0x7, Valid Rx ant: 0x7
-[    9.981982] iwlwifi 0000:03:00.0: Tunable channels: 13 802.11bg, 24
-802.11a channels
-[   10.119812] iwlwifi 0000:03:00.0: loaded firmware version 9.221.4.1
-build 25532
-
-and the failure and subsequent forced reconnect looks like:
-
-[  659.272849] cfg80211: Calling CRDA for country: US
-[  659.280937] cfg80211: Regulatory domain changed to country: US
-[  659.280945] cfg80211:   (start_freq - end_freq @ bandwidth),
-(max_antenna_gain, max_eirp)
-[  659.280952] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz),
-(300 mBi, 2700 mBm)
-[  659.280957] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz),
-(300 mBi, 1700 mBm)
-[  659.280962] cfg80211:   (5250000 KHz - 5330000 KHz @ 40000 KHz),
-(300 mBi, 2000 mBm)
-[  659.280968] cfg80211:   (5490000 KHz - 5600000 KHz @ 40000 KHz),
-(300 mBi, 2000 mBm)
-[  659.280973] cfg80211:   (5650000 KHz - 5710000 KHz @ 40000 KHz),
-(300 mBi, 2000 mBm)
-[  659.280977] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz),
-(300 mBi, 3000 mBm)
-[  659.372989] wlan0: moving STA xx:xx:xx:xx:xx:xx to state 3
-[  682.786577] iwlwifi 0000:03:00.0: Tx aggregation enabled on ra =
-xx:xx:xx:xx:xx:xx tid = 0
-[  686.067870] iwlwifi 0000:03:00.0: Queue 12 stuck for 2000 ms.
-[  686.067874] iwlwifi 0000:03:00.0: Current SW read_ptr 6 write_ptr 99
-[  686.067907] iwlwifi 0000:03:00.0: Current HW read_ptr 6 write_ptr 99
-[  686.067918] iwlwifi 0000:03:00.0: On demand firmware reload
-[  686.068318] ieee80211 phy0: Hardware restart was requested
-[  686.068385] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
-[  686.068521] iwlwifi 0000:03:00.0: Radio type=0x0-0x3-0x1
-
-Most of the time, though, the connection dies with nothing printed to dmesg.
+Stanislaw
