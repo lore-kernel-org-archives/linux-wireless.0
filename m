@@ -1,91 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:65258 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750763Ab2BET7g (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:40574 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932135Ab2BMThj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Feb 2012 14:59:36 -0500
-Date: Sun, 5 Feb 2012 20:59:24 +0100
-From: Thierry Reding <thierry.reding@avionic-design.de>
-To: Marc Dietrich <marvin24@gmx.de>
-Cc: linux-tegra@vger.kernel.org, Stephen Warren <swarren@nvidia.com>,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rhyland Klein <rklein@nvidia.com>
-Subject: Re: [PATCH 1/3] net: rfkill-gpio: add device tree support
-Message-ID: <20120205195924.GA18267@avionic-0098.adnet.avionic-design.de> (sfid-20120205_205939_975394_5817AE30)
-References: <215249735783e9fe35db1c594d901f591725de50.1328461986.git.marvin24@gmx.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="cWoXeonUoKmBZSoM"
-In-Reply-To: <215249735783e9fe35db1c594d901f591725de50.1328461986.git.marvin24@gmx.de>
+	Mon, 13 Feb 2012 14:37:39 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, chunkeey@web.de,
+	Max Filippov <jcmvbkbc@gmail.com>, m@bues.ch,
+	linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [RFC/RFT 5/5] p54spi: Load firmware from work queue and not from probe routine
+Date: Mon, 13 Feb 2012 13:37:06 -0600
+Message-Id: <1329161826-11135-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120213_203756_510068_4F4B7332)
+In-Reply-To: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Drivers that load firmware from their probe routine have problems with the
+latest versions of udev as they get timeouts while waiting for user
+space to start. The problem is fixed by loading the firmware and starting
+mac80211 from a delayed_work queue. By using this method, most of the
+original code is preserved.
 
---cWoXeonUoKmBZSoM
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+This one is compile-tested only.
 
-* Marc Dietrich wrote:
-> +#ifdef CONFIG_OF
-[...]
-> +#else
-[...]
-> +#define of_rfkill_gpio_match NULL
+Larry
+---
+ drivers/net/wireless/p54/p54spi.c |   38 ++++++++++++++++++++++++++----------
+ drivers/net/wireless/p54/p54spi.h |    1 +
+ 2 files changed, 28 insertions(+), 11 deletions(-)
 
-This can be dropped, see below.
+diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+index 7faed62..87c2634 100644
+--- a/drivers/net/wireless/p54/p54spi.c
++++ b/drivers/net/wireless/p54/p54spi.c
+@@ -595,6 +595,30 @@ static void p54spi_op_stop(struct ieee80211_hw *dev)
+ 	cancel_work_sync(&priv->work);
+ }
+ 
++static void p54s_load_firmware(struct work_struct *work)
++{
++	struct p54s_priv *priv = container_of(to_delayed_work(work),
++				 struct p54s_priv, firmware_load);
++	struct ieee80211_hw *hw = priv->hw;
++	int ret;
++
++	ret = p54spi_request_firmware(hw);
++	if (ret < 0)
++		goto err_free_common;
++
++	ret = p54spi_request_eeprom(hw);
++	if (ret)
++		goto err_free_common;
++
++	ret = p54_register_common(hw, &priv->spi->dev);
++	if (ret)
++		goto err_free_common;
++	return;
++
++err_free_common:
++	dev_err(&priv->spi->dev, "Failed to read firmware\n");
++}
++
+ static int __devinit p54spi_probe(struct spi_device *spi)
+ {
+ 	struct p54s_priv *priv = NULL;
+@@ -658,17 +682,9 @@ static int __devinit p54spi_probe(struct spi_device *spi)
+ 	priv->common.stop = p54spi_op_stop;
+ 	priv->common.tx = p54spi_op_tx;
+ 
+-	ret = p54spi_request_firmware(hw);
+-	if (ret < 0)
+-		goto err_free_common;
+-
+-	ret = p54spi_request_eeprom(hw);
+-	if (ret)
+-		goto err_free_common;
+-
+-	ret = p54_register_common(hw, &priv->spi->dev);
+-	if (ret)
+-		goto err_free_common;
++	/* setup and start delayed work to load firmware */
++	INIT_DELAYED_WORK(&priv->firmware_load, p54s_load_firmware);
++	schedule_delayed_work(&priv->firmware_load, HZ);
+ 
+ 	return 0;
+ 
+diff --git a/drivers/net/wireless/p54/p54spi.h b/drivers/net/wireless/p54/p54spi.h
+index dfaa62a..5f7714b 100644
+--- a/drivers/net/wireless/p54/p54spi.h
++++ b/drivers/net/wireless/p54/p54spi.h
+@@ -120,6 +120,7 @@ struct p54s_priv {
+ 
+ 	enum fw_state fw_state;
+ 	const struct firmware *firmware;
++	struct delayed_work firmware_load;
+ };
+ 
+ #endif /* P54SPI_H */
+-- 
+1.7.7
 
-> +#endif
-> +
->  static int rfkill_gpio_probe(struct platform_device *pdev)
->  {
->  	struct rfkill_gpio_data *rfkill;
->  	struct rfkill_gpio_platform_data *pdata =3D pdev->dev.platform_data;
-> +	struct device_node *np =3D pdev->dev.of_node;
->  	int ret =3D 0;
->  	int len =3D 0;
-> =20
-> +	if (np)
-> +		pdata =3D rfkill_gpio_parse_pdata(pdev);
-> +
->  	if (!pdata) {
->  		pr_warn("%s: No platform data specified\n", __func__);
->  		return -EINVAL;
-> @@ -210,13 +268,13 @@ static int rfkill_gpio_remove(struct platform_devic=
-e *pdev)
-> =20
->  	return 0;
->  }
-> -
-
-Are you removing this line on purpose?
-
->  static struct platform_driver rfkill_gpio_driver =3D {
->  	.probe =3D rfkill_gpio_probe,
->  	.remove =3D __devexit_p(rfkill_gpio_remove),
->  	.driver =3D {
->  		   .name =3D "rfkill_gpio",
->  		   .owner =3D THIS_MODULE,
-> +		   .of_match_table =3D of_rfkill_gpio_match,
-
-I think the canonical way to do this is of_match_ptr() and leave out the
-definition to NULL in the !CONFIG_OF above.
-
-Thierry
-
---cWoXeonUoKmBZSoM
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk8u35wACgkQZ+BJyKLjJp/p+QCff0z2Od44D8yJlA6ZzBFD0aQZ
-YzAAnREqWiOX3+Ul674jviPzY/QgHsdz
-=Ij7q
------END PGP SIGNATURE-----
-
---cWoXeonUoKmBZSoM--
