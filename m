@@ -1,126 +1,213 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:4551 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755428Ab2B0XTD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 18:19:03 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:57649 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757686Ab2BMThh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Feb 2012 14:37:37 -0500
+Received: by yhoo21 with SMTP id o21so2575202yho.19
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Feb 2012 11:37:36 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 03/24] iwlwifi: move uCode flags handling to op_mode
-Date: Mon, 27 Feb 2012 14:07:27 -0800
-Message-Id: <1330380468-17674-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120228_002024_042789_20B7B668)
-In-Reply-To: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, chunkeey@web.de
+Subject: [RFC/RFT 3/5] p54usb: Load firmware from work queue and not from probe routine
+Date: Mon, 13 Feb 2012 13:37:04 -0600
+Message-Id: <1329161826-11135-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120213_203740_034098_CF9A77C0)
+In-Reply-To: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Drivers that load firmware from their probe routine have problems with the
+latest versions of udev as they get timeouts while waiting for user
+space to start. The problem is fixed by loading the firmware and starting
+mac80211 from a delayed_work queue. By using this method, most of the
+original code is preserved.
 
-The uCode flags modification is op_mode dependent
-since the P2P config is an op-mode config.
-
-This also fixes P2P enabling: due to the uCode
-loading code shuffle moving the SKU check before
-the EEPROM was read it was always false and would
-always disable PAN/P2P.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c   |   23 ++++++++++++++++++++---
- drivers/net/wireless/iwlwifi/iwl-ucode.c |   14 +-------------
- 2 files changed, 21 insertions(+), 16 deletions(-)
+ drivers/net/wireless/p54/p54usb.c |  120 +++++++++++++++++-------------------
+ drivers/net/wireless/p54/p54usb.h |    1 +
+ 2 files changed, 58 insertions(+), 63 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 5e476a8..d70dd6f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1151,6 +1151,7 @@ int iwl_op_mode_dvm_start(struct iwl_bus *bus,
- 	struct iwl_priv *priv;
- 	struct ieee80211_hw *hw;
- 	u16 num_mac;
-+	u32 ucode_flags;
+diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
+index f4d28c3..b8eff19 100644
+--- a/drivers/net/wireless/p54/p54usb.c
++++ b/drivers/net/wireless/p54/p54usb.c
+@@ -836,9 +836,33 @@ fail:
+ 	return err;
+ }
  
- 	/************************
- 	 * 1. Allocating HW data
-@@ -1242,6 +1243,22 @@ int iwl_op_mode_dvm_start(struct iwl_bus *bus,
- 	 ************************/
- 	iwl_set_hw_params(priv);
- 
-+	ucode_flags = fw->ucode_capa.flags;
+-static int p54u_load_firmware(struct ieee80211_hw *dev)
++static int p54u_open(struct ieee80211_hw *dev)
+ {
+ 	struct p54u_priv *priv = dev->priv;
++	int err;
 +
-+#ifndef CONFIG_IWLWIFI_P2P
-+	ucode_flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
-+#endif
-+	if (!(hw_params(priv).sku & EEPROM_SKU_CAP_IPAN_ENABLE))
-+		ucode_flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
++	err = p54u_init_urbs(dev);
++	if (err)
++		return err;
 +
-+	/*
-+	 * if not PAN, then don't support P2P -- might be a uCode
-+	 * packaging bug or due to the eeprom check above
-+	 */
-+	if (!(ucode_flags & IWL_UCODE_TLV_FLAGS_PAN))
-+		ucode_flags &= ~IWL_UCODE_TLV_FLAGS_P2P;
++	priv->common.open = p54u_init_urbs;
 +
++	return 0;
++}
 +
- 	/*******************
- 	 * 6. Setup priv
- 	 *******************/
-@@ -1266,9 +1283,9 @@ int iwl_op_mode_dvm_start(struct iwl_bus *bus,
- 		 "%s", fw->fw_version);
- 
- 	priv->new_scan_threshold_behaviour =
--		!!(fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_NEWSCAN);
-+		!!(ucode_flags & IWL_UCODE_TLV_FLAGS_NEWSCAN);
- 
--	if (fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PAN) {
-+	if (ucode_flags & IWL_UCODE_TLV_FLAGS_PAN) {
- 		priv->sta_key_max_num = STA_KEY_MAX_NUM_PAN;
- 		priv->shrd->cmd_queue = IWL_IPAN_CMD_QUEUE_NUM;
- 	} else {
-@@ -1282,7 +1299,7 @@ int iwl_op_mode_dvm_start(struct iwl_bus *bus,
- 		fw->ucode_capa.standard_phy_calibration_size + 1;
- 
- 	/* initialize all valid contexts */
--	iwl_init_context(priv, fw->ucode_capa.flags);
-+	iwl_init_context(priv, ucode_flags);
- 
- 	/**************************************************
- 	 * This is still part of probe() in a sense...
-diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.c b/drivers/net/wireless/iwlwifi/iwl-ucode.c
-index 99f89b2..3645bf3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-ucode.c
-@@ -1226,9 +1226,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 		nic->inst_evtlog_size =
- 			cfg->base_params->max_event_log_size;
- 	nic->inst_errlog_ptr = pieces.inst_errlog_ptr;
--#ifndef CONFIG_IWLWIFI_P2P
--	fw->ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
--#endif
++static void p54u_stop(struct ieee80211_hw *dev)
++{
++	/* TODO: figure out how to reliably stop the 3887 and net2280 so
++	   the hardware is still usable next time we want to start it.
++	   until then, we just stop listening to the hardware.. */
++	p54u_free_urbs(dev);
++}
 +
- 	/*
- 	 * figure out the offset of chain noise reset and gain commands
- 	 * base on the size of standard phy calibration commands table size
-@@ -1238,16 +1236,6 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 		fw->ucode_capa.standard_phy_calibration_size =
- 			IWL_MAX_STANDARD_PHY_CALIBRATE_TBL_SIZE;
++static void p54u_load_firmware(struct work_struct *work)
++{
++	struct p54u_priv *priv = container_of(to_delayed_work(work),
++				 struct p54u_priv, firmware_load);
++	struct ieee80211_hw *dev = usb_get_intfdata(priv->intf);
+ 	int err, i;
  
--	if (!(cfg->sku & EEPROM_SKU_CAP_IPAN_ENABLE))
--		fw->ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
+ 	BUILD_BUG_ON(ARRAY_SIZE(p54u_fwlist) != __NUM_P54U_HWTYPES);
+@@ -847,59 +871,53 @@ static int p54u_load_firmware(struct ieee80211_hw *dev)
+ 		if (p54u_fwlist[i].type == priv->hw_type)
+ 			break;
+ 
+-	if (i == __NUM_P54U_HWTYPES)
+-		return -EOPNOTSUPP;
++	if (i == __NUM_P54U_HWTYPES) {
++		dev_err(&priv->udev->dev, "Device not supported\n");
++		return;
++	}
+ 
+ 	err = request_firmware(&priv->fw, p54u_fwlist[i].fw, &priv->udev->dev);
+ 	if (err) {
+-		dev_err(&priv->udev->dev, "(p54usb) cannot load firmware %s "
+-					  "(%d)!\n", p54u_fwlist[i].fw, err);
 -
--	/*
--	 * if not PAN, then don't support P2P -- might be a uCode
--	 * packaging bug or due to the eeprom check above
--	 */
--	if (!(fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PAN))
--		fw->ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_P2P;
+ 		err = request_firmware(&priv->fw, p54u_fwlist[i].fw_legacy,
+ 				       &priv->udev->dev);
+-		if (err)
+-			return err;
++
++		if (err) {
++			dev_err(&priv->udev->dev,
++				"(p54usb) cannot load firmware %s or %s(%d)!\n",
++				p54u_fwlist[i].fw, p54u_fwlist[i].fw_legacy,
++				err);
++			return;
++		}
+ 	}
+ 
+ 	err = p54_parse_firmware(dev, priv->fw);
+-	if (err)
+-		goto out;
++	if (err) {
++		dev_err(&priv->udev->dev, "Error parsing firmware\n");
++		return;
++	}
+ 
+ 	if (priv->common.fw_interface != p54u_fwlist[i].intf) {
+ 		dev_err(&priv->udev->dev, "wrong firmware, please get "
+ 			"a firmware for \"%s\" and try again.\n",
+ 			p54u_fwlist[i].hw);
+-		err = -EINVAL;
++		return;
+ 	}
 -
- 	/* We have our copies now, allow OS release its copies */
- 	release_firmware(ucode_raw);
- 	complete(&nic->request_firmware_complete);
+-out:
+-	if (err)
+-		release_firmware(priv->fw);
+-
+-	return err;
+-}
+-
+-static int p54u_open(struct ieee80211_hw *dev)
+-{
+-	struct p54u_priv *priv = dev->priv;
+-	int err;
+-
+-	err = p54u_init_urbs(dev);
++	err = priv->upload_fw(dev);
+ 	if (err) {
+-		return err;
++		dev_err(&priv->udev->dev, "Error uploading firmware\n");
++		return;
+ 	}
+ 
+-	priv->common.open = p54u_init_urbs;
+-
+-	return 0;
+-}
++	p54u_open(dev);
++	err = p54_read_eeprom(dev);
++	if (err)
++		dev_err(&priv->udev->dev, "Error reading eeprom\n");
++	p54u_stop(dev);
++	if (err)
++		return;
+ 
+-static void p54u_stop(struct ieee80211_hw *dev)
+-{
+-	/* TODO: figure out how to reliably stop the 3887 and net2280 so
+-	   the hardware is still usable next time we want to start it.
+-	   until then, we just stop listening to the hardware.. */
+-	p54u_free_urbs(dev);
++	/* firmware available - start operations */
++	err = p54_register_common(dev, &priv->udev->dev);
+ }
+ 
+ static int __devinit p54u_probe(struct usb_interface *intf,
+@@ -969,34 +987,10 @@ static int __devinit p54u_probe(struct usb_interface *intf,
+ 		priv->common.tx = p54u_tx_net2280;
+ 		priv->upload_fw = p54u_upload_firmware_net2280;
+ 	}
+-	err = p54u_load_firmware(dev);
+-	if (err)
+-		goto err_free_dev;
+-
+-	err = priv->upload_fw(dev);
+-	if (err)
+-		goto err_free_fw;
+-
+-	p54u_open(dev);
+-	err = p54_read_eeprom(dev);
+-	p54u_stop(dev);
+-	if (err)
+-		goto err_free_fw;
+-
+-	err = p54_register_common(dev, &udev->dev);
+-	if (err)
+-		goto err_free_fw;
+-
++	/* setup and start delayed work to load firmware */
++	INIT_DELAYED_WORK(&priv->firmware_load, p54u_load_firmware);
++	schedule_delayed_work(&priv->firmware_load, HZ);
+ 	return 0;
+-
+-err_free_fw:
+-	release_firmware(priv->fw);
+-
+-err_free_dev:
+-	p54_free_common(dev);
+-	usb_set_intfdata(intf, NULL);
+-	usb_put_dev(udev);
+-	return err;
+ }
+ 
+ static void __devexit p54u_disconnect(struct usb_interface *intf)
+diff --git a/drivers/net/wireless/p54/p54usb.h b/drivers/net/wireless/p54/p54usb.h
+index ed4034a..6070a21 100644
+--- a/drivers/net/wireless/p54/p54usb.h
++++ b/drivers/net/wireless/p54/p54usb.h
+@@ -143,6 +143,7 @@ struct p54u_priv {
+ 	struct sk_buff_head rx_queue;
+ 	struct usb_anchor submitted;
+ 	const struct firmware *fw;
++	struct delayed_work firmware_load;
+ };
+ 
+ #endif /* P54USB_H */
 -- 
-1.7.0.4
+1.7.7
 
