@@ -1,121 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:54344 "HELO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756144Ab2BAKze (ORCPT
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:40500 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755832Ab2BMTnS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Feb 2012 05:55:34 -0500
-Date: Wed, 1 Feb 2012 16:19:54 +0530
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Lennert Buytenhek <buytenh@wantstofly.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH] mwl8k: Remove BSSID from the firmware when the
- corresponding BSS is stopped
-Message-ID: <20120201104938.GA6932@hertz.marvell.com> (sfid-20120201_115538_170527_7757DECA)
+	Mon, 13 Feb 2012 14:43:18 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F391470.3090102@gmail.com>
+References: <1ec0e63a7453072689618430ebc2bdd7b62542a2.1329073559.git.marvin24@gmx.de>
+	<86044d44009316a48b402050f9dd742391d46eac.1329073559.git.marvin24@gmx.de>
+	<CAPnjgZ2b4QjKMKjKyHqGGU1TbMamq6pBPUAAO99gMa98Rd+Erw@mail.gmail.com>
+	<4F391470.3090102@gmail.com>
+Date: Mon, 13 Feb 2012 11:43:17 -0800
+Message-ID: <CAOesGMjofzC9pp1H9SXS693QR7JU9XjvVLVi6gBSGuqVNJ-rKA@mail.gmail.com> (sfid-20120213_204329_771986_6FE20CC1)
+Subject: Re: [PATCH 2/3] dt: rfkill-gpio: add bindings documentation
+From: Olof Johansson <olof@lixom.net>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Simon Glass <sjg@chromium.org>, Marc Dietrich <marvin24@gmx.de>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devicetree-discuss@lists.ozlabs.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Using command DEL_MAC_ADDR, remove the mac address of the BSS
-when it is stopped i.e the corresponding vif is removed. Without
-this, the stale bss entry will still be maintained in the firmware
-which causes issues when the BSS's are recreated.
+Hi,
 
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
----
- drivers/net/wireless/mwl8k.c |   38 +++++++++++++++++++++++++++++---------
- 1 files changed, 29 insertions(+), 9 deletions(-)
+On Mon, Feb 13, 2012 at 5:47 AM, Rob Herring <robherring2@gmail.com> wrote:
+> On 02/12/2012 02:21 PM, Simon Glass wrote:
+>> Hi Marc,
+>>
+>> On Sun, Feb 12, 2012 at 11:13 AM, Marc Dietrich <marvin24@gmx.de> wrote:
+>>> Add device tree bindings information for rfkill gpio switches.
+>>>
+>>> Cc: linux-wireless@vger.kernel.org
+>>> Cc: "John W. Linville" <linville@tuxdriver.com>
+>>> Cc: Johannes Berg <johannes@sipsolutions.net>
+>>> Cc: Rhyland Klein <rklein@nvidia.com>
+>>> Cc: Grant Likely <grant.likely@secretlab.ca>
+>>> Cc: devicetree-discuss@lists.ozlabs.org
+>>> Signed-off-by: Marc Dietrich <marvin24@gmx.de>
+>>> ---
+>>>  Documentation/devicetree/bindings/gpio/rfkill.txt |   38 +++++++++++++++++++++
+>>>  1 files changed, 38 insertions(+), 0 deletions(-)
+>>>  create mode 100644 Documentation/devicetree/bindings/gpio/rfkill.txt
+>>>
+>>> diff --git a/Documentation/devicetree/bindings/gpio/rfkill.txt b/Documentation/devicetree/bindings/gpio/rfkill.txt
+>>> new file mode 100644
+>>> index 0000000..22bf22a
+>>> --- /dev/null
+>>> +++ b/Documentation/devicetree/bindings/gpio/rfkill.txt
+>>> @@ -0,0 +1,38 @@
+>>> +RFKILL switches connected to GPIO lines
+>>> +
+>>> +Required properties:
+>>> +- compatible : should be "rfkill-gpio".
+>>> +
+>>> +Each rfkill switch is represented as a sub-node of the rfkill-gpio device.
+>>> +Each node has a label property which represents the name of the corresponding
+>>> +rfkill device.
+>>> +
+>>> +RFKILL sub-node properties:
+>>> +- label :  (optional) The label for this rfkill switch.  If omitted, the label is
+>>> +  taken from the node name (excluding the unit address).
+>>> +- reset-gpio, shutdown-gpio :  Should specify the rfkill gpios for reset and
+>>> +  shutdown (see "Specifying GPIO information for devices" in
+>>
+>> Should that be reset-gpios, shutdown-gpios? Even though you have only
+>> one it seems that people put an 's' on the end.
 
-diff --git a/drivers/net/wireless/mwl8k.c b/drivers/net/wireless/mwl8k.c
-index fd12547..ac7c983 100644
---- a/drivers/net/wireless/mwl8k.c
-+++ b/drivers/net/wireless/mwl8k.c
-@@ -402,6 +402,7 @@ static const struct ieee80211_rate mwl8k_rates_50[] = {
- #define MWL8K_CMD_SET_MAC_ADDR		0x0202		/* per-vif */
- #define MWL8K_CMD_SET_RATEADAPT_MODE	0x0203
- #define MWL8K_CMD_GET_WATCHDOG_BITMAP	0x0205
-+#define MWL8K_CMD_DEL_MAC_ADDR		0x0206		/* per-vif */
- #define MWL8K_CMD_BSS_START		0x1100		/* per-vif */
- #define MWL8K_CMD_SET_NEW_STN		0x1111		/* per-vif */
- #define MWL8K_CMD_UPDATE_ENCRYPTION	0x1122		/* per-vif */
-@@ -3430,10 +3431,7 @@ static int mwl8k_cmd_enable_sniffer(struct ieee80211_hw *hw, bool enable)
- 	return rc;
- }
- 
--/*
-- * CMD_SET_MAC_ADDR.
-- */
--struct mwl8k_cmd_set_mac_addr {
-+struct mwl8k_cmd_update_mac_addr {
- 	struct mwl8k_cmd_pkt header;
- 	union {
- 		struct {
-@@ -3449,12 +3447,12 @@ struct mwl8k_cmd_set_mac_addr {
- #define MWL8K_MAC_TYPE_PRIMARY_AP		2
- #define MWL8K_MAC_TYPE_SECONDARY_AP		3
- 
--static int mwl8k_cmd_set_mac_addr(struct ieee80211_hw *hw,
--				  struct ieee80211_vif *vif, u8 *mac)
-+static int mwl8k_cmd_update_mac_addr(struct ieee80211_hw *hw,
-+				  struct ieee80211_vif *vif, u8 *mac, bool set)
- {
- 	struct mwl8k_priv *priv = hw->priv;
- 	struct mwl8k_vif *mwl8k_vif = MWL8K_VIF(vif);
--	struct mwl8k_cmd_set_mac_addr *cmd;
-+	struct mwl8k_cmd_update_mac_addr *cmd;
- 	int mac_type;
- 	int rc;
- 
-@@ -3475,7 +3473,11 @@ static int mwl8k_cmd_set_mac_addr(struct ieee80211_hw *hw,
- 	if (cmd == NULL)
- 		return -ENOMEM;
- 
--	cmd->header.code = cpu_to_le16(MWL8K_CMD_SET_MAC_ADDR);
-+	if (set)
-+		cmd->header.code = cpu_to_le16(MWL8K_CMD_SET_MAC_ADDR);
-+	else
-+		cmd->header.code = cpu_to_le16(MWL8K_CMD_DEL_MAC_ADDR);
-+
- 	cmd->header.length = cpu_to_le16(sizeof(*cmd));
- 	if (priv->ap_fw) {
- 		cmd->mbss.mac_type = cpu_to_le16(mac_type);
-@@ -3491,6 +3493,24 @@ static int mwl8k_cmd_set_mac_addr(struct ieee80211_hw *hw,
- }
- 
- /*
-+ * MWL8K_CMD_SET_MAC_ADDR.
-+ */
-+static inline int mwl8k_cmd_set_mac_addr(struct ieee80211_hw *hw,
-+				  struct ieee80211_vif *vif, u8 *mac)
-+{
-+	return mwl8k_cmd_update_mac_addr(hw, vif, mac, true);
-+}
-+
-+/*
-+ * MWL8K_CMD_DEL_MAC_ADDR.
-+ */
-+static inline int mwl8k_cmd_del_mac_addr(struct ieee80211_hw *hw,
-+				  struct ieee80211_vif *vif, u8 *mac)
-+{
-+	return mwl8k_cmd_update_mac_addr(hw, vif, mac, false);
-+}
-+
-+/*
-  * CMD_SET_RATEADAPT_MODE.
-  */
- struct mwl8k_cmd_set_rate_adapt_mode {
-@@ -4542,7 +4562,7 @@ static void mwl8k_remove_interface(struct ieee80211_hw *hw,
- 	if (priv->ap_fw)
- 		mwl8k_cmd_set_new_stn_del(hw, vif, vif->addr);
- 
--	mwl8k_cmd_set_mac_addr(hw, vif, "\x00\x00\x00\x00\x00\x00");
-+	mwl8k_cmd_del_mac_addr(hw, vif, vif->addr);
- 
- 	mwl8k_remove_vif(priv, mwl8k_vif);
- }
--- 
-1.7.5.4
+Agreed.
 
+>>
+>>> +  Documentation/devicetree/booting-without-of.txt).
+>>> +- type : enumerated type of the gpio (see include/linux/rfkill.h).
+>>
+>> It would be better I think if this were explicit here. If you have a
+>> number, then what values does it take and what do they mean?
+
+This should most likely be moved to a set of properties instad of an
+enumerated type, I agree. And/or use a string to encode the type
+simiar to how powerpc does some of the USB interfaces.
+
+>>> +- clock : (optional) name of the clock name associated with the rfkill switch
+>>
+>> Can this be a phandle instead of a string?
+>
+> This seems to be in the wrong place altogether. The gpio controller
+> would have a clock, not particular gpio line.
+
+And either way, this should conform to the standard clock binding, not
+use something locally hacked up.
+
+>>> +  (see include/linux/rfkill-gpio.h)
+>>
+>> IMO device tree bindings should be fully documented in this file,
+>> rather than needing to look at a separate header. This is particularly
+>> true if the binding is used in another project.
+>>
+>
+> Correct. A binding should not be Linux specific. It should describe the h/w.
+>
+>>> +
+>>> +Examples:
+>>> +
+>>> +rfkill-switches {
+>>> +       compatible = "rfkill-gpio";
+>>> +
+>>> +       wifi {
+>>> +               label = "wifi";
+>>> +               reset-gpio = <&gpio 25 0>; /* Active high */
+>>> +               shutdown-gpio = <&gpio 85 0>; /* Active high */
+>>> +               type = <1>;
+>>> +       };
+>>> +
+>>> +       bt {
+>>> +               label = "bluetooth";
+>>> +               reset-gpio = <&gpio 17 0>; /* Active high */
+>>> +               shutdown-gpio = <&gpio 35 0>; /* Active high */
+>>> +               type = <1>;
+>>> +       };
+>
+> Why wouldn't the gpio lines just be part of the bt and wifi device nodes
+> themselves? The DT is supposed to describe h/w connections.
+
+The thing is, that "rfkill" isn't a _device_, and Marc is trying to
+describe it as one. It's really just a software abstraction of a
+collection of power supplies and/or GPIO lines that are used to power
+up/down specific peripherals.
+
+I know that the USB modem, for example, is probed through autoprobing
+the USB bus. So there's no device to associate it with, per se. But
+the USB slot that the modem is connected to, which is also the
+connector that the GPIO controls the power supplies and reset line to,
+are connected directly to one of the USB host controllers, right? So
+maybe describing it there is a better option.
+
+That still leaves the issue of actually having something to bind it
+against. As I already said, rfkill isn't a device, so crafting one
+just because linux wants one is the wrong way to go about. Maybe using
+/chosen to refer to the device nodes for the GPIO lines under USB
+instead, and have rfkill look for those and create a device if they're
+found is a better way to go about it.
+
+
+-Olof
