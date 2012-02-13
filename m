@@ -1,92 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53516 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752117Ab2BYUsK (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:48817 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757686Ab2BMThf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Feb 2012 15:48:10 -0500
-Subject: [PATCH 1/2 v2] mac80211: fix auth/assoc data & timer leak
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20120225204145.794866318@sipsolutions.net> (sfid-20120225_214404_329985_A211B0C9)
-References: <20120225204044.168176239@sipsolutions.net>
-	 <20120225204145.794866318@sipsolutions.net>
-	 (sfid-20120225_214404_329985_A211B0C9)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 25 Feb 2012 21:48:08 +0100
-Message-ID: <1330202888.3509.1.camel@jlt3.sipsolutions.net> (sfid-20120225_214814_687112_03D66CA5)
-Mime-Version: 1.0
+	Mon, 13 Feb 2012 14:37:35 -0500
+Received: by ghrr11 with SMTP id r11so2581605ghr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Feb 2012 11:37:34 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, zajec5@gmail.com
+Subject: [RFC/RFT 2/5] b43: Load firmware from a work queue and not from the probe routine
+Date: Mon, 13 Feb 2012 13:37:03 -0600
+Message-Id: <1329161826-11135-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120213_203737_600862_49580521)
+In-Reply-To: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Recent changes in udev are causing problems for drivers that load firmware
+from the probe routine. As b43 has such a structure, it must be changed.
+As this driver loads more than 1 firmware file, changing to the asynchronous routine
+request_firmware_nowait() would be complicated. In this implementation, the probe
+routine starts a delayed_work queue that calls the firmware loading routines when
+the delay (1 sec) expires..
 
-When removing an interface while it is in the
-process of authenticating or associating, we
-leak the auth_data or assoc_data, and leave
-the timer pending. The timer then crashes the
-system when it fires as its data is gone.
-
-Fix this by explicitly deleting all the data
-when the interface is removed. This uncovered
-another bug -- this problem should have been
-detected by the sta_info_flush() warning but
-that function doesn't ever return non-zero,
-I'll fix that in a separate patch.
-
-Reported-by: Hieu Nguyen <hieux.c.nguyen@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
-v2: also delete timer
+ drivers/net/wireless/b43/b43.h  |    3 +++
+ drivers/net/wireless/b43/main.c |   38 ++++++++++++++++++++++----------------
+ 2 files changed, 25 insertions(+), 16 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index feddd8a..38bfca3 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1181,6 +1181,7 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
- 				  struct sk_buff *skb);
- void ieee80211_sta_reset_beacon_monitor(struct ieee80211_sub_if_data *sdata);
- void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata);
-+void ieee80211_mgd_teardown(struct ieee80211_sub_if_data *sdata);
+diff --git a/drivers/net/wireless/b43/b43.h b/drivers/net/wireless/b43/b43.h
+index 835462d..532ba79 100644
+--- a/drivers/net/wireless/b43/b43.h
++++ b/drivers/net/wireless/b43/b43.h
+@@ -932,6 +932,9 @@ struct b43_wl {
+ 	/* Flag that implement the queues stopping. */
+ 	bool tx_queue_stopped[B43_QOS_QUEUE_NUM];
  
- /* IBSS code */
- void ieee80211_ibss_notify_scan_completed(struct ieee80211_local *local);
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index a495587..e2e45dc 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -654,6 +654,8 @@ static void ieee80211_teardown_sdata(struct net_device *dev)
++	/* delayed firmware loading */
++	struct delayed_work firmware_load;
++
+ 	/* The device LEDs. */
+ 	struct b43_leds leds;
  
- 	if (ieee80211_vif_is_mesh(&sdata->vif))
- 		mesh_rmc_free(sdata);
-+	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
-+		ieee80211_mgd_teardown(sdata);
- 
- 	flushed = sta_info_flush(local, sdata);
- 	WARN_ON(flushed);
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 2d8a2b6..be35827 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -3532,6 +3532,19 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
- 	return 0;
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 1b540d2..903e1ea 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2390,8 +2390,14 @@ error:
+ 	return err;
  }
  
-+void ieee80211_mgd_teardown(struct ieee80211_sub_if_data *sdata)
-+{
-+	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-static int b43_request_firmware(struct b43_wldev *dev)
++static int b43_one_core_attach(struct b43_bus_dev *dev, struct b43_wl *wl);
++static void b43_one_core_detach(struct b43_bus_dev *dev);
 +
-+	mutex_lock(&ifmgd->mtx);
-+	if (ifmgd->assoc_data)
-+		ieee80211_destroy_assoc_data(sdata, false);
-+	if (ifmgd->auth_data)
-+		ieee80211_destroy_auth_data(sdata, false);
-+	del_timer_sync(&ifmgd->timer);
-+	mutex_unlock(&ifmgd->mtx);
-+}
++static void b43_request_firmware(struct work_struct *work)
+ {
++	struct b43_wl *wl = container_of(to_delayed_work(work),
++			    struct b43_wl, firmware_load);
++	struct b43_wldev *dev = wl->current_dev;
+ 	struct b43_request_fw_context *ctx;
+ 	unsigned int i;
+ 	int err;
+@@ -2399,13 +2405,13 @@ static int b43_request_firmware(struct b43_wldev *dev)
+ 
+ 	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
+ 	if (!ctx)
+-		return -ENOMEM;
++		return;
+ 	ctx->dev = dev;
+ 
+ 	ctx->req_type = B43_FWTYPE_PROPRIETARY;
+ 	err = b43_try_request_fw(ctx);
+ 	if (!err)
+-		goto out; /* Successfully loaded it. */
++		goto start_ieee80211; /* Successfully loaded it. */
+ 	err = ctx->fatal_failure;
+ 	if (err)
+ 		goto out;
+@@ -2413,7 +2419,7 @@ static int b43_request_firmware(struct b43_wldev *dev)
+ 	ctx->req_type = B43_FWTYPE_OPENSOURCE;
+ 	err = b43_try_request_fw(ctx);
+ 	if (!err)
+-		goto out; /* Successfully loaded it. */
++		goto start_ieee80211; /* Successfully loaded it. */
+ 	err = ctx->fatal_failure;
+ 	if (err)
+ 		goto out;
+@@ -2427,9 +2433,17 @@ static int b43_request_firmware(struct b43_wldev *dev)
+ 	b43_print_fw_helptext(dev->wl, 1);
+ 	err = -ENOENT;
+ 
++start_ieee80211:
++	err = ieee80211_register_hw(wl->hw);
++	if (err)
++		goto err_one_core_detach;
++	goto out;
 +
- void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
- 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
- 			       gfp_t gfp)
-
++err_one_core_detach:
++	b43_one_core_detach(dev->dev);
++
+ out:
+ 	kfree(ctx);
+-	return err;
+ }
+ 
+ static int b43_upload_microcode(struct b43_wldev *dev)
+@@ -3021,9 +3035,6 @@ static int b43_chip_init(struct b43_wldev *dev)
+ 	macctl |= B43_MACCTL_INFRA;
+ 	b43_write32(dev, B43_MMIO_MACCTL, macctl);
+ 
+-	err = b43_request_firmware(dev);
+-	if (err)
+-		goto out;
+ 	err = b43_upload_microcode(dev);
+ 	if (err)
+ 		goto out;	/* firmware is released later */
+@@ -5391,18 +5402,13 @@ int b43_ssb_probe(struct ssb_device *sdev, const struct ssb_device_id *id)
+ 	if (err)
+ 		goto err_wireless_exit;
+ 
+-	if (first) {
+-		err = ieee80211_register_hw(wl->hw);
+-		if (err)
+-			goto err_one_core_detach;
+-		b43_leds_register(wl->current_dev);
+-	}
++	/* setup and start delayed work to load firmware */
++	INIT_DELAYED_WORK(&wl->firmware_load, b43_request_firmware);
++	schedule_delayed_work(&wl->firmware_load, HZ);
+ 
+       out:
+ 	return err;
+ 
+-      err_one_core_detach:
+-	b43_one_core_detach(dev);
+       err_wireless_exit:
+ 	if (first)
+ 		b43_wireless_exit(dev, wl);
+-- 
+1.7.7
 
