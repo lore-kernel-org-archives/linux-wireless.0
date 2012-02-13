@@ -1,57 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:41149 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752920Ab2BETpb (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:34958 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755787Ab2BMThb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Feb 2012 14:45:31 -0500
-MIME-Version: 1.0
-Date: Sun, 5 Feb 2012 20:45:30 +0100
-Message-ID: <CANtv1eXSbOSp90BEfuWdL+6_7CFPJ5Hpn=Va3Jopbr7s011JLg@mail.gmail.com> (sfid-20120205_204621_866737_B6648DBC)
-Subject: regression, 3.2.2 stable: ath9k won't associate anymore
-From: Jurica Vukadin <u.ra604@googlemail.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Felix Fietkau <nbd@openwrt.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 13 Feb 2012 14:37:31 -0500
+Received: by yenm8 with SMTP id m8so2576797yen.19
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Feb 2012 11:37:31 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, zajec5@gmail.com
+Subject: [RFC/RFT 1/5] b43legacy: Load firmware from work queue instead of from probe routine
+Date: Mon, 13 Feb 2012 13:37:02 -0600
+Message-Id: <1329161826-11135-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120213_203734_272669_3BE39B51)
+In-Reply-To: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Recent changes in udev are causing problems for drivers that load firmware
+from the probe routine. As b43legacy has such a structure, it must be changed.
+As this driver loads 3 or 4 firmware files, changing to the asynchronous routine
+request_firmware_nowait() would be complicated. In this implementation, the probe
+routine starts a delayed_work queue that calls the firmware loading routines when
+the delay (1 sec) expires..
 
-commit "b4a82a0 ath9k_hw: fix interpretation of the rx KeyMiss flag"
-caused my card to stop associating with the router.
-Reverting it fixes the issue. Encryption is WEP, if that matters; I
-haven't tried others.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+ drivers/net/wireless/b43legacy/b43legacy.h |    3 ++
+ drivers/net/wireless/b43legacy/main.c      |   32 ++++++++++++++++-----------
+ 2 files changed, 22 insertions(+), 13 deletions(-)
 
-The device is "10:00.0 Network controller: Atheros Communications Inc.
-AR9287 Wireless Network Adapter (PCI-Express) (rev 01)"
+diff --git a/drivers/net/wireless/b43legacy/b43legacy.h b/drivers/net/wireless/b43legacy/b43legacy.h
+index 98e3d44..e9337e5 100644
+--- a/drivers/net/wireless/b43legacy/b43legacy.h
++++ b/drivers/net/wireless/b43legacy/b43legacy.h
+@@ -581,6 +581,9 @@ struct b43legacy_wl {
+ 	struct mutex mutex;		/* locks wireless core state */
+ 	spinlock_t leds_lock;		/* lock for leds */
+ 
++	/* delayed firmware loading */
++	struct delayed_work firmware_load;
++
+ 	/* We can only have one operating interface (802.11 core)
+ 	 * at a time. General information about this interface follows.
+ 	 */
+diff --git a/drivers/net/wireless/b43legacy/main.c b/drivers/net/wireless/b43legacy/main.c
+index 75e70bc..99d1237 100644
+--- a/drivers/net/wireless/b43legacy/main.c
++++ b/drivers/net/wireless/b43legacy/main.c
+@@ -1557,8 +1557,15 @@ err_format:
+ 	return -EPROTO;
+ }
+ 
+-static int b43legacy_request_firmware(struct b43legacy_wldev *dev)
++static int b43legacy_one_core_attach(struct ssb_device *dev,
++				     struct b43legacy_wl *wl);
++static void b43legacy_one_core_detach(struct ssb_device *dev);
++
++static void b43legacy_request_firmware(struct work_struct *work)
+ {
++	struct b43legacy_wl *wl = container_of(to_delayed_work(work),
++				  struct b43legacy_wl, firmware_load);
++	struct b43legacy_wldev *dev = wl->current_dev;
+ 	struct b43legacy_firmware *fw = &dev->fw;
+ 	const u8 rev = dev->dev->id.revision;
+ 	const char *filename;
+@@ -1624,8 +1631,14 @@ static int b43legacy_request_firmware(struct b43legacy_wldev *dev)
+ 		if (err)
+ 			goto err_load;
+ 	}
++	err = ieee80211_register_hw(wl->hw);
++	if (err)
++		goto err_one_core_detach;
++	return;
+ 
+-	return 0;
++err_one_core_detach:
++	b43legacy_one_core_detach(dev->dev);
++	goto error;
+ 
+ err_load:
+ 	b43legacy_print_fw_helptext(dev->wl);
+@@ -1639,7 +1652,7 @@ err_no_initvals:
+ 
+ error:
+ 	b43legacy_release_firmware(dev);
+-	return err;
++	return;
+ }
+ 
+ static int b43legacy_upload_microcode(struct b43legacy_wldev *dev)
+@@ -2153,9 +2166,6 @@ static int b43legacy_chip_init(struct b43legacy_wldev *dev)
+ 	macctl |= B43legacy_MACCTL_INFRA;
+ 	b43legacy_write32(dev, B43legacy_MMIO_MACCTL, macctl);
+ 
+-	err = b43legacy_request_firmware(dev);
+-	if (err)
+-		goto out;
+ 	err = b43legacy_upload_microcode(dev);
+ 	if (err)
+ 		goto out; /* firmware is released later */
+@@ -3860,17 +3870,13 @@ static int b43legacy_probe(struct ssb_device *dev,
+ 	if (err)
+ 		goto err_wireless_exit;
+ 
+-	if (first) {
+-		err = ieee80211_register_hw(wl->hw);
+-		if (err)
+-			goto err_one_core_detach;
+-	}
++	/* setup and start delayed work to load firmware */
++	INIT_DELAYED_WORK(&wl->firmware_load, b43legacy_request_firmware);
++	schedule_delayed_work(&wl->firmware_load, HZ);
+ 
+ out:
+ 	return err;
+ 
+-err_one_core_detach:
+-	b43legacy_one_core_detach(dev);
+ err_wireless_exit:
+ 	if (first)
+ 		b43legacy_wireless_exit(dev, wl);
+-- 
+1.7.7
 
-excerpt from dmesg before the revert:
-Feb  5 20:00:56 smaug kernel: [    7.468770] ath9k 0000:10:00.0: PCI
-INT A -> GSI 17 (level, low) -> IRQ 17
-Feb  5 20:00:56 smaug kernel: [    7.468787] ath9k 0000:10:00.0:
-setting latency timer to 64
-Feb  5 20:00:56 smaug kernel: [    7.558116] ath: EEPROM regdomain: 0x6a
-Feb  5 20:00:56 smaug kernel: [    7.558118] ath: EEPROM indicates we
-should expect a direct regpair map
-Feb  5 20:00:56 smaug kernel: [    7.558121] ath: Country alpha2 being used: 00
-Feb  5 20:00:56 smaug kernel: [    7.558122] ath: Regpair used: 0x6a
-Feb  5 20:00:56 smaug kernel: [    8.044750] ieee80211 phy0: Selected
-rate control algorithm 'ath9k_rate_control'
-Feb  5 20:00:56 smaug kernel: [    8.045371] Registered led device: ath9k-phy0
-Feb  5 20:01:01 smaug kernel: [   16.161078] wlan0: authenticate with
-00:01:e3:4a:9e:be (try 1)
-Feb  5 20:01:01 smaug kernel: [   16.163159] wlan0: authenticated
-Feb  5 20:01:01 smaug kernel: [   16.197844] wlan0: associate with
-00:01:e3:4a:9e:be (try 1)
-Feb  5 20:01:01 smaug kernel: [   16.200307] wlan0: RX AssocResp from
-00:01:e3:4a:9e:be (capab=0x431 status=0 aid=4)
-Feb  5 20:01:01 smaug kernel: [   16.200312] wlan0: associated
-Feb  5 20:01:31 smaug kernel: [   46.185930] wlan0: deauthenticating
-from 00:01:e3:4a:9e:be by local choice (reason=3)
-
-
---
-Kind regards,
-Jurica
