@@ -1,177 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:54915 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751365Ab2BDBZ4 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:64864 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751645Ab2BMGVH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 20:25:56 -0500
-Received: by mail-pz0-f46.google.com with SMTP id p15so3176528dad.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2012 17:25:55 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Subject: [RFC 01/11] crda: move country2rd() and its helper to reglib.c
-Date: Fri,  3 Feb 2012 17:25:38 -0800
-Message-Id: <1328318748-21044-2-git-send-email-mcgrof@frijolero.org> (sfid-20120204_022605_235126_4D7E01B4)
-In-Reply-To: <1328318748-21044-1-git-send-email-mcgrof@frijolero.org>
-References: <1328318748-21044-1-git-send-email-mcgrof@frijolero.org>
+	Mon, 13 Feb 2012 01:21:07 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20280.43978.995673.296898@gargle.gargle.HOWL> (sfid-20120213_072111_813547_BA0C391B)
+Date: Mon, 13 Feb 2012 11:50:58 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 4/7] ath9k: Add a debugfs file to display reset statistics
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Start cleaning the way we deal with reglib.c as the goal
-is to make that stuff a library to be shared first in
-userspace with the regulatory simulator [0]. We start
-off by moving country2rd() and its helper over to
-reglib.c.
+Location: <debugfs_path>/ieee80211/phy#/ath9k/reset
 
-[0] git://github.com/mcgrof/regsim.git
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- print-regdom.c |   61 --------------------------------------------------------
- reglib.c       |   61 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 61 insertions(+), 61 deletions(-)
+ drivers/net/wireless/ath/ath9k/debug.c |   41 ++++++++++++++++++++++++++++++++
+ 1 files changed, 41 insertions(+), 0 deletions(-)
 
-diff --git a/print-regdom.c b/print-regdom.c
-index f34a8db..a3bedeb 100644
---- a/print-regdom.c
-+++ b/print-regdom.c
-@@ -4,67 +4,6 @@
- #include <arpa/inet.h>
- #include "reglib.h"
- 
--static void reg_rule2rd(uint8_t *db, int dblen,
--	uint32_t ruleptr, struct ieee80211_reg_rule *rd_reg_rule)
--{
--	struct regdb_file_reg_rule *rule;
--	struct regdb_file_freq_range *freq;
--	struct regdb_file_power_rule *power;
--
--	struct ieee80211_freq_range *rd_freq_range = &rd_reg_rule->freq_range;
--	struct ieee80211_power_rule *rd_power_rule = &rd_reg_rule->power_rule;
--
--	rule  = crda_get_file_ptr(db, dblen, sizeof(*rule), ruleptr);
--	freq  = crda_get_file_ptr(db, dblen, sizeof(*freq), rule->freq_range_ptr);
--	power = crda_get_file_ptr(db, dblen, sizeof(*power), rule->power_rule_ptr);
--
--	rd_freq_range->start_freq_khz = ntohl(freq->start_freq);
--	rd_freq_range->end_freq_khz = ntohl(freq->end_freq);
--	rd_freq_range->max_bandwidth_khz = ntohl(freq->max_bandwidth);
--
--	rd_power_rule->max_antenna_gain = ntohl(power->max_antenna_gain);
--	rd_power_rule->max_eirp = ntohl(power->max_eirp);
--
--	rd_reg_rule->flags = ntohl(rule->flags);
--}
--
--/* Converts a file regdomain to ieee80211_regdomain, easier to manage */
--struct ieee80211_regdomain *country2rd(uint8_t *db, int dblen,
--	struct regdb_file_reg_country *country)
--{
--	struct regdb_file_reg_rules_collection *rcoll;
--	struct ieee80211_regdomain *rd;
--	int i, num_rules, size_of_rd;
--
--	rcoll = crda_get_file_ptr(db, dblen, sizeof(*rcoll),
--				country->reg_collection_ptr);
--	num_rules = ntohl(rcoll->reg_rule_num);
--	/* re-get pointer with sanity checking for num_rules */
--	rcoll = crda_get_file_ptr(db, dblen,
--			sizeof(*rcoll) + num_rules * sizeof(uint32_t),
--			country->reg_collection_ptr);
--
--	size_of_rd = sizeof(struct ieee80211_regdomain) +
--		num_rules * sizeof(struct ieee80211_reg_rule);
--
--	rd = malloc(size_of_rd);
--	if (!rd)
--		return NULL;
--
--	memset(rd, 0, size_of_rd);
--
--	rd->alpha2[0] = country->alpha2[0];
--	rd->alpha2[1] = country->alpha2[1];
--	rd->n_reg_rules = num_rules;
--
--	for (i = 0; i < num_rules; i++) {
--		reg_rule2rd(db, dblen, rcoll->reg_rule_ptrs[i],
--			&rd->reg_rules[i]);
--	}
--
--	return rd;
--}
--
- static void print_reg_rule(struct ieee80211_reg_rule *rule)
- {
- 	struct ieee80211_freq_range *freq;
-diff --git a/reglib.c b/reglib.c
-index ebf0fb1..5d66481 100644
---- a/reglib.c
-+++ b/reglib.c
-@@ -151,3 +151,64 @@ out:
- 	return 1;
- #endif
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index b2c6069..fe1f55f 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -750,6 +750,38 @@ static ssize_t read_file_misc(struct file *file, char __user *user_buf,
+ 	return retval;
  }
-+
-+static void reg_rule2rd(uint8_t *db, int dblen,
-+	uint32_t ruleptr, struct ieee80211_reg_rule *rd_reg_rule)
+ 
++static ssize_t read_file_reset(struct file *file, char __user *user_buf,
++			       size_t count, loff_t *ppos)
 +{
-+	struct regdb_file_reg_rule *rule;
-+	struct regdb_file_freq_range *freq;
-+	struct regdb_file_power_rule *power;
++	struct ath_softc *sc = file->private_data;
++	char buf[512];
++	unsigned int len = 0;
 +
-+	struct ieee80211_freq_range *rd_freq_range = &rd_reg_rule->freq_range;
-+	struct ieee80211_power_rule *rd_power_rule = &rd_reg_rule->power_rule;
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%17s: %2d\n", "Baseband Hang",
++			sc->debug.stats.reset[RESET_TYPE_BB_HANG]);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%17s: %2d\n", "Baseband Watchdog",
++			sc->debug.stats.reset[RESET_TYPE_BB_WATCHDOG]);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%17s: %2d\n", "Fatal HW Error",
++			sc->debug.stats.reset[RESET_TYPE_FATAL_INT]);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%17s: %2d\n", "TX HW error",
++			sc->debug.stats.reset[RESET_TYPE_TX_ERROR]);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%17s: %2d\n", "TX Path Hang",
++			sc->debug.stats.reset[RESET_TYPE_TX_HANG]);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%17s: %2d\n", "PLL RX Hang",
++			sc->debug.stats.reset[RESET_TYPE_PLL_HANG]);
 +
-+	rule  = crda_get_file_ptr(db, dblen, sizeof(*rule), ruleptr);
-+	freq  = crda_get_file_ptr(db, dblen, sizeof(*freq), rule->freq_range_ptr);
-+	power = crda_get_file_ptr(db, dblen, sizeof(*power), rule->power_rule_ptr);
++	if (len > sizeof(buf))
++		len = sizeof(buf);
 +
-+	rd_freq_range->start_freq_khz = ntohl(freq->start_freq);
-+	rd_freq_range->end_freq_khz = ntohl(freq->end_freq);
-+	rd_freq_range->max_bandwidth_khz = ntohl(freq->max_bandwidth);
-+
-+	rd_power_rule->max_antenna_gain = ntohl(power->max_antenna_gain);
-+	rd_power_rule->max_eirp = ntohl(power->max_eirp);
-+
-+	rd_reg_rule->flags = ntohl(rule->flags);
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
 +}
 +
-+/* Converts a file regdomain to ieee80211_regdomain, easier to manage */
-+struct ieee80211_regdomain *country2rd(uint8_t *db, int dblen,
-+	struct regdb_file_reg_country *country)
-+{
-+	struct regdb_file_reg_rules_collection *rcoll;
-+	struct ieee80211_regdomain *rd;
-+	int i, num_rules, size_of_rd;
+ void ath_debug_stat_tx(struct ath_softc *sc, struct ath_buf *bf,
+ 		       struct ath_tx_status *ts, struct ath_txq *txq,
+ 		       unsigned int flags)
+@@ -837,6 +869,13 @@ static const struct file_operations fops_misc = {
+ 	.llseek = default_llseek,
+ };
+ 
++static const struct file_operations fops_reset = {
++	.read = read_file_reset,
++	.open = ath9k_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
 +
-+	rcoll = crda_get_file_ptr(db, dblen, sizeof(*rcoll),
-+				country->reg_collection_ptr);
-+	num_rules = ntohl(rcoll->reg_rule_num);
-+	/* re-get pointer with sanity checking for num_rules */
-+	rcoll = crda_get_file_ptr(db, dblen,
-+			sizeof(*rcoll) + num_rules * sizeof(uint32_t),
-+			country->reg_collection_ptr);
-+
-+	size_of_rd = sizeof(struct ieee80211_regdomain) +
-+		num_rules * sizeof(struct ieee80211_reg_rule);
-+
-+	rd = malloc(size_of_rd);
-+	if (!rd)
-+		return NULL;
-+
-+	memset(rd, 0, size_of_rd);
-+
-+	rd->alpha2[0] = country->alpha2[0];
-+	rd->alpha2[1] = country->alpha2[1];
-+	rd->n_reg_rules = num_rules;
-+
-+	for (i = 0; i < num_rules; i++) {
-+		reg_rule2rd(db, dblen, rcoll->reg_rule_ptrs[i],
-+			&rd->reg_rules[i]);
-+	}
-+
-+	return rd;
-+}
+ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+ 			      size_t count, loff_t *ppos)
+ {
+@@ -1549,6 +1588,8 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 			    &fops_stations);
+ 	debugfs_create_file("misc", S_IRUSR, sc->debug.debugfs_phy, sc,
+ 			    &fops_misc);
++	debugfs_create_file("reset", S_IRUSR, sc->debug.debugfs_phy, sc,
++			    &fops_reset);
+ 	debugfs_create_file("recv", S_IRUSR, sc->debug.debugfs_phy, sc,
+ 			    &fops_recv);
+ 	debugfs_create_file("rx_chainmask", S_IRUSR | S_IWUSR,
 -- 
-1.7.4.15.g7811d
+1.7.9
 
