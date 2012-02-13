@@ -1,50 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:33640 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753505Ab2BAHnV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Feb 2012 02:43:21 -0500
-Date: Wed, 1 Feb 2012 10:42:11 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Simon Wunderlich <simon.wunderlich@s2003.tu-chemnitz.de>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch -next] mac80211: off by one in mcs mask handling
-Message-ID: <20120201074210.GA22179@elgon.mountain> (sfid-20120201_084325_940726_DF5CF15E)
+Received: from mout4.freenet.de ([195.4.92.94]:58226 "EHLO mout4.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751967Ab2BMPHk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Feb 2012 10:07:40 -0500
+Message-ID: <4F3926AD.3020405@01019freenet.de> (sfid-20120213_160743_951984_0BC2889E)
+Date: Mon, 13 Feb 2012 16:05:17 +0100
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: Florian Fainelli <florian@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com, gwingerde@gmail.com,
+	Ivo Van Doorn <ivdoorn@gmail.com>
+Subject: Re: Poor RT2880 performance
+References: <4F390ED3.8010400@openwrt.org> <CAGXE3d90az_g3KyzPp-4NQoM2zmXaNSVo=7piM=q8EK9WdBp7A@mail.gmail.com>
+In-Reply-To: <CAGXE3d90az_g3KyzPp-4NQoM2zmXaNSVo=7piM=q8EK9WdBp7A@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"ridx" is used as an index into the mcs_mask[] array which has
-IEEE80211_HT_MCS_MASK_LEN elements.
+Helmut Schaa schrieb:
+> Hi,
+> 
+> On Mon, Feb 13, 2012 at 2:23 PM, Florian Fainelli <florian@openwrt.org> wrote:
+>> I am playing with a RT2880-F based AP, with a N connected station, in a
+>> residential environment.
+> 
+> Mind to provide the RF and RT chipset identifications? rt2x00 should print them
+> out during module load (at least when compiled with debugging options).
+> 
+>> I could not get more than 26Mbits/sec TCP performance using iperf on both
+>> sides,
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Just for my understanding: did you test iperf payload in both directions
+parallel or serial?
 
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 3fef26d..22fc28e 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -324,7 +324,7 @@ static bool rate_idx_match_mcs_mask(struct ieee80211_tx_rate *rate,
- 	rbit = rate->idx % 8;
- 
- 	/* sanity check */
--	if (ridx < 0 || ridx > IEEE80211_HT_MCS_MASK_LEN)
-+	if (ridx < 0 || ridx >= IEEE80211_HT_MCS_MASK_LEN)
- 		return false;
- 
- 	/* See whether the selected rate or anything below it is allowed. */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c910b07..7db14b4 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5408,7 +5408,7 @@ static bool ht_rateset_to_mask(struct ieee80211_supported_band *sband,
- 		rbit = BIT(rates[i] % 8);
- 
- 		/* check validity */
--		if ((ridx < 0) || (ridx > IEEE80211_HT_MCS_MASK_LEN))
-+		if ((ridx < 0) || (ridx >= IEEE80211_HT_MCS_MASK_LEN))
- 			return false;
- 
- 		/* check availability */
+What about the hardware of the STA?
+
+> Did aggregation kick in? What rate was selected by the AP?
+
+I set the 80211.n options like this in hostapd.conf:
+
+ieee80211n=1
+ht_capab=[HT40+][SHORT-GI-40][SHORT-GI-20][TX-STBC1][MAX-AMSDU-3839][RX-STBC12][SMPS-STATIC][GF]
+
+It's vitally to enable 40MHz channels, above [HT40+].
+
+But you should put your own values into the config. You get them from iw
+list of the AP interface.
+
+> 
+>> changing to a busier channel even made the performance drop down to
+>> 5Mbits/sec, and remained like this.
+> 
+> Andreas also reported some issues as soon as the environment gets noisy,
+> not sure what the root cause for this is :(
+
+Yes, the issues I saw came up with nl80211 based STA interface running
+parallel to a ralink legacy driver based interface (the payload from
+ath9k interface was practically knocked out (DOS-attack :-)) - the
+ralink legacy driver based STA sent on briskly).
+
+
+Kind regards,
+Andreas
