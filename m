@@ -1,50 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:34044 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755649Ab2B2UrB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 15:47:01 -0500
-Date: Wed, 29 Feb 2012 15:35:15 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] carl9170: fix breakage from "mac80211: handle
- non-bufferable MMPDUs correctly"
-Message-ID: <20120229203515.GE13733@tuxdriver.com> (sfid-20120229_214705_668166_351E2883)
-References: <1330546305-26773-1-git-send-email-linville@tuxdriver.com>
- <1330546923.13717.9.camel@jlt3.sipsolutions.net>
- <201202292127.18915.chunkeey@googlemail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201202292127.18915.chunkeey@googlemail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:38458 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756530Ab2BMKYH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Feb 2012 05:24:07 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 04/24] iwlegacy: use writeb,writel,readl directly
+Date: Mon, 13 Feb 2012 11:23:11 +0100
+Message-Id: <1329128611-6815-5-git-send-email-sgruszka@redhat.com> (sfid-20120213_112423_280438_97C901BE)
+In-Reply-To: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
+References: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 29, 2012 at 09:27:18PM +0100, Christian Lamparter wrote:
-> On Wednesday, February 29, 2012 09:22:03 PM Johannes Berg wrote:
-> > On Wed, 2012-02-29 at 15:11 -0500, John W. Linville wrote:
-> > > That commit intended for 3.4 renamed IEEE80211_TX_CTL_POLL_RESPONSE as
-> > > IEEE80211_TX_CTL_NO_PS_BUFFER.  Meanwhile, "carl9170: fix frame delivery
-> > > if sta is in powersave mode" added a reference to
-> > > IEEE80211_TX_CTL_POLL_RESPONSE in the fixes stream for 3.3.  This simple
-> > > patch fixes that merge boo-boo.
-> > 
-> > Thanks, sorry about the overlap.
-> Err?! I wrote and posted an updated patch on saturday.
-> 
-> [PATCH -wt] carl9170: fix frame delivery if sta is in powersave mode
-> http://www.spinics.net/lists/linux-wireless/msg85556.html
+That change will save us some CPU cycles at run time. Having
+port-based I/O seems to be not possible for PCIe devices.
 
-Indeed, you did.  I think the net effect is the same, right?
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/3945-mac.c |    6 +++---
+ drivers/net/wireless/iwlegacy/4965-mac.c |    6 +++---
+ drivers/net/wireless/iwlegacy/common.h   |    6 +++---
+ 3 files changed, 9 insertions(+), 9 deletions(-)
 
-I generally prefer to merge a single fix patch and account for any
-conflicts in a merge.  This one slipped through because of the lack
-of direct merge breakage.  Anyway, it all seems fine now.
-
-Thanks,
-
-John
+diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
+index aa8f5c0..63ec05b 100644
+--- a/drivers/net/wireless/iwlegacy/3945-mac.c
++++ b/drivers/net/wireless/iwlegacy/3945-mac.c
+@@ -3655,7 +3655,7 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/***********************
+ 	 * 3. Read REV Register
+ 	 * ********************/
+-	il->hw_base = pci_iomap(pdev, 0, 0);
++	il->hw_base = pci_ioremap_bar(pdev, 0);
+ 	if (!il->hw_base) {
+ 		err = -ENODEV;
+ 		goto out_pci_release_regions;
+@@ -3780,7 +3780,7 @@ out_unset_hw_params:
+ out_eeprom_free:
+ 	il_eeprom_free(il);
+ out_iounmap:
+-	pci_iounmap(pdev, il->hw_base);
++	iounmap(il->hw_base);
+ out_pci_release_regions:
+ 	pci_release_regions(pdev);
+ out_pci_disable_device:
+@@ -3860,7 +3860,7 @@ il3945_pci_remove(struct pci_dev *pdev)
+ 	free_irq(pdev->irq, il);
+ 	pci_disable_msi(pdev);
+ 
+-	pci_iounmap(pdev, il->hw_base);
++	iounmap(il->hw_base);
+ 	pci_release_regions(pdev);
+ 	pci_disable_device(pdev);
+ 	pci_set_drvdata(pdev, NULL);
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 90c9bfb..7bf78bf 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -6224,7 +6224,7 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/***********************
+ 	 * 3. Read REV register
+ 	 ***********************/
+-	il->hw_base = pci_iomap(pdev, 0, 0);
++	il->hw_base = pci_ioremap_bar(pdev, 0);
+ 	if (!il->hw_base) {
+ 		err = -ENODEV;
+ 		goto out_pci_release_regions;
+@@ -6356,7 +6356,7 @@ out_disable_msi:
+ out_free_eeprom:
+ 	il_eeprom_free(il);
+ out_iounmap:
+-	pci_iounmap(pdev, il->hw_base);
++	iounmap(il->hw_base);
+ out_pci_release_regions:
+ 	pci_set_drvdata(pdev, NULL);
+ 	pci_release_regions(pdev);
+@@ -6438,7 +6438,7 @@ il4965_pci_remove(struct pci_dev *pdev)
+ 
+ 	free_irq(il->pci_dev->irq, il);
+ 	pci_disable_msi(il->pci_dev);
+-	pci_iounmap(pdev, il->hw_base);
++	iounmap(il->hw_base);
+ 	pci_release_regions(pdev);
+ 	pci_disable_device(pdev);
+ 	pci_set_drvdata(pdev, NULL);
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index df9b5b4..fd2a4ee 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -2114,20 +2114,20 @@ extern void il_write_targ_mem(struct il_priv *il, u32 addr, u32 val);
+ static inline void
+ _il_write8(struct il_priv *il, u32 ofs, u8 val)
+ {
+-	iowrite8(val, il->hw_base + ofs);
++	writeb(val, il->hw_base + ofs);
+ }
+ #define il_write8(il, ofs, val) _il_write8(il, ofs, val)
+ 
+ static inline void
+ _il_wr(struct il_priv *il, u32 ofs, u32 val)
+ {
+-	iowrite32(val, il->hw_base + ofs);
++	writel(val, il->hw_base + ofs);
+ }
+ 
+ static inline u32
+ _il_rd(struct il_priv *il, u32 ofs)
+ {
+-	return ioread32(il->hw_base + ofs);
++	return readl(il->hw_base + ofs);
+ }
+ 
+ static inline void
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.1
+
