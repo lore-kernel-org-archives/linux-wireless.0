@@ -1,52 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:47931 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755807Ab2BBL2Z convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 06:28:25 -0500
-Received: by vbjk17 with SMTP id k17so1685755vbj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 03:28:24 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20120202042521.GA20635@ubuntu-macmini>
-References: <20120202042521.GA20635@ubuntu-macmini>
-Date: Thu, 2 Feb 2012 16:58:23 +0530
-Message-ID: <CAD2nsn0tk_A18vjsCzgO2_7swuM=VPghyTaiHjkHAUc3h3+MiQ@mail.gmail.com> (sfid-20120202_122828_705406_89552916)
-Subject: Re: CTS timeout issue with AR9285
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Seth Forshee <seth.forshee@canonical.com>
+Received: from mx1.redhat.com ([209.132.183.28]:42951 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753842Ab2BMKXx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Feb 2012 05:23:53 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>,
-	Senthil Balasubramanian <senthilb@qca.qualcomm.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 02/24] iwlegacy: always check if got h/w access before write
+Date: Mon, 13 Feb 2012 11:23:09 +0100
+Message-Id: <1329128611-6815-3-git-send-email-sgruszka@redhat.com> (sfid-20120213_112357_620180_1874B50C)
+In-Reply-To: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
+References: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 2, 2012 at 9:55 AM, Seth Forshee <seth.forshee@canonical.com> wrote:
-> I recently updated a machine with AR9285 wireless from kernel version
-> 3.0 to 3.2 and saw that wireless had become slow and unreliable. It
-> seems that the problem is extremely frequent CTS timeouts, which began
-> happening with commit adb5066 (ath9k_hw: do not apply the 2.4 ghz ack
-> timeout workaround to cts). Restoring the CTS timeout to the value prior
-> to this commit on top of 3.2 gets performance back to what it was with
-> 3.0.
+Before we write to the device register always check if
+_il_grap_nic_access() was successful.
 
-does the environment is a noisy one (or) clear one
+Change type return type _il_grap_nic_access() to bool, and
+add likely()/unlikely() statements.
 
->
-> I don't have any other ath9k cards lying around, but various other cards
-> are working fine with this router. Any ideas what's wrong here?
->
-> Thanks,
-> Seth
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/4965-mac.c |    2 +-
+ drivers/net/wireless/iwlegacy/common.c   |   10 +++++-----
+ drivers/net/wireless/iwlegacy/common.h   |   27 +++++++++++++++------------
+ 3 files changed, 21 insertions(+), 18 deletions(-)
 
-
-
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 235812a..90c9bfb 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -3778,7 +3778,7 @@ il4965_perform_ct_kill_task(struct il_priv *il)
+ 	_il_rd(il, CSR_UCODE_DRV_GP1);
+ 
+ 	spin_lock_irqsave(&il->reg_lock, flags);
+-	if (!_il_grab_nic_access(il))
++	if (likely(_il_grab_nic_access(il)))
+ 		_il_release_nic_access(il);
+ 	spin_unlock_irqrestore(&il->reg_lock, flags);
+ }
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index 3900967..6dbd11f 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -81,7 +81,7 @@ il_clear_bit(struct il_priv *p, u32 r, u32 m)
+ }
+ EXPORT_SYMBOL(il_clear_bit);
+ 
+-int
++bool
+ _il_grab_nic_access(struct il_priv *il)
+ {
+ 	int ret;
+@@ -116,10 +116,10 @@ _il_grab_nic_access(struct il_priv *il)
+ 		WARN_ONCE(1, "Timeout waiting for ucode processor access "
+ 			     "(CSR_GP_CNTRL 0x%08x)\n", val);
+ 		_il_wr(il, CSR_RESET, CSR_RESET_REG_FLAG_FORCE_NMI);
+-		return -EIO;
++		return false;
+ 	}
+ 
+-	return 0;
++	return true;
+ }
+ EXPORT_SYMBOL_GPL(_il_grab_nic_access);
+ 
+@@ -161,7 +161,7 @@ il_wr_prph(struct il_priv *il, u32 addr, u32 val)
+ 	unsigned long reg_flags;
+ 
+ 	spin_lock_irqsave(&il->reg_lock, reg_flags);
+-	if (!_il_grab_nic_access(il)) {
++	if (likely(_il_grab_nic_access(il))) {
+ 		_il_wr_prph(il, addr, val);
+ 		_il_release_nic_access(il);
+ 	}
+@@ -194,7 +194,7 @@ il_write_targ_mem(struct il_priv *il, u32 addr, u32 val)
+ 	unsigned long reg_flags;
+ 
+ 	spin_lock_irqsave(&il->reg_lock, reg_flags);
+-	if (!_il_grab_nic_access(il)) {
++	if (likely(_il_grab_nic_access(il))) {
+ 		_il_wr(il, HBUS_TARG_MEM_WADDR, addr);
+ 		wmb();
+ 		_il_wr(il, HBUS_TARG_MEM_WDAT, val);
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index 7080956..1dfaa58 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -2103,7 +2103,7 @@ irqreturn_t il_isr(int irq, void *data);
+ 
+ extern void il_set_bit(struct il_priv *p, u32 r, u32 m);
+ extern void il_clear_bit(struct il_priv *p, u32 r, u32 m);
+-extern int _il_grab_nic_access(struct il_priv *il);
++extern bool _il_grab_nic_access(struct il_priv *il);
+ extern int _il_poll_bit(struct il_priv *il, u32 addr, u32 bits, u32 mask, int timeout);
+ extern int il_poll_bit(struct il_priv *il, u32 addr, u32 mask, int timeout);
+ extern u32 il_rd_prph(struct il_priv *il, u32 reg);
+@@ -2168,7 +2168,7 @@ il_wr(struct il_priv *il, u32 reg, u32 value)
+ 	unsigned long reg_flags;
+ 
+ 	spin_lock_irqsave(&il->reg_lock, reg_flags);
+-	if (!_il_grab_nic_access(il)) {
++	if (likely(_il_grab_nic_access(il))) {
+ 		_il_wr(il, reg, value);
+ 		_il_release_nic_access(il);
+ 	}
+@@ -2197,9 +2197,10 @@ il_set_bits_prph(struct il_priv *il, u32 reg, u32 mask)
+ 	unsigned long reg_flags;
+ 
+ 	spin_lock_irqsave(&il->reg_lock, reg_flags);
+-	_il_grab_nic_access(il);
+-	_il_wr_prph(il, reg, (_il_rd_prph(il, reg) | mask));
+-	_il_release_nic_access(il);
++	if (likely(_il_grab_nic_access(il))) {
++		_il_wr_prph(il, reg, (_il_rd_prph(il, reg) | mask));
++		_il_release_nic_access(il);
++	}
+ 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
+ }
+ 
+@@ -2209,9 +2210,10 @@ il_set_bits_mask_prph(struct il_priv *il, u32 reg, u32 bits, u32 mask)
+ 	unsigned long reg_flags;
+ 
+ 	spin_lock_irqsave(&il->reg_lock, reg_flags);
+-	_il_grab_nic_access(il);
+-	_il_wr_prph(il, reg, ((_il_rd_prph(il, reg) & mask) | bits));
+-	_il_release_nic_access(il);
++	if (likely(_il_grab_nic_access(il))) {
++		_il_wr_prph(il, reg, ((_il_rd_prph(il, reg) & mask) | bits));
++		_il_release_nic_access(il);
++	}
+ 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
+ }
+ 
+@@ -2222,10 +2224,11 @@ il_clear_bits_prph(struct il_priv *il, u32 reg, u32 mask)
+ 	u32 val;
+ 
+ 	spin_lock_irqsave(&il->reg_lock, reg_flags);
+-	_il_grab_nic_access(il);
+-	val = _il_rd_prph(il, reg);
+-	_il_wr_prph(il, reg, (val & ~mask));
+-	_il_release_nic_access(il);
++	if (likely(_il_grab_nic_access(il))) {
++		val = _il_rd_prph(il, reg);
++		_il_wr_prph(il, reg, (val & ~mask));
++		_il_release_nic_access(il);
++	}
+ 	spin_unlock_irqrestore(&il->reg_lock, reg_flags);
+ }
+ 
 -- 
-shafi
+1.7.1
+
