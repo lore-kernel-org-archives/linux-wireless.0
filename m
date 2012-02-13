@@ -1,44 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:54536 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751868Ab2BNRdV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 12:33:21 -0500
-Message-ID: <4F3A9ACB.3010009@candelatech.com> (sfid-20120214_183325_349924_792B96DA)
-Date: Tue, 14 Feb 2012 09:32:59 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-CC: Peter Stuge <peter@stuge.se>, ath9k-devel@venema.h4ckr.net,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [ath9k-devel] [PATCH 3/7] ath9k: Merge wiphy and misc debugfs
- files
-References: <20280.43962.403799.188541@gargle.gargle.HOWL> <4F3947A1.2060103@candelatech.com> <20281.48485.409968.741657@gargle.gargle.HOWL> <4F39BF5F.3030408@candelatech.com> <20281.52354.478076.479135@gargle.gargle.HOWL> <20120214073855.6843.qmail@stuge.se> <20282.7088.898987.229335@gargle.gargle.HOWL>
-In-Reply-To: <20282.7088.898987.229335@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:44708 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751634Ab2BMKXs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Feb 2012 05:23:48 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 00/24] iwlegacy update 2012-02-13
+Date: Mon, 13 Feb 2012 11:23:07 +0100
+Message-Id: <1329128611-6815-1-git-send-email-sgruszka@redhat.com> (sfid-20120213_112352_683768_D3392C47)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/14/2012 12:30 AM, Sujith Manoharan wrote:
-> Peter Stuge wrote:
+Further cleanups and some debugging improvements.
 
->> As a compromise, you could suggest a move to a two-level compile time
->> option for debugging. You would enable only what you believe to be
-
-> Having multiple levels of debugging makes things complex. If the general
-> consensus is to keep the information, I can rework the patch.
-
-Actually, I think it might be useful to have a second level of debugging.
-I hope to soon have time & resources to add some logic to dump lots of register
-info and such in human-readable format, (like, when DMA times out).  That is going to be a lot
-of strings added to the driver, so the compile size will definitely
-increase.  If keeping the size small is important, then this sort of verbose thing
-could be hidden behind a second level of debugging...
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+ drivers/net/wireless/iwlegacy/3945-debug.c |    6 
+ drivers/net/wireless/iwlegacy/3945-mac.c   |  108 ++---
+ drivers/net/wireless/iwlegacy/3945.c       |  133 ++----
+ drivers/net/wireless/iwlegacy/3945.h       |    8 
+ drivers/net/wireless/iwlegacy/4965-calib.c |    4 
+ drivers/net/wireless/iwlegacy/4965-debug.c |    6 
+ drivers/net/wireless/iwlegacy/4965-mac.c   |  589 +++++++++++++++++++++--------
+ drivers/net/wireless/iwlegacy/4965.c       |  402 +------------------
+ drivers/net/wireless/iwlegacy/4965.h       |   20 
+ drivers/net/wireless/iwlegacy/common.c     |  548 +++++++-------------------
+ drivers/net/wireless/iwlegacy/common.h     |  224 +++--------
+ drivers/net/wireless/iwlegacy/debug.c      |  260 +++++++-----
+ 12 files changed, 956 insertions(+), 1352 deletions(-)
 
