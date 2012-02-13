@@ -1,33 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:60186 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754680Ab2BOTQo (ORCPT
+Received: from hqemgate03.nvidia.com ([216.228.121.140]:19166 "EHLO
+	hqemgate03.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932135Ab2BMT2z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 14:16:44 -0500
-Date: Wed, 15 Feb 2012 14:01:37 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
-	magnus.maatta@logica.com
-Subject: Re: [PATCH 3.3] ath9k_hw: prevent writes to const data on AR9160
-Message-ID: <20120215190137.GH4379@tuxdriver.com> (sfid-20120215_201648_025105_4AC4A6D0)
-References: <1329330680-62602-1-git-send-email-nbd@openwrt.org>
- <20120215183047.GD4379@tuxdriver.com>
- <4F3BFF2B.8080706@openwrt.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F3BFF2B.8080706@openwrt.org>
+	Mon, 13 Feb 2012 14:28:55 -0500
+Subject: Re: [PATCH 1/3] net: rfkill-gpio: add device tree support
+From: Rhyland Klein <rklein@nvidia.com>
+To: Marc Dietrich <marvin24@gmx.de>
+Cc: "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
+	Stephen Warren <swarren@nvidia.com>,
+	Colin Cross <ccross@android.com>,
+	Olof Johansson <olof@lixom.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <1ec0e63a7453072689618430ebc2bdd7b62542a2.1329073559.git.marvin24@gmx.de>
+References: <1ec0e63a7453072689618430ebc2bdd7b62542a2.1329073559.git.marvin24@gmx.de>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 13 Feb 2012 11:25:59 -0800
+Message-ID: <1329161159.22948.3.camel@rklein-linux> (sfid-20120213_202904_320627_68022235)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 15, 2012 at 07:53:31PM +0100, Felix Fietkau wrote:
-> On 2012-02-15 7:30 PM, John W. Linville wrote:
-> > Do you have a link to the reported crash?
-> It was reported on IRC, the trace is here: http://pastebin.com/wvxXwLs4
+On Sun, 2012-02-12 at 11:13 -0800, Marc Dietrich wrote:
+> This adds device tree support for rfkill-gpio. The optional platform
+> paramters gpio_runtime_close and gpio_runtime_setup are not implemented.
+> 
+> Cc: linux-wireless@vger.kernel.org
+> Cc: "John W. Linville" <linville@tuxdriver.com>
+> Cc: Johannes Berg <johannes@sipsolutions.net>
+> Cc: Rhyland Klein <rklein@nvidia.com>
+> Signed-off-by: Marc Dietrich <marvin24@gmx.de>
+> +
+>  static int rfkill_gpio_probe(struct platform_device *pdev)
+>  {
+>  	struct rfkill_gpio_data *rfkill;
+>  	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
+> +	struct device_node *np = pdev->dev.of_node;
+>  	int ret = 0;
+>  	int len = 0;
+>  
+> +	if (np)
+> +		pdata = rfkill_gpio_parse_pdata(pdev);
+> +
 
-Cool, thanks.
+The only concern I have is the precedence of devicetree settings vs
+platform data settings? If there is pdata passed in from board file
+initialization, and there is a device tree (a corner case but I think a
+valid one) then I believe the order would be that defined pdata would
+override the devicetree settings. That way if someone wanted to make a
+quick update, they wouldn't need to change the boot loader as well.
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+>  	if (!pdata) {
+>  		pr_warn("%s: No platform data specified\n", __func__);
+>  		return -EINVAL;
+> @@ -217,6 +273,7 @@ static struct platform_driver rfkill_gpio_driver = {
+>  	.driver = {
+>  		   .name = "rfkill_gpio",
+>  		   .owner = THIS_MODULE,
+> +		   .of_match_table = of_match_ptr(of_rfkill_gpio_match),
+>  	},
+>  };
+>  
+
+-rhyland
+
