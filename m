@@ -1,147 +1,281 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:55973 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752625Ab2BAAGb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 19:06:31 -0500
-Received: by pbdu11 with SMTP id u11so600210pbd.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 16:06:31 -0800 (PST)
-MIME-Version: 1.0
-From: Alfonso Fiore <alfonso.fiore@gmail.com>
-Date: Wed, 1 Feb 2012 01:06:01 +0100
-Message-ID: <CAO=xpBGCABtjPstHcxcPHL7MGXSa7nQw4ZtwJkfZiTq=DPAE1w@mail.gmail.com> (sfid-20120201_010635_177582_99D3F3D9)
-Subject: compat-wireless can't compile under kernel 3.2.0 both 3.3-rc1-2 and
- 2012-01-26 - error: missing binary operator before token "("
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:57549 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753842Ab2BMKZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Feb 2012 05:25:09 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 21/24] iwlegacy: small queue initializations cleanup
+Date: Mon, 13 Feb 2012 11:23:28 +0100
+Message-Id: <1329128611-6815-22-git-send-email-sgruszka@redhat.com> (sfid-20120213_112513_622528_7C06A9AC)
+In-Reply-To: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
+References: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/3945.c     |    9 +---
+ drivers/net/wireless/iwlegacy/4965-mac.c |   18 ++------
+ drivers/net/wireless/iwlegacy/common.c   |   66 ++++++++++++++++-------------
+ drivers/net/wireless/iwlegacy/common.h   |   20 ++++-----
+ 4 files changed, 52 insertions(+), 61 deletions(-)
 
-I'm facing a bug you fixed in compat-wireless-3.3-rc1-2: rt2800pci:
-fix spurious interrupts generation
-But I must run a 3.2.0 kernel with some patches for my display driver
-(cause I'm greedy and I want both to see the screen and access
-internet)
+diff --git a/drivers/net/wireless/iwlegacy/3945.c b/drivers/net/wireless/iwlegacy/3945.c
+index 103251d..8900e3c 100644
+--- a/drivers/net/wireless/iwlegacy/3945.c
++++ b/drivers/net/wireless/iwlegacy/3945.c
+@@ -790,7 +790,6 @@ il3945_rx_init(struct il_priv *il, struct il_rx_queue *rxq)
+ static int
+ il3945_tx_reset(struct il_priv *il)
+ {
+-
+ 	/* bypass mode */
+ 	il_wr_prph(il, ALM_SCD_MODE_REG, 0x2);
+ 
+@@ -827,8 +826,7 @@ il3945_tx_reset(struct il_priv *il)
+ static int
+ il3945_txq_ctx_reset(struct il_priv *il)
+ {
+-	int rc;
+-	int txq_id, slots_num;
++	int rc, txq_id;
+ 
+ 	il3945_hw_txq_ctx_free(il);
+ 
+@@ -844,10 +842,7 @@ il3945_txq_ctx_reset(struct il_priv *il)
+ 
+ 	/* Tx queue(s) */
+ 	for (txq_id = 0; txq_id < il->hw_params.max_txq_num; txq_id++) {
+-		slots_num =
+-		    (txq_id ==
+-		     IL39_CMD_QUEUE_NUM) ? TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
+-		rc = il_tx_queue_init(il, &il->txq[txq_id], slots_num, txq_id);
++		rc = il_tx_queue_init(il, txq_id);
+ 		if (rc) {
+ 			IL_ERR("Tx %d queue init failed\n", txq_id);
+ 			goto error;
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index cf14861..a0158e3 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -1952,8 +1952,7 @@ il4965_hw_txq_ctx_free(struct il_priv *il)
+ int
+ il4965_txq_ctx_alloc(struct il_priv *il)
+ {
+-	int ret;
+-	int txq_id, slots_num;
++	int ret, txq_id;
+ 	unsigned long flags;
+ 
+ 	/* Free all tx/cmd queues and keep-warm buffer */
+@@ -1990,10 +1989,7 @@ il4965_txq_ctx_alloc(struct il_priv *il)
+ 
+ 	/* Alloc and init all Tx queues, including the command queue (#4/#9) */
+ 	for (txq_id = 0; txq_id < il->hw_params.max_txq_num; txq_id++) {
+-		slots_num =
+-		    (txq_id ==
+-		     il->cmd_queue) ? TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
+-		ret = il_tx_queue_init(il, &il->txq[txq_id], slots_num, txq_id);
++		ret = il_tx_queue_init(il, txq_id);
+ 		if (ret) {
+ 			IL_ERR("Tx %d queue init failed\n", txq_id);
+ 			goto error;
+@@ -2014,25 +2010,21 @@ error_bc_tbls:
+ void
+ il4965_txq_ctx_reset(struct il_priv *il)
+ {
+-	int txq_id, slots_num;
++	int txq_id;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&il->lock, flags);
+ 
+ 	/* Turn off all Tx DMA fifos */
+ 	il4965_txq_set_sched(il, 0);
+-
+ 	/* Tell NIC where to find the "keep warm" buffer */
+ 	il_wr(il, FH49_KW_MEM_ADDR_REG, il->kw.dma >> 4);
+ 
+ 	spin_unlock_irqrestore(&il->lock, flags);
+ 
+ 	/* Alloc and init all Tx queues, including the command queue (#4) */
+-	for (txq_id = 0; txq_id < il->hw_params.max_txq_num; txq_id++) {
+-		slots_num =
+-		    txq_id == il->cmd_queue ? TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
+-		il_tx_queue_reset(il, &il->txq[txq_id], slots_num, txq_id);
+-	}
++	for (txq_id = 0; txq_id < il->hw_params.max_txq_num; txq_id++)
++		il_tx_queue_reset(il, txq_id);
+ }
+ 
+ void
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index d0d408e..872302a 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -2887,20 +2887,22 @@ EXPORT_SYMBOL(il_queue_space);
+  * il_queue_init - Initialize queue's high/low-water and read/write idxes
+  */
+ static int
+-il_queue_init(struct il_priv *il, struct il_queue *q, int count, int slots_num,
+-	      u32 id)
++il_queue_init(struct il_priv *il, struct il_queue *q, int slots, u32 id)
+ {
+-	q->n_bd = count;
+-	q->n_win = slots_num;
+-	q->id = id;
++	/*
++	 * TFD_QUEUE_SIZE_MAX must be power-of-two size, otherwise
++	 * il_queue_inc_wrap and il_queue_dec_wrap are broken.
++	 */
++	BUILD_BUG_ON(TFD_QUEUE_SIZE_MAX & (TFD_QUEUE_SIZE_MAX - 1));
++	/* FIXME: remove q->n_bd */
++	q->n_bd = TFD_QUEUE_SIZE_MAX;
+ 
+-	/* count must be power-of-two size, otherwise il_queue_inc_wrap
+-	 * and il_queue_dec_wrap are broken. */
+-	BUG_ON(!is_power_of_2(count));
++	q->n_win = slots;
++	q->id = id;
+ 
+-	/* slots_num must be power-of-two size, otherwise
++	/* slots_must be power-of-two size, otherwise
+ 	 * il_get_cmd_idx is broken. */
+-	BUG_ON(!is_power_of_2(slots_num));
++	BUG_ON(!is_power_of_2(slots));
+ 
+ 	q->low_mark = q->n_win / 4;
+ 	if (q->low_mark < 4)
+@@ -2959,12 +2961,11 @@ error:
+  * il_tx_queue_init - Allocate and initialize one tx/cmd queue
+  */
+ int
+-il_tx_queue_init(struct il_priv *il, struct il_tx_queue *txq, int slots_num,
+-		 u32 txq_id)
++il_tx_queue_init(struct il_priv *il, u32 txq_id)
+ {
+-	int i, len;
+-	int ret;
+-	int actual_slots = slots_num;
++	int i, len, ret;
++	int slots, actual_slots;
++	struct il_tx_queue *txq = &il->txq[txq_id];
+ 
+ 	/*
+ 	 * Alloc buffer array for commands (Tx or other types of commands).
+@@ -2974,8 +2975,13 @@ il_tx_queue_init(struct il_priv *il, struct il_tx_queue *txq, int slots_num,
+ 	 * For normal Tx queues (all other queues), no super-size command
+ 	 * space is needed.
+ 	 */
+-	if (txq_id == il->cmd_queue)
+-		actual_slots++;
++	if (txq_id == il->cmd_queue) {
++		slots = TFD_CMD_SLOTS;
++		actual_slots = slots + 1;
++	} else {
++		slots = TFD_TX_CMD_SLOTS;
++		actual_slots = slots;
++	}
+ 
+ 	txq->meta =
+ 	    kzalloc(sizeof(struct il_cmd_meta) * actual_slots, GFP_KERNEL);
+@@ -2988,7 +2994,7 @@ il_tx_queue_init(struct il_priv *il, struct il_tx_queue *txq, int slots_num,
+ 	len = sizeof(struct il_device_cmd);
+ 	for (i = 0; i < actual_slots; i++) {
+ 		/* only happens for cmd queue */
+-		if (i == slots_num)
++		if (i == slots)
+ 			len = IL_MAX_CMD_SIZE;
+ 
+ 		txq->cmd[i] = kmalloc(len, GFP_KERNEL);
+@@ -3011,12 +3017,8 @@ il_tx_queue_init(struct il_priv *il, struct il_tx_queue *txq, int slots_num,
+ 	if (txq_id < 4)
+ 		il_set_swq_id(txq, txq_id, txq_id);
+ 
+-	/* TFD_QUEUE_SIZE_MAX must be power-of-two size, otherwise
+-	 * il_queue_inc_wrap and il_queue_dec_wrap are broken. */
+-	BUILD_BUG_ON(TFD_QUEUE_SIZE_MAX & (TFD_QUEUE_SIZE_MAX - 1));
+-
+ 	/* Initialize queue's high/low-water marks, and head/tail idxes */
+-	il_queue_init(il, &txq->q, TFD_QUEUE_SIZE_MAX, slots_num, txq_id);
++	il_queue_init(il, &txq->q, slots, txq_id);
+ 
+ 	/* Tell device where to find queue */
+ 	il->ops->txq_init(il, txq);
+@@ -3034,20 +3036,24 @@ out_free_arrays:
+ EXPORT_SYMBOL(il_tx_queue_init);
+ 
+ void
+-il_tx_queue_reset(struct il_priv *il, struct il_tx_queue *txq, int slots_num,
+-		  u32 txq_id)
++il_tx_queue_reset(struct il_priv *il, u32 txq_id)
+ {
+-	int actual_slots = slots_num;
++	int slots, actual_slots;
++	struct il_tx_queue *txq = &il->txq[txq_id];
+ 
+-	if (txq_id == il->cmd_queue)
+-		actual_slots++;
++	if (txq_id == il->cmd_queue) {
++		slots = TFD_CMD_SLOTS;
++		actual_slots = TFD_CMD_SLOTS + 1;
++	} else {
++		slots = TFD_TX_CMD_SLOTS;
++		actual_slots = TFD_TX_CMD_SLOTS;
++	}
+ 
+ 	memset(txq->meta, 0, sizeof(struct il_cmd_meta) * actual_slots);
+-
+ 	txq->need_update = 0;
+ 
+ 	/* Initialize queue's high/low-water marks, and head/tail idxes */
+-	il_queue_init(il, &txq->q, TFD_QUEUE_SIZE_MAX, slots_num, txq_id);
++	il_queue_init(il, &txq->q, slots, txq_id);
+ 
+ 	/* Tell device where to find queue */
+ 	il->ops->txq_init(il, txq);
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index 13bfd43..e2f55dc 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1783,14 +1783,12 @@ void il_chswitch_done(struct il_priv *il, bool is_success);
+ /*****************************************************
+ * TX
+ ******************************************************/
+-void il_txq_update_write_ptr(struct il_priv *il, struct il_tx_queue *txq);
+-int il_tx_queue_init(struct il_priv *il, struct il_tx_queue *txq, int slots_num,
+-		     u32 txq_id);
+-void il_tx_queue_reset(struct il_priv *il, struct il_tx_queue *txq,
+-		       int slots_num, u32 txq_id);
+-void il_tx_queue_unmap(struct il_priv *il, int txq_id);
+-void il_tx_queue_free(struct il_priv *il, int txq_id);
+-void il_setup_watchdog(struct il_priv *il);
++extern void il_txq_update_write_ptr(struct il_priv *il, struct il_tx_queue *txq);
++extern int il_tx_queue_init(struct il_priv *il, u32 txq_id);
++extern void il_tx_queue_reset(struct il_priv *il, u32 txq_id);
++extern void il_tx_queue_unmap(struct il_priv *il, int txq_id);
++extern void il_tx_queue_free(struct il_priv *il, int txq_id);
++extern void il_setup_watchdog(struct il_priv *il);
+ /*****************************************************
+  * TX power
+  ****************************************************/
+@@ -2405,10 +2403,10 @@ struct il_rb_status {
+ 	__le32 __unused;	/* 3945 only */
+ } __packed;
+ 
+-#define TFD_QUEUE_SIZE_MAX      (256)
+-#define TFD_QUEUE_SIZE_BC_DUP	(64)
++#define TFD_QUEUE_SIZE_MAX      256
++#define TFD_QUEUE_SIZE_BC_DUP	64
+ #define TFD_QUEUE_BC_SIZE	(TFD_QUEUE_SIZE_MAX + TFD_QUEUE_SIZE_BC_DUP)
+-#define IL_TX_DMA_MASK        DMA_BIT_MASK(36)
++#define IL_TX_DMA_MASK		DMA_BIT_MASK(36)
+ #define IL_NUM_OF_TBS		20
+ 
+ static inline u8
+-- 
+1.7.1
 
-I tested in kernel 3.0.0 and I can compile and see the bug is fixed.
-
-but when I try to compile under 3.2.0 I get the following error:
-
-$ make
-./scripts/gen-compat-autoconf.sh config.mk > include/linux/compat_autoconf.h
-make -C /lib/modules/3.2.0-interlaced2+/build
-M=/home/alfonso/wifi/compat-wireless-2012-01-26 modules
-make[1]: Entering directory `/home/alfonso/tests/kernel/linux_keithp'
-  LD      /home/alfonso/wifi/compat-wireless-2012-01-26/compat/built-in.o
-  CC [M]  /home/alfonso/wifi/compat-wireless-2012-01-26/compat/main.o
-In file included from include/net/net_namespace.h:13:0,
-                 from
-/home/alfonso/wifi/compat-wireless-2012-01-26/include/net/net_namespace.h:7,
-                 from include/linux/netdevice.h:49,
-                 from
-/home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5,
-                 from
-/home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
-                 from <command-line>:0:
-include/net/netns/mib.h:15:5: warning: "IS_ENABLED" is not defined [-Wundef]
-include/net/netns/mib.h:15:15: error: missing binary operator before token "("
-In file included from include/net/net_namespace.h:23:0,
-                 from
-/home/alfonso/wifi/compat-wireless-2012-01-26/include/net/net_namespace.h:7,
-                 from include/linux/netdevice.h:49,
-                 from
-/home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5,
-                 from
-/home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
-                 from <command-line>:0:
-include/net/netns/xfrm.h:59:5: warning: "IS_ENABLED" is not defined [-Wundef]
-include/net/netns/xfrm.h:59:15: error: missing binary operator before token "("
-In file included from
-/home/alfonso/wifi/compat-wireless-2012-01-26/include/net/net_namespace.h:7:0,
-                 from include/linux/netdevice.h:49,
-                 from
-/home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5,
-                 from
-/home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
-                 from <command-line>:0:
-include/net/net_namespace.h:80:5: warning: "IS_ENABLED" is not defined [-Wundef]
-include/net/net_namespace.h:80:15: error: missing binary operator
-before token "("
-In file included from include/linux/netdevice.h:54:0,
-                 from
-/home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5,
-                 from
-/home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
-                 from <command-line>:0:
-include/net/netprio_cgroup.h: In function âtask_netprio_stateâ:
-include/net/netprio_cgroup.h:44:5: warning: "IS_ENABLED" is not
-defined [-Wundef]
-include/net/netprio_cgroup.h:44:15: error: missing binary operator
-before token "("
-In file included from
-/home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.29.h:5:0,
-                 from
-/home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:24,
-                 from <command-line>:0:
-include/linux/netdevice.h: At top level:
-include/linux/netdevice.h:147:39: error: missing binary operator
-before token "("
-include/linux/netdevice.h:153:7: warning: "IS_ENABLED" is not defined [-Wundef]
-include/linux/netdevice.h:153:17: error: missing binary operator
-before token "("
-include/linux/netdevice.h:159:6: warning: "IS_ENABLED" is not defined [-Wundef]
-include/linux/netdevice.h:159:16: error: missing binary operator
-before token "("
-include/linux/netdevice.h:964:5: warning: "IS_ENABLED" is not defined [-Wundef]
-include/linux/netdevice.h:964:15: error: missing binary operator
-before token "("
-include/linux/netdevice.h:981:5: warning: "IS_ENABLED" is not defined [-Wundef]
-include/linux/netdevice.h:981:15: error: missing binary operator
-before token "("
-include/linux/netdevice.h:1123:5: warning: "IS_ENABLED" is not defined [-Wundef]
-include/linux/netdevice.h:1123:15: error: missing binary operator
-before token "("
-include/linux/netdevice.h:1126:5: warning: "IS_ENABLED" is not defined [-Wundef]
-include/linux/netdevice.h:1126:15: error: missing binary operator
-before token "("
-include/linux/netdevice.h:1289:5: warning: "IS_ENABLED" is not defined [-Wundef]
-include/linux/netdevice.h:1289:15: error: missing binary operator
-before token "("
-include/linux/netdevice.h:1293:5: warning: "IS_ENABLED" is not defined [-Wundef]
-include/linux/netdevice.h:1293:15: error: missing binary operator
-before token "("
-include/linux/netdevice.h: In function ânetdev_uses_dsa_tagsâ:
-include/linux/netdevice.h:1397:9: error: âstruct net_deviceâ has no
-member named âdsa_ptrâ
-include/linux/netdevice.h:1398:31: error: âstruct net_deviceâ has no
-member named âdsa_ptrâ
-include/linux/netdevice.h: In function ânetdev_uses_trailer_tagsâ:
-include/linux/netdevice.h:1416:9: error: âstruct net_deviceâ has no
-member named âdsa_ptrâ
-include/linux/netdevice.h:1417:35: error: âstruct net_deviceâ has no
-member named âdsa_ptrâ
-In file included from
-/home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-2.6.h:38:0,
-                 from <command-line>:0:
-/home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-3.3.h:
-At top level:
-/home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-3.3.h:28:20:
-error: static declaration of âskb_complete_wifi_ackâ follows
-non-static declaration
-include/linux/skbuff.h:2260:6: note: previous declaration of
-âskb_complete_wifi_ackâ was here
-/home/alfonso/wifi/compat-wireless-2012-01-26/include/linux/compat-3.3.h:34:13:
-error: conflicting types for ânetdev_features_tâ
-include/linux/netdev_features.h:15:13: note: previous declaration of
-ânetdev_features_tâ was here
-make[3]: *** [/home/alfonso/wifi/compat-wireless-2012-01-26/compat/main.o]
-Error 1
-make[2]: *** [/home/alfonso/wifi/compat-wireless-2012-01-26/compat] Error 2
-make[1]: *** [_module_/home/alfonso/wifi/compat-wireless-2012-01-26] Error 2
-make[1]: Leaving directory `/home/alfonso/tests/kernel/linux_keithp'
-make: *** [modules] Error 2
-
-Thank you for you help,
-alfonso
