@@ -1,71 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:34440 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755121Ab2BXHwp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 02:52:45 -0500
-Received: by werb13 with SMTP id b13so1250347wer.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 23:52:39 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1330033977-5741-1-git-send-email-arend@broadcom.com>
-References: <1330033977-5741-1-git-send-email-arend@broadcom.com>
-Date: Fri, 24 Feb 2012 08:52:39 +0100
-Message-ID: <CACna6rwk8xbjbX7uisqAv_y_JYn636orR-VLgNQ908yOYS+i1A@mail.gmail.com> (sfid-20120224_085248_646452_5D7A06C0)
-Subject: Re: [RFC] bcma: add support for on-chip OTP memory used for SPROM storage
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
+Received: from mx1.redhat.com ([209.132.183.28]:39744 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756565Ab2BMKYv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Feb 2012 05:24:51 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
 Cc: linux-wireless@vger.kernel.org,
-	"Saul St. John" <saul.stjohn@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 23/24] iwlegacy: s/il_txq_mem/il_free_txq_mem/g
+Date: Mon, 13 Feb 2012 11:23:30 +0100
+Message-Id: <1329128611-6815-24-git-send-email-sgruszka@redhat.com> (sfid-20120213_112456_556986_8AE4B6EF)
+In-Reply-To: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
+References: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2012/2/23 Arend van Spriel <arend@broadcom.com>:
-> Wireless Broadcom chips can have either their SPROM data stored
-> on either external SPROM or on-chip OTP memory. Both are accessed
-> through the same register space. This patch adds support for the
-> on-chip OTP memory.
->
-> Tested with:
-> BCM43224 OTP and SPROM
-> BCM4331 SPROM
-> BCM4313 OTP
->
-> This patch is in response so gmane article [1].
->
-> [1] http://article.gmane.org/gmane.linux.kernel.wireless.general/85426
+Previous name was confusing.
 
-Great, thanks a lot for your work! I'll give it a try with my cards.
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/3945.c     |    2 +-
+ drivers/net/wireless/iwlegacy/4965-mac.c |    2 +-
+ drivers/net/wireless/iwlegacy/common.c   |    4 ++--
+ drivers/net/wireless/iwlegacy/common.h   |    2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-May I ask how did you test this with BCM4331? What card (slot) /
-machine did you use for your test?
-
-
-> +       if (bus->drv_cc.core->id.rev >= 31) {
-> +               if (!(bus->drv_cc.capabilities & BCMA_CC_CAP_SPROM))
-> +                               return false;
-
-One less indent will be fine ;)
-
-
-> +               srom_control = bcma_read32(bus->drv_cc.core,
-> +                                          BCMA_CC_SROM_CONTROL);
-> +               return !!(srom_control & BCMA_CC_SROM_CONTROL_PRESENT);
-
-Does any compiler complain on returning sth like 0xF as a bool?
-
-
-> +       return (chip_status & present_mask) == present_mask;
-
-Same :)
-
-
-> +       u16 offset = BCMA_CC_SPROM;
-
-I guess we can drop second define offset now?
-
-
+diff --git a/drivers/net/wireless/iwlegacy/3945.c b/drivers/net/wireless/iwlegacy/3945.c
+index 8900e3c..456f32d 100644
+--- a/drivers/net/wireless/iwlegacy/3945.c
++++ b/drivers/net/wireless/iwlegacy/3945.c
+@@ -1002,7 +1002,7 @@ il3945_hw_txq_ctx_free(struct il_priv *il)
+ 				il_tx_queue_free(il, txq_id);
+ 
+ 	/* free tx queue structure */
+-	il_txq_mem(il);
++	il_free_txq_mem(il);
+ }
+ 
+ void
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 3aa0ee5..2d01db0 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -1939,7 +1939,7 @@ il4965_hw_txq_ctx_free(struct il_priv *il)
+ 	il4965_free_dma_ptr(il, &il->scd_bc_tbls);
+ 
+ 	/* free tx queue structure */
+-	il_txq_mem(il);
++	il_free_txq_mem(il);
+ }
+ 
+ /**
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index defe8d9..b42052b 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -4591,12 +4591,12 @@ il_alloc_txq_mem(struct il_priv *il)
+ EXPORT_SYMBOL(il_alloc_txq_mem);
+ 
+ void
+-il_txq_mem(struct il_priv *il)
++il_free_txq_mem(struct il_priv *il)
+ {
+ 	kfree(il->txq);
+ 	il->txq = NULL;
+ }
+-EXPORT_SYMBOL(il_txq_mem);
++EXPORT_SYMBOL(il_free_txq_mem);
+ 
+ int
+ il_force_reset(struct il_priv *il, bool external)
+diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
+index 4282018..cee72f1 100644
+--- a/drivers/net/wireless/iwlegacy/common.h
++++ b/drivers/net/wireless/iwlegacy/common.h
+@@ -1747,7 +1747,7 @@ void il_mac_remove_interface(struct ieee80211_hw *hw,
+ int il_mac_change_interface(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			    enum nl80211_iftype newtype, bool newp2p);
+ int il_alloc_txq_mem(struct il_priv *il);
+-void il_txq_mem(struct il_priv *il);
++void il_free_txq_mem(struct il_priv *il);
+ 
+ #ifdef CONFIG_IWLEGACY_DEBUGFS
+ extern void il_update_stats(struct il_priv *il, bool is_tx, __le16 fc, u16 len);
 -- 
-Rafał
+1.7.1
+
