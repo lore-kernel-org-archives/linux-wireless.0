@@ -1,81 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:42293 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756494Ab2BGMwd convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:40574 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932134Ab2BMThi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 07:52:33 -0500
-Received: by vbjk17 with SMTP id k17so4572742vbj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 04:52:32 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1328568313-26267-8-git-send-email-gwingerde@gmail.com>
-References: <1328568313-26267-1-git-send-email-gwingerde@gmail.com>
-	<1328568313-26267-2-git-send-email-gwingerde@gmail.com>
-	<1328568313-26267-3-git-send-email-gwingerde@gmail.com>
-	<1328568313-26267-4-git-send-email-gwingerde@gmail.com>
-	<1328568313-26267-5-git-send-email-gwingerde@gmail.com>
-	<1328568313-26267-6-git-send-email-gwingerde@gmail.com>
-	<1328568313-26267-7-git-send-email-gwingerde@gmail.com>
-	<1328568313-26267-8-git-send-email-gwingerde@gmail.com>
-Date: Tue, 7 Feb 2012 13:52:32 +0100
-Message-ID: <CAOZOX0Uxfwk5S4oOb8ahFhNg=EtQbUYp8O7Bbi0vFhjHW0-nww@mail.gmail.com> (sfid-20120207_135239_667740_BAC35528)
-Subject: Re: [PATCH 7/8] rt2x00: Fix RT3572 channel switch RFCSR 7 programming.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 13 Feb 2012 14:37:38 -0500
+Received: by iacb35 with SMTP id b35so4859866iac.19
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Feb 2012 11:37:37 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: linville@tuxdriver.com
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org, chunkeey@web.de
+Subject: [PATCH 4/5] p54pci: Load firmware from work queue and not from probe routine
+Date: Mon, 13 Feb 2012 13:37:05 -0600
+Message-Id: <1329161826-11135-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120213_203743_355590_8FA50411)
+In-Reply-To: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 6, 2012 at 11:45 PM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> Align with the v2.5.0.0 Ralink RT3572 driver.
->
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Drivers that load firmware from their probe routine have problems with the
+latest versions of udev as they get timeouts while waiting for user
+space to start. The problem is fixed by loading the firmware and starting
+mac80211 from a delayed_work queue. By using this method, most of the
+original code is preserved.
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-> index 8aabd0d..c6648b0 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800.h
-> +++ b/drivers/net/wireless/rt2x00/rt2800.h
-> @@ -1819,10 +1819,12 @@ struct mac_iveiv_entry {
->  * RFCSR 7:
->  */
->  #define RFCSR7_RF_TUNING               FIELD8(0x01)
-> -#define RFCSR7_R02                             FIELD8(0x07)
-> -#define RFCSR7_R3                              FIELD8(0x08)
-> -#define RFCSR7_R45                             FIELD8(0x30)
-> -#define RFCSR7_R67                             FIELD8(0xc0)
-> +#define RFCSR7_BIT1                    FIELD8(0x02)
-> +#define RFCSR7_BIT2                    FIELD8(0x04)
-> +#define RFCSR7_BIT3                    FIELD8(0x08)
-> +#define RFCSR7_BIT4                    FIELD8(0x10)
-> +#define RFCSR7_BIT5                    FIELD8(0x20)
-> +#define RFCSR7_BITS67                  FIELD8(0xc0)
->
->  /*
->  * RFCSR 11:
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 2afb798..28dc6ba 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -1865,7 +1865,12 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
->                rt2800_rfcsr_write(rt2x00dev, 27, 0x00);
->                rt2800_rfcsr_write(rt2x00dev, 29, 0x9b);
->        } else {
-> -               rt2800_rfcsr_write(rt2x00dev, 7, 0x14);
-> +               rt2800_rfcsr_read(rt2x00dev, 7, &rfcsr);
-> +               rt2x00_set_field8(&rfcsr, RFCSR7_BIT2, 1);
-> +               rt2x00_set_field8(&rfcsr, RFCSR7_BIT3, 0);
-> +               rt2x00_set_field8(&rfcsr, RFCSR7_BIT4, 1);
-> +               rt2x00_set_field8(&rfcsr, RFCSR7_BITS67, 0);
-> +               rt2800_rfcsr_write(rt2x00dev, 7, rfcsr);
->                rt2800_rfcsr_write(rt2x00dev, 9, 0xc0);
->                rt2800_rfcsr_write(rt2x00dev, 10, 0xf1);
->                rt2800_rfcsr_write(rt2x00dev, 11, 0x00);
-> --
-> 1.7.9
->
+This patch is compile tested only.
+
+Larry
+---
+ drivers/net/wireless/p54/p54pci.c |   66 ++++++++++++++++++++++--------------
+ drivers/net/wireless/p54/p54pci.h |    1 +
+ 2 files changed, 41 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+index b1f51a2..7e4188a 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -488,6 +488,43 @@ static int p54p_open(struct ieee80211_hw *dev)
+ 	return 0;
+ }
+ 
++static void p54p_load_firmware(struct work_struct *work)
++{
++	struct p54p_priv *priv = container_of(to_delayed_work(work),
++				 struct p54p_priv, firmware_load);
++	struct ieee80211_hw *hw = pci_get_drvdata(priv->pdev);
++	struct device *dev = &priv->pdev->dev;
++	int err;
++
++	err = request_firmware(&priv->firmware, "isl3886pci",
++			       &priv->pdev->dev);
++	if (err) {
++		dev_err(dev, "Cannot find firmware (isl3886pci)\n");
++		err = request_firmware(&priv->firmware, "isl3886",
++				       &priv->pdev->dev);
++		if (err) {
++			dev_err(dev, "Cannot find firmware (isl3886pci)\n");
++			goto err_free_firmware;
++		}
++	}
++
++	err = p54p_open(hw);
++	if (err)
++		goto err_free_firmware;
++	err = p54_read_eeprom(hw);
++	p54p_stop(hw);
++	if (err)
++		goto err_free_firmware;
++
++	err = p54_register_common(hw, dev);
++	if (err)
++		goto err_free_firmware;
++	return;
++
++err_free_firmware:
++	release_firmware(priv->firmware);
++}
++
+ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 				const struct pci_device_id *id)
+ {
+@@ -561,35 +598,12 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 	spin_lock_init(&priv->lock);
+ 	tasklet_init(&priv->tasklet, p54p_tasklet, (unsigned long)dev);
+ 
+-	err = request_firmware(&priv->firmware, "isl3886pci",
+-			       &priv->pdev->dev);
+-	if (err) {
+-		dev_err(&pdev->dev, "Cannot find firmware (isl3886pci)\n");
+-		err = request_firmware(&priv->firmware, "isl3886",
+-				       &priv->pdev->dev);
+-		if (err)
+-			goto err_free_common;
+-	}
+-
+-	err = p54p_open(dev);
+-	if (err)
+-		goto err_free_common;
+-	err = p54_read_eeprom(dev);
+-	p54p_stop(dev);
+-	if (err)
+-		goto err_free_common;
+-
+-	err = p54_register_common(dev, &pdev->dev);
+-	if (err)
+-		goto err_free_common;
++	/* setup and start delayed work to load firmware */
++	INIT_DELAYED_WORK(&priv->firmware_load, p54p_load_firmware);
++	schedule_delayed_work(&priv->firmware_load, HZ);
+ 
+ 	return 0;
+ 
+- err_free_common:
+-	release_firmware(priv->firmware);
+-	pci_free_consistent(pdev, sizeof(*priv->ring_control),
+-			    priv->ring_control, priv->ring_control_dma);
+-
+  err_iounmap:
+ 	iounmap(priv->map);
+ 
+diff --git a/drivers/net/wireless/p54/p54pci.h b/drivers/net/wireless/p54/p54pci.h
+index 7aa509f..de8edff 100644
+--- a/drivers/net/wireless/p54/p54pci.h
++++ b/drivers/net/wireless/p54/p54pci.h
+@@ -105,6 +105,7 @@ struct p54p_priv {
+ 	struct sk_buff *tx_buf_data[32];
+ 	struct sk_buff *tx_buf_mgmt[4];
+ 	struct completion boot_comp;
++	struct delayed_work firmware_load;
+ };
+ 
+ #endif /* P54USB_H */
+-- 
+1.7.7
+
