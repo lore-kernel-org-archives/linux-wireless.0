@@ -1,54 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:38569 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751306Ab2BHJ1p convert rfc822-to-8bit (ORCPT
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:42390 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754752Ab2BMTSf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 04:27:45 -0500
-Received: by daed14 with SMTP id d14so329814dae.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2012 01:27:45 -0800 (PST)
+	Mon, 13 Feb 2012 14:18:35 -0500
+Received: by ghrr11 with SMTP id r11so2568437ghr.19
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Feb 2012 11:18:34 -0800 (PST)
+Message-ID: <4F3961FB.7020409@openwrt.org> (sfid-20120213_201839_276674_5FF7BFB5)
+Date: Mon, 13 Feb 2012 20:18:19 +0100
+From: Florian Fainelli <florian@openwrt.org>
 MIME-Version: 1.0
-In-Reply-To: <1328681208-5734-1-git-send-email-john.li.mediatek@gmail.com>
-References: <1328681208-5734-1-git-send-email-john.li.mediatek@gmail.com>
-Date: Wed, 8 Feb 2012 10:27:45 +0100
-Message-ID: <CAGXE3d_-pTTKxBJ9XWyF7J5XHQbNeVV=GjYC8ohoVOEvE6ryrA@mail.gmail.com> (sfid-20120208_102750_324645_8EF97F97)
-Subject: Re: [PATCH] rt2x00:Fix typo
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: John Li <john.li.mediatek@gmail.com>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	John Li <chen-yang.li@mediatek.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: Helmut Schaa <helmut.schaa@googlemail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	users@rt2x00.serialmonkey.com, gwingerde@gmail.com,
+	Ivo Van Doorn <ivdoorn@gmail.com>,
+	Andreas Hartmann <andihartmann@freenet.de>
+Subject: Re: Poor RT2880 performance
+References: <4F390ED3.8010400@openwrt.org> <CAGXE3d90az_g3KyzPp-4NQoM2zmXaNSVo=7piM=q8EK9WdBp7A@mail.gmail.com>
+In-Reply-To: <CAGXE3d90az_g3KyzPp-4NQoM2zmXaNSVo=7piM=q8EK9WdBp7A@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
-
-On Wed, Feb 8, 2012 at 7:06 AM, John Li <john.li.mediatek@gmail.com> wrote:
-> From: John Li <chen-yang.li@mediatek.com>
-
-Your Signed-off-by line is missing here ...
-
-> ---
->  drivers/net/wireless/rt2x00/Kconfig |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+Le 02/13/12 14:45, Helmut Schaa a écrit :
+> Hi,
 >
-> diff --git a/drivers/net/wireless/rt2x00/Kconfig b/drivers/net/wireless/rt2x00/Kconfig
-> index a0a7854..299c387 100644
-> --- a/drivers/net/wireless/rt2x00/Kconfig
-> +++ b/drivers/net/wireless/rt2x00/Kconfig
-> @@ -163,7 +163,7 @@ config RT2800USB_RT53XX
->        depends on EXPERIMENTAL
->        ---help---
->          This adds support for rt53xx wireless chipset family to the
-> -         rt2800pci driver.
-> +         rt2800usb driver.
->          Supported chips: RT5370
+> On Mon, Feb 13, 2012 at 2:23 PM, Florian Fainelli<florian@openwrt.org>  wrote:
+>> I am playing with a RT2880-F based AP, with a N connected station, in a
+>> residential environment.
+> Mind to provide the RF and RT chipset identifications? rt2x00 should print them
+> out during module load (at least when compiled with debugging options).
+
+Sure, here are the HW infos of the AP:
+Ralink RT2880   id:1 rev:1 running at 266.66 MHz
+phy0 -> rt2x00_set_chip: Info - Chipset detected - rt: 2860, rf: 0001, 
+rev: 0101.
+
+The station is an AR5418 ath9k card 2x2.
+
 >
->  config RT2800USB_UNKNOWN
-> --
-> 1.7.6.5
+>> I could not get more than 26Mbits/sec TCP performance using iperf on both
+>> sides,
+> Did aggregation kick in? What rate was selected by the AP?
+
+Does it print anything when it does? The station dump gives me:
+Station 00:1d:7d:45:53:99 (on wlan0)
+         inactive time:  12670 ms
+         rx bytes:       44578225
+         rx packets:     29117
+         tx bytes:       1116274
+         tx packets:     13560
+         tx retries:     9148
+         tx failed:      890
+         signal:         -54 dBm
+         signal avg:     -53 dBm
+         tx bitrate:     117.0 MBit/s MCS 14
+         rx bitrate:     130.0 MBit/s MCS 15
+         authorized:     yes
+         authenticated:  yes
+         preamble:       short
+         WMM/WME:        yes
+         MFP:            no
+         TDLS peer:      no
+
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> changing to a busier channel even made the performance drop down to
+>> 5Mbits/sec, and remained like this.
+> Andreas also reported some issues as soon as the environment gets noisy,
+> not sure what the root cause for this is :(
+
+The original firmware gives me roughly 75Mbits/sec in HT20 and 
+89/Mbits/sec in HT40+. The CPU is 66% idle during the transfers.
+--
+Florian
