@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:33155 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751805Ab2BQQZc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Feb 2012 11:25:32 -0500
-Received: by wgbdt10 with SMTP id dt10so2875416wgb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Feb 2012 08:25:31 -0800 (PST)
-MIME-Version: 1.0
-From: Claudio Rossi <rossi.claudio.82@gmail.com>
-Date: Fri, 17 Feb 2012 17:25:11 +0100
-Message-ID: <CAO1ZyKkq3nS=KfXF5BQu+SkUOjd2fT7onuMSo_3P2DEa_Du6cQ@mail.gmail.com> (sfid-20120217_172535_442837_9FE4DE7B)
-Subject: Accessing protocol type field from mac802.11
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mx1.redhat.com ([209.132.183.28]:25449 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756548Ab2BMKYa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Feb 2012 05:24:30 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 18/24] iwlegacy: check correct il_poll_bit error value
+Date: Mon, 13 Feb 2012 11:23:25 +0100
+Message-Id: <1329128611-6815-19-git-send-email-sgruszka@redhat.com> (sfid-20120213_112436_205698_76662D54)
+In-Reply-To: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
+References: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
- I would like to inspect the protocol type field from mac802.11, and
-specifically in rx.c in the function
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlegacy/common.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-static ieee80211_rx_result debug_noinline
-ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
+index f343f27..d0d408e 100644
+--- a/drivers/net/wireless/iwlegacy/common.c
++++ b/drivers/net/wireless/iwlegacy/common.c
+@@ -4136,7 +4136,7 @@ _il_apm_stop_master(struct il_priv *il)
+ 	ret =
+ 	    _il_poll_bit(il, CSR_RESET, CSR_RESET_REG_FLAG_MASTER_DISABLED,
+ 			 CSR_RESET_REG_FLAG_MASTER_DISABLED, 100);
+-	if (ret)
++	if (ret < 0)
+ 		IL_WARN("Master Disable Timed Out, 100 usec\n");
+ 
+ 	D_INFO("stop master\n");
+-- 
+1.7.1
 
-I was trying to do:
-
-struct iphdr * network_header;
-skb_set_network_header(skb,ieee80211_get_hdrlen_from_skb(skb));
-network_header = (struct iphdr *)skb_network_header(skb);
-
- if (network_header->protocol==IPPROTO_TCP){
-...
-}
-but it does not seams to work....
-
-can somebody give me an hint?
-I am sorry about this question, that may be silly... I am a beginner.
-
-Thank you
-
---
-Claudio Rossi
--------------------
-Office @ PoliTO: +39 011 5644194
