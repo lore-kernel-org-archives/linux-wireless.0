@@ -1,40 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:62922 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753466Ab2BPGVP (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:57226 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751236Ab2BNQXH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Feb 2012 01:21:15 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Tue, 14 Feb 2012 11:23:07 -0500
+Received: by pbcun15 with SMTP id un15so566023pbc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2012 08:23:06 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20284.41031.366468.457178@gargle.gargle.HOWL> (sfid-20120216_072119_220525_83A88FAE)
-Date: Thu, 16 Feb 2012 11:50:55 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH v2 1/9] ath9k: Remove unnecessary variable initialization
+In-Reply-To: <CACna6rwXEjsJEPK4EZ9pbh2sGJgvt05JRfo2HkeDKpT26YORwg@mail.gmail.com>
+References: <20120214040120.GA2077@eris.garyseven.net> <CACna6rwXEjsJEPK4EZ9pbh2sGJgvt05JRfo2HkeDKpT26YORwg@mail.gmail.com>
+From: "Saul St. John" <saul.stjohn@gmail.com>
+Date: Tue, 14 Feb 2012 10:22:46 -0600
+Message-ID: <CAG=dh1pTDSkkhgXGOv=n8uferq61-Db0EFGexO=ZZ+oN6w8_hQ@mail.gmail.com> (sfid-20120214_172312_404890_4682C019)
+Subject: Re: [RFC] use alternate SPROM offset for 43224
+To: =?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/debug.c |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
+On Tue, Feb 14, 2012 at 7:34 AM, Rafa³ Mi³ecki <zajec5@gmail.com> wrote:
+> W dniu 14 lutego 2012 05:01 u¿ytkownik Saul St. John
+> <saul.stjohn@gmail.com> napisa³:
+>> I don't know if this is correct in the general sense, but the wireless on my
+>> mid-2010 MacBook Pro doesn't work without it.
+>>
+>> Signed-off-by: Saul St. John <saul.stjohn@gmail.com>
+>> ---
+>>  drivers/bcma/sprom.c |    4 ++--
+>>  1 files changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
+>> index 6f230fb..06c87b5 100644
+>> --- a/drivers/bcma/sprom.c
+>> +++ b/drivers/bcma/sprom.c
+>> @@ -228,8 +228,8 @@ int bcma_sprom_get(struct bcma_bus *bus)
+>>        /* Most cards have SPROM moved by additional offset 0x30 (48 dwords).
+>>         * According to brcm80211 this applies to cards with PCIe rev >= 6
+>>         * TODO: understand this condition and use it */
+>> -       offset = (bus->chipinfo.id == 0x4331) ? BCMA_CC_SPROM :
+>> -               BCMA_CC_SPROM_PCIE6;
+>> +       offset = (bus->chipinfo.id == 0x4331 || bus->chipinfo.id == 43224) ?
+>> +                       BCMA_CC_SPROM : BCMA_CC_SPROM_PCIE6;
+>>        bcma_sprom_read(bus, offset, sprom);
+>>
+>>        if (bus->chipinfo.id == 0x4331)
+>
+> I'm quite sure it'll break my BCM43224. It's not chip-specific,
+> probably some status bit specific.
+>
+> --
+> Rafa³
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 68d972b..dc45cf9 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -1677,10 +1677,5 @@ int ath9k_init_debug(struct ath_hw *ah)
- 	debugfs_create_u32("gpio_val", S_IRUSR | S_IWUSR,
- 			   sc->debug.debugfs_phy, &sc->sc_ah->gpio_val);
- 
--	sc->debug.regidx = 0;
--	memset(&sc->debug.bb_mac_samp, 0, sizeof(sc->debug.bb_mac_samp));
--	sc->debug.sampidx = 0;
--	sc->debug.tsidx = 0;
--	sc->debug.rsidx = 0;
- 	return 0;
- }
--- 
-1.7.9.1
+My BCM43324 was broken by bmca up until "[PATCH] bcma: don't fail for
+bad SPROM CRC." Even with that patch, I still get "bmca: Failed to get
+SPROM: -71" in the dmesg log. Is that error harmless?
 
+The CRC check appears to pass without issue when using the 0x800
+offset on my device.
+
+-saul
