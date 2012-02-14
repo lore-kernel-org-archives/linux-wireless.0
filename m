@@ -1,120 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:34122 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:6646 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753596Ab2BVHLE (ORCPT
+	with ESMTP id S1751191Ab2BNBs2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 02:11:04 -0500
+	Mon, 13 Feb 2012 20:48:28 -0500
 From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20292.38132.189174.742249@gargle.gargle.HOWL> (sfid-20120222_081110_369789_997AAF4D)
-Date: Wed, 22 Feb 2012 12:40:44 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 08/26] ath9k: Use CONFIG_ATH9K_BTCOEX_SUPPORT
+Message-ID: <20281.48485.409968.741657@gargle.gargle.HOWL> (sfid-20120214_024831_735029_987FE7B1)
+Date: Tue, 14 Feb 2012 07:18:21 +0530
+To: Ben Greear <greearb@candelatech.com>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<ath9k-devel@venema.h4ckr.net>
+Subject: Re: [PATCH 3/7] ath9k: Merge wiphy and misc debugfs files
+In-Reply-To: <4F3947A1.2060103@candelatech.com>
+References: <20280.43962.403799.188541@gargle.gargle.HOWL>
+	<4F3947A1.2060103@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch uses CONFIG_ATH9K_BTCOEX_SUPPORT to conditionally
-compile btcoex-related code in the driver core.
+Ben Greear wrote:
+> It is nice to be able to see what the driver/NIC thinks
+> it is set to as well.  It is always possible that the
+> stack and the NIC are out of sync for some reason.
+> I'd rather those values be left in the debugfs unless
+> there is a good reason for getting rid of them.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/Makefile |    4 ++--
- drivers/net/wireless/ath/ath9k/ath9k.h  |   28 ++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/gpio.c   |    4 ++++
- 3 files changed, 34 insertions(+), 2 deletions(-)
+The 'wiphy' file is a remnant from the old virtual HW code.
+To know the channel parameters of multiple, virtual PHYs, it
+was useful. Since the operating parameters, channel type, HT
+capabilites etc. are all exposed by mac80211's debugfs, we might
+as well use that. Most of the other information - BSSID, RXfilter etc.
+have been retained.
 
-diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
-index da02242..b3c7b12 100644
---- a/drivers/net/wireless/ath/ath9k/Makefile
-+++ b/drivers/net/wireless/ath/ath9k/Makefile
-@@ -3,9 +3,9 @@ ath9k-y +=	beacon.o \
- 		init.o \
- 		main.o \
- 		recv.o \
--		xmit.o \
--		mci.o \
-+		xmit.o
- 
-+ath9k-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += mci.o
- ath9k-$(CONFIG_ATH9K_RATE_CONTROL) += rc.o
- ath9k-$(CONFIG_ATH9K_PCI) += pci.o
- ath9k-$(CONFIG_ATH9K_AHB) += ahb.o
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 23145ce..c2ccba6 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -454,6 +454,7 @@ struct ath_btcoex {
- 	struct ath_mci_profile mci;
- };
- 
-+#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- int ath9k_init_btcoex(struct ath_softc *sc);
- void ath9k_deinit_btcoex(struct ath_softc *sc);
- void ath9k_start_btcoex(struct ath_softc *sc);
-@@ -462,6 +463,30 @@ void ath9k_btcoex_timer_resume(struct ath_softc *sc);
- void ath9k_btcoex_timer_pause(struct ath_softc *sc);
- void ath9k_btcoex_handle_interrupt(struct ath_softc *sc, u32 status);
- u16 ath9k_btcoex_aggr_limit(struct ath_softc *sc, u32 max_4ms_framelen);
-+#else
-+static inline int ath9k_init_btcoex(struct ath_softc *sc)
-+{
-+	return 0;
-+}
-+static inline void ath9k_deinit_btcoex(struct ath_softc *sc)
-+{
-+}
-+static inline void ath9k_start_btcoex(struct ath_softc *sc)
-+{
-+}
-+static inline void ath9k_stop_btcoex(struct ath_softc *sc)
-+{
-+}
-+static inline void ath9k_btcoex_handle_interrupt(struct ath_softc *sc,
-+						 u32 status)
-+{
-+}
-+static inline u16 ath9k_btcoex_aggr_limit(struct ath_softc *sc,
-+					  u32 max_4ms_framelen)
-+{
-+	return 0;
-+}
-+#endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
- 
- /********************/
- /*   LED Control    */
-@@ -655,8 +680,11 @@ struct ath_softc {
- 	struct ath_beacon_config cur_beacon_conf;
- 	struct delayed_work tx_complete_work;
- 	struct delayed_work hw_pll_work;
-+
-+#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- 	struct ath_btcoex btcoex;
- 	struct ath_mci_coex mci_coex;
-+#endif
- 
- 	struct ath_descdma txsdma;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index e870251..77b3eb7 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -110,6 +110,8 @@ void ath_start_rfkill_poll(struct ath_softc *sc)
- 		wiphy_rfkill_start_polling(sc->hw->wiphy);
- }
- 
-+#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
-+
- /******************/
- /*     BTCOEX     */
- /******************/
-@@ -423,3 +425,5 @@ int ath9k_init_btcoex(struct ath_softc *sc)
- 
- 	return 0;
- }
-+
-+#endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
--- 
-1.7.9.1
-
+Sujith
