@@ -1,86 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.23]:45299 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754659Ab2BERUE (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:38059 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932287Ab2BNVET (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Feb 2012 12:20:04 -0500
-From: Marc Dietrich <marvin24@gmx.de>
-To: linux-tegra@vger.kernel.org
-Cc: Stephen Warren <swarren@nvidia.com>,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rhyland Klein <rklein@nvidia.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Subject: [PATCH 2/3] dt: rfkill-gpio: add bindings documentation
-Date: Sun,  5 Feb 2012 18:18:41 +0100
-Message-Id: <a2291f385edf9692f4a946fd78a7ee7cca29e3b4.1328461986.git.marvin24@gmx.de> (sfid-20120205_182019_062883_2D3B8D43)
-In-Reply-To: <215249735783e9fe35db1c594d901f591725de50.1328461986.git.marvin24@gmx.de>
-References: <215249735783e9fe35db1c594d901f591725de50.1328461986.git.marvin24@gmx.de>
-In-Reply-To: <215249735783e9fe35db1c594d901f591725de50.1328461986.git.marvin24@gmx.de>
-References: <215249735783e9fe35db1c594d901f591725de50.1328461986.git.marvin24@gmx.de>
+	Tue, 14 Feb 2012 16:04:19 -0500
+Received: by iacb35 with SMTP id b35so419881iac.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2012 13:04:19 -0800 (PST)
+Message-ID: <4F3ACC50.2000201@lwfinger.net> (sfid-20120214_220423_753666_60D90CB2)
+Date: Tue, 14 Feb 2012 15:04:16 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Ronald Wahl <ronald.wahl@raritan.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: rtlwifi/rtl8192cu: scheduling while atomic / sleeping function
+ called from invalid context
+References: <4F3A7F71.6000008@raritan.com>
+In-Reply-To: <4F3A7F71.6000008@raritan.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add device tree bindings information for rfkill gpio switches.
+On 02/14/2012 09:36 AM, Ronald Wahl wrote:
+> Hi,
+>
+> I just got the below traces with the rtlwifi driver in linux 3.2.5 and a
+> rtl8192cu chip. It looks like that _usb_read_sync() and kmalloc(...,
+> GFP_KERNEL) is called while the rcu lock is held inside
+> rtl92c_dm_refresh_rate_adaptive_mask.
 
-Cc: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Rhyland Klein <rklein@nvidia.com>
-Cc: Grant Likely <grant.likely@secretlab.ca>
-Signed-off-by: Marc Dietrich <marvin24@gmx.de>
----
- Documentation/devicetree/bindings/gpio/rfkill.txt |   38 +++++++++++++++++++++
- 1 files changed, 38 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/gpio/rfkill.txt
+--snip--
 
-diff --git a/Documentation/devicetree/bindings/gpio/rfkill.txt b/Documentation/devicetree/bindings/gpio/rfkill.txt
-new file mode 100644
-index 0000000..22bf22a
---- /dev/null
-+++ b/Documentation/devicetree/bindings/gpio/rfkill.txt
-@@ -0,0 +1,38 @@
-+RFKILL switches connected to GPIO lines
-+
-+Required properties:
-+- compatible : should be "rfkill-gpio".
-+
-+Each rfkill switch is represented as a sub-node of the rfkill-gpio device.
-+Each node has a label property which represents the name of the corresponding
-+rfkill device.
-+
-+RFKILL sub-node properties:
-+- label :  (optional) The label for this rfkill switch.  If omitted, the label is
-+  taken from the node name (excluding the unit address).
-+- reset-gpio, shutdown-gpio :  Should specify the rfkill gpios for reset and
-+  shutdown (see "Specifying GPIO information for devices" in
-+  Documentation/devicetree/booting-without-of.txt).
-+- type : enumerated type of the gpio (see include/linux/rfkill.h).
-+- clock : (optional) name of the clock name associated with the rfkill switch
-+  (see include/linux/rfkill-gpio.h)
-+
-+Examples:
-+
-+rfkill-switches {
-+	compatible = "rfkill-gpio";
-+
-+	wifi {
-+		label = "wifi";
-+		reset-gpio = <&gpio 25 0>; /* Active high */
-+		shutdown-gpio = <&gpio 85 0>; /* Active high */
-+		type = <1>;
-+	};
-+
-+	bt {
-+		label = "bluetooth";
-+		reset-gpio = <&gpio 17 0>; /* Active high */
-+		shutdown-gpio = <&gpio 35 0>; /* Active high */
-+		type = <1>;
-+	};
-+};
--- 
-1.7.5.4
+> I hope you can fix this.
 
+Thanks to your analysis, it was easy. Routine 
+rtl92c_dm_refresh_rate_adaptive_mask() makes a callback to 
+rtlpriv->cfg->ops->update_rate_tbl() with the lock held. For rtl8192ce, it is 
+OK, but rtl8192cu kmallocs a data buffer. The irony is that rtl8192cu does not 
+use the ieee80211_sta struct, which is what is being locked. The quick fix is to 
+release the lock in the affected routine and reacquire it before the exit. The 
+real fix will be to redefine the callback routines. That will be done for 3.4, 
+but we need to get 3.2 and 3.3 fixed first.
+
+Could you please test this patch?
+
+Thanks,
+
+Larry
+
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192cu/hw.c
+@@ -2010,6 +2010,7 @@ void rtl92cu_update_hal_rate_table(struc
+  	u8 curshortgi_20mhz = mac->sgi_20;
+  	enum wireless_mode wirelessmode = mac->mode;
+
++	rcu_read_unlock();
+  	ratr_value |= ((*(u16 *) (mcsrate))) << 12;
+  	switch (wirelessmode) {
+  	case WIRELESS_MODE_B:
+@@ -2061,6 +2062,7 @@ void rtl92cu_update_hal_rate_table(struc
+  	rtl_write_dword(rtlpriv, REG_ARFR0 + ratr_index * 4, ratr_value);
+  	RT_TRACE(rtlpriv, COMP_RATR, DBG_DMESG, "%x\n",
+  		 rtl_read_dword(rtlpriv, REG_ARFR0));
++	rcu_read_lock();
+  }
+
+  void rtl92cu_update_hal_rate_mask(struct ieee80211_hw *hw, u8 rssi_level)
