@@ -1,91 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:19459 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752488Ab2B0Ojl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 09:39:41 -0500
-Message-ID: <4F4B95A7.2060809@qca.qualcomm.com> (sfid-20120227_153944_719234_1BB56D68)
-Date: Mon, 27 Feb 2012 16:39:35 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:60588 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752330Ab2BNJU7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Feb 2012 04:20:59 -0500
+Date: Tue, 14 Feb 2012 10:20:21 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>, security@kernel.org
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+Message-ID: <20120214092020.GB12905@redhat.com> (sfid-20120214_102122_078983_9305279D)
+References: <20111110163051.GA24533@nomi.cz>
+ <20111111054731.GA2292@redhat.com>
+ <20111111150105.GA25437@nomi.cz>
+ <20111114140714.GD2513@redhat.com>
+ <20111119181106.GA5515@nomi.cz>
+ <1321755233.22510.1.camel@wwguy-ubuntu>
+ <20111120032016.GA14520@nomi.cz>
+ <1321763314.22510.4.camel@wwguy-ubuntu>
+ <20111120204007.GA7273@nomi.cz>
+ <20120210180929.GA17733@nomi.cz>
 MIME-Version: 1.0
-To: <rmani@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH v2 1/1] ath6kl: Check wow state before sending control
- and data pkt
-References: <1328779916-7732-1-git-send-email-rmani@qca.qualcomm.com>
-In-Reply-To: <1328779916-7732-1-git-send-email-rmani@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20120210180929.GA17733@nomi.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/09/2012 11:31 AM, rmani@qca.qualcomm.com wrote:
-> From: Raja Mani <rmani@qca.qualcomm.com>
+On Fri, Feb 10, 2012 at 07:09:29PM +0100, Tomáš Janoušek wrote:
+> For the last few months, I've happily used a 64-bit kernel and have had no
+> problems whatsoever. About a week ago, I started using virtual machines in
+> KVM. And today I found that I have exactly the same problem, but only _inside_
+> the virtual machine. I can't reliably scp a file from the internet to my
+> virtual machine. It works fine when I scp to the host, it works fine when I'm
+> on a WPA-PSK network. And it happens even if I tell kvm to emulate e1000, not
+> only with virtio-net. How strange is that?
 > 
-> Below two scenarios are taken care in this patch which helped
-> to fix the firmware crash during wow suspend/resume.
+> And while this is happening, the host is running just fine. The host has a
+> 64-bit kernel with a 32-bit userspace, so if something was wrong with the
+> 32-bit mode of my processor, it would've appeared on the host as well, no?
 > 
-> * TX operation (ctrl tx and data tx) has to be controlled based
->   on suspend state. i.e, with respect to WOW mode, control packets
->   are allowed to send from the host until the suspend state goes
->   ATH6KL_STATE_WOW and the data packets are allowed until WOW
->   suspend operation starts.
+> It's also worth mentioning that if I build openssl with "no-asm 386", scp
+> works just fine.
+Good hint.
+
+> So it doesn't look like a memory corruption after all. It
+> seems as if certain CPU instructions didn't work properly if running on a
+> 32-bit kernel with a WiFi adapter doing something. But how can it be
+> that those same CPU instructions work on a 64-bit host with 32-bit userspace?
+> At the same time! That's just completely insane, and I can't think of an
+> explanation. Shall I get a new CPU perhaps? :-)
+>
 > 
-> * Similarly, wow resume is NOT allowed if WOW suspend is in progress.
-> 
-> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
-> ---
-> V2 changes:
-> 
-> * Separate wow sub state introduced in V1 is removed and common
->   states (ATH6KL_STATE_SUSPENDING and ATH6KL_STATE_RESUMING)
->   are added in enum ath6kl_state.
-> 
-> * netdev queue is stopped while dropping skb in ath6kl_data_tx()
->   and resumed back in ath6kl_wow_resume().
+> Please, give me any ideas that you might have.
 
-[...]
+That make sense! Your "CPU instructions break things" theory sounds crazy,
+but I think it's logical. WPA enterprise differ from WPA-PSA (pre shared
+key) that the key changed periodically, SSL is used when keys are changed
+(via wpa_supplicant). So looks like 32-bit openssl generate object code
+that trigger bug on CPU, which crash other processes.
 
-> diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-> index 4febee7..402087e 100644
-> --- a/drivers/net/wireless/ath/ath6kl/sdio.c
-> +++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-> @@ -901,8 +901,12 @@ static int ath6kl_sdio_resume(struct ath6kl *ar)
->  
->  	case ATH6KL_STATE_WOW:
->  		break;
-> +
->  	case ATH6KL_STATE_SCHED_SCAN:
->  		break;
-> +
-> +	default:
-> +		break;
->  	}
+Please forward details about this issue to security@kernel.org and proper
+vendor engineer in non public manner, as this hw bug could be possibly
+exploitable (hardware bug can not be fixed, but kernel could disable
+appropriate functionality or use some other workaround).
 
-Don't add the default case, instead add all states explicitly. That way
-it's easier to track state changes.
-
-> --- a/drivers/net/wireless/ath/ath6kl/txrx.c
-> +++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-> @@ -284,6 +284,9 @@ int ath6kl_control_tx(void *devt, struct sk_buff *skb,
->  	int status = 0;
->  	struct ath6kl_cookie *cookie = NULL;
->  
-> +	if (ar->state == ATH6KL_STATE_WOW)
-> +		return -EACCES;
-
-Should this have WARN_ON_ONCE()?
-
-> @@ -359,6 +362,13 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
->  		return 0;
->  	}
->  
-> +	if (WARN_ON_ONCE(ar->state != ATH6KL_STATE_ON)) {
-> +		set_bit(NETQ_STOPPED, &vif->flags);
-> +		netif_stop_queue(dev);
-> +		dev_kfree_skb(skb);
-> +		return 0;
-> +	}
-
-Don't stop the queue here, dropping the packet is enough.
-
-Kalle
+Thanks
+Stanislaw
