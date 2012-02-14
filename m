@@ -1,47 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:47273 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752418Ab2BWSqZ convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22661 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751366Ab2BNIjN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 13:46:25 -0500
-Received: by wgbgn7 with SMTP id gn7so6124098wgb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 10:46:23 -0800 (PST)
+	Tue, 14 Feb 2012 03:39:13 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CACna6rxgGuCNY19Dn=VcgUH=EORNr72x4CTbR61srSZmcM+h-w@mail.gmail.com>
-References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
-	<1328818149-4826-15-git-send-email-arend@broadcom.com>
-	<CACna6rxgGuCNY19Dn=VcgUH=EORNr72x4CTbR61srSZmcM+h-w@mail.gmail.com>
-Date: Thu, 23 Feb 2012 19:46:23 +0100
-Message-ID: <CACna6rxSrzuEHTC++kZj79sQ7JEv42ckHj5o4bZ5bCULWKUXqA@mail.gmail.com> (sfid-20120223_194628_415666_C4763F81)
-Subject: Re: [PATCH 14/15] brcm80211: fmac: add USB support for bcm43235/6/8 chipsets
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	"M. Lambert" <lambertm@westman.wave.ca>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20282.7600.287048.11418@gargle.gargle.HOWL> (sfid-20120214_093916_772219_F7F125D3)
+Date: Tue, 14 Feb 2012 14:09:12 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 3/4] ath9k: Modify CCK spur mitigation for AR9462
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 23 lutego 2012 19:10 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
-> 2012/2/9 Arend van Spriel <arend@broadcom.com>:
->> This patch extends the use of the brcmfmac driver with support for
->> chipsets with a USB host interface. The first chipsets supported are
->> the bcm43235, bcm43236, and bcm43238 for which firmware has been
->> submitted.
->
-> Can you say something more about the firmware? AFAICS brcm directory
-> in linux-firmware.git contains:
-> brcmfmac43236b.bin
-> brcmfmac4329.bin
-> brcmfmac4330.bin
->
->
->> +#define BRCMF_USB_FW_NAME      "brcm/brcmfmac-usb.bin"
->
-> However your driver seems to require *only* brcmfmac-usb.bin firmware file...
+This improves sensitivity for CCK at specific channels.
 
-The only file passing usb.c::check_file test seems to be
-brcmfmac43236b.bin. I guess you meant this file name in usb.c.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 70e27d2..941b915 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -171,6 +171,7 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
+ 					    struct ath9k_channel *chan)
+ {
+ 	static const u32 spur_freq[4] = { 2420, 2440, 2464, 2480 };
++	static const u32 spur_freq_AR9462[2] = { 2440, 2464 };
+ 	int cur_bb_spur, negative = 0, cck_spur_freq;
+ 	int i;
+ 	int range, max_spur_cnts, synth_freq;
+@@ -198,8 +199,12 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
+ 			range = 10;
+ 			synth_freq = chan->channel;
+ 		}
++	} else if (AR_SREV_9462(ah)) {
++		range = 5;
++		max_spur_cnts = 2;
++		synth_freq = chan->channel;
+ 	} else {
+-		range = AR_SREV_9462(ah) ? 5 : 10;
++		range = 10;
+ 		max_spur_cnts = 4;
+ 		synth_freq = chan->channel;
+ 	}
+@@ -211,6 +216,8 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
+ 		if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah))
+ 			cur_bb_spur = FBIN2FREQ(spur_fbin_ptr[i],
+ 					IS_CHAN_2GHZ(chan)) - synth_freq;
++		else if (AR_SREV_9462(ah))
++			cur_bb_spur = spur_freq_AR9462[i] - synth_freq;
+ 		else
+ 			cur_bb_spur = spur_freq[i] - synth_freq;
+ 
 -- 
-Rafał
+1.7.9
+
