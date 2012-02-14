@@ -1,80 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:23078 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753559Ab2BVHK5 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63078 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756682Ab2BNPDE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 02:10:57 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Tue, 14 Feb 2012 10:03:04 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 1/2] ath6kl: Fix missing release of semaphore in ath6kl_stop_txrx()
+Date: Tue, 14 Feb 2012 20:32:59 +0530
+Message-ID: <1329231780-18929-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120214_160309_869976_0AF72F42)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20292.38120.827135.226403@gargle.gargle.HOWL> (sfid-20120222_081100_676833_81CABF92)
-Date: Wed, 22 Feb 2012 12:40:32 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 06/26] ath9k: Process BTCOEX interrupts using a helper
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    1 +
- drivers/net/wireless/ath/ath9k/gpio.c  |   12 ++++++++++++
- drivers/net/wireless/ath/ath9k/main.c  |    7 +------
- 3 files changed, 14 insertions(+), 6 deletions(-)
+This fixes smatch warning "inconsistent returns sem:&ar->sem".
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 2ede897..acf5372 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -460,6 +460,7 @@ void ath9k_start_btcoex(struct ath_softc *sc);
- void ath9k_stop_btcoex(struct ath_softc *sc);
- void ath9k_btcoex_timer_resume(struct ath_softc *sc);
- void ath9k_btcoex_timer_pause(struct ath_softc *sc);
-+void ath9k_btcoex_handle_interrupt(struct ath_softc *sc, u32 status);
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/init.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index 72f1b4f..6fed628 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -1733,5 +1733,7 @@ void ath6kl_stop_txrx(struct ath6kl *ar)
+ 	ath6kl_reset_device(ar, ar->target_type, true, true);
  
- /********************/
- /*   LED Control    */
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 1ca2ca5..a24aa67 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -318,6 +318,18 @@ void ath9k_btcoex_timer_pause(struct ath_softc *sc)
- 	btcoex->hw_timer_enabled = false;
+ 	clear_bit(WLAN_ENABLED, &ar->flag);
++
++	up(&ar->sem);
  }
- 
-+void ath9k_btcoex_handle_interrupt(struct ath_softc *sc, u32 status)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_3WIRE)
-+		if (status & ATH9K_INT_GENTIMER)
-+			ath_gen_timer_isr(sc->sc_ah);
-+
-+	if ((status & ATH9K_INT_MCI) && ATH9K_HW_CAP_MCI)
-+		ath_mci_intr(sc);
-+}
-+
- void ath9k_start_btcoex(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index ee5335c..14df586 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -739,12 +739,7 @@ void ath9k_tasklet(unsigned long data)
- 			ath_tx_tasklet(sc);
- 	}
- 
--	if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_3WIRE)
--		if (status & ATH9K_INT_GENTIMER)
--			ath_gen_timer_isr(sc->sc_ah);
--
--	if ((status & ATH9K_INT_MCI) && ATH9K_HW_CAP_MCI)
--		ath_mci_intr(sc);
-+	ath9k_btcoex_handle_interrupt(sc, status);
- 
- out:
- 	/* re-enable hardware interrupt */
+ EXPORT_SYMBOL(ath6kl_stop_txrx);
 -- 
-1.7.9.1
+1.7.0.4
 
