@@ -1,36 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:56544 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755690Ab2BCLDU convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33398 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754622Ab2BNK47 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 06:03:20 -0500
-Received: by vbjk17 with SMTP id k17so2448404vbj.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2012 03:03:19 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1328249924-1766-1-git-send-email-john.li.mediatek@gmail.com>
-References: <1328249924-1766-1-git-send-email-john.li.mediatek@gmail.com>
-Date: Fri, 3 Feb 2012 12:03:19 +0100
-Message-ID: <CAOZOX0UeAp_tRd=WsK8HK4fFjJQ2t_T8hoPKiocDc+5BxgTsOQ@mail.gmail.com> (sfid-20120203_120324_682513_0CAAB573)
-Subject: Re: [PATCH] rt2x00:Add RT5372 chipset support and VCO recalibration
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: John Li <john.li.mediatek@gmail.com>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	John Li <chen-yang.li@mediatek.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 14 Feb 2012 05:56:59 -0500
+Subject: Re: [RFC/RFT 0/5] Firmware load change for various wireless drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120213_203726_939695_C63C1EE3)
+References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
+	 (sfid-20120213_203726_939695_C63C1EE3)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 14 Feb 2012 11:56:55 +0100
+Message-ID: <1329217015.3941.8.camel@jlt3.sipsolutions.net> (sfid-20120214_115702_731061_CCA4BCB9)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Mon, 2012-02-13 at 13:37 -0600, Larry Finger wrote:
+> These patches change 5 drivers that are now loading firmware from the probe
+> routine. As each of them has the possibility of loading more than one
+> file, the method of using request_firmware_nowait() has some difficulty,
+> as it gets duplicate names in sysfs when the requests are launched in
+> parallel.
 
-Besides the point from Helmut. I have this small comment to add:
+Why not simply start off with one, and then when that returns
+successfully request the other ones?
 
-> -       if (rt2x00_rt(rt2x00dev, RT5390))
-> +       if (rt2x00_rt(rt2x00dev, RT5390) ||
-> +               rt2x00_rt(rt2x00dev, RT5390) ||
-> +               rt2x00_rt(rt2x00dev, RT5392))
->                rt2800_bbp_write(rt2x00dev, 86, 0x38);
+> When the callback routine is used to launch a second request,
+> the structure gets messy, particularly with b43legacy, which loads 4
+> firmware files for some hardware. My solution is to create a delayed work
+> queue that is started in the probe routine with a delay of one second. The
+> routine that is triggered does the normal request_firmware() calls
+> and starts mac80211 when the firmware is available.
 
-You're checking for RT5390 twice. :)
+I suppose this works, but I'd be a little worried that when the driver
+is built into the kernel it doesn't help much. I'm asking the udev
+people to not answer async loads while in initramfs, but they'd still
+give you a negative answer here, and they won't be able to tell the
+difference between a synchronous request from a work item (which doesn't
+block boot) and a synchronous request from probe (which does block
+booting).
 
-Ivo
+johannes
+
