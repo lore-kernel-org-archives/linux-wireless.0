@@ -1,82 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zmc.proxad.net ([212.27.53.206]:54120 "EHLO zmc.proxad.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932213Ab2B2Jhc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 04:37:32 -0500
-From: Florian Fainelli <florian@openwrt.org>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, dsd@gentoo.org,
-	kune@deine-taler.de, jussi.kivilinna@mbnet.fi,
-	Florian Fainelli <florian@openwrt.org>
-Subject: [PATCH v2] zd1211rw: wait between setting hash table and powering radio on
-Date: Wed, 29 Feb 2012 10:36:43 +0100
-Message-Id: <1330508203-5454-1-git-send-email-florian@openwrt.org> (sfid-20120229_103738_081982_37794A9C)
-In-Reply-To: <20120215145231.80704988jhf2taxc@www.81.fi>
-References: <20120215145231.80704988jhf2taxc@www.81.fi>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:61324 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757365Ab2BNQfA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Feb 2012 11:35:00 -0500
+Received: by yhoo21 with SMTP id o21so124993yho.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2012 08:35:00 -0800 (PST)
+Message-ID: <4F3A8D30.3040804@lwfinger.net> (sfid-20120214_173507_940129_120ED6F9)
+Date: Tue, 14 Feb 2012 10:34:56 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [RFC/RFT 0/5] Firmware load change for various wireless drivers
+References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>  (sfid-20120213_203726_939695_C63C1EE3) <1329217015.3941.8.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1329217015.3941.8.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I am running Debian testing kernel 3.1.0-1-amd64, using a 079b:0062 Sagem
-XG-76NA 802.11bg stick.
+On 02/14/2012 04:56 AM, Johannes Berg wrote:
+> On Mon, 2012-02-13 at 13:37 -0600, Larry Finger wrote:
+>> These patches change 5 drivers that are now loading firmware from the probe
+>> routine. As each of them has the possibility of loading more than one
+>> file, the method of using request_firmware_nowait() has some difficulty,
+>> as it gets duplicate names in sysfs when the requests are launched in
+>> parallel.
+>
+> Why not simply start off with one, and then when that returns
+> successfully request the other ones?
 
-Upon zd1211rw interface
-bringup (ifconfig wlan0 up) I get the following timeout:
+I have code that does that, and it is a reasonable solution when the driver 
+loads only two files, or one and an alternate.
 
-[  950.330573] zd1211rw 1-3:1.0: phy2
-[  955.108510] zd1211rw 1-3:1.0: firmware version 4725
-[  955.148532] zd1211rw 1-3:1.0: zd1211b chip 079b:0062 v4810 high 00-19-70
-AL2230_RF pa0 g--NS
-[snip]
-[  955.204072] zd1211rw 1-3:1.0: error ioread32(CR_REG1): -110
+>> When the callback routine is used to launch a second request,
+>> the structure gets messy, particularly with b43legacy, which loads 4
+>> firmware files for some hardware. My solution is to create a delayed work
+>> queue that is started in the probe routine with a delay of one second. The
+>> routine that is triggered does the normal request_firmware() calls
+>> and starts mac80211 when the firmware is available.
+>
+> I suppose this works, but I'd be a little worried that when the driver
+> is built into the kernel it doesn't help much. I'm asking the udev
+> people to not answer async loads while in initramfs, but they'd still
+> give you a negative answer here, and they won't be able to tell the
+> difference between a synchronous request from a work item (which doesn't
+> block boot) and a synchronous request from probe (which does block
+> booting).
 
-A second ifconfig wlan0 up brings the interface up without problems.
+I asked a variant of this question on LKML and the driverdevel ML, but got no 
+answer.
 
-After a bit more debugging, the call trace is the following:
+Unless I get a definitive answer, I'll have to go back to the chain loading, no 
+matter how messy.
 
-[10241.028130] zd1211rw 1-3:1.0: zd_chip_lock_phy_regs: error
-ioread32(CR_REG1): -110
-[10241.028140] zd1211rw 1-3:1.0: zd_switch_radio_on: failed to lock PHY regs
-[10241.028148] zd1211rw 1-3:1.0: zd_op_start: failed to set radio on
-
-Adding a 10 milliseconds delay between the call to set_mc_hash() and
-zd_chip_switch_radio_on() allows successful interface bringups in all
-cases and matches what the vendor driver did.
-
-Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Signed-off-by: Florian Fainelli <florian@openwrt.org>
----
-Changes since v1:
-- added comment in the code as to why this delay is required
-- added Jussi's acked-by tag
-
- drivers/net/wireless/zd1211rw/zd_mac.c |   12 +++++++++++-
- 1 files changed, 11 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 98a574a..2d43e08 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -306,9 +306,19 @@ int zd_op_start(struct ieee80211_hw *hw)
- 	r = set_mc_hash(mac);
- 	if (r)
- 		goto disable_int;
-+
-+	/* Wait after setting the mutlicast hash table and powering on
-+	 * the radio otherwise interface bring up will fail. This matches
-+	 * what the vendor driver did.
-+	 */
-+	msleep(10);
-+
- 	r = zd_chip_switch_radio_on(chip);
--	if (r < 0)
-+	if (r < 0) {
-+		dev_err(zd_chip_dev(chip),
-+			"%s: failed to set radio on\n", __func__);
- 		goto disable_int;
-+	}
- 	r = zd_chip_enable_rxtx(chip);
- 	if (r < 0)
- 		goto disable_radio;
--- 
-1.7.5.4
-
+Larry
