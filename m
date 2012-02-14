@@ -1,122 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qw0-f53.google.com ([209.85.216.53]:56617 "EHLO
-	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750898Ab2BNCrs (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:45794 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752509Ab2BNKsw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 21:47:48 -0500
-Received: by qafk1 with SMTP id k1so18622qaf.19
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Feb 2012 18:47:48 -0800 (PST)
-Message-ID: <4F39CB51.8080904@gmail.com> (sfid-20120214_034752_183461_542F0926)
-Date: Mon, 13 Feb 2012 21:47:45 -0500
-From: Jonathan Bither <jonbither@gmail.com>
+	Tue, 14 Feb 2012 05:48:52 -0500
+Received: by wgbdt10 with SMTP id dt10so5799179wgb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2012 02:48:51 -0800 (PST)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] ath5k:Remove __raw_read and __raw_write
+In-Reply-To: <1329108519-5342-3-git-send-email-kubakici@wp.pl>
+References: <1329108519-5342-1-git-send-email-kubakici@wp.pl>
+	<1329108519-5342-3-git-send-email-kubakici@wp.pl>
+Date: Tue, 14 Feb 2012 11:48:50 +0100
+Message-ID: <CAL1gcdP2WaKm75rJn91zKpLiP=tNKxp8GWixn4Cqov-DWw6TOA@mail.gmail.com> (sfid-20120214_114855_376504_2D881C39)
+Subject: Re: [rt2x00-users] [PATCH v2 2/4] rt2800usb: remove
+ rt2800usb_set_state function
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Jakub Kicinski <kubakici@wp.pl>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	users@rt2x00.serialmonkey.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello everyone,
-This is my first patch submission so hopefully everything goes well. :-)
-By swithing from our __raw_read and __raw_write functions to ioread32 and iowrite32,
-benchmarks on my desk with iperf went from 11MBps to 18.1MBps using the AHB bus
-on an EnGenius ECB3500 running OpenWRT.
+On Mon, Feb 13, 2012 at 5:48 AM, Jakub Kicinski <kubakici@wp.pl> wrote:
+> Remove rt2800usb_set_state to make the flow inside USB driver
+> similar to that of PCI driver.
+>
+> Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
 
-Signed-off-by: Jonathan Bither <jonbither@gmail.com>
+The same comment with respect to falling through the state cases as
+for patch 1 of the
+series applies here.
 
+> ---
+>  drivers/net/wireless/rt2x00/rt2800usb.c |   28 +++++++++-------------------
+>  1 files changed, 9 insertions(+), 19 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
+> index d009b6b..15cce5e 100644
+> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
+> @@ -272,17 +272,6 @@ static void rt2800usb_disable_radio(struct rt2x00_dev *rt2x00dev)
+>        rt2x00usb_disable_radio(rt2x00dev);
+>  }
+>
+> -static int rt2800usb_set_state(struct rt2x00_dev *rt2x00dev,
+> -                              enum dev_state state)
+> -{
+> -       if (state == STATE_AWAKE)
+> -               rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, 0xff, 0, 2);
+> -       else
+> -               rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0xff, 2);
+> -
+> -       return 0;
+> -}
+> -
+>  static int rt2800usb_set_device_state(struct rt2x00_dev *rt2x00dev,
+>                                      enum dev_state state)
+>  {
+> @@ -295,7 +284,7 @@ static int rt2800usb_set_device_state(struct rt2x00_dev *rt2x00dev,
+>                 * to be woken up. After that it needs a bit of time
+>                 * to be fully awake and then the radio can be enabled.
+>                 */
+> -               rt2800usb_set_state(rt2x00dev, STATE_AWAKE);
+> +               rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, 0xff, 0, 2);
+>                msleep(1);
+>                retval = rt2800usb_enable_radio(rt2x00dev);
+>                break;
+> @@ -305,17 +294,18 @@ static int rt2800usb_set_device_state(struct rt2x00_dev *rt2x00dev,
+>                 * be put to sleep for powersaving.
+>                 */
+>                rt2800usb_disable_radio(rt2x00dev);
+> -               rt2800usb_set_state(rt2x00dev, STATE_SLEEP);
+> -               break;
+> -       case STATE_RADIO_IRQ_ON:
+> -       case STATE_RADIO_IRQ_OFF:
+> -               /* No support, but no error either */
+> -               break;
+> +               /* fall through */
+>        case STATE_DEEP_SLEEP:
+>        case STATE_SLEEP:
+>        case STATE_STANDBY:
+> +               rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0xff, 2);
+> +               break;
+>        case STATE_AWAKE:
+> -               retval = rt2800usb_set_state(rt2x00dev, state);
+> +               rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, 0xff, 0, 2);
+> +               break;
+> +       case STATE_RADIO_IRQ_ON:
+> +       case STATE_RADIO_IRQ_OFF:
+> +               /* No support, but no error either */
+>                break;
+>        default:
+>                retval = -ENOTSUPP;
 
---- a/drivers/net/wireless/ath/ath5k/ath5k.h
-+++ b/drivers/net/wireless/ath/ath5k/ath5k.h
-@@ -1656,12 +1656,12 @@
- 
- static inline u32 ath5k_hw_reg_read(struct ath5k_hw *ah, u16 reg)
- {
--	return __raw_readl(ath5k_ahb_reg(ah, reg));
-+	return ioread32(ath5k_ahb_reg(ah, reg));
- }
- 
- static inline void ath5k_hw_reg_write(struct ath5k_hw *ah, u32 val, u16 reg)
- {
--	__raw_writel(val, ath5k_ahb_reg(ah, reg));
-+	iowrite32(val, ath5k_ahb_reg(ah, reg));
- }
- 
- #else
-
---- a/drivers/net/wireless/ath/ath5k/ahb.c
-+++ b/drivers/net/wireless/ath/ath5k/ahb.c
-@@ -140,23 +140,23 @@
- 
- 	if (bcfg->devid >= AR5K_SREV_AR2315_R6) {
- 		/* Enable WMAC AHB arbitration */
--		reg = __raw_readl((void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
-+		reg = ioread32((void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
- 		reg |= AR5K_AR2315_AHB_ARB_CTL_WLAN;
--		__raw_writel(reg, (void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
-+		iowrite32(reg, (void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
- 
- 		/* Enable global WMAC swapping */
--		reg = __raw_readl((void __iomem *) AR5K_AR2315_BYTESWAP);
-+		reg = ioread32((void __iomem *) AR5K_AR2315_BYTESWAP);
- 		reg |= AR5K_AR2315_BYTESWAP_WMAC;
--		__raw_writel(reg, (void __iomem *) AR5K_AR2315_BYTESWAP);
-+		iowrite32(reg, (void __iomem *) AR5K_AR2315_BYTESWAP);
- 	} else {
- 		/* Enable WMAC DMA access (assuming 5312 or 231x*/
- 		/* TODO: check other platforms */
--		reg = __raw_readl((void __iomem *) AR5K_AR5312_ENABLE);
-+		reg = ioread32((void __iomem *) AR5K_AR5312_ENABLE);
- 		if (to_platform_device(ah->dev)->id == 0)
- 			reg |= AR5K_AR5312_ENABLE_WLAN0;
- 		else
- 			reg |= AR5K_AR5312_ENABLE_WLAN1;
--		__raw_writel(reg, (void __iomem *) AR5K_AR5312_ENABLE);
-+		iowrite32(reg, (void __iomem *) AR5K_AR5312_ENABLE);
- 
- 		/*
- 		 * On a dual-band AR5312, the multiband radio is only
-@@ -203,17 +203,17 @@
- 
- 	if (bcfg->devid >= AR5K_SREV_AR2315_R6) {
- 		/* Disable WMAC AHB arbitration */
--		reg = __raw_readl((void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
-+		reg = ioread32((void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
- 		reg &= ~AR5K_AR2315_AHB_ARB_CTL_WLAN;
--		__raw_writel(reg, (void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
-+		iowrite32(reg, (void __iomem *) AR5K_AR2315_AHB_ARB_CTL);
- 	} else {
- 		/*Stop DMA access */
--		reg = __raw_readl((void __iomem *) AR5K_AR5312_ENABLE);
-+		reg = ioread32((void __iomem *) AR5K_AR5312_ENABLE);
- 		if (to_platform_device(ah->dev)->id == 0)
- 			reg &= ~AR5K_AR5312_ENABLE_WLAN0;
- 		else
- 			reg &= ~AR5K_AR5312_ENABLE_WLAN1;
--		__raw_writel(reg, (void __iomem *) AR5K_AR5312_ENABLE);
-+		iowrite32(reg, (void __iomem *) AR5K_AR5312_ENABLE);
- 	}
- 
- 	ath5k_deinit_ah(ah);
-
---- a/drivers/net/wireless/ath/ath5k/reset.c
-+++ b/drivers/net/wireless/ath/ath5k/reset.c
-@@ -473,14 +473,14 @@
- 	}
- 
- 	/* Put BB/MAC into reset */
--	regval = __raw_readl(reg);
--	__raw_writel(regval | val, reg);
--	regval = __raw_readl(reg);
-+	regval = ioread32(reg);
-+	iowrite32(regval | val, reg);
-+	regval = ioread32(reg);
- 	usleep_range(100, 150);
- 
- 	/* Bring BB/MAC out of reset */
--	__raw_writel(regval & ~val, reg);
--	regval = __raw_readl(reg);
-+	iowrite32(regval & ~val, reg);
-+	regval = ioread32(reg);
- 
- 	/*
- 	 * Reset configuration register (for hw byte-swap). Note that this
+---
+Gertjan
