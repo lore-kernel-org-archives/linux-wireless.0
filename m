@@ -1,80 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:43330 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755403Ab2BNMqO convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:60084 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760196Ab2BNNJ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 07:46:14 -0500
-Received: by pbcun15 with SMTP id un15so407061pbc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2012 04:46:14 -0800 (PST)
+	Tue, 14 Feb 2012 08:09:28 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 1/2] ath9k: remove obselete comments
+Date: Tue, 14 Feb 2012 18:39:18 +0530
+Message-ID: <1329224959-12143-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120214_140952_950228_04EDEB66)
 MIME-Version: 1.0
-In-Reply-To: <1329217171.3941.10.camel@jlt3.sipsolutions.net>
-References: <CAGXE3d-ydmV8qrtihSHCNBtkTxT8M=JCACBZFuP+Ne3cQ1WVow@mail.gmail.com>
-	<1329217171.3941.10.camel@jlt3.sipsolutions.net>
-Date: Tue, 14 Feb 2012 13:46:14 +0100
-Message-ID: <CAGXE3d9yp33bUu1Rzfur8Rt+uE_LZFZx_MAYN13E46_=Ftw3xQ@mail.gmail.com> (sfid-20120214_134624_209063_1E053535)
-Subject: Re: DELBA processed in workqueue too slow?
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 14, 2012 at 11:59 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2012-02-06 at 16:48 +0100, Helmut Schaa wrote:
->> Hi,
->>
->> since all action frames are handled in the iface workqueue the following
->> situation can cause problems on slow devices in AP mode:
->>
->> - data stream AP -> STA with established TX BA session
->> - peer sends a DELBA to tear the APs TX BA session down
->> - new frames are still send as AMPDU but the receiver doesn't BlockAck
->>   them anymore since it assumes the BA session is already teared down.
->> - DELBA gets processed
->
->> Hence, most frames between receiving the DELBA and actually processing
->> it are basically lost. This can easily make TCP streams getting stuck for a
->> few seconds :(
->
-> Why are they lost? They haven't been acknowledged so wouldn't they be
-> retransmitted?
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Yes, they are retried till the retransmit timeout is reached, but they
-are retried
-as AMPDU again (rt2x00 does this in hw).
+the corresponding code/logic was removed in
+"ath9k: rework power state handling"
 
-> In any case, it seems the easiest solution may be to stop queues?
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/main.c |    6 ------
+ 1 files changed, 0 insertions(+), 6 deletions(-)
 
-Not sure, the action frame processing in the workqueue was added
-last year in this patch:
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index ec82e92..22785c7 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1587,12 +1587,6 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
+ 	ath9k_ps_wakeup(sc);
+ 	mutex_lock(&sc->mutex);
+ 
+-	/*
+-	 * Leave this as the first check because we need to turn on the
+-	 * radio if it was disabled before prior to processing the rest
+-	 * of the changes. Likewise we must only disable the radio towards
+-	 * the end.
+-	 */
+ 	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
+ 		sc->ps_idle = !!(conf->flags & IEEE80211_CONF_IDLE);
+ 		if (sc->ps_idle)
+-- 
+1.7.0.4
 
-commit bed7ee6e44cb7633a4f9821688a6c7ae977615ed
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Thu Jun 10 10:21:35 2010 +0200
-
-    mac80211: always process blockack action from workqueue
-
-    To prepare for making the ampdu_action callback
-    sleep, make mac80211 always process blockack
-    action frames from the skb queue. This gets rid
-    of the current special case for managed mode
-    interfaces as well.
-
-Before that it was directly processed in the rx path.
-
-> But to
-> really make this fool-proof you'd also have to tell the driver to
-> release all its internal buffers -- and you're never going to solve the
-> race completely.
-
-Correct, we will always have a small race here but getting it as small
-as possible
-seems reasonable to me :)
-
-Maybe we could at least set HT_AGG_STATE_STOPPING already in the rx
-path such that the aggregation logic won't continue sending AMPDUs
-to the driver and instead buffers them till the work queue is processed ...
-
-Helmut
