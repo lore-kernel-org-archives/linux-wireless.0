@@ -1,57 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:44622 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752905Ab2BVIyW convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:46443 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752178Ab2BNIbA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 03:54:22 -0500
+	Tue, 14 Feb 2012 03:31:00 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOJsxLENnvYn+xkDufQeTcgbKBsrrf=hw=g_ejCrts7ZNPa-Cg@mail.gmail.com>
-References: <20120124013625.GB18436@gamma.logic.tuwien.ac.at>
-	<CANUX_P3er0orBy8OhDuY1DfgD810UD-_HB_ukJnCA+W8e-VazQ@mail.gmail.com>
-	<20120125002250.GA20431@gamma.logic.tuwien.ac.at>
-	<CANUX_P0UREz_jZABu+Y_QYOh9tx_sKZSSkZpYHBEVtcU4QQdSA@mail.gmail.com>
-	<20120126003735.GA2346@gamma.logic.tuwien.ac.at>
-	<CANUX_P0H_WaWwnpjoBcMpZQY4xH=cbVhAKxWKXmz-HwFMcWS6w@mail.gmail.com>
-	<CANUX_P3XSCsWUJ9M55qeaK-DuPEMXODFPJiNk+BgnHN-=WECqw@mail.gmail.com>
-	<20120126232555.GB16330@gamma.logic.tuwien.ac.at>
-	<20120127015015.GA23291@gamma.logic.tuwien.ac.at>
-	<CANUX_P3F58upbrw48AiMTV4DDZWsfveYp=mANAD9CQ2bPps0cA@mail.gmail.com>
-	<20120222003747.GA9808@gamma.logic.tuwien.ac.at>
-	<CAOJsxLENnvYn+xkDufQeTcgbKBsrrf=hw=g_ejCrts7ZNPa-Cg@mail.gmail.com>
-Date: Wed, 22 Feb 2012 10:54:20 +0200
-Message-ID: <CANUX_P3f-9-1pnCRcLmTdt0irjA_JfkXoWrHQD_NtfDemXPoYQ@mail.gmail.com> (sfid-20120222_095437_895779_38F4CBEA)
-Subject: Re: iwlagn is getting even worse with 3.3-rc1
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Pekka Enberg <penberg@kernel.org>
-Cc: Norbert Preining <preining@logic.at>, linux-kernel@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	Dave Jones <davej@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20282.7088.898987.229335@gargle.gargle.HOWL> (sfid-20120214_093105_218259_BA9EABCD)
+Date: Tue, 14 Feb 2012 14:00:40 +0530
+To: Peter Stuge <peter@stuge.se>
+CC: Ben Greear <greearb@candelatech.com>,
+	<ath9k-devel@venema.h4ckr.net>, <linux-wireless@vger.kernel.org>,
+	<linville@tuxdriver.com>
+Subject: Re: [ath9k-devel] [PATCH 3/7] ath9k: Merge wiphy and misc debugfs files
+In-Reply-To: <20120214073855.6843.qmail@stuge.se>
+References: <20280.43962.403799.188541@gargle.gargle.HOWL>
+	<4F3947A1.2060103@candelatech.com>
+	<20281.48485.409968.741657@gargle.gargle.HOWL>
+	<4F39BF5F.3030408@candelatech.com>
+	<20281.52354.478076.479135@gargle.gargle.HOWL>
+	<20120214073855.6843.qmail@stuge.se>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please check this one:
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=3d29dd9b5b160ba4542a9b8f869a220559e633a0
+Peter Stuge wrote:
+> It is not very wise for ath9k to reduce debug output with the
+> motivation that some users leave it enabled even if they deploy
+> into limited systems and they would actually prefer to have less
+> debugging.
+> 
+> If ath9k users have an issue with debugging being too big then THEY
+> can disable it. It seems senseless to delete debugging when the
+> driver is clearly still buggy.
+> 
+> It also seems senseless to try to punt to mac80211. It is amazing
+> that Ben's point is not absolutely obvious.
+> 
+> One purpose of debugging is to allow and enable consistency checking.
+> Redundant information is by definition neccessary for that.
+> 
+> 
+> As a compromise, you could suggest a move to a two-level compile time
+> option for debugging. You would enable only what you believe to be
+> adequate for debugging in production systems (wait, what did I just
+> write? oh well..) with the first option, and you would allow the rest
+> of the world to enable complete debugging with the second option.
 
-it is in 3.3-rc4
+/me disregards all the nerd-rage and the general snarkiness.
 
+Having multiple levels of debugging makes things complex. If the general
+consensus is to keep the information, I can rework the patch.
 
-On Wed, Feb 22, 2012 at 10:40, Pekka Enberg <penberg@kernel.org> wrote:
-> On Wed, Feb 22, 2012 at 2:37 AM, Norbert Preining <preining@logic.at> wrote:
->> I still see that, on 3.3-rc4, and it is the same as usual. The interface
->> believes it is up and connected, but nothing works.
->>
->> I am *100%* sure that this is related to the driver, because in old
->> revisions (somewhen around 2.6.27 or so) it was working without
->> any problem, and when it started I reported it long time ago.
->
-> It's definitely a kernel regression, no question about it. Was 3.3-rc1
-> already broken for you? It shouldn't be that difficult to find the
-> offending commit with git bisect if it's that easy to reproduce for
-> you.
->
->                        Pekka
+Sujith
+
