@@ -1,104 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.23]:43747 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751718Ab2BFKQZ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:52809 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754672Ab2BNNo3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Feb 2012 05:16:25 -0500
-From: Marc Dietrich <marvin24@gmx.de>
-To: Olof Johansson <olof@lixom.net>
-Cc: linux-tegra@vger.kernel.org, Stephen Warren <swarren@nvidia.com>,
-	Colin Cross <ccross@android.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rhyland Klein <rklein@nvidia.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	devicetree-discuss@lists.ozlabs.org
-Subject: Re: Re: [PATCH 2/3] dt: rfkill-gpio: add bindings documentation
-Date: Mon, 06 Feb 2012 11:16:17 +0100
-Message-ID: <3698018.3auA4qnmIx@fb07-iapwap2> (sfid-20120206_111630_564546_007B2985)
-In-Reply-To: <CAOesGMhXZLRHw+TSVqHZFQcYLeu995EKaG_hNFRkgOnPFdmq6g@mail.gmail.com>
-References: <215249735783e9fe35db1c594d901f591725de50.1328461986.git.marvin24@gmx.de> <a2291f385edf9692f4a946fd78a7ee7cca29e3b4.1328461986.git.marvin24@gmx.de> <CAOesGMhXZLRHw+TSVqHZFQcYLeu995EKaG_hNFRkgOnPFdmq6g@mail.gmail.com>
+	Tue, 14 Feb 2012 08:44:29 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20282.25916.865430.139200@gargle.gargle.HOWL> (sfid-20120214_144433_257789_2E2475C4)
+Date: Tue, 14 Feb 2012 19:14:28 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v2] ath9k: Fix descriptor length for AR9462
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Olof,
+Change the descriptor length to 24 and explicitly
+set the control field 23 to zero. Not doing so would
+result in dropping of frames.
 
-Am Sonntag, 5. Februar 2012, 14:00:25 schrieb Olof Johansson:
-> Hi,
-> 
-> On Sun, Feb 5, 2012 at 9:18 AM, Marc Dietrich <marvin24@gmx.de> wrote:
-> > Add device tree bindings information for rfkill gpio switches.
-> > 
-> > Cc: linux-wireless@vger.kernel.org
-> > Cc: "John W. Linville" <linville@tuxdriver.com>
-> > Cc: Johannes Berg <johannes@sipsolutions.net>
-> > Cc: Rhyland Klein <rklein@nvidia.com>
-> > Cc: Grant Likely <grant.likely@secretlab.ca>
-> > Signed-off-by: Marc Dietrich <marvin24@gmx.de>
-> 
-> Please cc devicetree-discuss@lists.ozlabs.org on device tree bindings;
-> not everyone monitors the linux mailing lists.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |    6 +++++-
+ drivers/net/wireless/ath/ath9k/ar9003_mac.h |    3 ++-
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-done.
-
-> > diff --git a/Documentation/devicetree/bindings/gpio/rfkill.txt
-> > b/Documentation/devicetree/bindings/gpio/rfkill.txt new file mode 100644
-> > index 0000000..22bf22a
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/gpio/rfkill.txt
-> > @@ -0,0 +1,38 @@
-> > +RFKILL switches connected to GPIO lines
-> > +
-> > +Required properties:
-> > +- compatible : should be "rfkill-gpio".
-> > +
-> > +Each rfkill switch is represented as a sub-node of the rfkill-gpio device.
-> > +Each node has a label property which represents the name of the corresponding
-> > +rfkill device.
-> > +
-> > +RFKILL sub-node properties:
-> > +- label :  (optional) The label for this rfkill switch.  If omitted, the label
-> > is +  taken from the node name (excluding the unit address).
-> > +- reset-gpio, shutdown-gpio :  Should specify the rfkill gpios for reset and
-> > +  shutdown (see "Specifying GPIO information for devices" in
-> > +  Documentation/devicetree/booting-without-of.txt).
-> > +- type : enumerated type of the gpio (see include/linux/rfkill.h).
-> > +- clock : (optional) name of the clock name associated with the rfkill switch
-> > +  (see include/linux/rfkill-gpio.h)
-> 
-> Sorry, but this is going about things the wrong way.
-> 
-> A device tree binding is meant to describe hardware. For example, the
-> type and clock properties are clearly linux specifics that shouldn't
-> be expressed that way in the device tree.
-> 
-> instead, think about what you actually need to provide for a driver to
-> do its work. Does the wifi device have a gpio to control power (and
-> one for providing reset outside of the standard interface)? Well, then
-> that should probably be defined in the node that describes the device
-> -- i.e. under the sdhci node in question here.
-
-well, that doesn't work in case of paz00 because nearly all devices (including wifi) 
-are connected via usb. Only the rfkill switch is controlled via the gpios.
-
-> That doesn't fit the rfkill device/driver model perfectly, since it
-> doesn't have something to bind against, so the rfkill platform device
-> needs to be instantiated from somewhere else. It's possible that best
-> match is to have the wifi driver handle it, which should be OK, I
-> think?
-
-You are right, but in case of usb devices which are not instantiated via device tree 
-there is no parent. It doesn't make much sense for me to put it under the usb 
-controller because it is independent to it. One may argue that the rfkill switch is a 
-separate device, which is controlled via gpio lines. The wifi driver itself has no 
-way to modify the gpios itself, it can only read out its status. I'm a bit lost here, 
-maybe you have a better solution.
-
-Thanks
-
-Marc
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 09b8c9d..39cb482 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -28,11 +28,14 @@ ar9003_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
+ 	struct ar9003_txc *ads = ds;
+ 	int checksum = 0;
+ 	u32 val, ctl12, ctl17;
++	u8 desc_len;
++
++	desc_len = (AR_SREV_9462(ah) ? 0x18 : 0x17);
+ 
+ 	val = (ATHEROS_VENDOR_ID << AR_DescId_S) |
+ 	      (1 << AR_TxRxDesc_S) |
+ 	      (1 << AR_CtrlStat_S) |
+-	      (i->qcu << AR_TxQcuNum_S) | 0x17;
++	      (i->qcu << AR_TxQcuNum_S) | desc_len;
+ 
+ 	checksum += val;
+ 	ACCESS_ONCE(ads->info) = val;
+@@ -81,6 +84,7 @@ ar9003_set_txdesc(struct ath_hw *ah, void *ds, struct ath_tx_info *i)
+ 	ads->ctl20 = 0;
+ 	ads->ctl21 = 0;
+ 	ads->ctl22 = 0;
++	ads->ctl23 = 0;
+ 
+ 	ctl17 = SM(i->keytype, AR_EncrType);
+ 	if (!i->is_first) {
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.h b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+index e203b51..cbf60b0 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.h
+@@ -92,7 +92,8 @@ struct ar9003_txc {
+ 	u32 ctl20;  /* DMA control 20 */
+ 	u32 ctl21;  /* DMA control 21 */
+ 	u32 ctl22;  /* DMA control 22 */
+-	u32 pad[9]; /* pad to cache line (128 bytes/32 dwords) */
++	u32 ctl23;  /* DMA control 23 */
++	u32 pad[8]; /* pad to cache line (128 bytes/32 dwords) */
+ } __packed __aligned(4);
+ 
+ struct ar9003_txs {
+-- 
+1.7.9
 
