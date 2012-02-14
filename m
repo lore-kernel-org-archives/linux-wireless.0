@@ -1,59 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4419 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757867Ab2BIUJa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 15:09:30 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 12/15] brcm80211: fmac: change allocation flag in
- brcmf_enq_event() function
-Date: Thu, 9 Feb 2012 21:09:06 +0100
-Message-ID: <1328818149-4826-13-git-send-email-arend@broadcom.com> (sfid-20120209_210951_887449_A55D0592)
-In-Reply-To: <1328818149-4826-1-git-send-email-arend@broadcom.com>
-References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:46416 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756715Ab2BNQ5h (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Feb 2012 11:57:37 -0500
+Received: by ghrr11 with SMTP id r11so133054ghr.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2012 08:57:36 -0800 (PST)
+Message-ID: <4F3A927D.2050708@lwfinger.net> (sfid-20120214_175740_737694_71C77F80)
+Date: Tue, 14 Feb 2012 10:57:33 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Subject: Re: [RFC/RFT 0/5] Firmware load change for various wireless drivers
+References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>  (sfid-20120213_203726_939695_C63C1EE3) <1329217015.3941.8.camel@jlt3.sipsolutions.net>  <4F3A8D30.3040804@lwfinger.net> (sfid-20120214_173532_491396_64EB4078) <1329237440.3941.15.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1329237440.3941.15.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As the function is called from atomic context it should not do the
-kzalloc call with GFP_KERNEL.
+On 02/14/2012 10:37 AM, Johannes Berg wrote:
+>
+> I'm not even sure they've done *anything* until now, so I'm not sure it
+> matters. I believe the behavioural change that prompted these changes
+> will actually make it easier to implement the delay in a matter that
+> covers both this and async loading, so you may well be safe, I haven't
+> really understood the full details of the change that prompted all this.
 
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Kan Yan <kanyan@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+I do not think the changes have been merged into any distro yet, but I have 
+gotten feedback converning udev timeouts from the rtlwifi drivers when booting. 
+That is the reason I'm trying to get ahead of the curve now.
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index e95a883..285fa19 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -3297,7 +3297,9 @@ static struct brcmf_cfg80211_event_q *brcmf_deq_event(
- }
- 
- /*
--** push event to tail of the queue
-+*	push event to tail of the queue
-+*
-+*	remark: this function may not sleep as it is called in atomic context.
- */
- 
- static s32
-@@ -3307,7 +3309,7 @@ brcmf_enq_event(struct brcmf_cfg80211_priv *cfg_priv, u32 event,
- 	struct brcmf_cfg80211_event_q *e;
- 	s32 err = 0;
- 
--	e = kzalloc(sizeof(struct brcmf_cfg80211_event_q), GFP_KERNEL);
-+	e = kzalloc(sizeof(struct brcmf_cfg80211_event_q), GFP_ATOMIC);
- 	if (!e)
- 		return -ENOMEM;
- 
--- 
-1.7.5.4
-
+Larry
 
