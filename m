@@ -1,42 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:49117 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752976Ab2BNS35 (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:44815 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752463Ab2BNJHB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 13:29:57 -0500
-Received: by pbcun15 with SMTP id un15so665363pbc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2012 10:29:57 -0800 (PST)
-From: Sujith <m.sujith@gmail.com>
+	Tue, 14 Feb 2012 04:07:01 -0500
+Received: by vcge1 with SMTP id e1so3722196vcg.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2012 01:07:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Message-ID: <20282.43026.335779.405152@gargle.gargle.HOWL> (sfid-20120214_193001_376240_C4EC2B6B)
-Date: Tue, 14 Feb 2012 23:59:38 +0530
-To: Ben Greear <greearb@candelatech.com>
-Cc: ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Subject: Re: [ath9k-devel] [PATCH 3/7] ath9k: Merge wiphy and misc debugfs files
-In-Reply-To: <4F3A9ACB.3010009@candelatech.com>
-References: <20280.43962.403799.188541@gargle.gargle.HOWL>
-	<4F3947A1.2060103@candelatech.com>
-	<20281.48485.409968.741657@gargle.gargle.HOWL>
-	<4F39BF5F.3030408@candelatech.com>
-	<20281.52354.478076.479135@gargle.gargle.HOWL>
-	<20120214073855.6843.qmail@stuge.se>
-	<20282.7088.898987.229335@gargle.gargle.HOWL>
-	<4F3A9ACB.3010009@candelatech.com>
+In-Reply-To: <20282.7600.287048.11418@gargle.gargle.HOWL>
+References: <20282.7600.287048.11418@gargle.gargle.HOWL>
+Date: Tue, 14 Feb 2012 14:37:01 +0530
+Message-ID: <CAD2nsn3sVaAea1iBRAgp7-j733BznjrB6sU_i5V1SZ0_kpC1fA@mail.gmail.com> (sfid-20120214_100712_779918_B988C028)
+Subject: Re: [PATCH 3/4] ath9k: Modify CCK spur mitigation for AR9462
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear wrote:
-> Actually, I think it might be useful to have a second level of debugging.
-> I hope to soon have time & resources to add some logic to dump lots of register
-> info and such in human-readable format, (like, when DMA times out).  That is going to be a lot
-> of strings added to the driver, so the compile size will definitely
-> increase.  If keeping the size small is important, then this sort of verbose thing
-> could be hidden behind a second level of debugging...
+Hi Sujith,
 
-That could be implemented similar to what usbmon does. A debugfs file that could
-be read and redirected to a file. And there would be no overhead to the
-driver, I think. We could call it the 'event log'. :)
+On Tue, Feb 14, 2012 at 2:09 PM, Sujith Manoharan
+<c_manoha@qca.qualcomm.com> wrote:
+> This improves sensitivity for CCK at specific channels.
+>
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/ar9003_phy.c |    9 ++++++++-
+>  1 files changed, 8 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> index 70e27d2..941b915 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+> @@ -171,6 +171,7 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
+>                                            struct ath9k_channel *chan)
+>  {
+>        static const u32 spur_freq[4] = { 2420, 2440, 2464, 2480 };
+> +       static const u32 spur_freq_AR9462[2] = { 2440, 2464 };
+>        int cur_bb_spur, negative = 0, cck_spur_freq;
+>        int i;
+>        int range, max_spur_cnts, synth_freq;
+> @@ -198,8 +199,12 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
+>                        range = 10;
+>                        synth_freq = chan->channel;
+>                }
+> +       } else if (AR_SREV_9462(ah)) {
+> +               range = 5;
+> +               max_spur_cnts = 2;
+> +               synth_freq = chan->channel;
+>        } else {
+> -               range = AR_SREV_9462(ah) ? 5 : 10;
+> +               range = 10;
+>                max_spur_cnts = 4;
+>                synth_freq = chan->channel;
+>        }
+> @@ -211,6 +216,8 @@ static void ar9003_hw_spur_mitigate_mrc_cck(struct ath_hw *ah,
+>                if (AR_SREV_9485(ah) || AR_SREV_9340(ah) || AR_SREV_9330(ah))
+>                        cur_bb_spur = FBIN2FREQ(spur_fbin_ptr[i],
+>                                        IS_CHAN_2GHZ(chan)) - synth_freq;
+> +               else if (AR_SREV_9462(ah))
+> +                       cur_bb_spur = spur_freq_AR9462[i] - synth_freq;
+>                else
+>                        cur_bb_spur = spur_freq[i] - synth_freq;
 
-Sujith
+i saw this some time back ,the check will not take care of this logic
+
+if (AR_SREV_9462(ah) && (i == 0 || i == 3))
+			continue;
+
+please let me know if i had missed something
+
+>
+> --
+> 1.7.9
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+shafi
