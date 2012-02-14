@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from i118-21-156-233.s30.a048.ap.plala.or.jp ([118.21.156.233]:46743
-	"EHLO rinabert.homeip.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753318Ab2BKL55 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:62031 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756682Ab2BNPDR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Feb 2012 06:57:57 -0500
-From: Masanari Iida <standby24x7@gmail.com>
-To: j@w1.fi, linux-wireless@vger.kernel.org
-Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
-	standby24x7@gmail.com
-Subject: [PATCH] [trivial] hostap: Fix typo in hostap_hw.c
-Date: Sat, 11 Feb 2012 20:56:59 +0900
-Message-Id: <1328961419-1682-1-git-send-email-standby24x7@gmail.com> (sfid-20120211_125817_116615_D02A59D6)
+	Tue, 14 Feb 2012 10:03:17 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 2/2] ath6kl: Remove bogus non-NULL pointer check
+Date: Tue, 14 Feb 2012 20:33:00 +0530
+Message-ID: <1329231780-18929-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120214_160319_410827_1953E40D)
+In-Reply-To: <1329231780-18929-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1329231780-18929-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct spelling "reseting" to "resetting" in
-drivers/net/wireless/hostap/hostap_hw.c
+In ath6kl_cfg80211_add_key(), params is checked for non-NULL
+but this pointer has been deferenced many times before this check. This
+gives the following smatch warning. add_key() can never carry NULL as
+params, remove this bogus check.
 
-Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+ath6kl_cfg80211_add_key(86) warn: variable dereferenced before check 'params'
+
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- drivers/net/wireless/hostap/hostap_hw.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/hostap/hostap_hw.c b/drivers/net/wireless/hostap/hostap_hw.c
-index aa15cc4..50f87b6 100644
---- a/drivers/net/wireless/hostap/hostap_hw.c
-+++ b/drivers/net/wireless/hostap/hostap_hw.c
-@@ -1466,7 +1466,7 @@ static int prism2_hw_enable(struct net_device *dev, int initial)
- 	 * before it starts acting as an AP, so reset port automatically
- 	 * here just in case */
- 	if (initial && prism2_reset_port(dev)) {
--		printk("%s: MAC port 0 reseting failed\n", dev->name);
-+		printk("%s: MAC port 0 resetting failed\n", dev->name);
- 		return 1;
- 	}
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index a91f521..313787e 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1059,7 +1059,7 @@ static int ath6kl_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
  
-@@ -1557,7 +1557,7 @@ static void prism2_hw_reset(struct net_device *dev)
- 	static long last_reset = 0;
- 
- 	/* do not reset card more than once per second to avoid ending up in a
--	 * busy loop reseting the card */
-+	 * busy loop resetting the card */
- 	if (time_before_eq(jiffies, last_reset + HZ))
- 		return;
- 	last_reset = jiffies;
+ 	if (vif->nw_type == AP_NETWORK && !pairwise &&
+ 	    (key_type == TKIP_CRYPT || key_type == AES_CRYPT ||
+-	     key_type == WAPI_CRYPT) && params) {
++	     key_type == WAPI_CRYPT)) {
+ 		ar->ap_mode_bkey.valid = true;
+ 		ar->ap_mode_bkey.key_index = key_index;
+ 		ar->ap_mode_bkey.key_type = key_type;
 -- 
-1.7.6.5
+1.7.0.4
 
