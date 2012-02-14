@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:52587 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756990Ab2BHC4A (ORCPT
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:47225 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755449Ab2BNEBW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 21:56:00 -0500
+	Mon, 13 Feb 2012 23:01:22 -0500
+Received: by obcva7 with SMTP id va7so7533994obc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Feb 2012 20:01:22 -0800 (PST)
+Date: Mon, 13 Feb 2012 22:01:20 -0600
+From: "Saul St. John" <saul.stjohn@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: [RFC] use alternate SPROM offset for 43224
+Message-ID: <20120214040120.GA2077@eris.garyseven.net> (sfid-20120214_050132_226395_889E4666)
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6Wv3PEJj5zKfK2o869ntxuU3V+Nv2dgKX1eDtk3zQ04dA@mail.gmail.com>
-References: <1328312594-31934-1-git-send-email-mcgrof@frijolero.org>
- <20120206160727.GA21048@tuxdriver.com> <20120207041958.GA32377@bombadil.infradead.org>
- <CAB=NE6VS79S4R6wQddQCqPfoYPyRbPzSdAYN2Mxfi-4G_sfCvg@mail.gmail.com> <CAB=NE6Wv3PEJj5zKfK2o869ntxuU3V+Nv2dgKX1eDtk3zQ04dA@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 7 Feb 2012 18:55:40 -0800
-Message-ID: <CAB=NE6URWAgUgF+6bOsRBeeXnQ4VjYf1tWuUkkvMviCLOCxeqA@mail.gmail.com> (sfid-20120208_035636_997056_4B48D61E)
-Subject: Re: [PATCH] compat: add compat kernel checker and downloader
-To: "Luis R. Rodriguez" <mcgrof@bombadil.infradead.org>,
-	Andy Whitcroft <apw@canonical.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>, hauke@hauke-m.de,
-	kernel-team@lists.ubuntu.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 7, 2012 at 5:19 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
-> On Mon, Feb 6, 2012 at 8:56 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
->> Come to think of it.. we could bastardize Ubuntu's PPA packages for
->> mainline kernels, translate the deb packages into tar files and some
->> sort of grub-update or whatever scrip to run in the end? That still
->> seems like a lot of work.
->>
->> The current option allows us to use either distro kernels or whatever
->> you have installed.. not sure how else to improve this. Didn't we have
->> some sort of distro agnostic package crap? Maybe?
->
-> Or -- Andy -- any chance we can get some of the deb contents unpacked
-> into a distro-agostic tarball of some sort that we can use ? I ask
-> given that you guys already host the sources and all that.
+I don't know if this is correct in the general sense, but the wireless on my
+mid-2010 MacBook Pro doesn't work without it.
 
-Just to not waste anyone's time it seems pkgadd from IRC has a
-distro-agnostic dpkg -x type of solution in the works, that could use
-these same debs.
+Signed-off-by: Saul St. John <saul.stjohn@gmail.com>
+---
+ drivers/bcma/sprom.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-http://paste.debian.net/155521/
+diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
+index 6f230fb..06c87b5 100644
+--- a/drivers/bcma/sprom.c
++++ b/drivers/bcma/sprom.c
+@@ -228,8 +228,8 @@ int bcma_sprom_get(struct bcma_bus *bus)
+ 	/* Most cards have SPROM moved by additional offset 0x30 (48 dwords).
+ 	 * According to brcm80211 this applies to cards with PCIe rev >= 6
+ 	 * TODO: understand this condition and use it */
+-	offset = (bus->chipinfo.id == 0x4331) ? BCMA_CC_SPROM :
+-		BCMA_CC_SPROM_PCIE6;
++	offset = (bus->chipinfo.id == 0x4331 || bus->chipinfo.id == 43224) ? 
++ 			BCMA_CC_SPROM : BCMA_CC_SPROM_PCIE6;
+ 	bcma_sprom_read(bus, offset, sprom);
+ 
+ 	if (bus->chipinfo.id == 0x4331)
+-- 
+1.7.9
 
-  Luis
