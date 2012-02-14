@@ -1,73 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29445 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753505Ab2BCMID (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 07:08:03 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 06/25] iwlegacy: get rid of wep_key_cmd
-Date: Fri,  3 Feb 2012 13:07:06 +0100
-Message-Id: <1328270845-16891-7-git-send-email-sgruszka@redhat.com> (sfid-20120203_130808_072350_CDF1F551)
-In-Reply-To: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
-References: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
+Received: from perches-mx.perches.com ([206.117.179.246]:54315 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751191Ab2BNBtC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Feb 2012 20:49:02 -0500
+Message-ID: <1329184138.4939.18.camel@joe2Laptop> (sfid-20120214_024912_292230_25AC0368)
+Subject: Re: RTLWIFI_DEBUG bug
+From: Joe Perches <joe@perches.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 13 Feb 2012 17:48:58 -0800
+In-Reply-To: <1329167246.3458.0.camel@jlt3.sipsolutions.net>
+References: <1329142387.3365.6.camel@jlt3.sipsolutions.net>
+	 <1329165326.4939.16.camel@joe2Laptop>
+	 <1329167246.3458.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/3945-mac.c |    1 -
- drivers/net/wireless/iwlegacy/4965-mac.c |    3 +--
- drivers/net/wireless/iwlegacy/common.h   |    2 --
- 3 files changed, 1 insertions(+), 5 deletions(-)
+On Mon, 2012-02-13 at 22:07 +0100, Johannes Berg wrote:
+> On Mon, 2012-02-13 at 12:35 -0800, Joe Perches wrote:
+> > On Mon, 2012-02-13 at 15:13 +0100, Johannes Berg wrote:
+> > > config RTLWIFI_DEBUG
+> > >         tristate "Additional debugging output"
+> > >         depends on RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE
+> > >         default y
+> > > 
+> > > should be
+> > > 
+> > > config RTLWIFI_DEBUG
+> > >         bool "..."
+> > > 
+> > > as otherwise
+> > > 
+> > > +#ifdef CONFIG_RTLWIFI_DEBUG
+> > > can never be true in a modular build.
+> > 
+> > If you know the correct solution,
+> > perhaps you should submit a patch.
+> 
+> If I knew your attitude was going to be a problem, I'd never said
+> anything. I have better things to do.
 
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index bbbac26..4a01acb 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -3620,7 +3620,6 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	il->ctx.ctxid = 0;
- 
- 	il->ctx.ap_sta_id = IL_AP_ID;
--	il->ctx.wep_key_cmd = C_WEPKEY;
- 	il->ctx.interface_modes =
- 	    BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
- 	il->ctx.ibss_devtype = RXON_DEV_TYPE_IBSS;
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 2ee5de3..a2955a4 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -2823,7 +2823,7 @@ il4965_static_wepkey_cmd(struct il_priv *il, struct il_rxon_context *ctx,
- 	struct il_wep_cmd *wep_cmd = (struct il_wep_cmd *)buff;
- 	size_t cmd_size = sizeof(struct il_wep_cmd);
- 	struct il_host_cmd cmd = {
--		.id = ctx->wep_key_cmd,
-+		.id = C_WEPKEY,
- 		.data = wep_cmd,
- 		.flags = CMD_SYNC,
- 	};
-@@ -6136,7 +6136,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	il->ctx.always_active = true;
- 	il->ctx.is_active = true;
- 	il->ctx.ap_sta_id = IL_AP_ID;
--	il->ctx.wep_key_cmd = C_WEPKEY;
- 	il->ctx.ac_to_fifo = il4965_bss_ac_to_fifo;
- 	il->ctx.ac_to_queue = il4965_bss_ac_to_queue;
- 	il->ctx.exclusive_interface_modes = BIT(NL80211_IFTYPE_ADHOC);
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index b08ddd1..46835f9 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1175,8 +1175,6 @@ struct il_rxon_context {
- 
- 	u8 bcast_sta_id, ap_sta_id;
- 
--	u8 wep_key_cmd;
--
- 	struct il_wep_key wep_keys[WEP_KEYS_MAX];
- 	u8 key_mapping_keys;
- 
--- 
-1.7.1
+If you know a problem exists and the
+proper solution, it's not necessary to
+do anything other than create the
+appropriate patch and cc the appropriate
+people.  Doing something else just creates
+more work for more people.
+
+
 
