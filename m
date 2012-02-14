@@ -1,47 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:30285 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755752Ab2B0XTK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 18:19:10 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 24/24] iwlwifi: fix IDI compilation
-Date: Mon, 27 Feb 2012 14:07:48 -0800
-Message-Id: <1330380468-17674-25-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120228_001919_648953_A569F998)
-In-Reply-To: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7727 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756503Ab2BNH1r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Feb 2012 02:27:47 -0500
+Message-ID: <4F3A0CE5.2090206@qca.qualcomm.com> (sfid-20120214_082802_504698_9595DE1E)
+Date: Tue, 14 Feb 2012 12:57:33 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Raja Mani <rmani@qca.qualcomm.com>
+CC: <kvalo@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	<ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 2/2] ath6kl: Fix memory leak of rx packets in endpoint
+ 0
+References: <1328886633-2823-1-git-send-email-vthiagar@qca.qualcomm.com> <1328886633-2823-2-git-send-email-vthiagar@qca.qualcomm.com> <4F3A0C07.5030508@qca.qualcomm.com>
+In-Reply-To: <4F3A0C07.5030508@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Tuesday 14 February 2012 12:53 PM, Raja Mani wrote:
+>
+> Vasanth,
+>
+> My system is freezing with this patch when i tried to unload
+> ath6kl_sdio.ko. Could you double check this change once again?
 
-This is a fixup for my:
-iwlwifi: kill iwl_bus.h
+Thanks for reporting this. Kalle, please drop this, i'll send the
+revised patch.
 
-Please fold them into one patch for upstream
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-pci.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
-index 0ce7047..06e0041 100644
---- a/drivers/net/wireless/iwlwifi/iwl-pci.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
-@@ -278,7 +278,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- #ifdef CONFIG_IWLWIFI_IDI
- 	iwl_trans = iwl_trans_idi_alloc(shrd, pdev, ent);
--	if (trans == NULL) {
-+	if (iwl_trans == NULL) {
- 		err = -ENOMEM;
- 		goto out_free_bus;
- 	}
 -- 
-1.7.0.4
+Vasanth
 
