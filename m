@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29192 "EHLO mx1.redhat.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:3315 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756544Ab2BMKYS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 05:24:18 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 15/24] iwleagcy: remove old comments
-Date: Mon, 13 Feb 2012 11:23:22 +0100
-Message-Id: <1329128611-6815-16-git-send-email-sgruszka@redhat.com> (sfid-20120213_112430_650418_BD014131)
-In-Reply-To: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
-References: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
+	id S1756592Ab2BNKHa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Feb 2012 05:07:30 -0500
+From: "Arend Van Spriel" <arend@broadcom.com>
+To: "Saul St. John" <saul.stjohn@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+cc: =?iso-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>
+Date: Tue, 14 Feb 2012 02:07:13 -0800
+Subject: RE: [RFC] use alternate SPROM offset for 43224
+Message-ID: <400C43189542CE41BC0A5B252FC90136BC8414CAF4@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20120214_110737_267868_792DF8CE)
+References: <20120214040120.GA2077@eris.garyseven.net>
+In-Reply-To: <20120214040120.GA2077@eris.garyseven.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/common.h |   16 ----------------
- 1 files changed, 0 insertions(+), 16 deletions(-)
+> owner@vger.kernel.org] On Behalf Of Saul St. John
+> Sent: dinsdag 14 februari 2012 5:01
+> 
+> I don't know if this is correct in the general sense, but the wireless
+> on my
+> mid-2010 MacBook Pro doesn't work without it.
+> 
+> Signed-off-by: Saul St. John <saul.stjohn@gmail.com>
 
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index b2a6e52..a779445 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1626,22 +1626,6 @@ struct il_mod_params {
- 	int restart_fw;		/* def: 1 = restart firmware */
- };
- 
--/*
-- * @led_compensation: compensate on the led on/off time per HW according
-- *	to the deviation to achieve the desired led frequency.
-- *	The detail algorithm is described in common.c
-- * @chain_noise_num_beacons: number of beacons used to compute chain noise
-- * @wd_timeout: TX queues watchdog timeout
-- * @temperature_kelvin: temperature report by uCode in kelvin
-- * @ucode_tracing: support ucode continuous tracing
-- * @sensitivity_calib_by_driver: driver has the capability to perform
-- *	sensitivity calibration operation
-- * @chain_noise_calib_by_driver: driver has the capability to perform
-- *	chain noise calibration operation
-- */
--struct il_base_params {
--};
--
- #define IL_LED_SOLID 11
- #define IL_DEF_LED_INTRVL cpu_to_le32(1000)
- 
--- 
-1.7.1
+Does this patch solve the same issue as [1] with title:
+
+[PATCH] bcma: don't fail for bad SPROM CRC
+
+Gr. AvS
+
+[1] http://www.spinics.net/lists/netdev/msg187943.html
 
