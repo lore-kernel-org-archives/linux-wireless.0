@@ -1,281 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57549 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753842Ab2BMKZJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 05:25:09 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 21/24] iwlegacy: small queue initializations cleanup
-Date: Mon, 13 Feb 2012 11:23:28 +0100
-Message-Id: <1329128611-6815-22-git-send-email-sgruszka@redhat.com> (sfid-20120213_112513_622528_7C06A9AC)
-In-Reply-To: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
-References: <1329128611-6815-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:35428 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754400Ab2BNSwD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Feb 2012 13:52:03 -0500
+Received: by yenm8 with SMTP id m8so222442yen.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2012 10:52:02 -0800 (PST)
+Date: Tue, 14 Feb 2012 12:52:02 -0600
+From: "Saul St. John" <saul.stjohn@gmail.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [RFC] use alternate SPROM offset for 43224
+Message-ID: <20120214185202.GA5339@eris.garyseven.net> (sfid-20120214_195210_852242_A0A37F8F)
+References: <20120214040120.GA2077@eris.garyseven.net>
+ <CACna6rwXEjsJEPK4EZ9pbh2sGJgvt05JRfo2HkeDKpT26YORwg@mail.gmail.com>
+ <CAG=dh1pTDSkkhgXGOv=n8uferq61-Db0EFGexO=ZZ+oN6w8_hQ@mail.gmail.com>
+ <CACna6rw=ZJe28ahRQFU-_9+BD8+L5SNV_xdwxLxUdNk-b3HHxg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CACna6rw=ZJe28ahRQFU-_9+BD8+L5SNV_xdwxLxUdNk-b3HHxg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/3945.c     |    9 +---
- drivers/net/wireless/iwlegacy/4965-mac.c |   18 ++------
- drivers/net/wireless/iwlegacy/common.c   |   66 ++++++++++++++++-------------
- drivers/net/wireless/iwlegacy/common.h   |   20 ++++-----
- 4 files changed, 52 insertions(+), 61 deletions(-)
+On Tue, Feb 14, 2012 at 06:29:59PM +0100, Rafał Miłecki wrote:
+> W dniu 14 lutego 2012 17:22 użytkownik Saul St. John
+> <saul.stjohn@gmail.com> napisał:
+> > On Tue, Feb 14, 2012 at 7:34 AM, Rafał Miłecki <zajec5@gmail.com> wrote:
+> >> W dniu 14 lutego 2012 05:01 użytkownik Saul St. John
+> >> <saul.stjohn@gmail.com> napisał:
+> >>> I don't know if this is correct in the general sense, but the wireless on my
+> >>> mid-2010 MacBook Pro doesn't work without it.
+> >>>
+> >>> Signed-off-by: Saul St. John <saul.stjohn@gmail.com>
+> >>> ---
+> >>>  drivers/bcma/sprom.c |    4 ++--
+> >>>  1 files changed, 2 insertions(+), 2 deletions(-)
+> >>>
+> >>> diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
+> >>> index 6f230fb..06c87b5 100644
+> >>> --- a/drivers/bcma/sprom.c
+> >>> +++ b/drivers/bcma/sprom.c
+> >>> @@ -228,8 +228,8 @@ int bcma_sprom_get(struct bcma_bus *bus)
+> >>>        /* Most cards have SPROM moved by additional offset 0x30 (48 dwords).
+> >>>         * According to brcm80211 this applies to cards with PCIe rev >= 6
+> >>>         * TODO: understand this condition and use it */
+> >>> -       offset = (bus->chipinfo.id == 0x4331) ? BCMA_CC_SPROM :
+> >>> -               BCMA_CC_SPROM_PCIE6;
+> >>> +       offset = (bus->chipinfo.id == 0x4331 || bus->chipinfo.id == 43224) ?
+> >>> +                       BCMA_CC_SPROM : BCMA_CC_SPROM_PCIE6;
+> >>>        bcma_sprom_read(bus, offset, sprom);
+> >>>
+> >>>        if (bus->chipinfo.id == 0x4331)
+> >>
+> >> I'm quite sure it'll break my BCM43224. It's not chip-specific,
+> >> probably some status bit specific.
+> >>
+> >> --
+> >> Rafał
+> >
+> > My BCM43324 was broken by bmca up until "[PATCH] bcma: don't fail for
+> > bad SPROM CRC." Even with that patch, I still get "bmca: Failed to get
+> > SPROM: -71" in the dmesg log. Is that error harmless?
+> 
+> It's harmless for brcmsmac, which doesn't use SPROM struct of bcma bus
+> driver. This bug should be fixed and brcmsmac should be improved in
+> many contexts: using SPROM, standard bcma module functions, dropping
+> other cores initializing. For now you can live with this.
+> 
+My worry is that, were the brcmsmac driver to be improved in the ways you
+suggest, the BCM43224 in my MBP would start failing again.
+> 
+> > The CRC check appears to pass without issue when using the 0x800
+> > offset on my device.
+> 
+> The quick fix would be probably to implement in bcma two tries of
+> reading SPROM. One for 0x800 second for 0x830 (base address). The real
+> fix is to grab the real condition from specs/brcmsmac and implement it
+> in bcma.
+> 
+Real fix: any leads on where the real condition can be found? I looked through
+the brcmsmac driver, but it wasn't obvious to me.
 
-diff --git a/drivers/net/wireless/iwlegacy/3945.c b/drivers/net/wireless/iwlegacy/3945.c
-index 103251d..8900e3c 100644
---- a/drivers/net/wireless/iwlegacy/3945.c
-+++ b/drivers/net/wireless/iwlegacy/3945.c
-@@ -790,7 +790,6 @@ il3945_rx_init(struct il_priv *il, struct il_rx_queue *rxq)
- static int
- il3945_tx_reset(struct il_priv *il)
+Quick fix: something like this?
+
+Signed-off-by: Saul St. John <saul.stjohn@gmail.com>
+---
+ drivers/bcma/sprom.c |   24 ++++++++++++++----------
+ 1 files changed, 14 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
+index 6f230fb..e99807e 100644
+--- a/drivers/bcma/sprom.c
++++ b/drivers/bcma/sprom.c
+@@ -207,7 +207,7 @@ static void bcma_sprom_extract_r8(struct bcma_bus *bus, const u16 *sprom)
+ 
+ int bcma_sprom_get(struct bcma_bus *bus)
  {
+-	u16 offset;
++	u16 offset = 0;
+ 	u16 *sprom;
+ 	int err = 0;
+ 
+@@ -222,20 +222,24 @@ int bcma_sprom_get(struct bcma_bus *bus)
+ 	if (!sprom)
+ 		return -ENOMEM;
+ 
+-	if (bus->chipinfo.id == 0x4331)
+-		bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, false);
 -
- 	/* bypass mode */
- 	il_wr_prph(il, ALM_SCD_MODE_REG, 0x2);
+ 	/* Most cards have SPROM moved by additional offset 0x30 (48 dwords).
+ 	 * According to brcm80211 this applies to cards with PCIe rev >= 6
+ 	 * TODO: understand this condition and use it */
+-	offset = (bus->chipinfo.id == 0x4331) ? BCMA_CC_SPROM :
+-		BCMA_CC_SPROM_PCIE6;
+-	bcma_sprom_read(bus, offset, sprom);
++	do {
++		if (bus->chipinfo.id == 0x4331)
++			bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, 
++							     false);
++
++		offset = (offset == 0) ? BCMA_CC_SPROM : BCMA_CC_SPROM_PCIE6;
++		bcma_sprom_read(bus, offset, sprom);
++
++		if (bus->chipinfo.id == 0x4331)
++			bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, 
++							     true);
  
-@@ -827,8 +826,7 @@ il3945_tx_reset(struct il_priv *il)
- static int
- il3945_txq_ctx_reset(struct il_priv *il)
- {
--	int rc;
--	int txq_id, slots_num;
-+	int rc, txq_id;
+-	if (bus->chipinfo.id == 0x4331)
+-		bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, true);
++		err = bcma_sprom_valid(sprom);
++	} while (err && (offset != BCMA_CC_SPROM_PCIE6));
  
- 	il3945_hw_txq_ctx_free(il);
+-	err = bcma_sprom_valid(sprom);
+ 	if (err)
+ 		goto out;
  
-@@ -844,10 +842,7 @@ il3945_txq_ctx_reset(struct il_priv *il)
- 
- 	/* Tx queue(s) */
- 	for (txq_id = 0; txq_id < il->hw_params.max_txq_num; txq_id++) {
--		slots_num =
--		    (txq_id ==
--		     IL39_CMD_QUEUE_NUM) ? TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
--		rc = il_tx_queue_init(il, &il->txq[txq_id], slots_num, txq_id);
-+		rc = il_tx_queue_init(il, txq_id);
- 		if (rc) {
- 			IL_ERR("Tx %d queue init failed\n", txq_id);
- 			goto error;
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index cf14861..a0158e3 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -1952,8 +1952,7 @@ il4965_hw_txq_ctx_free(struct il_priv *il)
- int
- il4965_txq_ctx_alloc(struct il_priv *il)
- {
--	int ret;
--	int txq_id, slots_num;
-+	int ret, txq_id;
- 	unsigned long flags;
- 
- 	/* Free all tx/cmd queues and keep-warm buffer */
-@@ -1990,10 +1989,7 @@ il4965_txq_ctx_alloc(struct il_priv *il)
- 
- 	/* Alloc and init all Tx queues, including the command queue (#4/#9) */
- 	for (txq_id = 0; txq_id < il->hw_params.max_txq_num; txq_id++) {
--		slots_num =
--		    (txq_id ==
--		     il->cmd_queue) ? TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
--		ret = il_tx_queue_init(il, &il->txq[txq_id], slots_num, txq_id);
-+		ret = il_tx_queue_init(il, txq_id);
- 		if (ret) {
- 			IL_ERR("Tx %d queue init failed\n", txq_id);
- 			goto error;
-@@ -2014,25 +2010,21 @@ error_bc_tbls:
- void
- il4965_txq_ctx_reset(struct il_priv *il)
- {
--	int txq_id, slots_num;
-+	int txq_id;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&il->lock, flags);
- 
- 	/* Turn off all Tx DMA fifos */
- 	il4965_txq_set_sched(il, 0);
--
- 	/* Tell NIC where to find the "keep warm" buffer */
- 	il_wr(il, FH49_KW_MEM_ADDR_REG, il->kw.dma >> 4);
- 
- 	spin_unlock_irqrestore(&il->lock, flags);
- 
- 	/* Alloc and init all Tx queues, including the command queue (#4) */
--	for (txq_id = 0; txq_id < il->hw_params.max_txq_num; txq_id++) {
--		slots_num =
--		    txq_id == il->cmd_queue ? TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
--		il_tx_queue_reset(il, &il->txq[txq_id], slots_num, txq_id);
--	}
-+	for (txq_id = 0; txq_id < il->hw_params.max_txq_num; txq_id++)
-+		il_tx_queue_reset(il, txq_id);
- }
- 
- void
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index d0d408e..872302a 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -2887,20 +2887,22 @@ EXPORT_SYMBOL(il_queue_space);
-  * il_queue_init - Initialize queue's high/low-water and read/write idxes
-  */
- static int
--il_queue_init(struct il_priv *il, struct il_queue *q, int count, int slots_num,
--	      u32 id)
-+il_queue_init(struct il_priv *il, struct il_queue *q, int slots, u32 id)
- {
--	q->n_bd = count;
--	q->n_win = slots_num;
--	q->id = id;
-+	/*
-+	 * TFD_QUEUE_SIZE_MAX must be power-of-two size, otherwise
-+	 * il_queue_inc_wrap and il_queue_dec_wrap are broken.
-+	 */
-+	BUILD_BUG_ON(TFD_QUEUE_SIZE_MAX & (TFD_QUEUE_SIZE_MAX - 1));
-+	/* FIXME: remove q->n_bd */
-+	q->n_bd = TFD_QUEUE_SIZE_MAX;
- 
--	/* count must be power-of-two size, otherwise il_queue_inc_wrap
--	 * and il_queue_dec_wrap are broken. */
--	BUG_ON(!is_power_of_2(count));
-+	q->n_win = slots;
-+	q->id = id;
- 
--	/* slots_num must be power-of-two size, otherwise
-+	/* slots_must be power-of-two size, otherwise
- 	 * il_get_cmd_idx is broken. */
--	BUG_ON(!is_power_of_2(slots_num));
-+	BUG_ON(!is_power_of_2(slots));
- 
- 	q->low_mark = q->n_win / 4;
- 	if (q->low_mark < 4)
-@@ -2959,12 +2961,11 @@ error:
-  * il_tx_queue_init - Allocate and initialize one tx/cmd queue
-  */
- int
--il_tx_queue_init(struct il_priv *il, struct il_tx_queue *txq, int slots_num,
--		 u32 txq_id)
-+il_tx_queue_init(struct il_priv *il, u32 txq_id)
- {
--	int i, len;
--	int ret;
--	int actual_slots = slots_num;
-+	int i, len, ret;
-+	int slots, actual_slots;
-+	struct il_tx_queue *txq = &il->txq[txq_id];
- 
- 	/*
- 	 * Alloc buffer array for commands (Tx or other types of commands).
-@@ -2974,8 +2975,13 @@ il_tx_queue_init(struct il_priv *il, struct il_tx_queue *txq, int slots_num,
- 	 * For normal Tx queues (all other queues), no super-size command
- 	 * space is needed.
- 	 */
--	if (txq_id == il->cmd_queue)
--		actual_slots++;
-+	if (txq_id == il->cmd_queue) {
-+		slots = TFD_CMD_SLOTS;
-+		actual_slots = slots + 1;
-+	} else {
-+		slots = TFD_TX_CMD_SLOTS;
-+		actual_slots = slots;
-+	}
- 
- 	txq->meta =
- 	    kzalloc(sizeof(struct il_cmd_meta) * actual_slots, GFP_KERNEL);
-@@ -2988,7 +2994,7 @@ il_tx_queue_init(struct il_priv *il, struct il_tx_queue *txq, int slots_num,
- 	len = sizeof(struct il_device_cmd);
- 	for (i = 0; i < actual_slots; i++) {
- 		/* only happens for cmd queue */
--		if (i == slots_num)
-+		if (i == slots)
- 			len = IL_MAX_CMD_SIZE;
- 
- 		txq->cmd[i] = kmalloc(len, GFP_KERNEL);
-@@ -3011,12 +3017,8 @@ il_tx_queue_init(struct il_priv *il, struct il_tx_queue *txq, int slots_num,
- 	if (txq_id < 4)
- 		il_set_swq_id(txq, txq_id, txq_id);
- 
--	/* TFD_QUEUE_SIZE_MAX must be power-of-two size, otherwise
--	 * il_queue_inc_wrap and il_queue_dec_wrap are broken. */
--	BUILD_BUG_ON(TFD_QUEUE_SIZE_MAX & (TFD_QUEUE_SIZE_MAX - 1));
--
- 	/* Initialize queue's high/low-water marks, and head/tail idxes */
--	il_queue_init(il, &txq->q, TFD_QUEUE_SIZE_MAX, slots_num, txq_id);
-+	il_queue_init(il, &txq->q, slots, txq_id);
- 
- 	/* Tell device where to find queue */
- 	il->ops->txq_init(il, txq);
-@@ -3034,20 +3036,24 @@ out_free_arrays:
- EXPORT_SYMBOL(il_tx_queue_init);
- 
- void
--il_tx_queue_reset(struct il_priv *il, struct il_tx_queue *txq, int slots_num,
--		  u32 txq_id)
-+il_tx_queue_reset(struct il_priv *il, u32 txq_id)
- {
--	int actual_slots = slots_num;
-+	int slots, actual_slots;
-+	struct il_tx_queue *txq = &il->txq[txq_id];
- 
--	if (txq_id == il->cmd_queue)
--		actual_slots++;
-+	if (txq_id == il->cmd_queue) {
-+		slots = TFD_CMD_SLOTS;
-+		actual_slots = TFD_CMD_SLOTS + 1;
-+	} else {
-+		slots = TFD_TX_CMD_SLOTS;
-+		actual_slots = TFD_TX_CMD_SLOTS;
-+	}
- 
- 	memset(txq->meta, 0, sizeof(struct il_cmd_meta) * actual_slots);
--
- 	txq->need_update = 0;
- 
- 	/* Initialize queue's high/low-water marks, and head/tail idxes */
--	il_queue_init(il, &txq->q, TFD_QUEUE_SIZE_MAX, slots_num, txq_id);
-+	il_queue_init(il, &txq->q, slots, txq_id);
- 
- 	/* Tell device where to find queue */
- 	il->ops->txq_init(il, txq);
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index 13bfd43..e2f55dc 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1783,14 +1783,12 @@ void il_chswitch_done(struct il_priv *il, bool is_success);
- /*****************************************************
- * TX
- ******************************************************/
--void il_txq_update_write_ptr(struct il_priv *il, struct il_tx_queue *txq);
--int il_tx_queue_init(struct il_priv *il, struct il_tx_queue *txq, int slots_num,
--		     u32 txq_id);
--void il_tx_queue_reset(struct il_priv *il, struct il_tx_queue *txq,
--		       int slots_num, u32 txq_id);
--void il_tx_queue_unmap(struct il_priv *il, int txq_id);
--void il_tx_queue_free(struct il_priv *il, int txq_id);
--void il_setup_watchdog(struct il_priv *il);
-+extern void il_txq_update_write_ptr(struct il_priv *il, struct il_tx_queue *txq);
-+extern int il_tx_queue_init(struct il_priv *il, u32 txq_id);
-+extern void il_tx_queue_reset(struct il_priv *il, u32 txq_id);
-+extern void il_tx_queue_unmap(struct il_priv *il, int txq_id);
-+extern void il_tx_queue_free(struct il_priv *il, int txq_id);
-+extern void il_setup_watchdog(struct il_priv *il);
- /*****************************************************
-  * TX power
-  ****************************************************/
-@@ -2405,10 +2403,10 @@ struct il_rb_status {
- 	__le32 __unused;	/* 3945 only */
- } __packed;
- 
--#define TFD_QUEUE_SIZE_MAX      (256)
--#define TFD_QUEUE_SIZE_BC_DUP	(64)
-+#define TFD_QUEUE_SIZE_MAX      256
-+#define TFD_QUEUE_SIZE_BC_DUP	64
- #define TFD_QUEUE_BC_SIZE	(TFD_QUEUE_SIZE_MAX + TFD_QUEUE_SIZE_BC_DUP)
--#define IL_TX_DMA_MASK        DMA_BIT_MASK(36)
-+#define IL_TX_DMA_MASK		DMA_BIT_MASK(36)
- #define IL_NUM_OF_TBS		20
- 
- static inline u8
 -- 
-1.7.1
+1.7.9
 
