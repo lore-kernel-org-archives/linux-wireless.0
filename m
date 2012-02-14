@@ -1,60 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36042 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754811Ab2B0S6v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 13:58:51 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:47540 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754400Ab2BNUGW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Feb 2012 15:06:22 -0500
+Received: by wics10 with SMTP id s10so80153wic.19
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2012 12:06:21 -0800 (PST)
+MIME-Version: 1.0
+Date: Tue, 14 Feb 2012 12:06:21 -0800
+Message-ID: <CACct8en2C+fuL81mLwdNUXvvAzyKjj5yjmcWGg_tWHAzQkeF8w@mail.gmail.com> (sfid-20120214_210626_087091_67DBC799)
+Subject: ath5k : Where does the actual CSMA take place?
+From: Yiannis Yiakoumis <gyiakoumis@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	rmanohar@qca.qualcomm.com
-Subject: [PATCH 3.3 4/4] ath9k: fix drv_tx_last_beacon on AR9003 by processing beacon tx status
-Date: Mon, 27 Feb 2012 19:58:42 +0100
-Message-Id: <1330369122-60220-4-git-send-email-nbd@openwrt.org> (sfid-20120227_195855_490804_4263B696)
-In-Reply-To: <1330369122-60220-3-git-send-email-nbd@openwrt.org>
-References: <1330369122-60220-1-git-send-email-nbd@openwrt.org>
- <1330369122-60220-2-git-send-email-nbd@openwrt.org>
- <1330369122-60220-3-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/beacon.c |    2 +-
- drivers/net/wireless/ath/ath9k/xmit.c   |    7 +++++--
- 2 files changed, 6 insertions(+), 3 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
-index 6d1e465..43882f9 100644
---- a/drivers/net/wireless/ath/ath9k/beacon.c
-+++ b/drivers/net/wireless/ath/ath9k/beacon.c
-@@ -91,7 +91,7 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
- 	info.txpower = MAX_RATE_POWER;
- 	info.keyix = ATH9K_TXKEYIX_INVALID;
- 	info.keytype = ATH9K_KEY_TYPE_CLEAR;
--	info.flags = ATH9K_TXDESC_NOACK;
-+	info.flags = ATH9K_TXDESC_NOACK | ATH9K_TXDESC_INTREQ;
- 
- 	info.buf_addr[0] = bf->bf_buf_addr;
- 	info.buf_len[0] = roundup(skb->len, 4);
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 3182408..cf5a267 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2297,9 +2297,12 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
- 			break;
- 		}
- 
--		/* Skip beacon completions */
--		if (ts.qid == sc->beacon.beaconq)
-+		/* Process beacon completions separately */
-+		if (ts.qid == sc->beacon.beaconq) {
-+			sc->beacon.tx_processed = true;
-+			sc->beacon.tx_last = !(ts.ts_status & ATH9K_TXERR_MASK);
- 			continue;
-+		}
- 
- 		txq = &sc->tx.txq[ts.qid];
- 
+I am reading the code and trying to understand what forces the packet
+out of the card, or to be more clear, what runs CSMA/CA and when
+detects a tx opportunity pushes the packet down to the phy. I can
+track the packet all the way until it gets to start_tx_dma(), but I am
+not clear what is the actual call that sends it out, and how this
+relates with QCU (I am on a 5212). I suspect that it's within the
+tasklet_schedule but wasn't able to find the details.
+Also, does QCU get involved on a packet-per-packet basis, or does it
+just set the initial values to the device's registers?
+
+Any help is much appreciated..
+
+Thanks,
 -- 
-1.7.3.2
-
+Yiannis .
