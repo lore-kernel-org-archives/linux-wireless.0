@@ -1,62 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:53768 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755234Ab2BOVqq (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:26778 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755380Ab2BNN5K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 16:46:46 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: [PATCH] compat-wireless: remove olpc_ec_wakeup_* calls for pre-3.1 kernels
-Date: Wed, 15 Feb 2012 16:37:52 -0500
-Message-Id: <1329341872-12872-1-git-send-email-linville@tuxdriver.com> (sfid-20120215_224650_877862_383EA8EF)
+	Tue, 14 Feb 2012 08:57:10 -0500
+Message-ID: <4F3A6828.7060001@qca.qualcomm.com> (sfid-20120214_145714_357145_43CF0E06)
+Date: Tue, 14 Feb 2012 19:26:56 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Raja Mani <rmani@qca.qualcomm.com>
+CC: <kvalo@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	<ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 2/2] ath6kl: Fix memory leak of rx packets in endpoint
+ 0
+References: <1328886633-2823-1-git-send-email-vthiagar@qca.qualcomm.com> <1328886633-2823-2-git-send-email-vthiagar@qca.qualcomm.com> <4F3A0C07.5030508@qca.qualcomm.com> <4F3A0CE5.2090206@qca.qualcomm.com>
+In-Reply-To: <4F3A0CE5.2090206@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This section of the libertas driver calls functions that simply don't
-exist before the release of 3.1.  This code in question was an addition,
-not a change from any existing code.  It is safe to simply remove it for
-older kernels.
+On Tuesday 14 February 2012 12:57 PM, Vasanthakumar Thiagarajan wrote:
+> On Tuesday 14 February 2012 12:53 PM, Raja Mani wrote:
+>>
+>> Vasanth,
+>>
+>> My system is freezing with this patch when i tried to unload
+>> ath6kl_sdio.ko. Could you double check this change once again?
+>
+> Thanks for reporting this. Kalle, please drop this, i'll send the
+> revised patch.
+>
+Actually the first patch also needs to be applied to avoid invalid memory
+free.
 
-Signed-off-by: John W. Linville <linville@tuxdriver.com>
----
- patches/50-libertas-olpc-ec-wakeup.patch |   25 +++++++++++++++++++++++++
- 1 files changed, 25 insertions(+), 0 deletions(-)
- create mode 100644 patches/50-libertas-olpc-ec-wakeup.patch
+Kalle, when used with PATCH[1/2] this patch does not cause any
+system freeze. This patch can be taken if there is no any review commands.
 
-diff --git a/patches/50-libertas-olpc-ec-wakeup.patch b/patches/50-libertas-olpc-ec-wakeup.patch
-new file mode 100644
-index 0000000..13413af
---- /dev/null
-+++ b/patches/50-libertas-olpc-ec-wakeup.patch
-@@ -0,0 +1,25 @@
-+This section of the libertas driver calls functions that simply don't
-+exist before the release of 3.1.  This code in question was an addition,
-+not a change from any existing code.  It is safe to simply remove it for
-+older kernels.
-+
-+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
-+index b5fbbc7..513ae29 100644
-+--- a/drivers/net/wireless/libertas/if_usb.c
-++++ b/drivers/net/wireless/libertas/if_usb.c
-+@@ -1133,6 +1133,7 @@ static int if_usb_suspend(struct usb_interface *intf, pm_message_t message)
-+ 	if (priv->psstate != PS_STATE_FULL_POWER)
-+ 		return -1;
-+ 
-++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0))
-+ #ifdef CONFIG_OLPC
-+ 	if (machine_is_olpc()) {
-+ 		if (priv->wol_criteria == EHS_REMOVE_WAKEUP)
-+@@ -1141,6 +1142,7 @@ static int if_usb_suspend(struct usb_interface *intf, pm_message_t message)
-+ 			olpc_ec_wakeup_set(EC_SCI_SRC_WLAN);
-+ 	}
-+ #endif
-++#endif
-+ 
-+ 	ret = lbs_suspend(priv);
-+ 	if (ret)
 -- 
-1.7.4.4
+Vasanth
 
