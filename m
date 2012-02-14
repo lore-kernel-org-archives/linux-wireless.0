@@ -1,37 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:40458 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750821Ab2BHFX6 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 00:23:58 -0500
-Received: by obcva7 with SMTP id va7so299507obc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 21:23:58 -0800 (PST)
+Received: from foo.stuge.se ([212.116.89.98]:40462 "HELO foo.stuge.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751400Ab2BNHi6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Feb 2012 02:38:58 -0500
+Message-ID: <20120214073855.6843.qmail@stuge.se> (sfid-20120214_083901_176440_CD79AB39)
+Date: Tue, 14 Feb 2012 08:38:55 +0100
+From: Peter Stuge <peter@stuge.se>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: Ben Greear <greearb@candelatech.com>, ath9k-devel@venema.h4ckr.net,
+	linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [ath9k-devel] [PATCH 3/7] ath9k: Merge wiphy and misc debugfs
+	files
+References: <20280.43962.403799.188541@gargle.gargle.HOWL> <4F3947A1.2060103@candelatech.com> <20281.48485.409968.741657@gargle.gargle.HOWL> <4F39BF5F.3030408@candelatech.com> <20281.52354.478076.479135@gargle.gargle.HOWL>
 MIME-Version: 1.0
-In-Reply-To: <1328677765-21971-1-git-send-email-mcgrof@frijolero.org>
-References: <1328677765-21971-1-git-send-email-mcgrof@frijolero.org>
-From: Javier Cardona <javier@cozybit.com>
-Date: Tue, 7 Feb 2012 21:23:38 -0800
-Message-ID: <CAPjQAd9ayG1kcpzx9pimy6=g6EYS1VvJ=q8JMA7AibHhBV-3Gg@mail.gmail.com> (sfid-20120208_062403_002667_01FDC153)
-Subject: Re: [PATCH] mac80211: rename mesh static path_lookup()
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: johannes@sipsolutions.net, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20281.52354.478076.479135@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 7, 2012 at 9:09 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
-> If you want to use mesh support from mac80211 on a recent
-> kernel on 2.6.24 you'll run into a name clash when compiling
-> against include/linux/namei.h, so rename this routine.
->
-> /home/mcgrof/tmp/compat-wireless-3.2.5-1/net/mac80211/mesh_pathtbl.c: At top level:
-> /home/mcgrof/tmp/compat-wireless-3.2.5-1/net/mac80211/mesh_pathtbl.c:342:26: error: conflicting types for ‘path_lookup’
-> include/linux/namei.h:71:12: note: previous declaration of ‘path_lookup’ was here
->
-> Although this could sit as a separate patch in compat-wireless it seems
-> best to just merge upstream.
->
-> Cc: Javier Cardona <javier@cozybit.com>
-> Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
-Acked-by: Javier Cardona <javier@cozybit.com>
+Sujith Manoharan wrote:
+> > Ath9k is a tricky beast to debug, and I think you should
+> > not remove anything that is remotely useful to debugging
+> > unless removing it has a real benefit other than just
+> > decreasing lines of (conditionally compiled) code.
+> 
+> I am aware that you have rather unique requirements regarding ath9k,
+
+Not really. He just wants to have HALF a chance to find issues. I'm
+sure you understand that ath9k is far from bug free. Until that has
+changed (don't hold your breath) the driver can not have too much
+debug information!
+
+
+> removing redundant code will make a difference in
+> memory-constrained environments like APs. (OpenWRT has DEBUGFS
+> enabled by default).
+
+It is not very wise for ath9k to reduce debug output with the
+motivation that some users leave it enabled even if they deploy
+into limited systems and they would actually prefer to have less
+debugging.
+
+If ath9k users have an issue with debugging being too big then THEY
+can disable it. It seems senseless to delete debugging when the
+driver is clearly still buggy.
+
+It also seems senseless to try to punt to mac80211. It is amazing
+that Ben's point is not absolutely obvious.
+
+One purpose of debugging is to allow and enable consistency checking.
+Redundant information is by definition neccessary for that.
+
+
+As a compromise, you could suggest a move to a two-level compile time
+option for debugging. You would enable only what you believe to be
+adequate for debugging in production systems (wait, what did I just
+write? oh well..) with the first option, and you would allow the rest
+of the world to enable complete debugging with the second option.
+
+I would support such a scheme.
+
+
+//Peter
