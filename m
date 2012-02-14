@@ -1,39 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:34796 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757119Ab2BOKOO (ORCPT
+Received: from mail.candelatech.com ([208.74.158.172]:49508 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752035Ab2BNSnY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 05:14:14 -0500
-Received: by lamf4 with SMTP id f4so823824lam.28
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 02:14:11 -0800 (PST)
-Message-ID: <1329300848.19569.38.camel@cumari> (sfid-20120215_111417_367513_80A95997)
-Subject: Re: [PATCH 1/2] wl12xx: check bss_conf->assoc on CHANGED_BSSID
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 15 Feb 2012 12:14:08 +0200
-In-Reply-To: <1327421923-25586-1-git-send-email-eliad@wizery.com>
-References: <1327421923-25586-1-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 14 Feb 2012 13:43:24 -0500
+Message-ID: <4F3AAB3F.7030308@candelatech.com> (sfid-20120214_194327_857765_5133BC7F)
+Date: Tue, 14 Feb 2012 10:43:11 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Sujith <m.sujith@gmail.com>
+CC: ath9k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Subject: Re: [ath9k-devel] [PATCH 3/7] ath9k: Merge wiphy and misc debugfs
+ files
+References: <20280.43962.403799.188541@gargle.gargle.HOWL> <4F3947A1.2060103@candelatech.com> <20281.48485.409968.741657@gargle.gargle.HOWL> <4F39BF5F.3030408@candelatech.com> <20281.52354.478076.479135@gargle.gargle.HOWL> <20120214073855.6843.qmail@stuge.se> <20282.7088.898987.229335@gargle.gargle.HOWL> <4F3A9ACB.3010009@candelatech.com> <20282.43026.335779.405152@gargle.gargle.HOWL>
+In-Reply-To: <20282.43026.335779.405152@gargle.gargle.HOWL>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-01-24 at 18:18 +0200, Eliad Peller wrote: 
-> with the new auth/assoc redesign, we get CHANGED_BSSID
-> indication before CHANGED_ASSOC indication, while our
-> CHANGED_BSSID handling block assumes we are already
-> associated.
-> 
-> Fix it by checking we are either in ibss mode, or
-> already associated.
-> 
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+On 02/14/2012 10:29 AM, Sujith wrote:
+> Ben Greear wrote:
+>> Actually, I think it might be useful to have a second level of debugging.
+>> I hope to soon have time&  resources to add some logic to dump lots of register
+>> info and such in human-readable format, (like, when DMA times out).  That is going to be a lot
+>> of strings added to the driver, so the compile size will definitely
+>> increase.  If keeping the size small is important, then this sort of verbose thing
+>> could be hidden behind a second level of debugging...
+>
+> That could be implemented similar to what usbmon does. A debugfs file that could
+> be read and redirected to a file. And there would be no overhead to the
+> driver, I think. We could call it the 'event log'. :)
 
-Applied the set, thanks!
+I was thinking about adding a method that grabbed as many registers
+as I have info for and dumping them with printk when DMA errors
+hit.  This would make kernel splats more useful.
+
+And also have a debugfs file called 'registers' or similar that one
+could cat out and get similar info.  And this can let folks look
+at steady-state or whatever.
+
+But, the logic to turn the register bit values into strings would
+be in the driver (and thus add some code size bloat).
+
+My hope is that this would allow a better chance of understanding
+the stop-DMA errors that some people get reliably (but which I can never reliably
+reproduce).
+
+I'm not sure how that plays into your 'event log' idea, but maybe
+one will help the other.
+
+Thanks,
+Ben
 
 -- 
-Cheers,
-Luca.
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
