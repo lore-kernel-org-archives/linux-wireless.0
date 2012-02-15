@@ -1,67 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from i118-21-156-233.s30.a048.ap.plala.or.jp ([118.21.156.233]:37388
-	"EHLO rinabert.homeip.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751103Ab2BQOEl (ORCPT
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:38693 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757930Ab2BOKOt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Feb 2012 09:04:41 -0500
-From: Masanari Iida <standby24x7@gmail.com>
-To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
-Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
-	Masanari Iida <standby24x7@gmail.com>
-Subject: [PATCH] [trivial] wireless: Fix typo in mac80211_hwsim.c
-Date: Fri, 17 Feb 2012 23:04:10 +0900
-Message-Id: <1329487450-1937-1-git-send-email-standby24x7@gmail.com> (sfid-20120217_150504_777921_FB2B2999)
+	Wed, 15 Feb 2012 05:14:49 -0500
+Received: by mail-lpp01m010-f51.google.com with SMTP id s15so786268lag.38
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 02:14:47 -0800 (PST)
+Message-ID: <1329300883.19569.39.camel@cumari> (sfid-20120215_111452_038313_DC399C8A)
+Subject: Re: [PATCH 1/2] Revert "wl12xx: Change claiming of the SDIO bus"
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 15 Feb 2012 12:14:43 +0200
+In-Reply-To: <1327579952-4595-1-git-send-email-eliad@wizery.com>
+References: <1327579952-4595-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct spelling "occured" to "occurred" in
-drivers/net/wireless/mac80211_hwsim.c
+On Thu, 2012-01-26 at 14:12 +0200, Eliad Peller wrote: 
+> This reverts commit 393fb560d328cc06e6a5c7b7473901ad724f82e7.
+> 
+> Commit b6ad726 ("mmc: core: Prevent too long response times
+> for suspend") fails the suspend if the mmc host can't be
+> claimed before suspend. As the host is claimed by us as long
+> as the chip is powered on, suspend will always fail.
+> 
+> Revert to claiming the sdio bus only when needed.
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
 
-Signed-off-by: Masanari Iida <standby24x7@gmail.com>
----
- drivers/net/wireless/mac80211_hwsim.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+Applied the set, thank you.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 4b9e730..29e930a 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -592,7 +592,7 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
- 	return;
- 
- nla_put_failure:
--	printk(KERN_DEBUG "mac80211_hwsim: error occured in %s\n", __func__);
-+	printk(KERN_DEBUG "mac80211_hwsim: error occurred in %s\n", __func__);
- }
- 
- static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
-@@ -1564,7 +1564,7 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 
- 	return 0;
- err:
--	printk(KERN_DEBUG "mac80211_hwsim: error occured in %s\n", __func__);
-+	printk(KERN_DEBUG "mac80211_hwsim: error occurred in %s\n", __func__);
- 	goto out;
- out:
- 	dev_kfree_skb(skb);
-@@ -1584,7 +1584,7 @@ static int hwsim_register_received_nl(struct sk_buff *skb_2,
- 
- 	return 0;
- out:
--	printk(KERN_DEBUG "mac80211_hwsim: error occured in %s\n", __func__);
-+	printk(KERN_DEBUG "mac80211_hwsim: error occurred in %s\n", __func__);
- 	return -EINVAL;
- }
- 
-@@ -1647,7 +1647,7 @@ static int hwsim_init_netlink(void)
- 	return 0;
- 
- failure:
--	printk(KERN_DEBUG "mac80211_hwsim: error occured in %s\n", __func__);
-+	printk(KERN_DEBUG "mac80211_hwsim: error occurred in %s\n", __func__);
- 	return -EINVAL;
- }
- 
 -- 
-1.7.4.4
+Cheers,
+Luca.
 
