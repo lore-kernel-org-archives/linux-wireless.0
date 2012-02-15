@@ -1,72 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:43836 "HELO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751206Ab2BYFiq (ORCPT
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:44374 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759011Ab2BOKTb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Feb 2012 00:38:46 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 3.3] mwifiex: correct bitrates advertised to cfg80211
-Date: Fri, 24 Feb 2012 21:35:45 -0800
-Message-Id: <1330148145-28895-1-git-send-email-bzhao@marvell.com> (sfid-20120225_063848_535698_E4A085DE)
+	Wed, 15 Feb 2012 05:19:31 -0500
+Received: by mail-lpp01m010-f53.google.com with SMTP id d3so863129lah.12
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 02:19:30 -0800 (PST)
+Message-ID: <1329301167.19569.44.camel@cumari> (sfid-20120215_111940_563548_D4872E57)
+Subject: Re: [PATCH] wl12xx: declare support for hw scan while idle
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 15 Feb 2012 12:19:27 +0200
+In-Reply-To: <1328181335-8155-1-git-send-email-eliad@wizery.com>
+References: <1328181335-8155-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avinash Patil <patila@marvell.com>
+On Thu, 2012-02-02 at 13:15 +0200, Eliad Peller wrote: 
+> By allowing hw scan while idle, we no longer
+> need the redundant ROC/CROC that are done
+> on idle off/on, which helps simplifying the
+> state machine of the driver.
+> 
+> This way, we can also allow scanning while
+> there is an ongoing sched scan (otherwise,
+> we won't be able to ROC on idle-off)
+> 
+> Signed-off-by: Eliad Peller <eliad@wizery.com>
+> ---
+> depends on "mac80211: support hw scan while idle"
+> 
+>  drivers/net/wireless/wl12xx/main.c |    7 ++-----
+>  drivers/net/wireless/wl12xx/scan.c |   13 -------------
+>  2 files changed, 2 insertions(+), 18 deletions(-)
 
-1. Remove non-standard rates 22Mbps and 72Mbps.
-2. First 4 rates from mwifiex_rates table are not valid for
-5GHz/A band. Set correct bitrate array's index and no of rates for
-ieee80211_supported_band for 5GHz band.
+Applied, thanks!
 
-Signed-off-by: Avinash Patil <patila@marvell.com>
-Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Kiran Divekar <dkiran@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/cfg80211.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 7b98ce0..2a1fc32 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -613,7 +613,6 @@ static struct ieee80211_rate mwifiex_rates[] = {
- 	{.bitrate = 20, .hw_value = 4, },
- 	{.bitrate = 55, .hw_value = 11, },
- 	{.bitrate = 110, .hw_value = 22, },
--	{.bitrate = 220, .hw_value = 44, },
- 	{.bitrate = 60, .hw_value = 12, },
- 	{.bitrate = 90, .hw_value = 18, },
- 	{.bitrate = 120, .hw_value = 24, },
-@@ -622,7 +621,6 @@ static struct ieee80211_rate mwifiex_rates[] = {
- 	{.bitrate = 360, .hw_value = 72, },
- 	{.bitrate = 480, .hw_value = 96, },
- 	{.bitrate = 540, .hw_value = 108, },
--	{.bitrate = 720, .hw_value = 144, },
- };
- 
- /* Channel definitions to be advertised to cfg80211 */
-@@ -688,8 +686,8 @@ static struct ieee80211_channel mwifiex_channels_5ghz[] = {
- static struct ieee80211_supported_band mwifiex_band_5ghz = {
- 	.channels = mwifiex_channels_5ghz,
- 	.n_channels = ARRAY_SIZE(mwifiex_channels_5ghz),
--	.bitrates = mwifiex_rates - 4,
--	.n_bitrates = ARRAY_SIZE(mwifiex_rates) + 4,
-+	.bitrates = mwifiex_rates + 4,
-+	.n_bitrates = ARRAY_SIZE(mwifiex_rates) - 4,
- };
- 
- 
 -- 
-1.7.0.2
+Cheers,
+Luca.
 
