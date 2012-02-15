@@ -1,76 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1335 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756848Ab2BHMd7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 07:33:59 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Felix Fietkau" <nbd@openwrt.org>
-Subject: [PATCH] mac80211: minstrel_ht: fix NULL pointer dereference
- during auth/assoc
-Date: Wed, 8 Feb 2012 13:33:41 +0100
-Message-ID: <1328704421-31202-1-git-send-email-arend@broadcom.com> (sfid-20120208_133402_868106_DCB45AA2)
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:58631 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753153Ab2BOQqO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Feb 2012 11:46:14 -0500
+Received: by bkcjm19 with SMTP id jm19so1395031bkc.5
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 08:45:27 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAB=NE6W9JdLDn7FRwuT9fEQUMs7Xkn4yyJzaYshzViGmzbBNTQ@mail.gmail.com>
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>
+	<1327581484-22047-2-git-send-email-victorg@ti.com>
+	<4F277E8D.5040809@sipsolutions.net>
+	<CAK80WHbh13duicPjTEWpTpbjiCiJUu6R_ZArYce5D7wUu1PnMA@mail.gmail.com>
+	<CAB=NE6W9JdLDn7FRwuT9fEQUMs7Xkn4yyJzaYshzViGmzbBNTQ@mail.gmail.com>
+Date: Wed, 15 Feb 2012 18:45:27 +0200
+Message-ID: <CAK80WHYAwFQx-3VLfmB9fgEDfKwxUCMtHjveWrGU7rkJH0o9BQ@mail.gmail.com> (sfid-20120215_174655_933455_E94284A2)
+Subject: Re: [RFC 1/9] nl80211/cfg80211: add radar detection command/event
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian.chadd@gmail.com, j@w1.fi,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the following NULL pointer dereference:
-
-> I rerun the test on a kernel with some more lock checking and got lucky.
+On Fri, Feb 10, 2012 at 12:02 AM, Luis R. Rodriguez
+<mcgrof@frijolero.org> wrote:
+> On Thu, Feb 2, 2012 at 8:06 AM, Goldenshtein, Victor <victorg@ti.com> wrote:
+>> Once we start radar detection, it should continuously monitor for
+>> radar until we switch from this channel. The command applies to
+>> current operational channel.
 >
-> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512283] wlan0: authenticate
-> with 98:fc:11:8e:94:57
-> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512515] wlan0: send auth to
-> 98:fc:11:8e:94:57 (try 1/3)
-> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514184] BUG: unable to handle
-> kernel NULL pointer dereference at 00000004
-> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514233] IP: [<f8648f08>]
-> minstrel_tx_status+0x48/0xe0 [mac80211]
+> Please consider adding this to the documentation,  it would make this
+> crystal clear.
+>
 
-static inline int
-rix_to_ndx(struct minstrel_sta_info *mi, int rix)
-{
-        int i = rix;
-        for (i = rix; i >= 0; i--)
-                if (mi->r[i].rix == rix)
-  48:   3b 58 04                cmp    0x4(%eax),%ebx
-  4b:   74 4b                   je     98 <minstrel_tx_status+0x98>
-  4d:   83 c2 01                add    $0x1,%edx
+Will do that.
 
-It fails because of mi->r[i] being a NULL pointer. It is allocated in
-minstel_alloc_sta, but minstrel_ht_alloc_sta does not call that function.
-
-struct minstrel_ht_sta_priv holds a union with struct minstrel_ht_sta and
-struct minstrel_sta_info. During authenticate the bool is_ht is false so
-minstrel_ht_tx_status calls minstrel_tx_status, but minstrel_sta_info::r
-is not set until rate_init which is after assoc.
-
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@openwrt.org>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- net/mac80211/rc80211_minstrel_ht.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index ff5f7b8..cf3919f 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -813,6 +813,9 @@ minstrel_ht_alloc_sta(void *priv, struct ieee80211_sta *sta, gfp_t gfp)
- 	if (!msp->sample_table)
- 		goto error1;
- 
-+        msp->legacy.r = msp->ratelist;
-+        msp->legacy.sample_table = msp->sample_table;
-+
- 	return msp;
- 
- error1:
 -- 
-1.7.5.4
-
-
+Thanks,
+Victor.
