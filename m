@@ -1,60 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:62556 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751799Ab2BWQBG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 11:01:06 -0500
-Received: by ghrr11 with SMTP id r11so653565ghr.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 08:01:05 -0800 (PST)
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:53647 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752940Ab2BOQqD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Feb 2012 11:46:03 -0500
+Received: by mail-ee0-f43.google.com with SMTP id b45so479645eek.2
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 08:46:01 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4F356004.9090409@broadcom.com>
-References: <CAN+AqrXRuBQZ9Hvnd=sdauFdo1e5eYWBiyo8f2WFDy8EBLGvEQ@mail.gmail.com>
- <4F356004.9090409@broadcom.com>
-From: Kiss Robert <kepten@gmail.com>
-Date: Thu, 23 Feb 2012 17:00:45 +0100
-Message-ID: <CAN+AqrVLeJYQFLHqtmuhWQ_34x-6bG1uiYRJxj3zRvNJXknpPQ@mail.gmail.com> (sfid-20120223_170110_592094_5817D19F)
-Subject: Re: Broadcom brcm80211 monitor mode
-To: Franky Lin <frankyl@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+In-Reply-To: <CAB=NE6XL4=RJZtbf_qnyDpShk5qFrLFFxSrnaoow1F5ayhdE6A@mail.gmail.com>
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>
+	<1327581484-22047-6-git-send-email-victorg@ti.com>
+	<CAB=NE6XL4=RJZtbf_qnyDpShk5qFrLFFxSrnaoow1F5ayhdE6A@mail.gmail.com>
+Date: Wed, 15 Feb 2012 18:46:01 +0200
+Message-ID: <CAK80WHavr1jEspR+fa1aSvzaOBcGZRrmruu+C6aMT+GjU6gTRQ@mail.gmail.com> (sfid-20120215_174642_132093_1D4D1F36)
+Subject: Re: [RFC 5/9] nl80211/cfg80211: add ap channel switch command/event
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian.chadd@gmail.com, j@w1.fi,
+	johannes@sipsolutions.net, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for the answer!
-I have read somewhere that the Broadcom 4330 chipset on Samsung Galaxy
-S II cannot be put to monitor mode because of some hardware
-limitation. Is that true? Can someone confirm that?
+On Fri, Feb 10, 2012 at 12:53 AM, Luis R. Rodriguez
+<mcgrof@frijolero.org> wrote:
+> On Thu, Jan 26, 2012 at 4:38 AM, Victor Goldenshtein <victorg@ti.com> wrote:
+>> Add new NL80211_CMD_AP_CHANNEL_SWITCH command which
+>> triggers a channel switch process, this command also
+>> notifies usermode about channel switch complete event.
+>>
+>> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
+>> ---
+>>  include/linux/nl80211.h |   23 +++++++++++++
+>>  include/net/cfg80211.h  |   16 +++++++++
+>>  net/wireless/mlme.c     |   11 ++++++
+>>  net/wireless/nl80211.c  |   80 +++++++++++++++++++++++++++++++++++++++++++++++
+>>  net/wireless/nl80211.h  |    4 ++
+>>  5 files changed, 134 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+>> index b45ceb1..8a004fc 100644
+>> --- a/include/linux/nl80211.h
+>> +++ b/include/linux/nl80211.h
+>> @@ -551,6 +551,15 @@
+>>  *     radar interference is detected during this period the dfs master may
+>>  *     initiate the tx.
+>>  *
+>> + * @NL80211_CMD_AP_CHANNEL_SWITCH: Perform a channel switch in the driver (for
+>> + *     AP/GO).
+>> + *     %NL80211_ATTR_WIPHY_FREQ: new channel frequency.
+>> + *     %NL80211_ATTR_CH_SWITCH_BLOCK_TX: block tx on the current channel.
+>> + *     %NL80211_ATTR_CH_SWITCH_POST_BLOCK_TX: block tx on the target channel.
+>
+> This is left as optional. It would be good to explain why this is
+> option and/or why userspace would set this
+> NL80211_ATTR_CH_SWITCH_POST_BLOCK_TX flag or not.
+>
+>> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+>> @@ -4072,6 +4075,39 @@ static int nl80211_dfs_en_tx(struct sk_buff *skb, struct genl_info *info)
+>>        return rdev->ops->dfs_en_tx(&rdev->wiphy, dev);
+>>  }
+>>
+>> +static int nl80211_ap_channel_switch(struct sk_buff *skb,
+>> +                                    struct genl_info *info)
+>> +{
+>> +       struct cfg80211_registered_device *rdev = info->user_ptr[0];
+>> +       struct net_device *dev = info->user_ptr[1];
+>> +       u32 freq = 0, count = 0, post_switch_block_tx = 0, block_tx = 0;
+>
+> Please use bool for flags.
+>
 
-Regards,
+ok.
 
-Robert
+>> +
+>> +       ASSERT_RDEV_LOCK(rdev);
+>> +
+>> +       if (!rdev->ops->ap_channel_switch)
+>> +               return -EOPNOTSUPP;
+>> +
+>> +       if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
+>> +           dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
+>> +               return -EOPNOTSUPP;
+>
+> If we want to restrict this command from userspace to only be able to
+> issue a channel switch for DFS we need to consider some additional
+> sanity checks here. It may be worth adding a small state machine to
+> cfg80211 for the device and only allow certain of these commands for
+> specific DFS states, if these commands are to be used only on DFS
+> states. This would limit the stupidities that userspace can put
+> cfg80211 into.
+>
 
-On 10 February 2012 19:20, Franky Lin <frankyl@broadcom.com> wrote:
-> On 02/08/2012 10:53 AM, Kiss Robert wrote:
->>
->> On 2012-02-03 21:57:27, Franky Lin wrote:
->>>
->>> Monitor mode is not supported in fullmac at the moment. I am afraid we
->>> don't have an ETA as well. But if for mobile devices you mean Android
->>> devices using Broadcom wifi chipset, current Android driver does have
->>> monitor mode support.
->>>
->>> Franky
->>
->>
->> Hi,
->>
->> Does that mean that the Android driver for bcm4330 has a working
->> monitor mode already? Where can I download that?
->>
->
-> Hi,
->
-> I need to correct my words after some digging. The Android version does
-> *NOT* fully support monitor mode. It has some partial support there for P2P
-> implementation. But some packets are held by the dongle because of filter
-> offload. Sorry about the wrong info.
->
-> Regards,
-> Franky
->
+DFS implementation in driver has only one state - DFS_CAC_IN_PROGRESS,
+so I"m not sure we need here a state machine but some sanity checks
+will be added in the next RFC.
+
+
+-- 
+Thanks,
+Victor.
