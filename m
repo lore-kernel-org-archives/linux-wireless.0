@@ -1,61 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:4551 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755643Ab2B0XTI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 18:19:08 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 15/24] iwlwifi: move eeprom defines to iwl-eeprom.c
-Date: Mon, 27 Feb 2012 14:07:39 -0800
-Message-Id: <1330380468-17674-16-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120228_001912_807338_F2962113)
-In-Reply-To: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:45400 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754653Ab2BOK5N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Feb 2012 05:57:13 -0500
+Received: by lahg1 with SMTP id g1so1016915lah.8
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 02:57:10 -0800 (PST)
+Message-ID: <1329303426.19569.54.camel@cumari> (sfid-20120215_115716_503603_E3AA5B2D)
+Subject: Re: wl12xx/master branch has been rebased (3.3-rc3)
+From: Luciano Coelho <coelho@ti.com>
+To: Fu yingang <yingang.fu@borqs.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 15 Feb 2012 12:57:06 +0200
+In-Reply-To: <F3DD826768954BD1B67A2BBAAA1CE884@7CF9T2X>
+References: <1329302724.19569.52.camel@cumari>
+	 <F3DD826768954BD1B67A2BBAAA1CE884@7CF9T2X>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Wed, 2012-02-15 at 18:54 +0800, Fu yingang wrote: 
+> Can i attach log/screen shot/ files in the email?
 
-They don't need to be in iwl-dev.h
+Sure, preferably plaintext logs.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-dev.h    |    3 ---
- drivers/net/wireless/iwlwifi/iwl-eeprom.c |    4 ++++
- 2 files changed, 4 insertions(+), 3 deletions(-)
+Only in last case, if you get a Oops or something which you can't copy
+and paste, then you can send a screenshot.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index 479d328..a670c82 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -443,9 +443,6 @@ struct iwl_chain_noise_data {
- 	u8 state;
- };
- 
--#define	EEPROM_SEM_TIMEOUT 10		/* milliseconds */
--#define EEPROM_SEM_RETRY_LIMIT 1000	/* number of attempts (not time) */
--
- enum {
- 	MEASUREMENT_READY = (1 << 0),
- 	MEASUREMENT_ACTIVE = (1 << 1),
-diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-index d1fd1cd..5936833 100644
---- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
-@@ -149,6 +149,10 @@ static const u8 iwl_eeprom_band_7[] = {       /* 5.2 ht40 channel */
-  * EEPROM chip, not a single event, so even reads could conflict if they
-  * weren't arbitrated by the semaphore.
-  */
-+
-+#define	EEPROM_SEM_TIMEOUT 10		/* milliseconds */
-+#define EEPROM_SEM_RETRY_LIMIT 1000	/* number of attempts (not time) */
-+
- static int iwl_eeprom_acquire_semaphore(struct iwl_bus *bus)
- {
- 	u16 count;
+
+> I have encountered several problems and need the help of analsysing the 
+> debug logs.
+
+
 -- 
-1.7.0.4
+Cheers,
+Luca.
 
