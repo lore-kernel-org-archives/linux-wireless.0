@@ -1,37 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:33358 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753162Ab2BUXCh (ORCPT
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:45555 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751389Ab2BOQrd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Feb 2012 18:02:37 -0500
-Date: Tue, 21 Feb 2012 18:01:22 -0500 (EST)
-Message-Id: <20120221.180122.934191435231223587.davem@davemloft.net> (sfid-20120222_000247_384564_E7F8BB25)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	ralf@linux-mips.org
-Subject: Re: pull request: wireless-next 2012-02-21
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120221203734.GD19354@tuxdriver.com>
-References: <20120221203734.GD19354@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Wed, 15 Feb 2012 11:47:33 -0500
+Received: by mail-lpp01m010-f43.google.com with SMTP id p5so2178801lag.16
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 08:47:23 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6Vz0GX=XpcycGyGbsLYDt556BrW11P0RHEnCCOD9HB7XA@mail.gmail.com>
+References: <1327581689-22090-1-git-send-email-victorg@ti.com>
+	<1327581689-22090-2-git-send-email-victorg@ti.com>
+	<CAB=NE6Vz0GX=XpcycGyGbsLYDt556BrW11P0RHEnCCOD9HB7XA@mail.gmail.com>
+Date: Wed, 15 Feb 2012 18:47:23 +0200
+Message-ID: <CAK80WHY+b-+Xs_htPVOXEDV3OuDJUzvfRy3TuvKPiHDdFjV3ow@mail.gmail.com> (sfid-20120215_174736_635275_B50412FB)
+Subject: Re: [RFC 1/7] hostapd: implement dfs drv ops functions
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: hostap@lists.shmoo.com, linux-wireless@vger.kernel.org,
+	kgiori@qca.qualcomm.com, zefir.kurtisi@neratec.com,
+	adrian.chadd@gmail.com, j@w1.fi, johannes@sipsolutions.net,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 21 Feb 2012 15:37:35 -0500
+On Fri, Feb 10, 2012 at 1:19 AM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+> No checks on if the channel is DFS, if we started DFS, etc?
+>
 
-> commit a9802d43f205faa2fff422502a1336a50b9615c3
-> 
-> Dave,
-> 
-> Here is a batch of wireless updates intended for 3.4.
-> 
-> Highlights include significant updates to ath6kl, iwlegacy, iwlwifi,
-> mwifiex, rt2x00, and mac80211.  The bcma and ssb busses get some
-> attention as well.  There is also a pull of fixes from the wireless
-> tree, which resolved some merge issues in wireless-next.
-> 
-> Please let me know if there are problems!
+Will add few sanity checks.
 
-Pulled, thanks John.
+Thanks for the reviews ;)
+Victor.
