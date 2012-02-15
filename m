@@ -1,87 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:64814 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751927Ab2B0SMW (ORCPT
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:40937 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754309Ab2BOKVH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 13:12:22 -0500
-Message-ID: <4F4BC77F.2010400@qca.qualcomm.com> (sfid-20120227_191225_900006_66276375)
-Date: Mon, 27 Feb 2012 20:12:15 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: <rmani@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: Add provision to define suspend policy in disconnected
- state.
-References: <1329308528-2925-1-git-send-email-rmani@qca.qualcomm.com>
-In-Reply-To: <1329308528-2925-1-git-send-email-rmani@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Wed, 15 Feb 2012 05:21:07 -0500
+Received: by mail-lpp01m010-f41.google.com with SMTP id f4so1018324lam.14
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 02:21:06 -0800 (PST)
+Message-ID: <1329301263.19569.46.camel@cumari> (sfid-20120215_112111_776282_884F8E5D)
+Subject: Re: [PATCH 0/4] wl12xx: some scan patches
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 15 Feb 2012 12:21:03 +0200
+In-Reply-To: <1328183669-21059-1-git-send-email-eliad@wizery.com>
+References: <1328183669-21059-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/15/2012 02:22 PM, rmani@qca.qualcomm.com wrote:
-> From: Raja Mani <rmani@qca.qualcomm.com>
+On Thu, 2012-02-02 at 13:54 +0200, Eliad Peller wrote: 
+> fix some various scan issues
 > 
-> It gives flexibility to the user to define suspend policy
-> when the suspend mode is set to WOW and the device is in 
-> disconnected state at the time of suspend.
+> Eliad Peller (1):
+>   wl12xx: don't fail on AP scan
 > 
-> Some bits (bit 4 to 7) of existing mod parameter suspend_mode
-> is used for that purpose. There is no change in the existing
-> way of defining suspend mode.
+> Eyal Shapira (2):
+>   wl12xx: use split scan for normal scan
+>   wl12xx: add split_scan_timeout debugfs file
 > 
-> To force cut power:
->   suspend_mode=0x1
+> Ido Reis (1):
+>   wl12xx: increase max probe-req template size to
+>     WL1271_CMD_TEMPL_MAX_SIZE
 > 
-> To force deep sleep:
->   suspend_mode=0x2
-> 
-> To force wow (deep sleep is the default mode
-> in disconnected state):
->   suspend_mode=0x3
-> 
-> To force wow in connected state and cut power
-> in disconnected state:
->   suspend_mode=0x13
+>  drivers/net/wireless/wl12xx/conf.h    |    8 ++++++
+>  drivers/net/wireless/wl12xx/debugfs.c |   43 +++++++++++++++++++++++++++++++++
+>  drivers/net/wireless/wl12xx/init.c    |    4 +-
+>  drivers/net/wireless/wl12xx/main.c    |    5 ++-
+>  drivers/net/wireless/wl12xx/scan.c    |   21 +++++++++-------
+>  drivers/net/wireless/wl12xx/scan.h    |    2 +-
+>  6 files changed, 69 insertions(+), 14 deletions(-)
 
-What's the difference between values 0x3 and 0x13? It wasn't clear for
-me from the description and neither from the code.
+Applied these 4 patches, thanks!
 
-> To force wow in connected state and deep sleep
-> in disconnected state:
->   suspend_mode=0x23
 
-I'm not sure if adding bits to suspend_mode is the best way. To me
-adding a separate parameter wow_mode looks easier from user's point of
-view. What do you think?
+-- 
+Cheers,
+Luca.
 
-And if you add a new module paratemer please use charp type so that can
-use strings like 'deepsleep' and 'cutpower'. I wish that we had used
-that already with suspend_mode but it's too late now :(
-
-> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-> @@ -2063,7 +2063,6 @@ int ath6kl_cfg80211_suspend(struct ath6kl *ar,
->  
->  		ret = ath6kl_wow_suspend(ar, wow);
->  		if (ret) {
-> -			ath6kl_err("wow suspend failed: %d\n", ret);
->  			ar->state = prev_state;
->  			return ret;
->  		}
-
-Please convert this to a debug message, maybe using the suspend level.
-It might be useful when debugging something.
-
-> diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
-> index c4926cf..37c92a1 100644
-> --- a/drivers/net/wireless/ath/ath6kl/core.c
-> +++ b/drivers/net/wireless/ath/ath6kl/core.c
-> @@ -41,6 +41,7 @@ int ath6kl_core_init(struct ath6kl *ar)
->  {
->  	struct ath6kl_bmi_target_info targ_info;
->  	struct net_device *ndev;
-> +	u16 pri_suspend_mode, wow2_suspend_mode;
-
-Why the number two? Why not just wow_suspend_mode?
-
-Kalle
