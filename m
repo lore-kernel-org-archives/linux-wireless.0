@@ -1,85 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from remail2.raritan.com ([62.132.199.138]:23780 "EHLO
-	remail2.raritan.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754805Ab2BONkX (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:57076 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753253Ab2BOSfO convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 08:40:23 -0500
-Message-ID: <4F3BB5C4.9040803@raritan.com> (sfid-20120215_144029_146019_01263C32)
-Date: Wed, 15 Feb 2012 14:40:20 +0100
-From: Ronald Wahl <ronald.wahl@raritan.com>
+	Wed, 15 Feb 2012 13:35:14 -0500
+Received: by vcge1 with SMTP id e1so962620vcg.19
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 10:35:13 -0800 (PST)
 MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rtlwifi/rtl8192cu: scheduling while atomic / sleeping function
- called from invalid context
-References: <4F3A7F71.6000008@raritan.com> <4F3ACC50.2000201@lwfinger.net>
-In-Reply-To: <4F3ACC50.2000201@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAB3XZEcv57uTvTN-rddc7p2LPoU0Tv_V3PqWyYpM_NajmFB1OQ@mail.gmail.com>
+References: <CAG6hwVNXru0bN+MZNf+vwN=LGFn9G8EpzK+A=FOCHwe0yYCbyQ@mail.gmail.com>
+ <20120215040307.GA4387@shredder> <CAB3XZEcv57uTvTN-rddc7p2LPoU0Tv_V3PqWyYpM_NajmFB1OQ@mail.gmail.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Wed, 15 Feb 2012 10:34:53 -0800
+Message-ID: <CAG6hwVPhox575NKk5mOx8Q8Eangk8sVvZAi7fembFBF1yk40ww@mail.gmail.com> (sfid-20120215_193522_873317_30977AEC)
+Subject: Re: wl12xx: BUG: scheduling while atomic: kworker
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14.02.2012 22:04, Larry Finger wrote:
-> On 02/14/2012 09:36 AM, Ronald Wahl wrote:
->> Hi,
+Hi Eliad,
+
+On Wed, Feb 15, 2012 at 2:00 AM, Eliad Peller <eliad@wizery.com> wrote:
+> On Wed, Feb 15, 2012 at 6:03 AM, Thomas Pedersen <thomas@cozybit.com> wrote:
+>> Sorry, gmail ate the formatting. Resending:
 >>
->> I just got the below traces with the rtlwifi driver in linux 3.2.5 and a
->> rtl8192cu chip. It looks like that _usb_read_sync() and kmalloc(...,
->> GFP_KERNEL) is called while the rcu lock is held inside
->> rtl92c_dm_refresh_rate_adaptive_mask.
-> 
-> --snip--
-> 
->> I hope you can fix this.
-> 
-> Thanks to your analysis, it was easy. Routine 
-> rtl92c_dm_refresh_rate_adaptive_mask() makes a callback to 
-> rtlpriv->cfg->ops->update_rate_tbl() with the lock held. For rtl8192ce, 
-> it is OK, but rtl8192cu kmallocs a data buffer. The irony is that 
-> rtl8192cu does not use the ieee80211_sta struct, which is what is being 
-> locked. The quick fix is to release the lock in the affected routine and 
-> reacquire it before the exit. The real fix will be to redefine the 
-> callback routines. That will be done for 3.4, but we need to get 3.2 and 
-> 3.3 fixed first.
-> 
-> Could you please test this patch?
+>> # [ †151.065338] BUG: scheduling while atomic: kworker/0:1/425/0x00000200
+>
+>> [ †151.249053] [<bf0f2170>] (wl12xx_sdio_raw_write+0x50/0xa4 [wl12xx_sdio]) from [<bf0c710c>] (wl1271_cm)
+>> [ †151.261260] [<bf0c710c>] (wl1271_cmd_send+0x80/0x3b4 [wl12xx]) from [<bf0c98f4>] (wl12xx_start_dev+0x)
+>> [ †151.272674] [<bf0c98f4>] (wl12xx_start_dev+0x90/0x144 [wl12xx]) from [<bf0cab2c>] (wl12xx_tx_get_hlid)
+>> [ †151.284179] [<bf0cab2c>] (wl12xx_tx_get_hlid+0xc8/0xcc [wl12xx]) from [<bf0c36c4>] (wl1271_op_tx+0x44)
+>> [ †151.284179] [<bf0c36c4>] (wl1271_op_tx+0x44/0x150 [wl12xx]) from [<bf059ce8>] (__ieee80211_tx.isra.4+)
+>> [ †151.307586] [<bf059ce8>] (__ieee80211_tx.isra.4+0x150/0x2c0 [mac80211]) from [<bf059f18>] (ieee80211_)
+>> [ †151.319702] [<bf059f18>] (ieee80211_tx+0xc0/0xf4 [mac80211]) from [<bf05a008>] (ieee80211_xmit+0xbc/0)
+>> [ †151.330841] [<bf05a008>] (ieee80211_xmit+0xbc/0x150 [mac80211]) from [<bf05b2a8>] (ieee80211_tx_skb_t)
+>> [ †151.342956] [<bf05b2a8>] (ieee80211_tx_skb_tid+0x3c/0x48 [mac80211]) from [<bf06f998>] (ieee80211_pro)
+>> [ †151.355773] [<bf06f998>] (ieee80211_probe_auth+0x128/0x2f8 [mac80211]) from [<bf073774>] (ieee80211_m)
+>> [ †151.355773] [<bf073774>] (ieee80211_mgd_auth+0x218/0x3b0 [mac80211]) from [<bf016e94>]
+>
+> this should be applied:
+> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/84311
+>
+> and you'll probably also need to apply
+> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/84312
+>
+> if you want your device to be able to connect :)
+>
 
-Thanks for the patch. It improves the situation but I found a second trace
-during association:
+That did it, thanks!
 
-BUG: sleeping function called from invalid context at mm/slub.c:935
-in_atomic(): 1, irqs_disabled(): 0, pid: 11580, name: kworker/u:2
-[<c000e158>] (unwind_backtrace+0x0/0x12c) from [<c02db684>] (dump_stack+0x20/0x24)
-[<c02db684>] (dump_stack+0x20/0x24) from [<c0017238>] (__might_sleep+0x104/0x124)
-[<c0017238>] (__might_sleep+0x104/0x124) from [<c00b123c>] (kmem_cache_alloc_trace+0x4c/0x1f0)
-[<c00b123c>] (kmem_cache_alloc_trace+0x4c/0x1f0) from [<bf459398>] (_usb_read_sync+0x40/0xd0 [rtlwifi])
-[<bf459398>] (_usb_read_sync+0x40/0xd0 [rtlwifi]) from [<bf45944c>] (_usb_read32_sync+0x24/0x28 [rtlwifi])
-[<bf45944c>] (_usb_read32_sync+0x24/0x28 [rtlwifi]) from [<bf486c04>] (rtl92cu_update_hal_rate_table+0x1e8/0x24c [rtl8192cu])
-[<bf486c04>] (rtl92cu_update_hal_rate_table+0x1e8/0x24c [rtl8192cu]) from [<bf451830>] (rtl_op_sta_add+0x114/0x13c [rtlwifi])
-[<bf451830>] (rtl_op_sta_add+0x114/0x13c [rtlwifi]) from [<bf0bd4d0>] (sta_info_finish_insert+0x80/0x204 [mac80211])
-[<bf0bd4d0>] (sta_info_finish_insert+0x80/0x204 [mac80211]) from [<bf0bdb18>] (sta_info_insert_non_ibss+0x108/0x140 [mac80211])
-[<bf0bdb18>] (sta_info_insert_non_ibss+0x108/0x140 [mac80211]) from [<bf0bdfc0>] (sta_info_reinsert+0x4c/0x78 [mac80211])
-[<bf0bdfc0>] (sta_info_reinsert+0x4c/0x78 [mac80211]) from [<bf0c7d4c>] (ieee80211_assoc_success+0x474/0x7c0 [mac80211])
-[<bf0c7d4c>] (ieee80211_assoc_success+0x474/0x7c0 [mac80211]) from [<bf0c81c0>] (ieee80211_assoc_done+0x128/0x1e4 [mac80211])
-[<bf0c81c0>] (ieee80211_assoc_done+0x128/0x1e4 [mac80211]) from [<bf0c98a8>] (ieee80211_work_work+0x2c0/0x11c0 [mac80211])
-[<bf0c98a8>] (ieee80211_work_work+0x2c0/0x11c0 [mac80211]) from [<c00398c4>] (process_one_work+0x294/0x474)
-[<c00398c4>] (process_one_work+0x294/0x474) from [<c003c0a8>] (worker_thread+0x214/0x344)
-[<c003c0a8>] (worker_thread+0x214/0x344) from [<c0040330>] (kthread+0x94/0x9c)
-[<c0040330>] (kthread+0x94/0x9c) from [<c0009eec>] (kernel_thread_exit+0x0/0x8)
-
-Here it looks like the lock is held in the mac80211 layer ouside of the
-lowlevel driver. I tried GFP_ATOMIC in _usb_read_sync() but this does not
-work because on one hand usb_control_msg() calls non-atomic kmalloc() itself
-and we also wait for completion of the usb transfer.
-
-Note: I'm away until end of next week so I can't test any further patches
-      during that time.
-
-thanks,
-ron
-
--- 
-Ronald Wahl - ronald.wahl@raritan.com - Phone +49 375271349-0 Fax -99
-Raritan Deutschland GmbH, Kornmarkt 7, 08056 Zwickau, Germany
-USt-IdNr. DE813094160, Steuer-Nr. 227/117/01749
-Amtsgericht Chemnitz HRB 23605
-Gesch√§ftsf√ºhrung: Stuart Hopper, Burkhard Wessler
+Thomas
