@@ -1,37 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:65487 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756194Ab2BBP1h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 10:27:37 -0500
-Received: by iacb35 with SMTP id b35so3270115iac.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 07:27:37 -0800 (PST)
-Message-ID: <4F2AAB65.6000409@lwfinger.net> (sfid-20120202_162740_880899_53F4AD48)
-Date: Thu, 02 Feb 2012 09:27:33 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:34513 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753145Ab2BOKAS convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Feb 2012 05:00:18 -0500
+Received: by obcva7 with SMTP id va7so1279025obc.19
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 02:00:18 -0800 (PST)
 MIME-Version: 1.0
-To: Jenny <coamicoami@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: RTL8188SU
-References: <CA+ff7uV5SmsOrP3Zi-nf70rfSTse5g47ziFEAqPFyuB5RD6K8A@mail.gmail.com>
-In-Reply-To: <CA+ff7uV5SmsOrP3Zi-nf70rfSTse5g47ziFEAqPFyuB5RD6K8A@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20120215040307.GA4387@shredder>
+References: <CAG6hwVNXru0bN+MZNf+vwN=LGFn9G8EpzK+A=FOCHwe0yYCbyQ@mail.gmail.com>
+	<20120215040307.GA4387@shredder>
+Date: Wed, 15 Feb 2012 12:00:18 +0200
+Message-ID: <CAB3XZEcv57uTvTN-rddc7p2LPoU0Tv_V3PqWyYpM_NajmFB1OQ@mail.gmail.com> (sfid-20120215_110022_457849_DBC1BFDC)
+Subject: Re: wl12xx: BUG: scheduling while atomic: kworker
+From: Eliad Peller <eliad@wizery.com>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/02/2012 01:27 AM, Jenny wrote:
-> Hello!
-> I have an adapter that has rtl8188su and I wanted to know if by any chance you
-> had or knew of a patch that would make monitor mode work with it. I've heard
-> that with rtl8188cu and rtl8188ru, firmware from rtl8792cu worked well. I tried
-> it, even tough I was able to get online I wasn't able to to get monitor mode.
-> I also tried compat wireless and that didn't have any effect.
+On Wed, Feb 15, 2012 at 6:03 AM, Thomas Pedersen <thomas@cozybit.com> wrote:
+> Sorry, gmail ate the formatting. Resending:
+>
+> # [  151.065338] BUG: scheduling while atomic: kworker/0:1/425/0x00000200
 
-If I remember correctly, the RTL8188SU uses r8712u as the driver. That driver 
-does not work in monitor mode (as an AP). I have been trying to find the 
-problem, but the time that I have available is limited.
+> [  151.249053] [<bf0f2170>] (wl12xx_sdio_raw_write+0x50/0xa4 [wl12xx_sdio]) from [<bf0c710c>] (wl1271_cm)
+> [  151.261260] [<bf0c710c>] (wl1271_cmd_send+0x80/0x3b4 [wl12xx]) from [<bf0c98f4>] (wl12xx_start_dev+0x)
+> [  151.272674] [<bf0c98f4>] (wl12xx_start_dev+0x90/0x144 [wl12xx]) from [<bf0cab2c>] (wl12xx_tx_get_hlid)
+> [  151.284179] [<bf0cab2c>] (wl12xx_tx_get_hlid+0xc8/0xcc [wl12xx]) from [<bf0c36c4>] (wl1271_op_tx+0x44)
+> [  151.284179] [<bf0c36c4>] (wl1271_op_tx+0x44/0x150 [wl12xx]) from [<bf059ce8>] (__ieee80211_tx.isra.4+)
+> [  151.307586] [<bf059ce8>] (__ieee80211_tx.isra.4+0x150/0x2c0 [mac80211]) from [<bf059f18>] (ieee80211_)
+> [  151.319702] [<bf059f18>] (ieee80211_tx+0xc0/0xf4 [mac80211]) from [<bf05a008>] (ieee80211_xmit+0xbc/0)
+> [  151.330841] [<bf05a008>] (ieee80211_xmit+0xbc/0x150 [mac80211]) from [<bf05b2a8>] (ieee80211_tx_skb_t)
+> [  151.342956] [<bf05b2a8>] (ieee80211_tx_skb_tid+0x3c/0x48 [mac80211]) from [<bf06f998>] (ieee80211_pro)
+> [  151.355773] [<bf06f998>] (ieee80211_probe_auth+0x128/0x2f8 [mac80211]) from [<bf073774>] (ieee80211_m)
+> [  151.355773] [<bf073774>] (ieee80211_mgd_auth+0x218/0x3b0 [mac80211]) from [<bf016e94>]
 
-Sorry,
+this should be applied:
+http://permalink.gmane.org/gmane.linux.kernel.wireless.general/84311
 
-Larry
+and you'll probably also need to apply
+http://permalink.gmane.org/gmane.linux.kernel.wireless.general/84312
 
+if you want your device to be able to connect :)
+
+(haven't tested these patches with the latest kernel yet, though)
+
+Eliad.
