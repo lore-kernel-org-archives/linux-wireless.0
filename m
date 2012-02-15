@@ -1,60 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:65355 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756586Ab2BGXGU convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53768 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755234Ab2BOVqq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 18:06:20 -0500
-Received: by ghrr11 with SMTP id r11so3491813ghr.19
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 15:06:19 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <201202072247.08793.david.goodenough@btconnect.com>
-References: <87pqgkxn25.fsf@nemi.mork.no> <20120207195415.GG5560@tuxdriver.com>
- <CAB=NE6VVcQgum4mQ5eooS2yXo-NNXHvujsUwpbEwNdQQSreaBA@mail.gmail.com> <201202072247.08793.david.goodenough@btconnect.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 7 Feb 2012 15:05:59 -0800
-Message-ID: <CAB=NE6X=WNYjmiZp76hqu8=1r4OHK4n_9GzUM3aDTJ4euTm56w@mail.gmail.com> (sfid-20120208_000623_943128_2FD4A4F0)
-Subject: Re: [wireless-regdb] wireless-regdb: Update regulatory rules for
- Norway (NO)
-To: David Goodenough <david.goodenough@btconnect.com>,
-	wireless-regdb@lists.infradead.org,
-	Michael Green <green@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 15 Feb 2012 16:46:46 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: linux-wireless@vger.kernel.org
+Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	"John W. Linville" <linville@tuxdriver.com>
+Subject: [PATCH] compat-wireless: remove olpc_ec_wakeup_* calls for pre-3.1 kernels
+Date: Wed, 15 Feb 2012 16:37:52 -0500
+Message-Id: <1329341872-12872-1-git-send-email-linville@tuxdriver.com> (sfid-20120215_224650_877862_383EA8EF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 7, 2012 at 2:47 PM, David Goodenough
-<david.goodenough@btconnect.com> wrote:
-> On Tuesday 07 Feb 2012, Luis R. Rodriguez wrote:
->> On Tue, Feb 7, 2012 at 11:54 AM, John W. Linville
->>
->> <linville@tuxdriver.com> wrote:
->> > Well, sorry for the delay...  I will take this silence as "no
->> > objection". :-)
->>
->> Sorry, I did get a reply by Michael Green on 11/28/2011 but I never
->> followed up with the list. Apologies as well with the delay, but here
->> is our review.
->>
->> The European Union has some harmonized European radio conformance spec
->> and QCA's interpretation and position is that that spec overrides
->> deviations for end products for specific countries like the one being
->> recommended for Norway. This also means that QCA does not deviate for
->> EU countries on specs, even if countries have their own quirks, for
->> any country in the EU.
-> Except that Norway is not in the EU.
+This section of the libertas driver calls functions that simply don't
+exist before the release of 3.1.  This code in question was an addition,
+not a change from any existing code.  It is safe to simply remove it for
+older kernels.
 
-Technically that is true, but Norway follows EEA (European economic
-area) agreements and uses CE Marking and ETSI spec for conformance,
-same as all the other "EU" countries.
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+---
+ patches/50-libertas-olpc-ec-wakeup.patch |   25 +++++++++++++++++++++++++
+ 1 files changed, 25 insertions(+), 0 deletions(-)
+ create mode 100644 patches/50-libertas-olpc-ec-wakeup.patch
 
-The full list that follow harmonized ETSI conformance standards:
+diff --git a/patches/50-libertas-olpc-ec-wakeup.patch b/patches/50-libertas-olpc-ec-wakeup.patch
+new file mode 100644
+index 0000000..13413af
+--- /dev/null
++++ b/patches/50-libertas-olpc-ec-wakeup.patch
+@@ -0,0 +1,25 @@
++This section of the libertas driver calls functions that simply don't
++exist before the release of 3.1.  This code in question was an addition,
++not a change from any existing code.  It is safe to simply remove it for
++older kernels.
++
++diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
++index b5fbbc7..513ae29 100644
++--- a/drivers/net/wireless/libertas/if_usb.c
+++++ b/drivers/net/wireless/libertas/if_usb.c
++@@ -1133,6 +1133,7 @@ static int if_usb_suspend(struct usb_interface *intf, pm_message_t message)
++ 	if (priv->psstate != PS_STATE_FULL_POWER)
++ 		return -1;
++ 
+++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0))
++ #ifdef CONFIG_OLPC
++ 	if (machine_is_olpc()) {
++ 		if (priv->wol_criteria == EHS_REMOVE_WAKEUP)
++@@ -1141,6 +1142,7 @@ static int if_usb_suspend(struct usb_interface *intf, pm_message_t message)
++ 			olpc_ec_wakeup_set(EC_SCI_SRC_WLAN);
++ 	}
++ #endif
+++#endif
++ 
++ 	ret = lbs_suspend(priv);
++ 	if (ret)
+-- 
+1.7.4.4
 
-Austria, Belgium, Bulgaria, Cyprus, Czech Rep, Denmark, Estonia, Finland,
-France, Germany, Greece, Hungary, Iceland, Ireland, Italy, Liechtenstein,
-Latvia, Lithuania, Luxembourg, Malta, Netherlands, Norway, Poland, Portugal,
-Romania, Slovakia, Slovenia, Spain, Sweden, Switzerland, U.K.
-
-31 countries
-
-  Luis
