@@ -1,108 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:60041 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753256Ab2BDB0X (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 20:26:23 -0500
-Received: by mail-pw0-f46.google.com with SMTP id u11so3334452pbd.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2012 17:26:23 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Subject: [RFC 10/11] crda: make usage of regdb.h exclusive to reglib.c
-Date: Fri,  3 Feb 2012 17:25:47 -0800
-Message-Id: <1328318748-21044-11-git-send-email-mcgrof@frijolero.org> (sfid-20120204_022632_157461_848BA3B6)
-In-Reply-To: <1328318748-21044-1-git-send-email-mcgrof@frijolero.org>
-References: <1328318748-21044-1-git-send-email-mcgrof@frijolero.org>
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:41334 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752993Ab2BOQqK convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Feb 2012 11:46:10 -0500
+Received: by mail-lpp01m010-f46.google.com with SMTP id u2so1702794lag.33
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 08:46:08 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6XznrwGRXWKqHaiYqZ0f_e6OkYxK1Ft7ZqeLVy_yF0EKQ@mail.gmail.com>
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>
+	<1327581484-22047-7-git-send-email-victorg@ti.com>
+	<CAB=NE6XznrwGRXWKqHaiYqZ0f_e6OkYxK1Ft7ZqeLVy_yF0EKQ@mail.gmail.com>
+Date: Wed, 15 Feb 2012 18:46:08 +0200
+Message-ID: <CAK80WHbazpO8kGOLt=Z8JvR2DG3Js4gv37xM+=G=Tm77jL_mFg@mail.gmail.com> (sfid-20120215_174642_711424_F84BBBE9)
+Subject: Re: [RFC 6/9] mac80211: add ap channel switch command/event
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian.chadd@gmail.com, j@w1.fi,
+	johannes@sipsolutions.net, coelho@ti.com, assaf@ti.com,
+	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
+	nbd@nbd.name
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The only other remaining user of regdb.h is regdbdump tool
-but as I see it this utility can exist in either a reglib
-library, or on each OS for its own specific adaptation of
-the reglib code. For now we just make regdbump use the local
-copy of nl80211.h. Later the reglib library can have its own
-print / dump utility if we deem it necessary.
+On Fri, Feb 10, 2012 at 1:06 AM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+> On Thu, Jan 26, 2012 at 4:38 AM, Victor Goldenshtein <victorg@ti.com> wrote:
+>> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+>> index d08b808..b0f4e67 100644
+>> --- a/include/net/mac80211.h
+>> +++ b/include/net/mac80211.h
+>> @@ -841,12 +841,16 @@ struct ieee80211_conf {
+>>  *     the driver passed into mac80211.
+>>  * @block_tx: Indicates whether transmission must be blocked before the
+>>  *     scheduled channel switch, as indicated by the AP.
+>> + * @post_switch_block_tx: Indicates whether transmission must be blocked after
+>> + *     the scheduled channel switch, this should be set if the target channel
+>> + *     is DFS channel.
+>
+> Here you say that post_switch_block_tx is required for DFS channels
+> but yet you do not check for this. You should instead clarify that
+> this is required on the nl80211.h command, and also add the sanity
+> check there.
+>
+>  Luis
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
----
- print-regdom.c |   21 ++++++++++++---------
- reglib.c       |    1 +
- reglib.h       |    2 --
- 3 files changed, 13 insertions(+), 11 deletions(-)
+The AP channel switch functionality is not only for DFS, in the future
+other usermode applications/clients might also use it (e.g. ACS ;)).
+ In addition even the DFS-Master may switch to a non DFS channel - so
+this post_switch_block_tx won't be set.
 
-diff --git a/print-regdom.c b/print-regdom.c
-index a3bedeb..075eea8 100644
---- a/print-regdom.c
-+++ b/print-regdom.c
-@@ -2,6 +2,9 @@
- #include <stdio.h>
- #include <string.h>
- #include <arpa/inet.h>
-+
-+#include "nl80211.h"
-+
- #include "reglib.h"
- 
- static void print_reg_rule(struct ieee80211_reg_rule *rule)
-@@ -29,23 +32,23 @@ static void print_reg_rule(struct ieee80211_reg_rule *rule)
- 	else
- 		printf("N/A)");
- 
--	if (rule->flags & RRF_NO_OFDM)
-+	if (rule->flags & NL80211_RRF_NO_OFDM)
- 		printf(", NO-OFDM");
--	if (rule->flags & RRF_NO_CCK)
-+	if (rule->flags & NL80211_RRF_NO_CCK)
- 		printf(", NO-CCK");
--	if (rule->flags & RRF_NO_INDOOR)
-+	if (rule->flags & NL80211_RRF_NO_INDOOR)
- 		printf(", NO-INDOOR");
--	if (rule->flags & RRF_NO_OUTDOOR)
-+	if (rule->flags & NL80211_RRF_NO_OUTDOOR)
- 		printf(", NO-OUTDOOR");
--	if (rule->flags & RRF_DFS)
-+	if (rule->flags & NL80211_RRF_DFS)
- 		printf(", DFS");
--	if (rule->flags & RRF_PTP_ONLY)
-+	if (rule->flags & NL80211_RRF_PTP_ONLY)
- 		printf(", PTP-ONLY");
--	if (rule->flags & RRF_PTMP_ONLY)
-+	if (rule->flags & NL80211_RRF_PTMP_ONLY)
- 		printf(", PTMP-ONLY");
--	if (rule->flags & RRF_PASSIVE_SCAN)
-+	if (rule->flags & NL80211_RRF_PASSIVE_SCAN)
- 		printf(", PASSIVE-SCAN");
--	if (rule->flags & RRF_NO_IBSS)
-+	if (rule->flags & NL80211_RRF_NO_IBSS)
- 		printf(", NO-IBSS");
- 
- 	printf("\n");
-diff --git a/reglib.c b/reglib.c
-index 3cb7f72..12698fa 100644
---- a/reglib.c
-+++ b/reglib.c
-@@ -13,6 +13,7 @@
- #include <arpa/inet.h> /* ntohl */
- 
- #include "reglib.h"
-+#include "regdb.h"
- 
- #ifdef USE_OPENSSL
- #include <openssl/objects.h>
-diff --git a/reglib.h b/reglib.h
-index 42c7999..99e6c76 100644
---- a/reglib.h
-+++ b/reglib.h
-@@ -4,8 +4,6 @@
- #include <stdlib.h>
- #include <stdint.h>
- 
--#include "regdb.h"
--
- /* Common regulatory structures, functions and helpers */
- 
- /* This matches the kernel's data structures */
+
 -- 
-1.7.4.15.g7811d
-
+Thanks,
+Victor.
