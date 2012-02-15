@@ -1,101 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:52802 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752588Ab2BWSpA convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8488 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757573Ab2BOIhf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 13:45:00 -0500
-Received: by iacb35 with SMTP id b35so1891105iac.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 10:45:00 -0800 (PST)
+	Wed, 15 Feb 2012 03:37:35 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1330004589.3448.12.camel@jlt3.sipsolutions.net>
-References: <loom.20120221T000341-610@post.gmane.org>
-	<1330004589.3448.12.camel@jlt3.sipsolutions.net>
-Date: Thu, 23 Feb 2012 10:45:00 -0800
-Message-ID: <CA+yqC4be_Zn48LyRMLCX5bDJt3+Ls5+y4hwb1WZ9gK=9Yd++ZA@mail.gmail.com> (sfid-20120223_194512_681650_F1AD3910)
-Subject: Re: [PATCH] mac80211 radiotap injection
-From: Sam Leffler <sleffler@google.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Lars Bro <larsbro@gmail.com>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20283.28341.982945.926756@gargle.gargle.HOWL> (sfid-20120215_093738_883350_2E58D243)
+Date: Wed, 15 Feb 2012 14:07:09 +0530
+To: Ben Greear <greearb@candelatech.com>
+CC: <ath9k-devel@venema.h4ckr.net>, <linux-wireless@vger.kernel.org>,
+	<linville@tuxdriver.com>
+Subject: Re: [ath9k-devel] [PATCH 3/7] ath9k: Merge wiphy and misc debugfs files
+In-Reply-To: <20283.14537.284629.215476@gargle.gargle.HOWL>
+References: <20280.43962.403799.188541@gargle.gargle.HOWL>
+	<4F3947A1.2060103@candelatech.com>
+	<20281.48485.409968.741657@gargle.gargle.HOWL>
+	<4F39BF5F.3030408@candelatech.com>
+	<20281.52354.478076.479135@gargle.gargle.HOWL>
+	<20120214073855.6843.qmail@stuge.se>
+	<20282.7088.898987.229335@gargle.gargle.HOWL>
+	<4F3A9ACB.3010009@candelatech.com>
+	<20282.43026.335779.405152@gargle.gargle.HOWL>
+	<4F3AAB3F.7030308@candelatech.com>
+	<20283.14537.284629.215476@gargle.gargle.HOWL>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 23, 2012 at 5:43 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Mon, 2012-02-20 at 23:17 +0000, Lars Bro wrote:
->> Building on the work of Sam Leffler, adding the possibility of setting
->> the tx-power also.
->
-> Please read
-> http://wireless.kernel.org/en/developers/Documentation/SubmittingPatches, particularly the references at the bottom of the page.
->
-> Please also follow the style of the surrounding code.
+Sujith Manoharan wrote:
+> Ben Greear wrote:
+> > I was thinking about adding a method that grabbed as many registers
+> > as I have info for and dumping them with printk when DMA errors
+> > hit.  This would make kernel splats more useful.
+> > 
+> > And also have a debugfs file called 'registers' or similar that one
+> > could cat out and get similar info.  And this can let folks look
+> > at steady-state or whatever.
+> > 
+> > But, the logic to turn the register bit values into strings would
+> > be in the driver (and thus add some code size bloat).
+> > 
+> > My hope is that this would allow a better chance of understanding
+> > the stop-DMA errors that some people get reliably (but which I can never reliably
+> > reproduce).
+> > 
+> > I'm not sure how that plays into your 'event log' idea, but maybe
+> > one will help the other.
+> 
+> I was thinking more on the lines of instrumentation, but what you are
+> describing here looks like a VERBOSE_DEBUG option is needed.
 
-I tried (for my stuff); it's helpful if you can point out at least one
-specific issue.  The code went through checkpatch for example.
+Huh.
 
->
->> diff --git a/Documentation/networking/mac80211-injection.txt
->> b/Documentation/networking/mac80211-injection.txt
->> index 3a93007..cd3d3ef 100644
->> --- a/Documentation/networking/mac80211-injection.txt
->> +++ b/Documentation/networking/mac80211-injection.txt
->> @@ -23,11 +23,28 @@ radiotap headers and used to control injection:
->>     IEEE80211_RADIOTAP_F_FRAG: frame will be fragmented if longer than the
->>                             current fragmentation threshold.
->>
->> + * IEEE80211_RADIOTAP_RATE
->> +   legacy transmit rate in .5 Mb/s units (u8)
->
-> This looks quite strange, for example.
+This discussion amounts to nothing. The stuff that was removed was dumping
+the information present in mac80211.
 
-Strange how?  The .5 units are consistent w/ IEEE legacy rate codes.
-Not sure how you want to express values like 5.5 to the kernel.
-
->
->> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
->> index cbff4f9..2821b87 100644
->> --- a/include/net/mac80211.h
->> +++ b/include/net/mac80211.h
->> @@ -378,6 +378,9 @@ struct ieee80211_bss_conf {
->>   * @IEEE80211_TX_CTL_DONTFRAG: Don't fragment this packet even if it
->>   *   would be fragmented by size (this is optional, only used for
->>   *   monitor injection).
->> + * @IEEE80211_TX_CTL_NO_RC: This frame does not require rate control.
->> + *   This flag is used when an injected frame includes a transmit
->> + *   rate (and possibly flags and retry count) in the radiotap header.
->
-> Does that really have to be here? This is the last bit we have, and it
-> seems this is internal so ... ?
-
-So ... what?  I saw it was the last bit didn't see another way to tag
-state in the skb (and the cb looked to be max size so there was no
-room to expand it).
-
->
->>  #define IEEE80211_TX_CTL_STBC_SHIFT          23
->> @@ -555,6 +559,7 @@ struct ieee80211_tx_info {
->>                       struct ieee80211_vif *vif;
->>                       struct ieee80211_key_conf *hw_key;
->>                       struct ieee80211_sta *sta;
->> +                     u8 tx_power;
->
-> That's not going to be honoured by a lot of devices.
->
->>
->>       /* process and remove the injection radiotap header */
->> -     if (!ieee80211_parse_tx_radiotap(skb))
->> +     if (!ieee80211_parse_tx_radiotap(skb, local))
->
-> that's a very unusual argument order for the mac80211 code
->
-> I promise to actually look at the code when you fix all the surrounding
-> issues, right now I'm quite busy though so not very keen on looking
-> through this.
->
-> johannes
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Sujith
