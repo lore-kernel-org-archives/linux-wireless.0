@@ -1,102 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7687 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755251Ab2BCAQ6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 19:16:58 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 22/28] iwlwifi: stop_hw replace enable_rfkill_int
-Date: Thu,  2 Feb 2012 15:09:13 -0800
-Message-Id: <1328224159-18134-23-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120203_011718_999759_BFCFB69B)
-In-Reply-To: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:33265 "EHLO
+	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754807Ab2BOMwf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Feb 2012 07:52:35 -0500
+Message-ID: <20120215145231.80704988jhf2taxc@www.81.fi> (sfid-20120215_135240_414417_C920ECAA)
+Date: Wed, 15 Feb 2012 14:52:31 +0200
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: Florian Fainelli <florian@openwrt.org>
+Cc: Julian Calaby <julian.calaby@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, dsd@gentoo.org, kune@deine-taler.de
+Subject: Re: [PATCH] zd1211rw: wait between setting hash table and powering
+ radio on
+References: <20120208180102.18346jfdlm9wakw8@www.81.fi>
+ <1328783095-8330-1-git-send-email-florian@openwrt.org>
+ <CAGRGNgX-_s_EsbBLxs6UNJd7=3Yk0HECfxb-HSB_-r6cDyyuuA@mail.gmail.com>
+ <4F33A5DE.8020208@openwrt.org>
+ <CAGRGNgXDFEnOCjc+0Dx+kK1hju7AN-mwU9AksECZCxzB2NJYig@mail.gmail.com>
+ <20120209134130.49211ca9upll7y00@www.81.fi> <4F3B89EA.8080501@openwrt.org>
+In-Reply-To: <4F3B89EA.8080501@openwrt.org>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Quoting Florian Fainelli <florian@openwrt.org>:
 
-This trans_ops->stop_hw leaves the RFKILL interrupt enabled,
-we can call that one instead of enable_rfkill_int. By that,
-we reduce the numbers of acceesses to the NIC from the upper
-layers.
+> On 02/09/12 12:41, Jussi Kivilinna wrote:
+>> Quoting Julian Calaby <julian.calaby@gmail.com>:
+>>
+>>> Hi Florian,
+>>>
+>>> On Thu, Feb 9, 2012 at 21:54, Florian Fainelli <florian@openwrt.org> wrote:
+>>>> Hi Julian,
+>>>>
+>>>>
+>>>> On 02/09/12 11:40, Julian Calaby wrote:
+>>>>>
+>>>>> Hi Florian,
+>>>>>
+>>>>> A couple of minor points:
+>>>>>
+>>>>> On Thu, Feb 9, 2012 at 21:24, Florian Fainelli<florian@openwrt.org>
+>>>>> wrote:
+>>>>>>
+>>>>>> I am running Debian testing kernel 3.1.0-1-amd64, using a  
+>>>>>> 079b:0062 Sagem
+>>>>>> XG-76NA 802.11bg stick.
+>>>>>>
+>>>>>> Upon zd1211rw interface
+>>>>>> bringup (ifconfig wlan0 up) I get the following timeout:
+>>>>>>
+>>>>>> [  950.330573] zd1211rw 1-3:1.0: phy2
+>>>>>> [  955.108510] zd1211rw 1-3:1.0: firmware version 4725
+>>>>>> [  955.148532] zd1211rw 1-3:1.0: zd1211b chip 079b:0062 v4810 high
+>>>>>> 00-19-70
+>>>>>> AL2230_RF pa0 g--NS
+>>>>>> [snip]
+>>>>>> [  955.204072] zd1211rw 1-3:1.0: error ioread32(CR_REG1): -110
+>>>>>>
+>>>>>> A second ifconfig wlan0 up brings the interface up without problems.
+>>>>>>
+>>>>>> After a bit more debugging, the call trace is the following:
+>>>>>>
+>>>>>> [10241.028130] zd1211rw 1-3:1.0: zd_chip_lock_phy_regs: error
+>>>>>> ioread32(CR_REG1): -110
+>>>>>> [10241.028140] zd1211rw 1-3:1.0: zd_switch_radio_on: failed to lock PHY
+>>>>>> regs
+>>>>>> [10241.028148] zd1211rw 1-3:1.0: zd_op_start: failed to set radio on
+>>>>>>
+>>>>>> Adding a 10 milliseconds delay between the call to set_mc_hash() and
+>>>>>> zd_chip_switch_radio_on() allows successful interface bringups in all
+>>>>>> cases and matches what the vendor driver did.
+>>>>>>
+>>>>>> Signed-off-by: Florian Fainelli<florian@openwrt.org>
+>>>>>> ---
+>>>>>> drivers/net/wireless/zd1211rw/zd_mac.c |    7 ++++++-
+>>>>>> 1 files changed, 6 insertions(+), 1 deletions(-)
+>>>>>>
+>>>>>> diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c
+>>>>>> b/drivers/net/wireless/zd1211rw/zd_mac.c
+>>>>>> index 98a574a..bed634c 100644
+>>>>>> --- a/drivers/net/wireless/zd1211rw/zd_mac.c
+>>>>>> +++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+>>>>>> @@ -306,9 +306,14 @@ int zd_op_start(struct ieee80211_hw *hw)
+>>>>>>       r = set_mc_hash(mac);
+>>>>>>       if (r)
+>>>>>>               goto disable_int;
+>>>>>> +       msleep(10);
+>>>>>
+>>>>> You might want to stick a comment in here to tell future developers
+>>>>> why we're doing this.
+>>>>
+>>>>
+>>>> I was counting on the commit message to actually provide the detailed
+>>>> explanation, but you are right, some comment might be appropriate here as
+>>>> well.
+>>>>
+>>>>
+>>>>>
+>>>>>> +
+>>>>>>       r = zd_chip_switch_radio_on(chip);
+>>>>>> -       if (r<  0)
+>>>>>> +       if (r<  0) {
+>>>>>> +               dev_err(zd_chip_dev(chip),
+>>>>>> +                       "%s: failed to set radio on\n", __func__);
+>>>>>>               goto disable_int;
+>>>>>> +       }
+>>>>>
+>>>>> It might also be an idea to have it re-try powering on the radio
+>>>>> after, say 100 msecs, just in case 10 msecs isn't enough for whatever
+>>>>> is causing this issue.
+>>>>
+>>>>
+>>>> Here I would rather let the error be printed in the kernel log  
+>>>> for people to
+>>>> report an issue if 10 msecs proves not to be enough for some systems.
+>>>
+>>> When I see timing like this added to established drivers it makes me
+>>> think that maybe something has changed since the code was originally
+>>> written, maybe there was a 10msec delay somewhere deep down in the USB
+>>> code that's now been eliminated, or something else equally random, and
+>>> maybe we'll need a longer wait in the future. Writing the code to try
+>>> it, say, 5 times will probably never completely time out, but it will
+>>> probably work until the driver is removed from the kernel, rather than
+>>> having to change this to a larger value some time in the future. On
+>>> the other hand, this fixes the bug you've found and maybe something
+>>> like that can wait.
+>>
+>> Quick search of "error ioread32(CR_REG1): -110" shows that first  
+>> reports are from 2008/2.6.24. People have found following  
+>> workarounds are "rmmod zd1211rw;modprobe zd1211rw", unplug/replug  
+>> USB device, use motherboard USB connector instead of hub, etc.
+>
+> So, is the patch as-is acceptable, or do you want me to resubmit  
+> with more comments around the msleep()?
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.h          |    6 ------
- drivers/net/wireless/iwlwifi/iwl-mac80211.c      |    7 ++++---
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    6 ++++--
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c    |    2 ++
- 4 files changed, 10 insertions(+), 11 deletions(-)
+Comment would be good to have. You can add my acked-by to patch message..
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index e74bfb7..8d60dcf 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -297,12 +297,6 @@ static inline bool iwl_advanced_bt_coexist(struct iwl_priv *priv)
- 	       cfg(priv)->bt_params->advanced_bt_coexist;
- }
- 
--static inline void iwl_enable_rfkill_int(struct iwl_priv *priv)
--{
--	IWL_DEBUG_ISR(priv, "Enabling rfkill interrupt\n");
--	iwl_write32(trans(priv), CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
--}
--
- extern bool bt_siso_mode;
- 
- #endif /* __iwl_core_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index 78bc1e8..7177fd7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -346,9 +346,10 @@ static void iwlagn_mac_stop(struct ieee80211_hw *hw)
- 	flush_workqueue(priv->shrd->workqueue);
- 
- 	/* User space software may expect getting rfkill changes
--	 * even if interface is down */
--	iwl_write32(trans(priv), CSR_INT, 0xFFFFFFFF);
--	iwl_enable_rfkill_int(priv);
-+	 * even if interface is down, trans->down will leave the RF
-+	 * kill interrupt enabled
-+	 */
-+	iwl_trans_stop_hw(trans(priv));
- 
- 	IWL_DEBUG_MAC80211(priv, "leave\n");
- }
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-index 731f287..78abff0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-@@ -1149,8 +1149,10 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
- 	if (test_bit(STATUS_INT_ENABLED, &trans->shrd->status))
- 		iwl_enable_interrupts(trans);
- 	/* Re-enable RF_KILL if it occurred */
--	else if (handled & CSR_INT_BIT_RF_KILL)
--		iwl_enable_rfkill_int(priv(trans));
-+	else if (handled & CSR_INT_BIT_RF_KILL) {
-+		IWL_DEBUG_ISR(trans, "Enabling rfkill interrupt\n");
-+		iwl_write32(trans, CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
-+	}
- }
- 
- /******************************************************************************
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index ed2a921..ec26950 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1532,6 +1532,8 @@ static void iwl_trans_pcie_stop_hw(struct iwl_trans *trans)
- {
- 	iwl_apm_stop(trans);
- 
-+	iwl_write32(trans, CSR_INT, 0xFFFFFFFF);
-+
- 	/* Even if we stop the HW, we still want the RF kill interrupt */
- 	IWL_DEBUG_ISR(trans, "Enabling rfkill interrupt\n");
- 	iwl_write32(trans, CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
--- 
-1.7.0.4
+Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+
+>
+> Thank you.
+> --
+> Florian
+>
+>
+
+
 
