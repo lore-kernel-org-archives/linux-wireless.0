@@ -1,72 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8370 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754141Ab2BCMIV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 07:08:21 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 18/25] iwlegacy: get rid of ctx->ac_to_queue
-Date: Fri,  3 Feb 2012 13:07:18 +0100
-Message-Id: <1328270845-16891-19-git-send-email-sgruszka@redhat.com> (sfid-20120203_130830_956306_8DAA08D2)
-In-Reply-To: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
-References: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:46421 "HELO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753395Ab2BOQqf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Feb 2012 11:46:35 -0500
+Received: by mail-bk0-f49.google.com with SMTP id jk13so1389097bkc.8
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 08:46:27 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAB=NE6WkArbBkiT6A4eEKEo6k2EJ2SsxjoNoPHp5BDWZNR3t8g@mail.gmail.com>
+References: <1327581484-22047-1-git-send-email-victorg@ti.com>
+	<1327581484-22047-8-git-send-email-victorg@ti.com>
+	<4F27819A.1030200@sipsolutions.net>
+	<CAK80WHZpAAG_NWcuGUK2FJ_UwOhFXraVVkugR3W5FZEHCb6Z0A@mail.gmail.com>
+	<CAB=NE6WkArbBkiT6A4eEKEo6k2EJ2SsxjoNoPHp5BDWZNR3t8g@mail.gmail.com>
+Date: Wed, 15 Feb 2012 18:46:27 +0200
+Message-ID: <CAK80WHY0EzZH=tNMnYsFzSsnX=AK1OLyi3m2PB7bpVC153VtZg@mail.gmail.com> (sfid-20120215_174654_719395_7ABEC4B9)
+Subject: Re: [RFC 7/9] nl80211/cfg80211: add DFS feature flag
+From: "Goldenshtein, Victor" <victorg@ti.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
+	zefir.kurtisi@neratec.com, adrian.chadd@gmail.com, j@w1.fi,
+	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
+	adrian@freebsd.org, nbd@nbd.name
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/4965-mac.c |    8 ++------
- drivers/net/wireless/iwlegacy/common.h   |    2 --
- 2 files changed, 2 insertions(+), 8 deletions(-)
+On Fri, Feb 10, 2012 at 1:11 AM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+> While a it, consider adding one for the requirement of sending the
+> channel switch announcement within mac80211, not the driver. In that
+> case, although a DFS feature may be available in the driver, DFS
+> should not be enabled on the driver through nl80211 unless that
+> feature gets implemented in mac80211.
+>
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 731bb8c..1c3c85e 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -1718,7 +1718,8 @@ il4965_tx_skb(struct il_priv *il, struct sk_buff *skb)
- 	/* FIXME: remove me ? */
- 	WARN_ON_ONCE(info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM);
- 
--	txq_id = ctx->ac_to_queue[skb_get_queue_mapping(skb)];
-+	/* Access category (AC) is also the queue number */
-+	txq_id = skb_get_queue_mapping(skb);
- 
- 	/* irqs already disabled/saved above when locking il->lock */
- 	spin_lock(&il->sta_lock);
-@@ -6111,10 +6112,6 @@ il4965_set_hw_params(struct il_priv *il)
- 	return il->cfg->ops->lib->set_hw_params(il);
- }
- 
--static const u8 il4965_bss_ac_to_queue[] = {
--	0, 1, 2, 3,
--};
--
- static int
- il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
-@@ -6139,7 +6136,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	il->ctx.always_active = true;
- 	il->ctx.is_active = true;
--	il->ctx.ac_to_queue = il4965_bss_ac_to_queue;
- 
- 	SET_IEEE80211_DEV(hw, &pdev->dev);
- 
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index e0e4d01..e085131 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1155,8 +1155,6 @@ struct il_force_reset {
- struct il_rxon_context {
- 	struct ieee80211_vif *vif;
- 
--	const u8 *ac_to_queue;
--
- 	/*
- 	 * We could use the vif to indicate active, but we
- 	 * also need it to be active during disabling when
+At this point I'd prefer to stick to the original design proposal.
+
 -- 
-1.7.1
-
+Thanks,
+Victor.
