@@ -1,82 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:1305 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752268Ab2BIKRl (ORCPT
+Received: from nbd.name ([46.4.11.11]:44636 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753403Ab2BOSbq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 05:17:41 -0500
-From: Chilam Ng <chilamng@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <ath6kl-devel@qualcomm.com>
-Subject: [PATCH] ath6kl: assign Tx packet drop threshold per endpoint based on AC priority
-Date: Thu, 9 Feb 2012 02:17:01 -0800
-Message-ID: <1328782621-5251-1-git-send-email-chilamng@qca.qualcomm.com> (sfid-20120209_111745_421314_C5108745)
+	Wed, 15 Feb 2012 13:31:46 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	magnus.maatta@logica.com
+Subject: [PATCH 3.3] ath9k_hw: prevent writes to const data on AR9160
+Date: Wed, 15 Feb 2012 19:31:20 +0100
+Message-Id: <1329330680-62602-1-git-send-email-nbd@openwrt.org> (sfid-20120215_193203_734265_4F19F74E)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tx packets will begin to drop when there are multiple traffic priorities
-and the current traffic is not the highest priority and the remaining
-cookies drop below a certain number, which is fixed for all AC. It is
-possilbe that lower priority AC have more traffic which will consume
-more cookies and lock out higher priority AC from having any. Assign
-each endpoint (AC) with a different Tx-packet-drop threshold so lower
-priority AC is more likely to drop packets and the cookies become more
-available to higher priority AC.
+Duplicate the data for iniAddac early on, to avoid having to do redundant
+memcpy calls later. While we're at it, make AR5416 < v2.2 use the same
+codepath. Fixes a reported crash on x86.
 
-Signed-off-by: Chilam Ng <chilamng@qca.qualcomm.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Reported-by: Magnus Määttä <magnus.maatta@logica.com>
+Cc: stable@vger.kernel.org
 ---
- drivers/net/wireless/ath/ath6kl/htc.c  |    9 +++++++++
- drivers/net/wireless/ath/ath6kl/htc.h  |    1 +
- drivers/net/wireless/ath/ath6kl/txrx.c |    3 ++-
- 3 files changed, 12 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c |   25 +------------------------
+ drivers/net/wireless/ath/ath9k/ar9002_hw.c  |   19 +++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h         |    1 -
+ 3 files changed, 20 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-index 7d4e835..93e819d 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc.c
-@@ -2482,6 +2482,15 @@ int ath6kl_htc_conn_service(struct htc_target *target,
- 	endpoint->cred_dist.endpoint = assigned_ep;
- 	endpoint->cred_dist.cred_sz = target->tgt_cred_sz;
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index f901a17..86a891f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -489,8 +489,6 @@ static int ar5008_hw_rf_alloc_ext_banks(struct ath_hw *ah)
+ 	ATH_ALLOC_BANK(ah->analogBank6Data, ah->iniBank6.ia_rows);
+ 	ATH_ALLOC_BANK(ah->analogBank6TPCData, ah->iniBank6TPC.ia_rows);
+ 	ATH_ALLOC_BANK(ah->analogBank7Data, ah->iniBank7.ia_rows);
+-	ATH_ALLOC_BANK(ah->addac5416_21,
+-		       ah->iniAddac.ia_rows * ah->iniAddac.ia_columns);
+ 	ATH_ALLOC_BANK(ah->bank6Temp, ah->iniBank6.ia_rows);
  
-+	switch (endpoint->svc_id) {
-+	case WMI_DATA_BK_SVC:
-+		endpoint->tx_drop_packet_threshold = MAX_DEF_COOKIE_NUM / 3;
-+		break;
-+	default:
-+		endpoint->tx_drop_packet_threshold = MAX_HI_COOKIE_NUM;
-+		break;
-+	}
+ 	return 0;
+@@ -519,7 +517,6 @@ static void ar5008_hw_rf_free_ext_banks(struct ath_hw *ah)
+ 	ATH_FREE_BANK(ah->analogBank6Data);
+ 	ATH_FREE_BANK(ah->analogBank6TPCData);
+ 	ATH_FREE_BANK(ah->analogBank7Data);
+-	ATH_FREE_BANK(ah->addac5416_21);
+ 	ATH_FREE_BANK(ah->bank6Temp);
+ 
+ #undef ATH_FREE_BANK
+@@ -805,27 +802,7 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
+ 	if (ah->eep_ops->set_addac)
+ 		ah->eep_ops->set_addac(ah, chan);
+ 
+-	if (AR_SREV_5416_22_OR_LATER(ah)) {
+-		REG_WRITE_ARRAY(&ah->iniAddac, 1, regWrites);
+-	} else {
+-		struct ar5416IniArray temp;
+-		u32 addacSize =
+-			sizeof(u32) * ah->iniAddac.ia_rows *
+-			ah->iniAddac.ia_columns;
+-
+-		/* For AR5416 2.0/2.1 */
+-		memcpy(ah->addac5416_21,
+-		       ah->iniAddac.ia_array, addacSize);
+-
+-		/* override CLKDRV value at [row, column] = [31, 1] */
+-		(ah->addac5416_21)[31 * ah->iniAddac.ia_columns + 1] = 0;
+-
+-		temp.ia_array = ah->addac5416_21;
+-		temp.ia_columns = ah->iniAddac.ia_columns;
+-		temp.ia_rows = ah->iniAddac.ia_rows;
+-		REG_WRITE_ARRAY(&temp, 1, regWrites);
+-	}
+-
++	REG_WRITE_ARRAY(&ah->iniAddac, 1, regWrites);
+ 	REG_WRITE(ah, AR_PHY_ADC_SERIAL_CTL, AR_PHY_SEL_INTERNAL_ADDAC);
+ 
+ 	ENABLE_REGWRITE_BUFFER(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+index 11f192a..d190411 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+@@ -180,6 +180,25 @@ static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
+ 		INIT_INI_ARRAY(&ah->iniAddac, ar5416Addac,
+ 			       ARRAY_SIZE(ar5416Addac), 2);
+ 	}
 +
- 	if (conn_req->max_rxmsg_sz) {
- 		/*
- 		 * Override cred_per_msg calculation, this optimizes
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
-index b85716e..1d90fe6 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.h
-+++ b/drivers/net/wireless/ath/ath6kl/htc.h
-@@ -500,6 +500,7 @@ struct htc_endpoint {
- 	u8 seqno;
- 	u32 conn_flags;
- 	struct htc_endpoint_stats ep_st;
-+	u16 tx_drop_packet_threshold;
- };
++	/* iniAddac needs to be modified for these chips */
++	if (AR_SREV_9160(ah) || !AR_SREV_5416_22_OR_LATER(ah)) {
++		struct ar5416IniArray *addac = &ah->iniAddac;
++		u32 size = sizeof(u32) * addac->ia_rows * addac->ia_columns;
++		u32 *data;
++
++		data = kmalloc(size, GFP_KERNEL);
++		if (!data)
++			return;
++
++		memcpy(data, addac->ia_array, size);
++		addac->ia_array = data;
++
++		if (!AR_SREV_5416_22_OR_LATER(ah)) {
++			/* override CLKDRV value */
++			INI_RA(addac, 31,1) = 0;
++		}
++	}
+ }
  
- struct htc_control_buffer {
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index dd63371..294e269 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -576,7 +576,8 @@ enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
- 	 */
- 	if (ar->ac_stream_pri_map[ar->ep2ac_map[endpoint]] <
- 	    ar->hiac_stream_active_pri &&
--	    ar->cookie_count <= MAX_HI_COOKIE_NUM)
-+	    ar->cookie_count <=
-+			target->endpoint[endpoint].tx_drop_packet_threshold)
- 		/*
- 		 * Give preference to the highest priority stream by
- 		 * dropping the packets which overflowed.
+ /* Support for Japan ch.14 (2484) spread */
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 6a29004..c8261d4 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -940,7 +940,6 @@ struct ath_hw {
+ 	u32 *analogBank6Data;
+ 	u32 *analogBank6TPCData;
+ 	u32 *analogBank7Data;
+-	u32 *addac5416_21;
+ 	u32 *bank6Temp;
+ 
+ 	u8 txpower_limit;
 -- 
-1.7.7.2
+1.7.3.2
 
