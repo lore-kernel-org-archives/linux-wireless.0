@@ -1,41 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58804 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752440Ab2B2I2I (ORCPT
+Received: from nm24-vm0.access.bullet.mail.mud.yahoo.com ([66.94.236.143]:22494
+	"HELO nm24-vm0.access.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754653Ab2BOKyG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 03:28:08 -0500
-Subject: Re: checking for integer overflows in cfg80211_roamed_bss()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20120229063841.GG18031@elgon.mountain> (sfid-20120229_073850_391425_67F24184)
-References: <20120229063841.GG18031@elgon.mountain>
-	 (sfid-20120229_073850_391425_67F24184)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Feb 2012 09:28:04 +0100
-Message-ID: <1330504084.4714.0.camel@jlt3.sipsolutions.net> (sfid-20120229_092812_762848_B7F4CEA4)
-Mime-Version: 1.0
+	Wed, 15 Feb 2012 05:54:06 -0500
+Message-ID: <F3DD826768954BD1B67A2BBAAA1CE884@7CF9T2X> (sfid-20120215_115411_788114_C973D79B)
+From: "Fu yingang" <yingang.fu@borqs.com>
+To: "Luciano Coelho" <coelho@ti.com>, <linux-wireless@vger.kernel.org>
+References: <1329302724.19569.52.camel@cumari>
+Subject: Re: wl12xx/master branch has been rebased (3.3-rc3)
+Date: Wed, 15 Feb 2012 18:54:08 +0800
+MIME-Version: 1.0
+Content-Type: text/plain;
+	format=flowed;
+	charset="UTF-8";
+	reply-type=original
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-02-29 at 09:38 +0300, Dan Carpenter wrote:
-> I just sent a patch for a places that didn't cap "req_ie_len" and
-> "resp_ie_len" properly leading to integer overflows in
-> cfg80211_roamed_bss().  If there was a good way, I'd like to cap those
-> values inside cfg80211_roamed_bss() as well.  What is a good limit to
-> use?
-> 
-> devel/net/wireless/sme.c
->    653  
->    654          ev = kzalloc(sizeof(*ev) + req_ie_len + resp_ie_len, gfp);
->    655          if (!ev) {
->    656                  cfg80211_put_bss(bss);
->    657                  return;
->    658          }
->    659  
+hi, Luca
 
-Probably IEEE80211_MAX_DATA_LEN, there's no way all the IEs could ever
-be longer than that combined, at least for now :)
+Can i attach log/screen shot/ files in the email?
 
-johannes
+I have encountered several problems and need the help of analsysing the 
+debug logs.
+
+Thanks
+Yingang
+----- Original Message ----- 
+From: "Luciano Coelho" <coelho@ti.com>
+To: <linux-wireless@vger.kernel.org>
+Sent: Wednesday, February 15, 2012 6:45 PM
+Subject: wl12xx/master branch has been rebased (3.3-rc3)
+
+
+> Hi,
+>
+> I have rebased the master branch of the wl12xx.git tree to sync with
+> John's latest tree (based on 3.3-rc3).
+>
+> The wl12xx-next branch has also been updated accordingly.
+>
+> Please update your local copies.
+>
+> -- 
+> Cheers,
+> Luca.
+>
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" 
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html 
 
