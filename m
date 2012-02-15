@@ -1,52 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18447 "EHLO mx1.redhat.com"
+Received: from plane.gmane.org ([80.91.229.3]:52066 "EHLO plane.gmane.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753916Ab2BCMIJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 07:08:09 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 13/25] iwlegacy: get rid of ctx->station_flags
-Date: Fri,  3 Feb 2012 13:07:13 +0100
-Message-Id: <1328270845-16891-14-git-send-email-sgruszka@redhat.com> (sfid-20120203_130819_316884_393B4EEE)
-In-Reply-To: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
-References: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
+	id S1752811Ab2BOKAI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Feb 2012 05:00:08 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1Rxbee-000468-7J
+	for linux-wireless@vger.kernel.org; Wed, 15 Feb 2012 11:00:07 +0100
+Received: from sw.montavista.co.jp ([202.232.97.131])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 11:00:04 +0100
+Received: from sshukla82 by sw.montavista.co.jp with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 11:00:04 +0100
+To: linux-wireless@vger.kernel.org
+From: Santosh Shukla <sshukla82@hotmail.com>
+Subject: Re: wl1271: how to use without runtime pm
+Date: Wed, 15 Feb 2012 09:57:39 +0000 (UTC)
+Message-ID: <loom.20120215T101548-412@post.gmane.org> (sfid-20120215_110014_213295_3240DB1D)
+References: <20101230000737.74d30852@lair>  <AANLkTim55FJ_cBE1M7HmhVagfphntZZBLSs9NjTmK_F+@mail.gmail.com>  <20101231010847.79a55fda@lair> <1293782416.15791.10.camel@powerslave>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/common.c |    2 +-
- drivers/net/wireless/iwlegacy/common.h |    2 --
- 2 files changed, 1 insertions(+), 3 deletions(-)
+Is there any resolution for this mail thread? I too came across this problem. My 
+H/W has WLAN_EN bit high( a h/w Switch) and Physically can not be configured for 
+RUN-TIME feature. So, I will have to run wl128x compat module without RUN-TIME 
+support. 
 
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index 7c7ea77..ac26985 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -1950,7 +1950,7 @@ il_prep_station(struct il_priv *il, struct il_rxon_context *ctx,
- 	memcpy(station->sta.sta.addr, addr, ETH_ALEN);
- 	station->sta.mode = 0;
- 	station->sta.sta.sta_id = sta_id;
--	station->sta.station_flags = ctx->station_flags;
-+	station->sta.station_flags = 0;
- 
- 	if (sta) {
- 		struct il_station_priv_common *sta_priv;
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index 811e768..a872175 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1169,8 +1169,6 @@ struct il_rxon_context {
- 
- 	struct il_qos_info qos_data;
- 
--	__le32 station_flags;
--
- 	struct {
- 		bool non_gf_sta_present;
- 		u8 protection;
--- 
-1.7.1
+Could any one suggest workaround for same so that I don't see SDIO WR/RD error
+for sequence of wireless node down , followed by up (referred in this mail 
+thread).
+
+Appreciate your opinion.
 
