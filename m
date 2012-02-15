@@ -1,42 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:60262 "EHLO
-	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755496Ab2BOKR7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 05:17:59 -0500
-Received: by mail-lpp01m010-f47.google.com with SMTP id c1so1093045lah.34
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 02:17:58 -0800 (PST)
-Message-ID: <1329301074.19569.42.camel@cumari> (sfid-20120215_111807_348841_1CC21334)
-Subject: Re: [PATCH v3 0/4] wl12xx: add some psm/suspend features
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 15 Feb 2012 12:17:54 +0200
-In-Reply-To: <1328177022-26646-1-git-send-email-eliad@wizery.com>
-References: <1328177022-26646-1-git-send-email-eliad@wizery.com>
+Received: from mga11.intel.com ([192.55.52.93]:33381 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754060Ab2BOR7l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Feb 2012 12:59:41 -0500
+Subject: Re: [PATCH] iwlwifi: iwl-agn.h included twice
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Danny Kukawka <danny.kukawka@bisect.de>
+Cc: linux-wireless@vger.kernel.org, Danny Kukawka <dkukawka@suse.de>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1329328516-4792-1-git-send-email-danny.kukawka@bisect.de>
+References: <1329328516-4792-1-git-send-email-danny.kukawka@bisect.de>
 Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 15 Feb 2012 08:50:09 -0800
+Message-ID: <1329324609.7290.67.camel@wwguy-huron> (sfid-20120215_190000_236066_1532F2F5)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-02-02 at 12:03 +0200, Eliad Peller wrote: 
-> Add some psm / suspend features:
-> * Add the ability to force psm (by default, the fw uses dynamic ps)
-> * Use differnet wake up conditions on suspend
+On Wed, 2012-02-15 at 18:55 +0100, Danny Kukawka wrote:
+> drivers/net/wireless/iwlwifi/iwl-core.c included 'iwl-agn.h' twice,
+> remove the duplicate.
 > 
-> (depends on the "wl12xx: update fw api" patchset)
-> 
-> v3: remove the rx-filters patches
-> 
-> Eyal Shapira (4):
->   wl12xx: Set different wake up conditions in case of suspend
->   wl12xx: add suspend_listen_interval debugfs file
->   wl12xx: add forced_ps mode
->   wl12xx: add forced_ps debugfs file
-
-Applied the set with v4 of 3/4.
-
--- 
-Cheers,
-Luca.
+> Signed-off-by: Danny Kukawka <danny.kukawka@bisect.de>
+Acked-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 
