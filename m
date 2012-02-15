@@ -1,76 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44473 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932081Ab2BNW3m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 17:29:42 -0500
-Message-ID: <4F3AE048.5030503@openwrt.org> (sfid-20120214_232945_547811_C8798626)
-Date: Tue, 14 Feb 2012 23:29:28 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40612 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751994Ab2BOSqq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Feb 2012 13:46:46 -0500
+Date: Wed, 15 Feb 2012 13:30:48 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
+	magnus.maatta@logica.com
+Subject: Re: [PATCH 3.3] ath9k_hw: prevent writes to const data on AR9160
+Message-ID: <20120215183047.GD4379@tuxdriver.com> (sfid-20120215_194649_560510_1FEEE27B)
+References: <1329330680-62602-1-git-send-email-nbd@openwrt.org>
 MIME-Version: 1.0
-To: Ben Greear <greearb@candelatech.com>
-CC: Sujith <m.sujith@gmail.com>, ath9k-devel@venema.h4ckr.net,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [ath9k-devel] [PATCH 3/7] ath9k: Merge wiphy and misc debugfs
- files
-References: <20280.43962.403799.188541@gargle.gargle.HOWL> <4F3947A1.2060103@candelatech.com> <20281.48485.409968.741657@gargle.gargle.HOWL> <4F39BF5F.3030408@candelatech.com> <20281.52354.478076.479135@gargle.gargle.HOWL> <20120214073855.6843.qmail@stuge.se> <20282.7088.898987.229335@gargle.gargle.HOWL> <4F3A9ACB.3010009@candelatech.com> <20282.43026.335779.405152@gargle.gargle.HOWL> <4F3AAB3F.7030308@candelatech.com>
-In-Reply-To: <4F3AAB3F.7030308@candelatech.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1329330680-62602-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-02-14 7:43 PM, Ben Greear wrote:
-> On 02/14/2012 10:29 AM, Sujith wrote:
->> Ben Greear wrote:
->>> Actually, I think it might be useful to have a second level of debugging.
->>> I hope to soon have time&  resources to add some logic to dump lots of register
->>> info and such in human-readable format, (like, when DMA times out).  That is going to be a lot
->>> of strings added to the driver, so the compile size will definitely
->>> increase.  If keeping the size small is important, then this sort of verbose thing
->>> could be hidden behind a second level of debugging...
->>
->> That could be implemented similar to what usbmon does. A debugfs file that could
->> be read and redirected to a file. And there would be no overhead to the
->> driver, I think. We could call it the 'event log'. :)
-> 
-> I was thinking about adding a method that grabbed as many registers
-> as I have info for and dumping them with printk when DMA errors
-> hit.  This would make kernel splats more useful.
-> 
-> And also have a debugfs file called 'registers' or similar that one
-> could cat out and get similar info.  And this can let folks look
-> at steady-state or whatever.
-> 
-> But, the logic to turn the register bit values into strings would
-> be in the driver (and thus add some code size bloat).
-> 
-> My hope is that this would allow a better chance of understanding
-> the stop-DMA errors that some people get reliably (but which I can never reliably
-> reproduce).
-> 
-> I'm not sure how that plays into your 'event log' idea, but maybe
-> one will help the other.
-I think the 'let's dump all kinds of random crap when the issue occurs
-until we find somebody that can parse it' approach won't work here, and
-I really think it's not a good idea in general.
+Do you have a link to the reported crash?
 
-In the past the stop-DMA crap has been a symptom with a wild variety of
-different causes, most of which were actually *software* race
-conditions, e.g. dma tx or rx enable during reset, locking issues, etc.
+On Wed, Feb 15, 2012 at 07:31:20PM +0100, Felix Fietkau wrote:
+> Duplicate the data for iniAddac early on, to avoid having to do redundant
+> memcpy calls later. While we're at it, make AR5416 < v2.2 use the same
+> codepath. Fixes a reported crash on x86.
+> 
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> Reported-by: Magnus M‰‰tt‰ <magnus.maatta@logica.com>
+> Cc: stable@vger.kernel.org
+> ---
+>  drivers/net/wireless/ath/ath9k/ar5008_phy.c |   25 +------------------------
+>  drivers/net/wireless/ath/ath9k/ar9002_hw.c  |   19 +++++++++++++++++++
+>  drivers/net/wireless/ath/ath9k/hw.h         |    1 -
+>  3 files changed, 20 insertions(+), 25 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+> index f901a17..86a891f 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+> @@ -489,8 +489,6 @@ static int ar5008_hw_rf_alloc_ext_banks(struct ath_hw *ah)
+>  	ATH_ALLOC_BANK(ah->analogBank6Data, ah->iniBank6.ia_rows);
+>  	ATH_ALLOC_BANK(ah->analogBank6TPCData, ah->iniBank6TPC.ia_rows);
+>  	ATH_ALLOC_BANK(ah->analogBank7Data, ah->iniBank7.ia_rows);
+> -	ATH_ALLOC_BANK(ah->addac5416_21,
+> -		       ah->iniAddac.ia_rows * ah->iniAddac.ia_columns);
+>  	ATH_ALLOC_BANK(ah->bank6Temp, ah->iniBank6.ia_rows);
+>  
+>  	return 0;
+> @@ -519,7 +517,6 @@ static void ar5008_hw_rf_free_ext_banks(struct ath_hw *ah)
+>  	ATH_FREE_BANK(ah->analogBank6Data);
+>  	ATH_FREE_BANK(ah->analogBank6TPCData);
+>  	ATH_FREE_BANK(ah->analogBank7Data);
+> -	ATH_FREE_BANK(ah->addac5416_21);
+>  	ATH_FREE_BANK(ah->bank6Temp);
+>  
+>  #undef ATH_FREE_BANK
+> @@ -805,27 +802,7 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
+>  	if (ah->eep_ops->set_addac)
+>  		ah->eep_ops->set_addac(ah, chan);
+>  
+> -	if (AR_SREV_5416_22_OR_LATER(ah)) {
+> -		REG_WRITE_ARRAY(&ah->iniAddac, 1, regWrites);
+> -	} else {
+> -		struct ar5416IniArray temp;
+> -		u32 addacSize =
+> -			sizeof(u32) * ah->iniAddac.ia_rows *
+> -			ah->iniAddac.ia_columns;
+> -
+> -		/* For AR5416 2.0/2.1 */
+> -		memcpy(ah->addac5416_21,
+> -		       ah->iniAddac.ia_array, addacSize);
+> -
+> -		/* override CLKDRV value at [row, column] = [31, 1] */
+> -		(ah->addac5416_21)[31 * ah->iniAddac.ia_columns + 1] = 0;
+> -
+> -		temp.ia_array = ah->addac5416_21;
+> -		temp.ia_columns = ah->iniAddac.ia_columns;
+> -		temp.ia_rows = ah->iniAddac.ia_rows;
+> -		REG_WRITE_ARRAY(&temp, 1, regWrites);
+> -	}
+> -
+> +	REG_WRITE_ARRAY(&ah->iniAddac, 1, regWrites);
+>  	REG_WRITE(ah, AR_PHY_ADC_SERIAL_CTL, AR_PHY_SEL_INTERNAL_ADDAC);
+>  
+>  	ENABLE_REGWRITE_BUFFER(ah);
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+> index 11f192a..d190411 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
+> @@ -180,6 +180,25 @@ static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
+>  		INIT_INI_ARRAY(&ah->iniAddac, ar5416Addac,
+>  			       ARRAY_SIZE(ar5416Addac), 2);
+>  	}
+> +
+> +	/* iniAddac needs to be modified for these chips */
+> +	if (AR_SREV_9160(ah) || !AR_SREV_5416_22_OR_LATER(ah)) {
+> +		struct ar5416IniArray *addac = &ah->iniAddac;
+> +		u32 size = sizeof(u32) * addac->ia_rows * addac->ia_columns;
+> +		u32 *data;
+> +
+> +		data = kmalloc(size, GFP_KERNEL);
+> +		if (!data)
+> +			return;
+> +
+> +		memcpy(data, addac->ia_array, size);
+> +		addac->ia_array = data;
+> +
+> +		if (!AR_SREV_5416_22_OR_LATER(ah)) {
+> +			/* override CLKDRV value */
+> +			INI_RA(addac, 31,1) = 0;
+> +		}
+> +	}
+>  }
+>  
+>  /* Support for Japan ch.14 (2484) spread */
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+> index 6a29004..c8261d4 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.h
+> +++ b/drivers/net/wireless/ath/ath9k/hw.h
+> @@ -940,7 +940,6 @@ struct ath_hw {
+>  	u32 *analogBank6Data;
+>  	u32 *analogBank6TPCData;
+>  	u32 *analogBank7Data;
+> -	u32 *addac5416_21;
+>  	u32 *bank6Temp;
+>  
+>  	u8 txpower_limit;
+> -- 
+> 1.7.3.2
+> 
+> 
 
-In addition to those software causes, there was one actual hardware
-condition that also triggered this error, and even this wouldn't have
-showed up in a normal register dump, because it required setting up the
-MAC observation bus in a particular way.
-
-That hardware trigger for this issue was analyzed not by dumping random
-data, but by actually talking to hardware designers that could look
-through the code and guide the debugging process.
-
-Let's not carpet-bomb the driver with lots of debug crap that probably
-won't ever lead anybody to any good solution for the remaining issues,
-let's fix stuff the old-fashioned way: by reading the code,
-understanding what's going on, analyzing problems in a systematic way,
-rather than clouding the whole process with assumptions based on old
-bugs that have since been fixed.
-
-- Felix
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
