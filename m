@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36040 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754810Ab2B0S6v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 13:58:51 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
-	rmanohar@qca.qualcomm.com
-Subject: [PATCH 3.3 3/4] ath9k_hw: enable interrupts for beacon tx completion events
-Date: Mon, 27 Feb 2012 19:58:41 +0100
-Message-Id: <1330369122-60220-3-git-send-email-nbd@openwrt.org> (sfid-20120227_195858_945382_655C0342)
-In-Reply-To: <1330369122-60220-2-git-send-email-nbd@openwrt.org>
-References: <1330369122-60220-1-git-send-email-nbd@openwrt.org>
- <1330369122-60220-2-git-send-email-nbd@openwrt.org>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:34591 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751251Ab2BOTeS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Feb 2012 14:34:18 -0500
+Message-ID: <4F3C08B4.8010103@canonical.com> (sfid-20120215_203441_648063_2D298136)
+Date: Wed, 15 Feb 2012 12:34:12 -0700
+From: Tim Gardner <rtg.canonical@gmail.com>
+Reply-To: tim.gardner@canonical.com
+MIME-Version: 1.0
+To: Larry Finger <Larry.Finger@lwfinger.net>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Tim Gardner <tim.gardner@canonical.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] rtlwifi: rtl8192se firmware load can overflow target
+ buffer
+References: <1328833192-10681-1-git-send-email-Larry.Finger@lwfinger.net> <20120215185525.GE4379@tuxdriver.com> <4F3C0421.20506@lwfinger.net>
+In-Reply-To: <4F3C0421.20506@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Not doing so could cause the tx status queue to overflow during longer
-periods of time without non-beacon tx. These events are also required
-for proper drv_tx_last_beacon handling.
+On 02/15/2012 12:14 PM, Larry Finger wrote:
+> On 02/15/2012 12:55 PM, John W. Linville wrote:
+>> Is this a fix that should go to 3.3?
+>
+> That code has been in the driver since 3.0 and it should probably be
+> packported. On the other hand, Tim's report is the first one. My
+> suggestion is that it go into 3.4.
+>
+> In addition, I am working on a fix that will completely eliminate all
+> this fixed storage.
+>
+> Larry
+>
+>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- drivers/net/wireless/ath/ath9k/mac.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+I'm fine with it being 3.4 material. The patch addresses an unlikely 
+scenario.
 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index e196aba..5f4ae6c 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -745,7 +745,11 @@ int ath9k_hw_beaconq_setup(struct ath_hw *ah)
- 	qi.tqi_aifs = 1;
- 	qi.tqi_cwmin = 0;
- 	qi.tqi_cwmax = 0;
--	/* NB: don't enable any interrupts */
-+
-+	if (ah->caps.hw_caps & ATH9K_HW_CAP_EDMA)
-+		qi.tqi_qflags = TXQ_FLAG_TXOKINT_ENABLE |
-+				TXQ_FLAG_TXERRINT_ENABLE;
-+
- 	return ath9k_hw_setuptxqueue(ah, ATH9K_TX_QUEUE_BEACON, &qi);
- }
- EXPORT_SYMBOL(ath9k_hw_beaconq_setup);
+rtg
 -- 
-1.7.3.2
-
+Tim Gardner tim.gardner@canonical.com
