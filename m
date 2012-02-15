@@ -1,93 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:64864 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751645Ab2BMGVH (ORCPT
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:60262 "EHLO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755496Ab2BOKR7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 01:21:07 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20280.43978.995673.296898@gargle.gargle.HOWL> (sfid-20120213_072111_813547_BA0C391B)
-Date: Mon, 13 Feb 2012 11:50:58 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 4/7] ath9k: Add a debugfs file to display reset statistics
+	Wed, 15 Feb 2012 05:17:59 -0500
+Received: by mail-lpp01m010-f47.google.com with SMTP id c1so1093045lah.34
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 02:17:58 -0800 (PST)
+Message-ID: <1329301074.19569.42.camel@cumari> (sfid-20120215_111807_348841_1CC21334)
+Subject: Re: [PATCH v3 0/4] wl12xx: add some psm/suspend features
+From: Luciano Coelho <coelho@ti.com>
+To: Eliad Peller <eliad@wizery.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 15 Feb 2012 12:17:54 +0200
+In-Reply-To: <1328177022-26646-1-git-send-email-eliad@wizery.com>
+References: <1328177022-26646-1-git-send-email-eliad@wizery.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Location: <debugfs_path>/ieee80211/phy#/ath9k/reset
+On Thu, 2012-02-02 at 12:03 +0200, Eliad Peller wrote: 
+> Add some psm / suspend features:
+> * Add the ability to force psm (by default, the fw uses dynamic ps)
+> * Use differnet wake up conditions on suspend
+> 
+> (depends on the "wl12xx: update fw api" patchset)
+> 
+> v3: remove the rx-filters patches
+> 
+> Eyal Shapira (4):
+>   wl12xx: Set different wake up conditions in case of suspend
+>   wl12xx: add suspend_listen_interval debugfs file
+>   wl12xx: add forced_ps mode
+>   wl12xx: add forced_ps debugfs file
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/debug.c |   41 ++++++++++++++++++++++++++++++++
- 1 files changed, 41 insertions(+), 0 deletions(-)
+Applied the set with v4 of 3/4.
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index b2c6069..fe1f55f 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -750,6 +750,38 @@ static ssize_t read_file_misc(struct file *file, char __user *user_buf,
- 	return retval;
- }
- 
-+static ssize_t read_file_reset(struct file *file, char __user *user_buf,
-+			       size_t count, loff_t *ppos)
-+{
-+	struct ath_softc *sc = file->private_data;
-+	char buf[512];
-+	unsigned int len = 0;
-+
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+			"%17s: %2d\n", "Baseband Hang",
-+			sc->debug.stats.reset[RESET_TYPE_BB_HANG]);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+			"%17s: %2d\n", "Baseband Watchdog",
-+			sc->debug.stats.reset[RESET_TYPE_BB_WATCHDOG]);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+			"%17s: %2d\n", "Fatal HW Error",
-+			sc->debug.stats.reset[RESET_TYPE_FATAL_INT]);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+			"%17s: %2d\n", "TX HW error",
-+			sc->debug.stats.reset[RESET_TYPE_TX_ERROR]);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+			"%17s: %2d\n", "TX Path Hang",
-+			sc->debug.stats.reset[RESET_TYPE_TX_HANG]);
-+	len += snprintf(buf + len, sizeof(buf) - len,
-+			"%17s: %2d\n", "PLL RX Hang",
-+			sc->debug.stats.reset[RESET_TYPE_PLL_HANG]);
-+
-+	if (len > sizeof(buf))
-+		len = sizeof(buf);
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-+}
-+
- void ath_debug_stat_tx(struct ath_softc *sc, struct ath_buf *bf,
- 		       struct ath_tx_status *ts, struct ath_txq *txq,
- 		       unsigned int flags)
-@@ -837,6 +869,13 @@ static const struct file_operations fops_misc = {
- 	.llseek = default_llseek,
- };
- 
-+static const struct file_operations fops_reset = {
-+	.read = read_file_reset,
-+	.open = ath9k_debugfs_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- static ssize_t read_file_recv(struct file *file, char __user *user_buf,
- 			      size_t count, loff_t *ppos)
- {
-@@ -1549,6 +1588,8 @@ int ath9k_init_debug(struct ath_hw *ah)
- 			    &fops_stations);
- 	debugfs_create_file("misc", S_IRUSR, sc->debug.debugfs_phy, sc,
- 			    &fops_misc);
-+	debugfs_create_file("reset", S_IRUSR, sc->debug.debugfs_phy, sc,
-+			    &fops_reset);
- 	debugfs_create_file("recv", S_IRUSR, sc->debug.debugfs_phy, sc,
- 			    &fops_recv);
- 	debugfs_create_file("rx_chainmask", S_IRUSR | S_IWUSR,
 -- 
-1.7.9
+Cheers,
+Luca.
 
