@@ -1,63 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:64433 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754338Ab2BQUX4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Feb 2012 15:23:56 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 26/26] iwlwifi: enable receiving beacons when not associated
-Date: Fri, 17 Feb 2012 11:13:54 -0800
-Message-Id: <1329506034-1394-27-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120217_212418_167079_C4E74B9B)
-In-Reply-To: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:59504 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751138Ab2BOPmu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Feb 2012 10:42:50 -0500
+Received: by wics10 with SMTP id s10so600212wic.19
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 07:42:49 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20120214180551.70389f5e@north>
+References: <1329108519-5342-1-git-send-email-kubakici@wp.pl>
+	<1329108519-5342-2-git-send-email-kubakici@wp.pl>
+	<CAL1gcdPWEf_qYcjp8nYuZNkJUR=pA93P3-hi5xhokvUm1t-Ljg@mail.gmail.com>
+	<20120214180551.70389f5e@north>
+Date: Wed, 15 Feb 2012 16:42:49 +0100
+Message-ID: <CAL1gcdMb3+iiUU1rDLoEO1tWNE92_v4tC5X+hDa3PGzY-mXW-g@mail.gmail.com> (sfid-20120215_164257_191629_A5B027B1)
+Subject: Re: [rt2x00-users] [PATCH v2 1/4] rt2800pci: remove
+ rt2800pci_set_state function
+From: Gertjan van Wingerde <gwingerde@gmail.com>
+To: Jakub Kicinski <kubakici@wp.pl>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+On Tue, Feb 14, 2012 at 6:05 PM, Jakub Kicinski <kubakici@wp.pl> wrote:
+> On Tue, 14 Feb 2012 11:47:37 +0100 Gertjan van Wingerde <gwingerde@gmail.com> wrote:
+>> On Mon, Feb 13, 2012 at 5:48 AM, Jakub Kicinski <kubakici@wp.pl> wrote:
+>> > rt2800pci_set_state was introduced to group requests preceded with
+>> > common introduction. As that introduction is no longer used
+>> > rt2800pci_set_state can be removed.
+>> >
+>> > Note that this patch changes behaviour for STATE_DEEP_SLEEP and
+>> > STATE_STANDBY, but those states are not used in rt2800 anyway.
+>> >
+>> > Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+>>
+>> I know this patch has been out there for a while, but I only now have
+>> taken a good look at it.
+>> First of all, I think that it would have been easy to not change the
+>> behaviour for STATE_DEEP_SLEEP
+>> and STATE_STANDBY, even though these are not used in rt2800. They can
+>> simply be put as their
+>> own cases in the switch statement in which nothing is done.
+>
+> True, I have decided to make the change because:
+>  1) I couldn't find any reason to treat those states differently than
+>    normal SLEEP;
+>  2) rt61pci and rt2500pci treats them equally;
+>  3) the differentiation was introduced by Jay in 7f6e144f and the change
+>    looks like it may have not been 100% intentional. At least my newbie
+>    mind is telling me that. No one asked about it at the time and commit
+>    message also doesn't explain this change.
+>
+> Please let me know if this reasoning makes any sense to you.
 
-If the firmware implements beacon filtering,
-beacons are filtered when not associated. This causes
-association failures on channels marked passive.
+OK. Looking at this closer it actually looks like that these two
+states are not used at
+all in rt2x00. So, I guess I can be fine with this.
 
-Enabling this flag indicates to the firmware to allow
-the beacons to pass through when not associated only.
+>
+>> Also some comments to the actual code below.
+>>
+>> > ---
+>> >  drivers/net/wireless/rt2x00/rt2800pci.c |   38 ++++++++++--------------------
+>> >  1 files changed, 13 insertions(+), 25 deletions(-)
+>> >
+>> > diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+>> > index 6ad6929..6ab4637 100644
+>> > --- a/drivers/net/wireless/rt2x00/rt2800pci.c
+>> > +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+>> > @@ -517,23 +517,6 @@ static void rt2800pci_disable_radio(struct rt2x00_dev *rt2x00dev)
+>> >        }
+>> >  }
+>> >
+>> > -static int rt2800pci_set_state(struct rt2x00_dev *rt2x00dev,
+>> > -                              enum dev_state state)
+>> > -{
+>> > -       if (state == STATE_AWAKE) {
+>> > -               rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, TOKEN_WAKUP, 0, 0x02);
+>> > -               rt2800pci_mcu_status(rt2x00dev, TOKEN_WAKUP);
+>> > -       } else if (state == STATE_SLEEP) {
+>> > -               rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_STATUS,
+>> > -                                        0xffffffff);
+>> > -               rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_CID,
+>> > -                                        0xffffffff);
+>> > -               rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0x01, 0xff, 0x01);
+>> > -       }
+>> > -
+>> > -       return 0;
+>> > -}
+>> > -
+>> >  static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
+>> >                                      enum dev_state state)
+>> >  {
+>> > @@ -546,7 +529,7 @@ static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
+>> >                 * to be woken up. After that it needs a bit of time
+>> >                 * to be fully awake and then the radio can be enabled.
+>> >                 */
+>> > -               rt2800pci_set_state(rt2x00dev, STATE_AWAKE);
+>> > +               rt2800pci_set_device_state(rt2x00dev, STATE_AWAKE);
+>> >                msleep(1);
+>> >                retval = rt2800pci_enable_radio(rt2x00dev);
+>> >                break;
+>>
+>> I don't like this recursive call, but this is removed in patch 4, so I
+>> don't mind it here.
+>>
+>> > @@ -556,17 +539,22 @@ static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
+>> >                 * be put to sleep for powersaving.
+>> >                 */
+>> >                rt2800pci_disable_radio(rt2x00dev);
+>> > -               rt2800pci_set_state(rt2x00dev, STATE_SLEEP);
+>> > -               break;
+>> > -       case STATE_RADIO_IRQ_ON:
+>> > -       case STATE_RADIO_IRQ_OFF:
+>> > -               rt2800pci_toggle_irq(rt2x00dev, state);
+>> > -               break;
+>> > +               /* fall through */
+>>
+>> I don't really like this falling through, which is just there out of
+>> convenience, as the states have
+>> some common code. However, in reality these states have not a lot in
+>> common, so just a bit
+>> of code duplication would have been better here, IMHO.
+>
+> Ok, I will change that and perhaps put that "duplicated" code into
+> rt2800pci_disable_radio to keep switch statement short.
+>
 
-Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Fine with me. Maybe the same could be done with respect to the new code
+and rt2800pci_enable_radio.
+
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c |   16 ++++++++++++++++
- 1 files changed, 16 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index 8ca9570..35dd7e3 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -900,6 +900,22 @@ void iwlagn_bss_info_changed(struct ieee80211_hw *hw,
- 		}
- 	}
- 
-+	/*
-+	 * If the ucode decides to do beacon filtering before
-+	 * association, it will lose beacons that are needed
-+	 * before sending frames out on passive channels. This
-+	 * causes association failures on those channels. Enable
-+	 * receiving beacons in such cases.
-+	 */
-+
-+	if (vif->type == NL80211_IFTYPE_STATION) {
-+		if (!bss_conf->assoc)
-+			ctx->staging.filter_flags |= RXON_FILTER_BCON_AWARE_MSK;
-+		else
-+			ctx->staging.filter_flags &=
-+						    ~RXON_FILTER_BCON_AWARE_MSK;
-+	}
-+
- 	if (force || memcmp(&ctx->staging, &ctx->active, sizeof(ctx->staging)))
- 		iwlagn_commit_rxon(priv, ctx);
- 
--- 
-1.7.0.4
-
+Gertjan
