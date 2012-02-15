@@ -1,36 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5163 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756130Ab2BHKwY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 05:52:24 -0500
-Date: Wed, 8 Feb 2012 11:52:21 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC 1/4] iwlwifi: dump stack when fail to gain access to the
- device
-Message-ID: <20120208105220.GA2283@redhat.com> (sfid-20120208_115228_427924_B85952AD)
-References: <1328544564-8696-1-git-send-email-sgruszka@redhat.com>
- <1328544496.14547.10.camel@wwguy-ubuntu>
- <20120207080122.GA2246@redhat.com>
- <1328624472.7290.51.camel@wwguy-huron>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1328624472.7290.51.camel@wwguy-huron>
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:41998 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755975Ab2BOKZV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Feb 2012 05:25:21 -0500
+Received: by lahl5 with SMTP id l5so1224957lah.17
+        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 02:25:15 -0800 (PST)
+Message-ID: <1329301512.19569.48.camel@cumari> (sfid-20120215_112524_639796_94068F24)
+Subject: Re: [PATCH] wl12xx: fix typo in fwlog module param description
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Date: Wed, 15 Feb 2012 12:25:12 +0200
+In-Reply-To: <1328611168-22994-1-git-send-email-coelho@ti.com>
+References: <1328611168-22994-1-git-send-email-coelho@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> > > I agree the message and check make sense, but not sure what new clue we
-> > > got by doing this?
-> > 
-> > Calltrace with very first grab nic access failure.
-> > 
-> Good point, we have this "PCI bus disappear" problem on all of our
-> devices and very difficult to debug.
+On Tue, 2012-02-07 at 12:39 +0200, Luciano Coelho wrote: 
+> Fix a copy and paste bug in the MODULE_PARAM_DESC for fwlog.
 > 
-> btw, do you have any system can reproduce this problem? we have nothing.
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
+> ---
 
-No, those problems are not reproducible here as well.
+Applied.
 
-Stanislaw
+-- 
+Cheers,
+Luca.
+
