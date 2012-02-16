@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:34513 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753145Ab2BOKAS convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 05:00:18 -0500
-Received: by obcva7 with SMTP id va7so1279025obc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 02:00:18 -0800 (PST)
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:59072 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751114Ab2BPTyd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Feb 2012 14:54:33 -0500
+Received: by iacb35 with SMTP id b35so3305322iac.19
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Feb 2012 11:54:33 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20120215040307.GA4387@shredder>
-References: <CAG6hwVNXru0bN+MZNf+vwN=LGFn9G8EpzK+A=FOCHwe0yYCbyQ@mail.gmail.com>
-	<20120215040307.GA4387@shredder>
-Date: Wed, 15 Feb 2012 12:00:18 +0200
-Message-ID: <CAB3XZEcv57uTvTN-rddc7p2LPoU0Tv_V3PqWyYpM_NajmFB1OQ@mail.gmail.com> (sfid-20120215_110022_457849_DBC1BFDC)
-Subject: Re: wl12xx: BUG: scheduling while atomic: kworker
-From: Eliad Peller <eliad@wizery.com>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1329341872-12872-1-git-send-email-linville@tuxdriver.com>
+References: <1329341872-12872-1-git-send-email-linville@tuxdriver.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 16 Feb 2012 11:54:12 -0800
+Message-ID: <CAB=NE6V0VDxBq5MhDnzjQaYqjoXgaoRuvo9RjGw_vfQWw7RxeA@mail.gmail.com> (sfid-20120216_205443_139483_6E1FA0F5)
+Subject: Re: [PATCH] compat-wireless: remove olpc_ec_wakeup_* calls for
+ pre-3.1 kernels
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 15, 2012 at 6:03 AM, Thomas Pedersen <thomas@cozybit.com> wrote:
-> Sorry, gmail ate the formatting. Resending:
+On Wed, Feb 15, 2012 at 1:37 PM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> This section of the libertas driver calls functions that simply don't
+> exist before the release of 3.1. Â This code in question was an addition,
+> not a change from any existing code. Â It is safe to simply remove it for
+> older kernels.
 >
-> # [  151.065338] BUG: scheduling while atomic: kworker/0:1/425/0x00000200
+> Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-> [  151.249053] [<bf0f2170>] (wl12xx_sdio_raw_write+0x50/0xa4 [wl12xx_sdio]) from [<bf0c710c>] (wl1271_cm)
-> [  151.261260] [<bf0c710c>] (wl1271_cmd_send+0x80/0x3b4 [wl12xx]) from [<bf0c98f4>] (wl12xx_start_dev+0x)
-> [  151.272674] [<bf0c98f4>] (wl12xx_start_dev+0x90/0x144 [wl12xx]) from [<bf0cab2c>] (wl12xx_tx_get_hlid)
-> [  151.284179] [<bf0cab2c>] (wl12xx_tx_get_hlid+0xc8/0xcc [wl12xx]) from [<bf0c36c4>] (wl1271_op_tx+0x44)
-> [  151.284179] [<bf0c36c4>] (wl1271_op_tx+0x44/0x150 [wl12xx]) from [<bf059ce8>] (__ieee80211_tx.isra.4+)
-> [  151.307586] [<bf059ce8>] (__ieee80211_tx.isra.4+0x150/0x2c0 [mac80211]) from [<bf059f18>] (ieee80211_)
-> [  151.319702] [<bf059f18>] (ieee80211_tx+0xc0/0xf4 [mac80211]) from [<bf05a008>] (ieee80211_xmit+0xbc/0)
-> [  151.330841] [<bf05a008>] (ieee80211_xmit+0xbc/0x150 [mac80211]) from [<bf05b2a8>] (ieee80211_tx_skb_t)
-> [  151.342956] [<bf05b2a8>] (ieee80211_tx_skb_tid+0x3c/0x48 [mac80211]) from [<bf06f998>] (ieee80211_pro)
-> [  151.355773] [<bf06f998>] (ieee80211_probe_auth+0x128/0x2f8 [mac80211]) from [<bf073774>] (ieee80211_m)
-> [  151.355773] [<bf073774>] (ieee80211_mgd_auth+0x218/0x3b0 [mac80211]) from [<bf016e94>]
+Applied and pushed, thanks!
 
-this should be applied:
-http://permalink.gmane.org/gmane.linux.kernel.wireless.general/84311
-
-and you'll probably also need to apply
-http://permalink.gmane.org/gmane.linux.kernel.wireless.general/84312
-
-if you want your device to be able to connect :)
-
-(haven't tested these patches with the latest kernel yet, though)
-
-Eliad.
+  Luis
