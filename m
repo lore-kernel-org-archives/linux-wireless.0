@@ -1,100 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:34264 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754757Ab2BMAUd (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:61219 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757148Ab2BPGXN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Feb 2012 19:20:33 -0500
+	Thu, 16 Feb 2012 01:23:13 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <4f346d61.3S6x22TS5RH2gGO5%Larry.Finger@lwfinger.net>
-References: <4f346d61.3S6x22TS5RH2gGO5%Larry.Finger@lwfinger.net>
-Date: Mon, 13 Feb 2012 03:20:32 +0300
-Message-ID: <CAMo8BfL+nbOmO=jo1uqYoXOUCDW2-c7BZTL5UBcdHGuyGODiFA@mail.gmail.com> (sfid-20120213_012126_437469_C5E70B9E)
-Subject: Re: [RFC/RFT] p54spi: Convert driver to use asynchronous firmware loading
-From: Max Filippov <jcmvbkbc@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: chunkeey@web.de, m@bues.ch, linux-kernel@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20284.41146.869660.914302@gargle.gargle.HOWL> (sfid-20120216_072316_988975_36507C7A)
+Date: Thu, 16 Feb 2012 11:52:50 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v2 8/9] ath9k: Fix programming SYNTH4 for AR9462
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Drivers that load firmware from their probe routine have problems with the
-> latest versions of udev as they get timeouts while waiting for user
-> space to start. The problem is fixed by using request_firmware_nowait()
-> and delaying the start of mac80211 until the firmware is loaded.
->
-> To prevent the possibility of the driver being unloaded while the firmware
-> loading callback is still active, a completion queue entry is used.
->
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> ---
->
-> This conversion of p54spi to use asynchronous firmware loading is based
-> on the method used in p54usb. As I do not have the hardware, it is only
-> compile tested. I would appreciate any feedback from people that have the
-> hardware.
+The LONG_SHIFT_SELECT offset is different for AR9462 from
+the other chip families. Fix this.
 
-Hi, Larry.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Are there any prerequisites for this patch?
-For now I'm applying it to the linux-omap ToT and having the following:
-
-<7>[    2.968048] calling  p54spi_init+0x0/0x30 [p54spi] @ 456
-<4>[    2.973937] ------------[ cut here ]------------
-<4>[    2.974090] WARNING: at
-/home/dumb/ws/osll/n8x0/linux-3.3/linux-omap-2.6/fs/sysfs/dir.c:481
-sysfs_add_one+0x74/0x9c()
-<4>[    2.974212] sysfs: cannot create duplicate filename
-'/devices/platform/omap/omap2_mcspi.2/spi_master/spi2/spi2.0/firmware/spi2.0'
-<4>[    2.974334] Modules linked in: p54spi(+)
-<4>[    2.974487] [<c00182bc>] (unwind_backtrace+0x0/0xe4) from
-[<c002ef0c>] (warn_slowpath_common+0x4c/0x64)
-<4>[    2.974670] [<c002ef0c>] (warn_slowpath_common+0x4c/0x64) from
-[<c002efa4>] (warn_slowpath_fmt+0x2c/0x3c)
-<4>[    2.974792] [<c002efa4>] (warn_slowpath_fmt+0x2c/0x3c) from
-[<c00e5888>] (sysfs_add_one+0x74/0x9c)
-<4>[    2.974945] [<c00e5888>] (sysfs_add_one+0x74/0x9c) from
-[<c00e6290>] (create_dir+0x5c/0xac)
-<4>[    2.975067] [<c00e6290>] (create_dir+0x5c/0xac) from
-[<c00e6394>] (sysfs_create_dir+0xb4/0xcc)
-<4>[    2.975219] [<c00e6394>] (sysfs_create_dir+0xb4/0xcc) from
-[<c0142ce8>] (kobject_add_internal+0xe4/0x1c0)
-<4>[    2.975372] [<c0142ce8>] (kobject_add_internal+0xe4/0x1c0) from
-[<c0142f30>] (kobject_add+0x44/0x54)
-<4>[    2.975494] [<c0142f30>] (kobject_add+0x44/0x54) from
-[<c0193c98>] (device_add+0xe0/0x530)
-<4>[    2.975646] [<c0193c98>] (device_add+0xe0/0x530) from
-[<c019f184>] (_request_firmware+0x190/0x394)
-<4>[    2.975799] [<c019f184>] (_request_firmware+0x190/0x394) from
-[<c019f3c8>] (request_firmware_work_func+0x40/0x78)
-<4>[    2.975952] [<c019f3c8>] (request_firmware_work_func+0x40/0x78)
-from [<c00473cc>] (kthread+0x88/0x94)
-<4>[    2.976135] [<c00473cc>] (kthread+0x88/0x94) from [<c0013844>]
-(kernel_thread_exit+0x0/0x8)
-<4>[    2.976226] ---[ end trace 181b959cc0c448db ]---
-<3>[    2.976318] kobject_add_internal failed for spi2.0 with -EEXIST,
-don't try to register things with the same name in the same directory.
-<4>[    2.976501] [<c00182bc>] (unwind_backtrace+0x0/0xe4) from
-[<c0142d84>] (kobject_add_internal+0x180/0x1c0)
-<4>[    2.976654] [<c0142d84>] (kobject_add_internal+0x180/0x1c0) from
-[<c0142f30>] (kobject_add+0x44/0x54)
-<4>[    2.976776] [<c0142f30>] (kobject_add+0x44/0x54) from
-[<c0193c98>] (device_add+0xe0/0x530)
-<4>[    2.976928] [<c0193c98>] (device_add+0xe0/0x530) from
-[<c019f184>] (_request_firmware+0x190/0x394)
-<4>[    2.977081] [<c019f184>] (_request_firmware+0x190/0x394) from
-[<c019f3c8>] (request_firmware_work_func+0x40/0x78)
-<4>[    2.977233] [<c019f3c8>] (request_firmware_work_func+0x40/0x78)
-from [<c00473cc>] (kthread+0x88/0x94)
-<4>[    2.977386] [<c00473cc>] (kthread+0x88/0x94) from [<c0013844>]
-(kernel_thread_exit+0x0/0x8)
-<3>[    2.977508] p54spi spi2.0: fw_create_instance: device_register failed
-<3>[    2.977600] p54spi spi2.0: Firmware loading failed
-<3>[    3.104492] firmware spi2.0: firmware_loading_store: vmap() failed
-<6>[    3.108337] p54spi spi2.0: loading default eeprom...
-<6>[    3.108764] ieee80211 phy0: hwaddr 00:02:ee:c0:ff:ee,
-MAC:isl3820 RF:Longbow
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+index aca24bf..81f3e85 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
+@@ -625,8 +625,8 @@
+ #define AR_PHY_AIC_STAT_2_B0	(AR_SM_BASE + 0x4cc)
+ 
+ #define AR_PHY_65NM_CH0_SYNTH4      0x1608c
+-#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT   0x00000002
+-#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT_S 1
++#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT   (AR_SREV_9462(ah) ? 0x00000001 : 0x00000002)
++#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT_S (AR_SREV_9462(ah) ? 0 : 1)
+ #define AR_PHY_65NM_CH0_SYNTH7      0x16098
+ #define AR_PHY_65NM_CH0_BIAS1       0x160c0
+ #define AR_PHY_65NM_CH0_BIAS2       0x160c4
 -- 
-Thanks.
--- Max
+1.7.9.1
+
