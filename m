@@ -1,92 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:4643 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753210Ab2BIWgW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 17:36:22 -0500
-From: "Allan, Bruce W" <bruce.w.allan@intel.com>
-To: "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-	Joe Perches <joe@perches.com>
-CC: David Miller <davem@davemloft.net>,
-	"David.Laight@ACULAB.COM" <David.Laight@ACULAB.COM>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH net-next] drivers/net: Remove boolean comparisons to
- true/false
-Date: Thu, 9 Feb 2012 22:36:16 +0000
-Message-ID: <804857E1F29AAC47BF68C404FC60A1842709C1@ORSMSX102.amr.corp.intel.com> (sfid-20120209_233628_329123_1DAF4FC9)
-References: <1328783282-17760-5-git-send-email-jeffrey.t.kirsher@intel.com>
-	 <AE90C24D6B3A694183C094C60CF0A2F6026B6E62@saturn3.aculab.com>
-	 <20120209.133413.349832435589531136.davem@davemloft.net>
-	 <1328822243.29329.11.camel@joe2Laptop>
- <1328822935.2242.1.camel@jtkirshe-mobl>
-In-Reply-To: <1328822935.2242.1.camel@jtkirshe-mobl>
-Content-Type: text/plain; charset="utf-8"
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:2464 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753538Ab2BPIQW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Feb 2012 03:16:22 -0500
+Message-ID: <4F3CBB4F.7070408@qca.qualcomm.com> (sfid-20120216_091650_471653_9BFEA662)
+Date: Thu, 16 Feb 2012 13:46:15 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
+To: Felix Fietkau <nbd@openwrt.org>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	<Mohammed@venema.h4ckr.net>, <ath9k-devel@lists.ath9k.org>,
+	<linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>
+Subject: Re: [RFC] ath9k: remove rx_bufptr
+References: <1329375781-4902-1-git-send-email-mohammed@qca.qualcomm.com> <4F3CB274.1080800@openwrt.org>
+In-Reply-To: <4F3CB274.1080800@openwrt.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBuZXRkZXYtb3duZXJAdmdlci5r
-ZXJuZWwub3JnIFttYWlsdG86bmV0ZGV2LQ0KPiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJl
-aGFsZiBPZiBKZWZmIEtpcnNoZXINCj4gU2VudDogVGh1cnNkYXksIEZlYnJ1YXJ5IDA5LCAyMDEy
-IDE6MjkgUE0NCj4gVG86IEpvZSBQZXJjaGVzDQo+IENjOiBEYXZpZCBNaWxsZXI7IERhdmlkLkxh
-aWdodEBBQ1VMQUIuQ09NOyBuZXRkZXZAdmdlci5rZXJuZWwub3JnOw0KPiBsaW51eC13aXJlbGVz
-cw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIG5ldC1uZXh0XSBkcml2ZXJzL25ldDogUmVtb3ZlIGJv
-b2xlYW4gY29tcGFyaXNvbnMNCj4gdG8gdHJ1ZS9mYWxzZQ0KPiANCj4gT24gVGh1LCAyMDEyLTAy
-LTA5IGF0IDEzOjE3IC0wODAwLCBKb2UgUGVyY2hlcyB3cm90ZToNCj4gPiBCb29sZWFucyBzaG91
-bGQgbm90IGJlIGNvbXBhcmVkIHRvIHRydWUgb3IgZmFsc2UNCj4gPiBidXQgYmUgZGlyZWN0bHkg
-dGVzdGVkIG9yIHRlc3RlZCB3aXRoICEuDQo+ID4NCj4gPiBEb25lIHZpYSBjb2NjaSBzY3JpcHQ6
-DQo+ID4NCj4gPiBAQA0KPiA+IGJvb2wgdDsNCj4gPiBAQA0KPiA+IC0gdCA9PSB0cnVlDQo+ID4g
-KyB0DQo+ID4gQEANCj4gPiBib29sIHQ7DQo+ID4gQEANCj4gPiAtIHQgIT0gdHJ1ZQ0KPiA+ICsg
-IXQNCj4gPiBAQA0KPiA+IGJvb2wgdDsNCj4gPiBAQA0KPiA+IC0gdCA9PSBmYWxzZQ0KPiA+ICsg
-IXQNCj4gPiBAQA0KPiA+IGJvb2wgdDsNCj4gPiBAQA0KPiA+IC0gdCAhPSBmYWxzZQ0KPiA+ICsg
-dA0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogSm9lIFBlcmNoZXMgPGpvZUBwZXJjaGVzLmNvbT4N
-Cj4gPiAtLS0NCj4gPiAgZHJpdmVycy9uZXQvZXRoZXJuZXQvYnJvYWRjb20vYm54MngvYm54Mnhf
-Y21uLmggICAgfCAgICAzICstLQ0KPiA+ICBkcml2ZXJzL25ldC9ldGhlcm5ldC9icm9jYWRlL2Ju
-YS9iZmFfY2VlLmMgICAgICAgICB8ICAgIDggKysrKy0tLS0NCj4gPiAgZHJpdmVycy9uZXQvZXRo
-ZXJuZXQvYnJvY2FkZS9ibmEvYmZhX2lvYy5jICAgICAgICAgfCAgICAyICstDQo+ID4gIGRyaXZl
-cnMvbmV0L2V0aGVybmV0L2ludGVsL2l4Z2IvaXhnYl9lZS5jICAgICAgICAgIHwgICAxMg0KPiA+
-ICsrKysrLS0tLS0tLQ0KPiA+ICBkcml2ZXJzL25ldC9ldGhlcm5ldC9pbnRlbC9peGdiZS9peGdi
-ZV84MjU5OC5jICAgICB8ICAgIDQgKystLQ0KPiA+ICBkcml2ZXJzL25ldC9ldGhlcm5ldC9pbnRl
-bC9peGdiZS9peGdiZV9zcmlvdi5jICAgICB8ICAgIDIgKy0NCj4gPiAgZHJpdmVycy9uZXQvZXRo
-ZXJuZXQvaW50ZWwvaXhnYmUvaXhnYmVfeDU0MC5jICAgICAgfCAgICAyICstDQo+ID4gIC4uLi9u
-ZXQvZXRoZXJuZXQvb2tpLXNlbWkvcGNoX2diZS9wY2hfZ2JlX21haW4uYyAgIHwgICAgMiArLQ0K
-PiA+ICBkcml2ZXJzL25ldC9waHkvYnJvYWRjb20uYyAgICAgICAgICAgICAgICAgICAgICAgICB8
-ICAgIDYgKystLS0tDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg1ay9hbmkuYyAg
-ICAgICAgICAgICAgIHwgICAgOCArKysrLS0tLQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9h
-dGgvYXRoOWsvYW5pLmMgICAgICAgICAgICAgICB8ICAgIDYgKysrLS0tDQo+ID4gIGRyaXZlcnMv
-bmV0L3dpcmVsZXNzL2F0aC9hdGg5ay9ody1vcHMuaCAgICAgICAgICAgIHwgICAgMiArLQ0KPiA+
-ICBkcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoOWsvaHcuYyAgICAgICAgICAgICAgICB8ICAg
-IDUgKystLS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvYnJjbTgwMjExL2JyY21mbWFjL2Ro
-ZF9zZGlvLmMgfCAgIDE2DQo+ID4gKysrKysrKy0tLS0tLS0tLQ0KPiA+ICBkcml2ZXJzL25ldC93
-aXJlbGVzcy9icmNtODAyMTEvYnJjbXNtYWMvbWFpbi5jICAgICB8ICAgIDQgKystLQ0KPiA+ICAu
-Li4vbmV0L3dpcmVsZXNzL2JyY204MDIxMS9icmNtc21hYy9waHkvcGh5X24uYyAgICB8ICAgIDIg
-Ky0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJhbnMtcGNpZS10eC5j
-ICAgfCAgICA0ICsrLS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvaXdsd2lmaS9pd2wtdHJh
-bnMtcGNpZS5jICAgICAgfCAgICAyICstDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL213bDhr
-LmMgICAgICAgICAgICAgICAgICAgICAgIHwgICAgNSArKy0tLQ0KPiA+ICBkcml2ZXJzL25ldC93
-aXJlbGVzcy9ydGx3aWZpL2VmdXNlLmMgICAgICAgICAgICAgICB8ICAgIDIgKy0NCj4gPiAgZHJp
-dmVycy9uZXQvd2lyZWxlc3MvcnRsd2lmaS9wcy5jICAgICAgICAgICAgICAgICAgfCAgICAzICst
-LQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0bDgxOTJjL2RtX2NvbW1vbi5j
-ICB8ICAgIDQgKystLQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0bDgxOTJj
-L3BoeV9jb21tb24uYyB8ICAgIDggKysrKy0tLS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3Mv
-cnRsd2lmaS9ydGw4MTkyY2UvaHcuYyAgICAgICAgfCAgICA5ICsrKystLS0tLQ0KPiA+ICBkcml2
-ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0bDgxOTJjZS9waHkuYyAgICAgICB8ICAgIDMgKy0t
-DQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL3J0bHdpZmkvcnRsODE5MmNlL3JmLmMgICAgICAg
-IHwgICAgMiArLQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0bDgxOTJjdS9w
-aHkuYyAgICAgICB8ICAgIDMgKy0tDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL3J0bHdpZmkv
-cnRsODE5MmN1L3JmLmMgICAgICAgIHwgICAgMiArLQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVz
-cy9ydGx3aWZpL3J0bDgxOTJkZS9kbS5jICAgICAgICB8ICAgIDIgKy0NCj4gPiAgZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvcnRsd2lmaS9ydGw4MTkyZGUvaHcuYyAgICAgICAgfCAgICA5ICsrKystLS0t
-LQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0bDgxOTJkZS9waHkuYyAgICAg
-ICB8ICAgMTEgKysrKystLS0tDQo+IC0tDQo+ID4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL3J0bHdp
-ZmkvcnRsODE5MmRlL3JmLmMgICAgICAgIHwgICAgMiArLQ0KPiA+ICBkcml2ZXJzL25ldC93aXJl
-bGVzcy9ydGx3aWZpL3J0bDgxOTJzZS9mdy5jICAgICAgICB8ICAgIDYgKysrLS0tDQo+ID4gIGRy
-aXZlcnMvbmV0L3dpcmVsZXNzL3J0bHdpZmkvcnRsODE5MnNlL2h3LmMgICAgICAgIHwgICAxMCAr
-KysrKy0tLS0NCj4gLQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9ydGx3aWZpL3J0bDgxOTJz
-ZS9waHkuYyAgICAgICB8ICAgMTMNCj4gPiArKysrKystLS0tLS0tDQo+ID4gIGRyaXZlcnMvbmV0
-L3dpcmVsZXNzL3J0bHdpZmkvcnRsODE5MnNlL3JmLmMgICAgICAgIHwgICAgMiArLQ0KPiA+ICAz
-NiBmaWxlcyBjaGFuZ2VkLCA4NSBpbnNlcnRpb25zKCspLCAxMDEgZGVsZXRpb25zKC0pDQo+IA0K
-PiBUaGUgaXhnYmUgY2hhbmdlcyBsb29rIGZpbmUsIGFuZCBJIGRvIG5vdCBzZWUgYW55IGlzc3Vl
-cyB3aXRoIHRoZQ0KPiBjaGFuZ2VzLg0KPiANCj4gUmV2aWV3ZWQtYnk6IEplZmYgS2lyc2hlciA8
-amVmZnJleS50LmtpcnNoZXJAaW50ZWwuY29tPg0KDQpIYXMgdGhlIGNvY2NpIHNjcmlwdCBiZWVu
-IChvciB3aWxsIGl0IGJlKSBhZGRlZCB0byAuL3NjcmlwdHMvY29jY2luZWxsZT8NCg0K
+Hi Felix,
+
+On Thursday 16 February 2012 01:08 PM, Felix Fietkau wrote:
+> On 2012-02-16 8:03 AM, Mohammed Shafi Shajakhan wrote:
+>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>>
+>> it does not seems to used for anything
+>>
+>> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>> ---
+>> drivers/net/wireless/ath/ath9k/ath9k.h | 1 -
+>> drivers/net/wireless/ath/ath9k/recv.c | 4 ----
+>> 2 files changed, 0 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h
+>> b/drivers/net/wireless/ath/ath9k/ath9k.h
+>> index 171ccf7..603f686 100644
+>> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
+>> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+>> @@ -311,7 +311,6 @@ struct ath_rx {
+>> spinlock_t rxbuflock;
+>> struct list_head rxbuf;
+>> struct ath_descdma rxdma;
+>> - struct ath_buf *rx_bufptr;
+>> struct ath_rx_edma rx_edma[ATH9K_RX_QUEUE_MAX];
+>>
+>> struct sk_buff *frag;
+>> diff --git a/drivers/net/wireless/ath/ath9k/recv.c
+>> b/drivers/net/wireless/ath/ath9k/recv.c
+>> index 7e1a91a..c9612d9 100644
+>> --- a/drivers/net/wireless/ath/ath9k/recv.c
+>> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+>> @@ -224,9 +224,6 @@ static void ath_rx_edma_cleanup(struct ath_softc *sc)
+>> }
+>>
+>> INIT_LIST_HEAD(&sc->rx.rxbuf);
+>> -
+>> - kfree(sc->rx.rx_bufptr);
+>> - sc->rx.rx_bufptr = NULL;
+>> }
+>>
+> Take a look at this part. It's used for avoiding a memleak, so please
+> keep it ;)
+
+sure i will leave it as it is, thanks for the review :)
+
+-- 
+thanks,
+shafi
