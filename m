@@ -1,40 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:58320 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753447Ab2BBKSj (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:53110 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751627Ab2BPO4E (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 05:18:39 -0500
-Received: by werb13 with SMTP id b13so1675044wer.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 02:18:38 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 0/3] wl12xx: re-enable auto-arp
-Date: Thu,  2 Feb 2012 12:22:08 +0200
-Message-Id: <1328178131-28938-1-git-send-email-eliad@wizery.com> (sfid-20120202_111842_580966_91FCA80F)
+	Thu, 16 Feb 2012 09:56:04 -0500
+Date: Thu, 16 Feb 2012 08:55:58 -0600
+From: Seth Forshee <seth.forshee@canonical.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	Arend van Spriel <arend@broadcom.com>,
+	Scott Sanbar <scott.sanbar@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
+Subject: Re: BCM4331 fails to associate after suspend
+Message-ID: <20120216145558.GB30486@ubuntu-macmini> (sfid-20120216_155608_920368_9C4329AF)
+References: <20120203222818.GA3749@ubuntu-mba>
+ <4F2D0C07.1010704@broadcom.com>
+ <20120204142502.GA10858@ubuntu-mba>
+ <CACna6ryR2xm2EAJaV4vCO8WebR5pXCyFknEMrf8ynVF+HYrxTw@mail.gmail.com>
+ <20120206173757.GC31938@ubuntu-macmini>
+ <4F302647.2070102@hauke-m.de>
+ <20120206223447.GE31938@ubuntu-macmini>
+ <CACna6rx7E9tM82iyYP=eRnTU+QZA1rMfdk8vNnX5k1_jbc5DqQ@mail.gmail.com>
+ <CACna6rzDNfAMq+RHO_X2y3XrQn3oFJxmf9bsR2mzLs3X0o3dSA@mail.gmail.com>
+ <20120207152921.GA8464@ubuntu-macmini>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20120207152921.GA8464@ubuntu-macmini>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-auto-arp used to cause various issues when enabled. however,
-after some fixes both in the driver and fw side, it seems to
-work well. re-enable it.
+On Tue, Feb 07, 2012 at 09:29:21AM -0600, Seth Forshee wrote:
+> On Tue, Feb 07, 2012 at 08:08:11AM +0100, Rafał Miłecki wrote:
+> > W dniu 7 lutego 2012 08:04 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
+> > > 2012/2/6 Seth Forshee <seth.forshee@canonical.com>:
+> > >> On Mon, Feb 06, 2012 at 08:13:11PM +0100, Hauke Mehrtens wrote:
+> > >>> According to the Broadcom SDK for SoCs bcma_pcicore_serdes_workaround()
+> > >>> should be called when coming out of standby/hibernate.
+> > >>> The code wl uses to do the same thing as bcma does is open source. You
+> > >>> find it in the GPL package of many Broadcom based Wifi Routers.
+> > >>
+> > >> Thanks for the suggestion. Unfortunately calling
+> > >> bcma_pcicore_serdes_workaround() during resume doesn't help. I'll look
+> > >> at the wl code to see if I can learn anything there.
+> > >
+> > > Can you try
+> > >
+> > >
+> > > diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+> > > index febbc0a..a097a26 100644
+> > > --- a/drivers/bcma/main.c
+> > > +++ b/drivers/bcma/main.c
+> > > @@ -267,6 +267,13 @@ int bcma_bus_resume(struct bcma_bus *bus)
+> > >                bcma_core_chipcommon_init(&bus->drv_cc);
+> > >        }
+> > >
+> > > +       /* Init PCIE core */
+> > > +       core = bcma_find_core(bus, BCMA_CORE_PCIE);
+> > > +       if (core) {
+> > > +               bus->drv_pci.setup_done = false;
+> > > +               bcma_core_pci_init(&bus->drv_pci);
+> > > +       }
+> > > +
+> > >        list_for_each_entry(core, &bus->cores, list) {
+> > >                struct device_driver *drv = core->dev.driver;
+> > >                if (drv) {
+> > 
+> > If this doesn't work out of box, please check if reloading b43 is
+> > enough. AFAIR now you have to reload both: b43 and bcma. I hope this
+> > patch will let you avoid reloading at least bcma.
+> 
+> I tried exactly that yesterday, but it doesn't fix the issue. I just
+> checked to see if it allows reloading only b43, and it does not. I still
+> have to reload bcma to get the wireless working again.
 
-Eliad Peller (3):
-  wl12xx: consider encryption and QoS in auto arp template
-  wl12xx: Revert "wl12xx: disable auto-arp"
-  wl12xx: configure arp filtering only after association
+I've been pounding on this quite a bit in the past week, but I haven't
+been able to get anywhere so far. Any relevant workarounds I found in wl
+have no effect, and neither does any amount of reinitialization.
 
- drivers/net/wireless/wl12xx/cmd.c          |   88 +++++++++++++++++++++------
- drivers/net/wireless/wl12xx/cmd.h          |    3 +-
- drivers/net/wireless/wl12xx/debugfs.c      |    1 +
- drivers/net/wireless/wl12xx/init.c         |    6 +-
- drivers/net/wireless/wl12xx/main.c         |   83 +++++++++++++++++---------
- drivers/net/wireless/wl12xx/tx.c           |   11 ++--
- drivers/net/wireless/wl12xx/tx.h           |    4 +-
- drivers/net/wireless/wl12xx/wl12xx.h       |    6 ++
- drivers/net/wireless/wl12xx/wl12xx_80211.h |    2 +-
- 9 files changed, 144 insertions(+), 60 deletions(-)
+I'm still digging into the drivers to see if I can learn anything, but
+if anyone has more suggestions I'll happily give them a try.
 
--- 
-1.7.6.401.g6a319
-
+Seth
