@@ -1,73 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46255 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:60779 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751935Ab2BCF4b (ORCPT
+	with ESMTP id S1753466Ab2BPGVf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 00:56:31 -0500
-Date: Fri, 3 Feb 2012 11:26:47 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Adrian Chadd <adrian@freebsd.org>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Paul Stewart <pstew@google.com>,
-	Susinder Gulasekaran <susinder@qca.qualcomm.com>,
-	Suresh Chandrasekaran <csuresh@qca.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath9k_hw: improve ANI processing and rx
- desensitizing parameters
-Message-ID: <20120203055645.GA15811@vmraj-lnx.users.atheros.com> (sfid-20120203_065645_245274_C55526C2)
-References: <1328112335-19265-1-git-send-email-rmanohar@qca.qualcomm.com>
- <1328112335-19265-2-git-send-email-rmanohar@qca.qualcomm.com>
- <CAJ-Vmon56yyyvU46oXBJaFpUcFWa0008S5tyBm31qTY5y2CO+g@mail.gmail.com>
+	Thu, 16 Feb 2012 01:21:35 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-In-Reply-To: <CAJ-Vmon56yyyvU46oXBJaFpUcFWa0008S5tyBm31qTY5y2CO+g@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20284.41047.270368.466355@gargle.gargle.HOWL> (sfid-20120216_072138_345772_520516B1)
+Date: Thu, 16 Feb 2012 11:51:11 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v2 3/9] ath9k: Add a debugfs file to display reset statistics
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 02, 2012 at 02:09:10PM -0800, Adrian Chadd wrote:
-> Hi, questions below:
-> 
-> On 1 February 2012 08:05, Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
-> >
-> > This patch improves ANI operations by switching among the immunity
-> > levels based on PHY errors and beacon rssi which will adjust receiver
-> > desensitizing parameters. The changes are
-> 
-> What environments are you seeing this bad behaviour in? I'd just like
-> to be sure that this won't mess up the behaviour of ANI for other
-> chips, other environments and other operating modes.
->
-The actual test was done in AP mode in controlled environment with rx signal
-level of -50 dBm and with interference of -45 dBm at STA side. In such scenario
-beacon miss was observered and drastic hit in throughput at OFDM ani level 9 after
-enabling the Weak signal detection. Not changing the any of weak signal detection
-thresholds and retaining the ini values improved the throughput at higher ANI
-levels.
-> > * Irrespective of opmode, the Weak Signal Detection is with the current
-> >  immunity level value.
-> 
-Again with AP mode enabling/disabling the Weak signal detection is not working.
-It was verified from the register (use_self_corr_low). So that it will
-configure the WSD with current ofdm immunity level, if there is mismatch b/w
-configured WSD state and selected immunity level's WSD state.
+Location: <debugfs_path>/ieee80211/phy#/ath9k/reset
 
-> I didn't think that weak signal detection was a single bit in the PHY.
-> It looks like you've just deleted all the threshold settings and are
-> turning on/off using low self correlation.
->
-As menstion above, the thresh values are continue to retain the init values.
-Based on the test results, it is enough to update use_self_corr_low state.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |   41 ++++++++++++++++++++++++++++++++
+ 1 files changed, 41 insertions(+), 0 deletions(-)
 
-> Have a read of the (very early, AR5212 era?) ANI patent:
-> 
-> http://www.freepatentsonline.com/7349503.pdf
-> 
-> If this has changed (ie, if in Osprey it's done differently) then it
-> should likely be documented in the driver somewhere.
-> 
-> IF this all works then great, but I'd really like to try and better
-> understand/document the "why" aspects of it. ANI is .. fiddly, and
-> there aren't any tools available for ath9k (+freebsd) wireless
-> developers to really understand the impact of ANI.
->
---
-Rajkumar
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index b2c6069..fe1f55f 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -750,6 +750,38 @@ static ssize_t read_file_misc(struct file *file, char __user *user_buf,
+ 	return retval;
+ }
+ 
++static ssize_t read_file_reset(struct file *file, char __user *user_buf,
++			       size_t count, loff_t *ppos)
++{
++	struct ath_softc *sc = file->private_data;
++	char buf[512];
++	unsigned int len = 0;
++
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%17s: %2d\n", "Baseband Hang",
++			sc->debug.stats.reset[RESET_TYPE_BB_HANG]);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%17s: %2d\n", "Baseband Watchdog",
++			sc->debug.stats.reset[RESET_TYPE_BB_WATCHDOG]);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%17s: %2d\n", "Fatal HW Error",
++			sc->debug.stats.reset[RESET_TYPE_FATAL_INT]);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%17s: %2d\n", "TX HW error",
++			sc->debug.stats.reset[RESET_TYPE_TX_ERROR]);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%17s: %2d\n", "TX Path Hang",
++			sc->debug.stats.reset[RESET_TYPE_TX_HANG]);
++	len += snprintf(buf + len, sizeof(buf) - len,
++			"%17s: %2d\n", "PLL RX Hang",
++			sc->debug.stats.reset[RESET_TYPE_PLL_HANG]);
++
++	if (len > sizeof(buf))
++		len = sizeof(buf);
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
++}
++
+ void ath_debug_stat_tx(struct ath_softc *sc, struct ath_buf *bf,
+ 		       struct ath_tx_status *ts, struct ath_txq *txq,
+ 		       unsigned int flags)
+@@ -837,6 +869,13 @@ static const struct file_operations fops_misc = {
+ 	.llseek = default_llseek,
+ };
+ 
++static const struct file_operations fops_reset = {
++	.read = read_file_reset,
++	.open = ath9k_debugfs_open,
++	.owner = THIS_MODULE,
++	.llseek = default_llseek,
++};
++
+ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+ 			      size_t count, loff_t *ppos)
+ {
+@@ -1549,6 +1588,8 @@ int ath9k_init_debug(struct ath_hw *ah)
+ 			    &fops_stations);
+ 	debugfs_create_file("misc", S_IRUSR, sc->debug.debugfs_phy, sc,
+ 			    &fops_misc);
++	debugfs_create_file("reset", S_IRUSR, sc->debug.debugfs_phy, sc,
++			    &fops_reset);
+ 	debugfs_create_file("recv", S_IRUSR, sc->debug.debugfs_phy, sc,
+ 			    &fops_recv);
+ 	debugfs_create_file("rx_chainmask", S_IRUSR | S_IWUSR,
+-- 
+1.7.9.1
+
