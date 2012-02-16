@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42478 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756855Ab2BHNDP (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34890 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751470Ab2BPOjJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 08:03:15 -0500
-Message-ID: <4F327273.5090301@sipsolutions.net> (sfid-20120208_140317_307278_DFC2B14F)
-Date: Wed, 08 Feb 2012 14:02:43 +0100
+	Thu, 16 Feb 2012 09:39:09 -0500
+Subject: Re: calling request_firmware() from module init will not work with
+ recent/future udev versions
 From: Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
 To: Arend van Spriel <arend@broadcom.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: REGRESSION: crash in wireless-testing smoketest
-References: <4F313815.3020107@broadcom.com> ( sfid-20120207_154219_853529_011888C8) <4F313C53.2040604@sipsolutions.net> <4F315E7E.7040203@broadcom.com> <1328646776.4223.0.camel@jlt3.sipsolutions.net> <4F32484B.7020409@broadcom.com>
-In-Reply-To: <4F32484B.7020409@broadcom.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc: Kay Sievers <kay.sievers@vrfy.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Tom Gundersen <teg@jklm.no>, Andy Whitcroft <apw@canonical.com>
+In-Reply-To: <4F3D0012.9070808@broadcom.com>
+References: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
+	 <1326621743.3448.1.camel@jlt3.sipsolutions.net>
+	 <CAPXgP13b0uu3DgOGRL-_WKx-aSQN-f0xL6OmjNPBGf9fg0satA@mail.gmail.com>
+	 ( sfid-20120115_163411_716244_29DE7A13) <1326704259.3510.3.camel@jlt3.sipsolutions.net>
+	 <4F3CF0C1.3090304@broadcom.com>
+	 <1329395881.3915.7.camel@jlt3.sipsolutions.net>
+	 <4F3D0012.9070808@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 16 Feb 2012 15:39:05 +0100
+Message-ID: <1329403145.3915.10.camel@jlt3.sipsolutions.net> (sfid-20120216_153921_586251_AA7D60E4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I rerun the test on a kernel with some more lock checking and got lucky.
->
-> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512283] wlan0: authenticate
-> with 98:fc:11:8e:94:57
-> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512515] wlan0: send auth to
-> 98:fc:11:8e:94:57 (try 1/3)
-> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514184] BUG: unable to handle
-> kernel NULL pointer dereference at 00000004
+On Thu, 2012-02-16 at 14:09 +0100, Arend van Spriel wrote:
 
-...
 
-> Apparently, minstrel_ht expects some tx_status field filled in by
-> brcmsmac/mac80211. Have not found the problem yet.
+> > When the firmware loading fails, the driver should unbind from the
+> > device that it failed for, and the retrying behaviour doesn't change
+> > (and requires a rebind)
 
-So the patch you sent fixes this? Just making sure it's not a different 
-thing.
+> That helps. My driver was happily bound to the device until unloading 
+> the driver or unplugging the device.
+
+Right, if it fails you should call device_release_driver()
 
 johannes
+
