@@ -1,79 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:51651 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755369Ab2B1JvX (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41951 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756077Ab2BPGWr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Feb 2012 04:51:23 -0500
-Received: by mail-lpp01m010-f52.google.com with SMTP id i5so1353860lah.39
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2012 01:51:22 -0800 (PST)
-Message-ID: <1330422678.18637.28.camel@cumari> (sfid-20120228_105127_435367_45AA5426)
-Subject: Re: [PATCH 3/7] wl12xx: reset link Tx queues when freeing it
-From: Luciano Coelho <coelho@ti.com>
-To: Arik Nemtsov <arik@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 28 Feb 2012 11:51:18 +0200
-In-Reply-To: <1330382494-31148-3-git-send-email-arik@wizery.com>
-References: <1330382494-31148-1-git-send-email-arik@wizery.com>
-	 <1330382494-31148-3-git-send-email-arik@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 16 Feb 2012 01:22:47 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20284.41121.477852.876483@gargle.gargle.HOWL> (sfid-20120216_072250_899098_05997C34)
+Date: Thu, 16 Feb 2012 11:52:25 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH v2 5/9] ath9k: Fix phyerr debug statistics
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-02-28 at 00:41 +0200, Arik Nemtsov wrote: 
-> Before, the link was first freed (invalidating it in the map), and later
-> on vif removal, all valid wlvif-related links were reset. Since these
-> links were already invalid, we failed to reset them.
-> The bug was made worse by op_stop, which set the tx_queue_count to 0
-> arbitrarily. This resulted in a negative tx_queue_count in some scenarios.
-> 
-> Fix this by resetting the Tx-queues of a link when freeing it. Add a
-> WARN_ON and reset all link Tx-queues in op_stop, to avoid a negative
-> tx_queue_count.
-> 
-> Signed-off-by: Arik Nemtsov <arik@wizery.com>
-> ---
+Validate the phyerr value against the max. size of the
+statistics array properly.
 
-[...]
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-> diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-> index 6446e4d..311b5a2 100644
-> --- a/drivers/net/wireless/wl12xx/tx.c
-> +++ b/drivers/net/wireless/wl12xx/tx.c
-> @@ -527,6 +527,7 @@ static struct sk_buff *wl12xx_lnk_skb_dequeue(struct wl1271 *wl,
->  	if (skb) {
->  		int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
->  		spin_lock_irqsave(&wl->wl_lock, flags);
-> +		WARN_ON(wl->tx_queue_count[q] <= 0);
->  		wl->tx_queue_count[q]--;
->  		spin_unlock_irqrestore(&wl->wl_lock, flags);
->  	}
-> @@ -602,6 +603,7 @@ static struct sk_buff *wl1271_skb_dequeue(struct wl1271 *wl)
->  		skb = wl->dummy_packet;
->  		q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
->  		spin_lock_irqsave(&wl->wl_lock, flags);
-> +		WARN_ON(wl->tx_queue_count[q] <= 0);
->  		wl->tx_queue_count[q]--;
->  		spin_unlock_irqrestore(&wl->wl_lock, flags);
->  	}
-
-[...]
-
-> @@ -973,8 +974,14 @@ void wl12xx_tx_reset(struct wl1271 *wl, bool reset_tx_queues)
->  	struct sk_buff *skb;
->  	struct ieee80211_tx_info *info;
->  
-> -	for (i = 0; i < NUM_TX_QUEUES; i++)
-> -		wl->tx_queue_count[i] = 0;
-> +	/* only reset the queues if something bad happened */
-> +	if (WARN_ON(wl1271_tx_total_queue_count(wl) != 0)) {
-
-Let's make all these WARN_ONs as WARN_ON_ONCE as it is recommended
-nowadays.  This will make Kalle Valo happier. :)
-
-I can do a quick sed before I apply this, if you agree.
-
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 5a838fc..228c181 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -987,8 +987,6 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+ #define RX_SAMP_DBG(c) (sc->debug.bb_mac_samp[sc->debug.sampidx].rs\
+ 			[sc->debug.rsidx].c)
+ 
+-	u32 phyerr;
+-
+ 	RX_STAT_INC(rx_pkts_all);
+ 	sc->debug.stats.rxstats.rx_bytes_all += rs->rs_datalen;
+ 
+@@ -1007,8 +1005,8 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+ 
+ 	if (rs->rs_status & ATH9K_RXERR_PHY) {
+ 		RX_STAT_INC(phy_err);
+-		phyerr = rs->rs_phyerr & 0x24;
+-		RX_PHY_ERR_INC(phyerr);
++		if (rs->rs_phyerr < ATH9K_PHYERR_MAX)
++			RX_PHY_ERR_INC(rs->rs_phyerr);
+ 	}
+ 
+ 	sc->debug.stats.rxstats.rs_rssi_ctl0 = rs->rs_rssi_ctl0;
 -- 
-Cheers,
-Luca.
+1.7.9.1
 
