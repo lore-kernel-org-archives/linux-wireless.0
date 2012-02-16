@@ -1,135 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:59504 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751138Ab2BOPmu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 10:42:50 -0500
-Received: by wics10 with SMTP id s10so600212wic.19
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 07:42:49 -0800 (PST)
+Received: from mms2.broadcom.com ([216.31.210.18]:4317 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751619Ab2BPME2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Feb 2012 07:04:28 -0500
+Message-ID: <4F3CF0C1.3090304@broadcom.com> (sfid-20120216_130432_082401_A349B4F4)
+Date: Thu, 16 Feb 2012 13:04:17 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20120214180551.70389f5e@north>
-References: <1329108519-5342-1-git-send-email-kubakici@wp.pl>
-	<1329108519-5342-2-git-send-email-kubakici@wp.pl>
-	<CAL1gcdPWEf_qYcjp8nYuZNkJUR=pA93P3-hi5xhokvUm1t-Ljg@mail.gmail.com>
-	<20120214180551.70389f5e@north>
-Date: Wed, 15 Feb 2012 16:42:49 +0100
-Message-ID: <CAL1gcdMb3+iiUU1rDLoEO1tWNE92_v4tC5X+hDa3PGzY-mXW-g@mail.gmail.com> (sfid-20120215_164257_191629_A5B027B1)
-Subject: Re: [rt2x00-users] [PATCH v2 1/4] rt2800pci: remove
- rt2800pci_set_state function
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Jakub Kicinski <kubakici@wp.pl>
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "Kay Sievers" <kay.sievers@vrfy.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Tom Gundersen" <teg@jklm.no>, "Andy Whitcroft" <apw@canonical.com>
+Subject: Re: calling request_firmware() from module init will not work
+ with recent/future udev versions
+References: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
+ <1326621743.3448.1.camel@jlt3.sipsolutions.net>
+ <CAPXgP13b0uu3DgOGRL-_WKx-aSQN-f0xL6OmjNPBGf9fg0satA@mail.gmail.com> (
+ sfid-20120115_163411_716244_29DE7A13)
+ <1326704259.3510.3.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1326704259.3510.3.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 14, 2012 at 6:05 PM, Jakub Kicinski <kubakici@wp.pl> wrote:
-> On Tue, 14 Feb 2012 11:47:37 +0100 Gertjan van Wingerde <gwingerde@gmail.com> wrote:
->> On Mon, Feb 13, 2012 at 5:48 AM, Jakub Kicinski <kubakici@wp.pl> wrote:
->> > rt2800pci_set_state was introduced to group requests preceded with
->> > common introduction. As that introduction is no longer used
->> > rt2800pci_set_state can be removed.
->> >
->> > Note that this patch changes behaviour for STATE_DEEP_SLEEP and
->> > STATE_STANDBY, but those states are not used in rt2800 anyway.
->> >
->> > Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
->>
->> I know this patch has been out there for a while, but I only now have
->> taken a good look at it.
->> First of all, I think that it would have been easy to not change the
->> behaviour for STATE_DEEP_SLEEP
->> and STATE_STANDBY, even though these are not used in rt2800. They can
->> simply be put as their
->> own cases in the switch statement in which nothing is done.
->
-> True, I have decided to make the change because:
->  1) I couldn't find any reason to treat those states differently than
->    normal SLEEP;
->  2) rt61pci and rt2500pci treats them equally;
->  3) the differentiation was introduced by Jay in 7f6e144f and the change
->    looks like it may have not been 100% intentional. At least my newbie
->    mind is telling me that. No one asked about it at the time and commit
->    message also doesn't explain this change.
->
-> Please let me know if this reasoning makes any sense to you.
+On 01/16/2012 09:57 AM, Johannes Berg wrote:
+>> Now the problem, the pcidev event is blocking in modprobe and waits
+>> >  for the child event it has generated to finish, but udev does not
+>> >  start the event because the parent still blocks in modprobe ->
+>> >  deadlock until default firmware timeout of 60 sec. What we want here,
+>> >  for several reasons not only udev's dependency logic, is that modprobe
+>> >  never waits for userspace transactions to finish.
+> Ok, thanks for the description. I guess to me that means nothing really
+> changes much in the situation I'm thinking of.
 
-OK. Looking at this closer it actually looks like that these two
-states are not used at
-all in rt2x00. So, I guess I can be fine with this.
+I am working on changes in brcm80211 driver and the behaviour changes 
+slightly. The async firmware request basically kicks of a kernel thread 
+to do the actual request. So the probe finishes successfully regardless 
+what the results will be of the actual firmware request. Hence the 
+driver is associated with the hardware.
 
->
->> Also some comments to the actual code below.
->>
->> > ---
->> >  drivers/net/wireless/rt2x00/rt2800pci.c |   38 ++++++++++--------------------
->> >  1 files changed, 13 insertions(+), 25 deletions(-)
->> >
->> > diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
->> > index 6ad6929..6ab4637 100644
->> > --- a/drivers/net/wireless/rt2x00/rt2800pci.c
->> > +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
->> > @@ -517,23 +517,6 @@ static void rt2800pci_disable_radio(struct rt2x00_dev *rt2x00dev)
->> >        }
->> >  }
->> >
->> > -static int rt2800pci_set_state(struct rt2x00_dev *rt2x00dev,
->> > -                              enum dev_state state)
->> > -{
->> > -       if (state == STATE_AWAKE) {
->> > -               rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, TOKEN_WAKUP, 0, 0x02);
->> > -               rt2800pci_mcu_status(rt2x00dev, TOKEN_WAKUP);
->> > -       } else if (state == STATE_SLEEP) {
->> > -               rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_STATUS,
->> > -                                        0xffffffff);
->> > -               rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_CID,
->> > -                                        0xffffffff);
->> > -               rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0x01, 0xff, 0x01);
->> > -       }
->> > -
->> > -       return 0;
->> > -}
->> > -
->> >  static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
->> >                                      enum dev_state state)
->> >  {
->> > @@ -546,7 +529,7 @@ static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
->> >                 * to be woken up. After that it needs a bit of time
->> >                 * to be fully awake and then the radio can be enabled.
->> >                 */
->> > -               rt2800pci_set_state(rt2x00dev, STATE_AWAKE);
->> > +               rt2800pci_set_device_state(rt2x00dev, STATE_AWAKE);
->> >                msleep(1);
->> >                retval = rt2800pci_enable_radio(rt2x00dev);
->> >                break;
->>
->> I don't like this recursive call, but this is removed in patch 4, so I
->> don't mind it here.
->>
->> > @@ -556,17 +539,22 @@ static int rt2800pci_set_device_state(struct rt2x00_dev *rt2x00dev,
->> >                 * be put to sleep for powersaving.
->> >                 */
->> >                rt2800pci_disable_radio(rt2x00dev);
->> > -               rt2800pci_set_state(rt2x00dev, STATE_SLEEP);
->> > -               break;
->> > -       case STATE_RADIO_IRQ_ON:
->> > -       case STATE_RADIO_IRQ_OFF:
->> > -               rt2800pci_toggle_irq(rt2x00dev, state);
->> > -               break;
->> > +               /* fall through */
->>
->> I don't really like this falling through, which is just there out of
->> convenience, as the states have
->> some common code. However, in reality these states have not a lot in
->> common, so just a bit
->> of code duplication would have been better here, IMHO.
->
-> Ok, I will change that and perhaps put that "duplicated" code into
-> rt2800pci_disable_radio to keep switch statement short.
+>> >  If userspace is not responding, the firmware request times out after
+>> >  60 seconds and the driver is not associated with any hardware. To
+>> >  retry the firmware loading, the module needs to be unloaded and
+>> >  reloaded, or the driver needs to be asked to bind to a device again by
+>> >  writing to the 'bind' in file in the sysfs driver directory.
+> Right.
 >
 
-Fine with me. Maybe the same could be done with respect to the new code
-and rt2800pci_enable_radio.
+If my previous statement is true, what does it mean regarding retrying 
+the firmware loading?
 
----
-Gertjan
+Gr. AvS
+
