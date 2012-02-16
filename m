@@ -1,81 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1030 "EHLO mx1.redhat.com"
+Received: from nbd.name ([46.4.11.11]:50244 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753943Ab2BCQdE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 11:33:04 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v2 17/25] iwlegacy: get rid of ctx->ac_to_fifo
-Date: Fri,  3 Feb 2012 17:31:53 +0100
-Message-Id: <1328286721-11309-18-git-send-email-sgruszka@redhat.com> (sfid-20120203_173312_398819_F60E81A4)
-In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
-References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+	id S1751063Ab2BPHii (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Feb 2012 02:38:38 -0500
+Message-ID: <4F3CB274.1080800@openwrt.org> (sfid-20120216_083845_755479_5B9C7D39)
+Date: Thu, 16 Feb 2012 08:38:28 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Mohammed@venema.h4ckr.net, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>
+Subject: Re: [RFC] ath9k: remove rx_bufptr
+References: <1329375781-4902-1-git-send-email-mohammed@qca.qualcomm.com>
+In-Reply-To: <1329375781-4902-1-git-send-email-mohammed@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/4965-mac.c |   17 ++++++++---------
- drivers/net/wireless/iwlegacy/common.h   |    1 -
- 2 files changed, 8 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 94984c8..731bb8c 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -1458,8 +1458,15 @@ il4965_get_ac_from_tid(u16 tid)
- static inline int
- il4965_get_fifo_from_tid(struct il_rxon_context *ctx, u16 tid)
- {
-+	const u8 ac_to_fifo[] = {
-+		IL_TX_FIFO_VO,
-+		IL_TX_FIFO_VI,
-+		IL_TX_FIFO_BE,
-+		IL_TX_FIFO_BK,
-+	};
-+
- 	if (likely(tid < ARRAY_SIZE(tid_to_ac)))
--		return ctx->ac_to_fifo[tid_to_ac[tid]];
-+		return ac_to_fifo[tid_to_ac[tid]];
- 
- 	/* no support for TIDs 8-15 yet */
- 	return -EINVAL;
-@@ -6104,13 +6111,6 @@ il4965_set_hw_params(struct il_priv *il)
- 	return il->cfg->ops->lib->set_hw_params(il);
- }
- 
--static const u8 il4965_bss_ac_to_fifo[] = {
--	IL_TX_FIFO_VO,
--	IL_TX_FIFO_VI,
--	IL_TX_FIFO_BE,
--	IL_TX_FIFO_BK,
--};
--
- static const u8 il4965_bss_ac_to_queue[] = {
- 	0, 1, 2, 3,
- };
-@@ -6139,7 +6139,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	il->ctx.always_active = true;
- 	il->ctx.is_active = true;
--	il->ctx.ac_to_fifo = il4965_bss_ac_to_fifo;
- 	il->ctx.ac_to_queue = il4965_bss_ac_to_queue;
- 
- 	SET_IEEE80211_DEV(hw, &pdev->dev);
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index df4d160..e0e4d01 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1155,7 +1155,6 @@ struct il_force_reset {
- struct il_rxon_context {
- 	struct ieee80211_vif *vif;
- 
--	const u8 *ac_to_fifo;
- 	const u8 *ac_to_queue;
- 
- 	/*
--- 
-1.7.1
-
+On 2012-02-16 8:03 AM, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>
+> it does not seems to used for anything
+>
+> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/ath9k/ath9k.h |    1 -
+>   drivers/net/wireless/ath/ath9k/recv.c  |    4 ----
+>   2 files changed, 0 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+> index 171ccf7..603f686 100644
+> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
+> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+> @@ -311,7 +311,6 @@ struct ath_rx {
+>   	spinlock_t rxbuflock;
+>   	struct list_head rxbuf;
+>   	struct ath_descdma rxdma;
+> -	struct ath_buf *rx_bufptr;
+>   	struct ath_rx_edma rx_edma[ATH9K_RX_QUEUE_MAX];
+>
+>   	struct sk_buff *frag;
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> index 7e1a91a..c9612d9 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -224,9 +224,6 @@ static void ath_rx_edma_cleanup(struct ath_softc *sc)
+>   	}
+>
+>   	INIT_LIST_HEAD(&sc->rx.rxbuf);
+> -
+> -	kfree(sc->rx.rx_bufptr);
+> -	sc->rx.rx_bufptr = NULL;
+>   }
+>
+Take a look at this part. It's used for avoiding a memleak, so please 
+keep it ;)
