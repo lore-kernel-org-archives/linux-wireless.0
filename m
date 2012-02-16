@@ -1,42 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:33233 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754748Ab2BMLZC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 06:25:02 -0500
-Message-ID: <4F38F303.3010007@openwrt.org> (sfid-20120213_122507_433563_88AE1FB4)
-Date: Mon, 13 Feb 2012 12:24:51 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from bluegene.sat.lt ([88.119.145.12]:44413 "HELO bluegene.sat.lt"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1750845Ab2BPLUG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Feb 2012 06:20:06 -0500
+Date: Thu, 16 Feb 2012 13:18:34 +0200
+From: Nerijus Baliunas <nerijus@users.sourceforge.net>
+Subject: Re: iwl3945 cannot connect to zd1211rw AP
+To: linux-wireless@vger.kernel.org
+Message-ID: <Mahogany-0.68.0-3602-20120216-131834.01@nerijus.sat.lt> (sfid-20120216_122010_898595_D4E9016A)
 MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: [PATCH 1/7] ath9k: Remove redundant max_streams assignment
-References: <20280.43934.3990.442268@gargle.gargle.HOWL>
-In-Reply-To: <20280.43934.3990.442268@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+References: <Mahogany-0.68.0-758-20120215-003647.00@nerijus.sat.lt> <20120215084658.GA17573@redhat.com>
+In-Reply-To: <20120215084658.GA17573@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-02-13 7:20 AM, Sujith Manoharan wrote:
-> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath9k/init.c |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-> index 53a005d..a625c9a 100644
-> --- a/drivers/net/wireless/ath/ath9k/init.c
-> +++ b/drivers/net/wireless/ath/ath9k/init.c
-> @@ -258,8 +258,6 @@ static void setup_ht_cap(struct ath_softc *sc,
->  
->  	if (AR_SREV_9330(ah) || AR_SREV_9485(ah))
->  		max_streams = 1;
-> -	else if (AR_SREV_9462(ah))
-> -		max_streams = 2;
->  	else if (AR_SREV_9300_20_OR_LATER(ah))
->  		max_streams = 3;
->  	else
-I think AR9462 is also matched by AR_SREV_9300_20_OR_LATER(ah), so that
-one may not be redundant.
+On Wed, 15 Feb 2012 09:46:59 +0100 Stanislaw Gruszka <sgruszka@redhat.com> wrote:
 
-- Felix
+> Perhaps know zd1211 bug, we have one fix that I think can address that:
+> http://git.kernel.org/?p=linux/kernel/git/linville/wireless-testing.git;a=commitdiff;h=e81a7bd55531a77d8c16d44766db4089c2983f1b
+> 
+> We included that commit in the latest fedora kernel 3.2.6, check that out:
+> http://koji.fedoraproject.org/koji/buildinfo?buildID=299356
+
+Yes, this fix fixes it, thanks!
+
+Regards,
+Nerijus
