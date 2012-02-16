@@ -1,119 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:44644 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752131Ab2BBIjs (ORCPT
+Received: from mailout-de.gmx.net ([213.165.64.22]:45231 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752736Ab2BPK30 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 03:39:48 -0500
-Received: by lahl5 with SMTP id l5so1762737lah.17
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 00:39:46 -0800 (PST)
-Subject: Re: [PATCH v2 6/7] wl12xx: add RX data filters management functions
-From: Luciano Coelho <coelho@ti.com>
-To: Eliad Peller <eliad@wizery.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1328021048-8944-7-git-send-email-eliad@wizery.com>
-References: <1328021048-8944-1-git-send-email-eliad@wizery.com>
-	 <1328021048-8944-7-git-send-email-eliad@wizery.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 02 Feb 2012 10:39:41 +0200
-Message-ID: <1328171981.3626.274.camel@cumari> (sfid-20120202_093952_005883_D51E8640)
-Mime-Version: 1.0
+	Thu, 16 Feb 2012 05:29:26 -0500
+From: Marc Dietrich <marvin24@gmx.de>
+To: Olof Johansson <olof@lixom.net>
+Cc: Rob Herring <robherring2@gmail.com>,
+	Simon Glass <sjg@chromium.org>, linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Colin Cross <ccross@android.com>, linux-tegra@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	devicetree-discuss@lists.ozlabs.org
+Subject: Re: Re: [PATCH 2/3] dt: rfkill-gpio: add bindings documentation
+Date: Thu, 16 Feb 2012 11:29:17 +0100
+Message-ID: <166174495.hTFI2yeA72@fb07-iapwap2> (sfid-20120216_112930_847551_2B9A5115)
+In-Reply-To: <CAOesGMjofzC9pp1H9SXS693QR7JU9XjvVLVi6gBSGuqVNJ-rKA@mail.gmail.com>
+References: <1ec0e63a7453072689618430ebc2bdd7b62542a2.1329073559.git.marvin24@gmx.de> <4F391470.3090102@gmail.com> <CAOesGMjofzC9pp1H9SXS693QR7JU9XjvVLVi6gBSGuqVNJ-rKA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-01-31 at 16:44 +0200, Eliad Peller wrote: 
-> From: Eyal Shapira <eyal@wizery.com>
+Am Montag, 13. Februar 2012, 11:43:17 schrieb Olof Johansson:
+> Hi,
 > 
-> (based on Pontus' patch)
+> On Mon, Feb 13, 2012 at 5:47 AM, Rob Herring <robherring2@gmail.com> wrote:
+> > On 02/12/2012 02:21 PM, Simon Glass wrote:
+> >> Hi Marc,
+> >> 
+> >> On Sun, Feb 12, 2012 at 11:13 AM, Marc Dietrich <marvin24@gmx.de> wrote:
+> >>> Add device tree bindings information for rfkill gpio switches.
+> >>> 
+> >>> Cc: linux-wireless@vger.kernel.org
+> >>> Cc: "John W. Linville" <linville@tuxdriver.com>
+> >>> Cc: Johannes Berg <johannes@sipsolutions.net>
+> >>> Cc: Rhyland Klein <rklein@nvidia.com>
+> >>> Cc: Grant Likely <grant.likely@secretlab.ca>
+> >>> Cc: devicetree-discuss@lists.ozlabs.org
+> >>> Signed-off-by: Marc Dietrich <marvin24@gmx.de>
+> >>> ---
+> >>>  Documentation/devicetree/bindings/gpio/rfkill.txt |   38
+> >>> +++++++++++++++++++++ 1 files changed, 38 insertions(+), 0 deletions(-)
+> >>>  create mode 100644 Documentation/devicetree/bindings/gpio/rfkill.txt
+> >>> 
+> >>> diff --git a/Documentation/devicetree/bindings/gpio/rfkill.txt
+> >>> b/Documentation/devicetree/bindings/gpio/rfkill.txt new file mode 100644
+> >>> index 0000000..22bf22a
+> >>> --- /dev/null
+> >>> +++ b/Documentation/devicetree/bindings/gpio/rfkill.txt
+> >>> @@ -0,0 +1,38 @@
+> >>> +RFKILL switches connected to GPIO lines
+> >>> +
+> >>> +Required properties:
+> >>> +- compatible : should be "rfkill-gpio".
+> >>> +
+> >>> +Each rfkill switch is represented as a sub-node of the rfkill-gpio device.
+> >>> +Each node has a label property which represents the name of the
+> >>> corresponding
+> >>> +rfkill device.
+> >>> +
+> >>> +RFKILL sub-node properties:
+> >>> +- label :  (optional) The label for this rfkill switch.  If omitted, the
+> >>> label is +  taken from the node name (excluding the unit address).
+> >>> +- reset-gpio, shutdown-gpio :  Should specify the rfkill gpios for reset
+> >>> and
+> >>> +  shutdown (see "Specifying GPIO information for devices" in
+> >> 
+> >> Should that be reset-gpios, shutdown-gpios? Even though you have only
+> >> one it seems that people put an 's' on the end.
 > 
-> More prep work for supporting RX data filters
-> in FW. These functions use a driver saved state
-> of the enabled filters to prevent actions (enable/disable)
-> which don't match the FW status.
+> Agreed.
 > 
-> Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-> Signed-off-by: Ido Reis <idor@ti.com>
-> Signed-off-by: Eyal Shapira <eyal@wizery.com>
-> Signed-off-by: Eliad Peller <eliad@wizery.com>
-> ---
+> >>> +  Documentation/devicetree/booting-without-of.txt).
+> >>> +- type : enumerated type of the gpio (see include/linux/rfkill.h).
+> >> 
+> >> It would be better I think if this were explicit here. If you have a
+> >> number, then what values does it take and what do they mean?
+> 
+> This should most likely be moved to a set of properties instad of an
+> enumerated type, I agree. And/or use a string to encode the type
+> simiar to how powerpc does some of the USB interfaces.
+> 
+> >>> +- clock : (optional) name of the clock name associated with the rfkill
+> >>> switch
+> >> 
+> >> Can this be a phandle instead of a string?
+> > 
+> > This seems to be in the wrong place altogether. The gpio controller
+> > would have a clock, not particular gpio line.
+> 
+> And either way, this should conform to the standard clock binding, not
+> use something locally hacked up.
+> 
+> >>> +  (see include/linux/rfkill-gpio.h)
+> >> 
+> >> IMO device tree bindings should be fully documented in this file,
+> >> rather than needing to look at a separate header. This is particularly
+> >> true if the binding is used in another project.
+> > 
+> > Correct. A binding should not be Linux specific. It should describe the h/w.
+> > 
+> >>> +
+> >>> +Examples:
+> >>> +
+> >>> +rfkill-switches {
+> >>> +       compatible = "rfkill-gpio";
+> >>> +
+> >>> +       wifi {
+> >>> +               label = "wifi";
+> >>> +               reset-gpio = <&gpio 25 0>; /* Active high */
+> >>> +               shutdown-gpio = <&gpio 85 0>; /* Active high */
+> >>> +               type = <1>;
+> >>> +       };
+> >>> +
+> >>> +       bt {
+> >>> +               label = "bluetooth";
+> >>> +               reset-gpio = <&gpio 17 0>; /* Active high */
+> >>> +               shutdown-gpio = <&gpio 35 0>; /* Active high */
+> >>> +               type = <1>;
+> >>> +       };
+> > 
+> > Why wouldn't the gpio lines just be part of the bt and wifi device nodes
+> > themselves? The DT is supposed to describe h/w connections.
+> 
+> The thing is, that "rfkill" isn't a _device_, and Marc is trying to
+> describe it as one. It's really just a software abstraction of a
+> collection of power supplies and/or GPIO lines that are used to power
+> up/down specific peripherals.
+> 
+> I know that the USB modem, for example, is probed through autoprobing
+> the USB bus. So there's no device to associate it with, per se. But
+> the USB slot that the modem is connected to, which is also the
+> connector that the GPIO controls the power supplies and reset line to,
+> are connected directly to one of the USB host controllers, right? So
+> maybe describing it there is a better option.
+> 
+> That still leaves the issue of actually having something to bind it
+> against. As I already said, rfkill isn't a device, so crafting one
+> just because linux wants one is the wrong way to go about. Maybe using
+> /chosen to refer to the device nodes for the GPIO lines under USB
+> instead, and have rfkill look for those and create a device if they're
+> found is a better way to go about it.
 
-[...]
+So to move forward, what about a "fake" device like this?
 
+usb@c5000000 {
+		wifi-card@1 { /* 1nd port on usb bus 1 */
+				compatible = "rfkill-gpio";
 
-> diff --git a/drivers/net/wireless/wl12xx/rx.c b/drivers/net/wireless/wl12xx/rx.c
-> index 4fbd2a7..d025db6 100644
-> --- a/drivers/net/wireless/wl12xx/rx.c
-> +++ b/drivers/net/wireless/wl12xx/rx.c
-> @@ -282,3 +282,64 @@ void wl12xx_rx(struct wl1271 *wl, struct wl12xx_fw_status *status)
->  
->  	wl12xx_rearm_rx_streaming(wl, active_hlids);
->  }
-> +
-> +/*
-> + * Global on / off for RX packet filtering in firmware
-> + */
-> +int wl1271_rx_data_filtering_enable(struct wl1271 *wl, bool enable,
-> +				    enum rx_data_filter_action policy)
-> +{
-> +	int ret;
-> +
-> +	if (policy < FILTER_DROP || policy > FILTER_FW_HANDLE) {
-> +		wl1271_warning("filter policy value is not in valid range");
-> +		return -ERANGE;
-> +	}
+				wifi {
+						label = "internal wifi";
+						reset-gpios = <&gpio 25 0>; /* Active high */
+						shutdown-gpios = <&gpio 85 0>; /* Active high */
+						type = "wlan";
+						clocks = <&tegra-car 17>;
+				};
+		};
 
-Again, this is only called internally, so we either use a BUG_ON or we
-don't check the values here at all.
+		bt-card@2 { /* 2rd port on usb bus 1 */
+				compatible = "rfkill-gpio";
 
+				bt {
+						label = "internal bluetooth";
+						reset-gpios = <&gpio 17 0>; /* Active high */
+						shutdown-gpios = <&gpio 35 0>; /* Active high */
+						type = "bluetooth";
+				};
+		};
+};
 
-> +	if (enable < 0 || enable > 1) {
-> +		wl1271_warning("filter enable value is not in valid range");
-> +		return -ERANGE;
-> +	}
+I hope this won't confuse the usb controller.
 
-No need to check the validity of the bool here.
-
-
-> +	ret = wl1271_acx_toggle_rx_data_filter(wl, enable, policy);
-
-If you want to be really sure the boolean is really a boolean, you
-should use !!enable here, though I don't think it's necessary.
-
-
-> +int wl1271_rx_data_filter_enable(struct wl1271 *wl,
-> +				 int index,
-> +				 bool enable,
-> +				 struct wl12xx_rx_data_filter *filter)
-> +{
-> +	int ret;
-> +
-> +	if (wl->rx_data_filters_status[index] == enable) {
-> +		wl1271_debug(DEBUG_ACX, "Request to enable an already "
-> +			     "enabled rx filter %d", index);
-> +		return 0;
-> +	}
-
-Maybe DEBUG_RX? Or something else? It's definitely not DEBUG_ACX,
-though.
-
-
-> +void wl1271_rx_data_filters_clear_all(struct wl1271 *wl);
->  #endif
-> diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-> index c18ad0a..720ea82 100644
-> --- a/drivers/net/wireless/wl12xx/wl12xx.h
-> +++ b/drivers/net/wireless/wl12xx/wl12xx.h
-> @@ -509,6 +509,9 @@ struct wl1271 {
->  
->  	/* last wlvif we transmitted from */
->  	struct wl12xx_vif *last_wlvif;
-> +
-> +	/* RX Data filter rule status - enabled/disabled */
-> +	bool rx_data_filters_status[WL1271_MAX_RX_DATA_FILTERS];
-
-Maybe s/_status/_enabled/? Also I think for all the code we should
-s/rx_data_filter/rx_filter/ so we can reduce the length of the symbols.
-
--- 
-Cheers,
-Luca.
+Marc
 
