@@ -1,38 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:47332 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752853Ab2BCF5y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 00:57:54 -0500
-Received: by mail-lpp01m010-f49.google.com with SMTP id m7so2064372laa.8
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 21:57:53 -0800 (PST)
-Subject: Re: [PATCH 2/2] cleanup modprobe calls
-From: Luciano Coelho <coelho@ti.com>
-To: Rick Farina <sidhayn@gmail.com>
-Cc: mcgrof@gmail.com, linux-wireless@vger.kernel.org
-In-Reply-To: <1328237302-13423-2-git-send-email-sidhayn@gmail.com>
-References: <1328237302-13423-1-git-send-email-sidhayn@gmail.com>
-	 <1328237302-13423-2-git-send-email-sidhayn@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 03 Feb 2012 07:57:49 +0200
-Message-ID: <1328248669.3626.328.camel@cumari> (sfid-20120203_065757_366720_2226F140)
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:1649 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750939Ab2BPNKx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Feb 2012 08:10:53 -0500
+Message-ID: <4F3D0012.9070808@broadcom.com> (sfid-20120216_141058_314031_F0327EC5)
+Date: Thu, 16 Feb 2012 14:09:38 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Johannes Berg" <johannes@sipsolutions.net>
+cc: "Kay Sievers" <kay.sievers@vrfy.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Tom Gundersen" <teg@jklm.no>, "Andy Whitcroft" <apw@canonical.com>
+Subject: Re: calling request_firmware() from module init will not work
+ with recent/future udev versions
+References: <CAPXgP11iT9K2KcDCJvw_druf5qdNjs0jLfrbpS7CcYh5vXrz_w@mail.gmail.com>
+ <1326621743.3448.1.camel@jlt3.sipsolutions.net>
+ <CAPXgP13b0uu3DgOGRL-_WKx-aSQN-f0xL6OmjNPBGf9fg0satA@mail.gmail.com> (
+ sfid-20120115_163411_716244_29DE7A13)
+ <1326704259.3510.3.camel@jlt3.sipsolutions.net>
+ <4F3CF0C1.3090304@broadcom.com>
+ <1329395881.3915.7.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1329395881.3915.7.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-02-02 at 21:48 -0500, Rick Farina wrote: 
-> There were a lot of needless calls to "modprobe -l <drivername>" and even more confusingly $(MODPROBE).
-> None of this is needed on a modern distro, and it errors on when modprobe -l is removed (such as KMOD in Arch Linux)
-> 
-> Signed-of-By: Rick Farina <sidhayn@gmail.com>
-> ---
+On 02/16/2012 01:38 PM, Johannes Berg wrote:
+> On Thu, 2012-02-16 at 13:04 +0100, Arend van Spriel wrote:
+>> On 01/16/2012 09:57 AM, Johannes Berg wrote:
+>>>> Now the problem, the pcidev event is blocking in modprobe and waits
+>>>>>   for the child event it has generated to finish, but udev does not
+>>>>>   start the event because the parent still blocks in modprobe ->
+>>>>>   deadlock until default firmware timeout of 60 sec. What we want here,
+>>>>>   for several reasons not only udev's dependency logic, is that modprobe
+>>>>>   never waits for userspace transactions to finish.
+>>> Ok, thanks for the description. I guess to me that means nothing really
+>>> changes much in the situation I'm thinking of.
+>>
+>> I am working on changes in brcm80211 driver and the behaviour changes
+>> slightly. The async firmware request basically kicks of a kernel thread
+>> to do the actual request. So the probe finishes successfully regardless
+>> what the results will be of the actual firmware request. Hence the
+>> driver is associated with the hardware.
+>
+> This is true.
+>
+>>>>>   If userspace is not responding, the firmware request times out after
+>>>>>   60 seconds and the driver is not associated with any hardware. To
+>>>>>   retry the firmware loading, the module needs to be unloaded and
+>>>>>   reloaded, or the driver needs to be asked to bind to a device again by
+>>>>>   writing to the 'bind' in file in the sysfs driver directory.
+>>> Right.
+>>>
+>>
+>> If my previous statement is true, what does it mean regarding retrying
+>> the firmware loading?
+>
+> When the firmware loading fails, the driver should unbind from the
+> device that it failed for, and the retrying behaviour doesn't change
+> (and requires a rebind)
+>
+> johannes
+>
+>
 
-I agree with this.  The modprobes are just there in order to list which
-of the relevant modules you have in your system.  There is little value
-in this and, if considered really necessary, there surely must be other
-ways to find out?
+Thanks, Johannes
 
--- 
-Cheers,
-Luca.
+That helps. My driver was happily bound to the device until unloading 
+the driver or unplugging the device.
+
+Gr. AvS
 
