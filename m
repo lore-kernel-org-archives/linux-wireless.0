@@ -1,97 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58635 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752222Ab2BTKip (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Feb 2012 05:38:45 -0500
-Subject: [PATCH] mac80211: clean up asm/unaligned.h inclusion
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 20 Feb 2012 11:38:41 +0100
-Message-ID: <1329734321.3458.5.camel@jlt3.sipsolutions.net> (sfid-20120220_113847_962256_442E097C)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:46093 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752146Ab2BQUXw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Feb 2012 15:23:52 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 10/26] iwlwifi: move firmware_name to iwl_nic
+Date: Fri, 17 Feb 2012 11:13:38 -0800
+Message-Id: <1329506034-1394-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120217_212442_812775_BC6CE887)
+In-Reply-To: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Don Fry <donald.h.fry@intel.com>
 
-Some files implicitly get this via mesh.h
-which itself doesn't need it, so move the
-inclusion into the right files. Some other
-files don't need it at all but include it,
-so remove it from there.
+Delete firmware_name from iwl_priv and use iwl_nic instead.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Don Fry <donald.h.fry@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/mac80211/ibss.c      |    1 -
- net/mac80211/key.c       |    1 +
- net/mac80211/mesh.h      |    1 -
- net/mac80211/mesh_hwmp.c |    1 +
- net/mac80211/rx.c        |    1 +
- net/mac80211/status.c    |    1 +
- 6 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-dev.h   |    3 ---
+ drivers/net/wireless/iwlwifi/iwl-ucode.c |   10 +++++-----
+ 2 files changed, 5 insertions(+), 8 deletions(-)
 
---- a/net/mac80211/ibss.c	2012-02-16 09:41:51.000000000 +0100
-+++ b/net/mac80211/ibss.c	2012-02-20 11:35:19.000000000 +0100
-@@ -20,7 +20,6 @@
- #include <linux/etherdevice.h>
- #include <linux/rtnetlink.h>
- #include <net/mac80211.h>
--#include <asm/unaligned.h>
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 008287f..3321010 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -787,9 +787,6 @@ struct iwl_priv {
+ 	/* EEPROM MAC addresses */
+ 	struct mac_address addresses[2];
  
- #include "ieee80211_i.h"
- #include "driver-ops.h"
---- a/net/mac80211/key.c	2012-02-16 09:41:51.000000000 +0100
-+++ b/net/mac80211/key.c	2012-02-20 11:36:34.000000000 +0100
-@@ -17,6 +17,7 @@
- #include <linux/slab.h>
- #include <linux/export.h>
- #include <net/mac80211.h>
-+#include <asm/unaligned.h>
- #include "ieee80211_i.h"
- #include "driver-ops.h"
- #include "debugfs_key.h"
---- a/net/mac80211/mesh.h	2012-01-11 17:59:31.000000000 +0100
-+++ b/net/mac80211/mesh.h	2012-02-20 11:35:37.000000000 +0100
-@@ -13,7 +13,6 @@
+-	/* uCode images, save to reload in case of failure */
+-	char firmware_name[25];
+-
+ 	struct iwl_rxon_context contexts[NUM_IWL_RXON_CTX];
  
- #include <linux/types.h>
- #include <linux/jhash.h>
--#include <asm/unaligned.h>
- #include "ieee80211_i.h"
+ 	__le16 switch_channel;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.c b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+index c3ac2cc..0ba8ea9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+@@ -712,14 +712,14 @@ int __must_check iwl_request_firmware(struct iwl_priv *priv, bool first)
+ 		return -ENOENT;
+ 	}
  
+-	sprintf(priv->firmware_name, "%s%s%s", name_pre, tag, ".ucode");
++	sprintf(nic->firmware_name, "%s%s%s", name_pre, tag, ".ucode");
  
---- a/net/mac80211/mesh_hwmp.c	2012-02-03 07:24:21.000000000 +0100
-+++ b/net/mac80211/mesh_hwmp.c	2012-02-20 11:36:34.000000000 +0100
-@@ -8,6 +8,7 @@
-  */
+ 	IWL_DEBUG_INFO(priv, "attempting to load firmware %s'%s'\n",
+ 		       (nic->fw_index == UCODE_EXPERIMENTAL_INDEX)
+ 				? "EXPERIMENTAL " : "",
+-		       priv->firmware_name);
++		       nic->firmware_name);
  
- #include <linux/slab.h>
-+#include <asm/unaligned.h>
- #include "wme.h"
- #include "mesh.h"
+-	return request_firmware_nowait(THIS_MODULE, 1, priv->firmware_name,
++	return request_firmware_nowait(THIS_MODULE, 1, nic->firmware_name,
+ 				       trans(priv)->dev,
+ 				       GFP_KERNEL, priv, iwl_ucode_callback);
+ }
+@@ -1036,12 +1036,12 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 		if (nic->fw_index <= api_ok)
+ 			IWL_ERR(priv,
+ 				"request for firmware file '%s' failed.\n",
+-				priv->firmware_name);
++				nic->firmware_name);
+ 		goto try_again;
+ 	}
  
---- a/net/mac80211/rx.c	2012-02-16 09:41:51.000000000 +0100
-+++ b/net/mac80211/rx.c	2012-02-20 11:36:09.000000000 +0100
-@@ -19,6 +19,7 @@
- #include <linux/export.h>
- #include <net/mac80211.h>
- #include <net/ieee80211_radiotap.h>
-+#include <asm/unaligned.h>
+ 	IWL_DEBUG_INFO(priv, "Loaded firmware file '%s' (%zd bytes).\n",
+-		       priv->firmware_name, ucode_raw->size);
++		       nic->firmware_name, ucode_raw->size);
  
- #include "ieee80211_i.h"
- #include "driver-ops.h"
---- a/net/mac80211/status.c	2012-02-01 05:34:47.000000000 +0100
-+++ b/net/mac80211/status.c	2012-02-20 11:35:51.000000000 +0100
-@@ -11,6 +11,7 @@
- 
- #include <linux/export.h>
- #include <net/mac80211.h>
-+#include <asm/unaligned.h>
- #include "ieee80211_i.h"
- #include "rate.h"
- #include "mesh.h"
-
+ 	/* Make sure that we got at least the API version number */
+ 	if (ucode_raw->size < 4) {
+-- 
+1.7.0.4
 
