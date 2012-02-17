@@ -1,55 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1478 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753424Ab2BWVUf convert rfc822-to-8bit (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:59653 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751688Ab2BQIw2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 16:20:35 -0500
-Message-ID: <4F46AD93.6010508@broadcom.com> (sfid-20120223_222039_521602_92F2C188)
-Date: Thu, 23 Feb 2012 22:20:19 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+	Fri, 17 Feb 2012 03:52:28 -0500
+Received: by pbcun15 with SMTP id un15so3493640pbc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Feb 2012 00:52:28 -0800 (PST)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+In-Reply-To: <4F3E14D9.2010204@openwrt.org>
+References: <4F390ED3.8010400@openwrt.org>
+	<CAGXE3d90az_g3KyzPp-4NQoM2zmXaNSVo=7piM=q8EK9WdBp7A@mail.gmail.com>
+	<4F3961FB.7020409@openwrt.org>
+	<20120216130020.GG25833@redhat.com>
+	<4F3E14D9.2010204@openwrt.org>
+Date: Fri, 17 Feb 2012 09:52:28 +0100
+Message-ID: <CAGXE3d-yRdOKCU40ehuMhhOWPbBG+MCR5xrwCue-=3=cu9r8HA@mail.gmail.com> (sfid-20120217_095232_010234_9424C8D5)
+Subject: Re: Poor RT2880 performance
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Florian Fainelli <florian@openwrt.org>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"M. Lambert" <lambertm@westman.wave.ca>
-Subject: Re: [PATCH 14/15] brcm80211: fmac: add USB support for
- bcm43235/6/8 chipsets
-References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
- <1328818149-4826-15-git-send-email-arend@broadcom.com>
- <CACna6rxgGuCNY19Dn=VcgUH=EORNr72x4CTbR61srSZmcM+h-w@mail.gmail.com>
- <CACna6rxSrzuEHTC++kZj79sQ7JEv42ckHj5o4bZ5bCULWKUXqA@mail.gmail.com>
-In-Reply-To: <CACna6rxSrzuEHTC++kZj79sQ7JEv42ckHj5o4bZ5bCULWKUXqA@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+	users@rt2x00.serialmonkey.com, gwingerde@gmail.com,
+	Ivo Van Doorn <ivdoorn@gmail.com>,
+	Andreas Hartmann <andihartmann@freenet.de>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/23/2012 07:46 PM, Rafa≈Ç Mi≈Çecki wrote:
-> W dniu 23 lutego 2012 19:10 u≈ºytkownik Rafa≈Ç Mi≈Çecki<zajec5@gmail.com>  napisa≈Ç:
->> 2012/2/9 Arend van Spriel<arend@broadcom.com>:
->>> This patch extends the use of the brcmfmac driver with support for
->>> chipsets with a USB host interface. The first chipsets supported are
->>> the bcm43235, bcm43236, and bcm43238 for which firmware has been
->>> submitted.
->>
->> Can you say something more about the firmware? AFAICS brcm directory
->> in linux-firmware.git contains:
->> brcmfmac43236b.bin
->> brcmfmac4329.bin
->> brcmfmac4330.bin
->>
->>
->>> +#define BRCMF_USB_FW_NAME      "brcm/brcmfmac-usb.bin"
->>
->> However your driver seems to require *only* brcmfmac-usb.bin firmware file...
+On Fri, Feb 17, 2012 at 9:50 AM, Florian Fainelli <florian@openwrt.org> wrote:
+> Hello Stanislaw,
 >
-> The only file passing usb.c::check_file test seems to be
-> brcmfmac43236b.bin. I guess you meant this file name in usb.c.
+> Le 02/16/12 14:00, Stanislaw Gruszka a Ècrit :
 >
+>> On Mon, Feb 13, 2012 at 08:18:19PM +0100, Florian Fainelli wrote:
+>>>
+>>> Le 02/13/12 14:45, Helmut Schaa a Ècrit :
+>>>>
+>>>> On Mon, Feb 13, 2012 at 2:23 PM, Florian Fainelli<florian@openwrt.org>
+>>>> wrote:
+>>>>>
+>>>>> I am playing with a RT2880-F based AP, with a N connected station, in a
+>>>>> residential environment.
+>>>>
+>>>> Mind to provide the RF and RT chipset identifications? rt2x00 should
+>>>> print them
+>>>> out during module load (at least when compiled with debugging options).
+>>>
+>>> Sure, here are the HW infos of the AP:
+>>> Ralink RT2880 † id:1 rev:1 running at 266.66 MHz
+>>> phy0 -> †rt2x00_set_chip: Info - Chipset detected - rt: 2860, rf:
+>>> 0001, rev: 0101.
+>>
+>> Did you try to revert commit (if you use kernel, which include it) ?
+>>
+>> commit f0425beda4d404a6e751439b562100b902ba9c98
+>> Author: Felix Fietkau<nbd@openwrt.org>
+>> Date: † Sun Aug 28 21:11:01 2011 +0200
+>>
+>> † † mac80211: retry sending failed BAR frames later instead of tearing
+>>
+>> It was already identified that it couse performace issues on rt2860
+>> based APs.
+>
+>
+> Indeed, that seems to give me much better throughput, now I am around
+> 45Mbits/sec in HT20 and 64Mbits/sec in HT40+.
+>
+> On a crowded channel, I could get 20Mbits/sec compared to the previous
+> 5Mbits/sec.
+>
+> Do you know what could be the fix for RT2860 not to be impacted by this
+> change or play nicely with it?
 
-Yes. bcm4329 and bcm4330 are SDIO cards. I will update the information 
-on linuxwireless.
+I plan to implement a workaround for this in rt2x00. Just tearing down the BA
+session as soon as one AMPDU failed instead of letting mac80211 send
+BARs. Also we might delay the BA session establishment a bit when this
+happens ...
 
-Gr. AvS
-
+Helmut
