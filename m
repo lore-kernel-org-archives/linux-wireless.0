@@ -1,42 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9116 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752486Ab2B2OjB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 09:39:01 -0500
-Date: Wed, 29 Feb 2012 15:38:52 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Paul Farrow <linuxwireless@thefabfarrows.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Can't compile latest compat-wireless on Fedora 16 -
-  3.2.7-1.fc16.x86_64.debug
-Message-ID: <20120229143847.GA20516@redhat.com> (sfid-20120229_153906_452775_743F2EAE)
-References: <fb86ee45cba7d303c361b65c072504ca@www.thefabfarrows.com>
+Received: from mail.candelatech.com ([208.74.158.172]:47362 "EHLO
+	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751525Ab2BQSi7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Feb 2012 13:38:59 -0500
+Message-ID: <4F3E9EBE.60602@candelatech.com> (sfid-20120217_193903_152581_4E0A9BED)
+Date: Fri, 17 Feb 2012 10:38:54 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <fb86ee45cba7d303c361b65c072504ca@www.thefabfarrows.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [RFT/FYI] mac80211: revert on-channel work optimisations
+References: <1320772222.24797.22.camel@jlt3.sipsolutions.net>  <4EB96416.5040700@candelatech.com>  (sfid-20111108_181718_795911_9F0A2B63) <1329493491.3786.6.camel@jlt3.sipsolutions.net>  <4F3E7CA5.7010207@candelatech.com> <1329502761.3330.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1329502761.3330.0.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 28, 2012 at 02:05:24PM -0500, Paul Farrow wrote:
-> I have in recent times compiled the latest compat-wireless with no
-> problem but I seem to be having trouble compiling it on this kernel
-> - lots of undefined warnings in the mac80211 area.
-> 
-> Output from make is attached.
-> 
-> Can any one tell me what I have done wrong?
+On 02/17/2012 10:19 AM, Johannes Berg wrote:
+> On Fri, 2012-02-17 at 08:13 -0800, Ben Greear wrote:
+>
+>>> Given the auth/assoc redesign that went in now, are you still carrying
+>>> this? Does the redesign address your problem?
+>>
+>> I haven't looked yet...still stuck back on 3.0 kernel for the
+>> most part.
+>>
+>> I should be moving to 3.3 sometime soon, and will see how it works.
+>>
+>> I was thinking that I would ignore the work logic for now and probably
+>> just focus on re-applying the on-channel scan optimization first.
+>>
+>> Are you done, or mostly done with the re-architecture you were working on?
+>
+> Yes, I'm done.
+>
+>> I know you didn't like the scan optimization from before...do you have any
+>> ideas on how it might be done more to your liking?
+>
+> I, umm, don't even remember what that was about :)
 
- 
-> WARNING: "__tracepoint_api_stop_tx_ba_session" [/usr/local/src/compat-wireless-2012-02-27/net/mac80211/mac80211.ko] undefined!
+The basic idea is that if the user requests that we only
+scan a single channel, and that channel is the operating channel,
+we should be able to scan without interrupting any other
+packet transmission/reception, and without kicking the NIC to make it go off/on
+channel, etc.
 
-In compat-wireless tree do:
+Basically I had to complicate the scan state machine
+in order to minimize going off-channel (if indeed we are only
+scanning one current channel).
 
-patch -p1 -R < patches/44-deactivate-mac80211-tracing.patch
+I'd want to re-add the logic that let us receive pkts while
+scanning (so long as we are scanning on the oper-channel)
+as well.
 
-I'm not sure how proper fix should looks like. I guess removing that
-patch will broke compiation on older kernels without tracing support.
+Might be a while before I can get back to this, but I'll
+let you know when I get started if no one beats me to it.
 
-BTW: this could be usefull for you
-http://people.redhat.com/sgruszka/compat_wireless.html
+Thanks,
+Ben
 
-Stanislaw
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
