@@ -1,54 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58809 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753972Ab2B2I3z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 03:29:55 -0500
-Subject: RE: WARNING: at
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c:465
- iwl_irq_tasklet+0x7c8/0x1620 [iwlwifi]()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Mohammed Shafi <shafi.wireless@gmail.com>,
-	linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
-	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB30B2BFE@HASMSX103.ger.corp.intel.com>
-References: <CAD2nsn1_DzbRHuSbS_1rFNzuux_9pW1-pABEasQ01_y7-ndO5w@mail.gmail.com>
-	 <1330441305.3368.12.camel@jlt3.sipsolutions.net>
-	 <CAD2nsn0p=owQVumNVhxfPgtxyj7M6o5OkRcEYKhn8sQzQBCi+g@mail.gmail.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB30B2BFE@HASMSX103.ger.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Feb 2012 09:29:53 +0100
-Message-ID: <1330504193.4714.1.camel@jlt3.sipsolutions.net> (sfid-20120229_093008_126771_DBDC14FA)
-Mime-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:46093 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754057Ab2BQUXy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Feb 2012 15:23:54 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 14/26] iwlwifi: kill iwl_down and s/__iwl_down/iwl_down
+Date: Fri, 17 Feb 2012 11:13:42 -0800
+Message-Id: <1329506034-1394-15-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120217_212405_419827_072EBC26)
+In-Reply-To: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-02-28 at 17:39 +0000, Grumbach, Emmanuel wrote:
-> > >
-> > >> [11056.342672] WARNING: at
-> > >> drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c:465
-> > >> iwl_irq_tasklet+0x7c8/0x1620 [iwlwifi]()
-> > >> [11056.342681] Hardware name: 64756D6
-> > >> [11056.342687] reclaim is false, SEQ_RX_FRAME unset:
-> > STATISTICS_NOTIFICATION
-> > >
-> > > Thanks for the report. The warning is harmless, but we were hoping this
-> > > code was only to handle 4965 (this code comes from pre-driver-split
-> > > days). As we weren't sure, we put in the warning. Since you ran into it,
-> > > evidently this does in fact happen on later devices; it will complicate
-> > > our life a bit but we'll handle it.
-> > 
-> > oh ok,  also i am just using the default firmware thats in my system
-> > [36762.942612] iwlwifi 0000:03:00.0: loaded firmware version 8.83.5.1
-> > build 33692
-> > 
-> 
-> And this one seems to be the latest but I am not sure. Can you please download http://intellinuxwireless.org/iwlwifi/downloads/iwlwifi-5000-ucode-8.83.5.1-1.tar.gz and check what is the diff with your version ?
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-ISTR that the only difference was that the previous version was
-accidentally packaged as supporting two virtual interfaces, which isn't
-true.
+iwl_down was just a wrapper around __iwl_down which was called from
+one place only. Replace it to direct call to iwl_down. Add lockdep
+warning in iwl_down to ensure it was called with the mutex held.
 
-johannes
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c      |   19 +++++--------------
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |    6 +++++-
+ 3 files changed, 11 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index ff22c4a..cf1a353 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -738,14 +738,14 @@ int iwl_alive_start(struct iwl_priv *priv)
+ 	return iwl_power_update_mode(priv, true);
+ }
+ 
+-static void iwl_cancel_deferred_work(struct iwl_priv *priv);
+-
+-void __iwl_down(struct iwl_priv *priv)
++void iwl_down(struct iwl_priv *priv)
+ {
+ 	int exit_pending;
+ 
+ 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
+ 
++	lockdep_assert_held(&priv->shrd->mutex);
++
+ 	iwl_scan_cancel_timeout(priv, 200);
+ 
+ 	/*
+@@ -803,15 +803,6 @@ void __iwl_down(struct iwl_priv *priv)
+ 	priv->beacon_skb = NULL;
+ }
+ 
+-void iwl_down(struct iwl_priv *priv)
+-{
+-	mutex_lock(&priv->shrd->mutex);
+-	__iwl_down(priv);
+-	mutex_unlock(&priv->shrd->mutex);
+-
+-	iwl_cancel_deferred_work(priv);
+-}
+-
+ /*****************************************************************************
+  *
+  * Workqueue callbacks
+@@ -869,7 +860,7 @@ void iwlagn_prepare_restart(struct iwl_priv *priv)
+ 	bt_status = priv->bt_status;
+ 	bt_is_sco = priv->bt_is_sco;
+ 
+-	__iwl_down(priv);
++	iwl_down(priv);
+ 
+ 	priv->bt_full_concurrent = bt_full_concurrent;
+ 	priv->bt_ci_compliance = bt_ci_compliance;
+@@ -970,7 +961,7 @@ static void iwl_setup_deferred_work(struct iwl_priv *priv)
+ 	priv->watchdog.function = iwl_bg_watchdog;
+ }
+ 
+-static void iwl_cancel_deferred_work(struct iwl_priv *priv)
++void iwl_cancel_deferred_work(struct iwl_priv *priv)
+ {
+ 	if (cfg(priv)->lib->cancel_deferred_work)
+ 		cfg(priv)->lib->cancel_deferred_work(priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 37c325f..8a170b7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -81,8 +81,8 @@ static inline void iwl_set_calib_hdr(struct iwl_calib_hdr *hdr, u8 cmd)
+ 	hdr->data_valid = 1;
+ }
+ 
+-void __iwl_down(struct iwl_priv *priv);
+ void iwl_down(struct iwl_priv *priv);
++void iwl_cancel_deferred_work(struct iwl_priv *priv);
+ void iwlagn_prepare_restart(struct iwl_priv *priv);
+ 
+ /* MAC80211 */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index ca0c465..90d8081 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -296,7 +296,7 @@ static int __iwl_up(struct iwl_priv *priv)
+ 
+  error:
+ 	set_bit(STATUS_EXIT_PENDING, &priv->shrd->status);
+-	__iwl_down(priv);
++	iwl_down(priv);
+ 	clear_bit(STATUS_EXIT_PENDING, &priv->shrd->status);
+ 
+ 	IWL_ERR(priv, "Unable to initialize device.\n");
+@@ -341,7 +341,11 @@ static void iwlagn_mac_stop(struct ieee80211_hw *hw)
+ 
+ 	priv->is_open = 0;
+ 
++	mutex_lock(&priv->shrd->mutex);
+ 	iwl_down(priv);
++	mutex_unlock(&priv->shrd->mutex);
++
++	iwl_cancel_deferred_work(priv);
+ 
+ 	flush_workqueue(priv->workqueue);
+ 
+-- 
+1.7.0.4
 
