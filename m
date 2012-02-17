@@ -1,60 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:45594 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755658Ab2B0XTJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 18:19:09 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 19/24] iwlwifi: remove iwl_reset_traffic_log from shared
-Date: Mon, 27 Feb 2012 14:07:43 -0800
-Message-Id: <1330380468-17674-20-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120228_001924_455261_D66B0332)
-In-Reply-To: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:35112 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755014Ab2BQX6Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Feb 2012 18:58:24 -0500
+Received: by iacb35 with SMTP id b35so5043340iac.19
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Feb 2012 15:58:24 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1329472141-28781-1-git-send-email-coelho@ti.com>
+References: <1329472141-28781-1-git-send-email-coelho@ti.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 17 Feb 2012 15:58:04 -0800
+Message-ID: <CAB=NE6U0brv=BQwB+KLZt0gO7g9FJTxLKymve4BxhnJ6hi0KWg@mail.gmail.com> (sfid-20120218_005838_962049_A04E26E8)
+Subject: Re: [PATCH 1/2] compat-wireless: update bluetooth patch to latest wireless-testing
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Fri, Feb 17, 2012 at 1:49 AM, Luciano Coelho <coelho@ti.com> wrote:
+> There is a small change in the bt_sock_unregister() function in
+> af_bluetooth (an extra if) that cause the patch not to apply anymore.
+>
+> Signed-off-by: Luciano Coelho <coelho@ti.com>
 
-It is op_mode related
+Applied and pushed, thanks!
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.h   |    2 ++
- drivers/net/wireless/iwlwifi/iwl-shared.h |    4 ----
- 2 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 930e247..42630f5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -197,6 +197,8 @@ const char *get_ctrl_string(int cmd);
- void iwl_clear_traffic_stats(struct iwl_priv *priv);
- void iwl_update_stats(struct iwl_priv *priv, bool is_tx, __le16 fc,
- 		      u16 len);
-+void iwl_reset_traffic_log(struct iwl_priv *priv);
-+
- #else
- static inline int iwl_alloc_traffic_mem(struct iwl_priv *priv)
- {
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 5140c78..a644162 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -553,10 +553,6 @@ void __releases(wait_entry)
- iwl_remove_notification(struct iwl_shared *shrd,
- 			   struct iwl_notification_wait *wait_entry);
- 
--#ifdef CONFIG_IWLWIFI_DEBUGFS
--void iwl_reset_traffic_log(struct iwl_priv *priv);
--#endif /* CONFIG_IWLWIFI_DEBUGFS */
--
- #define IWL_CMD(x) case x: return #x
- #define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
- 
--- 
-1.7.0.4
-
+  Luis
