@@ -1,282 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:64433 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754268Ab2BQUXz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Feb 2012 15:23:55 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 19/26] iwlwifi: document the transport layer
-Date: Fri, 17 Feb 2012 11:13:47 -0800
-Message-Id: <1329506034-1394-20-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120217_212423_476447_CA30285E)
-In-Reply-To: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from store.l.unchti.me ([88.198.247.169]:48770 "EHLO
+	store.l.unchti.me" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751464Ab2BQOrs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Feb 2012 09:47:48 -0500
+Received: from wlan0761.rz.uni-leipzig.de ([139.18.250.249] helo=spatula.l.unchti.me)
+	by store.l.unchti.me with esmtpsa (TLS1.0:DHE_RSA_AES_128_CBC_SHA1:16)
+	(Exim 4.72)
+	(envelope-from <mittagessen@l.unchti.me>)
+	id 1RyOaU-0005EK-AU
+	for linux-wireless@vger.kernel.org; Fri, 17 Feb 2012 14:15:02 +0000
+Date: Fri, 17 Feb 2012 15:15:04 +0100
+From: Benjamin Kiessling <mittagessen@l.unchti.me>
+To: linux-wireless@vger.kernel.org
+Subject: minstrel rate statistics
+Message-ID: <20120217141504.GA31438@spatula.l.unchti.me> (sfid-20120217_154751_064734_27DDCE76)
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="r5Pyd7+fXNt84Ff3"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Fix a few typos in the existing comments too.
-Enforce the comments with might_sleep.
+--r5Pyd7+fXNt84Ff3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-trans.h |  120 ++++++++++++++++++++++++++---
- 1 files changed, 107 insertions(+), 13 deletions(-)
+Hi,
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 7ea5f77..2a2941f 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -70,17 +70,72 @@
- #include "iwl-commands.h"
- #include "iwl-ucode.h"
- 
-- /*This file includes the declaration that are exported from the transport
-- * layer */
-+/**
-+ * DOC: Transport layer - what is it ?
-+ *
-+ * The tranport layer is the layer that deals with the HW directly. It provides
-+ * an abstraction of the underlying HW to the upper layer. The transport layer
-+ * doesn't provide any policy, algorithm or anything of this kind, but only
-+ * mechanisms to make the HW do something.It is not completely stateless but
-+ * close to it.
-+ * We will have an implementation for each different supported bus.
-+ */
-+
-+/**
-+ * DOC: Life cycle of the transport layer
-+ *
-+ * The transport layer has a very precise life cycle.
-+ *
-+ *	1) A helper function is called during the module initialization and
-+ *	   registers the bus driver's ops with the transport's alloc function.
-+ *	2) Bus's probe calls to the transport layer's allocation functions.
-+ *	   Of course this function is bus specific.
-+ *	3) This allocation functions will spawn the upper layer which will
-+ *	   register mac80211.
-+ *
-+ *	4) At some point (i.e. mac80211's start call), the op_mode will call
-+ *	   the following sequence:
-+ *	   start_hw
-+ *	   start_fw
-+ *
-+ *	5) Then when finished (or reset):
-+ *	   stop_fw (a.k.a. stop device for the moment)
-+ *	   stop_hw
-+ *
-+ *	6) Eventually, the free function will be called.
-+ */
-+
-+/**
-+ * DOC: API needed by the transport layer from the op_mode
-+ *
-+ * TODO
-+ */
- 
- struct iwl_priv;
- struct iwl_shared;
- 
-+/**
-+ * DOC: Host command section
-+ *
-+ * A host command is a commaned issued by the upper layer to the fw. There are
-+ * several versions of fw that have several APIs. The transport layer is
-+ * completely agnostic to these differences.
-+ * The transport does provide helper functionnality (i.e. SYNC / ASYNC mode),
-+ */
- #define SEQ_TO_SN(seq) (((seq) & IEEE80211_SCTL_SEQ) >> 4)
- #define SN_TO_SEQ(ssn) (((ssn) << 4) & IEEE80211_SCTL_SEQ)
- #define MAX_SN ((IEEE80211_SCTL_SEQ) >> 4)
- 
--enum {
-+/**
-+ * enum CMD_MODE - how to send the host commands ?
-+ *
-+ * @CMD_SYNC: The caller will be stalled until the fw responds to the command
-+ * @CMD_ASYNC: Return right away and don't want for the response
-+ * @CMD_WANT_SKB: valid only with CMD_SYNC. The caller needs the buffer of the
-+ *	response.
-+ * @CMD_ON_DEMAND: This command is sent by the test mode pipe.
-+ */
-+enum CMD_MODE {
- 	CMD_SYNC = 0,
- 	CMD_ASYNC = BIT(0),
- 	CMD_WANT_SKB = BIT(1),
-@@ -105,20 +160,29 @@ struct iwl_device_cmd {
- 
- #define IWL_MAX_CMD_TFDS	2
- 
-+/**
-+ * struct iwl_hcmd_dataflag - flag for each one of the chunks of the command
-+ *
-+ * IWL_HCMD_DFL_NOCOPY: By default, the command is copied to the host command's
-+ *	ring. The transport layer doesn't map the command's buffer to DMA, but
-+ *	rather copies it to an previously allocated DMA buffer. This flag tells
-+ *	the transport layer not to copy the command, but to map the existing
-+ *	buffer. This can save memcpy and is worth with very big comamnds.
-+ */
- enum iwl_hcmd_dataflag {
- 	IWL_HCMD_DFL_NOCOPY	= BIT(0),
- };
- 
- /**
-  * struct iwl_host_cmd - Host command to the uCode
-+ *
-  * @data: array of chunks that composes the data of the host command
-  * @reply_page: pointer to the page that holds the response to the host command
-  * @handler_status: return value of the handler of the command
-  *	(put in setup_rx_handlers) - valid for SYNC mode only
-- * @callback:
-- * @flags: can be CMD_* note CMD_WANT_SKB is incompatible withe CMD_ASYNC
-+ * @flags: can be CMD_*
-  * @len: array of the lenths of the chunks in data
-- * @dataflags:
-+ * @dataflags: IWL_HCMD_DFL_*
-  * @id: id of the host command
-  */
- struct iwl_host_cmd {
-@@ -134,26 +198,43 @@ struct iwl_host_cmd {
- 
- /**
-  * struct iwl_trans_ops - transport specific operations
-+ *
-+ * All the handlers MUST be implemented
-+ *
-  * @start_hw: starts the HW- from that point on, the HW can send interrupts
-+ *	May sleep
-  * @stop_hw: stops the HW- from that point on, the HW will be in low power but
-  *	will still issue interrupt if the HW RF kill is triggered.
-+ *	May sleep
-  * @start_fw: allocates and inits all the resources for the transport
-- *	layer. Also kick a fw image. This handler may sleep.
-+ *	layer. Also kick a fw image.
-+ *	May sleep
-  * @fw_alive: called when the fw sends alive notification
-+ *	May sleep
-  * @wake_any_queue: wake all the queues of a specfic context IWL_RXON_CTX_*
-  * @stop_device:stops the whole device (embedded CPU put to reset)
-+ *	May sleep
-  * @send_cmd:send a host command
-+ *	May sleep only if CMD_SYNC is set
-  * @tx: send an skb
-+ *	Must be atomic
-  * @reclaim: free packet until ssn. Returns a list of freed packets.
-+ *	Must be atomic
-  * @tx_agg_alloc: allocate resources for a TX BA session
-+ *	May sleep
-  * @tx_agg_setup: setup a tx queue for AMPDU - will be called once the HW is
-- *                 ready and a successful ADDBA response has been received.
-+ *	ready and a successful ADDBA response has been received.
-+ *	May sleep
-  * @tx_agg_disable: de-configure a Tx queue to send AMPDUs
-+ *	May sleep
-  * @free: release all the ressource for the transport layer itself such as
-- *        irq, tasklet etc...
-+ *	irq, tasklet etc... From this point on, the device may not issue
-+ *	any interrupt (incl. RFKILL).
-+ *	May sleep
-  * @stop_queue: stop a specific queue
-  * @check_stuck_queue: check if a specific queue is stuck
-  * @wait_tx_queue_empty: wait until all tx queues are empty
-+ *	May sleep
-  * @dbgfs_register: add the dbgfs files under this directory. Files will be
-  *	automatically deleted.
-  * @suspend: stop the device unless WoWLAN is configured
-@@ -217,6 +298,7 @@ struct iwl_calib_result {
- 
- /**
-  * struct iwl_trans - transport common data
-+ *
-  * @ops - pointer to iwl_trans_ops
-  * @shrd - pointer to iwl_shared which holds shared data from the upper layer
-  * @hcmd_lock: protects HCMD
-@@ -224,7 +306,7 @@ struct iwl_calib_result {
-  * @dev - pointer to struct device * that represents the device
-  * @irq - the irq number for the device
-  * @hw_id: a u32 with the ID of the device / subdevice.
--  *	Set during transport alloaction.
-+ *	Set during transport allocation.
-  * @hw_id_str: a string with info about HW ID. Set during transport allocation.
-  * @ucode_write_complete: indicates that the ucode has been copied.
-  * @ucode_rt: run time ucode image
-@@ -246,13 +328,11 @@ struct iwl_trans {
- 	u32 hw_id;
- 	char hw_id_str[52];
- 
--	u8 ucode_write_complete;	/* the image write is complete */
-+	u8 ucode_write_complete;
- 
--	/* eeprom related variables */
- 	int    nvm_device_type;
- 	bool pm_support;
- 
--	/* init calibration results */
- 	struct list_head calib_results;
- 
- 	/* pointer to trans specific struct */
-@@ -262,16 +342,22 @@ struct iwl_trans {
- 
- static inline int iwl_trans_start_hw(struct iwl_trans *trans)
- {
-+	might_sleep();
-+
- 	return trans->ops->start_hw(trans);
- }
- 
- static inline void iwl_trans_stop_hw(struct iwl_trans *trans)
- {
-+	might_sleep();
-+
- 	trans->ops->stop_hw(trans);
- }
- 
- static inline void iwl_trans_fw_alive(struct iwl_trans *trans)
- {
-+	might_sleep();
-+
- 	trans->ops->fw_alive(trans);
- }
- 
-@@ -284,6 +370,8 @@ static inline int iwl_trans_start_fw(struct iwl_trans *trans, struct fw_img *fw)
- 
- static inline void iwl_trans_stop_device(struct iwl_trans *trans)
- {
-+	might_sleep();
-+
- 	trans->ops->stop_device(trans);
- }
- 
-@@ -322,12 +410,16 @@ static inline int iwl_trans_reclaim(struct iwl_trans *trans, int sta_id,
- static inline int iwl_trans_tx_agg_disable(struct iwl_trans *trans,
- 					    int sta_id, int tid)
- {
-+	might_sleep();
-+
- 	return trans->ops->tx_agg_disable(trans, sta_id, tid);
- }
- 
- static inline int iwl_trans_tx_agg_alloc(struct iwl_trans *trans,
- 					 int sta_id, int tid)
- {
-+	might_sleep();
-+
- 	return trans->ops->tx_agg_alloc(trans, sta_id, tid);
- }
- 
-@@ -337,6 +429,8 @@ static inline void iwl_trans_tx_agg_setup(struct iwl_trans *trans,
- 					   int sta_id, int tid,
- 					   int frame_limit, u16 ssn)
- {
-+	might_sleep();
-+
- 	trans->ops->tx_agg_setup(trans, ctx, sta_id, tid, frame_limit, ssn);
- }
- 
--- 
-1.7.0.4
+I know it sounds silly but I am unable to find the rc_stats file for
+minstrel in my debugfs. I've been using an older kernel (2.6.35) and
+recently ported a few patches to the current wireless-testing tree, but
+after the upgrade there is only the rc_stats file of ath9k.=20
+I followed the rate_control_add_sta_debugfs() path and couldn't find any
+obvious wrong code. Is this a known problem or am I just too stupid to
+find it?
 
+Regards,
+Benjamin Kiessling
+
+--r5Pyd7+fXNt84Ff3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPPmDoAAoJECylO89uSo7HTgkQAJLunOJBx5BlmT2q8WWHyqmB
+q9W20LVOpQ+7fU4D6MN94+DM3ik3RCtGOwt4CyweO3WddUQb78OToD9cE4rakQiw
+fQ2dWePU86yXpWEL6dUp+UVUzu51frYYO+26TURcho2ENtKoS48vWASdVwHQCJZq
+XR3Q7IpcoOnuY9RrEnO4nOzasA7/7rDWqX9m2WrL8tMOSfQKO7uTk6qN3tWIXDep
+gw//DL8xqAxcX/uG7F0OZ3ZBiaCCfWECUa7Kv4XevUiNlQjsBFXsbmTQRSqQaOku
+GJd/DO4TTq0rktKac+d9kaINYks2NcXkKs3SYboDF5HQ2BK7uOwn+uimOCKe0vHT
+aLquNVln1NsMW0iL4ju2K6AUFz5RjVBp5MaLshnX1UV7fTqrDChIHw6sLzBSePm0
+htPSaVBV3TtoTIaDl3kZ5R9jQJ+PNhhtlE+HfL29/Rw2uUxfPW8jZ4UL1H+8spqh
+h5vydSmmibkQL5tOKeBKbSQAVGE/MORYrGUPFEkp2u9+QZF67HIibBDn234VKH5W
+Fj3SvcS8Xi3KbsOrneWQV8m4spoSuTQ6Ur25tug/8xIHB/tK9F1Bd2MbOKMKf00p
+NXJLP6v1krRQfqtI5Vpa2GiFXVBw8ULQgLo5Qz7LqxUz6e0QB0YQRN+o/H4E1dJe
+P5AntJK2qUR8I6i/9zN8
+=rp2f
+-----END PGP SIGNATURE-----
+
+--r5Pyd7+fXNt84Ff3--
