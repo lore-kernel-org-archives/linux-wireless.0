@@ -1,47 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from thalia-smout.broadpark.no ([80.202.8.21]:36317 "EHLO
-	thalia-smout.broadpark.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752249Ab2BUVz6 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:33415 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753259Ab2BQPo4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Feb 2012 16:55:58 -0500
-MIME-version: 1.0
-Content-type: text/plain; CHARSET=US-ASCII
-Received: from ignis-smin.broadpark.no ([80.202.8.11])
- by thalia-smout.broadpark.no
- (Sun Java(tm) System Messaging Server 7u3-15.01 64bit (built Feb 12 2010))
- with ESMTP id <0LZR00BTKGSZZ020@thalia-smout.broadpark.no> for
- linux-wireless@vger.kernel.org; Tue, 21 Feb 2012 21:55:47 +0100 (CET)
-Received: from [192.168.1.10] ([80.202.101.84]) by ignis-smin.broadpark.no
- (Sun Java(tm) System Messaging Server 7u3-15.01 64bit (built Feb 12 2010))
- with ESMTP id <0LZR00872GSZVBD0@ignis-smin.broadpark.no> for
- linux-wireless@vger.kernel.org; Tue, 21 Feb 2012 21:55:47 +0100 (CET)
-Message-id: <4F4404E9.3030404@bakke.com> (sfid-20120221_225602_061989_9E3103D0)
-Date: Tue, 21 Feb 2012 21:56:09 +0100
-From: DagB <dag@bakke.com>
-To: linux-wireless@vger.kernel.org
-Subject: brcmsmac features/TODO?
+	Fri, 17 Feb 2012 10:44:56 -0500
+Subject: Re: [RFT/FYI] mac80211: revert on-channel work optimisations
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <4EB96416.5040700@candelatech.com> (sfid-20111108_181718_795911_9F0A2B63)
+References: <1320772222.24797.22.camel@jlt3.sipsolutions.net>
+	 <4EB96416.5040700@candelatech.com> (sfid-20111108_181718_795911_9F0A2B63)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 17 Feb 2012 16:44:51 +0100
+Message-ID: <1329493491.3786.6.camel@jlt3.sipsolutions.net> (sfid-20120217_164617_851210_A8782AAE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2011-11-08 at 09:17 -0800, Ben Greear wrote:
+> On 11/08/2011 09:10 AM, Johannes Berg wrote:
+> > FYI -- I'm going to test this a bit more but I am going to put it in.
+> > The code is a mess -- look at how much code I remove below (and that's
+> > after everybody elses cleanups!) for a dubious optimisation.
+> >
+> > I agree that we should address this and we need to really do this to not
+> > mess up our aggregation state, but the current code is too complex and
+> > causing too many issues. We also need to think about this in the context
+> > of multi-virtual-channel support.
+> 
+> Well crap.  Why don't you try to fix it right instead?
+> 
+> I'll probably end up carrying this in my own tree so
+> that multiple vifs work well and don't constantly
+> reset the ath9k causing it to shit itself...
 
-Hi.
+Given the auth/assoc redesign that went in now, are you still carrying
+this? Does the redesign address your problem?
 
-Referring to:
-http://linuxwireless.org/en/users/Drivers/brcm80211
+johannes
 
-I was wondering if there is a roadmap/plan to implement 40MHz channels
-and powersave for the brcmsmac driver in the not too distant future.
-
-brcmsmac is by far the single most powerhungry device in my MBA, if
-powertop is to be trusted. Would be great to have that fixed. I guess
-enabling hw encryption will contribute positively in this regard as well.
-
-Not asking for hard commitments, just wondering if the Broadcom guys
-have a plan...
-
-Brett? Arend? Franky?
-
-
-Thanks,
-
-Dag B.
