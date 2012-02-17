@@ -1,213 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:57649 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757686Ab2BMThh (ORCPT
+Received: from i118-21-156-233.s30.a048.ap.plala.or.jp ([118.21.156.233]:37388
+	"EHLO rinabert.homeip.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751103Ab2BQOEl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 14:37:37 -0500
-Received: by yhoo21 with SMTP id o21so2575202yho.19
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Feb 2012 11:37:36 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, chunkeey@web.de
-Subject: [RFC/RFT 3/5] p54usb: Load firmware from work queue and not from probe routine
-Date: Mon, 13 Feb 2012 13:37:04 -0600
-Message-Id: <1329161826-11135-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120213_203740_034098_CF9A77C0)
-In-Reply-To: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 17 Feb 2012 09:04:41 -0500
+From: Masanari Iida <standby24x7@gmail.com>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org,
+	Masanari Iida <standby24x7@gmail.com>
+Subject: [PATCH] [trivial] wireless: Fix typo in mac80211_hwsim.c
+Date: Fri, 17 Feb 2012 23:04:10 +0900
+Message-Id: <1329487450-1937-1-git-send-email-standby24x7@gmail.com> (sfid-20120217_150504_777921_FB2B2999)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers that load firmware from their probe routine have problems with the
-latest versions of udev as they get timeouts while waiting for user
-space to start. The problem is fixed by loading the firmware and starting
-mac80211 from a delayed_work queue. By using this method, most of the
-original code is preserved.
+Correct spelling "occured" to "occurred" in
+drivers/net/wireless/mac80211_hwsim.c
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Masanari Iida <standby24x7@gmail.com>
 ---
- drivers/net/wireless/p54/p54usb.c |  120 +++++++++++++++++-------------------
- drivers/net/wireless/p54/p54usb.h |    1 +
- 2 files changed, 58 insertions(+), 63 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/p54/p54usb.c b/drivers/net/wireless/p54/p54usb.c
-index f4d28c3..b8eff19 100644
---- a/drivers/net/wireless/p54/p54usb.c
-+++ b/drivers/net/wireless/p54/p54usb.c
-@@ -836,9 +836,33 @@ fail:
- 	return err;
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 4b9e730..29e930a 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -592,7 +592,7 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
+ 	return;
+ 
+ nla_put_failure:
+-	printk(KERN_DEBUG "mac80211_hwsim: error occured in %s\n", __func__);
++	printk(KERN_DEBUG "mac80211_hwsim: error occurred in %s\n", __func__);
  }
  
--static int p54u_load_firmware(struct ieee80211_hw *dev)
-+static int p54u_open(struct ieee80211_hw *dev)
- {
- 	struct p54u_priv *priv = dev->priv;
-+	int err;
-+
-+	err = p54u_init_urbs(dev);
-+	if (err)
-+		return err;
-+
-+	priv->common.open = p54u_init_urbs;
-+
-+	return 0;
-+}
-+
-+static void p54u_stop(struct ieee80211_hw *dev)
-+{
-+	/* TODO: figure out how to reliably stop the 3887 and net2280 so
-+	   the hardware is still usable next time we want to start it.
-+	   until then, we just stop listening to the hardware.. */
-+	p54u_free_urbs(dev);
-+}
-+
-+static void p54u_load_firmware(struct work_struct *work)
-+{
-+	struct p54u_priv *priv = container_of(to_delayed_work(work),
-+				 struct p54u_priv, firmware_load);
-+	struct ieee80211_hw *dev = usb_get_intfdata(priv->intf);
- 	int err, i;
+ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
+@@ -1564,7 +1564,7 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
  
- 	BUILD_BUG_ON(ARRAY_SIZE(p54u_fwlist) != __NUM_P54U_HWTYPES);
-@@ -847,59 +871,53 @@ static int p54u_load_firmware(struct ieee80211_hw *dev)
- 		if (p54u_fwlist[i].type == priv->hw_type)
- 			break;
- 
--	if (i == __NUM_P54U_HWTYPES)
--		return -EOPNOTSUPP;
-+	if (i == __NUM_P54U_HWTYPES) {
-+		dev_err(&priv->udev->dev, "Device not supported\n");
-+		return;
-+	}
- 
- 	err = request_firmware(&priv->fw, p54u_fwlist[i].fw, &priv->udev->dev);
- 	if (err) {
--		dev_err(&priv->udev->dev, "(p54usb) cannot load firmware %s "
--					  "(%d)!\n", p54u_fwlist[i].fw, err);
--
- 		err = request_firmware(&priv->fw, p54u_fwlist[i].fw_legacy,
- 				       &priv->udev->dev);
--		if (err)
--			return err;
-+
-+		if (err) {
-+			dev_err(&priv->udev->dev,
-+				"(p54usb) cannot load firmware %s or %s(%d)!\n",
-+				p54u_fwlist[i].fw, p54u_fwlist[i].fw_legacy,
-+				err);
-+			return;
-+		}
- 	}
- 
- 	err = p54_parse_firmware(dev, priv->fw);
--	if (err)
--		goto out;
-+	if (err) {
-+		dev_err(&priv->udev->dev, "Error parsing firmware\n");
-+		return;
-+	}
- 
- 	if (priv->common.fw_interface != p54u_fwlist[i].intf) {
- 		dev_err(&priv->udev->dev, "wrong firmware, please get "
- 			"a firmware for \"%s\" and try again.\n",
- 			p54u_fwlist[i].hw);
--		err = -EINVAL;
-+		return;
- 	}
--
--out:
--	if (err)
--		release_firmware(priv->fw);
--
--	return err;
--}
--
--static int p54u_open(struct ieee80211_hw *dev)
--{
--	struct p54u_priv *priv = dev->priv;
--	int err;
--
--	err = p54u_init_urbs(dev);
-+	err = priv->upload_fw(dev);
- 	if (err) {
--		return err;
-+		dev_err(&priv->udev->dev, "Error uploading firmware\n");
-+		return;
- 	}
- 
--	priv->common.open = p54u_init_urbs;
--
--	return 0;
--}
-+	p54u_open(dev);
-+	err = p54_read_eeprom(dev);
-+	if (err)
-+		dev_err(&priv->udev->dev, "Error reading eeprom\n");
-+	p54u_stop(dev);
-+	if (err)
-+		return;
- 
--static void p54u_stop(struct ieee80211_hw *dev)
--{
--	/* TODO: figure out how to reliably stop the 3887 and net2280 so
--	   the hardware is still usable next time we want to start it.
--	   until then, we just stop listening to the hardware.. */
--	p54u_free_urbs(dev);
-+	/* firmware available - start operations */
-+	err = p54_register_common(dev, &priv->udev->dev);
- }
- 
- static int __devinit p54u_probe(struct usb_interface *intf,
-@@ -969,34 +987,10 @@ static int __devinit p54u_probe(struct usb_interface *intf,
- 		priv->common.tx = p54u_tx_net2280;
- 		priv->upload_fw = p54u_upload_firmware_net2280;
- 	}
--	err = p54u_load_firmware(dev);
--	if (err)
--		goto err_free_dev;
--
--	err = priv->upload_fw(dev);
--	if (err)
--		goto err_free_fw;
--
--	p54u_open(dev);
--	err = p54_read_eeprom(dev);
--	p54u_stop(dev);
--	if (err)
--		goto err_free_fw;
--
--	err = p54_register_common(dev, &udev->dev);
--	if (err)
--		goto err_free_fw;
--
-+	/* setup and start delayed work to load firmware */
-+	INIT_DELAYED_WORK(&priv->firmware_load, p54u_load_firmware);
-+	schedule_delayed_work(&priv->firmware_load, HZ);
  	return 0;
--
--err_free_fw:
--	release_firmware(priv->fw);
--
--err_free_dev:
--	p54_free_common(dev);
--	usb_set_intfdata(intf, NULL);
--	usb_put_dev(udev);
--	return err;
+ err:
+-	printk(KERN_DEBUG "mac80211_hwsim: error occured in %s\n", __func__);
++	printk(KERN_DEBUG "mac80211_hwsim: error occurred in %s\n", __func__);
+ 	goto out;
+ out:
+ 	dev_kfree_skb(skb);
+@@ -1584,7 +1584,7 @@ static int hwsim_register_received_nl(struct sk_buff *skb_2,
+ 
+ 	return 0;
+ out:
+-	printk(KERN_DEBUG "mac80211_hwsim: error occured in %s\n", __func__);
++	printk(KERN_DEBUG "mac80211_hwsim: error occurred in %s\n", __func__);
+ 	return -EINVAL;
  }
  
- static void __devexit p54u_disconnect(struct usb_interface *intf)
-diff --git a/drivers/net/wireless/p54/p54usb.h b/drivers/net/wireless/p54/p54usb.h
-index ed4034a..6070a21 100644
---- a/drivers/net/wireless/p54/p54usb.h
-+++ b/drivers/net/wireless/p54/p54usb.h
-@@ -143,6 +143,7 @@ struct p54u_priv {
- 	struct sk_buff_head rx_queue;
- 	struct usb_anchor submitted;
- 	const struct firmware *fw;
-+	struct delayed_work firmware_load;
- };
+@@ -1647,7 +1647,7 @@ static int hwsim_init_netlink(void)
+ 	return 0;
  
- #endif /* P54USB_H */
+ failure:
+-	printk(KERN_DEBUG "mac80211_hwsim: error occured in %s\n", __func__);
++	printk(KERN_DEBUG "mac80211_hwsim: error occurred in %s\n", __func__);
+ 	return -EINVAL;
+ }
+ 
 -- 
-1.7.7
+1.7.4.4
 
