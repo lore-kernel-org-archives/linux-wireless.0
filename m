@@ -1,44 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from que31.charter.net ([209.225.8.23]:47153 "EHLO que31.charter.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753601Ab2B0Shb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 13:37:31 -0500
-From: Greg Dietsche <Gregory.Dietsche@cuw.edu>
-To: sgruszka@redhat.com
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Greg Dietsche <Gregory.Dietsche@cuw.edu>
-Subject: [PATCH 4/4] iwlegacy: remove unused enum il4965_calib_enabled_state
-Date: Mon, 27 Feb 2012 12:25:33 -0600
-Message-Id: <1330367133-26465-5-git-send-email-Gregory.Dietsche@cuw.edu> (sfid-20120227_193823_460641_E0DB31DC)
-In-Reply-To: <1330367133-26465-1-git-send-email-Gregory.Dietsche@cuw.edu>
-References: <1330367133-26465-1-git-send-email-Gregory.Dietsche@cuw.edu>
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:60820 "HELO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751097Ab2BQJrK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Feb 2012 04:47:10 -0500
+Received: by mail-lpp01m010-f50.google.com with SMTP id m13so4739005lah.37
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Feb 2012 01:47:08 -0800 (PST)
+MIME-Version: 1.0
+From: Luciano Coelho <coelho@ti.com>
+To: linux-wireless@vger.kernel.org
+Cc: mcgrof@gmail.com
+Subject: [PATCH] compat: move skb_complete_wifi_ack() function to compat-3.2.h
+Date: Fri, 17 Feb 2012 11:46:59 +0200
+Message-Id: <1329472019-28688-1-git-send-email-coelho@ti.com> (sfid-20120217_104719_771040_EB7C7B5E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove the enum il4965_calib_enabled_state because it is not used.
+It seems that the skb_complete_wifi_ack() function was introduced in
+3.2-rc2.  So the dummy implementation of this function in compat
+should not be in compat-3.3.h anymore, but in compat-3.2.h.
 
-Signed-off-by: Greg Dietsche <Gregory.Dietsche@cuw.edu>
+Signed-off-by: Luciano Coelho <coelho@ti.com>
 ---
- drivers/net/wireless/iwlegacy/common.h |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
+ include/linux/compat-3.2.h |    5 +++++
+ include/linux/compat-3.3.h |    4 ----
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index d0de922..5f50177 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -956,11 +956,6 @@ enum il4965_chain_noise_state {
- 	IL_CHAIN_NOISE_DONE,
- };
+diff --git a/include/linux/compat-3.2.h b/include/linux/compat-3.2.h
+index cb14f0b..9ca3727 100644
+--- a/include/linux/compat-3.2.h
++++ b/include/linux/compat-3.2.h
+@@ -10,6 +10,11 @@
  
--enum il4965_calib_enabled_state {
--	IL_CALIB_DISABLED = 0,	/* must be 0 */
--	IL_CALIB_ENABLED = 1,
--};
--
- enum ucode_type {
- 	UCODE_NONE = 0,
- 	UCODE_INIT,
+ #define PMSG_IS_AUTO(msg)	(((msg).event & PM_EVENT_AUTO) != 0)
+ 
++static inline void skb_complete_wifi_ack(struct sk_buff *skb, bool acked)
++{
++	WARN_ON(1);
++}
++
+ /**
+  * skb_frag_page - retrieve the page refered to by a paged fragment
+  * @frag: the paged fragment
+diff --git a/include/linux/compat-3.3.h b/include/linux/compat-3.3.h
+index 4965f23..325d488 100644
+--- a/include/linux/compat-3.3.h
++++ b/include/linux/compat-3.3.h
+@@ -8,10 +8,6 @@
+ /* include to override NL80211_FEATURE_SK_TX_STATUS */
+ #include <linux/nl80211.h>
+ 
+-static inline void skb_complete_wifi_ack(struct sk_buff *skb, bool acked)
+-{
+-	WARN_ON(1);
+-}
+ #define NL80211_FEATURE_SK_TX_STATUS 0
+ 
+ typedef u32 netdev_features_t;
 -- 
-1.7.6.4
+1.7.5.4
 
