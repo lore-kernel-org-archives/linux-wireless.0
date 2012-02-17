@@ -1,79 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:60041 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751518Ab2BDB0R (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 20:26:17 -0500
-Received: by mail-pw0-f46.google.com with SMTP id u11so3334452pbd.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2012 17:26:17 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Subject: [RFC 08/11] crda: clean header files
-Date: Fri,  3 Feb 2012 17:25:45 -0800
-Message-Id: <1328318748-21044-9-git-send-email-mcgrof@frijolero.org> (sfid-20120204_022626_149822_0587EC95)
-In-Reply-To: <1328318748-21044-1-git-send-email-mcgrof@frijolero.org>
-References: <1328318748-21044-1-git-send-email-mcgrof@frijolero.org>
+Received: from mail.vyatta.com ([76.74.103.46]:52779 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752824Ab2BQTGK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Feb 2012 14:06:10 -0500
+Date: Fri, 17 Feb 2012 11:06:02 -0800
+From: Stephen Hemminger <shemminger@vyatta.com>
+To: Joe Perches <joe@perches.com>
+Cc: Luis Felipe Strano Moraes <lfelipe@profusion.mobi>,
+	linville@tuxdriver.com, johannes@sipsolutions.net,
+	davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Cleaning up code formatting errors in net/wireless
+ pointed out by checkpatch.
+Message-ID: <20120217110602.2c4e762a@nehalam.linuxnetplumber.net> (sfid-20120217_200632_176783_CAA2C041)
+In-Reply-To: <1329504344.584.18.camel@joe2Laptop>
+References: <1329492603-3972-1-git-send-email-lfelipe@profusion.mobi>
+	<1329504344.584.18.camel@joe2Laptop>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unused headers now that we have an object
-(soon to be library) using what it has to separately.
+On Fri, 17 Feb 2012 10:45:44 -0800
+Joe Perches <joe@perches.com> wrote:
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
----
- crda.c      |    3 ---
- intersect.c |    3 ---
- regdbdump.c |    3 ---
- 3 files changed, 0 insertions(+), 9 deletions(-)
+> On Fri, 2012-02-17 at 07:30 -0800, Luis Felipe Strano Moraes wrote:
+> > These are mostly minor changes and they are being sent as one patch only in
+> > order to cause the smallest amount of disruption.
+> []
+> > diff --git a/net/wireless/core.c b/net/wireless/core.c
+> []
+> > @@ -668,7 +668,7 @@ void wiphy_unregister(struct wiphy *wiphy)
+> >  		mutex_lock(&rdev->devlist_mtx);
+> >  		__count = rdev->opencount;
+> >  		mutex_unlock(&rdev->devlist_mtx);
+> > -		__count == 0;}));
+> > +		__count == 0; }));
+> 
+> Inline statement expressions are pretty unusual
+> for kernel sources.  Normally these are used via
+> macro.
+> 
+> I'd try to make the statement expression visually
+> distinct.  Something like:
+> 
+> 	wait_event(rdev->dev_wait,
+> 		   ({
+> 			   int __count;
+> 			   mutex_lock(&rdev->devlist_mtx);
+> 			   __count = rdev->opencount;
+> 			   mutex_unlock(&rdev->devlist_mtx);
+> 			   __count == 0;
+> 		   })
+> 		  );
+> 
 
-diff --git a/crda.c b/crda.c
-index 344fd60..c6dc3d4 100644
---- a/crda.c
-+++ b/crda.c
-@@ -6,8 +6,6 @@
- 
- #include <errno.h>
- #include <stdio.h>
--#include <sys/mman.h>
--#include <sys/stat.h>
- #include <fcntl.h>
- #include <arpa/inet.h>
- #include <unistd.h>
-@@ -19,7 +17,6 @@
- #include <netlink/attr.h>
- #include "nl80211.h"
- 
--#include "regdb.h"
- #include "reglib.h"
- 
- #if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30) && !defined(CONFIG_LIBNL32)
-diff --git a/intersect.c b/intersect.c
-index 6d3d393..012750d 100644
---- a/intersect.c
-+++ b/intersect.c
-@@ -1,9 +1,6 @@
- #include <errno.h>
- #include <stdlib.h>
- #include <stdio.h>
--#include <sys/mman.h>
--#include <sys/stat.h>
--#include <fcntl.h>
- #include <arpa/inet.h> /* ntohl */
- #include <string.h>
- 
-diff --git a/regdbdump.c b/regdbdump.c
-index 6d4cf56..6f9592a 100644
---- a/regdbdump.c
-+++ b/regdbdump.c
-@@ -1,7 +1,4 @@
--#include <errno.h>
- #include <stdio.h>
--
--#include "regdb.h"
- #include "reglib.h"
- 
- int main(int argc, char **argv)
--- 
-1.7.4.15.g7811d
+I prefer to see this done as an inline function
 
+wait_event(rdev->dev_wait, is_foo_ready(rdev))
+
+Also, in this case wrapping a condition with a mutex really is
+meaningless because the state is longer protected out side the
+protected region; in other words the mutex here is bogus and
+provides no additional protection.
