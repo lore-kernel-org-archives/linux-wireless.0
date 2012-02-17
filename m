@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:26778 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755380Ab2BNN5K (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:33155 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751805Ab2BQQZc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 08:57:10 -0500
-Message-ID: <4F3A6828.7060001@qca.qualcomm.com> (sfid-20120214_145714_357145_43CF0E06)
-Date: Tue, 14 Feb 2012 19:26:56 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+	Fri, 17 Feb 2012 11:25:32 -0500
+Received: by wgbdt10 with SMTP id dt10so2875416wgb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Feb 2012 08:25:31 -0800 (PST)
 MIME-Version: 1.0
-To: Raja Mani <rmani@qca.qualcomm.com>
-CC: <kvalo@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	<ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 2/2] ath6kl: Fix memory leak of rx packets in endpoint
- 0
-References: <1328886633-2823-1-git-send-email-vthiagar@qca.qualcomm.com> <1328886633-2823-2-git-send-email-vthiagar@qca.qualcomm.com> <4F3A0C07.5030508@qca.qualcomm.com> <4F3A0CE5.2090206@qca.qualcomm.com>
-In-Reply-To: <4F3A0CE5.2090206@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+From: Claudio Rossi <rossi.claudio.82@gmail.com>
+Date: Fri, 17 Feb 2012 17:25:11 +0100
+Message-ID: <CAO1ZyKkq3nS=KfXF5BQu+SkUOjd2fT7onuMSo_3P2DEa_Du6cQ@mail.gmail.com> (sfid-20120217_172535_442837_9FE4DE7B)
+Subject: Accessing protocol type field from mac802.11
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 14 February 2012 12:57 PM, Vasanthakumar Thiagarajan wrote:
-> On Tuesday 14 February 2012 12:53 PM, Raja Mani wrote:
->>
->> Vasanth,
->>
->> My system is freezing with this patch when i tried to unload
->> ath6kl_sdio.ko. Could you double check this change once again?
->
-> Thanks for reporting this. Kalle, please drop this, i'll send the
-> revised patch.
->
-Actually the first patch also needs to be applied to avoid invalid memory
-free.
+Dear all,
+ I would like to inspect the protocol type field from mac802.11, and
+specifically in rx.c in the function
 
-Kalle, when used with PATCH[1/2] this patch does not cause any
-system freeze. This patch can be taken if there is no any review commands.
+static ieee80211_rx_result debug_noinline
+ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
 
--- 
-Vasanth
+I was trying to do:
 
+struct iphdr * network_header;
+skb_set_network_header(skb,ieee80211_get_hdrlen_from_skb(skb));
+network_header = (struct iphdr *)skb_network_header(skb);
+
+ if (network_header->protocol==IPPROTO_TCP){
+...
+}
+but it does not seams to work....
+
+can somebody give me an hint?
+I am sorry about this question, that may be silly... I am a beginner.
+
+Thank you
+
+--
+Claudio Rossi
+-------------------
+Office @ PoliTO: +39 011 5644194
