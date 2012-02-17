@@ -1,77 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52226 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754106Ab2B0X5P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 18:57:15 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
+Received: from mga02.intel.com ([134.134.136.20]:46093 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754343Ab2BQUX4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Feb 2012 15:23:56 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
-	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	arend@broadcom.com, m@bues.ch, ralf@linux-mips.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 01/11] ssb: sprom fix some sizes / signedness
-Date: Tue, 28 Feb 2012 00:56:04 +0100
-Message-Id: <1330386974-4056-2-git-send-email-hauke@hauke-m.de> (sfid-20120228_005718_783649_DF07C417)
-In-Reply-To: <1330386974-4056-1-git-send-email-hauke@hauke-m.de>
-References: <1330386974-4056-1-git-send-email-hauke@hauke-m.de>
+Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 23/26] iwlwifi: save ucode capabilities in iwl_fw
+Date: Fri, 17 Feb 2012 11:13:51 -0800
+Message-Id: <1329506034-1394-24-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120217_212413_646678_F714CC64)
+In-Reply-To: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some parts of the sprom struct are bigger than needed.
-The leddc and maxpwr values are just 8 bit long and not 16.
-rxpo2g and rxpo5g are signed
+From: Don Fry <donald.h.fry@intel.com>
 
-I got these information for the open source part of the Broadcom SDK
-covering sprom version 1 to 9. rxpo2g contained a negative number on my
-bcm5354 based device, this cased an error and Broadcom SDK says this is
-signed.
+The capabilities parsed from the ucode file are never saved.  Save
+them in the iwl_fw structure.
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Don Fry <donald.h.fry@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- include/linux/ssb/ssb.h |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |    8 +----
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans.h    |    3 --
+ drivers/net/wireless/iwlwifi/iwl-ucode.c    |   38 +++++++++++++-------------
+ 4 files changed, 22 insertions(+), 29 deletions(-)
 
-diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
-index bbc2612..f169621 100644
---- a/include/linux/ssb/ssb.h
-+++ b/include/linux/ssb/ssb.h
-@@ -33,8 +33,8 @@ struct ssb_sprom {
- 	u8 et1mdcport;		/* MDIO for enet1 */
- 	u16 board_rev;		/* Board revision number from SPROM. */
- 	u8 country_code;	/* Country Code */
--	u16 leddc_on_time;	/* LED Powersave Duty Cycle On Count */
--	u16 leddc_off_time;	/* LED Powersave Duty Cycle Off Count */
-+	u8 leddc_on_time;	/* LED Powersave Duty Cycle On Count */
-+	u8 leddc_off_time;	/* LED Powersave Duty Cycle Off Count */
- 	u8 ant_available_a;	/* 2GHz antenna available bits (up to 4) */
- 	u8 ant_available_bg;	/* 5GHz antenna available bits (up to 4) */
- 	u16 pa0b0;
-@@ -53,10 +53,10 @@ struct ssb_sprom {
- 	u8 gpio1;		/* GPIO pin 1 */
- 	u8 gpio2;		/* GPIO pin 2 */
- 	u8 gpio3;		/* GPIO pin 3 */
--	u16 maxpwr_bg;		/* 2.4GHz Amplifier Max Power (in dBm Q5.2) */
--	u16 maxpwr_al;		/* 5.2GHz Amplifier Max Power (in dBm Q5.2) */
--	u16 maxpwr_a;		/* 5.3GHz Amplifier Max Power (in dBm Q5.2) */
--	u16 maxpwr_ah;		/* 5.8GHz Amplifier Max Power (in dBm Q5.2) */
-+	u8 maxpwr_bg;		/* 2.4GHz Amplifier Max Power (in dBm Q5.2) */
-+	u8 maxpwr_al;		/* 5.2GHz Amplifier Max Power (in dBm Q5.2) */
-+	u8 maxpwr_a;		/* 5.3GHz Amplifier Max Power (in dBm Q5.2) */
-+	u8 maxpwr_ah;		/* 5.8GHz Amplifier Max Power (in dBm Q5.2) */
- 	u8 itssi_a;		/* Idle TSSI Target for A-PHY */
- 	u8 itssi_bg;		/* Idle TSSI Target for B/G-PHY */
- 	u8 tri2g;		/* 2.4GHz TX isolation */
-@@ -67,8 +67,8 @@ struct ssb_sprom {
- 	u8 txpid5gl[4];		/* 4.9 - 5.1GHz TX power index */
- 	u8 txpid5g[4];		/* 5.1 - 5.5GHz TX power index */
- 	u8 txpid5gh[4];		/* 5.5 - ...GHz TX power index */
--	u8 rxpo2g;		/* 2GHz RX power offset */
--	u8 rxpo5g;		/* 5GHz RX power offset */
-+	s8 rxpo2g;		/* 2GHz RX power offset */
-+	s8 rxpo5g;		/* 5GHz RX power offset */
- 	u8 rssisav2g;		/* 2GHz RSSI params */
- 	u8 rssismc2g;
- 	u8 rssismf2g;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 8a170b7..79894ac 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -65,11 +65,7 @@
+ 
+ #include "iwl-dev.h"
+ 
+-struct iwlagn_ucode_capabilities {
+-	u32 max_probe_length;
+-	u32 standard_phy_calibration_size;
+-	u32 flags;
+-};
++struct iwl_ucode_capabilities;
+ 
+ extern struct ieee80211_ops iwlagn_hw_ops;
+ 
+@@ -88,7 +84,7 @@ void iwlagn_prepare_restart(struct iwl_priv *priv);
+ /* MAC80211 */
+ struct ieee80211_hw *iwl_alloc_all(void);
+ int iwlagn_mac_setup_register(struct iwl_priv *priv,
+-			      struct iwlagn_ucode_capabilities *capa);
++			      struct iwl_ucode_capabilities *capa);
+ void iwlagn_mac_unregister(struct iwl_priv *priv);
+ 
+ /* RXON */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index 90d8081..9c29234 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -136,7 +136,7 @@ iwlagn_iface_combinations_p2p[] = {
+  * other mac80211 functions grouped here.
+  */
+ int iwlagn_mac_setup_register(struct iwl_priv *priv,
+-				  struct iwlagn_ucode_capabilities *capa)
++				  struct iwl_ucode_capabilities *capa)
+ {
+ 	int ret;
+ 	struct ieee80211_hw *hw = priv->hw;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 20b50a0..cc7a3cf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -321,9 +321,6 @@ enum iwl_trans_state {
+  *	Set during transport allocation.
+  * @hw_id_str: a string with info about HW ID. Set during transport allocation.
+  * @ucode_write_complete: indicates that the ucode has been copied.
+- * @ucode_rt: run time ucode image
+- * @ucode_init: init ucode image
+- * @ucode_wowlan: wake on wireless ucode image (optional)
+  * @nvm_device_type: indicates OTP or eeprom
+  * @pm_support: set to true in start_hw if link pm is supported
+  * @calib_results: list head for init calibration results
+diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.c b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+index 01768f7..9e21fc1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+@@ -805,7 +805,7 @@ static int iwl_parse_v1_v2_firmware(struct iwl_nic *nic,
+ static int iwl_parse_tlv_firmware(struct iwl_nic *nic,
+ 				const struct firmware *ucode_raw,
+ 				struct iwlagn_firmware_pieces *pieces,
+-				struct iwlagn_ucode_capabilities *capa)
++				struct iwl_ucode_capabilities *capa)
+ {
+ 	struct iwl_tlv_ucode_header *ucode = (void *)ucode_raw->data;
+ 	struct iwl_ucode_tlv *tlv;
+@@ -1012,6 +1012,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ {
+ 	struct iwl_nic *nic = context;
+ 	struct iwl_cfg *cfg = cfg(nic);
++	struct iwl_fw *fw = &nic->fw;
+ 	struct iwl_priv *priv = priv(nic); /* temporary */
+ 	struct iwl_ucode_header *ucode;
+ 	int err;
+@@ -1022,11 +1023,10 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	u32 api_ver;
+ 	char buildstr[25];
+ 	u32 build;
+-	struct iwlagn_ucode_capabilities ucode_capa = {
+-		.max_probe_length = 200,
+-		.standard_phy_calibration_size =
+-			IWL_DEFAULT_STANDARD_PHY_CALIBRATE_TBL_SIZE,
+-	};
++
++	fw->ucode_capa.max_probe_length = 200;
++	fw->ucode_capa.standard_phy_calibration_size =
++			IWL_DEFAULT_STANDARD_PHY_CALIBRATE_TBL_SIZE;
+ 
+ 	if (!api_ok)
+ 		api_ok = api_max;
+@@ -1057,7 +1057,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 		err = iwl_parse_v1_v2_firmware(nic, ucode_raw, &pieces);
+ 	else
+ 		err = iwl_parse_tlv_firmware(nic, ucode_raw, &pieces,
+-					   &ucode_capa);
++					   &fw->ucode_capa);
+ 
+ 	if (err)
+ 		goto try_again;
+@@ -1219,23 +1219,23 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 			cfg->base_params->max_event_log_size;
+ 	nic->inst_errlog_ptr = pieces.inst_errlog_ptr;
+ #ifndef CONFIG_IWLWIFI_P2P
+-	ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
++	fw->ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
+ #endif
+ 
+ 	priv->new_scan_threshold_behaviour =
+-		!!(ucode_capa.flags & IWL_UCODE_TLV_FLAGS_NEWSCAN);
++		!!(fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_NEWSCAN);
+ 
+ 	if (!(cfg->sku & EEPROM_SKU_CAP_IPAN_ENABLE))
+-		ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
++		fw->ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
+ 
+ 	/*
+ 	 * if not PAN, then don't support P2P -- might be a uCode
+ 	 * packaging bug or due to the eeprom check above
+ 	 */
+-	if (!(ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PAN))
+-		ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_P2P;
++	if (!(fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PAN))
++		fw->ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_P2P;
+ 
+-	if (ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PAN) {
++	if (fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PAN) {
+ 		priv->sta_key_max_num = STA_KEY_MAX_NUM_PAN;
+ 		nic->shrd->cmd_queue = IWL_IPAN_CMD_QUEUE_NUM;
+ 	} else {
+@@ -1246,25 +1246,25 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	 * figure out the offset of chain noise reset and gain commands
+ 	 * base on the size of standard phy calibration commands table size
+ 	 */
+-	if (ucode_capa.standard_phy_calibration_size >
++	if (fw->ucode_capa.standard_phy_calibration_size >
+ 	    IWL_MAX_PHY_CALIBRATE_TBL_SIZE)
+-		ucode_capa.standard_phy_calibration_size =
++		fw->ucode_capa.standard_phy_calibration_size =
+ 			IWL_MAX_STANDARD_PHY_CALIBRATE_TBL_SIZE;
+ 
+ 	priv->phy_calib_chain_noise_reset_cmd =
+-		ucode_capa.standard_phy_calibration_size;
++		fw->ucode_capa.standard_phy_calibration_size;
+ 	priv->phy_calib_chain_noise_gain_cmd =
+-		ucode_capa.standard_phy_calibration_size + 1;
++		fw->ucode_capa.standard_phy_calibration_size + 1;
+ 
+ 	/* initialize all valid contexts */
+-	iwl_init_context(priv, ucode_capa.flags);
++	iwl_init_context(priv, fw->ucode_capa.flags);
+ 
+ 	/**************************************************
+ 	 * This is still part of probe() in a sense...
+ 	 *
+ 	 * 9. Setup and register with mac80211 and debugfs
+ 	 **************************************************/
+-	err = iwlagn_mac_setup_register(priv, &ucode_capa);
++	err = iwlagn_mac_setup_register(priv, &fw->ucode_capa);
+ 	if (err)
+ 		goto out_unbind;
+ 
 -- 
-1.7.5.4
+1.7.0.4
 
