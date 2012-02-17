@@ -1,86 +1,282 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:38604 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751363Ab2BORaQ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 12:30:16 -0500
-Received: by lamf4 with SMTP id f4so1318667lam.28
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 09:30:11 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1329128888.3365.3.camel@jlt3.sipsolutions.net>
-References: <1327581484-22047-1-git-send-email-victorg@ti.com>
-	<1327581484-22047-8-git-send-email-victorg@ti.com>
-	<4F27819A.1030200@sipsolutions.net>
-	<CAK80WHZpAAG_NWcuGUK2FJ_UwOhFXraVVkugR3W5FZEHCb6Z0A@mail.gmail.com>
-	<CAB=NE6WkArbBkiT6A4eEKEo6k2EJ2SsxjoNoPHp5BDWZNR3t8g@mail.gmail.com>
-	<1329128888.3365.3.camel@jlt3.sipsolutions.net>
-Date: Wed, 15 Feb 2012 19:01:46 +0200
-Message-ID: <CAK80WHb1TgQk-yU_CrPzVgM-R-fzPK=n8A_GtZxGE3xXpYQ22w@mail.gmail.com> (sfid-20120215_183021_033207_63544DEE)
-Subject: Re: [RFC 7/9] nl80211/cfg80211: add DFS feature flag
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
-	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian.chadd@gmail.com, j@w1.fi,
-	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga02.intel.com ([134.134.136.20]:64433 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754268Ab2BQUXz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Feb 2012 15:23:55 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 19/26] iwlwifi: document the transport layer
+Date: Fri, 17 Feb 2012 11:13:47 -0800
+Message-Id: <1329506034-1394-20-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120217_212423_476447_CA30285E)
+In-Reply-To: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 13, 2012 at 12:28 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2012-02-09 at 15:11 -0800, Luis R. Rodriguez wrote:
->> On Thu, Feb 2, 2012 at 8:08 AM, Goldenshtein, Victor <victorg@ti.com> wrote:
->> > On Tue, Jan 31, 2012 at 7:52 AM, Johannes Berg
->> > <johannes@sipsolutions.net> wrote:
->> >> On 1/26/2012 4:38 AM, Victor Goldenshtein wrote:
->> >>>
->> >>> +static int nl80211_put_feature_flags(struct wiphy *wiphy,
->> >>> +                                    struct sk_buff *msg)
->> >>> +{
->> >>> +       if (wiphy->flags&  WIPHY_FLAG_SUPPORTS_DFS)
->> >>>
->> >>> +               wiphy->features |= NL80211_FEATURE_DFS;
->> >>> +
->> >>> +
->> >>> +       NLA_PUT_U32(msg, NL80211_ATTR_FEATURE_FLAGS, wiphy->features);
->> >>> +
->> >>> +       return 0;
->> >>> +nla_put_failure:
->> >>> +       return -ENOBUFS;
->> >>> +}
->> >>
->> >>
->> >> I think you misunderstood the new feature flags -- they're supposed to be
->> >> set by the driver directly, not indirectly via wiphy->flags.
->> >>
->> >
->> > yep, I guess you're right.
->>
->> While a it, consider adding one for the requirement of sending the
->> channel switch announcement within mac80211, not the driver. In that
->> case, although a DFS feature may be available in the driver, DFS
->> should not be enabled on the driver through nl80211 unless that
->> feature gets implemented in mac80211.
->
-> That, however, should be feature flag in mac80211, not cfg80211 (wiphy),
-> and in fact I think it can probably be done by checking if the low-level
-> function is there instead.
->
-> johannes
->
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Besides the NL80211_FEATURE_DFS, I'd prefer to add an additional flag
-which will indicate current DFS state, as I wrote in one of my
-previous emails:
-Zefir Kurtisi and myself thought to rename the start_radar detection +
-en_tx functions to something like dfs_start_cac() and
-dfs_resume_cac(),
-these two will set/reset WIPHY_FLAG_DFS_CAC_IN_PROGRESS flag, which
-should add some additional protection.
+Fix a few typos in the existing comments too.
+Enforce the comments with might_sleep.
 
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans.h |  120 ++++++++++++++++++++++++++---
+ 1 files changed, 107 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 7ea5f77..2a2941f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -70,17 +70,72 @@
+ #include "iwl-commands.h"
+ #include "iwl-ucode.h"
+ 
+- /*This file includes the declaration that are exported from the transport
+- * layer */
++/**
++ * DOC: Transport layer - what is it ?
++ *
++ * The tranport layer is the layer that deals with the HW directly. It provides
++ * an abstraction of the underlying HW to the upper layer. The transport layer
++ * doesn't provide any policy, algorithm or anything of this kind, but only
++ * mechanisms to make the HW do something.It is not completely stateless but
++ * close to it.
++ * We will have an implementation for each different supported bus.
++ */
++
++/**
++ * DOC: Life cycle of the transport layer
++ *
++ * The transport layer has a very precise life cycle.
++ *
++ *	1) A helper function is called during the module initialization and
++ *	   registers the bus driver's ops with the transport's alloc function.
++ *	2) Bus's probe calls to the transport layer's allocation functions.
++ *	   Of course this function is bus specific.
++ *	3) This allocation functions will spawn the upper layer which will
++ *	   register mac80211.
++ *
++ *	4) At some point (i.e. mac80211's start call), the op_mode will call
++ *	   the following sequence:
++ *	   start_hw
++ *	   start_fw
++ *
++ *	5) Then when finished (or reset):
++ *	   stop_fw (a.k.a. stop device for the moment)
++ *	   stop_hw
++ *
++ *	6) Eventually, the free function will be called.
++ */
++
++/**
++ * DOC: API needed by the transport layer from the op_mode
++ *
++ * TODO
++ */
+ 
+ struct iwl_priv;
+ struct iwl_shared;
+ 
++/**
++ * DOC: Host command section
++ *
++ * A host command is a commaned issued by the upper layer to the fw. There are
++ * several versions of fw that have several APIs. The transport layer is
++ * completely agnostic to these differences.
++ * The transport does provide helper functionnality (i.e. SYNC / ASYNC mode),
++ */
+ #define SEQ_TO_SN(seq) (((seq) & IEEE80211_SCTL_SEQ) >> 4)
+ #define SN_TO_SEQ(ssn) (((ssn) << 4) & IEEE80211_SCTL_SEQ)
+ #define MAX_SN ((IEEE80211_SCTL_SEQ) >> 4)
+ 
+-enum {
++/**
++ * enum CMD_MODE - how to send the host commands ?
++ *
++ * @CMD_SYNC: The caller will be stalled until the fw responds to the command
++ * @CMD_ASYNC: Return right away and don't want for the response
++ * @CMD_WANT_SKB: valid only with CMD_SYNC. The caller needs the buffer of the
++ *	response.
++ * @CMD_ON_DEMAND: This command is sent by the test mode pipe.
++ */
++enum CMD_MODE {
+ 	CMD_SYNC = 0,
+ 	CMD_ASYNC = BIT(0),
+ 	CMD_WANT_SKB = BIT(1),
+@@ -105,20 +160,29 @@ struct iwl_device_cmd {
+ 
+ #define IWL_MAX_CMD_TFDS	2
+ 
++/**
++ * struct iwl_hcmd_dataflag - flag for each one of the chunks of the command
++ *
++ * IWL_HCMD_DFL_NOCOPY: By default, the command is copied to the host command's
++ *	ring. The transport layer doesn't map the command's buffer to DMA, but
++ *	rather copies it to an previously allocated DMA buffer. This flag tells
++ *	the transport layer not to copy the command, but to map the existing
++ *	buffer. This can save memcpy and is worth with very big comamnds.
++ */
+ enum iwl_hcmd_dataflag {
+ 	IWL_HCMD_DFL_NOCOPY	= BIT(0),
+ };
+ 
+ /**
+  * struct iwl_host_cmd - Host command to the uCode
++ *
+  * @data: array of chunks that composes the data of the host command
+  * @reply_page: pointer to the page that holds the response to the host command
+  * @handler_status: return value of the handler of the command
+  *	(put in setup_rx_handlers) - valid for SYNC mode only
+- * @callback:
+- * @flags: can be CMD_* note CMD_WANT_SKB is incompatible withe CMD_ASYNC
++ * @flags: can be CMD_*
+  * @len: array of the lenths of the chunks in data
+- * @dataflags:
++ * @dataflags: IWL_HCMD_DFL_*
+  * @id: id of the host command
+  */
+ struct iwl_host_cmd {
+@@ -134,26 +198,43 @@ struct iwl_host_cmd {
+ 
+ /**
+  * struct iwl_trans_ops - transport specific operations
++ *
++ * All the handlers MUST be implemented
++ *
+  * @start_hw: starts the HW- from that point on, the HW can send interrupts
++ *	May sleep
+  * @stop_hw: stops the HW- from that point on, the HW will be in low power but
+  *	will still issue interrupt if the HW RF kill is triggered.
++ *	May sleep
+  * @start_fw: allocates and inits all the resources for the transport
+- *	layer. Also kick a fw image. This handler may sleep.
++ *	layer. Also kick a fw image.
++ *	May sleep
+  * @fw_alive: called when the fw sends alive notification
++ *	May sleep
+  * @wake_any_queue: wake all the queues of a specfic context IWL_RXON_CTX_*
+  * @stop_device:stops the whole device (embedded CPU put to reset)
++ *	May sleep
+  * @send_cmd:send a host command
++ *	May sleep only if CMD_SYNC is set
+  * @tx: send an skb
++ *	Must be atomic
+  * @reclaim: free packet until ssn. Returns a list of freed packets.
++ *	Must be atomic
+  * @tx_agg_alloc: allocate resources for a TX BA session
++ *	May sleep
+  * @tx_agg_setup: setup a tx queue for AMPDU - will be called once the HW is
+- *                 ready and a successful ADDBA response has been received.
++ *	ready and a successful ADDBA response has been received.
++ *	May sleep
+  * @tx_agg_disable: de-configure a Tx queue to send AMPDUs
++ *	May sleep
+  * @free: release all the ressource for the transport layer itself such as
+- *        irq, tasklet etc...
++ *	irq, tasklet etc... From this point on, the device may not issue
++ *	any interrupt (incl. RFKILL).
++ *	May sleep
+  * @stop_queue: stop a specific queue
+  * @check_stuck_queue: check if a specific queue is stuck
+  * @wait_tx_queue_empty: wait until all tx queues are empty
++ *	May sleep
+  * @dbgfs_register: add the dbgfs files under this directory. Files will be
+  *	automatically deleted.
+  * @suspend: stop the device unless WoWLAN is configured
+@@ -217,6 +298,7 @@ struct iwl_calib_result {
+ 
+ /**
+  * struct iwl_trans - transport common data
++ *
+  * @ops - pointer to iwl_trans_ops
+  * @shrd - pointer to iwl_shared which holds shared data from the upper layer
+  * @hcmd_lock: protects HCMD
+@@ -224,7 +306,7 @@ struct iwl_calib_result {
+  * @dev - pointer to struct device * that represents the device
+  * @irq - the irq number for the device
+  * @hw_id: a u32 with the ID of the device / subdevice.
+-  *	Set during transport alloaction.
++ *	Set during transport allocation.
+  * @hw_id_str: a string with info about HW ID. Set during transport allocation.
+  * @ucode_write_complete: indicates that the ucode has been copied.
+  * @ucode_rt: run time ucode image
+@@ -246,13 +328,11 @@ struct iwl_trans {
+ 	u32 hw_id;
+ 	char hw_id_str[52];
+ 
+-	u8 ucode_write_complete;	/* the image write is complete */
++	u8 ucode_write_complete;
+ 
+-	/* eeprom related variables */
+ 	int    nvm_device_type;
+ 	bool pm_support;
+ 
+-	/* init calibration results */
+ 	struct list_head calib_results;
+ 
+ 	/* pointer to trans specific struct */
+@@ -262,16 +342,22 @@ struct iwl_trans {
+ 
+ static inline int iwl_trans_start_hw(struct iwl_trans *trans)
+ {
++	might_sleep();
++
+ 	return trans->ops->start_hw(trans);
+ }
+ 
+ static inline void iwl_trans_stop_hw(struct iwl_trans *trans)
+ {
++	might_sleep();
++
+ 	trans->ops->stop_hw(trans);
+ }
+ 
+ static inline void iwl_trans_fw_alive(struct iwl_trans *trans)
+ {
++	might_sleep();
++
+ 	trans->ops->fw_alive(trans);
+ }
+ 
+@@ -284,6 +370,8 @@ static inline int iwl_trans_start_fw(struct iwl_trans *trans, struct fw_img *fw)
+ 
+ static inline void iwl_trans_stop_device(struct iwl_trans *trans)
+ {
++	might_sleep();
++
+ 	trans->ops->stop_device(trans);
+ }
+ 
+@@ -322,12 +410,16 @@ static inline int iwl_trans_reclaim(struct iwl_trans *trans, int sta_id,
+ static inline int iwl_trans_tx_agg_disable(struct iwl_trans *trans,
+ 					    int sta_id, int tid)
+ {
++	might_sleep();
++
+ 	return trans->ops->tx_agg_disable(trans, sta_id, tid);
+ }
+ 
+ static inline int iwl_trans_tx_agg_alloc(struct iwl_trans *trans,
+ 					 int sta_id, int tid)
+ {
++	might_sleep();
++
+ 	return trans->ops->tx_agg_alloc(trans, sta_id, tid);
+ }
+ 
+@@ -337,6 +429,8 @@ static inline void iwl_trans_tx_agg_setup(struct iwl_trans *trans,
+ 					   int sta_id, int tid,
+ 					   int frame_limit, u16 ssn)
+ {
++	might_sleep();
++
+ 	trans->ops->tx_agg_setup(trans, ctx, sta_id, tid, frame_limit, ssn);
+ }
+ 
 -- 
-Thanks,
-Victor.
+1.7.0.4
+
