@@ -1,128 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35575 "EHLO mx1.redhat.com"
+Received: from mga02.intel.com ([134.134.136.20]:10956 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756892Ab2BCQdG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 11:33:06 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH v2 19/25] iwlegacy: get rid of ctx->is_active
-Date: Fri,  3 Feb 2012 17:31:55 +0100
-Message-Id: <1328286721-11309-20-git-send-email-sgruszka@redhat.com> (sfid-20120203_173327_954465_49992E92)
-In-Reply-To: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
-References: <1328286721-11309-1-git-send-email-sgruszka@redhat.com>
+	id S1754225Ab2BQUXy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Feb 2012 15:23:54 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 20/26] iwlwifi: move event and err pointers to iwl_nic
+Date: Fri, 17 Feb 2012 11:13:48 -0800
+Message-Id: <1329506034-1394-21-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120217_212401_801874_2A0C1719)
+In-Reply-To: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/4965-mac.c |    3 ---
- drivers/net/wireless/iwlegacy/4965.c     |    3 ---
- drivers/net/wireless/iwlegacy/common.c   |   21 +++------------------
- drivers/net/wireless/iwlegacy/common.h   |    7 -------
- 4 files changed, 3 insertions(+), 31 deletions(-)
+From: Don Fry <donald.h.fry@intel.com>
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 1c3c85e..1a54c1a 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -6134,9 +6134,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	il = hw->priv;
- 	/* At this point both hw and il are allocated. */
+Move the ucode offset pointers to the iwl_nic as they are nic related.
+
+Signed-off-by: Don Fry <donald.h.fry@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-dev.h           |    3 --
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |   31 +++++++++++----------
+ drivers/net/wireless/iwlwifi/iwl-ucode.c         |   16 +++++-----
+ 3 files changed, 24 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 8a72940..494c696 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -863,9 +863,6 @@ struct iwl_priv {
+ 	struct iwl_rx_phy_res last_phy_res;
+ 	bool last_phy_res_valid;
  
--	il->ctx.always_active = true;
--	il->ctx.is_active = true;
+-	u32 init_evtlog_ptr, init_evtlog_size, init_errlog_ptr;
+-	u32 inst_evtlog_ptr, inst_evtlog_size, inst_errlog_ptr;
 -
- 	SET_IEEE80211_DEV(hw, &pdev->dev);
+ 	/*
+ 	 * chain noise reset and gain commands are the
+ 	 * two extra calibration commands follows the standard
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index e063426..6715d04 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -34,6 +34,7 @@
+ #include "iwl-core.h"
+ #include "iwl-io.h"
+ #include "iwl-trans-pcie-int.h"
++#include "iwl-wifi.h"
  
- 	D_INFO("*** LOAD DRIVER ***\n");
-diff --git a/drivers/net/wireless/iwlegacy/4965.c b/drivers/net/wireless/iwlegacy/4965.c
-index 8d0fd60..7b0192a 100644
---- a/drivers/net/wireless/iwlegacy/4965.c
-+++ b/drivers/net/wireless/iwlegacy/4965.c
-@@ -1419,9 +1419,6 @@ il4965_commit_rxon(struct il_priv *il, struct il_rxon_context *ctx)
- 	if (!il_is_alive(il))
- 		return -EBUSY;
- 
--	if (!ctx->is_active)
--		return 0;
--
- 	/* always get timestamp with Rx frame */
- 	il->staging.flags |= RXON_FLG_TSF2HOST_MSK;
- 
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index db2e8bb..13bd3a8 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -4537,7 +4537,6 @@ static int
- il_setup_interface(struct il_priv *il, struct il_rxon_context *ctx)
+ #ifdef CONFIG_IWLWIFI_IDI
+ #include "iwl-amfh.h"
+@@ -589,17 +590,17 @@ static void iwl_dump_nic_error_log(struct iwl_trans *trans)
  {
- 	struct ieee80211_vif *vif = ctx->vif;
--	int err;
+ 	u32 base;
+ 	struct iwl_error_event_table table;
+-	struct iwl_priv *priv = priv(trans);
++	struct iwl_nic *nic = nic(trans);
+ 	struct iwl_trans_pcie *trans_pcie =
+ 		IWL_TRANS_GET_PCIE_TRANS(trans);
  
- 	lockdep_assert_held(&il->mutex);
- 
-@@ -4548,16 +4547,7 @@ il_setup_interface(struct il_priv *il, struct il_rxon_context *ctx)
- 	 */
- 	il->iw_mode = vif->type;
- 
--	ctx->is_active = true;
--
--	err = il_set_mode(il, ctx);
--	if (err) {
--		if (!ctx->always_active)
--			ctx->is_active = false;
--		return err;
--	}
--
--	return 0;
-+	return il_set_mode(il, ctx);
- }
- 
- int
-@@ -4612,11 +4602,9 @@ il_teardown_interface(struct il_priv *il, struct ieee80211_vif *vif,
- 		il_force_scan_end(il);
+ 	base = trans->shrd->device_pointers.error_event_table;
+ 	if (trans->shrd->ucode_type == IWL_UCODE_INIT) {
+ 		if (!base)
+-			base = priv->init_errlog_ptr;
++			base = nic->init_errlog_ptr;
+ 	} else {
+ 		if (!base)
+-			base = priv->inst_errlog_ptr;
++			base = nic->inst_errlog_ptr;
  	}
  
--	if (!mode_change) {
-+	if (!mode_change)
- 		il_set_mode(il, ctx);
--		if (!ctx->always_active)
--			ctx->is_active = false;
--	}
-+
- }
- 
- void
-@@ -5227,9 +5215,6 @@ il_update_qos(struct il_priv *il, struct il_rxon_context *ctx)
- 	if (test_bit(S_EXIT_PENDING, &il->status))
+ 	if (!iwlagn_hw_valid_rtc_data_addr(base)) {
+@@ -611,7 +612,7 @@ static void iwl_dump_nic_error_log(struct iwl_trans *trans)
  		return;
+ 	}
  
--	if (!ctx->is_active)
--		return;
--
- 	il->qos_data.def_qos_parm.qos_flags = 0;
+-	iwl_read_targ_mem_words(trans(priv), base, &table, sizeof(table));
++	iwl_read_targ_mem_words(trans, base, &table, sizeof(table));
  
- 	if (il->qos_data.qos_active)
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index e085131..51c1eec 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1154,13 +1154,6 @@ struct il_force_reset {
+ 	if (ERROR_START_OFFSET <= table.valid * ERROR_ELEM_SIZE) {
+ 		IWL_ERR(trans, "Start IWL Error Log Dump:\n");
+@@ -621,7 +622,7 @@ static void iwl_dump_nic_error_log(struct iwl_trans *trans)
  
- struct il_rxon_context {
- 	struct ieee80211_vif *vif;
--
--	/*
--	 * We could use the vif to indicate active, but we
--	 * also need it to be active during disabling when
--	 * we already removed the vif for type setting.
--	 */
--	bool always_active, is_active;
- };
+ 	trans_pcie->isr_stats.err_code = table.error_id;
  
- struct il_power_mgr {
+-	trace_iwlwifi_dev_ucode_error(priv, table.error_id, table.tsf_low,
++	trace_iwlwifi_dev_ucode_error(priv(nic), table.error_id, table.tsf_low,
+ 				      table.data1, table.data2, table.line,
+ 				      table.blink1, table.blink2, table.ilink1,
+ 				      table.ilink2, table.bcon_time, table.gp1,
+@@ -718,7 +719,7 @@ static int iwl_print_event_log(struct iwl_trans *trans, u32 start_idx,
+ 	u32 ptr;        /* SRAM byte address of log data */
+ 	u32 ev, time, data; /* event log data */
+ 	unsigned long reg_flags;
+-	struct iwl_priv *priv = priv(trans);
++	struct iwl_nic *nic = nic(trans);
+ 
+ 	if (num_events == 0)
+ 		return pos;
+@@ -726,10 +727,10 @@ static int iwl_print_event_log(struct iwl_trans *trans, u32 start_idx,
+ 	base = trans->shrd->device_pointers.log_event_table;
+ 	if (trans->shrd->ucode_type == IWL_UCODE_INIT) {
+ 		if (!base)
+-			base = priv->init_evtlog_ptr;
++			base = nic->init_evtlog_ptr;
+ 	} else {
+ 		if (!base)
+-			base = priv->inst_evtlog_ptr;
++			base = nic->inst_evtlog_ptr;
+ 	}
+ 
+ 	if (mode == 0)
+@@ -759,7 +760,7 @@ static int iwl_print_event_log(struct iwl_trans *trans, u32 start_idx,
+ 						"EVT_LOG:0x%08x:%04u\n",
+ 						time, ev);
+ 			} else {
+-				trace_iwlwifi_dev_ucode_event(priv, 0,
++				trace_iwlwifi_dev_ucode_event(priv(trans), 0,
+ 					time, ev);
+ 				IWL_ERR(trans, "EVT_LOG:0x%08x:%04u\n",
+ 					time, ev);
+@@ -773,7 +774,7 @@ static int iwl_print_event_log(struct iwl_trans *trans, u32 start_idx,
+ 			} else {
+ 				IWL_ERR(trans, "EVT_LOGT:%010u:0x%08x:%04u\n",
+ 					time, data, ev);
+-				trace_iwlwifi_dev_ucode_event(priv, time,
++				trace_iwlwifi_dev_ucode_event(priv(trans), time,
+ 					data, ev);
+ 			}
+ 		}
+@@ -835,17 +836,17 @@ int iwl_dump_nic_event_log(struct iwl_trans *trans, bool full_log,
+ 	u32 logsize;
+ 	int pos = 0;
+ 	size_t bufsz = 0;
+-	struct iwl_priv *priv = priv(trans);
++	struct iwl_nic *nic = nic(trans);
+ 
+ 	base = trans->shrd->device_pointers.log_event_table;
+ 	if (trans->shrd->ucode_type == IWL_UCODE_INIT) {
+-		logsize = priv->init_evtlog_size;
++		logsize = nic->init_evtlog_size;
+ 		if (!base)
+-			base = priv->init_evtlog_ptr;
++			base = nic->init_evtlog_ptr;
+ 	} else {
+-		logsize = priv->inst_evtlog_size;
++		logsize = nic->inst_evtlog_size;
+ 		if (!base)
+-			base = priv->inst_evtlog_ptr;
++			base = nic->inst_evtlog_ptr;
+ 	}
+ 
+ 	if (!iwlagn_hw_valid_rtc_data_addr(base)) {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.c b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+index a2695c2..0d04a4d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+@@ -1205,20 +1205,20 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	 * for each event, which is of mode 1 (including timestamp) for all
+ 	 * new microcodes that include this information.
+ 	 */
+-	priv->init_evtlog_ptr = pieces.init_evtlog_ptr;
++	nic->init_evtlog_ptr = pieces.init_evtlog_ptr;
+ 	if (pieces.init_evtlog_size)
+-		priv->init_evtlog_size = (pieces.init_evtlog_size - 16)/12;
++		nic->init_evtlog_size = (pieces.init_evtlog_size - 16)/12;
+ 	else
+-		priv->init_evtlog_size =
++		nic->init_evtlog_size =
+ 			cfg(priv)->base_params->max_event_log_size;
+-	priv->init_errlog_ptr = pieces.init_errlog_ptr;
+-	priv->inst_evtlog_ptr = pieces.inst_evtlog_ptr;
++	nic->init_errlog_ptr = pieces.init_errlog_ptr;
++	nic->inst_evtlog_ptr = pieces.inst_evtlog_ptr;
+ 	if (pieces.inst_evtlog_size)
+-		priv->inst_evtlog_size = (pieces.inst_evtlog_size - 16)/12;
++		nic->inst_evtlog_size = (pieces.inst_evtlog_size - 16)/12;
+ 	else
+-		priv->inst_evtlog_size =
++		nic->inst_evtlog_size =
+ 			cfg(priv)->base_params->max_event_log_size;
+-	priv->inst_errlog_ptr = pieces.inst_errlog_ptr;
++	nic->inst_errlog_ptr = pieces.inst_errlog_ptr;
+ #ifndef CONFIG_IWLWIFI_P2P
+ 	ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
+ #endif
 -- 
-1.7.1
+1.7.0.4
 
