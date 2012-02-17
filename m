@@ -1,15 +1,15 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
 Received: from mga02.intel.com ([134.134.136.20]:10956 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752795Ab2BQUXx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Feb 2012 15:23:53 -0500
+	id S1752525Ab2BQUXv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Feb 2012 15:23:51 -0500
 From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
 	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 13/26] iwlwifi: change args to ucode routines
-Date: Fri, 17 Feb 2012 11:13:41 -0800
-Message-Id: <1329506034-1394-14-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120217_212441_534705_B2316F15)
+Subject: [PATCH 07/26] iwlwifi: create iwl_nic structure
+Date: Fri, 17 Feb 2012 11:13:35 -0800
+Message-Id: <1329506034-1394-8-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120217_212446_479848_EB4B7F28)
 In-Reply-To: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
 References: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
@@ -17,249 +17,204 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Don Fry <donald.h.fry@intel.com>
 
-Change the prameters to the ucode (de)allocate routines to iwl_nic as
-they are not transport operations.
+Create iwl_nic structure and link it together.
 
 Signed-off-by: Don Fry <donald.h.fry@intel.com>
 Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c   |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans.h |    2 -
- drivers/net/wireless/iwlwifi/iwl-ucode.c |   65 +++++++++++++++---------------
- drivers/net/wireless/iwlwifi/iwl-wifi.h  |    2 +
- 4 files changed, 36 insertions(+), 35 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-pci.c    |   18 ++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-shared.h |    3 ++
+ drivers/net/wireless/iwlwifi/iwl-ucode.h  |   37 +++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-wifi.h   |   30 +++++++++++++++++++++++
+ 4 files changed, 86 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 12803d3..ff22c4a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1316,7 +1316,7 @@ void __devexit iwl_remove(struct iwl_priv * priv)
- 	/*This will stop the queues, move the device to low power state */
- 	iwl_trans_stop_device(trans(priv));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index 3e2fce4..5190670 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -70,6 +70,7 @@
+ #include "iwl-trans.h"
+ #include "iwl-csr.h"
+ #include "iwl-cfg.h"
++#include "iwl-wifi.h"
  
--	iwl_dealloc_ucode(trans(priv));
-+	iwl_dealloc_ucode(nic(priv));
+ #define IWL_PCI_DEVICE(dev, subdev, cfg) \
+ 	.vendor = PCI_VENDOR_ID_INTEL,  .device = (dev), \
+@@ -282,13 +283,23 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  
- 	iwl_eeprom_free(priv->shrd);
+ 	bus->shrd->bus = bus;
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 913df93..7ea5f77 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -396,8 +396,6 @@ static inline u32 iwl_trans_read32(struct iwl_trans *trans, u32 ofs)
- /*****************************************************
- * Utils functions
- ******************************************************/
--void iwl_dealloc_ucode(struct iwl_trans *trans);
--
- int iwl_send_calib_results(struct iwl_trans *trans);
- int iwl_calib_set(struct iwl_trans *trans,
- 		  const struct iwl_calib_hdr *cmd, int len);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.c b/drivers/net/wireless/iwlwifi/iwl-ucode.c
-index 36039eb..26ead61 100644
---- a/drivers/net/wireless/iwlwifi/iwl-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-ucode.c
-@@ -82,30 +82,29 @@ static struct iwl_wimax_coex_event_entry cu_priorities[COEX_NUM_OF_EVENTS] = {
-  *
-  ******************************************************************************/
++	/* temporarily create this here */
++	bus->shrd->nic = kzalloc(sizeof(*bus->shrd->nic), GFP_KERNEL);
++	if (!bus->shrd->nic) {
++		dev_printk(KERN_ERR, &pdev->dev,
++			   "Couldn't allocate iwl_nic");
++		err = -ENOMEM;
++		goto out_free_bus;
++	}
++	/* and initialize it as well, temporarily */
++	bus->shrd->nic->shrd = bus->shrd;
+ 	pci_set_drvdata(pdev, bus);
  
--static void iwl_free_fw_desc(struct iwl_trans *trans, struct fw_desc *desc)
-+static void iwl_free_fw_desc(struct iwl_nic *nic, struct fw_desc *desc)
- {
- 	if (desc->v_addr)
--		dma_free_coherent(trans->dev, desc->len,
-+		dma_free_coherent(trans(nic)->dev, desc->len,
- 				  desc->v_addr, desc->p_addr);
- 	desc->v_addr = NULL;
- 	desc->len = 0;
- }
- 
--static void iwl_free_fw_img(struct iwl_trans *trans, struct fw_img *img)
-+static void iwl_free_fw_img(struct iwl_nic *nic, struct fw_img *img)
- {
--	iwl_free_fw_desc(trans, &img->code);
--	iwl_free_fw_desc(trans, &img->data);
-+	iwl_free_fw_desc(nic, &img->code);
-+	iwl_free_fw_desc(nic, &img->data);
- }
- 
--void iwl_dealloc_ucode(struct iwl_trans *trans)
-+void iwl_dealloc_ucode(struct iwl_nic *nic)
- {
--	struct iwl_nic *nic = nic(trans);
--	iwl_free_fw_img(trans, &nic->fw.ucode_rt);
--	iwl_free_fw_img(trans, &nic->fw.ucode_init);
--	iwl_free_fw_img(trans, &nic->fw.ucode_wowlan);
-+	iwl_free_fw_img(nic, &nic->fw.ucode_rt);
-+	iwl_free_fw_img(nic, &nic->fw.ucode_init);
-+	iwl_free_fw_img(nic, &nic->fw.ucode_wowlan);
- }
- 
--static int iwl_alloc_fw_desc(struct iwl_trans *trans, struct fw_desc *desc,
-+static int iwl_alloc_fw_desc(struct iwl_nic *nic, struct fw_desc *desc,
- 		      const void *data, size_t len)
- {
- 	if (!len) {
-@@ -113,7 +112,7 @@ static int iwl_alloc_fw_desc(struct iwl_trans *trans, struct fw_desc *desc,
- 		return -EINVAL;
+ #ifdef CONFIG_IWLWIFI_IDI
+ 	trans(bus) = iwl_trans_idi_alloc(bus->shrd, pdev, ent);
+ 	if (trans(bus) == NULL) {
+ 		err = -ENOMEM;
+-		goto out_free_bus;
++		goto out_free_nic;
  	}
  
--	desc->v_addr = dma_alloc_coherent(trans->dev, len,
-+	desc->v_addr = dma_alloc_coherent(trans(nic)->dev, len,
- 					  &desc->p_addr, GFP_KERNEL);
- 	if (!desc->v_addr)
- 		return -ENOMEM;
-@@ -398,15 +397,16 @@ static int iwl_alive_notify(struct iwl_trans *trans)
-  *   using sample data 100 bytes apart.  If these sample points are good,
-  *   it's a pretty good bet that everything between them is good, too.
-  */
--static int iwl_verify_inst_sparse(struct iwl_trans *trans,
-+static int iwl_verify_inst_sparse(struct iwl_nic *nic,
- 				      struct fw_desc *fw_desc)
- {
-+	struct iwl_trans *trans = trans(nic);
- 	__le32 *image = (__le32 *)fw_desc->v_addr;
- 	u32 len = fw_desc->len;
- 	u32 val;
- 	u32 i;
- 
--	IWL_DEBUG_FW(trans, "ucode inst image size is %u\n", len);
-+	IWL_DEBUG_FW(nic, "ucode inst image size is %u\n", len);
- 
- 	for (i = 0; i < len; i += 100, image += 100/sizeof(u32)) {
- 		/* read data comes through single port, auto-incr addr */
-@@ -422,16 +422,17 @@ static int iwl_verify_inst_sparse(struct iwl_trans *trans,
- 	return 0;
- }
- 
--static void iwl_print_mismatch_inst(struct iwl_trans *trans,
-+static void iwl_print_mismatch_inst(struct iwl_nic *nic,
- 				    struct fw_desc *fw_desc)
- {
-+	struct iwl_trans *trans = trans(nic);
- 	__le32 *image = (__le32 *)fw_desc->v_addr;
- 	u32 len = fw_desc->len;
- 	u32 val;
- 	u32 offs;
- 	int errors = 0;
- 
--	IWL_DEBUG_FW(trans, "ucode inst image size is %u\n", len);
-+	IWL_DEBUG_FW(nic, "ucode inst image size is %u\n", len);
- 
- 	iwl_write_direct32(trans, HBUS_TARG_MEM_RADDR,
- 			   IWLAGN_RTC_INST_LOWER_BOUND);
-@@ -442,7 +443,7 @@ static void iwl_print_mismatch_inst(struct iwl_trans *trans,
- 		/* read data comes through single port, auto-incr addr */
- 		val = iwl_read32(trans, HBUS_TARG_MEM_RDAT);
- 		if (val != le32_to_cpu(*image)) {
--			IWL_ERR(trans, "uCode INST section at "
-+			IWL_ERR(nic, "uCode INST section at "
- 				"offset 0x%x, is 0x%x, s/b 0x%x\n",
- 				offs, val, le32_to_cpu(*image));
- 			errors++;
-@@ -454,24 +455,24 @@ static void iwl_print_mismatch_inst(struct iwl_trans *trans,
-  * iwl_verify_ucode - determine which instruction image is in SRAM,
-  *    and verify its contents
-  */
--static int iwl_verify_ucode(struct iwl_trans *trans,
-+static int iwl_verify_ucode(struct iwl_nic *nic,
- 			    enum iwl_ucode_type ucode_type)
- {
--	struct fw_img *img = iwl_get_ucode_image(nic(trans), ucode_type);
-+	struct fw_img *img = iwl_get_ucode_image(nic, ucode_type);
- 
- 	if (!img) {
--		IWL_ERR(trans, "Invalid ucode requested (%d)\n", ucode_type);
-+		IWL_ERR(nic, "Invalid ucode requested (%d)\n", ucode_type);
- 		return -EINVAL;
+ 	err = iwl_probe(bus, &trans_ops_idi, cfg);
+@@ -296,7 +307,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	trans(bus) = iwl_trans_pcie_alloc(bus->shrd, pdev, ent);
+ 	if (trans(bus) == NULL) {
+ 		err = -ENOMEM;
+-		goto out_free_bus;
++		goto out_free_nic;
  	}
  
--	if (!iwl_verify_inst_sparse(trans, &img->code)) {
--		IWL_DEBUG_FW(trans, "uCode is good in inst SRAM\n");
-+	if (!iwl_verify_inst_sparse(nic, &img->code)) {
-+		IWL_DEBUG_FW(nic, "uCode is good in inst SRAM\n");
- 		return 0;
- 	}
+ 	err = iwl_probe(bus, &trans_ops_pcie, cfg);
+@@ -309,6 +320,8 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ out_free_trans:
+ 	iwl_trans_free(trans(bus));
+ 	pci_set_drvdata(pdev, NULL);
++out_free_nic:
++	kfree(bus->shrd->nic);
+ out_free_bus:
+ 	kfree(bus->shrd);
+ 	kfree(bus);
+@@ -325,6 +338,7 @@ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
  
--	IWL_ERR(trans, "UCODE IMAGE IN INSTRUCTION SRAM NOT VALID!!\n");
-+	IWL_ERR(nic, "UCODE IMAGE IN INSTRUCTION SRAM NOT VALID!!\n");
+ 	pci_set_drvdata(pdev, NULL);
  
--	iwl_print_mismatch_inst(trans, &img->code);
-+	iwl_print_mismatch_inst(nic, &img->code);
- 	return -EIO;
++	kfree(bus->shrd->nic);
+ 	kfree(bus->shrd);
+ 	kfree(bus);
  }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 42bf43b..8c6fc6e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -358,6 +358,7 @@ struct iwl_cfg {
+  * @cfg: see struct iwl_cfg
+  * @priv: pointer to the upper layer data
+  * @trans: pointer to the transport layer data
++ * @nic: pointer to the nic data
+  * @hw_params: see struct iwl_hw_params
+  * @lock: protect general shared data
+  * @sta_lock: protects the station table.
+@@ -388,6 +389,7 @@ struct iwl_shared {
+ 	struct iwl_cfg *cfg;
+ 	struct iwl_priv *priv;
+ 	struct iwl_trans *trans;
++	struct iwl_nic *nic;
+ 	struct iwl_hw_params hw_params;
  
-@@ -619,7 +620,7 @@ int iwl_load_ucode_wait_alive(struct iwl_trans *trans,
- 	 * skip it for WoWLAN.
- 	 */
- 	if (ucode_type != IWL_UCODE_WOWLAN) {
--		ret = iwl_verify_ucode(trans, ucode_type);
-+		ret = iwl_verify_ucode(nic(trans), ucode_type);
- 		if (ret) {
- 			trans->shrd->ucode_type = old_type;
- 			return ret;
-@@ -1164,20 +1165,20 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 	/* Runtime instructions and 2 copies of data:
- 	 * 1) unmodified from disk
- 	 * 2) backup cache for save/restore during power-downs */
--	if (iwl_alloc_fw_desc(trans(priv), &nic(priv)->fw.ucode_rt.code,
-+	if (iwl_alloc_fw_desc(nic(priv), &nic(priv)->fw.ucode_rt.code,
- 			      pieces.inst, pieces.inst_size))
- 		goto err_pci_alloc;
--	if (iwl_alloc_fw_desc(trans(priv), &nic(priv)->fw.ucode_rt.data,
-+	if (iwl_alloc_fw_desc(nic(priv), &nic(priv)->fw.ucode_rt.data,
- 			      pieces.data, pieces.data_size))
- 		goto err_pci_alloc;
+ 	spinlock_t lock;
+@@ -418,6 +420,7 @@ struct iwl_shared {
+ #define priv(_m)	((_m)->shrd->priv)
+ #define cfg(_m)		((_m)->shrd->cfg)
+ #define bus(_m)		((_m)->shrd->bus)
++#define nic(_m)		((_m)->shrd->nic)
+ #define trans(_m)	((_m)->shrd->trans)
+ #define hw_params(_m)	((_m)->shrd->hw_params)
  
- 	/* Initialization instructions and data */
- 	if (pieces.init_size && pieces.init_data_size) {
--		if (iwl_alloc_fw_desc(trans(priv),
-+		if (iwl_alloc_fw_desc(nic(priv),
- 				      &nic(priv)->fw.ucode_init.code,
- 				      pieces.init, pieces.init_size))
- 			goto err_pci_alloc;
--		if (iwl_alloc_fw_desc(trans(priv),
-+		if (iwl_alloc_fw_desc(nic(priv),
- 				      &nic(priv)->fw.ucode_init.data,
- 				      pieces.init_data, pieces.init_data_size))
- 			goto err_pci_alloc;
-@@ -1185,12 +1186,12 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.h b/drivers/net/wireless/iwlwifi/iwl-ucode.h
+index eccf925..18c77e9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-ucode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-ucode.h
+@@ -63,6 +63,10 @@
+ #ifndef __iwl_ucode_h__
+ #define __iwl_ucode_h__
  
- 	/* WoWLAN instructions and data */
- 	if (pieces.wowlan_inst_size && pieces.wowlan_data_size) {
--		if (iwl_alloc_fw_desc(trans(priv),
-+		if (iwl_alloc_fw_desc(nic(priv),
- 				      &nic(priv)->fw.ucode_wowlan.code,
- 				      pieces.wowlan_inst,
- 				      pieces.wowlan_inst_size))
- 			goto err_pci_alloc;
--		if (iwl_alloc_fw_desc(trans(priv),
-+		if (iwl_alloc_fw_desc(nic(priv),
- 				      &nic(priv)->fw.ucode_wowlan.data,
- 				      pieces.wowlan_data,
- 				      pieces.wowlan_data_size))
-@@ -1286,7 +1287,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 
-  err_pci_alloc:
- 	IWL_ERR(priv, "failed to allocate pci memory\n");
--	iwl_dealloc_ucode(trans(priv));
-+	iwl_dealloc_ucode(nic(priv));
-  out_unbind:
- 	complete(&nic->request_firmware_complete);
- 	device_release_driver(trans(priv)->dev);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-wifi.h b/drivers/net/wireless/iwlwifi/iwl-wifi.h
-index a34708d..392f111 100644
---- a/drivers/net/wireless/iwlwifi/iwl-wifi.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-wifi.h
-@@ -95,6 +95,8 @@ struct iwl_nic {
++#include "iwl-trans.h"
++
++#include <linux/netdevice.h>
++
+ /* v1/v2 uCode file layout */
+ struct iwl_ucode_header {
+ 	__le32 ver;	/* major/minor/API/serial */
+@@ -171,6 +175,39 @@ struct iwl_tlv_ucode_header {
+ 	u8 data[0];
  };
  
- 
-+void iwl_dealloc_ucode(struct iwl_nic *nic);
++struct iwl_ucode_capabilities {
++	u32 max_probe_length;
++	u32 standard_phy_calibration_size;
++	u32 flags;
++};
 +
++/**
++ * struct iwl_fw - variables associated with the firmware
++ *
++ * @ucode_ver: ucode version from the ucode file
++ * @fw_version: firmware version string
++ * @ucode_rt: run time ucode image
++ * @ucode_init: init ucode image
++ * @ucode_wowlan: wake on wireless ucode image (optional)
++ * @ucode_capa: capabilities parsed from the ucode file.
++ * @enhance_sensitivity_table: device can do enhanced sensitivity.
++ */
++struct iwl_fw {
++
++	/* ucode image and variables */
++	u32 ucode_ver;                  /* version of ucode, copy of
++					   iwl_ucode.ver */
++	char fw_version[ETHTOOL_BUSINFO_LEN];
++
++	/* ucode images */
++	struct fw_img ucode_rt;
++	struct fw_img ucode_init;
++	struct fw_img ucode_wowlan;
++
++	struct iwl_ucode_capabilities ucode_capa;
++	bool enhance_sensitivity_table;
++};
++
+ struct iwl_priv;
+ 
+ int __must_check iwl_request_firmware(struct iwl_priv *priv, bool first);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-wifi.h b/drivers/net/wireless/iwlwifi/iwl-wifi.h
+index 7e6eb20..a34708d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-wifi.h
++++ b/drivers/net/wireless/iwlwifi/iwl-wifi.h
+@@ -64,6 +64,36 @@
+ #define __iwl_wifi_h__
+ 
+ #include "iwl-shared.h"
++#include "iwl-ucode.h"
++
++/**
++ * struct iwl_nic - nic common data
++ * @fw: the iwl_fw structure
++ * @shrd: pointer to common shared structure
++ * @fw_index: firmware revision to try loading
++ * @firmware_name: composite filename of ucode file to load
++ * @init_evtlog_ptr: event log offset for init ucode.
++ * @init_evtlog_size: event log size for init ucode.
++ * @init_errlog_ptr: error log offfset for init ucode.
++ * @inst_evtlog_ptr: event log offset for runtime ucode.
++ * @inst_evtlog_size: event log size for runtime ucode.
++ * @inst_errlog_ptr: error log offfset for runtime ucode.
++ * @request_firmware_complete: the firmware has been obtained from user space
++ */
++struct iwl_nic {
++	struct iwl_fw fw;
++
++	struct iwl_shared *shrd;
++
++	int fw_index;                   /* firmware we're trying to load */
++	char firmware_name[25];         /* name of firmware file to load */
++
++	u32 init_evtlog_ptr, init_evtlog_size, init_errlog_ptr;
++	u32 inst_evtlog_ptr, inst_evtlog_size, inst_errlog_ptr;
++
++	struct completion request_firmware_complete;
++};
++
+ 
  int iwl_send_bt_env(struct iwl_trans *trans, u8 action, u8 type);
  void iwl_send_prio_tbl(struct iwl_trans *trans);
- int iwl_init_alive_start(struct iwl_trans *trans);
 -- 
 1.7.0.4
 
