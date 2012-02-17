@@ -1,77 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.tqs.de ([62.157.136.17]:37700 "EHLO mail.tqs.de"
+Received: from mga02.intel.com ([134.134.136.20]:10956 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753254Ab2B0RPv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 12:15:51 -0500
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: AW: [PATCH] Staging: rtl8712: Change double device ID back to original value
-Date: Mon, 27 Feb 2012 18:14:59 +0100
-Message-ID: <47F3F98010FF784EBEE6526EAAB078D10FD7EF7B@tq-mailsrv.tq-net.de> (sfid-20120227_181555_040432_C26A0B75)
-In-Reply-To: <4F4BA81D.1070800@lwfinger.net>
-References: <20120227102857.21246.43090.stgit@localhost.localdomain> <4F4BA81D.1070800@lwfinger.net>
-From: "Martin Krause" <Martin.Krause@tqs.de>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-Cc: <linux-wireless@vger.kernel.org>,
-	"John Linville" <linville@tuxdriver.com>
+	id S1752101Ab2BQUXr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Feb 2012 15:23:47 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 00/26] update for 3.4: iwlwifi 2012-02-17
+Date: Fri, 17 Feb 2012 11:13:28 -0800
+Message-Id: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120217_212351_792910_6CD3B8F3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+We continue the refactor works on the driver architecture, there are a lot of
+codes being move around, but it is very important works to support the next generation of our WiFi devices
+We make few improvements on both driver debugging and testmode operations
+We also fix an issue on 5.2 band association with the newer firmware
 
-thank you for your quick response!
-Comments see below.
+Amit Beka (4):
+  iwlwifi: testmode new indirect RW API
+  iwlwifi: added reply data to testmode HCMD send
+  iwlwifi: fixes to testmode indirect access
+  iwlwifi: send testmode hcmd reply with rx header
 
-Larry Finger wrote on :
-> On 02/27/2012 04:29 AM, Martin Krause wrote:
->> In the rtl8712 staging driver the 0bda:8172 usb device id exists two
->> times. It seems that this was an error when integrating the original
->> Realtek driver into the kernel. This patch changes the double device
->> id back to the value used in the last Realtek driver
->> (rtl8712_8188_8191_8192SU_usb_linux_v2.6.6.0.20110401).
->> 
->> Signed-off-by: Martin Krause<martin.krause@tqs.de>
->> ---
->> I tested this patch on a powerpc board (p2020 based) with a WIFIHU
->> Radicom wireless module with a RTL8191SU chip on it (usb device id
->> 0bda:8192). 
->> 
->>   drivers/staging/rtl8712/usb_intf.c |    2 +-
->>   1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> Your patch does two things. One is the deletion of a
-> duplicate USB ID, and the
-> other is the addition of a new one. I would prefer that any
-> patch do one or the
-> other, but not both. Note, there are two sets of duplicate
-> IDs in the table for
-> the driver - the one you note in the RTL8191SU section, and another
-> for 0bda:8174 in the section that covers the RTL8192SU.
-> 
-> I think you are deleting the wrong 0bda:8172 with this patch.
-> The 0bda code is
-> for Realtek, thus the one in the Asus section is the one to remove.
+Don Fry (10):
+  iwlwifi: create iwl_nic structure
+  iwlwifi: move ucode_ver to iwl_nic
+  iwlwifi: move fw_index from iwl_priv to iwl_nic
+  iwlwifi: move firmware_name to iwl_nic
+  iwlwifi: move firmware_loading_complete to iwl_nic
+  iwlwifi: Move ucode pointers to iwl_fw
+  iwlwifi: change args to ucode routines
+  iwlwifi: move event and err pointers to iwl_nic
+  iwlwifi: changes args to iwl_nic for firmware operations
+  iwlwifi: save ucode capabilities in iwl_fw
 
-OK (I don't thought very hard about this I fear ...).
+Emmanuel Grumbach (6):
+  iwlwifi: kill iwl_down and s/__iwl_down/iwl_down
+  iwlwifi: iwl_set_hw_params returns always 0
+  iwlwifi: use enhance_sensitivity from iwl_fw
+  iwlwifi: document the transport layer
+  iwlwifi: the transport knows its state
+  iwlwifi: SRAM size moves from hw_params to cfg
 
-> Does your chip really have an RTL8191SU label? The USB
-> database says that ID
-> 0bda:8192 is for the RTL8192SU. I would like to correct the database
-> if it is wrong.
+Johannes Berg (3):
+  iwlwifi: trace debug messages
+  iwlwifi: move workqueue to priv
+  iwlwifi: give PCIe its own lock
 
-The chip is covered by a metallic shielding. So I wrote an email to 
-Radicom to confirm this. I will forward you the answer.
+Meenakshi Venkataraman (1):
+  iwlwifi: enable receiving beacons when not associated
 
-> All patches to a staging driver go through the staging tree,
-> not wireless. Send
-> them to Greg Kroah-Hartman (gregkh@linuxfoundation.org)
-> rather than John
-> Linville. A Cc to linux-wireless is OK, but you should also reference
-> the driver development list (devel@driverdev.osuosl.org).
+Wey-Yi Guy (2):
+  iwlwifi: log as error when error detected
+  iwlwifi: remove un-necessary return
 
-OK, thanks for the hint!
+these patches are also available from wireless-next branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
 
-Regards,
-Martin
+ drivers/net/wireless/iwlwifi/Makefile             |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-1000.c           |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-2000.c           |   14 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c           |   18 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c           |   17 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.c      |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c        |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c         |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c         |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c       |   16 +
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.c         |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c            |   53 +--
+ drivers/net/wireless/iwlwifi/iwl-agn.h            |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c           |    7 +-
+ drivers/net/wireless/iwlwifi/iwl-core.h           |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-debug.c          |  127 +++++++
+ drivers/net/wireless/iwlwifi/iwl-debug.h          |   83 +++--
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c        |   11 +-
+ drivers/net/wireless/iwlwifi/iwl-dev.h            |   21 +-
+ drivers/net/wireless/iwlwifi/iwl-devtrace.h       |   65 ++++
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c       |   20 +-
+ drivers/net/wireless/iwlwifi/iwl-pci.c            |   18 +-
+ drivers/net/wireless/iwlwifi/iwl-scan.c           |   10 +-
+ drivers/net/wireless/iwlwifi/iwl-shared.h         |   13 +-
+ drivers/net/wireless/iwlwifi/iwl-testmode.c       |  411 ++++++++++++---------
+ drivers/net/wireless/iwlwifi/iwl-testmode.h       |   64 ++--
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    1 +
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |   70 ++--
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |   39 ++-
+ drivers/net/wireless/iwlwifi/iwl-trans.h          |  190 ++++++++--
+ drivers/net/wireless/iwlwifi/iwl-ucode.c          |  321 ++++++++--------
+ drivers/net/wireless/iwlwifi/iwl-ucode.h          |   47 +++-
+ drivers/net/wireless/iwlwifi/iwl-wifi.h           |   33 ++
+ 35 files changed, 1112 insertions(+), 611 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-debug.c
+
