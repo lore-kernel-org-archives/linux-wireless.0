@@ -1,72 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3932 "EHLO mms1.broadcom.com"
+Received: from mx1.redhat.com ([209.132.183.28]:65005 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754570Ab2BIUJ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 15:09:27 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>,
-	"Stanislaw Gruszka" <sgruszka@redhat.com>
-Subject: [PATCH 04/15] brcm80211: smac: fix endless retry of A-MPDU
- transmissions
-Date: Thu, 9 Feb 2012 21:08:58 +0100
-Message-ID: <1328818149-4826-5-git-send-email-arend@broadcom.com> (sfid-20120209_211027_503145_415A0465)
-In-Reply-To: <1328818149-4826-1-git-send-email-arend@broadcom.com>
-References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
+	id S1752795Ab2BRQ4g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Feb 2012 11:56:36 -0500
+Date: Sat, 18 Feb 2012 17:56:32 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Walter Goldens <goldenstranger@yahoo.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [rt2x00] rt2800usb and RT3070 issues with 54G AP
+Message-ID: <20120218165631.GA2922@redhat.com> (sfid-20120218_175641_161895_AA734D8D)
+References: <20120216125522.GF25833@redhat.com>
+ <1329567096.85201.YahooMailClassic@web161603.mail.bf1.yahoo.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1329567096.85201.YahooMailClassic@web161603.mail.bf1.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The A-MPDU code checked against a retry limit, but it was using
-the wrong variable to do so. This patch fixes this to assure
-proper retry mechanism.
+Hi.
 
-This problem had a side-effect causing the mac80211 flush callback
-to remain waiting forever as well. That side effect has been fixed
-by commit by Stanislaw Gruszka:
+On Sat, Feb 18, 2012 at 04:11:36AM -0800, Walter Goldens wrote:
+> This is from an N AP:
+> 
+> PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
+> 64 bytes from 192.168.1.1: icmp_req=1 ttl=64 time=1.47 ms
+> 64 bytes from 192.168.1.1: icmp_req=2 ttl=64 time=1.45 ms
+> 64 bytes from 192.168.1.1: icmp_req=3 ttl=64 time=0.952 ms
+> 64 bytes from 192.168.1.1: icmp_req=4 ttl=64 time=11.1 ms
+> 64 bytes from 192.168.1.1: icmp_req=5 ttl=64 time=7.06 ms
+> 64 bytes from 192.168.1.1: icmp_req=6 ttl=64 time=12.8 ms
+[snip]
+> And these are from 54G AP:
+> 
+> PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
+> 64 bytes from 192.168.1.1: icmp_req=1 ttl=63 time=8.56 ms
+> 64 bytes from 192.168.1.1: icmp_req=2 ttl=63 time=1.67 ms
+> 64 bytes from 192.168.1.1: icmp_req=3 ttl=63 time=2.94 ms
+> 64 bytes from 192.168.1.1: icmp_req=4 ttl=63 time=1.64 ms
+> 64 bytes from 192.168.1.1: icmp_req=5 ttl=63 time=1.67 ms
+> 64 bytes from 192.168.1.1: icmp_req=6 ttl=63 time=3.70 ms
+> 64 bytes from 192.168.1.1: icmp_req=7 ttl=63 time=1.80 ms
+> 64 bytes from 192.168.1.1: icmp_req=7 ttl=63 time=2.22 ms (DUP!)
+[snip]
+> If I use the STA drivers, no such problem occurres with either N or G APs.
+> This, for me, has been a long-standing problem.
 
-commit f96b08a7e6f69c0f0a576554df3df5b1b519c479
-Date:   Tue Jan 17 12:38:50 2012 +0100
+Looks like this could be related with Power-Save. Seems APs does not
+handle PS well (between each ICMP packed our station is put in
+the sleep mode) . Vendor driver has  PS disabled, hence problem
+is not observable.
 
-    brcmsmac: fix tx queue flush infinite loop
+Try "iwconfig wlan0 power off" and see if it helps. 
 
-    Reference:
-    https://bugzilla.kernel.org/show_bug.cgi?id=42576
-
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |    6 +-----
- 1 files changed, 1 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-index d89dcb1..c1ce831 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
-@@ -1051,17 +1051,13 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
- 		}
- 		/* either retransmit or send bar if ack not recd */
- 		if (!ack_recd) {
--			struct ieee80211_tx_rate *txrate =
--			    tx_info->status.rates;
--			if (retry && (txrate[0].count < (int)retry_limit)) {
-+			if (retry && (ini->txretry[index] < (int)retry_limit)) {
- 				ini->txretry[index]++;
- 				ini->tx_in_transit--;
- 				/*
- 				 * Use high prededence for retransmit to
- 				 * give some punch
- 				 */
--				/* brcms_c_txq_enq(wlc, scb, p,
--				 * BRCMS_PRIO_TO_PREC(tid)); */
- 				brcms_c_txq_enq(wlc, scb, p,
- 						BRCMS_PRIO_TO_HI_PREC(tid));
- 			} else {
--- 
-1.7.5.4
-
-
+Stanislaw
