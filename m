@@ -1,36 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:45775 "EHLO
-	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752381Ab2B0B0Y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Feb 2012 20:26:24 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>
-Date: Sun, 26 Feb 2012 17:26:18 -0800
-Subject: RE: [PATCH 3.3] mwifiex: fix bug in wildcard scan handling
-Message-ID: <477F20668A386D41ADCC57781B1F70430836762610@SC-VEXCH1.marvell.com> (sfid-20120227_022626_941004_515367FF)
-References: <1330148149-28922-1-git-send-email-bzhao@marvell.com>
-	 (sfid-20120225_063856_034955_8526CBA3)
- <1330161550.3575.1.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1330161550.3575.1.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from nm32-vm2.bullet.mail.bf1.yahoo.com ([72.30.239.138]:41258 "HELO
+	nm32-vm2.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751636Ab2BRMPb convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Feb 2012 07:15:31 -0500
+Message-ID: <1329567329.52125.YahooMailClassic@web161605.mail.bf1.yahoo.com> (sfid-20120218_131600_102350_081CC350)
+Date: Sat, 18 Feb 2012 04:15:29 -0800 (PST)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: [rt2x00] rt2800usb and RT3070 issues with 54G AP
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <20120216125522.GF25833@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAzLjNdIG13aWZpZXg6IGZpeCBi
-dWcgaW4gd2lsZGNhcmQgc2NhbiBoYW5kbGluZw0KPiANCj4gT24gRnJpLCAyMDEyLTAyLTI0IGF0
-IDIxOjM1IC0wODAwLCBCaW5nIFpoYW8gd3JvdGU6DQo+IA0KPiA+ICAJCQlzc2lkX2xlbiA9IHN0
-cmxlbih1c2VyX3NjYW5faW4tPnNzaWRfbGlzdFtzc2lkX2lkeF0uDQo+ID4gLQkJCQkJICBzc2lk
-KSArIDE7DQo+ID4gKwkJCQkJICBzc2lkKTsNCj4gDQo+IFVtbSwgYXJlIHlvdSByZWFsbHkgdXNp
-bmcgc3RybGVuKCkgb24gYW4gU1NJRCBoZXJlPyBUaGF0J3Mgc28gYnJva2VuIEkNCj4gY2FuIGhh
-cmRseSBkZXNjcmliZSBpdC4NCg0KVGhhbmtzIGEgbG90IGZvciBzcG90dGluZyB0aGlzIGVycm9y
-Lg0KSSB3aWxsIHJlc2VuZCB2MiBwYXRjaC4NCg0KVGhhbmtzLA0KQmluZw0KDQo+IA0KPiBqb2hh
-bm5lcw0KDQo=
+Oh, forgot the mention - the results are with the latest CW.
+
+> -0800, Walter Goldens wrote:
+> > My rt3070 USB card works flawlessly when connected to
+> an 802.11N AP. Excellent throughput, speed and reliability.
+> > 
+> > When connected to a 54G AP however, there is
+> significant packet loss and duplicates.
+> > I can confirm this to be happening with two older 54G
+> APs, and not with a single N AP.
+> >
+> > Does anyone else have the same problem?
+> 
+> Usually we have opposite problem, 11g works, 11n does not.
+> 
+> Are you using the lates wireless-testing tree? If not, try
+> that
+> i.e using compat-wireless package there are some pending
+> radio chip
+> programing fixes, I think they may help with packet lost.
+> 
+> Stanislaw   
+> 
