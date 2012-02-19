@@ -1,92 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:60434 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755431Ab2BMXvN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 18:51:13 -0500
-Received: by mail-iy0-f174.google.com with SMTP id b35so5196388iac.19
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Feb 2012 15:51:13 -0800 (PST)
-Message-ID: <4F39A1E9.7070702@lwfinger.net> (sfid-20120214_005117_327575_89442836)
-Date: Mon, 13 Feb 2012 17:51:05 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	zajec5@gmail.com
-Subject: Re: [RFC/RFT 2/5] b43: Load firmware from a work queue and not from
- the probe routine
-References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net> <1329161826-11135-3-git-send-email-Larry.Finger@lwfinger.net> <CAGRGNgVC4moLEnBKvjmPpnuSxs-yppGVx5Bn+0FhtwGAo_JrEQ@mail.gmail.com> <4F399C96.3090701@lwfinger.net> <CAGRGNgV7c34ofqCy+9CDcXSz3o48KtUYsa+nr4cVb0inj8yLrA@mail.gmail.com>
-In-Reply-To: <CAGRGNgV7c34ofqCy+9CDcXSz3o48KtUYsa+nr4cVb0inj8yLrA@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58190 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754607Ab2BSSdD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Feb 2012 13:33:03 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
+	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	arend@broadcom.com, m@bues.ch, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 01/11] ssb: sprom fix some sizes / signedness
+Date: Sun, 19 Feb 2012 19:32:15 +0100
+Message-Id: <1329676345-15856-2-git-send-email-hauke@hauke-m.de> (sfid-20120219_193337_893442_2D981FAE)
+In-Reply-To: <1329676345-15856-1-git-send-email-hauke@hauke-m.de>
+References: <1329676345-15856-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/13/2012 05:41 PM, Julian Calaby wrote:
-> Hi Larry,
->
-> On Tue, Feb 14, 2012 at 10:28, Larry Finger<Larry.Finger@lwfinger.net>  wrote:
->> On 02/13/2012 05:06 PM, Julian Calaby wrote:
->>>
->>> Hi Larry,
->>>
->>> On Tue, Feb 14, 2012 at 06:37, Larry Finger<Larry.Finger@lwfinger.net>
->>>   wrote:
->>>>
->>>> Recent changes in udev are causing problems for drivers that load
->>>> firmware
->>>> from the probe routine. As b43 has such a structure, it must be changed.
->>>> As this driver loads more than 1 firmware file, changing to the
->>>> asynchronous routine
->>>> request_firmware_nowait() would be complicated. In this implementation,
->>>> the probe
->>>> routine starts a delayed_work queue that calls the firmware loading
->>>> routines when
->>>> the delay (1 sec) expires..
->>>>
->>>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
->>>> ---
->>>> diff --git a/drivers/net/wireless/b43/b43.h
->>>> b/drivers/net/wireless/b43/b43.h
->>>> index 835462d..532ba79 100644
->>>> --- a/drivers/net/wireless/b43/b43.h
->>>> +++ b/drivers/net/wireless/b43/b43.h
->>>> @@ -932,6 +932,9 @@ struct b43_wl {
->>>>         /* Flag that implement the queues stopping. */
->>>>         bool tx_queue_stopped[B43_QOS_QUEUE_NUM];
->>>>
->>>> +       /* delayed firmware loading */
->>>> +       struct delayed_work firmware_load;
->>>> +
->>>>         /* The device LEDs. */
->>>>         struct b43_leds leds;
->>>>
->>>> diff --git a/drivers/net/wireless/b43/main.c
->>>> b/drivers/net/wireless/b43/main.c
->>>> index 1b540d2..903e1ea 100644
->>>> --- a/drivers/net/wireless/b43/main.c
->>>> +++ b/drivers/net/wireless/b43/main.c
->>>> @@ -2427,9 +2433,17 @@ static int b43_request_firmware(struct b43_wldev
->>>> *dev)
->>>>         b43_print_fw_helptext(dev->wl, 1);
->>>>         err = -ENOENT;
->>>
->>>
->>> Should something be done here rather than immediately going to
->>> register the card with ieee80211?
->>
->>
->> I don't think so. When firmware is loaded from the probe routine, it
->> registers the card as the next step. I did miss the step that registers the
->> leds - that has now been added.
->
-> My point here is that in the original flow, the -ENOENT would have
-> been returned to b43_chip_init() and the hardware would never have
-> been registered with mac80211. After this patch, it appears that if
-> the firmware cannot be found, it still registers the hardware with
-> mac80211.
+Some parts of the sprom struct are bigger than needed.
+The leddc and maxpwr values are just 8 bit long and not 16.
+rxpo2g and rxpo5g are signed
 
-I see what you mean. The statement before the start_ieee80211 label should be 
-'goto out' rather than falling through.
+I got these information for the open source part of the Braodcom SDK
+covering sprom version 1 to 9. rxpo2g contained a negative number on my
+bcm5354 based device, this cased an error and Broadcom SDK says this is
+signed.
 
-Larry
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/ssb/ssb.h |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+index bbc2612..f169621 100644
+--- a/include/linux/ssb/ssb.h
++++ b/include/linux/ssb/ssb.h
+@@ -33,8 +33,8 @@ struct ssb_sprom {
+ 	u8 et1mdcport;		/* MDIO for enet1 */
+ 	u16 board_rev;		/* Board revision number from SPROM. */
+ 	u8 country_code;	/* Country Code */
+-	u16 leddc_on_time;	/* LED Powersave Duty Cycle On Count */
+-	u16 leddc_off_time;	/* LED Powersave Duty Cycle Off Count */
++	u8 leddc_on_time;	/* LED Powersave Duty Cycle On Count */
++	u8 leddc_off_time;	/* LED Powersave Duty Cycle Off Count */
+ 	u8 ant_available_a;	/* 2GHz antenna available bits (up to 4) */
+ 	u8 ant_available_bg;	/* 5GHz antenna available bits (up to 4) */
+ 	u16 pa0b0;
+@@ -53,10 +53,10 @@ struct ssb_sprom {
+ 	u8 gpio1;		/* GPIO pin 1 */
+ 	u8 gpio2;		/* GPIO pin 2 */
+ 	u8 gpio3;		/* GPIO pin 3 */
+-	u16 maxpwr_bg;		/* 2.4GHz Amplifier Max Power (in dBm Q5.2) */
+-	u16 maxpwr_al;		/* 5.2GHz Amplifier Max Power (in dBm Q5.2) */
+-	u16 maxpwr_a;		/* 5.3GHz Amplifier Max Power (in dBm Q5.2) */
+-	u16 maxpwr_ah;		/* 5.8GHz Amplifier Max Power (in dBm Q5.2) */
++	u8 maxpwr_bg;		/* 2.4GHz Amplifier Max Power (in dBm Q5.2) */
++	u8 maxpwr_al;		/* 5.2GHz Amplifier Max Power (in dBm Q5.2) */
++	u8 maxpwr_a;		/* 5.3GHz Amplifier Max Power (in dBm Q5.2) */
++	u8 maxpwr_ah;		/* 5.8GHz Amplifier Max Power (in dBm Q5.2) */
+ 	u8 itssi_a;		/* Idle TSSI Target for A-PHY */
+ 	u8 itssi_bg;		/* Idle TSSI Target for B/G-PHY */
+ 	u8 tri2g;		/* 2.4GHz TX isolation */
+@@ -67,8 +67,8 @@ struct ssb_sprom {
+ 	u8 txpid5gl[4];		/* 4.9 - 5.1GHz TX power index */
+ 	u8 txpid5g[4];		/* 5.1 - 5.5GHz TX power index */
+ 	u8 txpid5gh[4];		/* 5.5 - ...GHz TX power index */
+-	u8 rxpo2g;		/* 2GHz RX power offset */
+-	u8 rxpo5g;		/* 5GHz RX power offset */
++	s8 rxpo2g;		/* 2GHz RX power offset */
++	s8 rxpo5g;		/* 5GHz RX power offset */
+ 	u8 rssisav2g;		/* 2GHz RSSI params */
+ 	u8 rssismc2g;
+ 	u8 rssismf2g;
+-- 
+1.7.5.4
 
