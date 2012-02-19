@@ -1,46 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:50918 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752853Ab2BAQor (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Feb 2012 11:44:47 -0500
-Received: by wics10 with SMTP id s10so1055524wic.19
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Feb 2012 08:44:45 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] mac80211: timeout a single frame in the rx reorder buffer
-Date: Wed,  1 Feb 2012 18:48:09 +0200
-Message-Id: <1328114889-15627-1-git-send-email-eliad@wizery.com> (sfid-20120201_174451_052054_D6EB60FC)
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58179 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754522Ab2BSSdC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Feb 2012 13:33:02 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
+	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	arend@broadcom.com, m@bues.ch, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 00/11] ssb/bcma/BCM47XX: sprom fixes and extensions
+Date: Sun, 19 Feb 2012 19:32:14 +0100
+Message-Id: <1329676345-15856-1-git-send-email-hauke@hauke-m.de> (sfid-20120219_193337_345350_236DC25C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current code checks for stored_mpdu_num > 1, causing
-the reorder_timer to be triggered indefinitely, but the
-frame is never timed-out (until the next packet is received)
+This patch series fixes some errors in the sprom structures and extends 
+it to contain members for all sprom values for sprom version 1 to 9. 
+This was done by looking into the open source part of the Broadcom SDK. 
+This also adds a fallback sprom registration method to bcma.
+It also contains some small fixes for the bcma47xx arch code and a 
+rewrite of the code to provide the sprom from flash. It now also 
+provides sprom from flash for devices using bcma to control the system 
+bus.
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
-Cc: <stable@vger.kernel.org>
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
----
-v2: cc stable
+This patch series is based on wireles-testing. I think it is the best 
+way to merge this through John's wireless tree as the changes in the 
+sprom struct should be used in further patches extending the pci sprom 
+parsing and the usage of struct sprom by the brcmsmac driver.
 
- net/mac80211/rx.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Hauke Mehrtens (11):
+  ssb: sprom fix some sizes / signedness
+  ssb: remove 5GHz antenna gain from sprom
+  ssb: fix per path sprom vars
+  ssb: add ccode
+  ssb: add some missing sprom attributes
+  bcma: export bcma_find_core
+  bcma: add support for sprom not found on the device.
+  MIPS: BCM47XX: return number of written bytes in nvram_getenv
+  MIPS: BCM47XX: fix signature of nvram_parse_macaddr
+  MIPS: BCM47XX: move and extend sprom parsing
+  MIPS: BCM47XX: provide sprom to bcma bus
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index f407427..7e3980f 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -611,7 +611,7 @@ static void ieee80211_sta_reorder_release(struct ieee80211_hw *hw,
- 	index = seq_sub(tid_agg_rx->head_seq_num, tid_agg_rx->ssn) %
- 						tid_agg_rx->buf_size;
- 	if (!tid_agg_rx->reorder_buf[index] &&
--	    tid_agg_rx->stored_mpdu_num > 1) {
-+	    tid_agg_rx->stored_mpdu_num) {
- 		/*
- 		 * No buffers ready to be released, but check whether any
- 		 * frames in the reorder buffer have timed out.
+ arch/mips/bcm47xx/Makefile                   |    2 +-
+ arch/mips/bcm47xx/nvram.c                    |    3 +-
+ arch/mips/bcm47xx/setup.c                    |  188 ++-------
+ arch/mips/bcm47xx/sprom.c                    |  618 ++++++++++++++++++++++++++
+ arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |    3 +
+ arch/mips/include/asm/mach-bcm47xx/nvram.h   |    2 +-
+ drivers/bcma/main.c                          |    3 +-
+ drivers/bcma/sprom.c                         |   75 +++-
+ drivers/net/wireless/b43legacy/phy.c         |    2 +-
+ drivers/ssb/pci.c                            |   40 +--
+ drivers/ssb/pcmcia.c                         |   12 +-
+ drivers/ssb/sdio.c                           |   12 +-
+ include/linux/bcma/bcma.h                    |    7 +
+ include/linux/ssb/ssb.h                      |  102 ++++-
+ 14 files changed, 844 insertions(+), 225 deletions(-)
+ create mode 100644 arch/mips/bcm47xx/sprom.c
+
 -- 
-1.7.6.401.g6a319
+1.7.5.4
 
