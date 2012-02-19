@@ -1,75 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:43067 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755422Ab2BVTqx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 14:46:53 -0500
-Date: Wed, 22 Feb 2012 14:30:40 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Masanari Iida <standby24x7@gmail.com>
-Cc: dsd@gentoo.org, kune@deine-taler.de,
-	linux-wireless@vger.kernel.org, trivial@kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] [trivial] zd1211rw: Fix typo in zd_usb.c and zd_mac.c
-Message-ID: <20120222193039.GC822@tuxdriver.com> (sfid-20120222_204930_000897_6197EE48)
-References: <1328801372-2532-1-git-send-email-standby24x7@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1328801372-2532-1-git-send-email-standby24x7@gmail.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58219 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754672Ab2BSSdQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Feb 2012 13:33:16 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
+	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	arend@broadcom.com, m@bues.ch, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH 03/11] ssb: fix per path sprom vars
+Date: Sun, 19 Feb 2012 19:32:17 +0100
+Message-Id: <1329676345-15856-4-git-send-email-hauke@hauke-m.de> (sfid-20120219_193344_269305_8CA33CD3)
+In-Reply-To: <1329676345-15856-1-git-send-email-hauke@hauke-m.de>
+References: <1329676345-15856-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-NAK
+On sprom version 4 and 5 there are 4 values for pa_2g, pa_5gl, pa_5g
+and pa_5gh, for sprom version 8 and 9 there are only 3. Make the per
+path sprom store also work for older sprom versions.
 
-http://mw1.merriam-webster.com/dictionary/resetting
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/ssb/ssb.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-On Fri, Feb 10, 2012 at 12:29:32AM +0900, Masanari Iida wrote:
-> Correct spelling "reseting" to "resetting" in
-> drivers/net/wireless/zd1211rw/zd_usb.c
-> drivers/net/wireless/zd1211rw/zd_mac.c
-> 
-> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
-> ---
->  drivers/net/wireless/zd1211rw/zd_mac.c |    2 +-
->  drivers/net/wireless/zd1211rw/zd_usb.c |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-> index 0a70149..a8370eb 100644
-> --- a/drivers/net/wireless/zd1211rw/zd_mac.c
-> +++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-> @@ -846,7 +846,7 @@ reset_device:
->  
->  	/* semaphore stuck, reset device to avoid fw freeze later */
->  	dev_warn(zd_mac_dev(mac), "CR_BCN_FIFO_SEMAPHORE stuck, "
-> -				  "reseting device...");
-> +				  "resetting device...");
->  	usb_queue_reset_device(mac->chip.usb.intf);
->  
->  	return r;
-> diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-> index 785bdbe..f766b3e 100644
-> --- a/drivers/net/wireless/zd1211rw/zd_usb.c
-> +++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-> @@ -1104,7 +1104,7 @@ static void zd_tx_watchdog_handler(struct work_struct *work)
->  		goto out;
->  
->  	/* TX halted, try reset */
-> -	dev_warn(zd_usb_dev(usb), "TX-stall detected, reseting device...");
-> +	dev_warn(zd_usb_dev(usb), "TX-stall detected, resetting device...");
->  
->  	usb_queue_reset_device(usb->intf);
->  
-> -- 
-> 1.7.6.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
-
+diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+index 1de5675..4928419 100644
+--- a/include/linux/ssb/ssb.h
++++ b/include/linux/ssb/ssb.h
+@@ -19,7 +19,7 @@ struct ssb_driver;
+ struct ssb_sprom_core_pwr_info {
+ 	u8 itssi_2g, itssi_5g;
+ 	u8 maxpwr_2g, maxpwr_5gl, maxpwr_5g, maxpwr_5gh;
+-	u16 pa_2g[3], pa_5gl[3], pa_5g[3], pa_5gh[3];
++	u16 pa_2g[4], pa_5gl[4], pa_5g[4], pa_5gh[4];
+ };
+ 
+ struct ssb_sprom {
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.5.4
+
