@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1405 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754173Ab2BWRii (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 12:38:38 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH for 3.3 0/2] brcm80211: fix endless A-MPDU retries
-Date: Thu, 23 Feb 2012 18:38:21 +0100
-Message-ID: <1330018703-2472-1-git-send-email-arend@broadcom.com> (sfid-20120223_183844_387149_3AC612A2)
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:58837 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752897Ab2BSNVl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Feb 2012 08:21:41 -0500
+Received: by wgbdt10 with SMTP id dt10so3987767wgb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Feb 2012 05:21:39 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Eliad Peller <eliad@wizery.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] mac80211: don't queue monitor work for HW_CONNECTION_MONITOR
+Date: Sun, 19 Feb 2012 15:26:09 +0200
+Message-Id: <1329657970-22751-1-git-send-email-eliad@wizery.com> (sfid-20120219_142215_177317_45EE28B5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Devices that monitor the connection in the hw don't need
+the monitor work in the driver.
 
-The first patch has already been taken in wireless-next repo. However,
-as people see the issue with 3.2 and 3.3 kernels it should go to wireless
-repository as well.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ net/mac80211/mlme.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-Fix endless retries that became more obvious upon implementing the
-mac80211 flush callback and more so after adding the WARN_ON_ONCE
-by Stanislaw Gruszka (https://bugzilla.kernel.org/show_bug.cgi?id=42576).
-
-These second patch removes error print to limit the mess printed in the
-log when an A-MPDU transmission times out on the block-ack.
-
-Arend van Spriel (2):
-  brcm80211: smac: fix endless retry of A-MPDU transmissions
-  brcm80211: smac: only print block-ack timeout message at trace level
-
- drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |   12 ++++--------
- 1 files changed, 4 insertions(+), 8 deletions(-)
-
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 52133da..7ece99a 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2974,13 +2974,17 @@ static void ieee80211_sta_monitor_work(struct work_struct *work)
+ 
+ static void ieee80211_restart_sta_timer(struct ieee80211_sub_if_data *sdata)
+ {
++	u32 flags;
++
+ 	if (sdata->vif.type == NL80211_IFTYPE_STATION) {
+ 		sdata->u.mgd.flags &= ~(IEEE80211_STA_BEACON_POLL |
+ 					IEEE80211_STA_CONNECTION_POLL);
+ 
+ 		/* let's probe the connection once */
+-		ieee80211_queue_work(&sdata->local->hw,
+-			   &sdata->u.mgd.monitor_work);
++		flags = sdata->local->hw.flags;
++		if (!(flags & IEEE80211_HW_CONNECTION_MONITOR))
++			ieee80211_queue_work(&sdata->local->hw,
++					     &sdata->u.mgd.monitor_work);
+ 		/* and do all the other regular work too */
+ 		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+ 	}
 -- 
-1.7.5.4
-
+1.7.6.401.g6a319
 
