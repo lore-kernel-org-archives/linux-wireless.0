@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4244 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751979Ab2BXLSt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 06:18:49 -0500
-Message-ID: <4F477211.60506@broadcom.com> (sfid-20120224_121853_156393_93CD99BC)
-Date: Fri, 24 Feb 2012 12:18:41 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:58631 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753998Ab2BST2y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Feb 2012 14:28:54 -0500
+Message-ID: <4F414D63.1070409@hauke-m.de> (sfid-20120219_202857_851406_729A8C47)
+Date: Sun, 19 Feb 2012 20:28:35 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-To: "Johannes Berg" <johannes@sipsolutions.net>
-cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Saul St. John" <saul.stjohn@gmail.com>,
-	"Hauke Mehrtens" <hauke@hauke-m.de>,
-	"Larry Finger" <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC] bcma: add support for on-chip OTP memory used for
- SPROM storage
-References: <1330033977-5741-1-git-send-email-arend@broadcom.com>
- <CACna6rwk8xbjbX7uisqAv_y_JYn636orR-VLgNQ908yOYS+i1A@mail.gmail.com>
- <4F4768D0.4030109@broadcom.com> (sfid-20120224_113946_190994_AFCFACFE)
- <1330081083.3426.15.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1330081083.3426.15.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+To: =?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>
+CC: linville@tuxdriver.com, zajec5@gmail.com,
+	b43-dev@lists.infradead.org, linux-mips@linux-mips.org,
+	linux-wireless@vger.kernel.org, arend@broadcom.com
+Subject: Re: [PATCH 04/11] ssb: add ccode
+References: <1329676345-15856-1-git-send-email-hauke@hauke-m.de> <1329676345-15856-5-git-send-email-hauke@hauke-m.de> <20120219194923.566f3fe8@milhouse>
+In-Reply-To: <20120219194923.566f3fe8@milhouse>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/24/2012 11:58 AM, Johannes Berg wrote:
-> On Fri, 2012-02-24 at 11:39 +0100, Arend van Spriel wrote:
->> On 02/24/2012 08:52 AM, Rafał Miłecki wrote:
->>>> +               srom_control = bcma_read32(bus->drv_cc.core,
->>>>>   +                                          BCMA_CC_SROM_CONTROL);
->>>>>   +               return !!(srom_control&   BCMA_CC_SROM_CONTROL_PRESENT);
->>> Does any compiler complain on returning sth like 0xF as a bool?
->>>
+On 02/19/2012 07:49 PM, Michael B�sch wrote:
+> On Sun, 19 Feb 2012 19:32:18 +0100
+> Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> 
+>> This member contains the country code encoded with two chars
 >>
->> The compiler probably will not complain, but the caller could have
->> following:
+>> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+>> ---
+>>  include/linux/ssb/ssb.h |    1 +
+>>  1 files changed, 1 insertions(+), 0 deletions(-)
 >>
->> if (bcma_sprom_ext_available(bus) == true) {
->> 	return;
->> }
->> BUG();
->>
->> I guess you would see the BUG show up in your log with the function
->> returning 0xF.
->
-> If it's really
->
-> bool foo = a&  b;
->
-> then the compiler has to compile that as if it was
->
-> u8 foo = !!(a&  b);
->
-> since bool can only carry the values 0 and 1.
->
-> So the !! isn't necessary.
->
-> johannes
->
->
+>> diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+>> index 4928419..44e486e 100644
+>> --- a/include/linux/ssb/ssb.h
+>> +++ b/include/linux/ssb/ssb.h
+>> @@ -33,6 +33,7 @@ struct ssb_sprom {
+>>  	u8 et1mdcport;		/* MDIO for enet1 */
+>>  	u16 board_rev;		/* Board revision number from SPROM. */
+>>  	u8 country_code;	/* Country Code */
+>> +	char ccode[2];		/* Country Code as two chars like EU or US */
+> 
+> This usually is referred to as "alpha2". So we should name it like that, too.
+I can not find any references to "alpha2" in the spec, the broadcom
+code, ssb, bcma or b43. ccode was the name broadcom gave this value so I
+took it.
+http://bcm-v4.sipsolutions.net/SPROM wrongly maps ccode to country_code,
+but cc is stored into country_code in ssb.
 
-I guess the compiler will convert the return value to _Bool (aka. bool) 
-so indeed !! is not  necessary. I will remove it.
-
-Gr. AvS
-
+Hauke
