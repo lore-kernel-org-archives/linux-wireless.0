@@ -1,40 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:41337 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755200Ab2BFPif (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59056 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752505Ab2BTJqO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Feb 2012 10:38:35 -0500
-Received: by qcqw6 with SMTP id w6so3437181qcq.19
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Feb 2012 07:38:34 -0800 (PST)
-From: Rick Farina <sidhayn@gmail.com>
-To: mcgrof@gmail.com
-Cc: linux-wireless@vger.kernel.org, Rick Farina <sidhayn@gmail.com>
-Subject: [PATCH] Calling make directly is not permitted
-Date: Mon,  6 Feb 2012 10:38:14 -0500
-Message-Id: <1328542694-20777-1-git-send-email-sidhayn@gmail.com> (sfid-20120206_163839_986996_AF7A23A9)
+	Mon, 20 Feb 2012 04:46:14 -0500
+Subject: Re: will these methods work with firmware loading?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	driverdevel <devel@driverdev.osuosl.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	linux-hotplug@vger.kernel.org
+In-Reply-To: <4F414230.5040506@lwfinger.net> (sfid-20120219_194128_235089_6C62CE24)
+References: <4F414230.5040506@lwfinger.net>
+	 (sfid-20120219_194128_235089_6C62CE24)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 20 Feb 2012 10:46:07 +0100
+Message-ID: <1329731167.3458.4.camel@jlt3.sipsolutions.net> (sfid-20120220_104627_825350_8AFFED55)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-make was being called directly, fix to $(MAKE)
+Hi Larry,
 
-Signed-of-By: Rick Farina <sidhayn@gmail.com>
----
- Makefile |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> I know that changing the request_firmware() call to request_firmware_nowait() 
+> solves the problem; however, that gives some trouble for driver b43legacy as it 
+> loads 3 or 4 firmware files depending on the hardware version. When I launch the 
+> 3 or 4 nowait requests, I get an error because the system is trying to start 
+> several tasks with the same name.
+> 
+> Would it be OK to load the first file with the nowait version, and issue a 
+> request_firmware() for the others from the callback routine? I think that would 
+> not cause any problems, but I would like to get confirmation from an expert.
 
-diff --git a/Makefile b/Makefile
-index d586f45..440bd91 100644
---- a/Makefile
-+++ b/Makefile
-@@ -115,7 +115,7 @@ btuninstall:
- 	@echo
- 
- btclean:
--	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) BT=TRUE clean
-+	$(MAKE) -C /lib/modules/$(shell uname -r)/build M=$(PWD) BT=TRUE clean
- 	@rm -f $(CREL_PRE)*
- 
- install: uninstall install-modules install-scripts
--- 
-1.7.3.4
+That should work -- I just looked at the firmware code and it spawns a
+new thread for every "nowait" request (and it calls the callback in that
+thread's context), so it won't block against itself.
+
+> Similarly, if I were to create a work queue, init and schedule it from 
+> module_init(), and then use synchronous loads to get the firmware from the work 
+> queue callback, would that get around the boot problem? I know it works as I 
+> have trial patches; however, my version of udev is not one affected. This method 
+> is very easy to implement, but again I would like confirmation from an expert.
+
+We discussed that before, and technically it should work, I'm just a bit
+worried about udev treating asynchronous and synchronous requests
+differently and that causing issues, but somebody who knows udev better
+will have to comment on that.
+
+johannes
 
