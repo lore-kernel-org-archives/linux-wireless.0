@@ -1,109 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54452 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753685Ab2BHRcc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 12:32:32 -0500
-Message-ID: <4F32B111.8020006@openwrt.org> (sfid-20120208_183247_018103_4713DA66)
-Date: Wed, 08 Feb 2012 18:29:53 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24365 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751129Ab2BTNi1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Feb 2012 08:38:27 -0500
+From: <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH 1/2] ath6kl: Maintain the listen interval per VIF specific
+Date: Mon, 20 Feb 2012 19:08:07 +0530
+Message-ID: <1329745088-23800-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20120220_143849_784264_FFAA8359)
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] mac80211: minstrel_ht: fix NULL pointer dereference
- during auth/assoc
-References: <1328705077-31360-1-git-send-email-arend@broadcom.com> <4F329DE5.20408@openwrt.org> <4F32A263.5050909@broadcom.com> <4F32AB79.9040307@openwrt.org>
-In-Reply-To: <4F32AB79.9040307@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-02-08 6:06 PM, Felix Fietkau wrote:
-> On 2012-02-08 5:27 PM, Arend van Spriel wrote:
->> On 02/08/2012 05:08 PM, Felix Fietkau wrote:
->>> On 2012-02-08 1:44 PM, Arend van Spriel wrote:
->>>> This patch fixes the following NULL pointer dereference:
->>>>
->>>>> I rerun the test on a kernel with some more lock checking and got lucky.
->>>>>
->>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512283] wlan0: authenticate
->>>>> with 98:fc:11:8e:94:57
->>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512515] wlan0: send auth to
->>>>> 98:fc:11:8e:94:57 (try 1/3)
->>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514184] BUG: unable to handle
->>>>> kernel NULL pointer dereference at 00000004
->>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514233] IP: [<f8648f08>]
->>>>> minstrel_tx_status+0x48/0xe0 [mac80211]
->>>>
->>>> static inline int
->>>> rix_to_ndx(struct minstrel_sta_info *mi, int rix)
->>>> {
->>>>         int i = rix;
->>>>         for (i = rix; i >= 0; i--)
->>>>                 if (mi->r[i].rix == rix)
->>>>   48:   3b 58 04                cmp    0x4(%eax),%ebx
->>>>   4b:   74 4b                   je     98 <minstrel_tx_status+0x98>
->>>>   4d:   83 c2 01                add    $0x1,%edx
->>>>
->>>> It fails because of mi->r[i] being a NULL pointer. It is allocated in
->>>> minstel_alloc_sta, but minstrel_ht_alloc_sta does not call that function.
->>>>
->>>> struct minstrel_ht_sta_priv holds a union with struct minstrel_ht_sta and
->>>> struct minstrel_sta_info. During authenticate the bool is_ht is false so
->>>> minstrel_ht_tx_status calls minstrel_tx_status, but minstrel_sta_info::r
->>>> is not set until rate_init which is after assoc.
->>> I'm not sure this is the right fix. If I understand the issue correctly,
->>> mi->r is only NULL because .rate_init has not been called yet, which is
->>> a bug that other rate control modules might trip over as well, maybe in
->>> more subtle ways. If this is the case, then I believe this bug should be
->>> fixed in mac80211 instead.
->>> 
->>> Maybe it would even be a good idea to set a flag after calling
->>> rate_control_rate_init, and calling WARN_ON or even BUG_ON when doing tx
->>> before that.
->>> 
->>> - Felix
->>> 
->> 
->> Hi Felix,
->> 
->> I am not sure I can agree. minstrel_ht allocates the struct
->> minstrel_ht_sta_priv initializing is_ht to false thereby choosing a
->> default and zero'ing the legacy field. When setting is_ht to false
->> consequently the contents of the legacy field should be properly set as
->> is done in minstrel_ht_update_caps (at use_legacy label).
-> Right, minstrel_ht_update_caps initializes that field, and it's always
-> called from .rate_init.
-> 
-> While the non-HT minstrel initializes that field earlier (because it is
-> not stored anywhere else), it still also assumes that it isn't asked to
-> do tx until .rate_init is called.
-> 
-> It doesn't matter whether it crashes in non-HT minstrel or not, the main
-> issue is that assumptions of both minstrel and minstrel_ht (and possibly
-> other rate control implementations) are being violated by mac80211.
-> 
-> Before we can address that problem, we need to decide whether we want to
-> change the code to no longer require .rate_init before tx (which I think
-> is a bad idea, since there's no list of supported rates available yet at
-> that point in time), or if we change mac80211 to no longer violate those
-> assumptions. In either case, this patch is insufficient.
-Actually, I took a quick look at the code and it seems to be easier
-than I thought. mac80211 sets a flag after rate_control_rate_init
-already, only the tx status path is lacking a check for it. This simple
-patch should take care of it, please test:
+From: Raja Mani <rmani@qca.qualcomm.com>
 
+Firmware has the option to support the listen interval
+per vif specific. Fix this.
+
+Listen interval can be set by the TUs or by the number
+of beacons. Current code enables the user to configure
+the listen interval in the unit of 'number of beacons'
+using debugfs entry "listen_interval". Going forward,
+we need to alter the listen interval in the unit of TUs
+to get good power numbers while going to WOW suspend/resume.
+
+Allowing the user to change the listen interval in
+the unit of "number of beacons"  in debugfs and changing
+listen interval in wow suspend/resume in the unit of
+time (TUs) would lead us to confuse.
+
+This patch make sures the listen interval is changed only
+in the unit of time (TUs).
+
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 ---
---- a/net/mac80211/rate.h
-+++ b/net/mac80211/rate.h
-@@ -37,7 +37,7 @@ static inline void rate_control_tx_statu
- 	struct ieee80211_sta *ista = &sta->sta;
- 	void *priv_sta = sta->rate_ctrl_priv;
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    1 +
+ drivers/net/wireless/ath/ath6kl/core.c     |    2 --
+ drivers/net/wireless/ath/ath6kl/core.h     |    6 +++---
+ drivers/net/wireless/ath/ath6kl/debug.c    |   15 ++++++++++-----
+ drivers/net/wireless/ath/ath6kl/main.c     |    6 ++----
+ 5 files changed, 16 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 003f320..6e02a2b 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -2943,6 +2943,7 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
+ 	vif->wdev.iftype = type;
+ 	vif->fw_vif_idx = fw_vif_idx;
+ 	vif->nw_type = vif->next_mode = nw_type;
++	vif->listen_intvl_t = ATH6KL_DEFAULT_LISTEN_INTVAL;
  
--	if (!ref)
-+	if (!ref || !test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
- 		return;
+ 	memcpy(ndev->dev_addr, ar->mac_addr, ETH_ALEN);
+ 	if (fw_vif_idx != 0)
+diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
+index 37c92a1..0db5c73 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.c
++++ b/drivers/net/wireless/ath/ath6kl/core.c
+@@ -264,9 +264,7 @@ struct ath6kl *ath6kl_core_create(struct device *dev)
+ 	clear_bit(SKIP_SCAN, &ar->flag);
+ 	clear_bit(DESTROY_IN_PROGRESS, &ar->flag);
  
- 	ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
+-	ar->listen_intvl_b = A_DEFAULT_LISTEN_INTERVAL;
+ 	ar->tx_pwr = 0;
+-
+ 	ar->intra_bss = 1;
+ 	ar->lrssi_roam_threshold = DEF_LRSSI_ROAM_THRESHOLD;
+ 
+diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
+index 808253e..78f53c0 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.h
++++ b/drivers/net/wireless/ath/ath6kl/core.h
+@@ -60,8 +60,6 @@
+ #define MAX_DEFAULT_SEND_QUEUE_DEPTH      (MAX_DEF_COOKIE_NUM / WMM_NUM_AC)
+ 
+ #define DISCON_TIMER_INTVAL               10000  /* in msec */
+-#define A_DEFAULT_LISTEN_INTERVAL         1      /* beacon intervals */
+-#define A_MAX_WOW_LISTEN_INTERVAL         1000
+ 
+ /* includes also the null byte */
+ #define ATH6KL_FIRMWARE_MAGIC               "QCA-ATH6KL"
+@@ -184,6 +182,8 @@ struct ath6kl_fw_ie {
+ 
+ #define MBOX_YIELD_LIMIT 99
+ 
++#define ATH6KL_DEFAULT_LISTEN_INTVAL	100 /* in TUs */
++
+ /* configuration lags */
+ /*
+  * ATH6KL_CONF_IGNORE_ERP_BARKER: Ignore the barker premable in
+@@ -495,6 +495,7 @@ struct ath6kl_vif {
+ 	bool probe_req_report;
+ 	u16 next_chan;
+ 	u16 assoc_bss_beacon_int;
++	u16 listen_intvl_t;
+ 	u8 assoc_bss_dtim_period;
+ 	struct net_device_stats net_stats;
+ 	struct target_stats target_stats;
+@@ -554,7 +555,6 @@ struct ath6kl {
+ 	u8 avail_idx_map;
+ 	spinlock_t lock;
+ 	struct semaphore sem;
+-	u16 listen_intvl_b;
+ 	u8 lrssi_roam_threshold;
+ 	struct ath6kl_version version;
+ 	u32 target_type;
+diff --git a/drivers/net/wireless/ath/ath6kl/debug.c b/drivers/net/wireless/ath/ath6kl/debug.c
+index 3d0713d..3092686 100644
+--- a/drivers/net/wireless/ath/ath6kl/debug.c
++++ b/drivers/net/wireless/ath/ath6kl/debug.c
+@@ -1628,12 +1628,12 @@ static ssize_t ath6kl_listen_int_write(struct file *file,
+ 	if (kstrtou16(buf, 0, &listen_interval))
+ 		return -EINVAL;
+ 
+-	if ((listen_interval < 1) || (listen_interval > 50))
++	if ((listen_interval < 15) || (listen_interval > 3000))
+ 		return -EINVAL;
+ 
+-	ar->listen_intvl_b = listen_interval;
+-	ath6kl_wmi_listeninterval_cmd(ar->wmi, vif->fw_vif_idx, 0,
+-				      ar->listen_intvl_b);
++	vif->listen_intvl_t = listen_interval;
++	ath6kl_wmi_listeninterval_cmd(ar->wmi, vif->fw_vif_idx,
++				      vif->listen_intvl_t, 0);
+ 
+ 	return count;
+ }
+@@ -1643,10 +1643,15 @@ static ssize_t ath6kl_listen_int_read(struct file *file,
+ 				      size_t count, loff_t *ppos)
+ {
+ 	struct ath6kl *ar = file->private_data;
++	struct ath6kl_vif *vif;
+ 	char buf[32];
+ 	int len;
+ 
+-	len = scnprintf(buf, sizeof(buf), "%u\n", ar->listen_intvl_b);
++	vif = ath6kl_vif_first(ar);
++	if (!vif)
++		return -EIO;
++
++	len = scnprintf(buf, sizeof(buf), "%u\n", vif->listen_intvl_t);
+ 
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+ }
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index d463a18..23a8027 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -589,11 +589,9 @@ void ath6kl_connect_event(struct ath6kl_vif *vif, u16 channel, u8 *bssid,
+ 	memcpy(vif->bssid, bssid, sizeof(vif->bssid));
+ 	vif->bss_ch = channel;
+ 
+-	if ((vif->nw_type == INFRA_NETWORK)) {
+-		ar->listen_intvl_b = listen_int;
++	if ((vif->nw_type == INFRA_NETWORK))
+ 		ath6kl_wmi_listeninterval_cmd(ar->wmi, vif->fw_vif_idx,
+-					      0, ar->listen_intvl_b);
+-	}
++					      vif->listen_intvl_t, 0);
+ 
+ 	netif_wake_queue(vif->ndev);
+ 
+-- 
+1.7.1
 
