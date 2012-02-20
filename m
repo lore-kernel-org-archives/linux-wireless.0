@@ -1,47 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:58814 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753142Ab2B2IbG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 03:31:06 -0500
-Subject: Re: [PATCH] mac80211: improve PID rate control mechanism by
- avoiding rate oscillation problem
-From: Johannes Berg <johannes@sipsolutions.net>
-To: YIN Wei <yinwei168@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	mattias.nissler@gmx.de, stefano.brivio@polimi.it
-In-Reply-To: <CAFxU49=OASHEDc2m8BfCGD6_gHcr6SFaap+b9ZnErWhNWFG8oQ@mail.gmail.com> (sfid-20120229_031816_008358_36E52A04)
-References: <CAFxU49=OASHEDc2m8BfCGD6_gHcr6SFaap+b9ZnErWhNWFG8oQ@mail.gmail.com>
-	 (sfid-20120229_031816_008358_36E52A04)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Feb 2012 09:31:03 +0100
-Message-ID: <1330504263.4714.2.camel@jlt3.sipsolutions.net> (sfid-20120229_093128_720553_2E09F646)
-Mime-Version: 1.0
+Received: from nm14-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.164]:37986 "HELO
+	nm14-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752988Ab2BTQwz convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Feb 2012 11:52:55 -0500
+Message-ID: <1329756774.86563.YahooMailClassic@web161602.mail.bf1.yahoo.com> (sfid-20120220_175259_432201_F8D0B0F0)
+Date: Mon, 20 Feb 2012 08:52:54 -0800 (PST)
+From: Walter Goldens <goldenstranger@yahoo.com>
+Subject: Re: [rt2x00] rt2800usb and RT3070 issues with 54G AP
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+In-Reply-To: <20120218165631.GA2922@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-02-29 at 12:17 +1000, YIN Wei wrote:
-> From: Wei YIN
-
-You want an email address here,
-
-> Improve PID rate control mechanism by solving the rate oscillation
-> problem. Current PID mechanism is based on a PID  controller which
-> tries to minimise the difference between the frame loss ratio (FLR)
-> and the target FLR. Therefore it is straight forward that it increases
-> to a higher rate when the FLR is less than the target without thinking
-> whether the higher rate can be supported. If the higher rate cannot be
-> supported, significant FLR will occur, which causes the mechanisms to
-> decrease the rate sharply. The proposed approach only updates the rate
-> when the proposed rate by the PID controller can achieve better
-> throughput than the old rate. This patch applies to kernel 3.3.0.
-> Signed-off-by: Wei YIN
-
-and here.
-
-Also since you sent as HTML, it never made it to the list and can't be
-applied as a patch, care to resend?
-
-johannes
 
 
+--- On Sat, 2/18/12, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+
+> From: Stanislaw Gruszka <sgruszka@redhat.com>
+> Subject: Re: [rt2x00] rt2800usb and RT3070 issues with 54G AP
+> To: "Walter Goldens" <goldenstranger@yahoo.com>
+> Cc: linux-wireless@vger.kernel.org, "Ivo van Doorn" <ivdoorn@gmail.com>
+> Date: Saturday, February 18, 2012, 6:56 PM
+> Hi.
+> 
+> On Sat, Feb 18, 2012 at 04:11:36AM -0800, Walter Goldens
+> wrote:
+> > This is from an N AP:
+> > 
+> > PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
+> > 64 bytes from 192.168.1.1: icmp_req=1 ttl=64 time=1.47
+> ms
+> > 64 bytes from 192.168.1.1: icmp_req=2 ttl=64 time=1.45
+> ms
+> > 64 bytes from 192.168.1.1: icmp_req=3 ttl=64 time=0.952
+> ms
+> > 64 bytes from 192.168.1.1: icmp_req=4 ttl=64 time=11.1
+> ms
+> > 64 bytes from 192.168.1.1: icmp_req=5 ttl=64 time=7.06
+> ms
+> > 64 bytes from 192.168.1.1: icmp_req=6 ttl=64 time=12.8
+> ms
+> [snip]
+> > And these are from 54G AP:
+> > 
+> > PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
+> > 64 bytes from 192.168.1.1: icmp_req=1 ttl=63 time=8.56
+> ms
+> > 64 bytes from 192.168.1.1: icmp_req=2 ttl=63 time=1.67
+> ms
+> > 64 bytes from 192.168.1.1: icmp_req=3 ttl=63 time=2.94
+> ms
+> > 64 bytes from 192.168.1.1: icmp_req=4 ttl=63 time=1.64
+> ms
+> > 64 bytes from 192.168.1.1: icmp_req=5 ttl=63 time=1.67
+> ms
+> > 64 bytes from 192.168.1.1: icmp_req=6 ttl=63 time=3.70
+> ms
+> > 64 bytes from 192.168.1.1: icmp_req=7 ttl=63 time=1.80
+> ms
+> > 64 bytes from 192.168.1.1: icmp_req=7 ttl=63 time=2.22
+> ms (DUP!)
+> [snip]
+> > If I use the STA drivers, no such problem occurres with
+> either N or G APs.
+> > This, for me, has been a long-standing problem.
+> 
+> Looks like this could be related with Power-Save. Seems APs
+> does not
+> handle PS well (between each ICMP packed our station is put
+> in
+> the sleep mode) . Vendor driver has  PS disabled, hence
+> problem
+> is not observable.
+> 
+> Try "iwconfig wlan0 power off" and see if it helps. 
+> 
+> Stanislaw
+
+Hello again,
+
+Unfortunately, disabling PS does not fix the problem:
+
+root@dell:~# iwconfig wlan1 power off
+root@dell:~# ping 192.168.1.1
+PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.
+64 bytes from 192.168.1.1: icmp_req=1 ttl=64 time=5.55 ms
+64 bytes from 192.168.1.1: icmp_req=2 ttl=64 time=2.09 ms
+64 bytes from 192.168.1.1: icmp_req=2 ttl=64 time=4.83 ms (DUP!)
+64 bytes from 192.168.1.1: icmp_req=3 ttl=64 time=2.03 ms
+64 bytes from 192.168.1.1: icmp_req=5 ttl=64 time=1.71 ms
+64 bytes from 192.168.1.1: icmp_req=6 ttl=64 time=1.44 ms
+64 bytes from 192.168.1.1: icmp_req=7 ttl=64 time=1.79 ms
+64 bytes from 192.168.1.1: icmp_req=8 ttl=64 time=5.15 ms
+64 bytes from 192.168.1.1: icmp_req=9 ttl=64 time=2.70 ms
+64 bytes from 192.168.1.1: icmp_req=10 ttl=64 time=16.8 ms
+64 bytes from 192.168.1.1: icmp_req=10 ttl=64 time=24.1 ms (DUP!)
+64 bytes from 192.168.1.1: icmp_req=11 ttl=64 time=13.0 ms
+^C
+--- 192.168.1.1 ping statistics ---
+11 packets transmitted, 10 received, +2 duplicates, 9% packet loss, time 10015ms
+rtt min/avg/max/mdev = 1.443/6.786/24.168/7.023 ms
+
+Walter
