@@ -1,41 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54966 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753162Ab2BXHZI (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:19698 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751374Ab2BTEfn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 02:25:08 -0500
-Subject: Re: iwlwifi havoc on some APs (rekeying?)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Wolfgang Breyha <wbreyha@gmx.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <1329570582.3443.5.camel@jlt3.sipsolutions.net> (sfid-20120218_140949_779575_5BB0DB68)
-References: <4EE2202A.4080303@gmx.net>
-	 (sfid-20111209_155026_272581_C336F412)  <1329570582.3443.5.camel@jlt3.sipsolutions.net>
-	 (sfid-20120218_140949_779575_5BB0DB68)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 24 Feb 2012 08:25:05 +0100
-Message-ID: <1330068305.3426.4.camel@jlt3.sipsolutions.net> (sfid-20120224_082512_695737_EF2A13CE)
-Mime-Version: 1.0
+	Sun, 19 Feb 2012 23:35:43 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	<stable@vger.kernel.org>, Pavel Roskin <proski@gnu.org>
+Subject: [PATCH 1/2] mac80211: zero initialize count field in ieee80211_tx_rate
+Date: Mon, 20 Feb 2012 10:05:31 +0530
+Message-ID: <1329712532-1928-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120220_053547_279390_0A708332)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2012-02-18 at 14:09 +0100, Johannes Berg wrote:
-> On Fri, 2011-12-09 at 15:50 +0100, Wolfgang Breyha wrote:
-> 
-> > If I connect to this one and start eg. videostreaming it takes only a few
-> > minutes and my machine gets completly unstable. Various applications crash,
-> > sounds starts crackling, video gets artefacts. Also doing large downloads
-> > helps to kill various components. gnome-shell, firefox, ... looks like
-> > iwlwifi writes random memory.
-> 
-> Just to give this some public closure as we've been discussing this in
-> private for a while now -- the problem was caused by the AES-NI FPU
-> state corruption problem that's been discussed elsewhere for a while.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Wolfgang, all,
+rate control algorithms concludes the rate as invalid
+with rate[i].idx < -1 , while they do also check for rate[i].count is
+non-zero. it would be safer to zero initialize the 'count' field.
+recently we had a ath9k rate control crash where the ath9k rate control
+in ath_tx_status assumed to check only for rate[i].count being non-zero
+in one instance and ended up in using invalid rate index for
+'connection monitoring NULL func frames' which eventually lead to the crash.
+thanks to Pavel Roskin for fixing it and finding the root cause.
+https://bugzilla.redhat.com/show_bug.cgi?id=768639
 
-Greg is asking for testers in conjunction with this problem to release
-3.2.8: https://plus.google.com/109995262342451767357/posts/TVTyT1DtQKJ
+Cc: stable@vger.kernel.org
+Cc: Pavel Roskin <proski@gnu.org>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ net/mac80211/rate.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-johannes
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 111fba3..b4f7600 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -447,7 +447,7 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
+ 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
+ 		info->control.rates[i].idx = -1;
+ 		info->control.rates[i].flags = 0;
+-		info->control.rates[i].count = 1;
++		info->control.rates[i].count = 0;
+ 	}
+ 
+ 	if (sdata->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
+-- 
+1.7.0.4
 
