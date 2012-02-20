@@ -1,73 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:18564 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753568Ab2B1E0u (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:22674 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752101Ab2BTJOK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 23:26:50 -0500
-Date: Tue, 28 Feb 2012 09:56:35 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 2/2] ath6kl: Fix memory leak of rx packets in endpoint 0
-Message-ID: <20120228042632.GA2892@vasanth-laptop> (sfid-20120228_052654_195738_12E244A0)
-References: <1328886633-2823-1-git-send-email-vthiagar@qca.qualcomm.com>
- <1328886633-2823-2-git-send-email-vthiagar@qca.qualcomm.com>
- <4F4BBBE5.4060101@qca.qualcomm.com>
+	Mon, 20 Feb 2012 04:14:10 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Eliad Peller <eliad@wizery.com>
+Subject: [PATCH v2 2/2] mac80211: Fix a warning on changing to monitor mode from STA
+Date: Mon, 20 Feb 2012 14:44:01 +0530
+Message-ID: <1329729241-14003-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120220_101415_875041_0D97A703)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4F4BBBE5.4060101@qca.qualcomm.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 27, 2012 at 07:22:45PM +0200, Kalle Valo wrote:
-> On 02/10/2012 05:10 PM, Vasanthakumar Thiagarajan wrote:
-> > htc_packet and htc_packet->buf_start are separately allocated
-> > for endpoint 0. This is different for other endpoints where
-> > packets are allocated as skb where htc_packet is skb->head
-> > and they are freed properly. Free htc_packet and htc_packet->buf_start
-> > separatly for endpoint 0.
-> > 
-> > Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-> > ---
-> >  drivers/net/wireless/ath/ath6kl/htc.c |   16 +++++++++++++++-
-> >  1 files changed, 15 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-> > index c703ef9..e50cc8e 100644
-> > --- a/drivers/net/wireless/ath/ath6kl/htc.c
-> > +++ b/drivers/net/wireless/ath/ath6kl/htc.c
-> > @@ -2372,7 +2372,21 @@ void ath6kl_htc_flush_rx_buf(struct htc_target *target)
-> >  				   "htc rx flush pkt 0x%p  len %d  ep %d\n",
-> >  				   packet, packet->buf_len,
-> >  				   packet->endpoint);
-> > -			dev_kfree_skb(packet->pkt_cntxt);
-> > +			/*
-> > +			 * packets in rx_bufq of endpoint 0 have originally
-> > +			 * been queued from target->free_ctrl_rxbuf where
-> > +			 * packet and packet->buf_start are allocated
-> > +			 * separately using kmalloc(). For other endpoint
-> > +			 * rx_bufq, it is allocated as skb where packet is
-> > +			 * skb->head. Take care of this difference while freeing
-> > +			 * the memory.
-> > +			 */
-> > +			if (packet->endpoint == ENDPOINT_0) {
-> > +				kfree(packet->buf_start);
-> > +				kfree(packet);
-> > +			} else {
-> > +				dev_kfree_skb(packet->pkt_cntxt);
-> > +			}
-> 
-> I didn't look at the code, but my question would it be possible to use
-> skbs also with endpoint 0? That would be more consistent aproach than
-> testing for a particular endpoint.
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Yeah, using skbs for control buffer is the right thing, but for the time being
-we can have this fix in.
+nothing needs to be done for monitor/AP_VLAN mode on calling
+ieee80211_bss_info_change_notify -> drv_bss_info_changed with the change
+flag 'BSS_CHANGED_IDLE'. 'wl1271' seems to use BSS_CHANGED_IDLE only for
+STA and IBSS mode. further the non-idle state of the monitor mode is
+taken care by the 'count' variable which counts non-idle interfaces.
+ieee80211_idle_off(local, "in use") will be called.
+this fixes the following WARNING when we have initially STA mode
+(network manager running) and not associated, and change it to monitor
+mode with network manager disabled and bringing up the monitor mode.
+this changes the idle state from 'true' (STA unassociated) to 'false'
+(MONITOR mode)
+exposed by the commit 405385f8ce7a2ed8f82e216d88b5282142e1288b
+"mac80211: set bss_conf.idle when vif is connected"
 
-> 
-> And in the future we should get rid of that buf_start hack and use skbs
-> directly anyway.
+	WARNING: net/mac80211/main.c:212
+	ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]()
+	Hardware name: 64756D6
+	Pid: 3835, comm: ifconfig Tainted: G           O
+	3.3.0-rc3-wl #9
+	Call Trace:
+	  [<c0133b02>] warn_slowpath_common+0x72/0xa0
+	  [<fc8e8c3f>] ?
+	  ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]
+	  [<fc8e8c3f>] ?
+	  ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]
+	  [<c0133b52>] warn_slowpath_null+0x22/0x30
+	  [<fc8e8c3f>]
+	  ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]
+	  [<fc8f9de3>] __ieee80211_recalc_idle+0x113/0x430
+	  [mac80211]
+	  [<fc8fabc6>] ieee80211_do_open+0x156/0x7e0 [mac80211]
+	  [<fc8f8a25>] ?
+	  ieee80211_check_concurrent_iface+0x25/0x180 [mac80211]
+	  [<c015dd9f>] ? raw_notifier_call_chain+0x1f/0x30
+	  [<fc8fb290>] ieee80211_open+0x40/0x80 [mac80211]
+	  [<c05894f6>] __dev_open+0x96/0xe0
+	  [<c068fba5>] ? _raw_spin_unlock_bh+0x35/0x40
+	  [<c05881d9>] __dev_change_flags+0x109/0x170
+	  [<c0589423>] dev_change_flags+0x23/0x60
+	  [<c05f3770>] devinet_ioctl+0x6a0/0x770
 
-Agree.
+ ieee80211 phy0: device no longer idle - in use
 
-Vasanth
+Cc: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ net/mac80211/iface.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 6b3cd65..daa50ea 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1342,6 +1342,9 @@ u32 __ieee80211_recalc_idle(struct ieee80211_local *local)
+ 		hw_roc = true;
+ 
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
++		if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
++		    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
++			continue;
+ 		if (sdata->old_idle == sdata->vif.bss_conf.idle)
+ 			continue;
+ 		if (!ieee80211_sdata_running(sdata))
+-- 
+1.7.0.4
+
