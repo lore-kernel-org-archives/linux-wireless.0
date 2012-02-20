@@ -1,62 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:50612 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752913Ab2B1Vtr (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:5364 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751800Ab2BTI6k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Feb 2012 16:49:47 -0500
-Received: by eaaq12 with SMTP id q12so12262eaa.19
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2012 13:49:46 -0800 (PST)
-Message-ID: <4F4D4BF7.8070407@gmail.com> (sfid-20120228_224954_466087_42F53FC5)
-Date: Tue, 28 Feb 2012 22:49:43 +0100
-From: Till Kamppeter <till.kamppeter@gmail.com>
+	Mon, 20 Feb 2012 03:58:40 -0500
+Message-ID: <4F420B37.3080504@qca.qualcomm.com> (sfid-20120220_095844_250323_8228BA5E)
+Date: Mon, 20 Feb 2012 14:28:31 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Fw: Google summer of code application for organization opened;
- wireless projects.
-References: <1330464499.83094.YahooMailClassic@web29501.mail.ird.yahoo.com>
-In-Reply-To: <1330464499.83094.YahooMailClassic@web29501.mail.ird.yahoo.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+To: Eliad Peller <eliad@wizery.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	<linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] mac80211: Fix a warning on changing to monitor mode
+ from STA
+References: <1329712532-1928-1-git-send-email-mohammed@qca.qualcomm.com>	<1329712532-1928-2-git-send-email-mohammed@qca.qualcomm.com> <CAB3XZEe2yqf1Frui3DvpHBG_VopkHydoJSXr2xqkBuUfpx8ZjQ@mail.gmail.com>
+In-Reply-To: <CAB3XZEe2yqf1Frui3DvpHBG_VopkHydoJSXr2xqkBuUfpx8ZjQ@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes, I will apply again for the Linux Foundation. I announced already 
-and I have prepared pages for the GSoC 2012:
+Hi Eliad,
 
-https://www.linuxfoundation.org/collaborate/workgroups/gsoc/google-summer-code-2012
-
-https://www.linuxfoundation.org/collaborate/workgroups/gsoc/2012-gsoc-80211-linux-projects
-
-Please edit the second of these two pages adding project ideas or 
-linking to your project ideas page for the GSoC 2012. To edit the page 
-group membership in the GSOC group at the Linux Foundation is needed. To 
-obtain the membership you need to log in and then click on the 
-appropriate link under the "GSOC" on the right. I will approve you then 
-and after that you can edit.
-
-    Till
-
-On 02/28/2012 10:28 PM, Hin-Tak Leung wrote:
-> oh, meant to cc' linux-wireless...
+On Monday 20 February 2012 02:23 PM, Eliad Peller wrote:
+> On Mon, Feb 20, 2012 at 6:35 AM, Mohammed Shafi Shajakhan
+> <mohammed@qca.qualcomm.com>  wrote:
+>>
+>> From: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>>
+>> nothing needs to be done for monitor mode on calling
+>> ieee80211_bss_info_change_notify ->  drv_bss_info_changed with the change
+>> flag 'BSS_CHANGED_IDLE'. 'wl1271' seems to use BSS_CHANGED_IDLE only for
+>> STA and IBSS mode. further the non-idle state of the monitor mode is
+>> taken care by the 'count' variable which counts non-idle interfaces.
+>> ieee80211_idle_off(local, "in use") will be called.
+>> this fixes the following WARNING when we have initially STA mode
+>> (network manager running) and not associated, and change it to monitor
+>> mode with network manager disabled and bringing up the monitor mode.
+>> this changes the idle state from 'true' (STA unassociated) to 'false'
+>> (MONITOR mode)
+>> exposed by the commit 405385f8ce7a2ed8f82e216d88b5282142e1288b
+>> "mac80211: set bss_conf.idle when vif is connected"
+>>
+>>         WARNING: net/mac80211/main.c:212
+>>         ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]()
+>>         Hardware name: 64756D6
+>>         Pid: 3835, comm: ifconfig Tainted: G           O
+>>         3.3.0-rc3-wl #9
+>>         Call Trace:
+>>           [<c0133b02>] warn_slowpath_common+0x72/0xa0
+>>           [<fc8e8c3f>] ?
+>>           ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]
+>>           [<fc8e8c3f>] ?
+>>           ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]
+>>           [<c0133b52>] warn_slowpath_null+0x22/0x30
+>>           [<fc8e8c3f>]
+>>           ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]
+>>           [<fc8f9de3>] __ieee80211_recalc_idle+0x113/0x430
+>>           [mac80211]
+>>           [<fc8fabc6>] ieee80211_do_open+0x156/0x7e0 [mac80211]
+>>           [<fc8f8a25>] ?
+>>           ieee80211_check_concurrent_iface+0x25/0x180 [mac80211]
+>>           [<c015dd9f>] ? raw_notifier_call_chain+0x1f/0x30
+>>           [<fc8fb290>] ieee80211_open+0x40/0x80 [mac80211]
+>>           [<c05894f6>] __dev_open+0x96/0xe0
+>>           [<c068fba5>] ? _raw_spin_unlock_bh+0x35/0x40
+>>           [<c05881d9>] __dev_change_flags+0x109/0x170
+>>           [<c0589423>] dev_change_flags+0x23/0x60
+>>           [<c05f3770>] devinet_ioctl+0x6a0/0x770
+>>
+>>   ieee80211 phy0: device no longer idle - in use
+>>
+>> Cc: Eliad Peller<eliad@wizery.com>
+>> Signed-off-by: Mohammed Shafi Shajakhan<mohammed@qca.qualcomm.com>
+>> ---
+>>   net/mac80211/iface.c |    2 ++
+>>   1 files changed, 2 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+>> index 6b3cd65..6b2221b 100644
+>> --- a/net/mac80211/iface.c
+>> +++ b/net/mac80211/iface.c
+>> @@ -1342,6 +1342,8 @@ u32 __ieee80211_recalc_idle(struct ieee80211_local *local)
+>>                 hw_roc = true;
+>>
+>>         list_for_each_entry(sdata,&local->interfaces, list) {
+>> +               if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
+>> +                       continue;
+>>                 if (sdata->old_idle == sdata->vif.bss_conf.idle)
+>>                         continue;
+>>                 if (!ieee80211_sdata_running(sdata))
+>> --
 >
-> --- On Tue, 28/2/12, Hin-Tak Leung<htl10@users.sourceforge.net>  wrote:
->
->> Hi Till,
->>
->> GSoC application for organization just opened. I assume
->> you'd put in an application for linux foundation per usual?
->> I mean to go back to testing the hfsplus journalling code
->> soon.
->>
->> Came across some android-specific issues concerning wifi
->> support:
->> http://linuxwireless.org/en/developers/Documentation/Android
->>
->> some of them probably would make a nice GSoC project. (using
->> unmod'ed wpa_supplicant, gui for setting up ad-hoc mode,
->> etc).
->>
->> Hin-Tak
->>
+> thanks, i missed it.
+> i think we should skip NL80211_IFTYPE_AP_VLAN as well?
 >
 
+thanks for the review, i will send a v2 adding AP_VLAN check too.
+
+-- 
+thanks,
+shafi
