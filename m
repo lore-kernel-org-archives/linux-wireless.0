@@ -1,87 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from exchange.solarflare.com ([216.237.3.220]:7303 "EHLO
-	ocex02.SolarFlarecom.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750813Ab2BHVpS (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:33039 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752051Ab2BTKUI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 16:45:18 -0500
-Message-ID: <1328737514.2627.14.camel@bwh-desktop> (sfid-20120208_224540_036009_FAF59717)
-Subject: Re: [PATCH] rtlwifi: rtl8192se firmware load can overflow target
- buffer
-From: Ben Hutchings <bhutchings@solarflare.com>
-To: Tim Gardner <tim.gardner@canonical.com>
-CC: <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Date: Wed, 8 Feb 2012 21:45:14 +0000
-In-Reply-To: <1328735291-33220-1-git-send-email-tim.gardner@canonical.com>
-References: <1328735291-33220-1-git-send-email-tim.gardner@canonical.com>
-Content-Type: text/plain; charset="UTF-8"
+	Mon, 20 Feb 2012 05:20:08 -0500
 MIME-Version: 1.0
+In-Reply-To: <4F421A0E.8030805@broadcom.com>
+References: <4F414230.5040506@lwfinger.net> <4F421A0E.8030805@broadcom.com>
+From: Kay Sievers <kay.sievers@vrfy.org>
+Date: Mon, 20 Feb 2012 11:19:48 +0100
+Message-ID: <CAPXgP10qa_g6R=pOWd8JuXpw0wPdJ4rP7B_4YHDU91mhC0N6Vg@mail.gmail.com> (sfid-20120220_112031_979231_3248CCA4)
+Subject: Re: will these methods work with firmware loading?
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	LKML <linux-kernel@vger.kernel.org>,
+	driverdevel <devel@driverdev.osuosl.org>,
+	wireless <linux-wireless@vger.kernel.org>,
+	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-02-08 at 14:08 -0700, Tim Gardner wrote:
-> The firmware file size check does not use the
-> correct limit.
-> 
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Chaoming Li <chaoming_li@realsil.com.cn>
-> Cc: John W. Linville <linville@tuxdriver.com>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
-> ---
->  drivers/net/wireless/rtlwifi/rtl8192se/fw.h |    3 ++-
->  drivers/net/wireless/rtlwifi/rtl8192se/sw.c |    2 +-
->  2 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
-> index babe85d..5c377fc 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
-> @@ -30,6 +30,7 @@
->  #define __REALTEK_FIRMWARE92S_H__
->  
->  #define RTL8190_MAX_FIRMWARE_CODE_SIZE		64000
-> +#define RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE	164000
->  #define RTL8190_CPU_START_OFFSET		0x80
->  /* Firmware Local buffer size. 64k */
->  #define	MAX_FIRMWARE_CODE_SIZE			0xFF00
-> @@ -217,7 +218,7 @@ struct rt_firmware {
->  	u8 fw_emem[RTL8190_MAX_FIRMWARE_CODE_SIZE];
->  	u32 fw_imem_len;
->  	u32 fw_emem_len;
-> -	u8 sz_fw_tmpbuffer[164000];
-> +	u8 sz_fw_tmpbuffer[RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE];
->  	u32 sz_fw_tmpbufferlen;
->  	u16 cmdpacket_fragthresold;
->  };
-> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-> index ca38dd9..155da0a 100644
-> --- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-> @@ -105,7 +105,7 @@ static void rtl92se_fw_cb(const struct firmware *firmware, void *context)
->  		rtlpriv->max_fw_size = 0;
->  		return;
->  	}
-> -	if (firmware->size > rtlpriv->max_fw_size) {
-> +	if (firmware->size >= RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE) {
+On Mon, Feb 20, 2012 at 11:01, Arend van Spriel <arend@broadcom.com> wrote:
+> On 02/19/2012 07:40 PM, Larry Finger wrote:
 
-This appears to reject a firmware blob which is exactly the maximum
-size, which looks wrong.  Also doesn't this make the max_fw_size field
-redundant?
+>> Similarly, if I were to create a work queue, init and schedule it from
+>> module_init(), and then use synchronous loads to get the firmware from the
+>> work
+>> queue callback, would that get around the boot problem? I know it works as
+>> I
+>> have trial patches; however, my version of udev is not one affected. This
+>> method
+>> is very easy to implement, but again I would like confirmation from an
+>> expert.
 
-Ben.
+It sounds like it should work, because the modprobe event returns, not
+waiting for the firmware request. Chaining one firmware request after
+the other sounds not like a problem, as long as they are chained with
+the return from the earlier request and not from inside the earlier
+request, which would have duplicated device name issues in the kernel
+too.
 
->  		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
->  			 "Firmware is too big!\n");
->  		release_firmware(firmware);
+> What boot problem are you referring to?
 
--- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+The pci event calls modprobe, the module init for the pci driver
+creates a child event of the pci device, this child event is queued in
+udev to be started after the pci event has finished. The pci event
+does not finish in time because the firmware request blocks itself.
 
+The current udev logic limits the timeout to 30 sec, while the
+firmware request is 60 sec, so it usually works with a logged error,
+and a 30 second delay.
+
+> The blocking modprobe?
+
+Yes, blocking in the module init path, will deadlock udev. Linking
+code into the kernel must not depend on device init or firmware
+loading.
+
+> For that
+> problem I would say yes. Also here the problem of handling error flows
+> exist. If the driver is kicked of during boot with a initramfs missing the
+> firmware, should we retry until the real root is mounted?
+
+I don't think so. Drivers are not supposed to know about bootup or
+initramfs issues. If they want, they can disable the timeout, and wait
+for userspace to handle the request any time later, but they should
+not try to be smart here.
+
+Currently, firmware requests are cancelled if the firmware isn't
+found, but that's a userspace issue, and nothing the kernel should try
+to work around.
+
+Kay
