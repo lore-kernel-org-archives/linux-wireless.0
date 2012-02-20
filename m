@@ -1,38 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:60165 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753614Ab2BCW2W (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:47695 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752161Ab2BTKbe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 17:28:22 -0500
-Date: Fri, 3 Feb 2012 16:28:18 -0600
-From: Seth Forshee <seth.forshee@canonical.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Scott Sanbar <scott.sanbar@gmail.com>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: BCM4331 fails to associate after suspend
-Message-ID: <20120203222818.GA3749@ubuntu-mba> (sfid-20120203_232825_902465_2DFC7EC9)
+	Mon, 20 Feb 2012 05:31:34 -0500
+Received: by werb13 with SMTP id b13so3062306wer.19
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Feb 2012 02:31:33 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAO1ZyKkq3nS=KfXF5BQu+SkUOjd2fT7onuMSo_3P2DEa_Du6cQ@mail.gmail.com>
+References: <CAO1ZyKkq3nS=KfXF5BQu+SkUOjd2fT7onuMSo_3P2DEa_Du6cQ@mail.gmail.com>
+From: Claudio Rossi <rossi.claudio.82@gmail.com>
+Date: Mon, 20 Feb 2012 11:31:13 +0100
+Message-ID: <CAO1ZyK=OBabkubphGj3BakXLFG6c248eXVnHSNCUHnLwTVNdTw@mail.gmail.com> (sfid-20120220_113137_511040_3370A58B)
+Subject: Re: Accessing protocol type field from mac802.11
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've been looking into some association problems seen with a MacBook Pro
-8,2 that has BCM4331 wireless, which I've confirmed still exist in
-wireless-testing. The association failures reliably start appearing
-after the machine is resumed from s3 without external power applied
-(whether or not power is applied when the machine is suspended doesn't
-matter).
+Dear all,
+ I forgot to mention that in status.c everything works fine when I do:
 
-When the association failures are happening the BCM4331 seems to be able
-to receive packets okay, as it can scan successfully. Transmissions
-don't work though; no frames from the BCM4331 are ever seen on the air,
-as though the tx path is off. Reloading both the b43 and bcma drivers
-gets things working again, but reloading just b43 does not.
+struct iphdr * network_header;
 
-I've been looking around a bit in the b43 and bcma drivers, but so far I
-haven't found the reason why this happens. Any help would be
-appreciated. Let me know if there's additional information I can
-provide.
+network_header = (struct iphdr *)skb_network_header(skb);
 
-Thanks,
-Seth
+ if (network_header->protocol==IPPROTO_TCP){
+...
+}
+
+
+the problem is how to correctly set the network header pointer in the
+skb in rx.c
+
+Please, can somebody help?
+Thank you
+
+2012/2/17 Claudio Rossi <rossi.claudio.82@gmail.com>
+>
+> Dear all,
+>  I would like to inspect the protocol type field from mac802.11, and
+> specifically in rx.c in the function
+>
+> static ieee80211_rx_result debug_noinline
+> ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+>
+> I was trying to do:
+>
+> struct iphdr * network_header;
+> skb_set_network_header(skb,ieee80211_get_hdrlen_from_skb(skb));
+> network_header = (struct iphdr *)skb_network_header(skb);
+>
+>  if (network_header->protocol==IPPROTO_TCP){
+> ...
+> }
+> but it does not seams to work....
+>
+> can somebody give me an hint?
+> I am sorry about this question, that may be silly... I am a beginner.
+>
+> Thank you
+>
+> --
+> Claudio Rossi
+> -------------------
+> Office @ PoliTO: +39 011 5644194
+
+
+
+
+--
+Claudio Rossi
+-------------------
+Office @ PoliTO: +39 011 5644194
