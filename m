@@ -1,133 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:45859 "EHLO
-	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755755Ab2BHQBH (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:58673 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751590Ab2BTEfx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 11:01:07 -0500
-Message-ID: <20120208180102.18346jfdlm9wakw8@www.81.fi> (sfid-20120208_170111_167100_90528AA4)
-Date: Wed, 08 Feb 2012 18:01:02 +0200
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: Florian Fainelli <florian@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	zd1211-devs@lists.sourceforge.net
-Subject: Re: zd1211rw firmware loading timeout
-References: <201111291544.28692.florian@openwrt.org>
- <CAFAL1Txx=qn3WXdRrtaYPVySY2vx+HinKk-NgthR+2ufcYNMwA@mail.gmail.com>
- <20120208151536.92555oyai8wffqww@www.81.fi> <4F3275DD.2000107@openwrt.org>
-In-Reply-To: <4F3275DD.2000107@openwrt.org>
+	Sun, 19 Feb 2012 23:35:53 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
+	Eliad Peller <eliad@wizery.com>
+Subject: [PATCH 2/2] mac80211: Fix a warning on changing to monitor mode from STA
+Date: Mon, 20 Feb 2012 10:05:32 +0530
+Message-ID: <1329712532-1928-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120220_053556_329219_A1822C21)
+In-Reply-To: <1329712532-1928-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1329712532-1928-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Florian Fainelli <florian@openwrt.org>:
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-> Hello Jussi,
->
-> On 02/08/12 14:15, Jussi Kivilinna wrote:
->> Quoting Florian Fainelli <florian@openwrt.org>:
->>
->>>
->>> Hello,
->>>
->>> I am running Debian testing kernel 3.1.0-1-amd64, using a 079b:0062 Sagem
->>> XG-76NA 802.11bg stick.
->>>
->>> Upon zd1211rw interface
->>> bringup (ifconfig wlan0 up) I get the following timeout:
->>>
->>> [  950.330573] zd1211rw 1-3:1.0: phy2
->>> [  955.108510] zd1211rw 1-3:1.0: firmware version 4725
->>> [  955.148532] zd1211rw 1-3:1.0: zd1211b chip 079b:0062 v4810 high 00-19-70
->>> AL2230_RF pa0 g--NS
->>> [snip]
->>> [  955.204072] zd1211rw 1-3:1.0: error ioread32(CR_REG1): -110
->>>
->>> A second ifconfig wlan0 up brings the interface up without problems.
->>>
->>> After a bit more debugging, the call trace is the following:
->>>
->>> [10241.028130] zd1211rw 1-3:1.0: zd_chip_lock_phy_regs: error
->>> ioread32(CR_REG1): -110
->>> [10241.028140] zd1211rw 1-3:1.0: zd_switch_radio_on: failed to  
->>> lock PHY regs
->>> [10241.028148] zd1211rw 1-3:1.0: zd_op_start: failed to set radio on
->>>
->>> The following small modification works around the issue:
->>>
->>> diff --git a/zd_mac.c b/zd_mac.c
->>> index cabfae1..6bfb673 100644
->>> --- a/zd_mac.c
->>> +++ b/zd_mac.c
->>> @@ -306,9 +306,14 @@ int zd_op_start(struct ieee80211_hw *hw)
->>>       r = set_mc_hash(mac);
->>>       if (r)
->>>               goto disable_int;
->>> +
->>> +       msleep(10);
->>> +
->>>       r = zd_chip_switch_radio_on(chip);
->>> -       if (r < 0)
->>> +       if (r < 0) {
->>> +               dev_err(zd_chip_dev(chip), "%s: failed to set radio on\n",
->>> __func__);
->>>               goto disable_int;
->>> +       }
->>>       r = zd_chip_enable_rxtx(chip);
->>>       if (r < 0)
->>>               goto disable_radio;
->>>
->>> Is it possible that some chips require more time between a  
->>> set_mc_hash and a
->>> radio on? Or in general that consequent writes to the PHY regs  
->>> should be timed
->>> appropriately?
->>
->> Yes, it is possible. Vendor driver appears to have quite alot  
->> sleeps spread around in RF-chip handling code. I might have seen  
->> this myself sometimes when zd1211 device has firmware freeze and  
->> has to be reseted. But since freeze is hard to reproduce and reset  
->> didn't fail always, I didn't bother with it.
->>
->> Can you give your "Signed-off-by" line for the patch?
->
-> Sure, I will resubmit this patch, do you also want me to keep the  
-> line showing the error?
->
+nothing needs to be done for monitor mode on calling
+ieee80211_bss_info_change_notify -> drv_bss_info_changed with the change
+flag 'BSS_CHANGED_IDLE'. 'wl1271' seems to use BSS_CHANGED_IDLE only for
+STA and IBSS mode. further the non-idle state of the monitor mode is
+taken care by the 'count' variable which counts non-idle interfaces.
+ieee80211_idle_off(local, "in use") will be called.
+this fixes the following WARNING when we have initially STA mode
+(network manager running) and not associated, and change it to monitor
+mode with network manager disabled and bringing up the monitor mode.
+this changes the idle state from 'true' (STA unassociated) to 'false'
+(MONITOR mode)
+exposed by the commit 405385f8ce7a2ed8f82e216d88b5282142e1288b
+"mac80211: set bss_conf.idle when vif is connected"
 
-Yes, do that or add URL to original mail. Thanks.
+	WARNING: net/mac80211/main.c:212
+	ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]()
+	Hardware name: 64756D6
+	Pid: 3835, comm: ifconfig Tainted: G           O
+	3.3.0-rc3-wl #9
+	Call Trace:
+	  [<c0133b02>] warn_slowpath_common+0x72/0xa0
+	  [<fc8e8c3f>] ?
+	  ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]
+	  [<fc8e8c3f>] ?
+	  ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]
+	  [<c0133b52>] warn_slowpath_null+0x22/0x30
+	  [<fc8e8c3f>]
+	  ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]
+	  [<fc8f9de3>] __ieee80211_recalc_idle+0x113/0x430
+	  [mac80211]
+	  [<fc8fabc6>] ieee80211_do_open+0x156/0x7e0 [mac80211]
+	  [<fc8f8a25>] ?
+	  ieee80211_check_concurrent_iface+0x25/0x180 [mac80211]
+	  [<c015dd9f>] ? raw_notifier_call_chain+0x1f/0x30
+	  [<fc8fb290>] ieee80211_open+0x40/0x80 [mac80211]
+	  [<c05894f6>] __dev_open+0x96/0xe0
+	  [<c068fba5>] ? _raw_spin_unlock_bh+0x35/0x40
+	  [<c05881d9>] __dev_change_flags+0x109/0x170
+	  [<c0589423>] dev_change_flags+0x23/0x60
+	  [<c05f3770>] devinet_ioctl+0x6a0/0x770
 
->>
->> -Jussi
->>
->>>
->>> When I googled for this timeout issue, I could see quite some  
->>> reports of other
->>> people having this error while the chip was already operating.
->>>
->>> Thanks
->>> -- 
->>> Florian
->>> -- 
->>> To unsubscribe from this list: send the line "unsubscribe  
->>> linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>>
->>
->>
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
+ ieee80211 phy0: device no longer idle - in use
 
+Cc: Eliad Peller <eliad@wizery.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ net/mac80211/iface.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 6b3cd65..6b2221b 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1342,6 +1342,8 @@ u32 __ieee80211_recalc_idle(struct ieee80211_local *local)
+ 		hw_roc = true;
+ 
+ 	list_for_each_entry(sdata, &local->interfaces, list) {
++		if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
++			continue;
+ 		if (sdata->old_idle == sdata->vif.bss_conf.idle)
+ 			continue;
+ 		if (!ieee80211_sdata_running(sdata))
+-- 
+1.7.0.4
 
