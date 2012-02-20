@@ -1,91 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22467 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753848Ab2BCAQu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 19:16:50 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 00/28] update for 3.4: iwlwifi 2012-02-02
-Date: Thu,  2 Feb 2012 15:08:51 -0800
-Message-Id: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120203_011654_090202_2893B100)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:19231 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752584Ab2BTOdz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Feb 2012 09:33:55 -0500
+From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Subject: [RFC] cfg80211: Add background scan period attribute.
+Date: Mon, 20 Feb 2012 20:03:47 +0530
+Message-ID: <1329748427-1862-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120220_153359_900909_9BFDC783)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We doing a lot of preparation works and get ready to split the driver into
-two separate layers in order to accommodate the new architecture.
+Send background scan period as part of connect
+command. Background scanning will be disabled
+if the period value is zero.
 
-Amit Beka (1):
-  iwlwifi: range check to testmode direct reg access
+Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+---
+ include/linux/nl80211.h |    9 ++++++++-
+ include/net/cfg80211.h  |    2 ++
+ net/wireless/nl80211.c  |    6 ++++++
+ 3 files changed, 16 insertions(+), 1 deletions(-)
 
-Don Fry (3):
-  iwlwifi: clarify comment
-  iwlwifi: move bcast_sta_id init to common routine
-  iwlwifi: move all ucode routines to iwl-ucode.c
-
-Emmanuel Grumbach (22):
-  iwlwifi: add fw_alive to transport layer API, kill tx_start
-  iwlwifi: separate the APM from the EEPROM
-  iwlwifi: move the shrd memory from priv
-  iwlwifi: allocate the transport from the bus layer
-  iwlwifi: move the bus configuration to transport
-  iwlwifi: the read / write register ops move to transport
-  iwlwifi: give trans to all the read / write functions
-  iwlwifi: remove the pointer to dev from the bus layer
-  iwlwifi: don't use the bus for ucode fw_desc any more
-  iwlwifi: rename trans_ops->request_irq to trans_ops->start_hw
-  iwlwifi: move prepare_card_hw to start_hw
-  iwlwifi: move apm_init to start_hw
-  iwlwifi: introduce trans_ops->stop_hw
-  iwlwifi: move the RF kill logic from iwl_probe to transport
-  iwlwifi: consolidate the start_device flow
-  iwlwifi: kill bus_apm_config
-  iwlwifi: kill bus_is_pm_supported
-  iwlwifi: kill bus_get_hw_id_string
-  iwlwifi: kill bus_get_hw_id
-  iwlwifi: move hw_rev to transport layer
-  iwlwifi: stop_hw replace enable_rfkill_int
-  iwlwifi: debug print in tx_queue_set_status is more clear
-
-Gregory Greenman (1):
-  iwlwifi: Connect IDI transport to driver.
-
-Johannes Berg (1):
-  iwlwifi: release IRQ in error path
-
-these patches are also available from wireless-next branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
-
- drivers/net/wireless/iwlwifi/iwl-1000.c           |    6 +-
- drivers/net/wireless/iwlwifi/iwl-2000.c           |    4 +-
- drivers/net/wireless/iwlwifi/iwl-5000.c           |    6 +-
- drivers/net/wireless/iwlwifi/iwl-6000.c           |   10 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rx.c         |    8 +-
- drivers/net/wireless/iwlwifi/iwl-agn-tt.c         |   14 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c            |  713 +-------------------
- drivers/net/wireless/iwlwifi/iwl-agn.h            |    3 +-
- drivers/net/wireless/iwlwifi/iwl-bus.h            |   64 --
- drivers/net/wireless/iwlwifi/iwl-core.c           |  128 +----
- drivers/net/wireless/iwlwifi/iwl-core.h           |    6 -
- drivers/net/wireless/iwlwifi/iwl-debug.h          |   16 +-
- drivers/net/wireless/iwlwifi/iwl-debugfs.c        |    6 +-
- drivers/net/wireless/iwlwifi/iwl-dev.h            |  109 ---
- drivers/net/wireless/iwlwifi/iwl-eeprom.c         |   65 +-
- drivers/net/wireless/iwlwifi/iwl-io.c             |  193 +++---
- drivers/net/wireless/iwlwifi/iwl-io.h             |   60 +-
- drivers/net/wireless/iwlwifi/iwl-led.c            |    9 +-
- drivers/net/wireless/iwlwifi/iwl-mac80211.c       |   36 +-
- drivers/net/wireless/iwlwifi/iwl-pci.c            |  229 +------
- drivers/net/wireless/iwlwifi/iwl-power.c          |    2 +-
- drivers/net/wireless/iwlwifi/iwl-shared.h         |    2 -
- drivers/net/wireless/iwlwifi/iwl-testmode.c       |   36 +-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |   18 +-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |  103 ++--
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |   55 +-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |  661 +++++++++++++++----
- drivers/net/wireless/iwlwifi/iwl-trans.h          |  133 +++--
- drivers/net/wireless/iwlwifi/iwl-ucode.c          |  740 ++++++++++++++++++---
- drivers/net/wireless/iwlwifi/iwl-ucode.h          |  178 +++++
- 30 files changed, 1837 insertions(+), 1776 deletions(-)
- create mode 100644 drivers/net/wireless/iwlwifi/iwl-ucode.h
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index ad56e21..3519054 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -366,7 +366,9 @@
+  *	IEs in %NL80211_ATTR_IE, %NL80211_ATTR_AUTH_TYPE, %NL80211_ATTR_MAC,
+  *	%NL80211_ATTR_WIPHY_FREQ, %NL80211_ATTR_CONTROL_PORT,
+  *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE and
+- *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT.
++ *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT. Background scan period can
++ *	also be optionally specified in %NL80211_ATTR_BG_SCAN_PERIOD,
++ *	zero period value is used to disable background scan.
+  *	It is also sent as an event, with the BSSID and response IEs when the
+  *	connection is established or failed to be established. This can be
+  *	determined by the STATUS_CODE attribute.
+@@ -1193,6 +1195,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_NOACK_MAP: This u16 bitmap contains the No Ack Policy of
+  *      up to 16 TIDs.
+  *
++ * @NL80211_ATTR_BG_SCAN_PERIOD: Specify background scan period,
++ *      zero value is used to disable background scan.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1438,6 +1443,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_NOACK_MAP,
+ 
++	NL80211_ATTR_BG_SCAN_PERIOD,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index e0c9ff3..10f4373 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1190,6 +1190,7 @@ struct cfg80211_ibss_params {
+  * @key_idx: index of WEP key for shared key authentication
+  * @key: WEP key for shared key authentication
+  * @flags:  See &enum cfg80211_assoc_req_flags
++ * @bg_period:  Background scan period in seconds
+  * @ht_capa:  HT Capabilities over-rides.  Values set in ht_capa_mask
+  *   will be used in ht_capa.  Un-supported values will be ignored.
+  * @ht_capa_mask:  The bits of ht_capa which are to be used.
+@@ -1207,6 +1208,7 @@ struct cfg80211_connect_params {
+ 	const u8 *key;
+ 	u8 key_len, key_idx;
+ 	u32 flags;
++	int bg_period;
+ 	struct ieee80211_ht_cap ht_capa;
+ 	struct ieee80211_ht_cap ht_capa_mask;
+ };
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index fe27476..ba9cb26 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -204,6 +204,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 		.len = NL80211_HT_CAPABILITY_LEN
+ 	},
+ 	[NL80211_ATTR_NOACK_MAP] = { .type = NLA_U16 },
++	[NL80211_ATTR_BG_SCAN_PERIOD] = { .type = NLA_U16 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -5061,6 +5062,11 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 	} else
+ 		connect.auth_type = NL80211_AUTHTYPE_AUTOMATIC;
+ 
++	connect.bg_period = -1;
++	if (info->attrs[NL80211_ATTR_BG_SCAN_PERIOD])
++		connect.bg_period =
++			nla_get_u16(info->attrs[NL80211_ATTR_BG_SCAN_PERIOD]);
++
+ 	connect.privacy = info->attrs[NL80211_ATTR_PRIVACY];
+ 
+ 	err = nl80211_crypto_settings(rdev, info, &connect.crypto,
+-- 
+1.7.4.1
 
