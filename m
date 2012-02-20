@@ -1,25 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:42609 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751830Ab2BVGuw (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50654 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752046Ab2BTLF0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 01:50:52 -0500
-Received: by yenm8 with SMTP id m8so3267678yen.19
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2012 22:50:52 -0800 (PST)
-MIME-Version: 1.0
-Date: Wed, 22 Feb 2012 07:50:51 +0100
-Message-ID: <CAOorkqfcsYJXCZQH=Stz=kMjN630CtDpc7UGPyEyGAVZJ07bpA@mail.gmail.com> (sfid-20120222_075056_137939_0348F902)
-Subject: 
-From: =?UTF-8?Q?Vlatka_Petri=C4=8Dec?= <vlatka.petricec@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Mon, 20 Feb 2012 06:05:26 -0500
+Subject: Re: AP send null-data packet?
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Yingang Fu <yingang.fu@gmail.com>,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <CAD2nsn1UWO0ix2OCkqC+xu3bX_p-pvsPk7VNv-5E=kGvKaxMUw@mail.gmail.com> (sfid-20120220_120339_900810_70F86FBC)
+References: <CAHPDcRtEHP7LAGPDE_UDs-P9Nq_ZrQbxsMYDCt-eXvjR+5=6kQ@mail.gmail.com>
+	 <201202201048.01883.chunkeey@googlemail.com>
+	 <CAD2nsn1UWO0ix2OCkqC+xu3bX_p-pvsPk7VNv-5E=kGvKaxMUw@mail.gmail.com>
+	 (sfid-20120220_120339_900810_70F86FBC)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 20 Feb 2012 12:05:23 +0100
+Message-ID: <1329735923.3458.16.camel@jlt3.sipsolutions.net> (sfid-20120220_120529_415447_725D7910)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-I have linux evolution  and I had a normal wireless connection until
-something changed in maybe network settings and it just stopped
-working. for example it says that my network is active but I cannot
-open any web adress or is just active but every function on computer
-says it is not active. I am thanking you in advance thank you for your
-time.
+On Mon, 2012-02-20 at 16:33 +0530, Mohammed Shafi wrote:
+> > Don't know much about other AP software. But hostapd sends them
+> > to check if a station is still in range and active.
+> >
+> > quote from hostapd.conf:
+> >
+> > # Station inactivity limit
+> > #
+> > # If a station does not send anything in ap_max_inactivity seconds, an
+> > # empty data frame is sent to it in order to verify whether it is
+> > # still in range. If this frame is not ACKed, the station will be
+> > # disassociated and then deauthenticated. This feature is used to
+> > # clear station table of old entries when the STAs move out of the
+> > # range.
+> 
+> i think also in this path in mac80211
+> sta_notify (driver call back) for AP mode
+> ieee80211_sta_block_awake
+> sta_unblock ->
+> ieee80211_sta_ps_deliver_poll_response  ->
+> ieee80211_sta_ps_deliver_response  ->
+>  ieee80211_send_null_response
+> 
+> also in UAPSD path. i don't know much about the technical details
+
+Yes, this is true, it happens when the station sends a PS-Poll but we
+timed out the frame in the meantime -- should be uncommon. In the uAPSD
+case it's more common, if nothing is pending and the station sends a
+trigger frame.
+
+In any case, it's perfectly normal for an AP to send null data frames.
+
+johannes
+
