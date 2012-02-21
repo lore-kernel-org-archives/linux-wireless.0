@@ -1,125 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:36199 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753743Ab2BORnw (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:48625 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755061Ab2BULLl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 12:43:52 -0500
-Received: by ghrr11 with SMTP id r11so800920ghr.19
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 09:43:51 -0800 (PST)
-Message-ID: <4F3BEEEB.4030001@lwfinger.net> (sfid-20120215_184404_770742_2D044A5F)
-Date: Wed, 15 Feb 2012 11:44:11 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 21 Feb 2012 06:11:41 -0500
+Received: by vbjk17 with SMTP id k17so4076249vbj.19
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2012 03:11:40 -0800 (PST)
 MIME-Version: 1.0
-To: Ronald Wahl <ronald.wahl@raritan.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rtlwifi/rtl8192cu: scheduling while atomic / sleeping function
- called from invalid context
-References: <4F3A7F71.6000008@raritan.com> <4F3ACC50.2000201@lwfinger.net> <4F3BB5C4.9040803@raritan.com> <4F3BCEC9.9030009@lwfinger.net> <4F3BDA1B.2070104@raritan.com>
-In-Reply-To: <4F3BDA1B.2070104@raritan.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20291.25199.584747.537695@gargle.gargle.HOWL>
+References: <20291.25199.584747.537695@gargle.gargle.HOWL>
+Date: Tue, 21 Feb 2012 16:41:40 +0530
+Message-ID: <CAD2nsn2bPffcbPcJAn1BG25Q-XTR8sJCHFwh_siGmneme7JpYQ@mail.gmail.com> (sfid-20120221_121145_523191_D0A30AC4)
+Subject: Re: [RFC/WIP 09/22] ath9k: Initialize BTCOEX scheme using a helper
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/15/2012 10:15 AM, Ronald Wahl wrote:
-> On 15.02.2012 16:27, Larry Finger wrote:
->> If possible, I would like one favor before you leave. These traces
->> should be a part of a report at bugzilla.kernel.org. Is this a
->> regression? I have assumed so.
+On Tue, Feb 21, 2012 at 2:52 PM, Sujith Manoharan
+<c_manoha@qca.qualcomm.com> wrote:
+> Setting up the required scheme can be done as part of the
+> BTCOEX initialization path and it doesn't belong in
+> ath9k_hw_fill_cap_info() anyway.
 >
-> https://bugzilla.kernel.org/show_bug.cgi?id=42775
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/btcoex.c |   34 +++++++++++++++++++++++++++++++
+>  drivers/net/wireless/ath/ath9k/btcoex.h |    1 +
+>  drivers/net/wireless/ath/ath9k/gpio.c   |    2 +
+>  drivers/net/wireless/ath/ath9k/hw.c     |   25 ----------------------
+>  4 files changed, 37 insertions(+), 25 deletions(-)
 >
-> I cannot tell if this is a regression - I just startet to test the driver with
-> this kernel.
+> diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+> index 6566952..5365959 100644
+> --- a/drivers/net/wireless/ath/ath9k/btcoex.c
+> +++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+> @@ -98,6 +98,40 @@ void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum)
+>  }
+>  EXPORT_SYMBOL(ath9k_hw_init_btcoex_hw);
+>
+> +void ath9k_hw_btcoex_init_scheme(struct ath_hw *ah)
+> +{
+> +       struct ath_common *common = ath9k_hw_common(ah);
+> +       struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+> +
+> +       /*
+> +        * Check if BTCOEX is globally disabled.
+> +        */
+> +       if (!common->btcoex_enabled) {
+> +               btcoex_hw->scheme = ATH_BTCOEX_CFG_NONE;
+> +               return;
+> +       }
+> +
+> +       if (AR_SREV_9462(ah)) {
+> +               btcoex_hw->scheme = ATH_BTCOEX_CFG_MCI;
+> +       } else if (AR_SREV_9300_20_OR_LATER(ah)) {
+> +               btcoex_hw->scheme = ATH_BTCOEX_CFG_3WIRE;
+> +               btcoex_hw->btactive_gpio = ATH_BTACTIVE_GPIO_9300;
+> +               btcoex_hw->wlanactive_gpio = ATH_WLANACTIVE_GPIO_9300;
+> +               btcoex_hw->btpriority_gpio = ATH_BTPRIORITY_GPIO_9300;
+> +       } else if (AR_SREV_9280_20_OR_LATER(ah)) {
+> +               btcoex_hw->btactive_gpio = ATH_BTACTIVE_GPIO_9280;
+> +               btcoex_hw->wlanactive_gpio = ATH_WLANACTIVE_GPIO_9280;
+> +
+> +               if (AR_SREV_9285(ah)) {
+> +                       btcoex_hw->scheme = ATH_BTCOEX_CFG_3WIRE;
+> +                       btcoex_hw->btpriority_gpio = ATH_BTPRIORITY_GPIO_9285;
+> +               } else {
+> +                       btcoex_hw->scheme = ATH_BTCOEX_CFG_2WIRE;
+> +               }
+> +       }
+> +}
+> +EXPORT_SYMBOL(ath9k_hw_btcoex_init_scheme);
+> +
+>  void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah)
+>  {
+>        struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+> diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+> index 0cb15cd..10627b4 100644
+> --- a/drivers/net/wireless/ath/ath9k/btcoex.h
+> +++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+> @@ -97,6 +97,7 @@ struct ath_btcoex_hw {
+>        u32 wlan_weight[AR9300_NUM_WLAN_WEIGHTS];
+>  };
+>
+> +void ath9k_hw_btcoex_init_scheme(struct ath_hw *ah);
+>  void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah);
+>  void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah);
+>  void ath9k_hw_btcoex_init_mci(struct ath_hw *ah);
+> diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+> index 3ab62af..c2238ff 100644
+> --- a/drivers/net/wireless/ath/ath9k/gpio.c
+> +++ b/drivers/net/wireless/ath/ath9k/gpio.c
+> @@ -391,6 +391,8 @@ int ath9k_init_btcoex(struct ath_softc *sc)
+>        struct ath_hw *ah = sc->sc_ah;
+>        int r;
+>
+> +       ath9k_hw_btcoex_init_scheme(ah);
+> +
+>        switch (ath9k_hw_get_btcoex_scheme(sc->sc_ah)) {
+>        case ATH_BTCOEX_CFG_NONE:
+>                break;
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+> index cb46d41..f4b121f 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.c
+> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+> @@ -2303,7 +2303,6 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+>        struct ath9k_hw_capabilities *pCap = &ah->caps;
+>        struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
+>        struct ath_common *common = ath9k_hw_common(ah);
+> -       struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+>        unsigned int chip_chainmask;
+>
+>        u16 eeval;
+> @@ -2422,30 +2421,6 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+>        else
+>                pCap->hw_caps |= ATH9K_HW_CAP_4KB_SPLITTRANS;
+>
+> -       if (common->btcoex_enabled) {
+> -               if (AR_SREV_9462(ah))
+> -                       btcoex_hw->scheme = ATH_BTCOEX_CFG_MCI;
+> -               else if (AR_SREV_9300_20_OR_LATER(ah)) {
+> -                       btcoex_hw->scheme = ATH_BTCOEX_CFG_3WIRE;
+> -                       btcoex_hw->btactive_gpio = ATH_BTACTIVE_GPIO_9300;
+> -                       btcoex_hw->wlanactive_gpio = ATH_WLANACTIVE_GPIO_9300;
+> -                       btcoex_hw->btpriority_gpio = ATH_BTPRIORITY_GPIO_9300;
+> -               } else if (AR_SREV_9280_20_OR_LATER(ah)) {
+> -                       btcoex_hw->btactive_gpio = ATH_BTACTIVE_GPIO_9280;
+> -                       btcoex_hw->wlanactive_gpio = ATH_WLANACTIVE_GPIO_9280;
+> -
+> -                       if (AR_SREV_9285(ah)) {
+> -                               btcoex_hw->scheme = ATH_BTCOEX_CFG_3WIRE;
+> -                               btcoex_hw->btpriority_gpio =
+> -                                               ATH_BTPRIORITY_GPIO_9285;
+> -                       } else {
+> -                               btcoex_hw->scheme = ATH_BTCOEX_CFG_2WIRE;
+> -                       }
+> -               }
+> -       } else {
+> -               btcoex_hw->scheme = ATH_BTCOEX_CFG_NONE;
+> -       }
+> -
+>        if (AR_SREV_9300_20_OR_LATER(ah)) {
+>                pCap->hw_caps |= ATH9K_HW_CAP_EDMA | ATH9K_HW_CAP_FASTCLOCK;
+>                if (!AR_SREV_9330(ah) && !AR_SREV_9485(ah))
+> --
+> 1.7.9.1
+>
 
-Thanks for the report and the link.
-
-Attached is a general fix that replaces the previous one and should fix both 
-problems. As we do synchronous reads, there is no real need to allocate a new 
-buffer for each one. I'm putting a 32-bit data buffer in the private data area 
-and eliminating the kmalloc/kfree process. The driver is obviously too 
-vulnerable to upstream changes to keep the current structure. Once again it is 
-ironic in that the sta struct that was protected in your second oops was also a 
-dummy, and that entire code is eliminated in the current version of mac80211.
-
-Please test whenever you get a chance. I'll continue to test the patch, but will 
-not submit it until I hear back from you.
-
-Thanks,
-
-Larry
+is it possible to move it to gpio.c, except we are initializing btcoex
+related GPIO pins so logically gpio.c could be a good idea. pls let me
+know if i had missed something
 
 
-Index: linux-2.6/drivers/net/wireless/rtlwifi/usb.c
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/rtlwifi/usb.c
-+++ linux-2.6/drivers/net/wireless/rtlwifi/usb.c
-@@ -113,46 +113,38 @@ static int _usbctrl_vendorreq_sync_read(
-  	return status;
-  }
-
--static u32 _usb_read_sync(struct usb_device *udev, u32 addr, u16 len)
-+static u32 _usb_read_sync(struct rtl_priv *rtlpriv, u32 addr, u16 len)
-  {
-+	struct device *dev = rtlpriv->io.dev;
-+	struct usb_device *udev = to_usb_device(dev);
-  	u8 request;
-  	u16 wvalue;
-  	u16 index;
--	u32 *data;
-+	u32 *data = &rtlpriv->usb_data;
-  	u32 ret;
-
--	data = kmalloc(sizeof(u32), GFP_KERNEL);
--	if (!data)
--		return -ENOMEM;
-  	request = REALTEK_USB_VENQT_CMD_REQ;
-  	index = REALTEK_USB_VENQT_CMD_IDX; /* n/a */
-
-  	wvalue = (u16)addr;
-  	_usbctrl_vendorreq_sync_read(udev, request, wvalue, index, data, len);
-  	ret = *data;
--	kfree(data);
-  	return ret;
-  }
-
-  static u8 _usb_read8_sync(struct rtl_priv *rtlpriv, u32 addr)
-  {
--	struct device *dev = rtlpriv->io.dev;
--
--	return (u8)_usb_read_sync(to_usb_device(dev), addr, 1);
-+	return (u8)_usb_read_sync(rtlpriv, addr, 1);
-  }
-
-  static u16 _usb_read16_sync(struct rtl_priv *rtlpriv, u32 addr)
-  {
--	struct device *dev = rtlpriv->io.dev;
--
--	return (u16)_usb_read_sync(to_usb_device(dev), addr, 2);
-+	return (u16)_usb_read_sync(rtlpriv, addr, 2);
-  }
-
-  static u32 _usb_read32_sync(struct rtl_priv *rtlpriv, u32 addr)
-  {
--	struct device *dev = rtlpriv->io.dev;
--
--	return _usb_read_sync(to_usb_device(dev), addr, 4);
-+	return _usb_read_sync(rtlpriv, addr, 4);
-  }
-
-  static void _usb_write_async(struct usb_device *udev, u32 addr, u32 val,
-Index: linux-2.6/drivers/net/wireless/rtlwifi/wifi.h
-===================================================================
---- linux-2.6.orig/drivers/net/wireless/rtlwifi/wifi.h
-+++ linux-2.6/drivers/net/wireless/rtlwifi/wifi.h
-@@ -1621,6 +1621,9 @@ struct rtl_priv {
-  	   interface or hardware */
-  	unsigned long status;
-
-+	/* data buffer for USB reads */
-+	u32 usb_data;
-+
-  	/*This must be the last item so
-  	   that it points to the data allocated
-  	   beyond  this structure like:
-
-
+-- 
+thanks,
+shafi
