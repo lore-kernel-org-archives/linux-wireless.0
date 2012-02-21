@@ -1,48 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:46127 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750888Ab2BDK2b (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22500 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753795Ab2BUJXY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Feb 2012 05:28:31 -0500
-Received: by vcge1 with SMTP id e1so3115473vcg.19
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Feb 2012 02:28:30 -0800 (PST)
+	Tue, 21 Feb 2012 04:23:24 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <20120203055645.GA15811@vmraj-lnx.users.atheros.com>
-References: <1328112335-19265-1-git-send-email-rmanohar@qca.qualcomm.com>
-	<1328112335-19265-2-git-send-email-rmanohar@qca.qualcomm.com>
-	<CAJ-Vmon56yyyvU46oXBJaFpUcFWa0008S5tyBm31qTY5y2CO+g@mail.gmail.com>
-	<20120203055645.GA15811@vmraj-lnx.users.atheros.com>
-Date: Sat, 4 Feb 2012 02:28:30 -0800
-Message-ID: <CAJ-Vmo=AXrnPAbvbfSAco8xkUQWKFLGMWKEYHMq-FsxsmqBbFA@mail.gmail.com> (sfid-20120204_112835_031395_2837D353)
-Subject: Re: [PATCH 2/2] ath9k_hw: improve ANI processing and rx desensitizing parameters
-From: Adrian Chadd <adrian@freebsd.org>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Paul Stewart <pstew@google.com>,
-	Susinder Gulasekaran <susinder@qca.qualcomm.com>,
-	Suresh Chandrasekaran <csuresh@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20291.25217.112736.268239@gargle.gargle.HOWL> (sfid-20120221_102330_294900_633FB7C3)
+Date: Tue, 21 Feb 2012 14:53:13 +0530
+To: <linux-wireless@vger.kernel.org>
+CC: <ath9k-devel@lists.ath9k.org>
+Subject: [RFC/WIP 12/22] ath9k_hw: Setup MCI calibration using a helper
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My point is that "use self corr low" isn't exactly and only "weak
-signal detection". My understanding is there's a whole heap of various
-PHY twiddles that set thresholds in the OFDM/CCK decoder.
-Disabling weak detection involves setting those thresholds high so
-they don't trigger on weak signals.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c |   42 ++-------------------
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c   |   48 +++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h           |    2 +
+ 3 files changed, 54 insertions(+), 38 deletions(-)
 
-I'd like to suggest we hold off on committing anything that really
-changes the ANI behaviour without figuring out exactly what's going on
-underneath the hood. I think it's worthwhile filing a bugzilla report
-and stuffing that patch against the bug though, so it's not "lost".
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 8e70f0b..63089cc 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -925,7 +925,6 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_hw_cal_data *caldata = ah->caldata;
+-	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
+ 	bool txiqcal_done = false, txclcal_done = false;
+ 	bool is_reusable = true, status = true;
+ 	bool run_rtt_cal = false, run_agc_cal;
+@@ -998,30 +997,8 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+ 	} else if (caldata && !caldata->done_txiqcal_once)
+ 		run_agc_cal = true;
+ 
+-	if (mci && IS_CHAN_2GHZ(chan) &&
+-	    (mci_hw->bt_state  == MCI_BT_AWAKE) &&
+-	    run_agc_cal &&
+-	    !(mci_hw->config & ATH_MCI_CONFIG_DISABLE_MCI_CAL)) {
+-
+-		u32 pld[4] = {0, 0, 0, 0};
+-
+-		/* send CAL_REQ only when BT is AWAKE. */
+-		ath_dbg(common, MCI, "MCI send WLAN_CAL_REQ 0x%x\n",
+-			mci_hw->wlan_cal_seq);
+-		MCI_GPM_SET_CAL_TYPE(pld, MCI_GPM_WLAN_CAL_REQ);
+-		pld[MCI_GPM_WLAN_CAL_W_SEQUENCE] = mci_hw->wlan_cal_seq++;
+-		ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
+-
+-		/* Wait BT_CAL_GRANT for 50ms */
+-		ath_dbg(common, MCI, "MCI wait for BT_CAL_GRANT\n");
+-
+-		if (ar9003_mci_wait_for_gpm(ah, MCI_GPM_BT_CAL_GRANT, 0, 50000))
+-			ath_dbg(common, MCI, "MCI got BT_CAL_GRANT\n");
+-		else {
+-			is_reusable = false;
+-			ath_dbg(common, MCI, "\nMCI BT is not responding\n");
+-		}
+-	}
++	if (mci && IS_CHAN_2GHZ(chan) && run_agc_cal)
++		ar9003_mci_init_cal_req(ah, &is_reusable);
+ 
+ 	txiqcal_done = ar9003_hw_tx_iq_cal_run(ah);
+ 	REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_DIS);
+@@ -1041,19 +1018,8 @@ skip_tx_iqcal:
+ 				       0, AH_WAIT_TIMEOUT);
+ 	}
+ 
+-	if (mci && IS_CHAN_2GHZ(chan) &&
+-	    (mci_hw->bt_state  == MCI_BT_AWAKE)	&&
+-	    run_agc_cal	&&
+-	    !(mci_hw->config & ATH_MCI_CONFIG_DISABLE_MCI_CAL)) {
+-
+-		u32 pld[4] = {0, 0, 0, 0};
+-
+-		ath_dbg(common, MCI, "MCI Send WLAN_CAL_DONE 0x%x\n",
+-			mci_hw->wlan_cal_done);
+-		MCI_GPM_SET_CAL_TYPE(pld, MCI_GPM_WLAN_CAL_DONE);
+-		pld[MCI_GPM_WLAN_CAL_W_SEQUENCE] = mci_hw->wlan_cal_done++;
+-		ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
+-	}
++	if (mci && IS_CHAN_2GHZ(chan) && run_agc_cal)
++		ar9003_mci_init_cal_done(ah);
+ 
+ 	if (rtt && !run_rtt_cal) {
+ 		agc_ctrl |= agc_supp_cals;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index f8dd0b2..e657578 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -1014,6 +1014,54 @@ bool ar9003_mci_send_message(struct ath_hw *ah, u8 header, u32 flag,
+ }
+ EXPORT_SYMBOL(ar9003_mci_send_message);
+ 
++void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
++	u32 pld[4] = {0, 0, 0, 0};
++
++	if ((mci_hw->bt_state != MCI_BT_AWAKE) ||
++	    (mci_hw->config & ATH_MCI_CONFIG_DISABLE_MCI_CAL))
++		return;
++
++	/* send CAL_REQ only when BT is AWAKE. */
++	ath_dbg(common, MCI, "MCI send WLAN_CAL_REQ 0x%x\n",
++		mci_hw->wlan_cal_seq);
++
++	MCI_GPM_SET_CAL_TYPE(pld, MCI_GPM_WLAN_CAL_REQ);
++	pld[MCI_GPM_WLAN_CAL_W_SEQUENCE] = mci_hw->wlan_cal_seq++;
++
++	ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
++
++	/* Wait BT_CAL_GRANT for 50ms */
++	ath_dbg(common, MCI, "MCI wait for BT_CAL_GRANT\n");
++
++	if (ar9003_mci_wait_for_gpm(ah, MCI_GPM_BT_CAL_GRANT, 0, 50000)) {
++		ath_dbg(common, MCI, "MCI got BT_CAL_GRANT\n");
++	} else {
++		is_reusable = false;
++		ath_dbg(common, MCI, "MCI BT is not responding\n");
++	}
++}
++
++void ar9003_mci_init_cal_done(struct ath_hw *ah)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
++	u32 pld[4] = {0, 0, 0, 0};
++
++	if ((mci_hw->bt_state != MCI_BT_AWAKE) ||
++	    (mci_hw->config & ATH_MCI_CONFIG_DISABLE_MCI_CAL))
++		return;
++
++	ath_dbg(common, MCI, "MCI Send WLAN_CAL_DONE 0x%x\n",
++		mci_hw->wlan_cal_done);
++
++	MCI_GPM_SET_CAL_TYPE(pld, MCI_GPM_WLAN_CAL_DONE);
++	pld[MCI_GPM_WLAN_CAL_W_SEQUENCE] = mci_hw->wlan_cal_done++;
++	ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
++}
++
+ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+ 		      u16 len, u32 sched_addr)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 07dd53e..ff75254 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -1211,6 +1211,8 @@ bool ar9003_mci_send_message(struct ath_hw *ah, u8 header, u32 flag,
+ 			     bool check_bt);
+ void ar9003_mci_mute_bt(struct ath_hw *ah);
+ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data);
++void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable);
++void ar9003_mci_init_cal_done(struct ath_hw *ah);
+ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+ 		      u16 len, u32 sched_addr);
+ void ar9003_mci_cleanup(struct ath_hw *ah);
+-- 
+1.7.9.1
 
-I can get some further information next week by paying the
-baseband/radio guys a visit. I'll see if we can figure out what's
-going on and why your ANI changes improve in that specific
-environment.
-
-(As a side note - it'd be nice to eliminate more 'stuck beacon' issues
-that relate to the radio side of things.)
-
-
-Adrian
