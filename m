@@ -1,261 +1,412 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hermes.mlbassoc.com ([64.234.241.98]:48865 "EHLO
-	mail.chez-thomas.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755934Ab2B2UxR (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:36105 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753795Ab2BUJXb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 15:53:17 -0500
-Message-ID: <4F4E903B.2030501@mlbassoc.com> (sfid-20120229_215321_306083_B86579B3)
-Date: Wed, 29 Feb 2012 13:53:15 -0700
-From: Gary Thomas <gary@mlbassoc.com>
+	Tue, 21 Feb 2012 04:23:31 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-CC: Luciano Coelho <coelho@ti.com>
-Subject: Problems with wl1271
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20291.25222.586158.979166@gargle.gargle.HOWL> (sfid-20120221_102336_429113_FFBC5C69)
+Date: Tue, 21 Feb 2012 14:53:18 +0530
+To: <linux-wireless@vger.kernel.org>
+CC: <ath9k-devel@lists.ath9k.org>
+Subject: [RFC/WIP 13/22] ath9k_hw: Cleanup MCI bits from ath9k_hw_reset()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm trying to bring up a new hardware platform which includes
-the TiWi-r02 (wl1271).  Since the kernel for my target device
-(AM3874) is stuck in the dark ages, Luciano suggested that I
-try compat-wireless + iw.  I've managed to build these now
-(after encountering many problems that I'll help iron out later)
-and now have the system ready to start using the device.  Note:
-I'm using compat-wireless-2012-02-28 and iw-3.2
+This patch moves all the MCI-specific code in the main reset
+function to helper functions.
 
-The kernel modules load and initialize now, with these messages:
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |  142 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.c         |  129 ++----------------------
+ drivers/net/wireless/ath/ath9k/hw.h         |   10 ++
+ 3 files changed, 163 insertions(+), 118 deletions(-)
 
-   cfg80211: Updating information on frequency 5200 MHz for a 20 MHz width channel with regulatory rule:
-   cfg80211: 5170000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-   cfg80211: Updating information on frequency 5210 MHz for a 20 MHz width channel with regulatory rule:
-   cfg80211: 5170000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-   cfg80211: Updating information on frequency 5220 MHz for a 20 MHz width channel with regulatory rule:
-   cfg80211: 5170000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-   cfg80211: Updating information on frequency 5230 MHz for a 20 MHz width channel with regulatory rule:
-   cfg80211: 5170000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-   cfg80211: Updating information on frequency 5240 MHz for a 20 MHz width channel with regulatory rule:
-   cfg80211: 5170000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-   cfg80211: Disabling freq 5260 MHz
-   cfg80211: Disabling freq 5280 MHz
-   cfg80211: Disabling freq 5300 MHz
-   cfg80211: Disabling freq 5320 MHz
-   cfg80211: Disabling freq 5500 MHz
-   cfg80211: Disabling freq 5520 MHz
-   cfg80211: Disabling freq 5540 MHz
-   cfg80211: Disabling freq 5560 MHz
-   cfg80211: Disabling freq 5580 MHz
-   cfg80211: Disabling freq 5600 MHz
-   cfg80211: Disabling freq 5620 MHz
-   cfg80211: Disabling freq 5640 MHz
-   cfg80211: Disabling freq 5660 MHz
-   cfg80211: Disabling freq 5680 MHz
-   cfg80211: Disabling freq 5700 MHz
-   cfg80211: Updating information on frequency 5745 MHz for a 20 MHz width channel with regulatory rule:
-   cfg80211: 5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-   cfg80211: Updating information on frequency 5765 MHz for a 20 MHz width channel with regulatory rule:
-   cfg80211: 5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-   cfg80211: Updating information on frequency 5785 MHz for a 20 MHz width channel with regulatory rule:
-   cfg80211: 5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-   cfg80211: Updating information on frequency 5805 MHz for a 20 MHz width channel with regulatory rule:
-   cfg80211: 5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-   cfg80211: Updating information on frequency 5825 MHz for a 20 MHz width channel with regulatory rule:
-   cfg80211: 5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
-
-   wl12xx: loaded
-
-When I try to bring up the device, I get this:
-   # ifconfig wlan0 hw ether 2a:00:24:01:02:03
-   # ifconfig wlan0 up
-   wl12xx: firmware booted (Rev 6.3.5.0.98)
-   ADDRCONF(NETDEV_UP): wlan0: link is not ready
-
-If I try to scan for an access point, I get nothing:
-   # iw wlan0 scan
-   --- Nothing prints
-   #
-I also see no additional messages in dmesg.
-
-Further checking of the device:
-   # iw wlan0 list
-   Wiphy phy0
-   	Band 1:
-   		Capabilities: 0x130
-   			HT20
-   			Static SM Power Save
-   			RX Greenfield
-   			RX HT20 SGI
-   			RX STBC 1-stream
-   			Max AMSDU length: 3839 bytes
-   			No DSSS/CCK HT40
-   		Maximum RX AMPDU length 8191 bytes (exponent: 0x000)
-   		Minimum RX AMPDU time spacing: 8 usec (0x06)
-   		HT TX/RX MCS rate indexes supported: 0-7
-   		Frequencies:
-   			* 2412 MHz [1] (20.0 dBm)
-   			* 2417 MHz [2] (20.0 dBm)
-   			* 2422 MHz [3] (20.0 dBm)
-   			* 2427 MHz [4] (20.0 dBm)
-   			* 2432 MHz [5] (20.0 dBm)
-   			* 2437 MHz [6] (20.0 dBm)
-   			* 2442 MHz [7] (20.0 dBm)
-   			* 2447 MHz [8] (20.0 dBm)
-   			* 2452 MHz [9] (20.0 dBm)
-   			* 2457 MHz [10] (20.0 dBm)
-   			* 2462 MHz [11] (20.0 dBm)
-   			* 2467 MHz [12] (20.0 dBm) (passive scanning, no IBSS)
-   			* 2472 MHz [13] (20.0 dBm) (passive scanning, no IBSS)
-   			* 2484 MHz [14] (20.0 dBm) (passive scanning, no IBSS)
-   		Bitrates (non-HT):
-   			* 1.0 Mbps
-   			* 2.0 Mbps (short preamble supported)
-   			* 5.5 Mbps (short preamble supported)
-   			* 11.0 Mbps (short preamble supported)
-   			* 6.0 Mbps
-   			* 9.0 Mbps
-   			* 12.0 Mbps
-   			* 18.0 Mbps
-   			* 24.0 Mbps
-   			* 36.0 Mbps
-   			* 48.0 Mbps
-   			* 54.0 Mbps
-   	Band 2:
-   		Capabilities: 0x130
-   			HT20
-   			Static SM Power Save
-   			RX Greenfield
-   			RX HT20 SGI
-   			RX STBC 1-stream
-   			Max AMSDU length: 3839 bytes
-   			No DSSS/CCK HT40
-   		Maximum RX AMPDU length 8191 bytes (exponent: 0x000)
-   		Minimum RX AMPDU time spacing: 8 usec (0x06)
-   		HT TX/RX MCS rate indexes supported: 0-7
-   		Frequencies:
-   			* 5035 MHz [7] (disabled)
-   			* 5040 MHz [8] (disabled)
-   			* 5045 MHz [9] (disabled)
-   			* 5055 MHz [11] (disabled)
-   			* 5060 MHz [12] (disabled)
-   			* 5080 MHz [16] (disabled)
-   			* 5170 MHz [34] (disabled)
-   			* 5180 MHz [36] (20.0 dBm) (passive scanning, no IBSS)
-   			* 5190 MHz [38] (20.0 dBm) (passive scanning, no IBSS)
-   			* 5200 MHz [40] (20.0 dBm) (passive scanning, no IBSS)
-   			* 5210 MHz [42] (20.0 dBm) (passive scanning, no IBSS)
-   			* 5220 MHz [44] (20.0 dBm) (passive scanning, no IBSS)
-   			* 5230 MHz [46] (20.0 dBm) (passive scanning, no IBSS)
-   			* 5240 MHz [48] (20.0 dBm) (passive scanning, no IBSS)
-   			* 5260 MHz [52] (disabled)
-   			* 5280 MHz [56] (disabled)
-   			* 5300 MHz [60] (disabled)
-   			* 5320 MHz [64] (disabled)
-   			* 5500 MHz [100] (disabled)
-   			* 5520 MHz [104] (disabled)
-   			* 5540 MHz [108] (disabled)
-   			* 5560 MHz [112] (disabled)
-   			* 5580 MHz [116] (disabled)
-   			* 5600 MHz [120] (disabled)
-   			* 5620 MHz [124] (disabled)
-   			* 5640 MHz [128] (disabled)
-   			* 5660 MHz [132] (disabled)
-   			* 5680 MHz [136] (disabled)
-   			* 5700 MHz [140] (disabled)
-   			* 5745 MHz [149] (20.0 dBm) (passive scanning, no IBSS)
-   			* 5765 MHz [153] (20.0 dBm) (passive scanning, no IBSS)
-   			* 5785 MHz [157] (20.0 dBm) (passive scanning, no IBSS)
-   			* 5805 MHz [161] (20.0 dBm) (passive scanning, no IBSS)
-   			* 5825 MHz [165] (20.0 dBm) (passive scanning, no IBSS)
-   		Bitrates (non-HT):
-   			* 6.0 Mbps
-   			* 9.0 Mbps
-   			* 12.0 Mbps
-   			* 18.0 Mbps
-   			* 24.0 Mbps
-   			* 36.0 Mbps
-   			* 48.0 Mbps
-   			* 54.0 Mbps
-   	max # scan SSIDs: 1
-   	max scan IEs length: 441 bytes
-   	Coverage class: 0 (up to 0m)
-   	Supported Ciphers:
-   		* WEP40 (00-0f-ac:1)
-   		* WEP104 (00-0f-ac:5)
-   		* TKIP (00-0f-ac:2)
-   		* CCMP (00-0f-ac:4)
-   		* WPI-SMS4 (00-14-72:1)
-   	Available Antennas: TX 0 RX 0
-   	Supported interface modes:
-   		 * IBSS
-   		 * managed
-   		 * AP
-   		 * AP/VLAN
-   		 * monitor
-   		 * P2P-client
-   		 * P2P-GO
-   	software interface modes (can always be added):
-   		 * AP/VLAN
-   		 * monitor
-   	interface combinations are not supported
-   	Supported commands:
-   		 * new_interface
-   		 * set_interface
-   		 * new_key
-   		 * new_beacon
-   		 * new_station
-   		 * new_mpath
-   		 * set_mesh_params
-   		 * set_bss
-   		 * authenticate
-   		 * associate
-   		 * deauthenticate
-   		 * disassociate
-   		 * join_ibss
-   		 * join_mesh
-   		 * remain_on_channel
-   		 * set_tx_bitrate_mask
-   		 * action
-   		 * frame_wait_cancel
-   		 * set_wiphy_netns
-   		 * set_channel
-   		 * set_wds_peer
-   		 * Unknown command (75)
-   		 * Unknown command (84)
-   		 * Unknown command (87)
-   		 * Unknown command (85)
-   		 * testmode
-   		 * connect
-   		 * disconnect
-   	Supported TX frame types:
-   		 * IBSS: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
-   		 * managed: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
-   		 * AP: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
-   		 * AP/VLAN: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
-   		 * mesh point: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
-   		 * P2P-client: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
-   		 * P2P-GO: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
-   	Supported RX frame types:
-   		 * IBSS: 0x00d0
-   		 * managed: 0x0040 0x00d0
-   		 * AP: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
-   		 * AP/VLAN: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
-   		 * mesh point: 0x00b0 0x00c0 0x00d0
-   		 * P2P-client: 0x0040 0x00d0
-   		 * P2P-GO: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
-   	WoWLAN support:
-   		 * wake up on anything (device continues operating normally)
-   	Device supports AP-side u-APSD.
-
-I don't know enough about this device to understand why it's not working.
-Perhaps the line
-   	Available Antennas: TX 0 RX 0
-is a clue?
-
-Any ideas what's not working & how I need to do to move forward?
-
-Thanks in advance for all the help
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index e657578..35299d5 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -16,6 +16,7 @@
+ 
+ #include <linux/export.h>
+ #include "hw.h"
++#include "hw-ops.h"
+ #include "ar9003_phy.h"
+ #include "ar9003_mci.h"
+ 
+@@ -567,6 +568,131 @@ static bool ar9003_mci_send_coex_bt_flags(struct ath_hw *ah, bool wait_done,
+ 							wait_done, true);
+ }
+ 
++void ar9003_mci_check_bt(struct ath_hw *ah)
++{
++	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
++
++	if (!mci_hw->ready)
++		return;
++
++	/*
++	 * check BT state again to make
++	 * sure it's not changed.
++	 */
++	ar9003_mci_sync_bt_state(ah);
++	ar9003_mci_2g5g_switch(ah, true);
++
++	if ((mci_hw->bt_state == MCI_BT_AWAKE) &&
++	    (mci_hw->query_bt == true)) {
++		mci_hw->need_flush_btinfo = true;
++	}
++}
++
++bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
++	u32 payload[4] = {0, 0, 0, 0};
++
++	ar9003_mci_2g5g_changed(ah, IS_CHAN_2GHZ(chan));
++
++	if (mci_hw->bt_state != MCI_BT_CAL_START)
++		return false;
++
++	ath_dbg(common, MCI, "MCI stop rx for BT CAL\n");
++
++	mci_hw->bt_state = MCI_BT_CAL;
++
++	/*
++	 * MCI FIX: disable mci interrupt here. This is to avoid
++	 * SW_MSG_DONE or RX_MSG bits to trigger MCI_INT and
++	 * lead to mci_intr reentry.
++	 */
++
++	ar9003_mci_disable_interrupt(ah);
++
++	ath_dbg(common, MCI, "send WLAN_CAL_GRANT\n");
++
++	MCI_GPM_SET_CAL_TYPE(payload, MCI_GPM_WLAN_CAL_GRANT);
++	ar9003_mci_send_message(ah, MCI_GPM, 0, payload,
++				16, true, false);
++
++	ath_dbg(common, MCI, "\nMCI BT is calibrating\n");
++
++	/* Wait BT calibration to be completed for 25ms */
++
++	if (ar9003_mci_wait_for_gpm(ah, MCI_GPM_BT_CAL_DONE,
++				    0, 25000))
++		ath_dbg(common, MCI,
++			"MCI got BT_CAL_DONE\n");
++	else
++		ath_dbg(common, MCI,
++			"MCI ### BT cal takes to long, force bt_state to be bt_awake\n");
++
++	mci_hw->bt_state = MCI_BT_AWAKE;
++	/* MCI FIX: enable mci interrupt here */
++	ar9003_mci_enable_interrupt(ah);
++
++	return true;
++}
++
++int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
++			 struct ath9k_hw_cal_data *caldata)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
++
++	if (!mci_hw->ready)
++		return 0;
++
++	if (!IS_CHAN_2GHZ(chan) || (mci_hw->bt_state != MCI_BT_SLEEP))
++		goto exit;
++
++	if (ar9003_mci_check_int(ah, AR_MCI_INTERRUPT_RX_MSG_REMOTE_RESET) ||
++	    ar9003_mci_check_int(ah, AR_MCI_INTERRUPT_RX_MSG_REQ_WAKE)) {
++
++		/*
++		 * BT is sleeping. Check if BT wakes up during
++		 * WLAN calibration. If BT wakes up during
++		 * WLAN calibration, need to go through all
++		 * message exchanges again and recal.
++		 */
++
++		ath_dbg(common, MCI,
++			"MCI BT wakes up during WLAN calibration\n");
++
++		REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_RAW,
++			  AR_MCI_INTERRUPT_RX_MSG_REMOTE_RESET |
++			  AR_MCI_INTERRUPT_RX_MSG_REQ_WAKE);
++
++		ath_dbg(common, MCI, "MCI send REMOTE_RESET\n");
++
++		ar9003_mci_remote_reset(ah, true);
++		ar9003_mci_send_sys_waking(ah, true);
++		udelay(1);
++
++		if (IS_CHAN_2GHZ(chan))
++			ar9003_mci_send_lna_transfer(ah, true);
++
++		mci_hw->bt_state = MCI_BT_AWAKE;
++
++		ath_dbg(common, MCI, "MCI re-cal\n");
++
++		if (caldata) {
++			caldata->done_txiqcal_once = false;
++			caldata->done_txclcal_once = false;
++			caldata->rtt_hist.num_readings = 0;
++		}
++
++		if (!ath9k_hw_init_cal(ah, chan))
++			return -EIO;
++
++	}
++exit:
++	ar9003_mci_enable_interrupt(ah);
++	return 0;
++}
++
+ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 		      bool is_full_sleep)
+ {
+@@ -696,6 +822,22 @@ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 		ar9003_mci_enable_interrupt(ah);
+ }
+ 
++void ar9003_mci_stop_bt(struct ath_hw *ah, bool save_fullsleep)
++{
++	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
++
++	ar9003_mci_disable_interrupt(ah);
++
++	if (mci_hw->ready && !save_fullsleep) {
++		ar9003_mci_mute_bt(ah);
++		udelay(20);
++		REG_WRITE(ah, AR_BTCOEX_CTRL, 0);
++	}
++
++	mci_hw->bt_state = MCI_BT_SLEEP;
++	mci_hw->ready = false;
++}
++
+ void ar9003_mci_mute_bt(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 406ffd0..475e4ca 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1518,61 +1518,22 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		   struct ath9k_hw_cal_data *caldata, bool bChannelChange)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
+ 	u32 saveLedState;
+ 	struct ath9k_channel *curchan = ah->curchan;
+ 	u32 saveDefAntenna;
+ 	u32 macStaId1;
+ 	u64 tsf = 0;
+ 	int i, r;
+-	bool allow_fbs = false;
++	bool allow_fbs = false, start_mci_reset = false;
+ 	bool mci = !!(ah->caps.hw_caps & ATH9K_HW_CAP_MCI);
+ 	bool save_fullsleep = ah->chip_fullsleep;
+ 
+ 	if (mci) {
+-
+-		ar9003_mci_2g5g_changed(ah, IS_CHAN_2GHZ(chan));
+-
+-		if (mci_hw->bt_state == MCI_BT_CAL_START) {
+-			u32 payload[4] = {0, 0, 0, 0};
+-
+-			ath_dbg(common, MCI, "MCI stop rx for BT CAL\n");
+-
+-			mci_hw->bt_state = MCI_BT_CAL;
+-
+-			/*
+-			 * MCI FIX: disable mci interrupt here. This is to avoid
+-			 * SW_MSG_DONE or RX_MSG bits to trigger MCI_INT and
+-			 * lead to mci_intr reentry.
+-			 */
+-
+-			ar9003_mci_disable_interrupt(ah);
+-
+-			ath_dbg(common, MCI, "send WLAN_CAL_GRANT\n");
+-			MCI_GPM_SET_CAL_TYPE(payload, MCI_GPM_WLAN_CAL_GRANT);
+-			ar9003_mci_send_message(ah, MCI_GPM, 0, payload,
+-						16, true, false);
+-
+-			ath_dbg(common, MCI, "\nMCI BT is calibrating\n");
+-
+-			/* Wait BT calibration to be completed for 25ms */
+-
+-			if (ar9003_mci_wait_for_gpm(ah, MCI_GPM_BT_CAL_DONE,
+-								  0, 25000))
+-				ath_dbg(common, MCI,
+-					"MCI got BT_CAL_DONE\n");
+-			else
+-				ath_dbg(common, MCI,
+-					"MCI ### BT cal takes to long, force bt_state to be bt_awake\n");
+-			mci_hw->bt_state = MCI_BT_AWAKE;
+-			/* MCI FIX: enable mci interrupt here */
+-			ar9003_mci_enable_interrupt(ah);
+-
+-			return true;
+-		}
++		start_mci_reset = ar9003_mci_start_reset(ah, chan);
++		if (start_mci_reset)
++			return 0;
+ 	}
+ 
+-
+ 	if (!ath9k_hw_setpower(ah, ATH9K_PM_AWAKE))
+ 		return -EIO;
+ 
+@@ -1609,7 +1570,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		if (ath9k_hw_channel_change(ah, chan)) {
+ 			ath9k_hw_loadnf(ah, ah->curchan);
+ 			ath9k_hw_start_nfcal(ah, true);
+-			if (mci && mci_hw->ready)
++			if (mci && ar9003_mci_is_ready(ah))
+ 				ar9003_mci_2g5g_switch(ah, true);
+ 
+ 			if (AR_SREV_9271(ah))
+@@ -1618,19 +1579,8 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 		}
+ 	}
+ 
+-	if (mci) {
+-		ar9003_mci_disable_interrupt(ah);
+-
+-		if (mci_hw->ready && !save_fullsleep) {
+-			ar9003_mci_mute_bt(ah);
+-			udelay(20);
+-			REG_WRITE(ah, AR_BTCOEX_CTRL, 0);
+-		}
+-
+-		mci_hw->bt_state = MCI_BT_SLEEP;
+-		mci_hw->ready = false;
+-	}
+-
++	if (mci)
++		ar9003_mci_stop_bt(ah, save_fullsleep);
+ 
+ 	saveDefAntenna = REG_READ(ah, AR_DEF_ANTENNA);
+ 	if (saveDefAntenna == 0)
+@@ -1807,53 +1757,8 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	ath9k_hw_loadnf(ah, chan);
+ 	ath9k_hw_start_nfcal(ah, true);
+ 
+-	if (mci && mci_hw->ready) {
+-
+-		if (IS_CHAN_2GHZ(chan) &&
+-		    (mci_hw->bt_state == MCI_BT_SLEEP)) {
+-
+-			if (ar9003_mci_check_int(ah,
+-			    AR_MCI_INTERRUPT_RX_MSG_REMOTE_RESET) ||
+-			    ar9003_mci_check_int(ah,
+-			    AR_MCI_INTERRUPT_RX_MSG_REQ_WAKE)) {
+-
+-				/*
+-				 * BT is sleeping. Check if BT wakes up during
+-				 * WLAN calibration. If BT wakes up during
+-				 * WLAN calibration, need to go through all
+-				 * message exchanges again and recal.
+-				 */
+-
+-				ath_dbg(common, MCI,
+-					"MCI BT wakes up during WLAN calibration\n");
+-
+-				REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_RAW,
+-					  AR_MCI_INTERRUPT_RX_MSG_REMOTE_RESET |
+-					  AR_MCI_INTERRUPT_RX_MSG_REQ_WAKE);
+-				ath_dbg(common, MCI, "MCI send REMOTE_RESET\n");
+-				ar9003_mci_remote_reset(ah, true);
+-				ar9003_mci_send_sys_waking(ah, true);
+-				udelay(1);
+-				if (IS_CHAN_2GHZ(chan))
+-					ar9003_mci_send_lna_transfer(ah, true);
+-
+-				mci_hw->bt_state = MCI_BT_AWAKE;
+-
+-				ath_dbg(common, MCI, "MCI re-cal\n");
+-
+-				if (caldata) {
+-					caldata->done_txiqcal_once = false;
+-					caldata->done_txclcal_once = false;
+-					caldata->rtt_hist.num_readings = 0;
+-				}
+-
+-				if (!ath9k_hw_init_cal(ah, chan))
+-					return -EIO;
+-
+-			}
+-		}
+-		ar9003_mci_enable_interrupt(ah);
+-	}
++	if (mci && ar9003_mci_end_reset(ah, chan, caldata))
++		return -EIO;
+ 
+ 	ENABLE_REGWRITE_BUFFER(ah);
+ 
+@@ -1898,20 +1803,8 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	    ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_NONE)
+ 		ath9k_hw_btcoex_enable(ah);
+ 
+-	if (mci && mci_hw->ready) {
+-		/*
+-		 * check BT state again to make
+-		 * sure it's not changed.
+-		 */
+-
+-		ar9003_mci_sync_bt_state(ah);
+-		ar9003_mci_2g5g_switch(ah, true);
+-
+-		if ((mci_hw->bt_state == MCI_BT_AWAKE) &&
+-				(mci_hw->query_bt == true)) {
+-			mci_hw->need_flush_btinfo = true;
+-		}
+-	}
++	if (mci)
++		ar9003_mci_check_bt(ah);
+ 
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		ar9003_hw_bb_watchdog_config(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index ff75254..0d108dc 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -1209,6 +1209,7 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan);
+ bool ar9003_mci_send_message(struct ath_hw *ah, u8 header, u32 flag,
+ 			     u32 *payload, u8 len, bool wait_done,
+ 			     bool check_bt);
++void ar9003_mci_stop_bt(struct ath_hw *ah, bool sava_fullsleep);
+ void ar9003_mci_mute_bt(struct ath_hw *ah);
+ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data);
+ void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable);
+@@ -1225,6 +1226,10 @@ void ar9003_mci_set_full_sleep(struct ath_hw *ah);
+ void ar9003_mci_disable_interrupt(struct ath_hw *ah);
+ void ar9003_mci_enable_interrupt(struct ath_hw *ah);
+ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done);
++void ar9003_mci_check_bt(struct ath_hw *ah);
++bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan);
++int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
++			 struct ath9k_hw_cal_data *caldata);
+ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 		      bool is_full_sleep);
+ bool ar9003_mci_check_int(struct ath_hw *ah, u32 ints);
+@@ -1236,6 +1241,11 @@ void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
+ 			      u32 *rx_msg_intr);
+ void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
+ 
++static inline bool ar9003_mci_is_ready(struct ath_hw *ah)
++{
++	return ah->btcoex_hw.mci.ready;
++}
++
+ #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+ static inline enum ath_btcoex_scheme
+ ath9k_hw_get_btcoex_scheme(struct ath_hw *ah)
 -- 
-------------------------------------------------------------
-Gary Thomas                 |  Consulting for the
-MLB Associates              |    Embedded world
-------------------------------------------------------------
+1.7.9.1
+
