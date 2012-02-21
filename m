@@ -1,30 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:35112 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755014Ab2BQX6Y (ORCPT
+Received: from shards.monkeyblade.net ([198.137.202.13]:59842 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753033Ab2BUTp0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Feb 2012 18:58:24 -0500
-Received: by iacb35 with SMTP id b35so5043340iac.19
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Feb 2012 15:58:24 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1329472141-28781-1-git-send-email-coelho@ti.com>
-References: <1329472141-28781-1-git-send-email-coelho@ti.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 17 Feb 2012 15:58:04 -0800
-Message-ID: <CAB=NE6U0brv=BQwB+KLZt0gO7g9FJTxLKymve4BxhnJ6hi0KWg@mail.gmail.com> (sfid-20120218_005838_962049_A04E26E8)
-Subject: Re: [PATCH 1/2] compat-wireless: update bluetooth patch to latest wireless-testing
-To: Luciano Coelho <coelho@ti.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 21 Feb 2012 14:45:26 -0500
+Date: Tue, 21 Feb 2012 14:44:17 -0500 (EST)
+Message-Id: <20120221.144417.1445117001833888214.davem@davemloft.net> (sfid-20120221_204553_575478_8DBEB811)
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-02-20
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20120221151435.GA19354@tuxdriver.com>
+References: <20120220203740.GD6740@tuxdriver.com>
+	<20120220.192324.498901675497866305.davem@davemloft.net>
+	<20120221151435.GA19354@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 17, 2012 at 1:49 AM, Luciano Coelho <coelho@ti.com> wrote:
-> There is a small change in the bt_sock_unregister() function in
-> af_bluetooth (an extra if) that cause the patch not to apply anymore.
->
-> Signed-off-by: Luciano Coelho <coelho@ti.com>
+From: "John W. Linville" <linville@tuxdriver.com>
+Date: Tue, 21 Feb 2012 10:14:36 -0500
 
-Applied and pushed, thanks!
+> On Mon, Feb 20, 2012 at 07:23:24PM -0500, David Miller wrote:
+>> From: "John W. Linville" <linville@tuxdriver.com>
+>> Date: Mon, 20 Feb 2012 15:37:40 -0500
+>> 
+>> > Here is another batch of fixes intended for 3.3.  Most of the fixes
+>> > this time are for Bluetooth.
+>> 
+>> Pulled, but please read the bluetooth changes more carefully in the
+>> future, there were a lot of coding style errors introduced this
+>> time around.
+> 
+> I pinged Johan about this, and he tells me that he spoke to Marcel
+> as well.  They were a bit unsure about the issue.  Is your concern
+> primarily about some excessive tabbing for indentation of parameters
+> and such?
 
-  Luis
+So you actually looked at the changes you pushed to me and you are
+telling me you personally can't find anything that looks like garbage?
+
+Really?  Do I really have to point out such obvious stuff like this?
+Are you serious?
+
+Look at ca0d6c7ece0e78268cd7c5c378d6b1b610625085 ("Bluetooth: Add
+missing QUIRK_NO_RESET test to hci_dev_do_close")
+
+You tell me what the heck you think of this thing.
+
+-	if (!test_bit(HCI_RAW, &hdev->flags)) {
++	if (!test_bit(HCI_RAW, &hdev->flags) &&
++				test_bit(HCI_QUIRK_NO_RESET, &hdev->quirks)) {
+
+That's disgusting, it jumps off the screen and says "Hello, I am ugly
+as sin".  How in the world can you miss something like this?  Four
+TABs on the second line?  Why?  I can't believe we even have to discuss
+something like this, seriously.
+
+Commit 6e1da683f79a22fafaada62d547138daaa9e3456 ("Bluetooth: l2cap_set_timer
+needs jiffies as timeout value"):
+
+-		__set_chan_timer(chan, L2CAP_DISC_REJ_TIMEOUT);
++		__set_chan_timer(chan,
++				msecs_to_jiffies(L2CAP_DISC_REJ_TIMEOUT));
+
+You can't see that mis-tabbed thing on the second new line?  Really?
+
+The list goes on and on, just walk through the bluetooth commits from
+the other day, stuff like this is all over the place.
