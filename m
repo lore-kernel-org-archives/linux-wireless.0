@@ -1,72 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:59842 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753033Ab2BUTp0 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57292 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753016Ab2BUTqz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Feb 2012 14:45:26 -0500
-Date: Tue, 21 Feb 2012 14:44:17 -0500 (EST)
-Message-Id: <20120221.144417.1445117001833888214.davem@davemloft.net> (sfid-20120221_204553_575478_8DBEB811)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-02-20
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120221151435.GA19354@tuxdriver.com>
-References: <20120220203740.GD6740@tuxdriver.com>
-	<20120220.192324.498901675497866305.davem@davemloft.net>
-	<20120221151435.GA19354@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 21 Feb 2012 14:46:55 -0500
+Date: Tue, 21 Feb 2012 14:37:44 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
+	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	arend@broadcom.com, m@bues.ch
+Subject: Re: [PATCH 00/11] ssb/bcma/BCM47XX: sprom fixes and extensions
+Message-ID: <20120221193744.GB19354@tuxdriver.com> (sfid-20120221_204659_120126_349E34AC)
+References: <1329676345-15856-1-git-send-email-hauke@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1329676345-15856-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Tue, 21 Feb 2012 10:14:36 -0500
+Has Ralf seen the arch/mips patches?
 
-> On Mon, Feb 20, 2012 at 07:23:24PM -0500, David Miller wrote:
->> From: "John W. Linville" <linville@tuxdriver.com>
->> Date: Mon, 20 Feb 2012 15:37:40 -0500
->> 
->> > Here is another batch of fixes intended for 3.3.  Most of the fixes
->> > this time are for Bluetooth.
->> 
->> Pulled, but please read the bluetooth changes more carefully in the
->> future, there were a lot of coding style errors introduced this
->> time around.
+On Sun, Feb 19, 2012 at 07:32:14PM +0100, Hauke Mehrtens wrote:
+> This patch series fixes some errors in the sprom structures and extends 
+> it to contain members for all sprom values for sprom version 1 to 9. 
+> This was done by looking into the open source part of the Broadcom SDK. 
+> This also adds a fallback sprom registration method to bcma.
+> It also contains some small fixes for the bcma47xx arch code and a 
+> rewrite of the code to provide the sprom from flash. It now also 
+> provides sprom from flash for devices using bcma to control the system 
+> bus.
 > 
-> I pinged Johan about this, and he tells me that he spoke to Marcel
-> as well.  They were a bit unsure about the issue.  Is your concern
-> primarily about some excessive tabbing for indentation of parameters
-> and such?
+> This patch series is based on wireles-testing. I think it is the best 
+> way to merge this through John's wireless tree as the changes in the 
+> sprom struct should be used in further patches extending the pci sprom 
+> parsing and the usage of struct sprom by the brcmsmac driver.
+> 
+> Hauke Mehrtens (11):
+>   ssb: sprom fix some sizes / signedness
+>   ssb: remove 5GHz antenna gain from sprom
+>   ssb: fix per path sprom vars
+>   ssb: add ccode
+>   ssb: add some missing sprom attributes
+>   bcma: export bcma_find_core
+>   bcma: add support for sprom not found on the device.
+>   MIPS: BCM47XX: return number of written bytes in nvram_getenv
+>   MIPS: BCM47XX: fix signature of nvram_parse_macaddr
+>   MIPS: BCM47XX: move and extend sprom parsing
+>   MIPS: BCM47XX: provide sprom to bcma bus
+> 
+>  arch/mips/bcm47xx/Makefile                   |    2 +-
+>  arch/mips/bcm47xx/nvram.c                    |    3 +-
+>  arch/mips/bcm47xx/setup.c                    |  188 ++-------
+>  arch/mips/bcm47xx/sprom.c                    |  618 ++++++++++++++++++++++++++
+>  arch/mips/include/asm/mach-bcm47xx/bcm47xx.h |    3 +
+>  arch/mips/include/asm/mach-bcm47xx/nvram.h   |    2 +-
+>  drivers/bcma/main.c                          |    3 +-
+>  drivers/bcma/sprom.c                         |   75 +++-
+>  drivers/net/wireless/b43legacy/phy.c         |    2 +-
+>  drivers/ssb/pci.c                            |   40 +--
+>  drivers/ssb/pcmcia.c                         |   12 +-
+>  drivers/ssb/sdio.c                           |   12 +-
+>  include/linux/bcma/bcma.h                    |    7 +
+>  include/linux/ssb/ssb.h                      |  102 ++++-
+>  14 files changed, 844 insertions(+), 225 deletions(-)
+>  create mode 100644 arch/mips/bcm47xx/sprom.c
+> 
+> -- 
+> 1.7.5.4
+> 
+> 
 
-So you actually looked at the changes you pushed to me and you are
-telling me you personally can't find anything that looks like garbage?
-
-Really?  Do I really have to point out such obvious stuff like this?
-Are you serious?
-
-Look at ca0d6c7ece0e78268cd7c5c378d6b1b610625085 ("Bluetooth: Add
-missing QUIRK_NO_RESET test to hci_dev_do_close")
-
-You tell me what the heck you think of this thing.
-
--	if (!test_bit(HCI_RAW, &hdev->flags)) {
-+	if (!test_bit(HCI_RAW, &hdev->flags) &&
-+				test_bit(HCI_QUIRK_NO_RESET, &hdev->quirks)) {
-
-That's disgusting, it jumps off the screen and says "Hello, I am ugly
-as sin".  How in the world can you miss something like this?  Four
-TABs on the second line?  Why?  I can't believe we even have to discuss
-something like this, seriously.
-
-Commit 6e1da683f79a22fafaada62d547138daaa9e3456 ("Bluetooth: l2cap_set_timer
-needs jiffies as timeout value"):
-
--		__set_chan_timer(chan, L2CAP_DISC_REJ_TIMEOUT);
-+		__set_chan_timer(chan,
-+				msecs_to_jiffies(L2CAP_DISC_REJ_TIMEOUT));
-
-You can't see that mis-tabbed thing on the second new line?  Really?
-
-The list goes on and on, just walk through the bluetooth commits from
-the other day, stuff like this is all over the place.
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
