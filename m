@@ -1,34 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44750 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:34409 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756150Ab2BGI0V (ORCPT
+	with ESMTP id S1753973Ab2BUNFL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 03:26:21 -0500
-Message-ID: <4F30E006.1000903@sipsolutions.net> (sfid-20120207_092645_353928_4D6F8F43)
-Date: Tue, 07 Feb 2012 09:25:42 +0100
+	Tue, 21 Feb 2012 08:05:11 -0500
+Subject: Re: [PATCH] mac80211: Fix the generation of PREQs in proactive
+ RANN mechanism of HWMP
 From: Johannes Berg <johannes@sipsolutions.net>
-MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC 3/4] iwlwifi: cleanup/fix memory barriers
-References: <1328544564-8696-1-git-send-email-sgruszka@redhat.com> <1328544564-8696-3-git-send-email-sgruszka@redhat.com> <4F2FFC25.8000705@sipsolutions.net> <20120207081115.GC2246@redhat.com>
-In-Reply-To: <20120207081115.GC2246@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, javier@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org
+In-Reply-To: <1329850383-31837-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120221_111128_325359_5A17F42A)
+References: <1329850383-31837-1-git-send-email-yeohchunyeow@gmail.com>
+	 (sfid-20120221_111128_325359_5A17F42A)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 21 Feb 2012 14:05:06 +0100
+Message-ID: <1329829506.3361.6.camel@jlt3.sipsolutions.net> (sfid-20120221_140516_491524_D9C8E35C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2/7/2012 9:11 AM, Stanislaw Gruszka wrote:
->> Technically, PCIe bridges can reorder writes as well, so we really
->> need to do a dummy read somewhere -- we were discussing this
->> internally recently as well.
->
-> PCIe can reorder writes only if they come from different CPUs,
-> good examples are in "LOCKS VS I/O ACCESSES" in
-> Documentation/memory-barriers.txt
+On Wed, 2012-02-22 at 02:53 +0800, Chun-Yeow Yeoh wrote:
 
-Good point, I was confusing this and write posting. Don't think we have 
-an issue with write posting here so we should be OK.
+> +++ b/net/mac80211/mesh_hwmp.c
+> @@ -590,12 +590,22 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+>  		flags = PREQ_IE_FLAGS(preq_elem);
+>  		preq_id = PREQ_IE_PREQ_ID(preq_elem);
+>  		hopcount = PREQ_IE_HOPCOUNT(preq_elem) + 1;
+> +		if (mpath && mpath->is_root) {
+> +			mesh_path_sel_frame_tx(MPATH_PREQ, flags, orig_addr,
+> +				cpu_to_le32(orig_sn), target_flags, target_addr,
+> +				cpu_to_le32(target_sn), mpath->rann_snd_addr,
+> +				hopcount, ttl, cpu_to_le32(lifetime),
+> +				cpu_to_le32(metric), cpu_to_le32(preq_id),
+> +				sdata);
+> +			goto endpreq;
+> +		}
+>  		mesh_path_sel_frame_tx(MPATH_PREQ, flags, orig_addr,
+>  				cpu_to_le32(orig_sn), target_flags, target_addr,
+>  				cpu_to_le32(target_sn), broadcast_addr,
+>  				hopcount, ttl, cpu_to_le32(lifetime),
+>  				cpu_to_le32(metric), cpu_to_le32(preq_id),
+>  				sdata);
+> +endpreq:
+
+maybe "else {..." instead of the goto?
 
 johannes
+
