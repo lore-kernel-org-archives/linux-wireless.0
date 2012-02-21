@@ -1,47 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49116 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756108Ab2BBVB3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 16:01:29 -0500
-Date: Thu, 2 Feb 2012 15:52:27 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Eliad Peller <eliad@wizery.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 00/11] station management & auth/assoc redesign
-Message-ID: <20120202205227.GC2568@tuxdriver.com> (sfid-20120202_220132_752934_345DBCDB)
-References: <20120120125516.000124996@sipsolutions.net>
- <CAB3XZEdjn3nk8_pnb6ZaW7CbFXgJg44bkVykx8m5iHY=t+vnqA@mail.gmail.com>
- <4F2AA822.2040303@sipsolutions.net>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:55950 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753424Ab2BUUiS convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Feb 2012 15:38:18 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F2AA822.2040303@sipsolutions.net>
+In-Reply-To: <20120221.144417.1445117001833888214.davem@davemloft.net>
+References: <20120220203740.GD6740@tuxdriver.com>
+	<20120220.192324.498901675497866305.davem@davemloft.net>
+	<20120221151435.GA19354@tuxdriver.com>
+	<20120221.144417.1445117001833888214.davem@davemloft.net>
+Date: Tue, 21 Feb 2012 22:38:16 +0200
+Message-ID: <CAMXE1-qB8_5oGey2=Ypa5BitZnye3YqdM=yB8oKCGLvoZu_8HQ@mail.gmail.com> (sfid-20120221_213853_347794_101AC995)
+Subject: Re: pull request: wireless 2012-02-20
+From: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>
+To: David Miller <davem@davemloft.net>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 02, 2012 at 07:13:38AM -0800, Johannes Berg wrote:
-> On 2/1/2012 11:45 PM, Eliad Peller wrote:
-> >On Fri, Jan 20, 2012 at 2:55 PM, Johannes Berg
-> ><johannes@sipsolutions.net>  wrote:
-> >>This is the combination series of the station management
-> >>and auth/assoc redesign patches.
-> >>
-> >>Together, they give drivers more flexibility as to when
-> >>to add the station entry to the device for connections.
-> >>The auth/assoc redesign also simplifies the connection
-> >>establishment process.
-> >>
-> >is this patchset going to get applied soon?
-> >(no rush, i just noticed that newer patches were already applied)
-> 
-> I haven't kept track, and I have no idea why it wouldn't be?
+Hi David,
 
-The patches didn't apply.  I haven't taken the time yet to work it out.
+On Tue, Feb 21, 2012 at 9:44 PM, David Miller <davem@davemloft.net> wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Tue, 21 Feb 2012 10:14:36 -0500
+>
+>> On Mon, Feb 20, 2012 at 07:23:24PM -0500, David Miller wrote:
+>>> From: "John W. Linville" <linville@tuxdriver.com>
+>>> Date: Mon, 20 Feb 2012 15:37:40 -0500
+>>>
+>>> > Here is another batch of fixes intended for 3.3.  Most of the fixes
+>>> > this time are for Bluetooth.
+>>>
+>>> Pulled, but please read the bluetooth changes more carefully in the
+>>> future, there were a lot of coding style errors introduced this
+>>> time around.
+>>
+>> I pinged Johan about this, and he tells me that he spoke to Marcel
+>> as well.  They were a bit unsure about the issue.  Is your concern
+>> primarily about some excessive tabbing for indentation of parameters
+>> and such?
+>
+> So you actually looked at the changes you pushed to me and you are
+> telling me you personally can't find anything that looks like garbage?
+>
+> Really?  Do I really have to point out such obvious stuff like this?
+> Are you serious?
+>
+> Look at ca0d6c7ece0e78268cd7c5c378d6b1b610625085 ("Bluetooth: Add
+> missing QUIRK_NO_RESET test to hci_dev_do_close")
+>
+> You tell me what the heck you think of this thing.
+>
+> -       if (!test_bit(HCI_RAW, &hdev->flags)) {
+> +       if (!test_bit(HCI_RAW, &hdev->flags) &&
+> +                               test_bit(HCI_QUIRK_NO_RESET, &hdev->quirks)) {
+>
+> That's disgusting, it jumps off the screen and says "Hello, I am ugly
+> as sin".  How in the world can you miss something like this?  Four
+> TABs on the second line?  Why?  I can't believe we even have to discuss
+> something like this, seriously.
 
-If you would like to repost a patchset that applies cleanly on top
-of the current base, that would probably speed it up. :-)
+Sorry did we understand wrong text of Linux coding style? Or do we need
+right interpretation of it?
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+http://www.kernel.org/doc/Documentation/CodingStyle
+
+Statements longer than 80 columns will be broken into sensible chunks.
+Descendants are always substantially shorter than the parent and are placed
+substantially to the right. The same applies to function headers with a long
+argument list. Long strings are as well broken into shorter strings. The
+only exception to this is where exceeding 80 columns significantly increases
+readability and does not hide information.
+
+void fun(int a, int b, int c)
+{
+	if (condition)
+		printk(KERN_WARNING "Warning this is a long printk with "
+						"3 parameters a: %u b: %u "
+						"c: %u \n", a, b, c);
+	else
+		next_statement;
+}
+
+>
+> Commit 6e1da683f79a22fafaada62d547138daaa9e3456 ("Bluetooth: l2cap_set_timer
+> needs jiffies as timeout value"):
+>
+> -               __set_chan_timer(chan, L2CAP_DISC_REJ_TIMEOUT);
+> +               __set_chan_timer(chan,
+> +                               msecs_to_jiffies(L2CAP_DISC_REJ_TIMEOUT));
+>
+> You can't see that mis-tabbed thing on the second new line?  Really?
+
+Are those lines longer then 80 characters?
+Otherwise same applies here.
+
+Regards,
+Andrei
