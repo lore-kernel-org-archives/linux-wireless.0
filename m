@@ -1,55 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from i118-21-156-233.s30.a048.ap.plala.or.jp ([118.21.156.233]:37563
-	"EHLO rinabert.homeip.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754281Ab2BIPaP (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:10366 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753083Ab2BUOSf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 10:30:15 -0500
-From: Masanari Iida <standby24x7@gmail.com>
-To: dsd@gentoo.org, kune@deine-taler.de, linux-wireless@vger.kernel.org
-Cc: standby24x7@gmail.com, trivial@kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] [trivial] zd1211rw: Fix typo in zd_usb.c and zd_mac.c
-Date: Fri, 10 Feb 2012 00:29:32 +0900
-Message-Id: <1328801372-2532-1-git-send-email-standby24x7@gmail.com> (sfid-20120209_163035_248669_E1BFEC39)
+	Tue, 21 Feb 2012 09:18:35 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20291.42915.691523.481193@gargle.gargle.HOWL> (sfid-20120221_151838_808128_01DA9CBA)
+Date: Tue, 21 Feb 2012 19:48:11 +0530
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: Re: [RFC/WIP 16/22] ath9k_hw: Use CONFIG_ATH9K_BTCOEX_SUPPORT
+In-Reply-To: <CAGRGNgVNRR=KRXrjYFSisQisd97gGPOxy4GE0iRipk7ZCLDQOA@mail.gmail.com>
+References: <20291.25241.5396.839366@gargle.gargle.HOWL>
+	<CAGRGNgVNRR=KRXrjYFSisQisd97gGPOxy4GE0iRipk7ZCLDQOA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct spelling "reseting" to "resetting" in
-drivers/net/wireless/zd1211rw/zd_usb.c
-drivers/net/wireless/zd1211rw/zd_mac.c
+Julian Calaby wrote:
+> If I recall correctly, the recommended form here is to create a inline
+> function that returns false, rather than the #define - this way the
+> type checking of the function's arguments still happens when
+> CONFIG_ATH9K_BTCOEX_SUPPORT is disabled.
 
-Signed-off-by: Masanari Iida <standby24x7@gmail.com>
----
- drivers/net/wireless/zd1211rw/zd_mac.c |    2 +-
- drivers/net/wireless/zd1211rw/zd_usb.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Right, that would be more elegant.
 
-diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-index 0a70149..a8370eb 100644
---- a/drivers/net/wireless/zd1211rw/zd_mac.c
-+++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-@@ -846,7 +846,7 @@ reset_device:
- 
- 	/* semaphore stuck, reset device to avoid fw freeze later */
- 	dev_warn(zd_mac_dev(mac), "CR_BCN_FIFO_SEMAPHORE stuck, "
--				  "reseting device...");
-+				  "resetting device...");
- 	usb_queue_reset_device(mac->chip.usb.intf);
- 
- 	return r;
-diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
-index 785bdbe..f766b3e 100644
---- a/drivers/net/wireless/zd1211rw/zd_usb.c
-+++ b/drivers/net/wireless/zd1211rw/zd_usb.c
-@@ -1104,7 +1104,7 @@ static void zd_tx_watchdog_handler(struct work_struct *work)
- 		goto out;
- 
- 	/* TX halted, try reset */
--	dev_warn(zd_usb_dev(usb), "TX-stall detected, reseting device...");
-+	dev_warn(zd_usb_dev(usb), "TX-stall detected, resetting device...");
- 
- 	usb_queue_reset_device(usb->intf);
- 
--- 
-1.7.6.5
+> You've done this a couple of other times in this patch too.
 
+I'll fix them in the next iteration, thanks for the review.
+
+Sujith
