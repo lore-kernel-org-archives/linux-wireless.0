@@ -1,105 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:51128 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755825Ab2BHRk6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 12:40:58 -0500
-Message-ID: <4F32B3A5.5020903@openwrt.org> (sfid-20120208_184102_398868_40FBAA1E)
-Date: Wed, 08 Feb 2012 18:40:53 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-ee0-f74.google.com ([74.125.83.74]:49883 "EHLO
+	mail-ee0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750733Ab2BUGJf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Feb 2012 01:09:35 -0500
+Received: by eekb15 with SMTP id b15so220983eek.1
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Feb 2012 22:09:33 -0800 (PST)
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] mac80211: minstrel_ht: fix NULL pointer dereference
- during auth/assoc
-References: <1328705077-31360-1-git-send-email-arend@broadcom.com> <4F329DE5.20408@openwrt.org> <4F32A263.5050909@broadcom.com> <4F32AB79.9040307@openwrt.org> <4F32B111.8020006@openwrt.org> <4F32B251.8090101@broadcom.com>
-In-Reply-To: <4F32B251.8090101@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from glenhelen.mtv.corp.google.com (glenhelen.mtv.corp.google.com [172.22.72.223])
+	by hpza10.eem.corp.google.com (Postfix) with ESMTP id 458A120004E
+	for <linux-wireless@vger.kernel.org>; Mon, 20 Feb 2012 22:09:33 -0800 (PST)
+From: Paul Stewart <pstew@chromium.org>
+Date: Mon, 20 Feb 2012 21:25:54 -0800
+Subject: [RFC] mac80211: Don't let regulatory make us deaf
+To: linux-wireless@vger.kernel.org
+Message-Id: <20120221060932.8A38C20517@glenhelen.mtv.corp.google.com> (sfid-20120221_070938_821553_FF9DC9D4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-02-08 6:35 PM, Arend van Spriel wrote:
-> On 02/08/2012 06:29 PM, Felix Fietkau wrote:
->> On 2012-02-08 6:06 PM, Felix Fietkau wrote:
->>> On 2012-02-08 5:27 PM, Arend van Spriel wrote:
->>>> On 02/08/2012 05:08 PM, Felix Fietkau wrote:
->>>>> On 2012-02-08 1:44 PM, Arend van Spriel wrote:
->>>>>> This patch fixes the following NULL pointer dereference:
->>>>>>
->>>>>>> I rerun the test on a kernel with some more lock checking and got lucky.
->>>>>>>
->>>>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512283] wlan0: authenticate
->>>>>>> with 98:fc:11:8e:94:57
->>>>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512515] wlan0: send auth to
->>>>>>> 98:fc:11:8e:94:57 (try 1/3)
->>>>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514184] BUG: unable to handle
->>>>>>> kernel NULL pointer dereference at 00000004
->>>>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514233] IP: [<f8648f08>]
->>>>>>> minstrel_tx_status+0x48/0xe0 [mac80211]
->>>>>>
->>>>>> static inline int
->>>>>> rix_to_ndx(struct minstrel_sta_info *mi, int rix)
->>>>>> {
->>>>>>         int i = rix;
->>>>>>         for (i = rix; i >= 0; i--)
->>>>>>                 if (mi->r[i].rix == rix)
->>>>>>   48:   3b 58 04                cmp    0x4(%eax),%ebx
->>>>>>   4b:   74 4b                   je     98 <minstrel_tx_status+0x98>
->>>>>>   4d:   83 c2 01                add    $0x1,%edx
->>>>>>
->>>>>> It fails because of mi->r[i] being a NULL pointer. It is allocated in
->>>>>> minstel_alloc_sta, but minstrel_ht_alloc_sta does not call that function.
->>>>>>
->>>>>> struct minstrel_ht_sta_priv holds a union with struct minstrel_ht_sta and
->>>>>> struct minstrel_sta_info. During authenticate the bool is_ht is false so
->>>>>> minstrel_ht_tx_status calls minstrel_tx_status, but minstrel_sta_info::r
->>>>>> is not set until rate_init which is after assoc.
->>>>> I'm not sure this is the right fix. If I understand the issue correctly,
->>>>> mi->r is only NULL because .rate_init has not been called yet, which is
->>>>> a bug that other rate control modules might trip over as well, maybe in
->>>>> more subtle ways. If this is the case, then I believe this bug should be
->>>>> fixed in mac80211 instead.
->>>>>
->>>>> Maybe it would even be a good idea to set a flag after calling
->>>>> rate_control_rate_init, and calling WARN_ON or even BUG_ON when doing tx
->>>>> before that.
->>>>>
->>>>> - Felix
->>>>>
->>>>
->>>> Hi Felix,
->>>>
->>>> I am not sure I can agree. minstrel_ht allocates the struct
->>>> minstrel_ht_sta_priv initializing is_ht to false thereby choosing a
->>>> default and zero'ing the legacy field. When setting is_ht to false
->>>> consequently the contents of the legacy field should be properly set as
->>>> is done in minstrel_ht_update_caps (at use_legacy label).
->>> Right, minstrel_ht_update_caps initializes that field, and it's always
->>> called from .rate_init.
->>>
->>> While the non-HT minstrel initializes that field earlier (because it is
->>> not stored anywhere else), it still also assumes that it isn't asked to
->>> do tx until .rate_init is called.
->>>
->>> It doesn't matter whether it crashes in non-HT minstrel or not, the main
->>> issue is that assumptions of both minstrel and minstrel_ht (and possibly
->>> other rate control implementations) are being violated by mac80211.
->>>
->>> Before we can address that problem, we need to decide whether we want to
->>> change the code to no longer require .rate_init before tx (which I think
->>> is a bad idea, since there's no list of supported rates available yet at
->>> that point in time), or if we change mac80211 to no longer violate those
->>> assumptions. In either case, this patch is insufficient.
->> Actually, I took a quick look at the code and it seems to be easier
->> than I thought. mac80211 sets a flag after rate_control_rate_init
->> already, only the tx status path is lacking a check for it. This simple
->> patch should take care of it, please test:
->> 
-> 
-> I will test it. So basically we don't want to do rate control for
-> management frames like AUTH and ASSOC?
-Right. That's already handled like this by the current code, only the tx
-status path was left out (probably accidentally).
+When regulatory information changes our HT behavior (e.g,
+when we get a country code from the AP we have just associated
+with), we should use this information to change the power with
+which we transmit, and what channels we transmit.  Sometimes
+the channel parameters we derive from regulatory information
+contradicts the parameters we used in association.  For example,
+we could have associated specifying HT40, but the regulatory
+rules we apply may forbid HT40 operation.
 
-- Felix
+In the situation above, we should reconfigure ourselves to
+transmit in HT20 only, however it makes no sense for us to
+disable receive in HT40, since if we associated with these
+parameters, the AP has every reason to expect we can and
+will receive packets this way.  The code in mac80211 does
+not have the capability of sending the appropriate action
+frames to signal a change in HT behaviour so the AP has
+no clue we can no longer receive frames encoded this way.
+In some broken AP implementations, this can leave us
+effectively deaf if the AP never retries in lower HT rates.
+
+This change breaks up the channel_type parameter in the
+ieee80211_enable_ht function into a separate receive and
+transmit part.  It honors the channel flags set by regulatory
+in order to configure the rate control algorithm, but uses
+the capability flags to configure the channel on the radio,
+since these were used in association to set the AP's transmit
+rate.
+
+Signed-off-by: Paul Stewart <pstew@chromium.org>
+---
+ net/mac80211/mlme.c |   30 +++++++++++++++++++-----------
+ 1 files changed, 19 insertions(+), 11 deletions(-)
+
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 52133da..22a1bcd 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -187,7 +187,8 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+ 	u16 ht_opmode;
+ 	bool enable_ht = true;
+ 	enum nl80211_channel_type prev_chantype;
+-	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
++	enum nl80211_channel_type xmit_channel_type = NL80211_CHAN_NO_HT;
++	enum nl80211_channel_type recv_channel_type = NL80211_CHAN_NO_HT;
+ 
+ 	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
+ 
+@@ -220,7 +221,8 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (enable_ht) {
+-		channel_type = NL80211_CHAN_HT20;
++		xmit_channel_type = NL80211_CHAN_HT20;
++		recv_channel_type = NL80211_CHAN_HT20;
+ 
+ 		if (!(ap_ht_cap_flags & IEEE80211_HT_CAP_40MHZ_INTOLERANT) &&
+ 		    !ieee80111_cfg_override_disables_ht40(sdata) &&
+@@ -228,26 +230,32 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+ 		    (hti->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
+ 			switch(hti->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
+ 			case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
++				recv_channel_type = NL80211_CHAN_HT40PLUS;
+ 				if (!(local->hw.conf.channel->flags &
+ 				    IEEE80211_CHAN_NO_HT40PLUS))
+-					channel_type = NL80211_CHAN_HT40PLUS;
++					xmit_channel_type =
++						NL80211_CHAN_HT40PLUS;
+ 				break;
+ 			case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
++				recv_channel_type = NL80211_CHAN_HT40MINUS;
+ 				if (!(local->hw.conf.channel->flags &
+ 				    IEEE80211_CHAN_NO_HT40MINUS))
+-					channel_type = NL80211_CHAN_HT40MINUS;
++					xmit_channel_type =
++						NL80211_CHAN_HT40MINUS;
+ 				break;
+ 			}
+ 		}
+ 	}
+ 
+ 	if (local->tmp_channel)
+-		local->tmp_channel_type = channel_type;
++		local->tmp_channel_type = recv_channel_type;
+ 
+-	if (!ieee80211_set_channel_type(local, sdata, channel_type)) {
++	if (!ieee80211_set_channel_type(local, sdata, recv_channel_type)) {
+ 		/* can only fail due to HT40+/- mismatch */
+-		channel_type = NL80211_CHAN_HT20;
+-		WARN_ON(!ieee80211_set_channel_type(local, sdata, channel_type));
++		xmit_channel_type = NL80211_CHAN_HT20;
++		recv_channel_type = NL80211_CHAN_HT20;
++		WARN_ON(!ieee80211_set_channel_type(local, sdata,
++						    recv_channel_type));
+ 	}
+ 
+ 	if (beacon_htcap_ie && (prev_chantype != channel_type)) {
+@@ -268,13 +276,13 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+ 	/* channel_type change automatically detected */
+ 	ieee80211_hw_config(local, 0);
+ 
+-	if (prev_chantype != channel_type) {
++	if (prev_chantype != xmit_channel_type) {
+ 		rcu_read_lock();
+ 		sta = sta_info_get(sdata, bssid);
+ 		if (sta)
+ 			rate_control_rate_update(local, sband, sta,
+ 						 IEEE80211_RC_HT_CHANGED,
+-						 channel_type);
++						 xmit_channel_type);
+ 		rcu_read_unlock();
+ 
+ 		if (beacon_htcap_ie)
+@@ -287,7 +295,7 @@ static u32 ieee80211_enable_ht(struct ieee80211_sub_if_data *sdata,
+ 	/* if bss configuration changed store the new one */
+ 	if (sdata->ht_opmode_valid != enable_ht ||
+ 	    sdata->vif.bss_conf.ht_operation_mode != ht_opmode ||
+-	    prev_chantype != channel_type) {
++	    prev_chantype != recv_channel_type) {
+ 		changed |= BSS_CHANGED_HT;
+ 		sdata->vif.bss_conf.ht_operation_mode = ht_opmode;
+ 		sdata->ht_opmode_valid = enable_ht;
+-- 
+1.7.7.3
+
