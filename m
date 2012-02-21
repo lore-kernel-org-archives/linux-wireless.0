@@ -1,120 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:46948 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752602Ab2BXCaY (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:56466 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753086Ab2BUJWV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 21:30:24 -0500
-Received: by pbcun15 with SMTP id un15so2095081pbc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 18:30:24 -0800 (PST)
+	Tue, 21 Feb 2012 04:22:21 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, Ashok Nagarajan <ashok@cozybit.com>
-Subject: [PATCH] {nl,cfg,mac}80211: Enable control quality monitoring for mesh
-Date: Thu, 23 Feb 2012 18:30:21 -0800
-Message-Id: <1330050621-8955-1-git-send-email-ashok@cozybit.com> (sfid-20120224_033027_978577_9073776C)
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20291.25137.666646.112510@gargle.gargle.HOWL> (sfid-20120221_102233_259763_96800DA7)
+Date: Tue, 21 Feb 2012 14:51:53 +0530
+To: <linux-wireless@vger.kernel.org>
+CC: <ath9k-devel@lists.ath9k.org>
+Subject: [RFC/WIP 00/22] ath9k/ath9k_htc BTCOEX cleanup
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mesh peer links are established only if average rssi of the peer
-candidate satisfies the threshold. This is not in 802.11s specification
-but was requested by David Fulgham, an open80211s user. This is a way to avoid
-marginal peer links with stations that are barely within range.
+This patch series cleans up the existing BTCOEX code in ath9k/ath9k_htc.
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- drivers/net/wireless/mac80211_hwsim.c |    1 +
- net/mac80211/cfg.c                    |    1 +
- net/mac80211/mesh_plink.c             |   22 +++++++++++++++++++++-
- net/wireless/nl80211.c                |    3 ++-
- 4 files changed, 25 insertions(+), 2 deletions(-)
+Proper abstraction is added and a facility (CONFIG_ATH9K_BTCOEX_SUPPORT)
+to optionally disable BTCOEX support at compile time is properly used.
+Both ath9k and ath9k_htc make use of the same config option.
+MCI, which is an AR9462-specific feature has been cleaned up a little,
+more needs to be done, though. The checks for MCI/BTCOEX which were
+present in various places have been removed since it makes the BT code
+a tad hard to read and makes adding support for future chips/profiles
+difficult.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 4b9e730..ca7d5a6 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -729,6 +729,7 @@ static int mac80211_hwsim_add_interface(struct ieee80211_hw *hw,
- 		    __func__, ieee80211_vif_type_p2p(vif),
- 		    vif->addr);
- 	hwsim_set_magic(vif);
-+	vif->driver_flags |= IEEE80211_VIF_SUPPORTS_CQM_RSSI;
- 	return 0;
- }
- 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index f7eb25a..d50258d 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1853,6 +1853,7 @@ static int ieee80211_set_cqm_rssi_config(struct wiphy *wiphy,
- 
- 	/* tell the driver upon association, unless already associated */
- 	if (sdata->u.mgd.associated &&
-+	    sdata->vif.type != NL80211_IFTYPE_STATION &&
- 	    sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI)
- 		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_CQM);
- 
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 8806e5e..6144f35 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -31,6 +31,17 @@
- #define dot11MeshHoldingTimeout(s) (s->u.mesh.mshcfg.dot11MeshHoldingTimeout)
- #define dot11MeshMaxPeerLinks(s) (s->u.mesh.mshcfg.dot11MeshMaxPeerLinks)
- 
-+/*
-+ * NOTE: Mesh peer links are established only if average rssi of the peer
-+ * candidate satisfies the threshold. sta_meets_rssi_treshold doesn't use
-+ * hysteresis as fluctuations around threshold have no adverse effects.
-+ */
-+
-+#define sta_meets_rssi_threshold(sta, sdata) \
-+		(sdata->vif.bss_conf.cqm_rssi_thold == 0 || \
-+		((s8) -ewma_read(&sta->avg_signal)) > \
-+		 sdata->vif.bss_conf.cqm_rssi_thold)
-+
- enum plink_event {
- 	PLINK_UNDEFINED,
- 	OPN_ACPT,
-@@ -301,7 +312,8 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
- 	if (mesh_peer_accepts_plinks(elems) &&
- 			sta->plink_state == NL80211_PLINK_LISTEN &&
- 			sdata->u.mesh.accepting_plinks &&
--			sdata->u.mesh.mshcfg.auto_open_plinks)
-+			sdata->u.mesh.mshcfg.auto_open_plinks &&
-+			sta_meets_rssi_threshold(sta, sdata))
- 		mesh_plink_open(sta);
- 
- 	rcu_read_unlock();
-@@ -531,6 +543,14 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		return;
- 	}
- 
-+	if (ftype == WLAN_SP_MESH_PEERING_OPEN &&
-+	    !sta_meets_rssi_threshold(sta, sdata)) {
-+		mpl_dbg("Mesh plink: %pM does not meet rssi threshold\n",
-+			sta->sta.addr);
-+		rcu_read_unlock();
-+		return;
-+	}
-+
- 	if (sta && !test_sta_flag(sta, WLAN_STA_AUTH)) {
- 		mpl_dbg("Mesh plink: Action frame from non-authed peer\n");
- 		rcu_read_unlock();
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 1998c36..6feff8c 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5796,7 +5796,8 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
- 		return -EOPNOTSUPP;
- 
- 	if (wdev->iftype != NL80211_IFTYPE_STATION &&
--	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)
-+	    wdev->iftype != NL80211_IFTYPE_P2P_CLIENT &&
-+	    wdev->iftype != NL80211_IFTYPE_MESH_POINT)
- 		return -EOPNOTSUPP;
- 
- 	return rdev->ops->set_cqm_rssi_config(wdev->wiphy, dev,
+Please review.
+
+Sujith
+
+Sujith Manoharan (22):
+  ath9k: Remove AR9462 v1.0 support
+  ath9k: Cleanup MCI init/deinit routines
+  ath9k: Initialize MCI params using a helper
+  ath9k: Move BTCOEX init/deinit functions to gpio.c
+  ath9k: Use proper start/stop routines for BTCOEX
+  ath9k: Process BTCOEX interrupts using a helper
+  ath9k: Calculate ampdu limit using a helper
+  ath9k: Use CONFIG_ATH9K_BTCOEX_SUPPORT
+  ath9k: Initialize BTCOEX scheme using a helper
+  ath9k_hw: Use a helper function to get MCI ISR
+  ath9k_hw: Handle MCI power state using a helper
+  ath9k_hw: Setup MCI calibration using a helper
+  ath9k_hw: Cleanup MCI bits from ath9k_hw_reset()
+  ath9k_hw: Cleanup MCI bits from hw.h
+  ath9k_hw: Cleanup MCI function declarations
+  ath9k_hw: Use CONFIG_ATH9K_BTCOEX_SUPPORT
+  ath9k_htc: Start/stop btcoex using a helper
+  ath9k_htc: Init BTCOEX inside htc_drv_gpio.c
+  ath9k_htc: Use CONFIG_ATH9K_BTCOEX_SUPPORT
+  ath9k: Remove ATH_BTCOEX_CFG_NONE checks
+  ath9k: Remove ATH9K_HW_CAP_MCI checks
+  ath9k: Modify ATH9K_BTCOEX_SUPPORT
+
+ drivers/net/wireless/ath/ath9k/Kconfig             |   16 +-
+ drivers/net/wireless/ath/ath9k/Makefile            |   10 +-
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c      |   42 +-
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c     |    4 -
+ drivers/net/wireless/ath/ath9k/ar9003_hw.c         |   88 +--
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c        |   30 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c        | 1096 +++++++++-------
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h        |  231 ++++
+ drivers/net/wireless/ath/ath9k/ar9003_phy.h        |    6 +-
+ .../net/wireless/ath/ath9k/ar9462_1p0_initvals.h   | 1439 --------------------
+ drivers/net/wireless/ath/ath9k/ath9k.h             |   35 +-
+ drivers/net/wireless/ath/ath9k/btcoex.c            |   77 +-
+ drivers/net/wireless/ath/ath9k/btcoex.h            |    4 +-
+ drivers/net/wireless/ath/ath9k/gpio.c              |  123 ++-
+ drivers/net/wireless/ath/ath9k/htc.h               |   21 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c      |   73 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c      |   32 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c      |   15 +-
+ drivers/net/wireless/ath/ath9k/hw.c                |  178 +---
+ drivers/net/wireless/ath/ath9k/hw.h                |  199 +---
+ drivers/net/wireless/ath/ath9k/init.c              |   67 +-
+ drivers/net/wireless/ath/ath9k/main.c              |   26 +-
+ drivers/net/wireless/ath/ath9k/mci.c               |   77 +-
+ drivers/net/wireless/ath/ath9k/mci.h               |    5 +-
+ drivers/net/wireless/ath/ath9k/xmit.c              |   19 +-
+ 25 files changed, 1231 insertions(+), 2682 deletions(-)
+ delete mode 100644 drivers/net/wireless/ath/ath9k/ar9462_1p0_initvals.h
+
 -- 
-1.7.0.4
+1.7.9.1
 
