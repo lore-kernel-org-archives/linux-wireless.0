@@ -1,45 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54627 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754175Ab2BVJqc (ORCPT
+Received: from thalia-smout.broadpark.no ([80.202.8.21]:36317 "EHLO
+	thalia-smout.broadpark.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752249Ab2BUVz6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 04:46:32 -0500
-Subject: RE: [PATCH] checkpatch: Add some --strict coding style checks
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: "Allan, Bruce W" <bruce.w.allan@intel.com>,
-	Joe Perches <joe@perches.com>,
-	David Miller <davem@davemloft.net>,
-	Andy Whitcroft <apw@shadowen.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	andrei.emeltchenko.news@gmail.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B6E77@saturn3.aculab.com> (sfid-20120222_103559_848738_672B22CE)
-References: <AE90C24D6B3A694183C094C60CF0A2F6026B6E77@saturn3.aculab.com>
-	 (sfid-20120222_103559_848738_672B22CE)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 22 Feb 2012 10:46:14 +0100
-Message-ID: <1329903974.4657.0.camel@jlt3.sipsolutions.net> (sfid-20120222_104704_126680_11DE8D6D)
-Mime-Version: 1.0
+	Tue, 21 Feb 2012 16:55:58 -0500
+MIME-version: 1.0
+Content-type: text/plain; CHARSET=US-ASCII
+Received: from ignis-smin.broadpark.no ([80.202.8.11])
+ by thalia-smout.broadpark.no
+ (Sun Java(tm) System Messaging Server 7u3-15.01 64bit (built Feb 12 2010))
+ with ESMTP id <0LZR00BTKGSZZ020@thalia-smout.broadpark.no> for
+ linux-wireless@vger.kernel.org; Tue, 21 Feb 2012 21:55:47 +0100 (CET)
+Received: from [192.168.1.10] ([80.202.101.84]) by ignis-smin.broadpark.no
+ (Sun Java(tm) System Messaging Server 7u3-15.01 64bit (built Feb 12 2010))
+ with ESMTP id <0LZR00872GSZVBD0@ignis-smin.broadpark.no> for
+ linux-wireless@vger.kernel.org; Tue, 21 Feb 2012 21:55:47 +0100 (CET)
+Message-id: <4F4404E9.3030404@bakke.com> (sfid-20120221_225602_061989_9E3103D0)
+Date: Tue, 21 Feb 2012 21:56:09 +0100
+From: DagB <dag@bakke.com>
+To: linux-wireless@vger.kernel.org
+Subject: brcmsmac features/TODO?
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-02-22 at 09:35 +0000, David Laight wrote:
-> > 	if (!(func_a(x) &&
-> > 		func_b(y)))
-> > 		baz();
-> 
-> Gah - that is horrid for the 'preferred style'.
-> A quick glance at the code puts both the func_b()
-> and baz() calls as inside the if.
 
-You forgot to read/quote the rest of Allan's email:
+Hi.
 
-> Assuming my stupid mailer will screw up the indentation above, the 'a'
-> in addr in the first example is meant to be immediately below the 'n'
-> in nr, and the two 'f's in func_* are meant to be vertically lined up
-> in the second example.
+Referring to:
+http://linuxwireless.org/en/users/Drivers/brcm80211
 
-johannes
+I was wondering if there is a roadmap/plan to implement 40MHz channels
+and powersave for the brcmsmac driver in the not too distant future.
 
+brcmsmac is by far the single most powerhungry device in my MBA, if
+powertop is to be trusted. Would be great to have that fixed. I guess
+enabling hw encryption will contribute positively in this regard as well.
+
+Not asking for hard commitments, just wondering if the Broadcom guys
+have a plan...
+
+Brett? Arend? Franky?
+
+
+Thanks,
+
+Dag B.
