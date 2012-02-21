@@ -1,34 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:36650 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757835Ab2B2LN0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 06:13:26 -0500
-Received: from aannecy-256-1-73-234.w90-10.abo.wanadoo.fr ([90.10.152.234] helo=[192.168.1.103])
-	by casper.infradead.org with esmtpsa (Exim 4.76 #1 (Red Hat Linux))
-	id 1S2hTJ-0002gq-Al
-	for linux-wireless@vger.kernel.org; Wed, 29 Feb 2012 11:13:25 +0000
-Subject: Re: [ANN] NFC daemon open sourced
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: linux-wireless@vger.kernel.org
-In-Reply-To: <1321533482.30184.6.camel@sortiz-mobl>
-References: <1321533482.30184.6.camel@sortiz-mobl>
+Received: from perches-mx.perches.com ([206.117.179.246]:47566 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752481Ab2BUVLS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Feb 2012 16:11:18 -0500
+Message-ID: <1329858675.5143.13.camel@joe2Laptop> (sfid-20120221_221138_177318_7CF4CAF5)
+Subject: Re: [PATCH] checkpatch: Add some --strict coding style checks
+From: Joe Perches <joe@perches.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: David Miller <davem@davemloft.net>,
+	Andy Whitcroft <apw@shadowen.org>,
+	andrei.emeltchenko.news@gmail.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Tue, 21 Feb 2012 13:11:15 -0800
+In-Reply-To: <20120221130917.e41491d4.akpm@linux-foundation.org>
+References: <20120221151435.GA19354@tuxdriver.com>
+	 <20120221.144417.1445117001833888214.davem@davemloft.net>
+	 <CAMXE1-qB8_5oGey2=Ypa5BitZnye3YqdM=yB8oKCGLvoZu_8HQ@mail.gmail.com>
+	 <20120221.154053.2103818562080068513.davem@davemloft.net>
+	 <1329857959.5143.11.camel@joe2Laptop>
+	 <20120221130917.e41491d4.akpm@linux-foundation.org>
 Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Feb 2012 12:20:56 +0100
-Message-ID: <1330514456.4428.1.camel@sortiz-mobl> (sfid-20120229_121332_239875_90A094AE)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2011-11-17 at 13:38 +0100, Samuel Ortiz wrote:
-> We should have our own neard development mailing list fairly soon, I'll
-> let you know when that happens.
-We finally have it. For those willing to subscribe, it's here:
+On Tue, 2012-02-21 at 13:09 -0800, Andrew Morton wrote:
+> Speaking of which, I just got this:
+> 
+> WARNING: %Ld/%Lu are not-standard C, use %lld/%llu
+> #142: FILE: fs/locks.c:2335:
+> +                       seq_printf(f, "Start-end:\t %Ld-EOF\n\n", fl->fl_start);
+> 
+> But %L saves a byte!  Why did we do this?  Don't you like puppies?
 
-https://lists.01.org/mailman/listinfo/linux-nfc
-
-Cheers,
-Samuel.
-
+Beats me and I prefer kittens.
 
