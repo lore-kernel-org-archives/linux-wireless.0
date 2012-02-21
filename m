@@ -1,44 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:53513 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755973Ab2BGPbB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 10:31:01 -0500
-Subject: Re: [RFC 4/4] iwlwifi: use writeb,writel,readl directly
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20120207082232.GD2246@redhat.com>
-References: <1328544564-8696-1-git-send-email-sgruszka@redhat.com>
-	 <1328544564-8696-4-git-send-email-sgruszka@redhat.com>
-	 <1328545972.14547.15.camel@wwguy-ubuntu> <20120207082232.GD2246@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 07 Feb 2012 06:22:48 -0800
-Message-ID: <1328624568.7290.52.camel@wwguy-huron> (sfid-20120207_163124_243672_D232338E)
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63446 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753047Ab2BUJWd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Feb 2012 04:22:33 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20291.25164.964886.579625@gargle.gargle.HOWL> (sfid-20120221_102240_088266_5F6F8585)
+Date: Tue, 21 Feb 2012 14:52:20 +0530
+To: <linux-wireless@vger.kernel.org>
+CC: <ath9k-devel@lists.ath9k.org>
+Subject: [RFC/WIP 03/22] ath9k: Initialize MCI params using a helper
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-02-07 at 09:22 +0100, Stanislaw Gruszka wrote:
-> On Mon, Feb 06, 2012 at 08:32:52AM -0800, wwguy wrote:
-> > I believe iwl driver were use readl/writel before switch to
-> > ioread32/iowrite32 (long time ago)
-> > 
-> > http://www.gossamer-threads.com/lists/linux/kernel/960145
-> >
-> > also, AFAIK, the readl/writel IO functions still works but their use in
-> > new code is discouraged.
-> I do not think so, we have tons of drivers that use readl/writel.
-> PCI express devices can not use port-based IO, they will be
-> incredible slow then.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/btcoex.c |   24 ++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/btcoex.h |    1 +
+ drivers/net/wireless/ath/ath9k/init.c   |   23 ++---------------------
+ 3 files changed, 27 insertions(+), 21 deletions(-)
 
-Agree
-
-> I think confusion come from a fact that iwlwifi use pci_ioremp() for
-> mapping registers, which can also maps port-based IO areas. Simply
-> changing that into pci_ioremap_bar(), and make driver depend on
-> CONFIG_HAS_IOMEM will remove that inconsistency.
-> 
-> Stanislaw 
-
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index a6712a9..6566952 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -152,6 +152,30 @@ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath9k_hw_btcoex_init_3wire);
+ 
++void ath9k_hw_btcoex_init_mci(struct ath_hw *ah)
++{
++	ah->btcoex_hw.mci.ready = false;
++	ah->btcoex_hw.mci.bt_state = 0;
++	ah->btcoex_hw.mci.bt_ver_major = 3;
++	ah->btcoex_hw.mci.bt_ver_minor = 0;
++	ah->btcoex_hw.mci.bt_version_known = false;
++	ah->btcoex_hw.mci.update_2g5g = true;
++	ah->btcoex_hw.mci.is_2g = true;
++	ah->btcoex_hw.mci.wlan_channels_update = false;
++	ah->btcoex_hw.mci.wlan_channels[0] = 0x00000000;
++	ah->btcoex_hw.mci.wlan_channels[1] = 0xffffffff;
++	ah->btcoex_hw.mci.wlan_channels[2] = 0xffffffff;
++	ah->btcoex_hw.mci.wlan_channels[3] = 0x7fffffff;
++	ah->btcoex_hw.mci.query_bt = true;
++	ah->btcoex_hw.mci.unhalt_bt_gpm = true;
++	ah->btcoex_hw.mci.halted_bt_gpm = false;
++	ah->btcoex_hw.mci.need_flush_btinfo = false;
++	ah->btcoex_hw.mci.wlan_cal_seq = 0;
++	ah->btcoex_hw.mci.wlan_cal_done = 0;
++	ah->btcoex_hw.mci.config = 0x2201;
++}
++EXPORT_SYMBOL(ath9k_hw_btcoex_init_mci);
++
+ static void ath9k_hw_btcoex_enable_2wire(struct ath_hw *ah)
+ {
+ 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+index 0cb7ce9..0cb15cd 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+@@ -99,6 +99,7 @@ struct ath_btcoex_hw {
+ 
+ void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah);
+ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah);
++void ath9k_hw_btcoex_init_mci(struct ath_hw *ah);
+ void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum);
+ void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
+ 				u32 bt_weight,
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 53a005d..a944fc9 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -449,27 +449,8 @@ static int ath9k_init_btcoex(struct ath_softc *sc)
+ 		if (r)
+ 			return r;
+ 
+-		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI) {
+-			ah->btcoex_hw.mci.ready = false;
+-			ah->btcoex_hw.mci.bt_state = 0;
+-			ah->btcoex_hw.mci.bt_ver_major = 3;
+-			ah->btcoex_hw.mci.bt_ver_minor = 0;
+-			ah->btcoex_hw.mci.bt_version_known = false;
+-			ah->btcoex_hw.mci.update_2g5g = true;
+-			ah->btcoex_hw.mci.is_2g = true;
+-			ah->btcoex_hw.mci.wlan_channels_update = false;
+-			ah->btcoex_hw.mci.wlan_channels[0] = 0x00000000;
+-			ah->btcoex_hw.mci.wlan_channels[1] = 0xffffffff;
+-			ah->btcoex_hw.mci.wlan_channels[2] = 0xffffffff;
+-			ah->btcoex_hw.mci.wlan_channels[3] = 0x7fffffff;
+-			ah->btcoex_hw.mci.query_bt = true;
+-			ah->btcoex_hw.mci.unhalt_bt_gpm = true;
+-			ah->btcoex_hw.mci.halted_bt_gpm = false;
+-			ah->btcoex_hw.mci.need_flush_btinfo = false;
+-			ah->btcoex_hw.mci.wlan_cal_seq = 0;
+-			ah->btcoex_hw.mci.wlan_cal_done = 0;
+-			ah->btcoex_hw.mci.config = 0x2201;
+-		}
++		ath9k_hw_btcoex_init_mci(ah);
++
+ 		break;
+ 	default:
+ 		WARN_ON(1);
+-- 
+1.7.9.1
 
