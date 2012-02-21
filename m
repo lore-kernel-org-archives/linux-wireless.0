@@ -1,136 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40612 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751994Ab2BOSqq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 13:46:46 -0500
-Date: Wed, 15 Feb 2012 13:30:48 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org, mcgrof@qca.qualcomm.com,
-	magnus.maatta@logica.com
-Subject: Re: [PATCH 3.3] ath9k_hw: prevent writes to const data on AR9160
-Message-ID: <20120215183047.GD4379@tuxdriver.com> (sfid-20120215_194649_560510_1FEEE27B)
-References: <1329330680-62602-1-git-send-email-nbd@openwrt.org>
+Received: from mga11.intel.com ([192.55.52.93]:38721 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752998Ab2BUWJQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Feb 2012 17:09:16 -0500
+From: "Allan, Bruce W" <bruce.w.allan@intel.com>
+To: Joe Perches <joe@perches.com>, David Miller <davem@davemloft.net>,
+	Andy Whitcroft <apw@shadowen.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+CC: "andrei.emeltchenko.news@gmail.com"
+	<andrei.emeltchenko.news@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] checkpatch: Add some --strict coding style checks
+Date: Tue, 21 Feb 2012 22:09:09 +0000
+Message-ID: <804857E1F29AAC47BF68C404FC60A18429B3EE@ORSMSX102.amr.corp.intel.com> (sfid-20120221_230920_780958_BE128270)
+References: <20120221151435.GA19354@tuxdriver.com>
+	 <20120221.144417.1445117001833888214.davem@davemloft.net>
+	 <CAMXE1-qB8_5oGey2=Ypa5BitZnye3YqdM=yB8oKCGLvoZu_8HQ@mail.gmail.com>
+	 <20120221.154053.2103818562080068513.davem@davemloft.net>
+ <1329857959.5143.11.camel@joe2Laptop>
+In-Reply-To: <1329857959.5143.11.camel@joe2Laptop>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1329330680-62602-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do you have a link to the reported crash?
-
-On Wed, Feb 15, 2012 at 07:31:20PM +0100, Felix Fietkau wrote:
-> Duplicate the data for iniAddac early on, to avoid having to do redundant
-> memcpy calls later. While we're at it, make AR5416 < v2.2 use the same
-> codepath. Fixes a reported crash on x86.
-> 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> Reported-by: Magnus M‰‰tt‰ <magnus.maatta@logica.com>
-> Cc: stable@vger.kernel.org
-> ---
->  drivers/net/wireless/ath/ath9k/ar5008_phy.c |   25 +------------------------
->  drivers/net/wireless/ath/ath9k/ar9002_hw.c  |   19 +++++++++++++++++++
->  drivers/net/wireless/ath/ath9k/hw.h         |    1 -
->  3 files changed, 20 insertions(+), 25 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-> index f901a17..86a891f 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-> @@ -489,8 +489,6 @@ static int ar5008_hw_rf_alloc_ext_banks(struct ath_hw *ah)
->  	ATH_ALLOC_BANK(ah->analogBank6Data, ah->iniBank6.ia_rows);
->  	ATH_ALLOC_BANK(ah->analogBank6TPCData, ah->iniBank6TPC.ia_rows);
->  	ATH_ALLOC_BANK(ah->analogBank7Data, ah->iniBank7.ia_rows);
-> -	ATH_ALLOC_BANK(ah->addac5416_21,
-> -		       ah->iniAddac.ia_rows * ah->iniAddac.ia_columns);
->  	ATH_ALLOC_BANK(ah->bank6Temp, ah->iniBank6.ia_rows);
->  
->  	return 0;
-> @@ -519,7 +517,6 @@ static void ar5008_hw_rf_free_ext_banks(struct ath_hw *ah)
->  	ATH_FREE_BANK(ah->analogBank6Data);
->  	ATH_FREE_BANK(ah->analogBank6TPCData);
->  	ATH_FREE_BANK(ah->analogBank7Data);
-> -	ATH_FREE_BANK(ah->addac5416_21);
->  	ATH_FREE_BANK(ah->bank6Temp);
->  
->  #undef ATH_FREE_BANK
-> @@ -805,27 +802,7 @@ static int ar5008_hw_process_ini(struct ath_hw *ah,
->  	if (ah->eep_ops->set_addac)
->  		ah->eep_ops->set_addac(ah, chan);
->  
-> -	if (AR_SREV_5416_22_OR_LATER(ah)) {
-> -		REG_WRITE_ARRAY(&ah->iniAddac, 1, regWrites);
-> -	} else {
-> -		struct ar5416IniArray temp;
-> -		u32 addacSize =
-> -			sizeof(u32) * ah->iniAddac.ia_rows *
-> -			ah->iniAddac.ia_columns;
-> -
-> -		/* For AR5416 2.0/2.1 */
-> -		memcpy(ah->addac5416_21,
-> -		       ah->iniAddac.ia_array, addacSize);
-> -
-> -		/* override CLKDRV value at [row, column] = [31, 1] */
-> -		(ah->addac5416_21)[31 * ah->iniAddac.ia_columns + 1] = 0;
-> -
-> -		temp.ia_array = ah->addac5416_21;
-> -		temp.ia_columns = ah->iniAddac.ia_columns;
-> -		temp.ia_rows = ah->iniAddac.ia_rows;
-> -		REG_WRITE_ARRAY(&temp, 1, regWrites);
-> -	}
-> -
-> +	REG_WRITE_ARRAY(&ah->iniAddac, 1, regWrites);
->  	REG_WRITE(ah, AR_PHY_ADC_SERIAL_CTL, AR_PHY_SEL_INTERNAL_ADDAC);
->  
->  	ENABLE_REGWRITE_BUFFER(ah);
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9002_hw.c b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-> index 11f192a..d190411 100644
-> --- a/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-> +++ b/drivers/net/wireless/ath/ath9k/ar9002_hw.c
-> @@ -180,6 +180,25 @@ static void ar9002_hw_init_mode_regs(struct ath_hw *ah)
->  		INIT_INI_ARRAY(&ah->iniAddac, ar5416Addac,
->  			       ARRAY_SIZE(ar5416Addac), 2);
->  	}
-> +
-> +	/* iniAddac needs to be modified for these chips */
-> +	if (AR_SREV_9160(ah) || !AR_SREV_5416_22_OR_LATER(ah)) {
-> +		struct ar5416IniArray *addac = &ah->iniAddac;
-> +		u32 size = sizeof(u32) * addac->ia_rows * addac->ia_columns;
-> +		u32 *data;
-> +
-> +		data = kmalloc(size, GFP_KERNEL);
-> +		if (!data)
-> +			return;
-> +
-> +		memcpy(data, addac->ia_array, size);
-> +		addac->ia_array = data;
-> +
-> +		if (!AR_SREV_5416_22_OR_LATER(ah)) {
-> +			/* override CLKDRV value */
-> +			INI_RA(addac, 31,1) = 0;
-> +		}
-> +	}
->  }
->  
->  /* Support for Japan ch.14 (2484) spread */
-> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-> index 6a29004..c8261d4 100644
-> --- a/drivers/net/wireless/ath/ath9k/hw.h
-> +++ b/drivers/net/wireless/ath/ath9k/hw.h
-> @@ -940,7 +940,6 @@ struct ath_hw {
->  	u32 *analogBank6Data;
->  	u32 *analogBank6TPCData;
->  	u32 *analogBank7Data;
-> -	u32 *addac5416_21;
->  	u32 *bank6Temp;
->  
->  	u8 txpower_limit;
-> -- 
-> 1.7.3.2
-> 
-> 
-
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1rZXJuZWwtb3duZXJA
+dmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgta2VybmVsLQ0KPiBvd25lckB2Z2VyLmtlcm5l
+bC5vcmddIE9uIEJlaGFsZiBPZiBKb2UgUGVyY2hlcw0KPiBTZW50OiBUdWVzZGF5LCBGZWJydWFy
+eSAyMSwgMjAxMiAxMjo1OSBQTQ0KPiBUbzogRGF2aWQgTWlsbGVyOyBBbmR5IFdoaXRjcm9mdDsg
+QW5kcmV3IE1vcnRvbg0KPiBDYzogYW5kcmVpLmVtZWx0Y2hlbmtvLm5ld3NAZ21haWwuY29tOyBs
+aW52aWxsZUB0dXhkcml2ZXIuY29tOyBsaW51eC0NCj4gd2lyZWxlc3NAdmdlci5rZXJuZWwub3Jn
+OyBuZXRkZXZAdmdlci5rZXJuZWwub3JnOyBsaW51eC0NCj4ga2VybmVsQHZnZXIua2VybmVsLm9y
+Zw0KPiBTdWJqZWN0OiBbUEFUQ0hdIGNoZWNrcGF0Y2g6IEFkZCBzb21lIC0tc3RyaWN0IGNvZGlu
+ZyBzdHlsZSBjaGVja3MNCj4gDQo+IEFyZ3VtZW50IGFsaWdubWVudCBhY3Jvc3MgbXVsdGlwbGUg
+bGluZXMgc2hvdWxkDQo+IG1hdGNoIHRoZSBvcGVuIHBhcmVudGhlc2lzLg0KPiANCj4gTG9naWNh
+bCBjb250aW51YXRpb25zIHNob3VsZCBiZSBhdCB0aGUgZW5kIG9mDQo+IHRoZSBwcmV2aW91cyBs
+aW5lLCBub3QgdGhlIHN0YXJ0IG9mIGEgbmV3IGxpbmUuDQo+IA0KPiBUaGVzZSBhcmUgbm90IHJl
+cXVpcmVkIGJ5IENvZGluZ1N0eWxlIHNvIG1ha2UgdGhlDQo+IHRlc3RzIGFjdGl2ZSBvbmx5IHdo
+ZW4gdXNpbmcgLS1zdHJpY3QuDQo+IA0KPiBUZXN0ZWQgd2l0aDoNCj4gaW50IGZvbyh2b2lkKQ0K
+PiB7DQo+IAlpZiAoZm9vICYmDQo+IAkgICAgYmFyKCkpDQo+IAkJYmF6KCk7DQo+IA0KPiAJaWYg
+KGZvbyAmJg0KPiAJICAgICBiYXIoKSkNCj4gCQliYXooKTsNCj4gDQo+IAlmb29fc29tZV9sb25n
+X2Z1bmN0aW9uKGJhciwNCj4gCQkJICAgICAgIGJheik7DQo+IA0KPiAJZm9vX3NvbWVfbG9uZ19m
+dW5jdGlvbihiYXIsDQo+IAkJYmF6KTsNCj4gDQo+IAlyZXR1cm4gMDsNCj4gfQ0KPiANCj4gU2ln
+bmVkLW9mZi1ieTogSm9lIFBlcmNoZXMgPGpvZUBwZXJjaGVzLmNvbT4NCj4gLS0tDQo+ICBzY3Jp
+cHRzL2NoZWNrcGF0Y2gucGwgfCAgIDIyICsrKysrKysrKysrKysrKysrKysrKysNCj4gIDEgZmls
+ZXMgY2hhbmdlZCwgMjIgaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlvbnMoLSkNCj4gDQo+IGRpZmYg
+LS1naXQgYS9zY3JpcHRzL2NoZWNrcGF0Y2gucGwgYi9zY3JpcHRzL2NoZWNrcGF0Y2gucGwNCj4g
+aW5kZXggYTNiOTc4Mi4uNjI5OTQ0ZSAxMDA3NTUNCj4gLS0tIGEvc2NyaXB0cy9jaGVja3BhdGNo
+LnBsDQo+ICsrKyBiL3NjcmlwdHMvY2hlY2twYXRjaC5wbA0KPiBAQCAtMTc4Myw2ICsxNzgzLDI4
+IEBAIHN1YiBwcm9jZXNzIHsNCj4gIAkJCSAgICAgInBsZWFzZSwgbm8gc3BhY2UgYmVmb3JlIHRh
+YnNcbiIgLiAkaGVyZXZldCk7DQo+ICAJCX0NCj4gDQo+ICsjIGNoZWNrIGZvciAmJiBvciB8fCBh
+dCB0aGUgc3RhcnQgb2YgYSBsaW5lDQo+ICsJCWlmICgkcmF3bGluZSA9fiAvXlwrXHMqKCYmfFx8
+XHwpLykgew0KPiArCQkJQ0hLKCJMT0dJQ0FMX0NPTlRJTlVBVElPTlMiLA0KPiArCQkJICAgICJM
+b2dpY2FsIGNvbnRpbnVhdGlvbnMgc2hvdWxkIGJlIG9uIHRoZSBwcmV2aW91cw0KPiBsaW5lXG4i
+IC4gJGhlcmVwcmV2KTsNCj4gKwkJfQ0KPiArDQo+ICsjIGNoZWNrIG11bHRpLWxpbmUgc3RhdGVt
+ZW50IGluZGVudGF0aW9uIG1hdGNoZXMgcHJldmlvdXMgbGluZQ0KPiArCQlpZiAoJHByZXZsaW5l
+ID1+IC9eXCsoXHQqKShpZg0KPiBcKHwkSWRlbnRcKCkuKihcJlwmfFx8XHx8LClccyokLyAmJiAk
+cmF3bGluZSA9fiAvXlwrKFsgXHRdKikvKSB7DQo+ICsJCQkkcHJldmxpbmUgPX4gL15cKyhcdCop
+KGlmDQo+IFwofCRJZGVudFwoKS4qKFwmXCZ8XHxcfHwsKVxzKiQvOw0KPiArCQkJbXkgJG9sZGlu
+ZGVudCA9ICQxOw0KPiArCQkJbXkgJGlmX29yX2Z1bmMgPSAkMjsNCj4gKwkJCSRyYXdsaW5lID1+
+IC9eXCsoWyBcdF0qKS87DQo+ICsJCQlteSAkbmV3aW5kZW50ID0gJDE7DQo+ICsJCQlteSAkZ29v
+ZGluZGVudCA9ICRvbGRpbmRlbnQgLg0KPiArCQkJCQkgIlx0IiB4IChsZW5ndGgoJGlmX29yX2Z1
+bmMpIC8gOCkgLg0KPiArCQkJCQkgIiAiICB4IChsZW5ndGgoJGlmX29yX2Z1bmMpICUgOCk7DQo+
+ICsJCQlpZiAoJG5ld2luZGVudCBuZSAiJGdvb2RpbmRlbnQiKSB7DQo+ICsJCQkJQ0hLKCJQQVJF
+TlRIRVNJU19BTElHTk1FTlQiLA0KPiArCQkJCSAgICAiQWxpZ25tZW50IHNob3VsZCBtYXRjaCBv
+cGVuDQo+IHBhcmVudGhlc2lzXG4iIC4gJGhlcmVwcmV2KTsNCj4gKwkJCX0NCj4gKwkJfQ0KPiAr
+DQo+ICAjIGNoZWNrIGZvciBzcGFjZXMgYXQgdGhlIGJlZ2lubmluZyBvZiBhIGxpbmUuDQo+ICAj
+IEV4Y2VwdGlvbnM6DQo+ICAjICAxKSB3aXRoaW4gY29tbWVudHMNCg0KVGhpcyBhcHBlYXJzIHRv
+IGZhbHNlbHkgY29tcGxhaW4gYWJvdXQgcGFyZW50aGVzaXMgYWxpZ25tZW50IGluIGNvbmRpdGlv
+bmFsIHN0YXRlbWVudHMgd2l0aCBtdWx0aXBsZSBvcGVuaW5nIHBhcmVudGhlc2VzLiAgRm9yIGV4
+YW1wbGUsIHRoZXNlIHdpbGwgcmVwb3J0IGEgY2hlY2sgY29uZGl0aW9uOg0KDQoJaWYgKHRlc3Rf
+YW5kX3NldF9iaXQobnIsDQoJCQkJICAgYWRkcikpDQoJCWJheigpOw0KDQoJaWYgKCEoZnVuY19h
+KHgpICYmDQoJCWZ1bmNfYih5KSkpDQoJCWJheigpOw0KDQpBc3N1bWluZyBteSBzdHVwaWQgbWFp
+bGVyIHdpbGwgc2NyZXcgdXAgdGhlIGluZGVudGF0aW9uIGFib3ZlLCB0aGUgJ2EnIGluIGFkZHIg
+aW4gdGhlIGZpcnN0IGV4YW1wbGUgaXMgbWVhbnQgdG8gYmUgaW1tZWRpYXRlbHkgYmVsb3cgdGhl
+ICduJyBpbiBuciwgYW5kIHRoZSB0d28gJ2YncyBpbiBmdW5jXyogYXJlIG1lYW50IHRvIGJlIHZl
+cnRpY2FsbHkgbGluZWQgdXAgaW4gdGhlIHNlY29uZCBleGFtcGxlLg0KDQoNCg==
