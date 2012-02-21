@@ -1,23 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm34-vm0.bullet.mail.bf1.yahoo.com ([72.30.239.72]:40181 "HELO
-	nm34-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752019Ab2BLPwE (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:37704 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753171Ab2BUPQv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Feb 2012 10:52:04 -0500
-Message-ID: <1329061551.67805.YahooMailClassic@web161605.mail.bf1.yahoo.com> (sfid-20120212_165234_829684_3C145B77)
-Date: Sun, 12 Feb 2012 07:45:51 -0800 (PST)
-From: Walter Goldens <goldenstranger@yahoo.com>
-Subject: [rt2x00] rt2800usb and RT3070 issues with 54G AP
-To: linux-wireless@vger.kernel.org
-Cc: Ivo van Doorn <ivdoorn@gmail.com>
+	Tue, 21 Feb 2012 10:16:51 -0500
+Date: Tue, 21 Feb 2012 10:14:36 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull request: wireless 2012-02-20
+Message-ID: <20120221151435.GA19354@tuxdriver.com> (sfid-20120221_161736_960017_95B25EA1)
+References: <20120220203740.GD6740@tuxdriver.com>
+ <20120220.192324.498901675497866305.davem@davemloft.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120220.192324.498901675497866305.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-My rt3070 USB card works flawlessly when connected to an 802.11N AP. Excellent throughput, speed and reliability.
+On Mon, Feb 20, 2012 at 07:23:24PM -0500, David Miller wrote:
+> From: "John W. Linville" <linville@tuxdriver.com>
+> Date: Mon, 20 Feb 2012 15:37:40 -0500
+> 
+> > Here is another batch of fixes intended for 3.3.  Most of the fixes
+> > this time are for Bluetooth.
+> 
+> Pulled, but please read the bluetooth changes more carefully in the
+> future, there were a lot of coding style errors introduced this
+> time around.
 
-When connected to a 54G AP however, there is significant packet loss and duplicates.
-I can confirm this to be happening with two older 54G APs, and not with a single N AP.
+I pinged Johan about this, and he tells me that he spoke to Marcel
+as well.  They were a bit unsure about the issue.  Is your concern
+primarily about some excessive tabbing for indentation of parameters
+and such?
 
-Does anyone else have the same problem?
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
