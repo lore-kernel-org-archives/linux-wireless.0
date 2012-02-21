@@ -1,30 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:61167 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753605Ab2BBIMk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 03:12:40 -0500
-Message-ID: <4F2A4570.5040206@qca.qualcomm.com> (sfid-20120202_091244_831707_B8E9250D)
-Date: Thu, 2 Feb 2012 10:12:32 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Masanari Iida <standby24x7@gmail.com>
-CC: <linux-wireless@vger.kernel.org>, <trivial@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	ath6kl-devel <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] [trivial] ath6kl: Fix typo in cfg80211.c
-References: <1328020375-2210-1-git-send-email-standby24x7@gmail.com>
-In-Reply-To: <1328020375-2210-1-git-send-email-standby24x7@gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from perches-mx.perches.com ([206.117.179.246]:55525 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755406Ab2BUU7X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Feb 2012 15:59:23 -0500
+Message-ID: <1329857959.5143.11.camel@joe2Laptop> (sfid-20120221_215927_624260_3269F898)
+Subject: [PATCH] checkpatch: Add some --strict coding style checks
+From: Joe Perches <joe@perches.com>
+To: David Miller <davem@davemloft.net>,
+	Andy Whitcroft <apw@shadowen.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+Cc: andrei.emeltchenko.news@gmail.com, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Tue, 21 Feb 2012 12:59:19 -0800
+In-Reply-To: <20120221.154053.2103818562080068513.davem@davemloft.net>
+References: <20120221151435.GA19354@tuxdriver.com>
+	 <20120221.144417.1445117001833888214.davem@davemloft.net>
+	 <CAMXE1-qB8_5oGey2=Ypa5BitZnye3YqdM=yB8oKCGLvoZu_8HQ@mail.gmail.com>
+	 <20120221.154053.2103818562080068513.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/31/2012 04:32 PM, Masanari Iida wrote:
-> Correct spelling "spported" to "supported" in
-> drivers/net/wireless/ath/ath6kl/cfg80211.c
-> 
-> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+Argument alignment across multiple lines should
+match the open parenthesis.
 
-Thanks, applied to ath6kl.git.
+Logical continuations should be at the end of
+the previous line, not the start of a new line.
 
-Kalle
+These are not required by CodingStyle so make the
+tests active only when using --strict.
+
+Tested with:
+int foo(void)
+{
+	if (foo &&
+	    bar())
+		baz();
+
+	if (foo &&
+	     bar())
+		baz();
+
+	foo_some_long_function(bar,
+			       baz);
+
+	foo_some_long_function(bar,
+		baz);
+
+	return 0;
+}
+
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ scripts/checkpatch.pl |   22 ++++++++++++++++++++++
+ 1 files changed, 22 insertions(+), 0 deletions(-)
+
+diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
+index a3b9782..629944e 100755
+--- a/scripts/checkpatch.pl
++++ b/scripts/checkpatch.pl
+@@ -1783,6 +1783,28 @@ sub process {
+ 			     "please, no space before tabs\n" . $herevet);
+ 		}
+ 
++# check for && or || at the start of a line
++		if ($rawline =~ /^\+\s*(&&|\|\|)/) {
++			CHK("LOGICAL_CONTINUATIONS",
++			    "Logical continuations should be on the previous line\n" . $hereprev);
++		}
++
++# check multi-line statement indentation matches previous line
++		if ($prevline =~ /^\+(\t*)(if \(|$Ident\().*(\&\&|\|\||,)\s*$/ && $rawline =~ /^\+([ \t]*)/) {
++			$prevline =~ /^\+(\t*)(if \(|$Ident\().*(\&\&|\|\||,)\s*$/;
++			my $oldindent = $1;
++			my $if_or_func = $2;
++			$rawline =~ /^\+([ \t]*)/;
++			my $newindent = $1;
++			my $goodindent = $oldindent .
++					 "\t" x (length($if_or_func) / 8) .
++					 " "  x (length($if_or_func) % 8);
++			if ($newindent ne "$goodindent") {
++				CHK("PARENTHESIS_ALIGNMENT",
++				    "Alignment should match open parenthesis\n" . $hereprev);
++			}
++		}
++
+ # check for spaces at the beginning of a line.
+ # Exceptions:
+ #  1) within comments
+
+
