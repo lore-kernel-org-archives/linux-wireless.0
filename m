@@ -1,124 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:41038 "EHLO
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:52033 "EHLO
 	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753256Ab2BHS1V (ORCPT
+	with ESMTP id S1753103Ab2BUA5g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 13:27:21 -0500
-Received: by iacb35 with SMTP id b35so1225299iac.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2012 10:27:21 -0800 (PST)
-Message-ID: <4F32BE9B.3040601@lwfinger.net> (sfid-20120208_192749_159176_D3AAB5A4)
-Date: Wed, 08 Feb 2012 12:27:39 -0600
+	Mon, 20 Feb 2012 19:57:36 -0500
+Received: by iacb35 with SMTP id b35so8205984iac.19
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Feb 2012 16:57:36 -0800 (PST)
+Message-ID: <4F42EBFC.4060307@lwfinger.net> (sfid-20120221_015806_330363_80B40F76)
+Date: Mon, 20 Feb 2012 18:57:32 -0600
 From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: Felix Fietkau <nbd@openwrt.org>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] mac80211: minstrel_ht: fix NULL pointer dereference
- during auth/assoc
-References: <1328705077-31360-1-git-send-email-arend@broadcom.com> <4F329DE5.20408@openwrt.org> <4F32A263.5050909@broadcom.com> <4F32AB79.9040307@openwrt.org> <4F32B111.8020006@openwrt.org> <4F32B942.2010600@broadcom.com>
-In-Reply-To: <4F32B942.2010600@broadcom.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: zajec5@gmail.com, b43-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, m@bues.ch
+Subject: Re: [RFC] b43: fix memory leak on bcm5354
+References: <1329781099-17342-1-git-send-email-hauke@hauke-m.de>
+In-Reply-To: <1329781099-17342-1-git-send-email-hauke@hauke-m.de>
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/08/2012 12:04 PM, Arend van Spriel wrote:
-> On 02/08/2012 06:29 PM, Felix Fietkau wrote:
->> On 2012-02-08 6:06 PM, Felix Fietkau wrote:
->>> On 2012-02-08 5:27 PM, Arend van Spriel wrote:
->>>> On 02/08/2012 05:08 PM, Felix Fietkau wrote:
->>>>> On 2012-02-08 1:44 PM, Arend van Spriel wrote:
->>>>>> This patch fixes the following NULL pointer dereference:
->>>>>>
->>>>>>> I rerun the test on a kernel with some more lock checking and got lucky.
->>>>>>>
->>>>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512283] wlan0: authenticate
->>>>>>> with 98:fc:11:8e:94:57
->>>>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512515] wlan0: send auth to
->>>>>>> 98:fc:11:8e:94:57 (try 1/3)
->>>>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514184] BUG: unable to handle
->>>>>>> kernel NULL pointer dereference at 00000004
->>>>>>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514233] IP: [<f8648f08>]
->>>>>>> minstrel_tx_status+0x48/0xe0 [mac80211]
->>>>>>
->>>>>> static inline int
->>>>>> rix_to_ndx(struct minstrel_sta_info *mi, int rix)
->>>>>> {
->>>>>>          int i = rix;
->>>>>>          for (i = rix; i>= 0; i--)
->>>>>>                  if (mi->r[i].rix == rix)
->>>>>>    48:   3b 58 04                cmp    0x4(%eax),%ebx
->>>>>>    4b:   74 4b                   je     98<minstrel_tx_status+0x98>
->>>>>>    4d:   83 c2 01                add    $0x1,%edx
->>>>>>
->>>>>> It fails because of mi->r[i] being a NULL pointer. It is allocated in
->>>>>> minstel_alloc_sta, but minstrel_ht_alloc_sta does not call that function.
->>>>>>
->>>>>> struct minstrel_ht_sta_priv holds a union with struct minstrel_ht_sta and
->>>>>> struct minstrel_sta_info. During authenticate the bool is_ht is false so
->>>>>> minstrel_ht_tx_status calls minstrel_tx_status, but minstrel_sta_info::r
->>>>>> is not set until rate_init which is after assoc.
->>>>> I'm not sure this is the right fix. If I understand the issue correctly,
->>>>> mi->r is only NULL because .rate_init has not been called yet, which is
->>>>> a bug that other rate control modules might trip over as well, maybe in
->>>>> more subtle ways. If this is the case, then I believe this bug should be
->>>>> fixed in mac80211 instead.
->>>>>
->>>>> Maybe it would even be a good idea to set a flag after calling
->>>>> rate_control_rate_init, and calling WARN_ON or even BUG_ON when doing tx
->>>>> before that.
->>>>>
->>>>> - Felix
->>>>>
->>>>
->>>> Hi Felix,
->>>>
->>>> I am not sure I can agree. minstrel_ht allocates the struct
->>>> minstrel_ht_sta_priv initializing is_ht to false thereby choosing a
->>>> default and zero'ing the legacy field. When setting is_ht to false
->>>> consequently the contents of the legacy field should be properly set as
->>>> is done in minstrel_ht_update_caps (at use_legacy label).
->>> Right, minstrel_ht_update_caps initializes that field, and it's always
->>> called from .rate_init.
->>>
->>> While the non-HT minstrel initializes that field earlier (because it is
->>> not stored anywhere else), it still also assumes that it isn't asked to
->>> do tx until .rate_init is called.
->>>
->>> It doesn't matter whether it crashes in non-HT minstrel or not, the main
->>> issue is that assumptions of both minstrel and minstrel_ht (and possibly
->>> other rate control implementations) are being violated by mac80211.
->>>
->>> Before we can address that problem, we need to decide whether we want to
->>> change the code to no longer require .rate_init before tx (which I think
->>> is a bad idea, since there's no list of supported rates available yet at
->>> that point in time), or if we change mac80211 to no longer violate those
->>> assumptions. In either case, this patch is insufficient.
->> Actually, I took a quick look at the code and it seems to be easier
->> than I thought. mac80211 sets a flag after rate_control_rate_init
->> already, only the tx status path is lacking a check for it. This simple
->> patch should take care of it, please test:
->>
->> ---
->> --- a/net/mac80211/rate.h
->> +++ b/net/mac80211/rate.h
->> @@ -37,7 +37,7 @@ static inline void rate_control_tx_statu
->>   	struct ieee80211_sta *ista =&sta->sta;
->>   	void *priv_sta = sta->rate_ctrl_priv;
->>
->> -	if (!ref)
->> +	if (!ref || !test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
->>   		return;
->>
->>   	ref->ops->tx_status(ref->priv, sband, ista, priv_sta, skb);
->>
->>
->
-> Works for me so you can sent this patch with
-> Tested-by: Arend van Spriel<arend@broadcom.com>
+On 02/20/2012 05:38 PM, Hauke Mehrtens wrote:
+> When using the bcm5354 with a recent firmware>= 478.104 it runs into a
+> memory very shortly after doing an active scan or any thing else where
 
-It works for me as well.
+You are missing a word after memory.
+
+> packages are send. This was cased by a gpio misconfiguration, the
+> firmware triggered the GPIO pins used for buttons on some devices and
+> that caused an other driver (OpenWrt diag) listening for these buttons
+> to send many user space messages.
+> This patch fixes the bug for my devices (Asus WL-520GU) and makes it
+> work with firmware 666.2, but I do not know if this patch is correct.
+> The spec for this part is out of date:
+> http://bcm-specs.sipsolutions.net/GPIO
+
+I just updated the specs based on additional info I found. Everything I see say 
+that there are 4 bits for the LEDs. Do you have a source for what you posted below?
+
+>
+> GPIO pin layout:
+> pin#	name	type
+> 0	power	led
+> 1	wlan	led
+> 2	reset	button
+> 3	ses	buttom
+>
+> related nvram configuration:
+> wl0gpio2=11
+> wl0gpio3=11
+> wl0gpio0=11
+> wl0gpio1=0x02
+> reset_gpio=2
 
 Larry
-
