@@ -1,101 +1,209 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:36815 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751995Ab2BVR7f convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:48445 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753935Ab2BUJXs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 12:59:35 -0500
-Received: by bkcjm19 with SMTP id jm19so334446bkc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Feb 2012 09:59:34 -0800 (PST)
+	Tue, 21 Feb 2012 04:23:48 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1328834790.5067.2.camel@dcbw.foobar.com>
-References: <1328837032-26137-1-git-send-email-stas.yakovlev@gmail.com>
-	<CAGRGNgWVsGt08gxoyaoG7sG7NgubF+qqjk=LaCruRJiUe1fuig@mail.gmail.com>
-	<1328834790.5067.2.camel@dcbw.foobar.com>
-Date: Wed, 22 Feb 2012 20:59:34 +0300
-Message-ID: <CA++WF2M99q70fj5KrH3HaFGL59ZSmjRHL5vgoDVoyp9zVuizXQ@mail.gmail.com> (sfid-20120222_185939_328094_C9BA9642)
-Subject: Re: [PATCH] ipw2x00: remove ipw2100_rates_11b[]
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Julian Calaby <julian.calaby@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20291.25241.5396.839366@gargle.gargle.HOWL> (sfid-20120221_102353_671942_C7014763)
+Date: Tue, 21 Feb 2012 14:53:37 +0530
+To: <linux-wireless@vger.kernel.org>
+CC: <ath9k-devel@lists.ath9k.org>
+Subject: [RFC/WIP 16/22] ath9k_hw: Use CONFIG_ATH9K_BTCOEX_SUPPORT
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 February 2012 03:46, Dan Williams <dcbw@redhat.com> wrote:
-> On Fri, 2012-02-10 at 11:26 +1100, Julian Calaby wrote:
->> Hi Stanislav,
->>
->> On Fri, Feb 10, 2012 at 12:23, Stanislav Yakovlev
->> <stas.yakovlev@gmail.com> wrote:
->> > It's just a duplicate of ipw2100_bg_rates[].
->>
->> Looks sensible to me.
->
-> Except that the 2100 is a B-only device; it doesn't do G at all.  So
-> wouldn't it make sense to get rid of ipw2100_rates_bg[] instead?
+Make use of CONFIG_ATH9K_BTCOEX_SUPPORT in ath9k_hw
+to provide a clean way of compilation without BTCOEX
+support.
 
-It looks like we all agree that one of them should be removed. I did
-not see an easy way to remove ipw2100_rates_bg[]. Maybe it makes more
-sense to rename it to ipw2100_rates_b[]?
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/Makefile     |    6 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |   63 ++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath9k/btcoex.h     |    1 -
+ drivers/net/wireless/ath/ath9k/hw.c         |    3 +-
+ drivers/net/wireless/ath/ath9k/hw.h         |   12 +++++-
+ 5 files changed, 71 insertions(+), 14 deletions(-)
 
-Stanislav
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index b3c7b12..27d95fe 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -31,14 +31,14 @@ ath9k_hw-y:=	\
+ 		eeprom_4k.o \
+ 		eeprom_9287.o \
+ 		ani.o \
+-		btcoex.o \
+ 		mac.o \
+ 		ar9002_mac.o \
+ 		ar9003_mac.o \
+ 		ar9003_eeprom.o \
+-		ar9003_paprd.o \
+-		ar9003_mci.o
++		ar9003_paprd.o
+ 
++ath9k_hw-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += btcoex.o \
++					   ar9003_mci.o
+ obj-$(CONFIG_ATH9K_HW) += ath9k_hw.o
+ 
+ obj-$(CONFIG_ATH9K_COMMON) += ath9k_common.o
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index 507527b..de94f69 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -254,16 +254,32 @@ enum mci_gpm_coex_opcode {
+ 
+ #define MCI_GPM_IS_CAL_TYPE(_type) ((_type) <= MCI_GPM_WLAN_CAL_DONE)
+ 
++/*
++ * Functions that are available to the MCI driver core.
++ */
+ bool ar9003_mci_send_message(struct ath_hw *ah, u8 header, u32 flag,
+ 			     u32 *payload, u8 len, bool wait_done,
+ 			     bool check_bt);
+-void ar9003_mci_stop_bt(struct ath_hw *ah, bool sava_fullsleep);
+ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data);
+-void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable);
+-void ar9003_mci_init_cal_done(struct ath_hw *ah);
+ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+ 		      u16 len, u32 sched_addr);
+ void ar9003_mci_cleanup(struct ath_hw *ah);
++void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
++			      u32 *rx_msg_intr);
++
++/*
++ * These functions are used by ath9k_hw.
++ */
++
++#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
++
++static inline bool ar9003_mci_is_ready(struct ath_hw *ah)
++{
++	return ah->btcoex_hw.mci.ready;
++}
++void ar9003_mci_stop_bt(struct ath_hw *ah, bool save_fullsleep);
++void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable);
++void ar9003_mci_init_cal_done(struct ath_hw *ah);
+ void ar9003_mci_set_full_sleep(struct ath_hw *ah);
+ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done);
+ void ar9003_mci_check_bt(struct ath_hw *ah);
+@@ -272,13 +288,46 @@ int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 			 struct ath9k_hw_cal_data *caldata);
+ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 		      bool is_full_sleep);
+-void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
+-			      u32 *rx_msg_intr);
+ void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
+ 
+-static inline bool ar9003_mci_is_ready(struct ath_hw *ah)
++#else
++
++#define ar9003_mci_is_ready(...) false
++
++static inline void ar9003_mci_stop_bt(struct ath_hw *ah, bool save_fullsleep)
++{
++}
++static inline void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable)
++{
++}
++static inline void ar9003_mci_init_cal_done(struct ath_hw *ah)
++{
++}
++static inline void ar9003_mci_set_full_sleep(struct ath_hw *ah)
++{
++}
++static inline void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done)
++{
++}
++static inline void ar9003_mci_check_bt(struct ath_hw *ah)
++{
++}
++static inline bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan)
++{
++	return false;
++}
++static inline int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
++				       struct ath9k_hw_cal_data *caldata)
++{
++	return 0;
++}
++static inline void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
++				    bool is_full_sleep)
++{
++}
++static inline void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ {
+-	return ah->btcoex_hw.mci.ready;
+ }
++#endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
+ 
+ #endif
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+index 10627b4..8f93aef 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+@@ -105,7 +105,6 @@ void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum);
+ void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
+ 				u32 bt_weight,
+ 				u32 wlan_weight);
+-void ath9k_hw_btcoex_enable(struct ath_hw *ah);
+ void ath9k_hw_btcoex_disable(struct ath_hw *ah);
+ void ath9k_hw_btcoex_bt_stomp(struct ath_hw *ah,
+ 			      enum ath_stomp_type stomp_type);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 5f2e30c..8c840ca 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1800,8 +1800,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ #endif
+ 	}
+ 
+-	if (ah->btcoex_hw.enabled &&
+-	    ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_NONE)
++	if (ath9k_hw_btcoex_is_enabled(ah))
+ 		ath9k_hw_btcoex_enable(ah);
+ 
+ 	if (mci)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 96494a6..fb7b7cb 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -802,8 +802,9 @@ struct ath_hw {
+ 	int firpwr[5];
+ 	enum ath9k_ani_cmd ani_function;
+ 
+-	/* Bluetooth coexistance */
++#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+ 	struct ath_btcoex_hw btcoex_hw;
++#endif
+ 
+ 	u32 intr_txqs;
+ 	u8 txchainmask;
+@@ -1052,12 +1053,21 @@ void ath9k_hw_proc_mib_event(struct ath_hw *ah);
+ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan);
+ 
+ #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
++static inline bool ath9k_hw_btcoex_is_enabled(struct ath_hw *ah)
++{
++	return ah->btcoex_hw.enabled;
++}
++void ath9k_hw_btcoex_enable(struct ath_hw *ah);
+ static inline enum ath_btcoex_scheme
+ ath9k_hw_get_btcoex_scheme(struct ath_hw *ah)
+ {
+ 	return ah->btcoex_hw.scheme;
+ }
+ #else
++#define ath9k_hw_btcoex_is_enabled(...) false
++static inline void ath9k_hw_btcoex_enable(struct ath_hw *ah)
++{
++}
+ #define ath9k_hw_get_btcoex_scheme(...) ATH_BTCOEX_CFG_NONE
+ #endif
+ 
+-- 
+1.7.9.1
 
-
-> Dan
->
->> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
->>
->> > Signed-off-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
->> > ---
->> >  drivers/net/wireless/ipw2x00/ipw2100.c |   11 ++---------
->> >  1 files changed, 2 insertions(+), 9 deletions(-)
->> >
->> > diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
->> > index a0e5c21..63567fb 100644
->> > --- a/drivers/net/wireless/ipw2x00/ipw2100.c
->> > +++ b/drivers/net/wireless/ipw2x00/ipw2100.c
->> > @@ -309,13 +309,6 @@ static const long ipw2100_frequencies[] = {
->> >
->> >  #define FREQ_COUNT     ARRAY_SIZE(ipw2100_frequencies)
->> >
->> > -static const long ipw2100_rates_11b[] = {
->> > -       1000000,
->> > -       2000000,
->> > -       5500000,
->> > -       11000000
->> > -};
->> > -
->> >  static struct ieee80211_rate ipw2100_bg_rates[] = {
->> >        { .bitrate = 10 },
->> >        { .bitrate = 20, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
->> > @@ -323,7 +316,7 @@ static struct ieee80211_rate ipw2100_bg_rates[] = {
->> >        { .bitrate = 110, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
->> >  };
->> >
->> > -#define RATE_COUNT ARRAY_SIZE(ipw2100_rates_11b)
->> > +#define RATE_COUNT ARRAY_SIZE(ipw2100_bg_rates)
->> >
->> >  /* Pre-decl until we get the code solid and then we can clean it up */
->> >  static void ipw2100_tx_send_commands(struct ipw2100_priv *priv);
->> > @@ -6896,7 +6889,7 @@ static int ipw2100_wx_get_range(struct net_device *dev,
->> >        range->num_bitrates = RATE_COUNT;
->> >
->> >        for (i = 0; i < RATE_COUNT && i < IW_MAX_BITRATES; i++) {
->> > -               range->bitrate[i] = ipw2100_rates_11b[i];
->> > +               range->bitrate[i] = ipw2100_bg_rates[i].bitrate * 100 * 1000;
->> >        }
->> >
->> >        range->min_rts = MIN_RTS_THRESHOLD;
->> > --
->> > 1.7.2.5
->> >
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->>
->
->
