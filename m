@@ -1,90 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:46393 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751031Ab2BVG6N convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:51956 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754443Ab2BULPY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 01:58:13 -0500
+	Tue, 21 Feb 2012 06:15:24 -0500
+Received: by vbjk17 with SMTP id k17so4077647vbj.19
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2012 03:15:23 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20120222003747.GA9808@gamma.logic.tuwien.ac.at>
-References: <20120124013625.GB18436@gamma.logic.tuwien.ac.at>
-	<CANUX_P3er0orBy8OhDuY1DfgD810UD-_HB_ukJnCA+W8e-VazQ@mail.gmail.com>
-	<20120125002250.GA20431@gamma.logic.tuwien.ac.at>
-	<CANUX_P0UREz_jZABu+Y_QYOh9tx_sKZSSkZpYHBEVtcU4QQdSA@mail.gmail.com>
-	<20120126003735.GA2346@gamma.logic.tuwien.ac.at>
-	<CANUX_P0H_WaWwnpjoBcMpZQY4xH=cbVhAKxWKXmz-HwFMcWS6w@mail.gmail.com>
-	<CANUX_P3XSCsWUJ9M55qeaK-DuPEMXODFPJiNk+BgnHN-=WECqw@mail.gmail.com>
-	<20120126232555.GB16330@gamma.logic.tuwien.ac.at>
-	<20120127015015.GA23291@gamma.logic.tuwien.ac.at>
-	<CANUX_P3F58upbrw48AiMTV4DDZWsfveYp=mANAD9CQ2bPps0cA@mail.gmail.com>
-	<20120222003747.GA9808@gamma.logic.tuwien.ac.at>
-Date: Wed, 22 Feb 2012 08:58:11 +0200
-Message-ID: <CANUX_P1CN0Ud5ZO4AMcvMSUsrsEABRHkgy42Di45n96mB64Ynw@mail.gmail.com> (sfid-20120222_075829_332966_5DCC5657)
-Subject: Re: iwlagn is getting even worse with 3.3-rc1
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Norbert Preining <preining@logic.at>
-Cc: linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	Dave Jones <davej@redhat.com>
+In-Reply-To: <20291.25217.112736.268239@gargle.gargle.HOWL>
+References: <20291.25217.112736.268239@gargle.gargle.HOWL>
+Date: Tue, 21 Feb 2012 16:45:23 +0530
+Message-ID: <CAD2nsn1szH2=JUkb+rTbssVgYJA5CzpHUPP9GTve0axkSQw-+Q@mail.gmail.com> (sfid-20120221_121527_632384_02F4133E)
+Subject: Re: [RFC/WIP 12/22] ath9k_hw: Setup MCI calibration using a helper
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 22, 2012 at 02:37, Norbert Preining <preining@logic.at> wrote:
+On Tue, Feb 21, 2012 at 2:53 PM, Sujith Manoharan
+<c_manoha@qca.qualcomm.com> wrote:
+> Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath9k/ar9003_calib.c |   42 ++-------------------
+>  drivers/net/wireless/ath/ath9k/ar9003_mci.c   |   48 +++++++++++++++++++++++++
+>  drivers/net/wireless/ath/ath9k/hw.h           |    2 +
+>  3 files changed, 54 insertions(+), 38 deletions(-)
 >
-> Hi Emmanuel,
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+> index 8e70f0b..63089cc 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+> @@ -925,7 +925,6 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+>  {
+>        struct ath_common *common = ath9k_hw_common(ah);
+>        struct ath9k_hw_cal_data *caldata = ah->caldata;
+> -       struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
+>        bool txiqcal_done = false, txclcal_done = false;
+>        bool is_reusable = true, status = true;
+>        bool run_rtt_cal = false, run_agc_cal;
+> @@ -998,30 +997,8 @@ static bool ar9003_hw_init_cal(struct ath_hw *ah,
+>        } else if (caldata && !caldata->done_txiqcal_once)
+>                run_agc_cal = true;
 >
-> sorry to come back soo late to that matter ... I was *really* busy
-> with real work.
+> -       if (mci && IS_CHAN_2GHZ(chan) &&
+> -           (mci_hw->bt_state  == MCI_BT_AWAKE) &&
+> -           run_agc_cal &&
+> -           !(mci_hw->config & ATH_MCI_CONFIG_DISABLE_MCI_CAL)) {
+> -
+> -               u32 pld[4] = {0, 0, 0, 0};
+> -
+> -               /* send CAL_REQ only when BT is AWAKE. */
+> -               ath_dbg(common, MCI, "MCI send WLAN_CAL_REQ 0x%x\n",
+> -                       mci_hw->wlan_cal_seq);
+> -               MCI_GPM_SET_CAL_TYPE(pld, MCI_GPM_WLAN_CAL_REQ);
+> -               pld[MCI_GPM_WLAN_CAL_W_SEQUENCE] = mci_hw->wlan_cal_seq++;
+> -               ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
+> -
+> -               /* Wait BT_CAL_GRANT for 50ms */
+> -               ath_dbg(common, MCI, "MCI wait for BT_CAL_GRANT\n");
+> -
+> -               if (ar9003_mci_wait_for_gpm(ah, MCI_GPM_BT_CAL_GRANT, 0, 50000))
+> -                       ath_dbg(common, MCI, "MCI got BT_CAL_GRANT\n");
+> -               else {
+> -                       is_reusable = false;
+> -                       ath_dbg(common, MCI, "\nMCI BT is not responding\n");
+> -               }
+> -       }
+> +       if (mci && IS_CHAN_2GHZ(chan) && run_agc_cal)
+> +               ar9003_mci_init_cal_req(ah, &is_reusable);
 >
-> On Do, 26 Jan 2012, Emmanuel Grumbach wrote:
-> > >
-> > > On Fr, 27 Jan 2012, Norbert Preining wrote:
-> > >> First tests are promising, after reboot it was working immediately
-> > >> without need to rfkill block/unblock. lso after suspend and resume.
-> > >>
-> > >> Will test more the next days and report back.
-> > >
-> > > Unfortunately, at the university it is still a complete no-go.
-> > > Usually the connection works for a short time, then breaks down.
-> > > After that even unloading and loading the module did not reactivate
-> > > it, I cannot get a connection at all. But other units, or with
-> > > older kernel (it was 2.6.3X AFAIR) it was working without a glitch.
-> > >
-> > > I uploaded a syslog output including kernel and network manager logs
-> > > to
-> > >        http://www.logic.at/people/preining/syslog.log
-> > > (new one). This shows a session from loading the module up to giving
-> > > up.
-> > >
-> >
-> > I glanced at the logs, and they look healthy from the wifi driver
-> > side. You just don't get any reply to DHCP_DISCOVER apparently... can
-> > you get a sniffer ?
-> > I am pretty sure that the packet in sent in the air, but if you can
-> > get a capture of that we could check that out.
+>        txiqcal_done = ar9003_hw_tx_iq_cal_run(ah);
+>        REG_WRITE(ah, AR_PHY_ACTIVE, AR_PHY_ACTIVE_DIS);
+> @@ -1041,19 +1018,8 @@ skip_tx_iqcal:
+>                                       0, AH_WAIT_TIMEOUT);
+>        }
 >
-> I still see that, on 3.3-rc4, and it is the same as usual. The interface
-> believes it is up and connected, but nothing works.
+> -       if (mci && IS_CHAN_2GHZ(chan) &&
+> -           (mci_hw->bt_state  == MCI_BT_AWAKE) &&
+> -           run_agc_cal &&
+> -           !(mci_hw->config & ATH_MCI_CONFIG_DISABLE_MCI_CAL)) {
+> -
+> -               u32 pld[4] = {0, 0, 0, 0};
+> -
+> -               ath_dbg(common, MCI, "MCI Send WLAN_CAL_DONE 0x%x\n",
+> -                       mci_hw->wlan_cal_done);
+> -               MCI_GPM_SET_CAL_TYPE(pld, MCI_GPM_WLAN_CAL_DONE);
+> -               pld[MCI_GPM_WLAN_CAL_W_SEQUENCE] = mci_hw->wlan_cal_done++;
+> -               ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
+> -       }
+> +       if (mci && IS_CHAN_2GHZ(chan) && run_agc_cal)
+> +               ar9003_mci_init_cal_done(ah);
 >
-> I am *100%* sure that this is related to the driver, because in old
-> revisions (somewhen around 2.6.27 or so) it was working without
-> any problem, and when it started I reported it long time ago.
+>        if (rtt && !run_rtt_cal) {
+>                agc_ctrl |= agc_supp_cals;
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+> index f8dd0b2..e657578 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+> @@ -1014,6 +1014,54 @@ bool ar9003_mci_send_message(struct ath_hw *ah, u8 header, u32 flag,
+>  }
+>  EXPORT_SYMBOL(ar9003_mci_send_message);
 >
-> Anyway, today it was really hopeless again, and the exact time it always
-> hangs is when the kernel driver spits out:
->        Rx A-MPDU request on tid 0 result 0
-> and with debugging on I get in addition:
->        ieee80211 phy3: release an RX reorder frame due to timeout on
-> earlier frames
-> that is where it all goes down the gully, without any reaction from the
-> outside world suddenly. Before ping was running, then off.
+> +void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable)
+> +{
+> +       struct ath_common *common = ath9k_hw_common(ah);
+> +       struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
+> +       u32 pld[4] = {0, 0, 0, 0};
+> +
+> +       if ((mci_hw->bt_state != MCI_BT_AWAKE) ||
+> +           (mci_hw->config & ATH_MCI_CONFIG_DISABLE_MCI_CAL))
+> +               return;
+> +
+> +       /* send CAL_REQ only when BT is AWAKE. */
+> +       ath_dbg(common, MCI, "MCI send WLAN_CAL_REQ 0x%x\n",
+> +               mci_hw->wlan_cal_seq);
+> +
+> +       MCI_GPM_SET_CAL_TYPE(pld, MCI_GPM_WLAN_CAL_REQ);
+> +       pld[MCI_GPM_WLAN_CAL_W_SEQUENCE] = mci_hw->wlan_cal_seq++;
+> +
+> +       ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
+> +
+> +       /* Wait BT_CAL_GRANT for 50ms */
+> +       ath_dbg(common, MCI, "MCI wait for BT_CAL_GRANT\n");
+> +
+> +       if (ar9003_mci_wait_for_gpm(ah, MCI_GPM_BT_CAL_GRANT, 0, 50000)) {
+> +               ath_dbg(common, MCI, "MCI got BT_CAL_GRANT\n");
+> +       } else {
+> +               is_reusable = false;
+> +               ath_dbg(common, MCI, "MCI BT is not responding\n");
+> +       }
+> +}
+> +
+> +void ar9003_mci_init_cal_done(struct ath_hw *ah)
+> +{
+> +       struct ath_common *common = ath9k_hw_common(ah);
+> +       struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
+> +       u32 pld[4] = {0, 0, 0, 0};
+> +
+> +       if ((mci_hw->bt_state != MCI_BT_AWAKE) ||
+> +           (mci_hw->config & ATH_MCI_CONFIG_DISABLE_MCI_CAL))
+> +               return;
+> +
+> +       ath_dbg(common, MCI, "MCI Send WLAN_CAL_DONE 0x%x\n",
+> +               mci_hw->wlan_cal_done);
+> +
+> +       MCI_GPM_SET_CAL_TYPE(pld, MCI_GPM_WLAN_CAL_DONE);
+> +       pld[MCI_GPM_WLAN_CAL_W_SEQUENCE] = mci_hw->wlan_cal_done++;
+> +       ar9003_mci_send_message(ah, MCI_GPM, 0, pld, 16, true, false);
+> +}
+> +
+>  void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+>                      u16 len, u32 sched_addr)
+>  {
+> diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+> index 07dd53e..ff75254 100644
+> --- a/drivers/net/wireless/ath/ath9k/hw.h
+> +++ b/drivers/net/wireless/ath/ath9k/hw.h
+> @@ -1211,6 +1211,8 @@ bool ar9003_mci_send_message(struct ath_hw *ah, u8 header, u32 flag,
+>                             bool check_bt);
+>  void ar9003_mci_mute_bt(struct ath_hw *ah);
+>  u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data);
+> +void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable);
+> +void ar9003_mci_init_cal_done(struct ath_hw *ah);
+>  void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+>                      u16 len, u32 sched_addr);
+>  void ar9003_mci_cleanup(struct ath_hw *ah);
+> --
+> 1.7.9.1
 >
-> I uploaded a new syslog.log in the above location that shows 5 min
-> or so of trial and error.
 
->From the log, I can see that we have a lot of "passive channel
-failures". Can you try to disable 11n (module_parameter) ?
-Please also try with debug=0xc0000000
+thanks!
+
+-- 
+thanks,
+shafi
