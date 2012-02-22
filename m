@@ -1,44 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:6942 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756345Ab2B1BF6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 20:05:58 -0500
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <hauke@hauke-m.de>, <nbd@nbd.name>, <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>
-Subject: [PATCH 4/7] compat: remove dubious clean at install target
-Date: Mon, 27 Feb 2012 17:05:38 -0800
-Message-ID: <1330391141-19909-5-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120228_024255_924701_6B8BFF5E)
-In-Reply-To: <1330391141-19909-1-git-send-email-rodrigue@qca.qualcomm.com>
-References: <1330391141-19909-1-git-send-email-rodrigue@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from perches-mx.perches.com ([206.117.179.246]:58967 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751679Ab2BVBgZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Feb 2012 20:36:25 -0500
+Message-ID: <1329874581.5143.22.camel@joe2Laptop> (sfid-20120222_023645_394929_E65D395B)
+Subject: RE: [PATCH] checkpatch: Add some --strict coding style checks
+From: Joe Perches <joe@perches.com>
+To: "Allan, Bruce W" <bruce.w.allan@intel.com>
+Cc: David Miller <davem@davemloft.net>,
+	Andy Whitcroft <apw@shadowen.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"andrei.emeltchenko.news@gmail.com"
+	<andrei.emeltchenko.news@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Tue, 21 Feb 2012 17:36:21 -0800
+In-Reply-To: <804857E1F29AAC47BF68C404FC60A18429B3EE@ORSMSX102.amr.corp.intel.com>
+References: <20120221151435.GA19354@tuxdriver.com>
+	 <20120221.144417.1445117001833888214.davem@davemloft.net>
+	 <CAMXE1-qB8_5oGey2=Ypa5BitZnye3YqdM=yB8oKCGLvoZu_8HQ@mail.gmail.com>
+	 <20120221.154053.2103818562080068513.davem@davemloft.net>
+	 <1329857959.5143.11.camel@joe2Laptop>
+	 <804857E1F29AAC47BF68C404FC60A18429B3EE@ORSMSX102.amr.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <mcgrof@frijolero.org>
+On Tue, 2012-02-21 at 22:09 +0000, Allan, Bruce W wrote:
+> This appears to falsely complain about parenthesis alignment in
+> conditional statements with multiple opening parentheses.
 
-Not sure why this was added, this is a big typo.
+Hey Allan.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
+Can you try this one please?
 ---
- Makefile |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ scripts/checkpatch.pl |   58 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 58 insertions(+), 0 deletions(-)
 
-diff --git a/Makefile b/Makefile
-index 423d1ed..2f47e3f 100644
---- a/Makefile
-+++ b/Makefile
-@@ -57,7 +57,6 @@ install: modules
- 	$(MAKE) -C $(KLIB_BUILD) M=$(PWD) $(KMODDIR_ARG) $(KMODPATH_ARG) \
- 		modules_install
- 	depmod -a
--	$(MAKE) -C $(KLIB_BUILD) M=$(PWD) clean
+diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
+index a3b9782..e95419e 100755
+--- a/scripts/checkpatch.pl
++++ b/scripts/checkpatch.pl
+@@ -1330,6 +1330,35 @@ sub check_absolute_file {
+ 	}
+ }
  
- $(COMPAT_AUTOCONF): ;
++sub pos_last_openparen {
++
++	my ($args) = @_;
++
++	my $pos = 0;
++	my $len = length($args);
++
++	my $opens = $args =~ tr/\(/\(/;
++	my $closes = $args =~ tr/\)/\)/;
++
++	my $last_openparen = 0;
++
++	if (($opens == 0) || ($closes >= $opens)) {
++		return 0;
++	}
++
++	for ($pos = 0; $pos < $len; $pos++) {
++		if (substr($args, $pos) =~ /^($FuncArg)/) {
++			$pos += length($1);
++		}
++
++		if (substr($args, $pos, 1) eq '(') {
++			$last_openparen = $pos;
++		}
++	}
++
++	return $last_openparen + 1;
++}
++
+ sub process {
+ 	my $filename = shift;
  
--- 
-1.7.4.15.g7811d
+@@ -1783,6 +1812,35 @@ sub process {
+ 			     "please, no space before tabs\n" . $herevet);
+ 		}
+ 
++# check for && or || at the start of a line
++		if ($rawline =~ /^\+\s*(&&|\|\|)/) {
++			CHK("LOGICAL_CONTINUATIONS",
++			    "Logical continuations should be on the previous line\n" . $hereprev);
++		}
++
++# check multi-line statement indentation matches previous line
++		if ($prevline =~ /^\+(\t*)(if \(|$Ident\().*(\&\&|\|\||,)\s*$/ && $rawline =~ /^\+([ \t]*)/) {
++			$prevline =~ /^\+(\t*)(if \(|$Ident\()(.*)(\&\&|\|\||,)\s*$/;
++			my $oldindent = $1;
++			my $if_or_func = $2;
++			my $args = $3;
++
++			my $pos = pos_last_openparen($args);
++
++			my $len = length($if_or_func) + $pos;
++			$rawline =~ /^\+([ \t]*)/;
++			my $newindent = $1;
++
++			my $goodindent = $oldindent .
++					 "\t" x ($len / 8) .
++					 " "  x ($len % 8);
++
++			if ($newindent ne $goodindent) {
++				CHK("PARENTHESIS_ALIGNMENT",
++				    "Alignment should match open parenthesis\n" . $hereprev);
++			}
++		}
++
+ # check for spaces at the beginning of a line.
+ # Exceptions:
+ #  1) within comments
+
 
