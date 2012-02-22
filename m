@@ -1,128 +1,277 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:49440 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751954Ab2BUPoO (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:6845 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753850Ab2BVHMI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Feb 2012 10:44:14 -0500
-Received: by daed14 with SMTP id d14so7002655dae.19
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2012 07:44:14 -0800 (PST)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, javier@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH v2] mac80211: Fix the generation of PREQs in proactive RANN mechanism of HWMP
-Date: Wed, 22 Feb 2012 08:26:24 +0800
-Message-Id: <1329870384-25857-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120221_164418_043738_6FE28A32)
+	Wed, 22 Feb 2012 02:12:08 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20292.38207.5893.131369@gargle.gargle.HOWL> (sfid-20120222_081213_131825_BC46CEB2)
+Date: Wed, 22 Feb 2012 12:41:59 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 21/26] ath9k: Remove ATH9K_HW_CAP_MCI checks
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-According to Section Y.7.4 Actions on receipt of proactive RANN, an individually
-addressed PREQ should be generated towards the neighbor peer mesh STA indicated
-in the RANN Sender Address field in the forwarding information.
+With the ability to remove BTCOEX support at compile time,
+these checks are no longer needed.
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- net/mac80211/mesh.h      |    4 ++++
- net/mac80211/mesh_hwmp.c |   24 +++++++++++++++++++-----
- 2 files changed, 23 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |   54 ---------------------------
+ drivers/net/wireless/ath/ath9k/gpio.c       |    2 +-
+ drivers/net/wireless/ath/ath9k/hw.h         |    4 --
+ drivers/net/wireless/ath/ath9k/mci.c        |    9 ----
+ 4 files changed, 1 insertions(+), 68 deletions(-)
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index bd14bd2..4b0a9e8 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -86,6 +86,8 @@ enum mesh_deferred_task_flags {
-  * @state_lock: mesh path state lock used to protect changes to the
-  * mpath itself.  No need to take this lock when adding or removing
-  * an mpath to a hash bucket on a path table.
-+ * @rann_snd_addr: the RANN sender address
-+ * @is_root: the destination station of this path is a root node
-  * @is_gate: the destination station of this path is a mesh gate
-  *
-  *
-@@ -110,6 +112,8 @@ struct mesh_path {
- 	u8 discovery_retries;
- 	enum mesh_path_flags flags;
- 	spinlock_t state_lock;
-+	u8 rann_snd_addr[ETH_ALEN];
-+	bool is_root;
- 	bool is_gate;
- };
-
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index cae4071..e24f5a1 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -513,7 +513,7 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index b9652f6..4079676 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -86,9 +86,6 @@ static void ar9003_mci_remote_reset(struct ath_hw *ah, bool wait_done)
  {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	struct mesh_path *mpath;
--	u8 *target_addr, *orig_addr;
-+	u8 *target_addr, *orig_addr, *da;
- 	u8 target_flags, ttl;
- 	u32 orig_sn, target_sn, lifetime;
- 	bool reply = false;
-@@ -590,9 +590,13 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
- 		flags = PREQ_IE_FLAGS(preq_elem);
- 		preq_id = PREQ_IE_PREQ_ID(preq_elem);
- 		hopcount = PREQ_IE_HOPCOUNT(preq_elem) + 1;
-+		if (mpath && mpath->is_root)
-+			da = mpath->rann_snd_addr;
-+		else
-+			da = broadcast_addr;
- 		mesh_path_sel_frame_tx(MPATH_PREQ, flags, orig_addr,
- 				cpu_to_le32(orig_sn), target_flags, target_addr,
--				cpu_to_le32(target_sn), broadcast_addr,
-+				cpu_to_le32(target_sn), da,
- 				hopcount, ttl, cpu_to_le32(lifetime),
- 				cpu_to_le32(metric), cpu_to_le32(preq_id),
- 				sdata);
-@@ -741,8 +745,8 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 	if (memcmp(orig_addr, sdata->vif.addr, ETH_ALEN) == 0)
- 		return;
-
--	mhwmp_dbg("received RANN from %pM (is_gate=%d)", orig_addr,
--			root_is_gate);
-+	mhwmp_dbg("received RANN from %pM via neighbour %pM (is_gate=%d)",
-+			orig_addr, mgmt->sa, root_is_gate);
-
- 	rcu_read_lock();
- 	mpath = mesh_path_lookup(orig_addr, sdata);
-@@ -773,6 +777,11 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 				       0, sdata);
- 		mpath->sn = orig_sn;
- 	}
-+
-+	/* Using individually addressed PREQ for root node */
-+	memcpy(mpath->rann_snd_addr, mgmt->sa, ETH_ALEN);
-+	mpath->is_root = true;
-+
- 	if (root_is_gate)
- 		mesh_path_add_gate(mpath);
-
-@@ -908,6 +917,7 @@ void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata)
- 	struct mesh_preq_queue *preq_node;
- 	struct mesh_path *mpath;
- 	u8 ttl, target_flags;
-+	u8 *da;
- 	u32 lifetime;
-
- 	spin_lock_bh(&ifmsh->mesh_preq_queue_lock);
-@@ -970,9 +980,13 @@ void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata)
- 		target_flags = MP_F_RF;
-
- 	spin_unlock_bh(&mpath->state_lock);
-+	if (!mpath->is_root)
-+		da = broadcast_addr;
-+	else
-+		da = mpath->rann_snd_addr;
- 	mesh_path_sel_frame_tx(MPATH_PREQ, 0, sdata->vif.addr,
- 			cpu_to_le32(ifmsh->sn), target_flags, mpath->dst,
--			cpu_to_le32(mpath->sn), broadcast_addr, 0,
-+			cpu_to_le32(mpath->sn), da, 0,
- 			ttl, cpu_to_le32(lifetime), 0,
- 			cpu_to_le32(ifmsh->preq_id++), sdata);
- 	mod_timer(&mpath->timer, jiffies + mpath->discovery_timeout);
---
-1.7.0.4
+ 	u32 payload[4] = { 0xffffffff, 0xffffffff, 0xffffffff, 0xffffff00};
+ 
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+ 	ar9003_mci_send_message(ah, MCI_REMOTE_RESET, 0, payload, 16,
+ 				wait_done, false);
+ 	udelay(5);
+@@ -98,9 +95,6 @@ static void ar9003_mci_send_lna_transfer(struct ath_hw *ah, bool wait_done)
+ {
+ 	u32 payload = 0x00000000;
+ 
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+ 	ar9003_mci_send_message(ah, MCI_LNA_TRANS, 0, &payload, 1,
+ 				wait_done, false);
+ }
+@@ -114,9 +108,6 @@ static void ar9003_mci_send_req_wake(struct ath_hw *ah, bool wait_done)
+ 
+ static void ar9003_mci_send_sys_waking(struct ath_hw *ah, bool wait_done)
+ {
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+ 	ar9003_mci_send_message(ah, MCI_SYS_WAKING, MCI_FLAG_DISABLE_TIMESTAMP,
+ 				NULL, 0, wait_done, false);
+ }
+@@ -230,9 +221,6 @@ static void ar9003_mci_send_coex_halt_bt_gpm(struct ath_hw *ah, bool halt,
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+ 	u32 payload[4] = {0, 0, 0, 0};
+ 
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+ 	ath_dbg(common, MCI, "MCI Send Coex %s BT GPM\n",
+ 		(halt) ? "halt" : "unhalt");
+ 
+@@ -385,18 +373,12 @@ void ar9003_mci_set_full_sleep(struct ath_hw *ah)
+ 
+ static void ar9003_mci_disable_interrupt(struct ath_hw *ah)
+ {
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+ 	REG_WRITE(ah, AR_MCI_INTERRUPT_EN, 0);
+ 	REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, 0);
+ }
+ 
+ static void ar9003_mci_enable_interrupt(struct ath_hw *ah)
+ {
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+ 	REG_WRITE(ah, AR_MCI_INTERRUPT_EN, AR_MCI_INTERRUPT_DEFAULT);
+ 	REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN,
+ 		  AR_MCI_INTERRUPT_RX_MSG_DEFAULT);
+@@ -406,9 +388,6 @@ static bool ar9003_mci_check_int(struct ath_hw *ah, u32 ints)
+ {
+ 	u32 intr;
+ 
+-	if (!ATH9K_HW_CAP_MCI)
+-		return false;
+-
+ 	intr = REG_READ(ah, AR_MCI_INTERRUPT_RX_MSG_RAW);
+ 	return ((intr & ints) == ints);
+ }
+@@ -418,9 +397,6 @@ void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
+ {
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+ 
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+ 	*raw_intr = mci->raw_intr;
+ 	*rx_msg_intr = mci->rx_msg_intr;
+ 
+@@ -459,9 +435,6 @@ static void ar9003_mci_2g5g_changed(struct ath_hw *ah, bool is_2g)
+ {
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+ 
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+ 	if (!mci->update_2g5g &&
+ 	    (mci->is_2g != is_2g))
+ 		mci->update_2g5g = true;
+@@ -574,9 +547,6 @@ static void ar9003_mci_sync_bt_state(struct ath_hw *ah)
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+ 	u32 cur_bt_state;
+ 
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+ 	cur_bt_state = ar9003_mci_state(ah, MCI_STATE_REMOTE_SLEEP, NULL);
+ 
+ 	if (mci->bt_state != cur_bt_state) {
+@@ -675,9 +645,6 @@ static u32 ar9003_mci_wait_for_gpm(struct ath_hw *ah, u8 gpm_type,
+ 	u8 recv_type = 0, recv_opcode = 0;
+ 	bool b_is_bt_cal_done = (gpm_type == MCI_GPM_BT_CAL_DONE);
+ 
+-	if (!ATH9K_HW_CAP_MCI)
+-		return 0;
+-
+ 	more_data = time_out ? MCI_GPM_NOMORE : MCI_GPM_MORE;
+ 
+ 	while (time_out > 0) {
+@@ -909,9 +876,6 @@ static void ar9003_mci_mute_bt(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+ 	/* disable all MCI messages */
+ 	REG_WRITE(ah, AR_MCI_MSG_ATTRIBUTES_TABLE, 0xffff0000);
+ 	REG_WRITE(ah, AR_BTCOEX_WL_WEIGHTS0, 0xffffffff);
+@@ -945,9 +909,6 @@ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+ 	u32 regval, thresh;
+ 
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+ 	ath_dbg(common, MCI, "MCI full_sleep = %d, is_2g = %d\n",
+ 		is_full_sleep, is_2g);
+ 
+@@ -1218,9 +1179,6 @@ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+ 
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+ 	if (mci->update_2g5g) {
+ 		if (mci->is_2g) {
+ 
+@@ -1272,9 +1230,6 @@ bool ar9003_mci_send_message(struct ath_hw *ah, u8 header, u32 flag,
+ 	u32 saved_mci_int_en;
+ 	int i;
+ 
+-	if (!ATH9K_HW_CAP_MCI)
+-		return false;
+-
+ 	saved_mci_int_en = REG_READ(ah, AR_MCI_INTERRUPT_EN);
+ 	regval = REG_READ(ah, AR_BTCOEX_CTRL);
+ 
+@@ -1388,9 +1343,6 @@ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+ {
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+ 
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+ 	mci->gpm_addr = gpm_addr;
+ 	mci->gpm_buf = gpm_buf;
+ 	mci->gpm_len = len;
+@@ -1402,9 +1354,6 @@ EXPORT_SYMBOL(ar9003_mci_setup);
+ 
+ void ar9003_mci_cleanup(struct ath_hw *ah)
+ {
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+ 	/* Turn off MCI and Jupiter mode. */
+ 	REG_WRITE(ah, AR_BTCOEX_CTRL, 0x00);
+ 	ar9003_mci_disable_interrupt(ah);
+@@ -1418,9 +1367,6 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
+ 	u32 value = 0, more_gpm = 0, gpm_ptr;
+ 	u8 query_type;
+ 
+-	if (!ATH9K_HW_CAP_MCI)
+-		return 0;
+-
+ 	switch (state_type) {
+ 	case MCI_STATE_ENABLE:
+ 		if (mci->ready) {
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 1f1a5c6..63e4c4b1 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -333,7 +333,7 @@ void ath9k_btcoex_handle_interrupt(struct ath_softc *sc, u32 status)
+ 		if (status & ATH9K_INT_GENTIMER)
+ 			ath_gen_timer_isr(sc->sc_ah);
+ 
+-	if ((status & ATH9K_INT_MCI) && ATH9K_HW_CAP_MCI)
++	if (status & ATH9K_INT_MCI)
+ 		ath_mci_intr(sc);
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 5e4d8dc..1707137 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -209,11 +209,7 @@ enum ath9k_hw_caps {
+ 	ATH9K_HW_CAP_5GHZ			= BIT(12),
+ 	ATH9K_HW_CAP_APM			= BIT(13),
+ 	ATH9K_HW_CAP_RTT			= BIT(14),
+-#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+ 	ATH9K_HW_CAP_MCI			= BIT(15),
+-#else
+-	ATH9K_HW_CAP_MCI			= 0,
+-#endif
+ 	ATH9K_HW_CAP_DFS			= BIT(16),
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 85a957a..f818faa 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -389,9 +389,6 @@ int ath_mci_setup(struct ath_softc *sc)
+ 	struct ath_mci_coex *mci = &sc->mci_coex;
+ 	struct ath_mci_buf *buf = &mci->sched_buf;
+ 
+-	if (!ATH9K_HW_CAP_MCI)
+-		return 0;
+-
+ 	buf->bf_addr = dma_alloc_coherent(sc->dev,
+ 				  ATH_MCI_SCHED_BUF_SIZE + ATH_MCI_GPM_BUF_SIZE,
+ 				  &buf->bf_paddr, GFP_KERNEL);
+@@ -426,9 +423,6 @@ void ath_mci_cleanup(struct ath_softc *sc)
+ 	struct ath_mci_coex *mci = &sc->mci_coex;
+ 	struct ath_mci_buf *buf = &mci->sched_buf;
+ 
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+ 	if (buf->bf_addr)
+ 		dma_free_coherent(sc->dev,
+ 				  ATH_MCI_SCHED_BUF_SIZE + ATH_MCI_GPM_BUF_SIZE,
+@@ -450,9 +444,6 @@ void ath_mci_intr(struct ath_softc *sc)
+ 	u32 more_data = MCI_GPM_MORE;
+ 	bool skip_gpm = false;
+ 
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+ 	ar9003_mci_get_interrupt(sc->sc_ah, &mci_int, &mci_int_rxmsg);
+ 
+ 	if (ar9003_mci_state(ah, MCI_STATE_ENABLE, NULL) == 0) {
+-- 
+1.7.9.1
 
