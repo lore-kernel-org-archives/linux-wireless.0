@@ -1,26 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.srv.pl ([217.17.32.250]:58953 "EHLO mail.srv.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752315Ab2BAURx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Feb 2012 15:17:53 -0500
-Subject: BCM4313 and kernel 2.6.39
-From: Jarek <jarek@poczta.srv.pl>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="ISO-8859-2"
-Date: Wed, 01 Feb 2012 20:49:18 +0100
-Message-ID: <1328125758.30092.1501.camel@tower.local> (sfid-20120201_211756_824216_6F79E6AB)
-Mime-Version: 1.0
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:57450 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751796Ab2BVUFI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Feb 2012 15:05:08 -0500
+Date: Wed, 22 Feb 2012 15:03:12 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Masanari Iida <standby24x7@gmail.com>
+Cc: dsd@gentoo.org, kune@deine-taler.de,
+	linux-wireless@vger.kernel.org, trivial@kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] [trivial] zd1211rw: Fix typo in zd_usb.c and zd_mac.c
+Message-ID: <20120222200311.GA28075@tuxdriver.com> (sfid-20120222_210531_499072_E483F92F)
+References: <1328801372-2532-1-git-send-email-standby24x7@gmail.com>
+ <20120222193039.GC822@tuxdriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20120222193039.GC822@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+Sorry, I misread the patch -- I'm having a bad week...
 
-	Debian kernel 2.6.39 sometimes crashes with brcmsmac. Is there any
-newer version of compat-wireless which will compile and work with this
-kernel ?
-	Latest version has some dependecies which prevent build of brcmsmac.
-	
-best regards
+On Wed, Feb 22, 2012 at 02:30:39PM -0500, John W. Linville wrote:
+> NAK
+> 
+> http://mw1.merriam-webster.com/dictionary/resetting
+> 
+> On Fri, Feb 10, 2012 at 12:29:32AM +0900, Masanari Iida wrote:
+> > Correct spelling "reseting" to "resetting" in
+> > drivers/net/wireless/zd1211rw/zd_usb.c
+> > drivers/net/wireless/zd1211rw/zd_mac.c
+> > 
+> > Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+> > ---
+> >  drivers/net/wireless/zd1211rw/zd_mac.c |    2 +-
+> >  drivers/net/wireless/zd1211rw/zd_usb.c |    2 +-
+> >  2 files changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+> > index 0a70149..a8370eb 100644
+> > --- a/drivers/net/wireless/zd1211rw/zd_mac.c
+> > +++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+> > @@ -846,7 +846,7 @@ reset_device:
+> >  
+> >  	/* semaphore stuck, reset device to avoid fw freeze later */
+> >  	dev_warn(zd_mac_dev(mac), "CR_BCN_FIFO_SEMAPHORE stuck, "
+> > -				  "reseting device...");
+> > +				  "resetting device...");
+> >  	usb_queue_reset_device(mac->chip.usb.intf);
+> >  
+> >  	return r;
+> > diff --git a/drivers/net/wireless/zd1211rw/zd_usb.c b/drivers/net/wireless/zd1211rw/zd_usb.c
+> > index 785bdbe..f766b3e 100644
+> > --- a/drivers/net/wireless/zd1211rw/zd_usb.c
+> > +++ b/drivers/net/wireless/zd1211rw/zd_usb.c
+> > @@ -1104,7 +1104,7 @@ static void zd_tx_watchdog_handler(struct work_struct *work)
+> >  		goto out;
+> >  
+> >  	/* TX halted, try reset */
+> > -	dev_warn(zd_usb_dev(usb), "TX-stall detected, reseting device...");
+> > +	dev_warn(zd_usb_dev(usb), "TX-stall detected, resetting device...");
+> >  
+> >  	usb_queue_reset_device(usb->intf);
+> >  
+> > -- 
+> > 1.7.6.5
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Please read the FAQ at  http://www.tux.org/lkml/
+> > 
+> 
+> -- 
+> John W. Linville		Someday the world will need a hero, and you
+> linville@tuxdriver.com			might be all we have.  Be ready.
+
 -- 
-Jarek <jarek@poczta.srv.pl>
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
