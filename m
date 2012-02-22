@@ -1,34 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:37435 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752829Ab2BYClU (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:34122 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753596Ab2BVHLE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 21:41:20 -0500
-Received: by iazz13 with SMTP id z13so853074iaz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2012 18:41:20 -0800 (PST)
+	Wed, 22 Feb 2012 02:11:04 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1330136920-15954-1-git-send-email-sidhayn@gmail.com>
-References: <1330136920-15954-1-git-send-email-sidhayn@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Fri, 24 Feb 2012 18:41:00 -0800
-Message-ID: <CAB=NE6Vpch++VKPCofdML0wk9f+BLquwutdJhHN2nSCn8R6JFw@mail.gmail.com> (sfid-20120225_034125_103329_60351504)
-Subject: Re: [PATCH]v5 compat-wireless: replace modprobe -l with functional equivilent
-To: Rick Farina <sidhayn@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20292.38132.189174.742249@gargle.gargle.HOWL> (sfid-20120222_081110_369789_997AAF4D)
+Date: Wed, 22 Feb 2012 12:40:44 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 08/26] ath9k: Use CONFIG_ATH9K_BTCOEX_SUPPORT
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 24, 2012 at 6:28 PM, Rick Farina <sidhayn@gmail.com> wrote:
-> modprobe -l is either deprecated or removed, so let's replace it
-> testing [ -z "$(DESTDIR)" ] appeared to only be need due to the fact
-> that *enable was run directly instead of being run with $(DESTDIR)/
->
-> Testing for module presence should now work properly on modern distros
-> and *enable will be run properly with or without $(DESTDIR) being set.
->
-> Signed-off-by: Rick Farina <sidhayn@gmail.com>
+This patch uses CONFIG_ATH9K_BTCOEX_SUPPORT to conditionally
+compile btcoex-related code in the driver core.
 
-Applied and pushed, thanks!
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/Makefile |    4 ++--
+ drivers/net/wireless/ath/ath9k/ath9k.h  |   28 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/gpio.c   |    4 ++++
+ 3 files changed, 34 insertions(+), 2 deletions(-)
 
-  Luis
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index da02242..b3c7b12 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -3,9 +3,9 @@ ath9k-y +=	beacon.o \
+ 		init.o \
+ 		main.o \
+ 		recv.o \
+-		xmit.o \
+-		mci.o \
++		xmit.o
+ 
++ath9k-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += mci.o
+ ath9k-$(CONFIG_ATH9K_RATE_CONTROL) += rc.o
+ ath9k-$(CONFIG_ATH9K_PCI) += pci.o
+ ath9k-$(CONFIG_ATH9K_AHB) += ahb.o
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 23145ce..c2ccba6 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -454,6 +454,7 @@ struct ath_btcoex {
+ 	struct ath_mci_profile mci;
+ };
+ 
++#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+ int ath9k_init_btcoex(struct ath_softc *sc);
+ void ath9k_deinit_btcoex(struct ath_softc *sc);
+ void ath9k_start_btcoex(struct ath_softc *sc);
+@@ -462,6 +463,30 @@ void ath9k_btcoex_timer_resume(struct ath_softc *sc);
+ void ath9k_btcoex_timer_pause(struct ath_softc *sc);
+ void ath9k_btcoex_handle_interrupt(struct ath_softc *sc, u32 status);
+ u16 ath9k_btcoex_aggr_limit(struct ath_softc *sc, u32 max_4ms_framelen);
++#else
++static inline int ath9k_init_btcoex(struct ath_softc *sc)
++{
++	return 0;
++}
++static inline void ath9k_deinit_btcoex(struct ath_softc *sc)
++{
++}
++static inline void ath9k_start_btcoex(struct ath_softc *sc)
++{
++}
++static inline void ath9k_stop_btcoex(struct ath_softc *sc)
++{
++}
++static inline void ath9k_btcoex_handle_interrupt(struct ath_softc *sc,
++						 u32 status)
++{
++}
++static inline u16 ath9k_btcoex_aggr_limit(struct ath_softc *sc,
++					  u32 max_4ms_framelen)
++{
++	return 0;
++}
++#endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
+ 
+ /********************/
+ /*   LED Control    */
+@@ -655,8 +680,11 @@ struct ath_softc {
+ 	struct ath_beacon_config cur_beacon_conf;
+ 	struct delayed_work tx_complete_work;
+ 	struct delayed_work hw_pll_work;
++
++#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+ 	struct ath_btcoex btcoex;
+ 	struct ath_mci_coex mci_coex;
++#endif
+ 
+ 	struct ath_descdma txsdma;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index e870251..77b3eb7 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -110,6 +110,8 @@ void ath_start_rfkill_poll(struct ath_softc *sc)
+ 		wiphy_rfkill_start_polling(sc->hw->wiphy);
+ }
+ 
++#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
++
+ /******************/
+ /*     BTCOEX     */
+ /******************/
+@@ -423,3 +425,5 @@ int ath9k_init_btcoex(struct ath_softc *sc)
+ 
+ 	return 0;
+ }
++
++#endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
+-- 
+1.7.9.1
+
