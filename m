@@ -1,67 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:33525 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750819Ab2B0FdY (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50284 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751511Ab2BVR5n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 00:33:24 -0500
-Message-ID: <1330320802.8460.105.camel@deadeye> (sfid-20120227_063327_782741_C11A1DED)
-Subject: iwlwifi WPA-TKIP crypto failure after group rekeying
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	651199@bugs.debian.org, Andreas Gustafsson <olangu@impressions.se>,
-	Marco d'Itri <md@Linux.IT>,
-	Gabriel Kerneis <kerneis@pps.jussieu.fr>
-Date: Mon, 27 Feb 2012 05:33:22 +0000
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-R4QuqudnzoYxd1JsQkVU"
+	Wed, 22 Feb 2012 12:57:43 -0500
+Subject: Re: [RFC] cfg80211: 80Mhz Bandwidth channel flags in 5Gig band
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mahesh <maheshp@posedge.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <f17c700977012ada368da4f339b9c639@posedge.com> (sfid-20120222_185112_125868_ED7DF18C)
+References: <f17c700977012ada368da4f339b9c639@posedge.com>
+	 (sfid-20120222_185112_125868_ED7DF18C)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 22 Feb 2012 18:57:38 +0100
+Message-ID: <1329933458.4657.2.camel@jlt3.sipsolutions.net> (sfid-20120222_185746_860409_0CF57D5F)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2012-02-22 at 23:21 +0530, Mahesh wrote:
+> This change is for marking 80Mhz bandwidth supported channel flags in 
+> 5Gig band.
 
---=-R4QuqudnzoYxd1JsQkVU
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+This patch is not only completely mangled, it also neglects to actually
+support this in the regdb etc. What's the point?
 
-Several Debian users (cc'd) have reported a regression in iwlagn in
-Linux 3.1, not fixed in 3.2.  The full bug log is at:
+johannes
 
-http://bugs.debian.org/651199
 
-To summarise, a WPA-TKIP managed connection stops passing traffic and
-the kernel log shows the message "WPA: Group rekeying".  This apparently
-doesn't happen if the connection is in heavy use at the time or with
-module parameter swcrypto=3D1.  WPA2 is not affected either.
+> Signed-off-by: Mahesh Palivela (maheshp@posedge.com)
+> ---
+> 
+>   include/net/cfg80211.h |   20 +++++++++----
+>   net/wireless/reg.c     |   72 
+> ++++++++++++++++++++++++++++++++++++++++++++++++
+>   2 files changed, 86 insertions(+), 6 deletions(-)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index e0c9ff3..7fb77d5 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -93,18 +93,26 @@ enum ieee80211_band {
+>    * 	is not permitted.
+>    * @IEEE80211_CHAN_NO_HT40MINUS: extension channel below this channel
+>    * 	is not permitted.
+> + * @IEEE80211_CHAN_NO_VHT80PLUS: extension channel above this channel
+> + * 	is not permitted.
+> + * @IEEE80211_CHAN_NO_VHT80MINUS: extension channel below this channel
+> + * 	is not permitted.
+>    */
+>   enum ieee80211_channel_flags {
+> -	IEEE80211_CHAN_DISABLED		= 1<<0,
+> -	IEEE80211_CHAN_PASSIVE_SCAN	= 1<<1,
+> -	IEEE80211_CHAN_NO_IBSS		= 1<<2,
+> -	IEEE80211_CHAN_RADAR		= 1<<3,
+> -	IEEE80211_CHAN_NO_HT40PLUS	= 1<<4,
+> -	IEEE80211_CHAN_NO_HT40MINUS	= 1<<5,
+> +	IEEE80211_CHAN_DISABLED		    = 1<<0,
+> +	IEEE80211_CHAN_PASSIVE_SCAN	    = 1<<1,
+> +	IEEE80211_CHAN_NO_IBSS		    = 1<<2,
+> +	IEEE80211_CHAN_RADAR		    = 1<<3,
+> +	IEEE80211_CHAN_NO_HT40PLUS	    = 1<<4,
+> +	IEEE80211_CHAN_NO_HT40MINUS	    = 1<<5,
+> +    IEEE80211_CHAN_NO_VHT80PLUS     = 1<<6,
+> +    IEEE80211_CHAN_NO_VHT80MINUS    = 1<<7,
+>   };
+> 
+>   #define IEEE80211_CHAN_NO_HT40 \
+>   	(IEEE80211_CHAN_NO_HT40PLUS | IEEE80211_CHAN_NO_HT40MINUS)
+> +#define IEEE80211_CHAN_NO_VHT80 \
+> +    (IEEE80211_CHAN_NO_VHT80PLUS | IEEE80211_CHAN_NO_VHT80MINUS)
+> 
+>   /**
+>    * struct ieee80211_channel - channel definition
+> diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+> index e9a0ac8..dfa8f5d 100644
+> --- a/net/wireless/reg.c
+> +++ b/net/wireless/reg.c
+> @@ -1048,6 +1048,77 @@ static void reg_process_beacons(struct wiphy 
+> *wiphy)
+>   	wiphy_update_beacon_reg(wiphy);
+>   }
+> 
+> +static bool is_vht80_not_allowed(struct ieee80211_channel *chan)
+> +{
+> +	if (!chan)
+> +		return true;
+> +	if (chan->flags & IEEE80211_CHAN_DISABLED)
+> +		return true;
+> +	/* This would happen when regulatory rules disallow VHT80 completely 
+> */
+> +	if (IEEE80211_CHAN_NO_VHT80 == (chan->flags & 
+> (IEEE80211_CHAN_NO_VHT80)))
+> +		return true;
+> +	return false;
+> +}
+> +
+> +static void reg_process_vht_flags_channel(struct wiphy *wiphy,
+> +					 unsigned int chan_idx)
+> +{
+> +	struct ieee80211_supported_band *sband;
+> +	struct ieee80211_channel *channel;
+> +	struct ieee80211_channel *channel_before = NULL, *channel_after = 
+> NULL;
+> +	unsigned int i;
+> +
+> +	assert_cfg80211_lock();
+> +
+> +	sband = wiphy->bands[IEEE80211_BAND_5GHZ];
+> +	BUG_ON(chan_idx >= sband->n_channels);
+> +	channel = &sband->channels[chan_idx];
+> +
+> +	if (is_vht80_not_allowed(channel)) {
+> +		channel->flags |= IEEE80211_CHAN_NO_VHT80;
+> +		return;
+> +	}
+> +
+> +	/*
+> +	 * We need to ensure the extension channels exist to
+> +	 * be able to use VHT80- or VHT80+, this finds them (or not)
+> +	 */
+> +	for (i = 0; i < sband->n_channels; i++) {
+> +		struct ieee80211_channel *c = &sband->channels[i];
+> +		if (c->center_freq == (channel->center_freq - 40))
+> +			channel_before = c;
+> +		if (c->center_freq == (channel->center_freq + 40))
+> +			channel_after = c;
+> +	}
+> +
+> +	/*
+> +	 * Please note that this assumes target bandwidth is 40 MHz,
+> +	 * if that ever changes we also need to change the below logic
+> +	 * to include that as well.
+> +	 */
+> +	if (is_vht80_not_allowed(channel_before))
+> +		channel->flags |= IEEE80211_CHAN_NO_VHT80MINUS;
+> +	else
+> +		channel->flags &= ~IEEE80211_CHAN_NO_VHT80MINUS;
+> +
+> +	if (is_vht80_not_allowed(channel_after))
+> +		channel->flags |= IEEE80211_CHAN_NO_VHT80PLUS;
+> +	else
+> +		channel->flags &= ~IEEE80211_CHAN_NO_VHT80PLUS;
+> +}
+> +
+> +static void reg_process_vht_flags(struct wiphy *wiphy)
+> +{
+> +	unsigned int i;
+> +	struct ieee80211_supported_band *sband;
+> +
+> +	BUG_ON(!wiphy->bands[IEEE80211_BAND_5GHZ]);
+> +	sband = wiphy->bands[IEEE80211_BAND_5GHZ];
+> +
+> +	for (i = 0; i < sband->n_channels; i++)
+> +		reg_process_vht_flags_channel(wiphy, i);
+> +}
+> +
+>   static bool is_ht40_not_allowed(struct ieee80211_channel *chan)
+>   {
+>   	if (!chan)
+> @@ -1154,6 +1225,7 @@ static void wiphy_update_regulatory(struct wiphy 
+> *wiphy,
+> 
+>   	reg_process_beacons(wiphy);
+>   	reg_process_ht_flags(wiphy);
+> +	reg_process_vht_flags(wiphy);
+>   	if (wiphy->reg_notifier)
+>   		wiphy->reg_notifier(wiphy, last_request);
+>   }
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Ben.
 
---=20
-Ben Hutchings
-Q.  Which is the greater problem in the world today, ignorance or apathy?
-A.  I don't know and I couldn't care less.
-
---=-R4QuqudnzoYxd1JsQkVU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIVAwUAT0sVoue/yOyVhhEJAQp8XhAAwH6GBX5T69c1cV5Dvk3l7gxERaHyjEKA
-akaZX4KU2ofdiH3pnedqgp8Ribxguv5RnG/tknOVdlc0hVB/N/NFLKDCWuieubAK
-VIK2Rz2DOjjgq48bwU+3BdpRhHlnYYIFKnX/tSuRYKOBBZmaaTkgqe0wJ5vAmqaX
-Bx8QbWhddDA2jl1++5kWT1O8ubu6Ec3vBuTKbEVyi+7sJnHdk9bFO5kC/rQXeilj
-AfkycAojTAhrIYzEv1NfW8Bl9oKnMa3BeX8/RWwLKCjIrqw9bPifD8fKLaoYUGF4
-6yBeQ3iYqWxyIdgz3yMa31x2n1FPFLRAyqtXUBIDTtBdydB2XcE+yfveO9oDAK7M
-CmkndnH5RgelqhQPX8uNFvIseHLnwBamcx71Epzpq6241kCbjMuChaYHGdRRsVAJ
-edZ+kajL4r4fzrhIyMnifUfMMIW0sovvBv4NHBcPasN42uyCsvaay3nygxLQKP4Q
-+sBTPK/BrX9RdV/DdfCvO2F0GigvZRPmkCRgiTV4yQO7PDWUmFVfk3g3XVV8+xpa
-l+rdc/SbcdTJlfZ5pHLEGub187LGGvqoyWMTe2sJUgb0M5H2ig4dzQF2V1UFsSqY
-CN6j3bK4t6Sfv3LYn0sMW7G1+f8KwVO/By5cE76IojmrIz+NMA5gXCyAxU1hO38I
-iVDBKDG+wU4=
-=fIdk
------END PGP SIGNATURE-----
-
---=-R4QuqudnzoYxd1JsQkVU--
