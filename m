@@ -1,48 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:50008 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754289Ab2B2Gil (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47473 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752815Ab2BVMWw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 01:38:41 -0500
-Date: Wed, 29 Feb 2012 09:36:57 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch 3/4] rndis_wlan: make some variables unsigned
-Message-ID: <20120229063657.GE18031@elgon.mountain> (sfid-20120229_073847_161188_EEFB9655)
+	Wed, 22 Feb 2012 07:22:52 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20292.56849.148667.178506@gargle.gargle.HOWL> (sfid-20120222_132306_651307_2BCE9A93)
+Date: Wed, 22 Feb 2012 17:52:41 +0530
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
+	<ath9k-devel@lists.ath9k.org>
+Subject: Re: [PATCH 16/26] ath9k_hw: Use CONFIG_ATH9K_BTCOEX_SUPPORT
+In-Reply-To: <CAGRGNgUTDAuncGyoXp5Y3pNPvVjPWWppsnH_qj+4HWrJWX-thw@mail.gmail.com>
+References: <20292.38178.132196.432415@gargle.gargle.HOWL>
+	<CAGRGNgUTDAuncGyoXp5Y3pNPvVjPWWppsnH_qj+4HWrJWX-thw@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These variables can never be less than zero because we cap them in
-get_device_pmkids().  Let's make them unsigned here because it's simpler
-to not have to worry about negative numbers when we read the code.
+Julian Calaby wrote:
+> > -static inline bool ar9003_mci_is_ready(struct ath_hw *ah)
+> > +#else
+> > +
+> > +#define ar9003_mci_is_ready(...) false
+> 
+> You missed one =)
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Heh, I did fix this, but messed up the git-rebase foo. :)
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index a93cfe2..74e2d1b 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -1790,7 +1790,8 @@ static struct ndis_80211_pmkid *remove_pmkid(struct usbnet *usbdev,
- 						struct cfg80211_pmksa *pmksa,
- 						int max_pmkids)
- {
--	int i, count, newlen, err;
-+	int i, newlen, err;
-+	unsigned int count;
- 
- 	count = le32_to_cpu(pmkids->bssid_info_count);
- 
-@@ -1830,7 +1831,8 @@ static struct ndis_80211_pmkid *update_pmkid(struct usbnet *usbdev,
- 						struct cfg80211_pmksa *pmksa,
- 						int max_pmkids)
- {
--	int i, err, count, newlen;
-+	int i, err, newlen;
-+	unsigned int count;
- 
- 	count = le32_to_cpu(pmkids->bssid_info_count);
- 
+Sujith
