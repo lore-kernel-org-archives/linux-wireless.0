@@ -1,416 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:39714 "EHLO
-	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750943Ab2BVHng (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 02:43:36 -0500
-Received: by mail-lpp01m010-f52.google.com with SMTP id y4so14476229lag.39
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Feb 2012 23:43:34 -0800 (PST)
-Message-ID: <1329896611.22736.104.camel@cumari> (sfid-20120222_084340_986217_9E2666F3)
-Subject: linux-firmware: pull-request wl12xx 2012-02-22 (v2)
-From: Luciano Coelho <coelho@ti.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: David Woodhouse <dwmw2@infradead.org>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 22 Feb 2012 09:43:31 +0200
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-ljdSWDxVji38al1qXojP"
-Mime-Version: 1.0
+Received: from nm14-vm0.bullet.mail.ird.yahoo.com ([77.238.189.193]:29963 "HELO
+	nm14-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753817Ab2BVVvj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Feb 2012 16:51:39 -0500
+Message-ID: <1329947497.90659.YahooMailClassic@web29504.mail.ird.yahoo.com> (sfid-20120222_225142_752050_8A45EE00)
+Date: Wed, 22 Feb 2012 21:51:37 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [PATCH] rtl8187: Add Ad-hoc mode
+To: Attila Fazekas <turul64@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Herton Ronaldo Krzesinski <herton@canonical.com>
+In-Reply-To: <CAFmNhL=5TSTZ94ZrSUztG9Hs28Mqk8vMB7rS51SNgE2RCK5s7g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--- On Tue, 21/2/12, Attila Fazekas <turul64@gmail.com> wrote:
 
---=-ljdSWDxVji38al1qXojP
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> I think it is worth the effort.
+> 
+> Hostapd AFAIK is not working with rtl8187 now.
+> Until we can make it work in master mode, the adhoc mode
+> could be an
+> alternative. I think even if we can use it in master mode,
+> ad-hoc mode
+> should be implemented.
 
-Hi Ben,
+You (and others) could comment on the issue of not-working hostapd a bit more; we might want to get it working properly anyway.
 
-I have fixed up the stuff you mentioned.  Now our LICENCE file doesn't
-have any lines number (I had to check with legal and it is okay).  I
-also added a separate patch to change the existing WHENCE info to use
-the correct format and used the new format also when adding the new
-files.
+As Larry requested - please send the patch without munching from your 
+e-mail client. Since you are on gmail, I could offer a little advice on git-send-email, which may or may not be something you already know. This is what I do to send patches from my gmail account (change "name" and "acct" and "FILLTHISIN" and "patch-file" to suit yourself), and you could add --cc a few of us there also: 
 
-The head of the branch I want you to pull from is:
-f268e39204577a50cdaa62547278a4d069746d51.
+git send-email --from 'name <acct@gmail.com>' \
+--to linux-wireless@vger.kernel.org --to linville@tuxdriver.com \
+--smtp-server smtp.gmail.com --smtp-server-port 465 --smtp-user \ acct@gmail.com --smtp-pass FILLTHISIN --smtp-ssl patch-file
 
-Please let me know if there are any problems.
+You can do "man git-send-email" (all git man pages uses "git-something" to document the "git something" sub commands, with a dash between) to read about all the switches and what they are supposed to do.
 
+> About refactoring:
+> 
+> rtl8180_beacon_work()
+> Now is almost the same, I think it is possible to make it
+> generic by a
+> macro, or by creating new source/object file linked to both
+> driver, or
+> even possible to create a common module.
+> But, this function will be different if someone will be able
+> to add
+> some hardware aided beacon timestamp update. (If I can have
+> more
+> information about this hardware I'll try it)
+> Creating a new common module just for one small function,
+> IMHO not
+> worth the effort.
+> Please advice.
+> 
+> struct rtl8187_vif, struct rtl8180_vif  now are the
+> same, they might
+> be the same in the future as well.
+> We can remove them and create new one named rtl818x_vif in
+> the rtl818x.h .
+> Shall I do it ?
 
-The following changes since commit 09c949f6d3196a7199eb2c7015bfa5d34ed723b5=
-:
+I haven't got a strong opinion on this - but we probably like to try your patch out first :-).
 
-  usbdux: Add usbduxsigma firmware (2012-02-19 03:42:21 +0000)
+Thanks for the work!
 
-are available in the git repository at:
-  git://github.com/TI-OpenLink/firmwares.git linux-firmware
-
-Luciano Coelho (3):
-      linux-firmware: update ti-connectivity licence
-      linux-firmware: ti-connectivity: change fw version info to new style
-      linux-firmware: ti-connectivity: update wl12xx firmwares
-
- LICENCE.ti-connectivity             |  175 +++++++------------------------=
-----
- WHENCE                              |   52 +++++++----
- ti-connectivity/wl127x-fw-4-mr.bin  |  Bin 0 -> 260852 bytes
- ti-connectivity/wl127x-fw-4-plt.bin |  Bin 0 -> 261892 bytes
- ti-connectivity/wl127x-fw-4-sr.bin  |  Bin 0 -> 276684 bytes
- ti-connectivity/wl128x-fw-4-mr.bin  |  Bin 0 -> 264904 bytes
- ti-connectivity/wl128x-fw-4-plt.bin |  Bin 0 -> 269424 bytes
- ti-connectivity/wl128x-fw-4-sr.bin  |  Bin 0 -> 284156 bytes
- 8 files changed, 69 insertions(+), 158 deletions(-)
- create mode 100644 ti-connectivity/wl127x-fw-4-mr.bin
- create mode 100644 ti-connectivity/wl127x-fw-4-plt.bin
- create mode 100644 ti-connectivity/wl127x-fw-4-sr.bin
- create mode 100644 ti-connectivity/wl128x-fw-4-mr.bin
- create mode 100644 ti-connectivity/wl128x-fw-4-plt.bin
- create mode 100644 ti-connectivity/wl128x-fw-4-sr.bin
-
-diff --git a/LICENCE.ti-connectivity b/LICENCE.ti-connectivity
-index 085f6c7..91a1516 100644
---- a/LICENCE.ti-connectivity
-+++ b/LICENCE.ti-connectivity
-@@ -1,151 +1,46 @@
--Texas Instruments Incorporated
--Technology and Software Publicly Available
--Software (Object Code) License Agreement
-+TECHNOLOGY AND SOFTWARE PUBLICLY AVAILABLE
-+SOFTWARE LICENSE
-=20
-+Copyright (c) 2011, Texas Instruments Incorporated.
-=20
--IMPORTANT - PLEASE READ THE FOLLOWING LICENSE AGREEMENT CAREFULLY. THIS IS
--	A LEGALLY BINDING AGREEMENT.  DO NOT DOWNLOAD THE LICENSED MATERIALS
--	UNLESS: (1) YOU ARE AUTHORIZED TO ACCEPT AND AGREE TO THE TERMS OF THIS
--	LICENSE AGREEMENT AND (2) YOU INTEND TO ENTER INTO AND TO BE BOUND BY
--	THE TERMS OF THIS AGREEMENT.
-+All rights reserved.
-=20
--This Software License Agreement ("Agreement") is a legal agreement between=
- you
--	(either an individual or entity) and Texas Instruments Incorporated
--	("TI").  The "Licensed Materials" subject to this Agreement include,
--	in whole or in part, the software programs that accompany this Agreement
--	and any "on-line" or electronic documentation associated with these
--	programs.  By installing, copying or otherwise using the Licensed
--	Materials you agree to abide by the terms of this Agreement.
--	If you choose not to accept or agree with these terms, do not download
--	or install the Licensed Materials.
-+Redistribution.
-=20
-+Redistribution and use in binary form, without modification, are
-+permitted provided that the following conditions are met:
-=20
--1. Object Code License.  TI hereby grants to you a limited, non-exclusive
--	license to reproduce and use the Licensed Materials provided to you in
--	object code format and to distribute an unlimited number of object or
--	executable copies of such Licensed Materials, provided that such object
--	or executable copies are used solely and exclusively on devices
--	manufactured by or for TI.
-+ * Redistributions must preserve existing copyright notices and reproduce
-+   this license (including the above copyright notice and the disclaimer b=
-elow)
-+   in the documentation and/or other materials provided with the distribut=
-ion.
-=20
--2. Termination.  This license is effective until terminated.  Without prej=
-udice
--	to any other rights, TI may terminate your right to use the Licensed
--	Materials under this Agreement if you fail to comply with the terms of
--	this Agreement.  In such event, you shall destroy all copies of the
--	Licensed Materials, including all portions and derivatives thereof.
-+ * Neither the name of Texas Instruments Incorporated nor the names of
-+   its suppliers may be used to endorse or promote products derived
-+   from this software without specific prior written permission.
-=20
--3. Intellectual Property Rights.  The Licensed Materials being provided to=
- you
--	hereunder are being made publicly available by TI, even though they
--	contain copyrighted material of TI and its licensors, if applicable.
--	In no event may you alter, remove or destroy any copyright notice
--	included in the Licensed Materials.  To the extent that any of the
--	Licensed Materials are provided in binary or object code only, you may
--	not unlock, decompile, reverse engineer, disassemble or otherwise
--	translate such binary or object code to human-perceivable form. The
--	source code of such reverse engineered code may contain TI trade secret
--	and other proprietary information.  Further, nothing shall obligate TI
--	to provide you with source code for the Licensed Materials licensed to
--	you in binary or object code only under this Agreement.  TI reserves all
--	rights not specifically granted under this Agreement.
-+ * No reverse engineering, decompilation, or disassembly of this
-+   software is permitted.
-=20
--4. Warranties and Limitations.  THE LICENSED MATERIALS ARE PROVIDED "AS IS=
-". TI
--	MAKES NO WARRANTY OR REPRESENTATION, EXPRESS, IMPLIED OR STATUTORY,
--	INCLUDING ANY IMPLIED WARRANTIES OF MERCHANTIBILITY, FITNESS FOR A
--	PARTICULAR PURPOSE, LACK OF VIRUSES, ACCURACY OR COMPLETENESS OF
--	RESPONSES, RESULTS AND LACK OF NEGLIGENCE.  TI DISCLAIMS ANY WARRANTY OF
--	TITLE, QUIET ENJOYMENT, QUIET POSESSION, AND NON-INFRINGEMENT OF ANY
--	THIRD PARTY INTELLECTUAL PROPERTY RIGHTS WITH REGARD TO THE LICENSED
--	MATERIALS OR USE OF THOSE MATERIALS.
-+Limited patent license.
-=20
--YOU ACKNOWLEDGE AND AGREE THAT THE LICENSED MATERIALS MAY NOT BE INTENDED =
-FOR
--	PRODUCTION APPLICATIONS AND MAY CONTAIN IRREGULARITIES AND DEFECTS NOT
--	FOUND IN PRODUCTION SOFTWARE.  FURTHERMORE, YOU ACKNOWLEDGE AND AGREE
--	THAT THE LICENSED MATERIALS HAVE NOT BEEN TESTED OR CERTIFIED BY ANY
--	GOVERNMENT AGENCY OR INDUSTRY REGULATORY ORGANIZATION OR ANY OTHER THIRD
--	PARTY ORGANIZATION.  YOU AGREE THAT PRIOR TO USING, INCORPORATING OR
--	DISTRIBUTING THE LICENSED MATERIALS IN OR WITH ANY COMMERCIAL PRODUCT
--	THAT YOU WILL THOROUGHLY TEST THE PRODUCT AND THE FUNCTIONALITY OF THE
--	LICENSED MATERIALS IN OR WITH THAT PRODUCT AND BE SOLELY RESPONSIBLE FOR
--	ANY PROBLEMS OR FAILURES.
-+Texas Instruments Incorporated grants a world-wide, royalty-free,
-+non-exclusive license under patents it now or hereafter owns or controls
-+to make, have made, use, import, offer to sell and sell ("Utilize") this
-+software, but solely to the extent that any such patent is necessary
-+to Utilize the software alone.  The patent license shall not apply to
-+any combinations which include this software.  No hardware per se is
-+licensed hereunder.
-=20
--IN NO EVENT SHALL TI, OR ANY APPLICABLE LICENSOR, BE LIABLE FOR ANY SPECIA=
-L,
--	INDIRECT, INCIDENTAL, PUNITIVE OR CONSEQUENTIAL DAMAGES, HOWEVER CAUSED
--	ON ANY THEORY OF LIABILITY, ARISING IN ANY WAY OUT OF THIS AGREEMENT,
--	OR YOUR USE OF THE LICENSED MATERIALS, WHETHER OR NOT TI HAS BEEN
--	ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.  EXCLUDED DAMAGES INCLUDE,
--	BUT ARE NOT LIMITED TO, COST OF REMOVAL OR REINSTALLATION, OUTSIDE
--	COMPUTER TIME, LABOR COSTS, LOSS OR CORRUPTION OF DATA, LOSS OF
--	GOODWILL, LOSS OF PROFITS, LOSS OF SAVINGS, OR LOSS OF USE OR
--	INTERRUPTION OF BUSINESS OR ANY OTHER ECONOMIC LOSS.  IN NO EVENT WILL
--	TI'S AGGREGATE LIABILITY UNDER THIS AGREEMENT OR ARISING OUT OF YOUR USE
--	OF THE LICENSED MATERIALS EXCEED FIVE HUNDRED U.S. DOLLARS (US$500).
--
--Because some jurisdictions do not allow the exclusion or limitation of
--	incidental or consequential damages or limitation on how long an implied
--	warranty lasts, the above limitations or exclusions may not apply to
--	you.
--
--5. Export Control. Thesoftware programs and any "on-line" documentation as=
- well
--	as any updates or upgrades to such software programs or documentation
--	may be subject to the export or import regulations of certain countries.
--	You agree to comply with all such regulations and acknowledge that you
--	have the responsibility to obtain any licenses or other authorizations
--	that may be required to export, re-export or import the Licensed
--	Materials.
--
--6. Governing Law, Jurisdiction and Severability.  This Agreement will be
--	governed by and interpreted in accordance with the laws of the State of
--	Texas, without reference to that state's conflict of laws principles.
--	This Agreement shall not be governed by the United Nations Convention on
--	Contracts for the International Sale of Goods, nor shall it be governed
--	by the Uniform Computer Information Transactions Act (UCITA).  Any
--	dispute arising out of or related to this Agreement will be brought in,
--	and each party consents to the exclusive jurisdiction and venue in the
--	state and federal courts sitting in Dallas Country, Texas. Each party
--	waives all defenses of lack of personal jurisdiction and forum
--	non-conveniens and agrees that process may be served on either party in
--	a manner authorized by applicable law or court rule.  If for any reason
--	a court of competent jurisdiction finds any provision of the Agreement
--	to be unenforceable, that provision will be enforced to the maximum
--	extent possible to effectuate the intent of the parties and the
--	remainder of the Agreement shall continue in full force and effect.
--
--7. PRC Provisions.  If you are located in the People's Republic of China (=
-"PRC")
--	or if the Licensed Materials will be sent to the PRC, the following
--	provisions shall apply and shall supersede any other provisions in this
--	Agreement concerning the same subject matter as the following
--	provisions:
--
--	a.	Registration Requirements.  You shall be solely responsible for
--	performing all acts and obtaining all approvals that may be required in
--	connection with this Agreement by the government of the PRC, including
--	but not limited to registering pursuant to, and otherwise complying
--	with, the PRC Measures on the Administration of Software Products,
--	Management Regulations on Technology Import-Export, and Technology
--	Import and Export Contract Registration Management Rules. Upon receipt
--	of such approvals from the government authorities, you shall forward
--	evidence of all such approvals to TI for its records.  In the event that
--	you fail to obtain any such approval or registration, you shall be
--	solely responsible for any and all losses, damages or costs resulting
--	therefrom, and shall indemnify TI for all such losses, damages or costs.
--
--	b.	Governing Language.  This Agreement is written and executed in
--	the English language.  If a translation of this Agreement is required
--	for any purpose, including but not limited to registration of the
--	Agreement pursuant to any governmental laws, regulations or rules, you
--	shall be solely responsible for creating such translation.  Any
--	translation of this Agreement into a language other than English is
--	intended solely in order to comply with such laws or for reference
--	purposes, and the English language version shall be authoritative and
--	controlling.
--
--8. Entire Agreement.  This is the entire Agreement between you and TI and
--	supersedes any prior agreement between the parties related to the
--	subject matter of this Agreement. No amendment or modification of this
--	Agreement will be effective unless in writing and signed by a duly
--	authorized representative of TI.  You hereby warrant and represent that
--	you have obtained all authorizations and other applicable consents
--	required empowering you to enter into this Agreement.
--
--1
--TILAW-#236402v3
-+DISCLAIMER.
-=20
-+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-diff --git a/WHENCE b/WHENCE
-index 392f8c0..2999fa7 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -1580,15 +1580,36 @@ Licence: Redistributable. See LICENCE.tda7706-firmw=
-are.txt for details.
- Driver: wl12xx - Texas Instruments 802.11 wireless LAN driver
-=20
- File: wl1271-fw.bin
-+Version: 6.1.0.50.350 (STA-only)
- File: wl1271-fw-2.bin
-+Version: 6.1.5.50.74 (STA-only)
- File: wl1271-fw-ap.bin
-+Version: 6.2.1.0.54 (AP-only)
- File: wl127x-fw-3.bin
-+Version: 6.3.0.0.77
- File: wl127x-fw-plt-3.bin
-+Version: 6.3.0.0.77 (PLT-only)
-+File: wl127x-fw-4-sr.bin
-+Version: 6.3.5.0.98 (Single-role)
-+File: wl127x-fw-4-mr.bin
-+Version: 6.5.2.0.15 (Multi-role)
-+File: wl127x-fw-4-plt.bin
-+Version: 6.3.5.0.98 (PLT-only)
-=20
- File: wl128x-fw.bin
-+Version: 7.1.5.50.74 (STA-only)
- File: wl128x-fw-ap.bin
-+Version: 7.2.1.0.54 (AP-only)
- File: wl128x-fw-3.bin
-+Version: 7.3.0.0.77
- File: wl128x-fw-plt-3.bin
-+Version: 7.3.0.0.77
-+File: wl128x-fw-4-sr.bin
-+Version: 7.3.5.0.98 (Single-role)
-+File: wl128x-fw-4-mr.bin
-+Version: 7.5.2.0.15 (Multi-role)
-+File: wl128x-fw-4-plt.bin
-+Version: 7.3.5.0.98 (PLT)
-=20
- File: wl127x-nvs.bin
- File: wl128x-nvs.bin
-@@ -1598,28 +1619,23 @@ sl:   wl1271-nvs.bin -> wl127x-nvs.bin
-=20
- Licence: See LICENCE.ti-connectivity for details.
-=20
--	Station:      wl1271-fw.bin version 6.1.0.50.350
--	Station:      wl1271-fw-2.bin version 6.1.5.50.74
--	Station:      wl128x-fw.bin version 7.1.5.50.74
--	Access Point: wl1271-fw-ap.bin version 6.2.1.0.54
--	Access Point: wl128x-fw-ap.bin version 7.2.1.0.54
--	Station & Access Point: wl127x-fw-3.bin version Rev 6.3.0.0.77
--	PLT: 			wl127x-fw-3.bin version PLT 6.3.0.0.77
--	Station & Access Point: wl128x-fw-3.bin version Rev 7.3.0.0.77
--	PLT:			wl128x-fw-3.bin version PLT 7.3.0.0.77
--
--The nvs file includes two parts:
-+The NVS file includes two parts:
- 	 - radio calibration
--	 - ini setting parameters
-+	 - HW configuration parameters (aka. INI values)
-=20
--In order to have correct NVS file for your device NVS tool should be use:
--http://linuxwireless.org/en/users/Drivers/wl12xx/calibrator
-+The published NVS files are for testing only.  Every device needs to
-+hava a unique NVS which is properly calibrated for best results.  You
-+can find more information about NVS generation for your device here:
-=20
--Example NVS files (not optimal) for wl127x and wl128x includes.
--To use example NVS set symbolic link wl12xx-nvs.bin to one of
--them (depending the chip on the platform)
-+http://wireless.kernel.org/en/users/Drivers/wl12xx/calibrator
-=20
--In order to use that files copy ti-connectivity directory to target FS at
-+If you're using a wl127x based device, use a symbolic link called
-+wl1271-nvs.bin that links to the wl127x-nvs.bin file.  If you are
-+using wl128x, link to wl128x-nvs.bin instead.
-+
-+The driver expects to find the firmwares under a ti-connectivity
-+subdirectory.  So if your system looks for firmwares in /lib/firmware,
-+the firmwares for wl12xx chips must be located in
- /lib/firmware/ti-connectivity/.
-=20
- --------------------------------------------------------------------------
-diff --git a/ti-connectivity/wl127x-fw-4-mr.bin b/ti-connectivity/wl127x-fw=
--4-mr.bin
-new file mode 100644
-index 0000000..6dd7f0e
-Binary files /dev/null and b/ti-connectivity/wl127x-fw-4-mr.bin differ
-diff --git a/ti-connectivity/wl127x-fw-4-plt.bin b/ti-connectivity/wl127x-f=
-w-4-plt.bin
-new file mode 100644
-index 0000000..b3b7d78
-Binary files /dev/null and b/ti-connectivity/wl127x-fw-4-plt.bin differ
-diff --git a/ti-connectivity/wl127x-fw-4-sr.bin b/ti-connectivity/wl127x-fw=
--4-sr.bin
-new file mode 100644
-index 0000000..a9d8f96
-Binary files /dev/null and b/ti-connectivity/wl127x-fw-4-sr.bin differ
-diff --git a/ti-connectivity/wl128x-fw-4-mr.bin b/ti-connectivity/wl128x-fw=
--4-mr.bin
-new file mode 100644
-index 0000000..64ca8fa
-Binary files /dev/null and b/ti-connectivity/wl128x-fw-4-mr.bin differ
-diff --git a/ti-connectivity/wl128x-fw-4-plt.bin b/ti-connectivity/wl128x-f=
-w-4-plt.bin
-new file mode 100644
-index 0000000..05f1317
-Binary files /dev/null and b/ti-connectivity/wl128x-fw-4-plt.bin differ
-diff --git a/ti-connectivity/wl128x-fw-4-sr.bin b/ti-connectivity/wl128x-fw=
--4-sr.bin
-new file mode 100644
-index 0000000..e3e1000
-Binary files /dev/null and b/ti-connectivity/wl128x-fw-4-sr.bin differ
-
-
---=20
-Cheers,
-Luca.
-
---=-ljdSWDxVji38al1qXojP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAABAgAGBQJPRJyjAAoJEKFHnKIaPMX64WsQAK9Inus1zOY7mZ8G5L/1JVLj
-bXqtXi/Jb6TzPu0Sh2pMr0sOGS5HfmJvyaorghgIxle6JdO9rXzLNPz+STap+tpX
-WfRIonC86ebRuix5J3oVQ3S1wBdVwNKwRTbJZSRKStp+PUZQ3GbgeddS/Yh79KBv
-yF0egJU+5qMG1gMh4dyaRiaTHrTPS4iWxguJlCxOm5dHIUGXhH+CHgSprcmYo0LR
-bnpwoteB5aoLTLVBfgHL1SXUriCSpltfPw66tmLZyUKS0+4j+GLza8Ad9fseMe+l
-BVuMOeRGJP6pW4sU43kQrnZicX4PCNNh5B5ubL/ibPiESQxCyjcXSVHjoZ3WnLh8
-/8nsucKbh9hOCbnoK2Mrf0/g1c6huefAHItkU8QCpENx+h0j4wdKmGtC0SZzWjS8
-/lacBP1FroHB/gLGuboDXtBBuruuRqU8yffsDnq9ZHLuJV4OrJIQEqQRZZHT/RlT
-f6BAgfBV2FMDICrpKwObG+o5MMGgOPzSMvIEVpMIqqI0yxrya+21+yiv0hrjN2cj
-tznpUOYbrDLidJQJcf9vfj8VQr0QvgdA/Eqb+8+d9NJxQOxeGasNggorRkXLVvPu
-o1HliIORBL8RVXksKEdOZIGvkBKC5FVHA8OLm+ee2ooapqUAP9XETQPlJkBxBxM7
-Jf2iWRs0/1X3k1pvhTyR
-=1wH7
------END PGP SIGNATURE-----
-
---=-ljdSWDxVji38al1qXojP--
-
+Hin-Tak
