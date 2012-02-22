@@ -1,277 +1,670 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:45594 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755329Ab2B0XTD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 18:19:03 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 02/24] iwlwifi: move content of iwl_probe to post fetch_fw
-Date: Mon, 27 Feb 2012 14:07:26 -0800
-Message-Id: <1330380468-17674-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120228_002023_455314_1E7C23B6)
-In-Reply-To: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:35213 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753790Ab2BVHLe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Feb 2012 02:11:34 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20292.38172.56195.947443@gargle.gargle.HOWL> (sfid-20120222_081138_123498_5CB98BE2)
+Date: Wed, 22 Feb 2012 12:41:24 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 15/26] ath9k_hw: Cleanup MCI function declarations
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+This patch converts a few functions to static variants
+and removes extraneous declarations.
 
-This will allow to have different behavior depending on the fw.
-Different fw APIs require completely different implementation
-of the mac80211 APIs. Each of these implementations is called an
-op_mode.
-
-The current op_mode is called DVM which states for dual virtual MAC.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c    |   53 +++++++++++++++++++++--
- drivers/net/wireless/iwlwifi/iwl-shared.h |    3 +
- drivers/net/wireless/iwlwifi/iwl-ucode.c  |   64 ++++++----------------------
- drivers/net/wireless/iwlwifi/iwl-wifi.h   |    2 +
- 4 files changed, 67 insertions(+), 55 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |  508 +++++++++++++-------------
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |   13 -
+ 2 files changed, 254 insertions(+), 267 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index e8fed16..5e476a8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1142,9 +1142,11 @@ static void iwl_debug_config(struct iwl_priv *priv)
- #endif
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 597e707..b9652f6 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -82,7 +82,7 @@ static int ar9003_mci_wait_for_interrupt(struct ath_hw *ah, u32 address,
+ 	return time_out;
  }
  
--int iwl_probe(struct iwl_bus *bus, const struct iwl_trans_ops *trans_ops,
--		struct iwl_cfg *cfg)
-+int iwl_op_mode_dvm_start(struct iwl_bus *bus,
-+			  const struct iwl_trans_ops *trans_ops,
-+			  struct iwl_cfg *cfg)
+-void ar9003_mci_remote_reset(struct ath_hw *ah, bool wait_done)
++static void ar9003_mci_remote_reset(struct ath_hw *ah, bool wait_done)
  {
-+	struct iwl_fw *fw = &nic(bus)->fw;
- 	int err = 0;
- 	struct iwl_priv *priv;
- 	struct ieee80211_hw *hw;
-@@ -1172,7 +1174,6 @@ int iwl_probe(struct iwl_bus *bus, const struct iwl_trans_ops *trans_ops,
- 	iwl_debug_config(priv);
+ 	u32 payload[4] = { 0xffffffff, 0xffffffff, 0xffffffff, 0xffffff00};
  
- 	IWL_DEBUG_INFO(priv, "*** LOAD DRIVER ***\n");
--	cfg(priv) = cfg;
+@@ -94,7 +94,7 @@ void ar9003_mci_remote_reset(struct ath_hw *ah, bool wait_done)
+ 	udelay(5);
+ }
  
- 	/* is antenna coupling more than 35dB ? */
- 	priv->bt_ant_couple_ok =
-@@ -1260,12 +1261,44 @@ int iwl_probe(struct iwl_bus *bus, const struct iwl_trans_ops *trans_ops,
- 	iwl_power_initialize(priv);
- 	iwl_tt_initialize(priv);
+-void ar9003_mci_send_lna_transfer(struct ath_hw *ah, bool wait_done)
++static void ar9003_mci_send_lna_transfer(struct ath_hw *ah, bool wait_done)
+ {
+ 	u32 payload = 0x00000000;
  
--	init_completion(&nic(priv)->request_firmware_complete);
-+	snprintf(priv->hw->wiphy->fw_version,
-+		 sizeof(priv->hw->wiphy->fw_version),
-+		 "%s", fw->fw_version);
+@@ -112,7 +112,7 @@ static void ar9003_mci_send_req_wake(struct ath_hw *ah, bool wait_done)
+ 	udelay(5);
+ }
+ 
+-void ar9003_mci_send_sys_waking(struct ath_hw *ah, bool wait_done)
++static void ar9003_mci_send_sys_waking(struct ath_hw *ah, bool wait_done)
+ {
+ 	if (!ATH9K_HW_CAP_MCI)
+ 		return;
+@@ -223,8 +223,8 @@ static void ar9003_mci_send_coex_bt_status_query(struct ath_hw *ah,
+ 	}
+ }
+ 
+-void ar9003_mci_send_coex_halt_bt_gpm(struct ath_hw *ah, bool halt,
+-				      bool wait_done)
++static void ar9003_mci_send_coex_halt_bt_gpm(struct ath_hw *ah, bool halt,
++					     bool wait_done)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+@@ -383,7 +383,7 @@ void ar9003_mci_set_full_sleep(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_RTC_KEEP_AWAKE, 0x2);
+ }
+ 
+-void ar9003_mci_disable_interrupt(struct ath_hw *ah)
++static void ar9003_mci_disable_interrupt(struct ath_hw *ah)
+ {
+ 	if (!ATH9K_HW_CAP_MCI)
+ 		return;
+@@ -392,7 +392,7 @@ void ar9003_mci_disable_interrupt(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_EN, 0);
+ }
+ 
+-void ar9003_mci_enable_interrupt(struct ath_hw *ah)
++static void ar9003_mci_enable_interrupt(struct ath_hw *ah)
+ {
+ 	if (!ATH9K_HW_CAP_MCI)
+ 		return;
+@@ -402,7 +402,7 @@ void ar9003_mci_enable_interrupt(struct ath_hw *ah)
+ 		  AR_MCI_INTERRUPT_RX_MSG_DEFAULT);
+ }
+ 
+-bool ar9003_mci_check_int(struct ath_hw *ah, u32 ints)
++static bool ar9003_mci_check_int(struct ath_hw *ah, u32 ints)
+ {
+ 	u32 intr;
+ 
+@@ -455,7 +455,7 @@ void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ 	}
+ }
+ 
+-void ar9003_mci_2g5g_changed(struct ath_hw *ah, bool is_2g)
++static void ar9003_mci_2g5g_changed(struct ath_hw *ah, bool is_2g)
+ {
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+ 
+@@ -568,6 +568,36 @@ static bool ar9003_mci_send_coex_bt_flags(struct ath_hw *ah, bool wait_done,
+ 							wait_done, true);
+ }
+ 
++static void ar9003_mci_sync_bt_state(struct ath_hw *ah)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
++	u32 cur_bt_state;
 +
-+	priv->new_scan_threshold_behaviour =
-+		!!(fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_NEWSCAN);
- 
--	err = iwl_request_firmware(nic(priv), true);
-+	if (fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PAN) {
-+		priv->sta_key_max_num = STA_KEY_MAX_NUM_PAN;
-+		priv->shrd->cmd_queue = IWL_IPAN_CMD_QUEUE_NUM;
-+	} else {
-+		priv->sta_key_max_num = STA_KEY_MAX_NUM;
-+		priv->shrd->cmd_queue = IWL_DEFAULT_CMD_QUEUE_NUM;
++	if (!ATH9K_HW_CAP_MCI)
++		return;
++
++	cur_bt_state = ar9003_mci_state(ah, MCI_STATE_REMOTE_SLEEP, NULL);
++
++	if (mci->bt_state != cur_bt_state) {
++		ath_dbg(common, MCI,
++			"MCI BT state mismatches. old: %d, new: %d\n",
++			mci->bt_state, cur_bt_state);
++		mci->bt_state = cur_bt_state;
 +	}
 +
-+	priv->phy_calib_chain_noise_reset_cmd =
-+		fw->ucode_capa.standard_phy_calibration_size;
-+	priv->phy_calib_chain_noise_gain_cmd =
-+		fw->ucode_capa.standard_phy_calibration_size + 1;
++	if (mci->bt_state != MCI_BT_SLEEP) {
 +
-+	/* initialize all valid contexts */
-+	iwl_init_context(priv, fw->ucode_capa.flags);
++		ar9003_mci_send_coex_version_query(ah, true);
++		ar9003_mci_send_coex_wlan_channels(ah, true);
 +
-+	/**************************************************
-+	 * This is still part of probe() in a sense...
-+	 *
-+	 * 9. Setup and register with mac80211 and debugfs
-+	 **************************************************/
-+	err = iwlagn_mac_setup_register(priv, &fw->ucode_capa);
- 	if (err)
- 		goto out_destroy_workqueue;
- 
-+	err = iwl_dbgfs_register(priv, DRV_NAME);
-+	if (err)
-+		IWL_ERR(priv,
-+			"failed to create debugfs files. Ignoring error: %d\n",
-+			err);
-+
- 	return 0;
- 
- out_destroy_workqueue:
-@@ -1281,6 +1314,16 @@ out:
- 	return err;
- }
- 
-+int iwl_probe(struct iwl_bus *bus, const struct iwl_trans_ops *trans_ops,
-+		struct iwl_cfg *cfg)
-+{
-+	bus->shrd->cfg = cfg;
-+
-+	init_completion(&nic(bus)->request_firmware_complete);
-+
-+	return iwl_request_firmware(nic(bus), true);
++		if (mci->unhalt_bt_gpm == true) {
++			ath_dbg(common, MCI, "MCI unhalt BT GPM\n");
++			ar9003_mci_send_coex_halt_bt_gpm(ah, false, true);
++		}
++	}
 +}
 +
- void __devexit iwl_remove(struct iwl_priv * priv)
+ void ar9003_mci_check_bt(struct ath_hw *ah)
  {
- 	wait_for_completion(&nic(priv)->request_firmware_complete);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index f810b41..cf593b0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -532,6 +532,9 @@ enum iwl_rxon_context_id {
- 	NUM_IWL_RXON_CTX
- };
- 
-+int iwl_op_mode_dvm_start(struct iwl_bus *bus,
-+			  const struct iwl_trans_ops *trans_ops,
-+			  struct iwl_cfg *cfg);
- int iwl_probe(struct iwl_bus *bus, const struct iwl_trans_ops *trans_ops,
- 		struct iwl_cfg *cfg);
- void __devexit iwl_remove(struct iwl_priv * priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.c b/drivers/net/wireless/iwlwifi/iwl-ucode.c
-index ea75709..99f89b2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-ucode.c
-@@ -687,7 +687,6 @@ int iwl_run_init_ucode(struct iwl_trans *trans)
- 
- static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context);
- 
--#define UCODE_EXPERIMENTAL_INDEX	100
- #define UCODE_EXPERIMENTAL_TAG		"exp"
- 
- int __must_check iwl_request_firmware(struct iwl_nic *nic, bool first)
-@@ -1047,7 +1046,6 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 	struct iwl_nic *nic = context;
- 	struct iwl_cfg *cfg = cfg(nic);
- 	struct iwl_fw *fw = &nic->fw;
--	struct iwl_priv *priv = priv(nic); /* temporary */
- 	struct iwl_ucode_header *ucode;
- 	int err;
- 	struct iwlagn_firmware_pieces pieces;
-@@ -1127,10 +1125,6 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 
- 	IWL_INFO(nic, "loaded firmware version %s", nic->fw.fw_version);
- 
--	snprintf(priv->hw->wiphy->fw_version,
--		 sizeof(priv->hw->wiphy->fw_version),
--		 "%s", nic->fw.fw_version);
--
- 	/*
- 	 * For any of the failures below (before allocating pci memory)
- 	 * we will try to load a version with a smaller API -- maybe the
-@@ -1235,27 +1229,6 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- #ifndef CONFIG_IWLWIFI_P2P
- 	fw->ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
- #endif
--
--	priv->new_scan_threshold_behaviour =
--		!!(fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_NEWSCAN);
--
--	if (!(cfg->sku & EEPROM_SKU_CAP_IPAN_ENABLE))
--		fw->ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
--
--	/*
--	 * if not PAN, then don't support P2P -- might be a uCode
--	 * packaging bug or due to the eeprom check above
--	 */
--	if (!(fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PAN))
--		fw->ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_P2P;
--
--	if (fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PAN) {
--		priv->sta_key_max_num = STA_KEY_MAX_NUM_PAN;
--		nic->shrd->cmd_queue = IWL_IPAN_CMD_QUEUE_NUM;
--	} else {
--		priv->sta_key_max_num = STA_KEY_MAX_NUM;
--		nic->shrd->cmd_queue = IWL_DEFAULT_CMD_QUEUE_NUM;
--	}
- 	/*
- 	 * figure out the offset of chain noise reset and gain commands
- 	 * base on the size of standard phy calibration commands table size
-@@ -1265,47 +1238,38 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 		fw->ucode_capa.standard_phy_calibration_size =
- 			IWL_MAX_STANDARD_PHY_CALIBRATE_TBL_SIZE;
- 
--	priv->phy_calib_chain_noise_reset_cmd =
--		fw->ucode_capa.standard_phy_calibration_size;
--	priv->phy_calib_chain_noise_gain_cmd =
--		fw->ucode_capa.standard_phy_calibration_size + 1;
--
--	/* initialize all valid contexts */
--	iwl_init_context(priv, fw->ucode_capa.flags);
--
--	/**************************************************
--	 * This is still part of probe() in a sense...
--	 *
--	 * 9. Setup and register with mac80211 and debugfs
--	 **************************************************/
--	err = iwlagn_mac_setup_register(priv, &fw->ucode_capa);
--	if (err)
--		goto out_unbind;
-+	if (!(cfg->sku & EEPROM_SKU_CAP_IPAN_ENABLE))
-+		fw->ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
- 
--	err = iwl_dbgfs_register(priv, DRV_NAME);
--	if (err)
--		IWL_ERR(nic,
--			"failed to create debugfs files. Ignoring error: %d\n",
--			err);
-+	/*
-+	 * if not PAN, then don't support P2P -- might be a uCode
-+	 * packaging bug or due to the eeprom check above
-+	 */
-+	if (!(fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PAN))
-+		fw->ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_P2P;
- 
- 	/* We have our copies now, allow OS release its copies */
- 	release_firmware(ucode_raw);
- 	complete(&nic->request_firmware_complete);
-+
-+	if (iwl_op_mode_dvm_start(bus(nic), trans(nic)->ops, cfg))
-+		goto out_unbind;
-+
- 	return;
- 
-  try_again:
- 	/* try next, if any */
-+	release_firmware(ucode_raw);
- 	if (iwl_request_firmware(nic, false))
- 		goto out_unbind;
--	release_firmware(ucode_raw);
- 	return;
- 
-  err_pci_alloc:
- 	IWL_ERR(nic, "failed to allocate pci memory\n");
- 	iwl_dealloc_ucode(nic);
-+	release_firmware(ucode_raw);
-  out_unbind:
- 	complete(&nic->request_firmware_complete);
- 	device_release_driver(trans(nic)->dev);
--	release_firmware(ucode_raw);
+ 	struct ath9k_hw_mci *mci_hw = &ah->btcoex_hw.mci;
+@@ -588,6 +618,188 @@ void ar9003_mci_check_bt(struct ath_hw *ah)
+ 	}
  }
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-wifi.h b/drivers/net/wireless/iwlwifi/iwl-wifi.h
-index 84172f6..a78120e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-wifi.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-wifi.h
-@@ -66,6 +66,8 @@
- #include "iwl-shared.h"
- #include "iwl-ucode.h"
- 
-+#define UCODE_EXPERIMENTAL_INDEX	100
++static void ar9003_mci_process_gpm_extra(struct ath_hw *ah, u8 gpm_type,
++					 u8 gpm_opcode, u32 *p_gpm)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
++	u8 *p_data = (u8 *) p_gpm;
 +
- /**
-  * struct iwl_nic - nic common data
-  * @fw: the iwl_fw structure
++	if (gpm_type != MCI_GPM_COEX_AGENT)
++		return;
++
++	switch (gpm_opcode) {
++	case MCI_GPM_COEX_VERSION_QUERY:
++		ath_dbg(common, MCI, "MCI Recv GPM COEX Version Query\n");
++		ar9003_mci_send_coex_version_response(ah, true);
++		break;
++	case MCI_GPM_COEX_VERSION_RESPONSE:
++		ath_dbg(common, MCI, "MCI Recv GPM COEX Version Response\n");
++		mci->bt_ver_major =
++			*(p_data + MCI_GPM_COEX_B_MAJOR_VERSION);
++		mci->bt_ver_minor =
++			*(p_data + MCI_GPM_COEX_B_MINOR_VERSION);
++		mci->bt_version_known = true;
++		ath_dbg(common, MCI, "MCI BT Coex version: %d.%d\n",
++			mci->bt_ver_major, mci->bt_ver_minor);
++		break;
++	case MCI_GPM_COEX_STATUS_QUERY:
++		ath_dbg(common, MCI,
++			"MCI Recv GPM COEX Status Query = 0x%02X\n",
++			*(p_data + MCI_GPM_COEX_B_WLAN_BITMAP));
++		mci->wlan_channels_update = true;
++		ar9003_mci_send_coex_wlan_channels(ah, true);
++		break;
++	case MCI_GPM_COEX_BT_PROFILE_INFO:
++		mci->query_bt = true;
++		ath_dbg(common, MCI, "MCI Recv GPM COEX BT_Profile_Info\n");
++		break;
++	case MCI_GPM_COEX_BT_STATUS_UPDATE:
++		mci->query_bt = true;
++		ath_dbg(common, MCI,
++			"MCI Recv GPM COEX BT_Status_Update SEQ=%d (drop&query)\n",
++			*(p_gpm + 3));
++		break;
++	default:
++		break;
++	}
++}
++
++static u32 ar9003_mci_wait_for_gpm(struct ath_hw *ah, u8 gpm_type,
++				   u8 gpm_opcode, int time_out)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
++	u32 *p_gpm = NULL, mismatch = 0, more_data;
++	u32 offset;
++	u8 recv_type = 0, recv_opcode = 0;
++	bool b_is_bt_cal_done = (gpm_type == MCI_GPM_BT_CAL_DONE);
++
++	if (!ATH9K_HW_CAP_MCI)
++		return 0;
++
++	more_data = time_out ? MCI_GPM_NOMORE : MCI_GPM_MORE;
++
++	while (time_out > 0) {
++		if (p_gpm) {
++			MCI_GPM_RECYCLE(p_gpm);
++			p_gpm = NULL;
++		}
++
++		if (more_data != MCI_GPM_MORE)
++			time_out = ar9003_mci_wait_for_interrupt(ah,
++					AR_MCI_INTERRUPT_RX_MSG_RAW,
++					AR_MCI_INTERRUPT_RX_MSG_GPM,
++					time_out);
++
++		if (!time_out)
++			break;
++
++		offset = ar9003_mci_state(ah,
++				MCI_STATE_NEXT_GPM_OFFSET, &more_data);
++
++		if (offset == MCI_GPM_INVALID)
++			continue;
++
++		p_gpm = (u32 *) (mci->gpm_buf + offset);
++		recv_type = MCI_GPM_TYPE(p_gpm);
++		recv_opcode = MCI_GPM_OPCODE(p_gpm);
++
++		if (MCI_GPM_IS_CAL_TYPE(recv_type)) {
++
++			if (recv_type == gpm_type) {
++
++				if ((gpm_type == MCI_GPM_BT_CAL_DONE) &&
++				    !b_is_bt_cal_done) {
++					gpm_type = MCI_GPM_BT_CAL_GRANT;
++					ath_dbg(common, MCI,
++						"MCI Recv BT_CAL_DONE wait BT_CAL_GRANT\n");
++					continue;
++				}
++
++				break;
++			}
++		} else if ((recv_type == gpm_type) &&
++			   (recv_opcode == gpm_opcode))
++			break;
++
++		/* not expected message */
++
++		/*
++		 * check if it's cal_grant
++		 *
++		 * When we're waiting for cal_grant in reset routine,
++		 * it's possible that BT sends out cal_request at the
++		 * same time. Since BT's calibration doesn't happen
++		 * that often, we'll let BT completes calibration then
++		 * we continue to wait for cal_grant from BT.
++		 * Orginal: Wait BT_CAL_GRANT.
++		 * New: Receive BT_CAL_REQ -> send WLAN_CAL_GRANT->wait
++		 * BT_CAL_DONE -> Wait BT_CAL_GRANT.
++		 */
++
++		if ((gpm_type == MCI_GPM_BT_CAL_GRANT) &&
++		    (recv_type == MCI_GPM_BT_CAL_REQ)) {
++
++			u32 payload[4] = {0, 0, 0, 0};
++
++			gpm_type = MCI_GPM_BT_CAL_DONE;
++			ath_dbg(common, MCI,
++				"MCI Rcv BT_CAL_REQ, send WLAN_CAL_GRANT\n");
++
++			MCI_GPM_SET_CAL_TYPE(payload,
++					MCI_GPM_WLAN_CAL_GRANT);
++
++			ar9003_mci_send_message(ah, MCI_GPM, 0, payload, 16,
++						false, false);
++
++			ath_dbg(common, MCI, "MCI now wait for BT_CAL_DONE\n");
++
++			continue;
++		} else {
++			ath_dbg(common, MCI, "MCI GPM subtype not match 0x%x\n",
++				*(p_gpm + 1));
++			mismatch++;
++			ar9003_mci_process_gpm_extra(ah, recv_type,
++					recv_opcode, p_gpm);
++		}
++	}
++	if (p_gpm) {
++		MCI_GPM_RECYCLE(p_gpm);
++		p_gpm = NULL;
++	}
++
++	if (time_out <= 0) {
++		time_out = 0;
++		ath_dbg(common, MCI,
++			"MCI GPM received timeout, mismatch = %d\n", mismatch);
++	} else
++		ath_dbg(common, MCI, "MCI Receive GPM type=0x%x, code=0x%x\n",
++			gpm_type, gpm_opcode);
++
++	while (more_data == MCI_GPM_MORE) {
++
++		ath_dbg(common, MCI, "MCI discard remaining GPM\n");
++		offset = ar9003_mci_state(ah, MCI_STATE_NEXT_GPM_OFFSET,
++					  &more_data);
++
++		if (offset == MCI_GPM_INVALID)
++			break;
++
++		p_gpm = (u32 *) (mci->gpm_buf + offset);
++		recv_type = MCI_GPM_TYPE(p_gpm);
++		recv_opcode = MCI_GPM_OPCODE(p_gpm);
++
++		if (!MCI_GPM_IS_CAL_TYPE(recv_type))
++			ar9003_mci_process_gpm_extra(ah, recv_type,
++						     recv_opcode, p_gpm);
++
++		MCI_GPM_RECYCLE(p_gpm);
++	}
++
++	return time_out;
++}
++
+ bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -693,6 +905,39 @@ exit:
+ 	return 0;
+ }
+ 
++static void ar9003_mci_mute_bt(struct ath_hw *ah)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++
++	if (!ATH9K_HW_CAP_MCI)
++		return;
++
++	/* disable all MCI messages */
++	REG_WRITE(ah, AR_MCI_MSG_ATTRIBUTES_TABLE, 0xffff0000);
++	REG_WRITE(ah, AR_BTCOEX_WL_WEIGHTS0, 0xffffffff);
++	REG_WRITE(ah, AR_BTCOEX_WL_WEIGHTS1, 0xffffffff);
++	REG_WRITE(ah, AR_BTCOEX_WL_WEIGHTS2, 0xffffffff);
++	REG_WRITE(ah, AR_BTCOEX_WL_WEIGHTS3, 0xffffffff);
++	REG_SET_BIT(ah, AR_MCI_TX_CTRL, AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
++
++	/* wait pending HW messages to flush out */
++	udelay(10);
++
++	/*
++	 * Send LNA_TAKE and SYS_SLEEPING when
++	 * 1. reset not after resuming from full sleep
++	 * 2. before reset MCI RX, to quiet BT and avoid MCI RX misalignment
++	 */
++
++	ath_dbg(common, MCI, "MCI Send LNA take\n");
++	ar9003_mci_send_lna_take(ah, true);
++
++	udelay(5);
++
++	ath_dbg(common, MCI, "MCI Send sys sleeping\n");
++	ar9003_mci_send_sys_sleeping(ah, true);
++}
++
+ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 		      bool is_full_sleep)
+ {
+@@ -838,69 +1083,6 @@ void ar9003_mci_stop_bt(struct ath_hw *ah, bool save_fullsleep)
+ 	mci_hw->ready = false;
+ }
+ 
+-void ar9003_mci_mute_bt(struct ath_hw *ah)
+-{
+-	struct ath_common *common = ath9k_hw_common(ah);
+-
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+-	/* disable all MCI messages */
+-	REG_WRITE(ah, AR_MCI_MSG_ATTRIBUTES_TABLE, 0xffff0000);
+-	REG_WRITE(ah, AR_BTCOEX_WL_WEIGHTS0, 0xffffffff);
+-	REG_WRITE(ah, AR_BTCOEX_WL_WEIGHTS1, 0xffffffff);
+-	REG_WRITE(ah, AR_BTCOEX_WL_WEIGHTS2, 0xffffffff);
+-	REG_WRITE(ah, AR_BTCOEX_WL_WEIGHTS3, 0xffffffff);
+-	REG_SET_BIT(ah, AR_MCI_TX_CTRL, AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
+-
+-	/* wait pending HW messages to flush out */
+-	udelay(10);
+-
+-	/*
+-	 * Send LNA_TAKE and SYS_SLEEPING when
+-	 * 1. reset not after resuming from full sleep
+-	 * 2. before reset MCI RX, to quiet BT and avoid MCI RX misalignment
+-	 */
+-
+-	ath_dbg(common, MCI, "MCI Send LNA take\n");
+-	ar9003_mci_send_lna_take(ah, true);
+-
+-	udelay(5);
+-
+-	ath_dbg(common, MCI, "MCI Send sys sleeping\n");
+-	ar9003_mci_send_sys_sleeping(ah, true);
+-}
+-
+-void ar9003_mci_sync_bt_state(struct ath_hw *ah)
+-{
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+-	u32 cur_bt_state;
+-
+-	if (!ATH9K_HW_CAP_MCI)
+-		return;
+-
+-	cur_bt_state = ar9003_mci_state(ah, MCI_STATE_REMOTE_SLEEP, NULL);
+-
+-	if (mci->bt_state != cur_bt_state) {
+-		ath_dbg(common, MCI,
+-			"MCI BT state mismatches. old: %d, new: %d\n",
+-			mci->bt_state, cur_bt_state);
+-		mci->bt_state = cur_bt_state;
+-	}
+-
+-	if (mci->bt_state != MCI_BT_SLEEP) {
+-
+-		ar9003_mci_send_coex_version_query(ah, true);
+-		ar9003_mci_send_coex_wlan_channels(ah, true);
+-
+-		if (mci->unhalt_bt_gpm == true) {
+-			ath_dbg(common, MCI, "MCI unhalt BT GPM\n");
+-			ar9003_mci_send_coex_halt_bt_gpm(ah, false, true);
+-		}
+-	}
+-}
+-
+ static void ar9003_mci_send_2g5g_status(struct ath_hw *ah, bool wait_done)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -1229,188 +1411,6 @@ void ar9003_mci_cleanup(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ar9003_mci_cleanup);
+ 
+-static void ar9003_mci_process_gpm_extra(struct ath_hw *ah, u8 gpm_type,
+-					 u8 gpm_opcode, u32 *p_gpm)
+-{
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+-	u8 *p_data = (u8 *) p_gpm;
+-
+-	if (gpm_type != MCI_GPM_COEX_AGENT)
+-		return;
+-
+-	switch (gpm_opcode) {
+-	case MCI_GPM_COEX_VERSION_QUERY:
+-		ath_dbg(common, MCI, "MCI Recv GPM COEX Version Query\n");
+-		ar9003_mci_send_coex_version_response(ah, true);
+-		break;
+-	case MCI_GPM_COEX_VERSION_RESPONSE:
+-		ath_dbg(common, MCI, "MCI Recv GPM COEX Version Response\n");
+-		mci->bt_ver_major =
+-			*(p_data + MCI_GPM_COEX_B_MAJOR_VERSION);
+-		mci->bt_ver_minor =
+-			*(p_data + MCI_GPM_COEX_B_MINOR_VERSION);
+-		mci->bt_version_known = true;
+-		ath_dbg(common, MCI, "MCI BT Coex version: %d.%d\n",
+-			mci->bt_ver_major, mci->bt_ver_minor);
+-		break;
+-	case MCI_GPM_COEX_STATUS_QUERY:
+-		ath_dbg(common, MCI,
+-			"MCI Recv GPM COEX Status Query = 0x%02X\n",
+-			*(p_data + MCI_GPM_COEX_B_WLAN_BITMAP));
+-		mci->wlan_channels_update = true;
+-		ar9003_mci_send_coex_wlan_channels(ah, true);
+-		break;
+-	case MCI_GPM_COEX_BT_PROFILE_INFO:
+-		mci->query_bt = true;
+-		ath_dbg(common, MCI, "MCI Recv GPM COEX BT_Profile_Info\n");
+-		break;
+-	case MCI_GPM_COEX_BT_STATUS_UPDATE:
+-		mci->query_bt = true;
+-		ath_dbg(common, MCI,
+-			"MCI Recv GPM COEX BT_Status_Update SEQ=%d (drop&query)\n",
+-			*(p_gpm + 3));
+-		break;
+-	default:
+-		break;
+-	}
+-}
+-
+-u32 ar9003_mci_wait_for_gpm(struct ath_hw *ah, u8 gpm_type,
+-			    u8 gpm_opcode, int time_out)
+-{
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+-	u32 *p_gpm = NULL, mismatch = 0, more_data;
+-	u32 offset;
+-	u8 recv_type = 0, recv_opcode = 0;
+-	bool b_is_bt_cal_done = (gpm_type == MCI_GPM_BT_CAL_DONE);
+-
+-	if (!ATH9K_HW_CAP_MCI)
+-		return 0;
+-
+-	more_data = time_out ? MCI_GPM_NOMORE : MCI_GPM_MORE;
+-
+-	while (time_out > 0) {
+-		if (p_gpm) {
+-			MCI_GPM_RECYCLE(p_gpm);
+-			p_gpm = NULL;
+-		}
+-
+-		if (more_data != MCI_GPM_MORE)
+-			time_out = ar9003_mci_wait_for_interrupt(ah,
+-					AR_MCI_INTERRUPT_RX_MSG_RAW,
+-					AR_MCI_INTERRUPT_RX_MSG_GPM,
+-					time_out);
+-
+-		if (!time_out)
+-			break;
+-
+-		offset = ar9003_mci_state(ah,
+-				MCI_STATE_NEXT_GPM_OFFSET, &more_data);
+-
+-		if (offset == MCI_GPM_INVALID)
+-			continue;
+-
+-		p_gpm = (u32 *) (mci->gpm_buf + offset);
+-		recv_type = MCI_GPM_TYPE(p_gpm);
+-		recv_opcode = MCI_GPM_OPCODE(p_gpm);
+-
+-		if (MCI_GPM_IS_CAL_TYPE(recv_type)) {
+-
+-			if (recv_type == gpm_type) {
+-
+-				if ((gpm_type == MCI_GPM_BT_CAL_DONE) &&
+-				    !b_is_bt_cal_done) {
+-					gpm_type = MCI_GPM_BT_CAL_GRANT;
+-					ath_dbg(common, MCI,
+-						"MCI Recv BT_CAL_DONE wait BT_CAL_GRANT\n");
+-					continue;
+-				}
+-
+-				break;
+-			}
+-		} else if ((recv_type == gpm_type) &&
+-			   (recv_opcode == gpm_opcode))
+-			break;
+-
+-		/* not expected message */
+-
+-		/*
+-		 * check if it's cal_grant
+-		 *
+-		 * When we're waiting for cal_grant in reset routine,
+-		 * it's possible that BT sends out cal_request at the
+-		 * same time. Since BT's calibration doesn't happen
+-		 * that often, we'll let BT completes calibration then
+-		 * we continue to wait for cal_grant from BT.
+-		 * Orginal: Wait BT_CAL_GRANT.
+-		 * New: Receive BT_CAL_REQ -> send WLAN_CAL_GRANT->wait
+-		 * BT_CAL_DONE -> Wait BT_CAL_GRANT.
+-		 */
+-
+-		if ((gpm_type == MCI_GPM_BT_CAL_GRANT) &&
+-		    (recv_type == MCI_GPM_BT_CAL_REQ)) {
+-
+-			u32 payload[4] = {0, 0, 0, 0};
+-
+-			gpm_type = MCI_GPM_BT_CAL_DONE;
+-			ath_dbg(common, MCI,
+-				"MCI Rcv BT_CAL_REQ, send WLAN_CAL_GRANT\n");
+-
+-			MCI_GPM_SET_CAL_TYPE(payload,
+-					MCI_GPM_WLAN_CAL_GRANT);
+-
+-			ar9003_mci_send_message(ah, MCI_GPM, 0, payload, 16,
+-						false, false);
+-
+-			ath_dbg(common, MCI, "MCI now wait for BT_CAL_DONE\n");
+-
+-			continue;
+-		} else {
+-			ath_dbg(common, MCI, "MCI GPM subtype not match 0x%x\n",
+-				*(p_gpm + 1));
+-			mismatch++;
+-			ar9003_mci_process_gpm_extra(ah, recv_type,
+-					recv_opcode, p_gpm);
+-		}
+-	}
+-	if (p_gpm) {
+-		MCI_GPM_RECYCLE(p_gpm);
+-		p_gpm = NULL;
+-	}
+-
+-	if (time_out <= 0) {
+-		time_out = 0;
+-		ath_dbg(common, MCI,
+-			"MCI GPM received timeout, mismatch = %d\n", mismatch);
+-	} else
+-		ath_dbg(common, MCI, "MCI Receive GPM type=0x%x, code=0x%x\n",
+-			gpm_type, gpm_opcode);
+-
+-	while (more_data == MCI_GPM_MORE) {
+-
+-		ath_dbg(common, MCI, "MCI discard remaining GPM\n");
+-		offset = ar9003_mci_state(ah, MCI_STATE_NEXT_GPM_OFFSET,
+-					  &more_data);
+-
+-		if (offset == MCI_GPM_INVALID)
+-			break;
+-
+-		p_gpm = (u32 *) (mci->gpm_buf + offset);
+-		recv_type = MCI_GPM_TYPE(p_gpm);
+-		recv_opcode = MCI_GPM_OPCODE(p_gpm);
+-
+-		if (!MCI_GPM_IS_CAL_TYPE(recv_type))
+-			ar9003_mci_process_gpm_extra(ah, recv_type,
+-						     recv_opcode, p_gpm);
+-
+-		MCI_GPM_RECYCLE(p_gpm);
+-	}
+-
+-	return time_out;
+-}
+-
+ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index 39bbf67..507527b 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -258,21 +258,13 @@ bool ar9003_mci_send_message(struct ath_hw *ah, u8 header, u32 flag,
+ 			     u32 *payload, u8 len, bool wait_done,
+ 			     bool check_bt);
+ void ar9003_mci_stop_bt(struct ath_hw *ah, bool sava_fullsleep);
+-void ar9003_mci_mute_bt(struct ath_hw *ah);
+ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data);
+ void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable);
+ void ar9003_mci_init_cal_done(struct ath_hw *ah);
+ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+ 		      u16 len, u32 sched_addr);
+ void ar9003_mci_cleanup(struct ath_hw *ah);
+-void ar9003_mci_send_coex_halt_bt_gpm(struct ath_hw *ah, bool halt,
+-				      bool wait_done);
+-u32 ar9003_mci_wait_for_gpm(struct ath_hw *ah, u8 gpm_type,
+-			    u8 gpm_opcode, int time_out);
+-void ar9003_mci_2g5g_changed(struct ath_hw *ah, bool is_2g);
+ void ar9003_mci_set_full_sleep(struct ath_hw *ah);
+-void ar9003_mci_disable_interrupt(struct ath_hw *ah);
+-void ar9003_mci_enable_interrupt(struct ath_hw *ah);
+ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done);
+ void ar9003_mci_check_bt(struct ath_hw *ah);
+ bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan);
+@@ -280,11 +272,6 @@ int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 			 struct ath9k_hw_cal_data *caldata);
+ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 		      bool is_full_sleep);
+-bool ar9003_mci_check_int(struct ath_hw *ah, u32 ints);
+-void ar9003_mci_remote_reset(struct ath_hw *ah, bool wait_done);
+-void ar9003_mci_send_sys_waking(struct ath_hw *ah, bool wait_done);
+-void ar9003_mci_send_lna_transfer(struct ath_hw *ah, bool wait_done);
+-void ar9003_mci_sync_bt_state(struct ath_hw *ah);
+ void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
+ 			      u32 *rx_msg_intr);
+ void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
 -- 
-1.7.0.4
+1.7.9.1
 
