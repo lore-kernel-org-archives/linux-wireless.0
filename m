@@ -1,78 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:65217 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752593Ab2BNRaA convert rfc822-to-8bit (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:36815 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751995Ab2BVR7f convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 12:30:00 -0500
-Received: by wgbdt10 with SMTP id dt10so159479wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2012 09:29:59 -0800 (PST)
+	Wed, 22 Feb 2012 12:59:35 -0500
+Received: by bkcjm19 with SMTP id jm19so334446bkc.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Feb 2012 09:59:34 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAG=dh1pTDSkkhgXGOv=n8uferq61-Db0EFGexO=ZZ+oN6w8_hQ@mail.gmail.com>
-References: <20120214040120.GA2077@eris.garyseven.net>
-	<CACna6rwXEjsJEPK4EZ9pbh2sGJgvt05JRfo2HkeDKpT26YORwg@mail.gmail.com>
-	<CAG=dh1pTDSkkhgXGOv=n8uferq61-Db0EFGexO=ZZ+oN6w8_hQ@mail.gmail.com>
-Date: Tue, 14 Feb 2012 18:29:59 +0100
-Message-ID: <CACna6rw=ZJe28ahRQFU-_9+BD8+L5SNV_xdwxLxUdNk-b3HHxg@mail.gmail.com> (sfid-20120214_183005_150239_B7B08BC5)
-Subject: Re: [RFC] use alternate SPROM offset for 43224
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: "Saul St. John" <saul.stjohn@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1328834790.5067.2.camel@dcbw.foobar.com>
+References: <1328837032-26137-1-git-send-email-stas.yakovlev@gmail.com>
+	<CAGRGNgWVsGt08gxoyaoG7sG7NgubF+qqjk=LaCruRJiUe1fuig@mail.gmail.com>
+	<1328834790.5067.2.camel@dcbw.foobar.com>
+Date: Wed, 22 Feb 2012 20:59:34 +0300
+Message-ID: <CA++WF2M99q70fj5KrH3HaFGL59ZSmjRHL5vgoDVoyp9zVuizXQ@mail.gmail.com> (sfid-20120222_185939_328094_C9BA9642)
+Subject: Re: [PATCH] ipw2x00: remove ipw2100_rates_11b[]
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: Julian Calaby <julian.calaby@gmail.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-W dniu 14 lutego 2012 17:22 u≈ºytkownik Saul St. John
-<saul.stjohn@gmail.com> napisa≈Ç:
-> On Tue, Feb 14, 2012 at 7:34 AM, Rafa≈Ç Mi≈Çecki <zajec5@gmail.com> wrote:
->> W dniu 14 lutego 2012 05:01 u≈ºytkownik Saul St. John
->> <saul.stjohn@gmail.com> napisa≈Ç:
->>> I don't know if this is correct in the general sense, but the wireless on my
->>> mid-2010 MacBook Pro doesn't work without it.
->>>
->>> Signed-off-by: Saul St. John <saul.stjohn@gmail.com>
->>> ---
->>> ¬†drivers/bcma/sprom.c | ¬† ¬†4 ++--
->>> ¬†1 files changed, 2 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
->>> index 6f230fb..06c87b5 100644
->>> --- a/drivers/bcma/sprom.c
->>> +++ b/drivers/bcma/sprom.c
->>> @@ -228,8 +228,8 @@ int bcma_sprom_get(struct bcma_bus *bus)
->>> ¬† ¬† ¬† ¬†/* Most cards have SPROM moved by additional offset 0x30 (48 dwords).
->>> ¬† ¬† ¬† ¬† * According to brcm80211 this applies to cards with PCIe rev >= 6
->>> ¬† ¬† ¬† ¬† * TODO: understand this condition and use it */
->>> - ¬† ¬† ¬† offset = (bus->chipinfo.id == 0x4331) ? BCMA_CC_SPROM :
->>> - ¬† ¬† ¬† ¬† ¬† ¬† ¬† BCMA_CC_SPROM_PCIE6;
->>> + ¬† ¬† ¬† offset = (bus->chipinfo.id == 0x4331 || bus->chipinfo.id == 43224) ?
->>> + ¬† ¬† ¬† ¬† ¬† ¬† ¬† ¬† ¬† ¬† ¬† BCMA_CC_SPROM : BCMA_CC_SPROM_PCIE6;
->>> ¬† ¬† ¬† ¬†bcma_sprom_read(bus, offset, sprom);
->>>
->>> ¬† ¬† ¬† ¬†if (bus->chipinfo.id == 0x4331)
+On 10 February 2012 03:46, Dan Williams <dcbw@redhat.com> wrote:
+> On Fri, 2012-02-10 at 11:26 +1100, Julian Calaby wrote:
+>> Hi Stanislav,
 >>
->> I'm quite sure it'll break my BCM43224. It's not chip-specific,
->> probably some status bit specific.
+>> On Fri, Feb 10, 2012 at 12:23, Stanislav Yakovlev
+>> <stas.yakovlev@gmail.com> wrote:
+>> > It's just a duplicate of ipw2100_bg_rates[].
 >>
->> --
->> Rafa≈Ç
+>> Looks sensible to me.
 >
-> My BCM43324 was broken by bmca up until "[PATCH] bcma: don't fail for
-> bad SPROM CRC." Even with that patch, I still get "bmca: Failed to get
-> SPROM: -71" in the dmesg log. Is that error harmless?
+> Except that the 2100 is a B-only device; it doesn't do G at all. †So
+> wouldn't it make sense to get rid of ipw2100_rates_bg[] instead?
 
-It's harmless for brcmsmac, which doesn't use SPROM struct of bcma bus
-driver. This bug should be fixed and brcmsmac should be improved in
-many contexts: using SPROM, standard bcma module functions, dropping
-other cores initializing. For now you can live with this.
+It looks like we all agree that one of them should be removed. I did
+not see an easy way to remove ipw2100_rates_bg[]. Maybe it makes more
+sense to rename it to ipw2100_rates_b[]?
+
+Stanislav
 
 
-> The CRC check appears to pass without issue when using the 0x800
-> offset on my device.
-
-The quick fix would be probably to implement in bcma two tries of
-reading SPROM. One for 0x800 second for 0x830 (base address). The real
-fix is to grab the real condition from specs/brcmsmac and implement it
-in bcma.
-
--- 
-Rafa≈Ç
+> Dan
+>
+>> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+>>
+>> > Signed-off-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+>> > ---
+>> > †drivers/net/wireless/ipw2x00/ipw2100.c | † 11 ++---------
+>> > †1 files changed, 2 insertions(+), 9 deletions(-)
+>> >
+>> > diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+>> > index a0e5c21..63567fb 100644
+>> > --- a/drivers/net/wireless/ipw2x00/ipw2100.c
+>> > +++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+>> > @@ -309,13 +309,6 @@ static const long ipw2100_frequencies[] = {
+>> >
+>> > †#define FREQ_COUNT † † ARRAY_SIZE(ipw2100_frequencies)
+>> >
+>> > -static const long ipw2100_rates_11b[] = {
+>> > - † † † 1000000,
+>> > - † † † 2000000,
+>> > - † † † 5500000,
+>> > - † † † 11000000
+>> > -};
+>> > -
+>> > †static struct ieee80211_rate ipw2100_bg_rates[] = {
+>> > † † † †{ .bitrate = 10 },
+>> > † † † †{ .bitrate = 20, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
+>> > @@ -323,7 +316,7 @@ static struct ieee80211_rate ipw2100_bg_rates[] = {
+>> > † † † †{ .bitrate = 110, .flags = IEEE80211_RATE_SHORT_PREAMBLE },
+>> > †};
+>> >
+>> > -#define RATE_COUNT ARRAY_SIZE(ipw2100_rates_11b)
+>> > +#define RATE_COUNT ARRAY_SIZE(ipw2100_bg_rates)
+>> >
+>> > †/* Pre-decl until we get the code solid and then we can clean it up */
+>> > †static void ipw2100_tx_send_commands(struct ipw2100_priv *priv);
+>> > @@ -6896,7 +6889,7 @@ static int ipw2100_wx_get_range(struct net_device *dev,
+>> > † † † †range->num_bitrates = RATE_COUNT;
+>> >
+>> > † † † †for (i = 0; i < RATE_COUNT && i < IW_MAX_BITRATES; i++) {
+>> > - † † † † † † † range->bitrate[i] = ipw2100_rates_11b[i];
+>> > + † † † † † † † range->bitrate[i] = ipw2100_bg_rates[i].bitrate * 100 * 1000;
+>> > † † † †}
+>> >
+>> > † † † †range->min_rts = MIN_RTS_THRESHOLD;
+>> > --
+>> > 1.7.2.5
+>> >
+>> > --
+>> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> > the body of a message to majordomo@vger.kernel.org
+>> > More majordomo info at †http://vger.kernel.org/majordomo-info.html
+>>
+>>
+>>
+>
+>
