@@ -1,52 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:58598 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:27082 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751386Ab2BMGV3 (ORCPT
+	with ESMTP id S1754608Ab2BVK6k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 01:21:29 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Wed, 22 Feb 2012 05:58:40 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 5/5] ath6kl: Defer wiphy and netdev registration till the end of ath6kl_core_init()
+Date: Wed, 22 Feb 2012 16:27:32 +0530
+Message-ID: <1329908252-16645-5-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120222_115843_633116_88954623)
+In-Reply-To: <1329908252-16645-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1329908252-16645-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20280.44003.603490.847317@gargle.gargle.HOWL> (sfid-20120213_072132_249485_13EF0634)
-Date: Mon, 13 Feb 2012 11:51:23 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 6/7] ath9k: Fix phyerr debug statistics
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Validate the phyerr value against the max. size of the
-statistics array properly.
+This makes the wiphy and initial netdev registration the last step
+in dev initialization. Apart from the fact that this looks right,
+it can also be used to setup wiphy with the regulatory information
+received from firmware after uploading the firmware. Also it fixes
+a FIXME in ath6kl_core_init() where mac address is copied into
+netdev->dev_addr, ath6kl_interface_add() takes care of this as well.
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/debug.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath6kl/core.c |   76 +++++++++++++------------------
+ 1 files changed, 32 insertions(+), 44 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 5a838fc..228c181 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -987,8 +987,6 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
- #define RX_SAMP_DBG(c) (sc->debug.bb_mac_samp[sc->debug.sampidx].rs\
- 			[sc->debug.rsidx].c)
+diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
+index 930ff9d..5564fa8 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.c
++++ b/drivers/net/wireless/ath/ath6kl/core.c
+@@ -98,38 +98,6 @@ int ath6kl_core_init(struct ath6kl *ar)
  
--	u32 phyerr;
+ 	ath6kl_dbg(ATH6KL_DBG_TRC, "%s: got wmi @ 0x%p.\n", __func__, ar->wmi);
+ 
+-	ret = ath6kl_cfg80211_init(ar);
+-	if (ret)
+-		goto err_node_cleanup;
 -
- 	RX_STAT_INC(rx_pkts_all);
- 	sc->debug.stats.rxstats.rx_bytes_all += rs->rs_datalen;
+-	ret = ath6kl_debug_init(ar);
+-	if (ret) {
+-		wiphy_unregister(ar->wiphy);
+-		goto err_node_cleanup;
+-	}
+-
+-	for (i = 0; i < ar->vif_max; i++)
+-		ar->avail_idx_map |= BIT(i);
+-
+-	rtnl_lock();
+-
+-	/* Add an initial station interface */
+-	ndev = ath6kl_interface_add(ar, "wlan%d", NL80211_IFTYPE_STATION, 0,
+-				    INFRA_NETWORK);
+-
+-	rtnl_unlock();
+-
+-	if (!ndev) {
+-		ath6kl_err("Failed to instantiate a network device\n");
+-		ret = -ENOMEM;
+-		wiphy_unregister(ar->wiphy);
+-		goto err_debug_init;
+-	}
+-
+-
+-	ath6kl_dbg(ATH6KL_DBG_TRC, "%s: name=%s dev=0x%p, ar=0x%p\n",
+-			__func__, ndev->name, ndev, ar);
+-
+ 	/* setup access class priority mappings */
+ 	ar->ac_stream_pri_map[WMM_AC_BK] = 0; /* lowest  */
+ 	ar->ac_stream_pri_map[WMM_AC_BE] = 1;
+@@ -166,24 +134,44 @@ int ath6kl_core_init(struct ath6kl *ar)
+ 	ath6kl_rx_refill(ar->htc_target, ar->ctrl_ep);
+ 	ath6kl_rx_refill(ar->htc_target, ar->ac2ep_map[WMM_AC_BE]);
  
-@@ -1007,8 +1005,8 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+-	/*
+-	 * Set mac address which is received in ready event
+-	 * FIXME: Move to ath6kl_interface_add()
+-	 */
+-	memcpy(ndev->dev_addr, ar->mac_addr, ETH_ALEN);
++	ret = ath6kl_cfg80211_init(ar);
++	if (ret)
++		goto err_rxbuf_cleanup;
  
- 	if (rs->rs_status & ATH9K_RXERR_PHY) {
- 		RX_STAT_INC(phy_err);
--		phyerr = rs->rs_phyerr & 0x24;
--		RX_PHY_ERR_INC(phyerr);
-+		if (rs->rs_phyerr < ATH9K_PHYERR_MAX)
-+			RX_PHY_ERR_INC(rs->rs_phyerr);
- 	}
+-	return ret;
++	ret = ath6kl_debug_init(ar);
++	if (ret) {
++		wiphy_unregister(ar->wiphy);
++		goto err_rxbuf_cleanup;
++	}
++
++	for (i = 0; i < ar->vif_max; i++)
++		ar->avail_idx_map |= BIT(i);
  
- 	sc->debug.stats.rxstats.rs_rssi_ctl0 = rs->rs_rssi_ctl0;
+-err_rxbuf_cleanup:
+-	ath6kl_htc_flush_rx_buf(ar->htc_target);
+-	ath6kl_cleanup_amsdu_rxbufs(ar);
+ 	rtnl_lock();
+-	ath6kl_cfg80211_vif_cleanup(netdev_priv(ndev));
++
++	/* Add an initial station interface */
++	ndev = ath6kl_interface_add(ar, "wlan%d", NL80211_IFTYPE_STATION, 0,
++				    INFRA_NETWORK);
++
+ 	rtnl_unlock();
+-	wiphy_unregister(ar->wiphy);
++
++	if (!ndev) {
++		ath6kl_err("Failed to instantiate a network device\n");
++		ret = -ENOMEM;
++		wiphy_unregister(ar->wiphy);
++		goto err_debug_init;
++	}
++
++	ath6kl_dbg(ATH6KL_DBG_TRC, "%s: name=%s dev=0x%p, ar=0x%p\n",
++			__func__, ndev->name, ndev, ar);
++
++	return ret;
++
+ err_debug_init:
+ 	ath6kl_debug_cleanup(ar);
+-err_node_cleanup:
++err_rxbuf_cleanup:
++	ath6kl_htc_flush_rx_buf(ar->htc_target);
++	ath6kl_cleanup_amsdu_rxbufs(ar);
+ 	ath6kl_wmi_shutdown(ar->wmi);
+ 	clear_bit(WMI_ENABLED, &ar->flag);
+ 	ar->wmi = NULL;
 -- 
-1.7.9
+1.7.0.4
 
