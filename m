@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from store.l.unchti.me ([88.198.247.169]:48770 "EHLO
-	store.l.unchti.me" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751464Ab2BQOrs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Feb 2012 09:47:48 -0500
-Received: from wlan0761.rz.uni-leipzig.de ([139.18.250.249] helo=spatula.l.unchti.me)
-	by store.l.unchti.me with esmtpsa (TLS1.0:DHE_RSA_AES_128_CBC_SHA1:16)
-	(Exim 4.72)
-	(envelope-from <mittagessen@l.unchti.me>)
-	id 1RyOaU-0005EK-AU
-	for linux-wireless@vger.kernel.org; Fri, 17 Feb 2012 14:15:02 +0000
-Date: Fri, 17 Feb 2012 15:15:04 +0100
-From: Benjamin Kiessling <mittagessen@l.unchti.me>
-To: linux-wireless@vger.kernel.org
-Subject: minstrel rate statistics
-Message-ID: <20120217141504.GA31438@spatula.l.unchti.me> (sfid-20120217_154751_064734_27DDCE76)
+Received: from mga14.intel.com ([143.182.124.37]:3904 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751719Ab2BVCRs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Feb 2012 21:17:48 -0500
+From: "Allan, Bruce W" <bruce.w.allan@intel.com>
+To: Joe Perches <joe@perches.com>
+CC: David Miller <davem@davemloft.net>,
+	Andy Whitcroft <apw@shadowen.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"andrei.emeltchenko.news@gmail.com"
+	<andrei.emeltchenko.news@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] checkpatch: Add some --strict coding style checks
+Date: Wed, 22 Feb 2012 02:17:46 +0000
+Message-ID: <804857E1F29AAC47BF68C404FC60A18429B98A@ORSMSX102.amr.corp.intel.com> (sfid-20120222_031814_580051_AC30843E)
+References: <20120221151435.GA19354@tuxdriver.com>
+	 <20120221.144417.1445117001833888214.davem@davemloft.net>
+	 <CAMXE1-qB8_5oGey2=Ypa5BitZnye3YqdM=yB8oKCGLvoZu_8HQ@mail.gmail.com>
+	 <20120221.154053.2103818562080068513.davem@davemloft.net>
+	 <1329857959.5143.11.camel@joe2Laptop>
+	 <804857E1F29AAC47BF68C404FC60A18429B3EE@ORSMSX102.amr.corp.intel.com>
+	 <1329874581.5143.22.camel@joe2Laptop>
+	 <804857E1F29AAC47BF68C404FC60A18429B8F2@ORSMSX102.amr.corp.intel.com>
+ <1329875935.5143.24.camel@joe2Laptop>
+In-Reply-To: <1329875935.5143.24.camel@joe2Laptop>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="r5Pyd7+fXNt84Ff3"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
---r5Pyd7+fXNt84Ff3
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi,
-
-I know it sounds silly but I am unable to find the rc_stats file for
-minstrel in my debugfs. I've been using an older kernel (2.6.35) and
-recently ported a few patches to the current wireless-testing tree, but
-after the upgrade there is only the rc_stats file of ath9k.=20
-I followed the rate_control_add_sta_debugfs() path and couldn't find any
-obvious wrong code. Is this a known problem or am I just too stupid to
-find it?
-
-Regards,
-Benjamin Kiessling
-
---r5Pyd7+fXNt84Ff3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPPmDoAAoJECylO89uSo7HTgkQAJLunOJBx5BlmT2q8WWHyqmB
-q9W20LVOpQ+7fU4D6MN94+DM3ik3RCtGOwt4CyweO3WddUQb78OToD9cE4rakQiw
-fQ2dWePU86yXpWEL6dUp+UVUzu51frYYO+26TURcho2ENtKoS48vWASdVwHQCJZq
-XR3Q7IpcoOnuY9RrEnO4nOzasA7/7rDWqX9m2WrL8tMOSfQKO7uTk6qN3tWIXDep
-gw//DL8xqAxcX/uG7F0OZ3ZBiaCCfWECUa7Kv4XevUiNlQjsBFXsbmTQRSqQaOku
-GJd/DO4TTq0rktKac+d9kaINYks2NcXkKs3SYboDF5HQ2BK7uOwn+uimOCKe0vHT
-aLquNVln1NsMW0iL4ju2K6AUFz5RjVBp5MaLshnX1UV7fTqrDChIHw6sLzBSePm0
-htPSaVBV3TtoTIaDl3kZ5R9jQJ+PNhhtlE+HfL29/Rw2uUxfPW8jZ4UL1H+8spqh
-h5vydSmmibkQL5tOKeBKbSQAVGE/MORYrGUPFEkp2u9+QZF67HIibBDn234VKH5W
-Fj3SvcS8Xi3KbsOrneWQV8m4spoSuTQ6Ur25tug/8xIHB/tK9F1Bd2MbOKMKf00p
-NXJLP6v1krRQfqtI5Vpa2GiFXVBw8ULQgLo5Qz7LqxUz6e0QB0YQRN+o/H4E1dJe
-P5AntJK2qUR8I6i/9zN8
-=rp2f
------END PGP SIGNATURE-----
-
---r5Pyd7+fXNt84Ff3--
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2UgUGVyY2hlcyBbbWFpbHRv
+OmpvZUBwZXJjaGVzLmNvbV0NCj4gU2VudDogVHVlc2RheSwgRmVicnVhcnkgMjEsIDIwMTIgNTo1
+OSBQTQ0KPiBUbzogQWxsYW4sIEJydWNlIFcNCj4gQ2M6IERhdmlkIE1pbGxlcjsgQW5keSBXaGl0
+Y3JvZnQ7IEFuZHJldyBNb3J0b247DQo+IGFuZHJlaS5lbWVsdGNoZW5rby5uZXdzQGdtYWlsLmNv
+bTsgbGludmlsbGVAdHV4ZHJpdmVyLmNvbTsgbGludXgtDQo+IHdpcmVsZXNzQHZnZXIua2VybmVs
+Lm9yZzsgbmV0ZGV2QHZnZXIua2VybmVsLm9yZzsgbGludXgtDQo+IGtlcm5lbEB2Z2VyLmtlcm5l
+bC5vcmcNCj4gU3ViamVjdDogUkU6IFtQQVRDSF0gY2hlY2twYXRjaDogQWRkIHNvbWUgLS1zdHJp
+Y3QgY29kaW5nIHN0eWxlIGNoZWNrcw0KPiANCj4gT24gV2VkLCAyMDEyLTAyLTIyIGF0IDAxOjU2
+ICswMDAwLCBBbGxhbiwgQnJ1Y2UgVyB3cm90ZToNCj4gPiA+IE9uIFR1ZSwgMjAxMi0wMi0yMSBh
+dCAyMjowOSArMDAwMCwgQWxsYW4sIEJydWNlIFcgd3JvdGU6DQo+ID4gPiA+IFRoaXMgYXBwZWFy
+cyB0byBmYWxzZWx5IGNvbXBsYWluIGFib3V0IHBhcmVudGhlc2lzIGFsaWdubWVudCBpbg0KPiA+
+ID4gPiBjb25kaXRpb25hbCBzdGF0ZW1lbnRzIHdpdGggbXVsdGlwbGUgb3BlbmluZyBwYXJlbnRo
+ZXNlcy4NCj4gPiA+IENhbiB5b3UgdHJ5IHRoaXMgb25lIHBsZWFzZT8NCj4gW10NCj4gPiBJdCdz
+IGJldHRlciwgYnV0IHRoZXJlIGFyZSBzdGlsbCBpbnN0YW5jZXMgb2YgZmFsc2UgaGl0cyBBRkFJ
+Q1QuDQo+IA0KPiBEbyB5b3UgaGF2ZSBhbnkgZXhhbXBsZXM/DQo+IFRoZSBvbmx5IG9uZSBJIG5v
+dGljZWQgd2FzIHNwYWNlcyBmb3IgYWxpZ25tZW50IGluc3RlYWQgb2YgdGFicy4NCj4gSSB0aGlu
+ayB0aGF0J3Mgbm90IGEgZmFsc2UgaGl0IG15c2VsZi4NCj4gDQoNCkV4YW1wbGUgMToNCglpZiAo
+KChhID09IGIpIHx8DQoJICAgICAoYyA9PSBkKSB8fA0KCSAgICAgKGUgPT0gZikpICYmDQoJICAg
+IChib29sX3ZhcikpDQoJCWJheigpOw0KDQpFeGFtcGxlIDI6DQoJaWYgKCghKHZhciAmIEZPT19N
+QVNLKSAmJg0KCSAgICAgKGEgPT0gYikpIHx8DQoJICAgIChjID09IGQpKQ0KCQliYXooKTsNCg0K
+RXhhbXBsZSAzOg0KCWlmICghKChmb28gJiBGT09fTUFTSykgJiYNCgkgICAgICAoYmFyICYgQkFS
+X01BU0spKSkNCgkJYmF6KCk7DQoNCkhUSCwNCkJydWNlLg0K
