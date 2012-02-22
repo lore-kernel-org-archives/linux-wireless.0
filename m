@@ -1,145 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:34122 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753619Ab2BVHLF (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:44622 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752905Ab2BVIyW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 02:11:05 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Wed, 22 Feb 2012 03:54:22 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20292.38137.989988.946723@gargle.gargle.HOWL> (sfid-20120222_081116_310800_6A4839BD)
-Date: Wed, 22 Feb 2012 12:40:49 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 09/26] ath9k: Initialize BTCOEX scheme using a helper
+In-Reply-To: <CAOJsxLENnvYn+xkDufQeTcgbKBsrrf=hw=g_ejCrts7ZNPa-Cg@mail.gmail.com>
+References: <20120124013625.GB18436@gamma.logic.tuwien.ac.at>
+	<CANUX_P3er0orBy8OhDuY1DfgD810UD-_HB_ukJnCA+W8e-VazQ@mail.gmail.com>
+	<20120125002250.GA20431@gamma.logic.tuwien.ac.at>
+	<CANUX_P0UREz_jZABu+Y_QYOh9tx_sKZSSkZpYHBEVtcU4QQdSA@mail.gmail.com>
+	<20120126003735.GA2346@gamma.logic.tuwien.ac.at>
+	<CANUX_P0H_WaWwnpjoBcMpZQY4xH=cbVhAKxWKXmz-HwFMcWS6w@mail.gmail.com>
+	<CANUX_P3XSCsWUJ9M55qeaK-DuPEMXODFPJiNk+BgnHN-=WECqw@mail.gmail.com>
+	<20120126232555.GB16330@gamma.logic.tuwien.ac.at>
+	<20120127015015.GA23291@gamma.logic.tuwien.ac.at>
+	<CANUX_P3F58upbrw48AiMTV4DDZWsfveYp=mANAD9CQ2bPps0cA@mail.gmail.com>
+	<20120222003747.GA9808@gamma.logic.tuwien.ac.at>
+	<CAOJsxLENnvYn+xkDufQeTcgbKBsrrf=hw=g_ejCrts7ZNPa-Cg@mail.gmail.com>
+Date: Wed, 22 Feb 2012 10:54:20 +0200
+Message-ID: <CANUX_P3f-9-1pnCRcLmTdt0irjA_JfkXoWrHQD_NtfDemXPoYQ@mail.gmail.com> (sfid-20120222_095437_895779_38F4CBEA)
+Subject: Re: iwlagn is getting even worse with 3.3-rc1
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Pekka Enberg <penberg@kernel.org>
+Cc: Norbert Preining <preining@logic.at>, linux-kernel@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	Dave Jones <davej@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setting up the required scheme can be done as part of the
-BTCOEX initialization path and it doesn't belong in
-ath9k_hw_fill_cap_info() anyway.
+Please check this one:
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=3d29dd9b5b160ba4542a9b8f869a220559e633a0
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/btcoex.c |   34 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/btcoex.h |    1 +
- drivers/net/wireless/ath/ath9k/gpio.c   |    2 +
- drivers/net/wireless/ath/ath9k/hw.c     |   25 ----------------------
- 4 files changed, 37 insertions(+), 25 deletions(-)
+it is in 3.3-rc4
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index 6566952..5365959 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -98,6 +98,40 @@ void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum)
- }
- EXPORT_SYMBOL(ath9k_hw_init_btcoex_hw);
- 
-+void ath9k_hw_btcoex_init_scheme(struct ath_hw *ah)
-+{
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
-+
-+	/*
-+	 * Check if BTCOEX is globally disabled.
-+	 */
-+	if (!common->btcoex_enabled) {
-+		btcoex_hw->scheme = ATH_BTCOEX_CFG_NONE;
-+		return;
-+	}
-+
-+	if (AR_SREV_9462(ah)) {
-+		btcoex_hw->scheme = ATH_BTCOEX_CFG_MCI;
-+	} else if (AR_SREV_9300_20_OR_LATER(ah)) {
-+		btcoex_hw->scheme = ATH_BTCOEX_CFG_3WIRE;
-+		btcoex_hw->btactive_gpio = ATH_BTACTIVE_GPIO_9300;
-+		btcoex_hw->wlanactive_gpio = ATH_WLANACTIVE_GPIO_9300;
-+		btcoex_hw->btpriority_gpio = ATH_BTPRIORITY_GPIO_9300;
-+	} else if (AR_SREV_9280_20_OR_LATER(ah)) {
-+		btcoex_hw->btactive_gpio = ATH_BTACTIVE_GPIO_9280;
-+		btcoex_hw->wlanactive_gpio = ATH_WLANACTIVE_GPIO_9280;
-+
-+		if (AR_SREV_9285(ah)) {
-+			btcoex_hw->scheme = ATH_BTCOEX_CFG_3WIRE;
-+			btcoex_hw->btpriority_gpio = ATH_BTPRIORITY_GPIO_9285;
-+		} else {
-+			btcoex_hw->scheme = ATH_BTCOEX_CFG_2WIRE;
-+		}
-+	}
-+}
-+EXPORT_SYMBOL(ath9k_hw_btcoex_init_scheme);
-+
- void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah)
- {
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index 0cb15cd..10627b4 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -97,6 +97,7 @@ struct ath_btcoex_hw {
- 	u32 wlan_weight[AR9300_NUM_WLAN_WEIGHTS];
- };
- 
-+void ath9k_hw_btcoex_init_scheme(struct ath_hw *ah);
- void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah);
- void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah);
- void ath9k_hw_btcoex_init_mci(struct ath_hw *ah);
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 77b3eb7..4da486b 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -391,6 +391,8 @@ int ath9k_init_btcoex(struct ath_softc *sc)
- 	struct ath_hw *ah = sc->sc_ah;
- 	int r;
- 
-+	ath9k_hw_btcoex_init_scheme(ah);
-+
- 	switch (ath9k_hw_get_btcoex_scheme(sc->sc_ah)) {
- 	case ATH_BTCOEX_CFG_NONE:
- 		break;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index cb46d41..f4b121f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2303,7 +2303,6 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
- 	struct ath_regulatory *regulatory = ath9k_hw_regulatory(ah);
- 	struct ath_common *common = ath9k_hw_common(ah);
--	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
- 	unsigned int chip_chainmask;
- 
- 	u16 eeval;
-@@ -2422,30 +2421,6 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	else
- 		pCap->hw_caps |= ATH9K_HW_CAP_4KB_SPLITTRANS;
- 
--	if (common->btcoex_enabled) {
--		if (AR_SREV_9462(ah))
--			btcoex_hw->scheme = ATH_BTCOEX_CFG_MCI;
--		else if (AR_SREV_9300_20_OR_LATER(ah)) {
--			btcoex_hw->scheme = ATH_BTCOEX_CFG_3WIRE;
--			btcoex_hw->btactive_gpio = ATH_BTACTIVE_GPIO_9300;
--			btcoex_hw->wlanactive_gpio = ATH_WLANACTIVE_GPIO_9300;
--			btcoex_hw->btpriority_gpio = ATH_BTPRIORITY_GPIO_9300;
--		} else if (AR_SREV_9280_20_OR_LATER(ah)) {
--			btcoex_hw->btactive_gpio = ATH_BTACTIVE_GPIO_9280;
--			btcoex_hw->wlanactive_gpio = ATH_WLANACTIVE_GPIO_9280;
--
--			if (AR_SREV_9285(ah)) {
--				btcoex_hw->scheme = ATH_BTCOEX_CFG_3WIRE;
--				btcoex_hw->btpriority_gpio =
--						ATH_BTPRIORITY_GPIO_9285;
--			} else {
--				btcoex_hw->scheme = ATH_BTCOEX_CFG_2WIRE;
--			}
--		}
--	} else {
--		btcoex_hw->scheme = ATH_BTCOEX_CFG_NONE;
--	}
--
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		pCap->hw_caps |= ATH9K_HW_CAP_EDMA | ATH9K_HW_CAP_FASTCLOCK;
- 		if (!AR_SREV_9330(ah) && !AR_SREV_9485(ah))
--- 
-1.7.9.1
 
+On Wed, Feb 22, 2012 at 10:40, Pekka Enberg <penberg@kernel.org> wrote:
+> On Wed, Feb 22, 2012 at 2:37 AM, Norbert Preining <preining@logic.at> wrote:
+>> I still see that, on 3.3-rc4, and it is the same as usual. The interface
+>> believes it is up and connected, but nothing works.
+>>
+>> I am *100%* sure that this is related to the driver, because in old
+>> revisions (somewhen around 2.6.27 or so) it was working without
+>> any problem, and when it started I reported it long time ago.
+>
+> It's definitely a kernel regression, no question about it. Was 3.3-rc1
+> already broken for you? It shouldn't be that difficult to find the
+> offending commit with git bisect if it's that easy to reproduce for
+> you.
+>
+>                        Pekka
