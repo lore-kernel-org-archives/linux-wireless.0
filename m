@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:46129 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752950Ab2BVKIB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 05:08:01 -0500
-Message-ID: <4F44BE7B.8000501@neratec.com> (sfid-20120222_110805_700440_482F094C)
-Date: Wed, 22 Feb 2012 11:07:55 +0100
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:42280 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753259Ab2BVP2I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Feb 2012 10:28:08 -0500
+Received: by iacb35 with SMTP id b35so157337iac.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Feb 2012 07:28:07 -0800 (PST)
+Message-ID: <4F450982.4070900@lwfinger.net> (sfid-20120222_162813_288757_6E27289D)
+Date: Wed, 22 Feb 2012 09:28:02 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-To: David Miller <davem@davemloft.net>
-CC: andrei.emeltchenko.news@gmail.com, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-02-20
-References: <20120221151435.GA19354@tuxdriver.com>	<20120221.144417.1445117001833888214.davem@davemloft.net>	<CAMXE1-qB8_5oGey2=Ypa5BitZnye3YqdM=yB8oKCGLvoZu_8HQ@mail.gmail.com> <20120221.154053.2103818562080068513.davem@davemloft.net>
-In-Reply-To: <20120221.154053.2103818562080068513.davem@davemloft.net>
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?UTF-8?B?VmxhdGthIFBldHJpxI1lYw==?= <vlatka.petricec@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re:
+References: <CAOorkqfcsYJXCZQH=Stz=kMjN630CtDpc7UGPyEyGAVZJ07bpA@mail.gmail.com>
+In-Reply-To: <CAOorkqfcsYJXCZQH=Stz=kMjN630CtDpc7UGPyEyGAVZJ07bpA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/21/2012 09:40 PM, David Miller wrote:
-> From: Andrei Emeltchenko <andrei.emeltchenko.news@gmail.com>
-> Date: Tue, 21 Feb 2012 22:38:16 +0200
-> 
->> Hi David,
->>
->> On Tue, Feb 21, 2012 at 9:44 PM, David Miller <davem@davemloft.net> wrote:
->>> From: "John W. Linville" <linville@tuxdriver.com>
->>> Date: Tue, 21 Feb 2012 10:14:36 -0500
->>> [...]
->>
->> Sorry did we understand wrong text of Linux coding style? Or do we need
->> right interpretation of it?
-> 
-> I'm not engaging in this conversation any more, I don't care what CodingStyle
-> says, the quoted code is garbage.
+On 02/22/2012 12:50 AM, Vlatka Petričec wrote:
+> Hi,
+> I have linux evolution  and I had a normal wireless connection until
+> something changed in maybe network settings and it just stopped
+> working. for example it says that my network is active but I cannot
+> open any web adress or is just active but every function on computer
+> says it is not active. I am thanking you in advance thank you for your
+> time.
 
-This is not really helpful, David.
+Vlatka,
 
-Andrei's question was fully reasonable here, i.e. the Documentation/CodingStyle is the only binding reference given to potential contributors -- the common 'how-to-contribute-kernel-patches' docs non-24/7-kernel-folks usually find and follow on the way preparing patches end exactly there.
+I have some suggestions for you.
 
-I recently learned the hard way when my patches were ignored just because of some missing spaces. That would be perfectly fair if some formal rules were broken, but not telling people about additional informal ones is not motivating.
+First, never submit an E-mail to anyone, and especially to a mailing list 
+without a subject that is a good description of your problem. Most experts will 
+have their mail filters set up to direct a subject-less message directly to the 
+spam bucket. I think I need to do that too.
 
+Second, you give no information that would let anyone help you. "It just stopped 
+working" does no good. Knowing what changed is critical. If the kernel changed 
+when it stopped, then this list might be the right place to ask. If something 
+was updated by the distro, then get your help there as very few of us would know 
+how evolution works. if nothing changed, then your settings just got corrupted, 
+and you definitely need to contact the support at evolution.
 
-I might be fully blind and just missed the related coding style document that covers the issues discussed here. But even then your answer should be 'RTFM' instead of just ending the conversation.
+If you think that it is a kernel or driver problem, then you absolutely must 
+state what hardware you have, what driver it uses, and the PCI or USB ID that 
+describes it. You also need to state what kernel works, and what version fails.
 
+Larry
 
-Cheers, Zefir
