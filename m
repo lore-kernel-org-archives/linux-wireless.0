@@ -1,81 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:39487 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756376Ab2BGMvk convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:62425 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752596Ab2BVXfo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 07:51:40 -0500
-Received: by vcge1 with SMTP id e1so4592507vcg.19
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 04:51:39 -0800 (PST)
+	Wed, 22 Feb 2012 18:35:44 -0500
+Received: by mail-iy0-f174.google.com with SMTP id b35so694040iac.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Feb 2012 15:35:44 -0800 (PST)
+Message-ID: <4F457BCD.5020200@lwfinger.net> (sfid-20120223_003550_294868_1602F234)
+Date: Wed, 22 Feb 2012 17:35:41 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <1328568313-26267-5-git-send-email-gwingerde@gmail.com>
-References: <1328568313-26267-1-git-send-email-gwingerde@gmail.com>
-	<1328568313-26267-2-git-send-email-gwingerde@gmail.com>
-	<1328568313-26267-3-git-send-email-gwingerde@gmail.com>
-	<1328568313-26267-4-git-send-email-gwingerde@gmail.com>
-	<1328568313-26267-5-git-send-email-gwingerde@gmail.com>
-Date: Tue, 7 Feb 2012 13:51:39 +0100
-Message-ID: <CAOZOX0UfTBDOokm364SKVPSxS-+OXqVuFpSdQQsa2grc1xBgUg@mail.gmail.com> (sfid-20120207_135143_422705_7E6FE828)
-Subject: Re: [PATCH 4/8] rt2x00: Use saved BBP 25 and 26 values when
- configuring channel on RT3572.
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: Gertjan van Wingerde <gwingerde@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+To: htl10@users.sourceforge.net
+CC: Attila Fazekas <turul64@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Herton Ronaldo Krzesinski <herton@canonical.com>
+Subject: Re: [PATCH] rtl8187: Add Ad-hoc mode
+References: <1329947497.90659.YahooMailClassic@web29504.mail.ird.yahoo.com>
+In-Reply-To: <1329947497.90659.YahooMailClassic@web29504.mail.ird.yahoo.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 6, 2012 at 11:45 PM, Gertjan van Wingerde
-<gwingerde@gmail.com> wrote:
-> This brings the rt2800 channel switching code for RT3572 closer to the
-> v2.5.0.0 Ralink RT3572 driver.
+On 02/22/2012 03:51 PM, Hin-Tak Leung wrote:
+> --- On Tue, 21/2/12, Attila Fazekas<turul64@gmail.com>  wrote:
 >
-> Signed-off-by: Gertjan van Wingerde <gwingerde@gmail.com>
+>> I think it is worth the effort.
+>>
+>> Hostapd AFAIK is not working with rtl8187 now.
+>> Until we can make it work in master mode, the adhoc mode
+>> could be an
+>> alternative. I think even if we can use it in master mode,
+>> ad-hoc mode
+>> should be implemented.
+>
+> You (and others) could comment on the issue of not-working hostapd a bit more; we might want to get it working properly anyway.
+>
+> As Larry requested - please send the patch without munching from your
+> e-mail client. Since you are on gmail, I could offer a little advice on git-send-email, which may or may not be something you already know. This is what I do to send patches from my gmail account (change "name" and "acct" and "FILLTHISIN" and "patch-file" to suit yourself), and you could add --cc a few of us there also:
+>
+> git send-email --from 'name<acct@gmail.com>' \
+> --to linux-wireless@vger.kernel.org --to linville@tuxdriver.com \
+> --smtp-server smtp.gmail.com --smtp-server-port 465 --smtp-user \ acct@gmail.com --smtp-pass FILLTHISIN --smtp-ssl patch-file
+>
+> You can do "man git-send-email" (all git man pages uses "git-something" to document the "git something" sub commands, with a dash between) to read about all the switches and what they are supposed to do.
+>
+>> About refactoring:
+>>
+>> rtl8180_beacon_work()
+>> Now is almost the same, I think it is possible to make it
+>> generic by a
+>> macro, or by creating new source/object file linked to both
+>> driver, or
+>> even possible to create a common module.
+>> But, this function will be different if someone will be able
+>> to add
+>> some hardware aided beacon timestamp update. (If I can have
+>> more
+>> information about this hardware I'll try it)
+>> Creating a new common module just for one small function,
+>> IMHO not
+>> worth the effort.
+>> Please advice.
+>>
+>> struct rtl8187_vif, struct rtl8180_vif  now are the
+>> same, they might
+>> be the same in the future as well.
+>> We can remove them and create new one named rtl818x_vif in
+>> the rtl818x.h .
+>> Shall I do it ?
+>
+> I haven't got a strong opinion on this - but we probably like to try your patch out first :-).
 
-Acked-by: Ivo van Doorn <IvDoorn@gmail.com>
+If drivers rtl8180 and rtl8187 each end up with the same struct definition in 
+their private headers, it certainly makes sense to place the code in a common 
+header.
 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
-> index 7c05dee..8aabd0d 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800.h
-> +++ b/drivers/net/wireless/rt2x00/rt2800.h
-> @@ -2444,6 +2444,8 @@ struct mac_iveiv_entry {
->  struct rt2800_drv_data {
->        u8 calibration_bw20;
->        u8 calibration_bw40;
-> +       u8 bbp25;
-> +       u8 bbp26;
->  };
->
->  #endif /* RT2800_H */
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index fad0e77..cb841f4 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -1754,8 +1754,8 @@ static void rt2800_config_channel_rf3052(struct rt2x00_dev *rt2x00dev,
->        u32 reg;
->
->        if (rf->channel <= 14) {
-> -               rt2800_bbp_write(rt2x00dev, 25, 0x15);
-> -               rt2800_bbp_write(rt2x00dev, 26, 0x85);
-> +               rt2800_bbp_write(rt2x00dev, 25, drv_data->bbp25);
-> +               rt2800_bbp_write(rt2x00dev, 26, drv_data->bbp26);
->        } else {
->                rt2800_bbp_write(rt2x00dev, 25, 0x09);
->                rt2800_bbp_write(rt2x00dev, 26, 0xff);
-> @@ -3623,6 +3623,12 @@ static int rt2800_init_rfcsr(struct rt2x00_dev *rt2x00dev)
->                        rt2800_init_rx_filter(rt2x00dev, true, 0x27, 0x15);
->        }
->
-> +       /*
-> +        * Save BBP 25 & 26 values for later use in channel switching
-> +        */
-> +       rt2800_bbp_read(rt2x00dev, 25, &drv_data->bbp25);
-> +       rt2800_bbp_read(rt2x00dev, 26, &drv_data->bbp26);
-> +
->        if (!rt2x00_rt(rt2x00dev, RT5390)) {
->                /*
->                 * Set back to initial state
-> --
-> 1.7.9
->
+I fixed and tested your patch. With it, I certainly see the beacons and I was 
+able to use NetworkManager to connect once. However, I was never able to ping 
+from either end of the network to the other.
+
+Besides the mangling of the patch by your mailer, you had many problems with 
+spaces instead of tabs. Did you use scripts/checkpatch.pl to test for errors?
+
+Larry
+
