@@ -1,58 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.thefabfarrows.com ([70.88.29.81]:37296 "EHLO
-	mail.thefabfarrows.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031018Ab2B2O5P (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 09:57:15 -0500
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Wed, 29 Feb 2012 09:57:13 -0500
-From: Paul Farrow <linuxwireless@thefabfarrows.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: Re: Can't compile latest compat-wireless on Fedora 16 -
- =?UTF-8?Q?=33=2E=32=2E=37-=31=2Efc=31=36=2Ex=38=36=5F=36=34=2Edebug?=
-In-Reply-To: <20120229143847.GA20516@redhat.com>
-References: <fb86ee45cba7d303c361b65c072504ca@www.thefabfarrows.com>
- <20120229143847.GA20516@redhat.com>
-Message-ID: <f2b62fb34829096ffd782328db881d52@www.thefabfarrows.com> (sfid-20120229_155719_722455_1526E3CC)
+Received: from mx4.wp.pl ([212.77.101.8]:33695 "EHLO mx4.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754501Ab2BVU7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Feb 2012 15:59:09 -0500
+From: Jakub Kicinski <kubakici@wp.pl>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
+	Jakub Kicinski <kubakici@wp.pl>
+Subject: [PATCH v3 1/2] rt2800: Add documentation on MCU requests
+Date: Wed, 22 Feb 2012 21:58:57 +0100
+Message-Id: <1329944338-4696-1-git-send-email-kubakici@wp.pl> (sfid-20120222_215914_227615_7B9933B8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add documentation on MCU communication, some of known commands and
+their arguments. Supplement command ids.
 
-On Wed, 29 Feb 2012 15:38:52 +0100, Stanislaw Gruszka wrote:
-> On Tue, Feb 28, 2012 at 02:05:24PM -0500, Paul Farrow wrote:
->> I have in recent times compiled the latest compat-wireless with no
->> problem but I seem to be having trouble compiling it on this kernel
->> - lots of undefined warnings in the mac80211 area.
->>
->> Output from make is attached.
->>
->> Can any one tell me what I have done wrong?
->
->
->> WARNING: "__tracepoint_api_stop_tx_ba_session" 
->> [/usr/local/src/compat-wireless-2012-02-27/net/mac80211/mac80211.ko] 
->> undefined!
->
-> In compat-wireless tree do:
->
-> patch -p1 -R < patches/44-deactivate-mac80211-tracing.patch
->
-> I'm not sure how proper fix should looks like. I guess removing that
-> patch will broke compiation on older kernels without tracing support.
->
-> BTW: this could be usefull for you
-> http://people.redhat.com/sgruszka/compat_wireless.html
->
-> Stanislaw
+Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+Acked-by: Ivo van Doorn <IvDoorn@gmail.com>  
+Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+---
+ drivers/net/wireless/rt2x00/rt2800.h    |   15 ++++++++++++++-
+ drivers/net/wireless/rt2x00/rt2800pci.c |    8 +++++---
+ 2 files changed, 19 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2800.h b/drivers/net/wireless/rt2x00/rt2800.h
+index 06acabd..3ab1f7f 100644
+--- a/drivers/net/wireless/rt2x00/rt2800.h
++++ b/drivers/net/wireless/rt2x00/rt2800.h
+@@ -1627,6 +1627,7 @@ struct mac_iveiv_entry {
+ 
+ /*
+  * H2M_MAILBOX_CSR: Host-to-MCU Mailbox.
++ * CMD_TOKEN: Command id, 0xff disable status reporting.
+  */
+ #define H2M_MAILBOX_CSR			0x7010
+ #define H2M_MAILBOX_CSR_ARG0		FIELD32(0x000000ff)
+@@ -1636,6 +1637,8 @@ struct mac_iveiv_entry {
+ 
+ /*
+  * H2M_MAILBOX_CID:
++ * Free slots contain 0xff. MCU will store command's token to lowest free slot.
++ * If all slots are occupied status will be dropped.
+  */
+ #define H2M_MAILBOX_CID			0x7014
+ #define H2M_MAILBOX_CID_CMD0		FIELD32(0x000000ff)
+@@ -1645,6 +1648,7 @@ struct mac_iveiv_entry {
+ 
+ /*
+  * H2M_MAILBOX_STATUS:
++ * Command status will be saved to same slot as command id.
+  */
+ #define H2M_MAILBOX_STATUS		0x701c
+ 
+@@ -2288,6 +2292,12 @@ struct mac_iveiv_entry {
+ 
+ /*
+  * MCU mailbox commands.
++ * MCU_SLEEP - go to power-save mode.
++ *             arg1: 1: save as much power as possible, 0: save less power.
++ *             status: 1: success, 2: already asleep,
++ *                     3: maybe MAC is busy so can't finish this task.
++ * MCU_RADIO_OFF
++ *             arg0: 0: do power-saving, NOT turn off radio.
+  */
+ #define MCU_SLEEP			0x30
+ #define MCU_WAKEUP			0x31
+@@ -2308,7 +2318,10 @@ struct mac_iveiv_entry {
+ /*
+  * MCU mailbox tokens
+  */
+-#define TOKEN_WAKUP			3
++#define TOKEN_SLEEP			1
++#define TOKEN_RADIO_OFF			2
++#define TOKEN_WAKEUP			3
++
+ 
+ /*
+  * DMA descriptor defines.
+diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
+index 6ad6929..891547c 100644
+--- a/drivers/net/wireless/rt2x00/rt2800pci.c
++++ b/drivers/net/wireless/rt2x00/rt2800pci.c
+@@ -521,14 +521,16 @@ static int rt2800pci_set_state(struct rt2x00_dev *rt2x00dev,
+ 			       enum dev_state state)
+ {
+ 	if (state == STATE_AWAKE) {
+-		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, TOKEN_WAKUP, 0, 0x02);
+-		rt2800pci_mcu_status(rt2x00dev, TOKEN_WAKUP);
++		rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, TOKEN_WAKEUP,
++				   0, 0x02);
++		rt2800pci_mcu_status(rt2x00dev, TOKEN_WAKEUP);
+ 	} else if (state == STATE_SLEEP) {
+ 		rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_STATUS,
+ 					 0xffffffff);
+ 		rt2x00pci_register_write(rt2x00dev, H2M_MAILBOX_CID,
+ 					 0xffffffff);
+-		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0x01, 0xff, 0x01);
++		rt2800_mcu_request(rt2x00dev, MCU_SLEEP, TOKEN_SLEEP,
++				   0xff, 0x01);
+ 	}
+ 
+ 	return 0;
+-- 
+1.7.7.6
 
-Bravo, that works for me.  Now to test the latest code for DMA TX 
-errors problem that I have, to see if its been fixed (bug already lodged 
-with kernel.org).
-
-Thanks for your help Stanislaw much appreciated.
-
-Paul
