@@ -1,138 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:60278 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753425Ab2B0Qh6 (ORCPT
+Received: from mail-qw0-f53.google.com ([209.85.216.53]:39052 "EHLO
+	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751746Ab2BVOXm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 11:37:58 -0500
-Received: by ggnh1 with SMTP id h1so2096530ggn.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2012 08:37:58 -0800 (PST)
-Message-ID: <4F4BB163.20107@lwfinger.net> (sfid-20120227_173802_352165_7500487C)
-Date: Mon, 27 Feb 2012 10:37:55 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 22 Feb 2012 09:23:42 -0500
+Received: by qafk1 with SMTP id k1so217357qaf.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Feb 2012 06:23:42 -0800 (PST)
 MIME-Version: 1.0
-To: Chris Thompson <bradhex@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Problems with Realtek USB rtl8192cu
-References: <loom.20120227T170610-925@post.gmane.org>
-In-Reply-To: <loom.20120227T170610-925@post.gmane.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Date: Wed, 22 Feb 2012 15:23:41 +0100
+Message-ID: <CAFED-j=pt4zyuWP9g6rhjzDDwxmrw01w1Lek=k5i7rzekezpAA@mail.gmail.com> (sfid-20120222_152346_033605_A986F9A5)
+Subject: compat-wireless-2012-02-21 compilation issue (2.6.35-32)
+From: Janusz Dziedzic <janusz.dziedzic@gmail.com>
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/27/2012 10:09 AM, Chris Thompson wrote:
-> Hello,
->
-> I'm attempting to get my belkin n300 to work with the kernel driver rtl8192cu. I
-> was previously using the realtek drivers but this only resulted in slow speeds.
->
-> I am running kernel 3.2.7 with the following information:
->
-> Bus 001 Device 004: ID 050d:2103 Belkin Components
-> Device Descriptor:
->    bLength                18
->    bDescriptorType         1
->    bcdUSB               2.00
->    bDeviceClass            0 (Defined at Interface level)
->    bDeviceSubClass         0
->    bDeviceProtocol         0
->    bMaxPacketSize0        64
->    idVendor           0x050d Belkin Components
->    idProduct          0x2103
->    bcdDevice            2.00
->    iManufacturer           1 Realtek
->    iProduct                2 Belkin Wireless Adapter
->    iSerial                 3 00e04c000001
->
-> modinfo rtl8192cu returns this:
-> filename:
-> /lib/modules/3.2.7/kernel/drivers/net/wireless/rtlwifi/rtl8192cu/rtl8192cu.ko
-> firmware:       rtlwifi/rtl8192cufw.bin
-> description:    Realtek 8192C/8188C 802.11n USB wireless
-> license:        GPL
-> author:         Larry Finger<Larry.Finger@lwfinger.net>
-> author:         Ziv Huang<ziv_huang@realtek.com>
-> author:         Georgia<georgia@realtek.com>
->
-> alias:          usb:v7392p7822d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v2019pAB2Bd*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v2001p330Ad*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v2001p3309d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v2001p3307d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v07B8p8178d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v07AAp0056d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0586p341Fd*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v9846p9041d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v4855p0091d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v4855p0090d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v13D3p3359d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v13D3p3358d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v7392p7811d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v20F4p648Bd*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v2019pED17d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v2019pAB2Ad*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v2001p3308d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v13D3p3357d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v103Cp1629d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0EB0p9071d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0DF6p0052d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0846p9041d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v07B8p8189d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v07B8p8188d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v06F8pE033d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v050Dp1102d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0BDAp817Cd*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0BDAp817Bd*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0BDAp8177d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0BDAp8754d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0BDAp817Fd*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0BDAp817Ed*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0BDAp817Dd*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0BDAp817Bd*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0BDAp817Ad*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0BDAp8177d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0BDAp8176d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0BDAp8170d*dc*dsc*dp*ic*isc*ip*
-> alias:          usb:v0BDAp8191d*dc*dsc*dp*ic*isc*ip*
-> depends:        rtlwifi,mac80211,rtl8192c-common
-> intree:         Y
-> vermagic:       3.2.7 SMP preempt mod_unload 586
-> parm:           swenc:Set to 1 for software crypto (default 0)
->   (bool)
-> parm:           debug:Set debug level (0-5) (default 0) (int)
->
->
-> ls -l /lib/firmware/rtlwifi:
-> total 16
-> -rwxr-xr-x 1 root root 16014 Feb 22 15:54 rtl8192cufw.bin
->
-> I have also ran md5checksum on the firmware file, it came back fine.
->
-> When I run modprobe rtl8192cu, this is what dmesg reports:
->
-> [ 1378.073848] usbcore: registered new interface driver rtl8192cu
->
-> Nothing else. This is what lsmod returns:
->
-> Module                  Size  Used by
-> rtl8192cu              86266  0
-> rtl8192c_common        53218  1 rtl8192cu
-> rtlwifi                81918  1 rtl8192cu
-> mac80211              165677  3 rtl8192cu,rtl8192c_common,rtlwifi
-> cfg80211              141272  2 rtlwifi,mac80211
->
->
->
-> What should I try next to get this module working? I hope I have given enough
-> information on trying to troubleshoot this.
+Hello,
 
-Your device is in the current tables with the insertion patch date October 2011. 
-Unfortunately, I failed to Cc it to Stable, thus the patch was not backported to 
-3.2.7.
+I have compilation issue.
+Is there any patch available?
 
-You could either choose to get a recent version of compat-wireless, or you can
 
-echo "050d 2103" > /sys/bus/usb/drivers/rtl8192cu/new_id
+jadz@uw000950:~/builds/community/compat-wireless-2012-02-21$ make
+make -C /lib/modules/2.6.35-32-generic/build
+M=/home/xpujadz/builds/community/compat-wireless-2012-02-21 modules
+make[1]: Entering directory `/usr/src/linux-headers-2.6.35-32-generic'
+  Building modules, stage 2.
+  MODPOST 9 modules
+WARNING: "__tracepoint_drv_return_void"
+[/home/xpujadz/builds/community/compat-wireless-2012-02-21/net/mac80211/mac80211.ko]
+undefined!
+WARNING: "__tracepoint_drv_bss_info_changed"
+[/home/xpujadz/builds/community/compat-wireless-2012-02-21/net/mac80211/mac80211.ko]
+undefined!
+WARNING: "__tracepoint_api_stop_tx_ba_session"
+[/home/xpujadz/builds/community/compat-wireless-2012-02-21/net/mac80211/mac80211.ko]
+undefined!
+WARNING: "__tracepoint_drv_configure_filter"
+[/home/xpujadz/builds/community/compat-wireless-2012-02-21/net/mac80211/mac80211.ko]
+undefined!
 
-(as root). That should bring the device to life.
+uname:
+Linux uw000950 2.6.35-32-generic #64~lucid1-Ubuntu SMP Tue Jan 3
+15:41:36 UTC 2012 x86_64 GNU/Linux
 
-Larry
+BR
+Janusz
