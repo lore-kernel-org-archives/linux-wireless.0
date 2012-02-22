@@ -1,118 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:40580 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753188Ab2BSLu4 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48156 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752950Ab2BVHKT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Feb 2012 06:50:56 -0500
-Received: by lags15 with SMTP id s15so4625832lag.24
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Feb 2012 03:50:53 -0800 (PST)
-Message-ID: <1329652250.3253.30.camel@cumari> (sfid-20120219_125100_697607_CA97B7BE)
-Subject: Re: linux-firmware: pull-request wl12xx 2012-02-17
-From: Luciano Coelho <coelho@ti.com>
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: linux-wireless@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>
-Date: Sun, 19 Feb 2012 13:50:50 +0200
-In-Reply-To: <1329615009.3258.57.camel@deadeye>
-References: <1329493309.21883.10.camel@cumari>
-	 <1329615009.3258.57.camel@deadeye>
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-pBwXQoVZJquRTnVNI+ZN"
-Mime-Version: 1.0
+	Wed, 22 Feb 2012 02:10:19 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20292.38097.735846.731941@gargle.gargle.HOWL> (sfid-20120222_081035_403984_0EB0A9C0)
+Date: Wed, 22 Feb 2012 12:40:09 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 02/26] ath9k: Cleanup MCI init/deinit routines
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch simplifies the buffer allocation functions
+for MCI and removes unneeded memset calls. Also, a couple
+of unused variables are removed and a memory leak in DMA
+allocation is fixed.
 
---=-pBwXQoVZJquRTnVNI+ZN
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+[ 1263.788267] WARNING: at /home/sujith/dev/wireless-testing/lib/dma-debug.c:875 check_unmap+0x173/0x7e0()
+[ 1263.788273] ath9k 0000:06:00.0: DMA-API: device driver frees DMA memory with different size
+               [device address=0x0000000071908000] [map size=512 bytes] [unmap size=256 bytes]
+[ 1263.788345] Pid: 774, comm: rmmod Tainted: G        W  O 3.3.0-rc3-wl #18
+[ 1263.788348] Call Trace:
+[ 1263.788355]  [<ffffffff8105110f>] warn_slowpath_common+0x7f/0xc0
+[ 1263.788359]  [<ffffffff81051206>] warn_slowpath_fmt+0x46/0x50
+[ 1263.788363]  [<ffffffff8125a713>] check_unmap+0x173/0x7e0
+[ 1263.788368]  [<ffffffff8123fc22>] ? prio_tree_left+0x32/0xc0
+[ 1263.788373]  [<ffffffff8125aded>] debug_dma_free_coherent+0x6d/0x80
+[ 1263.788381]  [<ffffffffa0701c3c>] ath_mci_cleanup+0x7c/0x110 [ath9k]
+[ 1263.788387]  [<ffffffffa06f4033>] ath9k_deinit_softc+0x113/0x120 [ath9k]
+[ 1263.788392]  [<ffffffffa06f55cc>] ath9k_deinit_device+0x5c/0x70 [ath9k]
+[ 1263.788397]  [<ffffffffa0704934>] ath_pci_remove+0x54/0xa0 [ath9k]
+[ 1263.788401]  [<ffffffff81267d06>] pci_device_remove+0x46/0x110
+[ 1263.788406]  [<ffffffff813102bc>] __device_release_driver+0x7c/0xe0
+[ 1263.788410]  [<ffffffff81310a00>] driver_detach+0xd0/0xe0
+[ 1263.788414]  [<ffffffff81310118>] bus_remove_driver+0x88/0xe0
+[ 1263.788418]  [<ffffffff813111c2>] driver_unregister+0x62/0xa0
+[ 1263.788421]  [<ffffffff812680c4>] pci_unregister_driver+0x44/0xc0
+[ 1263.788427]  [<ffffffffa0705015>] ath_pci_exit+0x15/0x20 [ath9k]
+[ 1263.788432]  [<ffffffffa070a92d>] ath9k_exit+0x15/0x31 [ath9k]
+[ 1263.788436]  [<ffffffff810b971c>] sys_delete_module+0x18c/0x270
+[ 1263.788441]  [<ffffffff81436edd>] ? retint_swapgs+0x13/0x1b
+[ 1263.788446]  [<ffffffff812483be>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+[ 1263.788450]  [<ffffffff814378e9>] system_call_fastpath+0x16/0x1b
+[ 1263.788453] ---[ end trace 3ab4d030ffde40d4 ]---
 
-On Sun, 2012-02-19 at 01:30 +0000, Ben Hutchings wrote:=20
-> On Fri, 2012-02-17 at 17:41 +0200, Luciano Coelho wrote:
-> > Hi Ben,
-> >=20
-> > Please pull the latest firmwares for the wl12xx driver.  These are new
-> > firmwares that are necessary to use the latest driver version, in which
-> > the host/fw API has changed.  We also updated our licence file.
-> >=20
-> > Please let me know if there are any problems.=20
->=20
-> There are.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |    5 --
+ drivers/net/wireless/ath/ath9k/btcoex.h     |    1 -
+ drivers/net/wireless/ath/ath9k/mci.c        |   70 +++++++++------------------
+ drivers/net/wireless/ath/ath9k/mci.h        |    3 -
+ 4 files changed, 23 insertions(+), 56 deletions(-)
 
-:)
-
-
-> [...]
-> > diff --git a/LICENCE.ti-connectivity b/LICENCE.ti-connectivity
-> > index 085f6c7..da80b62 100644
-> > --- a/LICENCE.ti-connectivity
-> > +++ b/LICENCE.ti-connectivity
-> > @@ -1,151 +1,46 @@
-> [...]
-> > +   1 TECHNOLOGY AND SOFTWARE PUBLICLY AVAILABLE
-> > +   2 SOFTWARE LICENSE
-> > +   3
->=20
-> What's with the line numbers here?
-
-I don't really know, it's ugly, but that's what we got from legal.  I
-saw it but didn't dare change, I'll recheck with legal to see if that is
-really required or not.
-
-
-> [...]
-> > diff --git a/WHENCE b/WHENCE
-> > index 804c91f..0596204 100644
-> > --- a/WHENCE
-> > +++ b/WHENCE
-> [...]
-> > +       Single-role:            wl127x-fw-4-sr.bin      6.3.5.0.98
-> > +       Multi-role:             wl127x-fw-4-mr.bin      6.5.2.0.15
-> > +       PLT:                    wl127x-fw-4-plt.bin     6.3.5.0.98
-> > +       Single-role:            wl128x-fw-4-sr.bin      7.3.5.0.98
-> > +       Multi-role:             wl128x-fw-4-mr.bin      7.5.2.0.15
-> > +       PLT:                    wl128x-fw-4-plt.bin     7.3.5.0.98
-> [...]
->=20
-> This is not the correct format for version information.  I'm going to
-> insist that for the new files you put a 'Version' field under each
-> 'File' field.  Please also convert the existing version information in a
-> separate commit.
-
-Okay, I'll use the correct format and resend.  I'll also add a patch to
-fix the existing ones.
-
-I'm the new "pusher" of firmwares from TI, so please bear with me while
-I adapt and learn the correct rules for linux-firmware.git. ;)
-
-Thanks a lot for the comments!
-
---=20
-Cheers,
-Luca.
-
---=-pBwXQoVZJquRTnVNI+ZN
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAABAgAGBQJPQOIaAAoJEKFHnKIaPMX6eKkP/3nck7VuKrQU5hL+ux7Ak8A3
-v/qRRACzrJIngKjDYoS4Y1CvxDSH9pqHKdqCveV1TZUFXv5Qsw+HZqHB/1Gv9F0k
-nFWMC2p8vWftpXBYHyEoExdd+qaX8IijjHpEfhuP4JbR8uQcGQKBupIeHdzPQK61
-XelKySeyYJNrYU88aIpg6kg/95CjavJlCVm0dsQGRTQGVdkivSjhahwS3DsHMtu4
-Umve+/3QzBibWlT7XNlsiMUlK4H/Ukbby7DUEPC5MGdAUGuL5fDCKGgxYDL8yT0/
-uX4elsWyiufwILN8G/wK2TEpxGmJQd1ayJBReUhP9cxWao/6PkCDzA1xEKX1CffW
-sVIbPm1H35B75R+D6X5Pqb0tz5/bi40vvobrmUGd91sD5uCsYjJYF2Zkk73HFYaX
-A1xXTqemnyMWFvdBuuhPG8aT/QME98xDkPNxDW7hNYQufZYgHQLKhI1Db+7vMdba
-CdUA7kxQLEdaXYTeIj+o5ObH6nDMMpoxlAa7vU0IVSskY+a2xIjuRnYQESW5UwfX
-k1xmqgvW65EXV+6o6ojrW78eBd1aRKL0qYmfxPLq1YZjqxREgeOOnJF6pCEsiDlX
-MErquMrPd+q4mNVL/CsX50nioYm2AUkel8C4HUiVYdWZuHye0HjI2qG3KzHyUEWk
-ErhtWvBdWbyKca7pZHak
-=AzzF
------END PGP SIGNATURE-----
-
---=-pBwXQoVZJquRTnVNI+ZN--
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 8439656..2cd607f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -973,7 +973,6 @@ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+ 		      u16 len, u32 sched_addr)
+ {
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+-	void *sched_buf = (void *)((char *) gpm_buf + (sched_addr - gpm_addr));
+ 
+ 	if (!ATH9K_HW_CAP_MCI)
+ 		return;
+@@ -982,7 +981,6 @@ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+ 	mci->gpm_buf = gpm_buf;
+ 	mci->gpm_len = len;
+ 	mci->sched_addr = sched_addr;
+-	mci->sched_buf = sched_buf;
+ 
+ 	ar9003_mci_reset(ah, true, true, true);
+ }
+@@ -990,14 +988,11 @@ EXPORT_SYMBOL(ar9003_mci_setup);
+ 
+ void ar9003_mci_cleanup(struct ath_hw *ah)
+ {
+-	struct ath_common *common = ath9k_hw_common(ah);
+-
+ 	if (!ATH9K_HW_CAP_MCI)
+ 		return;
+ 
+ 	/* Turn off MCI and Jupiter mode. */
+ 	REG_WRITE(ah, AR_BTCOEX_CTRL, 0x00);
+-	ath_dbg(common, MCI, "MCI ar9003_mci_cleanup\n");
+ 	ar9003_mci_disable_interrupt(ah);
+ }
+ EXPORT_SYMBOL(ar9003_mci_cleanup);
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+index 278361c..0cb7ce9 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+@@ -67,7 +67,6 @@ struct ath9k_hw_mci {
+ 	u32 wlan_cal_done;
+ 	u32 config;
+ 	u8 *gpm_buf;
+-	u8 *sched_buf;
+ 	bool ready;
+ 	bool update_2g5g;
+ 	bool is_2g;
+diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
+index 05c23ea..85a957a 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.c
++++ b/drivers/net/wireless/ath/ath9k/mci.c
+@@ -383,84 +383,60 @@ static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
+ 	}
+ }
+ 
+-static int ath_mci_buf_alloc(struct ath_softc *sc, struct ath_mci_buf *buf)
+-{
+-	int error = 0;
+-
+-	buf->bf_addr = dma_alloc_coherent(sc->dev, buf->bf_len,
+-					  &buf->bf_paddr, GFP_KERNEL);
+-
+-	if (buf->bf_addr == NULL) {
+-		error = -ENOMEM;
+-		goto fail;
+-	}
+-
+-	return 0;
+-
+-fail:
+-	memset(buf, 0, sizeof(*buf));
+-	return error;
+-}
+-
+-static void ath_mci_buf_free(struct ath_softc *sc, struct ath_mci_buf *buf)
+-{
+-	if (buf->bf_addr) {
+-		dma_free_coherent(sc->dev, buf->bf_len, buf->bf_addr,
+-							buf->bf_paddr);
+-		memset(buf, 0, sizeof(*buf));
+-	}
+-}
+-
+ int ath_mci_setup(struct ath_softc *sc)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_mci_coex *mci = &sc->mci_coex;
+-	int error = 0;
++	struct ath_mci_buf *buf = &mci->sched_buf;
+ 
+ 	if (!ATH9K_HW_CAP_MCI)
+ 		return 0;
+ 
+-	mci->sched_buf.bf_len = ATH_MCI_SCHED_BUF_SIZE + ATH_MCI_GPM_BUF_SIZE;
++	buf->bf_addr = dma_alloc_coherent(sc->dev,
++				  ATH_MCI_SCHED_BUF_SIZE + ATH_MCI_GPM_BUF_SIZE,
++				  &buf->bf_paddr, GFP_KERNEL);
+ 
+-	if (ath_mci_buf_alloc(sc, &mci->sched_buf)) {
++	if (buf->bf_addr == NULL) {
+ 		ath_dbg(common, FATAL, "MCI buffer alloc failed\n");
+-		error = -ENOMEM;
+-		goto fail;
++		return -ENOMEM;
+ 	}
+ 
+-	mci->sched_buf.bf_len = ATH_MCI_SCHED_BUF_SIZE;
++	memset(buf->bf_addr, MCI_GPM_RSVD_PATTERN,
++	       ATH_MCI_SCHED_BUF_SIZE + ATH_MCI_GPM_BUF_SIZE);
+ 
+-	memset(mci->sched_buf.bf_addr, MCI_GPM_RSVD_PATTERN,
+-						mci->sched_buf.bf_len);
++	mci->sched_buf.bf_len = ATH_MCI_SCHED_BUF_SIZE;
+ 
+ 	mci->gpm_buf.bf_len = ATH_MCI_GPM_BUF_SIZE;
+-	mci->gpm_buf.bf_addr = (u8 *)mci->sched_buf.bf_addr +
+-							mci->sched_buf.bf_len;
++	mci->gpm_buf.bf_addr = (u8 *)mci->sched_buf.bf_addr + mci->sched_buf.bf_len;
+ 	mci->gpm_buf.bf_paddr = mci->sched_buf.bf_paddr + mci->sched_buf.bf_len;
+ 
+-	/* initialize the buffer */
+-	memset(mci->gpm_buf.bf_addr, MCI_GPM_RSVD_PATTERN, mci->gpm_buf.bf_len);
+-
+ 	ar9003_mci_setup(sc->sc_ah, mci->gpm_buf.bf_paddr,
+ 			 mci->gpm_buf.bf_addr, (mci->gpm_buf.bf_len >> 4),
+ 			 mci->sched_buf.bf_paddr);
+-fail:
+-	return error;
++
++	ath_dbg(common, MCI, "MCI Initialized\n");
++
++	return 0;
+ }
+ 
+ void ath_mci_cleanup(struct ath_softc *sc)
+ {
++	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_hw *ah = sc->sc_ah;
+ 	struct ath_mci_coex *mci = &sc->mci_coex;
++	struct ath_mci_buf *buf = &mci->sched_buf;
+ 
+ 	if (!ATH9K_HW_CAP_MCI)
+ 		return;
+ 
+-	/*
+-	 * both schedule and gpm buffers will be released
+-	 */
+-	ath_mci_buf_free(sc, &mci->sched_buf);
++	if (buf->bf_addr)
++		dma_free_coherent(sc->dev,
++				  ATH_MCI_SCHED_BUF_SIZE + ATH_MCI_GPM_BUF_SIZE,
++				  buf->bf_addr, buf->bf_paddr);
++
+ 	ar9003_mci_cleanup(ah);
++
++	ath_dbg(common, MCI, "MCI De-Initialized\n");
+ }
+ 
+ void ath_mci_intr(struct ath_softc *sc)
+diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
+index 29e3e51..b805bf2 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.h
++++ b/drivers/net/wireless/ath/ath9k/mci.h
+@@ -113,7 +113,6 @@ struct ath_mci_profile {
+ 	u8 num_bdr;
+ };
+ 
+-
+ struct ath_mci_buf {
+ 	void *bf_addr;		/* virtual addr of desc */
+ 	dma_addr_t bf_paddr;    /* physical addr of buffer */
+@@ -121,10 +120,8 @@ struct ath_mci_buf {
+ };
+ 
+ struct ath_mci_coex {
+-	atomic_t mci_cal_flag;
+ 	struct ath_mci_buf sched_buf;
+ 	struct ath_mci_buf gpm_buf;
+-	u32 bt_cal_start;
+ };
+ 
+ void ath_mci_flush_profile(struct ath_mci_profile *mci);
+-- 
+1.7.9.1
 
