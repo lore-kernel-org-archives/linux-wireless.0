@@ -1,65 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:19148 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752804Ab2B0RWt (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44845 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753790Ab2BVHLj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 12:22:49 -0500
-Message-ID: <4F4BBBE5.4060101@qca.qualcomm.com> (sfid-20120227_182253_430429_239E0D6D)
-Date: Mon, 27 Feb 2012 19:22:45 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Wed, 22 Feb 2012 02:11:39 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH 2/2] ath6kl: Fix memory leak of rx packets in endpoint
- 0
-References: <1328886633-2823-1-git-send-email-vthiagar@qca.qualcomm.com> <1328886633-2823-2-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1328886633-2823-2-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20292.38178.132196.432415@gargle.gargle.HOWL> (sfid-20120222_081143_435351_62A2D78B)
+Date: Wed, 22 Feb 2012 12:41:30 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 16/26] ath9k_hw: Use CONFIG_ATH9K_BTCOEX_SUPPORT
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/10/2012 05:10 PM, Vasanthakumar Thiagarajan wrote:
-> htc_packet and htc_packet->buf_start are separately allocated
-> for endpoint 0. This is different for other endpoints where
-> packets are allocated as skb where htc_packet is skb->head
-> and they are freed properly. Free htc_packet and htc_packet->buf_start
-> separatly for endpoint 0.
-> 
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath6kl/htc.c |   16 +++++++++++++++-
->  1 files changed, 15 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-> index c703ef9..e50cc8e 100644
-> --- a/drivers/net/wireless/ath/ath6kl/htc.c
-> +++ b/drivers/net/wireless/ath/ath6kl/htc.c
-> @@ -2372,7 +2372,21 @@ void ath6kl_htc_flush_rx_buf(struct htc_target *target)
->  				   "htc rx flush pkt 0x%p  len %d  ep %d\n",
->  				   packet, packet->buf_len,
->  				   packet->endpoint);
-> -			dev_kfree_skb(packet->pkt_cntxt);
-> +			/*
-> +			 * packets in rx_bufq of endpoint 0 have originally
-> +			 * been queued from target->free_ctrl_rxbuf where
-> +			 * packet and packet->buf_start are allocated
-> +			 * separately using kmalloc(). For other endpoint
-> +			 * rx_bufq, it is allocated as skb where packet is
-> +			 * skb->head. Take care of this difference while freeing
-> +			 * the memory.
-> +			 */
-> +			if (packet->endpoint == ENDPOINT_0) {
-> +				kfree(packet->buf_start);
-> +				kfree(packet);
-> +			} else {
-> +				dev_kfree_skb(packet->pkt_cntxt);
-> +			}
+Make use of CONFIG_ATH9K_BTCOEX_SUPPORT in ath9k_hw
+to provide a clean way of compilation without BTCOEX
+support.
 
-I didn't look at the code, but my question would it be possible to use
-skbs also with endpoint 0? That would be more consistent aproach than
-testing for a particular endpoint.
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/Makefile     |    6 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |   63 ++++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath9k/btcoex.h     |    1 -
+ drivers/net/wireless/ath/ath9k/hw.c         |    3 +-
+ drivers/net/wireless/ath/ath9k/hw.h         |   21 ++++++++-
+ 5 files changed, 79 insertions(+), 15 deletions(-)
 
-And in the future we should get rid of that buf_start hack and use skbs
-directly anyway.
+diff --git a/drivers/net/wireless/ath/ath9k/Makefile b/drivers/net/wireless/ath/ath9k/Makefile
+index b3c7b12..27d95fe 100644
+--- a/drivers/net/wireless/ath/ath9k/Makefile
++++ b/drivers/net/wireless/ath/ath9k/Makefile
+@@ -31,14 +31,14 @@ ath9k_hw-y:=	\
+ 		eeprom_4k.o \
+ 		eeprom_9287.o \
+ 		ani.o \
+-		btcoex.o \
+ 		mac.o \
+ 		ar9002_mac.o \
+ 		ar9003_mac.o \
+ 		ar9003_eeprom.o \
+-		ar9003_paprd.o \
+-		ar9003_mci.o
++		ar9003_paprd.o
+ 
++ath9k_hw-$(CONFIG_ATH9K_BTCOEX_SUPPORT) += btcoex.o \
++					   ar9003_mci.o
+ obj-$(CONFIG_ATH9K_HW) += ath9k_hw.o
+ 
+ obj-$(CONFIG_ATH9K_COMMON) += ath9k_common.o
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index 507527b..de94f69 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -254,16 +254,32 @@ enum mci_gpm_coex_opcode {
+ 
+ #define MCI_GPM_IS_CAL_TYPE(_type) ((_type) <= MCI_GPM_WLAN_CAL_DONE)
+ 
++/*
++ * Functions that are available to the MCI driver core.
++ */
+ bool ar9003_mci_send_message(struct ath_hw *ah, u8 header, u32 flag,
+ 			     u32 *payload, u8 len, bool wait_done,
+ 			     bool check_bt);
+-void ar9003_mci_stop_bt(struct ath_hw *ah, bool sava_fullsleep);
+ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data);
+-void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable);
+-void ar9003_mci_init_cal_done(struct ath_hw *ah);
+ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+ 		      u16 len, u32 sched_addr);
+ void ar9003_mci_cleanup(struct ath_hw *ah);
++void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
++			      u32 *rx_msg_intr);
++
++/*
++ * These functions are used by ath9k_hw.
++ */
++
++#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
++
++static inline bool ar9003_mci_is_ready(struct ath_hw *ah)
++{
++	return ah->btcoex_hw.mci.ready;
++}
++void ar9003_mci_stop_bt(struct ath_hw *ah, bool save_fullsleep);
++void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable);
++void ar9003_mci_init_cal_done(struct ath_hw *ah);
+ void ar9003_mci_set_full_sleep(struct ath_hw *ah);
+ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done);
+ void ar9003_mci_check_bt(struct ath_hw *ah);
+@@ -272,13 +288,46 @@ int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 			 struct ath9k_hw_cal_data *caldata);
+ void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+ 		      bool is_full_sleep);
+-void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
+-			      u32 *rx_msg_intr);
+ void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
+ 
+-static inline bool ar9003_mci_is_ready(struct ath_hw *ah)
++#else
++
++#define ar9003_mci_is_ready(...) false
++
++static inline void ar9003_mci_stop_bt(struct ath_hw *ah, bool save_fullsleep)
++{
++}
++static inline void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable)
++{
++}
++static inline void ar9003_mci_init_cal_done(struct ath_hw *ah)
++{
++}
++static inline void ar9003_mci_set_full_sleep(struct ath_hw *ah)
++{
++}
++static inline void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done)
++{
++}
++static inline void ar9003_mci_check_bt(struct ath_hw *ah)
++{
++}
++static inline bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan)
++{
++	return false;
++}
++static inline int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
++				       struct ath9k_hw_cal_data *caldata)
++{
++	return 0;
++}
++static inline void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
++				    bool is_full_sleep)
++{
++}
++static inline void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ {
+-	return ah->btcoex_hw.mci.ready;
+ }
++#endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
+ 
+ #endif
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+index 10627b4..8f93aef 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+@@ -105,7 +105,6 @@ void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum);
+ void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
+ 				u32 bt_weight,
+ 				u32 wlan_weight);
+-void ath9k_hw_btcoex_enable(struct ath_hw *ah);
+ void ath9k_hw_btcoex_disable(struct ath_hw *ah);
+ void ath9k_hw_btcoex_bt_stomp(struct ath_hw *ah,
+ 			      enum ath_stomp_type stomp_type);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 5f2e30c..8c840ca 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1800,8 +1800,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ #endif
+ 	}
+ 
+-	if (ah->btcoex_hw.enabled &&
+-	    ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_NONE)
++	if (ath9k_hw_btcoex_is_enabled(ah))
+ 		ath9k_hw_btcoex_enable(ah);
+ 
+ 	if (mci)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index daceba7..d627399 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -801,8 +801,9 @@ struct ath_hw {
+ 	int firpwr[5];
+ 	enum ath9k_ani_cmd ani_function;
+ 
+-	/* Bluetooth coexistance */
++#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+ 	struct ath_btcoex_hw btcoex_hw;
++#endif
+ 
+ 	u32 intr_txqs;
+ 	u8 txchainmask;
+@@ -1051,13 +1052,29 @@ void ath9k_hw_proc_mib_event(struct ath_hw *ah);
+ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan);
+ 
+ #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
++static inline bool ath9k_hw_btcoex_is_enabled(struct ath_hw *ah)
++{
++	return ah->btcoex_hw.enabled;
++}
++void ath9k_hw_btcoex_enable(struct ath_hw *ah);
+ static inline enum ath_btcoex_scheme
+ ath9k_hw_get_btcoex_scheme(struct ath_hw *ah)
+ {
+ 	return ah->btcoex_hw.scheme;
+ }
+ #else
+-#define ath9k_hw_get_btcoex_scheme(...) ATH_BTCOEX_CFG_NONE
++static inline bool ath9k_hw_btcoex_is_enabled(struct ath_hw *ah)
++{
++	return false;
++}
++static inline void ath9k_hw_btcoex_enable(struct ath_hw *ah)
++{
++}
++static inline enum ath_btcoex_scheme
++ath9k_hw_get_btcoex_scheme(struct ath_hw *ah)
++{
++	return ATH_BTCOEX_CFG_NONE;
++}
+ #endif
+ 
+ #define ATH9K_CLOCK_RATE_CCK		22
+-- 
+1.7.9.1
 
-Kalle
