@@ -1,180 +1,486 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.thefabfarrows.com ([70.88.29.81]:37182 "EHLO
-	mail.thefabfarrows.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757468Ab2B2ORk (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:35524 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753790Ab2BVHL2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 09:17:40 -0500
+	Wed, 22 Feb 2012 02:11:28 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="=_e767b6f22d67a703efccf2c9f122e3bd"
-Date: Wed, 29 Feb 2012 09:17:37 -0500
-From: Paul Farrow <linuxwireless@thefabfarrows.com>
-To: Paul Farrow <linuxwireless@thefabfarrows.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: Re: Fwd: Can't compile latest compat-wireless on Fedora 16 -
- =?UTF-8?Q?=20=33=2E=32=2E=37-=31=2Efc=31=36=2Ex=38=36=5F=36=34=2Edebug?=
-In-Reply-To: <f4dafaf24a15bdee30366ec46f4e8429@www.thefabfarrows.com>
-References: <f4dafaf24a15bdee30366ec46f4e8429@www.thefabfarrows.com>
-Message-ID: <591bc8272f5a32225a4ca6f8ae8c2773@www.thefabfarrows.com> (sfid-20120229_151744_724872_7247024C)
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20292.38166.172540.624239@gargle.gargle.HOWL> (sfid-20120222_081132_235867_997947B3)
+Date: Wed, 22 Feb 2012 12:41:18 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 14/26] ath9k_hw: Cleanup MCI bits from hw.h
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch moves all the MCI-specific declarations that have been
+dumped unceremoniously in hw.h to ar9003_mci.h
 
---=_e767b6f22d67a703efccf2c9f122e3bd
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |    1 +
+ drivers/net/wireless/ath/ath9k/ar9003_mci.h |  195 +++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.c         |    1 +
+ drivers/net/wireless/ath/ath9k/hw.h         |  195 ---------------------------
+ drivers/net/wireless/ath/ath9k/mci.h        |    2 +
+ 5 files changed, 199 insertions(+), 195 deletions(-)
 
-Further to those warnings etc.  I took the latest code today and ran 
-make (warnings still there) then I ran make install and then modprobe 
-ath9k and got the following warnings in dmesg.
-
-Any ideas?
-
-Thanks
-
-Paul
-
-On Tue, 28 Feb 2012 15:00:24 -0500, Paul Farrow wrote:
-> Hi guys
->
-> I have in recent times compiled the latest compat-wireless with no
-> problem but I seem to be having trouble compiling it on this kernel -
-> lots of undefined warnings in the mac80211 area.
->
-> Output from make is attached.
->
-> Can any one tell me what I have done wrong?
->
-> Thanks
->
-> Paul
-
-
---=_e767b6f22d67a703efccf2c9f122e3bd
-Content-Transfer-Encoding: base64
-Content-Type: text/plain;
- name=modprobeError.txt
-Content-Disposition: attachment;
- filename=modprobeError.txt
-
-WyA3ODIxLjc1MDk2N10gYXRoOWsgMDAwMDowMzowMC4wOiBQQ0kgSU5UIEEgZGlzYWJsZWQNClsg
-NzgyMS43NTExMTVdIGF0aDlrOiBEcml2ZXIgdW5sb2FkZWQNClsgNzgyOS4yOTgxOThdIGNmZzgw
-MjExOiBDYWxsaW5nIENSREEgdG8gdXBkYXRlIHdvcmxkIHJlZ3VsYXRvcnkgZG9tYWluDQpbIDc4
-MjkuMzQzMjY2XSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9zdGFy
-dCAoZXJyIDApDQpbIDc4MjkuMzQzMjg5XSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFj
-ZXBvaW50X2Rydl9maW5pc2hfdHhfc3luYyAoZXJyIDApDQpbIDc4MjkuMzQzMjk4XSBtYWM4MDIx
-MTogVW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9zdGFfcmVtb3ZlIChlcnIgMCkNClsg
-NzgyOS4zNDMzMDhdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X2Nv
-bmZfdHggKGVyciAwKQ0KWyA3ODI5LjM0MzMxN10gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9f
-dHJhY2Vwb2ludF9kcnZfY2FuY2VsX3JlbWFpbl9vbl9jaGFubmVsIChlcnIgMCkNClsgNzgyOS4z
-NDMzMzRdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3JlbWFpbl9v
-bl9jaGFubmVsIChlcnIgMCkNClsgNzgyOS4zNDMzNDddIG1hYzgwMjExOiBVbmtub3duIHN5bWJv
-bCBfX3RyYWNlcG9pbnRfZHJ2X3NjaGVkX3NjYW5fc3RhcnQgKGVyciAwKQ0KWyA3ODI5LjM0MzM2
-MV0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfY2hhbm5lbF9zd2l0
-Y2ggKGVyciAwKQ0KWyA3ODI5LjM0MzM3N10gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJh
-Y2Vwb2ludF9kcnZfc3VzcGVuZCAoZXJyIDApDQpbIDc4MjkuMzQzMzk2XSBtYWM4MDIxMTogVW5r
-bm93biBzeW1ib2wgX190cmFjZXBvaW50X2FwaV9jcW1fcnNzaV9ub3RpZnkgKGVyciAwKQ0KWyA3
-ODI5LjM0MzQwNV0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfc2V0
-X3J0c190aHJlc2hvbGQgKGVyciAwKQ0KWyA3ODI5LjM0MzQxOV0gbWFjODAyMTE6IFVua25vd24g
-c3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfc3RhX3N0YXRlIChlcnIgMCkNClsgNzgyOS4zNDM0Mjhd
-IG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3NldF90aW0gKGVyciAw
-KQ0KWyA3ODI5LjM0MzQzOF0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9h
-cGlfc2NoZWRfc2Nhbl9yZXN1bHRzIChlcnIgMCkNClsgNzgyOS4zNDM0NDddIG1hYzgwMjExOiBV
-bmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3NldF9jb3ZlcmFnZV9jbGFzcyAoZXJyIDAp
-DQpbIDc4MjkuMzQzNDYwXSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Ry
-dl9yZW1vdmVfaW50ZXJmYWNlIChlcnIgMCkNClsgNzgyOS4zNDM0NzRdIG1hYzgwMjExOiBVbmtu
-b3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3ByZXBhcmVfbXVsdGljYXN0IChlcnIgMCkNClsg
-NzgyOS4zNDM0ODNdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfYXBpX3Jl
-YWR5X29uX2NoYW5uZWwgKGVyciAwKQ0KWyA3ODI5LjM0MzQ5OF0gbWFjODAyMTE6IFVua25vd24g
-c3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfc2NoZWRfc2Nhbl9zdG9wIChlcnIgMCkNClsgNzgyOS4z
-NDM1MDhdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfYXBpX3Jlc3RhcnRf
-aHcgKGVyciAwKQ0KWyA3ODI5LjM0MzUxOF0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJh
-Y2Vwb2ludF9hcGlfZW9zcCAoZXJyIDApDQpbIDc4MjkuMzQzNTI5XSBtYWM4MDIxMTogVW5rbm93
-biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9zd19zY2FuX2NvbXBsZXRlIChlcnIgMCkNClsgNzgy
-OS4zNDM1NDhdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3NldF9y
-ZWtleV9kYXRhIChlcnIgMCkNClsgNzgyOS4zNDM1NjBdIG1hYzgwMjExOiBVbmtub3duIHN5bWJv
-bCBfX3RyYWNlcG9pbnRfZHJ2X2FsbG93X2J1ZmZlcmVkX2ZyYW1lcyAoZXJyIDApDQpbIDc4Mjku
-MzQzNTcwXSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9zZXRfYml0
-cmF0ZV9tYXNrIChlcnIgMCkNClsgNzgyOS4zNDM1ODBdIG1hYzgwMjExOiBVbmtub3duIHN5bWJv
-bCBfX3RyYWNlcG9pbnRfZHJ2X2NoYW5nZV9pbnRlcmZhY2UgKGVyciAwKQ0KWyA3ODI5LjM0MzU5
-NF0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfcmV0dXJuX3U2NCAo
-ZXJyIDApDQpbIDc4MjkuMzQzNjA3XSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFjZXBv
-aW50X2FwaV9jb25uZWN0aW9uX2xvc3MgKGVyciAwKQ0KWyA3ODI5LjM0MzYxOF0gbWFjODAyMTE6
-IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9hcGlfc3RhcnRfdHhfYmFfc2Vzc2lvbiAoZXJy
-IDApDQpbIDc4MjkuMzQzNjI4XSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50
-X2Rydl90eF9mcmFtZXNfcGVuZGluZyAoZXJyIDApDQpbIDc4MjkuMzQzNjQwXSBtYWM4MDIxMTog
-VW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9nZXRfcmluZ3BhcmFtIChlcnIgMCkNClsg
-NzgyOS4zNDM2NTBdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3N3
-X3NjYW5fc3RhcnQgKGVyciAwKQ0KWyA3ODI5LjM0MzY2Nl0gbWFjODAyMTE6IFVua25vd24gc3lt
-Ym9sIF9fdHJhY2Vwb2ludF9hcGlfc3RhX2Jsb2NrX2F3YWtlIChlcnIgMCkNClsgNzgyOS4zNDM2
-NzZdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfYXBpX3N0b3BfdHhfYmFf
-Y2IgKGVyciAwKQ0KWyA3ODI5LjM0MzY4Nl0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJh
-Y2Vwb2ludF9kcnZfc3RhX25vdGlmeSAoZXJyIDApDQpbIDc4MjkuMzQzNjk1XSBtYWM4MDIxMTog
-VW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9nZXRfYW50ZW5uYSAoZXJyIDApDQpbIDc4
-MjkuMzQzNzA4XSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9zZXRf
-a2V5IChlcnIgMCkNClsgNzgyOS4zNDM3MjZdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3Ry
-YWNlcG9pbnRfZHJ2X2NvbmZpZyAoZXJyIDApDQpbIDc4MjkuMzQzNzM3XSBtYWM4MDIxMTogVW5r
-bm93biBzeW1ib2wgX190cmFjZXBvaW50X2FwaV9jaHN3aXRjaF9kb25lIChlcnIgMCkNClsgNzgy
-OS4zNDM3NDhdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3NldF9h
-bnRlbm5hIChlcnIgMCkNClsgNzgyOS4zNDM3NjJdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBf
-X3RyYWNlcG9pbnRfd2FrZV9xdWV1ZSAoZXJyIDApDQpbIDc4MjkuMzQzNzcxXSBtYWM4MDIxMTog
-VW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9hZGRfaW50ZXJmYWNlIChlcnIgMCkNClsg
-NzgyOS4zNDM3ODFdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3Jl
-bGVhc2VfYnVmZmVyZWRfZnJhbWVzIChlcnIgMCkNClsgNzgyOS4zNDM3OTddIG1hYzgwMjExOiBV
-bmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3NldF9yaW5ncGFyYW0gKGVyciAwKQ0KWyA3
-ODI5LjM0MzgxMl0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9hcGlfZ3Rr
-X3Jla2V5X25vdGlmeSAoZXJyIDApDQpbIDc4MjkuMzQzODIyXSBtYWM4MDIxMTogVW5rbm93biBz
-eW1ib2wgX190cmFjZXBvaW50X2Rydl9jYW5jZWxfaHdfc2NhbiAoZXJyIDApDQpbIDc4MjkuMzQz
-ODMzXSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9yZXN1bWUgKGVy
-ciAwKQ0KWyA3ODI5LjM0Mzg0M10gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2lu
-dF9kcnZfc3RvcCAoZXJyIDApDQpbIDc4MjkuMzQzODUzXSBtYWM4MDIxMTogVW5rbm93biBzeW1i
-b2wgX190cmFjZXBvaW50X3N0b3BfcXVldWUgKGVyciAwKQ0KWyA3ODI5LjM0Mzg2Nl0gbWFjODAy
-MTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfcmVzZXRfdHNmIChlcnIgMCkNClsg
-NzgyOS4zNDM4NzddIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfYXBpX3Nj
-aGVkX3NjYW5fc3RvcHBlZCAoZXJyIDApDQpbIDc4MjkuMzQzODg4XSBtYWM4MDIxMTogVW5rbm93
-biBzeW1ib2wgX190cmFjZXBvaW50X2FwaV9lbmFibGVfcnNzaV9yZXBvcnRzIChlcnIgMCkNClsg
-NzgyOS4zNDM5MDBdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X2dl
-dF90a2lwX3NlcSAoZXJyIDApDQpbIDc4MjkuMzQzOTEwXSBtYWM4MDIxMTogVW5rbm93biBzeW1i
-b2wgX190cmFjZXBvaW50X2Rydl9hbXBkdV9hY3Rpb24gKGVyciAwKQ0KWyA3ODI5LjM0MzkxOV0g
-bWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfdHhfbGFzdF9iZWFjb24g
-KGVyciAwKQ0KWyA3ODI5LjM0MzkyOF0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vw
-b2ludF9kcnZfcnNzaV9jYWxsYmFjayAoZXJyIDApDQpbIDc4MjkuMzQzOTM4XSBtYWM4MDIxMTog
-VW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9yZXR1cm5faW50IChlcnIgMCkNClsgNzgy
-OS4zNDM5NDhdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3N0YV9h
-ZGQgKGVyciAwKQ0KWyA3ODI5LjM0Mzk1N10gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJh
-Y2Vwb2ludF9hcGlfc3RhcnRfdHhfYmFfY2IgKGVyciAwKQ0KWyA3ODI5LjM0Mzk3Ml0gbWFjODAy
-MTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfZ2V0X3RzZiAoZXJyIDApDQpbIDc4
-MjkuMzQzOTgzXSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9mbHVz
-aCAoZXJyIDApDQpbIDc4MjkuMzQzOTk3XSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFj
-ZXBvaW50X2FwaV9iZWFjb25fbG9zcyAoZXJyIDApDQpbIDc4MjkuMzQ0MDQ5XSBtYWM4MDIxMTog
-VW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9od19zY2FuIChlcnIgMCkNClsgNzgyOS4z
-NDQwNjldIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3JldHVybl9i
-b29sIChlcnIgMCkNClsgNzgyOS4zNDQwODhdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3Ry
-YWNlcG9pbnRfYXBpX3JlbWFpbl9vbl9jaGFubmVsX2V4cGlyZWQgKGVyciAwKQ0KWyA3ODI5LjM0
-NDEwOF0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfc2V0X2ZyYWdf
-dGhyZXNob2xkIChlcnIgMCkNClsgNzgyOS4zNDQxMjVdIG1hYzgwMjExOiBVbmtub3duIHN5bWJv
-bCBfX3RyYWNlcG9pbnRfZHJ2X2dldF9zdXJ2ZXkgKGVyciAwKQ0KWyA3ODI5LjM0NDE0MV0gbWFj
-ODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfdXBkYXRlX3RraXBfa2V5IChl
-cnIgMCkNClsgNzgyOS4zNDQxNTldIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9p
-bnRfYXBpX3NjYW5fY29tcGxldGVkIChlcnIgMCkNClsgNzgyOS4zNDQxODhdIG1hYzgwMjExOiBV
-bmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3R4X3N5bmMgKGVyciAwKQ0KWyA3ODI5LjM0
-NDIwNF0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfY29uZmlndXJl
-X2ZpbHRlciAoZXJyIDApDQpbIDc4MjkuMzQ0MjI1XSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wg
-X190cmFjZXBvaW50X2FwaV9zdG9wX3R4X2JhX3Nlc3Npb24gKGVyciAwKQ0KWyA3ODI5LjM0NDI0
-NV0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfYnNzX2luZm9fY2hh
-bmdlZCAoZXJyIDApDQpbIDc4MjkuMzQ0MjYxXSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190
-cmFjZXBvaW50X2Rydl9yZXR1cm5fdm9pZCAoZXJyIDApDQpbIDc4MjkuNTEyOTYzXSBjZmc4MDIx
-MTogV29ybGQgcmVndWxhdG9yeSBkb21haW4gdXBkYXRlZDoNClsgNzgyOS41MTI5NjddIGNmZzgw
-MjExOiAgIChzdGFydF9mcmVxIC0gZW5kX2ZyZXEgQCBiYW5kd2lkdGgpLCAobWF4X2FudGVubmFf
-Z2FpbiwgbWF4X2VpcnApDQpbIDc4MjkuNTEyOTcxXSBjZmc4MDIxMTogICAoMjQwMjAwMCBLSHog
-LSAyNDcyMDAwIEtIeiBAIDQwMDAwIEtIeiksICgzMDAgbUJpLCAyMDAwIG1CbSkNClsgNzgyOS41
-MTI5NzVdIGNmZzgwMjExOiAgICgyNDU3MDAwIEtIeiAtIDI0ODIwMDAgS0h6IEAgMjAwMDAgS0h6
-KSwgKDMwMCBtQmksIDIwMDAgbUJtKQ0KWyA3ODI5LjUxMjk3OV0gY2ZnODAyMTE6ICAgKDI0NzQw
-MDAgS0h6IC0gMjQ5NDAwMCBLSHogQCAyMDAwMCBLSHopLCAoMzAwIG1CaSwgMjAwMCBtQm0pDQpb
-IDc4MjkuNTEyOTgyXSBjZmc4MDIxMTogICAoNTE3MDAwMCBLSHogLSA1MjUwMDAwIEtIeiBAIDQw
-MDAwIEtIeiksICgzMDAgbUJpLCAyMDAwIG1CbSkNClsgNzgyOS41MTI5ODZdIGNmZzgwMjExOiAg
-ICg1NzM1MDAwIEtIeiAtIDU4MzUwMDAgS0h6IEAgNDAwMDAgS0h6KSwgKDMwMCBtQmksIDIwMDAg
-bUJtKQ0K
---=_e767b6f22d67a703efccf2c9f122e3bd--
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 575f36a..51687e3 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -16,6 +16,7 @@
+ #include <linux/export.h>
+ #include "hw.h"
+ #include "ar9003_mac.h"
++#include "ar9003_mci.h"
+ 
+ static void ar9003_hw_rx_enable(struct ath_hw *hw)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.h b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+index 798da11..39bbf67 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.h
+@@ -99,4 +99,199 @@ enum mci_gpm_coex_bt_update_flags_op {
+ 					 ATH_MCI_CONFIG_MCI_OBS_BT)
+ #define ATH_MCI_CONFIG_MCI_OBS_GPIO     0x0000002F
+ 
++enum mci_message_header {		/* length of payload */
++	MCI_LNA_CTRL     = 0x10,        /* len = 0 */
++	MCI_CONT_NACK    = 0x20,        /* len = 0 */
++	MCI_CONT_INFO    = 0x30,        /* len = 4 */
++	MCI_CONT_RST     = 0x40,        /* len = 0 */
++	MCI_SCHD_INFO    = 0x50,        /* len = 16 */
++	MCI_CPU_INT      = 0x60,        /* len = 4 */
++	MCI_SYS_WAKING   = 0x70,        /* len = 0 */
++	MCI_GPM          = 0x80,        /* len = 16 */
++	MCI_LNA_INFO     = 0x90,        /* len = 1 */
++	MCI_LNA_STATE    = 0x94,
++	MCI_LNA_TAKE     = 0x98,
++	MCI_LNA_TRANS    = 0x9c,
++	MCI_SYS_SLEEPING = 0xa0,        /* len = 0 */
++	MCI_REQ_WAKE     = 0xc0,        /* len = 0 */
++	MCI_DEBUG_16     = 0xfe,        /* len = 2 */
++	MCI_REMOTE_RESET = 0xff         /* len = 16 */
++};
++
++enum ath_mci_gpm_coex_profile_type {
++	MCI_GPM_COEX_PROFILE_UNKNOWN,
++	MCI_GPM_COEX_PROFILE_RFCOMM,
++	MCI_GPM_COEX_PROFILE_A2DP,
++	MCI_GPM_COEX_PROFILE_HID,
++	MCI_GPM_COEX_PROFILE_BNEP,
++	MCI_GPM_COEX_PROFILE_VOICE,
++	MCI_GPM_COEX_PROFILE_MAX
++};
++
++/* MCI GPM/Coex opcode/type definitions */
++enum {
++	MCI_GPM_COEX_W_GPM_PAYLOAD      = 1,
++	MCI_GPM_COEX_B_GPM_TYPE         = 4,
++	MCI_GPM_COEX_B_GPM_OPCODE       = 5,
++	/* MCI_GPM_WLAN_CAL_REQ, MCI_GPM_WLAN_CAL_DONE */
++	MCI_GPM_WLAN_CAL_W_SEQUENCE     = 2,
++
++	/* MCI_GPM_COEX_VERSION_QUERY */
++	/* MCI_GPM_COEX_VERSION_RESPONSE */
++	MCI_GPM_COEX_B_MAJOR_VERSION    = 6,
++	MCI_GPM_COEX_B_MINOR_VERSION    = 7,
++	/* MCI_GPM_COEX_STATUS_QUERY */
++	MCI_GPM_COEX_B_BT_BITMAP        = 6,
++	MCI_GPM_COEX_B_WLAN_BITMAP      = 7,
++	/* MCI_GPM_COEX_HALT_BT_GPM */
++	MCI_GPM_COEX_B_HALT_STATE       = 6,
++	/* MCI_GPM_COEX_WLAN_CHANNELS */
++	MCI_GPM_COEX_B_CHANNEL_MAP      = 6,
++	/* MCI_GPM_COEX_BT_PROFILE_INFO */
++	MCI_GPM_COEX_B_PROFILE_TYPE     = 6,
++	MCI_GPM_COEX_B_PROFILE_LINKID   = 7,
++	MCI_GPM_COEX_B_PROFILE_STATE    = 8,
++	MCI_GPM_COEX_B_PROFILE_ROLE     = 9,
++	MCI_GPM_COEX_B_PROFILE_RATE     = 10,
++	MCI_GPM_COEX_B_PROFILE_VOTYPE   = 11,
++	MCI_GPM_COEX_H_PROFILE_T        = 12,
++	MCI_GPM_COEX_B_PROFILE_W        = 14,
++	MCI_GPM_COEX_B_PROFILE_A        = 15,
++	/* MCI_GPM_COEX_BT_STATUS_UPDATE */
++	MCI_GPM_COEX_B_STATUS_TYPE      = 6,
++	MCI_GPM_COEX_B_STATUS_LINKID    = 7,
++	MCI_GPM_COEX_B_STATUS_STATE     = 8,
++	/* MCI_GPM_COEX_BT_UPDATE_FLAGS */
++	MCI_GPM_COEX_W_BT_FLAGS         = 6,
++	MCI_GPM_COEX_B_BT_FLAGS_OP      = 10
++};
++
++enum mci_gpm_subtype {
++	MCI_GPM_BT_CAL_REQ      = 0,
++	MCI_GPM_BT_CAL_GRANT    = 1,
++	MCI_GPM_BT_CAL_DONE     = 2,
++	MCI_GPM_WLAN_CAL_REQ    = 3,
++	MCI_GPM_WLAN_CAL_GRANT  = 4,
++	MCI_GPM_WLAN_CAL_DONE   = 5,
++	MCI_GPM_COEX_AGENT      = 0x0c,
++	MCI_GPM_RSVD_PATTERN    = 0xfe,
++	MCI_GPM_RSVD_PATTERN32  = 0xfefefefe,
++	MCI_GPM_BT_DEBUG        = 0xff
++};
++
++enum mci_bt_state {
++	MCI_BT_SLEEP,
++	MCI_BT_AWAKE,
++	MCI_BT_CAL_START,
++	MCI_BT_CAL
++};
++
++/* Type of state query */
++enum mci_state_type {
++	MCI_STATE_ENABLE,
++	MCI_STATE_INIT_GPM_OFFSET,
++	MCI_STATE_NEXT_GPM_OFFSET,
++	MCI_STATE_LAST_GPM_OFFSET,
++	MCI_STATE_BT,
++	MCI_STATE_SET_BT_SLEEP,
++	MCI_STATE_SET_BT_AWAKE,
++	MCI_STATE_SET_BT_CAL_START,
++	MCI_STATE_SET_BT_CAL,
++	MCI_STATE_LAST_SCHD_MSG_OFFSET,
++	MCI_STATE_REMOTE_SLEEP,
++	MCI_STATE_CONT_RSSI_POWER,
++	MCI_STATE_CONT_PRIORITY,
++	MCI_STATE_CONT_TXRX,
++	MCI_STATE_RESET_REQ_WAKE,
++	MCI_STATE_SEND_WLAN_COEX_VERSION,
++	MCI_STATE_SET_BT_COEX_VERSION,
++	MCI_STATE_SEND_WLAN_CHANNELS,
++	MCI_STATE_SEND_VERSION_QUERY,
++	MCI_STATE_SEND_STATUS_QUERY,
++	MCI_STATE_NEED_FLUSH_BT_INFO,
++	MCI_STATE_SET_CONCUR_TX_PRI,
++	MCI_STATE_RECOVER_RX,
++	MCI_STATE_NEED_FTP_STOMP,
++	MCI_STATE_NEED_TUNING,
++	MCI_STATE_DEBUG,
++	MCI_STATE_MAX
++};
++
++enum mci_gpm_coex_opcode {
++	MCI_GPM_COEX_VERSION_QUERY,
++	MCI_GPM_COEX_VERSION_RESPONSE,
++	MCI_GPM_COEX_STATUS_QUERY,
++	MCI_GPM_COEX_HALT_BT_GPM,
++	MCI_GPM_COEX_WLAN_CHANNELS,
++	MCI_GPM_COEX_BT_PROFILE_INFO,
++	MCI_GPM_COEX_BT_STATUS_UPDATE,
++	MCI_GPM_COEX_BT_UPDATE_FLAGS
++};
++
++#define MCI_GPM_NOMORE  0
++#define MCI_GPM_MORE    1
++#define MCI_GPM_INVALID 0xffffffff
++
++#define MCI_GPM_RECYCLE(_p_gpm)	do {			  \
++	*(((u32 *)_p_gpm) + MCI_GPM_COEX_W_GPM_PAYLOAD) = \
++				MCI_GPM_RSVD_PATTERN32;   \
++} while (0)
++
++#define MCI_GPM_TYPE(_p_gpm)	\
++	(*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_TYPE) & 0xff)
++
++#define MCI_GPM_OPCODE(_p_gpm)	\
++	(*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_OPCODE) & 0xff)
++
++#define MCI_GPM_SET_CAL_TYPE(_p_gpm, _cal_type)	do {			   \
++	*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_TYPE) = (_cal_type) & 0xff;\
++} while (0)
++
++#define MCI_GPM_SET_TYPE_OPCODE(_p_gpm, _type, _opcode) do {		   \
++	*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_TYPE) = (_type) & 0xff;	   \
++	*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_OPCODE) = (_opcode) & 0xff;\
++} while (0)
++
++#define MCI_GPM_IS_CAL_TYPE(_type) ((_type) <= MCI_GPM_WLAN_CAL_DONE)
++
++bool ar9003_mci_send_message(struct ath_hw *ah, u8 header, u32 flag,
++			     u32 *payload, u8 len, bool wait_done,
++			     bool check_bt);
++void ar9003_mci_stop_bt(struct ath_hw *ah, bool sava_fullsleep);
++void ar9003_mci_mute_bt(struct ath_hw *ah);
++u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data);
++void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable);
++void ar9003_mci_init_cal_done(struct ath_hw *ah);
++void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
++		      u16 len, u32 sched_addr);
++void ar9003_mci_cleanup(struct ath_hw *ah);
++void ar9003_mci_send_coex_halt_bt_gpm(struct ath_hw *ah, bool halt,
++				      bool wait_done);
++u32 ar9003_mci_wait_for_gpm(struct ath_hw *ah, u8 gpm_type,
++			    u8 gpm_opcode, int time_out);
++void ar9003_mci_2g5g_changed(struct ath_hw *ah, bool is_2g);
++void ar9003_mci_set_full_sleep(struct ath_hw *ah);
++void ar9003_mci_disable_interrupt(struct ath_hw *ah);
++void ar9003_mci_enable_interrupt(struct ath_hw *ah);
++void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done);
++void ar9003_mci_check_bt(struct ath_hw *ah);
++bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan);
++int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
++			 struct ath9k_hw_cal_data *caldata);
++void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
++		      bool is_full_sleep);
++bool ar9003_mci_check_int(struct ath_hw *ah, u32 ints);
++void ar9003_mci_remote_reset(struct ath_hw *ah, bool wait_done);
++void ar9003_mci_send_sys_waking(struct ath_hw *ah, bool wait_done);
++void ar9003_mci_send_lna_transfer(struct ath_hw *ah, bool wait_done);
++void ar9003_mci_sync_bt_state(struct ath_hw *ah);
++void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
++			      u32 *rx_msg_intr);
++void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
++
++static inline bool ar9003_mci_is_ready(struct ath_hw *ah)
++{
++	return ah->btcoex_hw.mci.ready;
++}
++
+ #endif
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 475e4ca..5f2e30c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -23,6 +23,7 @@
+ #include "hw-ops.h"
+ #include "rc.h"
+ #include "ar9003_mac.h"
++#include "ar9003_mci.h"
+ 
+ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 1b41d11..daceba7 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -432,161 +432,6 @@ enum ath9k_rx_qtype {
+ 	ATH9K_RX_QUEUE_MAX,
+ };
+ 
+-enum mci_message_header {		/* length of payload */
+-	MCI_LNA_CTRL     = 0x10,        /* len = 0 */
+-	MCI_CONT_NACK    = 0x20,        /* len = 0 */
+-	MCI_CONT_INFO    = 0x30,        /* len = 4 */
+-	MCI_CONT_RST     = 0x40,        /* len = 0 */
+-	MCI_SCHD_INFO    = 0x50,        /* len = 16 */
+-	MCI_CPU_INT      = 0x60,        /* len = 4 */
+-	MCI_SYS_WAKING   = 0x70,        /* len = 0 */
+-	MCI_GPM          = 0x80,        /* len = 16 */
+-	MCI_LNA_INFO     = 0x90,        /* len = 1 */
+-	MCI_LNA_STATE    = 0x94,
+-	MCI_LNA_TAKE     = 0x98,
+-	MCI_LNA_TRANS    = 0x9c,
+-	MCI_SYS_SLEEPING = 0xa0,        /* len = 0 */
+-	MCI_REQ_WAKE     = 0xc0,        /* len = 0 */
+-	MCI_DEBUG_16     = 0xfe,        /* len = 2 */
+-	MCI_REMOTE_RESET = 0xff         /* len = 16 */
+-};
+-
+-enum ath_mci_gpm_coex_profile_type {
+-	MCI_GPM_COEX_PROFILE_UNKNOWN,
+-	MCI_GPM_COEX_PROFILE_RFCOMM,
+-	MCI_GPM_COEX_PROFILE_A2DP,
+-	MCI_GPM_COEX_PROFILE_HID,
+-	MCI_GPM_COEX_PROFILE_BNEP,
+-	MCI_GPM_COEX_PROFILE_VOICE,
+-	MCI_GPM_COEX_PROFILE_MAX
+-};
+-
+-/* MCI GPM/Coex opcode/type definitions */
+-enum {
+-	MCI_GPM_COEX_W_GPM_PAYLOAD      = 1,
+-	MCI_GPM_COEX_B_GPM_TYPE         = 4,
+-	MCI_GPM_COEX_B_GPM_OPCODE       = 5,
+-	/* MCI_GPM_WLAN_CAL_REQ, MCI_GPM_WLAN_CAL_DONE */
+-	MCI_GPM_WLAN_CAL_W_SEQUENCE     = 2,
+-
+-	/* MCI_GPM_COEX_VERSION_QUERY */
+-	/* MCI_GPM_COEX_VERSION_RESPONSE */
+-	MCI_GPM_COEX_B_MAJOR_VERSION    = 6,
+-	MCI_GPM_COEX_B_MINOR_VERSION    = 7,
+-	/* MCI_GPM_COEX_STATUS_QUERY */
+-	MCI_GPM_COEX_B_BT_BITMAP        = 6,
+-	MCI_GPM_COEX_B_WLAN_BITMAP      = 7,
+-	/* MCI_GPM_COEX_HALT_BT_GPM */
+-	MCI_GPM_COEX_B_HALT_STATE       = 6,
+-	/* MCI_GPM_COEX_WLAN_CHANNELS */
+-	MCI_GPM_COEX_B_CHANNEL_MAP      = 6,
+-	/* MCI_GPM_COEX_BT_PROFILE_INFO */
+-	MCI_GPM_COEX_B_PROFILE_TYPE     = 6,
+-	MCI_GPM_COEX_B_PROFILE_LINKID   = 7,
+-	MCI_GPM_COEX_B_PROFILE_STATE    = 8,
+-	MCI_GPM_COEX_B_PROFILE_ROLE     = 9,
+-	MCI_GPM_COEX_B_PROFILE_RATE     = 10,
+-	MCI_GPM_COEX_B_PROFILE_VOTYPE   = 11,
+-	MCI_GPM_COEX_H_PROFILE_T        = 12,
+-	MCI_GPM_COEX_B_PROFILE_W        = 14,
+-	MCI_GPM_COEX_B_PROFILE_A        = 15,
+-	/* MCI_GPM_COEX_BT_STATUS_UPDATE */
+-	MCI_GPM_COEX_B_STATUS_TYPE      = 6,
+-	MCI_GPM_COEX_B_STATUS_LINKID    = 7,
+-	MCI_GPM_COEX_B_STATUS_STATE     = 8,
+-	/* MCI_GPM_COEX_BT_UPDATE_FLAGS */
+-	MCI_GPM_COEX_W_BT_FLAGS         = 6,
+-	MCI_GPM_COEX_B_BT_FLAGS_OP      = 10
+-};
+-
+-enum mci_gpm_subtype {
+-	MCI_GPM_BT_CAL_REQ      = 0,
+-	MCI_GPM_BT_CAL_GRANT    = 1,
+-	MCI_GPM_BT_CAL_DONE     = 2,
+-	MCI_GPM_WLAN_CAL_REQ    = 3,
+-	MCI_GPM_WLAN_CAL_GRANT  = 4,
+-	MCI_GPM_WLAN_CAL_DONE   = 5,
+-	MCI_GPM_COEX_AGENT      = 0x0c,
+-	MCI_GPM_RSVD_PATTERN    = 0xfe,
+-	MCI_GPM_RSVD_PATTERN32  = 0xfefefefe,
+-	MCI_GPM_BT_DEBUG        = 0xff
+-};
+-
+-enum mci_bt_state {
+-	MCI_BT_SLEEP,
+-	MCI_BT_AWAKE,
+-	MCI_BT_CAL_START,
+-	MCI_BT_CAL
+-};
+-
+-/* Type of state query */
+-enum mci_state_type {
+-	MCI_STATE_ENABLE,
+-	MCI_STATE_INIT_GPM_OFFSET,
+-	MCI_STATE_NEXT_GPM_OFFSET,
+-	MCI_STATE_LAST_GPM_OFFSET,
+-	MCI_STATE_BT,
+-	MCI_STATE_SET_BT_SLEEP,
+-	MCI_STATE_SET_BT_AWAKE,
+-	MCI_STATE_SET_BT_CAL_START,
+-	MCI_STATE_SET_BT_CAL,
+-	MCI_STATE_LAST_SCHD_MSG_OFFSET,
+-	MCI_STATE_REMOTE_SLEEP,
+-	MCI_STATE_CONT_RSSI_POWER,
+-	MCI_STATE_CONT_PRIORITY,
+-	MCI_STATE_CONT_TXRX,
+-	MCI_STATE_RESET_REQ_WAKE,
+-	MCI_STATE_SEND_WLAN_COEX_VERSION,
+-	MCI_STATE_SET_BT_COEX_VERSION,
+-	MCI_STATE_SEND_WLAN_CHANNELS,
+-	MCI_STATE_SEND_VERSION_QUERY,
+-	MCI_STATE_SEND_STATUS_QUERY,
+-	MCI_STATE_NEED_FLUSH_BT_INFO,
+-	MCI_STATE_SET_CONCUR_TX_PRI,
+-	MCI_STATE_RECOVER_RX,
+-	MCI_STATE_NEED_FTP_STOMP,
+-	MCI_STATE_NEED_TUNING,
+-	MCI_STATE_DEBUG,
+-	MCI_STATE_MAX
+-};
+-
+-enum mci_gpm_coex_opcode {
+-	MCI_GPM_COEX_VERSION_QUERY,
+-	MCI_GPM_COEX_VERSION_RESPONSE,
+-	MCI_GPM_COEX_STATUS_QUERY,
+-	MCI_GPM_COEX_HALT_BT_GPM,
+-	MCI_GPM_COEX_WLAN_CHANNELS,
+-	MCI_GPM_COEX_BT_PROFILE_INFO,
+-	MCI_GPM_COEX_BT_STATUS_UPDATE,
+-	MCI_GPM_COEX_BT_UPDATE_FLAGS
+-};
+-
+-#define MCI_GPM_NOMORE  0
+-#define MCI_GPM_MORE    1
+-#define MCI_GPM_INVALID 0xffffffff
+-
+-#define MCI_GPM_RECYCLE(_p_gpm)	do {			  \
+-	*(((u32 *)_p_gpm) + MCI_GPM_COEX_W_GPM_PAYLOAD) = \
+-				MCI_GPM_RSVD_PATTERN32;   \
+-} while (0)
+-
+-#define MCI_GPM_TYPE(_p_gpm)	\
+-	(*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_TYPE) & 0xff)
+-
+-#define MCI_GPM_OPCODE(_p_gpm)	\
+-	(*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_OPCODE) & 0xff)
+-
+-#define MCI_GPM_SET_CAL_TYPE(_p_gpm, _cal_type)	do {			   \
+-	*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_TYPE) = (_cal_type) & 0xff;\
+-} while (0)
+-
+-#define MCI_GPM_SET_TYPE_OPCODE(_p_gpm, _type, _opcode) do {		   \
+-	*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_TYPE) = (_type) & 0xff;	   \
+-	*(((u8 *)(_p_gpm)) + MCI_GPM_COEX_B_GPM_OPCODE) = (_opcode) & 0xff;\
+-} while (0)
+-
+-#define MCI_GPM_IS_CAL_TYPE(_type) ((_type) <= MCI_GPM_WLAN_CAL_DONE)
+-
+ struct ath9k_beacon_state {
+ 	u32 bs_nexttbtt;
+ 	u32 bs_nextdtim;
+@@ -1205,46 +1050,6 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning);
+ void ath9k_hw_proc_mib_event(struct ath_hw *ah);
+ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan);
+ 
+-bool ar9003_mci_send_message(struct ath_hw *ah, u8 header, u32 flag,
+-			     u32 *payload, u8 len, bool wait_done,
+-			     bool check_bt);
+-void ar9003_mci_stop_bt(struct ath_hw *ah, bool sava_fullsleep);
+-void ar9003_mci_mute_bt(struct ath_hw *ah);
+-u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data);
+-void ar9003_mci_init_cal_req(struct ath_hw *ah, bool *is_reusable);
+-void ar9003_mci_init_cal_done(struct ath_hw *ah);
+-void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
+-		      u16 len, u32 sched_addr);
+-void ar9003_mci_cleanup(struct ath_hw *ah);
+-void ar9003_mci_send_coex_halt_bt_gpm(struct ath_hw *ah, bool halt,
+-				      bool wait_done);
+-u32 ar9003_mci_wait_for_gpm(struct ath_hw *ah, u8 gpm_type,
+-			    u8 gpm_opcode, int time_out);
+-void ar9003_mci_2g5g_changed(struct ath_hw *ah, bool is_2g);
+-void ar9003_mci_set_full_sleep(struct ath_hw *ah);
+-void ar9003_mci_disable_interrupt(struct ath_hw *ah);
+-void ar9003_mci_enable_interrupt(struct ath_hw *ah);
+-void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done);
+-void ar9003_mci_check_bt(struct ath_hw *ah);
+-bool ar9003_mci_start_reset(struct ath_hw *ah, struct ath9k_channel *chan);
+-int ar9003_mci_end_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+-			 struct ath9k_hw_cal_data *caldata);
+-void ar9003_mci_reset(struct ath_hw *ah, bool en_int, bool is_2g,
+-		      bool is_full_sleep);
+-bool ar9003_mci_check_int(struct ath_hw *ah, u32 ints);
+-void ar9003_mci_remote_reset(struct ath_hw *ah, bool wait_done);
+-void ar9003_mci_send_sys_waking(struct ath_hw *ah, bool wait_done);
+-void ar9003_mci_send_lna_transfer(struct ath_hw *ah, bool wait_done);
+-void ar9003_mci_sync_bt_state(struct ath_hw *ah);
+-void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
+-			      u32 *rx_msg_intr);
+-void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
+-
+-static inline bool ar9003_mci_is_ready(struct ath_hw *ah)
+-{
+-	return ah->btcoex_hw.mci.ready;
+-}
+-
+ #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+ static inline enum ath_btcoex_scheme
+ ath9k_hw_get_btcoex_scheme(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
+index b805bf2..c841444 100644
+--- a/drivers/net/wireless/ath/ath9k/mci.h
++++ b/drivers/net/wireless/ath/ath9k/mci.h
+@@ -17,6 +17,8 @@
+ #ifndef MCI_H
+ #define MCI_H
+ 
++#include "ar9003_mci.h"
++
+ #define ATH_MCI_SCHED_BUF_SIZE		(16 * 16) /* 16 entries, 4 dword each */
+ #define ATH_MCI_GPM_MAX_ENTRY		16
+ #define ATH_MCI_GPM_BUF_SIZE		(ATH_MCI_GPM_MAX_ENTRY * 16)
+-- 
+1.7.9.1
 
