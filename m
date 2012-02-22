@@ -1,44 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52255 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756209Ab2B0X51 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 18:57:27 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
-	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	arend@broadcom.com, m@bues.ch, ralf@linux-mips.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 03/11] ssb: fix per path sprom vars
-Date: Tue, 28 Feb 2012 00:56:06 +0100
-Message-Id: <1330386974-4056-4-git-send-email-hauke@hauke-m.de> (sfid-20120228_005732_379730_7FDFCFEC)
-In-Reply-To: <1330386974-4056-1-git-send-email-hauke@hauke-m.de>
-References: <1330386974-4056-1-git-send-email-hauke@hauke-m.de>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:32341 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753790Ab2BVHMZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Feb 2012 02:12:25 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20292.38223.843239.225165@gargle.gargle.HOWL> (sfid-20120222_081228_720292_ABD39B0D)
+Date: Wed, 22 Feb 2012 12:42:15 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 24/26] ath9k_hw: Remove HW revision checks
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On sprom version 4 and 5 there are 4 values for pa_2g, pa_5gl, pa_5g
-and pa_5gh, for sprom version 8 and 9 there are only 3. Make the per
-path sprom store also work for older sprom versions.
+They are not needed since MCI will be enabled only for
+AR9462 v2.0
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 ---
- include/linux/ssb/ssb.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |   34 ++++++++-------------------
+ 1 files changed, 10 insertions(+), 24 deletions(-)
 
-diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
-index 1de5675..4928419 100644
---- a/include/linux/ssb/ssb.h
-+++ b/include/linux/ssb/ssb.h
-@@ -19,7 +19,7 @@ struct ssb_driver;
- struct ssb_sprom_core_pwr_info {
- 	u8 itssi_2g, itssi_5g;
- 	u8 maxpwr_2g, maxpwr_5gl, maxpwr_5g, maxpwr_5gh;
--	u16 pa_2g[3], pa_5gl[3], pa_5g[3], pa_5gh[3];
-+	u16 pa_2g[4], pa_5gl[4], pa_5g[4], pa_5gh[4];
- };
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 8d3659c..591ca35 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -22,9 +22,6 @@
  
- struct ssb_sprom {
+ static void ar9003_mci_reset_req_wakeup(struct ath_hw *ah)
+ {
+-	if (!AR_SREV_9462_20(ah))
+-		return;
+-
+ 	REG_RMW_FIELD(ah, AR_MCI_COMMAND2,
+ 		      AR_MCI_COMMAND2_RESET_REQ_WAKEUP, 1);
+ 	udelay(1);
+@@ -496,14 +493,9 @@ static void ar9003_mci_observation_set_up(struct ath_hw *ah)
+ 
+ 	REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL, AR_GPIO_JTAG_DISABLE);
+ 
+-	if (AR_SREV_9462_20_OR_LATER(ah)) {
+-		REG_RMW_FIELD(ah, AR_PHY_GLB_CONTROL,
+-			      AR_GLB_DS_JTAG_DISABLE, 1);
+-		REG_RMW_FIELD(ah, AR_PHY_GLB_CONTROL,
+-			      AR_GLB_WLAN_UART_INTF_EN, 0);
+-		REG_SET_BIT(ah, AR_GLB_GPIO_CONTROL,
+-			    ATH_MCI_CONFIG_MCI_OBS_GPIO);
+-	}
++	REG_RMW_FIELD(ah, AR_PHY_GLB_CONTROL, AR_GLB_DS_JTAG_DISABLE, 1);
++	REG_RMW_FIELD(ah, AR_PHY_GLB_CONTROL, AR_GLB_WLAN_UART_INTF_EN, 0);
++	REG_SET_BIT(ah, AR_GLB_GPIO_CONTROL, ATH_MCI_CONFIG_MCI_OBS_GPIO);
+ 
+ 	REG_RMW_FIELD(ah, AR_BTCOEX_CTRL2, AR_BTCOEX_CTRL2_GPIO_OBS_SEL, 0);
+ 	REG_RMW_FIELD(ah, AR_BTCOEX_CTRL2, AR_BTCOEX_CTRL2_MAC_BB_OBS_SEL, 1);
+@@ -1053,9 +1045,7 @@ static void ar9003_mci_send_2g5g_status(struct ath_hw *ah, bool wait_done)
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+ 	u32 new_flags, to_set, to_clear;
+ 
+-	if (AR_SREV_9462_20(ah) &&
+-	    mci->update_2g5g &&
+-	    (mci->bt_state != MCI_BT_SLEEP)) {
++	if (mci->update_2g5g && (mci->bt_state != MCI_BT_SLEEP)) {
+ 
+ 		if (mci->is_2g) {
+ 			new_flags = MCI_2G_FLAGS;
+@@ -1193,14 +1183,13 @@ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done)
+ 			REG_CLR_BIT(ah, AR_MCI_TX_CTRL,
+ 				    AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
+ 
+-			if (AR_SREV_9462_20(ah)) {
+ 				REG_CLR_BIT(ah, AR_PHY_GLB_CONTROL,
+ 					    AR_BTCOEX_CTRL_BT_OWN_SPDT_CTRL);
++
+ 				if (!(mci->config &
+ 				      ATH_MCI_CONFIG_DISABLE_OSLA)) {
+ 					REG_SET_BIT(ah, AR_BTCOEX_CTRL,
+ 					AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN);
+-				}
+ 			}
+ 		} else {
+ 			ath_dbg(common, MCI, "MCI Send LNA take\n");
+@@ -1210,12 +1199,10 @@ void ar9003_mci_2g5g_switch(struct ath_hw *ah, bool wait_done)
+ 			REG_SET_BIT(ah, AR_MCI_TX_CTRL,
+ 				    AR_MCI_TX_CTRL_DISABLE_LNA_UPDATE);
+ 
+-			if (AR_SREV_9462_20(ah)) {
+-				REG_SET_BIT(ah, AR_PHY_GLB_CONTROL,
+-					    AR_BTCOEX_CTRL_BT_OWN_SPDT_CTRL);
+-				REG_CLR_BIT(ah, AR_BTCOEX_CTRL,
+-					AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN);
+-			}
++			REG_SET_BIT(ah, AR_PHY_GLB_CONTROL,
++				    AR_BTCOEX_CTRL_BT_OWN_SPDT_CTRL);
++			REG_CLR_BIT(ah, AR_BTCOEX_CTRL,
++				    AR_BTCOEX_CTRL_ONE_STEP_LOOK_AHEAD_EN);
+ 
+ 			ar9003_mci_send_2g5g_status(ah, true);
+ 		}
+@@ -1532,8 +1519,7 @@ u32 ar9003_mci_state(struct ath_hw *ah, u32 state_type, u32 *p_data)
+ 		ar9003_mci_reset_req_wakeup(ah);
+ 		mci->update_2g5g = true;
+ 
+-		if ((AR_SREV_9462_20_OR_LATER(ah)) &&
+-		    (mci->config & ATH_MCI_CONFIG_MCI_OBS_MASK)) {
++		if (mci->config & ATH_MCI_CONFIG_MCI_OBS_MASK) {
+ 			/* Check if we still have control of the GPIOs */
+ 			if ((REG_READ(ah, AR_GLB_GPIO_CONTROL) &
+ 				      ATH_MCI_CONFIG_MCI_OBS_GPIO) !=
 -- 
-1.7.5.4
+1.7.9.1
 
