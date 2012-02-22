@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37872 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753151Ab2B0PmF (ORCPT
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:50923 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750788Ab2BVIko (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 10:42:05 -0500
-Subject: Re: mac80211 queue handling in multi-channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dave Taht <dave.taht@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Eliad Peller <eliad@wizery.com>, Jouni Malinen <j@w1.fi>
-In-Reply-To: <CAA93jw4X-8x=V6WZstAwM8GyicN_ds8WHv8uYz4zF8d-KdNTsg@mail.gmail.com> (sfid-20120227_161059_020700_D617FF5D)
-References: <1330343374.3483.46.camel@jlt3.sipsolutions.net>
-	 <CAA93jw4X-8x=V6WZstAwM8GyicN_ds8WHv8uYz4zF8d-KdNTsg@mail.gmail.com>
-	 (sfid-20120227_161059_020700_D617FF5D)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 27 Feb 2012 16:42:02 +0100
-Message-ID: <1330357322.3483.53.camel@jlt3.sipsolutions.net> (sfid-20120227_164208_681111_190C8E48)
-Mime-Version: 1.0
+	Wed, 22 Feb 2012 03:40:44 -0500
+MIME-Version: 1.0
+In-Reply-To: <20120222003747.GA9808@gamma.logic.tuwien.ac.at>
+References: <20120124013625.GB18436@gamma.logic.tuwien.ac.at>
+	<CANUX_P3er0orBy8OhDuY1DfgD810UD-_HB_ukJnCA+W8e-VazQ@mail.gmail.com>
+	<20120125002250.GA20431@gamma.logic.tuwien.ac.at>
+	<CANUX_P0UREz_jZABu+Y_QYOh9tx_sKZSSkZpYHBEVtcU4QQdSA@mail.gmail.com>
+	<20120126003735.GA2346@gamma.logic.tuwien.ac.at>
+	<CANUX_P0H_WaWwnpjoBcMpZQY4xH=cbVhAKxWKXmz-HwFMcWS6w@mail.gmail.com>
+	<CANUX_P3XSCsWUJ9M55qeaK-DuPEMXODFPJiNk+BgnHN-=WECqw@mail.gmail.com>
+	<20120126232555.GB16330@gamma.logic.tuwien.ac.at>
+	<20120127015015.GA23291@gamma.logic.tuwien.ac.at>
+	<CANUX_P3F58upbrw48AiMTV4DDZWsfveYp=mANAD9CQ2bPps0cA@mail.gmail.com>
+	<20120222003747.GA9808@gamma.logic.tuwien.ac.at>
+Date: Wed, 22 Feb 2012 10:40:43 +0200
+Message-ID: <CAOJsxLENnvYn+xkDufQeTcgbKBsrrf=hw=g_ejCrts7ZNPa-Cg@mail.gmail.com> (sfid-20120222_094059_492602_FE0C5C0B)
+Subject: Re: iwlagn is getting even worse with 3.3-rc1
+From: Pekka Enberg <penberg@kernel.org>
+To: Norbert Preining <preining@logic.at>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	Dave Jones <davej@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-02-27 at 16:10 +0100, Dave Taht wrote:
-> On Mon, Feb 27, 2012 at 12:49 PM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> 
-> > As a consequence, I'm thinking that we should redesign the mac80211 /
-> > driver queue API to mirror more closely the kind of queues hardware
-> > really has.
-> 
-> I'd like the driver queues to mirror more closely the kinds of
-> connections the hardware really has. I realize that this is more of an
-> AP orientation than a wireless client orientation, but with wildly
-> different rates between connected devices bad things happen.
+On Wed, Feb 22, 2012 at 2:37 AM, Norbert Preining <preining@logic.at> wrote:
+> I still see that, on 3.3-rc4, and it is the same as usual. The interface
+> believes it is up and connected, but nothing works.
+>
+> I am *100%* sure that this is related to the driver, because in old
+> revisions (somewhen around 2.6.27 or so) it was working without
+> any problem, and when it started I reported it long time ago.
 
-This isn't possible -- having 4 netdev queues per remote station is,
-simply put, insane. We've discussed this before on this list and Eric
-had a few suggestions, but I have no time to work on them. Essentially
-though it boils down to solving the problem at a higher layer by
-differentiating traffic to different stations.
+It's definitely a kernel regression, no question about it. Was 3.3-rc1
+already broken for you? It shouldn't be that difficult to find the
+offending commit with git bisect if it's that easy to reproduce for
+you.
 
-> Secondly, my take on 802.11e QoS and wireless-n aggregation is that
-> aggregation wins nearly every time; all
-> 802.11e does is bloat up the buffers.
-
-That statement doesn't really make sense to me -- QoS (on the air) and
-aggregation are two unrelated things?
-
-> > Thus when e.g. in our driver the BE queue for the second VIF is full, we
-> > stop all traffic across all VIFs. When both VIFs are on the same
-> > channel, this isn't really a problem. However, when they are on
-> > different channels, there could be vastly different performance
-> > characteristics on those two channels due to interference etc.
-> 
-> And even more differences based on the destination's characteristics.
-
-I do understand that this is true, but we don't have the ability to
-solve this problem at the netdev queue level.
-
-johannes
-
+                        Pekka
