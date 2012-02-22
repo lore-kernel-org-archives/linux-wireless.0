@@ -1,46 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4728 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757006Ab2BNWjo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 17:39:44 -0500
-From: "Arend Van Spriel" <arend@broadcom.com>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>,
-	"Hauke Mehrtens" <hauke@hauke-m.de>
-cc: "Saul St. John" <saul.stjohn@gmail.com>,
-	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 14 Feb 2012 14:39:27 -0800
-Subject: RE: [RFC] use alternate SPROM offset for 43224
-Message-ID: <400C43189542CE41BC0A5B252FC90136BC8414D128@SJEXCHCCR02.corp.ad.broadcom.com> (sfid-20120214_233947_773117_9F517897)
-References: <20120214040120.GA2077@eris.garyseven.net>
- <CACna6rwXEjsJEPK4EZ9pbh2sGJgvt05JRfo2HkeDKpT26YORwg@mail.gmail.com>
- <CAG=dh1pTDSkkhgXGOv=n8uferq61-Db0EFGexO=ZZ+oN6w8_hQ@mail.gmail.com>
- <CACna6rw=ZJe28ahRQFU-_9+BD8+L5SNV_xdwxLxUdNk-b3HHxg@mail.gmail.com>
- <20120214185202.GA5339@eris.garyseven.net>
- <4F3ABFB0.3020502@lwfinger.net> <4F3AC20E.8080502@hauke-m.de>
- <4F3ADA6E.4050301@lwfinger.net>
-In-Reply-To: <4F3ADA6E.4050301@lwfinger.net>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:6736 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753578Ab2BVHLF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Feb 2012 02:11:05 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20292.38143.523349.904708@gargle.gargle.HOWL> (sfid-20120222_081113_646249_708CCBD9)
+Date: Wed, 22 Feb 2012 12:40:55 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 10/26] ath9k_hw: Use a helper function to get MCI ISR
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBTZW50OiBkaW5zZGFnIDE0IGZlYnJ1YXJpIDIwMTIgMjM6MDQNCj4gDQo+IE9uIDAyLzE0LzIw
-MTIgMDI6MjAgUE0sIEhhdWtlIE1laHJ0ZW5zIHdyb3RlOg0KPiA+PiA+ICBJIHRoaW5rIGl0IGlz
-IG1vcmUgY29tcGxpY2F0ZWQgdGhhbiB0aGUgYWJvdmUuIE9uIG15IDQzMjI0LCBJIGdldA0KPiB0
-aGUNCj4gPj4gPiAgbWVzc2FnZSAiTm8gU1BST00gYXZhaWxhYmxlIiwgd2hpY2ggYXJpc2VzIGJl
-Y2F1c2UNCj4gYmNtYV9zcHJvbV9nZXQoKSBpcw0KPiA+PiA+ICByZXR1cm5pbmcgLUVOT0VOVC4g
-VGhlIHJlYXNvbiBpcyB0aGF0IHRoZSB2YWx1ZSB0ZXN0ZWQgaW4gImlmDQo+ID4+ID4gICghKHNy
-b21jdHJsJiAgQkNNQV9DQ19TUk9NX0NPTlRST0xfUFJFU0VOVCkpIiBpcyB6ZXJvLiBUaGUNCj4g
-Y29udGVudHMgb2YNCj4gPj4gPiAgc3JvbWN0bCBhcmUgMHgxMiwgYW5kIHRoZSBtYXNrIGlzIDEu
-DQo+ID4gVGhpcyBjaGVjayBpcyB0aGUgbWFpbiBwYXJ0IG9mIGFpX2lzX3Nwcm9tX2F2YWlsYWJs
-ZSgpIGluIGJyY21zbWFjLg0KPiBJZg0KPiA+IHRoaXMgY2hlY2sgZmFpbHMsIGxpa2UgaW4geW91
-ciBjYXNlLCBicmNtc21hYyB0cmllcyBvdHBfcmVhZF9wY2koKSB0bw0KPiA+IHJlYWQgb3V0IHRo
-ZSBzcHJvbSwgd2hpY2ggaXMgbm90IGltcGxlbWVudGVkIGluIGJjbWEuDQo+IA0KPiBJIHdpbGwg
-dHJ5IGltcGxlbWVudGluZyBhIHNpbWlsYXIgcm91dGluZSBpbiBiY21hLg0KPiANCg0KSSBzdGFy
-dGVkIGFkZGluZyBwcm9wZXIgT1RQIHN1cHBvcnQgaW4gQkNNQSwgYnV0IEkgYW0gY3VycmVudGx5
-IHdvcmtpbmcgb24gYXN5bmMgZmlybXdhcmUgbG9hZGluZyBmZWF0dXJlLiBEaWZmZXJlbnQgY2hp
-cHNldHMgY2FuIGVpdGhlciBoYXZlIGFuIGV4dGVybmFsIFNQUk9NIG9yIG9uLWNoaXAgT1RQLiBT
-b21lIGhhdmUgYm90aCwgYnV0IG9ubHkgb25lIGhvbGRzIHRoZSBkYXRhLg0KDQpHci4gQXZTDQo=
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |   29 +-------------------------
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c |   25 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath9k/hw.h         |    1 +
+ 3 files changed, 28 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 39cb482..575f36a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -180,7 +180,6 @@ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ 	u32 mask2 = 0;
+ 	struct ath9k_hw_capabilities *pCap = &ah->caps;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+ 	u32 sync_cause = 0, async_cause;
+ 
+ 	async_cause = REG_READ(ah, AR_INTR_ASYNC_CAUSE);
+@@ -302,32 +301,8 @@ static bool ar9003_hw_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
+ 			ar9003_hw_bb_watchdog_read(ah);
+ 	}
+ 
+-	if (async_cause & AR_INTR_ASYNC_MASK_MCI) {
+-		u32 raw_intr, rx_msg_intr;
+-
+-		rx_msg_intr = REG_READ(ah, AR_MCI_INTERRUPT_RX_MSG_RAW);
+-		raw_intr = REG_READ(ah, AR_MCI_INTERRUPT_RAW);
+-
+-		if ((raw_intr == 0xdeadbeef) || (rx_msg_intr == 0xdeadbeef))
+-			ath_dbg(common, MCI,
+-				"MCI gets 0xdeadbeef during MCI int processing new raw_intr=0x%08x, new rx_msg_raw=0x%08x, raw_intr=0x%08x, rx_msg_raw=0x%08x\n",
+-				raw_intr, rx_msg_intr, mci->raw_intr,
+-				mci->rx_msg_intr);
+-		else {
+-			mci->rx_msg_intr |= rx_msg_intr;
+-			mci->raw_intr |= raw_intr;
+-			*masked |= ATH9K_INT_MCI;
+-
+-			if (rx_msg_intr & AR_MCI_INTERRUPT_RX_MSG_CONT_INFO)
+-				mci->cont_status =
+-					REG_READ(ah, AR_MCI_CONT_STATUS);
+-
+-			REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_RAW, rx_msg_intr);
+-			REG_WRITE(ah, AR_MCI_INTERRUPT_RAW, raw_intr);
+-			ath_dbg(common, MCI, "AR_INTR_SYNC_MCI\n");
+-
+-		}
+-	}
++	if (async_cause & AR_INTR_ASYNC_MASK_MCI)
++		ar9003_mci_get_isr(ah, masked);
+ 
+ 	if (sync_cause) {
+ 		if (sync_cause & AR_INTR_SYNC_RADM_CPL_TIMEOUT) {
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index 2cd607f..1a01788e 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -412,6 +412,31 @@ void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
+ }
+ EXPORT_SYMBOL(ar9003_mci_get_interrupt);
+ 
++void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked)
++{
++	struct ath_common *common = ath9k_hw_common(ah);
++	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
++	u32 raw_intr, rx_msg_intr;
++
++	rx_msg_intr = REG_READ(ah, AR_MCI_INTERRUPT_RX_MSG_RAW);
++	raw_intr = REG_READ(ah, AR_MCI_INTERRUPT_RAW);
++
++	if ((raw_intr == 0xdeadbeef) || (rx_msg_intr == 0xdeadbeef)) {
++		ath_dbg(common, MCI,
++			"MCI gets 0xdeadbeef during int processing\n");
++	} else {
++		mci->rx_msg_intr |= rx_msg_intr;
++		mci->raw_intr |= raw_intr;
++		*masked |= ATH9K_INT_MCI;
++
++		if (rx_msg_intr & AR_MCI_INTERRUPT_RX_MSG_CONT_INFO)
++			mci->cont_status = REG_READ(ah, AR_MCI_CONT_STATUS);
++
++		REG_WRITE(ah, AR_MCI_INTERRUPT_RX_MSG_RAW, rx_msg_intr);
++		REG_WRITE(ah, AR_MCI_INTERRUPT_RAW, raw_intr);
++	}
++}
++
+ void ar9003_mci_2g5g_changed(struct ath_hw *ah, bool is_2g)
+ {
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index c8261d4..a81c4e7 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -1230,6 +1230,7 @@ void ar9003_mci_send_lna_transfer(struct ath_hw *ah, bool wait_done);
+ void ar9003_mci_sync_bt_state(struct ath_hw *ah);
+ void ar9003_mci_get_interrupt(struct ath_hw *ah, u32 *raw_intr,
+ 			      u32 *rx_msg_intr);
++void ar9003_mci_get_isr(struct ath_hw *ah, enum ath9k_int *masked);
+ 
+ #ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
+ static inline enum ath_btcoex_scheme
+-- 
+1.7.9.1
 
