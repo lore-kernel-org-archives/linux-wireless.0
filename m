@@ -1,62 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:50295 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752524Ab2BWQw6 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:20623 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754608Ab2BVK5t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 11:52:58 -0500
-Received: by bkcjm19 with SMTP id jm19so1245161bkc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 08:52:57 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-Subject: Re: [RFC] carl9170: Fix memory accounting when sta is in power-save mode.
-Date: Thu, 23 Feb 2012 17:52:44 +0100
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org
-References: <1330012414-26559-1-git-send-email-cavallar@lri.fr>
-In-Reply-To: <1330012414-26559-1-git-send-email-cavallar@lri.fr>
+	Wed, 22 Feb 2012 05:57:49 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH 2/5] ath6kl: Initialize netdev hw_features for every interface
+Date: Wed, 22 Feb 2012 16:27:29 +0530
+Message-ID: <1329908252-16645-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120222_115756_796112_4EDEB55F)
+In-Reply-To: <1329908252-16645-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1329908252-16645-1-git-send-email-vthiagar@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201202231752.44125.chunkeey@googlemail.com> (sfid-20120223_175301_802948_F896606C)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, February 23, 2012 04:53:34 PM Nicolas Cavallari wrote:
-> On Access Point mode, when transmitting a packet, if the destination
-> station is in powersave mode, we abort transmitting the packet to the
-> device queue, but we do not reclaim the allocated memory.  Given enough
-> packets, we can go in a state where there is no packet on the device
-> queue, but we think the device has no memory left, so no packet gets
-> transmitted, connections breaks and the AP stops working.
-> 
-> This undo the allocation done in the TX path when the station is in
-> power-save mode.
-> 
-> Signed-off-by: Nicolas Cavallari <cavallar@lri.fr>
-Acked-by: Christian Lamparter <chunkeey@googlemail.com>
-Cc: stable <stable@vger.kernel.org>
+Move netdev->hw_features setting from ath6kl_core_init() to
+init_netdev() so that it is done for every interface.
 
-> ---
-> While this seems to fix my problem, there could still be problems remaining
-> in this code path.  Particularly carl9170_tx_status will do lots of things
-> like incrementing counters and waking up mac80211 queues...
-That should be alright. As a rule of thumb, for every call to
-carl9170_tx_accounting [called by carl9170_op_tx tx handler]
-we need to call carl9170_tx_status. If the station is still in
-ps mode, mac80211 will cache the station's frames and sets
-the TIM bits. 
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/core.c |    2 --
+ drivers/net/wireless/ath/ath6kl/main.c |    2 ++
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-> 
-> diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
-> index 771e1a9..8d52ddd 100644
-> --- a/drivers/net/wireless/ath/carl9170/tx.c
-> +++ b/drivers/net/wireless/ath/carl9170/tx.c
-> @@ -1253,6 +1253,7 @@ static bool carl9170_tx_ps_drop(struct ar9170 *ar, struct sk_buff *skb)
->  			atomic_dec(&ar->tx_ampdu_upload);
->  
->  		tx_info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
-> +		carl9170_release_dev_space(ar, skb);
->  		carl9170_tx_status(ar, skb, false);
->  		return true;
->  	}
-> 
+diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
+index 8dc207e..930ff9d 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.c
++++ b/drivers/net/wireless/ath/ath6kl/core.c
+@@ -156,8 +156,6 @@ int ath6kl_core_init(struct ath6kl *ar)
+ 
+ 	set_bit(FIRST_BOOT, &ar->flag);
+ 
+-	ndev->hw_features |= NETIF_F_IP_CSUM | NETIF_F_RXCSUM;
+-
+ 	ret = ath6kl_init_hw_start(ar);
+ 	if (ret) {
+ 		ath6kl_err("Failed to start hardware: %d\n", ret);
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index d463a18..19237bb 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -1185,5 +1185,7 @@ void init_netdev(struct net_device *dev)
+ 				sizeof(struct wmi_data_hdr) + HTC_HDR_LENGTH
+ 				+ WMI_MAX_TX_META_SZ + ATH6KL_HTC_ALIGN_BYTES;
+ 
++	dev->hw_features |= NETIF_F_IP_CSUM | NETIF_F_RXCSUM;
++
+ 	return;
+ }
+-- 
+1.7.0.4
+
