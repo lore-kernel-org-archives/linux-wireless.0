@@ -1,89 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:57068 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752375Ab2BDNmq convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:6845 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753790Ab2BVHMO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Feb 2012 08:42:46 -0500
-Date: Sat, 4 Feb 2012 11:44:15 -0200
-From: Lucas De Marchi <lucas.demarchi@profusion.mobi>
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Richard Farina <sidhayn@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	wireless <linux-wireless@vger.kernel.org>,
-	Jon Masters <jcm@jonmasters.org>, linux-modules@vger.kernel.org
-Subject: Re: [compat-wireless] modprobe -l is legacy compatibility mode and
- is being removed from some distros
-Message-ID: <20120204134415.GB528@vader> (sfid-20120204_144251_716892_5B7FF899)
-References: <4F1F0810.2000306@gmail.com>
- <4F25BCAE.3040709@hauke-m.de>
- <4F27F4DC.6080101@gmail.com>
- <CAB=NE6WzrBy+yEzgtNbS7yAyuVkXDumMG-XEwQ96P6ztzV=iEg@mail.gmail.com>
- <874nv8k295.fsf@rustcorp.com.au>
+	Wed, 22 Feb 2012 02:12:14 -0500
+From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <874nv8k295.fsf@rustcorp.com.au>
+Content-Type: text/plain; charset="us-ascii"
+Message-ID: <20292.38212.850086.356517@gargle.gargle.HOWL> (sfid-20120222_081217_814656_71F1F8A9)
+Date: Wed, 22 Feb 2012 12:42:04 +0530
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
+Subject: [PATCH 22/26] ath9k: Modify ATH9K_BTCOEX_SUPPORT
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Rusty Russell <rusty@rustcorp.com.au> [2012-02-03 14:16:30 +1030]:
+ATH9K_BTCOEX_SUPPORT is now used by both ath9k and ath9k_htc
+to enable BT coexistence. Fix Kbuild to allow this.
 
-> On Tue, 31 Jan 2012 15:15:45 -0800, "Luis R. Rodriguez" <mcgrof@gmail.com> wrote:
-> > On Tue, Jan 31, 2012 at 6:04 AM, Richard Farina <sidhayn@gmail.com> wrote:
-> > > On 01/29/2012 04:39 PM, Hauke Mehrtens wrote:
-> > >>
-> > >> On 01/24/2012 08:35 PM, Richard Farina wrote:
-> > >>>
-> > >>> module-init-tools has been deprecated in favor of kmod in Arch Linux,
-> > >>> and kmod doesn't have the legacy --list option for modprobe.
-> > >>> This patch fixes the areas of the Makefile which actually needed the
-> > >>> output of modprobe -l. The other 100's of uses are just to echo info to
-> > >>> the screen which in this case will simply fail in an extremely noisy
-> > >>> fashion yet non-fatal way.
-> > >>>
-> > >>> Please apply to all branches.
-> > >>>
-> > >>> Signed-of-By: Rick Farina<sidhayn@gmail.com>
-> > >>>
-> > >>> diff -Naur compat-wireless-3.3-rc1-2/Makefile
-> > >>> compat-wireless-3.3-rc1-2-modinfo-migration/Makefile
-> > >>> --- compat-wireless-3.3-rc1-2/Makefile    2012-01-21 02:00:21.000000000
-> > >>> -0500
-> > >>> +++ compat-wireless-3.3-rc1-2-modinfo-migration/Makefile    2012-01-24
-> > >>> 14:27:20.000000000 -0500
-> > >>> @@ -9,11 +9,6 @@
-> > >>>  # Sometimes not available in the path
-> > >>>  MODPROBE := /sbin/modprobe
-> > >>>
-> > >>> -ifneq ($(wildcard $(MODPROBE)),)
-> > >>> -MADWIFI=$(shell $(MODPROBE) -l ath_pci)
-> > >>> -OLD_IWL=$(shell $(MODPROBE) -l iwl4965)
-> > >>> -endif
-> > >>> -
+Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/Kconfig |   16 ++++++++--------
+ 1 files changed, 8 insertions(+), 8 deletions(-)
 
-Why do you need to know this? If you really need this, it can be well
-accomplished by 'find'. That's the reason it was removed from modprobe
-(and it was already deprecated in module-init-tools).
+diff --git a/drivers/net/wireless/ath/ath9k/Kconfig b/drivers/net/wireless/ath/ath9k/Kconfig
+index dc6be4a..595a272 100644
+--- a/drivers/net/wireless/ath/ath9k/Kconfig
++++ b/drivers/net/wireless/ath/ath9k/Kconfig
+@@ -6,6 +6,14 @@ config ATH9K_DFS_DEBUGFS
+ 	def_bool y
+ 	depends on ATH9K_DEBUGFS && ATH9K_DFS_CERTIFIED
+ 
++config ATH9K_BTCOEX_SUPPORT
++	bool "Atheros bluetooth coexistence support"
++	depends on (ATH9K || ATH9K_HTC)
++	default y
++	---help---
++	  Say Y, if you want to use the ath9k/ath9k_htc radios together with
++	  Bluetooth modules in the same system.
++
+ config ATH9K
+ 	tristate "Atheros 802.11n wireless cards support"
+ 	depends on MAC80211
+@@ -81,14 +89,6 @@ config ATH9K_RATE_CONTROL
+ 	  Say Y, if you want to use the ath9k specific rate control
+ 	  module instead of minstrel_ht.
+ 
+-config ATH9K_BTCOEX_SUPPORT
+-	bool "Atheros ath9k bluetooth coexistence support"
+-	depends on ATH9K
+-	default y
+-	---help---
+-	  Say Y, if you want to use the ath9k radios together with
+-	  Bluetooth modules in the same system.
+-
+ config ATH9K_HTC
+        tristate "Atheros HTC based wireless cards support"
+        depends on USB && MAC80211
+-- 
+1.7.9.1
 
-But what's the point in knowing where the file is?
-
-> > >>
-> > >> What happens if modinfo is not available? I do not know on what systems
-> > >> this is the case, but I do not think that modinfo is available when
-> > >> modprobe is not.
-> > >
-> > > AFAIK this is never the case.  modinfo is packaged with module-init-tools
-> > > and on Arch module-init-tools has been replaced by KMOD which also includes
-> > > modinfo.  It would seem to me that at this point modinfo is a required tool
-> > > and is always packaged with modprobe.
-> > 
-> > Rusty, should all Linux distributions that carry modprobe also have modinfo ?
-> 
-> Yes, at least so far.  But you should make sure the kmod guys are in the
-> loop, so they know exactly what you're trying to do.
-> 
-
-Yes, let us know what exactly you are trying to accomplish here.
-
-
-Lucas De Marchi
