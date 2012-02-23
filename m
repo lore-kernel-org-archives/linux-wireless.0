@@ -1,55 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26577 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754845Ab2BJMBF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Feb 2012 07:01:05 -0500
-Date: Fri, 10 Feb 2012 13:01:02 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+Received: from he.sipsolutions.net ([78.46.109.217]:33172 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751766Ab2BWMXC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Feb 2012 07:23:02 -0500
+Subject: Re: [PATCH 3/6] iwlwifi: cleanup/fix memory barriers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
 	linux-wireless@vger.kernel.org
-Subject: Re: [RFC 1/4] iwlwifi: dump stack when fail to gain access to the
- device
-Message-ID: <20120210120101.GB2274@redhat.com> (sfid-20120210_130110_421794_442E7070)
-References: <1328544564-8696-1-git-send-email-sgruszka@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1328544564-8696-1-git-send-email-sgruszka@redhat.com>
+In-Reply-To: <1329992168-19990-3-git-send-email-sgruszka@redhat.com> (sfid-20120223_111622_464410_98E63752)
+References: <1329992168-19990-1-git-send-email-sgruszka@redhat.com>
+	 <1329992168-19990-3-git-send-email-sgruszka@redhat.com>
+	 (sfid-20120223_111622_464410_98E63752)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 23 Feb 2012 13:22:58 +0100
+Message-ID: <1329999778.3448.2.camel@jlt3.sipsolutions.net> (sfid-20120223_132307_124556_8D43BC27)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 06, 2012 at 05:09:21PM +0100, Stanislaw Gruszka wrote:
-> Print dump stack when the device is not responding. This should give
-> some more clue about the reason of failure. Also change the message we
-> print, since "MAC in deep sleep" is kinda confusing.
-> 
-> On the way add unlikely(), as fail to gain NIC access is hmm ...
-> unlikely.
-> 
-> Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-io.c |    6 +++---
->  1 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
-> index 83fdff3..ce6d9c1 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-io.c
-> +++ b/drivers/net/wireless/iwlwifi/iwl-io.c
-> @@ -120,10 +120,10 @@ int iwl_grab_nic_access_silent(struct iwl_bus *bus)
->  int iwl_grab_nic_access(struct iwl_bus *bus)
->  {
->  	int ret = iwl_grab_nic_access_silent(bus);
-> -	if (ret) {
-> +	if (unlikely(ret)) {
->  		u32 val = iwl_read32(bus, CSR_GP_CNTRL);
-> -		IWL_ERR(bus,
-> -			"MAC is in deep sleep!. CSR_GP_CNTRL = 0x%08X\n", val);
-> +		WARN_ONCE(1, "Timeout waiting for ucode processor access "
-> +			     "(CSR_GP_CNTRL 0x%08x)\n", val);
->  	}
-I need to do a bit more testing before posting this. On iwlegacy the waring is
-triggered on rfkill, and currently I have no access to iwlwifi with rfkill
-switch, but seems there will be the same problem with iwlwifi: iwl_grab_nic_access()
-fail when rfkill is on.
+On Thu, 2012-02-23 at 11:16 +0100, Stanislaw Gruszka wrote:
 
-Stanislaw
+>  	__iwl_clear_bit(trans, CSR_GP_CNTRL,
+>  			CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
+> +	/*
+> +	 * In above we are reading CSR_GP_CNTRL register, what will flush any
+> +	 * previous writes, but still want write, which clear MAC_ACCESS_REQ
+> +	 * bit, be performed on PCI bus before any other writes scheduled on
+> +	 * different CPUs (after we drop reg_lock).
+> +	 */
+> +	mmiowb();
+>  }
+
+I changed this comment to the, imho, more readable
+
+        /*
+         * Above we read the CSR_GP_CNTRL register, which will flush
+         * any previous writes, but we need the write that clears the
+         * MAC_ACCESS_REQ bit to be performed before any other writes
+         * scheduled on different CPUs (after we drop reg_lock).
+         */
+
+johannes
+
