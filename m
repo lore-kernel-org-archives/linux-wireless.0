@@ -1,108 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:42568 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752773Ab2BVHKZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 02:10:25 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20292.38103.756886.834632@gargle.gargle.HOWL> (sfid-20120222_081041_547626_39E99A12)
-Date: Wed, 22 Feb 2012 12:40:15 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 03/26] ath9k: Initialize MCI params using a helper
+Received: from mail.neratec.ch ([80.75.119.105]:41076 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932105Ab2BWK2X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Feb 2012 05:28:23 -0500
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: linville@tuxdriver.com
+Cc: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	rodrigue@qca.qualcomm.com,
+	Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Subject: [PATCH] ath9k: fix PHY error accounting in debugfs
+Date: Thu, 23 Feb 2012 11:28:07 +0100
+Message-Id: <1329992887-4442-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20120223_112826_771524_6D653452)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+ath9k_phyerr are defined as index but have been treated as bitmask
+(with an outdated mask used) for counting PHY errors in debugfs.
 ---
- drivers/net/wireless/ath/ath9k/btcoex.c |   24 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/btcoex.h |    1 +
- drivers/net/wireless/ath/ath9k/init.c   |   23 ++---------------------
- 3 files changed, 27 insertions(+), 21 deletions(-)
+ drivers/net/wireless/ath/ath9k/debug.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index a6712a9..6566952 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -152,6 +152,30 @@ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
- }
- EXPORT_SYMBOL(ath9k_hw_btcoex_init_3wire);
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 68d972b..3be5b83 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -1049,8 +1049,6 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+ #define RX_SAMP_DBG(c) (sc->debug.bb_mac_samp[sc->debug.sampidx].rs\
+ 			[sc->debug.rsidx].c)
  
-+void ath9k_hw_btcoex_init_mci(struct ath_hw *ah)
-+{
-+	ah->btcoex_hw.mci.ready = false;
-+	ah->btcoex_hw.mci.bt_state = 0;
-+	ah->btcoex_hw.mci.bt_ver_major = 3;
-+	ah->btcoex_hw.mci.bt_ver_minor = 0;
-+	ah->btcoex_hw.mci.bt_version_known = false;
-+	ah->btcoex_hw.mci.update_2g5g = true;
-+	ah->btcoex_hw.mci.is_2g = true;
-+	ah->btcoex_hw.mci.wlan_channels_update = false;
-+	ah->btcoex_hw.mci.wlan_channels[0] = 0x00000000;
-+	ah->btcoex_hw.mci.wlan_channels[1] = 0xffffffff;
-+	ah->btcoex_hw.mci.wlan_channels[2] = 0xffffffff;
-+	ah->btcoex_hw.mci.wlan_channels[3] = 0x7fffffff;
-+	ah->btcoex_hw.mci.query_bt = true;
-+	ah->btcoex_hw.mci.unhalt_bt_gpm = true;
-+	ah->btcoex_hw.mci.halted_bt_gpm = false;
-+	ah->btcoex_hw.mci.need_flush_btinfo = false;
-+	ah->btcoex_hw.mci.wlan_cal_seq = 0;
-+	ah->btcoex_hw.mci.wlan_cal_done = 0;
-+	ah->btcoex_hw.mci.config = 0x2201;
-+}
-+EXPORT_SYMBOL(ath9k_hw_btcoex_init_mci);
-+
- static void ath9k_hw_btcoex_enable_2wire(struct ath_hw *ah)
- {
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index 0cb7ce9..0cb15cd 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -99,6 +99,7 @@ struct ath_btcoex_hw {
+-	u32 phyerr;
+-
+ 	RX_STAT_INC(rx_pkts_all);
+ 	sc->debug.stats.rxstats.rx_bytes_all += rs->rs_datalen;
  
- void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah);
- void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah);
-+void ath9k_hw_btcoex_init_mci(struct ath_hw *ah);
- void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum);
- void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
- 				u32 bt_weight,
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 53a005d..a944fc9 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -449,27 +449,8 @@ static int ath9k_init_btcoex(struct ath_softc *sc)
- 		if (r)
- 			return r;
+@@ -1068,9 +1066,11 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+ 		RX_STAT_INC(decrypt_busy_err);
  
--		if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI) {
--			ah->btcoex_hw.mci.ready = false;
--			ah->btcoex_hw.mci.bt_state = 0;
--			ah->btcoex_hw.mci.bt_ver_major = 3;
--			ah->btcoex_hw.mci.bt_ver_minor = 0;
--			ah->btcoex_hw.mci.bt_version_known = false;
--			ah->btcoex_hw.mci.update_2g5g = true;
--			ah->btcoex_hw.mci.is_2g = true;
--			ah->btcoex_hw.mci.wlan_channels_update = false;
--			ah->btcoex_hw.mci.wlan_channels[0] = 0x00000000;
--			ah->btcoex_hw.mci.wlan_channels[1] = 0xffffffff;
--			ah->btcoex_hw.mci.wlan_channels[2] = 0xffffffff;
--			ah->btcoex_hw.mci.wlan_channels[3] = 0x7fffffff;
--			ah->btcoex_hw.mci.query_bt = true;
--			ah->btcoex_hw.mci.unhalt_bt_gpm = true;
--			ah->btcoex_hw.mci.halted_bt_gpm = false;
--			ah->btcoex_hw.mci.need_flush_btinfo = false;
--			ah->btcoex_hw.mci.wlan_cal_seq = 0;
--			ah->btcoex_hw.mci.wlan_cal_done = 0;
--			ah->btcoex_hw.mci.config = 0x2201;
--		}
-+		ath9k_hw_btcoex_init_mci(ah);
-+
- 		break;
- 	default:
- 		WARN_ON(1);
+ 	if (rs->rs_status & ATH9K_RXERR_PHY) {
++		u32 phyerr;
+ 		RX_STAT_INC(phy_err);
+-		phyerr = rs->rs_phyerr & 0x24;
+-		RX_PHY_ERR_INC(phyerr);
++		phyerr = rs->rs_phyerr;
++		if (phyerr < ATH9K_PHYERR_MAX)
++			RX_PHY_ERR_INC(phyerr);
+ 	}
+ 
+ 	sc->debug.stats.rxstats.rs_rssi_ctl0 = rs->rs_rssi_ctl0;
 -- 
-1.7.9.1
+1.7.4.1
 
