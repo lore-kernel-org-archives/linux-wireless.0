@@ -1,37 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:64928 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752058Ab2BVIhv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 03:37:51 -0500
+Received: from nm25-vm0.bullet.mail.ird.yahoo.com ([212.82.109.201]:46232 "HELO
+	nm25-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752748Ab2BWAou convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Feb 2012 19:44:50 -0500
+Message-ID: <1329957888.76143.YahooMailClassic@web29502.mail.ird.yahoo.com> (sfid-20120223_014453_865365_B626D35D)
+Date: Thu, 23 Feb 2012 00:44:48 +0000 (GMT)
+From: Hin-Tak Leung <htl10@users.sourceforge.net>
+Reply-To: htl10@users.sourceforge.net
+Subject: Re: [PATCH] rtl8187: Add Ad-hoc mode
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Attila Fazekas <turul64@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Herton Ronaldo Krzesinski <herton@canonical.com>
+In-Reply-To: <4F457BCD.5020200@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <20120124013625.GB18436@gamma.logic.tuwien.ac.at>
-References: <20120124013625.GB18436@gamma.logic.tuwien.ac.at>
-Date: Wed, 22 Feb 2012 10:37:50 +0200
-Message-ID: <CAOJsxLFCLMFh7QQFQ+rsK3vr+oqvdoHifuEY5=oQASXZF6sbGA@mail.gmail.com> (sfid-20120222_093809_893377_9E9B4F44)
-Subject: Re: iwlagn is getting even worse with 3.3-rc1
-From: Pekka Enberg <penberg@kernel.org>
-To: Norbert Preining <preining@logic.at>
-Cc: linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 24, 2012 at 3:36 AM, Norbert Preining <preining@logic.at> wrote:
-> long time ago we had a long discussion about iwlagn regressions in 3.1.0
-> Up to 3.2 I still have regular problems on the university network
-> with stuck iwl driver not even realizing that nothing goes out or in.
->
-> Today I switched to 3.3-rc1 to see it is getting even worse, now on my
-> home network I get stuck queue and no connection:
+--- On Wed, 22/2/12, Larry Finger <Larry.Finger@lwfinger.net> wrote:
 
-I'm seeing the same thing with my home network as well with 3.3-rc3.
-Is there a fix in the pipeline for 3.3 final or do you want me to
-bisect which commits to revert?
+<snipped bits>
+> > As Larry requested - please send the patch without
+> munching from your
+> > e-mail client. Since you are on gmail, I could offer a
+> little advice on git-send-email, which may or may not be
+> something you already know. This is what I do to send
+> patches from my gmail account (change "name" and "acct" and
+> "FILLTHISIN" and "patch-file" to suit yourself), and you
+> could add --cc a few of us there also:
+> >
+> > git send-email --from 'name<acct@gmail.com>'
+> \
+> > --to linux-wireless@vger.kernel.org
+> --to linville@tuxdriver.com
+> \
+> > --smtp-server smtp.gmail.com --smtp-server-port 465
+> --smtp-user \ acct@gmail.com
+> --smtp-pass FILLTHISIN --smtp-ssl patch-file
+> >
+> > You can do "man git-send-email" (all git man pages uses
+> "git-something" to document the "git something" sub
+> commands, with a dash between) to read about all the
+> switches and what they are supposed to do.
+<snipped>
 
-                                Pekka
+> I fixed and tested your patch. With it, I certainly see the
+> beacons and I was 
+> able to use NetworkManager to connect once. However, I was
+> never able to ping 
+> from either end of the network to the other.
+
+Do you need something manual set-up like "ifconfig wlan1 192.168.0.1" for one box and "ifconfig wlan1 192.168.0.2" for the other box in the IP layer to work? I haven't quite got my head around this one - how network manager agrees for each for go into a private tcp/ip network, given there are three(?) private ranges to use, and setting up host names, and what ip adresses to assign... and since there is no dns for a network of two, it would have to ping by ip address?
+
+> Besides the mangling of the patch by your mailer, you had
+> many problems with 
+> spaces instead of tabs. Did you use scripts/checkpatch.pl to
+> test for errors?
+
+Hmm, probably try not to scare him away... Here is the definitive guide from Linus for submitting patches for the kernel in general:
+
+http://linuxwireless.org/en/developers/Documentation/SubmittingPatches/sourcedoc
+
+and here is one with information specific to wireless stuff:
+
+http://linuxwireless.org/en/developers/Documentation/SubmittingPatches
+
