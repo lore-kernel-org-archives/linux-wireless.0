@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:36207 "EHLO
-	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932413Ab2BBQIk (ORCPT
+Received: from mms2.broadcom.com ([216.31.210.18]:1478 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753424Ab2BWVUf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 11:08:40 -0500
-Received: by mail-wi0-f175.google.com with SMTP id hq7so2300626wib.20
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 08:08:36 -0800 (PST)
+	Thu, 23 Feb 2012 16:20:35 -0500
+Message-ID: <4F46AD93.6010508@broadcom.com> (sfid-20120223_222039_521602_92F2C188)
+Date: Thu, 23 Feb 2012 22:20:19 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <4F2781B4.9080004@sipsolutions.net>
-References: <1327581484-22047-1-git-send-email-victorg@ti.com>
-	<1327581484-22047-9-git-send-email-victorg@ti.com>
-	<4F2781B4.9080004@sipsolutions.net>
-Date: Thu, 2 Feb 2012 18:08:36 +0200
-Message-ID: <CAK80WHZr_VZhJAbfdsWTsf_ZYXrBXhnzT+m3WVBH3Q6fvn1JAA@mail.gmail.com> (sfid-20120202_170844_129828_7E607AF2)
-Subject: Re: [RFC 8/9] mac80211: add DFS capabilities flag
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	mcgrof@frijolero.org, zefir.kurtisi@neratec.com,
-	adrian.chadd@gmail.com, j@w1.fi, coelho@ti.com, assaf@ti.com,
-	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
-	nbd@nbd.name
-Content-Type: text/plain; charset=ISO-8859-1
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"M. Lambert" <lambertm@westman.wave.ca>
+Subject: Re: [PATCH 14/15] brcm80211: fmac: add USB support for
+ bcm43235/6/8 chipsets
+References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
+ <1328818149-4826-15-git-send-email-arend@broadcom.com>
+ <CACna6rxgGuCNY19Dn=VcgUH=EORNr72x4CTbR61srSZmcM+h-w@mail.gmail.com>
+ <CACna6rxSrzuEHTC++kZj79sQ7JEv42ckHj5o4bZ5bCULWKUXqA@mail.gmail.com>
+In-Reply-To: <CACna6rxSrzuEHTC++kZj79sQ7JEv42ckHj5o4bZ5bCULWKUXqA@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 31, 2012 at 7:52 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On 1/26/2012 4:38 AM, Victor Goldenshtein wrote:
+On 02/23/2012 07:46 PM, Rafał Miłecki wrote:
+> W dniu 23 lutego 2012 19:10 użytkownik Rafał Miłecki<zajec5@gmail.com>  napisał:
+>> 2012/2/9 Arend van Spriel<arend@broadcom.com>:
+>>> This patch extends the use of the brcmfmac driver with support for
+>>> chipsets with a USB host interface. The first chipsets supported are
+>>> the bcm43235, bcm43236, and bcm43238 for which firmware has been
+>>> submitted.
 >>
->> Add new IEEE80211_HW_SUPPORTS_RADAR_DETECTION attribute which
->> indicates that hw supports radar detection.
+>> Can you say something more about the firmware? AFAICS brcm directory
+>> in linux-firmware.git contains:
+>> brcmfmac43236b.bin
+>> brcmfmac4329.bin
+>> brcmfmac4330.bin
+>>
+>>
+>>> +#define BRCMF_USB_FW_NAME      "brcm/brcmfmac-usb.bin"
+>>
+>> However your driver seems to require *only* brcmfmac-usb.bin firmware file...
 >
+> The only file passing usb.c::check_file test seems to be
+> brcmfmac43236b.bin. I guess you meant this file name in usb.c.
 >
-> No need, driver can set the nl80211 flags directly.
 
-ok.
+Yes. bcm4329 and bcm4330 are SDIO cards. I will update the information 
+on linuxwireless.
 
+Gr. AvS
 
-Thanks for the review,
-Victor.
