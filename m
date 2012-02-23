@@ -1,62 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:60820 "HELO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751097Ab2BQJrK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:57266 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756663Ab2BWSr2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Feb 2012 04:47:10 -0500
-Received: by mail-lpp01m010-f50.google.com with SMTP id m13so4739005lah.37
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Feb 2012 01:47:08 -0800 (PST)
-MIME-Version: 1.0
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Cc: mcgrof@gmail.com
-Subject: [PATCH] compat: move skb_complete_wifi_ack() function to compat-3.2.h
-Date: Fri, 17 Feb 2012 11:46:59 +0200
-Message-Id: <1329472019-28688-1-git-send-email-coelho@ti.com> (sfid-20120217_104719_771040_EB7C7B5E)
+	Thu, 23 Feb 2012 13:47:28 -0500
+Subject: Re: [PATCH] mac80211 radiotap injection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sam Leffler <sleffler@google.com>
+Cc: Lars Bro <larsbro@gmail.com>, linux-wireless@vger.kernel.org
+In-Reply-To: <CA+yqC4be_Zn48LyRMLCX5bDJt3+Ls5+y4hwb1WZ9gK=9Yd++ZA@mail.gmail.com> (sfid-20120223_194532_916934_DF8FF208)
+References: <loom.20120221T000341-610@post.gmane.org>
+	 <1330004589.3448.12.camel@jlt3.sipsolutions.net>
+	 <CA+yqC4be_Zn48LyRMLCX5bDJt3+Ls5+y4hwb1WZ9gK=9Yd++ZA@mail.gmail.com>
+	 (sfid-20120223_194532_916934_DF8FF208)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 23 Feb 2012 19:47:26 +0100
+Message-ID: <1330022846.3448.18.camel@jlt3.sipsolutions.net> (sfid-20120223_194744_567313_618A6F56)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It seems that the skb_complete_wifi_ack() function was introduced in
-3.2-rc2.  So the dummy implementation of this function in compat
-should not be in compat-3.3.h anymore, but in compat-3.2.h.
+On Thu, 2012-02-23 at 10:45 -0800, Sam Leffler wrote:
 
-Signed-off-by: Luciano Coelho <coelho@ti.com>
----
- include/linux/compat-3.2.h |    5 +++++
- include/linux/compat-3.3.h |    4 ----
- 2 files changed, 5 insertions(+), 4 deletions(-)
+> > Please read
+> > http://wireless.kernel.org/en/developers/Documentation/SubmittingPatches, particularly the references at the bottom of the page.
+> >
+> > Please also follow the style of the surrounding code.
+> 
+> I tried (for my stuff); it's helpful if you can point out at least one
+> specific issue.  The code went through checkpatch for example.
 
-diff --git a/include/linux/compat-3.2.h b/include/linux/compat-3.2.h
-index cb14f0b..9ca3727 100644
---- a/include/linux/compat-3.2.h
-+++ b/include/linux/compat-3.2.h
-@@ -10,6 +10,11 @@
- 
- #define PMSG_IS_AUTO(msg)	(((msg).event & PM_EVENT_AUTO) != 0)
- 
-+static inline void skb_complete_wifi_ack(struct sk_buff *skb, bool acked)
-+{
-+	WARN_ON(1);
-+}
-+
- /**
-  * skb_frag_page - retrieve the page refered to by a paged fragment
-  * @frag: the paged fragment
-diff --git a/include/linux/compat-3.3.h b/include/linux/compat-3.3.h
-index 4965f23..325d488 100644
---- a/include/linux/compat-3.3.h
-+++ b/include/linux/compat-3.3.h
-@@ -8,10 +8,6 @@
- /* include to override NL80211_FEATURE_SK_TX_STATUS */
- #include <linux/nl80211.h>
- 
--static inline void skb_complete_wifi_ack(struct sk_buff *skb, bool acked)
--{
--	WARN_ON(1);
--}
- #define NL80211_FEATURE_SK_TX_STATUS 0
- 
- typedef u32 netdev_features_t;
--- 
-1.7.5.4
+Commit log for instance, in this particular patch.
+
+> >>     IEEE80211_RADIOTAP_F_FRAG: frame will be fragmented if longer than the
+> >>                             current fragmentation threshold.
+> >>
+> >> + * IEEE80211_RADIOTAP_RATE
+> >> +   legacy transmit rate in .5 Mb/s units (u8)
+> >
+> > This looks quite strange, for example.
+> 
+> Strange how?  The .5 units are consistent w/ IEEE legacy rate codes.
+> Not sure how you want to express values like 5.5 to the kernel.
+
+Oh, just the formatting -- the above is indented, this isn't.
+
+> >> + * @IEEE80211_TX_CTL_NO_RC: This frame does not require rate control.
+> >> + *   This flag is used when an injected frame includes a transmit
+> >> + *   rate (and possibly flags and retry count) in the radiotap header.
+> >
+> > Does that really have to be here? This is the last bit we have, and it
+> > seems this is internal so ... ?
+> 
+> So ... what?  I saw it was the last bit didn't see another way to tag
+> state in the skb (and the cb looked to be max size so there was no
+> room to expand it).
+
+I was thinking it could be in struct ieee80211_tx_data.flags?
+
+johannes
 
