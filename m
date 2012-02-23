@@ -1,113 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:56393 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932327Ab2B2QAR (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:52064 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753413Ab2BWA73 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 11:00:17 -0500
-Message-ID: <4F4E4B8B.8090508@lwfinger.net> (sfid-20120229_170035_681852_A80EB1D7)
-Date: Wed, 29 Feb 2012 10:00:11 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Wed, 22 Feb 2012 19:59:29 -0500
+Received: by iacb35 with SMTP id b35so779769iac.19
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Feb 2012 16:59:28 -0800 (PST)
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-CC: Larry Finger <Larry.Finger@lwfinger.net>, linville@tuxdriver.com,
-	chunkeey@web.de, Max Filippov <jcmvbkbc@gmail.com>, m@bues.ch,
-	linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: Re: [RFC/RFT 5/5] p54spi: Load firmware from work queue and not from
- probe routine
-References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net> <1329161826-11135-6-git-send-email-Larry.Finger@lwfinger.net>
-In-Reply-To: <1329161826-11135-6-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1329957888.76143.YahooMailClassic@web29502.mail.ird.yahoo.com>
+References: <4F457BCD.5020200@lwfinger.net> <1329957888.76143.YahooMailClassic@web29502.mail.ird.yahoo.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 23 Feb 2012 11:59:07 +1100
+Message-ID: <CAGRGNgXOjKZQqF_JrAA0hyqcsn8TZWHd9OysqOMrE5_JrmnRjA@mail.gmail.com> (sfid-20120223_015932_878845_5AFE663C)
+Subject: Re: [PATCH] rtl8187: Add Ad-hoc mode
+To: htl10@users.sourceforge.net
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Attila Fazekas <turul64@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Herton Ronaldo Krzesinski <herton@canonical.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/13/2012 01:37 PM, Larry Finger wrote:
-> Drivers that load firmware from their probe routine have problems with the
-> latest versions of udev as they get timeouts while waiting for user
-> space to start. The problem is fixed by loading the firmware and starting
-> mac80211 from a delayed_work queue. By using this method, most of the
-> original code is preserved.
->
-> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
-> ---
-> This one is compile-tested only.
->
-> Larry
-> ---
+Hi,
 
-Any testing done here?
+On Thu, Feb 23, 2012 at 11:44, Hin-Tak Leung
+<htl10@users.sourceforge.net> wrote:
+> --- On Wed, 22/2/12, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> I fixed and tested your patch. With it, I certainly see the
+>> beacons and I was
+>> able to use NetworkManager to connect once. However, I was
+>> never able to ping
+>> from either end of the network to the other.
+>
+> Do you need something manual set-up like "ifconfig wlan1 192.168.0.1" for one box and "ifconfig wlan1 192.168.0.2" for the other box in the IP layer to work? I haven't quite got my head around this one - how network manager agrees for each for go into a private tcp/ip network, given there are three(?) private ranges to use, and setting up host names, and what ip adresses to assign... and since there is no dns for a network of two, it would have to ping by ip address?
 
-Larry
+If it's anything like how it works on Ubuntu, when you start an Ad-Hoc
+network with NetworkManager, it chooses an IP range based on some
+internal logic (usually in the 10.0.0.0/8 private network) sets it's
+IP to something sensible then starts a DHCP server for everyone else
+on the network, so everyone should get a valid IP.
 
->   drivers/net/wireless/p54/p54spi.c |   38 ++++++++++++++++++++++++++----------
->   drivers/net/wireless/p54/p54spi.h |    1 +
->   2 files changed, 28 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
-> index 7faed62..87c2634 100644
-> --- a/drivers/net/wireless/p54/p54spi.c
-> +++ b/drivers/net/wireless/p54/p54spi.c
-> @@ -595,6 +595,30 @@ static void p54spi_op_stop(struct ieee80211_hw *dev)
->   	cancel_work_sync(&priv->work);
->   }
->
-> +static void p54s_load_firmware(struct work_struct *work)
-> +{
-> +	struct p54s_priv *priv = container_of(to_delayed_work(work),
-> +				 struct p54s_priv, firmware_load);
-> +	struct ieee80211_hw *hw = priv->hw;
-> +	int ret;
-> +
-> +	ret = p54spi_request_firmware(hw);
-> +	if (ret<  0)
-> +		goto err_free_common;
-> +
-> +	ret = p54spi_request_eeprom(hw);
-> +	if (ret)
-> +		goto err_free_common;
-> +
-> +	ret = p54_register_common(hw,&priv->spi->dev);
-> +	if (ret)
-> +		goto err_free_common;
-> +	return;
-> +
-> +err_free_common:
-> +	dev_err(&priv->spi->dev, "Failed to read firmware\n");
-> +}
-> +
->   static int __devinit p54spi_probe(struct spi_device *spi)
->   {
->   	struct p54s_priv *priv = NULL;
-> @@ -658,17 +682,9 @@ static int __devinit p54spi_probe(struct spi_device *spi)
->   	priv->common.stop = p54spi_op_stop;
->   	priv->common.tx = p54spi_op_tx;
->
-> -	ret = p54spi_request_firmware(hw);
-> -	if (ret<  0)
-> -		goto err_free_common;
-> -
-> -	ret = p54spi_request_eeprom(hw);
-> -	if (ret)
-> -		goto err_free_common;
-> -
-> -	ret = p54_register_common(hw,&priv->spi->dev);
-> -	if (ret)
-> -		goto err_free_common;
-> +	/* setup and start delayed work to load firmware */
-> +	INIT_DELAYED_WORK(&priv->firmware_load, p54s_load_firmware);
-> +	schedule_delayed_work(&priv->firmware_load, HZ);
->
->   	return 0;
->
-> diff --git a/drivers/net/wireless/p54/p54spi.h b/drivers/net/wireless/p54/p54spi.h
-> index dfaa62a..5f7714b 100644
-> --- a/drivers/net/wireless/p54/p54spi.h
-> +++ b/drivers/net/wireless/p54/p54spi.h
-> @@ -120,6 +120,7 @@ struct p54s_priv {
->
->   	enum fw_state fw_state;
->   	const struct firmware *firmware;
-> +	struct delayed_work firmware_load;
->   };
->
->   #endif /* P54SPI_H */
+Thanks,
 
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
