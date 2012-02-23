@@ -1,91 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:34268 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757006Ab2BNWmN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 17:42:13 -0500
-Message-ID: <4F3AE336.4030807@candelatech.com> (sfid-20120214_234216_281269_8E292AD6)
-Date: Tue, 14 Feb 2012 14:41:58 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Sujith <m.sujith@gmail.com>, ath9k-devel@venema.h4ckr.net,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [ath9k-devel] [PATCH 3/7] ath9k: Merge wiphy and misc debugfs
- files
-References: <20280.43962.403799.188541@gargle.gargle.HOWL> <4F3947A1.2060103@candelatech.com> <20281.48485.409968.741657@gargle.gargle.HOWL> <4F39BF5F.3030408@candelatech.com> <20281.52354.478076.479135@gargle.gargle.HOWL> <20120214073855.6843.qmail@stuge.se> <20282.7088.898987.229335@gargle.gargle.HOWL> <4F3A9ACB.3010009@candelatech.com> <20282.43026.335779.405152@gargle.gargle.HOWL> <4F3AAB3F.7030308@candelatech.com> <4F3AE048.5030503@openwrt.org>
-In-Reply-To: <4F3AE048.5030503@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mx3.wp.pl ([212.77.101.7]:25681 "EHLO mx3.wp.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753463Ab2BWBSZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Feb 2012 20:18:25 -0500
+From: Jakub Kicinski <kubakici@wp.pl>
+To: johannes@sipsolutions.net
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	Jakub Kicinski <kubakici@wp.pl>
+Subject: [PATCH] mac80211: use proper sub_if_data on suspend path
+Date: Thu, 23 Feb 2012 02:17:48 +0100
+Message-Id: <1329959868-10989-1-git-send-email-kubakici@wp.pl> (sfid-20120223_021829_074192_F10A5DC7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/14/2012 02:29 PM, Felix Fietkau wrote:
-> On 2012-02-14 7:43 PM, Ben Greear wrote:
->> On 02/14/2012 10:29 AM, Sujith wrote:
->>> Ben Greear wrote:
->>>> Actually, I think it might be useful to have a second level of debugging.
->>>> I hope to soon have time&   resources to add some logic to dump lots of register
->>>> info and such in human-readable format, (like, when DMA times out).  That is going to be a lot
->>>> of strings added to the driver, so the compile size will definitely
->>>> increase.  If keeping the size small is important, then this sort of verbose thing
->>>> could be hidden behind a second level of debugging...
->>>
->>> That could be implemented similar to what usbmon does. A debugfs file that could
->>> be read and redirected to a file. And there would be no overhead to the
->>> driver, I think. We could call it the 'event log'. :)
->>
->> I was thinking about adding a method that grabbed as many registers
->> as I have info for and dumping them with printk when DMA errors
->> hit.  This would make kernel splats more useful.
->>
->> And also have a debugfs file called 'registers' or similar that one
->> could cat out and get similar info.  And this can let folks look
->> at steady-state or whatever.
->>
->> But, the logic to turn the register bit values into strings would
->> be in the driver (and thus add some code size bloat).
->>
->> My hope is that this would allow a better chance of understanding
->> the stop-DMA errors that some people get reliably (but which I can never reliably
->> reproduce).
->>
->> I'm not sure how that plays into your 'event log' idea, but maybe
->> one will help the other.
-> I think the 'let's dump all kinds of random crap when the issue occurs
-> until we find somebody that can parse it' approach won't work here, and
-> I really think it's not a good idea in general.
->
-> In the past the stop-DMA crap has been a symptom with a wild variety of
-> different causes, most of which were actually *software* race
-> conditions, e.g. dma tx or rx enable during reset, locking issues, etc.
+Use interface data from sta instead of invalid pointer
+to list head in calls to drv_sta_state.
 
-I'm interested in parsing it.  There are folks that can reproduce
-this bug every time, and it seems none of the developers can reproduce
-it.  So, the only thing I can think to do is to try to get more info
-from the folks that see the problem.
+Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+---
+ net/mac80211/pm.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-The good news is that some of them are desperate enough to run my
-hacked kernel, so if such patches are not wanted upstream,
-I'll just put it in my tree and see if I can get any useful
-info from them that way...
-
-> Let's not carpet-bomb the driver with lots of debug crap that probably
-> won't ever lead anybody to any good solution for the remaining issues,
-> let's fix stuff the old-fashioned way: by reading the code,
-> understanding what's going on, analyzing problems in a systematic way,
-> rather than clouding the whole process with assumptions based on old
-> bugs that have since been fixed.
-
-That sounds good, and I hope folks are doing that.  But as for me,
-unless I can reproduce a problem I don't think I'll be able to
-do much, as I don't understand the code that well
-and I don't have any access to folks who know the details
-of the hardware and such...
-
-Thanks,
-Ben
-
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index 2b53a53..ef8eba1 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -102,7 +102,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 
+ 			state = sta->sta_state;
+ 			for (; state > IEEE80211_STA_NOTEXIST; state--)
+-				WARN_ON(drv_sta_state(local, sdata, sta,
++				WARN_ON(drv_sta_state(local, sta->sdata, sta,
+ 						      state, state - 1));
+ 		}
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.7.6
 
