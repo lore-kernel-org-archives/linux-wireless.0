@@ -1,75 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:33039 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752051Ab2BTKUI (ORCPT
+Received: from mail-ww0-f42.google.com ([74.125.82.42]:47273 "EHLO
+	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752418Ab2BWSqZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Feb 2012 05:20:08 -0500
+	Thu, 23 Feb 2012 13:46:25 -0500
+Received: by wgbgn7 with SMTP id gn7so6124098wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 10:46:23 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4F421A0E.8030805@broadcom.com>
-References: <4F414230.5040506@lwfinger.net> <4F421A0E.8030805@broadcom.com>
-From: Kay Sievers <kay.sievers@vrfy.org>
-Date: Mon, 20 Feb 2012 11:19:48 +0100
-Message-ID: <CAPXgP10qa_g6R=pOWd8JuXpw0wPdJ4rP7B_4YHDU91mhC0N6Vg@mail.gmail.com> (sfid-20120220_112031_979231_3248CCA4)
-Subject: Re: will these methods work with firmware loading?
+In-Reply-To: <CACna6rxgGuCNY19Dn=VcgUH=EORNr72x4CTbR61srSZmcM+h-w@mail.gmail.com>
+References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
+	<1328818149-4826-15-git-send-email-arend@broadcom.com>
+	<CACna6rxgGuCNY19Dn=VcgUH=EORNr72x4CTbR61srSZmcM+h-w@mail.gmail.com>
+Date: Thu, 23 Feb 2012 19:46:23 +0100
+Message-ID: <CACna6rxSrzuEHTC++kZj79sQ7JEv42ckHj5o4bZ5bCULWKUXqA@mail.gmail.com> (sfid-20120223_194628_415666_C4763F81)
+Subject: Re: [PATCH 14/15] brcm80211: fmac: add USB support for bcm43235/6/8 chipsets
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
 To: Arend van Spriel <arend@broadcom.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	LKML <linux-kernel@vger.kernel.org>,
-	driverdevel <devel@driverdev.osuosl.org>,
-	wireless <linux-wireless@vger.kernel.org>,
-	"linux-hotplug@vger.kernel.org" <linux-hotplug@vger.kernel.org>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	"M. Lambert" <lambertm@westman.wave.ca>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 20, 2012 at 11:01, Arend van Spriel <arend@broadcom.com> wrote:
-> On 02/19/2012 07:40 PM, Larry Finger wrote:
+W dniu 23 lutego 2012 19:10 użytkownik Rafał Miłecki <zajec5@gmail.com> napisał:
+> 2012/2/9 Arend van Spriel <arend@broadcom.com>:
+>> This patch extends the use of the brcmfmac driver with support for
+>> chipsets with a USB host interface. The first chipsets supported are
+>> the bcm43235, bcm43236, and bcm43238 for which firmware has been
+>> submitted.
+>
+> Can you say something more about the firmware? AFAICS brcm directory
+> in linux-firmware.git contains:
+> brcmfmac43236b.bin
+> brcmfmac4329.bin
+> brcmfmac4330.bin
+>
+>
+>> +#define BRCMF_USB_FW_NAME      "brcm/brcmfmac-usb.bin"
+>
+> However your driver seems to require *only* brcmfmac-usb.bin firmware file...
 
->> Similarly, if I were to create a work queue, init and schedule it from
->> module_init(), and then use synchronous loads to get the firmware from the
->> work
->> queue callback, would that get around the boot problem? I know it works as
->> I
->> have trial patches; however, my version of udev is not one affected. This
->> method
->> is very easy to implement, but again I would like confirmation from an
->> expert.
+The only file passing usb.c::check_file test seems to be
+brcmfmac43236b.bin. I guess you meant this file name in usb.c.
 
-It sounds like it should work, because the modprobe event returns, not
-waiting for the firmware request. Chaining one firmware request after
-the other sounds not like a problem, as long as they are chained with
-the return from the earlier request and not from inside the earlier
-request, which would have duplicated device name issues in the kernel
-too.
-
-> What boot problem are you referring to?
-
-The pci event calls modprobe, the module init for the pci driver
-creates a child event of the pci device, this child event is queued in
-udev to be started after the pci event has finished. The pci event
-does not finish in time because the firmware request blocks itself.
-
-The current udev logic limits the timeout to 30 sec, while the
-firmware request is 60 sec, so it usually works with a logged error,
-and a 30 second delay.
-
-> The blocking modprobe?
-
-Yes, blocking in the module init path, will deadlock udev. Linking
-code into the kernel must not depend on device init or firmware
-loading.
-
-> For that
-> problem I would say yes. Also here the problem of handling error flows
-> exist. If the driver is kicked of during boot with a initramfs missing the
-> firmware, should we retry until the real root is mounted?
-
-I don't think so. Drivers are not supposed to know about bootup or
-initramfs issues. If they want, they can disable the timeout, and wait
-for userspace to handle the request any time later, but they should
-not try to be smart here.
-
-Currently, firmware requests are cancelled if the firmware isn't
-found, but that's a userspace issue, and nothing the kernel should try
-to work around.
-
-Kay
+-- 
+Rafał
