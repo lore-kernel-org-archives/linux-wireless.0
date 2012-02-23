@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:49322 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752608Ab2BVTQw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 14:16:52 -0500
-Date: Wed, 22 Feb 2012 14:14:25 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/15] brcm80211: resolve brcmsmac issues and brcmfmac
- usb support
-Message-ID: <20120222191425.GB822@tuxdriver.com> (sfid-20120222_201655_292679_BB683564)
-References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
- <4F4521EB.4090709@broadcom.com>
+Received: from mms2.broadcom.com ([216.31.210.18]:1403 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752068Ab2BWRii (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Feb 2012 12:38:38 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: linville@tuxdriver.com
+cc: linux-wireless@vger.kernel.org,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 2/2] brcm80211: smac: only print block-ack timeout
+ message at trace level
+Date: Thu, 23 Feb 2012 18:38:23 +0100
+Message-ID: <1330018703-2472-3-git-send-email-arend@broadcom.com> (sfid-20120223_183842_516318_F606906D)
+In-Reply-To: <1330018703-2472-1-git-send-email-arend@broadcom.com>
+References: <1330018703-2472-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F4521EB.4090709@broadcom.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 22, 2012 at 06:12:11PM +0100, Arend van Spriel wrote:
-> On 02/09/2012 09:08 PM, Arend van Spriel wrote:
-> >This patch series contains patches for a couple of issue in brcmsmac. The A-MPDU
-> >endless retry fix is a long standing issue that exists in previous kernels. So
-> >it should go to 3.3 kernel.
-> >
-> >For the brcmfmac driver support has been added for USB chipsets. Firmware has
-> >been submitted for bcm43235, bcm43236, and bcm43238 chipsets.
-> >
-> 
-> Hi John,
-> 
-> I send this patch series a while ago. I wanted to be sure whether
-> they are scheduled to be taken in or is there some issue with it
-> that we need to address, eg. indentation ;-) I looked in my email
-> archive for community response and did not see any obvious show
-> stopper there.
-> 
-> One patch in the series is same as I attached to redhat bug 787649
-> (see [1]).
-> 
-> Regards,
-> AvS
-> 
-> [1] https://bugzilla.redhat.com/show_bug.cgi?id=787649
+In regular use block-ack timeouts can happen so it does not make
+sense to fill the log with these messages.
 
-I apologize to you and the other contributors.  I've been embroiled
-in something elsewhere that has been occupying a lot of my time over
-the past week or two.  I hope to be getting back to more regular
--next merging soon.
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-I appreciate your patience!
-
-John
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+index 9265226..30b5887 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+@@ -1070,9 +1070,9 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
+ 				    IEEE80211_TX_STAT_AMPDU_NO_BACK;
+ 				skb_pull(p, D11_PHY_HDR_LEN);
+ 				skb_pull(p, D11_TXH_LEN);
+-				wiphy_err(wiphy, "%s: BA Timeout, seq %d, in_"
+-					"transit %d\n", "AMPDU status", seq,
+-					ini->tx_in_transit);
++				BCMMSG(wiphy,
++				       "BA Timeout, seq %d, in_transit %d\n",
++				       seq, ini->tx_in_transit);
+ 				ieee80211_tx_status_irqsafe(wlc->pub->ieee_hw,
+ 							    p);
+ 			}
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.5.4
+
+
