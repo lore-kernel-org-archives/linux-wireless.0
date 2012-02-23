@@ -1,125 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52275 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755681Ab2B0X5n (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 18:57:43 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
-	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	arend@broadcom.com, m@bues.ch, ralf@linux-mips.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 05/11] ssb: add some missing sprom attributes
-Date: Tue, 28 Feb 2012 00:56:08 +0100
-Message-Id: <1330386974-4056-6-git-send-email-hauke@hauke-m.de> (sfid-20120228_005746_420726_57A53A5B)
-In-Reply-To: <1330386974-4056-1-git-send-email-hauke@hauke-m.de>
-References: <1330386974-4056-1-git-send-email-hauke@hauke-m.de>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:53036 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752784Ab2BWWLb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Feb 2012 17:11:31 -0500
+Received: by iacb35 with SMTP id b35so2124590iac.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 14:11:31 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1330022846.3448.18.camel@jlt3.sipsolutions.net>
+References: <loom.20120221T000341-610@post.gmane.org>
+	<1330004589.3448.12.camel@jlt3.sipsolutions.net>
+	<CA+yqC4be_Zn48LyRMLCX5bDJt3+Ls5+y4hwb1WZ9gK=9Yd++ZA@mail.gmail.com>
+	<1330022846.3448.18.camel@jlt3.sipsolutions.net>
+Date: Thu, 23 Feb 2012 14:11:30 -0800
+Message-ID: <CA+yqC4ZEqv+fwG61yeTQCdj2qaEm5xz_o2FUWeH+GkLuvz_zBA@mail.gmail.com> (sfid-20120223_231144_958017_1DB76480)
+Subject: Re: [PATCH] mac80211 radiotap injection
+From: Sam Leffler <sleffler@google.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Lars Bro <larsbro@gmail.com>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch extends the sprom struct to contain all sprom attributes
-found in sprom version 1 to 9. This was done accordingly to the open
-source part of the Broadcom SDK.
+On Thu, Feb 23, 2012 at 10:47 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2012-02-23 at 10:45 -0800, Sam Leffler wrote:
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/ssb/ssb.h |   76 ++++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 75 insertions(+), 1 deletions(-)
+>> >> + * @IEEE80211_TX_CTL_NO_RC: This frame does not require rate control.
+>> >> + *   This flag is used when an injected frame includes a transmit
+>> >> + *   rate (and possibly flags and retry count) in the radiotap header.
+>> >
+>> > Does that really have to be here? This is the last bit we have, and it
+>> > seems this is internal so ... ?
+>>
+>> So ... what?  I saw it was the last bit didn't see another way to tag
+>> state in the skb (and the cb looked to be max size so there was no
+>> room to expand it).
+>
+> I was thinking it could be in struct ieee80211_tx_data.flags?
 
-diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
-index d658de4..d276831 100644
---- a/include/linux/ssb/ssb.h
-+++ b/include/linux/ssb/ssb.h
-@@ -32,6 +32,8 @@ struct ssb_sprom {
- 	u8 et0mdcport;		/* MDIO for enet0 */
- 	u8 et1mdcport;		/* MDIO for enet1 */
- 	u16 board_rev;		/* Board revision number from SPROM. */
-+	u16 board_num;		/* Board number from SPROM. */
-+	u16 board_type;		/* Board type from SPROM. */
- 	u8 country_code;	/* Country Code */
- 	char alpha2[2];		/* Country Code as two chars like EU or US */
- 	u8 leddc_on_time;	/* LED Powersave Duty Cycle On Count */
-@@ -107,7 +109,79 @@ struct ssb_sprom {
- 		} ghz5;
- 	} fem;
- 
--	/* TODO - add any parameters needed from rev 2, 3, 4, 5 or 8 SPROMs */
-+	u16 mcs2gpo[8];
-+	u16 mcs5gpo[8];
-+	u16 mcs5glpo[8];
-+	u16 mcs5ghpo[8];
-+	u8 opo;
-+
-+	u8 rxgainerr2ga[3];
-+	u8 rxgainerr5gla[3];
-+	u8 rxgainerr5gma[3];
-+	u8 rxgainerr5gha[3];
-+	u8 rxgainerr5gua[3];
-+
-+	u8 noiselvl2ga[3];
-+	u8 noiselvl5gla[3];
-+	u8 noiselvl5gma[3];
-+	u8 noiselvl5gha[3];
-+	u8 noiselvl5gua[3];
-+
-+	u8 regrev;
-+	u8 txchain;
-+	u8 rxchain;
-+	u8 antswitch;
-+	u16 cddpo;
-+	u16 stbcpo;
-+	u16 bw40po;
-+	u16 bwduppo;
-+
-+	u8 tempthresh;
-+	u8 tempoffset;
-+	u16 rawtempsense;
-+	u8 measpower;
-+	u8 tempsense_slope;
-+	u8 tempcorrx;
-+	u8 tempsense_option;
-+	u8 freqoffset_corr;
-+	u8 iqcal_swp_dis;
-+	u8 hw_iqcal_en;
-+	u8 elna2g;
-+	u8 elna5g;
-+	u8 phycal_tempdelta;
-+	u8 temps_period;
-+	u8 temps_hysteresis;
-+	u8 measpower1;
-+	u8 measpower2;
-+	u8 pcieingress_war;
-+
-+	/* power per rate from sromrev 9 */
-+	u16 cckbw202gpo;
-+	u16 cckbw20ul2gpo;
-+	u32 legofdmbw202gpo;
-+	u32 legofdmbw20ul2gpo;
-+	u32 legofdmbw205glpo;
-+	u32 legofdmbw20ul5glpo;
-+	u32 legofdmbw205gmpo;
-+	u32 legofdmbw20ul5gmpo;
-+	u32 legofdmbw205ghpo;
-+	u32 legofdmbw20ul5ghpo;
-+	u32 mcsbw202gpo;
-+	u32 mcsbw20ul2gpo;
-+	u32 mcsbw402gpo;
-+	u32 mcsbw205glpo;
-+	u32 mcsbw20ul5glpo;
-+	u32 mcsbw405glpo;
-+	u32 mcsbw205gmpo;
-+	u32 mcsbw20ul5gmpo;
-+	u32 mcsbw405gmpo;
-+	u32 mcsbw205ghpo;
-+	u32 mcsbw20ul5ghpo;
-+	u32 mcsbw405ghpo;
-+	u16 mcs32po;
-+	u16 legofdm40duppo;
-+	u8 sar2g;
-+	u8 sar5g;
- };
- 
- /* Information about the PCB the circuitry is soldered on. */
--- 
-1.7.5.4
+I don't see how to get a handle on a ieee80211_tx_data struct in
+ieee80211_monitor_start_xmit.  It looks like the tx path allocates it
+on the stack for all the subhandlers but this is called through the
+netdevice ops vector.
 
+I'll revise the original patch and let Lars work on his separate
+change for tx power.
+
+-Sam
