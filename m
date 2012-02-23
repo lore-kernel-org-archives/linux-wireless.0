@@ -1,97 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:45215 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758008Ab2BJAVI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 19:21:08 -0500
-Message-ID: <4F3462F0.20905@lwfinger.net> (sfid-20120210_012144_666510_53F5C17B)
-Date: Thu, 09 Feb 2012 18:21:04 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: tim.gardner@canonical.com
-CC: Tim Gardner <rtg.canonical@gmail.com>,
-	Ben Hutchings <bhutchings@solarflare.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] rtlwifi: rtl8192se firmware load can overflow target
- buffer
-References: <1328735291-33220-1-git-send-email-tim.gardner@canonical.com> <1328737514.2627.14.camel@bwh-desktop> <4F332FC3.7000808@lwfinger.net> <4F33DAFC.1000502@canonical.com> <4F33F7C8.2090105@lwfinger.net> <4F34019E.60007@canonical.com>
-In-Reply-To: <4F34019E.60007@canonical.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:14539 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754079Ab2BWKQS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Feb 2012 05:16:18 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 3/6] iwlwifi: cleanup/fix memory barriers
+Date: Thu, 23 Feb 2012 11:16:05 +0100
+Message-Id: <1329992168-19990-3-git-send-email-sgruszka@redhat.com> (sfid-20120223_111622_464410_98E63752)
+In-Reply-To: <1329992168-19990-1-git-send-email-sgruszka@redhat.com>
+References: <1329992168-19990-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/09/2012 11:25 AM, Tim Gardner wrote:
-> On 02/09/2012 09:43 AM, Larry Finger wrote:
->> On 02/09/2012 08:41 AM, Tim Gardner wrote:
->>>
->>> I agree with you about the semantics of rtlpriv->max_fw_size, but I
->>> don't agree
->>> that the size check is correct. While rtlpriv->max_fw_size has been
->>> set to
->>> sizeof(struct rt_firmware), that value is _way_ bigger then the size
->>> of the
->>> target buffer.
->>>
->>> sizeof(struct rt_firmware) == 64000+64000+164000 plus some change
->>>
->>> The target buffer size is only 164000 bytes.
->>>
->>> I've attached v2 of the patch that is simpler and may serve to better
->>> illustrate
->>> my point. By the way, Ben Hutchings was right about the original patch
->>> having an
->>> off by one error. This version also clears rtlpriv->max_fw_size if the
->>> size
->>> check fails. Probably should have mentioned that in the commit log.
->>
->> I agree that Ben is right.
->>
->> This thread forced me to go back to square one in analyzing the
->> situation. For the other drivers in the rtlwifi family, the firmware
->> file contains an image that is directly stuffed into the device. For the
->> RTL8192SE devices, it is more complicated. The structure is described in
->> struct rt_firmware. At the moment, the arrays there are grossly
->> oversized. They could be as follows:
->>
->> struct rt_firmware {
->> struct fw_hdr *pfwheader;
->> enum fw_status fwstatus;
->> u16 firmwareversion;
->> u8 fw_imem[RTL8190_MAX_IMEM_CODE_SIZE];
->> u8 fw_emem[RTL8190_MAX_DMEM_CODE_SIZE];
->> u32 fw_imem_len;
->> u32 fw_emem_len;
->> u8 sz_fw_tmpbuffer[RTL8190_MAX_FIRMWARE_SIZE];
->> u32 sz_fw_tmpbufferlen;
->> u16 cmdpacket_fragthresold;
->> };
->>
->> with
->>
->> RTL8190_MAX_IMEM_CODE_SIZE = 54000 (current fw is 51,208),
->> RTL8190_MAX_DMEM_CODE_SIZE = 40000 (current fw is 37,520), and
->> RTL8190_MAX_FIRMWARE_SIZE = 90000 (it holds the raw firmware image,
->> which is currently 88,856).
->>
->> Ultimately, all three arrays should be eliminated. Now that we are using
->> asynchronous loading, the kernel should keep its cached data and not
->> copy it into the driver's private storage when a pointer will suffice.
->> All the drivers need this change, but that can wait for now.
->>
->> I will ACK the patch if you resumit it with
->> #define RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE 90000
->>
->> Larry
->
-> v3 expands the commit log a bit. It doesn't apply to stable 3.2.y, but could
-> easily be backported. If I remember I'll do it when its merged in Linus' tree.
+wmb(), rmb() are not needed when writel(), readl() are used as
+accessors for MMIO. We use them indirectly via iowrite32(),
+ioread32().
 
-I added my S-O-B and pushed it on to John.
+What is needed mmiowb(), for synchronizing writes coming from
+different CPUs on PCIe bridge (see in patch comments). This
+fortunately is not needed on x86, where mmiowb() is just
+defined as compiler barrier. As iwlwifi devices are most likely
+not used on anything other than x86, this is not so important
+fix.
 
-Thanks,
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c           |    1 -
+ drivers/net/wireless/iwlwifi/iwl-io.c            |   12 +++++++-----
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    1 -
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
-Larry
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 925fb71..ad8dfb9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -336,7 +336,6 @@ static void iwl_print_cont_event_trace(struct iwl_priv *priv, u32 base,
+ 
+ 	/* Set starting address; reads will auto-increment */
+ 	iwl_write32(trans(priv), HBUS_TARG_MEM_RADDR, ptr);
+-	rmb();
+ 
+ 	/*
+ 	 * Refuse to read more than would have fit into the log from
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
+index 829531a..493c434 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.c
++++ b/drivers/net/wireless/iwlwifi/iwl-io.c
+@@ -136,6 +136,13 @@ void iwl_release_nic_access(struct iwl_trans *trans)
+ 	lockdep_assert_held(&trans->reg_lock);
+ 	__iwl_clear_bit(trans, CSR_GP_CNTRL,
+ 			CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
++	/*
++	 * In above we are reading CSR_GP_CNTRL register, what will flush any
++	 * previous writes, but still want write, which clear MAC_ACCESS_REQ
++	 * bit, be performed on PCI bus before any other writes scheduled on
++	 * different CPUs (after we drop reg_lock).
++	 */
++	mmiowb();
+ }
+ 
+ u32 iwl_read_direct32(struct iwl_trans *trans, u32 reg)
+@@ -182,7 +189,6 @@ int iwl_poll_direct_bit(struct iwl_trans *trans, u32 addr, u32 mask,
+ static inline u32 __iwl_read_prph(struct iwl_trans *trans, u32 reg)
+ {
+ 	iwl_write32(trans, HBUS_TARG_PRPH_RADDR, reg | (3 << 24));
+-	rmb();
+ 	return iwl_read32(trans, HBUS_TARG_PRPH_RDAT);
+ }
+ 
+@@ -190,7 +196,6 @@ static inline void __iwl_write_prph(struct iwl_trans *trans, u32 addr, u32 val)
+ {
+ 	iwl_write32(trans, HBUS_TARG_PRPH_WADDR,
+ 		    ((addr & 0x0000FFFF) | (3 << 24)));
+-	wmb();
+ 	iwl_write32(trans, HBUS_TARG_PRPH_WDAT, val);
+ }
+ 
+@@ -269,7 +274,6 @@ void _iwl_read_targ_mem_words(struct iwl_trans *trans, u32 addr,
+ 	spin_lock_irqsave(&trans->reg_lock, flags);
+ 	if (likely(iwl_grab_nic_access(trans))) {
+ 		iwl_write32(trans, HBUS_TARG_MEM_RADDR, addr);
+-		rmb();
+ 		for (offs = 0; offs < words; offs++)
+ 			vals[offs] = iwl_read32(trans, HBUS_TARG_MEM_RDAT);
+ 		iwl_release_nic_access(trans);
+@@ -296,8 +300,6 @@ int _iwl_write_targ_mem_words(struct iwl_trans *trans, u32 addr,
+ 	spin_lock_irqsave(&trans->reg_lock, flags);
+ 	if (likely(iwl_grab_nic_access(trans))) {
+ 		iwl_write32(trans, HBUS_TARG_MEM_WADDR, addr);
+-		wmb();
+-
+ 		for (offs = 0; offs < words; offs++)
+ 			iwl_write32(trans, HBUS_TARG_MEM_WDAT, vals[offs]);
+ 		iwl_release_nic_access(trans);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index ea60584..a38a5b3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -751,7 +751,6 @@ static int iwl_print_event_log(struct iwl_trans *trans, u32 start_idx,
+ 
+ 	/* Set starting address; reads will auto-increment */
+ 	iwl_write32(trans, HBUS_TARG_MEM_RADDR, ptr);
+-	rmb();
+ 
+ 	/* "time" is actually "data" for mode 0 (no timestamp).
+ 	* place event id # at far right for easier visual parsing. */
+-- 
+1.7.1
 
