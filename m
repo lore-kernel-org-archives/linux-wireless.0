@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:36057 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752158Ab2BDVM1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Feb 2012 16:12:27 -0500
-Date: Sat, 04 Feb 2012 16:11:19 -0500 (EST)
-Message-Id: <20120204.161119.1004038103064439060.davem@davemloft.net> (sfid-20120204_221307_780263_3F6F55C1)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-02-03
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120203192917.GE15601@tuxdriver.com>
-References: <20120203192917.GE15601@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from smtp1.u-psud.fr ([129.175.33.41]:62491 "EHLO smtp1.u-psud.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752680Ab2BWSwU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Feb 2012 13:52:20 -0500
+Message-ID: <4F468AC1.1050100@lri.fr> (sfid-20120223_195228_881654_2EF772DC)
+Date: Thu, 23 Feb 2012 19:51:45 +0100
+From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFC] carl9170: Fix memory accounting when sta is in power-save
+ mode.
+References: <1330012414-26559-1-git-send-email-cavallar@lri.fr> <201202231752.44125.chunkeey@googlemail.com> <4F46771F.9000200@lri.fr> <201202231908.16364.chunkeey@googlemail.com>
+In-Reply-To: <201202231908.16364.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Fri, 3 Feb 2012 14:29:18 -0500
-
-> Here is a little batch of fixes intended for 3.3...
-> 
-> We have a fix from Eliad Peller for an off-by-one error in mac80211 that
-> was preventing a timeout.  Emmanuel Grumbach provides an iwlwifi fix to
-> avoid incorrect manipulations on non-QoS frames that were stalling the
-> Tx queues.  Hauke Mehrtens provides another off-by-one fix, this one for
-> the SSB bus.  Jesper Juhl provies us with a fix for a memory leak in the
-> BCMA code.  A fix to avoid some log spam from iwlwifi is provided by me.
-> Finally, Luigi Tarenga provides an rt2800 fix to correctly report signal
-> strength.
- ...
-> The following changes since commit 29830406415c227a54af429d7b300aabd4754237:
-> 
->   can: peak_pci: Fix the way channels are linked together (2012-02-03 00:26:27 +0100)
-> 
-> are available in the git repository at:
->   git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git for-davem
-
-Pulled, thanks John.
+On 23/02/2012 19:08, Christian Lamparter wrote:
+> On Thursday, February 23, 2012 06:27:59 PM Nicolas Cavallari wrote:
+>> On 23/02/2012 17:52, Christian Lamparter wrote:
+>>> On Thursday, February 23, 2012 04:53:34 PM Nicolas Cavallari wrote:
+>>>> While this seems to fix my problem, there could still be problems remaining
+>>>> in this code path.  Particularly carl9170_tx_status will do lots of things
+>>>> like incrementing counters and waking up mac80211 queues...
+>>> That should be alright. As a rule of thumb, for every call to
+>>> carl9170_tx_accounting [called by carl9170_op_tx tx handler]
+>>> we need to call carl9170_tx_status. If the station is still in
+>>> ps mode, mac80211 will cache the station's frames and sets
+>>> the TIM bits. 
+>> Part of the reason i wrote this, is because, while this patch fixes the
+>> memory accounting problem and prevent the AP from stopping working, the
+>> powersaving station sometimes cannot communicate with the AP anymore
+>> (other stations can). The station uses ath9k, and is just really doing a
+>> background scan. The first traces that i have just indicate that the
+>> station entered powersave mode, then sends probe requests and probe
+>> requests directed to the AP, then sends authentication requests to the
+>> AP (?), but the AP does not respond to any of them...
+>>
+> Do you run an 802.11n ap on carl9170?
+No, it's a 802.11g currently.
+My current wild guess is that, the responses to those requests are
+somehow still queued ...
