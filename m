@@ -1,38 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from remail2.raritan.com ([62.132.199.138]:47463 "EHLO
-	remail2.raritan.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752038Ab2BOQP2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 11:15:28 -0500
-Message-ID: <4F3BDA1B.2070104@raritan.com> (sfid-20120215_171531_919374_DE6F0EE5)
-Date: Wed, 15 Feb 2012 17:15:23 +0100
-From: Ronald Wahl <ronald.wahl@raritan.com>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: rtlwifi/rtl8192cu: scheduling while atomic / sleeping function
- called from invalid context
-References: <4F3A7F71.6000008@raritan.com> <4F3ACC50.2000201@lwfinger.net> <4F3BB5C4.9040803@raritan.com> <4F3BCEC9.9030009@lwfinger.net>
-In-Reply-To: <4F3BCEC9.9030009@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:48301 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754079Ab2BWKQU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Feb 2012 05:16:20 -0500
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Cc: Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 4/6] iwlwifi: use writeb,writel,readl directly
+Date: Thu, 23 Feb 2012 11:16:06 +0100
+Message-Id: <1329992168-19990-4-git-send-email-sgruszka@redhat.com> (sfid-20120223_111624_443292_569282C6)
+In-Reply-To: <1329992168-19990-1-git-send-email-sgruszka@redhat.com>
+References: <1329992168-19990-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15.02.2012 16:27, Larry Finger wrote:
-> If possible, I would like one favor before you leave. These traces
-> should be a part of a report at bugzilla.kernel.org. Is this a
-> regression? I have assumed so.
+That change will save us some CPU cycles at run time. Having port-based
+I/O seems to be not possible for PCIe devices.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=42775
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+---
+ drivers/net/wireless/iwlwifi/Kconfig          |    1 +
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |   13 ++++++-------
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-I cannot tell if this is a regression - I just startet to test the 
-driver with this kernel.
-
-- ron
-
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index ae08498..404ac69 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -6,6 +6,7 @@ config IWLWIFI
+ 	select LEDS_CLASS
+ 	select LEDS_TRIGGERS
+ 	select MAC80211_LEDS
++	select HAS_IOMEM
+ 	---help---
+ 	  Select to build the driver supporting the:
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index f5cb5d3..b6909b4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1583,18 +1583,17 @@ static int iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
+ 
+ static void iwl_trans_pcie_write8(struct iwl_trans *trans, u32 ofs, u8 val)
+ {
+-	iowrite8(val, IWL_TRANS_GET_PCIE_TRANS(trans)->hw_base + ofs);
++	writeb(val, IWL_TRANS_GET_PCIE_TRANS(trans)->hw_base + ofs);
+ }
+ 
+ static void iwl_trans_pcie_write32(struct iwl_trans *trans, u32 ofs, u32 val)
+ {
+-	iowrite32(val, IWL_TRANS_GET_PCIE_TRANS(trans)->hw_base + ofs);
++	writel(val, IWL_TRANS_GET_PCIE_TRANS(trans)->hw_base + ofs);
+ }
+ 
+ static u32 iwl_trans_pcie_read32(struct iwl_trans *trans, u32 ofs)
+ {
+-	u32 val = ioread32(IWL_TRANS_GET_PCIE_TRANS(trans)->hw_base + ofs);
+-	return val;
++	return readl(IWL_TRANS_GET_PCIE_TRANS(trans)->hw_base + ofs);
+ }
+ 
+ static void iwl_trans_pcie_free(struct iwl_trans *trans)
+@@ -1613,7 +1612,7 @@ static void iwl_trans_pcie_free(struct iwl_trans *trans)
+ 	}
+ 
+ 	pci_disable_msi(trans_pcie->pci_dev);
+-	pci_iounmap(trans_pcie->pci_dev, trans_pcie->hw_base);
++	iounmap(trans_pcie->hw_base);
+ 	pci_release_regions(trans_pcie->pci_dev);
+ 	pci_disable_device(trans_pcie->pci_dev);
+ 
+@@ -2294,9 +2293,9 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct iwl_shared *shrd,
+ 		goto out_pci_disable_device;
+ 	}
+ 
+-	trans_pcie->hw_base = pci_iomap(pdev, 0, 0);
++	trans_pcie->hw_base = pci_ioremap_bar(pdev, 0);
+ 	if (!trans_pcie->hw_base) {
+-		dev_printk(KERN_ERR, &pdev->dev, "pci_iomap failed");
++		dev_printk(KERN_ERR, &pdev->dev, "pci_ioremap_bar failed");
+ 		err = -ENODEV;
+ 		goto out_pci_release_regions;
+ 	}
 -- 
-Ronald Wahl - ronald.wahl@raritan.com - Phone +49 375271349-0 Fax -99
-Raritan Deutschland GmbH, Kornmarkt 7, 08056 Zwickau, Germany
-USt-IdNr. DE813094160, Steuer-Nr. 227/117/01749
-Amtsgericht Chemnitz HRB 23605
-Geschäftsführung: Stuart Hopper, Burkhard Wessler
+1.7.1
+
