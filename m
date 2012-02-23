@@ -1,65 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:41079 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756163Ab2BHNkO convert rfc822-to-8bit (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:33888 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756557Ab2BWSKT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 08:40:14 -0500
-Received: by pbcun15 with SMTP id un15so569751pbc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2012 05:40:14 -0800 (PST)
+	Thu, 23 Feb 2012 13:10:19 -0500
+Received: by wics10 with SMTP id s10so942191wic.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 10:10:17 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1328707524-11415-1-git-send-email-john.li.mediatek@gmail.com>
-References: <1328707524-11415-1-git-send-email-john.li.mediatek@gmail.com>
-Date: Wed, 8 Feb 2012 14:34:17 +0100
-Message-ID: <CAGXE3d-DRyJyQA+G=-oS+oFd6BQh6f+6C=_NREDgy4FwkHdWeQ@mail.gmail.com> (sfid-20120208_144020_556605_AD6E19CB)
-Subject: Re: [PATCH] rt2x00:Add debug message for new chipset
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: John Li <john.li.mediatek@gmail.com>
-Cc: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	John Li <chen-yang.li@mediatek.com>
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <1328818149-4826-15-git-send-email-arend@broadcom.com>
+References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
+	<1328818149-4826-15-git-send-email-arend@broadcom.com>
+Date: Thu, 23 Feb 2012 19:10:17 +0100
+Message-ID: <CACna6rxgGuCNY19Dn=VcgUH=EORNr72x4CTbR61srSZmcM+h-w@mail.gmail.com> (sfid-20120223_191025_162926_9F36EFB4)
+Subject: Re: [PATCH 14/15] brcm80211: fmac: add USB support for bcm43235/6/8 chipsets
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	"M. Lambert" <lambertm@westman.wave.ca>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 8, 2012 at 2:25 PM, John Li <john.li.mediatek@gmail.com> wrote:
-> From: John Li <chen-yang.li@mediatek.com>
->
-> Signed-off-by: John Li <chen-yang.li@mediatek.com>
+2012/2/9 Arend van Spriel <arend@broadcom.com>:
+> This patch extends the use of the brcmfmac driver with support for
+> chipsets with a USB host interface. The first chipsets supported are
+> the bcm43235, bcm43236, and bcm43238 for which firmware has been
+> submitted.
 
-No objections from my side.
+Can you say something more about the firmware? AFAICS brcm directory
+in linux-firmware.git contains:
+brcmfmac43236b.bin
+brcmfmac4329.bin
+brcmfmac4330.bin
 
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 22a1a8f..6bdf6d6 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -3949,7 +3949,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
->        case RT5390:
->                break;
->        default:
-> -               ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
-> +               ERROR(rt2x00dev, "Invalid RT chipset 0x%04x detected.\n", rt2x00dev->chip.rt);
->                return -ENODEV;
->        }
->
-> @@ -3968,7 +3968,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
->        case RF5390:
->                break;
->        default:
-> -               ERROR(rt2x00dev, "Invalid RF chipset 0x%x detected.\n",
-> +               ERROR(rt2x00dev, "Invalid RF chipset 0x%04x detected.\n",
->                      rt2x00dev->chip.rf);
->                return -ENODEV;
->        }
-> --
-> 1.7.6.5
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +#define BRCMF_USB_FW_NAME Â  Â  Â "brcm/brcmfmac-usb.bin"
+
+However your driver seems to require *only* brcmfmac-usb.bin firmware file...
+
+-- 
+RafaÅ‚
