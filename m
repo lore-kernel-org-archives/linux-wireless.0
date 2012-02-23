@@ -1,45 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:41092 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751267Ab2BMNp4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 08:45:56 -0500
-Received: by pbcun15 with SMTP id un15so4560345pbc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Feb 2012 05:45:56 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4F390ED3.8010400@openwrt.org>
-References: <4F390ED3.8010400@openwrt.org>
-Date: Mon, 13 Feb 2012 14:45:56 +0100
-Message-ID: <CAGXE3d90az_g3KyzPp-4NQoM2zmXaNSVo=7piM=q8EK9WdBp7A@mail.gmail.com> (sfid-20120213_144600_351887_4E76CC09)
-Subject: Re: Poor RT2880 performance
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Florian Fainelli <florian@openwrt.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com, gwingerde@gmail.com,
-	Ivo Van Doorn <ivdoorn@gmail.com>,
-	Andreas Hartmann <andihartmann@freenet.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from smtp1.u-psud.fr ([129.175.33.41]:54768 "EHLO smtp1.u-psud.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752395Ab2BWPxq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Feb 2012 10:53:46 -0500
+From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: chunkeey@googlemail.com, linux-wireless@vger.kernel.org
+Subject: [RFC] carl9170: Fix memory accounting when sta is in power-save mode.
+Date: Thu, 23 Feb 2012 16:53:34 +0100
+Message-Id: <1330012414-26559-1-git-send-email-cavallar@lri.fr> (sfid-20120223_165349_593726_E38FA373)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Access Point mode, when transmitting a packet, if the destination
+station is in powersave mode, we abort transmitting the packet to the
+device queue, but we do not reclaim the allocated memory.  Given enough
+packets, we can go in a state where there is no packet on the device
+queue, but we think the device has no memory left, so no packet gets
+transmitted, connections breaks and the AP stops working.
 
-On Mon, Feb 13, 2012 at 2:23 PM, Florian Fainelli <florian@openwrt.org> wrote:
-> I am playing with a RT2880-F based AP, with a N connected station, in a
-> residential environment.
+This undo the allocation done in the TX path when the station is in
+power-save mode.
 
-Mind to provide the RF and RT chipset identifications? rt2x00 should print them
-out during module load (at least when compiled with debugging options).
+Signed-off-by: Nicolas Cavallari <cavallar@lri.fr>
+---
+While this seems to fix my problem, there could still be problems remaining
+in this code path.  Particularly, carl9170_tx_status will do lots of things
+like incrementing counters and waking up mac80211 queues...
 
-> I could not get more than 26Mbits/sec TCP performance using iperf on both
-> sides,
+diff --git a/drivers/net/wireless/ath/carl9170/tx.c b/drivers/net/wireless/ath/carl9170/tx.c
+index 771e1a9..8d52ddd 100644
+--- a/drivers/net/wireless/ath/carl9170/tx.c
++++ b/drivers/net/wireless/ath/carl9170/tx.c
+@@ -1253,6 +1253,7 @@ static bool carl9170_tx_ps_drop(struct ar9170 *ar, struct sk_buff *skb)
+ 			atomic_dec(&ar->tx_ampdu_upload);
+ 
+ 		tx_info->flags |= IEEE80211_TX_STAT_TX_FILTERED;
++		carl9170_release_dev_space(ar, skb);
+ 		carl9170_tx_status(ar, skb, false);
+ 		return true;
+ 	}
+-- 
+1.7.9
 
-Did aggregation kick in? What rate was selected by the AP?
-
-> changing to a busier channel even made the performance drop down to
-> 5Mbits/sec, and remained like this.
-
-Andreas also reported some issues as soon as the environment gets noisy,
-not sure what the root cause for this is :(
-
-Helmut
