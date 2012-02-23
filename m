@@ -1,52 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:45656 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751278Ab2BXHel (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 02:34:41 -0500
-Subject: Re: [RFC] mac80211: Filter duplicate IE ids
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@chromium.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <20120224033729.9256A205A0@glenhelen.mtv.corp.google.com> (sfid-20120224_043736_015339_A91A0A49)
-References: <20120224033729.9256A205A0@glenhelen.mtv.corp.google.com>
-	 (sfid-20120224_043736_015339_A91A0A49)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 24 Feb 2012 08:34:37 +0100
-Message-ID: <1330068877.3426.6.camel@jlt3.sipsolutions.net> (sfid-20120224_083453_955533_3FB4DC8E)
-Mime-Version: 1.0
+Received: from mms2.broadcom.com ([216.31.210.18]:2533 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756012Ab2BWUBA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Feb 2012 15:01:00 -0500
+Message-ID: <4F469ADF.5040806@broadcom.com> (sfid-20120223_210103_362732_672207AC)
+Date: Thu, 23 Feb 2012 12:00:31 -0800
+From: "Franky Lin" <frankyl@broadcom.com>
+MIME-Version: 1.0
+To: "Kiss Robert" <kepten@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Broadcom brcm80211 monitor mode
+References: <CAN+AqrXRuBQZ9Hvnd=sdauFdo1e5eYWBiyo8f2WFDy8EBLGvEQ@mail.gmail.com>
+ <4F356004.9090409@broadcom.com>
+ <CAN+AqrVLeJYQFLHqtmuhWQ_34x-6bG1uiYRJxj3zRvNJXknpPQ@mail.gmail.com>
+In-Reply-To: <CAN+AqrVLeJYQFLHqtmuhWQ_34x-6bG1uiYRJxj3zRvNJXknpPQ@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-02-23 at 17:59 -0800, Paul Stewart wrote:
-> mac80211 is lenient with respect to reception of corrupted beacons.
-> Even if the frame is corrupted as a whole, the available IE elements
-> are still passed back and accepted, sometimes replacing legitimate
-> data.  It is unknown to what extent this "feature" is made use of,
-> but it is clear that in some cases, this is detrimental.  One such
-> case is reported in http://crosbug.com/26832 where an AP corrupts
-> its beacons but not its probe responses.
-> 
-> One approach would be to completely reject frames with invaid data
-> (for example, if the last tag extends beyond the end of the enclosing
-> PDU).  The enclosed approach is much more conservative: we simply
-> prevent later IEs from overwriting the state from previous ones.
-> This approach hopes that there might be some salient data in the
-> IE stream before the corruption, and seeks to at least prevent that
-> data from being overwritten.  This approach will fix the case above.
-> 
-> Short of any statistics gathering in the various forms of AP breakage,
-> it's not possible to ascertain the side effects of more stringent
-> discarding of data.
+On 02/23/2012 08:00 AM, Kiss Robert wrote:
+> I have read somewhere that the Broadcom 4330 chipset on Samsung Galaxy
+> S II cannot be put to monitor mode because of some hardware
+> limitation. Is that true? Can someone confirm that?
 
-Hmmm. This seems reasonable, but in the given example (in the bug
-report) it will at least lose the WMM info (since it's corrupt) and the
-HT info, as well as WPS (which is probably not relevant.)
+Hi Robert,
 
-I suppose better to accept such service degradation than not connect,
-but I wonder if we should log a warning when we actually try to use such
-an AP?
+It's a firmware limitation instead of hardware to be more precise. There 
+is no firmware out there support monitor mode so the support can not be 
+done by changing the host driver only.
 
-johannes
-
+Regards,
+Franky
 
