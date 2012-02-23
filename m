@@ -1,43 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:47139 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753538Ab2BNIi6 (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:56308 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752282Ab2BWKlg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 03:38:58 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Thu, 23 Feb 2012 05:41:36 -0500
+Received: by vbjk17 with SMTP id k17so719496vbj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 02:41:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20282.7580.303442.135662@gargle.gargle.HOWL> (sfid-20120214_093902_198558_58709DC6)
-Date: Tue, 14 Feb 2012 14:08:52 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 2/4] ath9k: Fix programming SYNTH4 for AR9462
+In-Reply-To: <1329992887-4442-1-git-send-email-zefir.kurtisi@neratec.com>
+References: <1329992887-4442-1-git-send-email-zefir.kurtisi@neratec.com>
+Date: Thu, 23 Feb 2012 16:11:35 +0530
+Message-ID: <CAD2nsn0_PwPLSQfVizz6CBkBGag7T__eynbG=bvwAdJjSLfLow@mail.gmail.com> (sfid-20120223_114139_443895_DD8D2E4C)
+Subject: Re: [PATCH] ath9k: fix PHY error accounting in debugfs
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
+	linux-wireless@vger.kernel.org, rodrigue@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The LONG_SHIFT_SELECT offset is different for AR9462 from
-the other chip families. Fix this.
+Hi Zefir,
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+On Thu, Feb 23, 2012 at 3:58 PM, Zefir Kurtisi
+<zefir.kurtisi@neratec.com> wrote:
+> ath9k_phyerr are defined as index but have been treated as bitmask
+> (with an outdated mask used) for counting PHY errors in debugfs.
+> ---
+>  drivers/net/wireless/ath/ath9k/debug.c |    8 ++++----
+>  1 files changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+> index 68d972b..3be5b83 100644
+> --- a/drivers/net/wireless/ath/ath9k/debug.c
+> +++ b/drivers/net/wireless/ath/ath9k/debug.c
+> @@ -1049,8 +1049,6 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+>  #define RX_SAMP_DBG(c) (sc->debug.bb_mac_samp[sc->debug.sampidx].rs\
+>                        [sc->debug.rsidx].c)
+>
+> -       u32 phyerr;
+> -
+>        RX_STAT_INC(rx_pkts_all);
+>        sc->debug.stats.rxstats.rx_bytes_all += rs->rs_datalen;
+>
+> @@ -1068,9 +1066,11 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+>                RX_STAT_INC(decrypt_busy_err);
+>
+>        if (rs->rs_status & ATH9K_RXERR_PHY) {
+> +               u32 phyerr;
+>                RX_STAT_INC(phy_err);
+> -               phyerr = rs->rs_phyerr & 0x24;
+> -               RX_PHY_ERR_INC(phyerr);
+> +               phyerr = rs->rs_phyerr;
+> +               if (phyerr < ATH9K_PHYERR_MAX)
+> +                       RX_PHY_ERR_INC(phyerr);
+>        }
+>
+>        sc->debug.stats.rxstats.rs_rssi_ctl0 = rs->rs_rssi_ctl0;
+> --
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index aca24bf..81f3e85 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -625,8 +625,8 @@
- #define AR_PHY_AIC_STAT_2_B0	(AR_SM_BASE + 0x4cc)
- 
- #define AR_PHY_65NM_CH0_SYNTH4      0x1608c
--#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT   0x00000002
--#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT_S 1
-+#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT   (AR_SREV_9462(ah) ? 0x00000001 : 0x00000002)
-+#define AR_PHY_SYNTH4_LONG_SHIFT_SELECT_S (AR_SREV_9462(ah) ? 0 : 1)
- #define AR_PHY_65NM_CH0_SYNTH7      0x16098
- #define AR_PHY_65NM_CH0_BIAS1       0x160c0
- #define AR_PHY_65NM_CH0_BIAS2       0x160c4
+
+very recently fixed by
+http://www.spinics.net/lists/linux-wireless/msg85034.html
+
 -- 
-1.7.9
-
+thanks,
+shafi
