@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4412 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751211Ab2BKWpZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Feb 2012 17:45:25 -0500
-Message-ID: <4F36EF7E.9060703@broadcom.com> (sfid-20120211_234528_933601_4092AFFA)
-Date: Sat, 11 Feb 2012 23:45:18 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:40141 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752685Ab2BXRnJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Feb 2012 12:43:09 -0500
+Received: by ggnh1 with SMTP id h1so1267679ggn.19
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2012 09:43:08 -0800 (PST)
 MIME-Version: 1.0
-To: "Ben Hutchings" <ben@decadent.org.uk>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"David Woodhouse" <dwmw2@infradead.org>
-Subject: Re: [PATCH 0/4] linux-firmware: brcm: new firmware files for
- brcmfmac and cleanup
-References: <1328302605-3382-1-git-send-email-arend@broadcom.com>
- <1328988230.325.24.camel@deadeye>
-In-Reply-To: <1328988230.325.24.camel@deadeye>
-Content-Type: text/plain;
- charset=utf-8
+In-Reply-To: <CA+yqC4buizhVjtWMTSfaD2c8d+cLjn13a-H2Ez883gxy8K8j+g@mail.gmail.com>
+References: <CA+yqC4buizhVjtWMTSfaD2c8d+cLjn13a-H2Ez883gxy8K8j+g@mail.gmail.com>
+Date: Fri, 24 Feb 2012 09:43:08 -0800
+Message-ID: <CAMcMvsj2XMFarr1+fqdSv88ZLrXLquK7wgF8LsTYDBfvHFwgrA@mail.gmail.com> (sfid-20120224_184316_066550_7B13BF0D)
+Subject: Re: [RFC] mac80211: Filter duplicate IE ids [corrupted beacons]
+From: Paul Stewart <pstew@chromium.org>
+To: Sam Leffler <sleffler@google.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/11/2012 08:23 PM, Ben Hutchings wrote:
-> On Fri, 2012-02-03 at 21:56 +0100, Arend van Spriel wrote:
->> This patch series adds new firmware for bcm4329 and bcm4330 SDIO chipsets
->> and removes the nvram file from the repository as it is not useful for Linux
->> users and only used for internal development.
->>
->> Also included is firmware for the bcm43236 USB chipset, which will be
->> supported by the brcmfmac driver.
->>
->> This series applies to kernel/git/firmware/linux-firmware.git tree. These
->> files will be used by brcmfmac as of kernel v3.3.
-> 
-> Applied, but:
-> 
-> [...]
->>  create mode 100755 brcm/brcmfmac4329.bin
->>  create mode 100755 brcm/brcmfmac4330.bin
-> 
-> I had to fix these permissions.  Please take care to fix executable
-> permissions when copying files from non-Unix systems.
-> 
-> Ben.
-> 
+On Fri, Feb 24, 2012 at 9:31 AM, Sam Leffler <sleffler@google.com> wrote:
+> On Fri, Feb 24, 2012 at 7:43 AM, Paul Stewart <pstew@chromium.org> wrote:
+>
+>> If my over-the-air captures are any indication, with some probability
+>> you will receive a corrupted beacon from time to time -- perhaps not
+>> due to a broken AP, but just from it being corrupted over the air.
+>> FCS could catch that most times, but perhaps sometimes not.
+>
+> I can't recall ever receiving a "corrupted frame" that passed FCS and
+> wasn't delivered due to some driver/hw problem.
 
-Ah, yes. I overlooked. Thanks.
+Fair point.  I still think flag clearing is still useful if the user
+finally goes over and kicks the AP into working correctly again.
 
-Gr. AvS
-
+> -Sam
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
