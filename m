@@ -1,105 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:53647 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752940Ab2BOQqD convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 11:46:03 -0500
-Received: by mail-ee0-f43.google.com with SMTP id b45so479645eek.2
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 08:46:01 -0800 (PST)
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:34620 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752288Ab2BXBxV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Feb 2012 20:53:21 -0500
+Received: by iacb35 with SMTP id b35so2360047iac.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 17:53:21 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6XL4=RJZtbf_qnyDpShk5qFrLFFxSrnaoow1F5ayhdE6A@mail.gmail.com>
-References: <1327581484-22047-1-git-send-email-victorg@ti.com>
-	<1327581484-22047-6-git-send-email-victorg@ti.com>
-	<CAB=NE6XL4=RJZtbf_qnyDpShk5qFrLFFxSrnaoow1F5ayhdE6A@mail.gmail.com>
-Date: Wed, 15 Feb 2012 18:46:01 +0200
-Message-ID: <CAK80WHavr1jEspR+fa1aSvzaOBcGZRrmruu+C6aMT+GjU6gTRQ@mail.gmail.com> (sfid-20120215_174642_132093_1D4D1F36)
-Subject: Re: [RFC 5/9] nl80211/cfg80211: add ap channel switch command/event
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian.chadd@gmail.com, j@w1.fi,
-	johannes@sipsolutions.net, coelho@ti.com, assaf@ti.com,
-	yoni.divinsky@ti.com, igalc@ti.com, adrian@freebsd.org,
-	nbd@nbd.name
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <CAMcMvshr_1gx0y55ne5wia03OaSASZAh1vvJyeY02v1yTwU4aQ@mail.gmail.com>
+References: <20120221060932.8A38C20517@glenhelen.mtv.corp.google.com>
+ <20120221131946.AC1AD20578@glenhelen.mtv.corp.google.com> <1330004364.3448.8.camel@jlt3.sipsolutions.net>
+ <CA+yqC4bcLz5xBTqOV_C4cjm4MDwEaifbJNi9dCSh7CTbjPiXBg@mail.gmail.com>
+ <1330009145.3448.13.camel@jlt3.sipsolutions.net> <CAMcMvshr_1gx0y55ne5wia03OaSASZAh1vvJyeY02v1yTwU4aQ@mail.gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Date: Thu, 23 Feb 2012 17:53:01 -0800
+Message-ID: <CAB=NE6XHpOdKsTFM3x_aMF7+jL6NKuB9_wS0eQRBYqAbQVw1ww@mail.gmail.com> (sfid-20120224_025325_757693_036F3CDC)
+Subject: Re: [RFCv2] mac80211: Don't let regulatory make us deaf
+To: Paul Stewart <pstew@chromium.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Sam Leffler <sleffler@google.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 10, 2012 at 12:53 AM, Luis R. Rodriguez
-<mcgrof@frijolero.org> wrote:
-> On Thu, Jan 26, 2012 at 4:38 AM, Victor Goldenshtein <victorg@ti.com> wrote:
->> Add new NL80211_CMD_AP_CHANNEL_SWITCH command which
->> triggers a channel switch process, this command also
->> notifies usermode about channel switch complete event.
+On Thu, Feb 23, 2012 at 7:14 AM, Paul Stewart <pstew@chromium.org> wrote:
+> On Thu, Feb 23, 2012 at 6:59 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
 >>
->> Signed-off-by: Victor Goldenshtein <victorg@ti.com>
->> ---
->>  include/linux/nl80211.h |   23 +++++++++++++
->>  include/net/cfg80211.h  |   16 +++++++++
->>  net/wireless/mlme.c     |   11 ++++++
->>  net/wireless/nl80211.c  |   80 +++++++++++++++++++++++++++++++++++++++++++++++
->>  net/wireless/nl80211.h  |    4 ++
->>  5 files changed, 134 insertions(+), 0 deletions(-)
+>> On Thu, 2012-02-23 at 06:53 -0800, Sam Leffler wrote:
+>> > On Thu, Feb 23, 2012 at 5:39 AM, Johannes Berg
+>> > <johannes@sipsolutions.net> wrote:
+>> > > On Mon, 2012-02-20 at 21:25 -0800, Paul Stewart wrote:
+>> > >> When regulatory information changes our HT behavior (e.g,
+>> > >> when we get a country code from the AP we have just associated
+>> > >> with), we should use this information to change the power with
+>> > >> which we transmit, and what channels we transmit. Â Sometimes
+>> > >> the channel parameters we derive from regulatory information
+>> > >> contradicts the parameters we used in association. Â For example,
+>> > >> we could have associated specifying HT40, but the regulatory
+>> > >> rules we apply may forbid HT40 operation.
+>> > >>
+>> > >> In the situation above, we should reconfigure ourselves to
+>> > >> transmit in HT20 only, however it makes no sense for us to
+>> > >> disable receive in HT40, since if we associated with these
+>> > >> parameters, the AP has every reason to expect we can and
+>> > >> will receive packets this way. Â The code in mac80211 does
+>> > >> not have the capability of sending the appropriate action
+>> > >> frames to signal a change in HT behaviour so the AP has
+>> > >> no clue we can no longer receive frames encoded this way.
+>> > >> In some broken AP implementations, this can leave us
+>> > >> effectively deaf if the AP never retries in lower HT rates.
+>> > >>
+>> > >> This change breaks up the channel_type parameter in the
+>> > >> ieee80211_enable_ht function into a separate receive and
+>> > >> transmit part. Â It honors the channel flags set by regulatory
+>> > >> in order to configure the rate control algorithm, but uses
+>> > >> the capability flags to configure the channel on the radio,
+>> > >> since these were used in association to set the AP's transmit
+>> > >> rate.
+>> > >
+>> > > Quite the stupid APs, obviously ...
+>> >
+>> > Actually the AP is operating correctly (modulo the question of whether
+>> > HT40 may be used in kr).
 >>
->> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
->> index b45ceb1..8a004fc 100644
->> --- a/include/linux/nl80211.h
->> +++ b/include/linux/nl80211.h
->> @@ -551,6 +551,15 @@
->>  *     radar interference is detected during this period the dfs master may
->>  *     initiate the tx.
->>  *
->> + * @NL80211_CMD_AP_CHANNEL_SWITCH: Perform a channel switch in the driver (for
->> + *     AP/GO).
->> + *     %NL80211_ATTR_WIPHY_FREQ: new channel frequency.
->> + *     %NL80211_ATTR_CH_SWITCH_BLOCK_TX: block tx on the current channel.
->> + *     %NL80211_ATTR_CH_SWITCH_POST_BLOCK_TX: block tx on the target channel.
+>> Ah, yes. I was thinking the AP was actually saying you can't use 40 MHz,
+>> but it's obviously just saying that you're in KR and our database says
+>> you then can't use 40 Mhz...
 >
-> This is left as optional. It would be good to explain why this is
-> option and/or why userspace would set this
-> NL80211_ATTR_CH_SWITCH_POST_BLOCK_TX flag or not.
->
->> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
->> @@ -4072,6 +4075,39 @@ static int nl80211_dfs_en_tx(struct sk_buff *skb, struct genl_info *info)
->>        return rdev->ops->dfs_en_tx(&rdev->wiphy, dev);
->>  }
->>
->> +static int nl80211_ap_channel_switch(struct sk_buff *skb,
->> +                                    struct genl_info *info)
->> +{
->> +       struct cfg80211_registered_device *rdev = info->user_ptr[0];
->> +       struct net_device *dev = info->user_ptr[1];
->> +       u32 freq = 0, count = 0, post_switch_block_tx = 0, block_tx = 0;
->
-> Please use bool for flags.
->
+> More succinctly, Sam is posing the possibility that a STA we should
+> ignore regulatory on TX as well as RX in this situation, since the AP
+> clearly negotiated HT40 with us.
 
-ok.
+If the AP was right and we were allowed to use this that'd be fine but
+consider the case where the AP is wrong, they'd we'd be doing the
+wrong thing. If the AP believes HT40 is allowed but our wireless-regdb
+disagrees we trust our wireless-regdb more, by design.
 
->> +
->> +       ASSERT_RDEV_LOCK(rdev);
->> +
->> +       if (!rdev->ops->ap_channel_switch)
->> +               return -EOPNOTSUPP;
->> +
->> +       if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
->> +           dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
->> +               return -EOPNOTSUPP;
->
-> If we want to restrict this command from userspace to only be able to
-> issue a channel switch for DFS we need to consider some additional
-> sanity checks here. It may be worth adding a small state machine to
-> cfg80211 for the device and only allow certain of these commands for
-> specific DFS states, if these commands are to be used only on DFS
-> states. This would limit the stupidities that userspace can put
-> cfg80211 into.
->
+Did I understand your question correctly?
 
-DFS implementation in driver has only one state - DFS_CAC_IN_PROGRESS,
-so I"m not sure we need here a state machine but some sanity checks
-will be added in the next RFC.
-
-
--- 
-Thanks,
-Victor.
+  Luis
