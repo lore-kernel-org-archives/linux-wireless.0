@@ -1,37 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:61591 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755016Ab2BHLnD (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:50135 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752900Ab2BXHQk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 06:43:03 -0500
-Received: by vbjk17 with SMTP id k17so253698vbj.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2012 03:43:02 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAGXE3d_-pTTKxBJ9XWyF7J5XHQbNeVV=GjYC8ohoVOEvE6ryrA@mail.gmail.com>
-References: <1328681208-5734-1-git-send-email-john.li.mediatek@gmail.com>
-	<CAGXE3d_-pTTKxBJ9XWyF7J5XHQbNeVV=GjYC8ohoVOEvE6ryrA@mail.gmail.com>
-Date: Wed, 8 Feb 2012 12:43:01 +0100
-Message-ID: <CAOZOX0U_EgAyfi_qe3HdGNBnOoDZ+RLroAo8PJgQE63GBnwJZQ@mail.gmail.com> (sfid-20120208_124307_473497_D942B9C3)
-Subject: Re: [PATCH] rt2x00:Fix typo
-From: Ivo Van Doorn <ivdoorn@gmail.com>
-To: John Li <chen-yang.li@mediatek.com>
-Cc: John Li <john.li.mediatek@gmail.com>,
-	users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 24 Feb 2012 02:16:40 -0500
+Subject: Re: [PATCH] mac80211 radiotap injection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lars Bro <larsbro@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <loom.20120221T000341-610@post.gmane.org> (sfid-20120221_001738_057595_CEF930DD)
+References: <loom.20120221T000341-610@post.gmane.org>
+	 (sfid-20120221_001738_057595_CEF930DD)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 24 Feb 2012 08:16:37 +0100
+Message-ID: <1330067797.3426.1.camel@jlt3.sipsolutions.net> (sfid-20120224_081642_302207_4233DED7)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 8, 2012 at 10:27 AM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> Hi John,
->
-> On Wed, Feb 8, 2012 at 7:06 AM, John Li <john.li.mediatek@gmail.com> wrote:
->> From: John Li <chen-yang.li@mediatek.com>
->
-> Your Signed-off-by line is missing here ...
+On Mon, 2012-02-20 at 23:17 +0000, Lars Bro wrote:
 
-In all 4 patches which you sent.
+> @@ -555,6 +559,7 @@ struct ieee80211_tx_info {
+>  			struct ieee80211_vif *vif;
+>  			struct ieee80211_key_conf *hw_key;
+>  			struct ieee80211_sta *sta;
+> +			u8 tx_power;
+>  		} control;
 
-Ivo
+Also, have you counted the bytes here and tried to compile this on a
+64-bit machine? Not going to work.
+
+johannes
+
