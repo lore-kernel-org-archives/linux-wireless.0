@@ -1,77 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:56398 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755328Ab2BYJNR (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:40346 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751890Ab2BXFnW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Feb 2012 04:13:17 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH] ath6kl: Make sure wiphy is registered before calling regulatory_hint()
-Date: Sat, 25 Feb 2012 14:43:17 +0530
-Message-ID: <1330161197-8593-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120225_101322_824417_DF5F5DC3)
+	Fri, 24 Feb 2012 00:43:22 -0500
+Received: by wgbdt10 with SMTP id dt10so1731795wgb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 21:43:20 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4F471F40.8060503@posedge.com>
+References: <f17c700977012ada368da4f339b9c639@posedge.com>
+	<1329933458.4657.2.camel@jlt3.sipsolutions.net>
+	<1329937072.4657.4.camel@jlt3.sipsolutions.net>
+	<4F471F40.8060503@posedge.com>
+Date: Thu, 23 Feb 2012 21:43:20 -0800
+Message-ID: <CAJ-Vmong58rRX_sMA3Zgg+17=ebAGmG9U+9rGC8Fw4q_=B2hDg@mail.gmail.com> (sfid-20120224_064325_907083_6BD415A8)
+Subject: Re: [RFCv2] cfg80211: 80Mhz Bandwidth channel flags in 5Gig band
+From: Adrian Chadd <adrian@freebsd.org>
+To: Mahesh <maheshp@posedge.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As regulatory events are processed even before the wiphy is registered,
-calling regulatory_hint() at early stage should be fixed.
+Hi,
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    4 ++++
- drivers/net/wireless/ath/ath6kl/core.h     |    2 ++
- drivers/net/wireless/ath/ath6kl/wmi.c      |    2 +-
- 3 files changed, 7 insertions(+), 1 deletions(-)
+Since what your _actual_ commit is doing is "begin fleshing out
+802.11ac support", I suggest someone spark a discussion or two about
+it first..
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index e82f220..af3d0ab 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -3021,12 +3021,16 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
- 		return ret;
- 	}
- 
-+	ar->wiphy_registered = true;
-+
- 	return 0;
- }
- 
- void ath6kl_cfg80211_cleanup(struct ath6kl *ar)
- {
- 	wiphy_unregister(ar->wiphy);
-+
-+	ar->wiphy_registered = false;
- }
- 
- struct ath6kl *ath6kl_cfg80211_create(void)
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 8d8677d..cb5ddda 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -654,6 +654,8 @@ struct ath6kl {
- 
- 	bool p2p;
- 
-+	bool wiphy_registered;
-+
- #ifdef CONFIG_ATH6KL_DEBUG
- 	struct {
- 		struct sk_buff_head fwlog_queue;
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 0527933..97680a2 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -914,7 +914,7 @@ static void ath6kl_wmi_regdomain_event(struct wmi *wmi, u8 *datap, int len)
- 				regpair->regDmnEnum);
- 	}
- 
--	if (country) {
-+	if (country && wmi->parent_dev->wiphy_registered) {
- 		alpha2[0] = country->isoName[0];
- 		alpha2[1] = country->isoName[1];
- 
--- 
-1.7.0.4
 
+adrian
