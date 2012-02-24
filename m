@@ -1,78 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server514a.exghost.com ([72.32.253.68]:3667 "EHLO
-	server514.appriver.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756602Ab2BGXXw convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:59865 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754143Ab2BXIBa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 18:23:52 -0500
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: [PATCH] rtlwifi: Hopefully not mangled this time -- Handle previous allocation failures when freeing device memory
-Date: Tue, 7 Feb 2012 17:23:50 -0600
-Message-ID: <BC8BC73D12649F439B502B4CB6FD58B1053E2D3F@BE23.exg4.exghost.com> (sfid-20120208_002355_913256_28581B73)
-From: "Simon Graham" <simon.graham@virtualcomputer.com>
-To: <linville@tuxdriver.com>
-Cc: <linux-wireless@vger.kernel.org>, <Larry.Finger@lwfinger.net>,
-	<chaoming_li@realsil.com.cn>
+	Fri, 24 Feb 2012 03:01:30 -0500
+Subject: Re: [RFCv2] cfg80211: 80Mhz Bandwidth channel flags in 5Gig band
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: Mahesh <maheshp@posedge.com>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <CAJ-Vmong58rRX_sMA3Zgg+17=ebAGmG9U+9rGC8Fw4q_=B2hDg@mail.gmail.com> (sfid-20120224_064351_670956_75D41CFC)
+References: <f17c700977012ada368da4f339b9c639@posedge.com>
+	 <1329933458.4657.2.camel@jlt3.sipsolutions.net>
+	 <1329937072.4657.4.camel@jlt3.sipsolutions.net>
+	 <4F471F40.8060503@posedge.com>
+	 <CAJ-Vmong58rRX_sMA3Zgg+17=ebAGmG9U+9rGC8Fw4q_=B2hDg@mail.gmail.com>
+	 (sfid-20120224_064351_670956_75D41CFC)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 24 Feb 2012 09:01:25 +0100
+Message-ID: <1330070485.3426.14.camel@jlt3.sipsolutions.net> (sfid-20120224_090133_771796_44A52C47)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Handle previous allocation failures when freeing device memory
+On Thu, 2012-02-23 at 21:43 -0800, Adrian Chadd wrote:
+> Hi,
+> 
+> Since what your _actual_ commit is doing is "begin fleshing out
+> 802.11ac support", I suggest someone spark a discussion or two about
+> it first..
 
-Signed-off-by: Simon Graham <simon.graham@virtualcomputer.com>
----
- drivers/net/wireless/rtlwifi/pci.c |   24 ++++++++++++++----------
- 1 files changed, 14 insertions(+), 10 deletions(-)
+Now you did ;-)
 
-diff --git a/drivers/net/wireless/rtlwifi/pci.c
-b/drivers/net/wireless/rtlwifi/pci.c
-index c5f6a32..fb84707 100644
---- a/drivers/net/wireless/rtlwifi/pci.c
-+++ b/drivers/net/wireless/rtlwifi/pci.c
-@@ -1148,10 +1148,12 @@ static void _rtl_pci_free_tx_ring(struct
-ieee80211_hw *hw,
- 		ring->idx = (ring->idx + 1) % ring->entries;
- 	}
- 
--	pci_free_consistent(rtlpci->pdev,
--			    sizeof(*ring->desc) * ring->entries,
--			    ring->desc, ring->dma);
--	ring->desc = NULL;
-+	if (ring->desc) {
-+		pci_free_consistent(rtlpci->pdev,
-+				sizeof(*ring->desc) * ring->entries,
-+				ring->desc, ring->dma);
-+		ring->desc = NULL;
-+	}
- }
- 
- static void _rtl_pci_free_rx_ring(struct rtl_pci *rtlpci)
-@@ -1175,13 +1177,14 @@ static void _rtl_pci_free_rx_ring(struct rtl_pci
-*rtlpci)
- 			kfree_skb(skb);
- 		}
- 
--		pci_free_consistent(rtlpci->pdev,
--
-sizeof(*rtlpci->rx_ring[rx_queue_idx].
--					   desc) * rtlpci->rxringcount,
--				    rtlpci->rx_ring[rx_queue_idx].desc,
--				    rtlpci->rx_ring[rx_queue_idx].dma);
--		rtlpci->rx_ring[rx_queue_idx].desc = NULL;
-+		if (rtlpci->rx_ring[rx_queue_idx].desc) {
-+			pci_free_consistent(rtlpci->pdev,
-+
-sizeof(*rtlpci->rx_ring[rx_queue_idx].
-+					       desc) *
-rtlpci->rxringcount,
-+
-rtlpci->rx_ring[rx_queue_idx].desc,
-+
-rtlpci->rx_ring[rx_queue_idx].dma);
-+			rtlpci->rx_ring[rx_queue_idx].desc = NULL;
-+		}
- 	}
- }
- 
--- 
-1.7.8.3
+I think the regulatory stuff is important, but obviously we also need
+VHT advertising, all the mac80211 (and hostapd) bits to add the IEs in
+the right places, station capability stuff. Some extensions for bitrate
+information/rate control will be needed -- maybe we should get started
+on radiotap VHT extensions also.
+
+Then stuff like CSA with wide bandwidth channel switch, VHT transmit
+power envelope, extended power constraint & quiet channel handling.
+
+If anyone wants beamforming, I'm not sure where that needs to be
+implemented, and MU-MIMO will be interesting as well.
+
+I also suspect A-MSDU will become more interesting, and I don't even
+want to think about VHT-IBSS.
+
+johannes
+
