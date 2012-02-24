@@ -1,40 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm11-vm0.bullet.mail.ird.yahoo.com ([77.238.189.218]:45833 "HELO
-	nm11-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752219Ab2BWC1V convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 21:27:21 -0500
-Message-ID: <1329964040.38655.YahooMailClassic@web29503.mail.ird.yahoo.com> (sfid-20120223_032725_307563_9FBA05B1)
-Date: Thu, 23 Feb 2012 02:27:20 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [PATCH] rtl8187: Add Ad-hoc mode
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Attila Fazekas <turul64@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Herton Ronaldo Krzesinski <herton@canonical.com>
-In-Reply-To: <CAGRGNgXOjKZQqF_JrAA0hyqcsn8TZWHd9OysqOMrE5_JrmnRjA@mail.gmail.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:40347 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751087Ab2BXFY0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Feb 2012 00:24:26 -0500
+Received: by vbjk17 with SMTP id k17so1341008vbj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 21:24:25 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAPjQAd9vwbSQuSvWbXvgrMeKt0K7eVx_pxO7K-2xAMnQGVj=Kw@mail.gmail.com>
+References: <1330050621-8955-1-git-send-email-ashok@cozybit.com> <CAPjQAd9vwbSQuSvWbXvgrMeKt0K7eVx_pxO7K-2xAMnQGVj=Kw@mail.gmail.com>
+From: Javier Cardona <javier@cozybit.com>
+Date: Thu, 23 Feb 2012 21:24:05 -0800
+Message-ID: <CAPjQAd9p-VFk4C0mDgTwu6k=HKzjvSMOMn2pqytL=UuA3o6tow@mail.gmail.com> (sfid-20120224_062429_077382_5E5A78BB)
+Subject: Re: [PATCH] {nl,cfg,mac}80211: Enable control quality monitoring for mesh
+To: Ashok Nagarajan <ashok@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Thu, 23/2/12, Julian Calaby <julian.calaby@gmail.com> wrote:
+On Thu, Feb 23, 2012 at 9:21 PM, Javier Cardona <javier@cozybit.com> wrote:
+> The logic and the order are wrong.  This needs to be:
+>
+> +        if (sdata->u.mgd.associated &&
+> +        if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+>              sdata->u.mgd.associated &&
 
-> If it's anything like how it works on Ubuntu, when you start
-> an Ad-Hoc
-> network with NetworkManager, it chooses an IP range based on
-> some
-> internal logic (usually in the 10.0.0.0/8 private network)
-> sets it's
-> IP to something sensible then starts a DHCP server for
-> everyone else
-> on the network, so everyone should get a valid IP.
+Sorry, I meant
 
-Thanks - that would make sense. (I have no experience setting up an ad-hoc network).
+-        if (sdata->u.mgd.associated &&
++        if (sdata->vif.type == NL80211_IFTYPE_STATION &&
++              sdata->u.mgd.associated &&
 
-OTOH, just so that we have established the basics - I would shutdown networkmanger/wpa_supplicant and do things manually if I were to test prototype driver patches though. There are many reasons why ad-hoc mode itself might work but one cannot ping, other than the patch not working or the hardware not behaving. The latter is in the tcp/ip layer and quite a lot higher than the wifi mac layer - if one had iptables/netfilter blocking icmp echo, for example. I'd probably just look at the packet stats from iwconfig/ifconfig, and may be firing up wireshark. It is up to Attila to show that it does work, and Larry to show that it does not :-).
-
-Hin-Tak
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
