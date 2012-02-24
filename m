@@ -1,178 +1,257 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12413 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751366Ab2BMGVU (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60448 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755219Ab2BXMwQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 01:21:20 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20280.43990.419490.460277@gargle.gargle.HOWL> (sfid-20120213_072122_530214_0E2DDD26)
-Date: Mon, 13 Feb 2012 11:51:10 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 5/7] ath9k: Prettify recv debugfs file output
+	Fri, 24 Feb 2012 07:52:16 -0500
+Message-Id: <20120224125139.011646911@sipsolutions.net> (sfid-20120224_135224_206883_4AB726EC)
+Date: Fri, 24 Feb 2012 13:50:54 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/4] mac80211: make deauth/disassoc sequence more natural
+References: <20120224125050.809601111@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dumping the RSSI information in the middle of error
-statistics is a bit misleading. Move them to the end.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+The association sequence looks (roughly) like
+this now:
+ * set BSSID
+ * set station to EXIST state
+ * send auth
+ * set station to AUTH state
+ * send assoc
+ * set station to ASSOC state
+ * set BSS info to associated
+
+In contrast, the deauth/disassoc sequence is
+the other way around:
+ * clear BSSID/BSS info state
+ * remove station
+ * send deauth/disassoc
+(in some cases the last two steps are reversed.)
+
+This patch encodes the entire sequence in the
+ieee80211_set_disassoc() function and changes
+it to be like this, for good measure with an
+explicit flush:
+ * send deauth/disassoc
+ * flush
+ * remove station
+ * clear BSSID/BSS info state
+
+At least iwlwifi gets confused with the other
+sequence in P2P mode and complains that it
+wasn't able to flush the queues.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/debug.c |   97 +++++++++++++++-----------------
- 1 files changed, 45 insertions(+), 52 deletions(-)
+ net/mac80211/mlme.c |   84 +++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 47 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index fe1f55f..5a838fc 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -880,12 +880,12 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
- 			      size_t count, loff_t *ppos)
+--- a/net/mac80211/mlme.c	2012-02-24 13:50:22.000000000 +0100
++++ b/net/mac80211/mlme.c	2012-02-24 13:50:23.000000000 +0100
+@@ -1389,7 +1389,8 @@ static void ieee80211_set_associated(str
+ }
+ 
+ static void ieee80211_set_disassoc(struct ieee80211_sub_if_data *sdata,
+-				   bool remove_sta, bool tx)
++				   u16 stype, u16 reason, bool tx,
++				   u8 *frame_buf)
  {
- #define PHY_ERR(s, p) \
--	len += snprintf(buf + len, size - len, "%18s : %10u\n", s, \
-+	len += snprintf(buf + len, size - len, "%22s : %10u\n", s, \
- 			sc->debug.stats.rxstats.phy_err_stats[p]);
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct ieee80211_local *local = sdata->local;
+@@ -1399,6 +1400,9 @@ static void ieee80211_set_disassoc(struc
  
- 	struct ath_softc *sc = file->private_data;
- 	char *buf;
--	unsigned int len = 0, size = 1400;
-+	unsigned int len = 0, size = 1600;
- 	ssize_t retval = 0;
+ 	ASSERT_MGD_MTX(ifmgd);
  
- 	buf = kzalloc(size, GFP_KERNEL);
-@@ -893,87 +893,80 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
- 		return -ENOMEM;
- 
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "CRC ERR",
-+			"%22s : %10u\n", "CRC ERR",
- 			sc->debug.stats.rxstats.crc_err);
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "DECRYPT CRC ERR",
-+			"%22s : %10u\n", "DECRYPT CRC ERR",
- 			sc->debug.stats.rxstats.decrypt_crc_err);
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "PHY ERR",
-+			"%22s : %10u\n", "PHY ERR",
- 			sc->debug.stats.rxstats.phy_err);
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "MIC ERR",
-+			"%22s : %10u\n", "MIC ERR",
- 			sc->debug.stats.rxstats.mic_err);
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "PRE-DELIM CRC ERR",
-+			"%22s : %10u\n", "PRE-DELIM CRC ERR",
- 			sc->debug.stats.rxstats.pre_delim_crc_err);
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "POST-DELIM CRC ERR",
-+			"%22s : %10u\n", "POST-DELIM CRC ERR",
- 			sc->debug.stats.rxstats.post_delim_crc_err);
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "DECRYPT BUSY ERR",
-+			"%22s : %10u\n", "DECRYPT BUSY ERR",
- 			sc->debug.stats.rxstats.decrypt_busy_err);
- 
-+	PHY_ERR("UNDERRUN ERR", ATH9K_PHYERR_UNDERRUN);
-+	PHY_ERR("TIMING ERR", ATH9K_PHYERR_TIMING);
-+	PHY_ERR("PARITY ERR", ATH9K_PHYERR_PARITY);
-+	PHY_ERR("RATE ERR", ATH9K_PHYERR_RATE);
-+	PHY_ERR("LENGTH ERR", ATH9K_PHYERR_LENGTH);
-+	PHY_ERR("RADAR ERR", ATH9K_PHYERR_RADAR);
-+	PHY_ERR("SERVICE ERR", ATH9K_PHYERR_SERVICE);
-+	PHY_ERR("TOR ERR", ATH9K_PHYERR_TOR);
-+	PHY_ERR("OFDM-TIMING ERR", ATH9K_PHYERR_OFDM_TIMING);
-+	PHY_ERR("OFDM-SIGNAL-PARITY ERR", ATH9K_PHYERR_OFDM_SIGNAL_PARITY);
-+	PHY_ERR("OFDM-RATE ERR", ATH9K_PHYERR_OFDM_RATE_ILLEGAL);
-+	PHY_ERR("OFDM-LENGTH ERR", ATH9K_PHYERR_OFDM_LENGTH_ILLEGAL);
-+	PHY_ERR("OFDM-POWER-DROP ERR", ATH9K_PHYERR_OFDM_POWER_DROP);
-+	PHY_ERR("OFDM-SERVICE ERR", ATH9K_PHYERR_OFDM_SERVICE);
-+	PHY_ERR("OFDM-RESTART ERR", ATH9K_PHYERR_OFDM_RESTART);
-+	PHY_ERR("FALSE-RADAR-EXT ERR", ATH9K_PHYERR_FALSE_RADAR_EXT);
-+	PHY_ERR("CCK-TIMING ERR", ATH9K_PHYERR_CCK_TIMING);
-+	PHY_ERR("CCK-HEADER-CRC ERR", ATH9K_PHYERR_CCK_HEADER_CRC);
-+	PHY_ERR("CCK-RATE ERR", ATH9K_PHYERR_CCK_RATE_ILLEGAL);
-+	PHY_ERR("CCK-SERVICE ERR", ATH9K_PHYERR_CCK_SERVICE);
-+	PHY_ERR("CCK-RESTART ERR", ATH9K_PHYERR_CCK_RESTART);
-+	PHY_ERR("CCK-LENGTH ERR", ATH9K_PHYERR_CCK_LENGTH_ILLEGAL);
-+	PHY_ERR("CCK-POWER-DROP ERR", ATH9K_PHYERR_CCK_POWER_DROP);
-+	PHY_ERR("HT-CRC ERR", ATH9K_PHYERR_HT_CRC_ERROR);
-+	PHY_ERR("HT-LENGTH ERR", ATH9K_PHYERR_HT_LENGTH_ILLEGAL);
-+	PHY_ERR("HT-RATE ERR", ATH9K_PHYERR_HT_RATE_ILLEGAL);
++	if (WARN_ON_ONCE(tx && !frame_buf))
++		return;
 +
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10d\n", "RSSI-CTL0",
-+			"%22s : %10d\n", "RSSI-CTL0",
- 			sc->debug.stats.rxstats.rs_rssi_ctl0);
--
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10d\n", "RSSI-CTL1",
-+			"%22s : %10d\n", "RSSI-CTL1",
- 			sc->debug.stats.rxstats.rs_rssi_ctl1);
--
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10d\n", "RSSI-CTL2",
-+			"%22s : %10d\n", "RSSI-CTL2",
- 			sc->debug.stats.rxstats.rs_rssi_ctl2);
--
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10d\n", "RSSI-EXT0",
-+			"%22s : %10d\n", "RSSI-EXT0",
- 			sc->debug.stats.rxstats.rs_rssi_ext0);
--
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10d\n", "RSSI-EXT1",
-+			"%22s : %10d\n", "RSSI-EXT1",
- 			sc->debug.stats.rxstats.rs_rssi_ext1);
--
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10d\n", "RSSI-EXT2",
-+			"%22s : %10d\n", "RSSI-EXT2",
- 			sc->debug.stats.rxstats.rs_rssi_ext2);
--
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10d\n", "Rx Antenna",
-+			"%22s : %10d\n", "Rx Antenna",
- 			sc->debug.stats.rxstats.rs_antenna);
--
--	PHY_ERR("UNDERRUN", ATH9K_PHYERR_UNDERRUN);
--	PHY_ERR("TIMING", ATH9K_PHYERR_TIMING);
--	PHY_ERR("PARITY", ATH9K_PHYERR_PARITY);
--	PHY_ERR("RATE", ATH9K_PHYERR_RATE);
--	PHY_ERR("LENGTH", ATH9K_PHYERR_LENGTH);
--	PHY_ERR("RADAR", ATH9K_PHYERR_RADAR);
--	PHY_ERR("SERVICE", ATH9K_PHYERR_SERVICE);
--	PHY_ERR("TOR", ATH9K_PHYERR_TOR);
--	PHY_ERR("OFDM-TIMING", ATH9K_PHYERR_OFDM_TIMING);
--	PHY_ERR("OFDM-SIGNAL-PARITY", ATH9K_PHYERR_OFDM_SIGNAL_PARITY);
--	PHY_ERR("OFDM-RATE", ATH9K_PHYERR_OFDM_RATE_ILLEGAL);
--	PHY_ERR("OFDM-LENGTH", ATH9K_PHYERR_OFDM_LENGTH_ILLEGAL);
--	PHY_ERR("OFDM-POWER-DROP", ATH9K_PHYERR_OFDM_POWER_DROP);
--	PHY_ERR("OFDM-SERVICE", ATH9K_PHYERR_OFDM_SERVICE);
--	PHY_ERR("OFDM-RESTART", ATH9K_PHYERR_OFDM_RESTART);
--	PHY_ERR("FALSE-RADAR-EXT", ATH9K_PHYERR_FALSE_RADAR_EXT);
--	PHY_ERR("CCK-TIMING", ATH9K_PHYERR_CCK_TIMING);
--	PHY_ERR("CCK-HEADER-CRC", ATH9K_PHYERR_CCK_HEADER_CRC);
--	PHY_ERR("CCK-RATE", ATH9K_PHYERR_CCK_RATE_ILLEGAL);
--	PHY_ERR("CCK-SERVICE", ATH9K_PHYERR_CCK_SERVICE);
--	PHY_ERR("CCK-RESTART", ATH9K_PHYERR_CCK_RESTART);
--	PHY_ERR("CCK-LENGTH", ATH9K_PHYERR_CCK_LENGTH_ILLEGAL);
--	PHY_ERR("CCK-POWER-DROP", ATH9K_PHYERR_CCK_POWER_DROP);
--	PHY_ERR("HT-CRC", ATH9K_PHYERR_HT_CRC_ERROR);
--	PHY_ERR("HT-LENGTH", ATH9K_PHYERR_HT_LENGTH_ILLEGAL);
--	PHY_ERR("HT-RATE", ATH9K_PHYERR_HT_RATE_ILLEGAL);
--
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "RX-Pkts-All",
-+			"%22s : %10u\n", "RX-Pkts-All",
- 			sc->debug.stats.rxstats.rx_pkts_all);
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "RX-Bytes-All",
-+			"%22s : %10u\n", "RX-Bytes-All",
- 			sc->debug.stats.rxstats.rx_bytes_all);
+ 	if (WARN_ON(!ifmgd->associated))
+ 		return;
  
- 	if (len > size)
--- 
-1.7.9
+@@ -1432,6 +1436,19 @@ static void ieee80211_set_disassoc(struc
+ 	}
+ 	mutex_unlock(&local->sta_mtx);
+ 
++	/* deauthenticate/disassociate now */
++	if (tx || frame_buf)
++		ieee80211_send_deauth_disassoc(sdata, bssid, stype, reason,
++					       tx, frame_buf);
++
++	/* flush out frame */
++	if (tx)
++		drv_flush(local, false);
++
++	/* remove AP and TDLS peers */
++	sta_info_flush(local, sdata);
++
++	/* finally reset all BSS / config parameters */
+ 	changed |= ieee80211_reset_erp_info(sdata);
+ 
+ 	ieee80211_led_assoc(local, 0);
+@@ -1471,10 +1488,6 @@ static void ieee80211_set_disassoc(struc
+ 	changed |= BSS_CHANGED_BSSID | BSS_CHANGED_HT;
+ 	ieee80211_bss_info_change_notify(sdata, changed);
+ 
+-	/* remove AP and TDLS peers */
+-	if (remove_sta)
+-		sta_info_flush(local, sdata);
+-
+ 	del_timer_sync(&sdata->u.mgd.conn_mon_timer);
+ 	del_timer_sync(&sdata->u.mgd.bcn_mon_timer);
+ 	del_timer_sync(&sdata->u.mgd.timer);
+@@ -1684,17 +1697,15 @@ static void __ieee80211_connection_loss(
+ 	printk(KERN_DEBUG "%s: Connection to AP %pM lost.\n",
+ 	       sdata->name, bssid);
+ 
+-	ieee80211_set_disassoc(sdata, true, false);
++	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
++			       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
++			       false, frame_buf);
+ 	mutex_unlock(&ifmgd->mtx);
+ 
+ 	/*
+ 	 * must be outside lock due to cfg80211,
+ 	 * but that's not a problem.
+ 	 */
+-	ieee80211_send_deauth_disassoc(sdata, bssid,
+-				       IEEE80211_STYPE_DEAUTH,
+-				       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
+-				       false, frame_buf);
+ 	cfg80211_send_deauth(sdata->dev, frame_buf, DEAUTH_DISASSOC_LEN);
+ 
+ 	mutex_lock(&local->mtx);
+@@ -1902,7 +1913,8 @@ ieee80211_rx_mgmt_deauth(struct ieee8021
+ 	printk(KERN_DEBUG "%s: deauthenticated from %pM (Reason: %u)\n",
+ 			sdata->name, bssid, reason_code);
+ 
+-	ieee80211_set_disassoc(sdata, true, false);
++	ieee80211_set_disassoc(sdata, 0, 0, false, NULL);
++
+ 	mutex_lock(&sdata->local->mtx);
+ 	ieee80211_recalc_idle(sdata->local);
+ 	mutex_unlock(&sdata->local->mtx);
+@@ -1932,10 +1944,12 @@ ieee80211_rx_mgmt_disassoc(struct ieee80
+ 	printk(KERN_DEBUG "%s: disassociated from %pM (Reason: %u)\n",
+ 			sdata->name, mgmt->sa, reason_code);
+ 
+-	ieee80211_set_disassoc(sdata, true, false);
++	ieee80211_set_disassoc(sdata, 0, 0, false, NULL);
++
+ 	mutex_lock(&sdata->local->mtx);
+ 	ieee80211_recalc_idle(sdata->local);
+ 	mutex_unlock(&sdata->local->mtx);
++
+ 	return RX_MGMT_CFG80211_DISASSOC;
+ }
+ 
+@@ -2699,15 +2713,14 @@ static void ieee80211_sta_connection_los
+ 	ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
+ 			  IEEE80211_STA_BEACON_POLL);
+ 
+-	ieee80211_set_disassoc(sdata, true, false);
++	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH, reason,
++			       false, frame_buf);
+ 	mutex_unlock(&ifmgd->mtx);
++
+ 	/*
+ 	 * must be outside lock due to cfg80211,
+ 	 * but that's not a problem.
+ 	 */
+-	ieee80211_send_deauth_disassoc(sdata, bssid,
+-				       IEEE80211_STYPE_DEAUTH,
+-				       reason, false, frame_buf);
+ 	cfg80211_send_deauth(sdata->dev, frame_buf, DEAUTH_DISASSOC_LEN);
+ 
+ 	mutex_lock(&local->mtx);
+@@ -3189,7 +3202,7 @@ int ieee80211_mgd_auth(struct ieee80211_
+ 	ifmgd->auth_data = auth_data;
+ 
+ 	if (ifmgd->associated)
+-		ieee80211_set_disassoc(sdata, true, false);
++		ieee80211_set_disassoc(sdata, 0, 0, false, NULL);
+ 
+ 	printk(KERN_DEBUG "%s: authenticate with %pM\n",
+ 	       sdata->name, req->bss->bssid);
+@@ -3267,7 +3280,7 @@ int ieee80211_mgd_assoc(struct ieee80211
+ 	mutex_lock(&ifmgd->mtx);
+ 
+ 	if (ifmgd->associated)
+-		ieee80211_set_disassoc(sdata, true, false);
++		ieee80211_set_disassoc(sdata, 0, 0, false, NULL);
+ 
+ 	if (ifmgd->auth_data && !ifmgd->auth_data->done) {
+ 		err = -EBUSY;
+@@ -3440,31 +3453,32 @@ int ieee80211_mgd_deauth(struct ieee8021
+ 			 struct cfg80211_deauth_request *req)
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+-	bool assoc_bss = false;
+ 	u8 frame_buf[DEAUTH_DISASSOC_LEN];
+ 
+ 	mutex_lock(&ifmgd->mtx);
+ 
+-	if (ifmgd->associated &&
+-	    memcmp(ifmgd->associated->bssid, req->bssid, ETH_ALEN) == 0) {
+-		ieee80211_set_disassoc(sdata, false, true);
+-		assoc_bss = true;
+-	} else if (ifmgd->auth_data) {
++	if (ifmgd->auth_data) {
+ 		ieee80211_destroy_auth_data(sdata, false);
+ 		mutex_unlock(&ifmgd->mtx);
+ 		return 0;
+ 	}
+-	mutex_unlock(&ifmgd->mtx);
+ 
+-	printk(KERN_DEBUG "%s: deauthenticating from %pM by local choice (reason=%d)\n",
++	printk(KERN_DEBUG
++	       "%s: deauthenticating from %pM by local choice (reason=%d)\n",
+ 	       sdata->name, req->bssid, req->reason_code);
+ 
+-	ieee80211_send_deauth_disassoc(sdata, req->bssid,
+-				       IEEE80211_STYPE_DEAUTH,
++	if (ifmgd->associated &&
++	    memcmp(ifmgd->associated->bssid, req->bssid, ETH_ALEN) == 0)
++		ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+ 				       req->reason_code, true, frame_buf);
++	else
++		ieee80211_send_deauth_disassoc(sdata, req->bssid,
++					       IEEE80211_STYPE_DEAUTH,
++					       req->reason_code, true,
++					       frame_buf);
++	mutex_unlock(&ifmgd->mtx);
++
+ 	__cfg80211_send_deauth(sdata->dev, frame_buf, DEAUTH_DISASSOC_LEN);
+-	if (assoc_bss)
+-		sta_info_flush(sdata->local, sdata);
+ 
+ 	mutex_lock(&sdata->local->mtx);
+ 	ieee80211_recalc_idle(sdata->local);
+@@ -3497,16 +3511,12 @@ int ieee80211_mgd_disassoc(struct ieee80
+ 	       sdata->name, req->bss->bssid, req->reason_code);
+ 
+ 	memcpy(bssid, req->bss->bssid, ETH_ALEN);
+-	ieee80211_set_disassoc(sdata, false, !req->local_state_change);
+-
++	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DISASSOC,
++			       req->reason_code, !req->local_state_change,
++			       frame_buf);
+ 	mutex_unlock(&ifmgd->mtx);
+ 
+-	ieee80211_send_deauth_disassoc(sdata, req->bss->bssid,
+-				       IEEE80211_STYPE_DISASSOC,
+-				       req->reason_code,
+-				       !req->local_state_change, frame_buf);
+ 	__cfg80211_send_disassoc(sdata->dev, frame_buf, DEAUTH_DISASSOC_LEN);
+-	sta_info_flush(sdata->local, sdata);
+ 
+ 	mutex_lock(&sdata->local->mtx);
+ 	ieee80211_recalc_idle(sdata->local);
+
 
