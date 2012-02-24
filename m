@@ -1,127 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22941 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753684Ab2BUJWp (ORCPT
+Received: from mms2.broadcom.com ([216.31.210.18]:4897 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752670Ab2BXKPi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Feb 2012 04:22:45 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Fri, 24 Feb 2012 05:15:38 -0500
+Message-ID: <4F47633F.6020804@broadcom.com> (sfid-20120224_111541_724152_EB0307F8)
+Date: Fri, 24 Feb 2012 11:15:27 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20291.25176.959512.155936@gargle.gargle.HOWL> (sfid-20120221_102248_883029_E0A12B91)
-Date: Tue, 21 Feb 2012 14:52:32 +0530
-To: <linux-wireless@vger.kernel.org>
-CC: <ath9k-devel@lists.ath9k.org>
-Subject: [RFC/WIP 05/22] ath9k: Use proper start/stop routines for BTCOEX
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Saul St. John" <saul.stjohn@gmail.com>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC] bcma: add support for on-chip OTP memory used for
+ SPROM storage
+References: <1330033977-5741-1-git-send-email-arend@broadcom.com>
+ <CACna6rwk8xbjbX7uisqAv_y_JYn636orR-VLgNQ908yOYS+i1A@mail.gmail.com>
+In-Reply-To: <CACna6rwk8xbjbX7uisqAv_y_JYn636orR-VLgNQ908yOYS+i1A@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ath9k.h |    3 ++-
- drivers/net/wireless/ath/ath9k/gpio.c  |   31 ++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath9k/main.c  |   19 ++-----------------
- 3 files changed, 34 insertions(+), 19 deletions(-)
+On 02/24/2012 08:52 AM, Rafał Miłecki wrote:
+> 2012/2/23 Arend van Spriel<arend@broadcom.com>:
+>> Wireless Broadcom chips can have either their SPROM data stored
+>> on either external SPROM or on-chip OTP memory. Both are accessed
+>> through the same register space. This patch adds support for the
+>> on-chip OTP memory.
+>>
+>> Tested with:
+>> BCM43224 OTP and SPROM
+>> BCM4331 SPROM
+>> BCM4313 OTP
+>>
+>> This patch is in response so gmane article [1].
+>>
+>> [1] http://article.gmane.org/gmane.linux.kernel.wireless.general/85426
+>
+> Great, thanks a lot for your work! I'll give it a try with my cards.
+>
+> May I ask how did you test this with BCM4331? What card (slot) /
+> machine did you use for your test?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index aa60983..2ede897 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -456,7 +456,8 @@ struct ath_btcoex {
- 
- int ath9k_init_btcoex(struct ath_softc *sc);
- void ath9k_deinit_btcoex(struct ath_softc *sc);
--int ath_init_btcoex_timer(struct ath_softc *sc);
-+void ath9k_start_btcoex(struct ath_softc *sc);
-+void ath9k_stop_btcoex(struct ath_softc *sc);
- void ath9k_btcoex_timer_resume(struct ath_softc *sc);
- void ath9k_btcoex_timer_pause(struct ath_softc *sc);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index ef23624..1ca2ca5 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -245,7 +245,7 @@ static void ath_btcoex_no_stomp_timer(void *arg)
- 	ath9k_ps_restore(sc);
- }
- 
--int ath_init_btcoex_timer(struct ath_softc *sc)
-+static int ath_init_btcoex_timer(struct ath_softc *sc)
- {
- 	struct ath_btcoex *btcoex = &sc->btcoex;
- 
-@@ -318,6 +318,35 @@ void ath9k_btcoex_timer_pause(struct ath_softc *sc)
- 	btcoex->hw_timer_enabled = false;
- }
- 
-+void ath9k_start_btcoex(struct ath_softc *sc)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	if ((ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_NONE) &&
-+	    !ah->btcoex_hw.enabled) {
-+		if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI))
-+			ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
-+						   AR_STOMP_LOW_WLAN_WGHT);
-+		ath9k_hw_btcoex_enable(ah);
-+
-+		if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_3WIRE)
-+			ath9k_btcoex_timer_resume(sc);
-+	}
-+}
-+
-+void ath9k_stop_btcoex(struct ath_softc *sc)
-+{
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	if (ah->btcoex_hw.enabled &&
-+	    ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_NONE) {
-+		ath9k_hw_btcoex_disable(ah);
-+		if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_3WIRE)
-+			ath9k_btcoex_timer_pause(sc);
-+		ath_mci_flush_profile(&sc->btcoex.mci);
-+	}
-+}
-+
- void ath9k_deinit_btcoex(struct ath_softc *sc)
- {
-         if ((sc->btcoex.no_stomp_timer) &&
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index ec82e92..ee5335c 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1079,16 +1079,7 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 
- 	spin_unlock_bh(&sc->sc_pcu_lock);
- 
--	if ((ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_NONE) &&
--	    !ah->btcoex_hw.enabled) {
--		if (!(sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_MCI))
--			ath9k_hw_btcoex_set_weight(ah, AR_BT_COEX_WGHT,
--						   AR_STOMP_LOW_WLAN_WGHT);
--		ath9k_hw_btcoex_enable(ah);
--
--		if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_3WIRE)
--			ath9k_btcoex_timer_resume(sc);
--	}
-+	ath9k_start_btcoex(sc);
- 
- 	if (ah->caps.pcie_lcr_extsync_en && common->bus_ops->extn_synch_en)
- 		common->bus_ops->extn_synch_en(common);
-@@ -1189,13 +1180,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 	/* Ensure HW is awake when we try to shut it down. */
- 	ath9k_ps_wakeup(sc);
- 
--	if (ah->btcoex_hw.enabled &&
--	    ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_NONE) {
--		ath9k_hw_btcoex_disable(ah);
--		if (ath9k_hw_get_btcoex_scheme(ah) == ATH_BTCOEX_CFG_3WIRE)
--			ath9k_btcoex_timer_pause(sc);
--		ath_mci_flush_profile(&sc->btcoex.mci);
--	}
-+	ath9k_stop_btcoex(sc);
- 
- 	spin_lock_bh(&sc->sc_pcu_lock);
- 
--- 
-1.7.9.1
+It is a half mini PCIe card used in my test laptop, ie. Dell Latitude E6410.
+
+>> +       if (bus->drv_cc.core->id.rev>= 31) {
+>> +               if (!(bus->drv_cc.capabilities&  BCMA_CC_CAP_SPROM))
+>> +                               return false;
+>
+> One less indent will be fine ;)
+>
+
+Let's blame my editor :-p. Will fix it.
+
+>> +               srom_control = bcma_read32(bus->drv_cc.core,
+>> +                                          BCMA_CC_SROM_CONTROL);
+>> +               return !!(srom_control&  BCMA_CC_SROM_CONTROL_PRESENT);
+>
+> Does any compiler complain on returning sth like 0xF as a bool?
+>
+
+Probably not. Just being overly correct, I guess.
+
+>> +       return (chip_status&  present_mask) == present_mask;
+>
+> Same :)
+>
+
+Same.
+
+>
+>> +       u16 offset = BCMA_CC_SPROM;
+>
+> I guess we can drop second define offset now?
+>
+
+Yes. Will do that?
+
+Gr. AvS
 
