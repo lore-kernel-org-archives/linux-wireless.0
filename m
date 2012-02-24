@@ -1,41 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:48649 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754336Ab2B0UUP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 15:20:15 -0500
-Received: by wibhm11 with SMTP id hm11so1538287wib.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2012 12:20:14 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1330364928.12612.15.camel@wwguy-huron>
-References: <1330350725-5815-1-git-send-email-sgruszka@redhat.com>
-	<1330353016.12612.13.camel@wwguy-huron>
-	<CANUX_P2Xia4HgF_ooUCTRN0+EqX8dx9Wc1rFiDbiNBdgzu9k5Q@mail.gmail.com>
-	<1330364928.12612.15.camel@wwguy-huron>
-Date: Mon, 27 Feb 2012 22:20:14 +0200
-Message-ID: <CANUX_P3JObf0OzAT4L5w7ksry89Ovz2QyAde+DZZUMR6eBt5Hw@mail.gmail.com> (sfid-20120227_212026_578034_F03C20F5)
-Subject: Re: [PATCH -iwlwifi] iwlwifi: make tx_cmd_pool kmem cache global
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
+Received: from mga11.intel.com ([192.55.52.93]:61309 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754567Ab2BXP4k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Feb 2012 10:56:40 -0500
+Subject: Re: [PATCH 1/6] iwlwifi: dump stack when fail to gain access to
+ the device
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: linville@tuxdriver.com, Intel Linux Wireless <ilw@linux.intel.com>,
 	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+In-Reply-To: <20120224093232.GA14496@redhat.com>
+References: <1329992168-19990-1-git-send-email-sgruszka@redhat.com>
+	 <1330008917.7290.92.camel@wwguy-huron>  <20120224093232.GA14496@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 24 Feb 2012 06:45:43 -0800
+Message-ID: <1330094743.7290.96.camel@wwguy-huron> (sfid-20120224_165643_875467_2922CAE6)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 27, 2012 at 19:48, Guy, Wey-Yi <wey-yi.w.guy@intel.com> wrote:
-> On Mon, 2012-02-27 at 19:55 +0200, Emmanuel Grumbach wrote:
->> I guess that Sanislaw patch is defining one single pool for all the
->> devices, which means that we won't try to allocate a few pools with
->> the same name, which leads to this warning.
->>
-> That I got it, but is really the "only" way to do it, I am really not a
-> fan of global variable.
->
-I guess we can have a pool for "iwl_dev_cmd_<PCI_DEV_ID>" or something
-like this. But I don't see what is the problem with the global
-variable besides the namespace pollution which is not very problematic
-since we don't export this variable. It is a singleton in terms of
-"Software design pattern" (I hate these buzzwords), and this is the
-way to implement this in C AFAICT.
+Hi Stanislaw,
+
+On Fri, 2012-02-24 at 10:32 +0100, Stanislaw Gruszka wrote:
+> Hi
+> 
+> On Thu, Feb 23, 2012 at 06:55:17AM -0800, Guy, Wey-Yi wrote:
+> > We are doing major driver re-factor works internally, I understand your
+> > patches are important and these patches improve the quality of the
+> > driver. I just wonder if it is ok for you to allow us to merge your
+> > patches into our internal development tree first, then I will push these
+> > patches upstream for you. By doing so, we can make sure your patches can
+> > fully integrated with our on-going driver re-factor work and not cause
+> > any conflict.
+> No problem with that.
+> 
+Thank you so much for the understanding, now is critical time for us, we
+are doing huge amount of re-factor works and I will like to make it as
+smooth and as quick as possible.
+
+btw, are you going to send another updated version of patches set to
+address Johannes's comments?
+
+Best Regards
+Wey
+
+
