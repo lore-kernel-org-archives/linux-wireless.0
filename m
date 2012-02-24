@@ -1,56 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:10489 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755253Ab2BYJL0 (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:53390 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751890Ab2BXFV7 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Feb 2012 04:11:26 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH V2 2/5] ath6kl: Initialize netdev hw_features for every interface
-Date: Sat, 25 Feb 2012 14:41:05 +0530
-Message-ID: <1330161068-8413-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120225_101205_450727_137BC91C)
-In-Reply-To: <1330161068-8413-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1330161068-8413-1-git-send-email-vthiagar@qca.qualcomm.com>
+	Fri, 24 Feb 2012 00:21:59 -0500
+Received: by vcge1 with SMTP id e1so1368174vcg.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 21:21:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1330050621-8955-1-git-send-email-ashok@cozybit.com>
+References: <1330050621-8955-1-git-send-email-ashok@cozybit.com>
+From: Javier Cardona <javier@cozybit.com>
+Date: Thu, 23 Feb 2012 21:21:38 -0800
+Message-ID: <CAPjQAd9vwbSQuSvWbXvgrMeKt0K7eVx_pxO7K-2xAMnQGVj=Kw@mail.gmail.com> (sfid-20120224_062203_647971_88CD4417)
+Subject: Re: [PATCH] {nl,cfg,mac}80211: Enable control quality monitoring for mesh
+To: Ashok Nagarajan <ashok@cozybit.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move netdev->hw_features setting from ath6kl_core_init() to
-init_netdev() so that it is done for every interface.
+Ashok,
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/core.c |    2 --
- drivers/net/wireless/ath/ath6kl/main.c |    2 ++
- 2 files changed, 2 insertions(+), 2 deletions(-)
+You'll have to resubmit, see inline.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
-index 8dc207e..930ff9d 100644
---- a/drivers/net/wireless/ath/ath6kl/core.c
-+++ b/drivers/net/wireless/ath/ath6kl/core.c
-@@ -156,8 +156,6 @@ int ath6kl_core_init(struct ath6kl *ar)
- 
- 	set_bit(FIRST_BOOT, &ar->flag);
- 
--	ndev->hw_features |= NETIF_F_IP_CSUM | NETIF_F_RXCSUM;
--
- 	ret = ath6kl_init_hw_start(ar);
- 	if (ret) {
- 		ath6kl_err("Failed to start hardware: %d\n", ret);
-diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
-index d463a18..19237bb 100644
---- a/drivers/net/wireless/ath/ath6kl/main.c
-+++ b/drivers/net/wireless/ath/ath6kl/main.c
-@@ -1185,5 +1185,7 @@ void init_netdev(struct net_device *dev)
- 				sizeof(struct wmi_data_hdr) + HTC_HDR_LENGTH
- 				+ WMI_MAX_TX_META_SZ + ATH6KL_HTC_ALIGN_BYTES;
- 
-+	dev->hw_features |= NETIF_F_IP_CSUM | NETIF_F_RXCSUM;
-+
- 	return;
- }
+On Thu, Feb 23, 2012 at 6:30 PM, Ashok Nagarajan <ashok@cozybit.com> wrote:
+> Mesh peer links are established only if average rssi of the peer
+> candidate satisfies the threshold. This is not in 802.11s specification
+> but was requested by David Fulgham, an open80211s user. This is a way to avoid
+> marginal peer links with stations that are barely within range.
+>
+> Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+> Signed-off-by: Javier Cardona <javier@cozybit.com>
+> ---
+>  drivers/net/wireless/mac80211_hwsim.c |    1 +
+>  net/mac80211/cfg.c                    |    1 +
+>  net/mac80211/mesh_plink.c             |   22 +++++++++++++++++++++-
+>  net/wireless/nl80211.c                |    3 ++-
+>  4 files changed, 25 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+> index 4b9e730..ca7d5a6 100644
+> --- a/drivers/net/wireless/mac80211_hwsim.c
+> +++ b/drivers/net/wireless/mac80211_hwsim.c
+> @@ -729,6 +729,7 @@ static int mac80211_hwsim_add_interface(struct ieee80211_hw *hw,
+>                    __func__, ieee80211_vif_type_p2p(vif),
+>                    vif->addr);
+>        hwsim_set_magic(vif);
+> +       vif->driver_flags |= IEEE80211_VIF_SUPPORTS_CQM_RSSI;
+>        return 0;
+>  }
+>
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index f7eb25a..d50258d 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -1853,6 +1853,7 @@ static int ieee80211_set_cqm_rssi_config(struct wiphy *wiphy,
+>
+>        /* tell the driver upon association, unless already associated */
+>        if (sdata->u.mgd.associated &&
+> +           sdata->vif.type != NL80211_IFTYPE_STATION &&
+
+The logic and the order are wrong.  This needs to be:
+
++        if (sdata->u.mgd.associated &&
++        if (sdata->vif.type == NL80211_IFTYPE_STATION &&
+              sdata->u.mgd.associated &&
+
+This prevents checking sdata->u.mgd.associated for vifs that are not
+of managed type.
+
+>            sdata->vif.driver_flags & IEEE80211_VIF_SUPPORTS_CQM_RSSI)
+>                ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_CQM);
+>
+> diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+> index 8806e5e..6144f35 100644
+> --- a/net/mac80211/mesh_plink.c
+> +++ b/net/mac80211/mesh_plink.c
+> @@ -31,6 +31,17 @@
+>  #define dot11MeshHoldingTimeout(s) (s->u.mesh.mshcfg.dot11MeshHoldingTimeout)
+>  #define dot11MeshMaxPeerLinks(s) (s->u.mesh.mshcfg.dot11MeshMaxPeerLinks)
+>
+> +/*
+> + * NOTE: Mesh peer links are established only if average rssi of the peer
+> + * candidate satisfies the threshold. sta_meets_rssi_treshold doesn't use
+> + * hysteresis as fluctuations around threshold have no adverse effects.
+> + */
+> +
+> +#define sta_meets_rssi_threshold(sta, sdata) \
+> +               (sdata->vif.bss_conf.cqm_rssi_thold == 0 || \
+> +               ((s8) -ewma_read(&sta->avg_signal)) > \
+> +                sdata->vif.bss_conf.cqm_rssi_thold)
+> +
+>  enum plink_event {
+>        PLINK_UNDEFINED,
+>        OPN_ACPT,
+> @@ -301,7 +312,8 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
+>        if (mesh_peer_accepts_plinks(elems) &&
+>                        sta->plink_state == NL80211_PLINK_LISTEN &&
+>                        sdata->u.mesh.accepting_plinks &&
+> -                       sdata->u.mesh.mshcfg.auto_open_plinks)
+> +                       sdata->u.mesh.mshcfg.auto_open_plinks &&
+> +                       sta_meets_rssi_threshold(sta, sdata))
+>                mesh_plink_open(sta);
+>
+>        rcu_read_unlock();
+> @@ -531,6 +543,14 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+>                return;
+>        }
+>
+> +       if (ftype == WLAN_SP_MESH_PEERING_OPEN &&
+> +           !sta_meets_rssi_threshold(sta, sdata)) {
+> +               mpl_dbg("Mesh plink: %pM does not meet rssi threshold\n",
+> +                       sta->sta.addr);
+> +               rcu_read_unlock();
+> +               return;
+> +       }
+> +
+>        if (sta && !test_sta_flag(sta, WLAN_STA_AUTH)) {
+>                mpl_dbg("Mesh plink: Action frame from non-authed peer\n");
+>                rcu_read_unlock();
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 1998c36..6feff8c 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -5796,7 +5796,8 @@ static int nl80211_set_cqm_rssi(struct genl_info *info,
+>                return -EOPNOTSUPP;
+>
+>        if (wdev->iftype != NL80211_IFTYPE_STATION &&
+> -           wdev->iftype != NL80211_IFTYPE_P2P_CLIENT)
+> +           wdev->iftype != NL80211_IFTYPE_P2P_CLIENT &&
+> +           wdev->iftype != NL80211_IFTYPE_MESH_POINT)
+>                return -EOPNOTSUPP;
+>
+>        return rdev->ops->set_cqm_rssi_config(wdev->wiphy, dev,
+> --
+> 1.7.0.4
+>
+
+
+
 -- 
-1.7.0.4
-
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
