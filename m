@@ -1,100 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:57810 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754409Ab2BCAQw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 19:16:52 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
+Received: from mail-we0-f174.google.com ([74.125.82.174]:34440 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755121Ab2BXHwp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Feb 2012 02:52:45 -0500
+Received: by werb13 with SMTP id b13so1250347wer.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 23:52:39 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1330033977-5741-1-git-send-email-arend@broadcom.com>
+References: <1330033977-5741-1-git-send-email-arend@broadcom.com>
+Date: Fri, 24 Feb 2012 08:52:39 +0100
+Message-ID: <CACna6rwk8xbjbX7uisqAv_y_JYn636orR-VLgNQ908yOYS+i1A@mail.gmail.com> (sfid-20120224_085248_646452_5D7A06C0)
+Subject: Re: [RFC] bcma: add support for on-chip OTP memory used for SPROM storage
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
 Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 04/28] iwlwifi: move the shrd memory from priv
-Date: Thu,  2 Feb 2012 15:08:55 -0800
-Message-Id: <1328224159-18134-5-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120203_011740_996895_186229EC)
-In-Reply-To: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
+	"Saul St. John" <saul.stjohn@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+2012/2/23 Arend van Spriel <arend@broadcom.com>:
+> Wireless Broadcom chips can have either their SPROM data stored
+> on either external SPROM or on-chip OTP memory. Both are accessed
+> through the same register space. This patch adds support for the
+> on-chip OTP memory.
+>
+> Tested with:
+> BCM43224 OTP and SPROM
+> BCM4331 SPROM
+> BCM4313 OTP
+>
+> This patch is in response so gmane article [1].
+>
+> [1] http://article.gmane.org/gmane.linux.kernel.wireless.general/85426
 
-Allocating the shrd area dynamically will allow more agility
-while revamping the flows.
+Great, thanks a lot for your work! I'll give it a try with my cards.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c |    4 +---
- drivers/net/wireless/iwlwifi/iwl-dev.h |    1 -
- drivers/net/wireless/iwlwifi/iwl-pci.c |   10 ++++++++++
- 3 files changed, 11 insertions(+), 4 deletions(-)
+May I ask how did you test this with BCM4331? What card (slot) /
+machine did you use for your test?
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index f3bd6a3..b42be30 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1780,9 +1780,7 @@ int iwl_probe(struct iwl_bus *bus, const struct iwl_trans_ops *trans_ops,
- 	}
- 
- 	priv = hw->priv;
--	priv->shrd = &priv->_shrd;
--	bus->shrd = priv->shrd;
--	priv->shrd->bus = bus;
-+	priv->shrd = bus->shrd;
- 	priv->shrd->priv = priv;
- 
- 	priv->shrd->trans = trans_ops->alloc(priv->shrd);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
-index af84600..fff5b62 100644
---- a/drivers/net/wireless/iwlwifi/iwl-dev.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
-@@ -821,7 +821,6 @@ struct iwl_wipan_noa_data {
- struct iwl_priv {
- 
- 	/*data shared among all the driver's layers */
--	struct iwl_shared _shrd;
- 	struct iwl_shared *shrd;
- 
- 	/* ieee device used by generic ieee processing code */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
-index 2c46063..a3ca0a7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-pci.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
-@@ -374,10 +374,18 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (!bus) {
- 		dev_printk(KERN_ERR, &pdev->dev,
- 			   "Couldn't allocate iwl_pci_bus");
-+		return -ENOMEM;
-+	}
-+
-+	bus->shrd = kzalloc(sizeof(*bus->shrd), GFP_KERNEL);
-+	if (!bus->shrd) {
-+		dev_printk(KERN_ERR, &pdev->dev,
-+			   "Couldn't allocate iwl_shared");
- 		err = -ENOMEM;
- 		goto out_no_pci;
- 	}
- 
-+	bus->shrd->bus = bus;
- 	pci_bus = IWL_BUS_GET_PCI_BUS(bus);
- 	pci_bus->pci_dev = pdev;
- 
-@@ -472,6 +480,7 @@ out_pci_release_regions:
- out_pci_disable_device:
- 	pci_disable_device(pdev);
- out_no_pci:
-+	kfree(bus->shrd);
- 	kfree(bus);
- 	return err;
- }
-@@ -491,6 +500,7 @@ static void __devexit iwl_pci_remove(struct pci_dev *pdev)
- 	pci_disable_device(pci_dev);
- 	pci_set_drvdata(pci_dev, NULL);
- 
-+	kfree(bus->shrd);
- 	kfree(bus);
- }
- 
+
+> +       if (bus->drv_cc.core->id.rev >= 31) {
+> +               if (!(bus->drv_cc.capabilities & BCMA_CC_CAP_SPROM))
+> +                               return false;
+
+One less indent will be fine ;)
+
+
+> +               srom_control = bcma_read32(bus->drv_cc.core,
+> +                                          BCMA_CC_SROM_CONTROL);
+> +               return !!(srom_control & BCMA_CC_SROM_CONTROL_PRESENT);
+
+Does any compiler complain on returning sth like 0xF as a bool?
+
+
+> +       return (chip_status & present_mask) == present_mask;
+
+Same :)
+
+
+> +       u16 offset = BCMA_CC_SPROM;
+
+I guess we can drop second define offset now?
+
+
 -- 
-1.7.0.4
-
+Rafał
