@@ -1,69 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:33045 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758014Ab2BIXIk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 18:08:40 -0500
-Message-ID: <1328828918.29329.21.camel@joe2Laptop> (sfid-20120210_000845_270016_2BC46301)
-Subject: RE: [PATCH net-next] drivers/net: Remove boolean comparisons to
- true/false
-From: Joe Perches <joe@perches.com>
-To: "Allan, Bruce W" <bruce.w.allan@intel.com>,
-	Julia Lawall <julia.lawall@lip6.fr>
-Cc: "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-	David Miller <davem@davemloft.net>,
-	"David.Laight@ACULAB.COM" <David.Laight@ACULAB.COM>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 09 Feb 2012 15:08:38 -0800
-In-Reply-To: <804857E1F29AAC47BF68C404FC60A1842709C1@ORSMSX102.amr.corp.intel.com>
-References: <1328783282-17760-5-git-send-email-jeffrey.t.kirsher@intel.com>
-	 <AE90C24D6B3A694183C094C60CF0A2F6026B6E62@saturn3.aculab.com>
-	 <20120209.133413.349832435589531136.davem@davemloft.net>
-	 <1328822243.29329.11.camel@joe2Laptop>
-	 <1328822935.2242.1.camel@jtkirshe-mobl>
-	 <804857E1F29AAC47BF68C404FC60A1842709C1@ORSMSX102.amr.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mms3.broadcom.com ([216.31.210.19]:4586 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752588Ab2BXKj3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Feb 2012 05:39:29 -0500
+Message-ID: <4F4768D0.4030109@broadcom.com> (sfid-20120224_113946_190994_AFCFACFE)
+Date: Fri, 24 Feb 2012 11:39:12 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Saul St. John" <saul.stjohn@gmail.com>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC] bcma: add support for on-chip OTP memory used for
+ SPROM storage
+References: <1330033977-5741-1-git-send-email-arend@broadcom.com>
+ <CACna6rwk8xbjbX7uisqAv_y_JYn636orR-VLgNQ908yOYS+i1A@mail.gmail.com>
+In-Reply-To: <CACna6rwk8xbjbX7uisqAv_y_JYn636orR-VLgNQ908yOYS+i1A@mail.gmail.com>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-02-09 at 22:36 +0000, Allan, Bruce W wrote:
-> > On Thu, 2012-02-09 at 13:17 -0800, Joe Perches wrote:
-> > > Booleans should not be compared to true or false
-> > > but be directly tested or tested with !.
-> > >
-> > > Done via cocci script:
-> > >
-> > > @@
-> > > bool t;
-> > > @@
-> > > - t == true
-> > > + t
-> > > @@
-> > > bool t;
-> > > @@
-> > > - t != true
-> > > + !t
-> > > @@
-> > > bool t;
-> > > @@
-> > > - t == false
-> > > + !t
-> > > @@
-> > > bool t;
-> > > @@
-> > > - t != false
-> > > + t
+On 02/24/2012 08:52 AM, Rafał Miłecki wrote:
+>> +               srom_control = bcma_read32(bus->drv_cc.core,
+>> >  +                                          BCMA_CC_SROM_CONTROL);
+>> >  +               return !!(srom_control&  BCMA_CC_SROM_CONTROL_PRESENT);
+> Does any compiler complain on returning sth like 0xF as a bool?
+>
 
-> Has the cocci script been (or will it be) added to ./scripts/coccinelle?
+The compiler probably will not complain, but the caller could have 
+following:
 
-These are pretty trivial scripts.
+if (bcma_sprom_ext_available(bus) == true) {
+	return;
+}
+BUG();
 
-You're welcome to add it or combine it
-with the one Rusty did to convert
-bool foo = 1
-to
-bool foo = true
+I guess you would see the BUG show up in your log with the function 
+returning 0xF.
 
-https://lkml.org/lkml/2011/12/19/15
+Gr. AvS
 
