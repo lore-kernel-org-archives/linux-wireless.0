@@ -1,96 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:33521 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752055Ab2BVHKH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 02:10:07 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:45939 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755680Ab2BXEZa convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Feb 2012 23:25:30 -0500
+Received: by obcva7 with SMTP id va7so2328806obc.19
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 20:25:29 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20292.38085.720657.522760@gargle.gargle.HOWL> (sfid-20120222_081028_636112_A614192A)
-Date: Wed, 22 Feb 2012 12:39:57 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 00/26] ath9k/ath9k_htc BTCOEX cleanup
+In-Reply-To: <CAB=NE6XHpOdKsTFM3x_aMF7+jL6NKuB9_wS0eQRBYqAbQVw1ww@mail.gmail.com>
+References: <20120221060932.8A38C20517@glenhelen.mtv.corp.google.com>
+	<20120221131946.AC1AD20578@glenhelen.mtv.corp.google.com>
+	<1330004364.3448.8.camel@jlt3.sipsolutions.net>
+	<CA+yqC4bcLz5xBTqOV_C4cjm4MDwEaifbJNi9dCSh7CTbjPiXBg@mail.gmail.com>
+	<1330009145.3448.13.camel@jlt3.sipsolutions.net>
+	<CAMcMvshr_1gx0y55ne5wia03OaSASZAh1vvJyeY02v1yTwU4aQ@mail.gmail.com>
+	<CAB=NE6XHpOdKsTFM3x_aMF7+jL6NKuB9_wS0eQRBYqAbQVw1ww@mail.gmail.com>
+Date: Thu, 23 Feb 2012 20:25:29 -0800
+Message-ID: <CA+yqC4az=eOHPZOj2PBc3VMVJGiRadueuvM9+Y6S+r+GT7YKuw@mail.gmail.com> (sfid-20120224_052533_563892_FF016814)
+Subject: Re: [RFCv2] mac80211: Don't let regulatory make us deaf
+From: Sam Leffler <sleffler@google.com>
+To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Cc: Paul Stewart <pstew@chromium.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series cleans up the existing BTCOEX code in ath9k/ath9k_htc.
+On Thu, Feb 23, 2012 at 5:53 PM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
+> On Thu, Feb 23, 2012 at 7:14 AM, Paul Stewart <pstew@chromium.org> wrote:
+>> On Thu, Feb 23, 2012 at 6:59 AM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>>>
+>>> On Thu, 2012-02-23 at 06:53 -0800, Sam Leffler wrote:
+>>> > On Thu, Feb 23, 2012 at 5:39 AM, Johannes Berg
+>>> > <johannes@sipsolutions.net> wrote:
+>>> > > On Mon, 2012-02-20 at 21:25 -0800, Paul Stewart wrote:
+>>> > >> When regulatory information changes our HT behavior (e.g,
+>>> > >> when we get a country code from the AP we have just associated
+>>> > >> with), we should use this information to change the power with
+>>> > >> which we transmit, and what channels we transmit.  Sometimes
+>>> > >> the channel parameters we derive from regulatory information
+>>> > >> contradicts the parameters we used in association.  For example,
+>>> > >> we could have associated specifying HT40, but the regulatory
+>>> > >> rules we apply may forbid HT40 operation.
+>>> > >>
+>>> > >> In the situation above, we should reconfigure ourselves to
+>>> > >> transmit in HT20 only, however it makes no sense for us to
+>>> > >> disable receive in HT40, since if we associated with these
+>>> > >> parameters, the AP has every reason to expect we can and
+>>> > >> will receive packets this way.  The code in mac80211 does
+>>> > >> not have the capability of sending the appropriate action
+>>> > >> frames to signal a change in HT behaviour so the AP has
+>>> > >> no clue we can no longer receive frames encoded this way.
+>>> > >> In some broken AP implementations, this can leave us
+>>> > >> effectively deaf if the AP never retries in lower HT rates.
+>>> > >>
+>>> > >> This change breaks up the channel_type parameter in the
+>>> > >> ieee80211_enable_ht function into a separate receive and
+>>> > >> transmit part.  It honors the channel flags set by regulatory
+>>> > >> in order to configure the rate control algorithm, but uses
+>>> > >> the capability flags to configure the channel on the radio,
+>>> > >> since these were used in association to set the AP's transmit
+>>> > >> rate.
+>>> > >
+>>> > > Quite the stupid APs, obviously ...
+>>> >
+>>> > Actually the AP is operating correctly (modulo the question of whether
+>>> > HT40 may be used in kr).
+>>>
+>>> Ah, yes. I was thinking the AP was actually saying you can't use 40 MHz,
+>>> but it's obviously just saying that you're in KR and our database says
+>>> you then can't use 40 Mhz...
+>>
+>> More succinctly, Sam is posing the possibility that a STA we should
+>> ignore regulatory on TX as well as RX in this situation, since the AP
+>> clearly negotiated HT40 with us.
+>
+> If the AP was right and we were allowed to use this that'd be fine but
+> consider the case where the AP is wrong, they'd we'd be doing the
+> wrong thing. If the AP believes HT40 is allowed but our wireless-regdb
+> disagrees we trust our wireless-regdb more, by design.
+>
+> Did I understand your question correctly?
 
-Proper abstraction is added and a facility (CONFIG_ATH9K_BTCOEX_SUPPORT)
-to optionally disable BTCOEX support at compile time is properly used.
-Both ath9k and ath9k_htc make use of the same config option.
-MCI, which is an AR9462-specific feature has been cleaned up a little,
-more needs to be done, though. The checks for MCI/BTCOEX which were
-present in various places have been removed since it makes the BT code
-a tad hard to read and makes adding support for future chips/profiles
-difficult.
+Yes, the point is that one must trust the AP otherwise you potentially
+have a sta that is not operating correctly within the BSS.  There are
+obvious limits (e.g. you don't raise the tx power cap above the h/w
+limit) but in this case it makes no sense to have a sta sticking to
+HT20 when the AP says the BSS is using HT40.  The local regulatory
+state should be used when starting up a master (ibss or infra) but
+overriding an AP in most cases will result in confusion.
 
-This series has 4 patches over the last RFC series cleaning up MCI in
-the driver core.
-
-If you would like a single mbox file of all the pending patches,
-please use: http://sujith.github.com/patches/wl/wl-ath9k-Feb-22-2012.patch
-
-Sujith
-
-Sujith Manoharan (26):
-  ath9k: Remove AR9462 v1.0 support
-  ath9k: Cleanup MCI init/deinit routines
-  ath9k: Initialize MCI params using a helper
-  ath9k: Move BTCOEX init/deinit functions to gpio.c
-  ath9k: Use proper start/stop routines for BTCOEX
-  ath9k: Process BTCOEX interrupts using a helper
-  ath9k: Calculate ampdu limit using a helper
-  ath9k: Use CONFIG_ATH9K_BTCOEX_SUPPORT
-  ath9k: Initialize BTCOEX scheme using a helper
-  ath9k_hw: Use a helper function to get MCI ISR
-  ath9k_hw: Handle MCI power state using a helper
-  ath9k_hw: Setup MCI calibration using a helper
-  ath9k_hw: Cleanup MCI bits from ath9k_hw_reset()
-  ath9k_hw: Cleanup MCI bits from hw.h
-  ath9k_hw: Cleanup MCI function declarations
-  ath9k_hw: Use CONFIG_ATH9K_BTCOEX_SUPPORT
-  ath9k_htc: Start/stop btcoex using a helper
-  ath9k_htc: Init BTCOEX inside htc_drv_gpio.c
-  ath9k_htc: Use CONFIG_ATH9K_BTCOEX_SUPPORT
-  ath9k: Remove ATH_BTCOEX_CFG_NONE checks
-  ath9k: Remove ATH9K_HW_CAP_MCI checks
-  ath9k: Modify ATH9K_BTCOEX_SUPPORT
-  ath9k_hw: Cleanup MCI reset routine
-  ath9k_hw: Remove HW revision checks
-  ath9k_hw: MCI whitespace/debug cleanup
-  ath9k: Cleanup mci.c
-
- drivers/net/wireless/ath/ath9k/Kconfig             |   16 +-
- drivers/net/wireless/ath/ath9k/Makefile            |   10 +-
- drivers/net/wireless/ath/ath9k/ar9003_calib.c      |   42 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c     |    4 -
- drivers/net/wireless/ath/ath9k/ar9003_hw.c         |   88 +--
- drivers/net/wireless/ath/ath9k/ar9003_mac.c        |   30 +-
- drivers/net/wireless/ath/ath9k/ar9003_mci.c        | 1250 ++++++++---------
- drivers/net/wireless/ath/ath9k/ar9003_mci.h        |  231 ++++
- drivers/net/wireless/ath/ath9k/ar9003_phy.h        |    6 +-
- .../net/wireless/ath/ath9k/ar9462_1p0_initvals.h   | 1439 --------------------
- drivers/net/wireless/ath/ath9k/ath9k.h             |   35 +-
- drivers/net/wireless/ath/ath9k/btcoex.c            |   77 +-
- drivers/net/wireless/ath/ath9k/btcoex.h            |    4 +-
- drivers/net/wireless/ath/ath9k/gpio.c              |  123 ++-
- drivers/net/wireless/ath/ath9k/htc.h               |   21 +-
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c      |   73 +-
- drivers/net/wireless/ath/ath9k/htc_drv_init.c      |   32 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c      |   15 +-
- drivers/net/wireless/ath/ath9k/hw.c                |  178 +---
- drivers/net/wireless/ath/ath9k/hw.h                |  208 +---
- drivers/net/wireless/ath/ath9k/init.c              |   67 +-
- drivers/net/wireless/ath/ath9k/main.c              |   26 +-
- drivers/net/wireless/ath/ath9k/mci.c               |  290 ++---
- drivers/net/wireless/ath/ath9k/mci.h               |    5 +-
- drivers/net/wireless/ath/ath9k/reg.h               |    5 -
- drivers/net/wireless/ath/ath9k/xmit.c              |   19 +-
- 26 files changed, 1255 insertions(+), 3039 deletions(-)
- delete mode 100644 drivers/net/wireless/ath/ath9k/ar9462_1p0_initvals.h
-
--- 
-1.7.9.1
-
+-Sam
