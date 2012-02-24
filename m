@@ -1,493 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:56055 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750878Ab2BQHyl (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:60441 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755195Ab2BXMwN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Feb 2012 02:54:41 -0500
-From: Marc Dietrich <marvin24@gmx.de>
-To: users@rt2x00.serialmonkey.com
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	John Li <john.li.mediatek@gmail.com>,
-	John Li <chen-yang.li@mediatek.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: Re: [rt2x00-users] [PATCH] rt2x00:Add RT5372 chipset support
-Date: Fri, 17 Feb 2012 08:54:30 +0100
-Message-ID: <1348156.SGbFXXa6QN@fb07-iapwap2> (sfid-20120217_085506_452445_A83767E3)
-In-Reply-To: <CAL1gcdMq7kHt=xhf1Nsb=X1eBt_Hs6azk45K_Z70o+ejW5g+Pw@mail.gmail.com>
-References: <1329370352-6009-1-git-send-email-john.li.mediatek@gmail.com> <CAL1gcdMq7kHt=xhf1Nsb=X1eBt_Hs6azk45K_Z70o+ejW5g+Pw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+	Fri, 24 Feb 2012 07:52:13 -0500
+Message-Id: <20120224125138.742154031@sipsolutions.net> (sfid-20120224_135221_591370_ADD4C2FE)
+Date: Fri, 24 Feb 2012 13:50:52 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 2/4] mac80211: dont call cfg80211 from
+ ieee80211_send_deauth_disassoc
+References: <20120224125050.809601111@sipsolutions.net>
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Freitag, 17. Februar 2012, 08:31:10 schrieb Gertjan van Wingerde:
-> 2012/2/16 John Li <john.li.mediatek@gmail.com>:
-> > From: John Li <chen-yang.li@mediatek.com>
-> > 
-> > Signed-off-by: John Li <chen-yang.li@mediatek.com>
-> 
-> Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
-> 
-> > ---
-> >  drivers/net/wireless/rt2x00/rt2800.h    |    1 +
-> >  drivers/net/wireless/rt2x00/rt2800lib.c |  153 ++++++++++++++++++++++++++-----
-> >  drivers/net/wireless/rt2x00/rt2800pci.c |    3 +-
-> >  drivers/net/wireless/rt2x00/rt2800usb.c |   14 +++
-> >  drivers/net/wireless/rt2x00/rt2x00.h    |    1 +
-> >  5 files changed, 147 insertions(+), 25 deletions(-)
-> > 
-> > diff --git a/drivers/net/wireless/rt2x00/rt2800.h
-> > b/drivers/net/wireless/rt2x00/rt2800.h index 2571a2f..56b78c8 100644
-> > --- a/drivers/net/wireless/rt2x00/rt2800.h
-> > +++ b/drivers/net/wireless/rt2x00/rt2800.h
-> > @@ -68,6 +68,7 @@
-> >  #define RF3322                         0x000c
-> >  #define RF3053                         0x000d
-> >  #define RF5370                         0x5370
-> > +#define RF5372                         0x5372
-> >  #define RF5390                         0x5390
-> > 
-> >  /*
-> > diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c
-> > b/drivers/net/wireless/rt2x00/rt2800lib.c index 22a1a8f..7c6c1b5 100644
-> > --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> > +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> > @@ -402,7 +402,8 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
-> > 
-> >        if (rt2x00_is_pci(rt2x00dev)) {
-> >                if (rt2x00_rt(rt2x00dev, RT3572) ||
-> > -                   rt2x00_rt(rt2x00dev, RT5390)) {
-> > +                   rt2x00_rt(rt2x00dev, RT5390) ||
-> > +                   rt2x00_rt(rt2x00dev, RT5392)) {
-> >                        rt2800_register_read(rt2x00dev, AUX_CTRL, &reg);
-> >                        rt2x00_set_field32(&reg, AUX_CTRL_FORCE_PCIE_CLK, 1);
-> >                        rt2x00_set_field32(&reg, AUX_CTRL_WAKE_PCIE_EN, 1);
-> > @@ -1906,7 +1907,8 @@ static void rt2800_config_channel_rf53xx(struct
-> > rt2x00_dev *rt2x00dev, r55_nonbt_rev[idx]);
-> >                                rt2800_rfcsr_write(rt2x00dev, 59,
-> >                                                   r59_nonbt_rev[idx]);
-> > -                       } else if (rt2x00_rt(rt2x00dev, RT5390)) {
-> > +                       } else if (rt2x00_rt(rt2x00dev, RT5390) ||
-> > +                                          rt2x00_rt(rt2x00dev, RT5392)) {
-> >                                static const char r59_non_bt[] = {0x8f, 0x8f,
-> >                                        0x8f, 0x8f, 0x8f, 0x8f, 0x8f, 0x8d,
-> >                                        0x8a, 0x88, 0x88, 0x87, 0x87, 0x86};
-> > @@ -1956,6 +1958,7 @@ static void rt2800_config_channel(struct rt2x00_dev
-> > *rt2x00dev, rt2800_config_channel_rf3052(rt2x00dev, conf, rf, info); break;
-> >        case RF5370:
-> > +       case RF5372:
-> >        case RF5390:
-> >                rt2800_config_channel_rf53xx(rt2x00dev, conf, rf, info);
-> >                break;
-> > @@ -1972,7 +1975,8 @@ static void rt2800_config_channel(struct rt2x00_dev
-> > *rt2x00dev, rt2800_bbp_write(rt2x00dev, 86, 0);
-> > 
-> >        if (rf->channel <= 14) {
-> > -               if (!rt2x00_rt(rt2x00dev, RT5390)) {
-> > +               if (!rt2x00_rt(rt2x00dev, RT5390) ||
-> > +                       !rt2x00_rt(rt2x00dev, RT5392)) {
+From: Johannes Berg <johannes.berg@intel.com>
 
-shoudn't this be && instead of || ? (more below)
+Instead of calling cfg80211 in ieee80211_send_deauth_disassoc()
+pass out the frame and call it from the caller. That saves the
+SKB allocation if we don't actually want to send the frame and
+enables us to make the ordering smarter in the future.
 
-> >                        if (test_bit(CAPABILITY_EXTERNAL_LNA_BG,
-> >                                     &rt2x00dev->cap_flags)) {
-> >                                rt2800_bbp_write(rt2x00dev, 82, 0x62);
-> > @@ -2502,7 +2506,8 @@ static u8 rt2800_get_default_vgc(struct rt2x00_dev
-> > *rt2x00dev) rt2x00_rt(rt2x00dev, RT3071) ||
-> >                    rt2x00_rt(rt2x00dev, RT3090) ||
-> >                    rt2x00_rt(rt2x00dev, RT3390) ||
-> > -                   rt2x00_rt(rt2x00dev, RT5390))
-> > +                   rt2x00_rt(rt2x00dev, RT5390) ||
-> > +                   rt2x00_rt(rt2x00dev, RT5392))
-> >                        return 0x1c + (2 * rt2x00dev->lna_gain);
-> >                else
-> >                        return 0x2e + rt2x00dev->lna_gain;
-> > @@ -2637,7 +2642,8 @@ static int rt2800_init_registers(struct rt2x00_dev
-> > *rt2x00dev) } else if (rt2x00_rt(rt2x00dev, RT3572)) {
-> >                rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000400);
-> >                rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
-> > -       } else if (rt2x00_rt(rt2x00dev, RT5390)) {
-> > +       } else if (rt2x00_rt(rt2x00dev, RT5390) ||
-> > +                          rt2x00_rt(rt2x00dev, RT5392)) {
-> >                rt2800_register_write(rt2x00dev, TX_SW_CFG0, 0x00000404);
-> >                rt2800_register_write(rt2x00dev, TX_SW_CFG1, 0x00080606);
-> >                rt2800_register_write(rt2x00dev, TX_SW_CFG2, 0x00000000);
-> > @@ -3013,7 +3019,8 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
-> >                     rt2800_wait_bbp_ready(rt2x00dev)))
-> >                return -EACCES;
-> > 
-> > -       if (rt2x00_rt(rt2x00dev, RT5390)) {
-> > +       if (rt2x00_rt(rt2x00dev, RT5390) ||
-> > +               rt2x00_rt(rt2x00dev, RT5392)) {
-> >                rt2800_bbp_read(rt2x00dev, 4, &value);
-> >                rt2x00_set_field8(&value, BBP4_MAC_IF_CTRL, 1);
-> >                rt2800_bbp_write(rt2x00dev, 4, value);
-> > @@ -3021,19 +3028,22 @@ static int rt2800_init_bbp(struct rt2x00_dev
-> > *rt2x00dev)
-> > 
-> >        if (rt2800_is_305x_soc(rt2x00dev) ||
-> >            rt2x00_rt(rt2x00dev, RT3572) ||
-> > -           rt2x00_rt(rt2x00dev, RT5390))
-> > +           rt2x00_rt(rt2x00dev, RT5390) ||
-> > +           rt2x00_rt(rt2x00dev, RT5392))
-> >                rt2800_bbp_write(rt2x00dev, 31, 0x08);
-> > 
-> >        rt2800_bbp_write(rt2x00dev, 65, 0x2c);
-> >        rt2800_bbp_write(rt2x00dev, 66, 0x38);
-> > 
-> > -       if (rt2x00_rt(rt2x00dev, RT5390))
-> > +       if (rt2x00_rt(rt2x00dev, RT5390) ||
-> > +               rt2x00_rt(rt2x00dev, RT5392))
-> >                rt2800_bbp_write(rt2x00dev, 68, 0x0b);
-> > 
-> >        if (rt2x00_rt_rev(rt2x00dev, RT2860, REV_RT2860C)) {
-> >                rt2800_bbp_write(rt2x00dev, 69, 0x16);
-> >                rt2800_bbp_write(rt2x00dev, 73, 0x12);
-> > -       } else if (rt2x00_rt(rt2x00dev, RT5390)) {
-> > +       } else if (rt2x00_rt(rt2x00dev, RT5390) ||
-> > +                          rt2x00_rt(rt2x00dev, RT5392)) {
-> >                rt2800_bbp_write(rt2x00dev, 69, 0x12);
-> >                rt2800_bbp_write(rt2x00dev, 73, 0x13);
-> >                rt2800_bbp_write(rt2x00dev, 75, 0x46);
-> > @@ -3051,7 +3061,8 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
-> >            rt2x00_rt(rt2x00dev, RT3090) ||
-> >            rt2x00_rt(rt2x00dev, RT3390) ||
-> >            rt2x00_rt(rt2x00dev, RT3572) ||
-> > -           rt2x00_rt(rt2x00dev, RT5390)) {
-> > +           rt2x00_rt(rt2x00dev, RT5390) ||
-> > +           rt2x00_rt(rt2x00dev, RT5392)) {
-> >                rt2800_bbp_write(rt2x00dev, 79, 0x13);
-> >                rt2800_bbp_write(rt2x00dev, 80, 0x05);
-> >                rt2800_bbp_write(rt2x00dev, 81, 0x33);
-> > @@ -3063,64 +3074,88 @@ static int rt2800_init_bbp(struct rt2x00_dev
-> > *rt2x00dev)
-> >        }
-> > 
-> >        rt2800_bbp_write(rt2x00dev, 82, 0x62);
-> > -       if (rt2x00_rt(rt2x00dev, RT5390))
-> > +       if (rt2x00_rt(rt2x00dev, RT5390) ||
-> > +               rt2x00_rt(rt2x00dev, RT5392))
-> >                rt2800_bbp_write(rt2x00dev, 83, 0x7a);
-> >        else
-> >                rt2800_bbp_write(rt2x00dev, 83, 0x6a);
-> > 
-> >        if (rt2x00_rt_rev(rt2x00dev, RT2860, REV_RT2860D))
-> >                rt2800_bbp_write(rt2x00dev, 84, 0x19);
-> > -       else if (rt2x00_rt(rt2x00dev, RT5390))
-> > +       else if (rt2x00_rt(rt2x00dev, RT5390) ||
-> > +                        rt2x00_rt(rt2x00dev, RT5392))
-> >                rt2800_bbp_write(rt2x00dev, 84, 0x9a);
-> >        else
-> >                rt2800_bbp_write(rt2x00dev, 84, 0x99);
-> > 
-> > -       if (rt2x00_rt(rt2x00dev, RT5390))
-> > +       if (rt2x00_rt(rt2x00dev, RT5390) ||
-> > +               rt2x00_rt(rt2x00dev, RT5392))
-> >                rt2800_bbp_write(rt2x00dev, 86, 0x38);
-> >        else
-> >                rt2800_bbp_write(rt2x00dev, 86, 0x00);
-> > 
-> > +       if (rt2x00_rt(rt2x00dev, RT5392))
-> > +               rt2800_bbp_write(rt2x00dev, 88, 0x90);
-> > +
-> >        rt2800_bbp_write(rt2x00dev, 91, 0x04);
-> > 
-> > -       if (rt2x00_rt(rt2x00dev, RT5390))
-> > +       if (rt2x00_rt(rt2x00dev, RT5390) ||
-> > +               rt2x00_rt(rt2x00dev, RT5392))
-> >                rt2800_bbp_write(rt2x00dev, 92, 0x02);
-> >        else
-> >                rt2800_bbp_write(rt2x00dev, 92, 0x00);
-> > 
-> > +       if (rt2x00_rt(rt2x00dev, RT5392)) {
-> > +               rt2800_bbp_write(rt2x00dev, 95, 0x9a);
-> > +               rt2800_bbp_write(rt2x00dev, 98, 0x12);
-> > +       }
-> > +
-> >        if (rt2x00_rt_rev_gte(rt2x00dev, RT3070, REV_RT3070F) ||
-> >            rt2x00_rt_rev_gte(rt2x00dev, RT3071, REV_RT3071E) ||
-> >            rt2x00_rt_rev_gte(rt2x00dev, RT3090, REV_RT3090E) ||
-> >            rt2x00_rt_rev_gte(rt2x00dev, RT3390, REV_RT3390E) ||
-> >            rt2x00_rt(rt2x00dev, RT3572) ||
-> >            rt2x00_rt(rt2x00dev, RT5390) ||
-> > +           rt2x00_rt(rt2x00dev, RT5392) ||
-> >            rt2800_is_305x_soc(rt2x00dev))
-> >                rt2800_bbp_write(rt2x00dev, 103, 0xc0);
-> >        else
-> >                rt2800_bbp_write(rt2x00dev, 103, 0x00);
-> > 
-> > -       if (rt2x00_rt(rt2x00dev, RT5390))
-> > +       if (rt2x00_rt(rt2x00dev, RT5390) ||
-> > +               rt2x00_rt(rt2x00dev, RT5392))
-> >                rt2800_bbp_write(rt2x00dev, 104, 0x92);
-> > 
-> >        if (rt2800_is_305x_soc(rt2x00dev))
-> >                rt2800_bbp_write(rt2x00dev, 105, 0x01);
-> > -       else if (rt2x00_rt(rt2x00dev, RT5390))
-> > +       else if (rt2x00_rt(rt2x00dev, RT5390) ||
-> > +                        rt2x00_rt(rt2x00dev, RT5392))
-> >                rt2800_bbp_write(rt2x00dev, 105, 0x3c);
-> >        else
-> >                rt2800_bbp_write(rt2x00dev, 105, 0x05);
-> > 
-> >        if (rt2x00_rt(rt2x00dev, RT5390))
-> >                rt2800_bbp_write(rt2x00dev, 106, 0x03);
-> > +       else if (rt2x00_rt(rt2x00dev, RT5392))
-> > +               rt2800_bbp_write(rt2x00dev, 106, 0x12);
-> >        else
-> >                rt2800_bbp_write(rt2x00dev, 106, 0x35);
-> > 
-> > -       if (rt2x00_rt(rt2x00dev, RT5390))
-> > +       if (rt2x00_rt(rt2x00dev, RT5390) ||
-> > +               rt2x00_rt(rt2x00dev, RT5392))
-> >                rt2800_bbp_write(rt2x00dev, 128, 0x12);
-> > 
-> > +       if (rt2x00_rt(rt2x00dev, RT5392)) {
-> > +               rt2800_bbp_write(rt2x00dev, 134, 0xd0);
-> > +               rt2800_bbp_write(rt2x00dev, 135, 0xf6);
-> > +       }
-> > +
-> >        if (rt2x00_rt(rt2x00dev, RT3071) ||
-> >            rt2x00_rt(rt2x00dev, RT3090) ||
-> >            rt2x00_rt(rt2x00dev, RT3390) ||
-> >            rt2x00_rt(rt2x00dev, RT3572) ||
-> > -           rt2x00_rt(rt2x00dev, RT5390)) {
-> > +           rt2x00_rt(rt2x00dev, RT5390) ||
-> > +           rt2x00_rt(rt2x00dev, RT5392)) {
-> >                rt2800_bbp_read(rt2x00dev, 138, &value);
-> > 
-> >                rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF0, &eeprom);
-> > @@ -3132,7 +3167,8 @@ static int rt2800_init_bbp(struct rt2x00_dev *rt2x00dev)
-> >                rt2800_bbp_write(rt2x00dev, 138, value);
-> >        }
-> > 
-> > -       if (rt2x00_rt(rt2x00dev, RT5390)) {
-> > +       if (rt2x00_rt(rt2x00dev, RT5390) ||
-> > +               rt2x00_rt(rt2x00dev, RT5392)) {
-> >                int ant, div_mode;
-> > 
-> >                rt2x00_eeprom_read(rt2x00dev, EEPROM_NIC_CONF1, &eeprom);
-> > @@ -3258,13 +3294,15 @@ static int rt2800_init_rfcsr(struct rt2x00_dev
-> > *rt2x00dev) !rt2x00_rt(rt2x00dev, RT3390) &&
-> >            !rt2x00_rt(rt2x00dev, RT3572) &&
-> >            !rt2x00_rt(rt2x00dev, RT5390) &&
-> > +           !rt2x00_rt(rt2x00dev, RT5392) &&
-> >            !rt2800_is_305x_soc(rt2x00dev))
-> >                return 0;
-> > 
-> >        /*
-> >         * Init RF calibration.
-> >         */
-> > -       if (rt2x00_rt(rt2x00dev, RT5390)) {
-> > +       if (rt2x00_rt(rt2x00dev, RT5390) ||
-> > +               rt2x00_rt(rt2x00dev, RT5392)) {
-> >                rt2800_rfcsr_read(rt2x00dev, 2, &rfcsr);
-> >                rt2x00_set_field8(&rfcsr, RFCSR2_RESCAL_EN, 1);
-> >                rt2800_rfcsr_write(rt2x00dev, 2, rfcsr);
-> > @@ -3482,6 +3520,66 @@ static int rt2800_init_rfcsr(struct rt2x00_dev
-> > *rt2x00dev) rt2800_rfcsr_write(rt2x00dev, 61, 0xdd);
-> >                rt2800_rfcsr_write(rt2x00dev, 62, 0x00);
-> >                rt2800_rfcsr_write(rt2x00dev, 63, 0x00);
-> > +       }       else if (rt2x00_rt(rt2x00dev, RT5392)) {
-> > +                       rt2800_rfcsr_write(rt2x00dev, 1, 0x17);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 2, 0x80);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 3, 0x88);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 5, 0x10);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 6, 0xe0);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 7, 0x00);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 10, 0x53);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 11, 0x4a);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 12, 0x46);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 13, 0x9f);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 14, 0x00);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 15, 0x00);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 16, 0x00);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 18, 0x03);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 19, 0x4d);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 20, 0x00);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 21, 0x8d);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 22, 0x20);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 23, 0x0b);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 24, 0x44);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 25, 0x80);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 26, 0x82);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 27, 0x09);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 28, 0x00);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 29, 0x10);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 30, 0x10);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 31, 0x80);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 32, 0x20);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 33, 0xC0);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 34, 0x07);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 35, 0x12);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 36, 0x00);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 37, 0x08);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 38, 0x89);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 39, 0x1b);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 40, 0x0f);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 41, 0xbb);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 42, 0xd5);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 43, 0x9b);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 44, 0x0e);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 45, 0xa2);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 46, 0x73);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 47, 0x0c);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 48, 0x10);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 49, 0x94);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 50, 0x94);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 51, 0x3a);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 52, 0x48);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 53, 0x44);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 54, 0x38);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 55, 0x43);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 56, 0xa1);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 57, 0x00);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 58, 0x39);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 59, 0x07);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 60, 0x45);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 61, 0x91);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 62, 0x39);
-> > +                       rt2800_rfcsr_write(rt2x00dev, 63, 0x07);
-> >        }
-> > 
-> >        if (rt2x00_rt_rev_lt(rt2x00dev, RT3070, REV_RT3070F)) {
-> > @@ -3549,7 +3647,8 @@ static int rt2800_init_rfcsr(struct rt2x00_dev
-> > *rt2x00dev)
-> >                        rt2800_init_rx_filter(rt2x00dev, true, 0x27, 0x15);
-> >        }
-> > 
-> > -       if (!rt2x00_rt(rt2x00dev, RT5390)) {
-> > +       if (!rt2x00_rt(rt2x00dev, RT5390) ||
-> > +               !rt2x00_rt(rt2x00dev, RT5392)) {
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c |   71 +++++++++++++++++++++++++++-------------------------
+ 1 file changed, 38 insertions(+), 33 deletions(-)
 
-same here
+--- a/net/mac80211/mlme.c	2012-02-24 13:50:18.000000000 +0100
++++ b/net/mac80211/mlme.c	2012-02-24 13:50:20.000000000 +0100
+@@ -88,6 +88,8 @@ MODULE_PARM_DESC(probe_wait_ms,
+ #define TMR_RUNNING_TIMER	0
+ #define TMR_RUNNING_CHANSW	1
+ 
++#define DEAUTH_DISASSOC_LEN	(24 /* hdr */ + 2 /* reason */)
++
+ /*
+  * All cfg80211 functions have to be called outside a locked
+  * section so that they can acquire a lock themselves... This
+@@ -613,47 +615,41 @@ static void ieee80211_send_assoc(struct
+ 
+ static void ieee80211_send_deauth_disassoc(struct ieee80211_sub_if_data *sdata,
+ 					   const u8 *bssid, u16 stype,
+-					   u16 reason, bool cfg80211_locked,
+-					   bool send_frame)
++					   u16 reason, bool send_frame,
++					   u8 *frame_buf)
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct sk_buff *skb;
+-	struct ieee80211_mgmt *mgmt;
+-
+-	skb = dev_alloc_skb(local->hw.extra_tx_headroom + sizeof(*mgmt));
+-	if (!skb)
+-		return;
++	struct ieee80211_mgmt *mgmt = (void *)frame_buf;
+ 
+-	skb_reserve(skb, local->hw.extra_tx_headroom);
+-
+-	mgmt = (struct ieee80211_mgmt *) skb_put(skb, 24);
+-	memset(mgmt, 0, 24);
++	/* build frame */
++	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT | stype);
++	mgmt->duration = 0; /* initialize only */
++	mgmt->seq_ctrl = 0; /* initialize only */
+ 	memcpy(mgmt->da, bssid, ETH_ALEN);
+ 	memcpy(mgmt->sa, sdata->vif.addr, ETH_ALEN);
+ 	memcpy(mgmt->bssid, bssid, ETH_ALEN);
+-	mgmt->frame_control = cpu_to_le16(IEEE80211_FTYPE_MGMT | stype);
+-	skb_put(skb, 2);
+ 	/* u.deauth.reason_code == u.disassoc.reason_code */
+ 	mgmt->u.deauth.reason_code = cpu_to_le16(reason);
+ 
+-	if (stype == IEEE80211_STYPE_DEAUTH)
+-		if (cfg80211_locked)
+-			__cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len);
+-		else
+-			cfg80211_send_deauth(sdata->dev, (u8 *)mgmt, skb->len);
+-	else
+-		if (cfg80211_locked)
+-			__cfg80211_send_disassoc(sdata->dev, (u8 *)mgmt, skb->len);
+-		else
+-			cfg80211_send_disassoc(sdata->dev, (u8 *)mgmt, skb->len);
+-	if (!(ifmgd->flags & IEEE80211_STA_MFP_ENABLED))
+-		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT;
++	if (send_frame) {
++		skb = dev_alloc_skb(local->hw.extra_tx_headroom +
++				    DEAUTH_DISASSOC_LEN);
++		if (!skb)
++			return;
++
++		skb_reserve(skb, local->hw.extra_tx_headroom);
+ 
+-	if (send_frame)
++		/* copy in frame */
++		memcpy(skb_put(skb, DEAUTH_DISASSOC_LEN),
++		       mgmt, DEAUTH_DISASSOC_LEN);
++
++		if (!(ifmgd->flags & IEEE80211_STA_MFP_ENABLED))
++			IEEE80211_SKB_CB(skb)->flags |=
++				IEEE80211_TX_INTFL_DONT_ENCRYPT;
+ 		ieee80211_tx_skb(sdata, skb);
+-	else
+-		kfree_skb(skb);
++	}
+ }
+ 
+ void ieee80211_send_pspoll(struct ieee80211_local *local,
+@@ -1675,6 +1671,7 @@ static void __ieee80211_connection_loss(
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	struct ieee80211_local *local = sdata->local;
+ 	u8 bssid[ETH_ALEN];
++	u8 frame_buf[DEAUTH_DISASSOC_LEN];
+ 
+ 	mutex_lock(&ifmgd->mtx);
+ 	if (!ifmgd->associated) {
+@@ -1697,7 +1694,8 @@ static void __ieee80211_connection_loss(
+ 	ieee80211_send_deauth_disassoc(sdata, bssid,
+ 				       IEEE80211_STYPE_DEAUTH,
+ 				       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
+-				       false, true);
++				       false, frame_buf);
++	cfg80211_send_deauth(sdata->dev, frame_buf, DEAUTH_DISASSOC_LEN);
+ 
+ 	mutex_lock(&local->mtx);
+ 	ieee80211_recalc_idle(local);
+@@ -2696,6 +2694,7 @@ static void ieee80211_sta_connection_los
+ {
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++	u8 frame_buf[DEAUTH_DISASSOC_LEN];
+ 
+ 	ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
+ 			  IEEE80211_STA_BEACON_POLL);
+@@ -2708,7 +2707,8 @@ static void ieee80211_sta_connection_los
+ 	 */
+ 	ieee80211_send_deauth_disassoc(sdata, bssid,
+ 				       IEEE80211_STYPE_DEAUTH,
+-				       reason, false, true);
++				       reason, false, frame_buf);
++	cfg80211_send_deauth(sdata->dev, frame_buf, DEAUTH_DISASSOC_LEN);
+ 
+ 	mutex_lock(&local->mtx);
+ 	ieee80211_recalc_idle(local);
+@@ -3441,6 +3441,7 @@ int ieee80211_mgd_deauth(struct ieee8021
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	bool assoc_bss = false;
++	u8 frame_buf[DEAUTH_DISASSOC_LEN];
+ 
+ 	mutex_lock(&ifmgd->mtx);
+ 
+@@ -3460,7 +3461,8 @@ int ieee80211_mgd_deauth(struct ieee8021
+ 
+ 	ieee80211_send_deauth_disassoc(sdata, req->bssid,
+ 				       IEEE80211_STYPE_DEAUTH,
+-				       req->reason_code, true, true);
++				       req->reason_code, true, frame_buf);
++	__cfg80211_send_deauth(sdata->dev, frame_buf, DEAUTH_DISASSOC_LEN);
+ 	if (assoc_bss)
+ 		sta_info_flush(sdata->local, sdata);
+ 
+@@ -3476,6 +3478,7 @@ int ieee80211_mgd_disassoc(struct ieee80
+ {
+ 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
+ 	u8 bssid[ETH_ALEN];
++	u8 frame_buf[DEAUTH_DISASSOC_LEN];
+ 
+ 	mutex_lock(&ifmgd->mtx);
+ 
+@@ -3499,8 +3502,10 @@ int ieee80211_mgd_disassoc(struct ieee80
+ 	mutex_unlock(&ifmgd->mtx);
+ 
+ 	ieee80211_send_deauth_disassoc(sdata, req->bss->bssid,
+-			IEEE80211_STYPE_DISASSOC, req->reason_code,
+-			true, !req->local_state_change);
++				       IEEE80211_STYPE_DISASSOC,
++				       req->reason_code,
++				       !req->local_state_change, frame_buf);
++	__cfg80211_send_disassoc(sdata->dev, frame_buf, DEAUTH_DISASSOC_LEN);
+ 	sta_info_flush(sdata->local, sdata);
+ 
+ 	mutex_lock(&sdata->local->mtx);
 
 
-> >                /*
-> >                 * Set back to initial state
-> >                 */
-> > @@ -3577,7 +3676,8 @@ static int rt2800_init_rfcsr(struct rt2x00_dev
-> > *rt2x00dev)
-> >        rt2x00_set_field32(&reg, OPT_14_CSR_BIT0, 1);
-> >        rt2800_register_write(rt2x00dev, OPT_14_CSR, reg);
-> > 
-> > -       if (!rt2x00_rt(rt2x00dev, RT5390)) {
-> > +       if (!rt2x00_rt(rt2x00dev, RT5390) ||
-> > +               !rt2x00_rt(rt2x00dev, RT5392)) {
-
-and here
-
-> >                rt2800_rfcsr_read(rt2x00dev, 17, &rfcsr);
-> >                rt2x00_set_field8(&rfcsr, RFCSR17_TX_LO1_EN, 0);
-> >                if (rt2x00_rt(rt2x00dev, RT3070) ||
-> > @@ -3645,7 +3745,8 @@ static int rt2800_init_rfcsr(struct rt2x00_dev
-> > *rt2x00dev)
-> >                rt2800_rfcsr_write(rt2x00dev, 27, rfcsr);
-> >        }
-> > 
-> > -       if (rt2x00_rt(rt2x00dev, RT5390)) {
-> > +       if (rt2x00_rt(rt2x00dev, RT5390) ||
-> > +               rt2x00_rt(rt2x00dev, RT5392)) {
-> >                rt2800_rfcsr_read(rt2x00dev, 38, &rfcsr);
-> >                rt2x00_set_field8(&rfcsr, RFCSR38_RX_LO1_EN, 0);
-> >                rt2800_rfcsr_write(rt2x00dev, 38, rfcsr);
-> > @@ -3929,7 +4030,8 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
-> >         * RT53xx: defined in "EEPROM_CHIP_ID" field
-> >         */
-> >        rt2800_register_read(rt2x00dev, MAC_CSR0, &reg);
-> > -       if (rt2x00_get_field32(reg, MAC_CSR0_CHIPSET) == RT5390)
-> > +       if (rt2x00_get_field32(reg, MAC_CSR0_CHIPSET) == RT5390 ||
-> > +               rt2x00_get_field32(reg, MAC_CSR0_CHIPSET) == RT5392)
-> >                rt2x00_eeprom_read(rt2x00dev, EEPROM_CHIP_ID, &value);
-> >        else
-> >                value = rt2x00_get_field16(eeprom, EEPROM_NIC_CONF0_RF_TYPE);
-> > @@ -3947,6 +4049,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
-> >        case RT3390:
-> >        case RT3572:
-> >        case RT5390:
-> > +       case RT5392:
-> >                break;
-> >        default:
-> >                ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
-> > @@ -3965,6 +4068,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
-> >        case RF3052:
-> >        case RF3320:
-> >        case RF5370:
-> > +       case RF5372:
-> >        case RF5390:
-> >                break;
-> >        default:
-> > @@ -4271,6 +4375,7 @@ int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
-> >                   rt2x00_rf(rt2x00dev, RF3022) ||
-> >                   rt2x00_rf(rt2x00dev, RF3320) ||
-> >                   rt2x00_rf(rt2x00dev, RF5370) ||
-> > +                  rt2x00_rf(rt2x00dev, RF5372) ||
-> >                   rt2x00_rf(rt2x00dev, RF5390)) {
-> >                spec->num_channels = 14;
-> >                spec->channels = rf_vals_3x;
-> > diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c
-> > b/drivers/net/wireless/rt2x00/rt2800pci.c index 837b460..bf0f83c 100644
-> > --- a/drivers/net/wireless/rt2x00/rt2800pci.c
-> > +++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-> > @@ -480,7 +480,8 @@ static int rt2800pci_init_registers(struct rt2x00_dev
-> > *rt2x00dev)
-> > 
-> >        if (rt2x00_is_pcie(rt2x00dev) &&
-> >            (rt2x00_rt(rt2x00dev, RT3572) ||
-> > -            rt2x00_rt(rt2x00dev, RT5390))) {
-> > +            rt2x00_rt(rt2x00dev, RT5390) ||
-> > +            rt2x00_rt(rt2x00dev, RT5392))) {
-> >                rt2x00pci_register_read(rt2x00dev, AUX_CTRL, &reg);
-> >                rt2x00_set_field32(&reg, AUX_CTRL_FORCE_PCIE_CLK, 1);
-> >                rt2x00_set_field32(&reg, AUX_CTRL_WAKE_PCIE_EN, 1);
-> > diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c
-> > b/drivers/net/wireless/rt2x00/rt2800usb.c index 7f21005..6565113 100644
-> > --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> > +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> > @@ -1101,12 +1101,26 @@ static struct usb_device_id rt2800usb_device_table[] =
-> > {
-> >        { USB_DEVICE(0x5a57, 0x0284) },
-> >  #endif
-> >  #ifdef CONFIG_RT2800USB_RT53XX
-> > +       /* Alpha */
-> > +       { USB_DEVICE(0x2001, 0x3c15) },
-> > +       { USB_DEVICE(0x2001, 0x3c19) },
-> > +       /* Arcadyan */
-> > +       { USB_DEVICE(0x043e, 0x7a12) },
-> >        /* Azurewave */
-> >        { USB_DEVICE(0x13d3, 0x3329) },
-> >        { USB_DEVICE(0x13d3, 0x3365) },
-> > +       /* LG innotek */
-> > +       { USB_DEVICE(0x043e, 0x7a22) },
-> > +       /* Panasonic */
-> > +       { USB_DEVICE(0x04da, 0x1801) },
-> > +       { USB_DEVICE(0x04da, 0x1800) },
-> > +       /* Philips */
-> > +       { USB_DEVICE(0x0471, 0x2104) },
-> >        /* Ralink */
-> >        { USB_DEVICE(0x148f, 0x5370) },
-> >        { USB_DEVICE(0x148f, 0x5372) },
-> > +       /* Unknown */
-> > +       { USB_DEVICE(0x04da, 0x23f6) },
-> >  #endif
-> >  #ifdef CONFIG_RT2800USB_UNKNOWN
-> >        /*
-> > diff --git a/drivers/net/wireless/rt2x00/rt2x00.h
-> > b/drivers/net/wireless/rt2x00/rt2x00.h index b03b22c..bf743cd 100644
-> > --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> > +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> > @@ -192,6 +192,7 @@ struct rt2x00_chip {
-> >  #define RT3593         0x3593
-> >  #define RT3883         0x3883  /* WSOC */
-> >  #define RT5390         0x5390  /* 2.4GHz */
-> > +#define RT5392         0x5392  /* 2.4GHz */
-> > 
-> >        u16 rf;
-> >        u16 rev;
-> > --
-> > 1.7.6.5
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
