@@ -1,88 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:62306 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752002Ab2BEWA0 convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:56727 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757421Ab2BXPga (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Feb 2012 17:00:26 -0500
-MIME-Version: 1.0
-In-Reply-To: <a2291f385edf9692f4a946fd78a7ee7cca29e3b4.1328461986.git.marvin24@gmx.de>
-References: <215249735783e9fe35db1c594d901f591725de50.1328461986.git.marvin24@gmx.de>
-	<a2291f385edf9692f4a946fd78a7ee7cca29e3b4.1328461986.git.marvin24@gmx.de>
-Date: Sun, 5 Feb 2012 14:00:25 -0800
-Message-ID: <CAOesGMhXZLRHw+TSVqHZFQcYLeu995EKaG_hNFRkgOnPFdmq6g@mail.gmail.com> (sfid-20120205_230032_262096_C0C31669)
-Subject: Re: [PATCH 2/3] dt: rfkill-gpio: add bindings documentation
-From: Olof Johansson <olof@lixom.net>
-To: Marc Dietrich <marvin24@gmx.de>
-Cc: linux-tegra@vger.kernel.org, Stephen Warren <swarren@nvidia.com>,
-	Colin Cross <ccross@android.com>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rhyland Klein <rklein@nvidia.com>,
-	Grant Likely <grant.likely@secretlab.ca>
-Content-Type: text/plain; charset=ISO-8859-1
+	Fri, 24 Feb 2012 10:36:30 -0500
+Subject: Re: [RFC] mac80211: Filter duplicate IE ids
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Stewart <pstew@chromium.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <CAMcMvsihYU93DjdqKYHW2xKiNbFD1YBqESx6NAkgKARCf-FjDQ@mail.gmail.com> (sfid-20120224_162609_881741_F7CCCE9D)
+References: <20120224033729.9256A205A0@glenhelen.mtv.corp.google.com>
+	 <1330068877.3426.6.camel@jlt3.sipsolutions.net>
+	 <CAMcMvsi_v=gb9UF3tHSZ11fnh83iE9bK7nSiwL1GB-tDqW47jQ@mail.gmail.com>
+	 <1330093741.3426.19.camel@jlt3.sipsolutions.net>
+	 <CAMcMvsihYU93DjdqKYHW2xKiNbFD1YBqESx6NAkgKARCf-FjDQ@mail.gmail.com>
+	 (sfid-20120224_162609_881741_F7CCCE9D)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 24 Feb 2012 16:36:28 +0100
+Message-ID: <1330097788.3426.29.camel@jlt3.sipsolutions.net> (sfid-20120224_163636_140387_62EC7816)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, 2012-02-24 at 07:25 -0800, Paul Stewart wrote:
 
-On Sun, Feb 5, 2012 at 9:18 AM, Marc Dietrich <marvin24@gmx.de> wrote:
-> Add device tree bindings information for rfkill gpio switches.
->
-> Cc: linux-wireless@vger.kernel.org
-> Cc: "John W. Linville" <linville@tuxdriver.com>
-> Cc: Johannes Berg <johannes@sipsolutions.net>
-> Cc: Rhyland Klein <rklein@nvidia.com>
-> Cc: Grant Likely <grant.likely@secretlab.ca>
-> Signed-off-by: Marc Dietrich <marvin24@gmx.de>
+> >> > I suppose better to accept such service degradation than not connect,
+> >> > but I wonder if we should log a warning when we actually try to use such
+> >> > an AP?
+> >>
+> >> Let me know where you'd like it.
+> >
+> > How about having a flag in the BSS struct (ieee80211_bss) and printing a
+> > message when we use that BSS struct for assoc? E.g. in
+> > ieee80211_mgd_assoc()? I'm not sure I fully understand where this
+> > actually has any effect.
+> 
+> How do we clear this flag?  Let's say we got one corrupted beacon and
+> from then on, everything was ducky.  We set the flag flag on the
+> corrupted beacon.  Do we clear it on an unblemished probe response?
+> Are these really two flags, since beacons and probe responses
+> sometimes have different subsets of info, or does a valid probe
+> response clear both flags?
 
-Please cc devicetree-discuss@lists.ozlabs.org on device tree bindings;
-not everyone monitors the linux mailing lists.
+Huh, good questions. Which info do we end up using? Just the one that
+was not corrupted? I think we always use the last IEs, no?
 
+Hmm. You said in the bug that supported rates were really only affected,
+and this caused an issue with the supported rates that we send, because
+we restrict ourselves to the rates the AP advertises (due to other buggy
+APs ...)
 
+Maybe then it doesn't matter all that much.
 
-> diff --git a/Documentation/devicetree/bindings/gpio/rfkill.txt b/Documentation/devicetree/bindings/gpio/rfkill.txt
-> new file mode 100644
-> index 0000000..22bf22a
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/gpio/rfkill.txt
-> @@ -0,0 +1,38 @@
-> +RFKILL switches connected to GPIO lines
-> +
-> +Required properties:
-> +- compatible : should be "rfkill-gpio".
-> +
-> +Each rfkill switch is represented as a sub-node of the rfkill-gpio device.
-> +Each node has a label property which represents the name of the corresponding
-> +rfkill device.
-> +
-> +RFKILL sub-node properties:
-> +- label :  (optional) The label for this rfkill switch.  If omitted, the label is
-> +  taken from the node name (excluding the unit address).
-> +- reset-gpio, shutdown-gpio :  Should specify the rfkill gpios for reset and
-> +  shutdown (see "Specifying GPIO information for devices" in
-> +  Documentation/devicetree/booting-without-of.txt).
-> +- type : enumerated type of the gpio (see include/linux/rfkill.h).
-> +- clock : (optional) name of the clock name associated with the rfkill switch
-> +  (see include/linux/rfkill-gpio.h)
+OTOH, why should we ever reset the flag? Eventually the BSS entry will
+be deleted anyway? And if we keep reconnecting to it, maybe there's some
+other bug?
 
-Sorry, but this is going about things the wrong way.
+I'm not really sure -- open to suggestions. I just think that in order
+to actually notice such things in the future we should print something
+so we don't get confused.
 
-A device tree binding is meant to describe hardware. For example, the
-type and clock properties are clearly linux specifics that shouldn't
-be expressed that way in the device tree.
+johannes
 
-instead, think about what you actually need to provide for a driver to
-do its work. Does the wifi device have a gpio to control power (and
-one for providing reset outside of the standard interface)? Well, then
-that should probably be defined in the node that describes the device
--- i.e. under the sdhci node in question here.
-
-That doesn't fit the rfkill device/driver model perfectly, since it
-doesn't have something to bind against, so the rfkill platform device
-needs to be instantiated from somewhere else. It's possible that best
-match is to have the wifi driver handle it, which should be OK, I
-think?
-
-
--Olof
