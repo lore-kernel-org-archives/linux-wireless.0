@@ -1,129 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1563 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754543Ab2BIUJY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 15:09:24 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 05/15] brcm80211: smac: remove smatch warnings from
- brcmsmac code
-Date: Thu, 9 Feb 2012 21:08:59 +0100
-Message-ID: <1328818149-4826-6-git-send-email-arend@broadcom.com> (sfid-20120209_210928_513664_67648229)
-In-Reply-To: <1328818149-4826-1-git-send-email-arend@broadcom.com>
-References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from perches-mx.perches.com ([206.117.179.246]:40070 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753570Ab2BXSh5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Feb 2012 13:37:57 -0500
+Message-ID: <1330108675.18464.21.camel@joe2Laptop> (sfid-20120224_193823_651632_1147C34B)
+Subject: [PATCH v2] checkpatch: Add some --strict coding style checks
+From: Joe Perches <joe@perches.com>
+To: Andrew Morton <akpm@linux-foundation.org>,
+	Andy Whitcroft <apw@shadowen.org>
+Cc: "Allan, Bruce W" <bruce.w.allan@intel.com>,
+	David Miller <davem@davemloft.net>,
+	"andrei.emeltchenko.news@gmail.com"
+	<andrei.emeltchenko.news@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Fri, 24 Feb 2012 10:37:55 -0800
+In-Reply-To: <804857E1F29AAC47BF68C404FC60A1842A1D36@ORSMSX102.amr.corp.intel.com>
+References: <20120221151435.GA19354@tuxdriver.com>
+	 <20120221.144417.1445117001833888214.davem@davemloft.net>
+	 <CAMXE1-qB8_5oGey2=Ypa5BitZnye3YqdM=yB8oKCGLvoZu_8HQ@mail.gmail.com>
+	 <20120221.154053.2103818562080068513.davem@davemloft.net>
+	 <1329857959.5143.11.camel@joe2Laptop>
+	 <804857E1F29AAC47BF68C404FC60A18429B3EE@ORSMSX102.amr.corp.intel.com>
+	 <1329874581.5143.22.camel@joe2Laptop>
+	 <804857E1F29AAC47BF68C404FC60A18429B8F2@ORSMSX102.amr.corp.intel.com>
+	 <1329875935.5143.24.camel@joe2Laptop>
+	 <804857E1F29AAC47BF68C404FC60A18429B98A@ORSMSX102.amr.corp.intel.com>
+	 <1329968622.5143.46.camel@joe2Laptop>
+	 <804857E1F29AAC47BF68C404FC60A1842A1D36@ORSMSX102.amr.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch fixes following smatch warnings:
+Argument alignment across multiple lines should
+match the open parenthesis.
 
-main.c +2902 brcms_b_read_objmem(11) info: ignoring unreachable code.
-mac80211_if.c +1146 brcms_suspend(8) error: we previously assumed 'wl'
-could be null (see line 1145)
-srom.c +641 _initvars_srom_pci(16) error: potential null dereference
-'entry'.  (kzalloc returns null)
+Logical continuations should be at the end of
+the previous line, not the start of a new line.
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Alwin Beukers <alwin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+These are not required by CodingStyle so make the
+tests active only when using --strict.
+
+Improved_by_examples_from: "Bruce W. Allen" <bruce.w.allan@intel.com>
+Signed-off-by: Joe Perches <joe@perches.com>
+
 ---
- .../net/wireless/brcm80211/brcmsmac/mac80211_if.c  |    4 ++--
- drivers/net/wireless/brcm80211/brcmsmac/main.c     |    1 -
- drivers/net/wireless/brcm80211/brcmsmac/srom.c     |   14 ++++++++++++--
- 3 files changed, 14 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-index c842797..fec0f10 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/mac80211_if.c
-@@ -1136,8 +1136,8 @@ static int brcms_suspend(struct bcma_device *pdev)
- 	hw = bcma_get_drvdata(pdev);
- 	wl = hw->priv;
- 	if (!wl) {
--		wiphy_err(wl->wiphy,
--			  "brcms_suspend: bcma_get_drvdata failed\n");
-+		pr_err("%s: %s: no driver private struct!\n", KBUILD_MODNAME,
-+		       __func__);
- 		return -ENODEV;
+V2: Scan the entire line for balanced parentheses,
+    use the position of the last non-balanced open parenthesis.
+    Allow all space indentation too, checkpatch will complain
+    in a different message about that if it's too long.
+
+ scripts/checkpatch.pl |   65 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 63 insertions(+), 2 deletions(-)
+
+diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
+index 89d24b3..7a0514b 100755
+--- a/scripts/checkpatch.pl
++++ b/scripts/checkpatch.pl
+@@ -330,10 +330,11 @@ sub build_types {
+ }
+ build_types();
+ 
+-our $match_balanced_parentheses = qr/(\((?:[^\(\)]+|(-1))*\))/;
++our $balanced_parens = qr/(\((?:[^\(\)]++|(?-1))*\))/;
++our $lval_parens = qr/(\((?:[^\(\)]+|(-1))*\))/;
+ 
+ our $Typecast	= qr{\s*(\(\s*$NonptrType\s*\)){0,1}\s*};
+-our $LvalOrFunc	= qr{($Lval)\s*($match_balanced_parentheses{0,1})\s*};
++our $LvalOrFunc	= qr{($Lval)\s*($lval_parens{0,1})\s*};
+ our $FuncArg = qr{$Typecast{0,1}($LvalOrFunc|$Constant)};
+ 
+ sub deparenthesize {
+@@ -1330,6 +1331,36 @@ sub check_absolute_file {
  	}
- 
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/main.c b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-index fb712ca..86186fa 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/main.c
-@@ -2901,7 +2901,6 @@ brcms_b_read_objmem(struct brcms_hardware *wlc_hw, uint offset, u32 sel)
- 		objoff += 2;
- 
- 	return bcma_read16(core, objoff);
--;
  }
  
- static void
-diff --git a/drivers/net/wireless/brcm80211/brcmsmac/srom.c b/drivers/net/wireless/brcm80211/brcmsmac/srom.c
-index 5637436..b96f4b9 100644
---- a/drivers/net/wireless/brcm80211/brcmsmac/srom.c
-+++ b/drivers/net/wireless/brcm80211/brcmsmac/srom.c
-@@ -621,7 +621,7 @@ static inline void cpu_to_le16_buf(u16 *buf, uint nwords)
- /*
-  * convert binary srom data into linked list of srom variable items.
-  */
--static void
-+static int
- _initvars_srom_pci(u8 sromrev, u16 *srom, struct list_head *var_list)
- {
- 	struct brcms_srom_list_head *entry;
-@@ -638,6 +638,9 @@ _initvars_srom_pci(u8 sromrev, u16 *srom, struct list_head *var_list)
- 
- 	/* first store the srom revision */
- 	entry = kzalloc(sizeof(struct brcms_srom_list_head), GFP_KERNEL);
-+	if (!entry)
-+		return -ENOMEM;
++sub pos_last_openparen {
++	my ($line) = @_;
 +
- 	entry->varid = BRCMS_SROM_REV;
- 	entry->var_type = BRCMS_SROM_UNUMBER;
- 	entry->uval = sromrev;
-@@ -715,6 +718,8 @@ _initvars_srom_pci(u8 sromrev, u16 *srom, struct list_head *var_list)
++	my $pos = 0;
++
++	my $opens = $line =~ tr/\(/\(/;
++	my $closes = $line =~ tr/\)/\)/;
++
++	my $last_openparen = 0;
++
++	if (($opens == 0) || ($closes >= $opens)) {
++		return -1;
++	}
++
++	my $len = length($line);
++
++	for ($pos = 0; $pos < $len; $pos++) {
++		my $string = substr($line, $pos);
++		if ($string =~ /^($FuncArg|$balanced_parens)/) {
++			$pos += length($1);
++		}
++
++		if (substr($line, $pos, 1) eq '(') {
++			$last_openparen = $pos;
++		}
++	}
++
++	return $last_openparen + 1;
++}
++
+ sub process {
+ 	my $filename = shift;
  
- 		entry = kzalloc(sizeof(struct brcms_srom_list_head) +
- 				extra_space, GFP_KERNEL);
-+		if (!entry)
-+			return -ENOMEM;
- 		entry->varid = id;
- 		entry->var_type = type;
- 		if (flags & SRFL_ETHADDR) {
-@@ -754,6 +759,8 @@ _initvars_srom_pci(u8 sromrev, u16 *srom, struct list_head *var_list)
- 			entry =
- 			    kzalloc(sizeof(struct brcms_srom_list_head),
- 				    GFP_KERNEL);
-+			if (!entry)
-+				return -ENOMEM;
- 			entry->varid = srv->varid+p;
- 			entry->var_type = BRCMS_SROM_UNUMBER;
- 			entry->uval = val;
-@@ -761,6 +768,7 @@ _initvars_srom_pci(u8 sromrev, u16 *srom, struct list_head *var_list)
+@@ -1783,6 +1814,36 @@ sub process {
+ 			     "please, no space before tabs\n" . $herevet);
  		}
- 		pb += psz;
- 	}
-+	return 0;
- }
  
- /*
-@@ -906,7 +914,9 @@ int srom_var_init(struct si_pub *sih)
- 		INIT_LIST_HEAD(&sii->var_list);
- 
- 		/* parse SROM into name=value pairs. */
--		_initvars_srom_pci(sromrev, srom, &sii->var_list);
-+		err = _initvars_srom_pci(sromrev, srom, &sii->var_list);
-+		if (err)
-+			srom_free_vars(sih);
- 	}
- 
- errout:
--- 
-1.7.5.4
++# check for && or || at the start of a line
++		if ($rawline =~ /^\+\s*(&&|\|\|)/) {
++			CHK("LOGICAL_CONTINUATIONS",
++			    "Logical continuations should be on the previous line\n" . $hereprev);
++		}
++
++# check multi-line statement indentation matches previous line
++		if ($prevline =~ /^\+(\t*)(if \(|$Ident\().*(\&\&|\|\||,)\s*$/) {
++			$prevline =~ /^\+(\t*)(.*)$/;
++			my $oldindent = $1;
++			my $rest = $2;
++
++			my $pos = pos_last_openparen($rest);
++			if ($pos >= 0) {
++				$line =~ /^\+([ \t]*)/;
++				my $newindent = $1;
++
++				my $goodtabindent = $oldindent .
++					"\t" x ($pos / 8) .
++					" "  x ($pos % 8);
++				my $goodspaceindent = $oldindent . " "  x $pos;
++
++				if ($newindent ne $goodtabindent &&
++				    $newindent ne $goodspaceindent) {
++					CHK("PARENTHESIS_ALIGNMENT",
++					    "Alignment should match open parenthesis\n" . $hereprev);
++				}
++			}
++		}
++
+ # check for spaces at the beginning of a line.
+ # Exceptions:
+ #  1) within comments
 
 
