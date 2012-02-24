@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout4.freenet.de ([195.4.92.94]:58226 "EHLO mout4.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751967Ab2BMPHk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 10:07:40 -0500
-Message-ID: <4F3926AD.3020405@01019freenet.de> (sfid-20120213_160743_951984_0BC2889E)
-Date: Mon, 13 Feb 2012 16:05:17 +0100
-From: Andreas Hartmann <andihartmann@01019freenet.de>
-MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: Florian Fainelli <florian@openwrt.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com, gwingerde@gmail.com,
-	Ivo Van Doorn <ivdoorn@gmail.com>
-Subject: Re: Poor RT2880 performance
-References: <4F390ED3.8010400@openwrt.org> <CAGXE3d90az_g3KyzPp-4NQoM2zmXaNSVo=7piM=q8EK9WdBp7A@mail.gmail.com>
-In-Reply-To: <CAGXE3d90az_g3KyzPp-4NQoM2zmXaNSVo=7piM=q8EK9WdBp7A@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:45656 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751278Ab2BXHel (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Feb 2012 02:34:41 -0500
+Subject: Re: [RFC] mac80211: Filter duplicate IE ids
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Stewart <pstew@chromium.org>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20120224033729.9256A205A0@glenhelen.mtv.corp.google.com> (sfid-20120224_043736_015339_A91A0A49)
+References: <20120224033729.9256A205A0@glenhelen.mtv.corp.google.com>
+	 (sfid-20120224_043736_015339_A91A0A49)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 24 Feb 2012 08:34:37 +0100
+Message-ID: <1330068877.3426.6.camel@jlt3.sipsolutions.net> (sfid-20120224_083453_955533_3FB4DC8E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helmut Schaa schrieb:
-> Hi,
+On Thu, 2012-02-23 at 17:59 -0800, Paul Stewart wrote:
+> mac80211 is lenient with respect to reception of corrupted beacons.
+> Even if the frame is corrupted as a whole, the available IE elements
+> are still passed back and accepted, sometimes replacing legitimate
+> data.  It is unknown to what extent this "feature" is made use of,
+> but it is clear that in some cases, this is detrimental.  One such
+> case is reported in http://crosbug.com/26832 where an AP corrupts
+> its beacons but not its probe responses.
 > 
-> On Mon, Feb 13, 2012 at 2:23 PM, Florian Fainelli <florian@openwrt.org> wrote:
->> I am playing with a RT2880-F based AP, with a N connected station, in a
->> residential environment.
+> One approach would be to completely reject frames with invaid data
+> (for example, if the last tag extends beyond the end of the enclosing
+> PDU).  The enclosed approach is much more conservative: we simply
+> prevent later IEs from overwriting the state from previous ones.
+> This approach hopes that there might be some salient data in the
+> IE stream before the corruption, and seeks to at least prevent that
+> data from being overwritten.  This approach will fix the case above.
 > 
-> Mind to provide the RF and RT chipset identifications? rt2x00 should print them
-> out during module load (at least when compiled with debugging options).
-> 
->> I could not get more than 26Mbits/sec TCP performance using iperf on both
->> sides,
+> Short of any statistics gathering in the various forms of AP breakage,
+> it's not possible to ascertain the side effects of more stringent
+> discarding of data.
 
-Just for my understanding: did you test iperf payload in both directions
-parallel or serial?
+Hmmm. This seems reasonable, but in the given example (in the bug
+report) it will at least lose the WMM info (since it's corrupt) and the
+HT info, as well as WPS (which is probably not relevant.)
 
-What about the hardware of the STA?
+I suppose better to accept such service degradation than not connect,
+but I wonder if we should log a warning when we actually try to use such
+an AP?
 
-> Did aggregation kick in? What rate was selected by the AP?
-
-I set the 80211.n options like this in hostapd.conf:
-
-ieee80211n=1
-ht_capab=[HT40+][SHORT-GI-40][SHORT-GI-20][TX-STBC1][MAX-AMSDU-3839][RX-STBC12][SMPS-STATIC][GF]
-
-It's vitally to enable 40MHz channels, above [HT40+].
-
-But you should put your own values into the config. You get them from iw
-list of the AP interface.
-
-> 
->> changing to a busier channel even made the performance drop down to
->> 5Mbits/sec, and remained like this.
-> 
-> Andreas also reported some issues as soon as the environment gets noisy,
-> not sure what the root cause for this is :(
-
-Yes, the issues I saw came up with nl80211 based STA interface running
-parallel to a ralink legacy driver based interface (the payload from
-ath9k interface was practically knocked out (DOS-attack :-)) - the
-ralink legacy driver based STA sent on briskly).
+johannes
 
 
-Kind regards,
-Andreas
