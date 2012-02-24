@@ -1,142 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:37622 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754370Ab2BCAQw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 19:16:52 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 10/28] iwlwifi: don't use the bus for ucode fw_desc any more
-Date: Thu,  2 Feb 2012 15:09:01 -0800
-Message-Id: <1328224159-18134-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120203_011657_341224_7DC6BD5B)
-In-Reply-To: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1328224159-18134-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:52582 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752235Ab2BXPzX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Feb 2012 10:55:23 -0500
+Date: Fri, 24 Feb 2012 13:55:15 -0200
+From: Gustavo Padovan <gustavo@padovan.org>
+To: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org
+Subject: Re: pull request: bluetooth-next 2012-02-24
+Message-ID: <20120224155515.GA28741@joana> (sfid-20120224_165528_469674_DBE68A8E)
+References: <20120224124202.GA9908@x220>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="YiEDa0DAkWCtVeE4"
+In-Reply-To: <20120224124202.GA9908@x220>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-This is transport related
+--YiEDa0DAkWCtVeE4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c   |   14 ++++++++------
- drivers/net/wireless/iwlwifi/iwl-trans.h |    2 +-
- drivers/net/wireless/iwlwifi/iwl-ucode.c |   20 ++++++++++----------
- 3 files changed, 19 insertions(+), 17 deletions(-)
+Hi John,
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index d890b64..8b1839a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1023,31 +1023,33 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 	/* Runtime instructions and 2 copies of data:
- 	 * 1) unmodified from disk
- 	 * 2) backup cache for save/restore during power-downs */
--	if (iwl_alloc_fw_desc(bus(priv), &trans(priv)->ucode_rt.code,
-+	if (iwl_alloc_fw_desc(trans(priv), &trans(priv)->ucode_rt.code,
- 			      pieces.inst, pieces.inst_size))
- 		goto err_pci_alloc;
--	if (iwl_alloc_fw_desc(bus(priv), &trans(priv)->ucode_rt.data,
-+	if (iwl_alloc_fw_desc(trans(priv), &trans(priv)->ucode_rt.data,
- 			      pieces.data, pieces.data_size))
- 		goto err_pci_alloc;
- 
- 	/* Initialization instructions and data */
- 	if (pieces.init_size && pieces.init_data_size) {
--		if (iwl_alloc_fw_desc(bus(priv), &trans(priv)->ucode_init.code,
-+		if (iwl_alloc_fw_desc(trans(priv),
-+				      &trans(priv)->ucode_init.code,
- 				      pieces.init, pieces.init_size))
- 			goto err_pci_alloc;
--		if (iwl_alloc_fw_desc(bus(priv), &trans(priv)->ucode_init.data,
-+		if (iwl_alloc_fw_desc(trans(priv),
-+				      &trans(priv)->ucode_init.data,
- 				      pieces.init_data, pieces.init_data_size))
- 			goto err_pci_alloc;
- 	}
- 
- 	/* WoWLAN instructions and data */
- 	if (pieces.wowlan_inst_size && pieces.wowlan_data_size) {
--		if (iwl_alloc_fw_desc(bus(priv),
-+		if (iwl_alloc_fw_desc(trans(priv),
- 				      &trans(priv)->ucode_wowlan.code,
- 				      pieces.wowlan_inst,
- 				      pieces.wowlan_inst_size))
- 			goto err_pci_alloc;
--		if (iwl_alloc_fw_desc(bus(priv),
-+		if (iwl_alloc_fw_desc(trans(priv),
- 				      &trans(priv)->ucode_wowlan.data,
- 				      pieces.wowlan_data,
- 				      pieces.wowlan_data_size))
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index dec935a..d519599 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -408,7 +408,7 @@ static inline u32 iwl_trans_read32(struct iwl_trans *trans, u32 ofs)
- /*****************************************************
- * Utils functions
- ******************************************************/
--int iwl_alloc_fw_desc(struct iwl_bus *bus, struct fw_desc *desc,
-+int iwl_alloc_fw_desc(struct iwl_trans *trans, struct fw_desc *desc,
- 		      const void *data, size_t len);
- void iwl_dealloc_ucode(struct iwl_trans *trans);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.c b/drivers/net/wireless/iwlwifi/iwl-ucode.c
-index 08483d7..793524a 100644
---- a/drivers/net/wireless/iwlwifi/iwl-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-ucode.c
-@@ -80,29 +80,29 @@ static struct iwl_wimax_coex_event_entry cu_priorities[COEX_NUM_OF_EVENTS] = {
-  *
-  ******************************************************************************/
- 
--static void iwl_free_fw_desc(struct iwl_bus *bus, struct fw_desc *desc)
-+static void iwl_free_fw_desc(struct iwl_trans *trans, struct fw_desc *desc)
- {
- 	if (desc->v_addr)
--		dma_free_coherent(trans(bus)->dev, desc->len,
-+		dma_free_coherent(trans->dev, desc->len,
- 				  desc->v_addr, desc->p_addr);
- 	desc->v_addr = NULL;
- 	desc->len = 0;
- }
- 
--static void iwl_free_fw_img(struct iwl_bus *bus, struct fw_img *img)
-+static void iwl_free_fw_img(struct iwl_trans *trans, struct fw_img *img)
- {
--	iwl_free_fw_desc(bus, &img->code);
--	iwl_free_fw_desc(bus, &img->data);
-+	iwl_free_fw_desc(trans, &img->code);
-+	iwl_free_fw_desc(trans, &img->data);
- }
- 
- void iwl_dealloc_ucode(struct iwl_trans *trans)
- {
--	iwl_free_fw_img(bus(trans), &trans->ucode_rt);
--	iwl_free_fw_img(bus(trans), &trans->ucode_init);
--	iwl_free_fw_img(bus(trans), &trans->ucode_wowlan);
-+	iwl_free_fw_img(trans, &trans->ucode_rt);
-+	iwl_free_fw_img(trans, &trans->ucode_init);
-+	iwl_free_fw_img(trans, &trans->ucode_wowlan);
- }
- 
--int iwl_alloc_fw_desc(struct iwl_bus *bus, struct fw_desc *desc,
-+int iwl_alloc_fw_desc(struct iwl_trans *trans, struct fw_desc *desc,
- 		      const void *data, size_t len)
- {
- 	if (!len) {
-@@ -110,7 +110,7 @@ int iwl_alloc_fw_desc(struct iwl_bus *bus, struct fw_desc *desc,
- 		return -EINVAL;
- 	}
- 
--	desc->v_addr = dma_alloc_coherent(trans(bus)->dev, len,
-+	desc->v_addr = dma_alloc_coherent(trans->dev, len,
- 					  &desc->p_addr, GFP_KERNEL);
- 	if (!desc->v_addr)
- 		return -ENOMEM;
--- 
-1.7.0.4
+* Johan Hedberg <johan.hedberg@gmail.com> [2012-02-24 14:42:02 +0200]:
 
+> Hi John,
+>=20
+> Here's a pull request for the work done in the bluetooth-next tree for
+> the past month or so. It's quite a big request but the vast majority of
+> changes are related to the new Bluetooth Management interface and
+> doesn't touch existing functionality or interfaces. We decided to
+> finally enable this interface by default (the enable_mgmt module option
+> is gone) which is why we spent a good amount of time fine-tuning it so
+> we have an as stable API as possible (this also contributed to the large
+> amount of commits in the request).
+>=20
+> Other than the mgmt stuff there are further fixes left over from the
+> move from tasklets to workqueues (related to locking, GFP_KERNEL vs.
+> GFP_ATOMIC, etc). There are also fixes to Enhanced L2CAP code which
+> revealed itself to be more buggy than expected at the last Bluetooth
+> UnplugFest testing event.
+>=20
+> Johan
+>=20
+> ---
+>=20
+> The following changes since commit ca994a36f585432458ead9133fcfe05440edbb=
+7b:
+>=20
+>   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/=
+linville/wireless (2012-02-15 16:24:37 -0500)
+>=20
+> are available in the git repository at:
+>=20
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jh/bluetooth-next.git for=
+-john
+>=20
+> for you to fetch changes up to 28b8df77449faa03b573638e089a855f8d25e0ed:
+>=20
+>   Bluetooth: Fix init request completion with AMP controllers (2012-02-24=
+ 14:02:21 +0200)
+
+Acked-by: Gustavo F. Padovan <padovan@profusion.mobi>
+
+Sorry about this big pull, for the next merge window we will be back the to
+almost weekly pull requests. If this is going to cause any problem for you
+tell us. Thanks for pulling!
+
+	Gustavo
+
+--YiEDa0DAkWCtVeE4
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPR7LjAAoJEPs3PUX4s20oeSQQAI4N4A6JmcIscN1tKpZDUQK7
+0K/mQcExdfIDHcq0rjD1OtuwOl3E6V3KXFZAOI9qbTLDy+fT8WZPJaH3rO5IdyET
+gON9ogtu3rrvHFuOR+/Asz8GtuohaL0xPiK6AN/eDyYY9YEAKxk24j5rK/1bfDHv
+3C/nyQxi86qNQ0UvZenhVDsWAE5PcFoPzpU49BcLaETreiPDz73JQXhMmQteCsq/
+7faHoRq0ZCRNdAlnnDOViNxJxnHR5DfHYywVaonsOke5+pG2z/bsj+3xx7ADa6EP
+Paku/UfAxfHGxgo3SzMP2q8IcTg4lK1fD0P/PA+xedCG7UEIhv4kj1iOxweTQuvG
+jZXrorSmZtUZUzLYRS4CUw7Is2JlSpLvKDdZWb3BnqMGkvmkV5KisCEKekRiFnCA
+xf1e3NGI1kIPrGY+J5dyaPLcnIpHHBTKzsXKe9kUp5Ae9DlCYkABi9mmUHH/vzE1
+rq6dnc51bTtzomkXL4EwgkUnX0Bf4WyORyRoSyHYMmVLMVz9vj7pEvX1vLMWQFmh
+ihvrIwncsjxwhbmxwYSVCyxDYNWmu4uMmVedsA75I8yeZjV+VcOYsDSCtzPATU/A
+wNdL0yWekQsTTHdNZxNojQ6e58Rv7gaUV2qg5lf/geOKtu5bnIgWzy1x59ITSW2l
+sRh47wTeNvGgUnaciUIl
+=Z3VL
+-----END PGP SIGNATURE-----
+
+--YiEDa0DAkWCtVeE4--
