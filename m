@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cpsmtpb-ews10.kpnxchange.com ([213.75.39.15]:2813 "EHLO
-	cpsmtpb-ews10.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754289Ab2BHWDE (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:37751 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751979Ab2BXGHa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 17:03:04 -0500
-Message-ID: <4F32F116.6040106@gmail.com> (sfid-20120208_230307_298874_E04400F6)
-Date: Wed, 08 Feb 2012 23:03:02 +0100
-From: Gertjan van Wingerde <gwingerde@gmail.com>
+	Fri, 24 Feb 2012 01:07:30 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [RFC 1/3] ath9k: completely zero intialize valid_phy_rate_idx
+Date: Fri, 24 Feb 2012 11:37:19 +0530
+Message-ID: <1330063641-4524-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120224_070734_164798_E167FF83)
 MIME-Version: 1.0
-To: John Li <john.li.mediatek@gmail.com>
-CC: users@rt2x00.serialmonkey.com, linux-wireless@vger.kernel.org,
-	John Linville <linville@tuxdriver.com>,
-	John Li <chen-yang.li@mediatek.com>
-Subject: Re: [PATCH] rt2x00:Add debug message for new chipset
-References: <1328707524-11415-1-git-send-email-john.li.mediatek@gmail.com>
-In-Reply-To: <1328707524-11415-1-git-send-email-john.li.mediatek@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/08/12 14:25, John Li wrote:
-> From: John Li <chen-yang.li@mediatek.com>
-> 
-> Signed-off-by: John Li <chen-yang.li@mediatek.com>
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-Acked-by: Gertjan van Wingerde <gwingerde@gmail.com>
+its better to zero initialize the 'valid_phy_rate_idx' array completely
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800lib.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-> index 22a1a8f..6bdf6d6 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-> @@ -3949,7 +3949,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
->  	case RT5390:
->  		break;
->  	default:
-> -		ERROR(rt2x00dev, "Invalid RT chipset detected.\n");
-> +		ERROR(rt2x00dev, "Invalid RT chipset 0x%04x detected.\n", rt2x00dev->chip.rt);
->  		return -ENODEV;
->  	}
->  
-> @@ -3968,7 +3968,7 @@ int rt2800_init_eeprom(struct rt2x00_dev *rt2x00dev)
->  	case RF5390:
->  		break;
->  	default:
-> -		ERROR(rt2x00dev, "Invalid RF chipset 0x%x detected.\n",
-> +		ERROR(rt2x00dev, "Invalid RF chipset 0x%04x detected.\n",
->  		      rt2x00dev->chip.rf);
->  		return -ENODEV;
->  	}
-
-
--- 
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 ---
-Gertjan
+ drivers/net/wireless/ath/ath9k/rc.c |    2 +-
+ drivers/net/wireless/ath/ath9k/rc.h |    2 --
+ 2 files changed, 1 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index a427a16..424864b 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1228,7 +1228,7 @@ static void ath_rc_init(struct ath_softc *sc,
+ 	ath_rc_init_valid_rate_idx(ath_rc_priv);
+ 
+ 	for (i = 0; i < WLAN_RC_PHY_MAX; i++) {
+-		for (j = 0; j < MAX_TX_RATE_PHY; j++)
++		for (j = 0; j < RATE_TABLE_SIZE; j++)
+ 			ath_rc_priv->valid_phy_rateidx[i][j] = 0;
+ 		ath_rc_priv->valid_phy_ratecnt[i] = 0;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/rc.h b/drivers/net/wireless/ath/ath9k/rc.h
+index b7a4bcd..75f8e9b 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.h
++++ b/drivers/net/wireless/ath/ath9k/rc.h
+@@ -25,8 +25,6 @@ struct ath_softc;
+ 
+ #define ATH_RATE_MAX     30
+ #define RATE_TABLE_SIZE  72
+-#define MAX_TX_RATE_PHY  48
+-
+ 
+ #define RC_INVALID	0x0000
+ #define RC_LEGACY	0x0001
+-- 
+1.7.0.4
+
