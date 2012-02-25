@@ -1,328 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:27191 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755253Ab2BYJLc (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:44967 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757648Ab2BYT23 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Feb 2012 04:11:32 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH V2 3/5] ath6kl: Refactor ath6kl_wmi_control_rx()
-Date: Sat, 25 Feb 2012 14:41:06 +0530
-Message-ID: <1330161068-8413-3-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120225_101206_213808_26DFD245)
-In-Reply-To: <1330161068-8413-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1330161068-8413-1-git-send-email-vthiagar@qca.qualcomm.com>
+	Sat, 25 Feb 2012 14:28:29 -0500
+Received: by werb13 with SMTP id b13so2075031wer.19
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Feb 2012 11:28:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <4F4772AB.9000305@posedge.com>
+References: <f17c700977012ada368da4f339b9c639@posedge.com>
+	<1329933458.4657.2.camel@jlt3.sipsolutions.net>
+	<1329937072.4657.4.camel@jlt3.sipsolutions.net>
+	<4F471F40.8060503@posedge.com>
+	<1330070145.3426.8.camel@jlt3.sipsolutions.net>
+	<4F4772AB.9000305@posedge.com>
+Date: Sat, 25 Feb 2012 11:22:58 -0800
+Message-ID: <CAJ-VmomfVCc0oQMjfwsrheC+Z2k3+-czo4F9GeeO=upHiHnQxg@mail.gmail.com> (sfid-20120225_202833_345255_DD58598C)
+Subject: Re: [RFCv2] cfg80211: 80Mhz Bandwidth channel flags in 5Gig band
+From: Adrian Chadd <adrian@freebsd.org>
+To: Mahesh <maheshp@posedge.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>, linville@tuxdriver.com,
+	linux-wireless@vger.kernel.org,
+	Chakra Parvathaneni <chakra@posedge.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Split the wmi event processing into the one which needs to be
-vif specific and the reset. This is a step towards avoiding
-the need for wiphy and a netdev registration before getting
-any message from firmware.
+.. and this doesn't yet address VHT160, which is part of the 11ac spec too.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/wmi.c |  200 ++++++++++++++++-----------------
- 1 files changed, 99 insertions(+), 101 deletions(-)
+I think it's worth having a bit more of a total, overall architecture
+discussion about what 11ac support -should- look like before bits are
+comitted, so you don't have to go and change them later (and possibly
+break some internal company drivers whilst doing so.)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index bbbe0a7..0527933 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -3369,32 +3369,101 @@ static int ath6kl_wmi_roam_tbl_event_rx(struct wmi *wmi, u8 *datap, int len)
- 	return ath6kl_debug_roam_tbl_event(wmi->parent_dev, datap, len);
- }
- 
--/* Control Path */
--int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
-+/* Process interface specific wmi events, caller would free the datap */
-+static int ath6kl_wmi_proc_events_iface(struct wmi *wmi, u16 if_idx, u16 cmd_id,
-+					u8 *datap, u32 len)
- {
--	struct wmi_cmd_hdr *cmd;
- 	struct ath6kl_vif *vif;
--	u32 len;
--	u16 id;
--	u8 if_idx;
--	u8 *datap;
--	int ret = 0;
- 
--	if (WARN_ON(skb == NULL))
-+	vif = ath6kl_get_vif_by_index(wmi->parent_dev, if_idx);
-+	if (!vif) {
-+		ath6kl_dbg(ATH6KL_DBG_WMI,
-+			   "Wmi event for unavailable vif, vif_index:%d\n",
-+			    if_idx);
- 		return -EINVAL;
-+	}
- 
--	if (skb->len < sizeof(struct wmi_cmd_hdr)) {
--		ath6kl_err("bad packet 1\n");
--		dev_kfree_skb(skb);
-+	switch (cmd_id) {
-+	case WMI_CONNECT_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_CONNECT_EVENTID\n");
-+		return ath6kl_wmi_connect_event_rx(wmi, datap, len, vif);
-+	case WMI_DISCONNECT_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_DISCONNECT_EVENTID\n");
-+		return ath6kl_wmi_disconnect_event_rx(wmi, datap, len, vif);
-+	case WMI_TKIP_MICERR_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_TKIP_MICERR_EVENTID\n");
-+		return ath6kl_wmi_tkip_micerr_event_rx(wmi, datap, len, vif);
-+	case WMI_BSSINFO_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_BSSINFO_EVENTID\n");
-+		return ath6kl_wmi_bssinfo_event_rx(wmi, datap, len, vif);
-+	case WMI_NEIGHBOR_REPORT_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_NEIGHBOR_REPORT_EVENTID\n");
-+		return ath6kl_wmi_neighbor_report_event_rx(wmi, datap, len,
-+							   vif);
-+	case WMI_SCAN_COMPLETE_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_SCAN_COMPLETE_EVENTID\n");
-+		return ath6kl_wmi_scan_complete_rx(wmi, datap, len, vif);
-+	case WMI_REPORT_STATISTICS_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_REPORT_STATISTICS_EVENTID\n");
-+		return ath6kl_wmi_stats_event_rx(wmi, datap, len, vif);
-+	case WMI_CAC_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_CAC_EVENTID\n");
-+		return ath6kl_wmi_cac_event_rx(wmi, datap, len, vif);
-+	case WMI_PSPOLL_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_PSPOLL_EVENTID\n");
-+		return ath6kl_wmi_pspoll_event_rx(wmi, datap, len, vif);
-+	case WMI_DTIMEXPIRY_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_DTIMEXPIRY_EVENTID\n");
-+		return ath6kl_wmi_dtimexpiry_event_rx(wmi, datap, len, vif);
-+	case WMI_ADDBA_REQ_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_ADDBA_REQ_EVENTID\n");
-+		return ath6kl_wmi_addba_req_event_rx(wmi, datap, len, vif);
-+	case WMI_DELBA_REQ_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_DELBA_REQ_EVENTID\n");
-+		return ath6kl_wmi_delba_req_event_rx(wmi, datap, len, vif);
-+	case WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI,
-+			   "WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID");
-+		return ath6kl_wmi_host_sleep_mode_cmd_prcd_evt_rx(wmi, vif);
-+	case WMI_REMAIN_ON_CHNL_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_REMAIN_ON_CHNL_EVENTID\n");
-+		return ath6kl_wmi_remain_on_chnl_event_rx(wmi, datap, len, vif);
-+	case WMI_CANCEL_REMAIN_ON_CHNL_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI,
-+			   "WMI_CANCEL_REMAIN_ON_CHNL_EVENTID\n");
-+		return ath6kl_wmi_cancel_remain_on_chnl_event_rx(wmi, datap,
-+								 len, vif);
-+	case WMI_TX_STATUS_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_TX_STATUS_EVENTID\n");
-+		return ath6kl_wmi_tx_status_event_rx(wmi, datap, len, vif);
-+	case WMI_RX_PROBE_REQ_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_RX_PROBE_REQ_EVENTID\n");
-+		return ath6kl_wmi_rx_probe_req_event_rx(wmi, datap, len, vif);
-+	case WMI_RX_ACTION_EVENTID:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_RX_ACTION_EVENTID\n");
-+		return ath6kl_wmi_rx_action_event_rx(wmi, datap, len, vif);
-+	default:
-+		ath6kl_dbg(ATH6KL_DBG_WMI, "unknown cmd id 0x%x\n", cmd_id);
- 		return -EINVAL;
- 	}
- 
-+	return 0;
-+}
-+
-+static int ath6kl_wmi_proc_events(struct wmi *wmi, struct sk_buff *skb)
-+{
-+	struct wmi_cmd_hdr *cmd;
-+	int ret = 0;
-+	u32 len;
-+	u16 id;
-+	u8 if_idx;
-+	u8 *datap;
-+
- 	cmd = (struct wmi_cmd_hdr *) skb->data;
- 	id = le16_to_cpu(cmd->cmd_id);
- 	if_idx = le16_to_cpu(cmd->info1) & WMI_CMD_HDR_IF_ID_MASK;
- 
- 	skb_pull(skb, sizeof(struct wmi_cmd_hdr));
--
- 	datap = skb->data;
- 	len = skb->len;
- 
-@@ -3402,15 +3471,6 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
- 	ath6kl_dbg_dump(ATH6KL_DBG_WMI_DUMP, NULL, "wmi rx ",
- 			datap, len);
- 
--	vif = ath6kl_get_vif_by_index(wmi->parent_dev, if_idx);
--	if (!vif) {
--		ath6kl_dbg(ATH6KL_DBG_WMI,
--			   "Wmi event for unavailable vif, vif_index:%d\n",
--			    if_idx);
--		dev_kfree_skb(skb);
--		return -EINVAL;
--	}
--
- 	switch (id) {
- 	case WMI_GET_BITRATE_CMDID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_GET_BITRATE_CMDID\n");
-@@ -3428,26 +3488,10 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_READY_EVENTID\n");
- 		ret = ath6kl_wmi_ready_event_rx(wmi, datap, len);
- 		break;
--	case WMI_CONNECT_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_CONNECT_EVENTID\n");
--		ret = ath6kl_wmi_connect_event_rx(wmi, datap, len, vif);
--		break;
--	case WMI_DISCONNECT_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_DISCONNECT_EVENTID\n");
--		ret = ath6kl_wmi_disconnect_event_rx(wmi, datap, len, vif);
--		break;
- 	case WMI_PEER_NODE_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_PEER_NODE_EVENTID\n");
- 		ret = ath6kl_wmi_peer_node_event_rx(wmi, datap, len);
- 		break;
--	case WMI_TKIP_MICERR_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_TKIP_MICERR_EVENTID\n");
--		ret = ath6kl_wmi_tkip_micerr_event_rx(wmi, datap, len, vif);
--		break;
--	case WMI_BSSINFO_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_BSSINFO_EVENTID\n");
--		ret = ath6kl_wmi_bssinfo_event_rx(wmi, datap, len, vif);
--		break;
- 	case WMI_REGDOMAIN_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_REGDOMAIN_EVENTID\n");
- 		ath6kl_wmi_regdomain_event(wmi, datap, len);
-@@ -3456,23 +3500,10 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_PSTREAM_TIMEOUT_EVENTID\n");
- 		ret = ath6kl_wmi_pstream_timeout_event_rx(wmi, datap, len);
- 		break;
--	case WMI_NEIGHBOR_REPORT_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_NEIGHBOR_REPORT_EVENTID\n");
--		ret = ath6kl_wmi_neighbor_report_event_rx(wmi, datap, len,
--							  vif);
--		break;
--	case WMI_SCAN_COMPLETE_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_SCAN_COMPLETE_EVENTID\n");
--		ret = ath6kl_wmi_scan_complete_rx(wmi, datap, len, vif);
--		break;
- 	case WMI_CMDERROR_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_CMDERROR_EVENTID\n");
- 		ret = ath6kl_wmi_error_event_rx(wmi, datap, len);
- 		break;
--	case WMI_REPORT_STATISTICS_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_REPORT_STATISTICS_EVENTID\n");
--		ret = ath6kl_wmi_stats_event_rx(wmi, datap, len, vif);
--		break;
- 	case WMI_RSSI_THRESHOLD_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_RSSI_THRESHOLD_EVENTID\n");
- 		ret = ath6kl_wmi_rssi_threshold_event_rx(wmi, datap, len);
-@@ -3492,10 +3523,6 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_EXTENSION_EVENTID\n");
- 		ret = ath6kl_wmi_control_rx_xtnd(wmi, skb);
- 		break;
--	case WMI_CAC_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_CAC_EVENTID\n");
--		ret = ath6kl_wmi_cac_event_rx(wmi, datap, len, vif);
--		break;
- 	case WMI_CHANNEL_CHANGE_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_CHANNEL_CHANGE_EVENTID\n");
- 		break;
-@@ -3535,28 +3562,12 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_GET_PMKID_LIST_EVENTID\n");
- 		ret = ath6kl_wmi_get_pmkid_list_event_rx(wmi, datap, len);
- 		break;
--	case WMI_PSPOLL_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_PSPOLL_EVENTID\n");
--		ret = ath6kl_wmi_pspoll_event_rx(wmi, datap, len, vif);
--		break;
--	case WMI_DTIMEXPIRY_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_DTIMEXPIRY_EVENTID\n");
--		ret = ath6kl_wmi_dtimexpiry_event_rx(wmi, datap, len, vif);
--		break;
- 	case WMI_SET_PARAMS_REPLY_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_SET_PARAMS_REPLY_EVENTID\n");
- 		break;
--	case WMI_ADDBA_REQ_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_ADDBA_REQ_EVENTID\n");
--		ret = ath6kl_wmi_addba_req_event_rx(wmi, datap, len, vif);
--		break;
- 	case WMI_ADDBA_RESP_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_ADDBA_RESP_EVENTID\n");
- 		break;
--	case WMI_DELBA_REQ_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_DELBA_REQ_EVENTID\n");
--		ret = ath6kl_wmi_delba_req_event_rx(wmi, datap, len, vif);
--		break;
- 	case WMI_REPORT_BTCOEX_CONFIG_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI,
- 			   "WMI_REPORT_BTCOEX_CONFIG_EVENTID\n");
-@@ -3569,52 +3580,39 @@ int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_TX_COMPLETE_EVENTID\n");
- 		ret = ath6kl_wmi_tx_complete_event_rx(datap, len);
- 		break;
--	case WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI,
--			   "WMI_SET_HOST_SLEEP_MODE_CMD_PROCESSED_EVENTID");
--		ret = ath6kl_wmi_host_sleep_mode_cmd_prcd_evt_rx(wmi, vif);
--		break;
--	case WMI_REMAIN_ON_CHNL_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_REMAIN_ON_CHNL_EVENTID\n");
--		ret = ath6kl_wmi_remain_on_chnl_event_rx(wmi, datap, len, vif);
--		break;
--	case WMI_CANCEL_REMAIN_ON_CHNL_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI,
--			   "WMI_CANCEL_REMAIN_ON_CHNL_EVENTID\n");
--		ret = ath6kl_wmi_cancel_remain_on_chnl_event_rx(wmi, datap,
--								len, vif);
--		break;
--	case WMI_TX_STATUS_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_TX_STATUS_EVENTID\n");
--		ret = ath6kl_wmi_tx_status_event_rx(wmi, datap, len, vif);
--		break;
--	case WMI_RX_PROBE_REQ_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_RX_PROBE_REQ_EVENTID\n");
--		ret = ath6kl_wmi_rx_probe_req_event_rx(wmi, datap, len, vif);
--		break;
- 	case WMI_P2P_CAPABILITIES_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_P2P_CAPABILITIES_EVENTID\n");
- 		ret = ath6kl_wmi_p2p_capabilities_event_rx(datap, len);
- 		break;
--	case WMI_RX_ACTION_EVENTID:
--		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_RX_ACTION_EVENTID\n");
--		ret = ath6kl_wmi_rx_action_event_rx(wmi, datap, len, vif);
--		break;
- 	case WMI_P2P_INFO_EVENTID:
- 		ath6kl_dbg(ATH6KL_DBG_WMI, "WMI_P2P_INFO_EVENTID\n");
- 		ret = ath6kl_wmi_p2p_info_event_rx(datap, len);
- 		break;
- 	default:
--		ath6kl_dbg(ATH6KL_DBG_WMI, "unknown cmd id 0x%x\n", id);
--		ret = -EINVAL;
-+		/* may be the event is interface specific */
-+		ret = ath6kl_wmi_proc_events_iface(wmi, if_idx, id, datap, len);
- 		break;
- 	}
- 
- 	dev_kfree_skb(skb);
--
- 	return ret;
- }
- 
-+/* Control Path */
-+int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
-+{
-+	if (WARN_ON(skb == NULL))
-+		return -EINVAL;
-+
-+	if (skb->len < sizeof(struct wmi_cmd_hdr)) {
-+		ath6kl_err("bad packet 1\n");
-+		dev_kfree_skb(skb);
-+		return -EINVAL;
-+	}
-+
-+	return ath6kl_wmi_proc_events(wmi, skb);
-+}
-+
- void ath6kl_wmi_reset(struct wmi *wmi)
- {
- 	spin_lock_bh(&wmi->lock);
--- 
-1.7.0.4
+So - what else is likely needed for the upcoming 11ac standard?
 
+Disclaimer: I'm speaking from my personal opinion rather than that of
+Qualcomm Atheros.
+
+
+
+adrian
