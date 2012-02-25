@@ -1,124 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:41997 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755976Ab2BGUBk (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:34915 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932150Ab2BYETs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 15:01:40 -0500
-Date: Tue, 7 Feb 2012 14:56:22 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Linux Wireless Stuff for IOPEN <linwir-list@iopen.net>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [wireless-regdb] Update regulatory rules for New Zealand (NZ)
-Message-ID: <20120207195622.GH5560@tuxdriver.com> (sfid-20120207_210145_100966_F59DB4D1)
-References: <4E73F3FA.502@iopen.net>
- <20110919141340.GB2608@tuxdriver.com>
- <4E7AA97D.40402@iopen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4E7AA97D.40402@iopen.net>
+	Fri, 24 Feb 2012 23:19:48 -0500
+Received: by mail-pz0-f46.google.com with SMTP id d14so3190091dae.19
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2012 20:19:47 -0800 (PST)
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: linux-wireless@vger.kernel.org
+Cc: hauke@hauke-m.de, nbd@nbd.name, linville@tuxdriver.com,
+	"Luis R. Rodriguez" <mcgrof@frijolero.org>
+Subject: [PATCH 4/4] compat: fix compat_firmware class for all kernels
+Date: Fri, 24 Feb 2012 20:19:29 -0800
+Message-Id: <1330143569-30296-5-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120225_051951_353364_ADB8A7F9)
+In-Reply-To: <1330143569-30296-1-git-send-email-rodrigue@qca.qualcomm.com>
+References: <1330143569-30296-1-git-send-email-rodrigue@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sorry for the delay, and thanks for the patch.
+From: Luis R. Rodriguez <mcgrof@frijolero.org>
 
-Could you perhaps produce the patch in "diff -u" format?  Also,
-could you include a proper "Signed-off-by" line?
+Instead of ifdef checks on the to_dev() just simply rename it
+to avoid clashes. This fixes compiling against all supported
+kernels on compat.
 
-Thanks,
+mcgrof@tux ~/compat (git::master)$ ckmake
+Trying kernel                  3.3.0-030300rc2-generic  [OK]
+Trying kernel                     3.2.2-030202-generic  [OK]
+Trying kernel                    3.1.10-030110-generic  [OK]
+Trying kernel                    3.0.18-030018-generic  [OK]
+Trying kernel                  2.6.39-02063904-generic  [OK]
+Trying kernel                         2.6.38-8-generic  [OK]
+Trying kernel                        2.6.38-13-generic  [OK]
+Trying kernel                        2.6.38-12-generic  [OK]
+Trying kernel                        2.6.38-11-generic  [OK]
+Trying kernel                        2.6.38-10-generic  [OK]
+Trying kernel                  2.6.38-02063808-generic  [OK]
+Trying kernel                  2.6.37-02063706-generic  [OK]
+Trying kernel                  2.6.36-02063604-generic  [OK]
+Trying kernel                  2.6.35-02063512-generic  [OK]
+Trying kernel                  2.6.34-02063410-generic  [OK]
+Trying kernel                  2.6.33-02063305-generic  [OK]
+Trying kernel                  2.6.32-02063255-generic  [OK]
+Trying kernel                        2.6.31-22-generic  [OK]
+Trying kernel                  2.6.31-02063113-generic  [OK]
+Trying kernel                  2.6.30-02063010-generic  [OK]
+Trying kernel                  2.6.29-02062906-generic  [OK]
+Trying kernel                  2.6.28-02062810-generic  [OK]
+Trying kernel                    2.6.27-020627-generic  [OK]
+Trying kernel                    2.6.26-020626-generic  [OK]
+Trying kernel                    2.6.25-020625-generic  [OK]
+Trying kernel                    2.6.24-020624-generic  [OK]
 
-John
+Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
+---
+ compat/compat_firmware_class.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
 
-On Thu, Sep 22, 2011 at 03:20:29PM +1200, Linux Wireless Stuff for IOPEN wrote:
-> On 09/20/2011 02:13 AM, John W. Linville wrote:
-> > On Sat, Sep 17, 2011 at 01:12:26PM +1200, Linux Wireless Stuff for IOPEN wrote:
-> >> From Fedora 14 :
-> >> ==============
-> >>
-> >>> country NZ:
-> >>>         (2402 - 2482 @ 40), (N/A, 30)
-> >>>         (5170 - 5250 @ 20), (3, 23)
-> >>>         (5250 - 5330 @ 20), (3, 23), DFS
-> >>>         (5735 - 5835 @ 20), (3, 30)
-> >>
-> >> Updates for 2.4 GHz :
-> >> ===================
-> >>
-> >>   Frequency range is 2400 to 2483.5 (Ref 1)
-> >>   Maximum EIRP is 36 dBm (4 W)      (Ref 1)
-> >>
-> >> Updates for 5 GHz :
-> >> =================
-> >>
-> >>   5150 - 5250  23 dBm (200 mW) indoor only            (Ref 1,3)
-> >>   5250 - 5350  23 dBm (200 mW) indoor/outdoor,DFS+TPC (Ref 1,3)
-> >>   5725 - 5875  36 dBm (  4  W) PtMP/PtP               (Ref 1,3)
-> >>   5725 - 5825  53 dBm (200  W) PtP fixed              (Ref 1,2,3)
-> >>
-> >>   And possibly this via the Spread Spectrum Device provision
-> >>
-> >>   5470 - 5725  30 dBm (  1  W) requires DFS+TPC       (Ref 3)
-> >>
-> >>   Maximum power density is specified for some chunks.
-> >>
-> >> References :
-> >> ==========
-> >> 1 :
-> >>> http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/fixed-radio-link-devices/information-on-the-operation-of-wireless-lan-and-related-systems-in-the-2-ghz-and-5-ghz-bands
-> >> 2 :
-> >>> http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/fixed-radio-link-devices
-> >> 3 :
-> >>> http://www.rsm.govt.nz/cms/licensees/types-of-licence/general-user-licences/short-range-devices
-> >>
-> >> Cheers
-> >> The IOPEN wireless deployers
-> > 
-> > Thanks for the info.  Any chance you could propose this in the form
-> > of a patch?
-> 
-> TaDa!
-> 
-> kernel.org is still down so we've derived the below patch from ...
-> 
-> > http://linuxwireless.org/download/wireless-regdb/wireless-regdb-2011.04.28.tar.bz2
-> 
-> For the DFS items, if TPC isn't used the maximum power is 3 dB less, but
-> there's no way of representing that in your scheme.
-> 
-> -----CUT-----
-> *** db.txt      2011-04-29 07:17:40.000000000 +1200
-> --- db-updated.txt      2011-09-22 14:36:04.966154148 +1200
-> ***************
-> 
-> *** 512,521 ****
->         (5735 - 5835 @ 40), (N/A, 30)
-> 
->   country NZ:
-> !       (2402 - 2482 @ 40), (N/A, 30)
-> !       (5170 - 5250 @ 20), (3, 23)
-> !       (5250 - 5330 @ 20), (3, 23), DFS
-> !       (5735 - 5835 @ 20), (3, 30)
-> 
->   country OM:
->         (2402 - 2482 @ 40), (N/A, 20)
-> --- 512,523 ----
->         (5735 - 5835 @ 40), (N/A, 30)
-> 
->   country NZ:
-> !       (2400 - 2483 @ 40), (N/A, 36)
-> !       (5150 - 5250 @ 40), (N/A, 23), NO-OUTDOOR
-> !       (5250 - 5350 @ 40), (N/A, 23), DFS
-> !       (5470 - 5725 @ 40), (N/A, 30), DFS
-> !       (5725 - 5875 @ 40), (N/A, 36)
-> !       (5725 - 5825 @ 40), (N/A, 53), PTP-ONLY
-> 
->   country OM:
->         (2402 - 2482 @ 40), (N/A, 20)
-> -----CUT-----
-> 
-> Cheers
-> The IOPEN wireless deployers
-> 
-
+diff --git a/compat/compat_firmware_class.c b/compat/compat_firmware_class.c
+index b085677..eb97dfc 100644
+--- a/compat/compat_firmware_class.c
++++ b/compat/compat_firmware_class.c
+@@ -21,10 +21,7 @@
+ #include <linux/firmware.h>
+ #include <linux/slab.h>
+ 
+-#ifdef to_dev
+-#undef to_dev
+-#define to_dev(obj) container_of(obj, struct device, kobj)
+-#endif
++#define compat_firmware_to_dev(obj) container_of(obj, struct device, kobj)
+ 
+ MODULE_AUTHOR("Manuel Estrada Sainz");
+ MODULE_DESCRIPTION("Multi purpose firmware loading support");
+@@ -327,7 +324,7 @@ static ssize_t firmware_data_read(struct kobject *kobj,
+ 				  char *buffer, loff_t offset, size_t count)
+ #endif
+ {
+-	struct device *dev = to_dev(kobj);
++	struct device *dev = compat_firmware_to_dev(kobj);
+ 	struct firmware_priv *fw_priv = to_firmware_priv(dev);
+ 	struct firmware *fw;
+ 	ssize_t ret_count;
+@@ -426,7 +423,7 @@ static ssize_t firmware_data_write(struct kobject *kobj,
+ 				   char *buffer, loff_t offset, size_t count)
+ #endif
+ {
+-	struct device *dev = to_dev(kobj);
++	struct device *dev = compat_firmware_to_dev(kobj);
+ 	struct firmware_priv *fw_priv = to_firmware_priv(dev);
+ 	struct firmware *fw;
+ 	ssize_t retval;
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.4.15.g7811d
+
