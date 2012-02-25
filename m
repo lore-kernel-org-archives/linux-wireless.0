@@ -1,75 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:60769 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755856Ab2BVK62 (ORCPT
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:43836 "HELO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751206Ab2BYFiq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 05:58:28 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH 4/5] ath6kl: Skip vif index validation in ath6kl_rx() for wmi events
-Date: Wed, 22 Feb 2012 16:27:31 +0530
-Message-ID: <1329908252-16645-4-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120222_115832_425932_F88F887E)
-In-Reply-To: <1329908252-16645-1-git-send-email-vthiagar@qca.qualcomm.com>
-References: <1329908252-16645-1-git-send-email-vthiagar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 25 Feb 2012 00:38:46 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3.3] mwifiex: correct bitrates advertised to cfg80211
+Date: Fri, 24 Feb 2012 21:35:45 -0800
+Message-Id: <1330148145-28895-1-git-send-email-bzhao@marvell.com> (sfid-20120225_063848_535698_E4A085DE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the wmi event is vif specific, the validation of vif index
-is taken care in ath6kl_wmi_proc_events_iface(). This also avoids
-the need for a netdev to be registered while receiving initial events
-like "target_ready" and "regulatory domain".
+From: Avinash Patil <patila@marvell.com>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+1. Remove non-standard rates 22Mbps and 72Mbps.
+2. First 4 rates from mwifiex_rates table are not valid for
+5GHz/A band. Set correct bitrate array's index and no of rates for
+ieee80211_supported_band for 5GHz band.
+
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/ath/ath6kl/txrx.c |   17 ++++++++---------
- 1 files changed, 8 insertions(+), 9 deletions(-)
+ drivers/net/wireless/mwifiex/cfg80211.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 87d4646..9d18930 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -1297,7 +1297,15 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 	skb_put(skb, packet->act_len + HTC_HDR_LENGTH);
- 	skb_pull(skb, HTC_HDR_LENGTH);
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 7b98ce0..2a1fc32 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -613,7 +613,6 @@ static struct ieee80211_rate mwifiex_rates[] = {
+ 	{.bitrate = 20, .hw_value = 4, },
+ 	{.bitrate = 55, .hw_value = 11, },
+ 	{.bitrate = 110, .hw_value = 22, },
+-	{.bitrate = 220, .hw_value = 44, },
+ 	{.bitrate = 60, .hw_value = 12, },
+ 	{.bitrate = 90, .hw_value = 18, },
+ 	{.bitrate = 120, .hw_value = 24, },
+@@ -622,7 +621,6 @@ static struct ieee80211_rate mwifiex_rates[] = {
+ 	{.bitrate = 360, .hw_value = 72, },
+ 	{.bitrate = 480, .hw_value = 96, },
+ 	{.bitrate = 540, .hw_value = 108, },
+-	{.bitrate = 720, .hw_value = 144, },
+ };
  
-+	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, __func__, "rx ",
-+			skb->data, skb->len);
-+
- 	if (ept == ar->ctrl_ep) {
-+		if (test_bit(WMI_ENABLED, &ar->flag)) {
-+			ath6kl_check_wow_status(ar);
-+			ath6kl_wmi_control_rx(ar->wmi, skb);
-+			return;
-+		}
- 		if_idx =
- 		wmi_cmd_hdr_get_if_idx((struct wmi_cmd_hdr *) skb->data);
- 	} else {
-@@ -1322,10 +1330,6 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
+ /* Channel definitions to be advertised to cfg80211 */
+@@ -688,8 +686,8 @@ static struct ieee80211_channel mwifiex_channels_5ghz[] = {
+ static struct ieee80211_supported_band mwifiex_band_5ghz = {
+ 	.channels = mwifiex_channels_5ghz,
+ 	.n_channels = ARRAY_SIZE(mwifiex_channels_5ghz),
+-	.bitrates = mwifiex_rates - 4,
+-	.n_bitrates = ARRAY_SIZE(mwifiex_rates) + 4,
++	.bitrates = mwifiex_rates + 4,
++	.n_bitrates = ARRAY_SIZE(mwifiex_rates) - 4,
+ };
  
- 	spin_unlock_bh(&vif->if_lock);
- 
--
--	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, __func__, "rx ",
--			skb->data, skb->len);
--
- 	skb->dev = vif->ndev;
- 
- 	if (!test_bit(WMI_ENABLED, &ar->flag)) {
-@@ -1337,11 +1341,6 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 
- 	ath6kl_check_wow_status(ar);
- 
--	if (ept == ar->ctrl_ep) {
--		ath6kl_wmi_control_rx(ar->wmi, skb);
--		return;
--	}
--
- 	min_hdr_len = sizeof(struct ethhdr) + sizeof(struct wmi_data_hdr) +
- 		      sizeof(struct ath6kl_llc_snap_hdr);
  
 -- 
-1.7.0.4
+1.7.0.2
 
