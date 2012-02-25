@@ -1,102 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:64080 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755863Ab2BYCln (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39681 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757257Ab2BYBwL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 21:41:43 -0500
-Received: by pbcup15 with SMTP id up15so114106pbc.19
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2012 18:41:42 -0800 (PST)
+	Fri, 24 Feb 2012 20:52:11 -0500
 From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: linux-wireless@vger.kernel.org
-Cc: hauke@hauke-m.de, nbd@nbd.name, linville@tuxdriver.com,
+To: <linux-wireless@vger.kernel.org>
+CC: <hauke@hauke-m.de>, <nbd@nbd.name>, <linville@tuxdriver.com>,
 	"Luis R. Rodriguez" <mcgrof@frijolero.org>
-Subject: [PATCH] compat: fix compilation on latest kernels
-Date: Fri, 24 Feb 2012 18:41:38 -0800
-Message-Id: <1330137698-12940-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120225_034146_621467_6C6CE875)
+Subject: [PATCH 0/5] compat / compat-wireless: merge autoconf generation
+Date: Fri, 24 Feb 2012 17:52:01 -0800
+Message-ID: <1330134726-1634-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120225_025215_154108_ABF2A9B3)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Luis R. Rodriguez <mcgrof@frijolero.org>
 
-The variables wasn't being set in shell. By defining
-the variables in shell and outputing them once onto
-a .config we avoid having to do release kernel checks
-every single time.
+While testing ckmake cross compiling compat through different kernels I
+realized that compat was failing to build on some kernels but compat-wireless
+was not. The reason for this turned out to be that compat did not have an
+autoconf for the CONFIG_COMPAT_KERNEL_* variables. In order to make use
+of a variable properly in code on kernel we need two things: a makefile
+equivalent and a header file that defines it. The compat project had
+only makefile variable generation while compat-wireless had makefile
+variable generation with a *few* variables propagated to actual code.
 
-We're back in business with the latest kernels.
+To avoid issues with this any further I've decided to try merging the
+autoconf effort for both projects and taking leads on what compat does
+first.
 
-mcgrof@tux ~/compat (git::master)$ ckmake
-Trying kernel                  3.3.0-030300rc2-generic  [OK]
-Trying kernel                     3.2.2-030202-generic  [OK]
-Trying kernel                    3.1.10-030110-generic  [OK]
-Trying kernel                    3.0.18-030018-generic  [OK]
-Trying kernel                  2.6.39-02063904-generic  [OK]
-Trying kernel                         2.6.38-8-generic  [OK]
-Trying kernel                        2.6.38-13-generic  [OK]
-Trying kernel                        2.6.38-12-generic  [OK]
-Trying kernel                        2.6.38-11-generic  [OK]
-Trying kernel                        2.6.38-10-generic  [OK]
-Trying kernel                  2.6.38-02063808-generic  [OK]
-Trying kernel                  2.6.37-02063706-generic  [OK]
-Trying kernel                  2.6.36-02063604-generic  [OK]
-Trying kernel                  2.6.35-02063512-generic  [OK]
-Trying kernel                  2.6.34-02063410-generic  [OK]
-Trying kernel                  2.6.33-02063305-generic  [OK]
-Trying kernel                  2.6.32-02063255-generic  [OK]
-Trying kernel                        2.6.31-22-generic  [OK]
-Trying kernel                  2.6.31-02063113-generic  [OK]
-Trying kernel                  2.6.30-02063010-generic  [OK]
-Trying kernel                  2.6.29-02062906-generic  [OK]
-Trying kernel                  2.6.28-02062810-generic  [OK]
-Trying kernel                    2.6.27-020627-generic  [OK]
-Trying kernel                    2.6.26-020626-generic  [OK]
-Trying kernel                    2.6.25-020625-generic  [FAILED]
+compat then does the CONFIG_COMPAT_KERNEL_* trickery and generates a
+clean .config for us. This in turn generates our compat's compat_autoconf.h.
+The compat-wireless project leverages this work by dropping its own
+Makefile hackery in favor of the same work and later also uses the same
+.config to expand its own compat_autoconf.h.
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
----
+John, I could use some extra help on reviewing the RHEL stuff. I'm going
+to push this stuff out now to help with testing.
 
-OK one final fix.
+compat:
 
- scripts/gen-compat-config.sh |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+Luis R. Rodriguez (2):
+  compat: fix few compilations by adding compat_autoconf.h support
+  compat: add some initial RHEL support
 
-diff --git a/scripts/gen-compat-config.sh b/scripts/gen-compat-config.sh
-index 656e8d3..423d595 100755
---- a/scripts/gen-compat-config.sh
-+++ b/scripts/gen-compat-config.sh
-@@ -32,12 +32,14 @@ else
- 	let KERNEL_26SUBLEVEL=${KERNEL_26SUBLEVEL}+1
- 
- 	for i in $(seq ${KERNEL_26SUBLEVEL} ${COMPAT_26LATEST_VERSION}); do
-+		eval CONFIG_COMPAT_KERNEL_2_6_${i}=y
- 		echo "CONFIG_COMPAT_KERNEL_2_6_${i}=y"
- 	done
- fi
- 
- let KERNEL_SUBLEVEL=${KERNEL_SUBLEVEL}+1
- for i in $(seq ${KERNEL_SUBLEVEL} ${COMPAT_LATEST_VERSION}); do
-+	eval CONFIG_COMPAT_KERNEL_3_${i}=y
- 	echo "CONFIG_COMPAT_KERNEL_3_${i}=y"
- done
- 
-@@ -47,14 +49,15 @@ RHEL_MAJOR=$(grep ^RHEL_MAJOR ${KLIB_BUILD}/Makefile | sed -n 's/.*= *\(.*\)/\1/
- if [[ ! -z ${RHEL_MAJOR} ]]; then
- 	RHEL_MINOR=$(grep ^RHEL_MINOR $(KLIB_BUILD)/Makefile | sed -n 's/.*= *\(.*\)/\1/p')
- 	for i in $(seq 0 ${RHEL_MINOR}); do
-+		eval CONFIG_COMPAT_${RHEL_MAJOR}_${i}=y
- 		echo "CONFIG_COMPAT_${RHEL_MAJOR}_${i}=y"
- 	done
- fi
- 
--if [[ ${CONFIG_COMPAT_KERNEL_2_6_33} -eq "y" ]]; then
-+if [[ ${CONFIG_COMPAT_KERNEL_2_6_33} = "y" ]]; then
- 	echo "CONFIG_COMPAT_FIRMWARE_CLASS=m"
- fi
- 
--if [[ ${CONFIG_COMPAT_KERNEL_2_6_36} -eq "y" ]]; then
-+if [[ ${CONFIG_COMPAT_KERNEL_2_6_36} = "y" ]]; then
- 	echo "CONFIG_COMPAT_KFIFO=m"
- fi
+ .gitignore                      |   10 ++++
+ Makefile                        |   59 ++++++++++------------
+ include/linux/compat_autoconf.h |   37 --------------
+ scripts/gen-compat-autoconf.sh  |  105 +++++++++++++++++++++++++++++++++++++++
+ scripts/gen-compat-config.sh    |   60 ++++++++++++++++++++++
+ 5 files changed, 201 insertions(+), 70 deletions(-)
+ delete mode 100644 include/linux/compat_autoconf.h
+ create mode 100755 scripts/gen-compat-autoconf.sh
+ create mode 100755 scripts/gen-compat-config.sh
+
+compat-wireless:
+
+Luis R. Rodriguez (3):
+  compat-wireless: fix old checks on KERNEL_SUBLEVEL
+  compat-wireless: start using CONFIG_COMPAT_KERNEL_ in code
+  compat-wireless: use compat's CONFIG_COMPAT_KERNEL_* variables
+ Makefile                       |   22 ++++++++++++++++------
+ config.mk                      |   24 ++++--------------------
+ scripts/check_config.sh        |    9 +++++----
+ scripts/gen-compat-autoconf.sh |   13 +++++++------
+ 4 files changed, 32 insertions(+), 36 deletions(-)
+
 -- 
 1.7.4.15.g7811d
 
