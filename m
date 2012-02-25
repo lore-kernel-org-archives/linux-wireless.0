@@ -1,179 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh06.mail.saunalahti.fi ([62.142.5.116]:44803 "EHLO
-	emh06.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758184Ab2B2RUJ (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:49012 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756084Ab2BYETo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 12:20:09 -0500
-Subject: [PATCH 11/12] ath6kl: fix too long lines
-To: kvalo@qca.qualcomm.com
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Date: Wed, 29 Feb 2012 19:20:03 +0200
-Message-ID: <20120229172003.24264.9451.stgit@localhost6.localdomain6> (sfid-20120229_182025_016232_4D4A30EA)
-In-Reply-To: <20120229171525.24264.22062.stgit@localhost6.localdomain6>
-References: <20120229171525.24264.22062.stgit@localhost6.localdomain6>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Fri, 24 Feb 2012 23:19:44 -0500
+Received: by mail-pw0-f46.google.com with SMTP id up15so170446pbc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2012 20:19:44 -0800 (PST)
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: linux-wireless@vger.kernel.org
+Cc: hauke@hauke-m.de, nbd@nbd.name, linville@tuxdriver.com,
+	"Luis R. Rodriguez" <mcgrof@frijolero.org>
+Subject: [PATCH 3/4] compat: avoid NOSTDINC_FLAGS during modpost
+Date: Fri, 24 Feb 2012 20:19:28 -0800
+Message-Id: <1330143569-30296-4-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120225_051948_041170_5B9F3676)
+In-Reply-To: <1330143569-30296-1-git-send-email-rodrigue@qca.qualcomm.com>
+References: <1330143569-30296-1-git-send-email-rodrigue@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Found by checkpatch:
+From: Luis R. Rodriguez <mcgrof@frijolero.org>
 
-drivers/net/wireless/ath/ath6kl/init.c:78: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath6kl/init.c:397: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath6kl/init.c:407: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath6kl/htc.c:189: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath6kl/htc.c:704: WARNING: line over 80 characters
-drivers/net/wireless/ath/ath6kl/htc.c:2452: WARNING: line over 80 characters
+modpost, the second part of module building, does not
+use NOSTDINC_FLAGS and friends so all the hackery we did
+to use it to prefer our header files and include compat-2.6.h
+will not work during modpost for older kernels. We don't really
+need all that stuff during modpost even for newer kernels so
+just avoid it all together.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
 ---
- drivers/net/wireless/ath/ath6kl/htc.c  |   43 ++++++++++++++++----------------
- drivers/net/wireless/ath/ath6kl/init.c |    6 ++--
- drivers/net/wireless/ath/ath6kl/wmi.h  |    4 +--
- 3 files changed, 27 insertions(+), 26 deletions(-)
+ Makefile |   27 ++++++++++++++++-----------
+ 1 files changed, 16 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-index 24cfc3b..4849d99 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc.c
-@@ -172,31 +172,29 @@ static void ath6kl_credit_reduce(struct ath6kl_htc_credit_info *cred_info,
- static void ath6kl_credit_update(struct ath6kl_htc_credit_info *cred_info,
- 				 struct list_head *epdist_list)
- {
--	struct htc_endpoint_credit_dist *cur_dist_list;
-+	struct htc_endpoint_credit_dist *cur_list;
- 
--	list_for_each_entry(cur_dist_list, epdist_list, list) {
--		if (cur_dist_list->endpoint == ENDPOINT_0)
-+	list_for_each_entry(cur_list, epdist_list, list) {
-+		if (cur_list->endpoint == ENDPOINT_0)
- 			continue;
- 
--		if (cur_dist_list->cred_to_dist > 0) {
--			cur_dist_list->credits +=
--					cur_dist_list->cred_to_dist;
--			cur_dist_list->cred_to_dist = 0;
--			if (cur_dist_list->credits >
--			    cur_dist_list->cred_assngd)
-+		if (cur_list->cred_to_dist > 0) {
-+			cur_list->credits += cur_list->cred_to_dist;
-+			cur_list->cred_to_dist = 0;
+diff --git a/Makefile b/Makefile
+index fdcff5c..d96d098 100644
+--- a/Makefile
++++ b/Makefile
+@@ -18,6 +18,22 @@ export COMPAT_BASE_TREE := "linux-next.git"
+ # working with.
+ export COMPAT_BASE_TREE_VERSION := "next-20100517"
+ export COMPAT_VERSION := $(shell git describe)
 +
-+			if (cur_list->credits > cur_list->cred_assngd)
- 				ath6kl_credit_reduce(cred_info,
--						     cur_dist_list,
--						     cur_dist_list->cred_assngd);
-+						     cur_list,
-+						     cur_list->cred_assngd);
++else
++# By stuffing this hear we avoid using
++# this hackery on modpost, the 2nd section of module building.
++#
++# This hack lets us put our include path first than the kernel's
++# when building our compat modules. Your own makefile would look
++# the same.
++NOSTDINC_FLAGS := -I$(M)/include/ \
++	-include $(M)/include/linux/compat-2.6.h \
++	$(CFLAGS) \
++	-DCOMPAT_BASE_TREE="\"$(COMPAT_BASE_TREE)\"" \
++	-DCOMPAT_BASE_TREE_VERSION="\"$(COMPAT_BASE_TREE_VERSION)\"" \
++	-DCOMPAT_PROJECT="\"Generic kernel\"" \
++	-DCOMPAT_VERSION="\"$(COMPAT_VERSION)\""
++
+ endif
  
--			if (cur_dist_list->credits >
--			    cur_dist_list->cred_norm)
--				ath6kl_credit_reduce(cred_info, cur_dist_list,
--						     cur_dist_list->cred_norm);
-+			if (cur_list->credits > cur_list->cred_norm)
-+				ath6kl_credit_reduce(cred_info, cur_list,
-+						     cur_list->cred_norm);
+ # to check config and compat autoconf
+@@ -31,17 +47,6 @@ export MAKE
  
--			if (!(cur_dist_list->dist_flags & HTC_EP_ACTIVE)) {
--				if (cur_dist_list->txq_depth == 0)
-+			if (!(cur_list->dist_flags & HTC_EP_ACTIVE)) {
-+				if (cur_list->txq_depth == 0)
- 					ath6kl_credit_reduce(cred_info,
--							     cur_dist_list, 0);
-+							     cur_list, 0);
- 			}
- 		}
- 	}
-@@ -674,6 +672,7 @@ static int ath6kl_htc_tx_setup_scat_list(struct htc_target *target,
- 	struct htc_packet *packet;
- 	int i, len, rem_scat, cred_pad;
- 	int status = 0;
-+	u8 flags;
+ obj-y += compat/
  
- 	rem_scat = target->max_tx_bndl_sz;
+-# This hack lets us put our include path first than the kernel's
+-# when building our compat modules. Your own makefile would look
+-# the same.
+-NOSTDINC_FLAGS := -I$(M)/include/ \
+-	-include $(M)/include/linux/compat-2.6.h \
+-	$(CFLAGS) \
+-	-DCOMPAT_BASE_TREE="\"$(COMPAT_BASE_TREE)\"" \
+-	-DCOMPAT_BASE_TREE_VERSION="\"$(COMPAT_BASE_TREE_VERSION)\"" \
+-	-DCOMPAT_PROJECT="\"Generic kernel\"" \
+-	-DCOMPAT_VERSION="\"$(COMPAT_VERSION)\""
+-
+ all: $(COMPAT_CONFIG)
  
-@@ -700,8 +699,8 @@ static int ath6kl_htc_tx_setup_scat_list(struct htc_target *target,
- 
- 		scat_req->scat_list[i].packet = packet;
- 		/* prepare packet and flag message as part of a send bundle */
--		ath6kl_htc_tx_prep_pkt(packet,
--				       packet->info.tx.flags | HTC_FLAGS_SEND_BUNDLE,
-+		flags = packet->info.tx.flags | HTC_FLAGS_SEND_BUNDLE;
-+		ath6kl_htc_tx_prep_pkt(packet, flags,
- 				       cred_pad, packet->info.tx.seqno);
- 		/* Make sure the buffer is 4-byte aligned */
- 		ath6kl_htc_tx_buf_align(&packet->buf,
-@@ -2405,6 +2404,7 @@ int ath6kl_htc_conn_service(struct htc_target *target,
- 	enum htc_endpoint_id assigned_ep = ENDPOINT_MAX;
- 	unsigned int max_msg_sz = 0;
- 	int status = 0;
-+	u16 msg_id;
- 
- 	ath6kl_dbg(ATH6KL_DBG_HTC,
- 		   "htc connect service target 0x%p service id 0x%x\n",
-@@ -2448,8 +2448,9 @@ int ath6kl_htc_conn_service(struct htc_target *target,
- 		}
- 
- 		resp_msg = (struct htc_conn_service_resp *)rx_pkt->buf;
-+		msg_id = le16_to_cpu(resp_msg->msg_id);
- 
--		if ((le16_to_cpu(resp_msg->msg_id) != HTC_MSG_CONN_SVC_RESP_ID) ||
-+		if ((msg_id != HTC_MSG_CONN_SVC_RESP_ID) ||
- 		    (rx_pkt->act_len < sizeof(*resp_msg))) {
- 			status = -ENOMEM;
- 			goto fail_tx;
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index c7d5149..231675d 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -75,7 +75,7 @@ static const struct ath6kl_hw hw_list[] = {
- 		},
- 
- 		.fw_board		= AR6003_HW_2_1_1_BOARD_DATA_FILE,
--		.fw_default_board	= AR6003_HW_2_1_1_DEFAULT_BOARD_DATA_FILE,
-+		.fw_default_board = AR6003_HW_2_1_1_DEFAULT_BOARD_DATA_FILE,
- 	},
- 	{
- 		.id				= AR6004_HW_1_0_VERSION,
-@@ -394,7 +394,7 @@ static int ath6kl_target_config_wlan_params(struct ath6kl *ar, int idx)
- 
- 	if (ar->conf_flags & ATH6KL_CONF_IGNORE_PS_FAIL_EVT_IN_SCAN) {
- 		ret = ath6kl_wmi_pmparams_cmd(ar->wmi, idx, 0, 1, 0, 0, 1,
--					      IGNORE_POWER_SAVE_FAIL_EVENT_DURING_SCAN);
-+					      IGNORE_PS_FAIL_DURING_SCAN);
- 		if (ret) {
- 			ath6kl_err("unable to set power save fail event policy: %d\n",
- 				   ret);
-@@ -404,7 +404,7 @@ static int ath6kl_target_config_wlan_params(struct ath6kl *ar, int idx)
- 
- 	if (!(ar->conf_flags & ATH6KL_CONF_IGNORE_ERP_BARKER)) {
- 		ret = ath6kl_wmi_set_lpreamble_cmd(ar->wmi, idx, 0,
--						   WMI_DONOT_IGNORE_BARKER_IN_ERP);
-+						   WMI_FOLLOW_BARKER_IN_ERP);
- 		if (ret) {
- 			ath6kl_err("unable to set barker preamble policy: %d\n",
- 				   ret);
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 9137850..70bc2f7 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -1017,7 +1017,7 @@ struct wmi_power_mode_cmd {
-  */
- enum power_save_fail_event_policy {
- 	SEND_POWER_SAVE_FAIL_EVENT_ALWAYS = 1,
--	IGNORE_POWER_SAVE_FAIL_EVENT_DURING_SCAN = 2,
-+	IGNORE_PS_FAIL_DURING_SCAN = 2,
- };
- 
- struct wmi_power_params_cmd {
-@@ -1215,7 +1215,7 @@ struct wmi_snr_threshold_params_cmd {
- 
- enum wmi_preamble_policy {
- 	WMI_IGNORE_BARKER_IN_ERP = 0,
--	WMI_DONOT_IGNORE_BARKER_IN_ERP
-+	WMI_FOLLOW_BARKER_IN_ERP,
- };
- 
- struct wmi_set_lpreamble_cmd {
+ modules: $(COMPAT_CONFIG) $(COMPAT_AUTOCONF)
+-- 
+1.7.4.15.g7811d
 
