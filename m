@@ -1,70 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm25-vm0.bullet.mail.ird.yahoo.com ([212.82.109.201]:46232 "HELO
-	nm25-vm0.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752748Ab2BWAou convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 19:44:50 -0500
-Message-ID: <1329957888.76143.YahooMailClassic@web29502.mail.ird.yahoo.com> (sfid-20120223_014453_865365_B626D35D)
-Date: Thu, 23 Feb 2012 00:44:48 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [PATCH] rtl8187: Add Ad-hoc mode
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Attila Fazekas <turul64@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Herton Ronaldo Krzesinski <herton@canonical.com>
-In-Reply-To: <4F457BCD.5020200@lwfinger.net>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:45377 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756150Ab2BYLGD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Feb 2012 06:06:03 -0500
+Message-ID: <4F48C08A.5070501@hauke-m.de> (sfid-20120225_120636_620248_F8F2CCA9)
+Date: Sat, 25 Feb 2012 12:05:46 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, nbd@nbd.name,
+	linville@tuxdriver.com, "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Subject: Re: [PATCH 0/5] compat / compat-wireless: merge autoconf generation
+References: <1330134726-1634-1-git-send-email-rodrigue@qca.qualcomm.com>
+In-Reply-To: <1330134726-1634-1-git-send-email-rodrigue@qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Wed, 22/2/12, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+On 02/25/2012 02:52 AM, Luis R. Rodriguez wrote:
+> From: Luis R. Rodriguez <mcgrof@frijolero.org>
+> 
+> While testing ckmake cross compiling compat through different kernels I
+> realized that compat was failing to build on some kernels but compat-wireless
+> was not. The reason for this turned out to be that compat did not have an
+> autoconf for the CONFIG_COMPAT_KERNEL_* variables. In order to make use
+> of a variable properly in code on kernel we need two things: a makefile
+> equivalent and a header file that defines it. The compat project had
+> only makefile variable generation while compat-wireless had makefile
+> variable generation with a *few* variables propagated to actual code.
+> 
+> To avoid issues with this any further I've decided to try merging the
+> autoconf effort for both projects and taking leads on what compat does
+> first.
+> 
+> compat then does the CONFIG_COMPAT_KERNEL_* trickery and generates a
+> clean .config for us. This in turn generates our compat's compat_autoconf.h.
+> The compat-wireless project leverages this work by dropping its own
+> Makefile hackery in favor of the same work and later also uses the same
+> .config to expand its own compat_autoconf.h.
+> 
+> John, I could use some extra help on reviewing the RHEL stuff. I'm going
+> to push this stuff out now to help with testing.
+> 
+> compat:
+> 
+> Luis R. Rodriguez (2):
+>   compat: fix few compilations by adding compat_autoconf.h support
+>   compat: add some initial RHEL support
+> 
+>  .gitignore                      |   10 ++++
+>  Makefile                        |   59 ++++++++++------------
+>  include/linux/compat_autoconf.h |   37 --------------
+>  scripts/gen-compat-autoconf.sh  |  105 +++++++++++++++++++++++++++++++++++++++
+>  scripts/gen-compat-config.sh    |   60 ++++++++++++++++++++++
+>  5 files changed, 201 insertions(+), 70 deletions(-)
+>  delete mode 100644 include/linux/compat_autoconf.h
+>  create mode 100755 scripts/gen-compat-autoconf.sh
+>  create mode 100755 scripts/gen-compat-config.sh
+> 
+> compat-wireless:
+> 
+> Luis R. Rodriguez (3):
+>   compat-wireless: fix old checks on KERNEL_SUBLEVEL
+>   compat-wireless: start using CONFIG_COMPAT_KERNEL_ in code
+>   compat-wireless: use compat's CONFIG_COMPAT_KERNEL_* variables
+>  Makefile                       |   22 ++++++++++++++++------
+>  config.mk                      |   24 ++++--------------------
+>  scripts/check_config.sh        |    9 +++++----
+>  scripts/gen-compat-autoconf.sh |   13 +++++++------
+>  4 files changed, 32 insertions(+), 36 deletions(-)
+> 
 
-<snipped bits>
-> > As Larry requested - please send the patch without
-> munching from your
-> > e-mail client. Since you are on gmail, I could offer a
-> little advice on git-send-email, which may or may not be
-> something you already know. This is what I do to send
-> patches from my gmail account (change "name" and "acct" and
-> "FILLTHISIN" and "patch-file" to suit yourself), and you
-> could add --cc a few of us there also:
-> >
-> > git send-email --from 'name<acct@gmail.com>'
-> \
-> > --to linux-wireless@vger.kernel.org
-> --to linville@tuxdriver.com
-> \
-> > --smtp-server smtp.gmail.com --smtp-server-port 465
-> --smtp-user \ acct@gmail.com
-> --smtp-pass FILLTHISIN --smtp-ssl patch-file
-> >
-> > You can do "man git-send-email" (all git man pages uses
-> "git-something" to document the "git something" sub
-> commands, with a dash between) to read about all the
-> switches and what they are supposed to do.
-<snipped>
+This patch series breaks parallel build.
+Before these patches where applied parallel build was no problem I just
+saw two error at the beginning, but after this patch series it does not
+work any more.
 
-> I fixed and tested your patch. With it, I certainly see the
-> beacons and I was 
-> able to use NetworkManager to connect once. However, I was
-> never able to ping 
-> from either end of the network to the other.
+These are the current error messages at the beginning and then it
+compiles sequential.
 
-Do you need something manual set-up like "ifconfig wlan1 192.168.0.1" for one box and "ifconfig wlan1 192.168.0.2" for the other box in the IP layer to work? I haven't quite got my head around this one - how network manager agrees for each for go into a private tcp/ip network, given there are three(?) private ranges to use, and setting up host names, and what ip adresses to assign... and since there is no dns for a network of two, it would have to ping by ip address?
+Hauke
 
-> Besides the mangling of the patch by your mailer, you had
-> many problems with 
-> spaces instead of tabs. Did you use scripts/checkpatch.pl to
-> test for errors?
-
-Hmm, probably try not to scare him away... Here is the definitive guide from Linus for submitting patches for the kernel in general:
-
-http://linuxwireless.org/en/developers/Documentation/SubmittingPatches/sourcedoc
-
-and here is one with information specific to wireless stuff:
-
-http://linuxwireless.org/en/developers/Documentation/SubmittingPatches
+hauke@hauke:~/compat-wireless/compat-wireless$ make -j5
+make[1]: warning: jobserver unavailable: using -j1.  Add `+' to parent
+make rule.
+make[1]: warning: jobserver unavailable: using -j1.  Add `+' to parent
+make rule.
+./scripts/gen-compat-autoconf.sh .config config.mk >
+include/linux/compat_autoconf.h
+make[1]: warning: jobserver unavailable: using -j1.  Add `+' to parent
+make rule.
+make[1]: warning: jobserver unavailable: using -j1.  Add `+' to parent
+make rule.
+make -C /home/hauke/compat-wireless/compat-wireless modules
+make[1]: Entering directory `/home/hauke/compat-wireless/compat-wireless'
+make[1]: warning: jobserver unavailable: using -j1.  Add `+' to parent
+make rule.
+make -C /lib/modules/3.0.0-16-generic/build
+M=/home/hauke/compat-wireless/compat-wireless modules
+make[2]: Entering directory `/usr/src/linux-headers-3.0.0-16-generic'
+  LD      /home/hauke/compat-wireless/compat-wireless/compat/built-in.o
 
