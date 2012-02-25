@@ -1,70 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60588 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752330Ab2BNJU7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 04:20:59 -0500
-Date: Tue, 14 Feb 2012 10:20:21 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
-Cc: wwguy <wey-yi.w.guy@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>, security@kernel.org
-Subject: Re: iwlagn: memory corruption with WPA enterprise
-Message-ID: <20120214092020.GB12905@redhat.com> (sfid-20120214_102122_078983_9305279D)
-References: <20111110163051.GA24533@nomi.cz>
- <20111111054731.GA2292@redhat.com>
- <20111111150105.GA25437@nomi.cz>
- <20111114140714.GD2513@redhat.com>
- <20111119181106.GA5515@nomi.cz>
- <1321755233.22510.1.camel@wwguy-ubuntu>
- <20111120032016.GA14520@nomi.cz>
- <1321763314.22510.4.camel@wwguy-ubuntu>
- <20111120204007.GA7273@nomi.cz>
- <20120210180929.GA17733@nomi.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20120210180929.GA17733@nomi.cz>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:35163 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757042Ab2BYC33 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 24 Feb 2012 21:29:29 -0500
+Received: by qcqw6 with SMTP id w6so142880qcq.19
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2012 18:29:28 -0800 (PST)
+From: Rick Farina <sidhayn@gmail.com>
+To: mcgrof@gmail.com
+Cc: linux-wireless@vger.kernel.org, Rick Farina <sidhayn@gmail.com>
+Subject: [PATCH]v5 compat-wireless: replace modprobe -l with functional equivilent
+Date: Fri, 24 Feb 2012 21:28:40 -0500
+Message-Id: <1330136920-15954-1-git-send-email-sidhayn@gmail.com> (sfid-20120225_032932_723127_EFFD4298)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 10, 2012 at 07:09:29PM +0100, Tomáš Janoušek wrote:
-> For the last few months, I've happily used a 64-bit kernel and have had no
-> problems whatsoever. About a week ago, I started using virtual machines in
-> KVM. And today I found that I have exactly the same problem, but only _inside_
-> the virtual machine. I can't reliably scp a file from the internet to my
-> virtual machine. It works fine when I scp to the host, it works fine when I'm
-> on a WPA-PSK network. And it happens even if I tell kvm to emulate e1000, not
-> only with virtio-net. How strange is that?
-> 
-> And while this is happening, the host is running just fine. The host has a
-> 64-bit kernel with a 32-bit userspace, so if something was wrong with the
-> 32-bit mode of my processor, it would've appeared on the host as well, no?
-> 
-> It's also worth mentioning that if I build openssl with "no-asm 386", scp
-> works just fine.
-Good hint.
+modprobe -l is either deprecated or removed, so let's replace it
+testing [ -z "$(DESTDIR)" ] appeared to only be need due to the fact
+that *enable was run directly instead of being run with $(DESTDIR)/
 
-> So it doesn't look like a memory corruption after all. It
-> seems as if certain CPU instructions didn't work properly if running on a
-> 32-bit kernel with a WiFi adapter doing something. But how can it be
-> that those same CPU instructions work on a 64-bit host with 32-bit userspace?
-> At the same time! That's just completely insane, and I can't think of an
-> explanation. Shall I get a new CPU perhaps? :-)
->
-> 
-> Please, give me any ideas that you might have.
+Testing for module presence should now work properly on modern distros
+and *enable will be run properly with or without $(DESTDIR) being set.
 
-That make sense! Your "CPU instructions break things" theory sounds crazy,
-but I think it's logical. WPA enterprise differ from WPA-PSA (pre shared
-key) that the key changed periodically, SSL is used when keys are changed
-(via wpa_supplicant). So looks like 32-bit openssl generate object code
-that trigger bug on CPU, which crash other processes.
+Signed-off-by: Rick Farina <sidhayn@gmail.com>
+---
+ Makefile |   30 ++++++++++--------------------
+ 1 files changed, 10 insertions(+), 20 deletions(-)
 
-Please forward details about this issue to security@kernel.org and proper
-vendor engineer in non public manner, as this hw bug could be possibly
-exploitable (hardware bug can not be fixed, but kernel could disable
-appropriate functionality or use some other workaround).
+diff --git a/Makefile b/Makefile
+index 5393b40..ef2f671 100644
+--- a/Makefile
++++ b/Makefile
+@@ -6,15 +6,6 @@ else
+ export KLIB:=          /lib/modules/$(shell uname -r)
+ endif
+ export KLIB_BUILD ?=	$(KLIB)/build
+-# Sometimes not available in the path
+-MODPROBE := /sbin/modprobe
+-export MAKE
+-
+-ifneq ($(wildcard $(MODPROBE)),)
+-MADWIFI=$(shell $(MODPROBE) -l ath_pci)
+-OLD_IWL=$(shell $(MODPROBE) -l iwl4965)
+-OLD_ALX=$(shell $(MODPROBE) -l atl1c)
+-endif
+ 
+ DESTDIR?=
+ 
+@@ -109,7 +100,7 @@ $(CREL_CHECK):
+ 
+ btinstall: btuninstall bt-install-modules
+ 
+-bt-install-modules: bt $(MODPROBE)
++bt-install-modules: bt
+ 	$(MAKE) -C $(KLIB_BUILD) M=$(PWD) $(KMODDIR_ARG) $(KMODPATH_ARG) BT=TRUE \
+ 		modules_install
+ 	@/sbin/depmod -ae
+@@ -121,7 +112,7 @@ bt-install-modules: bt $(MODPROBE)
+ 	@echo And then load the needed bluetooth modules. If unsure reboot.
+ 	@echo
+ 
+-btuninstall: $(MODPROBE)
++btuninstall:
+ 	@# New location, matches upstream
+ 	@rm -rf $(KLIB)/$(KMODDIR)/net/bluetooth/
+ 	@rm -rf $(KLIB)/$(KMODDIR)/drivers/bluetooth/
+@@ -141,7 +132,7 @@ install-modules: modules
+ 		modules_install
+ 	@./scripts/update-initramfs
+ 
+-install-scripts: $(MODPROBE)
++install-scripts:
+ 	@# All the scripts we can use
+ 	@mkdir -p $(DESTDIR)/usr/lib/compat-wireless/
+ 	@install scripts/modlib.sh	$(DESTDIR)/usr/lib/compat-wireless/
+@@ -154,32 +145,31 @@ install-scripts: $(MODPROBE)
+ 	@install scripts/athload	$(DESTDIR)/usr/sbin/
+ 	@install scripts/b43load	$(DESTDIR)/usr/sbin/
+ 	@install scripts/iwl-load	$(DESTDIR)/usr/sbin/
+-	@if [ ! -z "$(MADWIFI)" ] && [ -z "$(DESTDIR)" ]; then \
+-		echo ;\
++	@if $(modinfo ath_pci > /dev/null 2>&1); then \
+ 		echo -n "Note: madwifi detected, we're going to disable it. "  ;\
+ 		echo "If you would like to enable it later you can run:"  ;\
+ 		echo "    sudo athenable madwifi"  ;\
+ 		echo ;\
+ 		echo Running athenable ath5k...;\
+-		/usr/sbin/athenable ath5k ;\
++		$(DESTDIR)/usr/sbin/athenable ath5k ;\
+ 	fi
+-	@if [ ! -z "$(OLD_IWL)" ] && [ -z "$(DESTDIR)" ]; then \
++	@if $(modinfo iwl4965 > /dev/null 2>&1); then \
+ 		echo ;\
+ 		echo -n "Note: iwl4965 detected, we're going to disable it. "  ;\
+ 		echo "If you would like to enable it later you can run:"  ;\
+ 		echo "    sudo iwl-load iwl4965"  ;\
+ 		echo ;\
+ 		echo Running iwl-enable iwlagn...;\
+-		/usr/sbin/iwl-enable iwlagn ;\
++		$(DESTDIR)/usr/sbin/iwl-enable iwlagn ;\
+ 	fi
+-	@if [ ! -z "$(OLD_ALX)" ] && [ -z "$(DESTDIR)" ]; then \
++	@if $(modinfo atl1c > /dev/null 2>&1); then \
+ 		echo ;\
+ 		echo -n "Note: atl1c detected, we're going to disable it. "  ;\
+ 		echo "If you would like to enable it later you can run:"  ;\
+ 		echo "    sudo alx-load atl1c"  ;\
+ 		echo ;\
+ 		echo Running alx-enable alx...;\
+-		/usr/sbin/alx-enable alx;\
++		$(DESTDIR)/usr/sbin/alx-enable alx;\
+ 	fi
+ 	@# If on distributions like Mandriva which like to
+ 	@# compress their modules this will find out and do
+@@ -205,7 +195,7 @@ install-scripts: $(MODPROBE)
+ 	@echo If unsure reboot.
+ 	@echo
+ 
+-uninstall: $(MODPROBE)
++uninstall:
+ 	@# New location, matches upstream
+ 	@rm -rf $(KLIB)/$(KMODDIR)/compat/
+ 	@rm -rf $(KLIB)/$(KMODDIR)/net/mac80211/
+-- 
+1.7.3.4
 
-Thanks
-Stanislaw
