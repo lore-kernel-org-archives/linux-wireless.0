@@ -1,53 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:54315 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751191Ab2BNBtC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 20:49:02 -0500
-Message-ID: <1329184138.4939.18.camel@joe2Laptop> (sfid-20120214_024912_292230_25AC0368)
-Subject: Re: RTLWIFI_DEBUG bug
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 13 Feb 2012 17:48:58 -0800
-In-Reply-To: <1329167246.3458.0.camel@jlt3.sipsolutions.net>
-References: <1329142387.3365.6.camel@jlt3.sipsolutions.net>
-	 <1329165326.4939.16.camel@joe2Laptop>
-	 <1329167246.3458.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
+Received: from he.sipsolutions.net ([78.46.109.217]:49526 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752191Ab2BYUn7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Feb 2012 15:43:59 -0500
+Message-Id: <20120225204145.794866318@sipsolutions.net> (sfid-20120225_214404_329985_A211B0C9)
+Date: Sat, 25 Feb 2012 21:40:45 +0100
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH 1/2] mac80211: fix auth/assoc data & timer leak
+References: <20120225204044.168176239@sipsolutions.net>
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-02-13 at 22:07 +0100, Johannes Berg wrote:
-> On Mon, 2012-02-13 at 12:35 -0800, Joe Perches wrote:
-> > On Mon, 2012-02-13 at 15:13 +0100, Johannes Berg wrote:
-> > > config RTLWIFI_DEBUG
-> > >         tristate "Additional debugging output"
-> > >         depends on RTL8192CE || RTL8192CU || RTL8192SE || RTL8192DE
-> > >         default y
-> > > 
-> > > should be
-> > > 
-> > > config RTLWIFI_DEBUG
-> > >         bool "..."
-> > > 
-> > > as otherwise
-> > > 
-> > > +#ifdef CONFIG_RTLWIFI_DEBUG
-> > > can never be true in a modular build.
-> > 
-> > If you know the correct solution,
-> > perhaps you should submit a patch.
-> 
-> If I knew your attitude was going to be a problem, I'd never said
-> anything. I have better things to do.
+From: Johannes Berg <johannes.berg@intel.com>
 
-If you know a problem exists and the
-proper solution, it's not necessary to
-do anything other than create the
-appropriate patch and cc the appropriate
-people.  Doing something else just creates
-more work for more people.
+When removing an interface while it is in the
+process of authenticating or associating, we
+leak the auth_data or assoc_data, and leave
+the timer pending. The timer then crashes the
+system when it fires as its data is gone.
 
+Fix this by explicitly deleting all the data
+when the interface is removed. This uncovered
+another bug -- this problem should have been
+detected by the sta_info_flush() warning but
+that function doesn't ever return non-zero,
+I'll fix that in a separate patch.
+
+Reported-by: Hieu Nguyen <hieux.c.nguyen@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h |    1 +
+ net/mac80211/iface.c       |    2 ++
+ net/mac80211/mlme.c        |   12 ++++++++++++
+ 3 files changed, 15 insertions(+), 0 deletions(-)
+
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index feddd8a..38bfca3 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1181,6 +1181,7 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 				  struct sk_buff *skb);
+ void ieee80211_sta_reset_beacon_monitor(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata);
++void ieee80211_mgd_teardown(struct ieee80211_sub_if_data *sdata);
+ 
+ /* IBSS code */
+ void ieee80211_ibss_notify_scan_completed(struct ieee80211_local *local);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index a495587..e2e45dc 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -654,6 +654,8 @@ static void ieee80211_teardown_sdata(struct net_device *dev)
+ 
+ 	if (ieee80211_vif_is_mesh(&sdata->vif))
+ 		mesh_rmc_free(sdata);
++	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
++		ieee80211_mgd_teardown(sdata);
+ 
+ 	flushed = sta_info_flush(local, sdata);
+ 	WARN_ON(flushed);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 2d8a2b6..b1c40f7 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3532,6 +3532,18 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
+ }
+ 
++void ieee80211_mgd_teardown(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
++
++	mutex_lock(&ifmgd->mtx);
++	if (ifmgd->assoc_data)
++		ieee80211_destroy_assoc_data(sdata, false);
++	if (ifmgd->auth_data)
++		ieee80211_destroy_auth_data(sdata, false);
++	mutex_unlock(&ifmgd->mtx);
++}
++
+ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
+ 			       gfp_t gfp)
 
 
