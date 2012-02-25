@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30550 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754704Ab2BAPdh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Feb 2012 10:33:37 -0500
-Date: Wed, 1 Feb 2012 16:33:29 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Luigi Tarenga <luigi.tarenga@gmail.com>
-Cc: Ivo van Doorn <IvDoorn@gmail.com>,
-	Gertjan van Wingerde <gwingerde@gmail.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Subject: Re: [PATCH 3.2.2 1/1] rt2800lib: fix wrong -128dBm when signal is
- stronger than -12dBm
-Message-ID: <20120201153249.GA16461@redhat.com> (sfid-20120201_163341_030459_59600229)
-References: <CAKkO-EhQJfKZKTPVZH5-RvPDa8BSrbktEBYPuAHHPvQfhYZzog@mail.gmail.com>
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:65020 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757539Ab2BYUUH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Feb 2012 15:20:07 -0500
+Received: by eekc41 with SMTP id c41so183965eek.19
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Feb 2012 12:20:05 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [RFC] carl9170: Fix memory accounting when sta is in power-save mode.
+Date: Sat, 25 Feb 2012 21:20:01 +0100
+Cc: Jouni Malinen <j@w1.fi>,
+	Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
+	linux-wireless@vger.kernel.org
+References: <1330012414-26559-1-git-send-email-cavallar@lri.fr> <20120225093243.GA4066@w1.fi> <1330200772.3509.0.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1330200772.3509.0.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKkO-EhQJfKZKTPVZH5-RvPDa8BSrbktEBYPuAHHPvQfhYZzog@mail.gmail.com>
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201202252120.01430.chunkeey@googlemail.com> (sfid-20120225_212012_790796_FCB44B4B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 31, 2012 at 06:51:23PM +0100, Luigi Tarenga wrote:
-> This patch correct the type of variables containing the rssi
-> values read from the rxwi.
+On Saturday 25 February 2012 21:12:52 Johannes Berg wrote:
+> On Sat, 2012-02-25 at 11:32 +0200, Jouni Malinen wrote:
+> > On Fri, Feb 24, 2012 at 03:09:02PM +0100, Johannes Berg wrote:
+> > > On Fri, 2012-02-24 at 15:01 +0100, Nicolas Cavallari wrote:
+> > > > Hostapd already does that¹ ... after the association response is acked.
+> > > 
+> > > Ok maybe then we should send out assoc resp etc. frames and not subject
+> > > them to PS queueing? Jouni?
+> > 
+> > We should try to follow the clarified description of management frame
+> > buffering in P802.11-REVmb/D12.0 (i.e., soon to be published IEEE Std
+> > 802.11-2012). (Re)Association Response frame is not a bufferable
+> > management frame and as such, it needs to be sent out without being
+> > subject to PS queuing.
 > 
-> In function rt2800_agc_to_rssi() 3 variables (rssi0, rssi1, rss2)
-> defined as int was assigned a 16bit signed values as unsigned.
-> From a test with a hi-gain antenna I verified that the rxwi
-> contains signed rssi values in the  range -13/+81 (inclusive)
-> with 0 as an error condition. In case of negative values a
-> condition is triggered and the function return -128dBm while
-> the signal is at its maximum. This patch correct the cast so
-> negative values are not treated as very high positive values
-> (ex. -13 does not become 243).
+> Ah yes, you mentioned before that this was being clarified but I forgot
+> about it again. I'll take a look.
 > 
-> Signed-off-by: Luigi Tarenga <luigi.tarenga@gmail.com>
+Actually, I think I found the problem in carl9170 [writing a patch atm].
+[I forgot to check IEEE80211_TX_CTL_POLL_RESPONSE and
+IEEE80211_TX_CTL_CLEAR_PS_FILT flags].
 
-Reviewed-by: Stanislaw Gruszka <sgruszka@redhat.com>
+[A simple fix: we could set something like TX_CTL_IGNORE_PS  
+(now known as TX_CTL_POLL_RESPONSE) on outgoing
+auth & (re-)assoc frames] 
 
-Description is a bit embroiled, but patch is correct. Since rssi value
-is exported to user space and can be use i.e to choose to withch AP
-try to associate, I think this is a -stable sutiable fix.
+Regards,
+	Chr
