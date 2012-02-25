@@ -1,118 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:6832 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753790Ab2BVHL4 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:53516 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752117Ab2BYUsK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 02:11:56 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20292.38195.308140.41060@gargle.gargle.HOWL> (sfid-20120222_081200_291940_A0EF9DC2)
-Date: Wed, 22 Feb 2012 12:41:47 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 19/26] ath9k_htc: Use CONFIG_ATH9K_BTCOEX_SUPPORT
+	Sat, 25 Feb 2012 15:48:10 -0500
+Subject: [PATCH 1/2 v2] mac80211: fix auth/assoc data & timer leak
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20120225204145.794866318@sipsolutions.net> (sfid-20120225_214404_329985_A211B0C9)
+References: <20120225204044.168176239@sipsolutions.net>
+	 <20120225204145.794866318@sipsolutions.net>
+	 (sfid-20120225_214404_329985_A211B0C9)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 25 Feb 2012 21:48:08 +0100
+Message-ID: <1330202888.3509.1.camel@jlt3.sipsolutions.net> (sfid-20120225_214814_687112_03D66CA5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k_htc can also make use of CONFIG_ATH9K_BTCOEX_SUPPORT
-to be compiled without BTCOEX support.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+When removing an interface while it is in the
+process of authenticating or associating, we
+leak the auth_data or assoc_data, and leave
+the timer pending. The timer then crashes the
+system when it fires as its data is gone.
+
+Fix this by explicitly deleting all the data
+when the interface is removed. This uncovered
+another bug -- this problem should have been
+detected by the sta_info_flush() warning but
+that function doesn't ever return non-zero,
+I'll fix that in a separate patch.
+
+Reported-by: Hieu Nguyen <hieux.c.nguyen@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/htc.h          |   18 +++++++++++++++---
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |   10 +++++++---
- 2 files changed, 22 insertions(+), 6 deletions(-)
+v2: also delete timer
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc.h b/drivers/net/wireless/ath/ath9k/htc.h
-index 8046be6..1357952 100644
---- a/drivers/net/wireless/ath/ath9k/htc.h
-+++ b/drivers/net/wireless/ath/ath9k/htc.h
-@@ -400,12 +400,21 @@ struct ath_btcoex {
- 	u32 btscan_no_stomp;
- };
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index feddd8a..38bfca3 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1181,6 +1181,7 @@ void ieee80211_sta_rx_queued_mgmt(struct ieee80211_sub_if_data *sdata,
+ 				  struct sk_buff *skb);
+ void ieee80211_sta_reset_beacon_monitor(struct ieee80211_sub_if_data *sdata);
+ void ieee80211_sta_reset_conn_monitor(struct ieee80211_sub_if_data *sdata);
++void ieee80211_mgd_teardown(struct ieee80211_sub_if_data *sdata);
  
-+#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- void ath9k_htc_init_btcoex(struct ath9k_htc_priv *priv, char *product);
- void ath9k_htc_start_btcoex(struct ath9k_htc_priv *priv);
- void ath9k_htc_stop_btcoex(struct ath9k_htc_priv *priv);
--void ath_htc_init_btcoex_work(struct ath9k_htc_priv *priv);
--void ath_htc_resume_btcoex_work(struct ath9k_htc_priv *priv);
--void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv);
-+#else
-+static inline void ath9k_htc_init_btcoex(struct ath9k_htc_priv *priv, char *product)
-+{
-+}
-+static inline void ath9k_htc_start_btcoex(struct ath9k_htc_priv *priv)
-+{
-+}
-+static inline void ath9k_htc_stop_btcoex(struct ath9k_htc_priv *priv)
-+{
-+}
-+#endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
+ /* IBSS code */
+ void ieee80211_ibss_notify_scan_completed(struct ieee80211_local *local);
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index a495587..e2e45dc 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -654,6 +654,8 @@ static void ieee80211_teardown_sdata(struct net_device *dev)
  
- #define OP_INVALID		   BIT(0)
- #define OP_SCANNING		   BIT(1)
-@@ -486,7 +495,10 @@ struct ath9k_htc_priv {
- 	int cabq;
- 	int hwq_map[WME_NUM_AC];
+ 	if (ieee80211_vif_is_mesh(&sdata->vif))
+ 		mesh_rmc_free(sdata);
++	else if (sdata->vif.type == NL80211_IFTYPE_STATION)
++		ieee80211_mgd_teardown(sdata);
  
-+#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
- 	struct ath_btcoex btcoex;
-+#endif
-+
- 	struct delayed_work coex_period_work;
- 	struct delayed_work duty_cycle_work;
- #ifdef CONFIG_ATH9K_HTC_DEBUGFS
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-index 2c61d36..6aa7674 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-@@ -22,6 +22,8 @@
- 
- #define ATH_HTC_BTCOEX_PRODUCT_ID "wb193"
- 
-+#ifdef CONFIG_ATH9K_BTCOEX_SUPPORT
-+
- /*
-  * Detects if there is any priority bt traffic
-  */
-@@ -113,7 +115,7 @@ static void ath_btcoex_duty_cycle_work(struct work_struct *work)
- 	ath9k_hw_btcoex_enable(priv->ah);
+ 	flushed = sta_info_flush(local, sdata);
+ 	WARN_ON(flushed);
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 2d8a2b6..be35827 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -3532,6 +3532,19 @@ int ieee80211_mgd_disassoc(struct ieee80211_sub_if_data *sdata,
+ 	return 0;
  }
  
--void ath_htc_init_btcoex_work(struct ath9k_htc_priv *priv)
-+static void ath_htc_init_btcoex_work(struct ath9k_htc_priv *priv)
- {
- 	struct ath_btcoex *btcoex = &priv->btcoex;
- 
-@@ -133,7 +135,7 @@ void ath_htc_init_btcoex_work(struct ath9k_htc_priv *priv)
-  * (Re)start btcoex work
-  */
- 
--void ath_htc_resume_btcoex_work(struct ath9k_htc_priv *priv)
-+static void ath_htc_resume_btcoex_work(struct ath9k_htc_priv *priv)
- {
- 	struct ath_btcoex *btcoex = &priv->btcoex;
- 	struct ath_hw *ah = priv->ah;
-@@ -153,7 +155,7 @@ void ath_htc_resume_btcoex_work(struct ath9k_htc_priv *priv)
- /*
-  * Cancel btcoex and bt duty cycle work.
-  */
--void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv)
-+static void ath_htc_cancel_btcoex_work(struct ath9k_htc_priv *priv)
- {
- 	if (ath9k_hw_get_btcoex_scheme(priv->ah) == ATH_BTCOEX_CFG_NONE)
- 		return;
-@@ -216,6 +218,8 @@ void ath9k_htc_init_btcoex(struct ath9k_htc_priv *priv, char *product)
- 	}
- }
- 
-+#endif /* CONFIG_ATH9K_BTCOEX_SUPPORT */
++void ieee80211_mgd_teardown(struct ieee80211_sub_if_data *sdata)
++{
++	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
 +
- /*******/
- /* LED */
- /*******/
--- 
-1.7.9.1
++	mutex_lock(&ifmgd->mtx);
++	if (ifmgd->assoc_data)
++		ieee80211_destroy_assoc_data(sdata, false);
++	if (ifmgd->auth_data)
++		ieee80211_destroy_auth_data(sdata, false);
++	del_timer_sync(&ifmgd->timer);
++	mutex_unlock(&ifmgd->mtx);
++}
++
+ void ieee80211_cqm_rssi_notify(struct ieee80211_vif *vif,
+ 			       enum nl80211_cqm_rssi_threshold_event rssi_event,
+ 			       gfp_t gfp)
+
 
