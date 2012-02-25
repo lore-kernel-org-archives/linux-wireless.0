@@ -1,77 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:43396 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756671Ab2BIAv6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 19:51:58 -0500
-Message-ID: <4F3318A7.5030809@openwrt.org> (sfid-20120209_015211_303796_A4C43865)
-Date: Thu, 09 Feb 2012 01:51:51 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: Pavel Roskin <proski@gnu.org>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	arend@broadcom.com
-Subject: Re: [PATCH] mac80211: do not call rate control .tx_status before
- .rate_init
-References: <1328725031-35464-1-git-send-email-nbd@openwrt.org> <20120208192536.GB2929@tuxdriver.com> <4F32CF18.4010300@openwrt.org> <20120208194453.GC2929@tuxdriver.com> <20120208180152.082cff4e@mj>
-In-Reply-To: <20120208180152.082cff4e@mj>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:44848 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755253Ab2BYJTM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Feb 2012 04:19:12 -0500
+Subject: Re: [PATCH 3.3] mwifiex: fix bug in wildcard scan handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+In-Reply-To: <1330148149-28922-1-git-send-email-bzhao@marvell.com> (sfid-20120225_063856_034955_8526CBA3)
+References: <1330148149-28922-1-git-send-email-bzhao@marvell.com>
+	 (sfid-20120225_063856_034955_8526CBA3)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 25 Feb 2012 10:19:10 +0100
+Message-ID: <1330161550.3575.1.camel@jlt3.sipsolutions.net> (sfid-20120225_101917_277941_337CDD24)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-02-09 12:01 AM, Pavel Roskin wrote:
-> On Wed, 8 Feb 2012 14:44:54 -0500
-> "John W. Linville" <linville@tuxdriver.com> wrote:
-> 
->> On Wed, Feb 08, 2012 at 08:38:00PM +0100, Felix Fietkau wrote:
->> > On 2012-02-08 8:25 PM, John W. Linville wrote:
->> > > On Wed, Feb 08, 2012 at 07:17:11PM +0100, Felix Fietkau wrote:
->> > >> Most rate control implementations assume .get_rate
->> > >> and .tx_status are only called once the per-station data has
->> > >> been fully initialized. minstrel_ht crashes if this assumption
->> > >> is violated.
->> > >> 
->> > >> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->> > >> Tested-by: Arend van Spriel <arend@broadcom.com>
->> > >> ---
->> > >>  net/mac80211/rate.h |    2 +-
->> > >>  1 files changed, 1 insertions(+), 1 deletions(-)
->> > >> 
->> > >> diff --git a/net/mac80211/rate.h b/net/mac80211/rate.h
->> > >> index 5fc3135..fbb1efd 100644
->> > >> --- a/net/mac80211/rate.h
->> > >> +++ b/net/mac80211/rate.h
->> > >> @@ -37,7 +37,7 @@ static inline void
->> > >> rate_control_tx_status(struct ieee80211_local *local, struct
->> > >> ieee80211_sta *ista = &sta->sta; void *priv_sta =
->> > >> sta->rate_ctrl_priv; 
->> > >> -	if (!ref)
->> > >> +	if (!ref || !test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
->> > >>  		return;
->> > >>  
->> > >>  	ref->ops->tx_status(ref->priv, sband, ista, priv_sta,
->> > >> skb);
->> > > 
->> > > Any reason not to apply this for 3.3?  Or stable?
->> > I think 3.3 doesn't have that sta flag, the issue was probably
->> > introduced with the 3.4 changes.
->> > I don't remember something like this appearing in earlier versions.
->> 
->> Cool, thanks.
-> 
-> I believe 3.3 is affected.  At least it looks like the Fedora bug 768639
-> (https://bugzilla.redhat.com/show_bug.cgi?id=768639) is caused by
-> calling .tx_status at a wrong time.  Fedora kernels use
-> compat-wireless-3.3.  I'm going to test the bleeding edge
-> compat-wireless with the patch by Felix to see if it fixes things.
-> 
-> The lack of the WLAN_STA_RATE_CONTROL flag doesn't mean that the old
-> behavior was correct.  The flag was introduced to correct that behavior.
-> 
-> The oldest report is dated 2011-12-17 and it's about Linux 3.2.0-rc5
-> with compat-wireless-2011-12-01.
-Only .get_rate and .tx_status are affected, wireless-testing commit
-e1936e9407138b483e6d1332dd944afec8131f30 adds one of the checks, and my
-commit adds the other. Maybe John could merge those two to 3.3.
+On Fri, 2012-02-24 at 21:35 -0800, Bing Zhao wrote:
 
-- Felix
+>  			ssid_len = strlen(user_scan_in->ssid_list[ssid_idx].
+> -					  ssid) + 1;
+> +					  ssid);
+
+Umm, are you really using strlen() on an SSID here? That's so broken I
+can hardly describe it.
+
+johannes
+
