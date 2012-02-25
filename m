@@ -1,94 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:60041 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753701Ab2BDB00 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:10489 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755253Ab2BYJL0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 20:26:26 -0500
-Received: by mail-pw0-f46.google.com with SMTP id u11so3334452pbd.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2012 17:26:26 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Subject: [RFC 11/11] crda: rename reglib_get_*() routines
-Date: Fri,  3 Feb 2012 17:25:48 -0800
-Message-Id: <1328318748-21044-12-git-send-email-mcgrof@frijolero.org> (sfid-20120204_022634_624332_25CFBA39)
-In-Reply-To: <1328318748-21044-1-git-send-email-mcgrof@frijolero.org>
-References: <1328318748-21044-1-git-send-email-mcgrof@frijolero.org>
+	Sat, 25 Feb 2012 04:11:26 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH V2 2/5] ath6kl: Initialize netdev hw_features for every interface
+Date: Sat, 25 Feb 2012 14:41:05 +0530
+Message-ID: <1330161068-8413-2-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120225_101205_450727_137BC91C)
+In-Reply-To: <1330161068-8413-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1330161068-8413-1-git-send-email-vthiagar@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-reglib_get_country_idx() --> reglib_get_rd_alpha2()
-reglib_get_country_alpha2() --> reglib_get_rd_alpha2()
+Move netdev->hw_features setting from ath6kl_core_init() to
+init_netdev() so that it is done for every interface.
 
-This reflects better what we provide back out.
-
-Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 ---
- crda.c   |    2 +-
- reglib.c |    4 ++--
- reglib.h |    8 ++++----
- 3 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath6kl/core.c |    2 --
+ drivers/net/wireless/ath/ath6kl/main.c |    2 ++
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/crda.c b/crda.c
-index c6dc3d4..cdbc69a 100644
---- a/crda.c
-+++ b/crda.c
-@@ -191,7 +191,7 @@ int main(int argc, char **argv)
+diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
+index 8dc207e..930ff9d 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.c
++++ b/drivers/net/wireless/ath/ath6kl/core.c
+@@ -156,8 +156,6 @@ int ath6kl_core_init(struct ath6kl *ar)
  
- 	close(fd);
+ 	set_bit(FIRST_BOOT, &ar->flag);
  
--	rd = reglib_get_country_alpha2(alpha2, *regdb);
-+	rd = reglib_get_rd_alpha2(alpha2, *regdb);
- 	if (!rd) {
- 		fprintf(stderr, "No country match in regulatory database.\n");
- 		return -1;
-diff --git a/reglib.c b/reglib.c
-index 12698fa..bc81974 100644
---- a/reglib.c
-+++ b/reglib.c
-@@ -226,7 +226,7 @@ country2rd(uint8_t *db, int dblen,
+-	ndev->hw_features |= NETIF_F_IP_CSUM | NETIF_F_RXCSUM;
+-
+ 	ret = ath6kl_init_hw_start(ar);
+ 	if (ret) {
+ 		ath6kl_err("Failed to start hardware: %d\n", ret);
+diff --git a/drivers/net/wireless/ath/ath6kl/main.c b/drivers/net/wireless/ath/ath6kl/main.c
+index d463a18..19237bb 100644
+--- a/drivers/net/wireless/ath/ath6kl/main.c
++++ b/drivers/net/wireless/ath/ath6kl/main.c
+@@ -1185,5 +1185,7 @@ void init_netdev(struct net_device *dev)
+ 				sizeof(struct wmi_data_hdr) + HTC_HDR_LENGTH
+ 				+ WMI_MAX_TX_META_SZ + ATH6KL_HTC_ALIGN_BYTES;
+ 
++	dev->hw_features |= NETIF_F_IP_CSUM | NETIF_F_RXCSUM;
++
+ 	return;
  }
- 
- struct ieee80211_regdomain *
--reglib_get_country_idx(unsigned int idx, const char *file)
-+reglib_get_rd_idx(unsigned int idx, const char *file)
- {
- 	int fd;
- 	struct stat stat;
-@@ -288,7 +288,7 @@ reglib_get_country_idx(unsigned int idx, const char *file)
- }
- 
- struct ieee80211_regdomain *
--reglib_get_country_alpha2(const char *alpha2, const char *file)
-+reglib_get_rd_alpha2(const char *alpha2, const char *file)
- {
- 	int fd;
- 	struct stat stat;
-diff --git a/reglib.h b/reglib.h
-index 99e6c76..9b9bd5c 100644
---- a/reglib.h
-+++ b/reglib.h
-@@ -74,16 +74,16 @@ void *crda_get_file_ptr(uint8_t *db, int dblen, int structlen, uint32_t ptr);
- int crda_verify_db_signature(uint8_t *db, int dblen, int siglen);
- 
- struct ieee80211_regdomain *
--reglib_get_country_idx(unsigned int idx, const char *file);
-+reglib_get_rd_idx(unsigned int idx, const char *file);
- 
- #define reglib_for_each_country(__rd, __idx, __file)			\
--	for (__rd = reglib_get_country_idx(__idx, __file);		\
-+	for (__rd = reglib_get_rd_idx(__idx, __file);		\
- 	     __rd != NULL;						\
--	     __rd = reglib_get_country_idx(__idx, __file),		\
-+	     __rd = reglib_get_rd_idx(__idx, __file),		\
- 	     __idx++)
- 
- struct ieee80211_regdomain *
--reglib_get_country_alpha2(const char *alpha2, const char *file);
-+reglib_get_rd_alpha2(const char *alpha2, const char *file);
- 
- /* reg helpers */
- void print_regdom(struct ieee80211_regdomain *rd);
 -- 
-1.7.4.15.g7811d
+1.7.0.4
 
