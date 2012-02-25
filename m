@@ -1,182 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:37907 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754996Ab2BUSBL (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:37435 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752829Ab2BYClU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Feb 2012 13:01:11 -0500
+	Fri, 24 Feb 2012 21:41:20 -0500
+Received: by iazz13 with SMTP id z13so853074iaz.19
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2012 18:41:20 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Tue, 21 Feb 2012 23:31:10 +0530
-From: Mahesh <maheshp@posedge.com>
-To: Paul Stewart <pstew@chromium.org>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: Re: [RFCv2] mac80211: Don't let regulatory make us deaf
-In-Reply-To: <20120221131946.AC1AD20578@glenhelen.mtv.corp.google.com>
-References: <20120221060932.8A38C20517@glenhelen.mtv.corp.google.com>
- <20120221131946.AC1AD20578@glenhelen.mtv.corp.google.com>
-Message-ID: <7082904a9e30daef12e45d4d08a83d40@posedge.com> (sfid-20120221_190121_722435_EDA670C1)
+In-Reply-To: <1330136920-15954-1-git-send-email-sidhayn@gmail.com>
+References: <1330136920-15954-1-git-send-email-sidhayn@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Date: Fri, 24 Feb 2012 18:41:00 -0800
+Message-ID: <CAB=NE6Vpch++VKPCofdML0wk9f+BLquwutdJhHN2nSCn8R6JFw@mail.gmail.com> (sfid-20120225_034125_103329_60351504)
+Subject: Re: [PATCH]v5 compat-wireless: replace modprobe -l with functional equivilent
+To: Rick Farina <sidhayn@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Feb 24, 2012 at 6:28 PM, Rick Farina <sidhayn@gmail.com> wrote:
+> modprobe -l is either deprecated or removed, so let's replace it
+> testing [ -z "$(DESTDIR)" ] appeared to only be need due to the fact
+> that *enable was run directly instead of being run with $(DESTDIR)/
+>
+> Testing for module presence should now work properly on modern distros
+> and *enable will be run properly with or without $(DESTDIR) being set.
+>
+> Signed-off-by: Rick Farina <sidhayn@gmail.com>
 
-On Mon, 20 Feb 2012 21:25:54 -0800, Paul Stewart wrote:
-> When regulatory information changes our HT behavior (e.g,
-> when we get a country code from the AP we have just associated
-> with), we should use this information to change the power with
-> which we transmit, and what channels we transmit.  Sometimes
-> the channel parameters we derive from regulatory information
-> contradicts the parameters we used in association.  For example,
-> we could have associated specifying HT40, but the regulatory
-> rules we apply may forbid HT40 operation.
->
-> In the situation above, we should reconfigure ourselves to
-> transmit in HT20 only, however it makes no sense for us to
-> disable receive in HT40, since if we associated with these
-> parameters, the AP has every reason to expect we can and
-> will receive packets this way.  The code in mac80211 does
-> not have the capability of sending the appropriate action
-> frames to signal a change in HT behaviour so the AP has
-> no clue we can no longer receive frames encoded this way.
-> In some broken AP implementations, this can leave us
-> effectively deaf if the AP never retries in lower HT rates.
->
-> This change breaks up the channel_type parameter in the
-> ieee80211_enable_ht function into a separate receive and
-> transmit part.  It honors the channel flags set by regulatory
-> in order to configure the rate control algorithm, but uses
-> the capability flags to configure the channel on the radio,
-> since these were used in association to set the AP's transmit
-> rate.
->
-> Signed-off-by: Paul Stewart <pstew@chromium.org>
-> ---
->  net/mac80211/chan.c        |   24 ++++++++++++++++++++++++
->  net/mac80211/ieee80211_i.h |    3 +++
->  net/mac80211/mlme.c        |   16 ++++++++--------
->  3 files changed, 35 insertions(+), 8 deletions(-)
->
-> diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-> index d1f7abd..494580a 100644
-> --- a/net/mac80211/chan.c
-> +++ b/net/mac80211/chan.c
-> @@ -3,6 +3,7 @@
->   */
->
->  #include <linux/nl80211.h>
-> +#include <net/cfg80211.h>
->  #include "ieee80211_i.h"
->
->  static enum ieee80211_chan_mode
-> @@ -134,3 +135,26 @@ bool ieee80211_set_channel_type(struct
-> ieee80211_local *local,
->
->  	return result;
->  }
-> +
-> +/*
-> + * ieee80211_get_xmit_channel_type returns the channel type we 
-> should
-> + * use for packet transmission, given the channel capability and
-> + * whatever regulatory flags we have been given.
-> + */
-> +enum nl80211_channel_type ieee80211_get_xmit_channel_type(
-> +				struct ieee80211_local *local,
-> +				enum nl80211_channel_type channel_type) {
-> +	switch (channel_type) {
-> +	case NL80211_CHAN_HT40PLUS:
-> +		if ((local->hw.conf.channel->flags &
-> +		    IEEE80211_CHAN_NO_HT40PLUS))
-> +			return NL80211_CHAN_HT20;
-> +		break;
-> +	case NL80211_CHAN_HT40MINUS:
-> +		if ((local->hw.conf.channel->flags &
-> +		    IEEE80211_CHAN_NO_HT40MINUS))
-> +			return NL80211_CHAN_HT20;
-> +		break;
-> +	}
-> +	return channel_type;
-> +}
-> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-> index 74594f0..0a3c7df 100644
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -1468,6 +1468,9 @@ bool ieee80211_set_channel_type(struct
-> ieee80211_local *local,
->  				enum nl80211_channel_type chantype);
->  enum nl80211_channel_type
->  ieee80211_ht_info_to_channel_type(struct ieee80211_ht_info 
-> *ht_info);
-> +enum nl80211_channel_type ieee80211_get_xmit_channel_type(
-> +					struct ieee80211_local *local,
-> +					enum nl80211_channel_type channel_type);
->
->  #ifdef CONFIG_MAC80211_NOINLINE
->  #define debug_noinline noinline
-> diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-> index 52133da..3bcf4e3 100644
-> --- a/net/mac80211/mlme.c
-> +++ b/net/mac80211/mlme.c
-> @@ -188,6 +188,7 @@ static u32 ieee80211_enable_ht(struct
-> ieee80211_sub_if_data *sdata,
->  	bool enable_ht = true;
->  	enum nl80211_channel_type prev_chantype;
->  	enum nl80211_channel_type channel_type = NL80211_CHAN_NO_HT;
-> +	enum nl80211_channel_type xmit_channel_type;
->
->  	sband = local->hw.wiphy->bands[local->hw.conf.channel->band];
->
-> @@ -228,19 +229,18 @@ static u32 ieee80211_enable_ht(struct
-> ieee80211_sub_if_data *sdata,
->  		    (hti->ht_param & IEEE80211_HT_PARAM_CHAN_WIDTH_ANY)) {
->  			switch(hti->ht_param & IEEE80211_HT_PARAM_CHA_SEC_OFFSET) {
->  			case IEEE80211_HT_PARAM_CHA_SEC_ABOVE:
-> -				if (!(local->hw.conf.channel->flags &
-> -				    IEEE80211_CHAN_NO_HT40PLUS))
-> -					channel_type = NL80211_CHAN_HT40PLUS;
-> +				channel_type = NL80211_CHAN_HT40PLUS;
->  				break;
->  			case IEEE80211_HT_PARAM_CHA_SEC_BELOW:
-> -				if (!(local->hw.conf.channel->flags &
-> -				    IEEE80211_CHAN_NO_HT40MINUS))
-> -					channel_type = NL80211_CHAN_HT40MINUS;
-> +				channel_type = NL80211_CHAN_HT40MINUS;
->  				break;
->  			}
->  		}
->  	}
->
-> +	xmit_channel_type =
-> +		ieee80211_get_xmit_channel_type(local, channel_type);
-> +
->  	if (local->tmp_channel)
->  		local->tmp_channel_type = channel_type;
->
-> @@ -268,13 +268,13 @@ static u32 ieee80211_enable_ht(struct
-> ieee80211_sub_if_data *sdata,
->  	/* channel_type change automatically detected */
->  	ieee80211_hw_config(local, 0);
->
-> -	if (prev_chantype != channel_type) {
-> +	if (prev_chantype != xmit_channel_type) {
->  		rcu_read_lock();
->  		sta = sta_info_get(sdata, bssid);
->  		if (sta)
->  			rate_control_rate_update(local, sband, sta,
->  						 IEEE80211_RC_HT_CHANGED,
-> -						 channel_type);
-> +						 xmit_channel_type);
->  		rcu_read_unlock();
->
->  		if (beacon_htcap_ie)
+Applied and pushed, thanks!
 
-
-Peter,
-
-When AP sends country code info, it should also obey the same 
-regulatory of that country and stick to HT20 in your example? Am I 
-missing something here?
-
----
-Thanks,
-Mahesh
+  Luis
