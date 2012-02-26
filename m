@@ -1,114 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29198 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754069Ab2B1RRK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:45263 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750960Ab2BZLZl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Feb 2012 12:17:10 -0500
-From: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
-	Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
-Subject: [PATCH] ath6kl: Clear the IE in firmware if not set
-Date: Tue, 28 Feb 2012 09:17:04 -0800
-Message-ID: <1330449424-4975-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com> (sfid-20120228_181736_991205_8AB4E608)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 26 Feb 2012 06:25:41 -0500
+Subject: Re: [RFCv2] mac80211: Don't let regulatory make us deaf
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Paul Stewart <pstew@chromium.org>
+Cc: linux-wireless@vger.kernel.org,
+	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
+	Arik Nemtsov <anamtsov@gmail.com>,
+	Eliad Peller <eliad@wizery.com>, Jouni Malinen <j@w1.fi>
+In-Reply-To: <1330254954.4401.9.camel@jlt3.sipsolutions.net> (sfid-20120226_121611_944331_8D721289)
+References: <20120221060932.8A38C20517@glenhelen.mtv.corp.google.com>
+	 <20120221131946.AC1AD20578@glenhelen.mtv.corp.google.com>
+	 (sfid-20120221_142005_568435_B65411B9)  <1330254954.4401.9.camel@jlt3.sipsolutions.net>
+	 (sfid-20120226_121611_944331_8D721289)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 26 Feb 2012 12:25:37 +0100
+Message-ID: <1330255537.4401.10.camel@jlt3.sipsolutions.net> (sfid-20120226_122612_633449_A5107FC1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove check so that IE in firmware is cleared if not set. Without this fix, any
-previously set IE will be used incorrectly in the next frame. For example,
-consider the scenario where a P2P device scan is followed by a regular station
-scan. The P2P IE set by the P2P scan needs to be cleared, otherwise the station
-scan will contain the P2P IE.
+On Sun, 2012-02-26 at 12:15 +0100, Johannes Berg wrote:
+> On Mon, 2012-02-20 at 21:25 -0800, Paul Stewart wrote:
+> > When regulatory information changes our HT behavior (e.g,
+> > when we get a country code from the AP we have just associated
+> > with), we should use this information to change the power with
+> > which we transmit, and what channels we transmit.  Sometimes
+> > the channel parameters we derive from regulatory information
+> > contradicts the parameters we used in association.  For example,
+> > we could have associated specifying HT40, but the regulatory
+> > rules we apply may forbid HT40 operation.
+> > 
+> > In the situation above, we should reconfigure ourselves to
+> > transmit in HT20 only, however it makes no sense for us to
+> > disable receive in HT40, since if we associated with these
+> > parameters, the AP has every reason to expect we can and
+> > will receive packets this way.
+> 
+> Looking at this in mac80211 (ieee80211_enable_ht) in more detail for
+> other reasons, I believe our current behaviour is wrong in other cases
+> as well, not just the regulatory case.
+> 
+> If the AP is advertising HT40, but 40MHz-intolerant at the same time, I
+> believe we should also configure the channel to HT40, and prohibit using
+> 40 MHz TX for the time in which 40MHz-intolerant is set. Otherwise, when
+> the AP changes the 40MHz-intolerant flag, we may reconfigure our channel
+> too late to receive 40MHz transmissions. Also, some devices don't like
+> having the channel reconfigured while associated and doing so would be
+> particularly messy when we start talking about multi-channel operation.
+> 
+> I think overall better behaviour would be to set up the HT channel
+> already in ieee80211_mgd_auth() according to what the AP advertises,
 
-Signed-off-by: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   64 +++++++++++++---------------
- 1 files changed, 29 insertions(+), 35 deletions(-)
+Correction: ieee80211_mgd_assoc(), during auth we don't yet know what
+ciphers we'll use etc. so we don't yet know if HT will be disabled.
+However, during auth we also don't care about the channel type, so
+there's no problem for multi-channel.
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index a91f521..73848c0 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -877,19 +877,14 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
- 						  request->ssids[i].ssid);
- 	}
- 
--	/*
--	 * FIXME: we should clear the IE in fw if it's not set so just
--	 * remove the check altogether
--	 */
--	if (request->ie) {
--		ret = ath6kl_wmi_set_appie_cmd(ar->wmi, vif->fw_vif_idx,
--					       WMI_FRAME_PROBE_REQ,
--					       request->ie, request->ie_len);
--		if (ret) {
--			ath6kl_err("failed to set Probe Request appie for "
--				   "scan");
--			return ret;
--		}
-+	/* this also clears IE in fw if it's not set */
-+	ret = ath6kl_wmi_set_appie_cmd(ar->wmi, vif->fw_vif_idx,
-+		WMI_FRAME_PROBE_REQ,
-+		request->ie, request->ie_len);
-+	if (ret) {
-+		ath6kl_err("failed to set Probe Request appie for "
-+			"scan");
-+		return ret;
- 	}
- 
- 	/*
-@@ -2290,28 +2285,27 @@ static int ath6kl_ap_beacon(struct wiphy *wiphy, struct net_device *dev,
- 	if (vif->next_mode != AP_NETWORK)
- 		return -EOPNOTSUPP;
- 
--	if (info->beacon_ies) {
--		res = ath6kl_wmi_set_appie_cmd(ar->wmi, vif->fw_vif_idx,
--					       WMI_FRAME_BEACON,
--					       info->beacon_ies,
--					       info->beacon_ies_len);
--		if (res)
--			return res;
--	}
--	if (info->proberesp_ies) {
--		res = ath6kl_set_ap_probe_resp_ies(vif, info->proberesp_ies,
--						   info->proberesp_ies_len);
--		if (res)
--			return res;
--	}
--	if (info->assocresp_ies) {
--		res = ath6kl_wmi_set_appie_cmd(ar->wmi, vif->fw_vif_idx,
--					       WMI_FRAME_ASSOC_RESP,
--					       info->assocresp_ies,
--					       info->assocresp_ies_len);
--		if (res)
--			return res;
--	}
-+	/* this also clears IE in fw if it's not set */
-+	res = ath6kl_wmi_set_appie_cmd(ar->wmi, vif->fw_vif_idx,
-+		WMI_FRAME_BEACON,
-+		info->beacon_ies,
-+		info->beacon_ies_len);
-+	if (res)
-+		return res;
-+
-+	/* this also clears IE in fw if it's not set */
-+	res = ath6kl_set_ap_probe_resp_ies(vif, info->proberesp_ies,
-+		info->proberesp_ies_len);
-+	if (res)
-+		return res;
-+
-+	/* this also clears IE in fw if it's not set */
-+	res = ath6kl_wmi_set_appie_cmd(ar->wmi, vif->fw_vif_idx,
-+		WMI_FRAME_ASSOC_RESP,
-+		info->assocresp_ies,
-+		info->assocresp_ies_len);
-+	if (res)
-+		return res;
- 
- 	if (!add)
- 		return 0;
--- 
-1.7.0.4
+> disregarding regulatory information and 40MHz-intolerant bits. While
+> associated, the only possible changes would be
+>  1) changes in HT opmode (protection, non-GF/non-HT sta etc.)
+>  2) 40MHz-intolerant changes (e.g. when such a STA joins)
+> This would affect both the driver and rate control, and for drivers
+> having rate control built-in we need to also tell them directly.
+> 
+> Thoughts?
+> 
+> johannes
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
 
