@@ -1,197 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:4551 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755313Ab2B0XTC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 18:19:02 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 01/24] iwlwifi: parse_tlv functions set the fw_version string
-Date: Mon, 27 Feb 2012 14:07:25 -0800
-Message-Id: <1330380468-17674-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120228_001910_096664_513801EE)
-In-Reply-To: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:37829 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750992Ab2BZHOI convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 26 Feb 2012 02:14:08 -0500
+Received: by obcva7 with SMTP id va7so4391462obc.19
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Feb 2012 23:14:07 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20120225012039.4E62720353@glenhelen.mtv.corp.google.com>
+References: <CAMcMvsj2XMFarr1+fqdSv88ZLrXLquK7wgF8LsTYDBfvHFwgrA@mail.gmail.com>
+	<20120225012039.4E62720353@glenhelen.mtv.corp.google.com>
+Date: Sun, 26 Feb 2012 09:14:07 +0200
+Message-ID: <CAB3XZEcp3F1ZV1MpnBrdF3uL1dpgP1zFCUB+VYFAzEMU1Zzw8A@mail.gmail.com> (sfid-20120226_081440_888109_26FE91A0)
+Subject: Re: [RFCv3] mac80211: Filter duplicate IE ids
+From: Eliad Peller <eliad@wizery.com>
+To: Paul Stewart <pstew@chromium.org>
+Cc: linux-wireless@vger.kernel.org, sleffler@chromium.org,
+	johannes@sipsolutions.net
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Fri, Feb 24, 2012 at 3:59 AM, Paul Stewart <pstew@chromium.org> wrote:
+> mac80211 is lenient with respect to reception of corrupted beacons.
+> Even if the frame is corrupted as a whole, the available IE elements
+> are still passed back and accepted, sometimes replacing legitimate
+> data.  It is unknown to what extent this "feature" is made use of,
+> but it is clear that in some cases, this is detrimental.  One such
+> case is reported in http://crosbug.com/26832 where an AP corrupts
+> its beacons but not its probe responses.
+>
+> One approach would be to completely reject frames with invaid data
+> (for example, if the last tag extends beyond the end of the enclosing
+> PDU).  The enclosed approach is much more conservative: we simply
+> prevent later IEs from overwriting the state from previous ones.
+> This approach hopes that there might be some salient data in the
+> IE stream before the corruption, and seeks to at least prevent that
+> data from being overwritten.  This approach will fix the case above.
+>
+[...]
 
-struct iwl_fw contains a string that describe the fw. This string
-is now set by the iwl_parse_*_firmware.
-This string is later used to update the cfg80211 data.
+> @@ -705,7 +730,8 @@ u32 ieee802_11_parse_elems_crc(u8 *start, size_t len,
+>                        if (!elems->quiet_elem) {
+>                                elems->quiet_elem = pos;
+>                                elems->quiet_elem_len = elen;
+> -                       }
+> +                       } else
+> +                               elem_parse_failed = true;
+>                        elems->num_of_quiet_elem++;
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-ucode.c |   70 ++++++++++++++++++------------
- drivers/net/wireless/iwlwifi/iwl-ucode.h |    5 +-
- 2 files changed, 44 insertions(+), 31 deletions(-)
+i'm not familiar with this IE, but num_of_quiet_elem, which defined as:
+	u8 num_of_quiet_elem;	/* can be more the one */
+suggests we should treat it differently.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.c b/drivers/net/wireless/iwlwifi/iwl-ucode.c
-index 61c6c05..ea75709 100644
---- a/drivers/net/wireless/iwlwifi/iwl-ucode.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-ucode.c
-@@ -731,8 +731,6 @@ struct iwlagn_firmware_pieces {
- 	size_t inst_size, data_size, init_size, init_data_size,
- 	       wowlan_inst_size, wowlan_data_size;
- 
--	u32 build;
--
- 	u32 init_evtlog_ptr, init_evtlog_size, init_errlog_ptr;
- 	u32 inst_evtlog_ptr, inst_evtlog_size, inst_errlog_ptr;
- };
-@@ -742,7 +740,8 @@ static int iwl_parse_v1_v2_firmware(struct iwl_nic *nic,
- 				       struct iwlagn_firmware_pieces *pieces)
- {
- 	struct iwl_ucode_header *ucode = (void *)ucode_raw->data;
--	u32 api_ver, hdr_size;
-+	u32 api_ver, hdr_size, build;
-+	char buildstr[25];
- 	const u8 *src;
- 
- 	nic->fw.ucode_ver = le32_to_cpu(ucode->ver);
-@@ -755,7 +754,7 @@ static int iwl_parse_v1_v2_firmware(struct iwl_nic *nic,
- 			IWL_ERR(nic, "File size too small!\n");
- 			return -EINVAL;
- 		}
--		pieces->build = le32_to_cpu(ucode->u.v2.build);
-+		build = le32_to_cpu(ucode->u.v2.build);
- 		pieces->inst_size = le32_to_cpu(ucode->u.v2.inst_size);
- 		pieces->data_size = le32_to_cpu(ucode->u.v2.data_size);
- 		pieces->init_size = le32_to_cpu(ucode->u.v2.init_size);
-@@ -770,7 +769,7 @@ static int iwl_parse_v1_v2_firmware(struct iwl_nic *nic,
- 			IWL_ERR(nic, "File size too small!\n");
- 			return -EINVAL;
- 		}
--		pieces->build = 0;
-+		build = 0;
- 		pieces->inst_size = le32_to_cpu(ucode->u.v1.inst_size);
- 		pieces->data_size = le32_to_cpu(ucode->u.v1.data_size);
- 		pieces->init_size = le32_to_cpu(ucode->u.v1.init_size);
-@@ -779,6 +778,22 @@ static int iwl_parse_v1_v2_firmware(struct iwl_nic *nic,
- 		break;
- 	}
- 
-+	if (build)
-+		sprintf(buildstr, " build %u%s", build,
-+		       (nic->fw_index == UCODE_EXPERIMENTAL_INDEX)
-+				? " (EXP)" : "");
-+	else
-+		buildstr[0] = '\0';
-+
-+	snprintf(nic->fw.fw_version,
-+		 sizeof(nic->fw.fw_version),
-+		 "%u.%u.%u.%u%s",
-+		 IWL_UCODE_MAJOR(nic->fw.ucode_ver),
-+		 IWL_UCODE_MINOR(nic->fw.ucode_ver),
-+		 IWL_UCODE_API(nic->fw.ucode_ver),
-+		 IWL_UCODE_SERIAL(nic->fw.ucode_ver),
-+		 buildstr);
-+
- 	/* Verify size of file vs. image size info in file's header */
- 	if (ucode_raw->size != hdr_size + pieces->inst_size +
- 				pieces->data_size + pieces->init_size +
-@@ -817,6 +832,8 @@ static int iwl_parse_tlv_firmware(struct iwl_nic *nic,
- 	u32 tlv_len;
- 	enum iwl_ucode_tlv_type tlv_type;
- 	const u8 *tlv_data;
-+	char buildstr[25];
-+	u32 build;
- 
- 	if (len < sizeof(*ucode)) {
- 		IWL_ERR(nic, "uCode has invalid length: %zd\n", len);
-@@ -847,7 +864,24 @@ static int iwl_parse_tlv_firmware(struct iwl_nic *nic,
- 			 tmp, wanted_alternative);
- 
- 	nic->fw.ucode_ver = le32_to_cpu(ucode->ver);
--	pieces->build = le32_to_cpu(ucode->build);
-+	build = le32_to_cpu(ucode->build);
-+
-+	if (build)
-+		sprintf(buildstr, " build %u%s", build,
-+		       (nic->fw_index == UCODE_EXPERIMENTAL_INDEX)
-+				? " (EXP)" : "");
-+	else
-+		buildstr[0] = '\0';
-+
-+	snprintf(nic->fw.fw_version,
-+		 sizeof(nic->fw.fw_version),
-+		 "%u.%u.%u.%u%s",
-+		 IWL_UCODE_MAJOR(nic->fw.ucode_ver),
-+		 IWL_UCODE_MINOR(nic->fw.ucode_ver),
-+		 IWL_UCODE_API(nic->fw.ucode_ver),
-+		 IWL_UCODE_SERIAL(nic->fw.ucode_ver),
-+		 buildstr);
-+
- 	data = ucode->data;
- 
- 	len -= sizeof(*ucode);
-@@ -1021,8 +1055,6 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 	unsigned int api_ok = cfg->ucode_api_ok;
- 	const unsigned int api_min = cfg->ucode_api_min;
- 	u32 api_ver;
--	char buildstr[25];
--	u32 build;
- 
- 	fw->ucode_capa.max_probe_length = 200;
- 	fw->ucode_capa.standard_phy_calibration_size =
-@@ -1063,7 +1095,6 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 		goto try_again;
- 
- 	api_ver = IWL_UCODE_API(nic->fw.ucode_ver);
--	build = pieces.build;
- 
- 	/*
- 	 * api_ver should match the api version forming part of the
-@@ -1094,28 +1125,11 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 		}
- 	}
- 
--	if (build)
--		sprintf(buildstr, " build %u%s", build,
--		       (nic->fw_index == UCODE_EXPERIMENTAL_INDEX)
--				? " (EXP)" : "");
--	else
--		buildstr[0] = '\0';
--
--	IWL_INFO(nic, "loaded firmware version %u.%u.%u.%u%s\n",
--		 IWL_UCODE_MAJOR(nic->fw.ucode_ver),
--		 IWL_UCODE_MINOR(nic->fw.ucode_ver),
--		 IWL_UCODE_API(nic->fw.ucode_ver),
--		 IWL_UCODE_SERIAL(nic->fw.ucode_ver),
--		 buildstr);
-+	IWL_INFO(nic, "loaded firmware version %s", nic->fw.fw_version);
- 
- 	snprintf(priv->hw->wiphy->fw_version,
- 		 sizeof(priv->hw->wiphy->fw_version),
--		 "%u.%u.%u.%u%s",
--		 IWL_UCODE_MAJOR(nic->fw.ucode_ver),
--		 IWL_UCODE_MINOR(nic->fw.ucode_ver),
--		 IWL_UCODE_API(nic->fw.ucode_ver),
--		 IWL_UCODE_SERIAL(nic->fw.ucode_ver),
--		 buildstr);
-+		 "%s", nic->fw.fw_version);
- 
- 	/*
- 	 * For any of the failures below (before allocating pci memory)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.h b/drivers/net/wireless/iwlwifi/iwl-ucode.h
-index d13e624..8bebeb0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-ucode.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-ucode.h
-@@ -204,9 +204,8 @@ struct fw_img {
-  */
- struct iwl_fw {
- 
--	/* ucode image and variables */
--	u32 ucode_ver;                  /* version of ucode, copy of
--					   iwl_ucode.ver */
-+	u32 ucode_ver;
-+
- 	char fw_version[ETHTOOL_BUSINFO_LEN];
- 
- 	/* ucode images */
--- 
-1.7.0.4
-
+Eliad.
