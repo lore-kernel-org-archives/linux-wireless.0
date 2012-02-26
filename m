@@ -1,89 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:58673 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751590Ab2BTEfx (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:59775 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751226Ab2BZNPg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Feb 2012 23:35:53 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Eliad Peller <eliad@wizery.com>
-Subject: [PATCH 2/2] mac80211: Fix a warning on changing to monitor mode from STA
-Date: Mon, 20 Feb 2012 10:05:32 +0530
-Message-ID: <1329712532-1928-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120220_053556_329219_A1822C21)
-In-Reply-To: <1329712532-1928-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1329712532-1928-1-git-send-email-mohammed@qca.qualcomm.com>
+	Sun, 26 Feb 2012 08:15:36 -0500
+Received: by iazz13 with SMTP id z13so2112470iaz.19
+        for <linux-wireless@vger.kernel.org>; Sun, 26 Feb 2012 05:15:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAAevFRQ7dfk2UeackHR1sMJaAG1f70DWmZ4kfGW91A5opmioaA@mail.gmail.com>
+References: <CAAevFRQ7dfk2UeackHR1sMJaAG1f70DWmZ4kfGW91A5opmioaA@mail.gmail.com>
+From: "." <desire@gmail.com>
+Date: Sun, 26 Feb 2012 21:15:16 +0800
+Message-ID: <CAAevFRSY-wT9Ln_TPHJS4KSFtW62Be9fZ5mEAcb6Xg_cFx6=pw@mail.gmail.com> (sfid-20120226_141539_777127_C2397751)
+Subject: wireless-regdb: Update regulatory rules for Singapore (SG) on 2.4GHz
+ and 5GHz
+To: linville@tuxdriver.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+(resend)
 
-nothing needs to be done for monitor mode on calling
-ieee80211_bss_info_change_notify -> drv_bss_info_changed with the change
-flag 'BSS_CHANGED_IDLE'. 'wl1271' seems to use BSS_CHANGED_IDLE only for
-STA and IBSS mode. further the non-idle state of the monitor mode is
-taken care by the 'count' variable which counts non-idle interfaces.
-ieee80211_idle_off(local, "in use") will be called.
-this fixes the following WARNING when we have initially STA mode
-(network manager running) and not associated, and change it to monitor
-mode with network manager disabled and bringing up the monitor mode.
-this changes the idle state from 'true' (STA unassociated) to 'false'
-(MONITOR mode)
-exposed by the commit 405385f8ce7a2ed8f82e216d88b5282142e1288b
-"mac80211: set bss_conf.idle when vif is connected"
+Hi.  Following the instructions at
+http://linuxwireless.org/en/developers/Regulatory, I'd like to update that
+maximum EIRP for Singapore has changed.
 
-	WARNING: net/mac80211/main.c:212
-	ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]()
-	Hardware name: 64756D6
-	Pid: 3835, comm: ifconfig Tainted: G           O
-	3.3.0-rc3-wl #9
-	Call Trace:
-	  [<c0133b02>] warn_slowpath_common+0x72/0xa0
-	  [<fc8e8c3f>] ?
-	  ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]
-	  [<fc8e8c3f>] ?
-	  ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]
-	  [<c0133b52>] warn_slowpath_null+0x22/0x30
-	  [<fc8e8c3f>]
-	  ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]
-	  [<fc8f9de3>] __ieee80211_recalc_idle+0x113/0x430
-	  [mac80211]
-	  [<fc8fabc6>] ieee80211_do_open+0x156/0x7e0 [mac80211]
-	  [<fc8f8a25>] ?
-	  ieee80211_check_concurrent_iface+0x25/0x180 [mac80211]
-	  [<c015dd9f>] ? raw_notifier_call_chain+0x1f/0x30
-	  [<fc8fb290>] ieee80211_open+0x40/0x80 [mac80211]
-	  [<c05894f6>] __dev_open+0x96/0xe0
-	  [<c068fba5>] ? _raw_spin_unlock_bh+0x35/0x40
-	  [<c05881d9>] __dev_change_flags+0x109/0x170
-	  [<c0589423>] dev_change_flags+0x23/0x60
-	  [<c05f3770>] devinet_ioctl+0x6a0/0x770
+The updated Technical Specification for Short Range Devices was published
+at http://www.ida.gov.sg/Policies%20and%20Regulation/20060424155810.aspx.
+ In case the link changes, it can be retrieved from www.ida.gov.sg -> Policies &
+Regulation -> Standards -> Radio-Communication Equipment Standards
 
- ieee80211 phy0: device no longer idle - in use
+Briefly, the changes applicable to wireless LAN are:
 
-Cc: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- net/mac80211/iface.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+>
+> Technical requirements have also been revised for the wireless LAN and
+> broadband access applications:
+>
+> Output power limit for 2.4000 - 2.4835 GHz band increased from 100 mW EIRP
+> to 200 mW
+> Output power limit for 5.725 - 5.850 GHz band increased from 100 mW EIRP
+> to 1 W EIRP
+> Output power limit of 4 W EIRP is allowed for operations in the 5.725 -
+> 5.850 GHz band, subject to IDA's licensing
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 6b3cd65..6b2221b 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1342,6 +1342,8 @@ u32 __ieee80211_recalc_idle(struct ieee80211_local *local)
- 		hw_roc = true;
- 
- 	list_for_each_entry(sdata, &local->interfaces, list) {
-+		if (sdata->vif.type == NL80211_IFTYPE_MONITOR)
-+			continue;
- 		if (sdata->old_idle == sdata->vif.bss_conf.idle)
- 			continue;
- 		if (!ieee80211_sdata_running(sdata))
--- 
-1.7.0.4
 
+Thanks.
+
+(I'm not subscribed. Please cc: me for replies)
