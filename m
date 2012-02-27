@@ -1,56 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:54915 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751002Ab2BDBZx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 20:25:53 -0500
-Received: by dadp15 with SMTP id p15so3176528dad.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2012 17:25:52 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+Received: from nbd.name ([46.4.11.11]:60000 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753016Ab2B0PyN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 10:54:13 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Subject: [RFC 00/11] crda: start combing code for library
-Date: Fri,  3 Feb 2012 17:25:37 -0800
-Message-Id: <1328318748-21044-1-git-send-email-mcgrof@frijolero.org> (sfid-20120204_022600_783774_AC31D1E4)
+Cc: mcgrof@qca.qualcomm.com
+Subject: [PATCH] compat-wireless: fix directory copying in admin-update.sh
+Date: Mon, 27 Feb 2012 15:51:44 +0100
+Message-Id: <1330354304-69044-1-git-send-email-nbd@openwrt.org> (sfid-20120227_165417_358610_5AB368F6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've had these sittng in my queueu for a while, so here they are.  Its code
-that starts combing CRDA to allow for a small library to be later extracted to
-be shared between CRDA and the regulatory simulator [0].
+On my system the trailing slash leads to the directory contents being copied
+to the target instead of the full directory, which results in breakage during
+build.
 
-Sending these out for review. The library isn't split yet but I figured I'd
-send this out for review so far. I've decided to go with a compromise and
-simplify the library by only letting the library deal with reads from the
-database file atomically. I think the benefit is cleaner code without having to
-shuffle and keep some local mmap()'d value somewhere.
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ scripts/admin-update.sh |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Anyway, let me know if this seems agreeable.
-
-[0] git://github.com/mcgrof/regsim.git
-
-Luis R. Rodriguez (11):
-  crda: move country2rd() and its helper to reglib.c
-  crda: add a reglib iterator reglib_for_each_country()
-  crda: make intersect.c use reglib_for_each_country()
-  crda: close fd upon leaving
-  crda: add new reglib_get_country_alpha2()
-  crda: add dfs_region to the ieee80211_regdomain data structure
-  crda: make crda use reglib_get_country_alpha2()
-  crda: clean header files
-  crda: make country2rd() static
-  crda: make usage of regdb.h exclusive to reglib.c
-  crda: rename reglib_get_*() routines
-
- Makefile       |    2 +-
- crda.c         |  114 +++++++------------------------
- intersect.c    |   96 +++-----------------------
- print-regdom.c |   80 +++-------------------
- regdbdump.c    |   82 +---------------------
- reglib.c       |  207 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- reglib.h       |   17 +++--
- 7 files changed, 272 insertions(+), 326 deletions(-)
-
+diff --git a/scripts/admin-update.sh b/scripts/admin-update.sh
+index 369cc96..34022b7 100755
+--- a/scripts/admin-update.sh
++++ b/scripts/admin-update.sh
+@@ -425,8 +425,8 @@ mkdir -p $COMPAT
+ echo "Copying $GIT_COMPAT_TREE/ files..."
+ cp $GIT_COMPAT_TREE/compat/*.c $COMPAT/
+ cp $GIT_COMPAT_TREE/compat/Makefile $COMPAT/
+-cp -a $GIT_COMPAT_TREE/udev/ .
+-cp -a $GIT_COMPAT_TREE/scripts/ $COMPAT/
++cp -a $GIT_COMPAT_TREE/udev .
++cp -a $GIT_COMPAT_TREE/scripts $COMPAT/
+ cp -a $GIT_COMPAT_TREE/include/linux/* include/linux/
+ cp -a $GIT_COMPAT_TREE/include/net/* include/net/
+ cp -a $GIT_COMPAT_TREE/include/trace/* include/trace/
 -- 
-1.7.4.15.g7811d
+1.7.3.2
 
