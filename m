@@ -1,157 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:51550 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752217Ab2BGUiU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 15:38:20 -0500
-Received: by iacb35 with SMTP id b35so10589739iac.19
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 12:38:19 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20120207195415.GG5560@tuxdriver.com>
-References: <87pqgkxn25.fsf@nemi.mork.no> <20111128181912.GB2681@tuxdriver.com>
- <20120207195415.GG5560@tuxdriver.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Tue, 7 Feb 2012 12:37:59 -0800
-Message-ID: <CAB=NE6VVcQgum4mQ5eooS2yXo-NNXHvujsUwpbEwNdQQSreaBA@mail.gmail.com> (sfid-20120207_213824_389410_C2FCD3FB)
-Subject: Re: [wireless-regdb] wireless-regdb: Update regulatory rules for
- Norway (NO)
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Michael Green <green@qca.qualcomm.com>,
-	Tomas Winkler <tomas.winkler@intel.com>
-Cc: =?UTF-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>,
-	linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
-	=?UTF-8?Q?Robert_Gr=C3=B8nning?= <slimg@iggu.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([143.182.124.37]:4551 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755313Ab2B0XTC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 18:19:02 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 01/24] iwlwifi: parse_tlv functions set the fw_version string
+Date: Mon, 27 Feb 2012 14:07:25 -0800
+Message-Id: <1330380468-17674-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120228_001910_096664_513801EE)
+In-Reply-To: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 7, 2012 at 11:54 AM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> Well, sorry for the delay...  I will take this silence as "no
-> objection". :-)
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Sorry, I did get a reply by Michael Green on 11/28/2011 but I never
-followed up with the list. Apologies as well with the delay, but here
-is our review.
+struct iwl_fw contains a string that describe the fw. This string
+is now set by the iwl_parse_*_firmware.
+This string is later used to update the cfg80211 data.
 
-The European Union has some harmonized European radio conformance spec
-and QCA's interpretation and position is that that spec overrides
-deviations for end products for specific countries like the one being
-recommended for Norway. This also means that QCA does not deviate for
-EU countries on specs, even if countries have their own quirks, for
-any country in the EU.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-ucode.c |   70 ++++++++++++++++++------------
+ drivers/net/wireless/iwlwifi/iwl-ucode.h |    5 +-
+ 2 files changed, 44 insertions(+), 31 deletions(-)
 
-Supporting changes like these are a deviation from what QCA is used to
-using and testing and we unfortunately cannot verify any individual
-country specific changes like the one proposed for the EU. It is also
-our sentiment that we stand to gain more if we simply unify the EU
-requirements through the harmonized spec, it provides simplicity, its
-what we use and we can help in that regards. If wireless-regdb decides
-to take a different path we simply will not be able to verify and
-validate these changes. I'd be surprised if any other 802.11 vendor
-differs from this position.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.c b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+index 61c6c05..ea75709 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+@@ -731,8 +731,6 @@ struct iwlagn_firmware_pieces {
+ 	size_t inst_size, data_size, init_size, init_data_size,
+ 	       wowlan_inst_size, wowlan_data_size;
+ 
+-	u32 build;
+-
+ 	u32 init_evtlog_ptr, init_evtlog_size, init_errlog_ptr;
+ 	u32 inst_evtlog_ptr, inst_evtlog_size, inst_errlog_ptr;
+ };
+@@ -742,7 +740,8 @@ static int iwl_parse_v1_v2_firmware(struct iwl_nic *nic,
+ 				       struct iwlagn_firmware_pieces *pieces)
+ {
+ 	struct iwl_ucode_header *ucode = (void *)ucode_raw->data;
+-	u32 api_ver, hdr_size;
++	u32 api_ver, hdr_size, build;
++	char buildstr[25];
+ 	const u8 *src;
+ 
+ 	nic->fw.ucode_ver = le32_to_cpu(ucode->ver);
+@@ -755,7 +754,7 @@ static int iwl_parse_v1_v2_firmware(struct iwl_nic *nic,
+ 			IWL_ERR(nic, "File size too small!\n");
+ 			return -EINVAL;
+ 		}
+-		pieces->build = le32_to_cpu(ucode->u.v2.build);
++		build = le32_to_cpu(ucode->u.v2.build);
+ 		pieces->inst_size = le32_to_cpu(ucode->u.v2.inst_size);
+ 		pieces->data_size = le32_to_cpu(ucode->u.v2.data_size);
+ 		pieces->init_size = le32_to_cpu(ucode->u.v2.init_size);
+@@ -770,7 +769,7 @@ static int iwl_parse_v1_v2_firmware(struct iwl_nic *nic,
+ 			IWL_ERR(nic, "File size too small!\n");
+ 			return -EINVAL;
+ 		}
+-		pieces->build = 0;
++		build = 0;
+ 		pieces->inst_size = le32_to_cpu(ucode->u.v1.inst_size);
+ 		pieces->data_size = le32_to_cpu(ucode->u.v1.data_size);
+ 		pieces->init_size = le32_to_cpu(ucode->u.v1.init_size);
+@@ -779,6 +778,22 @@ static int iwl_parse_v1_v2_firmware(struct iwl_nic *nic,
+ 		break;
+ 	}
+ 
++	if (build)
++		sprintf(buildstr, " build %u%s", build,
++		       (nic->fw_index == UCODE_EXPERIMENTAL_INDEX)
++				? " (EXP)" : "");
++	else
++		buildstr[0] = '\0';
++
++	snprintf(nic->fw.fw_version,
++		 sizeof(nic->fw.fw_version),
++		 "%u.%u.%u.%u%s",
++		 IWL_UCODE_MAJOR(nic->fw.ucode_ver),
++		 IWL_UCODE_MINOR(nic->fw.ucode_ver),
++		 IWL_UCODE_API(nic->fw.ucode_ver),
++		 IWL_UCODE_SERIAL(nic->fw.ucode_ver),
++		 buildstr);
++
+ 	/* Verify size of file vs. image size info in file's header */
+ 	if (ucode_raw->size != hdr_size + pieces->inst_size +
+ 				pieces->data_size + pieces->init_size +
+@@ -817,6 +832,8 @@ static int iwl_parse_tlv_firmware(struct iwl_nic *nic,
+ 	u32 tlv_len;
+ 	enum iwl_ucode_tlv_type tlv_type;
+ 	const u8 *tlv_data;
++	char buildstr[25];
++	u32 build;
+ 
+ 	if (len < sizeof(*ucode)) {
+ 		IWL_ERR(nic, "uCode has invalid length: %zd\n", len);
+@@ -847,7 +864,24 @@ static int iwl_parse_tlv_firmware(struct iwl_nic *nic,
+ 			 tmp, wanted_alternative);
+ 
+ 	nic->fw.ucode_ver = le32_to_cpu(ucode->ver);
+-	pieces->build = le32_to_cpu(ucode->build);
++	build = le32_to_cpu(ucode->build);
++
++	if (build)
++		sprintf(buildstr, " build %u%s", build,
++		       (nic->fw_index == UCODE_EXPERIMENTAL_INDEX)
++				? " (EXP)" : "");
++	else
++		buildstr[0] = '\0';
++
++	snprintf(nic->fw.fw_version,
++		 sizeof(nic->fw.fw_version),
++		 "%u.%u.%u.%u%s",
++		 IWL_UCODE_MAJOR(nic->fw.ucode_ver),
++		 IWL_UCODE_MINOR(nic->fw.ucode_ver),
++		 IWL_UCODE_API(nic->fw.ucode_ver),
++		 IWL_UCODE_SERIAL(nic->fw.ucode_ver),
++		 buildstr);
++
+ 	data = ucode->data;
+ 
+ 	len -= sizeof(*ucode);
+@@ -1021,8 +1055,6 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 	unsigned int api_ok = cfg->ucode_api_ok;
+ 	const unsigned int api_min = cfg->ucode_api_min;
+ 	u32 api_ver;
+-	char buildstr[25];
+-	u32 build;
+ 
+ 	fw->ucode_capa.max_probe_length = 200;
+ 	fw->ucode_capa.standard_phy_calibration_size =
+@@ -1063,7 +1095,6 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 		goto try_again;
+ 
+ 	api_ver = IWL_UCODE_API(nic->fw.ucode_ver);
+-	build = pieces.build;
+ 
+ 	/*
+ 	 * api_ver should match the api version forming part of the
+@@ -1094,28 +1125,11 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 		}
+ 	}
+ 
+-	if (build)
+-		sprintf(buildstr, " build %u%s", build,
+-		       (nic->fw_index == UCODE_EXPERIMENTAL_INDEX)
+-				? " (EXP)" : "");
+-	else
+-		buildstr[0] = '\0';
+-
+-	IWL_INFO(nic, "loaded firmware version %u.%u.%u.%u%s\n",
+-		 IWL_UCODE_MAJOR(nic->fw.ucode_ver),
+-		 IWL_UCODE_MINOR(nic->fw.ucode_ver),
+-		 IWL_UCODE_API(nic->fw.ucode_ver),
+-		 IWL_UCODE_SERIAL(nic->fw.ucode_ver),
+-		 buildstr);
++	IWL_INFO(nic, "loaded firmware version %s", nic->fw.fw_version);
+ 
+ 	snprintf(priv->hw->wiphy->fw_version,
+ 		 sizeof(priv->hw->wiphy->fw_version),
+-		 "%u.%u.%u.%u%s",
+-		 IWL_UCODE_MAJOR(nic->fw.ucode_ver),
+-		 IWL_UCODE_MINOR(nic->fw.ucode_ver),
+-		 IWL_UCODE_API(nic->fw.ucode_ver),
+-		 IWL_UCODE_SERIAL(nic->fw.ucode_ver),
+-		 buildstr);
++		 "%s", nic->fw.fw_version);
+ 
+ 	/*
+ 	 * For any of the failures below (before allocating pci memory)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.h b/drivers/net/wireless/iwlwifi/iwl-ucode.h
+index d13e624..8bebeb0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-ucode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-ucode.h
+@@ -204,9 +204,8 @@ struct fw_img {
+  */
+ struct iwl_fw {
+ 
+-	/* ucode image and variables */
+-	u32 ucode_ver;                  /* version of ucode, copy of
+-					   iwl_ucode.ver */
++	u32 ucode_ver;
++
+ 	char fw_version[ETHTOOL_BUSINFO_LEN];
+ 
+ 	/* ucode images */
+-- 
+1.7.0.4
 
-  Luis
-
-> Bjørn, could you give me a "Signed-off-by" line as well?
->
-> Thanks,
->
-> John
->
-> On Mon, Nov 28, 2011 at 01:19:12PM -0500, John W. Linville wrote:
->> Any comments from the regulatory experts in the group?
->>
->> On Tue, Nov 22, 2011 at 03:13:22PM +0100, Bjørn Mork wrote:
->> > As mentioned by Robert Grønning <slimg at iggu.org> in June, Norway does
->> > allow a few more bands than what's currently in the database.  In
->> > particular, the old ISM band at 5725 - 5875 MHz is and has "always" been
->> > allowed.
->> >
->> > The regulations [1] have some weird restrictions wrt power densities etc
->> > which I have no idea how to describe in a format suitable for the db.
->> > I've tried my best to make sure the entries are within the rules.
->> >
->> > The regulations also allow up to 1 W eirp in the band 5470 - 5725 MHz,
->> > and up to 4 W eirp in the bands 5725 - 5795 MHz and 5815 - 5850 MHz if
->> > TPC is in use. The limits are reduced by 3dB without TPC.  As I don't
->> > know how to express the TPC requirement, I've chosen to put the reduced
->> > limits (500 mW and 2 W) in the db entries.  This also matches the German
->> > (DE) entry for 5470 - 5725 MHz, so I guess it must make some sense...
->> >
->> > I also have no idea which SI prefixes you allow in the database, so I've
->> > used whatever was in the regulations.  Please adjust as needed if only
->> > mW or dB is acceptable.  Or let me know and I'll provide an updated patch.
->> >
->> >
->> > Patch attached.
->> >
->> >
->> >
->> >
->> > References:
->> >
->> > [1] Current Norwegian regulations:
->> >   http://www.lovdata.no/cgi-wift/ldles?doc=/sf/sf/sf-20090602-0580.html
->> >
->> > [2] The Norwegian Post and Telecommunications Authority provides an unofficial english translation of these regulations:
->> >   http://www.npt.no/ikbViewer/Content/103810/Regulations_concerning_general_authorisations_for_the_use_of_radio_frequencies.pdf
->> >
->> >
->> > [3] Appendix 1 of ERC/REC 70-03 provides generic information about licensing
->> >   status for Short Range Devices (SRD) in most CEPT countries:
->> >   http://www.ecodocdb.dk/doks/filedownload.aspx?fileid=1694&fileurl=http://www.erodocdb.dk/Docs/doc98/official/pdf/REC7003E.PDF
->> >
->> >
->> >
->> >
->> > Bjørn
->>
->> > diff --git a/db.txt b/db.txt
->> > index e63a43e..375187f 100644
->> > --- a/db.txt
->> > +++ b/db.txt
->> > @@ -469,11 +469,20 @@ country NL:
->> >     (5250 - 5330 @ 40), (N/A, 20), DFS
->> >     (5490 - 5710 @ 40), (N/A, 27), DFS
->> >
->> > +# Data from http://www.lovdata.no/cgi-wift/ldles?doc=/sf/sf/sf-20090602-0580.html
->> >  country NO:
->> > -   (2402 - 2482 @ 40), (N/A, 20)
->> > -   (5170 - 5250 @ 40), (N/A, 20)
->> > -   (5250 - 5330 @ 40), (N/A, 20), DFS
->> > -   (5490 - 5710 @ 40), (N/A, 27), DFS
->> > +   # § 7 (2)
->> > +   (2400 - 2483.5 @ 40), (N/A, 100 mW)
->> > +   # § 7 (3)
->> > +   (5150 - 5350 @ 40), (N/A, 200 mW)
->> > +   # § 7 (4)
->> > +   (5470 - 5725 @ 40), (N/A, 500 mW), DFS
->> > +   # § 7 (5)
->> > +   (5725 - 5795 @ 40), (N/A, 2 W), DFS
->> > +   (5815 - 5850 @ 40), (N/A, 2 W), DFS
->> > +   # § 7 (6)
->> > +   (5725 - 5795 @ 40), (23, 1 W), DFS, PTP-ONLY
->> > +   (5815 - 5850 @ 40), (23, 1 W), DFS, PTP-ONLY
->> >
->> >  country NP:
->> >     (2402 - 2482 @ 40), (N/A, 20)
->>
->>
->> --
->> John W. Linville              Someday the world will need a hero, and you
->> linville@tuxdriver.com                        might be all we have.  Be ready.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> --
-> John W. Linville                Someday the world will need a hero, and you
-> linville@tuxdriver.com                  might be all we have.  Be ready.
->
-> _______________________________________________
-> wireless-regdb mailing list
-> wireless-regdb@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/wireless-regdb
