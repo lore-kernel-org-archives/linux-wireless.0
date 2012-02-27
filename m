@@ -1,97 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:38326 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757235Ab2BIKko convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:34861 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753354Ab2B0SBM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 05:40:44 -0500
-Received: by yhoo21 with SMTP id o21so729261yho.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2012 02:40:43 -0800 (PST)
+	Mon, 27 Feb 2012 13:01:12 -0500
 MIME-Version: 1.0
-In-Reply-To: <1328783095-8330-1-git-send-email-florian@openwrt.org>
-References: <20120208180102.18346jfdlm9wakw8@www.81.fi> <1328783095-8330-1-git-send-email-florian@openwrt.org>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 9 Feb 2012 21:40:23 +1100
-Message-ID: <CAGRGNgX-_s_EsbBLxs6UNJd7=3Yk0HECfxb-HSB_-r6cDyyuuA@mail.gmail.com> (sfid-20120209_114047_738473_CB442F20)
-Subject: Re: [PATCH] zd1211rw: wait between setting hash table and powering
- radio on
-To: Florian Fainelli <florian@openwrt.org>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	dsd@gentoo.org, kune@deine-taler.de, jussi.kivilinna@mbnet.fi
+In-Reply-To: <20120227083612.GA5648@gamma.logic.tuwien.ac.at>
+References: <20120125002250.GA20431@gamma.logic.tuwien.ac.at>
+	<CANUX_P0UREz_jZABu+Y_QYOh9tx_sKZSSkZpYHBEVtcU4QQdSA@mail.gmail.com>
+	<20120126003735.GA2346@gamma.logic.tuwien.ac.at>
+	<CANUX_P0H_WaWwnpjoBcMpZQY4xH=cbVhAKxWKXmz-HwFMcWS6w@mail.gmail.com>
+	<CANUX_P3XSCsWUJ9M55qeaK-DuPEMXODFPJiNk+BgnHN-=WECqw@mail.gmail.com>
+	<20120126232555.GB16330@gamma.logic.tuwien.ac.at>
+	<20120127015015.GA23291@gamma.logic.tuwien.ac.at>
+	<CANUX_P3F58upbrw48AiMTV4DDZWsfveYp=mANAD9CQ2bPps0cA@mail.gmail.com>
+	<20120222003747.GA9808@gamma.logic.tuwien.ac.at>
+	<CAOJsxLHoX2WU7xJ8etXsz32B=QhOADvMzBYzsuBR2YXvv44PyA@mail.gmail.com>
+	<CANUX_P1CN0Ud5ZO4AMcvMSUsrsEABRHkgy42Di45n96mB64Ynw@mail.gmail.com>
+	<20120227083612.GA5648@gamma.logic.tuwien.ac.at>
+Date: Mon, 27 Feb 2012 20:01:11 +0200
+Message-ID: <CANUX_P2jtrByqAJTAZDu-+5Nx-cYFKiO8Hkhepg7rDbEmNwfJQ@mail.gmail.com> (sfid-20120227_190127_662403_409283DB)
+Subject: Re: iwlagn is getting even worse with 3.3-rc1
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Norbert Preining <preining@logic.at>
+Cc: Pekka Enberg <penberg@kernel.org>, linux-kernel@vger.kernel.org,
+	ipw3945-devel@lists.sourceforge.net,
+	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>,
+	Dave Jones <davej@redhat.com>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Florian,
-
-A couple of minor points:
-
-On Thu, Feb 9, 2012 at 21:24, Florian Fainelli <florian@openwrt.org> wrote:
-> I am running Debian testing kernel 3.1.0-1-amd64, using a 079b:0062 Sagem
-> XG-76NA 802.11bg stick.
+> sorry for the silence, I wasn't at the university for a few days so
+> I couldn't test.
 >
-> Upon zd1211rw interface
-> bringup (ifconfig wlan0 up) I get the following timeout:
+> Now I did:
+> kernel 3.3-rc5
 >
-> [  950.330573] zd1211rw 1-3:1.0: phy2
-> [  955.108510] zd1211rw 1-3:1.0: firmware version 4725
-> [  955.148532] zd1211rw 1-3:1.0: zd1211b chip 079b:0062 v4810 high 00-19-70
-> AL2230_RF pa0 g--NS
-> [snip]
-> [  955.204072] zd1211rw 1-3:1.0: error ioread32(CR_REG1): -110
->
-> A second ifconfig wlan0 up brings the interface up without problems.
->
-> After a bit more debugging, the call trace is the following:
->
-> [10241.028130] zd1211rw 1-3:1.0: zd_chip_lock_phy_regs: error
-> ioread32(CR_REG1): -110
-> [10241.028140] zd1211rw 1-3:1.0: zd_switch_radio_on: failed to lock PHY regs
-> [10241.028148] zd1211rw 1-3:1.0: zd_op_start: failed to set radio on
->
-> Adding a 10 milliseconds delay between the call to set_mc_hash() and
-> zd_chip_switch_radio_on() allows successful interface bringups in all
-> cases and matches what the vendor driver did.
->
-> Signed-off-by: Florian Fainelli <florian@openwrt.org>
-> ---
->  drivers/net/wireless/zd1211rw/zd_mac.c |    7 ++++++-
->  1 files changed, 6 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
-> index 98a574a..bed634c 100644
-> --- a/drivers/net/wireless/zd1211rw/zd_mac.c
-> +++ b/drivers/net/wireless/zd1211rw/zd_mac.c
-> @@ -306,9 +306,14 @@ int zd_op_start(struct ieee80211_hw *hw)
->        r = set_mc_hash(mac);
->        if (r)
->                goto disable_int;
-> +       msleep(10);
+> On Mi, 22 Feb 2012, Emmanuel Grumbach wrote:
+>> From the log, I can see that we have a lot of "passive channel
+>> failures". Can you try to disable 11n (module_parameter) ?
+>> Please also try with debug=0xc0000000
 
-You might want to stick a comment in here to tell future developers
-why we're doing this.
-
-> +
->        r = zd_chip_switch_radio_on(chip);
-> -       if (r < 0)
-> +       if (r < 0) {
-> +               dev_err(zd_chip_dev(chip),
-> +                       "%s: failed to set radio on\n", __func__);
->                goto disable_int;
-> +       }
-
-It might also be an idea to have it re-try powering on the radio
-after, say 100 msecs, just in case 10 msecs isn't enough for whatever
-is causing this issue.
-
->        r = zd_chip_enable_rxtx(chip);
->        if (r < 0)
->                goto disable_radio;
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+So this doesn't seem to be related to my rework of the AMPDU logic....
+Will keep you updated if I think about something.
