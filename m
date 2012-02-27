@@ -1,117 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:44318 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755427Ab2BBLvM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:37872 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753151Ab2B0PmF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 06:51:12 -0500
-Received: by mail-wi0-f174.google.com with SMTP id s10so1677445wic.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 03:51:11 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>, Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyal@wizey.com>, Igal Chernobelsky <igalc@ti.com>
-Subject: [PATCH 3/4] wl12xx: use split scan for normal scan
-Date: Thu,  2 Feb 2012 13:54:28 +0200
-Message-Id: <1328183669-21059-4-git-send-email-eliad@wizery.com> (sfid-20120202_125117_487796_4EDF0095)
-In-Reply-To: <1328183669-21059-1-git-send-email-eliad@wizery.com>
-References: <1328183669-21059-1-git-send-email-eliad@wizery.com>
+	Mon, 27 Feb 2012 10:42:05 -0500
+Subject: Re: mac80211 queue handling in multi-channel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dave Taht <dave.taht@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Eliad Peller <eliad@wizery.com>, Jouni Malinen <j@w1.fi>
+In-Reply-To: <CAA93jw4X-8x=V6WZstAwM8GyicN_ds8WHv8uYz4zF8d-KdNTsg@mail.gmail.com> (sfid-20120227_161059_020700_D617FF5D)
+References: <1330343374.3483.46.camel@jlt3.sipsolutions.net>
+	 <CAA93jw4X-8x=V6WZstAwM8GyicN_ds8WHv8uYz4zF8d-KdNTsg@mail.gmail.com>
+	 (sfid-20120227_161059_020700_D617FF5D)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Feb 2012 16:42:02 +0100
+Message-ID: <1330357322.3483.53.camel@jlt3.sipsolutions.net> (sfid-20120227_164208_681111_190C8E48)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eyal Shapira <eyal@wizery.com>
+On Mon, 2012-02-27 at 16:10 +0100, Dave Taht wrote:
+> On Mon, Feb 27, 2012 at 12:49 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> 
+> > As a consequence, I'm thinking that we should redesign the mac80211 /
+> > driver queue API to mirror more closely the kind of queues hardware
+> > really has.
+> 
+> I'd like the driver queues to mirror more closely the kinds of
+> connections the hardware really has. I realize that this is more of an
+> AP orientation than a wireless client orientation, but with wildly
+> different rates between connected devices bad things happen.
 
-Split scan allows the FW to schedule other activities
-during a scan which may be a long operation. This is
-achieved by setting a trigger TID to ANY_TID and a scan
-trigger timeout other than 0. The default one is set to 50ms.
+This isn't possible -- having 4 netdev queues per remote station is,
+simply put, insane. We've discussed this before on this list and Eric
+had a few suggestions, but I have no time to work on them. Essentially
+though it boils down to solving the problem at a higher layer by
+differentiating traffic to different stations.
 
-Signed-off-by: Eyal Shapira <eyal@wizey.com>
-Signed-off-by: Igal Chernobelsky <igalc@ti.com>
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/conf.h |    8 ++++++++
- drivers/net/wireless/wl12xx/main.c |    1 +
- drivers/net/wireless/wl12xx/scan.c |    8 +++++---
- drivers/net/wireless/wl12xx/scan.h |    2 +-
- 4 files changed, 15 insertions(+), 4 deletions(-)
+> Secondly, my take on 802.11e QoS and wireless-n aggregation is that
+> aggregation wins nearly every time; all
+> 802.11e does is bloat up the buffers.
 
-diff --git a/drivers/net/wireless/wl12xx/conf.h b/drivers/net/wireless/wl12xx/conf.h
-index 823535c..cc50faa 100644
---- a/drivers/net/wireless/wl12xx/conf.h
-+++ b/drivers/net/wireless/wl12xx/conf.h
-@@ -1082,6 +1082,14 @@ struct conf_scan_settings {
- 	 */
- 	u16 num_probe_reqs;
- 
-+	/*
-+	 * Scan trigger (split scan) timeout. The FW will split the scan
-+	 * operation into slices of the given time and allow the FW to schedule
-+	 * other tasks in between.
-+	 *
-+	 * Range: u32 Microsecs
-+	 */
-+	u32 split_scan_timeout;
- };
- 
- struct conf_sched_scan_settings {
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index 1a12d8c..52efe7d 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -272,6 +272,7 @@ static struct conf_drv_settings default_conf = {
- 		.min_dwell_time_passive       = 100000,
- 		.max_dwell_time_passive       = 100000,
- 		.num_probe_reqs               = 2,
-+		.split_scan_timeout           = 50000,
- 	},
- 	.sched_scan = {
- 		/* sched_scan requires dwell times in TU instead of TU/1000 */
-diff --git a/drivers/net/wireless/wl12xx/scan.c b/drivers/net/wireless/wl12xx/scan.c
-index e3566ca..e43a6b2 100644
---- a/drivers/net/wireless/wl12xx/scan.c
-+++ b/drivers/net/wireless/wl12xx/scan.c
-@@ -172,6 +172,9 @@ static int wl1271_scan_send(struct wl1271 *wl, struct ieee80211_vif *vif,
- 		goto out;
- 	}
- 
-+	if (wl->conf.scan.split_scan_timeout)
-+		scan_options |= WL1271_SCAN_OPT_SPLIT_SCAN;
-+
- 	if (passive)
- 		scan_options |= WL1271_SCAN_OPT_PASSIVE;
- 
-@@ -198,7 +201,7 @@ static int wl1271_scan_send(struct wl1271 *wl, struct ieee80211_vif *vif,
- 
- 	cmd->params.tx_rate = cpu_to_le32(basic_rate);
- 	cmd->params.n_probe_reqs = wl->conf.scan.num_probe_reqs;
--	cmd->params.tid_trigger = 0;
-+	cmd->params.tid_trigger = CONF_TX_AC_ANY_TID;
- 	cmd->params.scan_tag = WL1271_SCAN_DEFAULT_TAG;
- 
- 	if (band == IEEE80211_BAND_2GHZ)
-@@ -223,8 +226,7 @@ static int wl1271_scan_send(struct wl1271 *wl, struct ieee80211_vif *vif,
- 		goto out;
- 	}
- 
--	/* disable the timeout */
--	trigger->timeout = 0;
-+	trigger->timeout = cpu_to_le32(wl->conf.scan.split_scan_timeout);
- 	ret = wl1271_cmd_send(wl, CMD_TRIGGER_SCAN_TO, trigger,
- 			      sizeof(*trigger), 0);
- 	if (ret < 0) {
-diff --git a/drivers/net/wireless/wl12xx/scan.h b/drivers/net/wireless/wl12xx/scan.h
-index a7ed43d..96ff457 100644
---- a/drivers/net/wireless/wl12xx/scan.h
-+++ b/drivers/net/wireless/wl12xx/scan.h
-@@ -48,7 +48,7 @@ void wl1271_scan_sched_scan_results(struct wl1271 *wl);
- #define WL1271_SCAN_CURRENT_TX_PWR     0
- #define WL1271_SCAN_OPT_ACTIVE         0
- #define WL1271_SCAN_OPT_PASSIVE	       1
--#define WL1271_SCAN_OPT_TRIGGERED_SCAN 2
-+#define WL1271_SCAN_OPT_SPLIT_SCAN     2
- #define WL1271_SCAN_OPT_PRIORITY_HIGH  4
- /* scan even if we fail to enter psm */
- #define WL1271_SCAN_OPT_FORCE          8
--- 
-1.7.6.401.g6a319
+That statement doesn't really make sense to me -- QoS (on the air) and
+aggregation are two unrelated things?
+
+> > Thus when e.g. in our driver the BE queue for the second VIF is full, we
+> > stop all traffic across all VIFs. When both VIFs are on the same
+> > channel, this isn't really a problem. However, when they are on
+> > different channels, there could be vastly different performance
+> > characteristics on those two channels due to interference etc.
+> 
+> And even more differences based on the destination's characteristics.
+
+I do understand that this is true, but we don't have the ability to
+solve this problem at the netdev queue level.
+
+johannes
 
