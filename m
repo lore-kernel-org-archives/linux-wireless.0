@@ -1,69 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:50517 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750879Ab2BHFJj (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:47357 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753889Ab2B0OpU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 00:09:39 -0500
-Received: by daed14 with SMTP id d14so173281dae.19
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 21:09:39 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-To: johannes@sipsolutions.net, linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>,
-	Javier Cardona <javier@cozybit.com>
-Subject: [PATCH] mac80211: rename mesh static path_lookup()
-Date: Tue,  7 Feb 2012 21:09:25 -0800
-Message-Id: <1328677765-21971-1-git-send-email-mcgrof@frijolero.org> (sfid-20120208_061534_612032_8CFCD87D)
+	Mon, 27 Feb 2012 09:45:20 -0500
+Received: by yenl12 with SMTP id l12so175974yen.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2012 06:45:20 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <4F4B25F5.4090204@qca.qualcomm.com>
+References: <CAK0tYSKLhALwUca2LPiRLfXTK-Qt3Oh3Lvk=V272AXdb=aAP7w@mail.gmail.com>
+	<4F4B25F5.4090204@qca.qualcomm.com>
+Date: Mon, 27 Feb 2012 22:45:19 +0800
+Message-ID: <CAK0tYSL6=fRj1Q-BgwQyBPSLHofnaphprc9_hTBi9eM=uaKT1Q@mail.gmail.com> (sfid-20120227_154525_614759_4EFB0078)
+Subject: Re: ath6kl hostapd
+From: Anthony Ginger <mapfly@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If you want to use mesh support from mac80211 on a recent
-kernel on 2.6.24 you'll run into a name clash when compiling
-against include/linux/namei.h, so rename this routine.
+Hi Kalle,
 
-/home/mcgrof/tmp/compat-wireless-3.2.5-1/net/mac80211/mesh_pathtbl.c: At top level:
-/home/mcgrof/tmp/compat-wireless-3.2.5-1/net/mac80211/mesh_pathtbl.c:342:26: error: conflicting types for â€˜path_lookupâ€™
-include/linux/namei.h:71:12: note: previous declaration of â€˜path_lookupâ€™ was here
+Thanks! My HW can work with the private Wifi driver(almost the same in
+previous linux drivers\staging dir), both hostapd and wpasupplicant.
+But I don't like that driver, if the new driver can work with hostapd,
+I prefer switch to the new driver.
+Take your time and take good care of yourself.
 
-Although this could sit as a separate patch in compat-wireless it seems
-best to just merge upstream.
+Best Regards!
+Tony
 
-Cc: Javier Cardona <javier@cozybit.com>
-Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
----
- net/mac80211/mesh_pathtbl.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index edf167e..dc51669 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -336,7 +336,7 @@ static void mesh_path_move_to_queue(struct mesh_path *gate_mpath,
- }
- 
- 
--static struct mesh_path *path_lookup(struct mesh_table *tbl, u8 *dst,
-+static struct mesh_path *mpath_lookup(struct mesh_table *tbl, u8 *dst,
- 					  struct ieee80211_sub_if_data *sdata)
- {
- 	struct mesh_path *mpath;
-@@ -371,12 +371,12 @@ static struct mesh_path *path_lookup(struct mesh_table *tbl, u8 *dst,
-  */
- struct mesh_path *mesh_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
- {
--	return path_lookup(rcu_dereference(mesh_paths), dst, sdata);
-+	return mpath_lookup(rcu_dereference(mesh_paths), dst, sdata);
- }
- 
- struct mesh_path *mpp_path_lookup(u8 *dst, struct ieee80211_sub_if_data *sdata)
- {
--	return path_lookup(rcu_dereference(mpp_paths), dst, sdata);
-+	return mpath_lookup(rcu_dereference(mpp_paths), dst, sdata);
- }
- 
- 
--- 
-1.7.4.15.g7811d
-
+2012/2/27 Kalle Valo <kvalo@qca.qualcomm.com>:
+> Hi Anthony,
+>
+> sorry for the late reply, I was sick a long time.
+>
+> On 02/16/2012 01:30 PM, Anthony Ginger wrote:
+>
+>> Can ath6kl support AP mode? If yes, how to config it? I tried a
+>> simplest config, but can't find the AP.
+>
+> I have used AP mode only with wpasupplicant, I haven't tried with
+> hostapd yet. I would guess that ath6kl works with hostapd as well but of
+> course there can be some issues.
+>
+>> I tried ath6kl driver in git://github.com/kvalo/ath6kl.git and the
+>> standard kernel 3.3-rc3.
+>> I am sure the HW is OK, wpa_supplicant works for me.
+>> hostapd & wpa_supplicant is the latest version build form
+>> git://w1.fi/srv/git/hostap.git,
+>
+> This looks good.
+>
+>> hostapd -v
+>> hostapd v1.0-rc2
+>> User space daemon for IEEE 802.11 AP management,
+>> IEEE 802.1X/WPA/WPA2/EAP/RADIUS Authenticator
+>> Copyright (c) 2002-2012, Jouni Malinen <j@w1.fi> and contributors
+>>
+>> Firmware is form linux-firmware, here is the kernel log:
+>> [   14.534308] mmc1: new high speed SDIO card at address 0001
+>> [   15.245538] ath6kl: ar6003 hw 2.1.1 sdio fw 3.1.1.609
+>
+> Ah, firmware is a bit old but IIRC it still should support AP mode. But
+> I need to submit latest firmware to linux-firmware.git.
+>
+>> I used the simplest config:
+>> cat /etc/hostapd.conf
+>> #change wlan0 to your wireless device
+>> interface=wlan0
+>> driver=nl80211
+>> ssid=test
+>> channel=1
+>>
+>> here is the log:
+>> hostapd -d /etc/hostapd.conf
+>> random: Trying to read entropy from /dev/random
+>> Configuration file: /etc/hostapd.conf
+>> nl80211: interface wlan0 in phy phy0
+>> rfkill: initial event: idx=0 type=1 op=0 soft=0 hard=0
+>> nl80211: Using driver-based roaming
+>> nl80211: Add own interface ifindex 3
+>> nl80211: Set mode ifindex 3 iftype 3 (AP)
+>> nl80211: Create interface iftype 6 (MONITOR)
+>> Failed to create interface mon.wlan0: -95 (Operation not supported)
+>> nl80211: Driver does not support monitor interface type - try to run without it
+>> BSS count 1, BSSID mask 00:00:00:00:00:00 (0 bits)
+>> nl80211: Regulatory information - country=00
+>> nl80211: 2402-2472 @ 40 MHz
+>> nl80211: 2457-2482 @ 20 MHz
+>> nl80211: 2474-2494 @ 20 MHz
+>> nl80211: 5170-5250 @ 40 MHz
+>> nl80211: 5735-5835 @ 40 MHz
+>> nl80211: Added 802.11b mode based on 802.11g information
+>> Completing interface initialization
+>> Mode: IEEE 802.11b  Channel: 1  Frequency: 2412 MHz
+>> nl80211: Set freq 2412 (ht_enabled=0 sec_channel_offset=0)
+>> Failed to update rate sets in kernel module
+>> RATE[0] rate=10 flags=0x1
+>> RATE[1] rate=20 flags=0x1
+>> RATE[2] rate=55 flags=0x0
+>> RATE[3] rate=110 flags=0x0
+>> Flushing old station entries
+>> Could not connect to kernel driver.
+>> Deauthenticate all stations
+>> nl80211: Frame command failed: ret=-22 (Invalid argument) (freq=0 wait=0)
+>> wpa_driver_nl80211_set_key: ifindex=3 alg=0 addr=(nil) key_idx=0
+>> set_tx=0 seq_len=0 key_len=0
+>> wpa_driver_nl80211_set_key: ifindex=3 alg=0 addr=(nil) key_idx=1
+>> set_tx=0 seq_len=0 key_len=0
+>> wpa_driver_nl80211_set_key: ifindex=3 alg=0 addr=(nil) key_idx=2
+>> set_tx=0 seq_len=0 key_len=0
+>> wpa_driver_nl80211_set_key: ifindex=3 alg=0 addr=(nil) key_idx=3
+>> set_tx=0 seq_len=0 key_len=0
+>> Using interface wlan0 with hwaddr 00:03:7f:be:f0:a0 and ssid 'test'
+>> nl80211: Set beacon (beacon_set=0)
+>> nl80211: Ignore AP isolation configuration error since isolation is not used
+>> wpa_driver_nl80211_set_operstate: operstate 0->1 (UP)
+>> netlink: Operstate: linkmode=-1, operstate=6
+>> Failed to set TX queue parameters for queue 0.
+>> Failed to set TX queue parameters for queue 1.
+>> Failed to set TX queue parameters for queue 2.
+>> Failed to set TX queue parameters for queue 3.
+>> wlan0: Setup of interface done.
+>> RTM_NEWLINK: operstate=1 ifi_flags=0x1003 ([UP])
+>> RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+>> Unknown event 5
+>
+> From the logs I can't identify what's wrong, but I have to admit that
+> I'm not very familiar with hostapd. I need to test this myself and I
+> will get back to you.
+>
+> Kalle
