@@ -1,105 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:4551 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755677Ab2B0XTI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 18:19:08 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34162 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756149Ab2B0X0r (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 18:26:47 -0500
+Date: Mon, 27 Feb 2012 13:23:13 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bing Zhao <bzhao@marvell.com>
 Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 18/24] iwlwifi: remove iwl_print_rx_config_cmd from shared
-Date: Mon, 27 Feb 2012 14:07:42 -0800
-Message-Id: <1330380468-17674-19-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120228_001935_680140_E784F569)
-In-Reply-To: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Subject: Re: [PATCH 3.3] mwifiex: reset encryption mode flag before
+ association
+Message-ID: <20120227182312.GB26664@tuxdriver.com> (sfid-20120228_002722_937827_5A161971)
+References: <1330148136-28867-1-git-send-email-bzhao@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1330148136-28867-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Fri, Feb 24, 2012 at 09:35:35PM -0800, Bing Zhao wrote:
+> From: Amitkumar Karwar <akarwar@marvell.com>
+> 
+> Recent commit
+> "mwifiex: clear previous security setting during association"
+> fixes association failure problems observed in some corner cases
+> by clearing previous security setting before each association.
+> 
+> We should reset encryption mode flag as well. This patch takes care
+> of it.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> ---
+>  drivers/net/wireless/mwifiex/cfg80211.c |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+> index 8d8ee63..e4e6d7d 100644
+> --- a/drivers/net/wireless/mwifiex/cfg80211.c
+> +++ b/drivers/net/wireless/mwifiex/cfg80211.c
+> @@ -872,6 +872,7 @@ mwifiex_cfg80211_assoc(struct mwifiex_private *priv, size_t ssid_len, u8 *ssid,
+>  	priv->sec_info.wpa_enabled = false;
+>  	priv->sec_info.wpa2_enabled = false;
+>  	priv->wep_key_curr_index = 0;
+> +	priv->sec_info.encryption_mode = 0;
+>  	ret = mwifiex_set_encode(priv, NULL, 0, 0, 1);
+>  
+>  	if (mode == NL80211_IFTYPE_ADHOC) {
 
-It is op_mode related
+What bug does this fix?  Does it need to be fixed in 3.3?  Or can it wait for 3.4?
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.h           |   10 ++++++++++
- drivers/net/wireless/iwlwifi/iwl-core.c          |    5 +++++
- drivers/net/wireless/iwlwifi/iwl-shared.h        |   10 ----------
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    4 ----
- 4 files changed, 15 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 3c7f0c1..cb484e2 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -392,4 +392,14 @@ void iwl_testmode_cleanup(struct iwl_priv *priv)
- }
- #endif
- 
-+#ifdef CONFIG_IWLWIFI_DEBUG
-+void iwl_print_rx_config_cmd(struct iwl_priv *priv,
-+			     enum iwl_rxon_context_id ctxid);
-+#else
-+static inline void iwl_print_rx_config_cmd(struct iwl_priv *priv,
-+					   enum iwl_rxon_context_id ctxid)
-+{
-+}
-+#endif
-+
- #endif /* __iwl_agn_h__ */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 88a8c74..275e089 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -835,6 +835,11 @@ static void iwlagn_fw_error(struct iwl_priv *priv, bool ondemand)
- 	unsigned int reload_msec;
- 	unsigned long reload_jiffies;
- 
-+#ifdef CONFIG_IWLWIFI_DEBUG
-+	if (iwl_get_debug_level(priv->shrd) & IWL_DL_FW_ERRORS)
-+		iwl_print_rx_config_cmd(priv, IWL_RXON_CTX_BSS);
-+#endif
-+
- 	/* Set the FW error flag -- cleared on iwl_down */
- 	set_bit(STATUS_FW_ERROR, &priv->shrd->status);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index e7b075e..5140c78 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -557,16 +557,6 @@ iwl_remove_notification(struct iwl_shared *shrd,
- void iwl_reset_traffic_log(struct iwl_priv *priv);
- #endif /* CONFIG_IWLWIFI_DEBUGFS */
- 
--#ifdef CONFIG_IWLWIFI_DEBUG
--void iwl_print_rx_config_cmd(struct iwl_priv *priv,
--			     enum iwl_rxon_context_id ctxid);
--#else
--static inline void iwl_print_rx_config_cmd(struct iwl_priv *priv,
--					   enum iwl_rxon_context_id ctxid)
--{
--}
--#endif
--
- #define IWL_CMD(x) case x: return #x
- #define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-index 60e70b7..2c910fd 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-@@ -695,10 +695,6 @@ static void iwl_irq_handle_error(struct iwl_trans *trans)
- 	iwl_dump_csr(trans);
- 	iwl_dump_fh(trans, NULL, false);
- 	iwl_dump_nic_event_log(trans, false, NULL, false);
--#ifdef CONFIG_IWLWIFI_DEBUG
--	if (iwl_get_debug_level(trans->shrd) & IWL_DL_FW_ERRORS)
--		iwl_print_rx_config_cmd(priv(trans), IWL_RXON_CTX_BSS);
--#endif
- 
- 	iwl_op_mode_nic_error(trans->op_mode);
- }
+John
 -- 
-1.7.0.4
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
