@@ -1,88 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22674 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752101Ab2BTJOK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Feb 2012 04:14:10 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	Eliad Peller <eliad@wizery.com>
-Subject: [PATCH v2 2/2] mac80211: Fix a warning on changing to monitor mode from STA
-Date: Mon, 20 Feb 2012 14:44:01 +0530
-Message-ID: <1329729241-14003-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120220_101415_875041_0D97A703)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga14.intel.com ([143.182.124.37]:4551 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755643Ab2B0XTI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 18:19:08 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 15/24] iwlwifi: move eeprom defines to iwl-eeprom.c
+Date: Mon, 27 Feb 2012 14:07:39 -0800
+Message-Id: <1330380468-17674-16-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120228_001912_807338_F2962113)
+In-Reply-To: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-nothing needs to be done for monitor/AP_VLAN mode on calling
-ieee80211_bss_info_change_notify -> drv_bss_info_changed with the change
-flag 'BSS_CHANGED_IDLE'. 'wl1271' seems to use BSS_CHANGED_IDLE only for
-STA and IBSS mode. further the non-idle state of the monitor mode is
-taken care by the 'count' variable which counts non-idle interfaces.
-ieee80211_idle_off(local, "in use") will be called.
-this fixes the following WARNING when we have initially STA mode
-(network manager running) and not associated, and change it to monitor
-mode with network manager disabled and bringing up the monitor mode.
-this changes the idle state from 'true' (STA unassociated) to 'false'
-(MONITOR mode)
-exposed by the commit 405385f8ce7a2ed8f82e216d88b5282142e1288b
-"mac80211: set bss_conf.idle when vif is connected"
+They don't need to be in iwl-dev.h
 
-	WARNING: net/mac80211/main.c:212
-	ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]()
-	Hardware name: 64756D6
-	Pid: 3835, comm: ifconfig Tainted: G           O
-	3.3.0-rc3-wl #9
-	Call Trace:
-	  [<c0133b02>] warn_slowpath_common+0x72/0xa0
-	  [<fc8e8c3f>] ?
-	  ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]
-	  [<fc8e8c3f>] ?
-	  ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]
-	  [<c0133b52>] warn_slowpath_null+0x22/0x30
-	  [<fc8e8c3f>]
-	  ieee80211_bss_info_change_notify+0x1cf/0x330 [mac80211]
-	  [<fc8f9de3>] __ieee80211_recalc_idle+0x113/0x430
-	  [mac80211]
-	  [<fc8fabc6>] ieee80211_do_open+0x156/0x7e0 [mac80211]
-	  [<fc8f8a25>] ?
-	  ieee80211_check_concurrent_iface+0x25/0x180 [mac80211]
-	  [<c015dd9f>] ? raw_notifier_call_chain+0x1f/0x30
-	  [<fc8fb290>] ieee80211_open+0x40/0x80 [mac80211]
-	  [<c05894f6>] __dev_open+0x96/0xe0
-	  [<c068fba5>] ? _raw_spin_unlock_bh+0x35/0x40
-	  [<c05881d9>] __dev_change_flags+0x109/0x170
-	  [<c0589423>] dev_change_flags+0x23/0x60
-	  [<c05f3770>] devinet_ioctl+0x6a0/0x770
-
- ieee80211 phy0: device no longer idle - in use
-
-Cc: Eliad Peller <eliad@wizery.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/mac80211/iface.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-dev.h    |    3 ---
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |    4 ++++
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 6b3cd65..daa50ea 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1342,6 +1342,9 @@ u32 __ieee80211_recalc_idle(struct ieee80211_local *local)
- 		hw_roc = true;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 479d328..a670c82 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -443,9 +443,6 @@ struct iwl_chain_noise_data {
+ 	u8 state;
+ };
  
- 	list_for_each_entry(sdata, &local->interfaces, list) {
-+		if (sdata->vif.type == NL80211_IFTYPE_MONITOR ||
-+		    sdata->vif.type == NL80211_IFTYPE_AP_VLAN)
-+			continue;
- 		if (sdata->old_idle == sdata->vif.bss_conf.idle)
- 			continue;
- 		if (!ieee80211_sdata_running(sdata))
+-#define	EEPROM_SEM_TIMEOUT 10		/* milliseconds */
+-#define EEPROM_SEM_RETRY_LIMIT 1000	/* number of attempts (not time) */
+-
+ enum {
+ 	MEASUREMENT_READY = (1 << 0),
+ 	MEASUREMENT_ACTIVE = (1 << 1),
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index d1fd1cd..5936833 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -149,6 +149,10 @@ static const u8 iwl_eeprom_band_7[] = {       /* 5.2 ht40 channel */
+  * EEPROM chip, not a single event, so even reads could conflict if they
+  * weren't arbitrated by the semaphore.
+  */
++
++#define	EEPROM_SEM_TIMEOUT 10		/* milliseconds */
++#define EEPROM_SEM_RETRY_LIMIT 1000	/* number of attempts (not time) */
++
+ static int iwl_eeprom_acquire_semaphore(struct iwl_bus *bus)
+ {
+ 	u16 count;
 -- 
 1.7.0.4
 
