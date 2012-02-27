@@ -1,67 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:4417 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751217Ab2BGPls (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 10:41:48 -0500
-Subject: Re: [RFC 1/4] iwlwifi: dump stack when fail to gain access to the
- device
-From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-In-Reply-To: <20120207080122.GA2246@redhat.com>
-References: <1328544564-8696-1-git-send-email-sgruszka@redhat.com>
-	 <1328544496.14547.10.camel@wwguy-ubuntu> <20120207080122.GA2246@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 07 Feb 2012 06:21:12 -0800
-Message-ID: <1328624472.7290.51.camel@wwguy-huron> (sfid-20120207_164151_051956_0277046D)
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:19459 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752488Ab2B0Ojl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 09:39:41 -0500
+Message-ID: <4F4B95A7.2060809@qca.qualcomm.com> (sfid-20120227_153944_719234_1BB56D68)
+Date: Mon, 27 Feb 2012 16:39:35 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH v2 1/1] ath6kl: Check wow state before sending control
+ and data pkt
+References: <1328779916-7732-1-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1328779916-7732-1-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-02-07 at 09:01 +0100, Stanislaw Gruszka wrote:
-> On Mon, Feb 06, 2012 at 08:08:16AM -0800, wwguy wrote:
-> > On Mon, 2012-02-06 at 17:09 +0100, Stanislaw Gruszka wrote:
-> > > Print dump stack when the device is not responding. This should give
-> > > some more clue about the reason of failure. Also change the message we
-> > > print, since "MAC in deep sleep" is kinda confusing.
-> > > 
-> > > On the way add unlikely(), as fail to gain NIC access is hmm ...
-> > > unlikely.
-> > > 
-> > > Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> > > ---
-> > >  drivers/net/wireless/iwlwifi/iwl-io.c |    6 +++---
-> > >  1 files changed, 3 insertions(+), 3 deletions(-)
-> > > 
-> > > diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
-> > > index 83fdff3..ce6d9c1 100644
-> > > --- a/drivers/net/wireless/iwlwifi/iwl-io.c
-> > > +++ b/drivers/net/wireless/iwlwifi/iwl-io.c
-> > > @@ -120,10 +120,10 @@ int iwl_grab_nic_access_silent(struct iwl_bus *bus)
-> > >  int iwl_grab_nic_access(struct iwl_bus *bus)
-> > >  {
-> > >  	int ret = iwl_grab_nic_access_silent(bus);
-> > > -	if (ret) {
-> > > +	if (unlikely(ret)) {
-> > >  		u32 val = iwl_read32(bus, CSR_GP_CNTRL);
-> > > -		IWL_ERR(bus,
-> > > -			"MAC is in deep sleep!. CSR_GP_CNTRL = 0x%08X\n", val);
-> > > +		WARN_ONCE(1, "Timeout waiting for ucode processor access "
-> > > +			     "(CSR_GP_CNTRL 0x%08x)\n", val);
-> > >  	}
-> > >  
-> > I agree the message and check make sense, but not sure what new clue we
-> > got by doing this?
+On 02/09/2012 11:31 AM, rmani@qca.qualcomm.com wrote:
+> From: Raja Mani <rmani@qca.qualcomm.com>
 > 
-> Calltrace with very first grab nic access failure.
+> Below two scenarios are taken care in this patch which helped
+> to fix the firmware crash during wow suspend/resume.
 > 
-Good point, we have this "PCI bus disappear" problem on all of our
-devices and very difficult to debug.
+> * TX operation (ctrl tx and data tx) has to be controlled based
+>   on suspend state. i.e, with respect to WOW mode, control packets
+>   are allowed to send from the host until the suspend state goes
+>   ATH6KL_STATE_WOW and the data packets are allowed until WOW
+>   suspend operation starts.
+> 
+> * Similarly, wow resume is NOT allowed if WOW suspend is in progress.
+> 
+> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+> ---
+> V2 changes:
+> 
+> * Separate wow sub state introduced in V1 is removed and common
+>   states (ATH6KL_STATE_SUSPENDING and ATH6KL_STATE_RESUMING)
+>   are added in enum ath6kl_state.
+> 
+> * netdev queue is stopped while dropping skb in ath6kl_data_tx()
+>   and resumed back in ath6kl_wow_resume().
 
-btw, do you have any system can reproduce this problem? we have nothing.
+[...]
 
-Thanks
-Wey
+> diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+> index 4febee7..402087e 100644
+> --- a/drivers/net/wireless/ath/ath6kl/sdio.c
+> +++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+> @@ -901,8 +901,12 @@ static int ath6kl_sdio_resume(struct ath6kl *ar)
+>  
+>  	case ATH6KL_STATE_WOW:
+>  		break;
+> +
+>  	case ATH6KL_STATE_SCHED_SCAN:
+>  		break;
+> +
+> +	default:
+> +		break;
+>  	}
 
+Don't add the default case, instead add all states explicitly. That way
+it's easier to track state changes.
 
+> --- a/drivers/net/wireless/ath/ath6kl/txrx.c
+> +++ b/drivers/net/wireless/ath/ath6kl/txrx.c
+> @@ -284,6 +284,9 @@ int ath6kl_control_tx(void *devt, struct sk_buff *skb,
+>  	int status = 0;
+>  	struct ath6kl_cookie *cookie = NULL;
+>  
+> +	if (ar->state == ATH6KL_STATE_WOW)
+> +		return -EACCES;
+
+Should this have WARN_ON_ONCE()?
+
+> @@ -359,6 +362,13 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
+>  		return 0;
+>  	}
+>  
+> +	if (WARN_ON_ONCE(ar->state != ATH6KL_STATE_ON)) {
+> +		set_bit(NETQ_STOPPED, &vif->flags);
+> +		netif_stop_queue(dev);
+> +		dev_kfree_skb(skb);
+> +		return 0;
+> +	}
+
+Don't stop the queue here, dropping the packet is enough.
+
+Kalle
