@@ -1,152 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:60041 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752149Ab2BDB0C (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:40109 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752368Ab2B0RB0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 20:26:02 -0500
-Received: by pbdu11 with SMTP id u11so3334452pbd.19
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Feb 2012 17:26:01 -0800 (PST)
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
+	Mon, 27 Feb 2012 12:01:26 -0500
+Received: by bkcik5 with SMTP id ik5so447234bkc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2012 09:01:24 -0800 (PST)
+Message-Id: <d053a9a1ec34c2e1b15cf50b272ba7863fb17088.1330360738.git.chunkeey@googlemail.com> (sfid-20120227_180134_238474_A978DCB7)
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Mon, 27 Feb 2012 17:10:16 +0100
+Subject: [RFC 1/2] ath9k: use ieee80211_free_txskb
 To: linux-wireless@vger.kernel.org
-Cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Subject: [RFC 03/11] crda: make intersect.c use reglib_for_each_country()
-Date: Fri,  3 Feb 2012 17:25:40 -0800
-Message-Id: <1328318748-21044-4-git-send-email-mcgrof@frijolero.org> (sfid-20120204_022639_433011_5F853506)
-In-Reply-To: <1328318748-21044-1-git-send-email-mcgrof@frijolero.org>
-References: <1328318748-21044-1-git-send-email-mcgrof@frijolero.org>
+Cc: ath9k-devel@lists.ath9k.org, senthilb@qca.qualcomm.com,
+	vthiagar@qca.qualcomm.com, mohammed@qca.qualcomm.com,
+	mcgrof@qca.qualcomm.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
----
- intersect.c |   93 +++++++---------------------------------------------------
- 1 files changed, 12 insertions(+), 81 deletions(-)
+With the new tx status API: "mac80211: implement wifi TX status"
+All skb originating from mac80211 needs to be given back to mac80211.
 
-diff --git a/intersect.c b/intersect.c
-index 2e5dacf..6d3d393 100644
---- a/intersect.c
-+++ b/intersect.c
-@@ -182,101 +182,26 @@ static struct ieee80211_regdomain *regdom_intersect(
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+It's high time we change all calls in the tx-path from
+dev_kfree_skb into ieee80211_free_txskb.
+
+The call in ath9k_tx is straightforward, but the one in
+ath_tx_setup_buffer gives me headaches. I'm not sure if
+we even need to check bf->bf_state.bfs_paprd at this
+stage since ath_tx_start_dma sets bf->bf_state.bfs_paprd
+"after" calling ath_tx_setup_buffer?!
+
+Regards,
+	Chr
+---
+ drivers/net/wireless/ath/ath9k/main.c |    2 +-
+ drivers/net/wireless/ath/ath9k/xmit.c |    6 +++++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index c81304d..4471ed9 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1162,7 +1162,7 @@ static void ath9k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
  
- int main(int argc, char **argv)
- {
--	int fd;
--	struct stat stat;
--	uint8_t *db;
--	struct regdb_file_header *header;
--	struct regdb_file_reg_country *countries;
--	int dblen, siglen, num_countries, i, r = 0;
-+	int r = 0;
- 	struct ieee80211_regdomain *prev_world = NULL, *rd = NULL, *world = NULL;
- 	int intersected = 0;
-+	unsigned int idx = 0;
+ 	return;
+ exit:
+-	dev_kfree_skb_any(skb);
++	ieee80211_free_txskb(sc->hw, skb);
+ }
  
- 	if (argc != 2) {
--		fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
--		return 2;
--	}
--
--	fd = open(argv[1], O_RDONLY);
--	if (fd < 0) {
--		perror("failed to open db file");
--		return 2;
--	}
--
--	if (fstat(fd, &stat)) {
--		perror("failed to fstat db file");
--		return 2;
--	}
--
--	dblen = stat.st_size;
--
--	db = mmap(NULL, dblen, PROT_READ, MAP_PRIVATE, fd, 0);
--	if (db == MAP_FAILED) {
--		perror("failed to mmap db file");
--		return 2;
--	}
--
--	header = crda_get_file_ptr(db, dblen, sizeof(*header), 0);
--
--	if (ntohl(header->magic) != REGDB_MAGIC) {
--		fprintf(stderr, "Invalid database magic\n");
--		return 2;
--	}
--
--	if (ntohl(header->version) != REGDB_VERSION) {
--		fprintf(stderr, "Invalid database version\n");
--		return 2;
--	}
--
--	siglen = ntohl(header->signature_length);
--	/* adjust dblen so later sanity checks don't run into the signature */
--	dblen -= siglen;
--
--	if (dblen <= (int)sizeof(*header)) {
--		fprintf(stderr, "Invalid signature length %d\n", siglen);
--		return 2;
--	}
--
--	/* verify signature */
--	if (!crda_verify_db_signature(db, dblen, siglen))
-+		fprintf(stderr, "You must specify a file\n");
- 		return -EINVAL;
--
--	num_countries = ntohl(header->reg_country_num);
--
--	if (num_countries <= 0)
--		return 0;
--
--	countries = crda_get_file_ptr(db, dblen,
--			sizeof(struct regdb_file_reg_country) * num_countries,
--			header->reg_country_ptr);
-+	}
+ static void ath9k_stop(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 3182408..0dadbc3 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1858,7 +1858,11 @@ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
+ 	return bf;
  
- 	/* We intersect only when we have to rd structures ready */
--	for (i = 0; i < num_countries; i++) {
--		struct regdb_file_reg_country *country = countries + i;
--
--		if (is_world_regdom((const char *) country->alpha2))
-+	reglib_for_each_country(rd, idx, argv[1]) {
-+		if (is_world_regdom((const char *) rd->alpha2))
- 			continue;
- 
--		/* Gets the rd for the current country */
--		rd = country2rd(db, dblen, country);
--		if (!rd) {
--			r = -ENOMEM;
--			fprintf(stderr, "Could not covert country "
--				"(%.2s) to rd\n", country->alpha2);
--			goto out;
--		}
--
--		if (num_countries == 1) {
--			world = rd;
--			rd = NULL;
--			break;
--		}
--
- 		if (!prev_world) {
- 			prev_world = rd;
- 			continue;
- 		}
- 
--
- 		if (world) {
- 			free(prev_world);
- 			prev_world = world;
-@@ -318,6 +243,12 @@ int main(int argc, char **argv)
- 		intersected++;
- 	}
- 
-+	if (idx == 1) {
-+		world = rd;
-+		rd = NULL;
-+	}
+ error:
+-	dev_kfree_skb_any(skb);
 +
-+
- 	if (intersected > 1)
- 		printf("%d regulatory domains intersected\n", intersected);
- 	else
++	if (bf->bf_state.bfs_paprd)
++		dev_kfree_skb_any(skb);
++	else
++		ieee80211_free_txskb(sc->hw, skb);
+ 	return NULL;
+ }
+ 
 -- 
-1.7.4.15.g7811d
+1.7.9.1
 
