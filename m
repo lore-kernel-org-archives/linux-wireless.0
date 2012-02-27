@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:40351 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932357Ab2B1CTl (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43244 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751409Ab2B0Nuz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 21:19:41 -0500
-Date: Mon, 27 Feb 2012 21:18:30 -0500 (EST)
-Message-Id: <20120227.211830.905259317987117782.davem@davemloft.net> (sfid-20120228_032000_726974_8BC29D68)
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull request: wireless 2012-02-27
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20120227201507.GE26664@tuxdriver.com>
-References: <20120227201507.GE26664@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 27 Feb 2012 08:50:55 -0500
+Message-ID: <4F4B8A38.6060606@qca.qualcomm.com> (sfid-20120227_145059_745366_92D1953E)
+Date: Mon, 27 Feb 2012 15:50:48 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Naveen Gangadharan <ngangadh@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	ath6kl-devel <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH] ath6kl: Add unicast mgmt frame buffering
+References: <1328752296-3801-1-git-send-email-ngangadh@qca.qualcomm.com>
+In-Reply-To: <1328752296-3801-1-git-send-email-ngangadh@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "John W. Linville" <linville@tuxdriver.com>
-Date: Mon, 27 Feb 2012 15:15:07 -0500
-
-> This is a batch of fixes intended for 3.3.
+On 02/09/2012 03:51 AM, Naveen Gangadharan wrote:
+> PS buffering of unicast Action frames that are sent in a context
+> of a BSS. In AP mode when the recepient station goes to powersave
+> and PS_POLL flag is not set, we would buffer the frames. Send out
+> unicast mgmt bufferred frame when PS_POLL is received.
 > 
-> The biggest fix comes from Felix, where he moves around some code
-> in ath9k in order to avoid a crash reported to him by a user on IRC.
-> Also included is an rt2x00 fix from Gabor Juhos for a possible NULL
-> pointer dereference, an iwlwifi fix from Johannes Berg for a bug that
-> led to incorrectly removing unicast keys (and dropping connections),
-> a mac80211 fix from Mohammed Shafi Shajakhan to properly initialize
-> a structure used by the rate control algorithms, another mac80211
-> fix from Mohammed to avoid a WARNING when changing from monitor mode
-> to managed mode, a brcmsmac fix from Arend van Spriel to avoid an
-> endless retry of A-MPDU retransmits, and another fix from Arend to
-> avoid some log spam coming from brcmsmac.
+> This fixes a bug in P2P GO behavior when sending a GO Discoverability
+> Request to a client that is in sleep mode.
+> 
+> Signed-off-by: Thirumalai Pachamuthu <tpachamu@qca.qualcomm.com>
+> Signed-off-by: Naveen Gangadharan <ngangadh@qca.qualcomm.com>
+> Signed-off-by: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
 
-Pulled, thanks John.
+Thanks, applied with some indentation fixes (which are new and not in
+CodingStyle yet).
+
+Kalle
