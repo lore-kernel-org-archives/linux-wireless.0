@@ -1,190 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:48103 "HELO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754385Ab2B1GFu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Feb 2012 01:05:50 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 5/6 V2] mwifiex: fix bug in wildcard scan handling
-Date: Mon, 27 Feb 2012 22:04:15 -0800
-Message-Id: <1330409056-4399-6-git-send-email-bzhao@marvell.com> (sfid-20120228_070553_945463_871FCC09)
-In-Reply-To: <1330409056-4399-1-git-send-email-bzhao@marvell.com>
-References: <1330409056-4399-1-git-send-email-bzhao@marvell.com>
+Received: from mga14.intel.com ([143.182.124.37]:4551 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755618Ab2B0XTH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 18:19:07 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 12/24] iwlwifi: virtualize op_mode's set_hw_rf_kill
+Date: Mon, 27 Feb 2012 14:07:36 -0800
+Message-Id: <1330380468-17674-13-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120228_001940_368159_4F4D5BED)
+In-Reply-To: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Amitkumar Karwar <akarwar@marvell.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Currently if valid SSID list is provided in scan request, driver
-performs specific SSID scan otherwise wildcard scan is chosen.
+Export it as "hw_rf_kill" notification.
 
-When wpa_supplicant provides valid SSID list followed by
-zero-length SSID for wildcard scan, only specific SSID scan is
-performed by driver. Actually driver is expected to do both type
-of scanning in this case. The patch fixes this issue.
-
-Also, use SSID list pointer provided by stack directly, instead
-of copying SSID's to local structure.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
-V2: Do not use strlen() on an SSID (Johanness Berg)
+ drivers/net/wireless/iwlwifi/iwl-agn.c           |    1 +
+ drivers/net/wireless/iwlwifi/iwl-agn.h           |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-core.c          |    4 +++-
+ drivers/net/wireless/iwlwifi/iwl-op-mode.h       |    9 +++++++++
+ drivers/net/wireless/iwlwifi/iwl-shared.h        |    1 -
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c    |    6 +++---
+ 7 files changed, 18 insertions(+), 7 deletions(-)
 
- drivers/net/wireless/mwifiex/cfg80211.c |   10 +++----
- drivers/net/wireless/mwifiex/fw.h       |   10 ++-----
- drivers/net/wireless/mwifiex/scan.c     |   40 +++++++++++++++---------------
- 3 files changed, 27 insertions(+), 33 deletions(-)
-
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 6a91c2f..b4890a0 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -1106,12 +1106,10 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy, struct net_device *dev,
- 		dev_err(priv->adapter->dev, "failed to alloc scan_req\n");
- 		return -ENOMEM;
- 	}
--	for (i = 0; i < request->n_ssids; i++) {
--		memcpy(priv->user_scan_cfg->ssid_list[i].ssid,
--			request->ssids[i].ssid, request->ssids[i].ssid_len);
--		priv->user_scan_cfg->ssid_list[i].max_len =
--			request->ssids[i].ssid_len;
--	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 91aa83f..28fda18 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1388,6 +1388,7 @@ const struct iwl_op_mode_ops iwl_dvm_ops = {
+ 	.rx = iwl_rx_dispatch,
+ 	.queue_full = iwl_stop_sw_queue,
+ 	.queue_not_full = iwl_wake_sw_queue,
++	.hw_rf_kill = iwl_set_hw_rfkill_state,
+ 	.free_skb = iwl_free_skb,
+ };
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index db0e2ae..39d1e79 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -86,7 +86,7 @@ int __must_check iwl_rx_dispatch(struct iwl_op_mode *op_mode,
+ 				 struct iwl_device_cmd *cmd);
+ void iwl_stop_sw_queue(struct iwl_op_mode *op_mode, u8 ac);
+ void iwl_wake_sw_queue(struct iwl_op_mode *op_mode, u8 ac);
+-
++void iwl_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state);
+ 
+ /* MAC80211 */
+ struct ieee80211_hw *iwl_alloc_all(void);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 2aa69e0..3b91b6b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1455,8 +1455,10 @@ __le32 iwl_add_beacon_time(struct iwl_priv *priv, u32 base,
+ 	return cpu_to_le32(res);
+ }
+ 
+-void iwl_set_hw_rfkill_state(struct iwl_priv *priv, bool state)
++void iwl_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
+ {
++	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
 +
-+	priv->user_scan_cfg->num_ssids = request->n_ssids;
-+	priv->user_scan_cfg->ssid_list = request->ssids;
+ 	wiphy_rfkill_set_hw_state(priv->hw->wiphy, state);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+index c1664e1..8ce4aac 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-op-mode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+@@ -84,6 +84,8 @@ struct iwl_rx_mem_buffer;
+  *	Must be atomic
+  * @queue_not_full: notifies that a HW queue is not full any more.
+  *	Ac is the ac of the queue. Must be atomic
++ * @hw_rf_kill:notifies of a change in the HW rf kill switch. True means that
++ *	the radio is killed. Must be atomic.
+  * @free_skb: allows the transport layer to free skbs that haven't been
+  *	reclaimed by the op_mode. This can happen when the driver is freed and
+  *	there are Tx packets pending in the transport layer.
+@@ -96,6 +98,7 @@ struct iwl_op_mode_ops {
+ 		  struct iwl_device_cmd *cmd);
+ 	void (*queue_full)(struct iwl_op_mode *op_mode, u8 ac);
+ 	void (*queue_not_full)(struct iwl_op_mode *op_mode, u8 ac);
++	void (*hw_rf_kill)(struct iwl_op_mode *op_mode, bool state);
+ 	void (*free_skb)(struct iwl_op_mode *op_mode, struct sk_buff *skb);
+ };
+ 
+@@ -136,6 +139,12 @@ static inline void iwl_op_mode_queue_not_full(struct iwl_op_mode *op_mode,
+ 	op_mode->ops->queue_not_full(op_mode, ac);
+ }
+ 
++static inline void iwl_op_mode_hw_rf_kill(struct iwl_op_mode *op_mode,
++					  bool state)
++{
++	op_mode->ops->hw_rf_kill(op_mode, state);
++}
 +
- 	for (i = 0; i < request->n_channels; i++) {
- 		chan = request->channels[i];
- 		priv->user_scan_cfg->chan_list[i].chan_number = chan->hw_value;
-diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
-index c826200..fc4ffee 100644
---- a/drivers/net/wireless/mwifiex/fw.h
-+++ b/drivers/net/wireless/mwifiex/fw.h
-@@ -852,11 +852,6 @@ struct mwifiex_user_scan_chan {
- 	u32 scan_time;
- } __packed;
+ static inline void iwl_op_mode_free_skb(struct iwl_op_mode *op_mode,
+ 					struct sk_buff *skb)
+ {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 0a3f6fd..5cbc637 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -533,7 +533,6 @@ enum iwl_rxon_context_id {
+ };
  
--struct mwifiex_user_scan_ssid {
--	u8 ssid[IEEE80211_MAX_SSID_LEN + 1];
--	u8 max_len;
--} __packed;
--
- struct mwifiex_user_scan_cfg {
- 	/*
- 	 *  BSS mode to be sent in the firmware command
-@@ -867,8 +862,9 @@ struct mwifiex_user_scan_cfg {
- 	u8 reserved;
- 	/* BSSID filter sent in the firmware command to limit the results */
- 	u8 specific_bssid[ETH_ALEN];
--	/* SSID filter list used in the to limit the scan results */
--	struct mwifiex_user_scan_ssid ssid_list[MWIFIEX_MAX_SSID_LIST_LENGTH];
-+	/* SSID filter list used in the firmware to limit the scan results */
-+	struct cfg80211_ssid *ssid_list;
-+	u8 num_ssids;
- 	/* Variable number (fixed maximum) of channels to scan up */
- 	struct mwifiex_user_scan_chan chan_list[MWIFIEX_USER_SCAN_CHAN_MAX];
- } __packed;
-diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
-index 67422f6..fd0302f 100644
---- a/drivers/net/wireless/mwifiex/scan.c
-+++ b/drivers/net/wireless/mwifiex/scan.c
-@@ -737,7 +737,7 @@ mwifiex_scan_setup_scan_config(struct mwifiex_private *priv,
- 	u16 scan_dur;
- 	u8 channel;
- 	u8 radio_type;
--	u32 ssid_idx;
-+	int i;
- 	u8 ssid_filter;
- 	u8 rates[MWIFIEX_SUPPORTED_RATES];
- 	u32 rates_size;
-@@ -792,14 +792,8 @@ mwifiex_scan_setup_scan_config(struct mwifiex_private *priv,
- 		       user_scan_in->specific_bssid,
- 		       sizeof(scan_cfg_out->specific_bssid));
- 
--		for (ssid_idx = 0;
--		     ((ssid_idx < ARRAY_SIZE(user_scan_in->ssid_list))
--		      && (*user_scan_in->ssid_list[ssid_idx].ssid
--			  || user_scan_in->ssid_list[ssid_idx].max_len));
--		     ssid_idx++) {
--
--			ssid_len = strlen(user_scan_in->ssid_list[ssid_idx].
--					  ssid) + 1;
-+		for (i = 0; i < user_scan_in->num_ssids; i++) {
-+			ssid_len = user_scan_in->ssid_list[i].ssid_len;
- 
- 			wildcard_ssid_tlv =
- 				(struct mwifiex_ie_types_wildcard_ssid_params *)
-@@ -810,19 +804,26 @@ mwifiex_scan_setup_scan_config(struct mwifiex_private *priv,
- 				(u16) (ssid_len + sizeof(wildcard_ssid_tlv->
- 							 max_ssid_length)));
- 
--			/* max_ssid_length = 0 tells firmware to perform
--			   specific scan for the SSID filled */
--			wildcard_ssid_tlv->max_ssid_length = 0;
-+			/*
-+			 * max_ssid_length = 0 tells firmware to perform
-+			 * specific scan for the SSID filled, whereas
-+			 * max_ssid_length = IEEE80211_MAX_SSID_LEN is for
-+			 * wildcard scan.
-+			 */
-+			if (ssid_len)
-+				wildcard_ssid_tlv->max_ssid_length = 0;
-+			else
-+				wildcard_ssid_tlv->max_ssid_length =
-+							IEEE80211_MAX_SSID_LEN;
- 
- 			memcpy(wildcard_ssid_tlv->ssid,
--			       user_scan_in->ssid_list[ssid_idx].ssid,
--			       ssid_len);
-+			       user_scan_in->ssid_list[i].ssid, ssid_len);
- 
- 			tlv_pos += (sizeof(wildcard_ssid_tlv->header)
- 				+ le16_to_cpu(wildcard_ssid_tlv->header.len));
- 
--			dev_dbg(adapter->dev, "info: scan: ssid_list[%d]: %s, %d\n",
--				ssid_idx, wildcard_ssid_tlv->ssid,
-+			dev_dbg(adapter->dev, "info: scan: ssid[%d]: %s, %d\n",
-+				i, wildcard_ssid_tlv->ssid,
- 				wildcard_ssid_tlv->max_ssid_length);
- 
- 			/* Empty wildcard ssid with a maxlen will match many or
-@@ -831,7 +832,6 @@ mwifiex_scan_setup_scan_config(struct mwifiex_private *priv,
- 			   filtered. */
- 			if (!ssid_len && wildcard_ssid_tlv->max_ssid_length)
- 				ssid_filter = false;
--
+ int iwlagn_hw_valid_rtc_data_addr(u32 addr);
+-void iwl_set_hw_rfkill_state(struct iwl_priv *priv, bool state);
+ void iwl_nic_config(struct iwl_priv *priv);
+ void iwlagn_fw_error(struct iwl_priv *priv, bool ondemand);
+ const char *get_cmd_string(u8 cmd);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index 5791311..abb5277 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -1036,7 +1036,7 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
+ 			else
+ 				clear_bit(STATUS_RF_KILL_HW,
+ 					  &trans->shrd->status);
+-			iwl_set_hw_rfkill_state(priv(trans), hw_rf_kill);
++			iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rf_kill);
  		}
  
- 		/*
-@@ -840,7 +840,7 @@ mwifiex_scan_setup_scan_config(struct mwifiex_private *priv,
- 		 *  truncate scan results.  That is not an issue with an SSID
- 		 *  or BSSID filter applied to the scan results in the firmware.
- 		 */
--		if ((ssid_idx && ssid_filter)
-+		if ((i && ssid_filter)
- 		    || memcmp(scan_cfg_out->specific_bssid, &zero_mac,
- 			      sizeof(zero_mac)))
- 			*filtered_scan = true;
-@@ -1876,8 +1876,8 @@ static int mwifiex_scan_specific_ssid(struct mwifiex_private *priv,
- 		return -ENOMEM;
+ 		handled |= CSR_INT_BIT_RF_KILL;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 176063c..ca0fa9c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1045,7 +1045,7 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans, struct fw_img *fw)
+ 		set_bit(STATUS_RF_KILL_HW, &trans->shrd->status);
+ 
+ 	if (iwl_is_rfkill(trans->shrd)) {
+-		iwl_set_hw_rfkill_state(priv(trans), true);
++		iwl_op_mode_hw_rf_kill(trans->op_mode, true);
+ 		iwl_enable_interrupts(trans);
+ 		return -ERFKILL;
  	}
+@@ -1524,7 +1524,7 @@ static int iwl_trans_pcie_start_hw(struct iwl_trans *trans)
+ 	else
+ 		set_bit(STATUS_RF_KILL_HW, &trans->shrd->status);
  
--	memcpy(scan_cfg->ssid_list[0].ssid, req_ssid->ssid,
--	       req_ssid->ssid_len);
-+	scan_cfg->ssid_list = req_ssid;
-+	scan_cfg->num_ssids = 1;
+-	iwl_set_hw_rfkill_state(priv(trans),
++	iwl_op_mode_hw_rf_kill(trans->op_mode,
+ 				test_bit(STATUS_RF_KILL_HW,
+ 					 &trans->shrd->status));
  
- 	ret = mwifiex_scan_networks(priv, scan_cfg);
+@@ -1669,7 +1669,7 @@ static int iwl_trans_pcie_resume(struct iwl_trans *trans)
+ 	else
+ 		clear_bit(STATUS_RF_KILL_HW, &trans->shrd->status);
  
+-	iwl_set_hw_rfkill_state(priv(trans), hw_rfkill);
++	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
+ 
+ 	return 0;
+ }
 -- 
-1.7.0.2
+1.7.0.4
 
