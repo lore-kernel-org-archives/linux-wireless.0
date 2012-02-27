@@ -1,81 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:57654 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754205Ab2BXPni convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:64814 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751927Ab2B0SMW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 10:43:38 -0500
-Received: by ghrr11 with SMTP id r11so1173955ghr.19
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2012 07:43:37 -0800 (PST)
+	Mon, 27 Feb 2012 13:12:22 -0500
+Message-ID: <4F4BC77F.2010400@qca.qualcomm.com> (sfid-20120227_191225_900006_66276375)
+Date: Mon, 27 Feb 2012 20:12:15 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1330097788.3426.29.camel@jlt3.sipsolutions.net>
-References: <20120224033729.9256A205A0@glenhelen.mtv.corp.google.com>
-	<1330068877.3426.6.camel@jlt3.sipsolutions.net>
-	<CAMcMvsi_v=gb9UF3tHSZ11fnh83iE9bK7nSiwL1GB-tDqW47jQ@mail.gmail.com>
-	<1330093741.3426.19.camel@jlt3.sipsolutions.net>
-	<CAMcMvsihYU93DjdqKYHW2xKiNbFD1YBqESx6NAkgKARCf-FjDQ@mail.gmail.com>
-	<1330097788.3426.29.camel@jlt3.sipsolutions.net>
-Date: Fri, 24 Feb 2012 07:43:37 -0800
-Message-ID: <CAMcMvsjPcBsur8ftSXVPzvPaCEEOPh+mYSr3MLV7Aa23reFBNA@mail.gmail.com> (sfid-20120224_164342_531883_A61A429B)
-Subject: Re: [RFC] mac80211: Filter duplicate IE ids
-From: Paul Stewart <pstew@chromium.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH] ath6kl: Add provision to define suspend policy in disconnected
+ state.
+References: <1329308528-2925-1-git-send-email-rmani@qca.qualcomm.com>
+In-Reply-To: <1329308528-2925-1-git-send-email-rmani@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 24, 2012 at 7:36 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2012-02-24 at 07:25 -0800, Paul Stewart wrote:
->
->> >> > I suppose better to accept such service degradation than not connect,
->> >> > but I wonder if we should log a warning when we actually try to use such
->> >> > an AP?
->> >>
->> >> Let me know where you'd like it.
->> >
->> > How about having a flag in the BSS struct (ieee80211_bss) and printing a
->> > message when we use that BSS struct for assoc? E.g. in
->> > ieee80211_mgd_assoc()? I'm not sure I fully understand where this
->> > actually has any effect.
->>
->> How do we clear this flag?  Let's say we got one corrupted beacon and
->> from then on, everything was ducky.  We set the flag flag on the
->> corrupted beacon.  Do we clear it on an unblemished probe response?
->> Are these really two flags, since beacons and probe responses
->> sometimes have different subsets of info, or does a valid probe
->> response clear both flags?
->
-> Huh, good questions. Which info do we end up using? Just the one that
-> was not corrupted? I think we always use the last IEs, no?
->
-> Hmm. You said in the bug that supported rates were really only affected,
-> and this caused an issue with the supported rates that we send, because
-> we restrict ourselves to the rates the AP advertises (due to other buggy
-> APs ...)
->
-> Maybe then it doesn't matter all that much.
->
-> OTOH, why should we ever reset the flag?
+On 02/15/2012 02:22 PM, rmani@qca.qualcomm.com wrote:
+> From: Raja Mani <rmani@qca.qualcomm.com>
+> 
+> It gives flexibility to the user to define suspend policy
+> when the suspend mode is set to WOW and the device is in 
+> disconnected state at the time of suspend.
+> 
+> Some bits (bit 4 to 7) of existing mod parameter suspend_mode
+> is used for that purpose. There is no change in the existing
+> way of defining suspend mode.
+> 
+> To force cut power:
+>   suspend_mode=0x1
+> 
+> To force deep sleep:
+>   suspend_mode=0x2
+> 
+> To force wow (deep sleep is the default mode
+> in disconnected state):
+>   suspend_mode=0x3
+> 
+> To force wow in connected state and cut power
+> in disconnected state:
+>   suspend_mode=0x13
 
-If my over-the-air captures are any indication, with some probability
-you will receive a corrupted beacon from time to time -- perhaps not
-due to a broken AP, but just from it being corrupted over the air.
-FCS could catch that most times, but perhaps sometimes not.  If you
-carry that flag along with you as long as the BSS exists (as long as
-the AP is in view) despite tens or hundreds of intact receptions
-afterwards, the importance of the error message diminishes.
+What's the difference between values 0x3 and 0x13? It wasn't clear for
+me from the description and neither from the code.
 
-> Eventually the BSS entry will
-> be deleted anyway? And if we keep reconnecting to it, maybe there's some
-> other bug?
->
-> I'm not really sure -- open to suggestions. I just think that in order
-> to actually notice such things in the future we should print something
-> so we don't get confused.
+> To force wow in connected state and deep sleep
+> in disconnected state:
+>   suspend_mode=0x23
 
-Let me cook something up, see what you think.
+I'm not sure if adding bits to suspend_mode is the best way. To me
+adding a separate parameter wow_mode looks easier from user's point of
+view. What do you think?
 
->
-> johannes
->
+And if you add a new module paratemer please use charp type so that can
+use strings like 'deepsleep' and 'cutpower'. I wish that we had used
+that already with suspend_mode but it's too late now :(
+
+> --- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> +++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+> @@ -2063,7 +2063,6 @@ int ath6kl_cfg80211_suspend(struct ath6kl *ar,
+>  
+>  		ret = ath6kl_wow_suspend(ar, wow);
+>  		if (ret) {
+> -			ath6kl_err("wow suspend failed: %d\n", ret);
+>  			ar->state = prev_state;
+>  			return ret;
+>  		}
+
+Please convert this to a debug message, maybe using the suspend level.
+It might be useful when debugging something.
+
+> diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
+> index c4926cf..37c92a1 100644
+> --- a/drivers/net/wireless/ath/ath6kl/core.c
+> +++ b/drivers/net/wireless/ath/ath6kl/core.c
+> @@ -41,6 +41,7 @@ int ath6kl_core_init(struct ath6kl *ar)
+>  {
+>  	struct ath6kl_bmi_target_info targ_info;
+>  	struct net_device *ndev;
+> +	u16 pri_suspend_mode, wow2_suspend_mode;
+
+Why the number two? Why not just wow_suspend_mode?
+
+Kalle
