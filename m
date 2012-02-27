@@ -1,178 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:30849 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754622Ab2BPGVn (ORCPT
+Received: from smtp1.keele.netcentral.co.uk ([212.57.235.197]:48361 "EHLO
+	smtp3.keele.netcentral.co.uk" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751429Ab2B0LEY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Feb 2012 01:21:43 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Mon, 27 Feb 2012 06:04:24 -0500
+Received: from terrafix.co.uk (reverse.keele.netcentral.co.uk [212.57.249.250] (may be forged))
+	by smtp3.keele.netcentral.co.uk (8.14.2/8.14.2) with ESMTP id q1RA9CDI013920
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2012 10:09:21 GMT
+Received: from WorldClient by terrafix.co.uk (MDaemon PRO v12.5.3)
+	with ESMTP id md50002180617.msg
+	for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2012 10:09:12 +0000
+Date: Mon, 27 Feb 2012 10:09:11 +0000
+From: "Joe Woodward" <jw@terrafix.co.uk>
+To: linux-wireless@vger.kernel.org
+Subject: libertas firmware loading slow with latest UDEV
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20284.41059.574285.697109@gargle.gargle.HOWL> (sfid-20120216_072146_749561_9A7FD287)
-Date: Thu, 16 Feb 2012 11:51:23 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH v2 4/9] ath9k: Prettify recv debugfs file output
+Message-ID: <WC20120227100911.6501DA@terrafix.co.uk> (sfid-20120227_120427_849747_E238FB57)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dumping the RSSI information in the middle of error
-statistics is a bit misleading. Move them to the end.
+Hi,
 
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/debug.c |   97 +++++++++++++++-----------------
- 1 files changed, 45 insertions(+), 52 deletions(-)
+Im running on a stock 3.2 kernel and have updated from udev-175 to udev-181/kmod-5, and loading the libertas firmware (WiFi SD8686 SDIO) 
+takes a *lot* longer (it does eventually succeed).
 
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index fe1f55f..5a838fc 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -880,12 +880,12 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
- 			      size_t count, loff_t *ppos)
- {
- #define PHY_ERR(s, p) \
--	len += snprintf(buf + len, size - len, "%18s : %10u\n", s, \
-+	len += snprintf(buf + len, size - len, "%22s : %10u\n", s, \
- 			sc->debug.stats.rxstats.phy_err_stats[p]);
- 
- 	struct ath_softc *sc = file->private_data;
- 	char *buf;
--	unsigned int len = 0, size = 1400;
-+	unsigned int len = 0, size = 1600;
- 	ssize_t retval = 0;
- 
- 	buf = kzalloc(size, GFP_KERNEL);
-@@ -893,87 +893,80 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
- 		return -ENOMEM;
- 
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "CRC ERR",
-+			"%22s : %10u\n", "CRC ERR",
- 			sc->debug.stats.rxstats.crc_err);
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "DECRYPT CRC ERR",
-+			"%22s : %10u\n", "DECRYPT CRC ERR",
- 			sc->debug.stats.rxstats.decrypt_crc_err);
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "PHY ERR",
-+			"%22s : %10u\n", "PHY ERR",
- 			sc->debug.stats.rxstats.phy_err);
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "MIC ERR",
-+			"%22s : %10u\n", "MIC ERR",
- 			sc->debug.stats.rxstats.mic_err);
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "PRE-DELIM CRC ERR",
-+			"%22s : %10u\n", "PRE-DELIM CRC ERR",
- 			sc->debug.stats.rxstats.pre_delim_crc_err);
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "POST-DELIM CRC ERR",
-+			"%22s : %10u\n", "POST-DELIM CRC ERR",
- 			sc->debug.stats.rxstats.post_delim_crc_err);
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "DECRYPT BUSY ERR",
-+			"%22s : %10u\n", "DECRYPT BUSY ERR",
- 			sc->debug.stats.rxstats.decrypt_busy_err);
- 
-+	PHY_ERR("UNDERRUN ERR", ATH9K_PHYERR_UNDERRUN);
-+	PHY_ERR("TIMING ERR", ATH9K_PHYERR_TIMING);
-+	PHY_ERR("PARITY ERR", ATH9K_PHYERR_PARITY);
-+	PHY_ERR("RATE ERR", ATH9K_PHYERR_RATE);
-+	PHY_ERR("LENGTH ERR", ATH9K_PHYERR_LENGTH);
-+	PHY_ERR("RADAR ERR", ATH9K_PHYERR_RADAR);
-+	PHY_ERR("SERVICE ERR", ATH9K_PHYERR_SERVICE);
-+	PHY_ERR("TOR ERR", ATH9K_PHYERR_TOR);
-+	PHY_ERR("OFDM-TIMING ERR", ATH9K_PHYERR_OFDM_TIMING);
-+	PHY_ERR("OFDM-SIGNAL-PARITY ERR", ATH9K_PHYERR_OFDM_SIGNAL_PARITY);
-+	PHY_ERR("OFDM-RATE ERR", ATH9K_PHYERR_OFDM_RATE_ILLEGAL);
-+	PHY_ERR("OFDM-LENGTH ERR", ATH9K_PHYERR_OFDM_LENGTH_ILLEGAL);
-+	PHY_ERR("OFDM-POWER-DROP ERR", ATH9K_PHYERR_OFDM_POWER_DROP);
-+	PHY_ERR("OFDM-SERVICE ERR", ATH9K_PHYERR_OFDM_SERVICE);
-+	PHY_ERR("OFDM-RESTART ERR", ATH9K_PHYERR_OFDM_RESTART);
-+	PHY_ERR("FALSE-RADAR-EXT ERR", ATH9K_PHYERR_FALSE_RADAR_EXT);
-+	PHY_ERR("CCK-TIMING ERR", ATH9K_PHYERR_CCK_TIMING);
-+	PHY_ERR("CCK-HEADER-CRC ERR", ATH9K_PHYERR_CCK_HEADER_CRC);
-+	PHY_ERR("CCK-RATE ERR", ATH9K_PHYERR_CCK_RATE_ILLEGAL);
-+	PHY_ERR("CCK-SERVICE ERR", ATH9K_PHYERR_CCK_SERVICE);
-+	PHY_ERR("CCK-RESTART ERR", ATH9K_PHYERR_CCK_RESTART);
-+	PHY_ERR("CCK-LENGTH ERR", ATH9K_PHYERR_CCK_LENGTH_ILLEGAL);
-+	PHY_ERR("CCK-POWER-DROP ERR", ATH9K_PHYERR_CCK_POWER_DROP);
-+	PHY_ERR("HT-CRC ERR", ATH9K_PHYERR_HT_CRC_ERROR);
-+	PHY_ERR("HT-LENGTH ERR", ATH9K_PHYERR_HT_LENGTH_ILLEGAL);
-+	PHY_ERR("HT-RATE ERR", ATH9K_PHYERR_HT_RATE_ILLEGAL);
-+
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10d\n", "RSSI-CTL0",
-+			"%22s : %10d\n", "RSSI-CTL0",
- 			sc->debug.stats.rxstats.rs_rssi_ctl0);
--
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10d\n", "RSSI-CTL1",
-+			"%22s : %10d\n", "RSSI-CTL1",
- 			sc->debug.stats.rxstats.rs_rssi_ctl1);
--
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10d\n", "RSSI-CTL2",
-+			"%22s : %10d\n", "RSSI-CTL2",
- 			sc->debug.stats.rxstats.rs_rssi_ctl2);
--
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10d\n", "RSSI-EXT0",
-+			"%22s : %10d\n", "RSSI-EXT0",
- 			sc->debug.stats.rxstats.rs_rssi_ext0);
--
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10d\n", "RSSI-EXT1",
-+			"%22s : %10d\n", "RSSI-EXT1",
- 			sc->debug.stats.rxstats.rs_rssi_ext1);
--
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10d\n", "RSSI-EXT2",
-+			"%22s : %10d\n", "RSSI-EXT2",
- 			sc->debug.stats.rxstats.rs_rssi_ext2);
--
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10d\n", "Rx Antenna",
-+			"%22s : %10d\n", "Rx Antenna",
- 			sc->debug.stats.rxstats.rs_antenna);
--
--	PHY_ERR("UNDERRUN", ATH9K_PHYERR_UNDERRUN);
--	PHY_ERR("TIMING", ATH9K_PHYERR_TIMING);
--	PHY_ERR("PARITY", ATH9K_PHYERR_PARITY);
--	PHY_ERR("RATE", ATH9K_PHYERR_RATE);
--	PHY_ERR("LENGTH", ATH9K_PHYERR_LENGTH);
--	PHY_ERR("RADAR", ATH9K_PHYERR_RADAR);
--	PHY_ERR("SERVICE", ATH9K_PHYERR_SERVICE);
--	PHY_ERR("TOR", ATH9K_PHYERR_TOR);
--	PHY_ERR("OFDM-TIMING", ATH9K_PHYERR_OFDM_TIMING);
--	PHY_ERR("OFDM-SIGNAL-PARITY", ATH9K_PHYERR_OFDM_SIGNAL_PARITY);
--	PHY_ERR("OFDM-RATE", ATH9K_PHYERR_OFDM_RATE_ILLEGAL);
--	PHY_ERR("OFDM-LENGTH", ATH9K_PHYERR_OFDM_LENGTH_ILLEGAL);
--	PHY_ERR("OFDM-POWER-DROP", ATH9K_PHYERR_OFDM_POWER_DROP);
--	PHY_ERR("OFDM-SERVICE", ATH9K_PHYERR_OFDM_SERVICE);
--	PHY_ERR("OFDM-RESTART", ATH9K_PHYERR_OFDM_RESTART);
--	PHY_ERR("FALSE-RADAR-EXT", ATH9K_PHYERR_FALSE_RADAR_EXT);
--	PHY_ERR("CCK-TIMING", ATH9K_PHYERR_CCK_TIMING);
--	PHY_ERR("CCK-HEADER-CRC", ATH9K_PHYERR_CCK_HEADER_CRC);
--	PHY_ERR("CCK-RATE", ATH9K_PHYERR_CCK_RATE_ILLEGAL);
--	PHY_ERR("CCK-SERVICE", ATH9K_PHYERR_CCK_SERVICE);
--	PHY_ERR("CCK-RESTART", ATH9K_PHYERR_CCK_RESTART);
--	PHY_ERR("CCK-LENGTH", ATH9K_PHYERR_CCK_LENGTH_ILLEGAL);
--	PHY_ERR("CCK-POWER-DROP", ATH9K_PHYERR_CCK_POWER_DROP);
--	PHY_ERR("HT-CRC", ATH9K_PHYERR_HT_CRC_ERROR);
--	PHY_ERR("HT-LENGTH", ATH9K_PHYERR_HT_LENGTH_ILLEGAL);
--	PHY_ERR("HT-RATE", ATH9K_PHYERR_HT_RATE_ILLEGAL);
--
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "RX-Pkts-All",
-+			"%22s : %10u\n", "RX-Pkts-All",
- 			sc->debug.stats.rxstats.rx_pkts_all);
- 	len += snprintf(buf + len, size - len,
--			"%18s : %10u\n", "RX-Bytes-All",
-+			"%22s : %10u\n", "RX-Bytes-All",
- 			sc->debug.stats.rxstats.rx_bytes_all);
- 
- 	if (len > size)
--- 
-1.7.9.1
+In fact, it takes 30 seconds longer, which seems to imply some timeout somewhere is being hit.
+
+# modprobe libertas_sdio
+[  108.600311] libertas_sdio: Libertas SDIO driver
+[  108.613891] libertas_sdio: Copyright Pierre Ossman
+[  139.116882] libertas_sdio mmc1:0001:1: (unregistered net_device): 00:19:88:3e:4f:f9, fw 9.70.3p36, cap 0x00000303
+[  139.191223] libertas_sdio mmc1:0001:1: wlan0: Marvell WLAN 802.11 adapter
+
+After doing an initial Google it seems that changes in udev-177 may have caused this issue, and that this is due to the way certain drivers load 
+firmware, which needs fixing in the kernel.
+
+So I have a couple of questions:
+ - Is this analysis correct?
+ - In my case is this a libertas_sdio-specific driver issue?
+ - And is anyone working on a fix or have a patch for a fix?
+ - Or is there anything I can do to work around this problem in the mean time?
+
+Thanks,
+Joe
+
+
+
+References:
+http://www.spinics.net/lists/netdev/msg185742.html
+https://bbs.archlinux.org/viewtopic.php?id=134012
+
+>From https://bbs.archlinux.org/viewtopic.php?pid=1045516#p1045516:
+What is happening is that some kernel drivers are asking udev to load their firmware before their modules have finished loading. This used to work 
+fine because udev gave firmware request special treatment and served them without waiting for anything else.
+
+As of udev-177 this is no longer done. All events are treated the same, and a firmware event that is the child of a module event (which is the case 
+that is causing us problems) is only served once the parent event has finished. In order to avoid dead-locks the modprobe is given a 30 seconds 
+timeout, after which the firmware event can continue to be loaded. This is what you are seeing.
+
+This problem should be solved by fixing the kernel drivers, and I know that at least he netdev guys are aware of it and working on it. If anyone is 
+interested in helping out they should go to the kernel bugzilla/mailinglist.
+
 
