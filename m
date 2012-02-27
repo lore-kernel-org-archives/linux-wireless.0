@@ -1,33 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:46964 "EHLO
-	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754933Ab2BOKpb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 05:45:31 -0500
-Received: by mail-lpp01m010-f45.google.com with SMTP id i5so1095770lah.18
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 02:45:27 -0800 (PST)
-Message-ID: <1329302724.19569.52.camel@cumari> (sfid-20120215_114535_318708_3AEC0AAF)
-Subject: wl12xx/master branch has been rebased (3.3-rc3)
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Date: Wed, 15 Feb 2012 12:45:24 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:30285 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755752Ab2B0XTK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 18:19:10 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 24/24] iwlwifi: fix IDI compilation
+Date: Mon, 27 Feb 2012 14:07:48 -0800
+Message-Id: <1330380468-17674-25-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120228_001919_648953_A569F998)
+In-Reply-To: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-I have rebased the master branch of the wl12xx.git tree to sync with
-John's latest tree (based on 3.3-rc3). 
+This is a fixup for my:
+iwlwifi: kill iwl_bus.h
 
-The wl12xx-next branch has also been updated accordingly.
+Please fold them into one patch for upstream
 
-Please update your local copies.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-pci.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index 0ce7047..06e0041 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -278,7 +278,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ #ifdef CONFIG_IWLWIFI_IDI
+ 	iwl_trans = iwl_trans_idi_alloc(shrd, pdev, ent);
+-	if (trans == NULL) {
++	if (iwl_trans == NULL) {
+ 		err = -ENOMEM;
+ 		goto out_free_bus;
+ 	}
 -- 
-Cheers,
-Luca.
-
-
+1.7.0.4
 
