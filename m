@@ -1,101 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:46837 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753613Ab2AaXPE convert rfc822-to-8bit (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:44446 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752270Ab2B0P3q convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 18:15:04 -0500
-Received: by iacb35 with SMTP id b35so591116iac.19
-        for <linux-wireless@vger.kernel.org>; Tue, 31 Jan 2012 15:15:04 -0800 (PST)
+	Mon, 27 Feb 2012 10:29:46 -0500
+Received: by wgbdr13 with SMTP id dr13so1796714wgb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2012 07:29:45 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <4F1F0810.2000306@gmail.com>
-References: <4F1F0810.2000306@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Tue, 31 Jan 2012 15:14:44 -0800
-Message-ID: <CAB=NE6VaU53v_qKuN_dBY+LhBxF5W0OLczGvJYg_if_nCn3nqQ@mail.gmail.com> (sfid-20120201_001509_795510_59D5A3D6)
-Subject: Re: [compat-wireless] modprobe -l is legacy compatibility mode and is
- being removed from some distros
-To: Richard Farina <sidhayn@gmail.com>
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAA93jw4X-8x=V6WZstAwM8GyicN_ds8WHv8uYz4zF8d-KdNTsg@mail.gmail.com>
+References: <1330343374.3483.46.camel@jlt3.sipsolutions.net>
+	<CAA93jw4X-8x=V6WZstAwM8GyicN_ds8WHv8uYz4zF8d-KdNTsg@mail.gmail.com>
+Date: Mon, 27 Feb 2012 16:29:43 +0100
+Message-ID: <CAA93jw7Quvaj=9jbXVPXO9fk1S50DBHbCSWk91WVEZaVU0MRwA@mail.gmail.com> (sfid-20120227_162950_069024_48E58FFE)
+Subject: Re: mac80211 queue handling in multi-channel
+From: Dave Taht <dave.taht@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Eliad Peller <eliad@wizery.com>, Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 24, 2012 at 11:35 AM, Richard Farina <sidhayn@gmail.com> wrote:
-> module-init-tools has been deprecated in favor of kmod in Arch Linux, and
-> kmod doesn't have the legacy --list option for modprobe.
-> This patch fixes the areas of the Makefile which actually needed the output
-> of modprobe -l. The other 100's of uses are just to echo info to the screen
-> which in this case will simply fail in an extremely noisy fashion yet
-> non-fatal way.
+This is a plot of applying queue management on top of the existing
+queue structure, only one queue active, against 50 saturating streams
+against a voip-like ping.
+
+http://www.teklibre.com/~d/bloat/ping_log.ps
+
+To explain it the first part of the plot is the start of the test,
+the second part is after a brief, small rate change downwards, the
+drop to 0 is the end of the first test, then it goes back and starts
+another.
+
+While the clustering at the ~60-90ms line is good and due to sfqred
+doing it's job, it's connected to and unable to control the large,
+floppy rubber hose of buffering beneath it, translating out to ~100ms
+of jitter on more normal spiky loads under good conditions and worse
+on bad.
+
+A flaw of this particular plot is it measures intrinsic buffering on
+both sides of the connection, but it's still a lot of intrinsic
+latency. It would be nice to be able to apply BQL or BQL-like
+techniques to this, because that white space underneath the plot gets
+much more latent at lower rates.
+
+On Mon, Feb 27, 2012 at 4:10 PM, Dave Taht <dave.taht@gmail.com> wrote:
+> On Mon, Feb 27, 2012 at 12:49 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
 >
-> Please apply to all branches.
+>> As a consequence, I'm thinking that we should redesign the mac80211 /
+>> driver queue API to mirror more closely the kind of queues hardware
+>> really has.
 >
-> Signed-of-By: Rick Farina <sidhayn@gmail.com>
+> I'd like the driver queues to mirror more closely the kinds of
+> connections the hardware really has. I realize that this is more of an
+> AP orientation than a wireless client orientation, but with wildly
+> different rates between connected devices bad things happen.
 >
-> diff -Naur compat-wireless-3.3-rc1-2/Makefile
-> compat-wireless-3.3-rc1-2-modinfo-migration/Makefile
-> --- compat-wireless-3.3-rc1-2/Makefile    2012-01-21 02:00:21.000000000
-> -0500
-
-This patch form is not valid. Not sure if it was your SMTP or what but
-its busted and I cannot apply it even if I try to salvage it manually.
-Please consider using git on top of the latest master branch:
-
-git://github.com/mcgrof/compat-wireless.git
-
-And then please consider sending me patches using ssmtp or something
-that will respect the form so that I can apply the patch accordingly.
-For instructions you can read:
-
-http://wireless.kernel.org/en/developers/Documentation/git-guide
-
-You can read the ssmtp section, it covers gmail.
-
-> +++ compat-wireless-3.3-rc1-2-modinfo-migration/Makefile    2012-01-24
-> 14:27:20.000000000 -0500
-> @@ -9,11 +9,6 @@
->  # Sometimes not available in the path
->  MODPROBE := /sbin/modprobe
+> Secondly, my take on 802.11e QoS and wireless-n aggregation is that
+> aggregation wins nearly every time; all
+> 802.11e does is bloat up the buffers.
 >
-> -ifneq ($(wildcard $(MODPROBE)),)
-> -MADWIFI=$(shell $(MODPROBE) -l ath_pci)
-> -OLD_IWL=$(shell $(MODPROBE) -l iwl4965)
-> -endif
-> -
->  DESTDIR?=
+>> To recap: today, almost all drivers expose four queues to mac80211 for
+>> the four ACs. In reality, many have many more queues, e.g. in iwlwifi:
+>> �* 4 for the first vif
+>> �* 4 for the second vif
+>> �* 1 for CAB (content after [DTIM] beacon)
+>> �* 1 for off-channel
+>>
+>> They are mapped as follows:
+>> �* all vif ACs -> 4 ACs
+>> �* off-channel -> BE
+>> �* CAB � � � � -> BE (I believe, maybe all?)
+>>
+>> Thus when e.g. in our driver the BE queue for the second VIF is full, we
+>> stop all traffic across all VIFs. When both VIFs are on the same
+>> channel, this isn't really a problem. However, when they are on
+>> different channels, there could be vastly different performance
+>> characteristics on those two channels due to interference etc.
 >
->  ifneq ($(KERNELRELEASE),)
-> @@ -188,7 +183,7 @@
->     @install scripts/athload    $(DESTDIR)/usr/sbin/
->     @install scripts/b43load    $(DESTDIR)/usr/sbin/
->     @install scripts/iwl-load    $(DESTDIR)/usr/sbin/
-> -    @if [ ! -z "$(MADWIFI)" ] && [ -z "$(DESTDIR)" ]; then \
-> +    @if [ `modinfo ath_pci > /dev/null 2>&1` ] && [ -z "$(DESTDIR)" ]; then
-> \
+> And even more differences based on the destination's characteristics.
+>
+>
+>
+>
+> --
+> Dave T�ht
+> SKYPE: davetaht
+> US Tel: 1-239-829-5608
+> http://www.bufferbloat.net
 
-This check never values to true for me. Did you test it?
 
-$ if [ `modinfo ath9k > /dev/null 2>&1` ] ; then echo module exists;
-else echo module does not exist; fi
 
-module does not exist
-
-So at least for me this check does not work. Also consider using
-something like $(modinfo ath9k), it looks a lot nicer than the
-`modinfo ath9k` stuff.
-
->         echo ;\
->         echo -n "Note: madwifi detected, we're going to disable it. "  ;\
->         echo "If you would like to enable it later you can run:"  ;\
-> @@ -197,7 +192,7 @@
->         echo Running athenable ath5k...;\
->         /usr/sbin/athenable ath5k ;\
->     fi
-> -    @if [ ! -z "$(OLD_IWL)" ] && [ -z "$(DESTDIR)" ]; then \
-> +    @if [ `modinfo iwl4965 > /dev/null 2>&1` ] && [ -z "$(DESTDIR)" ]; then
-> \
-
-Same here.
-
-  Luis
+-- 
+Dave T�ht
+SKYPE: davetaht
+US Tel: 1-239-829-5608
+http://www.bufferbloat.net
