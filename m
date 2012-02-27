@@ -1,54 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:56396 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754480Ab2BXPsQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 10:48:16 -0500
-Subject: Re: [RFC] mac80211: Filter duplicate IE ids
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@chromium.org>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <CAMcMvsjPcBsur8ftSXVPzvPaCEEOPh+mYSr3MLV7Aa23reFBNA@mail.gmail.com> (sfid-20120224_164409_423757_01F87ADD)
-References: <20120224033729.9256A205A0@glenhelen.mtv.corp.google.com>
-	 <1330068877.3426.6.camel@jlt3.sipsolutions.net>
-	 <CAMcMvsi_v=gb9UF3tHSZ11fnh83iE9bK7nSiwL1GB-tDqW47jQ@mail.gmail.com>
-	 <1330093741.3426.19.camel@jlt3.sipsolutions.net>
-	 <CAMcMvsihYU93DjdqKYHW2xKiNbFD1YBqESx6NAkgKARCf-FjDQ@mail.gmail.com>
-	 <1330097788.3426.29.camel@jlt3.sipsolutions.net>
-	 <CAMcMvsjPcBsur8ftSXVPzvPaCEEOPh+mYSr3MLV7Aa23reFBNA@mail.gmail.com>
-	 (sfid-20120224_164409_423757_01F87ADD)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 24 Feb 2012 16:48:15 +0100
-Message-ID: <1330098495.3426.30.camel@jlt3.sipsolutions.net> (sfid-20120224_164819_820720_4FC53100)
-Mime-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:51822 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751851Ab2B0MHZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 07:07:25 -0500
+Message-ID: <4F4B71F2.1020709@openwrt.org> (sfid-20120227_130729_182747_BE98FF6D)
+Date: Mon, 27 Feb 2012 13:07:14 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: David Fries <david@fries.net>
+CC: Nick Kossifidis <mickflemm@gmail.com>,
+	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Subject: Re: ath5k phy0: gain calibration timeout
+References: <20120227031232.GA1190@spacedout.fries.net>
+In-Reply-To: <20120227031232.GA1190@spacedout.fries.net>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-02-24 at 07:43 -0800, Paul Stewart wrote:
-
-> > Huh, good questions. Which info do we end up using? Just the one that
-> > was not corrupted? I think we always use the last IEs, no?
-> >
-> > Hmm. You said in the bug that supported rates were really only affected,
-> > and this caused an issue with the supported rates that we send, because
-> > we restrict ourselves to the rates the AP advertises (due to other buggy
-> > APs ...)
-> >
-> > Maybe then it doesn't matter all that much.
-> >
-> > OTOH, why should we ever reset the flag?
+On 2012-02-27 4:12 AM, David Fries wrote:
+> Wireless network stopped working after 22 hours with ath5k, I have the
+> following message repeating, suspending to ram and back was enough to
+> get it talking again.
+> ath5k phy0: gain calibration timeout (2462MHz)
 > 
-> If my over-the-air captures are any indication, with some probability
-> you will receive a corrupted beacon from time to time -- perhaps not
-> due to a broken AP, but just from it being corrupted over the air.
-> FCS could catch that most times, but perhaps sometimes not.  If you
-> carry that flag along with you as long as the BSS exists (as long as
-> the AP is in view) despite tens or hundreds of intact receptions
-> afterwards, the importance of the error message diminishes.
+> I previously was running 3.2-rc5 for a month and a half straight
+> without any wireless issues, I just upgraded to 3.3-rc1, the message
+> started 22 hours after booting the newer kernel.  This ath5k is
+> running hostapd 1:0.7.3-4 with WPA-EAP and had no clients for the 12
+> hours before the calibration message started, and had no clients for
+> hours after until I tried to connect and found I couldn't.
+> While I was unable to connect, I flipped
+> the laptop rfkill switch and the gain calibration timeouts continued,
+> disabling rfkill and they still continued.  That's when I did a
+> suspend to memory and resume and found it recovered.  While it was
+> working I tried rfkill and it no longer was talking after disabling
+> rfkill, I thought it was resuming previously, but I don't use that
+> very often.
+> 
+> I revered the following two comments and will see if I run into any
+> more problems.  I can test patches.
+> ath5k: We always do full calibration on AR5210
+> dafae6af0336958e9e2eb67cc5e4e31d6d13b308
+> ath5k: Calibration re-work
+> ce169aca0d823d38465127023e3d571816e6666c
+Please try applying the following two patches:
+http://nbd.name/gitweb.cgi?p=openwrt.git;a=blob_plain;f=package/mac80211/patches/440-ath5k_calibrate_no_queue_stop.patch;hb=HEAD
+http://nbd.name/gitweb.cgi?p=openwrt.git;a=blob_plain;f=package/mac80211/patches/441-ath5k_no_agc_recalibration.patch;hb=HEAD
 
-Yes, good point. Actually we (currently) only care about (extended)
-supported rates, so maybe we should reset whenever we take those from an
-intact frame?
-
-johannes
-
+- Felix
