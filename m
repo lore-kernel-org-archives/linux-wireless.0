@@ -1,55 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42552 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751299Ab2B2T0I (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 14:26:08 -0500
-Subject: Re: [PATCH] mac80211: Filter duplicate IE ids
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Paul Stewart <pstew@chromium.org>
-Cc: linux-wireless@vger.kernel.org,
-	Sam Leffler <sleffler@chromium.org>,
-	Eliad Peller <eliad@wizery.com>
-In-Reply-To: <20120229185846.9183D20476@glenhelen.mtv.corp.google.com> (sfid-20120229_195918_830584_A003F6E0)
-References: <CAMcMvsj2XMFarr1+fqdSv88ZLrXLquK7wgF8LsTYDBfvHFwgrA@mail.gmail.com>
-	 <20120225012039.4E62720353@glenhelen.mtv.corp.google.com>
-	 <CAB3XZEcp3F1ZV1MpnBrdF3uL1dpgP1zFCUB+VYFAzEMU1Zzw8A@mail.gmail.com>
-	 <CAMcMvsitdrMqMUti=b-cEM6KypGH=SWPhJWnr7xY0sc7_KWOvw@mail.gmail.com>
-	 <20120229185846.9183D20476@glenhelen.mtv.corp.google.com>
-	 (sfid-20120229_195918_830584_A003F6E0)
-Content-Type: text/plain; charset="UTF-8"
-Date: Wed, 29 Feb 2012 20:26:05 +0100
-Message-ID: <1330543565.13717.8.camel@jlt3.sipsolutions.net> (sfid-20120229_202612_998783_F629C93E)
-Mime-Version: 1.0
+Received: from mga14.intel.com ([143.182.124.37]:45594 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755458Ab2B0XTK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 18:19:10 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 23/24] iwlwifi: update pci subsystem id
+Date: Mon, 27 Feb 2012 14:07:47 -0800
+Message-Id: <1330380468-17674-24-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120228_001919_073865_4EF91EDF)
+In-Reply-To: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-02-23 at 17:59 -0800, Paul Stewart wrote:
-> mac80211 is lenient with respect to reception of corrupted beacons.
-> Even if the frame is corrupted as a whole, the available IE elements
-> are still passed back and accepted, sometimes replacing legitimate
-> data.  It is unknown to what extent this "feature" is made use of,
-> but it is clear that in some cases, this is detrimental.  One such
-> case is reported in http://crosbug.com/26832 where an AP corrupts
-> its beacons but not its probe responses.
-> 
-> One approach would be to completely reject frames with invaid data
-> (for example, if the last tag extends beyond the end of the enclosing
-> PDU).  The enclosed approach is much more conservative: we simply
-> prevent later IEs from overwriting the state from previous ones.
-> This approach hopes that there might be some salient data in the
-> IE stream before the corruption, and seeks to at least prevent that
-> data from being overwritten.  This approach will fix the case above.
-> 
-> Further, we flag element structures that contain data we think might
-> be corrupted, so that as we fill the mac80211 BSS structure, we try
-> not to replace data from an un-corrupted probe response with that
-> of a corrupted beacon, for example.
-> 
-> Short of any statistics gathering in the various forms of AP breakage,
-> it's not possible to ascertain the side effects of more stringent
-> discarding of data.
+Update the pci subsystem id and product name for 6005 series devices
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-6000.c |   11 +++++++++++
+ drivers/net/wireless/iwlwifi/iwl-cfg.h  |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-pci.c  |    6 +++---
+ 3 files changed, 16 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 1e6fbf4..223e60a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -383,6 +383,17 @@ struct iwl_cfg iwl6005_2agn_d_cfg = {
+ 	.ht_params = &iwl6000_ht_params,
+ };
+ 
++struct iwl_cfg iwl6005_2agn_mow1_cfg = {
++	.name = "Intel(R) Centrino(R) Advanced-N 6206 AGN",
++	IWL_DEVICE_6005,
++	.ht_params = &iwl6000_ht_params,
++};
++struct iwl_cfg iwl6005_2agn_mow2_cfg = {
++	.name = "Intel(R) Centrino(R) Advanced-N 6207 AGN",
++	IWL_DEVICE_6005,
++	.ht_params = &iwl6000_ht_params,
++};
++
+ #define IWL_DEVICE_6030						\
+ 	.fw_name_pre = IWL6030_FW_PRE,				\
+ 	.ucode_api_max = IWL6000G2_UCODE_API_MAX,		\
+diff --git a/drivers/net/wireless/iwlwifi/iwl-cfg.h b/drivers/net/wireless/iwlwifi/iwl-cfg.h
+index 957bc00..1ad14bb 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-cfg.h
++++ b/drivers/net/wireless/iwlwifi/iwl-cfg.h
+@@ -80,6 +80,8 @@ extern struct iwl_cfg iwl6005_2abg_cfg;
+ extern struct iwl_cfg iwl6005_2bg_cfg;
+ extern struct iwl_cfg iwl6005_2agn_sff_cfg;
+ extern struct iwl_cfg iwl6005_2agn_d_cfg;
++extern struct iwl_cfg iwl6005_2agn_mow1_cfg;
++extern struct iwl_cfg iwl6005_2agn_mow2_cfg;
+ extern struct iwl_cfg iwl1030_bgn_cfg;
+ extern struct iwl_cfg iwl1030_bg_cfg;
+ extern struct iwl_cfg iwl6030_2agn_cfg;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-pci.c b/drivers/net/wireless/iwlwifi/iwl-pci.c
+index 93bd9f6..0ce7047 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-pci.c
++++ b/drivers/net/wireless/iwlwifi/iwl-pci.c
+@@ -158,9 +158,9 @@ static DEFINE_PCI_DEVICE_TABLE(iwl_hw_card_ids) = {
+ 	{IWL_PCI_DEVICE(0x0085, 0x1316, iwl6005_2abg_cfg)},
+ 	{IWL_PCI_DEVICE(0x0082, 0xC020, iwl6005_2agn_sff_cfg)},
+ 	{IWL_PCI_DEVICE(0x0085, 0xC220, iwl6005_2agn_sff_cfg)},
+-	{IWL_PCI_DEVICE(0x0082, 0x1341, iwl6005_2agn_d_cfg)},
+-	{IWL_PCI_DEVICE(0x0082, 0x1304, iwl6005_2agn_cfg)},/* low 5GHz active */
+-	{IWL_PCI_DEVICE(0x0082, 0x1305, iwl6005_2agn_cfg)},/* high 5GHz active */
++	{IWL_PCI_DEVICE(0x0082, 0x4820, iwl6005_2agn_d_cfg)},
++	{IWL_PCI_DEVICE(0x0082, 0x1304, iwl6005_2agn_mow1_cfg)},/* low 5GHz active */
++	{IWL_PCI_DEVICE(0x0082, 0x1305, iwl6005_2agn_mow2_cfg)},/* high 5GHz active */
+ 
+ /* 6x30 Series */
+ 	{IWL_PCI_DEVICE(0x008A, 0x5305, iwl1030_bgn_cfg)},
+-- 
+1.7.0.4
 
