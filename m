@@ -1,113 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:52335 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755681Ab2B0X6Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 18:58:24 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
-	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	arend@broadcom.com, m@bues.ch, ralf@linux-mips.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v2 11/11] MIPS: BCM47XX: provide sprom to bcma bus
-Date: Tue, 28 Feb 2012 00:56:14 +0100
-Message-Id: <1330386974-4056-12-git-send-email-hauke@hauke-m.de> (sfid-20120228_005827_304469_395CDAF0)
-In-Reply-To: <1330386974-4056-1-git-send-email-hauke@hauke-m.de>
-References: <1330386974-4056-1-git-send-email-hauke@hauke-m.de>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:51613 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754011Ab2B0VSL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 16:18:11 -0500
+Date: Mon, 27 Feb 2012 13:18:06 -0800
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+CC: <linux-wireless@vger.kernel.org>, <nbd@nbd.name>,
+	<linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@frijolero.org>
+Subject: Re: [PATCH 0/5] compat / compat-wireless: merge autoconf generation
+Message-ID: <20120227211806.GB5646@tux> (sfid-20120227_221826_085002_7FE82C2B)
+References: <1330134726-1634-1-git-send-email-rodrigue@qca.qualcomm.com>
+ <4F48C08A.5070501@hauke-m.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4F48C08A.5070501@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On SoCs the sprom is often stored in nvram in the flashchip. This patch
-registers a sprom fallback callback handler in bcma and provides the
-sprom needed for this device.
+On Sat, Feb 25, 2012 at 12:05:46PM +0100, Hauke Mehrtens wrote:
+> On 02/25/2012 02:52 AM, Luis R. Rodriguez wrote:
+> > From: Luis R. Rodriguez <mcgrof@frijolero.org>
+> > 
+> > While testing ckmake cross compiling compat through different kernels I
+> > realized that compat was failing to build on some kernels but compat-wireless
+> > was not. The reason for this turned out to be that compat did not have an
+> > autoconf for the CONFIG_COMPAT_KERNEL_* variables. In order to make use
+> > of a variable properly in code on kernel we need two things: a makefile
+> > equivalent and a header file that defines it. The compat project had
+> > only makefile variable generation while compat-wireless had makefile
+> > variable generation with a *few* variables propagated to actual code.
+> > 
+> > To avoid issues with this any further I've decided to try merging the
+> > autoconf effort for both projects and taking leads on what compat does
+> > first.
+> > 
+> > compat then does the CONFIG_COMPAT_KERNEL_* trickery and generates a
+> > clean .config for us. This in turn generates our compat's compat_autoconf.h.
+> > The compat-wireless project leverages this work by dropping its own
+> > Makefile hackery in favor of the same work and later also uses the same
+> > .config to expand its own compat_autoconf.h.
+> > 
+> > John, I could use some extra help on reviewing the RHEL stuff. I'm going
+> > to push this stuff out now to help with testing.
+> > 
+> > compat:
+> > 
+> > Luis R. Rodriguez (2):
+> >   compat: fix few compilations by adding compat_autoconf.h support
+> >   compat: add some initial RHEL support
+> > 
+> >  .gitignore                      |   10 ++++
+> >  Makefile                        |   59 ++++++++++------------
+> >  include/linux/compat_autoconf.h |   37 --------------
+> >  scripts/gen-compat-autoconf.sh  |  105 +++++++++++++++++++++++++++++++++++++++
+> >  scripts/gen-compat-config.sh    |   60 ++++++++++++++++++++++
+> >  5 files changed, 201 insertions(+), 70 deletions(-)
+> >  delete mode 100644 include/linux/compat_autoconf.h
+> >  create mode 100755 scripts/gen-compat-autoconf.sh
+> >  create mode 100755 scripts/gen-compat-config.sh
+> > 
+> > compat-wireless:
+> > 
+> > Luis R. Rodriguez (3):
+> >   compat-wireless: fix old checks on KERNEL_SUBLEVEL
+> >   compat-wireless: start using CONFIG_COMPAT_KERNEL_ in code
+> >   compat-wireless: use compat's CONFIG_COMPAT_KERNEL_* variables
+> >  Makefile                       |   22 ++++++++++++++++------
+> >  config.mk                      |   24 ++++--------------------
+> >  scripts/check_config.sh        |    9 +++++----
+> >  scripts/gen-compat-autoconf.sh |   13 +++++++------
+> >  4 files changed, 32 insertions(+), 36 deletions(-)
+> > 
+> 
+> This patch series breaks parallel build.
+> Before these patches where applied parallel build was no problem I just
+> saw two error at the beginning, but after this patch series it does not
+> work any more.
+> 
+> These are the current error messages at the beginning and then it
+> compiles sequential.
+> 
+> Hauke
+> 
+> hauke@hauke:~/compat-wireless/compat-wireless$ make -j5
+> make[1]: warning: jobserver unavailable: using -j1.  Add `+' to parent
+> make rule.
+> make[1]: warning: jobserver unavailable: using -j1.  Add `+' to parent
+> make rule.
+> ./scripts/gen-compat-autoconf.sh .config config.mk >
+> include/linux/compat_autoconf.h
+> make[1]: warning: jobserver unavailable: using -j1.  Add `+' to parent
+> make rule.
+> make[1]: warning: jobserver unavailable: using -j1.  Add `+' to parent
+> make rule.
+> make -C /home/hauke/compat-wireless/compat-wireless modules
+> make[1]: Entering directory `/home/hauke/compat-wireless/compat-wireless'
+> make[1]: warning: jobserver unavailable: using -j1.  Add `+' to parent
+> make rule.
+> make -C /lib/modules/3.0.0-16-generic/build
+> M=/home/hauke/compat-wireless/compat-wireless modules
+> make[2]: Entering directory `/usr/src/linux-headers-3.0.0-16-generic'
+>   LD      /home/hauke/compat-wireless/compat-wireless/compat/built-in.o
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- arch/mips/bcm47xx/setup.c |   39 +++++++++++++++++++++++++++++++++++----
- 1 files changed, 35 insertions(+), 4 deletions(-)
+I had at first the below cheasy fix, but now I have an even better one
+that does not require recursion. I'll post and merge. Thanks for reporting
+this.
 
-diff --git a/arch/mips/bcm47xx/setup.c b/arch/mips/bcm47xx/setup.c
-index 6b0dacd..19780aa 100644
---- a/arch/mips/bcm47xx/setup.c
-+++ b/arch/mips/bcm47xx/setup.c
-@@ -3,7 +3,7 @@
-  *  Copyright (C) 2006 Felix Fietkau <nbd@openwrt.org>
-  *  Copyright (C) 2006 Michael Buesch <m@bues.ch>
-  *  Copyright (C) 2010 Waldemar Brodkorb <wbx@openadk.org>
-- *  Copyright (C) 2010-2011 Hauke Mehrtens <hauke@hauke-m.de>
-+ *  Copyright (C) 2010-2012 Hauke Mehrtens <hauke@hauke-m.de>
-  *
-  *  This program is free software; you can redistribute  it and/or modify it
-  *  under  the terms of  the GNU General  Public License as published by the
-@@ -85,7 +85,7 @@ static void bcm47xx_machine_halt(void)
- }
+diff --git a/Makefile b/Makefile
+index d96d098..d11da17 100644
+--- a/Makefile
++++ b/Makefile
+@@ -62,8 +62,8 @@ install: modules
+ $(COMPAT_AUTOCONF): ;
  
- #ifdef CONFIG_BCM47XX_SSB
--static int bcm47xx_get_sprom(struct ssb_bus *bus, struct ssb_sprom *out)
-+static int bcm47xx_get_sprom_ssb(struct ssb_bus *bus, struct ssb_sprom *out)
- {
- 	char prefix[10];
+ $(COMPAT_CONFIG):
+-	@$(PWD)/scripts/gen-compat-config.sh > $(PWD)/$(COMPAT_CONFIG)
+-	@$(PWD)/scripts/gen-compat-autoconf.sh $(COMPAT_CONFIG) > $(PWD)/$(COMPAT_AUTOCONF)
++	+@$(PWD)/scripts/gen-compat-config.sh > $(PWD)/$(COMPAT_CONFIG)
++	+@$(PWD)/scripts/gen-compat-autoconf.sh $(COMPAT_CONFIG) > $(PWD)/$(COMPAT_AUTOCONF)
+ 	@$(MAKE) -C $(PWD) modules
  
-@@ -102,7 +102,7 @@ static int bcm47xx_get_sprom(struct ssb_bus *bus, struct ssb_sprom *out)
- }
- 
- static int bcm47xx_get_invariants(struct ssb_bus *bus,
--				   struct ssb_init_invariants *iv)
-+				  struct ssb_init_invariants *iv)
- {
- 	char buf[20];
- 
-@@ -132,7 +132,7 @@ static void __init bcm47xx_register_ssb(void)
- 	char buf[100];
- 	struct ssb_mipscore *mcore;
- 
--	err = ssb_arch_register_fallback_sprom(&bcm47xx_get_sprom);
-+	err = ssb_arch_register_fallback_sprom(&bcm47xx_get_sprom_ssb);
- 	if (err)
- 		printk(KERN_WARNING "bcm47xx: someone else already registered"
- 			" a ssb SPROM callback handler (err %d)\n", err);
-@@ -159,10 +159,41 @@ static void __init bcm47xx_register_ssb(void)
- #endif
- 
- #ifdef CONFIG_BCM47XX_BCMA
-+static int bcm47xx_get_sprom_bcma(struct bcma_bus *bus, struct ssb_sprom *out)
-+{
-+	char prefix[10];
-+	struct bcma_device *core;
-+
-+	switch (bus->hosttype) {
-+	case BCMA_HOSTTYPE_PCI:
-+		snprintf(prefix, sizeof(prefix), "pci/%u/%u/",
-+			 bus->host_pci->bus->number + 1,
-+			 PCI_SLOT(bus->host_pci->devfn));
-+		bcm47xx_fill_sprom(out, prefix);
-+		return 0;
-+	case BCMA_HOSTTYPE_SOC:
-+		bcm47xx_fill_sprom_ethernet(out, NULL);
-+		core = bcma_find_core(bus, BCMA_CORE_80211);
-+		if (core) {
-+			snprintf(prefix, sizeof(prefix), "sb/%u/",
-+				 core->core_index);
-+			bcm47xx_fill_sprom(out, prefix);
-+		}
-+		return 0;
-+	default:
-+		pr_warn("bcm47xx: unable to fill SPROM for given bustype.\n");
-+		return -EINVAL;
-+	}
-+}
-+
- static void __init bcm47xx_register_bcma(void)
- {
- 	int err;
- 
-+	err = bcma_arch_register_fallback_sprom(&bcm47xx_get_sprom_bcma);
-+	if (err)
-+		pr_warn("bcm47xx: someone else already registered a bcma SPROM callback handler (err %d)\n", err);
-+
- 	err = bcma_host_soc_register(&bcm47xx_bus.bcma);
- 	if (err)
- 		panic("Failed to initialize BCMA bus (err %d)", err);
--- 
-1.7.5.4
-
+ kkinstall: modules
