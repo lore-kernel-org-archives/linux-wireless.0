@@ -1,65 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm8.bullet.mail.ird.yahoo.com ([77.238.189.23]:43520 "HELO
-	nm8.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750730Ab2BSXRf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Feb 2012 18:17:35 -0500
-Message-ID: <1329693453.51266.YahooMailClassic@web29503.mail.ird.yahoo.com> (sfid-20120220_001739_180522_7AE72462)
-Date: Sun, 19 Feb 2012 23:17:33 +0000 (GMT)
-From: Hin-Tak Leung <htl10@users.sourceforge.net>
-Reply-To: htl10@users.sourceforge.net
-Subject: Re: [PATCH] rtl8187: Add Ad-hoc mode
-To: Attila Fazekas <turul64@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Herton Ronaldo Krzesinski <herton@canonical.com>
-In-Reply-To: <4F416772.5030703@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Received: from nbd.name ([46.4.11.11]:36042 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754811Ab2B0S6v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 13:58:51 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com,
+	rmanohar@qca.qualcomm.com
+Subject: [PATCH 3.3 4/4] ath9k: fix drv_tx_last_beacon on AR9003 by processing beacon tx status
+Date: Mon, 27 Feb 2012 19:58:42 +0100
+Message-Id: <1330369122-60220-4-git-send-email-nbd@openwrt.org> (sfid-20120227_195855_490804_4263B696)
+In-Reply-To: <1330369122-60220-3-git-send-email-nbd@openwrt.org>
+References: <1330369122-60220-1-git-send-email-nbd@openwrt.org>
+ <1330369122-60220-2-git-send-email-nbd@openwrt.org>
+ <1330369122-60220-3-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---- On Sun, 19/2/12, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/beacon.c |    2 +-
+ drivers/net/wireless/ath/ath9k/xmit.c   |    7 +++++--
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-> On 02/19/2012 01:54 PM, Attila
-> Fazekas wrote:
-> > Add AD-HOC support to the rtl8187 based on the rtl8180
-> source
-> > 
-> > Signed-off-by: Attila Fazekas<turul64@gmail.com>
-> > ---
-> > diff --git
-> a/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> > b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> > index 638fbef..f8f9186 100644
-> > --- a/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> > +++ b/drivers/net/wireless/rtl818x/rtl8187/dev.c
-> > @@ -232,6 +232,7 @@ static void rtl8187_tx(struct
-> ieee80211_hw *dev,
-> > struct sk_buff *skb)
-> >   {
-> >       struct rtl8187_priv
-> *priv = dev->priv;
-> >       struct
-> ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-> > +    struct ieee80211_hdr *tx_hdr =
->     (struct ieee80211_hdr *)(skb->data);
-> >       unsigned int ep;
-> >       void *buf;
-> >       struct urb *urb;
-> > @@ -249,7 +250,7 @@ static void rtl8187_tx(struct
-> ieee80211_hw *dev,
-> > struct sk_buff *skb)
-> 
-> This patch was mangled by your mailer. See how the line
-> above is wrapped? In addition, the tabs seem to have been
-> replaced by spaces.
-> 
-> To test what works, you should mail a patch to yourself and
-> see if the version extracted from your mailer still
-> applies.
+diff --git a/drivers/net/wireless/ath/ath9k/beacon.c b/drivers/net/wireless/ath/ath9k/beacon.c
+index 6d1e465..43882f9 100644
+--- a/drivers/net/wireless/ath/ath9k/beacon.c
++++ b/drivers/net/wireless/ath/ath9k/beacon.c
+@@ -91,7 +91,7 @@ static void ath_beacon_setup(struct ath_softc *sc, struct ath_vif *avp,
+ 	info.txpower = MAX_RATE_POWER;
+ 	info.keyix = ATH9K_TXKEYIX_INVALID;
+ 	info.keytype = ATH9K_KEY_TYPE_CLEAR;
+-	info.flags = ATH9K_TXDESC_NOACK;
++	info.flags = ATH9K_TXDESC_NOACK | ATH9K_TXDESC_INTREQ;
+ 
+ 	info.buf_addr[0] = bf->bf_buf_addr;
+ 	info.buf_len[0] = roundup(skb->len, 4);
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 3182408..cf5a267 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -2297,9 +2297,12 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 			break;
+ 		}
+ 
+-		/* Skip beacon completions */
+-		if (ts.qid == sc->beacon.beaconq)
++		/* Process beacon completions separately */
++		if (ts.qid == sc->beacon.beaconq) {
++			sc->beacon.tx_processed = true;
++			sc->beacon.tx_last = !(ts.ts_status & ATH9K_TXERR_MASK);
+ 			continue;
++		}
+ 
+ 		txq = &sc->tx.txq[ts.qid];
+ 
+-- 
+1.7.3.2
 
-I am curious about this patch - does it take this amount of driver-specific effort to make ad-hoc mode work? Master mode is preferably handled in a generic way by hostapd... "Add AD-HOC support to the rtl8187 based on the rtl8180 source" - could some refactor be done?
-
-Hin-Tak
