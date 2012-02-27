@@ -1,57 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:49621 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752019Ab2BLQAD (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34156 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756147Ab2B0X0r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Feb 2012 11:00:03 -0500
-Received: by iacb35 with SMTP id b35so2898092iac.19
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Feb 2012 08:00:03 -0800 (PST)
-Message-ID: <4F37E200.90507@lwfinger.net> (sfid-20120212_170009_292439_C9C723B5)
-Date: Sun, 12 Feb 2012 10:00:00 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 27 Feb 2012 18:26:47 -0500
+Date: Mon, 27 Feb 2012 13:23:33 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Subject: Re: [PATCH 3.3] mwifiex: remove redundant scan operation
+Message-ID: <20120227182333.GC26664@tuxdriver.com> (sfid-20120228_002725_121821_8863E712)
+References: <1330148136-28867-1-git-send-email-bzhao@marvell.com>
+ <1330148136-28867-2-git-send-email-bzhao@marvell.com>
 MIME-Version: 1.0
-To: Sivakumar Pothireddy
-	<Sivakumar.Pothireddy@infotech-enterprises.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: Regarding RTL8191SU-GR
-References: <845B9439DBA52942BE709500EAB58CE002C4CD3D@INFHYDEX10MB3.corp.infotech-enterprises.com>,<845B9439DBA52942BE709500EAB58CE002C4CD9E@INFHYDEX10MB3.corp.infotech-enterprises.com> <845B9439DBA52942BE709500EAB58CE002C4CDF9@INFHYDEX10MB3.corp.infotech-enterprises.com>
-In-Reply-To: <845B9439DBA52942BE709500EAB58CE002C4CDF9@INFHYDEX10MB3.corp.infotech-enterprises.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1330148136-28867-2-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/12/2012 12:22 AM, Sivakumar Pothireddy wrote:
->
-> Dear All,
-> We have a Unigen device(UGWDR82NUH50) which uses RTL8191SU-GR Wi-Fi chipset.
-> We know that this device will work in Client mode in Linux-3.0 using the staging driver i.e. r8712u.
-> Our task was to make the device to run as Access point with mac80211 and nl80211.
-> In this regard i have few queries which are very important for us to proceed.
->
-> 1) Will the same firmware used for client supports AP mode or not?
-> 2) If it supports , does the driver code has enough calls to send the commands for AP?
-> 3) We currently doenst have a datasheet for RTL8191SU-GR, so without having the knowledge of register set ,
-> can we proceed?, i mean the current driver and firmware had the commands to support AP?
->
-> It would be of great help if can look in to this and reply ASAP,
+On Fri, Feb 24, 2012 at 09:35:36PM -0800, Bing Zhao wrote:
+> From: Amitkumar Karwar <akarwar@marvell.com>
+> 
+> It should have been removed by commit "mwifiex: use cfg80211 dynamic
+> scan..." (7c6fa2a843..) after adding code to avoid an extra scan
+> during association because scan entries are valid for 15 seconds in
+> cfg80211 stack.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> ---
+>  drivers/net/wireless/mwifiex/cfg80211.c |    6 ------
+>  1 files changed, 0 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+> index e4e6d7d..7b98ce0 100644
+> --- a/drivers/net/wireless/mwifiex/cfg80211.c
+> +++ b/drivers/net/wireless/mwifiex/cfg80211.c
+> @@ -924,12 +924,6 @@ mwifiex_cfg80211_assoc(struct mwifiex_private *priv, size_t ssid_len, u8 *ssid,
+>  		}
+>  	}
+>  done:
+> -	/* Do specific SSID scanning */
+> -	if (mwifiex_request_scan(priv, &req_ssid)) {
+> -		dev_err(priv->adapter->dev, "scan error\n");
+> -		return -EFAULT;
+> -	}
+> -
+>  	/*
+>  	 * Scan entries are valid for some time (15 sec). So we can save one
+>  	 * active scan time if we just try cfg80211_get_bss first. If it fails
 
-This topic has been discussed several times in this mailing list. The driver 
-works in ad-hoc mode, and would probably work in AP mode, if one has a suitable 
-equivalent of hostapd that would work with it. The latest versions of hostapd 
-are tailored toward the nl80211 interface; however, r8712u does hot use the 
-mac80211-based stack. As the wireless extensions interface is not sufficient to 
-implement an AP, it follows that r8712u will not work as an AP. The firmware 
-might, or might not work - there is no way to test.
+It seems like this could wait to be fixed in 3.4?
 
-The way to go would be to write a driver for the RTL8191SU that uses rtlwifi and 
-a new driver rtl8192su for these USB devices that works with mac80211. Such a 
-driver is on my todo list, but it has low priority.
-
-Note: I do not have a datasheet for the device either. My feeling is that a 
-study of drivers r8712u and rtl8192se would provide sufficient information. The 
-underlying wireless chip is nearly the same as that of the RTL8192SE - only the 
-USB interconnect is different.
-
-Larry
-
-
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
