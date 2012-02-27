@@ -1,65 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:55055 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754692Ab2BFVdI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Feb 2012 16:33:08 -0500
-Subject: Re: [Ilw] Re: 6300agn: queue stuck and driver doesn't recover
-From: Johannes Berg <johannes.berg@intel.com>
-To: Alexander Schnaidt <alex.schnaidt@googlemail.com>
-Cc: "Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	Andrew Lutomirski <luto@mit.edu>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-In-Reply-To: <CAFZTsKnjkJSmMdNpNkQWzUggNcN+3Qx0OGVXzuPDsXr8+h1SiA@mail.gmail.com> (sfid-20120206_222748_513328_D72EBBF9)
-References: <CAObL_7E2eW9aqz3VLsBU-=4+kMXrfPvfz6wCNUEdDHuJWVaSLA@mail.gmail.com>
-	 <CAFZTsKk9ojw9_XodisHf-dtHpL1n6xSRmmWDVniZ-Ps4-JLwvA@mail.gmail.com>
-	 <1328455870.7290.43.camel@wwguy-huron>
-	 <1DC40B07CD6EC041A66726C271A73AE611F67E@IRSMSX102.ger.corp.intel.com>
-	 <CAFZTsKnjkJSmMdNpNkQWzUggNcN+3Qx0OGVXzuPDsXr8+h1SiA@mail.gmail.com>
-	 (sfid-20120206_222748_513328_D72EBBF9)
-Date: Mon, 06 Feb 2012 22:33:00 +0100
-Message-ID: <1328563980.3466.10.camel@jlt3.sipsolutions.net> (sfid-20120206_223312_862218_DECFECB8)
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:12061 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750918Ab2B0GnG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 01:43:06 -0500
+Message-ID: <4F4B25F5.4090204@qca.qualcomm.com> (sfid-20120227_074312_341997_B9234BCE)
+Date: Mon, 27 Feb 2012 08:43:01 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Anthony Ginger <mapfly@gmail.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: ath6kl hostapd
+References: <CAK0tYSKLhALwUca2LPiRLfXTK-Qt3Oh3Lvk=V272AXdb=aAP7w@mail.gmail.com>
+In-Reply-To: <CAK0tYSKLhALwUca2LPiRLfXTK-Qt3Oh3Lvk=V272AXdb=aAP7w@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCAyMDEyLTAyLTA2IGF0IDIyOjI3ICswMTAwLCBBbGV4YW5kZXIgU2NobmFpZHQgd3Jv
-dGU6Cgo+ID4gSSB0aGluayB5b3UgcHJvYmFibHkgaGFkIHNvbWV0aGluZyBsaWtlICJvcHRpb25z
-IGl3bGFnbgo+IDExbl9kaXNhYmxlPTEiIG9yIHNvIGluIC9ldGMvbW9kcHJvYmUuZC8gc29tZXdo
-ZXJlLiBUaGlzIGNhdXNlZCB0aGUKPiBwcm9ibGVtIHRvIGhhcHBlbiBvbmx5IHdpdGggdGhlIGRy
-aXZlciBjYWxsZWQgIml3bHdpZmkiLCBzaW5jZQo+ICJpd2xhZ24iIHdvdWxkIGdldCAxMW4gZGlz
-YWJsZWQuCgo+IFlvdSdyZSBhbG1vc3Qgc3BvdCBvbiEsIHNvbWV3aGVyZSBhbG9uZyB0aGUgYmlz
-ZWN0IEkgcHV0IHN3Y3J5cHRvPTEgaW50bwo+IG1vZHByb2JlLmNvbmYuLi4gc28gbXVjaCBmb3Ig
-c2NpZW50aWZpYyByZXByb2R1Y2liaWxpdHkuIFNvcnJ5IGZvciB0aGF0Lgo+IAo+IEkgcmVkaWQg
-dGhlIHdob2xlIGJpc2VjdCB3aXRoIG5vIG9wdGlvbnMgaW4gbW9kcHJvYmUuY29uZiB3aGljaCBk
-ZWZhdWx0cwo+IHRvIHN3Y3J5cHRvPTAgb24gPj0zLjAgaWYgSSdtIG5vdCBtaXN0YWtlbi4KCi4u
-LgoKPiBJZiBteSBpbnRlcnByZXRhdGlvbiBpcyByaWdodCB0aGUgY3VscHJpdCB3b3VsZCBiZToK
-PiAKPiBjb21taXQgNWEzZDk4ODJiODRlZGY1ZmE4ZThjYTMzYTVkNmRmMjVlMmU3MjdhNQo+IEF1
-dGhvcjogSm9oYW5uZXMgQmVyZyA8am9oYW5uZXMuYmVyZ0BpbnRlbC5jb20+Cj4gRGF0ZTogICBG
-cmkgSnVsIDE1IDEzOjAzOjEyIDIwMTEgLTA3MDAKPiAKPiAgICAgaXdsYWduOiByZXdyaXRlIEhX
-IGNyeXB0bwoKPiBUbyBtZSBpdCBtYWtlcyBzZW5zZSBjb25zaWRlcmluZyB0aGF0IHN3Y3J5cHRv
-PTEgZml4ZXMKPiBteSBwcm9ibGVtcyBhbGwgdGhlIHdheSB1cCB0aWxsIGtlcm5lbCAzLjMuMC1y
-YzIuCj4gCj4gcHMuOiAxMW5fZGlzYWJsZT0xIGFzIHN1Z2dlc3RlZCBieSBXZXktWWkgZG9lcyBu
-b3QKPiBjaGFuZ2UgdGhlIGZhdWx0eSBiZWhhdmlvci4KPiAKPiBBZ2FpbiBJIGFwb2xvZ2l6ZSBm
-b3IgbXkgYmx1bmRlciBhbmQgdGhhbmtzIGZvciB0aGUgZWZmb3J0LgoKT2sgdGhpcyBtYWtlcyBz
-ZW5zZS4gQSBmZXcgb3RoZXIgcGVvcGxlIGFsc28gcmVjZW50bHkgcmVwb3J0ZWQgdGhpcy4gSSdt
-CmN1cnJlbnRseSAoc3RpbGwpIGF3YXkgZnJvbSBob21lIHNvIEkgY2FuJ3QgcmVwcm9kdWNlIHRo
-aXMgaXNzdWUsIGFuZCBJCmRpZG4ndCBmaW5kIGFueXRoaW5nIGJ5IGp1c3QgbG9va2luZyBhdCB0
-aGUgY29kZS4gVHJhY2VzIGZvciBtYWM4MDIxMQphbmQgaXdsd2lmaSBzdWJzeXN0ZW1zIHdvdWxk
-IGJlIHVzZWZ1bCB0byBsb29rIGF0IGluIHRoaXMgY2FzZSwgSSB0aGluaywKaWYgeW91IHdhbnQg
-dG8gcmVjb3JkIHRoZSBmYWlsdXJlIGNhc2Ugc2VlOgpodHRwOi8vd2lyZWxlc3Mua2VybmVsLm9y
-Zy9lbi9kZXZlbG9wZXJzL0RvY3VtZW50YXRpb24vbWFjODAyMTEvdHJhY2luZwooLWUgbWFjODAy
-MTEgLWUgaXdsd2lmaSkuIElmIHlvdSBkbyByZWNvcmQgaXQsIHBsZWFzZSBkb24ndCBzZW5kIHRo
-ZQp0cmFjZXMgdG8gdGhlIGxpc3QsIGJ6aXAyIGl0IGFuZCBzZW5kIGl0IHRvIG1lIGRpcmVjdGx5
-LgoKSSBkbyBleHBlY3QgdG8gYmUgYWJsZSB0byByZXByb2R1Y2UgdGhpcyBlYXNpbHkgdGhvdWdo
-LCBzbyBpZiB5b3UgZG9uJ3QKaGF2ZSB0cmFjaW5nIHNldHVwIGV0Yy4gSSdsbCBqdXN0IHdvcmsg
-b24gaXQgZWFybHkgbmV4dCB3ZWVrLgoKam9oYW5uZXMKCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tCkludGVsIEdtYkgKRG9ybmFjaGVyIFN0cmFzc2UgMQo4NTYyMiBGZWxka2lyY2hlbi9N
-dWVuY2hlbiwgRGV1dHNjaGxhbmQgClNpdHogZGVyIEdlc2VsbHNjaGFmdDogRmVsZGtpcmNoZW4g
-YmVpIE11ZW5jaGVuCkdlc2NoYWVmdHNmdWVocmVyOiBEb3VnbGFzIEx1c2ssIFBldGVyIEdsZWlz
-c25lciwgSGFubmVzIFNjaHdhZGVyZXIKUmVnaXN0ZXJnZXJpY2h0OiBNdWVuY2hlbiBIUkIgNDc0
-NTYgClVzdC4tSWROci4vVkFUIFJlZ2lzdHJhdGlvbiBOby46IERFMTI5Mzg1ODk1CkNpdGliYW5r
-IEZyYW5rZnVydCBhLk0uIChCTFogNTAyIDEwOSAwMCkgNjAwMTE5MDUyCg==
+Hi Anthony,
 
+sorry for the late reply, I was sick a long time.
+
+On 02/16/2012 01:30 PM, Anthony Ginger wrote:
+
+> Can ath6kl support AP mode? If yes, how to config it? I tried a
+> simplest config, but can't find the AP.
+
+I have used AP mode only with wpasupplicant, I haven't tried with
+hostapd yet. I would guess that ath6kl works with hostapd as well but of
+course there can be some issues.
+
+> I tried ath6kl driver in git://github.com/kvalo/ath6kl.git and the
+> standard kernel 3.3-rc3.
+> I am sure the HW is OK, wpa_supplicant works for me.
+> hostapd & wpa_supplicant is the latest version build form
+> git://w1.fi/srv/git/hostap.git,
+
+This looks good.
+
+> hostapd -v
+> hostapd v1.0-rc2
+> User space daemon for IEEE 802.11 AP management,
+> IEEE 802.1X/WPA/WPA2/EAP/RADIUS Authenticator
+> Copyright (c) 2002-2012, Jouni Malinen <j@w1.fi> and contributors
+> 
+> Firmware is form linux-firmware, here is the kernel log:
+> [   14.534308] mmc1: new high speed SDIO card at address 0001
+> [   15.245538] ath6kl: ar6003 hw 2.1.1 sdio fw 3.1.1.609
+
+Ah, firmware is a bit old but IIRC it still should support AP mode. But
+I need to submit latest firmware to linux-firmware.git.
+
+> I used the simplest config:
+> cat /etc/hostapd.conf
+> #change wlan0 to your wireless device
+> interface=wlan0
+> driver=nl80211
+> ssid=test
+> channel=1
+> 
+> here is the log:
+> hostapd -d /etc/hostapd.conf
+> random: Trying to read entropy from /dev/random
+> Configuration file: /etc/hostapd.conf
+> nl80211: interface wlan0 in phy phy0
+> rfkill: initial event: idx=0 type=1 op=0 soft=0 hard=0
+> nl80211: Using driver-based roaming
+> nl80211: Add own interface ifindex 3
+> nl80211: Set mode ifindex 3 iftype 3 (AP)
+> nl80211: Create interface iftype 6 (MONITOR)
+> Failed to create interface mon.wlan0: -95 (Operation not supported)
+> nl80211: Driver does not support monitor interface type - try to run without it
+> BSS count 1, BSSID mask 00:00:00:00:00:00 (0 bits)
+> nl80211: Regulatory information - country=00
+> nl80211: 2402-2472 @ 40 MHz
+> nl80211: 2457-2482 @ 20 MHz
+> nl80211: 2474-2494 @ 20 MHz
+> nl80211: 5170-5250 @ 40 MHz
+> nl80211: 5735-5835 @ 40 MHz
+> nl80211: Added 802.11b mode based on 802.11g information
+> Completing interface initialization
+> Mode: IEEE 802.11b  Channel: 1  Frequency: 2412 MHz
+> nl80211: Set freq 2412 (ht_enabled=0 sec_channel_offset=0)
+> Failed to update rate sets in kernel module
+> RATE[0] rate=10 flags=0x1
+> RATE[1] rate=20 flags=0x1
+> RATE[2] rate=55 flags=0x0
+> RATE[3] rate=110 flags=0x0
+> Flushing old station entries
+> Could not connect to kernel driver.
+> Deauthenticate all stations
+> nl80211: Frame command failed: ret=-22 (Invalid argument) (freq=0 wait=0)
+> wpa_driver_nl80211_set_key: ifindex=3 alg=0 addr=(nil) key_idx=0
+> set_tx=0 seq_len=0 key_len=0
+> wpa_driver_nl80211_set_key: ifindex=3 alg=0 addr=(nil) key_idx=1
+> set_tx=0 seq_len=0 key_len=0
+> wpa_driver_nl80211_set_key: ifindex=3 alg=0 addr=(nil) key_idx=2
+> set_tx=0 seq_len=0 key_len=0
+> wpa_driver_nl80211_set_key: ifindex=3 alg=0 addr=(nil) key_idx=3
+> set_tx=0 seq_len=0 key_len=0
+> Using interface wlan0 with hwaddr 00:03:7f:be:f0:a0 and ssid 'test'
+> nl80211: Set beacon (beacon_set=0)
+> nl80211: Ignore AP isolation configuration error since isolation is not used
+> wpa_driver_nl80211_set_operstate: operstate 0->1 (UP)
+> netlink: Operstate: linkmode=-1, operstate=6
+> Failed to set TX queue parameters for queue 0.
+> Failed to set TX queue parameters for queue 1.
+> Failed to set TX queue parameters for queue 2.
+> Failed to set TX queue parameters for queue 3.
+> wlan0: Setup of interface done.
+> RTM_NEWLINK: operstate=1 ifi_flags=0x1003 ([UP])
+> RTM_NEWLINK, IFLA_IFNAME: Interface 'wlan0' added
+> Unknown event 5
+
+>From the logs I can't identify what's wrong, but I have to admit that
+I'm not very familiar with hostapd. I need to test this myself and I
+will get back to you.
+
+Kalle
