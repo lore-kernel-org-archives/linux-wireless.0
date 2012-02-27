@@ -1,37 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:46449 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750835Ab2BMNYH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 08:24:07 -0500
-Received: by bkcjm19 with SMTP id jm19so4527208bkc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Feb 2012 05:24:05 -0800 (PST)
-Message-ID: <4F390ED3.8010400@openwrt.org> (sfid-20120213_142411_692746_CE66A203)
-Date: Mon, 13 Feb 2012 14:23:31 +0100
-From: Florian Fainelli <florian@openwrt.org>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	users@rt2x00.serialmonkey.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	gwingerde@gmail.com, ivdoorn@gmail.com
-Subject: Poor RT2880 performance
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from server19320154104.serverpool.info ([193.201.54.104]:52255 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756209Ab2B0X51 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 18:57:27 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
+	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
+	arend@broadcom.com, m@bues.ch, ralf@linux-mips.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v2 03/11] ssb: fix per path sprom vars
+Date: Tue, 28 Feb 2012 00:56:06 +0100
+Message-Id: <1330386974-4056-4-git-send-email-hauke@hauke-m.de> (sfid-20120228_005732_379730_7FDFCFEC)
+In-Reply-To: <1330386974-4056-1-git-send-email-hauke@hauke-m.de>
+References: <1330386974-4056-1-git-send-email-hauke@hauke-m.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On sprom version 4 and 5 there are 4 values for pa_2g, pa_5gl, pa_5g
+and pa_5gh, for sprom version 8 and 9 there are only 3. Make the per
+path sprom store also work for older sprom versions.
 
-I am playing with a RT2880-F based AP, with a N connected station, in a 
-residential environment.
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ include/linux/ssb/ssb.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-I could not get more than 26Mbits/sec TCP performance using iperf on 
-both sides, changing to a busier channel even made the performance drop 
-down to 5Mbits/sec, and remained like this.
+diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
+index 1de5675..4928419 100644
+--- a/include/linux/ssb/ssb.h
++++ b/include/linux/ssb/ssb.h
+@@ -19,7 +19,7 @@ struct ssb_driver;
+ struct ssb_sprom_core_pwr_info {
+ 	u8 itssi_2g, itssi_5g;
+ 	u8 maxpwr_2g, maxpwr_5gl, maxpwr_5g, maxpwr_5gh;
+-	u16 pa_2g[3], pa_5gl[3], pa_5g[3], pa_5gh[3];
++	u16 pa_2g[4], pa_5gl[4], pa_5g[4], pa_5gh[4];
+ };
+ 
+ struct ssb_sprom {
+-- 
+1.7.5.4
 
-Let me know if you need more informations like survey dumps etc ... it 
-does not seem like we are hitting the CPU bounds here, I can also attach 
-the EEPROM in case it helps.
-
-Thank you very much.
---
-Florian
