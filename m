@@ -1,43 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ackle.nomi.cz ([81.31.33.35]:51074 "EHLO ackle.nomi.cz"
+Received: from mail.tqs.de ([62.157.136.17]:37700 "EHLO mail.tqs.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751007Ab2BMN3l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 08:29:41 -0500
-Date: Mon, 13 Feb 2012 14:29:37 +0100
-From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: wwguy <wey-yi.w.guy@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: iwlagn: memory corruption with WPA enterprise
-Message-ID: <20120213132937.GA17203@nomi.cz> (sfid-20120213_142959_726301_53A536D3)
-References: <20111111150105.GA25437@nomi.cz> <20111114140714.GD2513@redhat.com> <20111119181106.GA5515@nomi.cz> <1321755233.22510.1.camel@wwguy-ubuntu> <20111120032016.GA14520@nomi.cz> <1321763314.22510.4.camel@wwguy-ubuntu> <20111120204007.GA7273@nomi.cz> <20120210180929.GA17733@nomi.cz> <20120213092538.GA6214@redhat.com> <20120213130903.GA7355@redhat.com>
+	id S1753254Ab2B0RPv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 12:15:51 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20120213130903.GA7355@redhat.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Subject: AW: [PATCH] Staging: rtl8712: Change double device ID back to original value
+Date: Mon, 27 Feb 2012 18:14:59 +0100
+Message-ID: <47F3F98010FF784EBEE6526EAAB078D10FD7EF7B@tq-mailsrv.tq-net.de> (sfid-20120227_181555_040432_C26A0B75)
+In-Reply-To: <4F4BA81D.1070800@lwfinger.net>
+References: <20120227102857.21246.43090.stgit@localhost.localdomain> <4F4BA81D.1070800@lwfinger.net>
+From: "Martin Krause" <Martin.Krause@tqs.de>
+To: "Larry Finger" <Larry.Finger@lwfinger.net>
+Cc: <linux-wireless@vger.kernel.org>,
+	"John Linville" <linville@tuxdriver.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Larry,
 
-On Mon, Feb 13, 2012 at 02:09:04PM +0100, Stanislaw Gruszka wrote:
-> I also found this bug report
-> https://bugzilla.kernel.org/show_bug.cgi?id=37742
-> where one user report iwlwifi corruption catched by IOMMU.
+thank you for your quick response!
+Comments see below.
 
-I wasn't able to catch anything using IOMMU, and I also wasn't able to
-reproduce the issue using any userspace memory checking tool. Hence I tend to
-believe we're not dealing with a memory corruption at all, perhaps something
-like certain CPU flags/registers not being correctly saved/restored during
-wlan interrupts or something. When I have a sufficient amount of free time,
-I'll try to check this hypothesis and perhaps pinpoint the instruction the
-result of which is corrupted during wlan operation.
+Larry Finger wrote on :
+> On 02/27/2012 04:29 AM, Martin Krause wrote:
+>> In the rtl8712 staging driver the 0bda:8172 usb device id exists two
+>> times. It seems that this was an error when integrating the original
+>> Realtek driver into the kernel. This patch changes the double device
+>> id back to the value used in the last Realtek driver
+>> (rtl8712_8188_8191_8192SU_usb_linux_v2.6.6.0.20110401).
+>> 
+>> Signed-off-by: Martin Krause<martin.krause@tqs.de>
+>> ---
+>> I tested this patch on a powerpc board (p2020 based) with a WIFIHU
+>> Radicom wireless module with a RTL8191SU chip on it (usb device id
+>> 0bda:8192). 
+>> 
+>>   drivers/staging/rtl8712/usb_intf.c |    2 +-
+>>   1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> Your patch does two things. One is the deletion of a
+> duplicate USB ID, and the
+> other is the addition of a new one. I would prefer that any
+> patch do one or the
+> other, but not both. Note, there are two sets of duplicate
+> IDs in the table for
+> the driver - the one you note in the RTL8191SU section, and another
+> for 0bda:8174 in the section that covers the RTL8192SU.
+> 
+> I think you are deleting the wrong 0bda:8172 with this patch.
+> The 0bda code is
+> for Realtek, thus the one in the Asus section is the one to remove.
 
-> Tomáš, I do not remember, do you have the same problems on
-> older kernels i.e < 3.0
+OK (I don't thought very hard about this I fear ...).
 
-Yeah. I was able to reproduce it with 2.6.38.8 and 2.6.39.4 at least.
+> Does your chip really have an RTL8191SU label? The USB
+> database says that ID
+> 0bda:8192 is for the RTL8192SU. I would like to correct the database
+> if it is wrong.
+
+The chip is covered by a metallic shielding. So I wrote an email to 
+Radicom to confirm this. I will forward you the answer.
+
+> All patches to a staging driver go through the staging tree,
+> not wireless. Send
+> them to Greg Kroah-Hartman (gregkh@linuxfoundation.org)
+> rather than John
+> Linville. A Cc to linux-wireless is OK, but you should also reference
+> the driver development list (devel@driverdev.osuosl.org).
+
+OK, thanks for the hint!
 
 Regards,
--- 
-Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
+Martin
