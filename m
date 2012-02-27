@@ -1,89 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.logic.tuwien.ac.at ([128.130.175.19]:41379 "EHLO
-	mx.logic.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753632Ab2BVAiE (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:53042 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753812Ab2B0Wlp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Feb 2012 19:38:04 -0500
-Date: Wed, 22 Feb 2012 09:37:48 +0900
-From: Norbert Preining <preining@logic.at>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: linux-kernel@vger.kernel.org, ipw3945-devel@lists.sourceforge.net,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	Dave Jones <davej@redhat.com>
-Subject: Re: iwlagn is getting even worse with 3.3-rc1
-Message-ID: <20120222003747.GA9808@gamma.logic.tuwien.ac.at> (sfid-20120222_013808_573161_701A44CE)
-References: <20120124013625.GB18436@gamma.logic.tuwien.ac.at> <CANUX_P3er0orBy8OhDuY1DfgD810UD-_HB_ukJnCA+W8e-VazQ@mail.gmail.com> <20120125002250.GA20431@gamma.logic.tuwien.ac.at> <CANUX_P0UREz_jZABu+Y_QYOh9tx_sKZSSkZpYHBEVtcU4QQdSA@mail.gmail.com> <20120126003735.GA2346@gamma.logic.tuwien.ac.at> <CANUX_P0H_WaWwnpjoBcMpZQY4xH=cbVhAKxWKXmz-HwFMcWS6w@mail.gmail.com> <CANUX_P3XSCsWUJ9M55qeaK-DuPEMXODFPJiNk+BgnHN-=WECqw@mail.gmail.com> <20120126232555.GB16330@gamma.logic.tuwien.ac.at> <20120127015015.GA23291@gamma.logic.tuwien.ac.at> <CANUX_P3F58upbrw48AiMTV4DDZWsfveYp=mANAD9CQ2bPps0cA@mail.gmail.com>
+	Mon, 27 Feb 2012 17:41:45 -0500
+Received: by mail-wi0-f174.google.com with SMTP id hm11so1607155wib.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2012 14:41:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <CANUX_P3F58upbrw48AiMTV4DDZWsfveYp=mANAD9CQ2bPps0cA@mail.gmail.com>
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 3/7] wl12xx: reset link Tx queues when freeing it
+Date: Tue, 28 Feb 2012 00:41:30 +0200
+Message-Id: <1330382494-31148-3-git-send-email-arik@wizery.com> (sfid-20120227_234149_013737_CB64F601)
+In-Reply-To: <1330382494-31148-1-git-send-email-arik@wizery.com>
+References: <1330382494-31148-1-git-send-email-arik@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Emmanuel,
+Before, the link was first freed (invalidating it in the map), and later
+on vif removal, all valid wlvif-related links were reset. Since these
+links were already invalid, we failed to reset them.
+The bug was made worse by op_stop, which set the tx_queue_count to 0
+arbitrarily. This resulted in a negative tx_queue_count in some scenarios.
 
-sorry to come back soo late to that matter ... I was *really* busy
-with real work.
+Fix this by resetting the Tx-queues of a link when freeing it. Add a
+WARN_ON and reset all link Tx-queues in op_stop, to avoid a negative
+tx_queue_count.
 
-On Do, 26 Jan 2012, Emmanuel Grumbach wrote:
-> >
-> > On Fr, 27 Jan 2012, Norbert Preining wrote:
-> >> First tests are promising, after reboot it was working immediately
-> >> without need to rfkill block/unblock. lso after suspend and resume.
-> >>
-> >> Will test more the next days and report back.
-> >
-> > Unfortunately, at the university it is still a complete no-go.
-> > Usually the connection works for a short time, then breaks down.
-> > After that even unloading and loading the module did not reactivate
-> > it, I cannot get a connection at all. But other units, or with
-> > older kernel (it was 2.6.3X AFAIR) it was working without a glitch.
-> >
-> > I uploaded a syslog output including kernel and network manager logs
-> > to
-> >        http://www.logic.at/people/preining/syslog.log
-> > (new one). This shows a session from loading the module up to giving up.
-> >
-> 
-> I glanced at the logs, and they look healthy from the wifi driver
-> side. You just don't get any reply to DHCP_DISCOVER apparently... can
-> you get a sniffer ?
-> I am pretty sure that the packet in sent in the air, but if you can
-> get a capture of that we could check that out.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/cmd.c  |    7 +++++++
+ drivers/net/wireless/wl12xx/main.c |    1 -
+ drivers/net/wireless/wl12xx/tx.c   |   13 ++++++++++---
+ 3 files changed, 17 insertions(+), 4 deletions(-)
 
-I still see that, on 3.3-rc4, and it is the same as usual. The interface
-believes it is up and connected, but nothing works.
+diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
+index ef994da..ae1f3d7 100644
+--- a/drivers/net/wireless/wl12xx/cmd.c
++++ b/drivers/net/wireless/wl12xx/cmd.c
+@@ -485,6 +485,13 @@ void wl12xx_free_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid)
+ 	__clear_bit(*hlid, wl->links_map);
+ 	__clear_bit(*hlid, wlvif->links_map);
+ 	spin_unlock_irqrestore(&wl->wl_lock, flags);
++
++	/*
++	 * At this point op_tx() will not add more packets to the queues. We
++	 * can purge them.
++	 */
++	wl1271_tx_reset_link_queues(wl, *hlid);
++
+ 	*hlid = WL12XX_INVALID_LINK_ID;
+ }
+ 
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index adf9bbc..712e385 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -4228,7 +4228,6 @@ void wl1271_free_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 hlid)
+ 	clear_bit(hlid, wlvif->ap.sta_hlid_map);
+ 	memset(wl->links[hlid].addr, 0, ETH_ALEN);
+ 	wl->links[hlid].ba_bitmap = 0;
+-	wl1271_tx_reset_link_queues(wl, hlid);
+ 	__clear_bit(hlid, &wl->ap_ps_map);
+ 	__clear_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
+ 	wl12xx_free_link(wl, wlvif, &hlid);
+diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+index 6446e4d..311b5a2 100644
+--- a/drivers/net/wireless/wl12xx/tx.c
++++ b/drivers/net/wireless/wl12xx/tx.c
+@@ -527,6 +527,7 @@ static struct sk_buff *wl12xx_lnk_skb_dequeue(struct wl1271 *wl,
+ 	if (skb) {
+ 		int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+ 		spin_lock_irqsave(&wl->wl_lock, flags);
++		WARN_ON(wl->tx_queue_count[q] <= 0);
+ 		wl->tx_queue_count[q]--;
+ 		spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 	}
+@@ -602,6 +603,7 @@ static struct sk_buff *wl1271_skb_dequeue(struct wl1271 *wl)
+ 		skb = wl->dummy_packet;
+ 		q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+ 		spin_lock_irqsave(&wl->wl_lock, flags);
++		WARN_ON(wl->tx_queue_count[q] <= 0);
+ 		wl->tx_queue_count[q]--;
+ 		spin_unlock_irqrestore(&wl->wl_lock, flags);
+ 	}
+@@ -959,7 +961,6 @@ void wl12xx_tx_reset_wlvif(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 		else
+ 			wlvif->sta.ba_rx_bitmap = 0;
+ 
+-		wl1271_tx_reset_link_queues(wl, i);
+ 		wl->links[i].allocated_pkts = 0;
+ 		wl->links[i].prev_freed_pkts = 0;
+ 	}
+@@ -973,8 +974,14 @@ void wl12xx_tx_reset(struct wl1271 *wl, bool reset_tx_queues)
+ 	struct sk_buff *skb;
+ 	struct ieee80211_tx_info *info;
+ 
+-	for (i = 0; i < NUM_TX_QUEUES; i++)
+-		wl->tx_queue_count[i] = 0;
++	/* only reset the queues if something bad happened */
++	if (WARN_ON(wl1271_tx_total_queue_count(wl) != 0)) {
++		for (i = 0; i < WL12XX_MAX_LINKS; i++)
++			wl1271_tx_reset_link_queues(wl, i);
++
++		for (i = 0; i < NUM_TX_QUEUES; i++)
++			wl->tx_queue_count[i] = 0;
++	}
+ 
+ 	wl->stopped_queues_map = 0;
+ 
+-- 
+1.7.5.4
 
-I am *100%* sure that this is related to the driver, because in old
-revisions (somewhen around 2.6.27 or so) it was working without
-any problem, and when it started I reported it long time ago.
-
-Anyway, today it was really hopeless again, and the exact time it always
-hangs is when the kernel driver spits out:
-	Rx A-MPDU request on tid 0 result 0
-and with debugging on I get in addition:
-	ieee80211 phy3: release an RX reorder frame due to timeout on earlier frames
-that is where it all goes down the gully, without any reaction from the
-outside world suddenly. Before ping was running, then off.
-
-I uploaded a new syslog.log in the above location that shows 5 min
-or so of trial and error.
-
-I don't know what else to provide then that, but it is definitely 
-a real problem, I cannot work without cable anymore at the university,
-which is a serious rpbolem.
-
-Best wishes
-
-Norbert
-------------------------------------------------------------------------
-Norbert Preining            preining@{jaist.ac.jp, logic.at, debian.org}
-JAIST, Japan                                 TeX Live & Debian Developer
-DSA: 0x09C5B094   fp: 14DF 2E6C 0307 BE6D AD76  A9C0 D2BF 4AA3 09C5 B094
-------------------------------------------------------------------------
-HAUGHAM (n.)
-One who loudly informs other diners in a restaurant what kind of man
-he is by calling for the chef by his christian name from the lobby.
-			--- Douglas Adams, The Meaning of Liff
