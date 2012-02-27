@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:34861 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753354Ab2B0SBM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 13:01:12 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:41409 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752488Ab2B0Kzl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 05:55:41 -0500
+Date: Mon, 27 Feb 2012 11:55:38 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Walter Goldens <goldenstranger@yahoo.com>
+Cc: linux-wireless@vger.kernel.org, Ivo van Doorn <ivdoorn@gmail.com>
+Subject: Re: [rt2x00] rt2800usb and RT3070 issues with 54G AP
+Message-ID: <20120227105538.GE4104@redhat.com> (sfid-20120227_115545_048083_820EB6AC)
+References: <20120218165631.GA2922@redhat.com>
+ <1329756774.86563.YahooMailClassic@web161602.mail.bf1.yahoo.com>
 MIME-Version: 1.0
-In-Reply-To: <20120227083612.GA5648@gamma.logic.tuwien.ac.at>
-References: <20120125002250.GA20431@gamma.logic.tuwien.ac.at>
-	<CANUX_P0UREz_jZABu+Y_QYOh9tx_sKZSSkZpYHBEVtcU4QQdSA@mail.gmail.com>
-	<20120126003735.GA2346@gamma.logic.tuwien.ac.at>
-	<CANUX_P0H_WaWwnpjoBcMpZQY4xH=cbVhAKxWKXmz-HwFMcWS6w@mail.gmail.com>
-	<CANUX_P3XSCsWUJ9M55qeaK-DuPEMXODFPJiNk+BgnHN-=WECqw@mail.gmail.com>
-	<20120126232555.GB16330@gamma.logic.tuwien.ac.at>
-	<20120127015015.GA23291@gamma.logic.tuwien.ac.at>
-	<CANUX_P3F58upbrw48AiMTV4DDZWsfveYp=mANAD9CQ2bPps0cA@mail.gmail.com>
-	<20120222003747.GA9808@gamma.logic.tuwien.ac.at>
-	<CAOJsxLHoX2WU7xJ8etXsz32B=QhOADvMzBYzsuBR2YXvv44PyA@mail.gmail.com>
-	<CANUX_P1CN0Ud5ZO4AMcvMSUsrsEABRHkgy42Di45n96mB64Ynw@mail.gmail.com>
-	<20120227083612.GA5648@gamma.logic.tuwien.ac.at>
-Date: Mon, 27 Feb 2012 20:01:11 +0200
-Message-ID: <CANUX_P2jtrByqAJTAZDu-+5Nx-cYFKiO8Hkhepg7rDbEmNwfJQ@mail.gmail.com> (sfid-20120227_190127_662403_409283DB)
-Subject: Re: iwlagn is getting even worse with 3.3-rc1
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Norbert Preining <preining@logic.at>
-Cc: Pekka Enberg <penberg@kernel.org>, linux-kernel@vger.kernel.org,
-	ipw3945-devel@lists.sourceforge.net,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>,
-	Dave Jones <davej@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1329756774.86563.YahooMailClassic@web161602.mail.bf1.yahoo.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> sorry for the silence, I wasn't at the university for a few days so
-> I couldn't test.
->
-> Now I did:
-> kernel 3.3-rc5
->
-> On Mi, 22 Feb 2012, Emmanuel Grumbach wrote:
->> From the log, I can see that we have a lot of "passive channel
->> failures". Can you try to disable 11n (module_parameter) ?
->> Please also try with debug=0xc0000000
+On Mon, Feb 20, 2012 at 08:52:54AM -0800, Walter Goldens wrote:
+> > Looks like this could be related with Power-Save. Seems APs
+> > does not
+> > handle PS well (between each ICMP packed our station is put
+> > in
+> > the sleep mode) . Vendor driver has  PS disabled, hence
+> > problem
+> > is not observable.
+> > 
+> > Try "iwconfig wlan0 power off" and see if it helps. 
+> > 
+> > Stanislaw
+> 
+> Hello again,
+> 
+> Unfortunately, disabling PS does not fix the problem:
 
-So this doesn't seem to be related to my rework of the AMPDU logic....
-Will keep you updated if I think about something.
+I'm able to reproduce that problem locally, I'm adding debug
+that problem to my TODO list ...
+
+Stanislaw
