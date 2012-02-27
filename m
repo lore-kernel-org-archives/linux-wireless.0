@@ -1,95 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:46654 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756597Ab2BIAzI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 19:55:08 -0500
-Message-ID: <4F331967.3070900@lwfinger.net> (sfid-20120209_015538_040530_F27F59DD)
-Date: Wed, 08 Feb 2012 18:55:03 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: Ben Hutchings <bhutchings@solarflare.com>
-CC: Tim Gardner <tim.gardner@canonical.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: rtl8192se firmware load can overflow target
- buffer
-References: <1328735291-33220-1-git-send-email-tim.gardner@canonical.com> <1328737514.2627.14.camel@bwh-desktop>
-In-Reply-To: <1328737514.2627.14.camel@bwh-desktop>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga14.intel.com ([143.182.124.37]:4551 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755428Ab2B0XTD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 18:19:03 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 03/24] iwlwifi: move uCode flags handling to op_mode
+Date: Mon, 27 Feb 2012 14:07:27 -0800
+Message-Id: <1330380468-17674-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120228_002024_042789_20B7B668)
+In-Reply-To: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/08/2012 03:45 PM, Ben Hutchings wrote:
-> On Wed, 2012-02-08 at 14:08 -0700, Tim Gardner wrote:
->> The firmware file size check does not use the
->> correct limit.
->>
->> Cc: Larry Finger<Larry.Finger@lwfinger.net>
->> Cc: Chaoming Li<chaoming_li@realsil.com.cn>
->> Cc: John W. Linville<linville@tuxdriver.com>
->> Cc: linux-wireless@vger.kernel.org
->> Cc: netdev@vger.kernel.org
->> Cc: linux-kernel@vger.kernel.org
->> Signed-off-by: Tim Gardner<tim.gardner@canonical.com>
->> ---
->>   drivers/net/wireless/rtlwifi/rtl8192se/fw.h |    3 ++-
->>   drivers/net/wireless/rtlwifi/rtl8192se/sw.c |    2 +-
->>   2 files changed, 3 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
->> index babe85d..5c377fc 100644
->> --- a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
->> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
->> @@ -30,6 +30,7 @@
->>   #define __REALTEK_FIRMWARE92S_H__
->>
->>   #define RTL8190_MAX_FIRMWARE_CODE_SIZE		64000
->> +#define RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE	164000
->>   #define RTL8190_CPU_START_OFFSET		0x80
->>   /* Firmware Local buffer size. 64k */
->>   #define	MAX_FIRMWARE_CODE_SIZE			0xFF00
->> @@ -217,7 +218,7 @@ struct rt_firmware {
->>   	u8 fw_emem[RTL8190_MAX_FIRMWARE_CODE_SIZE];
->>   	u32 fw_imem_len;
->>   	u32 fw_emem_len;
->> -	u8 sz_fw_tmpbuffer[164000];
->> +	u8 sz_fw_tmpbuffer[RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE];
->>   	u32 sz_fw_tmpbufferlen;
->>   	u16 cmdpacket_fragthresold;
->>   };
->> diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
->> index ca38dd9..155da0a 100644
->> --- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
->> +++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
->> @@ -105,7 +105,7 @@ static void rtl92se_fw_cb(const struct firmware *firmware, void *context)
->>   		rtlpriv->max_fw_size = 0;
->>   		return;
->>   	}
->> -	if (firmware->size>  rtlpriv->max_fw_size) {
->> +	if (firmware->size>= RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE) {
->
-> This appears to reject a firmware blob which is exactly the maximum
-> size, which looks wrong.  Also doesn't this make the max_fw_size field
-> redundant?
->
-> Ben.
->
->>   		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
->>   			 "Firmware is too big!\n");
->>   		release_firmware(firmware);
->
+From: Johannes Berg <johannes.berg@intel.com>
 
-For all the drivers under rtlwifi, max_fw_size is set to zero whenever the 
-required firmware file is not found. In the original version with synchronous 
-firmware loading, the existence of the required file and it's size were known 
-immediately, but with the asynch loading now used, that info is not known until 
-later. Thus a parameter is used. In addition, rtl8192ce, rtl8192cu, and 
-rtl8192de all share the same asynchronous loading callback routine, but each has 
-a different firmware size. The parameter max_fw_size contains that info as well.
+The uCode flags modification is op_mode dependent
+since the P2P config is an op-mode config.
 
-The patch is NACKed.
+This also fixes P2P enabling: due to the uCode
+loading code shuffle moving the SKU check before
+the EEPROM was read it was always false and would
+always disable PAN/P2P.
 
-Larry
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c   |   23 ++++++++++++++++++++---
+ drivers/net/wireless/iwlwifi/iwl-ucode.c |   14 +-------------
+ 2 files changed, 21 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 5e476a8..d70dd6f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1151,6 +1151,7 @@ int iwl_op_mode_dvm_start(struct iwl_bus *bus,
+ 	struct iwl_priv *priv;
+ 	struct ieee80211_hw *hw;
+ 	u16 num_mac;
++	u32 ucode_flags;
+ 
+ 	/************************
+ 	 * 1. Allocating HW data
+@@ -1242,6 +1243,22 @@ int iwl_op_mode_dvm_start(struct iwl_bus *bus,
+ 	 ************************/
+ 	iwl_set_hw_params(priv);
+ 
++	ucode_flags = fw->ucode_capa.flags;
++
++#ifndef CONFIG_IWLWIFI_P2P
++	ucode_flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
++#endif
++	if (!(hw_params(priv).sku & EEPROM_SKU_CAP_IPAN_ENABLE))
++		ucode_flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
++
++	/*
++	 * if not PAN, then don't support P2P -- might be a uCode
++	 * packaging bug or due to the eeprom check above
++	 */
++	if (!(ucode_flags & IWL_UCODE_TLV_FLAGS_PAN))
++		ucode_flags &= ~IWL_UCODE_TLV_FLAGS_P2P;
++
++
+ 	/*******************
+ 	 * 6. Setup priv
+ 	 *******************/
+@@ -1266,9 +1283,9 @@ int iwl_op_mode_dvm_start(struct iwl_bus *bus,
+ 		 "%s", fw->fw_version);
+ 
+ 	priv->new_scan_threshold_behaviour =
+-		!!(fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_NEWSCAN);
++		!!(ucode_flags & IWL_UCODE_TLV_FLAGS_NEWSCAN);
+ 
+-	if (fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PAN) {
++	if (ucode_flags & IWL_UCODE_TLV_FLAGS_PAN) {
+ 		priv->sta_key_max_num = STA_KEY_MAX_NUM_PAN;
+ 		priv->shrd->cmd_queue = IWL_IPAN_CMD_QUEUE_NUM;
+ 	} else {
+@@ -1282,7 +1299,7 @@ int iwl_op_mode_dvm_start(struct iwl_bus *bus,
+ 		fw->ucode_capa.standard_phy_calibration_size + 1;
+ 
+ 	/* initialize all valid contexts */
+-	iwl_init_context(priv, fw->ucode_capa.flags);
++	iwl_init_context(priv, ucode_flags);
+ 
+ 	/**************************************************
+ 	 * This is still part of probe() in a sense...
+diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.c b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+index 99f89b2..3645bf3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+@@ -1226,9 +1226,7 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 		nic->inst_evtlog_size =
+ 			cfg->base_params->max_event_log_size;
+ 	nic->inst_errlog_ptr = pieces.inst_errlog_ptr;
+-#ifndef CONFIG_IWLWIFI_P2P
+-	fw->ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
+-#endif
++
+ 	/*
+ 	 * figure out the offset of chain noise reset and gain commands
+ 	 * base on the size of standard phy calibration commands table size
+@@ -1238,16 +1236,6 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
+ 		fw->ucode_capa.standard_phy_calibration_size =
+ 			IWL_MAX_STANDARD_PHY_CALIBRATE_TBL_SIZE;
+ 
+-	if (!(cfg->sku & EEPROM_SKU_CAP_IPAN_ENABLE))
+-		fw->ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_PAN;
+-
+-	/*
+-	 * if not PAN, then don't support P2P -- might be a uCode
+-	 * packaging bug or due to the eeprom check above
+-	 */
+-	if (!(fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_PAN))
+-		fw->ucode_capa.flags &= ~IWL_UCODE_TLV_FLAGS_P2P;
+-
+ 	/* We have our copies now, allow OS release its copies */
+ 	release_firmware(ucode_raw);
+ 	complete(&nic->request_firmware_complete);
+-- 
+1.7.0.4
+
