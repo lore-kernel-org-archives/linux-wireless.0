@@ -1,114 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29741 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755351Ab2BFQJf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Feb 2012 11:09:35 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Cc: Intel Linux Wireless <ilw@linux.intel.com>,
-	linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [RFC 3/4] iwlwifi: cleanup/fix memory barriers
-Date: Mon,  6 Feb 2012 17:09:23 +0100
-Message-Id: <1328544564-8696-3-git-send-email-sgruszka@redhat.com> (sfid-20120206_170940_538104_F123CA7E)
-In-Reply-To: <1328544564-8696-1-git-send-email-sgruszka@redhat.com>
-References: <1328544564-8696-1-git-send-email-sgruszka@redhat.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:38512 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753393Ab2B0P6Y (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 10:58:24 -0500
+Received: by iazz13 with SMTP id z13so3410869iaz.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2012 07:58:23 -0800 (PST)
+Message-ID: <4F4BA81D.1070800@lwfinger.net> (sfid-20120227_165827_944423_CFC68FFD)
+Date: Mon, 27 Feb 2012 09:58:21 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: Martin Krause <martin.krause@tqs.de>
+CC: linux-wireless@vger.kernel.org,
+	John Linville <linville@tuxdriver.com>
+Subject: Re: [PATCH] Staging: rtl8712: Change double device ID back to original
+ value
+References: <20120227102857.21246.43090.stgit@localhost.localdomain>
+In-Reply-To: <20120227102857.21246.43090.stgit@localhost.localdomain>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wmb(), rmb() are not needed when writel(), readl() are used as
-accessors for MMIO. We use them indirectly via iowrite32(),
-ioread32().
+On 02/27/2012 04:29 AM, Martin Krause wrote:
+> In the rtl8712 staging driver the 0bda:8172 usb device id exists two times.
+> It seems that this was an error when integrating the original Realtek
+> driver into the kernel. This patch changes the double device id back to the
+> value used in the last Realtek driver
+> (rtl8712_8188_8191_8192SU_usb_linux_v2.6.6.0.20110401).
+>
+> Signed-off-by: Martin Krause<martin.krause@tqs.de>
+> ---
+> I tested this patch on a powerpc board (p2020 based) with a WIFIHU Radicom
+> wireless module with a RTL8191SU chip on it (usb device id 0bda:8192).
+>
+>   drivers/staging/rtl8712/usb_intf.c |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
 
-What is needed mmiowb(), for synchronizing writes coming from
-different CPUs on PCIe bridge (see in patch comments). This
-fortunately is not needed on x86, where mmiowb() is just
-defined as compiler barrier. As iwlwifi devices are most likely
-not used on anything other than x86, this is not so important
-fix.
+Your patch does two things. One is the deletion of a duplicate USB ID, and the 
+other is the addition of a new one. I would prefer that any patch do one or the 
+other, but not both. Note, there are two sets of duplicate IDs in the table for 
+the driver - the one you note in the RTL8191SU section, and another for 
+0bda:8174 in the section that covers the RTL8192SU.
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c           |    1 -
- drivers/net/wireless/iwlwifi/iwl-io.c            |   12 +++++++-----
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    1 -
- 3 files changed, 7 insertions(+), 7 deletions(-)
+I think you are deleting the wrong 0bda:8172 with this patch. The 0bda code is 
+for Realtek, thus the one in the Asus section is the one to remove.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 2642bf9..6636149 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -336,7 +336,6 @@ static void iwl_print_cont_event_trace(struct iwl_priv *priv, u32 base,
- 
- 	/* Set starting address; reads will auto-increment */
- 	iwl_write32(bus(priv), HBUS_TARG_MEM_RADDR, ptr);
--	rmb();
- 
- 	/*
- 	 * Refuse to read more than would have fit into the log from
-diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
-index b5d0bcb..111182b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-io.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-io.c
-@@ -135,6 +135,13 @@ void iwl_release_nic_access(struct iwl_bus *bus)
- 	lockdep_assert_held(&bus->reg_lock);
- 	__iwl_clear_bit(bus, CSR_GP_CNTRL,
- 			CSR_GP_CNTRL_REG_FLAG_MAC_ACCESS_REQ);
-+	/*
-+	 * In above we are reading CSR_GP_CNTRL register, what will flush any
-+	 * previous writes, but still want to write, which clear MAC_ACCESS_REQ
-+	 * bit, be performed on PCI bus, before any other writes scheduled on
-+	 * different CPUs after we drop reg_lock.
-+	 */
-+	mmiowb();
- }
- 
- u32 iwl_read_direct32(struct iwl_bus *bus, u32 reg)
-@@ -181,7 +188,6 @@ int iwl_poll_direct_bit(struct iwl_bus *bus, u32 addr, u32 mask,
- static inline u32 __iwl_read_prph(struct iwl_bus *bus, u32 reg)
- {
- 	iwl_write32(bus, HBUS_TARG_PRPH_RADDR, reg | (3 << 24));
--	rmb();
- 	return iwl_read32(bus, HBUS_TARG_PRPH_RDAT);
- }
- 
-@@ -189,7 +195,6 @@ static inline void __iwl_write_prph(struct iwl_bus *bus, u32 addr, u32 val)
- {
- 	iwl_write32(bus, HBUS_TARG_PRPH_WADDR,
- 		    ((addr & 0x0000FFFF) | (3 << 24)));
--	wmb();
- 	iwl_write32(bus, HBUS_TARG_PRPH_WDAT, val);
- }
- 
-@@ -268,7 +273,6 @@ void _iwl_read_targ_mem_words(struct iwl_bus *bus, u32 addr,
- 	spin_lock_irqsave(&bus->reg_lock, flags);
- 	if (likely(iwl_grab_nic_access(bus))) {
- 		iwl_write32(bus, HBUS_TARG_MEM_RADDR, addr);
--		rmb();
- 		for (offs = 0; offs < words; offs++)
- 			vals[offs] = iwl_read32(bus, HBUS_TARG_MEM_RDAT);
- 		iwl_release_nic_access(bus);
-@@ -295,8 +299,6 @@ int _iwl_write_targ_mem_words(struct iwl_bus *bus, u32 addr,
- 	spin_lock_irqsave(&bus->reg_lock, flags);
- 	if (likely(iwl_grab_nic_access(bus))) {
- 		iwl_write32(bus, HBUS_TARG_MEM_WADDR, addr);
--		wmb();
--
- 		for (offs = 0; offs < words; offs++)
- 			iwl_write32(bus, HBUS_TARG_MEM_WDAT, vals[offs]);
- 		iwl_release_nic_access(bus);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-index 7b7899d..3564b86 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-@@ -747,7 +747,6 @@ static int iwl_print_event_log(struct iwl_trans *trans, u32 start_idx,
- 
- 	/* Set starting address; reads will auto-increment */
- 	iwl_write32(bus(trans), HBUS_TARG_MEM_RADDR, ptr);
--	rmb();
- 
- 	/* "time" is actually "data" for mode 0 (no timestamp).
- 	* place event id # at far right for easier visual parsing. */
--- 
-1.7.1
+Does your chip really have an RTL8191SU label? The USB database says that ID 
+0bda:8192 is for the RTL8192SU. I would like to correct the database if it is wrong.
+
+All patches to a staging driver go through the staging tree, not wireless. Send 
+them to Greg Kroah-Hartman (gregkh@linuxfoundation.org) rather than John 
+Linville. A Cc to linux-wireless is OK, but you should also reference the driver 
+development list (devel@driverdev.osuosl.org).
+
+Larry
+
+>
+> diff --git a/drivers/staging/rtl8712/usb_intf.c b/drivers/staging/rtl8712/usb_intf.c
+> index 9bade18..bb247ce 100644
+> --- a/drivers/staging/rtl8712/usb_intf.c
+> +++ b/drivers/staging/rtl8712/usb_intf.c
+> @@ -104,7 +104,7 @@ static struct usb_device_id rtl871x_usb_id_tbl[] = {
+>
+>   /* RTL8191SU */
+>   	/* Realtek */
+> -	{USB_DEVICE(0x0BDA, 0x8172)},
+> +	{USB_DEVICE(0x0BDA, 0x8192)},
+>   	/* Amigo */
+>   	{USB_DEVICE(0x0EB0, 0x9061)},
+>   	/* ASUS/EKB */
+>
+>
 
