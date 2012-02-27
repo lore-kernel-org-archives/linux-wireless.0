@@ -1,70 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from remail2.raritan.com ([62.132.199.138]:52287 "EHLO
-	remail2.raritan.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965090Ab2B1PPw (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:45507 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751199Ab2B0PtW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Feb 2012 10:15:52 -0500
-Message-ID: <4F4CEFA6.2090005@raritan.com> (sfid-20120228_161555_339240_36D9E542)
-Date: Tue, 28 Feb 2012 16:15:50 +0100
-From: Ronald Wahl <ronald.wahl@raritan.com>
+	Mon, 27 Feb 2012 10:49:22 -0500
+Received: by pbcup15 with SMTP id up15so2183305pbc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2012 07:49:22 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1330357575.3483.57.camel@jlt3.sipsolutions.net>
+References: <1330343374.3483.46.camel@jlt3.sipsolutions.net>
+	<CAGXE3d_SNsrA-KLuPVe_TWnbaVGK3ABr_4TWbtJWU568=BgWbw@mail.gmail.com>
+	<1330357575.3483.57.camel@jlt3.sipsolutions.net>
+Date: Mon, 27 Feb 2012 16:49:22 +0100
+Message-ID: <CAGXE3d8KtDZyCY_QGNFpkh7VjXRrRrt2-2WvPXY+ExEs==sGGg@mail.gmail.com> (sfid-20120227_164925_315011_A979258B)
+Subject: Re: mac80211 queue handling in multi-channel
+From: Helmut Schaa <helmut.schaa@googlemail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: Occasional truncated scan results
-References: <4F4CE4D6.6020108@raritan.com>  (sfid-20120228_152950_864254_C21F9143) <1330440166.3368.7.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1330440166.3368.7.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Eliad Peller <eliad@wizery.com>, Jouni Malinen <j@w1.fi>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28.02.2012 15:42, Johannes Berg wrote:
->> After some playing with different wireless devices I discovered that
->> this is not limited to specific drivers so I digged a bit in the scan
->> code in net/wireless/scan.c and found the culprit: The scan result is
->> put together with the iwe_stream_* functions that place data into a
->> provided buffer if enough space is available in the buffer. Otherwise
->> the functions do just nothing. Before a BSS is added there is a check if
->> some minimum space is available but after the BSS has been added it is
->> not clear how many data actually has been placed into the buffer. So
->> especially (but not neccessarily only) the last BSS is prone to be
->> incomplete. I my case all the IEs were missing and this was persistent
->> over some time (the persitence behavior seems to differs between drivers
->> - probably depends on how the scanning is implemented).
+On Mon, Feb 27, 2012 at 4:46 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Mon, 2012-02-27 at 16:38 +0100, Helmut Schaa wrote:
+>> On Mon, Feb 27, 2012 at 12:49 PM, Johannes Berg
+>> <johannes@sipsolutions.net> wrote:
+>> > Then of course, the driver needs to tell mac80211 about queue mapping.
+>> > For this, there's one global queue:
+>> > †* off-channel TX queue
+>> > Additionally, there are per-interface queues:
+>> > †* 4 per AC
+>> > †* CAB for this interface
 >>
->> Currently I implemented a heuristic that checks if some minimum space
->> (currently 256 bytes) is still free _after_ adding a BSS and otherwise
->> return -E2BIG so the user space can provide a larger buffer but this is
->> a crappy hack.
->>
->> Can the code be changed in some way to more reliably detect if some data
->> did not fit into the buffer and report this to user space?
+>> Ralink devices have only the 4 hw queues and no CAB queue. So, would
+>> each interface point to the same hw queue or would the driver have to do
+>> some sort of translation?
 >
-> Unfortunately not. The maximum buffer size userspace can provide is
-> limited to 64k. In busy environments, this size can be exceeded. As a
-> result, if we do this, you can't get *any* scan results in such
-> environments. I believe the current code is almost the best we can do
-> for wireless extensions, but it may be possible to implement never
-> truncating a single BSS entry.
+> No, just like today I'd expect each interface to point to the same hw
+> queue. In fact, even in devices that do have more queues I would expect
+> multiple interfaces to point to the same hw queue, if they share
+> channels.
+>
+> This will be somewhat tricky when an the mapping isn't static, but for
+> that the netdev queues can be stopped and then the reassignment is
+> probably not so much of a problem.
 
-My problem is not that the scan results are larger than 64k. The user 
-space is coded so that it provides a small buffer that is doubled in 
-size until the data fits into the buffer. But the kernel code does not 
-always detect the case that the buffer is almost full and just starts 
-skipping some data without notifying user space with E2BIG.
+Ok.
 
-> That said, there's a very simple fix for this. Since you're talking
-> about net/wireless/scan.c, you're obviously using a driver with cfg80211
-> support. Ditch wireless extensions completely and use nl80211 instead,
-> you'll be much happier overall as it has no such limitations and more
-> features.
+>> Also Ralink devices don't have a CAB queue :)
+>
+> You just said that ;-)
+>
+> But in that case I suppose the CAB queue would simply point to the BE
+> queue or so as well. But I think they are also quite broken wrt. sending
+> multicast-after-DTIM anyway, no?
 
-Thanks for the hint. I will have a look into this.
+Yep, that's done in a tasklet using the BE queue at the moment. Not the
+perfect solution ...
 
-- ron
+In any case I'd then expect this to
+> either point to a "virtual" queue that the driver simply has in
+> software, or to the real BE queue, depending on the desired queue-full
+> semantics.
 
--- 
-Ronald Wahl - ronald.wahl@raritan.com - Phone +49 375271349-0 Fax -99
-Raritan Deutschland GmbH, Kornmarkt 7, 08056 Zwickau, Germany
-USt-IdNr. DE813094160, Steuer-Nr. 227/117/01749
-Amtsgericht Chemnitz HRB 23605
-Gesch√§ftsf√ºhrung: Stuart Hopper, Burkhard Wessler
+Ok, fine with me.
+
+Helmut
