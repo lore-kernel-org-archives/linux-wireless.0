@@ -1,299 +1,201 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:21567 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754745Ab2BAQF1 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:46154 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753779Ab2B0LSf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Feb 2012 11:05:27 -0500
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>,
-	Paul Stewart <pstew@google.com>,
-	Susinder Gulasekaran <susinder@qca.qualcomm.com>,
-	Suresh Chandrasekaran <csuresh@qca.qualcomm.com>
-Subject: [PATCH 2/2] ath9k_hw: improve ANI processing and rx desensitizing parameters
-Date: Wed, 1 Feb 2012 21:35:35 +0530
-Message-ID: <1328112335-19265-2-git-send-email-rmanohar@qca.qualcomm.com> (sfid-20120201_170530_231993_666A2902)
-In-Reply-To: <1328112335-19265-1-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1328112335-19265-1-git-send-email-rmanohar@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 27 Feb 2012 06:18:35 -0500
+Subject: [PATCH] mac80211: handle non-bufferable MMPDUs correctly
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>,
+	Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
+	Christian Lamparter <chunkeey@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Feb 2012 12:18:30 +0100
+Message-ID: <1330341510.3483.13.camel@jlt3.sipsolutions.net> (sfid-20120227_121841_642721_20650A7E)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch improves ANI operations by switching among the immunity
-levels based on PHY errors and beacon rssi which will adjust receiver
-desensitizing parameters. The changes are
+From: Johannes Berg <johannes.berg@intel.com>
 
-* Irrespective of opmode, the Weak Signal Detection is with the current
-  immunity level value.
-* At highest OFDM immunity level poor performance was observed with
-  strong interference. By tuning the FIR step and spur immunity levels
-  and not changing any weak signal detection thresholds at any level
-  helped to improve the performance.
-* ANI took long time to recover back to lower immunity levels on heavy
-  data load. As the listen time got reset to zero before reaching to
-  the 5x of aniperiod, the immunity level is not lowering back even
-  without any interference. This patch fix that.
-* Reset ANI values to default on disconnection.
+This renames the IEEE80211_TX_CTL_POLL_RESPONSE
+TX flag to IEEE80211_TX_CTL_NO_PS_BUFFER and also
+uses it for non-bufferable MMPDUs (all MMPDUs but
+deauth, disassoc and action frames.)
 
-Cc: Paul Stewart <pstew@google.com>
-Cc: Susinder Gulasekaran <susinder@qca.qualcomm.com>
-Signed-off-by: Suresh Chandrasekaran <csuresh@qca.qualcomm.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
+Previously, mac80211 would let the MMPDU through
+but not set the flag so drivers supporting some
+hardware aids for avoiding the PS races would
+then reject the frame.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ani.c        |   50 +++++++++++++--------------
- drivers/net/wireless/ath/ath9k/ani.h        |    6 ++-
- drivers/net/wireless/ath/ath9k/ar5008_phy.c |   38 --------------------
- drivers/net/wireless/ath/ath9k/ar9003_phy.c |   49 --------------------------
- drivers/net/wireless/ath/ath9k/main.c       |    1 +
- 5 files changed, 29 insertions(+), 115 deletions(-)
+ drivers/net/wireless/iwlegacy/4965-mac.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    6 +++++-
+ drivers/net/wireless/p54/txrx.c           |    2 +-
+ include/net/mac80211.h                    |   17 ++++++++++-------
+ net/mac80211/sta_info.c                   |    4 ++--
+ net/mac80211/tx.c                         |   17 +++++++++++------
+ 6 files changed, 30 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index bc56f57..516e29f 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -46,8 +46,8 @@ static const struct ani_ofdm_level_entry ofdm_level_table[] = {
- 	{  5,  4,  1  }, /* lvl 5 */
- 	{  6,  5,  1  }, /* lvl 6 */
- 	{  7,  6,  1  }, /* lvl 7 */
--	{  7,  7,  1  }, /* lvl 8 */
--	{  7,  8,  0  }  /* lvl 9 */
-+	{  7,  6,  0  }, /* lvl 8 */
-+	{  7,  7,  0  }  /* lvl 9 */
- };
- #define ATH9K_ANI_OFDM_NUM_LEVEL \
- 	ARRAY_SIZE(ofdm_level_table)
-@@ -91,8 +91,8 @@ static const struct ani_cck_level_entry cck_level_table[] = {
- 	{  4,  0  }, /* lvl 4 */
- 	{  5,  0  }, /* lvl 5 */
- 	{  6,  0  }, /* lvl 6 */
--	{  7,  0  }, /* lvl 7 (only for high rssi) */
--	{  8,  0  }  /* lvl 8 (only for high rssi) */
-+	{  6,  0  }, /* lvl 7 (only for high rssi) */
-+	{  7,  0  }  /* lvl 8 (only for high rssi) */
- };
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c	2012-02-24 16:39:05.000000000 +0100
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c	2012-02-27 12:14:43.000000000 +0100
+@@ -322,7 +322,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv,
+ 		sta_priv = (void *)info->control.sta->drv_priv;
  
- #define ATH9K_ANI_CCK_NUM_LEVEL \
-@@ -290,16 +290,9 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel)
- 				     ATH9K_ANI_FIRSTEP_LEVEL,
- 				     entry_ofdm->fir_step_level);
- 
--	if ((ah->opmode != NL80211_IFTYPE_STATION &&
--	     ah->opmode != NL80211_IFTYPE_ADHOC) ||
--	    aniState->noiseFloor <= aniState->rssiThrHigh) {
--		if (aniState->ofdmWeakSigDetectOff)
--			/* force on ofdm weak sig detect */
--			ath9k_hw_ani_control(ah,
--				ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
--					     true);
--		else if (aniState->ofdmWeakSigDetectOff ==
--			 entry_ofdm->ofdm_weak_signal_on)
-+	if ((aniState->noiseFloor >= aniState->rssiThrHigh) &&
-+	    (aniState->ofdmWeakSigDetectOff !=
-+	     entry_ofdm->ofdm_weak_signal_on)) {
- 			ath9k_hw_ani_control(ah,
- 				ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION,
- 				entry_ofdm->ofdm_weak_signal_on);
-@@ -717,26 +710,30 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
- 		ofdmPhyErrRate, aniState->cckNoiseImmunityLevel,
- 		cckPhyErrRate, aniState->ofdmsTurn);
- 
--	if (aniState->listenTime > 5 * ah->aniperiod) {
--		if (ofdmPhyErrRate <= ah->config.ofdm_trig_low &&
--		    cckPhyErrRate <= ah->config.cck_trig_low) {
-+	if (aniState->listenTime > ah->aniperiod) {
-+		if (cckPhyErrRate < ah->config.cck_trig_low &&
-+		    ((ofdmPhyErrRate < ah->config.ofdm_trig_low &&
-+		      aniState->ofdmNoiseImmunityLevel <
-+		      ATH9K_ANI_OFDM_DEF_LEVEL) ||
-+		     (ofdmPhyErrRate < ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI &&
-+		      aniState->ofdmNoiseImmunityLevel >=
-+		      ATH9K_ANI_OFDM_DEF_LEVEL))) {
- 			ath9k_hw_ani_lower_immunity(ah);
- 			aniState->ofdmsTurn = !aniState->ofdmsTurn;
--		}
--		ath9k_ani_restart(ah);
--	} else if (aniState->listenTime > ah->aniperiod) {
--		/* check to see if need to raise immunity */
--		if (ofdmPhyErrRate > ah->config.ofdm_trig_high &&
--		    (cckPhyErrRate <= ah->config.cck_trig_high ||
--		     aniState->ofdmsTurn)) {
-+		} else if ((ofdmPhyErrRate > ah->config.ofdm_trig_high &&
-+			    aniState->ofdmNoiseImmunityLevel >=
-+			    ATH9K_ANI_OFDM_DEF_LEVEL) ||
-+			   (ofdmPhyErrRate >
-+			    ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI &&
-+			    aniState->ofdmNoiseImmunityLevel <
-+			    ATH9K_ANI_OFDM_DEF_LEVEL)) {
- 			ath9k_hw_ani_ofdm_err_trigger(ah);
--			ath9k_ani_restart(ah);
- 			aniState->ofdmsTurn = false;
- 		} else if (cckPhyErrRate > ah->config.cck_trig_high) {
- 			ath9k_hw_ani_cck_err_trigger(ah);
--			ath9k_ani_restart(ah);
- 			aniState->ofdmsTurn = true;
- 		}
-+		ath9k_ani_restart(ah);
- 	}
- }
- EXPORT_SYMBOL(ath9k_hw_ani_monitor);
-@@ -911,3 +908,4 @@ void ath9k_hw_ani_init(struct ath_hw *ah)
- 	ath9k_ani_restart(ah);
- 	ath9k_enable_mib_counters(ah);
- }
-+EXPORT_SYMBOL(ath9k_hw_ani_init);
-diff --git a/drivers/net/wireless/ath/ath9k/ani.h b/drivers/net/wireless/ath/ath9k/ani.h
-index 83029d6..72e2b87 100644
---- a/drivers/net/wireless/ath/ath9k/ani.h
-+++ b/drivers/net/wireless/ath/ath9k/ani.h
-@@ -25,11 +25,13 @@
- 
- /* units are errors per second */
- #define ATH9K_ANI_OFDM_TRIG_HIGH_OLD      500
--#define ATH9K_ANI_OFDM_TRIG_HIGH_NEW      1000
-+#define ATH9K_ANI_OFDM_TRIG_HIGH_NEW      3500
-+#define ATH9K_ANI_OFDM_TRIG_HIGH_BELOW_INI 1000
- 
- /* units are errors per second */
- #define ATH9K_ANI_OFDM_TRIG_LOW_OLD       200
- #define ATH9K_ANI_OFDM_TRIG_LOW_NEW       400
-+#define ATH9K_ANI_OFDM_TRIG_LOW_ABOVE_INI 900
- 
- /* units are errors per second */
- #define ATH9K_ANI_CCK_TRIG_HIGH_OLD       200
-@@ -53,7 +55,7 @@
- #define ATH9K_ANI_RSSI_THR_LOW            7
- 
- #define ATH9K_ANI_PERIOD_OLD              100
--#define ATH9K_ANI_PERIOD_NEW              1000
-+#define ATH9K_ANI_PERIOD_NEW              300
- 
- /* in ms */
- #define ATH9K_ANI_POLLINTERVAL_OLD        100
-diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-index f901a17..51d3b7f 100644
---- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
-@@ -1079,46 +1079,8 @@ static bool ar5008_hw_ani_control_old(struct ath_hw *ah,
- 		break;
- 	}
- 	case ATH9K_ANI_OFDM_WEAK_SIGNAL_DETECTION:{
--		static const int m1ThreshLow[] = { 127, 50 };
--		static const int m2ThreshLow[] = { 127, 40 };
--		static const int m1Thresh[] = { 127, 0x4d };
--		static const int m2Thresh[] = { 127, 0x40 };
--		static const int m2CountThr[] = { 31, 16 };
--		static const int m2CountThrLow[] = { 63, 48 };
- 		u32 on = param ? 1 : 0;
- 
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR_LOW,
--			      AR_PHY_SFCORR_LOW_M1_THRESH_LOW,
--			      m1ThreshLow[on]);
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR_LOW,
--			      AR_PHY_SFCORR_LOW_M2_THRESH_LOW,
--			      m2ThreshLow[on]);
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR,
--			      AR_PHY_SFCORR_M1_THRESH,
--			      m1Thresh[on]);
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR,
--			      AR_PHY_SFCORR_M2_THRESH,
--			      m2Thresh[on]);
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR,
--			      AR_PHY_SFCORR_M2COUNT_THR,
--			      m2CountThr[on]);
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR_LOW,
--			      AR_PHY_SFCORR_LOW_M2COUNT_THR_LOW,
--			      m2CountThrLow[on]);
--
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR_EXT,
--			      AR_PHY_SFCORR_EXT_M1_THRESH_LOW,
--			      m1ThreshLow[on]);
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR_EXT,
--			      AR_PHY_SFCORR_EXT_M2_THRESH_LOW,
--			      m2ThreshLow[on]);
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR_EXT,
--			      AR_PHY_SFCORR_EXT_M1_THRESH,
--			      m1Thresh[on]);
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR_EXT,
--			      AR_PHY_SFCORR_EXT_M2_THRESH,
--			      m2Thresh[on]);
--
- 		if (on)
- 			REG_SET_BIT(ah, AR_PHY_SFCORR_LOW,
- 				    AR_PHY_SFCORR_LOW_USE_SELF_CORR_LOW);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 2b0bfb8..677b912 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -824,55 +824,6 @@ static bool ar9003_hw_ani_control(struct ath_hw *ah,
- 		 * on == 0 means more noise imm
+ 	if (sta_priv && sta_priv->asleep &&
+-	    (info->flags & IEEE80211_TX_CTL_POLL_RESPONSE)) {
++	    (info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER)) {
+ 		/*
+ 		 * This sends an asynchronous command to the device,
+ 		 * but we can rely on it being processed before the
+@@ -331,6 +331,10 @@ int iwlagn_tx_skb(struct iwl_priv *priv,
+ 		 * counter.
+ 		 * For now set the counter to just 1 since we do not
+ 		 * support uAPSD yet.
++		 *
++		 * FIXME: If we get two non-bufferable frames one
++		 * after the other, we might only send out one of
++		 * them because this is racy.
  		 */
- 		u32 on = param ? 1 : 0;
--		/*
--		 * make register setting for default
--		 * (weak sig detect ON) come from INI file
--		 */
--		int m1ThreshLow = on ?
--			aniState->iniDef.m1ThreshLow : m1ThreshLow_off;
--		int m2ThreshLow = on ?
--			aniState->iniDef.m2ThreshLow : m2ThreshLow_off;
--		int m1Thresh = on ?
--			aniState->iniDef.m1Thresh : m1Thresh_off;
--		int m2Thresh = on ?
--			aniState->iniDef.m2Thresh : m2Thresh_off;
--		int m2CountThr = on ?
--			aniState->iniDef.m2CountThr : m2CountThr_off;
--		int m2CountThrLow = on ?
--			aniState->iniDef.m2CountThrLow : m2CountThrLow_off;
--		int m1ThreshLowExt = on ?
--			aniState->iniDef.m1ThreshLowExt : m1ThreshLowExt_off;
--		int m2ThreshLowExt = on ?
--			aniState->iniDef.m2ThreshLowExt : m2ThreshLowExt_off;
--		int m1ThreshExt = on ?
--			aniState->iniDef.m1ThreshExt : m1ThreshExt_off;
--		int m2ThreshExt = on ?
--			aniState->iniDef.m2ThreshExt : m2ThreshExt_off;
--
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR_LOW,
--			      AR_PHY_SFCORR_LOW_M1_THRESH_LOW,
--			      m1ThreshLow);
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR_LOW,
--			      AR_PHY_SFCORR_LOW_M2_THRESH_LOW,
--			      m2ThreshLow);
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR,
--			      AR_PHY_SFCORR_M1_THRESH, m1Thresh);
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR,
--			      AR_PHY_SFCORR_M2_THRESH, m2Thresh);
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR,
--			      AR_PHY_SFCORR_M2COUNT_THR, m2CountThr);
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR_LOW,
--			      AR_PHY_SFCORR_LOW_M2COUNT_THR_LOW,
--			      m2CountThrLow);
--
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR_EXT,
--			      AR_PHY_SFCORR_EXT_M1_THRESH_LOW, m1ThreshLowExt);
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR_EXT,
--			      AR_PHY_SFCORR_EXT_M2_THRESH_LOW, m2ThreshLowExt);
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR_EXT,
--			      AR_PHY_SFCORR_EXT_M1_THRESH, m1ThreshExt);
--		REG_RMW_FIELD(ah, AR_PHY_SFCORR_EXT,
--			      AR_PHY_SFCORR_EXT_M2_THRESH, m2ThreshExt);
- 
- 		if (on)
- 			REG_SET_BIT(ah, AR_PHY_SFCORR_LOW,
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index b4322cb..d388034 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -2126,6 +2126,7 @@ static void ath9k_config_bss(struct ath_softc *sc, struct ieee80211_vif *vif)
- 		del_timer_sync(&common->ani.timer);
- 		del_timer_sync(&sc->rx_poll_timer);
- 		memset(&sc->caldata, 0, sizeof(sc->caldata));
-+		ath9k_hw_ani_init(sc->sc_ah);
+ 		iwl_sta_modify_sleep_tx_count(priv, sta_id, 1);
  	}
- }
+--- a/include/net/mac80211.h	2012-02-24 16:39:05.000000000 +0100
++++ b/include/net/mac80211.h	2012-02-27 12:14:43.000000000 +0100
+@@ -341,9 +341,9 @@ struct ieee80211_bss_conf {
+  *	used to indicate that a frame was already retried due to PS
+  * @IEEE80211_TX_INTFL_DONT_ENCRYPT: completely internal to mac80211,
+  *	used to indicate frame should not be encrypted
+- * @IEEE80211_TX_CTL_POLL_RESPONSE: This frame is a response to a poll
+- *	frame (PS-Poll or uAPSD) and should be sent although the station
+- *	is in powersave mode.
++ * @IEEE80211_TX_CTL_NO_PS_BUFFER: This frame is a response to a poll
++ *	frame (PS-Poll or uAPSD) or a non-bufferable MMPDU and must
++ *	be sent although the station is in powersave mode.
+  * @IEEE80211_TX_CTL_MORE_FRAMES: More frames will be passed to the
+  *	transmit function after the current frame, this can be used
+  *	by drivers to kick the DMA queue only if unset or when the
+@@ -399,7 +399,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_INTFL_NEED_TXPROCESSING	= BIT(14),
+ 	IEEE80211_TX_INTFL_RETRIED		= BIT(15),
+ 	IEEE80211_TX_INTFL_DONT_ENCRYPT		= BIT(16),
+-	IEEE80211_TX_CTL_POLL_RESPONSE		= BIT(17),
++	IEEE80211_TX_CTL_NO_PS_BUFFER		= BIT(17),
+ 	IEEE80211_TX_CTL_MORE_FRAMES		= BIT(18),
+ 	IEEE80211_TX_INTFL_RETRANSMISSION	= BIT(19),
+ 	/* hole at 20, use later */
+@@ -425,7 +425,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTL_SEND_AFTER_DTIM | IEEE80211_TX_CTL_AMPDU |	      \
+ 	IEEE80211_TX_STAT_TX_FILTERED |	IEEE80211_TX_STAT_ACK |		      \
+ 	IEEE80211_TX_STAT_AMPDU | IEEE80211_TX_STAT_AMPDU_NO_BACK |	      \
+-	IEEE80211_TX_CTL_RATE_CTRL_PROBE | IEEE80211_TX_CTL_POLL_RESPONSE |   \
++	IEEE80211_TX_CTL_RATE_CTRL_PROBE | IEEE80211_TX_CTL_NO_PS_BUFFER |    \
+ 	IEEE80211_TX_CTL_MORE_FRAMES | IEEE80211_TX_CTL_LDPC |		      \
+ 	IEEE80211_TX_CTL_STBC | IEEE80211_TX_STATUS_EOSP)
  
--- 
-1.7.9
+@@ -1634,7 +1634,7 @@ void ieee80211_free_txskb(struct ieee802
+  * the station sends a PS-Poll or a uAPSD trigger frame, mac80211
+  * will inform the driver of this with the @allow_buffered_frames
+  * callback; this callback is optional. mac80211 will then transmit
+- * the frames as usual and set the %IEEE80211_TX_CTL_POLL_RESPONSE
++ * the frames as usual and set the %IEEE80211_TX_CTL_NO_PS_BUFFER
+  * on each frame. The last frame in the service period (or the only
+  * response to a PS-Poll) also has %IEEE80211_TX_STATUS_EOSP set to
+  * indicate that it ends the service period; as this frame must have
+@@ -1642,6 +1642,9 @@ void ieee80211_free_txskb(struct ieee802
+  * When TX status is reported for this frame, the service period is
+  * marked has having ended and a new one can be started by the peer.
+  *
++ * Additionally, non-bufferable MMPDUs can also be transmitted by
++ * mac80211 with the %IEEE80211_TX_CTL_NO_PS_BUFFER set in them.
++ *
+  * Another race condition can happen on some devices like iwlwifi
+  * when there are frames queued for the station and it wakes up
+  * or polls; the frames that are already queued could end up being
+@@ -2140,7 +2143,7 @@ enum ieee80211_frame_release_type {
+  * @allow_buffered_frames: Prepare device to allow the given number of frames
+  *	to go out to the given station. The frames will be sent by mac80211
+  *	via the usual TX path after this call. The TX information for frames
+- *	released will also have the %IEEE80211_TX_CTL_POLL_RESPONSE flag set
++ *	released will also have the %IEEE80211_TX_CTL_NO_PS_BUFFER flag set
+  *	and the last one will also have %IEEE80211_TX_STATUS_EOSP set. In case
+  *	frames from multiple TIDs are released and the driver might reorder
+  *	them between the TIDs, it must set the %IEEE80211_TX_STATUS_EOSP flag
+--- a/net/mac80211/sta_info.c	2012-02-24 16:39:06.000000000 +0100
++++ b/net/mac80211/sta_info.c	2012-02-27 12:14:43.000000000 +0100
+@@ -1048,7 +1048,7 @@ static void ieee80211_send_null_response
+ 	 * exchange. Also set EOSP to indicate this packet
+ 	 * ends the poll/service period.
+ 	 */
+-	info->flags |= IEEE80211_TX_CTL_POLL_RESPONSE |
++	info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER |
+ 		       IEEE80211_TX_STATUS_EOSP |
+ 		       IEEE80211_TX_CTL_REQ_TX_STATUS;
+ 
+@@ -1175,7 +1175,7 @@ ieee80211_sta_ps_deliver_response(struct
+ 			 * STA may still remain is PS mode after this frame
+ 			 * exchange.
+ 			 */
+-			info->flags |= IEEE80211_TX_CTL_POLL_RESPONSE;
++			info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER;
+ 
+ 			/*
+ 			 * Use MoreData flag to indicate whether there are
+--- a/net/mac80211/tx.c	2012-02-25 10:21:14.000000000 +0100
++++ b/net/mac80211/tx.c	2012-02-27 12:14:43.000000000 +0100
+@@ -448,18 +448,23 @@ ieee80211_tx_h_unicast_ps_buf(struct iee
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
+ 	struct ieee80211_local *local = tx->local;
+ 
+-	if (unlikely(!sta ||
+-		     ieee80211_is_probe_resp(hdr->frame_control) ||
+-		     ieee80211_is_auth(hdr->frame_control) ||
+-		     ieee80211_is_assoc_resp(hdr->frame_control) ||
+-		     ieee80211_is_reassoc_resp(hdr->frame_control)))
++	if (unlikely(!sta))
+ 		return TX_CONTINUE;
+ 
+ 	if (unlikely((test_sta_flag(sta, WLAN_STA_PS_STA) ||
+ 		      test_sta_flag(sta, WLAN_STA_PS_DRIVER)) &&
+-		     !(info->flags & IEEE80211_TX_CTL_POLL_RESPONSE))) {
++		     !(info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER))) {
+ 		int ac = skb_get_queue_mapping(tx->skb);
+ 
++		/* only deauth, disassoc and action are bufferable MMPDUs */
++		if (ieee80211_is_mgmt(hdr->frame_control) &&
++		    !ieee80211_is_deauth(hdr->frame_control) &&
++		    !ieee80211_is_disassoc(hdr->frame_control) &&
++		    !ieee80211_is_action(hdr->frame_control)) {
++			info->flags |= IEEE80211_TX_CTL_NO_PS_BUFFER;
++			return TX_CONTINUE;
++		}
++
+ #ifdef CONFIG_MAC80211_VERBOSE_PS_DEBUG
+ 		printk(KERN_DEBUG "STA %pM aid %d: PS buffer for AC %d\n",
+ 		       sta->sta.addr, sta->sta.aid, ac);
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c	2012-02-25 10:21:14.000000000 +0100
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c	2012-02-27 12:15:03.000000000 +0100
+@@ -1693,7 +1693,7 @@ il4965_tx_skb(struct il_priv *il, struct
+ 		sta_priv = (void *)sta->drv_priv;
+ 
+ 	if (sta_priv && sta_priv->asleep &&
+-	    (info->flags & IEEE80211_TX_CTL_POLL_RESPONSE)) {
++	    (info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER)) {
+ 		/*
+ 		 * This sends an asynchronous command to the device,
+ 		 * but we can rely on it being processed before the
+--- a/drivers/net/wireless/p54/txrx.c	2012-02-23 17:03:18.000000000 +0100
++++ b/drivers/net/wireless/p54/txrx.c	2012-02-27 12:15:08.000000000 +0100
+@@ -690,7 +690,7 @@ static void p54_tx_80211_header(struct p
+ 	if (!(info->flags & IEEE80211_TX_CTL_ASSIGN_SEQ))
+ 		*flags |= P54_HDR_FLAG_DATA_OUT_SEQNR;
+ 
+-	if (info->flags & IEEE80211_TX_CTL_POLL_RESPONSE)
++	if (info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER)
+ 		*flags |= P54_HDR_FLAG_DATA_OUT_NOCANCEL;
+ 
+ 	if (info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT)
+
 
