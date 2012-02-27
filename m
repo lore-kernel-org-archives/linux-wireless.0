@@ -1,47 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:58320 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754775Ab2BBKSm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 05:18:42 -0500
-Received: by mail-we0-f174.google.com with SMTP id b13so1675044wer.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 02:18:42 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/3] wl12xx: Revert "wl12xx: disable auto-arp"
-Date: Thu,  2 Feb 2012 12:22:10 +0200
-Message-Id: <1328178131-28938-3-git-send-email-eliad@wizery.com> (sfid-20120202_111846_026469_8FEA258F)
-In-Reply-To: <1328178131-28938-1-git-send-email-eliad@wizery.com>
-References: <1328178131-28938-1-git-send-email-eliad@wizery.com>
+Received: from na3sys009aog122.obsmtp.com ([74.125.149.147]:50291 "EHLO
+	na3sys009aog122.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754851Ab2B0Xrc convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 18:47:32 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+Date: Mon, 27 Feb 2012 15:44:58 -0800
+Subject: RE: [PATCH 3.3] mwifiex: reset encryption mode flag before
+ association
+Message-ID: <477F20668A386D41ADCC57781B1F70430836762846@SC-VEXCH1.marvell.com> (sfid-20120228_004735_945265_64CDDA5B)
+References: <1330148136-28867-1-git-send-email-bzhao@marvell.com>
+ <20120227182312.GB26664@tuxdriver.com>
+In-Reply-To: <20120227182312.GB26664@tuxdriver.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This reverts commit e5e2f24b3eec67a7a35d43654a997f98ca21aff2.
+Hi John,
 
-The encryption consideration on auto-arp configuration,
-along with a fw fix, seem to resolve the crashes that
-occured when auto-arp was enabled, so we can re-enable it now.
+> Subject: Re: [PATCH 3.3] mwifiex: reset encryption mode flag before association
+> 
+> On Fri, Feb 24, 2012 at 09:35:35PM -0800, Bing Zhao wrote:
+> > From: Amitkumar Karwar <akarwar@marvell.com>
+> >
+> > Recent commit
+> > "mwifiex: clear previous security setting during association"
+> > fixes association failure problems observed in some corner cases
+> > by clearing previous security setting before each association.
+> >
+> > We should reset encryption mode flag as well. This patch takes care
+> > of it.
+> >
+> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > Signed-off-by: Bing Zhao <bzhao@marvell.com>
+> > ---
+> >  drivers/net/wireless/mwifiex/cfg80211.c |    1 +
+> >  1 files changed, 1 insertions(+), 0 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+> > index 8d8ee63..e4e6d7d 100644
+> > --- a/drivers/net/wireless/mwifiex/cfg80211.c
+> > +++ b/drivers/net/wireless/mwifiex/cfg80211.c
+> > @@ -872,6 +872,7 @@ mwifiex_cfg80211_assoc(struct mwifiex_private *priv, size_t ssid_len, u8 *ssid,
+> >  	priv->sec_info.wpa_enabled = false;
+> >  	priv->sec_info.wpa2_enabled = false;
+> >  	priv->wep_key_curr_index = 0;
+> > +	priv->sec_info.encryption_mode = 0;
+> >  	ret = mwifiex_set_encode(priv, NULL, 0, 0, 1);
+> >
+> >  	if (mode == NL80211_IFTYPE_ADHOC) {
+> 
+> What bug does this fix?  Does it need to be fixed in 3.3?  Or can it wait for 3.4?
 
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/wl12xx/main.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+This one line code should be part of this patch:
+[PATCH 3.3] mwifiex: clear previous security setting during association (in wireless.git)
 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index f22c8b1..a50c116 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -3836,7 +3836,8 @@ sta_not_found:
- 			}
- 
- 			ret = wl1271_acx_arp_ip_filter(wl, wlvif,
--				ACX_ARP_FILTER_ARP_FILTERING,
-+				(ACX_ARP_FILTER_ARP_FILTERING |
-+				 ACX_ARP_FILTER_AUTO_ARP),
- 				addr);
- 		} else {
- 			wlvif->ip_addr = 0;
--- 
-1.7.6.401.g6a319
+They altogether fix an association corner case issue. I'd prefer have it for 3.3.
 
+Of course it's your call if you think that's more suitable for 3.4.
+
+Thanks,
+Bing
+
+> 
+> John
+> --
+> John W. Linville		Someday the world will need a hero, and you
+> linville@tuxdriver.com			might be all we have.  Be ready.
