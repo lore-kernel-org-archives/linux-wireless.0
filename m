@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:52064 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753413Ab2BWA73 convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31770 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753209Ab2B0ORq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 19:59:29 -0500
-Received: by iacb35 with SMTP id b35so779769iac.19
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Feb 2012 16:59:28 -0800 (PST)
+	Mon, 27 Feb 2012 09:17:46 -0500
+Message-ID: <4F4B9085.6080603@qca.qualcomm.com> (sfid-20120227_151749_980862_180BAAB8)
+Date: Mon, 27 Feb 2012 16:17:41 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1329957888.76143.YahooMailClassic@web29502.mail.ird.yahoo.com>
-References: <4F457BCD.5020200@lwfinger.net> <1329957888.76143.YahooMailClassic@web29502.mail.ird.yahoo.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 23 Feb 2012 11:59:07 +1100
-Message-ID: <CAGRGNgXOjKZQqF_JrAA0hyqcsn8TZWHd9OysqOMrE5_JrmnRjA@mail.gmail.com> (sfid-20120223_015932_878845_5AFE663C)
-Subject: Re: [PATCH] rtl8187: Add Ad-hoc mode
-To: htl10@users.sourceforge.net
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Attila Fazekas <turul64@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Herton Ronaldo Krzesinski <herton@canonical.com>
-Content-Type: text/plain; charset=US-ASCII
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: Re: [PATCH] ath6kl: Fix random system lockup
+References: <1328772432-21074-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1328772432-21074-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 02/09/2012 09:27 AM, Vasanthakumar Thiagarajan wrote:
+> From: Raja Mani <rmani@qca.qualcomm.com>
+> 
+> The commit "ath6kl: Use a mutex_lock to avoid
+> race in diabling and handling irq" introduces a
+> state where ath6kl_sdio_irq_handler() would be waiting
+> to claim the sdio function for receive indefinitely
+> when things happen in the following order.
+> 
+> ath6kl_sdio_irq_handler()
+> 	- aquires mtx_irq
+> 	- sdio_release_host()
+> 					ath6kl_sdio_irq_disable()
+> 						- sdio_claim_host()
+> 						- sleep on mtx_irq
+> 	ath6kl_hif_intr_bh_handler()
+> 		- (indefinitely) wait for the sdio
+> 		  function to be released to exclusively claim
+> 		  it again for receive operation.
+> 
+> Fix this by replacing the mtx_irq with an atomic
+> variable and a wait_queue.
+> 
+> Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-On Thu, Feb 23, 2012 at 11:44, Hin-Tak Leung
-<htl10@users.sourceforge.net> wrote:
-> --- On Wed, 22/2/12, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> I fixed and tested your patch. With it, I certainly see the
->> beacons and I was
->> able to use NetworkManager to connect once. However, I was
->> never able to ping
->> from either end of the network to the other.
->
-> Do you need something manual set-up like "ifconfig wlan1 192.168.0.1" for one box and "ifconfig wlan1 192.168.0.2" for the other box in the IP layer to work? I haven't quite got my head around this one - how network manager agrees for each for go into a private tcp/ip network, given there are three(?) private ranges to use, and setting up host names, and what ip adresses to assign... and since there is no dns for a network of two, it would have to ping by ip address?
+I would really like to avoid using atomic variable if at all possible. I
+was trying to think other options and what if we take in
+ath6kl_sdio_irq_disable() mtx_irq before calling sdio_claim_host().
+Wouldn't that solve the deadlock?
 
-If it's anything like how it works on Ubuntu, when you start an Ad-Hoc
-network with NetworkManager, it chooses an IP range based on some
-internal logic (usually in the 10.0.0.0/8 private network) sets it's
-IP to something sensible then starts a DHCP server for everyone else
-on the network, so everyone should get a valid IP.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+Kalle
