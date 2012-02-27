@@ -1,115 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:53042 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753812Ab2B0Wlp (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44559 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398Ab2B0JCm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Feb 2012 17:41:45 -0500
-Received: by mail-wi0-f174.google.com with SMTP id hm11so1607155wib.19
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2012 14:41:44 -0800 (PST)
-MIME-Version: 1.0
-From: Arik Nemtsov <arik@wizery.com>
-To: <linux-wireless@vger.kernel.org>
-Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH 3/7] wl12xx: reset link Tx queues when freeing it
-Date: Tue, 28 Feb 2012 00:41:30 +0200
-Message-Id: <1330382494-31148-3-git-send-email-arik@wizery.com> (sfid-20120227_234149_013737_CB64F601)
-In-Reply-To: <1330382494-31148-1-git-send-email-arik@wizery.com>
-References: <1330382494-31148-1-git-send-email-arik@wizery.com>
+	Mon, 27 Feb 2012 04:02:42 -0500
+Subject: Re: iwlwifi WPA-TKIP crypto failure after group rekeying
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	651199@bugs.debian.org, Andreas Gustafsson <olangu@impressions.se>,
+	Marco d'Itri <md@Linux.IT>,
+	Gabriel Kerneis <kerneis@pps.jussieu.fr>
+In-Reply-To: <1330320802.8460.105.camel@deadeye> (sfid-20120227_063327_782741_C11A1DED)
+References: <1330320802.8460.105.camel@deadeye>
+	 (sfid-20120227_063327_782741_C11A1DED)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 27 Feb 2012 10:02:34 +0100
+Message-ID: <1330333354.3483.6.camel@jlt3.sipsolutions.net> (sfid-20120227_100247_251787_F8487642)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before, the link was first freed (invalidating it in the map), and later
-on vif removal, all valid wlvif-related links were reset. Since these
-links were already invalid, we failed to reset them.
-The bug was made worse by op_stop, which set the tx_queue_count to 0
-arbitrarily. This resulted in a negative tx_queue_count in some scenarios.
+Hi Ben,
 
-Fix this by resetting the Tx-queues of a link when freeing it. Add a
-WARN_ON and reset all link Tx-queues in op_stop, to avoid a negative
-tx_queue_count.
+Thanks for the report.
 
-Signed-off-by: Arik Nemtsov <arik@wizery.com>
----
- drivers/net/wireless/wl12xx/cmd.c  |    7 +++++++
- drivers/net/wireless/wl12xx/main.c |    1 -
- drivers/net/wireless/wl12xx/tx.c   |   13 ++++++++++---
- 3 files changed, 17 insertions(+), 4 deletions(-)
+On Mon, 2012-02-27 at 05:33 +0000, Ben Hutchings wrote:
+> Several Debian users (cc'd) have reported a regression in iwlagn in
+> Linux 3.1, not fixed in 3.2.  The full bug log is at:
+> 
+> http://bugs.debian.org/651199
+> 
+> To summarise, a WPA-TKIP managed connection stops passing traffic and
+> the kernel log shows the message "WPA: Group rekeying".  This apparently
+> doesn't happen if the connection is in heavy use at the time or with
+> module parameter swcrypto=1.  WPA2 is not affected either.
 
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index ef994da..ae1f3d7 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -485,6 +485,13 @@ void wl12xx_free_link(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 *hlid)
- 	__clear_bit(*hlid, wl->links_map);
- 	__clear_bit(*hlid, wlvif->links_map);
- 	spin_unlock_irqrestore(&wl->wl_lock, flags);
-+
-+	/*
-+	 * At this point op_tx() will not add more packets to the queues. We
-+	 * can purge them.
-+	 */
-+	wl1271_tx_reset_link_queues(wl, *hlid);
-+
- 	*hlid = WL12XX_INVALID_LINK_ID;
- }
- 
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index adf9bbc..712e385 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -4228,7 +4228,6 @@ void wl1271_free_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 hlid)
- 	clear_bit(hlid, wlvif->ap.sta_hlid_map);
- 	memset(wl->links[hlid].addr, 0, ETH_ALEN);
- 	wl->links[hlid].ba_bitmap = 0;
--	wl1271_tx_reset_link_queues(wl, hlid);
- 	__clear_bit(hlid, &wl->ap_ps_map);
- 	__clear_bit(hlid, (unsigned long *)&wl->ap_fw_ps_map);
- 	wl12xx_free_link(wl, wlvif, &hlid);
-diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
-index 6446e4d..311b5a2 100644
---- a/drivers/net/wireless/wl12xx/tx.c
-+++ b/drivers/net/wireless/wl12xx/tx.c
-@@ -527,6 +527,7 @@ static struct sk_buff *wl12xx_lnk_skb_dequeue(struct wl1271 *wl,
- 	if (skb) {
- 		int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
- 		spin_lock_irqsave(&wl->wl_lock, flags);
-+		WARN_ON(wl->tx_queue_count[q] <= 0);
- 		wl->tx_queue_count[q]--;
- 		spin_unlock_irqrestore(&wl->wl_lock, flags);
- 	}
-@@ -602,6 +603,7 @@ static struct sk_buff *wl1271_skb_dequeue(struct wl1271 *wl)
- 		skb = wl->dummy_packet;
- 		q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
- 		spin_lock_irqsave(&wl->wl_lock, flags);
-+		WARN_ON(wl->tx_queue_count[q] <= 0);
- 		wl->tx_queue_count[q]--;
- 		spin_unlock_irqrestore(&wl->wl_lock, flags);
- 	}
-@@ -959,7 +961,6 @@ void wl12xx_tx_reset_wlvif(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 		else
- 			wlvif->sta.ba_rx_bitmap = 0;
- 
--		wl1271_tx_reset_link_queues(wl, i);
- 		wl->links[i].allocated_pkts = 0;
- 		wl->links[i].prev_freed_pkts = 0;
- 	}
-@@ -973,8 +974,14 @@ void wl12xx_tx_reset(struct wl1271 *wl, bool reset_tx_queues)
- 	struct sk_buff *skb;
- 	struct ieee80211_tx_info *info;
- 
--	for (i = 0; i < NUM_TX_QUEUES; i++)
--		wl->tx_queue_count[i] = 0;
-+	/* only reset the queues if something bad happened */
-+	if (WARN_ON(wl1271_tx_total_queue_count(wl) != 0)) {
-+		for (i = 0; i < WL12XX_MAX_LINKS; i++)
-+			wl1271_tx_reset_link_queues(wl, i);
-+
-+		for (i = 0; i < NUM_TX_QUEUES; i++)
-+			wl->tx_queue_count[i] = 0;
-+	}
- 
- 	wl->stopped_queues_map = 0;
- 
--- 
-1.7.5.4
+I think this is due to my patch "iwlagn: rewrite HW crypto" which
+accidentally broke key *removal* (of all things), which causes issues
+when the first GTK is removed on the second rekeying.
+
+This patch
+http://git.kernel.org/?p=linux/kernel/git/iwlwifi/iwlwifi.git;a=commitdiff;h=5dcbf480473f6c3f06ad2426b7517038a2a18911
+
+should fix it. Wey has sent it to John, but he hasn't picked it up yet
+for some reason -- it's also marked for stable.
+
+It'd be great to get confirmation that this is the problem, I'm not sure
+I'll find time today to reproduce the problem.
+
+johannes
 
