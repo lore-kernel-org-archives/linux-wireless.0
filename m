@@ -1,58 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail022-1.exch022.serverdata.net ([64.78.22.98]:58985 "EHLO
-	mail022-1.exch022.serverdata.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751979Ab2BXLVU (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:1584 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753601Ab2B0GOR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 06:21:20 -0500
-Message-ID: <4F4772AB.9000305@posedge.com> (sfid-20120224_122123_319595_0FF2B153)
-Date: Fri, 24 Feb 2012 16:51:15 +0530
-From: Mahesh <maheshp@posedge.com>
+	Mon, 27 Feb 2012 01:14:17 -0500
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: [PATCH] ath6kl: Register driver ht capabilities in wiphy
+Date: Mon, 27 Feb 2012 11:44:19 +0530
+Message-ID: <1330323259-13399-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120227_071421_261796_F9A6D0DD)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Chakra Parvathaneni <chakra@posedge.com>
-Subject: Re: [RFCv2] cfg80211: 80Mhz Bandwidth channel flags in 5Gig band
-References: <f17c700977012ada368da4f339b9c639@posedge.com>  (sfid-20120222_185112_125868_ED7DF18C)  <1329933458.4657.2.camel@jlt3.sipsolutions.net>  (sfid-20120222_185746_860409_0CF57D5F) <1329937072.4657.4.camel@jlt3.sipsolutions.net>  <4F471F40.8060503@posedge.com> <1330070145.3426.8.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1330070145.3426.8.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Register driver's ht capabilities in wiphy to avoid failures
+in setting ht channels from hostapd.
 
-On 02/24/2012 01:25 PM, Johannes Berg wrote:
-> On Fri, 2012-02-24 at 10:55 +0530, Mahesh wrote:
->
->> Agree. we will work towards updating regulatory database with 80Mhz
->> bandwidth in 5Gig band. I had modified code to check maximum bandwidth
->> as well. Please find the updated change below.
->
->> -	if (freq_range->max_bandwidth_khz<  MHZ_TO_KHZ(40))
->> -		bw_flags = IEEE80211_CHAN_NO_HT40;
->> +	if (freq_range->max_bandwidth_khz<  MHZ_TO_KHZ(40)) {
->> +		bw_flags = IEEE80211_CHAN_NO_HT40 | IEEE80211_CHAN_NO_VHT80;
->> +    } else if (freq_range->max_bandwidth_khz<  MHZ_TO_KHZ(80)) {
->> +		bw_flags = IEEE80211_CHAN_NO_VHT80;
->> +    }
->
-> no braces needed
->
-> Also this will always be true now, so the patch isn't very useful right
-> now?
-True. But once reg database reflects 80MHz BW, we need it. Anyways its 
-part of new feature. Not a bug fix.
->
->
->> -	if (freq_range->max_bandwidth_khz<  MHZ_TO_KHZ(40))
->> -		bw_flags = IEEE80211_CHAN_NO_HT40;
->> +	if (freq_range->max_bandwidth_khz<  MHZ_TO_KHZ(40)) {
->> +		bw_flags = IEEE80211_CHAN_NO_HT40 | IEEE80211_CHAN_NO_VHT80;
->> +    } else if (freq_range->max_bandwidth_khz<  MHZ_TO_KHZ(80)) {
->> +		bw_flags = IEEE80211_CHAN_NO_VHT80;
->> +    }
->
-> Seems some refactoring could be useful since this is duplicated?
-May be a macro?
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
->
-> johannes
->
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index af3d0ab..c73f2ac 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -69,6 +69,10 @@ static struct ieee80211_rate ath6kl_rates[] = {
+ #define ath6kl_g_rates     (ath6kl_rates + 0)
+ #define ath6kl_g_rates_size    12
+ 
++#define ath6kl_g_htcap (IEEE80211_HT_CAP_SUP_WIDTH_20_40 | \
++			IEEE80211_HT_CAP_SGI_20		 | \
++			IEEE80211_HT_CAP_SGI_40)
++
+ static struct ieee80211_channel ath6kl_2ghz_channels[] = {
+ 	CHAN2G(1, 2412, 0),
+ 	CHAN2G(2, 2417, 0),
+@@ -113,6 +117,8 @@ static struct ieee80211_supported_band ath6kl_band_2ghz = {
+ 	.channels = ath6kl_2ghz_channels,
+ 	.n_bitrates = ath6kl_g_rates_size,
+ 	.bitrates = ath6kl_g_rates,
++	.ht_cap.cap = ath6kl_g_htcap,
++	.ht_cap.ht_supported = true,
+ };
+ 
+ static struct ieee80211_supported_band ath6kl_band_5ghz = {
+@@ -120,6 +126,8 @@ static struct ieee80211_supported_band ath6kl_band_5ghz = {
+ 	.channels = ath6kl_5ghz_a_channels,
+ 	.n_bitrates = ath6kl_a_rates_size,
+ 	.bitrates = ath6kl_a_rates,
++	.ht_cap.cap = ath6kl_g_htcap,
++	.ht_cap.ht_supported = true,
+ };
+ 
+ #define CCKM_KRK_CIPHER_SUITE 0x004096ff /* use for KRK */
+-- 
+1.7.0.4
+
