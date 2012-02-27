@@ -1,90 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:61902 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754511Ab2B2UEc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 15:04:32 -0500
-Received: by vcqp1 with SMTP id p1so3689852vcq.19
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 12:04:31 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4F4E801A.1090701@mlbassoc.com>
-References: <4F4E47BC.8000306@mlbassoc.com> <4F4E731B.7080704@mlbassoc.com> <4F4E801A.1090701@mlbassoc.com>
-From: Thomas Pedersen <thomas@cozybit.com>
-Date: Wed, 29 Feb 2012 11:59:20 -0800
-Message-ID: <CAG6hwVOgFuQ8XSGvYjM7aSiWe2O2T_UdVVWz+pyEHROEfqNE-g@mail.gmail.com> (sfid-20120229_210436_554804_4A298F9D)
-Subject: Re: Help building compat-wireless
-To: Gary Thomas <gary@mlbassoc.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Luciano Coelho <coelho@ti.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga14.intel.com ([143.182.124.37]:4551 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755448Ab2B0XTE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 18:19:04 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 06/24] iwlwifi: rename iwl_remove to iwl_op_mode_dvm_stop
+Date: Mon, 27 Feb 2012 14:07:30 -0800
+Message-Id: <1330380468-17674-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120228_001939_760307_ED7CE190)
+In-Reply-To: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330380468-17674-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Gary,
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-On Wed, Feb 29, 2012 at 11:44 AM, Gary Thomas <gary@mlbassoc.com> wrote:
-> On 2012-02-29 11:48, Gary Thomas wrote:
->>
->> On 2012-02-29 08:43, Gary Thomas wrote:
->>>
->>> I'm struggling a bit to build compat-wireless in a cross-build
->>> environment.
->>> I normally don't build kernels in-tree, rather I use a build tree, e.g.
->>> % cd <linux-source>
->>> % mkdir /tmp/kernel_build
->>> % make O=/tmp/kernel_build <some_config>
->>> % make O=/tmp/kernel_build uImage
->>>
->>> I can't see how to use this setup with the compat-wireless package.
->>> I tried [all the combinations I could think of] something like this:
->>> % cd <compat-wireless>
->>> % make KLIB=<linux-source> KLIB_BUILD=/tmp/kernel_build
->>> However, this seems to not work as all I get are errors like this:
->>> /local/compat-wireless-2012-02-28/config.mk:242: "WARNING:
->>> CONFIG_CFG80211_WEXT will be deactivated or not working because kernel was
->>> compiled with CONFIG_WIRELESS_EXT=n. Tools
->>> using wext interface like iwconfig will not work. To activate it build
->>> your kernel e.g. with CONFIG_LIBIPW=m."
->>>
->>> Does this process work in my workflow? What do I need to do to
->>> get it going?
->>
->>
->> I managed to get past this, using this
->> % make KLIB=/tmp/kernel_build KLIB_BUILD=/tmp/kernel_build
->> but to get it to actually build anything, I had to append the
->> 'modules' target, e.g.
->> % make KLIB=/tmp/kernel_build KLIB_BUILD=/tmp/kernel_build modules
->>
->> Next problems:
->> * How do I select sub-options? I only want WL12xx support with SDIO, but
->> that requires some sub-options to be set that don't appear to happen.
->> I get the main wl12xx module, but not wl12xx_sdio or wl12xx_platform_data
->> * There are a number of files which don't build against my 2.6.37 kernel,
->> but none of these are important to me (they are in the bluetooth driver
->> which I don't need, but nonetheless it gets built)
->> * The make/install is terribly broken for cross-builds.
->>
->> I hacked my way past these problems and finally got some modules which
->> I can try. Sadly, they don't work at all:
->> # modprobe wl12xx_sdio
->> wl12xx: loaded
->> # ifconfig wlan0 up
->> wl1271_sdio mmc1:0001:2: sdio write failed (-110)
->> wl1271_sdio mmc1:0001:2: sdio write failed (-110)
->> ...
->
->
-> Sadly, this one was my fault - one of my build hacks got in the way :-(
->
-> Now, I'm getting this error:
->  wl12xx: ERROR could not get firmware ti-connectivity/wl127x-fw-4-sr.bin: -2
-> But this file is not available at the Linux firmware tree
-> (git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git)
->
-> Where can I find it?
->
+iwl_remove stops the wifi flows, so rename.
+Moreover, we can possibly stop the wifi flows even if the driver
+is statically compiled in the kernel, so remove the __devexit pragma.
 
-Try here:  git://github.com/TI-OpenLink/firmwares.git
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-drv.c    |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-shared.h |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-Thomas
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 8bb97c9..09f343c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1331,7 +1331,7 @@ out:
+ 	return err;
+ }
+ 
+-void __devexit iwl_remove(struct iwl_priv * priv)
++void iwl_op_mode_dvm_stop(struct iwl_priv *priv)
+ {
+ 	wait_for_completion(&nic(priv)->request_firmware_complete);
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index b3876de..db430c7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -94,7 +94,7 @@ int iwl_drv_start(struct iwl_shared *shrd,
+ 
+ void iwl_drv_stop(struct iwl_shared *shrd)
+ {
+-	iwl_remove(shrd->priv);
++	iwl_op_mode_dvm_stop(shrd->priv);
+ 
+ 	kfree(shrd->nic);
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index d84beef..392b33a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -535,7 +535,7 @@ enum iwl_rxon_context_id {
+ int iwl_op_mode_dvm_start(struct iwl_bus *bus,
+ 			  const struct iwl_trans_ops *trans_ops,
+ 			  struct iwl_cfg *cfg);
+-void __devexit iwl_remove(struct iwl_priv * priv);
++void iwl_op_mode_dvm_stop(struct iwl_priv *priv);
+ struct iwl_device_cmd;
+ int __must_check iwl_rx_dispatch(struct iwl_priv *priv,
+ 				 struct iwl_rx_mem_buffer *rxb,
+-- 
+1.7.0.4
+
