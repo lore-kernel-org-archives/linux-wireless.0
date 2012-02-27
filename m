@@ -1,154 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:33265 "EHLO
-	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754807Ab2BOMwf (ORCPT
+Received: from SpacedOut.fries.net ([67.64.210.234]:39942 "EHLO
+	SpacedOut.fries.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753410Ab2B0OnW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 07:52:35 -0500
-Message-ID: <20120215145231.80704988jhf2taxc@www.81.fi> (sfid-20120215_135240_414417_C920ECAA)
-Date: Wed, 15 Feb 2012 14:52:31 +0200
-From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-To: Florian Fainelli <florian@openwrt.org>
-Cc: Julian Calaby <julian.calaby@gmail.com>, linville@tuxdriver.com,
-	linux-wireless@vger.kernel.org, dsd@gentoo.org, kune@deine-taler.de
-Subject: Re: [PATCH] zd1211rw: wait between setting hash table and powering
- radio on
-References: <20120208180102.18346jfdlm9wakw8@www.81.fi>
- <1328783095-8330-1-git-send-email-florian@openwrt.org>
- <CAGRGNgX-_s_EsbBLxs6UNJd7=3Yk0HECfxb-HSB_-r6cDyyuuA@mail.gmail.com>
- <4F33A5DE.8020208@openwrt.org>
- <CAGRGNgXDFEnOCjc+0Dx+kK1hju7AN-mwU9AksECZCxzB2NJYig@mail.gmail.com>
- <20120209134130.49211ca9upll7y00@www.81.fi> <4F3B89EA.8080501@openwrt.org>
-In-Reply-To: <4F3B89EA.8080501@openwrt.org>
+	Mon, 27 Feb 2012 09:43:22 -0500
+Date: Mon, 27 Feb 2012 08:42:55 -0600
+From: David Fries <david@fries.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Nick Kossifidis <mickflemm@gmail.com>,
+	ath5k-devel@venema.h4ckr.net, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Subject: Re: ath5k phy0: gain calibration timeout
+Message-ID: <20120227144255.GB1190@spacedout.fries.net> (sfid-20120227_154326_165987_29F044E7)
+References: <20120227031232.GA1190@spacedout.fries.net>
+ <4F4B71F2.1020709@openwrt.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4F4B71F2.1020709@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Quoting Florian Fainelli <florian@openwrt.org>:
+On Mon, Feb 27, 2012 at 01:07:14PM +0100, Felix Fietkau wrote:
+> On 2012-02-27 4:12 AM, David Fries wrote:
+> > Wireless network stopped working after 22 hours with ath5k, I have the
+> > following message repeating, suspending to ram and back was enough to
+> > get it talking again.
+> > ath5k phy0: gain calibration timeout (2462MHz)
+> > 
+> > I previously was running 3.2-rc5 for a month and a half straight
+> > without any wireless issues, I just upgraded to 3.3-rc1, the message
+> > started 22 hours after booting the newer kernel.  This ath5k is
+> > running hostapd 1:0.7.3-4 with WPA-EAP and had no clients for the 12
+> > hours before the calibration message started, and had no clients for
+> > hours after until I tried to connect and found I couldn't.
+> > While I was unable to connect, I flipped
+> > the laptop rfkill switch and the gain calibration timeouts continued,
+> > disabling rfkill and they still continued.  That's when I did a
+> > suspend to memory and resume and found it recovered.  While it was
+> > working I tried rfkill and it no longer was talking after disabling
+> > rfkill, I thought it was resuming previously, but I don't use that
+> > very often.
+> > 
+> > I revered the following two comments and will see if I run into any
+> > more problems.  I can test patches.
+> > ath5k: We always do full calibration on AR5210
+> > dafae6af0336958e9e2eb67cc5e4e31d6d13b308
+> > ath5k: Calibration re-work
+> > ce169aca0d823d38465127023e3d571816e6666c
+> Please try applying the following two patches:
+> http://nbd.name/gitweb.cgi?p=openwrt.git;a=blob_plain;f=package/mac80211/patches/440-ath5k_calibrate_no_queue_stop.patch;hb=HEAD
+> http://nbd.name/gitweb.cgi?p=openwrt.git;a=blob_plain;f=package/mac80211/patches/441-ath5k_no_agc_recalibration.patch;hb=HEAD
 
-> On 02/09/12 12:41, Jussi Kivilinna wrote:
->> Quoting Julian Calaby <julian.calaby@gmail.com>:
->>
->>> Hi Florian,
->>>
->>> On Thu, Feb 9, 2012 at 21:54, Florian Fainelli <florian@openwrt.org> wrote:
->>>> Hi Julian,
->>>>
->>>>
->>>> On 02/09/12 11:40, Julian Calaby wrote:
->>>>>
->>>>> Hi Florian,
->>>>>
->>>>> A couple of minor points:
->>>>>
->>>>> On Thu, Feb 9, 2012 at 21:24, Florian Fainelli<florian@openwrt.org>
->>>>> wrote:
->>>>>>
->>>>>> I am running Debian testing kernel 3.1.0-1-amd64, using a  
->>>>>> 079b:0062 Sagem
->>>>>> XG-76NA 802.11bg stick.
->>>>>>
->>>>>> Upon zd1211rw interface
->>>>>> bringup (ifconfig wlan0 up) I get the following timeout:
->>>>>>
->>>>>> [  950.330573] zd1211rw 1-3:1.0: phy2
->>>>>> [  955.108510] zd1211rw 1-3:1.0: firmware version 4725
->>>>>> [  955.148532] zd1211rw 1-3:1.0: zd1211b chip 079b:0062 v4810 high
->>>>>> 00-19-70
->>>>>> AL2230_RF pa0 g--NS
->>>>>> [snip]
->>>>>> [  955.204072] zd1211rw 1-3:1.0: error ioread32(CR_REG1): -110
->>>>>>
->>>>>> A second ifconfig wlan0 up brings the interface up without problems.
->>>>>>
->>>>>> After a bit more debugging, the call trace is the following:
->>>>>>
->>>>>> [10241.028130] zd1211rw 1-3:1.0: zd_chip_lock_phy_regs: error
->>>>>> ioread32(CR_REG1): -110
->>>>>> [10241.028140] zd1211rw 1-3:1.0: zd_switch_radio_on: failed to lock PHY
->>>>>> regs
->>>>>> [10241.028148] zd1211rw 1-3:1.0: zd_op_start: failed to set radio on
->>>>>>
->>>>>> Adding a 10 milliseconds delay between the call to set_mc_hash() and
->>>>>> zd_chip_switch_radio_on() allows successful interface bringups in all
->>>>>> cases and matches what the vendor driver did.
->>>>>>
->>>>>> Signed-off-by: Florian Fainelli<florian@openwrt.org>
->>>>>> ---
->>>>>> drivers/net/wireless/zd1211rw/zd_mac.c |    7 ++++++-
->>>>>> 1 files changed, 6 insertions(+), 1 deletions(-)
->>>>>>
->>>>>> diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c
->>>>>> b/drivers/net/wireless/zd1211rw/zd_mac.c
->>>>>> index 98a574a..bed634c 100644
->>>>>> --- a/drivers/net/wireless/zd1211rw/zd_mac.c
->>>>>> +++ b/drivers/net/wireless/zd1211rw/zd_mac.c
->>>>>> @@ -306,9 +306,14 @@ int zd_op_start(struct ieee80211_hw *hw)
->>>>>>       r = set_mc_hash(mac);
->>>>>>       if (r)
->>>>>>               goto disable_int;
->>>>>> +       msleep(10);
->>>>>
->>>>> You might want to stick a comment in here to tell future developers
->>>>> why we're doing this.
->>>>
->>>>
->>>> I was counting on the commit message to actually provide the detailed
->>>> explanation, but you are right, some comment might be appropriate here as
->>>> well.
->>>>
->>>>
->>>>>
->>>>>> +
->>>>>>       r = zd_chip_switch_radio_on(chip);
->>>>>> -       if (r<  0)
->>>>>> +       if (r<  0) {
->>>>>> +               dev_err(zd_chip_dev(chip),
->>>>>> +                       "%s: failed to set radio on\n", __func__);
->>>>>>               goto disable_int;
->>>>>> +       }
->>>>>
->>>>> It might also be an idea to have it re-try powering on the radio
->>>>> after, say 100 msecs, just in case 10 msecs isn't enough for whatever
->>>>> is causing this issue.
->>>>
->>>>
->>>> Here I would rather let the error be printed in the kernel log  
->>>> for people to
->>>> report an issue if 10 msecs proves not to be enough for some systems.
->>>
->>> When I see timing like this added to established drivers it makes me
->>> think that maybe something has changed since the code was originally
->>> written, maybe there was a 10msec delay somewhere deep down in the USB
->>> code that's now been eliminated, or something else equally random, and
->>> maybe we'll need a longer wait in the future. Writing the code to try
->>> it, say, 5 times will probably never completely time out, but it will
->>> probably work until the driver is removed from the kernel, rather than
->>> having to change this to a larger value some time in the future. On
->>> the other hand, this fixes the bug you've found and maybe something
->>> like that can wait.
->>
->> Quick search of "error ioread32(CR_REG1): -110" shows that first  
->> reports are from 2008/2.6.24. People have found following  
->> workarounds are "rmmod zd1211rw;modprobe zd1211rw", unplug/replug  
->> USB device, use motherboard USB connector instead of hub, etc.
->
-> So, is the patch as-is acceptable, or do you want me to resubmit  
-> with more comments around the msleep()?
+Thanks, I'm running with those two patches.  I'll give it a few days
+before reporting to see if it goes down again.
 
-Comment would be good to have. You can add my acked-by to patch message..
-
-Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-
->
-> Thank you.
-> --
-> Florian
->
->
-
-
-
+-- 
+David Fries <david@fries.net>    PGP pub CB1EE8F0
+http://fries.net/~david/
