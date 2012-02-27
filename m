@@ -1,43 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:16467 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:24069 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756836Ab2B2BZv (ORCPT
+	with ESMTP id S1753710Ab2B0QAh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Feb 2012 20:25:51 -0500
-From: Etay Luz <eluz@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <ath6kl-devel@qualcomm.com>
-Subject: [PATCH] ath6kl: Collect residue firmware logs
-Date: Tue, 28 Feb 2012 17:18:04 -0800
-Message-ID: <1330478284-29968-1-git-send-email-eluz@qca.qualcomm.com> (sfid-20120229_022554_617470_E568B593)
+	Mon, 27 Feb 2012 11:00:37 -0500
+From: "Chadd, Adrian" <achadd@qca.qualcomm.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>
+CC: "ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>
+Subject: RE: [PATCH] ath9k: decouple RX error checking for DFS
+Date: Mon, 27 Feb 2012 16:00:35 +0000
+Message-ID: <48EC4E8D43A28947B1AB2639FA97CDB901524852@nasanexd02a.na.qualcomm.com> (sfid-20120227_170041_253807_759CF23E)
+References: <1330343526-5335-1-git-send-email-zefir.kurtisi@neratec.com>
+In-Reply-To: <1330343526-5335-1-git-send-email-zefir.kurtisi@neratec.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Collect residue firmware logs following firmware assert.
-Firmware sends logs to host once the 1500 byte log buffer
-has been filled. At time of assert, there could be residue
-logs lying in the firmware. This patch pulls those residue
-logs. This would give the full picture of the firmware.
+Hi,
 
-Signed-off-by: Etay Luz <eluz@qca.qualcomm.com>
+Hm, so the AR9003 series NICs set PHY error _and_ decrypt/CRC error? On radar frames?
+
+Interesting! Have you checked to see if the AR9280 does the same?
+
+
+
+Adrian
+________________________________________
+From: Zefir Kurtisi [zefir.kurtisi@neratec.com]
+Sent: Monday, 27 February 2012 3:52 AM
+To: linville@tuxdriver.com
+Cc: ath9k-devel@lists.ath9k.org; linux-wireless@vger.kernel.org; Rodriguez, Luis; Chadd, Adrian; Zefir Kurtisi
+Subject: [PATCH] ath9k: decouple RX error checking for DFS
+
+Previous RX error checking was done exclusive-or for different error
+types and caused DFS pulse events to be dropped when other error
+flags (e.g. CRC) were set simultaneously.
+
+This patch decouples PHY error processing from other types and ensures
+that all pulses detected by HW are accounted by the pattern detector.
+
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 ---
- drivers/net/wireless/ath/ath6kl/hif.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_mac.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/hif.c b/drivers/net/wireless/ath/ath6kl/hif.c
-index ef650b6..3e569b2 100644
---- a/drivers/net/wireless/ath/ath6kl/hif.c
-+++ b/drivers/net/wireless/ath/ath6kl/hif.c
-@@ -135,6 +135,7 @@ static int ath6kl_hif_proc_dbg_intr(struct ath6kl_device *dev)
- 		ath6kl_warn("Failed to clear debug interrupt: %d\n", ret);
- 
- 	ath6kl_hif_dump_fw_crash(dev->ar);
-+	ath6kl_read_fwlogs(dev->ar);
- 
- 	return ret;
- }
--- 
-1.7.0.4
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+index 09b8c9d..92e0042 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+@@ -530,7 +530,11 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+                 */
+                if (rxsp->status11 & AR_CRCErr)
+                        rxs->rs_status |= ATH9K_RXERR_CRC;
+-               else if (rxsp->status11 & AR_PHYErr) {
++               else if (rxsp->status11 & AR_DecryptCRCErr)
++                       rxs->rs_status |= ATH9K_RXERR_DECRYPT;
++               else if (rxsp->status11 & AR_MichaelErr)
++                       rxs->rs_status |= ATH9K_RXERR_MIC;
++               if (rxsp->status11 & AR_PHYErr) {
+                        phyerr = MS(rxsp->status11, AR_PHYErrCode);
+                        /*
+                         * If we reach a point here where AR_PostDelimCRCErr is
+@@ -552,11 +556,7 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+                                rxs->rs_status |= ATH9K_RXERR_PHY;
+                                rxs->rs_phyerr = phyerr;
+                        }
+-
+-               } else if (rxsp->status11 & AR_DecryptCRCErr)
+-                       rxs->rs_status |= ATH9K_RXERR_DECRYPT;
+-               else if (rxsp->status11 & AR_MichaelErr)
+-                       rxs->rs_status |= ATH9K_RXERR_MIC;
++               };
+        }
+
+        if (rxsp->status11 & AR_KeyMiss)
+--
+1.7.4.1
 
