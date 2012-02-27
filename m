@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:35297 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753824Ab2BIB7o (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:36813 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753812Ab2B0Wll (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 20:59:44 -0500
-Received: by yenm8 with SMTP id m8so630705yen.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2012 17:59:43 -0800 (PST)
-Message-ID: <4F33288C.5090905@lwfinger.net> (sfid-20120209_030009_946521_4CB8E0F9)
-Date: Wed, 08 Feb 2012 19:59:40 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
+	Mon, 27 Feb 2012 17:41:41 -0500
+Received: by wgbdr13 with SMTP id dr13so2121496wgb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2012 14:41:39 -0800 (PST)
 MIME-Version: 1.0
-To: Simon Graham <simon.graham@virtualcomputer.com>
-CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	chaoming_li@realsil.com.cn
-Subject: Re: [PATCH V2] rtlwifi: Return correct failure code on error
-References: <20120208211436.GA1309@simgr-precise.oldroadcomputing.net>
-In-Reply-To: <20120208211436.GA1309@simgr-precise.oldroadcomputing.net>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Arik Nemtsov <arik@wizery.com>
+To: <linux-wireless@vger.kernel.org>
+Cc: Luciano Coelho <coelho@ti.com>, Arik Nemtsov <arik@wizery.com>
+Subject: [PATCH 1/7] wl12xx: set the ELP entry delay to the FW dyn-ps timeout
+Date: Tue, 28 Feb 2012 00:41:28 +0200
+Message-Id: <1330382494-31148-1-git-send-email-arik@wizery.com> (sfid-20120227_234144_182709_4A750075)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/08/2012 03:14 PM, Simon Graham wrote:
-> Callers of rtl_pci_init expect zero to be returned on error. Returning
-> the error code leads to the data being used when it shouldn't causing,
-> amongst other things, divide by zero panics attempting to use the
-> ring size that is set to zero.
->
-> Signed-off-by: Simon Graham<simon.graham@virtualcomputer.com>
-> ---
->   drivers/net/wireless/rtlwifi/pci.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/net/wireless/rtlwifi/pci.c b/drivers/net/wireless/rtlwifi/pci.c
-> index fb84707..f0ce366 100644
-> --- a/drivers/net/wireless/rtlwifi/pci.c
-> +++ b/drivers/net/wireless/rtlwifi/pci.c
-> @@ -1492,7 +1492,7 @@ static int rtl_pci_init(struct ieee80211_hw *hw, struct pci_dev *pdev)
->   	if (err) {
->   		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
->   			 "tx ring initialization failed\n");
-> -		return err;
-> +		return 0;
->   	}
->
->   	return 1;
+With PSM handled in FW, the checks in wl1271_elp_work() are always true.
+Thus during active traffic we constantly enter and exit ELP (many times
+per second). As each ELP exit takes ~10ms, this can have an adverse
+effect on throughput and interactivity.
+Set the ELP timeout to the dyn-ps timeout. This period is longer and
+avoids the above problem. It also makes sense to stay out of ELP while
+we are awake on the network, to minimize delays in Tx/Rx. The same thing
+was done by the mac80211 dynamic-ps mechanism before the FW DPS changes.
 
-You must have an extreme memory limitation to find all these problems.
+Signed-off-by: Arik Nemtsov <arik@wizery.com>
+---
+ drivers/net/wireless/wl12xx/ps.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-As long as you are reworking this section, I would prefer you leave the "return 
-err" as it is now, change the "return 1" to "return 0", and remove the not 
-operator in "err = !rtl_pci_init(hw, pdev);" call of this routine. I just 
-discovered it a few days ago, and it bothers me, but I've been too busy to 
-submit a fix. In addition, these changes will convert rtl_pci_init() into a more 
-normal routine that returns 0 if OK and non-zero on errors.
+diff --git a/drivers/net/wireless/wl12xx/ps.c b/drivers/net/wireless/wl12xx/ps.c
+index 23d6750..78f598b 100644
+--- a/drivers/net/wireless/wl12xx/ps.c
++++ b/drivers/net/wireless/wl12xx/ps.c
+@@ -69,8 +69,6 @@ out:
+ 	mutex_unlock(&wl->mutex);
+ }
+ 
+-#define ELP_ENTRY_DELAY  5
+-
+ /* Routines to toggle sleep mode while in ELP */
+ void wl1271_ps_elp_sleep(struct wl1271 *wl)
+ {
+@@ -90,7 +88,7 @@ void wl1271_ps_elp_sleep(struct wl1271 *wl)
+ 	}
+ 
+ 	ieee80211_queue_delayed_work(wl->hw, &wl->elp_work,
+-				     msecs_to_jiffies(ELP_ENTRY_DELAY));
++		msecs_to_jiffies(wl->conf.conn.dynamic_ps_timeout));
+ }
+ 
+ int wl1271_ps_elp_wakeup(struct wl1271 *wl)
+-- 
+1.7.5.4
 
-Larry
