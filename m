@@ -1,45 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:58631 "EHLO
-	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753153Ab2BOQqO convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 11:46:14 -0500
-Received: by bkcjm19 with SMTP id jm19so1395031bkc.5
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 08:45:27 -0800 (PST)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8148 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932573Ab2B1JKb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Feb 2012 04:10:31 -0500
+Message-ID: <4F4C9A03.2080906@qca.qualcomm.com> (sfid-20120228_101038_042313_F592649A)
+Date: Tue, 28 Feb 2012 11:10:27 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6W9JdLDn7FRwuT9fEQUMs7Xkn4yyJzaYshzViGmzbBNTQ@mail.gmail.com>
-References: <1327581484-22047-1-git-send-email-victorg@ti.com>
-	<1327581484-22047-2-git-send-email-victorg@ti.com>
-	<4F277E8D.5040809@sipsolutions.net>
-	<CAK80WHbh13duicPjTEWpTpbjiCiJUu6R_ZArYce5D7wUu1PnMA@mail.gmail.com>
-	<CAB=NE6W9JdLDn7FRwuT9fEQUMs7Xkn4yyJzaYshzViGmzbBNTQ@mail.gmail.com>
-Date: Wed, 15 Feb 2012 18:45:27 +0200
-Message-ID: <CAK80WHYAwFQx-3VLfmB9fgEDfKwxUCMtHjveWrGU7rkJH0o9BQ@mail.gmail.com> (sfid-20120215_174655_933455_E94284A2)
-Subject: Re: [RFC 1/9] nl80211/cfg80211: add radar detection command/event
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian.chadd@gmail.com, j@w1.fi,
-	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name
-Content-Type: text/plain; charset=ISO-8859-1
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH V2 3/5] ath6kl: Refactor ath6kl_wmi_control_rx()
+References: <1330161068-8413-1-git-send-email-vthiagar@qca.qualcomm.com> <1330161068-8413-3-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1330161068-8413-3-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 10, 2012 at 12:02 AM, Luis R. Rodriguez
-<mcgrof@frijolero.org> wrote:
-> On Thu, Feb 2, 2012 at 8:06 AM, Goldenshtein, Victor <victorg@ti.com> wrote:
->> Once we start radar detection, it should continuously monitor for
->> radar until we switch from this channel. The command applies to
->> current operational channel.
->
-> Please consider adding this to the documentation,  it would make this
-> crystal clear.
->
+On 02/25/2012 11:11 AM, Vasanthakumar Thiagarajan wrote:
+> Split the wmi event processing into the one which needs to be
+> vif specific and the reset. This is a step towards avoiding
+> the need for wiphy and a netdev registration before getting
+> any message from firmware.
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath6kl/wmi.c |  200 ++++++++++++++++-----------------
+>  1 files changed, 99 insertions(+), 101 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+> index bbbe0a7..0527933 100644
+> --- a/drivers/net/wireless/ath/ath6kl/wmi.c
+> +++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+> @@ -3369,32 +3369,101 @@ static int ath6kl_wmi_roam_tbl_event_rx(struct wmi *wmi, u8 *datap, int len)
+>  	return ath6kl_debug_roam_tbl_event(wmi->parent_dev, datap, len);
+>  }
+>  
+> -/* Control Path */
+> -int ath6kl_wmi_control_rx(struct wmi *wmi, struct sk_buff *skb)
+> +/* Process interface specific wmi events, caller would free the datap */
+> +static int ath6kl_wmi_proc_events_iface(struct wmi *wmi, u16 if_idx, u16 cmd_id,
+> +					u8 *datap, u32 len)
+>  {
 
-Will do that.
+Please rename this to ath6kl_wmi_proc_events_vif() or something similar.
+Better to use term vif everywhere, it's not clear that iface here means vif.
 
--- 
-Thanks,
-Victor.
+Otherwise the patchset looks good to me.
+
+Kalle
