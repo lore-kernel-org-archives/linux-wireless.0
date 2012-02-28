@@ -1,73 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:39681 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757257Ab2BYBwL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 20:52:11 -0500
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <hauke@hauke-m.de>, <nbd@nbd.name>, <linville@tuxdriver.com>,
-	"Luis R. Rodriguez" <mcgrof@frijolero.org>
-Subject: [PATCH 0/5] compat / compat-wireless: merge autoconf generation
-Date: Fri, 24 Feb 2012 17:52:01 -0800
-Message-ID: <1330134726-1634-1-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120225_025215_154108_ABF2A9B3)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from server19320154104.serverpool.info ([193.201.54.104]:54918 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030299Ab2B1Tph (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Feb 2012 14:45:37 -0500
+From: Hauke Mehrtens <hauke@hauke-m.de>
+To: linville@tuxdriver.com
+Cc: Larry.Finger@lwfinger.net, florian@openwrt.org, zajec5@gmail.com,
+	m@bues.ch, b43-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH] b43: prevent firmware on bcm5354 from taking over wrong GPIO pins
+Date: Tue, 28 Feb 2012 20:45:06 +0100
+Message-Id: <1330458306-13169-1-git-send-email-hauke@hauke-m.de> (sfid-20120228_204556_277510_FB5E4286)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luis R. Rodriguez <mcgrof@frijolero.org>
+When using the bcm5354 (Soc with integrated LP-PHY Wifi) with a recent
+firmware >= 478.104 it runs out of memory after a very short time in
+OpenWrt after doing an active scan or any thing else where packages are
+send. This was cased by a gpio misconfiguration, the firmware triggered
+the GPIO pins used for buttons on some devices and that caused an other
+driver (OpenWrt diag) listening for these buttons irqs to send many
+messages to the user space.
+This patch fixes the bug for my devices (Asus WL-520GU) and makes it
+work with firmware 666.2. Now the firmware just uses LED GPIO pin
+number 1 and not the button pins any more.
 
-While testing ckmake cross compiling compat through different kernels I
-realized that compat was failing to build on some kernels but compat-wireless
-was not. The reason for this turned out to be that compat did not have an
-autoconf for the CONFIG_COMPAT_KERNEL_* variables. In order to make use
-of a variable properly in code on kernel we need two things: a makefile
-equivalent and a header file that defines it. The compat project had
-only makefile variable generation while compat-wireless had makefile
-variable generation with a *few* variables propagated to actual code.
+This is the GPIO Pin layout used on my device, see [0].
+GPIO pin layout:
+pin#    name    type
+0       power   led
+1       wlan    led
+2       reset   button
+3       ses     buttom
 
-To avoid issues with this any further I've decided to try merging the
-autoconf effort for both projects and taking leads on what compat does
-first.
+This is the nvram configuration output of "nvram show |grep gpio"
 
-compat then does the CONFIG_COMPAT_KERNEL_* trickery and generates a
-clean .config for us. This in turn generates our compat's compat_autoconf.h.
-The compat-wireless project leverages this work by dropping its own
-Makefile hackery in favor of the same work and later also uses the same
-.config to expand its own compat_autoconf.h.
+related nvram configuration:
+wl0gpio2=11
+wl0gpio3=11
+wl0gpio0=11
+wl0gpio1=0x02
+reset_gpio=2
 
-John, I could use some extra help on reviewing the RHEL stuff. I'm going
-to push this stuff out now to help with testing.
+[0]: https://dev.openwrt.org/browser/trunk/package/broadcom-diag/src/diag.c
 
-compat:
+Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+---
+ drivers/net/wireless/b43/main.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Luis R. Rodriguez (2):
-  compat: fix few compilations by adding compat_autoconf.h support
-  compat: add some initial RHEL support
-
- .gitignore                      |   10 ++++
- Makefile                        |   59 ++++++++++------------
- include/linux/compat_autoconf.h |   37 --------------
- scripts/gen-compat-autoconf.sh  |  105 +++++++++++++++++++++++++++++++++++++++
- scripts/gen-compat-config.sh    |   60 ++++++++++++++++++++++
- 5 files changed, 201 insertions(+), 70 deletions(-)
- delete mode 100644 include/linux/compat_autoconf.h
- create mode 100755 scripts/gen-compat-autoconf.sh
- create mode 100755 scripts/gen-compat-config.sh
-
-compat-wireless:
-
-Luis R. Rodriguez (3):
-  compat-wireless: fix old checks on KERNEL_SUBLEVEL
-  compat-wireless: start using CONFIG_COMPAT_KERNEL_ in code
-  compat-wireless: use compat's CONFIG_COMPAT_KERNEL_* variables
- Makefile                       |   22 ++++++++++++++++------
- config.mk                      |   24 ++++--------------------
- scripts/check_config.sh        |    9 +++++----
- scripts/gen-compat-autoconf.sh |   13 +++++++------
- 4 files changed, 32 insertions(+), 36 deletions(-)
-
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index 5189cf3..1d633f3 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -2706,6 +2706,8 @@ static int b43_gpio_init(struct b43_wldev *dev)
+ 		mask |= 0x0060;
+ 		set |= 0x0060;
+ 	}
++	if (dev->dev->chip_id == 0x5354)
++		set &= 0xff02;
+ 	if (0 /* FIXME: conditional unknown */ ) {
+ 		b43_write16(dev, B43_MMIO_GPIO_MASK,
+ 			    b43_read16(dev, B43_MMIO_GPIO_MASK)
 -- 
-1.7.4.15.g7811d
+1.7.5.4
 
