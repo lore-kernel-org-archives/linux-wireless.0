@@ -1,42 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:46421 "HELO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753395Ab2BOQqf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 11:46:35 -0500
-Received: by mail-bk0-f49.google.com with SMTP id jk13so1389097bkc.8
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 08:46:27 -0800 (PST)
+Received: from mout0.freenet.de ([195.4.92.90]:54934 "EHLO mout0.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752271Ab2B1Kgj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Feb 2012 05:36:39 -0500
+Received: from [195.4.92.141] (helo=mjail1.freenet.de)
+	by mout0.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.76 #1)
+	id 1S2KQ9-0008TB-GM
+	for linux-wireless@vger.kernel.org; Tue, 28 Feb 2012 11:36:37 +0100
+Received: from localhost ([::1]:50334 helo=mjail1.freenet.de)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1S2KQ8-0006LH-VI
+	for linux-wireless@vger.kernel.org; Tue, 28 Feb 2012 11:36:37 +0100
+Received: from [195.4.92.25] (port=58144 helo=15.mx.freenet.de)
+	by mjail1.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.76 #1)
+	id 1S2KNf-00033N-O9
+	for linux-wireless@vger.kernel.org; Tue, 28 Feb 2012 11:34:03 +0100
+Received: from [2002:4fde:298:2:5054:ff:feb8:40bd] (port=53603 helo=mail.maya.org)
+	by 15.mx.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1:AES256-SHA:256) (port 25) (Exim 4.76 #1)
+	id 1S2KNf-0004of-6T
+	for linux-wireless@vger.kernel.org; Tue, 28 Feb 2012 11:34:03 +0100
+Received: from [192.168.1.6] (dualc.maya.org [192.168.1.6])
+	by mail.maya.org (8.14.4/8.13.8) with ESMTP id q1SAXvJL004179
+	for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2012 11:33:58 +0100
+Message-ID: <4F4CAD95.1000102@01019freenet.de> (sfid-20120228_113646_889972_DEA60E04)
+Date: Tue, 28 Feb 2012 11:33:57 +0100
+From: Andreas Hartmann <andihartmann@01019freenet.de>
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6WkArbBkiT6A4eEKEo6k2EJ2SsxjoNoPHp5BDWZNR3t8g@mail.gmail.com>
-References: <1327581484-22047-1-git-send-email-victorg@ti.com>
-	<1327581484-22047-8-git-send-email-victorg@ti.com>
-	<4F27819A.1030200@sipsolutions.net>
-	<CAK80WHZpAAG_NWcuGUK2FJ_UwOhFXraVVkugR3W5FZEHCb6Z0A@mail.gmail.com>
-	<CAB=NE6WkArbBkiT6A4eEKEo6k2EJ2SsxjoNoPHp5BDWZNR3t8g@mail.gmail.com>
-Date: Wed, 15 Feb 2012 18:46:27 +0200
-Message-ID: <CAK80WHY0EzZH=tNMnYsFzSsnX=AK1OLyi3m2PB7bpVC153VtZg@mail.gmail.com> (sfid-20120215_174654_719395_7ABEC4B9)
-Subject: Re: [RFC 7/9] nl80211/cfg80211: add DFS feature flag
-From: "Goldenshtein, Victor" <victorg@ti.com>
-To: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian.chadd@gmail.com, j@w1.fi,
-	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name
-Content-Type: text/plain; charset=ISO-8859-1
+To: linux-wireless@vger.kernel.org
+Subject: compat-wireless install-scripts section broken since 2012-02-26
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 10, 2012 at 1:11 AM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
-> While a it, consider adding one for the requirement of sending the
-> channel switch announcement within mac80211, not the driver. In that
-> case, although a DFS feature may be available in the driver, DFS
-> should not be enabled on the driver through nl80211 unless that
-> feature gets implemented in mac80211.
->
+Hello!
 
-At this point I'd prefer to stick to the original design proposal.
+I'm getting the following error during make install:
 
--- 
-Thanks,
-Victor.
+make install-scripts
+/bin/sh: -c: line 0: syntax error near unexpected token `;'
+/bin/sh: -c: line 0: `if ; then \'
+make: *** [install-scripts] Error 1
+
+
+Problem are these lines (one example - first line is the problem):
+
+@if $(modinfo ath_pci > /dev/null 2>&1); then \
+       echo -n "Note: madwifi detected, we're going to disable it. "  ;\
+       echo "If you would like to enable it later you can run:"  ;\
+       echo "    sudo athenable madwifi"  ;\
+       echo ;\
+       echo Running athenable ath5k...;\
+       $(DESTDIR)/usr/sbin/athenable ath5k ;\
+fi
+
+
+
+Kind regards,
+Andreas
