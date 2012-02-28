@@ -1,50 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:39646 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756555Ab2BGJ7n (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:58776 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754398Ab2B1EFg convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 04:59:43 -0500
-Date: Tue, 7 Feb 2012 15:29:35 +0530
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath6kl: add blocking debugfs file for retrieving
- firmware logs
-Message-ID: <20120207095933.GB5765@chvasanth-lnx> (sfid-20120207_105947_343418_DF503E92)
-References: <20120206062327.20231.11602.stgit@localhost6.localdomain6>
- <20120206062340.20231.55630.stgit@localhost6.localdomain6>
- <20120206090654.GA3260@chvasanth-lnx>
- <4F2FC989.5000306@qca.qualcomm.com>
- <20120206150515.GA4024@chvasanth-lnx>
- <4F30122E.3060004@qca.qualcomm.com>
+	Mon, 27 Feb 2012 23:05:36 -0500
+Received: by iagj37 with SMTP id j37so685056iag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2012 20:05:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <4F30122E.3060004@qca.qualcomm.com>
+In-Reply-To: <CAG6hwVPoWFdbS2FGOeZcCn8msQm63-GOmMbamH57LRpG2rf6Rw@mail.gmail.com>
+References: <1330427636-3350-1-git-send-email-yeohchunyeow@gmail.com> <CAG6hwVPoWFdbS2FGOeZcCn8msQm63-GOmMbamH57LRpG2rf6Rw@mail.gmail.com>
+From: Javier Cardona <javier@cozybit.com>
+Date: Mon, 27 Feb 2012 20:05:16 -0800
+Message-ID: <CAPjQAd9bF=yP9V5wM+iVFcxGbyVRibOuH2=rwz6PScZoi_LKPg@mail.gmail.com> (sfid-20120228_050540_228745_59ACEEC1)
+Subject: Re: [PATCH v3] mac80211: Fix the generation of PREQs in proactive
+ RANN mechanism of HWMP
+To: devel@lists.open80211s.org
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	linville@tuxdriver.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 06, 2012 at 07:47:26PM +0200, Kalle Valo wrote:
-> > Are you not making sure that the
-> > length of the data is not more than the requested one which is
-> > passed to copy_to_user() so that read() is always called with
-> > *ppos=0?. The following code seems to do that
-> 
-> But the function is called multiple times with increasing values of
-> *ppos as more data is returned to user space:
-> 
-> [  100.303747] ath6kl_fwlog_block_read(): *ppos 0
-> [  100.305252] ath6kl_fwlog_block_read(): *ppos 30116
-> [  101.768947] ath6kl_fwlog_block_read(): *ppos 31624
-> [  117.027469] ath6kl_fwlog_block_read(): *ppos 33124
-> [  117.090146] ath6kl_fwlog_block_read(): *ppos 34628
-> [  117.172338] ath6kl_fwlog_block_read(): *ppos 36128
-> 
-> So I can't assume that *ppos = 0.
+On Mon, Feb 27, 2012 at 7:10 PM, Thomas Pedersen <thomas@cozybit.com> wrote:
+> Hi Chun-Yeow,
+>
+> On Tue, Feb 28, 2012 at 3:13 AM, Chun-Yeow Yeoh <yeohchunyeow@gmail.com> wrote:
+>> According to Section Y.7.4 Actions on receipt of proactive RANN, an individually
+>> addressed PREQ should be generated towards the neighbor peer mesh STA indicated
+>> in the RANN Sender Address field in the forwarding information.
+>>
+>> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+>> Signed-off-by: Javier Cardona <javier@cozybit.com>
+>> ---
+>>  net/mac80211/mesh.h      |    4 ++++
+>>  net/mac80211/mesh_hwmp.c |   25 ++++++++++++++++++++-----
+>>  2 files changed, 24 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+>> index bd14bd2..4b0a9e8 100644
+>> --- a/net/mac80211/mesh.h
+>> +++ b/net/mac80211/mesh.h
+>> @@ -86,6 +86,8 @@ enum mesh_deferred_task_flags {
+>>  * @state_lock: mesh path state lock used to protect changes to the
+>>  * mpath itself.  No need to take this lock when adding or removing
+>>  * an mpath to a hash bucket on a path table.
+>> + * @rann_snd_addr: the RANN sender address
+>> + * @is_root: the destination station of this path is a root node
+>>  * @is_gate: the destination station of this path is a mesh gate
+>>  *
+>>  *
+>> @@ -110,6 +112,8 @@ struct mesh_path {
+>>        u8 discovery_retries;
+>>        enum mesh_path_flags flags;
+>>        spinlock_t state_lock;
+>> +       u8 rann_snd_addr[ETH_ALEN];
+>> +       bool is_root;
+>>        bool is_gate;
+>>  };
+>
+> Why not simply use mpath->dst as the root node address? Is there ever
+> a situation in which mpath->dst != mpath->rann_snd_addr?
 
-Right, unless we say we have no more data to pass
-(when read() returns 0), *ppos would be keep on increasing
-by the number of bytes copied to user space. Updating *ppos
-just looks like a formality here though. But I'm also not
-sure about doing it cleanly.
+rann_snd_addr is the address of the rann transmitter (i.e. prev hop),
+not the address of the root.
+The spec mentions that this is the path to use to send unicast PREQs,
+and not to use the forwarding table info.
 
-Vasanth
+>>
+>> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+>> index cae4071..cc7f8af 100644
+>> --- a/net/mac80211/mesh_hwmp.c
+>> +++ b/net/mac80211/mesh_hwmp.c
+>> @@ -512,8 +512,9 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+>>                                    u8 *preq_elem, u32 metric)
+>>  {
+>>        struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+>> -       struct mesh_path *mpath;
+>> +       struct mesh_path *mpath = NULL;
+>>        u8 *target_addr, *orig_addr;
+>> +       const u8 *da;
+>>        u8 target_flags, ttl;
+>>        u32 orig_sn, target_sn, lifetime;
+>>        bool reply = false;
+>> @@ -590,9 +591,13 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+>>                flags = PREQ_IE_FLAGS(preq_elem);
+>>                preq_id = PREQ_IE_PREQ_ID(preq_elem);
+>>                hopcount = PREQ_IE_HOPCOUNT(preq_elem) + 1;
+>> +               if (mpath && mpath->is_root)
+>> +                       da = mpath->rann_snd_addr;
+>> +               else
+>> +                       da = broadcast_addr;
+>
+> Maybe make these a ternary conditional.
+>
+>>                mesh_path_sel_frame_tx(MPATH_PREQ, flags, orig_addr,
+>>                                cpu_to_le32(orig_sn), target_flags, target_addr,
+>> -                               cpu_to_le32(target_sn), broadcast_addr,
+>> +                               cpu_to_le32(target_sn), da,
+>>                                hopcount, ttl, cpu_to_le32(lifetime),
+>>                                cpu_to_le32(metric), cpu_to_le32(preq_id),
+>>                                sdata);
+>> @@ -741,8 +746,8 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+>>        if (memcmp(orig_addr, sdata->vif.addr, ETH_ALEN) == 0)
+>>                return;
+>>
+>> -       mhwmp_dbg("received RANN from %pM (is_gate=%d)", orig_addr,
+>> -                       root_is_gate);
+>> +       mhwmp_dbg("received RANN from %pM via neighbour %pM (is_gate=%d)",
+>> +                       orig_addr, mgmt->sa, root_is_gate);
+>>
+>
+> Also, when is orig_addr != mgmt->sa?
+
+orig_addr would be the original source of the RANN, while mgmt->sa
+would be the previous transmitter of the RANN.
+
+>>        rcu_read_lock();
+>>        mpath = mesh_path_lookup(orig_addr, sdata);
+>> @@ -773,6 +778,11 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+>>                                       0, sdata);
+>>                mpath->sn = orig_sn;
+>>        }
+>> +
+>> +       /* Using individually addressed PREQ for root node */
+>> +       memcpy(mpath->rann_snd_addr, mgmt->sa, ETH_ALEN);
+>> +       mpath->is_root = true;
+>> +
+>>        if (root_is_gate)
+>>                mesh_path_add_gate(mpath);
+>>
+>> @@ -908,6 +918,7 @@ void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata)
+>>        struct mesh_preq_queue *preq_node;
+>>        struct mesh_path *mpath;
+>>        u8 ttl, target_flags;
+>> +       const u8 *da;
+>>        u32 lifetime;
+>>
+>>        spin_lock_bh(&ifmsh->mesh_preq_queue_lock);
+>> @@ -970,9 +981,13 @@ void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata)
+>>                target_flags = MP_F_RF;
+>>
+>>        spin_unlock_bh(&mpath->state_lock);
+>> +       if (!mpath->is_root)
+>> +               da = broadcast_addr;
+>> +       else
+>> +               da = mpath->rann_snd_addr;
+>
+> Ternary.
+>
+>>        mesh_path_sel_frame_tx(MPATH_PREQ, 0, sdata->vif.addr,
+>>                        cpu_to_le32(ifmsh->sn), target_flags, mpath->dst,
+>> -                       cpu_to_le32(mpath->sn), broadcast_addr, 0,
+>> +                       cpu_to_le32(mpath->sn), da, 0,
+>>                        ttl, cpu_to_le32(lifetime), 0,
+>>                        cpu_to_le32(ifmsh->preq_id++), sdata);
+>>        mod_timer(&mpath->timer, jiffies + mpath->discovery_timeout);
+>> --
+>> 1.7.0.4
+>>
+>
+> Thomas
+> _______________________________________________
+> Devel mailing list
+> Devel@lists.open80211s.org
+> http://open80211s.com/mailman/listinfo/devel
+
+
+
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
