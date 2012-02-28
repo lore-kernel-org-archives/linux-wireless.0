@@ -1,83 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4980 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750708Ab2BXJrV convert rfc822-to-8bit (ORCPT
+Received: from mail-bk0-f46.google.com ([209.85.214.46]:49451 "EHLO
+	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752255Ab2B1KJz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 04:47:21 -0500
-Message-ID: <4F475C99.2040802@broadcom.com> (sfid-20120224_104725_513812_C2C83576)
-Date: Fri, 24 Feb 2012 10:47:05 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
+	Tue, 28 Feb 2012 05:09:55 -0500
+Received: by bkcik5 with SMTP id ik5so1064047bkc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2012 02:09:54 -0800 (PST)
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"M. Lambert" <lambertm@westman.wave.ca>
-Subject: Re: [PATCH 14/15] brcm80211: fmac: add USB support for
- bcm43235/6/8 chipsets
-References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
- <1328818149-4826-15-git-send-email-arend@broadcom.com>
- <CACna6rxgGuCNY19Dn=VcgUH=EORNr72x4CTbR61srSZmcM+h-w@mail.gmail.com>
- <CACna6rxSrzuEHTC++kZj79sQ7JEv42ckHj5o4bZ5bCULWKUXqA@mail.gmail.com>
- <4F46AD93.6010508@broadcom.com>
- <CACna6rw9jU0HOOVHKNzqMW8sRXFgOwbSw6iOri4oQ_uTVopafw@mail.gmail.com>
-In-Reply-To: <CACna6rw9jU0HOOVHKNzqMW8sRXFgOwbSw6iOri4oQ_uTVopafw@mail.gmail.com>
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+In-Reply-To: <1330422678.18637.28.camel@cumari>
+References: <1330382494-31148-1-git-send-email-arik@wizery.com>
+ <1330382494-31148-3-git-send-email-arik@wizery.com> <1330422678.18637.28.camel@cumari>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 28 Feb 2012 12:09:39 +0200
+Message-ID: <CA+XVXfeWotOQky8TouJSzhNxCzR4TR3uPYPJ0wDOYzkFhekqig@mail.gmail.com> (sfid-20120228_110959_681416_6DA04A0A)
+Subject: Re: [PATCH 3/7] wl12xx: reset link Tx queues when freeing it
+To: Luciano Coelho <coelho@ti.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/24/2012 07:16 AM, Rafa≈Ç Mi≈Çecki wrote:
-> W dniu 23 lutego 2012 22:20 u≈ºytkownik Arend van Spriel
-> <arend@broadcom.com>  napisa≈Ç:
->> On 02/23/2012 07:46 PM, Rafa≈Ç Mi≈Çecki wrote:
->>>
->>> W dniu 23 lutego 2012 19:10 u≈ºytkownik Rafa≈Ç Mi≈Çecki<zajec5@gmail.com>
->>>   napisa≈Ç:
->>>>
->>>> 2012/2/9 Arend van Spriel<arend@broadcom.com>:
->>>>>
->>>>> This patch extends the use of the brcmfmac driver with support for
->>>>> chipsets with a USB host interface. The first chipsets supported are
->>>>> the bcm43235, bcm43236, and bcm43238 for which firmware has been
->>>>> submitted.
->>>>
->>>>
->>>> Can you say something more about the firmware? AFAICS brcm directory
->>>> in linux-firmware.git contains:
->>>> brcmfmac43236b.bin
->>>> brcmfmac4329.bin
->>>> brcmfmac4330.bin
->>>>
->>>>
->>>>> +#define BRCMF_USB_FW_NAME      "brcm/brcmfmac-usb.bin"
->>>>
->>>>
->>>> However your driver seems to require *only* brcmfmac-usb.bin firmware
->>>> file...
->>>
->>>
->>> The only file passing usb.c::check_file test seems to be
->>> brcmfmac43236b.bin. I guess you meant this file name in usb.c.
->>>
+On Tue, Feb 28, 2012 at 11:51, Luciano Coelho <coelho@ti.com> wrote:
+> On Tue, 2012-02-28 at 00:41 +0200, Arik Nemtsov wrote:
+>> Before, the link was first freed (invalidating it in the map), and later
+>> on vif removal, all valid wlvif-related links were reset. Since these
+>> links were already invalid, we failed to reset them.
+>> The bug was made worse by op_stop, which set the tx_queue_count to 0
+>> arbitrarily. This resulted in a negative tx_queue_count in some scenarios.
 >>
->> Yes. bcm4329 and bcm4330 are SDIO cards. I will update the information on
->> linuxwireless.
+>> Fix this by resetting the Tx-queues of a link when freeing it. Add a
+>> WARN_ON and reset all link Tx-queues in op_stop, to avoid a negative
+>> tx_queue_count.
+>>
+>> Signed-off-by: Arik Nemtsov <arik@wizery.com>
+>> ---
 >
-> I'm afraid we don't understand each other. The problem is that
-> filename of firmware submitted to the linux-firmware.git doesn't match
-> filename requested by brcmfmac/usb.c.
+> [...]
 >
-> brcmfmac43236b.bin != brcmfmac-usb.bin
+>> diff --git a/drivers/net/wireless/wl12xx/tx.c b/drivers/net/wireless/wl12xx/tx.c
+>> index 6446e4d..311b5a2 100644
+>> --- a/drivers/net/wireless/wl12xx/tx.c
+>> +++ b/drivers/net/wireless/wl12xx/tx.c
+>> @@ -527,6 +527,7 @@ static struct sk_buff *wl12xx_lnk_skb_dequeue(struct wl1271 *wl,
+>> † † † if (skb) {
+>> † † † † † † † int q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+>> † † † † † † † spin_lock_irqsave(&wl->wl_lock, flags);
+>> + † † † † † † WARN_ON(wl->tx_queue_count[q] <= 0);
+>> † † † † † † † wl->tx_queue_count[q]--;
+>> † † † † † † † spin_unlock_irqrestore(&wl->wl_lock, flags);
+>> † † † }
+>> @@ -602,6 +603,7 @@ static struct sk_buff *wl1271_skb_dequeue(struct wl1271 *wl)
+>> † † † † † † † skb = wl->dummy_packet;
+>> † † † † † † † q = wl1271_tx_get_queue(skb_get_queue_mapping(skb));
+>> † † † † † † † spin_lock_irqsave(&wl->wl_lock, flags);
+>> + † † † † † † WARN_ON(wl->tx_queue_count[q] <= 0);
+>> † † † † † † † wl->tx_queue_count[q]--;
+>> † † † † † † † spin_unlock_irqrestore(&wl->wl_lock, flags);
+>> † † † }
 >
+> [...]
+>
+>> @@ -973,8 +974,14 @@ void wl12xx_tx_reset(struct wl1271 *wl, bool reset_tx_queues)
+>> † † † struct sk_buff *skb;
+>> † † † struct ieee80211_tx_info *info;
+>>
+>> - † † for (i = 0; i < NUM_TX_QUEUES; i++)
+>> - † † † † † † wl->tx_queue_count[i] = 0;
+>> + † † /* only reset the queues if something bad happened */
+>> + † † if (WARN_ON(wl1271_tx_total_queue_count(wl) != 0)) {
+>
+> Let's make all these WARN_ONs as WARN_ON_ONCE as it is recommended
+> nowadays. †This will make Kalle Valo happier. :)
+>
+> I can do a quick sed before I apply this, if you agree.
 
-I do understand and the instruction on linux-wireless says:
+Sure thing.
 
-cp brcm/brcmfmac43236b.bin /lib/firmware/brcm/brcmfmac/brcmfmac-usb.bin
-
-et voila, they match. However, I can follow the reasoning you gave in 
-your patch albeit unlikely that someone inserts two wireless dongles in 
-system.
-
-Gr. AvS
-
+Arik
