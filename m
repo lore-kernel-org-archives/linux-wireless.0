@@ -1,78 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2075 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752906Ab2BHQ11 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 11:27:27 -0500
-Message-ID: <4F32A263.5050909@broadcom.com> (sfid-20120208_172754_410188_EE6CB549)
-Date: Wed, 8 Feb 2012 17:27:15 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: "Felix Fietkau" <nbd@openwrt.org>
-cc: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-Subject: Re: [PATCH v2] mac80211: minstrel_ht: fix NULL pointer
- dereference during auth/assoc
-References: <1328705077-31360-1-git-send-email-arend@broadcom.com>
- <4F329DE5.20408@openwrt.org>
-In-Reply-To: <4F329DE5.20408@openwrt.org>
-Content-Type: text/plain;
- charset=iso-8859-1
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:60442 "HELO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752399Ab2B1GFS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Feb 2012 01:05:18 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 1/6 V2] mwifiex: correct bitrates advertised to cfg80211
+Date: Mon, 27 Feb 2012 22:04:11 -0800
+Message-Id: <1330409056-4399-2-git-send-email-bzhao@marvell.com> (sfid-20120228_070523_441962_D5B1AB18)
+In-Reply-To: <1330409056-4399-1-git-send-email-bzhao@marvell.com>
+References: <1330409056-4399-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/08/2012 05:08 PM, Felix Fietkau wrote:
-> On 2012-02-08 1:44 PM, Arend van Spriel wrote:
->> This patch fixes the following NULL pointer dereference:
->>
->>> I rerun the test on a kernel with some more lock checking and got lucky.
->>>
->>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512283] wlan0: authenticate
->>> with 98:fc:11:8e:94:57
->>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.512515] wlan0: send auth to
->>> 98:fc:11:8e:94:57 (try 1/3)
->>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514184] BUG: unable to handle
->>> kernel NULL pointer dereference at 00000004
->>> Feb  8 08:40:17 lb-bun-10 kernel: [  514.514233] IP: [<f8648f08>]
->>> minstrel_tx_status+0x48/0xe0 [mac80211]
->>
->> static inline int
->> rix_to_ndx(struct minstrel_sta_info *mi, int rix)
->> {
->>         int i = rix;
->>         for (i = rix; i >= 0; i--)
->>                 if (mi->r[i].rix == rix)
->>   48:   3b 58 04                cmp    0x4(%eax),%ebx
->>   4b:   74 4b                   je     98 <minstrel_tx_status+0x98>
->>   4d:   83 c2 01                add    $0x1,%edx
->>
->> It fails because of mi->r[i] being a NULL pointer. It is allocated in
->> minstel_alloc_sta, but minstrel_ht_alloc_sta does not call that function.
->>
->> struct minstrel_ht_sta_priv holds a union with struct minstrel_ht_sta and
->> struct minstrel_sta_info. During authenticate the bool is_ht is false so
->> minstrel_ht_tx_status calls minstrel_tx_status, but minstrel_sta_info::r
->> is not set until rate_init which is after assoc.
-> I'm not sure this is the right fix. If I understand the issue correctly,
-> mi->r is only NULL because .rate_init has not been called yet, which is
-> a bug that other rate control modules might trip over as well, maybe in
-> more subtle ways. If this is the case, then I believe this bug should be
-> fixed in mac80211 instead.
-> 
-> Maybe it would even be a good idea to set a flag after calling
-> rate_control_rate_init, and calling WARN_ON or even BUG_ON when doing tx
-> before that.
-> 
-> - Felix
-> 
+From: Avinash Patil <patila@marvell.com>
 
-Hi Felix,
+1. Driver and firmware do not support 22Mbps and 72Mbps bitrates.
+Remove them from the rate table advertised to cfg80211.
 
-I am not sure I can agree. minstrel_ht allocates the struct
-minstrel_ht_sta_priv initializing is_ht to false thereby choosing a
-default and zero'ing the legacy field. When setting is_ht to false
-consequently the contents of the legacy field should be properly set as
-is done in minstrel_ht_update_caps (at use_legacy label).
+2. First 4 rates from mwifiex_rates table are not valid for
+5GHz/A band. Set correct bitrate array's index and no of rates for
+ieee80211_supported_band for 5GHz band.
 
-Gr. AvS
+Signed-off-by: Avinash Patil <patila@marvell.com>
+Signed-off-by: Nishant Sarmukadam <nishants@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
+Signed-off-by: Kiran Divekar <dkiran@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+V2: updated the commit description (Johanness Berg)
+
+ drivers/net/wireless/mwifiex/cfg80211.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 7b98ce0..2a1fc32 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -613,7 +613,6 @@ static struct ieee80211_rate mwifiex_rates[] = {
+ 	{.bitrate = 20, .hw_value = 4, },
+ 	{.bitrate = 55, .hw_value = 11, },
+ 	{.bitrate = 110, .hw_value = 22, },
+-	{.bitrate = 220, .hw_value = 44, },
+ 	{.bitrate = 60, .hw_value = 12, },
+ 	{.bitrate = 90, .hw_value = 18, },
+ 	{.bitrate = 120, .hw_value = 24, },
+@@ -622,7 +621,6 @@ static struct ieee80211_rate mwifiex_rates[] = {
+ 	{.bitrate = 360, .hw_value = 72, },
+ 	{.bitrate = 480, .hw_value = 96, },
+ 	{.bitrate = 540, .hw_value = 108, },
+-	{.bitrate = 720, .hw_value = 144, },
+ };
+ 
+ /* Channel definitions to be advertised to cfg80211 */
+@@ -688,8 +686,8 @@ static struct ieee80211_channel mwifiex_channels_5ghz[] = {
+ static struct ieee80211_supported_band mwifiex_band_5ghz = {
+ 	.channels = mwifiex_channels_5ghz,
+ 	.n_channels = ARRAY_SIZE(mwifiex_channels_5ghz),
+-	.bitrates = mwifiex_rates - 4,
+-	.n_bitrates = ARRAY_SIZE(mwifiex_rates) + 4,
++	.bitrates = mwifiex_rates + 4,
++	.n_bitrates = ARRAY_SIZE(mwifiex_rates) - 4,
+ };
+ 
+ 
+-- 
+1.7.0.2
 
