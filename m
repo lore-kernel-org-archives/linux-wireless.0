@@ -1,243 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:48156 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752950Ab2BVHKT (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:60428 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752332Ab2B1FTL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Feb 2012 02:10:19 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20292.38097.735846.731941@gargle.gargle.HOWL> (sfid-20120222_081035_403984_0EB0A9C0)
-Date: Wed, 22 Feb 2012 12:40:09 +0530
-To: <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>
-Subject: [PATCH 02/26] ath9k: Cleanup MCI init/deinit routines
+	Tue, 28 Feb 2012 00:19:11 -0500
+Received: by pbcup15 with SMTP id up15so2878685pbc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2012 21:19:11 -0800 (PST)
+From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, javier@cozybit.com,
+	linville@tuxdriver.com, devel@lists.open80211s.org,
+	thomas@cozybit.com, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: [PATCH v4] mac80211: Fix the generation of PREQs in proactive RANN mechanism of HWMP
+Date: Tue, 28 Feb 2012 22:00:06 +0800
+Message-Id: <1330437606-20935-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120228_061915_624295_30D82536)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch simplifies the buffer allocation functions
-for MCI and removes unneeded memset calls. Also, a couple
-of unused variables are removed and a memory leak in DMA
-allocation is fixed.
+According to Section Y.7.4 Actions on receipt of proactive RANN, an individually
+addressed PREQ should be generated towards the neighbor peer mesh STA indicated
+in the RANN Sender Address field in the forwarding information.
 
-[ 1263.788267] WARNING: at /home/sujith/dev/wireless-testing/lib/dma-debug.c:875 check_unmap+0x173/0x7e0()
-[ 1263.788273] ath9k 0000:06:00.0: DMA-API: device driver frees DMA memory with different size
-               [device address=0x0000000071908000] [map size=512 bytes] [unmap size=256 bytes]
-[ 1263.788345] Pid: 774, comm: rmmod Tainted: G        W  O 3.3.0-rc3-wl #18
-[ 1263.788348] Call Trace:
-[ 1263.788355]  [<ffffffff8105110f>] warn_slowpath_common+0x7f/0xc0
-[ 1263.788359]  [<ffffffff81051206>] warn_slowpath_fmt+0x46/0x50
-[ 1263.788363]  [<ffffffff8125a713>] check_unmap+0x173/0x7e0
-[ 1263.788368]  [<ffffffff8123fc22>] ? prio_tree_left+0x32/0xc0
-[ 1263.788373]  [<ffffffff8125aded>] debug_dma_free_coherent+0x6d/0x80
-[ 1263.788381]  [<ffffffffa0701c3c>] ath_mci_cleanup+0x7c/0x110 [ath9k]
-[ 1263.788387]  [<ffffffffa06f4033>] ath9k_deinit_softc+0x113/0x120 [ath9k]
-[ 1263.788392]  [<ffffffffa06f55cc>] ath9k_deinit_device+0x5c/0x70 [ath9k]
-[ 1263.788397]  [<ffffffffa0704934>] ath_pci_remove+0x54/0xa0 [ath9k]
-[ 1263.788401]  [<ffffffff81267d06>] pci_device_remove+0x46/0x110
-[ 1263.788406]  [<ffffffff813102bc>] __device_release_driver+0x7c/0xe0
-[ 1263.788410]  [<ffffffff81310a00>] driver_detach+0xd0/0xe0
-[ 1263.788414]  [<ffffffff81310118>] bus_remove_driver+0x88/0xe0
-[ 1263.788418]  [<ffffffff813111c2>] driver_unregister+0x62/0xa0
-[ 1263.788421]  [<ffffffff812680c4>] pci_unregister_driver+0x44/0xc0
-[ 1263.788427]  [<ffffffffa0705015>] ath_pci_exit+0x15/0x20 [ath9k]
-[ 1263.788432]  [<ffffffffa070a92d>] ath9k_exit+0x15/0x31 [ath9k]
-[ 1263.788436]  [<ffffffff810b971c>] sys_delete_module+0x18c/0x270
-[ 1263.788441]  [<ffffffff81436edd>] ? retint_swapgs+0x13/0x1b
-[ 1263.788446]  [<ffffffff812483be>] ? trace_hardirqs_on_thunk+0x3a/0x3f
-[ 1263.788450]  [<ffffffff814378e9>] system_call_fastpath+0x16/0x1b
-[ 1263.788453] ---[ end trace 3ab4d030ffde40d4 ]---
-
-Signed-off-by: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_mci.c |    5 --
- drivers/net/wireless/ath/ath9k/btcoex.h     |    1 -
- drivers/net/wireless/ath/ath9k/mci.c        |   70 +++++++++------------------
- drivers/net/wireless/ath/ath9k/mci.h        |    3 -
- 4 files changed, 23 insertions(+), 56 deletions(-)
+v2: fix suggestions by Johannes
+v3: fix warnings reported by Linville
+v4: fix ternary recommended by Thomas
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index 8439656..2cd607f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -973,7 +973,6 @@ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
- 		      u16 len, u32 sched_addr)
+ net/mac80211/mesh.h      |    4 ++++
+ net/mac80211/mesh_hwmp.c |   20 +++++++++++++++-----
+ 2 files changed, 19 insertions(+), 5 deletions(-)
+
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index bd14bd2..4b0a9e8 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -86,6 +86,8 @@ enum mesh_deferred_task_flags {
+  * @state_lock: mesh path state lock used to protect changes to the
+  * mpath itself.  No need to take this lock when adding or removing
+  * an mpath to a hash bucket on a path table.
++ * @rann_snd_addr: the RANN sender address
++ * @is_root: the destination station of this path is a root node
+  * @is_gate: the destination station of this path is a mesh gate
+  *
+  *
+@@ -110,6 +112,8 @@ struct mesh_path {
+ 	u8 discovery_retries;
+ 	enum mesh_path_flags flags;
+ 	spinlock_t state_lock;
++	u8 rann_snd_addr[ETH_ALEN];
++	bool is_root;
+ 	bool is_gate;
+ };
+
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index cae4071..2e5116d 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -512,8 +512,9 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 				    u8 *preq_elem, u32 metric)
  {
- 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
--	void *sched_buf = (void *)((char *) gpm_buf + (sched_addr - gpm_addr));
- 
- 	if (!ATH9K_HW_CAP_MCI)
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+-	struct mesh_path *mpath;
++	struct mesh_path *mpath = NULL;
+ 	u8 *target_addr, *orig_addr;
++	const u8 *da;
+ 	u8 target_flags, ttl;
+ 	u32 orig_sn, target_sn, lifetime;
+ 	bool reply = false;
+@@ -590,9 +591,11 @@ static void hwmp_preq_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		flags = PREQ_IE_FLAGS(preq_elem);
+ 		preq_id = PREQ_IE_PREQ_ID(preq_elem);
+ 		hopcount = PREQ_IE_HOPCOUNT(preq_elem) + 1;
++		da = (mpath && mpath->is_root) ?
++			mpath->rann_snd_addr : broadcast_addr;
+ 		mesh_path_sel_frame_tx(MPATH_PREQ, flags, orig_addr,
+ 				cpu_to_le32(orig_sn), target_flags, target_addr,
+-				cpu_to_le32(target_sn), broadcast_addr,
++				cpu_to_le32(target_sn), da,
+ 				hopcount, ttl, cpu_to_le32(lifetime),
+ 				cpu_to_le32(metric), cpu_to_le32(preq_id),
+ 				sdata);
+@@ -741,8 +744,8 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 	if (memcmp(orig_addr, sdata->vif.addr, ETH_ALEN) == 0)
  		return;
-@@ -982,7 +981,6 @@ void ar9003_mci_setup(struct ath_hw *ah, u32 gpm_addr, void *gpm_buf,
- 	mci->gpm_buf = gpm_buf;
- 	mci->gpm_len = len;
- 	mci->sched_addr = sched_addr;
--	mci->sched_buf = sched_buf;
- 
- 	ar9003_mci_reset(ah, true, true, true);
- }
-@@ -990,14 +988,11 @@ EXPORT_SYMBOL(ar9003_mci_setup);
- 
- void ar9003_mci_cleanup(struct ath_hw *ah)
- {
--	struct ath_common *common = ath9k_hw_common(ah);
--
- 	if (!ATH9K_HW_CAP_MCI)
- 		return;
- 
- 	/* Turn off MCI and Jupiter mode. */
- 	REG_WRITE(ah, AR_BTCOEX_CTRL, 0x00);
--	ath_dbg(common, MCI, "MCI ar9003_mci_cleanup\n");
- 	ar9003_mci_disable_interrupt(ah);
- }
- EXPORT_SYMBOL(ar9003_mci_cleanup);
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index 278361c..0cb7ce9 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -67,7 +67,6 @@ struct ath9k_hw_mci {
- 	u32 wlan_cal_done;
- 	u32 config;
- 	u8 *gpm_buf;
--	u8 *sched_buf;
- 	bool ready;
- 	bool update_2g5g;
- 	bool is_2g;
-diff --git a/drivers/net/wireless/ath/ath9k/mci.c b/drivers/net/wireless/ath/ath9k/mci.c
-index 05c23ea..85a957a 100644
---- a/drivers/net/wireless/ath/ath9k/mci.c
-+++ b/drivers/net/wireless/ath/ath9k/mci.c
-@@ -383,84 +383,60 @@ static void ath_mci_msg(struct ath_softc *sc, u8 opcode, u8 *rx_payload)
+
+-	mhwmp_dbg("received RANN from %pM (is_gate=%d)", orig_addr,
+-			root_is_gate);
++	mhwmp_dbg("received RANN from %pM via neighbour %pM (is_gate=%d)",
++			orig_addr, mgmt->sa, root_is_gate);
+
+ 	rcu_read_lock();
+ 	mpath = mesh_path_lookup(orig_addr, sdata);
+@@ -773,6 +776,11 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 				       0, sdata);
+ 		mpath->sn = orig_sn;
  	}
- }
- 
--static int ath_mci_buf_alloc(struct ath_softc *sc, struct ath_mci_buf *buf)
--{
--	int error = 0;
--
--	buf->bf_addr = dma_alloc_coherent(sc->dev, buf->bf_len,
--					  &buf->bf_paddr, GFP_KERNEL);
--
--	if (buf->bf_addr == NULL) {
--		error = -ENOMEM;
--		goto fail;
--	}
--
--	return 0;
--
--fail:
--	memset(buf, 0, sizeof(*buf));
--	return error;
--}
--
--static void ath_mci_buf_free(struct ath_softc *sc, struct ath_mci_buf *buf)
--{
--	if (buf->bf_addr) {
--		dma_free_coherent(sc->dev, buf->bf_len, buf->bf_addr,
--							buf->bf_paddr);
--		memset(buf, 0, sizeof(*buf));
--	}
--}
--
- int ath_mci_setup(struct ath_softc *sc)
- {
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_mci_coex *mci = &sc->mci_coex;
--	int error = 0;
-+	struct ath_mci_buf *buf = &mci->sched_buf;
- 
- 	if (!ATH9K_HW_CAP_MCI)
- 		return 0;
- 
--	mci->sched_buf.bf_len = ATH_MCI_SCHED_BUF_SIZE + ATH_MCI_GPM_BUF_SIZE;
-+	buf->bf_addr = dma_alloc_coherent(sc->dev,
-+				  ATH_MCI_SCHED_BUF_SIZE + ATH_MCI_GPM_BUF_SIZE,
-+				  &buf->bf_paddr, GFP_KERNEL);
- 
--	if (ath_mci_buf_alloc(sc, &mci->sched_buf)) {
-+	if (buf->bf_addr == NULL) {
- 		ath_dbg(common, FATAL, "MCI buffer alloc failed\n");
--		error = -ENOMEM;
--		goto fail;
-+		return -ENOMEM;
- 	}
- 
--	mci->sched_buf.bf_len = ATH_MCI_SCHED_BUF_SIZE;
-+	memset(buf->bf_addr, MCI_GPM_RSVD_PATTERN,
-+	       ATH_MCI_SCHED_BUF_SIZE + ATH_MCI_GPM_BUF_SIZE);
- 
--	memset(mci->sched_buf.bf_addr, MCI_GPM_RSVD_PATTERN,
--						mci->sched_buf.bf_len);
-+	mci->sched_buf.bf_len = ATH_MCI_SCHED_BUF_SIZE;
- 
- 	mci->gpm_buf.bf_len = ATH_MCI_GPM_BUF_SIZE;
--	mci->gpm_buf.bf_addr = (u8 *)mci->sched_buf.bf_addr +
--							mci->sched_buf.bf_len;
-+	mci->gpm_buf.bf_addr = (u8 *)mci->sched_buf.bf_addr + mci->sched_buf.bf_len;
- 	mci->gpm_buf.bf_paddr = mci->sched_buf.bf_paddr + mci->sched_buf.bf_len;
- 
--	/* initialize the buffer */
--	memset(mci->gpm_buf.bf_addr, MCI_GPM_RSVD_PATTERN, mci->gpm_buf.bf_len);
--
- 	ar9003_mci_setup(sc->sc_ah, mci->gpm_buf.bf_paddr,
- 			 mci->gpm_buf.bf_addr, (mci->gpm_buf.bf_len >> 4),
- 			 mci->sched_buf.bf_paddr);
--fail:
--	return error;
 +
-+	ath_dbg(common, MCI, "MCI Initialized\n");
++	/* Using individually addressed PREQ for root node */
++	memcpy(mpath->rann_snd_addr, mgmt->sa, ETH_ALEN);
++	mpath->is_root = true;
 +
-+	return 0;
- }
- 
- void ath_mci_cleanup(struct ath_softc *sc)
- {
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_mci_coex *mci = &sc->mci_coex;
-+	struct ath_mci_buf *buf = &mci->sched_buf;
- 
- 	if (!ATH9K_HW_CAP_MCI)
- 		return;
- 
--	/*
--	 * both schedule and gpm buffers will be released
--	 */
--	ath_mci_buf_free(sc, &mci->sched_buf);
-+	if (buf->bf_addr)
-+		dma_free_coherent(sc->dev,
-+				  ATH_MCI_SCHED_BUF_SIZE + ATH_MCI_GPM_BUF_SIZE,
-+				  buf->bf_addr, buf->bf_paddr);
-+
- 	ar9003_mci_cleanup(ah);
-+
-+	ath_dbg(common, MCI, "MCI De-Initialized\n");
- }
- 
- void ath_mci_intr(struct ath_softc *sc)
-diff --git a/drivers/net/wireless/ath/ath9k/mci.h b/drivers/net/wireless/ath/ath9k/mci.h
-index 29e3e51..b805bf2 100644
---- a/drivers/net/wireless/ath/ath9k/mci.h
-+++ b/drivers/net/wireless/ath/ath9k/mci.h
-@@ -113,7 +113,6 @@ struct ath_mci_profile {
- 	u8 num_bdr;
- };
- 
--
- struct ath_mci_buf {
- 	void *bf_addr;		/* virtual addr of desc */
- 	dma_addr_t bf_paddr;    /* physical addr of buffer */
-@@ -121,10 +120,8 @@ struct ath_mci_buf {
- };
- 
- struct ath_mci_coex {
--	atomic_t mci_cal_flag;
- 	struct ath_mci_buf sched_buf;
- 	struct ath_mci_buf gpm_buf;
--	u32 bt_cal_start;
- };
- 
- void ath_mci_flush_profile(struct ath_mci_profile *mci);
--- 
-1.7.9.1
+ 	if (root_is_gate)
+ 		mesh_path_add_gate(mpath);
+
+@@ -908,6 +916,7 @@ void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata)
+ 	struct mesh_preq_queue *preq_node;
+ 	struct mesh_path *mpath;
+ 	u8 ttl, target_flags;
++	const u8 *da;
+ 	u32 lifetime;
+
+ 	spin_lock_bh(&ifmsh->mesh_preq_queue_lock);
+@@ -970,9 +979,10 @@ void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata)
+ 		target_flags = MP_F_RF;
+
+ 	spin_unlock_bh(&mpath->state_lock);
++	da = (mpath->is_root) ? mpath->rann_snd_addr : broadcast_addr;
+ 	mesh_path_sel_frame_tx(MPATH_PREQ, 0, sdata->vif.addr,
+ 			cpu_to_le32(ifmsh->sn), target_flags, mpath->dst,
+-			cpu_to_le32(mpath->sn), broadcast_addr, 0,
++			cpu_to_le32(mpath->sn), da, 0,
+ 			ttl, cpu_to_le32(lifetime), 0,
+ 			cpu_to_le32(ifmsh->preq_id++), sdata);
+ 	mod_timer(&mpath->timer, jiffies + mpath->discovery_timeout);
+--
+1.7.0.4
 
