@@ -1,74 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:38418 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965490Ab2B2SVH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 13:21:07 -0500
-Message-ID: <1330539665.13689.9.camel@joe2Laptop> (sfid-20120229_192111_511697_59F5ED83)
-Subject: Re: [PATCH 00/12] ath6kl: checkpatch fixes
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
-Date: Wed, 29 Feb 2012 10:21:05 -0800
-In-Reply-To: <4F4E635A.3060003@qca.qualcomm.com>
-References: <20120229171525.24264.22062.stgit@localhost6.localdomain6>
-	 <1330537026.13689.1.camel@joe2Laptop> <4F4E635A.3060003@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:29198 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754069Ab2B1RRK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Feb 2012 12:17:10 -0500
+From: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>,
+	Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
+Subject: [PATCH] ath6kl: Clear the IE in firmware if not set
+Date: Tue, 28 Feb 2012 09:17:04 -0800
+Message-ID: <1330449424-4975-1-git-send-email-aarthi.thiruvengadam@qca.qualcomm.com> (sfid-20120228_181736_991205_8AB4E608)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2012-02-29 at 19:41 +0200, Kalle Valo wrote:
-> On 02/29/2012 07:37 PM, Joe Perches wrote:
-> > On Wed, 2012-02-29 at 19:18 +0200, Kalle Valo wrote:
-> >> Here are quite a few checkpatch fixes and other cleanups.
-> >>
-> >> Especially I would like to people review these two macros, they ended up
-> >> a bit too clever and I'm sure there are issues:
-> >>
-> >> #define ath6kl_bmi_write_hi32(ar, item, val)				\
-> >> 	({								\
-> >> 		u32 addr;						\
-> >> 		__le32 v;						\
-> >> 									\
-> >> 		addr = ath6kl_get_hi_item_addr(ar, HI_ITEM(item));	\
-> >> 		v = cpu_to_le32(val);					\
-> >> 		ath6kl_bmi_write(ar, addr, (u8 *) &v, sizeof(v));	\
-> >> 	})
-> >>
-> >> #define ath6kl_bmi_read_hi32(ar, item, val)				\
-> >> 	({								\
-> >> 		u32 addr, *check_type = val;				\
-> >> 		__le32 tmp;						\
-> >> 		int ret;						\
-> >> 									\
-> >> 		(void) (check_type == val);				\
-> >> 		addr = ath6kl_get_hi_item_addr(ar, HI_ITEM(item));	\
-> >> 		ret = ath6kl_bmi_read(ar, addr, (u8 *) &tmp, 4);	\
-> >> 		*val = le32_to_cpu(tmp);				\
-> >> 		ret;							\
-> >> 	})
-> > 
-> > Why not just make these functions?
-> 
-> Because of the HI_ITEM() macro I can't pass the item parameter to a
-> function:
-> 
-> #define HI_ITEM(item)  offsetof(struct host_interest, item)
+Remove check so that IE in firmware is cleared if not set. Without this fix, any
+previously set IE will be used incorrectly in the next frame. For example,
+consider the scenario where a P2P device scan is followed by a regular station
+scan. The P2P IE set by the P2P scan needs to be cleared, otherwise the station
+scan will contain the P2P IE.
 
-Perhaps something like:
-void _ath6kl_bmi_write_hi32(struct ath6kl ar, size_t offset, u32 *val)
-{
-	u32 addr;
-	__le32 v;
+Signed-off-by: Aarthi Thiruvengadam <athiruve@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   64 +++++++++++++---------------
+ 1 files changed, 29 insertions(+), 35 deletions(-)
 
-	addr = ath6kl_get_hi_item_addr(ar, offset);
-	v = cpu_to_le32(*val);
-	ath6kl_bmi_write(ar, addr, (u8 *)&v, sizeof(v));
-}
-
-#define ath6kl_bmi_write_hi32(ar, item, val)		\
-	_ath6kl_bmi_write_hi32(ar, HI_ITEM(item), &(val))
-
-etc...
-
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index a91f521..73848c0 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -877,19 +877,14 @@ static int ath6kl_cfg80211_scan(struct wiphy *wiphy, struct net_device *ndev,
+ 						  request->ssids[i].ssid);
+ 	}
+ 
+-	/*
+-	 * FIXME: we should clear the IE in fw if it's not set so just
+-	 * remove the check altogether
+-	 */
+-	if (request->ie) {
+-		ret = ath6kl_wmi_set_appie_cmd(ar->wmi, vif->fw_vif_idx,
+-					       WMI_FRAME_PROBE_REQ,
+-					       request->ie, request->ie_len);
+-		if (ret) {
+-			ath6kl_err("failed to set Probe Request appie for "
+-				   "scan");
+-			return ret;
+-		}
++	/* this also clears IE in fw if it's not set */
++	ret = ath6kl_wmi_set_appie_cmd(ar->wmi, vif->fw_vif_idx,
++		WMI_FRAME_PROBE_REQ,
++		request->ie, request->ie_len);
++	if (ret) {
++		ath6kl_err("failed to set Probe Request appie for "
++			"scan");
++		return ret;
+ 	}
+ 
+ 	/*
+@@ -2290,28 +2285,27 @@ static int ath6kl_ap_beacon(struct wiphy *wiphy, struct net_device *dev,
+ 	if (vif->next_mode != AP_NETWORK)
+ 		return -EOPNOTSUPP;
+ 
+-	if (info->beacon_ies) {
+-		res = ath6kl_wmi_set_appie_cmd(ar->wmi, vif->fw_vif_idx,
+-					       WMI_FRAME_BEACON,
+-					       info->beacon_ies,
+-					       info->beacon_ies_len);
+-		if (res)
+-			return res;
+-	}
+-	if (info->proberesp_ies) {
+-		res = ath6kl_set_ap_probe_resp_ies(vif, info->proberesp_ies,
+-						   info->proberesp_ies_len);
+-		if (res)
+-			return res;
+-	}
+-	if (info->assocresp_ies) {
+-		res = ath6kl_wmi_set_appie_cmd(ar->wmi, vif->fw_vif_idx,
+-					       WMI_FRAME_ASSOC_RESP,
+-					       info->assocresp_ies,
+-					       info->assocresp_ies_len);
+-		if (res)
+-			return res;
+-	}
++	/* this also clears IE in fw if it's not set */
++	res = ath6kl_wmi_set_appie_cmd(ar->wmi, vif->fw_vif_idx,
++		WMI_FRAME_BEACON,
++		info->beacon_ies,
++		info->beacon_ies_len);
++	if (res)
++		return res;
++
++	/* this also clears IE in fw if it's not set */
++	res = ath6kl_set_ap_probe_resp_ies(vif, info->proberesp_ies,
++		info->proberesp_ies_len);
++	if (res)
++		return res;
++
++	/* this also clears IE in fw if it's not set */
++	res = ath6kl_wmi_set_appie_cmd(ar->wmi, vif->fw_vif_idx,
++		WMI_FRAME_ASSOC_RESP,
++		info->assocresp_ies,
++		info->assocresp_ies_len);
++	if (res)
++		return res;
+ 
+ 	if (!add)
+ 		return 0;
+-- 
+1.7.0.4
 
