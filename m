@@ -1,89 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:54920 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757799Ab2BJAUG (ORCPT
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:48103 "HELO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754385Ab2B1GFu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 19:20:06 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Tim Gardner <tim.gardner@canonical.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH v3] rtlwifi: rtl8192se firmware load can overflow target buffer
-Date: Thu,  9 Feb 2012 18:19:52 -0600
-Message-Id: <1328833192-10681-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120210_012019_440357_9C480C02)
+	Tue, 28 Feb 2012 01:05:50 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 5/6 V2] mwifiex: fix bug in wildcard scan handling
+Date: Mon, 27 Feb 2012 22:04:15 -0800
+Message-Id: <1330409056-4399-6-git-send-email-bzhao@marvell.com> (sfid-20120228_070553_945463_871FCC09)
+In-Reply-To: <1330409056-4399-1-git-send-email-bzhao@marvell.com>
+References: <1330409056-4399-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tim Gardner <tim.gardner@canonical.com>
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Define RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE which represents the
-maximimum possible firmware file size. Use it in the definition
-of the buffer which receives the firmware file data.
+Currently if valid SSID list is provided in scan request, driver
+performs specific SSID scan otherwise wildcard scan is chosen.
 
-Set RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE closer to the actual size of
-the firmware file, e.g., 90000 (down from hard coded 164000). The current
-size of rtlwifi/rtl8192sefw.bin is 88856.
+When wpa_supplicant provides valid SSID list followed by
+zero-length SSID for wildcard scan, only specific SSID scan is
+performed by driver. Actually driver is expected to do both type
+of scanning in this case. The patch fixes this issue.
 
-Set max_fw_size to RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE for the size limit
-check. Fix the error case where max_fw_size is not cleared if the size
-limit check fails.
+Also, use SSID list pointer provided by stack directly, instead
+of copying SSID's to local structure.
 
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Tim Gardner <tim.gardner@canonical.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192se/fw.h |    3 ++-
- drivers/net/wireless/rtlwifi/rtl8192se/sw.c |    3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+V2: Do not use strlen() on an SSID (Johanness Berg)
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
-index babe85d..b4afff6 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/fw.h
-@@ -30,6 +30,7 @@
- #define __REALTEK_FIRMWARE92S_H__
- 
- #define RTL8190_MAX_FIRMWARE_CODE_SIZE		64000
-+#define RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE	90000
- #define RTL8190_CPU_START_OFFSET		0x80
- /* Firmware Local buffer size. 64k */
- #define	MAX_FIRMWARE_CODE_SIZE			0xFF00
-@@ -217,7 +218,7 @@ struct rt_firmware {
- 	u8 fw_emem[RTL8190_MAX_FIRMWARE_CODE_SIZE];
- 	u32 fw_imem_len;
- 	u32 fw_emem_len;
--	u8 sz_fw_tmpbuffer[164000];
-+	u8 sz_fw_tmpbuffer[RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE];
- 	u32 sz_fw_tmpbufferlen;
- 	u16 cmdpacket_fragthresold;
- };
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-index ca38dd9..345d752 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192se/sw.c
-@@ -108,6 +108,7 @@ static void rtl92se_fw_cb(const struct firmware *firmware, void *context)
- 	if (firmware->size > rtlpriv->max_fw_size) {
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
- 			 "Firmware is too big!\n");
-+		rtlpriv->max_fw_size = 0;
- 		release_firmware(firmware);
- 		return;
+ drivers/net/wireless/mwifiex/cfg80211.c |   10 +++----
+ drivers/net/wireless/mwifiex/fw.h       |   10 ++-----
+ drivers/net/wireless/mwifiex/scan.c     |   40 +++++++++++++++---------------
+ 3 files changed, 27 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 6a91c2f..b4890a0 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -1106,12 +1106,10 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy, struct net_device *dev,
+ 		dev_err(priv->adapter->dev, "failed to alloc scan_req\n");
+ 		return -ENOMEM;
  	}
-@@ -232,7 +233,7 @@ static int rtl92s_init_sw_vars(struct ieee80211_hw *hw)
- 		return 1;
+-	for (i = 0; i < request->n_ssids; i++) {
+-		memcpy(priv->user_scan_cfg->ssid_list[i].ssid,
+-			request->ssids[i].ssid, request->ssids[i].ssid_len);
+-		priv->user_scan_cfg->ssid_list[i].max_len =
+-			request->ssids[i].ssid_len;
+-	}
++
++	priv->user_scan_cfg->num_ssids = request->n_ssids;
++	priv->user_scan_cfg->ssid_list = request->ssids;
++
+ 	for (i = 0; i < request->n_channels; i++) {
+ 		chan = request->channels[i];
+ 		priv->user_scan_cfg->chan_list[i].chan_number = chan->hw_value;
+diff --git a/drivers/net/wireless/mwifiex/fw.h b/drivers/net/wireless/mwifiex/fw.h
+index c826200..fc4ffee 100644
+--- a/drivers/net/wireless/mwifiex/fw.h
++++ b/drivers/net/wireless/mwifiex/fw.h
+@@ -852,11 +852,6 @@ struct mwifiex_user_scan_chan {
+ 	u32 scan_time;
+ } __packed;
+ 
+-struct mwifiex_user_scan_ssid {
+-	u8 ssid[IEEE80211_MAX_SSID_LEN + 1];
+-	u8 max_len;
+-} __packed;
+-
+ struct mwifiex_user_scan_cfg {
+ 	/*
+ 	 *  BSS mode to be sent in the firmware command
+@@ -867,8 +862,9 @@ struct mwifiex_user_scan_cfg {
+ 	u8 reserved;
+ 	/* BSSID filter sent in the firmware command to limit the results */
+ 	u8 specific_bssid[ETH_ALEN];
+-	/* SSID filter list used in the to limit the scan results */
+-	struct mwifiex_user_scan_ssid ssid_list[MWIFIEX_MAX_SSID_LIST_LENGTH];
++	/* SSID filter list used in the firmware to limit the scan results */
++	struct cfg80211_ssid *ssid_list;
++	u8 num_ssids;
+ 	/* Variable number (fixed maximum) of channels to scan up */
+ 	struct mwifiex_user_scan_chan chan_list[MWIFIEX_USER_SCAN_CHAN_MAX];
+ } __packed;
+diff --git a/drivers/net/wireless/mwifiex/scan.c b/drivers/net/wireless/mwifiex/scan.c
+index 67422f6..fd0302f 100644
+--- a/drivers/net/wireless/mwifiex/scan.c
++++ b/drivers/net/wireless/mwifiex/scan.c
+@@ -737,7 +737,7 @@ mwifiex_scan_setup_scan_config(struct mwifiex_private *priv,
+ 	u16 scan_dur;
+ 	u8 channel;
+ 	u8 radio_type;
+-	u32 ssid_idx;
++	int i;
+ 	u8 ssid_filter;
+ 	u8 rates[MWIFIEX_SUPPORTED_RATES];
+ 	u32 rates_size;
+@@ -792,14 +792,8 @@ mwifiex_scan_setup_scan_config(struct mwifiex_private *priv,
+ 		       user_scan_in->specific_bssid,
+ 		       sizeof(scan_cfg_out->specific_bssid));
+ 
+-		for (ssid_idx = 0;
+-		     ((ssid_idx < ARRAY_SIZE(user_scan_in->ssid_list))
+-		      && (*user_scan_in->ssid_list[ssid_idx].ssid
+-			  || user_scan_in->ssid_list[ssid_idx].max_len));
+-		     ssid_idx++) {
+-
+-			ssid_len = strlen(user_scan_in->ssid_list[ssid_idx].
+-					  ssid) + 1;
++		for (i = 0; i < user_scan_in->num_ssids; i++) {
++			ssid_len = user_scan_in->ssid_list[i].ssid_len;
+ 
+ 			wildcard_ssid_tlv =
+ 				(struct mwifiex_ie_types_wildcard_ssid_params *)
+@@ -810,19 +804,26 @@ mwifiex_scan_setup_scan_config(struct mwifiex_private *priv,
+ 				(u16) (ssid_len + sizeof(wildcard_ssid_tlv->
+ 							 max_ssid_length)));
+ 
+-			/* max_ssid_length = 0 tells firmware to perform
+-			   specific scan for the SSID filled */
+-			wildcard_ssid_tlv->max_ssid_length = 0;
++			/*
++			 * max_ssid_length = 0 tells firmware to perform
++			 * specific scan for the SSID filled, whereas
++			 * max_ssid_length = IEEE80211_MAX_SSID_LEN is for
++			 * wildcard scan.
++			 */
++			if (ssid_len)
++				wildcard_ssid_tlv->max_ssid_length = 0;
++			else
++				wildcard_ssid_tlv->max_ssid_length =
++							IEEE80211_MAX_SSID_LEN;
+ 
+ 			memcpy(wildcard_ssid_tlv->ssid,
+-			       user_scan_in->ssid_list[ssid_idx].ssid,
+-			       ssid_len);
++			       user_scan_in->ssid_list[i].ssid, ssid_len);
+ 
+ 			tlv_pos += (sizeof(wildcard_ssid_tlv->header)
+ 				+ le16_to_cpu(wildcard_ssid_tlv->header.len));
+ 
+-			dev_dbg(adapter->dev, "info: scan: ssid_list[%d]: %s, %d\n",
+-				ssid_idx, wildcard_ssid_tlv->ssid,
++			dev_dbg(adapter->dev, "info: scan: ssid[%d]: %s, %d\n",
++				i, wildcard_ssid_tlv->ssid,
+ 				wildcard_ssid_tlv->max_ssid_length);
+ 
+ 			/* Empty wildcard ssid with a maxlen will match many or
+@@ -831,7 +832,6 @@ mwifiex_scan_setup_scan_config(struct mwifiex_private *priv,
+ 			   filtered. */
+ 			if (!ssid_len && wildcard_ssid_tlv->max_ssid_length)
+ 				ssid_filter = false;
+-
+ 		}
+ 
+ 		/*
+@@ -840,7 +840,7 @@ mwifiex_scan_setup_scan_config(struct mwifiex_private *priv,
+ 		 *  truncate scan results.  That is not an issue with an SSID
+ 		 *  or BSSID filter applied to the scan results in the firmware.
+ 		 */
+-		if ((ssid_idx && ssid_filter)
++		if ((i && ssid_filter)
+ 		    || memcmp(scan_cfg_out->specific_bssid, &zero_mac,
+ 			      sizeof(zero_mac)))
+ 			*filtered_scan = true;
+@@ -1876,8 +1876,8 @@ static int mwifiex_scan_specific_ssid(struct mwifiex_private *priv,
+ 		return -ENOMEM;
  	}
  
--	rtlpriv->max_fw_size = sizeof(struct rt_firmware);
-+	rtlpriv->max_fw_size = RTL8190_MAX_RAW_FIRMWARE_CODE_SIZE;
+-	memcpy(scan_cfg->ssid_list[0].ssid, req_ssid->ssid,
+-	       req_ssid->ssid_len);
++	scan_cfg->ssid_list = req_ssid;
++	scan_cfg->num_ssids = 1;
  
- 	pr_info("Driver for Realtek RTL8192SE/RTL8191SE\n"
- 		"Loading firmware %s\n", rtlpriv->cfg->fw_name);
+ 	ret = mwifiex_scan_networks(priv, scan_cfg);
+ 
 -- 
-1.7.9
+1.7.0.2
 
