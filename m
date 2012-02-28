@@ -1,81 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:35009 "HELO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753218Ab2B1GFN (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:33547 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752141Ab2B1PLk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Feb 2012 01:05:13 -0500
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 0/6] mwifiex: improvements for 3.4
-Date: Mon, 27 Feb 2012 22:04:10 -0800
-Message-Id: <1330409056-4399-1-git-send-email-bzhao@marvell.com> (sfid-20120228_070518_336668_3EDC406E)
+	Tue, 28 Feb 2012 10:11:40 -0500
+Received: by vbbff1 with SMTP id ff1so1910202vbb.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2012 07:11:40 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1330441305.3368.12.camel@jlt3.sipsolutions.net>
+References: <CAD2nsn1_DzbRHuSbS_1rFNzuux_9pW1-pABEasQ01_y7-ndO5w@mail.gmail.com>
+	<1330441305.3368.12.camel@jlt3.sipsolutions.net>
+Date: Tue, 28 Feb 2012 20:41:40 +0530
+Message-ID: <CAD2nsn0p=owQVumNVhxfPgtxyj7M6o5OkRcEYKhn8sQzQBCi+g@mail.gmail.com> (sfid-20120228_161144_995329_A423406F)
+Subject: Re: WARNING: at drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c:465
+ iwl_irq_tasklet+0x7c8/0x1620 [iwlwifi]()
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless Mailing List <linux-wireless@vger.kernel.org>,
+	"Guy, Wey-Yi W" <wey-yi.w.guy@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi John,
+Hi Johannes,
 
-Please find the following patches in this submission. I've mixed V1
-and V2 patches here as they have dependences.
- 
-[PATCH 1/6 V2] mwifiex: correct bitrates advertised to cfg80211
+>> got this following warning  for the following card, it was my inbuilt
+>> card it was just associated with an AP, wireless-testing 3.3.0-rc4-wl
+>>
+>> 03:00.0 Network controller: Intel Corporation PRO/Wireless 5100 AGN
+>> [Shiloh] Network Connection
+>>         Subsystem: Intel Corporation Device 1211
+>
+>> [11056.342672] WARNING: at
+>> drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c:465
+>> iwl_irq_tasklet+0x7c8/0x1620 [iwlwifi]()
+>> [11056.342681] Hardware name: 64756D6
+>> [11056.342687] reclaim is false, SEQ_RX_FRAME unset: STATISTICS_NOTIFICATION
+>
+> Thanks for the report. The warning is harmless, but we were hoping this
+> code was only to handle 4965 (this code comes from pre-driver-split
+> days). As we weren't sure, we put in the warning. Since you ran into it,
+> evidently this does in fact happen on later devices; it will complicate
+> our life a bit but we'll handle it.
 
-  The V1 patch was submitted for 3.3. Now I'm submitting the V2 for 3.4
-as it doesn't cause any real problem in 3.3 or ealier versions.
+oh ok,  also i am just using the default firmware thats in my system
+[36762.942612] iwlwifi 0000:03:00.0: loaded firmware version 8.83.5.1
+build 33692
 
-[PATCH 2/6 RESEND] mwifiex: remove unnecessary enum MWIFIEX_802_11_WEP_STATUS
-[PATCH 3/6 RESEND] mwifiex: handle auto authentication mode correctly
+[36762.886932] Intel(R) Wireless WiFi Link AGN driver for Linux, in-tree:d
+[36762.886935] Copyright(c) 2003-2012 Intel Corporation
+[36762.887170] iwlwifi 0000:03:00.0: pci_resource_len = 0x00002000
+[36762.887173] iwlwifi 0000:03:00.0: pci_resource_base = f8190000
+[36762.887176] iwlwifi 0000:03:00.0: HW Revision ID = 0x0
+[36762.887353] iwlwifi 0000:03:00.0: irq 48 for MSI/MSI-X
+[36762.887691] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUG enabled
+[36762.887694] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEBUGFS enabled
+[36762.887696] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEVICE_TRACING enabled
+[36762.887698] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_DEVICE_TESTMODE enabled
+[36762.887700] iwlwifi 0000:03:00.0: CONFIG_IWLWIFI_P2P disabled
+[36762.887704] iwlwifi 0000:03:00.0: Detected Intel(R) WiFi Link 5100
+AGN, REV=0x54
+[36762.888228] iwlwifi 0000:03:00.0: L1 Disabled; Enabling L0S
+[36762.907566] iwlwifi 0000:03:00.0: device EEPROM VER=0x11e, CALIB=0x4
+[36762.907569] iwlwifi 0000:03:00.0: Device SKU: 0xF0
+[36762.907829] iwlwifi 0000:03:00.0: Tunable channels: 13 802.11bg, 24
+802.11a channels
+[36762.942612] iwlwifi 0000:03:00.0: loaded firmware version 8.83.5.1
+build 33692
+[36762.943763] Registered led device: phy5-led
 
-  These two patches are included here just for your convenience.
-  They depend on
-    "[PATCH 3.3] mwifiex: reset encryption mode flag before association" and
-    "[PATCH 3.4] mwifiex: remove redundant scan operation"
-  submitted previously.
+>
+> For you, there's nothing to worry about, the driver handles this
+> situation just fine. :-)
 
-[PATCH 4/6] mwifiex: remove unnecessary struct mwifiex_802_11_ssid
 
-  This is a new cleanup patch for 3.4.
+ok , thank you!
 
-[PATCH 5/6 V2] mwifiex: fix bug in wildcard scan handling
 
-  The V1 patch was submitted for 3.3. Now I'm submitting the V2 for 3.4
-because it depends on PATCH 4/6 which is intended for 3.4.
-
-[PATCH 6/6] mwifiex: remove BSS entry before specific SSID scan
-
-  This is a new enhancement patch for specific scan, intended for 3.4.
-
-Thanks,
-Bing
-
----
-
-Amitkumar Karwar (5):
-  mwifiex: remove unnecessary enum MWIFIEX_802_11_WEP_STATUS
-  mwifiex: handle auto authentication mode correctly
-  mwifiex: remove unnecessary struct mwifiex_802_11_ssid
-  mwifiex: fix bug in wildcard scan handling
-  mwifiex: remove BSS entry before specific SSID scan
-
-Avinash Patil (1):
-  mwifiex: correct bitrates advertised to cfg80211
-
- drivers/net/wireless/mwifiex/cfg80211.c  |   32 ++++-----
- drivers/net/wireless/mwifiex/cmdevt.c    |    8 +--
- drivers/net/wireless/mwifiex/decl.h      |    5 --
- drivers/net/wireless/mwifiex/fw.h        |   15 +---
- drivers/net/wireless/mwifiex/init.c      |    2 +-
- drivers/net/wireless/mwifiex/ioctl.h     |    4 +-
- drivers/net/wireless/mwifiex/join.c      |   11 ++--
- drivers/net/wireless/mwifiex/main.h      |   18 +++---
- drivers/net/wireless/mwifiex/scan.c      |  111 ++++++++++++++++--------------
- drivers/net/wireless/mwifiex/sta_event.c |    2 +-
- drivers/net/wireless/mwifiex/sta_ioctl.c |   26 +++++--
- 11 files changed, 116 insertions(+), 118 deletions(-)
-
+-- 
+thanks,
+shafi
