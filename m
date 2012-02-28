@@ -1,111 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:60807 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754268Ab2BJKlO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Feb 2012 05:41:14 -0500
-Date: Fri, 10 Feb 2012 11:40:58 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: chunkeey@web.de, jcmvbkbc@gmail.com, linux-kernel@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
-Subject: Re: [RFC/RFT] p54spi: Convert driver to use asynchronous firmware
- loading
-Message-ID: <20120210114058.771f0e27@milhouse> (sfid-20120210_114200_836815_8938ED60)
-In-Reply-To: <4f346d61.3S6x22TS5RH2gGO5%Larry.Finger@lwfinger.net>
-References: <4f346d61.3S6x22TS5RH2gGO5%Larry.Finger@lwfinger.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from nm23-vm8.bullet.mail.ird.yahoo.com ([212.82.109.237]:22718 "HELO
+	nm23-vm8.bullet.mail.ird.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S965065Ab2B1VeJ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Feb 2012 16:34:09 -0500
+Message-ID: <1330464499.83094.YahooMailClassic@web29501.mail.ird.yahoo.com> (sfid-20120228_223423_264642_8168578A)
+Date: Tue, 28 Feb 2012 21:28:19 +0000 (GMT)
+From: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+Subject: Fw: Google summer of code application for organization opened; wireless projects.
+To: linux-wireless@vger.kernel.org
+Cc: Till Kamppeter <till.kamppeter@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 09 Feb 2012 19:05:37 -0600
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+oh, meant to cc' linux-wireless...
 
-> Index: wireless-testing-new/drivers/net/wireless/p54/p54spi.c
-> ===================================================================
-> --- wireless-testing-new.orig/drivers/net/wireless/p54/p54spi.c
-> +++ wireless-testing-new/drivers/net/wireless/p54/p54spi.c
-> @@ -163,25 +163,41 @@ static int p54spi_spi_write_dma(struct p
->  	return 0;
->  }
->  
-> -static int p54spi_request_firmware(struct ieee80211_hw *dev)
-> +
-> +static void p54s_load_firmware_cb(const struct firmware *firmware,
-> +				  void *context)
->  {
-> +	struct ieee80211_hw *dev = context;
->  	struct p54s_priv *priv = dev->priv;
->  	int ret;
->  
-> -	/* FIXME: should driver use it's own struct device? */
-> -	ret = request_firmware(&priv->firmware, "3826.arm", &priv->spi->dev);
-> -
-> -	if (ret < 0) {
-> -		dev_err(&priv->spi->dev, "request_firmware() failed: %d", ret);
-> -		return ret;
-> +	if (!firmware) {
-> +		/* alternate firmware not found */
-> +		dev_err(&priv->spi->dev, "Firmware loading failed\n");
-> +		return;
->  	}
-> +	complete(&priv->fw_loaded);
-> +	priv->firmware = firmware;
->  
->  	ret = p54_parse_firmware(dev, priv->firmware);
-> -	if (ret) {
-> +	if (ret)
->  		release_firmware(priv->firmware);
-> +}
-> +
-> +static int p54spi_request_firmware(struct ieee80211_hw *dev)
-> +{
-> +	struct p54s_priv *priv = dev->priv;
-> +	int ret;
-> +
-> +	init_completion(&priv->fw_loaded);
-> +	/* FIXME: should driver use it's own struct device? */
-> +	ret = request_firmware_nowait(THIS_MODULE, 1, "3826.arm",
-> +				      &priv->spi->dev, GFP_KERNEL, dev,
-> +				      p54s_load_firmware_cb);
-> +	if (ret < 0) {
-> +		dev_err(&priv->spi->dev, "request_firmware() failed: %d", ret);
->  		return ret;
->  	}
-> -
->  	return 0;
->  }
+--- On Tue, 28/2/12, Hin-Tak Leung <htl10@users.sourceforge.net> wrote:
 
-I think we need a wait_for_completion in op_start. We need to make sure firmware load is finished.
-It might currently work, though, because we have the other fw_comp completion.
-Please also rename your new completion to fw_requested or something like this to avoid
-confusion with the real fw-loaded completion.
-
-Also, what about eeprom request?
-
-> @@ -681,6 +697,7 @@ static int __devexit p54spi_remove(struc
->  {
->  	struct p54s_priv *priv = dev_get_drvdata(&spi->dev);
->  
-> +	wait_for_completion(&priv->fw_loaded);
->  	p54_unregister_common(priv->hw);
->  
->  	free_irq(gpio_to_irq(p54spi_gpio_irq), spi);
-> Index: wireless-testing-new/drivers/net/wireless/p54/p54spi.h
-> ===================================================================
-> --- wireless-testing-new.orig/drivers/net/wireless/p54/p54spi.h
-> +++ wireless-testing-new/drivers/net/wireless/p54/p54spi.h
-> @@ -120,6 +120,7 @@ struct p54s_priv {
->  
->  	enum fw_state fw_state;
->  	const struct firmware *firmware;
-> +	struct completion fw_loaded;
->  };
->  
->  #endif /* P54SPI_H */
+> Hi Till,
 > 
-
-
-
--- 
-Greetings, Michael.
+> GSoC application for organization just opened. I assume
+> you'd put in an application for linux foundation per usual?
+> I mean to go back to testing the hfsplus journalling code
+> soon.
+> 
+> Came across some android-specific issues concerning wifi
+> support:
+> http://linuxwireless.org/en/developers/Documentation/Android
+> 
+> some of them probably would make a nice GSoC project. (using
+> unmod'ed wpa_supplicant, gui for setting up ad-hoc mode,
+> etc).
+> 
+> Hin-Tak
+> 
