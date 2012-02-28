@@ -1,110 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:63738 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753419Ab2BKB0f (ORCPT
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:34108 "HELO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754017Ab2B1GFi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Feb 2012 20:26:35 -0500
-Received: by pbcun15 with SMTP id un15so2900956pbc.19
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Feb 2012 17:26:34 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <4F358902.3040009@01019freenet.de>
-References: <CAO=xpBHy9p4yzhxaWTfG+jjw7f_OzbACmxxPnDL8AmLBS-JdwQ@mail.gmail.com>
- <CAO=xpBGT7ovdSOV77AV6wpUcTDFYr0t8GEab474mVmZm0-BhVA@mail.gmail.com>
- <20120207171538.3336af0c@mj> <CAO=xpBGRs_kYtt_w6aG2dFjO4Pgd9MrjPwn7YfuLe7bw3mGiPg@mail.gmail.com>
- <4F34BF3C.9030809@01019freenet.de> <CAO=xpBFKOAdTEi1DMfJxWCCv9oEtJpuLjuN4uNPNRgN1iWG85Q@mail.gmail.com>
- <4F358902.3040009@01019freenet.de>
-From: Alfonso Fiore <alfonso.fiore@gmail.com>
-Date: Sat, 11 Feb 2012 02:26:04 +0100
-Message-ID: <CAO=xpBEvmd7=0EK68+MUQMgFVXL47tQYGc-2X8Rt0NfJdszUkw@mail.gmail.com> (sfid-20120211_022650_177069_D47BEFAF)
-Subject: Re: Setting up an AP @ 5 GHz 802.11a - hostapd refuses [Could not
- select hw_mode and channel. (-1)]
-To: Andreas Hartmann <andihartmann@01019freenet.de>
-Cc: Pavel Roskin <proski@gnu.org>, linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+	Tue, 28 Feb 2012 01:05:38 -0500
+From: Bing Zhao <bzhao@marvell.com>
+To: linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
+Subject: [PATCH 3/6 RESEND] mwifiex: handle auto authentication mode correctly
+Date: Mon, 27 Feb 2012 22:04:13 -0800
+Message-Id: <1330409056-4399-4-git-send-email-bzhao@marvell.com> (sfid-20120228_070541_465445_1A72580C)
+In-Reply-To: <1330409056-4399-1-git-send-email-bzhao@marvell.com>
+References: <1330409056-4399-1-git-send-email-bzhao@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 10, 2012 at 10:15 PM, Andreas Hartmann
-<andihartmann@01019freenet.de> wrote:
->
-> Alfonso Fiore schrieb:
-> > On Fri, Feb 10, 2012 at 7:54 AM, Andreas Hartmann
-> [...]
-> > # find / | grep ath5k.ko
-> > /lib/modules/3.0.0-voyage/kernel/drivers/net/wireless/ath/ath5k/ath5k.ko
-> > /lib/modules/3.0.0/updates/drivers/net/wireless/ath/ath5k/ath5k.ko
-> > /root/compat-wireless-3.3-rc1-2/drivers/net/wireless/ath/ath5k/ath5k.ko
-> > /root/compat-wireless-3.3-rc1-2/drivers/net/wireless/ath/ath5k/.ath5k.ko.cmd
-> >
-> > I tried depmod -a and also a simple reboot (which I always do after
-> > make install) but the "updates" module is never loaded.
-> >
-> > Any idea?
->
-> Sorry for being late. I worked on my machine and wasn't able to read any
-> mails.
->
->
-> I do have a config file for depmod in /etc/depmod.d called
-> 00-system.conf, which has the following entries:
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-Hi Andreas,
+When authentication type is configured to NL80211_AUTHTYPE_AUTOMATIC,
+driver tries to connect using open mode. The association is failed
+if AP is configured in shared mode.
 
-I do not have a /etc/depmod.d folder. I imagine it is something about
-my embedded distribution (voyage 0.8.0).
+This patch adds code to try association using shared mode as well if
+open mode association fails.
 
-I asked for help there. I will post back is they have any suggestion.
+Now since we returned exact error code in association response handler
+(instead of -1), corresponding changes are done in
+mwifiex_process_cmdresp().
 
-I imagine there is a reason why this feature is not part of the distribution...
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bing Zhao <bzhao@marvell.com>
+---
+ drivers/net/wireless/mwifiex/cfg80211.c  |   10 ++++++----
+ drivers/net/wireless/mwifiex/cmdevt.c    |    8 +++-----
+ drivers/net/wireless/mwifiex/join.c      |    2 +-
+ drivers/net/wireless/mwifiex/main.h      |    1 +
+ drivers/net/wireless/mwifiex/sta_ioctl.c |   11 +++++++++++
+ 5 files changed, 22 insertions(+), 10 deletions(-)
 
-Still I'm happy to test.
+diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
+index 9f3d8aa..55293a3 100644
+--- a/drivers/net/wireless/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/mwifiex/cfg80211.c
+@@ -871,6 +871,7 @@ mwifiex_cfg80211_assoc(struct mwifiex_private *priv, size_t ssid_len, u8 *ssid,
+ 	priv->sec_info.wpa2_enabled = false;
+ 	priv->wep_key_curr_index = 0;
+ 	priv->sec_info.encryption_mode = 0;
++	priv->sec_info.is_authtype_auto = 0;
+ 	ret = mwifiex_set_encode(priv, NULL, 0, 0, 1);
+ 
+ 	if (mode == NL80211_IFTYPE_ADHOC) {
+@@ -892,11 +893,12 @@ mwifiex_cfg80211_assoc(struct mwifiex_private *priv, size_t ssid_len, u8 *ssid,
+ 	}
+ 
+ 	/* Now handle infra mode. "sme" is valid for infra mode only */
+-	if (sme->auth_type == NL80211_AUTHTYPE_AUTOMATIC
+-			|| sme->auth_type == NL80211_AUTHTYPE_OPEN_SYSTEM)
++	if (sme->auth_type == NL80211_AUTHTYPE_AUTOMATIC) {
+ 		auth_type = NL80211_AUTHTYPE_OPEN_SYSTEM;
+-	else if (sme->auth_type == NL80211_AUTHTYPE_SHARED_KEY)
+-		auth_type = NL80211_AUTHTYPE_SHARED_KEY;
++		priv->sec_info.is_authtype_auto = 1;
++	} else {
++		auth_type = sme->auth_type;
++	}
+ 
+ 	if (sme->crypto.n_ciphers_pairwise) {
+ 		priv->sec_info.encryption_mode =
+diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
+index 6623db6..c82eb7f 100644
+--- a/drivers/net/wireless/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/mwifiex/cmdevt.c
+@@ -771,7 +771,7 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
+ 
+ 	/* Check init command response */
+ 	if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING) {
+-		if (ret == -1) {
++		if (ret) {
+ 			dev_err(adapter->dev, "%s: cmd %#x failed during "
+ 				"initialization\n", __func__, cmdresp_no);
+ 			mwifiex_init_fw_complete(adapter);
+@@ -781,10 +781,8 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
+ 	}
+ 
+ 	if (adapter->curr_cmd) {
+-		if (adapter->curr_cmd->wait_q_enabled && (!ret))
+-			adapter->cmd_wait_q.status = 0;
+-		else if (adapter->curr_cmd->wait_q_enabled && (ret == -1))
+-			adapter->cmd_wait_q.status = -1;
++		if (adapter->curr_cmd->wait_q_enabled)
++			adapter->cmd_wait_q.status = ret;
+ 
+ 		/* Clean up and put current command back to cmd_free_q */
+ 		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
+diff --git a/drivers/net/wireless/mwifiex/join.c b/drivers/net/wireless/mwifiex/join.c
+index ee439fc..5c95e48 100644
+--- a/drivers/net/wireless/mwifiex/join.c
++++ b/drivers/net/wireless/mwifiex/join.c
+@@ -585,7 +585,7 @@ int mwifiex_ret_802_11_associate(struct mwifiex_private *priv,
+ 		       le16_to_cpu(assoc_rsp->cap_info_bitmap),
+ 		       le16_to_cpu(assoc_rsp->a_id));
+ 
+-		ret = -1;
++		ret = le16_to_cpu(assoc_rsp->status_code);
+ 		goto done;
+ 	}
+ 
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 4c86217..dddb556 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -219,6 +219,7 @@ struct mwifiex_802_11_security {
+ 	u8 wapi_key_on;
+ 	u8 wep_enabled;
+ 	u32 authentication_mode;
++	u8 is_authtype_auto;
+ 	u32 encryption_mode;
+ };
+ 
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index 866026e..e10161f 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -249,6 +249,17 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
+ 		 * application retrieval */
+ 		priv->assoc_rsp_size = 0;
+ 		ret = mwifiex_associate(priv, bss_desc);
++
++		/* If auth type is auto and association fails using open mode,
++		 * try to connect using shared mode */
++		if (ret == WLAN_STATUS_NOT_SUPPORTED_AUTH_ALG &&
++		    priv->sec_info.is_authtype_auto &&
++		    priv->sec_info.wep_enabled) {
++			priv->sec_info.authentication_mode =
++						NL80211_AUTHTYPE_SHARED_KEY;
++			ret = mwifiex_associate(priv, bss_desc);
++		}
++
+ 		if (bss)
+ 			cfg80211_put_bss(bss);
+ 	} else {
+-- 
+1.7.0.2
 
-# dpkg -l | grep module-init
-ii  module-init-tools                  3.12-1
-tools for managing Linux kernel modules
-
-I created the folder and then /etc/depmod.d/00-system.conf same like yours.
-
-then I run "depmod -a" but lsmod shows the ath5k module is not loaded.
-
-If I overwrite the original .ko files I get this error:
-ath5k: version magic '3.0.0 SMP preempt mod_unload 486 ' should be
-'3.0.0-voyage SMP preempt mod_unload 486 '
-
-if you have other ideas, I'm happy to try them!
-
-thank you,
-alfonso
-
->
-> --------------------------------------------------------------------
-> #
-> # /etc/depmod.conf - configuration file for the depmod(8) command,
-> # for its format see depmod.conf(5).
-> #
-> # Please don't edit this file, place your settings into the /etc/depmod.d
-> # directory.
->
->
-> # search order:
-> # 1 updates/ (KMPs)
-> # 2 extra/ (KMPs or manually compiled modules)
-> # 3 weak-updates/ (KMPs built for older kernels)
-> # 4 everything else
-> search updates extra weak-updates built-in
->
-> # do not generate modules.*map files
-> make_map_files no
-> ----------------------------------------------------------------------
->
-> Version of my inittools is: module-init-tools-3.12-6.1.x86_64. I don't
-> have a depmod.conf file.
->
-> After creating / changing this file, issue depmod -a again!
->
->
->
-> Hope that helps!
->
-> Regards,
-> Andreas
