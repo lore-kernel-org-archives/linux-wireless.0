@@ -1,35 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:57156 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756953Ab2BOKMt (ORCPT
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:50612 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752913Ab2B1Vtr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Feb 2012 05:12:49 -0500
-Received: by mail-lpp01m010-f41.google.com with SMTP id f4so1009929lam.14
-        for <linux-wireless@vger.kernel.org>; Wed, 15 Feb 2012 02:12:48 -0800 (PST)
-Message-ID: <1329300764.19569.36.camel@cumari> (sfid-20120215_111253_379670_3E1E3D2B)
-Subject: Re: [PATCH 0/8] wl12xx: some fixes and improvements for PLT mode
-From: Luciano Coelho <coelho@ti.com>
-To: linux-wireless@vger.kernel.org
-Date: Wed, 15 Feb 2012 12:12:44 +0200
-In-Reply-To: <1327395989-29663-1-git-send-email-coelho@ti.com>
-References: <1327395989-29663-1-git-send-email-coelho@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 28 Feb 2012 16:49:47 -0500
+Received: by eaaq12 with SMTP id q12so12262eaa.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2012 13:49:46 -0800 (PST)
+Message-ID: <4F4D4BF7.8070407@gmail.com> (sfid-20120228_224954_466087_42F53FC5)
+Date: Tue, 28 Feb 2012 22:49:43 +0100
+From: Till Kamppeter <till.kamppeter@gmail.com>
+MIME-Version: 1.0
+To: Hin-Tak Leung <hintak_leung@yahoo.co.uk>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Fw: Google summer of code application for organization opened;
+ wireless projects.
+References: <1330464499.83094.YahooMailClassic@web29501.mail.ird.yahoo.com>
+In-Reply-To: <1330464499.83094.YahooMailClassic@web29501.mail.ird.yahoo.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-01-24 at 11:06 +0200, Luciano Coelho wrote: 
-> Hi,
-> 
-> This patchset fixes some bugs in PLT mode and adds support for 2 MAC
-> addresses based on the NVS file or in the device's fuse ROM.
-> 
-> This two patches I sent as part of the "wl12xx: read MAC from fuse
-> rom" series are superseded by this set.
+Yes, I will apply again for the Linux Foundation. I announced already 
+and I have prepared pages for the GSoC 2012:
 
-Applied this set.
+https://www.linuxfoundation.org/collaborate/workgroups/gsoc/google-summer-code-2012
 
--- 
-Cheers,
-Luca.
+https://www.linuxfoundation.org/collaborate/workgroups/gsoc/2012-gsoc-80211-linux-projects
+
+Please edit the second of these two pages adding project ideas or 
+linking to your project ideas page for the GSoC 2012. To edit the page 
+group membership in the GSOC group at the Linux Foundation is needed. To 
+obtain the membership you need to log in and then click on the 
+appropriate link under the "GSOC" on the right. I will approve you then 
+and after that you can edit.
+
+    Till
+
+On 02/28/2012 10:28 PM, Hin-Tak Leung wrote:
+> oh, meant to cc' linux-wireless...
+>
+> --- On Tue, 28/2/12, Hin-Tak Leung<htl10@users.sourceforge.net>  wrote:
+>
+>> Hi Till,
+>>
+>> GSoC application for organization just opened. I assume
+>> you'd put in an application for linux foundation per usual?
+>> I mean to go back to testing the hfsplus journalling code
+>> soon.
+>>
+>> Came across some android-specific issues concerning wifi
+>> support:
+>> http://linuxwireless.org/en/developers/Documentation/Android
+>>
+>> some of them probably would make a nice GSoC project. (using
+>> unmod'ed wpa_supplicant, gui for setting up ad-hoc mode,
+>> etc).
+>>
+>> Hin-Tak
+>>
+>
 
