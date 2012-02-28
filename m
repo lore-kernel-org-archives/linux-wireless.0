@@ -1,54 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:64242 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751421Ab2BHOmU (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:54414 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756574Ab2B1JW4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 09:42:20 -0500
-Received: by wgbdt10 with SMTP id dt10so667748wgb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2012 06:42:19 -0800 (PST)
+	Tue, 28 Feb 2012 04:22:56 -0500
+Message-ID: <4F4C9CEB.4090509@qca.qualcomm.com> (sfid-20120228_102301_225727_61D6B9CE)
+Date: Tue, 28 Feb 2012 11:22:51 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-From: Claudio Rossi <rossi.claudio.82@gmail.com>
-Date: Wed, 8 Feb 2012 15:41:59 +0100
-Message-ID: <CAO1ZyKm1V6FF5aqbdRimdtJRZ+n9exkdUWh06P+i0uqcwweR4A@mail.gmail.com> (sfid-20120208_154223_639476_569B3B1A)
-Subject: __floatunsidf and __fixunsdfsi undefined
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH] ath6kl: Register driver ht capabilities in wiphy
+References: <1330323259-13399-1-git-send-email-vthiagar@qca.qualcomm.com>
+In-Reply-To: <1330323259-13399-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear all,
- I am trying to compile compat-wireless-3.2-rc6-3 on
-a2.6.32-37-generic i686 GNU/Linux.
-Everything goes well until I enter in phase 2, and I receive the
-following WARNING which prevent the mac80211 modules to work properly
-if installed
+On 02/27/2012 08:14 AM, Vasanthakumar Thiagarajan wrote:
+> Register driver's ht capabilities in wiphy to avoid failures
+> in setting ht channels from hostapd.
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 
-make -C /lib/modules/2.6.32-37-generic/build
-M=/home/claudio/Programs/compat-wireless-3.2-rc6-3 modules
-make[1]: Entering directory `/usr/src/linux-headers-2.6.32-37-generic'
-  Building modules, stage 2.
-  MODPOST 9 modules
-WARNING: "__floatunsidf"
-[/home/claudio/Programs/compat-wireless-3.2-rc6-3/net/mac80211/mac80211.ko]
-undefined!
-WARNING: "__fixunsdfsi"
-[/home/claudio/Programs/compat-wireless-3.2-rc6-3/net/mac80211/mac80211.ko]
-undefined!
-make[1]: Leaving directory `/usr/src/linux-headers-2.6.32-37-generic'
+Thanks, applied.
 
-the first time I compiled and installed the compat-wireless-3.2-rc6-3
-it worked, but now it is not.
-
-My distribution (UBUNTU 10.04) already comes with ath9k and mac80211.
-
-Could  somebody give me an hint? I am a newbie at this
-
-Thank you
-
-Claudio
-
-
--- 
-Claudio Rossi
--------------------
-Office @ PoliTO: +39 011 5644194
+Kalle
