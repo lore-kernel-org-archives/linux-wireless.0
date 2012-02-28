@@ -1,56 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from oproxy4-pub.bluehost.com ([69.89.21.11]:53237 "HELO
-	oproxy4-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932662Ab2B2QVv (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:48216 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751024Ab2B1CCd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 11:21:51 -0500
-Message-ID: <4F4E50A4.1090309@xenotime.net> (sfid-20120229_172216_821253_65D4F940)
-Date: Wed, 29 Feb 2012 08:21:56 -0800
-From: Randy Dunlap <rdunlap@xenotime.net>
+	Mon, 27 Feb 2012 21:02:33 -0500
+Received: by iagj37 with SMTP id j37so566033iag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Feb 2012 18:02:32 -0800 (PST)
+Date: Mon, 27 Feb 2012 20:02:14 -0600
+From: Jonathan Nieder <jrnieder@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ben Hutchings <ben@decadent.org.uk>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
+	Intel Linux Wireless <ilw@linux.intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	651199@bugs.debian.org, Andreas Gustafsson <olangu@impressions.se>,
+	Marco d'Itri <md@Linux.IT>,
+	Gabriel Kerneis <kerneis@pps.jussieu.fr>
+Subject: Re: iwlwifi WPA-TKIP crypto failure after group rekeying
+Message-ID: <20120228020214.GA21699@burratino> (sfid-20120228_030258_938221_C1722320)
+References: <1330320802.8460.105.camel@deadeye>
+ <1330333354.3483.6.camel@jlt3.sipsolutions.net>
 MIME-Version: 1.0
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-CC: "John W. Linville" <linville@tuxdriver.com>,
-	"Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: wireless-testing fail compiling
-References: <1330374499.12612.18.camel@wwguy-huron>	<20120227232946.GG26664@tuxdriver.com> <CAD2nsn3+WK9FQ=xwGO22g6XsCRK2hO6Y7CAtjGRdJUu3Bmuwbg@mail.gmail.com>
-In-Reply-To: <CAD2nsn3+WK9FQ=xwGO22g6XsCRK2hO6Y7CAtjGRdJUu3Bmuwbg@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: multipart/mixed; boundary="cNdxnHkX5QqsyA0e"
+In-Reply-To: <1330333354.3483.6.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/28/2012 11:51 PM, Mohammed Shafi wrote:
 
-> On Tue, Feb 28, 2012 at 4:59 AM, John W. Linville
-> <linville@tuxdriver.com> wrote:
->> On Mon, Feb 27, 2012 at 12:28:19PM -0800, Guy, Wey-Yi wrote:
->>> build break in the latest wireless-testing
->>>
->>> fs/autofs4/inode.c: In function ‘autofs4_fill_super’:
->>> fs/autofs4/inode.c:228: error: implicit declaration of function
->>> ‘is_compat_task’
->>> make[2]: *** [fs/autofs4/inode.o] Error 1
->>> make[1]: *** [fs/autofs4] Error 2
->>> make: *** [fs] Error 2
->>>
->>>
->>> fs/autofs4/dev-ioctl.c: In function ‘autofs_dev_ioctl_setpipefd’:
->>> fs/autofs4/dev-ioctl.c:388: error: implicit declaration of function
->>> ‘is_compat_task’
->>> make[2]: *** [fs/autofs4/dev-ioctl.o] Error 1
->>
->> It looks like that line was added in commit
->> a32744d4abae24572eff7269bc17895c41bd0085, which came into
->> wireless-testing as part of 3.3-rc5.
-> 
-> John, i  also got the same problem just trying the fix mentioned in
-> https://lkml.org/lkml/2012/2/25/103
+--cNdxnHkX5QqsyA0e
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
+tags 651199 = upstream patch
+quit
 
-Huh?  You got the same problem after trying Linus's patch?
+Johannes Berg wrote:
 
-or you got the same problem (it's in 3.3-rc5 baseline) so you are
-trying Linus's patch (which works) ??
+> I think this is due to my patch "iwlagn: rewrite HW crypto" which
+> accidentally broke key *removal* (of all things), which causes issues
+> when the first GTK is removed on the second rekeying.
+>
+> This patch
+> [...]h=5dcbf480473f6c3f06ad2426b7517038a2a18911
+>
+> should fix it.
 
+Thanks.  The fix is in Linville's wireless tree, hence in linux-next.
+I've attached it as a patch against 3.2.y in case someone wants to
+try it.
+
+(Instructions:
+
+ # prerequisites
+ apt-get install git build-essential
+
+ # get a copy of the kernel
+ git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+ cd linux
+
+ # fetch point releases
+ git remote add -f stable \
+  git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+ 
+ # try 3.2.y
+ git checkout stable/linux-3.2.y
+ cp /boot/config-$(uname -r) .config; # current configuration
+ make localmodconfig; # optional: minimize configuration
+ make deb-pkg; # optionally with -j<num> for parallel build
+ dpkg -i ../<name of package>
+ reboot
+
+ # hopefully it reproduces the problem, so try the patch:
+ git am -3sc thepatch
+ make deb-pkg; # maybe with -j4
+ dpkg -i ../<name of package>
+ reboot
+)
+
+--cNdxnHkX5QqsyA0e
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="iwlwifi-fix-key-removal.patch"
+
+From: Johannes Berg <johannes.berg@intel.com>
+Date: Fri, 17 Feb 2012 09:47:14 -0800
+Subject: iwlwifi: fix key removal
+
+commit 5dcbf480473f6c3f06ad2426b7517038a2a18911 upstream.
+
+When trying to remove a key, we always send key
+flags just setting the key type, not including
+the multicast flag and the key ID. As a result,
+whenever any key was removed, the unicast key 0
+would be removed, causing a complete connection
+loss after the second rekey (the first doesn't
+cause a key removal). Fix the key removal code
+to include the key ID and multicast flag, thus
+removing the correct key.
+
+Reported-by: Alexander Schnaidt <alex.schnaidt@googlemail.com>
+Tested-by: Alexander Schnaidt <alex.schnaidt@googlemail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: John W. Linville <linville@tuxdriver.com>
+Signed-off-by: Jonathan Nieder <jrnieder@gmail.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c |   10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+index 4b2aa1da0953..5cfb3d17a2bc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+@@ -1211,6 +1211,7 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
+ 	unsigned long flags;
+ 	struct iwl_addsta_cmd sta_cmd;
+ 	u8 sta_id = iwlagn_key_sta_id(priv, ctx->vif, sta);
++	__le16 key_flags;
+ 
+ 	/* if station isn't there, neither is the key */
+ 	if (sta_id == IWL_INVALID_STATION)
+@@ -1236,7 +1237,14 @@ int iwl_remove_dynamic_key(struct iwl_priv *priv,
+ 		IWL_ERR(priv, "offset %d not used in uCode key table.\n",
+ 			keyconf->hw_key_idx);
+ 
+-	sta_cmd.key.key_flags = STA_KEY_FLG_NO_ENC | STA_KEY_FLG_INVALID;
++	key_flags = cpu_to_le16(keyconf->keyidx << STA_KEY_FLG_KEYID_POS);
++	key_flags |= STA_KEY_FLG_MAP_KEY_MSK | STA_KEY_FLG_NO_ENC |
++		     STA_KEY_FLG_INVALID;
++
++	if (!(keyconf->flags & IEEE80211_KEY_FLAG_PAIRWISE))
++		key_flags |= STA_KEY_MULTICAST_MSK;
++
++	sta_cmd.key.key_flags = key_flags;
+ 	sta_cmd.key.key_offset = WEP_INVALID_OFFSET;
+ 	sta_cmd.sta.modify_mask = STA_MODIFY_KEY_MASK;
+ 	sta_cmd.mode = STA_CONTROL_MODIFY_MSK;
 -- 
-~Randy
+1.7.9.2
+
+
+--cNdxnHkX5QqsyA0e--
