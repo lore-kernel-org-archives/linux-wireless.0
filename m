@@ -1,96 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1182 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753778Ab2BCMIG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 07:08:06 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 02/25] iwlegacy: get rid of ctx->rxon_cmd
-Date: Fri,  3 Feb 2012 13:07:02 +0100
-Message-Id: <1328270845-16891-3-git-send-email-sgruszka@redhat.com> (sfid-20120203_130810_496596_B567705A)
-In-Reply-To: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
-References: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:6942 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756131Ab2B1BF5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 20:05:57 -0500
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <hauke@hauke-m.de>, <nbd@nbd.name>, <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@frijolero.org>
+Subject: [PATCH 2/7] compat: move definition of COMPAT_CONFIG and COMPAT_AUTOCONF
+Date: Mon, 27 Feb 2012 17:05:36 -0800
+Message-ID: <1330391141-19909-3-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120228_020601_268614_0A1C8A51)
+In-Reply-To: <1330391141-19909-1-git-send-email-rodrigue@qca.qualcomm.com>
+References: <1330391141-19909-1-git-send-email-rodrigue@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/3945-mac.c |    1 -
- drivers/net/wireless/iwlegacy/4965-mac.c |    1 -
- drivers/net/wireless/iwlegacy/4965.c     |    6 +++---
- drivers/net/wireless/iwlegacy/common.h   |    2 +-
- 4 files changed, 4 insertions(+), 6 deletions(-)
+From: Luis R. Rodriguez <mcgrof@frijolero.org>
 
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index 980566f..8de8355 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -3619,7 +3619,6 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+The Makefile for external modules are read twice, once during
+the initial make command, and then later to build the modules
+target *by the kernel*. This ensures that we define the variables
+COMPAT_CONFIG and COMPAT_AUTOCONF are only defined once.
+
+Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
+---
+ Makefile |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index d11da17..287f35f 100644
+--- a/Makefile
++++ b/Makefile
+@@ -19,6 +19,11 @@ export COMPAT_BASE_TREE := "linux-next.git"
+ export COMPAT_BASE_TREE_VERSION := "next-20100517"
+ export COMPAT_VERSION := $(shell git describe)
  
- 	il->ctx.ctxid = 0;
++# to check config and compat autoconf
++export COMPAT_CONFIG=.config
++export COMPAT_AUTOCONF=include/linux/compat_autoconf.h
++export MAKE
++
+ else
+ # By stuffing this hear we avoid using
+ # this hackery on modpost, the 2nd section of module building.
+@@ -36,11 +41,6 @@ NOSTDINC_FLAGS := -I$(M)/include/ \
  
--	il->ctx.rxon_cmd = C_RXON;
- 	il->ctx.rxon_timing_cmd = C_RXON_TIMING;
- 	il->ctx.rxon_assoc_cmd = C_RXON_ASSOC;
- 	il->ctx.qos_cmd = C_QOS_PARAM;
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 6a77f41..2368f3a 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -6135,7 +6135,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ endif
  
- 	il->ctx.always_active = true;
- 	il->ctx.is_active = true;
--	il->ctx.rxon_cmd = C_RXON;
- 	il->ctx.rxon_timing_cmd = C_RXON_TIMING;
- 	il->ctx.rxon_assoc_cmd = C_RXON_ASSOC;
- 	il->ctx.qos_cmd = C_QOS_PARAM;
-diff --git a/drivers/net/wireless/iwlegacy/4965.c b/drivers/net/wireless/iwlegacy/4965.c
-index b34de14..8926108 100644
---- a/drivers/net/wireless/iwlegacy/4965.c
-+++ b/drivers/net/wireless/iwlegacy/4965.c
-@@ -1472,7 +1472,7 @@ il4965_commit_rxon(struct il_priv *il, struct il_rxon_context *ctx)
- 		active_rxon->filter_flags &= ~RXON_FILTER_ASSOC_MSK;
- 
- 		ret =
--		    il_send_cmd_pdu(il, ctx->rxon_cmd,
-+		    il_send_cmd_pdu(il, C_RXON,
- 				    sizeof(struct il_rxon_cmd), active_rxon);
- 
- 		/* If the mask clearing failed then we set
-@@ -1503,7 +1503,7 @@ il4965_commit_rxon(struct il_priv *il, struct il_rxon_context *ctx)
- 	 */
- 	if (!new_assoc) {
- 		ret =
--		    il_send_cmd_pdu(il, ctx->rxon_cmd,
-+		    il_send_cmd_pdu(il, C_RXON,
- 				    sizeof(struct il_rxon_cmd), &il->staging);
- 		if (ret) {
- 			IL_ERR("Error setting new RXON (%d)\n", ret);
-@@ -1525,7 +1525,7 @@ il4965_commit_rxon(struct il_priv *il, struct il_rxon_context *ctx)
- 		 * RXON assoc doesn't clear the station table in uCode,
- 		 */
- 		ret =
--		    il_send_cmd_pdu(il, ctx->rxon_cmd,
-+		    il_send_cmd_pdu(il, C_RXON,
- 				    sizeof(struct il_rxon_cmd), &il->staging);
- 		if (ret) {
- 			IL_ERR("Error setting new RXON (%d)\n", ret);
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index ba801c7..80c60e5 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1175,7 +1175,7 @@ struct il_rxon_context {
- 
- 	u8 bcast_sta_id, ap_sta_id;
- 
--	u8 rxon_cmd, rxon_assoc_cmd, rxon_timing_cmd;
-+	u8 rxon_assoc_cmd, rxon_timing_cmd;
- 	u8 qos_cmd;
- 	u8 wep_key_cmd;
- 
+-# to check config and compat autoconf
+-export COMPAT_CONFIG=.config
+-export COMPAT_AUTOCONF=include/linux/compat_autoconf.h
+-export MAKE
+-
+ # Recursion lets us ensure we get this file included.
+ # Trick is to run make -C $(PWD) modules later.
+ -include $(PWD)/$(COMPAT_CONFIG)
 -- 
-1.7.1
+1.7.4.15.g7811d
 
