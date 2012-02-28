@@ -1,124 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:56472 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757018Ab2BHNRs (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18564 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753568Ab2B1E0u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 08:17:48 -0500
-Received: by bkcjm19 with SMTP id jm19so451781bkc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2012 05:17:47 -0800 (PST)
-Message-ID: <4F3275DD.2000107@openwrt.org> (sfid-20120208_141751_454627_D6651C4B)
-Date: Wed, 08 Feb 2012 14:17:17 +0100
-From: Florian Fainelli <florian@openwrt.org>
+	Mon, 27 Feb 2012 23:26:50 -0500
+Date: Tue, 28 Feb 2012 09:56:35 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH 2/2] ath6kl: Fix memory leak of rx packets in endpoint 0
+Message-ID: <20120228042632.GA2892@vasanth-laptop> (sfid-20120228_052654_195738_12E244A0)
+References: <1328886633-2823-1-git-send-email-vthiagar@qca.qualcomm.com>
+ <1328886633-2823-2-git-send-email-vthiagar@qca.qualcomm.com>
+ <4F4BBBE5.4060101@qca.qualcomm.com>
 MIME-Version: 1.0
-To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
-CC: linux-wireless@vger.kernel.org, Daniel Drake <dsd@gentoo.org>,
-	Ulrich Kunitz <kune@deine-taler.de>,
-	zd1211-devs@lists.sourceforge.net
-Subject: Re: zd1211rw firmware loading timeout
-References: <201111291544.28692.florian@openwrt.org> <CAFAL1Txx=qn3WXdRrtaYPVySY2vx+HinKk-NgthR+2ufcYNMwA@mail.gmail.com> <20120208151536.92555oyai8wffqww@www.81.fi>
-In-Reply-To: <20120208151536.92555oyai8wffqww@www.81.fi>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <4F4BBBE5.4060101@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Jussi,
+On Mon, Feb 27, 2012 at 07:22:45PM +0200, Kalle Valo wrote:
+> On 02/10/2012 05:10 PM, Vasanthakumar Thiagarajan wrote:
+> > htc_packet and htc_packet->buf_start are separately allocated
+> > for endpoint 0. This is different for other endpoints where
+> > packets are allocated as skb where htc_packet is skb->head
+> > and they are freed properly. Free htc_packet and htc_packet->buf_start
+> > separatly for endpoint 0.
+> > 
+> > Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+> > ---
+> >  drivers/net/wireless/ath/ath6kl/htc.c |   16 +++++++++++++++-
+> >  1 files changed, 15 insertions(+), 1 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
+> > index c703ef9..e50cc8e 100644
+> > --- a/drivers/net/wireless/ath/ath6kl/htc.c
+> > +++ b/drivers/net/wireless/ath/ath6kl/htc.c
+> > @@ -2372,7 +2372,21 @@ void ath6kl_htc_flush_rx_buf(struct htc_target *target)
+> >  				   "htc rx flush pkt 0x%p  len %d  ep %d\n",
+> >  				   packet, packet->buf_len,
+> >  				   packet->endpoint);
+> > -			dev_kfree_skb(packet->pkt_cntxt);
+> > +			/*
+> > +			 * packets in rx_bufq of endpoint 0 have originally
+> > +			 * been queued from target->free_ctrl_rxbuf where
+> > +			 * packet and packet->buf_start are allocated
+> > +			 * separately using kmalloc(). For other endpoint
+> > +			 * rx_bufq, it is allocated as skb where packet is
+> > +			 * skb->head. Take care of this difference while freeing
+> > +			 * the memory.
+> > +			 */
+> > +			if (packet->endpoint == ENDPOINT_0) {
+> > +				kfree(packet->buf_start);
+> > +				kfree(packet);
+> > +			} else {
+> > +				dev_kfree_skb(packet->pkt_cntxt);
+> > +			}
+> 
+> I didn't look at the code, but my question would it be possible to use
+> skbs also with endpoint 0? That would be more consistent aproach than
+> testing for a particular endpoint.
 
-On 02/08/12 14:15, Jussi Kivilinna wrote:
-> Quoting Florian Fainelli <florian@openwrt.org>:
->
->>
->> Hello,
->>
->> I am running Debian testing kernel 3.1.0-1-amd64, using a 079b:0062 
->> Sagem
->> XG-76NA 802.11bg stick.
->>
->> Upon zd1211rw interface
->> bringup (ifconfig wlan0 up) I get the following timeout:
->>
->> [  950.330573] zd1211rw 1-3:1.0: phy2
->> [  955.108510] zd1211rw 1-3:1.0: firmware version 4725
->> [  955.148532] zd1211rw 1-3:1.0: zd1211b chip 079b:0062 v4810 high 
->> 00-19-70
->> AL2230_RF pa0 g--NS
->> [snip]
->> [  955.204072] zd1211rw 1-3:1.0: error ioread32(CR_REG1): -110
->>
->> A second ifconfig wlan0 up brings the interface up without problems.
->>
->> After a bit more debugging, the call trace is the following:
->>
->> [10241.028130] zd1211rw 1-3:1.0: zd_chip_lock_phy_regs: error
->> ioread32(CR_REG1): -110
->> [10241.028140] zd1211rw 1-3:1.0: zd_switch_radio_on: failed to lock 
->> PHY regs
->> [10241.028148] zd1211rw 1-3:1.0: zd_op_start: failed to set radio on
->>
->> The following small modification works around the issue:
->>
->> diff --git a/zd_mac.c b/zd_mac.c
->> index cabfae1..6bfb673 100644
->> --- a/zd_mac.c
->> +++ b/zd_mac.c
->> @@ -306,9 +306,14 @@ int zd_op_start(struct ieee80211_hw *hw)
->>        r = set_mc_hash(mac);
->>        if (r)
->>                goto disable_int;
->> +
->> +       msleep(10);
->> +
->>        r = zd_chip_switch_radio_on(chip);
->> -       if (r < 0)
->> +       if (r < 0) {
->> +               dev_err(zd_chip_dev(chip), "%s: failed to set radio 
->> on\n",
->> __func__);
->>                goto disable_int;
->> +       }
->>        r = zd_chip_enable_rxtx(chip);
->>        if (r < 0)
->>                goto disable_radio;
->>
->> Is it possible that some chips require more time between a 
->> set_mc_hash and a
->> radio on? Or in general that consequent writes to the PHY regs should 
->> be timed
->> appropriately?
->
-> Yes, it is possible. Vendor driver appears to have quite alot sleeps 
-> spread around in RF-chip handling code. I might have seen this myself 
-> sometimes when zd1211 device has firmware freeze and has to be 
-> reseted. But since freeze is hard to reproduce and reset didn't fail 
-> always, I didn't bother with it.
->
-> Can you give your "Signed-off-by" line for the patch?
+Yeah, using skbs for control buffer is the right thing, but for the time being
+we can have this fix in.
 
-Sure, I will resubmit this patch, do you also want me to keep the line 
-showing the error?
+> 
+> And in the future we should get rid of that buf_start hack and use skbs
+> directly anyway.
 
->
-> -Jussi
->
->>
->> When I googled for this timeout issue, I could see quite some reports 
->> of other
->> people having this error while the chip was already operating.
->>
->> Thanks
->> -- 
->> Florian
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe 
->> linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>
->
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Agree.
 
+Vasanth
