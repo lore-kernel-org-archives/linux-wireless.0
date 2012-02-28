@@ -1,38 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:39616 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753674Ab2AaXOG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 Jan 2012 18:14:06 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, m@bues.ch, b43-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 0/4] ssb/bcma: misc fixes
-Date: Wed,  1 Feb 2012 00:13:52 +0100
-Message-Id: <1328051636-15449-1-git-send-email-hauke@hauke-m.de> (sfid-20120201_001410_513685_D89CA1B4)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:6942 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756379Ab2B1BGC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Feb 2012 20:06:02 -0500
+From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <hauke@hauke-m.de>, <nbd@nbd.name>, <linville@tuxdriver.com>,
+	"Luis R. Rodriguez" <mcgrof@frijolero.org>
+Subject: [PATCH 5/7] compat: split COMPAT_CONFIG and COMPAT_AUTOCONF targets
+Date: Mon, 27 Feb 2012 17:05:39 -0800
+Message-ID: <1330391141-19909-6-git-send-email-rodrigue@qca.qualcomm.com> (sfid-20120228_024249_697766_33D2C478)
+In-Reply-To: <1330391141-19909-1-git-send-email-rodrigue@qca.qualcomm.com>
+References: <1330391141-19909-1-git-send-email-rodrigue@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This contains a fix which makes cardbus work with the PCI host 
-controller found on some ssb based SoCs. It also add a log entry for 
-informations about the bcma/ssb chip used. The last patch adds support 
-for the BCM5354 SoC.
+From: Luis R. Rodriguez <mcgrof@frijolero.org>
 
-Hauke Mehrtens (4):
-  ssb: fix cardbus slot in hostmode
-  bcma: log the id, rev and pkg of the chip found
-  ssb: log the id, rev and pkg of the chip found
-  ssb: add support for bcm5354
+Let GNU Make take care of the dependency map.
 
- drivers/bcma/scan.c                 |   10 +++++--
- drivers/ssb/driver_chipcommon_pmu.c |   48 +++++++++++++++++++++++++++++++---
- drivers/ssb/driver_mipscore.c       |    3 ++
- drivers/ssb/driver_pcicore.c        |    2 +-
- drivers/ssb/main.c                  |    3 ++
- drivers/ssb/scan.c                  |    3 ++
- drivers/ssb/ssb_private.h           |    4 +++
- 7 files changed, 64 insertions(+), 9 deletions(-)
+Signed-off-by: Luis R. Rodriguez <mcgrof@frijolero.org>
+---
+ Makefile |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/Makefile b/Makefile
+index 2f47e3f..537d759 100644
+--- a/Makefile
++++ b/Makefile
+@@ -58,11 +58,11 @@ install: modules
+ 		modules_install
+ 	depmod -a
+ 
+-$(COMPAT_AUTOCONF): ;
++$(COMPAT_AUTOCONF): $(COMPAT_CONFIG)
++	+@$(PWD)/scripts/gen-compat-autoconf.sh $(COMPAT_CONFIG) > $(COMPAT_AUTOCONF)
+ 
+ $(COMPAT_CONFIG):
+ 	+@$(PWD)/scripts/gen-compat-config.sh > $(COMPAT_CONFIG)
+-	+@$(PWD)/scripts/gen-compat-autoconf.sh $(COMPAT_CONFIG) > $(COMPAT_AUTOCONF)
+ 	@$(MAKE) -C $(PWD) modules
+ 
+ install: modules
 -- 
-1.7.5.4
+1.7.4.15.g7811d
 
