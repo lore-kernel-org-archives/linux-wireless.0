@@ -1,83 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:44242 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752235Ab2BXPZi convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:3536 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965643Ab2B1P7h convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 10:25:38 -0500
-Received: by iazz13 with SMTP id z13so201823iaz.19
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Feb 2012 07:25:38 -0800 (PST)
+	Tue, 28 Feb 2012 10:59:37 -0500
+From: "Chadd, Adrian" <achadd@qca.qualcomm.com>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Rodriguez, Luis" <rodrigue@qca.qualcomm.com>
+Subject: RE: [PATCH] ath9k: decouple RX error checking for DFS
+Date: Tue, 28 Feb 2012 15:59:35 +0000
+Message-ID: <48EC4E8D43A28947B1AB2639FA97CDB901524A5F@nasanexd02a.na.qualcomm.com> (sfid-20120228_165940_640329_80720F3F)
+References: <1330343526-5335-1-git-send-email-zefir.kurtisi@neratec.com>
+ <48EC4E8D43A28947B1AB2639FA97CDB901524852@nasanexd02a.na.qualcomm.com>,<4F4CC111.7040909@neratec.com>
+In-Reply-To: <4F4CC111.7040909@neratec.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1330093741.3426.19.camel@jlt3.sipsolutions.net>
-References: <20120224033729.9256A205A0@glenhelen.mtv.corp.google.com>
-	<1330068877.3426.6.camel@jlt3.sipsolutions.net>
-	<CAMcMvsi_v=gb9UF3tHSZ11fnh83iE9bK7nSiwL1GB-tDqW47jQ@mail.gmail.com>
-	<1330093741.3426.19.camel@jlt3.sipsolutions.net>
-Date: Fri, 24 Feb 2012 07:25:37 -0800
-Message-ID: <CAMcMvsihYU93DjdqKYHW2xKiNbFD1YBqESx6NAkgKARCf-FjDQ@mail.gmail.com> (sfid-20120224_162542_128204_82B14366)
-Subject: Re: [RFC] mac80211: Filter duplicate IE ids
-From: Paul Stewart <pstew@chromium.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 24, 2012 at 6:29 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Fri, 2012-02-24 at 06:24 -0800, Paul Stewart wrote:
->> On Thu, Feb 23, 2012 at 11:34 PM, Johannes Berg
->> <johannes@sipsolutions.net> wrote:
->> > On Thu, 2012-02-23 at 17:59 -0800, Paul Stewart wrote:
->> >> mac80211 is lenient with respect to reception of corrupted beacons.
->> >> Even if the frame is corrupted as a whole, the available IE elements
->> >> are still passed back and accepted, sometimes replacing legitimate
->> >> data.  It is unknown to what extent this "feature" is made use of,
->> >> but it is clear that in some cases, this is detrimental.  One such
->> >> case is reported in http://crosbug.com/26832 where an AP corrupts
->> >> its beacons but not its probe responses.
->> >>
->> >> One approach would be to completely reject frames with invaid data
->> >> (for example, if the last tag extends beyond the end of the enclosing
->> >> PDU).  The enclosed approach is much more conservative: we simply
->> >> prevent later IEs from overwriting the state from previous ones.
->> >> This approach hopes that there might be some salient data in the
->> >> IE stream before the corruption, and seeks to at least prevent that
->> >> data from being overwritten.  This approach will fix the case above.
->> >>
->> >> Short of any statistics gathering in the various forms of AP breakage,
->> >> it's not possible to ascertain the side effects of more stringent
->> >> discarding of data.
->> >
->> > Hmmm. This seems reasonable, but in the given example (in the bug
->> > report) it will at least lose the WMM info (since it's corrupt) and the
->> > HT info, as well as WPS (which is probably not relevant.)
->>
->> As you can see from the association request, the STA appears to hold
->> an amalgamation of the broken rate information in the beacon and the
->> correct HT/WMM information from the probe response.  In the
->> association request there's both HT and WMM info, as it was able to
->> get it from the probe response.
->
-> Ah, indeed, I hadn't even looked at that.
->
->> > I suppose better to accept such service degradation than not connect,
->> > but I wonder if we should log a warning when we actually try to use such
->> > an AP?
->>
->> Let me know where you'd like it.
->
-> How about having a flag in the BSS struct (ieee80211_bss) and printing a
-> message when we use that BSS struct for assoc? E.g. in
-> ieee80211_mgd_assoc()? I'm not sure I fully understand where this
-> actually has any effect.
+Hi,
 
-How do we clear this flag?  Let's say we got one corrupted beacon and
-from then on, everything was ducky.  We set the flag flag on the
-corrupted beacon.  Do we clear it on an unblemished probe response?
-Are these really two flags, since beacons and probe responses
-sometimes have different subsets of info, or does a valid probe
-response clear both flags?
+That's interesting. I have found the AR9280 to do the same. I hadn't gone digging into it though, I've been busy with other things but it was on my todo list. So thankyou for finding it. :-)
 
+Specifically (and this is all under BSD):
+
+* I'd start rx'ing radar errors;
+* then they'd become crc errors;
+* after some indeterminate amount of time, they'd drift back to being radar errors.
+
+I'll reproduce it on the AR9280 and let you know how it goes.
+
+Thanks for digging into it!
+
+
+Adrian
+________________________________________
+From: Zefir Kurtisi [zefir.kurtisi@neratec.com]
+Sent: Tuesday, 28 February 2012 3:57 AM
+To: Chadd, Adrian
+Cc: linville@tuxdriver.com; ath9k-devel@lists.ath9k.org; linux-wireless@vger.kernel.org; Rodriguez, Luis
+Subject: Re: [PATCH] ath9k: decouple RX error checking for DFS
+
+Hi Adrian,
+
+finally found an AR9280 and repeated the tests simultaneously, i.e. identical radar pulses go to AR9390 and AR9280.
+
+After several hours of continuous radar firing (pulse count in the 1M range), it looks like the AR9280 does not suffer from the reported problem, i.e. the PHY error is never reported in combination with other RX errors.
+
+The AR9390 OTOH always follows the following scheme:
+* it starts as expected with radar pulses being reported as PHY errors (RX descriptor word 11 set to status11=0x511)
+* after a short time (about 80% probability within 5-20 mins) a single CRC error is reported (status11=0x005)
+* the CRC error flag becomes sticky thereafter, all further radar pulses are reported with status11=0x515, i.e. PHY *and* CRC error
+
+
+The posted patch fixes this issue for monitor mode. Not sure about implications for the soon to follow master mode, though.
+
+On 02/27/2012 05:00 PM, Chadd, Adrian wrote:
+> Hi,
 >
-> johannes
+> Hm, so the AR9003 series NICs set PHY error _and_ decrypt/CRC error? On radar frames?
 >
+> Interesting! Have you checked to see if the AR9280 does the same?
+>
+>
+>
+> Adrian
