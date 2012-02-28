@@ -1,77 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3937 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757814Ab2BIUJ1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 15:09:27 -0500
-From: "Arend van Spriel" <arend@broadcom.com>
-To: linville@tuxdriver.com
-cc: linux-wireless@vger.kernel.org,
-	"Arend van Spriel" <arend@broadcom.com>
-Subject: [PATCH 06/15] brcm80211: fmac: resolve smatch issues in
- brcmfmac code
-Date: Thu, 9 Feb 2012 21:09:00 +0100
-Message-ID: <1328818149-4826-7-git-send-email-arend@broadcom.com> (sfid-20120209_211026_937738_88E6EC96)
-In-Reply-To: <1328818149-4826-1-git-send-email-arend@broadcom.com>
-References: <1328818149-4826-1-git-send-email-arend@broadcom.com>
+Received: from remail2.raritan.com ([62.132.199.138]:55267 "EHLO
+	remail2.raritan.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932161Ab2B1Pfu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Feb 2012 10:35:50 -0500
+Message-ID: <4F4CF454.8050207@raritan.com> (sfid-20120228_163553_655385_5097D2D6)
+Date: Tue, 28 Feb 2012 16:35:48 +0100
+From: Ronald Wahl <ronald.wahl@raritan.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Occasional truncated scan results
+References: <4F4CE4D6.6020108@raritan.com>  (sfid-20120228_152950_864254_C21F9143) <1330440166.3368.7.camel@jlt3.sipsolutions.net>  <4F4CEFA6.2090005@raritan.com> <1330442659.3368.13.camel@jlt3.sipsolutions.net>
+In-Reply-To: <1330442659.3368.13.camel@jlt3.sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch resolves the following smatch issues:
+On 28.02.2012 16:24, Johannes Berg wrote:
+> On Tue, 2012-02-28 at 16:15 +0100, Ronald Wahl wrote:
+>> My problem is not that the scan results are larger than 64k. The user
+>> space is coded so that it provides a small buffer that is doubled in
+>> size until the data fits into the buffer. But the kernel code does not
+>> always detect the case that the buffer is almost full and just starts
+>> skipping some data without notifying user space with E2BIG.
+>
+> Ok. Yes, this could be fixed by making sure that a single BSS is
+> atomically written or not written -- probably simply by rolling back at
+> the end of the function if it didn't fit and returning an error etc. If
+> you wanted to work on this, I'd review&  accept the patch, but I have no
+> intention whatsoever to do this myself :-)
 
-wl_cfg80211.c +1377 brcmf_cfg80211_connect(65) warn: min_t truncates
-here '(sme->ssid_len)' (4294967295 vs 9223372036854775807)
-dhd_sdio.c +1275 brcmf_sdbrcm_rxglom(156) warn: min_t truncates here
-'(pfirst->len)' (2147483647 vs 4294967295)
-dhd_sdio.c +1457 brcmf_sdbrcm_rxglom(338) warn: min_t truncates here
-'(pfirst->len)' (2147483647 vs 4294967295)
-bcmsdh_sdmmc.c +300 brcmf_sdioh_request_buffer(10) warn: variable
-dereferenced before check 'pkt' (see line 295)
+I'll first check if I can use the nl80211 interface in all cases. If not 
+I'll probably come up with a patch. Thanks!
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c |    3 ++-
- .../net/wireless/brcm80211/brcmfmac/wl_cfg80211.c  |    2 +-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+- ron
 
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-index ac71ade..b698a76 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/bcmsdh_sdmmc.c
-@@ -294,13 +294,14 @@ int brcmf_sdioh_request_buffer(struct brcmf_sdio_dev *sdiodev,
- 			       struct sk_buff *pkt)
- {
- 	int status;
--	uint pkt_len = pkt->len;
-+	uint pkt_len;
- 	bool fifo = (fix_inc == SDIOH_DATA_FIX);
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
- 	if (pkt == NULL)
- 		return -EINVAL;
-+	pkt_len = pkt->len;
- 
- 	brcmf_pm_resume_wait(sdiodev, &sdiodev->request_buffer_wait);
- 	if (brcmf_pm_resume_error(sdiodev))
-diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-index 74c95a5..e95a883 100644
---- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-+++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
-@@ -1376,7 +1376,7 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
- 	memset(&join_params, 0, sizeof(join_params));
- 	join_params_size = sizeof(join_params.ssid_le);
- 
--	ssid.SSID_len = min_t(u32, sizeof(ssid.SSID), sme->ssid_len);
-+	ssid.SSID_len = min_t(u32, sizeof(ssid.SSID), (u32)sme->ssid_len);
- 	memcpy(&join_params.ssid_le.SSID, sme->ssid, ssid.SSID_len);
- 	memcpy(&ssid.SSID, sme->ssid, ssid.SSID_len);
- 	join_params.ssid_le.SSID_len = cpu_to_le32(ssid.SSID_len);
 -- 
-1.7.5.4
-
-
+Ronald Wahl - ronald.wahl@raritan.com - Phone +49 375271349-0 Fax -99
+Raritan Deutschland GmbH, Kornmarkt 7, 08056 Zwickau, Germany
+USt-IdNr. DE813094160, Steuer-Nr. 227/117/01749
+Amtsgericht Chemnitz HRB 23605
+Geschäftsführung: Stuart Hopper, Burkhard Wessler
