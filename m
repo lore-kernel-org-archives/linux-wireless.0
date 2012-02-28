@@ -1,35 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:34392 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755217Ab2BHSOK (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55129 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755733Ab2B1PYV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 13:14:10 -0500
-Received: by yenm8 with SMTP id m8so403586yen.19
-        for <linux-wireless@vger.kernel.org>; Wed, 08 Feb 2012 10:14:09 -0800 (PST)
-Message-ID: <4F32BB6E.1020803@lwfinger.net> (sfid-20120208_191415_135438_5F673A45)
-Date: Wed, 08 Feb 2012 12:14:06 -0600
-From: Larry Finger <Larry.Finger@lwfinger.net>
-MIME-Version: 1.0
-To: lina <lina.lastname@gmail.com>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: something about compact-wireless
-References: <CAG9cJmnuyjxLFe5Wc4okDmOw4ik0aC_vT8xi5rEhfUJGbiczcg@mail.gmail.com>
-In-Reply-To: <CAG9cJmnuyjxLFe5Wc4okDmOw4ik0aC_vT8xi5rEhfUJGbiczcg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Tue, 28 Feb 2012 10:24:21 -0500
+Subject: Re: Occasional truncated scan results
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ronald Wahl <ronald.wahl@raritan.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <4F4CEFA6.2090005@raritan.com>
+References: <4F4CE4D6.6020108@raritan.com>
+	 (sfid-20120228_152950_864254_C21F9143) <1330440166.3368.7.camel@jlt3.sipsolutions.net>
+	 <4F4CEFA6.2090005@raritan.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 28 Feb 2012 16:24:19 +0100
+Message-ID: <1330442659.3368.13.camel@jlt3.sipsolutions.net> (sfid-20120228_162430_694022_1801A6E2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/08/2012 11:05 AM, lina wrote:
-> Hi,
->
-> The question i am going to ask might sounds silly, please forgive,
->
-> do I need the compact-wireless in future? something about it's history?
+On Tue, 2012-02-28 at 16:15 +0100, Ronald Wahl wrote:
 
-Obviously, you do not understand the reason for compat-wireless. It is used to 
-backport the wireless drivers in the development kernels so that they can be 
-used on older kernels. Whether you need it depends on what kernel you are using, 
-and what device(s) you have. The short answer is "probably not".
+> >> Currently I implemented a heuristic that checks if some minimum space
+> >> (currently 256 bytes) is still free _after_ adding a BSS and otherwise
+> >> return -E2BIG so the user space can provide a larger buffer but this is
+> >> a crappy hack.
+> >>
+> >> Can the code be changed in some way to more reliably detect if some data
+> >> did not fit into the buffer and report this to user space?
+> >
+> > Unfortunately not. The maximum buffer size userspace can provide is
+> > limited to 64k. In busy environments, this size can be exceeded. As a
+> > result, if we do this, you can't get *any* scan results in such
+> > environments. I believe the current code is almost the best we can do
+> > for wireless extensions, but it may be possible to implement never
+> > truncating a single BSS entry.
+> 
+> My problem is not that the scan results are larger than 64k. The user 
+> space is coded so that it provides a small buffer that is doubled in 
+> size until the data fits into the buffer. But the kernel code does not 
+> always detect the case that the buffer is almost full and just starts 
+> skipping some data without notifying user space with E2BIG.
 
-Larry
+Ok. Yes, this could be fixed by making sure that a single BSS is
+atomically written or not written -- probably simply by rolling back at
+the end of the function if it didn't fit and returning an error etc. If
+you wanted to work on this, I'd review & accept the patch, but I have no
+intention whatsoever to do this myself :-)
+
+johannes
 
