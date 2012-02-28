@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:38194 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753877Ab2BGLqC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 06:46:02 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH] mac80211: add #ifdef CONFIG_MAC80211_VERBOSE_DEBUG for a debug printk
-Date: Tue,  7 Feb 2012 12:45:44 +0100
-Message-Id: <1328615144-66050-1-git-send-email-nbd@openwrt.org> (sfid-20120207_124607_346922_78FFE4AF)
+Received: from he.sipsolutions.net ([78.46.109.217]:50674 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753905Ab2B1J2g (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Feb 2012 04:28:36 -0500
+Subject: Re: [PATCH 6/6] mwifiex: remove BSS entry before specific SSID scan
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kiran Divekar <dkiran@marvell.com>,
+	Yogesh Powar <yogeshp@marvell.com>,
+	Avinash Patil <patila@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Frank Huang <frankh@marvell.com>
+In-Reply-To: <1330409056-4399-7-git-send-email-bzhao@marvell.com> (sfid-20120228_070558_572954_B2EED4D1)
+References: <1330409056-4399-1-git-send-email-bzhao@marvell.com>
+	 <1330409056-4399-7-git-send-email-bzhao@marvell.com>
+	 (sfid-20120228_070558_572954_B2EED4D1)
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 28 Feb 2012 10:28:30 +0100
+Message-ID: <1330421310.3368.0.camel@jlt3.sipsolutions.net> (sfid-20120228_102841_594122_DDA1BE2B)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When not debugging mac80211 code, station state transitions do not need to
-show up in the kernel log.
+On Mon, 2012-02-27 at 22:04 -0800, Bing Zhao wrote:
+> From: Amitkumar Karwar <akarwar@marvell.com>
+> 
+> Driver performs specific SSID scan operation when "iw dev <devname>
+> scan ssid <ssid>" command is fired.
+> Sometimes even if driver could not find the AP with requested SSID
+> in scanning, it is displayed in scan results based on history,
+> because scan table entries are valid in cfg80211 stack for 15 seconds.
+> 
+> This patch adds code to remove respective scan table entry before
+> performing specific SSID scan to make sure that correct scan results
+> are displayed to user.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/sta_info.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+NACK. This isn't the intended behaviour here. If any such behaviour is
+desired it should probably be implemented in wpa_s, or maybe in
+cfg80211, but certainly not in the driver where all it does is make
+different drivers behave differently.
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 31cd6d9..4034ee6 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1379,8 +1379,10 @@ int sta_info_move_state(struct sta_info *sta,
- 		return -EINVAL;
- 	}
- 
-+#ifdef CONFIG_MAC80211_VERBOSE_DEBUG
- 	printk(KERN_DEBUG "%s: moving STA %pM to state %d\n",
- 		sta->sdata->name, sta->sta.addr, new_state);
-+#endif
- 
- 	/*
- 	 * notify the driver before the actual changes so it can
--- 
-1.7.3.2
+johannes
 
