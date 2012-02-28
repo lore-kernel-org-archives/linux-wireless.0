@@ -1,34 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:59173 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752326Ab2BMFue (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31432 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755733Ab2B1PYw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 00:50:34 -0500
-Date: Mon, 13 Feb 2012 00:50:25 -0500 (EST)
-Message-Id: <20120213.005025.199077040083086801.davem@davemloft.net> (sfid-20120213_065048_318134_0B602165)
-To: joe@perches.com
-Cc: David.Laight@ACULAB.COM, jeffrey.t.kirsher@intel.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH net-next] drivers/net: Remove boolean comparisons to
- true/false
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1328822243.29329.11.camel@joe2Laptop>
-References: <AE90C24D6B3A694183C094C60CF0A2F6026B6E62@saturn3.aculab.com>
-	<20120209.133413.349832435589531136.davem@davemloft.net>
-	<1328822243.29329.11.camel@joe2Laptop>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 28 Feb 2012 10:24:52 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
+	<ath9k-devel@lists.ath9k.org>,
+	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Subject: [PATCH 1/2] ath9k: completely zero intialize valid_phy_rate_idx
+Date: Tue, 28 Feb 2012 20:54:43 +0530
+Message-ID: <1330442684-10553-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120228_162456_659912_47BDEE7F)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Joe Perches <joe@perches.com>
-Date: Thu, 09 Feb 2012 13:17:23 -0800
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 
-> Booleans should not be compared to true or false
-> but be directly tested or tested with !.
-> 
-> Done via cocci script:
- ...
-> Signed-off-by: Joe Perches <joe@perches.com>
+its better to zero initialize the 'valid_phy_rate_idx' array completely
 
-Applied.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath9k/rc.c |    2 +-
+ drivers/net/wireless/ath/ath9k/rc.h |    2 --
+ 2 files changed, 1 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/rc.c b/drivers/net/wireless/ath/ath9k/rc.c
+index b8c6c38..6407af2 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.c
++++ b/drivers/net/wireless/ath/ath9k/rc.c
+@@ -1226,7 +1226,7 @@ static void ath_rc_init(struct ath_softc *sc,
+ 	ath_rc_init_valid_rate_idx(ath_rc_priv);
+ 
+ 	for (i = 0; i < WLAN_RC_PHY_MAX; i++) {
+-		for (j = 0; j < MAX_TX_RATE_PHY; j++)
++		for (j = 0; j < RATE_TABLE_SIZE; j++)
+ 			ath_rc_priv->valid_phy_rateidx[i][j] = 0;
+ 		ath_rc_priv->valid_phy_ratecnt[i] = 0;
+ 	}
+diff --git a/drivers/net/wireless/ath/ath9k/rc.h b/drivers/net/wireless/ath/ath9k/rc.h
+index b7a4bcd..75f8e9b 100644
+--- a/drivers/net/wireless/ath/ath9k/rc.h
++++ b/drivers/net/wireless/ath/ath9k/rc.h
+@@ -25,8 +25,6 @@ struct ath_softc;
+ 
+ #define ATH_RATE_MAX     30
+ #define RATE_TABLE_SIZE  72
+-#define MAX_TX_RATE_PHY  48
+-
+ 
+ #define RC_INVALID	0x0000
+ #define RC_LEGACY	0x0001
+-- 
+1.7.0.4
+
