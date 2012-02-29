@@ -1,96 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hermes.mlbassoc.com ([64.234.241.98]:48533 "EHLO
-	mail.chez-thomas.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750773Ab2B2USN (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:42826 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030609Ab2B2BEO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 15:18:13 -0500
-Message-ID: <4F4E8802.8090903@mlbassoc.com> (sfid-20120229_211815_484122_5B89574A)
-Date: Wed, 29 Feb 2012 13:18:10 -0700
-From: Gary Thomas <gary@mlbassoc.com>
+	Tue, 28 Feb 2012 20:04:14 -0500
+Received: by pbcup15 with SMTP id up15so3922010pbc.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2012 17:04:13 -0800 (PST)
 MIME-Version: 1.0
-To: Thomas Pedersen <thomas@cozybit.com>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-	Luciano Coelho <coelho@ti.com>
-Subject: Re: Help building compat-wireless
-References: <4F4E47BC.8000306@mlbassoc.com> <4F4E731B.7080704@mlbassoc.com> <4F4E801A.1090701@mlbassoc.com> <CAG6hwVOgFuQ8XSGvYjM7aSiWe2O2T_UdVVWz+pyEHROEfqNE-g@mail.gmail.com>
-In-Reply-To: <CAG6hwVOgFuQ8XSGvYjM7aSiWe2O2T_UdVVWz+pyEHROEfqNE-g@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+From: Ashok Nagarajan <ashok@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: javier@cozybit.com, ashok@cozybit.com
+Subject: [PATCH v3] {nl,cfg,mac}80211: Implement RSSI threshold for mesh peering
+Date: Tue, 28 Feb 2012 17:04:08 -0800
+Message-Id: <1330477448-13117-1-git-send-email-ashok@cozybit.com> (sfid-20120229_020417_891029_DBB15E1C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-02-29 12:59, Thomas Pedersen wrote:
-> Hi Gary,
->
-> On Wed, Feb 29, 2012 at 11:44 AM, Gary Thomas<gary@mlbassoc.com>  wrote:
->> On 2012-02-29 11:48, Gary Thomas wrote:
->>>
->>> On 2012-02-29 08:43, Gary Thomas wrote:
->>>>
->>>> I'm struggling a bit to build compat-wireless in a cross-build
->>>> environment.
->>>> I normally don't build kernels in-tree, rather I use a build tree, e.g.
->>>> % cd<linux-source>
->>>> % mkdir /tmp/kernel_build
->>>> % make O=/tmp/kernel_build<some_config>
->>>> % make O=/tmp/kernel_build uImage
->>>>
->>>> I can't see how to use this setup with the compat-wireless package.
->>>> I tried [all the combinations I could think of] something like this:
->>>> % cd<compat-wireless>
->>>> % make KLIB=<linux-source>  KLIB_BUILD=/tmp/kernel_build
->>>> However, this seems to not work as all I get are errors like this:
->>>> /local/compat-wireless-2012-02-28/config.mk:242: "WARNING:
->>>> CONFIG_CFG80211_WEXT will be deactivated or not working because kernel was
->>>> compiled with CONFIG_WIRELESS_EXT=n. Tools
->>>> using wext interface like iwconfig will not work. To activate it build
->>>> your kernel e.g. with CONFIG_LIBIPW=m."
->>>>
->>>> Does this process work in my workflow? What do I need to do to
->>>> get it going?
->>>
->>>
->>> I managed to get past this, using this
->>> % make KLIB=/tmp/kernel_build KLIB_BUILD=/tmp/kernel_build
->>> but to get it to actually build anything, I had to append the
->>> 'modules' target, e.g.
->>> % make KLIB=/tmp/kernel_build KLIB_BUILD=/tmp/kernel_build modules
->>>
->>> Next problems:
->>> * How do I select sub-options? I only want WL12xx support with SDIO, but
->>> that requires some sub-options to be set that don't appear to happen.
->>> I get the main wl12xx module, but not wl12xx_sdio or wl12xx_platform_data
->>> * There are a number of files which don't build against my 2.6.37 kernel,
->>> but none of these are important to me (they are in the bluetooth driver
->>> which I don't need, but nonetheless it gets built)
->>> * The make/install is terribly broken for cross-builds.
->>>
->>> I hacked my way past these problems and finally got some modules which
->>> I can try. Sadly, they don't work at all:
->>> # modprobe wl12xx_sdio
->>> wl12xx: loaded
->>> # ifconfig wlan0 up
->>> wl1271_sdio mmc1:0001:2: sdio write failed (-110)
->>> wl1271_sdio mmc1:0001:2: sdio write failed (-110)
->>> ...
->>
->>
->> Sadly, this one was my fault - one of my build hacks got in the way :-(
->>
->> Now, I'm getting this error:
->>   wl12xx: ERROR could not get firmware ti-connectivity/wl127x-fw-4-sr.bin: -2
->> But this file is not available at the Linux firmware tree
->> (git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git)
->>
->> Where can I find it?
->>
->
-> Try here:  git://github.com/TI-OpenLink/firmwares.git
+Mesh peer links are established only if average rssi of the peer
+candidate satisfies the threshold. This is not in 802.11s specification
+but was requested by David Fulgham, an open80211s user. This is a way to avoid
+marginal peer links with stations that are barely within range.
 
-Thanks.  Do you know if these will be moving to kernel.org anytime soon?
-My build recipes expect that to be the official home for firmware.
+This patch adds a new mesh configuration parameter, mesh_rssi_threshold. This
+feature is supported only for hardwares that report signal in dBm.
 
+Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
+---
+v3:
+use s32 instead of int32_t (Kalle Valo)
+Feature to be supported for devices reporting signal in dBm (Johannes)
+
+ include/linux/nl80211.h       |    5 +++++
+ include/net/cfg80211.h        |    1 +
+ net/mac80211/cfg.c            |    8 ++++++++
+ net/mac80211/debugfs_netdev.c |    2 ++
+ net/mac80211/mesh_plink.c     |   16 +++++++++++++++-
+ net/wireless/mesh.c           |    3 +++
+ net/wireless/nl80211.c        |    5 +++++
+ 7 files changed, 39 insertions(+), 1 deletions(-)
+
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index be35a68..38fda5e 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -2112,6 +2112,10 @@ enum nl80211_mntr_flags {
+  * @NL80211_MESHCONF_FORWARDING: set Mesh STA as forwarding or non-forwarding
+  * or forwarding entity (default is TRUE - forwarding entity)
+  *
++ * @NL80211_MESHCONF_RSSI_THRESHOLD: RSSI threshold in dBm. This specifies the
++ * threshold for average signal strength of candidate station to establish
++ * a peer link.
++ *
+  * @NL80211_MESHCONF_ATTR_MAX: highest possible mesh configuration attribute
+  *
+  * @__NL80211_MESHCONF_ATTR_AFTER_LAST: internal use
+@@ -2137,6 +2141,7 @@ enum nl80211_meshconf_params {
+ 	NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
+ 	NL80211_MESHCONF_HWMP_PERR_MIN_INTERVAL,
+ 	NL80211_MESHCONF_FORWARDING,
++	NL80211_MESHCONF_RSSI_THRESHOLD,
+ 
+ 	/* keep last */
+ 	__NL80211_MESHCONF_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 755a770..4866a10 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -809,6 +809,7 @@ struct mesh_config {
+ 	 * Still keeping the same nomenclature to be in sync with the spec. */
+ 	bool  dot11MeshGateAnnouncementProtocol;
+ 	bool dot11MeshForwarding;
++	s32 rssi_threshold;
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index f7eb25a..ef9bbb8 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1314,6 +1314,14 @@ static int ieee80211_update_mesh_config(struct wiphy *wiphy,
+ 	}
+ 	if (_chg_mesh_attr(NL80211_MESHCONF_FORWARDING, mask))
+ 		conf->dot11MeshForwarding = nconf->dot11MeshForwarding;
++	if (_chg_mesh_attr(NL80211_MESHCONF_RSSI_THRESHOLD, mask)) {
++		/* our RSSI threshold implementation is supported only for
++		 * devices that report signal in dBm.
++		 */
++		if (!(sdata->local->hw.flags & IEEE80211_HW_SIGNAL_DBM))
++			return -ENOTSUPP;
++		conf->rssi_threshold = nconf->rssi_threshold;
++	}
+ 	return 0;
+ }
+ 
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 510ed1d..9f484d8 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -443,6 +443,7 @@ IEEE80211_IF_FILE(dot11MeshGateAnnouncementProtocol,
+ IEEE80211_IF_FILE(dot11MeshHWMPRannInterval,
+ 		u.mesh.mshcfg.dot11MeshHWMPRannInterval, DEC);
+ IEEE80211_IF_FILE(dot11MeshForwarding, u.mesh.mshcfg.dot11MeshForwarding, DEC);
++IEEE80211_IF_FILE(rssi_threshold, u.mesh.mshcfg.rssi_threshold, DEC);
+ #endif
+ 
+ 
+@@ -581,6 +582,7 @@ static void add_mesh_config(struct ieee80211_sub_if_data *sdata)
+ 	MESHPARAMS_ADD(dot11MeshHWMPRootMode);
+ 	MESHPARAMS_ADD(dot11MeshHWMPRannInterval);
+ 	MESHPARAMS_ADD(dot11MeshGateAnnouncementProtocol);
++	MESHPARAMS_ADD(rssi_threshold);
+ #undef MESHPARAMS_ADD
+ }
+ #endif
+diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
+index 8806e5e..80ce527 100644
+--- a/net/mac80211/mesh_plink.c
++++ b/net/mac80211/mesh_plink.c
+@@ -31,6 +31,11 @@
+ #define dot11MeshHoldingTimeout(s) (s->u.mesh.mshcfg.dot11MeshHoldingTimeout)
+ #define dot11MeshMaxPeerLinks(s) (s->u.mesh.mshcfg.dot11MeshMaxPeerLinks)
+ 
++#define sta_meets_rssi_threshold(sta, sdata) \
++		(sdata->u.mesh.mshcfg.rssi_threshold == 0 ||\
++		(s8) -ewma_read(&sta->avg_signal) > \
++		sdata->u.mesh.mshcfg.rssi_threshold)
++
+ enum plink_event {
+ 	PLINK_UNDEFINED,
+ 	OPN_ACPT,
+@@ -301,7 +306,8 @@ void mesh_neighbour_update(u8 *hw_addr, u32 rates,
+ 	if (mesh_peer_accepts_plinks(elems) &&
+ 			sta->plink_state == NL80211_PLINK_LISTEN &&
+ 			sdata->u.mesh.accepting_plinks &&
+-			sdata->u.mesh.mshcfg.auto_open_plinks)
++			sdata->u.mesh.mshcfg.auto_open_plinks &&
++			sta_meets_rssi_threshold(sta, sdata))
+ 		mesh_plink_open(sta);
+ 
+ 	rcu_read_unlock();
+@@ -531,6 +537,14 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
+ 		return;
+ 	}
+ 
++	if (ftype == WLAN_SP_MESH_PEERING_OPEN &&
++	    !sta_meets_rssi_threshold(sta, sdata)) {
++		mpl_dbg("Mesh plink: %pM does not meet rssi threshold\n",
++			sta->sta.addr);
++		rcu_read_unlock();
++		return;
++	}
++
+ 	if (sta && !test_sta_flag(sta, WLAN_STA_AUTH)) {
+ 		mpl_dbg("Mesh plink: Action frame from non-authed peer\n");
+ 		rcu_read_unlock();
+diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
+index 9d3e3b6..ba21ab2 100644
+--- a/net/wireless/mesh.c
++++ b/net/wireless/mesh.c
+@@ -23,6 +23,8 @@
+ #define MESH_PERR_MIN_INT	100
+ #define MESH_DIAM_TRAVERSAL_TIME 50
+ 
++#define MESH_RSSI_THRESHOLD	0
++
+ /*
+  * A path will be refreshed if it is used PATH_REFRESH_TIME milliseconds
+  * before timing out.  This way it will remain ACTIVE and no data frames
+@@ -56,6 +58,7 @@ const struct mesh_config default_mesh_config = {
+ 	.dot11MeshHWMPRannInterval = MESH_RANN_INTERVAL,
+ 	.dot11MeshGateAnnouncementProtocol = false,
+ 	.dot11MeshForwarding = true,
++	.rssi_threshold = MESH_RSSI_THRESHOLD,
+ };
+ 
+ const struct mesh_setup default_mesh_setup = {
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 1998c36..25a470a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3290,6 +3290,8 @@ static int nl80211_get_mesh_config(struct sk_buff *skb,
+ 			cur_params.dot11MeshGateAnnouncementProtocol);
+ 	NLA_PUT_U8(msg, NL80211_MESHCONF_FORWARDING,
+ 			cur_params.dot11MeshForwarding);
++	NLA_PUT_U32(msg, NL80211_MESHCONF_RSSI_THRESHOLD,
++			cur_params.rssi_threshold);
+ 	nla_nest_end(msg, pinfoattr);
+ 	genlmsg_end(msg, hdr);
+ 	return genlmsg_reply(msg, info);
+@@ -3322,6 +3324,7 @@ static const struct nla_policy nl80211_meshconf_params_policy[NL80211_MESHCONF_A
+ 	[NL80211_MESHCONF_HWMP_RANN_INTERVAL] = { .type = NLA_U16 },
+ 	[NL80211_MESHCONF_GATE_ANNOUNCEMENTS] = { .type = NLA_U8 },
+ 	[NL80211_MESHCONF_FORWARDING] = { .type = NLA_U8 },
++	[NL80211_MESHCONF_RSSI_THRESHOLD] = { .type = NLA_U32},
+ };
+ 
+ static const struct nla_policy
+@@ -3413,6 +3416,8 @@ do {\
+ 			nla_get_u8);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshForwarding,
+ 			mask, NL80211_MESHCONF_FORWARDING, nla_get_u8);
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold,
++			mask, NL80211_MESHCONF_RSSI_THRESHOLD, nla_get_u32);
+ 	if (mask_out)
+ 		*mask_out = mask;
+ 
 -- 
-------------------------------------------------------------
-Gary Thomas                 |  Consulting for the
-MLB Associates              |    Embedded world
-------------------------------------------------------------
+1.7.5.4
+
