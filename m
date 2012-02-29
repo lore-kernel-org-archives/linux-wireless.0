@@ -1,65 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:50962 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751016Ab2BFRsH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Feb 2012 12:48:07 -0500
-Message-ID: <4F30122E.3060004@qca.qualcomm.com> (sfid-20120206_184811_473343_EA6C2211)
-Date: Mon, 6 Feb 2012 19:47:26 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <ath6kl-devel@qualcomm.com>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath6kl: add blocking debugfs file for retrieving
- firmware logs
-References: <20120206062327.20231.11602.stgit@localhost6.localdomain6> <20120206062340.20231.55630.stgit@localhost6.localdomain6> <20120206090654.GA3260@chvasanth-lnx> <4F2FC989.5000306@qca.qualcomm.com> <20120206150515.GA4024@chvasanth-lnx>
-In-Reply-To: <20120206150515.GA4024@chvasanth-lnx>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from zmc.proxad.net ([212.27.53.206]:54120 "EHLO zmc.proxad.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932213Ab2B2Jhc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Feb 2012 04:37:32 -0500
+From: Florian Fainelli <florian@openwrt.org>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, dsd@gentoo.org,
+	kune@deine-taler.de, jussi.kivilinna@mbnet.fi,
+	Florian Fainelli <florian@openwrt.org>
+Subject: [PATCH v2] zd1211rw: wait between setting hash table and powering radio on
+Date: Wed, 29 Feb 2012 10:36:43 +0100
+Message-Id: <1330508203-5454-1-git-send-email-florian@openwrt.org> (sfid-20120229_103738_081982_37794A9C)
+In-Reply-To: <20120215145231.80704988jhf2taxc@www.81.fi>
+References: <20120215145231.80704988jhf2taxc@www.81.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/06/2012 05:05 PM, Vasanthakumar Thiagarajan wrote:
-> On Mon, Feb 06, 2012 at 02:37:29PM +0200, Kalle Valo wrote:
->> On 02/06/2012 11:06 AM, Vasanthakumar Thiagarajan wrote:
->>
->>> Why not to use simple_read_from_buffer()?, looks like it can also
->>> takes care of len == 0 case in the following check.
->>>
->>> if (pos >= available || !count)
->>>         return 0;
->>>
->>> when available (len) is 0, pos = available with
->>> ath6kl_fwlog_block_read().
->>
->> I actually used simple_read_from_buffer() first, but the problem is that
->> it assumes that there's just one buffer from which the data is copied.
->> But in this case there can be multiple buffers from which I copy data.
->>
->> Ok, that was a bit confusing, let's try to explain a bit differently :)
->>
->> If 'ppos > 0' (for example during the second function call)
->> simple_read_from_buffer() will try to copy from 'user_buf + ppos' but I
->> would want to copy from 'user_buf'.
-> 
-> I think you mean s/user_buf/buf.
+I am running Debian testing kernel 3.1.0-1-amd64, using a 079b:0062 Sagem
+XG-76NA 802.11bg stick.
 
-Correct.
+Upon zd1211rw interface
+bringup (ifconfig wlan0 up) I get the following timeout:
 
-> Are you not making sure that the
-> length of the data is not more than the requested one which is
-> passed to copy_to_user() so that read() is always called with
-> *ppos=0?. The following code seems to do that
+[  950.330573] zd1211rw 1-3:1.0: phy2
+[  955.108510] zd1211rw 1-3:1.0: firmware version 4725
+[  955.148532] zd1211rw 1-3:1.0: zd1211b chip 079b:0062 v4810 high 00-19-70
+AL2230_RF pa0 g--NS
+[snip]
+[  955.204072] zd1211rw 1-3:1.0: error ioread32(CR_REG1): -110
 
-But the function is called multiple times with increasing values of
-*ppos as more data is returned to user space:
+A second ifconfig wlan0 up brings the interface up without problems.
 
-[  100.303747] ath6kl_fwlog_block_read(): *ppos 0
-[  100.305252] ath6kl_fwlog_block_read(): *ppos 30116
-[  101.768947] ath6kl_fwlog_block_read(): *ppos 31624
-[  117.027469] ath6kl_fwlog_block_read(): *ppos 33124
-[  117.090146] ath6kl_fwlog_block_read(): *ppos 34628
-[  117.172338] ath6kl_fwlog_block_read(): *ppos 36128
+After a bit more debugging, the call trace is the following:
 
-So I can't assume that *ppos = 0.
+[10241.028130] zd1211rw 1-3:1.0: zd_chip_lock_phy_regs: error
+ioread32(CR_REG1): -110
+[10241.028140] zd1211rw 1-3:1.0: zd_switch_radio_on: failed to lock PHY regs
+[10241.028148] zd1211rw 1-3:1.0: zd_op_start: failed to set radio on
 
-Kalle
+Adding a 10 milliseconds delay between the call to set_mc_hash() and
+zd_chip_switch_radio_on() allows successful interface bringups in all
+cases and matches what the vendor driver did.
+
+Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Signed-off-by: Florian Fainelli <florian@openwrt.org>
+---
+Changes since v1:
+- added comment in the code as to why this delay is required
+- added Jussi's acked-by tag
+
+ drivers/net/wireless/zd1211rw/zd_mac.c |   12 +++++++++++-
+ 1 files changed, 11 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/zd1211rw/zd_mac.c b/drivers/net/wireless/zd1211rw/zd_mac.c
+index 98a574a..2d43e08 100644
+--- a/drivers/net/wireless/zd1211rw/zd_mac.c
++++ b/drivers/net/wireless/zd1211rw/zd_mac.c
+@@ -306,9 +306,19 @@ int zd_op_start(struct ieee80211_hw *hw)
+ 	r = set_mc_hash(mac);
+ 	if (r)
+ 		goto disable_int;
++
++	/* Wait after setting the mutlicast hash table and powering on
++	 * the radio otherwise interface bring up will fail. This matches
++	 * what the vendor driver did.
++	 */
++	msleep(10);
++
+ 	r = zd_chip_switch_radio_on(chip);
+-	if (r < 0)
++	if (r < 0) {
++		dev_err(zd_chip_dev(chip),
++			"%s: failed to set radio on\n", __func__);
+ 		goto disable_int;
++	}
+ 	r = zd_chip_enable_rxtx(chip);
+ 	if (r < 0)
+ 		goto disable_radio;
+-- 
+1.7.5.4
+
