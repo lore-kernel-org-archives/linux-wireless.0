@@ -1,40 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:58233 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754675Ab2BSSda (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Feb 2012 13:33:30 -0500
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: linville@tuxdriver.com
-Cc: zajec5@gmail.com, b43-dev@lists.infradead.org,
-	linux-mips@linux-mips.org, linux-wireless@vger.kernel.org,
-	arend@broadcom.com, m@bues.ch, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH 04/11] ssb: add ccode
-Date: Sun, 19 Feb 2012 19:32:18 +0100
-Message-Id: <1329676345-15856-5-git-send-email-hauke@hauke-m.de> (sfid-20120219_193340_378390_BA97E196)
-In-Reply-To: <1329676345-15856-1-git-send-email-hauke@hauke-m.de>
-References: <1329676345-15856-1-git-send-email-hauke@hauke-m.de>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:27752 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755146Ab2B2OiL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Feb 2012 09:38:11 -0500
+Message-ID: <4F4E384D.2090802@qca.qualcomm.com> (sfid-20120229_153818_203046_6E8672BC)
+Date: Wed, 29 Feb 2012 16:38:05 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Joe Perches <joe@perches.com>
+CC: Andrew Morton <akpm@linux-foundation.org>,
+	Andy Whitcroft <apw@shadowen.org>,
+	"Allan, Bruce W" <bruce.w.allan@intel.com>,
+	David Miller <davem@davemloft.net>,
+	"andrei.emeltchenko.news@gmail.com"
+	<andrei.emeltchenko.news@gmail.com>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] checkpatch: Add some --strict coding style checks
+References: <20120221151435.GA19354@tuxdriver.com>	 <20120221.144417.1445117001833888214.davem@davemloft.net>	 <CAMXE1-qB8_5oGey2=Ypa5BitZnye3YqdM=yB8oKCGLvoZu_8HQ@mail.gmail.com>	 <20120221.154053.2103818562080068513.davem@davemloft.net>	 <1329857959.5143.11.camel@joe2Laptop>	 <804857E1F29AAC47BF68C404FC60A18429B3EE@ORSMSX102.amr.corp.intel.com>	 <1329874581.5143.22.camel@joe2Laptop>	 <804857E1F29AAC47BF68C404FC60A18429B8F2@ORSMSX102.amr.corp.intel.com>	 <1329875935.5143.24.camel@joe2Laptop>	 <804857E1F29AAC47BF68C404FC60A18429B98A@ORSMSX102.amr.corp.intel.com>	 <1329968622.5143.46.camel@joe2Laptop>	 <804857E1F29AAC47BF68C404FC60A1842A1D36@ORSMSX102.amr.corp.intel.com> <1330108675.18464.21.camel@joe2Laptop>
+In-Reply-To: <1330108675.18464.21.camel@joe2Laptop>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This member contains the country code encoded with two chars
+On 02/24/2012 08:37 PM, Joe Perches wrote:
+> Argument alignment across multiple lines should
+> match the open parenthesis.
+> 
+> Logical continuations should be at the end of
+> the previous line, not the start of a new line.
+> 
+> These are not required by CodingStyle so make the
+> tests active only when using --strict.
+> 
+> Improved_by_examples_from: "Bruce W. Allen" <bruce.w.allan@intel.com>
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
----
- include/linux/ssb/ssb.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Thanks Joe, this is very useful for me. I seem to have one false alarm
+though:
 
-diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
-index 4928419..44e486e 100644
---- a/include/linux/ssb/ssb.h
-+++ b/include/linux/ssb/ssb.h
-@@ -33,6 +33,7 @@ struct ssb_sprom {
- 	u8 et1mdcport;		/* MDIO for enet1 */
- 	u16 board_rev;		/* Board revision number from SPROM. */
- 	u8 country_code;	/* Country Code */
-+	char ccode[2];		/* Country Code as two chars like EU or US */
- 	u8 leddc_on_time;	/* LED Powersave Duty Cycle On Count */
- 	u8 leddc_off_time;	/* LED Powersave Duty Cycle Off Count */
- 	u8 ant_available_a;	/* 2GHz antenna available bits (up to 4) */
--- 
-1.7.5.4
+drivers/net/wireless/ath/ath6kl/txrx.c:464: CHECK: Alignment should
+match open parenthesis
 
+This is with patches I haven't sent yet so line numbers most likely
+don't match, but the code in question is this:
+
+	if (!IS_ALIGNED((unsigned long) skb->data - HTC_HDR_LENGTH, 4) &&
+	    skb_cloned(skb)) {
+
+Apparently the cast "(unsigned long)" causes the false alarm as when I
+remove it I don't see the warning anymore.
+
+Kalle
