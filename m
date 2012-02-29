@@ -1,55 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:16567 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751277Ab2BPGnk (ORCPT
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:56393 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932327Ab2B2QAR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Feb 2012 01:43:40 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>,
-	<stable@vger.kernel.org>, Pavel Roskin <proski@gnu.org>
-Subject: [RFC] mac80211: zero initialize count field in ieee80211_tx_rate
-Date: Thu, 16 Feb 2012 12:13:31 +0530
-Message-ID: <1329374611-3793-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120216_074355_832747_AC495CF2)
+	Wed, 29 Feb 2012 11:00:17 -0500
+Message-ID: <4F4E4B8B.8090508@lwfinger.net> (sfid-20120229_170035_681852_A80EB1D7)
+Date: Wed, 29 Feb 2012 10:00:11 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: linux-wireless@vger.kernel.org
+CC: Larry Finger <Larry.Finger@lwfinger.net>, linville@tuxdriver.com,
+	chunkeey@web.de, Max Filippov <jcmvbkbc@gmail.com>, m@bues.ch,
+	linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: Re: [RFC/RFT 5/5] p54spi: Load firmware from work queue and not from
+ probe routine
+References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net> <1329161826-11135-6-git-send-email-Larry.Finger@lwfinger.net>
+In-Reply-To: <1329161826-11135-6-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+On 02/13/2012 01:37 PM, Larry Finger wrote:
+> Drivers that load firmware from their probe routine have problems with the
+> latest versions of udev as they get timeouts while waiting for user
+> space to start. The problem is fixed by loading the firmware and starting
+> mac80211 from a delayed_work queue. By using this method, most of the
+> original code is preserved.
+>
+> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+> ---
+> This one is compile-tested only.
+>
+> Larry
+> ---
 
-rate control algorithms concludes the rate as invalid
-with rate[i].idx < -1 , while they do also check for rate[i].count is
-non-zero. it would be safer to zero initialize the 'count' field.
-recently we had a ath9k rate control crash where the ath9k rate control
-in ath_tx_status assumed to check only for rate[i].count being non-zero
-in one instance and ended up in using invalid rate index for
-'connection monitoring NULL func frames' which eventually lead to the crash.
-thanks to Pavel Roskin for fixing it and finding the root cause.
-https://bugzilla.redhat.com/show_bug.cgi?id=768639
+Any testing done here?
 
-Cc: stable@vger.kernel.org
-Cc: Pavel Roskin <proski@gnu.org>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
----
- net/mac80211/rate.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Larry
 
-diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
-index 111fba3..b4f7600 100644
---- a/net/mac80211/rate.c
-+++ b/net/mac80211/rate.c
-@@ -447,7 +447,7 @@ void rate_control_get_rate(struct ieee80211_sub_if_data *sdata,
- 	for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
- 		info->control.rates[i].idx = -1;
- 		info->control.rates[i].flags = 0;
--		info->control.rates[i].count = 1;
-+		info->control.rates[i].count = 0;
- 	}
- 
- 	if (sdata->local->hw.flags & IEEE80211_HW_HAS_RATE_CONTROL)
--- 
-1.7.0.4
+>   drivers/net/wireless/p54/p54spi.c |   38 ++++++++++++++++++++++++++----------
+>   drivers/net/wireless/p54/p54spi.h |    1 +
+>   2 files changed, 28 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/net/wireless/p54/p54spi.c b/drivers/net/wireless/p54/p54spi.c
+> index 7faed62..87c2634 100644
+> --- a/drivers/net/wireless/p54/p54spi.c
+> +++ b/drivers/net/wireless/p54/p54spi.c
+> @@ -595,6 +595,30 @@ static void p54spi_op_stop(struct ieee80211_hw *dev)
+>   	cancel_work_sync(&priv->work);
+>   }
+>
+> +static void p54s_load_firmware(struct work_struct *work)
+> +{
+> +	struct p54s_priv *priv = container_of(to_delayed_work(work),
+> +				 struct p54s_priv, firmware_load);
+> +	struct ieee80211_hw *hw = priv->hw;
+> +	int ret;
+> +
+> +	ret = p54spi_request_firmware(hw);
+> +	if (ret<  0)
+> +		goto err_free_common;
+> +
+> +	ret = p54spi_request_eeprom(hw);
+> +	if (ret)
+> +		goto err_free_common;
+> +
+> +	ret = p54_register_common(hw,&priv->spi->dev);
+> +	if (ret)
+> +		goto err_free_common;
+> +	return;
+> +
+> +err_free_common:
+> +	dev_err(&priv->spi->dev, "Failed to read firmware\n");
+> +}
+> +
+>   static int __devinit p54spi_probe(struct spi_device *spi)
+>   {
+>   	struct p54s_priv *priv = NULL;
+> @@ -658,17 +682,9 @@ static int __devinit p54spi_probe(struct spi_device *spi)
+>   	priv->common.stop = p54spi_op_stop;
+>   	priv->common.tx = p54spi_op_tx;
+>
+> -	ret = p54spi_request_firmware(hw);
+> -	if (ret<  0)
+> -		goto err_free_common;
+> -
+> -	ret = p54spi_request_eeprom(hw);
+> -	if (ret)
+> -		goto err_free_common;
+> -
+> -	ret = p54_register_common(hw,&priv->spi->dev);
+> -	if (ret)
+> -		goto err_free_common;
+> +	/* setup and start delayed work to load firmware */
+> +	INIT_DELAYED_WORK(&priv->firmware_load, p54s_load_firmware);
+> +	schedule_delayed_work(&priv->firmware_load, HZ);
+>
+>   	return 0;
+>
+> diff --git a/drivers/net/wireless/p54/p54spi.h b/drivers/net/wireless/p54/p54spi.h
+> index dfaa62a..5f7714b 100644
+> --- a/drivers/net/wireless/p54/p54spi.h
+> +++ b/drivers/net/wireless/p54/p54spi.h
+> @@ -120,6 +120,7 @@ struct p54s_priv {
+>
+>   	enum fw_state fw_state;
+>   	const struct firmware *firmware;
+> +	struct delayed_work firmware_load;
+>   };
+>
+>   #endif /* P54SPI_H */
 
