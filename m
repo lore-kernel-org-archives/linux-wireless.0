@@ -1,47 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:33746 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753669Ab2BBEqe (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:54400 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755913Ab2B2Hvf convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Feb 2012 23:46:34 -0500
-Date: Thu, 2 Feb 2012 10:16:49 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Paul Stewart <pstew@google.com>
-Subject: Re: [PATCH 1/2] ath9k: recover the chip from tx/rx stuck
-Message-ID: <20120202044646.GA26377@vmraj-lnx.users.atheros.com> (sfid-20120202_054637_525564_5740E92D)
-References: <1328112335-19265-1-git-send-email-rmanohar@qca.qualcomm.com>
- <20265.65072.546108.448327@gargle.gargle.HOWL>
- <20120202035652.GB25988@vmraj-lnx.users.atheros.com>
- <20266.3200.403302.486325@gargle.gargle.HOWL>
+	Wed, 29 Feb 2012 02:51:35 -0500
+Received: by vcqp1 with SMTP id p1so3166957vcq.19
+        for <linux-wireless@vger.kernel.org>; Tue, 28 Feb 2012 23:51:34 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20266.3200.403302.486325@gargle.gargle.HOWL>
+In-Reply-To: <20120227232946.GG26664@tuxdriver.com>
+References: <1330374499.12612.18.camel@wwguy-huron>
+	<20120227232946.GG26664@tuxdriver.com>
+Date: Wed, 29 Feb 2012 13:21:34 +0530
+Message-ID: <CAD2nsn3+WK9FQ=xwGO22g6XsCRK2hO6Y7CAtjGRdJUu3Bmuwbg@mail.gmail.com> (sfid-20120229_085138_727915_BEF2C886)
+Subject: Re: wireless-testing fail compiling
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 02, 2012 at 09:39:36AM +0530, Sujith Manoharan wrote:
-> Rajkumar Manoharan wrote:
-> > On Thu, Feb 02, 2012 at 08:38:32AM +0530, Sujith Manoharan wrote:
-> > > Rajkumar Manoharan wrote:
-> > > > +void ath_start_rx_poll(struct ath_softc *sc, const u32 msec)
-> > > > +{
-> > > > +	if (!AR_SREV_9300_20_OR_LATER(sc->sc_ah))
-> > > > +		return;
-> > > 
-> > > I have not reviewed the patch, but to do such workarounds for an entire
-> > > family of chips is overkill. Has it been confirmed that the other
-> > > chips falling under this SREV check require this snafu ?
-> > >
-> > unfortunately this snafu is applicable for all ar9380 MAC based chips ;)
-> > and confirmed the same.
-> 
-> Ok. But this stuff really needs to be verified for other chips.
-> These 'poll' workarounds are piling up.
-> 
-Agree. But sometimes these 'poll' WARs are being inevitable. As this patch was
-verified in ar938x chips, i update the SREV to check only for 938x.
+On Tue, Feb 28, 2012 at 4:59 AM, John W. Linville
+<linville@tuxdriver.com> wrote:
+> On Mon, Feb 27, 2012 at 12:28:19PM -0800, Guy, Wey-Yi wrote:
+>> build break in the latest wireless-testing
+>>
+>> fs/autofs4/inode.c: In function ‘autofs4_fill_super’:
+>> fs/autofs4/inode.c:228: error: implicit declaration of function
+>> ‘is_compat_task’
+>> make[2]: *** [fs/autofs4/inode.o] Error 1
+>> make[1]: *** [fs/autofs4] Error 2
+>> make: *** [fs] Error 2
+>>
+>>
+>> fs/autofs4/dev-ioctl.c: In function ‘autofs_dev_ioctl_setpipefd’:
+>> fs/autofs4/dev-ioctl.c:388: error: implicit declaration of function
+>> ‘is_compat_task’
+>> make[2]: *** [fs/autofs4/dev-ioctl.o] Error 1
+>
+> It looks like that line was added in commit
+> a32744d4abae24572eff7269bc17895c41bd0085, which came into
+> wireless-testing as part of 3.3-rc5.
 
---
-Rajkumar
+John, i  also got the same problem just trying the fix mentioned in
+https://lkml.org/lkml/2012/2/25/103
+
+-- 
+thanks,
+shafi
