@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:44936 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753465Ab2BCGEK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 01:04:10 -0500
-Date: Fri, 3 Feb 2012 11:34:26 +0530
-From: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-To: Adrian Chadd <adrian@freebsd.org>
-CC: Sujith Manoharan <c_manoha@qca.qualcomm.com>,
-	<linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	Paul Stewart <pstew@google.com>
-Subject: Re: [PATCH 1/2] ath9k: recover the chip from tx/rx stuck
-Message-ID: <20120203060424.GB15811@vmraj-lnx.users.atheros.com> (sfid-20120203_070414_838426_A3A1B4DD)
-References: <1328112335-19265-1-git-send-email-rmanohar@qca.qualcomm.com>
- <20265.65072.546108.448327@gargle.gargle.HOWL>
- <20120202035652.GB25988@vmraj-lnx.users.atheros.com>
- <20266.3200.403302.486325@gargle.gargle.HOWL>
- <CAJ-VmomK0cD5rYbSYOQ7xwJLADdbD=a4JVG1bcd4QdTpV+uN2Q@mail.gmail.com>
+Received: from wp188.webpack.hosteurope.de ([80.237.132.195]:43265 "EHLO
+	wp188.webpack.hosteurope.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755063Ab2B2HET convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Feb 2012 02:04:19 -0500
+From: Danny Kukawka <danny.kukawka@bisect.de>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 00/12] Part 2: check given MAC address, if invalid return -EADDRNOTAVAIL
+Date: Wed, 29 Feb 2012 08:02:49 +0100
+Cc: =?utf-8?q?Micha=C5=82_Miros=C5=82aw?= <mirqus@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Andy Gospodarek <andy@greyhouse.net>,
+	"Guo-Fu Tseng" <cooldavid@cooldavid.org>,
+	Petko Manolov <petkan@users.sourceforge.net>,
+	"VMware, Inc." <pv-drivers@vmware.com>,
+	"John W. Linville" <linville@tuxdriver.com>, linux390@de.ibm.com,
+	Mauro Carvalho Chehab <mchehab@infradead.org>,
+	Stephen Hemminger <shemminger@vyatta.com>,
+	Joe Perches <joe@perches.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	Jiri Pirko <jpirko@redhat.com>, netdev@vger.kernel.org,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	libertas-dev@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org, linux-s390@vger.kernel.org,
+	linux-hams@vger.kernel.org, linux-mips@linux-mips.org
+References: <1330099282-4588-1-git-send-email-danny.kukawka@bisect.de> <CAHXqBFK=u+MchBn=D31h6nhp-R9GTNbaC18QJA937zjXc60UQw@mail.gmail.com> <CAMuHMdVZ8eVdRLtsq23XCLtA4wU7cTc-mLebAQ4QzO=gkuNMWQ@mail.gmail.com>
+In-Reply-To: <CAMuHMdVZ8eVdRLtsq23XCLtA4wU7cTc-mLebAQ4QzO=gkuNMWQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAJ-VmomK0cD5rYbSYOQ7xwJLADdbD=a4JVG1bcd4QdTpV+uN2Q@mail.gmail.com>
+Content-Type: text/plain;
+  charset="utf-8"
+Message-Id: <201202290802.52234.danny.kukawka@bisect.de> (sfid-20120229_080427_074707_684BD35E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 02, 2012 at 01:58:21PM -0800, Adrian Chadd wrote:
-> On 1 February 2012 20:09, Sujith Manoharan <c_manoha@qca.qualcomm.com>wrote:
-> 
-> 
-> > > > I have not reviewed the patch, but to do such workarounds for an entire
-> > > > family of chips is overkill. Has it been confirmed that the other
-> > > > chips falling under this SREV check require this snafu ?
-> > > >
-> > > unfortunately this snafu is applicable for all ar9380 MAC based chips ;)
-> > > and confirmed the same.
+On Samstag, 25. Februar 2012, Geert Uytterhoeven wrote:
+> 2012/2/24 Michał Mirosław <mirqus@gmail.com>:
+> > 2012/2/24 Danny Kukawka <danny.kukawka@bisect.de>:
+> >> Second Part of series patches to unifiy the return value of
+> >> .ndo_set_mac_address if the given address isn't valid.
+> >>
+> >> These changes check if a given (MAC) address is valid in
+> >> .ndo_set_mac_address, if invalid return -EADDRNOTAVAIL
+> >> as eth_mac_addr() already does if is_valid_ether_addr() fails.
 > >
-> > Ok. But this stuff really needs to be verified for other chips.
-> > These 'poll' workarounds are piling up.
-> >
-> 
-> Hi,
-> 
-> Is there a bugzilla.kernel.org bug for this particular behaviour? And if
-> you can dig up the internal bug number, please  post it privately.
+> > Why not just fix dev_set_mac_address() and make do_setlink() use that?
 >
-No. This issue was originally reported by Google in their setup.
+> BTW, it's also called from dev_set_mac_address().
+>
+> > Checks are specific to address family, not device model I assume.
+>
+> Indeed, why can't this be done in one single place, instead of sprinkling
+> these checks over all drivers, missing all out-of-tree (note: I don't care)
+> and all soon-to-be-submitted drivers?
 
---
-Rajkumar
+Since the .ndo_set_mac_address functions are used by some drivers internally 
+too, you may get some new checks on other places. But I'll take a look at it.
+
+Danny
+
