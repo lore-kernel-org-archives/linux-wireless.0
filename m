@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:3503 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752460Ab2BNCw4 (ORCPT
+Received: from hermes.mlbassoc.com ([64.234.241.98]:45919 "EHLO
+	mail.chez-thomas.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757846Ab2B2PwR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Feb 2012 21:52:56 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Wed, 29 Feb 2012 10:52:17 -0500
+Message-ID: <4F4E47BC.8000306@mlbassoc.com> (sfid-20120229_165221_313061_B1046115)
+Date: Wed, 29 Feb 2012 08:43:56 -0700
+From: Gary Thomas <gary@mlbassoc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20281.52354.478076.479135@gargle.gargle.HOWL> (sfid-20120214_035259_937043_6BC481A2)
-Date: Tue, 14 Feb 2012 08:22:50 +0530
-To: Ben Greear <greearb@candelatech.com>
-CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>,
-	<ath9k-devel@venema.h4ckr.net>
-Subject: Re: [PATCH 3/7] ath9k: Merge wiphy and misc debugfs files
-In-Reply-To: <4F39BF5F.3030408@candelatech.com>
-References: <20280.43962.403799.188541@gargle.gargle.HOWL>
-	<4F3947A1.2060103@candelatech.com>
-	<20281.48485.409968.741657@gargle.gargle.HOWL>
-	<4F39BF5F.3030408@candelatech.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Help building compat-wireless
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear wrote:
-> What if there is some bug that causes the NIC to be in a
-> state different than mac80211 thinks it is?  If you leave
-> this in, then maybe someone will notice.
+I'm struggling a bit to build compat-wireless in a cross-build environment.
+I normally don't build kernels in-tree, rather I use a build tree, e.g.
+   % cd <linux-source>
+   % mkdir /tmp/kernel_build
+   % make O=/tmp/kernel_build <some_config>
+   % make O=/tmp/kernel_build uImage
 
-Well, if we are not operating in the channel that mac80211
-tells us, then we are screwed in a major, non-obvious way. :)
+I can't see how to use this setup with the compat-wireless package.
+I tried [all the combinations I could think of] something like this:
+   % cd <compat-wireless>
+   % make KLIB=<linux-source> KLIB_BUILD=/tmp/kernel_build
+However, this seems to not work as all I get are errors like this:
+   /local/compat-wireless-2012-02-28/config.mk:242: "WARNING: CONFIG_CFG80211_WEXT will be deactivated or not working because kernel was compiled with CONFIG_WIRELESS_EXT=n. Tools 
+using wext interface like iwconfig will not work. To activate it build your kernel e.g. with CONFIG_LIBIPW=m."
 
-> Ath9k is a tricky beast to debug, and I think you should
-> not remove anything that is remotely useful to debugging
-> unless removing it has a real benefit other than just
-> decreasing lines of (conditionally compiled) code.
+Does this process work in my workflow?  What do I need to do to
+get it going?
 
-I am aware that you have rather unique requirements regarding ath9k,
-which is why I left 'stations', 'xmit', etc.. untouched. :)
+Thanks
 
-The only data points that have been removed are the current operating
-channel parameters. And removing redundant code will make a difference
-in memory-constrained environments like APs. (OpenWRT has DEBUGFS enabled
-by default).
-
-Sujith
+-- 
+------------------------------------------------------------
+Gary Thomas                 |  Consulting for the
+MLB Associates              |    Embedded world
+------------------------------------------------------------
