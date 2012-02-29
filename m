@@ -1,38 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:40347 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751087Ab2BXFY0 convert rfc822-to-8bit (ORCPT
+Received: from hermes.mlbassoc.com ([64.234.241.98]:47756 "EHLO
+	mail.chez-thomas.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030455Ab2B2StD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 00:24:26 -0500
-Received: by vbjk17 with SMTP id k17so1341008vbj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 21:24:25 -0800 (PST)
+	Wed, 29 Feb 2012 13:49:03 -0500
+Message-ID: <4F4E731B.7080704@mlbassoc.com> (sfid-20120229_194908_103400_EC9782BC)
+Date: Wed, 29 Feb 2012 11:48:59 -0700
+From: Gary Thomas <gary@mlbassoc.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPjQAd9vwbSQuSvWbXvgrMeKt0K7eVx_pxO7K-2xAMnQGVj=Kw@mail.gmail.com>
-References: <1330050621-8955-1-git-send-email-ashok@cozybit.com> <CAPjQAd9vwbSQuSvWbXvgrMeKt0K7eVx_pxO7K-2xAMnQGVj=Kw@mail.gmail.com>
-From: Javier Cardona <javier@cozybit.com>
-Date: Thu, 23 Feb 2012 21:24:05 -0800
-Message-ID: <CAPjQAd9p-VFk4C0mDgTwu6k=HKzjvSMOMn2pqytL=UuA3o6tow@mail.gmail.com> (sfid-20120224_062429_077382_5E5A78BB)
-Subject: Re: [PATCH] {nl,cfg,mac}80211: Enable control quality monitoring for mesh
-To: Ashok Nagarajan <ashok@cozybit.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+CC: Luciano Coelho <coelho@ti.com>
+Subject: Re: Help building compat-wireless
+References: <4F4E47BC.8000306@mlbassoc.com>
+In-Reply-To: <4F4E47BC.8000306@mlbassoc.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 23, 2012 at 9:21 PM, Javier Cardona <javier@cozybit.com> wrote:
-> The logic and the order are wrong.  This needs to be:
+On 2012-02-29 08:43, Gary Thomas wrote:
+> I'm struggling a bit to build compat-wireless in a cross-build environment.
+> I normally don't build kernels in-tree, rather I use a build tree, e.g.
+> % cd <linux-source>
+> % mkdir /tmp/kernel_build
+> % make O=/tmp/kernel_build <some_config>
+> % make O=/tmp/kernel_build uImage
 >
-> +        if (sdata->u.mgd.associated &&
-> +        if (sdata->vif.type == NL80211_IFTYPE_STATION &&
->              sdata->u.mgd.associated &&
+> I can't see how to use this setup with the compat-wireless package.
+> I tried [all the combinations I could think of] something like this:
+> % cd <compat-wireless>
+> % make KLIB=<linux-source> KLIB_BUILD=/tmp/kernel_build
+> However, this seems to not work as all I get are errors like this:
+> /local/compat-wireless-2012-02-28/config.mk:242: "WARNING: CONFIG_CFG80211_WEXT will be deactivated or not working because kernel was compiled with CONFIG_WIRELESS_EXT=n. Tools
+> using wext interface like iwconfig will not work. To activate it build your kernel e.g. with CONFIG_LIBIPW=m."
+>
+> Does this process work in my workflow? What do I need to do to
+> get it going?
 
-Sorry, I meant
+I managed to get past this, using this
+   % make KLIB=/tmp/kernel_build KLIB_BUILD=/tmp/kernel_build
+but to get it to actually build anything, I had to append the
+'modules' target, e.g.
+   % make KLIB=/tmp/kernel_build KLIB_BUILD=/tmp/kernel_build modules
 
--        if (sdata->u.mgd.associated &&
-+        if (sdata->vif.type == NL80211_IFTYPE_STATION &&
-+              sdata->u.mgd.associated &&
+Next problems:
+* How do I select sub-options?  I only want WL12xx support with SDIO, but
+   that requires some sub-options to be set that don't appear to happen.
+   I get the main wl12xx module, but not wl12xx_sdio or wl12xx_platform_data
+* There are a number of files which don't build against my 2.6.37 kernel,
+   but none of these are important to me (they are in the bluetooth driver
+   which I don't need, but nonetheless it gets built)
+* The make/install is terribly broken for cross-builds.
+
+I hacked my way past these problems and finally got some modules which
+I can try.  Sadly, they don't work at all:
+   # modprobe wl12xx_sdio
+   wl12xx: loaded
+   # ifconfig wlan0 up
+   wl1271_sdio mmc1:0001:2: sdio write failed (-110)
+   wl1271_sdio mmc1:0001:2: sdio write failed (-110)
+   ...
+
+Note: This driver in my kernel tree gets much farther than this - it
+will actually download firmware and talk to the device, so I'm pretty
+perplexed by this failure.
+
+Any help greatly appreciated
 
 -- 
-Javier Cardona
-cozybit Inc.
-http://www.cozybit.com
+------------------------------------------------------------
+Gary Thomas                 |  Consulting for the
+MLB Associates              |    Embedded world
+------------------------------------------------------------
