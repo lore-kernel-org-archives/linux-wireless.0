@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:47362 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751525Ab2BQSi7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Feb 2012 13:38:59 -0500
-Message-ID: <4F3E9EBE.60602@candelatech.com> (sfid-20120217_193903_152581_4E0A9BED)
-Date: Fri, 17 Feb 2012 10:38:54 -0800
-From: Ben Greear <greearb@candelatech.com>
+Received: from purkki.adurom.net ([80.68.90.206]:36257 "EHLO purkki.adurom.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754276Ab2B2IbM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Feb 2012 03:31:12 -0500
+From: Kalle Valo <kvalo@adurom.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: Arik Nemtsov <arik@wizery.com>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/7] wl12xx: reset link Tx queues when freeing it
+References: <1330382494-31148-1-git-send-email-arik@wizery.com>
+	<1330382494-31148-3-git-send-email-arik@wizery.com>
+	<1330422678.18637.28.camel@cumari>
+Date: Wed, 29 Feb 2012 10:31:10 +0200
+In-Reply-To: <1330422678.18637.28.camel@cumari> (Luciano Coelho's message of
+	"Tue, 28 Feb 2012 11:51:18 +0200")
+Message-ID: <87pqcyavn5.fsf@purkki.adurom.net> (sfid-20120229_093122_120362_BD89D2DA)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [RFT/FYI] mac80211: revert on-channel work optimisations
-References: <1320772222.24797.22.camel@jlt3.sipsolutions.net>  <4EB96416.5040700@candelatech.com>  (sfid-20111108_181718_795911_9F0A2B63) <1329493491.3786.6.camel@jlt3.sipsolutions.net>  <4F3E7CA5.7010207@candelatech.com> <1329502761.3330.0.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1329502761.3330.0.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/17/2012 10:19 AM, Johannes Berg wrote:
-> On Fri, 2012-02-17 at 08:13 -0800, Ben Greear wrote:
+Luciano Coelho <coelho@ti.com> writes:
+
+>> @@ -973,8 +974,14 @@ void wl12xx_tx_reset(struct wl1271 *wl, bool reset_tx_queues)
+>>  	struct sk_buff *skb;
+>>  	struct ieee80211_tx_info *info;
+>>  
+>> -	for (i = 0; i < NUM_TX_QUEUES; i++)
+>> -		wl->tx_queue_count[i] = 0;
+>> +	/* only reset the queues if something bad happened */
+>> +	if (WARN_ON(wl1271_tx_total_queue_count(wl) != 0)) {
 >
->>> Given the auth/assoc redesign that went in now, are you still carrying
->>> this? Does the redesign address your problem?
->>
->> I haven't looked yet...still stuck back on 3.0 kernel for the
->> most part.
->>
->> I should be moving to 3.3 sometime soon, and will see how it works.
->>
->> I was thinking that I would ignore the work logic for now and probably
->> just focus on re-applying the on-channel scan optimization first.
->>
->> Are you done, or mostly done with the re-architecture you were working on?
->
-> Yes, I'm done.
->
->> I know you didn't like the scan optimization from before...do you have any
->> ideas on how it might be done more to your liking?
->
-> I, umm, don't even remember what that was about :)
+> Let's make all these WARN_ONs as WARN_ON_ONCE as it is recommended
+> nowadays.  This will make Kalle Valo happier. :)
 
-The basic idea is that if the user requests that we only
-scan a single channel, and that channel is the operating channel,
-we should be able to scan without interrupting any other
-packet transmission/reception, and without kicking the NIC to make it go off/on
-channel, etc.
+Hehe. Actually the dislike against WARN_ON() was started by John, I
+again started the war to killing BUG_ON() :)
 
-Basically I had to complicate the scan state machine
-in order to minimize going off-channel (if indeed we are only
-scanning one current channel).
-
-I'd want to re-add the logic that let us receive pkts while
-scanning (so long as we are scanning on the oper-channel)
-as well.
-
-Might be a while before I can get back to this, but I'll
-let you know when I get started if no one beats me to it.
-
-Thanks,
-Ben
+But nevertheless, this changes makes also me happy. I have seen cases
+where the whole system reboots because of WARN_ON() spam, so
+WARN_ON_ONCE() is much better in in cases where's a possibility that it
+will get printed a lot. Of course printk_ratelimit() is another option,
+but for some reason it isn't that popular.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Kalle Valo
