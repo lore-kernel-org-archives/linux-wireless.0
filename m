@@ -1,88 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout-de.gmx.net ([213.165.64.22]:35116 "HELO
-	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755820Ab2BLTOD (ORCPT
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:56975 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753254Ab2B2TyJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Feb 2012 14:14:03 -0500
-From: Marc Dietrich <marvin24@gmx.de>
-To: linux-tegra@vger.kernel.org
-Cc: Stephen Warren <swarren@nvidia.com>,
-	Colin Cross <ccross@android.com>,
-	Olof Johansson <olof@lixom.net>,
-	linux-wireless@vger.kernel.org,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Rhyland Klein <rklein@nvidia.com>,
-	Grant Likely <grant.likely@secretlab.ca>,
-	devicetree-discuss@lists.ozlabs.org
-Subject: [PATCH 2/3] dt: rfkill-gpio: add bindings documentation
-Date: Sun, 12 Feb 2012 20:13:07 +0100
-Message-Id: <86044d44009316a48b402050f9dd742391d46eac.1329073559.git.marvin24@gmx.de> (sfid-20120212_201409_770130_2CAE9684)
-In-Reply-To: <1ec0e63a7453072689618430ebc2bdd7b62542a2.1329073559.git.marvin24@gmx.de>
-References: <1ec0e63a7453072689618430ebc2bdd7b62542a2.1329073559.git.marvin24@gmx.de>
-In-Reply-To: <1ec0e63a7453072689618430ebc2bdd7b62542a2.1329073559.git.marvin24@gmx.de>
-References: <1ec0e63a7453072689618430ebc2bdd7b62542a2.1329073559.git.marvin24@gmx.de>
+	Wed, 29 Feb 2012 14:54:09 -0500
+MIME-Version: 1.0
+In-Reply-To: <4F4E4B8B.8090508@lwfinger.net>
+References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net>
+	<1329161826-11135-6-git-send-email-Larry.Finger@lwfinger.net>
+	<4F4E4B8B.8090508@lwfinger.net>
+Date: Wed, 29 Feb 2012 22:54:08 +0300
+Message-ID: <CAMo8BfK5=YwZYepFoP5SqgDQMPvUeQobqNiBCMM5=eTwUT5e0A@mail.gmail.com> (sfid-20120229_205428_575099_D6D15393)
+Subject: Re: [RFC/RFT 5/5] p54spi: Load firmware from work queue and not from
+ probe routine
+From: Max Filippov <jcmvbkbc@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	chunkeey@web.de, m@bues.ch, linux-kernel@vger.kernel.org,
+	devel@driverdev.osuosl.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add device tree bindings information for rfkill gpio switches.
+>> Drivers that load firmware from their probe routine have problems with the
+>> latest versions of udev as they get timeouts while waiting for user
+>> space to start. The problem is fixed by loading the firmware and starting
+>> mac80211 from a delayed_work queue. By using this method, most of the
+>> original code is preserved.
+>>
+>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+>> ---
+>> This one is compile-tested only.
+>>
+>> Larry
+>> ---
+>
+>
+> Any testing done here?
 
-Cc: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: Rhyland Klein <rklein@nvidia.com>
-Cc: Grant Likely <grant.likely@secretlab.ca>
-Cc: devicetree-discuss@lists.ozlabs.org
-Signed-off-by: Marc Dietrich <marvin24@gmx.de>
----
- Documentation/devicetree/bindings/gpio/rfkill.txt |   38 +++++++++++++++++++++
- 1 files changed, 38 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/gpio/rfkill.txt
+insmod immediately followed by rmmod causes NULL pointer dereference.
+The same always happens on rmmode when the firmware image is absent:
 
-diff --git a/Documentation/devicetree/bindings/gpio/rfkill.txt b/Documentation/devicetree/bindings/gpio/rfkill.txt
-new file mode 100644
-index 0000000..22bf22a
---- /dev/null
-+++ b/Documentation/devicetree/bindings/gpio/rfkill.txt
-@@ -0,0 +1,38 @@
-+RFKILL switches connected to GPIO lines
-+
-+Required properties:
-+- compatible : should be "rfkill-gpio".
-+
-+Each rfkill switch is represented as a sub-node of the rfkill-gpio device.
-+Each node has a label property which represents the name of the corresponding
-+rfkill device.
-+
-+RFKILL sub-node properties:
-+- label :  (optional) The label for this rfkill switch.  If omitted, the label is
-+  taken from the node name (excluding the unit address).
-+- reset-gpio, shutdown-gpio :  Should specify the rfkill gpios for reset and
-+  shutdown (see "Specifying GPIO information for devices" in
-+  Documentation/devicetree/booting-without-of.txt).
-+- type : enumerated type of the gpio (see include/linux/rfkill.h).
-+- clock : (optional) name of the clock name associated with the rfkill switch
-+  (see include/linux/rfkill-gpio.h)
-+
-+Examples:
-+
-+rfkill-switches {
-+	compatible = "rfkill-gpio";
-+
-+	wifi {
-+		label = "wifi";
-+		reset-gpio = <&gpio 25 0>; /* Active high */
-+		shutdown-gpio = <&gpio 85 0>; /* Active high */
-+		type = <1>;
-+	};
-+
-+	bt {
-+		label = "bluetooth";
-+		reset-gpio = <&gpio 17 0>; /* Active high */
-+		shutdown-gpio = <&gpio 35 0>; /* Active high */
-+		type = <1>;
-+	};
-+};
+[   52.482696] calling  p54spi_init+0x0/0x30 [p54spi] @ 941
+[   52.486053] initcall p54spi_init+0x0/0x30 [p54spi] returned 0 after
+3071 usecs
+[   53.522430] p54spi spi2.0: request_firmware() failed: -2
+[   53.522521] p54spi spi2.0: Failed to read firmware
+[   56.337036] Unable to handle kernel NULL pointer dereference at
+virtual address 00000044
+[   56.337188] pgd = c6c2c000
+[   56.337219] [00000044] *pgd=87b07831, *pte=00000000, *ppte=00000000
+[   56.337341] Internal error: Oops: 17 [#1] PREEMPT
+[   56.337402] Modules linked in: p54spi(-)
+[   56.337493] CPU: 0    Not tainted  (3.3.0-rc3-11564-g1465640 #12)
+[   56.337585] PC is at drain_workqueue+0x10/0x1b4
+[   56.337677] LR is at drain_workqueue+0x10/0x1b4
+[   56.337738] pc : [<c0043340>]    lr : [<c0043340>]    psr: 80000013
+[   56.337768] sp : c79e3eb8  ip : 00000000  fp : bed7cc1c
+[   56.337890] r10: 00000000  r9 : c79e2000  r8 : c0012a48
+[   56.337951] r7 : c7863634  r6 : c7863600  r5 : bf00115c  r4 : 00000000
+[   56.338043] r3 : 00000000  r2 : 00000000  r1 : c040c844  r0 : 00000001
+[   56.338134] Flags: Nzcv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment user
+[   56.338226] Control: 00c5387d  Table: 86c2c000  DAC: 00000015
+[   56.338317] Process rmmod (pid: 950, stack limit = 0xc79e2268)
+[   56.338378] Stack: (0xc79e3eb8 to 0xc79e4000)
+[   56.338470] 3ea0:
+    00000000 bf00115c
+[   56.338592] 3ec0: c7863600 c7863634 c0012a48 c79e2000 00000000
+c00434f0 c7816300 bf00115c
+[   56.338714] 3ee0: c7863600 c0278c38 c7816fa0 bf000ba0 c7863600
+bf001ff8 bf001ff8 c01aa53c
+[   56.338836] 3f00: c01aa524 c0195808 c7863600 c79e2000 bf001ff8
+c01958fc bf001ff8 00000000
+[   56.338989] 3f20: c03e3d44 bed7cbf8 c0012a48 c0194c88 bf002030
+00000000 00000013 c0061dc8
+[   56.339111] 3f40: c79cdf20 73343570 b6006970 c008577c ffffffff
+c6ca0180 c79cdf20 c0086774
+[   56.339233] 3f60: b6f23000 b6f22000 bed7cc1c c01466f0 c6ca01b4
+00000000 b6f22000 00ca0180
+[   56.339355] 3f80: bf002030 00000880 c79e3f8c 00000000 b6f233ff
+00000880 bed7cbf8 bed7ce97
+[   56.339508] 3fa0: 00000081 c00128a0 00000880 bed7cbf8 bed7cbf8
+00000880 bed7cbec 00000000
+[   56.339630] 3fc0: 00000880 bed7cbf8 bed7ce97 00000081 00000001
+00000001 00011fe4 bed7cc1c
+[   56.339752] 3fe0: 00000880 bed7cbf8 00009004 b6e908bc 60000010
+bed7cbf8 00000000 00000000
+[   56.339904] [<c0043340>] (drain_workqueue+0x10/0x1b4) from
+[<c00434f0>] (destroy_workqueue+0xc/0x150)
+[   56.340057] [<c00434f0>] (destroy_workqueue+0xc/0x150) from
+[<c0278c38>] (ieee80211_unregister_hw+0xbc/0xe4)
+[   56.340209] [<c0278c38>] (ieee80211_unregister_hw+0xbc/0xe4) from
+[<bf000ba0>] (p54spi_remove+0x1c/0x58 [p54spi])
+[   56.340393] [<bf000ba0>] (p54spi_remove+0x1c/0x58 [p54spi]) from
+[<c01aa53c>] (spi_drv_remove+0x18/0x1c)
+[   56.340576] [<c01aa53c>] (spi_drv_remove+0x18/0x1c) from
+[<c0195808>] (__device_release_driver+0x7c/0xbc)
+[   56.340728] [<c0195808>] (__device_release_driver+0x7c/0xbc) from
+[<c01958fc>] (driver_detach+0xb4/0xdc)
+[   56.340850] [<c01958fc>] (driver_detach+0xb4/0xdc) from
+[<c0194c88>] (bus_remove_driver+0x8c/0xb4)
+[   56.341003] [<c0194c88>] (bus_remove_driver+0x8c/0xb4) from
+[<c0061dc8>] (sys_delete_module+0x1c8/0x234)
+[   56.341186] [<c0061dc8>] (sys_delete_module+0x1c8/0x234) from
+[<c00128a0>] (ret_fast_syscall+0x0/0x30)
+[   56.341308] Code: e92d47f0 e1a04000 e3a00001 eb002dbb (e5943044)
+[   56.341552] ---[ end trace 79a2a071aae86862 ]---
+[   56.341644] note: rmmod[950] exited with preempt_count 1
+
 -- 
-1.7.5.4
-
+Thanks.
+-- Max
