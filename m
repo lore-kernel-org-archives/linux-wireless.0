@@ -1,131 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:14878 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754346Ab2BIV3G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 16:29:06 -0500
-Message-ID: <1328822935.2242.1.camel@jtkirshe-mobl> (sfid-20120209_222909_934157_24672979)
-Subject: Re: [PATCH net-next] drivers/net: Remove boolean comparisons to
- true/false
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Reply-To: jeffrey.t.kirsher@intel.com
-To: Joe Perches <joe@perches.com>
-Cc: David Miller <davem@davemloft.net>, David.Laight@ACULAB.COM,
-	netdev@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 09 Feb 2012 13:28:55 -0800
-In-Reply-To: <1328822243.29329.11.camel@joe2Laptop>
-References: <1328783282-17760-5-git-send-email-jeffrey.t.kirsher@intel.com>
-	 <AE90C24D6B3A694183C094C60CF0A2F6026B6E62@saturn3.aculab.com>
-	 <20120209.133413.349832435589531136.davem@davemloft.net>
-	 <1328822243.29329.11.camel@joe2Laptop>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-E23QgpvExXo1mIU6Vupx"
-Mime-Version: 1.0
+Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:46684 "EHLO
+	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031084Ab2B2RTu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Feb 2012 12:19:50 -0500
+Subject: [PATCH 09/12] ath6kl: fix open paranthesis alignment in
+	ath6kl_cfg80211_connect()
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Wed, 29 Feb 2012 19:19:46 +0200
+Message-ID: <20120229171946.24264.32281.stgit@localhost6.localdomain6> (sfid-20120229_182018_378382_36C4B6B2)
+In-Reply-To: <20120229171525.24264.22062.stgit@localhost6.localdomain6>
+References: <20120229171525.24264.22062.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+ath6kl/cfg80211.c:462: CHECK: Alignment should match open parenthesis
 
---=-E23QgpvExXo1mIU6Vupx
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
 
-On Thu, 2012-02-09 at 13:17 -0800, Joe Perches wrote:
-> Booleans should not be compared to true or false
-> but be directly tested or tested with !.
->=20
-> Done via cocci script:
->=20
-> @@
-> bool t;
-> @@
-> - t =3D=3D true
-> + t
-> @@
-> bool t;
-> @@
-> - t !=3D true
-> + !t
-> @@
-> bool t;
-> @@
-> - t =3D=3D false
-> + !t
-> @@
-> bool t;
-> @@
-> - t !=3D false
-> + t
->=20
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/net/ethernet/broadcom/bnx2x/bnx2x_cmn.h    |    3 +--
->  drivers/net/ethernet/brocade/bna/bfa_cee.c         |    8 ++++----
->  drivers/net/ethernet/brocade/bna/bfa_ioc.c         |    2 +-
->  drivers/net/ethernet/intel/ixgb/ixgb_ee.c          |   12
-> +++++-------
->  drivers/net/ethernet/intel/ixgbe/ixgbe_82598.c     |    4 ++--
->  drivers/net/ethernet/intel/ixgbe/ixgbe_sriov.c     |    2 +-
->  drivers/net/ethernet/intel/ixgbe/ixgbe_x540.c      |    2 +-
->  .../net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c   |    2 +-
->  drivers/net/phy/broadcom.c                         |    6 ++----
->  drivers/net/wireless/ath/ath5k/ani.c               |    8 ++++----
->  drivers/net/wireless/ath/ath9k/ani.c               |    6 +++---
->  drivers/net/wireless/ath/ath9k/hw-ops.h            |    2 +-
->  drivers/net/wireless/ath/ath9k/hw.c                |    5 ++---
->  drivers/net/wireless/brcm80211/brcmfmac/dhd_sdio.c |   16
-> +++++++---------
->  drivers/net/wireless/brcm80211/brcmsmac/main.c     |    4 ++--
->  .../net/wireless/brcm80211/brcmsmac/phy/phy_n.c    |    2 +-
->  drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c   |    4 ++--
->  drivers/net/wireless/iwlwifi/iwl-trans-pcie.c      |    2 +-
->  drivers/net/wireless/mwl8k.c                       |    5 ++---
->  drivers/net/wireless/rtlwifi/efuse.c               |    2 +-
->  drivers/net/wireless/rtlwifi/ps.c                  |    3 +--
->  drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c  |    4 ++--
->  drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |    8 ++++----
->  drivers/net/wireless/rtlwifi/rtl8192ce/hw.c        |    9 ++++-----
->  drivers/net/wireless/rtlwifi/rtl8192ce/phy.c       |    3 +--
->  drivers/net/wireless/rtlwifi/rtl8192ce/rf.c        |    2 +-
->  drivers/net/wireless/rtlwifi/rtl8192cu/phy.c       |    3 +--
->  drivers/net/wireless/rtlwifi/rtl8192cu/rf.c        |    2 +-
->  drivers/net/wireless/rtlwifi/rtl8192de/dm.c        |    2 +-
->  drivers/net/wireless/rtlwifi/rtl8192de/hw.c        |    9 ++++-----
->  drivers/net/wireless/rtlwifi/rtl8192de/phy.c       |   11 +++++------
->  drivers/net/wireless/rtlwifi/rtl8192de/rf.c        |    2 +-
->  drivers/net/wireless/rtlwifi/rtl8192se/fw.c        |    6 +++---
->  drivers/net/wireless/rtlwifi/rtl8192se/hw.c        |   10 +++++-----
->  drivers/net/wireless/rtlwifi/rtl8192se/phy.c       |   13
-> ++++++-------
->  drivers/net/wireless/rtlwifi/rtl8192se/rf.c        |    2 +-
->  36 files changed, 85 insertions(+), 101 deletions(-)=20
-
-The ixgbe changes look fine, and I do not see any issues with the
-changes.
-
-Reviewed-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-
---=-E23QgpvExXo1mIU6Vupx
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAABCgAGBQJPNDqXAAoJEOVv75VaS+3OJ7QP+wQ/okr+2VpFzIbrtsH8ObzJ
-YRH3E7MQIu0t7E7RVxMADcQyFsP4EALKoGGzZ5tk8VGQU2y3qo7z+Y32kM+K2Gc5
-M55GRN25XK8noBJJ1HoN7+jNj6YCp4K578mdkMDweLxq2pAG1KYrvLl3pK1Ch1WP
-FVSjuM9yEcvlXDSw6VruD35xsGtLrL7ZysDawyRsojTjSu06w4kQT7TfBlGZBsfV
-RJFIg53nem9nIKdjsYjr1B2CE498h/Hek520KloD9ePthL/4ENb6XIGDoLE8HY+/
-lAt+GiLiznbMHHfwMG+/ev4+5ytDZ6B7HRfmbmLs6lu+TYhMIEc0M1KehQpAYlL2
-q9H7NXVN4qszUrcpeDJlznqqR50xwRvTsKGc8NOtTeLFAaBrR0sJsdHeV7xLsugQ
-yFy/gHp9sUsHEeMedly43ySI3cTd+J9VfrRjRKnPEo/gznbAch4zAgx7jrl+kif0
-zz/5zqlWDAVWzyO4cYLLhfOXaK3ernol8YwUxh46bg+a4tZJbbH8YaUVIN31Vw0k
-9Dx7Qta2DL/ePhVa7AA0zHKreQimlsjy+obHzBlwUttAryGV+A7/0IiwcDA/Da/t
-wnzEYj/OsRNlVC/nwLObB9dC0oHJ3TN3I+UShsMUFt9pxrK5ZWZSaKqtjjQRFw/Q
-rEeuo1PsgZytmEgwzyS0
-=+XsN
------END PGP SIGNATURE-----
-
---=-E23QgpvExXo1mIU6Vupx--
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 6aa4c71..45cf4f4 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -416,6 +416,12 @@ static bool ath6kl_is_valid_iftype(struct ath6kl *ar, enum nl80211_iftype type,
+ 	return false;
+ }
+ 
++static bool ath6kl_is_tx_pending(struct ath6kl *ar)
++{
++	return ar->tx_pending[ath6kl_wmi_get_control_ep(ar->wmi)] == 0;
++}
++
++
+ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 				   struct cfg80211_connect_params *sme)
+ {
+@@ -459,8 +465,8 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 		 * sleep until the command queue drains
+ 		 */
+ 		wait_event_interruptible_timeout(ar->event_wq,
+-			ar->tx_pending[ath6kl_wmi_get_control_ep(ar->wmi)] == 0,
+-			WMI_TIMEOUT);
++						 ath6kl_is_tx_pending(ar),
++						 WMI_TIMEOUT);
+ 		if (signal_pending(current)) {
+ 			ath6kl_err("cmd queue drain timeout\n");
+ 			up(&ar->sem);
 
