@@ -1,98 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:45794 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752509Ab2BNKsw convert rfc822-to-8bit (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:49841 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753119Ab2B2GiO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 05:48:52 -0500
-Received: by wgbdt10 with SMTP id dt10so5799179wgb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Feb 2012 02:48:51 -0800 (PST)
+	Wed, 29 Feb 2012 01:38:14 -0500
+Date: Wed, 29 Feb 2012 09:37:53 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch 4/4] rndis_wlan: prevent integer overflow in indication()
+Message-ID: <20120229063753.GF18031@elgon.mountain> (sfid-20120229_073819_668286_5EC8EF99)
 MIME-Version: 1.0
-In-Reply-To: <1329108519-5342-3-git-send-email-kubakici@wp.pl>
-References: <1329108519-5342-1-git-send-email-kubakici@wp.pl>
-	<1329108519-5342-3-git-send-email-kubakici@wp.pl>
-Date: Tue, 14 Feb 2012 11:48:50 +0100
-Message-ID: <CAL1gcdP2WaKm75rJn91zKpLiP=tNKxp8GWixn4Cqov-DWw6TOA@mail.gmail.com> (sfid-20120214_114855_376504_2D881C39)
-Subject: Re: [rt2x00-users] [PATCH v2 2/4] rt2800usb: remove
- rt2800usb_set_state function
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Jakub Kicinski <kubakici@wp.pl>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 13, 2012 at 5:48 AM, Jakub Kicinski <kubakici@wp.pl> wrote:
-> Remove rt2800usb_set_state to make the flow inside USB driver
-> similar to that of PCI driver.
->
-> Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+If we pick a high value for "offset" then it could lead to an integer
+overflow and we would get past the check for:
+	if (offset + len > buflen) { ...
 
-The same comment with respect to falling through the state cases as
-for patch 1 of the
-series applies here.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-> ---
->  drivers/net/wireless/rt2x00/rt2800usb.c |   28 +++++++++-------------------
->  1 files changed, 9 insertions(+), 19 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2800usb.c b/drivers/net/wireless/rt2x00/rt2800usb.c
-> index d009b6b..15cce5e 100644
-> --- a/drivers/net/wireless/rt2x00/rt2800usb.c
-> +++ b/drivers/net/wireless/rt2x00/rt2800usb.c
-> @@ -272,17 +272,6 @@ static void rt2800usb_disable_radio(struct rt2x00_dev *rt2x00dev)
->        rt2x00usb_disable_radio(rt2x00dev);
->  }
->
-> -static int rt2800usb_set_state(struct rt2x00_dev *rt2x00dev,
-> -                              enum dev_state state)
-> -{
-> -       if (state == STATE_AWAKE)
-> -               rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, 0xff, 0, 2);
-> -       else
-> -               rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0xff, 2);
-> -
-> -       return 0;
-> -}
-> -
->  static int rt2800usb_set_device_state(struct rt2x00_dev *rt2x00dev,
->                                      enum dev_state state)
->  {
-> @@ -295,7 +284,7 @@ static int rt2800usb_set_device_state(struct rt2x00_dev *rt2x00dev,
->                 * to be woken up. After that it needs a bit of time
->                 * to be fully awake and then the radio can be enabled.
->                 */
-> -               rt2800usb_set_state(rt2x00dev, STATE_AWAKE);
-> +               rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, 0xff, 0, 2);
->                msleep(1);
->                retval = rt2800usb_enable_radio(rt2x00dev);
->                break;
-> @@ -305,17 +294,18 @@ static int rt2800usb_set_device_state(struct rt2x00_dev *rt2x00dev,
->                 * be put to sleep for powersaving.
->                 */
->                rt2800usb_disable_radio(rt2x00dev);
-> -               rt2800usb_set_state(rt2x00dev, STATE_SLEEP);
-> -               break;
-> -       case STATE_RADIO_IRQ_ON:
-> -       case STATE_RADIO_IRQ_OFF:
-> -               /* No support, but no error either */
-> -               break;
-> +               /* fall through */
->        case STATE_DEEP_SLEEP:
->        case STATE_SLEEP:
->        case STATE_STANDBY:
-> +               rt2800_mcu_request(rt2x00dev, MCU_SLEEP, 0xff, 0xff, 2);
-> +               break;
->        case STATE_AWAKE:
-> -               retval = rt2800usb_set_state(rt2x00dev, state);
-> +               rt2800_mcu_request(rt2x00dev, MCU_WAKEUP, 0xff, 0, 2);
-> +               break;
-> +       case STATE_RADIO_IRQ_ON:
-> +       case STATE_RADIO_IRQ_OFF:
-> +               /* No support, but no error either */
->                break;
->        default:
->                retval = -ENOTSUPP;
-
----
-Gertjan
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 74e2d1b..dfd76e3 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -3043,7 +3043,7 @@ static void rndis_wlan_media_specific_indication(struct usbnet *usbdev,
+ 			struct rndis_indicate *msg, int buflen)
+ {
+ 	struct ndis_80211_status_indication *indication;
+-	int len, offset;
++	unsigned int len, offset;
+ 
+ 	offset = offsetof(struct rndis_indicate, status) +
+ 			le32_to_cpu(msg->offset);
+@@ -3055,7 +3055,7 @@ static void rndis_wlan_media_specific_indication(struct usbnet *usbdev,
+ 		return;
+ 	}
+ 
+-	if (offset + len > buflen) {
++	if (len > buflen || offset > buflen || offset + len > buflen) {
+ 		netdev_info(usbdev->net, "media specific indication, too large to fit to buffer (%i > %i)\n",
+ 			    offset + len, buflen);
+ 		return;
