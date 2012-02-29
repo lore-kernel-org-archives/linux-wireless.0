@@ -1,68 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:56308 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752282Ab2BWKlg convert rfc822-to-8bit (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:50008 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754289Ab2B2Gil (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Feb 2012 05:41:36 -0500
-Received: by vbjk17 with SMTP id k17so719496vbj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Feb 2012 02:41:35 -0800 (PST)
+	Wed, 29 Feb 2012 01:38:41 -0500
+Date: Wed, 29 Feb 2012 09:36:57 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch 3/4] rndis_wlan: make some variables unsigned
+Message-ID: <20120229063657.GE18031@elgon.mountain> (sfid-20120229_073847_161188_EEFB9655)
 MIME-Version: 1.0
-In-Reply-To: <1329992887-4442-1-git-send-email-zefir.kurtisi@neratec.com>
-References: <1329992887-4442-1-git-send-email-zefir.kurtisi@neratec.com>
-Date: Thu, 23 Feb 2012 16:11:35 +0530
-Message-ID: <CAD2nsn0_PwPLSQfVizz6CBkBGag7T__eynbG=bvwAdJjSLfLow@mail.gmail.com> (sfid-20120223_114139_443895_DD8D2E4C)
-Subject: Re: [PATCH] ath9k: fix PHY error accounting in debugfs
-From: Mohammed Shafi <shafi.wireless@gmail.com>
-To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Cc: linville@tuxdriver.com, ath9k-devel@lists.ath9k.org,
-	linux-wireless@vger.kernel.org, rodrigue@qca.qualcomm.com
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Zefir,
+These variables can never be less than zero because we cap them in
+get_device_pmkids().  Let's make them unsigned here because it's simpler
+to not have to worry about negative numbers when we read the code.
 
-On Thu, Feb 23, 2012 at 3:58 PM, Zefir Kurtisi
-<zefir.kurtisi@neratec.com> wrote:
-> ath9k_phyerr are defined as index but have been treated as bitmask
-> (with an outdated mask used) for counting PHY errors in debugfs.
-> ---
->  drivers/net/wireless/ath/ath9k/debug.c |    8 ++++----
->  1 files changed, 4 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-> index 68d972b..3be5b83 100644
-> --- a/drivers/net/wireless/ath/ath9k/debug.c
-> +++ b/drivers/net/wireless/ath/ath9k/debug.c
-> @@ -1049,8 +1049,6 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
->  #define RX_SAMP_DBG(c) (sc->debug.bb_mac_samp[sc->debug.sampidx].rs\
->                        [sc->debug.rsidx].c)
->
-> -       u32 phyerr;
-> -
->        RX_STAT_INC(rx_pkts_all);
->        sc->debug.stats.rxstats.rx_bytes_all += rs->rs_datalen;
->
-> @@ -1068,9 +1066,11 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
->                RX_STAT_INC(decrypt_busy_err);
->
->        if (rs->rs_status & ATH9K_RXERR_PHY) {
-> +               u32 phyerr;
->                RX_STAT_INC(phy_err);
-> -               phyerr = rs->rs_phyerr & 0x24;
-> -               RX_PHY_ERR_INC(phyerr);
-> +               phyerr = rs->rs_phyerr;
-> +               if (phyerr < ATH9K_PHYERR_MAX)
-> +                       RX_PHY_ERR_INC(phyerr);
->        }
->
->        sc->debug.stats.rxstats.rs_rssi_ctl0 = rs->rs_rssi_ctl0;
-> --
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-
-very recently fixed by
-http://www.spinics.net/lists/linux-wireless/msg85034.html
-
--- 
-thanks,
-shafi
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index a93cfe2..74e2d1b 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -1790,7 +1790,8 @@ static struct ndis_80211_pmkid *remove_pmkid(struct usbnet *usbdev,
+ 						struct cfg80211_pmksa *pmksa,
+ 						int max_pmkids)
+ {
+-	int i, count, newlen, err;
++	int i, newlen, err;
++	unsigned int count;
+ 
+ 	count = le32_to_cpu(pmkids->bssid_info_count);
+ 
+@@ -1830,7 +1831,8 @@ static struct ndis_80211_pmkid *update_pmkid(struct usbnet *usbdev,
+ 						struct cfg80211_pmksa *pmksa,
+ 						int max_pmkids)
+ {
+-	int i, err, count, newlen;
++	int i, err, newlen;
++	unsigned int count;
+ 
+ 	count = le32_to_cpu(pmkids->bssid_info_count);
+ 
