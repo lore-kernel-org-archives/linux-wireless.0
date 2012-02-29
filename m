@@ -1,78 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15933 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753323Ab2BCMHy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Feb 2012 07:07:54 -0500
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 03/25] iwlegacy: get rid of ctx->rxon_timing_cmd
-Date: Fri,  3 Feb 2012 13:07:03 +0100
-Message-Id: <1328270845-16891-4-git-send-email-sgruszka@redhat.com> (sfid-20120203_130757_903550_EC6E9061)
-In-Reply-To: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
-References: <1328270845-16891-1-git-send-email-sgruszka@redhat.com>
+Received: from emh02.mail.saunalahti.fi ([62.142.5.108]:36689 "EHLO
+	emh02.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757989Ab2B2RTe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Feb 2012 12:19:34 -0500
+Subject: [PATCH 07/12] ath6kl: add ath6kl_bmi_read_hi32()
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Wed, 29 Feb 2012 19:19:29 +0200
+Message-ID: <20120229171929.24264.39824.stgit@localhost6.localdomain6> (sfid-20120229_181940_305846_7AA9F40C)
+In-Reply-To: <20120229171525.24264.22062.stgit@localhost6.localdomain6>
+References: <20120229171525.24264.22062.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/iwlegacy/3945-mac.c |    1 -
- drivers/net/wireless/iwlegacy/4965-mac.c |    1 -
- drivers/net/wireless/iwlegacy/common.c   |    2 +-
- drivers/net/wireless/iwlegacy/common.h   |    2 +-
- 4 files changed, 2 insertions(+), 4 deletions(-)
+There are few 32 bit reads from the host interest area. Add
+ath6kl_bmi_read_hi32() to make it easier to do that. As code is cleaner
+this also fixes few checkpatch warnings.
 
-diff --git a/drivers/net/wireless/iwlegacy/3945-mac.c b/drivers/net/wireless/iwlegacy/3945-mac.c
-index 8de8355..5ca8a78 100644
---- a/drivers/net/wireless/iwlegacy/3945-mac.c
-+++ b/drivers/net/wireless/iwlegacy/3945-mac.c
-@@ -3619,7 +3619,6 @@ il3945_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/bmi.h  |    7 +++++++
+ drivers/net/wireless/ath/ath6kl/init.c |   20 ++++----------------
+ 2 files changed, 11 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/bmi.h b/drivers/net/wireless/ath/ath6kl/bmi.h
+index e6a7330..3c5b382 100644
+--- a/drivers/net/wireless/ath/ath6kl/bmi.h
++++ b/drivers/net/wireless/ath/ath6kl/bmi.h
+@@ -231,6 +231,13 @@ struct ath6kl_bmi_target_info {
+ 		ath6kl_bmi_write(ar, addr, (u8 *) &v, sizeof(v));	\
+ 	})
  
- 	il->ctx.ctxid = 0;
++#define ath6kl_bmi_read_hi32(ar, item, val)				\
++	({								\
++		u32 addr, *check_type = val;				\
++		(void) (check_type == val);				\
++		addr = ath6kl_get_hi_item_addr(ar, HI_ITEM(item));	\
++		ath6kl_bmi_read(ar, addr, (u8 *) val, 4);		\
++	})
  
--	il->ctx.rxon_timing_cmd = C_RXON_TIMING;
- 	il->ctx.rxon_assoc_cmd = C_RXON_ASSOC;
- 	il->ctx.qos_cmd = C_QOS_PARAM;
- 	il->ctx.ap_sta_id = IL_AP_ID;
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 2368f3a..9539acc 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -6135,7 +6135,6 @@ il4965_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ int ath6kl_bmi_init(struct ath6kl *ar);
+ void ath6kl_bmi_cleanup(struct ath6kl *ar);
+diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+index da5900d..d1d121d 100644
+--- a/drivers/net/wireless/ath/ath6kl/init.c
++++ b/drivers/net/wireless/ath/ath6kl/init.c
+@@ -501,10 +501,7 @@ int ath6kl_configure_target(struct ath6kl *ar)
+ 	/* set the firmware mode to STA/IBSS/AP */
+ 	param = 0;
  
- 	il->ctx.always_active = true;
- 	il->ctx.is_active = true;
--	il->ctx.rxon_timing_cmd = C_RXON_TIMING;
- 	il->ctx.rxon_assoc_cmd = C_RXON_ASSOC;
- 	il->ctx.qos_cmd = C_QOS_PARAM;
- 	il->ctx.ap_sta_id = IL_AP_ID;
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index 2b56226..9025214 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -3664,7 +3664,7 @@ il_send_rxon_timing(struct il_priv *il, struct il_rxon_context *ctx)
- 		le32_to_cpu(il->timing.beacon_init_val),
- 		le16_to_cpu(il->timing.atim_win));
+-	if (ath6kl_bmi_read(ar,
+-			    ath6kl_get_hi_item_addr(ar,
+-			    HI_ITEM(hi_option_flag)),
+-			    (u8 *)&param, 4) != 0) {
++	if (ath6kl_bmi_read_hi32(ar, hi_option_flag, &param) != 0) {
+ 		ath6kl_err("bmi_read_memory for setting fwmode failed\n");
+ 		return -EIO;
+ 	}
+@@ -1074,17 +1071,11 @@ static int ath6kl_upload_board_file(struct ath6kl *ar)
+ 		ath6kl_bmi_write_hi32(ar, hi_board_data,
+ 				      ar->hw.board_addr);
+ 	} else {
+-		ath6kl_bmi_read(ar,
+-				ath6kl_get_hi_item_addr(ar,
+-				HI_ITEM(hi_board_data)),
+-				(u8 *) &board_address, 4);
++		ath6kl_bmi_read_hi32(ar, hi_board_data, &board_address);
+ 	}
  
--	return il_send_cmd_pdu(il, il->ctx.rxon_timing_cmd, sizeof(il->timing),
-+	return il_send_cmd_pdu(il, C_RXON_TIMING, sizeof(il->timing),
- 			       &il->timing);
- }
- EXPORT_SYMBOL(il_send_rxon_timing);
-diff --git a/drivers/net/wireless/iwlegacy/common.h b/drivers/net/wireless/iwlegacy/common.h
-index 80c60e5..d1d5055 100644
---- a/drivers/net/wireless/iwlegacy/common.h
-+++ b/drivers/net/wireless/iwlegacy/common.h
-@@ -1175,7 +1175,7 @@ struct il_rxon_context {
+ 	/* determine where in target ram to write extended board data */
+-	ath6kl_bmi_read(ar,
+-			ath6kl_get_hi_item_addr(ar,
+-			HI_ITEM(hi_board_ext_data)),
+-			(u8 *) &board_ext_address, 4);
++	ath6kl_bmi_read_hi32(ar, hi_board_ext_data, &board_ext_address);
  
- 	u8 bcast_sta_id, ap_sta_id;
+ 	if (ar->target_type == TARGET_TYPE_AR6003 &&
+ 	    board_ext_address == 0) {
+@@ -1177,10 +1168,7 @@ static int ath6kl_upload_otp(struct ath6kl *ar)
+ 	}
  
--	u8 rxon_assoc_cmd, rxon_timing_cmd;
-+	u8 rxon_assoc_cmd;
- 	u8 qos_cmd;
- 	u8 wep_key_cmd;
+ 	/* read firmware start address */
+-	ret = ath6kl_bmi_read(ar,
+-			      ath6kl_get_hi_item_addr(ar,
+-						      HI_ITEM(hi_app_start)),
+-			      (u8 *) &address, sizeof(address));
++	ret = ath6kl_bmi_read_hi32(ar, hi_app_start, &address);
  
--- 
-1.7.1
+ 	if (ret) {
+ 		ath6kl_err("Failed to read hi_app_start: %d\n", ret);
 
