@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:27752 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48363 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755146Ab2B2OiL (ORCPT
+	with ESMTP id S1754620Ab2B2NIM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Feb 2012 09:38:11 -0500
-Message-ID: <4F4E384D.2090802@qca.qualcomm.com> (sfid-20120229_153818_203046_6E8672BC)
-Date: Wed, 29 Feb 2012 16:38:05 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Wed, 29 Feb 2012 08:08:12 -0500
+From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+To: <ath6kl-devel@qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Subject: [PATCH] ath6kl: Set background scan period.
+Date: Wed, 29 Feb 2012 18:38:04 +0530
+Message-ID: <1330520884-15503-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120229_140820_854453_B952CA5B)
 MIME-Version: 1.0
-To: Joe Perches <joe@perches.com>
-CC: Andrew Morton <akpm@linux-foundation.org>,
-	Andy Whitcroft <apw@shadowen.org>,
-	"Allan, Bruce W" <bruce.w.allan@intel.com>,
-	David Miller <davem@davemloft.net>,
-	"andrei.emeltchenko.news@gmail.com"
-	<andrei.emeltchenko.news@gmail.com>,
-	"linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] checkpatch: Add some --strict coding style checks
-References: <20120221151435.GA19354@tuxdriver.com>	 <20120221.144417.1445117001833888214.davem@davemloft.net>	 <CAMXE1-qB8_5oGey2=Ypa5BitZnye3YqdM=yB8oKCGLvoZu_8HQ@mail.gmail.com>	 <20120221.154053.2103818562080068513.davem@davemloft.net>	 <1329857959.5143.11.camel@joe2Laptop>	 <804857E1F29AAC47BF68C404FC60A18429B3EE@ORSMSX102.amr.corp.intel.com>	 <1329874581.5143.22.camel@joe2Laptop>	 <804857E1F29AAC47BF68C404FC60A18429B8F2@ORSMSX102.amr.corp.intel.com>	 <1329875935.5143.24.camel@joe2Laptop>	 <804857E1F29AAC47BF68C404FC60A18429B98A@ORSMSX102.amr.corp.intel.com>	 <1329968622.5143.46.camel@joe2Laptop>	 <804857E1F29AAC47BF68C404FC60A1842A1D36@ORSMSX102.amr.corp.intel.com> <1330108675.18464.21.camel@joe2Laptop>
-In-Reply-To: <1330108675.18464.21.camel@joe2Laptop>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/24/2012 08:37 PM, Joe Perches wrote:
-> Argument alignment across multiple lines should
-> match the open parenthesis.
-> 
-> Logical continuations should be at the end of
-> the previous line, not the start of a new line.
-> 
-> These are not required by CodingStyle so make the
-> tests active only when using --strict.
-> 
-> Improved_by_examples_from: "Bruce W. Allen" <bruce.w.allan@intel.com>
-> Signed-off-by: Joe Perches <joe@perches.com>
+After connect command, send scan params WMI command to
+set background scan period. If period value is zero
+send 0xffff as bg scan period to disable bg scan.
 
-Thanks Joe, this is very useful for me. I seem to have one false alarm
-though:
+This patch depends on below patch
+cfg80211: Add background scan period attribute.
 
-drivers/net/wireless/ath/ath6kl/txrx.c:464: CHECK: Alignment should
-match open parenthesis
+Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-This is with patches I haven't sent yet so line numbers most likely
-don't match, but the code in question is this:
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index a91f521..8e984d7 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -578,6 +578,15 @@ static int ath6kl_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 					vif->req_bssid, vif->ch_hint,
+ 					ar->connect_ctrl_flags, nw_subtype);
+ 
++	if (sme->bg_scan_period >= 0) {
++		/* disable bg scan if period is 0 */
++		if (sme->bg_scan_period == 0)
++			sme->bg_scan_period = 0xffff;
++
++		ath6kl_wmi_scanparams_cmd(ar->wmi, vif->fw_vif_idx, 0, 0,
++			sme->bg_scan_period, 0, 0, 0, 3, 0, 0, 0);
++	}
++
+ 	up(&ar->sem);
+ 
+ 	if (status == -EINVAL) {
+-- 
+1.7.4.1
 
-	if (!IS_ALIGNED((unsigned long) skb->data - HTC_HDR_LENGTH, 4) &&
-	    skb_cloned(skb)) {
-
-Apparently the cast "(unsigned long)" causes the false alarm as when I
-remove it I don't see the warning anymore.
-
-Kalle
