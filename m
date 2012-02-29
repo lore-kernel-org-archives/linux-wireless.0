@@ -1,61 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:56803 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933479Ab2BBWJL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Feb 2012 17:09:11 -0500
-Received: by vbjk17 with SMTP id k17so2129482vbj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Feb 2012 14:09:10 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1328112335-19265-2-git-send-email-rmanohar@qca.qualcomm.com>
-References: <1328112335-19265-1-git-send-email-rmanohar@qca.qualcomm.com>
-	<1328112335-19265-2-git-send-email-rmanohar@qca.qualcomm.com>
-Date: Thu, 2 Feb 2012 14:09:10 -0800
-Message-ID: <CAJ-Vmon56yyyvU46oXBJaFpUcFWa0008S5tyBm31qTY5y2CO+g@mail.gmail.com> (sfid-20120202_230918_845362_0098D8FB)
-Subject: Re: [PATCH 2/2] ath9k_hw: improve ANI processing and rx desensitizing parameters
-From: Adrian Chadd <adrian@freebsd.org>
-To: Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	Paul Stewart <pstew@google.com>,
-	Susinder Gulasekaran <susinder@qca.qualcomm.com>,
-	Suresh Chandrasekaran <csuresh@qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from perches-mx.perches.com ([206.117.179.246]:38418 "EHLO
+	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S965490Ab2B2SVH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Feb 2012 13:21:07 -0500
+Message-ID: <1330539665.13689.9.camel@joe2Laptop> (sfid-20120229_192111_511697_59F5ED83)
+Subject: Re: [PATCH 00/12] ath6kl: checkpatch fixes
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Wed, 29 Feb 2012 10:21:05 -0800
+In-Reply-To: <4F4E635A.3060003@qca.qualcomm.com>
+References: <20120229171525.24264.22062.stgit@localhost6.localdomain6>
+	 <1330537026.13689.1.camel@joe2Laptop> <4F4E635A.3060003@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, questions below:
+On Wed, 2012-02-29 at 19:41 +0200, Kalle Valo wrote:
+> On 02/29/2012 07:37 PM, Joe Perches wrote:
+> > On Wed, 2012-02-29 at 19:18 +0200, Kalle Valo wrote:
+> >> Here are quite a few checkpatch fixes and other cleanups.
+> >>
+> >> Especially I would like to people review these two macros, they ended up
+> >> a bit too clever and I'm sure there are issues:
+> >>
+> >> #define ath6kl_bmi_write_hi32(ar, item, val)				\
+> >> 	({								\
+> >> 		u32 addr;						\
+> >> 		__le32 v;						\
+> >> 									\
+> >> 		addr = ath6kl_get_hi_item_addr(ar, HI_ITEM(item));	\
+> >> 		v = cpu_to_le32(val);					\
+> >> 		ath6kl_bmi_write(ar, addr, (u8 *) &v, sizeof(v));	\
+> >> 	})
+> >>
+> >> #define ath6kl_bmi_read_hi32(ar, item, val)				\
+> >> 	({								\
+> >> 		u32 addr, *check_type = val;				\
+> >> 		__le32 tmp;						\
+> >> 		int ret;						\
+> >> 									\
+> >> 		(void) (check_type == val);				\
+> >> 		addr = ath6kl_get_hi_item_addr(ar, HI_ITEM(item));	\
+> >> 		ret = ath6kl_bmi_read(ar, addr, (u8 *) &tmp, 4);	\
+> >> 		*val = le32_to_cpu(tmp);				\
+> >> 		ret;							\
+> >> 	})
+> > 
+> > Why not just make these functions?
+> 
+> Because of the HI_ITEM() macro I can't pass the item parameter to a
+> function:
+> 
+> #define HI_ITEM(item)  offsetof(struct host_interest, item)
 
-On 1 February 2012 08:05, Rajkumar Manoharan <rmanohar@qca.qualcomm.com> wrote:
->
-> This patch improves ANI operations by switching among the immunity
-> levels based on PHY errors and beacon rssi which will adjust receiver
-> desensitizing parameters. The changes are
+Perhaps something like:
+void _ath6kl_bmi_write_hi32(struct ath6kl ar, size_t offset, u32 *val)
+{
+	u32 addr;
+	__le32 v;
 
-What environments are you seeing this bad behaviour in? I'd just like
-to be sure that this won't mess up the behaviour of ANI for other
-chips, other environments and other operating modes.
+	addr = ath6kl_get_hi_item_addr(ar, offset);
+	v = cpu_to_le32(*val);
+	ath6kl_bmi_write(ar, addr, (u8 *)&v, sizeof(v));
+}
 
-> * Irrespective of opmode, the Weak Signal Detection is with the current
->  immunity level value.
+#define ath6kl_bmi_write_hi32(ar, item, val)		\
+	_ath6kl_bmi_write_hi32(ar, HI_ITEM(item), &(val))
 
-I didn't think that weak signal detection was a single bit in the PHY.
-It looks like you've just deleted all the threshold settings and are
-turning on/off using low self correlation.
-
-Have a read of the (very early, AR5212 era?) ANI patent:
-
-http://www.freepatentsonline.com/7349503.pdf
-
-If this has changed (ie, if in Osprey it's done differently) then it
-should likely be documented in the driver somewhere.
-
-IF this all works then great, but I'd really like to try and better
-understand/document the "why" aspects of it. ANI is .. fiddly, and
-there aren't any tools available for ath9k (+freebsd) wireless
-developers to really understand the impact of ANI.
-
-Thanks,
+etc...
 
 
-
-Adrian
