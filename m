@@ -1,46 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server514a.exghost.com ([72.32.253.68]:4166 "EHLO
-	server514.appriver.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757020Ab2BICSj convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:44515 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757306Ab2B2MjW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Feb 2012 21:18:39 -0500
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Subject: RE: [PATCH V2] rtlwifi: Return correct failure code on error
-Date: Wed, 8 Feb 2012 20:18:35 -0600
-Message-ID: <BC8BC73D12649F439B502B4CB6FD58B1053E30FB@BE23.exg4.exghost.com> (sfid-20120209_031845_533888_292982D3)
-In-Reply-To: <4F33288C.5090905@lwfinger.net>
-References: <20120208211436.GA1309@simgr-precise.oldroadcomputing.net> <4F33288C.5090905@lwfinger.net>
-From: "Simon Graham" <simon.graham@virtualcomputer.com>
-To: "Larry Finger" <Larry.Finger@lwfinger.net>
-Cc: <linux-wireless@vger.kernel.org>, <linville@tuxdriver.com>,
-	<chaoming_li@realsil.com.cn>
+	Wed, 29 Feb 2012 07:39:22 -0500
+Subject: Re: [PATCH] cfg80211: Add background scan period attribute.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1330518896-15230-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120229_133516_521752_BEEDD972)
+References: <1330518896-15230-1-git-send-email-bkamatch@qca.qualcomm.com>
+	 (sfid-20120229_133516_521752_BEEDD972)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 29 Feb 2012 13:39:14 +0100
+Message-ID: <1330519154.4714.6.camel@jlt3.sipsolutions.net> (sfid-20120229_133927_045740_0B5B94C3)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> >   	return 1;
+On Wed, 2012-02-29 at 18:04 +0530, Bala Shanmugam wrote:
+> Receive background scan period as part of connect
+> command and pass the same to driver.
 > 
-> You must have an extreme memory limitation to find all these problems.
+> Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+> ---
+>  include/linux/nl80211.h |    8 ++++++++
+>  include/net/cfg80211.h  |    2 ++
+>  net/wireless/nl80211.c  |    7 +++++++
+>  net/wireless/wext-sme.c |    5 +++++
+>  4 files changed, 22 insertions(+), 0 deletions(-)
 > 
+> diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+> index ad56e21..7cef223 100644
+> --- a/include/linux/nl80211.h
+> +++ b/include/linux/nl80211.h
+> @@ -367,6 +367,9 @@
+>   *	%NL80211_ATTR_WIPHY_FREQ, %NL80211_ATTR_CONTROL_PORT,
+>   *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE and
+>   *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT.
+> + *	Background scan period can also be
+> + *	optionally specified in %NL80211_ATTR_BG_SCAN_PERIOD.
+> + *	If period value is 0, bg scan will be disabled.
 
-As part of system testing we do
+Nack. We leave out the attribute in those cases and make 0 an invalid
+value.
 
-> As long as you are reworking this section, I would prefer you leave
-the
-> "return
-> err" as it is now, change the "return 1" to "return 0", and remove the
-> not
-> operator in "err = !rtl_pci_init(hw, pdev);" call of this routine. I
-> just
-> discovered it a few days ago, and it bothers me, but I've been too
-busy
-> to
-> submit a fix. In addition, these changes will convert rtl_pci_init()
-> into a more
-> normal routine that returns 0 if OK and non-zero on errors.
-> 
+Also please have this reviewed internally first. I'm tired of pointing
+out all the whitespace, code formatting, etc. issues from QCA folks.
 
-OK - I'll do that tomorrow and resubmit (hopefully correctly this time!)
+johannes
 
-> Larry
