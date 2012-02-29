@@ -1,53 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:35197 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758332Ab2BIWgs (ORCPT
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:62920 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965366Ab2B2SPe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 17:36:48 -0500
-Received: by iacb35 with SMTP id b35so3133471iac.19
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Feb 2012 14:36:48 -0800 (PST)
+	Wed, 29 Feb 2012 13:15:34 -0500
+Received: by yenl12 with SMTP id l12so1458731yen.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 10:15:34 -0800 (PST)
+Message-ID: <4F4E6B43.6050204@lwfinger.net> (sfid-20120229_191538_191471_E9881B9E)
+Date: Wed, 29 Feb 2012 12:15:31 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <CAK80WHaiOp2f08ErSiLdoSOcN1A1EbFX4x02wGPQY1WJJrKK-g@mail.gmail.com>
-References: <1327581484-22047-1-git-send-email-victorg@ti.com>
- <1327581484-22047-5-git-send-email-victorg@ti.com> <4F277FE3.8090006@sipsolutions.net>
- <CAK80WHaiOp2f08ErSiLdoSOcN1A1EbFX4x02wGPQY1WJJrKK-g@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Thu, 9 Feb 2012 14:36:28 -0800
-Message-ID: <CAB=NE6XVqqfRF+4QtzxeknuvOyupEiNjzx4Cvjcv7DdPsvU1rA@mail.gmail.com> (sfid-20120209_233652_957634_D0224D5C)
-Subject: Re: [RFC 4/9] mac80211: add ability to enable TX on op-channel
-To: "Goldenshtein, Victor" <victorg@ti.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, kgiori@qca.qualcomm.com,
-	zefir.kurtisi@neratec.com, adrian.chadd@gmail.com, j@w1.fi,
-	coelho@ti.com, assaf@ti.com, yoni.divinsky@ti.com, igalc@ti.com,
-	adrian@freebsd.org, nbd@nbd.name
-Content-Type: text/plain; charset=UTF-8
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com
+Subject: Re: [PATCH 4/5] p54pci: Load firmware from work queue and not from
+ probe routine
+References: <1329161826-11135-1-git-send-email-Larry.Finger@lwfinger.net> <1329161826-11135-5-git-send-email-Larry.Finger@lwfinger.net> <4F4E4B52.4070701@lwfinger.net> <201202291843.26824.chunkeey@googlemail.com>
+In-Reply-To: <201202291843.26824.chunkeey@googlemail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 2, 2012 at 8:06 AM, Goldenshtein, Victor <victorg@ti.com> wrote:
-> On Tue, Jan 31, 2012 at 7:45 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On 1/26/2012 4:37 AM, Victor Goldenshtein wrote:
+On 02/29/2012 11:43 AM, Christian Lamparter wrote:
+> On Wednesday, February 29, 2012 04:59:14 PM Larry Finger wrote:
+>> On 02/13/2012 01:37 PM, Larry Finger wrote:
+>>> Drivers that load firmware from their probe routine have problems with the
+>>> latest versions of udev as they get timeouts while waiting for user
+>>> space to start. The problem is fixed by loading the firmware and starting
+>>> mac80211 from a delayed_work queue. By using this method, most of the
+>>> original code is preserved.
 >>>
->>> Prior starting tx on DFS channels, the DFS master
->>> device shall perform a Channel Availability Check
->>> to ensure that there is no radar interference on
->>> those channels. Once CAC done, the tx can be
->>> enabled with ieee80211_dfs_en_tx().
+>>> Signed-off-by: Larry Finger<Larry.Finger@lwfinger.net>
+>>> ---
+>>>
+>>> This patch is compile tested only.
+>>>
+>>> Larry
 >>
->>
->> How do you expect this to be used by the device? It seems that it should
->> have the side effect of lifting some TX-prohibited flag instead?
+>> Has anyone tested this patch? I would like to submit this series.
+> only briefly, but I'm not sure if the workqueue approach is adequate. On
+> resume, I get WARNINGs and the card fails to resume because the firmware
+> file can't be loaded :(.
 >
-> In wl12xx driver we starting the AP role, and clearing FLAG_DFS_CAC_IN_PROGRESS.
-> Maybe the function name is misleading here ? maybe we should rename it
-> to something like resume_dfs_cac() - because it is called at the end
-> of the CAC test.
+> WARNING: at drivers/base/firmware_class.c:538 _request_firmware+0x3ae/0x3e0()
+> Pid: 1083, comm: kworker/0:3 Tainted:G		O 3.3.0-rc5-wl+
+> Call Trace:
+> 	[<c102c658>] ? wanr_slowpath_common+0x78/0xb0
+> 	[<c12c728e>] ? _request_firmware+0x3ae/0x3e0
+> 	[<c12c728e>] ? _requrst_firmware+0x3ae/0x3e0
+> 	[<c102c6a9>] ? warn_slowpath_common+0x19/0x20
+> 	[<c12c728e>] ? _request_firmware+0x3ae/0x3e0
+> 	[<c12c7347>] ? request_firmware+0x17/0x20
+> 	[<f86v1dc7>] ? p54p_load_firmware+0x47/0x120 [p54pci]
+> 	[...]
 >
-> The other question is whether we want to add DFS flags into mac? I
-> mean something like FLAG_DFS_CAC_IN_PROGRESS.
+> Regards,
+> 	Chr
+>
+> BTW: I will take a closer look at it over the weekend.
 
-How about that and a CAC timer as sanity checks to cfg80211, not mac80211.
+Does the driver come back through the probe routine on resume? If not, the 
+firmware should have been cached and not needed reloading. I'll have to look at 
+the driver structure some more. I likely screwed that up.
 
-  Luis
+Larry
+
