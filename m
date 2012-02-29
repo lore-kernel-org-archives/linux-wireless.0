@@ -1,56 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46443 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752178Ab2BNIbA (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:34044 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755649Ab2B2UrB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 03:31:00 -0500
-From: Sujith Manoharan <c_manoha@qca.qualcomm.com>
+	Wed, 29 Feb 2012 15:47:01 -0500
+Date: Wed, 29 Feb 2012 15:35:15 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] carl9170: fix breakage from "mac80211: handle
+ non-bufferable MMPDUs correctly"
+Message-ID: <20120229203515.GE13733@tuxdriver.com> (sfid-20120229_214705_668166_351E2883)
+References: <1330546305-26773-1-git-send-email-linville@tuxdriver.com>
+ <1330546923.13717.9.camel@jlt3.sipsolutions.net>
+ <201202292127.18915.chunkeey@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Message-ID: <20282.7088.898987.229335@gargle.gargle.HOWL> (sfid-20120214_093105_218259_BA9EABCD)
-Date: Tue, 14 Feb 2012 14:00:40 +0530
-To: Peter Stuge <peter@stuge.se>
-CC: Ben Greear <greearb@candelatech.com>,
-	<ath9k-devel@venema.h4ckr.net>, <linux-wireless@vger.kernel.org>,
-	<linville@tuxdriver.com>
-Subject: Re: [ath9k-devel] [PATCH 3/7] ath9k: Merge wiphy and misc debugfs files
-In-Reply-To: <20120214073855.6843.qmail@stuge.se>
-References: <20280.43962.403799.188541@gargle.gargle.HOWL>
-	<4F3947A1.2060103@candelatech.com>
-	<20281.48485.409968.741657@gargle.gargle.HOWL>
-	<4F39BF5F.3030408@candelatech.com>
-	<20281.52354.478076.479135@gargle.gargle.HOWL>
-	<20120214073855.6843.qmail@stuge.se>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201202292127.18915.chunkeey@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Stuge wrote:
-> It is not very wise for ath9k to reduce debug output with the
-> motivation that some users leave it enabled even if they deploy
-> into limited systems and they would actually prefer to have less
-> debugging.
+On Wed, Feb 29, 2012 at 09:27:18PM +0100, Christian Lamparter wrote:
+> On Wednesday, February 29, 2012 09:22:03 PM Johannes Berg wrote:
+> > On Wed, 2012-02-29 at 15:11 -0500, John W. Linville wrote:
+> > > That commit intended for 3.4 renamed IEEE80211_TX_CTL_POLL_RESPONSE as
+> > > IEEE80211_TX_CTL_NO_PS_BUFFER.  Meanwhile, "carl9170: fix frame delivery
+> > > if sta is in powersave mode" added a reference to
+> > > IEEE80211_TX_CTL_POLL_RESPONSE in the fixes stream for 3.3.  This simple
+> > > patch fixes that merge boo-boo.
+> > 
+> > Thanks, sorry about the overlap.
+> Err?! I wrote and posted an updated patch on saturday.
 > 
-> If ath9k users have an issue with debugging being too big then THEY
-> can disable it. It seems senseless to delete debugging when the
-> driver is clearly still buggy.
-> 
-> It also seems senseless to try to punt to mac80211. It is amazing
-> that Ben's point is not absolutely obvious.
-> 
-> One purpose of debugging is to allow and enable consistency checking.
-> Redundant information is by definition neccessary for that.
-> 
-> 
-> As a compromise, you could suggest a move to a two-level compile time
-> option for debugging. You would enable only what you believe to be
-> adequate for debugging in production systems (wait, what did I just
-> write? oh well..) with the first option, and you would allow the rest
-> of the world to enable complete debugging with the second option.
+> [PATCH -wt] carl9170: fix frame delivery if sta is in powersave mode
+> http://www.spinics.net/lists/linux-wireless/msg85556.html
 
-/me disregards all the nerd-rage and the general snarkiness.
+Indeed, you did.  I think the net effect is the same, right?
 
-Having multiple levels of debugging makes things complex. If the general
-consensus is to keep the information, I can rework the patch.
+I generally prefer to merge a single fix patch and account for any
+conflicts in a merge.  This one slipped through because of the lack
+of direct merge breakage.  Anyway, it all seems fine now.
 
-Sujith
+Thanks,
 
+John
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
