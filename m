@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:60084 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:16467 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760196Ab2BNNJ2 (ORCPT
+	with ESMTP id S1756836Ab2B2BZv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 08:09:28 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: <linux-wireless@vger.kernel.org>,
-	Rodriguez Luis <rodrigue@qca.qualcomm.com>,
-	<ath9k-devel@lists.ath9k.org>,
-	Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
-Subject: [PATCH 1/2] ath9k: remove obselete comments
-Date: Tue, 14 Feb 2012 18:39:18 +0530
-Message-ID: <1329224959-12143-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20120214_140952_950228_04EDEB66)
+	Tue, 28 Feb 2012 20:25:51 -0500
+From: Etay Luz <eluz@qca.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath6kl-devel@qualcomm.com>
+Subject: [PATCH] ath6kl: Collect residue firmware logs
+Date: Tue, 28 Feb 2012 17:18:04 -0800
+Message-ID: <1330478284-29968-1-git-send-email-eluz@qca.qualcomm.com> (sfid-20120229_022554_617470_E568B593)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Collect residue firmware logs following firmware assert.
+Firmware sends logs to host once the 1500 byte log buffer
+has been filled. At time of assert, there could be residue
+logs lying in the firmware. This patch pulls those residue
+logs. This would give the full picture of the firmware.
 
-the corresponding code/logic was removed in
-"ath9k: rework power state handling"
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+Signed-off-by: Etay Luz <eluz@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/main.c |    6 ------
- 1 files changed, 0 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath6kl/hif.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index ec82e92..22785c7 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1587,12 +1587,6 @@ static int ath9k_config(struct ieee80211_hw *hw, u32 changed)
- 	ath9k_ps_wakeup(sc);
- 	mutex_lock(&sc->mutex);
+diff --git a/drivers/net/wireless/ath/ath6kl/hif.c b/drivers/net/wireless/ath/ath6kl/hif.c
+index ef650b6..3e569b2 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif.c
++++ b/drivers/net/wireless/ath/ath6kl/hif.c
+@@ -135,6 +135,7 @@ static int ath6kl_hif_proc_dbg_intr(struct ath6kl_device *dev)
+ 		ath6kl_warn("Failed to clear debug interrupt: %d\n", ret);
  
--	/*
--	 * Leave this as the first check because we need to turn on the
--	 * radio if it was disabled before prior to processing the rest
--	 * of the changes. Likewise we must only disable the radio towards
--	 * the end.
--	 */
- 	if (changed & IEEE80211_CONF_CHANGE_IDLE) {
- 		sc->ps_idle = !!(conf->flags & IEEE80211_CONF_IDLE);
- 		if (sc->ps_idle)
+ 	ath6kl_hif_dump_fw_crash(dev->ar);
++	ath6kl_read_fwlogs(dev->ar);
+ 
+ 	return ret;
+ }
 -- 
 1.7.0.4
 
