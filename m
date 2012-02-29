@@ -1,58 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:33073 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752228Ab2BINrX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Feb 2012 08:47:23 -0500
-Message-ID: <1328795289.25876.5.camel@blackout-netbook> (sfid-20120209_144740_515978_CB5F4F2D)
-Subject: [PATCH] [trivial] Correcting typos in rtlwifi/base.c
-From: Tristan Pourcelot <tristan.pourcelot@gmail.com>
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Thu, 09 Feb 2012 14:48:09 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from victor.provo.novell.com ([137.65.250.26]:59621 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757768Ab2B2LDc (ORCPT
+	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
+	Wed, 29 Feb 2012 06:03:32 -0500
+Received: by bkcik5 with SMTP id ik5so2143351bkc.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 03:03:21 -0800 (PST)
+MIME-Version: 1.0
+Date: Wed, 29 Feb 2012 19:03:21 +0800
+Message-ID: <CALx5=V8BDFXD7KGBFia0MAkb2iv3x5dupGXTkKEDJ24DLJVx1g@mail.gmail.com> (sfid-20120229_120336_920233_A898FB6F)
+Subject: [ath9k-devel] Any recommendation of direct access the GPIO from
+ specific address ?
+From: Matt Chen <machen@suse.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch correct some typos in a comment.
+Hi list,
 
+I am working on verifying the ath9k_rfkill_poll_state() function. It
+would execute the ath_is_rfkill_set() the read the GPIO and change the
+LED. I found the POLL_INTERVAL would take 5 secs according the
+definition in net/rfkill/core.c
+#define POLL_INTERVAL (5 * HZ)
+So it would detect the GPIO status in every 5 seconds. But the ath9k I
+run in different platform, with the same modules, it works different
+way. The LED for one is working very fast, in another one is working
+so slow.
 
->From 79bce2d3fb5c2e3c78ff39f3c9a0f10c20be9221 Mon Sep 17 00:00:00 2001
-From: Tristan Pourcelot <tristan.pourcelot@gmail.com>
-Date: Thu, 9 Feb 2012 14:45:28 +0100
-Subject: [PATCH] Correcting typos in rtlwifi/base.c
+I would like to clarify it is driver or BIOS issues. The way I come
+out is manually to change the GPIO status, see how the driver work.
+But so far I only found the devmen2 to access the specific address of
+GPIO. Any other good ways recommended ?
+And another question is the address defined in reg.h correct to access
+? Such as
+#define AR_GPIO_IN    (AR_SERV_9340(ah)) ? 0x402c : 0x404c)
+can I access the value of 0x404c directly?
 
-
-Signed-off-by: Tristan Pourcelot <tristan.pourcelot@gmail.com>
----
- drivers/net/wireless/rtlwifi/base.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/rtlwifi/base.c
-b/drivers/net/wireless/rtlwifi/base.c
-index 8d6eb0f..08e4b28 100644
---- a/drivers/net/wireless/rtlwifi/base.c
-+++ b/drivers/net/wireless/rtlwifi/base.c
-@@ -40,10 +40,10 @@
- #include "regd.h"
- 
- /*
-- *NOTICE!!!: This file will be very big, we hsould
-- *keep it clear under follwing roles:
-+ *NOTICE!!!: This file will be very big, we should
-+ *keep it clear under following roles:
-  *
-- *This file include follwing part, so, if you add new
-+ *This file include following parts, so, if you add new
-  *functions into this file, please check which part it
-  *should includes. or check if you should add new part
-  *for this file:
--- 
-1.7.9
-
-
-
-
-
+Thank you for your patience. :)
