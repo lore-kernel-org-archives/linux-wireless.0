@@ -1,91 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp1.u-psud.fr ([129.175.33.41]:61775 "EHLO smtp1.u-psud.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753465Ab2BXOBp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Feb 2012 09:01:45 -0500
-Message-ID: <4F479847.10906@lri.fr> (sfid-20120224_150149_313521_D6579D22)
-Date: Fri, 24 Feb 2012 15:01:43 +0100
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:26882 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752645Ab2B2GgT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Feb 2012 01:36:19 -0500
+Date: Wed, 29 Feb 2012 09:35:55 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch 1/4] rndis_wlan: integer overflows in
+ rndis_wlan_do_link_up_work()
+Message-ID: <20120229063555.GC18031@elgon.mountain> (sfid-20120229_073624_219412_643C1DE0)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFC] carl9170: Fix memory accounting when sta is in power-save
- mode.
-References: <1330012414-26559-1-git-send-email-cavallar@lri.fr>  <201202231752.44125.chunkeey@googlemail.com> <4F46771F.9000200@lri.fr>  <201202231908.16364.chunkeey@googlemail.com> <4F468AC1.1050100@lri.fr>  <4F4791FC.9080707@lri.fr> (sfid-20120224_143533_449788_ED2A82B4) <1330090741.3426.16.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1330090741.3426.16.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24/02/2012 14:39, Johannes Berg wrote:
-> On Fri, 2012-02-24 at 14:34 +0100, Nicolas Cavallari wrote:
->> On 23/02/2012 19:51, Nicolas Cavallari wrote:
->>> On 23/02/2012 19:08, Christian Lamparter wrote:
->>>> On Thursday, February 23, 2012 06:27:59 PM Nicolas Cavallari wrote:
->>>>> On 23/02/2012 17:52, Christian Lamparter wrote:
->>>>>> On Thursday, February 23, 2012 04:53:34 PM Nicolas Cavallari wrote:
->>>>>>> While this seems to fix my problem, there could still be problems remaining
->>>>>>> in this code path.  Particularly carl9170_tx_status will do lots of things
->>>>>>> like incrementing counters and waking up mac80211 queues...
->>>>>> That should be alright. As a rule of thumb, for every call to
->>>>>> carl9170_tx_accounting [called by carl9170_op_tx tx handler]
->>>>>> we need to call carl9170_tx_status. If the station is still in
->>>>>> ps mode, mac80211 will cache the station's frames and sets
->>>>>> the TIM bits. 
->>>>> Part of the reason i wrote this, is because, while this patch fixes the
->>>>> memory accounting problem and prevent the AP from stopping working, the
->>>>> powersaving station sometimes cannot communicate with the AP anymore
->>>>> (other stations can). The station uses ath9k, and is just really doing a
->>>>> background scan. The first traces that i have just indicate that the
->>>>> station entered powersave mode, then sends probe requests and probe
->>>>> requests directed to the AP, then sends authentication requests to the
->>>>> AP (?), but the AP does not respond to any of them...
->>>>>
->>>> Do you run an 802.11n ap on carl9170?
->>> No, it's a 802.11g currently.
->>> My current wild guess is that, the responses to those requests are
->>> somehow still queued ...
->>
->> And i was right...
->>
->> /*
->>  * Ignore doze->wake transitions that are
->>  * indicated by non-data frames, the standard
->>  * is unclear here, but for example going to
->>  * PS mode and then scanning would cause a
->>  * doze->wake transition for the probe request,
->>  * and that is clearly undesirable.
->>  */
->> if (ieee80211_is_data(hdr->frame_control) &&
->>     !ieee80211_has_pm(hdr->frame_control))
->> 	ap_sta_ps_end(sta);
->>
->> As (re)associations requests and Auth frames are not data frames,
->> mac80211 still considers that the station is still in powersave mode, so
->> it still queues frames, and even queues the responses to the auth
->> frames. Except that the station disassociated silently, and is trying to
->> re-associate after a short time.
->>
->> Shouldn't mac80211 transition the sta to "awake" when receiving
->> auth/assoc frames ?
-> 
-> I don't think so, that would make us send frames to the station it no
-> longer deserves to have. Hostapd should instead delete & re-create the
-> station entry, I think?
-> 
-> johannes
-> 
+If "offset" is negative then we can get past this check:
+	if (offset > CONTROL_BUFFER_SIZE)
+Or if we pick a very high "req_ie_len" then we can get around the check:
+	if (offset + req_ie_len > CONTROL_BUFFER_SIZE)
 
-Hostapd already does that¹ ... after the association response is acked.
+I made "resp_ie_len" and "req_ie_len" unsigned.  I don't know if it was
+intentional that they were signed in the original.
 
-Will send a patch for hostapd then.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-[¹] :
-/*
- * Remove the STA entry in order to make sure the STA PS state gets
- * cleared and configuration gets updated in case of reassociation back
- * to the same AP.
- */
-hostapd_drv_sta_remove(hapd, sta->addr);
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index a330c69..6d8a986 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -2755,9 +2755,10 @@ static void rndis_wlan_do_link_up_work(struct usbnet *usbdev)
+ 	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
+ 	struct ndis_80211_assoc_info *info = NULL;
+ 	u8 bssid[ETH_ALEN];
+-	int resp_ie_len, req_ie_len;
++	unsigned int resp_ie_len, req_ie_len;
++	unsigned int offset;
+ 	u8 *req_ie, *resp_ie;
+-	int ret, offset;
++	int ret;
+ 	bool roamed = false;
+ 	bool match_bss;
+ 
+@@ -2785,6 +2786,8 @@ static void rndis_wlan_do_link_up_work(struct usbnet *usbdev)
+ 		ret = get_association_info(usbdev, info, CONTROL_BUFFER_SIZE);
+ 		if (!ret) {
+ 			req_ie_len = le32_to_cpu(info->req_ie_length);
++			if (req_ie_len > CONTROL_BUFFER_SIZE)
++				req_ie_len = CONTROL_BUFFER_SIZE;
+ 			if (req_ie_len > 0) {
+ 				offset = le32_to_cpu(info->offset_req_ies);
+ 
+@@ -2799,6 +2802,8 @@ static void rndis_wlan_do_link_up_work(struct usbnet *usbdev)
+ 			}
+ 
+ 			resp_ie_len = le32_to_cpu(info->resp_ie_length);
++			if (resp_ie_len > CONTROL_BUFFER_SIZE)
++				resp_ie_len = CONTROL_BUFFER_SIZE;
+ 			if (resp_ie_len > 0) {
+ 				offset = le32_to_cpu(info->offset_resp_ies);
+ 
