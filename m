@@ -1,130 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:46093 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754057Ab2BQUXy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Feb 2012 15:23:54 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 14/26] iwlwifi: kill iwl_down and s/__iwl_down/iwl_down
-Date: Fri, 17 Feb 2012 11:13:42 -0800
-Message-Id: <1329506034-1394-15-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120217_212405_419827_072EBC26)
-In-Reply-To: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1329506034-1394-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:49943 "EHLO
+	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757989Ab2B2RTR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Feb 2012 12:19:17 -0500
+Subject: [PATCH 05/12] ath6kl: remove multiple assignments
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Wed, 29 Feb 2012 19:19:12 +0200
+Message-ID: <20120229171912.24264.21383.stgit@localhost6.localdomain6> (sfid-20120229_181921_128007_BF25462B)
+In-Reply-To: <20120229171525.24264.22062.stgit@localhost6.localdomain6>
+References: <20120229171525.24264.22062.stgit@localhost6.localdomain6>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Found by checkpatch:
 
-iwl_down was just a wrapper around __iwl_down which was called from
-one place only. Replace it to direct call to iwl_down. Add lockdep
-warning in iwl_down to ensure it was called with the mutex held.
+drivers/net/wireless/ath/ath6kl/cfg80211.c:1295: CHECK: multiple assignments should be avoided
+drivers/net/wireless/ath/ath6kl/cfg80211.c:3000: CHECK: multiple assignments should be avoided
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c      |   19 +++++--------------
- drivers/net/wireless/iwlwifi/iwl-agn.h      |    2 +-
- drivers/net/wireless/iwlwifi/iwl-mac80211.c |    6 +++++-
- 3 files changed, 11 insertions(+), 16 deletions(-)
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index ff22c4a..cf1a353 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -738,14 +738,14 @@ int iwl_alive_start(struct iwl_priv *priv)
- 	return iwl_power_update_mode(priv, true);
- }
- 
--static void iwl_cancel_deferred_work(struct iwl_priv *priv);
--
--void __iwl_down(struct iwl_priv *priv)
-+void iwl_down(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index c69de7b..6aa4c71 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1275,7 +1275,6 @@ static int ath6kl_cfg80211_set_txpower(struct wiphy *wiphy,
  {
- 	int exit_pending;
+ 	struct ath6kl *ar = (struct ath6kl *)wiphy_priv(wiphy);
+ 	struct ath6kl_vif *vif;
+-	u8 ath6kl_dbm;
+ 	int dbm = MBM_TO_DBM(mbm);
  
- 	IWL_DEBUG_INFO(priv, DRV_NAME " is going down\n");
+ 	ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: type 0x%x, dbm %d\n", __func__,
+@@ -1292,7 +1291,7 @@ static int ath6kl_cfg80211_set_txpower(struct wiphy *wiphy,
+ 	case NL80211_TX_POWER_AUTOMATIC:
+ 		return 0;
+ 	case NL80211_TX_POWER_LIMITED:
+-		ar->tx_pwr = ath6kl_dbm = dbm;
++		ar->tx_pwr = dbm;
+ 		break;
+ 	default:
+ 		ath6kl_dbg(ATH6KL_DBG_WLAN_CFG, "%s: type 0x%x not supported\n",
+@@ -1300,7 +1299,7 @@ static int ath6kl_cfg80211_set_txpower(struct wiphy *wiphy,
+ 		return -EOPNOTSUPP;
+ 	}
  
-+	lockdep_assert_held(&priv->shrd->mutex);
-+
- 	iwl_scan_cancel_timeout(priv, 200);
+-	ath6kl_wmi_set_tx_pwr_cmd(ar->wmi, vif->fw_vif_idx, ath6kl_dbm);
++	ath6kl_wmi_set_tx_pwr_cmd(ar->wmi, vif->fw_vif_idx, dbm);
  
- 	/*
-@@ -803,15 +803,6 @@ void __iwl_down(struct iwl_priv *priv)
- 	priv->beacon_skb = NULL;
+ 	return 0;
  }
+@@ -2997,7 +2996,8 @@ struct net_device *ath6kl_interface_add(struct ath6kl *ar, char *name,
+ 	vif->wdev.netdev = ndev;
+ 	vif->wdev.iftype = type;
+ 	vif->fw_vif_idx = fw_vif_idx;
+-	vif->nw_type = vif->next_mode = nw_type;
++	vif->nw_type = nw_type;
++	vif->next_mode = nw_type;
  
--void iwl_down(struct iwl_priv *priv)
--{
--	mutex_lock(&priv->shrd->mutex);
--	__iwl_down(priv);
--	mutex_unlock(&priv->shrd->mutex);
--
--	iwl_cancel_deferred_work(priv);
--}
--
- /*****************************************************************************
-  *
-  * Workqueue callbacks
-@@ -869,7 +860,7 @@ void iwlagn_prepare_restart(struct iwl_priv *priv)
- 	bt_status = priv->bt_status;
- 	bt_is_sco = priv->bt_is_sco;
- 
--	__iwl_down(priv);
-+	iwl_down(priv);
- 
- 	priv->bt_full_concurrent = bt_full_concurrent;
- 	priv->bt_ci_compliance = bt_ci_compliance;
-@@ -970,7 +961,7 @@ static void iwl_setup_deferred_work(struct iwl_priv *priv)
- 	priv->watchdog.function = iwl_bg_watchdog;
- }
- 
--static void iwl_cancel_deferred_work(struct iwl_priv *priv)
-+void iwl_cancel_deferred_work(struct iwl_priv *priv)
- {
- 	if (cfg(priv)->lib->cancel_deferred_work)
- 		cfg(priv)->lib->cancel_deferred_work(priv);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 37c325f..8a170b7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -81,8 +81,8 @@ static inline void iwl_set_calib_hdr(struct iwl_calib_hdr *hdr, u8 cmd)
- 	hdr->data_valid = 1;
- }
- 
--void __iwl_down(struct iwl_priv *priv);
- void iwl_down(struct iwl_priv *priv);
-+void iwl_cancel_deferred_work(struct iwl_priv *priv);
- void iwlagn_prepare_restart(struct iwl_priv *priv);
- 
- /* MAC80211 */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index ca0c465..90d8081 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -296,7 +296,7 @@ static int __iwl_up(struct iwl_priv *priv)
- 
-  error:
- 	set_bit(STATUS_EXIT_PENDING, &priv->shrd->status);
--	__iwl_down(priv);
-+	iwl_down(priv);
- 	clear_bit(STATUS_EXIT_PENDING, &priv->shrd->status);
- 
- 	IWL_ERR(priv, "Unable to initialize device.\n");
-@@ -341,7 +341,11 @@ static void iwlagn_mac_stop(struct ieee80211_hw *hw)
- 
- 	priv->is_open = 0;
- 
-+	mutex_lock(&priv->shrd->mutex);
- 	iwl_down(priv);
-+	mutex_unlock(&priv->shrd->mutex);
-+
-+	iwl_cancel_deferred_work(priv);
- 
- 	flush_workqueue(priv->workqueue);
- 
--- 
-1.7.0.4
+ 	memcpy(ndev->dev_addr, ar->mac_addr, ETH_ALEN);
+ 	if (fw_vif_idx != 0)
 
