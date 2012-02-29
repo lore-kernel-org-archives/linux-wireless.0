@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:58631 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753998Ab2BST2y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Feb 2012 14:28:54 -0500
-Message-ID: <4F414D63.1070409@hauke-m.de> (sfid-20120219_202857_851406_729A8C47)
-Date: Sun, 19 Feb 2012 20:28:35 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>
-CC: linville@tuxdriver.com, zajec5@gmail.com,
-	b43-dev@lists.infradead.org, linux-mips@linux-mips.org,
-	linux-wireless@vger.kernel.org, arend@broadcom.com
-Subject: Re: [PATCH 04/11] ssb: add ccode
-References: <1329676345-15856-1-git-send-email-hauke@hauke-m.de> <1329676345-15856-5-git-send-email-hauke@hauke-m.de> <20120219194923.566f3fe8@milhouse>
-In-Reply-To: <20120219194923.566f3fe8@milhouse>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:58804 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752440Ab2B2I2I (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Feb 2012 03:28:08 -0500
+Subject: Re: checking for integer overflows in cfg80211_roamed_bss()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <20120229063841.GG18031@elgon.mountain> (sfid-20120229_073850_391425_67F24184)
+References: <20120229063841.GG18031@elgon.mountain>
+	 (sfid-20120229_073850_391425_67F24184)
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 29 Feb 2012 09:28:04 +0100
+Message-ID: <1330504084.4714.0.camel@jlt3.sipsolutions.net> (sfid-20120229_092812_762848_B7F4CEA4)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/19/2012 07:49 PM, Michael Büsch wrote:
-> On Sun, 19 Feb 2012 19:32:18 +0100
-> Hauke Mehrtens <hauke@hauke-m.de> wrote:
+On Wed, 2012-02-29 at 09:38 +0300, Dan Carpenter wrote:
+> I just sent a patch for a places that didn't cap "req_ie_len" and
+> "resp_ie_len" properly leading to integer overflows in
+> cfg80211_roamed_bss().  If there was a good way, I'd like to cap those
+> values inside cfg80211_roamed_bss() as well.  What is a good limit to
+> use?
 > 
->> This member contains the country code encoded with two chars
->>
->> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
->> ---
->>  include/linux/ssb/ssb.h |    1 +
->>  1 files changed, 1 insertions(+), 0 deletions(-)
->>
->> diff --git a/include/linux/ssb/ssb.h b/include/linux/ssb/ssb.h
->> index 4928419..44e486e 100644
->> --- a/include/linux/ssb/ssb.h
->> +++ b/include/linux/ssb/ssb.h
->> @@ -33,6 +33,7 @@ struct ssb_sprom {
->>  	u8 et1mdcport;		/* MDIO for enet1 */
->>  	u16 board_rev;		/* Board revision number from SPROM. */
->>  	u8 country_code;	/* Country Code */
->> +	char ccode[2];		/* Country Code as two chars like EU or US */
-> 
-> This usually is referred to as "alpha2". So we should name it like that, too.
-I can not find any references to "alpha2" in the spec, the broadcom
-code, ssb, bcma or b43. ccode was the name broadcom gave this value so I
-took it.
-http://bcm-v4.sipsolutions.net/SPROM wrongly maps ccode to country_code,
-but cc is stored into country_code in ssb.
+> devel/net/wireless/sme.c
+>    653  
+>    654          ev = kzalloc(sizeof(*ev) + req_ie_len + resp_ie_len, gfp);
+>    655          if (!ev) {
+>    656                  cfg80211_put_bss(bss);
+>    657                  return;
+>    658          }
+>    659  
 
-Hauke
+Probably IEEE80211_MAX_DATA_LEN, there's no way all the IEs could ever
+be longer than that combined, at least for now :)
+
+johannes
+
