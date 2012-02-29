@@ -1,160 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:47932 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757144Ab2BNUUu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 15:20:50 -0500
-Message-ID: <4F3AC20E.8080502@hauke-m.de> (sfid-20120214_212107_051476_CB974980)
-Date: Tue, 14 Feb 2012 21:20:30 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: "Saul St. John" <saul.stjohn@gmail.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2s=?= =?UTF-8?B?aQ==?=
-	<zajec5@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: [RFC] use alternate SPROM offset for 43224
-References: <20120214040120.GA2077@eris.garyseven.net> <CACna6rwXEjsJEPK4EZ9pbh2sGJgvt05JRfo2HkeDKpT26YORwg@mail.gmail.com> <CAG=dh1pTDSkkhgXGOv=n8uferq61-Db0EFGexO=ZZ+oN6w8_hQ@mail.gmail.com> <CACna6rw=ZJe28ahRQFU-_9+BD8+L5SNV_xdwxLxUdNk-b3HHxg@mail.gmail.com> <20120214185202.GA5339@eris.garyseven.net> <4F3ABFB0.3020502@lwfinger.net>
-In-Reply-To: <4F3ABFB0.3020502@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from casper.infradead.org ([85.118.1.10]:36650 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757835Ab2B2LN0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Feb 2012 06:13:26 -0500
+Received: from aannecy-256-1-73-234.w90-10.abo.wanadoo.fr ([90.10.152.234] helo=[192.168.1.103])
+	by casper.infradead.org with esmtpsa (Exim 4.76 #1 (Red Hat Linux))
+	id 1S2hTJ-0002gq-Al
+	for linux-wireless@vger.kernel.org; Wed, 29 Feb 2012 11:13:25 +0000
+Subject: Re: [ANN] NFC daemon open sourced
+From: Samuel Ortiz <samuel@sortiz.org>
+Reply-To: Samuel Ortiz <samuel@sortiz.org>
+To: linux-wireless@vger.kernel.org
+In-Reply-To: <1321533482.30184.6.camel@sortiz-mobl>
+References: <1321533482.30184.6.camel@sortiz-mobl>
+Content-Type: text/plain; charset="UTF-8"
+Date: Wed, 29 Feb 2012 12:20:56 +0100
+Message-ID: <1330514456.4428.1.camel@sortiz-mobl> (sfid-20120229_121332_239875_90A094AE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/14/2012 09:10 PM, Larry Finger wrote:
-> On 02/14/2012 12:52 PM, Saul St. John wrote:
->> On Tue, Feb 14, 2012 at 06:29:59PM +0100, Rafał Miłecki wrote:
->>> W dniu 14 lutego 2012 17:22 użytkownik Saul St. John
->>> <saul.stjohn@gmail.com>  napisał:
->>>> On Tue, Feb 14, 2012 at 7:34 AM, Rafał Miłecki<zajec5@gmail.com> 
->>>> wrote:
->>>>> W dniu 14 lutego 2012 05:01 użytkownik Saul St. John
->>>>> <saul.stjohn@gmail.com>  napisał:
->>>>>> I don't know if this is correct in the general sense, but the
->>>>>> wireless on my
->>>>>> mid-2010 MacBook Pro doesn't work without it.
->>>>>>
->>>>>> Signed-off-by: Saul St. John<saul.stjohn@gmail.com>
->>>>>> ---
->>>>>>   drivers/bcma/sprom.c |    4 ++--
->>>>>>   1 files changed, 2 insertions(+), 2 deletions(-)
->>>>>>
->>>>>> diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
->>>>>> index 6f230fb..06c87b5 100644
->>>>>> --- a/drivers/bcma/sprom.c
->>>>>> +++ b/drivers/bcma/sprom.c
->>>>>> @@ -228,8 +228,8 @@ int bcma_sprom_get(struct bcma_bus *bus)
->>>>>>         /* Most cards have SPROM moved by additional offset 0x30
->>>>>> (48 dwords).
->>>>>>          * According to brcm80211 this applies to cards with PCIe
->>>>>> rev>= 6
->>>>>>          * TODO: understand this condition and use it */
->>>>>> -       offset = (bus->chipinfo.id == 0x4331) ? BCMA_CC_SPROM :
->>>>>> -               BCMA_CC_SPROM_PCIE6;
->>>>>> +       offset = (bus->chipinfo.id == 0x4331 || bus->chipinfo.id
->>>>>> == 43224) ?
->>>>>> +                       BCMA_CC_SPROM : BCMA_CC_SPROM_PCIE6;
->>>>>>         bcma_sprom_read(bus, offset, sprom);
->>>>>>
->>>>>>         if (bus->chipinfo.id == 0x4331)
->>>>>
->>>>> I'm quite sure it'll break my BCM43224. It's not chip-specific,
->>>>> probably some status bit specific.
->>>>>
->>>>> -- 
->>>>> Rafał
->>>>
->>>> My BCM43324 was broken by bmca up until "[PATCH] bcma: don't fail for
->>>> bad SPROM CRC." Even with that patch, I still get "bmca: Failed to get
->>>> SPROM: -71" in the dmesg log. Is that error harmless?
->>>
->>> It's harmless for brcmsmac, which doesn't use SPROM struct of bcma bus
->>> driver. This bug should be fixed and brcmsmac should be improved in
->>> many contexts: using SPROM, standard bcma module functions, dropping
->>> other cores initializing. For now you can live with this.
->>>
->> My worry is that, were the brcmsmac driver to be improved in the ways you
->> suggest, the BCM43224 in my MBP would start failing again.
->>>
->>>> The CRC check appears to pass without issue when using the 0x800
->>>> offset on my device.
->>>
->>> The quick fix would be probably to implement in bcma two tries of
->>> reading SPROM. One for 0x800 second for 0x830 (base address). The real
->>> fix is to grab the real condition from specs/brcmsmac and implement it
->>> in bcma.
->>>
->> Real fix: any leads on where the real condition can be found? I looked
->> through
->> the brcmsmac driver, but it wasn't obvious to me.
->>
->> Quick fix: something like this?
->>
->> Signed-off-by: Saul St. John<saul.stjohn@gmail.com>
->> ---
->>   drivers/bcma/sprom.c |   24 ++++++++++++++----------
->>   1 files changed, 14 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
->> index 6f230fb..e99807e 100644
->> --- a/drivers/bcma/sprom.c
->> +++ b/drivers/bcma/sprom.c
->> @@ -207,7 +207,7 @@ static void bcma_sprom_extract_r8(struct bcma_bus
->> *bus, const u16 *sprom)
->>
->>   int bcma_sprom_get(struct bcma_bus *bus)
->>   {
->> -    u16 offset;
->> +    u16 offset = 0;
->>       u16 *sprom;
->>       int err = 0;
->>
->> @@ -222,20 +222,24 @@ int bcma_sprom_get(struct bcma_bus *bus)
->>       if (!sprom)
->>           return -ENOMEM;
->>
->> -    if (bus->chipinfo.id == 0x4331)
->> -        bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, false);
->> -
->>       /* Most cards have SPROM moved by additional offset 0x30 (48
->> dwords).
->>        * According to brcm80211 this applies to cards with PCIe rev>= 6
->>        * TODO: understand this condition and use it */
->> -    offset = (bus->chipinfo.id == 0x4331) ? BCMA_CC_SPROM :
->> -        BCMA_CC_SPROM_PCIE6;
->> -    bcma_sprom_read(bus, offset, sprom);
->> +    do {
->> +        if (bus->chipinfo.id == 0x4331)
->> +            bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc,
->> +                                 false);
->> +
->> +        offset = (offset == 0) ? BCMA_CC_SPROM : BCMA_CC_SPROM_PCIE6;
->> +        bcma_sprom_read(bus, offset, sprom);
->> +
->> +        if (bus->chipinfo.id == 0x4331)
->> +            bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc,
->> +                                 true);
->>
->> -    if (bus->chipinfo.id == 0x4331)
->> -        bcma_chipco_bcm4331_ext_pa_lines_ctl(&bus->drv_cc, true);
->> +        err = bcma_sprom_valid(sprom);
->> +    } while (err&&  (offset != BCMA_CC_SPROM_PCIE6));
->>
->> -    err = bcma_sprom_valid(sprom);
->>       if (err)
->>           goto out;
->>
-> 
-> I think it is more complicated than the above. On my 43224, I get the
-> message "No SPROM available", which arises because bcma_sprom_get() is
-> returning -ENOENT. The reason is that the value tested in "if
-> (!(sromctrl & BCMA_CC_SROM_CONTROL_PRESENT))" is zero. The contents of
-> sromctl are 0x12, and the mask is 1.
-This check is the main part of ai_is_sprom_available() in brcmsmac. If
-this check fails, like in your case, brcmsmac tries otp_read_pci() to
-read out the sprom, which is not implemented in bcma.
+On Thu, 2011-11-17 at 13:38 +0100, Samuel Ortiz wrote:
+> We should have our own neard development mailing list fairly soon, I'll
+> let you know when that happens.
+We finally have it. For those willing to subscribe, it's here:
 
-> I am still investigating. When I comment out the test of sromctl, then
-> the driver seems to find the SPROM at offset 0x830, but neither b43 nor
-> brcmsmac works.
-Where did you get the 0x830 from and for which devices do you get a
-correct sprom at that position?
+https://lists.01.org/mailman/listinfo/linux-nfc
 
-Hauke
+Cheers,
+Samuel.
+
+
