@@ -1,46 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:33415 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751442Ab2BNK7d (ORCPT
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:40101 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757512Ab2B2RS1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Feb 2012 05:59:33 -0500
-Subject: Re: DELBA processed in workqueue too slow?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <CAGXE3d-ydmV8qrtihSHCNBtkTxT8M=JCACBZFuP+Ne3cQ1WVow@mail.gmail.com> (sfid-20120206_164853_205520_EC6E0AD1)
-References: <CAGXE3d-ydmV8qrtihSHCNBtkTxT8M=JCACBZFuP+Ne3cQ1WVow@mail.gmail.com>
-	 (sfid-20120206_164853_205520_EC6E0AD1)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 14 Feb 2012 11:59:31 +0100
-Message-ID: <1329217171.3941.10.camel@jlt3.sipsolutions.net> (sfid-20120214_115935_947004_BFA9F0E3)
-Mime-Version: 1.0
+	Wed, 29 Feb 2012 12:18:27 -0500
+Subject: [PATCH 00/12] ath6kl: checkpatch fixes
+To: kvalo@qca.qualcomm.com
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath6kl-devel@qualcomm.com, linux-wireless@vger.kernel.org
+Date: Wed, 29 Feb 2012 19:18:18 +0200
+Message-ID: <20120229171525.24264.22062.stgit@localhost6.localdomain6> (sfid-20120229_181830_752738_30E844AD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-02-06 at 16:48 +0100, Helmut Schaa wrote:
-> Hi,
-> 
-> since all action frames are handled in the iface workqueue the following
-> situation can cause problems on slow devices in AP mode:
-> 
-> - data stream AP -> STA with established TX BA session
-> - peer sends a DELBA to tear the APs TX BA session down
-> - new frames are still send as AMPDU but the receiver doesn't BlockAck
->   them anymore since it assumes the BA session is already teared down.
-> - DELBA gets processed
+Here are quite a few checkpatch fixes and other cleanups.
 
-> Hence, most frames between receiving the DELBA and actually processing
-> it are basically lost. This can easily make TCP streams getting stuck for a
-> few seconds :(
+Especially I would like to people review these two macros, they ended up
+a bit too clever and I'm sure there are issues:
 
-Why are they lost? They haven't been acknowledged so wouldn't they be
-retransmitted?
+#define ath6kl_bmi_write_hi32(ar, item, val)				\
+	({								\
+		u32 addr;						\
+		__le32 v;						\
+									\
+		addr = ath6kl_get_hi_item_addr(ar, HI_ITEM(item));	\
+		v = cpu_to_le32(val);					\
+		ath6kl_bmi_write(ar, addr, (u8 *) &v, sizeof(v));	\
+	})
 
-In any case, it seems the easiest solution may be to stop queues? But to
-really make this fool-proof you'd also have to tell the driver to
-release all its internal buffers -- and you're never going to solve the
-race completely.
+#define ath6kl_bmi_read_hi32(ar, item, val)				\
+	({								\
+		u32 addr, *check_type = val;				\
+		__le32 tmp;						\
+		int ret;						\
+									\
+		(void) (check_type == val);				\
+		addr = ath6kl_get_hi_item_addr(ar, HI_ITEM(item));	\
+		ret = ath6kl_bmi_read(ar, addr, (u8 *) &tmp, 4);	\
+		*val = le32_to_cpu(tmp);				\
+		ret;							\
+	})
 
-johannes
+---
+
+Kalle Valo (12):
+      ath6kl: fix pointer style
+      ath6kl: fix checkpatch error with EPSTAT() macro
+      ath6kl: alignment should match open parenthesis
+      ath6kl: logical continuations should be on the previous line
+      ath6kl: remove multiple assignments
+      ath6kl: add ath6kl_bmi_write_hi32()
+      ath6kl: add ath6kl_bmi_read_hi32()
+      ath6kl: fix error handling ath6kl_target_config_wlan_params()
+      ath6kl: fix open paranthesis alignment in ath6kl_cfg80211_connect()
+      ath6kl: document all spinlocks
+      ath6kl: fix too long lines
+      ath6kl: make ath6kl_bmi_[read|write]_hi32() endian safe
+
+
+ drivers/net/wireless/ath/ath6kl/bmi.c      |    6 -
+ drivers/net/wireless/ath/ath6kl/bmi.h      |   23 +++
+ drivers/net/wireless/ath/ath6kl/cfg80211.c |   46 ++++--
+ drivers/net/wireless/ath/ath6kl/core.c     |    6 -
+ drivers/net/wireless/ath/ath6kl/core.h     |   25 +++
+ drivers/net/wireless/ath/ath6kl/debug.c    |   58 ++++----
+ drivers/net/wireless/ath/ath6kl/hif.c      |    6 -
+ drivers/net/wireless/ath/ath6kl/hif.h      |    1 
+ drivers/net/wireless/ath/ath6kl/htc.c      |  105 +++++++-------
+ drivers/net/wireless/ath/ath6kl/htc.h      |    7 +
+ drivers/net/wireless/ath/ath6kl/init.c     |  203 ++++++++++------------------
+ drivers/net/wireless/ath/ath6kl/main.c     |   22 ++-
+ drivers/net/wireless/ath/ath6kl/sdio.c     |   11 +-
+ drivers/net/wireless/ath/ath6kl/txrx.c     |   18 +-
+ drivers/net/wireless/ath/ath6kl/wmi.c      |   31 ++--
+ drivers/net/wireless/ath/ath6kl/wmi.h      |    6 +
+ 16 files changed, 295 insertions(+), 279 deletions(-)
 
