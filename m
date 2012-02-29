@@ -1,72 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:39094 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755357Ab2BGQLr (ORCPT
+Received: from mail.thefabfarrows.com ([70.88.29.81]:37182 "EHLO
+	mail.thefabfarrows.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757468Ab2B2ORk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Feb 2012 11:11:47 -0500
-Received: by mail-lpp01m020-f182.google.com with SMTP id gj3so3004029lbb.27
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Feb 2012 08:11:43 -0800 (PST)
-Message-ID: <1328631100.7324.272.camel@cumari> (sfid-20120207_171151_819428_85A936A7)
-Subject: Re: [PATCH v2 5/7] wl12xx: add RX data filter ACX commands
-From: Luciano Coelho <coelho@ti.com>
-To: Kalle Valo <kvalo@adurom.com>
-Cc: Eliad Peller <eliad@wizery.com>, eyal@wizery.com,
-	linux-wireless@vger.kernel.org
-Date: Tue, 07 Feb 2012 18:11:40 +0200
-In-Reply-To: <8739amd3xl.fsf@purkki.adurom.net>
-References: <1328021048-8944-1-git-send-email-eliad@wizery.com>
-	 <1328021048-8944-6-git-send-email-eliad@wizery.com>
-	 <1328170983.3626.265.camel@cumari> <877h00cay9.fsf@purkki.adurom.net>
-	 <1328538734.7324.139.camel@cumari> <8739amd3xl.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 29 Feb 2012 09:17:40 -0500
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="=_e767b6f22d67a703efccf2c9f122e3bd"
+Date: Wed, 29 Feb 2012 09:17:37 -0500
+From: Paul Farrow <linuxwireless@thefabfarrows.com>
+To: Paul Farrow <linuxwireless@thefabfarrows.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: Re: Fwd: Can't compile latest compat-wireless on Fedora 16 -
+ =?UTF-8?Q?=20=33=2E=32=2E=37-=31=2Efc=31=36=2Ex=38=36=5F=36=34=2Edebug?=
+In-Reply-To: <f4dafaf24a15bdee30366ec46f4e8429@www.thefabfarrows.com>
+References: <f4dafaf24a15bdee30366ec46f4e8429@www.thefabfarrows.com>
+Message-ID: <591bc8272f5a32225a4ca6f8ae8c2773@www.thefabfarrows.com> (sfid-20120229_151744_724872_7247024C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2012-02-07 at 18:05 +0200, Kalle Valo wrote: 
-> Luciano Coelho <coelho@ti.com> writes:
-> 
-> > On Mon, 2012-02-06 at 16:07 +0200, Kalle Valo wrote: 
-> >> Luciano Coelho <coelho@ti.com> writes:
-> >> 
-> >> >> +	if (index >= WL1271_MAX_RX_DATA_FILTERS) {
-> >> >> +		wl1271_warning("acx_set_rx_data_filter: invalid filter idx(%d)",
-> >> >> +			       index);
-> >> >> +		return -EINVAL;
-> >> >> +	}
-> >> >
-> >> > Should we use BUG_ON instead? This is only used internally in the
-> >> > driver, so if it get here, it's a bug.  And if the filters come from
-> >> > userspace, we should validate them before continuing anyway.
-> >> 
-> >> BUG_ON() is evil and wireless drivers should really not use it,
-> >> WARN_ON_ONCE() and return with an error is much more user friendly.
-> >
-> > Yeah, BUG_ON() is evil, but sometimes it can be good to have.
-> 
-> What good does BUG_ON() bring compared to WARN_ON_ONCE()? For example,
-> does BUG_ON() even get logged to disk? Most likely not, so
-> WARN_ON_ONCE() is much easier to report by the users.
-> 
-> > I don't agree with "wireless drivers should really not use it". There
-> > are 181 occurrences in wireless-testing/master right now[1].
-> 
-> Then there are 181 misuses of BUG_ON() ;)
 
-:D
+--=_e767b6f22d67a703efccf2c9f122e3bd
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
 
+Further to those warnings etc.  I took the latest code today and ran 
+make (warnings still there) then I ran make install and then modprobe 
+ath9k and got the following warnings in dmesg.
 
-> > I'm not saying this measure is either accurate or an excuse to use it
-> > where we shouldn't, but it shows that it really has widespread usage
-> > in wireless drivers.
-> 
-> Yes, and that's why I have started a war against misuse of BUG_ON() :)
+Any ideas?
 
-Okay, I will definitely not be in the frontline against you in this
-war. :)
+Thanks
+
+Paul
+
+On Tue, 28 Feb 2012 15:00:24 -0500, Paul Farrow wrote:
+> Hi guys
+>
+> I have in recent times compiled the latest compat-wireless with no
+> problem but I seem to be having trouble compiling it on this kernel -
+> lots of undefined warnings in the mac80211 area.
+>
+> Output from make is attached.
+>
+> Can any one tell me what I have done wrong?
+>
+> Thanks
+>
+> Paul
 
 
--- 
-Cheers,
-Luca.
+--=_e767b6f22d67a703efccf2c9f122e3bd
+Content-Transfer-Encoding: base64
+Content-Type: text/plain;
+ name=modprobeError.txt
+Content-Disposition: attachment;
+ filename=modprobeError.txt
+
+WyA3ODIxLjc1MDk2N10gYXRoOWsgMDAwMDowMzowMC4wOiBQQ0kgSU5UIEEgZGlzYWJsZWQNClsg
+NzgyMS43NTExMTVdIGF0aDlrOiBEcml2ZXIgdW5sb2FkZWQNClsgNzgyOS4yOTgxOThdIGNmZzgw
+MjExOiBDYWxsaW5nIENSREEgdG8gdXBkYXRlIHdvcmxkIHJlZ3VsYXRvcnkgZG9tYWluDQpbIDc4
+MjkuMzQzMjY2XSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9zdGFy
+dCAoZXJyIDApDQpbIDc4MjkuMzQzMjg5XSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFj
+ZXBvaW50X2Rydl9maW5pc2hfdHhfc3luYyAoZXJyIDApDQpbIDc4MjkuMzQzMjk4XSBtYWM4MDIx
+MTogVW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9zdGFfcmVtb3ZlIChlcnIgMCkNClsg
+NzgyOS4zNDMzMDhdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X2Nv
+bmZfdHggKGVyciAwKQ0KWyA3ODI5LjM0MzMxN10gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9f
+dHJhY2Vwb2ludF9kcnZfY2FuY2VsX3JlbWFpbl9vbl9jaGFubmVsIChlcnIgMCkNClsgNzgyOS4z
+NDMzMzRdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3JlbWFpbl9v
+bl9jaGFubmVsIChlcnIgMCkNClsgNzgyOS4zNDMzNDddIG1hYzgwMjExOiBVbmtub3duIHN5bWJv
+bCBfX3RyYWNlcG9pbnRfZHJ2X3NjaGVkX3NjYW5fc3RhcnQgKGVyciAwKQ0KWyA3ODI5LjM0MzM2
+MV0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfY2hhbm5lbF9zd2l0
+Y2ggKGVyciAwKQ0KWyA3ODI5LjM0MzM3N10gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJh
+Y2Vwb2ludF9kcnZfc3VzcGVuZCAoZXJyIDApDQpbIDc4MjkuMzQzMzk2XSBtYWM4MDIxMTogVW5r
+bm93biBzeW1ib2wgX190cmFjZXBvaW50X2FwaV9jcW1fcnNzaV9ub3RpZnkgKGVyciAwKQ0KWyA3
+ODI5LjM0MzQwNV0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfc2V0
+X3J0c190aHJlc2hvbGQgKGVyciAwKQ0KWyA3ODI5LjM0MzQxOV0gbWFjODAyMTE6IFVua25vd24g
+c3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfc3RhX3N0YXRlIChlcnIgMCkNClsgNzgyOS4zNDM0Mjhd
+IG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3NldF90aW0gKGVyciAw
+KQ0KWyA3ODI5LjM0MzQzOF0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9h
+cGlfc2NoZWRfc2Nhbl9yZXN1bHRzIChlcnIgMCkNClsgNzgyOS4zNDM0NDddIG1hYzgwMjExOiBV
+bmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3NldF9jb3ZlcmFnZV9jbGFzcyAoZXJyIDAp
+DQpbIDc4MjkuMzQzNDYwXSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Ry
+dl9yZW1vdmVfaW50ZXJmYWNlIChlcnIgMCkNClsgNzgyOS4zNDM0NzRdIG1hYzgwMjExOiBVbmtu
+b3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3ByZXBhcmVfbXVsdGljYXN0IChlcnIgMCkNClsg
+NzgyOS4zNDM0ODNdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfYXBpX3Jl
+YWR5X29uX2NoYW5uZWwgKGVyciAwKQ0KWyA3ODI5LjM0MzQ5OF0gbWFjODAyMTE6IFVua25vd24g
+c3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfc2NoZWRfc2Nhbl9zdG9wIChlcnIgMCkNClsgNzgyOS4z
+NDM1MDhdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfYXBpX3Jlc3RhcnRf
+aHcgKGVyciAwKQ0KWyA3ODI5LjM0MzUxOF0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJh
+Y2Vwb2ludF9hcGlfZW9zcCAoZXJyIDApDQpbIDc4MjkuMzQzNTI5XSBtYWM4MDIxMTogVW5rbm93
+biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9zd19zY2FuX2NvbXBsZXRlIChlcnIgMCkNClsgNzgy
+OS4zNDM1NDhdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3NldF9y
+ZWtleV9kYXRhIChlcnIgMCkNClsgNzgyOS4zNDM1NjBdIG1hYzgwMjExOiBVbmtub3duIHN5bWJv
+bCBfX3RyYWNlcG9pbnRfZHJ2X2FsbG93X2J1ZmZlcmVkX2ZyYW1lcyAoZXJyIDApDQpbIDc4Mjku
+MzQzNTcwXSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9zZXRfYml0
+cmF0ZV9tYXNrIChlcnIgMCkNClsgNzgyOS4zNDM1ODBdIG1hYzgwMjExOiBVbmtub3duIHN5bWJv
+bCBfX3RyYWNlcG9pbnRfZHJ2X2NoYW5nZV9pbnRlcmZhY2UgKGVyciAwKQ0KWyA3ODI5LjM0MzU5
+NF0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfcmV0dXJuX3U2NCAo
+ZXJyIDApDQpbIDc4MjkuMzQzNjA3XSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFjZXBv
+aW50X2FwaV9jb25uZWN0aW9uX2xvc3MgKGVyciAwKQ0KWyA3ODI5LjM0MzYxOF0gbWFjODAyMTE6
+IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9hcGlfc3RhcnRfdHhfYmFfc2Vzc2lvbiAoZXJy
+IDApDQpbIDc4MjkuMzQzNjI4XSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50
+X2Rydl90eF9mcmFtZXNfcGVuZGluZyAoZXJyIDApDQpbIDc4MjkuMzQzNjQwXSBtYWM4MDIxMTog
+VW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9nZXRfcmluZ3BhcmFtIChlcnIgMCkNClsg
+NzgyOS4zNDM2NTBdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3N3
+X3NjYW5fc3RhcnQgKGVyciAwKQ0KWyA3ODI5LjM0MzY2Nl0gbWFjODAyMTE6IFVua25vd24gc3lt
+Ym9sIF9fdHJhY2Vwb2ludF9hcGlfc3RhX2Jsb2NrX2F3YWtlIChlcnIgMCkNClsgNzgyOS4zNDM2
+NzZdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfYXBpX3N0b3BfdHhfYmFf
+Y2IgKGVyciAwKQ0KWyA3ODI5LjM0MzY4Nl0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJh
+Y2Vwb2ludF9kcnZfc3RhX25vdGlmeSAoZXJyIDApDQpbIDc4MjkuMzQzNjk1XSBtYWM4MDIxMTog
+VW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9nZXRfYW50ZW5uYSAoZXJyIDApDQpbIDc4
+MjkuMzQzNzA4XSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9zZXRf
+a2V5IChlcnIgMCkNClsgNzgyOS4zNDM3MjZdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3Ry
+YWNlcG9pbnRfZHJ2X2NvbmZpZyAoZXJyIDApDQpbIDc4MjkuMzQzNzM3XSBtYWM4MDIxMTogVW5r
+bm93biBzeW1ib2wgX190cmFjZXBvaW50X2FwaV9jaHN3aXRjaF9kb25lIChlcnIgMCkNClsgNzgy
+OS4zNDM3NDhdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3NldF9h
+bnRlbm5hIChlcnIgMCkNClsgNzgyOS4zNDM3NjJdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBf
+X3RyYWNlcG9pbnRfd2FrZV9xdWV1ZSAoZXJyIDApDQpbIDc4MjkuMzQzNzcxXSBtYWM4MDIxMTog
+VW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9hZGRfaW50ZXJmYWNlIChlcnIgMCkNClsg
+NzgyOS4zNDM3ODFdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3Jl
+bGVhc2VfYnVmZmVyZWRfZnJhbWVzIChlcnIgMCkNClsgNzgyOS4zNDM3OTddIG1hYzgwMjExOiBV
+bmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3NldF9yaW5ncGFyYW0gKGVyciAwKQ0KWyA3
+ODI5LjM0MzgxMl0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9hcGlfZ3Rr
+X3Jla2V5X25vdGlmeSAoZXJyIDApDQpbIDc4MjkuMzQzODIyXSBtYWM4MDIxMTogVW5rbm93biBz
+eW1ib2wgX190cmFjZXBvaW50X2Rydl9jYW5jZWxfaHdfc2NhbiAoZXJyIDApDQpbIDc4MjkuMzQz
+ODMzXSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9yZXN1bWUgKGVy
+ciAwKQ0KWyA3ODI5LjM0Mzg0M10gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2lu
+dF9kcnZfc3RvcCAoZXJyIDApDQpbIDc4MjkuMzQzODUzXSBtYWM4MDIxMTogVW5rbm93biBzeW1i
+b2wgX190cmFjZXBvaW50X3N0b3BfcXVldWUgKGVyciAwKQ0KWyA3ODI5LjM0Mzg2Nl0gbWFjODAy
+MTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfcmVzZXRfdHNmIChlcnIgMCkNClsg
+NzgyOS4zNDM4NzddIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfYXBpX3Nj
+aGVkX3NjYW5fc3RvcHBlZCAoZXJyIDApDQpbIDc4MjkuMzQzODg4XSBtYWM4MDIxMTogVW5rbm93
+biBzeW1ib2wgX190cmFjZXBvaW50X2FwaV9lbmFibGVfcnNzaV9yZXBvcnRzIChlcnIgMCkNClsg
+NzgyOS4zNDM5MDBdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X2dl
+dF90a2lwX3NlcSAoZXJyIDApDQpbIDc4MjkuMzQzOTEwXSBtYWM4MDIxMTogVW5rbm93biBzeW1i
+b2wgX190cmFjZXBvaW50X2Rydl9hbXBkdV9hY3Rpb24gKGVyciAwKQ0KWyA3ODI5LjM0MzkxOV0g
+bWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfdHhfbGFzdF9iZWFjb24g
+KGVyciAwKQ0KWyA3ODI5LjM0MzkyOF0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vw
+b2ludF9kcnZfcnNzaV9jYWxsYmFjayAoZXJyIDApDQpbIDc4MjkuMzQzOTM4XSBtYWM4MDIxMTog
+VW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9yZXR1cm5faW50IChlcnIgMCkNClsgNzgy
+OS4zNDM5NDhdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3N0YV9h
+ZGQgKGVyciAwKQ0KWyA3ODI5LjM0Mzk1N10gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJh
+Y2Vwb2ludF9hcGlfc3RhcnRfdHhfYmFfY2IgKGVyciAwKQ0KWyA3ODI5LjM0Mzk3Ml0gbWFjODAy
+MTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfZ2V0X3RzZiAoZXJyIDApDQpbIDc4
+MjkuMzQzOTgzXSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9mbHVz
+aCAoZXJyIDApDQpbIDc4MjkuMzQzOTk3XSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190cmFj
+ZXBvaW50X2FwaV9iZWFjb25fbG9zcyAoZXJyIDApDQpbIDc4MjkuMzQ0MDQ5XSBtYWM4MDIxMTog
+VW5rbm93biBzeW1ib2wgX190cmFjZXBvaW50X2Rydl9od19zY2FuIChlcnIgMCkNClsgNzgyOS4z
+NDQwNjldIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3JldHVybl9i
+b29sIChlcnIgMCkNClsgNzgyOS4zNDQwODhdIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3Ry
+YWNlcG9pbnRfYXBpX3JlbWFpbl9vbl9jaGFubmVsX2V4cGlyZWQgKGVyciAwKQ0KWyA3ODI5LjM0
+NDEwOF0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfc2V0X2ZyYWdf
+dGhyZXNob2xkIChlcnIgMCkNClsgNzgyOS4zNDQxMjVdIG1hYzgwMjExOiBVbmtub3duIHN5bWJv
+bCBfX3RyYWNlcG9pbnRfZHJ2X2dldF9zdXJ2ZXkgKGVyciAwKQ0KWyA3ODI5LjM0NDE0MV0gbWFj
+ODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfdXBkYXRlX3RraXBfa2V5IChl
+cnIgMCkNClsgNzgyOS4zNDQxNTldIG1hYzgwMjExOiBVbmtub3duIHN5bWJvbCBfX3RyYWNlcG9p
+bnRfYXBpX3NjYW5fY29tcGxldGVkIChlcnIgMCkNClsgNzgyOS4zNDQxODhdIG1hYzgwMjExOiBV
+bmtub3duIHN5bWJvbCBfX3RyYWNlcG9pbnRfZHJ2X3R4X3N5bmMgKGVyciAwKQ0KWyA3ODI5LjM0
+NDIwNF0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfY29uZmlndXJl
+X2ZpbHRlciAoZXJyIDApDQpbIDc4MjkuMzQ0MjI1XSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wg
+X190cmFjZXBvaW50X2FwaV9zdG9wX3R4X2JhX3Nlc3Npb24gKGVyciAwKQ0KWyA3ODI5LjM0NDI0
+NV0gbWFjODAyMTE6IFVua25vd24gc3ltYm9sIF9fdHJhY2Vwb2ludF9kcnZfYnNzX2luZm9fY2hh
+bmdlZCAoZXJyIDApDQpbIDc4MjkuMzQ0MjYxXSBtYWM4MDIxMTogVW5rbm93biBzeW1ib2wgX190
+cmFjZXBvaW50X2Rydl9yZXR1cm5fdm9pZCAoZXJyIDApDQpbIDc4MjkuNTEyOTYzXSBjZmc4MDIx
+MTogV29ybGQgcmVndWxhdG9yeSBkb21haW4gdXBkYXRlZDoNClsgNzgyOS41MTI5NjddIGNmZzgw
+MjExOiAgIChzdGFydF9mcmVxIC0gZW5kX2ZyZXEgQCBiYW5kd2lkdGgpLCAobWF4X2FudGVubmFf
+Z2FpbiwgbWF4X2VpcnApDQpbIDc4MjkuNTEyOTcxXSBjZmc4MDIxMTogICAoMjQwMjAwMCBLSHog
+LSAyNDcyMDAwIEtIeiBAIDQwMDAwIEtIeiksICgzMDAgbUJpLCAyMDAwIG1CbSkNClsgNzgyOS41
+MTI5NzVdIGNmZzgwMjExOiAgICgyNDU3MDAwIEtIeiAtIDI0ODIwMDAgS0h6IEAgMjAwMDAgS0h6
+KSwgKDMwMCBtQmksIDIwMDAgbUJtKQ0KWyA3ODI5LjUxMjk3OV0gY2ZnODAyMTE6ICAgKDI0NzQw
+MDAgS0h6IC0gMjQ5NDAwMCBLSHogQCAyMDAwMCBLSHopLCAoMzAwIG1CaSwgMjAwMCBtQm0pDQpb
+IDc4MjkuNTEyOTgyXSBjZmc4MDIxMTogICAoNTE3MDAwMCBLSHogLSA1MjUwMDAwIEtIeiBAIDQw
+MDAwIEtIeiksICgzMDAgbUJpLCAyMDAwIG1CbSkNClsgNzgyOS41MTI5ODZdIGNmZzgwMjExOiAg
+ICg1NzM1MDAwIEtIeiAtIDU4MzUwMDAgS0h6IEAgNDAwMDAgS0h6KSwgKDMwMCBtQmksIDIwMDAg
+bUJtKQ0K
+--=_e767b6f22d67a703efccf2c9f122e3bd--
 
