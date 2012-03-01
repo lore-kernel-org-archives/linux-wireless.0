@@ -1,64 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:51937 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759724Ab2CGTGi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 14:06:38 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 25/35] iwlwifi: log stop / wake queues
-Date: Wed,  7 Mar 2012 09:52:34 -0800
-Message-Id: <1331142764-5750-26-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200648_563052_05ACFE8A)
-In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:50162 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753503Ab2CAGje (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Mar 2012 01:39:34 -0500
+From: Bala Shanmugam <bkamatch@qca.qualcomm.com>
+To: <linville@tuxdriver.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Bala Shanmugam <bkamatch@qca.qualcomm.com>
+Subject: [PATCH v2] cfg80211: Add background scan period attribute.
+Date: Thu, 1 Mar 2012 12:09:25 +0530
+Message-ID: <1330583965-8415-1-git-send-email-bkamatch@qca.qualcomm.com> (sfid-20120301_073937_156683_BFB54260)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Receive background scan period as part of connect
+command and pass the same to driver.
 
-There were a few missing occurences when we get PASSIVE_NO_RX
-notification.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Bala Shanmugam <bkamatch@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    2 ++
- drivers/net/wireless/iwlwifi/iwl-agn.c    |    6 +++++-
- 2 files changed, 7 insertions(+), 1 deletions(-)
+ include/linux/nl80211.h |    9 +++++++++
+ include/net/cfg80211.h  |    3 +++
+ net/wireless/nl80211.c  |    7 +++++++
+ net/wireless/wext-sme.c |    3 +++
+ 4 files changed, 22 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index 1d67e6c..1cd4831 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -1088,6 +1088,8 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
- 			    ctx->vif->type == NL80211_IFTYPE_STATION) {
- 				/* block and stop all queues */
- 				priv->passive_no_rx = true;
-+				IWL_DEBUG_TX_QUEUES(priv, "stop all queues: "
-+						    "passive channel");
- 				ieee80211_stop_queues(priv->hw);
+diff --git a/include/linux/nl80211.h b/include/linux/nl80211.h
+index be35a68..e81d327 100644
+--- a/include/linux/nl80211.h
++++ b/include/linux/nl80211.h
+@@ -369,6 +369,10 @@
+  *	%NL80211_ATTR_WIPHY_FREQ, %NL80211_ATTR_CONTROL_PORT,
+  *	%NL80211_ATTR_CONTROL_PORT_ETHERTYPE and
+  *	%NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT.
++ *	Background scan period can optionally be
++ *	specified in %NL80211_ATTR_BG_SCAN_PERIOD,
++ *	if not specified default background scan configuration
++ *	in driver is used and if period value is 0, bg scan will be disabled.
+  *	It is also sent as an event, with the BSSID and response IEs when the
+  *	connection is established or failed to be established. This can be
+  *	determined by the STATUS_CODE attribute.
+@@ -1197,6 +1201,9 @@ enum nl80211_commands {
+  * @NL80211_ATTR_NOACK_MAP: This u16 bitmap contains the No Ack Policy of
+  *      up to 16 TIDs.
+  *
++ * @NL80211_ATTR_BG_SCAN_PERIOD: Background scan period in seconds
++ *      or 0 to disable background scan.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1442,6 +1449,8 @@ enum nl80211_attrs {
  
- 				IWL_DEBUG_TX_REPLY(priv,
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 7927e3e..6ed2f78 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1450,8 +1450,12 @@ void iwlagn_lift_passive_no_rx(struct iwl_priv *priv)
- 		return;
+ 	NL80211_ATTR_NOACK_MAP,
  
- 	for (ac = IEEE80211_AC_VO; ac < IEEE80211_NUM_ACS; ac++) {
--		if (!test_bit(ac, &priv->transport_queue_stop))
-+		if (!test_bit(ac, &priv->transport_queue_stop)) {
-+			IWL_DEBUG_TX_QUEUES(priv, "Wake queue %d");
- 			ieee80211_wake_queue(priv->hw, ac);
-+		} else {
-+			IWL_DEBUG_TX_QUEUES(priv, "Don't wake queue %d");
-+		}
- 	}
++	NL80211_ATTR_BG_SCAN_PERIOD,
++
+ 	/* add attributes here, update the policy in nl80211.c */
  
- 	priv->passive_no_rx = false;
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0178c74..8b3b3b8 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1200,6 +1200,8 @@ struct cfg80211_ibss_params {
+  * @key_idx: index of WEP key for shared key authentication
+  * @key: WEP key for shared key authentication
+  * @flags:  See &enum cfg80211_assoc_req_flags
++ * @bg_scan_period:  Background scan period in seconds
++ *   or -1 to indicate that default value is to be used.
+  * @ht_capa:  HT Capabilities over-rides.  Values set in ht_capa_mask
+  *   will be used in ht_capa.  Un-supported values will be ignored.
+  * @ht_capa_mask:  The bits of ht_capa which are to be used.
+@@ -1217,6 +1219,7 @@ struct cfg80211_connect_params {
+ 	const u8 *key;
+ 	u8 key_len, key_idx;
+ 	u32 flags;
++	int bg_scan_period;
+ 	struct ieee80211_ht_cap ht_capa;
+ 	struct ieee80211_ht_cap ht_capa_mask;
+ };
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 1998c36..a3a6013 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -204,6 +204,7 @@ static const struct nla_policy nl80211_policy[NL80211_ATTR_MAX+1] = {
+ 		.len = NL80211_HT_CAPABILITY_LEN
+ 	},
+ 	[NL80211_ATTR_NOACK_MAP] = { .type = NLA_U16 },
++	[NL80211_ATTR_BG_SCAN_PERIOD] = { .type = NLA_U16 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -5090,6 +5091,12 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 	} else
+ 		connect.auth_type = NL80211_AUTHTYPE_AUTOMATIC;
+ 
++	connect.bg_scan_period = -1;
++	if (info->attrs[NL80211_ATTR_BG_SCAN_PERIOD]) {
++		connect.bg_scan_period =
++			nla_get_u16(info->attrs[NL80211_ATTR_BG_SCAN_PERIOD]);
++	}
++
+ 	connect.privacy = info->attrs[NL80211_ATTR_PRIVACY];
+ 
+ 	err = nl80211_crypto_settings(rdev, info, &connect.crypto,
+diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
+index 326750b..7c01c2f 100644
+--- a/net/wireless/wext-sme.c
++++ b/net/wireless/wext-sme.c
+@@ -30,6 +30,9 @@ int cfg80211_mgd_wext_connect(struct cfg80211_registered_device *rdev,
+ 	wdev->wext.connect.ie = wdev->wext.ie;
+ 	wdev->wext.connect.ie_len = wdev->wext.ie_len;
+ 
++	/* Use default background scan period */
++	wdev->wext.connect.bg_scan_period = -1;
++
+ 	if (wdev->wext.keys) {
+ 		wdev->wext.keys->def = wdev->wext.default_key;
+ 		wdev->wext.keys->defmgmt = wdev->wext.default_mgmt_key;
 -- 
-1.7.0.4
+1.7.4.1
 
