@@ -1,90 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms173007pub.verizon.net ([206.46.173.7]:43003 "EHLO
-	vms173007pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754006Ab2CLBq3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Mar 2012 21:46:29 -0400
-Received: from vms170035 ([unknown] [192.168.1.3]) by vms173007.mailsrvcs.net
- (Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16 2009))
- with ESMTPA id <0M0R005BH0XGO9C0@vms173007.mailsrvcs.net> for
- linux-wireless@vger.kernel.org; Sun, 11 Mar 2012 20:46:28 -0500 (CDT)
-Date: Sun, 11 Mar 2012 20:46:28 -0500 (CDT)
-From: alupu@verizon.net
-To: Larry.Finger@lwfinger.net
-Cc: linux-wireless@vger.kernel.org
-Message-id: <22781504.258629.1331516788574.JavaMail.root@vms170035> (sfid-20120312_024658_902904_D4CB0B7C)
-Subject: Re: r8712u staging in kernel 3.2.9
-MIME-version: 1.0
-Content-type: text/plain; charset=UTF-8
+Received: from plane.gmane.org ([80.91.229.3]:55177 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751201Ab2CALfG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Mar 2012 06:35:06 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1S34Ho-0003zr-7p
+	for linux-wireless@vger.kernel.org; Thu, 01 Mar 2012 12:35:04 +0100
+Received: from numa-i.igpm.rwth-aachen.de ([134.130.161.252])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2012 12:35:04 +0100
+Received: from jarausch by numa-i.igpm.rwth-aachen.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2012 12:35:04 +0100
+To: linux-wireless@vger.kernel.org
+From: Helmut Jarausch <jarausch@igpm.rwth-aachen.de>
+Subject: brcmsmac crashed 3.3-rc5 kernel
+Date: Thu, 1 Mar 2012 11:33:56 +0000 (UTC)
+Message-ID: <jinmr4$pej$1@dough.gmane.org> (sfid-20120301_123519_459569_D1C55F3D)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> On 03/11/12 8.19 PM, Larry Finger wrote:
-> On 03/11/2012 05:36 PM, Alex wrote:
+Hi,
 
-[ Previous Larry email:
-After you boot it, use the NetworkManager system tray
-applet to connect to your system.
-Does that work? ]
+on an HP625 I have the following device
 
-> Alex (in answer to [Previous Larry email]):
-> Yes. How? Very smoothly.
+06:00.0 Network controller [0280]: Broadcom Corporation BCM4313 802.11b/g/
+n Wireless LAN Controller [14e4:4727] (rev 01)
+        Subsystem: Hewlett-Packard Company Device [103c:145c]
+        Kernel driver in use: bcma-pci-bridge
 
-Unfortunately, here we lose the sync (so to speak):
 
->> I know that the openSUSE Live CD works on my computer with the Rosewill device 
->> and WEP encryption. That tells me that the driver is working correctly, and that 
->> the user-space stuff is OK. Let's see if we can find what is wrong for you.
->> After the Live CD boots, do you see the NM applet in the lower-right hand corner 
-of the screen?
->> When you click on it, do you see a list of APs that are in range?
->> If you click on yours, do you get a screen that wants to know the WEP key? You 
->> will need to enter the hexadecimal key, not any passphrase. You will also get a 
->> popup asking if you want to use kwallet. Say yes and give it a blank password.
->> Did you get a connection? Note, NM uses wpa_supplicant even for WEP. That is normal.
+This device isn't recognized by the brcmfmac driver but only by the 
+brcmsfac driver.
 
-I'm repeating myself:
-> Yes. How? Very smoothly.
+My kernel configuration is
 
-That means that I _must_ have done and succeeded in all of your above
-instructions and descriptions.  But that's beside the point.
+# Broadcom specific AMBA
+#
+CONFIG_BCMA=y
+CONFIG_BCMA_HOST_PCI_POSSIBLE=y
+CONFIG_BCMA_HOST_PCI=y
+# CONFIG_BCMA_DEBUG is not set
 
-The real point that somehow I haven't been able to convey since my OP
-is that I expect the commands,
-iwconfig wlan0 essid ...
+# CONFIG_B43 is not set
+# CONFIG_B43LEGACY is not set
+CONFIG_BRCMUTIL=m
+CONFIG_BRCMSMAC=m
+# CONFIG_BRCMFMAC is not set
+CONFIG_BRCMDBG=y
 
-and
+CONFIG_CFG80211=y
+# CONFIG_NL80211_TESTMODE is not set
+CONFIG_CFG80211_DEVELOPER_WARNINGS=y
+CONFIG_CFG80211_REG_DEBUG=y
+CONFIG_CFG80211_DEFAULT_PS=y
 
-iwconfig wlan0 key restricted ... 
-(or these two combined)
+CONFIG_MAC80211=y
+CONFIG_MAC80211_HAS_RC=y
+CONFIG_MAC80211_RC_MINSTREL=y
+CONFIG_MAC80211_RC_MINSTREL_HT=y
+CONFIG_MAC80211_RC_DEFAULT_MINSTREL=y
+CONFIG_MAC80211_RC_DEFAULT="minstrel_ht"
+CONFIG_MAC80211_MESH=y
+CONFIG_MAC80211_LEDS=y
 
-to work from the _command line_ (init 3) for an adapter/driver.
-(how one actually connects to an AP, is _another_ story completely
-and I can handle that by myself).
+The device is recognized :
+wlan0     IEEE 802.11bgn  ESSID:off/any  
+          Mode:Managed  Access Point: Not-Associated   Tx-Power=0 dBm   
+          Retry  long limit:7   RTS thr:off   Fragment thr:off
+          Encryption key:off
+          Power Management:on
+          
+but doing  /etc/init.d/net.wlan0 start
+crashes the kernel - even <Ctrl><Alt><Shift><SysRq>  doesn't work anymore.
+I've tried strace, but the output file doesn't get closed so it's missing 
+after reboot.
 
-What you have to do to replicate what I (and all the other
-users who prefer to sit at the command line) do is to
-use Linux at command line (init 3) and test the two commands.
+Any help is very much appreciated.
 
-As an aside, in the meantime I tested Knoppix wireless in graphics mode.
-Works smoothly as well (as I feared)!
-Fails, as I said, if you try to connect from the command line, like
-'knoppix 2' on the boot (BIOS) prompt.
+P.S. the GRML64 live CD system does work on that hardware but it uses a 
+3.1 kernel and a staging driver.
 
-I suppose openSUSE has a similar command to go directly to command line
-(to "simulate" the _real_ Linux - not the graphics thrown on top of it).
-A "workaround" I suppose is to start up openSUSE "normally" (to graphics
-mode) _without_ the Rosewill plugged in (so the driver module doesn't
-load automatically). Then go into a terminal, then plug in Rosewill
-then test these two commands.
+Since I'd like to use BTRFS I'd like to use a 3.3 kernel.
+Helmut.
 
-Reasons (pretty obvious):
-1. Wired connections _can_ be made from the command line at any time
-simply, conveniently and securely.
-2. I worked with wireless adapters (Lynksys - Atheros? comes to mind)
-which do indeed that (i.e. succeed on the above two commands).
-Whether I use the wpa_supplicant (again, from command line) is based on
-what the AP expects from me as level of security and that's my business.
 
-Thanks,
--- Alex
