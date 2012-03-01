@@ -1,34 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58819 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756364Ab2CPNN1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 09:13:27 -0400
-Date: Fri, 16 Mar 2012 14:13:23 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [RFC 1/3] mac80211: do not scan and monitor connection in
- parallel
-Message-ID: <20120316131322.GA10844@redhat.com> (sfid-20120316_141331_017635_61E7372E)
-References: <1331899378-10543-1-git-send-email-sgruszka@redhat.com>
- <1331902378.6753.3.camel@jlt3.sipsolutions.net>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:36967 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750772Ab2CAFJ4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Mar 2012 00:09:56 -0500
+Received: by vcqp1 with SMTP id p1so180394vcq.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 21:09:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1331902378.6753.3.camel@jlt3.sipsolutions.net>
+In-Reply-To: <4F4E9A36.2080809@lacto.se>
+References: <4F4E9A36.2080809@lacto.se>
+Date: Thu, 1 Mar 2012 10:39:55 +0530
+Message-ID: <CAD2nsn2ifGDPr_J7LtBS04yCkxg12jQShrCDCBUERmOC5kodyA@mail.gmail.com> (sfid-20120301_061038_169931_67F924F8)
+Subject: Re: "Failed to stop Tx DMA" and "Could not stop RX" with AR9485
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: =?ISO-8859-1?Q?Kim_Lidstr=F6m?= <dexter@lacto.se>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	Adrian Chadd <adrian.chadd@gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 16, 2012 at 01:52:58PM +0100, Johannes Berg wrote:
-> On Fri, 2012-03-16 at 13:02 +0100, Stanislaw Gruszka wrote:
-> > Before we send probes in connection monitoring we check if scan is not
-> > pending. But we do that check without locking. Fix that and also do not
-> > start scan if connection monitoring is in progress.
-> 
-> Wouldn't it be easier to just abort the check instead of deferring the
-> scan?
+> With this message I have attached a log with the error messages.
+> This has been a problem since.. Uhm.. Kernel 3.2.something and I'm
+> currently running 3.2.8.
+> For some reason it happened at least 3-4 times shortly after each other
+> today - so I thought I might ask on here what's happening.
 
-It would be easier. However we already defer scan on
-!list_empty(&local->work_list) case. Also random failures of
-scan request can not be well seen from user-space perspective.
+disabling power save would be a nice idea,  to see if this issue disappears.
+i got the same issue after a long stress test with some other card, sujith
+gave me the idea to see if disabling PS helps
+sudo iwconfig wlanX power off
+sudo iw dev wlanX set power_save off
+also please ensure that you run with your power adapter :) i noticed
+PS gets enabled
+via wext when we plug out the power adapter
 
-Stanislaw
+-- 
+thanks,
+shafi
