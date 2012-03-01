@@ -1,49 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:39805 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753052Ab2CIIdO (ORCPT
+Received: from rcsinet15.oracle.com ([148.87.113.117]:17950 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758425Ab2CAJdG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Mar 2012 03:33:14 -0500
-Subject: Re: [rt2x00-users] [PATCH 3.3 v2] rt2x00: fix random stalls
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Gertjan van Wingerde <gwingerde@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-In-Reply-To: <20120309082216.GA2339@redhat.com> (sfid-20120309_092236_584600_4D716D27)
-References: <20120307183103.GB15839@redhat.com> <4F59275B.2010309@gmail.com>
-	 <20120309082216.GA2339@redhat.com> (sfid-20120309_092236_584600_4D716D27)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 09 Mar 2012 09:33:07 +0100
-Message-ID: <1331281987.3491.0.camel@jlt3.sipsolutions.net> (sfid-20120309_093318_079436_39EA5F6E)
-Mime-Version: 1.0
+	Thu, 1 Mar 2012 04:33:06 -0500
+Date: Thu, 1 Mar 2012 10:22:30 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Bing Zhao <bzhao@marvell.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] mwifiex: endian bug in mwifiex_drv_change_adhoc_chan()
+Message-ID: <20120301072230.GC7152@elgon.mountain> (sfid-20120301_103314_337400_EBD39687)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-03-09 at 09:22 +0100, Stanislaw Gruszka wrote:
+In mwifiex_drv_change_adhoc_chan() we pass channel to
+mwifiex_bss_ioctl_ibss_channel() which sets the high 16 bits.  This
+works on little endian systems but not on big endian ones.  I've changed
+mwifiex_drv_change_adhoc_chan() to use a 16 bit variable.  This matches
+the other functions in the file.
 
-> > > +	spin_lock(&queue->tx_lock);
-> > >  	rt2x00queue_pause_queue(queue);
-> > > +	spin_unlock(&queue->tx_lock);
-> > >   exit_free_skb:
-> > >  	ieee80211_free_txskb(hw, skb);
-> > >  }
-> > 
-> > I'm sorry, but I'm still not convinced that we can use spin_lock_bh in
-> > one place of the code and then spin_lock in another place of the code,
-> > using the *same* spinlock.
-> > I always use the cheat sheet shown in:
-> > http://www.kernel.org/pub/linux/kernel/people/rusty/kernel-locking/c214.html
-> > 
-> > which to me shows that by definition we should be using spin_lock_bh in
-> > all cases now, the new ones and the existing cases where we lock tx_lock.
-> 
-> We have bh disabled here since ieee80211_xmit is always called with bh
-> disabled (early on dev_queue_xmit() or in ieee80211_tx_skb_tid()). I can
-> add comment about that.
+I considered changing mwifiex_change_adhoc_chan() as well but it turns
+out that the function isn't implemented so I just removed the
+definition.
 
-And in fact if you were to use spin_unlock_bh() in that kind of context
-it would be a bug :-)
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-johannes
-
+diff --git a/drivers/net/wireless/mwifiex/main.h b/drivers/net/wireless/mwifiex/main.h
+index 52810b1..60a6919 100644
+--- a/drivers/net/wireless/mwifiex/main.h
++++ b/drivers/net/wireless/mwifiex/main.h
+@@ -909,10 +909,9 @@ int mwifiex_request_scan(struct mwifiex_private *priv,
+ 			 struct mwifiex_802_11_ssid *req_ssid);
+ int mwifiex_set_user_scan_ioctl(struct mwifiex_private *priv,
+ 				struct mwifiex_user_scan_cfg *scan_req);
+-int mwifiex_change_adhoc_chan(struct mwifiex_private *priv, int channel);
+ int mwifiex_set_radio(struct mwifiex_private *priv, u8 option);
+ 
+-int mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, int channel);
++int mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, u16 channel);
+ 
+ int mwifiex_set_encode(struct mwifiex_private *priv, const u8 *key,
+ 		       int key_len, u8 key_index, int disable);
+diff --git a/drivers/net/wireless/mwifiex/sta_ioctl.c b/drivers/net/wireless/mwifiex/sta_ioctl.c
+index b0fbf5d..652d299 100644
+--- a/drivers/net/wireless/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/mwifiex/sta_ioctl.c
+@@ -599,7 +599,7 @@ static int mwifiex_bss_ioctl_ibss_channel(struct mwifiex_private *priv,
+  *          - Start/Join the IBSS
+  */
+ int
+-mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, int channel)
++mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, u16 channel)
+ {
+ 	int ret;
+ 	struct mwifiex_bss_info bss_info;
+@@ -636,7 +636,7 @@ mwifiex_drv_change_adhoc_chan(struct mwifiex_private *priv, int channel)
+ 	ret = mwifiex_deauthenticate(priv, ssid_bssid.bssid);
+ 
+ 	ret = mwifiex_bss_ioctl_ibss_channel(priv, HostCmd_ACT_GEN_SET,
+-					     (u16 *) &channel);
++					     &channel);
+ 
+ 	/* Do specific SSID scanning */
+ 	if (mwifiex_request_scan(priv, &bss_info.ssid)) {
