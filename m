@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:39342 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757535Ab2CEUCG (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:26357 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757263Ab2CAHHd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 15:02:06 -0500
-Date: Mon, 5 Mar 2012 14:59:27 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
-Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-	johannes.berg@intel.com
-Subject: Re: [PATCH 001/101] iwlwifi: move iwl_clear_driver_stations to user
-Message-ID: <20120305195927.GG18128@tuxdriver.com> (sfid-20120305_210213_734433_F054CC64)
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
- <1330889395-533-2-git-send-email-wey-yi.w.guy@intel.com>
- <20120304.203259.81092010167419901.davem@davemloft.net>
- <1330907855.12612.50.camel@wwguy-huron>
+	Thu, 1 Mar 2012 02:07:33 -0500
+Message-ID: <4F4F2030.9080805@qca.qualcomm.com> (sfid-20120301_080739_541151_B02A4BD2)
+Date: Thu, 1 Mar 2012 09:07:28 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1330907855.12612.50.camel@wwguy-huron>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH V3 1/5] ath6kl: Group wiphy initialization into ath6kl_cfg80211_init()
+References: <1330440623-5649-1-git-send-email-vthiagar@qca.qualcomm.com> <4F4F1817.9070904@qca.qualcomm.com>
+In-Reply-To: <4F4F1817.9070904@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 04, 2012 at 04:37:35PM -0800, Guy, Wey-Yi wrote:
-> On Sun, 2012-03-04 at 20:32 -0500, David Miller wrote:
-> > You seriously cannot queue up this work all at one time.
-> > 
-> > It is absolutely unreasonable to burdon the community with having to
-> > review a hundred patches at one time.
-> > 
-> > You must split these submissions down into smaller groups, say groups
-> > of 10 or so patches.
-> > 
-> > Also consider what if one patch in the first ten has a problem, and
-> > this causes conflicts with the next 90 patches?
+On 03/01/2012 08:32 AM, Kalle Valo wrote:
+> On 02/28/2012 04:50 PM, Vasanthakumar Thiagarajan wrote:
+>> There are some code which initializes various wiphy members
+>> left outside ath6kl_cfg80211_init(), in ath6kl_core_init().
+>> Move them into a single palce.
+>>
+>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
 > 
-> I understand there are a lot of patches, we are doing major re-factor
-> works and those patches are inter-related. I could try to see if I can
-> break those into smaller groups (maybe 20 - 30 patches a group).
-> 
-> John/David, are you prefer to see the submission like this?
+> Thanks, all five patches applied.
 
-This is a large request.  But FWIW, the iwlwifi team typically does
-manage their own trees and works via pull requests.
+There's an issue and I think these patches might cause it. Earlier (with
+commit 9289a8a8e2) my ath6kl device was always wlan0:
 
-It might be nice to see more/smaller requests in the future.
+6: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast
+state UP qlen 1000
+    link/ether 00:03:7f:04:04:c2 brd ff:ff:ff:ff:ff:ff
 
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+But now for some reason it's always wlan3 even though the mac address is
+the same:
+
+4: wlan3: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN qlen 1000
+    link/ether 00:03:7f:04:04:c2 brd ff:ff:ff:ff:ff:ff
+
+I'm guessing this has something to do with mac address and udev, but I
+didn't investigate this. But if you have the time better to check that
+there are no suprises hidden anywhere.
+
+Kalle
