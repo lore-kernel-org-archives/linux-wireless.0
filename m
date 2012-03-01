@@ -1,212 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:59784 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751313Ab2C3R6p (ORCPT
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:47194 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751205Ab2CAXkO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Mar 2012 13:58:45 -0400
-Date: Fri, 30 Mar 2012 13:55:34 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: davem@davemloft.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull request: wireless 2012-03-30
-Message-ID: <20120330175533.GC8273@tuxdriver.com> (sfid-20120330_195906_729608_CAA15D34)
+	Thu, 1 Mar 2012 18:40:14 -0500
+Received: by dajr28 with SMTP id r28so1303002daj.19
+        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2012 15:40:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="jRHKVT23PllUwdXP"
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>, devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCHv2 1/3] mac80211_hwsim:  Add tsf to beacons, probe responses and radiotap header.
+Date: Thu,  1 Mar 2012 15:40:05 -0800
+Message-Id: <1330645207-13964-1-git-send-email-javier@cozybit.com> (sfid-20120302_004019_891056_87880FE4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Generate a tsf from jiffies.  Prepare the path for having different tsf
+offsets on the each phy.  This will be useful for testing mesh
+synchronization algorithms.
 
---jRHKVT23PllUwdXP
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-commit de312db345f9770b64ff39ef5a7f86f6358e93cc
-
-Dave,
-
-I have a few more small fixes, hopefully still in time for 3.4-rc1...
-
-Rajkukmar provides us with a one-line timestamp correction related to
-scanning in mac80211.  Sujith gives us a small fixup for a regression
-in the handling of HT capability bits for ath9k.  Stanislav Yakovlev
-is stepping-up as maintainer for the ipw2x00 drivers, so we'll add
-him to MAINTAINERS.  Stanislav also gives us a fix for a thinko
-that registers the wrong band information for ipw2200 and 802.11a.
-Finally, Santosh Nayak adds some simple error checking to orinoco to
-avoid some potential NULL pointer dereferences.
-
-Please let me know if there are problems!
-
-Thanks,
-
-John
-
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
+v2: Added timestamp to probe responses, as suggested by Johannes
+    Also implement tx_last_beacon, useful for testing (new patch 1/3)
 
-The following changes since commit 643c61e119459e9d750087b7b34be94491efebf9:
+ drivers/net/wireless/mac80211_hwsim.c |   37 +++++++++++++++++++++++++++++---
+ 1 files changed, 33 insertions(+), 4 deletions(-)
 
-  rtlwifi: rtl8192ce: rtl8192cu: rtl8192de: Fix low-gain setting when scann=
-ing (2012-03-26 15:07:30 -0400)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/linville/wireless.git master
-
-Rajkumar Manoharan (1):
-      mac80211: fix oper channel timestamp updation
-
-Santosh Nayak (1):
-      net: orinoco: add error handling for failed kmalloc().
-
-Stanislav Yakovlev (2):
-      net/wireless: ipw2x00: fix a typo in wiphy struct initilization
-      MAINTAINERS: adding maintainer for ipw2x00
-
-Sujith Manoharan (1):
-      ath9k: Use HW HT capabilites properly
-
- MAINTAINERS                            |   12 ++++--------
- drivers/net/wireless/ath/ath9k/main.c  |    4 ++--
- drivers/net/wireless/ipw2x00/ipw2200.c |    4 ++--
- drivers/net/wireless/orinoco/main.c    |    8 ++++++++
- net/mac80211/scan.c                    |    2 +-
- 5 files changed, 17 insertions(+), 13 deletions(-)
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 0ddc77fe..09a79f9 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3519,17 +3519,13 @@ L:	linux-pm@vger.kernel.org
- S:	Supported
- F:	arch/x86/platform/mrst/pmu.*
-=20
--INTEL PRO/WIRELESS 2100 NETWORK CONNECTION SUPPORT
-+INTEL PRO/WIRELESS 2100, 2200BG, 2915ABG NETWORK CONNECTION SUPPORT
-+M:	Stanislav Yakovlev <stas.yakovlev@gmail.com>
- L:	linux-wireless@vger.kernel.org
--S:	Orphan
-+S:	Maintained
- F:	Documentation/networking/README.ipw2100
--F:	drivers/net/wireless/ipw2x00/ipw2100.*
--
--INTEL PRO/WIRELESS 2915ABG NETWORK CONNECTION SUPPORT
--L:	linux-wireless@vger.kernel.org
--S:	Orphan
- F:	Documentation/networking/README.ipw2200
--F:	drivers/net/wireless/ipw2x00/ipw2200.*
-+F:	drivers/net/wireless/ipw2x00/
-=20
- INTEL(R) TRUSTED EXECUTION TECHNOLOGY (TXT)
- M:	Joseph Cihula <joseph.cihula@intel.com>
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/a=
-th/ath9k/main.c
-index 3879485..215eb25 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -640,7 +640,7 @@ static void ath_node_attach(struct ath_softc *sc, struc=
-t ieee80211_sta *sta,
- 	an->sta =3D sta;
- 	an->vif =3D vif;
-=20
--	if (sta->ht_cap.ht_supported) {
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT) {
- 		ath_tx_node_init(sc, an);
- 		an->maxampdu =3D 1 << (IEEE80211_HT_MAX_AMPDU_FACTOR +
- 				     sta->ht_cap.ampdu_factor);
-@@ -659,7 +659,7 @@ static void ath_node_detach(struct ath_softc *sc, struc=
-t ieee80211_sta *sta)
- 	an->sta =3D NULL;
- #endif
-=20
--	if (sta->ht_cap.ht_supported)
-+	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_HT)
- 		ath_tx_node_cleanup(sc, an);
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index ba16f05..f44b3f6 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -321,11 +321,13 @@ struct mac80211_hwsim_data {
+ 	struct dentry *debugfs_group;
+ 
+ 	int power_level;
++	int tsf_offset;			/* in TUs */
+ };
+ 
+ 
+ struct hwsim_radiotap_hdr {
+ 	struct ieee80211_radiotap_header hdr;
++	u64 rt_tsft;
+ 	u8 rt_flags;
+ 	u8 rt_rate;
+ 	__le16 rt_channel;
+@@ -367,6 +369,11 @@ static netdev_tx_t hwsim_mon_xmit(struct sk_buff *skb,
+ 	return NETDEV_TX_OK;
  }
-=20
-diff --git a/drivers/net/wireless/ipw2x00/ipw2200.c b/drivers/net/wireless/=
-ipw2x00/ipw2200.c
-index 4fcdac6..2b02257 100644
---- a/drivers/net/wireless/ipw2x00/ipw2200.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2200.c
-@@ -11507,9 +11507,9 @@ static int ipw_wdev_init(struct net_device *dev)
- 			rc =3D -ENOMEM;
- 			goto out;
- 		}
--		/* translate geo->bg to a_band.channels */
-+		/* translate geo->a to a_band.channels */
- 		for (i =3D 0; i < geo->a_channels; i++) {
--			a_band->channels[i].band =3D IEEE80211_BAND_2GHZ;
-+			a_band->channels[i].band =3D IEEE80211_BAND_5GHZ;
- 			a_band->channels[i].center_freq =3D geo->a[i].freq;
- 			a_band->channels[i].hw_value =3D geo->a[i].channel;
- 			a_band->channels[i].max_power =3D geo->a[i].max_power;
-diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/ori=
-noco/main.c
-index dd6c64a..88e3ad2 100644
---- a/drivers/net/wireless/orinoco/main.c
-+++ b/drivers/net/wireless/orinoco/main.c
-@@ -1336,6 +1336,10 @@ static void qbuf_scan(struct orinoco_private *priv, =
-void *buf,
- 	unsigned long flags;
-=20
- 	sd =3D kmalloc(sizeof(*sd), GFP_ATOMIC);
-+	if (!sd) {
-+		printk(KERN_ERR "%s: failed to alloc memory\n", __func__);
-+		return;
+ 
++static __le64 __mac80211_hwsim_get_tsf(struct mac80211_hwsim_data *data)
++{
++	return cpu_to_le64(jiffies_to_msecs(jiffies)*1000/1024 +
++			data->tsf_offset);
++}
+ 
+ static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
+ 				      struct sk_buff *tx_skb)
+@@ -391,7 +398,9 @@ static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
+ 	hdr->hdr.it_len = cpu_to_le16(sizeof(*hdr));
+ 	hdr->hdr.it_present = cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
+ 					  (1 << IEEE80211_RADIOTAP_RATE) |
++					  (1 << IEEE80211_RADIOTAP_TSFT) |
+ 					  (1 << IEEE80211_RADIOTAP_CHANNEL));
++	hdr->rt_tsft = __mac80211_hwsim_get_tsf(data);
+ 	hdr->rt_flags = 0;
+ 	hdr->rt_rate = txrate->bitrate / 5;
+ 	hdr->rt_channel = cpu_to_le16(data->channel->center_freq);
+@@ -610,7 +619,8 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	memset(&rx_status, 0, sizeof(rx_status));
+-	/* TODO: set mactime */
++	rx_status.mactime = le64_to_cpu(__mac80211_hwsim_get_tsf(data));
++	rx_status.flag |= RX_FLAG_MACTIME_MPDU;
+ 	rx_status.freq = data->channel->center_freq;
+ 	rx_status.band = data->channel->band;
+ 	rx_status.rate_idx = info->control.rates[0].idx;
+@@ -667,6 +677,19 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	bool ack;
+ 	struct ieee80211_tx_info *txi;
+ 	u32 _pid;
++	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	struct mac80211_hwsim_data *data = hw->priv;
++	__le64 *tsfpos;
++	u16 fc = le16_to_cpu(hdr->frame_control);
++	u16 fctypes = fc & (IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE);
++
++	if (fctypes == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_PROBE_RESP) ||
++	    fctypes == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON)) {
++		struct ieee80211_hdr_3addr *hdr3 =
++			(struct ieee80211_hdr_3addr *) skb->data;
++		tsfpos = (__le64 *) (hdr3 + 1);
++		put_unaligned(__mac80211_hwsim_get_tsf(data), tsfpos);
 +	}
- 	sd->buf =3D buf;
- 	sd->len =3D len;
- 	sd->type =3D type;
-@@ -1353,6 +1357,10 @@ static void qabort_scan(struct orinoco_private *priv)
- 	unsigned long flags;
-=20
- 	sd =3D kmalloc(sizeof(*sd), GFP_ATOMIC);
-+	if (!sd) {
-+		printk(KERN_ERR "%s: failed to alloc memory\n", __func__);
-+		return;
-+	}
- 	sd->len =3D -1; /* Abort */
-=20
- 	spin_lock_irqsave(&priv->scan_lock, flags);
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 33cd169..c70e176 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -370,7 +370,7 @@ static int ieee80211_start_sw_scan(struct ieee80211_loc=
-al *local)
- 	 */
- 	drv_sw_scan_start(local);
-=20
--	local->leave_oper_channel_time =3D 0;
-+	local->leave_oper_channel_time =3D jiffies;
- 	local->next_scan_state =3D SCAN_DECISION;
- 	local->scan_channel_idx =3D 0;
-=20
---=20
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+ 
+ 	mac80211_hwsim_monitor_rx(hw, skb);
+ 
+@@ -685,10 +708,8 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	/* NO wmediumd detected, perfect medium simulation */
+ 	ack = mac80211_hwsim_tx_frame_no_nl(hw, skb);
+ 
+-	if (ack && skb->len >= 16) {
+-		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
++	if (ack && skb->len >= 16)
+ 		mac80211_hwsim_monitor_ack(hw, hdr->addr2);
+-	}
+ 
+ 	txi = IEEE80211_SKB_CB(skb);
+ 
+@@ -763,9 +784,12 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
+ 				     struct ieee80211_vif *vif)
+ {
+ 	struct ieee80211_hw *hw = arg;
++	struct mac80211_hwsim_data *data = hw->priv;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_tx_info *info;
+ 	u32 _pid;
++	struct ieee80211_hdr_3addr *hdr;
++	__le64 *tsfpos;
+ 
+ 	hwsim_check_magic(vif);
+ 
+@@ -779,6 +803,11 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
+ 		return;
+ 	info = IEEE80211_SKB_CB(skb);
+ 
++	/* add the timestamp to the beacon */
++	hdr = (struct ieee80211_hdr_3addr *) skb->data;
++	tsfpos = (__le64 *) (hdr + 1);
++	put_unaligned(__mac80211_hwsim_get_tsf(data), tsfpos);
++
+ 	mac80211_hwsim_monitor_rx(hw, skb);
+ 
+ 	/* wmediumd mode check */
+-- 
+1.7.6
 
---jRHKVT23PllUwdXP
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPdfOVAAoJEJctW/TcYTgGHDgP/1ZPkQaqCVKPqT1T+kwKdzVu
-mJ8JcgWLhuRZfcuemF4d+xzsE06CFsPRG7ats3AJnjMgdVoa9UP7oQTonKBp+jhF
-pROeOwDv2dv9omFWvuJqDZc0l+n1VOIZRaVEjwakXcecHB89I/kTK12vdtI6ncat
-O8/C9MCI0Zm7+DQUxVeKsJUw/xKe74IPV3+sd1HK/LsWt7geWGUKeoCYhXjttY39
-t8PSoefrf/oeX2EX45jG1JG6s7zGoWYnJOCww2jS8VHB9Y0PADseRNTBASx3kPKX
-VGhfqRGZdIGxavQYiOieS+6bUPMC1pzLLzX8BQmayQKE5b4iyZqrQGKzzmWoAI6k
-TgqjtOWy+QZh1RjqqCNQP2O6UaKS1LCgYPwzgv8LzbUviQzNQFVUBetDuZGC4pdq
-NdIN+DWZesiLpYlwRTu2PKto2Wyme+iZmqnSVuL+1N+6+wygk5mYSMwbSO0vnfh7
-OjCY215WhY1Tl9G+BZxaDCXgbEGHfQ24x/itjukjE1ldfCyAu4+lPJjDEsSE3OCt
-GNh1Bx14jlKD9ICZSl71jBqmeo5NXgNASxOYiK/5XCrQUMOOorg6D9qM/104FVXM
-JoMzoH73MXYAxld2mq2CGv4EIfp40rsT4O0e7zqSIw9Evs43PU5NUOpentpzCZxd
-GkTU9JtyFRBTsqnY58G0
-=pBlb
------END PGP SIGNATURE-----
-
---jRHKVT23PllUwdXP--
