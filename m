@@ -1,162 +1,230 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:51845 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755664Ab2CVAo6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2012 20:44:58 -0400
-Date: Thu, 22 Mar 2012 01:53:05 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Ilan Elias <ilane@ti.com>
-Cc: "Lapuyade, Eric" <eric.lapuyade@intel.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Subject: [RFC] [PATCH] NFC: The core part should generate the target index
-Message-ID: <20120322005305.GD3875@sortiz-mobl> (sfid-20120322_014502_746982_DB7377D3)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:57557 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754889Ab2CALme (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Mar 2012 06:42:34 -0500
+Message-ID: <4F4F60A0.5040006@qca.qualcomm.com> (sfid-20120301_124247_455427_A38E2A0E)
+Date: Thu, 1 Mar 2012 17:12:24 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	<senthilb@qca.qualcomm.com>, <vthiagar@qca.qualcomm.com>,
+	<rodrigue@qca.qualcomm.com>,
+	Rajkumar_contact <rmanohar@qca.qualcomm.com>,
+	"Manoharan, Sujith" <c_manoha@qca.qualcomm.com>
+Subject: Re: [RFC 1/2] ath9k: use ieee80211_free_txskb
+References: <d053a9a1ec34c2e1b15cf50b272ba7863fb17088.1330360738.git.chunkeey@googlemail.com> <4F4F0B83.9050203@qca.qualcomm.com>
+In-Reply-To: <4F4F0B83.9050203@qca.qualcomm.com>
+Content-Type: multipart/mixed;
+	boundary="------------030301020603050900000702"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--------------030301020603050900000702
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The target index can be used by userspace to uniquely identify a target
-and thus should be kept unique, per NFC adapter. Moreover, some protocols
-do not provide a logical index when discovering new targets, so we have to
-generate one for them.
-For NCI or pn533 to fetch their logical index, we added a logical_idx field
-to the target structure.
+On Thursday 01 March 2012 11:09 AM, Mohammed Shafi Shajakhan wrote:
+> Hi Christian,
+>
+> On Monday 27 February 2012 09:40 PM, Christian Lamparter wrote:
+>> With the new tx status API: "mac80211: implement wifi TX status"
+>> All skb originating from mac80211 needs to be given back to mac80211.
+>>
+>> Signed-off-by: Christian Lamparter<chunkeey@googlemail.com>
+>> ---
+>> It's high time we change all calls in the tx-path from
+>> dev_kfree_skb into ieee80211_free_txskb.
+>>
+>> The call in ath9k_tx is straightforward, but the one in
+>> ath_tx_setup_buffer gives me headaches. I'm not sure if
+>> we even need to check bf->bf_state.bfs_paprd at this
+>> stage since ath_tx_start_dma sets bf->bf_state.bfs_paprd
+>> "after" calling ath_tx_setup_buffer?!
+>
+> yes, i think its a problem, we cannot exactly say its the skb from
+> mac80211 (or) its our PAPRD skb. though with the current code(as the
+> PAPRD) is disabled the skb would be always from mac80211. let us see if
+> we have some good solution.
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
 
-Ilan, could you please comment on this patch and also make sure that it
-doesn't break multiple targets support for NCI ?
+got some idea, need to make sure this works perfectly, paprd frames are 
+not aggregated, so we can look only at the non-aggregated path.
 
----
+lets ignore aggregated path:
 
- include/net/nfc/nfc.h |    2 ++
- net/nfc/core.c        |    5 +++++
- net/nfc/nci/core.c    |    2 +-
- net/nfc/nci/ntf.c     |   11 ++++++-----
- net/nfc/rawsock.c     |   12 ++++++++++++
- 5 files changed, 26 insertions(+), 6 deletions(-)
+*ath_tx_form_aggr
+*ath_tx_send_ampdu
 
-diff --git a/include/net/nfc/nfc.h b/include/net/nfc/nfc.h
-index 57ea095..9097093 100644
---- a/include/net/nfc/nfc.h
-+++ b/include/net/nfc/nfc.h
-@@ -78,6 +78,7 @@ struct nfc_target {
- 	u8 sensb_res[NFC_SENSB_RES_MAXSIZE];
- 	u8 sensf_res_len;
- 	u8 sensf_res[NFC_SENSF_RES_MAXSIZE];
-+	u8 logical_idx;
- };
+
+non-aggregated path :
+
+*ath_tx_start_dma
+*ath_send_normal
+
+->  'ath_tx_setup_buffer' called from 'ath_tx_start_dma' can have a 
+'is_paprd' check based on 'txctl->paprd' which holds which chain we are 
+sending PAPRD frame.
+
+-> 'ath_send_normal' called from
+                                  -ath_tx_start_dma ( then 'bf' should 
+be valid and we would not have called 'ath_tx_setup_buffer'
+				 -ath_tx_flush_tid ( which is an aggregation path) ignore it.
+
+
+attached rough patch for ath9k, need to be compiled and tested. i will 
+also analyze if this can be done in a better way or any flaws in it
+
+
+>>
+>> Regards,
+>> Chr
+>> ---
+>> drivers/net/wireless/ath/ath9k/main.c | 2 +-
+>> drivers/net/wireless/ath/ath9k/xmit.c | 6 +++++-
+>> 2 files changed, 6 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/main.c
+>> b/drivers/net/wireless/ath/ath9k/main.c
+>> index c81304d..4471ed9 100644
+>> --- a/drivers/net/wireless/ath/ath9k/main.c
+>> +++ b/drivers/net/wireless/ath/ath9k/main.c
+>> @@ -1162,7 +1162,7 @@ static void ath9k_tx(struct ieee80211_hw *hw,
+>> struct sk_buff *skb)
+>>
+>> return;
+>> exit:
+>> - dev_kfree_skb_any(skb);
+>> + ieee80211_free_txskb(sc->hw, skb);
+>> }
+>>
+>> static void ath9k_stop(struct ieee80211_hw *hw)
+>> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c
+>> b/drivers/net/wireless/ath/ath9k/xmit.c
+>> index 3182408..0dadbc3 100644
+>> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+>> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+>> @@ -1858,7 +1858,11 @@ static struct ath_buf
+>> *ath_tx_setup_buffer(struct ath_softc *sc,
+>> return bf;
+>>
+>> error:
+>> - dev_kfree_skb_any(skb);
+>> +
+>> + if (bf->bf_state.bfs_paprd)
+>> + dev_kfree_skb_any(skb);
+>> + else
+>> + ieee80211_free_txskb(sc->hw, skb);
+>> return NULL;
+>> }
+>>
+>
+>
+
+
+-- 
+thanks,
+shafi
+
+--------------030301020603050900000702
+Content-Type: text/x-patch; name="use-mac80211-api-freeing-skb.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="use-mac80211-api-freeing-skb.patch"
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 02e95c8..1a37a43 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1148,7 +1148,7 @@ static void ath9k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
  
- struct nfc_genl_data {
-@@ -87,6 +88,7 @@ struct nfc_genl_data {
- 
- struct nfc_dev {
- 	unsigned idx;
-+	unsigned target_idx;
- 	struct nfc_target *targets;
- 	int n_targets;
- 	int targets_generation;
-diff --git a/net/nfc/core.c b/net/nfc/core.c
-index 376f9ac..2818582 100644
---- a/net/nfc/core.c
-+++ b/net/nfc/core.c
-@@ -428,10 +428,15 @@ EXPORT_SYMBOL(nfc_alloc_recv_skb);
- int nfc_targets_found(struct nfc_dev *dev,
- 		      struct nfc_target *targets, int n_targets)
- {
-+	int i;
-+
- 	pr_debug("dev_name=%s n_targets=%d\n", dev_name(&dev->dev), n_targets);
- 
- 	dev->polling = false;
- 
-+	for (i = 0; i < n_targets; i++)
-+		targets[i].idx = dev->target_idx++;
-+
- 	spin_lock_bh(&dev->targets_lock);
- 
- 	dev->targets_generation++;
-diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-index 9ec065b..8737c20 100644
---- a/net/nfc/nci/core.c
-+++ b/net/nfc/nci/core.c
-@@ -477,7 +477,7 @@ static int nci_activate_target(struct nfc_dev *nfc_dev, __u32 target_idx,
- 	}
- 
- 	if (atomic_read(&ndev->state) == NCI_W4_HOST_SELECT) {
--		param.rf_discovery_id = target->idx;
-+		param.rf_discovery_id = target->logical_idx;
- 
- 		if (protocol == NFC_PROTO_JEWEL)
- 			param.rf_protocol = NCI_RF_PROTOCOL_T1T;
-diff --git a/net/nfc/nci/ntf.c b/net/nfc/nci/ntf.c
-index 2e3dee4..99e1632 100644
---- a/net/nfc/nci/ntf.c
-+++ b/net/nfc/nci/ntf.c
-@@ -227,7 +227,7 @@ static void nci_add_new_target(struct nci_dev *ndev,
- 
- 	for (i = 0; i < ndev->n_targets; i++) {
- 		target = &ndev->targets[i];
--		if (target->idx == ntf->rf_discovery_id) {
-+		if (target->logical_idx == ntf->rf_discovery_id) {
- 			/* This target already exists, add the new protocol */
- 			nci_add_new_protocol(ndev, target, ntf->rf_protocol,
- 					     ntf->rf_tech_and_mode,
-@@ -248,10 +248,10 @@ static void nci_add_new_target(struct nci_dev *ndev,
- 				  ntf->rf_tech_and_mode,
- 				  &ntf->rf_tech_specific_params);
- 	if (!rc) {
--		target->idx = ntf->rf_discovery_id;
-+		target->logical_idx = ntf->rf_discovery_id;
- 		ndev->n_targets++;
- 
--		pr_debug("target_idx %d, n_targets %d\n", target->idx,
-+		pr_debug("logical idx %d, n_targets %d\n", target->logical_idx,
- 			 ndev->n_targets);
- 	}
+ 	return;
+ exit:
+-	dev_kfree_skb_any(skb);
++	ieee80211_free_txskb(sc->hw, skb);
  }
-@@ -372,10 +372,11 @@ static void nci_target_auto_activated(struct nci_dev *ndev,
- 	if (rc)
+ 
+ static void ath9k_stop(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 5dd27d2..699086c 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -811,7 +811,7 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 		fi = get_frame_info(skb);
+ 		bf = fi->bf;
+ 		if (!fi->bf)
+-			bf = ath_tx_setup_buffer(sc, txq, tid, skb);
++			bf = ath_tx_setup_buffer(sc, txq, tid, skb, false);
+ 
+ 		if (!bf)
+ 			continue;
+@@ -1728,7 +1728,7 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 		return;
+ 	}
+ 
+-	bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb);
++	bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb, false);
+ 	if (!bf)
  		return;
  
--	target->idx = ntf->rf_discovery_id;
-+	target->logical_idx = ntf->rf_discovery_id;
- 	ndev->n_targets++;
+@@ -1752,10 +1752,12 @@ static void ath_tx_send_normal(struct ath_softc *sc, struct ath_txq *txq,
+ 	struct ath_frame_info *fi = get_frame_info(skb);
+ 	struct list_head bf_head;
+ 	struct ath_buf *bf;
++	bool is_paprd = false;
  
--	pr_debug("target_idx %d, n_targets %d\n", target->idx, ndev->n_targets);
-+	pr_debug("logical idx %d, n_targets %d\n",
-+		 target->logical_idx, ndev->n_targets);
+ 	bf = fi->bf;
++
+ 	if (!bf)
+-		bf = ath_tx_setup_buffer(sc, txq, tid, skb);
++		bf = ath_tx_setup_buffer(sc, txq, tid, skb, false);
  
- 	nfc_targets_found(ndev->nfc_dev, ndev->targets, ndev->n_targets);
+ 	if (!bf)
+ 		return;
+@@ -1816,7 +1818,8 @@ u8 ath_txchainmask_reduction(struct ath_softc *sc, u8 chainmask, u32 rate)
+ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
+ 					   struct ath_txq *txq,
+ 					   struct ath_atx_tid *tid,
+-					   struct sk_buff *skb)
++					   struct sk_buff *skb,
++					   bool is_paprd)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_frame_info *fi = get_frame_info(skb);
+@@ -1857,7 +1860,11 @@ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
+ 	return bf;
+ 
+ error:
+-	dev_kfree_skb_any(skb);
++	if (is_paprd)
++		dev_kfree_skb_any(skb);
++	else
++		ieee80211_free_txskb(sc->hw, skb);
++
+ 	return NULL;
  }
-diff --git a/net/nfc/rawsock.c b/net/nfc/rawsock.c
-index 5a839ce..47fcf0d 100644
---- a/net/nfc/rawsock.c
-+++ b/net/nfc/rawsock.c
-@@ -92,6 +92,18 @@ static int rawsock_connect(struct socket *sock, struct sockaddr *_addr,
- 		goto error;
- 	}
  
-+	if (addr->target_idx > dev->target_idx - 1 ||
-+	    addr->target_idx < dev->target_idx - dev->n_targets) {
-+		rc = -EINVAL;
-+		goto error;
-+	}
+@@ -1870,6 +1877,7 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct sk_buff *skb,
+ 	struct ath_atx_tid *tid = NULL;
+ 	struct ath_buf *bf;
+ 	u8 tidno;
++	bool is_paprd = false;
+ 
+ 	if ((sc->sc_flags & SC_OP_TXAGGR) && txctl->an &&
+ 		ieee80211_is_data_qos(hdr->frame_control)) {
+@@ -1887,7 +1895,10 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct sk_buff *skb,
+ 		 */
+ 		ath_tx_send_ampdu(sc, tid, skb, txctl);
+ 	} else {
+-		bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb);
++		if (txctl->paprd)
++			is_paprd = true;
 +
-+	if (addr->target_idx > dev->target_idx - 1 ||
-+	    addr->target_idx < dev->target_idx - dev->n_targets) {
-+		rc = -EINVAL;
-+		goto error;
-+	}
-+
- 	rc = nfc_activate_target(dev, addr->target_idx, addr->nfc_protocol);
- 	if (rc)
- 		goto put_dev;
--- 
-1.7.9.1
++		bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb, is_paprd);
+ 		if (!bf)
+ 			return;
+ 
 
--- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+--------------030301020603050900000702--
