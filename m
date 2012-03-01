@@ -1,65 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx3.wp.pl ([212.77.101.7]:42564 "EHLO mx3.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754797Ab2C0OvT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2012 10:51:19 -0400
-From: Jakub Kicinski <kubakici@wp.pl>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Jakub Kicinski <kubakici@wp.pl>
-Subject: [PATCH 3/4] rt2x00: initialize queues before giving up due to DMA error
-Date: Tue, 27 Mar 2012 16:51:06 +0200
-Message-Id: <1332859867-27921-4-git-send-email-kubakici@wp.pl> (sfid-20120327_165123_696247_1CEFC7BC)
-In-Reply-To: <1332859867-27921-1-git-send-email-kubakici@wp.pl>
-References: <1332859867-27921-1-git-send-email-kubakici@wp.pl>
+Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:44663 "EHLO
+	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754723Ab2CAFyC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Mar 2012 00:54:02 -0500
+Received: by lahj13 with SMTP id j13so301487lah.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 21:54:01 -0800 (PST)
+Message-ID: <4F4F0EE1.2020202@lacto.se> (sfid-20120301_065410_374101_5B74AF90)
+Date: Thu, 01 Mar 2012 06:53:37 +0100
+From: =?ISO-8859-1?Q?Kim_Lidstr=F6m?= <dexter@lacto.se>
+MIME-Version: 1.0
+To: Mohammed Shafi <shafi.wireless@gmail.com>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	Adrian Chadd <adrian@freebsd.org>
+Subject: Re: "Failed to stop Tx DMA" and "Could not stop RX" with AR9485
+References: <4F4E9A36.2080809@lacto.se> <CAD2nsn2ifGDPr_J7LtBS04yCkxg12jQShrCDCBUERmOC5kodyA@mail.gmail.com>
+In-Reply-To: <CAD2nsn2ifGDPr_J7LtBS04yCkxg12jQShrCDCBUERmOC5kodyA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Don't immediately abort .start if DMA is busy before we
-initialize the queues. Some drivers do not deinitialize
-queues properly and we would fail to take over after them.
+On 03/01/2012 06:09 AM, Mohammed Shafi wrote:
+>> With this message I have attached a log with the error messages.
+>> This has been a problem since.. Uhm.. Kernel 3.2.something and I'm
+>> currently running 3.2.8.
+>> For some reason it happened at least 3-4 times shortly after each other
+>> today - so I thought I might ask on here what's happening.
+> 
+> disabling power save would be a nice idea,  to see if this issue disappears.
+> i got the same issue after a long stress test with some other card, sujith
+> gave me the idea to see if disabling PS helps
+> sudo iwconfig wlanX power off
+> sudo iw dev wlanX set power_save off
+> also please ensure that you run with your power adapter :) i noticed
+> PS gets enabled
+> via wext when we plug out the power adapter
+> 
 
-This behaviour is consistent with legacy driver.
+I just tried it and will see what happens! That might take a while,
+though, because it seems to occur at random.
 
-Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
----
-2011_0406_RT5390_RT5392_Linux_STA_V2.5.0.3_DPO
-common/rtmp_init.c:2007
----
- drivers/net/wireless/rt2x00/rt2800lib.c |    2 +-
- drivers/net/wireless/rt2x00/rt2800pci.c |    6 ++++--
- 2 files changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index c872ba6..de975ef 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -290,7 +290,7 @@ int rt2800_wait_wpdma_ready(struct rt2x00_dev *rt2x00dev)
- 		msleep(10);
- 	}
- 
--	ERROR(rt2x00dev, "WPDMA TX/RX busy, aborting.\n");
-+	ERROR(rt2x00dev, "WPDMA TX/RX busy [0x%08x].\n", reg);
- 	return -EACCES;
- }
- EXPORT_SYMBOL_GPL(rt2800_wait_wpdma_ready);
-diff --git a/drivers/net/wireless/rt2x00/rt2800pci.c b/drivers/net/wireless/rt2x00/rt2800pci.c
-index 5a2f68f..f39587b 100644
---- a/drivers/net/wireless/rt2x00/rt2800pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2800pci.c
-@@ -501,8 +501,10 @@ static int rt2800pci_enable_radio(struct rt2x00_dev *rt2x00dev)
- {
- 	int retval;
- 
--	if (unlikely(rt2800_wait_wpdma_ready(rt2x00dev) ||
--		     rt2800pci_init_queues(rt2x00dev)))
-+	/* Wait for DMA, ignore error until we initialize queues. */
-+	rt2800_wait_wpdma_ready(rt2x00dev);
-+
-+	if (unlikely(rt2800pci_init_queues(rt2x00dev)))
- 		return -EIO;
- 
- 	retval = rt2800_enable_radio(rt2x00dev);
--- 
-1.7.7.6
+But you know something? The thought has struck me before that it might
+have something to do with power saving. Interesting :)
 
