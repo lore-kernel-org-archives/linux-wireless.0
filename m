@@ -1,36 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:42856 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751560Ab2CJHfi (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:57732 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750743Ab2CAFDE convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Mar 2012 02:35:38 -0500
-Subject: Re: [PATCH] mac80211: Disable MCS > 7 in minstrel_ht when STA uses
- static SMPS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	nbd@openwrt.org
-In-Reply-To: <CAJ-Vmo=WLa6Lc7u4fjPNDjVP5MT9+OJ-qNP-zBL+T=ajOHSN7g@mail.gmail.com> (sfid-20120310_074059_038114_F8B300B5)
-References: <1331298825-22314-1-git-send-email-helmut.schaa@googlemail.com>
-	 <CAGXE3d_58okToGOH146vDsgZ_Jf01iZAxDX0pxwBMGSo0BvZYg@mail.gmail.com>
-	 <CAJ-Vmo=WLa6Lc7u4fjPNDjVP5MT9+OJ-qNP-zBL+T=ajOHSN7g@mail.gmail.com>
-	 (sfid-20120310_074059_038114_F8B300B5)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 10 Mar 2012 08:35:31 +0100
-Message-ID: <1331364931.3348.0.camel@jlt3.sipsolutions.net> (sfid-20120310_083607_700740_578FC5D2)
-Mime-Version: 1.0
+	Thu, 1 Mar 2012 00:03:04 -0500
+Received: by vcqp1 with SMTP id p1so177133vcq.19
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 21:03:03 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CALx5=V8BDFXD7KGBFia0MAkb2iv3x5dupGXTkKEDJ24DLJVx1g@mail.gmail.com>
+References: <CALx5=V8BDFXD7KGBFia0MAkb2iv3x5dupGXTkKEDJ24DLJVx1g@mail.gmail.com>
+Date: Thu, 1 Mar 2012 10:33:03 +0530
+Message-ID: <CAD2nsn2GLAo=8xhe+-Xm0igSmQ+tr1F+Q6scuFaeaQWMYrQbwg@mail.gmail.com> (sfid-20120301_060309_147073_08814B19)
+Subject: Re: [ath9k-devel] Any recommendation of direct access the GPIO from
+ specific address ?
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Matt Chen <machen@suse.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-03-09 at 22:40 -0800, Adrian Chadd wrote:
-> .. hm, I was wondering about SMPS. Why not RTS? Wouldn't that
-> wake up the other RX chains?
+On Wed, Feb 29, 2012 at 4:33 PM, Matt Chen <machen@suse.com> wrote:
+> Hi list,
+>
+> I am working on verifying the ath9k_rfkill_poll_state() function. It
+> would execute the ath_is_rfkill_set() the read the GPIO and change the
+> LED. I found the POLL_INTERVAL would take 5 secs according the
+> definition in net/rfkill/core.c
+> #define POLL_INTERVAL (5 * HZ)
+> So it would detect the GPIO status in every 5 seconds. But the ath9k I
+> run in different platform, with the same modules, it works different
+> way. The LED for one is working very fast, in another one is working
+> so slow.
+>
+> I would like to clarify it is driver or BIOS issues. The way I come
+> out is manually to change the GPIO status, see how the driver work.
+> But so far I only found the devmen2 to access the specific address of
+> GPIO. Any other good ways recommended ?
+> And another question is the address defined in reg.h correct to access
+> ? Such as
+> #define AR_GPIO_IN    (AR_SERV_9340(ah)) ? 0x402c : 0x404c)
+> can I access the value of 0x404c directly?
 
-(corrected to RTS)
+yes you can, one idea i have is to enable ath9k debug
+http://linuxwireless.org/en/users/Drivers/ath9k/debug
+and echo 0x404c in the regidx field in debug and keep looking for regval,
+in which the corresponding rfkill related bit may toggle,  when the
+rfkill is enabled
 
-That would be "dynamic SMPS", "static SMPS" means your chains are truly
-turned off and can't even be revived by RTS.
+>
+> Thank you for your patience. :)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-johannes
 
+
+-- 
+thanks,
+shafi
