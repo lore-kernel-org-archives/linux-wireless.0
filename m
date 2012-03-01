@@ -1,56 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:59366 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758458Ab2CBIv5 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:58100 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751046Ab2CAO1X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 03:51:57 -0500
-Subject: Re: [PATCH 19/21] cw1200: TODO list.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1330652495-25837-20-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_024214_419049_90816933)
-References: <d53e019b1a0bcd29c2c367fbe5665413f2d33938-submit>
-	 <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-	 <1330652495-25837-20-git-send-email-dmitry.tarnyagin@stericsson.com>
-	 (sfid-20120302_024214_419049_90816933)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 02 Mar 2012 09:51:55 +0100
-Message-ID: <1330678315.8542.8.camel@jlt3.sipsolutions.net> (sfid-20120302_095202_273626_854715D4)
-Mime-Version: 1.0
+	Thu, 1 Mar 2012 09:27:23 -0500
+Date: Thu, 1 Mar 2012 19:57:29 +0530
+From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linville@tuxdriver.com>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: Add an attribute to set inactivity timeout
+ in AP mode
+Message-ID: <20120301142727.GA2041@vasanth-laptop> (sfid-20120301_152727_257165_0BB4AA79)
+References: <1330606339-9055-1-git-send-email-vthiagar@qca.qualcomm.com>
+ <1330611665.3623.3.camel@jlt3.sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1330611665.3623.3.camel@jlt3.sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-03-02 at 02:41 +0100, Dmitry Tarnyagin wrote:
-> Just a TODO list for the driver.
+On Thu, Mar 01, 2012 at 03:21:05PM +0100, Johannes Berg wrote:
+> On Thu, 2012-03-01 at 18:22 +0530, Vasanthakumar Thiagarajan wrote:
+> > This patch adds an attribute, NL80211_ATTR_INACTIVITY_TIMEOUT,
+> > to set the inactivity timeout which can be used to remove the
+> > station in AP mode. This can be passed in NL80211_CMD_START_AP
+> > and used by the drivers which have AP MLME in firmware but
+> > don't support get_station() properly.
 > 
-> Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-> ---
->  drivers/staging/cw1200/TODO |    7 +++++++
->  1 files changed, 7 insertions(+), 0 deletions(-)
->  create mode 100644 drivers/staging/cw1200/TODO
-> 
-> diff --git a/drivers/staging/cw1200/TODO b/drivers/staging/cw1200/TODO
-> new file mode 100644
-> index 0000000..8967a29
-> --- /dev/null
-> +++ b/drivers/staging/cw1200/TODO
-> @@ -0,0 +1,7 @@
-> +TODO:
-> +        - IBSS: Not implemented. Consider as obsolete?
-> +	- Convert bh thread to a realtime workqueue.
-> +	- Submit mac80211 CQM (beacon miss, tx fail) changes
-> +	  and reenable CQM extensions in the driver.
-> +	- Align filters in pm.c with wowlan filters.
-> +	- Different suspend strategy for Linux and Android.
+> Doesn't hostapd need to know whether this is done or not? At least if it
+> knew it could avoid timers etc. -- seems you should add a flag that
+> indicates support for this? .And maybe refuse the setting if the flag
+> isn't set.
 
-It's nice that you add this todo list, so we know you have a plan to
-still work on it :-)
+Makes sense, i'll add a flag. thanks!
 
-Apart from my few small comments though I don't really see anything
-wrong with the code that would require inclusion into staging. I think
-that when you resend (I'd like you to address some of the Kconfig issues
-I pointed out) you should just put the driver into drivers/net/wireless/
-instead.
-
-johannes
-
+Vasanth
