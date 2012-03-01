@@ -1,41 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:41676 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756199Ab2CESK3 (ORCPT
+Received: from hermes.mlbassoc.com ([64.234.241.98]:57509 "EHLO
+	mail.chez-thomas.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758958Ab2CAM2Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 13:10:29 -0500
-Date: Mon, 5 Mar 2012 21:10:07 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] airo: fix test for FLAG_RADIO_DOWN
-Message-ID: <20120305181007.GC26880@elgon.mountain> (sfid-20120305_191034_447861_020B4150)
+	Thu, 1 Mar 2012 07:28:16 -0500
+Message-ID: <4F4F6B5A.6060202@mlbassoc.com> (sfid-20120301_132820_468634_2732F6C9)
+Date: Thu, 01 Mar 2012 05:28:10 -0700
+From: Gary Thomas <gary@mlbassoc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Ohad Ben-Cohen <ohad@wizery.com>
+CC: Linux Wireless <linux-wireless@vger.kernel.org>,
+	Luciano Coelho <coelho@ti.com>
+Subject: Re: Problems with wl1271
+References: <4F4E903B.2030501@mlbassoc.com> <CAK=WgbbO2fv-hp6vJ8-rhRvzGgs26kd5UGWp_vWveXb_VmpsoA@mail.gmail.com>
+In-Reply-To: <CAK=WgbbO2fv-hp6vJ8-rhRvzGgs26kd5UGWp_vWveXb_VmpsoA@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We should be doing a shift (1 << FLAG_RADIO_DOWN) here before testing
-the flag.  As luck would have it, this test works almost correctly.
-The current code tests for FLAG_RADIO_OFF instead of FLAG_RADIO_DOWN.
+On 2012-03-01 05:13, Ohad Ben-Cohen wrote:
+> On Wed, Feb 29, 2012 at 10:53 PM, Gary Thomas<gary@mlbassoc.com>  wrote:
+>> If I try to scan for an access point, I get nothing:
+>>   # iw wlan0 scan
+>>   --- Nothing prints
+>
+> You might be using a wrong reference clock value (see
+> include/linux/wl12xx.h for more info, look for 'clock').
 
-#define FLAG_RADIO_OFF  0       /* User disabling of MAC */
-#define FLAG_RADIO_DOWN 1       /* ifup/ifdown disabling of MAC */
+Yes, that was it :-)  I added the "board_ref_clock" to my
+platform parameters and now I'm getting something from the
+scan.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-I don't have this hardware.  Please review carefully.
+Thanks for the help
 
-diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
-index 1c008c6..ddc061d 100644
---- a/drivers/net/wireless/airo.c
-+++ b/drivers/net/wireless/airo.c
-@@ -1869,7 +1869,7 @@ static int readStatsRid(struct airo_info*ai, StatsRid *sr, int rid, int lock)
- 
- static void try_auto_wep(struct airo_info *ai)
- {
--	if (auto_wep && !(ai->flags & FLAG_RADIO_DOWN)) {
-+	if (auto_wep && !test_bit(FLAG_RADIO_DOWN, &ai->flags)) {
- 		ai->expires = RUN_AT(3*HZ);
- 		wake_up_interruptible(&ai->thr_wait);
- 	}
+-- 
+------------------------------------------------------------
+Gary Thomas                 |  Consulting for the
+MLB Associates              |    Embedded world
+------------------------------------------------------------
