@@ -1,65 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.8]:37857 "EHLO mx4.wp.pl"
+Received: from nbd.name ([46.4.11.11]:35338 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754786Ab2C0OvR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2012 10:51:17 -0400
-From: Jakub Kicinski <kubakici@wp.pl>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com,
-	Jakub Kicinski <kubakici@wp.pl>
-Subject: [PATCH 2/4] rt2x00: move disabling of DMA before loading firmware
-Date: Tue, 27 Mar 2012 16:51:05 +0200
-Message-Id: <1332859867-27921-3-git-send-email-kubakici@wp.pl> (sfid-20120327_165126_707870_239E72F6)
-In-Reply-To: <1332859867-27921-1-git-send-email-kubakici@wp.pl>
-References: <1332859867-27921-1-git-send-email-kubakici@wp.pl>
+	id S1030546Ab2CAKYD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Mar 2012 05:24:03 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH] mac80211: use 16 bit alignment for the if_ibss bssid field
+Date: Thu,  1 Mar 2012 11:23:37 +0100
+Message-Id: <1330597417-74535-1-git-send-email-nbd@openwrt.org> (sfid-20120301_112420_223525_304D0884)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Legacy driver disables DMA before not after loading firmware.
+Several MAC address comparison functions assume 16 bit alignment for pointers
+passed to them. Since the addition of the control_port field, alignment
+for the IBSS bssid was off by one, causing a severe performance hit on
+architectures without efficient unaligned access (e.g. MIPS).
 
-Signed-off-by: Jakub Kicinski <kubakici@wp.pl>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-2011_0406_RT5390_RT5392_Linux_STA_V2.5.0.3_DPO
-rtmp_init_inf.c:186
----
- drivers/net/wireless/rt2x00/rt2800lib.c |   17 ++++++++---------
- 1 files changed, 8 insertions(+), 9 deletions(-)
+ net/mac80211/ieee80211_i.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/rt2x00/rt2800lib.c b/drivers/net/wireless/rt2x00/rt2800lib.c
-index 4722030..c872ba6 100644
---- a/drivers/net/wireless/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/rt2x00/rt2800lib.c
-@@ -411,6 +411,14 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
- 	}
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index cee0c74..c413058 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -480,7 +480,7 @@ struct ieee80211_if_ibss {
  
- 	/*
-+	 * Disable DMA, will be reenabled later when enabling the radio.
-+	 */
-+	rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
-+	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
-+	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
-+	rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
-+
-+	/*
- 	 * Write firmware to the device.
- 	 */
- 	rt2800_drv_write_firmware(rt2x00dev, data, len);
-@@ -431,15 +439,6 @@ int rt2800_load_firmware(struct rt2x00_dev *rt2x00dev,
- 	}
+ 	bool control_port;
  
- 	/*
--	 * Disable DMA, will be reenabled later when enabling
--	 * the radio.
--	 */
--	rt2800_register_read(rt2x00dev, WPDMA_GLO_CFG, &reg);
--	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_TX_DMA, 0);
--	rt2x00_set_field32(&reg, WPDMA_GLO_CFG_ENABLE_RX_DMA, 0);
--	rt2800_register_write(rt2x00dev, WPDMA_GLO_CFG, reg);
--
--	/*
- 	 * Initialize firmware.
- 	 */
- 	rt2800_register_write(rt2x00dev, H2M_BBP_AGENT, 0);
+-	u8 bssid[ETH_ALEN];
++	u8 bssid[ETH_ALEN] __aligned(2);
+ 	u8 ssid[IEEE80211_MAX_SSID_LEN];
+ 	u8 ssid_len, ie_len;
+ 	u8 *ie;
 -- 
-1.7.7.6
+1.7.3.2
 
