@@ -1,87 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:60494 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755985Ab2CYOPq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Mar 2012 10:15:46 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
-Subject: [PATCH v2 2/9] ath6kl: Add tx_complete() to struct htc_ep_callbacks
-Date: Sun, 25 Mar 2012 17:15:22 +0300
-Message-Id: <1332684929-6405-3-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120325_161631_819080_CE754F56)
-In-Reply-To: <1332684929-6405-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1332684929-6405-1-git-send-email-kvalo@qca.qualcomm.com>
+Received: from nbd.name ([46.4.11.11]:58333 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1031075Ab2CAOWS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Mar 2012 09:22:18 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, johannes@sipsolutions.net
+Subject: [PATCH 1/2] cfg80211: use compare_ether_addr on MAC addresses instead of memcmp
+Date: Thu,  1 Mar 2012 15:22:08 +0100
+Message-Id: <1330611729-68484-1-git-send-email-nbd@openwrt.org> (sfid-20120301_152224_033902_B27BAD9D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is needed by the USB code. Also while at it replace one void pointer
-with a properly typed pointer.
+Because of the constant size and guaranteed 16 bit alignment, the inline
+compare_ether_addr function is much cheaper than calling memcmp.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/ath/ath6kl/core.h |    3 ++-
- drivers/net/wireless/ath/ath6kl/htc.c  |    2 +-
- drivers/net/wireless/ath/ath6kl/htc.h  |    1 +
- drivers/net/wireless/ath/ath6kl/txrx.c |    5 +++--
- 4 files changed, 7 insertions(+), 4 deletions(-)
+ net/wireless/mlme.c |   32 +++++++++++++++++---------------
+ net/wireless/scan.c |    2 +-
+ 2 files changed, 18 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index f1dd890..6485ef0 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -746,7 +746,8 @@ void init_netdev(struct net_device *dev);
- void ath6kl_cookie_init(struct ath6kl *ar);
- void ath6kl_cookie_cleanup(struct ath6kl *ar);
- void ath6kl_rx(struct htc_target *target, struct htc_packet *packet);
--void ath6kl_tx_complete(void *context, struct list_head *packet_queue);
-+void ath6kl_tx_complete(struct htc_target *context,
-+			struct list_head *packet_queue);
- enum htc_send_full_action ath6kl_tx_queue_full(struct htc_target *target,
- 					       struct htc_packet *packet);
- void ath6kl_stop_txrx(struct ath6kl *ar);
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.c b/drivers/net/wireless/ath/ath6kl/htc.c
-index 4849d99..187f449 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.c
-+++ b/drivers/net/wireless/ath/ath6kl/htc.c
-@@ -432,7 +432,7 @@ static void htc_tx_complete(struct htc_endpoint *endpoint,
- 		   "htc tx complete ep %d pkts %d\n",
- 		   endpoint->eid, get_queue_depth(txq));
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index fb1e721..71ba519 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -6,6 +6,7 @@
  
--	ath6kl_tx_complete(endpoint->target->dev->ar, txq);
-+	ath6kl_tx_complete(endpoint->target, txq);
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <linux/etherdevice.h>
+ #include <linux/netdevice.h>
+ #include <linux/nl80211.h>
+ #include <linux/slab.h>
+@@ -100,7 +101,7 @@ void __cfg80211_send_deauth(struct net_device *dev,
+ 	ASSERT_WDEV_LOCK(wdev);
+ 
+ 	if (wdev->current_bss &&
+-	    memcmp(wdev->current_bss->pub.bssid, bssid, ETH_ALEN) == 0) {
++	    compare_ether_addr(wdev->current_bss->pub.bssid, bssid) == 0) {
+ 		cfg80211_unhold_bss(wdev->current_bss);
+ 		cfg80211_put_bss(&wdev->current_bss->pub);
+ 		wdev->current_bss = NULL;
+@@ -115,7 +116,7 @@ void __cfg80211_send_deauth(struct net_device *dev,
+ 
+ 		reason_code = le16_to_cpu(mgmt->u.deauth.reason_code);
+ 
+-		from_ap = memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0;
++		from_ap = compare_ether_addr(mgmt->sa, dev->dev_addr) != 0;
+ 		__cfg80211_disconnected(dev, NULL, 0, reason_code, from_ap);
+ 	} else if (wdev->sme_state == CFG80211_SME_CONNECTING) {
+ 		__cfg80211_connect_result(dev, mgmt->bssid, NULL, 0, NULL, 0,
+@@ -154,7 +155,7 @@ void __cfg80211_send_disassoc(struct net_device *dev,
+ 		return;
+ 
+ 	if (wdev->current_bss &&
+-	    memcmp(wdev->current_bss->pub.bssid, bssid, ETH_ALEN) == 0) {
++	    compare_ether_addr(wdev->current_bss->pub.bssid, bssid) == 0) {
+ 		cfg80211_sme_disassoc(dev, wdev->current_bss);
+ 		cfg80211_unhold_bss(wdev->current_bss);
+ 		cfg80211_put_bss(&wdev->current_bss->pub);
+@@ -165,7 +166,7 @@ void __cfg80211_send_disassoc(struct net_device *dev,
+ 
+ 	reason_code = le16_to_cpu(mgmt->u.disassoc.reason_code);
+ 
+-	from_ap = memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0;
++	from_ap = compare_ether_addr(mgmt->sa, dev->dev_addr) != 0;
+ 	__cfg80211_disconnected(dev, NULL, 0, reason_code, from_ap);
  }
+ EXPORT_SYMBOL(__cfg80211_send_disassoc);
+@@ -285,7 +286,7 @@ int __cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+ 			return -EINVAL;
  
- static void htc_tx_comp_handler(struct htc_target *target,
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
-index 5027ccc..7b0c489 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.h
-+++ b/drivers/net/wireless/ath/ath6kl/htc.h
-@@ -319,6 +319,7 @@ enum htc_send_full_action {
- };
+ 	if (wdev->current_bss &&
+-	    memcmp(bssid, wdev->current_bss->pub.bssid, ETH_ALEN) == 0)
++	    compare_ether_addr(bssid, wdev->current_bss->pub.bssid) == 0)
+ 		return -EALREADY;
  
- struct htc_ep_callbacks {
-+	void (*tx_complete) (struct htc_target *, struct htc_packet *);
- 	void (*rx) (struct htc_target *, struct htc_packet *);
- 	void (*rx_refill) (struct htc_target *, enum htc_endpoint_id endpoint);
- 	enum htc_send_full_action (*tx_full) (struct htc_target *,
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index f85353f..befe305 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -666,9 +666,10 @@ static void ath6kl_tx_clear_node_map(struct ath6kl_vif *vif,
+ 	memset(&req, 0, sizeof(req));
+@@ -362,7 +363,7 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
+ 	memset(&req, 0, sizeof(req));
+ 
+ 	if (wdev->current_bss && prev_bssid &&
+-	    memcmp(wdev->current_bss->pub.bssid, prev_bssid, ETH_ALEN) == 0) {
++	    compare_ether_addr(wdev->current_bss->pub.bssid, prev_bssid) == 0) {
+ 		/*
+ 		 * Trying to reassociate: Allow this to proceed and let the old
+ 		 * association to be dropped when the new one is completed.
+@@ -446,7 +447,8 @@ int __cfg80211_mlme_deauth(struct cfg80211_registered_device *rdev,
+ 
+ 	if (local_state_change) {
+ 		if (wdev->current_bss &&
+-		    memcmp(wdev->current_bss->pub.bssid, bssid, ETH_ALEN) == 0) {
++		    compare_ether_addr(wdev->current_bss->pub.bssid, bssid)
++		    == 0) {
+ 			cfg80211_unhold_bss(wdev->current_bss);
+ 			cfg80211_put_bss(&wdev->current_bss->pub);
+ 			wdev->current_bss = NULL;
+@@ -495,7 +497,7 @@ static int __cfg80211_mlme_disassoc(struct cfg80211_registered_device *rdev,
+ 	req.local_state_change = local_state_change;
+ 	req.ie = ie;
+ 	req.ie_len = ie_len;
+-	if (memcmp(wdev->current_bss->pub.bssid, bssid, ETH_ALEN) == 0)
++	if (compare_ether_addr(wdev->current_bss->pub.bssid, bssid) == 0)
+ 		req.bss = &wdev->current_bss->pub;
+ 	else
+ 		return -ENOTCONN;
+@@ -758,8 +760,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 				break;
+ 			}
+ 
+-			if (memcmp(wdev->current_bss->pub.bssid,
+-				   mgmt->bssid, ETH_ALEN)) {
++			if (compare_ether_addr(wdev->current_bss->pub.bssid,
++					       mgmt->bssid)) {
+ 				err = -ENOTCONN;
+ 				break;
+ 			}
+@@ -772,8 +774,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 				break;
+ 
+ 			/* for station, check that DA is the AP */
+-			if (memcmp(wdev->current_bss->pub.bssid,
+-				   mgmt->da, ETH_ALEN)) {
++			if (compare_ether_addr(wdev->current_bss->pub.bssid,
++					       mgmt->da)) {
+ 				err = -ENOTCONN;
+ 				break;
+ 			}
+@@ -781,11 +783,11 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 		case NL80211_IFTYPE_AP:
+ 		case NL80211_IFTYPE_P2P_GO:
+ 		case NL80211_IFTYPE_AP_VLAN:
+-			if (memcmp(mgmt->bssid, dev->dev_addr, ETH_ALEN))
++			if (compare_ether_addr(mgmt->bssid, dev->dev_addr))
+ 				err = -EINVAL;
+ 			break;
+ 		case NL80211_IFTYPE_MESH_POINT:
+-			if (memcmp(mgmt->sa, mgmt->bssid, ETH_ALEN)) {
++			if (compare_ether_addr(mgmt->sa, mgmt->bssid)) {
+ 				err = -EINVAL;
+ 				break;
+ 			}
+@@ -804,7 +806,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 			return err;
  	}
+ 
+-	if (memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0)
++	if (compare_ether_addr(mgmt->sa, dev->dev_addr) != 0)
+ 		return -EINVAL;
+ 
+ 	/* Transmit the Action frame as requested by user space */
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index afde7e5..2786f44 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -378,7 +378,7 @@ static int cmp_bss_core(struct cfg80211_bss *a,
+ 			       b->len_information_elements);
+ 	}
+ 
+-	return memcmp(a->bssid, b->bssid, ETH_ALEN);
++	return compare_ether_addr(a->bssid, b->bssid);
  }
  
--void ath6kl_tx_complete(void *context, struct list_head *packet_queue)
-+void ath6kl_tx_complete(struct htc_target *target,
-+			struct list_head *packet_queue)
- {
--	struct ath6kl *ar = context;
-+	struct ath6kl *ar = target->dev->ar;
- 	struct sk_buff_head skb_queue;
- 	struct htc_packet *packet;
- 	struct sk_buff *skb;
+ static int cmp_bss(struct cfg80211_bss *a,
 -- 
-1.7.1
+1.7.3.2
 
