@@ -1,53 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:48759 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:51708 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758641Ab2CGTG2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 14:06:28 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 02/35] iwlwifi: remove unused argument from rs_initialize_lq
-Date: Wed,  7 Mar 2012 09:52:11 -0800
-Message-Id: <1331142764-5750-3-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200634_070675_2726F86B)
-In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1030596Ab2CAOj0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Mar 2012 09:39:26 -0500
+Date: Thu, 1 Mar 2012 09:39:22 -0500
+From: Dave Jones <davej@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, ilw@linux.intel.com
+Subject: firmware error.
+Message-ID: <20120301143922.GA31369@redhat.com> (sfid-20120301_153944_934061_CCD2A051)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Still seeing this occasionally in v3.3-rc5-101-g88ebdda
 
-The function never uses its conf argument,
-so remove it.
+iwlwifi 0000:04:00.0: Received BA when not expected
+iwlwifi 0000:04:00.0: Microcode SW error detected.  Restarting 0x2000000.
+iwlwifi 0000:04:00.0: Loaded firmware version: 8.83.5.1 build 33692
+iwlwifi 0000:04:00.0: Start IWL Error Log Dump:
+iwlwifi 0000:04:00.0: Status: 0x000412E4, count: 5
+iwlwifi 0000:04:00.0: 0x0000001C | ADVANCED_SYSASSERT          
+iwlwifi 0000:04:00.0: 0x000006E4 | uPc
+iwlwifi 0000:04:00.0: 0x000005AA | branchlink1
+iwlwifi 0000:04:00.0: 0x00000820 | branchlink2
+iwlwifi 0000:04:00.0: 0x00000916 | interruptlink1
+iwlwifi 0000:04:00.0: 0x0000E52E | interruptlink2
+iwlwifi 0000:04:00.0: 0x00000002 | data1
+iwlwifi 0000:04:00.0: 0x02630000 | data2
+iwlwifi 0000:04:00.0: 0x00000236 | line
+iwlwifi 0000:04:00.0: 0x00C04D1D | beacon time
+iwlwifi 0000:04:00.0: 0xFDF602E3 | tsf low
+iwlwifi 0000:04:00.0: 0x000000DD | tsf hi
+iwlwifi 0000:04:00.0: 0x00000000 | time gp1
+iwlwifi 0000:04:00.0: 0x57F562C0 | time gp2
+iwlwifi 0000:04:00.0: 0x00000000 | time gp3
+iwlwifi 0000:04:00.0: 0x00010853 | uCode version
+iwlwifi 0000:04:00.0: 0x00000024 | hw version
+iwlwifi 0000:04:00.0: 0x00480302 | board version
+iwlwifi 0000:04:00.0: 0x0B59001C | hcmd
+iwlwifi 0000:04:00.0: 0x2F873802 | isr0
+iwlwifi 0000:04:00.0: 0x014BF800 | isr1
+iwlwifi 0000:04:00.0: 0x0000011A | isr2
+iwlwifi 0000:04:00.0: 0x1443FCC3 | isr3
+iwlwifi 0000:04:00.0: 0x00804110 | isr4
+iwlwifi 0000:04:00.0: 0x00000236 | isr_pref
+iwlwifi 0000:04:00.0: 0x000000D4 | wait_event
+iwlwifi 0000:04:00.0: 0x00000004 | l2p_control
+iwlwifi 0000:04:00.0: 0x00000007 | l2p_duration
+iwlwifi 0000:04:00.0: 0x00101042 | l2p_mhvalid
+iwlwifi 0000:04:00.0: 0x00000015 | l2p_addr_match
+iwlwifi 0000:04:00.0: 0x02121704 | lmpm_pmg_sel
+iwlwifi 0000:04:00.0: 0x14B498A0 | timestamp
+iwlwifi 0000:04:00.0: 0x00000100 | flow_handler
+iwlwifi 0000:04:00.0: CSR values:
+iwlwifi 0000:04:00.0: (2nd byte of CSR_INT_COALESCING is CSR_INT_PERIODIC_REG)
+iwlwifi 0000:04:00.0:        CSR_HW_IF_CONFIG_REG: 0X00480302
+iwlwifi 0000:04:00.0:          CSR_INT_COALESCING: 0X00000040
+iwlwifi 0000:04:00.0:                     CSR_INT: 0X00000000
+iwlwifi 0000:04:00.0:                CSR_INT_MASK: 0X00000000
+iwlwifi 0000:04:00.0:           CSR_FH_INT_STATUS: 0X00000000
+iwlwifi 0000:04:00.0:                 CSR_GPIO_IN: 0X00000000
+iwlwifi 0000:04:00.0:                   CSR_RESET: 0X00000000
+iwlwifi 0000:04:00.0:                CSR_GP_CNTRL: 0X080403c5
+iwlwifi 0000:04:00.0:                  CSR_HW_REV: 0X00000024
+iwlwifi 0000:04:00.0:              CSR_EEPROM_REG: 0X00000000
+iwlwifi 0000:04:00.0:               CSR_EEPROM_GP: 0X90000004
+iwlwifi 0000:04:00.0:              CSR_OTP_GP_REG: 0X00060000
+iwlwifi 0000:04:00.0:                 CSR_GIO_REG: 0X00080042
+iwlwifi 0000:04:00.0:            CSR_GP_UCODE_REG: 0X00003001
+iwlwifi 0000:04:00.0:           CSR_GP_DRIVER_REG: 0X00000000
+iwlwifi 0000:04:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
+iwlwifi 0000:04:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
+iwlwifi 0000:04:00.0:                 CSR_LED_REG: 0X00000058
+iwlwifi 0000:04:00.0:        CSR_DRAM_INT_TBL_REG: 0X8811137b
+iwlwifi 0000:04:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
+iwlwifi 0000:04:00.0:             CSR_ANA_PLL_CFG: 0X00880300
+iwlwifi 0000:04:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
+iwlwifi 0000:04:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0000
+iwlwifi 0000:04:00.0: FH register values:
+iwlwifi 0000:04:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X11672c00
+iwlwifi 0000:04:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X011672b0
+iwlwifi 0000:04:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X00000098
+iwlwifi 0000:04:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X00819104
+iwlwifi 0000:04:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
+iwlwifi 0000:04:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X02630000
+iwlwifi 0000:04:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
+iwlwifi 0000:04:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0001
+iwlwifi 0000:04:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
+iwlwifi 0000:04:00.0: Start IWL Event Log Dump: display last 20 entries
+iwlwifi 0000:04:00.0: EVT_LOGT:1475497643:0x00000000:0210
+iwlwifi 0000:04:00.0: EVT_LOGT:1475497653:0x00000000:0207
+iwlwifi 0000:04:00.0: EVT_LOGT:1475497655:0x01002111:0211
+iwlwifi 0000:04:00.0: EVT_LOGT:1475497660:0x00000000:0212
+iwlwifi 0000:04:00.0: EVT_LOGT:1475498758:0x00000000:0215
+iwlwifi 0000:04:00.0: EVT_LOGT:1475498760:0x00000008:0220
+iwlwifi 0000:04:00.0: EVT_LOGT:1475498779:0x00000000:0301
+iwlwifi 0000:04:00.0: EVT_LOGT:1475498967:0x00000000:0355
+iwlwifi 0000:04:00.0: EVT_LOGT:1475499319:0x00001359:0217
+iwlwifi 0000:04:00.0: EVT_LOGT:1475499323:0x0b58001c:0218
+iwlwifi 0000:04:00.0: EVT_LOGT:1475499401:0x0b59001c:0206
+iwlwifi 0000:04:00.0: EVT_LOGT:1475499402:0x00000001:0204
+iwlwifi 0000:04:00.0: EVT_LOGT:1475499405:0x01102100:0209
+iwlwifi 0000:04:00.0: EVT_LOGT:1475499430:0x00000000:0210
+iwlwifi 0000:04:00.0: EVT_LOGT:1475499446:0x00000000:0207
+iwlwifi 0000:04:00.0: EVT_LOGT:1475499449:0x2b110000:0227
+iwlwifi 0000:04:00.0: EVT_LOGT:1475499449:0xc3f02b50:0228
+iwlwifi 0000:04:00.0: EVT_LOGT:1475499454:0x57f255be:1586
+iwlwifi 0000:04:00.0: EVT_LOGT:1475699376:0x000000d7:0123
+iwlwifi 0000:04:00.0: EVT_LOGT:1475699415:0x00000000:0125
+ieee80211 phy0: Hardware restart was requested
+iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
+iwlwifi 0000:04:00.0: Radio type=0x0-0x2-0x0
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-index 9895b80..53f8c51 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rs.c
-@@ -2677,7 +2677,6 @@ out:
-  *       which requires station table entry to exist).
-  */
- static void rs_initialize_lq(struct iwl_priv *priv,
--			     struct ieee80211_conf *conf,
- 			     struct ieee80211_sta *sta,
- 			     struct iwl_lq_sta *lq_sta)
- {
-@@ -2912,7 +2911,7 @@ void iwl_rs_rate_init(struct iwl_priv *priv, struct ieee80211_sta *sta, u8 sta_i
- 	lq_sta->dbg_fixed_rate = 0;
- #endif
- 
--	rs_initialize_lq(priv, conf, sta, lq_sta);
-+	rs_initialize_lq(priv, sta, lq_sta);
- }
- 
- static void rs_fill_link_cmd(struct iwl_priv *priv,
--- 
-1.7.0.4
+04:00.0 Network controller: Intel Corporation Ultimate N WiFi Link 5300
+
+	Dave
 
