@@ -1,144 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:7349 "EHLO mga09.intel.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:3254 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965104Ab2CEUiF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 15:38:05 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 10/33] iwlwifi: make EXIT_PENDING depend on mac80211
-Date: Mon,  5 Mar 2012 11:24:28 -0800
-Message-Id: <1330975491-19680-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120305_213915_705446_BE72A640)
-In-Reply-To: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1759347Ab2CAOMo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Mar 2012 09:12:44 -0500
+Message-ID: <4F4F83D2.8030101@broadcom.com> (sfid-20120301_151248_503566_08DEC6B0)
+Date: Thu, 1 Mar 2012 15:12:34 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Hauke Mehrtens" <hauke@hauke-m.de>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Saul St. John" <saul.stjohn@gmail.com>,
+	"Rafal Milecki" <zajec5@gmail.com>,
+	"Larry Finger" <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC] bcma: add support for on-chip OTP memory used for
+ SPROM storage
+References: <1330033977-5741-1-git-send-email-arend@broadcom.com>
+ <4F48D997.1060400@hauke-m.de> <4F4B571E.7040704@broadcom.com>
+ <4F4D34FA.8070800@hauke-m.de>
+In-Reply-To: <4F4D34FA.8070800@hauke-m.de>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 02/28/2012 09:11 PM, Hauke Mehrtens wrote:
+> On 02/27/2012 11:12 AM, Arend van Spriel wrote:
+>> On 02/25/2012 01:52 PM, Hauke Mehrtens wrote:
+>>> I will test you patch on my device soon and will report if something is
+>>> wrong. If you are sending a non RFC patch in the next days I would
+>>> rebase my patch onto yours. The code searching in the SoCs flash chip
+>>> will be added to run if bcma_sprom_onchip_available() returns false.
+>>
+>> Appreciate any testing on SoCs. I think I will need some time to modify
+>> brcmsmac so let your patch go first.
+>
+> The sprom part of my SoC is working with this patch on top of my sprom
+> patches, but it uses the sprom from flash/nvram for both wifi devices
+> (one integrated in the bCM4716 and the other a BCM43224 connected to the
+> PCIe host controller of the BCM4716).
+> For my BCM4716 bcma_sprom_ext_available() and
+> bcma_sprom_onchip_available() are returning false and for the BCM43224
+> bcma_sprom_ext_available() is returning false and
+> bcma_sprom_onchip_offset() 0.
 
-There's no reason to set EXIT_PENDING when we
-start removing the module, as mac80211 will
-cleanly shut down the device in this case.
-Additionally, there's no point in rejecting
-commands to the device when we're cleaning up
-as that only leads to unwanted errors from
-mac80211 being printed, such as
-  failed to remove key (...) from hardware (-16)
+Thanks, Hauke
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-rxon.c      |    6 ------
- drivers/net/wireless/iwlwifi/iwl-agn.c           |    6 ------
- drivers/net/wireless/iwlwifi/iwl-mac80211.c      |    4 ----
- drivers/net/wireless/iwlwifi/iwl-scan.c          |    3 +--
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    7 -------
- 5 files changed, 1 insertions(+), 25 deletions(-)
+Did the BCM43224 come with the router. If so I am assuming the onchip is 
+not used and the system relies on flash/nvram completely. I will inform 
+whether my assumption is correct.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-index a8c7900..7a86a35 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
-@@ -422,9 +422,6 @@ int iwlagn_commit_rxon(struct iwl_priv *priv, struct iwl_rxon_context *ctx)
- 
- 	lockdep_assert_held(&priv->shrd->mutex);
- 
--	if (test_bit(STATUS_EXIT_PENDING, &priv->shrd->status))
--		return -EINVAL;
--
- 	if (!iwl_is_alive(priv->shrd))
- 		return -EBUSY;
- 
-@@ -560,9 +557,6 @@ int iwlagn_mac_config(struct ieee80211_hw *hw, u32 changed)
- 
- 	mutex_lock(&priv->shrd->mutex);
- 
--	if (test_bit(STATUS_EXIT_PENDING, &priv->shrd->status))
--		goto out;
--
- 	if (unlikely(test_bit(STATUS_SCANNING, &priv->shrd->status))) {
- 		IWL_DEBUG_MAC80211(priv, "leave - scanning\n");
- 		goto out;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index ada9d9e..c14eda0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1378,12 +1378,6 @@ static void iwl_op_mode_dvm_stop(struct iwl_op_mode *op_mode)
- 
- 	iwl_dbgfs_unregister(priv);
- 
--	/* ieee80211_unregister_hw call wil cause iwlagn_mac_stop to
--	 * to be called and iwl_down since we are removing the device
--	 * we need to set STATUS_EXIT_PENDING bit.
--	 */
--	set_bit(STATUS_EXIT_PENDING, &priv->shrd->status);
--
- 	iwl_testmode_cleanup(priv);
- 	iwlagn_mac_unregister(priv);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index dcee30f..7f63ba9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -649,8 +649,6 @@ static int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
- 	case IEEE80211_AMPDU_RX_STOP:
- 		IWL_DEBUG_HT(priv, "stop Rx\n");
- 		ret = iwl_sta_rx_agg_stop(priv, sta, tid);
--		if (test_bit(STATUS_EXIT_PENDING, &priv->shrd->status))
--			ret = 0;
- 		break;
- 	case IEEE80211_AMPDU_TX_START:
- 		if (iwlagn_mod_params.disable_11n & IWL_DISABLE_HT_TXAGG)
-@@ -666,8 +664,6 @@ static int iwlagn_mac_ampdu_action(struct ieee80211_hw *hw,
- 			IWL_DEBUG_HT(priv, "priv->agg_tids_count = %u\n",
- 				     priv->agg_tids_count);
- 		}
--		if (test_bit(STATUS_EXIT_PENDING, &priv->shrd->status))
--			ret = 0;
- 		if (!priv->agg_tids_count && cfg(priv)->ht_params &&
- 		    cfg(priv)->ht_params->use_rts_for_aggregation) {
- 			/*
-diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
-index 42ee1c4..766572b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-scan.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
-@@ -69,8 +69,7 @@ static int iwl_send_scan_abort(struct iwl_priv *priv)
- 	if (!test_bit(STATUS_READY, &priv->shrd->status) ||
- 	    !test_bit(STATUS_GEO_CONFIGURED, &priv->shrd->status) ||
- 	    !test_bit(STATUS_SCAN_HW, &priv->shrd->status) ||
--	    test_bit(STATUS_FW_ERROR, &priv->shrd->status) ||
--	    test_bit(STATUS_EXIT_PENDING, &priv->shrd->status))
-+	    test_bit(STATUS_FW_ERROR, &priv->shrd->status))
- 		return -EIO;
- 
- 	ret = iwl_trans_send_cmd(trans(priv), &cmd);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-index 1cb1dd2..de2a0d9 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-@@ -914,9 +914,6 @@ static int iwl_send_cmd_async(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 		return -EINVAL;
- 
- 
--	if (test_bit(STATUS_EXIT_PENDING, &trans->shrd->status))
--		return -EBUSY;
--
- 	ret = iwl_enqueue_hcmd(trans, cmd);
- 	if (ret < 0) {
- 		IWL_DEBUG_QUIET_RFKILL(trans,
-@@ -938,10 +935,6 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	IWL_DEBUG_INFO(trans, "Attempting to send sync command %s\n",
- 			get_cmd_string(cmd->id));
- 
--	if (test_bit(STATUS_EXIT_PENDING, &trans->shrd->status))
--		return -EBUSY;
--
--
- 	if (test_bit(STATUS_RF_KILL_HW, &trans->shrd->status)) {
- 		IWL_ERR(trans, "Command %s aborted: RF KILL Switch\n",
- 			       get_cmd_string(cmd->id));
--- 
-1.7.0.4
+Gr. AvS
 
