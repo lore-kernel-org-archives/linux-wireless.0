@@ -1,84 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh01.mail.saunalahti.fi ([62.142.5.107]:60503 "EHLO
-	emh01.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756076Ab2CYOPv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Mar 2012 10:15:51 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
-Subject: [PATCH v2 4/9] ath6kl: add pointer to the skb in htc_packet
-Date: Sun, 25 Mar 2012 17:15:24 +0300
-Message-Id: <1332684929-6405-5-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120325_161630_163116_6F34594D)
-In-Reply-To: <1332684929-6405-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1332684929-6405-1-git-send-email-kvalo@qca.qualcomm.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60402 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754631Ab2CAQOf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Mar 2012 11:14:35 -0500
+Message-ID: <4F4FA059.8000105@hauke-m.de> (sfid-20120301_171439_535906_B3129063)
+Date: Thu, 01 Mar 2012 17:14:17 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
+MIME-Version: 1.0
+To: Arend van Spriel <arend@broadcom.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Saul St. John" <saul.stjohn@gmail.com>,
+	Rafal Milecki <zajec5@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC] bcma: add support for on-chip OTP memory used for SPROM
+ storage
+References: <1330033977-5741-1-git-send-email-arend@broadcom.com> <4F48D997.1060400@hauke-m.de> <4F4B571E.7040704@broadcom.com> <4F4D34FA.8070800@hauke-m.de> <4F4F83D2.8030101@broadcom.com> <4F4F8934.6070101@hauke-m.de> <4F4F92B2.4060708@broadcom.com>
+In-Reply-To: <4F4F92B2.4060708@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Needed by the USB code.
+On 03/01/2012 04:16 PM, Arend van Spriel wrote:
+> On 03/01/2012 03:35 PM, Hauke Mehrtens wrote:
+>> On 03/01/2012 03:12 PM, Arend van Spriel wrote:
+>>> On 02/28/2012 09:11 PM, Hauke Mehrtens wrote:
+>>>> On 02/27/2012 11:12 AM, Arend van Spriel wrote:
+>>>>> On 02/25/2012 01:52 PM, Hauke Mehrtens wrote:
+>>>>>> I will test you patch on my device soon and will report if
+>>>>>> something is
+>>>>>> wrong. If you are sending a non RFC patch in the next days I would
+>>>>>> rebase my patch onto yours. The code searching in the SoCs flash chip
+>>>>>> will be added to run if bcma_sprom_onchip_available() returns false.
+>>>>>
+>>>>> Appreciate any testing on SoCs. I think I will need some time to
+>>>>> modify
+>>>>> brcmsmac so let your patch go first.
+>>>>
+>>>> The sprom part of my SoC is working with this patch on top of my sprom
+>>>> patches, but it uses the sprom from flash/nvram for both wifi devices
+>>>> (one integrated in the bCM4716 and the other a BCM43224 connected to
+>>>> the
+>>>> PCIe host controller of the BCM4716).
+>>>> For my BCM4716 bcma_sprom_ext_available() and
+>>>> bcma_sprom_onchip_available() are returning false and for the BCM43224
+>>>> bcma_sprom_ext_available() is returning false and
+>>>> bcma_sprom_onchip_offset() 0.
+>>>
+>>> Thanks, Hauke
+>>>
+>>> Did the BCM43224 come with the router. If so I am assuming the onchip is
+>>> not used and the system relies on flash/nvram completely. I will inform
+>>> whether my assumption is correct.
+>> Yes the BCM43224 is direly soldered onto the board where also the
+>> BCM4716 is on, there is no physical PCIe port or something like this.
+>> The nvram on the flash chip contains the sprom for this devices, one set
+>> of variables in the nvram has the prefix pci/1/1/ (for the BCM43224 with
+>> the options for 5GHz only) and the other has sb/1/ (for the BCM4716 with
+>> the options for 2.4 GHz only).
+>>
+>> It is this device: http://infodepot.wikia.com/wiki/Netgear_WNDR3400
+>>
+>> Hauke
+>>
+> 
+> You made me curious so I followed the link. It says BCM4718.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath6kl/htc.h  |    8 ++++++++
- drivers/net/wireless/ath/ath6kl/txrx.c |    5 +++++
- 2 files changed, 13 insertions(+), 0 deletions(-)
+The BCM4716, BCM4717 and BCM4718 are the same chips from a driver
+developer point of view. ;-) They share the same device id (0x4716),
+just the package id is different. The BCM4717 and BCM4718 have a PCIe
+host controller, the BCM4716 does not have a PCIe host controller. The
+BCM4718 also has a higher CPU clock than the others. The PCIe host
+controller is automatically detected and the CPU clock speed is read out
+of some register. They are sharing the same workarounds in the driver.
+So if I speak of the BCM4716 mostly I mean all of these three or one of
+these three. ;-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
-index 51f2485..e97ebc3 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.h
-+++ b/drivers/net/wireless/ath/ath6kl/htc.h
-@@ -311,6 +311,14 @@ struct htc_packet {
- 
- 	void (*completion) (struct htc_target *, struct htc_packet *);
- 	struct htc_target *context;
-+
-+	/*
-+	 * optimization for network-oriented data, the HTC packet
-+	 * can pass the network buffer corresponding to the HTC packet
-+	 * lower layers may optimized the transfer knowing this is
-+	 * a network buffer
-+	 */
-+	struct sk_buff *skb;
- };
- 
- enum htc_send_full_action {
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index befe305..53d0334 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -322,6 +322,7 @@ int ath6kl_control_tx(void *devt, struct sk_buff *skb,
- 	cookie->map_no = 0;
- 	set_htc_pkt_info(&cookie->htc_pkt, cookie, skb->data, skb->len,
- 			 eid, ATH6KL_CONTROL_PKT_TAG);
-+	cookie->htc_pkt.skb = skb;
- 
- 	/*
- 	 * This interface is asynchronous, if there is an error, cleanup
-@@ -490,6 +491,7 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- 	cookie->map_no = map_no;
- 	set_htc_pkt_info(&cookie->htc_pkt, cookie, skb->data, skb->len,
- 			 eid, htc_tag);
-+	cookie->htc_pkt.skb = skb;
- 
- 	ath6kl_dbg_dump(ATH6KL_DBG_RAW_BYTES, __func__, "tx ",
- 			skb->data, skb->len);
-@@ -888,6 +890,7 @@ void ath6kl_rx_refill(struct htc_target *target, enum htc_endpoint_id endpoint)
- 			skb->data = PTR_ALIGN(skb->data - 4, 4);
- 		set_htc_rxpkt_info(packet, skb, skb->data,
- 				   ATH6KL_BUFFER_SIZE, endpoint);
-+		packet->skb = skb;
- 		list_add_tail(&packet->list, &queue);
- 	}
- 
-@@ -910,6 +913,8 @@ void ath6kl_refill_amsdu_rxbufs(struct ath6kl *ar, int count)
- 			skb->data = PTR_ALIGN(skb->data - 4, 4);
- 		set_htc_rxpkt_info(packet, skb, skb->data,
- 				   ATH6KL_AMSDU_BUFFER_SIZE, 0);
-+		packet->skb = skb;
-+
- 		spin_lock_bh(&ar->lock);
- 		list_add_tail(&packet->list, &ar->amsdu_rx_buffer_queue);
- 		spin_unlock_bh(&ar->lock);
--- 
-1.7.1
-
+Hauke
