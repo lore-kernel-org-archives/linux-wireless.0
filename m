@@ -1,67 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:44636 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758097Ab2CGTc5 (ORCPT
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:51167 "EHLO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754653Ab2CAGId (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 14:32:57 -0500
-Received: from [192.168.100.111] (firewall.candelatech.com [70.89.124.249])
-	(authenticated bits=0)
-	by ns3.lanforge.com (8.14.2/8.14.2) with ESMTP id q27JWslr017521
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Wed, 7 Mar 2012 11:32:55 -0800
-Message-ID: <4F57B7E6.1050103@candelatech.com> (sfid-20120307_203301_816701_DF7D4715)
-Date: Wed, 07 Mar 2012 11:32:54 -0800
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: bss_info_change_notify warning (hacked 3.3.0-rc5+)
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 1 Mar 2012 01:08:33 -0500
+Received: by mail-lpp01m010-f41.google.com with SMTP id z14so359146lag.28
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Feb 2012 22:08:32 -0800 (PST)
+Message-ID: <1330582108.18637.119.camel@cumari> (sfid-20120301_070857_486651_8DCC272B)
+Subject: Re: Help building compat-wireless
+From: Luciano Coelho <coelho@ti.com>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: Gary Thomas <gary@mlbassoc.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 01 Mar 2012 08:08:28 +0200
+In-Reply-To: <CAG6hwVPFwX6+Kaq=YvTVMMn-D6-wgoCV-D2oKgbHpszM55y98w@mail.gmail.com>
+References: <4F4E47BC.8000306@mlbassoc.com> <4F4E731B.7080704@mlbassoc.com>
+	 <4F4E801A.1090701@mlbassoc.com>
+	 <CAG6hwVOgFuQ8XSGvYjM7aSiWe2O2T_UdVVWz+pyEHROEfqNE-g@mail.gmail.com>
+	 <4F4E8802.8090903@mlbassoc.com>
+	 <CAG6hwVPFwX6+Kaq=YvTVMMn-D6-wgoCV-D2oKgbHpszM55y98w@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is with a somewhat hacked 3.3.0-rc5+.  Just
-curious if this is a known problem.
+On Wed, 2012-02-29 at 16:08 -0800, Thomas Pedersen wrote: 
+> On Wed, Feb 29, 2012 at 12:18 PM, Gary Thomas <gary@mlbassoc.com> wrote:
+> > On 2012-02-29 12:59, Thomas Pedersen wrote:
+> >>
+> >> Hi Gary,
+> >>
+> >> On Wed, Feb 29, 2012 at 11:44 AM, Gary Thomas<gary@mlbassoc.com>  wrote:
+> >>>
+> >>> On 2012-02-29 11:48, Gary Thomas wrote:
+> >>>>
+> >>>>
+> >>>> On 2012-02-29 08:43, Gary Thomas wrote:
+> >>>>>
+> >>>>>
+> >>>>> I'm struggling a bit to build compat-wireless in a cross-build
+> >>>>> environment.
+> >>>>> I normally don't build kernels in-tree, rather I use a build tree, e.g.
+> >>>>> % cd<linux-source>
+> >>>>> % mkdir /tmp/kernel_build
+> >>>>> % make O=/tmp/kernel_build<some_config>
+> >>>>> % make O=/tmp/kernel_build uImage
+> >>>>>
+> >>>>> I can't see how to use this setup with the compat-wireless package.
+> >>>>> I tried [all the combinations I could think of] something like this:
+> >>>>> % cd<compat-wireless>
+> >>>>> % make KLIB=<linux-source>  KLIB_BUILD=/tmp/kernel_build
+> >>>>> However, this seems to not work as all I get are errors like this:
+> >>>>> /local/compat-wireless-2012-02-28/config.mk:242: "WARNING:
+> >>>>> CONFIG_CFG80211_WEXT will be deactivated or not working because kernel
+> >>>>> was
+> >>>>> compiled with CONFIG_WIRELESS_EXT=n. Tools
+> >>>>> using wext interface like iwconfig will not work. To activate it build
+> >>>>> your kernel e.g. with CONFIG_LIBIPW=m."
+> >>>>>
+> >>>>> Does this process work in my workflow? What do I need to do to
+> >>>>> get it going?
+> >>>>
+> >>>>
+> >>>>
+> >>>> I managed to get past this, using this
+> >>>> % make KLIB=/tmp/kernel_build KLIB_BUILD=/tmp/kernel_build
+> >>>> but to get it to actually build anything, I had to append the
+> >>>> 'modules' target, e.g.
+> >>>> % make KLIB=/tmp/kernel_build KLIB_BUILD=/tmp/kernel_build modules
+> >>>>
+> >>>> Next problems:
+> >>>> * How do I select sub-options? I only want WL12xx support with SDIO, but
+> >>>> that requires some sub-options to be set that don't appear to happen.
+> >>>> I get the main wl12xx module, but not wl12xx_sdio or
+> >>>> wl12xx_platform_data
+> >>>> * There are a number of files which don't build against my 2.6.37
+> >>>> kernel,
+> >>>> but none of these are important to me (they are in the bluetooth driver
+> >>>> which I don't need, but nonetheless it gets built)
+> >>>> * The make/install is terribly broken for cross-builds.
+> >>>>
+> >>>> I hacked my way past these problems and finally got some modules which
+> >>>> I can try. Sadly, they don't work at all:
+> >>>> # modprobe wl12xx_sdio
+> >>>> wl12xx: loaded
+> >>>> # ifconfig wlan0 up
+> >>>> wl1271_sdio mmc1:0001:2: sdio write failed (-110)
+> >>>> wl1271_sdio mmc1:0001:2: sdio write failed (-110)
+> >>>> ...
+> >>>
+> >>>
+> >>>
+> >>> Sadly, this one was my fault - one of my build hacks got in the way :-(
+> >>>
+> >>> Now, I'm getting this error:
+> >>>  wl12xx: ERROR could not get firmware ti-connectivity/wl127x-fw-4-sr.bin:
+> >>> -2
+> >>> But this file is not available at the Linux firmware tree
+> >>>
+> >>> (git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git)
+> >>>
+> >>> Where can I find it?
+> >>>
+> >>
+> >> Try here:  git://github.com/TI-OpenLink/firmwares.git
+> >
+> >
+> > Thanks.  Do you know if these will be moving to kernel.org anytime soon?
+> > My build recipes expect that to be the official home for firmware.
+> >
+> 
+> I believe Luciano submitted these a few weeks back, so all in good time :)
 
-
-Seems very reproducible on my system.
-
-
-WARNING: at /home/greearb/git/linux-3.3.dev.y/net/mac80211/driver-ops.h:10 ieee80211_bss_info_change_noti)
-Hardware name: To be filled by O.E.M.
-Modules linked in: 8021q garp stp llc macvlan wanlink(PO) pktgen lockd arc4 joydev ppdev microcode serio_]
-Pid: 1855, comm: hostapd Tainted: P         C O 3.3.0-rc5+ #7
-Call Trace:
-  [<ffffffff81036eda>] warn_slowpath_common+0x80/0x98
-  [<ffffffff81036f07>] warn_slowpath_null+0x15/0x17
-  [<ffffffffa02c0010>] ieee80211_bss_info_change_notify+0x15f/0x18c [mac80211]
-  [<ffffffffa02d472d>] ieee80211_config_beacon+0x58/0x208 [mac80211]
-  [<ffffffff8144773b>] ? __mutex_unlock_slowpath+0x10d/0x11f
-  [<ffffffffa02d4936>] ieee80211_add_beacon+0x35/0xa4 [mac80211]
-  [<ffffffffa01fd715>] nl80211_addset_beacon+0x317/0x34a [cfg80211]
-  [<ffffffff813b5a08>] genl_rcv_msg+0x1f4/0x239
-  [<ffffffff813b5814>] ? genl_rcv+0x28/0x28
-  [<ffffffff813b4836>] netlink_rcv_skb+0x3e/0x8f
-  [<ffffffff813b580d>] genl_rcv+0x21/0x28
-  [<ffffffff813b4611>] netlink_unicast+0xe9/0x152
-  [<ffffffff813b4d6a>] netlink_sendmsg+0x1f8/0x216
-  [<ffffffff81384122>] __sock_sendmsg_nosec+0x5f/0x6a
-  [<ffffffff8138416a>] __sock_sendmsg+0x3d/0x48
-  [<ffffffff81384a0a>] sock_sendmsg+0xa3/0xbc
-  [<ffffffff811d12c2>] ? blk_finish_plug+0x13/0x34
-  [<ffffffff810a8b87>] ? generic_file_aio_write+0xa6/0xb6
-  [<ffffffff81383b68>] ? copy_from_user+0x9/0xb
-  [<ffffffff813846b2>] ? move_addr_to_kernel+0x2b/0x65
-  [<ffffffff8138e909>] ? copy_from_user+0x9/0xb
-  [<ffffffff8138ec56>] ? verify_iovec+0x4f/0xa3
-  [<ffffffff8138516c>] __sys_sendmsg+0x20f/0x29c
-  [<ffffffff8144c242>] ? sub_preempt_count+0x92/0xa6
-  [<ffffffff81052ecf>] ? __srcu_read_unlock+0x3b/0x59
-  [<ffffffff8111d9c0>] ? fsnotify+0x255/0x285
-  [<ffffffff81385356>] sys_sendmsg+0x3d/0x5b
-  [<ffffffff8144dfb9>] system_call_fastpath+0x16/0x1b
----[ end trace 7abcbdd8b95b5194 ]---
+Yes, I sent a pull request for this to be included in
+linux-firmware.git, but Ben hasn't pulled it yet.  Hopefully soon. :)
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Cheers,
+Luca.
 
