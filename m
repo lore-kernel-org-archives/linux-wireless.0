@@ -1,70 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms173021pub.verizon.net ([206.46.173.21]:50547 "EHLO
-	vms173021pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750703Ab2CGFbs (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:43946 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753509Ab2CAN6w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 00:31:48 -0500
-Received: from vznit170060 ([unknown] [172.18.12.132])
- by vms173021.mailsrvcs.net
- (Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16 2009))
- with ESMTPA id <0M0I00HLY20XI5B0@vms173021.mailsrvcs.net> for
- linux-wireless@vger.kernel.org; Tue, 06 Mar 2012 23:31:45 -0600 (CST)
-Date: Tue, 06 Mar 2012 23:31:45 -0600 (CST)
-From: alupu@verizon.net
-To: Larry.Finger@lwfinger.net
-Cc: linux-wireless@vger.kernel.org
-Message-id: <27728117.2989270.1331098305793.JavaMail.root@vznit170060> (sfid-20120307_063151_925820_4B9F86CA)
-Subject: Re: r8712u staging in kernel 3.2.9
-MIME-version: 1.0
-Content-type: text/plain; charset=UTF-8
+	Thu, 1 Mar 2012 08:58:52 -0500
+Message-ID: <4F4F8095.4010706@qca.qualcomm.com> (sfid-20120301_145856_169389_B12914BB)
+Date: Thu, 1 Mar 2012 19:28:45 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	<senthilb@qca.qualcomm.com>, <vthiagar@qca.qualcomm.com>,
+	<rodrigue@qca.qualcomm.com>
+Subject: Re: [RFC 2/2] ath9k_htc: use ieee80211_free_txskb
+References: <d053a9a1ec34c2e1b15cf50b272ba7863fb17088.1330360738.git.chunkeey@googlemail.com> <88bea301177cac98e77cd49490ac576d36b10c81.1330360738.git.chunkeey@googlemail.com>
+In-Reply-To: <88bea301177cac98e77cd49490ac576d36b10c81.1330360738.git.chunkeey@googlemail.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On 03/06/12 10:22 PM, Larry Finger wrote:> Here are the details for my system, which is 64-bit.
-> I'm running kernel 3.3-rc5 with wireless-tools version 30.
-  
-The root of the divergence between our results might be 
-found in the differences between my version 29 and your "30".
+Hi Christian,
 
-According to Jean Tourrilhes (the founding father of the tools):
-"The latest stable version of Wireless Tools is version 29"
-He also mentions (and offers) a version "30-pre9(beta)".
-See
-<www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/Tools.html>
 
-As an aside, this situation where distributions (as opposed to the
-(B)LFS approach) tweak packages so as to offer an overall workable
-release is getting worse and worse, especially lately where
-software package dependencies are getting way out of hand.
-In this particular instance, we'll never know if openSuse "30"
-is the same as "30-pre9(beta)" (whatever that would mean) or
-a lower "-pre" or even an in-house version 29/30 software
-massaged to play nice with other package instances within
-a particular distribution release.
+On Monday 27 February 2012 10:02 PM, Christian Lamparter wrote:
+> With the new tx status API: "mac80211: implement wifi TX status"
+> All skb originating from mac80211 needs to be given back to mac80211.
+>
+> Signed-off-by: Christian Lamparter<chunkeey@googlemail.com>
+> ---
+> It compiles, but not tested.
+> ---
+>   drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    4 ++--
+>   1 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+> index 3e40a64..e958704 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
+> @@ -451,7 +451,7 @@ static void ath9k_htc_tx_process(struct ath9k_htc_priv *priv,
+>
+>   	slot = strip_drv_header(priv, skb);
+>   	if (slot<  0) {
+> -		dev_kfree_skb_any(skb);
+> +		ieee80211_free_txskb(priv->hw, skb);
+>   		return;
+>   	}
+>
+> @@ -687,7 +687,7 @@ void ath9k_htc_txep(void *drv_priv, struct sk_buff *skb,
+>
+>   	epid_queue = get_htc_epid_queue(priv, ep_id);
+>   	if (!epid_queue) {
+> -		dev_kfree_skb_any(skb);
+> +		ieee80211_free_txskb(priv->hw, skb);
+>   		return;
+>   	}
+>
 
-That said, this doesn't mean that my problem might not lie elsewhere.
-A great help would be if you could install the latest
-_stable_ release (29) and quickly test my complaints.
-Don't be afraid of the version police. You cannot be arrested
-for using the _official_, genuine, latest stable version 29.
-You _might_ get in trouble if they catch you using a most
-likely counterfeit version 30 :)
+also we should do it ath9k_htc_tx in htc_drv_main.c, i don't know very 
+much about ath9k_htc.
 
-> What would be the ifconfig command to start the interface with DHCP?
-> In my distro, we have an ifup command that reads a configuration file.
-> That script is too complicated to see what it does.
 
-I've used DHCP only for "wire" connections, in a wrapper of my
-own which finally ends up doing something like,
- dhcpcd eth0 -L
-For wireless stuff I use 'pppoe-start/stop/status' with an
-appropriate /etc/ppp/xxxxx.conf file.
-
-For a solid, more legible (IMHO) approach (DHCP, etc.),
-you can take a look at LFS-Bootscripts:
-<www.linuxfromscratch.org/lfs/view/development/chapter03/packages.html>
-and BLFS-Bootscripts:
-<www.linuxfromscratch.org/blfs/view/svn/introduction/bootscripts.html>
- 
-Thanks,
--- Alex
+-- 
+thanks,
+shafi
