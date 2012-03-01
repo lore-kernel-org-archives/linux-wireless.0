@@ -1,244 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:39918 "HELO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752720Ab2CMCfr (ORCPT
+Received: from sd-mail-sa-01.sanoma.fi ([158.127.18.161]:40824 "EHLO
+	sd-mail-sa-01.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030316Ab2CAKTs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2012 22:35:47 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
+	Thu, 1 Mar 2012 05:19:48 -0500
+Message-ID: <20120301121935.1627611hqt6w784c@www.81.fi> (sfid-20120301_111951_652375_4C659ABE)
+Date: Thu, 01 Mar 2012 12:19:35 +0200
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: Dan Carpenter <dan.carpenter@oracle.com>
 Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Joe Perches <joe@perches.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 05/15] mwifiex: rearrange if and else blocks to avoid extra indentation
-Date: Mon, 12 Mar 2012 19:35:12 -0700
-Message-Id: <1331606116-32745-6-git-send-email-bzhao@marvell.com> (sfid-20120313_033552_644172_9125C392)
-In-Reply-To: <1331606116-32745-1-git-send-email-bzhao@marvell.com>
-References: <1331606116-32745-1-git-send-email-bzhao@marvell.com>
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch 2/4] rndis_wlan: remove unneeded variables
+References: <20120229063628.GD18031@elgon.mountain>
+In-Reply-To: <20120229063628.GD18031@elgon.mountain>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
+Quoting Dan Carpenter <dan.carpenter@oracle.com>:
 
-This adds better readability.
+> We never use the "len" variable.
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
----
- drivers/net/wireless/mwifiex/11n_rxreorder.c |   15 +++--
- drivers/net/wireless/mwifiex/sta_cmdresp.c   |   93 ++++++++++++--------------
- drivers/net/wireless/mwifiex/wmm.c           |   30 +++++----
- 3 files changed, 68 insertions(+), 70 deletions(-)
+Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
 
-diff --git a/drivers/net/wireless/mwifiex/11n_rxreorder.c b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-index ad41fab..491cd85 100644
---- a/drivers/net/wireless/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/mwifiex/11n_rxreorder.c
-@@ -205,14 +205,17 @@ mwifiex_flush_data(unsigned long context)
- 	int start_win;
- 
- 	start_win = mwifiex_11n_find_last_seq_num(reorder_cnxt->ptr);
--	if (start_win >= 0) {
--		dev_dbg(reorder_cnxt->priv->adapter->dev,
--				"info: flush data %d\n", start_win);
-+
-+	if (start_win < 0)
-+		return;
-+
-+	dev_dbg(reorder_cnxt->priv->adapter->dev, "info: flush data %d\n",
-+		start_win);
- 		mwifiex_11n_dispatch_pkt_until_start_win(reorder_cnxt->priv,
- 				reorder_cnxt->ptr,
--				((reorder_cnxt->ptr->start_win +
--				  start_win + 1) & (MAX_TID_VALUE - 1)));
--	}
-+						 ((reorder_cnxt->ptr->start_win
-+						   + start_win + 1) &
-+						  (MAX_TID_VALUE - 1)));
- }
- 
- /*
-diff --git a/drivers/net/wireless/mwifiex/sta_cmdresp.c b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-index 3f13ff0..a2a9c51 100644
---- a/drivers/net/wireless/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/mwifiex/sta_cmdresp.c
-@@ -327,31 +327,26 @@ static int mwifiex_ret_tx_rate_cfg(struct mwifiex_private *priv,
- 					  HostCmd_CMD_802_11_TX_RATE_QUERY,
- 					  HostCmd_ACT_GEN_GET, 0, NULL);
- 
--	if (ds_rate) {
--		if (le16_to_cpu(rate_cfg->action) == HostCmd_ACT_GEN_GET) {
--			if (priv->is_data_rate_auto) {
--				ds_rate->is_rate_auto = 1;
--			} else {
--				ds_rate->rate = mwifiex_get_rate_index(priv->
--							       bitmap_rates,
--							       sizeof(priv->
--							       bitmap_rates));
--				if (ds_rate->rate >=
--				    MWIFIEX_RATE_BITMAP_OFDM0
--				    && ds_rate->rate <=
--				    MWIFIEX_RATE_BITMAP_OFDM7)
--					ds_rate->rate -=
--						(MWIFIEX_RATE_BITMAP_OFDM0 -
--						 MWIFIEX_RATE_INDEX_OFDM0);
--				if (ds_rate->rate >=
--				    MWIFIEX_RATE_BITMAP_MCS0
--				    && ds_rate->rate <=
--				    MWIFIEX_RATE_BITMAP_MCS127)
--					ds_rate->rate -=
--						(MWIFIEX_RATE_BITMAP_MCS0 -
--						 MWIFIEX_RATE_INDEX_MCS0);
--			}
--		}
-+	if (!ds_rate)
-+		return ret;
-+
-+	if (le16_to_cpu(rate_cfg->action) == HostCmd_ACT_GEN_GET) {
-+		if (priv->is_data_rate_auto) {
-+			ds_rate->is_rate_auto = 1;
-+		return ret;
-+	}
-+	ds_rate->rate = mwifiex_get_rate_index(priv->bitmap_rates,
-+					       sizeof(priv->bitmap_rates));
-+
-+	if (ds_rate->rate >= MWIFIEX_RATE_BITMAP_OFDM0 &&
-+	    ds_rate->rate <= MWIFIEX_RATE_BITMAP_OFDM7)
-+		ds_rate->rate -= (MWIFIEX_RATE_BITMAP_OFDM0 -
-+				  MWIFIEX_RATE_INDEX_OFDM0);
-+
-+	if (ds_rate->rate >= MWIFIEX_RATE_BITMAP_MCS0 &&
-+	    ds_rate->rate <= MWIFIEX_RATE_BITMAP_MCS127)
-+		ds_rate->rate -= (MWIFIEX_RATE_BITMAP_MCS0 -
-+				  MWIFIEX_RATE_INDEX_MCS0);
- 	}
- 
- 	return ret;
-@@ -369,34 +364,32 @@ static int mwifiex_get_power_level(struct mwifiex_private *priv, void *data_buf)
- 	struct mwifiex_types_power_group *pg_tlv_hdr;
- 	struct mwifiex_power_group *pg;
- 
--	if (data_buf) {
--		pg_tlv_hdr =
--			(struct mwifiex_types_power_group *) ((u8 *) data_buf
--					+ sizeof(struct host_cmd_ds_txpwr_cfg));
--		pg = (struct mwifiex_power_group *) ((u8 *) pg_tlv_hdr +
--				sizeof(struct mwifiex_types_power_group));
--		length = pg_tlv_hdr->length;
--		if (length > 0) {
-+	if (!data_buf)
-+		return -1;
-+
-+	pg_tlv_hdr = (struct mwifiex_types_power_group *)
-+		((u8 *) data_buf + sizeof(struct host_cmd_ds_txpwr_cfg));
-+	pg = (struct mwifiex_power_group *)
-+		((u8 *) pg_tlv_hdr + sizeof(struct mwifiex_types_power_group));
-+	length = pg_tlv_hdr->length;
-+	if (length > 0) {
-+		max_power = pg->power_max;
-+		min_power = pg->power_min;
-+		length -= sizeof(struct mwifiex_power_group);
-+	}
-+	while (length) {
-+		pg++;
-+		if (max_power < pg->power_max)
- 			max_power = pg->power_max;
--			min_power = pg->power_min;
--			length -= sizeof(struct mwifiex_power_group);
--		}
--		while (length) {
--			pg++;
--			if (max_power < pg->power_max)
--				max_power = pg->power_max;
- 
--			if (min_power > pg->power_min)
--				min_power = pg->power_min;
-+		if (min_power > pg->power_min)
-+			min_power = pg->power_min;
- 
--			length -= sizeof(struct mwifiex_power_group);
--		}
--		if (pg_tlv_hdr->length > 0) {
--			priv->min_tx_power_level = (u8) min_power;
--			priv->max_tx_power_level = (u8) max_power;
--		}
--	} else {
--		return -1;
-+		length -= sizeof(struct mwifiex_power_group);
-+	}
-+	if (pg_tlv_hdr->length > 0) {
-+		priv->min_tx_power_level = (u8) min_power;
-+		priv->max_tx_power_level = (u8) max_power;
- 	}
- 
- 	return 0;
-diff --git a/drivers/net/wireless/mwifiex/wmm.c b/drivers/net/wireless/mwifiex/wmm.c
-index 5757ebd..6f0cc21 100644
---- a/drivers/net/wireless/mwifiex/wmm.c
-+++ b/drivers/net/wireless/mwifiex/wmm.c
-@@ -850,6 +850,7 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
- 	struct mwifiex_ra_list_tbl *ptr, *head;
- 	struct mwifiex_bss_prio_node *bssprio_node, *bssprio_head;
- 	struct mwifiex_tid_tbl *tid_ptr;
-+	atomic_t *hqp;
- 	int is_list_empty;
- 	unsigned long flags;
- 	int i, j;
-@@ -879,12 +880,8 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
- 		}
- 
- 		do {
--			atomic_t *hqp;
--			spinlock_t *lock;
--
- 			priv_tmp = bssprio_node->priv;
- 			hqp = &priv_tmp->wmm.highest_queued_prio;
--			lock = &priv_tmp->wmm.ra_list_spinlock;
- 
- 			for (i = atomic_read(hqp); i >= LOW_PRIO_TID; --i) {
- 
-@@ -923,16 +920,10 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
- 				do {
- 					is_list_empty =
- 						skb_queue_empty(&ptr->skb_head);
--					if (!is_list_empty) {
--						spin_lock_irqsave(lock, flags);
--						if (atomic_read(hqp) > i)
--							atomic_set(hqp, i);
--						spin_unlock_irqrestore(lock,
--									flags);
--						*priv = priv_tmp;
--						*tid = tos_to_tid[i];
--						return ptr;
--					}
-+
-+					if (!is_list_empty)
-+						goto found;
-+
- 					/* Get next ra */
- 					ptr = list_first_entry(&ptr->list,
- 						 struct mwifiex_ra_list_tbl,
-@@ -969,6 +960,17 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
- 		} while (bssprio_node != bssprio_head);
- 	}
- 	return NULL;
-+
-+found:
-+	spin_lock_irqsave(&priv_tmp->wmm.ra_list_spinlock, flags);
-+	if (atomic_read(hqp) > i)
-+		atomic_set(hqp, i);
-+	spin_unlock_irqrestore(&priv_tmp->wmm.ra_list_spinlock, flags);
-+
-+	*priv = priv_tmp;
-+	*tid = tos_to_tid[i];
-+
-+	return ptr;
- }
- 
- /*
--- 
-1.7.0.2
+>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>
+> diff --git a/drivers/net/wireless/rndis_wlan.c  
+> b/drivers/net/wireless/rndis_wlan.c
+> index 6d8a986..99fab7d 100644
+> --- a/drivers/net/wireless/rndis_wlan.c
+> +++ b/drivers/net/wireless/rndis_wlan.c
+> @@ -1790,9 +1790,8 @@ static struct ndis_80211_pmkid  
+> *remove_pmkid(struct usbnet *usbdev,
+>  						struct cfg80211_pmksa *pmksa,
+>  						int max_pmkids)
+>  {
+> -	int i, len, count, newlen, err;
+> +	int i, count, newlen, err;
+>
+> -	len = le32_to_cpu(pmkids->length);
+>  	count = le32_to_cpu(pmkids->bssid_info_count);
+>
+>  	if (count > max_pmkids)
+> diff --git a/drivers/net/wireless/rndis_wlan.c  
+> b/drivers/net/wireless/rndis_wlan.c
+> index 99fab7d..a93cfe2 100644
+> --- a/drivers/net/wireless/rndis_wlan.c
+> +++ b/drivers/net/wireless/rndis_wlan.c
+> @@ -1830,9 +1830,8 @@ static struct ndis_80211_pmkid  
+> *update_pmkid(struct usbnet *usbdev,
+>  						struct cfg80211_pmksa *pmksa,
+>  						int max_pmkids)
+>  {
+> -	int i, err, len, count, newlen;
+> +	int i, err, count, newlen;
+>
+> -	len = le32_to_cpu(pmkids->length);
+>  	count = le32_to_cpu(pmkids->bssid_info_count);
+>
+>  	if (count > max_pmkids)
+>
+>
+
+
 
