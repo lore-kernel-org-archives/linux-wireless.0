@@ -1,65 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:28466 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751204Ab2CGFUm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 00:20:42 -0500
-Message-ID: <4F56F023.1090201@qca.qualcomm.com> (sfid-20120307_062047_123714_80C71C91)
-Date: Wed, 7 Mar 2012 10:50:35 +0530
-From: Raja Mani <rmani@qca.qualcomm.com>
+Received: from server19320154104.serverpool.info ([193.201.54.104]:60146 "EHLO
+	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030519Ab2CAOfx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Mar 2012 09:35:53 -0500
+Message-ID: <4F4F8934.6070101@hauke-m.de> (sfid-20120301_153609_553961_7CEF5E17)
+Date: Thu, 01 Mar 2012 15:35:32 +0100
+From: Hauke Mehrtens <hauke@hauke-m.de>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH v2] ath6kl: Add provision to define suspend policy in
- disconnected state.
-References: <1331026439-7822-1-git-send-email-rmani@qca.qualcomm.com> <4F563776.8090000@qca.qualcomm.com>
-In-Reply-To: <4F563776.8090000@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+To: Arend van Spriel <arend@broadcom.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Saul St. John" <saul.stjohn@gmail.com>,
+	Rafal Milecki <zajec5@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [RFC] bcma: add support for on-chip OTP memory used for SPROM
+ storage
+References: <1330033977-5741-1-git-send-email-arend@broadcom.com> <4F48D997.1060400@hauke-m.de> <4F4B571E.7040704@broadcom.com> <4F4D34FA.8070800@hauke-m.de> <4F4F83D2.8030101@broadcom.com>
+In-Reply-To: <4F4F83D2.8030101@broadcom.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 06 March 2012 09:42 PM, Kalle Valo wrote:
-> On 03/06/2012 11:33 AM, rmani@qca.qualcomm.com wrote:
->> From: Raja Mani<rmani@qca.qualcomm.com>
+On 03/01/2012 03:12 PM, Arend van Spriel wrote:
+> On 02/28/2012 09:11 PM, Hauke Mehrtens wrote:
+>> On 02/27/2012 11:12 AM, Arend van Spriel wrote:
+>>> On 02/25/2012 01:52 PM, Hauke Mehrtens wrote:
+>>>> I will test you patch on my device soon and will report if something is
+>>>> wrong. If you are sending a non RFC patch in the next days I would
+>>>> rebase my patch onto yours. The code searching in the SoCs flash chip
+>>>> will be added to run if bcma_sprom_onchip_available() returns false.
+>>>
+>>> Appreciate any testing on SoCs. I think I will need some time to modify
+>>> brcmsmac so let your patch go first.
 >>
->> It gives flexibility to the user to define suspend policy
->> when the suspend mode is set to WOW and the device is in
->> disconnected state at the time of suspend.
->>
->> New module parameter wow_mode is added to get the choice
->> from the user. This parameter is valid only if the module
->> parameter suspend_mode is set to WOW.
->>
->> To force WOW in connected state and cut power
->> in disconnected state:
->>    suspend_mode=0x3 wow_mode=0x1
->>
->> To force WOW in connected state and deep sleep
->> in disconnected state:
->>     suspend_mode=0x3 wow_mode=0x2
->>
->> If there is no value specified to wow_mode during insmod,
->> deep sleep mode will be tried in the disconnected state.
->>
->> Signed-off-by: Raja Mani<rmani@qca.qualcomm.com>
->
-> [...]
->
->> +		if (ret&&  (!ar->wow_suspend_mode ||
->> +		    ar->wow_suspend_mode == WLAN_POWER_STATE_DEEP_SLEEP))
->> +				try_deepsleep = true;
->
-> I don't get this part. If the wow_mode parameter is set to 0 or 2 the
-> functionality is the same, right? So what's the point with 0x2 the
-> commit log? Deep sleep will be the default in disconnected anyway.
-> Unless I misunderstood something, of course.
+>> The sprom part of my SoC is working with this patch on top of my sprom
+>> patches, but it uses the sprom from flash/nvram for both wifi devices
+>> (one integrated in the bCM4716 and the other a BCM43224 connected to the
+>> PCIe host controller of the BCM4716).
+>> For my BCM4716 bcma_sprom_ext_available() and
+>> bcma_sprom_onchip_available() are returning false and for the BCM43224
+>> bcma_sprom_ext_available() is returning false and
+>> bcma_sprom_onchip_offset() 0.
+> 
+> Thanks, Hauke
+> 
+> Did the BCM43224 come with the router. If so I am assuming the onchip is
+> not used and the system relies on flash/nvram completely. I will inform
+> whether my assumption is correct.
+Yes the BCM43224 is direly soldered onto the board where also the
+BCM4716 is on, there is no physical PCIe port or something like this.
+The nvram on the flash chip contains the sprom for this devices, one set
+of variables in the nvram has the prefix pci/1/1/ (for the BCM43224 with
+the options for 5GHz only) and the other has sb/1/ (for the BCM4716 with
+the options for 2.4 GHz only).
 
-Yes, the functionality is the same for both cases (0 or 2).
-passing 2 to wow_mode is an explicitly option.
-The value 0 is the default case.
+It is this device: http://infodepot.wikia.com/wiki/Netgear_WNDR3400
 
-Should we remove option 2 in wow_mode and keep only
-option 1 ?
-
->
-> Kalle
+Hauke
