@@ -1,46 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:41881 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758252Ab2CHTga convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 14:36:30 -0500
-Received: by iagz16 with SMTP id z16so1106126iag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2012 11:36:30 -0800 (PST)
+Received: from mms3.broadcom.com ([216.31.210.19]:2710 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759266Ab2CAM6g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Mar 2012 07:58:36 -0500
+Message-ID: <4F4F7271.8080900@broadcom.com> (sfid-20120301_135840_293351_1FC4AF7E)
+Date: Thu, 1 Mar 2012 13:58:25 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <4B96CD77D9161244899852B5F20DB5B70125BB72@nasanexd02d.na.qualcomm.com>
-References: <20120307194001.GA2506@ubuntu-macmini> <20120308174101.GB28133@ubuntu-macmini>
- <CAB=NE6VapPfLjAh5Y+sCA4qA82s9HrQk_Mxr8FpKoCfjudMDig@mail.gmail.com> <4B96CD77D9161244899852B5F20DB5B70125BB72@nasanexd02d.na.qualcomm.com>
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-Date: Thu, 8 Mar 2012 11:36:10 -0800
-Message-ID: <CAB=NE6U04a0XNrvt6HLCwqbHMtGL8CWh8No_=Bx0mwQZYEgGxQ@mail.gmail.com> (sfid-20120308_203633_962958_F889D86F)
-Subject: Re: Problems with regulatory domain support and BCM43224
-To: "Quan, David" <dquan@qca.qualcomm.com>
-Cc: Seth Forshee <seth.forshee@canonical.com>,
-	"Green, Michael" <green@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+To: "Helmut Jarausch" <jarausch@igpm.rwth-aachen.de>
+cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: brcmsmac crashed 3.3-rc5 kernel
+References: <jinmr4$pej$1@dough.gmane.org>
+In-Reply-To: <jinmr4$pej$1@dough.gmane.org>
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 8, 2012 at 11:07 AM, Quan, David <dquan@qca.qualcomm.com> wrote:
-> 1) Depending on which WW sku number you selected, it may and may not support the DFS channels. So this is not true that we do not support DFS channels in WW mode.
-
-David, sorry I should have clarified, this is not for ath9k. This is
-for other drivers which do not have custom regulatory domains nor do
-they have any regulatory hint obtainable from their EEPROM. For those
-cards that do not have anything like this we make them use the world
-regulatory domain by default.
-
-> 2) Today, I do not believe ath9k code supports DFS detection. If that is what you mean. Therefore STA mode will not support DFS detection. However, STA does support DFS channels. DFS channel support vs DFS detection support is two different things. DFS channel support as a slave device, only has to do passive scanning.
+On 03/01/2012 12:33 PM, Helmut Jarausch wrote:
+> Hi,
 >
-> Let me know if that answers your questions.
+> on an HP625 I have the following device
+>
+> 06:00.0 Network controller [0280]: Broadcom Corporation BCM4313 802.11b/g/
+> n Wireless LAN Controller [14e4:4727] (rev 01)
+>          Subsystem: Hewlett-Packard Company Device [103c:145c]
+>          Kernel driver in use: bcma-pci-bridge
+>
+>
+> This device isn't recognized by the brcmfmac driver but only by the
+> brcmsfac driver.
 
-It does, but would like your advice / review on the idea of enabling
-DFS channels as passive scan, no-ibss (or any radiation enabled) for
-cards that use the static default world regulatory domain in the
-kernel. This would not in any way affect ath9k, ath6kl, or any of our
-cards, but just help other cards that do not have anything
-implemented.
+That is expected. brcmfmac is support sdio/usb cards. brcmsmac is used 
+for bcm4313 card.
 
-  Luis
+> My kernel configuration is
+>
+> # Broadcom specific AMBA
+> #
+> CONFIG_BCMA=y
+> CONFIG_BCMA_HOST_PCI_POSSIBLE=y
+> CONFIG_BCMA_HOST_PCI=y
+> # CONFIG_BCMA_DEBUG is not set
+>
+> # CONFIG_B43 is not set
+> # CONFIG_B43LEGACY is not set
+> CONFIG_BRCMUTIL=m
+> CONFIG_BRCMSMAC=m
+> # CONFIG_BRCMFMAC is not set
+> CONFIG_BRCMDBG=y
+>
+
+looks ok.
+
+>
+> but doing  /etc/init.d/net.wlan0 start
+> crashes the kernel - even<Ctrl><Alt><Shift><SysRq>   doesn't work anymore.
+> I've tried strace, but the output file doesn't get closed so it's missing
+> after reboot.
+
+You could try some kernel hacking features. Some can help to get some 
+vital info on screen.
+
+> Any help is very much appreciated.
+>
+> P.S. the GRML64 live CD system does work on that hardware but it uses a
+> 3.1 kernel and a staging driver.
+>
+> Since I'd like to use BTRFS I'd like to use a 3.3 kernel.
+> Helmut.
+
+Some more details would certainly increase my ability to help you.
+
+Gr. AvS
+
