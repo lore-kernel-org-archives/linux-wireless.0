@@ -1,40 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:30849 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754970Ab2CDX6H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 18:58:07 -0500
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 15/22] NFC: Export NFCID when detecting a p2p target with pn533
-Date: Mon,  5 Mar 2012 01:03:47 +0100
-Message-Id: <1330905834-6994-16-git-send-email-sameo@linux.intel.com> (sfid-20120305_005812_653231_E0F7EE7C)
-In-Reply-To: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
-References: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:41519 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754912Ab2CAM4L (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 1 Mar 2012 07:56:11 -0500
+Date: Thu, 1 Mar 2012 15:57:40 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: bojan prtvar <prtvar.b@gmail.com>
+Cc: walter harms <wharms@bfs.de>,
+	Jussi Kivilinna <jussi.kivilinna@mbnet.fi>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch 1/4 v2] rndis_wlan: integer overflows in
+ rndis_wlan_do_link_up_work()
+Message-ID: <20120301125739.GF22598@mwanda> (sfid-20120301_135616_774642_1E95BBE2)
+References: <20120229063555.GC18031@elgon.mountain>
+ <4F4DE009.7010808@bfs.de>
+ <20120301070208.GH1003@mwanda>
+ <CAOmT4fS1jnywLoiMJjewFi2-w1UHySNPCEhAbrZwW01OS1hV6w@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="aZoGpuMECXJckB41"
+In-Reply-To: <CAOmT4fS1jnywLoiMJjewFi2-w1UHySNPCEhAbrZwW01OS1hV6w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
----
- drivers/nfc/pn533.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
-index f5da5ae..ef33f64 100644
---- a/drivers/nfc/pn533.c
-+++ b/drivers/nfc/pn533.c
-@@ -1316,6 +1316,8 @@ static int pn533_in_dep_link_up_complete(struct pn533 *dev, void *arg,
- 		nfc_dev_dbg(&dev->interface->dev, "Creating new target");
- 
- 		nfc_target.supported_protocols = NFC_PROTO_NFC_DEP_MASK;
-+		nfc_target.nfcid1_len = 10;
-+		memcpy(nfc_target.nfcid1, resp->nfcid3t, nfc_target.nfcid1_len);
- 		rc = nfc_targets_found(dev->nfc_dev, &nfc_target, 1);
- 		if (rc)
- 			return 0;
--- 
-1.7.7.3
+--aZoGpuMECXJckB41
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Thu, Mar 01, 2012 at 10:51:37AM +0100, bojan prtvar wrote:
+> Hi,
+>=20
+>=20
+> On Thu, Mar 1, 2012 at 8:02 AM, Dan Carpenter <dan.carpenter@oracle.com> =
+wrote:
+> >
+> >
+> >
+> >
+> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> > ---
+> > v2: Fixed a style issue for Walter Harms. =A0Changed > 0 to !=3D 0.
+> >
+>=20
+> Why not just=A0 if (req_ie_len) and if (resp_ie_len) ?
+>=20
+
+It could go either way.  I wrote it that way first, then I decided
+that zero was a special enough case to draw attention to it.  In
+this case it felt like zero was its own thing.
+
+For allocation failures I would do:
+	foo =3D kmalloc();
+	if (!foo)
+		return -ENOMEM;
+Allocation failures are not interesting and the NULL doesn't have a
+special meaning and doesn't need explanation.
+
+Hard to explain.
+
+regards,
+dan carpenter
+
+--aZoGpuMECXJckB41
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPT3JDAAoJEOnZkXI/YHqREvkP/0ZENWWco18TQFrRD+ylLztR
+BAnQPTYgPNeZZ3inGnTQjvrdHAHwlx46l8JjJf3U+odu+YiZdlORm/MjoHec0G5F
+FtfpUZcRvMnox3iZa1dIfJ6E/x650m3SYl5bwMJIEvGlyWdv03JfBwZcdP7Mjcq5
+kFaatlFUxV8p0awsknwlS8seynlsGzOJhvvDbniDyU2v/hqlvxfpnwJySDUerCMa
+uodTNkC3YWwbT6a6jfBhUdw92anhB81mqf6FKaT1XetSSjhc+wbv/wghehhel4mx
+tC/xwKYG9+ynGJXS5kCnZm1lTL7CFtnYRddTforST7Xr4P2OKFInumJfGPOkjys0
+Xa/8dAtNkNrPwNqbTBI56OA4Vq1kudADPIT9zgGodoJFWzTgennFOppn4W0U1OGz
+BZ3V+GS0sr79FKqswjHpVSE2kVts6KoRW6kGuZRuYqpoOysWbouYqO2CpD0Fw/Mp
+9rzeRdwg86dyuLDCp6MD3J/mxJ0CQB7x12MVNhRkl49x+bth5PDg6QgWzv5V6nMJ
+MCRjP29Kkaj5vOUCWdtkfMYAFGboa/rlcr9JUYxxX/T12kRHE3cMQ1hgGJuqAL9R
+daqiABiE6MPFZLYYqMFRsCubWUx2ff5mAu9g/ma6HFAFSRFIzhwxvNaM5n2dV+1e
+vEtC8xcu12uxyor+2qLu
+=Jzph
+-----END PGP SIGNATURE-----
+
+--aZoGpuMECXJckB41--
