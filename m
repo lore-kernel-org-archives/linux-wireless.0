@@ -1,36 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:34948 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753013Ab2CWAzB convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50333 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758103Ab2CANqv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Mar 2012 20:55:01 -0400
-Received: by ghrr11 with SMTP id r11so2362250ghr.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Mar 2012 17:55:00 -0700 (PDT)
+	Thu, 1 Mar 2012 08:46:51 -0500
+Message-ID: <4F4F7DC2.8030204@qca.qualcomm.com> (sfid-20120301_144655_558672_430192E2)
+Date: Thu, 1 Mar 2012 19:16:42 +0530
+From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAEFj986ZP6bPBNXY2OtjyM_Sn8F1dUsZOAPTE_bSkAE6==Tx0w@mail.gmail.com>
-References: <1332420968-16300-1-git-send-email-yeohchunyeow@gmail.com>
- <201203221958.10427.lindner_marek@yahoo.de> <CAPjQAd-j0mP9faqSkwuDWErX1v+dbzYqO+rL6sKN-2ZMYr_FGA@mail.gmail.com>
- <201203222035.50568.lindner_marek@yahoo.de> <CAEFj986ZP6bPBNXY2OtjyM_Sn8F1dUsZOAPTE_bSkAE6==Tx0w@mail.gmail.com>
-From: Javier Cardona <javier@cozybit.com>
-Date: Thu, 22 Mar 2012 17:54:40 -0700
-Message-ID: <CAPjQAd-CM-oe_-=w6BcCjUuPmbimwBXMjPqR=2p4G-i=x3Frbg@mail.gmail.com> (sfid-20120323_015507_862447_E75D8BC3)
-Subject: Re: [PATCH v2] mac80211: fix the RANN propagation issues
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-Cc: Marek Lindner <lindner_marek@yahoo.de>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	thomas@cozybit.com, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+To: Christian Lamparter <chunkeey@googlemail.com>
+CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+	<senthilb@qca.qualcomm.com>, <vthiagar@qca.qualcomm.com>,
+	<rodrigue@qca.qualcomm.com>,
+	Rajkumar_contact <rmanohar@qca.qualcomm.com>,
+	"Manoharan, Sujith" <c_manoha@qca.qualcomm.com>
+Subject: Re: [RFC 1/2] ath9k: use ieee80211_free_txskb
+References: <d053a9a1ec34c2e1b15cf50b272ba7863fb17088.1330360738.git.chunkeey@googlemail.com> <4F4F0B83.9050203@qca.qualcomm.com> <4F4F60A0.5040006@qca.qualcomm.com>
+In-Reply-To: <4F4F60A0.5040006@qca.qualcomm.com>
+Content-Type: multipart/mixed;
+	boundary="------------000506000809030900060103"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 22, 2012 at 5:47 PM, Yeoh Chun-Yeow <yeohchunyeow@gmail.com> wrote:
-> "In the section 11C.9.8.3 HWMP sequence numbering, Comparing HWMP
-> sequence numbers is done using a circular modulo 232 comparison."
+--------------000506000809030900060103
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 
-That would be section 13.10.8.3 in the ratified version of the
-standard.  And it's modulo 2³² (2^32), not 232 :)
+On Thursday 01 March 2012 05:12 PM, Mohammed Shafi Shajakhan wrote:
+> On Thursday 01 March 2012 11:09 AM, Mohammed Shafi Shajakhan wrote:
+>> Hi Christian,
+>>
+>> On Monday 27 February 2012 09:40 PM, Christian Lamparter wrote:
+>>> With the new tx status API: "mac80211: implement wifi TX status"
+>>> All skb originating from mac80211 needs to be given back to mac80211.
+>>>
+>>> Signed-off-by: Christian Lamparter<chunkeey@googlemail.com>
+>>> ---
+>>> It's high time we change all calls in the tx-path from
+>>> dev_kfree_skb into ieee80211_free_txskb.
+>>>
+>>> The call in ath9k_tx is straightforward, but the one in
+>>> ath_tx_setup_buffer gives me headaches. I'm not sure if
+>>> we even need to check bf->bf_state.bfs_paprd at this
+>>> stage since ath_tx_start_dma sets bf->bf_state.bfs_paprd
+>>> "after" calling ath_tx_setup_buffer?!
+>>
+>> yes, i think its a problem, we cannot exactly say its the skb from
+>> mac80211 (or) its our PAPRD skb. though with the current code(as the
+>> PAPRD) is disabled the skb would be always from mac80211. let us see if
+>> we have some good solution.
+>
+>
+> got some idea, need to make sure this works perfectly, paprd frames are
+> not aggregated, so we can look only at the non-aggregated path.
+>
+> lets ignore aggregated path:
+>
+> *ath_tx_form_aggr
+> *ath_tx_send_ampdu
+>
+>
+> non-aggregated path :
+>
+> *ath_tx_start_dma
+> *ath_send_normal
+>
+> -> 'ath_tx_setup_buffer' called from 'ath_tx_start_dma' can have a
+> 'is_paprd' check based on 'txctl->paprd' which holds which chain we are
+> sending PAPRD frame.
+>
+> -> 'ath_send_normal' called from
+> -ath_tx_start_dma ( then 'bf' should be valid and we would not have
+> called 'ath_tx_setup_buffer'
+> -ath_tx_flush_tid ( which is an aggregation path) ignore it.
+>
+>
+> attached rough patch for ath9k, need to be compiled and tested. i will
+> also analyze if this can be done in a better way or any flaws in it
+>
 
-Cheers,
+compilation fails with previous patch, forgot to declare the field in 
+the declaration, attached patch passes compilation.
 
-Javier
+
+-- 
+thanks,
+shafi
+
+--------------000506000809030900060103
+Content-Type: text/x-patch; name="use-mac80211-api-freeing-skb.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="use-mac80211-api-freeing-skb.patch"
+
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 02e95c8..1a37a43 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1148,7 +1148,7 @@ static void ath9k_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 
+ 	return;
+ exit:
+-	dev_kfree_skb_any(skb);
++	ieee80211_free_txskb(sc->hw, skb);
+ }
+ 
+ static void ath9k_stop(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 5dd27d2..7b9f1ba 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -64,7 +64,8 @@ static void ath_tx_update_baw(struct ath_softc *sc, struct ath_atx_tid *tid,
+ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
+ 					   struct ath_txq *txq,
+ 					   struct ath_atx_tid *tid,
+-					   struct sk_buff *skb);
++					   struct sk_buff *skb,
++					   bool is_paprd);
+ 
+ enum {
+ 	MCS_HT20,
+@@ -811,7 +812,7 @@ static enum ATH_AGGR_STATUS ath_tx_form_aggr(struct ath_softc *sc,
+ 		fi = get_frame_info(skb);
+ 		bf = fi->bf;
+ 		if (!fi->bf)
+-			bf = ath_tx_setup_buffer(sc, txq, tid, skb);
++			bf = ath_tx_setup_buffer(sc, txq, tid, skb, false);
+ 
+ 		if (!bf)
+ 			continue;
+@@ -1728,7 +1729,7 @@ static void ath_tx_send_ampdu(struct ath_softc *sc, struct ath_atx_tid *tid,
+ 		return;
+ 	}
+ 
+-	bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb);
++	bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb, false);
+ 	if (!bf)
+ 		return;
+ 
+@@ -1754,8 +1755,9 @@ static void ath_tx_send_normal(struct ath_softc *sc, struct ath_txq *txq,
+ 	struct ath_buf *bf;
+ 
+ 	bf = fi->bf;
++
+ 	if (!bf)
+-		bf = ath_tx_setup_buffer(sc, txq, tid, skb);
++		bf = ath_tx_setup_buffer(sc, txq, tid, skb, false);
+ 
+ 	if (!bf)
+ 		return;
+@@ -1816,7 +1818,8 @@ u8 ath_txchainmask_reduction(struct ath_softc *sc, u8 chainmask, u32 rate)
+ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
+ 					   struct ath_txq *txq,
+ 					   struct ath_atx_tid *tid,
+-					   struct sk_buff *skb)
++					   struct sk_buff *skb,
++					   bool is_paprd)
+ {
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+ 	struct ath_frame_info *fi = get_frame_info(skb);
+@@ -1857,7 +1860,11 @@ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
+ 	return bf;
+ 
+ error:
+-	dev_kfree_skb_any(skb);
++	if (is_paprd)
++		dev_kfree_skb_any(skb);
++	else
++		ieee80211_free_txskb(sc->hw, skb);
++
+ 	return NULL;
+ }
+ 
+@@ -1870,6 +1877,7 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct sk_buff *skb,
+ 	struct ath_atx_tid *tid = NULL;
+ 	struct ath_buf *bf;
+ 	u8 tidno;
++	bool is_paprd = false;
+ 
+ 	if ((sc->sc_flags & SC_OP_TXAGGR) && txctl->an &&
+ 		ieee80211_is_data_qos(hdr->frame_control)) {
+@@ -1887,7 +1895,10 @@ static void ath_tx_start_dma(struct ath_softc *sc, struct sk_buff *skb,
+ 		 */
+ 		ath_tx_send_ampdu(sc, tid, skb, txctl);
+ 	} else {
+-		bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb);
++		if (txctl->paprd)
++			is_paprd = true;
++
++		bf = ath_tx_setup_buffer(sc, txctl->txq, tid, skb, is_paprd);
+ 		if (!bf)
+ 			return;
+ 
+
+--------------000506000809030900060103--
