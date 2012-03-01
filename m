@@ -1,92 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:59543 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757164Ab2CYXAa (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55315 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751165Ab2CAObV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Mar 2012 19:00:30 -0400
-Message-ID: <4F6FA388.9080408@gmail.com> (sfid-20120326_010106_641177_01DF43E5)
-Date: Sun, 25 Mar 2012 16:00:24 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-MIME-Version: 1.0
-To: Sujith Manoharan <c_manoha@qca.qualcomm.com>
-CC: Mohammed Shafi <shafi.wireless@gmail.com>,
-	Linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@openwrt.org>, linux-kernel@vger.kernel.org,
-	Linux-netdev <netdev@vger.kernel.org>
-Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
- DMADBG_7=0x00008040
-References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org> <4F61F551.5010608@gmail.com> <4F639851.5080500@gmail.com> <4F674616.8080103@gmail.com> <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com> <4F674FF5.2060406@gmail.com> <4F6751B2.1030809@openwrt.org> <4F681B78.9000207@gmail.com> <CAD2nsn0d-3edYGH8u+v5mhrUZBMsznDNRDkDHE-tErG8uGk84Q@mail.gmail.com> <4F68235C.5090701@gmail.com> <CAD2nsn0toAjyWw48J7oREES0=x6D72hMntP+WpAjHmR5drd-tQ@mail.gmail.com> <4F682555.3020502@gmail.com> <20328.16366.166909.255035@gargle.gargle.HOWL>
-In-Reply-To: <20328.16366.166909.255035@gargle.gargle.HOWL>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Thu, 1 Mar 2012 09:31:21 -0500
+Subject: Re: [PATCH] cfg80211: fix kernel-doc
+From: Johannes Berg <johannes@sipsolutions.net>
+To: John Linville <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Randy Dunlap <rdunlap@xenotime.net>
+In-Reply-To: <1330612099.3623.8.camel@jlt3.sipsolutions.net> (sfid-20120301_152824_102778_67A11174)
+References: <1330612099.3623.8.camel@jlt3.sipsolutions.net>
+	 (sfid-20120301_152824_102778_67A11174)
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 01 Mar 2012 15:31:19 +0100
+Message-ID: <1330612279.3623.9.camel@jlt3.sipsolutions.net> (sfid-20120301_153124_476673_DD757460)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/20/2012 01:29 AM, Sujith Manoharan wrote:
-> Justin P. Mattock wrote:
->> yeah this works:
->>
->> eading symbols from
->> /home/kernel/linux-next/drivers/net/wireless/ath/ath9k/ath9k.o...done.
->> (gdb) l *(ath_tx_start+0x284)
->> 0xcad4 is in ath_tx_start (drivers/net/wireless/ath/ath9k/xmit.c:1878).
->> 1873			ieee80211_is_data_qos(hdr->frame_control)) {
->> 1874			tidno = ieee80211_get_qos_ctl(hdr)[0]&
->> 1875				IEEE80211_QOS_CTL_TID_MASK;
->> 1876			tid = ATH_AN_2_TID(txctl->an, tidno);
->> 1877	
->> 1878			WARN_ON(tid->ac->txq != txctl->txq);
->> 1879		}
->> 1880	
->> 1881		if ((tx_info->flags&  IEEE80211_TX_CTL_AMPDU)&&  tid) {
->> 1882			/*
->> (gdb)
->
-> Can you try this patch ?
->
-> From: Sujith Manoharan<c_manoha@qca.qualcomm.com>
-> Date: Tue, 20 Mar 2012 13:51:26 +0530
-> Subject: [PATCH] ath9k: Use HW HT capabilites properly
->
-> The commit "ath9k: Remove aggregation flags" changed how
-> nodes were being initialized. Use the HW HT cap bits
-> to initialize/de-initialize nodes, else we would be
-> accessing an uninitialized entry during a suspend/resume cycle,
-> resulting in a panic.
->
-> Reported-by: Justin P. Mattock<justinmattock@gmail.com>
-> Signed-off-by: Sujith Manoharan<c_manoha@qca.qualcomm.com>
+Ok, let's try another address for Randy :-)
+
+johannes
+
+> I forgot to update the kernel-doc in my patch
+> to redesign AP mode APIs, fix that now.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 > ---
->   drivers/net/wireless/ath/ath9k/main.c |    4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index 3879485..215eb25 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -640,7 +640,7 @@ static void ath_node_attach(struct ath_softc *sc, struct ieee80211_sta *sta,
->   	an->sta = sta;
->   	an->vif = vif;
->
-> -	if (sta->ht_cap.ht_supported) {
-> +	if (sc->sc_ah->caps.hw_caps&  ATH9K_HW_CAP_HT) {
->   		ath_tx_node_init(sc, an);
->   		an->maxampdu = 1<<  (IEEE80211_HT_MAX_AMPDU_FACTOR +
->   				     sta->ht_cap.ampdu_factor);
-> @@ -659,7 +659,7 @@ static void ath_node_detach(struct ath_softc *sc, struct ieee80211_sta *sta)
->   	an->sta = NULL;
->   #endif
->
-> -	if (sta->ht_cap.ht_supported)
-> +	if (sc->sc_ah->caps.hw_caps&  ATH9K_HW_CAP_HT)
->   		ath_tx_node_cleanup(sc, an);
->   }
->
+> Cc Randy, just in case you notice it too :)
+> 
+>  include/net/cfg80211.h |   10 ++++------
+>  1 file changed, 4 insertions(+), 6 deletions(-)
+> 
+> --- a/include/net/cfg80211.h	2012-02-25 10:21:14.000000000 +0100
+> +++ b/include/net/cfg80211.h	2012-03-01 15:26:54.000000000 +0100
+> @@ -1356,12 +1356,10 @@ struct cfg80211_gtk_rekey_data {
+>   *
+>   * @set_rekey_data: give the data necessary for GTK rekeying to the driver
+>   *
+> - * @add_beacon: Add a beacon with given parameters, @head, @interval
+> - *	and @dtim_period will be valid, @tail is optional.
+> - * @set_beacon: Change the beacon parameters for an access point mode
+> - *	interface. This should reject the call when no beacon has been
+> - *	configured.
+> - * @del_beacon: Remove beacon configuration and stop sending the beacon.
+> + * @start_ap: Start acting in AP mode defined by the parameters.
+> + * @change_beacon: Change the beacon parameters for an access point mode
+> + *	interface. This should reject the call when AP mode wasn't started.
+> + * @stop_ap: Stop being an AP, including stopping beaconing.
 
-I would have to say this patch above does get rid of this crash I was 
-seeing. as a quick test I simply connect to a WPA network, then connect 
-to an open network going back and forth triggers this freeze for me 
-after applying this I am able to toggle back and forth without a freeze.
 
-Thanks!
-
-Justin P. Mattock
