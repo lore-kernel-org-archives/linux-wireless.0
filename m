@@ -1,50 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:51303 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933083Ab2CZSuM (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:34405 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031010Ab2CAOVL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 14:50:12 -0400
-Received: by iagz16 with SMTP id z16so8605045iag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2012 11:50:11 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 0/6] rtlwifi: Convert drivers away from global copies of structures
-Date: Mon, 26 Mar 2012 13:49:51 -0500
-Message-Id: <1332787797-26475-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120326_205017_787075_A397C2D4)
+	Thu, 1 Mar 2012 09:21:11 -0500
+Subject: Re: [PATCH] cfg80211: Add an attribute to set inactivity timeout
+ in AP mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org
+In-Reply-To: <1330606339-9055-1-git-send-email-vthiagar@qca.qualcomm.com>
+References: <1330606339-9055-1-git-send-email-vthiagar@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Thu, 01 Mar 2012 15:21:05 +0100
+Message-ID: <1330611665.3623.3.camel@jlt3.sipsolutions.net> (sfid-20120301_152114_781053_2537B593)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-All the rtlwifi-family of drivers contain 1 or 2 tables that are defined
-on a "per-driver" basis. For systems that contain more than one interface,
-each instance will not have its own copy.
+On Thu, 2012-03-01 at 18:22 +0530, Vasanthakumar Thiagarajan wrote:
+> This patch adds an attribute, NL80211_ATTR_INACTIVITY_TIMEOUT,
+> to set the inactivity timeout which can be used to remove the
+> station in AP mode. This can be passed in NL80211_CMD_START_AP
+> and used by the drivers which have AP MLME in firmware but
+> don't support get_station() properly.
 
-This series of patches is to be applied to kernel 3.5.
+Doesn't hostapd need to know whether this is done or not? At least if it
+knew it could avoid timers etc. -- seems you should add a flag that
+indicates support for this? .And maybe refuse the setting if the flag
+isn't set.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+johannes
 
-Larry Finger (6):
-  rtlwifi: Move dig_t and ps_t structs
-  rtlwifi: Add dm structs to private structure
-  rtlwifi: rtl8192c: Convert driver to use private dm structs
-  rtlwifi: rtl8192c: Convert driver to use private ps_t struct
-  rtlwifi: rtl8192de: Convert driver to use private dm structs
-  rtlwifi: rtl8192se: Convert driver to use private dm structs
-
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c  |   22 ++++++-
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.h  |   35 -----------
- drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c |    1 +
- drivers/net/wireless/rtlwifi/rtl8192ce/dm.h        |   35 -----------
- drivers/net/wireless/rtlwifi/rtl8192de/dm.c        |   11 +++-
- drivers/net/wireless/rtlwifi/rtl8192de/dm.h        |   51 ----------------
- drivers/net/wireless/rtlwifi/rtl8192de/phy.c       |    1 +
- drivers/net/wireless/rtlwifi/rtl8192se/dm.c        |    6 ++-
- drivers/net/wireless/rtlwifi/rtl8192se/dm.h        |   44 --------------
- drivers/net/wireless/rtlwifi/rtl8192se/phy.c       |    1 +
- drivers/net/wireless/rtlwifi/wifi.h                |   63 ++++++++++++++++++++
- 11 files changed, 99 insertions(+), 171 deletions(-)
-
--- 
-1.7.7
 
