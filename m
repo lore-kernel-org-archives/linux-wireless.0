@@ -1,156 +1,272 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29680 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756709Ab2CFJeM (ORCPT
+Received: from hermes.mlbassoc.com ([64.234.241.98]:56621 "EHLO
+	mail.chez-thomas.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751201Ab2CALf0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 04:34:12 -0500
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH v2] ath6kl: Add provision to define suspend policy in disconnected state.
-Date: Tue, 6 Mar 2012 15:03:59 +0530
-Message-ID: <1331026439-7822-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20120306_103430_556310_F0F1B1D7)
+	Thu, 1 Mar 2012 06:35:26 -0500
+Message-ID: <4F4F5EFB.3020400@mlbassoc.com> (sfid-20120301_123530_177787_72DC0AF7)
+Date: Thu, 01 Mar 2012 04:35:23 -0700
+From: Gary Thomas <gary@mlbassoc.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+CC: Luciano Coelho <coelho@ti.com>
+Subject: Re: Problems with wl1271
+References: <4F4E903B.2030501@mlbassoc.com>
+In-Reply-To: <4F4E903B.2030501@mlbassoc.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+On 2012-02-29 13:53, Gary Thomas wrote:
+> I'm trying to bring up a new hardware platform which includes
+> the TiWi-r02 (wl1271). Since the kernel for my target device
+> (AM3874) is stuck in the dark ages, Luciano suggested that I
+> try compat-wireless + iw. I've managed to build these now
+> (after encountering many problems that I'll help iron out later)
+> and now have the system ready to start using the device. Note:
+> I'm using compat-wireless-2012-02-28 and iw-3.2
+>
+> The kernel modules load and initialize now, with these messages:
+>
+> cfg80211: Updating information on frequency 5200 MHz for a 20 MHz width channel with regulatory rule:
+> cfg80211: 5170000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
+> cfg80211: Updating information on frequency 5210 MHz for a 20 MHz width channel with regulatory rule:
+> cfg80211: 5170000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
+> cfg80211: Updating information on frequency 5220 MHz for a 20 MHz width channel with regulatory rule:
+> cfg80211: 5170000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
+> cfg80211: Updating information on frequency 5230 MHz for a 20 MHz width channel with regulatory rule:
+> cfg80211: 5170000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
+> cfg80211: Updating information on frequency 5240 MHz for a 20 MHz width channel with regulatory rule:
+> cfg80211: 5170000 KHz - 5250000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
+> cfg80211: Disabling freq 5260 MHz
+> cfg80211: Disabling freq 5280 MHz
+> cfg80211: Disabling freq 5300 MHz
+> cfg80211: Disabling freq 5320 MHz
+> cfg80211: Disabling freq 5500 MHz
+> cfg80211: Disabling freq 5520 MHz
+> cfg80211: Disabling freq 5540 MHz
+> cfg80211: Disabling freq 5560 MHz
+> cfg80211: Disabling freq 5580 MHz
+> cfg80211: Disabling freq 5600 MHz
+> cfg80211: Disabling freq 5620 MHz
+> cfg80211: Disabling freq 5640 MHz
+> cfg80211: Disabling freq 5660 MHz
+> cfg80211: Disabling freq 5680 MHz
+> cfg80211: Disabling freq 5700 MHz
+> cfg80211: Updating information on frequency 5745 MHz for a 20 MHz width channel with regulatory rule:
+> cfg80211: 5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
+> cfg80211: Updating information on frequency 5765 MHz for a 20 MHz width channel with regulatory rule:
+> cfg80211: 5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
+> cfg80211: Updating information on frequency 5785 MHz for a 20 MHz width channel with regulatory rule:
+> cfg80211: 5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
+> cfg80211: Updating information on frequency 5805 MHz for a 20 MHz width channel with regulatory rule:
+> cfg80211: 5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
+> cfg80211: Updating information on frequency 5825 MHz for a 20 MHz width channel with regulatory rule:
+> cfg80211: 5735000 KHz - 5835000 KHz @ 40000 KHz), (600 mBi, 2000 mBm)
+>
+> wl12xx: loaded
+>
+> When I try to bring up the device, I get this:
+> # ifconfig wlan0 hw ether 2a:00:24:01:02:03
+> # ifconfig wlan0 up
+> wl12xx: firmware booted (Rev 6.3.5.0.98)
+> ADDRCONF(NETDEV_UP): wlan0: link is not ready
+>
+> If I try to scan for an access point, I get nothing:
+> # iw wlan0 scan
+> --- Nothing prints
+> #
+> I also see no additional messages in dmesg.
+>
+> Further checking of the device:
+> # iw wlan0 list
+> Wiphy phy0
+> Band 1:
+> Capabilities: 0x130
+> HT20
+> Static SM Power Save
+> RX Greenfield
+> RX HT20 SGI
+> RX STBC 1-stream
+> Max AMSDU length: 3839 bytes
+> No DSSS/CCK HT40
+> Maximum RX AMPDU length 8191 bytes (exponent: 0x000)
+> Minimum RX AMPDU time spacing: 8 usec (0x06)
+> HT TX/RX MCS rate indexes supported: 0-7
+> Frequencies:
+> * 2412 MHz [1] (20.0 dBm)
+> * 2417 MHz [2] (20.0 dBm)
+> * 2422 MHz [3] (20.0 dBm)
+> * 2427 MHz [4] (20.0 dBm)
+> * 2432 MHz [5] (20.0 dBm)
+> * 2437 MHz [6] (20.0 dBm)
+> * 2442 MHz [7] (20.0 dBm)
+> * 2447 MHz [8] (20.0 dBm)
+> * 2452 MHz [9] (20.0 dBm)
+> * 2457 MHz [10] (20.0 dBm)
+> * 2462 MHz [11] (20.0 dBm)
+> * 2467 MHz [12] (20.0 dBm) (passive scanning, no IBSS)
+> * 2472 MHz [13] (20.0 dBm) (passive scanning, no IBSS)
+> * 2484 MHz [14] (20.0 dBm) (passive scanning, no IBSS)
+> Bitrates (non-HT):
+> * 1.0 Mbps
+> * 2.0 Mbps (short preamble supported)
+> * 5.5 Mbps (short preamble supported)
+> * 11.0 Mbps (short preamble supported)
+> * 6.0 Mbps
+> * 9.0 Mbps
+> * 12.0 Mbps
+> * 18.0 Mbps
+> * 24.0 Mbps
+> * 36.0 Mbps
+> * 48.0 Mbps
+> * 54.0 Mbps
+> Band 2:
+> Capabilities: 0x130
+> HT20
+> Static SM Power Save
+> RX Greenfield
+> RX HT20 SGI
+> RX STBC 1-stream
+> Max AMSDU length: 3839 bytes
+> No DSSS/CCK HT40
+> Maximum RX AMPDU length 8191 bytes (exponent: 0x000)
+> Minimum RX AMPDU time spacing: 8 usec (0x06)
+> HT TX/RX MCS rate indexes supported: 0-7
+> Frequencies:
+> * 5035 MHz [7] (disabled)
+> * 5040 MHz [8] (disabled)
+> * 5045 MHz [9] (disabled)
+> * 5055 MHz [11] (disabled)
+> * 5060 MHz [12] (disabled)
+> * 5080 MHz [16] (disabled)
+> * 5170 MHz [34] (disabled)
+> * 5180 MHz [36] (20.0 dBm) (passive scanning, no IBSS)
+> * 5190 MHz [38] (20.0 dBm) (passive scanning, no IBSS)
+> * 5200 MHz [40] (20.0 dBm) (passive scanning, no IBSS)
+> * 5210 MHz [42] (20.0 dBm) (passive scanning, no IBSS)
+> * 5220 MHz [44] (20.0 dBm) (passive scanning, no IBSS)
+> * 5230 MHz [46] (20.0 dBm) (passive scanning, no IBSS)
+> * 5240 MHz [48] (20.0 dBm) (passive scanning, no IBSS)
+> * 5260 MHz [52] (disabled)
+> * 5280 MHz [56] (disabled)
+> * 5300 MHz [60] (disabled)
+> * 5320 MHz [64] (disabled)
+> * 5500 MHz [100] (disabled)
+> * 5520 MHz [104] (disabled)
+> * 5540 MHz [108] (disabled)
+> * 5560 MHz [112] (disabled)
+> * 5580 MHz [116] (disabled)
+> * 5600 MHz [120] (disabled)
+> * 5620 MHz [124] (disabled)
+> * 5640 MHz [128] (disabled)
+> * 5660 MHz [132] (disabled)
+> * 5680 MHz [136] (disabled)
+> * 5700 MHz [140] (disabled)
+> * 5745 MHz [149] (20.0 dBm) (passive scanning, no IBSS)
+> * 5765 MHz [153] (20.0 dBm) (passive scanning, no IBSS)
+> * 5785 MHz [157] (20.0 dBm) (passive scanning, no IBSS)
+> * 5805 MHz [161] (20.0 dBm) (passive scanning, no IBSS)
+> * 5825 MHz [165] (20.0 dBm) (passive scanning, no IBSS)
+> Bitrates (non-HT):
+> * 6.0 Mbps
+> * 9.0 Mbps
+> * 12.0 Mbps
+> * 18.0 Mbps
+> * 24.0 Mbps
+> * 36.0 Mbps
+> * 48.0 Mbps
+> * 54.0 Mbps
+> max # scan SSIDs: 1
+> max scan IEs length: 441 bytes
+> Coverage class: 0 (up to 0m)
+> Supported Ciphers:
+> * WEP40 (00-0f-ac:1)
+> * WEP104 (00-0f-ac:5)
+> * TKIP (00-0f-ac:2)
+> * CCMP (00-0f-ac:4)
+> * WPI-SMS4 (00-14-72:1)
+> Available Antennas: TX 0 RX 0
+> Supported interface modes:
+> * IBSS
+> * managed
+> * AP
+> * AP/VLAN
+> * monitor
+> * P2P-client
+> * P2P-GO
+> software interface modes (can always be added):
+> * AP/VLAN
+> * monitor
+> interface combinations are not supported
+> Supported commands:
+> * new_interface
+> * set_interface
+> * new_key
+> * new_beacon
+> * new_station
+> * new_mpath
+> * set_mesh_params
+> * set_bss
+> * authenticate
+> * associate
+> * deauthenticate
+> * disassociate
+> * join_ibss
+> * join_mesh
+> * remain_on_channel
+> * set_tx_bitrate_mask
+> * action
+> * frame_wait_cancel
+> * set_wiphy_netns
+> * set_channel
+> * set_wds_peer
+> * Unknown command (75)
+> * Unknown command (84)
+> * Unknown command (87)
+> * Unknown command (85)
+> * testmode
+> * connect
+> * disconnect
+> Supported TX frame types:
+> * IBSS: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+> * managed: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+> * AP: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+> * AP/VLAN: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+> * mesh point: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+> * P2P-client: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+> * P2P-GO: 0x0000 0x0010 0x0020 0x0030 0x0040 0x0050 0x0060 0x0070 0x0080 0x0090 0x00a0 0x00b0 0x00c0 0x00d0 0x00e0 0x00f0
+> Supported RX frame types:
+> * IBSS: 0x00d0
+> * managed: 0x0040 0x00d0
+> * AP: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
+> * AP/VLAN: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
+> * mesh point: 0x00b0 0x00c0 0x00d0
+> * P2P-client: 0x0040 0x00d0
+> * P2P-GO: 0x0000 0x0020 0x0040 0x00a0 0x00b0 0x00c0 0x00d0
+> WoWLAN support:
+> * wake up on anything (device continues operating normally)
+> Device supports AP-side u-APSD.
+>
+> I don't know enough about this device to understand why it's not working.
+> Perhaps the line
+> Available Antennas: TX 0 RX 0
+> is a clue?
+>
+> Any ideas what's not working & how I need to do to move forward?
+>
+> Thanks in advance for all the help
+>
 
-It gives flexibility to the user to define suspend policy
-when the suspend mode is set to WOW and the device is in
-disconnected state at the time of suspend.
+Any ideas at all?  Is there some debug info I can get to find
+out what's going on?
 
-New module parameter wow_mode is added to get the choice
-from the user. This parameter is valid only if the module
-parameter suspend_mode is set to WOW.
+Note: I compared the output of 'iw list' from my non-functional system
+to that of a working one (OMAP4430 PandaBoard) and they are virtually
+identical, even the line about the antenna...
 
-To force WOW in connected state and cut power
-in disconnected state:
-  suspend_mode=0x3 wow_mode=0x1
-
-To force WOW in connected state and deep sleep
-in disconnected state:
-   suspend_mode=0x3 wow_mode=0x2
-
-If there is no value specified to wow_mode during insmod,
-deep sleep mode will be tried in the disconnected state.
-
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
----
-V2:
-   - Bit usage of suspend_mode is removed and new mod param
-     wow_mode is introduced.
-   - wow2_suspend_mode variable is renamed to wow_suspend_mode
-
- drivers/net/wireless/ath/ath6kl/cfg80211.c |    5 ++---
- drivers/net/wireless/ath/ath6kl/core.c     |    9 +++++++++
- drivers/net/wireless/ath/ath6kl/core.h     |    1 +
- drivers/net/wireless/ath/ath6kl/sdio.c     |   18 +++++++++++++-----
- 4 files changed, 25 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 9abc7a6..5285294 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2046,10 +2046,9 @@ int ath6kl_cfg80211_suspend(struct ath6kl *ar,
- 		ath6kl_tx_data_cleanup(ar);
- 
- 		ret = ath6kl_wow_suspend(ar, wow);
--		if (ret) {
--			ath6kl_err("wow suspend failed: %d\n", ret);
-+		if (ret)
- 			return ret;
--		}
-+
- 		ar->state = ATH6KL_STATE_WOW;
- 		break;
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
-index e66cf43..e404db2 100644
---- a/drivers/net/wireless/ath/ath6kl/core.c
-+++ b/drivers/net/wireless/ath/ath6kl/core.c
-@@ -27,12 +27,14 @@
- 
- unsigned int debug_mask;
- static unsigned int suspend_mode;
-+static unsigned int wow_mode;
- static unsigned int uart_debug;
- static unsigned int ath6kl_p2p;
- static unsigned int testmode;
- 
- module_param(debug_mask, uint, 0644);
- module_param(suspend_mode, uint, 0644);
-+module_param(wow_mode, uint, 0644);
- module_param(uart_debug, uint, 0644);
- module_param(ath6kl_p2p, uint, 0644);
- module_param(testmode, uint, 0644);
-@@ -119,6 +121,13 @@ int ath6kl_core_init(struct ath6kl *ar)
- 	else
- 		ar->suspend_mode = 0;
- 
-+	if (suspend_mode == WLAN_POWER_STATE_WOW &&
-+	    (wow_mode == WLAN_POWER_STATE_CUT_PWR ||
-+	     wow_mode == WLAN_POWER_STATE_DEEP_SLEEP))
-+		ar->wow_suspend_mode = wow_mode;
-+	else
-+		ar->wow_suspend_mode = 0;
-+
- 	if (uart_debug)
- 		ar->conf_flags |= ATH6KL_CONF_UART_DEBUG;
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index b6bdece..b9d810f 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -636,6 +636,7 @@ struct ath6kl {
- 
- 	u16 conf_flags;
- 	u16 suspend_mode;
-+	u16 wow_suspend_mode;
- 	wait_queue_head_t event_wq;
- 	struct ath6kl_mbox_info mbox_info;
- 
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index e2f42a1..9b6282a 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -836,6 +836,7 @@ static int ath6kl_sdio_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
- 	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
- 	struct sdio_func *func = ar_sdio->func;
- 	mmc_pm_flag_t flags;
-+	bool try_deepsleep = false;
- 	int ret;
- 
- 	if (ar->state == ATH6KL_STATE_SCHED_SCAN) {
-@@ -862,14 +863,21 @@ static int ath6kl_sdio_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
- 			goto cut_pwr;
- 
- 		ret = ath6kl_cfg80211_suspend(ar, ATH6KL_CFG_SUSPEND_WOW, wow);
--		if (ret)
--			goto cut_pwr;
--
--		return 0;
-+		if (ret && ret != -ENOTCONN)
-+			ath6kl_err("wow suspend failed: %d\n", ret);
-+
-+		if (ret && (!ar->wow_suspend_mode ||
-+		    ar->wow_suspend_mode == WLAN_POWER_STATE_DEEP_SLEEP))
-+				try_deepsleep = true;
-+		else if (ret &&
-+			 ar->wow_suspend_mode == WLAN_POWER_STATE_CUT_PWR)
-+				goto cut_pwr;
-+		if (!ret)
-+			return 0;
- 	}
- 
- 	if (ar->suspend_mode == WLAN_POWER_STATE_DEEP_SLEEP ||
--	    !ar->suspend_mode) {
-+	    !ar->suspend_mode || try_deepsleep) {
- 
- 		flags = sdio_get_host_pm_caps(func);
- 		if (!(flags & MMC_PM_KEEP_POWER))
 -- 
-1.7.1
-
+------------------------------------------------------------
+Gary Thomas                 |  Consulting for the
+MLB Associates              |    Embedded world
+------------------------------------------------------------
