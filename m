@@ -1,81 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.watchguard.com ([206.191.171.101]:49694 "EHLO
-	watchguard.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759903Ab2CGTpe convert rfc822-to-8bit (ORCPT
+Received: from sd-mail-sa-02.sanoma.fi ([158.127.18.162]:49238 "EHLO
+	sd-mail-sa-02.sanoma.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966042Ab2CAKTF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 14:45:34 -0500
-From: Bryan Phillippe <Bryan.Phillippe@watchguard.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: bss_info_change_notify warning (hacked 3.3.0-rc5+)
-Date: Wed, 7 Mar 2012 19:45:32 +0000
-Message-ID: <D6CE340A-7CE4-42DA-B1C3-4137C1D13BFF@watchguard.com> (sfid-20120307_204537_972509_710BE011)
-References: <4F57B7E6.1050103@candelatech.com>
-In-Reply-To: <4F57B7E6.1050103@candelatech.com>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 1 Mar 2012 05:19:05 -0500
+Message-ID: <20120301121901.363327qut940t1lw@www.81.fi> (sfid-20120301_111910_030730_7FC305D7)
+Date: Thu, 01 Mar 2012 12:19:01 +0200
+From: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [patch 1/4] rndis_wlan: integer overflows in
+ rndis_wlan_do_link_up_work()
+References: <20120229063555.GC18031@elgon.mountain>
+In-Reply-To: <20120229063555.GC18031@elgon.mountain>
 MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Quoting Dan Carpenter <dan.carpenter@oracle.com>:
 
-Yes, it's a known problem.  It's very reproducible for me on a non-hacked 3.3-rc1 as well: changing from AP to client mode, or setting up multiple APs, or changing from 2.4Ghz to 5Ghz all seem to trigger this warning with various stack traces.
+> If "offset" is negative then we can get past this check:
+> 	if (offset > CONTROL_BUFFER_SIZE)
+> Or if we pick a very high "req_ie_len" then we can get around the check:
+> 	if (offset + req_ie_len > CONTROL_BUFFER_SIZE)
+>
+> I made "resp_ie_len" and "req_ie_len" unsigned.  I don't know if it was
+> intentional that they were signed in the original.
+>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>
+> diff --git a/drivers/net/wireless/rndis_wlan.c  
+> b/drivers/net/wireless/rndis_wlan.c
+> index a330c69..6d8a986 100644
+> --- a/drivers/net/wireless/rndis_wlan.c
+> +++ b/drivers/net/wireless/rndis_wlan.c
+> @@ -2755,9 +2755,10 @@ static void rndis_wlan_do_link_up_work(struct  
+> usbnet *usbdev)
+>  	struct rndis_wlan_private *priv = get_rndis_wlan_priv(usbdev);
+>  	struct ndis_80211_assoc_info *info = NULL;
+>  	u8 bssid[ETH_ALEN];
+> -	int resp_ie_len, req_ie_len;
+> +	unsigned int resp_ie_len, req_ie_len;
+> +	unsigned int offset;
+>  	u8 *req_ie, *resp_ie;
+> -	int ret, offset;
+> +	int ret;
+>  	bool roamed = false;
+>  	bool match_bss;
+>
+> @@ -2785,6 +2786,8 @@ static void rndis_wlan_do_link_up_work(struct  
+> usbnet *usbdev)
+>  		ret = get_association_info(usbdev, info, CONTROL_BUFFER_SIZE);
+>  		if (!ret) {
+>  			req_ie_len = le32_to_cpu(info->req_ie_length);
+> +			if (req_ie_len > CONTROL_BUFFER_SIZE)
+> +				req_ie_len = CONTROL_BUFFER_SIZE;
+>  			if (req_ie_len > 0) {
+>  				offset = le32_to_cpu(info->offset_req_ies);
+>
+> @@ -2799,6 +2802,8 @@ static void rndis_wlan_do_link_up_work(struct  
+> usbnet *usbdev)
+>  			}
+>
+>  			resp_ie_len = le32_to_cpu(info->resp_ie_length);
+> +			if (resp_ie_len > CONTROL_BUFFER_SIZE)
+> +				resp_ie_len = CONTROL_BUFFER_SIZE;
+>  			if (resp_ie_len > 0) {
+
+(resp_ie_len > 0), (resp_ie_len != 0), (resp_ie_len) .. all fine by me,
+
+Acked-by: Jussi Kivilinna <jussi.kivilinna@mbnet.fi>
+
+>  				offset = le32_to_cpu(info->offset_resp_ies);
+>
+>
+>
 
 
---
--bp
-
-
-On Mar 7, 2012, at 11:32 AM, Ben Greear wrote:
-
-> This is with a somewhat hacked 3.3.0-rc5+.  Just
-> curious if this is a known problem.
-> 
-> 
-> Seems very reproducible on my system.
-> 
-> 
-> WARNING: at /home/greearb/git/linux-3.3.dev.y/net/mac80211/driver-ops.h:10 ieee80211_bss_info_change_noti)
-> Hardware name: To be filled by O.E.M.
-> Modules linked in: 8021q garp stp llc macvlan wanlink(PO) pktgen lockd arc4 joydev ppdev microcode serio_]
-> Pid: 1855, comm: hostapd Tainted: P         C O 3.3.0-rc5+ #7
-> Call Trace:
-> [<ffffffff81036eda>] warn_slowpath_common+0x80/0x98
-> [<ffffffff81036f07>] warn_slowpath_null+0x15/0x17
-> [<ffffffffa02c0010>] ieee80211_bss_info_change_notify+0x15f/0x18c [mac80211]
-> [<ffffffffa02d472d>] ieee80211_config_beacon+0x58/0x208 [mac80211]
-> [<ffffffff8144773b>] ? __mutex_unlock_slowpath+0x10d/0x11f
-> [<ffffffffa02d4936>] ieee80211_add_beacon+0x35/0xa4 [mac80211]
-> [<ffffffffa01fd715>] nl80211_addset_beacon+0x317/0x34a [cfg80211]
-> [<ffffffff813b5a08>] genl_rcv_msg+0x1f4/0x239
-> [<ffffffff813b5814>] ? genl_rcv+0x28/0x28
-> [<ffffffff813b4836>] netlink_rcv_skb+0x3e/0x8f
-> [<ffffffff813b580d>] genl_rcv+0x21/0x28
-> [<ffffffff813b4611>] netlink_unicast+0xe9/0x152
-> [<ffffffff813b4d6a>] netlink_sendmsg+0x1f8/0x216
-> [<ffffffff81384122>] __sock_sendmsg_nosec+0x5f/0x6a
-> [<ffffffff8138416a>] __sock_sendmsg+0x3d/0x48
-> [<ffffffff81384a0a>] sock_sendmsg+0xa3/0xbc
-> [<ffffffff811d12c2>] ? blk_finish_plug+0x13/0x34
-> [<ffffffff810a8b87>] ? generic_file_aio_write+0xa6/0xb6
-> [<ffffffff81383b68>] ? copy_from_user+0x9/0xb
-> [<ffffffff813846b2>] ? move_addr_to_kernel+0x2b/0x65
-> [<ffffffff8138e909>] ? copy_from_user+0x9/0xb
-> [<ffffffff8138ec56>] ? verify_iovec+0x4f/0xa3
-> [<ffffffff8138516c>] __sys_sendmsg+0x20f/0x29c
-> [<ffffffff8144c242>] ? sub_preempt_count+0x92/0xa6
-> [<ffffffff81052ecf>] ? __srcu_read_unlock+0x3b/0x59
-> [<ffffffff8111d9c0>] ? fsnotify+0x255/0x285
-> [<ffffffff81385356>] sys_sendmsg+0x3d/0x5b
-> [<ffffffff8144dfb9>] system_call_fastpath+0x16/0x1b
-> ---[ end trace 7abcbdd8b95b5194 ]---
-> 
-> -- 
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
