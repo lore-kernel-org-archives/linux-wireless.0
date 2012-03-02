@@ -1,178 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:17699 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755043Ab2CDUnE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:04 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 041/101] iwlwifi: move rfkill status handling out of transport
-Date: Sun,  4 Mar 2012 11:28:55 -0800
-Message-Id: <1330889395-533-42-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214558_856723_FD8917A3)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:36332 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757514Ab2CBIuQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Mar 2012 03:50:16 -0500
+Subject: Re: [PATCH 21/21] cw1200: Kconfig + Makefile for the driver.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1330652495-25837-22-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_024231_185549_5ECA663F)
+References: <d53e019b1a0bcd29c2c367fbe5665413f2d33938-submit>
+	 <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>
+	 <1330652495-25837-22-git-send-email-dmitry.tarnyagin@stericsson.com>
+	 (sfid-20120302_024231_185549_5ECA663F)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 02 Mar 2012 09:50:13 +0100
+Message-ID: <1330678213.8542.6.camel@jlt3.sipsolutions.net> (sfid-20120302_095021_187751_6786205C)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2012-03-02 at 02:41 +0100, Dmitry Tarnyagin wrote:
 
-The transport layer should only check the
-hardware RF kill status, not impose any
-policy or reaction based on it, so move
-that out of it into the op_mode.
+> +if CW1200
 
-For now keep the restriction on loading
-firmware, that will have to be removed
-later.
+I don't think that's necessary with the "depends on?"
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-core.c          |    5 +++
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |   24 +++----------
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c    |   39 +++++++---------------
- 3 files changed, 22 insertions(+), 46 deletions(-)
+> +config CW1200_STANDALONE
+> +      bool "Build a standalone cw1200 driver"
+> +      depends on CW1200
+> +      help
+> +        Say Y here if you would like to build a standalone cw1200 driver,
+> +        not associated with any platform. Likely you wil not be able to use
+> +	it for any purposes.
+> +        If unsure, say N.
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index 88842de..c5fcbdc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1470,6 +1470,11 @@ void iwl_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
- {
- 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
- 
-+	if (state)
-+		set_bit(STATUS_RF_KILL_HW, &priv->shrd->status);
-+	else
-+		clear_bit(STATUS_RF_KILL_HW, &priv->shrd->status);
-+
- 	wiphy_rfkill_set_hw_state(priv->hw->wiphy, state);
- }
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-index c3c2de3..e8d3129 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-@@ -1016,30 +1016,16 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
- 
- 	/* HW RF KILL switch toggled */
- 	if (inta & CSR_INT_BIT_RF_KILL) {
--		int hw_rf_kill = 0;
--		if (!(iwl_read32(trans, CSR_GP_CNTRL) &
--				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW))
--			hw_rf_kill = 1;
-+		bool hw_rfkill;
- 
-+		hw_rfkill = !(iwl_read32(trans, CSR_GP_CNTRL) &
-+				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
- 		IWL_WARN(trans, "RF_KILL bit toggled to %s.\n",
--				hw_rf_kill ? "disable radio" : "enable radio");
-+				hw_rfkill ? "disable radio" : "enable radio");
- 
- 		isr_stats->rfkill++;
- 
--		/* driver only loads ucode once setting the interface up.
--		 * the driver allows loading the ucode even if the radio
--		 * is killed. Hence update the killswitch state here. The
--		 * rfkill handler will care about restarting if needed.
--		 */
--		if (!test_bit(STATUS_ALIVE, &trans->shrd->status)) {
--			if (hw_rf_kill)
--				set_bit(STATUS_RF_KILL_HW,
--					&trans->shrd->status);
--			else
--				clear_bit(STATUS_RF_KILL_HW,
--					  &trans->shrd->status);
--			iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rf_kill);
--		}
-+		iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
- 
- 		handled |= CSR_INT_BIT_RF_KILL;
- 	}
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index d7dbd80..4a05216 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -1021,6 +1021,7 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
- 	int ret;
- 	struct iwl_trans_pcie *trans_pcie =
- 		IWL_TRANS_GET_PCIE_TRANS(trans);
-+	bool hw_rfkill;
- 
- 	trans->shrd->ucode_owner = IWL_OWNERSHIP_DRIVER;
- 	trans_pcie->ac_to_queue[IWL_RXON_CTX_BSS] = iwlagn_bss_ac_to_queue;
-@@ -1039,14 +1040,11 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
- 	}
- 
- 	/* If platform's RF_KILL switch is NOT set to KILL */
--	if (iwl_read32(trans, CSR_GP_CNTRL) &
--			CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
--		clear_bit(STATUS_RF_KILL_HW, &trans->shrd->status);
--	else
--		set_bit(STATUS_RF_KILL_HW, &trans->shrd->status);
-+	hw_rfkill = !(iwl_read32(trans, CSR_GP_CNTRL) &
-+				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
-+	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
- 
--	if (iwl_is_rfkill(trans->shrd)) {
--		iwl_op_mode_hw_rf_kill(trans->op_mode, true);
-+	if (hw_rfkill) {
- 		iwl_enable_interrupts(trans);
- 		return -ERFKILL;
- 	}
-@@ -1506,6 +1504,7 @@ static int iwl_trans_pcie_start_hw(struct iwl_trans *trans)
- 	struct iwl_trans_pcie *trans_pcie =
- 		IWL_TRANS_GET_PCIE_TRANS(trans);
- 	int err;
-+	bool hw_rfkill;
- 
- 	trans_pcie->inta_mask = CSR_INI_SET_MASK;
- 
-@@ -1535,16 +1534,9 @@ static int iwl_trans_pcie_start_hw(struct iwl_trans *trans)
- 
- 	iwl_apm_init(trans);
- 
--	/* If platform's RF_KILL switch is NOT set to KILL */
--	if (iwl_read32(trans,
--			CSR_GP_CNTRL) & CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW)
--		clear_bit(STATUS_RF_KILL_HW, &trans->shrd->status);
--	else
--		set_bit(STATUS_RF_KILL_HW, &trans->shrd->status);
--
--	iwl_op_mode_hw_rf_kill(trans->op_mode,
--				test_bit(STATUS_RF_KILL_HW,
--					 &trans->shrd->status));
-+	hw_rfkill = !(iwl_read32(trans, CSR_GP_CNTRL) &
-+				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
-+	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
- 
- 	return err;
- 
-@@ -1659,19 +1651,12 @@ static int iwl_trans_pcie_suspend(struct iwl_trans *trans)
- 
- static int iwl_trans_pcie_resume(struct iwl_trans *trans)
- {
--	bool hw_rfkill = false;
-+	bool hw_rfkill;
- 
- 	iwl_enable_interrupts(trans);
- 
--	if (!(iwl_read32(trans, CSR_GP_CNTRL) &
--				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW))
--		hw_rfkill = true;
--
--	if (hw_rfkill)
--		set_bit(STATUS_RF_KILL_HW, &trans->shrd->status);
--	else
--		clear_bit(STATUS_RF_KILL_HW, &trans->shrd->status);
--
-+	hw_rfkill = !(iwl_read32(trans, CSR_GP_CNTRL) &
-+				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
- 	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
- 
- 	return 0;
--- 
-1.7.0.4
+typo "will", and some indentation issue
+
+> +config CW1200_USE_STE_EXTENSIONS
+> +      bool "STE extensions"
+> +      depends on CW1200
+> +      help
+> +        Say Y if you want to include experimental code or code with
+> +	not resolved dependency.
+> +        If unsure, say N.
+
+This seems questionable. Maybe you should get rid of it for now and
+explain what is needed and extend the APIs as needed?
+
+> +config CW1200_WAPI_SUPPORT
+> +      bool "WAPI support"
+> +      depends on CW1200_USE_STE_EXTENSIONS
+> +      help
+> +        Say Y if your compat-wireless support WAPI.
+> +        If unsure, say N.
+
+This is unnecessary. You can always advertise support for SMS4. Also, it
+really shouldn't be talking about compat-wireless here since you're
+submitting this driver for upstream :-)
+
+> +config CW1200_DISABLE_BEACON_HINTS
+> +      bool "Disable 11d beacon hints"
+> +      depends on CW1200
+> +      help
+> +        Say Y if you want to disable 11d beacon hints.
+> +        If unsure, say N.
+
+I don't understand this -- beacon hints or not should be your decision
+based on how the device works wrt. regulatory, not the users?
+
+> +config CW1200_BH_DEBUG
+> +      bool "Enable low-level device communication logs (DEVELOPMENT)"
+> +      help
+> +        Say Y if you want to enable BH logs.
+> +        If unsure, say N.
+
+What does "BH" stand for here? In the kernel it typically stands for
+Bottom Half (or softirq) but that can't be meant? In other places in
+your code you do mean that though, it seems, so this is a bit confusing.
+
+> +config CW1200_WSM_DEBUG
+> +      bool "Enable WSM API debug messages (DEVELOPMENT)"
+> +      help
+> +        Say Y if you want to enable WSM logs.
+> +        If unsure, say N.
+> +
+> +config CW1200_WSM_DUMPS
+> +      bool "Verbose WSM API logging (DEVELOPMENT)"
+> +      help
+> +        Say Y if you want to enable WSM dumps.
+> +        If unsure, say N.
+
+You should think about adding tracing instead.
+
+> +config CW1200_WSM_DUMPS_SHORT
+> +      depends on CW1200_WSM_DUMPS
+> +      bool "Dump only first x bytes (default 20) (DEVELOPMENT)"
+> +      help
+> +        Say Y if you want to limit amount of data printed in WSM dumps.
+> +        If unsure, say N.
+
+Then you also don't need this since tracing is really fast. On a core i3
+I can trace full HT "line" rate. It's also a lot more powerful for
+analysis tools. Yes I need to give a talk about this some time ;-)
+
+
+johannes
 
