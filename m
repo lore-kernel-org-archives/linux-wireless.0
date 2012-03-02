@@ -1,126 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38078 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754984Ab2CDUnA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 15:43:00 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 019/101] iwlwifi: use ieee80211_tx_status
-Date: Sun,  4 Mar 2012 11:28:33 -0800
-Message-Id: <1330889395-533-20-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214639_287183_CD5AA0C4)
-In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56759 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758454Ab2CBVrO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Mar 2012 16:47:14 -0500
+Received: by iagz16 with SMTP id z16so2839680iag.19
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2012 13:47:13 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1330724598.9652.4.camel@jlt3.sipsolutions.net>
+References: <1330722280-28879-1-git-send-email-javier@cozybit.com> <1330724598.9652.4.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Fri, 2 Mar 2012 13:46:53 -0800
+Message-ID: <CAPjQAd8+dwYV3QjY-j5TSiV1neY_3ZS+fHQTrbEFYommqev51Q@mail.gmail.com> (sfid-20120302_224722_646886_E418092F)
+Subject: Re: [PATCHv3 1/2] mac80211_hwsim: Add tsf to beacons, probe responses
+ and radiotap header.
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Mar 2, 2012 at 1:43 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2012-03-02 at 13:04 -0800, Javier Cardona wrote:
+>
+>> @@ -667,6 +679,19 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>>       bool ack;
+>>       struct ieee80211_tx_info *txi;
+>>       u32 _pid;
+>> +     struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+>> +     struct mac80211_hwsim_data *data = hw->priv;
+>> +     __le64 *tsfpos;
+>> +     u16 fc = le16_to_cpu(hdr->frame_control);
+>> +     u16 fctypes = fc & (IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE);
+>> +
+>> +     if (fctypes == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_PROBE_RESP) ||
+>> +         fctypes == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON)) {
+>> +             struct ieee80211_hdr_3addr *hdr3 =
+>> +                     (struct ieee80211_hdr_3addr *) skb->data;
+>> +             tsfpos = (__le64 *) (hdr3 + 1);
+>> +             put_unaligned(__mac80211_hwsim_get_tsf(data), tsfpos);
+>> +     }
+>
+> And here, you can do the same with struct ieee80211_mgmt and don't even
+> need the struct ieee80211_hdr * variable then.
+>
+> Also, you should use ieee80211_is_beacon() and ieee80211_is_probe_req().
+>
+> Sorry for the incoherent review!
 
-We currently use the _irqsafe version, but that
-isn't recommended together with ieee80211_rx()
-as it can cause races. If the device reports
-a TX-status and RX in that order then with the
-current combination mac80211 might process them
-in the other order, which can cause issues with
-powersaving clients.
+No, thank you for your patience and help.  Working on v5 (how many
+patch revisions can I make before somebody bans me from the list? :)
 
-Use ieee80211_tx_status() to avoid this race.
-Since we don't want to call it with locks held,
-process the frame queues later -- this is fine
-as they are on the stack.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   28 ++++++++++++++++++----------
- 1 files changed, 18 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-index e5ebc36..1914bee 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
-@@ -1007,6 +1007,8 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
- 	if (is_agg)
- 		iwl_rx_reply_tx_agg(priv, tx_resp);
- 
-+	__skb_queue_head_init(&skbs);
-+
- 	if (tx_resp->frame_count == 1) {
- 		u16 next_reclaimed = le16_to_cpu(tx_resp->seq_ctl);
- 		next_reclaimed = SEQ_TO_SN(next_reclaimed + 0x10);
-@@ -1026,8 +1028,6 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
- 			next_reclaimed = ssn;
- 		}
- 
--		__skb_queue_head_init(&skbs);
--
- 		if (tid != IWL_TID_NON_QOS) {
- 			priv->tid_data[sta_id][tid].next_reclaimed =
- 				next_reclaimed;
-@@ -1040,8 +1040,9 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
- 				  ssn, status, &skbs));
- 		iwlagn_check_ratid_empty(priv, sta_id, tid);
- 		freed = 0;
--		while (!skb_queue_empty(&skbs)) {
--			skb = __skb_dequeue(&skbs);
-+
-+		/* process frames */
-+		skb_queue_walk(&skbs, skb) {
- 			hdr = (struct ieee80211_hdr *)skb->data;
- 
- 			if (!ieee80211_is_data_qos(hdr->frame_control))
-@@ -1083,8 +1084,6 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
- 			if (!is_agg)
- 				iwlagn_non_agg_tx_status(priv, ctx, hdr->addr1);
- 
--			ieee80211_tx_status_irqsafe(priv->hw, skb);
--
- 			freed++;
- 		}
- 
-@@ -1093,6 +1092,12 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
- 
- 	iwl_check_abort_status(priv, tx_resp->frame_count, status);
- 	spin_unlock(&priv->sta_lock);
-+
-+	while (!skb_queue_empty(&skbs)) {
-+		skb = __skb_dequeue(&skbs);
-+		ieee80211_tx_status(priv->hw, skb);
-+	}
-+
- 	return 0;
- }
- 
-@@ -1186,9 +1191,8 @@ int iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
- 
- 	iwlagn_check_ratid_empty(priv, sta_id, tid);
- 	freed = 0;
--	while (!skb_queue_empty(&reclaimed_skbs)) {
- 
--		skb = __skb_dequeue(&reclaimed_skbs);
-+	skb_queue_walk(&reclaimed_skbs, skb) {
- 		hdr = (struct ieee80211_hdr *)skb->data;
- 
- 		if (ieee80211_is_data_qos(hdr->frame_control))
-@@ -1211,10 +1215,14 @@ int iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
- 			iwlagn_hwrate_to_tx_control(priv, agg->rate_n_flags,
- 						    info);
- 		}
--
--		ieee80211_tx_status_irqsafe(priv->hw, skb);
- 	}
- 
- 	spin_unlock(&priv->sta_lock);
-+
-+	while (!skb_queue_empty(&reclaimed_skbs)) {
-+		skb = __skb_dequeue(&reclaimed_skbs);
-+		ieee80211_tx_status(priv->hw, skb);
-+	}
-+
- 	return 0;
- }
--- 
-1.7.0.4
-
+j
