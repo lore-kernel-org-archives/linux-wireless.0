@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:54649 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753491Ab2CTM3s convert rfc822-to-8bit (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Tue, 20 Mar 2012 08:29:48 -0400
-Received: by bkcik5 with SMTP id ik5so5069937bkc.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2012 05:29:39 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1332224377.3329.1.camel@jlt3.sipsolutions.net>
-References: <CALx5=V_czM-3sqhutbYx27wHnLtQL_PvcSjKHd4RGtopkKqf3A@mail.gmail.com>
-	<1332224377.3329.1.camel@jlt3.sipsolutions.net>
-Date: Tue, 20 Mar 2012 20:29:39 +0800
-Message-ID: <CALx5=V-CLY2QE=BuYoYOdBSELmFUxNXQ+Ws5Gh=rCND0SbJL1g@mail.gmail.com> (sfid-20120320_132953_451159_95C90941)
-Subject: Re: About the .start function in ieee80211_ops.
-From: Matt Chen <machen@suse.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: users@rt2x00.serialmonkey.com,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from he.sipsolutions.net ([78.46.109.217]:35180 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755313Ab2CBVnT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Mar 2012 16:43:19 -0500
+Subject: Re: [PATCHv3 1/2] mac80211_hwsim:  Add tsf to beacons, probe
+ responses and radiotap header.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Javier Cardona <javier@cozybit.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
+In-Reply-To: <1330722280-28879-1-git-send-email-javier@cozybit.com> (sfid-20120302_220506_374722_1B6412A4)
+References: <1330722280-28879-1-git-send-email-javier@cozybit.com>
+	 (sfid-20120302_220506_374722_1B6412A4)
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 02 Mar 2012 22:43:18 +0100
+Message-ID: <1330724598.9652.4.camel@jlt3.sipsolutions.net> (sfid-20120302_224322_276484_BF447C85)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On Fri, 2012-03-02 at 13:04 -0800, Javier Cardona wrote:
 
-2012/3/20 Johannes Berg <johannes@sipsolutions.net>:
-> On Tue, 2012-03-20 at 14:02 +0800, Matt Chen wrote:
->> Hi all,
->> I have a issue recently for rt2800pci, the way to duplicate this is
->> 1. Press function key to set rfkill hard blocked, it would cause
->> driver to power off.
->> 2. reboot
->> 3. find when load the driver (rt2800pci), it would stop in "Registered
->> led device: rt2800pci-phy0::quality".
->>
->> Here you would find the rfkill_poll function is not started to work,
->> also the rt2x00mac_start() registered in rt2800pci_mac80211_ops
->> structure is not yet be executed.
->> My question is when or what condition the rt2x00mac_start()  would be
->> running, because if it is not yet executed, then it would not be able
->> to load the firmware in rt2x00lib_start().
->
-> That's a bug in the driver then -- it should probably start the rfkill
-> stuff without mac80211's start() command. start() is only called when
-> the first interface comes up, but that will never happen if it's in
-> rfkill block.
-Do you have any idea which part of code would make the first interface
-comes up ?  :)
-Would that be in cfg80211 ?
+> @@ -667,6 +679,19 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+>  	bool ack;
+>  	struct ieee80211_tx_info *txi;
+>  	u32 _pid;
+> +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+> +	struct mac80211_hwsim_data *data = hw->priv;
+> +	__le64 *tsfpos;
+> +	u16 fc = le16_to_cpu(hdr->frame_control);
+> +	u16 fctypes = fc & (IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE);
+> +
+> +	if (fctypes == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_PROBE_RESP) ||
+> +	    fctypes == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON)) {
+> +		struct ieee80211_hdr_3addr *hdr3 =
+> +			(struct ieee80211_hdr_3addr *) skb->data;
+> +		tsfpos = (__le64 *) (hdr3 + 1);
+> +		put_unaligned(__mac80211_hwsim_get_tsf(data), tsfpos);
+> +	}
 
-Thanks.
-> johannes
->
-> .
+And here, you can do the same with struct ieee80211_mgmt and don't even
+need the struct ieee80211_hdr * variable then.
 
--- 
-Thank you.
+Also, you should use ieee80211_is_beacon() and ieee80211_is_probe_req().
+
+Sorry for the incoherent review!
+
+johannes
+
