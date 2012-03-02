@@ -1,137 +1,542 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:34610 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758013Ab2CBO5E (ORCPT
+Received: from eu1sys200aog102.obsmtp.com ([207.126.144.113]:34245 "EHLO
+	eu1sys200aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759311Ab2CBU0v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 09:57:04 -0500
-Subject: [PATCH] mac80211: combine QoS with other BSS changes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 02 Mar 2012 15:56:59 +0100
-Message-ID: <1330700219.8542.19.camel@jlt3.sipsolutions.net> (sfid-20120302_155708_155170_5AF956E8)
-Mime-Version: 1.0
+	Fri, 2 Mar 2012 15:26:51 -0500
+Received: from zeta.dmz-us.st.com (ns4.st.com [167.4.16.71])
+	by beta.dmz-us.st.com (STMicroelectronics) with ESMTP id 75C3C75
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 20:26:35 +0000 (GMT)
+Received: from relay1.stm.gmessaging.net (unknown [10.230.100.17])
+	by zeta.dmz-us.st.com (STMicroelectronics) with ESMTP id 58F7957
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 18:57:22 +0000 (GMT)
+Received: from exdcvycastm003.EQ1STM.local (alteon-source-exch [10.230.100.61])
+	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
+	(Client CN "exdcvycastm003", Issuer "exdcvycastm003" (not verified))
+	by relay1.stm.gmessaging.net (Postfix) with ESMTPS id 9D38E24C2E5
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 21:26:36 +0100 (CET)
+From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCHv2 04/21] cw1200: cw1200_sdio.c, implementation of SDIO wrapper for the driver.
+Date: Fri, 2 Mar 2012 21:26:26 +0100
+Message-ID: <1330720003-15866-5-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_212656_016662_F8B25937)
+In-Reply-To: <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
+References: <983b0e2d75af161b8e4dec02fc3497926a0080df-submit>
+ <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+The patch contains SDIO wrapper for the cw1200 wireless driver.
+The wrapper instantiates driver's core and implements common sbus
+interface for the core.
 
-When associating and particularly when disassociating
-there's no need to notify the driver about changes
-with multiple calls to bss_info_changed, we should
-combine the QoS enabling/disabling into the same call
-as otherwise the driver could get confused about QoS
-suddenly getting disabled while connected.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
 ---
- net/mac80211/ieee80211_i.h |    3 ++-
- net/mac80211/iface.c       |    2 +-
- net/mac80211/mlme.c        |   12 ++++++++----
- net/mac80211/util.c        |    9 ++++++---
- 4 files changed, 17 insertions(+), 9 deletions(-)
+ drivers/net/wireless/cw1200/cw1200_sdio.c |  493 +++++++++++++++++++++++++++++
+ 1 files changed, 493 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/cw1200/cw1200_sdio.c
 
---- a/net/mac80211/ieee80211_i.h	2012-03-02 13:28:10.000000000 +0100
-+++ b/net/mac80211/ieee80211_i.h	2012-03-02 15:56:06.000000000 +0100
-@@ -1348,7 +1348,8 @@ int ieee80211_frame_duration(struct ieee
- void mac80211_ev_michael_mic_failure(struct ieee80211_sub_if_data *sdata, int keyidx,
- 				     struct ieee80211_hdr *hdr, const u8 *tsc,
- 				     gfp_t gfp);
--void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata);
-+void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
-+			       bool bss_notify);
- void ieee80211_xmit(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb);
- 
- void ieee80211_tx_skb_tid(struct ieee80211_sub_if_data *sdata,
---- a/net/mac80211/iface.c	2012-02-29 11:02:37.000000000 +0100
-+++ b/net/mac80211/iface.c	2012-03-02 15:56:06.000000000 +0100
-@@ -304,7 +304,7 @@ static int ieee80211_do_open(struct net_
- 		 * need to initialise the hardware if the hardware
- 		 * doesn't start up with sane defaults
- 		 */
--		ieee80211_set_wmm_default(sdata);
-+		ieee80211_set_wmm_default(sdata, true);
- 	}
- 
- 	set_bit(SDATA_STATE_RUNNING, &sdata->state);
---- a/net/mac80211/mlme.c	2012-03-02 13:28:10.000000000 +0100
-+++ b/net/mac80211/mlme.c	2012-03-02 15:56:06.000000000 +0100
-@@ -1277,7 +1277,6 @@ static void ieee80211_sta_wmm_params(str
- 
- 	/* enable WMM or activate new settings */
- 	sdata->vif.bss_conf.qos = true;
--	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_QOS);
- }
- 
- static u32 ieee80211_handle_bss_capability(struct ieee80211_sub_if_data *sdata,
-@@ -1455,8 +1454,6 @@ static void ieee80211_set_disassoc(struc
- 	changed |= BSS_CHANGED_ASSOC;
- 	sdata->vif.bss_conf.assoc = false;
- 
--	ieee80211_set_wmm_default(sdata);
--
- 	/* channel(_type) changes are handled by ieee80211_hw_config */
- 	WARN_ON(!ieee80211_set_channel_type(local, sdata, NL80211_CHAN_NO_HT));
- 
-@@ -1484,10 +1481,16 @@ static void ieee80211_set_disassoc(struc
- 		changed |= BSS_CHANGED_ARP_FILTER;
- 	}
- 
-+	sdata->vif.bss_conf.qos = false;
-+	changed |= BSS_CHANGED_QOS;
+diff --git a/drivers/net/wireless/cw1200/cw1200_sdio.c b/drivers/net/wireless/cw1200/cw1200_sdio.c
+new file mode 100644
+index 0000000..dfa7e64
+--- /dev/null
++++ b/drivers/net/wireless/cw1200/cw1200_sdio.c
+@@ -0,0 +1,493 @@
++/*
++ * Mac80211 SDIO driver for ST-Ericsson CW1200 device
++ *
++ * Copyright (c) 2010-2012, ST-Ericsson AB
++ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
 +
- 	/* The BSSID (not really interesting) and HT changed */
- 	changed |= BSS_CHANGED_BSSID | BSS_CHANGED_HT;
- 	ieee80211_bss_info_change_notify(sdata, changed);
- 
-+	/* disassociated - set to defaults now */
-+	ieee80211_set_wmm_default(sdata, false);
++#include <linux/version.h>
++#include <linux/module.h>
++#include <linux/gpio.h>
++#include <linux/delay.h>
++#include <linux/mmc/host.h>
++#include <linux/mmc/sdio_func.h>
++#include <linux/mmc/card.h>
++#include <linux/mmc/sdio.h>
++#include <linux/spinlock.h>
++#include <net/mac80211.h>
 +
- 	del_timer_sync(&sdata->u.mgd.conn_mon_timer);
- 	del_timer_sync(&sdata->u.mgd.bcn_mon_timer);
- 	del_timer_sync(&sdata->u.mgd.timer);
-@@ -2155,7 +2158,8 @@ static bool ieee80211_assoc_success(stru
- 		ieee80211_sta_wmm_params(local, sdata, elems.wmm_param,
- 					 elems.wmm_param_len);
- 	else
--		ieee80211_set_wmm_default(sdata);
-+		ieee80211_set_wmm_default(sdata, false);
-+	changed |= BSS_CHANGED_QOS;
- 
- 	if (elems.ht_info_elem && elems.wmm_param &&
- 	    (sdata->local->hw.queues >= 4) &&
---- a/net/mac80211/util.c	2012-02-29 11:02:37.000000000 +0100
-+++ b/net/mac80211/util.c	2012-03-02 15:56:06.000000000 +0100
-@@ -737,7 +737,8 @@ void ieee802_11_parse_elems(u8 *start, s
- 	ieee802_11_parse_elems_crc(start, len, elems, 0, 0);
- }
- 
--void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata)
-+void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
-+			       bool bss_notify)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee80211_tx_queue_params qparam;
-@@ -807,7 +808,9 @@ void ieee80211_set_wmm_default(struct ie
- 	if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
- 		sdata->vif.bss_conf.qos =
- 			sdata->vif.type != NL80211_IFTYPE_STATION;
--		ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_QOS);
-+		if (bss_notify)
-+			ieee80211_bss_info_change_notify(sdata,
-+							 BSS_CHANGED_QOS);
- 	}
- }
- 
-@@ -829,7 +832,7 @@ void ieee80211_sta_def_wmm_params(struct
- 	else
- 		sdata->flags &= ~IEEE80211_SDATA_OPERATING_GMODE;
- 
--	ieee80211_set_wmm_default(sdata);
-+	ieee80211_set_wmm_default(sdata, true);
- }
- 
- u32 ieee80211_mandatory_rates(struct ieee80211_local *local,
-
++#include "cw1200.h"
++#include "sbus.h"
++#include "cw1200_plat.h"
++
++MODULE_AUTHOR("Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>");
++MODULE_DESCRIPTION("mac80211 ST-Ericsson CW1200 SDIO driver");
++MODULE_LICENSE("GPL");
++MODULE_ALIAS("cw1200_wlan");
++
++#if defined(CONFIG_CW1200_STANDALONE)
++static char cw1200_mmc_id[10];
++module_param_string(mmc_id, cw1200_mmc_id, sizeof(cw1200_mmc_id), 0);
++#endif /* CONFIG_CW1200_STANDALONE */
++
++struct sbus_priv {
++	struct sdio_func	*func;
++	struct cw1200_common	*core;
++	const struct cw1200_platform_data *pdata;
++	spinlock_t		lock;
++	sbus_irq_handler	irq_handler;
++	void			*irq_priv;
++};
++
++static const struct sdio_device_id cw1200_sdio_ids[] = {
++	{ SDIO_DEVICE(SDIO_ANY_ID, SDIO_ANY_ID) },
++	{ /* end: all zeroes */			},
++};
++
++/* sbus_ops implemetation */
++
++static int cw1200_sdio_memcpy_fromio(struct sbus_priv *self,
++				     unsigned int addr,
++				     void *dst, int count)
++{
++	return sdio_memcpy_fromio(self->func, dst, addr, count);
++}
++
++static int cw1200_sdio_memcpy_toio(struct sbus_priv *self,
++				   unsigned int addr,
++				   const void *src, int count)
++{
++	return sdio_memcpy_toio(self->func, addr, (void *)src, count);
++}
++
++static void cw1200_sdio_lock(struct sbus_priv *self)
++{
++	sdio_claim_host(self->func);
++}
++
++static void cw1200_sdio_unlock(struct sbus_priv *self)
++{
++	sdio_release_host(self->func);
++}
++
++#ifndef CONFIG_CW1200_USE_GPIO_IRQ
++static void cw1200_sdio_irq_handler(struct sdio_func *func)
++{
++	struct sbus_priv *self = sdio_get_drvdata(func);
++	unsigned long flags;
++
++	BUG_ON(!self);
++	spin_lock_irqsave(&self->lock, flags);
++	if (self->irq_handler)
++		self->irq_handler(self->irq_priv);
++	spin_unlock_irqrestore(&self->lock, flags);
++}
++#else /* CONFIG_CW1200_USE_GPIO_IRQ */
++static irqreturn_t cw1200_gpio_irq_handler(int irq, void *dev_id)
++{
++	struct sbus_priv *self = dev_id;
++
++	BUG_ON(!self);
++	if (self->irq_handler)
++		self->irq_handler(self->irq_priv);
++	return IRQ_HANDLED;
++}
++
++static int cw1200_request_irq(struct sbus_priv *self,
++			      irq_handler_t handler)
++{
++	int ret;
++	int func_num;
++	const struct resource *irq = self->pdata->irq;
++	u8 cccr;
++
++	if (!irq)
++		return -EINVAL;
++
++	ret = request_any_context_irq(irq->start, handler,
++			IRQF_TRIGGER_RISING, irq->name, self);
++	if (WARN_ON(ret < 0))
++		goto exit;
++
++	/* Hack to access Fuction-0 */
++	func_num = self->func->num;
++	self->func->num = 0;
++
++	cccr = sdio_readb(self->func, SDIO_CCCR_IENx, &ret);
++	if (WARN_ON(ret))
++		goto set_func;
++
++	/* Master interrupt enable ... */
++	cccr |= BIT(0);
++
++	/* ... for our function */
++	cccr |= BIT(func_num);
++
++	sdio_writeb(self->func, cccr, SDIO_CCCR_IENx, &ret);
++	if (WARN_ON(ret))
++		goto set_func;
++
++	/* Restore the WLAN function number */
++	self->func->num = func_num;
++	return 0;
++
++set_func:
++	self->func->num = func_num;
++	free_irq(irq->start, self);
++exit:
++	return ret;
++}
++#endif /* CONFIG_CW1200_USE_GPIO_IRQ */
++
++static int cw1200_sdio_irq_subscribe(struct sbus_priv *self,
++				     sbus_irq_handler handler,
++				     void *priv)
++{
++	int ret;
++	unsigned long flags;
++
++	if (!handler)
++		return -EINVAL;
++
++	spin_lock_irqsave(&self->lock, flags);
++	self->irq_priv = priv;
++	self->irq_handler = handler;
++	spin_unlock_irqrestore(&self->lock, flags);
++
++	printk(KERN_DEBUG "SW IRQ subscribe\n");
++	sdio_claim_host(self->func);
++#ifndef CONFIG_CW1200_USE_GPIO_IRQ
++	ret = sdio_claim_irq(self->func, cw1200_sdio_irq_handler);
++#else
++	ret = cw1200_request_irq(self, cw1200_gpio_irq_handler);
++#endif
++	sdio_release_host(self->func);
++	return ret;
++}
++
++static int cw1200_sdio_irq_unsubscribe(struct sbus_priv *self)
++{
++	int ret = 0;
++	unsigned long flags;
++#ifdef CONFIG_CW1200_USE_GPIO_IRQ
++	const struct resource *irq = self->pdata->irq;
++
++	if (!irq)
++		return -EINVAL;
++#endif
++
++	WARN_ON(!self->irq_handler);
++	if (!self->irq_handler)
++		return 0;
++
++	printk(KERN_DEBUG "SW IRQ unsubscribe\n");
++#ifndef CONFIG_CW1200_USE_GPIO_IRQ
++	sdio_claim_host(self->func);
++	ret = sdio_release_irq(self->func);
++	sdio_release_host(self->func);
++#else
++	free_irq(irq->start, self);
++#endif
++
++	spin_lock_irqsave(&self->lock, flags);
++	self->irq_priv = NULL;
++	self->irq_handler = NULL;
++	spin_unlock_irqrestore(&self->lock, flags);
++
++	return ret;
++}
++
++static int cw1200_detect_card(const struct cw1200_platform_data *pdata)
++{
++	/* HACK!!!
++	 * Rely on mmc->class_dev.class set in mmc_alloc_host
++	 * Tricky part: a new mmc hook is being (temporary) created
++	 * to discover mmc_host class.
++	 * Do you know more elegant way how to enumerate mmc_hosts?
++	 */
++
++	struct mmc_host *mmc = NULL;
++	struct class_dev_iter iter;
++	struct device *dev;
++
++	mmc = mmc_alloc_host(0, NULL);
++	if (!mmc)
++		return -ENOMEM;
++
++	BUG_ON(!mmc->class_dev.class);
++	class_dev_iter_init(&iter, mmc->class_dev.class, NULL, NULL);
++	for (;;) {
++		dev = class_dev_iter_next(&iter);
++		if (!dev) {
++			printk(KERN_ERR "cw1200: %s is not found.\n",
++				pdata->mmc_id);
++			break;
++		} else {
++			struct mmc_host *host = container_of(dev,
++				struct mmc_host, class_dev);
++
++			if (dev_name(&host->class_dev) &&
++				strcmp(dev_name(&host->class_dev),
++					pdata->mmc_id))
++				continue;
++
++			mmc_detect_change(host, 10);
++			break;
++		}
++	}
++	mmc_free_host(mmc);
++	return 0;
++}
++
++static int cw1200_sdio_off(const struct cw1200_platform_data *pdata)
++{
++	int ret = 0;
++#ifndef CONFIG_CW1200_U5500_SUPPORT
++	const struct resource *reset = pdata->reset;
++	if (reset) {
++		gpio_set_value(reset->start, 0);
++		gpio_free(reset->start);
++	}
++#else
++	if (pdata->prcmu_ctrl)
++		ret = pdata->prcmu_ctrl(pdata, false);
++	msleep(50);
++#endif
++	cw1200_detect_card(pdata);
++	return ret;
++}
++
++static int cw1200_sdio_on(const struct cw1200_platform_data *pdata)
++{
++	int ret = 0;
++#ifndef CONFIG_CW1200_U5500_SUPPORT
++	const struct resource *reset = pdata->reset;
++	if (reset) {
++		gpio_request(reset->start, reset->name);
++		gpio_direction_output(reset->start, 1);
++		/* It is not stated in the datasheet, but at least some
++		 * of devices have problems with reset if this stage
++		 * is omited. */
++		msleep(50);
++		gpio_direction_output(reset->start, 0);
++		/* A valid reset shall be obtained by maintaining WRESETN
++		 * active (low) for at least two cycles of LP_CLK after VDDIO
++		 * is stable within it operating range. */
++		usleep_range(1000, 20000);
++		gpio_set_value(reset->start, 1);
++		/* The host should wait 32 ms after the WRESETN release
++		 * for the on-chip LDO to stabilize */
++		msleep(32);
++	}
++#else
++	if (pdata->prcmu_ctrl)
++		ret = pdata->prcmu_ctrl(pdata, true);
++	msleep(50);
++#endif
++	cw1200_detect_card(pdata);
++	return ret;
++}
++
++static int cw1200_sdio_reset(struct sbus_priv *self)
++{
++	cw1200_sdio_off(self->pdata);
++	msleep(1000);
++	cw1200_sdio_on(self->pdata);
++	return 0;
++}
++
++static size_t cw1200_sdio_align_size(struct sbus_priv *self, size_t size)
++{
++	size_t aligned = sdio_align_size(self->func, size);
++	return aligned;
++}
++
++int cw1200_sdio_set_block_size(struct sbus_priv *self, size_t size)
++{
++	return sdio_set_block_size(self->func, size);
++}
++
++static int cw1200_sdio_pm(struct sbus_priv *self, bool  suspend)
++{
++	int ret = 0;
++	const struct resource *irq = self->pdata->irq;
++
++	if (irq)
++		ret = irq_set_irq_wake(irq->start, suspend);
++
++	return ret;
++}
++
++static struct sbus_ops cw1200_sdio_sbus_ops = {
++	.sbus_memcpy_fromio	= cw1200_sdio_memcpy_fromio,
++	.sbus_memcpy_toio	= cw1200_sdio_memcpy_toio,
++	.lock			= cw1200_sdio_lock,
++	.unlock			= cw1200_sdio_unlock,
++	.irq_subscribe		= cw1200_sdio_irq_subscribe,
++	.irq_unsubscribe	= cw1200_sdio_irq_unsubscribe,
++	.reset			= cw1200_sdio_reset,
++	.align_size		= cw1200_sdio_align_size,
++	.power_mgmt		= cw1200_sdio_pm,
++	.set_block_size		= cw1200_sdio_set_block_size,
++};
++
++/* Probe Function to be called by SDIO stack when device is discovered */
++static int cw1200_sdio_probe(struct sdio_func *func,
++			      const struct sdio_device_id *id)
++{
++	struct sbus_priv *self;
++	int status;
++
++	cw1200_dbg(CW1200_DBG_INIT, "Probe called\n");
++
++	self = kzalloc(sizeof(*self), GFP_KERNEL);
++	if (!self) {
++		cw1200_dbg(CW1200_DBG_ERROR, "Can't allocate SDIO sbus_priv.");
++		return -ENOMEM;
++	}
++
++	spin_lock_init(&self->lock);
++	self->pdata = cw1200_get_platform_data();
++	self->func = func;
++	sdio_set_drvdata(func, self);
++	sdio_claim_host(func);
++	sdio_enable_func(func);
++	sdio_release_host(func);
++
++	status = cw1200_core_probe(&cw1200_sdio_sbus_ops,
++			      self, &func->dev, &self->core);
++	if (status) {
++		sdio_claim_host(func);
++		sdio_disable_func(func);
++		sdio_release_host(func);
++		sdio_set_drvdata(func, NULL);
++		kfree(self);
++	}
++
++	return status;
++}
++
++/* Disconnect Function to be called by SDIO stack when
++ * device is disconnected */
++static void cw1200_sdio_disconnect(struct sdio_func *func)
++{
++	struct sbus_priv *self = sdio_get_drvdata(func);
++
++	if (self) {
++		if (self->core) {
++			cw1200_core_release(self->core);
++			self->core = NULL;
++		}
++		sdio_claim_host(func);
++		sdio_disable_func(func);
++		sdio_release_host(func);
++		sdio_set_drvdata(func, NULL);
++		kfree(self);
++	}
++}
++
++static int cw1200_suspend(struct device *dev)
++{
++	int ret;
++	struct sdio_func *func = dev_to_sdio_func(dev);
++
++	/* Notify SDIO that CW1200 will remain powered during suspend */
++	ret = sdio_set_host_pm_flags(func, MMC_PM_KEEP_POWER);
++	if (ret)
++		cw1200_dbg(CW1200_DBG_ERROR,
++			   "Error setting SDIO pm flags: %i\n", ret);
++
++	return ret;
++}
++
++static int cw1200_resume(struct device *dev)
++{
++	return 0;
++}
++
++static const struct dev_pm_ops cw1200_pm_ops = {
++	.suspend = cw1200_suspend,
++	.resume = cw1200_resume,
++};
++
++static struct sdio_driver sdio_driver = {
++	.name		= "cw1200_wlan",
++	.id_table	= cw1200_sdio_ids,
++	.probe		= cw1200_sdio_probe,
++	.remove		= cw1200_sdio_disconnect,
++	.drv = {
++		.pm = &cw1200_pm_ops,
++	}
++};
++
++/* Init Module function -> Called by insmod */
++static int __init cw1200_sdio_init(void)
++{
++	const struct cw1200_platform_data *pdata;
++	int ret;
++
++	pdata = cw1200_get_platform_data();
++
++	ret = sdio_register_driver(&sdio_driver);
++	if (ret)
++		goto err_reg;
++
++	if (pdata->clk_ctrl) {
++		ret = pdata->clk_ctrl(pdata, true);
++		if (ret)
++			goto err_clk;
++	}
++
++	if (pdata->power_ctrl) {
++		ret = pdata->power_ctrl(pdata, true);
++		if (ret)
++			goto err_power;
++	}
++
++	ret = cw1200_sdio_on(pdata);
++	if (ret)
++		goto err_on;
++
++	return 0;
++
++err_on:
++	if (pdata->power_ctrl)
++		pdata->power_ctrl(pdata, false);
++err_power:
++	if (pdata->clk_ctrl)
++		pdata->clk_ctrl(pdata, false);
++err_clk:
++	sdio_unregister_driver(&sdio_driver);
++err_reg:
++	return ret;
++}
++
++/* Called at Driver Unloading */
++static void __exit cw1200_sdio_exit(void)
++{
++	const struct cw1200_platform_data *pdata;
++	pdata = cw1200_get_platform_data();
++	sdio_unregister_driver(&sdio_driver);
++	cw1200_sdio_off(pdata);
++	if (pdata->power_ctrl)
++		pdata->power_ctrl(pdata, false);
++	if (pdata->clk_ctrl)
++		pdata->clk_ctrl(pdata, false);
++}
++
++#if defined(CONFIG_CW1200_STANDALONE)
++const struct cw1200_platform_data *cw1200_get_platform_data()
++{
++	static const struct cw1200_platform_data pdata = {
++		.mmc_id = cw1200_mmc_id,
++	};
++	return &pdata;
++}
++#endif /* CONFIG_CW1200_STANDALONE */
++
++module_init(cw1200_sdio_init);
++module_exit(cw1200_sdio_exit);
+-- 
+1.7.9
 
