@@ -1,54 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36422 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752745Ab2CWJUS (ORCPT
+Received: from eu1sys200aog119.obsmtp.com ([207.126.144.147]:40635 "EHLO
+	eu1sys200aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1030492Ab2CBU0w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2012 05:20:18 -0400
-Message-ID: <1332494416.3506.16.camel@jlt3.sipsolutions.net> (sfid-20120323_102021_826095_222475C2)
-Subject: Re: [RFC 11/12] mac80211: split offchannel functions to per-vif
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Micha=C5=82?= Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 23 Mar 2012 10:20:16 +0100
-In-Reply-To: <4F6C3F32.7040700@tieto.com>
-References: <ccb26d54-38f2-478e-95d9-85fa1aea62c2@FIVLA-EXHUB02.eu.tieto.com>
-		 (sfid-20120320_154026_591857_E0DB8EEA) <1332492804.3506.7.camel@jlt3.sipsolutions.net>
-	 <4F6C3F32.7040700@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Fri, 2 Mar 2012 15:26:52 -0500
+Received: from zeta.dmz-ap.st.com (ns6.st.com [138.198.234.13])
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 0A606C8
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 20:18:21 +0000 (GMT)
+Received: from relay1.stm.gmessaging.net (unknown [10.230.100.17])
+	by zeta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 6A59BA71
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 20:26:46 +0000 (GMT)
+Received: from exdcvycastm003.EQ1STM.local (alteon-source-exch [10.230.100.61])
+	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
+	(Client CN "exdcvycastm003", Issuer "exdcvycastm003" (not verified))
+	by relay1.stm.gmessaging.net (Postfix) with ESMTPS id BBAFA24C2C0
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 21:26:35 +0100 (CET)
+From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCHv2 03/21] cw1200: sbus.h, common device interface abstraction.
+Date: Fri, 2 Mar 2012 21:26:25 +0100
+Message-ID: <1330720003-15866-4-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_212700_365690_338195D0)
+In-Reply-To: <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
+References: <983b0e2d75af161b8e4dec02fc3497926a0080df-submit>
+ <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-03-23 at 10:15 +0100, Michał Kazior wrote:
-> Johannes Berg wrote:
-> > This seems very odd. Why would one vif be off-channel, and the other be
-> > on-channel? That makes no sense, off-channel is a global state.
-> 
-> Should mac80211 care if the device does channel-hopping? What if it's 
-> possible for off-channel to be done simultaneously because the device 
-> has two radios?
+The patch contains definition of hardware abstraction layer between
+cw1200 core driver and physical device interface. A bunch of wrappers
+can be build using this interface: sdio, spi, c2c etc.
 
-What do you mean by channel hopping? IBSS-like behaviour?
+Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+---
+ drivers/net/wireless/cw1200/sbus.h |   39 ++++++++++++++++++++++++++++++++++++
+ 1 files changed, 39 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/cw1200/sbus.h
 
-The two radios case is interesting, but is it really relevant right now?
-I suspect the first case of it we'll see will be 11ad and then it's two
-different bands.
-
-> Maybe off-channel should also be reworked more to support multiple 
-> scenarios?
-
-What scenarios do you have in mind?
-
-> > My thinking here right now is that mac80211-based off-channel and
-> > scanning will only be supported for devices that don't implement
-> > multi-channel, since all others really need to do the channel scheduling
-> > themselves.
-> 
-> Software off-channel isn't used only for scanning, or is it?
-
-It's only used for scanning & P2P-device activities right now, I could
-see it being used for FT-OTA (with resource reservation) too in the
-future, if needed, but that's about it.
-
-johannes
+diff --git a/drivers/net/wireless/cw1200/sbus.h b/drivers/net/wireless/cw1200/sbus.h
+new file mode 100644
+index 0000000..49bd06d
+--- /dev/null
++++ b/drivers/net/wireless/cw1200/sbus.h
+@@ -0,0 +1,39 @@
++/*
++ * Common sbus abstraction layer interface for cw1200 wireless driver
++ *
++ * Copyright (c) 2010-2012, ST-Ericsson AB
++ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#ifndef CW1200_SBUS_H
++#define CW1200_SBUS_H
++
++/*
++ * sbus priv forward definition.
++ * Implemented and instantiated in particular modules.
++ */
++struct sbus_priv;
++
++typedef void (*sbus_irq_handler)(void *priv);
++
++struct sbus_ops {
++	int (*sbus_memcpy_fromio)(struct sbus_priv *self, unsigned int addr,
++					void *dst, int count);
++	int (*sbus_memcpy_toio)(struct sbus_priv *self, unsigned int addr,
++					const void *src, int count);
++	void (*lock)(struct sbus_priv *self);
++	void (*unlock)(struct sbus_priv *self);
++	int (*irq_subscribe)(struct sbus_priv *self, sbus_irq_handler handler,
++				void *priv);
++	int (*irq_unsubscribe)(struct sbus_priv *self);
++	int (*reset)(struct sbus_priv *self);
++	size_t (*align_size)(struct sbus_priv *self, size_t size);
++	int (*power_mgmt)(struct sbus_priv *self, bool suspend);
++	int (*set_block_size)(struct sbus_priv *self, size_t size);
++};
++
++#endif /* CW1200_SBUS_H */
+-- 
+1.7.9
 
