@@ -1,50 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo-p00-ob.rzone.de ([81.169.146.160]:8975 "EHLO
-	mo-p00-ob.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751936Ab2CYHn3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 25 Mar 2012 03:43:29 -0400
-Message-ID: <4F6EBE8C.6000302@hartkopp.net> (sfid-20120325_094333_772257_5ED49723)
-Date: Sun, 25 Mar 2012 08:43:24 +0200
-From: Oliver Hartkopp <socketcan@hartkopp.net>
-MIME-Version: 1.0
-To: "John W. Linville" <linville@tuxdriver.com>
-CC: linux-wireless@vger.kernel.org,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Subject: [PATCH] iwlwifi: fix unused variable warning
-References: <1318506157-10329-1-git-send-email-mkl@pengutronix.de>
-In-Reply-To: <1318506157-10329-1-git-send-email-mkl@pengutronix.de>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:23026 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030283Ab2CBPnX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Mar 2012 10:43:23 -0500
+Subject: Re: [Ilw] firmware error.
+From: "Guy, Wey-Yi" <wey-yi.w.guy@intel.com>
+To: Dave Jones <davej@redhat.com>
+Cc: linux-kernel@vger.kernel.org, ilw@linux.intel.com,
+	linux-wireless@vger.kernel.org
+In-Reply-To: <20120301143922.GA31369@redhat.com>
+References: <20120301143922.GA31369@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Fri, 02 Mar 2012 06:30:41 -0800
+Message-ID: <1330698641.12612.34.camel@wwguy-huron> (sfid-20120302_164339_081392_DBE4D4BA)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In the case of disabled CONFIG_IWLWIFI_DEBUGFS option the compiler complains
-about the unused variable 'img'. Fix this by moving the 'img' definition.
+Hi dave,
 
-Signed-off-by: Oliver Hartkopp <socketcan@hartkopp.net>
+could you please file a bug in http://bugzilla.intellinuxwireless.org/
+so we can keep track and assign someone work with you.
 
----
+Thank you very much
+Wey
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-index b6805f8..0f5db8b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
-@@ -437,7 +437,6 @@ static int iwlagn_mac_resume(struct ieee80211_hw *hw)
- 	unsigned long flags;
- 	u32 base, status = 0xffffffff;
- 	int ret = -EIO;
--	const struct fw_img *img;
- 
- 	IWL_DEBUG_MAC80211(priv, "enter\n");
- 	mutex_lock(&priv->mutex);
-@@ -458,6 +457,8 @@ static int iwlagn_mac_resume(struct ieee80211_hw *hw)
- 
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- 		if (ret == 0) {
-+			const struct fw_img *img;
-+
- 			img = &(priv->fw->img[IWL_UCODE_WOWLAN]);
- 			if (!priv->wowlan_sram) {
- 				priv->wowlan_sram =
+On Thu, 2012-03-01 at 09:39 -0500, Dave Jones wrote:
+> Still seeing this occasionally in v3.3-rc5-101-g88ebdda
+> 
+> iwlwifi 0000:04:00.0: Received BA when not expected
+> iwlwifi 0000:04:00.0: Microcode SW error detected.  Restarting 0x2000000.
+> iwlwifi 0000:04:00.0: Loaded firmware version: 8.83.5.1 build 33692
+> iwlwifi 0000:04:00.0: Start IWL Error Log Dump:
+> iwlwifi 0000:04:00.0: Status: 0x000412E4, count: 5
+> iwlwifi 0000:04:00.0: 0x0000001C | ADVANCED_SYSASSERT          
+> iwlwifi 0000:04:00.0: 0x000006E4 | uPc
+> iwlwifi 0000:04:00.0: 0x000005AA | branchlink1
+> iwlwifi 0000:04:00.0: 0x00000820 | branchlink2
+> iwlwifi 0000:04:00.0: 0x00000916 | interruptlink1
+> iwlwifi 0000:04:00.0: 0x0000E52E | interruptlink2
+> iwlwifi 0000:04:00.0: 0x00000002 | data1
+> iwlwifi 0000:04:00.0: 0x02630000 | data2
+> iwlwifi 0000:04:00.0: 0x00000236 | line
+> iwlwifi 0000:04:00.0: 0x00C04D1D | beacon time
+> iwlwifi 0000:04:00.0: 0xFDF602E3 | tsf low
+> iwlwifi 0000:04:00.0: 0x000000DD | tsf hi
+> iwlwifi 0000:04:00.0: 0x00000000 | time gp1
+> iwlwifi 0000:04:00.0: 0x57F562C0 | time gp2
+> iwlwifi 0000:04:00.0: 0x00000000 | time gp3
+> iwlwifi 0000:04:00.0: 0x00010853 | uCode version
+> iwlwifi 0000:04:00.0: 0x00000024 | hw version
+> iwlwifi 0000:04:00.0: 0x00480302 | board version
+> iwlwifi 0000:04:00.0: 0x0B59001C | hcmd
+> iwlwifi 0000:04:00.0: 0x2F873802 | isr0
+> iwlwifi 0000:04:00.0: 0x014BF800 | isr1
+> iwlwifi 0000:04:00.0: 0x0000011A | isr2
+> iwlwifi 0000:04:00.0: 0x1443FCC3 | isr3
+> iwlwifi 0000:04:00.0: 0x00804110 | isr4
+> iwlwifi 0000:04:00.0: 0x00000236 | isr_pref
+> iwlwifi 0000:04:00.0: 0x000000D4 | wait_event
+> iwlwifi 0000:04:00.0: 0x00000004 | l2p_control
+> iwlwifi 0000:04:00.0: 0x00000007 | l2p_duration
+> iwlwifi 0000:04:00.0: 0x00101042 | l2p_mhvalid
+> iwlwifi 0000:04:00.0: 0x00000015 | l2p_addr_match
+> iwlwifi 0000:04:00.0: 0x02121704 | lmpm_pmg_sel
+> iwlwifi 0000:04:00.0: 0x14B498A0 | timestamp
+> iwlwifi 0000:04:00.0: 0x00000100 | flow_handler
+> iwlwifi 0000:04:00.0: CSR values:
+> iwlwifi 0000:04:00.0: (2nd byte of CSR_INT_COALESCING is CSR_INT_PERIODIC_REG)
+> iwlwifi 0000:04:00.0:        CSR_HW_IF_CONFIG_REG: 0X00480302
+> iwlwifi 0000:04:00.0:          CSR_INT_COALESCING: 0X00000040
+> iwlwifi 0000:04:00.0:                     CSR_INT: 0X00000000
+> iwlwifi 0000:04:00.0:                CSR_INT_MASK: 0X00000000
+> iwlwifi 0000:04:00.0:           CSR_FH_INT_STATUS: 0X00000000
+> iwlwifi 0000:04:00.0:                 CSR_GPIO_IN: 0X00000000
+> iwlwifi 0000:04:00.0:                   CSR_RESET: 0X00000000
+> iwlwifi 0000:04:00.0:                CSR_GP_CNTRL: 0X080403c5
+> iwlwifi 0000:04:00.0:                  CSR_HW_REV: 0X00000024
+> iwlwifi 0000:04:00.0:              CSR_EEPROM_REG: 0X00000000
+> iwlwifi 0000:04:00.0:               CSR_EEPROM_GP: 0X90000004
+> iwlwifi 0000:04:00.0:              CSR_OTP_GP_REG: 0X00060000
+> iwlwifi 0000:04:00.0:                 CSR_GIO_REG: 0X00080042
+> iwlwifi 0000:04:00.0:            CSR_GP_UCODE_REG: 0X00003001
+> iwlwifi 0000:04:00.0:           CSR_GP_DRIVER_REG: 0X00000000
+> iwlwifi 0000:04:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
+> iwlwifi 0000:04:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
+> iwlwifi 0000:04:00.0:                 CSR_LED_REG: 0X00000058
+> iwlwifi 0000:04:00.0:        CSR_DRAM_INT_TBL_REG: 0X8811137b
+> iwlwifi 0000:04:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
+> iwlwifi 0000:04:00.0:             CSR_ANA_PLL_CFG: 0X00880300
+> iwlwifi 0000:04:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
+> iwlwifi 0000:04:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0000
+> iwlwifi 0000:04:00.0: FH register values:
+> iwlwifi 0000:04:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X11672c00
+> iwlwifi 0000:04:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X011672b0
+> iwlwifi 0000:04:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X00000098
+> iwlwifi 0000:04:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X00819104
+> iwlwifi 0000:04:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
+> iwlwifi 0000:04:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X02630000
+> iwlwifi 0000:04:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
+> iwlwifi 0000:04:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0001
+> iwlwifi 0000:04:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
+> iwlwifi 0000:04:00.0: Start IWL Event Log Dump: display last 20 entries
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475497643:0x00000000:0210
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475497653:0x00000000:0207
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475497655:0x01002111:0211
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475497660:0x00000000:0212
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475498758:0x00000000:0215
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475498760:0x00000008:0220
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475498779:0x00000000:0301
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475498967:0x00000000:0355
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475499319:0x00001359:0217
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475499323:0x0b58001c:0218
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475499401:0x0b59001c:0206
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475499402:0x00000001:0204
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475499405:0x01102100:0209
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475499430:0x00000000:0210
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475499446:0x00000000:0207
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475499449:0x2b110000:0227
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475499449:0xc3f02b50:0228
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475499454:0x57f255be:1586
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475699376:0x000000d7:0123
+> iwlwifi 0000:04:00.0: EVT_LOGT:1475699415:0x00000000:0125
+> ieee80211 phy0: Hardware restart was requested
+> iwlwifi 0000:04:00.0: L1 Enabled; Disabling L0S
+> iwlwifi 0000:04:00.0: Radio type=0x0-0x2-0x0
+> 
+> 
+> 04:00.0 Network controller: Intel Corporation Ultimate N WiFi Link 5300
+> 
+> 	Dave
+> 
+> _______________________________________________
+> ilw mailing list
+> ilw@linux.intel.com
+> http://linux.intel.com/mailman/listinfo/ilw
+
 
