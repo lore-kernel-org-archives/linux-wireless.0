@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57470 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758636Ab2CFI31 (ORCPT
+Received: from condef006-v.nifty.com ([210.131.4.243]:33464 "EHLO
+	condef006-v.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753229Ab2CBCIU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 03:29:27 -0500
-Subject: Re: [PATCH v4 1/2] cfg80211: expose cfg80211_calculate_bitrate()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thomas Pedersen <thomas@cozybit.com>
-Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
-	linville@tuxdriver.com
-In-Reply-To: <1330990308-15077-1-git-send-email-thomas@cozybit.com> (sfid-20120306_003228_682773_17B3F4DB)
-References: <1330990308-15077-1-git-send-email-thomas@cozybit.com>
-	 (sfid-20120306_003228_682773_17B3F4DB)
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 06 Mar 2012 09:29:25 +0100
-Message-ID: <1331022565.3447.2.camel@jlt3.sipsolutions.net> (sfid-20120306_092930_877754_742BA73C)
-Mime-Version: 1.0
+	Thu, 1 Mar 2012 21:08:20 -0500
+Received: from msag502.nifty.com ([10.22.128.253])by condef006-v.nifty.com with ESMTP id q221wqV4009139
+	for <linux-wireless@vger.kernel.org>; Fri, 2 Mar 2012 10:58:52 +0900
+Received: from [192.168.3.100] (EM117-55-65-134.emobile.ad.jp [117.55.65.134]) (authenticated)
+	by msag502.nifty.com with ESMTP id q221wHVf032130
+	for <linux-wireless@vger.kernel.org>; Fri, 2 Mar 2012 10:58:20 +0900
+Date: Fri, 02 Mar 2012 10:58:19 +0900
+From: Masahiro Inoue <miyabi.-.inoue@nifty.com>
+To: linux-wireless@vger.kernel.org
+Subject: Build Error Report
+Message-Id: <20120302105815.7B30.2E210E2F@nifty.com> (sfid-20120302_030848_342420_4E96B81F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-03-05 at 15:31 -0800, Thomas Pedersen wrote:
-> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Hello,
 
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+The build error occurs by compat-wireless-2012-03-01.
+My kernel is 2.6.35.
 
-> ---
->  include/net/cfg80211.h |    8 ++++++++
->  net/wireless/util.c    |    1 +
->  2 files changed, 9 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 0178c74..64f6181 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -3334,6 +3334,14 @@ int cfg80211_can_beacon_sec_chan(struct wiphy *wiphy,
->  				 struct ieee80211_channel *chan,
->  				 enum nl80211_channel_type channel_type);
->  
-> +/*
-> + * cfg80211_calculate_bitrate - calculate actual bitrate (in 100Kbps units)
-> + * @rate: given rate_info to calculate bitrate from
-> + *
-> + * return 0 if MCS index >= 32
-> + */
-> +u16 cfg80211_calculate_bitrate(struct rate_info *rate);
-> +
->  /* Logging, debugging and troubleshooting/diagnostic helpers. */
->  
->  /* wiphy_printk helpers, similar to dev_printk */
-> diff --git a/net/wireless/util.c b/net/wireless/util.c
-> index 9aa9db6..1b7a08d 100644
-> --- a/net/wireless/util.c
-> +++ b/net/wireless/util.c
-> @@ -904,6 +904,7 @@ u16 cfg80211_calculate_bitrate(struct rate_info *rate)
->  	/* do NOT round down here */
->  	return (bitrate + 50000) / 100000;
->  }
-> +EXPORT_SYMBOL(cfg80211_calculate_bitrate);
->  
->  int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
->  				 u32 beacon_int)
-
+  CC [M]  /home/miyabi/test/compat-wireless/compat-wireless-2012-03-01/drivers/misc/eeprom/eeprom_93cx6.o
+  LD      /home/miyabi/test/compat-wireless/compat-wireless-2012-03-01/drivers/net/ethernet/atheros/built-in.o
+  LD      /home/miyabi/test/compat-wireless/compat-wireless-2012-03-01/drivers/net/ethernet/atheros/atl1c/built-in.o
+  CC [M]  /home/miyabi/test/compat-wireless/compat-wireless-2012-03-01/drivers/net/ethernet/atheros/atl1c/atl1c_main.o
+/home/miyabi/test/compat-wireless/compat-wireless-2012-03-01/drivers/net/ethernet/atheros/atl1c/atl1c_main.c: In function 'atl1c_set_mac_addr':
+/home/miyabi/test/compat-wireless/compat-wireless-2012-03-01/drivers/net/ethernet/atheros/atl1c/atl1c_main.c:475: error: 'struct net_device' has no member named 'addr_assign_type'
+/home/miyabi/test/compat-wireless/compat-wireless-2012-03-01/drivers/net/ethernet/atheros/atl1c/atl1c_main.c: In function 'atl1c_probe':
+/home/miyabi/test/compat-wireless/compat-wireless-2012-03-01/drivers/net/ethernet/atheros/atl1c/atl1c_main.c:2775: error: 'struct net_device' has no member named 'addr_assign_type'
+make[5]: *** [/home/miyabi/test/compat-wireless/compat-wireless-2012-03-01/drivers/net/ethernet/atheros/atl1c/atl1c_main.o] Error 1
+make[4]: *** [/home/miyabi/test/compat-wireless/compat-wireless-2012-03-01/drivers/net/ethernet/atheros/atl1c] Error 2
+make[3]: *** [/home/miyabi/test/compat-wireless/compat-wireless-2012-03-01/drivers/net/ethernet/atheros] Error 2
+make[2]: *** [_module_/home/miyabi/test/compat-wireless/compat-wireless-2012-03-01] Error 2
+make[2]: Leaving directory `/usr/src/kernels/2.6.35-21vl6-x86_64'
+make[1]: *** [modules] Error 2
+make[1]: Leaving directory `/home/miyabi/test/compat-wireless/compat-wireless-2012-03-01'
+make: *** [.compat_autoconf_compat-wireless-2012-02-28] Error 2
 
