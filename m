@@ -1,72 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52503 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753397Ab2CFP5h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 10:57:37 -0500
-Message-ID: <4F5633E5.7040507@qca.qualcomm.com> (sfid-20120306_165744_407303_920066B0)
-Date: Tue, 6 Mar 2012 17:57:25 +0200
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:4373 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754762Ab2CBV4N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Mar 2012 16:56:13 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 2/7] brcm80211: fmac: remove brcmf_usb_attrib structure
+Date: Fri, 2 Mar 2012 22:55:46 +0100
+Message-ID: <1330725351-3803-3-git-send-email-arend@broadcom.com> (sfid-20120302_225622_789801_617095AF)
+In-Reply-To: <1330725351-3803-1-git-send-email-arend@broadcom.com>
+References: <1330725351-3803-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-To: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: Re: [PATCH] ath6kl: Fix kernel panic while receiving fwlog during
- boot
-References: <1331024980-1632-1-git-send-email-vthiagar@qca.qualcomm.com>
-In-Reply-To: <1331024980-1632-1-git-send-email-vthiagar@qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/06/2012 11:09 AM, Vasanthakumar Thiagarajan wrote:
-> "ath6kl: Defer wiphy and netdev registration till the end of ath6kl_core_init()"
-> causes kernel panic by accessing the unallocated debug resources during
-> boot time. To fix this, split the debug initialization funtion into two,
-> one initializes the debug resource and the other takes care of debugfs
-> initialization. When this issue shows up the kernel crash dump would
-> look like
-> 
->  ath6kl_debug_fwlog_event+0x9c/0x10a
->  [<c10666c9>] register_lock_class+0x57/0x288
->  [<c1065cd3>] ? trace_hardirqs_on+0xb/0xd
->  [<f801f4c9>] ? ath6kl_debug_fwlog_event+0x9c/0x10a
->  [<c1066a8a>] __lock_acquire+0x96/0xbe5
->  [<c106007b>] ? alarmtimer_suspend+0x80/0x127
->  [<c10258da>] ? vprintk+0x394/0x3b1
->  [<f801f4c9>] ? ath6kl_debug_fwlog_event+0x9c/0x10a
->  [<c10676b3>] lock_acquire+0xda/0xf9
->  [<f801f4c9>] ? ath6kl_debug_fwlog_event+0x9c/0x10a
->  [<c1532ce3>] _raw_spin_lock+0x28/0x58
->  [<f801f4c9>] ? ath6kl_debug_fwlog_event+0x9c/0x10a
->  [<f801f4c9>] ath6kl_debug_fwlog_event+0x9c/0x10a
->  [<f80310a4>] ath6kl_wmi_control_rx+0x69d/0xb50 [ath6kl_core]
->  [<f802d2e1>] ? ath6kl_rx+0x3c/0x839 [ath6kl_core]
->  [<f802d35d>] ath6kl_rx+0xb8/0x839 [ath6kl_core]
->  [<c104b81e>] ? local_clock+0x2d/0x4e
->  [<c102a0af>] ? _local_bh_enable_ip+0x94/0x98
->  [<f802bfc0>] ? ath6kl_alloc_amsdu_rxbuf+0xb7/0xb7
->  [<f8023b28>] ath6kl_htc_rxmsg_pending_handler+0x891/0x988 [ath6kl_core]
->  [<f802bf00>] ? ath6kl_refill_amsdu_rxbufs+0x89/0x92
->  [<f802d2a5>] ? aggr_timeout+0xed/0xed [ath6kl_core]
->  [<f802bfc0>] ? ath6kl_alloc_amsdu_rxbuf+0xb7/0xb7
->  [<f802c420>] ? ath6kl_tx_complete+0x376/0x376 [ath6kl_core]
->  [<f8020e92>] ath6kl_hif_intr_bh_handler+0xf7/0x33e
->  [<c138ab00>] ? mmc_host_disable+0x15/0x3a
->  [<f8123b5c>] ath6kl_sdio_irq_handler+0x3c/0x90 [ath6kl_sdio]
->  [<c1392f56>] sdio_irq_thread+0xb6/0x29c
->  [<c1392ea0>] ? sdio_claim_irq+0x1cb/0x1cb
->  [<c103d4c0>] kthread+0x67/0x6c
->  [<c103d459>] ? __init_kthread_worker+0x42/0x42
->  [<c153903a>] kernel_thread_helper+0x6/0xd
->  BUG: unable to handle kernel NULL pointer dereference at
-> EIP: [<f801f4d4>] ath6kl_debug_fwlog_event+0xa7/0x10a
-> 
-> Reported-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Several fields in this structure are only written once or not used
+at all. Remaining two fields have been moved and brcmf_usb_attrib
+definition has been removed.
 
-Thanks, applied with these changes:
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Kan Yan <kanyan@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/usb.c |   17 +++++++++--------
+ drivers/net/wireless/brcm80211/brcmfmac/usb.h |   16 ++--------------
+ 2 files changed, 11 insertions(+), 22 deletions(-)
 
-    kvalo: rename new function to ath6kl_debug_init_fs() and add a comment
-    why it's needed
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+index 8616961..0418a40 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.c
+@@ -897,8 +897,8 @@ brcmf_usb_dlneeded(struct brcmf_usbdev_info *devinfo)
+ 			sizeof(struct bootrom_id_le));
+ 		return false;
+ 	} else {
+-		devinfo->bus_pub.attrib.devid = chipid;
+-		devinfo->bus_pub.attrib.chiprev = chiprev;
++		devinfo->bus_pub.devid = chipid;
++		devinfo->bus_pub.chiprev = chiprev;
+ 	}
+ 	return true;
+ }
+@@ -1064,7 +1064,7 @@ static int brcmf_usb_dlstart(struct brcmf_usbdev_info *devinfo, u8 *fw, int len)
+ 	if (devinfo == NULL)
+ 		return -EINVAL;
+ 
+-	if (devinfo->bus_pub.attrib.devid == 0xDEAD)
++	if (devinfo->bus_pub.devid == 0xDEAD)
+ 		return -EINVAL;
+ 
+ 	err = brcmf_usb_dl_writeimage(devinfo, fw, len);
+@@ -1085,7 +1085,7 @@ static int brcmf_usb_dlrun(struct brcmf_usbdev_info *devinfo)
+ 	if (!devinfo)
+ 		return -EINVAL;
+ 
+-	if (devinfo->bus_pub.attrib.devid == 0xDEAD)
++	if (devinfo->bus_pub.devid == 0xDEAD)
+ 		return -EINVAL;
+ 
+ 	/* Check we are runnable */
+@@ -1124,18 +1124,19 @@ static bool brcmf_usb_chip_support(int chipid, int chiprev)
+ static int
+ brcmf_usb_fw_download(struct brcmf_usbdev_info *devinfo)
+ {
+-	struct brcmf_usb_attrib *attr;
++	int devid, chiprev;
+ 	int err;
+ 
+ 	brcmf_dbg(TRACE, "enter\n");
+ 	if (devinfo == NULL)
+ 		return -ENODEV;
+ 
+-	attr = &devinfo->bus_pub.attrib;
++	devid = devinfo->bus_pub.devid;
++	chiprev = devinfo->bus_pub.chiprev;
+ 
+-	if (!brcmf_usb_chip_support(attr->devid, attr->chiprev)) {
++	if (!brcmf_usb_chip_support(devid, chiprev)) {
+ 		brcmf_dbg(ERROR, "unsupported chip %d rev %d\n",
+-			  attr->devid, attr->chiprev);
++			  devid, chiprev);
+ 		return -EINVAL;
+ 	}
+ 
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/usb.h b/drivers/net/wireless/brcm80211/brcmfmac/usb.h
+index b31da7b..3377d63 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/usb.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/usb.h
+@@ -50,19 +50,6 @@ struct brcmf_stats {
+ 
+ };
+ 
+-struct brcmf_usb_attrib {
+-	int bustype;
+-	int vid;
+-	int pid;
+-	int devid;
+-	int chiprev; /* chip revsion number */
+-	int mtu;
+-	int nchan; /* Data Channels */
+-	int has_2nd_bulk_in_ep;
+-};
+-
+-struct brcmf_usbdev_info;
+-
+ struct brcmf_usbdev {
+ 	struct brcmf_bus *bus;
+ 	struct brcmf_usbdev_info *devinfo;
+@@ -70,7 +57,8 @@ struct brcmf_usbdev {
+ 	struct brcmf_stats stats;
+ 	int ntxq, nrxq, rxsize;
+ 	u32 bus_mtu;
+-	struct brcmf_usb_attrib attrib;
++	int devid;
++	int chiprev; /* chip revsion number */
+ };
+ 
+ /* IO Request Block (IRB) */
+-- 
+1.7.5.4
 
-Kalle
+
