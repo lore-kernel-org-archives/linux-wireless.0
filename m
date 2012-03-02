@@ -1,39 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2237 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751267Ab2CXJ2M convert rfc822-to-8bit (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:54287 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753840Ab2CBXSm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 24 Mar 2012 05:28:12 -0400
-Message-ID: <4F6D939F.3030206@broadcom.com> (sfid-20120324_102815_365935_20B03881)
-Date: Sat, 24 Mar 2012 10:27:59 +0100
-From: "Arend van Spriel" <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Camale=F3n?= <noelamac@gmail.com>
-cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"sgruszka@redhat.com" <sgruszka@redhat.com>,
-	"jrnieder@gmail.com" <jrnieder@gmail.com>,
-	"Seth Forshee" <seth.forshee@canonical.com>
-Subject: Re: brcmsmac still woes, possible regression?
-References: <CAKprTDELdRWtJWpmn9RMuMUYXxuaR6Cf41+jot4_fZixHQtcMw@mail.gmail.com>
-In-Reply-To: <CAKprTDELdRWtJWpmn9RMuMUYXxuaR6Cf41+jot4_fZixHQtcMw@mail.gmail.com>
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
+	Fri, 2 Mar 2012 18:18:42 -0500
+Subject: Re: [PATCH 3/3] mac80211: fix mesh airtime link metric estimating
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	linville@tuxdriver.com
+In-Reply-To: <1330729524-1010-3-git-send-email-thomas@cozybit.com> (sfid-20120303_000604_467410_A1483369)
+References: <1330729524-1010-1-git-send-email-thomas@cozybit.com>
+	 <1330729524-1010-3-git-send-email-thomas@cozybit.com>
+	 (sfid-20120303_000604_467410_A1483369)
+Content-Type: text/plain; charset="UTF-8"
+Date: Sat, 03 Mar 2012 00:18:36 +0100
+Message-ID: <1330730316.3865.0.camel@jlt3.sipsolutions.net> (sfid-20120303_001850_594943_BBE98E17)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/24/2012 09:55 AM, Camaleón wrote:
-> How to reproduce the problem:
-> After booting the system, I get a trace (see attached file "messages.txt")
->
+On Fri, 2012-03-02 at 15:05 -0800, Thomas Pedersen wrote:
+> Airtime link metric estimation was broken in HT mesh, use
+> cfg80211_calculate_bitrate to get the right rate value.
 
-Hi Camaleón,
+> -	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
+> +	sta_set_sinfo(sta, &sinfo);
+> +	rate = cfg80211_calculate_bitrate(&sinfo.txrate);
+> +	if (WARN_ON(!rate))
+>  		return MAX_METRIC;
 
- From the trace I see that your system apparently is setup for 
-regulatory domain EU. Could you configure it US instead. I think 
-brcmsmac is not handling the channel 12 and 13 properly. Is you AP on 
-either of these channels? Regardless, mac80211 will probably switch to 
-those channels for (passive) scanning.
+Patch 1 should be rolled into this, but I don't like it -- you fill a
+lot of info you don't need, I think the rate should be factored out of
+sta_set_sinfo then
 
-Gr. AvS
+johannes
 
