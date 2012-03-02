@@ -1,356 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55432 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755085Ab2CNPkp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Mar 2012 11:40:45 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 14/14] ath9k_hw: remove unused initvals
-Date: Wed, 14 Mar 2012 16:40:34 +0100
-Message-Id: <1331739634-22318-14-git-send-email-nbd@openwrt.org> (sfid-20120314_164100_449959_F6EF071D)
-In-Reply-To: <1331739634-22318-13-git-send-email-nbd@openwrt.org>
-References: <1331739634-22318-1-git-send-email-nbd@openwrt.org>
- <1331739634-22318-2-git-send-email-nbd@openwrt.org>
- <1331739634-22318-3-git-send-email-nbd@openwrt.org>
- <1331739634-22318-4-git-send-email-nbd@openwrt.org>
- <1331739634-22318-5-git-send-email-nbd@openwrt.org>
- <1331739634-22318-6-git-send-email-nbd@openwrt.org>
- <1331739634-22318-7-git-send-email-nbd@openwrt.org>
- <1331739634-22318-8-git-send-email-nbd@openwrt.org>
- <1331739634-22318-9-git-send-email-nbd@openwrt.org>
- <1331739634-22318-10-git-send-email-nbd@openwrt.org>
- <1331739634-22318-11-git-send-email-nbd@openwrt.org>
- <1331739634-22318-12-git-send-email-nbd@openwrt.org>
- <1331739634-22318-13-git-send-email-nbd@openwrt.org>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:40033 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756423Ab2CBWHS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Mar 2012 17:07:18 -0500
+Received: by mail-pw0-f46.google.com with SMTP id un15so562773pbc.19
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2012 14:07:18 -0800 (PST)
+MIME-Version: 1.0
+From: Javier Cardona <javier@cozybit.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Javier Cardona <javier@cozybit.com>, devel@lists.open80211s.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCHv5 2/2] mac80211: Modify tsf via debugfs in mesh interfaces
+Date: Fri,  2 Mar 2012 14:07:07 -0800
+Message-Id: <1330726027-30354-2-git-send-email-javier@cozybit.com> (sfid-20120302_230729_341196_1C223CCE)
+In-Reply-To: <1330726027-30354-1-git-send-email-javier@cozybit.com>
+References: <1330726027-30354-1-git-send-email-javier@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Javier Cardona <javier@cozybit.com>
 ---
- .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |  302 --------------------
- 1 files changed, 0 insertions(+), 302 deletions(-)
+ drivers/net/wireless/mac80211_hwsim.c |   18 ++++++++++++++++++
+ net/mac80211/debugfs_netdev.c         |    7 ++++++-
+ 2 files changed, 24 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-index 026f9de..46c79a3 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_2p2_initvals.h
-@@ -295,266 +295,6 @@ static const u32 ar9300_2p2_radio_core[][2] = {
- 	{0x00016bd4, 0x00000000},
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index f4bcd03..99909bd 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -379,6 +379,22 @@ static __le64 __mac80211_hwsim_get_tsf(struct mac80211_hwsim_data *data)
+ 	return cpu_to_le64(now + data->tsf_offset);
+ }
+ 
++static u64 mac80211_hwsim_get_tsf(struct ieee80211_hw *hw,
++		struct ieee80211_vif *vif)
++{
++	struct mac80211_hwsim_data *data = hw->priv;
++	return le64_to_cpu(__mac80211_hwsim_get_tsf(data));
++}
++
++static void mac80211_hwsim_set_tsf(struct ieee80211_hw *hw,
++		struct ieee80211_vif *vif, u64 tsf)
++{
++	struct mac80211_hwsim_data *data = hw->priv;
++	struct timeval tv = ktime_to_timeval(ktime_get_real());
++	u64 now = tv.tv_sec * USEC_PER_SEC + tv.tv_usec;
++	data->tsf_offset = tsf - now;
++}
++
+ static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
+ 				      struct sk_buff *tx_skb)
+ {
+@@ -1224,6 +1240,8 @@ static struct ieee80211_ops mac80211_hwsim_ops =
+ 	.sw_scan_start = mac80211_hwsim_sw_scan,
+ 	.sw_scan_complete = mac80211_hwsim_sw_scan_complete,
+ 	.flush = mac80211_hwsim_flush,
++	.get_tsf = mac80211_hwsim_get_tsf,
++	.set_tsf = mac80211_hwsim_set_tsf,
  };
  
--static const u32 ar9300Common_rx_gain_table_merlin_2p2[][2] = {
--	/* Addr      allmodes  */
--	{0x0000a000, 0x02000101},
--	{0x0000a004, 0x02000102},
--	{0x0000a008, 0x02000103},
--	{0x0000a00c, 0x02000104},
--	{0x0000a010, 0x02000200},
--	{0x0000a014, 0x02000201},
--	{0x0000a018, 0x02000202},
--	{0x0000a01c, 0x02000203},
--	{0x0000a020, 0x02000204},
--	{0x0000a024, 0x02000205},
--	{0x0000a028, 0x02000208},
--	{0x0000a02c, 0x02000302},
--	{0x0000a030, 0x02000303},
--	{0x0000a034, 0x02000304},
--	{0x0000a038, 0x02000400},
--	{0x0000a03c, 0x02010300},
--	{0x0000a040, 0x02010301},
--	{0x0000a044, 0x02010302},
--	{0x0000a048, 0x02000500},
--	{0x0000a04c, 0x02010400},
--	{0x0000a050, 0x02020300},
--	{0x0000a054, 0x02020301},
--	{0x0000a058, 0x02020302},
--	{0x0000a05c, 0x02020303},
--	{0x0000a060, 0x02020400},
--	{0x0000a064, 0x02030300},
--	{0x0000a068, 0x02030301},
--	{0x0000a06c, 0x02030302},
--	{0x0000a070, 0x02030303},
--	{0x0000a074, 0x02030400},
--	{0x0000a078, 0x02040300},
--	{0x0000a07c, 0x02040301},
--	{0x0000a080, 0x02040302},
--	{0x0000a084, 0x02040303},
--	{0x0000a088, 0x02030500},
--	{0x0000a08c, 0x02040400},
--	{0x0000a090, 0x02050203},
--	{0x0000a094, 0x02050204},
--	{0x0000a098, 0x02050205},
--	{0x0000a09c, 0x02040500},
--	{0x0000a0a0, 0x02050301},
--	{0x0000a0a4, 0x02050302},
--	{0x0000a0a8, 0x02050303},
--	{0x0000a0ac, 0x02050400},
--	{0x0000a0b0, 0x02050401},
--	{0x0000a0b4, 0x02050402},
--	{0x0000a0b8, 0x02050403},
--	{0x0000a0bc, 0x02050500},
--	{0x0000a0c0, 0x02050501},
--	{0x0000a0c4, 0x02050502},
--	{0x0000a0c8, 0x02050503},
--	{0x0000a0cc, 0x02050504},
--	{0x0000a0d0, 0x02050600},
--	{0x0000a0d4, 0x02050601},
--	{0x0000a0d8, 0x02050602},
--	{0x0000a0dc, 0x02050603},
--	{0x0000a0e0, 0x02050604},
--	{0x0000a0e4, 0x02050700},
--	{0x0000a0e8, 0x02050701},
--	{0x0000a0ec, 0x02050702},
--	{0x0000a0f0, 0x02050703},
--	{0x0000a0f4, 0x02050704},
--	{0x0000a0f8, 0x02050705},
--	{0x0000a0fc, 0x02050708},
--	{0x0000a100, 0x02050709},
--	{0x0000a104, 0x0205070a},
--	{0x0000a108, 0x0205070b},
--	{0x0000a10c, 0x0205070c},
--	{0x0000a110, 0x0205070d},
--	{0x0000a114, 0x02050710},
--	{0x0000a118, 0x02050711},
--	{0x0000a11c, 0x02050712},
--	{0x0000a120, 0x02050713},
--	{0x0000a124, 0x02050714},
--	{0x0000a128, 0x02050715},
--	{0x0000a12c, 0x02050730},
--	{0x0000a130, 0x02050731},
--	{0x0000a134, 0x02050732},
--	{0x0000a138, 0x02050733},
--	{0x0000a13c, 0x02050734},
--	{0x0000a140, 0x02050735},
--	{0x0000a144, 0x02050750},
--	{0x0000a148, 0x02050751},
--	{0x0000a14c, 0x02050752},
--	{0x0000a150, 0x02050753},
--	{0x0000a154, 0x02050754},
--	{0x0000a158, 0x02050755},
--	{0x0000a15c, 0x02050770},
--	{0x0000a160, 0x02050771},
--	{0x0000a164, 0x02050772},
--	{0x0000a168, 0x02050773},
--	{0x0000a16c, 0x02050774},
--	{0x0000a170, 0x02050775},
--	{0x0000a174, 0x00000776},
--	{0x0000a178, 0x00000776},
--	{0x0000a17c, 0x00000776},
--	{0x0000a180, 0x00000776},
--	{0x0000a184, 0x00000776},
--	{0x0000a188, 0x00000776},
--	{0x0000a18c, 0x00000776},
--	{0x0000a190, 0x00000776},
--	{0x0000a194, 0x00000776},
--	{0x0000a198, 0x00000776},
--	{0x0000a19c, 0x00000776},
--	{0x0000a1a0, 0x00000776},
--	{0x0000a1a4, 0x00000776},
--	{0x0000a1a8, 0x00000776},
--	{0x0000a1ac, 0x00000776},
--	{0x0000a1b0, 0x00000776},
--	{0x0000a1b4, 0x00000776},
--	{0x0000a1b8, 0x00000776},
--	{0x0000a1bc, 0x00000776},
--	{0x0000a1c0, 0x00000776},
--	{0x0000a1c4, 0x00000776},
--	{0x0000a1c8, 0x00000776},
--	{0x0000a1cc, 0x00000776},
--	{0x0000a1d0, 0x00000776},
--	{0x0000a1d4, 0x00000776},
--	{0x0000a1d8, 0x00000776},
--	{0x0000a1dc, 0x00000776},
--	{0x0000a1e0, 0x00000776},
--	{0x0000a1e4, 0x00000776},
--	{0x0000a1e8, 0x00000776},
--	{0x0000a1ec, 0x00000776},
--	{0x0000a1f0, 0x00000776},
--	{0x0000a1f4, 0x00000776},
--	{0x0000a1f8, 0x00000776},
--	{0x0000a1fc, 0x00000776},
--	{0x0000b000, 0x02000101},
--	{0x0000b004, 0x02000102},
--	{0x0000b008, 0x02000103},
--	{0x0000b00c, 0x02000104},
--	{0x0000b010, 0x02000200},
--	{0x0000b014, 0x02000201},
--	{0x0000b018, 0x02000202},
--	{0x0000b01c, 0x02000203},
--	{0x0000b020, 0x02000204},
--	{0x0000b024, 0x02000205},
--	{0x0000b028, 0x02000208},
--	{0x0000b02c, 0x02000302},
--	{0x0000b030, 0x02000303},
--	{0x0000b034, 0x02000304},
--	{0x0000b038, 0x02000400},
--	{0x0000b03c, 0x02010300},
--	{0x0000b040, 0x02010301},
--	{0x0000b044, 0x02010302},
--	{0x0000b048, 0x02000500},
--	{0x0000b04c, 0x02010400},
--	{0x0000b050, 0x02020300},
--	{0x0000b054, 0x02020301},
--	{0x0000b058, 0x02020302},
--	{0x0000b05c, 0x02020303},
--	{0x0000b060, 0x02020400},
--	{0x0000b064, 0x02030300},
--	{0x0000b068, 0x02030301},
--	{0x0000b06c, 0x02030302},
--	{0x0000b070, 0x02030303},
--	{0x0000b074, 0x02030400},
--	{0x0000b078, 0x02040300},
--	{0x0000b07c, 0x02040301},
--	{0x0000b080, 0x02040302},
--	{0x0000b084, 0x02040303},
--	{0x0000b088, 0x02030500},
--	{0x0000b08c, 0x02040400},
--	{0x0000b090, 0x02050203},
--	{0x0000b094, 0x02050204},
--	{0x0000b098, 0x02050205},
--	{0x0000b09c, 0x02040500},
--	{0x0000b0a0, 0x02050301},
--	{0x0000b0a4, 0x02050302},
--	{0x0000b0a8, 0x02050303},
--	{0x0000b0ac, 0x02050400},
--	{0x0000b0b0, 0x02050401},
--	{0x0000b0b4, 0x02050402},
--	{0x0000b0b8, 0x02050403},
--	{0x0000b0bc, 0x02050500},
--	{0x0000b0c0, 0x02050501},
--	{0x0000b0c4, 0x02050502},
--	{0x0000b0c8, 0x02050503},
--	{0x0000b0cc, 0x02050504},
--	{0x0000b0d0, 0x02050600},
--	{0x0000b0d4, 0x02050601},
--	{0x0000b0d8, 0x02050602},
--	{0x0000b0dc, 0x02050603},
--	{0x0000b0e0, 0x02050604},
--	{0x0000b0e4, 0x02050700},
--	{0x0000b0e8, 0x02050701},
--	{0x0000b0ec, 0x02050702},
--	{0x0000b0f0, 0x02050703},
--	{0x0000b0f4, 0x02050704},
--	{0x0000b0f8, 0x02050705},
--	{0x0000b0fc, 0x02050708},
--	{0x0000b100, 0x02050709},
--	{0x0000b104, 0x0205070a},
--	{0x0000b108, 0x0205070b},
--	{0x0000b10c, 0x0205070c},
--	{0x0000b110, 0x0205070d},
--	{0x0000b114, 0x02050710},
--	{0x0000b118, 0x02050711},
--	{0x0000b11c, 0x02050712},
--	{0x0000b120, 0x02050713},
--	{0x0000b124, 0x02050714},
--	{0x0000b128, 0x02050715},
--	{0x0000b12c, 0x02050730},
--	{0x0000b130, 0x02050731},
--	{0x0000b134, 0x02050732},
--	{0x0000b138, 0x02050733},
--	{0x0000b13c, 0x02050734},
--	{0x0000b140, 0x02050735},
--	{0x0000b144, 0x02050750},
--	{0x0000b148, 0x02050751},
--	{0x0000b14c, 0x02050752},
--	{0x0000b150, 0x02050753},
--	{0x0000b154, 0x02050754},
--	{0x0000b158, 0x02050755},
--	{0x0000b15c, 0x02050770},
--	{0x0000b160, 0x02050771},
--	{0x0000b164, 0x02050772},
--	{0x0000b168, 0x02050773},
--	{0x0000b16c, 0x02050774},
--	{0x0000b170, 0x02050775},
--	{0x0000b174, 0x00000776},
--	{0x0000b178, 0x00000776},
--	{0x0000b17c, 0x00000776},
--	{0x0000b180, 0x00000776},
--	{0x0000b184, 0x00000776},
--	{0x0000b188, 0x00000776},
--	{0x0000b18c, 0x00000776},
--	{0x0000b190, 0x00000776},
--	{0x0000b194, 0x00000776},
--	{0x0000b198, 0x00000776},
--	{0x0000b19c, 0x00000776},
--	{0x0000b1a0, 0x00000776},
--	{0x0000b1a4, 0x00000776},
--	{0x0000b1a8, 0x00000776},
--	{0x0000b1ac, 0x00000776},
--	{0x0000b1b0, 0x00000776},
--	{0x0000b1b4, 0x00000776},
--	{0x0000b1b8, 0x00000776},
--	{0x0000b1bc, 0x00000776},
--	{0x0000b1c0, 0x00000776},
--	{0x0000b1c4, 0x00000776},
--	{0x0000b1c8, 0x00000776},
--	{0x0000b1cc, 0x00000776},
--	{0x0000b1d0, 0x00000776},
--	{0x0000b1d4, 0x00000776},
--	{0x0000b1d8, 0x00000776},
--	{0x0000b1dc, 0x00000776},
--	{0x0000b1e0, 0x00000776},
--	{0x0000b1e4, 0x00000776},
--	{0x0000b1e8, 0x00000776},
--	{0x0000b1ec, 0x00000776},
--	{0x0000b1f0, 0x00000776},
--	{0x0000b1f4, 0x00000776},
--	{0x0000b1f8, 0x00000776},
--	{0x0000b1fc, 0x00000776},
--};
--
- static const u32 ar9300_2p2_mac_postamble[][5] = {
- 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
- 	{0x00001030, 0x00000230, 0x00000460, 0x000002c0, 0x00000160},
-@@ -572,48 +312,6 @@ static const u32 ar9300_2p2_soc_postamble[][5] = {
- 	{0x00007010, 0x00000023, 0x00000023, 0x00000023, 0x00000023},
- };
  
--static const u32 ar9200_merlin_2p2_radio_core[][2] = {
--	/* Addr      allmodes  */
--	{0x00007800, 0x00040000},
--	{0x00007804, 0xdb005012},
--	{0x00007808, 0x04924914},
--	{0x0000780c, 0x21084210},
--	{0x00007810, 0x6d801300},
--	{0x00007814, 0x0019beff},
--	{0x00007818, 0x07e41000},
--	{0x0000781c, 0x00392000},
--	{0x00007820, 0x92592480},
--	{0x00007824, 0x00040000},
--	{0x00007828, 0xdb005012},
--	{0x0000782c, 0x04924914},
--	{0x00007830, 0x21084210},
--	{0x00007834, 0x6d801300},
--	{0x00007838, 0x0019beff},
--	{0x0000783c, 0x07e40000},
--	{0x00007840, 0x00392000},
--	{0x00007844, 0x92592480},
--	{0x00007848, 0x00100000},
--	{0x0000784c, 0x773f0567},
--	{0x00007850, 0x54214514},
--	{0x00007854, 0x12035828},
--	{0x00007858, 0x92592692},
--	{0x0000785c, 0x00000000},
--	{0x00007860, 0x56400000},
--	{0x00007864, 0x0a8e370e},
--	{0x00007868, 0xc0102850},
--	{0x0000786c, 0x812d4000},
--	{0x00007870, 0x807ec400},
--	{0x00007874, 0x001b6db0},
--	{0x00007878, 0x00376b63},
--	{0x0000787c, 0x06db6db6},
--	{0x00007880, 0x006d8000},
--	{0x00007884, 0xffeffffe},
--	{0x00007888, 0xffeffffe},
--	{0x0000788c, 0x00010000},
--	{0x00007890, 0x02060aeb},
--	{0x00007894, 0x5a108000},
--};
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 510ed1d..416b906 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -537,11 +537,15 @@ static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
+ 
+ #ifdef CONFIG_MAC80211_MESH
+ 
++static void add_mesh_files(struct ieee80211_sub_if_data *sdata)
++{
++	DEBUGFS_ADD_MODE(tsf, 0600);
++}
++
+ static void add_mesh_stats(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct dentry *dir = debugfs_create_dir("mesh_stats",
+ 						sdata->debugfs.dir);
 -
- static const u32 ar9300_2p2_baseband_postamble[][5] = {
- 	/* Addr      5G_HT20     5G_HT40     2G_HT40     2G_HT20   */
- 	{0x00009810, 0xd00a8005, 0xd00a8005, 0xd00a8011, 0xd00a8011},
+ #define MESHSTATS_ADD(name)\
+ 	debugfs_create_file(#name, 0400, dir, sdata, &name##_ops);
+ 
+@@ -593,6 +597,7 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_MESH_POINT:
+ #ifdef CONFIG_MAC80211_MESH
++		add_mesh_files(sdata);
+ 		add_mesh_stats(sdata);
+ 		add_mesh_config(sdata);
+ #endif
 -- 
-1.7.3.2
+1.7.6
 
