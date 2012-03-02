@@ -1,76 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.watchguard.com ([206.191.171.101]:48603 "EHLO
-	watchguard.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1031691Ab2CGBB7 convert rfc822-to-8bit (ORCPT
+Received: from eu1sys200aog120.obsmtp.com ([207.126.144.149]:35134 "EHLO
+	eu1sys200aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756630Ab2CBBll (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 20:01:59 -0500
-From: Bryan Phillippe <Bryan.Phillippe@watchguard.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: WARNING: driver-ops.h:10 -- how do I fix this?
-Date: Wed, 7 Mar 2012 01:01:57 +0000
-Message-ID: <42A9DDDF-0364-49F2-AACE-FBB8B72D573C@watchguard.com> (sfid-20120307_020214_401052_70E39319)
-References: <461155E6-5B2C-48C3-AD1C-4D07B6EECE4B@watchguard.com>
- (sfid-20120306_014028_944755_47BCD942)
- <1331022766.3447.4.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1331022766.3447.4.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 1 Mar 2012 20:41:41 -0500
+Received: from zeta.dmz-ap.st.com (ns6.st.com [138.198.234.13])
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id E6468CE
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 01:33:11 +0000 (GMT)
+Received: from relay2.stm.gmessaging.net (unknown [10.230.100.18])
+	by zeta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 803923C0
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 01:41:36 +0000 (GMT)
+Received: from exdcvycastm003.EQ1STM.local (alteon-source-exch [10.230.100.61])
+	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
+	(Client CN "exdcvycastm003", Issuer "exdcvycastm003" (not verified))
+	by relay2.stm.gmessaging.net (Postfix) with ESMTPS id D8DB5A8065
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 02:41:34 +0100 (CET)
+From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 03/21] cw1200: sbus.h, common device interface abstraction.
+Date: Fri, 2 Mar 2012 02:41:17 +0100
+Message-ID: <1330652495-25837-4-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_024148_186285_B2D3BEB9)
+In-Reply-To: <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>
+References: <d53e019b1a0bcd29c2c367fbe5665413f2d33938-submit>
+ <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The patch contains definition of hardware abstraction layer between
+cw1200 core driver and physical device interface. A bunch of wrappers
+can be build using this interface: sdio, spi, c2c etc.
 
-On Mar 6, 2012, at 12:32 AM, Johannes Berg wrote:
+Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+---
+ drivers/staging/cw1200/sbus.h |   39 +++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 39 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/staging/cw1200/sbus.h
 
-> On Tue, 2012-03-06 at 00:40 +0000, Bryan Phillippe wrote:
->> on compat-wireless-2012-02-06 as well as compat-wireless-3.3-rc1-2, I see this:
->> 
->> WARNING: at ath9k/net/mac80211/driver-ops.h:10 ieee80211_bss_info_change_notify+0x150/0x18c [mac80211]()
->> 
->> any time I change from one band to another.  How do I fix this?
-> 
-> Post the full warning and then we can see if we can figure it out.
-> 
-> johannes
-
-Hi Johannes,
-
-Here are some examples:
-
-Feb 13 05:29:48 2012 mybox local0.emerg kernel: [  266.700780] ------------[ cut here ]------------
-Feb 13 05:29:48 2012 mybox local0.err kernel: [  266.705424] Badness at net/mac80211/driver-ops.h:10
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705439] NIP: f2bd32b0 LR: f2bd32a4 CTR: a03fde5c
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705453] REGS: cfa31a80 TRAP: 0700   Tainted: P             (2.6.35.12)
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705463] MSR: 00029000 <EE,ME,CE>  CR: 28022422  XER: 00000000
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705489] TASK = c850dbc0[1727] 'hostapd' THREAD: cfa30000 CPU: 1
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705501] GPR00: 00000001 cfa31b30 c850dbc0 00000000 00000002 cfa31b78 d3bf2254 cfa31bbc
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705529] GPR08: c844bc10 00000000 00000000 a03fde5c 28022428 100773cc 00000000 10005060
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705557] GPR16: 100700e8 1004bb3c 00000000 00000000 00000000 00000000 cfa31dec 00000024
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705585] GPR24: 00000000 00000004 00000014 cfa31ba8 cdf307e0 cdc4ca80 00000002 cde75360
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705650] NIP [f2bd32b0] ieee80211_bss_info_change_notify+0x11c/0x308 [mac80211]
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705674] LR [f2bd32a4] ieee80211_bss_info_change_notify+0x110/0x308 [mac80211]
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705684] Call Trace:
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705704] [cfa31b30] [f2bd32a4] ieee80211_bss_info_change_notify+0x110/0x308 [mac80211] (unreliable)
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705738] [cfa31b50] [f2bec174] ieee80211_aes_cmac+0x1678/0x4758 [mac80211]
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705775] [cfa31b70] [f2b5ab20] nl80211_init+0x6a8/0x4f94 [cfg80211]
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705799] [cfa31ba0] [f2b10450] compat_vzalloc+0x1a4/0x284 [compat]
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705824] [cfa31be0] [a0334a4c] genl_rcv_msg+0x1f8/0x21c
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705840] [cfa31c30] [a0332ae0] netlink_rcv_skb+0xe0/0x108
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705856] [cfa31c50] [a0334844] genl_rcv+0x24/0x34
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705872] [cfa31c60] [a03325d0] netlink_unicast+0x380/0x3cc
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705888] [cfa31ca0] [a0333160] netlink_sendmsg+0x250/0x398
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705914] [cfa31cf0] [a02f9e28] sock_sendmsg+0x90/0xc8
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705931] [cfa31dc0] [a02fa668] sys_sendmsg+0x234/0x2d8
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705950] [cfa31f10] [a02fc03c] sys_socketcall+0x144/0x258
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.705973] [cfa31f40] [a0012000] ret_from_syscall+0x0/0x3c
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.706090] --- Exception: c01 at 0xfd16088
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.706095]     LR = 0xffd7d28
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.706102] Instruction dump:
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.706113] 419e00c0 0fe00000 48000018 39200000 912304a8 4bffff88 38000000 981f04b3
-Feb 13 05:29:48 2012 mybox local0.warn kernel: [  266.706143] 48033c29 801f01cc 68000020 5400dffe <0f000000> 813d0054 80090020 2f800000
-Feb 13 05:29:48 2012 mybox local0.emerg kernel: [  266.707407] ------------[ cut here ]------------
-
-
---
--bp
+diff --git a/drivers/staging/cw1200/sbus.h b/drivers/staging/cw1200/sbus.h
+new file mode 100644
+index 0000000..49bd06d
+--- /dev/null
++++ b/drivers/staging/cw1200/sbus.h
+@@ -0,0 +1,39 @@
++/*
++ * Common sbus abstraction layer interface for cw1200 wireless driver
++ *
++ * Copyright (c) 2010, ST-Ericsson
++ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#ifndef CW1200_SBUS_H
++#define CW1200_SBUS_H
++
++/*
++ * sbus priv forward definition.
++ * Implemented and instantiated in particular modules.
++ */
++struct sbus_priv;
++
++typedef void (*sbus_irq_handler)(void *priv);
++
++struct sbus_ops {
++	int (*sbus_memcpy_fromio)(struct sbus_priv *self, unsigned int addr,
++					void *dst, int count);
++	int (*sbus_memcpy_toio)(struct sbus_priv *self, unsigned int addr,
++					const void *src, int count);
++	void (*lock)(struct sbus_priv *self);
++	void (*unlock)(struct sbus_priv *self);
++	int (*irq_subscribe)(struct sbus_priv *self, sbus_irq_handler handler,
++				void *priv);
++	int (*irq_unsubscribe)(struct sbus_priv *self);
++	int (*reset)(struct sbus_priv *self);
++	size_t (*align_size)(struct sbus_priv *self, size_t size);
++	int (*power_mgmt)(struct sbus_priv *self, bool suspend);
++	int (*set_block_size)(struct sbus_priv *self, size_t size);
++};
++
++#endif /* CW1200_SBUS_H */
+-- 
+1.7.9
 
