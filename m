@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:43704 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965139Ab2CEUiL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 15:38:11 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 28/33] iwlwifi: move traffic log definitions
-Date: Mon,  5 Mar 2012 11:24:46 -0800
-Message-Id: <1330975491-19680-29-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120305_213840_235421_752E2F92)
-In-Reply-To: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:51082 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758569Ab2CBMc0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Mar 2012 07:32:26 -0500
+From: <rmani@qca.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
+	Raja Mani <rmani@qca.qualcomm.com>
+Subject: [PATCH] ath6kl: Restrict memcpy to bounce buffer only for write request
+Date: Fri, 2 Mar 2012 18:02:08 +0530
+Message-ID: <1330691528-2915-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20120302_133230_155126_E392960C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Raja Mani <rmani@qca.qualcomm.com>
 
-These are DVM specific, and shouldn't be
-in iwl-shared.h.
+No need to copy received local buffer content to bounce buffer
+(DMA buffer) while performing sync READ operation from the chip.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+It's applicable for only WRITE operation.
+
+Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.h   |    4 ++++
- drivers/net/wireless/iwlwifi/iwl-shared.h |    3 ---
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath6kl/sdio.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
-index 42630f5..db44115 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.h
-@@ -265,6 +265,10 @@ int __must_check iwl_scan_initiate(struct iwl_priv *priv,
- 
- #define IWL_SCAN_CHECK_WATCHDOG		(HZ * 7)
- 
-+/* traffic log definitions */
-+#define IWL_TRAFFIC_ENTRIES	(256)
-+#define IWL_TRAFFIC_ENTRY_SIZE  (64)
+diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
+index 346f5dd..e2f42a1 100644
+--- a/drivers/net/wireless/ath/ath6kl/sdio.c
++++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+@@ -405,7 +405,10 @@ static int ath6kl_sdio_read_write_sync(struct ath6kl *ar, u32 addr, u8 *buf,
+ 			return -ENOMEM;
+ 		mutex_lock(&ar_sdio->dma_buffer_mutex);
+ 		tbuf = ar_sdio->dma_buffer;
+-		memcpy(tbuf, buf, len);
 +
- /*****************************************************
-  *   S e n d i n g     H o s t     C o m m a n d s   *
-  *****************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 976e6c5..b816e70 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -445,9 +445,6 @@ iwl_remove_notification(struct iwl_shared *shrd,
- 
- #define IWL_CMD(x) case x: return #x
- 
--#define IWL_TRAFFIC_ENTRIES	(256)
--#define IWL_TRAFFIC_ENTRY_SIZE  (64)
--
- /*****************************************************
- * DRIVER STATUS FUNCTIONS
- ******************************************************/
++		if (request & HIF_WRITE)
++			memcpy(tbuf, buf, len);
++
+ 		bounced = true;
+ 	} else
+ 		tbuf = buf;
 -- 
-1.7.0.4
+1.7.1
 
