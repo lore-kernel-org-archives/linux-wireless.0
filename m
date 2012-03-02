@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.polymtl.ca ([132.207.4.11]:42646 "EHLO smtp.polymtl.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750784Ab2C0Oxu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2012 10:53:50 -0400
-Received: from localhost (imp-4-2.polymtl.ca [132.207.4.77])
-	by smtp.polymtl.ca (8.14.3/8.14.3) with ESMTP id q2RErm8u029913
-	for <linux-wireless@vger.kernel.org>; Tue, 27 Mar 2012 10:53:49 -0400
-Message-ID: <1332860028.4f71d47c7ec86@www.imp.polymtl.ca> (sfid-20120327_165353_225822_E1A133C0)
-Date: Tue, 27 Mar 2012 10:53:48 -0400
-From: Naveen Goswamy <naveen.goswamy@polymtl.ca>
-To: linux-wireless@vger.kernel.org
-Subject: brcmsmac not working well
-References: <1332856558-5708-1-git-send-email-michal.kazior@tieto.com> <1332856558-5708-4-git-send-email-michal.kazior@tieto.com>
-In-Reply-To: <1332856558-5708-4-git-send-email-michal.kazior@tieto.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:60968 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757935Ab2CBVSO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Mar 2012 16:18:14 -0500
+Received: by iagz16 with SMTP id z16so2806408iag.19
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2012 13:18:14 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <1330722711.8542.26.camel@jlt3.sipsolutions.net>
+References: <1330722280-28879-1-git-send-email-javier@cozybit.com>
+ <1330722280-28879-2-git-send-email-javier@cozybit.com> <1330722711.8542.26.camel@jlt3.sipsolutions.net>
+From: Javier Cardona <javier@cozybit.com>
+Date: Fri, 2 Mar 2012 13:17:54 -0800
+Message-ID: <CAPjQAd_Pnpvwqti4faMB2svacbjg3Z4PvEq_fg3v4jJMC5sAaA@mail.gmail.com> (sfid-20120302_221825_132512_4A30A7ED)
+Subject: Re: [PATCHv3 2/2] mac80211: Modify tsf via debugfs in mesh interfaces
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Mar 2, 2012 at 1:11 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2012-03-02 at 13:04 -0800, Javier Cardona wrote:
+>
+>>  static __le64 __mac80211_hwsim_get_tsf(struct mac80211_hwsim_data *data)
+>>  {
+>> -     return cpu_to_le64(jiffies_to_msecs(jiffies)*1000/1024 +
+>> -                     data->tsf_offset);
+>> +     struct timeval tv = ktime_to_timeval(ktime_get_real());
+>> +     u64 now = (u64) tv.tv_sec * MSEC_PER_SEC + tv.tv_usec / USEC_PER_MSEC;
+>> +     return cpu_to_le64(now + data->tsf_offset);
+>> +}
+>
+> Oh.
+>
+> But now you're giving it in MSEC, you want USEC.
 
-I have the BCM4313 [14e4:4727] (rev 01)
+I changed tea brands this week and it shows.  v4 in a few minutes.
 
-When using wireshark, I see that I am getting many {TCP Retransmission,TCP Dup
-ACK,TCP RST} with {TCP, HTTP, SSH} when using brcmsmac driver in the 3.2.1
-kernel.  I've tried 3.3-rc5 kernel with similar results.
-
-I notice a lot of these popping up in /var/log/messages as well:
-
-ieee80211 phy0: wl0: brcms_c_d11hdrs_mac80211:  txop exceeded phylen 155/256 dur
-1746/1504
-ieee80211 phy0: wl0: brcms_c_d11hdrs_mac80211:  txop exceeded phylen 130/256 dur
-1546/1504
-ieee80211 phy0: wl0: brcms_c_d11hdrs_mac80211:  txop exceeded phylen 130/256 dur
-1546/1504
+j
 
 
-any ideas how to solve this?
 
-Thanks,
 
-Naveen
 
+-- 
+Javier Cardona
+cozybit Inc.
+http://www.cozybit.com
