@@ -1,76 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:40169 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753077Ab2CCORS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 3 Mar 2012 09:17:18 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from eu1sys200aog107.obsmtp.com ([207.126.144.123]:52685 "EHLO
+	eu1sys200aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759310Ab2CBU04 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Mar 2012 15:26:56 -0500
+Received: from zeta.dmz-eu.st.com (zeta.dmz-eu.st.com [164.129.230.9])
+	by beta.dmz-eu.st.com (STMicroelectronics) with ESMTP id 0C0C01AF
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 20:26:54 +0000 (GMT)
+Received: from relay1.stm.gmessaging.net (unknown [10.230.100.17])
+	by zeta.dmz-eu.st.com (STMicroelectronics) with ESMTP id AE04129FF
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 20:26:54 +0000 (GMT)
+Received: from exdcvycastm003.EQ1STM.local (alteon-source-exch [10.230.100.61])
+	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
+	(Client CN "exdcvycastm003", Issuer "exdcvycastm003" (not verified))
+	by relay1.stm.gmessaging.net (Postfix) with ESMTPS id 7DFB924C2F2
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 21:26:44 +0100 (CET)
+From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
 To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 5/5] ath9k: fix signal strength reporting issues
-Date: Sat,  3 Mar 2012 15:17:06 +0100
-Message-Id: <1330784226-65563-5-git-send-email-nbd@openwrt.org> (sfid-20120303_151721_780197_1C3C0F2B)
-In-Reply-To: <1330784226-65563-4-git-send-email-nbd@openwrt.org>
-References: <1330784226-65563-1-git-send-email-nbd@openwrt.org>
- <1330784226-65563-2-git-send-email-nbd@openwrt.org>
- <1330784226-65563-3-git-send-email-nbd@openwrt.org>
- <1330784226-65563-4-git-send-email-nbd@openwrt.org>
+Subject: [PATCHv2 10/21] cw1200: ht.h, small helper header with HT definitions.
+Date: Fri, 2 Mar 2012 21:26:32 +0100
+Message-ID: <1330720003-15866-11-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_212705_967068_828E352B)
+In-Reply-To: <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
+References: <983b0e2d75af161b8e4dec02fc3497926a0080df-submit>
+ <1330720003-15866-1-git-send-email-dmitry.tarnyagin@stericsson.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On A-MPDU frames, the hardware only reports valid signal strength data for
-the last subframe. The driver also mangled rx_stats->rs_rssi using the
-ATH_EP_RND macro in a way that may make sense for ANI, but definitely
-not for reporting to mac80211.
-This patch changes the code to calculate the signal strength from the rssi
-directly instead of taking the average value, and flag everything but
-the last subframe in an A-MPDU to tell mac80211 to ignore the signal strength
-entirely, fixing signal strength fluctuation issues reported by various
-users.
+The patch implements HT-related inlines, used in the driver.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
 ---
- drivers/net/wireless/ath/ath9k/recv.c |   12 +++++++-----
- 1 files changed, 7 insertions(+), 5 deletions(-)
+ drivers/net/wireless/cw1200/ht.h |   43 ++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 43 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/net/wireless/cw1200/ht.h
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index cdba79f..027d232 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -953,6 +953,7 @@ static void ath9k_process_rssi(struct ath_common *common,
- 	struct ath_softc *sc = hw->priv;
- 	struct ath_hw *ah = common->ah;
- 	int last_rssi;
-+	int rssi = rx_stats->rs_rssi;
- 
- 	if (!rx_stats->is_mybeacon ||
- 	    ((ah->opmode != NL80211_IFTYPE_STATION) &&
-@@ -964,13 +965,12 @@ static void ath9k_process_rssi(struct ath_common *common,
- 
- 	last_rssi = sc->last_rssi;
- 	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
--		rx_stats->rs_rssi = ATH_EP_RND(last_rssi,
--					      ATH_RSSI_EP_MULTIPLIER);
--	if (rx_stats->rs_rssi < 0)
--		rx_stats->rs_rssi = 0;
-+		rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
-+	if (rssi < 0)
-+		rssi = 0;
- 
- 	/* Update Beacon RSSI, this is used by ANI. */
--	ah->stats.avgbrssi = rx_stats->rs_rssi;
-+	ah->stats.avgbrssi = rssi;
- }
- 
- /*
-@@ -1010,6 +1010,8 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
- 	rx_status->signal = ah->noise + rx_stats->rs_rssi;
- 	rx_status->antenna = rx_stats->rs_antenna;
- 	rx_status->flag |= RX_FLAG_MACTIME_MPDU;
-+	if (rx_stats->rs_moreaggr)
-+		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
- 
- 	return 0;
- }
+diff --git a/drivers/net/wireless/cw1200/ht.h b/drivers/net/wireless/cw1200/ht.h
+new file mode 100644
+index 0000000..5c486a6
+--- /dev/null
++++ b/drivers/net/wireless/cw1200/ht.h
+@@ -0,0 +1,43 @@
++/*
++ *  HT-related code for ST-Ericsson CW1200 driver
++ *
++ * Copyright (c) 2010-2012, ST-Ericsson AB
++ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#ifndef CW1200_HT_H_INCLUDED
++#define CW1200_HT_H_INCLUDED
++
++#include <net/mac80211.h>
++
++struct cw1200_ht_info {
++	struct ieee80211_sta_ht_cap	ht_cap;
++	enum nl80211_channel_type	channel_type;
++	u16				operation_mode;
++};
++
++static inline int cw1200_is_ht(const struct cw1200_ht_info *ht_info)
++{
++	return ht_info->channel_type != NL80211_CHAN_NO_HT;
++}
++
++static inline int cw1200_ht_greenfield(const struct cw1200_ht_info *ht_info)
++{
++	return cw1200_is_ht(ht_info) &&
++		(ht_info->ht_cap.cap & IEEE80211_HT_CAP_GRN_FLD) &&
++		!(ht_info->operation_mode &
++			IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT);
++}
++
++static inline int cw1200_ht_ampdu_density(const struct cw1200_ht_info *ht_info)
++{
++	if (!cw1200_is_ht(ht_info))
++		return 0;
++	return ht_info->ht_cap.ampdu_density;
++}
++
++#endif /* CW1200_HT_H_INCLUDED */
 -- 
-1.7.3.2
+1.7.9
 
