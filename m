@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:36639 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760318Ab2C2X24 (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:46602 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751216Ab2CBTDk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2012 19:28:56 -0400
-Received: by pbcun15 with SMTP id un15so789148pbc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2012 16:28:56 -0700 (PDT)
+	Fri, 2 Mar 2012 14:03:40 -0500
+Received: by iagz16 with SMTP id z16so2653712iag.19
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2012 11:03:40 -0800 (PST)
+Message-ID: <4F511989.8040508@lwfinger.net> (sfid-20120302_200344_864939_AB0CF849)
+Date: Fri, 02 Mar 2012 13:03:37 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, thomas@cozybit.com, johannes@sipsolutions.net,
-	devel@lists.open80211s.org, linville@tuxdriver.com,
-	Ashok Nagarajan <ashok@cozybit.com>
-Subject: [PATCH 1/4] mac80211: Use mandatory rates as basic rates when starting mesh
-Date: Thu, 29 Mar 2012 16:28:46 -0700
-Message-Id: <1333063729-9353-1-git-send-email-ashok@cozybit.com> (sfid-20120330_012900_159231_2CF107D2)
+To: Patrick McMunn <doctorwhoguy@gmail.com>
+CC: linux-wireless@vger.kernel.org
+Subject: Re: Problem with b43 driver
+References: <CAKS+cu2g45-KvQdvT=5B8p7dCt76dwXgNjMSUARM5+v8Mz9joQ@mail.gmail.com>
+In-Reply-To: <CAKS+cu2g45-KvQdvT=5B8p7dCt76dwXgNjMSUARM5+v8Mz9joQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 03/02/2012 11:59 AM, Patrick McMunn wrote:
+> A while back, a fix was issued for the b43 driver where the driver was
+> not issuing beacons in ad-hoc mode (
+> http://www.kernel.org/pub/linux/kernel/v2.6/longterm/v2.6.33/ChangeLog-2.6.33.20
+> ). I have a card which uses the driver, and it did allow me to use
+> ad-hoc mode for sharing an internet connection. However, I think there
+> is still some problem with the driver. When I start up my laptop (with
+> an Intel wireless card) and try to connect to the connection which I
+> created on my desktop which uses the b43 driver, there are occasions
+> when it detects the network immediately, and there are occasions when
+> it never does detect it even if I go to my desktop and stop then
+> restart the network. I may wait 15 or 20 minutes before giving up on
+> it. At the same time, my laptop may detect 3 or 4 wireless networks
+> from neighbors' homes, but it will not detect mine. So I suspect that
+> the b43 driver is somehow issuing beacons inconsistently. I'll be
+> happy to supply any additional information I can upon request. Another
+> thing that may or may not be related is that even when I do connect,
+> the machines can only ping each other if I connect using channel 10.
+> No other channel seems to work even if they successfully connect.
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/mesh.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+Does your laptop have a reasonable operating system that will let you run 
+wireshark in promiscuous mode? If so, please capture the traffic when you are 
+having this problem and check to see if the beacons are present.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 1f82c61..56ec79d 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -579,8 +579,12 @@ void ieee80211_start_mesh(struct ieee80211_sub_if_data *sdata)
- 	ieee80211_mesh_root_setup(ifmsh);
- 	ieee80211_queue_work(&local->hw, &sdata->work);
- 	sdata->vif.bss_conf.beacon_int = MESH_DEFAULT_BEACON_INTERVAL;
-+	sdata->vif.bss_conf.basic_rates =
-+		ieee80211_mandatory_rates(sdata->local,
-+					  sdata->local->hw.conf.channel->band);
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON |
- 						BSS_CHANGED_BEACON_ENABLED |
-+						BSS_CHANGED_BASIC_RATES |
- 						BSS_CHANGED_BEACON_INT);
- }
- 
--- 
-1.7.5.4
+That problem of needing to use channel 10 seems a bit strange.
+
+Larry
 
