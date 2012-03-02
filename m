@@ -1,79 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55438 "EHLO nbd.name"
+Received: from mms2.broadcom.com ([216.31.210.18]:2171 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756069Ab2CNPko (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 14 Mar 2012 11:40:44 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
-Subject: [PATCH 06/14] ath9k_hw: remove ath9k_hw_gettxintrtxqs
-Date: Wed, 14 Mar 2012 16:40:26 +0100
-Message-Id: <1331739634-22318-6-git-send-email-nbd@openwrt.org> (sfid-20120314_164113_605802_8B0EF964)
-In-Reply-To: <1331739634-22318-5-git-send-email-nbd@openwrt.org>
-References: <1331739634-22318-1-git-send-email-nbd@openwrt.org>
- <1331739634-22318-2-git-send-email-nbd@openwrt.org>
- <1331739634-22318-3-git-send-email-nbd@openwrt.org>
- <1331739634-22318-4-git-send-email-nbd@openwrt.org>
- <1331739634-22318-5-git-send-email-nbd@openwrt.org>
+	id S1752057Ab2CBV4K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Mar 2012 16:56:10 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>
+Subject: [PATCH 7/7] brcm80211: smac: cleanup couple of debug output
+ statements
+Date: Fri, 2 Mar 2012 22:55:51 +0100
+Message-ID: <1330725351-3803-8-git-send-email-arend@broadcom.com> (sfid-20120302_225614_737807_43711970)
+In-Reply-To: <1330725351-3803-1-git-send-email-arend@broadcom.com>
+References: <1330725351-3803-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver can just check the mask directly
+Tidying up some debug statements in brcms_c_ampdu_dotxstatus_complete()
+that got broken strings to satisfy checkpatch, but the rules changed.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Alwin Beukers <alwin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/mac.c  |    7 -------
- drivers/net/wireless/ath/ath9k/mac.h  |    1 -
- drivers/net/wireless/ath/ath9k/xmit.c |    5 ++---
- 3 files changed, 2 insertions(+), 11 deletions(-)
+ drivers/net/wireless/brcm80211/brcmsmac/ampdu.c |   20 +++++++++-----------
+ 1 files changed, 9 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/mac.c b/drivers/net/wireless/ath/ath9k/mac.c
-index bfb95e5..f7bd253 100644
---- a/drivers/net/wireless/ath/ath9k/mac.c
-+++ b/drivers/net/wireless/ath/ath9k/mac.c
-@@ -185,13 +185,6 @@ bool ath9k_hw_stop_dma_queue(struct ath_hw *ah, u32 q)
- }
- EXPORT_SYMBOL(ath9k_hw_stop_dma_queue);
+diff --git a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+index dbee696..95b5902 100644
+--- a/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
++++ b/drivers/net/wireless/brcm80211/brcmsmac/ampdu.c
+@@ -959,14 +959,13 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
+ 		if (supr_status) {
+ 			update_rate = false;
+ 			if (supr_status == TX_STATUS_SUPR_BADCH) {
+-				wiphy_err(wiphy, "%s: Pkt tx suppressed, "
+-					  "illegal channel possibly %d\n",
++				wiphy_err(wiphy,
++					  "%s: Pkt tx suppressed, illegal channel possibly %d\n",
+ 					  __func__, CHSPEC_CHANNEL(
+ 					  wlc->default_bss->chanspec));
+ 			} else {
+ 				if (supr_status != TX_STATUS_SUPR_FRAG)
+-					wiphy_err(wiphy, "%s:"
+-						  "supr_status 0x%x\n",
++					wiphy_err(wiphy, "%s: supr_status 0x%x\n",
+ 						  __func__, supr_status);
+ 			}
+ 			/* no need to retry for badch; will fail again */
+@@ -988,9 +987,8 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
+ 			}
+ 		} else if (txs->phyerr) {
+ 			update_rate = false;
+-			wiphy_err(wiphy, "wl%d: ampdu tx phy "
+-				  "error (0x%x)\n", wlc->pub->unit,
+-				  txs->phyerr);
++			wiphy_err(wiphy, "%s: ampdu tx phy error (0x%x)\n",
++				  __func__, txs->phyerr);
  
--void ath9k_hw_gettxintrtxqs(struct ath_hw *ah, u32 *txqs)
--{
--	*txqs &= ah->intr_txqs;
--	ah->intr_txqs &= ~(*txqs);
--}
--EXPORT_SYMBOL(ath9k_hw_gettxintrtxqs);
--
- bool ath9k_hw_set_txq_props(struct ath_hw *ah, int q,
- 			    const struct ath9k_tx_queue_info *qinfo)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/mac.h b/drivers/net/wireless/ath/ath9k/mac.h
-index 6476d90..21c9556 100644
---- a/drivers/net/wireless/ath/ath9k/mac.h
-+++ b/drivers/net/wireless/ath/ath9k/mac.h
-@@ -713,7 +713,6 @@ u32 ath9k_hw_numtxpending(struct ath_hw *ah, u32 q);
- bool ath9k_hw_updatetxtriglevel(struct ath_hw *ah, bool bIncTrigLevel);
- bool ath9k_hw_stop_dma_queue(struct ath_hw *ah, u32 q);
- void ath9k_hw_abort_tx_dma(struct ath_hw *ah);
--void ath9k_hw_gettxintrtxqs(struct ath_hw *ah, u32 *txqs);
- bool ath9k_hw_set_txq_props(struct ath_hw *ah, int q,
- 			    const struct ath9k_tx_queue_info *qinfo);
- bool ath9k_hw_get_txq_props(struct ath_hw *ah, int q,
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index 5de5199..a91cfd7 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -2262,10 +2262,9 @@ static void ath_tx_complete_poll_work(struct work_struct *work)
- 
- void ath_tx_tasklet(struct ath_softc *sc)
- {
-+	struct ath_hw *ah = sc->sc_ah;
-+	u32 qcumask = ((1 << ATH9K_NUM_TX_QUEUES) - 1) & ah->intr_txqs;
- 	int i;
--	u32 qcumask = ((1 << ATH9K_NUM_TX_QUEUES) - 1);
--
--	ath9k_hw_gettxintrtxqs(sc->sc_ah, &qcumask);
- 
- 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
- 		if (ATH_TXQ_SETUP(sc, i) && (qcumask & (1 << i)))
+ 			if (brcm_msg_level & LOG_ERROR_VAL) {
+ 				brcmu_prpkt("txpkt (AMPDU)", p);
+@@ -1018,10 +1016,10 @@ brcms_c_ampdu_dotxstatus_complete(struct ampdu_info *ampdu, struct scb *scb,
+ 		ack_recd = false;
+ 		if (ba_recd) {
+ 			bindex = MODSUB_POW2(seq, start_seq, SEQNUM_MAX);
+-			BCMMSG(wlc->wiphy, "tid %d seq %d,"
+-				" start_seq %d, bindex %d set %d, index %d\n",
+-				tid, seq, start_seq, bindex,
+-				isset(bitmap, bindex), index);
++			BCMMSG(wiphy,
++			       "tid %d seq %d, start_seq %d, bindex %d set %d, index %d\n",
++			       tid, seq, start_seq, bindex,
++			       isset(bitmap, bindex), index);
+ 			/* if acked then clear bit and free packet */
+ 			if ((bindex < AMPDU_TX_BA_MAX_WSIZE)
+ 			    && isset(bitmap, bindex)) {
 -- 
-1.7.3.2
+1.7.5.4
+
 
