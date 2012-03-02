@@ -1,70 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:62055 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933106Ab2CZSuZ (ORCPT
+Received: from eu1sys200aog109.obsmtp.com ([207.126.144.127]:36194 "EHLO
+	eu1sys200aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756171Ab2CBBls (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 14:50:25 -0400
-Received: by ghrr11 with SMTP id r11so4111435ghr.19
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Mar 2012 11:50:23 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 4/6] rtlwifi: rtl8192c: Convert driver to use private ps_t struct
-Date: Mon, 26 Mar 2012 13:49:55 -0500
-Message-Id: <1332787797-26475-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120326_205032_609838_3EBDA6E7)
-In-Reply-To: <1332787797-26475-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1332787797-26475-1-git-send-email-Larry.Finger@lwfinger.net>
+	Thu, 1 Mar 2012 20:41:48 -0500
+Received: from zeta.dmz-eu.st.com (zeta.dmz-eu.st.com [164.129.230.9])
+	by beta.dmz-eu.st.com (STMicroelectronics) with ESMTP id D5EC92E3
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 01:41:44 +0000 (GMT)
+Received: from relay2.stm.gmessaging.net (unknown [10.230.100.18])
+	by zeta.dmz-eu.st.com (STMicroelectronics) with ESMTP id 908CF47AD
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 01:41:44 +0000 (GMT)
+Received: from exdcvycastm003.EQ1STM.local (alteon-source-exch [10.230.100.61])
+	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
+	(Client CN "exdcvycastm003", Issuer "exdcvycastm003" (not verified))
+	by relay2.stm.gmessaging.net (Postfix) with ESMTPS id 67CC1A8065
+	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 02:41:43 +0100 (CET)
+From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 10/21] cw1200: ht.h, small helper header with HT definitions.
+Date: Fri, 2 Mar 2012 02:41:24 +0100
+Message-ID: <1330652495-25837-11-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_024152_074512_B48905EB)
+In-Reply-To: <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>
+References: <d53e019b1a0bcd29c2c367fbe5665413f2d33938-submit>
+ <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Convert driver to use the private instead of global version.
+The patch implements HT-related inlines, used in the driver.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
 ---
- drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+ drivers/staging/cw1200/ht.h |   43 +++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 43 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/staging/cw1200/ht.h
 
-diff --git a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-index 26d7018..2054b22 100644
---- a/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-+++ b/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
-@@ -33,8 +33,6 @@
- #include "../pci.h"
- #include "../base.h"
- 
--static struct ps_t dm_pstable;
--
- #define BT_RSSI_STATE_NORMAL_POWER	BIT_OFFSET_LEN_MASK_32(0, 1)
- #define BT_RSSI_STATE_AMDPU_OFF		BIT_OFFSET_LEN_MASK_32(1, 1)
- #define BT_RSSI_STATE_SPECIAL_LOW	BIT_OFFSET_LEN_MASK_32(2, 1)
-@@ -1235,6 +1233,9 @@ static void rtl92c_dm_refresh_rate_adaptive_mask(struct ieee80211_hw *hw)
- 
- static void rtl92c_dm_init_dynamic_bb_powersaving(struct ieee80211_hw *hw)
- {
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct ps_t dm_pstable = rtlpriv->dm_pstable;
+diff --git a/drivers/staging/cw1200/ht.h b/drivers/staging/cw1200/ht.h
+new file mode 100644
+index 0000000..5c486a6
+--- /dev/null
++++ b/drivers/staging/cw1200/ht.h
+@@ -0,0 +1,43 @@
++/*
++ *  HT-related code for ST-Ericsson CW1200 driver
++ *
++ * Copyright (c) 2010, ST-Ericsson
++ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
 +
- 	dm_pstable.pre_ccastate = CCA_MAX;
- 	dm_pstable.cur_ccasate = CCA_MAX;
- 	dm_pstable.pre_rfstate = RF_MAX;
-@@ -1244,6 +1245,8 @@ static void rtl92c_dm_init_dynamic_bb_powersaving(struct ieee80211_hw *hw)
- 
- void rtl92c_dm_rf_saving(struct ieee80211_hw *hw, u8 bforce_in_normal)
- {
-+	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct ps_t dm_pstable = rtlpriv->dm_pstable;
- 	static u8 initialize;
- 	static u32 reg_874, reg_c70, reg_85c, reg_a74;
- 
-@@ -1315,6 +1318,7 @@ static void rtl92c_dm_dynamic_bb_powersaving(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_mac *mac = rtl_mac(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
-+	struct ps_t dm_pstable = rtlpriv->dm_pstable;
- 
- 	if (((mac->link_state == MAC80211_NOLINK)) &&
- 	    (rtlpriv->dm.entry_min_undecoratedsmoothed_pwdb == 0)) {
++#ifndef CW1200_HT_H_INCLUDED
++#define CW1200_HT_H_INCLUDED
++
++#include <net/mac80211.h>
++
++struct cw1200_ht_info {
++	struct ieee80211_sta_ht_cap	ht_cap;
++	enum nl80211_channel_type	channel_type;
++	u16				operation_mode;
++};
++
++static inline int cw1200_is_ht(const struct cw1200_ht_info *ht_info)
++{
++	return ht_info->channel_type != NL80211_CHAN_NO_HT;
++}
++
++static inline int cw1200_ht_greenfield(const struct cw1200_ht_info *ht_info)
++{
++	return cw1200_is_ht(ht_info) &&
++		(ht_info->ht_cap.cap & IEEE80211_HT_CAP_GRN_FLD) &&
++		!(ht_info->operation_mode &
++			IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT);
++}
++
++static inline int cw1200_ht_ampdu_density(const struct cw1200_ht_info *ht_info)
++{
++	if (!cw1200_is_ht(ht_info))
++		return 0;
++	return ht_info->ht_cap.ampdu_density;
++}
++
++#endif /* CW1200_HT_H_INCLUDED */
 -- 
-1.7.7
+1.7.9
 
