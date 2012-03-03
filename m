@@ -1,116 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:37228 "EHLO mga09.intel.com"
+Received: from nbd.name ([46.4.11.11]:40624 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161450Ab2COU2O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 16:28:14 -0400
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 24/26] iwlwifi: remove firmware info from iwl_shared
-Date: Thu, 15 Mar 2012 13:27:04 -0700
-Message-Id: <1331843226-29860-25-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120315_212822_185269_06B497DB)
-In-Reply-To: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1752513Ab2CCO5k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Mar 2012 09:57:40 -0500
+Message-ID: <4F523162.6070306@openwrt.org> (sfid-20120303_155742_864702_69C6C963)
+Date: Sat, 03 Mar 2012 15:57:38 +0100
+From: Felix Fietkau <nbd@openwrt.org>
+MIME-Version: 1.0
+To: Mohammed Shafi <shafi.wireless@gmail.com>
+CC: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com
+Subject: Re: [PATCH 1/5] ath9k_hw: use cold instead of warm reset on AR9280
+References: <1330784226-65563-1-git-send-email-nbd@openwrt.org> <CAD2nsn1epfw=N=Np8Ts+G6yF5JTXZXSE4bOL7_jY9mCZG9Cg4Q@mail.gmail.com>
+In-Reply-To: <CAD2nsn1epfw=N=Np8Ts+G6yF5JTXZXSE4bOL7_jY9mCZG9Cg4Q@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+On 2012-03-03 3:40 PM, Mohammed Shafi wrote:
+> Hi Felix,
+> 
+> On Sat, Mar 3, 2012 at 7:47 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> Cold reset is more reliable for getting the hardware out of some specific
+>> stuck states.
+>>
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/hw.c |   14 ++++++++++----
+>>  1 files changed, 10 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+>> index 8c840ca..d582cf7 100644
+>> --- a/drivers/net/wireless/ath/ath9k/hw.c
+>> +++ b/drivers/net/wireless/ath/ath9k/hw.c
+>> @@ -1386,10 +1386,16 @@ static bool ath9k_hw_set_reset_reg(struct ath_hw *ah, u32 type)
+>>  static bool ath9k_hw_chip_reset(struct ath_hw *ah,
+>>                                struct ath9k_channel *chan)
+>>  {
+>> -       if (AR_SREV_9280(ah) && ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL)) {
+>> -               if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_POWER_ON))
+>> -                       return false;
+>> -       } else if (!ath9k_hw_set_reset_reg(ah, ATH9K_RESET_WARM))
+>> +       int reset_type = ATH9K_RESET_WARM;
+>> +
+>> +       if (AR_SREV_9280(ah)) {
+>> +               if (ah->eep_ops->get_eeprom(ah, EEP_OL_PWRCTRL))
+>> +                       reset_type = ATH9K_RESET_POWER_ON;
+>> +               else
+>> +                       reset_type = ATH9K_RESET_COLD;
+>> +       }
+> 
+> 
+> cold reset seems to be applicable for older chip sets like AR9100,
+> should this be applicable to AR9280. won't there be any problem if we
+> perform cold reset in STA mode.
+What kind of issues do you expect from cold reset in STA mode? OpenWrt
+has had this patch for a while now, and I didn't notice any issues with it.
 
-With error logging now completely handled in
-the op_mode, the transport layer does not
-need to know information about the loaded
-firmware.
-
-Remove this state information from the
-iwl_shared data structure.
-
-Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
----
- drivers/net/wireless/iwlwifi/iwl-agn.c    |   20 +++++++++-----------
- drivers/net/wireless/iwlwifi/iwl-shared.h |    1 -
- 2 files changed, 9 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index b8fcb4a..e91d88d 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1498,8 +1498,6 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
- 	priv = IWL_OP_MODE_GET_DVM(op_mode);
- 	priv->shrd = trans->shrd;
- 	priv->fw = fw;
--	/* TODO: remove fw from shared data later */
--	priv->shrd->fw = fw;
- 
- 	/*
- 	 * Populate the state variables that the transport layer needs
-@@ -1817,10 +1815,10 @@ static void iwl_dump_nic_error_log(struct iwl_priv *priv)
- 	base = priv->device_pointers.error_event_table;
- 	if (priv->cur_ucode == IWL_UCODE_INIT) {
- 		if (!base)
--			base = priv->shrd->fw->init_errlog_ptr;
-+			base = priv->fw->init_errlog_ptr;
- 	} else {
- 		if (!base)
--			base = priv->shrd->fw->inst_errlog_ptr;
-+			base = priv->fw->inst_errlog_ptr;
- 	}
- 
- 	if (!iwlagn_hw_valid_rtc_data_addr(base)) {
-@@ -1908,10 +1906,10 @@ static int iwl_print_event_log(struct iwl_priv *priv, u32 start_idx,
- 	base = priv->device_pointers.log_event_table;
- 	if (priv->cur_ucode == IWL_UCODE_INIT) {
- 		if (!base)
--			base = priv->shrd->fw->init_evtlog_ptr;
-+			base = priv->fw->init_evtlog_ptr;
- 	} else {
- 		if (!base)
--			base = priv->shrd->fw->inst_evtlog_ptr;
-+			base = priv->fw->inst_evtlog_ptr;
- 	}
- 
- 	if (mode == 0)
-@@ -2022,13 +2020,13 @@ int iwl_dump_nic_event_log(struct iwl_priv *priv, bool full_log,
- 
- 	base = priv->device_pointers.log_event_table;
- 	if (priv->cur_ucode == IWL_UCODE_INIT) {
--		logsize = priv->shrd->fw->init_evtlog_size;
-+		logsize = priv->fw->init_evtlog_size;
- 		if (!base)
--			base = priv->shrd->fw->init_evtlog_ptr;
-+			base = priv->fw->init_evtlog_ptr;
- 	} else {
--		logsize = priv->shrd->fw->inst_evtlog_size;
-+		logsize = priv->fw->inst_evtlog_size;
- 		if (!base)
--			base = priv->shrd->fw->inst_evtlog_ptr;
-+			base = priv->fw->inst_evtlog_ptr;
- 	}
- 
- 	if (!iwlagn_hw_valid_rtc_data_addr(base)) {
-@@ -2117,7 +2115,7 @@ static void iwl_nic_error(struct iwl_op_mode *op_mode)
- 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
- 
- 	IWL_ERR(priv, "Loaded firmware version: %s\n",
--		priv->shrd->fw->fw_version);
-+		priv->fw->fw_version);
- 
- 	iwl_dump_nic_error_log(priv);
- 	iwl_dump_nic_event_log(priv, false, NULL, false);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 90f464e..983b41e 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -354,7 +354,6 @@ struct iwl_shared {
- 	struct iwl_trans *trans;
- 	void *drv;
- 	struct iwl_hw_params hw_params;
--	const struct iwl_fw *fw;
- 
- 	/* eeprom -- this is in the card's little endian byte order */
- 	u8 *eeprom;
--- 
-1.7.0.4
-
+- Felix
