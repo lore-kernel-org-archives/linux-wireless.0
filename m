@@ -1,63 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:43946 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753509Ab2CAN6w (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:56855 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753762Ab2CCOq5 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 08:58:52 -0500
-Message-ID: <4F4F8095.4010706@qca.qualcomm.com> (sfid-20120301_145856_169389_B12914BB)
-Date: Thu, 1 Mar 2012 19:28:45 +0530
-From: Mohammed Shafi Shajakhan <mohammed@qca.qualcomm.com>
+	Sat, 3 Mar 2012 09:46:57 -0500
+Received: by vbbff1 with SMTP id ff1so2298252vbb.19
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Mar 2012 06:46:56 -0800 (PST)
 MIME-Version: 1.0
-To: Christian Lamparter <chunkeey@googlemail.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	<senthilb@qca.qualcomm.com>, <vthiagar@qca.qualcomm.com>,
-	<rodrigue@qca.qualcomm.com>
-Subject: Re: [RFC 2/2] ath9k_htc: use ieee80211_free_txskb
-References: <d053a9a1ec34c2e1b15cf50b272ba7863fb17088.1330360738.git.chunkeey@googlemail.com> <88bea301177cac98e77cd49490ac576d36b10c81.1330360738.git.chunkeey@googlemail.com>
-In-Reply-To: <88bea301177cac98e77cd49490ac576d36b10c81.1330360738.git.chunkeey@googlemail.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <1330784226-65563-3-git-send-email-nbd@openwrt.org>
+References: <1330784226-65563-1-git-send-email-nbd@openwrt.org>
+	<1330784226-65563-2-git-send-email-nbd@openwrt.org>
+	<1330784226-65563-3-git-send-email-nbd@openwrt.org>
+Date: Sat, 3 Mar 2012 20:16:56 +0530
+Message-ID: <CAD2nsn2N2Ei2GTHc-_8hQ1h-jOy7jo3FM-Cn7i2T5t-eviCMZA@mail.gmail.com> (sfid-20120303_154701_154448_FCAB2CCB)
+Subject: Re: [PATCH 3/5] ath9k: remove rssi/antenna information from recv
+ debug stats
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Christian,
+On Sat, Mar 3, 2012 at 7:47 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> The way this is implemented (simply storing the last value) is absolutely
+> worthless for debugging anything, and the same information is also available
+> through the MAC sample feature, so there's no point in keeping this around.
 
+:) :)  please keep this, we were debugging antenna diversity related
+issues in AR9485 with this stats. the antenna switching never
+happened, then with these stats we found that the rss1 seems to be
+always negative, same result with the windows driver also, then later
+found its a EEPROM related issue.
 
-On Monday 27 February 2012 10:02 PM, Christian Lamparter wrote:
-> With the new tx status API: "mac80211: implement wifi TX status"
-> All skb originating from mac80211 needs to be given back to mac80211.
 >
-> Signed-off-by: Christian Lamparter<chunkeey@googlemail.com>
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 > ---
-> It compiles, but not tested.
-> ---
->   drivers/net/wireless/ath/ath9k/htc_drv_txrx.c |    4 ++--
->   1 files changed, 2 insertions(+), 2 deletions(-)
+>  drivers/net/wireless/ath/ath9k/debug.c |   31 -------------------------------
+>  drivers/net/wireless/ath/ath9k/debug.h |    7 -------
+>  2 files changed, 0 insertions(+), 38 deletions(-)
 >
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-> index 3e40a64..e958704 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_txrx.c
-> @@ -451,7 +451,7 @@ static void ath9k_htc_tx_process(struct ath9k_htc_priv *priv,
+> diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+> index 03a4740..c2edf68 100644
+> --- a/drivers/net/wireless/ath/ath9k/debug.c
+> +++ b/drivers/net/wireless/ath/ath9k/debug.c
+> @@ -944,27 +944,6 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+>        PHY_ERR("HT-RATE ERR", ATH9K_PHYERR_HT_RATE_ILLEGAL);
 >
->   	slot = strip_drv_header(priv, skb);
->   	if (slot<  0) {
-> -		dev_kfree_skb_any(skb);
-> +		ieee80211_free_txskb(priv->hw, skb);
->   		return;
->   	}
+>        len += snprintf(buf + len, size - len,
+> -                       "%22s : %10d\n", "RSSI-CTL0",
+> -                       sc->debug.stats.rxstats.rs_rssi_ctl0);
+> -       len += snprintf(buf + len, size - len,
+> -                       "%22s : %10d\n", "RSSI-CTL1",
+> -                       sc->debug.stats.rxstats.rs_rssi_ctl1);
+> -       len += snprintf(buf + len, size - len,
+> -                       "%22s : %10d\n", "RSSI-CTL2",
+> -                       sc->debug.stats.rxstats.rs_rssi_ctl2);
+> -       len += snprintf(buf + len, size - len,
+> -                       "%22s : %10d\n", "RSSI-EXT0",
+> -                       sc->debug.stats.rxstats.rs_rssi_ext0);
+> -       len += snprintf(buf + len, size - len,
+> -                       "%22s : %10d\n", "RSSI-EXT1",
+> -                       sc->debug.stats.rxstats.rs_rssi_ext1);
+> -       len += snprintf(buf + len, size - len,
+> -                       "%22s : %10d\n", "RSSI-EXT2",
+> -                       sc->debug.stats.rxstats.rs_rssi_ext2);
+> -       len += snprintf(buf + len, size - len,
+> -                       "%22s : %10d\n", "Rx Antenna",
+> -                       sc->debug.stats.rxstats.rs_antenna);
+> -       len += snprintf(buf + len, size - len,
+>                        "%22s : %10u\n", "RX-Pkts-All",
+>                        sc->debug.stats.rxstats.rx_pkts_all);
+>        len += snprintf(buf + len, size - len,
+> @@ -1011,16 +990,6 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+>                        RX_PHY_ERR_INC(rs->rs_phyerr);
+>        }
 >
-> @@ -687,7 +687,7 @@ void ath9k_htc_txep(void *drv_priv, struct sk_buff *skb,
+> -       sc->debug.stats.rxstats.rs_rssi_ctl0 = rs->rs_rssi_ctl0;
+> -       sc->debug.stats.rxstats.rs_rssi_ctl1 = rs->rs_rssi_ctl1;
+> -       sc->debug.stats.rxstats.rs_rssi_ctl2 = rs->rs_rssi_ctl2;
+> -
+> -       sc->debug.stats.rxstats.rs_rssi_ext0 = rs->rs_rssi_ext0;
+> -       sc->debug.stats.rxstats.rs_rssi_ext1 = rs->rs_rssi_ext1;
+> -       sc->debug.stats.rxstats.rs_rssi_ext2 = rs->rs_rssi_ext2;
+> -
+> -       sc->debug.stats.rxstats.rs_antenna = rs->rs_antenna;
+> -
+>  #ifdef CONFIG_ATH9K_MAC_DEBUG
+>        spin_lock(&sc->debug.samp_lock);
+>        RX_SAMP_DBG(jiffies) = jiffies;
+> diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+> index 7a51958..64fcfad 100644
+> --- a/drivers/net/wireless/ath/ath9k/debug.h
+> +++ b/drivers/net/wireless/ath/ath9k/debug.h
+> @@ -165,13 +165,6 @@ struct ath_rx_stats {
+>        u32 post_delim_crc_err;
+>        u32 decrypt_busy_err;
+>        u32 phy_err_stats[ATH9K_PHYERR_MAX];
+> -       int8_t rs_rssi_ctl0;
+> -       int8_t rs_rssi_ctl1;
+> -       int8_t rs_rssi_ctl2;
+> -       int8_t rs_rssi_ext0;
+> -       int8_t rs_rssi_ext1;
+> -       int8_t rs_rssi_ext2;
+> -       u8 rs_antenna;
+>  };
 >
->   	epid_queue = get_htc_epid_queue(priv, ep_id);
->   	if (!epid_queue) {
-> -		dev_kfree_skb_any(skb);
-> +		ieee80211_free_txskb(priv->hw, skb);
->   		return;
->   	}
+>  enum ath_reset_type {
+> --
+> 1.7.3.2
 >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-also we should do it ath9k_htc_tx in htc_drv_main.c, i don't know very 
-much about ath9k_htc.
 
 
 -- 
