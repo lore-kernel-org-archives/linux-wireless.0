@@ -1,62 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:35173 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932727Ab2CZPCS (ORCPT
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:59721 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751032Ab2CCUZY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 11:02:18 -0400
-Date: Mon, 26 Mar 2012 10:54:34 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: Re: RFC/CFP -- Linux Wireless (802.11/Bluetooth/NFC) Mini-Summit
- 2012 (Barcelona?)
-Message-ID: <20120326145433.GE13806@tuxdriver.com> (sfid-20120326_170223_105744_2439134D)
-References: <20120322192406.GB2432@tuxdriver.com>
- <1332698585.1870.88.camel@aeonflux>
+	Sat, 3 Mar 2012 15:25:24 -0500
+Received: by eekc41 with SMTP id c41so1008341eek.19
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Mar 2012 12:25:23 -0800 (PST)
+Subject: [PATCH 2/2] p54pci: use new driver.pm interface for suspend/resume
+Cc: linux-wireless@vger.kernel.org
+From: Christian Lamparter <chunkeey@googlemail.com>
+Date: Sat, 3 Mar 2012 21:25:19 +0100
+To: "John W. Linville" <linville@tuxdriver.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1332698585.1870.88.camel@aeonflux>
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <201203032125.19574.chunkeey@googlemail.com> (sfid-20120303_212527_791338_4A76FD31)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 25, 2012 at 11:03:05AM -0700, Marcel Holtmann wrote:
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+ drivers/net/wireless/p54/p54pci.c |   48 ++++++++++++++++++------------------
+ 1 files changed, 24 insertions(+), 24 deletions(-)
 
-> I am in favor of requiring attendees to register with the LinuxCon
-> event. That has always worked out nicely for everybody. Especially if we
-> want to have extra rooms for breakout sessions. Otherwise we have to
-> figure out the room costs.
-> 
-> Unless some company wants to step up and sponsor. Or sponsor a dinner
-> event and get free attendance. I think we can figure something out to
-> make this work if anybody is interested ;)
-
-Sponsorship is always welcome, of course. :-)
-
-> > Given the potential to expand this into a larger event, we would
-> > likely need to be somewhat more formal about having proposals for
-> > speaking slots.  In that case, we might require a program committee
-> > for reviewing proposals, etc.  Anyone interested in participating in
-> > speaking at the mini-summit or in reviewing speaking proposals should
-> > contact me or reply in this thread.
-> 
-> When you and I talked originally about this, we discussed the format a
-> little bit. In theory we have a bunch of options here. One of the
-> original thoughts was 1-2 day mini-conference and 1 day break-out
-> sessions. I assume 6 presentation per day is maximum. Is it enough to
-> just do 1 day?
-
-I don't think that 1 day is enough.  2 might not be enough, depending
-on how we stage it.  Do you think that we would have more than one
-"track" (e.g. separate Blueooth/802.11/NFC sessions)?  A single
-"plenary" session?  Or some mix?
-
-> Any other thoughts?
-> 
-> And while we are at it I am volunteering myself (or someone from our
-> team) to give the "Bluetooth: State of the Union" talk.
-
-Cool.
-
+diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+index b1f51a2..d4860ac 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -624,36 +624,39 @@ static void __devexit p54p_remove(struct pci_dev *pdev)
+ }
+ 
+ #ifdef CONFIG_PM
+-static int p54p_suspend(struct pci_dev *pdev, pm_message_t state)
++static int p54p_suspend(struct device *device)
+ {
+-	struct ieee80211_hw *dev = pci_get_drvdata(pdev);
+-	struct p54p_priv *priv = dev->priv;
+-
+-	if (priv->common.mode != NL80211_IFTYPE_UNSPECIFIED) {
+-		ieee80211_stop_queues(dev);
+-		p54p_stop(dev);
+-	}
++	struct pci_dev *pdev = to_pci_dev(device);
+ 
+ 	pci_save_state(pdev);
+-	pci_set_power_state(pdev, pci_choose_state(pdev, state));
++	pci_set_power_state(pdev, PCI_D3hot);
++	pci_disable_device(pdev);
+ 	return 0;
+ }
+ 
+-static int p54p_resume(struct pci_dev *pdev)
++static int p54p_resume(struct device *device)
+ {
+-	struct ieee80211_hw *dev = pci_get_drvdata(pdev);
+-	struct p54p_priv *priv = dev->priv;
++	struct pci_dev *pdev = to_pci_dev(device);
++	int err;
+ 
+-	pci_set_power_state(pdev, PCI_D0);
+-	pci_restore_state(pdev);
++	err = pci_reenable_device(pdev);
++	if (err)
++		return err;
++	return pci_set_power_state(pdev, PCI_D0);
++}
+ 
+-	if (priv->common.mode != NL80211_IFTYPE_UNSPECIFIED) {
+-		p54p_open(dev);
+-		ieee80211_wake_queues(dev);
+-	}
++static const struct dev_pm_ops p54pci_pm_ops = {
++	.suspend = p54p_suspend,
++	.resume = p54p_resume,
++	.freeze = p54p_suspend,
++	.thaw = p54p_resume,
++	.poweroff = p54p_suspend,
++	.restore = p54p_resume,
++};
+ 
+-	return 0;
+-}
++#define P54P_PM_OPS (&p54pci_pm_ops)
++#else
++#define P54P_PM_OPS (NULL)
+ #endif /* CONFIG_PM */
+ 
+ static struct pci_driver p54p_driver = {
+@@ -661,10 +664,7 @@ static struct pci_driver p54p_driver = {
+ 	.id_table	= p54p_table,
+ 	.probe		= p54p_probe,
+ 	.remove		= __devexit_p(p54p_remove),
+-#ifdef CONFIG_PM
+-	.suspend	= p54p_suspend,
+-	.resume		= p54p_resume,
+-#endif /* CONFIG_PM */
++	.driver.pm	= P54P_PM_OPS,
+ };
+ 
+ static int __init p54p_init(void)
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+1.7.9.1
+
