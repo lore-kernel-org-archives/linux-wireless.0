@@ -1,37 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:52906 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757917Ab2CHQCY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 11:02:24 -0500
-Received: by bkcik5 with SMTP id ik5so468360bkc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2012 08:02:23 -0800 (PST)
-Message-ID: <4F58D80D.8070905@gmail.com> (sfid-20120308_170232_038000_E1AAC03E)
-Date: Thu, 08 Mar 2012 17:02:21 +0100
-From: Aaron <regtothismail@gmail.com>
-MIME-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:40169 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753077Ab2CCORS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Mar 2012 09:17:18 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Subject: Building and Installation errors due to modprobe -l was deprecated
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 5/5] ath9k: fix signal strength reporting issues
+Date: Sat,  3 Mar 2012 15:17:06 +0100
+Message-Id: <1330784226-65563-5-git-send-email-nbd@openwrt.org> (sfid-20120303_151721_780197_1C3C0F2B)
+In-Reply-To: <1330784226-65563-4-git-send-email-nbd@openwrt.org>
+References: <1330784226-65563-1-git-send-email-nbd@openwrt.org>
+ <1330784226-65563-2-git-send-email-nbd@openwrt.org>
+ <1330784226-65563-3-git-send-email-nbd@openwrt.org>
+ <1330784226-65563-4-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On A-MPDU frames, the hardware only reports valid signal strength data for
+the last subframe. The driver also mangled rx_stats->rs_rssi using the
+ATH_EP_RND macro in a way that may make sense for ANI, but definitely
+not for reporting to mac80211.
+This patch changes the code to calculate the signal strength from the rssi
+directly instead of taking the average value, and flag everything but
+the last subframe in an A-MPDU to tell mac80211 to ignore the signal strength
+entirely, fixing signal strength fluctuation issues reported by various
+users.
 
-I have problems with building and installing compat-wireless-3.3-rc1-2 
-drivers due to modprobe -l option is obsolete.
-Debian wheezy/sid
-Linux laptop 3.2.0-2-amd64 #1 SMP Sun Mar 4 22:48:17 UTC 2012 x86_64 
-GNU/Linux
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/recv.c |   12 +++++++-----
+ 1 files changed, 7 insertions(+), 5 deletions(-)
 
-# make install
-/sbin/modprobe: invalid option -- 'l'
-/sbin/modprobe: invalid option -- 'l'
+diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+index cdba79f..027d232 100644
+--- a/drivers/net/wireless/ath/ath9k/recv.c
++++ b/drivers/net/wireless/ath/ath9k/recv.c
+@@ -953,6 +953,7 @@ static void ath9k_process_rssi(struct ath_common *common,
+ 	struct ath_softc *sc = hw->priv;
+ 	struct ath_hw *ah = common->ah;
+ 	int last_rssi;
++	int rssi = rx_stats->rs_rssi;
+ 
+ 	if (!rx_stats->is_mybeacon ||
+ 	    ((ah->opmode != NL80211_IFTYPE_STATION) &&
+@@ -964,13 +965,12 @@ static void ath9k_process_rssi(struct ath_common *common,
+ 
+ 	last_rssi = sc->last_rssi;
+ 	if (likely(last_rssi != ATH_RSSI_DUMMY_MARKER))
+-		rx_stats->rs_rssi = ATH_EP_RND(last_rssi,
+-					      ATH_RSSI_EP_MULTIPLIER);
+-	if (rx_stats->rs_rssi < 0)
+-		rx_stats->rs_rssi = 0;
++		rssi = ATH_EP_RND(last_rssi, ATH_RSSI_EP_MULTIPLIER);
++	if (rssi < 0)
++		rssi = 0;
+ 
+ 	/* Update Beacon RSSI, this is used by ANI. */
+-	ah->stats.avgbrssi = rx_stats->rs_rssi;
++	ah->stats.avgbrssi = rssi;
+ }
+ 
+ /*
+@@ -1010,6 +1010,8 @@ static int ath9k_rx_skb_preprocess(struct ath_common *common,
+ 	rx_status->signal = ah->noise + rx_stats->rs_rssi;
+ 	rx_status->antenna = rx_stats->rs_antenna;
+ 	rx_status->flag |= RX_FLAG_MACTIME_MPDU;
++	if (rx_stats->rs_moreaggr)
++		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
+ 
+ 	return 0;
+ }
+-- 
+1.7.3.2
 
-Your old wireless subsystem modules were left intact:
-
-/sbin/modprobe: invalid option -- 'l'
-make: *** [uninstall] Error 1
-
-Best regards,
-Aaron
