@@ -1,86 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:47299 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752436Ab2CTFyK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 01:54:10 -0400
-Message-ID: <4F681B78.9000207@gmail.com> (sfid-20120320_065416_619341_DD7A34D1)
-Date: Mon, 19 Mar 2012 22:54:00 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-MIME-Version: 1.0
-To: Linux-wireless <linux-wireless@vger.kernel.org>
-CC: Felix Fietkau <nbd@openwrt.org>,
-	Mohammed Shafi <shafi.wireless@gmail.com>,
-	linux-kernel@vger.kernel.org, Linux-netdev <netdev@vger.kernel.org>
-Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
- DMADBG_7=0x00008040
-References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org> <4F61F551.5010608@gmail.com> <4F639851.5080500@gmail.com> <4F674616.8080103@gmail.com> <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com> <4F674FF5.2060406@gmail.com> <4F6751B2.1030809@openwrt.org>
-In-Reply-To: <4F6751B2.1030809@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from nbd.name ([46.4.11.11]:40170 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753311Ab2CCORS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Mar 2012 09:17:18 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: linville@tuxdriver.com, mcgrof@qca.qualcomm.com
+Subject: [PATCH 3/5] ath9k: remove rssi/antenna information from recv debug stats
+Date: Sat,  3 Mar 2012 15:17:04 +0100
+Message-Id: <1330784226-65563-3-git-send-email-nbd@openwrt.org> (sfid-20120303_151723_502125_398E2B4E)
+In-Reply-To: <1330784226-65563-2-git-send-email-nbd@openwrt.org>
+References: <1330784226-65563-1-git-send-email-nbd@openwrt.org>
+ <1330784226-65563-2-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/19/2012 08:33 AM, Felix Fietkau wrote:
-> On 2012-03-19 4:25 PM, Justin P. Mattock wrote:
->> On 03/19/2012 08:20 AM, Mohammed Shafi wrote:
->>> Hi Justin,
->>>
->>>> seems I got this when waking up from suspend, was trying to connect with NM
->>>> then all of a sudden Xorg shut off and this appeared on the screen(image
->>>> links below I could not save dmesg only pic)
->>>> http://flic.kr/p/bEhf2K
->>>> http://flic.kr/p/bEhf2x
->>>> http://flic.kr/p/bEhf2n
->>>> http://flic.kr/p/bEhf26
->>>>
->>>> I see ath9k in the image, but am unsure if its related.
->>>> kernel is: 3.3.0-rc7-next-20120316
->>>
->>> this looks like some new issue  in ath9k, lets try to recreate it here
->>>
->>>>
->>>> Justin P. Mattock
->>>>
->>>>
->>>>
->>>
->>>
->>>
->>
->> would be nice to recreate, then bisecting will be more accurate to do..
->> I am trying userspace tweaks here and there but no luck(hostapd etc..)
->> keep in mind this is for the RX DMA, the above just occured..
->> as for writing a small app I still need to try, but my C skills only go
->> so far(anything to trigger!).
-> Was your kernel compiled with debug info? If so, please run gdb on the
-> ath9k.ko module and enter this:
-> l *ath9k_tx+start+0x284
-> Then send me the output of that.
->
-> - Felix
->
+The way this is implemented (simply storing the last value) is absolutely
+worthless for debugging anything, and the same information is also available
+through the MAC sample feature, so there's no point in keeping this around.
 
-I changed the Cc''s so hopefully its correct..
-  anyway I tried the above but might have gotten it wrong..:
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+---
+ drivers/net/wireless/ath/ath9k/debug.c |   31 -------------------------------
+ drivers/net/wireless/ath/ath9k/debug.h |    7 -------
+ 2 files changed, 0 insertions(+), 38 deletions(-)
 
-Reading symbols from 
-/home/kernel/linux-next/drivers/net/wireless/ath/ath9k/ath9k.o...done.
-(gdb) list *ath9k_tx+0xa3
-0x4673 is in ath9k_tx (drivers/net/wireless/ath/ath9k/main.c:1136).
-1131		memset(&txctl, 0, sizeof(struct ath_tx_control));
-1132		txctl.txq = sc->tx.txq_map[skb_get_queue_mapping(skb)];
-1133	
-1134		ath_dbg(common, XMIT, "transmitting packet, skb: %p\n", skb);
-1135	
-1136		if (ath_tx_start(hw, skb, &txctl) != 0) {
-1137			ath_dbg(common, XMIT, "TX failed\n");
-1138			goto exit;
-1139		}
-1140	
-(gdb) list *ath9k_tx+start+0x284
-No symbol "start" in current context.
-
-before receiving the email to do the above code with gdb I had cleaned 
-the tree out with git clean -fx so rebuilding might have misalighned 
-things(but could be wrong)..
+diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
+index 03a4740..c2edf68 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.c
++++ b/drivers/net/wireless/ath/ath9k/debug.c
+@@ -944,27 +944,6 @@ static ssize_t read_file_recv(struct file *file, char __user *user_buf,
+ 	PHY_ERR("HT-RATE ERR", ATH9K_PHYERR_HT_RATE_ILLEGAL);
+ 
+ 	len += snprintf(buf + len, size - len,
+-			"%22s : %10d\n", "RSSI-CTL0",
+-			sc->debug.stats.rxstats.rs_rssi_ctl0);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10d\n", "RSSI-CTL1",
+-			sc->debug.stats.rxstats.rs_rssi_ctl1);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10d\n", "RSSI-CTL2",
+-			sc->debug.stats.rxstats.rs_rssi_ctl2);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10d\n", "RSSI-EXT0",
+-			sc->debug.stats.rxstats.rs_rssi_ext0);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10d\n", "RSSI-EXT1",
+-			sc->debug.stats.rxstats.rs_rssi_ext1);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10d\n", "RSSI-EXT2",
+-			sc->debug.stats.rxstats.rs_rssi_ext2);
+-	len += snprintf(buf + len, size - len,
+-			"%22s : %10d\n", "Rx Antenna",
+-			sc->debug.stats.rxstats.rs_antenna);
+-	len += snprintf(buf + len, size - len,
+ 			"%22s : %10u\n", "RX-Pkts-All",
+ 			sc->debug.stats.rxstats.rx_pkts_all);
+ 	len += snprintf(buf + len, size - len,
+@@ -1011,16 +990,6 @@ void ath_debug_stat_rx(struct ath_softc *sc, struct ath_rx_status *rs)
+ 			RX_PHY_ERR_INC(rs->rs_phyerr);
+ 	}
+ 
+-	sc->debug.stats.rxstats.rs_rssi_ctl0 = rs->rs_rssi_ctl0;
+-	sc->debug.stats.rxstats.rs_rssi_ctl1 = rs->rs_rssi_ctl1;
+-	sc->debug.stats.rxstats.rs_rssi_ctl2 = rs->rs_rssi_ctl2;
+-
+-	sc->debug.stats.rxstats.rs_rssi_ext0 = rs->rs_rssi_ext0;
+-	sc->debug.stats.rxstats.rs_rssi_ext1 = rs->rs_rssi_ext1;
+-	sc->debug.stats.rxstats.rs_rssi_ext2 = rs->rs_rssi_ext2;
+-
+-	sc->debug.stats.rxstats.rs_antenna = rs->rs_antenna;
+-
+ #ifdef CONFIG_ATH9K_MAC_DEBUG
+ 	spin_lock(&sc->debug.samp_lock);
+ 	RX_SAMP_DBG(jiffies) = jiffies;
+diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
+index 7a51958..64fcfad 100644
+--- a/drivers/net/wireless/ath/ath9k/debug.h
++++ b/drivers/net/wireless/ath/ath9k/debug.h
+@@ -165,13 +165,6 @@ struct ath_rx_stats {
+ 	u32 post_delim_crc_err;
+ 	u32 decrypt_busy_err;
+ 	u32 phy_err_stats[ATH9K_PHYERR_MAX];
+-	int8_t rs_rssi_ctl0;
+-	int8_t rs_rssi_ctl1;
+-	int8_t rs_rssi_ctl2;
+-	int8_t rs_rssi_ext0;
+-	int8_t rs_rssi_ext1;
+-	int8_t rs_rssi_ext2;
+-	u8 rs_antenna;
+ };
+ 
+ enum ath_reset_type {
+-- 
+1.7.3.2
 
