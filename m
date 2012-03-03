@@ -1,125 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20496 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031476Ab2CFWnc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 17:43:32 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 11/33] iwlwifi: remove shadow_reg_enable from hw_params
-Date: Tue,  6 Mar 2012 13:30:46 -0800
-Message-Id: <1331069468-11074-12-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234438_094124_662AB129)
-In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:26835 "EHLO
+	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750757Ab2CCCwR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 2 Mar 2012 21:52:17 -0500
+Date: Fri, 02 Mar 2012 20:52:14 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: John W Linville <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] rtlwifi: rtl8192ce: Fix loss of receive performance
+Message-ID: <4f51875e.mkSIJh/iQxO4b3ER%Larry.Finger@lwfinger.net> (sfid-20120303_035244_599064_45BC2A08)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Jingjun Wu <jingjun_wu@realsil.com.cn>
 
-There's no need to copy shadow_reg_enable into
-hw_params since it is a pure hardware parameter
-that will never change, we can access it from
-the config directly.
+Driver rtl8192ce when used with the RTL8188CE device would start at about
+20 Mbps on a 54 Mbps connection, but quickly drop to 1 Mbps. One of the
+symptoms is that the AP would need to retransmit each packet 4 of 5 times
+before the driver would acknowledge it. Recovery is possible only by
+unloading and reloading the driver. This problem was reported at
+https://bugzilla.redhat.com/show_bug.cgi?id=770207.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+The problem is due to a missing update of the gain setting.
+
+Signed-off-by: Jingjun Wu <jingjun_wu@realsil.com.cn>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c           |    2 --
- drivers/net/wireless/iwlwifi/iwl-power.c         |    4 ++--
- drivers/net/wireless/iwlwifi/iwl-shared.h        |    1 -
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c    |    2 +-
- 6 files changed, 5 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 863c27e..f816371 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1127,8 +1127,6 @@ static void iwl_set_hw_params(struct iwl_priv *priv)
- 
- 	hw_params(priv).num_ampdu_queues =
- 		cfg(priv)->base_params->num_of_ampdu_queues;
--	hw_params(priv).shadow_reg_enable =
--		cfg(priv)->base_params->shadow_reg_enable;
- 	hw_params(priv).wd_timeout = cfg(priv)->base_params->wd_timeout;
- 
- 	/* Device-specific setup */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-power.c b/drivers/net/wireless/iwlwifi/iwl-power.c
-index d76ff23..f79ff16 100644
---- a/drivers/net/wireless/iwlwifi/iwl-power.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-power.c
-@@ -215,7 +215,7 @@ static void iwl_static_sleep_cmd(struct iwl_priv *priv,
- 	else
- 		cmd->flags &= ~IWL_POWER_SLEEP_OVER_DTIM_MSK;
- 
--	if (hw_params(priv).shadow_reg_enable)
-+	if (cfg(priv)->base_params->shadow_reg_enable)
- 		cmd->flags |= IWL_POWER_SHADOW_REG_ENA;
- 	else
- 		cmd->flags &= ~IWL_POWER_SHADOW_REG_ENA;
-@@ -301,7 +301,7 @@ static void iwl_power_fill_sleep_cmd(struct iwl_priv *priv,
- 	if (priv->power_data.bus_pm)
- 		cmd->flags |= IWL_POWER_PCI_PM_MSK;
- 
--	if (hw_params(priv).shadow_reg_enable)
-+	if (cfg(priv)->base_params->shadow_reg_enable)
- 		cmd->flags |= IWL_POWER_SHADOW_REG_ENA;
- 	else
- 		cmd->flags &= ~IWL_POWER_SHADOW_REG_ENA;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 30b942f..a5ab58c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -185,7 +185,6 @@ struct iwl_hw_params {
- 	u8  valid_tx_ant;
- 	u8  valid_rx_ant;
- 	u8  ht40_channel;
--	bool shadow_reg_enable;
- 	u16 sku;
- 	u32 rx_page_order;
- 	u32 ct_kill_threshold;
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-index e8d3129..911a9f1 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
-@@ -141,7 +141,7 @@ void iwl_rx_queue_update_write_ptr(struct iwl_trans *trans,
- 	if (q->need_update == 0)
- 		goto exit_unlock;
- 
--	if (hw_params(trans).shadow_reg_enable) {
-+	if (cfg(trans)->base_params->shadow_reg_enable) {
- 		/* shadow register enabled */
- 		/* Device expects a multiple of 8 */
- 		q->write_actual = (q->write & ~0x7);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-index ca4ceea..2573f71 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-@@ -136,7 +136,7 @@ void iwl_txq_update_write_ptr(struct iwl_trans *trans, struct iwl_tx_queue *txq)
- 	if (txq->need_update == 0)
- 		return;
- 
--	if (hw_params(trans).shadow_reg_enable) {
-+	if (cfg(trans)->base_params->shadow_reg_enable) {
- 		/* shadow register enabled */
- 		iwl_write32(trans, HBUS_TARG_WRPTR,
- 			    txq->q.write_ptr | (txq_id << 8));
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index 4a2d4b5..44050fa 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -828,7 +828,7 @@ static int iwl_nic_init(struct iwl_trans *trans)
- 	if (iwl_tx_init(trans))
- 		return -ENOMEM;
- 
--	if (hw_params(trans).shadow_reg_enable) {
-+	if (cfg(trans)->base_params->shadow_reg_enable) {
- 		/* enable shadow regs in HW */
- 		iwl_set_bit(trans, CSR_MAC_SHADOW_REG_CTRL,
- 			0x800FFFFF);
--- 
-1.7.0.4
+John,
 
+I think this patch should be pushed to 3.3. The bug causes a nasty hit to
+the receive performance.
+
+I have been holding it to get feedback from the Redhat bugzilla, but none
+seems to be forthcoming.
+
+Larry
+---
+
+Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+===================================================================
+--- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
++++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/dm_common.c
+@@ -520,6 +520,10 @@ void rtl92c_dm_write_dig(struct ieee8021
+ 		 dm_digtable.cur_igvalue, dm_digtable.pre_igvalue,
+ 		 dm_digtable.backoff_val);
+ 
++	dm_digtable.cur_igvalue += 2;
++	if (dm_digtable.cur_igvalue > 0x3f)
++		dm_digtable.cur_igvalue = 0x3f;
++
+ 	if (dm_digtable.pre_igvalue != dm_digtable.cur_igvalue) {
+ 		rtl_set_bbreg(hw, ROFDM0_XAAGCCORE1, 0x7f,
+ 			      dm_digtable.cur_igvalue);
