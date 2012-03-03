@@ -1,46 +1,210 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.ch ([80.75.119.105]:47948 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758764Ab2CWPe0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2012 11:34:26 -0400
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org, nbd@openwrt.org,
-	rodrigue@qca.qualcomm.com,
-	Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Subject: [RFCv2 0/3] ath9k: DFS pattern detector
-Date: Fri, 23 Mar 2012 16:33:59 +0100
-Message-Id: <1332516842-27522-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20120323_163433_000220_AA757D70)
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:61083 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751089Ab2CCUql (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 3 Mar 2012 15:46:41 -0500
+Received: by eekc41 with SMTP id c41so1011854eek.19
+        for <linux-wireless@vger.kernel.org>; Sat, 03 Mar 2012 12:46:39 -0800 (PST)
+Subject: [RFT 1/2] p54pci: convert driver to use asynchronous firmware loading
+Cc: linux-wireless@vger.kernel.org
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Date: Sat, 3 Mar 2012 21:46:26 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+  charset="us-ascii"
+Message-Id: <201203032146.26452.chunkeey@googlemail.com> (sfid-20120303_214714_192203_30E64775)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an update of the initial proposal in [1] considering the
-comments received and re-factoring towards integration with the
-DFS management component provided by TI.
+From: Larry Finger <Larry.Finger@lwfinger.net>
 
+Drivers that load firmware from their probe routine have problems with the
+latest versions of udev as they get timeouts while waiting for user
+space to start. The problem is fixed by using request_firmware_nowait()
+and delaying the start of mac80211 until the firmware is loaded.
 
-[1] http://lwn.net/Articles/478096/
+To prevent the possibility of the driver being unloaded while the firmware
+loading callback is still active, a completion queue entry is used.
 
-Zefir Kurtisi (3):
-  ath9k: add DFS pattern detector
-  ath9k: add DFS pattern detector instance to ath_softc
-  ath9k: update to DFS pattern detector interface
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+---
+Hi Larry,
 
- drivers/net/wireless/ath/ath9k/Makefile            |    5 +-
- drivers/net/wireless/ath/ath9k/ath9k.h             |    2 +
- drivers/net/wireless/ath/ath9k/dfs.c               |   76 ++---
- drivers/net/wireless/ath/ath9k/dfs.h               |    8 +-
- .../net/wireless/ath/ath9k/dfs_pattern_detector.c  |  300 +++++++++++++++
- .../net/wireless/ath/ath9k/dfs_pattern_detector.h  |  104 ++++++
- drivers/net/wireless/ath/ath9k/dfs_pri_detector.c  |  390 ++++++++++++++++++++
- drivers/net/wireless/ath/ath9k/dfs_pri_detector.h  |   52 +++
- drivers/net/wireless/ath/ath9k/init.c              |    4 +
- 9 files changed, 890 insertions(+), 51 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath9k/dfs_pattern_detector.c
- create mode 100644 drivers/net/wireless/ath/ath9k/dfs_pattern_detector.h
- create mode 100644 drivers/net/wireless/ath/ath9k/dfs_pri_detector.c
- create mode 100644 drivers/net/wireless/ath/ath9k/dfs_pri_detector.h
+As I said earlier this week, I took a closer look at the async fw loading issues
+surrounding p54pci over the weekend. The good news is that I got it working.
+The bad news is that it's not as simple as just one patch to fix p54pci and
+I had to modify the firmware loader and the pcmcia subsystem to get there.
 
+[RFC] firmware loader: retry _nowait requests when userhelper is not yet available
+http://lkml.org/lkml/2012/3/3/102
+
+[PATCH 2/6] pcmcia: move unbind/rebind into dev_pm_ops.complete
+http://lkml.org/lkml/2012/3/3/101
+
+The outcome of this endeavor now depends on whenever I can get a green
+light from all involved parties.
+
+Regards,
+	Christian
+
+BTW: I dropped the legacy "isl3886" fw request completely. I figured that
+we have been using the two-staged loader long enough.
+---
+ drivers/net/wireless/p54/p54pci.c |   88 ++++++++++++++++++++++++++-----------
+ drivers/net/wireless/p54/p54pci.h |    1 +
+ 2 files changed, 63 insertions(+), 26 deletions(-)
+
+diff --git a/drivers/net/wireless/p54/p54pci.c b/drivers/net/wireless/p54/p54pci.c
+index d4860ac..bc05bf3 100644
+--- a/drivers/net/wireless/p54/p54pci.c
++++ b/drivers/net/wireless/p54/p54pci.c
+@@ -488,6 +488,58 @@ static int p54p_open(struct ieee80211_hw *dev)
+ 	return 0;
+ }
+ 
++static void p54p_firmware_step2(const struct firmware *fw,
++				void *context)
++{
++	struct p54p_priv *priv = context;
++	struct ieee80211_hw *dev = priv->common.hw;
++	struct pci_dev *pdev = priv->pdev;
++	int err;
++
++	if (!fw) {
++		dev_err(&pdev->dev, "Cannot find firmware (isl3886pci)\n");
++		err = -ENOENT;
++		goto out;
++	}
++
++	priv->firmware = fw;
++
++	err = p54p_open(dev);
++	if (err)
++		goto out;
++	err = p54_read_eeprom(dev);
++	p54p_stop(dev);
++	if (err)
++		goto out;
++
++	err = p54_register_common(dev, &pdev->dev);
++	if (err)
++		goto out;
++
++out:
++
++	complete(&priv->fw_loaded);
++
++	if (err) {
++		struct device *parent = pdev->dev.parent;
++
++		if (parent)
++			device_lock(parent);
++
++		/*
++		 * This will indirectly result in a call to p54p_remove.
++		 * Hence, we don't need to bother with freeing any
++		 * allocated ressources at all.
++		 */
++		device_release_driver(&pdev->dev);
++
++		if (parent)
++			device_unlock(parent);
++	}
++
++	pci_dev_put(pdev);
++}
++
+ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 				const struct pci_device_id *id)
+ {
+@@ -496,6 +548,7 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 	unsigned long mem_addr, mem_len;
+ 	int err;
+ 
++	pci_dev_get(pdev);
+ 	err = pci_enable_device(pdev);
+ 	if (err) {
+ 		dev_err(&pdev->dev, "Cannot enable new PCI device\n");
+@@ -537,6 +590,7 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 	priv = dev->priv;
+ 	priv->pdev = pdev;
+ 
++	init_completion(&priv->fw_loaded);
+ 	SET_IEEE80211_DEV(dev, &pdev->dev);
+ 	pci_set_drvdata(pdev, dev);
+ 
+@@ -561,32 +615,12 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 	spin_lock_init(&priv->lock);
+ 	tasklet_init(&priv->tasklet, p54p_tasklet, (unsigned long)dev);
+ 
+-	err = request_firmware(&priv->firmware, "isl3886pci",
+-			       &priv->pdev->dev);
+-	if (err) {
+-		dev_err(&pdev->dev, "Cannot find firmware (isl3886pci)\n");
+-		err = request_firmware(&priv->firmware, "isl3886",
+-				       &priv->pdev->dev);
+-		if (err)
+-			goto err_free_common;
+-	}
+-
+-	err = p54p_open(dev);
+-	if (err)
+-		goto err_free_common;
+-	err = p54_read_eeprom(dev);
+-	p54p_stop(dev);
+-	if (err)
+-		goto err_free_common;
+-
+-	err = p54_register_common(dev, &pdev->dev);
+-	if (err)
+-		goto err_free_common;
+-
+-	return 0;
++	err = request_firmware_nowait(THIS_MODULE, 1, "isl3886pci",
++				      &priv->pdev->dev, GFP_KERNEL,
++				      priv, p54p_firmware_step2);
++	if (!err)
++		return 0;
+ 
+- err_free_common:
+-	release_firmware(priv->firmware);
+ 	pci_free_consistent(pdev, sizeof(*priv->ring_control),
+ 			    priv->ring_control, priv->ring_control_dma);
+ 
+@@ -601,6 +635,7 @@ static int __devinit p54p_probe(struct pci_dev *pdev,
+ 	pci_release_regions(pdev);
+  err_disable_dev:
+ 	pci_disable_device(pdev);
++	pci_dev_put(pdev);
+ 	return err;
+ }
+ 
+@@ -612,8 +647,9 @@ static void __devexit p54p_remove(struct pci_dev *pdev)
+ 	if (!dev)
+ 		return;
+ 
+-	p54_unregister_common(dev);
+ 	priv = dev->priv;
++	wait_for_completion(&priv->fw_loaded);
++	p54_unregister_common(dev);
+ 	release_firmware(priv->firmware);
+ 	pci_free_consistent(pdev, sizeof(*priv->ring_control),
+ 			    priv->ring_control, priv->ring_control_dma);
+diff --git a/drivers/net/wireless/p54/p54pci.h b/drivers/net/wireless/p54/p54pci.h
+index 7aa509f..68405c1 100644
+--- a/drivers/net/wireless/p54/p54pci.h
++++ b/drivers/net/wireless/p54/p54pci.h
+@@ -105,6 +105,7 @@ struct p54p_priv {
+ 	struct sk_buff *tx_buf_data[32];
+ 	struct sk_buff *tx_buf_mgmt[4];
+ 	struct completion boot_comp;
++	struct completion fw_loaded;
+ };
+ 
+ #endif /* P54USB_H */
 -- 
-1.7.4.1
+1.7.9.1
 
