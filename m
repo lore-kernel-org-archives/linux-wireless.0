@@ -1,64 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:47958 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754528Ab2CTQrm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 12:47:42 -0400
-Message-ID: <4F68B4AA.3070306@candelatech.com> (sfid-20120320_174752_494070_07E777BE)
-Date: Tue, 20 Mar 2012 09:47:38 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Florian Fainelli <florian@openwrt.org>
-CC: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v3 4/4] ath9k:  Support ethtool getstats api.
-References: <1332183105-4447-1-git-send-email-greearb@candelatech.com> <1332183105-4447-4-git-send-email-greearb@candelatech.com> <4F684301.9040006@openwrt.org>
-In-Reply-To: <4F684301.9040006@openwrt.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:17699 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755178Ab2CDUnK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:10 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 076/101] iwlwifi: move BT/HT params to shared
+Date: Sun,  4 Mar 2012 11:29:30 -0800
+Message-Id: <1330889395-533-77-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214506_166529_BE8CC919)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/20/2012 01:42 AM, Florian Fainelli wrote:
-> Hi,
->
-> Le 03/19/12 19:51, greearb@candelatech.com a écrit :
->> From: Ben Greear<greearb@candelatech.com>
->>
->> This returns many of the values that formerly could
->> only be obtained from debugfs. This should be an
->> improvement when trying to access these counters
->> programatically. Currently this support is only
->> enabled when DEBUGFS is enabled because otherwise
->> these stats are not accumulated.
->>
->> Signed-off-by: Ben Greear<greearb@candelatech.com>
->> ---
->>
->> v3: No changes from v2
->>
->> :100644 100644 4a00806... 7261f88... M drivers/net/wireless/ath/ath9k/main.c
->> drivers/net/wireless/ath/ath9k/main.c | 134 +++++++++++++++++++++++++++++++++
->> 1 files changed, 134 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
->> index 4a00806..7261f88 100644
->> --- a/drivers/net/wireless/ath/ath9k/main.c
->> +++ b/drivers/net/wireless/ath/ath9k/main.c
->> @@ -2430,6 +2430,134 @@ static int ath9k_get_antenna(struct ieee80211_hw *hw, u32 *tx_ant, u32 *rx_ant)
->> return 0;
->> }
->>
->> +#ifdef CONFIG_ATH9K_DEBUGFS
->
-> These are ethtool knobs, so you might want to introduce a new config symbol dedicated to it, which depends on CONFIG_ATH9K_DEBUGFS eventually.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I'd like to gather at least most stats always, so ethtool can work regardless of
-debugfs.  But, that can be follow on patches in my opinion.  If it turns out
-that we need another config option for this, then that is fine too.
+Hardware parameters will be shared, so
+move the definitions into the shared
+header file.
 
-Thanks,
-Ben
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.h   |   24 ------------------------
+ drivers/net/wireless/iwlwifi/iwl-shared.h |   24 ++++++++++++++++++++++++
+ 2 files changed, 24 insertions(+), 24 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index 95f6b7b..635eb68 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -89,30 +89,6 @@ struct iwl_lib_ops {
+ 	void (*temperature)(struct iwl_priv *priv);
+ };
+ 
+-/*
+- * @advanced_bt_coexist: support advanced bt coexist
+- * @bt_init_traffic_load: specify initial bt traffic load
+- * @bt_prio_boost: default bt priority boost value
+- * @agg_time_limit: maximum number of uSec in aggregation
+- * @bt_sco_disable: uCode should not response to BT in SCO/ESCO mode
+- */
+-struct iwl_bt_params {
+-	bool advanced_bt_coexist;
+-	u8 bt_init_traffic_load;
+-	u8 bt_prio_boost;
+-	u16 agg_time_limit;
+-	bool bt_sco_disable;
+-	bool bt_session_2;
+-};
+-/*
+- * @use_rts_for_aggregation: use rts/cts protection for HT traffic
+- */
+-struct iwl_ht_params {
+-	const bool ht_greenfield_support; /* if used set to true */
+-	bool use_rts_for_aggregation;
+-	enum ieee80211_smps_mode smps_mode;
+-};
+-
+ /***************************
+  *   L i b                 *
+  ***************************/
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 2ab7462..0e24803 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -268,6 +268,30 @@ struct iwl_base_params {
+ 	const bool wd_disable;
+ };
+ 
++/*
++ * @advanced_bt_coexist: support advanced bt coexist
++ * @bt_init_traffic_load: specify initial bt traffic load
++ * @bt_prio_boost: default bt priority boost value
++ * @agg_time_limit: maximum number of uSec in aggregation
++ * @bt_sco_disable: uCode should not response to BT in SCO/ESCO mode
++ */
++struct iwl_bt_params {
++	bool advanced_bt_coexist;
++	u8 bt_init_traffic_load;
++	u8 bt_prio_boost;
++	u16 agg_time_limit;
++	bool bt_sco_disable;
++	bool bt_session_2;
++};
++/*
++ * @use_rts_for_aggregation: use rts/cts protection for HT traffic
++ */
++struct iwl_ht_params {
++	const bool ht_greenfield_support; /* if used set to true */
++	bool use_rts_for_aggregation;
++	enum ieee80211_smps_mode smps_mode;
++};
++
+ /**
+  * struct iwl_cfg
+  * @name: Offical name of the device
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.0.4
 
