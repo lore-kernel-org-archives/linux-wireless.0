@@ -1,88 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eu1sys200aog120.obsmtp.com ([207.126.144.149]:35134 "EHLO
-	eu1sys200aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756630Ab2CBBll (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 20:41:41 -0500
-Received: from zeta.dmz-ap.st.com (ns6.st.com [138.198.234.13])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id E6468CE
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 01:33:11 +0000 (GMT)
-Received: from relay2.stm.gmessaging.net (unknown [10.230.100.18])
-	by zeta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 803923C0
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 01:41:36 +0000 (GMT)
-Received: from exdcvycastm003.EQ1STM.local (alteon-source-exch [10.230.100.61])
-	(using TLSv1 with cipher RC4-MD5 (128/128 bits))
-	(Client CN "exdcvycastm003", Issuer "exdcvycastm003" (not verified))
-	by relay2.stm.gmessaging.net (Postfix) with ESMTPS id D8DB5A8065
-	for <linux-wireless@vger.kernel.org>; Fri,  2 Mar 2012 02:41:34 +0100 (CET)
-From: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 03/21] cw1200: sbus.h, common device interface abstraction.
-Date: Fri, 2 Mar 2012 02:41:17 +0100
-Message-ID: <1330652495-25837-4-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_024148_186285_B2D3BEB9)
-In-Reply-To: <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-References: <d53e019b1a0bcd29c2c367fbe5665413f2d33938-submit>
- <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:31533 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755076Ab2CDUnG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:06 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 048/101] iwlwifi: clean up iwl-core.h inclusions
+Date: Sun,  4 Mar 2012 11:29:02 -0800
+Message-Id: <1330889395-533-49-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214553_505290_58F32FDE)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The patch contains definition of hardware abstraction layer between
-cw1200 core driver and physical device interface. A bunch of wrappers
-can be build using this interface: sdio, spi, c2c etc.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
+The transport doesn't need to include iwl-core.h any more.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/staging/cw1200/sbus.h |   39 +++++++++++++++++++++++++++++++++++++++
- 1 files changed, 39 insertions(+), 0 deletions(-)
- create mode 100644 drivers/staging/cw1200/sbus.h
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    3 +--
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c    |    1 -
+ 2 files changed, 1 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/cw1200/sbus.h b/drivers/staging/cw1200/sbus.h
-new file mode 100644
-index 0000000..49bd06d
---- /dev/null
-+++ b/drivers/staging/cw1200/sbus.h
-@@ -0,0 +1,39 @@
-+/*
-+ * Common sbus abstraction layer interface for cw1200 wireless driver
-+ *
-+ * Copyright (c) 2010, ST-Ericsson
-+ * Author: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#ifndef CW1200_SBUS_H
-+#define CW1200_SBUS_H
-+
-+/*
-+ * sbus priv forward definition.
-+ * Implemented and instantiated in particular modules.
-+ */
-+struct sbus_priv;
-+
-+typedef void (*sbus_irq_handler)(void *priv);
-+
-+struct sbus_ops {
-+	int (*sbus_memcpy_fromio)(struct sbus_priv *self, unsigned int addr,
-+					void *dst, int count);
-+	int (*sbus_memcpy_toio)(struct sbus_priv *self, unsigned int addr,
-+					const void *src, int count);
-+	void (*lock)(struct sbus_priv *self);
-+	void (*unlock)(struct sbus_priv *self);
-+	int (*irq_subscribe)(struct sbus_priv *self, sbus_irq_handler handler,
-+				void *priv);
-+	int (*irq_unsubscribe)(struct sbus_priv *self);
-+	int (*reset)(struct sbus_priv *self);
-+	size_t (*align_size)(struct sbus_priv *self, size_t size);
-+	int (*power_mgmt)(struct sbus_priv *self, bool suspend);
-+	int (*set_block_size)(struct sbus_priv *self, size_t size);
-+};
-+
-+#endif /* CW1200_SBUS_H */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index 33a933b..f145621 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -30,8 +30,7 @@
+ #include <linux/wait.h>
+ #include <linux/gfp.h>
+ 
+-/*TODO: Remove include to iwl-core.h*/
+-#include "iwl-core.h"
++#include "iwl-prph.h"
+ #include "iwl-io.h"
+ #include "iwl-trans-pcie-int.h"
+ #include "iwl-op-mode.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index ef4e122..6090e98 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -75,7 +75,6 @@
+ #include "iwl-shared.h"
+ #include "iwl-eeprom.h"
+ #include "iwl-agn-hw.h"
+-#include "iwl-core.h"
+ 
+ #define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
+ 
 -- 
-1.7.9
+1.7.0.4
 
