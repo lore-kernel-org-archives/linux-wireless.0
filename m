@@ -1,202 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:56235 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964833Ab2CVA1T (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2012 20:27:19 -0400
-Date: Wed, 21 Mar 2012 17:27:15 -0700
-From: "Luis R. Rodriguez" <rodrigue@qca.qualcomm.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Michael Green <green@qca.qualcomm.com>,
-	David Quan <dquan@qca.qualcomm.com>,
-	Henry Ptasinski <henry@logout.com>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: Problems with regulatory domain support and BCM43224
-Message-ID: <20120322002715.GA3709@tux> (sfid-20120322_012725_097043_F07EF75C)
-References: <CAB=NE6X9c1m63xayNsEf9XZ3AgPZDV2SiRivg3SV2Day83fPQA@mail.gmail.com>
- <20120308200734.GC28133@ubuntu-macmini>
- <4F591E14.4010000@broadcom.com>
- <CAB=NE6XnorRDEu976uMkPFNKHQjhRT0Craf3ZjL9dYysPjmQng@mail.gmail.com>
- <20120320220706.GA17272@thinkpad-t410>
- <4F69B604.4030303@broadcom.com>
- <20120321141916.GA23643@thinkpad-t410>
- <4F6A1514.9090907@broadcom.com>
- <20120321181753.GC24075@tux>
- <20120321193706.GC23643@thinkpad-t410>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20120321193706.GC23643@thinkpad-t410>
+Received: from mga09.intel.com ([134.134.136.24]:11400 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755180Ab2CDUnK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:10 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 077/101] iwlwifi: make EEPROM enhanced TX power a bool
+Date: Sun,  4 Mar 2012 11:29:31 -0800
+Message-Id: <1330889395-533-78-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214449_459920_9A807FB2)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 21, 2012 at 02:37:06PM -0500, Seth Forshee wrote:
-> On Wed, Mar 21, 2012 at 11:17:53AM -0700, Luis R. Rodriguez wrote:
-> > Adding Michael and David just for their information. I know Henry
-> > is not with Broadcom any more but hey, hey may be interested.
-> > 
-> > On Wed, Mar 21, 2012 at 06:51:16PM +0100, Arend van Spriel wrote:
-> > > On 03/21/2012 03:19 PM, Seth Forshee wrote:
-> > > >On Wed, Mar 21, 2012 at 12:05:40PM +0100, Arend van Spriel wrote:
-> > > >>On 03/20/2012 11:07 PM, Seth Forshee wrote:
-> > > >>>On Thu, Mar 08, 2012 at 01:06:57PM -0800, Luis R. Rodriguez wrote:
-> > > >>>>>Hi, Seth
-> > > >>>>>
-> > > >>>>>Noticed your email yesterday, but did not get to chime into the
-> > > >>>>>conversation. brcmsmac does indeed provide a regulatory hint, which is
-> > > >>>>>either from SPROM or hard-coded to "US". Since "X0" is not a known
-> > > >>>>>regulatory domain for crda it does not make sense to pass it as a regulatory
-> > > >>>>>hint. However, the "full" story is told on linuxwireless.org (see [1]).
-> > > >>>>
-> > > >>>>The Linux kernel allows you to define custom regulatory domains, the
-> > > >>>>ath module uses these, it defines 13 of them. You can review that code
-> > > >>>>for an example of how to use them. So your X0 can still be used, you
-> > > >>>>just have to define the data structure.
-> > > >>>
-> > > >>>I took a shot at implementing custom regulatory domain support for
-> > > >>>brcmsmac. I've got it working to the point of letting me see APs on the
-> > > >>>DFS channels at least. The patch is below. A number of issues
-> > > >>>undoubtedly remain to be resolved. Some that I can think of:
-> > > >>
-> > > >>Hi Seth,
-> > > >>
-> > > >>Thanks for looking into this. I also did some tinkering over here,
-> > > >>but not sure which way to go here, ie. 1) define and use custom
-> > > >>regulatory domains, or 2) be happy with world regulatory domain as
-> > > >>is and do not pass the custom codes if found in sprom.
-> > > >
-> > > >For 2 I think you also have to set WIPGHY_FLAG_CUSTOM_REGULATORY or else
-> > > >the default world domain will still be applied. That certainly seems to
-> > > >be the quick-and-easy fix, but I'm not sure about what's preferable.
-> > > >
-> > > >However, I do think that passing up the custom codes as hints doesn't
-> > > >make sense, and the patch I sent only passes it up if it's not known to
-> > > >be one of the custom domains.
-> > > 
-> > > Ok. so the wiphy_apply_custom_regulatory() does not make the custom
-> > > domains known by their code (.alpha2).
-> > > 
-> > > >>>  - I set up two custom domains, X0 and X2, which are identical. I'm not
-> > > >>>    sure precisely how each needs to be set up, but I took a reasonable
-> > > >>>    guess.
-> > > >>
-> > > >>There are 9 custom domains in the proprietary driver. X0 only allows
-> > > >>using channels 1-11. X2 allows 1-13. There are other parameters like
-> > > >>rates and txpower that may differ.
-> > > >
-> > > >That's the kind if information I would need to make this patch viable.
-> > > >I'll go ahead and update the patch to remove channels 12-13 from X0, and
-> > > >14 from both. Are the 5 GHz rules correct?
-> > > 
-> > > 5G channels are all considered passive by brcmsmac. Not sure whether
-> > > that should be made explicit in the rules. Also the driver does not
-> > > support IBSS so those flags are redundant now, but it is good to
-> > > have it already in place.
-> > > 
-> > > >Are the custom domains named X[0-8]? If that's the case I can simplify
-> > > >some of the code.
-> > > 
-> > > Unfortunately, no.
-> > > 
-> > > >>>  - I tried to integrate with the existing X2 domain support, but this
-> > > >>>    could probably be improved. I avoided making large changes because
-> > > >>>    there's some complexity in the current code that doesn't seem to
-> > > >>>    serve a purpose currently, but I assume it's there for a reason.
-> > > >>
-> > > >>The code in channel.c was taken from our proprietary driver.
-> > > >>Basically, the LOCALES hold the same information as the rules in
-> > > >>regdomain.
-> > > >
-> > > >I assumed as much, but I haven't made much of an effort to understand it
-> > > >yet.
-> > > >
-> > > >But the complexity I'm referring to is really the infrastructure to
-> > > >support multiple locales and revisions that just isn't used right now. I
-> > > >can only assume that there are plans to use additional locales and
-> > > >revisions at some point.
-> > > 
-> > > Understood. The proprietary driver (which is not a mac80211 driver)
-> > > supports a lot of locales, which are selected on country code and
-> > > regulatory revision (both read from sprom). I suspect this is done
-> > > to support the regulatory rules for which the device was certified.
-> > > Revisiting channel.c is on our work list, but it would mean more
-> > > moving toward using the regdomain approach you started on instead of
-> > > locales.
-> > 
-> > Let me first explain a little on how Atheros' regulatory mapping works, hope
-> > this helps you.
-> > 
-> > If companies have a map of a regdomain to an alpha2 then the country alpha2
-> > approach makes sense. For Atheros it just so happens that some EEPROM codes map
-> > to a direct alpha2, which is a direct map. In other cases we have an EEPROM
-> > code map to a region, but such region allows usage of a card in set of
-> > different countries -- these countries all happen to have the same regulatory
-> > domain, which is why for these regions we just ask for the first alphabetical
-> > alpha2. Regardless of the country in the region the regulatory domain in CRDA
-> > is expected to be the same. Then we have 12 custom world regulatory domains
-> > which are exactly for that -- world roaming. In these cases we have 12 custom
-> > regulatory domains and disable initiating radiation on them until we know where
-> > we are through a country IE. We also take advantage of the beacon regulatory
-> > hints in this case. The custom regulatory domains should be used only if you
-> > really cannot map a region code to any alpha2, but consider the case of
-> > grouping countries together if you know the assumption was that different
-> > countries had the same regulatory domain. This can help simoplify your
-> > implementation. For more details please read:
-> > 
-> > http://wireless.kernel.org/en/users/Drivers/ath#Regulatory
-> > http://wireless.kernel.org/en/developers/Regulatory/processing_rules
-> > 
-> > One idea that occcurs to me to help simplify this even further is --
-> > for us to consider mapping a region to a set of different alpha2s, then
-> > send a custom regdomain building request to userspace based on these
-> > group of alpha2s, userpace could respond with an intersection of the
-> > alpha2s. CRDA already implements the capability to intersect regulatory
-> > domains, so the code is already there, we'd just need the hooks for
-> > the kernel if this is deemed desirable. This is just and idea and
-> > worth considering for the revamp of regulatory code.
-> > 
-> > More and more I see things like this getting complicated by the
-> > years, perhaps its a good time to review the possibility of getting
-> > together and sticking to something simple for the better or simplicity.
-> > I realize that the difficulty lies here in supporting other OSes, which
-> > is why we have worked hard at ensuring we permissively license all
-> > regulatory code and recently we even relicensed cfg80211's reg.c
-> > and other regulatory components. To help with this even further I
-> > have also started a userspace regulatory simulator [0] complete permissively
-> > licensed which allows us to simulate and engineer regulatory solutions
-> > completley in userspace and if we are happy later adapt the code to
-> > kernelspace / firmware / proprietary software / whatever.
-> > 
-> > So -- please consider all these things when implmenting your solution
-> > on the Broadcom driver. Keep in mind the ways to improve regulatory
-> > and current work and design considreations.
-> > 
-> > [0] git://github.com/mcgrof/regsim.git
-> 
-> Great information, Luis. Thanks so much.
-> 
-> Arend, in order to proceed it looks like what we need to know is what
-> the custom domains represent, i.e. whether they map to a specific
-> country or set of countries, etc.
+From: Johannes Berg <johannes.berg@intel.com>
 
-This is why it is crucial for vendors themselves to get involved in this
-process. Only they will truly know and completely understand what this
-all means. Since it is hard to keep track of this information it is also
-why we have documented what our EEPROM regulatory domains look like and
-what they mean / map to.
+There's no need to carry around the function
+pointer when a boolean indicating that the
+EEPROM stores enhanced TX power information
+is sufficient.
 
-http://wireless.kernel.org/en/users/Drivers/ath
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-2000.c   |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-6000.c   |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-agn.h    |    1 -
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h |    2 +-
+ 5 files changed, 8 insertions(+), 9 deletions(-)
 
-Something similar may be worthy for this driver. But just my own 0.02
-costarican colones.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-2000.c b/drivers/net/wireless/iwlwifi/iwl-2000.c
+index 2c03858..6931820 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-2000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-2000.c
+@@ -147,7 +147,7 @@ static struct iwl_lib_ops iwl2000_lib = {
+ 			EEPROM_6000_REG_BAND_24_HT40_CHANNELS,
+ 			EEPROM_REGULATORY_BAND_NO_HT40,
+ 		},
+-		.update_enhanced_txpower = iwl_eeprom_enhanced_txpower,
++		.enhanced_txpower = true,
+ 	},
+ 	.temperature = iwlagn_temperature,
+ };
+@@ -165,7 +165,7 @@ static struct iwl_lib_ops iwl2030_lib = {
+ 			EEPROM_6000_REG_BAND_24_HT40_CHANNELS,
+ 			EEPROM_REGULATORY_BAND_NO_HT40,
+ 		},
+-		.update_enhanced_txpower = iwl_eeprom_enhanced_txpower,
++		.enhanced_txpower = true,
+ 	},
+ 	.temperature = iwlagn_temperature,
+ };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 510a5c0..9fbab01 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -243,7 +243,7 @@ static struct iwl_lib_ops iwl6000_lib = {
+ 			EEPROM_6000_REG_BAND_24_HT40_CHANNELS,
+ 			EEPROM_REG_BAND_52_HT40_CHANNELS
+ 		},
+-		.update_enhanced_txpower = iwl_eeprom_enhanced_txpower,
++		.enhanced_txpower = true,
+ 	},
+ 	.temperature = iwlagn_temperature,
+ };
+@@ -262,7 +262,7 @@ static struct iwl_lib_ops iwl6030_lib = {
+ 			EEPROM_6000_REG_BAND_24_HT40_CHANNELS,
+ 			EEPROM_REG_BAND_52_HT40_CHANNELS
+ 		},
+-		.update_enhanced_txpower = iwl_eeprom_enhanced_txpower,
++		.enhanced_txpower = true,
+ 	},
+ 	.temperature = iwlagn_temperature,
+ };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index b56498b..6345ab0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -305,7 +305,6 @@ static inline __le32 iwl_hw_set_rate_n_flags(u8 rate, u32 flags)
+ }
+ 
+ /* eeprom */
+-void iwl_eeprom_enhanced_txpower(struct iwl_priv *priv);
+ void iwl_eeprom_get_mac(const struct iwl_shared *shrd, u8 *mac);
+ 
+ extern int iwl_alive_start(struct iwl_priv *priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index e2d8084..23cea42 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -589,7 +589,7 @@ iwl_eeprom_enh_txp_read_element(struct iwl_priv *priv,
+ #define TXP_CHECK_AND_PRINT(x) ((txp->flags & IWL_EEPROM_ENH_TXP_FL_##x) \
+ 			    ? # x " " : "")
+ 
+-void iwl_eeprom_enhanced_txpower(struct iwl_priv *priv)
++static void iwl_eeprom_enhanced_txpower(struct iwl_priv *priv)
+ {
+ 	struct iwl_shared *shrd = priv->shrd;
+ 	struct iwl_eeprom_enhanced_txpwr *txp_array, *txp;
+@@ -1025,8 +1025,8 @@ int iwl_init_channel_map(struct iwl_priv *priv)
+ 	 * driver need to process addition information
+ 	 * to determine the max channel tx power limits
+ 	 */
+-	if (cfg(priv)->lib->eeprom_ops.update_enhanced_txpower)
+-		cfg(priv)->lib->eeprom_ops.update_enhanced_txpower(priv);
++	if (cfg(priv)->lib->eeprom_ops.enhanced_txpower)
++		iwl_eeprom_enhanced_txpower(priv);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.h b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+index 3b17056..e4a7583 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.h
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.h
+@@ -302,7 +302,7 @@ extern const u8 iwl_eeprom_band_1[14];
+ 
+ struct iwl_eeprom_ops {
+ 	const u32 regulatory_bands[7];
+-	void (*update_enhanced_txpower) (struct iwl_priv *priv);
++	bool enhanced_txpower;
+ };
+ 
+ 
+-- 
+1.7.0.4
 
-> From what you've said so far it looks
-> like X0 may map to US 
-
-BTW if this is the case, you may be able to send the regulatory hint
-for "US" and then apply any thing you need on top of that after
-through the reg_notifier() callback.
-
-> while X2 is more of a world roaming domain, but again I'm just guessing.
-
- Luis
