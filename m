@@ -1,71 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:50735 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757731Ab2C1JWC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2012 05:22:02 -0400
-Subject: [PATCH] mac80211_hwsim: Report rate info in tx status
-From: Timo Lindhorst <tlnd@online.de>
-To: "John W. Linville" <linville@tuxdriver.com>
+Received: from mga09.intel.com ([134.134.136.24]:38078 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755031Ab2CDUnD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:03 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"Jouni Malinen" <j@w1.fi>
-Date: Wed, 28 Mar 2012 11:17:52 +0200
-MIME-Version: 1.0
-Message-Id: <201203281117.53033.tlnd@online.de> (sfid-20120328_112206_645468_30ADE40E)
-Content-Type: text/plain;
-  charset="us-ascii"
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 033/101] iwlwifi: move firmware completion wait
+Date: Sun,  4 Mar 2012 11:28:47 -0800
+Message-Id: <1330889395-533-34-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214624_635003_0BA6A4B1)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Assuming an ideal channel, always the first transmission is considered
-successful if an ACK is received. If no ACK is received, the
-rates/attempts are reported as set by the rate control.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Timo Lindhorst <tlnd@online.de>
+This doesn't belong into the op_mode, it has
+to be in the drv stop flow instead.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c |   15 +++++++++++++++
- 1 files changed, 15 insertions(+), 0 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    2 --
+ drivers/net/wireless/iwlwifi/iwl-drv.c |    2 ++
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c 
-b/drivers/net/wireless/mac80211_hwsim.c
-index b7ce6a6..64adb3c 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -698,6 +698,8 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, 
-struct sk_buff *skb)
- 	bool ack;
- 	struct ieee80211_tx_info *txi;
- 	u32 _pid;
-+	u8 tx_count[IEEE80211_TX_MAX_RATES];
-+	int i;
- 	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) skb->data;
- 	struct mac80211_hwsim_data *data = hw->priv;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index c3b5946..8bb3f17 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1371,8 +1371,6 @@ static void iwl_op_mode_dvm_stop(struct iwl_op_mode *op_mode)
+ {
+ 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
  
-@@ -734,9 +736,22 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, 
-struct sk_buff *skb)
- 	if (txi->control.sta)
- 		hwsim_check_sta_magic(txi->control.sta);
+-	wait_for_completion(&nic(priv)->request_firmware_complete);
+-
+ 	IWL_DEBUG_INFO(priv, "*** UNLOAD DRIVER ***\n");
  
-+	if (!ack)
-+		for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
-+			tx_count[i] = txi->control.rates[i].count;
-+
- 	ieee80211_tx_info_clear_status(txi);
- 	if (!(txi->flags & IEEE80211_TX_CTL_NO_ACK) && ack)
- 		txi->flags |= IEEE80211_TX_STAT_ACK;
-+
-+	if (ack) {
-+		txi->status.rates[0].count = 1;
-+		txi->status.rates[1].idx = -1;
-+	} else {
-+		for (i = 0; i < IEEE80211_TX_MAX_RATES; i++)
-+			txi->control.rates[i].count = tx_count[i];
-+	}
-+
- 	ieee80211_tx_status_irqsafe(hw, skb);
- }
+ 	iwl_dbgfs_unregister(priv);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index 343f41e..1a588f3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -720,6 +720,8 @@ int iwl_drv_start(struct iwl_shared *shrd,
  
+ void iwl_drv_stop(struct iwl_shared *shrd)
+ {
++	wait_for_completion(&shrd->nic->request_firmware_complete);
++
+ 	/* op_mode can be NULL if its start failed */
+ 	if (shrd->nic->op_mode)
+ 		iwl_op_mode_stop(shrd->nic->op_mode);
 -- 
-1.7.9.1
+1.7.0.4
 
