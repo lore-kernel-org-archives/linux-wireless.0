@@ -1,58 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:7349 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:54587 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965039Ab2CEUiC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 15:38:02 -0500
+	id S1755015Ab2CDUnC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:02 -0500
 From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 00/33] update for 3.4: iwlwifi 2012-03-05
-Date: Mon,  5 Mar 2012 11:24:18 -0800
-Message-Id: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120305_213921_368037_CE2E843A)
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 027/101] iwlwifi: move IWL_MASK into file using it
+Date: Sun,  4 Mar 2012 11:28:41 -0800
+Message-Id: <1330889395-533-28-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214633_705265_BD50ED50)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-First set of major re-factor and clenup works happen in iwlwifi,
-we move the code to the proper place and get ready for the next generation
-of the devices
+From: Johannes Berg <johannes.berg@intel.com>
 
-We also modify the auth/assoc flow to match the re-design work in mac80211
+Only used in two places in the same file,
+no need to be in iwl-shared.h.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-shared.h     |    1 -
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    2 ++
+ 2 files changed, 2 insertions(+), 1 deletions(-)
 
-Johannes Berg (33):
-  iwlwifi: move iwl_clear_driver_stations to user
-  iwlwifi: remove an unused argument
-  iwlwifi: reduce sta_lock hold time in TX
-  iwlwifi: simplify code in iwlagn_key_sta_id
-  iwlwifi: build some station commands directly
-  iwlwifi: introduce per-queue locks
-  iwlwifi: make sta lock private & BH lock
-  iwlwifi: introduce statistics lock
-  iwlwifi: remove shared lock
-  iwlwifi: make EXIT_PENDING depend on mac80211
-  iwlwifi: simplify auth/assoc flow
-  iwlwifi: remove per-device debug level
-  iwlwifi: remove SKU from config
-  iwlwifi: use valid TX/RX antenna from hw_params
-  iwlwifi: make config const
-  iwlwifi: reduce IDI code ifdef
-  iwlwifi: clean up (wowlan) suspend flow
-  iwlwifi: move wowlan bool into priv
-  iwlwifi: use ieee80211_tx_status
-  iwlwifi: pass response packet directly
-  iwlwifi: don't pass iwl_rx_mem_buffer to upper layers
-  iwlwifi: refactor PCI-E RX path
-  iwlwifi: transport's tx_agg_alloc must not sleep
-  iwlwifi: move queue functions to PCI-E
-  iwlwifi: iwl_rx_cmd_buffer belongs to transport API
-  iwlwifi: move tid_to_ac to PCI-E
-  iwlwifi: move IWL_MASK into file using it
-  iwlwifi: move traffic log definitions
-  iwlwifi: fix station HT parameters
-  iwlwifi: move uCode deallocation to drv
-  iwlwifi: move iwl_base_params to shared header
-  iwlwifi: move firmware request into drv
-  iwlwifi: move firmware completion wait
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 740a058..976e6c5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -444,7 +444,6 @@ iwl_remove_notification(struct iwl_shared *shrd,
+ 			   struct iwl_notification_wait *wait_entry);
+ 
+ #define IWL_CMD(x) case x: return #x
+-#define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
+ 
+ #define IWL_TRAFFIC_ENTRIES	(256)
+ #define IWL_TRAFFIC_ENTRY_SIZE  (64)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index bb8f2fd..3ae2fd7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -78,6 +78,8 @@
+ #include "iwl-core.h"
+ #include "iwl-ucode.h"
+ 
++#define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
++
+ static int iwl_trans_rx_alloc(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie =
+-- 
+1.7.0.4
 
-these patches are also available from wireless-next branch on
- git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
