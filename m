@@ -1,124 +1,217 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from victor.provo.novell.com ([137.65.250.26]:49940 "EHLO
-	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751262Ab2CGJGz (ORCPT
-	<rfc822;groupwise-linux-wireless@vger.kernel.org:0:0>);
-	Wed, 7 Mar 2012 04:06:55 -0500
-Received: by bkcik5 with SMTP id ik5so4976465bkc.19
-        for <linux-wireless@vger.kernel.org>; Wed, 07 Mar 2012 01:06:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAD2nsn1Wu66JUaPQmK4ktjUBeCjMp4xXG2=FDy3G-LnVDwtAVA@mail.gmail.com>
-References: <CALx5=V8BDFXD7KGBFia0MAkb2iv3x5dupGXTkKEDJ24DLJVx1g@mail.gmail.com>
-	<CAD2nsn2GLAo=8xhe+-Xm0igSmQ+tr1F+Q6scuFaeaQWMYrQbwg@mail.gmail.com>
-	<CALx5=V9LwpWVG0UGLgyNyJVrSYj826xXwbEcFQVYM5BxAxnEJQ@mail.gmail.com>
-	<CAD2nsn1Wu66JUaPQmK4ktjUBeCjMp4xXG2=FDy3G-LnVDwtAVA@mail.gmail.com>
-Date: Wed, 7 Mar 2012 17:06:35 +0800
-Message-ID: <CALx5=V98n26O88C2XkGnH8z69EKpRY6rejXxasTwZC=iZFTumA@mail.gmail.com> (sfid-20120307_100700_797670_B47D8ABE)
-Subject: Re: [ath9k-devel] Any recommendation of direct access the GPIO from
- specific address ?
-From: Matt Chen <machen@suse.com>
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:11400 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754987Ab2CDUnB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:01 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 020/101] iwlwifi: pass response packet directly
+Date: Sun,  4 Mar 2012 11:28:34 -0800
+Message-Id: <1330889395-533-21-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214341_351749_69E507BE)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mohammed,
+From: Johannes Berg <johannes.berg@intel.com>
 
-2012/3/5 Mohammed Shafi <shafi.wireless@gmail.com>:
-> Hi Matt,
->
->> echo 0x404c to which file in /sys/kernel/debug/ath9k ?
->
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# echo 0x404c > regidx
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
-> 0x00000c45
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
-> 0x00000c45
->
-> -> toggle the rfkill button, wifi off
->
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
-> 0x00000c55
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k#
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
-> 0x00000c55
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
-> 0x00000c55
->
-> -> toggle the rfkill button, wifi ON
->
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
-> 0x00000c45
-> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
-> 0x00000c45
-yes, those are working to me now, but see the file "regval", it is
-allowed to be written. I tried to echo a value to it, and cat it, it
-seems not work right to me. :(
+When CMD_WANT_SKB is set for a (synchronous)
+command, the response is passed back to the
+caller which is then responsible for freeing
+it. Make this more abstract with real API,
+passing directly the response packet in the
+new cmd.resp_pkt member and also introduce
+iwl_free_resp() to free the pages -- this
+way the upper layers don't have to directly
+touch the page implementation.
 
-You may try to echo "0x00000c45" > regval when the regval is
-"0x00000c55". Then cat regval again, see if it changed to
-"0x00000c45".
-The case I tried, but is not working to me.
-found the function in ath/ath9k/debug.c
+NOTE: This breaks IDI -- the new code isn't reflected there yet!
 
-static ssize_t write_file_regval(struct file *file, const char __user *user_buf,
-                             size_t count, loff_t *ppos)
-{
-        struct ath_softc *sc = file->private_data;
-        struct ath_hw *ah = sc->sc_ah;
-        unsigned long regval;
-        char buf[32];
-        ssize_t len;
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c       |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-scan.c          |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-shared.h        |    5 -----
+ drivers/net/wireless/iwlwifi/iwl-testmode.c      |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |   16 ++++++++++------
+ drivers/net/wireless/iwlwifi/iwl-trans.h         |   13 +++++++++++--
+ 6 files changed, 28 insertions(+), 20 deletions(-)
 
-        len = min(count, sizeof(buf) - 1);
-        if (copy_from_user(buf, user_buf, len))
-                return -EFAULT;
-
-        buf[len] = '\0';
-        if (strict_strtoul(buf, 0, &regval))
-                return -EINVAL;
-
-        ath9k_ps_wakeup(sc);
-        REG_WRITE_D(ah, sc->debug.regidx, regval);
-        ath9k_ps_restore(sc);
-        return count;
-}
-
-then found
-#define REG_WRITE_D(_ah, _reg, _val) \
-        ath9k_hw_common(_ah)->ops->write((_ah), (_val), (_reg))
-So it would go to : ath/ath9k/init.c
-
-static void ath9k_iowrite32(void *hw_priv, u32 val, u32 reg_offset)
-{
-        struct ath_hw *ah = (struct ath_hw *) hw_priv;
-        struct ath_common *common = ath9k_hw_common(ah);
-        struct ath_softc *sc = (struct ath_softc *) common->priv;
-
-        if (ah->config.serialize_regmode == SER_REG_MODE_ON) {
-                unsigned long flags;
-                spin_lock_irqsave(&sc->sc_serial_rw, flags);
-                iowrite32(val, sc->mem + reg_offset);
-                spin_unlock_irqrestore(&sc->sc_serial_rw, flags);
-        } else
-                iowrite32(val, sc->mem + reg_offset);
-}
-
-Generally it should write value to to (sc->mem+reg_offset). But
-actually the value of regval is not changed when you echo a value to
-regval.
-
-> please also see the dump of rfkill list, as i am external PCI card, my
-> card is only softblocked.
->
-> --
-> thanks,
-> shafi
->
-
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+index 7a713ba..9ef8da4 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+@@ -160,7 +160,7 @@ int iwl_send_add_sta(struct iwl_priv *priv,
+ 	/*else the command was successfully sent in SYNC mode, need to free
+ 	 * the reply page */
+ 
+-	iwl_free_pages(priv->shrd, cmd.reply_page);
++	iwl_free_resp(&cmd);
+ 
+ 	if (cmd.handler_status)
+ 		IWL_ERR(priv, "%s - error in the CMD response %d", __func__,
+@@ -415,7 +415,7 @@ static int iwl_send_remove_station(struct iwl_priv *priv,
+ 	if (ret)
+ 		return ret;
+ 
+-	pkt = (struct iwl_rx_packet *)cmd.reply_page;
++	pkt = cmd.resp_pkt;
+ 	if (pkt->hdr.flags & IWL_CMD_FAILED_MSK) {
+ 		IWL_ERR(priv, "Bad return from REPLY_REMOVE_STA (0x%08X)\n",
+ 			  pkt->hdr.flags);
+@@ -438,7 +438,7 @@ static int iwl_send_remove_station(struct iwl_priv *priv,
+ 			break;
+ 		}
+ 	}
+-	iwl_free_pages(priv->shrd, cmd.reply_page);
++	iwl_free_resp(&cmd);
+ 
+ 	return ret;
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index 766572b..c0fc368 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -76,7 +76,7 @@ static int iwl_send_scan_abort(struct iwl_priv *priv)
+ 	if (ret)
+ 		return ret;
+ 
+-	pkt = (struct iwl_rx_packet *)cmd.reply_page;
++	pkt = cmd.resp_pkt;
+ 	if (pkt->u.status != CAN_ABORT_STATUS) {
+ 		/* The scan abort will return 1 for success or
+ 		 * 2 for "failure".  A failure condition can be
+@@ -88,7 +88,7 @@ static int iwl_send_scan_abort(struct iwl_priv *priv)
+ 		ret = -EIO;
+ 	}
+ 
+-	iwl_free_pages(priv->shrd, cmd.reply_page);
++	iwl_free_resp(&cmd);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index a7dbcab..53244d8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -413,11 +413,6 @@ static inline bool iwl_have_debug_level(u32 level)
+ 	return iwlagn_mod_params.debug_level & level;
+ }
+ 
+-static inline void iwl_free_pages(struct iwl_shared *shrd, unsigned long page)
+-{
+-	free_pages(page, shrd->hw_params.rx_page_order);
+-}
+-
+ /**
+  * iwl_queue_inc_wrap - increment queue index, wrap back to beginning
+  * @index -- current index
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+index 23eea06..cc1f3e9 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+@@ -292,7 +292,7 @@ static int iwl_testmode_ucode(struct ieee80211_hw *hw, struct nlattr **tb)
+ 		return ret;
+ 
+ 	/* Handling return of SKB to the user */
+-	pkt = (struct iwl_rx_packet *)cmd.reply_page;
++	pkt = cmd.resp_pkt;
+ 	if (!pkt) {
+ 		IWL_ERR(priv, "HCMD received a null response packet\n");
+ 		return ret;
+@@ -309,7 +309,7 @@ static int iwl_testmode_ucode(struct ieee80211_hw *hw, struct nlattr **tb)
+ 
+ 	/* The reply is in a page, that we cannot send to user space. */
+ 	memcpy(reply_buf, &(pkt->hdr), reply_len);
+-	iwl_free_pages(priv->shrd, cmd.reply_page);
++	iwl_free_resp(&cmd);
+ 
+ 	NLA_PUT_U32(skb, IWL_TM_ATTR_COMMAND, IWL_TM_CMD_DEV2APP_UCODE_RX_PKT);
+ 	NLA_PUT(skb, IWL_TM_ATTR_UCODE_RX_PKT, reply_len, reply_buf);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index de2a0d9..771fae2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -879,9 +879,13 @@ void iwl_tx_cmd_complete(struct iwl_trans *trans, struct iwl_rx_mem_buffer *rxb,
+ 
+ 	/* Input error checking is done when commands are added to queue. */
+ 	if (meta->flags & CMD_WANT_SKB) {
+-		meta->source->reply_page = (unsigned long)rxb_addr(rxb);
+-		meta->source->handler_status = handler_status;
++		struct page *p = rxb->page;
++
+ 		rxb->page = NULL;
++		meta->source->resp_pkt = pkt;
++		meta->source->_rx_page_addr = (unsigned long)page_address(p);
++		meta->source->_rx_page_order = hw_params(trans).rx_page_order;
++		meta->source->handler_status = handler_status;
+ 	}
+ 
+ 	iwl_hcmd_queue_reclaim(trans, txq_id, index);
+@@ -985,7 +989,7 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 		}
+ 	}
+ 
+-	if ((cmd->flags & CMD_WANT_SKB) && !cmd->reply_page) {
++	if ((cmd->flags & CMD_WANT_SKB) && !cmd->resp_pkt) {
+ 		IWL_ERR(trans, "Error: Response NULL in '%s'\n",
+ 			  get_cmd_string(cmd->id));
+ 		ret = -EIO;
+@@ -1006,9 +1010,9 @@ cancel:
+ 							~CMD_WANT_SKB;
+ 	}
+ 
+-	if (cmd->reply_page) {
+-		iwl_free_pages(trans->shrd, cmd->reply_page);
+-		cmd->reply_page = 0;
++	if (cmd->resp_pkt) {
++		iwl_free_resp(cmd);
++		cmd->resp_pkt = NULL;
+ 	}
+ 
+ 	return ret;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 83f04c9..e8ab8d8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -173,7 +173,9 @@ enum iwl_hcmd_dataflag {
+  * struct iwl_host_cmd - Host command to the uCode
+  *
+  * @data: array of chunks that composes the data of the host command
+- * @reply_page: pointer to the page that holds the response to the host command
++ * @resp_pkt: response packet, if %CMD_WANT_SKB was set
++ * @_rx_page_order: (internally used to free response packet)
++ * @_rx_page_addr: (internally used to free response packet)
+  * @handler_status: return value of the handler of the command
+  *	(put in setup_rx_handlers) - valid for SYNC mode only
+  * @flags: can be CMD_*
+@@ -183,7 +185,9 @@ enum iwl_hcmd_dataflag {
+  */
+ struct iwl_host_cmd {
+ 	const void *data[IWL_MAX_CMD_TFDS];
+-	unsigned long reply_page;
++	struct iwl_rx_packet *resp_pkt;
++	unsigned long _rx_page_addr;
++	u32 _rx_page_order;
+ 	int handler_status;
+ 
+ 	u32 flags;
+@@ -192,6 +196,11 @@ struct iwl_host_cmd {
+ 	u8 id;
+ };
+ 
++static inline void iwl_free_resp(struct iwl_host_cmd *cmd)
++{
++	free_pages(cmd->_rx_page_addr, cmd->_rx_page_order);
++}
++
+ /**
+  * struct iwl_trans_ops - transport specific operations
+  *
 -- 
-Thank you.
+1.7.0.4
+
