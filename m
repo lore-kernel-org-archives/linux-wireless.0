@@ -1,211 +1,163 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:62761 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755255Ab2CQRmT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 17 Mar 2012 13:42:19 -0400
-From: Mircea Gherzan <mgherzan@gmail.com>
-To: Luciano Coelho <coelho@ti.com>
-Cc: Mircea Gherzan <mgherzan@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2] wl12xx: fix DMA-API-related warnings
-Date: Sat, 17 Mar 2012 18:41:53 +0100
-Message-Id: <1332006114-30230-1-git-send-email-mgherzan@gmail.com> (sfid-20120317_184240_683228_AD3FB021)
+Received: from mga09.intel.com ([134.134.136.24]:38078 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755104Ab2CDUnH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:07 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 057/101] iwlwifi: move ucode_owner to priv
+Date: Sun,  4 Mar 2012 11:29:11 -0800
+Message-Id: <1330889395-533-58-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214547_458970_1925403F)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On the PandaBoard (omap_hsmmc + wl12xx_sdio) with DMA_API_DEBUG:
+From: Johannes Berg <johannes.berg@intel.com>
 
- WARNING: at lib/dma-debug.c:930 check_for_stack.part.8+0x7c/0xe0()
- omap_hsmmc omap_hsmmc.4: DMA-API: device driver maps memory fromstack
+The transport doesn't really need to know as
+we can enforce it in the command wrapper.
+Move the ucode_owner variable into priv and
+do all enforcing there.
 
-Signed-off-by: Mircea Gherzan <mgherzan@gmail.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/wl12xx/boot.c   |   14 +++++++++++---
- drivers/net/wireless/wl12xx/cmd.c    |   25 ++++++++++++++++---------
- drivers/net/wireless/wl12xx/event.c  |   10 +++++-----
- drivers/net/wireless/wl12xx/event.h  |    2 ++
- drivers/net/wireless/wl12xx/main.c   |    9 +++++++++
- drivers/net/wireless/wl12xx/wl12xx.h |    3 +++
- 6 files changed, 46 insertions(+), 17 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c       |    6 ++++++
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c        |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c           |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-dev.h           |    4 ++++
+ drivers/net/wireless/iwlwifi/iwl-shared.h        |    4 ----
+ drivers/net/wireless/iwlwifi/iwl-testmode.c      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |    6 ------
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c    |    1 -
+ 8 files changed, 14 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/wl12xx/boot.c b/drivers/net/wireless/wl12xx/boot.c
-index 8f9cf5a..89c78d1 100644
---- a/drivers/net/wireless/wl12xx/boot.c
-+++ b/drivers/net/wireless/wl12xx/boot.c
-@@ -142,14 +142,22 @@ static void wl1271_parse_fw_ver(struct wl1271 *wl)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 90f1f8a..dec2693 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1306,6 +1306,12 @@ int iwl_dvm_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 	if (cmd->flags & CMD_SYNC)
+ 		lockdep_assert_held(&priv->mutex);
  
- static void wl1271_boot_fw_version(struct wl1271 *wl)
- {
--	struct wl1271_static_data static_data;
-+	struct wl1271_static_data *static_data;
- 
--	wl1271_read(wl, wl->cmd_box_addr, &static_data, sizeof(static_data),
-+	static_data = kmalloc(sizeof(*static_data), GFP_DMA);
-+	if (!static_data) {
-+		__WARN();
-+		return;
++	if (priv->ucode_owner == IWL_OWNERSHIP_TM &&
++	    !(cmd->flags & CMD_ON_DEMAND)) {
++		IWL_DEBUG_HC(priv, "tm own the uCode, no regular hcmd send\n");
++		return -EIO;
 +	}
 +
-+	wl1271_read(wl, wl->cmd_box_addr, static_data, sizeof(*static_data),
- 		    false);
+ 	return iwl_trans_send_cmd(trans(priv), cmd);
+ }
  
--	strncpy(wl->chip.fw_ver_str, static_data.fw_version,
-+	strncpy(wl->chip.fw_ver_str, static_data->fw_version,
- 		sizeof(wl->chip.fw_ver_str));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+index f17142b..08de306 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+@@ -1165,7 +1165,7 @@ int iwl_rx_dispatch(struct iwl_op_mode *op_mode, struct iwl_rx_cmd_buffer *rxb,
+ 	iwl_notification_wait_notify(&priv->notif_wait, pkt);
  
-+	kfree(static_data);
+ 	if (priv->pre_rx_handler &&
+-	    priv->shrd->ucode_owner == IWL_OWNERSHIP_TM)
++	    priv->ucode_owner == IWL_OWNERSHIP_TM)
+ 		priv->pre_rx_handler(priv, rxb);
+ 	else {
+ 		/* Based on type of command response or notification,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index ce62a2f..afded29 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1053,6 +1053,8 @@ static int iwl_init_drv(struct iwl_priv *priv)
+ 	priv->missed_beacon_threshold = IWL_MISSED_BEACON_THRESHOLD_DEF;
+ 	priv->agg_tids_count = 0;
+ 
++	priv->ucode_owner = IWL_OWNERSHIP_DRIVER;
 +
- 	/* make sure the string is NULL-terminated */
- 	wl->chip.fw_ver_str[sizeof(wl->chip.fw_ver_str) - 1] = '\0';
+ 	/* initialize force reset */
+ 	priv->force_reset[IWL_RF_RESET].reset_duration =
+ 		IWL_DELAY_NEXT_FORCE_RF_RESET;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index c57e605..a301daf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -748,6 +748,10 @@ struct iwl_priv {
+ 	struct iwl_spectrum_notification measure_report;
+ 	u8 measurement_status;
  
-diff --git a/drivers/net/wireless/wl12xx/cmd.c b/drivers/net/wireless/wl12xx/cmd.c
-index 25990bd..a5c8800 100644
---- a/drivers/net/wireless/wl12xx/cmd.c
-+++ b/drivers/net/wireless/wl12xx/cmd.c
-@@ -342,8 +342,12 @@ int wl1271_cmd_ext_radio_parms(struct wl1271 *wl)
++#define IWL_OWNERSHIP_DRIVER	0
++#define IWL_OWNERSHIP_TM	1
++	u8 ucode_owner;
++
+ 	/* ucode beacon time */
+ 	u32 ucode_beacon_time;
+ 	int missed_beacon_threshold;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 1ec5a22..ca090d2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -354,7 +354,6 @@ struct iwl_cfg {
+ /**
+  * struct iwl_shared - shared fields for all the layers of the driver
+  *
+- * @ucode_owner: IWL_OWNERSHIP_*
+  * @cmd_queue: command queue number
+  * @status: STATUS_*
+  * @wowlan: are we running wowlan uCode
+@@ -372,9 +371,6 @@ struct iwl_cfg {
+  * @device_pointers: pointers to ucode event tables
   */
- static int wl1271_cmd_wait_for_event_or_timeout(struct wl1271 *wl, u32 mask)
- {
--	u32 events_vector, event;
-+	u32 *events_vector;
-+	u32 event;
- 	unsigned long timeout;
-+	int ret = 0;
-+
-+	events_vector = kmalloc(sizeof(*events_vector), GFP_DMA);
+ struct iwl_shared {
+-#define IWL_OWNERSHIP_DRIVER	0
+-#define IWL_OWNERSHIP_TM	1
+-	u8 ucode_owner;
+ 	u8 cmd_queue;
+ 	unsigned long status;
+ 	u8 valid_contexts;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+index cc049d2..63868df 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+@@ -770,7 +770,7 @@ static int iwl_testmode_ownership(struct ieee80211_hw *hw, struct nlattr **tb)
  
- 	timeout = jiffies + msecs_to_jiffies(WL1271_EVENT_TIMEOUT);
- 
-@@ -351,21 +355,24 @@ static int wl1271_cmd_wait_for_event_or_timeout(struct wl1271 *wl, u32 mask)
- 		if (time_after(jiffies, timeout)) {
- 			wl1271_debug(DEBUG_CMD, "timeout waiting for event %d",
- 				     (int)mask);
--			return -ETIMEDOUT;
-+			ret = -ETIMEDOUT;
-+			goto out;
- 		}
- 
- 		msleep(1);
- 
- 		/* read from both event fields */
--		wl1271_read(wl, wl->mbox_ptr[0], &events_vector,
--			    sizeof(events_vector), false);
--		event = events_vector & mask;
--		wl1271_read(wl, wl->mbox_ptr[1], &events_vector,
--			    sizeof(events_vector), false);
--		event |= events_vector & mask;
-+		wl1271_read(wl, wl->mbox_ptr[0], events_vector,
-+			    sizeof(*events_vector), false);
-+		event = *events_vector & mask;
-+		wl1271_read(wl, wl->mbox_ptr[1], events_vector,
-+			    sizeof(*events_vector), false);
-+		event |= *events_vector & mask;
- 	} while (!event);
- 
--	return 0;
-+out:
-+	kfree(events_vector);
-+	return ret;
- }
- 
- static int wl1271_cmd_wait_for_event(struct wl1271 *wl, u32 mask)
-diff --git a/drivers/net/wireless/wl12xx/event.c b/drivers/net/wireless/wl12xx/event.c
-index d3280df68..10007f5 100644
---- a/drivers/net/wireless/wl12xx/event.c
-+++ b/drivers/net/wireless/wl12xx/event.c
-@@ -233,8 +233,9 @@ static void wl1271_event_mbox_dump(struct event_mailbox *mbox)
- 	wl1271_debug(DEBUG_EVENT, "\tmask: 0x%x", mbox->events_mask);
- }
- 
--static int wl1271_event_process(struct wl1271 *wl, struct event_mailbox *mbox)
-+static int wl1271_event_process(struct wl1271 *wl)
- {
-+	struct event_mailbox *mbox = wl->mbox;
- 	struct ieee80211_vif *vif;
- 	struct wl12xx_vif *wlvif;
- 	int ret;
-@@ -439,7 +440,6 @@ void wl1271_event_mbox_config(struct wl1271 *wl)
- 
- int wl1271_event_handle(struct wl1271 *wl, u8 mbox_num)
- {
--	struct event_mailbox mbox;
- 	int ret;
- 
- 	wl1271_debug(DEBUG_EVENT, "EVENT on mbox %d", mbox_num);
-@@ -448,11 +448,11 @@ int wl1271_event_handle(struct wl1271 *wl, u8 mbox_num)
+ 	owner = nla_get_u8(tb[IWL_TM_ATTR_UCODE_OWNER]);
+ 	if ((owner == IWL_OWNERSHIP_DRIVER) || (owner == IWL_OWNERSHIP_TM))
+-		priv->shrd->ucode_owner = owner;
++		priv->ucode_owner = owner;
+ 	else {
+ 		IWL_ERR(priv, "Invalid owner\n");
  		return -EINVAL;
- 
- 	/* first we read the mbox descriptor */
--	wl1271_read(wl, wl->mbox_ptr[mbox_num], &mbox,
--		    sizeof(struct event_mailbox), false);
-+	wl1271_read(wl, wl->mbox_ptr[mbox_num], wl->mbox,
-+		    sizeof(*wl->mbox), false);
- 
- 	/* process the descriptor */
--	ret = wl1271_event_process(wl, &mbox);
-+	ret = wl1271_event_process(wl);
- 	if (ret < 0)
- 		return ret;
- 
-diff --git a/drivers/net/wireless/wl12xx/event.h b/drivers/net/wireless/wl12xx/event.h
-index 1d878ba..7a6b18b 100644
---- a/drivers/net/wireless/wl12xx/event.h
-+++ b/drivers/net/wireless/wl12xx/event.h
-@@ -127,6 +127,8 @@ struct event_mailbox {
- 	u8 reserved_7[12];
- } __packed;
- 
-+struct wl1271;
-+
- int wl1271_event_unmask(struct wl1271 *wl);
- void wl1271_event_mbox_config(struct wl1271 *wl);
- int wl1271_event_handle(struct wl1271 *wl, u8 mbox);
-diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
-index d5f55a1..f63fde4 100644
---- a/drivers/net/wireless/wl12xx/main.c
-+++ b/drivers/net/wireless/wl12xx/main.c
-@@ -5071,8 +5071,17 @@ static struct ieee80211_hw *wl1271_alloc_hw(void)
- 		goto err_dummy_packet;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index 9af5c8f..8d13362 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -686,12 +686,6 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 		return -EIO;
  	}
  
-+	wl->mbox = kmalloc(sizeof(*wl->mbox), GFP_DMA);
-+	if (!wl->mbox) {
-+		ret = -ENOMEM;
-+		goto err_fwlog;
-+	}
-+
- 	return hw;
+-	if ((trans->shrd->ucode_owner == IWL_OWNERSHIP_TM) &&
+-	    !(cmd->flags & CMD_ON_DEMAND)) {
+-		IWL_DEBUG_HC(trans, "tm own the uCode, no regular hcmd send\n");
+-		return -EIO;
+-	}
+-
+ 	copy_size = sizeof(out_cmd->hdr);
+ 	cmd_size = sizeof(out_cmd->hdr);
  
-+err_fwlog:
-+	free_page((unsigned long)wl->fwlog);
-+
- err_dummy_packet:
- 	dev_kfree_skb(wl->dummy_packet);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 6da9972..7a2e65f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1029,7 +1029,6 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
+ 		IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	bool hw_rfkill;
  
-diff --git a/drivers/net/wireless/wl12xx/wl12xx.h b/drivers/net/wireless/wl12xx/wl12xx.h
-index b2b09cd..0d02c7a 100644
---- a/drivers/net/wireless/wl12xx/wl12xx.h
-+++ b/drivers/net/wireless/wl12xx/wl12xx.h
-@@ -34,6 +34,7 @@
- 
- #include "conf.h"
- #include "ini.h"
-+#include "event.h"
- 
- #define WL127X_FW_NAME "ti-connectivity/wl127x-fw-3.bin"
- #define WL128X_FW_NAME "ti-connectivity/wl128x-fw-3.bin"
-@@ -394,6 +395,8 @@ struct wl1271 {
- 	/* Hardware recovery work */
- 	struct work_struct recovery_work;
- 
-+	struct event_mailbox *mbox;
-+
- 	/* The mbox event mask */
- 	u32 event_mask;
+-	trans->shrd->ucode_owner = IWL_OWNERSHIP_DRIVER;
+ 	trans_pcie->ac_to_queue[IWL_RXON_CTX_BSS] = iwlagn_bss_ac_to_queue;
+ 	trans_pcie->ac_to_queue[IWL_RXON_CTX_PAN] = iwlagn_pan_ac_to_queue;
  
 -- 
-1.7.9.1
+1.7.0.4
 
