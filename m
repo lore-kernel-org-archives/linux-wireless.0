@@ -1,722 +1,470 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:54294 "HELO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1759363Ab2CMCgB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 12 Mar 2012 22:36:01 -0400
-From: Bing Zhao <bzhao@marvell.com>
-To: linux-wireless@vger.kernel.org
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Joe Perches <joe@perches.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kiran Divekar <dkiran@marvell.com>,
-	Yogesh Powar <yogeshp@marvell.com>,
-	Avinash Patil <patila@marvell.com>,
-	Frank Huang <frankh@marvell.com>, Bing Zhao <bzhao@marvell.com>
-Subject: [PATCH 08/15] mwifiex: fix checkpatch --strict warnings/errors  Part 2
-Date: Mon, 12 Mar 2012 19:35:15 -0700
-Message-Id: <1331606116-32745-9-git-send-email-bzhao@marvell.com> (sfid-20120313_033608_529481_6366FC3D)
-In-Reply-To: <1331606116-32745-1-git-send-email-bzhao@marvell.com>
-References: <1331606116-32745-1-git-send-email-bzhao@marvell.com>
+Received: from mga09.intel.com ([134.134.136.24]:55973 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755171Ab2CDUnK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:10 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 073/101] iwlwifi: redesign PASSIVE_NO_RX workaround
+Date: Sun,  4 Mar 2012 11:29:27 -0800
+Message-Id: <1330889395-533-74-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214501_103982_412CE45F)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Yogesh Ashok Powar <yogeshp@marvell.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-For files cfg80211.c, cfp.c, and cmdevt.c
+The PASSIVE_NO_RX workaround currently crosses
+through the op_mode and transport layers, which
+is a bit odd. This also isn't necessary, if the
+transport simply reports when queues are full
+(or no longer full) the op_mode can keep track
+of this state, and report to mac80211 only what
+*it* thinks is appropriate. What is appropriate
+can then be based on whether queues should be
+stopped to wait for RX or not.
 
-Signed-off-by: Yogesh Ashok Powar <yogeshp@marvell.com>
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
+This significantly simplifies the transport API,
+it no longer needs to expose anything to stop a
+queue, nor to wake "any" queue, this can all be
+handled in the upper layer completely.
+
+Also simplify the handling to not be dependent
+on the context, that makes little sense as the
+queues are shared and both contexts have to be
+on the same channel anyway.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/mwifiex/cfg80211.c |   83 +++++++++---------
- drivers/net/wireless/mwifiex/cfp.c      |    4 +-
- drivers/net/wireless/mwifiex/cmdevt.c   |  147 ++++++++++++++++---------------
- 3 files changed, 118 insertions(+), 116 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c         |    8 +---
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c       |    8 +---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |   12 +++---
+ drivers/net/wireless/iwlwifi/iwl-agn.c            |   33 +++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.h            |    5 +--
+ drivers/net/wireless/iwlwifi/iwl-core.c           |   14 --------
+ drivers/net/wireless/iwlwifi/iwl-dev.h            |    5 ++-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |   12 -------
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |   36 +-------------------
+ drivers/net/wireless/iwlwifi/iwl-trans.h          |   36 ++-------------------
+ drivers/net/wireless/iwlwifi/iwl-ucode.c          |    6 ++--
+ 11 files changed, 56 insertions(+), 119 deletions(-)
 
-diff --git a/drivers/net/wireless/mwifiex/cfg80211.c b/drivers/net/wireless/mwifiex/cfg80211.c
-index 84508b0..2e9dfab 100644
---- a/drivers/net/wireless/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/mwifiex/cfg80211.c
-@@ -127,8 +127,8 @@ mwifiex_cfg80211_set_power_mgmt(struct wiphy *wiphy,
- 
- 	if (timeout)
- 		wiphy_dbg(wiphy,
--			"info: ignoring the timeout value"
--			" for IEEE power save\n");
-+			  "info: ignoring the timeout value"
-+			  " for IEEE power save\n");
- 
- 	ps_mode = enabled;
- 
-@@ -168,7 +168,7 @@ mwifiex_cfg80211_add_key(struct wiphy *wiphy, struct net_device *netdev,
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(netdev);
- 
- 	if (mwifiex_set_encode(priv, params->key, params->key_len,
--							key_index, 0)) {
-+			       key_index, 0)) {
- 		wiphy_err(wiphy, "crypto keys added\n");
- 		return -EFAULT;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+index 521c820..a9bdbad 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+@@ -807,16 +807,12 @@ static void iwlagn_pass_packet_to_mac80211(struct iwl_priv *priv,
+ 	* sometimes even after already having transmitted frames for the
+ 	* association because the new RXON may reset the information.
+ 	*/
+-	if (unlikely(ieee80211_is_beacon(fc))) {
++	if (unlikely(ieee80211_is_beacon(fc) && priv->passive_no_rx)) {
+ 		for_each_context(priv, ctx) {
+-			if (!ctx->last_tx_rejected)
+-				continue;
+ 			if (compare_ether_addr(hdr->addr3,
+ 					       ctx->active.bssid_addr))
+ 				continue;
+-			ctx->last_tx_rejected = false;
+-			iwl_trans_wake_any_queue(trans(priv), ctx->ctxid,
+-				"channel got active");
++			iwlagn_lift_passive_no_rx(priv);
+ 		}
  	}
-@@ -225,7 +225,7 @@ static int mwifiex_send_domain_info_cmd_fw(struct wiphy *wiphy)
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+index 9d955fa..66e9a71 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rxon.c
+@@ -833,12 +833,8 @@ void iwlagn_bss_info_changed(struct ieee80211_hw *hw,
+ 			 * not get stuck in this case either since it
+ 			 * can happen if userspace gets confused.
+ 			 */
+-			if (ctx->last_tx_rejected) {
+-				ctx->last_tx_rejected = false;
+-				iwl_trans_wake_any_queue(trans(priv),
+-							 ctx->ctxid,
+-							 "Disassoc: flush queue");
+-			}
++			iwlagn_lift_passive_no_rx(priv);
++
+ 			ctx->staging.filter_flags &= ~RXON_FILTER_ASSOC_MSK;
+ 
+ 			if (ctx->ctxid == IWL_RXON_CTX_BSS)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 14a6bde..527fde0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -1064,8 +1064,8 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
  		}
  
- 		if (ch->hw_value == next_chan + 1 &&
--				ch->max_power == max_pwr) {
-+		    ch->max_power == max_pwr) {
- 			next_chan++;
- 			no_of_parsed_chan++;
- 		} else {
-@@ -252,7 +252,7 @@ static int mwifiex_send_domain_info_cmd_fw(struct wiphy *wiphy)
- 	domain_info->no_of_triplet = no_of_triplet;
+ 		/*we can free until ssn % q.n_bd not inclusive */
+-		WARN_ON(iwl_trans_reclaim(trans(priv), sta_id, tid, txq_id,
+-				  ssn, status, &skbs));
++		WARN_ON(iwl_trans_reclaim(trans(priv), sta_id, tid,
++					  txq_id, ssn, &skbs));
+ 		iwlagn_check_ratid_empty(priv, sta_id, tid);
+ 		freed = 0;
  
- 	if (mwifiex_send_cmd_async(priv, HostCmd_CMD_802_11D_DOMAIN_INFO,
--				     HostCmd_ACT_GEN_SET, 0, NULL)) {
-+				   HostCmd_ACT_GEN_SET, 0, NULL)) {
- 		wiphy_err(wiphy, "11D: setting domain info in FW\n");
- 		return -1;
- 	}
-@@ -271,7 +271,7 @@ static int mwifiex_send_domain_info_cmd_fw(struct wiphy *wiphy)
-  *      - Set bt Country IE
-  */
- static int mwifiex_reg_notifier(struct wiphy *wiphy,
--		struct regulatory_request *request)
-+				struct regulatory_request *request)
- {
- 	struct mwifiex_private *priv = mwifiex_cfg80211_get_priv(wiphy);
+@@ -1086,9 +1086,9 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+ 			if (status == TX_STATUS_FAIL_PASSIVE_NO_RX &&
+ 			    iwl_is_associated_ctx(ctx) && ctx->vif &&
+ 			    ctx->vif->type == NL80211_IFTYPE_STATION) {
+-				ctx->last_tx_rejected = true;
+-				iwl_trans_stop_queue(trans(priv), txq_id,
+-					"Tx on passive channel");
++				/* block and stop all queues */
++				priv->passive_no_rx = true;
++				ieee80211_stop_queues(priv->hw);
  
-@@ -316,7 +316,7 @@ mwifiex_set_rf_channel(struct mwifiex_private *priv,
- 		if (chan->band == IEEE80211_BAND_2GHZ) {
- 			if (channel_type == NL80211_CHAN_NO_HT)
- 				if (priv->adapter->config_bands == BAND_B ||
--					  priv->adapter->config_bands == BAND_G)
-+				    priv->adapter->config_bands == BAND_G)
- 					config_bands =
- 						priv->adapter->config_bands;
- 				else
-@@ -336,7 +336,7 @@ mwifiex_set_rf_channel(struct mwifiex_private *priv,
- 			if (priv->bss_mode == NL80211_IFTYPE_ADHOC) {
- 				adapter->adhoc_start_band = config_bands;
- 				if ((config_bands & BAND_GN) ||
--						(config_bands & BAND_AN))
-+				    (config_bands & BAND_AN))
- 					adapter->adhoc_11n_enabled = true;
- 				else
- 					adapter->adhoc_11n_enabled = false;
-@@ -351,8 +351,8 @@ mwifiex_set_rf_channel(struct mwifiex_private *priv,
- 	}
- 
- 	wiphy_dbg(wiphy, "info: setting band %d, channel offset %d and "
--		"mode %d\n", config_bands, adapter->sec_chan_offset,
--		priv->bss_mode);
-+		  "mode %d\n", config_bands, adapter->sec_chan_offset,
-+		  priv->bss_mode);
- 	if (!chan)
+ 				IWL_DEBUG_TX_REPLY(priv,
+ 					   "TXQ %d status %s (0x%08x) "
+@@ -1182,7 +1182,7 @@ int iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
+ 	 * block-ack window (we assume that they've been successfully
+ 	 * transmitted ... if not, it's too late anyway). */
+ 	if (iwl_trans_reclaim(trans(priv), sta_id, tid, scd_flow,
+-			      ba_resp_scd_ssn, 0, &reclaimed_skbs)) {
++			      ba_resp_scd_ssn, &reclaimed_skbs)) {
+ 		spin_unlock(&priv->sta_lock);
  		return 0;
+ 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 397faf9..29f40ea 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1427,6 +1427,39 @@ static void iwl_nic_config(struct iwl_op_mode *op_mode)
+ 	cfg(priv)->lib->nic_config(priv);
+ }
  
-@@ -403,8 +403,8 @@ mwifiex_set_frag(struct mwifiex_private *priv, u32 frag_thr)
++static void iwl_stop_sw_queue(struct iwl_op_mode *op_mode, u8 ac)
++{
++	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
++
++	set_bit(ac, &priv->transport_queue_stop);
++	ieee80211_stop_queue(priv->hw, ac);
++}
++
++static void iwl_wake_sw_queue(struct iwl_op_mode *op_mode, u8 ac)
++{
++	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
++
++	clear_bit(ac, &priv->transport_queue_stop);
++
++	if (!priv->passive_no_rx)
++		ieee80211_wake_queue(priv->hw, ac);
++}
++
++void iwlagn_lift_passive_no_rx(struct iwl_priv *priv)
++{
++	int ac;
++
++	if (!priv->passive_no_rx)
++		return;
++
++	for (ac = IEEE80211_AC_VO; ac < IEEE80211_NUM_ACS; ac++) {
++		if (!test_bit(ac, &priv->transport_queue_stop))
++			ieee80211_wake_queue(priv->hw, ac);
++	}
++
++	priv->passive_no_rx = false;
++}
++
+ const struct iwl_op_mode_ops iwl_dvm_ops = {
+ 	.start = iwl_op_mode_dvm_start,
+ 	.stop = iwl_op_mode_dvm_stop,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 82930ef..b56498b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -84,14 +84,13 @@ void iwl_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb);
+ int __must_check iwl_rx_dispatch(struct iwl_op_mode *op_mode,
+ 				 struct iwl_rx_cmd_buffer *rxb,
+ 				 struct iwl_device_cmd *cmd);
+-void iwl_stop_sw_queue(struct iwl_op_mode *op_mode, u8 ac);
+-void iwl_wake_sw_queue(struct iwl_op_mode *op_mode, u8 ac);
+ void iwl_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state);
+-void iwl_stop_sw_queue(struct iwl_op_mode *op_mode, u8 ac);
+ void iwl_nic_error(struct iwl_op_mode *op_mode);
+ 
+ bool iwl_check_for_ct_kill(struct iwl_priv *priv);
+ 
++void iwlagn_lift_passive_no_rx(struct iwl_priv *priv);
++
+ /* MAC80211 */
+ struct ieee80211_hw *iwl_alloc_all(void);
+ int iwlagn_mac_setup_register(struct iwl_priv *priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index 6648c1b..c2e604b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1488,17 +1488,3 @@ void iwl_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb)
+ 	kmem_cache_free(priv->tx_cmd_pool, (info->driver_data[1]));
+ 	dev_kfree_skb_any(skb);
+ }
+-
+-void iwl_stop_sw_queue(struct iwl_op_mode *op_mode, u8 ac)
+-{
+-	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
+-
+-	ieee80211_stop_queue(priv->hw, ac);
+-}
+-
+-void iwl_wake_sw_queue(struct iwl_op_mode *op_mode, u8 ac)
+-{
+-	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
+-
+-	ieee80211_wake_queue(priv->hw, ac);
+-}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index d1e722b..7442970 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -670,8 +670,6 @@ struct iwl_rxon_context {
+ 		bool enabled, is_40mhz;
+ 		u8 extension_chan_offset;
+ 	} ht;
+-
+-	bool last_tx_rejected;
+ };
+ 
+ enum iwl_scan_type {
+@@ -720,6 +718,9 @@ struct iwl_priv {
+ 	spinlock_t sta_lock;
+ 	struct mutex mutex;
+ 
++	unsigned long transport_queue_stop;
++	bool passive_no_rx;
++
+ 	/* ieee device used by generic ieee processing code */
+ 	struct ieee80211_hw *hw;
+ 	struct ieee80211_channel *ieee_channels;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+index d13b8d1..4f73a6d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+@@ -451,18 +451,6 @@ static inline void iwl_stop_queue(struct iwl_trans *trans,
+ 	}
+ }
+ 
+-#ifdef ieee80211_stop_queue
+-#undef ieee80211_stop_queue
+-#endif
+-
+-#define ieee80211_stop_queue DO_NOT_USE_ieee80211_stop_queue
+-
+-#ifdef ieee80211_wake_queue
+-#undef ieee80211_wake_queue
+-#endif
+-
+-#define ieee80211_wake_queue DO_NOT_USE_ieee80211_wake_queue
+-
+ static inline void iwl_txq_ctx_activate(struct iwl_trans_pcie *trans_pcie,
+ 					int txq_id)
  {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 836e067..4844fb2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1568,8 +1568,7 @@ static void iwl_trans_pcie_stop_hw(struct iwl_trans *trans)
+ }
+ 
+ static int iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
+-		      int txq_id, int ssn, u32 status,
+-		      struct sk_buff_head *skbs)
++		      int txq_id, int ssn, struct sk_buff_head *skbs)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_tx_queue *txq = &trans_pcie->txq[txq_id];
+@@ -1602,9 +1601,7 @@ static int iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
+ 				txq_id, iwl_get_queue_ac(txq), txq->q.read_ptr,
+ 				tfd_num, ssn);
+ 		freed = iwl_tx_queue_reclaim(trans, txq_id, tfd_num, skbs);
+-		if (iwl_queue_space(&txq->q) > txq->q.low_mark &&
+-		   (!txq->sched_retry ||
+-		   status != TX_STATUS_FAIL_PASSIVE_NO_RX))
++		if (iwl_queue_space(&txq->q) > txq->q.low_mark)
+ 			iwl_wake_queue(trans, txq, "Packets reclaimed");
+ 	}
+ 
+@@ -1671,32 +1668,6 @@ static int iwl_trans_pcie_resume(struct iwl_trans *trans)
+ }
+ #endif /* CONFIG_PM_SLEEP */
+ 
+-static void iwl_trans_pcie_wake_any_queue(struct iwl_trans *trans,
+-					  enum iwl_rxon_context_id ctx,
+-					  const char *msg)
+-{
+-	u8 ac, txq_id;
+-	struct iwl_trans_pcie *trans_pcie =
+-		IWL_TRANS_GET_PCIE_TRANS(trans);
+-
+-	for (ac = 0; ac < AC_NUM; ac++) {
+-		txq_id = trans_pcie->ac_to_queue[ctx][ac];
+-		IWL_DEBUG_TX_QUEUES(trans, "Queue Status: Q[%d] %s\n",
+-			ac,
+-			(atomic_read(&trans_pcie->queue_stop_count[ac]) > 0)
+-			      ? "stopped" : "awake");
+-		iwl_wake_queue(trans, &trans_pcie->txq[txq_id], msg);
+-	}
+-}
+-
+-static void iwl_trans_pcie_stop_queue(struct iwl_trans *trans, int txq_id,
+-				      const char *msg)
+-{
+-	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+-
+-	iwl_stop_queue(trans, &trans_pcie->txq[txq_id], msg);
+-}
+-
+ #define IWL_FLUSH_WAIT_MS	2000
+ 
+ static int iwl_trans_pcie_wait_tx_queue_empty(struct iwl_trans *trans)
+@@ -2218,8 +2189,6 @@ const struct iwl_trans_ops trans_ops_pcie = {
+ 
+ 	.wowlan_suspend = iwl_trans_pcie_wowlan_suspend,
+ 
+-	.wake_any_queue = iwl_trans_pcie_wake_any_queue,
+-
+ 	.send_cmd = iwl_trans_pcie_send_cmd,
+ 
+ 	.tx = iwl_trans_pcie_tx,
+@@ -2230,7 +2199,6 @@ const struct iwl_trans_ops trans_ops_pcie = {
+ 	.tx_agg_setup = iwl_trans_pcie_tx_agg_setup,
+ 
+ 	.free = iwl_trans_pcie_free,
+-	.stop_queue = iwl_trans_pcie_stop_queue,
+ 
+ 	.dbgfs_register = iwl_trans_pcie_dbgfs_register,
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 15bb208..609949f 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -289,7 +289,6 @@ static inline struct page *rxb_steal_page(struct iwl_rx_cmd_buffer *r)
+  *	May sleep
+  * @fw_alive: called when the fw sends alive notification
+  *	May sleep
+- * @wake_any_queue: wake all the queues of a specfic context IWL_RXON_CTX_*
+  * @stop_device:stops the whole device (embedded CPU put to reset)
+  *	May sleep
+  * @wowlan_suspend: put the device into the correct mode for WoWLAN during
+@@ -312,7 +311,6 @@ static inline struct page *rxb_steal_page(struct iwl_rx_cmd_buffer *r)
+  *	irq, tasklet etc... From this point on, the device may not issue
+  *	any interrupt (incl. RFKILL).
+  *	May sleep
+- * @stop_queue: stop a specific queue
+  * @check_stuck_queue: check if a specific queue is stuck
+  * @wait_tx_queue_empty: wait until all tx queues are empty
+  *	May sleep
+@@ -334,18 +332,13 @@ struct iwl_trans_ops {
+ 
+ 	void (*wowlan_suspend)(struct iwl_trans *trans);
+ 
+-	void (*wake_any_queue)(struct iwl_trans *trans,
+-			       enum iwl_rxon_context_id ctx,
+-			       const char *msg);
+-
+ 	int (*send_cmd)(struct iwl_trans *trans, struct iwl_host_cmd *cmd);
+ 
+ 	int (*tx)(struct iwl_trans *trans, struct sk_buff *skb,
+ 		struct iwl_device_cmd *dev_cmd, enum iwl_rxon_context_id ctx,
+ 		u8 sta_id, u8 tid);
+ 	int (*reclaim)(struct iwl_trans *trans, int sta_id, int tid,
+-			int txq_id, int ssn, u32 status,
+-			struct sk_buff_head *skbs);
++			int txq_id, int ssn, struct sk_buff_head *skbs);
+ 
+ 	int (*tx_agg_disable)(struct iwl_trans *trans,
+ 			      int sta_id, int tid);
+@@ -357,8 +350,6 @@ struct iwl_trans_ops {
+ 
+ 	void (*free)(struct iwl_trans *trans);
+ 
+-	void (*stop_queue)(struct iwl_trans *trans, int q, const char *msg);
+-
+ 	int (*dbgfs_register)(struct iwl_trans *trans, struct dentry* dir);
+ 	int (*check_stuck_queue)(struct iwl_trans *trans, int q);
+ 	int (*wait_tx_queue_empty)(struct iwl_trans *trans);
+@@ -474,17 +465,6 @@ static inline void iwl_trans_wowlan_suspend(struct iwl_trans *trans)
+ 	trans->ops->wowlan_suspend(trans);
+ }
+ 
+-static inline void iwl_trans_wake_any_queue(struct iwl_trans *trans,
+-					    enum iwl_rxon_context_id ctx,
+-					    const char *msg)
+-{
+-	if (trans->state != IWL_TRANS_FW_ALIVE)
+-		IWL_ERR(trans, "%s bad state = %d", __func__, trans->state);
+-
+-	trans->ops->wake_any_queue(trans, ctx, msg);
+-}
+-
+-
+ static inline int iwl_trans_send_cmd(struct iwl_trans *trans,
+ 				struct iwl_host_cmd *cmd)
+ {
+@@ -505,14 +485,13 @@ static inline int iwl_trans_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ }
+ 
+ static inline int iwl_trans_reclaim(struct iwl_trans *trans, int sta_id,
+-				 int tid, int txq_id, int ssn, u32 status,
++				 int tid, int txq_id, int ssn,
+ 				 struct sk_buff_head *skbs)
+ {
+ 	if (trans->state != IWL_TRANS_FW_ALIVE)
+ 		IWL_ERR(trans, "%s bad state = %d", __func__, trans->state);
+ 
+-	return trans->ops->reclaim(trans, sta_id, tid, txq_id, ssn,
+-				   status, skbs);
++	return trans->ops->reclaim(trans, sta_id, tid, txq_id, ssn, skbs);
+ }
+ 
+ static inline int iwl_trans_tx_agg_disable(struct iwl_trans *trans,
+@@ -554,15 +533,6 @@ static inline void iwl_trans_free(struct iwl_trans *trans)
+ 	trans->ops->free(trans);
+ }
+ 
+-static inline void iwl_trans_stop_queue(struct iwl_trans *trans, int q,
+-					const char *msg)
+-{
+-	if (trans->state != IWL_TRANS_FW_ALIVE)
+-		IWL_ERR(trans, "%s bad state = %d", __func__, trans->state);
+-
+-	trans->ops->stop_queue(trans, q, msg);
+-}
+-
+ static inline int iwl_trans_wait_tx_queue_empty(struct iwl_trans *trans)
+ {
+ 	if (trans->state != IWL_TRANS_FW_ALIVE)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.c b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+index 8267dbe..404fd8e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+@@ -316,7 +316,6 @@ int iwl_send_bt_env(struct iwl_priv *priv, u8 action, u8 type)
+ 
+ static int iwl_alive_notify(struct iwl_priv *priv)
+ {
+-	struct iwl_rxon_context *ctx;
  	int ret;
  
--	if (frag_thr < MWIFIEX_FRAG_MIN_VALUE
--	    || frag_thr > MWIFIEX_FRAG_MAX_VALUE)
-+	if (frag_thr < MWIFIEX_FRAG_MIN_VALUE ||
-+	    frag_thr > MWIFIEX_FRAG_MAX_VALUE)
- 		return -EINVAL;
- 
- 	/* Send request to firmware */
-@@ -746,8 +746,7 @@ static int mwifiex_cfg80211_set_bitrate_mask(struct wiphy *wiphy,
- 	adapter->channel_type = NL80211_CHAN_NO_HT;
- 
- 	wiphy_debug(wiphy, "info: device configured in 802.11%s%s mode\n",
--				(mode & BAND_B) ? "b" : "",
--				(mode & BAND_G) ? "g" : "");
-+		    (mode & BAND_B) ? "b" : "", (mode & BAND_G) ? "g" : "");
- 
- 	return 0;
- }
-@@ -802,8 +801,7 @@ static int mwifiex_cfg80211_inform_ibss_bss(struct mwifiex_private *priv)
- 	ie_buf[1] = bss_info.ssid.ssid_len;
- 
- 	memcpy(&ie_buf[sizeof(struct ieee_types_header)],
--			&bss_info.ssid.ssid,
--			bss_info.ssid.ssid_len);
-+	       &bss_info.ssid.ssid, bss_info.ssid.ssid_len);
- 	ie_len = ie_buf[1] + sizeof(struct ieee_types_header);
- 
- 	band = mwifiex_band_to_radio_type(priv->curr_bss_params.band);
-@@ -812,8 +810,8 @@ static int mwifiex_cfg80211_inform_ibss_bss(struct mwifiex_private *priv)
- 						       band));
- 
- 	bss = cfg80211_inform_bss(priv->wdev->wiphy, chan,
--		bss_info.bssid, 0, WLAN_CAPABILITY_IBSS,
--		0, ie_buf, ie_len, 0, GFP_KERNEL);
-+				  bss_info.bssid, 0, WLAN_CAPABILITY_IBSS,
-+				  0, ie_buf, ie_len, 0, GFP_KERNEL);
- 	cfg80211_put_bss(bss);
- 	memcpy(priv->cfg_bssid, bss_info.bssid, ETH_ALEN);
- 
-@@ -959,7 +957,7 @@ done:
- 			is_scanning_required = 1;
- 		} else {
- 			dev_dbg(priv->adapter->dev, "info: trying to associate to %s and bssid %pM\n",
--					(char *) req_ssid.ssid, bss->bssid);
-+				(char *) req_ssid.ssid, bss->bssid);
- 			memcpy(&priv->cfg_bssid, bss->bssid, ETH_ALEN);
- 			break;
- 		}
-@@ -999,7 +997,7 @@ mwifiex_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
- 	}
- 
- 	wiphy_dbg(wiphy, "info: Trying to associate to %s and bssid %pM\n",
--	       (char *) sme->ssid, sme->bssid);
-+		  (char *) sme->ssid, sme->bssid);
- 
- 	ret = mwifiex_cfg80211_assoc(priv, sme->ssid_len, sme->ssid, sme->bssid,
- 				     priv->bss_mode, sme->channel, sme, 0);
-@@ -1041,11 +1039,11 @@ mwifiex_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
- 	}
- 
- 	wiphy_dbg(wiphy, "info: trying to join to %s and bssid %pM\n",
--	       (char *) params->ssid, params->bssid);
-+		  (char *) params->ssid, params->bssid);
- 
- 	ret = mwifiex_cfg80211_assoc(priv, params->ssid_len, params->ssid,
--				params->bssid, priv->bss_mode,
--				params->channel, NULL, params->privacy);
-+				     params->bssid, priv->bss_mode,
-+				     params->channel, NULL, params->privacy);
- done:
- 	if (!ret) {
- 		cfg80211_ibss_joined(priv->netdev, priv->cfg_bssid, GFP_KERNEL);
-@@ -1072,7 +1070,7 @@ mwifiex_cfg80211_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
- 
- 	wiphy_dbg(wiphy, "info: disconnecting from essid %pM\n",
--			priv->cfg_bssid);
-+		  priv->cfg_bssid);
- 	if (mwifiex_deauthenticate(priv, NULL))
- 		return -EFAULT;
- 
-@@ -1101,7 +1099,7 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy, struct net_device *dev,
- 	priv->scan_request = request;
- 
- 	priv->user_scan_cfg = kzalloc(sizeof(struct mwifiex_user_scan_cfg),
--					GFP_KERNEL);
-+				      GFP_KERNEL);
- 	if (!priv->user_scan_cfg) {
- 		dev_err(priv->adapter->dev, "failed to alloc scan_req\n");
+ 	if (!priv->tx_cmd_pool)
+@@ -329,8 +328,9 @@ static int iwl_alive_notify(struct iwl_priv *priv)
  		return -ENOMEM;
-@@ -1117,10 +1115,10 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy, struct net_device *dev,
  
- 		if (chan->flags & IEEE80211_CHAN_PASSIVE_SCAN)
- 			priv->user_scan_cfg->chan_list[i].scan_type =
--				MWIFIEX_SCAN_TYPE_PASSIVE;
-+						MWIFIEX_SCAN_TYPE_PASSIVE;
- 		else
- 			priv->user_scan_cfg->chan_list[i].scan_type =
--				MWIFIEX_SCAN_TYPE_ACTIVE;
-+						MWIFIEX_SCAN_TYPE_ACTIVE;
+ 	iwl_trans_fw_alive(trans(priv));
+-	for_each_context(priv, ctx)
+-		ctx->last_tx_rejected = false;
++
++	priv->passive_no_rx = false;
++	priv->transport_queue_stop = 0;
  
- 		priv->user_scan_cfg->chan_list[i].scan_time = 0;
- 	}
-@@ -1191,9 +1189,9 @@ mwifiex_setup_ht_caps(struct ieee80211_sta_ht_cap *ht_info,
- 	memset(mcs, 0xff, rx_mcs_supp);
- 	/* Clear all the other values */
- 	memset(&mcs[rx_mcs_supp], 0,
--			sizeof(struct ieee80211_mcs_info) - rx_mcs_supp);
-+	       sizeof(struct ieee80211_mcs_info) - rx_mcs_supp);
- 	if (priv->bss_mode == NL80211_IFTYPE_STATION ||
--			ISSUPP_CHANWIDTH40(adapter->hw_dot_11n_dev_cap))
-+	    ISSUPP_CHANWIDTH40(adapter->hw_dot_11n_dev_cap))
- 		/* Set MCS32 for infra mode or ad-hoc mode with 40MHz support */
- 		SETHT_MCS32(mcs_set.rx_mask);
- 
-@@ -1206,10 +1204,10 @@ mwifiex_setup_ht_caps(struct ieee80211_sta_ht_cap *ht_info,
-  *  create a new virtual interface with the given name
-  */
- struct net_device *mwifiex_add_virtual_intf(struct wiphy *wiphy,
--						char *name,
--						enum nl80211_iftype type,
--						u32 *flags,
--						struct vif_params *params)
-+					    char *name,
-+					    enum nl80211_iftype type,
-+					    u32 *flags,
-+					    struct vif_params *params)
- {
- 	struct mwifiex_private *priv = mwifiex_cfg80211_get_priv(wiphy);
- 	struct mwifiex_adapter *adapter;
-@@ -1367,11 +1365,12 @@ int mwifiex_register_cfg80211(struct mwifiex_private *priv)
- 	int ret;
- 	void *wdev_priv;
- 	struct wireless_dev *wdev;
-+	struct ieee80211_sta_ht_cap *ht_info;
- 
- 	wdev = kzalloc(sizeof(struct wireless_dev), GFP_KERNEL);
- 	if (!wdev) {
- 		dev_err(priv->adapter->dev, "%s: allocating wireless device\n",
--						__func__);
-+			__func__);
- 		return -ENOMEM;
- 	}
- 	wdev->wiphy =
-@@ -1383,17 +1382,17 @@ int mwifiex_register_cfg80211(struct mwifiex_private *priv)
- 	}
- 	wdev->iftype = NL80211_IFTYPE_STATION;
- 	wdev->wiphy->max_scan_ssids = 10;
--	wdev->wiphy->interface_modes =
--		BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
-+	wdev->wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
-+				       BIT(NL80211_IFTYPE_ADHOC);
- 
- 	wdev->wiphy->bands[IEEE80211_BAND_2GHZ] = &mwifiex_band_2ghz;
--	mwifiex_setup_ht_caps(
--		&wdev->wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap, priv);
-+	ht_info = &wdev->wiphy->bands[IEEE80211_BAND_2GHZ]->ht_cap;
-+	mwifiex_setup_ht_caps(ht_info, priv);
- 
- 	if (priv->adapter->config_bands & BAND_A) {
- 		wdev->wiphy->bands[IEEE80211_BAND_5GHZ] = &mwifiex_band_5ghz;
--		mwifiex_setup_ht_caps(
--			&wdev->wiphy->bands[IEEE80211_BAND_5GHZ]->ht_cap, priv);
-+		ht_info = &wdev->wiphy->bands[IEEE80211_BAND_5GHZ]->ht_cap;
-+		mwifiex_setup_ht_caps(ht_info, priv);
- 	} else {
- 		wdev->wiphy->bands[IEEE80211_BAND_5GHZ] = NULL;
- 	}
-@@ -1420,13 +1419,13 @@ int mwifiex_register_cfg80211(struct mwifiex_private *priv)
- 	ret = wiphy_register(wdev->wiphy);
- 	if (ret < 0) {
- 		dev_err(priv->adapter->dev, "%s: registering cfg80211 device\n",
--						__func__);
-+			__func__);
- 		wiphy_free(wdev->wiphy);
- 		kfree(wdev);
- 		return ret;
- 	} else {
- 		dev_dbg(priv->adapter->dev,
--				"info: successfully registered wiphy device\n");
-+			"info: successfully registered wiphy device\n");
- 	}
- 
- 	priv->wdev = wdev;
-diff --git a/drivers/net/wireless/mwifiex/cfp.c b/drivers/net/wireless/mwifiex/cfp.c
-index 7541d9a..2fe1c33 100644
---- a/drivers/net/wireless/mwifiex/cfp.c
-+++ b/drivers/net/wireless/mwifiex/cfp.c
-@@ -163,8 +163,8 @@ u32 mwifiex_get_active_data_rates(struct mwifiex_private *priv, u8 *rates)
- 		return mwifiex_get_supported_rates(priv, rates);
- 	else
- 		return mwifiex_copy_rates(rates, 0,
--				       priv->curr_bss_params.data_rates,
--				       priv->curr_bss_params.num_of_rates);
-+					  priv->curr_bss_params.data_rates,
-+					  priv->curr_bss_params.num_of_rates);
- }
- 
- /*
-diff --git a/drivers/net/wireless/mwifiex/cmdevt.c b/drivers/net/wireless/mwifiex/cmdevt.c
-index c82eb7f..371143a 100644
---- a/drivers/net/wireless/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/mwifiex/cmdevt.c
-@@ -67,7 +67,7 @@ mwifiex_get_cmd_node(struct mwifiex_adapter *adapter)
- 		return NULL;
- 	}
- 	cmd_node = list_first_entry(&adapter->cmd_free_q,
--			struct cmd_ctrl_node, list);
-+				    struct cmd_ctrl_node, list);
- 	list_del(&cmd_node->list);
- 	spin_unlock_irqrestore(&adapter->cmd_free_q_lock, flags);
- 
-@@ -158,8 +158,9 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
- 	/* Set command sequence number */
- 	adapter->seq_num++;
- 	host_cmd->seq_num = cpu_to_le16(HostCmd_SET_SEQ_NO_BSS_INFO
--			    (adapter->seq_num, cmd_node->priv->bss_num,
--			     cmd_node->priv->bss_type));
-+					(adapter->seq_num,
-+					 cmd_node->priv->bss_num,
-+					 cmd_node->priv->bss_type));
- 
- 	spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
- 	adapter->curr_cmd = cmd_node;
-@@ -174,8 +175,8 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
- 	dev_dbg(adapter->dev, "cmd: DNLD_CMD: (%lu.%lu): %#x, act %#x, len %d,"
- 		" seqno %#x\n",
- 		tstamp.tv_sec, tstamp.tv_usec, cmd_code,
--	       le16_to_cpu(*(__le16 *) ((u8 *) host_cmd + S_DS_GEN)), cmd_size,
--	       le16_to_cpu(host_cmd->seq_num));
-+		le16_to_cpu(*(__le16 *) ((u8 *) host_cmd + S_DS_GEN)), cmd_size,
-+		le16_to_cpu(host_cmd->seq_num));
- 
- 	skb_push(cmd_node->cmd_skb, INTF_HEADER_LEN);
- 
-@@ -200,17 +201,17 @@ static int mwifiex_dnld_cmd_to_fw(struct mwifiex_private *priv,
- 
- 	/* Save the last command id and action to debug log */
- 	adapter->dbg.last_cmd_index =
--		(adapter->dbg.last_cmd_index + 1) % DBG_CMD_NUM;
-+			(adapter->dbg.last_cmd_index + 1) % DBG_CMD_NUM;
- 	adapter->dbg.last_cmd_id[adapter->dbg.last_cmd_index] = cmd_code;
- 	adapter->dbg.last_cmd_act[adapter->dbg.last_cmd_index] =
--		le16_to_cpu(*(__le16 *) ((u8 *) host_cmd + S_DS_GEN));
-+			le16_to_cpu(*(__le16 *) ((u8 *) host_cmd + S_DS_GEN));
- 
- 	/* Clear BSS_NO_BITS from HostCmd */
- 	cmd_code &= HostCmd_CMD_ID_MASK;
- 
- 	/* Setup the timer after transmit command */
- 	mod_timer(&adapter->cmd_timer,
--		jiffies + (MWIFIEX_TIMER_10S * HZ) / 1000);
-+		  jiffies + (MWIFIEX_TIMER_10S * HZ) / 1000);
- 
- 	return 0;
- }
-@@ -230,7 +231,7 @@ static int mwifiex_dnld_sleep_confirm_cmd(struct mwifiex_adapter *adapter)
- 	struct mwifiex_private *priv;
- 	struct mwifiex_opt_sleep_confirm *sleep_cfm_buf =
- 				(struct mwifiex_opt_sleep_confirm *)
--				adapter->sleep_cfm->data;
-+						adapter->sleep_cfm->data;
- 	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
- 
- 	sleep_cfm_buf->seq_num =
-@@ -250,7 +251,7 @@ static int mwifiex_dnld_sleep_confirm_cmd(struct mwifiex_adapter *adapter)
- 		return -1;
- 	}
- 	if (GET_BSS_ROLE(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY))
--			== MWIFIEX_BSS_ROLE_STA) {
-+	    == MWIFIEX_BSS_ROLE_STA) {
- 		if (!sleep_cfm_buf->resp_ctrl)
- 			/* Response is not needed for sleep
- 			   confirm command */
-@@ -258,12 +259,12 @@ static int mwifiex_dnld_sleep_confirm_cmd(struct mwifiex_adapter *adapter)
- 		else
- 			adapter->ps_state = PS_STATE_SLEEP_CFM;
- 
--		if (!sleep_cfm_buf->resp_ctrl
--				&& (adapter->is_hs_configured
--					&& !adapter->sleep_period.period)) {
-+		if (!sleep_cfm_buf->resp_ctrl &&
-+		    (adapter->is_hs_configured &&
-+		     !adapter->sleep_period.period)) {
- 			adapter->pm_wakeup_card_req = true;
--			mwifiex_hs_activated_event(mwifiex_get_priv(adapter,
--						MWIFIEX_BSS_ROLE_STA), true);
-+			mwifiex_hs_activated_event(mwifiex_get_priv
-+					(adapter, MWIFIEX_BSS_ROLE_STA), true);
- 		}
- 	}
- 
-@@ -293,7 +294,7 @@ int mwifiex_alloc_cmd_buffer(struct mwifiex_adapter *adapter)
- 	cmd_array = kzalloc(buf_size, GFP_KERNEL);
- 	if (!cmd_array) {
- 		dev_err(adapter->dev, "%s: failed to alloc cmd_array\n",
--				__func__);
-+			__func__);
- 		return -ENOMEM;
- 	}
- 
-@@ -376,9 +377,9 @@ int mwifiex_process_event(struct mwifiex_adapter *adapter)
- 
- 	/* Save the last event to debug log */
- 	adapter->dbg.last_event_index =
--		(adapter->dbg.last_event_index + 1) % DBG_CMD_NUM;
-+			(adapter->dbg.last_event_index + 1) % DBG_CMD_NUM;
- 	adapter->dbg.last_event[adapter->dbg.last_event_index] =
--		(u16) eventcause;
-+							(u16) eventcause;
- 
- 	/* Get BSS number and corresponding priv */
- 	priv = mwifiex_get_priv_by_id(adapter, EVENT_GET_BSS_NUM(eventcause),
-@@ -398,7 +399,7 @@ int mwifiex_process_event(struct mwifiex_adapter *adapter)
- 	if (eventcause != EVENT_PS_SLEEP && eventcause != EVENT_PS_AWAKE) {
- 		do_gettimeofday(&tstamp);
- 		dev_dbg(adapter->dev, "event: %lu.%lu: cause: %#x\n",
--		       tstamp.tv_sec, tstamp.tv_usec, eventcause);
-+			tstamp.tv_sec, tstamp.tv_usec, eventcause);
- 	}
- 
- 	ret = mwifiex_process_sta_event(priv);
-@@ -509,7 +510,7 @@ int mwifiex_send_cmd_async(struct mwifiex_private *priv, uint16_t cmd_no,
- 	/* Return error, since the command preparation failed */
- 	if (ret) {
- 		dev_err(adapter->dev, "PREP_CMD: cmd %#x preparation failed\n",
--							cmd_no);
-+			cmd_no);
- 		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
- 		return -1;
- 	}
-@@ -577,9 +578,9 @@ mwifiex_insert_cmd_to_pending_q(struct mwifiex_adapter *adapter,
- 	/* Exit_PS command needs to be queued in the header always. */
- 	if (command == HostCmd_CMD_802_11_PS_MODE_ENH) {
- 		struct host_cmd_ds_802_11_ps_mode_enh *pm =
--			&host_cmd->params.psmode_enh;
--		if ((le16_to_cpu(pm->action) == DIS_PS)
--		    || (le16_to_cpu(pm->action) == DIS_AUTO_PS)) {
-+						&host_cmd->params.psmode_enh;
-+		if ((le16_to_cpu(pm->action) == DIS_PS) ||
-+		    (le16_to_cpu(pm->action) == DIS_AUTO_PS)) {
- 			if (adapter->ps_state != PS_STATE_AWAKE)
- 				add_tail = false;
- 		}
-@@ -692,7 +693,7 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
- 	if (!adapter->curr_cmd || !adapter->curr_cmd->resp_skb) {
- 		resp = (struct host_cmd_ds_command *) adapter->upld_buf;
- 		dev_err(adapter->dev, "CMD_RESP: NULL curr_cmd, %#x\n",
--		       le16_to_cpu(resp->command));
-+			le16_to_cpu(resp->command));
- 		return -1;
- 	}
- 
-@@ -701,7 +702,7 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
- 	resp = (struct host_cmd_ds_command *) adapter->curr_cmd->resp_skb->data;
- 	if (adapter->curr_cmd->cmd_flag & CMD_F_CANCELED) {
- 		dev_err(adapter->dev, "CMD_RESP: %#x been canceled\n",
--				le16_to_cpu(resp->command));
-+			le16_to_cpu(resp->command));
- 		mwifiex_insert_cmd_to_free_q(adapter, adapter->curr_cmd);
- 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
- 		adapter->curr_cmd = NULL;
-@@ -725,8 +726,8 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
- 
- 	/* Get BSS number and corresponding priv */
- 	priv = mwifiex_get_priv_by_id(adapter,
--			HostCmd_GET_BSS_NO(le16_to_cpu(resp->seq_num)),
--			HostCmd_GET_BSS_TYPE(le16_to_cpu(resp->seq_num)));
-+			     HostCmd_GET_BSS_NO(le16_to_cpu(resp->seq_num)),
-+			     HostCmd_GET_BSS_TYPE(le16_to_cpu(resp->seq_num)));
- 	if (!priv)
- 		priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
- 	/* Clear RET_BIT from HostCmd */
-@@ -737,9 +738,9 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
- 
- 	/* Save the last command response to debug log */
- 	adapter->dbg.last_cmd_resp_index =
--		(adapter->dbg.last_cmd_resp_index + 1) % DBG_CMD_NUM;
-+			(adapter->dbg.last_cmd_resp_index + 1) % DBG_CMD_NUM;
- 	adapter->dbg.last_cmd_resp_id[adapter->dbg.last_cmd_resp_index] =
--		orig_cmdresp_no;
-+								orig_cmdresp_no;
- 
- 	do_gettimeofday(&tstamp);
- 	dev_dbg(adapter->dev, "cmd: CMD_RESP: (%lu.%lu): 0x%x, result %d,"
-@@ -761,8 +762,8 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
- 
- 	if (adapter->curr_cmd->cmd_flag & CMD_F_HOSTCMD) {
- 		adapter->curr_cmd->cmd_flag &= ~CMD_F_HOSTCMD;
--		if ((cmdresp_result == HostCmd_RESULT_OK)
--		    && (cmdresp_no == HostCmd_CMD_802_11_HS_CFG_ENH))
-+		if ((cmdresp_result == HostCmd_RESULT_OK) &&
-+		    (cmdresp_no == HostCmd_CMD_802_11_HS_CFG_ENH))
- 			ret = mwifiex_ret_802_11_hs_cfg(priv, resp);
- 	} else {
- 		/* handle response */
-@@ -826,42 +827,43 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
- 		do_gettimeofday(&tstamp);
- 		dev_err(adapter->dev, "%s: Timeout cmd id (%lu.%lu) = %#x,"
- 			" act = %#x\n", __func__,
--		       tstamp.tv_sec, tstamp.tv_usec,
--		       adapter->dbg.timeout_cmd_id,
--		       adapter->dbg.timeout_cmd_act);
-+			tstamp.tv_sec, tstamp.tv_usec,
-+			adapter->dbg.timeout_cmd_id,
-+			adapter->dbg.timeout_cmd_act);
- 
- 		dev_err(adapter->dev, "num_data_h2c_failure = %d\n",
--		       adapter->dbg.num_tx_host_to_card_failure);
-+			adapter->dbg.num_tx_host_to_card_failure);
- 		dev_err(adapter->dev, "num_cmd_h2c_failure = %d\n",
--		       adapter->dbg.num_cmd_host_to_card_failure);
-+			adapter->dbg.num_cmd_host_to_card_failure);
- 
- 		dev_err(adapter->dev, "num_cmd_timeout = %d\n",
--		       adapter->dbg.num_cmd_timeout);
-+			adapter->dbg.num_cmd_timeout);
- 		dev_err(adapter->dev, "num_tx_timeout = %d\n",
--		       adapter->dbg.num_tx_timeout);
-+			adapter->dbg.num_tx_timeout);
- 
- 		dev_err(adapter->dev, "last_cmd_index = %d\n",
--		       adapter->dbg.last_cmd_index);
-+			adapter->dbg.last_cmd_index);
- 		print_hex_dump_bytes("last_cmd_id: ", DUMP_PREFIX_OFFSET,
--				adapter->dbg.last_cmd_id, DBG_CMD_NUM);
-+				     adapter->dbg.last_cmd_id, DBG_CMD_NUM);
- 		print_hex_dump_bytes("last_cmd_act: ", DUMP_PREFIX_OFFSET,
--				adapter->dbg.last_cmd_act, DBG_CMD_NUM);
-+				     adapter->dbg.last_cmd_act, DBG_CMD_NUM);
- 
- 		dev_err(adapter->dev, "last_cmd_resp_index = %d\n",
--		       adapter->dbg.last_cmd_resp_index);
-+			adapter->dbg.last_cmd_resp_index);
- 		print_hex_dump_bytes("last_cmd_resp_id: ", DUMP_PREFIX_OFFSET,
--				adapter->dbg.last_cmd_resp_id, DBG_CMD_NUM);
-+				     adapter->dbg.last_cmd_resp_id,
-+				     DBG_CMD_NUM);
- 
- 		dev_err(adapter->dev, "last_event_index = %d\n",
--		       adapter->dbg.last_event_index);
-+			adapter->dbg.last_event_index);
- 		print_hex_dump_bytes("last_event: ", DUMP_PREFIX_OFFSET,
--				adapter->dbg.last_event, DBG_CMD_NUM);
-+				     adapter->dbg.last_event, DBG_CMD_NUM);
- 
- 		dev_err(adapter->dev, "data_sent=%d cmd_sent=%d\n",
--		       adapter->data_sent, adapter->cmd_sent);
-+			adapter->data_sent, adapter->cmd_sent);
- 
- 		dev_err(adapter->dev, "ps_mode=%d ps_state=%d\n",
--				adapter->ps_mode, adapter->ps_state);
-+			adapter->ps_mode, adapter->ps_state);
- 	}
- 	if (adapter->hw_status == MWIFIEX_HW_STATUS_INITIALIZING)
- 		mwifiex_init_fw_complete(adapter);
-@@ -942,7 +944,7 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
- 	uint16_t cancel_scan_cmd = false;
- 
- 	if ((adapter->curr_cmd) &&
--	     (adapter->curr_cmd->wait_q_enabled)) {
-+	    (adapter->curr_cmd->wait_q_enabled)) {
- 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, cmd_flags);
- 		cmd_node = adapter->curr_cmd;
- 		cmd_node->wait_q_enabled = false;
-@@ -996,9 +998,9 @@ mwifiex_check_ps_cond(struct mwifiex_adapter *adapter)
- 	else
- 		dev_dbg(adapter->dev,
- 			"cmd: Delay Sleep Confirm (%s%s%s)\n",
--		       (adapter->cmd_sent) ? "D" : "",
--		       (adapter->curr_cmd) ? "C" : "",
--		       (IS_CARD_RX_RCVD(adapter)) ? "R" : "");
-+			(adapter->cmd_sent) ? "D" : "",
-+			(adapter->curr_cmd) ? "C" : "",
-+			(IS_CARD_RX_RCVD(adapter)) ? "R" : "");
- }
- 
- /*
-@@ -1050,8 +1052,8 @@ int mwifiex_ret_802_11_hs_cfg(struct mwifiex_private *priv,
- 		dev_dbg(adapter->dev, "cmd: CMD_RESP: HS_CFG cmd reply"
- 			" result=%#x, conditions=0x%x gpio=0x%x gap=0x%x\n",
- 			resp->result, conditions,
--		       phs_cfg->params.hs_config.gpio,
--		       phs_cfg->params.hs_config.gap);
-+			phs_cfg->params.hs_config.gpio,
-+			phs_cfg->params.hs_config.gap);
- 	}
- 	if (conditions != HOST_SLEEP_CFG_CANCEL) {
- 		adapter->is_hs_configured = true;
-@@ -1078,7 +1080,8 @@ mwifiex_process_hs_config(struct mwifiex_adapter *adapter)
- 	adapter->hs_activated = false;
- 	adapter->is_hs_configured = false;
- 	mwifiex_hs_activated_event(mwifiex_get_priv(adapter,
--				   MWIFIEX_BSS_ROLE_ANY), false);
-+						    MWIFIEX_BSS_ROLE_ANY),
-+				   false);
- }
- 
- /*
-@@ -1120,16 +1123,17 @@ mwifiex_process_sleep_confirm_resp(struct mwifiex_adapter *adapter,
- 	}
- 
- 	if (result) {
--		dev_err(adapter->dev, "%s: sleep confirm cmd failed\n",
--						__func__);
-+		dev_err(adapter->dev, "%s: sleep confirm cmd failed\n", __func__
-+			);
- 		adapter->pm_wakeup_card_req = false;
- 		adapter->ps_state = PS_STATE_AWAKE;
- 		return;
- 	}
- 	adapter->pm_wakeup_card_req = true;
- 	if (adapter->is_hs_configured)
--		mwifiex_hs_activated_event(mwifiex_get_priv(adapter,
--					   MWIFIEX_BSS_ROLE_ANY), true);
-+		mwifiex_hs_activated_event(mwifiex_get_priv
-+						(adapter, MWIFIEX_BSS_ROLE_ANY),
-+					   true);
- 	adapter->ps_state = PS_STATE_SLEEP;
- 	cmd->command = cpu_to_le16(command);
- 	cmd->seq_num = cpu_to_le16(seq_num);
-@@ -1163,17 +1167,17 @@ int mwifiex_cmd_enh_power_mode(struct mwifiex_private *priv,
- 		psmode_enh->action = cpu_to_le16(DIS_AUTO_PS);
- 		psmode_enh->params.ps_bitmap = cpu_to_le16(ps_bitmap);
- 		cmd->size = cpu_to_le16(S_DS_GEN + sizeof(psmode_enh->action) +
--				sizeof(psmode_enh->params.ps_bitmap));
-+					sizeof(psmode_enh->params.ps_bitmap));
- 	} else if (cmd_action == GET_PS) {
- 		psmode_enh->action = cpu_to_le16(GET_PS);
- 		psmode_enh->params.ps_bitmap = cpu_to_le16(ps_bitmap);
- 		cmd->size = cpu_to_le16(S_DS_GEN + sizeof(psmode_enh->action) +
--				sizeof(psmode_enh->params.ps_bitmap));
-+					sizeof(psmode_enh->params.ps_bitmap));
- 	} else if (cmd_action == EN_AUTO_PS) {
- 		psmode_enh->action = cpu_to_le16(EN_AUTO_PS);
- 		psmode_enh->params.ps_bitmap = cpu_to_le16(ps_bitmap);
- 		cmd_size = S_DS_GEN + sizeof(psmode_enh->action) +
--				sizeof(psmode_enh->params.ps_bitmap);
-+					sizeof(psmode_enh->params.ps_bitmap);
- 		tlv = (u8 *) cmd + cmd_size;
- 		if (ps_bitmap & BITMAP_STA_PS) {
- 			struct mwifiex_adapter *adapter = priv->adapter;
-@@ -1187,19 +1191,18 @@ int mwifiex_cmd_enh_power_mode(struct mwifiex_private *priv,
- 			tlv += sizeof(*ps_tlv);
- 			dev_dbg(adapter->dev, "cmd: PS Command: Enter PS\n");
- 			ps_mode->null_pkt_interval =
--				cpu_to_le16(adapter->null_pkt_interval);
-+					cpu_to_le16(adapter->null_pkt_interval);
- 			ps_mode->multiple_dtims =
--				cpu_to_le16(adapter->multiple_dtim);
-+					cpu_to_le16(adapter->multiple_dtim);
- 			ps_mode->bcn_miss_timeout =
--				cpu_to_le16(adapter->bcn_miss_time_out);
-+					cpu_to_le16(adapter->bcn_miss_time_out);
- 			ps_mode->local_listen_interval =
- 				cpu_to_le16(adapter->local_listen_interval);
- 			ps_mode->adhoc_wake_period =
- 				cpu_to_le16(adapter->adhoc_awake_period);
- 			ps_mode->delay_to_ps =
--				cpu_to_le16(adapter->delay_to_ps);
--			ps_mode->mode =
--				cpu_to_le16(adapter->enhanced_ps_mode);
-+					cpu_to_le16(adapter->delay_to_ps);
-+			ps_mode->mode = cpu_to_le16(adapter->enhanced_ps_mode);
- 
- 		}
- 		if (ps_bitmap & BITMAP_AUTO_DS) {
-@@ -1217,7 +1220,7 @@ int mwifiex_cmd_enh_power_mode(struct mwifiex_private *priv,
- 			if (auto_ds)
- 				idletime = auto_ds->idle_time;
- 			dev_dbg(priv->adapter->dev,
--					"cmd: PS Command: Enter Auto Deep Sleep\n");
-+				"cmd: PS Command: Enter Auto Deep Sleep\n");
- 			auto_ds_tlv->deep_sleep_timeout = cpu_to_le16(idletime);
- 		}
- 		cmd->size = cpu_to_le16(cmd_size);
-@@ -1245,7 +1248,7 @@ int mwifiex_ret_enh_power_mode(struct mwifiex_private *priv,
- 		le16_to_cpu(ps_mode->params.ps_bitmap);
- 
- 	dev_dbg(adapter->dev, "info: %s: PS_MODE cmd reply result=%#x action=%#X\n",
--					__func__, resp->result, action);
-+		__func__, resp->result, action);
- 	if (action == EN_AUTO_PS) {
- 		if (auto_ps_bitmap & BITMAP_AUTO_DS) {
- 			dev_dbg(adapter->dev, "cmd: Enabled auto deep sleep\n");
-@@ -1373,12 +1376,12 @@ int mwifiex_ret_get_hw_spec(struct mwifiex_private *priv,
- 	adapter->number_of_antenna = le16_to_cpu(hw_spec->number_of_antenna);
- 
- 	dev_dbg(adapter->dev, "info: GET_HW_SPEC: fw_release_number- %#x\n",
--	       adapter->fw_release_number);
-+		adapter->fw_release_number);
- 	dev_dbg(adapter->dev, "info: GET_HW_SPEC: permanent addr: %pM\n",
--					hw_spec->permanent_addr);
-+		hw_spec->permanent_addr);
- 	dev_dbg(adapter->dev, "info: GET_HW_SPEC: hw_if_version=%#x  version=%#x\n",
- 		le16_to_cpu(hw_spec->hw_if_version),
--	       le16_to_cpu(hw_spec->version));
-+		le16_to_cpu(hw_spec->version));
- 
- 	if (priv->curr_addr[0] == 0xff)
- 		memmove(priv->curr_addr, hw_spec->permanent_addr, ETH_ALEN);
+ 	ret = iwl_send_wimax_coex(priv);
+ 	if (ret)
 -- 
-1.7.0.2
+1.7.0.4
 
