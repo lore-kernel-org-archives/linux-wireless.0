@@ -1,133 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:54635 "EHLO ogre.sisk.pl"
+Received: from mga09.intel.com ([134.134.136.24]:38078 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755493Ab2CDVft convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 16:35:49 -0500
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 3.3-rc6: Reported regressions 3.1 -> 3.2
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <QW36V-vSgyB.A.YIG.i79UPB@chimera> (sfid-20120304_223556_804368_EBFC03EF)
-Date: Sun,  4 Mar 2012 22:15:40 +0100 (CET)
+	id S1754890Ab2CDUm4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:42:56 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 000/101] update for 3.4: iwlwifi 2012-03-04
+Date: Sun,  4 Mar 2012 11:28:14 -0800
+Message-Id: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214659_687687_F4FD9B7D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some post-3.1 regressions introduced before
-3.2, for which there are no fixes in the mainline known to the tracking team.
-If any of them have been fixed already, please let us know.
+Major re-factor and clenup works happen in iwlwifi, we move the code to the
+proper place and get ready for the next generation of the devices
 
-If you know of any other unresolved post-3.1 regressions, please let us know
-either and we'll add them to the list.  Also, please let us know if any
-of the entries below are invalid.
+We also modify the auth/assoc flow to match the re-design work in mac80211
 
-Each entry from the list will be sent additionally in an automatic reply to
-this message with CCs to the people involved in reporting and handling the
-issue.
+Amit Beka (1):
+  iwlwifi: fixed testmode notifications length
 
+David Spinadel (1):
+  iwlwifi: add option to test MFP
 
-Listed regressions statistics:
+Don Fry (3):
+  iwlwifi: separate status to priv and trans
+  iwlwifi: more status bit factoring
+  iwlwifi: correct status bit refactoring errors
 
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2012-03-04        9        8           7
-  2012-02-24        9        8           7
+Emmanuel Grumbach (3):
+  iwlwifi: add testmode command for rx forwarding
+  iwlwifi: log stop / wake queues
+  iwlwifi: restore PAN support
 
+Johannes Berg (83):
+  iwlwifi: move iwl_clear_driver_stations to user
+  iwlwifi: remove an unused argument
+  iwlwifi: reduce sta_lock hold time in TX
+  iwlwifi: simplify code in iwlagn_key_sta_id
+  iwlwifi: build some station commands directly
+  iwlwifi: introduce per-queue locks
+  iwlwifi: make sta lock private & BH lock
+  iwlwifi: introduce statistics lock
+  iwlwifi: remove shared lock
+  iwlwifi: make EXIT_PENDING depend on mac80211
+  iwlwifi: simplify auth/assoc flow
+  iwlwifi: remove per-device debug level
+  iwlwifi: remove SKU from config
+  iwlwifi: use valid TX/RX antenna from hw_params
+  iwlwifi: make config const
+  iwlwifi: reduce IDI code ifdef
+  iwlwifi: clean up (wowlan) suspend flow
+  iwlwifi: move wowlan bool into priv
+  iwlwifi: use ieee80211_tx_status
+  iwlwifi: pass response packet directly
+  iwlwifi: don't pass iwl_rx_mem_buffer to upper layers
+  iwlwifi: refactor PCI-E RX path
+  iwlwifi: transport's tx_agg_alloc must not sleep
+  iwlwifi: move queue functions to PCI-E
+  iwlwifi: iwl_rx_cmd_buffer belongs to transport API
+  iwlwifi: move tid_to_ac to PCI-E
+  iwlwifi: move IWL_MASK into file using it
+  iwlwifi: move traffic log definitions
+  iwlwifi: fix station HT parameters
+  iwlwifi: move uCode deallocation to drv
+  iwlwifi: move iwl_base_params to shared header
+  iwlwifi: move firmware request into drv
+  iwlwifi: move firmware completion wait
+  iwlwifi: move ucode loading to op_mode
+  iwlwifi: split out firmware store
+  iwlwifi: remove iwl-wifi.h
+  iwlwifi: add wrappers for command sending
+  iwlwifi: move RF/CT kill check to command wrapper
+  iwlwifi: move lockdep assertion into DVM
+  iwlwifi: move mutex out of shared
+  iwlwifi: move rfkill status handling out of transport
+  iwlwifi: rename ucode.h to fw-file.h
+  iwlwifi: remove AMT check from transport
+  iwlwifi: remove shadow_reg_enable from hw_params
+  iwlwifi: move status check functions out of shared
+  iwlwifi: make tracing use device as identifier
+  iwlwifi: virtualize command queue full behaviour
+  iwlwifi: clean up iwl-core.h inclusions
+  iwlwifi: remove num_of_queues module parameter
+  iwlwifi: remove max_txq_num from hw_params
+  iwlwifi: keep plcp_delta_threshold in priv
+  iwlwifi: use watchdog timeout from hw_params
+  iwlwifi: put use_rts_for_aggregation into hw_params
+  iwlwifi: constify remaining config data
+  iwlwifi: fix notification wait bug
+  iwlwifi: abstract out notification wait support
+  iwlwifi: move ucode_owner to priv
+  iwlwifi: move all uCode load variables
+  iwlwifi: move irq to PCIe
+  iwlwifi: move packet to transport
+  iwlwifi: virtualize nic_config
+  iwlwifi: remove priv from shared
+  iwlwifi: remove PA type configuration
+  iwlwifi: don't include iwl-prph.h everywhere
+  iwlwifi: clean up iwl-commands.h
+  iwlwifi: make iwl_fill_probe_req static
+  iwlwifi: remove unused arguments from iwlagn_gain_computation
+  iwlwifi: remove unused argument from rs_initialize_lq
+  iwlwifi: move iwl_sta_id_or_broadcast to user
+  iwlwifi: remove unused argument from iwl_init_hw_rates
+  iwlwifi: remove two unused arguments in testmode
+  iwlwifi: remove unused argument from iwlagn_suspend
+  iwlwifi: redesign PASSIVE_NO_RX workaround
+  iwlwifi: transport's tx_agg_disable must be atomic
+  iwlwifi: remove BT handlers from lib_ops
+  iwlwifi: move BT/HT params to shared
+  iwlwifi: make EEPROM enhanced TX power a bool
+  iwlwifi: remove unused max_nrg_cck from sensitivity and constify
+  iwlwifi: return error if loading uCode failed
+  iwlwifi: remove messages from queue wake/stop
+  iwlwifi: make iwl_init_context static
+  iwlwifi: don't delete AP station directly
+  iwlwifi: always monitor for stuck queues
 
-Unresolved regressions
-----------------------
+Meenakshi Venkataraman (3):
+  iwlwifi: configure transport layer from dvm op mode
+  iwlwifi: move setting up fw parameters
+  iwlwifi: move command queue number out of the iwl_shared struct
 
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42714
-Subject		: 3.2.x Regression for SAS Controller on Dell C6100
-Submitter	: Herbert Poetzl <herbert@13thfloor.at>
-Date		: 2012-01-31 18:09 (34 days old)
-Message-ID	: <20120131180949.GT29272@MAIL.13thfloor.at>
-References	: http://marc.info/?l=linux-kernel&m=132803360019481&w=2
+Stanislaw Gruszka (7):
+  iwlwifi: dump stack when fail to gain access to the device
+  iwlwifi: always check if got h/w access before write
+  iwlwifi: cleanup/fix memory barriers
+  iwlwifi: use writeb,writel,readl directly
+  iwlwifi: print DMA stop timeout error only if it happened
+  iwlwifi: reintroduce iwl_enable_rfkill_int
+  iwlwifi: make tx_cmd_pool kmem cache global
 
+these patches are also available from wireless-next branch on
+ git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi.git
 
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42685
-Subject		: multi-media key "mute" no longer recognized
-Submitter	: Toralf Förster <toralf.foerster@gmx.de>
-Date		: 2012-01-23 10:52 (42 days old)
-Message-ID	: <201201231152.25344.toralf.foerster@gmx.de>
-References	: http://marc.info/?l=linux-kernel&m=132731613606121&w=2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42684
-Subject		: FYIO: usb/video 3.2 breaks logitech 9000pro webcam focus control
-Submitter	: M G Berberich <berberic@fmi.uni-passau.de>
-Date		: 2012-01-23 21:49 (42 days old)
-Message-ID	: <20120123214934.GA4240@invalid>
-References	: http://marc.info/?l=linux-kernel&m=132735609521443&w=2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42631
-Subject		: Sound broken in 3.2.0 and 3.2.1
-Submitter	: Joseph Parmelee <jparmele@wildbear.com>
-Date		: 2012-01-13 19:44 (52 days old)
-Message-ID	: <alpine.LNX.2.00.1201131241090.1239@bruno>
-References	: http://marc.info/?l=linux-kernel&m=132648462806235&w=2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42629
-Subject		: recvmsg sleeping from invalid context
-Submitter	: Dave Jones <davej@redhat.com>
-Date		: 2012-01-13 18:24 (52 days old)
-Message-ID	: <20120113182401.GA25885@redhat.com>
-References	: http://marc.info/?l=linux-kernel&m=132647921304184&w=2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42611
-Subject		: kernel 3.2 crashes too early on HP dc7700 and HP t5000 series
-Submitter	: Dmitry D. Khlebnikov <galaxy@openwall.com>
-Date		: 2012-01-10 11:49 (55 days old)
-Message-ID	: <20120110114905.GC13535@openwall.com>
-References	: http://marc.info/?l=linux-kernel&m=132619793012702&w=2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42610
-Subject		: 3.2.0 reboot powers off machine
-Submitter	: Tom Weber <l_linux-kernel@mail2news.4t2.com>
-Date		: 2012-01-11 11:03 (54 days old)
-Message-ID	: <1326279818.24835.12.camel@utumno>
-References	: http://marc.info/?l=linux-kernel&m=132628059308023&w=2
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42571
-Subject		: BUG in ofcs2_change_file_space
-Submitter	: Bret Towe <magnade@gmail.com>
-Date		: 2012-01-05 22:23 (60 days old)
-Message-ID	: <CALjC5haTNDMOTDPL1m1uBTc2a-Qb8cvR44SCaVDFMzGc+Gw3+w@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=132580236211209&w=2
-Patch		: http://oss.oracle.com/pipermail/ocfs2-devel/2012-January/008464.html
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions introduced
-between 3.1 and 3.2, unresolved as well as resolved, at:
-
-https://bugzilla.kernel.org/show_bug.cgi?id=42566
-
-Please let the tracking team know if there are any Bugzilla entries that
-should be added to the list in there.
-
-Thanks!
+ drivers/net/wireless/iwlwifi/Kconfig              |   11 +-
+ drivers/net/wireless/iwlwifi/Makefile             |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-1000.c           |   31 +-
+ drivers/net/wireless/iwlwifi/iwl-2000.c           |   44 +-
+ drivers/net/wireless/iwlwifi/iwl-5000.c           |   63 +-
+ drivers/net/wireless/iwlwifi/iwl-6000.c           |  103 ++--
+ drivers/net/wireless/iwlwifi/iwl-agn-calib.c      |   65 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c        |  101 ++-
+ drivers/net/wireless/iwlwifi/iwl-agn-rs.c         |    6 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c         |  180 ++--
+ drivers/net/wireless/iwlwifi/iwl-agn-rxon.c       |   91 +--
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c        |  385 +++++-----
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.c         |   47 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |  164 +++--
+ drivers/net/wireless/iwlwifi/iwl-agn.c            |  357 ++++++---
+ drivers/net/wireless/iwlwifi/iwl-agn.h            |  166 ++--
+ drivers/net/wireless/iwlwifi/iwl-cfg.h            |   82 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h       |  106 +---
+ drivers/net/wireless/iwlwifi/iwl-core.c           |  111 +--
+ drivers/net/wireless/iwlwifi/iwl-core.h           |   78 +--
+ drivers/net/wireless/iwlwifi/iwl-debug.c          |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-debug.h          |   26 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c        |  167 ++---
+ drivers/net/wireless/iwlwifi/iwl-dev.h            |   37 +-
+ drivers/net/wireless/iwlwifi/iwl-devtrace.h       |  141 ++--
+ drivers/net/wireless/iwlwifi/iwl-drv.c            |  684 +++++++++++++++-
+ drivers/net/wireless/iwlwifi/iwl-drv.h            |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c         |   69 +-
+ drivers/net/wireless/iwlwifi/iwl-eeprom.h         |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-fw-file.h        |  160 ++++
+ drivers/net/wireless/iwlwifi/iwl-fw.h             |  146 ++++
+ drivers/net/wireless/iwlwifi/iwl-io.c             |   69 +-
+ drivers/net/wireless/iwlwifi/iwl-io.h             |    8 +-
+ drivers/net/wireless/iwlwifi/iwl-led.c            |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c       |  403 +++++-----
+ drivers/net/wireless/iwlwifi/iwl-notif-wait.c     |  157 ++++
+ drivers/net/wireless/iwlwifi/iwl-notif-wait.h     |  129 +++
+ drivers/net/wireless/iwlwifi/iwl-op-mode.h        |   26 +-
+ drivers/net/wireless/iwlwifi/iwl-pci.c            |   13 +-
+ drivers/net/wireless/iwlwifi/iwl-power.c          |   14 +-
+ drivers/net/wireless/iwlwifi/iwl-prph.h           |    4 -
+ drivers/net/wireless/iwlwifi/iwl-scan.c           |  218 +++---
+ drivers/net/wireless/iwlwifi/iwl-shared.h         |  331 ++------
+ drivers/net/wireless/iwlwifi/iwl-testmode.c       |  103 ++-
+ drivers/net/wireless/iwlwifi/iwl-testmode.h       |   13 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |  104 ++-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |  313 ++++----
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |  164 +++--
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |  286 +++----
+ drivers/net/wireless/iwlwifi/iwl-trans.c          |   77 --
+ drivers/net/wireless/iwlwifi/iwl-trans.h          |  191 +++--
+ drivers/net/wireless/iwlwifi/iwl-ucode.c          |  911 +++------------------
+ drivers/net/wireless/iwlwifi/iwl-ucode.h          |  220 -----
+ drivers/net/wireless/iwlwifi/iwl-wifi.h           |  111 ---
+ 54 files changed, 3718 insertions(+), 3784 deletions(-)
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-fw-file.h
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-fw.h
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-notif-wait.c
+ create mode 100644 drivers/net/wireless/iwlwifi/iwl-notif-wait.h
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-trans.c
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-ucode.h
+ delete mode 100644 drivers/net/wireless/iwlwifi/iwl-wifi.h
 
