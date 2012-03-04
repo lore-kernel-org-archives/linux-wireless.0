@@ -1,113 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:43502 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755460Ab2CHOx3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 09:53:29 -0500
-Received: by gghe5 with SMTP id e5so231892ggh.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2012 06:53:28 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAD2nsn08oU9MCEnYoFpHPmUfo+7bXrnOP2k1P7PH4P_1NH59Vg@mail.gmail.com>
-References: <CAO1ZyKkpZy38vNc8iCOODnuVeJJPPb-DOH=+HFPvgGGjj+hDMA@mail.gmail.com>
- <CAD2nsn08oU9MCEnYoFpHPmUfo+7bXrnOP2k1P7PH4P_1NH59Vg@mail.gmail.com>
-From: Claudio Rossi <rossi.claudio.82@gmail.com>
-Date: Thu, 8 Mar 2012 15:53:08 +0100
-Message-ID: <CAO1ZyK=kzvnRS8BsZoyqqun4-sra=AROF_uL1Nxjr2BoQCGwhw@mail.gmail.com> (sfid-20120308_155337_411909_FD00DB98)
-Subject: Re: Accessing PROTOCOL TYPE FILES from rx.c in mac80211
-To: Mohammed Shafi <shafi.wireless@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:54587 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755220Ab2CDUnN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:13 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 096/101] iwlwifi: remove messages from queue wake/stop
+Date: Sun,  4 Mar 2012 11:29:50 -0800
+Message-Id: <1330889395-533-97-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214428_568515_C7EEFD6E)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Mohammed,
-  I need to work inside  ieee80211_rx_h_sta_process as I have to
-perform stationwise stats and I have to catch all packets, also the
-ones that will be redirected to the BSS.
-I think that the problem arise because the pointer of the
-network_header is not correctly set.
-If I am not wrong, at this point of the receive path the skb should
-contain the 802.11 header as a first element, so I did
-skb_set_nework_header(skb,ieee80211_get_hdrlen_from_skb(skb)))
-I was supposing that after the MAC header there is the IP header... no
-ethernet header in between. Is this the case?
-Also doing
-skb_set_nework_header(skb,ieee80211_get_hdrlen_from_skb(skb)+sizeof(struct(ethhdr)))
-does not work
-Does somebody have any hint?
-thank you
+From: Johannes Berg <johannes.berg@intel.com>
 
-Claudio
+The only reason we ever stop/wake queues at
+the transport level is now that they become
+full (or non-full), so the messages aren't
+useful any more -- remove them.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |   36 ++++++++++----------
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |    4 +-
+ 2 files changed, 20 insertions(+), 20 deletions(-)
 
-2012/3/8 Mohammed Shafi <shafi.wireless@gmail.com>:
-> On Thu, Mar 8, 2012 at 3:54 PM, Claudio Rossi
-> <rossi.claudio.82@gmail.com> wrote:
->> Dear all,
->>  I would like to inspect the protocol type field from mac802.11, and
->> specifically in rx.c in the function
->>
->> static ieee80211_rx_result debug_noinline
->> ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
->
-> may be you should do this stuff after ieee80211_deliver_skb in 1740, rx.c
->
-> if (skb) {
->                        /* deliver to local stack */
->                        skb->protocol = eth_type_trans(skb, dev);
->                        memset(skb->cb, 0, sizeof(skb->cb));
->                        netif_receive_skb(skb);
->                }
->        }
->
->
->>
->> I was trying to do:
->>
->> struct iphdr * network_header;
->> skb_set_network_header(skb,ieee80211_get_hdrlen_from_skb(skb));
->> network_header = (struct iphdr *)skb_network_header(skb);
->>
->>  if (network_header->protocol==IPPROTO_TCP){
->> ...
->> }
->> but it does not seams to work....
->>
->> In status.c everything works fine when I do:
->>
->> struct iphdr * network_header;
->>
->> network_header = (struct iphdr *)skb_network_header(skb);
->>
->>  if (network_header->protocol==IPPROTO_TCP){
->> ...
->> }
->>
->> the problem is how to correctly set the network header pointer in the
->> skb in rx.c
->> can somebody give me an hint?
->>
->>
->> Thank you
->>
->> --
->> Claudio Rossi
->> -------------------
->> Office @ PoliTO: +39 011 5644194
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
-> --
-> thanks,
-> shafi
-
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+index 14e5d52..6796559 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+@@ -411,7 +411,7 @@ static inline u8 iwl_get_queue_ac(struct iwl_tx_queue *txq)
+ }
+ 
+ static inline void iwl_wake_queue(struct iwl_trans *trans,
+-				  struct iwl_tx_queue *txq, const char *msg)
++				  struct iwl_tx_queue *txq)
+ {
+ 	u8 queue = txq->swq_id;
+ 	u8 ac = queue & 3;
+@@ -422,19 +422,19 @@ static inline void iwl_wake_queue(struct iwl_trans *trans,
+ 	if (test_and_clear_bit(hwq, trans_pcie->queue_stopped)) {
+ 		if (atomic_dec_return(&trans_pcie->queue_stop_count[ac]) <= 0) {
+ 			iwl_op_mode_queue_not_full(trans->op_mode, ac);
+-			IWL_DEBUG_TX_QUEUES(trans, "Wake hwq %d ac %d. %s",
+-					    hwq, ac, msg);
++			IWL_DEBUG_TX_QUEUES(trans, "Wake hwq %d ac %d",
++					    hwq, ac);
+ 		} else {
+-			IWL_DEBUG_TX_QUEUES(trans, "Don't wake hwq %d ac %d"
+-					    " stop count %d. %s",
+-					    hwq, ac, atomic_read(&trans_pcie->
+-					    queue_stop_count[ac]), msg);
++			IWL_DEBUG_TX_QUEUES(trans,
++				"Don't wake hwq %d ac %d stop count %d",
++				hwq, ac,
++				atomic_read(&trans_pcie->queue_stop_count[ac]));
+ 		}
+ 	}
+ }
+ 
+ static inline void iwl_stop_queue(struct iwl_trans *trans,
+-				  struct iwl_tx_queue *txq, const char *msg)
++				  struct iwl_tx_queue *txq)
+ {
+ 	u8 queue = txq->swq_id;
+ 	u8 ac = queue & 3;
+@@ -445,19 +445,19 @@ static inline void iwl_stop_queue(struct iwl_trans *trans,
+ 	if (!test_and_set_bit(hwq, trans_pcie->queue_stopped)) {
+ 		if (atomic_inc_return(&trans_pcie->queue_stop_count[ac]) > 0) {
+ 			iwl_op_mode_queue_full(trans->op_mode, ac);
+-			IWL_DEBUG_TX_QUEUES(trans, "Stop hwq %d ac %d"
+-					    " stop count %d. %s",
+-					    hwq, ac, atomic_read(&trans_pcie->
+-					    queue_stop_count[ac]), msg);
++			IWL_DEBUG_TX_QUEUES(trans,
++				"Stop hwq %d ac %d stop count %d",
++				hwq, ac,
++				atomic_read(&trans_pcie->queue_stop_count[ac]));
+ 		} else {
+-			IWL_DEBUG_TX_QUEUES(trans, "Don't stop hwq %d ac %d"
+-					    " stop count %d. %s",
+-					    hwq, ac, atomic_read(&trans_pcie->
+-					    queue_stop_count[ac]), msg);
++			IWL_DEBUG_TX_QUEUES(trans,
++				"Don't stop hwq %d ac %d stop count %d",
++				hwq, ac,
++				atomic_read(&trans_pcie->queue_stop_count[ac]));
+ 		}
+ 	} else {
+-		IWL_DEBUG_TX_QUEUES(trans, "stop hwq %d, but it is stopped/ %s",
+-				    hwq, msg);
++		IWL_DEBUG_TX_QUEUES(trans, "stop hwq %d, but it is stopped",
++				    hwq);
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index f28f4cb..7c80897 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1497,7 +1497,7 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 			txq->need_update = 1;
+ 			iwl_txq_update_write_ptr(trans, txq);
+ 		} else {
+-			iwl_stop_queue(trans, txq, "Queue is full");
++			iwl_stop_queue(trans, txq);
+ 		}
+ 	}
+ 	spin_unlock(&txq->lock);
+@@ -1601,7 +1601,7 @@ static int iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
+ 				tfd_num, ssn);
+ 		freed = iwl_tx_queue_reclaim(trans, txq_id, tfd_num, skbs);
+ 		if (iwl_queue_space(&txq->q) > txq->q.low_mark)
+-			iwl_wake_queue(trans, txq, "Packets reclaimed");
++			iwl_wake_queue(trans, txq);
+ 	}
+ 
+ 	spin_unlock(&txq->lock);
 -- 
-Claudio Rossi
--------------------
-Office @ PoliTO: +39 011 5644194
+1.7.0.4
+
