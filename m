@@ -1,77 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:40855 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753867Ab2CINmW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Mar 2012 08:42:22 -0500
-Received: by dajr28 with SMTP id r28so1492094daj.19
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2012 05:42:22 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1331298825-22314-1-git-send-email-helmut.schaa@googlemail.com>
-References: <1331298825-22314-1-git-send-email-helmut.schaa@googlemail.com>
-Date: Fri, 9 Mar 2012 14:42:22 +0100
-Message-ID: <CAGXE3d_58okToGOH146vDsgZ_Jf01iZAxDX0pxwBMGSo0BvZYg@mail.gmail.com> (sfid-20120309_144226_282173_3EB79E62)
-Subject: Re: [PATCH] mac80211: Disable MCS > 7 in minstrel_ht when STA uses
- static SMPS
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net, nbd@openwrt.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:55973 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755209Ab2CDUnM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:12 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 091/101] iwlwifi: log stop / wake queues
+Date: Sun,  4 Mar 2012 11:29:45 -0800
+Message-Id: <1330889395-533-92-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214412_008631_328F6FFE)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 9, 2012 at 2:13 PM, Helmut Schaa
-<helmut.schaa@googlemail.com> wrote:
-> Disable multi stream rates (MCS > 7) when a STA is in static SMPS mode
-> since it has only one active rx chain. Hence, it doesn't even make
-> sense to sample multi stream rates.
->
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> ---
->
-> I haven't found a STA that makes use of static SMPS, so this is only compile tested.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Did some tests now, 2-stream rates are masked out correctly when the STA
-enters static SMPS mode ...
+There were a few missing occurences when we get PASSIVE_NO_RX
+notification.
 
->  net/mac80211/rc80211_minstrel_ht.c |    9 +++++++++
->  1 files changed, 9 insertions(+), 0 deletions(-)
->
-> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-> index ff5f7b8..2b42564 100644
-> --- a/net/mac80211/rc80211_minstrel_ht.c
-> +++ b/net/mac80211/rc80211_minstrel_ht.c
-> @@ -692,6 +692,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
->        int ack_dur;
->        int stbc;
->        int i;
-> +       unsigned int smps;
->
->        /* fall back to the old minstrel for legacy stations */
->        if (!sta->ht_cap.ht_supported)
-> @@ -731,6 +732,9 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
->            oper_chan_type != NL80211_CHAN_HT40PLUS)
->                sta_cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
->
-> +       smps = (sta_cap & IEEE80211_HT_CAP_SM_PS) >>
-> +               IEEE80211_HT_CAP_SM_PS_SHIFT;
-> +
->        for (i = 0; i < ARRAY_SIZE(mi->groups); i++) {
->                u16 req = 0;
->
-> @@ -748,6 +752,11 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
->                if ((sta_cap & req) != req)
->                        continue;
->
-> +               /* Mark MCS > 7 as unsupported if STA is in static SMPS mode */
-> +               if (smps == WLAN_HT_CAP_SM_PS_STATIC &&
-> +                   minstrel_mcs_groups[i].streams > 1)
-> +                       continue;
-> +
->                mi->groups[i].supported =
->                        mcs->rx_mask[minstrel_mcs_groups[i].streams - 1];
->
-> --
-> 1.7.7
->
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    2 ++
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |    6 +++++-
+ 2 files changed, 7 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 1d67e6c..1cd4831 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -1088,6 +1088,8 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+ 			    ctx->vif->type == NL80211_IFTYPE_STATION) {
+ 				/* block and stop all queues */
+ 				priv->passive_no_rx = true;
++				IWL_DEBUG_TX_QUEUES(priv, "stop all queues: "
++						    "passive channel");
+ 				ieee80211_stop_queues(priv->hw);
+ 
+ 				IWL_DEBUG_TX_REPLY(priv,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 7927e3e..6ed2f78 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1450,8 +1450,12 @@ void iwlagn_lift_passive_no_rx(struct iwl_priv *priv)
+ 		return;
+ 
+ 	for (ac = IEEE80211_AC_VO; ac < IEEE80211_NUM_ACS; ac++) {
+-		if (!test_bit(ac, &priv->transport_queue_stop))
++		if (!test_bit(ac, &priv->transport_queue_stop)) {
++			IWL_DEBUG_TX_QUEUES(priv, "Wake queue %d");
+ 			ieee80211_wake_queue(priv->hw, ac);
++		} else {
++			IWL_DEBUG_TX_QUEUES(priv, "Don't wake queue %d");
++		}
+ 	}
+ 
+ 	priv->passive_no_rx = false;
+-- 
+1.7.0.4
+
