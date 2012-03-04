@@ -1,51 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:43254 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751580Ab2C1HXC (ORCPT
+Received: from mail-we0-f174.google.com ([74.125.82.174]:58905 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751865Ab2CDIz7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2012 03:23:02 -0400
-Date: Wed, 28 Mar 2012 10:24:57 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Kiran Divekar <dkiran@marvell.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: signedness bug in lbs_auth_to_authtype()
-Message-ID: <20120328072456.GC3200@mwanda> (sfid-20120328_092307_525707_5906DFEA)
+	Sun, 4 Mar 2012 03:55:59 -0500
+Received: by mail-we0-f174.google.com with SMTP id x9so1794100wej.19
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Mar 2012 00:55:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 07/11] wl12xx: don't handle change_channel while associated
+Date: Sun,  4 Mar 2012 10:55:51 +0200
+Message-Id: <1330851355-24459-8-git-send-email-eliad@wizery.com> (sfid-20120304_095635_725669_BA6B4E18)
+In-Reply-To: <1330851355-24459-1-git-send-email-eliad@wizery.com>
+References: <1330851355-24459-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is a signedness bug in lbs_auth_to_authtype() and it messes
-up the error handling.
+Currently, CHANGE_CHANNEL indication while
+associated is considered as roaming attempt.
 
-drivers/net/wireless/libertas/cfg.c
-   106  static u8 lbs_auth_to_authtype(enum nl80211_auth_type auth_type)
-   107  {
-   108          int ret = -ENOTSUPP;
-   109  
+However, with the new auth/assoc redesign,
+we no longer have to handle this case,
+so remove it.
 
-We return -ENOTSUPP but it's casted to u8 making it 244.
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |   43 ++++++++++++-----------------------
+ 1 files changed, 15 insertions(+), 28 deletions(-)
 
-   351          auth->header.type = cpu_to_le16(TLV_TYPE_AUTH_TYPE);
-   352          auth->header.len = cpu_to_le16(sizeof(*auth)-sizeof(auth->header));
-   353          auth->auth = cpu_to_le16(lbs_auth_to_authtype(auth_type));
-                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-We don't check for errors here.
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 65f91d7..85bbe7f 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2515,35 +2515,22 @@ static int wl12xx_config_vif(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 				wl1271_warning("rate policy for channel "
+ 					       "failed %d", ret);
+ 
+-			if (test_bit(WLVIF_FLAG_STA_ASSOCIATED,
+-				     &wlvif->flags)) {
+-				if (wl12xx_dev_role_started(wlvif)) {
+-					/* roaming */
+-					ret = wl12xx_croc(wl,
+-							  wlvif->dev_role_id);
+-					if (ret < 0)
+-						return ret;
+-				}
+-				ret = wl1271_join(wl, wlvif, false);
++			/*
++			 * change the ROC channel. do it only if we are
++			 * not idle. otherwise, CROC will be called
++			 * anyway.
++			 */
++			if (!test_bit(WLVIF_FLAG_STA_ASSOCIATED,
++				      &wlvif->flags) &&
++			    wl12xx_dev_role_started(wlvif) &&
++			    !(conf->flags & IEEE80211_CONF_IDLE)) {
++				ret = wl12xx_stop_dev(wl, wlvif);
+ 				if (ret < 0)
+-					wl1271_warning("cmd join on channel "
+-						       "failed %d", ret);
+-			} else {
+-				/*
+-				 * change the ROC channel. do it only if we are
+-				 * not idle. otherwise, CROC will be called
+-				 * anyway.
+-				 */
+-				if (wl12xx_dev_role_started(wlvif) &&
+-				    !(conf->flags & IEEE80211_CONF_IDLE)) {
+-					ret = wl12xx_stop_dev(wl, wlvif);
+-					if (ret < 0)
+-						return ret;
++					return ret;
+ 
+-					ret = wl12xx_start_dev(wl, wlvif);
+-					if (ret < 0)
+-						return ret;
+-				}
++				ret = wl12xx_start_dev(wl, wlvif);
++				if (ret < 0)
++					return ret;
+ 			}
+ 		}
+ 	}
+-- 
+1.7.6.401.g6a319
 
-   354          return sizeof(*auth);
-   355  }
-
-  1061          /* convert auth_type */
-  1062          ret = lbs_auth_to_authtype(sme->auth_type);
-  1063          if (ret < 0)
-                    ^^^^^^^
-This doesn't work because 244 is larger than zero.
-
-  1064                  goto done;
-
-I would just change the u8 to an int, except that I felt that maybe
-we should be checking for errors on the first time this function is
-called.  I wasn't sure how to handle that error.
-
-regards,
-dan carpenter
