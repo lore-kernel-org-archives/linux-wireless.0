@@ -1,130 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail1.windriver.com ([147.11.146.13]:48863 "EHLO
-	mail1.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758633Ab2C2O21 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2012 10:28:27 -0400
-From: "Cabuk, Yusuf" <Yusuf.Cabuk@windriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"Zhong, Hongbo" <Hongbo.Zhong@windriver.com>,
-	"Dodeja, Rakesh (rakesh.dodeja@intel.com)" <rakesh.dodeja@intel.com>,
-	"Dakev, NikolayX V (nikolayx.v.dakev@intel.com)"
-	<nikolayx.v.dakev@intel.com>
-CC: "wey-yi.w.guy@intel.com" <wey-yi.w.guy@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Cao, Qingtao (Harry)" <Qingtao.Cao@windriver.com>,
-	"Gao, Guijin" <Guijin.Gao@windriver.com>,
-	"Foglia, Michael" <Michael.Foglia@windriver.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>,
-	"Zhan, Rongkai (Mark)" <rongkai.zhan@windriver.com>
-Subject: RE: Dell E6400 + Windows XP can not work on intel N-6205 AP mode
- for compat-wireless-2012-03-18.tar.bz2 package
-Date: Thu, 29 Mar 2012 14:27:51 +0000
-Message-ID: <C1615BC0413B104DAA256FBA76EF22F2E48AC2@ALA-MBA.corp.ad.wrs.com> (sfid-20120329_162830_806473_A2B14B4A)
-References: <4F687667.1030605@windriver.com>
-	   <1332247526.3329.17.camel@jlt3.sipsolutions.net>
-	   <4F687D82.2010201@windriver.com>  <4F687F4E.4030203@windriver.com>
-	  <1332248855.3329.18.camel@jlt3.sipsolutions.net>
-	  <4F6B1D8B.8060306@windriver.com>
-	 <1332751883.3511.5.camel@jlt3.sipsolutions.net>
-	 <4F71E566.50802@windriver.com>
- <1333021216.3575.6.camel@jlt3.sipsolutions.net>
-In-Reply-To: <1333021216.3575.6.camel@jlt3.sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:20116 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755170Ab2CDUnK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:10 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 072/101] iwlwifi: remove unused argument from iwlagn_suspend
+Date: Sun,  4 Mar 2012 11:29:26 -0800
+Message-Id: <1330889395-533-73-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214529_735259_0E7CD6DE)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-KyBSYWtlc2gvTmljaw0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogSm9oYW5u
-ZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdIA0KU2VudDogVGh1cnNk
-YXksIE1hcmNoIDI5LCAyMDEyIDc6NDAgQU0NClRvOiBaaG9uZywgSG9uZ2JvDQpDYzogd2V5LXlp
-LncuZ3V5QGludGVsLmNvbTsgbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBDYW8sIFFp
-bmd0YW8gKEhhcnJ5KTsgR2FvLCBHdWlqaW47IENhYnVrLCBZdXN1ZjsgRm9nbGlhLCBNaWNoYWVs
-OyBJbnRlbCBMaW51eCBXaXJlbGVzczsgWmhhbiwgUm9uZ2thaSAoTWFyaykNClN1YmplY3Q6IFJl
-OiBEZWxsIEU2NDAwICsgV2luZG93cyBYUCBjYW4gbm90IHdvcmsgb24gaW50ZWwgTi02MjA1IEFQ
-IG1vZGUgZm9yIGNvbXBhdC13aXJlbGVzcy0yMDEyLTAzLTE4LnRhci5iejIgcGFja2FnZQ0KDQpI
-aSBaaG9uZywNCg0KPiBNYXIgMjMgMTI6NDQ6NDggbG9jYWxob3N0IGhvc3RhcGQ6IHdsYW4wOiBT
-VEEgMDA6MWY6ZTI6Y2M6ZjU6MGEgSUVFRSANCj4gODAyLjExOiBhdXRoZW50aWNhdGVkIE1hciAy
-MyAxMjo0NDo0OCBsb2NhbGhvc3QgaG9zdGFwZDogd2xhbjA6IFNUQSANCj4gMDA6MWY6ZTI6Y2M6
-ZjU6MGEgSUVFRSA4MDIuMTE6IGFzc29jaWF0ZWQgKGFpZCAxKSBNYXIgMjMgMTI6NDQ6NDggDQo+
-IGxvY2FsaG9zdCBrZXJuZWw6IHdsYW4wOiBTVEEgMDA6MWY6ZTI6Y2M6ZjU6MGEgYWlkIDEgc2Vu
-ZGluZyAwIA0KPiBmaWx0ZXJlZC8wIFBTIGZyYW1lcyBzaW5jZSBTVEEgbm90IHNsZWVwaW5nIGFu
-eW1vcmUgTWFyIDIzIDEyOjQ0OjUwIA0KPiBsb2NhbGhvc3QgbGFzdCBtZXNzYWdlIHJlcGVhdGVk
-IDMgdGltZXMgTWFyIDIzIDEyOjQ0OjUxIGxvY2FsaG9zdCANCj4gaG9zdGFwZDogd2xhbjA6IFNU
-QSAwMDoxZjplMjpjYzpmNTowYSBJRUVFIDgwMi4xMTogZGVhdXRoZW50aWNhdGVkIGR1ZSANCj4g
-dG8gbG9jYWwgZGVhdXRoIHJlcXVlc3QgTWFyIDIzIDEyOjQ0OjUzIGxvY2FsaG9zdCBob3N0YXBk
-OiB3bGFuMDogU1RBIA0KPiAwMDoxZjplMjpjYzpmNTowYSBJRUVFIDgwMi4xMTogYXV0aGVudGlj
-YXRlZCBNYXIgMjMgMTI6NDQ6NTMgbG9jYWxob3N0IA0KPiBob3N0YXBkOiB3bGFuMDogU1RBIDAw
-OjFmOmUyOmNjOmY1OjBhIElFRUUgODAyLjExOiBhc3NvY2lhdGVkIChhaWQgMSkgDQo+IE1hciAy
-MyAxMjo0NDo1MyBsb2NhbGhvc3Qga2VybmVsOiB3bGFuMDogU1RBIDAwOjFmOmUyOmNjOmY1OjBh
-IGFpZCAxIA0KPiBzZW5kaW5nIDAgZmlsdGVyZWQvMCBQUyBmcmFtZXMgc2luY2UgU1RBIG5vdCBz
-bGVlcGluZyBhbnltb3JlIE1hciAyMyANCj4gMTI6NDQ6NTUgbG9jYWxob3N0IGxhc3QgbWVzc2Fn
-ZSByZXBlYXRlZCAzIHRpbWVzDQoNClRoaXMgaXMgYSBiaXQgc3RyYW5nZSAtLSBhbnkgaWRlYSB3
-aGF0IHdhcyBoYXBwZW5pbmcgYXQgdGhpcyB0aW1lPyBJdCBzZWVtcyB0byByZXBlYXQgZm9yIHF1
-aXRlIGEgd2hpbGUgdW50aWwgaXQgZmluYWxseSBhc3NvY2lhdGVzIHByb3Blcmx5Og0KDQo+IE1h
-ciAyMyAxMjo0NToxNiBsb2NhbGhvc3QgaG9zdGFwZDogd2xhbjA6IFNUQSAwMDoxZjplMjpjYzpm
-NTowYSBJRUVFIA0KPiA4MDIuMTE6IGF1dGhlbnRpY2F0ZWQgTWFyIDIzIDEyOjQ1OjE2IGxvY2Fs
-aG9zdCBob3N0YXBkOiB3bGFuMDogU1RBIA0KPiAwMDoxZjplMjpjYzpmNTowYSBJRUVFIDgwMi4x
-MTogYXNzb2NpYXRlZCAoYWlkIDEpIE1hciAyMyAxMjo0NToxNyANCj4gbG9jYWxob3N0IGtlcm5l
-bDogd2xhbjA6IFNUQSAwMDoxZjplMjpjYzpmNTowYSBhaWQgMSBzZW5kaW5nIDAgDQo+IGZpbHRl
-cmVkLzAgUFMgZnJhbWVzIHNpbmNlIFNUQSBub3Qgc2xlZXBpbmcgYW55bW9yZSBNYXIgMjMgMTI6
-NDU6MTcgDQo+IGxvY2FsaG9zdCBrZXJuZWw6IHdsYW4wOiBTVEEgMDA6MWY6ZTI6Y2M6ZjU6MGEg
-YWlkIDEgc2VuZGluZyAwIA0KPiBmaWx0ZXJlZC8wIFBTIGZyYW1lcyBzaW5jZSBTVEEgbm90IHNs
-ZWVwaW5nIGFueW1vcmUgTWFyIDIzIDEyOjQ1OjE3IA0KPiBsb2NhbGhvc3Qga2VybmVsOiBicjA6
-IHBvcnQgMSh3bGFuMCkgZW50ZXJpbmcgZm9yd2FyZGluZyBzdGF0ZSBNYXIgMjMgDQo+IDEyOjQ1
-OjE4IGxvY2FsaG9zdCBrZXJuZWw6IHdsYW4wOiBTVEEgMDA6MWY6ZTI6Y2M6ZjU6MGEgYWlkIDEg
-c2VuZGluZyANCj4gMCBmaWx0ZXJlZC8wIFBTIGZyYW1lcyBzaW5jZSBTVEEgbm90IHNsZWVwaW5n
-IGFueW1vcmUgTWFyIDIzIDEyOjQ1OjE4IA0KPiBsb2NhbGhvc3Qga2VybmVsOiB3bGFuMDogU1RB
-IDAwOjFmOmUyOmNjOmY1OjBhIGFpZCAxIHNlbmRpbmcgMCANCj4gZmlsdGVyZWQvMCBQUyBmcmFt
-ZXMgc2luY2UgU1RBIG5vdCBzbGVlcGluZyBhbnltb3JlIE1hciAyMyAxMjo0NToxOCANCj4gbG9j
-YWxob3N0IGhvc3RhcGQ6IHdsYW4wOiBTVEEgMDA6MWY6ZTI6Y2M6ZjU6MGEgUkFESVVTOiBzdGFy
-dGluZyANCj4gYWNjb3VudGluZyBzZXNzaW9uIDRGNkM3MDJDLTAwMDAwMDAwIE1hciAyMyAxMjo0
-NToxOCBsb2NhbGhvc3QgDQo+IGhvc3RhcGQ6IHdsYW4wOiBTVEEgMDA6MWY6ZTI6Y2M6ZjU6MGEg
-V1BBOiBwYWlyd2lzZSBrZXkgaGFuZHNoYWtlIA0KPiBjb21wbGV0ZWQgKFJTTikNCg0KSXMgaXQg
-cG9zc2libGUgdGhhdCB0aGUgc3lzdGVtIHlvdSdyZSBydW5uaW5nIHRoZSBBUCBvbiBkb2Vzbid0
-IGhhdmUgZW5vdWdoIGVudHJvcHkgdG8gZG8gdGhlIDQtd2F5IGhhbmRzaGFrZSBlYXJsaWVyPw0K
-DQo+IE1hciAyMyAxMjo0NTo0OCBsb2NhbGhvc3QgZGhjcGQ6IEludGVybmV0IFN5c3RlbXMgQ29u
-c29ydGl1bSBESENQIA0KPiBTZXJ2ZXIgNC4yLjEtUDEgTWFyIDIzIDEyOjQ1OjQ4IGxvY2FsaG9z
-dCBkaGNwZDogQ29weXJpZ2h0IDIwMDQtMjAxMSBJbnRlcm5ldCBTeXN0ZW1zIENvbnNvcnRpdW0u
-DQo+IE1hciAyMyAxMjo0NTo0OCBsb2NhbGhvc3QgZGhjcGQ6IEFsbCByaWdodHMgcmVzZXJ2ZWQu
-DQo+IE1hciAyMyAxMjo0NTo0OCBsb2NhbGhvc3QgZGhjcGQ6IEZvciBpbmZvLCBwbGVhc2Ugdmlz
-aXQgDQo+IGh0dHBzOi8vd3d3LmlzYy5vcmcvc29mdHdhcmUvZGhjcC8NCj4gTWFyIDIzIDEyOjQ1
-OjQ4IGxvY2FsaG9zdCBkaGNwZDogV3JvdGUgMCBsZWFzZXMgdG8gbGVhc2VzIGZpbGUuDQo+IE1h
-ciAyMyAxMjo0NTo0OCBsb2NhbGhvc3QgZGhjcGQ6IExpc3RlbmluZyBvbiBMUEYvYnIwL2EwOjg4
-OmI0OjE4OjY0OmEwLzE5Mi4xNjguMC4wLzI0DQo+IE1hciAyMyAxMjo0NTo0OCBsb2NhbGhvc3Qg
-ZGhjcGQ6IFNlbmRpbmcgb24gICBMUEYvYnIwL2EwOjg4OmI0OjE4OjY0OmEwLzE5Mi4xNjguMC4w
-LzI0DQo+IE1hciAyMyAxMjo0NTo0OCBsb2NhbGhvc3QgZGhjcGQ6IA0KPiBNYXIgMjMgMTI6NDU6
-NDggbG9jYWxob3N0IGRoY3BkOiBObyBzdWJuZXQgZGVjbGFyYXRpb24gZm9yIGV0aDAgKDEyOC4y
-MjQuMTYzLjE5MikuDQo+IE1hciAyMyAxMjo0NTo0OCBsb2NhbGhvc3QgZGhjcGQ6ICoqIElnbm9y
-aW5nIHJlcXVlc3RzIG9uIGV0aDAuICBJZiB0aGlzIGlzIG5vdCB3aGF0DQo+IE1hciAyMyAxMjo0
-NTo0OCBsb2NhbGhvc3QgZGhjcGQ6ICAgIHlvdSB3YW50LCBwbGVhc2Ugd3JpdGUgYSBzdWJuZXQg
-ZGVjbGFyYXRpb24NCj4gTWFyIDIzIDEyOjQ1OjQ4IGxvY2FsaG9zdCBkaGNwZDogICAgaW4geW91
-ciBkaGNwZC5jb25mIGZpbGUgZm9yIHRoZSBuZXR3b3JrIHNlZ21lbnQNCj4gTWFyIDIzIDEyOjQ1
-OjQ4IGxvY2FsaG9zdCBkaGNwZDogICAgdG8gd2hpY2ggaW50ZXJmYWNlIGV0aDAgaXMgYXR0YWNo
-ZWQuICoqDQo+IE1hciAyMyAxMjo0NTo0OCBsb2NhbGhvc3QgZGhjcGQ6IA0KPiBNYXIgMjMgMTI6
-NDU6NDggbG9jYWxob3N0IGRoY3BkOiBTZW5kaW5nIG9uICAgU29ja2V0L2ZhbGxiYWNrL2ZhbGxi
-YWNrLW5ldA0KDQpBcmUgeW91IHJlYWxseSBzdGFydGluZyBkaGNwZCB0aGlzIGxhdGUsIGFmdGVy
-IHRoZSBjbGllbnQgY29ubmVjdGVkPw0KRG9lcyB0aGUgY2xpZW50IHRoZW4gZXZlbiBnZXQgYSBw
-cm9wZXIgSVAgYWRkcmVzcz8NCg0KPiBNYXIgMjMgMTI6NDU6NTcgbG9jYWxob3N0IGRoY3BkOiBE
-SENQRElTQ09WRVIgZnJvbSAwMDoxZjplMjpjYzpmNTowYSANCj4gdmlhIGJyMCBNYXIgMjMgMTI6
-NDU6NTcgbG9jYWxob3N0IGtlcm5lbDogd2xhbjA6IFNUQSAwMDoxZjplMjpjYzpmNTowYSANCj4g
-YWlkIDEgZXhpdHMgcG93ZXIgc2F2ZSBtb2RlIE1hciAyMyAxMjo0NTo1NyBsb2NhbGhvc3Qga2Vy
-bmVsOiB3bGFuMDogDQo+IFNUQSAwMDoxZjplMjpjYzpmNTowYSBhaWQgMSBzZW5kaW5nIDAgZmls
-dGVyZWQvMCBQUyBmcmFtZXMgc2luY2UgU1RBIA0KPiBub3Qgc2xlZXBpbmcgYW55bW9yZSBNYXIg
-MjMgMTI6NDU6NTcgbG9jYWxob3N0IGtlcm5lbDogd2xhbjA6IFNUQSANCj4gMDA6MWY6ZTI6Y2M6
-ZjU6MGEgYWlkIDEgZW50ZXJzIHBvd2VyIHNhdmUgbW9kZSBNYXIgMjMgMTI6NDU6NTggDQo+IGxv
-Y2FsaG9zdCBrZXJuZWw6IHdsYW4wOiBTVEEgMDA6MWY6ZTI6Y2M6ZjU6MGEgYWlkIDEgZXhpdHMg
-cG93ZXIgc2F2ZSANCj4gbW9kZSBNYXIgMjMgMTI6NDU6NTggbG9jYWxob3N0IGtlcm5lbDogd2xh
-bjA6IFNUQSAwMDoxZjplMjpjYzpmNTowYSANCj4gYWlkIDEgc2VuZGluZyAwIGZpbHRlcmVkLzAg
-UFMgZnJhbWVzIHNpbmNlIFNUQSBub3Qgc2xlZXBpbmcgYW55bW9yZSANCj4gTWFyIDIzIDEyOjQ1
-OjU4IGxvY2FsaG9zdCBkaGNwZDogREhDUE9GRkVSIG9uIDE5Mi4xNjguMC41MiB0byANCj4gMDA6
-MWY6ZTI6Y2M6ZjU6MGEgKFBFSy1JVC1MNSkgdmlhIGJyMCBNYXIgMjMgMTI6NDU6NTggbG9jYWxo
-b3N0IGRoY3BkOiANCj4gREhDUFJFUVVFU1QgZm9yIDE5Mi4xNjguMC41MiAoMTkyLjE2OC4wLjEp
-IGZyb20gMDA6MWY6ZTI6Y2M6ZjU6MGEgDQo+IChQRUstSVQtTDUpIHZpYSBicjAgTWFyIDIzIDEy
-OjQ1OjU4IGxvY2FsaG9zdCBkaGNwZDogREhDUEFDSyBvbiANCj4gMTkyLjE2OC4wLjUyIHRvIDAw
-OjFmOmUyOmNjOmY1OjBhIChQRUstSVQtTDUpIHZpYSBicjANCg0KT2ssIEkgZ3Vlc3MgaXQgbG9v
-a3MgbGlrZSBpdCBkb2VzIGdldCBhbiBJUCBhZGRyZXNzLg0KDQpUaGUgcmVtYWluZGVyIG9mIHRo
-aXMgbG9nIGxvb2tzIHBlcmZlY3RseSBub3JtYWwsIGp1c3QgbGlrZSB5b3UnZCBleHBlY3Qgd2l0
-aCBhIGNsaWVudCBpbiBwb3dlcnNhdmUuDQoNCkRvIHlvdSB0aGluayB5b3UgY291bGQgZ2V0IGEg
-d2lyZWxlc3Mgc25pZmZlciBhbmQgcmVjb3JkIG92ZXItdGhlLWFpciB0cmFmZmljPw0KDQpqb2hh
-bm5lcw0KDQo=
+From: Johannes Berg <johannes.berg@intel.com>
+
+There's not much point in passing priv and
+hw pointers since they can be derived from
+each other, and the function doesn't use
+the hw pointer anyway. Remove it.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c  |    3 +--
+ drivers/net/wireless/iwlwifi/iwl-agn.h      |    3 +--
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |    2 +-
+ 3 files changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index b2ee1f9..6d8a857 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1120,8 +1120,7 @@ int iwlagn_send_patterns(struct iwl_priv *priv,
+ 	return err;
+ }
+ 
+-int iwlagn_suspend(struct iwl_priv *priv,
+-		struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
++int iwlagn_suspend(struct iwl_priv *priv, struct cfg80211_wowlan *wowlan)
+ {
+ 	struct iwlagn_wowlan_wakeup_filter_cmd wakeup_filter_cmd;
+ 	struct iwl_rxon_cmd rxon;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index 8384c05..82930ef 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -141,8 +141,7 @@ int iwlagn_send_beacon_cmd(struct iwl_priv *priv);
+ #ifdef CONFIG_PM_SLEEP
+ int iwlagn_send_patterns(struct iwl_priv *priv,
+ 			 struct cfg80211_wowlan *wowlan);
+-int iwlagn_suspend(struct iwl_priv *priv,
+-		   struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan);
++int iwlagn_suspend(struct iwl_priv *priv, struct cfg80211_wowlan *wowlan);
+ #endif
+ 
+ /* rx */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index d2c1d71..bdcbbd0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -405,7 +405,7 @@ static int iwlagn_mac_suspend(struct ieee80211_hw *hw,
+ 		goto out;
+ 	}
+ 
+-	ret = iwlagn_suspend(priv, hw, wowlan);
++	ret = iwlagn_suspend(priv, wowlan);
+ 	if (ret)
+ 		goto error;
+ 
+-- 
+1.7.0.4
+
