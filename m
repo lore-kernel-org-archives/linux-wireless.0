@@ -1,191 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ebb05.tieto.com ([131.207.168.36]:50221 "EHLO ebb05.tieto.com"
+Received: from mga09.intel.com ([134.134.136.24]:31533 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758283Ab2CTOkP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 10:40:15 -0400
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Mon, 19 Mar 2012 13:11:03 +0100
-Subject: [RFC 11/12] mac80211: split offchannel functions to per-vif
-To: <linux-wireless@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
-Message-ID: <ccb26d54-38f2-478e-95d9-85fa1aea62c2@FIVLA-EXHUB02.eu.tieto.com> (sfid-20120320_154026_591857_E0DB8EEA)
+	id S1755176Ab2CDUnK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:10 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 074/101] iwlwifi: transport's tx_agg_disable must be atomic
+Date: Sun,  4 Mar 2012 11:29:28 -0800
+Message-Id: <1330889395-533-75-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214501_694414_27C3E7A6)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In preparation for multi-channel operation.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+At least as long as it is called from the reclaim
+flow (iwlagn_check_ratid_empty) it must be atomic.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/mac80211/ieee80211_i.h |    4 ++
- net/mac80211/offchannel.c  |  122 ++++++++++++++++++++++++--------------------
- 2 files changed, 70 insertions(+), 56 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-trans.h |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 4ceedff..58ee794 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1280,8 +1280,12 @@ int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata);
- void ieee80211_sched_scan_stopped_work(struct work_struct *work);
- 
- /* off-channel helpers */
-+void ieee80211_offchannel_stop_vif(struct ieee80211_sub_if_data *sdata,
-+				   bool offchannel_ps_enable);
- void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
- 				    bool offchannel_ps_enable);
-+void ieee80211_offchannel_return_vif(struct ieee80211_sub_if_data *sdata,
-+				     bool offchannel_ps_disable);
- void ieee80211_offchannel_return_vifs(struct ieee80211_local *local,
- 				      bool offchannel_ps_disable);
- void ieee80211_hw_roc_setup(struct ieee80211_local *local);
-diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
-index 06a809d..a5a5f1d 100644
---- a/net/mac80211/offchannel.c
-+++ b/net/mac80211/offchannel.c
-@@ -103,6 +103,31 @@ static void ieee80211_offchannel_ps_disable(struct ieee80211_sub_if_data *sdata)
- 	ieee80211_sta_reset_conn_monitor(sdata);
- }
- 
-+void ieee80211_offchannel_stop_vif(struct ieee80211_sub_if_data *sdata,
-+				   bool offchannel_ps_enable)
-+{
-+	if (!ieee80211_sdata_running(sdata))
-+		return;
-+
-+	if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
-+		set_bit(SDATA_STATE_OFFCHANNEL, &sdata->state);
-+
-+	/* Check to see if we should disable beaconing. */
-+	if (sdata->vif.type == NL80211_IFTYPE_AP ||
-+	    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
-+	    sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
-+		ieee80211_bss_info_change_notify(
-+			sdata, BSS_CHANGED_BEACON_ENABLED);
-+
-+	if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
-+		netif_tx_stop_all_queues(sdata->dev);
-+		if (offchannel_ps_enable &&
-+		    (sdata->vif.type == NL80211_IFTYPE_STATION) &&
-+		    sdata->u.mgd.associated)
-+			ieee80211_offchannel_ps_enable(sdata, true);
-+	}
-+}
-+
- void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
- 				    bool offchannel_ps_enable)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 609949f..ed6ab44 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -306,7 +306,7 @@ static inline struct page *rxb_steal_page(struct iwl_rx_cmd_buffer *r)
+  *	ready and a successful ADDBA response has been received.
+  *	May sleep
+  * @tx_agg_disable: de-configure a Tx queue to send AMPDUs
+- *	May sleep
++ *	Must be atomic
+  * @free: release all the ressource for the transport layer itself such as
+  *	irq, tasklet etc... From this point on, the device may not issue
+  *	any interrupt (incl. RFKILL).
+@@ -497,8 +497,6 @@ static inline int iwl_trans_reclaim(struct iwl_trans *trans, int sta_id,
+ static inline int iwl_trans_tx_agg_disable(struct iwl_trans *trans,
+ 					    int sta_id, int tid)
  {
-@@ -113,71 +138,56 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local,
- 	 * STA interfaces.
- 	 */
- 	mutex_lock(&local->iflist_mtx);
--	list_for_each_entry(sdata, &local->interfaces, list) {
--		if (!ieee80211_sdata_running(sdata))
--			continue;
+-	might_sleep();
 -
--		if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
--			set_bit(SDATA_STATE_OFFCHANNEL, &sdata->state);
--
--		/* Check to see if we should disable beaconing. */
--		if (sdata->vif.type == NL80211_IFTYPE_AP ||
--		    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
--		    sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
--			ieee80211_bss_info_change_notify(
--				sdata, BSS_CHANGED_BEACON_ENABLED);
--
--		if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
--			netif_tx_stop_all_queues(sdata->dev);
--			if (offchannel_ps_enable &&
--			    (sdata->vif.type == NL80211_IFTYPE_STATION) &&
--			    sdata->u.mgd.associated)
--				ieee80211_offchannel_ps_enable(sdata, true);
--		}
--	}
-+	list_for_each_entry(sdata, &local->interfaces, list)
-+		ieee80211_offchannel_stop_vif(sdata, offchannel_ps_enable);
- 	mutex_unlock(&local->iflist_mtx);
- }
- 
-+void ieee80211_offchannel_return_vif(struct ieee80211_sub_if_data *sdata,
-+				     bool offchannel_ps_disable)
-+{
-+	if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
-+		clear_bit(SDATA_STATE_OFFCHANNEL, &sdata->state);
-+
-+	if (!ieee80211_sdata_running(sdata))
-+		return;
-+
-+	/* Tell AP we're back */
-+	if (offchannel_ps_disable &&
-+	    sdata->vif.type == NL80211_IFTYPE_STATION) {
-+		if (sdata->u.mgd.associated)
-+			ieee80211_offchannel_ps_disable(sdata);
-+	}
-+
-+	if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
-+		/*
-+		 * This may wake up queues even though the driver
-+		 * currently has them stopped. This is not very
-+		 * likely, since the driver won't have gotten any
-+		 * (or hardly any) new packets while we weren't
-+		 * on the right channel, and even if it happens
-+		 * it will at most lead to queueing up one more
-+		 * packet per queue in mac80211 rather than on
-+		 * the interface qdisc.
-+		 */
-+		netif_tx_wake_all_queues(sdata->dev);
-+	}
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_AP ||
-+	    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
-+	    sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
-+		ieee80211_bss_info_change_notify(
-+			sdata, BSS_CHANGED_BEACON_ENABLED);
-+}
-+
- void ieee80211_offchannel_return_vifs(struct ieee80211_local *local,
- 				      bool offchannel_ps_disable)
- {
- 	struct ieee80211_sub_if_data *sdata;
- 
- 	mutex_lock(&local->iflist_mtx);
--	list_for_each_entry(sdata, &local->interfaces, list) {
--		if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
--			clear_bit(SDATA_STATE_OFFCHANNEL, &sdata->state);
--
--		if (!ieee80211_sdata_running(sdata))
--			continue;
--
--		/* Tell AP we're back */
--		if (offchannel_ps_disable &&
--		    sdata->vif.type == NL80211_IFTYPE_STATION) {
--			if (sdata->u.mgd.associated)
--				ieee80211_offchannel_ps_disable(sdata);
--		}
--
--		if (sdata->vif.type != NL80211_IFTYPE_MONITOR) {
--			/*
--			 * This may wake up queues even though the driver
--			 * currently has them stopped. This is not very
--			 * likely, since the driver won't have gotten any
--			 * (or hardly any) new packets while we weren't
--			 * on the right channel, and even if it happens
--			 * it will at most lead to queueing up one more
--			 * packet per queue in mac80211 rather than on
--			 * the interface qdisc.
--			 */
--			netif_tx_wake_all_queues(sdata->dev);
--		}
--
--		if (sdata->vif.type == NL80211_IFTYPE_AP ||
--		    sdata->vif.type == NL80211_IFTYPE_ADHOC ||
--		    sdata->vif.type == NL80211_IFTYPE_MESH_POINT)
--			ieee80211_bss_info_change_notify(
--				sdata, BSS_CHANGED_BEACON_ENABLED);
--	}
-+	list_for_each_entry(sdata, &local->interfaces, list)
-+		ieee80211_offchannel_return_vif(sdata, offchannel_ps_disable);
- 	mutex_unlock(&local->iflist_mtx);
- }
+ 	if (trans->state != IWL_TRANS_FW_ALIVE)
+ 		IWL_ERR(trans, "%s bad state = %d", __func__, trans->state);
  
 -- 
 1.7.0.4
