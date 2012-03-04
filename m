@@ -1,55 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms173007pub.verizon.net ([206.46.173.7]:35156 "EHLO
-	vms173007pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754040Ab2CKWgV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Mar 2012 18:36:21 -0400
-Received: from vms170029 ([unknown] [192.168.1.3]) by vms173007.mailsrvcs.net
- (Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16 2009))
- with ESMTPA id <0M0Q00C9ZS4E1L70@vms173007.mailsrvcs.net> for
- linux-wireless@vger.kernel.org; Sun, 11 Mar 2012 17:36:15 -0500 (CDT)
-Date: Sun, 11 Mar 2012 17:36:14 -0500 (CDT)
-From: alupu@verizon.net
-To: Larry.Finger@lwfinger.net
-Cc: linux-wireless@vger.kernel.org
-Message-id: <17646354.573873.1331505374568.JavaMail.root@vms170029> (sfid-20120311_233624_579749_5CEFC953)
-Subject: Re: r8712u staging in kernel 3.2.9
-MIME-version: 1.0
-Content-type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:55973 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755138Ab2CDUnI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:08 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 064/101] iwlwifi: don't include iwl-prph.h everywhere
+Date: Sun,  4 Mar 2012 11:29:18 -0800
+Message-Id: <1330889395-533-65-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214403_357975_04BEE07D)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+From: Johannes Berg <johannes.berg@intel.com>
 
-A few _quick_ notes ("impressions") so you can get me more/detailed
-instructions while I'm getting the hang of openSUSE :)
+It's only needed in a few places.
 
-> Could you please download a Live KDE CD from
-> software.opensuse.org/121/en
-> It should not matter whether you use the 32- or 64-bit version.
-> After you boot it, use the NetworkManager system tray
-> applet to connect to your system.
-> Does that work?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-1000.c     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-5000.c     |    1 +
+ drivers/net/wireless/iwlwifi/iwl-dev.h      |    2 --
+ drivers/net/wireless/iwlwifi/iwl-eeprom.c   |    1 +
+ drivers/net/wireless/iwlwifi/iwl-testmode.c |    1 +
+ 5 files changed, 4 insertions(+), 2 deletions(-)
 
-Yes. How? Very smoothly.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-1000.c b/drivers/net/wireless/iwlwifi/iwl-1000.c
+index 900d430..798e24e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-1000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-1000.c
+@@ -43,6 +43,7 @@
+ #include "iwl-agn-hw.h"
+ #include "iwl-shared.h"
+ #include "iwl-cfg.h"
++#include "iwl-prph.h"
+ 
+ /* Highest firmware API version supported */
+ #define IWL1000_UCODE_API_MAX 6
+diff --git a/drivers/net/wireless/iwlwifi/iwl-5000.c b/drivers/net/wireless/iwlwifi/iwl-5000.c
+index 0b85ca0..0e97cfd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-5000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-5000.c
+@@ -45,6 +45,7 @@
+ #include "iwl-trans.h"
+ #include "iwl-shared.h"
+ #include "iwl-cfg.h"
++#include "iwl-prph.h"
+ 
+ /* Highest firmware API version supported */
+ #define IWL5000_UCODE_API_MAX 5
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index a301daf..d1e722b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -37,11 +37,9 @@
+ #include <linux/leds.h>
+ #include <linux/slab.h>
+ #include <linux/mutex.h>
+-#include <net/ieee80211_radiotap.h>
+ 
+ #include "iwl-eeprom.h"
+ #include "iwl-csr.h"
+-#include "iwl-prph.h"
+ #include "iwl-debug.h"
+ #include "iwl-agn-hw.h"
+ #include "iwl-led.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-eeprom.c b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+index f965ee3..e2d8084 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-eeprom.c
++++ b/drivers/net/wireless/iwlwifi/iwl-eeprom.c
+@@ -75,6 +75,7 @@
+ #include "iwl-agn.h"
+ #include "iwl-eeprom.h"
+ #include "iwl-io.h"
++#include "iwl-prph.h"
+ 
+ /************************** EEPROM BANDS ****************************
+  *
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+index 63868df..5b06916 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+@@ -78,6 +78,7 @@
+ #include "iwl-testmode.h"
+ #include "iwl-trans.h"
+ #include "iwl-fh.h"
++#include "iwl-prph.h"
+ 
+ 
+ /* Periphery registers absolute lower bound. This is used in order to
+-- 
+1.7.0.4
 
-> Next, use 'ps ax' to get the PID for NetworkManager and kill it.
-> Then try your iwconfig/ifconfig command sequence.
-> Does that work?
-
-No. Same old story.
-Actually, I tried the "iwconfig/ifconfig" (from the KDE terminal) first.
-It didn't work so then, quite discouraged, I went to the NM above.
-As I said, worked AOK, I then killed the guy, so I can try
-the "iwconfig/ifconfig" again. No cigar, as I explained above.
-
-Note: in retrospect, I'm wondering if in Knoppix what would've
-happened if I had tried his graphics mode (some sort of KDE clone).
-An even bigger wonder. I'll be looking into that:
-When doing 'ps ...' I noticed there was a wpa_supplicant(?) running.
-If that was a requirement for NM, it should've helped when I went "down"
-in command (KDE terminal) mode as well. ???
-I don't remember if the supplicant process was killed (as a side effect).
-
-Thanks,
--- Alex
