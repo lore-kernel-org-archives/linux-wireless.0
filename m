@@ -1,52 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from emh07.mail.saunalahti.fi ([62.142.5.117]:35730 "EHLO
-	emh07.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031925Ab2CSQPZ (ORCPT
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:40715 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751860Ab2CDIz5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 12:15:25 -0400
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath6kl-devel@qualcomm.com
-Subject: [PATCH 3/9] ath6kl: add tx_comp_multi() to struct htc_ep_callbacks
-Date: Mon, 19 Mar 2012 18:14:58 +0200
-Message-Id: <1332173704-18877-4-git-send-email-kvalo@qca.qualcomm.com> (sfid-20120319_171611_498055_64D8C855)
-In-Reply-To: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com>
-References: <1332173704-18877-1-git-send-email-kvalo@qca.qualcomm.com>
+	Sun, 4 Mar 2012 03:55:57 -0500
+Received: by mail-wi0-f174.google.com with SMTP id hm2so1368116wib.19
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Mar 2012 00:55:57 -0800 (PST)
+MIME-Version: 1.0
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 06/11] wl12xx: set correct vif type in change_interface callback
+Date: Sun,  4 Mar 2012 10:55:50 +0200
+Message-Id: <1330851355-24459-7-git-send-email-eliad@wizery.com> (sfid-20120304_095637_681450_6C0EC7FF)
+In-Reply-To: <1330851355-24459-1-git-send-email-eliad@wizery.com>
+References: <1330851355-24459-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's also needed by the USB code.
+In some cases, the wrong vif type was set in the
+change_interface callback (P2P_CLIENT/P2P_GO instead
+of STA/AP)
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath6kl/htc.h  |    1 +
- drivers/net/wireless/ath/ath6kl/init.c |    1 +
- 2 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/htc.h b/drivers/net/wireless/ath/ath6kl/htc.h
-index 7b0c489..51f2485 100644
---- a/drivers/net/wireless/ath/ath6kl/htc.h
-+++ b/drivers/net/wireless/ath/ath6kl/htc.h
-@@ -326,6 +326,7 @@ struct htc_ep_callbacks {
- 					      struct htc_packet *);
- 	struct htc_packet *(*rx_allocthresh) (struct htc_target *,
- 					      enum htc_endpoint_id, int);
-+	void (*tx_comp_multi) (struct htc_target *, struct list_head *);
- 	int rx_alloc_thresh;
- 	int rx_refill_thresh;
- };
-diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
-index 1b97f26..d33691e 100644
---- a/drivers/net/wireless/ath/ath6kl/init.c
-+++ b/drivers/net/wireless/ath/ath6kl/init.c
-@@ -256,6 +256,7 @@ static int ath6kl_init_service_ep(struct ath6kl *ar)
- 	memset(&connect, 0, sizeof(connect));
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index a330b0c..65f91d7 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -2336,7 +2336,7 @@ static int wl12xx_op_change_interface(struct ieee80211_hw *hw,
+ 	set_bit(WL1271_FLAG_VIF_CHANGE_IN_PROGRESS, &wl->flags);
+ 	wl1271_op_remove_interface(hw, vif);
  
- 	/* these fields are the same for all service endpoints */
-+	connect.ep_cb.tx_comp_multi = ath6kl_tx_complete;
- 	connect.ep_cb.rx = ath6kl_rx;
- 	connect.ep_cb.rx_refill = ath6kl_rx_refill;
- 	connect.ep_cb.tx_full = ath6kl_tx_queue_full;
+-	vif->type = ieee80211_iftype_p2p(new_type, p2p);
++	vif->type = new_type;
+ 	vif->p2p = p2p;
+ 	ret = wl1271_op_add_interface(hw, vif);
+ 
 -- 
-1.7.1
+1.7.6.401.g6a319
 
