@@ -1,95 +1,194 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:42921 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754210Ab2CSJ3s (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 05:29:48 -0400
-Received: by dajr28 with SMTP id r28so9666915daj.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2012 02:29:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1332146368.3359.12.camel@jlt3.sipsolutions.net>
-References: <1332025254-5048-1-git-send-email-nbd@openwrt.org>
-	<1332025254-5048-2-git-send-email-nbd@openwrt.org>
-	<1332025254-5048-3-git-send-email-nbd@openwrt.org>
-	<1332065875.3609.3.camel@jlt3.sipsolutions.net>
-	<4F65C374.2060505@openwrt.org>
-	<1332146368.3359.12.camel@jlt3.sipsolutions.net>
-Date: Mon, 19 Mar 2012 10:29:47 +0100
-Message-ID: <CAGXE3d8P1r+DRv4UKbzSMXaf4fRB4cXAyz8+a1pf3RsfeAKOvQ@mail.gmail.com> (sfid-20120319_102951_852330_98DC4568)
-Subject: Re: [PATCH 3/3] mac80211: optimize aggregation session timeout handling
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:11400 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755194Ab2CDUnM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:12 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Amit Beka <amit.beka@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 086/101] iwlwifi: add testmode command for rx forwarding
+Date: Sun,  4 Mar 2012 11:29:40 -0800
+Message-Id: <1330889395-533-87-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214442_131904_679DD372)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-On Mon, Mar 19, 2012 at 9:39 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Sun, 2012-03-18 at 12:13 +0100, Felix Fietkau wrote:
->> On 2012-03-18 11:17 AM, Johannes Berg wrote:
->> > On Sun, 2012-03-18 at 00:00 +0100, Felix Fietkau wrote:
->> >> Calling mod_timer from the rx/tx hotpath is somewhat expensive, and the
->> >> timeout doesn't need to be so precise.
->> >>
->> >> Switch to a different strategy: Schedule the timer initially, store jiffies
->> >> of all last rx/tx activity which would previously modify the timer, and
->> >> let the timer re-arm itself after checking the last rx/tx timestamp.
->> >
->> > I don't like this. It's not the optimisation you think it is on other
->> > ("embedded") systems where firing a timer is more expensive.
->> >
->> > You're trading power consumption against CPU utilisation by causing the
->> > timer to wake up.
->> I considered that was well, but didn't think one wakeup every 5 seconds
->> or so would be significant. Would you take the patch if I change the
->> timer to be deferrable, so that it doesn't cause wakeups by itself?
->
-> I'm not really convinced, for making them deferrable we should analyse
-> the consequences of that more carefully, for example it seems possible
-> that the system wakes up to send a packet, and then the first thing that
-> happens is a few aggregation handshakes ... that wastes a lot of time
-> and power.
+Added a testmode command which tells iwl_rx_dispatch
+to send the RX both as a notification to nl80211 and
+with the registered RX handlers.
 
-I like the idea of getting rid of the mod_timer overhead. Looking at the timer
-code, if the timer value is unchanged mod_timer is not that expensive.
+This is used for monitoring RX from userspace while preserving
+the regular flows in the driver.
 
-So, instead of calling mod_timer for every successive frame with a slightly
-different timeout we could just use round_jiffies to round the timeout to the
-next full second. This would in most cases take the quick path through
-mod_timer and only update the timer once every second.
-
-See code (untested, not even compile tested) below.
-
-Helmut
-
+Signed-off-by: Amit Beka <amit.beka@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 44627c8..25c1621 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -53,6 +53,7 @@ struct ieee80211_local;
- #define IEEE80211_FRAGMENT_MAX 4
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c   |   20 +++++++++++++---
+ drivers/net/wireless/iwlwifi/iwl-testmode.c |   32 ++++++++++++++++++++++++--
+ drivers/net/wireless/iwlwifi/iwl-testmode.h |   13 +++++++++-
+ 3 files changed, 56 insertions(+), 9 deletions(-)
 
- #define TU_TO_EXP_TIME(x)	(jiffies + usecs_to_jiffies((x) * 1024))
-+#define TU_TO_EXP_TIME_ROUNDED(x) round_jiffies(TU_TO_EXP_TIME(x))
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+index e504675..8e7cdfa 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+@@ -1152,6 +1152,8 @@ int iwl_rx_dispatch(struct iwl_op_mode *op_mode, struct iwl_rx_cmd_buffer *rxb,
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
++	void (*pre_rx_handler)(struct iwl_priv *,
++			       struct iwl_rx_cmd_buffer *);
+ 	int err = 0;
+ 
+ 	/*
+@@ -1161,10 +1163,20 @@ int iwl_rx_dispatch(struct iwl_op_mode *op_mode, struct iwl_rx_cmd_buffer *rxb,
+ 	 */
+ 	iwl_notification_wait_notify(&priv->notif_wait, pkt);
+ 
+-	if (priv->pre_rx_handler &&
+-	    priv->ucode_owner == IWL_OWNERSHIP_TM)
+-		priv->pre_rx_handler(priv, rxb);
+-	else {
++	/* RX data may be forwarded to userspace (using pre_rx_handler) in one
++	 * of two cases: the first, that the user owns the uCode through
++	 * testmode - in such case the pre_rx_handler is set and no further
++	 * processing takes place. The other case is when the user want to
++	 * monitor the rx w/o affecting the regular flow - the pre_rx_handler
++	 * will be set but the ownership flag != IWL_OWNERSHIP_TM and the flow
++	 * continues.
++	 * We need to use ACCESS_ONCE to prevent a case where the handler
++	 * changes between the check and the call.
++	 */
++	pre_rx_handler = ACCESS_ONCE(priv->pre_rx_handler);
++	if (pre_rx_handler)
++		pre_rx_handler(priv, rxb);
++	if (priv->ucode_owner != IWL_OWNERSHIP_TM) {
+ 		/* Based on type of command response or notification,
+ 		 *   handle those that need handling via function in
+ 		 *   rx_handlers table.  See iwl_setup_rx_handlers() */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+index 1d73209..b8044bc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+@@ -125,6 +125,8 @@ struct nla_policy iwl_testmode_gnl_msg_policy[IWL_TM_ATTR_MAX] = {
+ 	[IWL_TM_ATTR_FW_TYPE] = { .type = NLA_U32, },
+ 	[IWL_TM_ATTR_FW_INST_SIZE] = { .type = NLA_U32, },
+ 	[IWL_TM_ATTR_FW_DATA_SIZE] = { .type = NLA_U32, },
++
++	[IWL_TM_ATTR_ENABLE_NOTIFICATION] = {.type = NLA_FLAG, },
+ };
+ 
+ /*
+@@ -194,7 +196,7 @@ nla_put_failure:
+ 
+ void iwl_testmode_init(struct iwl_priv *priv)
+ {
+-	priv->pre_rx_handler = iwl_testmode_ucode_rx_pkt;
++	priv->pre_rx_handler = NULL;
+ 	priv->testmode_trace.trace_enabled = false;
+ 	priv->testmode_mem.read_in_progress = false;
+ }
+@@ -770,9 +772,13 @@ static int iwl_testmode_ownership(struct ieee80211_hw *hw, struct nlattr **tb)
+ 	}
+ 
+ 	owner = nla_get_u8(tb[IWL_TM_ATTR_UCODE_OWNER]);
+-	if ((owner == IWL_OWNERSHIP_DRIVER) || (owner == IWL_OWNERSHIP_TM))
++	if (owner == IWL_OWNERSHIP_DRIVER) {
+ 		priv->ucode_owner = owner;
+-	else {
++		priv->pre_rx_handler = NULL;
++	} else if (owner == IWL_OWNERSHIP_TM) {
++		priv->pre_rx_handler = iwl_testmode_ucode_rx_pkt;
++		priv->ucode_owner = owner;
++	} else {
+ 		IWL_ERR(priv, "Invalid owner\n");
+ 		return -EINVAL;
+ 	}
+@@ -937,6 +943,20 @@ static int iwl_testmode_buffer_dump(struct ieee80211_hw *hw,
+ 	return -ENOBUFS;
+ }
+ 
++static int iwl_testmode_notifications(struct ieee80211_hw *hw,
++	struct nlattr **tb)
++{
++	struct iwl_priv *priv = IWL_MAC80211_GET_DVM(hw);
++	bool enable;
++
++	enable = nla_get_flag(tb[IWL_TM_ATTR_ENABLE_NOTIFICATION]);
++	if (enable)
++		priv->pre_rx_handler = iwl_testmode_ucode_rx_pkt;
++	else
++		priv->pre_rx_handler = NULL;
++	return 0;
++}
++
+ 
+ /* The testmode gnl message handler that takes the gnl message from the
+  * user space and parses it per the policy iwl_testmode_gnl_msg_policy, then
+@@ -1022,6 +1042,12 @@ int iwlagn_mac_testmode_cmd(struct ieee80211_hw *hw, void *data, int len)
+ 		result = iwl_testmode_indirect_mem(hw, tb);
+ 		break;
+ 
++	case IWL_TM_CMD_APP2DEV_NOTIFICATIONS:
++		IWL_DEBUG_INFO(priv, "testmode notifications cmd "
++			"to driver\n");
++		result = iwl_testmode_notifications(hw, tb);
++		break;
++
+ 	default:
+ 		IWL_ERR(priv, "Unknown testmode command\n");
+ 		result = -ENOSYS;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.h b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+index 69b2e80..6ba211b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.h
+@@ -122,6 +122,9 @@
+  *	Fore reading, a READ command is sent from the userspace and the data
+  *	is returned when the user calls a DUMP command.
+  *	For writing, only a WRITE command is used.
++ * @IWL_TM_CMD_APP2DEV_NOTIFICATIONS:
++ *	Command to enable/disable notifications (currently RX packets) from the
++ *	driver to userspace.
+  */
+ enum iwl_tm_cmd_t {
+ 	IWL_TM_CMD_APP2DEV_UCODE		= 1,
+@@ -152,7 +155,8 @@ enum iwl_tm_cmd_t {
+ 	IWL_TM_CMD_APP2DEV_INDIRECT_BUFFER_READ = 26,
+ 	IWL_TM_CMD_APP2DEV_INDIRECT_BUFFER_DUMP = 27,
+ 	IWL_TM_CMD_APP2DEV_INDIRECT_BUFFER_WRITE = 28,
+-	IWL_TM_CMD_MAX				= 29,
++	IWL_TM_CMD_APP2DEV_NOTIFICATIONS	= 29,
++	IWL_TM_CMD_MAX				= 30,
+ };
+ 
+ /*
+@@ -256,6 +260,10 @@ enum iwl_tm_cmd_t {
+  *	When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_UCODE this flag
+  *	indicates that the user wants to receive the response of the command
+  *	in a reply SKB. If it's not present, the response is not returned.
++ * @IWL_TM_ATTR_ENABLE_NOTIFICATIONS:
++ *	When IWL_TM_ATTR_COMMAND is IWL_TM_CMD_APP2DEV_NOTIFICATIONS, this
++ *	flag enables (if present) or disables (if not) the forwarding
++ *	to userspace.
+  */
+ enum iwl_tm_attr_t {
+ 	IWL_TM_ATTR_NOT_APPLICABLE		= 0,
+@@ -282,7 +290,8 @@ enum iwl_tm_attr_t {
+ 	IWL_TM_ATTR_FW_INST_SIZE		= 21,
+ 	IWL_TM_ATTR_FW_DATA_SIZE		= 22,
+ 	IWL_TM_ATTR_UCODE_CMD_SKB		= 23,
+-	IWL_TM_ATTR_MAX				= 24,
++	IWL_TM_ATTR_ENABLE_NOTIFICATION		= 24,
++	IWL_TM_ATTR_MAX				= 25,
+ };
+ 
+ /* uCode trace buffer */
+-- 
+1.7.0.4
 
- #define IEEE80211_DEFAULT_UAPSD_QUEUES \
- 	(IEEE80211_WMM_IE_STA_QOSINFO_AC_BK |	\
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 491c96f..f1b111d 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -794,7 +794,7 @@ static void ieee80211_rx_reorder_ampdu(struct
-ieee80211_rx_data *rx)
- 	/* reset session timer */
- 	if (tid_agg_rx->timeout)
- 		mod_timer(&tid_agg_rx->session_timer,
--			  TU_TO_EXP_TIME(tid_agg_rx->timeout));
-+			  TU_TO_EXP_TIME_ROUNDED(tid_agg_rx->timeout));
-
- 	/* if this mpdu is fragmented - terminate rx aggregation session */
- 	sc = le16_to_cpu(hdr->seq_ctrl);
