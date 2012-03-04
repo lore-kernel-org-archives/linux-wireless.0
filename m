@@ -1,109 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:36639 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933072Ab2C2X3A (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 29 Mar 2012 19:29:00 -0400
-Received: by mail-pb0-f46.google.com with SMTP id un15so789148pbc.19
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Mar 2012 16:28:59 -0700 (PDT)
-MIME-Version: 1.0
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, thomas@cozybit.com, johannes@sipsolutions.net,
-	devel@lists.open80211s.org, linville@tuxdriver.com,
-	Ashok Nagarajan <ashok@cozybit.com>
-Subject: [PATCH 4/4] mac80211: Check basic rates when peering
-Date: Thu, 29 Mar 2012 16:28:49 -0700
-Message-Id: <1333063729-9353-4-git-send-email-ashok@cozybit.com> (sfid-20120330_012907_215604_21C341FC)
-In-Reply-To: <1333063729-9353-1-git-send-email-ashok@cozybit.com>
-References: <1333063729-9353-1-git-send-email-ashok@cozybit.com>
+Received: from mga09.intel.com ([134.134.136.24]:20116 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754999Ab2CDUnB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:01 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 023/101] iwlwifi: transport's tx_agg_alloc must not sleep
+Date: Sun,  4 Mar 2012 11:28:37 -0800
+Message-Id: <1330889395-533-24-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214351_447407_31753188)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Section 13.2.3 of IEEE 80211s standard requires BSSBasicRateSet of mesh nodes
-to be identical to establish peer link.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+The annotation/documentation is wrong, we call
+it in a context that can't sleep.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/mac80211/mesh.c       |   15 ++++++++++-----
- net/mac80211/mesh.h       |    2 +-
- net/mac80211/mesh_plink.c |    2 +-
- 3 files changed, 12 insertions(+), 7 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-trans.h |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 964d8a9..a67b24e 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -69,11 +69,13 @@ static void ieee80211_mesh_housekeeping_timer(unsigned long data)
-  *
-  * @ie: information elements of a management frame from the mesh peer
-  * @sdata: local mesh subif
-+ * @basic_rates: BSSBasicRateSet of the peer candidate
-  *
-  * This function checks if the mesh configuration of a mesh point matches the
-  * local mesh configuration, i.e. if both nodes belong to the same mesh network.
-  */
--bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_data *sdata)
-+bool mesh_matches_local(struct ieee802_11_elems *ie,
-+			struct ieee80211_sub_if_data *sdata, u32 basic_rates)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index e8ab8d8..0197f31 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -229,7 +229,7 @@ static inline void iwl_free_resp(struct iwl_host_cmd *cmd)
+  * @reclaim: free packet until ssn. Returns a list of freed packets.
+  *	Must be atomic
+  * @tx_agg_alloc: allocate resources for a TX BA session
+- *	May sleep
++ *	Must be atomic
+  * @tx_agg_setup: setup a tx queue for AMPDU - will be called once the HW is
+  *	ready and a successful ADDBA response has been received.
+  *	May sleep
+@@ -474,8 +474,6 @@ static inline int iwl_trans_tx_agg_disable(struct iwl_trans *trans,
+ static inline int iwl_trans_tx_agg_alloc(struct iwl_trans *trans,
+ 					 int sta_id, int tid)
  {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
- 	struct ieee80211_local *local = sdata->local;
-@@ -97,6 +99,9 @@ bool mesh_matches_local(struct ieee802_11_elems *ie, struct ieee80211_sub_if_dat
- 	     (ifmsh->mesh_auth_id == ie->mesh_config->meshconf_auth)))
- 		goto mismatch;
+-	might_sleep();
+-
+ 	if (trans->state != IWL_TRANS_FW_ALIVE)
+ 		IWL_ERR(trans, "%s bad state = %d", __func__, trans->state);
  
-+	if (sdata->vif.bss_conf.basic_rates != basic_rates)
-+		goto mismatch;
-+
- 	/* disallow peering with mismatched channel types for now */
- 	/*if (ie->ht_info_elem &&
- 	    (local->_oper_channel_type !=
-@@ -653,13 +658,13 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 	if (!channel || channel->flags & IEEE80211_CHAN_DISABLED)
- 		return;
- 
-+	supp_rates = ieee80211_sta_get_rates(local, &elems,
-+					     band, &basic_rates);
-+
- 	if (elems.mesh_id && elems.mesh_config &&
--	    mesh_matches_local(&elems, sdata)) {
--		supp_rates = ieee80211_sta_get_rates(local, &elems,
--						     band, &basic_rates);
-+	    mesh_matches_local(&elems, sdata, basic_rates))
- 		mesh_neighbour_update(mgmt, supp_rates, sdata, &elems,
- 					rx_status);
--	}
- }
- 
- static void ieee80211_mesh_rx_mgmt_action(struct ieee80211_sub_if_data *sdata,
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 7d5d34b..0e40c8a 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -204,7 +204,7 @@ int ieee80211_new_mesh_header(struct ieee80211s_hdr *meshhdr,
- int mesh_rmc_check(u8 *addr, struct ieee80211s_hdr *mesh_hdr,
- 		struct ieee80211_sub_if_data *sdata);
- bool mesh_matches_local(struct ieee802_11_elems *ie,
--		struct ieee80211_sub_if_data *sdata);
-+			struct ieee80211_sub_if_data *sdata, u32 basic_rates);
- void mesh_ids_set_default(struct ieee80211_if_mesh *mesh);
- void mesh_mgmt_ies_add(struct sk_buff *skb,
- 		struct ieee80211_sub_if_data *sdata);
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index 879b0a1..abc4cb4 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -573,7 +573,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 					rx_status->band, &basic_rates);
- 
- 	if (ftype != WLAN_SP_MESH_PEERING_CLOSE &&
--	    (!mesh_matches_local(&elems, sdata))) {
-+	    (!mesh_matches_local(&elems, sdata, basic_rates))) {
- 		matches_local = false;
- 		switch (ftype) {
- 		case WLAN_SP_MESH_PEERING_OPEN:
 -- 
-1.7.5.4
+1.7.0.4
 
