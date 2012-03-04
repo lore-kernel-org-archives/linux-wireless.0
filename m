@@ -1,55 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52826 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757655Ab2C1JHN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2012 05:07:13 -0400
-Message-Id: <20120328090432.965911820@sipsolutions.net> (sfid-20120328_110724_729222_A5799F39)
-Date: Wed, 28 Mar 2012 11:04:28 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 6/7] mac80211: lazily stop queues in add_pending
-References: <20120328090422.367469100@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:11400 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755086Ab2CDUnG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:06 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 051/101] iwlwifi: keep plcp_delta_threshold in priv
+Date: Sun,  4 Mar 2012 11:29:05 -0800
+Message-Id: <1330889395-533-52-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214555_785479_95ADE173)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-When adding pending SKBs there's no need to
-stop all queues, we only need to stop those
-that we're adding frames to. Implement that
-by lazily stopping a queue as we add an SKB.
+The base_params shouldn't be writable, so keep
+a copy of this in priv that can be modified.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/mac80211/util.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c     |    3 +++
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c |    6 +++---
+ drivers/net/wireless/iwlwifi/iwl-dev.h     |    2 ++
+ 4 files changed, 9 insertions(+), 4 deletions(-)
 
---- a/net/mac80211/util.c	2012-03-28 09:34:49.000000000 +0200
-+++ b/net/mac80211/util.c	2012-03-28 09:36:48.000000000 +0200
-@@ -385,10 +385,6 @@ void ieee80211_add_pending_skbs_fn(struc
- 	int queue, i;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+index d16e73d..5c9c88b 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+@@ -320,7 +320,7 @@ static bool iwlagn_good_plcp_health(struct iwl_priv *priv,
+ 				 unsigned int msecs)
+ {
+ 	int delta;
+-	int threshold = cfg(priv)->base_params->plcp_delta_threshold;
++	int threshold = priv->plcp_delta_threshold;
  
- 	spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
--	for (i = 0; i < hw->queues; i++)
--		__ieee80211_stop_queue(hw, i,
--			IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
--
- 	while ((skb = skb_dequeue(skbs))) {
- 		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	if (threshold == IWL_MAX_PLCP_ERR_THRESHOLD_DISABLE) {
+ 		IWL_DEBUG_RADIO(priv, "plcp_err check disabled\n");
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 8cf149c..ac23aa3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1045,6 +1045,9 @@ static int iwl_init_drv(struct iwl_priv *priv)
+ 	priv->ieee_rates = NULL;
+ 	priv->band = IEEE80211_BAND_2GHZ;
  
-@@ -398,6 +394,10 @@ void ieee80211_add_pending_skbs_fn(struc
- 		}
- 
- 		queue = skb_get_queue_mapping(skb);
++	priv->plcp_delta_threshold =
++		cfg(priv)->base_params->plcp_delta_threshold;
 +
-+		__ieee80211_stop_queue(hw, queue,
-+				IEEE80211_QUEUE_STOP_REASON_SKB_ADD);
-+
- 		__skb_queue_tail(&local->pending[queue], skb);
- 	}
+ 	priv->iw_mode = NL80211_IFTYPE_STATION;
+ 	priv->current_ht_config.smps = IEEE80211_SMPS_STATIC;
+ 	priv->missed_beacon_threshold = IWL_MISSED_BEACON_THRESHOLD_DEF;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-debugfs.c b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+index 8fefb43..04eb8d3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-debugfs.c
++++ b/drivers/net/wireless/iwlwifi/iwl-debugfs.c
+@@ -2241,7 +2241,7 @@ static ssize_t iwl_dbgfs_plcp_delta_read(struct file *file,
+ 	const size_t bufsz = sizeof(buf);
  
-
+ 	pos += scnprintf(buf + pos, bufsz - pos, "%u\n",
+-			cfg(priv)->base_params->plcp_delta_threshold);
++			priv->plcp_delta_threshold);
+ 
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ }
+@@ -2263,10 +2263,10 @@ static ssize_t iwl_dbgfs_plcp_delta_write(struct file *file,
+ 		return -EINVAL;
+ 	if ((plcp < IWL_MAX_PLCP_ERR_THRESHOLD_MIN) ||
+ 		(plcp > IWL_MAX_PLCP_ERR_THRESHOLD_MAX))
+-		cfg(priv)->base_params->plcp_delta_threshold =
++		priv->plcp_delta_threshold =
+ 			IWL_MAX_PLCP_ERR_THRESHOLD_DISABLE;
+ 	else
+-		cfg(priv)->base_params->plcp_delta_threshold = plcp;
++		priv->plcp_delta_threshold = plcp;
+ 	return count;
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index 73acbab..0c397fd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -770,6 +770,8 @@ struct iwl_priv {
+ 	struct iwl_channel_info *channel_info;	/* channel info array */
+ 	u8 channel_count;	/* # of channels */
+ 
++	u8 plcp_delta_threshold;
++
+ 	/* thermal calibration */
+ 	s32 temperature;	/* Celsius */
+ 	s32 last_temperature;
+-- 
+1.7.0.4
 
