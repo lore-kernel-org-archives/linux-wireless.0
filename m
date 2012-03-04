@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:44058 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751627Ab2C1Hn5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2012 03:43:57 -0400
-MIME-Version: 1.0
-In-Reply-To: <4F72BB7F.8080704@gmail.com>
-References: <CAB=NE6WgTMdDtU4_ZgYVr2XzSuiicT5o=q2RvV24jeQj0rZfFw@mail.gmail.com>
- <4F72BB7F.8080704@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Wed, 28 Mar 2012 00:43:36 -0700
-Message-ID: <CAB=NE6WFM-BPQ41kPaod-7qkHnT5MXCUc2hdKXDVzrdPq2brjA@mail.gmail.com> (sfid-20120328_094420_525677_5B321D40)
-Subject: Re: compat-wireless releases based on v3.3
-To: Richard Farina <sidhayn@gmail.com>
-Cc: linux-kernel@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-bluetooth <linux-bluetooth@vger.kernel.org>,
-	netdev@vger.kernel.org,
-	lf_driver_backport@lists.linux-foundation.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:55973 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754888Ab2CDUm5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:42:57 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 003/101] iwlwifi: reduce sta_lock hold time in TX
+Date: Sun,  4 Mar 2012 11:28:17 -0800
+Message-Id: <1330889395-533-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214657_811990_A8D76B54)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 28, 2012 at 12:19 AM, Richard Farina <sidhayn@gmail.com> wrote:
-> /var/tmp/portage/net-wireless/compat-wireless-3.3/work/compat-wireless-3.3-1-n/drivers/net/wireless/ath/carl9170/tx.c:
-> In function 'carl9170_tx_ps_drop':
-> /var/tmp/portage/net-wireless/compat-wireless-3.3/work/compat-wireless-3.3-1-n/drivers/net/wireless/ath/carl9170/tx.c:1248:26:
-> error: 'IEEE80211_TX_CTL_POLL_RESPONSE' undeclared (first use in this
-> function)
+From: Johannes Berg <johannes.berg@intel.com>
 
-linux-next-cherry-picks/0007-mac80211-handle-non-bufferable-MMPDUs-correctly.patch
+When we TX, we hold the sta_lock for a long
+time, a lot of which isn't needed. Reduce
+the time we hold the lock. Note that this
+doesn't really change anything as the code
+is already under the other spinlock, but it
+makes the code easier to read.
 
-is to be blamed for. This is fixed, new tarball:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-http://www.orbit-lab.org/kernel/compat-wireless-3-stable/v3.3/compat-wireless-3.3-2-n.tar.bz2
-sha1sum: dd18cfabbe705a75440fd7fbe50a09d5fe34bb70
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 81a3b0e..59509d8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -341,13 +341,10 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	if (info->flags & IEEE80211_TX_CTL_AMPDU)
+ 		is_agg = true;
+ 
+-	/* irqs already disabled/saved above when locking priv->shrd->lock */
+-	spin_lock(&priv->shrd->sta_lock);
+-
+ 	dev_cmd = kmem_cache_alloc(priv->tx_cmd_pool, GFP_ATOMIC);
+ 
+ 	if (unlikely(!dev_cmd))
+-		goto drop_unlock_sta;
++		goto drop_unlock_priv;
+ 
+ 	memset(dev_cmd, 0, sizeof(*dev_cmd));
+ 	tx_cmd = (struct iwl_tx_cmd *) dev_cmd->payload;
+@@ -372,6 +369,9 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	info->driver_data[0] = ctx;
+ 	info->driver_data[1] = dev_cmd;
+ 
++	/* irqs already disabled/saved above when locking priv->shrd->lock */
++	spin_lock(&priv->shrd->sta_lock);
++
+ 	if (ieee80211_is_data_qos(fc) && !ieee80211_is_qos_nullfunc(fc)) {
+ 		u8 *qc = NULL;
+ 		struct iwl_tid_data *tid_data;
+-- 
+1.7.0.4
 
-Thanks for reporting this. Just FYI -- I am working to use ckmake on
-compat-wireless.git to build test against all supported kernels prior
-to release just as I am doing now for compat.git, but the current
-development cycle still a few items which require a bit of work to
-backport to fix compilation against older kernels. That is the goal
-though, so that future releases area always guaranteed to compile
-against all supported stable kernel releases listed on kernel.org.
-
-  Luis
