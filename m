@@ -1,55 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f52.google.com ([209.85.210.52]:60407 "EHLO
-	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751269Ab2CaCBP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 30 Mar 2012 22:01:15 -0400
-Received: by dake40 with SMTP id e40so165491dak.11
-        for <linux-wireless@vger.kernel.org>; Fri, 30 Mar 2012 19:01:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAJ8GFOihCt_JBPoawk2xKOO6wan_03F9LLwhsOAbmAKXSs0ygg@mail.gmail.com>
-References: <CAJ8GFOihCt_JBPoawk2xKOO6wan_03F9LLwhsOAbmAKXSs0ygg@mail.gmail.com>
-Date: Fri, 30 Mar 2012 19:01:14 -0700
-Message-ID: <CAJ-Vmok1qzkHVhJescbuEwz8OzfeqpHg5RC=vk4XA1KEqAGeKQ@mail.gmail.com> (sfid-20120331_040118_860466_C93F4F11)
-Subject: Re: Dual-band support for AP mode for AR9280?
-From: Adrian Chadd <adrian@freebsd.org>
-To: Harshal Chhaya <harshal@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:38078 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755140Ab2CDUnI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:08 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 065/101] iwlwifi: clean up iwl-commands.h
+Date: Sun,  4 Mar 2012 11:29:19 -0800
+Message-Id: <1330889395-533-66-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214512_069800_84876B38)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 30 March 2012 14:04, Harshal Chhaya <harshal@gmail.com> wrote:
-> Hello,
->
-> The 'ath9k' project page
-> (http://linuxwireless.org/en/users/Drivers/ath9k) mentions that '2x2
-> DB 11n' operation is supported for AR9280. A later section says that
-> 'AP mode' is supported.
+From: Johannes Berg <johannes.berg@intel.com>
 
-These are both true.
+Do some cleanups here:
+ * remove an unused prototype
+ * remove some unused constants
+ * clean up includes
 
-> Does the AP mode support full 11n features in a dual-band
-> configuration? Is there a hard limit to the number of clients when the
-> AR9280 is used as an AP? I am currently using an AR9170 (using
-> carl9170 - thanks, Christian) as an AP and found that I had to switch
-> to software encryption to scale beyond 32 clients because of the
-> number of key slots on the chip.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c  |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-commands.h |   10 +---------
+ 2 files changed, 2 insertions(+), 10 deletions(-)
 
-Yes. It's a dual band chip, but you only get to choose one band at a time.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+index cb6c230..cf5cc10 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+@@ -26,7 +26,7 @@
+  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
+  *
+  *****************************************************************************/
+-
++#include <linux/etherdevice.h>
+ #include <net/mac80211.h>
+ 
+ #include "iwl-dev.h"
+diff --git a/drivers/net/wireless/iwlwifi/iwl-commands.h b/drivers/net/wireless/iwlwifi/iwl-commands.h
+index 70ba962..9ed73e5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-commands.h
++++ b/drivers/net/wireless/iwlwifi/iwl-commands.h
+@@ -69,15 +69,9 @@
+ #ifndef __iwl_commands_h__
+ #define __iwl_commands_h__
+ 
+-#include <linux/etherdevice.h>
+ #include <linux/ieee80211.h>
++#include <linux/types.h>
+ 
+-struct iwl_priv;
+-
+-/* Tx rates */
+-#define IWL_CCK_RATES	4
+-#define IWL_OFDM_RATES	8
+-#define IWL_MAX_RATES	(IWL_CCK_RATES + IWL_OFDM_RATES)
+ 
+ enum {
+ 	REPLY_ALIVE = 0x1,
+@@ -3851,8 +3845,6 @@ struct iwlagn_wowlan_kek_kck_material_cmd {
+ 	__le64	replay_ctr;
+ } __packed;
+ 
+-int iwl_agn_check_rxon_cmd(struct iwl_priv *priv);
+-
+ /*
+  * REPLY_WIPAN_PARAMS = 0xb2 (Commands and Notification)
+  */
+-- 
+1.7.0.4
 
-Yes, there are limited keycache slot chips. I don't remember if the
-hardware limit is 32 or 64 clients.
-
-> And are the numbers in the 'power consumption' analysis
-> (http://linuxwireless.org/en/users/Drivers/ath9k/power-consumption)
-> for STA mode or AP mode? The 'PS On' configuration implies that this
-> is for an STA mode but I wanted to confirm.
-
-You should always do your own power consumption tests. It differs
-based on operating mode, environment, TX rate selection/power, what
-kind of amplifiers and other circuitry are on the NIC, etc.
-
-
-
-Adrian
