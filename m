@@ -1,82 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:21225 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:20116 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161452Ab2COU2G (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 16:28:06 -0400
+	id S1755186Ab2CDUnK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:10 -0500
 From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>,
 	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 15/26] iwlwifi: make iwl_nic_error static
-Date: Thu, 15 Mar 2012 13:26:55 -0700
-Message-Id: <1331843226-29860-16-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120315_212814_149790_DC46A8AB)
-In-Reply-To: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331843226-29860-1-git-send-email-wey-yi.w.guy@intel.com>
+Subject: [PATCH 081/101] iwlwifi: always check if got h/w access before write
+Date: Sun,  4 Mar 2012 11:29:35 -0800
+Message-Id: <1330889395-533-82-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214408_712450_8D4E95D4)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 
-iwl_nic_error is used in iwl-agn.c only, move
-it there and make it static.
+Before we write to the device registers always check if
+iwl_grap_nic_access() was successful.
 
-Signed-off-by: Meenakshi Venkataraman <meenakshi.venkataraman@intel.com>
+On the way change return type of grab_nic_access() to bool, and add
+likely()/unlikely() statement.
+
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c  |    7 +++++++
- drivers/net/wireless/iwlwifi/iwl-agn.h  |    1 -
- drivers/net/wireless/iwlwifi/iwl-core.c |    7 -------
- 3 files changed, 7 insertions(+), 8 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-tt.c        |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c           |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-io.c            |   53 +++++++++++----------
+ drivers/net/wireless/iwlwifi/iwl-io.h            |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c      |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c |    4 +-
+ 6 files changed, 35 insertions(+), 30 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
+index 7712c55..9a12b70 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tt.c
+@@ -189,7 +189,7 @@ static void iwl_tt_check_exit_ct_kill(unsigned long data)
+ 		}
+ 		iwl_read32(trans(priv), CSR_UCODE_DRV_GP1);
+ 		spin_lock_irqsave(&trans(priv)->reg_lock, flags);
+-		if (!iwl_grab_nic_access(trans(priv)))
++		if (likely(iwl_grab_nic_access(trans(priv))))
+ 			iwl_release_nic_access(trans(priv));
+ 		spin_unlock_irqrestore(&trans(priv)->reg_lock, flags);
+ 
 diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 3c49c04..37060aa 100644
+index 5f390f8..ce9ebeb 100644
 --- a/drivers/net/wireless/iwlwifi/iwl-agn.c
 +++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1556,6 +1556,13 @@ static void iwl_op_mode_dvm_stop(struct iwl_op_mode *op_mode)
- 	ieee80211_free_hw(priv->hw);
+@@ -327,7 +327,7 @@ static void iwl_print_cont_event_trace(struct iwl_priv *priv, u32 base,
+ 
+ 	/* Make sure device is powered up for SRAM reads */
+ 	spin_lock_irqsave(&trans(priv)->reg_lock, reg_flags);
+-	if (iwl_grab_nic_access(trans(priv))) {
++	if (unlikely(!iwl_grab_nic_access(trans(priv)))) {
+ 		spin_unlock_irqrestore(&trans(priv)->reg_lock, reg_flags);
+ 		return;
+ 	}
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.c b/drivers/net/wireless/iwlwifi/iwl-io.c
+index fc36535..fa69845 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.c
++++ b/drivers/net/wireless/iwlwifi/iwl-io.c
+@@ -118,16 +118,17 @@ int iwl_grab_nic_access_silent(struct iwl_trans *trans)
+ 	return 0;
  }
  
-+static void iwl_nic_error(struct iwl_op_mode *op_mode)
-+{
-+	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
-+
-+	iwlagn_fw_error(priv, false);
-+}
-+
- static void iwl_cmd_queue_full(struct iwl_op_mode *op_mode)
+-int iwl_grab_nic_access(struct iwl_trans *trans)
++bool iwl_grab_nic_access(struct iwl_trans *trans)
  {
- 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
-index 22fc363..882261b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
-@@ -92,7 +92,6 @@ int __must_check iwl_rx_dispatch(struct iwl_op_mode *op_mode,
- 				 struct iwl_rx_cmd_buffer *rxb,
- 				 struct iwl_device_cmd *cmd);
- void iwl_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state);
--void iwl_nic_error(struct iwl_op_mode *op_mode);
+ 	int ret = iwl_grab_nic_access_silent(trans);
+ 	if (unlikely(ret)) {
+ 		u32 val = iwl_read32(trans, CSR_GP_CNTRL);
+ 		WARN_ONCE(1, "Timeout waiting for hardware access "
+ 			     "(CSR_GP_CNTRL 0x%08x)\n", val);
++		return false;
+ 	}
  
- bool iwl_check_for_ct_kill(struct iwl_priv *priv);
- 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index e59cb5b..0a9bc98 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1451,13 +1451,6 @@ __le32 iwl_add_beacon_time(struct iwl_priv *priv, u32 base,
- 	return cpu_to_le32(res);
+-	return ret;
++	return true;
  }
  
--void iwl_nic_error(struct iwl_op_mode *op_mode)
--{
--	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
+ void iwl_release_nic_access(struct iwl_trans *trans)
+@@ -156,7 +157,7 @@ void iwl_write_direct32(struct iwl_trans *trans, u32 reg, u32 value)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&trans->reg_lock, flags);
+-	if (!iwl_grab_nic_access(trans)) {
++	if (likely(iwl_grab_nic_access(trans))) {
+ 		iwl_write32(trans, reg, value);
+ 		iwl_release_nic_access(trans);
+ 	}
+@@ -211,7 +212,7 @@ void iwl_write_prph(struct iwl_trans *trans, u32 addr, u32 val)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&trans->reg_lock, flags);
+-	if (!iwl_grab_nic_access(trans)) {
++	if (likely(iwl_grab_nic_access(trans))) {
+ 		__iwl_write_prph(trans, addr, val);
+ 		iwl_release_nic_access(trans);
+ 	}
+@@ -223,9 +224,11 @@ void iwl_set_bits_prph(struct iwl_trans *trans, u32 reg, u32 mask)
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&trans->reg_lock, flags);
+-	iwl_grab_nic_access(trans);
+-	__iwl_write_prph(trans, reg, __iwl_read_prph(trans, reg) | mask);
+-	iwl_release_nic_access(trans);
++	if (likely(iwl_grab_nic_access(trans))) {
++		__iwl_write_prph(trans, reg,
++				 __iwl_read_prph(trans, reg) | mask);
++		iwl_release_nic_access(trans);
++	}
+ 	spin_unlock_irqrestore(&trans->reg_lock, flags);
+ }
+ 
+@@ -235,10 +238,11 @@ void iwl_set_bits_mask_prph(struct iwl_trans *trans, u32 reg,
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&trans->reg_lock, flags);
+-	iwl_grab_nic_access(trans);
+-	__iwl_write_prph(trans, reg,
+-			 (__iwl_read_prph(trans, reg) & mask) | bits);
+-	iwl_release_nic_access(trans);
++	if (likely(iwl_grab_nic_access(trans))) {
++		__iwl_write_prph(trans, reg,
++				 (__iwl_read_prph(trans, reg) & mask) | bits);
++		iwl_release_nic_access(trans);
++	}
+ 	spin_unlock_irqrestore(&trans->reg_lock, flags);
+ }
+ 
+@@ -248,10 +252,11 @@ void iwl_clear_bits_prph(struct iwl_trans *trans, u32 reg, u32 mask)
+ 	u32 val;
+ 
+ 	spin_lock_irqsave(&trans->reg_lock, flags);
+-	iwl_grab_nic_access(trans);
+-	val = __iwl_read_prph(trans, reg);
+-	__iwl_write_prph(trans, reg, (val & ~mask));
+-	iwl_release_nic_access(trans);
++	if (likely(iwl_grab_nic_access(trans))) {
++		val = __iwl_read_prph(trans, reg);
++		__iwl_write_prph(trans, reg, (val & ~mask));
++		iwl_release_nic_access(trans);
++	}
+ 	spin_unlock_irqrestore(&trans->reg_lock, flags);
+ }
+ 
+@@ -263,15 +268,13 @@ void _iwl_read_targ_mem_words(struct iwl_trans *trans, u32 addr,
+ 	u32 *vals = buf;
+ 
+ 	spin_lock_irqsave(&trans->reg_lock, flags);
+-	iwl_grab_nic_access(trans);
 -
--	iwlagn_fw_error(priv, false);
--}
+-	iwl_write32(trans, HBUS_TARG_MEM_RADDR, addr);
+-	rmb();
 -
- void iwl_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
- {
- 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
+-	for (offs = 0; offs < words; offs++)
+-		vals[offs] = iwl_read32(trans, HBUS_TARG_MEM_RDAT);
+-
+-	iwl_release_nic_access(trans);
++	if (likely(iwl_grab_nic_access(trans))) {
++		iwl_write32(trans, HBUS_TARG_MEM_RADDR, addr);
++		rmb();
++		for (offs = 0; offs < words; offs++)
++			vals[offs] = iwl_read32(trans, HBUS_TARG_MEM_RDAT);
++		iwl_release_nic_access(trans);
++	}
+ 	spin_unlock_irqrestore(&trans->reg_lock, flags);
+ }
+ 
+@@ -292,7 +295,7 @@ int _iwl_write_targ_mem_words(struct iwl_trans *trans, u32 addr,
+ 	u32 *vals = buf;
+ 
+ 	spin_lock_irqsave(&trans->reg_lock, flags);
+-	if (!iwl_grab_nic_access(trans)) {
++	if (likely(iwl_grab_nic_access(trans))) {
+ 		iwl_write32(trans, HBUS_TARG_MEM_WADDR, addr);
+ 		wmb();
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-io.h b/drivers/net/wireless/iwlwifi/iwl-io.h
+index 1136dc1..09b8567 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-io.h
++++ b/drivers/net/wireless/iwlwifi/iwl-io.h
+@@ -61,7 +61,7 @@ int iwl_poll_direct_bit(struct iwl_trans *trans, u32 addr, u32 mask,
+ 			int timeout);
+ 
+ int iwl_grab_nic_access_silent(struct iwl_trans *trans);
+-int iwl_grab_nic_access(struct iwl_trans *trans);
++bool iwl_grab_nic_access(struct iwl_trans *trans);
+ void iwl_release_nic_access(struct iwl_trans *trans);
+ 
+ u32 iwl_read_direct32(struct iwl_trans *trans, u32 reg);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index bdcbbd0..91a42c3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -445,7 +445,7 @@ static int iwlagn_mac_resume(struct ieee80211_hw *hw)
+ 	if (iwlagn_hw_valid_rtc_data_addr(base)) {
+ 		spin_lock_irqsave(&trans(priv)->reg_lock, flags);
+ 		ret = iwl_grab_nic_access_silent(trans(priv));
+-		if (ret == 0) {
++		if (likely(ret == 0)) {
+ 			iwl_write32(trans(priv), HBUS_TARG_MEM_RADDR, base);
+ 			status = iwl_read32(trans(priv), HBUS_TARG_MEM_RDAT);
+ 			iwl_release_nic_access(trans(priv));
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index 088354f..25e2f93 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -745,7 +745,8 @@ static int iwl_print_event_log(struct iwl_trans *trans, u32 start_idx,
+ 
+ 	/* Make sure device is powered up for SRAM reads */
+ 	spin_lock_irqsave(&trans->reg_lock, reg_flags);
+-	iwl_grab_nic_access(trans);
++	if (unlikely(!iwl_grab_nic_access(trans)))
++		goto out_unlock;
+ 
+ 	/* Set starting address; reads will auto-increment */
+ 	iwl_write32(trans, HBUS_TARG_MEM_RADDR, ptr);
+@@ -785,6 +786,7 @@ static int iwl_print_event_log(struct iwl_trans *trans, u32 start_idx,
+ 
+ 	/* Allow device to power down */
+ 	iwl_release_nic_access(trans);
++out_unlock:
+ 	spin_unlock_irqrestore(&trans->reg_lock, reg_flags);
+ 	return pos;
+ }
 -- 
 1.7.0.4
 
