@@ -1,49 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:48489 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757538Ab2CFVra convert rfc822-to-8bit (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:49995 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754975Ab2CDWte convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 16:47:30 -0500
+	Sun, 4 Mar 2012 17:49:34 -0500
+Received: by iagz16 with SMTP id z16so4782680iag.19
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Mar 2012 14:49:34 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFxdnfGREML3u+eoGf89Jci8qBuW7WBmPk3w=wRWMvRvfg@mail.gmail.com>
-References: <20120228010511.GA8453@kroah.com> <20120228010434.412979550@linuxfoundation.org>
- <87hay4dqjr.fsf@turtle.gmx.de> <201203050143.24541.s.L-H@gmx.de>
- <CA+55aFxZsVxkxifR+EUZi=RsUGKfs5vYXX3nN_M_Az1BY5yyaw@mail.gmail.com>
- <alpine.LFD.2.02.1203060927190.2742@ionos> <alpine.LFD.2.02.1203060957140.2742@ionos>
- <alpine.LFD.2.02.1203062019340.2742@ionos> <8762eh1p7d.fsf@turtle.gmx.de>
- <alpine.LFD.2.02.1203062101040.2742@ionos> <CA+55aFxdnfGREML3u+eoGf89Jci8qBuW7WBmPk3w=wRWMvRvfg@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Tue, 6 Mar 2012 13:47:09 -0800
-Message-ID: <CA+55aFzqF0C1eiidR=ycJ0DhV3MiWJRkOmi-GEcgT7J6Dm+a5g@mail.gmail.com> (sfid-20120306_224736_753588_F68D31FE)
-Subject: Re: [ 57/72] genirq: Unmask oneshot irqs when thread was not woken
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Sven Joachim <svenjoac@gmx.de>,
-	Stefan Lippers-Hollmann <s.L-H@gmx.de>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	LKML <linux-kernel@vger.kernel.org>, stable@vger.kernel.org,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Alan Cox <alan@lxorguk.ukuu.org.uk>,
-	Jonathan Nieder <jrnieder@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Stefano Brivio <stefano.brivio@polimi.it>
+In-Reply-To: <1330725351-3803-5-git-send-email-arend@broadcom.com>
+References: <1330725351-3803-1-git-send-email-arend@broadcom.com> <1330725351-3803-5-git-send-email-arend@broadcom.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 5 Mar 2012 09:49:12 +1100
+Message-ID: <CAGRGNgXbkV-OkB5XG8+HqmmxG6f3RfgAkfnb_XxhXYU5+yN6Ug@mail.gmail.com> (sfid-20120304_234937_806805_8506333D)
+Subject: Re: [PATCH 4/7] brcm80211: fmac: initialize host interface drivers
+ regardless result
+To: Arend van Spriel <arend@broadcom.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 6, 2012 at 1:40 PM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
->
-> (*) "1 << ffz(a)" can be written as
->
->   a = ~a;        /* Turn the zero bits into 1 bits */
->   a &= -a;      /* .. and find the first one. */
->
-> without ever doing any insane bit scanning.
+Hi Arend,
 
-Alternatively, wite it directly as "(a+1) &~a", which is the same
-expression just written differently (due to "-a == ~a+1")
+On Sat, Mar 3, 2012 at 08:55, Arend van Spriel <arend@broadcom.com> wrote:
+> The module init function of brcmfmac calls init functions for SDIO and
+> USB doing driver registration. This patch removes terminating the module
+> init when a driver registration for one host interface fails.
 
-Yeah, I've been playing too much with the bitwise optimizations of the
-dentry cache name comparisons lately.
+Would it be better to fail the module load if *none* of them succeed -
+there's probably no point in having the module loaded if it's not
+actually hooked up to anything.
 
-                   Linus
+You could write the init code like this:
+
+static int __init brcmfmac_init(void)
+{
+       int ret = 0;
+       bool loaded = false;
+
+#ifdef CONFIG_BRCMFMAC_SDIO
+       ret = brcmf_sdio_init();
+       if (!ret)
+               loaded = true;
+
+       // An informative message could go here if it fails
+#endif
+#ifdef CONFIG_BRCMFMAC_USB
+       ret = brcmf_usb_init();
+       if (!ret)
+               loaded = true;
+
+       // An informative message could go here if it fails
+#endif
+
+       if (!loaded)
+               return ret; // or -ENODEV
+
+       return 0;
+}
+
+And you then wouldn't have to change any of the other code.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
+.Plan: http://sites.google.com/site/juliancalaby/
