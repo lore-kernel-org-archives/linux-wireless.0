@@ -1,91 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20496 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:17699 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031468Ab2CFWna (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 17:43:30 -0500
+	id S1755193Ab2CDUnM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:12 -0500
 From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
 	Johannes Berg <johannes.berg@intel.com>,
 	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 06/33] iwlwifi: move lockdep assertion into DVM
-Date: Tue,  6 Mar 2012 13:30:41 -0800
-Message-Id: <1331069468-11074-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234434_911247_6B0834E7)
-In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
+Subject: [PATCH 085/101] iwlwifi: reintroduce iwl_enable_rfkill_int
+Date: Sun,  4 Mar 2012 11:29:39 -0800
+Message-Id: <1330889395-533-86-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214441_552571_F0C0FCD7)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 
-The fact that the mutex must be held is an
-implementation detail of DVM, but something
-has to ensure that no two synchronous cmds
-are submitted concurrently. Move the lockdep
-assertion into the DVM-specific code, but
-also make the transport abort if there are
-two concurrently commands.
+If device is disabled by rfkill switch, do not enable all interrupts,
+but only CSR_INT_BIT_RF_KILL to receive rfkill state change. Unblocking
+other interrupts might cause problems, since driver can not be prepared
+for receive them.
 
-The assertion is much more useful though as
-the transport check can only catch it when
-it actually happens, while the assertion
-makes sure it can't possibly happen.
-
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-lib.c       |    8 ++++++++
- drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |   11 ++++++++---
- 2 files changed, 16 insertions(+), 3 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    6 ++++++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |    6 ++----
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |   13 ++++++++-----
+ 3 files changed, 16 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-index 11f2411..238f824 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
-@@ -1298,6 +1298,14 @@ int iwl_dvm_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
- 		return -EIO;
- 	}
- 
-+	/*
-+	 * Synchronous commands from this op-mode must hold
-+	 * the mutex, this ensures we don't try to send two
-+	 * (or more) synchronous commands at a time.
-+	 */
-+	if (cmd->flags & CMD_SYNC)
-+		lockdep_assert_held(&priv->shrd->mutex);
-+
- 	return iwl_trans_send_cmd(trans(priv), cmd);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+index 4f73a6d..93d89a3 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+@@ -376,6 +376,12 @@ static inline void iwl_enable_interrupts(struct iwl_trans *trans)
+ 	iwl_write32(trans, CSR_INT_MASK, trans_pcie->inta_mask);
  }
  
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-index c85975e..ca4ceea 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
-@@ -973,8 +973,6 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 	int cmd_idx;
- 	int ret;
++static inline void iwl_enable_rfkill_int(struct iwl_trans *trans)
++{
++	IWL_DEBUG_ISR(trans, "Enabling rfkill interrupt\n");
++	iwl_write32(trans, CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
++}
++
+ /*
+  * we have 8 bits used like this:
+  *
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index 5b2e47a..3eb7bd1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -1134,10 +1134,8 @@ void iwl_irq_tasklet(struct iwl_trans *trans)
+ 	if (test_bit(STATUS_INT_ENABLED, &trans->shrd->status))
+ 		iwl_enable_interrupts(trans);
+ 	/* Re-enable RF_KILL if it occurred */
+-	else if (handled & CSR_INT_BIT_RF_KILL) {
+-		IWL_DEBUG_ISR(trans, "Enabling rfkill interrupt\n");
+-		iwl_write32(trans, CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
+-	}
++	else if (handled & CSR_INT_BIT_RF_KILL)
++		iwl_enable_rfkill_int(trans);
+ }
  
--	lockdep_assert_held(&trans->shrd->mutex);
--
- 	IWL_DEBUG_INFO(trans, "Attempting to send sync command %s\n",
- 			get_cmd_string(cmd->id));
+ /******************************************************************************
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 75bb95e..1d35d0e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1051,7 +1051,7 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
+ 	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
  
-@@ -983,7 +981,14 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
- 			       get_cmd_string(cmd->id));
- 		return -EIO;
+ 	if (hw_rfkill) {
+-		iwl_enable_interrupts(trans);
++		iwl_enable_rfkill_int(trans);
+ 		return -ERFKILL;
  	}
--	set_bit(STATUS_HCMD_ACTIVE, &trans->shrd->status);
-+
-+	if (WARN_ON(test_and_set_bit(STATUS_HCMD_ACTIVE,
-+				     &trans->shrd->status))) {
-+		IWL_ERR(trans, "Command %s: a command is already active!\n",
-+			get_cmd_string(cmd->id));
-+		return -EIO;
-+	}
-+
- 	IWL_DEBUG_INFO(trans, "Setting HCMD_ACTIVE for command %s\n",
- 			get_cmd_string(cmd->id));
  
+@@ -1562,8 +1562,7 @@ static void iwl_trans_pcie_stop_hw(struct iwl_trans *trans)
+ 	iwl_write32(trans, CSR_INT, 0xFFFFFFFF);
+ 
+ 	/* Even if we stop the HW, we still want the RF kill interrupt */
+-	IWL_DEBUG_ISR(trans, "Enabling rfkill interrupt\n");
+-	iwl_write32(trans, CSR_INT_MASK, CSR_INT_BIT_RF_KILL);
++	iwl_enable_rfkill_int(trans);
+ }
+ 
+ static int iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
+@@ -1656,10 +1655,14 @@ static int iwl_trans_pcie_resume(struct iwl_trans *trans)
+ {
+ 	bool hw_rfkill;
+ 
+-	iwl_enable_interrupts(trans);
+-
+ 	hw_rfkill = !(iwl_read32(trans, CSR_GP_CNTRL) &
+ 				CSR_GP_CNTRL_REG_FLAG_HW_RF_KILL_SW);
++
++	if (hw_rfkill)
++		iwl_enable_rfkill_int(trans);
++	else
++		iwl_enable_interrupts(trans);
++
+ 	iwl_op_mode_hw_rf_kill(trans->op_mode, hw_rfkill);
+ 
+ 	return 0;
 -- 
 1.7.0.4
 
