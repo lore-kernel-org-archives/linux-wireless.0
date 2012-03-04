@@ -1,144 +1,232 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:32442 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755412Ab2CDX6y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 4 Mar 2012 18:58:54 -0500
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH 11/22] NFC: Set MIU and RW values from CONNECT and CC LLCP frames
-Date: Mon,  5 Mar 2012 01:03:43 +0100
-Message-Id: <1330905834-6994-12-git-send-email-sameo@linux.intel.com> (sfid-20120305_005857_161591_F1F3D41A)
-In-Reply-To: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
-References: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
+Received: from mail-wi0-f174.google.com ([209.85.212.174]:40715 "EHLO
+	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751842Ab2CDIzw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 03:55:52 -0500
+Received: by wibhm2 with SMTP id hm2so1368116wib.19
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Mar 2012 00:55:51 -0800 (PST)
+MIME-Version: 1.0
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 03/11] wl12xx: implement sta_state callback
+Date: Sun,  4 Mar 2012 10:55:47 +0200
+Message-Id: <1330851355-24459-4-git-send-email-eliad@wizery.com> (sfid-20120304_095638_797514_6E5626C0)
+In-Reply-To: <1330851355-24459-1-git-send-email-eliad@wizery.com>
+References: <1330851355-24459-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We use the maximum values for the LLCP Maximum Information Unit and Receive
-Window Size.
+Implement sta_state callback instead of the
+sta_add/remove callbacks.
 
-Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+Update the fw regarding peer state and ht caps
+only after the station was authorized. Otherwise,
+the fw might try establishing BA session before
+the sta is authorized.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- net/nfc/llcp/commands.c |   48 ++++++++++++++++++++++++++++++++++++++++++++--
- net/nfc/llcp/llcp.h     |    4 +++
- 2 files changed, 49 insertions(+), 3 deletions(-)
+ drivers/net/wireless/wl12xx/main.c |  137 +++++++++++++++++++++--------------
+ 1 files changed, 82 insertions(+), 55 deletions(-)
 
-diff --git a/net/nfc/llcp/commands.c b/net/nfc/llcp/commands.c
-index 8ebd322..a02292b 100644
---- a/net/nfc/llcp/commands.c
-+++ b/net/nfc/llcp/commands.c
-@@ -284,6 +284,9 @@ int nfc_llcp_send_connect(struct nfc_llcp_sock *sock)
- 	struct nfc_llcp_local *local;
- 	struct sk_buff *skb;
- 	u8 *service_name_tlv = NULL, service_name_tlv_length;
-+	u8 *miux_tlv = NULL, miux_tlv_length;
-+	u8 *rw_tlv = NULL, rw_tlv_length, rw;
-+	__be16 miux;
- 	int err;
- 	u16 size = 0;
- 
-@@ -301,6 +304,14 @@ int nfc_llcp_send_connect(struct nfc_llcp_sock *sock)
- 		size += service_name_tlv_length;
- 	}
- 
-+	miux = cpu_to_be16(LLCP_MAX_MIUX);
-+	miux_tlv = nfc_llcp_build_tlv(LLCP_TLV_MIUX, (u8 *)&miux, 0, &miux_tlv_length);
-+	size += miux_tlv_length;
-+
-+	rw = LLCP_MAX_RW;
-+	rw_tlv = nfc_llcp_build_tlv(LLCP_TLV_RW, &rw, 0, &rw_tlv_length);
-+	size += rw_tlv_length;
-+
- 	pr_debug("SKB size %d SN length %zu\n", size, sock->service_name_len);
- 
- 	skb = llcp_allocate_pdu(sock, LLCP_PDU_CONNECT, size);
-@@ -313,6 +324,9 @@ int nfc_llcp_send_connect(struct nfc_llcp_sock *sock)
- 		skb = llcp_add_tlv(skb, service_name_tlv,
- 					service_name_tlv_length);
- 
-+	skb = llcp_add_tlv(skb, miux_tlv, miux_tlv_length);
-+	skb = llcp_add_tlv(skb, rw_tlv, rw_tlv_length);
-+
- 	skb_queue_tail(&local->tx_queue, skb);
- 
- 	return 0;
-@@ -321,6 +335,8 @@ error_tlv:
- 	pr_err("error %d\n", err);
- 
- 	kfree(service_name_tlv);
-+	kfree(miux_tlv);
-+	kfree(rw_tlv);
- 
- 	return err;
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index b771106..8569ac3 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -4233,100 +4233,128 @@ void wl1271_free_sta(struct wl1271 *wl, struct wl12xx_vif *wlvif, u8 hlid)
+ 	wl->active_sta_count--;
  }
-@@ -329,6 +345,11 @@ int nfc_llcp_send_cc(struct nfc_llcp_sock *sock)
+ 
+-static int wl1271_op_sta_add(struct ieee80211_hw *hw,
+-			     struct ieee80211_vif *vif,
+-			     struct ieee80211_sta *sta)
++static int wl12xx_sta_add(struct wl1271 *wl,
++			  struct wl12xx_vif *wlvif,
++			  struct ieee80211_sta *sta)
  {
- 	struct nfc_llcp_local *local;
- 	struct sk_buff *skb;
-+	u8 *miux_tlv = NULL, miux_tlv_length;
-+	u8 *rw_tlv = NULL, rw_tlv_length, rw;
-+	__be16 miux;
-+	int err;
-+	u16 size = 0;
+-	struct wl1271 *wl = hw->priv;
+-	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+ 	struct wl1271_station *wl_sta;
+ 	int ret = 0;
+ 	u8 hlid;
  
- 	pr_debug("Sending CC\n");
+-	mutex_lock(&wl->mutex);
+-
+-	if (unlikely(wl->state == WL1271_STATE_OFF))
+-		goto out;
+-
+-	if (wlvif->bss_type != BSS_TYPE_AP_BSS)
+-		goto out;
+-
+ 	wl1271_debug(DEBUG_MAC80211, "mac80211 add sta %d", (int)sta->aid);
  
-@@ -336,13 +357,34 @@ int nfc_llcp_send_cc(struct nfc_llcp_sock *sock)
- 	if (local == NULL)
- 		return -ENODEV;
+ 	ret = wl1271_allocate_sta(wl, wlvif, sta);
+ 	if (ret < 0)
+-		goto out;
++		return ret;
  
--	skb = llcp_allocate_pdu(sock, LLCP_PDU_CC, 0);
--	if (skb == NULL)
--		return -ENOMEM;
-+	miux = cpu_to_be16(LLCP_MAX_MIUX);
-+	miux_tlv = nfc_llcp_build_tlv(LLCP_TLV_MIUX, (u8 *)&miux, 0, &miux_tlv_length);
-+	size += miux_tlv_length;
-+
-+	rw = LLCP_MAX_RW;
-+	rw_tlv = nfc_llcp_build_tlv(LLCP_TLV_RW, &rw, 0, &rw_tlv_length);
-+	size += rw_tlv_length;
-+
-+	skb = llcp_allocate_pdu(sock, LLCP_PDU_CC, size);
-+	if (skb == NULL) {
-+		err = -ENOMEM;
-+		goto error_tlv;
-+	}
-+
-+	skb = llcp_add_tlv(skb, miux_tlv, miux_tlv_length);
-+	skb = llcp_add_tlv(skb, rw_tlv, rw_tlv_length);
+ 	wl_sta = (struct wl1271_station *)sta->drv_priv;
+ 	hlid = wl_sta->hlid;
  
- 	skb_queue_tail(&local->tx_queue, skb);
+-	ret = wl1271_ps_elp_wakeup(wl);
+-	if (ret < 0)
+-		goto out_free_sta;
+-
+ 	ret = wl12xx_cmd_add_peer(wl, wlvif, sta, hlid);
+ 	if (ret < 0)
+-		goto out_sleep;
++		wl1271_free_sta(wl, wlvif, hlid);
  
- 	return 0;
+-	ret = wl12xx_cmd_set_peer_state(wl, hlid);
+-	if (ret < 0)
+-		goto out_sleep;
++	return ret;
++}
+ 
+-	ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap, true, hlid);
+-	if (ret < 0)
+-		goto out_sleep;
++static int wl12xx_sta_remove(struct wl1271 *wl,
++			     struct wl12xx_vif *wlvif,
++			     struct ieee80211_sta *sta)
++{
++	struct wl1271_station *wl_sta;
++	int ret = 0, id;
+ 
+-out_sleep:
+-	wl1271_ps_elp_sleep(wl);
++	wl1271_debug(DEBUG_MAC80211, "mac80211 remove sta %d", (int)sta->aid);
 +
-+error_tlv:
-+	pr_err("error %d\n", err);
-+
-+	kfree(miux_tlv);
-+	kfree(rw_tlv);
-+
-+	return err;
++	wl_sta = (struct wl1271_station *)sta->drv_priv;
++	id = wl_sta->hlid;
++	if (WARN_ON(!test_bit(id, wlvif->ap.sta_hlid_map)))
++		return -EINVAL;
+ 
+-out_free_sta:
++	ret = wl12xx_cmd_remove_peer(wl, wl_sta->hlid);
+ 	if (ret < 0)
+-		wl1271_free_sta(wl, wlvif, hlid);
++		return ret;
+ 
+-out:
+-	mutex_unlock(&wl->mutex);
++	wl1271_free_sta(wl, wlvif, wl_sta->hlid);
+ 	return ret;
  }
  
- int nfc_llcp_send_dm(struct nfc_llcp_local *local, u8 ssap, u8 dsap, u8 reason)
-diff --git a/net/nfc/llcp/llcp.h b/net/nfc/llcp/llcp.h
-index 054c64f..70e1762 100644
---- a/net/nfc/llcp/llcp.h
-+++ b/net/nfc/llcp/llcp.h
-@@ -28,6 +28,10 @@ enum llcp_state {
- #define LLCP_DEFAULT_RW  1
- #define LLCP_DEFAULT_MIU 128
+-static int wl1271_op_sta_remove(struct ieee80211_hw *hw,
+-				struct ieee80211_vif *vif,
+-				struct ieee80211_sta *sta)
++static int wl12xx_update_sta_state(struct wl1271 *wl,
++				   struct wl12xx_vif *wlvif,
++				   struct ieee80211_sta *sta,
++				   enum ieee80211_sta_state old_state,
++				   enum ieee80211_sta_state new_state)
+ {
+-	struct wl1271 *wl = hw->priv;
+-	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+ 	struct wl1271_station *wl_sta;
+-	int ret = 0, id;
++	u8 hlid;
++	bool is_ap = wlvif->bss_type == BSS_TYPE_AP_BSS;
++	bool is_sta = wlvif->bss_type == BSS_TYPE_STA_BSS;
++	int ret;
  
-+#define LLCP_MAX_LTO  0xff
-+#define LLCP_MAX_RW   15
-+#define LLCP_MAX_MIUX 0x7ff
+-	mutex_lock(&wl->mutex);
++	wl_sta = (struct wl1271_station *)sta->drv_priv;
++	hlid = wl_sta->hlid;
+ 
+-	if (unlikely(wl->state == WL1271_STATE_OFF))
+-		goto out;
++	/* Add station (AP mode) */
++	if (is_ap &&
++	    old_state == IEEE80211_STA_NOTEXIST &&
++	    new_state == IEEE80211_STA_NONE)
++		return wl12xx_sta_add(wl, wlvif, sta);
 +
- #define LLCP_WKS_NUM_SAP   16
- #define LLCP_SDP_NUM_SAP   16
- #define LLCP_LOCAL_NUM_SAP 32
++	/* Remove station (AP mode) */
++	if (is_ap &&
++	    old_state == IEEE80211_STA_NONE &&
++	    new_state == IEEE80211_STA_NOTEXIST) {
++		/* must not fail */
++		wl12xx_sta_remove(wl, wlvif, sta);
++		return 0;
++	}
+ 
+-	if (wlvif->bss_type != BSS_TYPE_AP_BSS)
+-		goto out;
++	/* Authorize station (AP mode) */
++	if (is_ap &&
++	    new_state == IEEE80211_STA_AUTHORIZED) {
++		ret = wl12xx_cmd_set_peer_state(wl, hlid);
++		if (ret < 0)
++			return ret;
+ 
+-	wl1271_debug(DEBUG_MAC80211, "mac80211 remove sta %d", (int)sta->aid);
++		ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap, true,
++						     hlid);
++		return ret;
++	}
+ 
+-	wl_sta = (struct wl1271_station *)sta->drv_priv;
+-	id = wl_sta->hlid;
+-	if (WARN_ON(!test_bit(id, wlvif->ap.sta_hlid_map)))
++	return 0;
++}
++
++static int wl12xx_op_sta_state(struct ieee80211_hw *hw,
++			       struct ieee80211_vif *vif,
++			       struct ieee80211_sta *sta,
++			       enum ieee80211_sta_state old_state,
++			       enum ieee80211_sta_state new_state)
++{
++	struct wl1271 *wl = hw->priv;
++	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
++	int ret;
++
++	wl1271_debug(DEBUG_MAC80211, "mac80211 sta %d state=%d->%d",
++		     sta->aid, old_state, new_state);
++
++	mutex_lock(&wl->mutex);
++
++	if (unlikely(wl->state == WL1271_STATE_OFF)) {
++		ret = -EBUSY;
+ 		goto out;
++	}
+ 
+ 	ret = wl1271_ps_elp_wakeup(wl);
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	ret = wl12xx_cmd_remove_peer(wl, wl_sta->hlid);
+-	if (ret < 0)
+-		goto out_sleep;
++	ret = wl12xx_update_sta_state(wl, wlvif, sta, old_state, new_state);
+ 
+-	wl1271_free_sta(wl, wlvif, wl_sta->hlid);
+-
+-out_sleep:
+ 	wl1271_ps_elp_sleep(wl);
+-
+ out:
+ 	mutex_unlock(&wl->mutex);
++	if (new_state < old_state)
++		return 0;
+ 	return ret;
+ }
+ 
+@@ -4795,8 +4823,7 @@ static const struct ieee80211_ops wl1271_ops = {
+ 	.conf_tx = wl1271_op_conf_tx,
+ 	.get_tsf = wl1271_op_get_tsf,
+ 	.get_survey = wl1271_op_get_survey,
+-	.sta_add = wl1271_op_sta_add,
+-	.sta_remove = wl1271_op_sta_remove,
++	.sta_state = wl12xx_op_sta_state,
+ 	.ampdu_action = wl1271_op_ampdu_action,
+ 	.tx_frames_pending = wl1271_tx_frames_pending,
+ 	.set_bitrate_mask = wl12xx_set_bitrate_mask,
 -- 
-1.7.7.3
+1.7.6.401.g6a319
 
