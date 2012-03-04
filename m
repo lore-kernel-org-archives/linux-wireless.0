@@ -1,64 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57496 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753171Ab2CPNB2 (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:58481 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755138Ab2CDWuM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 09:01:28 -0400
-Subject: RE: mac80211 20/40 coexist
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Manoharan, Rajkumar" <rmanohar@qca.qualcomm.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-In-Reply-To: <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b>
-References: <1331818214.3432.12.camel@jlt3.sipsolutions.net>
-	 <8F3AF1C9F856774F8C8D67AA7EDFEC8801E3005E@aphydexd01b>
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 16 Mar 2012 14:01:25 +0100
-Message-ID: <1331902885.6753.10.camel@jlt3.sipsolutions.net> (sfid-20120316_140157_658300_7E065B29)
-Mime-Version: 1.0
+	Sun, 4 Mar 2012 17:50:12 -0500
+Received: by vbbff1 with SMTP id ff1so2940068vbb.19
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Mar 2012 14:50:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAG6hwVMo2ZgcNYDQ3UKRC2Wo_gibERBdgvaLWJmi52min8w3Hg@mail.gmail.com>
+References: <1330731963-9905-1-git-send-email-thomas@cozybit.com>
+ <1330731963-9905-2-git-send-email-thomas@cozybit.com> <1330774678.3619.1.camel@jlt3.sipsolutions.net>
+ <CAG6hwVMo2ZgcNYDQ3UKRC2Wo_gibERBdgvaLWJmi52min8w3Hg@mail.gmail.com>
+From: Thomas Pedersen <thomas@cozybit.com>
+Date: Sun, 4 Mar 2012 14:49:51 -0800
+Message-ID: <CAG6hwVMpZTG=vuidSvQvvJhBj=avW_JP5ewATLwTCZsNqcu5zw@mail.gmail.com> (sfid-20120304_235014_995172_1C43BF40)
+Subject: Re: [PATCH v2 2/2] mac80211: fix mesh airtime link metric estimating
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	open11s <devel@lists.open80211s.org>
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+grrr, missed reply-all.
 
-[I'll also fold in your other email]
-
-> Not calling hw_config could affect drivers like ath9k_htc where the rate control runs in the firmware.
-> Those drivers will update the rate control based on CHANGED_HT flag.
-
-Yeah that's actually an interesting point -- but we have it wrong right
-now I think. Did you see Paul's recent patch? We really shouldn't be
-reconfiguring the channel if all we want is to stop transmitting 40 MHz,
-we should just update rate control only. Now for in-device rate control
-that isn't really possible today since they can't get rate_update(), but
-that means we should add a separate callback, I think?
-
-> > If we do that, is it still necessary to stop the queues for it? It seems
-> > like it shouldn't.
-> 
-> Actually the queue stop was added to avoid mismatches b/w hw and rate control. But If you dont stop the queues
-> before the rate control change, the station might send the frames in different ht mode (for example ht40) wrt AP's ht mode (ht20).
-
-Yes, but that's probably OK. It's going to do that anyway since there
-are still frames in the hardware queues, and those will go out without
-updated rate information. There can be no guarantee (without having some
-form of hardware assist) that from the point we receive a 20/40
-notification we'll send the right bandwidth.
-
-
-In the other mail you said almost the same thing:
-
-> The queue stop was added to avoid sending frames while the hw
-> reconfigure is in progress.
-> So that we can prevent differences b/w hw and rate control ht mode.
-> But I doubt that hw_reconfig
-> removal could not affect split drivers where the rc is offloaded.
-
-Like above, I think we need a new callback for rc offloaded drivers so
-that they can update when the bandwidth changes -- I do remove the
-bandwidth update after all, i.e. we no longer reconfigure the channel
-when it's desired to no longer TX 40 MHz.
-
-I'll think about offloaded rate control a bit more.
-
-johannes
-
+On Sun, Mar 4, 2012 at 2:37 PM, Thomas Pedersen <thomas@cozybit.com> wrote:
+> On Sat, Mar 3, 2012 at 3:37 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> On Fri, 2012-03-02 at 15:46 -0800, Thomas Pedersen wrote:
+>>> Airtime link metric estimation was broken in HT mesh, use
+>>> cfg80211_calculate_bitrate to get the right rate value.
+>>>
+>>> Also factor out rate copying from sta_set_sinfo().
+>>>
+>>> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+>>> ---
+>>> v2:
+>>> factor out rate copying (Johannes)
+>>
+>>> +void sta_set_rate_info(struct sta_info *sta, struct station_info *sinfo)
+>>
+>> For stack usage, it'd be better if you gave this two arguments (struct
+>> rate_info *txrate, struct rate_info *rxrate), or maybe simply factored
+>> out *only* the TX-rate bit?
+>>
+>
+> like sta_set_rate_info(struct sta_info *sta, struct rate_info *txrate,
+> struct rate_info *rxrate)?
+>
+> How do you feel about consolidating last_rx_flags and _index into an
+> ieee80211_tx_rate? A bit odd maybe, but then we could use:
+>
+> sta_set_rate_info(struct ieee80211_tx_rate *rate, struct rate_info *rinfo);
+>
+> As needed for both last_rx and last_tx rates.
+>
+> Thomas
