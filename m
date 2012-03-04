@@ -1,69 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:4468 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932703Ab2CGTGl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 14:06:41 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Don Fry <donald.h.fry@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 34/35] iwlwifi: correct status bit refactoring errors
-Date: Wed,  7 Mar 2012 09:52:43 -0800
-Message-Id: <1331142764-5750-35-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200705_079716_0B726A60)
-In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:42299 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750896Ab2CDIcz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 03:32:55 -0500
+Subject: [PATCH] compat-wireless: remove unaligned from mac80211 patch
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Luis R. Rodriguez" <mcgrof@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Date: Sun, 04 Mar 2012 09:32:52 +0100
+Message-ID: <1330849972.4000.3.camel@jlt3.sipsolutions.net> (sfid-20120304_093326_755903_AF5661D5)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Don Fry <donald.h.fry@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-I missed a couple of status bits in my refactoring changes.  This
-fixes the ones I missed.
+This is no longer needed as upstream includes it.
 
-Signed-off-by: Don Fry <donald.h.fry@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn-rx.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn.c    |    8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ patches/06-header-changes.patch |   12 ------------
+ 1 files changed, 0 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-index 3ad4333..cc0227c 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
-@@ -628,7 +628,7 @@ static int iwlagn_rx_card_state_notif(struct iwl_priv *priv,
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_card_state_notif *card_state_notif = (void *)pkt->data;
- 	u32 flags = le32_to_cpu(card_state_notif->flags);
--	unsigned long status = priv->shrd->status;
-+	unsigned long status = priv->status;
- 
- 	IWL_DEBUG_RF_KILL(priv, "Card state received: HW:%s SW:%s CT:%s\n",
- 			  (flags & HW_CARD_DISABLED) ? "Kill" : "On",
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index 3793dc4..28422c0 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -819,15 +819,15 @@ void iwl_down(struct iwl_priv *priv)
- 	iwl_trans_stop_device(trans(priv));
- 
- 	/* Clear out all status bits but a few that are stable across reset */
--	priv->shrd->status &=
--			test_bit(STATUS_RF_KILL_HW, &priv->status) <<
-+	priv->status &= test_bit(STATUS_RF_KILL_HW, &priv->status) <<
- 				STATUS_RF_KILL_HW |
- 			test_bit(STATUS_GEO_CONFIGURED, &priv->status) <<
- 				STATUS_GEO_CONFIGURED |
--			test_bit(STATUS_FW_ERROR, &priv->shrd->status) <<
--				STATUS_FW_ERROR |
- 			test_bit(STATUS_EXIT_PENDING, &priv->status) <<
- 				STATUS_EXIT_PENDING;
-+	priv->shrd->status &=
-+			test_bit(STATUS_FW_ERROR, &priv->shrd->status) <<
-+				STATUS_FW_ERROR;
- 
- 	dev_kfree_skb(priv->beacon_skb);
- 	priv->beacon_skb = NULL;
+diff --git a/patches/06-header-changes.patch b/patches/06-header-changes.patch
+index 15355d5..c3f8cff 100644
+--- a/patches/06-header-changes.patch
++++ b/patches/06-header-changes.patch
+@@ -50,15 +50,3 @@ cases.
+  #include <linux/spi/spi.h>
+  #include <linux/wl12xx.h>
+  
+---- a/net/mac80211/key.c
+-+++ b/net/mac80211/key.c
+-@@ -23,6 +23,9 @@
+- #include "aes_ccm.h"
+- #include "aes_cmac.h"
+- 
+-+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,29))
+-+#include <asm/unaligned.h>
+-+#endif
+- 
+- /**
+-  * DOC: Key handling basics
 -- 
-1.7.0.4
+1.7.6.3
+
+
 
