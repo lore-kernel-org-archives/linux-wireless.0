@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:54297 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757105Ab2CBXVI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 18:21:08 -0500
-Subject: Re: [PATCHv5 1/2] mac80211_hwsim:  Add tsf to beacons, probe
- responses and radiotap header.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Javier Cardona <javier@cozybit.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	devel@lists.open80211s.org, linux-wireless@vger.kernel.org
-In-Reply-To: <1330726027-30354-1-git-send-email-javier@cozybit.com> (sfid-20120302_230752_883430_F670115F)
-References: <1330726027-30354-1-git-send-email-javier@cozybit.com>
-	 (sfid-20120302_230752_883430_F670115F)
-Content-Type: text/plain; charset="UTF-8"
-Date: Sat, 03 Mar 2012 00:21:04 +0100
-Message-ID: <1330730464.3865.2.camel@jlt3.sipsolutions.net> (sfid-20120303_002112_376111_2E74AF5B)
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:51544 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755182Ab2CDUnK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:10 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 079/101] iwlwifi: return error if loading uCode failed
+Date: Sun,  4 Mar 2012 11:29:33 -0800
+Message-Id: <1330889395-533-80-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214452_837209_232637BB)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-> +	struct ieee80211_mgmt *mgmt = (struct ieee80211_mgmt *) skb->data;
-> +	struct mac80211_hwsim_data *data = hw->priv;
-> +
-> +	if (ieee80211_is_beacon(mgmt->frame_control) ||
-> +				ieee80211_is_probe_resp(mgmt->frame_control))
-> +		mgmt->u.beacon.timestamp = __mac80211_hwsim_get_tsf(data);
+In "iwlwifi: consolidate the start_device flow"
+the code flow changed and the firmware is now
+loaded by the transport layer, but the change
+unfortunately lost error checking -- restore.
 
-In light of the recent discussion ... John will have to point out to you
-that the right style is
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-if (ieee80211...() ||
-    ieee80211...()) {
-}
-
-
-:-)
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 4844fb2..2a781b5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1077,9 +1077,7 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
+ 	iwl_write32(trans, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
+ 
+ 	/* Load the given image to the HW */
+-	iwl_load_given_ucode(trans, fw);
+-
+-	return 0;
++	return iwl_load_given_ucode(trans, fw);
+ }
+ 
+ /*
+-- 
+1.7.0.4
 
