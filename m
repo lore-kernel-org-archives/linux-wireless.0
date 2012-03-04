@@ -1,125 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:38209 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932921Ab2CZQrW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 12:47:22 -0400
-Message-ID: <1332780438.5435.53.camel@jlt3.sipsolutions.net> (sfid-20120326_184725_425617_B1AAF9AF)
-Subject: [PATCH] mac80211: don't always advertise remain-on-channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Jouni Malinen <j@w1.fi>, Sujith <Sujith.Manoharan@atheros.com>,
-	Luciano Coelho <coelho@ti.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Mon, 26 Mar 2012 18:47:18 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:38078 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754888Ab2CDUm4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:42:56 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 001/101] iwlwifi: move iwl_clear_driver_stations to user
+Date: Sun,  4 Mar 2012 11:28:15 -0800
+Message-Id: <1330889395-533-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214327_264161_21754FF8)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-Not all devices are really capable of implementing
-remain-on-channel, even if it is implemented in SW,
-as they can't necessarily deal with channel changes
-while associated.
-
-Remove the WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL and add
-it only if either the driver has remain_on_channel
-implemented in the driver/device.
-
-Also add it to all drivers that advertise P2P right
-now since those definitely have to have it working.
+There's only one place using this function, so
+move it where it's needed.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
-I think e.g. wl1251 would completely get fucked up by this .. let's not
-go there. Also iwlegacy wouldn't like offchannel much, and doesn't need
-it since it'll never have P2P anyway.
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   35 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.h |   35 --------------------------------
+ 2 files changed, 35 insertions(+), 35 deletions(-)
 
-Since we don't need offchannel any more for "real" operation (auth/assoc
-used to use it) we should clean this up too.
-
- drivers/net/wireless/ath/ath9k/htc_drv_init.c |    3 ++-
- drivers/net/wireless/ath/ath9k/init.c         |    1 +
- drivers/net/wireless/ath/carl9170/fw.c        |    2 ++
- drivers/net/wireless/mac80211_hwsim.c         |    3 ++-
- drivers/net/wireless/wl12xx/main.c            |    3 ++-
- net/mac80211/main.c                           |    6 ++++--
- 6 files changed, 13 insertions(+), 5 deletions(-)
-
---- a/net/mac80211/main.c	2012-03-26 18:41:42.000000000 +0200
-+++ b/net/mac80211/main.c	2012-03-26 18:41:43.000000000 +0200
-@@ -560,8 +560,10 @@ struct ieee80211_hw *ieee80211_alloc_hw(
- 			WIPHY_FLAG_4ADDR_AP |
- 			WIPHY_FLAG_4ADDR_STATION |
- 			WIPHY_FLAG_REPORTS_OBSS |
--			WIPHY_FLAG_OFFCHAN_TX |
--			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
-+			WIPHY_FLAG_OFFCHAN_TX;
-+
-+	if (ops->remain_on_channel)
-+		wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
- 
- 	wiphy->features = NL80211_FEATURE_SK_TX_STATUS |
- 			  NL80211_FEATURE_HT_IBSS;
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c	2012-03-26 18:41:42.000000000 +0200
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c	2012-03-26 18:41:43.000000000 +0200
-@@ -711,7 +711,8 @@ static void ath9k_set_hw_capab(struct at
- 
- 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
- 
--	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
-+	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN |
-+			    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
- 
- 	hw->queues = 4;
- 	hw->channel_change_time = 5000;
---- a/drivers/net/wireless/ath/ath9k/init.c	2012-03-26 18:41:42.000000000 +0200
-+++ b/drivers/net/wireless/ath/ath9k/init.c	2012-03-26 18:41:43.000000000 +0200
-@@ -676,6 +676,7 @@ void ath9k_set_hw_capab(struct ath_softc
- 
- 	hw->wiphy->flags |= WIPHY_FLAG_IBSS_RSN;
- 	hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
-+	hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
- 
- 	hw->queues = 4;
- 	hw->max_rates = 4;
---- a/drivers/net/wireless/ath/carl9170/fw.c	2012-03-26 18:41:42.000000000 +0200
-+++ b/drivers/net/wireless/ath/carl9170/fw.c	2012-03-26 18:41:43.000000000 +0200
-@@ -355,6 +355,8 @@ static int carl9170_fw(struct ar9170 *ar
- 
- 	ar->hw->wiphy->interface_modes |= if_comb_types;
- 
-+	ar->hw->wiphy->flags |= WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
-+
- #undef SUPPORTED
- 	return carl9170_fw_tx_sequence(ar);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index e0fef9f..a7f3a70 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -738,6 +738,41 @@ int iwl_alive_start(struct iwl_priv *priv)
+ 	return iwl_power_update_mode(priv, true);
  }
---- a/drivers/net/wireless/wl12xx/main.c	2012-03-26 18:41:42.000000000 +0200
-+++ b/drivers/net/wireless/wl12xx/main.c	2012-03-26 18:41:43.000000000 +0200
-@@ -5242,7 +5242,8 @@ static int wl1271_init_ieee80211(struct
- 	wl->hw->wiphy->max_sched_scan_ie_len = WL1271_CMD_TEMPL_MAX_SIZE -
- 		sizeof(struct ieee80211_header);
  
--	wl->hw->wiphy->flags |= WIPHY_FLAG_AP_UAPSD;
-+	wl->hw->wiphy->flags |= WIPHY_FLAG_AP_UAPSD |
-+				WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
++/**
++ * iwl_clear_driver_stations - clear knowledge of all stations from driver
++ * @priv: iwl priv struct
++ *
++ * This is called during iwl_down() to make sure that in the case
++ * we're coming there from a hardware restart mac80211 will be
++ * able to reconfigure stations -- if we're getting there in the
++ * normal down flow then the stations will already be cleared.
++ */
++static void iwl_clear_driver_stations(struct iwl_priv *priv)
++{
++	unsigned long flags;
++	struct iwl_rxon_context *ctx;
++
++	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
++	memset(priv->stations, 0, sizeof(priv->stations));
++	priv->num_stations = 0;
++
++	priv->ucode_key_table = 0;
++
++	for_each_context(priv, ctx) {
++		/*
++		 * Remove all key information that is not stored as part
++		 * of station information since mac80211 may not have had
++		 * a chance to remove all the keys. When device is
++		 * reconfigured by mac80211 after an error all keys will
++		 * be reconfigured.
++		 */
++		memset(ctx->wep_keys, 0, sizeof(ctx->wep_keys));
++		ctx->key_mapping_keys = 0;
++	}
++
++	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
++}
++
+ void iwl_down(struct iwl_priv *priv)
+ {
+ 	int exit_pending;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index cb484e2..ef0cdf5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -232,41 +232,6 @@ int iwl_add_sta_callback(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
+ 			       struct iwl_device_cmd *cmd);
  
- 	/* make sure all our channels fit in the scanned_ch bitmask */
- 	BUILD_BUG_ON(ARRAY_SIZE(wl1271_channels) +
---- a/drivers/net/wireless/mac80211_hwsim.c	2012-03-26 18:41:42.000000000 +0200
-+++ b/drivers/net/wireless/mac80211_hwsim.c	2012-03-26 18:41:43.000000000 +0200
-@@ -1791,7 +1791,8 @@ static int __init init_mac80211_hwsim(vo
- 			    IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
- 			    IEEE80211_HW_AMPDU_AGGREGATION;
  
--		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS;
-+		hw->wiphy->flags |= WIPHY_FLAG_SUPPORTS_TDLS |
-+				    WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
- 
- 		/* ask mac80211 to reserve space for magic */
- 		hw->vif_data_size = sizeof(struct hwsim_vif_priv);
-
+-/**
+- * iwl_clear_driver_stations - clear knowledge of all stations from driver
+- * @priv: iwl priv struct
+- *
+- * This is called during iwl_down() to make sure that in the case
+- * we're coming there from a hardware restart mac80211 will be
+- * able to reconfigure stations -- if we're getting there in the
+- * normal down flow then the stations will already be cleared.
+- */
+-static inline void iwl_clear_driver_stations(struct iwl_priv *priv)
+-{
+-	unsigned long flags;
+-	struct iwl_rxon_context *ctx;
+-
+-	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
+-	memset(priv->stations, 0, sizeof(priv->stations));
+-	priv->num_stations = 0;
+-
+-	priv->ucode_key_table = 0;
+-
+-	for_each_context(priv, ctx) {
+-		/*
+-		 * Remove all key information that is not stored as part
+-		 * of station information since mac80211 may not have had
+-		 * a chance to remove all the keys. When device is
+-		 * reconfigured by mac80211 after an error all keys will
+-		 * be reconfigured.
+-		 */
+-		memset(ctx->wep_keys, 0, sizeof(ctx->wep_keys));
+-		ctx->key_mapping_keys = 0;
+-	}
+-
+-	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
+-}
+-
+ static inline int iwl_sta_id(struct ieee80211_sta *sta)
+ {
+ 	if (WARN_ON(!sta))
+-- 
+1.7.0.4
 
