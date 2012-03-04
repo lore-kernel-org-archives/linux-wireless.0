@@ -1,135 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:52710 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031173Ab2CORdM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 13:33:12 -0400
-Subject: Re: [PATCH v2] cfg80211: allow CFG80211_SIGNAL_TYPE_UNSPEC in
- station_info
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "John W. Linville" <linville@tuxdriver.com>
+Received: from mga09.intel.com ([134.134.136.24]:38078 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755007Ab2CDUnB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:01 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
-	Cristian Morales Vega <cristian@samknows.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-In-Reply-To: <1331832341-30795-1-git-send-email-linville@tuxdriver.com>
-References: <1331827087-21339-1-git-send-email-linville@tuxdriver.com>
-	 <1331832341-30795-1-git-send-email-linville@tuxdriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 15 Mar 2012 18:33:10 +0100
-Message-ID: <1331832790.3432.28.camel@jlt3.sipsolutions.net> (sfid-20120315_183316_113194_637395D7)
-Mime-Version: 1.0
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 025/101] iwlwifi: iwl_rx_cmd_buffer belongs to transport API
+Date: Sun,  4 Mar 2012 11:28:39 -0800
+Message-Id: <1330889395-533-26-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214600_980636_8D2C43C9)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2012-03-15 at 13:25 -0400, John W. Linville wrote:
-> The station_info struct had demanded dBm signal values, but the
-> cfg80211 wireless extensions implementation was also accepting
-> "unspecified" (i.e. RSSI) unit values while the nl80211 code was
-> completely unaware of them.  Resolve this by formally allowing the
-> "unspecified" units while making nl80211 ignore them.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Looks good, thanks.
+This is how the transport passes things
+up into higher layers, so it belongs to
+the transport API.
 
-Reviewed-by: Johannes Berg <johannes@sipsolutions.net>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-shared.h |   17 -----------------
+ drivers/net/wireless/iwlwifi/iwl-trans.h  |   17 +++++++++++++++++
+ 2 files changed, 17 insertions(+), 17 deletions(-)
 
-> Signed-off-by: John W. Linville <linville@tuxdriver.com>
-> ---
-> The switch statement could be an if, but used it because I copied it
-> from elsewhere in the file and because we might (?) want to support a
-> different attribute to report the unspecified unit values through
-> nl80211?
-> 
-> v2: Fix typo in commit message and add note about using dBm for drivers
->     using CFG80211_SIGNAL_TYPE_MBM.
-> 
->  include/net/cfg80211.h |    4 ++--
->  net/wireless/nl80211.c |   29 +++++++++++++++++++----------
->  2 files changed, 21 insertions(+), 12 deletions(-)
-> 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index a067d30..4263a62 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -605,8 +605,10 @@ struct sta_bss_parameters {
->   * @llid: mesh local link id
->   * @plid: mesh peer link id
->   * @plink_state: mesh peer link state
-> - * @signal: signal strength of last received packet in dBm
-> - * @signal_avg: signal strength average in dBm
-> + * @signal: the signal strength, type depends on the wiphy's signal_type
-> +	NOTE: For CFG80211_SIGNAL_TYPE_MBM, value is expressed in _dBm_.
-> + * @signal_avg: avg signal strength, type depends on the wiphy's signal_type
-> +	NOTE: For CFG80211_SIGNAL_TYPE_MBM, value is expressed in _dBm_.
->   * @txrate: current unicast bitrate from this station
->   * @rxrate: current unicast bitrate to this station
->   * @rx_packets: packets received from this station
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index afeea32..3105c77 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -2349,7 +2349,9 @@ nla_put_failure:
->  }
->  
->  static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
-> -				int flags, struct net_device *dev,
-> +				int flags,
-> +				struct cfg80211_registered_device *rdev,
-> +				struct net_device *dev,
->  				const u8 *mac_addr, struct station_info *sinfo)
->  {
->  	void *hdr;
-> @@ -2388,12 +2390,18 @@ static int nl80211_send_station(struct sk_buff *msg, u32 pid, u32 seq,
->  	if (sinfo->filled & STATION_INFO_PLINK_STATE)
->  		NLA_PUT_U8(msg, NL80211_STA_INFO_PLINK_STATE,
->  			    sinfo->plink_state);
-> -	if (sinfo->filled & STATION_INFO_SIGNAL)
-> -		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
-> -			   sinfo->signal);
-> -	if (sinfo->filled & STATION_INFO_SIGNAL_AVG)
-> -		NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL_AVG,
-> -			   sinfo->signal_avg);
-> +	switch (rdev->wiphy.signal_type) {
-> +	case CFG80211_SIGNAL_TYPE_MBM:
-> +		if (sinfo->filled & STATION_INFO_SIGNAL)
-> +			NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL,
-> +				   sinfo->signal);
-> +		if (sinfo->filled & STATION_INFO_SIGNAL_AVG)
-> +			NLA_PUT_U8(msg, NL80211_STA_INFO_SIGNAL_AVG,
-> +				   sinfo->signal_avg);
-> +		break;
-> +	default:
-> +		break;
-> +	}
->  	if (sinfo->filled & STATION_INFO_TX_BITRATE) {
->  		if (!nl80211_put_sta_rate(msg, &sinfo->txrate,
->  					  NL80211_STA_INFO_TX_BITRATE))
-> @@ -2486,7 +2494,7 @@ static int nl80211_dump_station(struct sk_buff *skb,
->  		if (nl80211_send_station(skb,
->  				NETLINK_CB(cb->skb).pid,
->  				cb->nlh->nlmsg_seq, NLM_F_MULTI,
-> -				netdev, mac_addr,
-> +				dev, netdev, mac_addr,
->  				&sinfo) < 0)
->  			goto out;
->  
-> @@ -2531,7 +2539,7 @@ static int nl80211_get_station(struct sk_buff *skb, struct genl_info *info)
->  		return -ENOMEM;
->  
->  	if (nl80211_send_station(msg, info->snd_pid, info->snd_seq, 0,
-> -				 dev, mac_addr, &sinfo) < 0) {
-> +				 rdev, dev, mac_addr, &sinfo) < 0) {
->  		nlmsg_free(msg);
->  		return -ENOBUFS;
->  	}
-> @@ -7482,7 +7490,8 @@ void nl80211_send_sta_event(struct cfg80211_registered_device *rdev,
->  	if (!msg)
->  		return;
->  
-> -	if (nl80211_send_station(msg, 0, 0, 0, dev, mac_addr, sinfo) < 0) {
-> +	if (nl80211_send_station(msg, 0, 0, 0,
-> +				 rdev, dev, mac_addr, sinfo) < 0) {
->  		nlmsg_free(msg);
->  		return;
->  	}
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 787d726..2b9d21a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -67,7 +67,6 @@
+ #include <linux/spinlock.h>
+ #include <linux/mutex.h>
+ #include <linux/gfp.h>
+-#include <linux/mm.h> /* for page_address */
+ #include <net/mac80211.h>
+ 
+ #include "iwl-commands.h"
+@@ -413,22 +412,6 @@ static inline bool iwl_have_debug_level(u32 level)
+ 	return iwlagn_mod_params.debug_level & level;
+ }
+ 
+-struct iwl_rx_cmd_buffer {
+-	struct page *_page;
+-};
+-
+-static inline void *rxb_addr(struct iwl_rx_cmd_buffer *r)
+-{
+-	return page_address(r->_page);
+-}
+-
+-static inline struct page *rxb_steal_page(struct iwl_rx_cmd_buffer *r)
+-{
+-	struct page *p = r->_page;
+-	r->_page = NULL;
+-	return p;
+-}
+-
+ /*
+  * mac80211 queues, ACs, hardware queues, FIFOs.
+  *
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 0197f31..b09192a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -64,6 +64,7 @@
+ #define __iwl_trans_h__
+ 
+ #include <linux/ieee80211.h>
++#include <linux/mm.h> /* for page_address */
+ 
+ #include "iwl-shared.h"
+ #include "iwl-debug.h"
+@@ -201,6 +202,22 @@ static inline void iwl_free_resp(struct iwl_host_cmd *cmd)
+ 	free_pages(cmd->_rx_page_addr, cmd->_rx_page_order);
+ }
+ 
++struct iwl_rx_cmd_buffer {
++	struct page *_page;
++};
++
++static inline void *rxb_addr(struct iwl_rx_cmd_buffer *r)
++{
++	return page_address(r->_page);
++}
++
++static inline struct page *rxb_steal_page(struct iwl_rx_cmd_buffer *r)
++{
++	struct page *p = r->_page;
++	r->_page = NULL;
++	return p;
++}
++
+ /**
+  * struct iwl_trans_ops - transport specific operations
+  *
+-- 
+1.7.0.4
 
