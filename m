@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:53786 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754173Ab2CSJjd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 05:39:33 -0400
-Subject: Re: [PATCH 3/3] mac80211: optimize aggregation session timeout
- handling
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	linville@tuxdriver.com
-In-Reply-To: <CAGXE3d8P1r+DRv4UKbzSMXaf4fRB4cXAyz8+a1pf3RsfeAKOvQ@mail.gmail.com> (sfid-20120319_103021_124630_3C74268D)
-References: <1332025254-5048-1-git-send-email-nbd@openwrt.org>
-	 <1332025254-5048-2-git-send-email-nbd@openwrt.org>
-	 <1332025254-5048-3-git-send-email-nbd@openwrt.org>
-	 <1332065875.3609.3.camel@jlt3.sipsolutions.net>
-	 <4F65C374.2060505@openwrt.org>
-	 <1332146368.3359.12.camel@jlt3.sipsolutions.net>
-	 <CAGXE3d8P1r+DRv4UKbzSMXaf4fRB4cXAyz8+a1pf3RsfeAKOvQ@mail.gmail.com>
-	 (sfid-20120319_103021_124630_3C74268D)
-Content-Type: text/plain; charset="UTF-8"
-Date: Mon, 19 Mar 2012 10:39:29 +0100
-Message-ID: <1332149969.3359.13.camel@jlt3.sipsolutions.net> (sfid-20120319_103936_795837_CC1D02D4)
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:51544 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755200Ab2CDUnM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:12 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	David Spinadel <david.spinadel@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 088/101] iwlwifi: add option to test MFP
+Date: Sun,  4 Mar 2012 11:29:42 -0800
+Message-Id: <1330889395-533-89-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214445_609255_D71E0D65)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2012-03-19 at 10:29 +0100, Helmut Schaa wrote:
+From: David Spinadel <david.spinadel@intel.com>
 
-> > I'm not really convinced, for making them deferrable we should analyse
-> > the consequences of that more carefully, for example it seems possible
-> > that the system wakes up to send a packet, and then the first thing that
-> > happens is a few aggregation handshakes ... that wastes a lot of time
-> > and power.
-> 
-> I like the idea of getting rid of the mod_timer overhead. Looking at the timer
-> code, if the timer value is unchanged mod_timer is not that expensive.
-> 
-> So, instead of calling mod_timer for every successive frame with a slightly
-> different timeout we could just use round_jiffies to round the timeout to the
-> next full second. This would in most cases take the quick path through
-> mod_timer and only update the timer once every second.
+Add a Kconfig symbol to enable MFP for testing even
+if the firmware file doesn't advertise it.
 
-That seems like a good plan.
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/Kconfig        |    9 +++++++++
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |    3 +++
+ 2 files changed, 12 insertions(+), 0 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/Kconfig b/drivers/net/wireless/iwlwifi/Kconfig
+index 5afd06e..2fe6273 100644
+--- a/drivers/net/wireless/iwlwifi/Kconfig
++++ b/drivers/net/wireless/iwlwifi/Kconfig
+@@ -127,3 +127,12 @@ config IWLWIFI_P2P
+          support when it is loaded.
+ 
+          Say Y only if you want to experiment with P2P.
++
++config IWLWIFI_EXPERIMENTAL_MFP
++	bool "support MFP (802.11w) even if uCode doesn't advertise"
++	depends on IWLWIFI
++	help
++	  This option enables experimental MFP (802.11W) support
++	  even if the microcode doesn't advertise it.
++
++	  Say Y only if you want to experiment with MFP.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index 91a42c3..dcf39f8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -163,7 +163,10 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
+ 		hw->flags |= IEEE80211_HW_SUPPORTS_DYNAMIC_SMPS |
+ 			     IEEE80211_HW_SUPPORTS_STATIC_SMPS;
+ 
++#ifndef CONFIG_IWLWIFI_EXPERIMENTAL_MFP
++	/* enable 11w if the uCode advertise */
+ 	if (capa->flags & IWL_UCODE_TLV_FLAGS_MFP)
++#endif /* !CONFIG_IWLWIFI_EXPERIMENTAL_MFP */
+ 		hw->flags |= IEEE80211_HW_MFP_CAPABLE;
+ 
+ 	hw->sta_data_size = sizeof(struct iwl_station_priv);
+-- 
+1.7.0.4
 
