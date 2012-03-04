@@ -1,142 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:47194 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751205Ab2CAXkO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 18:40:14 -0500
-Received: by dajr28 with SMTP id r28so1303002daj.19
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Mar 2012 15:40:14 -0800 (PST)
-MIME-Version: 1.0
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>, devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCHv2 1/3] mac80211_hwsim:  Add tsf to beacons, probe responses and radiotap header.
-Date: Thu,  1 Mar 2012 15:40:05 -0800
-Message-Id: <1330645207-13964-1-git-send-email-javier@cozybit.com> (sfid-20120302_004019_891056_87880FE4)
+Received: from mga09.intel.com ([134.134.136.24]:19072 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755129Ab2CDUnI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:08 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 062/101] iwlwifi: remove priv from shared
+Date: Sun,  4 Mar 2012 11:29:16 -0800
+Message-Id: <1330889395-533-63-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214540_315772_9D04D2D8)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Generate a tsf from jiffies.  Prepare the path for having different tsf
-offsets on the each phy.  This will be useful for testing mesh
-synchronization algorithms.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
+Finally nothing needs to access priv
+from shared any more, so remove it.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
-v2: Added timestamp to probe responses, as suggested by Johannes
-    Also implement tx_last_beacon, useful for testing (new patch 1/3)
+ drivers/net/wireless/iwlwifi/iwl-agn.c    |    1 -
+ drivers/net/wireless/iwlwifi/iwl-shared.h |    2 --
+ 2 files changed, 0 insertions(+), 3 deletions(-)
 
- drivers/net/wireless/mac80211_hwsim.c |   37 +++++++++++++++++++++++++++++---
- 1 files changed, 33 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index ba16f05..f44b3f6 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -321,11 +321,13 @@ struct mac80211_hwsim_data {
- 	struct dentry *debugfs_group;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 98f32e5..4cd375c 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1205,7 +1205,6 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
+ 	op_mode->ops = &iwl_dvm_ops;
+ 	priv = IWL_OP_MODE_GET_DVM(op_mode);
+ 	priv->shrd = trans->shrd;
+-	priv->shrd->priv = priv;
+ 	priv->fw = fw;
+ 	/* TODO: remove fw from shared data later */
+ 	priv->shrd->fw = fw;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index a6c2539..55f9f07 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -376,7 +376,6 @@ struct iwl_shared {
+ 	u8 valid_contexts;
  
- 	int power_level;
-+	int tsf_offset;			/* in TUs */
+ 	const struct iwl_cfg *cfg;
+-	struct iwl_priv *priv;
+ 	struct iwl_trans *trans;
+ 	void *drv;
+ 	struct iwl_hw_params hw_params;
+@@ -398,7 +397,6 @@ struct iwl_shared {
  };
  
- 
- struct hwsim_radiotap_hdr {
- 	struct ieee80211_radiotap_header hdr;
-+	u64 rt_tsft;
- 	u8 rt_flags;
- 	u8 rt_rate;
- 	__le16 rt_channel;
-@@ -367,6 +369,11 @@ static netdev_tx_t hwsim_mon_xmit(struct sk_buff *skb,
- 	return NETDEV_TX_OK;
- }
- 
-+static __le64 __mac80211_hwsim_get_tsf(struct mac80211_hwsim_data *data)
-+{
-+	return cpu_to_le64(jiffies_to_msecs(jiffies)*1000/1024 +
-+			data->tsf_offset);
-+}
- 
- static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
- 				      struct sk_buff *tx_skb)
-@@ -391,7 +398,9 @@ static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
- 	hdr->hdr.it_len = cpu_to_le16(sizeof(*hdr));
- 	hdr->hdr.it_present = cpu_to_le32((1 << IEEE80211_RADIOTAP_FLAGS) |
- 					  (1 << IEEE80211_RADIOTAP_RATE) |
-+					  (1 << IEEE80211_RADIOTAP_TSFT) |
- 					  (1 << IEEE80211_RADIOTAP_CHANNEL));
-+	hdr->rt_tsft = __mac80211_hwsim_get_tsf(data);
- 	hdr->rt_flags = 0;
- 	hdr->rt_rate = txrate->bitrate / 5;
- 	hdr->rt_channel = cpu_to_le16(data->channel->center_freq);
-@@ -610,7 +619,8 @@ static bool mac80211_hwsim_tx_frame_no_nl(struct ieee80211_hw *hw,
- 	}
- 
- 	memset(&rx_status, 0, sizeof(rx_status));
--	/* TODO: set mactime */
-+	rx_status.mactime = le64_to_cpu(__mac80211_hwsim_get_tsf(data));
-+	rx_status.flag |= RX_FLAG_MACTIME_MPDU;
- 	rx_status.freq = data->channel->center_freq;
- 	rx_status.band = data->channel->band;
- 	rx_status.rate_idx = info->control.rates[0].idx;
-@@ -667,6 +677,19 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	bool ack;
- 	struct ieee80211_tx_info *txi;
- 	u32 _pid;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	__le64 *tsfpos;
-+	u16 fc = le16_to_cpu(hdr->frame_control);
-+	u16 fctypes = fc & (IEEE80211_FCTL_FTYPE | IEEE80211_FCTL_STYPE);
-+
-+	if (fctypes == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_PROBE_RESP) ||
-+	    fctypes == (IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_BEACON)) {
-+		struct ieee80211_hdr_3addr *hdr3 =
-+			(struct ieee80211_hdr_3addr *) skb->data;
-+		tsfpos = (__le64 *) (hdr3 + 1);
-+		put_unaligned(__mac80211_hwsim_get_tsf(data), tsfpos);
-+	}
- 
- 	mac80211_hwsim_monitor_rx(hw, skb);
- 
-@@ -685,10 +708,8 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	/* NO wmediumd detected, perfect medium simulation */
- 	ack = mac80211_hwsim_tx_frame_no_nl(hw, skb);
- 
--	if (ack && skb->len >= 16) {
--		struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	if (ack && skb->len >= 16)
- 		mac80211_hwsim_monitor_ack(hw, hdr->addr2);
--	}
- 
- 	txi = IEEE80211_SKB_CB(skb);
- 
-@@ -763,9 +784,12 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 				     struct ieee80211_vif *vif)
- {
- 	struct ieee80211_hw *hw = arg;
-+	struct mac80211_hwsim_data *data = hw->priv;
- 	struct sk_buff *skb;
- 	struct ieee80211_tx_info *info;
- 	u32 _pid;
-+	struct ieee80211_hdr_3addr *hdr;
-+	__le64 *tsfpos;
- 
- 	hwsim_check_magic(vif);
- 
-@@ -779,6 +803,11 @@ static void mac80211_hwsim_beacon_tx(void *arg, u8 *mac,
- 		return;
- 	info = IEEE80211_SKB_CB(skb);
- 
-+	/* add the timestamp to the beacon */
-+	hdr = (struct ieee80211_hdr_3addr *) skb->data;
-+	tsfpos = (__le64 *) (hdr + 1);
-+	put_unaligned(__mac80211_hwsim_get_tsf(data), tsfpos);
-+
- 	mac80211_hwsim_monitor_rx(hw, skb);
- 
- 	/* wmediumd mode check */
+ /*Whatever _m is (iwl_trans, iwl_priv, these macros will work */
+-#define priv(_m)	((_m)->shrd->priv)
+ #define cfg(_m)		((_m)->shrd->cfg)
+ #define trans(_m)	((_m)->shrd->trans)
+ #define hw_params(_m)	((_m)->shrd->hw_params)
 -- 
-1.7.6
+1.7.0.4
 
