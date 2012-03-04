@@ -1,45 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nm9.bullet.mail.ukl.yahoo.com ([217.146.182.250]:22502 "HELO
-	nm9.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755538Ab2CVKjw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Mar 2012 06:39:52 -0400
-From: Marek Lindner <lindner_marek@yahoo.de>
-To: "Chun-Yeow Yeoh" <yeohchunyeow@gmail.com>
-Subject: Re: [PATCH v2] mac80211: fix the RANN propagation issues
-Date: Thu, 22 Mar 2012 11:33:51 +0100
-Cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	javier@cozybit.com, thomas@cozybit.com, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-References: <1332420968-16300-1-git-send-email-yeohchunyeow@gmail.com>
-In-Reply-To: <1332420968-16300-1-git-send-email-yeohchunyeow@gmail.com>
-MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Message-Id: <201203221133.51928.lindner_marek@yahoo.de> (sfid-20120322_113956_200617_B74A1C54)
+Received: from mga09.intel.com ([134.134.136.24]:38078 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755042Ab2CDUnE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:04 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 039/101] iwlwifi: move lockdep assertion into DVM
+Date: Sun,  4 Mar 2012 11:28:53 -0800
+Message-Id: <1330889395-533-40-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214624_074222_6B1079A8)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hi,
+The fact that the mutex must be held is an
+implementation detail of DVM, but something
+has to ensure that no two synchronous cmds
+are submitted concurrently. Move the lockdep
+assertion into the DVM-specific code, but
+also make the transport abort if there are
+two concurrently commands.
 
-I am not familiar with the 802.11s code and could be totally wrong here but ..
+The assertion is much more useful though as
+the transport check can only catch it when
+it actually happens, while the assertion
+makes sure it can't possibly happen.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c       |    8 ++++++++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |   11 ++++++++---
+ 2 files changed, 16 insertions(+), 3 deletions(-)
 
-On Thursday, March 22, 2012 13:56:08 Chun-Yeow Yeoh wrote:
-> +       if ((mpath->sn < orig_sn || (mpath->sn == orig_sn &&
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 11f2411..238f824 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1298,6 +1298,14 @@ int iwl_dvm_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 		return -EIO;
+ 	}
+ 
++	/*
++	 * Synchronous commands from this op-mode must hold
++	 * the mutex, this ensures we don't try to send two
++	 * (or more) synchronous commands at a time.
++	 */
++	if (cmd->flags & CMD_SYNC)
++		lockdep_assert_held(&priv->shrd->mutex);
++
+ 	return iwl_trans_send_cmd(trans(priv), cmd);
+ }
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index c85975e..ca4ceea 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -973,8 +973,6 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	int cmd_idx;
+ 	int ret;
+ 
+-	lockdep_assert_held(&trans->shrd->mutex);
+-
+ 	IWL_DEBUG_INFO(trans, "Attempting to send sync command %s\n",
+ 			get_cmd_string(cmd->id));
+ 
+@@ -983,7 +981,14 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 			       get_cmd_string(cmd->id));
+ 		return -EIO;
+ 	}
+-	set_bit(STATUS_HCMD_ACTIVE, &trans->shrd->status);
++
++	if (WARN_ON(test_and_set_bit(STATUS_HCMD_ACTIVE,
++				     &trans->shrd->status))) {
++		IWL_ERR(trans, "Command %s: a command is already active!\n",
++			get_cmd_string(cmd->id));
++		return -EIO;
++	}
++
+ 	IWL_DEBUG_INFO(trans, "Setting HCMD_ACTIVE for command %s\n",
+ 			get_cmd_string(cmd->id));
+ 
+-- 
+1.7.0.4
 
-.. this sequence number handling looks broken to me. What happens when the 
-sequence number wraps around ? One could be smaller than the other and still 
-be newer.
-I know this isn't really what your patch changes.
-
-
->  #define SN_GT(x, y) ((long) (y) - (long) (x) < 0)
->  #define SN_LT(x, y) ((long) (x) - (long) (y) < 0)
-
-Your macros tried to address the problem but casting your sequence number to 
-long also breaks the wrap around.
-
-Regards,
-Marek
