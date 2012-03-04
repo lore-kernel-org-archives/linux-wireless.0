@@ -1,78 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:45725 "EHLO mga01.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:51544 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753568Ab2CISLp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Mar 2012 13:11:45 -0500
+	id S1755225Ab2CDUnN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:13 -0500
 From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 1/1] iwlwifi: fix cmd_queue number merge
-Date: Fri,  9 Mar 2012 10:12:42 -0800
-Message-Id: <1331316762-29126-1-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120309_191201_994816_B45417F3)
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 097/101] iwlwifi: make iwl_init_context static
+Date: Sun,  4 Mar 2012 11:29:51 -0800
+Message-Id: <1330889395-533-98-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214430_837533_07394879)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwlwifi: move command queue number out of the iwl_shared struct
-move the cmd_queue out of iwl_shared struct, but for some reason the
-patch is half done and fail compile
+From: Johannes Berg <johannes.berg@intel.com>
 
-Here is the fix
+It's not needed anywhere but during init.
 
-John, could you apply this patch to wireless-next to address the issue
-Thanks
-
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-prph.h       |    4 ----
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    6 +++---
- 2 files changed, 3 insertions(+), 7 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.h |    1 -
+ 2 files changed, 1 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-prph.h b/drivers/net/wireless/iwlwifi/iwl-prph.h
-index a4d1101..75dc20b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-prph.h
-@@ -216,10 +216,6 @@
- #define SCD_TRANS_TBL_OFFSET_QUEUE(x) \
- 	((SCD_TRANS_TBL_MEM_LOWER_BOUND + ((x) * 2)) & 0xfffc)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 76ee2dd..f150edc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -488,7 +488,7 @@ static void iwl_bg_tx_flush(struct work_struct *work)
+ 	iwlagn_dev_txfifo_flush(priv, IWL_DROP_ALL);
+ }
  
--#define SCD_QUEUECHAIN_SEL_ALL(priv)	\
--	(((1<<hw_params(priv).max_txq_num) - 1) &\
--	(~(1<<(priv)->shrd->cmd_queue)))
--
- #define SCD_BASE			(PRPH_BASE + 0xa02c00)
+-void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags)
++static void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags)
+ {
+ 	int i;
  
- #define SCD_SRAM_BASE_ADDR	(SCD_BASE + 0x0)
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index 8170133..a3ac6d8 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -556,7 +556,7 @@ static int iwl_trans_tx_alloc(struct iwl_trans *trans)
- 
- 	/* Alloc and init all Tx queues, including the command queue (#4/#9) */
- 	for (txq_id = 0; txq_id < hw_params(trans).max_txq_num; txq_id++) {
--		slots_num = (txq_id == trans->cmd_queue) ?
-+		slots_num = (txq_id == trans_pcie->cmd_queue) ?
- 					TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
- 		ret = iwl_trans_txq_alloc(trans, &trans_pcie->txq[txq_id],
- 					  slots_num, txq_id);
-@@ -601,7 +601,7 @@ static int iwl_tx_init(struct iwl_trans *trans)
- 
- 	/* Alloc and init all Tx queues, including the command queue (#4/#9) */
- 	for (txq_id = 0; txq_id < hw_params(trans).max_txq_num; txq_id++) {
--		slots_num = (txq_id == trans->cmd_queue) ?
-+		slots_num = (txq_id == trans_pcie->cmd_queue) ?
- 					TFD_CMD_SLOTS : TFD_TX_CMD_SLOTS;
- 		ret = iwl_trans_txq_init(trans, &trans_pcie->txq[txq_id],
- 					 slots_num, txq_id);
-@@ -1686,7 +1686,7 @@ static int iwl_trans_pcie_wait_tx_queue_empty(struct iwl_trans *trans)
- 
- 	/* waiting for all the tx frames complete might take a while */
- 	for (cnt = 0; cnt < hw_params(trans).max_txq_num; cnt++) {
--		if (cnt == trans->cmd_queue)
-+		if (cnt == trans_pcie->cmd_queue)
- 			continue;
- 		txq = &trans_pcie->txq[cnt];
- 		q = &txq->q;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index eb96855..5410dfd 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -118,7 +118,6 @@ void iwlagn_config_ht40(struct ieee80211_conf *conf,
+ int iwlagn_rx_calib_result(struct iwl_priv *priv,
+ 			    struct iwl_rx_cmd_buffer *rxb,
+ 			    struct iwl_device_cmd *cmd);
+-void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags);
+ int iwl_send_bt_env(struct iwl_priv *priv, u8 action, u8 type);
+ void iwl_send_prio_tbl(struct iwl_priv *priv);
+ int iwl_init_alive_start(struct iwl_priv *priv);
 -- 
 1.7.0.4
 
