@@ -1,78 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:60402 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754631Ab2CAQOf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 1 Mar 2012 11:14:35 -0500
-Message-ID: <4F4FA059.8000105@hauke-m.de> (sfid-20120301_171439_535906_B3129063)
-Date: Thu, 01 Mar 2012 17:14:17 +0100
-From: Hauke Mehrtens <hauke@hauke-m.de>
-MIME-Version: 1.0
-To: Arend van Spriel <arend@broadcom.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Saul St. John" <saul.stjohn@gmail.com>,
-	Rafal Milecki <zajec5@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [RFC] bcma: add support for on-chip OTP memory used for SPROM
- storage
-References: <1330033977-5741-1-git-send-email-arend@broadcom.com> <4F48D997.1060400@hauke-m.de> <4F4B571E.7040704@broadcom.com> <4F4D34FA.8070800@hauke-m.de> <4F4F83D2.8030101@broadcom.com> <4F4F8934.6070101@hauke-m.de> <4F4F92B2.4060708@broadcom.com>
-In-Reply-To: <4F4F92B2.4060708@broadcom.com>
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:20116 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755030Ab2CDUnD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:03 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 031/101] iwlwifi: move iwl_base_params to shared header
+Date: Sun,  4 Mar 2012 11:28:45 -0800
+Message-Id: <1330889395-533-32-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214626_469360_734334CA)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/01/2012 04:16 PM, Arend van Spriel wrote:
-> On 03/01/2012 03:35 PM, Hauke Mehrtens wrote:
->> On 03/01/2012 03:12 PM, Arend van Spriel wrote:
->>> On 02/28/2012 09:11 PM, Hauke Mehrtens wrote:
->>>> On 02/27/2012 11:12 AM, Arend van Spriel wrote:
->>>>> On 02/25/2012 01:52 PM, Hauke Mehrtens wrote:
->>>>>> I will test you patch on my device soon and will report if
->>>>>> something is
->>>>>> wrong. If you are sending a non RFC patch in the next days I would
->>>>>> rebase my patch onto yours. The code searching in the SoCs flash chip
->>>>>> will be added to run if bcma_sprom_onchip_available() returns false.
->>>>>
->>>>> Appreciate any testing on SoCs. I think I will need some time to
->>>>> modify
->>>>> brcmsmac so let your patch go first.
->>>>
->>>> The sprom part of my SoC is working with this patch on top of my sprom
->>>> patches, but it uses the sprom from flash/nvram for both wifi devices
->>>> (one integrated in the bCM4716 and the other a BCM43224 connected to
->>>> the
->>>> PCIe host controller of the BCM4716).
->>>> For my BCM4716 bcma_sprom_ext_available() and
->>>> bcma_sprom_onchip_available() are returning false and for the BCM43224
->>>> bcma_sprom_ext_available() is returning false and
->>>> bcma_sprom_onchip_offset() 0.
->>>
->>> Thanks, Hauke
->>>
->>> Did the BCM43224 come with the router. If so I am assuming the onchip is
->>> not used and the system relies on flash/nvram completely. I will inform
->>> whether my assumption is correct.
->> Yes the BCM43224 is direly soldered onto the board where also the
->> BCM4716 is on, there is no physical PCIe port or something like this.
->> The nvram on the flash chip contains the sprom for this devices, one set
->> of variables in the nvram has the prefix pci/1/1/ (for the BCM43224 with
->> the options for 5GHz only) and the other has sb/1/ (for the BCM4716 with
->> the options for 2.4 GHz only).
->>
->> It is this device: http://infodepot.wikia.com/wiki/Netgear_WNDR3400
->>
->> Hauke
->>
-> 
-> You made me curious so I followed the link. It says BCM4718.
+From: Johannes Berg <johannes.berg@intel.com>
 
-The BCM4716, BCM4717 and BCM4718 are the same chips from a driver
-developer point of view. ;-) They share the same device id (0x4716),
-just the package id is different. The BCM4717 and BCM4718 have a PCIe
-host controller, the BCM4716 does not have a PCIe host controller. The
-BCM4718 also has a higher CPU clock than the others. The PCIe host
-controller is automatically detected and the CPU clock speed is read out
-of some register. They are sharing the same workarounds in the driver.
-So if I speak of the BCM4716 mostly I mean all of these three or one of
-these three. ;-)
+This is used from there, so should be in it.
 
-Hauke
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.h   |   42 ----------------------------
+ drivers/net/wireless/iwlwifi/iwl-shared.h |   43 +++++++++++++++++++++++++++++
+ 2 files changed, 43 insertions(+), 42 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.h b/drivers/net/wireless/iwlwifi/iwl-core.h
+index db44115..7259cbf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.h
++++ b/drivers/net/wireless/iwlwifi/iwl-core.h
+@@ -96,48 +96,6 @@ struct iwl_lib_ops {
+ };
+ 
+ /*
+- * @max_ll_items: max number of OTP blocks
+- * @shadow_ram_support: shadow support for OTP memory
+- * @led_compensation: compensate on the led on/off time per HW according
+- *	to the deviation to achieve the desired led frequency.
+- *	The detail algorithm is described in iwl-led.c
+- * @chain_noise_num_beacons: number of beacons used to compute chain noise
+- * @adv_thermal_throttle: support advance thermal throttle
+- * @support_ct_kill_exit: support ct kill exit condition
+- * @support_wimax_coexist: support wimax/wifi co-exist
+- * @plcp_delta_threshold: plcp error rate threshold used to trigger
+- *	radio tuning when there is a high receiving plcp error rate
+- * @chain_noise_scale: default chain noise scale used for gain computation
+- * @wd_timeout: TX queues watchdog timeout
+- * @max_event_log_size: size of event log buffer size for ucode event logging
+- * @shadow_reg_enable: HW shadhow register bit
+- * @no_idle_support: do not support idle mode
+- * @hd_v2: v2 of enhanced sensitivity value, used for 2000 series and up
+- * wd_disable: disable watchdog timer
+- */
+-struct iwl_base_params {
+-	int eeprom_size;
+-	int num_of_queues;	/* def: HW dependent */
+-	int num_of_ampdu_queues;/* def: HW dependent */
+-	/* for iwl_apm_init() */
+-	u32 pll_cfg_val;
+-
+-	const u16 max_ll_items;
+-	const bool shadow_ram_support;
+-	u16 led_compensation;
+-	bool adv_thermal_throttle;
+-	bool support_ct_kill_exit;
+-	const bool support_wimax_coexist;
+-	u8 plcp_delta_threshold;
+-	s32 chain_noise_scale;
+-	unsigned int wd_timeout;
+-	u32 max_event_log_size;
+-	const bool shadow_reg_enable;
+-	const bool no_idle_support;
+-	const bool hd_v2;
+-	const bool wd_disable;
+-};
+-/*
+  * @advanced_bt_coexist: support advanced bt coexist
+  * @bt_init_traffic_load: specify initial bt traffic load
+  * @bt_prio_boost: default bt priority boost value
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index b816e70..ef80e03 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -267,6 +267,49 @@ enum iwl_led_mode {
+ 	IWL_LED_DISABLE,
+ };
+ 
++/*
++ * @max_ll_items: max number of OTP blocks
++ * @shadow_ram_support: shadow support for OTP memory
++ * @led_compensation: compensate on the led on/off time per HW according
++ *	to the deviation to achieve the desired led frequency.
++ *	The detail algorithm is described in iwl-led.c
++ * @chain_noise_num_beacons: number of beacons used to compute chain noise
++ * @adv_thermal_throttle: support advance thermal throttle
++ * @support_ct_kill_exit: support ct kill exit condition
++ * @support_wimax_coexist: support wimax/wifi co-exist
++ * @plcp_delta_threshold: plcp error rate threshold used to trigger
++ *	radio tuning when there is a high receiving plcp error rate
++ * @chain_noise_scale: default chain noise scale used for gain computation
++ * @wd_timeout: TX queues watchdog timeout
++ * @max_event_log_size: size of event log buffer size for ucode event logging
++ * @shadow_reg_enable: HW shadhow register bit
++ * @hd_v2: v2 of enhanced sensitivity value, used for 2000 series and up
++ * @no_idle_support: do not support idle mode
++ * wd_disable: disable watchdog timer
++ */
++struct iwl_base_params {
++	int eeprom_size;
++	int num_of_queues;	/* def: HW dependent */
++	int num_of_ampdu_queues;/* def: HW dependent */
++	/* for iwl_apm_init() */
++	u32 pll_cfg_val;
++
++	const u16 max_ll_items;
++	const bool shadow_ram_support;
++	u16 led_compensation;
++	bool adv_thermal_throttle;
++	bool support_ct_kill_exit;
++	const bool support_wimax_coexist;
++	u8 plcp_delta_threshold;
++	s32 chain_noise_scale;
++	unsigned int wd_timeout;
++	u32 max_event_log_size;
++	const bool shadow_reg_enable;
++	const bool hd_v2;
++	const bool no_idle_support;
++	const bool wd_disable;
++};
++
+ /**
+  * struct iwl_cfg
+  * @name: Offical name of the device
+-- 
+1.7.0.4
+
