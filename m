@@ -1,49 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:37617 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932190Ab2CVTNu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Mar 2012 15:13:50 -0400
-Received: by vcqp1 with SMTP id p1so2292861vcq.19
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Mar 2012 12:13:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201203221958.10427.lindner_marek@yahoo.de>
-References: <1332420968-16300-1-git-send-email-yeohchunyeow@gmail.com>
- <201203221133.51928.lindner_marek@yahoo.de> <CAPjQAd8BAjNFjmpjwrdNMpPNphqTBihitEPEPSiVqzS4KsPEAg@mail.gmail.com>
- <201203221958.10427.lindner_marek@yahoo.de>
-From: Javier Cardona <javier@cozybit.com>
-Date: Thu, 22 Mar 2012 12:13:28 -0700
-Message-ID: <CAPjQAd-j0mP9faqSkwuDWErX1v+dbzYqO+rL6sKN-2ZMYr_FGA@mail.gmail.com> (sfid-20120322_201353_325741_E578DE40)
-Subject: Re: [PATCH v2] mac80211: fix the RANN propagation issues
-To: Marek Lindner <lindner_marek@yahoo.de>
-Cc: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>,
-	linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
-	thomas@cozybit.com, linville@tuxdriver.com,
-	devel@lists.open80211s.org
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:20116 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755102Ab2CDUnH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:07 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 055/101] iwlwifi: fix notification wait bug
+Date: Sun,  4 Mar 2012 11:29:09 -0800
+Message-Id: <1330889395-533-56-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214543_808757_28C8A7CC)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 22, 2012 at 11:58 AM, Marek Lindner <lindner_marek@yahoo.de> wrote:
-> On Thursday, March 22, 2012 17:31:33 Javier Cardona wrote:
->> >>  #define SN_GT(x, y) ((long) (y) - (long) (x) < 0)
->> >>  #define SN_LT(x, y) ((long) (x) - (long) (y) < 0)
->> >
->> > Your macros tried to address the problem but casting your sequence number
->> > to long also breaks the wrap around.
->>
->> Ah, thanks for your help.  I guess we do need those macros after all
->> but they'd have to be re-written as
->>
->> #define SN_LT(x, y) ((s32)(x - y) < 0)
->> #define SN_GT(x, y) ((s32)(x - y) > 0)
->
-> No, you need unsigned values for this arithmetic to work (which is why long
-> also fails).
+From: Johannes Berg <johannes.berg@intel.com>
 
-The macro is always used on u32 values, so the arithmetic would be
-unsigned in this case.
+In "iwlwifi: consolidate the start_device flow"
+Emmanuel added the return if the fw isn't there
+but forgot to take into account that the struct
+for notification wait needs to be added only
+after the check -- fix that.
 
-Cheers,
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-ucode.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Javier
+diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.c b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+index c1c5e1f..686d456 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+@@ -533,9 +533,6 @@ int iwl_load_ucode_wait_alive(struct iwl_priv *priv,
+ 	int ret;
+ 	enum iwl_ucode_type old_type;
+ 
+-	iwl_init_notification_wait(priv->shrd, &alive_wait, REPLY_ALIVE,
+-				      iwl_alive_fn, &alive_data);
+-
+ 	old_type = priv->shrd->ucode_type;
+ 	priv->shrd->ucode_type = ucode_type;
+ 	fw = iwl_get_ucode_image(priv, ucode_type);
+@@ -543,6 +540,9 @@ int iwl_load_ucode_wait_alive(struct iwl_priv *priv,
+ 	if (!fw)
+ 		return -EINVAL;
+ 
++	iwl_init_notification_wait(priv->shrd, &alive_wait, REPLY_ALIVE,
++				      iwl_alive_fn, &alive_data);
++
+ 	ret = iwl_trans_start_fw(trans(priv), fw);
+ 	if (ret) {
+ 		priv->shrd->ucode_type = old_type;
+-- 
+1.7.0.4
+
