@@ -1,21 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44519 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751840Ab2CMNEQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 13 Mar 2012 09:04:16 -0400
-Message-Id: <20120313125702.703540202@sipsolutions.net> (sfid-20120313_140421_091914_C496850A)
-Date: Tue, 13 Mar 2012 13:57:02 +0100
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 0/2] BSS timestamp fix/cleanup
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:38078 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755233Ab2CDUnO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:14 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	stable@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 101/101] iwlwifi: always monitor for stuck queues
+Date: Sun,  4 Mar 2012 11:29:55 -0800
+Message-Id: <1330889395-533-102-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214417_488937_BECFC031)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I was looking at this code and thought I'd clarify it
-and remove some abuse in brcmfmac.
+From: Johannes Berg <johannes.berg@intel.com>
 
-johannes
+If we only monitor while associated, the following
+can happen:
+ - we're associated, and the queue stuck check
+   runs, setting the queue "touch" time to X
+ - we disassociate, stopping the monitoring,
+   which leaves the time set to X
+ - almost 2s later, we associate, and enqueue
+   a frame
+ - before the frame is transmitted, we monitor
+   for stuck queues, and find the time set to
+   X, although it is now later than X + 2000ms,
+   so we decide that the queue is stuck and
+   erroneously restart the device
+
+It happens more with P2P because there we can
+go between associated/unassociated frequently.
+
+Cc: stable@vger.kernel.org
+Reported-by: Ben Cahill <ben.m.cahill@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-core.c |   19 ++++---------------
+ 1 files changed, 4 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
+index b94e23c..8b85940 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-core.c
++++ b/drivers/net/wireless/iwlwifi/iwl-core.c
+@@ -1343,21 +1343,10 @@ void iwl_bg_watchdog(unsigned long data)
+ 	if (timeout == 0)
+ 		return;
+ 
+-	/* monitor and check for stuck cmd queue */
+-	if (iwl_check_stuck_queue(priv, priv->shrd->cmd_queue))
+-		return;
+-
+-	/* monitor and check for other stuck queues */
+-	if (iwl_is_any_associated(priv)) {
+-		for (cnt = 0; cnt < cfg(priv)->base_params->num_of_queues;
+-		     cnt++) {
+-			/* skip as we already checked the command queue */
+-			if (cnt == priv->shrd->cmd_queue)
+-				continue;
+-			if (iwl_check_stuck_queue(priv, cnt))
+-				return;
+-		}
+-	}
++	/* monitor and check for stuck queues */
++	for (cnt = 0; cnt < cfg(priv)->base_params->num_of_queues; cnt++)
++		if (iwl_check_stuck_queue(priv, cnt))
++			return;
+ 
+ 	mod_timer(&priv->watchdog, jiffies +
+ 		  msecs_to_jiffies(IWL_WD_TICK(timeout)));
+-- 
+1.7.0.4
+
