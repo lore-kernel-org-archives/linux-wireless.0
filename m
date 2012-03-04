@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:50057 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030385Ab2CFMIF convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 07:08:05 -0500
-Received: by mail-lpp01m010-f46.google.com with SMTP id j13so5931162lah.19
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Mar 2012 04:08:04 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20120306115321.GB31306@redhat.com>
-References: <20120305164813.GB2979@redhat.com>
-	<CAGXE3d9==tT-ukfn5RO9xTEfw=YXO=FAVJob2WMFJS-FS8j9GQ@mail.gmail.com>
-	<20120306115321.GB31306@redhat.com>
-Date: Tue, 6 Mar 2012 13:08:04 +0100
-Message-ID: <CAL1gcdNZR6KoZeQkW1EaZp5ptH9X5M+vhpo7pnPyUvkE6p6qDg@mail.gmail.com> (sfid-20120306_130813_308887_C3162558)
-Subject: Re: [PATCH 3.3] rt2x00: fix random stalls
-From: Gertjan van Wingerde <gwingerde@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga09.intel.com ([134.134.136.24]:31533 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755191Ab2CDUnM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:12 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 084/101] iwlwifi: print DMA stop timeout error only if it happened
+Date: Sun,  4 Mar 2012 11:29:38 -0800
+Message-Id: <1330889395-533-85-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214439_626834_127C5126)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+From: Stanislaw Gruszka <sgruszka@redhat.com>
 
-On Tue, Mar 6, 2012 at 12:53 PM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> On Tue, Mar 06, 2012 at 08:45:21AM +0100, Helmut Schaa wrote:
->> > -       if (!rt2x00queue_threshold(entry->queue))
->> > +       if (!rt2x00queue_threshold(entry->queue)) {
->> > +               spin_lock_irq(&entry->queue->tx_lock);
->> >                rt2x00queue_unpause_queue(entry->queue);
->> > +               spin_unlock_irq(&entry->queue->tx_lock);
->>
->> Why do we need to disable interrupts here? spin_lock_bh should
->> be sufficient.
->
-> I'm not 100% sure, and I was to lazy to find out, and chose safer
-> version. I guess I need to find out now ...
->
+iwl_poll_direct_bit() return negative error value on timeout,
+positive values do not indicate an error.
 
-That is actually a good point of Helmut. In all other cases where the tx_lock
-is used we actually use spin_lock and spin_unlock. AFAIK we shouldn't mix
-the different spinlock variants, so with this the other uses may have to change
-as well.
-
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
-Gertjan
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    7 ++++---
+ 1 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index ef7418d..75bb95e 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -1219,7 +1219,7 @@ static void iwl_trans_pcie_fw_alive(struct iwl_trans *trans)
+  */
+ static int iwl_trans_tx_stop(struct iwl_trans *trans)
+ {
+-	int ch, txq_id;
++	int ch, txq_id, ret;
+ 	unsigned long flags;
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+@@ -1232,9 +1232,10 @@ static int iwl_trans_tx_stop(struct iwl_trans *trans)
+ 	for (ch = 0; ch < FH_TCSR_CHNL_NUM; ch++) {
+ 		iwl_write_direct32(trans,
+ 				   FH_TCSR_CHNL_TX_CONFIG_REG(ch), 0x0);
+-		if (iwl_poll_direct_bit(trans, FH_TSSR_TX_STATUS_REG,
++		ret = iwl_poll_direct_bit(trans, FH_TSSR_TX_STATUS_REG,
+ 				    FH_TSSR_TX_STATUS_REG_MSK_CHNL_IDLE(ch),
+-				    1000))
++				    1000);
++		if (ret < 0)
+ 			IWL_ERR(trans, "Failing on timeout while stopping"
+ 			    " DMA channel %d [0x%08x]", ch,
+ 			    iwl_read_direct32(trans,
+-- 
+1.7.0.4
+
