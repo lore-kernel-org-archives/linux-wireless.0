@@ -1,67 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qa0-f46.google.com ([209.85.216.46]:52297 "EHLO
-	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751766Ab2CXCPh (ORCPT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:58910 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751903Ab2CDI4B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2012 22:15:37 -0400
-Message-ID: <4F6D2E76.90204@gmail.com> (sfid-20120324_031548_768085_9A1E9039)
-Date: Fri, 23 Mar 2012 22:16:22 -0400
-From: Richard Farina <sidhayn@gmail.com>
+	Sun, 4 Mar 2012 03:56:01 -0500
+Received: by mail-ww0-f44.google.com with SMTP id dr13so2663813wgb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 04 Mar 2012 00:56:00 -0800 (PST)
 MIME-Version: 1.0
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-CC: Larry Finger <Larry.Finger@lwfinger.net>,
-	jerome huang <jerome.syno@gmail.com>,
-	"Xu, Andiry" <Andiry.Xu@amd.com>, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: rt8192cu on USB3
-References: <CAHaq0gKxw9Lir2bB__jNmmZPzbgq7Ky6v9Ps2RVexbnRjd8a2g@mail.gmail.com> <4F585BA9.6020903@amd.com> <2A76B9D36150BE4293842BC2FE8FF165016A31@SCYBEXDAG04.amd.com> <CAHaq0g+hXKdCaMm8dXiQhzqCsjAa0vihd2YE3gbw-xrMrxmOgw@mail.gmail.com> <CAHaq0gJRr5p2d=P_J9+NQ0=PqaCu6NLSwJ_LSjFn7HffkX-Odg@mail.gmail.com> <4F58F2D0.5060805@lwfinger.net> <CAHaq0gKSSgYX19BH92Pg+gXifSEmjvubc_nd5brO8QeLCpr1yA@mail.gmail.com> <4F59800B.80407@lwfinger.net> <20120322223107.GA8877@xanatos> <4F6BDEDF.2020907@lwfinger.net> <20120323203404.GD5207@xanatos>
-In-Reply-To: <20120323203404.GD5207@xanatos>
-Content-Type: text/plain; charset=ISO-8859-1
+From: Eliad Peller <eliad@wizery.com>
+To: Luciano Coelho <coelho@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 08/11] wl12xx: don't allow scanning while device is in ROC
+Date: Sun,  4 Mar 2012 10:55:52 +0200
+Message-Id: <1330851355-24459-9-git-send-email-eliad@wizery.com> (sfid-20120304_095627_433294_83A43EBD)
+In-Reply-To: <1330851355-24459-1-git-send-email-eliad@wizery.com>
+References: <1330851355-24459-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/23/12 16:34, Sarah Sharp wrote:
-> On Thu, Mar 22, 2012 at 09:24:31PM -0500, Larry Finger wrote:
->> On 03/22/2012 05:31 PM, Sarah Sharp wrote:
->>
->>> Larry, if the driver doesn't cancel an URB that the device doesn't
->>> respond to, then it will just be left on the endpoint ring.  If the
->>> driver then tries to queue new transfers to that same endpoint, but the
->>> device keeps NAKing the uncancelled transfer, then the endpoint ring
->>> would fill up with unanswered transfers.
->>>
->>> Perhaps some userspace or kernel portion is forgetting to cancel URBs
->>> before moving onto the next thing?  You said you moved to asynchronous
->>> transfers, so maybe the problem lies there?
->> The writes have always been asynchronous and reads are synchronous.
->> The only change was to convert the firmware uploading writes from
->> 32-bits at a time into block writes of 1000+ 32-bit words.
-> Yeah, that's going to cause the out-of-room warning under xHCI.  That
-> should be fixed in the 3.4-rc1 kernel though.
-Given that I can replicate this issue using several different drivers,
-should I test using 3.4_rc1 kernel to see if the usb is fixed or using
-compat-wireless based on 3.4_rc1 to see if the drivers are fixed? Or both?
+return EBUSY on scan when there is any role
+in ROC (not necessarily the one we are going
+to use)
 
-Thanks,
-Rick
->
->> Would xhci be worse that ohci or ehci in terms of the device not
->> responding to URBs? We only see problems with USB3.0 hubs, never
->> with 2.0 or 1.1.
-> That's because EHCI handles arbitrarily large transfers, and xHCI didn't
-> until now.
->
->> I am looking into changing the writes to be synchronous. That should
->> clear up any problems.
-> Yeah, your problem probably was in the bulk large transfer, not the
-> unfinished canceled URBs.  I would suggest getting your reporters to
-> just try 3.4-rc1 and see if it helps before doing too much work to debug
-> this.
->
-> Sarah Sharp
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Signed-off-by: Eliad Peller <eliad@wizery.com>
+---
+ drivers/net/wireless/wl12xx/main.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/wl12xx/main.c b/drivers/net/wireless/wl12xx/main.c
+index 85bbe7f..1d5f2d5 100644
+--- a/drivers/net/wireless/wl12xx/main.c
++++ b/drivers/net/wireless/wl12xx/main.c
+@@ -3057,8 +3057,6 @@ static int wl1271_op_hw_scan(struct ieee80211_hw *hw,
+ 			     struct cfg80211_scan_request *req)
+ {
+ 	struct wl1271 *wl = hw->priv;
+-	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+-
+ 	int ret;
+ 	u8 *ssid = NULL;
+ 	size_t len = 0;
+@@ -3086,8 +3084,8 @@ static int wl1271_op_hw_scan(struct ieee80211_hw *hw,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	if (test_bit(WLVIF_FLAG_STA_ASSOCIATED, &wlvif->flags) &&
+-	    test_bit(wlvif->role_id, wl->roc_map)) {
++	/* fail if there is any role in ROC */
++	if (find_first_bit(wl->roc_map, WL12XX_MAX_ROLES) < WL12XX_MAX_ROLES) {
+ 		/* don't allow scanning right now */
+ 		ret = -EBUSY;
+ 		goto out_sleep;
+-- 
+1.7.6.401.g6a319
 
