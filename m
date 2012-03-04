@@ -1,91 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:57652 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932809Ab2CZQNy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 12:13:54 -0400
-Message-ID: <1332778432.5435.50.camel@jlt3.sipsolutions.net> (sfid-20120326_181358_127750_61D0B7AB)
-Subject: Re: mac80211 queue handling in multi-channel
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Eliad Peller <eliad@wizery.com>, Jouni Malinen <j@w1.fi>,
-	Michal Kazior <michal.kazior@tieto.com>
-Date: Mon, 26 Mar 2012 18:13:52 +0200
-In-Reply-To: <1330343374.3483.46.camel@jlt3.sipsolutions.net> (sfid-20120227_124940_942920_32DA7DE7)
-References: <1330343374.3483.46.camel@jlt3.sipsolutions.net>
-	 (sfid-20120227_124940_942920_32DA7DE7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:20116 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755136Ab2CDUnI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 15:43:08 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH 063/101] iwlwifi: remove PA type configuration
+Date: Sun,  4 Mar 2012 11:29:17 -0800
+Message-Id: <1330889395-533-64-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120304_214507_977170_8B282F11)
+In-Reply-To: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330889395-533-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So I've started to work on this a bit.
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Mon, 2012-02-27 at 12:49 +0100, Johannes Berg wrote:
+No need to have a special config variable
+for the PA type, we can just use the
+additional NIC config function to config
+the hardware correctly.
 
-> So what changes would this require?
-> 
-> First of all, of course the driver needs to advertise the number of
-> hardware queues it supports. We'll have to think about changing the
-> check "do we support QoS" from "hw.queues >= 4" to something else, but I
-> think >=4 will still be a good indication and it seems unlikely that
-> somebody will have a device with a lot of queues yet not support QoS.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-6000.c   |   17 +++++++++--------
+ drivers/net/wireless/iwlwifi/iwl-shared.h |   12 ------------
+ 2 files changed, 9 insertions(+), 20 deletions(-)
 
-This is a non-issue really.
-
-> Then of course, the driver needs to tell mac80211 about queue mapping.
-> For this, there's one global queue:
->  * off-channel TX queue
-> Additionally, there are per-interface queues:
->  * 4 per AC
->  * CAB for this interface
-
-This I haven't gotten to.
-
-One issue I noticed though is that the queue mapping might need to be
-changed during the lifetime of the virtual interface (ie. while it's
-UP).
-
-Over in the other thread, I'm discussing channel contexts with Michal,
-and it seems that when the channel context is changed the queue mapping
-might also change. This doesn't seem like a problem, but we definitely
-need to keep it in mind. The way to handle it would be to stop the
-netdev queues, sync_net(), drop everything we have queued up for this
-interface and then we have clean state to start from.
-
-
-The other thing this affects is monitor mode. When the hardware queues
-are only defined per interface, we can't just give a frame to the driver
-on an essentially random queue and hope it can transmit it. Therefore,
-we need more queues, for monitor mode, in some way.
-
-As I was also trying to figure out what a good way to handle monitor
-mode in cases like iwlwifi is where the device really wants to be in a
-special "monitor mode" -- not just different filter programming.
-
-So to address both of these things, I came up with this patch:
-http://p.sipsolutions.net/ad87702d716df6d5.txt
-
-This will allow drivers to be informed of monitor mode when that is the
-only thing active.
-
-Injection would work like this:
- * when monitor is only active:
-  - use this pseudo monitor interface
-  - if that doesn't exist (driver doesn't have it): discard frame
- * when something else is active:
-  - if the TA of the injected frame matches any vif: use that vif
-  - if the TA doesn't match: use a vif matching the monitor addr
-  - if that doesn't exist: discard frame
-
-
-I think this strikes a good balance between having injection and having
-to worry about it too much. Obviously, drivers not implementing this new
-monitor mode interface capability wouldn't have pure injection, but that
-seems OK -- it should be relatively easy to add this to drivers.
-
-As mentioned in the patch, the alternative would be to have new API for
-all of this, but that doesn't seem worthwhile.
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-6000.c b/drivers/net/wireless/iwlwifi/iwl-6000.c
+index 1e29a51..6f7d5f0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-6000.c
++++ b/drivers/net/wireless/iwlwifi/iwl-6000.c
+@@ -96,20 +96,21 @@ static void iwl6150_additional_nic_config(struct iwl_priv *priv)
+ 		    CSR_GP_DRIVER_REG_BIT_6050_1x2);
+ }
+ 
++static void iwl6000i_additional_nic_config(struct iwl_priv *priv)
++{
++	/* 2x2 IPA phy type */
++	iwl_write32(trans(priv), CSR_GP_DRIVER_REG,
++		     CSR_GP_DRIVER_REG_BIT_RADIO_SKU_2x2_IPA);
++}
++
+ /* NIC configuration for 6000 series */
+ static void iwl6000_nic_config(struct iwl_priv *priv)
+ {
+ 	iwl_rf_config(priv);
+ 
+-	/* no locking required for register write */
+-	if (cfg(priv)->pa_type == IWL_PA_INTERNAL) {
+-		/* 2x2 IPA phy type */
+-		iwl_write32(trans(priv), CSR_GP_DRIVER_REG,
+-			     CSR_GP_DRIVER_REG_BIT_RADIO_SKU_2x2_IPA);
+-	}
+ 	/* do additional nic configuration if needed */
+ 	if (cfg(priv)->additional_nic_config)
+-			cfg(priv)->additional_nic_config(priv);
++		cfg(priv)->additional_nic_config(priv);
+ }
+ 
+ static struct iwl_sensitivity_ranges iwl6000_sensitivity = {
+@@ -471,8 +472,8 @@ const struct iwl_cfg iwl130_bg_cfg = {
+ 	.eeprom_ver = EEPROM_6000_EEPROM_VERSION,		\
+ 	.eeprom_calib_ver = EEPROM_6000_TX_POWER_VERSION,	\
+ 	.lib = &iwl6000_lib,					\
++	.additional_nic_config = iwl6000i_additional_nic_config,\
+ 	.base_params = &iwl6000_base_params,			\
+-	.pa_type = IWL_PA_INTERNAL,				\
+ 	.led_mode = IWL_LED_BLINK
+ 
+ const struct iwl_cfg iwl6000i_2agn_cfg = {
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 55f9f07..2ab7462 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -209,16 +209,6 @@ enum iwl_ucode_type {
+ 	IWL_UCODE_WOWLAN,
+ };
+ 
+-/**
+- * enum iwl_pa_type - Power Amplifier type
+- * @IWL_PA_SYSTEM:  based on uCode configuration
+- * @IWL_PA_INTERNAL: use Internal only
+- */
+-enum iwl_pa_type {
+-	IWL_PA_SYSTEM = 0,
+-	IWL_PA_INTERNAL = 1,
+-};
+-
+ /*
+  * LED mode
+  *    IWL_LED_DEFAULT:  use device default
+@@ -299,7 +289,6 @@ struct iwl_base_params {
+  * @base_params: pointer to basic parameters
+  * @ht_params: point to ht patameters
+  * @bt_params: pointer to bt parameters
+- * @pa_type: used by 6000 series only to identify the type of Power Amplifier
+  * @need_temp_offset_calib: need to perform temperature offset calibration
+  * @no_xtal_calib: some devices do not need crystal calibration data,
+  *	don't send it to those
+@@ -339,7 +328,6 @@ struct iwl_cfg {
+ 	/* params likely to change within a device family */
+ 	const struct iwl_ht_params *ht_params;
+ 	const struct iwl_bt_params *bt_params;
+-	enum iwl_pa_type pa_type;	  /* if used set to IWL_PA_SYSTEM */
+ 	const bool need_temp_offset_calib; /* if used set to true */
+ 	const bool no_xtal_calib;
+ 	u8 scan_rx_antennas[IEEE80211_NUM_BANDS];
+-- 
+1.7.0.4
 
