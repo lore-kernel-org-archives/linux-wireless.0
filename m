@@ -1,118 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:38447 "EHLO ogre.sisk.pl"
+Received: from mga14.intel.com ([143.182.124.37]:64914 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751517Ab2CKWIm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Mar 2012 18:08:42 -0400
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: 3.3-rc7: Reported regressions 3.1 -> 3.2
-Cc: Maciej Rutecki <maciej.rutecki@gmail.com>,
-	Florian Mickler <florian@mickler.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Kernel Testers List <kernel-testers@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PM List <linux-pm@lists.linux-foundation.org>,
-	Linux SCSI List <linux-scsi@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	DRI <dri-devel@lists.freedesktop.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Message-ID: <5lvJI01hLEP.A.LnC.3_RXPB@chimera> (sfid-20120311_230906_808128_FBC32D2E)
-Date: Sun, 11 Mar 2012 22:46:18 +0100 (CET)
+	id S1753721Ab2CDX5V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 18:57:21 -0500
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 01/22] NFC: Export NFCID1 from pn533
+Date: Mon,  5 Mar 2012 01:03:33 +0100
+Message-Id: <1330905834-6994-2-git-send-email-sameo@linux.intel.com> (sfid-20120305_005724_817416_E9D1FA60)
+In-Reply-To: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
+References: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This message contains a list of some post-3.1 regressions introduced before
-3.2, for which there are no fixes in the mainline known to the tracking team.
-If any of them have been fixed already, please let us know.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ drivers/nfc/pn533.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-If you know of any other unresolved post-3.1 regressions, please let us know
-either and we'll add them to the list.  Also, please let us know if any
-of the entries below are invalid.
-
-Each entry from the list will be sent additionally in an automatic reply to
-this message with CCs to the people involved in reporting and handling the
-issue.
-
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2012-03-11        9        6           5
-  2012-03-04        9        8           7
-  2012-02-24        9        8           7
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42684
-Subject		: FYIO: usb/video 3.2 breaks logitech 9000pro webcam focus control
-Submitter	: M G Berberich <berberic@fmi.uni-passau.de>
-Date		: 2012-01-23 21:49 (49 days old)
-Message-ID	: <20120123214934.GA4240@invalid>
-References	: http://marc.info/?l=linux-kernel&m=132735609521443&w=2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42631
-Subject		: Sound broken in 3.2.0 and 3.2.1
-Submitter	: Joseph Parmelee <jparmele@wildbear.com>
-Date		: 2012-01-13 19:44 (59 days old)
-Message-ID	: <alpine.LNX.2.00.1201131241090.1239@bruno>
-References	: http://marc.info/?l=linux-kernel&m=132648462806235&w=2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42629
-Subject		: recvmsg sleeping from invalid context
-Submitter	: Dave Jones <davej@redhat.com>
-Date		: 2012-01-13 18:24 (59 days old)
-Message-ID	: <20120113182401.GA25885@redhat.com>
-References	: http://marc.info/?l=linux-kernel&m=132647921304184&w=2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42611
-Subject		: kernel 3.2 crashes too early on HP dc7700 and HP t5000 series
-Submitter	: Dmitry D. Khlebnikov <galaxy@openwall.com>
-Date		: 2012-01-10 11:49 (62 days old)
-Message-ID	: <20120110114905.GC13535@openwall.com>
-References	: http://marc.info/?l=linux-kernel&m=132619793012702&w=2
-
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42610
-Subject		: 3.2.0 reboot powers off machine
-Submitter	: Tom Weber <l_linux-kernel@mail2news.4t2.com>
-Date		: 2012-01-11 11:03 (61 days old)
-Message-ID	: <1326279818.24835.12.camel@utumno>
-References	: http://marc.info/?l=linux-kernel&m=132628059308023&w=2
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: https://bugzilla.kernel.org/show_bug.cgi?id=42571
-Subject		: BUG in ofcs2_change_file_space
-Submitter	: Bret Towe <magnade@gmail.com>
-Date		: 2012-01-05 22:23 (67 days old)
-Message-ID	: <CALjC5haTNDMOTDPL1m1uBTc2a-Qb8cvR44SCaVDFMzGc+Gw3+w@mail.gmail.com>
-References	: http://marc.info/?l=linux-kernel&m=132580236211209&w=2
-Patch		: http://oss.oracle.com/pipermail/ocfs2-devel/2012-January/008464.html
-
-
-For details, please visit the bug entries and follow the links given in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regressions.
-There also is a Bugzilla entry used for tracking the regressions introduced
-between 3.1 and 3.2, unresolved as well as resolved, at:
-
-https://bugzilla.kernel.org/show_bug.cgi?id=42566
-
-Please let the tracking team know if there are any Bugzilla entries that
-should be added to the list in there.
-
-Thanks!
+diff --git a/drivers/nfc/pn533.c b/drivers/nfc/pn533.c
+index 1a1500b..8be0ae6 100644
+--- a/drivers/nfc/pn533.c
++++ b/drivers/nfc/pn533.c
+@@ -736,6 +736,8 @@ static int pn533_target_found_type_a(struct nfc_target *nfc_tgt, u8 *tgt_data,
+ 
+ 	nfc_tgt->sens_res = be16_to_cpu(tgt_type_a->sens_res);
+ 	nfc_tgt->sel_res = tgt_type_a->sel_res;
++	nfc_tgt->nfcid1_len = tgt_type_a->nfcid_len;
++	memcpy(nfc_tgt->nfcid1, tgt_type_a->nfcid_data, nfc_tgt->nfcid1_len);
+ 
+ 	return 0;
+ }
+-- 
+1.7.7.3
 
