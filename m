@@ -1,380 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server19320154104.serverpool.info ([193.201.54.104]:56037 "EHLO
-	hauke-m.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031159Ab2COWvU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 15 Mar 2012 18:51:20 -0400
-From: Hauke Mehrtens <hauke@hauke-m.de>
-To: gregkh@linuxfoundation.org
-Cc: stern@rowland.harvard.edu, linux-mips@linux-mips.org,
-	ralf@linux-mips.org, m@bues.ch, linux-usb@vger.kernel.org,
-	linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Subject: [PATCH v5 4/4] USB: OHCI: remove old SSB OHCI driver
-Date: Thu, 15 Mar 2012 23:49:59 +0100
-Message-Id: <1331851799-5968-5-git-send-email-hauke@hauke-m.de> (sfid-20120315_235127_089778_BCCE806C)
-In-Reply-To: <1331851799-5968-1-git-send-email-hauke@hauke-m.de>
-References: <1331851799-5968-1-git-send-email-hauke@hauke-m.de>
+Received: from mga09.intel.com ([134.134.136.24]:11459 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965000Ab2CEUiE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 15:38:04 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 06/33] iwlwifi: introduce per-queue locks
+Date: Mon,  5 Mar 2012 11:24:24 -0800
+Message-Id: <1330975491-19680-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120305_213811_232364_8B2465E3)
+In-Reply-To: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is now replaced by the new ssb USB driver, which also supports
-devices with an EHCI controller.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
+Instead of (ab)using the sta_lock, make the
+transport layer lock its own TX queue data
+structures with a lock per queue. This also
+unifies with the cmd queue lock.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/usb/host/Kconfig    |    7 +-
- drivers/usb/host/ohci-hcd.c |   21 +----
- drivers/usb/host/ohci-ssb.c |  260 -------------------------------------------
- 3 files changed, 7 insertions(+), 281 deletions(-)
- delete mode 100644 drivers/usb/host/ohci-ssb.c
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    2 +
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |   20 ++++++++-----
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c     |   31 +++++++++++++--------
+ drivers/net/wireless/iwlwifi/iwl-trans.h          |    2 -
+ 4 files changed, 33 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
-index 2fc5637..00b6fc8 100644
---- a/drivers/usb/host/Kconfig
-+++ b/drivers/usb/host/Kconfig
-@@ -373,10 +373,15 @@ config USB_OHCI_HCD_PCI
- 	  If unsure, say Y.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+index 5b26b71..b102946 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+@@ -169,6 +169,7 @@ struct iwl_queue {
+  * @meta: array of meta data for each command/tx buffer
+  * @dma_addr_cmd: physical address of cmd/tx buffer array
+  * @txb: array of per-TFD driver data
++ * lock: queue lock
+  * @time_stamp: time (in jiffies) of last read_ptr change
+  * @need_update: indicates need to update read/write index
+  * @sched_retry: indicates queue is high-throughput aggregation (HT AGG) enabled
+@@ -187,6 +188,7 @@ struct iwl_tx_queue {
+ 	struct iwl_device_cmd **cmd;
+ 	struct iwl_cmd_meta *meta;
+ 	struct sk_buff **skbs;
++	spinlock_t lock;
+ 	unsigned long time_stamp;
+ 	u8 need_update;
+ 	u8 sched_retry;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index 82e3448..1cb1dd2 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -217,6 +217,8 @@ void iwlagn_txq_free_tfd(struct iwl_trans *trans, struct iwl_tx_queue *txq,
+ {
+ 	struct iwl_tfd *tfd_tmp = txq->tfds;
  
- config USB_OHCI_HCD_SSB
--	bool "OHCI support for Broadcom SSB OHCI core"
-+	bool "OHCI support for Broadcom SSB OHCI core (DEPRECATED)"
- 	depends on USB_OHCI_HCD && (SSB = y || SSB = USB_OHCI_HCD) && EXPERIMENTAL
-+	select USB_HCD_SSB
-+	select USB_OHCI_HCD_PLATFORM
- 	default n
- 	---help---
-+	  This option is deprecated now and the driver was removed, use
-+	  USB_HCD_SSB and USB_OHCI_HCD_PLATFORM instead.
++	lockdep_assert_held(&txq->lock);
 +
- 	  Support for the Sonics Silicon Backplane (SSB) attached
- 	  Broadcom USB OHCI core.
+ 	iwlagn_unmap_tfd(trans, &txq->meta[index], &tfd_tmp[index], dma_dir);
  
-diff --git a/drivers/usb/host/ohci-hcd.c b/drivers/usb/host/ohci-hcd.c
-index cd5e382..4f9e293 100644
---- a/drivers/usb/host/ohci-hcd.c
-+++ b/drivers/usb/host/ohci-hcd.c
-@@ -1081,11 +1081,6 @@ MODULE_LICENSE ("GPL");
- #define PS3_SYSTEM_BUS_DRIVER	ps3_ohci_driver
- #endif
+ 	/* free SKB */
+@@ -621,7 +623,6 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	struct iwl_device_cmd *out_cmd;
+ 	struct iwl_cmd_meta *out_meta;
+ 	dma_addr_t phys_addr;
+-	unsigned long flags;
+ 	u32 idx;
+ 	u16 copy_size, cmd_size;
+ 	bool is_ct_kill = false;
+@@ -680,10 +681,10 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 		return -EIO;
+ 	}
  
--#ifdef CONFIG_USB_OHCI_HCD_SSB
--#include "ohci-ssb.c"
--#define SSB_OHCI_DRIVER		ssb_ohci_driver
--#endif
--
- #ifdef CONFIG_MFD_SM501
- #include "ohci-sm501.c"
- #define SM501_OHCI_DRIVER	ohci_hcd_sm501_driver
-@@ -1129,8 +1124,7 @@ MODULE_LICENSE ("GPL");
- 	!defined(SA1111_DRIVER) &&	\
- 	!defined(PS3_SYSTEM_BUS_DRIVER) && \
- 	!defined(SM501_OHCI_DRIVER) && \
--	!defined(TMIO_OHCI_DRIVER) && \
--	!defined(SSB_OHCI_DRIVER)
-+	!defined(TMIO_OHCI_DRIVER)
- #error "missing bus glue for ohci-hcd"
- #endif
+-	spin_lock_irqsave(&trans->hcmd_lock, flags);
++	spin_lock_bh(&txq->lock);
  
-@@ -1196,12 +1190,6 @@ static int __init ohci_hcd_mod_init(void)
- 		goto error_pci;
- #endif
+ 	if (iwl_queue_space(q) < ((cmd->flags & CMD_ASYNC) ? 2 : 1)) {
+-		spin_unlock_irqrestore(&trans->hcmd_lock, flags);
++		spin_unlock_bh(&txq->lock);
  
--#ifdef SSB_OHCI_DRIVER
--	retval = ssb_driver_register(&SSB_OHCI_DRIVER);
--	if (retval)
--		goto error_ssb;
--#endif
+ 		IWL_ERR(trans, "No space in command queue\n");
+ 		is_ct_kill = iwl_check_for_ct_kill(priv(trans));
+@@ -790,7 +791,7 @@ static int iwl_enqueue_hcmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	iwl_txq_update_write_ptr(trans, txq);
+ 
+  out:
+-	spin_unlock_irqrestore(&trans->hcmd_lock, flags);
++	spin_unlock_bh(&txq->lock);
+ 	return idx;
+ }
+ 
+@@ -809,6 +810,8 @@ static void iwl_hcmd_queue_reclaim(struct iwl_trans *trans, int txq_id,
+ 	struct iwl_queue *q = &txq->q;
+ 	int nfreed = 0;
+ 
++	lockdep_assert_held(&txq->lock);
++
+ 	if ((idx >= q->n_bd) || (iwl_queue_used(q, idx) == 0)) {
+ 		IWL_ERR(trans, "%s: Read index for DMA queue txq id (%d), "
+ 			  "index %d is out of range [0-%d] %d %d.\n", __func__,
+@@ -850,7 +853,6 @@ void iwl_tx_cmd_complete(struct iwl_trans *trans, struct iwl_rx_mem_buffer *rxb,
+ 	struct iwl_cmd_meta *meta;
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_tx_queue *txq = &trans_pcie->txq[trans->shrd->cmd_queue];
+-	unsigned long flags;
+ 
+ 	/* If a Tx command is being handled and it isn't in the actual
+ 	 * command queue then there a command routing bug has been introduced
+@@ -864,6 +866,8 @@ void iwl_tx_cmd_complete(struct iwl_trans *trans, struct iwl_rx_mem_buffer *rxb,
+ 		return;
+ 	}
+ 
++	spin_lock(&txq->lock);
++
+ 	cmd_index = get_cmd_index(&txq->q, index);
+ 	cmd = txq->cmd[cmd_index];
+ 	meta = &txq->meta[cmd_index];
+@@ -880,8 +884,6 @@ void iwl_tx_cmd_complete(struct iwl_trans *trans, struct iwl_rx_mem_buffer *rxb,
+ 		rxb->page = NULL;
+ 	}
+ 
+-	spin_lock_irqsave(&trans->hcmd_lock, flags);
 -
- #ifdef SM501_OHCI_DRIVER
- 	retval = platform_driver_register(&SM501_OHCI_DRIVER);
- 	if (retval < 0)
-@@ -1225,10 +1213,6 @@ static int __init ohci_hcd_mod_init(void)
- 	platform_driver_unregister(&SM501_OHCI_DRIVER);
-  error_sm501:
- #endif
--#ifdef SSB_OHCI_DRIVER
--	ssb_driver_unregister(&SSB_OHCI_DRIVER);
-- error_ssb:
--#endif
- #ifdef PCI_DRIVER
- 	pci_unregister_driver(&PCI_DRIVER);
-  error_pci:
-@@ -1276,9 +1260,6 @@ static void __exit ohci_hcd_mod_exit(void)
- #ifdef SM501_OHCI_DRIVER
- 	platform_driver_unregister(&SM501_OHCI_DRIVER);
- #endif
--#ifdef SSB_OHCI_DRIVER
--	ssb_driver_unregister(&SSB_OHCI_DRIVER);
--#endif
- #ifdef PCI_DRIVER
- 	pci_unregister_driver(&PCI_DRIVER);
- #endif
-diff --git a/drivers/usb/host/ohci-ssb.c b/drivers/usb/host/ohci-ssb.c
-deleted file mode 100644
-index 5ba1859..0000000
---- a/drivers/usb/host/ohci-ssb.c
-+++ /dev/null
-@@ -1,260 +0,0 @@
--/*
-- * Sonics Silicon Backplane
-- * Broadcom USB-core OHCI driver
-- *
-- * Copyright 2007 Michael Buesch <m@bues.ch>
-- *
-- * Derived from the OHCI-PCI driver
-- * Copyright 1999 Roman Weissgaerber
-- * Copyright 2000-2002 David Brownell
-- * Copyright 1999 Linus Torvalds
-- * Copyright 1999 Gregory P. Smith
-- *
-- * Derived from the USBcore related parts of Broadcom-SB
-- * Copyright 2005 Broadcom Corporation
-- *
-- * Licensed under the GNU/GPL. See COPYING for details.
-- */
--#include <linux/ssb/ssb.h>
--
--
--#define SSB_OHCI_TMSLOW_HOSTMODE	(1 << 29)
--
--struct ssb_ohci_device {
--	struct ohci_hcd ohci; /* _must_ be at the beginning. */
--
--	u32 enable_flags;
--};
--
--static inline
--struct ssb_ohci_device *hcd_to_ssb_ohci(struct usb_hcd *hcd)
--{
--	return (struct ssb_ohci_device *)(hcd->hcd_priv);
--}
--
--
--static int ssb_ohci_reset(struct usb_hcd *hcd)
--{
--	struct ssb_ohci_device *ohcidev = hcd_to_ssb_ohci(hcd);
--	struct ohci_hcd *ohci = &ohcidev->ohci;
--	int err;
--
--	ohci_hcd_init(ohci);
--	err = ohci_init(ohci);
--
--	return err;
--}
--
--static int ssb_ohci_start(struct usb_hcd *hcd)
--{
--	struct ssb_ohci_device *ohcidev = hcd_to_ssb_ohci(hcd);
--	struct ohci_hcd *ohci = &ohcidev->ohci;
--	int err;
--
--	err = ohci_run(ohci);
--	if (err < 0) {
--		ohci_err(ohci, "can't start\n");
--		ohci_stop(hcd);
+ 	iwl_hcmd_queue_reclaim(trans, txq_id, index);
+ 
+ 	if (!(meta->flags & CMD_ASYNC)) {
+@@ -898,7 +900,7 @@ void iwl_tx_cmd_complete(struct iwl_trans *trans, struct iwl_rx_mem_buffer *rxb,
+ 
+ 	meta->flags = 0;
+ 
+-	spin_unlock_irqrestore(&trans->hcmd_lock, flags);
++	spin_unlock(&txq->lock);
+ }
+ 
+ #define HOST_COMPLETE_TIMEOUT (2 * HZ)
+@@ -1041,6 +1043,8 @@ int iwl_tx_queue_reclaim(struct iwl_trans *trans, int txq_id, int index,
+ 	if (WARN_ON(txq_id == trans->shrd->cmd_queue))
+ 		return 0;
+ 
++	lockdep_assert_held(&txq->lock);
++
+ 	/*Since we free until index _not_ inclusive, the one before index is
+ 	 * the last we will free. This one must be used */
+ 	last_to_free = iwl_queue_dec_wrap(index, q->n_bd);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index 9f8b239..f47426a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -390,6 +390,8 @@ static int iwl_trans_txq_init(struct iwl_trans *trans, struct iwl_tx_queue *txq,
+ 	if (ret)
+ 		return ret;
+ 
++	spin_lock_init(&txq->lock);
++
+ 	/*
+ 	 * Tell nic where to find circular buffer of Tx Frame Descriptors for
+ 	 * given Tx queue, and enable the DMA channel used for that queue.
+@@ -409,8 +411,6 @@ static void iwl_tx_queue_unmap(struct iwl_trans *trans, int txq_id)
+ 	struct iwl_tx_queue *txq = &trans_pcie->txq[txq_id];
+ 	struct iwl_queue *q = &txq->q;
+ 	enum dma_data_direction dma_dir;
+-	unsigned long flags;
+-	spinlock_t *lock;
+ 
+ 	if (!q->n_bd)
+ 		return;
+@@ -418,22 +418,19 @@ static void iwl_tx_queue_unmap(struct iwl_trans *trans, int txq_id)
+ 	/* In the command queue, all the TBs are mapped as BIDI
+ 	 * so unmap them as such.
+ 	 */
+-	if (txq_id == trans->shrd->cmd_queue) {
++	if (txq_id == trans->shrd->cmd_queue)
+ 		dma_dir = DMA_BIDIRECTIONAL;
+-		lock = &trans->hcmd_lock;
+-	} else {
++	else
+ 		dma_dir = DMA_TO_DEVICE;
+-		lock = &trans->shrd->sta_lock;
 -	}
--
--	return err;
--}
--
--static const struct hc_driver ssb_ohci_hc_driver = {
--	.description		= "ssb-usb-ohci",
--	.product_desc		= "SSB OHCI Controller",
--	.hcd_priv_size		= sizeof(struct ssb_ohci_device),
--
--	.irq			= ohci_irq,
--	.flags			= HCD_MEMORY | HCD_USB11,
--
--	.reset			= ssb_ohci_reset,
--	.start			= ssb_ohci_start,
--	.stop			= ohci_stop,
--	.shutdown		= ohci_shutdown,
--
--	.urb_enqueue		= ohci_urb_enqueue,
--	.urb_dequeue		= ohci_urb_dequeue,
--	.endpoint_disable	= ohci_endpoint_disable,
--
--	.get_frame_number	= ohci_get_frame,
--
--	.hub_status_data	= ohci_hub_status_data,
--	.hub_control		= ohci_hub_control,
--#ifdef	CONFIG_PM
--	.bus_suspend		= ohci_bus_suspend,
--	.bus_resume		= ohci_bus_resume,
--#endif
--
--	.start_port_reset	= ohci_start_port_reset,
--};
--
--static void ssb_ohci_detach(struct ssb_device *dev)
--{
--	struct usb_hcd *hcd = ssb_get_drvdata(dev);
--
--	if (hcd->driver->shutdown)
--		hcd->driver->shutdown(hcd);
--	usb_remove_hcd(hcd);
--	iounmap(hcd->regs);
--	release_mem_region(hcd->rsrc_start, hcd->rsrc_len);
--	usb_put_hcd(hcd);
--	ssb_device_disable(dev, 0);
--}
--
--static int ssb_ohci_attach(struct ssb_device *dev)
--{
--	struct ssb_ohci_device *ohcidev;
--	struct usb_hcd *hcd;
--	int err = -ENOMEM;
--	u32 tmp, flags = 0;
--
--	if (dma_set_mask(dev->dma_dev, DMA_BIT_MASK(32)) ||
--	    dma_set_coherent_mask(dev->dma_dev, DMA_BIT_MASK(32)))
--		return -EOPNOTSUPP;
--
--	if (dev->id.coreid == SSB_DEV_USB11_HOSTDEV) {
--		/* Put the device into host-mode. */
--		flags |= SSB_OHCI_TMSLOW_HOSTMODE;
--		ssb_device_enable(dev, flags);
--	} else if (dev->id.coreid == SSB_DEV_USB20_HOST) {
--		/*
--		 * USB 2.0 special considerations:
--		 *
--		 * In addition to the standard SSB reset sequence, the Host
--		 * Control Register must be programmed to bring the USB core
--		 * and various phy components out of reset.
--		 */
--		ssb_device_enable(dev, 0);
--		ssb_write32(dev, 0x200, 0x7ff);
--
--		/* Change Flush control reg */
--		tmp = ssb_read32(dev, 0x400);
--		tmp &= ~8;
--		ssb_write32(dev, 0x400, tmp);
--		tmp = ssb_read32(dev, 0x400);
--
--		/* Change Shim control reg */
--		tmp = ssb_read32(dev, 0x304);
--		tmp &= ~0x100;
--		ssb_write32(dev, 0x304, tmp);
--		tmp = ssb_read32(dev, 0x304);
--
--		udelay(1);
--
--		/* Work around for 5354 failures */
--		if (dev->id.revision == 2 && dev->bus->chip_id == 0x5354) {
--			/* Change syn01 reg */
--			tmp = 0x00fe00fe;
--			ssb_write32(dev, 0x894, tmp);
--
--			/* Change syn03 reg */
--			tmp = ssb_read32(dev, 0x89c);
--			tmp |= 0x1;
--			ssb_write32(dev, 0x89c, tmp);
--		}
--	} else
--		ssb_device_enable(dev, 0);
--
--	hcd = usb_create_hcd(&ssb_ohci_hc_driver, dev->dev,
--			dev_name(dev->dev));
--	if (!hcd)
--		goto err_dev_disable;
--	ohcidev = hcd_to_ssb_ohci(hcd);
--	ohcidev->enable_flags = flags;
--
--	tmp = ssb_read32(dev, SSB_ADMATCH0);
--	hcd->rsrc_start = ssb_admatch_base(tmp);
--	hcd->rsrc_len = ssb_admatch_size(tmp);
--	hcd->regs = ioremap_nocache(hcd->rsrc_start, hcd->rsrc_len);
--	if (!hcd->regs)
--		goto err_put_hcd;
--	err = usb_add_hcd(hcd, dev->irq, IRQF_SHARED);
--	if (err)
--		goto err_iounmap;
--
--	ssb_set_drvdata(dev, hcd);
--
--	return err;
--
--err_iounmap:
--	iounmap(hcd->regs);
--err_put_hcd:
--	usb_put_hcd(hcd);
--err_dev_disable:
--	ssb_device_disable(dev, flags);
--	return err;
--}
--
--static int ssb_ohci_probe(struct ssb_device *dev,
--		const struct ssb_device_id *id)
--{
--	int err;
--	u16 chipid_top;
--
--	/* USBcores are only connected on embedded devices. */
--	chipid_top = (dev->bus->chip_id & 0xFF00);
--	if (chipid_top != 0x4700 && chipid_top != 0x5300)
--		return -ENODEV;
--
--	/* TODO: Probably need checks here; is the core connected? */
--
--	if (usb_disabled())
--		return -ENODEV;
--
--	/* We currently always attach SSB_DEV_USB11_HOSTDEV
--	 * as HOST OHCI. If we want to attach it as Client device,
--	 * we must branch here and call into the (yet to
--	 * be written) Client mode driver. Same for remove(). */
--
--	err = ssb_ohci_attach(dev);
--
--	return err;
--}
--
--static void ssb_ohci_remove(struct ssb_device *dev)
--{
--	ssb_ohci_detach(dev);
--}
--
--#ifdef CONFIG_PM
--
--static int ssb_ohci_suspend(struct ssb_device *dev, pm_message_t state)
--{
--	ssb_device_disable(dev, 0);
--
--	return 0;
--}
--
--static int ssb_ohci_resume(struct ssb_device *dev)
--{
--	struct usb_hcd *hcd = ssb_get_drvdata(dev);
--	struct ssb_ohci_device *ohcidev = hcd_to_ssb_ohci(hcd);
--
--	ssb_device_enable(dev, ohcidev->enable_flags);
--
--	ohci_finish_controller_resume(hcd);
--	return 0;
--}
--
--#else /* !CONFIG_PM */
--#define ssb_ohci_suspend	NULL
--#define ssb_ohci_resume	NULL
--#endif /* CONFIG_PM */
--
--static const struct ssb_device_id ssb_ohci_table[] = {
--	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_USB11_HOSTDEV, SSB_ANY_REV),
--	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_USB11_HOST, SSB_ANY_REV),
--	SSB_DEVICE(SSB_VENDOR_BROADCOM, SSB_DEV_USB20_HOST, SSB_ANY_REV),
--	SSB_DEVTABLE_END
--};
--MODULE_DEVICE_TABLE(ssb, ssb_ohci_table);
--
--static struct ssb_driver ssb_ohci_driver = {
--	.name		= KBUILD_MODNAME,
--	.id_table	= ssb_ohci_table,
--	.probe		= ssb_ohci_probe,
--	.remove		= ssb_ohci_remove,
--	.suspend	= ssb_ohci_suspend,
--	.resume		= ssb_ohci_resume,
--};
+ 
+-	spin_lock_irqsave(lock, flags);
++	spin_lock_bh(&txq->lock);
+ 	while (q->write_ptr != q->read_ptr) {
+ 		/* The read_ptr needs to bound by q->n_window */
+ 		iwlagn_txq_free_tfd(trans, txq, get_cmd_index(q, q->read_ptr),
+ 				    dma_dir);
+ 		q->read_ptr = iwl_queue_inc_wrap(q->read_ptr, q->n_bd);
+ 	}
+-	spin_unlock_irqrestore(lock, flags);
++	spin_unlock_bh(&txq->lock);
+ }
+ 
+ /**
+@@ -1358,6 +1355,8 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 	txq = &trans_pcie->txq[txq_id];
+ 	q = &txq->q;
+ 
++	spin_lock(&txq->lock);
++
+ 	/* In AGG mode, the index in the ring must correspond to the WiFi
+ 	 * sequence number. This is a HW requirements to help the SCD to parse
+ 	 * the BA.
+@@ -1404,7 +1403,7 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 				    &dev_cmd->hdr, firstlen,
+ 				    DMA_BIDIRECTIONAL);
+ 	if (unlikely(dma_mapping_error(trans->dev, txcmd_phys)))
+-		return -1;
++		goto out_err;
+ 	dma_unmap_addr_set(out_meta, mapping, txcmd_phys);
+ 	dma_unmap_len_set(out_meta, len, firstlen);
+ 
+@@ -1426,7 +1425,7 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 					 dma_unmap_addr(out_meta, mapping),
+ 					 dma_unmap_len(out_meta, len),
+ 					 DMA_BIDIRECTIONAL);
+-			return -1;
++			goto out_err;
+ 		}
+ 	}
+ 
+@@ -1481,7 +1480,11 @@ static int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+ 			iwl_stop_queue(trans, txq, "Queue is full");
+ 		}
+ 	}
++	spin_unlock(&txq->lock);
+ 	return 0;
++ out_err:
++	spin_unlock(&txq->lock);
++	return -1;
+ }
+ 
+ static int iwl_trans_pcie_start_hw(struct iwl_trans *trans)
+@@ -1560,6 +1563,8 @@ static int iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
+ 	int tfd_num = ssn & (txq->q.n_bd - 1);
+ 	int freed = 0;
+ 
++	spin_lock(&txq->lock);
++
+ 	txq->time_stamp = jiffies;
+ 
+ 	if (unlikely(txq_id >= IWLAGN_FIRST_AMPDU_QUEUE &&
+@@ -1574,6 +1579,7 @@ static int iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
+ 		IWL_DEBUG_TX_QUEUES(trans, "Bad queue mapping txq_id %d, "
+ 			"agg_txq[sta_id[tid] %d", txq_id,
+ 			trans_pcie->agg_txq[sta_id][tid]);
++		spin_unlock(&txq->lock);
+ 		return 1;
+ 	}
+ 
+@@ -1587,6 +1593,8 @@ static int iwl_trans_pcie_reclaim(struct iwl_trans *trans, int sta_id, int tid,
+ 		   status != TX_STATUS_FAIL_PASSIVE_NO_RX))
+ 			iwl_wake_queue(trans, txq, "Packets reclaimed");
+ 	}
++
++	spin_unlock(&txq->lock);
+ 	return 0;
+ }
+ 
+@@ -2267,7 +2275,6 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct iwl_shared *shrd,
+ 	trans->ops = &trans_ops_pcie;
+ 	trans->shrd = shrd;
+ 	trans_pcie->trans = trans;
+-	spin_lock_init(&trans->hcmd_lock);
+ 	spin_lock_init(&trans_pcie->irq_lock);
+ 
+ 	/* W/A - seems to solve weird behavior. We need to remove this if we
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
+index 4e7e6c0..e2f21cf 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
+@@ -309,7 +309,6 @@ enum iwl_trans_state {
+  * @ops - pointer to iwl_trans_ops
+  * @op_mode - pointer to the op_mode
+  * @shrd - pointer to iwl_shared which holds shared data from the upper layer
+- * @hcmd_lock: protects HCMD
+  * @reg_lock - protect hw register access
+  * @dev - pointer to struct device * that represents the device
+  * @irq - the irq number for the device
+@@ -326,7 +325,6 @@ struct iwl_trans {
+ 	struct iwl_op_mode *op_mode;
+ 	struct iwl_shared *shrd;
+ 	enum iwl_trans_state state;
+-	spinlock_t hcmd_lock;
+ 	spinlock_t reg_lock;
+ 
+ 	struct device *dev;
 -- 
-1.7.5.4
+1.7.0.4
 
