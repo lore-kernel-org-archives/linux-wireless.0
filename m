@@ -1,71 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53179 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964819Ab2CSKxD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 06:53:03 -0400
-Message-ID: <4F671009.6070602@openwrt.org> (sfid-20120319_115308_539375_180ACCCB)
-Date: Mon, 19 Mar 2012 11:52:57 +0100
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:65328 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756459Ab2CEXbz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 18:31:55 -0500
+Received: by pbcun15 with SMTP id un15so3341146pbc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2012 15:31:55 -0800 (PST)
 MIME-Version: 1.0
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Subject: Re: [PATCH 3/3] mac80211: optimize aggregation session timeout handling
-References: <1332025254-5048-1-git-send-email-nbd@openwrt.org> <1332025254-5048-2-git-send-email-nbd@openwrt.org> <1332025254-5048-3-git-send-email-nbd@openwrt.org> <1332065875.3609.3.camel@jlt3.sipsolutions.net> <4F65C374.2060505@openwrt.org> <1332146368.3359.12.camel@jlt3.sipsolutions.net> <CAGXE3d8P1r+DRv4UKbzSMXaf4fRB4cXAyz8+a1pf3RsfeAKOvQ@mail.gmail.com> <4F670C16.9030009@openwrt.org> <CAGXE3d8D5Fg9r9xNNNcryDgXZU+rZ+2V087HJGyrNdyd736mZg@mail.gmail.com>
-In-Reply-To: <CAGXE3d8D5Fg9r9xNNNcryDgXZU+rZ+2V087HJGyrNdyd736mZg@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH v4 1/2] cfg80211: expose cfg80211_calculate_bitrate()
+Date: Mon,  5 Mar 2012 15:31:47 -0800
+Message-Id: <1330990308-15077-1-git-send-email-thomas@cozybit.com> (sfid-20120306_003200_027558_BAE3564A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-03-19 11:50 AM, Helmut Schaa wrote:
-> On Mon, Mar 19, 2012 at 11:36 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->> On 2012-03-19 10:29 AM, Helmut Schaa wrote:
->>> Hi,
->>>
->>> On Mon, Mar 19, 2012 at 9:39 AM, Johannes Berg
->>> <johannes@sipsolutions.net> wrote:
->>>> On Sun, 2012-03-18 at 12:13 +0100, Felix Fietkau wrote:
->>>>> On 2012-03-18 11:17 AM, Johannes Berg wrote:
->>>>> > On Sun, 2012-03-18 at 00:00 +0100, Felix Fietkau wrote:
->>>>> >> Calling mod_timer from the rx/tx hotpath is somewhat expensive, and the
->>>>> >> timeout doesn't need to be so precise.
->>>>> >>
->>>>> >> Switch to a different strategy: Schedule the timer initially, store jiffies
->>>>> >> of all last rx/tx activity which would previously modify the timer, and
->>>>> >> let the timer re-arm itself after checking the last rx/tx timestamp.
->>>>> >
->>>>> > I don't like this. It's not the optimisation you think it is on other
->>>>> > ("embedded") systems where firing a timer is more expensive.
->>>>> >
->>>>> > You're trading power consumption against CPU utilisation by causing the
->>>>> > timer to wake up.
->>>>> I considered that was well, but didn't think one wakeup every 5 seconds
->>>>> or so would be significant. Would you take the patch if I change the
->>>>> timer to be deferrable, so that it doesn't cause wakeups by itself?
->>>>
->>>> I'm not really convinced, for making them deferrable we should analyse
->>>> the consequences of that more carefully, for example it seems possible
->>>> that the system wakes up to send a packet, and then the first thing that
->>>> happens is a few aggregation handshakes ... that wastes a lot of time
->>>> and power.
->>>
->>> I like the idea of getting rid of the mod_timer overhead. Looking at the timer
->>> code, if the timer value is unchanged mod_timer is not that expensive.
->>>
->>> So, instead of calling mod_timer for every successive frame with a slightly
->>> different timeout we could just use round_jiffies to round the timeout to the
->>> next full second. This would in most cases take the quick path through
->>> mod_timer and only update the timer once every second.
->>>
->>> See code (untested, not even compile tested) below.
->> I would still like to avoid the overhead of apply_slack(), which is
->> called early by mod_timer(). It was visible in both CPU cycles and
->> icache misses when I did some profiling under high tx load.
-> 
-> Indeed, however, I don't know the timer code at all. Seems like the default
-> slack for a timer is 0.4%. Setting the slack to 0 with set_timer_slack
-> should allow a shorter path through apply_slack. Not sure if that's sufficient
-> already.
-Looking at the code, it appears that this would not be sufficient.
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+---
+ include/net/cfg80211.h |    8 ++++++++
+ net/wireless/util.c    |    1 +
+ 2 files changed, 9 insertions(+), 0 deletions(-)
 
-- Felix
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0178c74..64f6181 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3334,6 +3334,14 @@ int cfg80211_can_beacon_sec_chan(struct wiphy *wiphy,
+ 				 struct ieee80211_channel *chan,
+ 				 enum nl80211_channel_type channel_type);
+ 
++/*
++ * cfg80211_calculate_bitrate - calculate actual bitrate (in 100Kbps units)
++ * @rate: given rate_info to calculate bitrate from
++ *
++ * return 0 if MCS index >= 32
++ */
++u16 cfg80211_calculate_bitrate(struct rate_info *rate);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 9aa9db6..1b7a08d 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -904,6 +904,7 @@ u16 cfg80211_calculate_bitrate(struct rate_info *rate)
+ 	/* do NOT round down here */
+ 	return (bitrate + 50000) / 100000;
+ }
++EXPORT_SYMBOL(cfg80211_calculate_bitrate);
+ 
+ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 				 u32 beacon_int)
+-- 
+1.7.5.4
+
