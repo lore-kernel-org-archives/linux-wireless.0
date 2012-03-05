@@ -1,78 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:51937 "EHLO mga09.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:65491 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932729Ab2CGTGl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 14:06:41 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	stable@vger.kernel.org, Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 35/35] iwlwifi: always monitor for stuck queues
-Date: Wed,  7 Mar 2012 09:52:44 -0800
-Message-Id: <1331142764-5750-36-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200701_850610_B47FA4B8)
-In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1753721Ab2CDX5f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 18:57:35 -0500
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 05/22] NFC: LLCP socket sendmsg implemetation
+Date: Mon,  5 Mar 2012 01:03:37 +0100
+Message-Id: <1330905834-6994-6-git-send-email-sameo@linux.intel.com> (sfid-20120305_005738_477196_1B3789B6)
+In-Reply-To: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
+References: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-If we only monitor while associated, the following
-can happen:
- - we're associated, and the queue stuck check
-   runs, setting the queue "touch" time to X
- - we disassociate, stopping the monitoring,
-   which leaves the time set to X
- - almost 2s later, we associate, and enqueue
-   a frame
- - before the frame is transmitted, we monitor
-   for stuck queues, and find the time set to
-   X, although it is now later than X + 2000ms,
-   so we decide that the queue is stuck and
-   erroneously restart the device
-
-It happens more with P2P because there we can
-go between associated/unassociated frequently.
-
-Cc: stable@vger.kernel.org
-Reported-by: Ben Cahill <ben.m.cahill@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-core.c |   19 ++++---------------
- 1 files changed, 4 insertions(+), 15 deletions(-)
+ net/nfc/llcp/commands.c |   31 +++++++++++++++++++++++++++++++
+ net/nfc/llcp/llcp.h     |    2 ++
+ net/nfc/llcp/sock.c     |   30 +++++++++++++++++++++++++++++-
+ 3 files changed, 62 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index b94e23c..8b85940 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1343,21 +1343,10 @@ void iwl_bg_watchdog(unsigned long data)
- 	if (timeout == 0)
- 		return;
+diff --git a/net/nfc/llcp/commands.c b/net/nfc/llcp/commands.c
+index 151f2ef..f6c2257 100644
+--- a/net/nfc/llcp/commands.c
++++ b/net/nfc/llcp/commands.c
+@@ -397,3 +397,34 @@ int nfc_llcp_send_disconnect(struct nfc_llcp_sock *sock)
  
--	/* monitor and check for stuck cmd queue */
--	if (iwl_check_stuck_queue(priv, priv->shrd->cmd_queue))
--		return;
--
--	/* monitor and check for other stuck queues */
--	if (iwl_is_any_associated(priv)) {
--		for (cnt = 0; cnt < cfg(priv)->base_params->num_of_queues;
--		     cnt++) {
--			/* skip as we already checked the command queue */
--			if (cnt == priv->shrd->cmd_queue)
--				continue;
--			if (iwl_check_stuck_queue(priv, cnt))
--				return;
--		}
--	}
-+	/* monitor and check for stuck queues */
-+	for (cnt = 0; cnt < cfg(priv)->base_params->num_of_queues; cnt++)
-+		if (iwl_check_stuck_queue(priv, cnt))
-+			return;
+ 	return 0;
+ }
++
++int nfc_llcp_send_i_frame(struct nfc_llcp_sock *sock,
++				struct msghdr *msg, size_t len)
++{
++	struct sk_buff *pdu;
++	struct sock *sk;
++
++	pr_debug("Send I frame\n");
++
++	pdu = llcp_allocate_pdu(sock, LLCP_PDU_I, len + LLCP_SEQUENCE_SIZE);
++	if (pdu == NULL)
++		return -ENOMEM;
++
++	skb_put(pdu, LLCP_SEQUENCE_SIZE);
++
++	if (memcpy_fromiovec(skb_put(pdu, len), msg->msg_iov, len)) {
++		kfree_skb(pdu);
++		return -EFAULT;
++	}
++
++	skb_queue_head(&sock->tx_queue, pdu);
++
++	sk = &sock->sk;
++	lock_sock(sk);
++
++	nfc_llcp_queue_i_frames(sock);
++
++	release_sock(sk);
++
++	return 0;
++}
+diff --git a/net/nfc/llcp/llcp.h b/net/nfc/llcp/llcp.h
+index 0a72ee6..36d8572 100644
+--- a/net/nfc/llcp/llcp.h
++++ b/net/nfc/llcp/llcp.h
+@@ -188,6 +188,8 @@ int nfc_llcp_send_connect(struct nfc_llcp_sock *sock);
+ int nfc_llcp_send_cc(struct nfc_llcp_sock *sock);
+ int nfc_llcp_send_dm(struct nfc_llcp_local *local, u8 ssap, u8 dsap, u8 reason);
+ int nfc_llcp_send_disconnect(struct nfc_llcp_sock *sock);
++int nfc_llcp_send_i_frame(struct nfc_llcp_sock *sock,
++				struct msghdr *msg, size_t len);
  
- 	mod_timer(&priv->watchdog, jiffies +
- 		  msecs_to_jiffies(IWL_WD_TICK(timeout)));
+ /* Socket API */
+ int __init nfc_llcp_sock_init(void);
+diff --git a/net/nfc/llcp/sock.c b/net/nfc/llcp/sock.c
+index f738ccd..b8bef36 100644
+--- a/net/nfc/llcp/sock.c
++++ b/net/nfc/llcp/sock.c
+@@ -482,6 +482,34 @@ error:
+ 	return ret;
+ }
+ 
++static int llcp_sock_sendmsg(struct kiocb *iocb, struct socket *sock,
++				struct msghdr *msg, size_t len)
++{
++	struct sock *sk = sock->sk;
++	struct nfc_llcp_sock *llcp_sock = nfc_llcp_sock(sk);
++	int ret;
++
++	pr_debug("sock %p sk %p", sock, sk);
++
++	ret = sock_error(sk);
++	if (ret)
++		return ret;
++
++	if (msg->msg_flags & MSG_OOB)
++		return -EOPNOTSUPP;
++
++	lock_sock(sk);
++
++	if (sk->sk_state != LLCP_CONNECTED) {
++		release_sock(sk);
++		return -ENOTCONN;
++	}
++
++	release_sock(sk);
++
++	return nfc_llcp_send_i_frame(llcp_sock, msg, len);
++}
++
+ static int llcp_sock_recvmsg(struct kiocb *iocb, struct socket *sock,
+ 			     struct msghdr *msg, size_t len, int flags)
+ {
+@@ -567,7 +595,7 @@ static const struct proto_ops llcp_sock_ops = {
+ 	.shutdown       = sock_no_shutdown,
+ 	.setsockopt     = sock_no_setsockopt,
+ 	.getsockopt     = sock_no_getsockopt,
+-	.sendmsg        = sock_no_sendmsg,
++	.sendmsg        = llcp_sock_sendmsg,
+ 	.recvmsg        = llcp_sock_recvmsg,
+ 	.mmap           = sock_no_mmap,
+ };
 -- 
-1.7.0.4
+1.7.7.3
 
