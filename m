@@ -1,48 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.candelatech.com ([208.74.158.172]:49787 "EHLO
-	ns3.lanforge.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751544Ab2CPShQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 14:37:16 -0400
-Message-ID: <4F638859.8060809@candelatech.com> (sfid-20120316_193724_499940_B0F6CDB0)
-Date: Fri, 16 Mar 2012 11:37:13 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 4/4] ath9k:  Support ethtool getstats api.
-References: <1331853606-28434-1-git-send-email-greearb@candelatech.com> <1331853606-28434-4-git-send-email-greearb@candelatech.com> <4F6356E8.3050906@openwrt.org> <4F6368E9.2040007@candelatech.com> <4F636C07.7060202@openwrt.org> <4F636F81.9070804@candelatech.com> <4F637325.2020205@openwrt.org>
-In-Reply-To: <4F637325.2020205@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga03.intel.com ([143.182.124.21]:63989 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753721Ab2CDX5Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 18:57:25 -0500
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 02/22] NFC: Add device powered netlink attribute
+Date: Mon,  5 Mar 2012 01:03:34 +0100
+Message-Id: <1330905834-6994-3-git-send-email-sameo@linux.intel.com> (sfid-20120305_005728_300585_D0053AE3)
+In-Reply-To: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
+References: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/16/2012 10:06 AM, Felix Fietkau wrote:
+For user space to know if a device is up or down.
 
->>> Most of the PHY error counters aren't even tracked by the hw, nothing in
->>> the driver enables their use.
->>
->> Well, any reason we cannot enable those?
-> The hardware has a limited number of counter registers available for
-> tracking PHY errors. Enabling PHY errors to be reported via DMA wastes
-> tons of precious CPU cycles.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ include/linux/nfc.h |    1 +
+ net/nfc/netlink.c   |    3 +++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
 
-Am I correct in assuming that these are the only phy-errors that
-the driver can currently report?
-
-#define AR_PHY_ERR_DCHIRP      0x00000008
-#define AR_PHY_ERR_RADAR       0x00000020
-#define AR_PHY_ERR_OFDM_TIMING 0x00020000
-#define AR_PHY_ERR_CCK_TIMING  0x02000000
-
-With regard to DMA resources, do you mean that the
-waste is in having the NIC receive the packets that
-would otherwise be filtered?
-
-Thanks,
-Ben
-
+diff --git a/include/linux/nfc.h b/include/linux/nfc.h
+index b4999ab..39c1fcf 100644
+--- a/include/linux/nfc.h
++++ b/include/linux/nfc.h
+@@ -107,6 +107,7 @@ enum nfc_attrs {
+ 	NFC_ATTR_TARGET_SENSF_RES,
+ 	NFC_ATTR_COMM_MODE,
+ 	NFC_ATTR_RF_MODE,
++	NFC_ATTR_DEVICE_POWERED,
+ /* private: internal use only */
+ 	__NFC_ATTR_AFTER_LAST
+ };
+diff --git a/net/nfc/netlink.c b/net/nfc/netlink.c
+index 07f0348..a1388e4 100644
+--- a/net/nfc/netlink.c
++++ b/net/nfc/netlink.c
+@@ -48,6 +48,7 @@ static const struct nla_policy nfc_genl_policy[NFC_ATTR_MAX + 1] = {
+ 	[NFC_ATTR_PROTOCOLS] = { .type = NLA_U32 },
+ 	[NFC_ATTR_COMM_MODE] = { .type = NLA_U8 },
+ 	[NFC_ATTR_RF_MODE] = { .type = NLA_U8 },
++	[NFC_ATTR_DEVICE_POWERED] = { .type = NLA_U8 },
+ };
+ 
+ static int nfc_genl_send_target(struct sk_buff *msg, struct nfc_target *target,
+@@ -200,6 +201,7 @@ int nfc_genl_device_added(struct nfc_dev *dev)
+ 	NLA_PUT_STRING(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev));
+ 	NLA_PUT_U32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx);
+ 	NLA_PUT_U32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols);
++	NLA_PUT_U8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up);
+ 
+ 	genlmsg_end(msg, hdr);
+ 
+@@ -261,6 +263,7 @@ static int nfc_genl_send_device(struct sk_buff *msg, struct nfc_dev *dev,
+ 	NLA_PUT_STRING(msg, NFC_ATTR_DEVICE_NAME, nfc_device_name(dev));
+ 	NLA_PUT_U32(msg, NFC_ATTR_DEVICE_INDEX, dev->idx);
+ 	NLA_PUT_U32(msg, NFC_ATTR_PROTOCOLS, dev->supported_protocols);
++	NLA_PUT_U8(msg, NFC_ATTR_DEVICE_POWERED, dev->dev_up);
+ 
+ 	return genlmsg_end(msg, hdr);
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.7.3
 
