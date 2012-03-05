@@ -1,148 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:48061 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932212Ab2CZMpV (ORCPT
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:61207 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757133Ab2CETKo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 08:45:21 -0400
-Message-ID: <1332765914.5435.7.camel@jlt3.sipsolutions.net> (sfid-20120326_144524_882420_15F405E6)
-Subject: Re: [RFC 00/12] multi-channel support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Mon, 26 Mar 2012 14:45:14 +0200
-In-Reply-To: <4F7060C2.9070206@tieto.com>
-References: <06edaf32-5a4f-4887-8b22-6bec31c2c7c6@FIVLA-EXHUB02.eu.tieto.com>
-			 (sfid-20120320_154008_038091_B257E507) <1332494945.3506.23.camel@jlt3.sipsolutions.net>
-		 <4F6C82A5.5080302@tieto.com>
-	 <1332513075.10384.20.camel@jlt3.sipsolutions.net>
-	 <4F7060C2.9070206@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 5 Mar 2012 14:10:44 -0500
+Received: by iagz16 with SMTP id z16so5911728iag.19
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2012 11:10:43 -0800 (PST)
+Message-ID: <4F550FAC.2060805@lwfinger.net> (sfid-20120305_201048_775792_6451BA36)
+Date: Mon, 05 Mar 2012 13:10:36 -0600
+From: Larry Finger <Larry.Finger@lwfinger.net>
+MIME-Version: 1.0
+To: alupu@verizon.net
+CC: linux-wireless@vger.kernel.org
+Subject: Re: r8712u staging in kernel 3.2.9
+References: <5847319.2627837.1330967243216.JavaMail.root@vznit170080>
+In-Reply-To: <5847319.2627837.1330967243216.JavaMail.root@vznit170080>
+Content-Type: multipart/mixed;
+ boundary="------------030609090800040304040200"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This is a multi-part message in MIME format.
+--------------030609090800040304040200
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> > I'm not sure we can easily use such a "stream" for off-channel
-> > operation. In particular, that "stream" might not support multiple
-> > queues.
-> 
-> Does it need to? It could as well just map all queues to a single hw 
-> queue with this design. I'm not sure if I get your point here.
-> 
-> 
-> Is it okay for us to not care if the driver supports real queues for 
-> ACs? Should we care if a driver maps all ACs from a channel context (or 
-> vif for that matter) onto a single hw queue? I'm wondering whether that 
-> would simplify code paths?
+On 03/05/2012 11:07 AM, alupu@verizon.net wrote:
+> Hello Larry,
+>
+> System: (B)LFS i686-pc-linux-gnu, 3.2.9
+> Rosewill Wireless Adapter: RNX-N180UBE
+>
+> I compiled (as part of kernel 3.2.9) the r8712u module.
+> Comes up OK but cannot take an essid nor a key.
+>
+>
+> Example:
+> iwconfig wlan0 essid<ESSID>  key restricted<Encryption key>
+>
+>
+> Fails quietly:
+> iwconfig wlan0
+>
+> wlan0 unassociated Nickname:"rtl_wifi"
+> Mode:Managed Access Point: Not-Associated Sensitivity:0/0
+> Retry:off RTS thr:off Fragment thr:off
+> Encryption key:off
+> ...
+>
+> FWIW, it does take a mode ("managed", as shown above - default was Auto)
 
-Well, ok, that would be possible, but I'm not sure I see the point in
-using a stream for off-channel. Today, we completely offload off-channel
-to the device, and I don't see how that could change? Having temporary
-context allocations all the time seems like a lot of thrash?
+There are a couple of bugs in 3.2.6+. I don't think they have been fixed by 
+3.2.9. Check dmesg for a "Badfw size" message. If you see that, the two attached 
+patches will fix that.
 
-> >>     struct ieee80211_queue_types { // or tx_queue_types?
-> >>       IEEE80211_QUEUE_VO,
-> >>       IEEE80211_QUEUE_VI,
-> >>       IEEE80211_QUEUE_BE,
-> >>       IEEE80211_QUEUE_BK,
-> >>       IEEE80211_QUEUE_CAB,
-> >>
-> >>       IEEE80211_QUEUE_LAST
-> >>     };
-> > [...]
-> >> This looks kind of ugly, but oh well. This way the driver will be able
-> >> to setup mapping between mac80211 and internal device queues. It should
-> >> also be possible to map one hardware queue to multiple
-> >> ieee80211_channel_stream structures (queues is a list of pointers) so
-> >> multiple vifs on the same channel is okay.
-> >
-> > I don't think this makes a lot of sense, tbh. This isn't a separate AC,
-> > I'd rather keep them separated.
-> 
-> You mean the CAB queue separated from ACs?
-
-Yeah. I don't see CAB as a separate AC. It's just a separate queue.
+Larry
 
 
-> > I'm looking at the code right now, and I think we should treat ACs,
-> > queues and channels separately. If we combine queue sets&  channels into
-> > one, I think we'll find drivers that don't work correctly with this.
-> > Some devices for instance might have a set of queues for each interface,
-> > even if they're on the same channel. I don't want to lose flexibility to
-> > handle that.
-> 
-> You mean a driver that can handle two vifs simultaneously but on the 
-> same channel and have two separate queue sets for that?
+--------------030609090800040304040200
+Content-Type: text/plain;
+ name="r8712u_patch1"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="r8712u_patch1"
 
-Yes, that's a possibility we have to consider, I think our device might
-end up behaving like that.
+Y29tbWl0IDlmNGJjOGNmM2ZlNzUwZWQwOTM4NTZhNWY1ZDQxYzExY2MxMmFkMjIKQXV0aG9y
+OiBMYXJyeSBGaW5nZXIgPExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+CkRhdGU6ICAgU2F0
+IEZlYiAyNSAxODoxMDoyMCAyMDEyIC0wNjAwCgogICAgc3RhZ2luZzogcjg3MTJ1OiBGaXgg
+cmVncmVzc2lvbiBpbnRyb2R1Y2VkIGJ5IGNvbW1pdCBhNWVlNjUyCiAgICAKICAgIEluIGNv
+bW1pdCBhNWVlNjUyICJzdGFnaW5nOiByODcxMnU6IEludGVyZmFjZS1zdGF0ZSBub3QgZnVs
+bHkgdHJhY2tlZCIsCiAgICB0aGUgcHJpdmF0ZSBib29sZWFuICJidXAiIHdhcyBzZXQgZmFs
+c2Ugd2hlbiB0aGUgaW50ZXJmYWNlIHdhcyBicm91Z2h0IGRvd24sCiAgICBhcyB0aGF0IHNl
+ZW1lZCBhcHByb3ByaWF0ZS4gVGhpcyBjaGFuZ2UgaGFzIG5vdCBjYXVzZWQgYW55IHByb2Js
+ZW1zIHdoZW4KICAgIHVzaW5nIE5ldHdvcmtNYW5hZ2VyIG9yIG1hbnVhbCBjb250cm9sIG9m
+IHRoZSBkZXZpY2U7IGhvd2V2ZXIsIHdoZW4gd2ljZAogICAgY29udHJvbCBpcyB1c2VkLCB0
+aGVyZSBpcyBhIGxvY2tpbmcgcHJvYmxlbSBpbiB3cGFfc3VwcGxpY2FudCwgYXMgc2hvd24g
+aW4KICAgIGh0dHBzOi8vYnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9NDI4
+MTguCiAgICAKICAgIFRoaXMgZml4IHJldmVydHMgdGhlIG9ubHkgY29kZSBjaGFuZ2UgaW4g
+Y29tbWl0IGE1ZWU2NTIuIE15CiAgICBhbmFseXNpcyBpcyB0aGF0ICJidXAiIGlzIGJhZGx5
+IG5hbWVkLiBJbiBpdHMgcHJlc2VudCBmb3JtLCBpdAogICAgc2VlbXMgdG8gaW5kaWNhdGUg
+dGhlIHVwL2Rvd24gc3RhdGUgb2YgdGhlIGRldmljZSwgYnV0IGl0cyB1c2FnZQogICAgaXMg
+bW9yZSBjb25zaXN0ZW50IHdpdGggYW4gaW5pdGlhbGl6ZWQvdW5pbml0aWFsaXplZCBzdGF0
+ZS4gVGhhdAogICAgcHJvYmxlbSB3aWxsIGJlIGFkZHJlc3NlZCBpbiBhIGxhdGVyIHBhdGNo
+LgogICAgCiAgICBOb3RlOiBDb21taXQgOGMyMTNmYSwgd2hpY2ggaW50cm9kdWVkIGFzeW5j
+aHJvbm91cyBmaXJtd2FyZSBsb2FkaW5nCiAgICBmb3IgdGhpcyBkcml2ZXIsIGV4cG9zZWQg
+dGhpcyBidWcgdG8gYSBncmVhdGVyIGV4dGVudC4gVGhhdCBidWcKICAgIGlzIGFkZHJlc3Nl
+ZCBpbiB0aGUgbmV4dCBwYXRjaCBpbiB0aGlzIHNlcmllcy4KICAgIAogICAgVGhpcyBidWcg
+aXMgYWxzbyByZXNwb25zaWJsZSBmb3IgdGhlIGJ1ZyBpbgogICAgaHR0cHM6Ly9idWd6aWxs
+YS5rZXJuZWwub3JnL3Nob3dfYnVnLmNnaT9pZD00MjgxNS4gYW5kIHRoaXMgYnVnIGlzCiAg
+ICBhbHNvIHBhcnQgb2YgdGhlIHByb2JsZW1zIGRpc2N1c3NlZCBhdCBodHRwczovL2J1Z3Mu
+YXJjaGxpbnV4Lm9yZy90YXNrLzI3OTk2I2NvbW1lbnQ4OTk1MC4KICAgIAogICAgVGVzdGVk
+LWJ5OiBBbGJlcnRvIExhZ28gQmFsbGVzdGVyb3MgPHNhbml1a2Vva3VzYWluYXlhQGdtYWls
+LmNvbT4KICAgIFRlc3RlZC1ieTogQWRyaWFuIDxhZ2liQGdteC5kZT4KICAgIFNpZ25lZC1v
+ZmYtYnk6IExhcnJ5IEZpbmdlciA8TGFycnkuRmluZ2VyQGx3ZmluZ2VyLm5ldD4KICAgIENj
+OiBTdGFibGUgPHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmc+IFszLjIrXQogICAgU2lnbmVkLW9m
+Zi1ieTogR3JlZyBLcm9haC1IYXJ0bWFuIDxncmVna2hAbGludXhmb3VuZGF0aW9uLm9yZz4K
+CmRpZmYgLS1naXQgYS9kcml2ZXJzL3N0YWdpbmcvcnRsODcxMi9vc19pbnRmcy5jIGIvZHJp
+dmVycy9zdGFnaW5nL3J0bDg3MTIvb3NfaW50ZnMuYwppbmRleCBiMjJmZWE1Li40Y2YxNzVm
+IDEwMDY0NAotLS0gYS9kcml2ZXJzL3N0YWdpbmcvcnRsODcxMi9vc19pbnRmcy5jCisrKyBi
+L2RyaXZlcnMvc3RhZ2luZy9ydGw4NzEyL29zX2ludGZzLmMKQEAgLTQ3NSw4ICs0NzUsNiBA
+QCBzdGF0aWMgaW50IG5ldGRldl9jbG9zZShzdHJ1Y3QgbmV0X2RldmljZSAqcG5ldGRldikK
+IAlyODcxMl9mcmVlX2Fzc29jX3Jlc291cmNlcyhwYWRhcHRlcik7CiAJLypzMi00LiovCiAJ
+cjg3MTJfZnJlZV9uZXR3b3JrX3F1ZXVlKHBhZGFwdGVyKTsKLQkvKiBUaGUgaW50ZXJmYWNl
+IGlzIG5vIGxvbmdlciBVcDogKi8KLQlwYWRhcHRlci0+YnVwID0gZmFsc2U7CiAJcmVsZWFz
+ZV9maXJtd2FyZShwYWRhcHRlci0+ZncpOwogCS8qIG5ldmVyIGV4aXQgd2l0aCBhIGZpcm13
+YXJlIGNhbGxiYWNrIHBlbmRpbmcgKi8KIAl3YWl0X2Zvcl9jb21wbGV0aW9uKCZwYWRhcHRl
+ci0+cnRsODcxMl9md19yZWFkeSk7Cg==
+--------------030609090800040304040200
+Content-Type: text/plain;
+ name="r8712u_patch2"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="r8712u_patch2"
 
-> Then we need to move queues to ieee80211_vif and create callbacks to 
-> bind channels contexts with a vif (just you mentioned that in other email).
-
-Right.
-
-
-> > struct ieee80211_hw {
-> > 	...
-> > 	u8 offchannel_queue;
-> > };
-> >
-> > struct ieee80211_vif {
-> > 	...
-> > 	u8 hw_queue[IEEE80211_NUM_ACS];
-> > 	u8 after_dtim_queue;
-> > };
-> >
-> > For any of these (offchannel_queue, after_dtim_queue, hw_queue[i]), the
-> > queue number Q must be 0<= Q<  hw.queues. This allows us to keep all
-> > per-hw-queue state "flattened" in ieee80211_local's pending,
-> > queue_stop_reasons, etc. instead of separating all of it out into
-> > separate structures.
-> 
-> So you want "offchannel_queue", "hw_queue[]" and "after_dtim_queue" to 
-> point to driver/device hw queue id?
-
-The driver is free to point it to anything it want, but typically it
-would point it to the real HW queue ID -- this would be the same ID it
-has to give to ieee80211_stop_queue()/wake_queue() as well.
-
-
-> > When a queue is stopped, we do:
-> >
-> > void queue_stop(int q)
-> > {
-> > 	for_each_interface(vif) {
-> > 		if (vif->hw_queue[AC] == q) // for all 4 ACs
-> > 			stop netdev queue (vif->dev, AC)
-> > 		if (vif->after_dtim_queue == q)
-> > 			stop_all_queues(vif->dev)
-> > 	}
-> > }
-> >
-> > Or so ... after_dtim_queue is kinda a special case.
-> 
-> Oh, I see. So stopping CAB would be like "stop all the things".
-
-CAB is really special -- not sure what the best thing here is. But
-technically frames from any AC can be multicast so I suppose this is the
-best way to handle it after all. I wouldn't really worry too much about
-CAB though :)
-
-
-> But how do we then check if we need to stop given queue or not? Let's 
-> say a driver stops q=2 which corresponds to BE on vif0 and vif1. But 
-> then comes mac80211 aggregation and stops BE on vif0. I can only think 
-> of a single solution to that: "u8 lock_reasons[256];" in ieee80211_local 
-> but it seems like an overkill or is it not?
-
-Essentially that's what I was considering, we'd maintain all the queue
-state per HW queue ID. I said it would be a u8 for the HW queue ID, but
-I don't see anyone using more than say 32 or so, so we wouldn't really
-need 256. But we could go up to 256 if needed (though at that point we
-should probably do dynamic allocation instead.)
-
-
-johannes
-
+Y29tbWl0IDIwODA5MTNlMDE3YWI5Zjg4Mzc5ZDkzZmQwOTU0NmFkOTVmYWY4N2IKQXV0aG9y
+OiBMYXJyeSBGaW5nZXIgPExhcnJ5LkZpbmdlckBsd2Zpbmdlci5uZXQ+CkRhdGU6ICAgU2F0
+IEZlYiAyNSAxODoxMDoyMSAyMDEyIC0wNjAwCgogICAgc3RhZ2luZzogcjg3MTJ1OiBGaXgg
+cmVncmVzc2lvbiBjYXVzZWQgYnkgY29tbWl0IDhjMjEzZmEKICAgIAogICAgSW4gY29tbWl0
+IDhjMjEzZmEgInN0YWdpbmc6IHI4NzEydTogVXNlIGFzeW5jaHJvbm91cyBmaXJtd2FyZSBs
+b2FkaW5nIiwKICAgIHRoZSBjb21tYW5kIHRvIHJlbGVhc2UgdGhlIGZpcm13YXJlIHdhcyBw
+bGFjZWQgaW4gdGhlIHdyb25nIHJvdXRpbmUuCiAgICAKICAgIEluIGNvbWJpbmF0aW9uIHdp
+dGggdGhlIGJ1ZyBpbnRyb2R1Y2VkIGluIGNvbW1pdCBhNWVlNjUyICJzdGFnaW5nOiByODcx
+MnU6CiAgICBJbnRlcmZhY2Utc3RhdGUgbm90IGZ1bGx5IHRyYWNrZWQiLCB0aGUgZHJpdmVy
+IGF0dGVtcHRzIHRvIHVwbG9hZCBmaXJtd2FyZQogICAgdGhhdCBoYWQgYWxyZWFkeSBiZWVu
+IHJlbGVhc2VkLiBUaGlzIGJ1ZyBpcyB0aGUgc291cmNlIG9mIG9uZSBvZiB0aGUKICAgIHBy
+b2JsZW1zIGluIGh0dHBzOi8vYnVncy5hcmNobGludXgub3JnL3Rhc2svMjc5OTYjY29tbWVu
+dDg5ODMzLgogICAgCiAgICBUZXN0ZWQtYnk6IEFsYmVydG8gTGFnbyBCYWxsZXN0ZXJvcyA8
+c2FuaXVrZW9rdXNhaW5heWFAZ21haWwuY29tPgogICAgVGVzdGVkLWJ5OiBBZHJpYW4gPGFn
+aWJAZ214LmRlPgogICAgU2lnbmVkLW9mZi1ieTogTGFycnkgRmluZ2VyIDxMYXJyeS5GaW5n
+ZXJAbHdmaW5nZXIubmV0PgogICAgU2lnbmVkLW9mZi1ieTogR3JlZyBLcm9haC1IYXJ0bWFu
+IDxncmVna2hAbGludXhmb3VuZGF0aW9uLm9yZz4KCmRpZmYgLS1naXQgYS9kcml2ZXJzL3N0
+YWdpbmcvcnRsODcxMi9vc19pbnRmcy5jIGIvZHJpdmVycy9zdGFnaW5nL3J0bDg3MTIvb3Nf
+aW50ZnMuYwppbmRleCA0Y2YxNzVmLi43YmJkNTNhIDEwMDY0NAotLS0gYS9kcml2ZXJzL3N0
+YWdpbmcvcnRsODcxMi9vc19pbnRmcy5jCisrKyBiL2RyaXZlcnMvc3RhZ2luZy9ydGw4NzEy
+L29zX2ludGZzLmMKQEAgLTQ3NSw5ICs0NzUsNiBAQCBzdGF0aWMgaW50IG5ldGRldl9jbG9z
+ZShzdHJ1Y3QgbmV0X2RldmljZSAqcG5ldGRldikKIAlyODcxMl9mcmVlX2Fzc29jX3Jlc291
+cmNlcyhwYWRhcHRlcik7CiAJLypzMi00LiovCiAJcjg3MTJfZnJlZV9uZXR3b3JrX3F1ZXVl
+KHBhZGFwdGVyKTsKLQlyZWxlYXNlX2Zpcm13YXJlKHBhZGFwdGVyLT5mdyk7Ci0JLyogbmV2
+ZXIgZXhpdCB3aXRoIGEgZmlybXdhcmUgY2FsbGJhY2sgcGVuZGluZyAqLwotCXdhaXRfZm9y
+X2NvbXBsZXRpb24oJnBhZGFwdGVyLT5ydGw4NzEyX2Z3X3JlYWR5KTsKIAlyZXR1cm4gMDsK
+IH0KIApkaWZmIC0tZ2l0IGEvZHJpdmVycy9zdGFnaW5nL3J0bDg3MTIvdXNiX2ludGYuYyBi
+L2RyaXZlcnMvc3RhZ2luZy9ydGw4NzEyL3VzYl9pbnRmLmMKaW5kZXggZmUwZTJmZi4uZTAx
+ZmUxNCAxMDA2NDQKLS0tIGEvZHJpdmVycy9zdGFnaW5nL3J0bDg3MTIvdXNiX2ludGYuYwor
+KysgYi9kcml2ZXJzL3N0YWdpbmcvcnRsODcxMi91c2JfaW50Zi5jCkBAIC0zMCw2ICszMCw3
+IEBACiAKICNpbmNsdWRlIDxsaW51eC91c2IuaD4KICNpbmNsdWRlIDxsaW51eC9tb2R1bGUu
+aD4KKyNpbmNsdWRlIDxsaW51eC9maXJtd2FyZS5oPgogCiAjaW5jbHVkZSAib3NkZXBfc2Vy
+dmljZS5oIgogI2luY2x1ZGUgImRydl90eXBlcy5oIgpAQCAtNjIwLDYgKzYyMSwxMCBAQCBz
+dGF0aWMgdm9pZCByODcxeHVfZGV2X3JlbW92ZShzdHJ1Y3QgdXNiX2ludGVyZmFjZSAqcHVz
+Yl9pbnRmKQogCXN0cnVjdCBfYWRhcHRlciAqcGFkYXB0ZXIgPSBuZXRkZXZfcHJpdihwbmV0
+ZGV2KTsKIAlzdHJ1Y3QgdXNiX2RldmljZSAqdWRldiA9IGludGVyZmFjZV90b191c2JkZXYo
+cHVzYl9pbnRmKTsKIAorCWlmIChwYWRhcHRlci0+ZndfZm91bmQpCisJCXJlbGVhc2VfZmly
+bXdhcmUocGFkYXB0ZXItPmZ3KTsKKwkvKiBuZXZlciBleGl0IHdpdGggYSBmaXJtd2FyZSBj
+YWxsYmFjayBwZW5kaW5nICovCisJd2FpdF9mb3JfY29tcGxldGlvbigmcGFkYXB0ZXItPnJ0
+bDg3MTJfZndfcmVhZHkpOwogCXVzYl9zZXRfaW50ZmRhdGEocHVzYl9pbnRmLCBOVUxMKTsK
+IAlpZiAocGFkYXB0ZXIpIHsKIAkJaWYgKGRydnByaXYuZHJ2X3JlZ2lzdGVyZWQgPT0gdHJ1
+ZSkK
+--------------030609090800040304040200--
