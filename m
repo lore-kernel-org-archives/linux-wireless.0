@@ -1,172 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:54864 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752686Ab2CaUcY (ORCPT
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:63454 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756430Ab2CEIoz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 31 Mar 2012 16:32:24 -0400
-Received: by mail-ob0-f174.google.com with SMTP id tb18so473268obb.19
-        for <linux-wireless@vger.kernel.org>; Sat, 31 Mar 2012 13:32:24 -0700 (PDT)
-From: Ashok Nagarajan <ashok@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: javier@cozybit.com, thomas@cozybit.com, johannes@sipsolutions.net,
-	devel@lists.open80211s.org, linville@tuxdriver.com,
-	Ashok Nagarajan <ashok@cozybit.com>
-Subject: [[PATCH v2 3/4] mac80211: Modify sta_get_rates to give basic rates
-Date: Sat, 31 Mar 2012 13:32:09 -0700
-Message-Id: <1333225930-320-3-git-send-email-ashok@cozybit.com> (sfid-20120331_223229_995420_003DA8CB)
-In-Reply-To: <1333225930-320-1-git-send-email-ashok@cozybit.com>
-References: <1333225930-320-1-git-send-email-ashok@cozybit.com>
+	Mon, 5 Mar 2012 03:44:55 -0500
+Received: by vcqp1 with SMTP id p1so3160685vcq.19
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2012 00:44:55 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CALx5=V9LwpWVG0UGLgyNyJVrSYj826xXwbEcFQVYM5BxAxnEJQ@mail.gmail.com>
+References: <CALx5=V8BDFXD7KGBFia0MAkb2iv3x5dupGXTkKEDJ24DLJVx1g@mail.gmail.com>
+	<CAD2nsn2GLAo=8xhe+-Xm0igSmQ+tr1F+Q6scuFaeaQWMYrQbwg@mail.gmail.com>
+	<CALx5=V9LwpWVG0UGLgyNyJVrSYj826xXwbEcFQVYM5BxAxnEJQ@mail.gmail.com>
+Date: Mon, 5 Mar 2012 14:14:55 +0530
+Message-ID: <CAD2nsn1Wu66JUaPQmK4ktjUBeCjMp4xXG2=FDy3G-LnVDwtAVA@mail.gmail.com> (sfid-20120305_094459_605316_4BA21026)
+Subject: Re: [ath9k-devel] Any recommendation of direct access the GPIO from
+ specific address ?
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Matt Chen <machen@suse.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Ashok Nagarajan <ashok@cozybit.com>
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
----
- net/mac80211/ibss.c        |    4 ++--
- net/mac80211/ieee80211_i.h |    2 +-
- net/mac80211/mesh.c        |    5 +++--
- net/mac80211/mesh_plink.c  |    7 ++++---
- net/mac80211/util.c        |   16 +++++++++++++---
- 5 files changed, 23 insertions(+), 11 deletions(-)
+Hi Matt,
 
-diff --git a/net/mac80211/ibss.c b/net/mac80211/ibss.c
-index 33fd8d9..17bfb3a 100644
---- a/net/mac80211/ibss.c
-+++ b/net/mac80211/ibss.c
-@@ -410,7 +410,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 
- 		if (elems->supp_rates) {
- 			supp_rates = ieee80211_sta_get_rates(local, elems,
--							     band);
-+							     band, NULL);
- 			if (sta) {
- 				u32 prev_rates;
- 
-@@ -560,7 +560,7 @@ static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,
- 		       sdata->name, mgmt->bssid);
- #endif
- 		ieee80211_sta_join_ibss(sdata, bss);
--		supp_rates = ieee80211_sta_get_rates(local, elems, band);
-+		supp_rates = ieee80211_sta_get_rates(local, elems, band, NULL);
- 		ieee80211_ibss_add_sta(sdata, mgmt->bssid, mgmt->sa,
- 				       supp_rates, true);
- 		rcu_read_unlock();
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index d9798a3..1cf5c03 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1460,7 +1460,7 @@ void ieee80211_sta_def_wmm_params(struct ieee80211_sub_if_data *sdata,
- 				  const u8 *supp_rates);
- u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
- 			    struct ieee802_11_elems *elems,
--			    enum ieee80211_band band);
-+			    enum ieee80211_band band, u32 *basic_rates);
- int __ieee80211_request_smps(struct ieee80211_sub_if_data *sdata,
- 			     enum ieee80211_smps_mode smps_mode);
- void ieee80211_recalc_smps(struct ieee80211_local *local);
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 56ec79d..964d8a9 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -622,7 +622,7 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_local *local = sdata->local;
- 	struct ieee802_11_elems elems;
- 	struct ieee80211_channel *channel;
--	u32 supp_rates = 0;
-+	u32 supp_rates = 0, basic_rates = 0;
- 	size_t baselen;
- 	int freq;
- 	enum ieee80211_band band = rx_status->band;
-@@ -655,7 +655,8 @@ static void ieee80211_mesh_rx_bcn_presp(struct ieee80211_sub_if_data *sdata,
- 
- 	if (elems.mesh_id && elems.mesh_config &&
- 	    mesh_matches_local(&elems, sdata)) {
--		supp_rates = ieee80211_sta_get_rates(local, &elems, band);
-+		supp_rates = ieee80211_sta_get_rates(local, &elems,
-+						     band, &basic_rates);
- 		mesh_neighbour_update(mgmt, supp_rates, sdata, &elems,
- 					rx_status);
- 	}
-diff --git a/net/mac80211/mesh_plink.c b/net/mac80211/mesh_plink.c
-index e1a5fc4..133f267 100644
---- a/net/mac80211/mesh_plink.c
-+++ b/net/mac80211/mesh_plink.c
-@@ -474,6 +474,7 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 	bool deactivated, matches_local = true;
- 	u8 ie_len;
- 	u8 *baseaddr;
-+	u32 rates, basic_rates = 0;
- 	__le16 plid, llid, reason;
- #ifdef CONFIG_MAC80211_VERBOSE_MPL_DEBUG
- 	static const char *mplstates[] = {
-@@ -568,6 +569,9 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 
- 	/* Now we will figure out the appropriate event... */
- 	event = PLINK_UNDEFINED;
-+	rates = ieee80211_sta_get_rates(local, &elems,
-+					rx_status->band, &basic_rates);
-+
- 	if (ftype != WLAN_SP_MESH_PEERING_CLOSE &&
- 	    (!mesh_matches_local(&elems, sdata))) {
- 		matches_local = false;
-@@ -592,7 +596,6 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 		return;
- 	} else if (!sta) {
- 		/* ftype == WLAN_SP_MESH_PEERING_OPEN */
--		u32 rates;
- 
- 		rcu_read_unlock();
- 
-@@ -600,8 +603,6 @@ void mesh_rx_plink_frame(struct ieee80211_sub_if_data *sdata, struct ieee80211_m
- 			mpl_dbg("Mesh plink error: no more free plinks\n");
- 			return;
- 		}
--
--		rates = ieee80211_sta_get_rates(local, &elems, rx_status->band);
- 		sta = mesh_plink_alloc(sdata, mgmt->sa, rates, &elems);
- 		if (!sta) {
- 			mpl_dbg("Mesh plink error: plink table full\n");
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index ca5aa32..8ae0363 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1106,7 +1106,7 @@ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
- 
- u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
- 			    struct ieee802_11_elems *elems,
--			    enum ieee80211_band band)
-+			    enum ieee80211_band band, u32 *basic_rates)
- {
- 	struct ieee80211_supported_band *sband;
- 	struct ieee80211_rate *bitrates;
-@@ -1127,15 +1127,25 @@ u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
- 		     elems->ext_supp_rates_len; i++) {
- 		u8 rate = 0;
- 		int own_rate;
-+		bool is_basic;
- 		if (i < elems->supp_rates_len)
- 			rate = elems->supp_rates[i];
- 		else if (elems->ext_supp_rates)
- 			rate = elems->ext_supp_rates
- 				[i - elems->supp_rates_len];
- 		own_rate = 5 * (rate & 0x7f);
--		for (j = 0; j < num_rates; j++)
--			if (bitrates[j].bitrate == own_rate)
-+		is_basic = !!(rate & 0x80);
-+
-+		if (is_basic && (rate & 0x7f) == BSS_MEMBERSHIP_SELECTOR_HT_PHY)
-+			continue;
-+
-+		for (j = 0; j < num_rates; j++) {
-+			if (bitrates[j].bitrate == own_rate) {
- 				supp_rates |= BIT(j);
-+				if (basic_rates && is_basic)
-+					*basic_rates |= BIT(j);
-+			}
-+		}
- 	}
- 	return supp_rates;
- }
+> echo 0x404c to which file in /sys/kernel/debug/ath9k ?
+
+root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# echo 0x404c > regidx
+root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
+0x00000c45
+root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
+0x00000c45
+
+-> toggle the rfkill button, wifi off
+
+root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
+0x00000c55
+root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k#
+root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
+0x00000c55
+root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
+0x00000c55
+
+-> toggle the rfkill button, wifi ON
+
+root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
+0x00000c45
+root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
+0x00000c45
+
+please also see the dump of rfkill list, as i am external PCI card, my
+card is only softblocked.
+
 -- 
-1.7.5.4
-
+thanks,
+shafi
