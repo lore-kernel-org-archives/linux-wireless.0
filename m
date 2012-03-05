@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [129.175.33.41] ([129.175.33.41]:51209 "EHLO smtp1.u-psud.fr"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1758511Ab2CFJ6d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 04:58:33 -0500
-From: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-	Maximilian.Gmeiner.sam04@fh-joanneum.at
-Cc: linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
-Subject: [PATCH] compat: Fix module_init return type from void to int.
-Date: Tue,  6 Mar 2012 10:55:28 +0100
-Message-Id: <1331027728-18496-1-git-send-email-cavallar@lri.fr> (sfid-20120306_105836_618222_61A5ED9C)
-In-Reply-To: <CDCF1538AB98AA4FBCA89C8D5750845F1A473A21@MALMO.technikum.fh-joanneum.local>
-References: <CDCF1538AB98AA4FBCA89C8D5750845F1A473A21@MALMO.technikum.fh-joanneum.local>
+Received: from mms3.broadcom.com ([216.31.210.19]:4961 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756473Ab2CEJbR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 04:31:17 -0500
+Message-ID: <4F5487DA.2010805@broadcom.com> (sfid-20120305_103121_535318_E6D0FAEE)
+Date: Mon, 5 Mar 2012 10:31:06 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Julian Calaby" <julian.calaby@gmail.com>
+cc: "John W. Linville" <linville@tuxdriver.com>,
+	"Linux Wireless List" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 4/7] brcm80211: fmac: initialize host interface
+ drivers regardless result
+References: <1330725351-3803-1-git-send-email-arend@broadcom.com>
+ <1330725351-3803-5-git-send-email-arend@broadcom.com>
+ <CAGRGNgXbkV-OkB5XG8+HqmmxG6f3RfgAkfnb_XxhXYU5+yN6Ug@mail.gmail.com>
+In-Reply-To: <CAGRGNgXbkV-OkB5XG8+HqmmxG6f3RfgAkfnb_XxhXYU5+yN6Ug@mail.gmail.com>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-086f3a1 overrode module_init to make it depend on compat, but the
-overriding module_init has return type 'void', so strange things would
-happen when the module loading code see that init_module() returns
-positive values.  This patch makes it return the value returned by
-the overriden module_init.
+On 03/04/2012 11:49 PM, Julian Calaby wrote:
+> Hi Arend,
+>
+> On Sat, Mar 3, 2012 at 08:55, Arend van Spriel<arend@broadcom.com>  wrote:
+>> The module init function of brcmfmac calls init functions for SDIO and
+>> USB doing driver registration. This patch removes terminating the module
+>> init when a driver registration for one host interface fails.
+>
+> Would it be better to fail the module load if *none* of them succeed -
+> there's probably no point in having the module loaded if it's not
+> actually hooked up to anything.
+>
 
-Signed-off-by: Nicolas Cavallari <cavallar@lri.fr>
----
-On 05/03/2012 22:50, Gmeiner Maximilian wrote:
-> After compiling from the bleeding-edge without any errors this is what I get in kern.log when doing modprobe ath9k
+Thanks, Julian
 
-I had the same problem with a completely different architecture and device,
-and this patch fixed it.
+However, the next patch in this series would undo the init code 
+behaviour you are proposing. The brcmf_sdio_init() already logs the 
+failed driver registration. I will add the same to brcmf_usb_init() in a 
+separate patch. Is that ok with you?
 
-diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
-index bb00cd4..5715ce5 100644
---- a/include/linux/compat-2.6.h
-+++ b/include/linux/compat-2.6.h
-@@ -27,10 +27,10 @@ void compat_dependency_symbol(void);
- 
- #undef module_init
- #define module_init(initfn)						\
--	static void __init __init_compat(void)				\
-+	static int __init __init_compat(void)				\
- 	{								\
- 		compat_dependency_symbol();				\
--		initfn();						\
-+		return initfn();					\
- 	}								\
- 	int init_module(void) __attribute__((alias("__init_compat")));
- 
--- 
-1.7.9
+Gr. AvS
+
 
