@@ -1,66 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:45407 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756120Ab2CSQJk (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:47603 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751454Ab2CEGzg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 12:09:40 -0400
-Message-ID: <4F675A3E.1070507@gmail.com> (sfid-20120319_171023_426915_13DB69E2)
-Date: Mon, 19 Mar 2012 09:09:34 -0700
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>
-CC: Mohammed Shafi <shafi.wireless@gmail.com>,
-	Linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Linux-netdev <netdev@vger.kernel.org>
-Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
- DMADBG_7=0x00008040
-References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com> <4F579A88.6030503@openwrt.org> <4F61F551.5010608@gmail.com> <4F639851.5080500@gmail.com> <4F674616.8080103@gmail.com> <CAD2nsn3xpkGenrK50YmE5D7Odg3sBEek5zKcLZF6MAm69p5RJg@mail.gmail.com> <4F674FF5.2060406@gmail.com> <4F6751B2.1030809@openwrt.org>
-In-Reply-To: <4F6751B2.1030809@openwrt.org>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+	Mon, 5 Mar 2012 01:55:36 -0500
+Subject: Re: [PATCH v2 2/2] mac80211: fix mesh airtime link metric
+ estimating
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	open11s <devel@lists.open80211s.org>
+In-Reply-To: <CAG6hwVMpZTG=vuidSvQvvJhBj=avW_JP5ewATLwTCZsNqcu5zw@mail.gmail.com> (sfid-20120304_235047_838378_68018E05)
+References: <1330731963-9905-1-git-send-email-thomas@cozybit.com>
+	 <1330731963-9905-2-git-send-email-thomas@cozybit.com>
+	 <1330774678.3619.1.camel@jlt3.sipsolutions.net>
+	 <CAG6hwVMo2ZgcNYDQ3UKRC2Wo_gibERBdgvaLWJmi52min8w3Hg@mail.gmail.com>
+	 <CAG6hwVMpZTG=vuidSvQvvJhBj=avW_JP5ewATLwTCZsNqcu5zw@mail.gmail.com>
+	 (sfid-20120304_235047_838378_68018E05)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 05 Mar 2012 07:55:34 +0100
+Message-ID: <1330930534.3545.3.camel@jlt3.sipsolutions.net> (sfid-20120305_075539_991049_6B05F6CE)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/19/2012 08:33 AM, Felix Fietkau wrote:
-> On 2012-03-19 4:25 PM, Justin P. Mattock wrote:
->> On 03/19/2012 08:20 AM, Mohammed Shafi wrote:
->>> Hi Justin,
->>>
->>>> seems I got this when waking up from suspend, was trying to connect with NM
->>>> then all of a sudden Xorg shut off and this appeared on the screen(image
->>>> links below I could not save dmesg only pic)
->>>> http://flic.kr/p/bEhf2K
->>>> http://flic.kr/p/bEhf2x
->>>> http://flic.kr/p/bEhf2n
->>>> http://flic.kr/p/bEhf26
->>>>
->>>> I see ath9k in the image, but am unsure if its related.
->>>> kernel is: 3.3.0-rc7-next-20120316
->>>
->>> this looks like some new issue  in ath9k, lets try to recreate it here
->>>
->>>>
->>>> Justin P. Mattock
->>>>
->>>>
->>>>
->>>
->>>
->>>
->>
->> would be nice to recreate, then bisecting will be more accurate to do..
->> I am trying userspace tweaks here and there but no luck(hostapd etc..)
->> keep in mind this is for the RX DMA, the above just occured..
->> as for writing a small app I still need to try, but my C skills only go
->> so far(anything to trigger!).
-> Was your kernel compiled with debug info? If so, please run gdb on the
-> ath9k.ko module and enter this:
-> l *ath9k_tx+start+0x284
-> Then send me the output of that.
->
-> - Felix
->
+On Sun, 2012-03-04 at 14:49 -0800, Thomas Pedersen wrote:
 
-sure! I will do this as soon as I get to a stable connection(am remote 
-now)so I can install gdb to gather the info for you.
+> >> For stack usage, it'd be better if you gave this two arguments (struct
+> >> rate_info *txrate, struct rate_info *rxrate), or maybe simply factored
+> >> out *only* the TX-rate bit?
+> >>
+> >
+> > like sta_set_rate_info(struct sta_info *sta, struct rate_info *txrate,
+> > struct rate_info *rxrate)?
+> >
+> > How do you feel about consolidating last_rx_flags and _index into an
+> > ieee80211_tx_rate? A bit odd maybe, but then we could use:
+> >
+> > sta_set_rate_info(struct ieee80211_tx_rate *rate, struct rate_info *rinfo);
+> >
+> > As needed for both last_rx and last_tx rates.
 
-Justin P. Mattock
+Seems a little odd to first translate RX rate into TX rate and then to
+cfg80211 info? But you only care about TX rate anyway so ... why worry
+at all?
+
+johannes
+
