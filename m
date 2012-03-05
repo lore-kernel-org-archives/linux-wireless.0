@@ -1,80 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:48736 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:20172 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752184Ab2CJU73 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Mar 2012 15:59:29 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	David Spinadel <david.spinadel@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH 10/10] iwlwifi: Add bool mvm_ucode to iwl_fw
-Date: Sat, 10 Mar 2012 13:00:15 -0800
-Message-Id: <1331413215-10027-11-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120310_220005_224184_88EC9F5B)
-In-Reply-To: <1331413215-10027-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331413215-10027-1-git-send-email-wey-yi.w.guy@intel.com>
+	id S1756152Ab2CEQsb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 11:48:31 -0500
+Date: Mon, 5 Mar 2012 17:48:16 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com
+Subject: [PATCH 3.3] rt2x00: fix random stalls
+Message-ID: <20120305164813.GB2979@redhat.com> (sfid-20120305_174835_232022_D84915A3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+Is possible that we stop queue and then do not wake up it again,
+especially when packets are transmitted fast. That can be easily
+reproduced with modified tx queue entry_num to some small value e.g. 16.
 
-mvm_ucode is true when mvm TLVs arive.
+If mac80211 already hold local->queue_stop_reason_lock, then we can wait
+on that lock in both rt2x00queue_pause_queue() and
+rt2x00queue_unpause_queue(). After drooping ->queue_stop_reason_lock
+is possible that __ieee80211_wake_queue() will be performed before
+__ieee80211_stop_queue(), hence we stop queue and newer wake up it
+again.
 
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To prevent stalls serialize pause/unpause by queue->tx_lock.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-drv.c |    9 ++++++++-
- drivers/net/wireless/iwlwifi/iwl-fw.h  |    2 ++
- 2 files changed, 10 insertions(+), 1 deletions(-)
+ drivers/net/wireless/rt2x00/rt2x00dev.c |   10 ++++++++--
+ drivers/net/wireless/rt2x00/rt2x00mac.c |   10 +++++++++-
+ 2 files changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
-index 54e0969..6f312c7 100644
---- a/drivers/net/wireless/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
-@@ -636,14 +636,17 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 		 case IWL_UCODE_TLV_SEC_RT:
- 			iwl_store_ucode_sec(pieces, tlv_data, IWL_UCODE_REGULAR,
- 					    tlv_len);
-+			drv->fw.mvm_fw = true;
- 			break;
- 		case IWL_UCODE_TLV_SEC_INIT:
- 			iwl_store_ucode_sec(pieces, tlv_data, IWL_UCODE_INIT,
- 					    tlv_len);
-+			drv->fw.mvm_fw = true;
- 			break;
- 		case IWL_UCODE_TLV_SEC_WOWLAN:
- 			iwl_store_ucode_sec(pieces, tlv_data, IWL_UCODE_WOWLAN,
- 					    tlv_len);
-+			drv->fw.mvm_fw = true;
- 			break;
- 		case IWL_UCODE_TLV_DEF_CALIB:
- 			if (tlv_len != sizeof(struct iwl_tlv_calib_data))
-@@ -870,7 +873,11 @@ static void iwl_ucode_callback(const struct firmware *ucode_raw, void *context)
- 		goto try_again;
- 	}
+diff --git a/drivers/net/wireless/rt2x00/rt2x00dev.c b/drivers/net/wireless/rt2x00/rt2x00dev.c
+index 49a51b4..6c64658 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/rt2x00/rt2x00dev.c
+@@ -430,10 +430,16 @@ void rt2x00lib_txdone(struct queue_entry *entry,
+ 	/*
+ 	 * If the data queue was below the threshold before the txdone
+ 	 * handler we must make sure the packet queue in the mac80211 stack
+-	 * is reenabled when the txdone handler has finished.
++	 * is reenabled when the txdone handler has finished. This has to be
++	 * serialized with rt2x00mac_tx, otherwise we can wake up mac80211
++	 * queue before it was stopped if someone else hold mac80211 internal
++	 * local->queue_stop_reason_lock .
+ 	 */
+-	if (!rt2x00queue_threshold(entry->queue))
++	if (!rt2x00queue_threshold(entry->queue)) {
++		spin_lock_irq(&entry->queue->tx_lock);
+ 		rt2x00queue_unpause_queue(entry->queue);
++		spin_unlock_irq(&entry->queue->tx_lock);
++	}
+ }
+ EXPORT_SYMBOL_GPL(rt2x00lib_txdone);
  
--	if (validate_sec_sizes(drv, &pieces, cfg))
+diff --git a/drivers/net/wireless/rt2x00/rt2x00mac.c b/drivers/net/wireless/rt2x00/rt2x00mac.c
+index ede3c58..2880512 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/rt2x00/rt2x00mac.c
+@@ -152,13 +152,21 @@ void rt2x00mac_tx(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 	if (unlikely(rt2x00queue_write_tx_frame(queue, skb, false)))
+ 		goto exit_fail;
+ 
+-	if (rt2x00queue_threshold(queue))
 +	/*
-+	 * In mvm uCode there is no difference between data and instructions
-+	 * sections.
++	 * Pausing queue has to be serialized with rt2x00lib_txdone .
 +	 */
-+	if (!fw->mvm_fw && validate_sec_sizes(drv, &pieces, cfg))
- 		goto try_again;
++	if (rt2x00queue_threshold(queue)) {
++		spin_lock(&queue->tx_lock);
+ 		rt2x00queue_pause_queue(queue);
++		spin_unlock(&queue->tx_lock);
++	}
  
- 	/* Allocate ucode buffers for card's bus-master loading ... */
-diff --git a/drivers/net/wireless/iwlwifi/iwl-fw.h b/drivers/net/wireless/iwlwifi/iwl-fw.h
-index 5d634f3..8e36bdc 100644
---- a/drivers/net/wireless/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-fw.h
-@@ -170,6 +170,8 @@ struct iwl_fw {
+ 	return;
  
- 	u64 default_calib[IWL_UCODE_TYPE_MAX];
- 	u32 phy_config;
-+
-+	bool mvm_fw;
- };
- 
- #endif  /* __iwl_fw_h__ */
+  exit_fail:
++	spin_lock(&queue->tx_lock);
+ 	rt2x00queue_pause_queue(queue);
++	spin_unlock(&queue->tx_lock);
+  exit_free_skb:
+ 	ieee80211_free_txskb(hw, skb);
+ }
 -- 
-1.7.0.4
+1.7.1
 
