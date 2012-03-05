@@ -1,84 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vms173007pub.verizon.net ([206.46.173.7]:58964 "EHLO
-	vms173007pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750930Ab2CJSKw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 10 Mar 2012 13:10:52 -0500
-Received: from vznit170136 ([unknown] [192.168.1.3]) by vms173007.mailsrvcs.net
- (Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16 2009))
- with ESMTPA id <0M0O00LCZL63FWD0@vms173007.mailsrvcs.net> for
- linux-wireless@vger.kernel.org; Sat, 10 Mar 2012 12:10:52 -0600 (CST)
-Date: Sat, 10 Mar 2012 12:10:51 -0600 (CST)
-From: alupu@verizon.net
-To: Larry.Finger@lwfinger.net
-Cc: linux-wireless@vger.kernel.org
-Message-id: <7971088.142916.1331403052068.JavaMail.root@vznit170136> (sfid-20120310_191105_130500_EBA5228A)
-Subject: Re: r8712u staging in kernel 3.2.9
-MIME-version: 1.0
-Content-type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:11459 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965000Ab2CEUiL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 15:38:11 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 26/33] iwlwifi: move tid_to_ac to PCI-E
+Date: Mon,  5 Mar 2012 11:24:44 -0800
+Message-Id: <1330975491-19680-27-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120305_213846_509755_AFBD7D9C)
+In-Reply-To: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- Hi Larry,
+From: Johannes Berg <johannes.berg@intel.com>
 
-I ran a few more tests around the subject thread.
-Brought up my machine on the Knoppix-6.7.1 DVD, (his latest):
+Currently, queue mapping is handled in the
+transport. This may change, but until then
+the code for it can be close to where it's
+used rather than in iwl-shared.h.
 
-uname -a
-Linux Microknoppix 3.0.4 #12 SMP PREEMPT Thu Sep 8 05:27:05 CEST 2011
- i686 GNU/Linux
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-shared.h        |   46 ----------------------
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |   46 ++++++++++++++++++++++
+ 2 files changed, 46 insertions(+), 46 deletions(-)
 
-iwconfig --version
-iwconfig Wireless-Tools version 30
- Compatible with Wireless Extension v11 to v22.
-
- Kernel Currently compiled with Wireless Extension v22.
-
-Please note the same weird version, 30.
-There must be a thriving black market for wireless-tools in Germany :)
-
-Whatever driver Knoppix uses, it is in the kernel
-(i.e., not as a module) and BTW, 'iwconfig wlan0 essid ...'
- doesn't work either.
-
-lsusb --version
-lsusb (usbutils) 0.87
-
-Two odd things:
-1. Bus 002 Device 003:
- ID 0bda:8172 Realtek Semiconductor Corp. RTL8191S WLAN Adapter
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 2b9d21a..740a058 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -412,52 +412,6 @@ static inline bool iwl_have_debug_level(u32 level)
+ 	return iwlagn_mod_params.debug_level & level;
+ }
  
-Please note "RTL8191S" above.
+-/*
+- * mac80211 queues, ACs, hardware queues, FIFOs.
+- *
+- * Cf. http://wireless.kernel.org/en/developers/Documentation/mac80211/queues
+- *
+- * Mac80211 uses the following numbers, which we get as from it
+- * by way of skb_get_queue_mapping(skb):
+- *
+- *	VO	0
+- *	VI	1
+- *	BE	2
+- *	BK	3
+- *
+- *
+- * Regular (not A-MPDU) frames are put into hardware queues corresponding
+- * to the FIFOs, see comments in iwl-prph.h. Aggregated frames get their
+- * own queue per aggregation session (RA/TID combination), such queues are
+- * set up to map into FIFOs too, for which we need an AC->FIFO mapping. In
+- * order to map frames to the right queue, we also need an AC->hw queue
+- * mapping. This is implemented here.
+- *
+- * Due to the way hw queues are set up (by the hw specific modules like
+- * iwl-4965.c, iwl-5000.c etc.), the AC->hw queue mapping is the identity
+- * mapping.
+- */
+-
+-static const u8 tid_to_ac[] = {
+-	IEEE80211_AC_BE,
+-	IEEE80211_AC_BK,
+-	IEEE80211_AC_BK,
+-	IEEE80211_AC_BE,
+-	IEEE80211_AC_VI,
+-	IEEE80211_AC_VI,
+-	IEEE80211_AC_VO,
+-	IEEE80211_AC_VO
+-};
+-
+-static inline int get_ac_from_tid(u16 tid)
+-{
+-	if (likely(tid < ARRAY_SIZE(tid_to_ac)))
+-		return tid_to_ac[tid];
+-
+-	/* no support for TIDs 8-15 yet */
+-	return -EINVAL;
+-}
+-
+ enum iwl_rxon_context_id {
+ 	IWL_RXON_CTX_BSS,
+ 	IWL_RXON_CTX_PAN,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index 0513b90..0164154 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -41,6 +41,43 @@
+ #define IWL_TX_CRC_SIZE 4
+ #define IWL_TX_DELIMITER_SIZE 4
+ 
++/*
++ * mac80211 queues, ACs, hardware queues, FIFOs.
++ *
++ * Cf. http://wireless.kernel.org/en/developers/Documentation/mac80211/queues
++ *
++ * Mac80211 uses the following numbers, which we get as from it
++ * by way of skb_get_queue_mapping(skb):
++ *
++ *	VO	0
++ *	VI	1
++ *	BE	2
++ *	BK	3
++ *
++ *
++ * Regular (not A-MPDU) frames are put into hardware queues corresponding
++ * to the FIFOs, see comments in iwl-prph.h. Aggregated frames get their
++ * own queue per aggregation session (RA/TID combination), such queues are
++ * set up to map into FIFOs too, for which we need an AC->FIFO mapping. In
++ * order to map frames to the right queue, we also need an AC->hw queue
++ * mapping. This is implemented here.
++ *
++ * Due to the way hw queues are set up (by the hw specific code), the AC->hw
++ * queue mapping is the identity mapping.
++ */
++
++static const u8 tid_to_ac[] = {
++	IEEE80211_AC_BE,
++	IEEE80211_AC_BK,
++	IEEE80211_AC_BK,
++	IEEE80211_AC_BE,
++	IEEE80211_AC_VI,
++	IEEE80211_AC_VI,
++	IEEE80211_AC_VO,
++	IEEE80211_AC_VO
++};
++
++
+ /**
+  * iwl_trans_txq_update_byte_cnt_tbl - Set up entry in Tx byte-count array
+  */
+@@ -442,6 +479,15 @@ void iwl_trans_tx_queue_set_status(struct iwl_trans *trans,
+ 			scd_retry ? "BA" : "AC/CMD", txq_id);
+ }
+ 
++static inline int get_ac_from_tid(u16 tid)
++{
++	if (likely(tid < ARRAY_SIZE(tid_to_ac)))
++		return tid_to_ac[tid];
++
++	/* no support for TIDs 8-15 yet */
++	return -EINVAL;
++}
++
+ static inline int get_fifo_from_tid(struct iwl_trans_pcie *trans_pcie,
+ 				    u8 ctx, u16 tid)
+ {
+-- 
+1.7.0.4
 
-2. ls -og /lib/firmware/rtlwifi
- -rw-r--r-- 1 122328 Jan 4 2011 rtl8712u.bin
-
-As opposed to things on my subject machine (3.2.9):
-lsusb --version
-lsusb (usbutils) 0.73
-
-1. Bus 002 Device 003: ID 0bda:8172 Realtek Semiconductor Corp.
-Note: the missing "RTL8191S" could very well be caused by
- my using a lower lsusb version.
-
-2. ls -og /lib/firmware/rtlwifi
- -rw-r--r-- 1 129304 2012-03-04 15:42 rtl8712u.bin
-------
-
-The 'menuconfig' on my version, 3.2.9, has only these choices for
-RTL staging devices:
- 8187SE
- 8192U
- 8192E
- 8712 (8192SU)
-
-No trace of an RTL8191S possibility.
-
-Maybe you can make more heads (or even tails) of it.
-
-Regards,
--- Alex
-
-PS.  Just to prevent any uncalled-for suspicions, this Rosewill device
-works smoothly and perfectly on Win XP (very same machine, different
-partition) and Win 7.  Surprise, surprise.
