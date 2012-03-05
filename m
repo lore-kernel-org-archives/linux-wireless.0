@@ -1,231 +1,597 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:51441 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755358Ab2CWObQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2012 10:31:16 -0400
-Message-ID: <1332513075.10384.20.camel@jlt3.sipsolutions.net> (sfid-20120323_153121_035803_CEE29FE5)
-Subject: Re: [RFC 00/12] multi-channel support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Micha=C5=82?= Kazior <michal.kazior@tieto.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 23 Mar 2012 15:31:15 +0100
-In-Reply-To: <4F6C82A5.5080302@tieto.com>
-References: <06edaf32-5a4f-4887-8b22-6bec31c2c7c6@FIVLA-EXHUB02.eu.tieto.com>
-		 (sfid-20120320_154008_038091_B257E507) <1332494945.3506.23.camel@jlt3.sipsolutions.net>
-	 <4F6C82A5.5080302@tieto.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:22398 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965129Ab2CEUiL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 15:38:11 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 21/33] iwlwifi: don't pass iwl_rx_mem_buffer to upper layers
+Date: Mon,  5 Mar 2012 11:24:39 -0800
+Message-Id: <1330975491-19680-22-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120305_213839_048137_DE5926E0)
+In-Reply-To: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-03-23 at 15:03 +0100, Michał Kazior wrote:
-> > So I took a closer look at this now.
-> >
-> > I think we should probably apply the first two patches now, and the
-> > third with changes. After that, I'm not so sure.
-> 
-> You mean the following, right?
-> 
->           mac80211: prepare ieee80211_mandatory_rates to per-vif
->           mac80211: prepare ieee80211_sta_get_rates to per-vif
-> [tofix]  mac80211: prepare ieee80211_frame_duration to per-vif
-> 
-> Should I resend them all, or just the 3rd one once I fix it?
+From: Johannes Berg <johannes.berg@intel.com>
 
-You should probably send them as [PATCH].
+struct iwl_rx_mem_buffer implementation details
+(DMA address, list pointers) that the upper
+layers don't need. Introduce iwl_rx_cmd_buffer
+that is passed upstream and only contains the
+needed data (the page). Additionally, access
+this data only via accessor functions, allowing
+us to change the implementation in the future.
+These accessors are rxb_addr() (as before) and
+rxb_steal_page() to take ownership of the data.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c        |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-rx.c         |   41 +++++++++++----------
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c        |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c         |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.h            |   12 +++---
+ drivers/net/wireless/iwlwifi/iwl-dev.h            |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-op-mode.h        |    6 ++--
+ drivers/net/wireless/iwlwifi/iwl-scan.c           |    8 ++--
+ drivers/net/wireless/iwlwifi/iwl-shared.h         |   18 +++++++---
+ drivers/net/wireless/iwlwifi/iwl-testmode.c       |    4 +-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h |    8 ++++-
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c  |   21 +++++++----
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c  |    5 +--
+ drivers/net/wireless/iwlwifi/iwl-ucode.c          |    2 +-
+ 14 files changed, 80 insertions(+), 57 deletions(-)
 
-> > Overall, I think the approach isn't sufficient. At the very least, the
-> > (unstated!) assumption that one channel per interface can always be done
-> > is bad. Modifying this with the structure you gave it though seems to be
-> > problematic.
-> >
-> > We should also handle the queue mapping first I think. This isn't a
-> > feature you can implement overnight :-)
-> 
-> I've been thinking more on queue handling in multi-channel. Here are my 
-> thoughts.
-
-Did you see my previous mail?
-http://mid.gmane.org/1330343374.3483.46.camel@jlt3.sipsolutions.net
-
-
-> If we assume that off-channel should be a global thing then we should 
-> rethink the whole queue thing first.
-
-I think we need to rethink the queues first even if off-channel isn't
-global -- right now you can only stop a given AC across all interfaces
-but that's really not what you want if you're on multiple channels...
-
-
-> What if we create a new structure that would be a channel 
-> stream/reservation? Driver could then report multiple such objects. Each 
-> such would have a tx queue and it's own locking. Let's assume something 
-> like:
-> 
->    struct ieee80211_channel_stream {
->      struct list_head vif; // list of vifs we're attached to
->      struct ieee80211_channel *ch;
->      struct sk_buff_head pending;
->      int stop_reasons[IEEE80211_MAX_QUEUES];
->      // .. other stuff
->      u8 *drv_priv[0] __attribute__((__aligned__((void *))));
->    };
-> 
->    struct ieee80211_vif {
->      struct ieee80211_channel_stream *channel_stream;
->      // .. rest of struct
->    };
-> 
->   * We could then reject set_channel() based on number of different
->     oper_channels and channel reservations
->   * We could handle off-channel through a channel reservation by either
->     using an unused one (which would result in hardware offloaded
->     off-channel) or we would lock&flush it, switch to off-channel, do
->     work, and get back
-
-I'm not sure we can easily use such a "stream" for off-channel
-operation. In particular, that "stream" might not support multiple
-queues.
-
-> We should however consider that a device may not support certain 
-> interface combinations. One thing that comes immediately to my mind is 
-> the following: suppose we support STA+STA on different channels, AP+AP 
-> on the same channel, but do not support AP+AP on different channels:
-> 
->    1. create wlan0, set channel=1, and start AP
->    2. create wlan1, set channel=1, and start AP
->    3. do set_channel(wlan1, 3) <-- oops
-> 
-> This would probably be fixed easily with:
-> 
->    1. forbid changing channels on a running interface (i'm aware that's
->       the same case for mac addr)
->    2. thus we would require: ifdown + setchannel + ifup
-> 
-> But that's just one case. Are there any others? This needs investigation.
-
-So my interface combinations advertising already supports
-"num_different_channels" per combination, so that would be easy to
-express. Switching the channel while the AP interface is up is probably
-not desirable anyway.
-
-The biggest challenge here is CSA functionality I think.
-
-
-> Other issue I'm thinking would be: what if a device supports specialized 
-> off-channel queue (is there one we know? iwlwifi?) ? 
-
-Yeah we do have this.
-
-> We can't advertise 
-> this as a fully-usable ieee80211_channel_stream (again, is there 
-> anything that has a shortcoming like that?). 
-
-Yup.
-
-> Should we add capability 
-> flags for each ieee80211_channel_stream? Or we could add new driver 
-> callback, eg. "set_channel_try" and allow the driver to decide whether 
-> it allows a certain hardware state or not.
-
-This is not a fully feasible "stream" anyway. Think of it more like a
-single scan dwell -- you wouldn't express that as a separate "stream" I
-think?
-
-> What is still missing here is the CAB queue (and possible other that may 
-> come up in the future) you mentioned in the other thread. 
-
-Ah, I see you did see my other thread :-)
-
-> I'm not sure 
-> whether we may use queue_mapping for our own evil purposes here. If not, 
-> then how about this:
-> 
->    struct ieee80211_queue_types { // or tx_queue_types?
->      IEEE80211_QUEUE_VO,
->      IEEE80211_QUEUE_VI,
->      IEEE80211_QUEUE_BE,
->      IEEE80211_QUEUE_BK,
->      IEEE80211_QUEUE_CAB,
-> 
->      IEEE80211_QUEUE_LAST
->    };
-[...]
-> This looks kind of ugly, but oh well. This way the driver will be able 
-> to setup mapping between mac80211 and internal device queues. It should 
-> also be possible to map one hardware queue to multiple 
-> ieee80211_channel_stream structures (queues is a list of pointers) so 
-> multiple vifs on the same channel is okay.
-
-I don't think this makes a lot of sense, tbh. This isn't a separate AC,
-I'd rather keep them separated.
-
-> What are your thoughts on this? Is this terribly wrong or is it the way 
-> to go? Have I missed something?
-
-I think that this is all a bit overkill :)
-
-I'm looking at the code right now, and I think we should treat ACs,
-queues and channels separately. If we combine queue sets & channels into
-one, I think we'll find drivers that don't work correctly with this.
-Some devices for instance might have a set of queues for each interface,
-even if they're on the same channel. I don't want to lose flexibility to
-handle that.
-
-I think we'd hold the AC in skb_queue_mapping, since that's assigned
-early in the virtual interface queues already, and we need it to be the
-AC there for proper queue selection.
-
-The hardware queue we can put into a separate field in tx_info, I've
-made space for a u8 for this in a patch I have pending (but not sent to
-the list yet.)
-
-Ignoring the monitor mode interface, I think the simplest thing we can
-do is
-
-struct ieee80211_hw {
-	...
-	u8 offchannel_queue;
-};
-
-struct ieee80211_vif {
-	...
-	u8 hw_queue[IEEE80211_NUM_ACS];
-	u8 after_dtim_queue;
-};
-
-For any of these (offchannel_queue, after_dtim_queue, hw_queue[i]), the
-queue number Q must be 0 <= Q < hw.queues. This allows us to keep all
-per-hw-queue state "flattened" in ieee80211_local's pending,
-queue_stop_reasons, etc. instead of separating all of it out into
-separate structures.
-
-When a queue is stopped, we do:
-
-void queue_stop(int q)
-{
-	for_each_interface(vif) {
-		if (vif->hw_queue[AC] == q) // for all 4 ACs
-			stop netdev queue (vif->dev, AC)
-		if (vif->after_dtim_queue == q)
-			stop_all_queues(vif->dev)
-	}
-}
-
-Or so ... after_dtim_queue is kinda a special case.
-
-
-If offchannel_queue is stopped, we'll have to refuse offchannel TX from
-nl80211 -- that seems *very* unlikely though.
-
-
-Do you think this would work?
-
-I think that covers the queue part -- I'll split the thread and will
-talk about multi-channel in a separate email.
-
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 626b0d1..e96af51 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -707,7 +707,7 @@ static void iwlagn_set_kill_msk(struct iwl_priv *priv,
+ }
+ 
+ int iwlagn_bt_coex_profile_notif(struct iwl_priv *priv,
+-				  struct iwl_rx_mem_buffer *rxb,
++				  struct iwl_rx_cmd_buffer *rxb,
+ 				  struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+index bc21586..8e025e0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-rx.c
+@@ -131,7 +131,7 @@ const char *get_cmd_string(u8 cmd)
+  ******************************************************************************/
+ 
+ static int iwlagn_rx_reply_error(struct iwl_priv *priv,
+-			       struct iwl_rx_mem_buffer *rxb,
++			       struct iwl_rx_cmd_buffer *rxb,
+ 			       struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+@@ -146,7 +146,7 @@ static int iwlagn_rx_reply_error(struct iwl_priv *priv,
+ 	return 0;
+ }
+ 
+-static int iwlagn_rx_csa(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
++static int iwlagn_rx_csa(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+ 			       struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+@@ -177,7 +177,7 @@ static int iwlagn_rx_csa(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
+ 
+ 
+ static int iwlagn_rx_spectrum_measure_notif(struct iwl_priv *priv,
+-					  struct iwl_rx_mem_buffer *rxb,
++					  struct iwl_rx_cmd_buffer *rxb,
+ 					  struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+@@ -195,7 +195,7 @@ static int iwlagn_rx_spectrum_measure_notif(struct iwl_priv *priv,
+ }
+ 
+ static int iwlagn_rx_pm_sleep_notif(struct iwl_priv *priv,
+-				  struct iwl_rx_mem_buffer *rxb,
++				  struct iwl_rx_cmd_buffer *rxb,
+ 				  struct iwl_device_cmd *cmd)
+ {
+ #ifdef CONFIG_IWLWIFI_DEBUG
+@@ -208,7 +208,7 @@ static int iwlagn_rx_pm_sleep_notif(struct iwl_priv *priv,
+ }
+ 
+ static int iwlagn_rx_pm_debug_statistics_notif(struct iwl_priv *priv,
+-					     struct iwl_rx_mem_buffer *rxb,
++					     struct iwl_rx_cmd_buffer *rxb,
+ 					     struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+@@ -222,7 +222,7 @@ static int iwlagn_rx_pm_debug_statistics_notif(struct iwl_priv *priv,
+ }
+ 
+ static int iwlagn_rx_beacon_notif(struct iwl_priv *priv,
+-				struct iwl_rx_mem_buffer *rxb,
++				struct iwl_rx_cmd_buffer *rxb,
+ 				struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+@@ -489,7 +489,7 @@ iwlagn_accumulative_statistics(struct iwl_priv *priv,
+ #endif
+ 
+ static int iwlagn_rx_statistics(struct iwl_priv *priv,
+-			      struct iwl_rx_mem_buffer *rxb,
++			      struct iwl_rx_cmd_buffer *rxb,
+ 			      struct iwl_device_cmd *cmd)
+ {
+ 	unsigned long stamp = jiffies;
+@@ -597,7 +597,7 @@ static int iwlagn_rx_statistics(struct iwl_priv *priv,
+ }
+ 
+ static int iwlagn_rx_reply_statistics(struct iwl_priv *priv,
+-				    struct iwl_rx_mem_buffer *rxb,
++				    struct iwl_rx_cmd_buffer *rxb,
+ 				    struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+@@ -620,7 +620,7 @@ static int iwlagn_rx_reply_statistics(struct iwl_priv *priv,
+ /* Handle notification from uCode that card's power state is changing
+  * due to software, hardware, or critical temperature RFKILL */
+ static int iwlagn_rx_card_state_notif(struct iwl_priv *priv,
+-				    struct iwl_rx_mem_buffer *rxb,
++				    struct iwl_rx_cmd_buffer *rxb,
+ 				    struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+@@ -673,7 +673,7 @@ static int iwlagn_rx_card_state_notif(struct iwl_priv *priv,
+ }
+ 
+ static int iwlagn_rx_missed_beacon_notif(struct iwl_priv *priv,
+-				       struct iwl_rx_mem_buffer *rxb,
++				       struct iwl_rx_cmd_buffer *rxb,
+ 				       struct iwl_device_cmd *cmd)
+ 
+ {
+@@ -698,7 +698,7 @@ static int iwlagn_rx_missed_beacon_notif(struct iwl_priv *priv,
+ /* Cache phy data (Rx signal strength, etc) for HT frame (REPLY_RX_PHY_CMD).
+  * This will be used later in iwl_rx_reply_rx() for REPLY_RX_MPDU_CMD. */
+ static int iwlagn_rx_reply_rx_phy(struct iwl_priv *priv,
+-				struct iwl_rx_mem_buffer *rxb,
++				struct iwl_rx_cmd_buffer *rxb,
+ 				struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+@@ -765,12 +765,14 @@ static void iwlagn_pass_packet_to_mac80211(struct iwl_priv *priv,
+ 					struct ieee80211_hdr *hdr,
+ 					u16 len,
+ 					u32 ampdu_status,
+-					struct iwl_rx_mem_buffer *rxb,
++					struct iwl_rx_cmd_buffer *rxb,
+ 					struct ieee80211_rx_status *stats)
+ {
+ 	struct sk_buff *skb;
+ 	__le16 fc = hdr->frame_control;
+ 	struct iwl_rxon_context *ctx;
++	struct page *p;
++	int offset;
+ 
+ 	/* We only process data packets if the interface is open */
+ 	if (unlikely(!priv->is_open)) {
+@@ -790,7 +792,9 @@ static void iwlagn_pass_packet_to_mac80211(struct iwl_priv *priv,
+ 		return;
+ 	}
+ 
+-	skb_add_rx_frag(skb, 0, rxb->page, (void *)hdr - rxb_addr(rxb), len);
++	offset = (void *)hdr - rxb_addr(rxb);
++	p = rxb_steal_page(rxb);
++	skb_add_rx_frag(skb, 0, p, offset, len);
+ 
+ 	iwl_update_stats(priv, false, fc, len);
+ 
+@@ -817,7 +821,6 @@ static void iwlagn_pass_packet_to_mac80211(struct iwl_priv *priv,
+ 	memcpy(IEEE80211_SKB_RXCB(skb), stats, sizeof(*stats));
+ 
+ 	ieee80211_rx(priv->hw, skb);
+-	rxb->page = NULL;
+ }
+ 
+ static u32 iwlagn_translate_rx_status(struct iwl_priv *priv, u32 decrypt_in)
+@@ -923,7 +926,7 @@ static int iwlagn_calc_rssi(struct iwl_priv *priv,
+ /* Called for REPLY_RX (legacy ABG frames), or
+  * REPLY_RX_MPDU_CMD (HT high-throughput N frames). */
+ static int iwlagn_rx_reply_rx(struct iwl_priv *priv,
+-			    struct iwl_rx_mem_buffer *rxb,
++			    struct iwl_rx_cmd_buffer *rxb,
+ 			    struct iwl_device_cmd *cmd)
+ {
+ 	struct ieee80211_hdr *header;
+@@ -1043,7 +1046,7 @@ static int iwlagn_rx_reply_rx(struct iwl_priv *priv,
+ }
+ 
+ static int iwlagn_rx_noa_notification(struct iwl_priv *priv,
+-				      struct iwl_rx_mem_buffer *rxb,
++				      struct iwl_rx_cmd_buffer *rxb,
+ 				      struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_wipan_noa_data *new_data, *old_data;
+@@ -1094,7 +1097,7 @@ static int iwlagn_rx_noa_notification(struct iwl_priv *priv,
+  */
+ void iwl_setup_rx_handlers(struct iwl_priv *priv)
+ {
+-	int (**handlers)(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
++	int (**handlers)(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+ 			       struct iwl_device_cmd *cmd);
+ 
+ 	handlers = priv->rx_handlers;
+@@ -1149,8 +1152,8 @@ void iwl_setup_rx_handlers(struct iwl_priv *priv)
+ 
+ }
+ 
+-int iwl_rx_dispatch(struct iwl_op_mode *op_mode, struct iwl_rx_mem_buffer *rxb,
+-		     struct iwl_device_cmd *cmd)
++int iwl_rx_dispatch(struct iwl_op_mode *op_mode, struct iwl_rx_cmd_buffer *rxb,
++		    struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+index 9ef8da4..736f8dc 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+@@ -123,7 +123,7 @@ static int iwl_process_add_sta_resp(struct iwl_priv *priv,
+ 	return ret;
+ }
+ 
+-int iwl_add_sta_callback(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
++int iwl_add_sta_callback(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+ 			       struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 1914bee..dd28785 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -977,7 +977,7 @@ static void iwl_check_abort_status(struct iwl_priv *priv,
+ 	}
+ }
+ 
+-int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
++int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+ 			       struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+@@ -1108,7 +1108,7 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
+  * of frames sent via aggregation.
+  */
+ int iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
+-				   struct iwl_rx_mem_buffer *rxb,
++				   struct iwl_rx_cmd_buffer *rxb,
+ 				   struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index a142a19..a9c018a 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -82,7 +82,7 @@ void iwl_cancel_deferred_work(struct iwl_priv *priv);
+ void iwlagn_prepare_restart(struct iwl_priv *priv);
+ void iwl_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb);
+ int __must_check iwl_rx_dispatch(struct iwl_op_mode *op_mode,
+-				 struct iwl_rx_mem_buffer *rxb,
++				 struct iwl_rx_cmd_buffer *rxb,
+ 				 struct iwl_device_cmd *cmd);
+ void iwl_stop_sw_queue(struct iwl_op_mode *op_mode, u8 ac);
+ void iwl_wake_sw_queue(struct iwl_op_mode *op_mode, u8 ac);
+@@ -110,7 +110,7 @@ void iwlagn_config_ht40(struct ieee80211_conf *conf,
+ 
+ /* uCode */
+ int iwlagn_rx_calib_result(struct iwl_priv *priv,
+-			    struct iwl_rx_mem_buffer *rxb,
++			    struct iwl_rx_cmd_buffer *rxb,
+ 			    struct iwl_device_cmd *cmd);
+ void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags);
+ 
+@@ -142,9 +142,9 @@ int iwlagn_tx_agg_oper(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ int iwlagn_tx_agg_stop(struct iwl_priv *priv, struct ieee80211_vif *vif,
+ 		       struct ieee80211_sta *sta, u16 tid);
+ int iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
+-				   struct iwl_rx_mem_buffer *rxb,
++				   struct iwl_rx_cmd_buffer *rxb,
+ 				   struct iwl_device_cmd *cmd);
+-int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
++int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+ 			       struct iwl_device_cmd *cmd);
+ 
+ static inline u32 iwl_tx_status_to_mac80211(u32 status)
+@@ -179,7 +179,7 @@ void iwlagn_disable_roc(struct iwl_priv *priv);
+ /* bt coex */
+ void iwlagn_send_advance_bt_config(struct iwl_priv *priv);
+ int iwlagn_bt_coex_profile_notif(struct iwl_priv *priv,
+-				  struct iwl_rx_mem_buffer *rxb,
++				  struct iwl_rx_cmd_buffer *rxb,
+ 				  struct iwl_device_cmd *cmd);
+ void iwlagn_bt_rx_handler_setup(struct iwl_priv *priv);
+ void iwlagn_bt_setup_deferred_work(struct iwl_priv *priv);
+@@ -227,7 +227,7 @@ void iwl_sta_fill_lq(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ 		     u8 sta_id, struct iwl_link_quality_cmd *link_cmd);
+ int iwl_send_lq_cmd(struct iwl_priv *priv, struct iwl_rxon_context *ctx,
+ 		    struct iwl_link_quality_cmd *lq, u8 flags, bool init);
+-int iwl_add_sta_callback(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
++int iwl_add_sta_callback(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+ 			       struct iwl_device_cmd *cmd);
+ 
+ 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-dev.h b/drivers/net/wireless/iwlwifi/iwl-dev.h
+index ef71463..5957209 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-dev.h
++++ b/drivers/net/wireless/iwlwifi/iwl-dev.h
+@@ -729,9 +729,9 @@ struct iwl_priv {
+ 	enum ieee80211_band band;
+ 
+ 	void (*pre_rx_handler)(struct iwl_priv *priv,
+-			       struct iwl_rx_mem_buffer *rxb);
++			       struct iwl_rx_cmd_buffer *rxb);
+ 	int (*rx_handlers[REPLY_MAX])(struct iwl_priv *priv,
+-				       struct iwl_rx_mem_buffer *rxb,
++				       struct iwl_rx_cmd_buffer *rxb,
+ 				       struct iwl_device_cmd *cmd);
+ 
+ 	struct ieee80211_supported_band bands[IEEE80211_NUM_BANDS];
+diff --git a/drivers/net/wireless/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+index d4fc9be..41e58a1 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-op-mode.h
++++ b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
+@@ -67,7 +67,7 @@ struct iwl_op_mode;
+ struct iwl_trans;
+ struct sk_buff;
+ struct iwl_device_cmd;
+-struct iwl_rx_mem_buffer;
++struct iwl_rx_cmd_buffer;
+ 
+ /**
+  * DOC: Operational mode - what is it ?
+@@ -125,7 +125,7 @@ struct iwl_rx_mem_buffer;
+ struct iwl_op_mode_ops {
+ 	struct iwl_op_mode *(*start)(struct iwl_trans *trans);
+ 	void (*stop)(struct iwl_op_mode *op_mode);
+-	int (*rx)(struct iwl_op_mode *op_mode, struct iwl_rx_mem_buffer *rxb,
++	int (*rx)(struct iwl_op_mode *op_mode, struct iwl_rx_cmd_buffer *rxb,
+ 		  struct iwl_device_cmd *cmd);
+ 	void (*queue_full)(struct iwl_op_mode *op_mode, u8 ac);
+ 	void (*queue_not_full)(struct iwl_op_mode *op_mode, u8 ac);
+@@ -156,7 +156,7 @@ static inline void iwl_op_mode_stop(struct iwl_op_mode *op_mode)
+ }
+ 
+ static inline int iwl_op_mode_rx(struct iwl_op_mode *op_mode,
+-				  struct iwl_rx_mem_buffer *rxb,
++				  struct iwl_rx_cmd_buffer *rxb,
+ 				  struct iwl_device_cmd *cmd)
+ {
+ 	return op_mode->ops->rx(op_mode, rxb, cmd);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-scan.c b/drivers/net/wireless/iwlwifi/iwl-scan.c
+index c0fc368..28899da 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-scan.c
++++ b/drivers/net/wireless/iwlwifi/iwl-scan.c
+@@ -260,7 +260,7 @@ void iwl_scan_cancel_timeout(struct iwl_priv *priv, unsigned long ms)
+ 
+ /* Service response to REPLY_SCAN_CMD (0x80) */
+ static int iwl_rx_reply_scan(struct iwl_priv *priv,
+-			      struct iwl_rx_mem_buffer *rxb,
++			      struct iwl_rx_cmd_buffer *rxb,
+ 			      struct iwl_device_cmd *cmd)
+ {
+ #ifdef CONFIG_IWLWIFI_DEBUG
+@@ -275,7 +275,7 @@ static int iwl_rx_reply_scan(struct iwl_priv *priv,
+ 
+ /* Service SCAN_START_NOTIFICATION (0x82) */
+ static int iwl_rx_scan_start_notif(struct iwl_priv *priv,
+-				    struct iwl_rx_mem_buffer *rxb,
++				    struct iwl_rx_cmd_buffer *rxb,
+ 				    struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+@@ -302,7 +302,7 @@ static int iwl_rx_scan_start_notif(struct iwl_priv *priv,
+ 
+ /* Service SCAN_RESULTS_NOTIFICATION (0x83) */
+ static int iwl_rx_scan_results_notif(struct iwl_priv *priv,
+-				      struct iwl_rx_mem_buffer *rxb,
++				      struct iwl_rx_cmd_buffer *rxb,
+ 				      struct iwl_device_cmd *cmd)
+ {
+ #ifdef CONFIG_IWLWIFI_DEBUG
+@@ -328,7 +328,7 @@ static int iwl_rx_scan_results_notif(struct iwl_priv *priv,
+ 
+ /* Service SCAN_COMPLETE_NOTIFICATION (0x84) */
+ static int iwl_rx_scan_complete_notif(struct iwl_priv *priv,
+-				       struct iwl_rx_mem_buffer *rxb,
++				       struct iwl_rx_cmd_buffer *rxb,
+ 				       struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 53244d8..ed1811d 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -433,13 +433,21 @@ static inline int iwl_queue_dec_wrap(int index, int n_bd)
+ 	return --index & (n_bd - 1);
+ }
+ 
+-struct iwl_rx_mem_buffer {
+-	dma_addr_t page_dma;
+-	struct page *page;
+-	struct list_head list;
++struct iwl_rx_cmd_buffer {
++	struct page *_page;
+ };
+ 
+-#define rxb_addr(r) page_address(r->page)
++static inline void *rxb_addr(struct iwl_rx_cmd_buffer *r)
++{
++	return page_address(r->_page);
++}
++
++static inline struct page *rxb_steal_page(struct iwl_rx_cmd_buffer *r)
++{
++	struct page *p = r->_page;
++	r->_page = NULL;
++	return p;
++}
+ 
+ /*
+  * mac80211 queues, ACs, hardware queues, FIFOs.
+diff --git a/drivers/net/wireless/iwlwifi/iwl-testmode.c b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+index cc1f3e9..b24b166 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-testmode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-testmode.c
+@@ -131,7 +131,7 @@ struct nla_policy iwl_testmode_gnl_msg_policy[IWL_TM_ATTR_MAX] = {
+  * See the struct iwl_rx_packet in iwl-commands.h for the format of the
+  * received events from the device
+  */
+-static inline int get_event_length(struct iwl_rx_mem_buffer *rxb)
++static inline int get_event_length(struct iwl_rx_cmd_buffer *rxb)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	if (pkt)
+@@ -162,7 +162,7 @@ static inline int get_event_length(struct iwl_rx_mem_buffer *rxb)
+  */
+ 
+ static void iwl_testmode_ucode_rx_pkt(struct iwl_priv *priv,
+-				struct iwl_rx_mem_buffer *rxb)
++				      struct iwl_rx_cmd_buffer *rxb)
+ {
+ 	struct ieee80211_hw *hw = priv->hw;
+ 	struct sk_buff *skb;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+index b102946..632d409 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-int.h
+@@ -49,6 +49,12 @@ struct iwl_host_cmd;
+ /*This file includes the declaration that are internal to the
+  * trans_pcie layer */
+ 
++struct iwl_rx_mem_buffer {
++	dma_addr_t page_dma;
++	struct page *page;
++	struct list_head list;
++};
++
+ /**
+  * struct isr_statistics - interrupt statistics
+  *
+@@ -287,7 +293,7 @@ int iwlagn_txq_attach_buf_to_tfd(struct iwl_trans *trans,
+ int iwl_queue_init(struct iwl_queue *q, int count, int slots_num, u32 id);
+ int iwl_trans_pcie_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd);
+ void iwl_tx_cmd_complete(struct iwl_trans *trans,
+-			 struct iwl_rx_mem_buffer *rxb, int handler_status);
++			 struct iwl_rx_cmd_buffer *rxb, int handler_status);
+ void iwl_trans_txq_update_byte_cnt_tbl(struct iwl_trans *trans,
+ 					   struct iwl_tx_queue *txq,
+ 					   u16 byte_cnt);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+index 6495945..68e89be 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-rx.c
+@@ -367,8 +367,6 @@ void iwl_bg_rx_replenish(struct work_struct *data)
+  */
+ static void iwl_rx_handle(struct iwl_trans *trans)
+ {
+-	struct iwl_rx_mem_buffer *rxb;
+-	struct iwl_rx_packet *pkt;
+ 	struct iwl_trans_pcie *trans_pcie =
+ 		IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rx_queue *rxq = &trans_pcie->rxq;
+@@ -402,6 +400,9 @@ static void iwl_rx_handle(struct iwl_trans *trans)
+ 	while (i != r) {
+ 		int len, err;
+ 		u16 sequence;
++		struct iwl_rx_mem_buffer *rxb;
++		struct iwl_rx_cmd_buffer rxcb;
++		struct iwl_rx_packet *pkt;
+ 
+ 		rxb = rxq->queue[i];
+ 
+@@ -418,7 +419,9 @@ static void iwl_rx_handle(struct iwl_trans *trans)
+ 		dma_unmap_page(trans->dev, rxb->page_dma,
+ 			       PAGE_SIZE << hw_params(trans).rx_page_order,
+ 			       DMA_FROM_DEVICE);
+-		pkt = rxb_addr(rxb);
++
++		rxcb._page = rxb->page;
++		pkt = rxb_addr(&rxcb);
+ 
+ 		IWL_DEBUG_RX(trans, "r = %d, i = %d, %s, 0x%02x\n", r,
+ 			i, get_cmd_string(pkt->hdr.cmd), pkt->hdr.cmd);
+@@ -461,10 +464,10 @@ static void iwl_rx_handle(struct iwl_trans *trans)
+ 		     "reclaim is false, SEQ_RX_FRAME unset: %s\n",
+ 		     get_cmd_string(pkt->hdr.cmd));
+ 
+-		err = iwl_op_mode_rx(trans->op_mode, rxb, cmd);
++		err = iwl_op_mode_rx(trans->op_mode, &rxcb, cmd);
+ 
+ 		/*
+-		 * XXX: After here, we should always check rxb->page
++		 * XXX: After here, we should always check rxcb._page
+ 		 * against NULL before touching it or its virtual
+ 		 * memory (pkt). Because some rx_handler might have
+ 		 * already taken or freed the pages.
+@@ -475,12 +478,16 @@ static void iwl_rx_handle(struct iwl_trans *trans)
+ 			 * and fire off the (possibly) blocking
+ 			 * iwl_trans_send_cmd()
+ 			 * as we reclaim the driver command queue */
+-			if (rxb->page)
+-				iwl_tx_cmd_complete(trans, rxb, err);
++			if (rxcb._page)
++				iwl_tx_cmd_complete(trans, &rxcb, err);
+ 			else
+ 				IWL_WARN(trans, "Claim null rxb?\n");
+ 		}
+ 
++		/* page was stolen from us */
++		if (rxcb._page == NULL)
++			rxb->page = NULL;
++
+ 		/* Reuse the page if possible. For notification packets and
+ 		 * SKBs that fail to Rx correctly, add them back into the
+ 		 * rx_free list for reuse later. */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index 771fae2..0513b90 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -841,7 +841,7 @@ static void iwl_hcmd_queue_reclaim(struct iwl_trans *trans, int txq_id,
+  * will be executed.  The attached skb (if present) will only be freed
+  * if the callback returns 1
+  */
+-void iwl_tx_cmd_complete(struct iwl_trans *trans, struct iwl_rx_mem_buffer *rxb,
++void iwl_tx_cmd_complete(struct iwl_trans *trans, struct iwl_rx_cmd_buffer *rxb,
+ 			 int handler_status)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+@@ -879,9 +879,8 @@ void iwl_tx_cmd_complete(struct iwl_trans *trans, struct iwl_rx_mem_buffer *rxb,
+ 
+ 	/* Input error checking is done when commands are added to queue. */
+ 	if (meta->flags & CMD_WANT_SKB) {
+-		struct page *p = rxb->page;
++		struct page *p = rxb_steal_page(rxb);
+ 
+-		rxb->page = NULL;
+ 		meta->source->resp_pkt = pkt;
+ 		meta->source->_rx_page_addr = (unsigned long)page_address(p);
+ 		meta->source->_rx_page_order = hw_params(trans).rx_page_order;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-ucode.c b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+index 206a61c..12e79d0 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-ucode.c
++++ b/drivers/net/wireless/iwlwifi/iwl-ucode.c
+@@ -228,7 +228,7 @@ static int iwl_send_calib_cfg(struct iwl_trans *trans)
+ }
+ 
+ int iwlagn_rx_calib_result(struct iwl_priv *priv,
+-			    struct iwl_rx_mem_buffer *rxb,
++			    struct iwl_rx_cmd_buffer *rxb,
+ 			    struct iwl_device_cmd *cmd)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+-- 
+1.7.0.4
 
