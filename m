@@ -1,109 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36332 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757514Ab2CBIuQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 03:50:16 -0500
-Subject: Re: [PATCH 21/21] cw1200: Kconfig + Makefile for the driver.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dmitry Tarnyagin <dmitry.tarnyagin@stericsson.com>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <1330652495-25837-22-git-send-email-dmitry.tarnyagin@stericsson.com> (sfid-20120302_024231_185549_5ECA663F)
-References: <d53e019b1a0bcd29c2c367fbe5665413f2d33938-submit>
-	 <1330652495-25837-1-git-send-email-dmitry.tarnyagin@stericsson.com>
-	 <1330652495-25837-22-git-send-email-dmitry.tarnyagin@stericsson.com>
-	 (sfid-20120302_024231_185549_5ECA663F)
-Content-Type: text/plain; charset="UTF-8"
-Date: Fri, 02 Mar 2012 09:50:13 +0100
-Message-ID: <1330678213.8542.6.camel@jlt3.sipsolutions.net> (sfid-20120302_095021_187751_6786205C)
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:22398 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030203Ab2CEUiM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 15:38:12 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 30/33] iwlwifi: move uCode deallocation to drv
+Date: Mon,  5 Mar 2012 11:24:48 -0800
+Message-Id: <1330975491-19680-31-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120305_213822_125890_A3458F7B)
+In-Reply-To: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2012-03-02 at 02:41 +0100, Dmitry Tarnyagin wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> +if CW1200
+This shouldn't be in the op_mode, as it
+will later be switchable at runtime.
 
-I don't think that's necessary with the "depends on?"
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn.c |    2 --
+ drivers/net/wireless/iwlwifi/iwl-drv.c |    2 ++
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-> +config CW1200_STANDALONE
-> +      bool "Build a standalone cw1200 driver"
-> +      depends on CW1200
-> +      help
-> +        Say Y here if you would like to build a standalone cw1200 driver,
-> +        not associated with any platform. Likely you wil not be able to use
-> +	it for any purposes.
-> +        If unsure, say N.
-
-typo "will", and some indentation issue
-
-> +config CW1200_USE_STE_EXTENSIONS
-> +      bool "STE extensions"
-> +      depends on CW1200
-> +      help
-> +        Say Y if you want to include experimental code or code with
-> +	not resolved dependency.
-> +        If unsure, say N.
-
-This seems questionable. Maybe you should get rid of it for now and
-explain what is needed and extend the APIs as needed?
-
-> +config CW1200_WAPI_SUPPORT
-> +      bool "WAPI support"
-> +      depends on CW1200_USE_STE_EXTENSIONS
-> +      help
-> +        Say Y if your compat-wireless support WAPI.
-> +        If unsure, say N.
-
-This is unnecessary. You can always advertise support for SMS4. Also, it
-really shouldn't be talking about compat-wireless here since you're
-submitting this driver for upstream :-)
-
-> +config CW1200_DISABLE_BEACON_HINTS
-> +      bool "Disable 11d beacon hints"
-> +      depends on CW1200
-> +      help
-> +        Say Y if you want to disable 11d beacon hints.
-> +        If unsure, say N.
-
-I don't understand this -- beacon hints or not should be your decision
-based on how the device works wrt. regulatory, not the users?
-
-> +config CW1200_BH_DEBUG
-> +      bool "Enable low-level device communication logs (DEVELOPMENT)"
-> +      help
-> +        Say Y if you want to enable BH logs.
-> +        If unsure, say N.
-
-What does "BH" stand for here? In the kernel it typically stands for
-Bottom Half (or softirq) but that can't be meant? In other places in
-your code you do mean that though, it seems, so this is a bit confusing.
-
-> +config CW1200_WSM_DEBUG
-> +      bool "Enable WSM API debug messages (DEVELOPMENT)"
-> +      help
-> +        Say Y if you want to enable WSM logs.
-> +        If unsure, say N.
-> +
-> +config CW1200_WSM_DUMPS
-> +      bool "Verbose WSM API logging (DEVELOPMENT)"
-> +      help
-> +        Say Y if you want to enable WSM dumps.
-> +        If unsure, say N.
-
-You should think about adding tracing instead.
-
-> +config CW1200_WSM_DUMPS_SHORT
-> +      depends on CW1200_WSM_DUMPS
-> +      bool "Dump only first x bytes (default 20) (DEVELOPMENT)"
-> +      help
-> +        Say Y if you want to limit amount of data printed in WSM dumps.
-> +        If unsure, say N.
-
-Then you also don't need this since tracing is really fast. On a core i3
-I can trace full HT "line" rate. It's also a lot more powerful for
-analysis tools. Yes I need to give a talk about this some time ;-)
-
-
-johannes
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index 6dd4fae..c3b5946 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -1385,8 +1385,6 @@ static void iwl_op_mode_dvm_stop(struct iwl_op_mode *op_mode)
+ 	/*This will stop the queues, move the device to low power state */
+ 	iwl_trans_stop_device(trans(priv));
+ 
+-	iwl_dealloc_ucode(nic(priv));
+-
+ 	iwl_eeprom_free(priv->shrd);
+ 
+ 	/*netif_stop_queue(dev); */
+diff --git a/drivers/net/wireless/iwlwifi/iwl-drv.c b/drivers/net/wireless/iwlwifi/iwl-drv.c
+index 76fc440..590f576 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/iwlwifi/iwl-drv.c
+@@ -99,5 +99,7 @@ void iwl_drv_stop(struct iwl_shared *shrd)
+ 	if (shrd->nic->op_mode)
+ 		iwl_op_mode_stop(shrd->nic->op_mode);
+ 
++	iwl_dealloc_ucode(shrd->nic);
++
+ 	kfree(shrd->nic);
+ }
+-- 
+1.7.0.4
 
