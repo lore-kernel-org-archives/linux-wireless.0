@@ -1,54 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cora.hrz.tu-chemnitz.de ([134.109.228.40]:57259 "EHLO
-	cora.hrz.tu-chemnitz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758476Ab2CPOa7 (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:38106 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756444Ab2CEIsv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 10:30:59 -0400
-From: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
-Subject: [PATCH] mac80211: end service period only after sending last buffered frame
-Date: Fri, 16 Mar 2012 15:30:26 +0100
-Message-Id: <1331908226-6694-1-git-send-email-marco.porsch@etit.tu-chemnitz.de> (sfid-20120316_153104_695060_A088C5D3)
-In-Reply-To: <1331905240.6753.14.camel@jlt3.sipsolutions.net>
-References: <1331905240.6753.14.camel@jlt3.sipsolutions.net>
+	Mon, 5 Mar 2012 03:48:51 -0500
+Received: by vbbff1 with SMTP id ff1so3204276vbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2012 00:48:50 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAD2nsn1Wu66JUaPQmK4ktjUBeCjMp4xXG2=FDy3G-LnVDwtAVA@mail.gmail.com>
+References: <CALx5=V8BDFXD7KGBFia0MAkb2iv3x5dupGXTkKEDJ24DLJVx1g@mail.gmail.com>
+	<CAD2nsn2GLAo=8xhe+-Xm0igSmQ+tr1F+Q6scuFaeaQWMYrQbwg@mail.gmail.com>
+	<CALx5=V9LwpWVG0UGLgyNyJVrSYj826xXwbEcFQVYM5BxAxnEJQ@mail.gmail.com>
+	<CAD2nsn1Wu66JUaPQmK4ktjUBeCjMp4xXG2=FDy3G-LnVDwtAVA@mail.gmail.com>
+Date: Mon, 5 Mar 2012 14:18:50 +0530
+Message-ID: <CAD2nsn2wexoWksvvt-5oixpVEeAEybR5febwA1sf3jnxGh5g0g@mail.gmail.com> (sfid-20120305_094902_281425_0EE52D94)
+Subject: Re: [ath9k-devel] Any recommendation of direct access the GPIO from
+ specific address ?
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Matt Chen <machen@suse.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Mar 5, 2012 at 2:14 PM, Mohammed Shafi <shafi.wireless@gmail.com> wrote:
+> Hi Matt,
+>
+>> echo 0x404c to which file in /sys/kernel/debug/ath9k ?
+>
+> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# echo 0x404c > regidx
+> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
+> 0x00000c45
+> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
+> 0x00000c45
+>
+> -> toggle the rfkill button, wifi off
+>
+> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
+> 0x00000c55
+> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k#
+> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
+> 0x00000c55
+> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
+> 0x00000c55
+>
+> -> toggle the rfkill button, wifi ON
+>
+> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
+> 0x00000c45
+> root@shafi-laptop:/sys/kernel/debug/ieee80211/phy0/ath9k# cat regval
+> 0x00000c45
+>
+> please also see the dump of rfkill list, as i am external PCI card, my
+> card is only softblocked.
 
-Signed-off-by: Marco Porsch <marco.porsch@etit.tu-chemnitz.de>
----
- net/mac80211/sta_info.c |   16 +++++++++-------
- 1 files changed, 9 insertions(+), 7 deletions(-)
+please note my chip is AR9462, (AR9300 family)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index f468eb1..9b63cd7 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1257,13 +1257,15 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 			    ieee80211_is_qos_nullfunc(hdr->frame_control))
- 				qoshdr = ieee80211_get_qos_ctl(hdr);
- 
--			/* set EOSP for the frame */
--			if (reason == IEEE80211_FRAME_RELEASE_UAPSD &&
--			    qoshdr && skb_queue_empty(&frames))
--				*qoshdr |= IEEE80211_QOS_CTL_EOSP;
--
--			info->flags |= IEEE80211_TX_STATUS_EOSP |
--				       IEEE80211_TX_CTL_REQ_TX_STATUS;
-+			/* end service period after last frame */
-+			if (skb_queue_empty(&frames)) {
-+				if (reason == IEEE80211_FRAME_RELEASE_UAPSD &&
-+				    qoshdr)
-+					*qoshdr |= IEEE80211_QOS_CTL_EOSP;
-+
-+				info->flags |= IEEE80211_TX_STATUS_EOSP |
-+					       IEEE80211_TX_CTL_REQ_TX_STATUS;
-+			}
- 
- 			if (qoshdr)
- 				tids |= BIT(*qoshdr & IEEE80211_QOS_CTL_TID_MASK);
+>
+> --
+> thanks,
+> shafi
+
+
+
 -- 
-1.7.5.4
-
+thanks,
+shafi
