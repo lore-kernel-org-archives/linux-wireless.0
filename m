@@ -1,38 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:44424 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756031Ab2CINaI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Mar 2012 08:30:08 -0500
-Received: by pbcun15 with SMTP id un15so2533010pbc.19
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2012 05:30:08 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:55739 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932300Ab2CEO5d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 09:57:33 -0500
+Date: Mon, 5 Mar 2012 15:57:01 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>, security@kernel.org
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+Message-ID: <20120305145700.GA17800@redhat.com> (sfid-20120305_155749_946954_AFAC9813)
+References: <20111111150105.GA25437@nomi.cz>
+ <20111114140714.GD2513@redhat.com>
+ <20111119181106.GA5515@nomi.cz>
+ <1321755233.22510.1.camel@wwguy-ubuntu>
+ <20111120032016.GA14520@nomi.cz>
+ <1321763314.22510.4.camel@wwguy-ubuntu>
+ <20111120204007.GA7273@nomi.cz>
+ <20120210180929.GA17733@nomi.cz>
+ <20120214092020.GB12905@redhat.com>
+ <20120305140130.GA15186@nomi.cz>
 MIME-Version: 1.0
-In-Reply-To: <1331299538.3491.4.camel@jlt3.sipsolutions.net>
-References: <1331298825-22314-1-git-send-email-helmut.schaa@googlemail.com>
-	<1331299538.3491.4.camel@jlt3.sipsolutions.net>
-Date: Fri, 9 Mar 2012 14:30:08 +0100
-Message-ID: <CAGXE3d_M0w7KVB35aX9Kzd=MLU0qkQ27_r_=s84OHtygukbk_g@mail.gmail.com> (sfid-20120309_143018_310040_CCB17798)
-Subject: Re: [PATCH] mac80211: Disable MCS > 7 in minstrel_ht when STA uses
- static SMPS
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
-	nbd@openwrt.org
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20120305140130.GA15186@nomi.cz>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 9, 2012 at 2:25 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2012-03-09 at 14:13 +0100, Helmut Schaa wrote:
->> Disable multi stream rates (MCS > 7) when a STA is in static SMPS mode
->> since it has only one active rx chain. Hence, it doesn't even make
->> sense to sample multi stream rates.
->>
->> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
->> ---
->>
->> I haven't found a STA that makes use of static SMPS, so this is only compile tested.
->
-> You can easily make a mac80211 use it with the debugfs file?
+On Mon, Mar 05, 2012 at 03:01:30PM +0100, Tomáš Janoušek wrote:
+> > That make sense! Your "CPU instructions break things" theory sounds crazy,
+> > but I think it's logical. WPA enterprise differ from WPA-PSA (pre shared
+> > key) that the key changed periodically, SSL is used when keys are changed
+> > (via wpa_supplicant). So looks like 32-bit openssl generate object code
+> > that trigger bug on CPU, which crash other processes.
+> 
+> It seems that someone beat me to it. Since Linus fixed the FPU leaks in
+> 3.3-rc4, I haven't experienced the problem. And I was this close! :-)
 
-Thanks for the hint, doing some tests with iwlagn right now ...
+Yeh, that was really nasty bug. 
+
+> Anyway, thanks for assistance and sorry for being so slow to respond.
+
+No problem. Can you remind me, is this reproducible on 64-bit kernel
+with 32-bit user space? I'm asking because I would like to know if we
+need to  backport those fixes to our kernel. We do not enable
+CONFIG_CRYPTO_AES_NI_INTEL on 32 bit kernel, only on 64 bit, but if this
+problem happen with 32-bit user land with 64 bit kernel, we will need to
+do backport.
+
+Thanks
+Stanislaw
