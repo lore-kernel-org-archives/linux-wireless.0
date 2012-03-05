@@ -1,114 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:57464 "EHLO
-	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751972Ab2C0T2A (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:65328 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756459Ab2CEXb5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2012 15:28:00 -0400
-Message-ID: <4F7214A1.6080100@windriver.com> (sfid-20120327_212805_097804_DAD38668)
-Date: Tue, 27 Mar 2012 15:27:29 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
+	Mon, 5 Mar 2012 18:31:57 -0500
+Received: by mail-pw0-f46.google.com with SMTP id un15so3341146pbc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2012 15:31:56 -0800 (PST)
 MIME-Version: 1.0
-To: Hauke Mehrtens <hauke@hauke-m.de>
-CC: Julian Calaby <julian.calaby@gmail.com>, <zajec5@gmail.com>,
-	<linux-wireless@vger.kernel.org>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH] bcma: fix build error on MIPS; implicit pcibios_enable_device
-References: <1332720175-7659-1-git-send-email-paul.gortmaker@windriver.com> <CAGRGNgVBwKppzMa7HZeWm+ZW1a7u0JKwxxFS2xCRv=bpxXnk+Q@mail.gmail.com> <20120326012038.GA7722@windriver.com> <CAGRGNgVm_cNAdXZcSjj1oUz98vAVNEsdpZZ9L6=cc_sX_AZ8Rg@mail.gmail.com> <4F70543F.2010007@hauke-m.de> <20120326185641.GA22375@windriver.com> <4F719C46.9030006@hauke-m.de>
-In-Reply-To: <4F719C46.9030006@hauke-m.de>
-Content-Type: text/plain; charset="ISO-8859-1"
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH v4 2/2] mac80211: fix mesh airtime link metric estimating
+Date: Mon,  5 Mar 2012 15:31:48 -0800
+Message-Id: <1330990308-15077-2-git-send-email-thomas@cozybit.com> (sfid-20120306_003201_792999_E8BB3969)
+In-Reply-To: <1330990308-15077-1-git-send-email-thomas@cozybit.com>
+References: <1330990308-15077-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12-03-27 06:53 AM, Hauke Mehrtens wrote:
-> On 03/26/2012 09:56 PM, Paul Gortmaker wrote:
->> The following is seen during allmodconfig builds for MIPS:
->>
->> drivers/bcma/driver_pci_host.c:518:2: error: implicit declaration
->> of function 'pcibios_enable_device' [-Werror=implicit-function-declaration]
->> cc1: some warnings being treated as errors
->> make[3]: *** [drivers/bcma/driver_pci_host.o] Error 1
->>
->> Most likey introduced by commit 49dc9577155576b10ff79f0c1486c816b01f58bf
->>
->>    "bcma: add PCIe host controller"
->>
->> Add the header instead of implicitly assuming it will be present.
->> Sounds like a good idea, but that alone doesn't fix anything.
->>
->> The real problem is that the Kconfig has settings related to whether
->> PCI is possible, i.e.
->>
->>  config BCMA_HOST_PCI_POSSIBLE
->>        bool
->>        depends on BCMA && PCI = y
->>        default y
->>
->>  config BCMA_HOST_PCI
->>        bool "Support for BCMA on PCI-host bus"
->>        depends on BCMA_HOST_PCI_POSSIBLE
->>
->> ...but what is missing is that BCMA_DRIVER_PCI_HOSTMODE doesn't
->> have any dependencies on the above.  Add one.
->>
->> CC: Hauke Mehrtens <hauke@hauke-m.de>
->> CC: John W. Linville <linville@tuxdriver.com>
->> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
->> ---
->>
->> [ v2: depend on BCMA_HOST_PCI_POSSIBLE, not BCMA_HOST_PCI ]
->>
->> diff --git a/drivers/bcma/Kconfig b/drivers/bcma/Kconfig
->> index c1172da..6a0082d 100644
->> --- a/drivers/bcma/Kconfig
->> +++ b/drivers/bcma/Kconfig
->> @@ -29,7 +29,7 @@ config BCMA_HOST_PCI
->>  
->>  config BCMA_DRIVER_PCI_HOSTMODE
->>  	bool "Driver for PCI core working in hostmode"
->> -	depends on BCMA && MIPS
->> +	depends on BCMA && MIPS && BCMA_HOST_PCI_POSSIBLE
-> 
-> This is wrong the first patch you send was correct. Now it is possible
-> to select BCMA_DRIVER_PCI_HOSTMODE without selecting BCMA_DRIVER_PCI
-> which will cause build errors as host mode part uses bcma_pcie_read().
-> 
-> You should do this:
-> +	depends on BCMA && MIPS && BCMA_DRIVER_PCI
+Airtime link metric estimation was broken in HT mesh, use
+cfg80211_calculate_bitrate to get the right rate value.
 
-OK, the text in your follow-up here was confusing.
+Also factor out tx rate copying from sta_set_sinfo().
 
-http://marc.info/?l=linux-wireless&m=133276175202412&w=2
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 
-It made me think you agreed with the proposed correction
-and wanted a v2, vs. agreeing with my v1 interpretation.
+---
+v2:
+factor out rate copying (Johannes)
 
-If John can grab the v1 and your ack'd by from here:
+v3:
+just factor out tx rate copying (Johannes)
 
-http://marc.info/?l=linux-wireless&m=133272031621916&w=2
+v4:
+pass by reference and add "_tx" (Johannes)
 
-then great. I'll leave it in the hands of the wireless
-folks from here.
+ net/mac80211/cfg.c       |   23 +++++++++++++++--------
+ net/mac80211/mesh_hwmp.c |    6 ++++--
+ net/mac80211/sta_info.h  |    3 +++
+ 3 files changed, 22 insertions(+), 10 deletions(-)
 
-Paul.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 6a77d4c..f6aacd8 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -336,6 +336,20 @@ static void rate_idx_to_bitrate(struct rate_info *rate, struct sta_info *sta, in
+ 		rate->mcs = idx;
+ }
+ 
++void sta_set_rate_info_tx(struct sta_info *sta,
++			  const struct ieee80211_tx_rate *rate,
++			  struct rate_info *rinfo)
++{
++	rinfo->flags = 0;
++	if (rate->flags & IEEE80211_TX_RC_MCS)
++		rinfo->flags |= RATE_INFO_FLAGS_MCS;
++	if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
++		rinfo->flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
++	if (rate->flags & IEEE80211_TX_RC_SHORT_GI)
++		rinfo->flags |= RATE_INFO_FLAGS_SHORT_GI;
++	rate_idx_to_bitrate(rinfo, sta, rate->idx);
++}
++
+ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+@@ -378,14 +392,7 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 		sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
+ 	}
+ 
+-	sinfo->txrate.flags = 0;
+-	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
+-		sinfo->txrate.flags |= RATE_INFO_FLAGS_MCS;
+-	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
+-		sinfo->txrate.flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
+-	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_SHORT_GI)
+-		sinfo->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
+-	rate_idx_to_bitrate(&sinfo->txrate, sta, sta->last_tx_rate.idx);
++	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &sinfo->txrate);
+ 
+ 	sinfo->rxrate.flags = 0;
+ 	if (sta->last_rx_rate_flag & RX_FLAG_HT)
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 31bc762..13a4cb8 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -323,6 +323,7 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 				   struct sta_info *sta)
+ {
+ 	struct ieee80211_supported_band *sband;
++	struct rate_info rinfo;
+ 	/* This should be adjusted for each device */
+ 	int device_constant = 1 << ARITH_SHIFT;
+ 	int test_frame_len = TEST_FRAME_LEN << ARITH_SHIFT;
+@@ -336,7 +337,9 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 	if (sta->fail_avg >= 100)
+ 		return MAX_METRIC;
+ 
+-	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
++	sta_set_rate_info_tx(sta, &sta->last_tx_rate, &rinfo);
++	rate = cfg80211_calculate_bitrate(&rinfo);
++	if (WARN_ON(!rate))
+ 		return MAX_METRIC;
+ 
+ 	err = (sta->fail_avg << ARITH_SHIFT) / 100;
+@@ -344,7 +347,6 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 	/* bitrate is in units of 100 Kbps, while we need rate in units of
+ 	 * 1Mbps. This will be corrected on tx_time computation.
+ 	 */
+-	rate = sband->bitrates[sta->last_tx_rate.idx].bitrate;
+ 	tx_time = (device_constant + 10 * test_frame_len / rate);
+ 	estimated_retx = ((1 << (2 * ARITH_SHIFT)) / (s_unit - err));
+ 	result = (tx_time * estimated_retx) >> (2 * ARITH_SHIFT) ;
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 23a97c9..92715c6 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -528,6 +528,9 @@ void sta_info_init(struct ieee80211_local *local);
+ void sta_info_stop(struct ieee80211_local *local);
+ int sta_info_flush(struct ieee80211_local *local,
+ 		   struct ieee80211_sub_if_data *sdata);
++void sta_set_rate_info_tx(struct sta_info *sta,
++			  const struct ieee80211_tx_rate *rate,
++			  struct rate_info *rinfo);
+ void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
+ 			  unsigned long exp_time);
+ 
+-- 
+1.7.5.4
 
-> 
-> Maybe I should make it possible to build it with pcie host mode support,
-> but without pcie client mode support. For now it is not needed as all
-> device I know of have an other bcma device behind the pcie bus.
-> 
->>  	help
->>  	  PCI core hostmode operation (external PCI bus).
->>  
->> diff --git a/drivers/bcma/driver_pci_host.c b/drivers/bcma/driver_pci_host.c
->> index 4e20bcf..d2097a1 100644
->> --- a/drivers/bcma/driver_pci_host.c
->> +++ b/drivers/bcma/driver_pci_host.c
->> @@ -10,6 +10,7 @@
->>   */
->>  
->>  #include "bcma_private.h"
->> +#include <linux/pci.h>
->>  #include <linux/export.h>
->>  #include <linux/bcma/bcma.h>
->>  #include <asm/paccess.h>
-> 
