@@ -1,34 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:47554 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:11459 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752965Ab2CWOGw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 23 Mar 2012 10:06:52 -0400
-Date: Fri, 23 Mar 2012 15:15:00 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Eric Lapuyade <eric.lapuyade@linux.intel.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Subject: Re: [PATCH] NFC: Add Core support to generate tag lost event
-Message-ID: <20120323141500.GD7231@sortiz-mobl> (sfid-20120323_150655_161283_232922FB)
-References: <4F6C5C59.2060708@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4F6C5C59.2060708@linux.intel.com>
+	id S964952Ab2CEUiB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 15:38:01 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 03/33] iwlwifi: reduce sta_lock hold time in TX
+Date: Mon,  5 Mar 2012 11:24:21 -0800
+Message-Id: <1330975491-19680-4-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120305_213807_118417_1591E9BC)
+In-Reply-To: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Eric,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Fri, Mar 23, 2012 at 12:19:53PM +0100, Eric Lapuyade wrote:
-> Some HW/drivers get notifications when a tag moves out of the radio field.
-> This notification is now forwarded to user space through netlink.
-Thanks, applied to my nfc-next branch.
+When we TX, we hold the sta_lock for a long
+time, a lot of which isn't needed. Reduce
+the time we hold the lock. Note that this
+doesn't really change anything as the code
+is already under the other spinlock, but it
+makes the code easier to read.
 
-Cheers,
-Samuel.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index 81a3b0e..59509d8 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -341,13 +341,10 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	if (info->flags & IEEE80211_TX_CTL_AMPDU)
+ 		is_agg = true;
+ 
+-	/* irqs already disabled/saved above when locking priv->shrd->lock */
+-	spin_lock(&priv->shrd->sta_lock);
+-
+ 	dev_cmd = kmem_cache_alloc(priv->tx_cmd_pool, GFP_ATOMIC);
+ 
+ 	if (unlikely(!dev_cmd))
+-		goto drop_unlock_sta;
++		goto drop_unlock_priv;
+ 
+ 	memset(dev_cmd, 0, sizeof(*dev_cmd));
+ 	tx_cmd = (struct iwl_tx_cmd *) dev_cmd->payload;
+@@ -372,6 +369,9 @@ int iwlagn_tx_skb(struct iwl_priv *priv, struct sk_buff *skb)
+ 	info->driver_data[0] = ctx;
+ 	info->driver_data[1] = dev_cmd;
+ 
++	/* irqs already disabled/saved above when locking priv->shrd->lock */
++	spin_lock(&priv->shrd->sta_lock);
++
+ 	if (ieee80211_is_data_qos(fc) && !ieee80211_is_qos_nullfunc(fc)) {
+ 		u8 *qc = NULL;
+ 		struct iwl_tid_data *tid_data;
 -- 
-Intel Open Source Technology Centre
-http://oss.intel.com/
+1.7.0.4
+
