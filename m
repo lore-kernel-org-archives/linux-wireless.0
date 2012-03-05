@@ -1,109 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:57274 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751582Ab2CKV7i convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 11 Mar 2012 17:59:38 -0400
-MIME-Version: 1.0
-In-Reply-To: <1331496505-18697-4-git-send-email-hauke@hauke-m.de>
-References: <1331496505-18697-1-git-send-email-hauke@hauke-m.de> <1331496505-18697-4-git-send-email-hauke@hauke-m.de>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 12 Mar 2012 08:59:18 +1100
-Message-ID: <CAGRGNgX116dRB03NTL_DFZ4b_PYcdY+Un_cVwt6ZUGR1bwZzHA@mail.gmail.com> (sfid-20120311_225945_113991_479DE759)
-Subject: Re: [PATCH 3/7] bcma: scan for extra address space
-To: Hauke Mehrtens <hauke@hauke-m.de>
-Cc: gregkh@linuxfoundation.org, stern@rowland.harvard.edu,
-	linux-mips@linux-mips.org, ralf@linux-mips.org, m@bues.ch,
-	linux-usb@vger.kernel.org,
-	=?ISO-8859-2?Q?Rafa=B3_Mi=B3ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:22398 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965121Ab2CEUiJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 15:38:09 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 19/33] iwlwifi: use ieee80211_tx_status
+Date: Mon,  5 Mar 2012 11:24:37 -0800
+Message-Id: <1330975491-19680-20-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120305_213857_491071_685C28FB)
+In-Reply-To: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Hauke,
+From: Johannes Berg <johannes.berg@intel.com>
 
-On Mon, Mar 12, 2012 at 07:08, Hauke Mehrtens <hauke@hauke-m.de> wrote:
-> Some cores like the USB core have two address spaces. In the USB host
-> controller one address space is used for the OHCI and the other for the
-> EHCI controller interface. The USB controller is the only core I found
-> with two address spaces. This code is based on the AI scan function
-> ai_scan() in shared/aiutils.c i the Broadcom SDK.
->
-> CC: Rafał Miłecki <zajec5@gmail.com>
-> CC: linux-wireless@vger.kernel.org
-> Signed-off-by: Hauke Mehrtens <hauke@hauke-m.de>
-> ---
->  drivers/bcma/scan.c       |   18 +++++++++++++++++-
->  include/linux/bcma/bcma.h |    1 +
->  2 files changed, 18 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-> index 3a2f672..3c2eeed 100644
-> --- a/drivers/bcma/scan.c
-> +++ b/drivers/bcma/scan.c
-> @@ -286,6 +286,22 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
->                        return -EILSEQ;
->        }
->
-> +
-> +       /* First Slave Address Descriptor should be port 0:
-> +        * the main register space for the core
-> +        */
-> +       tmp = bcma_erom_get_addr_desc(bus, eromptr, SCAN_ADDR_TYPE_SLAVE, 0);
-> +       if (tmp <= 0) {
-> +               /* Try again to see if it is a bridge */
-> +               tmp = bcma_erom_get_addr_desc(bus, eromptr,
-> +                                             SCAN_ADDR_TYPE_BRIDGE, 0);
-> +               if (tmp > 0) {
-> +                       pr_info("found bridge");
-> +                       return -ENXIO;
-> +               }
+We currently use the _irqsafe version, but that
+isn't recommended together with ieee80211_rx()
+as it can cause races. If the device reports
+a TX-status and RX in that order then with the
+current combination mac80211 might process them
+in the other order, which can cause issues with
+powersaving clients.
 
-Should this do something if the second bcma_erom_get_addr_desc() call
-returns an error? We seem to be putting any errors from that call into
-the addr member of the core structure below.
+Use ieee80211_tx_status() to avoid this race.
+Since we don't want to call it with locks held,
+process the frame queues later -- this is fine
+as they are on the stack.
 
-> +       }
-> +       core->addr = tmp;
-> +
->        /* get & parse slave ports */
->        for (i = 0; i < ports[1]; i++) {
->                for (j = 0; ; j++) {
-> @@ -298,7 +314,7 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
->                                break;
->                        } else {
->                                if (i == 0 && j == 0)
-> -                                       core->addr = tmp;
-> +                                       core->addr1 = tmp;
->                        }
->                }
->        }
-> diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-> index 83c209f..7fe41e1 100644
-> --- a/include/linux/bcma/bcma.h
-> +++ b/include/linux/bcma/bcma.h
-> @@ -138,6 +138,7 @@ struct bcma_device {
->        u8 core_index;
->
->        u32 addr;
-> +       u32 addr1;
->        u32 wrap;
->
->        void __iomem *io_addr;
-> --
-> 1.7.5.4
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-tx.c |   28 ++++++++++++++++++----------
+ 1 files changed, 18 insertions(+), 10 deletions(-)
 
-
-
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+index e5ebc36..1914bee 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-tx.c
+@@ -1007,6 +1007,8 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
+ 	if (is_agg)
+ 		iwl_rx_reply_tx_agg(priv, tx_resp);
+ 
++	__skb_queue_head_init(&skbs);
++
+ 	if (tx_resp->frame_count == 1) {
+ 		u16 next_reclaimed = le16_to_cpu(tx_resp->seq_ctl);
+ 		next_reclaimed = SEQ_TO_SN(next_reclaimed + 0x10);
+@@ -1026,8 +1028,6 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
+ 			next_reclaimed = ssn;
+ 		}
+ 
+-		__skb_queue_head_init(&skbs);
+-
+ 		if (tid != IWL_TID_NON_QOS) {
+ 			priv->tid_data[sta_id][tid].next_reclaimed =
+ 				next_reclaimed;
+@@ -1040,8 +1040,9 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
+ 				  ssn, status, &skbs));
+ 		iwlagn_check_ratid_empty(priv, sta_id, tid);
+ 		freed = 0;
+-		while (!skb_queue_empty(&skbs)) {
+-			skb = __skb_dequeue(&skbs);
++
++		/* process frames */
++		skb_queue_walk(&skbs, skb) {
+ 			hdr = (struct ieee80211_hdr *)skb->data;
+ 
+ 			if (!ieee80211_is_data_qos(hdr->frame_control))
+@@ -1083,8 +1084,6 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
+ 			if (!is_agg)
+ 				iwlagn_non_agg_tx_status(priv, ctx, hdr->addr1);
+ 
+-			ieee80211_tx_status_irqsafe(priv->hw, skb);
+-
+ 			freed++;
+ 		}
+ 
+@@ -1093,6 +1092,12 @@ int iwlagn_rx_reply_tx(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
+ 
+ 	iwl_check_abort_status(priv, tx_resp->frame_count, status);
+ 	spin_unlock(&priv->sta_lock);
++
++	while (!skb_queue_empty(&skbs)) {
++		skb = __skb_dequeue(&skbs);
++		ieee80211_tx_status(priv->hw, skb);
++	}
++
+ 	return 0;
+ }
+ 
+@@ -1186,9 +1191,8 @@ int iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
+ 
+ 	iwlagn_check_ratid_empty(priv, sta_id, tid);
+ 	freed = 0;
+-	while (!skb_queue_empty(&reclaimed_skbs)) {
+ 
+-		skb = __skb_dequeue(&reclaimed_skbs);
++	skb_queue_walk(&reclaimed_skbs, skb) {
+ 		hdr = (struct ieee80211_hdr *)skb->data;
+ 
+ 		if (ieee80211_is_data_qos(hdr->frame_control))
+@@ -1211,10 +1215,14 @@ int iwlagn_rx_reply_compressed_ba(struct iwl_priv *priv,
+ 			iwlagn_hwrate_to_tx_control(priv, agg->rate_n_flags,
+ 						    info);
+ 		}
+-
+-		ieee80211_tx_status_irqsafe(priv->hw, skb);
+ 	}
+ 
+ 	spin_unlock(&priv->sta_lock);
++
++	while (!skb_queue_empty(&reclaimed_skbs)) {
++		skb = __skb_dequeue(&reclaimed_skbs);
++		ieee80211_tx_status(priv->hw, skb);
++	}
++
+ 	return 0;
+ }
 -- 
-Julian Calaby
+1.7.0.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
