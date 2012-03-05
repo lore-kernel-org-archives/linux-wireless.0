@@ -1,169 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48851 "EHLO nbd.name"
+Received: from mms2.broadcom.com ([216.31.210.18]:4886 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754100Ab2CRV63 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 18 Mar 2012 17:58:29 -0400
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net
-Subject: [PATCH v2 1/3] cfg80211: use compare_ether_addr on MAC addresses instead of memcmp
-Date: Sun, 18 Mar 2012 22:58:04 +0100
-Message-Id: <1332107886-41282-1-git-send-email-nbd@openwrt.org> (sfid-20120318_225832_100415_7A7C6869)
+	id S1756421Ab2CEJkM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 04:40:12 -0500
+Message-ID: <4F5489EE.20203@broadcom.com> (sfid-20120305_104049_820373_6D21D8A9)
+Date: Mon, 5 Mar 2012 10:39:58 +0100
+From: "Arend van Spriel" <arend@broadcom.com>
+MIME-Version: 1.0
+To: "Alan Cox" <alan@lxorguk.ukuu.org.uk>
+cc: "Luis R. Rodriguez" <mcgrof@frijolero.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] compat: makes all compat symbols
+ EXPORT_SYMBOL_GPL()
+References: <1330729706-11113-1-git-send-email-mcgrof@frijolero.org>
+ <4F52141C.2050808@broadcom.com>
+ <20120303161537.0b4ac739@pyramind.ukuu.org.uk>
+In-Reply-To: <20120303161537.0b4ac739@pyramind.ukuu.org.uk>
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Because of the constant size and guaranteed 16 bit alignment, the inline
-compare_ether_addr function is much cheaper than calling memcmp.
+On 03/03/2012 05:15 PM, Alan Cox wrote:
+>> Some of the modules in this patch are dual-licensed. I was under the
+>> impression that EXPORT_SYMBOL_GPL was specifically for GPL-only code
+>> although I could not find any specifics in the Documentation folder. Do
+>> you (or someone else) have a reference on this topic?
+>
+> If your code is licensed GPL or greater rights then you shouldn't have a
+> problem. The module loader recognizes
+>
+> 	"GPL"
+> 	"GPL v2"
+> 	"GPL and additional rights"
+> 	"Dual BSD/GPL"
+> 	"Dual MIT/GPL"
+> 	"DUal MPL/GPL"
+>
+> as legitimate users of _GPL. Any work which is derivative of the kernel
+> (which in practise I suspect means almost any module) will need a GPL
+> compatible licence anyway.
+>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/wireless/mlme.c |   32 +++++++++++++++++---------------
- net/wireless/scan.c |    2 +-
- 2 files changed, 18 insertions(+), 16 deletions(-)
+Hi, Alan
 
-diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
-index f5a7ac3..e14fdcc 100644
---- a/net/wireless/mlme.c
-+++ b/net/wireless/mlme.c
-@@ -6,6 +6,7 @@
- 
- #include <linux/kernel.h>
- #include <linux/module.h>
-+#include <linux/etherdevice.h>
- #include <linux/netdevice.h>
- #include <linux/nl80211.h>
- #include <linux/slab.h>
-@@ -100,7 +101,7 @@ void __cfg80211_send_deauth(struct net_device *dev,
- 	ASSERT_WDEV_LOCK(wdev);
- 
- 	if (wdev->current_bss &&
--	    memcmp(wdev->current_bss->pub.bssid, bssid, ETH_ALEN) == 0) {
-+	    compare_ether_addr(wdev->current_bss->pub.bssid, bssid) == 0) {
- 		cfg80211_unhold_bss(wdev->current_bss);
- 		cfg80211_put_bss(&wdev->current_bss->pub);
- 		wdev->current_bss = NULL;
-@@ -115,7 +116,7 @@ void __cfg80211_send_deauth(struct net_device *dev,
- 
- 		reason_code = le16_to_cpu(mgmt->u.deauth.reason_code);
- 
--		from_ap = memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0;
-+		from_ap = compare_ether_addr(mgmt->sa, dev->dev_addr) != 0;
- 		__cfg80211_disconnected(dev, NULL, 0, reason_code, from_ap);
- 	} else if (wdev->sme_state == CFG80211_SME_CONNECTING) {
- 		__cfg80211_connect_result(dev, mgmt->bssid, NULL, 0, NULL, 0,
-@@ -154,7 +155,7 @@ void __cfg80211_send_disassoc(struct net_device *dev,
- 		return;
- 
- 	if (wdev->current_bss &&
--	    memcmp(wdev->current_bss->pub.bssid, bssid, ETH_ALEN) == 0) {
-+	    compare_ether_addr(wdev->current_bss->pub.bssid, bssid) == 0) {
- 		cfg80211_sme_disassoc(dev, wdev->current_bss);
- 		cfg80211_unhold_bss(wdev->current_bss);
- 		cfg80211_put_bss(&wdev->current_bss->pub);
-@@ -165,7 +166,7 @@ void __cfg80211_send_disassoc(struct net_device *dev,
- 
- 	reason_code = le16_to_cpu(mgmt->u.disassoc.reason_code);
- 
--	from_ap = memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0;
-+	from_ap = compare_ether_addr(mgmt->sa, dev->dev_addr) != 0;
- 	__cfg80211_disconnected(dev, NULL, 0, reason_code, from_ap);
- }
- EXPORT_SYMBOL(__cfg80211_send_disassoc);
-@@ -285,7 +286,7 @@ int __cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
- 			return -EINVAL;
- 
- 	if (wdev->current_bss &&
--	    memcmp(bssid, wdev->current_bss->pub.bssid, ETH_ALEN) == 0)
-+	    compare_ether_addr(bssid, wdev->current_bss->pub.bssid) == 0)
- 		return -EALREADY;
- 
- 	memset(&req, 0, sizeof(req));
-@@ -362,7 +363,7 @@ int __cfg80211_mlme_assoc(struct cfg80211_registered_device *rdev,
- 	memset(&req, 0, sizeof(req));
- 
- 	if (wdev->current_bss && prev_bssid &&
--	    memcmp(wdev->current_bss->pub.bssid, prev_bssid, ETH_ALEN) == 0) {
-+	    compare_ether_addr(wdev->current_bss->pub.bssid, prev_bssid) == 0) {
- 		/*
- 		 * Trying to reassociate: Allow this to proceed and let the old
- 		 * association to be dropped when the new one is completed.
-@@ -446,7 +447,8 @@ int __cfg80211_mlme_deauth(struct cfg80211_registered_device *rdev,
- 
- 	if (local_state_change) {
- 		if (wdev->current_bss &&
--		    memcmp(wdev->current_bss->pub.bssid, bssid, ETH_ALEN) == 0) {
-+		    compare_ether_addr(wdev->current_bss->pub.bssid, bssid)
-+		    == 0) {
- 			cfg80211_unhold_bss(wdev->current_bss);
- 			cfg80211_put_bss(&wdev->current_bss->pub);
- 			wdev->current_bss = NULL;
-@@ -495,7 +497,7 @@ static int __cfg80211_mlme_disassoc(struct cfg80211_registered_device *rdev,
- 	req.local_state_change = local_state_change;
- 	req.ie = ie;
- 	req.ie_len = ie_len;
--	if (memcmp(wdev->current_bss->pub.bssid, bssid, ETH_ALEN) == 0)
-+	if (compare_ether_addr(wdev->current_bss->pub.bssid, bssid) == 0)
- 		req.bss = &wdev->current_bss->pub;
- 	else
- 		return -ENOTCONN;
-@@ -758,8 +760,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 				break;
- 			}
- 
--			if (memcmp(wdev->current_bss->pub.bssid,
--				   mgmt->bssid, ETH_ALEN)) {
-+			if (compare_ether_addr(wdev->current_bss->pub.bssid,
-+					       mgmt->bssid)) {
- 				err = -ENOTCONN;
- 				break;
- 			}
-@@ -772,8 +774,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 				break;
- 
- 			/* for station, check that DA is the AP */
--			if (memcmp(wdev->current_bss->pub.bssid,
--				   mgmt->da, ETH_ALEN)) {
-+			if (compare_ether_addr(wdev->current_bss->pub.bssid,
-+					       mgmt->da)) {
- 				err = -ENOTCONN;
- 				break;
- 			}
-@@ -781,11 +783,11 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 		case NL80211_IFTYPE_AP:
- 		case NL80211_IFTYPE_P2P_GO:
- 		case NL80211_IFTYPE_AP_VLAN:
--			if (memcmp(mgmt->bssid, dev->dev_addr, ETH_ALEN))
-+			if (compare_ether_addr(mgmt->bssid, dev->dev_addr))
- 				err = -EINVAL;
- 			break;
- 		case NL80211_IFTYPE_MESH_POINT:
--			if (memcmp(mgmt->sa, mgmt->bssid, ETH_ALEN)) {
-+			if (compare_ether_addr(mgmt->sa, mgmt->bssid)) {
- 				err = -EINVAL;
- 				break;
- 			}
-@@ -804,7 +806,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
- 			return err;
- 	}
- 
--	if (memcmp(mgmt->sa, dev->dev_addr, ETH_ALEN) != 0)
-+	if (compare_ether_addr(mgmt->sa, dev->dev_addr) != 0)
- 		return -EINVAL;
- 
- 	/* Transmit the Action frame as requested by user space */
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index 70faadf..fdbcfe6 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -378,7 +378,7 @@ static int cmp_bss_core(struct cfg80211_bss *a,
- 			       b->len_information_elements);
- 	}
- 
--	return memcmp(a->bssid, b->bssid, ETH_ALEN);
-+	return compare_ether_addr(a->bssid, b->bssid);
- }
- 
- static int cmp_bss(struct cfg80211_bss *a,
--- 
-1.7.3.2
+I found the list above in module.h, but was not sure whether it was ok 
+to use _GPL for dual license. Thanks for clarifying this.
+
+Gr. AvS
 
