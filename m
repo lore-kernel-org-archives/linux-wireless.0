@@ -1,58 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9221 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030976Ab2CSPAm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 11:00:42 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH] mac80211: fix possible tid_rx->reorder_timer use after free
-Date: Mon, 19 Mar 2012 16:00:26 +0100
-Message-Id: <1332169226-23204-1-git-send-email-sgruszka@redhat.com> (sfid-20120319_160046_281112_FB7D1146)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43436 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755314Ab2CEQ7J (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 11:59:09 -0500
+Message-ID: <4F54F0D8.705@qca.qualcomm.com> (sfid-20120305_175914_449161_1E653FEC)
+Date: Mon, 5 Mar 2012 18:59:04 +0200
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+MIME-Version: 1.0
+To: Raja Mani <rmani@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
+Subject: Re: [PATCH v2 1/1] ath6kl: Check wow state before sending control
+ and data pkt
+References: <1328779916-7732-1-git-send-email-rmani@qca.qualcomm.com> <4F4B95A7.2060809@qca.qualcomm.com> <4F4C6A78.3070704@qca.qualcomm.com>
+In-Reply-To: <4F4C6A78.3070704@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is possible that we will arm the tid_rx->reorder_timer after
-del_timer_sync() in ___ieee80211_stop_rx_ba_session(). We need to stop
-timer after RCU grace period finish, so move it to
-ieee80211_free_tid_rx(). Timer will not be armed again, as
-rcu_dereference(sta->ampdu_mlme.tid_rx[tid]) will return NULL.
+On 02/28/2012 07:47 AM, Raja Mani wrote:
+> On Monday 27 February 2012 08:09 PM, Kalle Valo wrote:
+>> On 02/09/2012 11:31 AM, rmani@qca.qualcomm.com wrote:
+>>
+>>> --- a/drivers/net/wireless/ath/ath6kl/sdio.c
+>>> +++ b/drivers/net/wireless/ath/ath6kl/sdio.c
+>>> @@ -901,8 +901,12 @@ static int ath6kl_sdio_resume(struct ath6kl *ar)
+>>>
+>>>   	case ATH6KL_STATE_WOW:
+>>>   		break;
+>>> +
+>>>   	case ATH6KL_STATE_SCHED_SCAN:
+>>>   		break;
+>>> +
+>>> +	default:
+>>> +		break;
+>>>   	}
+>>
+>> Don't add the default case, instead add all states explicitly. That way
+>> it's easier to track state changes.
+> 
+> I don't see any value addition having CASE statement for each state
+> here. We are not doing any specific operation other than the state
+> ATH6KL_STATE_OFF and ATH6KL_STATE_CUTPOWER.
+> 
+> IMHO, cases can be added later if we want to do anything specific to the 
+> state in future.
+> 
+> To fix sparse errors, i added default case here.
 
-Debug object detected problem with the following warning:
-ODEBUG: free active (active state 0) object type: timer_list hint: sta_rx_agg_reorder_timer_expired+0x0/0xf0 [mac80211]
+The idea is to force the person adding a new state to think if something
+special needs to handled for the state. If we have a default case it's
+easy to miss it as compiler doesn't warn anything.
 
-Bug report (with all warning messages):
-https://bugzilla.redhat.com/show_bug.cgi?id=804007
+>>> @@ -359,6 +362,13 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
+>>>   		return 0;
+>>>   	}
+>>>
+>>> +	if (WARN_ON_ONCE(ar->state != ATH6KL_STATE_ON)) {
+>>> +		set_bit(NETQ_STOPPED,&vif->flags);
+>>> +		netif_stop_queue(dev);
+>>> +		dev_kfree_skb(skb);
+>>> +		return 0;
+>>> +	}
+>>
+>> Don't stop the queue here, dropping the packet is enough.
+> 
+> As per your comments in V1, i added this change.
+> Do you want me to change it again ?
+> 
+> This is what i received from you.
+> 
+> "Don't think about dropping packets, instead try to make sure that the
+> packet flow is _stopped_. Dropping packets should be the last resort,
+> instead we need to go to the source of the packets. For data packets
+> this means that we need to stop netdev queues. For control packets we
+> need to make sure that cfg80211 ops in cfg80211.c don't issue any new
+> wmi commands. And maybe we should also consider debugfs and wmi events
+> as they can also issue new wmi commands."
 
-Reported-by: "jan p. springer" <jsd@igroup.org>
-Cc: stable@vger.kernel.org
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- net/mac80211/agg-rx.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Sorry for writing in a confusing way, but I didn't mean this. I meant
+stopping the queue from suspend path, not in the data path. The
+WARN_ON_ONCE() should not happen so dropping packets should be safe.
+It's better to stop and stop the queue from one place (ie suspend/resume
+handlers) than doing it also here. It doesn't gain anything.
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 1068f66..64d3ce5 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -49,6 +49,8 @@ static void ieee80211_free_tid_rx(struct rcu_head *h)
- 		container_of(h, struct tid_ampdu_rx, rcu_head);
- 	int i;
- 
-+	del_timer_sync(&tid_rx->reorder_timer);
-+
- 	for (i = 0; i < tid_rx->buf_size; i++)
- 		dev_kfree_skb(tid_rx->reorder_buf[i]);
- 	kfree(tid_rx->reorder_buf);
-@@ -91,7 +93,6 @@ void ___ieee80211_stop_rx_ba_session(struct sta_info *sta, u16 tid,
- 				     tid, WLAN_BACK_RECIPIENT, reason);
- 
- 	del_timer_sync(&tid_rx->session_timer);
--	del_timer_sync(&tid_rx->reorder_timer);
- 
- 	call_rcu(&tid_rx->rcu_head, ieee80211_free_tid_rx);
- }
--- 
-1.7.1
-
+Kalle
