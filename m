@@ -1,71 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41390 "EHLO nbd.name"
+Received: from mga09.intel.com ([134.134.136.24]:11459 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754978Ab2CGR1i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 12:27:38 -0500
-Message-ID: <4F579A88.6030503@openwrt.org> (sfid-20120307_182743_066065_F676A18B)
-Date: Wed, 07 Mar 2012 18:27:36 +0100
-From: Felix Fietkau <nbd@openwrt.org>
-MIME-Version: 1.0
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-CC: Mohammed Shafi <shafi.wireless@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	Linux-netdev <netdev@vger.kernel.org>,
-	Linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: ath: DMA failed to stop in 10 ms AR_CR=0x00000024 AR_DIAG_SW=0x02000020
- DMADBG_7=0x00008040
-References: <4F576FD5.2050208@gmail.com> <CAD2nsn23UqshHz1ZUn8bHN0rWyOMbBHhn9V8pmCc4_aT_uGYaw@mail.gmail.com> <4F577D9B.7020402@gmail.com>
-In-Reply-To: <4F577D9B.7020402@gmail.com>
-Content-Type: text/plain; charset=ISO-8859-1
+	id S965036Ab2CEUiC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 15:38:02 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 05/33] iwlwifi: build some station commands directly
+Date: Mon,  5 Mar 2012 11:24:23 -0800
+Message-Id: <1330975491-19680-6-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120305_213807_712230_0F3DD073)
+In-Reply-To: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2012-03-07 4:24 PM, Justin P. Mattock wrote:
-> On 03/07/2012 07:19 AM, Mohammed Shafi wrote:
->> On Wed, Mar 7, 2012 at 7:55 PM, Justin P. Mattock
->> <justinmattock@gmail.com>  wrote:
->>> ath9k craps out from time to time(more annoying if anything)
->>>
->>> [44309.840830] ath: Failed to stop TX DMA, queues=0x001!
->>> [44309.858246] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
->>> [44309.858255] ath: Could not stop RX, we could be confusing the DMA engine
->>> when we start RX up
->>> [44309.932801] ath: Failed to stop TX DMA, queues=0x001!
->>> [44309.950352] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
->>> [44309.950361] ath: Could not stop RX, we could be confusing the DMA engine
->>> when we start RX up
->>> [44310.024301] ath: Failed to stop TX DMA, queues=0x001!
->>> [44310.041641] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
->>> [44310.041646] ath: Could not stop RX, we could be confusing the DMA engine
->>> when we start RX up
->>> [44310.116316] ath: Failed to stop TX DMA, queues=0x001!
->>> [44310.133909] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
->>> [44310.133918] ath: Could not stop RX, we could be confusing the DMA engine
->>> when we start RX up
->>> [44310.208021] ath: Failed to stop TX DMA, queues=0x001!
->>> [44310.225752] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00008040
->>> [44310.225761] ath: Could not stop RX, we could be confusing the DMA engine
->>> when we start RX up
->>> [44310.299922] ath: Failed to stop TX DMA, queues=0x001!
->>> [44310.317579] ath: DMA failed to stop in 10 ms AR_CR=0x00000024
->>> AR_DIAG_SW=0x02000020 DMADBG_7=0x00006040
->>> [44310.317587] ath: Could not stop RX, we could be confusing the DMA engine
->>> whe
->>
->> this is has become a know issue but less harmful, please try to see if
->> the workaround of disabling power save helps
->>
->> iw dev wlanX set power_save off
->>
-> 
-> ok! I have set that on the machine.. will see if I get this message in 
-> the upcoming weeks.
-Also, please try this patch with powersave enabled:
-http://nbd.name/ps-fix.patch
+From: Johannes Berg <johannes.berg@intel.com>
 
-- Felix
+In the powersave related functions we only need
+to set a few parameters for the station command
+and can otherwise leave it blank -- there's no
+need to copy it from the database.
+
+This allows us to not use the sta lock here.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+---
+ drivers/net/wireless/iwlwifi/iwl-agn-sta.c  |   20 +++++++++-----------
+ drivers/net/wireless/iwlwifi/iwl-mac80211.c |   16 ++++++----------
+ 2 files changed, 15 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+index 3eb8fd4..6b9af99 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-sta.c
+@@ -1437,16 +1437,14 @@ int iwl_sta_rx_agg_stop(struct iwl_priv *priv, struct ieee80211_sta *sta,
+ 
+ void iwl_sta_modify_sleep_tx_count(struct iwl_priv *priv, int sta_id, int cnt)
+ {
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
+-	priv->stations[sta_id].sta.station_flags |= STA_FLG_PWR_SAVE_MSK;
+-	priv->stations[sta_id].sta.station_flags_msk = STA_FLG_PWR_SAVE_MSK;
+-	priv->stations[sta_id].sta.sta.modify_mask =
+-					STA_MODIFY_SLEEP_TX_COUNT_MSK;
+-	priv->stations[sta_id].sta.sleep_tx_count = cpu_to_le16(cnt);
+-	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+-	iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
+-	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
++	struct iwl_addsta_cmd cmd = {
++		.mode = STA_CONTROL_MODIFY_MSK,
++		.station_flags = STA_FLG_PWR_SAVE_MSK,
++		.station_flags_msk = STA_FLG_PWR_SAVE_MSK,
++		.sta.sta_id = sta_id,
++		.sta.modify_mask = STA_MODIFY_SLEEP_TX_COUNT_MSK,
++		.sleep_tx_count = cpu_to_le16(cnt),
++	};
+ 
++	iwl_send_add_sta(priv, &cmd, CMD_ASYNC);
+ }
+diff --git a/drivers/net/wireless/iwlwifi/iwl-mac80211.c b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+index 03f7705..9fba532 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-mac80211.c
++++ b/drivers/net/wireless/iwlwifi/iwl-mac80211.c
+@@ -1505,17 +1505,13 @@ static int iwlagn_mac_sta_remove(struct ieee80211_hw *hw,
+ 
+ static void iwl_sta_modify_ps_wake(struct iwl_priv *priv, int sta_id)
+ {
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
+-	priv->stations[sta_id].sta.station_flags &= ~STA_FLG_PWR_SAVE_MSK;
+-	priv->stations[sta_id].sta.station_flags_msk = STA_FLG_PWR_SAVE_MSK;
+-	priv->stations[sta_id].sta.sta.modify_mask = 0;
+-	priv->stations[sta_id].sta.sleep_tx_count = 0;
+-	priv->stations[sta_id].sta.mode = STA_CONTROL_MODIFY_MSK;
+-	iwl_send_add_sta(priv, &priv->stations[sta_id].sta, CMD_ASYNC);
+-	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
++	struct iwl_addsta_cmd cmd = {
++		.mode = STA_CONTROL_MODIFY_MSK,
++		.station_flags_msk = STA_FLG_PWR_SAVE_MSK,
++		.sta.sta_id = sta_id,
++	};
+ 
++	iwl_send_add_sta(priv, &cmd, CMD_ASYNC);
+ }
+ 
+ static void iwlagn_mac_sta_notify(struct ieee80211_hw *hw,
+-- 
+1.7.0.4
+
