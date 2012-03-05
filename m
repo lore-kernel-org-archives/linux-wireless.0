@@ -1,124 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:54878 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752597Ab2CUD4n (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 20 Mar 2012 23:56:43 -0400
-Received: by dajr28 with SMTP id r28so958284daj.19
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Mar 2012 20:56:42 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, javier@cozybit.com, thomas@cozybit.com,
-	linville@tuxdriver.com, devel@lists.open80211s.org,
-	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH] mac80211: fix the RANN propagation issues
-Date: Wed, 21 Mar 2012 20:33:02 +0800
-Message-Id: <1332333182-11941-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20120321_045651_492547_578FC9B8)
+Received: from mga03.intel.com ([143.182.124.21]:65491 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753721Ab2CDX5b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 18:57:31 -0500
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 04/22] NFC: Handle Receiver Not Ready LLCP frame
+Date: Mon,  5 Mar 2012 01:03:36 +0100
+Message-Id: <1330905834-6994-5-git-send-email-sameo@linux.intel.com> (sfid-20120305_005734_938948_0AAAB98B)
+In-Reply-To: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
+References: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch is intended to solve the follwing issues in RANN propagation:
-[1] The interval in propagated RANN should be based on the interval of received RANN.
-[2] The aggregated path metric for propagated RANN is as received plus own link metric
-    towards the transmitting mesh STA (not root mesh STA).
-[3] The comparison of path metric for RANN with same sequence number should be done
-    before deciding whether to propagate or not.
-
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- net/mac80211/mesh.h      |    2 ++
- net/mac80211/mesh_hwmp.c |   21 +++++++++++++++++----
- 2 files changed, 19 insertions(+), 4 deletions(-)
+ net/nfc/llcp/llcp.c |   16 +++++++++++-----
+ 1 files changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 8d53b71..adf1be3 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -86,6 +86,7 @@ enum mesh_deferred_task_flags {
-  * mpath itself.  No need to take this lock when adding or removing
-  * an mpath to a hash bucket on a path table.
-  * @rann_snd_addr: the RANN sender address
-+ * @rann_metric: the aggregated path metric towards the root node
-  * @is_root: the destination station of this path is a root node
-  * @is_gate: the destination station of this path is a mesh gate
-  *
-@@ -112,6 +113,7 @@ struct mesh_path {
- 	enum mesh_path_flags flags;
- 	spinlock_t state_lock;
- 	u8 rann_snd_addr[ETH_ALEN];
-+	u32 rann_metric;
- 	bool is_root;
- 	bool is_gate;
- };
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index f80a9e3..fcfebc7 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -88,6 +88,7 @@ static inline u32 u16_field_get(u8 *preq_elem, int offset, bool ae)
- #define MSEC_TO_TU(x) (x*1000/1024)
- #define SN_GT(x, y) ((long) (y) - (long) (x) < 0)
- #define SN_LT(x, y) ((long) (x) - (long) (y) < 0)
-+#define SN_EQ(x, y) ((long) (x) - (long) (y) == 0)
- 
- #define net_traversal_jiffies(s) \
- 	msecs_to_jiffies(s->u.mesh.mshcfg.dot11MeshHWMPnetDiameterTraversalTime)
-@@ -732,11 +733,12 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 				struct ieee80211_rann_ie *rann)
- {
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-+	struct ieee80211_local *local = sdata->local;
-+	struct sta_info *sta;
- 	struct mesh_path *mpath;
- 	u8 ttl, flags, hopcount;
- 	u8 *orig_addr;
--	u32 orig_sn, metric;
--	u32 interval = ifmsh->mshcfg.dot11MeshHWMPRannInterval;
-+	u32 orig_sn, metric, metric_txsta, interval;
- 	bool root_is_gate;
- 
- 	ttl = rann->rann_ttl;
-@@ -749,6 +751,7 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 	root_is_gate = !!(flags & RANN_FLAG_IS_GATE);
- 	orig_addr = rann->rann_addr;
- 	orig_sn = le32_to_cpu(rann->rann_seq);
-+	interval = le32_to_cpu(rann->rann_interval);
- 	hopcount = rann->rann_hopcount;
- 	hopcount++;
- 	metric = le32_to_cpu(rann->rann_metric);
-@@ -761,6 +764,14 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 			orig_addr, mgmt->sa, root_is_gate);
- 
- 	rcu_read_lock();
-+	sta = sta_info_get(sdata, mgmt->sa);
-+	if (!sta) {
-+		rcu_read_unlock();
-+		return;
-+	}
-+
-+	metric_txsta = airtime_link_metric_get(local, sta);
-+
- 	mpath = mesh_path_lookup(orig_addr, sdata);
- 	if (!mpath) {
- 		mesh_path_add(orig_addr, sdata);
-@@ -780,14 +791,16 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 		mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH);
+diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
+index 8510a2f..bbfaa27 100644
+--- a/net/nfc/llcp/llcp.c
++++ b/net/nfc/llcp/llcp.c
+@@ -671,15 +671,15 @@ static void nfc_llcp_recv_hdlc(struct nfc_llcp_local *local,
+ 		nfc_llcp_sock_put(llcp_sock);
  	}
  
--	if (mpath->sn < orig_sn && ifmsh->mshcfg.dot11MeshForwarding) {
-+	if ((SN_LT(mpath->sn, orig_sn) || (SN_EQ(mpath->sn, orig_sn) &&
-+	   metric < mpath->rann_metric)) && ifmsh->mshcfg.dot11MeshForwarding) {
- 		mesh_path_sel_frame_tx(MPATH_RANN, flags, orig_addr,
- 				       cpu_to_le32(orig_sn),
- 				       0, NULL, 0, broadcast_addr,
- 				       hopcount, ttl, cpu_to_le32(interval),
--				       cpu_to_le32(metric + mpath->metric),
-+				       cpu_to_le32(metric + metric_txsta),
- 				       0, sdata);
- 		mpath->sn = orig_sn;
-+		mpath->rann_metric = metric + metric_txsta;
+-	if (ns == llcp_sock->recv_n)
+-		llcp_sock->recv_n = (llcp_sock->recv_n + 1) % 16;
+-	else
+-		pr_err("Received out of sequence I PDU\n");
+-
+ 	/* Pass the payload upstream */
+ 	if (ptype == LLCP_PDU_I) {
+ 		pr_debug("I frame, queueing on %p\n", &llcp_sock->sk);
+ 
++		if (ns == llcp_sock->recv_n)
++			llcp_sock->recv_n = (llcp_sock->recv_n + 1) % 16;
++		else
++			pr_err("Received out of sequence I PDU\n");
++
+ 		skb_pull(skb, LLCP_HEADER_SIZE + LLCP_SEQUENCE_SIZE);
+ 		if (sock_queue_rcv_skb(&llcp_sock->sk, skb)) {
+ 			pr_err("receive queue is full\n");
+@@ -700,6 +700,11 @@ static void nfc_llcp_recv_hdlc(struct nfc_llcp_local *local,
+ 			}
  	}
  
- 	/* Using individually addressed PREQ for root node */
++	if (ptype == LLCP_PDU_RR)
++		llcp_sock->remote_ready = true;
++        else if (ptype == LLCP_PDU_RNR)
++		llcp_sock->remote_ready = false;
++
+ 	nfc_llcp_queue_i_frames(llcp_sock);
+ 
+ 	release_sock(sk);
+@@ -813,6 +818,7 @@ static void nfc_llcp_rx_work(struct work_struct *work)
+ 
+ 	case LLCP_PDU_I:
+ 	case LLCP_PDU_RR:
++	case LLCP_PDU_RNR:
+ 		pr_debug("I frame\n");
+ 		nfc_llcp_recv_hdlc(local, skb);
+ 		break;
 -- 
-1.7.0.4
+1.7.7.3
 
