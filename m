@@ -1,140 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:63798 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757235Ab2CIE0L (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 23:26:11 -0500
-Received: by iagz16 with SMTP id z16so1692806iag.19
-        for <linux-wireless@vger.kernel.org>; Thu, 08 Mar 2012 20:26:11 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: linville@tuxdriver.com
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless@vger.kernel.org, zajec5@gmail.com
-Subject: [PATCH 1/5 V2] b43legacy: Load firmware from work queue instead of from probe routine
-Date: Thu,  8 Mar 2012 22:25:57 -0600
-Message-Id: <1331267157-19476-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20120309_052616_822085_93A864FB)
+Received: from mga01.intel.com ([192.55.52.88]:54701 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755074Ab2CDX6U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 18:58:20 -0500
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 19/22] NFC: Fix LLCP sockets releasing path
+Date: Mon,  5 Mar 2012 01:03:51 +0100
+Message-Id: <1330905834-6994-20-git-send-email-sameo@linux.intel.com> (sfid-20120305_005825_124432_DB563AAF)
+In-Reply-To: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
+References: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Recent changes in udev are causing problems for drivers that load firmware
-from the probe routine. As b43legacy has such a structure, it must be changed.
-As this driver loads 3 or 4 firmware files, changing to the asynchronous routine
-request_firmware_nowait() would be complicated. In this implementation, the probe
-routine starts a work queue that calls the firmware loading routines.
+The socket local pointer needs to be set to NULL when the adapter is
+removed or the MAC goes down.
+If the socket release code is called after such an event, the socket
+reference count still needs to be decreased in order for the socket to
+eventually be freed.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
+ net/nfc/llcp/llcp.c |   15 +++++++++++----
+ net/nfc/llcp/sock.c |   23 +++++++++++++++--------
+ 2 files changed, 26 insertions(+), 12 deletions(-)
 
-V2 - Change from delayed to ordinary work queue
-
-John,
-
-I think this patch should stay in wireless-testing and ultimately be pushed
-to 3.5.
-
-Larry
----
-
- drivers/net/wireless/b43legacy/b43legacy.h |    3 ++
- drivers/net/wireless/b43legacy/main.c      |   32 ++++++++++++++++-----------
- 2 files changed, 22 insertions(+), 13 deletions(-)
-
-Index: wireless-testing-new/drivers/net/wireless/b43legacy/b43legacy.h
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/b43legacy/b43legacy.h
-+++ wireless-testing-new/drivers/net/wireless/b43legacy/b43legacy.h
-@@ -581,6 +581,9 @@ struct b43legacy_wl {
- 	struct mutex mutex;		/* locks wireless core state */
- 	spinlock_t leds_lock;		/* lock for leds */
+diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
+index 3ce646e..8af896d 100644
+--- a/net/nfc/llcp/llcp.c
++++ b/net/nfc/llcp/llcp.c
+@@ -47,7 +47,7 @@ static void nfc_llcp_socket_release(struct nfc_llcp_local *local)
  
-+	/* firmware loading work */
-+	struct work_struct firmware_load;
-+
- 	/* We can only have one operating interface (802.11 core)
- 	 * at a time. General information about this interface follows.
- 	 */
-Index: wireless-testing-new/drivers/net/wireless/b43legacy/main.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/b43legacy/main.c
-+++ wireless-testing-new/drivers/net/wireless/b43legacy/main.c
-@@ -1557,8 +1557,15 @@ err_format:
- 	return -EPROTO;
- }
+ 		/* Release all child sockets */
+ 		list_for_each_entry_safe(s, n, &parent->list, list) {
+-			list_del(&s->list);
++			list_del_init(&s->list);
+ 			sk = &s->sk;
  
--static int b43legacy_request_firmware(struct b43legacy_wldev *dev)
-+static int b43legacy_one_core_attach(struct ssb_device *dev,
-+				     struct b43legacy_wl *wl);
-+static void b43legacy_one_core_detach(struct ssb_device *dev);
+ 			lock_sock(sk);
+@@ -56,9 +56,12 @@ static void nfc_llcp_socket_release(struct nfc_llcp_local *local)
+ 				nfc_put_device(s->dev);
+ 
+ 			sk->sk_state = LLCP_CLOSED;
+-			sock_set_flag(sk, SOCK_DEAD);
+ 
+ 			release_sock(sk);
 +
-+static void b43legacy_request_firmware(struct work_struct *work)
- {
-+	struct b43legacy_wl *wl = container_of(work,
-+				  struct b43legacy_wl, firmware_load);
-+	struct b43legacy_wldev *dev = wl->current_dev;
- 	struct b43legacy_firmware *fw = &dev->fw;
- 	const u8 rev = dev->dev->id.revision;
- 	const char *filename;
-@@ -1624,8 +1631,14 @@ static int b43legacy_request_firmware(st
- 		if (err)
- 			goto err_load;
++			sock_orphan(sk);
++
++			s->local = NULL;
+ 		}
+ 
+ 		parent_sk = &parent->sk;
+@@ -77,11 +80,12 @@ static void nfc_llcp_socket_release(struct nfc_llcp_local *local)
+ 				nfc_llcp_accept_unlink(accept_sk);
+ 
+ 				accept_sk->sk_state = LLCP_CLOSED;
+-				sock_set_flag(accept_sk, SOCK_DEAD);
+ 
+ 				release_sock(accept_sk);
+ 
+ 				sock_orphan(accept_sk);
++
++				lsk->local = NULL;
+ 			}
+ 		}
+ 
+@@ -89,9 +93,12 @@ static void nfc_llcp_socket_release(struct nfc_llcp_local *local)
+ 			nfc_put_device(parent->dev);
+ 
+ 		parent_sk->sk_state = LLCP_CLOSED;
+-		sock_set_flag(parent_sk, SOCK_DEAD);
+ 
+ 		release_sock(parent_sk);
++
++		sock_orphan(parent_sk);
++
++		parent->local = NULL;
  	}
-+	err = ieee80211_register_hw(wl->hw);
-+	if (err)
-+		goto err_one_core_detach;
-+	return;
+ 
+ 	mutex_unlock(&local->socket_lock);
+diff --git a/net/nfc/llcp/sock.c b/net/nfc/llcp/sock.c
+index d386177..35825e2 100644
+--- a/net/nfc/llcp/sock.c
++++ b/net/nfc/llcp/sock.c
+@@ -315,6 +315,7 @@ static int llcp_sock_release(struct socket *sock)
+ 	struct sock *sk = sock->sk;
+ 	struct nfc_llcp_local *local;
+ 	struct nfc_llcp_sock *llcp_sock = nfc_llcp_sock(sk);
++	int err = 0;
+ 
+ 	if (!sk)
+ 		return 0;
+@@ -322,15 +323,17 @@ static int llcp_sock_release(struct socket *sock)
+ 	pr_debug("%p\n", sk);
+ 
+ 	local = llcp_sock->local;
+-	if (local == NULL)
+-		return -ENODEV;
++	if (local == NULL) {
++		err = -ENODEV;
++		goto out;
++	}
+ 
+ 	mutex_lock(&local->socket_lock);
+ 
+ 	if (llcp_sock == local->sockets[llcp_sock->ssap])
+ 		local->sockets[llcp_sock->ssap] = NULL;
+ 	else
+-		list_del(&llcp_sock->list);
++		list_del_init(&llcp_sock->list);
+ 
+ 	mutex_unlock(&local->socket_lock);
+ 
+@@ -354,9 +357,7 @@ static int llcp_sock_release(struct socket *sock)
+ 
+ 			release_sock(accept_sk);
+ 
+-			sock_set_flag(sk, SOCK_DEAD);
+ 			sock_orphan(accept_sk);
+-			sock_put(accept_sk);
+ 		}
+ 	}
+ 
+@@ -367,14 +368,13 @@ static int llcp_sock_release(struct socket *sock)
+ 	    sk->sk_state == LLCP_LISTEN)
+ 		nfc_llcp_put_ssap(llcp_sock->local, llcp_sock->ssap);
+ 
+-	sock_set_flag(sk, SOCK_DEAD);
+-
+ 	release_sock(sk);
+ 
++out:
+ 	sock_orphan(sk);
+ 	sock_put(sk);
  
 -	return 0;
-+err_one_core_detach:
-+	b43legacy_one_core_detach(dev->dev);
-+	goto error;
- 
- err_load:
- 	b43legacy_print_fw_helptext(dev->wl);
-@@ -1639,7 +1652,7 @@ err_no_initvals:
- 
- error:
- 	b43legacy_release_firmware(dev);
--	return err;
-+	return;
++	return err;
  }
  
- static int b43legacy_upload_microcode(struct b43legacy_wldev *dev)
-@@ -2153,9 +2166,6 @@ static int b43legacy_chip_init(struct b4
- 	macctl |= B43legacy_MACCTL_INFRA;
- 	b43legacy_write32(dev, B43legacy_MMIO_MACCTL, macctl);
+ static int llcp_sock_connect(struct socket *sock, struct sockaddr *_addr,
+@@ -645,6 +645,8 @@ struct sock *nfc_llcp_sock_alloc(struct socket *sock, int type, gfp_t gfp)
  
--	err = b43legacy_request_firmware(dev);
--	if (err)
--		goto out;
- 	err = b43legacy_upload_microcode(dev);
- 	if (err)
- 		goto out; /* firmware is released later */
-@@ -3860,17 +3870,13 @@ static int b43legacy_probe(struct ssb_de
- 	if (err)
- 		goto err_wireless_exit;
+ void nfc_llcp_sock_free(struct nfc_llcp_sock *sock)
+ {
++	struct nfc_llcp_local *local = sock->local;
++
+ 	kfree(sock->service_name);
  
--	if (first) {
--		err = ieee80211_register_hw(wl->hw);
--		if (err)
--			goto err_one_core_detach;
--	}
-+	/* setup and start work to load firmware */
-+	INIT_WORK(&wl->firmware_load, b43legacy_request_firmware);
-+	schedule_work(&wl->firmware_load);
+ 	skb_queue_purge(&sock->tx_queue);
+@@ -653,6 +655,11 @@ void nfc_llcp_sock_free(struct nfc_llcp_sock *sock)
  
- out:
- 	return err;
+ 	list_del_init(&sock->accept_queue);
  
--err_one_core_detach:
--	b43legacy_one_core_detach(dev);
- err_wireless_exit:
- 	if (first)
- 		b43legacy_wireless_exit(dev, wl);
-@@ -3885,6 +3891,7 @@ static void b43legacy_remove(struct ssb_
- 	/* We must cancel any work here before unregistering from ieee80211,
- 	 * as the ieee80211 unreg will destroy the workqueue. */
- 	cancel_work_sync(&wldev->restart_work);
-+	cancel_work_sync(&wl->firmware_load);
++	if (local != NULL && sock == local->sockets[sock->ssap])
++		local->sockets[sock->ssap] = NULL;
++	else
++		list_del_init(&sock->list);
++
+ 	sock->parent = NULL;
+ }
  
- 	B43legacy_WARN_ON(!wl);
- 	if (wl->current_dev == wldev)
+-- 
+1.7.7.3
+
