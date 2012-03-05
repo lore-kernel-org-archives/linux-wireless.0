@@ -1,54 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:48759 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759641Ab2CGTGa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 14:06:30 -0500
-From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 08/35] iwlwifi: transport's tx_agg_disable must be atomic
-Date: Wed,  7 Mar 2012 09:52:17 -0800
-Message-Id: <1331142764-5750-9-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120307_200639_843112_1CA6BCFF)
-In-Reply-To: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
-References: <1331142764-5750-1-git-send-email-wey-yi.w.guy@intel.com>
+Received: from mail-pz0-f52.google.com ([209.85.210.52]:34620 "EHLO
+	mail-pz0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751456Ab2CEVRJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 16:17:09 -0500
+Received: by dadp12 with SMTP id p12so5622317dad.11
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2012 13:17:08 -0800 (PST)
+MIME-Version: 1.0
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH v3 1/2] cfg80211: expose cfg80211_calculate_bitrate()
+Date: Mon,  5 Mar 2012 13:17:02 -0800
+Message-Id: <1330982223-8379-1-git-send-email-thomas@cozybit.com> (sfid-20120305_221722_350661_696F33E6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-At least as long as it is called from the reclaim
-flow (iwlagn_check_ratid_empty) it must be atomic.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-trans.h |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+ include/net/cfg80211.h |    8 ++++++++
+ net/wireless/util.c    |    1 +
+ 2 files changed, 9 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans.h b/drivers/net/wireless/iwlwifi/iwl-trans.h
-index 609949f..ed6ab44 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans.h
-@@ -306,7 +306,7 @@ static inline struct page *rxb_steal_page(struct iwl_rx_cmd_buffer *r)
-  *	ready and a successful ADDBA response has been received.
-  *	May sleep
-  * @tx_agg_disable: de-configure a Tx queue to send AMPDUs
-- *	May sleep
-+ *	Must be atomic
-  * @free: release all the ressource for the transport layer itself such as
-  *	irq, tasklet etc... From this point on, the device may not issue
-  *	any interrupt (incl. RFKILL).
-@@ -497,8 +497,6 @@ static inline int iwl_trans_reclaim(struct iwl_trans *trans, int sta_id,
- static inline int iwl_trans_tx_agg_disable(struct iwl_trans *trans,
- 					    int sta_id, int tid)
- {
--	might_sleep();
--
- 	if (trans->state != IWL_TRANS_FW_ALIVE)
- 		IWL_ERR(trans, "%s bad state = %d", __func__, trans->state);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0178c74..64f6181 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -3334,6 +3334,14 @@ int cfg80211_can_beacon_sec_chan(struct wiphy *wiphy,
+ 				 struct ieee80211_channel *chan,
+ 				 enum nl80211_channel_type channel_type);
  
++/*
++ * cfg80211_calculate_bitrate - calculate actual bitrate (in 100Kbps units)
++ * @rate: given rate_info to calculate bitrate from
++ *
++ * return 0 if MCS index >= 32
++ */
++u16 cfg80211_calculate_bitrate(struct rate_info *rate);
++
+ /* Logging, debugging and troubleshooting/diagnostic helpers. */
+ 
+ /* wiphy_printk helpers, similar to dev_printk */
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 9aa9db6..1b7a08d 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -904,6 +904,7 @@ u16 cfg80211_calculate_bitrate(struct rate_info *rate)
+ 	/* do NOT round down here */
+ 	return (bitrate + 50000) / 100000;
+ }
++EXPORT_SYMBOL(cfg80211_calculate_bitrate);
+ 
+ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
+ 				 u32 beacon_int)
 -- 
-1.7.0.4
+1.7.5.4
 
