@@ -1,222 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37315 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757671Ab2C1JGO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2012 05:06:14 -0400
-Message-Id: <20120328085901.436280820@sipsolutions.net> (sfid-20120328_110625_255736_B56EFA9F)
-Date: Wed, 28 Mar 2012 10:58:39 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/4] mac80211: notify driver of rate control updates
-References: <20120328085835.902687300@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:31616 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755585Ab2CDX5j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 18:57:39 -0500
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 06/22] NFC: Fix bitops usage in LLCP
+Date: Mon,  5 Mar 2012 01:03:38 +0100
+Message-Id: <1330905834-6994-7-git-send-email-sameo@linux.intel.com> (sfid-20120305_005743_817539_81E7A806)
+In-Reply-To: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
+References: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-Devices that have internal rate control need to be
-notified when the bandwidth or SMPS state changes
-just like external rate control algorithms get a
-notification now.
-
-Add this notification and clarify the change bits
-while at it, the HT_CHANGED bit really meant only
-bandwidth changed.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
- Documentation/DocBook/80211.tmpl    |    2 -
- drivers/net/wireless/ath/ath9k/rc.c |    2 -
- include/net/mac80211.h              |   37 +++++++++++++++++++++++-------------
- net/mac80211/driver-ops.h           |   17 ++++++++++++++++
- net/mac80211/driver-trace.h         |   28 +++++++++++++++++++++++++++
- net/mac80211/mlme.c                 |    2 -
- net/mac80211/rate.h                 |    2 +
- 7 files changed, 74 insertions(+), 16 deletions(-)
+ net/nfc/llcp/llcp.c |   20 ++++++++++----------
+ 1 files changed, 10 insertions(+), 10 deletions(-)
 
---- a/Documentation/DocBook/80211.tmpl	2012-03-16 14:13:10.000000000 +0100
-+++ b/Documentation/DocBook/80211.tmpl	2012-03-16 14:25:57.000000000 +0100
-@@ -533,7 +533,7 @@ MISSING
- !Finclude/net/mac80211.h ieee80211_start_tx_ba_cb_irqsafe
- !Finclude/net/mac80211.h ieee80211_stop_tx_ba_session
- !Finclude/net/mac80211.h ieee80211_stop_tx_ba_cb_irqsafe
--!Finclude/net/mac80211.h rate_control_changed
-+!Finclude/net/mac80211.h ieee80211_rate_control_changed
- !Finclude/net/mac80211.h ieee80211_tx_rate_control
- !Finclude/net/mac80211.h rate_control_send_low
-       </chapter>
---- a/include/net/mac80211.h	2012-03-16 14:14:31.000000000 +0100
-+++ b/include/net/mac80211.h	2012-03-16 14:36:25.000000000 +0100
-@@ -1778,6 +1778,18 @@ enum ieee80211_frame_release_type {
- };
+diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
+index bbfaa27..443407e 100644
+--- a/net/nfc/llcp/llcp.c
++++ b/net/nfc/llcp/llcp.c
+@@ -176,7 +176,7 @@ u8 nfc_llcp_get_sdp_ssap(struct nfc_llcp_local *local,
+ 				return LLCP_SAP_MAX;
+ 			}
  
- /**
-+ * enum ieee80211_rate_control_changed - flags to indicate what changed
-+ *
-+ * @IEEE80211_RC_BW_CHANGED: The bandwidth that can be used to transmit
-+ *	to this station changed.
-+ * @IEEE80211_RC_SMPS_CHANGED: The SMPS state of the station changed.
-+ */
-+enum ieee80211_rate_control_changed {
-+	IEEE80211_RC_BW_CHANGED		= BIT(0),
-+	IEEE80211_RC_SMPS_CHANGED	= BIT(1),
-+};
-+
-+/**
-  * struct ieee80211_ops - callbacks from mac80211 to the driver
-  *
-  * This structure contains various callbacks that the driver may
-@@ -1978,6 +1990,14 @@ enum ieee80211_frame_release_type {
-  *	up the list of states.
-  *	The callback can sleep.
-  *
-+ * @sta_rc_update: Notifies the driver of changes to the bitrates that can be
-+ *	used to transmit to the station. The changes are advertised with bits
-+ *	from &enum ieee80211_rate_control_changed and the values are reflected
-+ *	in the station data. This callback should only be used when the driver
-+ *	uses hardware rate control (%IEEE80211_HW_HAS_RATE_CONTROL) since
-+ *	otherwise the rate control algorithm is notified directly.
-+ *	Must be atomic.
-+ *
-  * @conf_tx: Configure TX queue parameters (EDCF (aifs, cw_min, cw_max),
-  *	bursting) for a hardware TX queue.
-  *	Returns a negative error code on failure.
-@@ -2194,6 +2214,10 @@ struct ieee80211_ops {
- 			 struct ieee80211_sta *sta,
- 			 enum ieee80211_sta_state old_state,
- 			 enum ieee80211_sta_state new_state);
-+	void (*sta_rc_update)(struct ieee80211_hw *hw,
-+			      struct ieee80211_vif *vif,
-+			      struct ieee80211_sta *sta,
-+			      u32 changed);
- 	int (*conf_tx)(struct ieee80211_hw *hw,
- 		       struct ieee80211_vif *vif, u16 queue,
- 		       const struct ieee80211_tx_queue_params *params);
-@@ -3510,19 +3534,6 @@ void ieee80211_send_bar(struct ieee80211
- /* Rate control API */
+-			set_bit(BIT(ssap), &local->local_wks);
++			set_bit(ssap, &local->local_wks);
+ 			mutex_unlock(&local->sdp_lock);
  
- /**
-- * enum rate_control_changed - flags to indicate which parameter changed
-- *
-- * @IEEE80211_RC_HT_CHANGED: The HT parameters of the operating channel have
-- *	changed, rate control algorithm can update its internal state if needed.
-- * @IEEE80211_RC_SMPS_CHANGED: The SMPS state of the station changed, the rate
-- *	control algorithm needs to adjust accordingly.
-- */
--enum rate_control_changed {
--	IEEE80211_RC_HT_CHANGED		= BIT(0),
--	IEEE80211_RC_SMPS_CHANGED	= BIT(1),
--};
--
--/**
-  * struct ieee80211_tx_rate_control - rate control information for/from RC algo
-  *
-  * @hw: The hardware the algorithm is invoked for.
---- a/drivers/net/wireless/ath/ath9k/rc.c	2012-03-16 14:14:31.000000000 +0100
-+++ b/drivers/net/wireless/ath/ath9k/rc.c	2012-03-16 14:28:34.000000000 +0100
-@@ -1447,7 +1447,7 @@ static void ath_rate_update(void *priv,
+ 			return ssap;
+@@ -195,25 +195,25 @@ u8 nfc_llcp_get_sdp_ssap(struct nfc_llcp_local *local,
  
- 	/* FIXME: Handle AP mode later when we support CWM */
+ 		pr_debug("SDP ssap %d\n", LLCP_WKS_NUM_SAP + ssap);
  
--	if (changed & IEEE80211_RC_HT_CHANGED) {
-+	if (changed & IEEE80211_RC_BW_CHANGED) {
- 		if (sc->sc_ah->opmode != NL80211_IFTYPE_STATION)
- 			return;
+-		set_bit(BIT(ssap), &local->local_sdp);
++		set_bit(ssap, &local->local_sdp);
+ 		mutex_unlock(&local->sdp_lock);
  
---- a/net/mac80211/mlme.c	2012-03-16 14:23:40.000000000 +0100
-+++ b/net/mac80211/mlme.c	2012-03-16 14:28:30.000000000 +0100
-@@ -219,7 +219,7 @@ static u32 ieee80211_config_ht_tx(struct
- 			sta->sta.ht_cap.cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+ 		return LLCP_WKS_NUM_SAP + ssap;
  
- 		rate_control_rate_update(local, sband, sta,
--					 IEEE80211_RC_HT_CHANGED);
-+					 IEEE80211_RC_BW_CHANGED);
+ 	} else if (sock->ssap != 0) {
+ 		if (sock->ssap < LLCP_WKS_NUM_SAP) {
+-			if (!(local->local_wks & BIT(sock->ssap))) {
+-				set_bit(BIT(sock->ssap), &local->local_wks);
++			if (!test_bit(sock->ssap, &local->local_wks)) {
++				set_bit(sock->ssap, &local->local_wks);
+ 				mutex_unlock(&local->sdp_lock);
+ 
+ 				return sock->ssap;
+ 			}
+ 
+ 		} else if (sock->ssap < LLCP_SDP_NUM_SAP) {
+-			if (!(local->local_sdp &
+-				BIT(sock->ssap - LLCP_WKS_NUM_SAP))) {
+-				set_bit(BIT(sock->ssap - LLCP_WKS_NUM_SAP),
+-							&local->local_sdp);
++			if (!test_bit(sock->ssap - LLCP_WKS_NUM_SAP,
++				      &local->local_sdp)) {
++				set_bit(sock->ssap - LLCP_WKS_NUM_SAP,
++					&local->local_sdp);
+ 				mutex_unlock(&local->sdp_lock);
+ 
+ 				return sock->ssap;
+@@ -238,7 +238,7 @@ u8 nfc_llcp_get_local_ssap(struct nfc_llcp_local *local)
+ 		return LLCP_SAP_MAX;
  	}
- 	mutex_unlock(&local->sta_mtx);
  
---- a/net/mac80211/driver-trace.h	2012-03-15 20:43:13.000000000 +0100
-+++ b/net/mac80211/driver-trace.h	2012-03-16 14:37:24.000000000 +0100
-@@ -624,6 +624,34 @@ TRACE_EVENT(drv_sta_state,
- 	)
- );
+-	set_bit(BIT(local_ssap), &local->local_sap);
++	set_bit(local_ssap, &local->local_sap);
  
-+TRACE_EVENT(drv_sta_rc_update,
-+	TP_PROTO(struct ieee80211_local *local,
-+		 struct ieee80211_sub_if_data *sdata,
-+		 struct ieee80211_sta *sta,
-+		 u32 changed),
-+
-+	TP_ARGS(local, sdata, sta, changed),
-+
-+	TP_STRUCT__entry(
-+		LOCAL_ENTRY
-+		VIF_ENTRY
-+		STA_ENTRY
-+		__field(u32, changed)
-+	),
-+
-+	TP_fast_assign(
-+		LOCAL_ASSIGN;
-+		VIF_ASSIGN;
-+		STA_ASSIGN;
-+		__entry->changed = changed;
-+	),
-+
-+	TP_printk(
-+		LOCAL_PR_FMT  VIF_PR_FMT  STA_PR_FMT " changed: 0x%x",
-+		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->changed
-+	)
-+);
-+
- TRACE_EVENT(drv_sta_add,
- 	TP_PROTO(struct ieee80211_local *local,
- 		 struct ieee80211_sub_if_data *sdata,
---- a/net/mac80211/driver-ops.h	2012-03-15 20:43:13.000000000 +0100
-+++ b/net/mac80211/driver-ops.h	2012-03-16 14:35:54.000000000 +0100
-@@ -474,6 +474,23 @@ int drv_sta_state(struct ieee80211_local
- 	return ret;
+ 	mutex_unlock(&local->sdp_lock);
+ 
+@@ -265,7 +265,7 @@ void nfc_llcp_put_ssap(struct nfc_llcp_local *local, u8 ssap)
+ 
+ 	mutex_lock(&local->sdp_lock);
+ 
+-	clear_bit(1 << local_ssap, sdp);
++	clear_bit(local_ssap, sdp);
+ 
+ 	mutex_unlock(&local->sdp_lock);
  }
- 
-+static inline void drv_sta_rc_update(struct ieee80211_local *local,
-+				     struct ieee80211_sub_if_data *sdata,
-+				     struct ieee80211_sta *sta, u32 changed)
-+{
-+	might_sleep();
-+
-+	sdata = get_bss_sdata(sdata);
-+	check_sdata_in_driver(sdata);
-+
-+	trace_drv_sta_rc_update(local, sdata, sta, changed);
-+	if (local->ops->sta_rc_update)
-+		local->ops->sta_rc_update(&local->hw, &sdata->vif,
-+					  sta, changed);
-+
-+	trace_drv_return_void(local);
-+}
-+
- static inline int drv_conf_tx(struct ieee80211_local *local,
- 			      struct ieee80211_sub_if_data *sdata, u16 queue,
- 			      const struct ieee80211_tx_queue_params *params)
---- a/net/mac80211/rate.h	2012-03-16 14:14:31.000000000 +0100
-+++ b/net/mac80211/rate.h	2012-03-16 14:38:20.000000000 +0100
-@@ -17,6 +17,7 @@
- #include <net/mac80211.h>
- #include "ieee80211_i.h"
- #include "sta_info.h"
-+#include "driver-ops.h"
- 
- struct rate_control_ref {
- 	struct ieee80211_local *local;
-@@ -72,6 +73,7 @@ static inline void rate_control_rate_upd
- 	if (ref && ref->ops->rate_update)
- 		ref->ops->rate_update(ref->priv, sband, ista,
- 				      priv_sta, changed);
-+	drv_sta_rc_update(local, sta->sdata, &sta->sta, changed);
- }
- 
- static inline void *rate_control_alloc_sta(struct rate_control_ref *ref,
-
+-- 
+1.7.7.3
 
