@@ -1,229 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:37321 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757731Ab2C1JGP (ORCPT
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:44035 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752254Ab2CEVRK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 28 Mar 2012 05:06:15 -0400
-Message-Id: <20120328090432.437324860@sipsolutions.net> (sfid-20120328_110630_402971_8122B28B)
-Date: Wed, 28 Mar 2012 11:04:24 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/7] cfg80211/nl80211: clarify TX queue API
-References: <20120328090422.367469100@sipsolutions.net>
-Mime-Version: 1.0
+	Mon, 5 Mar 2012 16:17:10 -0500
+Received: by pbcun15 with SMTP id un15so3225673pbc.19
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2012 13:17:10 -0800 (PST)
+MIME-Version: 1.0
+From: Thomas Pedersen <thomas@cozybit.com>
+To: linux-wireless@vger.kernel.org
+Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
+	johannes@sipsolutions.net, linville@tuxdriver.com
+Subject: [PATCH v3 2/2] mac80211: fix mesh airtime link metric estimating
+Date: Mon,  5 Mar 2012 13:17:03 -0800
+Message-Id: <1330982223-8379-2-git-send-email-thomas@cozybit.com> (sfid-20120305_221722_951685_AEE36666)
+In-Reply-To: <1330982223-8379-1-git-send-email-thomas@cozybit.com>
+References: <1330982223-8379-1-git-send-email-thomas@cozybit.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Airtime link metric estimation was broken in HT mesh, use
+cfg80211_calculate_bitrate to get the right rate value.
 
-With the plan to change mac80211's queue API to
-not map ACs to queues 1:1, it seems necessary to
-clarify some APIs that act on ACs rather than on
-queues to spell that out explicitly. Do this.
+Also factor out tx rate copying from sta_set_sinfo().
 
-Also verify that the AC number given is valid.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
 ---
- include/linux/nl80211.h     |   22 +++++++++++++++-------
- include/net/cfg80211.h      |    4 ++--
- include/net/mac80211.h      |    2 +-
- net/mac80211/cfg.c          |   10 +++++-----
- net/mac80211/driver-ops.h   |    6 +++---
- net/mac80211/driver-trace.h |   13 ++++++-------
- net/wireless/nl80211.c      |    7 +++++--
- 7 files changed, 37 insertions(+), 27 deletions(-)
+v2:
+factor out rate copying (Johannes)
 
---- a/include/linux/nl80211.h	2012-03-23 17:11:25.000000000 +0100
-+++ b/include/linux/nl80211.h	2012-03-23 17:11:47.000000000 +0100
-@@ -2223,7 +2223,7 @@ enum nl80211_mesh_setup_params {
- /**
-  * enum nl80211_txq_attr - TX queue parameter attributes
-  * @__NL80211_TXQ_ATTR_INVALID: Attribute number 0 is reserved
-- * @NL80211_TXQ_ATTR_QUEUE: TX queue identifier (NL80211_TXQ_Q_*)
-+ * @NL80211_TXQ_ATTR_AC: AC identifier (NL80211_AC_*)
-  * @NL80211_TXQ_ATTR_TXOP: Maximum burst time in units of 32 usecs, 0 meaning
-  *	disabled
-  * @NL80211_TXQ_ATTR_CWMIN: Minimum contention window [a value of the form
-@@ -2236,7 +2236,7 @@ enum nl80211_mesh_setup_params {
-  */
- enum nl80211_txq_attr {
- 	__NL80211_TXQ_ATTR_INVALID,
--	NL80211_TXQ_ATTR_QUEUE,
-+	NL80211_TXQ_ATTR_AC,
- 	NL80211_TXQ_ATTR_TXOP,
- 	NL80211_TXQ_ATTR_CWMIN,
- 	NL80211_TXQ_ATTR_CWMAX,
-@@ -2247,13 +2247,21 @@ enum nl80211_txq_attr {
- 	NL80211_TXQ_ATTR_MAX = __NL80211_TXQ_ATTR_AFTER_LAST - 1
- };
- 
--enum nl80211_txq_q {
--	NL80211_TXQ_Q_VO,
--	NL80211_TXQ_Q_VI,
--	NL80211_TXQ_Q_BE,
--	NL80211_TXQ_Q_BK
-+enum nl80211_ac {
-+	NL80211_AC_VO,
-+	NL80211_AC_VI,
-+	NL80211_AC_BE,
-+	NL80211_AC_BK,
-+	NL80211_NUM_ACS
- };
- 
-+/* backward compat */
-+#define NL80211_TXQ_ATTR_QUEUE	NL80211_TXQ_ATTR_AC
-+#define NL80211_TXQ_Q_VO	NL80211_AC_VO
-+#define NL80211_TXQ_Q_VI	NL80211_AC_VI
-+#define NL80211_TXQ_Q_BE	NL80211_AC_BE
-+#define NL80211_TXQ_Q_BK	NL80211_AC_BK
-+
- enum nl80211_channel_type {
- 	NL80211_CHAN_NO_HT,
- 	NL80211_CHAN_HT20,
---- a/include/net/cfg80211.h	2012-03-23 17:11:25.000000000 +0100
-+++ b/include/net/cfg80211.h	2012-03-23 17:11:47.000000000 +0100
-@@ -842,7 +842,7 @@ struct mesh_setup {
- 
- /**
-  * struct ieee80211_txq_params - TX queue parameters
-- * @queue: TX queue identifier (NL80211_TXQ_Q_*)
-+ * @ac: AC identifier
-  * @txop: Maximum burst time in units of 32 usecs, 0 meaning disabled
-  * @cwmin: Minimum contention window [a value of the form 2^n-1 in the range
-  *	1..32767]
-@@ -851,7 +851,7 @@ struct mesh_setup {
-  * @aifs: Arbitration interframe space [0..255]
-  */
- struct ieee80211_txq_params {
--	enum nl80211_txq_q queue;
-+	enum nl80211_ac ac;
- 	u16 txop;
- 	u16 cwmin;
- 	u16 cwmax;
---- a/net/wireless/nl80211.c	2012-03-23 17:11:25.000000000 +0100
-+++ b/net/wireless/nl80211.c	2012-03-23 17:11:47.000000000 +0100
-@@ -1104,17 +1104,20 @@ static const struct nla_policy txq_param
- static int parse_txq_params(struct nlattr *tb[],
- 			    struct ieee80211_txq_params *txq_params)
- {
--	if (!tb[NL80211_TXQ_ATTR_QUEUE] || !tb[NL80211_TXQ_ATTR_TXOP] ||
-+	if (!tb[NL80211_TXQ_ATTR_AC] || !tb[NL80211_TXQ_ATTR_TXOP] ||
- 	    !tb[NL80211_TXQ_ATTR_CWMIN] || !tb[NL80211_TXQ_ATTR_CWMAX] ||
- 	    !tb[NL80211_TXQ_ATTR_AIFS])
- 		return -EINVAL;
- 
--	txq_params->queue = nla_get_u8(tb[NL80211_TXQ_ATTR_QUEUE]);
-+	txq_params->ac = nla_get_u8(tb[NL80211_TXQ_ATTR_AC]);
- 	txq_params->txop = nla_get_u16(tb[NL80211_TXQ_ATTR_TXOP]);
- 	txq_params->cwmin = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMIN]);
- 	txq_params->cwmax = nla_get_u16(tb[NL80211_TXQ_ATTR_CWMAX]);
- 	txq_params->aifs = nla_get_u8(tb[NL80211_TXQ_ATTR_AIFS]);
- 
-+	if (txq_params->ac >= NL80211_NUM_ACS)
-+		return -EINVAL;
-+
- 	return 0;
+v3:
+just factor out tx rate copying (Johannes)
+
+ net/mac80211/cfg.c       |   22 ++++++++++++++--------
+ net/mac80211/mesh_hwmp.c |    6 ++++--
+ net/mac80211/sta_info.h  |    2 ++
+ 3 files changed, 20 insertions(+), 10 deletions(-)
+
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 6a77d4c..9e6accd 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -336,6 +336,19 @@ static void rate_idx_to_bitrate(struct rate_info *rate, struct sta_info *sta, in
+ 		rate->mcs = idx;
  }
  
---- a/net/mac80211/cfg.c	2012-03-23 17:11:25.000000000 +0100
-+++ b/net/mac80211/cfg.c	2012-03-23 17:11:47.000000000 +0100
-@@ -1449,14 +1449,14 @@ static int ieee80211_set_txq_params(stru
- 	 */
- 	p.uapsd = false;
- 
--	if (params->queue >= local->hw.queues)
-+	if (params->ac >= local->hw.queues)
- 		return -EINVAL;
- 
--	sdata->tx_conf[params->queue] = p;
--	if (drv_conf_tx(local, sdata, params->queue, &p)) {
-+	sdata->tx_conf[params->ac] = p;
-+	if (drv_conf_tx(local, sdata, params->ac, &p)) {
- 		wiphy_debug(local->hw.wiphy,
--			    "failed to set TX queue parameters for queue %d\n",
--			    params->queue);
-+			    "failed to set TX queue parameters for AC %d\n",
-+			    params->ac);
- 		return -EINVAL;
++void sta_set_rate_info(struct sta_info *sta, struct ieee80211_tx_rate rate,
++		       struct rate_info *rinfo)
++{
++	rinfo->flags = 0;
++	if (rate.flags & IEEE80211_TX_RC_MCS)
++		rinfo->flags |= RATE_INFO_FLAGS_MCS;
++	if (rate.flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
++		rinfo->flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
++	if (rate.flags & IEEE80211_TX_RC_SHORT_GI)
++		rinfo->flags |= RATE_INFO_FLAGS_SHORT_GI;
++	rate_idx_to_bitrate(rinfo, sta, rate.idx);
++}
++
+ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ {
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+@@ -378,14 +391,7 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+ 		sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
  	}
  
---- a/net/mac80211/driver-ops.h	2012-03-23 17:11:25.000000000 +0100
-+++ b/net/mac80211/driver-ops.h	2012-03-23 17:11:47.000000000 +0100
-@@ -492,7 +492,7 @@ static inline void drv_sta_rc_update(str
- }
+-	sinfo->txrate.flags = 0;
+-	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
+-		sinfo->txrate.flags |= RATE_INFO_FLAGS_MCS;
+-	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
+-		sinfo->txrate.flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
+-	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_SHORT_GI)
+-		sinfo->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
+-	rate_idx_to_bitrate(&sinfo->txrate, sta, sta->last_tx_rate.idx);
++	sta_set_rate_info(sta, sta->last_tx_rate, &sinfo->txrate);
  
- static inline int drv_conf_tx(struct ieee80211_local *local,
--			      struct ieee80211_sub_if_data *sdata, u16 queue,
-+			      struct ieee80211_sub_if_data *sdata, u16 ac,
- 			      const struct ieee80211_tx_queue_params *params)
+ 	sinfo->rxrate.flags = 0;
+ 	if (sta->last_rx_rate_flag & RX_FLAG_HT)
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 31bc762..ae99f14 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -323,6 +323,7 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 				   struct sta_info *sta)
  {
- 	int ret = -EOPNOTSUPP;
-@@ -501,10 +501,10 @@ static inline int drv_conf_tx(struct iee
+ 	struct ieee80211_supported_band *sband;
++	struct rate_info rinfo;
+ 	/* This should be adjusted for each device */
+ 	int device_constant = 1 << ARITH_SHIFT;
+ 	int test_frame_len = TEST_FRAME_LEN << ARITH_SHIFT;
+@@ -336,7 +337,9 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 	if (sta->fail_avg >= 100)
+ 		return MAX_METRIC;
  
- 	check_sdata_in_driver(sdata);
+-	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
++	sta_set_rate_info(sta, sta->last_tx_rate, &rinfo);
++	rate = cfg80211_calculate_bitrate(&rinfo);
++	if (WARN_ON(!rate))
+ 		return MAX_METRIC;
  
--	trace_drv_conf_tx(local, sdata, queue, params);
-+	trace_drv_conf_tx(local, sdata, ac, params);
- 	if (local->ops->conf_tx)
- 		ret = local->ops->conf_tx(&local->hw, &sdata->vif,
--					  queue, params);
-+					  ac, params);
- 	trace_drv_return_int(local, ret);
- 	return ret;
- }
---- a/net/mac80211/driver-trace.h	2012-03-23 17:11:25.000000000 +0100
-+++ b/net/mac80211/driver-trace.h	2012-03-23 17:11:47.000000000 +0100
-@@ -705,15 +705,14 @@ TRACE_EVENT(drv_sta_remove,
- TRACE_EVENT(drv_conf_tx,
- 	TP_PROTO(struct ieee80211_local *local,
- 		 struct ieee80211_sub_if_data *sdata,
--		 u16 queue,
--		 const struct ieee80211_tx_queue_params *params),
-+		 u16 ac, const struct ieee80211_tx_queue_params *params),
+ 	err = (sta->fail_avg << ARITH_SHIFT) / 100;
+@@ -344,7 +347,6 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
+ 	/* bitrate is in units of 100 Kbps, while we need rate in units of
+ 	 * 1Mbps. This will be corrected on tx_time computation.
+ 	 */
+-	rate = sband->bitrates[sta->last_tx_rate.idx].bitrate;
+ 	tx_time = (device_constant + 10 * test_frame_len / rate);
+ 	estimated_retx = ((1 << (2 * ARITH_SHIFT)) / (s_unit - err));
+ 	result = (tx_time * estimated_retx) >> (2 * ARITH_SHIFT) ;
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 23a97c9..066d2e8 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -528,6 +528,8 @@ void sta_info_init(struct ieee80211_local *local);
+ void sta_info_stop(struct ieee80211_local *local);
+ int sta_info_flush(struct ieee80211_local *local,
+ 		   struct ieee80211_sub_if_data *sdata);
++void sta_set_rate_info(struct sta_info *sta, struct ieee80211_tx_rate rate,
++		       struct rate_info *rinfo);
+ void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
+ 			  unsigned long exp_time);
  
--	TP_ARGS(local, sdata, queue, params),
-+	TP_ARGS(local, sdata, ac, params),
- 
- 	TP_STRUCT__entry(
- 		LOCAL_ENTRY
- 		VIF_ENTRY
--		__field(u16, queue)
-+		__field(u16, ac)
- 		__field(u16, txop)
- 		__field(u16, cw_min)
- 		__field(u16, cw_max)
-@@ -724,7 +723,7 @@ TRACE_EVENT(drv_conf_tx,
- 	TP_fast_assign(
- 		LOCAL_ASSIGN;
- 		VIF_ASSIGN;
--		__entry->queue = queue;
-+		__entry->ac = ac;
- 		__entry->txop = params->txop;
- 		__entry->cw_max = params->cw_max;
- 		__entry->cw_min = params->cw_min;
-@@ -733,8 +732,8 @@ TRACE_EVENT(drv_conf_tx,
- 	),
- 
- 	TP_printk(
--		LOCAL_PR_FMT  VIF_PR_FMT  " queue:%d",
--		LOCAL_PR_ARG, VIF_PR_ARG, __entry->queue
-+		LOCAL_PR_FMT  VIF_PR_FMT  " AC:%d",
-+		LOCAL_PR_ARG, VIF_PR_ARG, __entry->ac
- 	)
- );
- 
---- a/include/net/mac80211.h	2012-03-23 17:11:47.000000000 +0100
-+++ b/include/net/mac80211.h	2012-03-23 17:11:47.000000000 +0100
-@@ -2220,7 +2220,7 @@ struct ieee80211_ops {
- 			      struct ieee80211_sta *sta,
- 			      u32 changed);
- 	int (*conf_tx)(struct ieee80211_hw *hw,
--		       struct ieee80211_vif *vif, u16 queue,
-+		       struct ieee80211_vif *vif, u16 ac,
- 		       const struct ieee80211_tx_queue_params *params);
- 	u64 (*get_tsf)(struct ieee80211_hw *hw, struct ieee80211_vif *vif);
- 	void (*set_tsf)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-
+-- 
+1.7.5.4
 
