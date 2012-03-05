@@ -1,65 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hrndva-omtalb.mail.rr.com ([71.74.56.122]:5592 "EHLO
-	hrndva-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932727Ab2CZO7x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 10:59:53 -0400
-Date: Mon, 26 Mar 2012 09:59:48 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: John W Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl8192ce: rtl8192cu: rtl8192de: Fix low-gain
- setting when scanning
-Message-ID: <4f708464.mg1tzZ6N4mmeCi7+%Larry.Finger@lwfinger.net> (sfid-20120326_165956_890824_A52FB82A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga09.intel.com ([134.134.136.24]:7349 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965134Ab2CEUiL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 15:38:11 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 27/33] iwlwifi: move IWL_MASK into file using it
+Date: Mon,  5 Mar 2012 11:24:45 -0800
+Message-Id: <1330975491-19680-28-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120305_213839_635169_32702B2A)
+In-Reply-To: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In https://bugzilla.redhat.com/show_bug.cgi?id=770207, slowdowns of driver
-rtl8192ce are reported. One fix (commit a9b89e2) has already been applied,
-and it helped, but the maximum RX speed would still drop to 1 Mbps. As in
-the previous fix, the initial gain was determined to be the problem; however,
-the problem arises from a setting of the gain when scans are started.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Driver rtl8192de also has the same code structure - this one is fixed as well.
+Only used in two places in the same file,
+no need to be in iwl-shared.h.
 
-Reported-and-Tested-by: Ivan Pesin <ivan.pesin@gmail.com>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
+ drivers/net/wireless/iwlwifi/iwl-shared.h     |    1 -
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    2 ++
+ 2 files changed, 2 insertions(+), 1 deletions(-)
 
-John,
+diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
+index 740a058..976e6c5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-shared.h
++++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
+@@ -444,7 +444,6 @@ iwl_remove_notification(struct iwl_shared *shrd,
+ 			   struct iwl_notification_wait *wait_entry);
+ 
+ #define IWL_CMD(x) case x: return #x
+-#define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
+ 
+ #define IWL_TRAFFIC_ENTRIES	(256)
+ #define IWL_TRAFFIC_ENTRY_SIZE  (64)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+index bb8f2fd..3ae2fd7 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
+@@ -78,6 +78,8 @@
+ #include "iwl-core.h"
+ #include "iwl-ucode.h"
+ 
++#define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
++
+ static int iwl_trans_rx_alloc(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie =
+-- 
+1.7.0.4
 
-This bug fix should be applied to 3.4. It has been in these drivers from
-the beginning, and is not a regression.
-
-Larry
----
-
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192c/phy_common.c
-@@ -1893,7 +1893,7 @@ void rtl92c_phy_set_io(struct ieee80211_
- 		break;
- 	case IO_CMD_PAUSE_DM_BY_SCAN:
- 		rtlphy->initgain_backup.xaagccore1 = dm_digtable.cur_igvalue;
--		dm_digtable.cur_igvalue = 0x17;
-+		dm_digtable.cur_igvalue = 0x37;
- 		rtl92c_dm_write_dig(hw);
- 		break;
- 	default:
-Index: wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-===================================================================
---- wireless-testing-new.orig/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-+++ wireless-testing-new/drivers/net/wireless/rtlwifi/rtl8192de/phy.c
-@@ -3077,7 +3077,7 @@ static void rtl92d_phy_set_io(struct iee
- 		break;
- 	case IO_CMD_PAUSE_DM_BY_SCAN:
- 		rtlphy->initgain_backup.xaagccore1 = de_digtable.cur_igvalue;
--		de_digtable.cur_igvalue = 0x17;
-+		de_digtable.cur_igvalue = 0x37;
- 		rtl92d_dm_write_dig(hw);
- 		break;
- 	default:
