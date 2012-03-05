@@ -1,63 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:36834 "EHLO
-	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751415Ab2C0MUT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 27 Mar 2012 08:20:19 -0400
-Message-Id: <20120327121921.578800559@sipsolutions.net> (sfid-20120327_142029_194523_1EFED34A)
-Date: Tue, 27 Mar 2012 14:18:39 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH 4/5] mac80211: inline ieee80211_add_pending_skbs
-References: <20120327121835.299635879@sipsolutions.net>
-Mime-Version: 1.0
+Received: from mga09.intel.com ([134.134.136.24]:11459 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964952Ab2CEUiD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 15:38:03 -0500
+From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	Wey-Yi Guy <wey-yi.w.guy@intel.com>
+Subject: [PATCH RESEND 01/33] iwlwifi: move iwl_clear_driver_stations to user
+Date: Mon,  5 Mar 2012 11:24:19 -0800
+Message-Id: <1330975491-19680-2-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120305_213918_168797_556E4270)
+In-Reply-To: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
+References: <1330975491-19680-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-This is a trivial wrapper function, inline it.
+There's only one place using this function, so
+move it where it's needed.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- net/mac80211/ieee80211_i.h |    7 +++++--
- net/mac80211/util.c        |    6 ------
- 2 files changed, 5 insertions(+), 8 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn.c |   35 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/iwlwifi/iwl-agn.h |   35 --------------------------------
+ 2 files changed, 35 insertions(+), 35 deletions(-)
 
---- a/net/mac80211/ieee80211_i.h	2012-03-26 12:25:01.000000000 +0200
-+++ b/net/mac80211/ieee80211_i.h	2012-03-26 12:25:10.000000000 +0200
-@@ -1432,11 +1432,14 @@ void ieee80211_stop_queue_by_reason(stru
- 				    enum queue_stop_reason reason);
- void ieee80211_add_pending_skb(struct ieee80211_local *local,
- 			       struct sk_buff *skb);
--void ieee80211_add_pending_skbs(struct ieee80211_local *local,
--				struct sk_buff_head *skbs);
- void ieee80211_add_pending_skbs_fn(struct ieee80211_local *local,
- 				   struct sk_buff_head *skbs,
- 				   void (*fn)(void *data), void *data);
-+static inline void ieee80211_add_pending_skbs(struct ieee80211_local *local,
-+					      struct sk_buff_head *skbs)
-+{
-+	ieee80211_add_pending_skbs_fn(local, skbs, NULL, NULL);
-+}
- 
- void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
- 			 u16 transaction, u16 auth_alg,
---- a/net/mac80211/util.c	2012-03-26 12:25:00.000000000 +0200
-+++ b/net/mac80211/util.c	2012-03-26 12:25:10.000000000 +0200
-@@ -404,12 +404,6 @@ void ieee80211_add_pending_skbs_fn(struc
- 	spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
+index e0fef9f..a7f3a70 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
+@@ -738,6 +738,41 @@ int iwl_alive_start(struct iwl_priv *priv)
+ 	return iwl_power_update_mode(priv, true);
  }
  
--void ieee80211_add_pending_skbs(struct ieee80211_local *local,
--				struct sk_buff_head *skbs)
++/**
++ * iwl_clear_driver_stations - clear knowledge of all stations from driver
++ * @priv: iwl priv struct
++ *
++ * This is called during iwl_down() to make sure that in the case
++ * we're coming there from a hardware restart mac80211 will be
++ * able to reconfigure stations -- if we're getting there in the
++ * normal down flow then the stations will already be cleared.
++ */
++static void iwl_clear_driver_stations(struct iwl_priv *priv)
++{
++	unsigned long flags;
++	struct iwl_rxon_context *ctx;
++
++	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
++	memset(priv->stations, 0, sizeof(priv->stations));
++	priv->num_stations = 0;
++
++	priv->ucode_key_table = 0;
++
++	for_each_context(priv, ctx) {
++		/*
++		 * Remove all key information that is not stored as part
++		 * of station information since mac80211 may not have had
++		 * a chance to remove all the keys. When device is
++		 * reconfigured by mac80211 after an error all keys will
++		 * be reconfigured.
++		 */
++		memset(ctx->wep_keys, 0, sizeof(ctx->wep_keys));
++		ctx->key_mapping_keys = 0;
++	}
++
++	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
++}
++
+ void iwl_down(struct iwl_priv *priv)
+ {
+ 	int exit_pending;
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.h b/drivers/net/wireless/iwlwifi/iwl-agn.h
+index cb484e2..ef0cdf5 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn.h
++++ b/drivers/net/wireless/iwlwifi/iwl-agn.h
+@@ -232,41 +232,6 @@ int iwl_add_sta_callback(struct iwl_priv *priv, struct iwl_rx_mem_buffer *rxb,
+ 			       struct iwl_device_cmd *cmd);
+ 
+ 
+-/**
+- * iwl_clear_driver_stations - clear knowledge of all stations from driver
+- * @priv: iwl priv struct
+- *
+- * This is called during iwl_down() to make sure that in the case
+- * we're coming there from a hardware restart mac80211 will be
+- * able to reconfigure stations -- if we're getting there in the
+- * normal down flow then the stations will already be cleared.
+- */
+-static inline void iwl_clear_driver_stations(struct iwl_priv *priv)
 -{
--	ieee80211_add_pending_skbs_fn(local, skbs, NULL, NULL);
+-	unsigned long flags;
+-	struct iwl_rxon_context *ctx;
+-
+-	spin_lock_irqsave(&priv->shrd->sta_lock, flags);
+-	memset(priv->stations, 0, sizeof(priv->stations));
+-	priv->num_stations = 0;
+-
+-	priv->ucode_key_table = 0;
+-
+-	for_each_context(priv, ctx) {
+-		/*
+-		 * Remove all key information that is not stored as part
+-		 * of station information since mac80211 may not have had
+-		 * a chance to remove all the keys. When device is
+-		 * reconfigured by mac80211 after an error all keys will
+-		 * be reconfigured.
+-		 */
+-		memset(ctx->wep_keys, 0, sizeof(ctx->wep_keys));
+-		ctx->key_mapping_keys = 0;
+-	}
+-
+-	spin_unlock_irqrestore(&priv->shrd->sta_lock, flags);
 -}
 -
- void ieee80211_stop_queues_by_reason(struct ieee80211_hw *hw,
- 				    enum queue_stop_reason reason)
+ static inline int iwl_sta_id(struct ieee80211_sta *sta)
  {
-
+ 	if (WARN_ON(!sta))
+-- 
+1.7.0.4
 
