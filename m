@@ -1,197 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:10085 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751452Ab2CGGF3 (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:41750 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751029Ab2CEVAm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 7 Mar 2012 01:05:29 -0500
-From: <rmani@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>,
-	Raja Mani <rmani@qca.qualcomm.com>
-Subject: [PATCH v3] ath6kl: Check wow state before sending control and data pkt
-Date: Wed, 7 Mar 2012 11:35:04 +0530
-Message-ID: <1331100304-15903-1-git-send-email-rmani@qca.qualcomm.com> (sfid-20120307_070533_442302_FA2776F9)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 5 Mar 2012 16:00:42 -0500
+Subject: Re: [PATCH] cfg80211/mac80211: report signal strength for mgmt
+ frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20120305204251.GH18128@tuxdriver.com>
+References: <1330692035.8542.14.camel@jlt3.sipsolutions.net>
+	 <20120305204251.GH18128@tuxdriver.com>
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 05 Mar 2012 22:00:39 +0100
+Message-ID: <1330981239.3545.12.camel@jlt3.sipsolutions.net> (sfid-20120305_220045_488299_FE9B2836)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@qca.qualcomm.com>
+On Mon, 2012-03-05 at 15:42 -0500, John W. Linville wrote:
+> On Fri, Mar 02, 2012 at 01:40:35PM +0100, Johannes Berg wrote:
+> > From: Johannes Berg <johannes.berg@intel.com>
+> > 
+> > Add the signal strength (in dBm only for now) to
+> > frames that are received via nl80211's various
+> > frame APIs.
+> > 
+> > Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> > ---
+> >  include/linux/nl80211.h |    6 ++++++
+> >  include/net/cfg80211.h  |    8 +++++---
+> >  net/mac80211/rx.c       |   13 +++++++++++--
+> >  net/wireless/mlme.c     |    7 ++++---
+> >  net/wireless/nl80211.c  |    9 +++++++--
+> >  net/wireless/nl80211.h  |    3 ++-
+> >  6 files changed, 35 insertions(+), 11 deletions(-)
+> 
+>   CC      drivers/net/wireless/ath/ath6kl/wmi.o
+> drivers/net/wireless/ath/ath6kl/wmi.c: In function ‘ath6kl_wmi_rx_probe_req_event_rx’:
+> drivers/net/wireless/ath/ath6kl/wmi.c:559:3: warning: passing argument 3 of ‘cfg80211_rx_mgmt’ makes integer from pointer without a cast
+> include/net/cfg80211.h:3205:6: note: expected ‘int’ but argument is of type ‘u8 *’
+> drivers/net/wireless/ath/ath6kl/wmi.c:559:3: warning: passing argument 4 of ‘cfg80211_rx_mgmt’ makes pointer from integer without a cast
+> include/net/cfg80211.h:3205:6: note: expected ‘const u8 *’ but argument is of type ‘u16’
+> drivers/net/wireless/ath/ath6kl/wmi.c:559:3: error: too few arguments to function ‘cfg80211_rx_mgmt’
+> include/net/cfg80211.h:3205:6: note: declared here
+> drivers/net/wireless/ath/ath6kl/wmi.c: In function ‘ath6kl_wmi_rx_action_event_rx’:
+> drivers/net/wireless/ath/ath6kl/wmi.c:598:2: warning: passing argument 3 of ‘cfg80211_rx_mgmt’ makes integer from pointer without a cast
+> include/net/cfg80211.h:3205:6: note: expected ‘int’ but argument is of type ‘u8 *’
+> drivers/net/wireless/ath/ath6kl/wmi.c:598:2: warning: passing argument 4 of ‘cfg80211_rx_mgmt’ makes pointer from integer without a cast
+> include/net/cfg80211.h:3205:6: note: expected ‘const u8 *’ but argument is of type ‘u16’
+> drivers/net/wireless/ath/ath6kl/wmi.c:598:2: error: too few arguments to function ‘cfg80211_rx_mgmt’
+> include/net/cfg80211.h:3205:6: note: declared here
+> make[3]: *** [drivers/net/wireless/ath/ath6kl/wmi.o] Error 1
 
-Below two scenarios are taken care in this patch which helped
-to fix the firmware crash during wow suspend/resume.
+Oh crap, I forgot about ath6kl, sorry!
 
-* TX operation (ctrl tx and data tx) has to be controlled based
-  on suspend state. i.e, with respect to WOW mode, control packets
-  are allowed to send from the host until the suspend state goes
-  ATH6KL_STATE_WOW and the data packets are allowed until WOW
-  suspend operation starts.
-
-* Similarly, wow resume is NOT allowed if WOW suspend is in progress.
-
-Signed-off-by: Raja Mani <rmani@qca.qualcomm.com>
----
-V3:
-
-* netif queue stop call is moved from ath6kl_data_tx
-  to ath6kl_wow_suspend handler.
-
-* Switch cases are added for new ATH6KL_STATE_RESUMING
-  and ATH6KL_STATE_SUSPENDING in ath6kl_sdio_resume. 
-
-* Added WARN_ON_ONCE() for the condition we check ar->state in
-  ath6kl_control_tx 
-
-V2:
-
-* Separate wow sub state introduced in V1 is removed and common
-  states (ATH6KL_STATE_SUSPENDING and ATH6KL_STATE_RESUMING)
-  are added in enum ath6kl_state.
-
-* netdev queue is stopped while dropping skb in ath6kl_data_tx()
-  and resumed back in ath6kl_wow_resume().
-
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   27 +++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath6kl/core.h     |    2 ++
- drivers/net/wireless/ath/ath6kl/sdio.c     |    7 +++++++
- drivers/net/wireless/ath/ath6kl/txrx.c     |    8 ++++++++
- 4 files changed, 42 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 9abc7a6..9915fc3 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -1948,6 +1948,10 @@ static int ath6kl_wow_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
- 	if (ret)
- 		return ret;
- 
-+	netif_stop_queue(vif->ndev);
-+
-+	ar->state = ATH6KL_STATE_SUSPENDING;
-+
- 	/* Setup own IP addr for ARP agent. */
- 	in_dev = __in_dev_get_rtnl(vif->ndev);
- 	if (!in_dev)
-@@ -2026,15 +2030,29 @@ static int ath6kl_wow_resume(struct ath6kl *ar)
- 	if (!vif)
- 		return -EIO;
- 
-+	ar->state = ATH6KL_STATE_RESUMING;
-+
- 	ret = ath6kl_wmi_set_host_sleep_mode_cmd(ar->wmi, vif->fw_vif_idx,
- 						 ATH6KL_HOST_MODE_AWAKE);
--	return ret;
-+	if (ret) {
-+		ath6kl_warn("Failed to configure host sleep mode for "
-+			    "wow resume: %d\n", ret);
-+		ar->state = ATH6KL_STATE_WOW;
-+		return ret;
-+	}
-+
-+	ar->state = ATH6KL_STATE_ON;
-+
-+	netif_wake_queue(vif->ndev);
-+
-+	return 0;
- }
- 
- int ath6kl_cfg80211_suspend(struct ath6kl *ar,
- 			    enum ath6kl_cfg_suspend_mode mode,
- 			    struct cfg80211_wowlan *wow)
- {
-+	enum ath6kl_state prev_state;
- 	int ret;
- 
- 	switch (mode) {
-@@ -2045,8 +2063,11 @@ int ath6kl_cfg80211_suspend(struct ath6kl *ar,
- 		/* Flush all non control pkts in TX path */
- 		ath6kl_tx_data_cleanup(ar);
- 
-+		prev_state = ar->state;
-+
- 		ret = ath6kl_wow_suspend(ar, wow);
- 		if (ret) {
-+			ar->state = prev_state;
- 			ath6kl_err("wow suspend failed: %d\n", ret);
- 			return ret;
- 		}
-@@ -2121,7 +2142,6 @@ int ath6kl_cfg80211_resume(struct ath6kl *ar)
- 			return ret;
- 		}
- 
--		ar->state = ATH6KL_STATE_ON;
- 		break;
- 
- 	case ATH6KL_STATE_DEEPSLEEP:
-@@ -2195,6 +2215,9 @@ static int __ath6kl_cfg80211_resume(struct wiphy *wiphy)
-  */
- void ath6kl_check_wow_status(struct ath6kl *ar)
- {
-+	if (ar->state == ATH6KL_STATE_SUSPENDING)
-+		return;
-+
- 	if (ar->state == ATH6KL_STATE_WOW)
- 		ath6kl_cfg80211_resume(ar);
- }
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index b6bdece..180ba97 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -537,6 +537,8 @@ enum ath6kl_dev_state {
- enum ath6kl_state {
- 	ATH6KL_STATE_OFF,
- 	ATH6KL_STATE_ON,
-+	ATH6KL_STATE_SUSPENDING,
-+	ATH6KL_STATE_RESUMING,
- 	ATH6KL_STATE_DEEPSLEEP,
- 	ATH6KL_STATE_CUTPOWER,
- 	ATH6KL_STATE_WOW,
-diff --git a/drivers/net/wireless/ath/ath6kl/sdio.c b/drivers/net/wireless/ath/ath6kl/sdio.c
-index e2f42a1..cb94e67 100644
---- a/drivers/net/wireless/ath/ath6kl/sdio.c
-+++ b/drivers/net/wireless/ath/ath6kl/sdio.c
-@@ -924,8 +924,15 @@ static int ath6kl_sdio_resume(struct ath6kl *ar)
- 
- 	case ATH6KL_STATE_WOW:
- 		break;
-+
- 	case ATH6KL_STATE_SCHED_SCAN:
- 		break;
-+
-+	case ATH6KL_STATE_SUSPENDING:
-+		break;
-+
-+	case ATH6KL_STATE_RESUMING:
-+		break;
- 	}
- 
- 	ath6kl_cfg80211_resume(ar);
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 6754441..b05f353 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -285,6 +285,9 @@ int ath6kl_control_tx(void *devt, struct sk_buff *skb,
- 	int status = 0;
- 	struct ath6kl_cookie *cookie = NULL;
- 
-+	if (WARN_ON_ONCE(ar->state == ATH6KL_STATE_WOW))
-+		return -EACCES;
-+
- 	spin_lock_bh(&ar->lock);
- 
- 	ath6kl_dbg(ATH6KL_DBG_WLAN_TX,
-@@ -360,6 +363,11 @@ int ath6kl_data_tx(struct sk_buff *skb, struct net_device *dev)
- 		return 0;
- 	}
- 
-+	if (WARN_ON_ONCE(ar->state != ATH6KL_STATE_ON)) {
-+		dev_kfree_skb(skb);
-+		return 0;
-+	}
-+
- 	if (!test_bit(WMI_READY, &ar->flag))
- 		goto fail_tx;
- 
--- 
-1.7.1
+johannes
 
