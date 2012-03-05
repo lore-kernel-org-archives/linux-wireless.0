@@ -1,62 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bk0-f46.google.com ([209.85.214.46]:58398 "EHLO
-	mail-bk0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758372Ab2CSW4p convert rfc822-to-8bit (ORCPT
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:56270 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932246Ab2CENvW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 18:56:45 -0400
-Received: by bkcik5 with SMTP id ik5so4681424bkc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Mar 2012 15:56:44 -0700 (PDT)
+	Mon, 5 Mar 2012 08:51:22 -0500
+Received: by vbbff1 with SMTP id ff1so3390811vbb.19
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2012 05:51:21 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20120317143640.GC23594@khazad-dum.debian.net>
-References: <CAG-2HqUqwHo_xgqC79riQF2DA4DPz1Qy5ZARQK8GT+tf_-UKRg@mail.gmail.com>
-	<20120130184446.GB2493@tuxdriver.com>
-	<CA++WF2PnEzS5CAfryaPrJSs3Xb3s0WK1zR7N5o8+ud2HiU5GCw@mail.gmail.com>
-	<20120315110219.GA2335@redhat.com>
-	<CA++WF2P8E=0Xym92MuU84RwaP5Y9uyCyqw5jefh25QDz-Cpzkw@mail.gmail.com>
-	<20120317143640.GC23594@khazad-dum.debian.net>
-Date: Mon, 19 Mar 2012 15:56:43 -0700
-Message-ID: <CA++WF2PCO8ZdhfSMs6_gy2gz5OvTkVrGYXm0X6Aicoe5JmK+pg@mail.gmail.com> (sfid-20120319_235649_060845_A33BEF22)
-Subject: Re: MAINTAINER NEEDED -- Re: status of ipw2x00
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Tom Gundersen <teg@jklm.no>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	linux-wireless@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
+In-Reply-To: <1330784226-65563-4-git-send-email-nbd@openwrt.org>
+References: <1330784226-65563-1-git-send-email-nbd@openwrt.org>
+	<1330784226-65563-2-git-send-email-nbd@openwrt.org>
+	<1330784226-65563-3-git-send-email-nbd@openwrt.org>
+	<1330784226-65563-4-git-send-email-nbd@openwrt.org>
+Date: Mon, 5 Mar 2012 19:21:21 +0530
+Message-ID: <CAD2nsn1-KFWN9XNT6GXfrw+SC_aWOaOX7RdwN5az_hsS7BeWFg@mail.gmail.com> (sfid-20120305_145126_420711_97A407FF)
+Subject: Re: [PATCH 4/5] ath9k: get rid of double queueing of rx frames on EDMA
+From: Mohammed Shafi <shafi.wireless@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless@vger.kernel.org, linville@tuxdriver.com,
+	mcgrof@qca.qualcomm.com
 Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Henrique,
+Hi Felix,
 
-On 17 March 2012 07:36, Henrique de Moraes Holschuh <hmh@hmh.eng.br> wrote:
-> On Thu, 15 Mar 2012, Stanislav Yakovlev wrote:
->> On 15 March 2012 04:02, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->> > Are you plan to fix issues caused on current firmware loading changes on
->> > linux?
->>
->> I was able to reproduce this issue; unfortunately, I don't have a
->> proper fix for it yet.
+On Sat, Mar 3, 2012 at 7:47 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> Process rx status directly instead of separating the completion test from
+> the actual rx status processing.
 >
-> Maybe you could delay the firmware load to when the device is opened (at
-> which point you can probably change the driver to keep the device in PCI
-> D3 state unless it is opened, which does save power), and just caching
-> the firmware forever after the first load so that you don't need to
-> request_firmware anything more than once.
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>  drivers/net/wireless/ath/ath9k/ar9003_mac.c |   18 +++-------
+>  drivers/net/wireless/ath/ath9k/ath9k.h      |    1 -
+>  drivers/net/wireless/ath/ath9k/recv.c       |   47 +++++++++++++--------------
+>  3 files changed, 29 insertions(+), 37 deletions(-)
 >
-> Chances are ipw2xxx firmware will never get a new revision anyway, so
-> reloading the modules is not too large a price to pay if the user does
-> decide he has to force a firmware refresh...
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mac.c b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+> index 8d1bca0..acf2ca2 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar9003_mac.c
+> @@ -440,20 +440,14 @@ int ath9k_hw_process_rxdesc_edma(struct ath_hw *ah, struct ath_rx_status *rxs,
+>        struct ar9003_rxs *rxsp = (struct ar9003_rxs *) buf_addr;
+>        unsigned int phyerr;
+>
+> -       /* TODO: byte swap on big endian for ar9300_10 */
+> -
+> -       if (!rxs) {
+> -               if ((rxsp->status11 & AR_RxDone) == 0)
+> -                       return -EINPROGRESS;
+> -
+> -               if (MS(rxsp->ds_info, AR_DescId) != 0x168c)
+> -                       return -EINVAL;
+> +       if ((rxsp->status11 & AR_RxDone) == 0)
+> +               return -EINPROGRESS;
+>
+> -               if ((rxsp->ds_info & (AR_TxRxDesc | AR_CtrlStat)) != 0)
+> -                       return -EINPROGRESS;
+> +       if (MS(rxsp->ds_info, AR_DescId) != 0x168c)
+> +               return -EINVAL;
+>
+> -               return 0;
+> -       }
+> +       if ((rxsp->ds_info & (AR_TxRxDesc | AR_CtrlStat)) != 0)
+> +               return -EINPROGRESS;
+>
+>        rxs->rs_status = 0;
+>        rxs->rs_flags =  0;
+> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+> index c2ccba6..3d8e51c 100644
+> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
+> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+> @@ -299,7 +299,6 @@ struct ath_tx {
+>
+>  struct ath_rx_edma {
+>        struct sk_buff_head rx_fifo;
+> -       struct sk_buff_head rx_buffers;
+>        u32 rx_fifo_hwsize;
+>  };
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
+> index 7e1a91a..cdba79f 100644
+> --- a/drivers/net/wireless/ath/ath9k/recv.c
+> +++ b/drivers/net/wireless/ath/ath9k/recv.c
+> @@ -232,7 +232,6 @@ static void ath_rx_edma_cleanup(struct ath_softc *sc)
+>  static void ath_rx_edma_init_queue(struct ath_rx_edma *rx_edma, int size)
+>  {
+>        skb_queue_head_init(&rx_edma->rx_fifo);
+> -       skb_queue_head_init(&rx_edma->rx_buffers);
+>        rx_edma->rx_fifo_hwsize = size;
+>  }
+>
+> @@ -658,7 +657,9 @@ static void ath_rx_ps(struct ath_softc *sc, struct sk_buff *skb, bool mybeacon)
+>  }
+>
+>  static bool ath_edma_get_buffers(struct ath_softc *sc,
+> -                                enum ath9k_rx_qtype qtype)
+> +                                enum ath9k_rx_qtype qtype,
+> +                                struct ath_rx_status *rs,
+> +                                struct ath_buf **dest)
+>  {
+>        struct ath_rx_edma *rx_edma = &sc->rx.rx_edma[qtype];
+>        struct ath_hw *ah = sc->sc_ah;
+> @@ -677,7 +678,7 @@ static bool ath_edma_get_buffers(struct ath_softc *sc,
+>        dma_sync_single_for_cpu(sc->dev, bf->bf_buf_addr,
+>                                common->rx_bufsize, DMA_FROM_DEVICE);
+>
+> -       ret = ath9k_hw_process_rxdesc_edma(ah, NULL, skb->data);
+> +       ret = ath9k_hw_process_rxdesc_edma(ah, rs, skb->data);
+>        if (ret == -EINPROGRESS) {
+>                /*let device gain the buffer again*/
+>                dma_sync_single_for_device(sc->dev, bf->bf_buf_addr,
+> @@ -690,20 +691,21 @@ static bool ath_edma_get_buffers(struct ath_softc *sc,
+>                /* corrupt descriptor, skip this one and the following one */
+>                list_add_tail(&bf->list, &sc->rx.rxbuf);
+>                ath_rx_edma_buf_link(sc, qtype);
+> -               skb = skb_peek(&rx_edma->rx_fifo);
+> -               if (!skb)
+> -                       return true;
+>
+> -               bf = SKB_CB_ATHBUF(skb);
+> -               BUG_ON(!bf);
+> +               skb = skb_peek(&rx_edma->rx_fifo);
+> +               if (skb) {
+> +                       bf = SKB_CB_ATHBUF(skb);
+> +                       BUG_ON(!bf);
+>
+> -               __skb_unlink(skb, &rx_edma->rx_fifo);
+> -               list_add_tail(&bf->list, &sc->rx.rxbuf);
+> -               ath_rx_edma_buf_link(sc, qtype);
+> -               return true;
+> +                       __skb_unlink(skb, &rx_edma->rx_fifo);
+> +                       list_add_tail(&bf->list, &sc->rx.rxbuf);
+> +                       ath_rx_edma_buf_link(sc, qtype);
+> +               } else {
+> +                       bf = NULL;
+> +               }
+>        }
+> -       skb_queue_tail(&rx_edma->rx_buffers, skb);
+>
+> +       *dest = bf;
+>        return true;
+>  }
+>
+> @@ -711,18 +713,15 @@ static struct ath_buf *ath_edma_get_next_rx_buf(struct ath_softc *sc,
+>                                                struct ath_rx_status *rs,
+>                                                enum ath9k_rx_qtype qtype)
+>  {
+> -       struct ath_rx_edma *rx_edma = &sc->rx.rx_edma[qtype];
+> -       struct sk_buff *skb;
+> -       struct ath_buf *bf;
+> +       struct ath_buf *bf = NULL;
+>
+> -       while (ath_edma_get_buffers(sc, qtype));
+> -       skb = __skb_dequeue(&rx_edma->rx_buffers);
+> -       if (!skb)
+> -               return NULL;
+> +       while (ath_edma_get_buffers(sc, qtype, rs, &bf)) {
+> +               if (!bf)
+> +                       continue;
+>
+> -       bf = SKB_CB_ATHBUF(skb);
+> -       ath9k_hw_process_rxdesc_edma(sc->sc_ah, rs, skb->data);
+> -       return bf;
+> +               return bf;
+> +       }
+> +       return NULL;
+>  }
 
-As far as I know there is no way to force firmware refresh at the
-moment without reloading the driver. If you know any implementations
-of such behavior, please let me know.
+can we do something like this, as 'buf' is initialized to NULL
 
-Stanislav.
+while (ath_edma_get_buffers(sc, qtype, rs, &bf))
+> +               if (bf)
+> +                       break;
+>
+> -       bf = SKB_CB_ATHBUF(skb);
+> -       ath9k_hw_process_rxdesc_edma(sc->sc_ah, rs, skb->data);
+> -       return bf;
+> +       return bf;
 
+
+
+>
+>  static struct ath_buf *ath_get_next_rx_buf(struct ath_softc *sc,
 > --
->  "One disk to rule them all, One disk to find them. One disk to bring
->  them all and in the darkness grind them. In the Land of Redmond
->  where the shadows lie." -- The Silicon Valley Tarot
->  Henrique Holschuh
+> 1.7.3.2
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+thanks,
+shafi
