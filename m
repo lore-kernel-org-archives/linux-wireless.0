@@ -1,96 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:40033 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756423Ab2CBWHS (ORCPT
+Received: from he.sipsolutions.net ([78.46.109.217]:55413 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751846Ab2CEV0L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 2 Mar 2012 17:07:18 -0500
-Received: by mail-pw0-f46.google.com with SMTP id un15so562773pbc.19
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Mar 2012 14:07:18 -0800 (PST)
-MIME-Version: 1.0
-From: Javier Cardona <javier@cozybit.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Javier Cardona <javier@cozybit.com>, devel@lists.open80211s.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCHv5 2/2] mac80211: Modify tsf via debugfs in mesh interfaces
-Date: Fri,  2 Mar 2012 14:07:07 -0800
-Message-Id: <1330726027-30354-2-git-send-email-javier@cozybit.com> (sfid-20120302_230729_341196_1C223CCE)
-In-Reply-To: <1330726027-30354-1-git-send-email-javier@cozybit.com>
-References: <1330726027-30354-1-git-send-email-javier@cozybit.com>
+	Mon, 5 Mar 2012 16:26:11 -0500
+Subject: Re: [PATCH v3 2/2] mac80211: fix mesh airtime link metric
+ estimating
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thomas Pedersen <thomas@cozybit.com>
+Cc: linux-wireless@vger.kernel.org, devel@lists.open80211s.org,
+	linville@tuxdriver.com
+In-Reply-To: <1330982223-8379-2-git-send-email-thomas@cozybit.com> (sfid-20120305_221743_028947_F8F6C4E2)
+References: <1330982223-8379-1-git-send-email-thomas@cozybit.com>
+	 <1330982223-8379-2-git-send-email-thomas@cozybit.com>
+	 (sfid-20120305_221743_028947_F8F6C4E2)
+Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 05 Mar 2012 22:26:07 +0100
+Message-ID: <1330982767.3545.15.camel@jlt3.sipsolutions.net> (sfid-20120305_222614_551467_3027CAB2)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Javier Cardona <javier@cozybit.com>
----
- drivers/net/wireless/mac80211_hwsim.c |   18 ++++++++++++++++++
- net/mac80211/debugfs_netdev.c         |    7 ++++++-
- 2 files changed, 24 insertions(+), 1 deletions(-)
+On Mon, 2012-03-05 at 13:17 -0800, Thomas Pedersen wrote:
+> Airtime link metric estimation was broken in HT mesh, use
+> cfg80211_calculate_bitrate to get the right rate value.
+> 
+> Also factor out tx rate copying from sta_set_sinfo().
+> 
+> Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+> ---
+> v2:
+> factor out rate copying (Johannes)
+> 
+> v3:
+> just factor out tx rate copying (Johannes)
+> 
+>  net/mac80211/cfg.c       |   22 ++++++++++++++--------
+>  net/mac80211/mesh_hwmp.c |    6 ++++--
+>  net/mac80211/sta_info.h  |    2 ++
+>  3 files changed, 20 insertions(+), 10 deletions(-)
+> 
+> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+> index 6a77d4c..9e6accd 100644
+> --- a/net/mac80211/cfg.c
+> +++ b/net/mac80211/cfg.c
+> @@ -336,6 +336,19 @@ static void rate_idx_to_bitrate(struct rate_info *rate, struct sta_info *sta, in
+>  		rate->mcs = idx;
+>  }
+>  
+> +void sta_set_rate_info(struct sta_info *sta, struct ieee80211_tx_rate rate,
+> +		       struct rate_info *rinfo)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index f4bcd03..99909bd 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -379,6 +379,22 @@ static __le64 __mac80211_hwsim_get_tsf(struct mac80211_hwsim_data *data)
- 	return cpu_to_le64(now + data->tsf_offset);
- }
- 
-+static u64 mac80211_hwsim_get_tsf(struct ieee80211_hw *hw,
-+		struct ieee80211_vif *vif)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	return le64_to_cpu(__mac80211_hwsim_get_tsf(data));
-+}
-+
-+static void mac80211_hwsim_set_tsf(struct ieee80211_hw *hw,
-+		struct ieee80211_vif *vif, u64 tsf)
-+{
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	struct timeval tv = ktime_to_timeval(ktime_get_real());
-+	u64 now = tv.tv_sec * USEC_PER_SEC + tv.tv_usec;
-+	data->tsf_offset = tsf - now;
-+}
-+
- static void mac80211_hwsim_monitor_rx(struct ieee80211_hw *hw,
- 				      struct sk_buff *tx_skb)
- {
-@@ -1224,6 +1240,8 @@ static struct ieee80211_ops mac80211_hwsim_ops =
- 	.sw_scan_start = mac80211_hwsim_sw_scan,
- 	.sw_scan_complete = mac80211_hwsim_sw_scan_complete,
- 	.flush = mac80211_hwsim_flush,
-+	.get_tsf = mac80211_hwsim_get_tsf,
-+	.set_tsf = mac80211_hwsim_set_tsf,
- };
- 
- 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 510ed1d..416b906 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -537,11 +537,15 @@ static void add_monitor_files(struct ieee80211_sub_if_data *sdata)
- 
- #ifdef CONFIG_MAC80211_MESH
- 
-+static void add_mesh_files(struct ieee80211_sub_if_data *sdata)
-+{
-+	DEBUGFS_ADD_MODE(tsf, 0600);
-+}
-+
- static void add_mesh_stats(struct ieee80211_sub_if_data *sdata)
- {
- 	struct dentry *dir = debugfs_create_dir("mesh_stats",
- 						sdata->debugfs.dir);
--
- #define MESHSTATS_ADD(name)\
- 	debugfs_create_file(#name, 0400, dir, sdata, &name##_ops);
- 
-@@ -593,6 +597,7 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_MESH_POINT:
- #ifdef CONFIG_MAC80211_MESH
-+		add_mesh_files(sdata);
- 		add_mesh_stats(sdata);
- 		add_mesh_config(sdata);
- #endif
--- 
-1.7.6
+I think passing a struct by value is rather expensive?
+
+Also I think it should have "tx" somewhere in the name.
+
+johannes
+
 
