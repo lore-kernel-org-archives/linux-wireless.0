@@ -1,65 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from perches-mx.perches.com ([206.117.179.246]:49393 "EHLO
-	labridge.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754665Ab2CSFS6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 19 Mar 2012 01:18:58 -0400
-Message-ID: <1332134336.23125.60.camel@joe2Laptop> (sfid-20120319_061918_342390_F5BBCFFB)
-Subject: Re: [PATCH wireless-next 2/3] ath5k: Introduce _ath5k_printk to
- reduce code/text
-From: Joe Perches <joe@perches.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Jiri Slaby <jirislaby@gmail.com>,
-	Nick Kossifidis <mickflemm@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@qca.qualcomm.com>,
-	Bob Copeland <me@bobcopeland.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	linux-wireless@vger.kernel.org, ath5k-devel@lists.ath5k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Sun, 18 Mar 2012 22:18:56 -0700
-In-Reply-To: <CAJ-Vmo=ceSV38vQGfs8cKJScWjYF4kbQdK3+JJvQLCmnURaEwA@mail.gmail.com>
-References: <cover.1332116921.git.joe@perches.com>
-	 <b157e2d1a746733d1814b9726f326d52d36da2fc.1332116921.git.joe@perches.com>
-	 <CAJ-Vmo=ceSV38vQGfs8cKJScWjYF4kbQdK3+JJvQLCmnURaEwA@mail.gmail.com>
+Received: from he.sipsolutions.net ([78.46.109.217]:35741 "EHLO
+	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751456Ab2CEVSo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 16:18:44 -0500
+Subject: [PATCH v2] cfg80211/mac80211: report signal strength for mgmt
+ frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <20120305204251.GH18128@tuxdriver.com>
+References: <1330692035.8542.14.camel@jlt3.sipsolutions.net>
+	 <20120305204251.GH18128@tuxdriver.com>
 Content-Type: text/plain; charset="UTF-8"
+Date: Mon, 05 Mar 2012 22:18:41 +0100
+Message-ID: <1330982321.3545.13.camel@jlt3.sipsolutions.net> (sfid-20120305_221848_246519_06450402)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2012-03-18 at 21:36 -0700, Adrian Chadd wrote:
-> Hi,
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hi Adrian.
+Add the signal strength (in dBm only for now) to
+frames that are received via nl80211's various
+frame APIs.
 
-> So the reason this is a macro in the FreeBSD HAL is so that the args
-> aren't evaluated unless the level (or debug bitmap in my case) fires
-> off.
-> 
-> Otherwise compiling in debugging will cause a _lot_ of spurious
-> register reads to occur that are then tossed. This was one of the big
-> reasons for instability and slow performance when AH_DEBUG was
-> enabled.
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+v2: fix ath6kl -- it doesn't have this info in the WMI structs
 
-That doesn't make any sense in this case.
+ drivers/net/wireless/ath/ath6kl/wmi.c |    6 ++++--
+ include/linux/nl80211.h               |    6 ++++++
+ include/net/cfg80211.h                |    8 +++++---
+ net/mac80211/rx.c                     |   13 +++++++++++--
+ net/wireless/mlme.c                   |    7 ++++---
+ net/wireless/nl80211.c                |    9 +++++++--
+ net/wireless/nl80211.h                |    3 ++-
+ 7 files changed, 39 insertions(+), 13 deletions(-)
 
-It's either a call to printk or _ath5_printk
-but it's still a call to a function.
-
-+void __printf(3, 4)
-+_ath5k_printk(const struct ath5k_hw *ah, const char *level,
-+             const char *fmt, ...);
+--- a/include/linux/nl80211.h	2012-03-02 13:40:45.000000000 +0100
++++ b/include/linux/nl80211.h	2012-03-05 22:15:41.000000000 +0100
+@@ -1197,6 +1197,10 @@ enum nl80211_commands {
+  * @NL80211_ATTR_NOACK_MAP: This u16 bitmap contains the No Ack Policy of
+  *      up to 16 TIDs.
+  *
++ * @NL80211_ATTR_RX_SIGNAL_DBM: signal strength in dBm (as a 32-bit int);
++ *	this attribute is (depending on the driver capabilities) added to
++ *	received frames indicated with %NL80211_CMD_FRAME.
++ *
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+  */
+@@ -1442,6 +1446,8 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_NOACK_MAP,
+ 
++	NL80211_ATTR_RX_SIGNAL_DBM,
 +
- #define ATH5K_PRINTK(_sc, _level, _fmt, ...)                           \
--       printk(_level pr_fmt("%s%s" _fmt),                              \
--              ((_sc) && (_sc)->hw) ? wiphy_name((_sc)->hw->wiphy) : "", \
--              ((_sc) && (_sc)->hw) ? ": " : "",                        \
--              ##__VA_ARGS__)
-+       _ath5k_printk(_sc, _level, _fmt, ##__VA_ARGS__)
-
-If there are level/mask tests to macros that
-are used to call ATH5K_PRINTK, that still
-works.  As far as I can tell, there aren't
-any uses of macros like that.
-
-cheers, Joe
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+--- a/include/net/cfg80211.h	2012-03-05 22:15:37.000000000 +0100
++++ b/include/net/cfg80211.h	2012-03-05 22:15:41.000000000 +0100
+@@ -3186,6 +3186,7 @@ void cfg80211_del_sta(struct net_device
+  * cfg80211_rx_mgmt - notification of received, unprocessed management frame
+  * @dev: network device
+  * @freq: Frequency on which the frame was received in MHz
++ * @sig_dbm: signal strength in mBm, or 0 if unknown
+  * @buf: Management frame (header + body)
+  * @len: length of the frame data
+  * @gfp: context flags
+@@ -3198,8 +3199,8 @@ void cfg80211_del_sta(struct net_device
+  * This function is called whenever an Action frame is received for a station
+  * mode interface, but is not processed in kernel.
+  */
+-bool cfg80211_rx_mgmt(struct net_device *dev, int freq, const u8 *buf,
+-		      size_t len, gfp_t gfp);
++bool cfg80211_rx_mgmt(struct net_device *dev, int freq, int sig_dbm,
++		      const u8 *buf, size_t len, gfp_t gfp);
+ 
+ /**
+  * cfg80211_mgmt_tx_status - notification of TX status for management frame
+@@ -3312,6 +3313,7 @@ void cfg80211_probe_status(struct net_de
+  * @frame: the frame
+  * @len: length of the frame
+  * @freq: frequency the frame was received on
++ * @sig_dbm: signal strength in mBm, or 0 if unknown
+  * @gfp: allocation flags
+  *
+  * Use this function to report to userspace when a beacon was
+@@ -3320,7 +3322,7 @@ void cfg80211_probe_status(struct net_de
+  */
+ void cfg80211_report_obss_beacon(struct wiphy *wiphy,
+ 				 const u8 *frame, size_t len,
+-				 int freq, gfp_t gfp);
++				 int freq, int sig_dbm, gfp_t gfp);
+ 
+ /*
+  * cfg80211_can_beacon_sec_chan - test if ht40 on extension channel can be used
+--- a/net/wireless/nl80211.c	2012-03-02 13:40:45.000000000 +0100
++++ b/net/wireless/nl80211.c	2012-03-05 22:15:41.000000000 +0100
+@@ -7673,7 +7673,8 @@ bool nl80211_unexpected_4addr_frame(stru
+ 
+ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
+ 		      struct net_device *netdev, u32 nlpid,
+-		      int freq, const u8 *buf, size_t len, gfp_t gfp)
++		      int freq, int sig_dbm,
++		      const u8 *buf, size_t len, gfp_t gfp)
+ {
+ 	struct sk_buff *msg;
+ 	void *hdr;
+@@ -7691,6 +7692,8 @@ int nl80211_send_mgmt(struct cfg80211_re
+ 	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
+ 	NLA_PUT_U32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex);
+ 	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
++	if (sig_dbm)
++		NLA_PUT_U32(msg, NL80211_ATTR_RX_SIGNAL_DBM, sig_dbm);
+ 	NLA_PUT(msg, NL80211_ATTR_FRAME, len, buf);
+ 
+ 	genlmsg_end(msg, hdr);
+@@ -7952,7 +7955,7 @@ EXPORT_SYMBOL(cfg80211_probe_status);
+ 
+ void cfg80211_report_obss_beacon(struct wiphy *wiphy,
+ 				 const u8 *frame, size_t len,
+-				 int freq, gfp_t gfp)
++				 int freq, int sig_dbm, gfp_t gfp)
+ {
+ 	struct cfg80211_registered_device *rdev = wiphy_to_dev(wiphy);
+ 	struct sk_buff *msg;
+@@ -7975,6 +7978,8 @@ void cfg80211_report_obss_beacon(struct
+ 	NLA_PUT_U32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx);
+ 	if (freq)
+ 		NLA_PUT_U32(msg, NL80211_ATTR_WIPHY_FREQ, freq);
++	if (sig_dbm)
++		NLA_PUT_U32(msg, NL80211_ATTR_RX_SIGNAL_DBM, sig_dbm);
+ 	NLA_PUT(msg, NL80211_ATTR_FRAME, len, frame);
+ 
+ 	genlmsg_end(msg, hdr);
+--- a/net/wireless/mlme.c	2012-03-02 13:40:45.000000000 +0100
++++ b/net/wireless/mlme.c	2012-03-05 22:15:41.000000000 +0100
+@@ -814,8 +814,8 @@ int cfg80211_mlme_mgmt_tx(struct cfg8021
+ 				  cookie);
+ }
+ 
+-bool cfg80211_rx_mgmt(struct net_device *dev, int freq, const u8 *buf,
+-		      size_t len, gfp_t gfp)
++bool cfg80211_rx_mgmt(struct net_device *dev, int freq, int sig_mbm,
++		      const u8 *buf, size_t len, gfp_t gfp)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct wiphy *wiphy = wdev->wiphy;
+@@ -854,7 +854,8 @@ bool cfg80211_rx_mgmt(struct net_device
+ 		/* found match! */
+ 
+ 		/* Indicate the received Action frame to user space */
+-		if (nl80211_send_mgmt(rdev, dev, reg->nlpid, freq,
++		if (nl80211_send_mgmt(rdev, dev, reg->nlpid,
++				      freq, sig_mbm,
+ 				      buf, len, gfp))
+ 			continue;
+ 
+--- a/net/mac80211/rx.c	2012-03-05 22:15:39.000000000 +0100
++++ b/net/mac80211/rx.c	2012-03-05 22:15:41.000000000 +0100
+@@ -2182,9 +2182,14 @@ ieee80211_rx_h_mgmt_check(struct ieee802
+ 	if (rx->sdata->vif.type == NL80211_IFTYPE_AP &&
+ 	    ieee80211_is_beacon(mgmt->frame_control) &&
+ 	    !(rx->flags & IEEE80211_RX_BEACON_REPORTED)) {
++	    	int sig = 0;
++
++		if (rx->local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
++			sig = status->signal;
++
+ 		cfg80211_report_obss_beacon(rx->local->hw.wiphy,
+ 					    rx->skb->data, rx->skb->len,
+-					    status->freq, GFP_ATOMIC);
++					    status->freq, sig, GFP_ATOMIC);
+ 		rx->flags |= IEEE80211_RX_BEACON_REPORTED;
+ 	}
+ 
+@@ -2408,6 +2413,7 @@ static ieee80211_rx_result debug_noinlin
+ ieee80211_rx_h_userspace_mgmt(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
++	int sig = 0;
+ 
+ 	/* skip known-bad action frames and return them in the next handler */
+ 	if (status->rx_flags & IEEE80211_RX_MALFORMED_ACTION_FRM)
+@@ -2420,7 +2426,10 @@ ieee80211_rx_h_userspace_mgmt(struct iee
+ 	 * it transmitted were processed or returned.
+ 	 */
+ 
+-	if (cfg80211_rx_mgmt(rx->sdata->dev, status->freq,
++	if (rx->local->hw.flags & IEEE80211_HW_SIGNAL_DBM)
++		sig = status->signal;
++
++	if (cfg80211_rx_mgmt(rx->sdata->dev, status->freq, sig,
+ 			     rx->skb->data, rx->skb->len,
+ 			     GFP_ATOMIC)) {
+ 		if (rx->sta)
+--- a/net/wireless/nl80211.h	2012-03-02 13:40:45.000000000 +0100
++++ b/net/wireless/nl80211.h	2012-03-05 22:15:41.000000000 +0100
+@@ -92,7 +92,8 @@ void nl80211_send_sta_del_event(struct c
+ 				gfp_t gfp);
+ 
+ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
+-		      struct net_device *netdev, u32 nlpid, int freq,
++		      struct net_device *netdev, u32 nlpid,
++		      int freq, int sig_dbm,
+ 		      const u8 *buf, size_t len, gfp_t gfp);
+ void nl80211_send_mgmt_tx_status(struct cfg80211_registered_device *rdev,
+ 				 struct net_device *netdev, u64 cookie,
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c	2012-02-24 16:39:05.000000000 +0100
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c	2012-03-05 22:17:47.000000000 +0100
+@@ -556,7 +556,8 @@ static int ath6kl_wmi_rx_probe_req_event
+ 		   dlen, freq, vif->probe_req_report);
+ 
+ 	if (vif->probe_req_report || vif->nw_type == AP_NETWORK)
+-		cfg80211_rx_mgmt(vif->ndev, freq, ev->data, dlen, GFP_ATOMIC);
++		cfg80211_rx_mgmt(vif->ndev, freq, 0,
++				 ev->data, dlen, GFP_ATOMIC);
+ 
+ 	return 0;
+ }
+@@ -595,7 +596,8 @@ static int ath6kl_wmi_rx_action_event_rx
+ 		return -EINVAL;
+ 	}
+ 	ath6kl_dbg(ATH6KL_DBG_WMI, "rx_action: len=%u freq=%u\n", dlen, freq);
+-	cfg80211_rx_mgmt(vif->ndev, freq, ev->data, dlen, GFP_ATOMIC);
++	cfg80211_rx_mgmt(vif->ndev, freq, 0,
++			 ev->data, dlen, GFP_ATOMIC);
+ 
+ 	return 0;
+ }
 
 
