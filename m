@@ -1,126 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:44035 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752254Ab2CEVRK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 16:17:10 -0500
-Received: by pbcun15 with SMTP id un15so3225673pbc.19
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2012 13:17:10 -0800 (PST)
-MIME-Version: 1.0
-From: Thomas Pedersen <thomas@cozybit.com>
-To: linux-wireless@vger.kernel.org
-Cc: devel@lists.open80211s.org, Thomas Pedersen <thomas@cozybit.com>,
-	johannes@sipsolutions.net, linville@tuxdriver.com
-Subject: [PATCH v3 2/2] mac80211: fix mesh airtime link metric estimating
-Date: Mon,  5 Mar 2012 13:17:03 -0800
-Message-Id: <1330982223-8379-2-git-send-email-thomas@cozybit.com> (sfid-20120305_221722_951685_AEE36666)
-In-Reply-To: <1330982223-8379-1-git-send-email-thomas@cozybit.com>
-References: <1330982223-8379-1-git-send-email-thomas@cozybit.com>
+Received: from mga11.intel.com ([192.55.52.93]:56317 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754637Ab2CDX56 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 18:57:58 -0500
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 12/22] NFC: Fragment LLCP I frames
+Date: Mon,  5 Mar 2012 01:03:44 +0100
+Message-Id: <1330905834-6994-13-git-send-email-sameo@linux.intel.com> (sfid-20120305_005801_388163_C0C73437)
+In-Reply-To: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
+References: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Airtime link metric estimation was broken in HT mesh, use
-cfg80211_calculate_bitrate to get the right rate value.
+Based on the receiver MIU, we have to fragment the frame to be
+transmitted.
 
-Also factor out tx rate copying from sta_set_sinfo().
-
-Signed-off-by: Thomas Pedersen <thomas@cozybit.com>
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
 ---
-v2:
-factor out rate copying (Johannes)
+ net/nfc/llcp/commands.c |   57 +++++++++++++++++++++++++++++++++++-----------
+ 1 files changed, 43 insertions(+), 14 deletions(-)
 
-v3:
-just factor out tx rate copying (Johannes)
-
- net/mac80211/cfg.c       |   22 ++++++++++++++--------
- net/mac80211/mesh_hwmp.c |    6 ++++--
- net/mac80211/sta_info.h  |    2 ++
- 3 files changed, 20 insertions(+), 10 deletions(-)
-
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 6a77d4c..9e6accd 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -336,6 +336,19 @@ static void rate_idx_to_bitrate(struct rate_info *rate, struct sta_info *sta, in
- 		rate->mcs = idx;
- }
- 
-+void sta_set_rate_info(struct sta_info *sta, struct ieee80211_tx_rate rate,
-+		       struct rate_info *rinfo)
-+{
-+	rinfo->flags = 0;
-+	if (rate.flags & IEEE80211_TX_RC_MCS)
-+		rinfo->flags |= RATE_INFO_FLAGS_MCS;
-+	if (rate.flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
-+		rinfo->flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
-+	if (rate.flags & IEEE80211_TX_RC_SHORT_GI)
-+		rinfo->flags |= RATE_INFO_FLAGS_SHORT_GI;
-+	rate_idx_to_bitrate(rinfo, sta, rate.idx);
-+}
-+
- static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+diff --git a/net/nfc/llcp/commands.c b/net/nfc/llcp/commands.c
+index a02292b..bfe35b8 100644
+--- a/net/nfc/llcp/commands.c
++++ b/net/nfc/llcp/commands.c
+@@ -444,29 +444,58 @@ int nfc_llcp_send_i_frame(struct nfc_llcp_sock *sock,
+ 				struct msghdr *msg, size_t len)
  {
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
-@@ -378,14 +391,7 @@ static void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 		sinfo->signal_avg = (s8) -ewma_read(&sta->avg_signal);
+ 	struct sk_buff *pdu;
+-	struct sock *sk;
++	struct sock *sk = &sock->sk;
++	struct nfc_llcp_local *local;
++	size_t frag_len = 0, remaining_len;
++	u8 *msg_data, *msg_ptr;
+ 
+-	pr_debug("Send I frame\n");
++	pr_debug("Send I frame len %zd\n", len);
+ 
+-	pdu = llcp_allocate_pdu(sock, LLCP_PDU_I, len + LLCP_SEQUENCE_SIZE);
+-	if (pdu == NULL)
+-		return -ENOMEM;
++	local = sock->local;
++	if (local == NULL)
++		return -ENODEV;
+ 
+-	skb_put(pdu, LLCP_SEQUENCE_SIZE);
++	msg_data = kzalloc(len, GFP_KERNEL);
++	if (msg_data == NULL)
++		return -ENOMEM;
+ 
+-	if (memcpy_fromiovec(skb_put(pdu, len), msg->msg_iov, len)) {
+-		kfree_skb(pdu);
+-		return -EFAULT;
++	if (memcpy_fromiovec(msg_data, msg->msg_iov, len)) {
++			kfree(msg_data);
++			return -EFAULT;
  	}
  
--	sinfo->txrate.flags = 0;
--	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
--		sinfo->txrate.flags |= RATE_INFO_FLAGS_MCS;
--	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
--		sinfo->txrate.flags |= RATE_INFO_FLAGS_40_MHZ_WIDTH;
--	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_SHORT_GI)
--		sinfo->txrate.flags |= RATE_INFO_FLAGS_SHORT_GI;
--	rate_idx_to_bitrate(&sinfo->txrate, sta, sta->last_tx_rate.idx);
-+	sta_set_rate_info(sta, sta->last_tx_rate, &sinfo->txrate);
+-	skb_queue_head(&sock->tx_queue, pdu);
++	remaining_len = len;
++	msg_ptr = msg_data;
++
++	while (remaining_len > 0) {
++
++		frag_len = min_t(u16, local->remote_miu, remaining_len);
  
- 	sinfo->rxrate.flags = 0;
- 	if (sta->last_rx_rate_flag & RX_FLAG_HT)
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 31bc762..ae99f14 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -323,6 +323,7 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
- 				   struct sta_info *sta)
- {
- 	struct ieee80211_supported_band *sband;
-+	struct rate_info rinfo;
- 	/* This should be adjusted for each device */
- 	int device_constant = 1 << ARITH_SHIFT;
- 	int test_frame_len = TEST_FRAME_LEN << ARITH_SHIFT;
-@@ -336,7 +337,9 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
- 	if (sta->fail_avg >= 100)
- 		return MAX_METRIC;
+-	sk = &sock->sk;
+-	lock_sock(sk);
++		pr_debug("Fragment %zd bytes remaining %zd",
++			 frag_len, remaining_len);
  
--	if (sta->last_tx_rate.flags & IEEE80211_TX_RC_MCS)
-+	sta_set_rate_info(sta, sta->last_tx_rate, &rinfo);
-+	rate = cfg80211_calculate_bitrate(&rinfo);
-+	if (WARN_ON(!rate))
- 		return MAX_METRIC;
+-	nfc_llcp_queue_i_frames(sock);
++		pdu = llcp_allocate_pdu(sock, LLCP_PDU_I,
++					frag_len + LLCP_SEQUENCE_SIZE);
++		if (pdu == NULL)
++			return -ENOMEM;
++
++		skb_put(pdu, LLCP_SEQUENCE_SIZE);
++
++		memcpy(skb_put(pdu, frag_len), msg_ptr, frag_len);
++
++		skb_queue_head(&sock->tx_queue, pdu);
++
++		lock_sock(sk);
++
++		nfc_llcp_queue_i_frames(sock);
++
++		release_sock(sk);
++
++		remaining_len -= frag_len;
++		msg_ptr += len;
++	}
  
- 	err = (sta->fail_avg << ARITH_SHIFT) / 100;
-@@ -344,7 +347,6 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
- 	/* bitrate is in units of 100 Kbps, while we need rate in units of
- 	 * 1Mbps. This will be corrected on tx_time computation.
- 	 */
--	rate = sband->bitrates[sta->last_tx_rate.idx].bitrate;
- 	tx_time = (device_constant + 10 * test_frame_len / rate);
- 	estimated_retx = ((1 << (2 * ARITH_SHIFT)) / (s_unit - err));
- 	result = (tx_time * estimated_retx) >> (2 * ARITH_SHIFT) ;
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 23a97c9..066d2e8 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -528,6 +528,8 @@ void sta_info_init(struct ieee80211_local *local);
- void sta_info_stop(struct ieee80211_local *local);
- int sta_info_flush(struct ieee80211_local *local,
- 		   struct ieee80211_sub_if_data *sdata);
-+void sta_set_rate_info(struct sta_info *sta, struct ieee80211_tx_rate rate,
-+		       struct rate_info *rinfo);
- void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
- 			  unsigned long exp_time);
+-	release_sock(sk);
++	kfree(msg_data);
  
+ 	return 0;
+ }
 -- 
-1.7.5.4
+1.7.7.3
 
