@@ -1,57 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from casper.infradead.org ([85.118.1.10]:57771 "EHLO
-	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756509Ab2CZKEk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 26 Mar 2012 06:04:40 -0400
-Message-ID: <1332756769.5884.17.camel@sortiz-mobl> (sfid-20120326_120444_927537_4B506E45)
-Subject: RE: [PATCH] NFC: Add Core support to generate tag lost event
-From: Samuel Ortiz <samuel@sortiz.org>
-Reply-To: Samuel Ortiz <samuel@sortiz.org>
-To: "Elias, Ilan" <ilane@ti.com>
-Cc: Eric Lapuyade <eric.lapuyade@linux.intel.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
+Received: from ackle.nomi.cz ([81.31.33.35]:41173 "EHLO ackle.nomi.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932480Ab2CEPSK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 10:18:10 -0500
+Date: Mon, 5 Mar 2012 16:18:08 +0100
+From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Date: Mon, 26 Mar 2012 12:12:49 +0200
-In-Reply-To: <B30D1FD582D6484ABF57420512E5803516A9376C@DNCE03.ent.ti.com>
-References: <4F6C5C59.2060708@linux.intel.com>
-	 <B30D1FD582D6484ABF57420512E5803516A9376C@DNCE03.ent.ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Johannes Berg <johannes@sipsolutions.net>, security@kernel.org
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+Message-ID: <20120305151808.GA24309@nomi.cz> (sfid-20120305_161834_322304_00B20CD7)
+References: <1321755233.22510.1.camel@wwguy-ubuntu> <20111120032016.GA14520@nomi.cz> <1321763314.22510.4.camel@wwguy-ubuntu> <20111120204007.GA7273@nomi.cz> <20120210180929.GA17733@nomi.cz> <20120214092020.GB12905@redhat.com> <20120305140130.GA15186@nomi.cz> <20120305145700.GA17800@redhat.com> <20120305150031.GA22387@nomi.cz> <20120305151138.GB17800@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20120305151138.GB17800@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ilan,
+Hello,
 
-On Mon, 2012-03-26 at 09:48 +0000, Elias, Ilan wrote:
-> Hi Eric, 
-> 
-> > +static void nfc_check_pres_work(struct work_struct *work)
-> > +{
-> > +	struct nfc_dev *dev = container_of(work, struct nfc_dev,
-> > +					   check_pres_work);
-> > +	int rc;
-> > +
-> > +	device_lock(&dev->dev);
-> > +
-> > +	if (dev->activated_target_idx != NFC_TARGET_IDX_NONE &&
-> > +	    timer_pending(&dev->check_pres_timer) == 0) {
-> > +		rc = dev->ops->check_presence(dev, 
-> > dev->activated_target_idx);
-> > +		if (!rc) {
-> > +			mod_timer(&dev->check_pres_timer, jiffies +
-> > +				  
-> > msecs_to_jiffies(NFC_CHECK_PRES_FREQ_MS));
-> > +		} else {
-> > +			nfc_target_lost(dev, dev->activated_target_idx);
-> I'm unable to find the definition of the function nfc_target_lost.
-This patch is based on my nfc-next branch, where nfc_target_lost is
-implemented. I'm waiting for John to take patches for the next merge
-window before sending him a pull request for that.
+On Mon, Mar 05, 2012 at 04:11:41PM +0100, Stanislaw Gruszka wrote:
+> Perhaps bug was triggered because KVM 32-bit guest had CONFIG_CRYPTO_AES_NI_INTEL
+> enabled ?
 
-Cheers,
-Samuel.
+Nope. CONFIG_CRYPTO_AES_NI_INTEL is enabled only in the 64-bit host kernel.
+Guest kernel version is 2.6.32-220.2.1.el6.i686 and there's no mention of
+AES_NI_INTEL in its .config.
 
+(And I do run a 32-bit userspace, perhaps if I had 64-bit userspace, the guest
+would be safe. Or maybe not. I have no idea and no time to get a 64-bit
+userspace. :-))
+
+-- 
+Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
