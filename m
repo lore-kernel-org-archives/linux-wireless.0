@@ -1,67 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:33061 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751295Ab2CINN6 (ORCPT
+Received: from acsinet15.oracle.com ([141.146.126.227]:41676 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756199Ab2CESK3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Mar 2012 08:13:58 -0500
-Received: by wgbdr13 with SMTP id dr13so1597845wgb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2012 05:13:57 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: linville@tuxdriver.com, johannes@sipsolutions.net, nbd@openwrt.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCH] mac80211: Disable MCS > 7 in minstrel_ht when STA uses static SMPS
-Date: Fri,  9 Mar 2012 14:13:45 +0100
-Message-Id: <1331298825-22314-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20120309_141418_799868_1058833C)
+	Mon, 5 Mar 2012 13:10:29 -0500
+Date: Mon, 5 Mar 2012 21:10:07 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] airo: fix test for FLAG_RADIO_DOWN
+Message-ID: <20120305181007.GC26880@elgon.mountain> (sfid-20120305_191034_447861_020B4150)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Disable multi stream rates (MCS > 7) when a STA is in static SMPS mode
-since it has only one active rx chain. Hence, it doesn't even make
-sense to sample multi stream rates.
+We should be doing a shift (1 << FLAG_RADIO_DOWN) here before testing
+the flag.  As luck would have it, this test works almost correctly.
+The current code tests for FLAG_RADIO_OFF instead of FLAG_RADIO_DOWN.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+#define FLAG_RADIO_OFF  0       /* User disabling of MAC */
+#define FLAG_RADIO_DOWN 1       /* ifup/ifdown disabling of MAC */
+
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
+I don't have this hardware.  Please review carefully.
 
-I haven't found a STA that makes use of static SMPS, so this is only compile tested.
-
- net/mac80211/rc80211_minstrel_ht.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
-
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index ff5f7b8..2b42564 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -692,6 +692,7 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	int ack_dur;
- 	int stbc;
- 	int i;
-+	unsigned int smps;
+diff --git a/drivers/net/wireless/airo.c b/drivers/net/wireless/airo.c
+index 1c008c6..ddc061d 100644
+--- a/drivers/net/wireless/airo.c
++++ b/drivers/net/wireless/airo.c
+@@ -1869,7 +1869,7 @@ static int readStatsRid(struct airo_info*ai, StatsRid *sr, int rid, int lock)
  
- 	/* fall back to the old minstrel for legacy stations */
- 	if (!sta->ht_cap.ht_supported)
-@@ -731,6 +732,9 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	    oper_chan_type != NL80211_CHAN_HT40PLUS)
- 		sta_cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
- 
-+	smps = (sta_cap & IEEE80211_HT_CAP_SM_PS) >>
-+		IEEE80211_HT_CAP_SM_PS_SHIFT;
-+
- 	for (i = 0; i < ARRAY_SIZE(mi->groups); i++) {
- 		u16 req = 0;
- 
-@@ -748,6 +752,11 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 		if ((sta_cap & req) != req)
- 			continue;
- 
-+		/* Mark MCS > 7 as unsupported if STA is in static SMPS mode */
-+		if (smps == WLAN_HT_CAP_SM_PS_STATIC &&
-+		    minstrel_mcs_groups[i].streams > 1)
-+			continue;
-+
- 		mi->groups[i].supported =
- 			mcs->rx_mask[minstrel_mcs_groups[i].streams - 1];
- 
--- 
-1.7.7
-
+ static void try_auto_wep(struct airo_info *ai)
+ {
+-	if (auto_wep && !(ai->flags & FLAG_RADIO_DOWN)) {
++	if (auto_wep && !test_bit(FLAG_RADIO_DOWN, &ai->flags)) {
+ 		ai->expires = RUN_AT(3*HZ);
+ 		wake_up_interruptible(&ai->thr_wait);
+ 	}
