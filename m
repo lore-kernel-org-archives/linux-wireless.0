@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:59277 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754442Ab2CIKB5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 9 Mar 2012 05:01:57 -0500
-Received: by lahj13 with SMTP id j13so1472030lah.19
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Mar 2012 02:01:56 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAGXE3d_fMnjyHJ7zkz53Dvv0eL+MKC6sDJwpvOQQrK+R=f2iBw@mail.gmail.com>
-References: <1331137230-12430-1-git-send-email-helmut.schaa@googlemail.com>
-	<1331139615.3519.18.camel@jlt3.sipsolutions.net>
-	<CAGXE3d_fMnjyHJ7zkz53Dvv0eL+MKC6sDJwpvOQQrK+R=f2iBw@mail.gmail.com>
-Date: Fri, 9 Mar 2012 02:01:55 -0800
-Message-ID: <CAJ-Vmomm9NKr6T_PczQ_eOq-so1b-=z1dSEPyjJr35ZNcag2XA@mail.gmail.com> (sfid-20120309_110210_142282_527452F2)
-Subject: Re: [PATCH] mac80211: Limit TID buffering during BA session setup/teardown
-From: Adrian Chadd <adrian@freebsd.org>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org, linville@tuxdriver.com
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mga01.intel.com ([192.55.52.88]:47242 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755474Ab2CDX5o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 4 Mar 2012 18:57:44 -0500
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Ilan Elias <ilane@ti.com>, linux-wireless@vger.kernel.org,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH 08/22] NFC: Clear LLCP SDPs whan MAC goes down
+Date: Mon,  5 Mar 2012 01:03:40 +0100
+Message-Id: <1330905834-6994-9-git-send-email-sameo@linux.intel.com> (sfid-20120305_005749_013162_623B6E29)
+In-Reply-To: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
+References: <1330905834-6994-1-git-send-email-sameo@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I haven't come up with a cleaner solution either for
-FreeBSD/ath/net80211 at the moment.
+Signed-off-by: Samuel Ortiz <sameo@linux.intel.com>
+---
+ net/nfc/llcp/llcp.c |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-Right now, if you try establishing an aggregation session by flooding
-250+ Mbit of UDP, you can easily allocate all the ath_buf's before the
-driver gets a chance to send the addba. Or, the addba fails but before
-that retransmission occurs, another UDP frame has eaten up another
-mbuf/ath_buf.
+diff --git a/net/nfc/llcp/llcp.c b/net/nfc/llcp/llcp.c
+index 443407e..577bcb9 100644
+--- a/net/nfc/llcp/llcp.c
++++ b/net/nfc/llcp/llcp.c
+@@ -97,6 +97,17 @@ static void nfc_llcp_socket_release(struct nfc_llcp_local *local)
+ 	mutex_unlock(&local->socket_lock);
+ }
+ 
++static void nfc_llcp_clear_sdp(struct nfc_llcp_local *local)
++{
++	mutex_lock(&local->sdp_lock);
++
++	local->local_wks = 0;
++	local->local_sdp = 0;
++	local->local_sap = 0;
++
++	mutex_unlock(&local->sdp_lock);
++}
++
+ static void nfc_llcp_timeout_work(struct work_struct *work)
+ {
+ 	struct nfc_llcp_local *local = container_of(work, struct nfc_llcp_local,
+@@ -857,6 +868,8 @@ void nfc_llcp_mac_is_down(struct nfc_dev *dev)
+ 	if (local == NULL)
+ 		return;
+ 
++	nfc_llcp_clear_sdp(local);
++
+ 	/* Close and purge all existing sockets */
+ 	nfc_llcp_socket_release(local);
+ }
+-- 
+1.7.7.3
 
-I'm totally open to a better idea/solution. Even if I delay allocating
-ath_buf's until actual packet TX, that doesn't necessarily stop mbuf
-exhaustion from occuring, which is in line with what you see you're
-seeing in Linux.
-
-My temporarily solution is likely to fail datapath TX at say, 70% of
-ath_buf's being allocated, allowing the other 30% for whatever
-management traffic needs to occur.
-
-(That said, what may be nice is applying backpressure to the source
-interface of the frame(s), eg by sending PAUSE frames to the ethernet
-port(s), but that's just me..)
-
-
-Adrian
