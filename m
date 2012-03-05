@@ -1,70 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:52230 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755989Ab2CELox convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 5 Mar 2012 06:44:53 -0500
-Received: by iagz16 with SMTP id z16so5421279iag.19
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Mar 2012 03:44:53 -0800 (PST)
+Received: from ackle.nomi.cz ([81.31.33.35]:39957 "EHLO ackle.nomi.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932150Ab2CEPAe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 5 Mar 2012 10:00:34 -0500
+Date: Mon, 5 Mar 2012 16:00:31 +0100
+From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: wwguy <wey-yi.w.guy@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>, security@kernel.org
+Subject: Re: iwlagn: memory corruption with WPA enterprise
+Message-ID: <20120305150031.GA22387@nomi.cz> (sfid-20120305_160055_986063_A8B54B22)
+References: <20111114140714.GD2513@redhat.com> <20111119181106.GA5515@nomi.cz> <1321755233.22510.1.camel@wwguy-ubuntu> <20111120032016.GA14520@nomi.cz> <1321763314.22510.4.camel@wwguy-ubuntu> <20111120204007.GA7273@nomi.cz> <20120210180929.GA17733@nomi.cz> <20120214092020.GB12905@redhat.com> <20120305140130.GA15186@nomi.cz> <20120305145700.GA17800@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <4F5487DA.2010805@broadcom.com>
-References: <1330725351-3803-1-git-send-email-arend@broadcom.com>
- <1330725351-3803-5-git-send-email-arend@broadcom.com> <CAGRGNgXbkV-OkB5XG8+HqmmxG6f3RfgAkfnb_XxhXYU5+yN6Ug@mail.gmail.com>
- <4F5487DA.2010805@broadcom.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 5 Mar 2012 22:44:32 +1100
-Message-ID: <CAGRGNgW4ZqK62LRGJhppDvnaOJLJT1JKiJOK10O5MOc9UhAJXQ@mail.gmail.com> (sfid-20120305_124458_200393_B5E75C71)
-Subject: Re: [PATCH 4/7] brcm80211: fmac: initialize host interface drivers
- regardless result
-To: Arend van Spriel <arend@broadcom.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20120305145700.GA17800@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+Hi,
 
-On Mon, Mar 5, 2012 at 20:31, Arend van Spriel <arend@broadcom.com> wrote:
-> On 03/04/2012 11:49 PM, Julian Calaby wrote:
->>
->> Hi Arend,
->>
->> On Sat, Mar 3, 2012 at 08:55, Arend van Spriel<arend@broadcom.com> �wrote:
->>>
->>> The module init function of brcmfmac calls init functions for SDIO and
->>> USB doing driver registration. This patch removes terminating the module
->>> init when a driver registration for one host interface fails.
->>
->>
->> Would it be better to fail the module load if *none* of them succeed -
->> there's probably no point in having the module loaded if it's not
->> actually hooked up to anything.
->>
->
-> Thanks, Julian
->
-> However, the next patch in this series would undo the init code behaviour
-> you are proposing. The brcmf_sdio_init() already logs the failed driver
-> registration. I will add the same to brcmf_usb_init() in a separate patch.
-> Is that ok with you?
+On Mon, Mar 05, 2012 at 03:57:01PM +0100, Stanislaw Gruszka wrote:
+> No problem. Can you remind me, is this reproducible on 64-bit kernel
+> with 32-bit user space? I'm asking because I would like to know if we
+> need to  backport those fixes to our kernel. We do not enable
+> CONFIG_CRYPTO_AES_NI_INTEL on 32 bit kernel, only on 64 bit, but if this
+> problem happen with 32-bit user land with 64 bit kernel, we will need to
+> do backport.
 
-I only skimmed the patch set and this is one of the bits that stuck
-out, I didn't really read what happened in the next patch.
+It happens in 32-bit KVM guests on a 64-bit host, so I guess you need it.
 
-I didn't really care about the actual logging of failure - my point
-was more that if both fail then the module's still loaded, rather than
-failing and unloading - however, with the firmware loading being moved
-out of the module init path, there's no way to detect this anymore, so
-I suppose it doesn't matter.
-
-And yes, logging the probe error for USB would be a good thing.
-
-Thanks anyway,
-
+Regards,
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
-.Plan: http://sites.google.com/site/juliancalaby/
+Tomáš Janoušek, a.k.a. Liskni_si, http://work.lisk.in/
