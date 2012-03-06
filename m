@@ -1,165 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:33467 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751253Ab2CVE3a convert rfc822-to-8bit (ORCPT
+Received: from vms173013pub.verizon.net ([206.46.173.13]:40577 "EHLO
+	vms173013pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758066Ab2CFCWx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 22 Mar 2012 00:29:30 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAB=NE6XyDDfzu71K-1ecMQ+F-0Z1iTN4OKCUjJ+E3yxvydks0Q@mail.gmail.com>
-References: <1332214021-9716-1-git-send-email-mcgrof@frijolero.org>
- <1332214021-9716-5-git-send-email-mcgrof@frijolero.org> <1332245766.3329.14.camel@jlt3.sipsolutions.net>
- <CAB=NE6XyDDfzu71K-1ecMQ+F-0Z1iTN4OKCUjJ+E3yxvydks0Q@mail.gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@frijolero.org>
-Date: Wed, 21 Mar 2012 21:29:09 -0700
-Message-ID: <CAB=NE6XXd-T5B37Cc_eCwnWHRk-_UVn0JY0mQjzMQcK+ZcLuWQ@mail.gmail.com> (sfid-20120322_052956_532217_253BAD6B)
-Subject: Re: [PATCH 4/4] compat: add some tracing backport work
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	lf_driver_backport@lists.linux-foundation.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 5 Mar 2012 21:22:53 -0500
+Received: from vms170015 ([unknown] [172.18.12.133]) by vms173013.mailsrvcs.net
+ (Sun Java(tm) System Messaging Server 7u2-7.02 32bit (built Apr 16 2009))
+ with ESMTPA id <0M0F002ALYLGGLK3@vms173013.mailsrvcs.net> for
+ linux-wireless@vger.kernel.org; Mon, 05 Mar 2012 20:22:28 -0600 (CST)
+Date: Mon, 05 Mar 2012 20:22:28 -0600 (CST)
+From: alupu@verizon.net
+To: Larry.Finger@lwfinger.net
+Cc: linux-wireless@vger.kernel.org
+Message-id: <31698868.2383065.1331000548495.JavaMail.root@vms170015> (sfid-20120306_032256_894020_5477D86B)
+Subject: Re: r8712u staging in kernel 3.2.9
+MIME-version: 1.0
+Content-type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 20, 2012 at 6:53 AM, Luis R. Rodriguez <mcgrof@frijolero.org> wrote:
-> On Tue, Mar 20, 2012 at 5:16 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> Sure, yeah I think I tried disabling as you suggested and ran into
-> compilation issues with mac80211 on 2.6.31.
+> On 03/05/12, Larry Finger wrote:
 
-I tested again by only having this:
+>> On 03/05/2012 11:07 AM, alupu@verizon.net wrote:
+>> System: (B)LFS i686-pc-linux-gnu, 3.2.9
+>> Rosewill Wireless Adapter: RNX-N180UBE
+>> I compiled (as part of kernel 3.2.9) the r8712u module.
+>> Comes up OK but cannot take an essid nor a key.
+>> ...
+
+> There are a couple of bugs in 3.2.6+.
+> I don't think they have been fixed by 3.2.9.
+> Check dmesg for a "Badfw size" message.
+> If you see that, the two attached patches will fix that.
+
+Hi Larry,
+Thank you for the patches.
+Unfortunately, no cigar:
+
+<After kernel re-compile>
+usb 8-1: new high-speed USB device number 2 using ehci_hcd
+r8712u: module is from the staging directory, the quality is unknown,
+ you have been warned.
+r8712u: DriverVersion: v7_0.20100831
+r8712u: register rtl8712_netdev_ops to netdev_ops
+r8712u: USB_SPEED_HIGH with 4 endpoints
+r8712u: Boot from EFUSE: Autoload OK
+r8712u: CustomerID = 0x0000
+r8712u: MAC Address from efuse = 00:1a:ef:25:2d:f9
+r8712u: Loading firmware from "rtlwifi/rtl8712u.bin"
+usbcore: registered new interface driver r8712u
+r8712u: r8711_wx_set_enc: IW_ENCODE_RESTRICTED
+usb 8-1: USB disconnect, device number 2
 
 
-mcgrof@tux ~/compat (git::master)$ cat include/linux/tracepoint.h
-#ifndef _COMPAT_LINUX_TRACEPOINT_H
-#define _COMPAT_LINUX_TRACEPOINT_H 1
+NOTE: I haven't seen any "Badfw size" message.
+            I applied the patches, hope against hope.
+            (maybe, as a side effect, it can fix my problem)
+------
+iwconfig
+lo         no wireless extensions.
 
-#include <linux/version.h>
+wlan0 unassociated Nickname:"rtl_wifi"
+ Mode:Auto Access Point: Not-Associated Sensitivity:0/0
+ Retry:off RTS thr:off Fragment thr:off
+ Encryption key:off
+ Power Management:off
+ Link Quality:0 Signal level:0 Noise level:0
+ Rx invalid nwid:0 Rx invalid crypt:0 Rx invalid frag:0
+ Tx excessive retries:0 Invalid misc:0 Missed beacon:0
 
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,33))
 
-#include_next <linux/tracepoint.h>
 
-#else /* just disable tracing */
+eth0  no wireless extensions.
+------
+iwconfig wlan0 essid <ESSIS>  key restricted <Encryption Key>
 
-/* Disable all tracing */
-#undef TRACE_EVENT
-#define TRACE_EVENT(name, proto, ...) \
-static inline void trace_ ## name(proto) {}
-#undef DECLARE_EVENT_CLASS
-#define DECLARE_EVENT_CLASS(...)
-#undef DEFINE_EVENT
-#define DEFINE_EVENT(evt_class, name, proto, ...) \
-static inline void trace_ ## name(proto) {}
+r8712u: r8711_wx_set_enc: IW_ENCODE_RESTRICTED
 
-#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,33)) */
 
-#endif	/* _COMPAT_LINUX_TRACEPOINT_H */
+iwconfig wlan0
+wlan0 unassociated Nickname:"rtl_wifi"
+ Mode:Auto Access Point: Not-Associated Sensitivity:0/0
+ Retry:off RTS thr:off Fragment thr:off
+ Encryption key:off
+ Power Management:off
+ Link Quality:0 Signal level:0 Noise level:0
+ Rx invalid nwid:0 Rx invalid crypt:0 Rx invalid frag:0
+ Tx excessive retries:0 Invalid misc:0 Missed beacon:0
+NOTE: 'iwconfig wlan0 essid ' and 'iwconfig wlan0 key restricted '
+ can be tried separately, with or without double quotes
+ (for the particular ESSID or KEY), with the same failed result.
+------
+iwconfig wlan0 Mode managed
+iwconfig wlan0
+wlan0 unassociated Nickname:"rtl_wifi"
+ Mode:Managed Access Point: Not-Associated Sensitivity:0/0
+ Retry:off RTS thr:off Fragment thr:off
+ Encryption key:off
+ Power Management:off
+ Link Quality:0 Signal level:0 Noise level:0
+ Rx invalid nwid:0 Rx invalid crypt:0 Rx invalid frag:0
+ Tx excessive retries:0 Invalid misc:0 Missed beacon:0
+------
+Any idea what's happening?
+Thanks,
+-- Alex
+---------------------------------------------------
+For reference:
+[/linux-3.2.9/drivers/staging/rtl8712]$ ls -og os_intfs.c* usb_intf.c*
+-rw-rw-r-- 1 15584 2012-03-05 19:25 os_intfs.c
+-rw-rw-r-- 1 15781 2012-02-29 19:32 os_intfs.c-orig
+-rw-rw-r-- 1 18798 2012-03-05 19:25 usb_intf.c
+-rw-rw-r-- 1 18609 2012-02-29 19:32 usb_intf.c-orig
+------
+[/linux-3.2.9/drivers/staging/rtl8712]$ diff os_intfs.c os_intfs.c.orig
+478a479,483
+> /* The interface is no longer Up: */
+> padapter->bup = false;
+> release_firmware(padapter->fw);
+> /* never exit with a firmware callback pending */
+> wait_for_completion(&padapter->rtl8712_fw_ready);
+------
+[/linux-3.2.9/drivers/staging/rtl8712]$ diff usb_intf.c usb_intf.c.orig
+33d32
+< #include 
 
-And then by using compat-wireless tag
-compat-wireless-2012-03-14-3-g98cc995 against linux-next tag
-next-20120314 I can only compile up to 2.6.34. Anything older I get
-compilation errors which seem to point to somehow DEFINE_EVENT()
-failing.
-
-./scripts/gen-compat-autoconf.sh
-/home/mcgrof/devel/compat-wireless/.config
-/home/mcgrof/devel/compat-wireless/config.mk >
-include/linux/compat_autoconf.h
-make -C /lib/modules/2.6.33-02063305-generic/build
-M=/home/mcgrof/devel/compat-wireless modules
-make[1]: Entering directory `/usr/src/linux-headers-2.6.33-02063305-generic'
-  CC [M]  /home/mcgrof/devel/compat-wireless/compat/main.o
-In file included from include/linux/kmemtrace.h:12:0,
-                 from include/linux/slub_def.h:13,
-                 from include/linux/slab.h:162,
-                 from include/linux/percpu.h:5,
-                 from
-/usr/src/linux-headers-2.6.33-02063305-generic/arch/x86/include/asm/local.h:4,
-                 from include/linux/module.h:20,
-                 from include/linux/textsearch.h:7,
-                 from include/linux/skbuff.h:27,
-                 from include/linux/if_ether.h:124,
-                 from include/linux/netdevice.h:29,
-                 from
-/home/mcgrof/devel/compat-wireless/include/linux/compat-2.6.29.h:5,
-                 from
-/home/mcgrof/devel/compat-wireless/include/linux/compat-2.6.h:49,
-                 from <command-line>:1:
-include/trace/events/kmem.h:81:11: error: expected ‘)’ before ‘(’ token
-
-Now this kmem.h line 81 has:
-
-DEFINE_EVENT(kmem_alloc, kmalloc,
-
-        TP_PROTO(unsigned long call_site, const void *ptr,
-                 size_t bytes_req, size_t bytes_alloc, gfp_t gfp_flags),
-
-        TP_ARGS(call_site, ptr, bytes_req, bytes_alloc, gfp_flags)
-);
-
-This is then fixed by adding TP_PROTO and TP_ARGS to our backport:
-
-#define TP_PROTO(args...)  args
-#define TP_ARGS(args...)   args
-#define TP_CONDITION(args...)      args
-
-But then we get:
-
-./scripts/gen-compat-autoconf.sh
-/home/mcgrof/devel/compat-wireless/.config
-/home/mcgrof/devel/compat-wireless/config.mk >
-include/linux/compat_autoconf.h
-make -C /lib/modules/2.6.33-02063305-generic/build
-M=/home/mcgrof/devel/compat-wireless modules
-make[1]: Entering directory `/usr/src/linux-headers-2.6.33-02063305-generic'
-  CC [M]  /home/mcgrof/devel/compat-wireless/compat/main.o
-In file included from include/linux/kmemtrace.h:12:0,
-                 from include/linux/slub_def.h:13,
-                 from include/linux/slab.h:162,
-                 from include/linux/percpu.h:5,
-                 from
-/usr/src/linux-headers-2.6.33-02063305-generic/arch/x86/include/asm/local.h:4,
-                 from include/linux/module.h:20,
-                 from include/linux/textsearch.h:7,
-                 from include/linux/skbuff.h:27,
-                 from include/linux/if_ether.h:124,
-                 from include/linux/netdevice.h:29,
-                 from
-/home/mcgrof/devel/compat-wireless/include/linux/compat-2.6.29.h:5,
-                 from
-/home/mcgrof/devel/compat-wireless/include/linux/compat-2.6.h:49,
-                 from <command-line>:1:
-include/trace/events/kmem.h:292:41: error: expected ‘)’ before ‘(’ token
-
-And also:
-
-include/linux/module.h:543:47: warning: ‘struct tracepoint_iter’
-declared inside parameter list
-include/linux/module.h:543:47: warning: its scope is only this
-definition or declaration, which is probably not what you want
-make[3]: *** [/home/mcgrof/devel/compat-wireless/compat/main.o] Error 1
-make[2]: *** [/home/mcgrof/devel/compat-wireless/compat] Error 2
-make[1]: *** [_module_/home/mcgrof/devel/compat-wireless] Error 2
-make[1]: Leaving directory `/usr/src/linux-headers-2.6.33-02063305-generic'
-make: *** [modules] Error 2
-
-I'm trying to work my way through disabling this properly but haven't
-figured out yet how. I tried adding:
-
-#undef DECLARE_TRACE
-#define DECLARE_TRACE(name, proto, ...) \
-static inline void trace_ ## name(proto) {}
-
-#undef DEFINE_EVENT_PRINT
-#define DEFINE_EVENT_PRINT(template, name, proto, args, print)  \
-        DECLARE_TRACE(name, PARAMS(proto), PARAMS(args))
-
-But no dice. I then figured it may be my kernel with
-CONFIG_TRACEPOINTS=y and indeed that is the case -- so we have to
-consider the case where the target kernel may have tracing enabled and
-we have to disable it somehow. Undef'ing CONFIG_TRACEPOINTS and
-DECLARE_TRACE doesn't really do it.
-
-We may need to redefine each macro to some COMPAT_TRACE_ macro, not sure yet.
-
-  Luis
+625,628d623
+< if (padapter->fw_found)
+< release_firmware(padapter->fw);
+< /* never exit with a firmware callback pending */
+< wait_for_completion(&padapter->rtl8712_fw_ready);
