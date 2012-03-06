@@ -1,46 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from he.sipsolutions.net ([78.46.109.217]:44807 "EHLO
+Received: from he.sipsolutions.net ([78.46.109.217]:56163 "EHLO
 	sipsolutions.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752747Ab2CHQNm (ORCPT
+	with ESMTP id S1756807Ab2CFKJk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 8 Mar 2012 11:13:42 -0500
-Subject: Re: [PATCH 4/6] mac80211: remove spurious BSSID change flag
+	Tue, 6 Mar 2012 05:09:40 -0500
+Subject: Re: [PATCH] compat: Fix module_init return type from void to int.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: John Linville <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, Sujith <m.sujith@gmail.com>,
-	Rajkumar Manoharan <rmanohar@qca.qualcomm.com>
-In-Reply-To: <20120308140227.133587480@sipsolutions.net> (sfid-20120308_150328_058540_9FB5A49A)
-References: <20120308140202.751490800@sipsolutions.net>
-	 <20120308140227.133587480@sipsolutions.net>
-	 (sfid-20120308_150328_058540_9FB5A49A)
+To: Nicolas Cavallari <Nicolas.Cavallari@lri.fr>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	Maximilian.Gmeiner.sam04@fh-joanneum.at,
+	linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org
+In-Reply-To: <1331027728-18496-1-git-send-email-cavallar@lri.fr> (sfid-20120306_105836_618222_61A5ED9C)
+References: <CDCF1538AB98AA4FBCA89C8D5750845F1A473A21@MALMO.technikum.fh-joanneum.local>
+	 <1331027728-18496-1-git-send-email-cavallar@lri.fr>
+	 (sfid-20120306_105836_618222_61A5ED9C)
 Content-Type: text/plain; charset="UTF-8"
-Date: Thu, 08 Mar 2012 17:13:37 +0100
-Message-ID: <1331223217.1598.1.camel@jlt3.sipsolutions.net> (sfid-20120308_171346_064648_0FAF4E13)
+Date: Tue, 06 Mar 2012 11:09:35 +0100
+Message-ID: <1331028575.3447.5.camel@jlt3.sipsolutions.net> (sfid-20120306_110945_808772_398E54B3)
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> The BSSID has been set a lot earlier already and
-> didn't change again in ieee80211_set_associated().
+On Tue, 2012-03-06 at 10:55 +0100, Nicolas Cavallari wrote:
+> 086f3a1 overrode module_init to make it depend on compat, but the
+> overriding module_init has return type 'void', so strange things would
+> happen when the module loading code see that init_module() returns
+> positive values.  This patch makes it return the value returned by
+> the overriden module_init.
 > 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Signed-off-by: Nicolas Cavallari <cavallar@lri.fr>
 > ---
->  net/mac80211/mlme.c |    3 ---
->  1 file changed, 3 deletions(-)
+> On 05/03/2012 22:50, Gmeiner Maximilian wrote:
+> > After compiling from the bleeding-edge without any errors this is what I get in kern.log when doing modprobe ath9k
 > 
-> --- a/net/mac80211/mlme.c	2012-03-08 13:55:16.000000000 +0100
-> +++ b/net/mac80211/mlme.c	2012-03-08 13:55:22.000000000 +0100
-> @@ -1351,9 +1351,6 @@ static void ieee80211_set_associated(str
->  	 */
->  	bss_info_changed |= BSS_CHANGED_BASIC_RATES;
+> I had the same problem with a completely different architecture and device,
+> and this patch fixed it.
+> 
+> diff --git a/include/linux/compat-2.6.h b/include/linux/compat-2.6.h
+> index bb00cd4..5715ce5 100644
+> --- a/include/linux/compat-2.6.h
+> +++ b/include/linux/compat-2.6.h
+> @@ -27,10 +27,10 @@ void compat_dependency_symbol(void);
 >  
-> -	/* And the BSSID changed - we're associated now */
-> -	bss_info_changed |= BSS_CHANGED_BSSID;
+>  #undef module_init
+>  #define module_init(initfn)						\
+> -	static void __init __init_compat(void)				\
+> +	static int __init __init_compat(void)				\
+>  	{								\
+>  		compat_dependency_symbol();				\
+> -		initfn();						\
+> +		return initfn();					\
 
-Sujith tells me that this will break ath9k -- Rajkumar, can you take a
-look at this? Before your commit 99e4d43ad5ff5778f92ee3bc40a29a ath9k
-did listen to BSS_CHANGED_ASSOC -- it seems like it should again?
+
+Yikes, you're right, thanks for the patch!
+
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
 johannes
 
