@@ -1,16 +1,16 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:64658 "EHLO mga09.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:20496 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031501Ab2CFWnj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 17:43:39 -0500
+	id S1031468Ab2CFWna (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 17:43:30 -0500
 From: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org,
 	Johannes Berg <johannes.berg@intel.com>,
 	Wey-Yi Guy <wey-yi.w.guy@intel.com>
-Subject: [PATCH RESEND 28/33] iwlwifi: virtualize nic_config
-Date: Tue,  6 Mar 2012 13:31:03 -0800
-Message-Id: <1331069468-11074-29-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234401_781444_19B39CA5)
+Subject: [PATCH RESEND 06/33] iwlwifi: move lockdep assertion into DVM
+Date: Tue,  6 Mar 2012 13:30:41 -0800
+Message-Id: <1331069468-11074-7-git-send-email-wey-yi.w.guy@intel.com> (sfid-20120306_234434_911247_6B0834E7)
 In-Reply-To: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
 References: <1331069468-11074-1-git-send-email-wey-yi.w.guy@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
@@ -18,120 +18,74 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Johannes Berg <johannes.berg@intel.com>
 
-The nic_config sets uCode dependent register
-bits, so it must be virtual in the op_mode.
+The fact that the mutex must be held is an
+implementation detail of DVM, but something
+has to ensure that no two synchronous cmds
+are submitted concurrently. Move the lockdep
+assertion into the DVM-specific code, but
+also make the transport abort if there are
+two concurrently commands.
+
+The assertion is much more useful though as
+the transport check can only catch it when
+it actually happens, while the assertion
+makes sure it can't possibly happen.
 
 Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Wey-Yi Guy <wey-yi.w.guy@intel.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-agn.c        |    8 ++++++++
- drivers/net/wireless/iwlwifi/iwl-core.c       |    5 -----
- drivers/net/wireless/iwlwifi/iwl-op-mode.h    |    9 +++++++++
- drivers/net/wireless/iwlwifi/iwl-shared.h     |    1 -
- drivers/net/wireless/iwlwifi/iwl-trans-pcie.c |    2 +-
- 5 files changed, 18 insertions(+), 7 deletions(-)
+ drivers/net/wireless/iwlwifi/iwl-agn-lib.c       |    8 ++++++++
+ drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c |   11 ++++++++---
+ 2 files changed, 16 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-agn.c b/drivers/net/wireless/iwlwifi/iwl-agn.c
-index afded29..98f32e5 100644
---- a/drivers/net/wireless/iwlwifi/iwl-agn.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-agn.c
-@@ -1422,6 +1422,13 @@ static void iwl_cmd_queue_full(struct iwl_op_mode *op_mode)
+diff --git a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+index 11f2411..238f824 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
++++ b/drivers/net/wireless/iwlwifi/iwl-agn-lib.c
+@@ -1298,6 +1298,14 @@ int iwl_dvm_send_cmd(struct iwl_priv *priv, struct iwl_host_cmd *cmd)
+ 		return -EIO;
  	}
+ 
++	/*
++	 * Synchronous commands from this op-mode must hold
++	 * the mutex, this ensures we don't try to send two
++	 * (or more) synchronous commands at a time.
++	 */
++	if (cmd->flags & CMD_SYNC)
++		lockdep_assert_held(&priv->shrd->mutex);
++
+ 	return iwl_trans_send_cmd(trans(priv), cmd);
  }
  
-+static void iwl_nic_config(struct iwl_op_mode *op_mode)
-+{
-+	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
-+
-+	cfg(priv)->lib->nic_config(priv);
-+}
-+
- const struct iwl_op_mode_ops iwl_dvm_ops = {
- 	.start = iwl_op_mode_dvm_start,
- 	.stop = iwl_op_mode_dvm_stop,
-@@ -1432,6 +1439,7 @@ const struct iwl_op_mode_ops iwl_dvm_ops = {
- 	.free_skb = iwl_free_skb,
- 	.nic_error = iwl_nic_error,
- 	.cmd_queue_full = iwl_cmd_queue_full,
-+	.nic_config = iwl_nic_config,
- };
+diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+index c85975e..ca4ceea 100644
+--- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
++++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie-tx.c
+@@ -973,8 +973,6 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 	int cmd_idx;
+ 	int ret;
  
- /*****************************************************************************
-diff --git a/drivers/net/wireless/iwlwifi/iwl-core.c b/drivers/net/wireless/iwlwifi/iwl-core.c
-index c60c4a8..6648c1b 100644
---- a/drivers/net/wireless/iwlwifi/iwl-core.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-core.c
-@@ -1479,11 +1479,6 @@ void iwl_set_hw_rfkill_state(struct iwl_op_mode *op_mode, bool state)
- 	wiphy_rfkill_set_hw_state(priv->hw->wiphy, state);
- }
- 
--void iwl_nic_config(struct iwl_priv *priv)
--{
--	cfg(priv)->lib->nic_config(priv);
--}
+-	lockdep_assert_held(&trans->shrd->mutex);
 -
- void iwl_free_skb(struct iwl_op_mode *op_mode, struct sk_buff *skb)
- {
- 	struct iwl_priv *priv = IWL_OP_MODE_GET_DVM(op_mode);
-diff --git a/drivers/net/wireless/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-index a4a4907..6ea4163 100644
---- a/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-op-mode.h
-@@ -123,6 +123,8 @@ struct iwl_fw;
-  *	Must be atomic
-  * @nic_error: error notification. Must be atomic
-  * @cmd_queue_full: Called when the command queue gets full. Must be atomic.
-+ * @nic_config: configure NIC, called before firmware is started.
-+ *	May sleep
-  */
- struct iwl_op_mode_ops {
- 	struct iwl_op_mode *(*start)(struct iwl_trans *trans,
-@@ -136,6 +138,7 @@ struct iwl_op_mode_ops {
- 	void (*free_skb)(struct iwl_op_mode *op_mode, struct sk_buff *skb);
- 	void (*nic_error)(struct iwl_op_mode *op_mode);
- 	void (*cmd_queue_full)(struct iwl_op_mode *op_mode);
-+	void (*nic_config)(struct iwl_op_mode *op_mode);
- };
+ 	IWL_DEBUG_INFO(trans, "Attempting to send sync command %s\n",
+ 			get_cmd_string(cmd->id));
  
- /**
-@@ -199,6 +202,12 @@ static inline void iwl_op_mode_cmd_queue_full(struct iwl_op_mode *op_mode)
- 	op_mode->ops->cmd_queue_full(op_mode);
- }
- 
-+static inline void iwl_op_mode_nic_config(struct iwl_op_mode *op_mode)
-+{
-+	might_sleep();
-+	op_mode->ops->nic_config(op_mode);
-+}
+@@ -983,7 +981,14 @@ static int iwl_send_cmd_sync(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
+ 			       get_cmd_string(cmd->id));
+ 		return -EIO;
+ 	}
+-	set_bit(STATUS_HCMD_ACTIVE, &trans->shrd->status);
 +
- /*****************************************************
- * Op mode layers implementations
- ******************************************************/
-diff --git a/drivers/net/wireless/iwlwifi/iwl-shared.h b/drivers/net/wireless/iwlwifi/iwl-shared.h
-index 4fc8967..a6c2539 100644
---- a/drivers/net/wireless/iwlwifi/iwl-shared.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-shared.h
-@@ -416,7 +416,6 @@ enum iwl_rxon_context_id {
- };
++	if (WARN_ON(test_and_set_bit(STATUS_HCMD_ACTIVE,
++				     &trans->shrd->status))) {
++		IWL_ERR(trans, "Command %s: a command is already active!\n",
++			get_cmd_string(cmd->id));
++		return -EIO;
++	}
++
+ 	IWL_DEBUG_INFO(trans, "Setting HCMD_ACTIVE for command %s\n",
+ 			get_cmd_string(cmd->id));
  
- int iwlagn_hw_valid_rtc_data_addr(u32 addr);
--void iwl_nic_config(struct iwl_priv *priv);
- const char *get_cmd_string(u8 cmd);
- 
- #define IWL_CMD(x) case x: return #x
-diff --git a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-index d68dd65..836e067 100644
---- a/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-+++ b/drivers/net/wireless/iwlwifi/iwl-trans-pcie.c
-@@ -823,7 +823,7 @@ static int iwl_nic_init(struct iwl_trans *trans)
- 
- 	iwl_set_pwr_vmain(trans);
- 
--	iwl_nic_config(priv(trans));
-+	iwl_op_mode_nic_config(trans->op_mode);
- 
- #ifndef CONFIG_IWLWIFI_IDI
- 	/* Allocate the RX queue, or reset if it is already allocated */
 -- 
 1.7.0.4
 
