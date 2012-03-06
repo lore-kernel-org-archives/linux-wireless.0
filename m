@@ -1,187 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10471 "EHLO mx1.redhat.com"
+Received: from mga11.intel.com ([192.55.52.93]:51742 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1032773Ab2CPMDP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 16 Mar 2012 08:03:15 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [RFC 1/3] mac80211: do not scan and monitor connection in parallel
-Date: Fri, 16 Mar 2012 13:02:56 +0100
-Message-Id: <1331899378-10543-1-git-send-email-sgruszka@redhat.com> (sfid-20120316_130318_801255_E6602E32)
+	id S1754318Ab2CFXZk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 18:25:40 -0500
+Subject: [PATCH] compat-wireless: Handle name change from iwlagn to iwlwifi
+ in 3.2
+From: Don Fry <donald.h.fry@intel.com>
+To: mcgrof@frijolero.org
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 06 Mar 2012 15:23:42 -0800
+Message-ID: <1331076222.28277.2.camel@dfry-linux1> (sfid-20120307_002543_750662_F6CA6EE1)
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Before we send probes in connection monitoring we check if scan is not
-pending. But we do that check without locking. Fix that and also do not
-start scan if connection monitoring is in progress.
+From: Don Fry <donald.h.fry@intel.com>
 
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
+With linux-3.2 the iwlagn driver is renamed iwlwifi.  For some kernels
+(like 3.1.5) this causes the non-compat iwlagn.ko to try and run against
+the compat mac80211 resulting in an oops.  This change prevents the
+non-compat iwlagn.ko from being loaded.
+
+Signed-off-by: Don Fry <donald.h.fry@intel.com>
 ---
- net/mac80211/ieee80211_i.h |    1 +
- net/mac80211/mlme.c        |   35 +++++++++++++++++++++++------------
- net/mac80211/scan.c        |   29 ++++++++++++++++++++++++++++-
- net/mac80211/work.c        |    7 +------
- 4 files changed, 53 insertions(+), 19 deletions(-)
+v2 based on today's compat-wireless
+---
+ Makefile            |   10 ++++++++++
+ scripts/iwl-enable  |   11 ++++++++++-
+ scripts/unload.sh   |    2 +-
+ scripts/wlunload.sh |    2 +-
+ 4 files changed, 22 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 63fb0eb..a48d40f 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1239,6 +1239,7 @@ int ieee80211_request_internal_scan(struct ieee80211_sub_if_data *sdata,
- int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
- 			   struct cfg80211_scan_request *req);
- void ieee80211_scan_cancel(struct ieee80211_local *local);
-+void ieee80211_run_deferred_scan(struct ieee80211_local *local);
- ieee80211_rx_result
- ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb);
+diff --git a/Makefile b/Makefile
+index 6b6f097..204c63d 100644
+--- a/Makefile
++++ b/Makefile
+@@ -163,6 +163,16 @@ install-scripts:
+ 		echo Running iwl-enable iwlagn...;\
+ 		$(DESTDIR)/usr/sbin/iwl-enable iwlagn ;\
+ 	fi
++	@if [ $(shell modinfo iwlagn > /dev/null 2>&1 && echo 1) ] \
++	 && [ $(shell modinfo iwlwifi > /dev/null 2>&1 && echo 1) ]; then \
++		echo ;\
++		echo -n "Note: iwlagn detected, we're going to disable it. " ;\
++		echo "If you would like to enable it later you can run:"  ;\
++		echo "    sudo iwl-load iwlagn"  ;\
++		echo ;\
++		echo Running iwl-enable iwlwifi...;\
++		$(DESTDIR)/usr/sbin/iwl-enable iwlwifi ;\
++	fi
+ 	@if [ $(shell modinfo atl1c > /dev/null 2>&1 && echo 1) ]; then \
+ 		echo ;\
+ 		echo -n "Note: atl1c detected, we're going to disable it. "  ;\
+diff --git a/scripts/iwl-enable b/scripts/iwl-enable
+index 765195b..b18fdc2 100755
+--- a/scripts/iwl-enable
++++ b/scripts/iwl-enable
+@@ -17,7 +17,14 @@ IWL_NEW="iwlagn"
+ IWL_OLD="iwl4965"
  
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 0df2237..0737278 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -1496,19 +1496,24 @@ void ieee80211_sta_rx_notify(struct ieee80211_sub_if_data *sdata,
- static void ieee80211_reset_ap_probe(struct ieee80211_sub_if_data *sdata)
- {
- 	struct ieee80211_if_managed *ifmgd = &sdata->u.mgd;
-+	struct ieee80211_local *local = sdata->local;
- 
-+	mutex_lock(&local->mtx);
- 	if (!(ifmgd->flags & (IEEE80211_STA_BEACON_POLL |
--			      IEEE80211_STA_CONNECTION_POLL)))
--	    return;
-+			      IEEE80211_STA_CONNECTION_POLL))) {
-+		mutex_unlock(&local->mtx);
-+		return;
-+	}
- 
- 	ifmgd->flags &= ~(IEEE80211_STA_CONNECTION_POLL |
- 			  IEEE80211_STA_BEACON_POLL);
--	mutex_lock(&sdata->local->iflist_mtx);
--	ieee80211_recalc_ps(sdata->local, -1);
--	mutex_unlock(&sdata->local->iflist_mtx);
+ # Appended to module file at the end when we want to ignore one
+-USAGE="Usage: $0 [ $IWL_NEW | $IWL_OLD ]"
++USAGE="Usage: $0 [ $IWL_NEW | $IWL_OLD | iwlwifi ]"
 +
-+	mutex_lock(&local->iflist_mtx);
-+	ieee80211_recalc_ps(local, -1);
-+	mutex_unlock(&local->iflist_mtx);
- 
- 	if (sdata->local->hw.flags & IEEE80211_HW_CONNECTION_MONITOR)
--		return;
-+		goto out;
- 
- 	/*
- 	 * We've received a probe response, but are not sure whether
-@@ -1520,6 +1525,9 @@ static void ieee80211_reset_ap_probe(struct ieee80211_sub_if_data *sdata)
- 	mod_timer(&ifmgd->conn_mon_timer,
- 		  round_jiffies_up(jiffies +
- 				   IEEE80211_CONNECTION_IDLE_TIME));
-+out:
-+	ieee80211_run_deferred_scan(local);
-+	mutex_unlock(&local->mtx);
- }
- 
- void ieee80211_sta_tx_notify(struct ieee80211_sub_if_data *sdata,
-@@ -1586,17 +1594,18 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
- 	if (!ieee80211_sdata_running(sdata))
- 		return;
- 
--	if (sdata->local->scanning)
--		return;
--
--	if (sdata->local->tmp_channel)
--		return;
--
- 	mutex_lock(&ifmgd->mtx);
- 
- 	if (!ifmgd->associated)
- 		goto out;
- 
-+	mutex_lock(&sdata->local->mtx);
-+
-+	if (sdata->local->tmp_channel || sdata->local->scanning) {
-+		mutex_unlock(&sdata->local->mtx);
-+		goto out;
-+	}
-+
- #ifdef CONFIG_MAC80211_VERBOSE_DEBUG
- 	if (beacon && net_ratelimit())
- 		printk(KERN_DEBUG "%s: detected beacon loss from AP "
-@@ -1623,6 +1632,8 @@ static void ieee80211_mgd_probe_ap(struct ieee80211_sub_if_data *sdata,
- 	else
- 		ifmgd->flags |= IEEE80211_STA_CONNECTION_POLL;
- 
-+	mutex_unlock(&sdata->local->mtx);
-+
- 	if (already)
- 		goto out;
- 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index 33cd169..1b90f97 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -387,6 +387,33 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
- 	return 0;
- }
- 
-+static bool ieee80211_can_scan(struct ieee80211_local *local,
-+			       struct ieee80211_sub_if_data *sdata)
-+{
-+	if (!list_empty(&local->work_list))
-+		return false;
-+
-+	if (sdata->vif.type == NL80211_IFTYPE_STATION &&
-+	    sdata->u.mgd.flags & (IEEE80211_STA_BEACON_POLL |
-+				  IEEE80211_STA_CONNECTION_POLL))
-+		return false;
-+
-+	return true;
-+}
-+
-+void ieee80211_run_deferred_scan(struct ieee80211_local *local)
-+{
-+	lockdep_assert_held(&local->mtx);
-+
-+	if (!local->scan_req || local->scanning)
-+		return;
-+
-+	if (!ieee80211_can_scan(local, local->scan_sdata))
-+		return;
-+
-+	ieee80211_queue_delayed_work(&local->hw, &local->scan_work,
-+				     round_jiffies_relative(0));
++function enable_iwlwifi {
++	for i in $IWL_OLD $IWL_NEW; do
++		module_disable $i
++	done
++	module_enable iwlwifi
 +}
  
- static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- 				  struct cfg80211_scan_request *req)
-@@ -399,7 +426,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
- 	if (local->scan_req)
- 		return -EBUSY;
- 
--	if (!list_empty(&local->work_list)) {
-+	if (!ieee80211_can_scan(local, sdata)) {
- 		/* wait for the work to finish/time out */
- 		local->scan_req = req;
- 		local->scan_sdata = sdata;
-diff --git a/net/mac80211/work.c b/net/mac80211/work.c
-index c6e230e..1f74af3 100644
---- a/net/mac80211/work.c
-+++ b/net/mac80211/work.c
-@@ -226,13 +226,8 @@ static void ieee80211_work_work(struct work_struct *work)
- 		run_again(local, jiffies + HZ/2);
- 	}
- 
--	if (list_empty(&local->work_list) && local->scan_req &&
--	    !local->scanning)
--		ieee80211_queue_delayed_work(&local->hw,
--					     &local->scan_work,
--					     round_jiffies_relative(0));
--
- 	ieee80211_recalc_idle(local);
-+	ieee80211_run_deferred_scan(local);
- 
- 	mutex_unlock(&local->mtx);
- 
+ function enable_iwlagn {
+ 	module_disable $IWL_OLD
+@@ -41,6 +48,8 @@ if [ "$MODULE" == "iwl4965" ]; then
+ 	module_enable $IWL_OLD
+ elif [ "$MODULE" == "iwlagn" ]; then
+ 	enable_iwlagn
++elif [ "$MODULE" == "iwlwifi" ]; then
++	enable_iwlwifi
+ else
+ 	echo "$USAGE"
+ 	exit
+diff --git a/scripts/unload.sh b/scripts/unload.sh
+index c659a70..fc7261d 100755
+--- a/scripts/unload.sh
++++ b/scripts/unload.sh
+@@ -15,7 +15,7 @@ MODULES="$MODULES adm8211 zd1211rw"
+ MODULES="$MODULES orinoco_cs orinoco_nortel orinoco_pci orinoco_plx"
+ MODULES="$MODULES orinoco_tld orinoco_usb spectrum_cs orinoco"
+ MODULES="$MODULES b43 b44 b43legacy brcm80211 ssb"
+-MODULES="$MODULES iwl3945 iwlagn iwlcore"
++MODULES="$MODULES iwl3945 iwlwifi iwlagn iwlcore"
+ MODULES="$MODULES ath9k ath9k_htc ath9k_common ath9k_hw "
+ MODULES="$MODULES ath5k ath ath6kl ar9170usb carl9170"
+ MODULES="$MODULES p54pci p54usb p54spi p54common"
+diff --git a/scripts/wlunload.sh b/scripts/wlunload.sh
+index cd6298d..c6c6af9 100755
+--- a/scripts/wlunload.sh
++++ b/scripts/wlunload.sh
+@@ -15,7 +15,7 @@ MODULES="$MODULES adm8211 zd1211rw"
+ MODULES="$MODULES orinoco_cs orinoco_nortel orinoco_pci orinoco_plx"
+ MODULES="$MODULES orinoco_tld orinoco_usb spectrum_cs orinoco"
+ MODULES="$MODULES b43 b44 b43legacy brcm80211 ssb"
+-MODULES="$MODULES iwl3945 iwlagn iwlcore"
++MODULES="$MODULES iwl3945 iwlwifi iwlagn iwlcore"
+ MODULES="$MODULES ath9k ath9k_htc ath9k_common ath9k_hw "
+ MODULES="$MODULES ath5k ath ath6kl ar9170usb carl9170"
+ MODULES="$MODULES p54pci p54usb p54spi p54common"
 -- 
-1.7.1
+1.7.4.4
+
+
 
