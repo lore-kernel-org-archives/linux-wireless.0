@@ -1,101 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:59335 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965176Ab2CFTpZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 6 Mar 2012 14:45:25 -0500
-Date: Tue, 6 Mar 2012 20:45:21 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Stefan Lippers-Hollmann <s.L-H@gmx.de>
-cc: Sven Joachim <svenjoac@gmx.de>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	alan@lxorguk.ukuu.org.uk, Jonathan Nieder <jrnieder@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [ 57/72] genirq: Unmask oneshot irqs when thread was not woken
-In-Reply-To: <201203050143.24541.s.L-H@gmx.de>
-Message-ID: <alpine.LFD.2.02.1203062043500.2742@ionos> (sfid-20120306_204529_195781_F21D8879)
-References: <20120228010511.GA8453@kroah.com> <20120228010434.412979550@linuxfoundation.org> <87hay4dqjr.fsf@turtle.gmx.de> <201203050143.24541.s.L-H@gmx.de>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from bues.ch ([80.190.117.144]:51823 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752604Ab2CFXcg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 18:32:36 -0500
+Date: Wed, 7 Mar 2012 00:32:21 +0100
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org,
+	"John W. Linville" <linville@tuxdriver.com>,
+	b43-dev@lists.infradead.org, larry.finger@lwfinger.net,
+	florian@openwrt.org
+Subject: Re: [RFT][PATCH] b43: fix logic in GPIO configuration
+Message-ID: <20120307003221.7664eb4a@milhouse> (sfid-20120307_003239_868541_D5D422ED)
+In-Reply-To: <4F5695CC.3010206@hauke-m.de>
+References: <1331071898-3651-1-git-send-email-zajec5@gmail.com>
+	<4F5695CC.3010206@hauke-m.de>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=PGP-SHA1;
+ boundary="Sig_/.0Ze0s=_Mfc=J+K_g5NfDBX"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 5 Mar 2012, Stefan Lippers-Hollmann wrote:
-> On Monday 05 March 2012, Sven Joachim wrote:
-> > On 2012-02-28 02:05 +0100, Greg KH wrote:
-> > 
-> > > 3.2-stable review patch.  If anyone has any objections, please let me know.
-> > 
-> > Alas, the commit below broke the WiFi on my laptop, where
-> > "iwlist wlan0 scan" now just reports: " wlan0     No scan results".
-> > 
-> > This is not specific to 3.2, the same problem exists in 3.0.23 and
-> > 3.3-rc6 while previous releases worked.
-> 
-> I can confirm this regression on an old PIII based notebook with a 
-> 32 bit BCM4306/3 PCMCIA card:
-> 
-> 02:00.0 Network controller [0280]: Broadcom Corporation BCM4306 802.11b/g Wireless LAN Controller [14e4:4320] (rev 03)
->         Subsystem: Linksys WPC54G v1 / WPC54GS v1 802.11g Wireless-G Notebook Adapter [1737:4320]
->         Flags: bus master, fast devsel, latency 64, IRQ 10
->         Memory at 20000000 (32-bit, non-prefetchable) [size=8K]
->         Capabilities: [40] Power Management version 2
->         Kernel driver in use: b43-pci-bridge
-> 
-> I can observe these differences in the dmesg output (3.2.9 + current 
-> stable queue-3.2):
-> 
-> The kernel configuration is identical in both cases, the only 
-> difference is "genirq: Unmask oneshot irqs when thread was not woken"
-> being applied or not.
-> 
-> --- working	<-- 3.2.9 + current stable queue-3.2, with "genirq: Unmask oneshot irqs when thread was not woken" reverted
-> +++ broken	<-- 3.2.9 + current stable queue-3.2
-> @@ -125,6 +125,7 @@ Initializing cgroup subsys freezer
->  Initializing cgroup subsys net_cls
->  Initializing cgroup subsys blkio
->  Initializing cgroup subsys perf_event
-> +CPU serial number disabled.
+--Sig_/.0Ze0s=_Mfc=J+K_g5NfDBX
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I can't see why reverting that genirq patch would cause this.
+On Tue, 06 Mar 2012 23:55:08 +0100
+Hauke Mehrtens <hauke@hauke-m.de> wrote:
 
->  mce: CPU supports 5 MCE banks
->  SMP alternatives: switching to UP code
->  Freeing SMP alternatives: 8k freed
-> @@ -137,9 +138,16 @@ SMP disabled
->  Performance Events: 
->  no APIC, boot with the "lapic" boot parameter to force-enable it.
->  no hardware sampling interrupt available.
-> -Broken PMU hardware detected, using software events only.
-> +p6 PMU driver.
-> +... version:                0
-> +... bit width:              32
-> +... generic registers:      2
-> +... value mask:             00000000ffffffff
-> +... max period:             000000007fffffff
-> +... fixed-purpose events:   0
-> +... event mask:             0000000000000003
+> This patch did not helped fixing my problem. The ucode still takes over
+> the GPIOs of the buttons with firmware version 666.2. I am getting the
+> following messages:
+>=20
+> [   83.620000] b43-phy0: Loading firmware version 666.2 (2011-02-23
+> 01:15:07)
+> [   83.624000] Init value of B43_GPIO_CONTROL: 0x0
 
-Ditto.
 
->  Brought up 1 CPUs
->  Total of 1 processors activated (1989.75 BogoMIPS).
->  devtmpfs: initialized
->  PM: Registering ACPI NVS region at eeff000 (4096 bytes)
->  print_constraints: dummy: 
-> @@ -174,12 +182,12 @@ pci 0000:00:00.0: reg 10: [mem 0xec00000
->  type 1 class 0x000604
->  pci 0000:00:01.0: supports D1
->  type 2 class 0x000607
-> -pci 0000:00:04.0: reg 10: [mem 0x10000000-0x10000fff]
-> +pci 0000:00:04.0: reg 10: [mem 0x00000000-0x00000fff]
+I think this is caused by b43_gpio_cleanup. Can you try removing that funct=
+ion (or just returning early, for the time being.)
 
-Even more. 
+--=20
+Greetings, Michael.
 
-There is something extremly fishy.
+PGP encryption is encouraged / 908D8B0E
 
-Thanks,
+--Sig_/.0Ze0s=_Mfc=J+K_g5NfDBX
+Content-Type: application/pgp-signature; name=signature.asc
+Content-Disposition: attachment; filename=signature.asc
 
-	tglx
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.12 (GNU/Linux)
+
+iQIcBAEBAgAGBQJPVp6FAAoJEPUyvh2QjYsOgIgP/2QULepEOF8bNmkP8533NdGE
+MvOnQWxBedUPYmgFbuKO186BaweooEUhJuFFql82YX4B60UjfGXQbBNQ/pm8ucbq
+87kjbb/L+K+y0F0BQOcO4fdcnKREdu80JR4BGPdP2ZLMHQwCvizJwXgiM/hO0gE+
+xEVsufwjzf1UNuewfSriCTPeTX6TYTDfn2CfSlIXkLchR5x4lpahpc3qMJ9spRGX
+lumQpTW88c6/GvGSyNgEigByNruw1r4lj/mVpzMwq2DOiR7+UjuauStMyla3yS7W
+TADgcrP3Ye2Tj4HKabZWZGYmbuLAANz7gzN+DNqBXwyjaUyUA1nhdf5RcAW6X3Si
+OEJSBtJbaO19ycP3p00ugL0W7pALl8GX6Z8HAbvqm7YH1ViF9wQw/g7WxsciTxtg
+4Q/RKj+IE7t2ROhbsOcwLB5eTx2enNoC0ASHS6YcuPUfubjjddkvN6s7JQBe+m0t
+81zqzerpZc3iEPYm+cowTD1VsoZ/OA3HDj/YxMZhp78ksT+1AnvYBQ+Y/QaEoqMC
+dRDBGPKBqVjAE2m4dyC6XXm44CyMY7iJDJ7HgdW5DZ929N9lsiLl79e2JuN++IeU
+P8CJ1PWlol6Yvn1S/V0IJdNCC0JORsZSuWOsSEtO1xdgYD7tii8aZwtCCqAy1IHl
+MlIglMEEyvyEu1s4Bns0
+=NrbK
+-----END PGP SIGNATURE-----
+
+--Sig_/.0Ze0s=_Mfc=J+K_g5NfDBX--
