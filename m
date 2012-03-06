@@ -1,135 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63860 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756172Ab2CUP2H (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 21 Mar 2012 11:28:07 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>, <ath6kl-devel@qualcomm.com>
-Subject: [PATCH] ath6kl: Configure inactivity timeout in fw
-Date: Wed, 21 Mar 2012 20:58:39 +0530
-Message-ID: <1332343719-3773-1-git-send-email-vthiagar@qca.qualcomm.com> (sfid-20120321_162826_742052_A14B1491)
+Received: from mms3.broadcom.com ([216.31.210.19]:4817 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030832Ab2CFOvE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 6 Mar 2012 09:51:04 -0500
+From: "Arend van Spriel" <arend@broadcom.com>
+To: "John W. Linville" <linville@tuxdriver.com>
+cc: "Linux Wireless List" <linux-wireless@vger.kernel.org>,
+	"Arend van Spriel" <arend@broadcom.com>,
+	"Rafal Milecki" <zajec5@gmail.com>,
+	"Hauke Mehrtens" <hauke@hauke-m.de>
+Subject: [PATCH v2 1/2] bcma: return error in bcma_sprom_get() when
+ fallback fails
+Date: Tue, 6 Mar 2012 15:50:47 +0100
+Message-ID: <1331045448-12883-1-git-send-email-arend@broadcom.com> (sfid-20120306_155114_837341_7198C5DC)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Configure the inactivity timeout passed in start_ap() to
-firmware. This capability is advertised only when fw supports
-it, there is a new bit (ATH6KL_FW_CAPABILITY_INACTIVITY_TIMEOUT)
-in firmware capability ie for driver to learn fw's capability.
-After the fw finds out the station is inactive, it will probe
-the station with null func frames. By default, the timeout is
-10 secs.
+When not SPROM is available a fallback mechanism is used. However,
+when that fails the code currently continues. This patch assures
+that the bcma_sprom_get() function aborts when that happens.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qca.qualcomm.com>
+Cc: Rafal Milecki <zajec5@gmail.com>
+Cc: Hauke Mehrtens <hauke@hauke-m.de>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath6kl/cfg80211.c |   11 +++++++++++
- drivers/net/wireless/ath/ath6kl/core.h     |    6 ++++++
- drivers/net/wireless/ath/ath6kl/wmi.c      |   17 +++++++++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.h      |    7 +++++++
- 4 files changed, 41 insertions(+), 0 deletions(-)
+ drivers/bcma/sprom.c |   27 +++++++++++++++++----------
+ 1 files changed, 17 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index d24bc66..92bcce9 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -2558,6 +2558,13 @@ static int ath6kl_start_ap(struct wiphy *wiphy, struct net_device *dev,
- 		p.nw_subtype = SUBTYPE_NONE;
- 	}
+diff --git a/drivers/bcma/sprom.c b/drivers/bcma/sprom.c
+index 916ae25..fba8066 100644
+--- a/drivers/bcma/sprom.c
++++ b/drivers/bcma/sprom.c
+@@ -49,10 +49,23 @@ int bcma_arch_register_fallback_sprom(int (*sprom_callback)(struct bcma_bus *bus
+ static int bcma_fill_sprom_with_fallback(struct bcma_bus *bus,
+ 					 struct ssb_sprom *out)
+ {
+-	if (!get_fallback_sprom)
+-		return -ENOENT;
++	int err;
  
-+	if (info->inactivity_timeout) {
-+		res = ath6kl_wmi_set_inact_period(ar->wmi, vif->fw_vif_idx,
-+						  info->inactivity_timeout);
-+		if (res < 0)
-+			return res;
+-	return get_fallback_sprom(bus, out);
++	if (!get_fallback_sprom) {
++		err = -ENOENT;
++		goto fail;
 +	}
 +
- 	res = ath6kl_wmi_ap_profile_commit(ar->wmi, vif->fw_vif_idx, &p);
- 	if (res < 0)
- 		return res;
-@@ -3222,6 +3229,10 @@ int ath6kl_cfg80211_init(struct ath6kl *ar)
- 	if (test_bit(ATH6KL_FW_CAPABILITY_SCHED_SCAN, ar->fw_capabilities))
- 		ar->wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN;
- 
-+	if (test_bit(ATH6KL_FW_CAPABILITY_INACTIVITY_TIMEOUT,
-+		     ar->fw_capabilities))
-+		ar->wiphy->features = NL80211_FEATURE_INACTIVITY_TIMER;
++	err = get_fallback_sprom(bus, out);
++	if (err)
++		goto fail;
 +
- 	ar->wiphy->probe_resp_offload =
- 		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS |
- 		NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2 |
-diff --git a/drivers/net/wireless/ath/ath6kl/core.h b/drivers/net/wireless/ath/ath6kl/core.h
-index 17697eb..a29a349 100644
---- a/drivers/net/wireless/ath/ath6kl/core.h
-+++ b/drivers/net/wireless/ath/ath6kl/core.h
-@@ -91,6 +91,12 @@ enum ath6kl_fw_capability {
- 	 */
- 	ATH6KL_FW_CAPABILITY_STA_P2PDEV_DUPLEX,
- 
-+	/*
-+	 * Firmware has support to cleanup inactive stations
-+	 * in AP mode.
-+	 */
-+	ATH6KL_FW_CAPABILITY_INACTIVITY_TIMEOUT,
-+
- 	/* this needs to be last */
- 	ATH6KL_FW_CAPABILITY_MAX,
- };
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 7654e8e..b1b1f34 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -3395,6 +3395,23 @@ int ath6kl_wmi_cancel_remain_on_chnl_cmd(struct wmi *wmi, u8 if_idx)
- 				     WMI_CANCEL_REMAIN_ON_CHNL_CMDID);
++	pr_debug("Using SPROM revision %d provided by"
++		 " platform.\n", bus->sprom.revision);
++	return 0;
++fail:
++	pr_warn("Using fallback SPROM failed (err %d)\n", err);
++	return err;
  }
  
-+int ath6kl_wmi_set_inact_period(struct wmi *wmi, u8 if_idx, int inact_timeout)
-+{
-+	struct sk_buff *skb;
-+	struct wmi_set_inact_period_cmd *cmd;
-+
-+	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	cmd = (struct wmi_set_inact_period_cmd *) skb->data;
-+	cmd->inact_period = cpu_to_le32(inact_timeout);
-+	cmd->num_null_func = 0;
-+
-+	return ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_AP_CONN_INACT_CMDID,
-+				   NO_SYNC_WMIFLAG);
-+}
-+
- static int ath6kl_wmi_control_rx_xtnd(struct wmi *wmi, struct sk_buff *skb)
- {
- 	struct wmix_cmd_hdr *cmd;
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 4092e3e..8c8a922 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -2141,6 +2141,11 @@ struct wmi_ap_hidden_ssid_cmd {
- 	u8 hidden_ssid;
- } __packed;
+ /**************************************************
+@@ -317,13 +330,7 @@ int bcma_sprom_get(struct bcma_bus *bus)
+ 		 * available for this device in some other storage.
+ 		 */
+ 		err = bcma_fill_sprom_with_fallback(bus, &bus->sprom);
+-		if (err) {
+-			pr_warn("Using fallback SPROM failed (err %d)\n", err);
+-		} else {
+-			pr_debug("Using SPROM revision %d provided by"
+-				 " platform.\n", bus->sprom.revision);
+-			return 0;
+-		}
++		return err;
+ 	}
  
-+struct wmi_set_inact_period_cmd {
-+	__le32 inact_period;
-+	u8 num_null_func;
-+} __packed;
-+
- /* AP mode events */
- struct wmi_ap_set_apsd_cmd {
- 	u8 enable;
-@@ -2538,6 +2543,8 @@ int ath6kl_wmi_cancel_remain_on_chnl_cmd(struct wmi *wmi, u8 if_idx);
- int ath6kl_wmi_set_appie_cmd(struct wmi *wmi, u8 if_idx, u8 mgmt_frm_type,
- 			     const u8 *ie, u8 ie_len);
- 
-+int ath6kl_wmi_set_inact_period(struct wmi *wmi, u8 if_idx, int inact_timeout);
-+
- void ath6kl_wmi_sscan_timer(unsigned long ptr);
- 
- struct ath6kl_vif *ath6kl_get_vif_by_index(struct ath6kl *ar, u8 if_idx);
+ 	sprom = kcalloc(SSB_SPROMSIZE_WORDS_R4, sizeof(u16),
 -- 
-1.7.0.4
+1.7.5.4
+
 
